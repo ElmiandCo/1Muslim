@@ -1,5 +1,7 @@
 "use client";
 
+import "./community.css";
+
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import SiteNav from "../components/SiteNav";
