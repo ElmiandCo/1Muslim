@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ThemeToggle } from "./components/SiteNav";
 import { useState } from "react";
 
 type Path = "easy" | "advanced";
@@ -67,19 +68,12 @@ export default function Home() {
       <aside className="sidebar">
         <div className="wordmark"><span className="mark">1</span><span>1Muslim</span></div>
         <nav>
-          {["Home", "Learn", "Explore", "Community", "Streaming", "Connect"].map((item, i) => (
-            item === "Streaming" ? (
-              <Link key={item} href="/streaming" className={active === item ? "nav active" : "nav"}>
-                <span className="navIcon">▶</span>{item}
-              </Link>
-            ) : (
-              <button key={item} className={active === item ? "nav active" : "nav"} onClick={() => setActive(item)}>
-                <span className="navIcon">{["⌂", "◈", "◎", "♧", "▶", "⌁"][i]}</span>{item}
-              </button>
-            )
-          ))}
+          {[
+            ["Home","/","⌂"],["Learn","/#paths","◈"],["Explore","/#explore","◎"],["Community","/community","♧"],["Streaming","/streaming","▶"]
+          ].map(([item,href,icon]) => <Link key={item} href={href} className={active === item ? "nav active" : "nav"} onClick={() => setActive(item)}><span className="navIcon">{icon}</span>{item}</Link>)}
         </nav>
-        <button className="primary sideCta">Start learning</button>
+        <button className="primary sideCta" onClick={() => document.getElementById("paths")?.scrollIntoView({behavior:"smooth"})}>Start learning</button>
+        <ThemeToggle />
         <div className="sidebarBottom">
           <div className="miniAvatar">OM</div>
           <div><strong>Start where you are.</strong><span>No pressure. No race.</span></div>
@@ -122,11 +116,11 @@ export default function Home() {
               </article>
             ))}
           </div>
-          <p className="adaptive">The Advanced Path can skip ahead. If a later question needs a foundation, OneMuslim can bring you back — learning should branch, not break.</p>
+          <p className="adaptive">The Advanced Path can skip ahead. If a later question needs a foundation, 1Muslim can bring you back — learning should branch, not break.</p>
         </section>
 
         <section className="shahadahPost">
-          <div className="postTop"><div className="miniAvatar gold">OM</div><div><strong>OneMuslim</strong><span>@onemuslim · Foundation</span></div><span className="more">•••</span></div>
+          <div className="postTop"><div className="miniAvatar gold">OM</div><div><strong>1Muslim</strong><span>@onemuslim · Foundation</span></div><span className="more">•••</span></div>
           <div className="eyebrow">THE SHAHADAH</div>
           <h2>Know it. Believe it. Then say it.</h2>
           <p>You can love your mother before you ever say, “I love my mother.” Saying it doesn’t create the love — it affirms what you already know and feel.</p>
@@ -176,11 +170,11 @@ export default function Home() {
           <div className="starterGrid"><button>Qur’an translation <Arrow /></button><button>Prayer mat <Arrow /></button><button>Modest clothing <Arrow /></button><button>Hijab, if you choose <Arrow /></button></div>
         </section>
 
-        <footer><strong>OneMuslim</strong><span>Learn · Connect · Reflect · Return</span><span>Built for people wherever they are in their journey.</span></footer>
+        <footer><strong>1Muslim</strong><span>Learn · Connect · Reflect · Return</span><span>Built for people wherever they are in their journey.</span></footer>
       </main>
 
       <aside className="rightRail">
-        <div className="search">⌕ <input placeholder="Search OneMuslim" /></div>
+        <div className="search">⌕ <input placeholder="Search 1Muslim" /></div>
         <div className="railCard"><span className="eyebrow">START HERE</span><h3>New to Islam?</h3><p>Take the gentle route through Allah, Qur’an, prayer, forgiveness and daily life.</p><button className="primary">Start Easy Path</button></div>
         <div className="railCard"><span className="eyebrow">PRAYER ACADEMY</span><h3>Learn salah by seeing it.</h3><div className="prayerMini"><span>Standing</span><span>↕</span><span>Bowing</span><span>↕</span><span>Prostration</span></div><button className="ghost full">Take the quiz</button></div>
         <div className="railCard quiet"><span className="eyebrow">COMMUNITY</span><h3>Leave something for the next person.</h3><p>Share a reflection, encouragement or honest question. Core lessons stay protected; community contributions add to them.</p></div>
