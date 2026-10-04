@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 import SiteNav from "../components/SiteNav";
 
+const PRODUCTION_ORIGIN = "https://1muslim.vercel.app";
+
 export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -22,7 +24,9 @@ export default function AuthPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/community`,
+        // Always return to the current OneMuslim production site.
+        // This prevents an old ESecure/WonMuslim origin from being reused.
+        redirectTo: `${PRODUCTION_ORIGIN}/auth/callback?next=/`,
       },
     });
 
