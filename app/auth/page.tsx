@@ -5,7 +5,6 @@ import { createClient } from "../../utils/supabase/client";
 import SiteNav from "../components/SiteNav";
 
 export default function AuthPage() {
-  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -19,6 +18,7 @@ export default function AuthPage() {
     setLoading(true);
     setMessage("");
 
+    const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
