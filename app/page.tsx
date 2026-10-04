@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 type Path = "easy" | "advanced";
@@ -64,12 +65,18 @@ export default function Home() {
   return (
     <div className="app">
       <aside className="sidebar">
-        <div className="wordmark"><span className="mark">1</span><span>OneMuslim</span></div>
+        <div className="wordmark"><span className="mark">1</span><span>1Muslim</span></div>
         <nav>
-          {["Home", "Learn", "Explore", "Community", "Shop", "Connect"].map((item, i) => (
-            <button key={item} className={active === item ? "nav active" : "nav"} onClick={() => setActive(item)}>
-              <span className="navIcon">{["⌂", "◈", "◎", "♧", "□", "⌁"][i]}</span>{item}
-            </button>
+          {["Home", "Learn", "Explore", "Community", "Streaming", "Connect"].map((item, i) => (
+            item === "Streaming" ? (
+              <Link key={item} href="/streaming" className={active === item ? "nav active" : "nav"}>
+                <span className="navIcon">▶</span>{item}
+              </Link>
+            ) : (
+              <button key={item} className={active === item ? "nav active" : "nav"} onClick={() => setActive(item)}>
+                <span className="navIcon">{["⌂", "◈", "◎", "♧", "▶", "⌁"][i]}</span>{item}
+              </button>
+            )
           ))}
         </nav>
         <button className="primary sideCta">Start learning</button>
@@ -82,7 +89,7 @@ export default function Home() {
 
       <main className="feed">
         <header className="mobileTop">
-          <div className="wordmark"><span className="mark">1</span><span>OneMuslim</span></div>
+          <div className="wordmark"><span className="mark">1</span><span>1Muslim</span></div>
           <button className="iconButton">☼</button>
         </header>
 
