@@ -3,7 +3,10 @@
 import SiteNav from "../components/SiteNav";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "../../utils/supabase/client";
+
+type LiveStream = { id: string; title: string; category: string; room_name: string; viewer_count: number; started_at: string };
 
 type Video = {
   id: string;
@@ -86,6 +89,19 @@ export default function StreamingPage() {
   const [category, setCategory] = useState("All");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Video | null>(null);
+  const [liveStreams, setLiveStreams] = useState<LiveStream[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const loadLives = async () => {
+      const { data } = await supabase.from("live_streams").select("id,title,category,room_name,viewer_count,started_at").eq("status","live").order("started_at",{ascending:false});
+      setLiveStreams((data ?? []) as LiveStream[]);
+    };
+    void loadLives();
+    const channel = supabase.channel("1muslim-live-discovery").on("postgres_changes",{event:"*",schema:"public",table:"live_streams"},() => void loadLives()).subscribe();
+    const timer = window.setInterval(loadLives, 10000);
+    return () => { window.clearInterval(timer); void supabase.removeChannel(channel); };
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -112,13 +128,13 @@ export default function StreamingPage() {
         .eyebrow{font-size:10px;letter-spacing:.15em;color:#829b87;font-weight:850}.hero h1{font-size:48px;line-height:1;letter-spacing:-.065em;margin:12px 0}.hero p{max-width:650px;color:#9ba69f;line-height:1.65;font-size:14px}
         .stats{display:flex;gap:20px;margin-top:25px}.stat strong{display:block;font-size:19px}.stat span{font-size:10px;color:#6e7a72}
         .heroSide h3{font-size:18px;margin:7px 0}.heroSide p{font-size:11px;color:#7f8b83;line-height:1.6}.liveBadge{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #3a463d;border-radius:999px;font-size:10px;color:#cbd8ce}.dot{width:7px;height:7px;border-radius:50%;background:#b9d98e;box-shadow:0 0 12px #b9d98e}
-        .controls{display:flex;gap:10px;align-items:center;margin:24px 0 16px}.search{flex:1;min-width:160px;background:#0b110d;border:1px solid #1b241f;border-radius:999px;padding:11px 15px;color:#fff;outline:0;font-size:12px}.search:focus{border-color:#587052}
+        .liveSection{margin:26px 0 8px}.liveSectionHead{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px}.liveSectionHead h2{font-size:21px;letter-spacing:-.04em;margin:5px 0}.liveGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.liveCard{border:1px solid #29352d;background:#0a100c;border-radius:17px;overflow:hidden;text-decoration:none;color:inherit}.liveThumb{height:125px;background:radial-gradient(circle at 50% 35%,rgba(214,231,184,.2),transparent 35%),linear-gradient(145deg,#172119,#070b08);display:flex;align-items:center;justify-content:center;position:relative}.liveThumbMark{font-size:38px;color:#b8ce9d}.liveNow{position:absolute;top:9px;left:9px;background:#d6e7b8;color:#071008;border-radius:999px;padding:5px 8px;font-size:9px;font-weight:900}.liveCardBody{padding:11px}.liveCardBody h3{font-size:13px;margin:0 0 5px}.liveCardBody p{font-size:9px;color:#7e8982;margin:0}.liveViewer{float:right;color:#a9b7ad}.controls{display:flex;gap:10px;align-items:center;margin:24px 0 16px}.search{flex:1;min-width:160px;background:#0b110d;border:1px solid #1b241f;border-radius:999px;padding:11px 15px;color:#fff;outline:0;font-size:12px}.search:focus{border-color:#587052}
         .chips{display:flex;gap:7px;overflow:auto;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}.chip{border:1px solid #263029;background:#0b110d;color:#89958d;border-radius:999px;padding:9px 13px;font-size:10px;white-space:nowrap;cursor:pointer}.chip.active{background:#d6e7b8;border-color:#d6e7b8;color:#071008;font-weight:800}
         .sectionTitle{display:flex;justify-content:space-between;align-items:end;margin:27px 0 14px}.sectionTitle h2{font-size:21px;letter-spacing:-.04em;margin:5px 0}.count{font-size:10px;color:#66736a}
         .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{border:1px solid #1b241f;background:#0a100c;border-radius:18px;overflow:hidden;transition:.2s}.card:hover{transform:translateY(-2px);border-color:#344238}.thumb{height:155px;background:radial-gradient(circle at 70% 25%,rgba(214,231,184,.17),transparent 25%),linear-gradient(145deg,#172119,#070b08);display:flex;align-items:center;justify-content:center;position:relative}.thumbMark{font-size:50px;color:#b8ce9d;text-shadow:0 0 35px rgba(184,206,157,.25)}.duration{position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.72);padding:5px 7px;border-radius:6px;font-size:9px}.cardBody{padding:14px}.meta{font-size:9px;color:#76917b;letter-spacing:.1em;text-transform:uppercase}.card h3{font-size:15px;line-height:1.25;margin:7px 0}.card p{font-size:10px;color:#7e8982;line-height:1.5;min-height:31px}.watch{width:100%;border:1px solid #2d3931;background:#101812;color:#dce8db;border-radius:10px;padding:9px;font-size:11px;font-weight:750;cursor:pointer}.watch:hover{background:#172219}
         .empty{border:1px dashed #263029;border-radius:18px;padding:40px;text-align:center;color:#738077}.empty strong{display:block;color:#cbd4cd;margin-bottom:6px}
         .playerOverlay{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);z-index:100;display:grid;place-items:center;padding:20px}.player{width:min(900px,100%);background:#080d09;border:1px solid #29352d;border-radius:20px;overflow:hidden;box-shadow:0 30px 100px rgba(0,0,0,.6)}.player video{display:block;width:100%;aspect-ratio:16/9;background:#000}.playerInfo{padding:17px;display:flex;justify-content:space-between;gap:15px}.playerInfo h3{margin:0 0 5px;font-size:16px}.playerInfo p{margin:0;color:#7e8982;font-size:10px}.close{border:1px solid #303b33;background:#0f1511;color:#fff;border-radius:999px;width:34px;height:34px;cursor:pointer}
-        @media(max-width:900px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.topLinks .topLink:not(.active){display:none}.shell{padding:24px 15px 80px}.hero h1{font-size:39px}.heroMain,.heroSide{padding:22px}.controls{flex-direction:column;align-items:stretch}.grid{grid-template-columns:1fr}.thumb{height:185px}}
+        @media(max-width:900px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.liveGrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.liveGrid{grid-template-columns:1fr}.topLinks .topLink:not(.active){display:none}.shell{padding:24px 15px 80px}.hero h1{font-size:39px}.heroMain,.heroSide{padding:22px}.controls{flex-direction:column;align-items:stretch}.grid{grid-template-columns:1fr}.thumb{height:185px}}
       `}</style>
 
           <SiteNav />
@@ -137,6 +153,11 @@ export default function StreamingPage() {
             <p>When a live stream is available, it will appear here with a live badge and open directly into the player. Recorded sessions stay available afterward.</p>
             <button className="topLink" style={{marginTop:10,cursor:"pointer"}} onClick={() => setCategory("Community")}>Browse community</button>
           </div>
+        </section>
+
+        <section className="liveSection">
+          <div className="liveSectionHead"><div><span className="eyebrow">LIVE NOW</span><h2>Watch Muslims who are live</h2></div><span className="count">{liveStreams.length} live</span></div>
+          {liveStreams.length ? <div className="liveGrid">{liveStreams.map((stream) => <Link href={`/streaming/live/${stream.id}`} className="liveCard" key={stream.id}><div className="liveThumb"><span className="liveNow">● LIVE</span><span className="liveThumbMark">1</span></div><div className="liveCardBody"><h3>{stream.title}</h3><p>{stream.category}<span className="liveViewer">👥 {stream.viewer_count}</span></p></div></Link>)}</div> : <div className="empty"><strong>No one is live right now.</strong>Check back soon or start your own Live.</div>}
         </section>
 
         <div className="controls">
