@@ -1,5 +1,7 @@
 "use client";
 
+import SiteNav from "../../components/SiteNav";
+
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -97,7 +99,7 @@ export default function StreamingPage() {
   return (
     <main className="streamingPage">
       <style jsx>{`
-        .streamingPage{min-height:100vh;background:#050806;color:#f2f6f2}
+        .streamingPage{min-height:100vh;background:var(--bg);color:var(--text)}
         .streamTop{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:16px max(22px,calc((100vw - 1180px)/2));border-bottom:1px solid #1b241f;background:rgba(5,8,6,.9);backdrop-filter:blur(18px)}
         .brand{display:flex;align-items:center;gap:10px;font-weight:850;letter-spacing:-.04em}
         .mark{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;border:1px solid #354237;background:#101811;color:#d6e7b8}
@@ -119,11 +121,7 @@ export default function StreamingPage() {
         @media(max-width:900px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.topLinks .topLink:not(.active){display:none}.shell{padding:24px 15px 80px}.hero h1{font-size:39px}.heroMain,.heroSide{padding:22px}.controls{flex-direction:column;align-items:stretch}.grid{grid-template-columns:1fr}.thumb{height:185px}}
       `}</style>
 
-      <header className="streamTop">
-        <Link href="/" className="back">← Home</Link>
-        <div className="brand"><span className="mark">1</span>1Muslim</div>
-        <div className="topLinks"><Link href="/streaming" className="topLink active">Streaming</Link><Link href="/learn" className="topLink">Learn</Link></div>
-      </header>
+          <SiteNav />
 
       <div className="shell">
         <section className="hero">
