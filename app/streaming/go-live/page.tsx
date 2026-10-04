@@ -91,7 +91,7 @@ export default function GoLivePage() {
     const mimeType = ["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm","video/mp4"].find((type) => MediaRecorder.isTypeSupported(type));
     if (!mimeType) throw new Error("This browser cannot record video in a supported format.");
     chunksRef.current = [];
-    const recorder = new MediaRecorder(stream, mimeType);
+    const recorder = new MediaRecorder(stream, { mimeType });
     recorder.ondataavailable = (event) => { if (event.data.size > 0) chunksRef.current.push(event.data); };
     recorderRef.current = recorder;
     recordingStartedAtRef.current = Date.now();
