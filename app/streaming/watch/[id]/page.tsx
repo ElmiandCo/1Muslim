@@ -1,6 +1,6 @@
 "use client";
 
-import SiteNav from "../../components/SiteNav";
+import SiteNav from "../../../components/SiteNav";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
