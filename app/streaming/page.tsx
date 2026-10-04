@@ -134,7 +134,7 @@ export default function StreamingPage() {
             <div className="stats"><div className="stat"><strong>6</strong><span>FEATURED VIDEOS</span></div><div className="stat"><strong>7</strong><span>TOPICS</span></div><div className="stat"><strong>24/7</strong><span>LIBRARY ACCESS</span></div></div>
           </div>
           <div className="heroSide">
-            <span className="liveBadge"><i className="dot" /> LIVE PROGRAMMING</span>
+            <span className="liveBadge"><i className="dot" /> LIVE PROGRAMMING</span><Link href="/streaming/go-live" className="topLink" style={{display:"inline-block",marginTop:12}}>Go Live →</Link>
             <h3>Coming into the feed</h3>
             <p>When a live stream is available, it will appear here with a live badge and open directly into the player. Recorded sessions stay available afterward.</p>
             <button className="topLink" style={{marginTop:10,cursor:"pointer"}} onClick={() => setCategory("Community")}>Browse community</button>
