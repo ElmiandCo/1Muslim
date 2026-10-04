@@ -1,5 +1,7 @@
 "use client";
 
+import SiteNav from "../../components/SiteNav";
+
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -77,7 +79,7 @@ export default function GoLivePage() {
   return (
     <main className="goLive">
       <style jsx>{`
-        .goLive{min-height:100vh;background:#050806;color:#f2f6f2}
+        .goLive{min-height:100vh;background:var(--bg);color:var(--text)}
         .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
         .brand{display:flex;gap:9px;align-items:center;font-weight:850}.mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#101811;border:1px solid #354237;color:#d6e7b8}.back{color:#98a49d;text-decoration:none;font-size:12px}
         .shell{max-width:1120px;margin:auto;padding:30px 18px 70px}.heading{margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#829b87;font-weight:850}.heading h1{font-size:42px;letter-spacing:-.06em;margin:8px 0}.heading p{color:#849087;font-size:13px;margin:0}
@@ -87,12 +89,7 @@ export default function GoLivePage() {
         @media(max-width:780px){.layout{grid-template-columns:1fr}.heading h1{font-size:36px}.shell{padding:24px 12px 50px}}
       `}</style>
 
-      <header className="bar">
-        <Link href="/streaming" className="back">← Streaming</Link>
-        <div className="brand"><span className="mark">1</span>1Muslim</div>
-        <Link href="/" className="back">Home</Link>
-      </header>
-
+      <SiteNav />
       <div className="shell">
         <div className="heading">
           <span className="eyebrow">CREATOR STUDIO</span>
