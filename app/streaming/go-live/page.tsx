@@ -3,9 +3,10 @@
 import SiteNav from "../../components/SiteNav";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 const categories = ["Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
+type ChatMessage = { id: string; name: string; text: string };
 
 export default function GoLivePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -17,6 +18,12 @@ export default function GoLivePage() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(categories[0]);
   const [error, setError] = useState("");
+  const [viewers, setViewers] = useState(0);
+  const [chat, setChat] = useState<ChatMessage[]>([{id:"welcome",name:"1Muslim",text:"Welcome to the live conversation."}]);
+  const [chatDraft, setChatDraft] = useState("");
+  const [reaction, setReaction] = useState<string | null>(null);
+  const [followed, setFollowed] = useState(false);
+  const [notifications, setNotifications] = useState(false);
 
   const startPreview = async () => {
     setError("");
