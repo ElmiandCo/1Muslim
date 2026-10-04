@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "../../../utils/supabase/client";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { Room, Track } from "livekit-client";
 
 const categories = ["Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
 type ChatMessage = { id: string; name: string; text: string };
@@ -32,6 +33,8 @@ export default function GoLivePage() {
   const [reaction, setReaction] = useState<string | null>(null);
   const [followed, setFollowed] = useState(false);
   const [notifications, setNotifications] = useState(false);
+  const roomRef = useRef<Room | null>(null);
+  const liveStreamIdRef = useRef<string | null>(null);
 
   const startPreview = async () => {
     setError("");
@@ -131,16 +134,56 @@ export default function GoLivePage() {
     } finally { setSaving(false); }
   };
 
-  const startLive = () => {
+  const startLive = async () => {
     if (!cameraReady) return setError("Turn on your camera and microphone first.");
     if (!title.trim()) return setError("Give your live stream a title first.");
     setError(""); setSaveMessage("");
     try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sign in is required to go live.");
+
+      const liveStreamId = crypto.randomUUID();
+      const roomName = `1muslim-live-${liveStreamId}`;
+      const { error: rowError } = await supabase.from("live_streams").insert({
+        id: liveStreamId,
+        host_id: user.id,
+        title: title.trim(),
+        category,
+        room_name: roomName,
+        status: "live",
+      });
+      if (rowError) throw rowError;
+
+      const tokenResponse = await fetch("/api/livekit/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ room: roomName, role: "host" }),
+      });
+      const tokenData = await tokenResponse.json();
+      if (!tokenResponse.ok) {
+        await supabase.from("live_streams").delete().eq("id", liveStreamId);
+        throw new Error(tokenData.error || "LiveKit could not be started.");
+      }
+
+      const room = new Room({ adaptiveStream: true, dynacast: true });
+      await room.connect(tokenData.url, tokenData.token);
+      const mediaStream = streamRef.current;
+      if (!mediaStream) throw new Error("Camera and microphone must be enabled first.");
+      const videoTrack = mediaStream.getVideoTracks()[0];
+      const audioTrack = mediaStream.getAudioTracks()[0];
+      if (videoTrack) await room.localParticipant.publishTrack(videoTrack, { source: Track.Source.Camera, simulcast: true });
+      if (audioTrack) await room.localParticipant.publishTrack(audioTrack, { source: Track.Source.Microphone });
+      roomRef.current = room;
+      liveStreamIdRef.current = liveStreamId;
+
       startRecording();
       setLive(true);
       setViewers(1);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Recording could not start.");
+      roomRef.current?.disconnect();
+      roomRef.current = null;
+      setError(err instanceof Error ? err.message : "Live broadcast could not start.");
     }
   };
 
@@ -150,6 +193,14 @@ export default function GoLivePage() {
 
   const endLive = () => {
     setLive(false); setViewers(0);
+    const supabase = createClient();
+    const liveStreamId = liveStreamIdRef.current;
+    liveStreamIdRef.current = null;
+    roomRef.current?.disconnect();
+    roomRef.current = null;
+    if (liveStreamId) {
+      void supabase.from("live_streams").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", liveStreamId);
+    }
     const recorder = recorderRef.current;
     if (recorder && recorder.state !== "inactive") {
       recorder.onstop = async () => {
@@ -206,8 +257,8 @@ export default function GoLivePage() {
             {live && <div className="ready">Your live session is active and being recorded.</div>}{saveMessage && <div className="ready">{saveMessage}</div>}
             <div className="field"><label htmlFor="title">Title</label><input id="title" className="input" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="What are you sharing?" disabled={live}/></div>
             <div className="field"><label htmlFor="category">Topic</label><select id="category" className="select" value={category} onChange={(e)=>setCategory(e.target.value)} disabled={live}>{categories.map((item)=><option key={item}>{item}</option>)}</select></div>
-            <p className="help">Starting Live records the camera and microphone session in your browser. When you end, the finished video is uploaded to your 1Muslim Live Recordings page.</p>
-            <div className="notice"><strong>Broadcast connection</strong>Saved recordings are stored in the 1Muslim Supabase video library and tied to your account.</div>
+            <p className="help">Starting Live publishes your camera and microphone through the OneMuslim WebRTC media backend. When you end, the finished video is also uploaded to your 1Muslim Live Recordings page.</p>
+            <div className="notice"><strong>Broadcast connection</strong>Live video is transported through LiveKit WebRTC; Supabase keeps the live-session state, social data and your finished recording.</div>
           </aside>
         </div>
 
