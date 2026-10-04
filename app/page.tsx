@@ -139,7 +139,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="sectionBlock">
+        <section className="sectionBlock" id="explore">
           <div className="sectionTitle"><div><span className="eyebrow">EXPLORE</span><h2>Questions deserve good answers.</h2></div><span className="counter">Swipe →</span></div>
           <div className="carousel exploreCarousel">
             {explore.map(([title,text,tag]) => <article className="exploreCard" key={title}><span className="cardTag">{tag}</span><h3>{title}</h3><p>{text}</p><button className="textButton">Explore <Arrow /></button></article>)}
