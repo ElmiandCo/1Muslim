@@ -38,10 +38,7 @@ export default function GoLivePage() {
         audio: true,
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
+      streamRef.current = stream;
       setCameraReady(true);
       setCameraOn(true);
       setMicOn(true);
@@ -51,6 +48,19 @@ export default function GoLivePage() {
         : err instanceof Error ? err.message : "We could not access your camera and microphone.");
     }
   };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (!cameraReady || !video || !stream) return;
+
+    video.srcObject = stream;
+    video.muted = true;
+    video.playsInline = true;
+    void video.play().catch(() => {
+      setError("Camera access was granted, but the preview could not start. Tap the preview or Enable camera & mic again.");
+    });
+  }, [cameraReady]);
 
   useEffect(() => () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
