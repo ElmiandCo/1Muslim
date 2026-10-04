@@ -33,7 +33,7 @@ export function ThemeToggle() {
 export default function SiteNav({ compact = false }: { compact?: boolean }) {
   return <header className={compact ? "siteNav compact" : "siteNav"}>
       <Link href="/" className="siteBrand"><span className="siteMark">1</span><span>1Muslim</span></Link>
-      <nav className="siteNavLinks">{links.map((link) => <Link key={link.href} href={link.href}>{link.label}</Link>)}<Link href="/streaming/go-live" className="liveNav">🔴 Go Live</Link></nav>
+      <nav className="siteNavLinks">{links.map((link) => <Link key={link.href} href={link.href}>{link.label}</Link>)}<Link href="/streaming/go-live" className="liveNav">🔴 Go Live</Link></nav><Link href="/auth" className="authNav">Sign in</Link>
       <ThemeToggle />
     </header>;
 }
