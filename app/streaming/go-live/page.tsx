@@ -72,10 +72,16 @@ export default function GoLivePage() {
     if (!title.trim()) return setError("Give your live stream a title first.");
     setError("");
     setLive(true);
+    setViewers(1);
   };
+
+  useEffect(() => { if (!live) return; const timer = window.setInterval(() => setViewers(v => Math.max(1, v + (Math.random() > 0.62 ? 1 : 0))), 5000); return () => window.clearInterval(timer); }, [live]);
+
+  const sendChat = (e: FormEvent) => { e.preventDefault(); if (!chatDraft.trim()) return; setChat(items => [...items, {id:crypto.randomUUID(), name:"You", text:chatDraft.trim()}]); setChatDraft(""); };
 
   const endLive = () => {
     setLive(false);
+    setViewers(0);
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     setCameraReady(false);
