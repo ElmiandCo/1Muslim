@@ -74,6 +74,7 @@ export default function Home() {
         </nav>
         <button className="primary sideCta" onClick={() => document.getElementById("paths")?.scrollIntoView({behavior:"smooth"})}>Start learning</button>
         <ThemeToggle />
+        <Link href="/auth" className="authSidebarLink">Sign in / Create account</Link>
         <div className="sidebarBottom">
           <div className="miniAvatar">OM</div>
           <div><strong>Start where you are.</strong><span>No pressure. No race.</span></div>
