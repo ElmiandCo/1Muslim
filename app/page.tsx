@@ -84,7 +84,7 @@ export default function Home() {
       <main className="feed">
         <header className="mobileTop">
           <div className="wordmark"><span className="mark">1</span><span>1Muslim</span></div>
-          <button className="iconButton">☼</button>
+          <ThemeToggle />
         </header>
 
         <div className="feedHeader">
@@ -180,9 +180,7 @@ export default function Home() {
         <div className="railCard quiet"><span className="eyebrow">COMMUNITY</span><h3>Leave something for the next person.</h3><p>Share a reflection, encouragement or honest question. Core lessons stay protected; community contributions add to them.</p></div>
       </aside>
 
-      <nav className="mobileNav">
-        {["⌂","◈","◎","♧","□"].map((icon,i)=><button key={i}>{icon}<small>{["Home","Learn","Explore","Community","Profile"][i]}</small></button>)}
-      </nav>
+      <nav className="mobileNav"><Link href="/" >⌂<small>Home</small></Link><Link href="/#paths">◈<small>Learn</small></Link><Link href="/#explore">◎<small>Explore</small></Link><Link href="/community">♧<small>Community</small></Link><Link href="/streaming">▶<small>Live</small></Link></nav>
     </div>
   );
 }
