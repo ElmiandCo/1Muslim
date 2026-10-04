@@ -10,7 +10,7 @@ const links = [
   { label: "Streaming", href: "/streaming" },
 ];
 
-export default function SiteNav({ compact = false }: { compact?: boolean }) {
+export function ThemeToggle() {
   const [light, setLight] = useState(false);
 
   useEffect(() => {
@@ -27,16 +27,13 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
     localStorage.setItem("1muslim-theme", next ? "light" : "dark");
   };
 
-  return (
-    <header className={compact ? "siteNav compact" : "siteNav"}>
+  return <button className="themeToggle" onClick={toggle} aria-label={light ? "Switch to night mode" : "Switch to day mode"}>{light ? "☾ Night" : "☀ Day"}</button>;
+}
+
+export default function SiteNav({ compact = false }: { compact?: boolean }) {
+  return <header className={compact ? "siteNav compact" : "siteNav"}>
       <Link href="/" className="siteBrand"><span className="siteMark">1</span><span>1Muslim</span></Link>
-      <nav className="siteNavLinks">
-        {links.map((link) => <Link key={link.href} href={link.href}>{link.label}</Link>)}
-        <Link href="/streaming/go-live" className="liveNav">🔴 Go Live</Link>
-      </nav>
-      <button className="themeToggle" onClick={toggle} aria-label={light ? "Switch to night mode" : "Switch to day mode"}>
-        {light ? "☾ Night" : "☀ Day"}
-      </button>
-    </header>
-  );
+      <nav className="siteNavLinks">{links.map((link) => <Link key={link.href} href={link.href}>{link.label}</Link>)}<Link href="/streaming/go-live" className="liveNav">🔴 Go Live</Link></nav>
+      <ThemeToggle />
+    </header>;
 }
