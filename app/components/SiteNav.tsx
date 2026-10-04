@@ -8,6 +8,7 @@ const links = [
   { label: "Learn", href: "/#paths" },
   { label: "Community", href: "/community" },
   { label: "Streaming", href: "/streaming" },
+  { label: "Recordings", href: "/streaming/recordings" },
 ];
 
 export function ThemeToggle() {
