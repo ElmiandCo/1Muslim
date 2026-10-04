@@ -1,21 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { createClient } from "../../utils/supabase/client";
 import SiteNav from "../components/SiteNav";
 
 export default function AuthPage() {
   const supabase = createClient();
-  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (searchParams.get("error")) {
+    if (new URLSearchParams(window.location.search).get("error")) {
       setMessage("Sign-in could not be completed. Please try again.");
     }
-  }, [searchParams]);
+  }, []);
 
   const signInWithGoogle = async () => {
     setLoading(true);
