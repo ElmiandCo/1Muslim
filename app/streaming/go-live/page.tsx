@@ -133,6 +133,18 @@ export default function GoLivePage() {
             <div className="notice"><strong>Broadcast connection</strong>This studio currently handles camera/microphone permission and the local live preview. A real multi-user broadcast still needs a streaming service such as WebRTC/LiveKit, Cloudflare Stream, Mux, or another media backend.</div>
           </aside>
         </div>
+
+        {live && <section className="liveRoom">
+          <div className="liveRoomTop">
+            <div><span className="livePill">● LIVE</span><strong>{title}</strong><span>{category}</span></div>
+            <div className="liveStats"><span>👥 {viewers} watching</span><button onClick={()=>setFollowed(!followed)}>{followed?"✓ Following":"＋ Follow"}</button><button onClick={()=>setNotifications(!notifications)}>{notifications?"🔔":"🔕"}</button></div>
+          </div>
+          <div className="liveRoomGrid">
+            <div className="reactionPanel"><span className="eyebrow">REACTIONS</span><div className="reactionRow">{["❤️","🤍","👍","✨","🤲"].map(x=><button key={x} className={reaction===x?"reaction selected":"reaction"} onClick={()=>setReaction(x)}>{x}</button>)}</div><p>{reaction ? "Reaction sent to the host." : "Tap a reaction to join the room."}</p></div>
+            <div className="chatPanel"><div className="chatHead"><strong>💬 Live chat</strong><span>{chat.length} messages</span></div><div className="chatMessages">{chat.map(m=><div className="chatMessage" key={m.id}><b>{m.name}</b><span>{m.text}</span></div>)}</div><form className="chatForm" onSubmit={sendChat}><input value={chatDraft} onChange={e=>setChatDraft(e.target.value)} placeholder="Say something beneficial…" maxLength={240}/><button>Send</button></form></div>
+          </div>
+          <div className="freeNote">Free-first mode: this room provides the camera preview and social interaction layer without a paid video provider. A true cross-device broadcast still needs a WebRTC media backend.</div>
+        </section>}
       </div>
     </main>
   );
