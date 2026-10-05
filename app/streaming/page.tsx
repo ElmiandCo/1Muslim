@@ -8,6 +8,7 @@ import { createClient } from "../../utils/supabase/client";
 
 type LiveStream = { id: string; title: string; category: string; room_name: string; viewer_count: number; started_at: string; thumbnail_path: string | null; aspect_ratio: "9:16" | "1:1" | "16:9" };
 
+type RecordedLive = { id:string; title:string; category:string; duration_seconds:number; created_at:string; thumbnail_path:string|null; stream_id:string|null; };
 type Video = {
   id: string;
   title: string;
@@ -86,7 +87,9 @@ const videos: Video[] = [
 const categories = ["All", "Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
 
 export default function StreamingPage() {
+  const supabase = useMemo(() => createClient(), []);
   const [category, setCategory] = useState("All");
+  const [recordedLives, setRecordedLives] = useState<RecordedLive[]>([]);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Video | null>(null);
   const [liveStreams, setLiveStreams] = useState<LiveStream[]>([]);
@@ -103,7 +106,6 @@ export default function StreamingPage() {
 
 
   useEffect(() => {
-    const supabase = createClient();
     const loadLives = async () => {
       const { data } = await supabase.from("live_streams").select("id,title,category,room_name,viewer_count,started_at,thumbnail_path,aspect_ratio").eq("status","live").order("started_at",{ascending:false});
       setLiveStreams((data ?? []) as LiveStream[]);
@@ -115,7 +117,21 @@ export default function StreamingPage() {
   }, []);
 
   useEffect(() => {
-    const supabase = createClient();
+    const loadRecordedLives = async () => {
+      const { data } = await supabase.from("live_recordings").select("id,title,category,duration_seconds,created_at,thumbnail_path").eq("visibility","public").order("created_at",{ascending:false}).limit(12);
+      const rows = (data ?? []) as Omit<RecordedLive,"stream_id">[];
+      const ids = rows.map(row => row.id);
+      let streamMap:Record<string,string> = {};
+      if (ids.length) {
+        const { data: streams } = await supabase.from("live_streams").select("id,recording_id").in("recording_id",ids);
+        streamMap = Object.fromEntries((streams ?? []).filter(stream => stream.recording_id).map(stream => [stream.recording_id,stream.id]));
+      }
+      setRecordedLives(rows.map(row => ({...row,stream_id:streamMap[row.id] ?? null})));
+    };
+    void loadRecordedLives();
+  }, [supabase]);
+
+  useEffect(() => {
     const loadAdminLibrary = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -226,6 +242,11 @@ const openAdminEditor = (video?: Video) => {
             <p>When a live stream is available, it will appear here with a live badge and open directly into the player. Recorded sessions stay available afterward.</p>
             <button className="topLink" style={{marginTop:10,cursor:"pointer"}} onClick={() => setCategory("Community")}>Browse community</button>
           </div>
+        </section>
+
+        <section className="liveSection">
+          <div className="liveSectionHead"><div><span className="eyebrow">RECORDED LIVES</span><h2>Previous Lives</h2></div><span className="count">{recordedLives.length} available</span></div>
+          {recordedLives.length ? <div className="liveGrid">{recordedLives.map((recording) => recording.stream_id ? <Link href={`/streaming/live/${recording.stream_id}`} className="liveCard" key={recording.id}><div className="liveThumb">{recording.thumbnail_path ? <img src={supabase.storage.from("live-recordings").getPublicUrl(recording.thumbnail_path).data.publicUrl} alt="" /> : <span className="liveThumbMark">▶</span>}<span className="liveNow" style={{background:"#172119",color:"#d6e7b8"}}>REPLAY</span></div><div className="liveCardBody"><h3>{recording.title}</h3><p>{recording.category}<span className="liveViewer">{formatDuration(recording.duration_seconds)}</span></p></div></Link> : null)}</div> : <div className="empty"><strong>No recorded Lives yet.</strong>Finished public Lives will appear here.</div>}
         </section>
 
         <section className="liveSection">
