@@ -5,10 +5,11 @@ import SiteNav from "../components/SiteNav";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
+import RecordingThumbnail from "../components/RecordingThumbnail";
 
 type LiveStream = { id: string; title: string; category: string; room_name: string; viewer_count: number; started_at: string; thumbnail_path: string | null; aspect_ratio: "9:16" | "1:1" | "16:9" };
 
-type RecordedLive = { id:string; title:string; category:string; duration_seconds:number; created_at:string; thumbnail_path:string|null; stream_id:string|null; };
+type RecordedLive = { id:string; title:string; category:string; duration_seconds:number; created_at:string; thumbnail_path:string|null; stream_id:string|null; user_id:string; host_name:string; host_avatar_url:string|null; };
 type Video = {
   id: string;
   title: string;
@@ -118,15 +119,24 @@ export default function StreamingPage() {
 
   useEffect(() => {
     const loadRecordedLives = async () => {
-      const { data } = await supabase.from("live_recordings").select("id,title,category,duration_seconds,created_at,thumbnail_path").eq("visibility","public").order("created_at",{ascending:false}).limit(12);
-      const rows = (data ?? []) as Omit<RecordedLive,"stream_id">[];
+      const { data } = await supabase.from("live_recordings").select("id,title,category,duration_seconds,created_at,thumbnail_path,user_id").eq("visibility","public").order("created_at",{ascending:false}).limit(12);
+      const rows = (data ?? []) as Omit<RecordedLive,"stream_id"|"host_name"|"host_avatar_url">[];
       const ids = rows.map(row => row.id);
+      const hostIds = Array.from(new Set(rows.map(row => row.user_id).filter(Boolean)));
+      let profileMap:Record<string,{display_name:string|null;username:string|null;avatar_url:string|null}>={};
+      if(hostIds.length){
+        const {data:profiles}=await supabase.from("profiles").select("id,display_name,username,avatar_url").in("id",hostIds);
+        profileMap=Object.fromEntries((profiles??[]).map(profile=>[profile.id,profile]));
+      }
       let streamMap:Record<string,string> = {};
       if (ids.length) {
         const { data: streams } = await supabase.from("live_streams").select("id,recording_id").in("recording_id",ids);
         streamMap = Object.fromEntries((streams ?? []).filter(stream => stream.recording_id).map(stream => [stream.recording_id,stream.id]));
       }
-      setRecordedLives(rows.map(row => ({...row,stream_id:streamMap[row.id] ?? null})));
+      setRecordedLives(rows.map(row => {
+        const profile=profileMap[row.user_id];
+        return {...row,stream_id:streamMap[row.id] ?? null,host_name:profile?.display_name||profile?.username||"1Muslim Host",host_avatar_url:profile?.avatar_url??null};
+      }));
     };
     void loadRecordedLives();
   }, [supabase]);
@@ -246,7 +256,7 @@ const openAdminEditor = (video?: Video) => {
 
         <section className="liveSection">
           <div className="liveSectionHead"><div><span className="eyebrow">RECORDED LIVES</span><h2>Previous Lives</h2></div><span className="count">{recordedLives.length} available</span></div>
-          {recordedLives.length ? <div className="liveGrid">{recordedLives.map((recording) => recording.stream_id ? <Link href={`/streaming/live/${recording.stream_id}`} className="liveCard" key={recording.id}><div className="liveThumb">{recording.thumbnail_path ? <img src={supabase.storage.from("live-recordings").getPublicUrl(recording.thumbnail_path).data.publicUrl} alt="" /> : <span className="liveThumbMark">▶</span>}<span className="liveNow" style={{background:"#172119",color:"#d6e7b8"}}>REPLAY</span></div><div className="liveCardBody"><h3>{recording.title}</h3><p>{recording.category}<span className="liveViewer">{formatDuration(recording.duration_seconds)}</span></p></div></Link> : null)}</div> : <div className="empty"><strong>No recorded Lives yet.</strong>Finished public Lives will appear here.</div>}
+          {recordedLives.length ? <div className="liveGrid">{recordedLives.map((recording) => recording.stream_id ? <Link href={`/streaming/live/${recording.stream_id}`} className="liveCard" key={recording.id}><div className="liveThumb"><RecordingThumbnail compact title={recording.title} hostName={recording.host_name} date={new Date(recording.created_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})} durationSeconds={recording.duration_seconds} photoUrl={recording.host_avatar_url} customThumbnailUrl={recording.thumbnail_path ? supabase.storage.from("live-recordings").getPublicUrl(recording.thumbnail_path).data.publicUrl : null} /><span className="liveNow" style={{background:"#172119",color:"#d6e7b8"}}>REPLAY</span></div><div className="liveCardBody"><h3>{recording.title}</h3><p>{recording.host_name} · {recording.category}<span className="liveViewer">{formatDuration(recording.duration_seconds)}</span></p></div></Link> : null)}</div> : <div className="empty"><strong>No recorded Lives yet.</strong>Finished public Lives will appear here.</div>}
         </section>
 
         <section className="liveSection">
