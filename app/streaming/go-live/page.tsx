@@ -108,6 +108,54 @@ export default function GoLivePage() {
     setRecording(true);
   };
 
+  const buildRecordingThumbnail = async (supabase:any, userId:string, recordingId:string, durationSeconds:number) => {
+    const video = videoRef.current;
+    const format = formats.find(f => f.key === aspectRatio) ?? formats[0];
+    const canvas = document.createElement("canvas");
+    canvas.width = format.width;
+    canvas.height = format.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    if (video && video.videoWidth && video.videoHeight) {
+      const sourceRatio = video.videoWidth / video.videoHeight;
+      const targetRatio = canvas.width / canvas.height;
+      let sx=0, sy=0, sw=video.videoWidth, sh=video.videoHeight;
+      if (sourceRatio > targetRatio) { sw = video.videoHeight * targetRatio; sx = (video.videoWidth - sw) / 2; }
+      else { sh = video.videoWidth / targetRatio; sy = (video.videoHeight - sh) / 2; }
+      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+    } else {
+      const g=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+      g.addColorStop(0,"#123d2d"); g.addColorStop(.55,"#07140d"); g.addColorStop(1,"#020403");
+      ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
+    }
+
+    const shade=ctx.createLinearGradient(0,0,0,canvas.height);
+    shade.addColorStop(0,"rgba(0,0,0,.18)"); shade.addColorStop(.45,"rgba(0,0,0,.2)"); shade.addColorStop(1,"rgba(0,0,0,.9)");
+    ctx.fillStyle=shade; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    const {data:profile}=await supabase.from("profiles").select("display_name,username").eq("id",userId).maybeSingle();
+    const hostName=profile?.display_name||profile?.username||"1Muslim Host";
+    const dateText=new Date().toLocaleString([], {dateStyle:"medium",timeStyle:"short"});
+    const lengthText=durationSeconds>=3600 ? `${Math.floor(durationSeconds/3600)}:${String(Math.floor((durationSeconds%3600)/60)).padStart(2,"0")}:${String(durationSeconds%60).padStart(2,"0")}` : `${Math.floor(durationSeconds/60)}:${String(durationSeconds%60).padStart(2,"0")}`;
+
+    ctx.fillStyle="#d6e7b8"; ctx.font=`900 ${Math.max(22,canvas.width*.025)}px system-ui`; ctx.fillText("1MUSLIM  •  LIVE",canvas.width*.055,canvas.height*.10);
+    ctx.fillStyle="#fff"; ctx.font=`900 ${Math.max(30,canvas.width*.045)}px system-ui`;
+    const words=title.trim().split(/\\s+/); let line=""; const lines:string[]=[]; const maxWidth=canvas.width*.86;
+    for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word;}else line=test;} if(line)lines.push(line);
+    const startY=canvas.height*.68;
+    lines.slice(0,2).forEach((text,index)=>ctx.fillText(text,canvas.width*.055,startY+index*canvas.width*.055));
+    ctx.fillStyle="#e7eee9"; ctx.font=`800 ${Math.max(18,canvas.width*.022)}px system-ui`; ctx.fillText(hostName,canvas.width*.055,startY+Math.min(lines.length,2)*canvas.width*.055+canvas.width*.035);
+    ctx.fillStyle="#c4cec7"; ctx.font=`600 ${Math.max(14,canvas.width*.017)}px system-ui`; ctx.fillText(`${dateText}  •  ${lengthText}`,canvas.width*.055,canvas.height*.94);
+
+    const blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,"image/jpeg",.86));
+    if(!blob) return null;
+    const thumbnailPath=`${userId}/${recordingId}-thumbnail.jpg`;
+    const {error}=await supabase.storage.from("live-recordings").upload(thumbnailPath,blob,{contentType:"image/jpeg",upsert:false,cacheControl:"31536000"});
+    if(error) throw error;
+    return thumbnailPath;
+  };
+
   const saveRecording = async () => {
     if (!chunksRef.current.length) { setError("No recording data was captured."); return; }
     setSaving(true); setError(""); setSaveMessage("");
@@ -129,6 +177,9 @@ export default function GoLivePage() {
       }
       const path = `${user.id}/${recordingId}.${extension}`;
       const durationSeconds = Math.max(1, Math.round((Date.now() - (recordingStartedAtRef.current ?? Date.now())) / 1000));
+      if (!thumbnailPath) {
+        thumbnailPath = await buildRecordingThumbnail(supabase, user.id, recordingId, durationSeconds);
+      }
       const { error: uploadError } = await supabase.storage.from("live-recordings").upload(path, blob, { contentType: mimeType, upsert: false, cacheControl: "31536000" });
       if (uploadError) throw uploadError;
       const { error: rowError } = await supabase.from("live_recordings").insert({
