@@ -18,7 +18,7 @@ export default function AshabButton({ targetId }: { targetId: string }) {
     setMe(user.id);
     const { data } = await s.from("ashab_friendships")
       .select("id,requester_id,addressee_id,status")
-      .or(\`requester_id.eq.\${user.id},addressee_id.eq.\${user.id}\`);
+      .or(`requester_id.eq.\${user.id},addressee_id.eq.\${user.id}`);
     const rows = (data ?? []) as Row[];
     const relation = rows.find(x =>
       (x.requester_id === user.id && x.addressee_id === targetId) ||
@@ -64,10 +64,10 @@ export default function AshabButton({ targetId }: { targetId: string }) {
 
   return <button className={"ashabButton " + (row?.status === "accepted" ? "accepted" : "")} onClick={() => void act()} disabled={busy || row?.status === "accepted"}>
     {busy ? "Working…" : label}
-    <style jsx>{\`
+    <style jsx>{`
       .ashabButton{border:1px solid #53695a;background:#dbe9c4;color:#071008;border-radius:999px;padding:10px 15px;font-size:10px;font-weight:900;cursor:pointer}
       .ashabButton.accepted{background:transparent;color:#b9cbbd;border-color:var(--line)}
       .ashabButton:disabled{opacity:.65;cursor:default}
-    \`}</style>
+    `}</style>
   </button>;
 }
