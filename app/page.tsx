@@ -116,9 +116,9 @@ export default function Home() {
           </div>
           <div className="carousel">
             {lessonSet.map(([num,title,text,tag]) => (
-              <article className="lessonCard" key={num}>
-                <span className="num">{num}</span><div className="cardTag">{tag}</div><h3>{title}</h3><p>{text}</p><button className="textButton">Open lesson <Arrow /></button>
-              </article>
+              <Link href="/learn/elm-tent#sessions" className="lessonCard" key={num}>
+                <span className="num">{num}</span><div className="cardTag">{tag}</div><h3>{title}</h3><p>{text}</p><span className="textButton">Open lesson <Arrow /></span>
+              </Link>
             ))}
           </div>
           <p className="adaptive">The Advanced Path can skip ahead. If a later question needs a foundation, 1Muslim can bring you back — learning should branch, not break.</p>
