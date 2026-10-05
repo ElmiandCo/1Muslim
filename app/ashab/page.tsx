@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import SiteNav from "../components/SiteNav";
 import ProfileAvatar from "../components/ProfileAvatar";
@@ -61,8 +61,6 @@ export default function AshabPage() {
   };
 
   useEffect(() => { void load(); }, []);
-
-  const friendIds = useMemo(() => new Set(friends.flatMap(x => [x.requester_id, x.addressee_id]).filter(x => x !== me)), [friends, me]);
 
   const respond = async (row: Friendship, status: "accepted" | "declined") => {
     setMessage("");
