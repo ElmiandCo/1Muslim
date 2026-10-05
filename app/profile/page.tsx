@@ -38,7 +38,7 @@ export default function ProfilePage() {
 
     {tab==="profile"&&<section className="profileEditor"><div className="editorIntro"><span className="eyebrow">PERSONAL DETAILS</span><h2>Tell people who you are.</h2><p>Your profile is yours. Keep only the information you want to share.</p></div><div className="formGrid">
       <label>Display name<input value={profile.display_name??""} onChange={e=>update({display_name:e.target.value})}/></label><label>First name<input value={profile.first_name??""} onChange={e=>update({first_name:e.target.value})}/></label><label>Last name<input value={profile.last_name??""} onChange={e=>update({last_name:e.target.value})}/></label>
-      <label>Gender<select value={profile.gender??""} onChange={e=>update({gender:e.target.value})}><option value="">Not specified</option><option>Male</option><option>Female</option><option>Prefer not to say</option></select></label>
+      <label>Gender<input value={profile.gender ? profile.gender.charAt(0).toUpperCase()+profile.gender.slice(1) : "Not selected"} disabled /><small className="fieldNote">Gender is selected once during onboarding and cannot be changed.</small></label>
       <label>City<input value={profile.city??""} onChange={e=>update({city:e.target.value})}/></label><label>State<input value={profile.state??""} onChange={e=>update({state:e.target.value})}/></label><label>Country<input value={profile.country??""} onChange={e=>update({country:e.target.value})}/></label>
       <label className="wide">Bio<textarea value={profile.bio??""} maxLength={500} onChange={e=>update({bio:e.target.value})}/></label>
     </div>{message&&<div className="saveMessage">{message}</div>}</section>}
