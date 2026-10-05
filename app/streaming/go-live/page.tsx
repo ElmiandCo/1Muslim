@@ -25,6 +25,7 @@ export default function GoLivePage() {
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [title, setTitle] = useState("");
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [category, setCategory] = useState(categories[0]);
   const [error, setError] = useState("");
   const [viewers, setViewers] = useState(0);
@@ -113,6 +114,14 @@ export default function GoLivePage() {
       const extension = mimeType.includes("mp4") ? "mp4" : "webm";
       const blob = new Blob(chunksRef.current, { type: mimeType });
       const recordingId = crypto.randomUUID();
+      let thumbnailPath: string | null = null;
+      if (thumbnailFile) {
+        if (!thumbnailFile.type.startsWith("image/")) throw new Error("Thumbnail must be an image.");
+        const safeName = thumbnailFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        thumbnailPath = user.id + "/" + recordingId + "-thumbnail-" + safeName;
+        const { error: thumbnailError } = await supabase.storage.from("live-recordings").upload(thumbnailPath, thumbnailFile, { contentType: thumbnailFile.type, upsert: false, cacheControl: "31536000" });
+        if (thumbnailError) throw thumbnailError;
+      }
       const path = `${user.id}/${recordingId}.${extension}`;
       const durationSeconds = Math.max(1, Math.round((Date.now() - (recordingStartedAtRef.current ?? Date.now())) / 1000));
       const { error: uploadError } = await supabase.storage.from("live-recordings").upload(path, blob, { contentType: mimeType, upsert: false, cacheControl: "31536000" });
@@ -120,10 +129,11 @@ export default function GoLivePage() {
       const { error: rowError } = await supabase.from("live_recordings").insert({
         id: recordingId, user_id: user.id, title: title.trim(), category,
         video_path: path, mime_type: mimeType, file_size: blob.size,
-        duration_seconds: durationSeconds, visibility: "public",
+        duration_seconds: durationSeconds, visibility: "public", thumbnail_path: thumbnailPath,
       });
       if (rowError) {
         await supabase.storage.from("live-recordings").remove([path]);
+        if (thumbnailPath) await supabase.storage.from("live-recordings").remove([thumbnailPath]);
         throw rowError;
       }
       chunksRef.current = [];
@@ -256,6 +266,7 @@ export default function GoLivePage() {
             {error && <div className="error">{error}</div>}
             {live && <div className="ready">Your live session is active and being recorded.</div>}{saveMessage && <div className="ready">{saveMessage}</div>}
             <div className="field"><label htmlFor="title">Title</label><input id="title" className="input" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="What are you sharing?" disabled={live}/></div>
+            <div className="field"><label htmlFor="thumbnail">Thumbnail image</label><input id="thumbnail" className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>setThumbnailFile(e.target.files?.[0]??null)} disabled={live}/><p className="help">Choose a cover image so your saved Live recording does not appear as a black thumbnail.</p></div>
             <div className="field"><label htmlFor="category">Topic</label><select id="category" className="select" value={category} onChange={(e)=>setCategory(e.target.value)} disabled={live}>{categories.map((item)=><option key={item}>{item}</option>)}</select></div>
             <p className="help">Starting Live publishes your camera and microphone through the OneMuslim WebRTC media backend. When you end, the finished video is also uploaded to your 1Muslim Live Recordings page.</p>
             <div className="notice"><strong>Broadcast connection</strong>Live video is transported through LiveKit WebRTC; Supabase keeps the live-session state, social data and your finished recording.</div>
