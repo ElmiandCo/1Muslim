@@ -4,7 +4,7 @@ import SiteNav from "../../../components/SiteNav";
 import LiveKitViewer from "../../../../components/LiveKitViewer";
 import LiveChat from "../../../../components/LiveChat";
 import RecordingComments from "../../../../components/RecordingComments";
-import SaveRecording from "../../../../components/SaveRecording";
+import SaveRecording from "../../../components/SaveRecording";
 
 export default async function LiveViewerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
