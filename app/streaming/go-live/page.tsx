@@ -49,7 +49,6 @@ export default function GoLivePage() {
         audio: true,
       });
       streamRef.current = stream;
-      streamRef.current = stream;
       setCameraReady(true);
       setCameraOn(true);
       setMicOn(true);
@@ -92,7 +91,7 @@ export default function GoLivePage() {
   const startRecording = () => {
     const stream = streamRef.current;
     if (!stream) throw new Error("Camera and microphone must be enabled first.");
-    const mimeType = ["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm","video/mp4"].find((type) => MediaRecorder.isTypeSupported(type));
+    const mimeType = ["video/mp4","video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"].find((type) => MediaRecorder.isTypeSupported(type));
     if (!mimeType) throw new Error("This browser cannot record video in a supported format.");
     chunksRef.current = [];
     const recorder = new MediaRecorder(stream, { mimeType });
@@ -269,7 +268,7 @@ export default function GoLivePage() {
             <div className="field"><label htmlFor="thumbnail">Thumbnail image</label><input id="thumbnail" className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>setThumbnailFile(e.target.files?.[0]??null)} disabled={live}/><p className="help">Choose a cover image so your saved Live recording does not appear as a black thumbnail.</p></div>
             <div className="field"><label htmlFor="category">Topic</label><select id="category" className="select" value={category} onChange={(e)=>setCategory(e.target.value)} disabled={live}>{categories.map((item)=><option key={item}>{item}</option>)}</select></div>
             <p className="help">Starting Live publishes your camera and microphone through the OneMuslim WebRTC media backend. When you end, the finished video is also uploaded to your 1Muslim Live Recordings page.</p>
-            <div className="notice"><strong>Broadcast connection</strong>Live video is transported through LiveKit WebRTC; Supabase keeps the live-session state, social data and your finished recording.</div>
+            <div className="notice"><strong>Broadcast connection</strong>Live video is transported through LiveKit WebRTC. Your finished recording is being transitioned to external video storage; Supabase will keep the recording metadata.</div>
           </aside>
         </div>
 
