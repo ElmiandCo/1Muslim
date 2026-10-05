@@ -96,7 +96,7 @@ export default function SettingsPage() {
       {message && <div className="settingsMessage">{message}</div>}
     </div>
 
-    <style jsx>{\`
+    <style jsx>{`
       .settingsShell{max-width:900px;margin:0 auto;padding:46px 20px 100px}
       .settingsHero{padding:20px 0 28px;border-bottom:1px solid var(--line)}
       .settingsHero h1{font-size:36px;margin:7px 0}
@@ -114,7 +114,7 @@ export default function SettingsPage() {
       .deleteButton{border:1px solid #7b3b3b;background:#321313;color:#ffcaca;border-radius:999px;padding:11px 16px;font-size:10px;font-weight:900;white-space:nowrap}
       .settingsMessage{margin-top:12px;border:1px solid var(--line);background:var(--panel2);padding:12px 14px;border-radius:12px;color:#aebdb2;font-size:11px}
       @media(max-width:680px){.settingsCard,.dangerCard{align-items:flex-start;flex-direction:column}.settingsHero h1{font-size:30px}}
-    \`}
+    `}
     </style>
   </main>;
 }
