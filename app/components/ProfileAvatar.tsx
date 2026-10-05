@@ -3,19 +3,17 @@
 export const AVATAR_TIERS = [
   { key: "starter", name: "Starter", minXp: 0, icon: "○", quality: "Clean foundation" },
   { key: "bronze", name: "Bronze", minXp: 500, icon: "◆", quality: "First accessories" },
-  { key: "silver", name: "Silver", minXp: 1500, icon: "✦", quality: "Premium details" },
-  { key: "gold", name: "Gold", minXp: 3000, icon: "✧", quality: "Elite customization" },
-  { key: "elite", name: "Elite", minXp: 6000, icon: "☪", quality: "Full collection" },
+  { key: "silver", name: "Silver", minXp: 10500, icon: "✦", quality: "Emerald Aura" },
+  { key: "gold", name: "Gold", minXp: 25000, icon: "✧", quality: "Gold Crest" },
+  { key: "elite", name: "Elite", minXp: 50000, icon: "☪", quality: "Light of Iman" },
 ] as const;
 
 export const ACCESSORIES = [
-  { id: "cap", name: "Classic Cap", tier: "bronze", icon: "🧢" },
-  { id: "scarf", name: "Travel Scarf", tier: "bronze", icon: "🧣" },
+  { id: "classic-badge", name: "Classic Badge", tier: "bronze", icon: "◆" },
+  { id: "muslim-badge", name: "Muslim Badge", tier: "bronze", icon: "☪" },
   { id: "glow", name: "Emerald Aura", tier: "silver", icon: "✦" },
   { id: "crown", name: "Gold Crest", tier: "gold", icon: "♛" },
-  { id: "halo", name: "Light Ring", tier: "gold", icon: "◉" },
-  { id: "royal", name: "Royal Trim", tier: "elite", icon: "✧" },
-  { id: "star", name: "Star Badge", tier: "elite", icon: "★" },
+  { id: "light-iman", name: "Light of Iman", tier: "elite", icon: "✧" },
 ] as const;
 
 export function tierForXp(xp: number) {
@@ -52,13 +50,7 @@ export default function ProfileAvatar({
   return (
     <div className={`profileAvatar avatar-${size} accent-${accent} package-${packageKey}`} aria-label={`${name ?? "Member"} avatar`}>
       <div className="avatarGlow" />
-      <img
-        className="avatarDefaultImage"
-        src={avatarSrc}
-        alt=""
-        aria-hidden="true"
-        draggable={false}
-      />
+      <img className="avatarDefaultImage" src={avatarSrc} alt="" aria-hidden="true" draggable={false} />
       {accessories.map((item) => (
         <span key={item.id} className={`avatarAccessory accessory-${item.id}`}>{item.icon}</span>
       ))}
