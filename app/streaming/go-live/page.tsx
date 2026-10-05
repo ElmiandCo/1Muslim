@@ -5,8 +5,8 @@ import SiteNav from "../../components/SiteNav";
 import Link from "next/link";
 import { createClient } from "../../../utils/supabase/client";
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
 import { Room, Track } from "livekit-client";
+import LiveChat from "../../../components/LiveChat";
 
 const categories = ["Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
 type ChatMessage = { id: string; name: string; text: string };
@@ -35,11 +35,9 @@ export default function GoLivePage() {
   const [category, setCategory] = useState(categories[0]);
   const [error, setError] = useState("");
   const [viewers, setViewers] = useState(0);
-  const [chat, setChat] = useState<ChatMessage[]>([{id:"welcome",name:"1Muslim",text:"Welcome to the live conversation."}]);
-  const [chatDraft, setChatDraft] = useState("");
   const [reaction, setReaction] = useState<string | null>(null);
   const [followed, setFollowed] = useState(false);
-  const [notifications, setNotifications] = useState(false);\n  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
+  const [notifications, setNotifications] = useState(false);\n  const [currentUserId, setCurrentUserId] = useState<string | null>(null);\n  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const roomRef = useRef<Room | null>(null);
   const liveStreamIdRef = useRef<string | null>(null);
 
@@ -157,9 +155,18 @@ export default function GoLivePage() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Sign in is required to go live.");
+      setCurrentUserId(user.id);
 
       const liveStreamId = crypto.randomUUID();
       const roomName = `1muslim-live-${liveStreamId}`;
+      let liveThumbnailPath: string | null = null;
+      if (thumbnailFile) {
+        if (!thumbnailFile.type.startsWith("image/")) throw new Error("Thumbnail must be an image.");
+        const safeName = thumbnailFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        liveThumbnailPath = `${user.id}/${liveStreamId}-live-thumbnail-${safeName}`;
+        const { error: thumbnailError } = await supabase.storage.from("live-recordings").upload(liveThumbnailPath, thumbnailFile, { contentType: thumbnailFile.type, upsert: false, cacheControl: "31536000" });
+        if (thumbnailError) throw thumbnailError;
+      }
       const { error: rowError } = await supabase.from("live_streams").insert({
         id: liveStreamId,
         host_id: user.id,
@@ -167,6 +174,10 @@ export default function GoLivePage() {
         category,
         room_name: roomName,
         status: "live",
+        thumbnail_path: liveThumbnailPath,
+        aspect_ratio: aspectRatio,
+        video_width: formats.find(f => f.key === aspectRatio)?.width ?? 720,
+        video_height: formats.find(f => f.key === aspectRatio)?.height ?? 1280,
       });
       if (rowError) throw rowError;
 
@@ -203,8 +214,6 @@ export default function GoLivePage() {
   };
 
   useEffect(() => { if (!live) return; const timer = window.setInterval(() => setViewers(v => Math.max(1, v + (Math.random() > 0.62 ? 1 : 0))), 5000); return () => window.clearInterval(timer); }, [live]);
-
-  const sendChat = (e: FormEvent) => { e.preventDefault(); if (!chatDraft.trim() || live) return; setChat(items => [...items, {id:crypto.randomUUID(), name:"You", text:chatDraft.trim()}]); setChatDraft(""); };
 
   const endLive = () => {
     setLive(false); setViewers(0);
@@ -285,7 +294,7 @@ export default function GoLivePage() {
           </div>
           <div className="liveRoomGrid">
             <div className="reactionPanel"><span className="eyebrow">REACTIONS</span><div className="reactionRow">{["❤️","🤍","👍","✨","🤲"].map(x=><button key={x} className={reaction===x?"reaction selected":"reaction"} onClick={()=>setReaction(x)}>{x}</button>)}</div><p>{reaction ? "Reaction sent to the host." : "Tap a reaction to join the room."}</p></div>
-            <div className="chatPanel"><div className="chatHead"><strong>💬 Live chat</strong><span>{chat.length} messages</span></div><div className="chatMessages">{chat.map(m=><div className="chatMessage" key={m.id}><b>{m.name}</b><span>{m.text}</span></div>)}</div><div className="chatHostNotice">You are the host. Viewer chat is shown here; hosts cannot post as a viewer.</div></div>
+            <div className="chatPanel"><LiveChat streamId={liveStreamIdRef.current ?? ""} hostId={currentUserId ?? ""} /></div>
           </div>
           <div className="freeNote">Free-first mode: this room provides the camera preview and social interaction layer without a paid video provider. A true cross-device broadcast still needs a WebRTC media backend.</div>
         </section>}
