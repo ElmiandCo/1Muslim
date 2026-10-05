@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "../../../utils/supabase/client";
 import RecordingComments from "../../../components/RecordingComments";
+import RecordingThumbnail from "../../../components/RecordingThumbnail";
 
 type Recording = {
   id: string;
@@ -19,6 +20,9 @@ type Recording = {
   comments_count: number;
   created_at: string;
   stream_id?: string | null;
+  thumbnail_path?: string | null;
+  host_name?: string;
+  host_avatar_url?: string | null;
 };
 
 const formatDuration = (seconds: number) => {
@@ -51,7 +55,7 @@ export default function RecordingsPage() {
 
       const { data, error: queryError } = await supabase
         .from("live_recordings")
-        .select("id,title,category,video_path,mime_type,file_size,duration_seconds,views,likes,comments_count,created_at")
+        .select("id,title,category,video_path,mime_type,file_size,duration_seconds,views,likes,comments_count,created_at,thumbnail_path,user_id")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -59,12 +63,26 @@ export default function RecordingsPage() {
       else {
         const rows = (data ?? []) as Recording[];
         const ids = rows.map(row => row.id);
+        const hostIds = Array.from(new Set(rows.map(row => (row as Recording & {user_id:string}).user_id).filter(Boolean)));
         let streamMap: Record<string,string> = {};
+        let profileMap: Record<string,{display_name:string|null;username:string|null;avatar_url:string|null}> = {};
+        if (hostIds.length) {
+          const { data: profiles } = await supabase.from("profiles").select("id,display_name,username,avatar_url").in("id",hostIds);
+          profileMap = Object.fromEntries((profiles ?? []).map(profile => [profile.id,profile]));
+        }
         if (ids.length) {
           const { data: streams } = await supabase.from("live_streams").select("id,recording_id").in("recording_id", ids);
           streamMap = Object.fromEntries((streams ?? []).filter(stream => stream.recording_id).map(stream => [stream.recording_id, stream.id]));
         }
-        setRecordings(rows.map(row => ({...row, stream_id: streamMap[row.id] ?? null})));
+        setRecordings(rows.map(row => {
+          const profile = profileMap[(row as Recording & {user_id:string}).user_id];
+          return {
+            ...row,
+            stream_id: streamMap[row.id] ?? null,
+            host_name: profile?.display_name || profile?.username || "1Muslim Host",
+            host_avatar_url: profile?.avatar_url ?? null,
+          };
+        }));
       }
       setLoading(false);
     };
@@ -79,7 +97,8 @@ export default function RecordingsPage() {
   const deleteRecording = async (recording: Recording) => {
     if (!window.confirm("Delete this recording permanently?")) return;
     const supabase = createClient();
-    const { error: fileError } = await supabase.storage.from("live-recordings").remove([recording.video_path]);
+    const files=[recording.video_path,...(recording.thumbnail_path?[recording.thumbnail_path]:[])];
+    const { error: fileError } = await supabase.storage.from("live-recordings").remove(files);
     if (fileError) return setError(fileError.message);
     const { error: rowError } = await supabase.from("live_recordings").delete().eq("id", recording.id);
     if (rowError) return setError(rowError.message);
@@ -114,7 +133,7 @@ export default function RecordingsPage() {
           <div className="grid">{recordings.map(recording => {
             const url = getUrl(recording.video_path);
             return <article className="card" key={recording.id}>
-              <div className="thumb"><video src={url} muted preload="metadata" playsInline /><button className="play" onClick={()=>setPlaying(recording)} aria-label={`Play ${recording.title}`}>▶</button><span className="duration">{formatDuration(recording.duration_seconds)}</span></div>
+              <div className="thumb"><RecordingThumbnail title={recording.title} hostName={recording.host_name || "1Muslim Host"} date={new Date(recording.created_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})} durationSeconds={recording.duration_seconds} photoUrl={recording.host_avatar_url} customThumbnailUrl={recording.thumbnail_path ? getUrl(recording.thumbnail_path) : null} /><button className="play" onClick={()=>setPlaying(recording)} aria-label={`Play ${recording.title}`}>▶</button></div>
               <div className="body"><span className="meta">{recording.category} · {new Date(recording.created_at).toLocaleDateString()}</span><h3>{recording.title}</h3><div className="details"><span>👁 {recording.views}</span><span>♥ {recording.likes}</span><span>{formatSize(recording.file_size)}</span></div><div className="actions">{recording.stream_id ? <Link className="action" href={`/streaming/live/${recording.stream_id}`}>Watch & comment</Link> : <button className="action" onClick={()=>setPlaying(recording)}>Watch</button>}<button className="action danger" onClick={()=>void deleteRecording(recording)}>Delete</button></div></div>
             </article>
           })}</div>}
