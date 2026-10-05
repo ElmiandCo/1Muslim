@@ -5,14 +5,16 @@ import { useEffect, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 
 const links = [
-  { label: "Home", href: "/" },
-  { label: "Learn", href: "/#paths" },
-  { label: "Elm Tent", href: "/learn/elm-tent" },
-  { label: "Community", href: "/community" },
-  { label: "Find", href: "/find" },
-  { label: "Streaming", href: "/streaming" },
-  { label: "Videos", href: "/streaming/library" },
-  { label: "Profile", href: "/profile" },
+  { label: "Home", ar: "الرئيسية", href: "/" },
+  { label: "Learn", ar: "تعلّم", href: "/#paths" },
+  { label: "Elm Tent", ar: "الخيمة", href: "/learn/elm-tent" },
+  { label: "Community", ar: "المجتمع", href: "/community" },
+  { label: "Ashab", ar: "أصحاب", href: "/ashab" },
+  { label: "Find", ar: "بحث", href: "/find" },
+  { label: "Streaming", ar: "البث", href: "/streaming" },
+  { label: "Videos", ar: "الفيديوهات", href: "/streaming/library" },
+  { label: "Profile", ar: "الملف الشخصي", href: "/profile" },
+  { label: "Settings", ar: "الإعدادات", href: "/settings" },
 ];
 
 export function ThemeToggle() {
@@ -23,7 +25,7 @@ export function ThemeToggle() {
 }
 
 export default function SiteNav({ compact = false }: { compact?: boolean }) {
-  const [user, setUser] = useState<{ id:string; email?:string; display_name?:string; username?:string } | null>(null);
+  const [user, setUser] = useState<{ id:string; email?:string; display_name?:string; username?:string; arabic_terms_enabled?:boolean } | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   useEffect(() => {
     const supabase = createClient(); let mounted = true;
@@ -31,9 +33,9 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!mounted) return;
       if (!authUser) { setUser(null); setLoadingAuth(false); return; }
-      const { data: profile } = await supabase.from("profiles").select("display_name,username").eq("id", authUser.id).maybeSingle();
+      const { data: profile } = await supabase.from("profiles").select("display_name,username,arabic_terms_enabled").eq("id", authUser.id).maybeSingle();
       if (!mounted) return;
-      setUser({ id: authUser.id, email: authUser.email ?? undefined, display_name: profile?.display_name ?? undefined, username: profile?.username ?? undefined });
+      setUser({ id: authUser.id, email: authUser.email ?? undefined, display_name: profile?.display_name ?? undefined, username: profile?.username ?? undefined, arabic_terms_enabled: !!profile?.arabic_terms_enabled });
       setLoadingAuth(false);
     };
     void loadUser();
@@ -42,9 +44,10 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   }, []);
   const accountLabel = user?.display_name || (user?.username ? "@" + user.username : user?.email?.split("@")[0]) || "My account";
   const signOut = async () => { const supabase = createClient(); await supabase.auth.signOut(); window.location.href = "/"; };
+  const label = (item: typeof links[number]) => user?.arabic_terms_enabled ? <>{item.label} <span className="arabicNav">{item.ar}</span></> : item.label;
   return <header className={compact ? "siteNav compact" : "siteNav"}>
     <Link href="/" className="siteBrand"><span className="siteMark">1</span><span>1Muslim</span></Link>
-    <nav className="siteNavLinks">{links.map((link) => <Link key={link.href} href={link.href}>{link.label}</Link>)}<Link href="/streaming/go-live" className="liveNav">🔴 Go Live</Link></nav>
+    <nav className="siteNavLinks">{links.map((link) => <Link key={link.href} href={link.href}>{label(link)}</Link>)}<Link href="/streaming/go-live" className="liveNav">🔴 Go Live</Link></nav>
     {loadingAuth ? <span className="authNav authLoading">Account</span> : user ? <div className="authAccount"><Link href="/profile" className="authNav">👤 {accountLabel}</Link><button type="button" className="authSignOut" onClick={signOut}>Sign out</button></div> : <Link href="/auth" className="authNav">Sign in</Link>}
     <ThemeToggle />
   </header>;
