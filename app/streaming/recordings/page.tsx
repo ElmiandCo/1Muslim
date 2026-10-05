@@ -4,6 +4,7 @@ import SiteNav from "../../components/SiteNav";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "../../../utils/supabase/client";
+import RecordingComments from "../../../components/RecordingComments";
 
 type Recording = {
   id: string;
@@ -17,6 +18,7 @@ type Recording = {
   likes: number;
   comments_count: number;
   created_at: string;
+  stream_id?: string | null;
 };
 
 const formatDuration = (seconds: number) => {
@@ -54,7 +56,16 @@ export default function RecordingsPage() {
         .order("created_at", { ascending: false });
 
       if (queryError) setError(queryError.message);
-      else setRecordings(data ?? []);
+      else {
+        const rows = (data ?? []) as Recording[];
+        const ids = rows.map(row => row.id);
+        let streamMap: Record<string,string> = {};
+        if (ids.length) {
+          const { data: streams } = await supabase.from("live_streams").select("id,recording_id").in("recording_id", ids);
+          streamMap = Object.fromEntries((streams ?? []).filter(stream => stream.recording_id).map(stream => [stream.recording_id, stream.id]));
+        }
+        setRecordings(rows.map(row => ({...row, stream_id: streamMap[row.id] ?? null})));
+      }
       setLoading(false);
     };
     void load();
@@ -104,13 +115,13 @@ export default function RecordingsPage() {
             const url = getUrl(recording.video_path);
             return <article className="card" key={recording.id}>
               <div className="thumb"><video src={url} muted preload="metadata" playsInline /><button className="play" onClick={()=>setPlaying(recording)} aria-label={`Play ${recording.title}`}>▶</button><span className="duration">{formatDuration(recording.duration_seconds)}</span></div>
-              <div className="body"><span className="meta">{recording.category} · {new Date(recording.created_at).toLocaleDateString()}</span><h3>{recording.title}</h3><div className="details"><span>👁 {recording.views}</span><span>♥ {recording.likes}</span><span>{formatSize(recording.file_size)}</span></div><div className="actions"><button className="action" onClick={()=>setPlaying(recording)}>Watch</button><button className="action danger" onClick={()=>void deleteRecording(recording)}>Delete</button></div></div>
+              <div className="body"><span className="meta">{recording.category} · {new Date(recording.created_at).toLocaleDateString()}</span><h3>{recording.title}</h3><div className="details"><span>👁 {recording.views}</span><span>♥ {recording.likes}</span><span>{formatSize(recording.file_size)}</span></div><div className="actions">{recording.stream_id ? <Link className="action" href={`/streaming/live/${recording.stream_id}`}>Watch & comment</Link> : <button className="action" onClick={()=>setPlaying(recording)}>Watch</button>}<button className="action danger" onClick={()=>void deleteRecording(recording)}>Delete</button></div></div>
             </article>
           })}</div>}
         </>}
       </div>
 
-      {playing && <div className="playerOverlay" onClick={()=>setPlaying(null)}><div className="player" onClick={e=>e.stopPropagation()}><video src={getUrl(playing.video_path)} controls autoPlay playsInline /><div className="playerBar"><strong>{playing.title}</strong><button className="close" onClick={()=>setPlaying(null)}>×</button></div></div></div>}
+      {playing && <div className="playerOverlay" onClick={()=>setPlaying(null)}><div className="player" onClick={e=>e.stopPropagation()}><video src={getUrl(playing.video_path)} controls autoPlay playsInline /><div className="playerBar"><strong>{playing.title}</strong><button className="close" onClick={()=>setPlaying(null)}>×</button></div><div style={{padding:"0 16px 16px"}}><RecordingComments recordingId={playing.id} /></div></div></div>}
     </main>
   );
 }
