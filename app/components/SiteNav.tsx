@@ -8,8 +8,10 @@ const links = [
   { label: "Learn", href: "/#paths" },
   { label: "Elm Tent", href: "/learn/elm-tent" },
   { label: "Community", href: "/community" },
+  { label: "Find", href: "/find" },
   { label: "Streaming", href: "/streaming" },
   { label: "Recordings", href: "/streaming/recordings" },
+  { label: "Profile", href: "/profile" },
 ];
 
 export function ThemeToggle() {
