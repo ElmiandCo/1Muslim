@@ -20,15 +20,15 @@ export default function PublicProfile(){
  useEffect(()=>{(async()=>{const s=createClient();const id=String(params.id);
  const [a,b,c,d,e]=await Promise.all([
   s.from("profiles").select("id,display_name,username,first_name,last_name,city,state,country,gender,bio,xp_total,avatar_gender,avatar_package,avatar_config,profile_accent,profile_background,profile_title").eq("id",id).single(),
-  s.from("live_streams").select("id,title,category,room_name,viewer_count,started_at").eq("host_id",id).eq("status","live").maybeSingle(),
+  s.from("live_streams").select("id,title,category,room_name,viewer_count,started_at").eq("host_id",id).eq("status","live").order("started_at",{ascending:false}).limit(1),
   s.from("live_recordings").select("id,title,category,video_path,duration_seconds,views,likes,comments_count,created_at").eq("user_id",id).eq("visibility","public").order("created_at",{ascending:false}).limit(8),
   s.from("posts").select("id,body,created_at").eq("user_id",id).order("created_at",{ascending:false}).limit(8),
   s.from("lesson_completions").select("lesson_id,completed_at").eq("user_id",id).eq("passed",true).order("completed_at",{ascending:false}).limit(1)
  ]);
- setP(a.data as Profile|null);setLive(b.data as LiveStream|null);setRecordings((c.data||[]) as Recording[]);setPosts((d.data||[]) as Post[]);
+ setP(a.data as Profile|null);setLive(((b.data||[])[0]||null) as LiveStream|null);setRecordings((c.data||[]) as Recording[]);setPosts((d.data||[]) as Post[]);
  if(e.data?.[0]){const{data:ld}=await s.from("lessons").select("title,slug").eq("id",e.data[0].lesson_id).maybeSingle();if(ld)setLesson({title:ld.title,slug:ld.slug,completed_at:e.data[0].completed_at})}
  const map:Record<string,string>={};for(const v of(c.data||[])){const{data}=await s.storage.from("live-recordings").createSignedUrl(v.video_path,3600);if(data?.signedUrl)map[v.id]=data.signedUrl}setVideoUrls(map);setLoading(false)})()},[params.id]);
- useEffect(()=>{let active=true; const poll=async()=>{const s=createClient(); const {data}=await s.from("live_streams").select("id,title,category,room_name,viewer_count,started_at").eq("host_id",String(params.id)).eq("status","live").maybeSingle(); if(active)setLive(data as LiveStream|null)}; void poll(); const timer=window.setInterval(()=>void poll(),5000); return()=>{active=false;window.clearInterval(timer)}},[params.id]);
+ useEffect(()=>{let active=true; const poll=async()=>{const s=createClient(); const {data}=await s.from("live_streams").select("id,title,category,room_name,viewer_count,started_at").eq("host_id",String(params.id)).eq("status","live").order("started_at",{ascending:false}).limit(1); if(active)setLive(((data||[])[0]||null) as LiveStream|null)}; void poll(); const timer=window.setInterval(()=>void poll(),5000); return()=>{active=false;window.clearInterval(timer)}},[params.id]);
  const filtered=useMemo(()=>recordings.filter(r=>(r.title+" "+r.category).toLowerCase().includes(query.toLowerCase())),[recordings,query]);
  const tier=useMemo(()=>tierForXp(p?.xp_total??0),[p?.xp_total]);
  if(loading)return <main><SiteNav compact/><section className="profileEmpty"><p>Loading…</p></section></main>;
