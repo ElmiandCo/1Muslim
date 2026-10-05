@@ -1,5 +1,5 @@
 import {createClient} from "../../../utils/supabase/server";
-import ArticleActions from "../../../components/ArticleActions";
+import ArticleActions from "../../components/ArticleActions";
 import SiteNav from "../../components/SiteNav";
 import {notFound} from "next/navigation";
 import type {Metadata} from "next";
