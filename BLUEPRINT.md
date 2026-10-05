@@ -56,3 +56,12 @@ Invite reflections, encouragement, and questions. Keep foundational lessons stab
 
 ## Design rule
 Prefer a compact feed + carousels over a very long static landing page. Related content belongs in horizontal scrolling groups rather than separate full-width sections.
+
+
+## Ashab & account settings
+- **Ashab (أصحاب)** is the 1Muslim name for a member's close friend circle.
+- Each member can have up to **5 Ashab**.
+- Members can send, accept, decline, cancel, and remove Ashab relationships.
+- Public profiles and Find People expose the Ashab action.
+- Settings includes **Translate common words to Arabic**, which adds Arabic equivalents to common navigation labels.
+- Settings includes a permanent **Delete account** action with confirmation; account deletion is handled through the authenticated Supabase database function and preserves shared/admin-owned records where required.
