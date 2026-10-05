@@ -11,7 +11,7 @@ const links = [
   { label: "Community", href: "/community" },
   { label: "Find", href: "/find" },
   { label: "Streaming", href: "/streaming" },
-  { label: "Recordings", href: "/streaming/library" },
+  { label: "Videos", href: "/streaming/library" },
   { label: "Profile", href: "/profile" },
 ];
 
