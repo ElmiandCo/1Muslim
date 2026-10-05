@@ -37,7 +37,9 @@ export default function GoLivePage() {
   const [viewers, setViewers] = useState(0);
   const [reaction, setReaction] = useState<string | null>(null);
   const [followed, setFollowed] = useState(false);
-  const [notifications, setNotifications] = useState(false);\n  const [currentUserId, setCurrentUserId] = useState<string | null>(null);\n  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
+  const [notifications, setNotifications] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const roomRef = useRef<Room | null>(null);
   const liveStreamIdRef = useRef<string | null>(null);
 
@@ -188,7 +190,8 @@ export default function GoLivePage() {
       });
       const tokenData = await tokenResponse.json();
       if (!tokenResponse.ok) {
-        await supabase.from("live_streams").delete().eq("id", liveStreamId);\n        if (liveThumbnailPath) await supabase.storage.from("live-recordings").remove([liveThumbnailPath]);
+        await supabase.from("live_streams").delete().eq("id", liveStreamId);
+        if (liveThumbnailPath) await supabase.storage.from("live-recordings").remove([liveThumbnailPath]);
         throw new Error(tokenData.error || "LiveKit could not be started.");
       }
 
@@ -280,7 +283,8 @@ export default function GoLivePage() {
             {error && <div className="error">{error}</div>}
             {live && <div className="ready">Your live session is active and being recorded.</div>}{saveMessage && <div className="ready">{saveMessage}</div>}
             <div className="field"><label htmlFor="title">Title</label><input id="title" className="input" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="What are you sharing?" disabled={live}/></div>
-            <div className="field"><label>Screen format</label><div className="formatGrid">{formats.map((format)=><button type="button" key={format.key} className={aspectRatio===format.key?"formatButton active":"formatButton"} onClick={()=>setAspectRatio(format.key)} disabled={live}><strong>{format.label} · {format.key}</strong><small>{format.hint}</small></button>)}</div><p className="help">Pick this before going live. Once the Live starts, the frame is locked for the whole broadcast.</p></div>\n            <div className="field"><label htmlFor="thumbnail">Thumbnail image</label><input id="thumbnail" className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>setThumbnailFile(e.target.files?.[0]??null)} disabled={live}/><p className="help">Choose a cover image so your saved Live recording does not appear as a black thumbnail.</p></div>
+            <div className="field"><label>Screen format</label><div className="formatGrid">{formats.map((format)=><button type="button" key={format.key} className={aspectRatio===format.key?"formatButton active":"formatButton"} onClick={()=>setAspectRatio(format.key)} disabled={live}><strong>{format.label} · {format.key}</strong><small>{format.hint}</small></button>)}</div><p className="help">Pick this before going live. Once the Live starts, the frame is locked for the whole broadcast.</p></div>
+            <div className="field"><label htmlFor="thumbnail">Thumbnail image</label><input id="thumbnail" className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>setThumbnailFile(e.target.files?.[0]??null)} disabled={live}/><p className="help">Choose a cover image so your saved Live recording does not appear as a black thumbnail.</p></div>
             <div className="field"><label htmlFor="category">Topic</label><select id="category" className="select" value={category} onChange={(e)=>setCategory(e.target.value)} disabled={live}>{categories.map((item)=><option key={item}>{item}</option>)}</select></div>
             <p className="help">Starting Live publishes your camera and microphone through the OneMuslim WebRTC media backend. When you end, the finished video is also uploaded to your 1Muslim Live Recordings page.</p>
             <div className="notice"><strong>Broadcast connection</strong>Live video is transported through LiveKit WebRTC. Your finished recording is being transitioned to external video storage; Supabase will keep the recording metadata.</div>
