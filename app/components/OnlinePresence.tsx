@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 
 type PresencePayload = { user_id?: string; online_at?: string };
@@ -28,10 +28,7 @@ export function useOnlinePresence() {
       if (!user || !active) return;
 
       channel = supabase.channel("onemuslim-online", {
-        config: {
-          private: true,
-          presence: { key: user.id },
-        },
+        config: { presence: { key: user.id } },
       });
 
       const sync = () => {
@@ -76,6 +73,5 @@ export function OnlineDot({ online, label = "Online" }: { online: boolean; label
 
 export default function OnlinePresence({ userId }: { userId: string }) {
   const onlineIds = useOnlinePresence();
-  const online = useMemo(() => onlineIds.has(userId), [onlineIds, userId]);
-  return <OnlineDot online={online} />;
+  return <OnlineDot online={onlineIds.has(userId)} />;
 }
