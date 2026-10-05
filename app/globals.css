@@ -54,3 +54,6 @@ footer{display:flex;flex-direction:column;gap:6px;padding:30px;color:#66726a;fon
 
 /* Real-time member presence */
 .onlineStatus{display:inline-flex;align-items:center;gap:5px;margin-left:7px;color:#8fc67f!important;font-size:9px!important;font-weight:800;letter-spacing:.01em}.onlineDot{width:7px;height:7px;border-radius:50%;background:#75c65f;box-shadow:0 0 0 3px rgba(117,198,95,.11),0 0 12px rgba(117,198,95,.35);display:inline-block}.light .onlineStatus{color:#4f8b48!important}.light .onlineDot{box-shadow:0 0 0 3px rgba(79,139,72,.1),0 0 10px rgba(79,139,72,.25)}
+
+/* Signed-in account navigation */
+.authAccount{display:flex;align-items:center;gap:7px}.authLoading{opacity:.6}.authSignOut{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:7px 10px;font-size:9px;font-weight:800;cursor:pointer}.authAccount .authNav{white-space:nowrap}@media(max-width:760px){.authAccount{gap:4px}.authAccount .authNav{max-width:105px;overflow:hidden;text-overflow:ellipsis}.authSignOut{padding:6px 8px}}
