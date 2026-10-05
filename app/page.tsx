@@ -93,7 +93,11 @@ export default function Home() {
         </header>
 
         <div className="feedHeader">
-          <div><strong>For you</strong><span>Learn</span><span>Explore</span></div>
+          <nav className="feedTabs" aria-label="Home sections">
+            <Link href="/" className="feedTab active">For You</Link>
+            <Link href="/#paths" className="feedTab">Learn</Link>
+            <Link href="/#explore" className="feedTab">Explore</Link>
+          </nav>
           <div className="tinyLine" />
         </div>
 
