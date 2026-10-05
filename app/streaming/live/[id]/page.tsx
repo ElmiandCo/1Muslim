@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "../../../../utils/supabase/server";
 import SiteNav from "../../../components/SiteNav";
 import LiveKitViewer from "../../../../components/LiveKitViewer";
+import LiveChat from "../../../../components/LiveChat";
 
 export default async function LiveViewerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -32,9 +33,9 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
             </div>
             <div style={{border:"1px solid #1b241f",borderRadius:22,overflow:"hidden",background:"#080d09"}}>
               <LiveKitViewer roomName={stream.room_name} />
-              <div style={{padding:18,display:"flex",justifyContent:"space-between",gap:15,flexWrap:"wrap"}}>
-                <div><strong>🔴 Live now</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>Watch and participate in the conversation.</div></div>
-                <Link href="/streaming" style={{color:"#cbd8ce",fontSize:12}}>← All streaming</Link>
+              <div style={{padding:18,display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(320px,.65fr)",gap:16}}>
+                <div><strong>🔴 Live now</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>Watch and participate in the conversation.</div><Link href="/streaming" style={{display:"inline-block",marginTop:12,color:"#cbd8ce",fontSize:12}}>← All streaming</Link></div>
+                <LiveChat streamId={stream.id} hostId={stream.host_id} />
               </div>
             </div>
           </>
