@@ -46,8 +46,8 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const signOut = async () => { const supabase = createClient(); await supabase.auth.signOut(); window.location.href = "/"; };
   const label = (item: typeof links[number]) => user?.arabic_terms_enabled ? <>{item.label} <span className="arabicNav">{item.ar}</span></> : item.label;
   return <header className={compact ? "siteNav compact" : "siteNav"}>
-    <Link href="/" className="siteBrand"><span className="siteMark">1</span><span>1Muslim</span></Link>
-    <nav className="siteNavLinks">{links.map((link) => <Link key={link.href} href={link.href}>{label(link)}</Link>)}<Link href="/streaming/go-live" className="liveNav">🔴 Go Live</Link></nav>
+    <Link href="/" className="siteBrand" aria-label="1Muslim Home"><img src="/1muslim-logo.svg" alt="1Muslim" className="siteLogo" /></Link>
+    <nav className="siteNavLinks">{links.map((link) => <Link key={link.href} href={link.href}>{label(link)}</Link>)}<Link href="/streaming" className="liveNav">🔴 Live</Link><Link href="/streaming/go-live" className="goLiveNav">Go Live</Link></nav>
     {loadingAuth ? <span className="authNav authLoading">Account</span> : user ? <div className="authAccount"><Link href="/profile" className="authNav">👤 {accountLabel}</Link><button type="button" className="authSignOut" onClick={signOut}>Sign out</button></div> : <Link href="/auth" className="authNav">Sign in</Link>}
     <ThemeToggle />
   </header>;
