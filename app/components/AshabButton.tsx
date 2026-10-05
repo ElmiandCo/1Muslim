@@ -59,7 +59,7 @@ export default function AshabButton({ targetId }: { targetId: string }) {
     setBusy(false);
   };
 
-  if (!me) return null;
+  if (!me || row?.status === "accepted") return null;
   const label = row?.status === "accepted" ? "✓ Ashab" : row?.status === "pending" && row.addressee_id === me ? "Accept Ashab" : row?.status === "pending" ? "Ashab requested" : "＋ Add Ashab";
 
   return <button className={"ashabButton " + (row?.status === "accepted" ? "accepted" : "")} onClick={() => void act()} disabled={busy || row?.status === "accepted"}>
