@@ -4,6 +4,7 @@ import SiteNav from "../../../components/SiteNav";
 import LiveKitViewer from "../../../../components/LiveKitViewer";
 import LiveChat from "../../../../components/LiveChat";
 import RecordingComments from "../../../../components/RecordingComments";
+import SaveRecording from "../../../../components/SaveRecording";
 
 export default async function LiveViewerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -61,7 +62,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
               <div style={{padding:18}}>
                 <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap"}}>
                   <div><strong>▶ Recorded Live</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>Watch the full session and join the conversation below.</div></div>
-                  <Link href="/streaming" style={{color:"#cbd8ce",fontSize:12}}>← All streaming</Link>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}><SaveRecording recordingId={recording.id} /><Link href="/streaming" style={{color:"#cbd8ce",fontSize:12}}>← All streaming</Link></div>
                 </div>
                 <div style={{marginTop:18}}><RecordingComments recordingId={recording.id} /></div>
               </div>
