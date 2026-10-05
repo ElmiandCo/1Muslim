@@ -12,6 +12,7 @@ export default function ShahadahStudio() {
   const [recording, setRecording] = useState(false);
   const [preview, setPreview] = useState("");
   const [locked, setLocked] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [duration, setDuration] = useState(0);
@@ -74,6 +75,7 @@ export default function ShahadahStudio() {
     const { error: xpError } = await supabase.rpc("award_shahadah_xp", { p_recording_id: row.id });
     if (xpError) { setSaving(false); setMessage("Your recording was saved, but XP could not be awarded yet."); return; }
     setLocked(true);
+    setCelebrating(true);
     setSaving(false);
     setMessage("Locked in your Secure Vault. +5,000 XP");
   }
@@ -104,6 +106,20 @@ export default function ShahadahStudio() {
         {locked && <div style={{marginTop:24,textAlign:"center",padding:18,borderRadius:18,background:"rgba(255,255,255,.06)"}}>🔒 <strong>Shahadah locked in your Secure Vault.</strong><br/><span style={{opacity:.7}}>This recording cannot be replaced here.</span></div>}
         {message && <p style={{textAlign:"center",marginTop:18}}>{message}</p>}
       </section>
+      {celebrating && <section aria-live="polite" style={{position:"relative",overflow:"hidden",marginTop:28,padding:"42px 24px",borderRadius:32,border:"1px solid rgba(211,178,84,.32)",background:"radial-gradient(circle at 50% 20%,rgba(211,178,84,.18),rgba(255,255,255,.035) 42%,rgba(255,255,255,.02) 100%)",boxShadow:"0 0 70px rgba(211,178,84,.12)"}}>
+        <div style={{position:"absolute",inset:0,pointerEvents:"none"}}>{Array.from({length:24}).map((_,i)=><span key={i} style={{position:"absolute",left:(4+(i*37)%92)+"%",top:(-10+(i*19)%34)+"%",width:6,height:10,borderRadius:3,background:i%3===0?"#d3b254":i%3===1?"#fff":"#4f9b78",transform:"rotate("+(i*31%360)+"deg)",opacity:.85}} />)}</div>
+        <div style={{position:"relative",textAlign:"center"}}>
+          <div style={{fontSize:42,marginBottom:10}}>🎉</div>
+          <div style={{fontSize:12,letterSpacing:".2em",opacity:.65}}>SHAHADAH COMPLETE</div>
+          <h2 style={{fontSize:"clamp(30px,6vw,52px)",margin:"10px 0 8px"}}>The Journey Begins</h2>
+          <p style={{margin:"0 auto",maxWidth:520,lineHeight:1.7,opacity:.72}}>You locked your Shahadah into your Secure Vault. Your Tajweed journey is now unlocked.</p>
+          <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap",marginTop:24}}>
+            {["Al-Fātiḥah","An-Nās","Al-Falaq","Al-Ikhlāṣ"].map(s=><span key={s} style={{padding:"9px 13px",borderRadius:999,border:"1px solid rgba(255,255,255,.12)",background:"rgba(255,255,255,.06)",fontSize:13}}>{s} 🔓</span>)}
+          </div>
+          <div style={{marginTop:24,fontWeight:700}}>+5,000 XP · Tajweed Unlocked</div>
+          <Link href="/learn/elm-tent#sessions" className="primary" style={{display:"inline-flex",marginTop:22,textDecoration:"none"}}>Begin Tajweed Journey →</Link>
+        </div>
+      </section>}
       <p style={{textAlign:"center",marginTop:24,fontSize:12,opacity:.5}}>Your recording is private and accessible only to your account.</p>
     </div>
   </main>;
