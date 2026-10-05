@@ -111,49 +111,7 @@ export default function StreamingPage() {
     void loadLives();
     const channel = supabase.channel("1muslim-live-discovery").on("postgres_changes",{event:"*",schema:"public",table:"live_streams"},() => void loadLives()).subscribe();
     const timer = window.setInterval(loadLives, 10000);
-    const openAdminEditor = (video?: Video) => {
-    setEditingVideo(video ?? null);
-    setAdminTitle(video?.title ?? "");
-    setAdminDescription(video?.description ?? "");
-    setAdminCategory(video?.category ?? "Qur'an");
-    setAdminFile(null);
-    setAdminMessage("");
-    setAdminModal(true);
-  };
-
-  const saveAdminVideo = async () => {
-    if (!admin) return;
-    if (!adminTitle.trim()) { setAdminMessage("Title is required."); return; }
-    setAdminSaving(true); setAdminMessage("");
-    const supabase = createClient();
-    if (editingVideo) {
-      const { error } = await supabase.from("admin_videos").update({
-        title: adminTitle.trim(), description: adminDescription.trim(), category: adminCategory, updated_at: new Date().toISOString()
-      }).eq("id", editingVideo.id);
-      if (error) { setAdminMessage(error.message); setAdminSaving(false); return; }
-      setAdminVideos(v => v.map(x => x.id === editingVideo.id ? {...x,title:adminTitle.trim(),description:adminDescription.trim(),category:adminCategory} : x));
-      setAdminSaving(false); setAdminModal(false); return;
-    }
-    if (!adminFile) { setAdminMessage("Choose a video file."); setAdminSaving(false); return; }
-    if (!adminFile.type.startsWith("video/")) { setAdminMessage("Please choose a video file."); setAdminSaving(false); return; }
-    const ext = adminFile.name.split(".").pop()?.toLowerCase() || "mp4";
-    const path = `admin/${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from("admin-videos").upload(path, adminFile, {contentType:adminFile.type,upsert:false});
-    if (uploadError) { setAdminMessage(uploadError.message); setAdminSaving(false); return; }
-    const duration = await readVideoDuration(adminFile);
-    const { data: userData } = await supabase.auth.getUser();
-    const { data, error } = await supabase.from("admin_videos").insert({
-      title:adminTitle.trim(),description:adminDescription.trim(),category:adminCategory,storage_path:path,mime_type:adminFile.type,duration_seconds:Math.round(duration),created_by:userData.user?.id
-    }).select("id,title,description,category,storage_path,duration_seconds").single();
-    if (error || !data) {
-      await supabase.storage.from("admin-videos").remove([path]);
-      setAdminMessage(error?.message ?? "Could not save video."); setAdminSaving(false); return;
-    }
-    setAdminVideos(v => [{id:data.id,title:data.title,creator:"1Muslim",category:data.category,duration:formatDuration(data.duration_seconds),description:data.description,accent:"✦",src:supabase.storage.from("admin-videos").getPublicUrl(data.storage_path).data.publicUrl}, ...v]);
-    setAdminSaving(false); setAdminModal(false);
-  };
-
-  return () => { window.clearInterval(timer); void supabase.removeChannel(channel); };
+    return () => { window.clearInterval(timer); void supabase.removeChannel(channel); };
   }, []);
 
   useEffect(() => {
@@ -173,6 +131,49 @@ export default function StreamingPage() {
     void loadAdminLibrary();
   }, []);
 
+const openAdminEditor = (video?: Video) => {
+  setEditingVideo(video ?? null);
+  setAdminTitle(video?.title ?? "");
+  setAdminDescription(video?.description ?? "");
+  setAdminCategory(video?.category ?? "Qur'an");
+  setAdminFile(null);
+  setAdminMessage("");
+  setAdminModal(true);
+  };
+
+  const saveAdminVideo = async () => {
+  if (!admin) return;
+  if (!adminTitle.trim()) { setAdminMessage("Title is required."); return; }
+  setAdminSaving(true); setAdminMessage("");
+  const supabase = createClient();
+  if (editingVideo) {
+    const { error } = await supabase.from("admin_videos").update({
+      title: adminTitle.trim(), description: adminDescription.trim(), category: adminCategory, updated_at: new Date().toISOString()
+    }).eq("id", editingVideo.id);
+    if (error) { setAdminMessage(error.message); setAdminSaving(false); return; }
+    setAdminVideos(v => v.map(x => x.id === editingVideo.id ? {...x,title:adminTitle.trim(),description:adminDescription.trim(),category:adminCategory} : x));
+    setAdminSaving(false); setAdminModal(false); return;
+  }
+  if (!adminFile) { setAdminMessage("Choose a video file."); setAdminSaving(false); return; }
+  if (!adminFile.type.startsWith("video/")) { setAdminMessage("Please choose a video file."); setAdminSaving(false); return; }
+  const ext = adminFile.name.split(".").pop()?.toLowerCase() || "mp4";
+  const path = `admin/${crypto.randomUUID()}.${ext}`;
+  const { error: uploadError } = await supabase.storage.from("admin-videos").upload(path, adminFile, {contentType:adminFile.type,upsert:false});
+  if (uploadError) { setAdminMessage(uploadError.message); setAdminSaving(false); return; }
+  const duration = await readVideoDuration(adminFile);
+  const { data: userData } = await supabase.auth.getUser();
+  const { data, error } = await supabase.from("admin_videos").insert({
+    title:adminTitle.trim(),description:adminDescription.trim(),category:adminCategory,storage_path:path,mime_type:adminFile.type,duration_seconds:Math.round(duration),created_by:userData.user?.id
+  }).select("id,title,description,category,storage_path,duration_seconds").single();
+  if (error || !data) {
+    await supabase.storage.from("admin-videos").remove([path]);
+    setAdminMessage(error?.message ?? "Could not save video."); setAdminSaving(false); return;
+  }
+  setAdminVideos(v => [{id:data.id,title:data.title,creator:"1Muslim",category:data.category,duration:formatDuration(data.duration_seconds),description:data.description,accent:"✦",src:supabase.storage.from("admin-videos").getPublicUrl(data.storage_path).data.publicUrl}, ...v]);
+  setAdminSaving(false); setAdminModal(false);
+  };
+
+  
   const allVideos = useMemo(() => [...adminVideos, ...videos], [adminVideos]);
 
   const filtered = useMemo(() => {
