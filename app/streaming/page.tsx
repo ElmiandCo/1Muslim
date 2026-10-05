@@ -5,7 +5,7 @@ import SiteNav from "../components/SiteNav";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
-import RecordingThumbnail from "../components/RecordingThumbnail";
+import RecordingThumbnail from "../../components/RecordingThumbnail";
 
 type LiveStream = { id: string; title: string; category: string; room_name: string; viewer_count: number; started_at: string; thumbnail_path: string | null; aspect_ratio: "9:16" | "1:1" | "16:9" };
 
