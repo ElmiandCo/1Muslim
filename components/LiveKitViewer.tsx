@@ -13,8 +13,27 @@ export default function LiveKitViewer({ roomName }: { roomName: string }) {
   useEffect(() => {
     let mounted = true;
 
+    const attachTrack = (track: any) => {
+      if (!mounted) return;
+      if (track.kind === Track.Kind.Video && videoRef.current) {
+        track.attach(videoRef.current);
+        videoRef.current.muted = true;
+        void videoRef.current.play().catch(() => {});
+        setStatus("LIVE");
+      } else if (track.kind === Track.Kind.Audio && audioContainerRef.current) {
+        const audio = track.attach();
+        audio.autoplay = true;
+        audio.setAttribute("playsinline", "true");
+        audioContainerRef.current.appendChild(audio);
+        void audio.play().catch(() => {});
+        setStatus("LIVE");
+      }
+    };
+
     const connect = async () => {
       try {
+        setStatus("Connecting to live…");
+        setError("");
         const response = await fetch("/api/livekit/token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -26,29 +45,24 @@ export default function LiveKitViewer({ roomName }: { roomName: string }) {
         const room = new Room({ adaptiveStream: true, dynacast: true });
         roomRef.current = room;
 
-        const attachTrack = (track: any) => {
-          if (!mounted) return;
-          if (track.kind === Track.Kind.Video && videoRef.current) {
-            track.attach(videoRef.current);
-          } else if (track.kind === Track.Kind.Audio && audioContainerRef.current) {
-            const audio = track.attach();
-            audio.autoplay = true;
-            audioContainerRef.current.appendChild(audio);
-          }
-        };
-
         room.on(RoomEvent.TrackSubscribed, (track) => attachTrack(track));
         room.on(RoomEvent.TrackUnsubscribed, (track) => track.detach());
+        room.on(RoomEvent.TrackSubscriptionFailed, () => {
+          if (mounted) setError("Live video could not be subscribed to. Please reconnect.");
+        });
+        room.on(RoomEvent.ParticipantConnected, () => mounted && setStatus("LIVE"));
         room.on(RoomEvent.Disconnected, () => mounted && setStatus("Live connection ended."));
-        await room.connect(data.url, data.token);
+
+        await room.connect(data.url, data.token, { autoSubscribe: true });
 
         for (const participant of room.remoteParticipants.values()) {
           for (const publication of participant.trackPublications.values()) {
-            if (publication.isSubscribed && publication.track) attachTrack(publication.track);
+            if (!publication.isSubscribed) await publication.setSubscribed(true);
+            if (publication.track) attachTrack(publication.track);
           }
         }
 
-        if (mounted) setStatus("LIVE");
+        if (!room.remoteParticipants.size && mounted) setStatus("Waiting for the host video…");
       } catch (err) {
         if (mounted) setError(err instanceof Error ? err.message : "Unable to connect.");
       }
@@ -60,12 +74,14 @@ export default function LiveKitViewer({ roomName }: { roomName: string }) {
       mounted = false;
       roomRef.current?.disconnect();
       roomRef.current = null;
+      if (videoRef.current) videoRef.current.srcObject = null;
+      audioContainerRef.current?.replaceChildren();
     };
   }, [roomName]);
 
   return (
     <div style={{position:"relative",background:"#000",aspectRatio:"16/9",overflow:"hidden"}}>
-      <video ref={videoRef} autoPlay playsInline controls style={{width:"100%",height:"100%",objectFit:"contain"}} />
+      <video ref={videoRef} autoPlay muted playsInline controls style={{width:"100%",height:"100%",objectFit:"contain"}} />
       <div ref={audioContainerRef} />
       {error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
     </div>
