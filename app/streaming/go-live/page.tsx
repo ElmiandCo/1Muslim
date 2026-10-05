@@ -181,7 +181,10 @@ export default function GoLivePage() {
         thumbnailPath = await buildRecordingThumbnail(supabase, user.id, recordingId, durationSeconds);
       }
       const { error: uploadError } = await supabase.storage.from("live-recordings").upload(path, blob, { contentType: mimeType, upsert: false, cacheControl: "31536000" });
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        if (thumbnailPath) await supabase.storage.from("live-recordings").remove([thumbnailPath]);
+        throw uploadError;
+      }
       const { error: rowError } = await supabase.from("live_recordings").insert({
         id: recordingId, user_id: user.id, title: title.trim(), category,
         video_path: path, mime_type: mimeType, file_size: blob.size,
