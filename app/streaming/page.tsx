@@ -90,6 +90,17 @@ export default function StreamingPage() {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Video | null>(null);
   const [liveStreams, setLiveStreams] = useState<LiveStream[]>([]);
+  const [admin, setAdmin] = useState(false);
+  const [adminVideos, setAdminVideos] = useState<Video[]>([]);
+  const [adminModal, setAdminModal] = useState(false);
+  const [editingVideo, setEditingVideo] = useState<Video | null>(null);
+  const [adminTitle, setAdminTitle] = useState("");
+  const [adminDescription, setAdminDescription] = useState("");
+  const [adminCategory, setAdminCategory] = useState("Qur'an");
+  const [adminFile, setAdminFile] = useState<File | null>(null);
+  const [adminSaving, setAdminSaving] = useState(false);
+  const [adminMessage, setAdminMessage] = useState("");
+
 
   useEffect(() => {
     const supabase = createClient();
@@ -100,17 +111,78 @@ export default function StreamingPage() {
     void loadLives();
     const channel = supabase.channel("1muslim-live-discovery").on("postgres_changes",{event:"*",schema:"public",table:"live_streams"},() => void loadLives()).subscribe();
     const timer = window.setInterval(loadLives, 10000);
-    return () => { window.clearInterval(timer); void supabase.removeChannel(channel); };
+    const openAdminEditor = (video?: Video) => {
+    setEditingVideo(video ?? null);
+    setAdminTitle(video?.title ?? "");
+    setAdminDescription(video?.description ?? "");
+    setAdminCategory(video?.category ?? "Qur'an");
+    setAdminFile(null);
+    setAdminMessage("");
+    setAdminModal(true);
+  };
+
+  const saveAdminVideo = async () => {
+    if (!admin) return;
+    if (!adminTitle.trim()) { setAdminMessage("Title is required."); return; }
+    setAdminSaving(true); setAdminMessage("");
+    const supabase = createClient();
+    if (editingVideo) {
+      const { error } = await supabase.from("admin_videos").update({
+        title: adminTitle.trim(), description: adminDescription.trim(), category: adminCategory, updated_at: new Date().toISOString()
+      }).eq("id", editingVideo.id);
+      if (error) { setAdminMessage(error.message); setAdminSaving(false); return; }
+      setAdminVideos(v => v.map(x => x.id === editingVideo.id ? {...x,title:adminTitle.trim(),description:adminDescription.trim(),category:adminCategory} : x));
+      setAdminSaving(false); setAdminModal(false); return;
+    }
+    if (!adminFile) { setAdminMessage("Choose a video file."); setAdminSaving(false); return; }
+    if (!adminFile.type.startsWith("video/")) { setAdminMessage("Please choose a video file."); setAdminSaving(false); return; }
+    const ext = adminFile.name.split(".").pop()?.toLowerCase() || "mp4";
+    const path = `admin/${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from("admin-videos").upload(path, adminFile, {contentType:adminFile.type,upsert:false});
+    if (uploadError) { setAdminMessage(uploadError.message); setAdminSaving(false); return; }
+    const duration = await readVideoDuration(adminFile);
+    const { data: userData } = await supabase.auth.getUser();
+    const { data, error } = await supabase.from("admin_videos").insert({
+      title:adminTitle.trim(),description:adminDescription.trim(),category:adminCategory,storage_path:path,mime_type:adminFile.type,duration_seconds:Math.round(duration),created_by:userData.user?.id
+    }).select("id,title,description,category,storage_path,duration_seconds").single();
+    if (error || !data) {
+      await supabase.storage.from("admin-videos").remove([path]);
+      setAdminMessage(error?.message ?? "Could not save video."); setAdminSaving(false); return;
+    }
+    setAdminVideos(v => [{id:data.id,title:data.title,creator:"1Muslim",category:data.category,duration:formatDuration(data.duration_seconds),description:data.description,accent:"✦",src:supabase.storage.from("admin-videos").getPublicUrl(data.storage_path).data.publicUrl}, ...v]);
+    setAdminSaving(false); setAdminModal(false);
+  };
+
+  return () => { window.clearInterval(timer); void supabase.removeChannel(channel); };
   }, []);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const loadAdminLibrary = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: adminRow } = await supabase.from("admin_users").select("user_id").eq("user_id", user.id).maybeSingle();
+      if (!adminRow) return;
+      setAdmin(true);
+      const { data } = await supabase.from("admin_videos").select("id,title,description,category,storage_path,duration_seconds").order("created_at", { ascending: false });
+      setAdminVideos((data ?? []).map((v: any) => ({
+        id:v.id,title:v.title,creator:"1Muslim",category:v.category,duration:formatDuration(v.duration_seconds),description:v.description,accent:"✦",
+        src:supabase.storage.from("admin-videos").getPublicUrl(v.storage_path).data.publicUrl
+      })));
+    };
+    void loadAdminLibrary();
+  }, []);
+
+  const allVideos = useMemo(() => [...adminVideos, ...videos], [adminVideos]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return videos.filter((video) => {
+    return allVideos.filter((video) => {
       const categoryMatch = category === "All" || video.category === category;
       const queryMatch = !q || [video.title, video.creator, video.category, video.description].join(" ").toLowerCase().includes(q);
       return categoryMatch && queryMatch;
     });
-  }, [category, query]);
+  }, [category, query, allVideos]);
 
   return (
     <main className="streamingPage">
@@ -131,8 +203,8 @@ export default function StreamingPage() {
         .liveSection{margin:26px 0 8px}.liveSectionHead{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px}.liveSectionHead h2{font-size:21px;letter-spacing:-.04em;margin:5px 0}.liveGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.liveCard{border:1px solid #29352d;background:#0a100c;border-radius:17px;overflow:hidden;text-decoration:none;color:inherit}.liveThumb{height:125px;background:radial-gradient(circle at 50% 35%,rgba(214,231,184,.2),transparent 35%),linear-gradient(145deg,#172119,#070b08);display:flex;align-items:center;justify-content:center;position:relative}.liveThumbMark{font-size:38px;color:#b8ce9d}.liveNow{position:absolute;top:9px;left:9px;background:#d6e7b8;color:#071008;border-radius:999px;padding:5px 8px;font-size:9px;font-weight:900}.liveCardBody{padding:11px}.liveCardBody h3{font-size:13px;margin:0 0 5px}.liveCardBody p{font-size:9px;color:#7e8982;margin:0}.liveViewer{float:right;color:#a9b7ad}.controls{display:flex;gap:10px;align-items:center;margin:24px 0 16px}.search{flex:1;min-width:160px;background:#0b110d;border:1px solid #1b241f;border-radius:999px;padding:11px 15px;color:#fff;outline:0;font-size:12px}.search:focus{border-color:#587052}
         .chips{display:flex;gap:7px;overflow:auto;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}.chip{border:1px solid #263029;background:#0b110d;color:#89958d;border-radius:999px;padding:9px 13px;font-size:10px;white-space:nowrap;cursor:pointer}.chip.active{background:#d6e7b8;border-color:#d6e7b8;color:#071008;font-weight:800}
         .sectionTitle{display:flex;justify-content:space-between;align-items:end;margin:27px 0 14px}.sectionTitle h2{font-size:21px;letter-spacing:-.04em;margin:5px 0}.count{font-size:10px;color:#66736a}
-        .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{border:1px solid #1b241f;background:#0a100c;border-radius:18px;overflow:hidden;transition:.2s}.card:hover{transform:translateY(-2px);border-color:#344238}.thumb{height:155px;background:radial-gradient(circle at 70% 25%,rgba(214,231,184,.17),transparent 25%),linear-gradient(145deg,#172119,#070b08);display:flex;align-items:center;justify-content:center;position:relative}.thumbMark{font-size:50px;color:#b8ce9d;text-shadow:0 0 35px rgba(184,206,157,.25)}.duration{position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.72);padding:5px 7px;border-radius:6px;font-size:9px}.cardBody{padding:14px}.meta{font-size:9px;color:#76917b;letter-spacing:.1em;text-transform:uppercase}.card h3{font-size:15px;line-height:1.25;margin:7px 0}.card p{font-size:10px;color:#7e8982;line-height:1.5;min-height:31px}.watch{width:100%;border:1px solid #2d3931;background:#101812;color:#dce8db;border-radius:10px;padding:9px;font-size:11px;font-weight:750;cursor:pointer}.watch:hover{background:#172219}
-        .empty{border:1px dashed #263029;border-radius:18px;padding:40px;text-align:center;color:#738077}.empty strong{display:block;color:#cbd4cd;margin-bottom:6px}
+        .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{border:1px solid #1b241f;background:#0a100c;border-radius:18px;overflow:hidden;transition:.2s}.card:hover{transform:translateY(-2px);border-color:#344238}.thumb{height:155px;background:radial-gradient(circle at 70% 25%,rgba(214,231,184,.17),transparent 25%),linear-gradient(145deg,#172119,#070b08);display:flex;align-items:center;justify-content:center;position:relative}.thumbMark{font-size:50px;color:#b8ce9d;text-shadow:0 0 35px rgba(184,206,157,.25)}.duration{position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.72);padding:5px 7px;border-radius:6px;font-size:9px}.cardBody{padding:14px}.meta{font-size:9px;color:#76917b;letter-spacing:.1em;text-transform:uppercase}.card h3{font-size:15px;line-height:1.25;margin:7px 0}.card p{font-size:10px;color:#7e8982;line-height:1.5;min-height:31px}.watch{flex:1;border:1px solid #2d3931;background:#101812;color:#dce8db;border-radius:10px;padding:9px;font-size:11px;font-weight:750;cursor:pointer}.watch:hover{background:#172219}
+        .watchRow{display:flex;gap:7px}.adminBtn,.editBtn{border:1px solid #2d3931;background:#d6e7b8;color:#071008;border-radius:10px;padding:9px 11px;font-size:10px;font-weight:800;cursor:pointer}.editBtn{background:#101812;color:#dce8db}.adminOverlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);z-index:120;display:grid;place-items:center;padding:20px}.adminModal{width:min(620px,100%);background:#080d09;border:1px solid #29352d;border-radius:20px;padding:22px}.adminModal h2{margin:6px 0;font-size:25px}.adminModal p,.adminHint{color:#7e8982;font-size:11px}.adminForm{display:grid;gap:12px;margin-top:17px}.adminForm label{display:grid;gap:6px;color:#93a098;font-size:10px}.adminForm input,.adminForm textarea,.adminForm select{background:#070c08;border:1px solid #263029;color:#fff;border-radius:10px;padding:10px;font:inherit;font-size:12px}.adminForm textarea{min-height:100px}.adminActions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.adminActions button{border:1px solid #29352d;background:#101812;color:#dce8db;border-radius:10px;padding:10px 14px;cursor:pointer}.adminActions .save{background:#d6e7b8;color:#071008;font-weight:800}.adminMessage{color:#ffbcbc;font-size:11px}.empty{border:1px dashed #263029;border-radius:18px;padding:40px;text-align:center;color:#738077}.empty strong{display:block;color:#cbd4cd;margin-bottom:6px}
         .playerOverlay{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);z-index:100;display:grid;place-items:center;padding:20px}.player{width:min(900px,100%);background:#080d09;border:1px solid #29352d;border-radius:20px;overflow:hidden;box-shadow:0 30px 100px rgba(0,0,0,.6)}.player video{display:block;width:100%;aspect-ratio:16/9;background:#000}.playerInfo{padding:17px;display:flex;justify-content:space-between;gap:15px}.playerInfo h3{margin:0 0 5px;font-size:16px}.playerInfo p{margin:0;color:#7e8982;font-size:10px}.close{border:1px solid #303b33;background:#0f1511;color:#fff;border-radius:999px;width:34px;height:34px;cursor:pointer}
         @media(max-width:900px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.liveGrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.liveGrid{grid-template-columns:1fr}.topLinks .topLink:not(.active){display:none}.shell{padding:24px 15px 80px}.hero h1{font-size:39px}.heroMain,.heroSide{padding:22px}.controls{flex-direction:column;align-items:stretch}.grid{grid-template-columns:1fr}.thumb{height:185px}}
       `}</style>
@@ -165,14 +237,20 @@ export default function StreamingPage() {
         </div>
         <div className="chips">{categories.map((item) => <button key={item} className={category === item ? "chip active" : "chip"} onClick={() => setCategory(item)}>{item}</button>)}</div>
 
-        <div className="sectionTitle"><div><span className="eyebrow">LIBRARY</span><h2>Continue learning</h2></div><span className="count">{filtered.length} results</span></div>
-        {filtered.length ? <div className="grid">{filtered.map((video) => <article className="card" key={video.id}><div className="thumb"><span className="thumbMark">{video.accent}</span><span className="duration">{video.duration}</span></div><div className="cardBody"><span className="meta">{video.category} · {video.creator}</span><h3>{video.title}</h3><p>{video.description}</p><button className="watch" onClick={() => setSelected(video)}>▶ Watch now</button></div></article>)}</div> : <div className="empty"><strong>No videos found.</strong>Try another search or topic.</div>}
+        <div className="sectionTitle"><div><span className="eyebrow">LIBRARY</span><h2>Continue learning</h2></div><span className="count">{filtered.length} results</span>{admin && <button className="adminBtn" onClick={() => openAdminEditor()}>＋ Upload video</button>}</div>
+        {filtered.length ? <div className="grid">{filtered.map((video) => <article className="card" key={video.id}><div className="thumb"><span className="thumbMark">{video.accent}</span><span className="duration">{video.duration}</span></div><div className="cardBody"><span className="meta">{video.category} · {video.creator}</span><h3>{video.title}</h3><p>{video.description}</p><div className="watchRow"><button className="watch" onClick={() => setSelected(video)}>▶ Watch now</button>{admin && <>{adminVideos.some(v => v.id === video.id) && <button className="editBtn" onClick={() => openAdminEditor(video)}>Edit</button>}<button className="adminBtn" onClick={() => openAdminEditor()}>Upload video</button></>}</div></div></article>)}</div> : <div className="empty"><strong>No videos found.</strong>Try another search or topic.</div>}
 
         <div className="sectionTitle"><div><span className="eyebrow">NEXT</span><h2>Keep exploring</h2></div></div>
         <div className="chips"><Link href="/" className="chip">Home feed</Link><Link href="/learn" className="chip">Learning paths</Link><button className="chip" onClick={() => setCategory("Qur'an")}>Qur'an</button><button className="chip" onClick={() => setCategory("Prayer")}>Prayer Academy</button></div>
       </div>
 
+      {adminModal && <div className="adminOverlay" onClick={() => !adminSaving && setAdminModal(false)}><div className="adminModal" onClick={e => e.stopPropagation()}><span className="eyebrow">{editingVideo ? "ADMIN EDITOR" : "ADMIN VIDEO LIBRARY"}</span><h2>{editingVideo ? "Edit video" : "Upload a 1Muslim video"}</h2><p>Only elmiandco@gmail.com can publish and edit these library videos.</p><div className="adminForm"><label>Title<input value={adminTitle} onChange={e=>setAdminTitle(e.target.value)} maxLength={180} /></label><label>Caption / description<textarea value={adminDescription} onChange={e=>setAdminDescription(e.target.value)} maxLength={1000} /></label><label>Topic<select value={adminCategory} onChange={e=>setAdminCategory(e.target.value)}>{categories.filter(x=>x!=="All").map(x=><option key={x}>{x}</option>)}</select></label>{!editingVideo && <label>Video file<input type="file" accept="video/*" onChange={e=>setAdminFile(e.target.files?.[0] ?? null)} /><span className="adminHint">Choose the video you want in the official 1Muslim library.</span></label>}{adminMessage&&<div className="adminMessage">{adminMessage}</div>}</div><div className="adminActions"><button onClick={()=>setAdminModal(false)} disabled={adminSaving}>Cancel</button><button className="save" onClick={()=>void saveAdminVideo()} disabled={adminSaving}>{adminSaving ? "Saving…" : editingVideo ? "Save changes" : "Publish video"}</button></div></div></div>}
+
       {selected && <div className="playerOverlay" onClick={() => setSelected(null)}><div className="player" onClick={(e) => e.stopPropagation()}><video src={selected.src} controls autoPlay playsInline /><div className="playerInfo"><div><h3>{selected.title}</h3><p>{selected.creator} · {selected.category} · {selected.duration}</p></div><button className="close" onClick={() => setSelected(null)} aria-label="Close player">×</button></div></div></div>}
     </main>
   );
 }
+
+
+function formatDuration(seconds: number | null | undefined) { const total=Math.max(0,Math.round(Number(seconds)||0)); return `${Math.floor(total/60)}:${String(total%60).padStart(2,"0")}`; }
+function readVideoDuration(file: File): Promise<number> { return new Promise(resolve => { const url=URL.createObjectURL(file); const video=document.createElement("video"); video.preload="metadata"; video.onloadedmetadata=()=>{const d=Number.isFinite(video.duration)?video.duration:0; URL.revokeObjectURL(url); resolve(d)}; video.onerror=()=>{URL.revokeObjectURL(url);resolve(0)}; video.src=url; }); }
