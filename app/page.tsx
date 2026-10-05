@@ -131,7 +131,7 @@ export default function Home() {
           <p>You can love your mother before you ever say, “I love my mother.” Saying it doesn’t create the love — it affirms what you already know and feel.</p>
           <p>Faith works with that same honesty. When you have learned enough about Allah, His Qur’an and His Messengers, you can affirm what you believe:</p>
           <blockquote>“I bear witness that there is no deity worthy of worship except Allah, and I bear witness that Muhammad is His Messenger.”</blockquote>
-          <button className="primary">Say it <Arrow /></button>
+          <Link className="primary" href="/recording-studio/shahadah">Say it <Arrow /></Link>
         </section>
 
         <section className="sectionBlock compact">
