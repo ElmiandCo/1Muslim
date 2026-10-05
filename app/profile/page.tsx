@@ -1,5 +1,7 @@
 "use client";
 
+import "./profile.css";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import SiteNav from "../components/SiteNav";
