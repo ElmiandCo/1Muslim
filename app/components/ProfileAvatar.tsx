@@ -45,7 +45,7 @@ export default function ProfileAvatar({
   const accessoryIds = Array.isArray(config.accessories) ? config.accessories.map(String) : [];
   const accessories = ACCESSORIES.filter((item) => accessoryIds.includes(item.id));
   const isFemale = selectedGender === "female";
-  const avatarSrc = isFemale ? "/avatars/default-female.webp" : "/avatars/default-male.webp";
+  const avatarSrc = isFemale ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg";
 
   return (
     <div className={`profileAvatar avatar-${size} accent-${accent} package-${packageKey}`} aria-label={`${name ?? "Member"} avatar`}>
