@@ -10,6 +10,12 @@ import { Room, Track } from "livekit-client";
 
 const categories = ["Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
 type ChatMessage = { id: string; name: string; text: string };
+type AspectRatio = "9:16" | "1:1" | "16:9";
+const formats: Array<{ key: AspectRatio; label: string; width: number; height: number; hint: string }> = [
+  { key: "9:16", label: "Portrait", width: 720, height: 1280, hint: "TikTok / Reels style" },
+  { key: "1:1", label: "Square", width: 1080, height: 1080, hint: "Balanced social card" },
+  { key: "16:9", label: "Landscape", width: 1280, height: 720, hint: "YouTube / desktop style" },
+];
 
 export default function GoLivePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -33,7 +39,7 @@ export default function GoLivePage() {
   const [chatDraft, setChatDraft] = useState("");
   const [reaction, setReaction] = useState<string | null>(null);
   const [followed, setFollowed] = useState(false);
-  const [notifications, setNotifications] = useState(false);
+  const [notifications, setNotifications] = useState(false);\n  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const roomRef = useRef<Room | null>(null);
   const liveStreamIdRef = useRef<string | null>(null);
 
@@ -45,7 +51,7 @@ export default function GoLivePage() {
       }
       streamRef.current?.getTracks().forEach((track) => track.stop());
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: "user", width: { ideal: formats.find(f => f.key === aspectRatio)?.width ?? 720 }, height: { ideal: formats.find(f => f.key === aspectRatio)?.height ?? 1280 } },
         audio: true,
       });
       streamRef.current = stream;
@@ -171,7 +177,7 @@ export default function GoLivePage() {
       });
       const tokenData = await tokenResponse.json();
       if (!tokenResponse.ok) {
-        await supabase.from("live_streams").delete().eq("id", liveStreamId);
+        await supabase.from("live_streams").delete().eq("id", liveStreamId);\n        if (liveThumbnailPath) await supabase.storage.from("live-recordings").remove([liveThumbnailPath]);
         throw new Error(tokenData.error || "LiveKit could not be started.");
       }
 
@@ -198,7 +204,7 @@ export default function GoLivePage() {
 
   useEffect(() => { if (!live) return; const timer = window.setInterval(() => setViewers(v => Math.max(1, v + (Math.random() > 0.62 ? 1 : 0))), 5000); return () => window.clearInterval(timer); }, [live]);
 
-  const sendChat = (e: FormEvent) => { e.preventDefault(); if (!chatDraft.trim()) return; setChat(items => [...items, {id:crypto.randomUUID(), name:"You", text:chatDraft.trim()}]); setChatDraft(""); };
+  const sendChat = (e: FormEvent) => { e.preventDefault(); if (!chatDraft.trim() || live) return; setChat(items => [...items, {id:crypto.randomUUID(), name:"You", text:chatDraft.trim()}]); setChatDraft(""); };
 
   const endLive = () => {
     setLive(false); setViewers(0);
@@ -233,9 +239,9 @@ export default function GoLivePage() {
         .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
         .brand{display:flex;gap:9px;align-items:center;font-weight:850}.mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#101811;border:1px solid #354237;color:#d6e7b8}.back{color:#98a49d;text-decoration:none;font-size:12px}
         .shell{max-width:1120px;margin:auto;padding:30px 18px 70px}.heading{margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#829b87;font-weight:850}.heading h1{font-size:42px;letter-spacing:-.06em;margin:8px 0}.heading p{color:#849087;font-size:13px;margin:0}
-        .layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:16px}.panel{border:1px solid #1b241f;border-radius:22px;background:#0a100c;overflow:hidden}.preview{aspect-ratio:16/10;background:radial-gradient(circle at 50% 40%,#18231b,#050806 65%);position:relative;display:grid;place-items:center}.preview video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}.placeholder{text-align:center;color:#6f7d74}.cameraIcon{font-size:44px;margin-bottom:8px}.recording{position:absolute;top:14px;right:14px;padding:7px 10px;border-radius:999px;background:#261313;color:#ffd9d9;font-size:10px;font-weight:900}.live{position:absolute;top:14px;left:14px;padding:7px 10px;border-radius:999px;background:#e9f3db;color:#081007;font-size:10px;font-weight:900}.status{position:absolute;bottom:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}.status span{font-size:10px;color:#d9e2dc;background:rgba(0,0,0,.62);padding:7px 10px;border-radius:999px}.controls{display:flex;justify-content:center;gap:10px;padding:16px;border-top:1px solid #1b241f}.circle{width:46px;height:46px;border-radius:50%;border:1px solid #334038;background:#121913;color:#fff;cursor:pointer}.circle.off{opacity:.5}.start{padding:12px 22px;border:0;border-radius:999px;background:#d6e7b8;color:#071008;font-weight:850;cursor:pointer}.end{padding:12px 22px;border:0;border-radius:999px;background:#251313;color:#ffd6d6;font-weight:850;cursor:pointer}
+        .layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:16px}.panel{border:1px solid #1b241f;border-radius:22px;background:#0a100c;overflow:hidden}.preview{aspect-ratio:9/16;background:radial-gradient(circle at 50% 40%,#18231b,#050806 65%);position:relative;display:grid;place-items:center}.preview video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}.preview.format-square{aspect-ratio:1/1}.preview.format-landscape{aspect-ratio:16/9}.placeholder{text-align:center;color:#6f7d74}.cameraIcon{font-size:44px;margin-bottom:8px}.recording{position:absolute;top:14px;right:14px;padding:7px 10px;border-radius:999px;background:#261313;color:#ffd9d9;font-size:10px;font-weight:900}.live{position:absolute;top:14px;left:14px;padding:7px 10px;border-radius:999px;background:#e9f3db;color:#081007;font-size:10px;font-weight:900}.status{position:absolute;bottom:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}.status span{font-size:10px;color:#d9e2dc;background:rgba(0,0,0,.62);padding:7px 10px;border-radius:999px}.controls{display:flex;justify-content:center;gap:10px;padding:16px;border-top:1px solid #1b241f}.circle{width:46px;height:46px;border-radius:50%;border:1px solid #334038;background:#121913;color:#fff;cursor:pointer}.circle.off{opacity:.5}.start{padding:12px 22px;border:0;border-radius:999px;background:#d6e7b8;color:#071008;font-weight:850;cursor:pointer}.end{padding:12px 22px;border:0;border-radius:999px;background:#251313;color:#ffd6d6;font-weight:850;cursor:pointer}
         .form{padding:20px}.form h2{font-size:17px;margin:0 0 15px}.field{margin-bottom:15px}.field label{display:block;font-size:10px;color:#748178;margin-bottom:7px;text-transform:uppercase;letter-spacing:.1em}.input,.select{width:100%;border:1px solid #263029;background:#0d140f;color:#f3f6f3;border-radius:11px;padding:12px;outline:none}.input:focus,.select:focus{border-color:#61785a}.help{font-size:10px;color:#66736b;line-height:1.6;margin-top:14px}.error{border:1px solid #533536;background:#1b0f10;color:#ffcaca;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}.ready{border:1px solid #334333;background:#101810;color:#b8d2ae;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}
-        .recordingsLink{display:inline-flex;margin-top:12px;color:#cbd8ce;text-decoration:none;font-size:11px}.notice{margin-top:16px;border:1px solid #273129;border-radius:16px;padding:15px;color:#7d8981;font-size:10px;line-height:1.6}.notice strong{color:#c7d2ca;display:block;margin-bottom:4px}
+        .formatGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.formatButton{border:1px solid #263029;background:#0d140f;color:#aeb8b1;border-radius:13px;padding:11px;text-align:left;cursor:pointer}.formatButton strong{display:block;color:#e8eee9;font-size:11px}.formatButton small{display:block;color:#69766e;font-size:9px;margin-top:4px}.formatButton.active{border-color:#718c69;background:#132016;box-shadow:inset 0 0 0 1px #718c69}.formatButton:disabled{cursor:not-allowed;opacity:.55}.recordingsLink{display:inline-flex;margin-top:12px;color:#cbd8ce;text-decoration:none;font-size:11px}.notice{margin-top:16px;border:1px solid #273129;border-radius:16px;padding:15px;color:#7d8981;font-size:10px;line-height:1.6}.notice strong{color:#c7d2ca;display:block;margin-bottom:4px}
         @media(max-width:780px){.layout{grid-template-columns:1fr}.heading h1{font-size:36px}.shell{padding:24px 12px 50px}}
       `}</style>
 
@@ -249,7 +255,7 @@ export default function GoLivePage() {
 
         <div className="layout">
           <section className="panel">
-            <div className="preview">
+            <div className={`preview format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"}`}>
               {cameraReady ? <video ref={videoRef} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               {live && <span className="live">● LIVE</span>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{micOn ? "Mic on" : "Mic off"}</span></div>}
@@ -265,7 +271,7 @@ export default function GoLivePage() {
             {error && <div className="error">{error}</div>}
             {live && <div className="ready">Your live session is active and being recorded.</div>}{saveMessage && <div className="ready">{saveMessage}</div>}
             <div className="field"><label htmlFor="title">Title</label><input id="title" className="input" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="What are you sharing?" disabled={live}/></div>
-            <div className="field"><label htmlFor="thumbnail">Thumbnail image</label><input id="thumbnail" className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>setThumbnailFile(e.target.files?.[0]??null)} disabled={live}/><p className="help">Choose a cover image so your saved Live recording does not appear as a black thumbnail.</p></div>
+            <div className="field"><label>Screen format</label><div className="formatGrid">{formats.map((format)=><button type="button" key={format.key} className={aspectRatio===format.key?"formatButton active":"formatButton"} onClick={()=>setAspectRatio(format.key)} disabled={live}><strong>{format.label} · {format.key}</strong><small>{format.hint}</small></button>)}</div><p className="help">Pick this before going live. Once the Live starts, the frame is locked for the whole broadcast.</p></div>\n            <div className="field"><label htmlFor="thumbnail">Thumbnail image</label><input id="thumbnail" className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>setThumbnailFile(e.target.files?.[0]??null)} disabled={live}/><p className="help">Choose a cover image so your saved Live recording does not appear as a black thumbnail.</p></div>
             <div className="field"><label htmlFor="category">Topic</label><select id="category" className="select" value={category} onChange={(e)=>setCategory(e.target.value)} disabled={live}>{categories.map((item)=><option key={item}>{item}</option>)}</select></div>
             <p className="help">Starting Live publishes your camera and microphone through the OneMuslim WebRTC media backend. When you end, the finished video is also uploaded to your 1Muslim Live Recordings page.</p>
             <div className="notice"><strong>Broadcast connection</strong>Live video is transported through LiveKit WebRTC. Your finished recording is being transitioned to external video storage; Supabase will keep the recording metadata.</div>
@@ -279,7 +285,7 @@ export default function GoLivePage() {
           </div>
           <div className="liveRoomGrid">
             <div className="reactionPanel"><span className="eyebrow">REACTIONS</span><div className="reactionRow">{["❤️","🤍","👍","✨","🤲"].map(x=><button key={x} className={reaction===x?"reaction selected":"reaction"} onClick={()=>setReaction(x)}>{x}</button>)}</div><p>{reaction ? "Reaction sent to the host." : "Tap a reaction to join the room."}</p></div>
-            <div className="chatPanel"><div className="chatHead"><strong>💬 Live chat</strong><span>{chat.length} messages</span></div><div className="chatMessages">{chat.map(m=><div className="chatMessage" key={m.id}><b>{m.name}</b><span>{m.text}</span></div>)}</div><form className="chatForm" onSubmit={sendChat}><input value={chatDraft} onChange={e=>setChatDraft(e.target.value)} placeholder="Say something beneficial…" maxLength={240}/><button>Send</button></form></div>
+            <div className="chatPanel"><div className="chatHead"><strong>💬 Live chat</strong><span>{chat.length} messages</span></div><div className="chatMessages">{chat.map(m=><div className="chatMessage" key={m.id}><b>{m.name}</b><span>{m.text}</span></div>)}</div><div className="chatHostNotice">You are the host. Viewer chat is shown here; hosts cannot post as a viewer.</div></div>
           </div>
           <div className="freeNote">Free-first mode: this room provides the camera preview and social interaction layer without a paid video provider. A true cross-device broadcast still needs a WebRTC media backend.</div>
         </section>}
