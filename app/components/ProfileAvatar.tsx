@@ -46,14 +46,22 @@ export default function ProfileAvatar({
   const packageKey = String(config.package ?? avatarPackage ?? "starter");
   const accessoryIds = Array.isArray(config.accessories) ? config.accessories.map(String) : [];
   const accessories = ACCESSORIES.filter((item) => accessoryIds.includes(item.id));
-  const initial = (name?.trim()?.[0] ?? "1").toUpperCase();
+  const isFemale = selectedGender === "female";
+  const avatarSrc = isFemale ? "/avatars/default-female.webp" : "/avatars/default-male.webp";
 
   return (
     <div className={`profileAvatar avatar-${size} accent-${accent} package-${packageKey}`} aria-label={`${name ?? "Member"} avatar`}>
       <div className="avatarGlow" />
-      <div className="avatarHead">{selectedGender === "female" ? "◉" : "●"}</div>
-      <div className="avatarBody"><span>{initial}</span></div>
-      {accessories.map((item) => <span key={item.id} className={`avatarAccessory accessory-${item.id}`}>{item.icon}</span>)}
+      <img
+        className="avatarDefaultImage"
+        src={avatarSrc}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+      />
+      {accessories.map((item) => (
+        <span key={item.id} className={`avatarAccessory accessory-${item.id}`}>{item.icon}</span>
+      ))}
     </div>
   );
 }
