@@ -37,7 +37,7 @@ export default function AshabPage() {
 
     const { data: rows, error } = await s.from("ashab_friendships")
       .select("id,requester_id,addressee_id,status")
-      .or(\`requester_id.eq.\${user.id},addressee_id.eq.\${user.id}\`)
+      .or(`requester_id.eq.\${user.id},addressee_id.eq.\${user.id}`)
       .order("created_at", { ascending: false });
 
     if (error) { setMessage(error.message); setLoading(false); return; }
@@ -115,7 +115,7 @@ export default function AshabPage() {
       <section className="ashabSection">
         <div className="sectionHead"><div><span className="eyebrow">YOUR ASHAB</span><h2>Five seats. Choose wisely.</h2></div><Link href="/find" className="ghost">Find people →</Link></div>
         {friends.length === 0 ? <div className="ashabEmpty"><h3>Your circle is open.</h3><p>Find someone you trust, open their profile and choose <b>Add Ashab</b>.</p></div> :
-          <div className="ashabGrid">{friends.map(row => { const id = row.requester_id === me ? row.addressee_id : row.requester_id; const p = profiles[id]; if (!p) return null; return <article className="ashabCard" key={row.id}><ProfileAvatar name={p.display_name} gender={null} avatarGender={p.avatar_gender} avatarPackage={p.avatar_package} avatarConfig={p.avatar_config} accent={p.profile_accent}/><div className="ashabCardBody"><h3>{p.display_name || "Member"}</h3><span>@{p.username || "member"}</span><p>{p.bio || "Building a life of faith, learning and community."}</p><div className="ashabActions"><Link href={\`/profile/\${p.id}\`} className="ghost">View profile</Link><button className="dangerGhost" onClick={() => void removeFriend(row)}>Remove</button></div></div></article>; })}</div>}
+          <div className="ashabGrid">{friends.map(row => { const id = row.requester_id === me ? row.addressee_id : row.requester_id; const p = profiles[id]; if (!p) return null; return <article className="ashabCard" key={row.id}><ProfileAvatar name={p.display_name} gender={null} avatarGender={p.avatar_gender} avatarPackage={p.avatar_package} avatarConfig={p.avatar_config} accent={p.profile_accent}/><div className="ashabCardBody"><h3>{p.display_name || "Member"}</h3><span>@{p.username || "member"}</span><p>{p.bio || "Building a life of faith, learning and community."}</p><div className="ashabActions"><Link href={`/profile/\${p.id}`} className="ghost">View profile</Link><button className="dangerGhost" onClick={() => void removeFriend(row)}>Remove</button></div></div></article>; })}</div>}
       </section>
 
       {outgoing.length > 0 && <section className="ashabSection">
