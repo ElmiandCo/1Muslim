@@ -44,8 +44,8 @@ export default function OnboardingPage() {
     <h1>Choose your profile.</h1>
     <p className="lead">Select your gender once. This sets your default profile avatar and stays fixed after setup.</p>
     <div className="genderGrid">
-      <button className={gender==="male"?"genderCard selected":"genderCard"} onClick={()=>setGender("male")}><img src="/avatars/default-male.webp" alt="" /><strong>Male</strong><span>Use the male default avatar</span></button>
-      <button className={gender==="female"?"genderCard selected":"genderCard"} onClick={()=>setGender("female")}><img src="/avatars/default-female.webp" alt="" /><strong>Female</strong><span>Use the female default avatar</span></button>
+      <button className={gender==="male"?"genderCard selected":"genderCard"} onClick={()=>setGender("male")}><img src="/assets/avatars/default-male.jpg" alt="" /><strong>Male</strong><span>Use the male default avatar</span></button>
+      <button className={gender==="female"?"genderCard selected":"genderCard"} onClick={()=>setGender("female")}><img src="/assets/avatars/default-female.jpg" alt="" /><strong>Female</strong><span>Use the female default avatar</span></button>
     </div>
     {message && <div className="error">{message}</div>}
     <button className="continue" onClick={continueToOneMuslim} disabled={saving}>{saving ? "Saving…" : "Continue to 1Muslim →"}</button>
