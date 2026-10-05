@@ -60,9 +60,9 @@ export default function AshabButton({ targetId }: { targetId: string }) {
   };
 
   if (!me || row?.status === "accepted") return null;
-  const label = row?.status === "accepted" ? "✓ Ashab" : row?.status === "pending" && row.addressee_id === me ? "Accept Ashab" : row?.status === "pending" ? "Ashab requested" : "＋ Add Ashab";
+  const label = row?.status === "pending" && row.addressee_id === me ? "Accept Ashab" : row?.status === "pending" ? "Ashab requested" : "＋ Add Ashab";
 
-  return <button className={"ashabButton " + (row?.status === "accepted" ? "accepted" : "")} onClick={() => void act()} disabled={busy || row?.status === "accepted"}>
+  return <button className="ashabButton" onClick={() => void act()} disabled={busy}>
     {busy ? "Working…" : label}
     <style jsx>{`
       .ashabButton{border:1px solid #53695a;background:#dbe9c4;color:#071008;border-radius:999px;padding:10px 15px;font-size:10px;font-weight:900;cursor:pointer}
