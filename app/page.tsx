@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { ThemeToggle } from "./components/SiteNav";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createClient } from "../utils/supabase/client";
 
 type Path = "easy" | "advanced";
 
@@ -60,6 +61,9 @@ function Arrow() {
 export default function Home() {
   const [path, setPath] = useState<Path>("easy");
   const [active, setActive] = useState("Home");
+  const [signedIn, setSignedIn] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  useEffect(() => { const supabase=createClient(); supabase.auth.getUser().then(async ({data}) => { if(!data.user) return; setSignedIn(true); const {data:profile}=await supabase.from("profiles").select("display_name,username").eq("id",data.user.id).maybeSingle(); setAccountName(profile?.display_name || (profile?.username ? "@"+profile.username : "My profile")); }); }, []);
 
   const lessonSet = path === "easy" ? easy : advanced;
 
@@ -74,7 +78,7 @@ export default function Home() {
         </nav>
         <button className="primary sideCta" onClick={() => document.getElementById("paths")?.scrollIntoView({behavior:"smooth"})}>Start learning</button>
         <ThemeToggle />
-        <Link href="/auth" className="authSidebarLink">Sign in / Create account</Link>
+        {signedIn ? <div className="authSidebarLink"><Link href="/profile">👤 {accountName}</Link><button onClick={async()=>{await createClient().auth.signOut();window.location.reload();}}>Sign out</button></div> : <Link href="/auth" className="authSidebarLink">Sign in / Create account</Link>}
         <div className="sidebarBottom">
           <div className="miniAvatar">OM</div>
           <div><strong>Start where you are.</strong><span>No pressure. No race.</span></div>
