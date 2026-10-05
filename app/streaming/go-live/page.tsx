@@ -141,6 +141,16 @@ export default function GoLivePage() {
         if (thumbnailPath) await supabase.storage.from("live-recordings").remove([thumbnailPath]);
         throw rowError;
       }
+      const activeStreamId = liveStreamIdRef.current;
+      if (activeStreamId) {
+        const { error: streamUpdateError } = await supabase.from("live_streams").update({
+          recording_id: recordingId,
+          status: "ended",
+          ended_at: new Date().toISOString(),
+        }).eq("id", activeStreamId);
+        if (streamUpdateError) throw streamUpdateError;
+        liveStreamIdRef.current = null;
+      }
       chunksRef.current = [];
       recordingStartedAtRef.current = null;
       setSaveMessage("Saved to your Live Recordings.");
@@ -222,7 +232,6 @@ export default function GoLivePage() {
     setLive(false); setViewers(0);
     const supabase = createClient();
     const liveStreamId = liveStreamIdRef.current;
-    liveStreamIdRef.current = null;
     roomRef.current?.disconnect();
     roomRef.current = null;
     if (liveStreamId) {
