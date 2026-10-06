@@ -291,7 +291,7 @@ const openAdminEditor = (video?: Video) => {
               return <section className="topicLiveSection" key={topic}>
                 <div className="topicLiveHead">
                   <div><span className="eyebrow">LIVE TOPIC</span><h3>{topic}</h3><p>Watch, join the conversation, or start your own Live in this topic.</p></div>
-                  <Link href="/streaming/go-live" className="topicGoLive">Go Live in {topic} →</Link>
+                  <Link href={`/streaming/go-live?topic=${encodeURIComponent(topic)}`} className="topicGoLive">Go Live in {topic} →</Link>
                 </div>
                 <div className="liveGrid">{topicStreams.map((stream) => {
                   const end=stream.scheduled_end_at?new Date(stream.scheduled_end_at).getTime():0;
@@ -307,7 +307,7 @@ const openAdminEditor = (video?: Video) => {
               </section>;
             })}
             {liveStreams.some((stream) => !categories.includes(stream.category)) && <section className="topicLiveSection">
-              <div className="topicLiveHead"><div><span className="eyebrow">LIVE TOPIC</span><h3>Community</h3><p>Lives without a specific topic land here so viewers can still find and join them.</p></div><Link href="/streaming/go-live" className="topicGoLive">Go Live →</Link></div>
+              <div className="topicLiveHead"><div><span className="eyebrow">LIVE TOPIC</span><h3>Community</h3><p>Lives without a specific topic land here so viewers can still find and join them.</p></div><Link href="/streaming/go-live?topic=Community" className="topicGoLive">Go Live →</Link></div>
               <div className="liveGrid">{liveStreams.filter((stream) => !categories.includes(stream.category)).map((stream) => <Link href={`/streaming/live/${stream.id}`} className="liveCard" key={stream.id}><div className="liveThumb">{stream.thumbnail_path ? <img src={supabase.storage.from("live-recordings").getPublicUrl(stream.thumbnail_path).data.publicUrl} alt="" /> : <img src={stream.host_avatar_url || (stream.host_gender?.toLowerCase() === "female" ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg")} alt="" />}<span className="liveNow">● LIVE</span></div><div className="liveCardBody"><h3>{stream.title}</h3><p>Community<span className="liveViewer">👥 {stream.viewer_count}</span></p></div></Link>)}</div>
             </section>}
           </div> : <div className="empty"><strong>No one is live right now.</strong>Be the first to go live, or check Scheduled Lives for the next rotation.</div>}
