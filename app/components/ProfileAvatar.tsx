@@ -28,6 +28,7 @@ type Props = {
   avatarConfig?: Record<string, unknown> | null;
   accent?: string | null;
   size?: "sm" | "md" | "lg";
+  isLive?: boolean;
 };
 
 export default function ProfileAvatar({
@@ -38,6 +39,7 @@ export default function ProfileAvatar({
   avatarConfig,
   accent = "emerald",
   size = "md",
+  isLive = false,
 }: Props) {
   const config = avatarConfig ?? {};
   const selectedGender = String(config.gender ?? avatarGender ?? gender ?? "male").toLowerCase();
@@ -48,9 +50,10 @@ export default function ProfileAvatar({
   const avatarSrc = isFemale ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg";
 
   return (
-    <div className={`profileAvatar avatar-${size} accent-${accent} package-${packageKey}`} aria-label={`${name ?? "Member"} avatar`}>
+    <div className={`profileAvatar avatar-${size} accent-${accent} package-${packageKey}${isLive ? " isLive" : ""}`} aria-label={`${name ?? "Member"} avatar${isLive ? " · Live now" : ""}`}>
       <div className="avatarGlow" />
       <img className="avatarDefaultImage" src={avatarSrc} alt="" aria-hidden="true" draggable={false} />
+      {isLive && <span className="liveAvatarRing" aria-hidden="true"><span>LIVE</span></span>}
       {accessories.map((item) => (
         <span key={item.id} className={`avatarAccessory accessory-${item.id}`}>{item.icon}</span>
       ))}
