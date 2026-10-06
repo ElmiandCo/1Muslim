@@ -15,6 +15,7 @@ const links = [
   { label: "Videos", ar: "الفيديوهات", href: "/streaming/library" },
   { label: "Profile", ar: "الملف الشخصي", href: "/profile" },
   { label: "Settings", ar: "الإعدادات", href: "/settings" },
+  { label: "Support", ar: "الدعم", href: "/support" },
 ];
 
 export function ThemeToggle() {
