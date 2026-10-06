@@ -115,7 +115,7 @@ export default function StreamingPage() {
 
   useEffect(() => {
     const loadLives = async () => {
-      const { data } = await supabase.from("live_streams").select("id,title,category,room_name,viewer_count,started_at,scheduled_end_at,thumbnail_path,aspect_ratio,host_id").eq("status","live").order("started_at",{ascending:false});
+      const { data } = await supabase.from("live_streams").select("id,title,category,room_name,viewer_count,started_at,scheduled_end_at,thumbnail_path,aspect_ratio,host_id").eq("status","live").gte("last_heartbeat_at", new Date(Date.now() - 60_000).toISOString()).order("started_at",{ascending:false});
       const rows = (data ?? []) as Omit<LiveStream,"host_gender"|"host_avatar_url">[];
       const hostIds = Array.from(new Set(rows.map(row => row.host_id).filter(Boolean)));
       let profileMap:Record<string,{gender:string|null;avatar_url:string|null}>={};
