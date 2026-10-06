@@ -116,11 +116,36 @@ export default function Home() {
 
         <section className="sectionBlock"><div className="sectionTitle"><div><span className="eyebrow">STILL YOUR JOURNEY</span><h2>Start where you are.</h2></div><span className="counter">Learn at your pace</span></div><p className="adaptive" style={{marginTop:0}}>Live is the front door. Learning, Qur’an, community and reflection are still here when you want to go deeper.</p></section>
 
-        <section className="sectionBlock" id="paths">
-          <div className="sectionTitle"><div><span className="eyebrow">CHOOSE YOUR PACE</span><h2>Two ways in.</h2></div><span className="counter">1 / 2</span></div>
-          <div className="pathTabs">
-            <button className={path === "easy" ? "pathTab selected" : "pathTab"} onClick={() => setPath("easy")}><span>RECOMMENDED</span><strong>The Easy Path</strong><small>Gentle first steps · practical · verse-based</small></button>
-            <button className={path === "advanced" ? "pathTab selected" : "pathTab"} onClick={() => setPath("advanced")}><span>DEEP DIVE</span><strong>The Advanced Path</strong><small>Qur’an · Tafsir · Hadith · Seerah · theology</small></button>
+        <section className="sectionBlock learnPaths" id="paths">
+          <div className="learnPathsHead">
+            <div>
+              <span className="eyebrow">CHOOSE YOUR PACE</span>
+              <h2>Two ways to learn.</h2>
+              <p>Start gently or go straight into the deeper questions. You can switch paths whenever you want.</p>
+            </div>
+            <span className="counter">01 — 02</span>
+          </div>
+
+          <div className="learningChoices">
+            <button className={path === "easy" ? "learningChoice active" : "learningChoice"} onClick={() => setPath("easy")}>
+              <span className="choiceNumber">01</span>
+              <span className="choiceLabel">RECOMMENDED</span>
+              <strong>The Easy Path</strong>
+              <p>Build a clear foundation without rushing. Short lessons, practical guidance and Qur’an-first learning.</p>
+              <span className="choiceMeta"><b>Allah</b><b>Qur’an</b><b>Prayer</b><i>↗</i></span>
+            </button>
+            <button className={path === "advanced" ? "learningChoice active" : "learningChoice"} onClick={() => setPath("advanced")}>
+              <span className="choiceNumber">02</span>
+              <span className="choiceLabel">DEEP DIVE</span>
+              <strong>The Advanced Path</strong>
+              <p>Go deeper into Tawhid, Tafsir, Hadith, Seerah, revelation and the questions behind the foundations.</p>
+              <span className="choiceMeta"><b>Tawhid</b><b>Tafsir</b><b>Seerah</b><i>↗</i></span>
+            </button>
+          </div>
+
+          <div className="learnLessonsHead">
+            <span>{path === "easy" ? "EASY PATH" : "ADVANCED PATH"} · NEXT LESSONS</span>
+            <span>Swipe to explore</span>
           </div>
           <div className="carousel">
             {lessonSet.map(([num,title,text,tag]) => (
@@ -129,7 +154,7 @@ export default function Home() {
               </Link>
             ))}
           </div>
-          <p className="adaptive">The Advanced Path can skip ahead. If a later question needs a foundation, 1Muslim can bring you back — learning should branch, not break.</p>
+          <p className="adaptive">Learning should branch, not break. If a deeper question needs a foundation, 1Muslim can bring you back to it.</p>
         </section>
 
         <section className="shahadahPost">
