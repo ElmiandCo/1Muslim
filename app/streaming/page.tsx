@@ -34,7 +34,6 @@ const videos: Video[] = [
     accent: "☾",
     src: "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
     thumbnail: "/assets/avatars/default-male.jpg",
-    thumbnail: "/assets/avatars/default-male.jpg",
   },
   {
     id: "new-muslim-01",
