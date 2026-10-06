@@ -285,15 +285,19 @@ const openAdminEditor = (video?: Video) => {
         <section className="liveSection">
           <div className="liveSectionHead"><div><span className="eyebrow">LIVE NOW</span><h2>Watch Muslims who are live</h2></div><span className="count">{liveStreams.length} live</span></div>
           {liveStreams.length ? <div className="topicLiveList">
-            {categories.filter((item) => item !== "All").map((topic) => {
-              const topicStreams = liveStreams.filter((stream) => (stream.category || "Community") === topic);
-              if (!topicStreams.length) return null;
-              return <section className="topicLiveSection" key={topic}>
+            {Array.from(new Set(liveStreams.map((stream) => stream.category || "Community")))
+              .map((topic) => ({
+                topic,
+                streams: liveStreams.filter((stream) => (stream.category || "Community") === topic).sort((a,b) => (b.viewer_count ?? 0) - (a.viewer_count ?? 0))
+              }))
+              .sort((a,b) => Math.max(...a.streams.map(s => s.viewer_count ?? 0),0) - Math.max(...b.streams.map(s => s.viewer_count ?? 0),0))
+              .reverse()
+              .map(({topic,streams}) => <section className="topicLiveSection" key={topic}>
                 <div className="topicLiveHead">
-                  <div><span className="eyebrow">LIVE TOPIC</span><h3>{topic}</h3><p>Watch, join the conversation, or start your own Live in this topic.</p></div>
+                  <div><span className="eyebrow">LIVE TOPIC · MOST VIEWED FIRST</span><h3>{topic}</h3><p>Popular Lives appear first. This ranking uses the view count of the individual Live — not accumulated category totals.</p></div>
                   <Link href={`/streaming/go-live?topic=${encodeURIComponent(topic)}`} className="topicGoLive">Go Live in {topic} →</Link>
                 </div>
-                <div className="liveGrid">{topicStreams.map((stream) => {
+                <div className="liveGrid">{streams.map((stream) => {
                   const end=stream.scheduled_end_at?new Date(stream.scheduled_end_at).getTime():0;
                   const remaining=end-Date.now();
                   return <Link href={`/streaming/live/${stream.id}`} className="liveCard" key={stream.id}>
@@ -301,15 +305,10 @@ const openAdminEditor = (video?: Video) => {
                       <span className="liveNow">● LIVE</span>
                       {remaining>0&&remaining<=120000&&<span style={{position:"absolute",bottom:9,left:9,background:"#111c12",color:"#d8e9bd",border:"1px solid #4b5d43",borderRadius:999,padding:"5px 8px",fontSize:9,fontWeight:900}}>SWITCHING IN {Math.ceil(remaining/1000)}s</span>}
                     </div>
-                    <div className="liveCardBody"><h3>{stream.title}</h3><p>{topic}<span className="liveViewer">👥 {stream.viewer_count}</span></p>{remaining>0&&remaining<=120000&&<p style={{color:"#b9ceaa",marginTop:6}}>Next streamer is preparing. The channel will continue.</p>}</div>
+                    <div className="liveCardBody"><h3>{stream.title}</h3><p>{topic}<span className="liveViewer">👥 {stream.viewer_count ?? 0} watching</span></p>{remaining>0&&remaining<=120000&&<p style={{color:"#b9ceaa",marginTop:6}}>Next streamer is preparing. The channel will continue.</p>}</div>
                   </Link>;
                 })}</div>
-              </section>;
-            })}
-            {liveStreams.some((stream) => !categories.includes(stream.category)) && <section className="topicLiveSection">
-              <div className="topicLiveHead"><div><span className="eyebrow">LIVE TOPIC</span><h3>Community</h3><p>Lives without a specific topic land here so viewers can still find and join them.</p></div><Link href="/streaming/go-live?topic=Community" className="topicGoLive">Go Live →</Link></div>
-              <div className="liveGrid">{liveStreams.filter((stream) => !categories.includes(stream.category)).map((stream) => <Link href={`/streaming/live/${stream.id}`} className="liveCard" key={stream.id}><div className="liveThumb">{stream.thumbnail_path ? <img src={supabase.storage.from("live-recordings").getPublicUrl(stream.thumbnail_path).data.publicUrl} alt="" /> : <img src={stream.host_avatar_url || (stream.host_gender?.toLowerCase() === "female" ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg")} alt="" />}<span className="liveNow">● LIVE</span></div><div className="liveCardBody"><h3>{stream.title}</h3><p>Community<span className="liveViewer">👥 {stream.viewer_count}</span></p></div></Link>)}</div>
-            </section>}
+              </section>)}
           </div> : <div className="empty"><strong>No one is live right now.</strong>Be the first to go live, or check Scheduled Lives for the next rotation.</div>}
         </section>
 
