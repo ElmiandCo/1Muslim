@@ -29,10 +29,16 @@ const colors = [["emerald","Emerald"],["gold","Gold"],["blue","Sapphire"],["viol
 
 export default function ProfilePage() {
   const [profile,setProfile]=useState<Profile|null>(null);
-  const [tab,setTab]=useState<"profile"|"avatar"|"header">("profile");
+  const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live">("profile");
   const [saving,setSaving]=useState(false); const [message,setMessage]=useState(""); const [authRequired,setAuthRequired]=useState(false);
+  const [liveConnectors,setLiveConnectors]=useState<Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>>({});
+  const providers=["tiktok","youtube","twitch"] as const;
 
-  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data)setProfile(data as Profile)})()},[]);
+  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data)setProfile(data as Profile);
+    const {data:connectors}=await s.from("live_connectors").select("provider,handle,channel_url,enabled,is_live,live_title").eq("user_id",user.id);
+    const map:Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>={};
+    for(const row of (connectors??[])) map[row.provider]={handle:row.handle??"",channel_url:row.channel_url??"",enabled:!!row.enabled,is_live:!!row.is_live,live_title:row.live_title??""};
+    setLiveConnectors(map);})()},[]);
 
   const tier=useMemo(()=>tierForXp(profile?.xp_total??0),[profile?.xp_total]);
   const update=(patch:Partial<Profile>)=>setProfile(p=>p?{...p,...patch}:p);
@@ -58,6 +64,15 @@ export default function ProfilePage() {
     setMessage(displayChanged||usernameChanged?"Profile identity updated.":"Profile saved.");
   };
 
+  const updateConnector=(provider:string,patch:Partial<{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>)=>setLiveConnectors(x=>({...x,[provider]:{handle:x[provider]?.handle??"",channel_url:x[provider]?.channel_url??"",enabled:x[provider]?.enabled??true,is_live:x[provider]?.is_live??false,live_title:x[provider]?.live_title??"",...patch}}));
+  const saveConnector=async(provider:string)=>{
+    if(!profile)return;
+    const row=liveConnectors[provider]??{handle:"",channel_url:"",enabled:true,is_live:false,live_title:""};
+    const s=createClient();
+    const {error}=await s.from("live_connectors").upsert({user_id:profile.id,provider,handle:row.handle.trim()||null,channel_url:row.channel_url.trim()||null,enabled:row.enabled,is_live:row.is_live,live_title:row.live_title.trim()||null,updated_at:new Date().toISOString()},{onConflict:"user_id,provider"});
+    setMessage(error?error.message:`${provider[0].toUpperCase()+provider.slice(1)} live connector saved.`);
+  };
+
   const toggleAccessory=(id:string)=>{if(!profile)return;const item=ACCESSORIES.find(x=>x.id===id);if(!item)return;const required=AVATAR_TIERS.find(x=>x.key===item.tier)?.minXp??0;if(profile.xp_total<required)return;const current=Array.isArray(profile.avatar_config?.accessories)?profile.avatar_config.accessories.map(String):[];const next=current.includes(id)?current.filter(x=>x!==id):[...current,id];update({avatar_config:{...profile.avatar_config,accessories:next}})};
 
   if(authRequired)return <main><SiteNav compact/><section className="profileEmpty"><h1>Build your profile.</h1><p>Sign in to customize your OneMuslim identity.</p><Link href="/auth" className="primary">Sign in</Link></section></main>;
@@ -65,7 +80,7 @@ export default function ProfilePage() {
 
   return <main className="profilePage"><SiteNav/><div className="profileShell">
     <header className={`profileHero header-${profile.profile_accent}`}><div className="profileHeroTop"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/><div><span className="eyebrow">YOUR ONE MUSLIM PROFILE</span><h1>{profile.display_name||"Member"}</h1><p>@{profile.username||"member"} · {tier.name} · {profile.xp_total.toLocaleString()} XP</p></div></div><div className="profileHeroActions"><Link href="/find" className="ghost">Find People</Link><button className="primary" onClick={save} disabled={saving}>{saving?"Saving…":"Save changes"}</button></div></header>
-    <div className="profileTabs">{(["profile","avatar","header"] as const).map(x=><button className={tab===x?"active":""} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Profile":x==="avatar"?"Avatar & Accessories":"Header Color"}</button>)}</div>
+    <div className="profileTabs">{(["profile","avatar","header","live"] as const).map(x=><button className={tab===x?"active":""} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Profile":x==="avatar"?"Avatar & Accessories":x==="header"?"Header Color":"Live & Streaming"}</button>)}</div>
 
     {tab==="profile"&&<section className="profileEditor"><div className="editorIntro"><span className="eyebrow">PERSONAL DETAILS</span><h2>Tell people who you are.</h2><p>Your profile is yours. Keep only the information you want to share.</p></div><div className="formGrid">
       <label>Display name<input value={profile.display_name??""} disabled={!!displayCooldown} onChange={e=>update({display_name:e.target.value})}/><small className="fieldNote">{displayCooldown?`You can change your display name again in ${displayCooldown}.`:"You can change this once every 3 days."}</small></label><label>@ Member handle<input value={profile.username?`@${profile.username}`:""} placeholder="@member" disabled={!!usernameCooldown} onChange={e=>update({username:e.target.value.replace(/^@+/,"")})}/><small className="fieldNote">{usernameCooldown?`You can change your handle again in ${usernameCooldown}.`:"You can change this once every 3 days."}</small></label><label>First name<input value={profile.first_name??""} onChange={e=>update({first_name:e.target.value})}/></label><label>Last name<input value={profile.last_name??""} onChange={e=>update({last_name:e.target.value})}/></label>
@@ -74,6 +89,18 @@ export default function ProfilePage() {
       <label className="wide">Bio<textarea value={profile.bio??""} maxLength={500} onChange={e=>update({bio:e.target.value})}/></label>
     </div>{message&&<div className="saveMessage">{message}</div>}</section>}
 
+    {tab==="live"&&<section className="profileEditor">
+      <div className="editorIntro"><span className="eyebrow">LIVE & STREAMING</span><h2>Bring your live presence to 1Muslim.</h2><p>Connect your TikTok, YouTube or Twitch profile. When a connector is marked live, your profile gets the animated Live ring and a Watch Stream button.</p></div>
+      <div className="liveConnectorGrid">{providers.map(provider=>{const row=liveConnectors[provider]??{handle:"",channel_url:"",enabled:true,is_live:false,live_title:""};const label=provider==="tiktok"?"TikTok":provider==="youtube"?"YouTube":"Twitch";return <article className={"liveConnectorCard "+(row.is_live?"active":"")} key={provider}>
+        <div className="connectorTop"><div><span className="eyebrow">{label}</span><h3>{row.is_live?"🔴 LIVE NOW":"Connect "+label}</h3></div><button className={"liveToggle "+(row.is_live?"on":"")} onClick={()=>updateConnector(provider,{is_live:!row.is_live})}>{row.is_live?"LIVE":"OFF"}</button></div>
+        <label>Username / channel<input value={row.handle} onChange={e=>updateConnector(provider,{handle:e.target.value})} placeholder={provider==="twitch"?"username":provider==="youtube"?"@channel":"@username"}/></label>
+        <label>Watch URL<input value={row.channel_url} onChange={e=>updateConnector(provider,{channel_url:e.target.value})} placeholder={"https://"+(provider==="tiktok"?"www.tiktok.com/@username/live":provider==="youtube"?"www.youtube.com/@channel/live":"www.twitch.tv/username")}/></label>
+        <label>Live title<input value={row.live_title} onChange={e=>updateConnector(provider,{live_title:e.target.value})} placeholder="What are you streaming?"/></label>
+        <button className="primary" onClick={()=>void saveConnector(provider)}>Save {label}</button>
+        <small>{row.is_live?"Your profile will show Live now.":"Connect first; automatic platform detection can be enabled when the platform API is authorized."}</small>
+      </article>})}</div>
+      <style jsx>{`.liveConnectorGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.liveConnectorCard{border:1px solid var(--line);background:var(--panel2);border-radius:18px;padding:16px}.liveConnectorCard.active{border-color:#71404a;box-shadow:0 0 24px rgba(255,77,94,.08)}.connectorTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.liveConnectorCard h3{margin:5px 0 14px;font-size:16px}.liveConnectorCard label{display:grid;gap:5px;font-size:9px;font-weight:800;color:#94a49a;margin:10px 0}.liveConnectorCard input{width:100%;box-sizing:border-box;border:1px solid var(--line);background:#080d09;color:var(--text);border-radius:10px;padding:10px;font-size:11px}.liveConnectorCard .primary{border:0;cursor:pointer;width:100%;margin-top:4px}.liveConnectorCard small{display:block;color:#718078;font-size:9px;line-height:1.5;margin-top:9px}.liveToggle{border:1px solid #493034;background:#170d0e;color:#b9979b;border-radius:999px;padding:6px 9px;font-size:8px;font-weight:900}.liveToggle.on{background:#ff4d5e;border-color:#ff4d5e;color:#fff;box-shadow:0 0 16px rgba(255,77,94,.35)}@media(max-width:850px){.liveConnectorGrid{grid-template-columns:1fr}}`}</style>
+    </section>}
     {tab==="avatar"&&<section className="avatarEditor"><div className="avatarPreview"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/><strong>{tier.icon} {tier.name}</strong><span>{tier.quality}</span><small>{profile.xp_total.toLocaleString()} XP</small></div><div><span className="eyebrow">5 XP TIERS</span><h2>Earn your look.</h2><p className="muted">Everyone starts with a clean default avatar. More XP unlocks better accessories and richer avatar packages.</p><div className="tierGrid">{AVATAR_TIERS.map(t=><div className={`tierCard ${profile.xp_total>=t.minXp?"unlocked":"locked"}`} key={t.key}><b>{t.icon} {t.name}</b><span>{t.minXp.toLocaleString()} XP</span><small>{profile.xp_total>=t.minXp?t.quality:"Locked"}</small></div>)}</div><div className="accessoryGrid">{ACCESSORIES.map(item=>{const required=AVATAR_TIERS.find(x=>x.key===item.tier)!.minXp;const unlocked=profile.xp_total>=required;const selected=Array.isArray(profile.avatar_config?.accessories)&&profile.avatar_config.accessories.map(String).includes(item.id);return <button key={item.id} disabled={!unlocked} className={`accessoryCard ${selected?"selected":""} ${!unlocked?"locked":""}`} onClick={()=>toggleAccessory(item.id)}><span>{unlocked?item.icon:"🔒"}</span><b>{item.name}</b><small>{unlocked?"Tap to equip":`${required.toLocaleString()} XP`}</small></button>})}</div></div></section>}
 
     {tab==="header"&&<section className="headerEditor"><span className="eyebrow">PROFILE HEADER</span><h2>Choose your header color.</h2><p className="muted">Your choice follows you into Find People and your public profile.</p><div className="colorGrid">{colors.map(([key,name])=><button key={key} className={profile.profile_accent===key?"selected":""} onClick={()=>update({profile_accent:key})}><span className={`swatch ${key}`}></span><b>{name}</b></button>)}</div><div className={`headerDemo header-${profile.profile_accent}`}><strong>{profile.display_name}</strong><span>Public profile header preview</span></div></section>}
