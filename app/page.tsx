@@ -106,6 +106,7 @@ export default function Home() {
           <div className="tinyLine" />
         </div>
 
+        <LiveNowFocus />
         <section className="heroPost">
           <div className="eyebrow">1MUSLIM LIVE</div>
           <h1>Watch. Learn. Reflect. Together.</h1>
