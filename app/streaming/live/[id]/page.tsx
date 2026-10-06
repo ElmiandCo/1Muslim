@@ -11,7 +11,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
   const supabase = await createClient();
   const { data: stream } = await supabase
     .from("live_streams")
-    .select("id, host_id, title, category, room_name, viewer_count, started_at, ended_at, status, recording_id, thumbnail_path, aspect_ratio")
+    .select("id, host_id, title, category, room_name, viewer_count, started_at, ended_at, status, recording_id, thumbnail_path, aspect_ratio, visibility")
     .eq("id", id)
     .maybeSingle();
 
@@ -42,7 +42,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
         <div style={{marginBottom:16}}>
           <span style={{fontSize:10,letterSpacing:".15em",color:"#829b87",fontWeight:850}}>{isLive ? "1MUSLIM LIVE" : "1MUSLIM REPLAY"}</span>
           <h1 style={{fontSize:"clamp(30px,5vw,52px)",letterSpacing:"-.06em",margin:"8px 0"}}>{stream.title}</h1>
-          <p style={{color:"#849087",margin:0}}>{stream.category} · {isLive ? "Started " + new Date(stream.started_at).toLocaleString() : "Recorded " + new Date(recording?.created_at ?? stream.ended_at ?? stream.started_at).toLocaleString()}</p>
+          <p style={{color:"#849087",margin:0}}>{stream.category} · {isLive ? "Started " + new Date(stream.started_at).toLocaleString() : "Recorded " + new Date(recording?.created_at ?? stream.ended_at ?? stream.started_at).toLocaleString()}</p>{isLive && <div style={{marginTop:10,fontSize:11,color:"#b9c9bc"}}>{stream.visibility === "ashab" ? "🔒 Ashab Live · Companions only" : "🌐 Public Live · All 1Muslim users"}</div>}
         </div>
 
         <div style={{border:"1px solid #1b241f",borderRadius:22,overflow:"hidden",background:"#080d09"}}>
