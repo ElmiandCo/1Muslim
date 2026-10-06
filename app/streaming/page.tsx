@@ -44,6 +44,7 @@ const videos: Video[] = [
     description: "A welcoming first lesson for someone discovering Islam or beginning again.",
     accent: "✦",
     src: "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
+    thumbnail: "/assets/avatars/default-male.jpg",
   },
   {
     id: "prayer-01",
