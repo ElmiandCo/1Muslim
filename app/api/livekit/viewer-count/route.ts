@@ -18,7 +18,12 @@ export async function POST(request: Request) {
     const client=new RoomServiceClient(url,key,secret);
     const participants=await client.listParticipants(room);
     const viewerCount=participants.filter((participant:any)=>participant.identity!==stream.host_id).length;
-    await supabase.from("live_streams").update({viewer_count:viewerCount,updated_at:new Date().toISOString()}).eq("id",stream.id);
+    const hostPresent=participants.some((participant:any)=>participant.identity===stream.host_id);
+    await supabase.from("live_streams").update({
+      viewer_count:viewerCount,
+      ...(hostPresent ? { last_heartbeat_at:new Date().toISOString() } : {}),
+      updated_at:new Date().toISOString()
+    }).eq("id",stream.id);
     return NextResponse.json({viewerCount});
   } catch(error) {
     console.error("Live viewer count error",error);
