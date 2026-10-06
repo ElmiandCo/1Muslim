@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 import RecordingThumbnail from "../../components/RecordingThumbnail";
 
-type LiveStream = { id: string; title: string; category: string; room_name: string; viewer_count: number; started_at: string; thumbnail_path: string | null; aspect_ratio: "9:16" | "1:1" | "16:9" };
+type LiveStream = { id: string; title: string; category: string; room_name: string; viewer_count: number; started_at: string; scheduled_end_at: string | null; thumbnail_path: string | null; aspect_ratio: "9:16" | "1:1" | "16:9" };
 
 type RecordedLive = { id:string; title:string; category:string; duration_seconds:number; created_at:string; thumbnail_path:string|null; stream_id:string|null; user_id:string; host_name:string; host_avatar_url:string|null; };
 type Video = {
@@ -108,7 +108,7 @@ export default function StreamingPage() {
 
   useEffect(() => {
     const loadLives = async () => {
-      const { data } = await supabase.from("live_streams").select("id,title,category,room_name,viewer_count,started_at,thumbnail_path,aspect_ratio").eq("status","live").order("started_at",{ascending:false});
+      const { data } = await supabase.from("live_streams").select("id,title,category,room_name,viewer_count,started_at,scheduled_end_at,thumbnail_path,aspect_ratio").eq("status","live").order("started_at",{ascending:false});
       setLiveStreams((data ?? []) as LiveStream[]);
     };
     void loadLives();
@@ -241,18 +241,23 @@ const openAdminEditor = (video?: Video) => {
       <div className="shell">
         <section className="hero">
           <div className="heroMain">
-            <span className="eyebrow">1MUSLIM STREAMING</span>
-            <h1>Watch. Learn. Reflect.</h1>
-            <p>A focused home for Qur'an, lessons, Seerah, prayer education, community conversations and live programming — built into the 1Muslim experience.</p>
-            <div className="stats"><div className="stat"><strong>6</strong><span>FEATURED VIDEOS</span></div><div className="stat"><strong>7</strong><span>TOPICS</span></div><div className="stat"><strong>24/7</strong><span>LIBRARY ACCESS</span></div></div>
+            <span className="eyebrow">1MUSLIM LIVE</span>
+            <h1>Live Now.</h1>
+            <p>The main 1Muslim channel: a continuous rotation of pro streamers, scheduled handoffs, and live community conversation. Watch publicly; sign in when you want to participate.</p>
+            <div className="stats"><div className="stat"><strong>LIVE NOW</strong><span>CONTINUOUS CHANNEL</span></div><div className="stat"><strong>SCHEDULED</strong><span>NEXT UP</span></div><div className="stat"><strong>24/7</strong><span>ROTATION MODEL</span></div></div>
           </div>
           <div className="heroSide">
-            <span className="liveBadge"><i className="dot" /> LIVE PROGRAMMING</span><Link href="/streaming/go-live" className="topLink" style={{display:"inline-block",marginTop:12}}>Go Live →</Link>
-            <h3>Coming into the feed</h3>
-            <p>When a live stream is available, it will appear here with a live badge and open directly into the player. Recorded sessions stay available afterward.</p>
-            <button className="topLink" style={{marginTop:10,cursor:"pointer"}} onClick={() => setCategory("Community")}>Browse community</button>
+            <span className="liveBadge"><i className="dot" /> MAIN CHANNEL</span>
+            <Link href="/streaming/go-live" className="topLink" style={{display:"inline-block",marginTop:12}}>Go Live →</Link>
+            <h3>Two live destinations.</h3>
+            <p>Jump into Live Now for the current broadcast, or open Scheduled Lives to see who is next and when the handoff happens.</p>
+            <Link href="/streaming/scheduled" className="topLink" style={{display:"inline-block",marginTop:10}}>Scheduled Lives →</Link>
           </div>
         </section>
+        <div style={{display:"flex",gap:8,margin:"20px 0 4px",flexWrap:"wrap"}}>
+          <Link href="/streaming" className="chip active" style={{textDecoration:"none"}}>● Live Now</Link>
+          <Link href="/streaming/scheduled" className="chip" style={{textDecoration:"none"}}>Scheduled Lives</Link>
+        </div>
 
         <section className="liveSection">
           <div className="liveSectionHead"><div><span className="eyebrow">RECORDED LIVES</span><h2>Previous Lives</h2></div><span className="count">{recordedLives.length} available</span></div>
@@ -261,7 +266,7 @@ const openAdminEditor = (video?: Video) => {
 
         <section className="liveSection">
           <div className="liveSectionHead"><div><span className="eyebrow">LIVE NOW</span><h2>Watch Muslims who are live</h2></div><span className="count">{liveStreams.length} live</span></div>
-          {liveStreams.length ? <div className="liveGrid">{liveStreams.map((stream) => <Link href={`/streaming/live/${stream.id}`} className="liveCard" key={stream.id}><div className="liveThumb">{stream.thumbnail_path ? <img src={supabase.storage.from("live-recordings").getPublicUrl(stream.thumbnail_path).data.publicUrl} alt="" /> : <span className="liveThumbMark">1</span>}<span className="liveNow">● LIVE</span></div><div className="liveCardBody"><h3>{stream.title}</h3><p>{stream.category}<span className="liveViewer">👥 {stream.viewer_count}</span></p></div></Link>)}</div> : <div className="empty"><strong>No one is live right now.</strong>Check back soon or start your own Live.</div>}
+          {liveStreams.length ? <div className="liveGrid">{liveStreams.map((stream) => { const end=stream.scheduled_end_at?new Date(stream.scheduled_end_at).getTime():0; const remaining=end-Date.now(); return <Link href={`/streaming/live/${stream.id}`} className="liveCard" key={stream.id}><div className="liveThumb">{stream.thumbnail_path ? <img src={supabase.storage.from("live-recordings").getPublicUrl(stream.thumbnail_path).data.publicUrl} alt="" /> : <span className="liveThumbMark">1</span>}<span className="liveNow">● LIVE</span>{remaining>0&&remaining<=120000&&<span style={{position:"absolute",bottom:9,left:9,background:"#111c12",color:"#d8e9bd",border:"1px solid #4b5d43",borderRadius:999,padding:"5px 8px",fontSize:9,fontWeight:900}}>SWITCHING IN {Math.ceil(remaining/1000)}s</span>}</div><div className="liveCardBody"><h3>{stream.title}</h3><p>{stream.category}<span className="liveViewer">👥 {stream.viewer_count}</span></p>{remaining>0&&remaining<=120000&&<p style={{color:"#b9ceaa",marginTop:6}}>Next streamer is preparing. The channel will continue.</p>}</div></Link>})}</div> : <div className="empty"><strong>No one is live right now.</strong>Check Scheduled Lives for the next rotation.</div>}
         </section>
 
         <div className="controls">
