@@ -8,6 +8,7 @@ type RecordingThumbnailProps = {
   photoUrl?: string | null;
   customThumbnailUrl?: string | null;
   compact?: boolean;
+  gender?: string | null;
 };
 
 function duration(seconds:number){
@@ -18,8 +19,9 @@ function duration(seconds:number){
   return h ? `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}` : `${m}:${String(s).padStart(2,"0")}`;
 }
 
-export default function RecordingThumbnail({title,hostName,date,durationSeconds,photoUrl,customThumbnailUrl,compact=false}:RecordingThumbnailProps){
-  const photo=customThumbnailUrl||photoUrl||"";
+export default function RecordingThumbnail({title,hostName,date,durationSeconds,photoUrl,customThumbnailUrl,compact=false,gender}:RecordingThumbnailProps){
+  const defaultAvatar = gender?.toLowerCase() === "female" ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg";
+  const photo=customThumbnailUrl||photoUrl||defaultAvatar;
   const initials=hostName.trim().split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase()||"1M";
   return <div className={compact ? "recordingThumb compact" : "recordingThumb"}>
     <style jsx>{`
