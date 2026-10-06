@@ -29,16 +29,16 @@ const colors = [["emerald","Emerald"],["gold","Gold"],["blue","Sapphire"],["viol
 
 export default function ProfilePage() {
   const [profile,setProfile]=useState<Profile|null>(null);
-  const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live">("profile");
+  const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live"|"shahada">("profile");
   const [saving,setSaving]=useState(false); const [message,setMessage]=useState(""); const [authRequired,setAuthRequired]=useState(false);
-  const [liveConnectors,setLiveConnectors]=useState<Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>>({});
+  const [liveConnectors,setLiveConnectors]=useState<Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>>({});\n  const [vaultUrl,setVaultUrl]=useState("");
   const providers=["tiktok","youtube","twitch"] as const;
 
   useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data)setProfile(data as Profile);
     const {data:connectors}=await s.from("live_connectors").select("provider,handle,channel_url,enabled,is_live,live_title").eq("user_id",user.id);
     const map:Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>={};
     for(const row of (connectors??[])) map[row.provider]={handle:row.handle??"",channel_url:row.channel_url??"",enabled:!!row.enabled,is_live:!!row.is_live,live_title:row.live_title??""};
-    setLiveConnectors(map);})()},[]);
+    setLiveConnectors(map);})()},[]);\n\n  useEffect(()=>{if(tab!=="shahada"||!profile?.shahada_audio_path)return;let active=true;(async()=>{const s=createClient();const {data}=await s.storage.from("shahada-safe-vault").createSignedUrl(profile.shahada_audio_path!,3600);if(active&&data?.signedUrl)setVaultUrl(data.signedUrl)})();return()=>{active=false}},[tab,profile?.shahada_audio_path]);
 
   const tier=useMemo(()=>tierForXp(profile?.xp_total??0),[profile?.xp_total]);
   const update=(patch:Partial<Profile>)=>setProfile(p=>p?{...p,...patch}:p);
@@ -80,7 +80,7 @@ export default function ProfilePage() {
 
   return <main className="profilePage"><SiteNav/><div className="profileShell">
     <header className={`profileHero header-${profile.profile_accent}`}><div className="profileHeroTop"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/><div><span className="eyebrow">YOUR ONE MUSLIM PROFILE</span><h1>{profile.display_name||"Member"}</h1><p>@{profile.username||"member"} · {tier.name} · {profile.xp_total.toLocaleString()} XP</p></div></div><div className="profileHeroActions"><Link href="/find" className="ghost">Find People</Link><button className="primary" onClick={save} disabled={saving}>{saving?"Saving…":"Save changes"}</button></div></header>
-    <div className="profileTabs">{(["profile","avatar","header","live"] as const).map(x=><button className={tab===x?"active":""} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Profile":x==="avatar"?"Avatar & Accessories":x==="header"?"Header Color":"Live & Streaming"}</button>)}</div>
+    <div className="profileTabs">{(["profile","avatar","header","live","shahada"] as const).map(x=><button className={tab===x?"active":""} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Profile":x==="avatar"?"Avatar & Accessories":x==="header"?"Header Color":x==="live"?"Live & Streaming":"Shahada Vault"}</button>)}</div>
 
     {tab==="profile"&&<section className="profileEditor"><div className="editorIntro"><span className="eyebrow">PERSONAL DETAILS</span><h2>Tell people who you are.</h2><p>Your profile is yours. Keep only the information you want to share.</p></div><div className="formGrid">
       <label>Display name<input value={profile.display_name??""} disabled={!!displayCooldown} onChange={e=>update({display_name:e.target.value})}/><small className="fieldNote">{displayCooldown?`You can change your display name again in ${displayCooldown}.`:"You can change this once every 3 days."}</small></label><label>@ Member handle<input value={profile.username?`@${profile.username}`:""} placeholder="@member" disabled={!!usernameCooldown} onChange={e=>update({username:e.target.value.replace(/^@+/,"")})}/><small className="fieldNote">{usernameCooldown?`You can change your handle again in ${usernameCooldown}.`:"You can change this once every 3 days."}</small></label><label>First name<input value={profile.first_name??""} onChange={e=>update({first_name:e.target.value})}/></label><label>Last name<input value={profile.last_name??""} onChange={e=>update({last_name:e.target.value})}/></label>
