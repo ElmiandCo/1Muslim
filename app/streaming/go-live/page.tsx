@@ -33,6 +33,7 @@ export default function GoLivePage() {
   const [title, setTitle] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [category, setCategory] = useState(categories[0]);
+  const [visibility, setVisibility] = useState<"public" | "ashab">("public");
   const [scheduledSlot, setScheduledSlot] = useState<any | null>(null);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleStart, setScheduleStart] = useState("");
@@ -277,6 +278,7 @@ export default function GoLivePage() {
         host_id: user.id,
         title: title.trim(),
         category,
+        visibility,
         room_name: roomName,
         status: "live",
         thumbnail_path: liveThumbnailPath,
@@ -392,6 +394,7 @@ export default function GoLivePage() {
             <div className="field"><label>Screen format</label><div className="formatGrid">{formats.map((format)=><button type="button" key={format.key} className={aspectRatio===format.key?"formatButton active":"formatButton"} onClick={()=>setAspectRatio(format.key)} disabled={live}><strong>{format.label} · {format.key}</strong><small>{format.hint}</small></button>)}</div><p className="help">Pick this before going live. Once the Live starts, the frame is locked for the whole broadcast.</p></div>
             <div className="field"><label htmlFor="thumbnail">Thumbnail image</label><input id="thumbnail" className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>setThumbnailFile(e.target.files?.[0]??null)} disabled={live}/><p className="help">Choose a cover image so your saved Live recording does not appear as a black thumbnail.</p></div>
             <div className="field"><label htmlFor="category">Topic</label><select id="category" className="select" value={category} onChange={(e)=>setCategory(e.target.value)} disabled={live}>{categories.map((item)=><option key={item}>{item}</option>)}</select></div>
+            <div className="field"><label htmlFor="visibility">Who can watch?</label><select id="visibility" className="select" value={visibility} onChange={(e)=>setVisibility(e.target.value as "public" | "ashab")} disabled={live}><option value="public">Public — all 1Muslim users</option><option value="ashab">Ashab — only your Companions</option></select><p className="help">{visibility === "public" ? "Anyone signed in to 1Muslim can watch this Live." : "Only people who are accepted as your Ashab (Companions) can watch this Live."}</p></div>
             <p className="help">Starting Live publishes your camera and microphone through the OneMuslim WebRTC media backend. When you end, the finished video is also uploaded to your 1Muslim Live Recordings page.</p>
             <div className="notice"><strong>Broadcast connection</strong>Live video is transported through LiveKit WebRTC. Your finished recording is being transitioned to external video storage; Supabase will keep the recording metadata.</div>
           </aside>
