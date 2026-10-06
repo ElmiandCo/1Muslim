@@ -33,7 +33,26 @@ export default function GoLivePage() {
   const [title, setTitle] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [category, setCategory] = useState(categories[0]);
-  useEffect(() => { const topic = new URLSearchParams(window.location.search).get("topic"); if (topic && categories.includes(topic)) setCategory(topic); }, []);
+  const [scheduledSlot, setScheduledSlot] = useState<any | null>(null);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleStart, setScheduleStart] = useState("");
+  const [scheduleEnd, setScheduleEnd] = useState("");
+  const [scheduleMessage, setScheduleMessage] = useState("");
+  const [showScheduler, setShowScheduler] = useState(false);
+  useEffect(() => {
+    const topic = new URLSearchParams(window.location.search).get("topic");
+    if (topic && categories.includes(topic)) setCategory(topic);
+  }, []);
+  useEffect(() => {
+    const loadScheduled = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("live_schedule_slots").select("id,title,category,starts_at,ends_at,status").eq("host_id", user.id).in("status", ["scheduled","waiting"]).order("starts_at",{ascending:true}).limit(1).maybeSingle();
+      setScheduledSlot(data ?? null);
+    };
+    void loadScheduled();
+  }, []);
   const [error, setError] = useState("");
   const [viewers, setViewers] = useState(0);
   const [reaction, setReaction] = useState<string | null>(null);
@@ -43,6 +62,23 @@ export default function GoLivePage() {
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const roomRef = useRef<Room | null>(null);
   const liveStreamIdRef = useRef<string | null>(null);
+
+  const scheduleLive = async () => {
+    setScheduleMessage("");
+    if (!title.trim()) return setScheduleMessage("Add a Live title first.");
+    if (!scheduleDate || !scheduleStart || !scheduleEnd) return setScheduleMessage("Choose a date, start time, and end time.");
+    const starts = new Date(\`${scheduleDate}T${scheduleStart}\`);
+    const ends = new Date(\`${scheduleDate}T${scheduleEnd}\`);
+    if (Number.isNaN(starts.getTime()) || Number.isNaN(ends.getTime()) || ends <= starts) return setScheduleMessage("End time must be after start time.");
+    if (starts <= new Date()) return setScheduleMessage("Choose a future start time.");
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return setScheduleMessage("Sign in is required to schedule a Live.");
+    const { data, error } = await supabase.from("live_schedule_slots").insert({host_id:user.id,title:title.trim(),category,starts_at:starts.toISOString(),ends_at:ends.toISOString(),status:"scheduled"}).select("id,title,category,starts_at,ends_at,status").single();
+    if (error) return setScheduleMessage(error.message);
+    setScheduledSlot(data); setScheduleMessage("Scheduled. Your Live Studio will surface a Prep for upcoming Live button when you return.");
+    setShowScheduler(false);
+  };
 
   const startPreview = async () => {
     setError("");
@@ -311,7 +347,7 @@ export default function GoLivePage() {
   return (
     <main className="goLive">
       <style jsx>{`
-        .goLive{min-height:100vh;background:var(--bg);color:var(--text)}
+        .goLive{min-height:100vh;background:var(--bg);color:var(--text)}.studioTools{display:grid;gap:10px;margin:0 0 18px}.upcomingPrep{display:flex;justify-content:space-between;align-items:center;gap:14px;border:1px solid #6b815e;background:linear-gradient(145deg,#121c12,#0b110c);border-radius:18px;padding:14px}.upcomingPrep strong,.upcomingPrep span{display:block}.upcomingPrep strong{font-size:13px;margin:4px 0}.upcomingPrep>div>span:last-child{font-size:10px;color:#7f8d84}.prepButton,.scheduleButton{border:1px solid #41503d;background:#d6e7b8;color:#071008;border-radius:999px;padding:10px 13px;font-size:10px;font-weight:850;cursor:pointer}.scheduleButton{justify-self:start;background:#101811;color:#d6e7b8}.scheduleBox{border:1px solid #263029;border-radius:17px;padding:15px;background:#0a100c}.scheduleBox h3{font-size:14px;margin:0 0 10px}.scheduleFields{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin-bottom:10px}@media(max-width:620px){.upcomingPrep{align-items:flex-start;flex-direction:column}.prepButton{width:100%}.scheduleFields{grid-template-columns:1fr}}
         .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
         .brand{display:flex;gap:9px;align-items:center;font-weight:850}.mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#101811;border:1px solid #354237;color:#d6e7b8}.back{color:#98a49d;text-decoration:none;font-size:12px}
         .shell{max-width:1120px;margin:auto;padding:30px 18px 70px}.heading{margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#829b87;font-weight:850}.heading h1{font-size:42px;letter-spacing:-.06em;margin:8px 0}.heading p{color:#849087;font-size:13px;margin:0}
@@ -323,7 +359,11 @@ export default function GoLivePage() {
 
       <SiteNav />
       <div className="shell">
-        <div className="heading">
+        <div className="studioTools">
+              {scheduledSlot && <div className="upcomingPrep"><div><span className="eyebrow">UPCOMING LIVE</span><strong>{scheduledSlot.title}</strong><span>{scheduledSlot.category} · {new Date(scheduledSlot.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div><button type="button" className="prepButton" onClick={()=>{setTitle(scheduledSlot.title);setCategory(scheduledSlot.category);setShowScheduler(false);setSaveMessage("Prep mode loaded. Check your title, topic, format, thumbnail, camera and microphone before going live.");}}>Prep for upcoming Live →</button></div>}
+              {!live && <button type="button" className="scheduleButton" onClick={()=>setShowScheduler(!showScheduler)}>{showScheduler ? "Close scheduler" : "Schedule a Live"}</button>}
+              {showScheduler && <div className="scheduleBox"><h3>Schedule a Live</h3><div className="scheduleFields"><input className="input" type="date" value={scheduleDate} onChange={e=>setScheduleDate(e.target.value)} /><input className="input" type="time" value={scheduleStart} onChange={e=>setScheduleStart(e.target.value)} /><input className="input" type="time" value={scheduleEnd} onChange={e=>setScheduleEnd(e.target.value)} /></div><button type="button" className="start" onClick={scheduleLive}>Save scheduled Live</button>{scheduleMessage&&<p className="help">{scheduleMessage}</p>}</div>}
+            </div>\n        <div className="heading">
           <span className="eyebrow">CREATOR STUDIO</span>
           <h1>Go Live</h1>
           <p>Share a lesson, reminder, conversation or community moment with 1Muslim.</p><Link href="/streaming/recordings" className="recordingsLink">View your Live Recordings →</Link>
