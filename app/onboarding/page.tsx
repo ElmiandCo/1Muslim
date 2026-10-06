@@ -48,7 +48,10 @@ export default function OnboardingPage(){
  const finish=async()=>{
    if(!gender){setMessage("Please select a gender to continue.");return}
    setSaving(true);setMessage("");const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){router.replace("/auth");return}
-   const {error}=await s.from("profiles").update({gender,avatar_gender:gender,avatar_config:{accent:"emerald",gender,package:"starter",accessories:[]},shahada_verified_at:new Date().toISOString(),shahada_verification_method:"voice-speech-recognition"}).eq("id",user.id).is("gender",null);
+   const {data:existing}=await s.from("profiles").select("gender,avatar_gender,avatar_config").eq("id",user.id).single();
+   const selectedGender=gender || existing?.gender || "";
+   if(!selectedGender){setMessage("Please select a gender to continue.");setSaving(false);return}
+   const {error}=await s.from("profiles").update({gender:selectedGender,avatar_gender:selectedGender,avatar_config:{...(existing?.avatar_config??{}),accent:"emerald",gender:selectedGender,package:"starter",accessories:Array.isArray(existing?.avatar_config?.accessories)?existing.avatar_config.accessories:[]},shahada_verified_at:new Date().toISOString(),shahada_verification_method:"voice-speech-recognition"}).eq("id",user.id);
    if(error){setMessage(error.message);setSaving(false);return}router.replace("/");
  };
  if(checking)return <main className="onboardingPage"><section className="onboardingCard"><span className="eyebrow">1MUSLIM</span><h1>Preparing your profile…</h1></section></main>;
