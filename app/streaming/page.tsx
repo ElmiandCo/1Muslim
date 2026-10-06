@@ -232,7 +232,7 @@ const openAdminEditor = (video?: Video) => {
   return (
     <main className="streamingPage">
       <style jsx>{`
-        .streamingPage{min-height:100vh;background:var(--bg);color:var(--text)}
+        .streamingPage{min-height:100vh;background:var(--bg);color:var(--text)}.topicLiveList{display:grid;gap:22px}.topicLiveSection{border:1px solid #1b241f;border-radius:20px;background:linear-gradient(145deg,#0d130f,#080d09);padding:15px}.topicLiveHead{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 13px}.topicLiveHead h3{font-size:18px;margin:5px 0 3px;letter-spacing:-.035em}.topicLiveHead p{font-size:10px;color:#748078;margin:0}.topicGoLive{white-space:nowrap;text-decoration:none;border:1px solid #354238;border-radius:999px;padding:9px 12px;color:#d6e7b8;background:#101811;font-size:10px;font-weight:800}.topicGoLive:hover{background:#182219;border-color:#61785a}@media(max-width:620px){.topicLiveHead{align-items:flex-start;flex-direction:column}.topicGoLive{width:100%;text-align:center}}
         .streamTop{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:16px max(22px,calc((100vw - 1180px)/2));border-bottom:1px solid #1b241f;background:rgba(5,8,6,.9);backdrop-filter:blur(18px)}
         .brand{display:flex;align-items:center;gap:10px;font-weight:850;letter-spacing:-.04em}
         .mark{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;border:1px solid #354237;background:#101811;color:#d6e7b8}
@@ -284,7 +284,33 @@ const openAdminEditor = (video?: Video) => {
 
         <section className="liveSection">
           <div className="liveSectionHead"><div><span className="eyebrow">LIVE NOW</span><h2>Watch Muslims who are live</h2></div><span className="count">{liveStreams.length} live</span></div>
-          {liveStreams.length ? <div className="liveGrid">{liveStreams.map((stream) => { const end=stream.scheduled_end_at?new Date(stream.scheduled_end_at).getTime():0; const remaining=end-Date.now(); return <Link href={`/streaming/live/${stream.id}`} className="liveCard" key={stream.id}><div className="liveThumb">{stream.thumbnail_path ? <img src={supabase.storage.from("live-recordings").getPublicUrl(stream.thumbnail_path).data.publicUrl} alt="" /> : <img src={stream.host_avatar_url || (stream.host_gender?.toLowerCase() === "female" ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg")} alt="" /><span className="liveNow">● LIVE</span>{remaining>0&&remaining<=120000&&<span style={{position:"absolute",bottom:9,left:9,background:"#111c12",color:"#d8e9bd",border:"1px solid #4b5d43",borderRadius:999,padding:"5px 8px",fontSize:9,fontWeight:900}}>SWITCHING IN {Math.ceil(remaining/1000)}s</span>}</div><div className="liveCardBody"><h3>{stream.title}</h3><p>{stream.category}<span className="liveViewer">👥 {stream.viewer_count}</span></p>{remaining>0&&remaining<=120000&&<p style={{color:"#b9ceaa",marginTop:6}}>Next streamer is preparing. The channel will continue.</p>}</div></Link>})}</div> : <div className="empty"><strong>No one is live right now.</strong>Check Scheduled Lives for the next rotation.</div>}
+          {liveStreams.length ? <div className="topicLiveList">
+            {categories.filter((item) => item !== "All").map((topic) => {
+              const topicStreams = liveStreams.filter((stream) => (stream.category || "Community") === topic);
+              if (!topicStreams.length) return null;
+              return <section className="topicLiveSection" key={topic}>
+                <div className="topicLiveHead">
+                  <div><span className="eyebrow">LIVE TOPIC</span><h3>{topic}</h3><p>Watch, join the conversation, or start your own Live in this topic.</p></div>
+                  <Link href="/streaming/go-live" className="topicGoLive">Go Live in {topic} →</Link>
+                </div>
+                <div className="liveGrid">{topicStreams.map((stream) => {
+                  const end=stream.scheduled_end_at?new Date(stream.scheduled_end_at).getTime():0;
+                  const remaining=end-Date.now();
+                  return <Link href={`/streaming/live/${stream.id}`} className="liveCard" key={stream.id}>
+                    <div className="liveThumb">{stream.thumbnail_path ? <img src={supabase.storage.from("live-recordings").getPublicUrl(stream.thumbnail_path).data.publicUrl} alt="" /> : <img src={stream.host_avatar_url || (stream.host_gender?.toLowerCase() === "female" ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg")} alt="" />}
+                      <span className="liveNow">● LIVE</span>
+                      {remaining>0&&remaining<=120000&&<span style={{position:"absolute",bottom:9,left:9,background:"#111c12",color:"#d8e9bd",border:"1px solid #4b5d43",borderRadius:999,padding:"5px 8px",fontSize:9,fontWeight:900}}>SWITCHING IN {Math.ceil(remaining/1000)}s</span>}
+                    </div>
+                    <div className="liveCardBody"><h3>{stream.title}</h3><p>{topic}<span className="liveViewer">👥 {stream.viewer_count}</span></p>{remaining>0&&remaining<=120000&&<p style={{color:"#b9ceaa",marginTop:6}}>Next streamer is preparing. The channel will continue.</p>}</div>
+                  </Link>;
+                })}</div>
+              </section>;
+            })}
+            {liveStreams.some((stream) => !categories.includes(stream.category)) && <section className="topicLiveSection">
+              <div className="topicLiveHead"><div><span className="eyebrow">LIVE TOPIC</span><h3>Community</h3><p>Lives without a specific topic land here so viewers can still find and join them.</p></div><Link href="/streaming/go-live" className="topicGoLive">Go Live →</Link></div>
+              <div className="liveGrid">{liveStreams.filter((stream) => !categories.includes(stream.category)).map((stream) => <Link href={`/streaming/live/${stream.id}`} className="liveCard" key={stream.id}><div className="liveThumb">{stream.thumbnail_path ? <img src={supabase.storage.from("live-recordings").getPublicUrl(stream.thumbnail_path).data.publicUrl} alt="" /> : <img src={stream.host_avatar_url || (stream.host_gender?.toLowerCase() === "female" ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg")} alt="" />}<span className="liveNow">● LIVE</span></div><div className="liveCardBody"><h3>{stream.title}</h3><p>Community<span className="liveViewer">👥 {stream.viewer_count}</span></p></div></Link>)}</div>
+            </section>}
+          </div> : <div className="empty"><strong>No one is live right now.</strong>Be the first to go live, or check Scheduled Lives for the next rotation.</div>}
         </section>
 
         <div className="controls">
