@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
 
-export default function LiveKitViewer({ roomName }: { roomName: string }) {
+export default function LiveKitViewer({ roomName, streamId }: { roomName: string; streamId?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioContainerRef = useRef<HTMLDivElement>(null);
   const roomRef = useRef<Room | null>(null);
@@ -69,8 +69,10 @@ export default function LiveKitViewer({ roomName }: { roomName: string }) {
     };
 
     void connect();
+    const countTimer = window.setInterval(() => { void fetch("/api/livekit/viewer-count", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({room:roomName}) }); }, 5000);
 
     return () => {
+      window.clearInterval(countTimer);
       mounted = false;
       roomRef.current?.disconnect();
       roomRef.current = null;
