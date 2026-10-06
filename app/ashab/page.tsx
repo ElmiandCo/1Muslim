@@ -28,6 +28,7 @@ export default function AshabPage() {
   const [outgoing, setOutgoing] = useState<Friendship[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [liveIds, setLiveIds] = useState<Set<string>>(new Set());
 
   const load = async () => {
     const s = createClient();
@@ -54,6 +55,8 @@ export default function AshabPage() {
     const map: Record<string, Profile> = {};
     for (const p of (people ?? []) as Profile[]) map[p.id] = p;
     setProfiles(map);
+    const { data: liveRows } = ids.length ? await s.from("live_streams").select("host_id").eq("status","live").in("host_id", ids) : { data: [] as {host_id:string}[] };
+    setLiveIds(new Set((liveRows ?? []).map(row => row.host_id)));
     setFriends(accepted);
     setIncoming(inc);
     setOutgoing(out);
@@ -105,7 +108,7 @@ export default function AshabPage() {
           {incoming.map(row => {
             const p = profiles[row.requester_id];
             if (!p) return null;
-            return <article className="ashabCard" key={row.id}><ProfileAvatar name={p.display_name} gender={null} avatarGender={p.avatar_gender} avatarPackage={p.avatar_package} avatarConfig={p.avatar_config} accent={p.profile_accent}/><div className="ashabCardBody"><h3>{p.display_name || "Member"}</h3><span>@{p.username || "member"}</span><p>{p.bio || "Building a life of faith, learning and community."}</p><div className="ashabActions"><button className="primary" onClick={() => void respond(row, "accepted")} disabled={friends.length >= 5}>Accept</button><button className="ghost" onClick={() => void respond(row, "declined")}>Decline</button></div></div></article>;
+            return <article className="ashabCard" key={row.id}><ProfileAvatar name={p.display_name} gender={null} avatarGender={p.avatar_gender} avatarPackage={p.avatar_package} avatarConfig={p.avatar_config} accent={p.profile_accent} isLive={liveIds.has(p.id)}/><div className="ashabCardBody"><h3>{p.display_name || "Member"}</h3><span>@{p.username || "member"}</span><p>{p.bio || "Building a life of faith, learning and community."}</p><div className="ashabActions"><button className="primary" onClick={() => void respond(row, "accepted")} disabled={friends.length >= 5}>Accept</button><button className="ghost" onClick={() => void respond(row, "declined")}>Decline</button></div></div></article>;
           })}
         </div>
       </section>}
