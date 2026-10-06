@@ -67,8 +67,8 @@ export default function GoLivePage() {
     setScheduleMessage("");
     if (!title.trim()) return setScheduleMessage("Add a Live title first.");
     if (!scheduleDate || !scheduleStart || !scheduleEnd) return setScheduleMessage("Choose a date, start time, and end time.");
-    const starts = new Date(\`${scheduleDate}T${scheduleStart}\`);
-    const ends = new Date(\`${scheduleDate}T${scheduleEnd}\`);
+    const starts = new Date(`${scheduleDate}T${scheduleStart}`);
+    const ends = new Date(`${scheduleDate}T${scheduleEnd}`);
     if (Number.isNaN(starts.getTime()) || Number.isNaN(ends.getTime()) || ends <= starts) return setScheduleMessage("End time must be after start time.");
     if (starts <= new Date()) return setScheduleMessage("Choose a future start time.");
     const supabase = createClient();
