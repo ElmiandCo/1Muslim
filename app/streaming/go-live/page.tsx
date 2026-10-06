@@ -33,6 +33,7 @@ export default function GoLivePage() {
   const [title, setTitle] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [category, setCategory] = useState(categories[0]);
+  useEffect(() => { const topic = new URLSearchParams(window.location.search).get("topic"); if (topic && categories.includes(topic)) setCategory(topic); }, []);
   const [error, setError] = useState("");
   const [viewers, setViewers] = useState(0);
   const [reaction, setReaction] = useState<string | null>(null);
