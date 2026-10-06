@@ -64,7 +64,11 @@ export default function Home() {
   const [active, setActive] = useState("Home");
   const [signedIn, setSignedIn] = useState(false);
   const [accountName, setAccountName] = useState("");
-  useEffect(() => { const supabase=createClient(); supabase.auth.getUser().then(async ({data}) => { if(!data.user) return; setSignedIn(true); const {data:profile}=await supabase.from("profiles").select("display_name,username").eq("id",data.user.id).maybeSingle(); setAccountName(profile?.display_name || (profile?.username ? "@"+profile.username : "My profile")); }); }, []);
+  const [myScheduledLives, setMyScheduledLives] = useState<Array<{id:string;title:string;category:string;starts_at:string;ends_at:string}>>([]);
+  useEffect(() => { const supabase=createClient(); supabase.auth.getUser().then(async ({data}) => { if(!data.user) return; setSignedIn(true); const {data:profile}=await supabase.from("profiles").select("display_name,username").eq("id",data.user.id).maybeSingle(); setAccountName(profile?.display_name || (profile?.username ? "@"+profile.username : "My profile"));
+      const {data:scheduled}=await supabase.from("live_schedule_slots").select("id,title,category,starts_at,ends_at").eq("host_id",data.user.id).in("status",["scheduled","waiting"]).gt("starts_at",new Date().toISOString()).order("starts_at",{ascending:true}).limit(3);
+      setMyScheduledLives((scheduled??[]) as Array<{id:string;title:string;category:string;starts_at:string;ends_at:string}>);
+    }); }, []);
 
   const lessonSet = path === "easy" ? easy : advanced;
 
@@ -113,6 +117,16 @@ export default function Home() {
           <div className="welcomeMeta"><span>● Watch without an account</span><span>·</span><span>Sign in to participate</span></div>
         </section>
         <LiveNowFocus />
+        {signedIn && myScheduledLives.length > 0 && <section className="sectionBlock" style={{marginTop:18}}>
+          <div className="sectionTitle"><div><span className="eyebrow">YOUR UPCOMING LIVES</span><h2>My scheduled Lives.</h2></div><Link href="/streaming/scheduled" className="counter">See all →</Link></div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12,marginTop:14}}>
+            {myScheduledLives.map(live=><Link key={live.id} href="/streaming/go-live" style={{textDecoration:"none",color:"inherit",border:"1px solid var(--border,#263029)",borderRadius:18,padding:16}}>
+              <div className="eyebrow">{live.category}</div><h3 style={{margin:"8px 0 5px"}}>{live.title}</h3>
+              <div style={{fontSize:11,opacity:.7}}>{new Date(live.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</div>
+              <div style={{fontSize:11,marginTop:10}}>Prep in Live Studio →</div>
+            </Link>)}
+          </div>
+        </section>}
 
         <section className="sectionBlock"><div className="sectionTitle"><div><span className="eyebrow">STILL YOUR JOURNEY</span><h2>Start where you are.</h2></div><span className="counter">Learn at your pace</span></div><p className="adaptive" style={{marginTop:0}}>Live is the front door. Learning, Qur’an, community and reflection are still here when you want to go deeper.</p></section>
 
