@@ -55,7 +55,7 @@ const videos: Video[] = [
     description: "A visual walkthrough of the core movements of salah.",
     accent: "⌁",
     src: "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
-  },
+    thumbnail: "/assets/avatars/default-male.jpg",\n  },
   {
     id: "seerah-01",
     title: "The Life of Muhammad ﷺ — The Beginning",
@@ -65,7 +65,7 @@ const videos: Video[] = [
     description: "Start the Seerah with historical context and a careful timeline.",
     accent: "◇",
     src: "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
-  },
+    thumbnail: "/assets/avatars/default-male.jpg",\n  },
   {
     id: "tawhid-01",
     title: "Why One God?",
@@ -75,7 +75,7 @@ const videos: Video[] = [
     description: "An accessible introduction to Tawhid and worship belonging to Allah alone.",
     accent: "1",
     src: "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
-  },
+    thumbnail: "/assets/avatars/default-male.jpg",\n  },
   {
     id: "community-01",
     title: "Ask 1Muslim: Faith, Doubt & Honest Questions",
@@ -85,7 +85,7 @@ const videos: Video[] = [
     description: "A community conversation about asking difficult questions without shame.",
     accent: "◎",
     src: "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
-  },
+    thumbnail: "/assets/avatars/default-male.jpg",\n  },
 ];
 
 const categories = ["All", "Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
