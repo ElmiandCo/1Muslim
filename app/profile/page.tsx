@@ -12,7 +12,7 @@ type Profile = {
   city: string | null; state: string | null; country: string | null; gender: string | null; bio: string | null;
   xp_total: number; avatar_gender: string; avatar_package: string; avatar_config: Record<string, unknown>;
   profile_background: string; profile_accent: string;
-  display_name_changed_at: string | null; username_changed_at: string | null;
+  display_name_changed_at: string | null; username_changed_at: string | null; shahada_verified_at: string | null; shahada_audio_path: string | null; shahada_language: "ar" | "en" | null;
 };
 
 const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
@@ -38,7 +38,7 @@ export default function ProfilePage() {
     const {data:connectors}=await s.from("live_connectors").select("provider,handle,channel_url,enabled,is_live,live_title").eq("user_id",user.id);
     const map:Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>={};
     for(const row of (connectors??[])) map[row.provider]={handle:row.handle??"",channel_url:row.channel_url??"",enabled:!!row.enabled,is_live:!!row.is_live,live_title:row.live_title??""};
-    setLiveConnectors(map);})()},[]);\n\n  useEffect(()=>{if(tab!=="shahada"||!profile?.shahada_audio_path)return;let active=true;(async()=>{const s=createClient();const {data}=await s.storage.from("shahada-safe-vault").createSignedUrl(profile.shahada_audio_path!,3600);if(active&&data?.signedUrl)setVaultUrl(data.signedUrl)})();return()=>{active=false}},[tab,profile?.shahada_audio_path]);
+    setLiveConnectors(map);})()},[]);\n\n  useEffect(()=>{if(tab!=="shahada"||!profile?.shahada_audio_path)return;let active=true;(async()=>{const s=createClient();const {data}=await s.storage.from("shahada-safe-vault").createSignedUrl(profile.shahada_audio_path!,600);if(active&&data?.signedUrl)setVaultUrl(data.signedUrl)})();return()=>{active=false}},[tab,profile?.shahada_audio_path]);
 
   const tier=useMemo(()=>tierForXp(profile?.xp_total??0),[profile?.xp_total]);
   const update=(patch:Partial<Profile>)=>setProfile(p=>p?{...p,...patch}:p);
@@ -100,6 +100,15 @@ export default function ProfilePage() {
         <small>{row.is_live?"Your profile will show Live now.":"Connect first; automatic platform detection can be enabled when the platform API is authorized."}</small>
       </article>})}</div>
       <style jsx>{`.liveConnectorGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.liveConnectorCard{border:1px solid var(--line);background:var(--panel2);border-radius:18px;padding:16px}.liveConnectorCard.active{border-color:#71404a;box-shadow:0 0 24px rgba(255,77,94,.08)}.connectorTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.liveConnectorCard h3{margin:5px 0 14px;font-size:16px}.liveConnectorCard label{display:grid;gap:5px;font-size:9px;font-weight:800;color:#94a49a;margin:10px 0}.liveConnectorCard input{width:100%;box-sizing:border-box;border:1px solid var(--line);background:#080d09;color:var(--text);border-radius:10px;padding:10px;font-size:11px}.liveConnectorCard .primary{border:0;cursor:pointer;width:100%;margin-top:4px}.liveConnectorCard small{display:block;color:#718078;font-size:9px;line-height:1.5;margin-top:9px}.liveToggle{border:1px solid #493034;background:#170d0e;color:#b9979b;border-radius:999px;padding:6px 9px;font-size:8px;font-weight:900}.liveToggle.on{background:#ff4d5e;border-color:#ff4d5e;color:#fff;box-shadow:0 0 16px rgba(255,77,94,.35)}@media(max-width:850px){.liveConnectorGrid{grid-template-columns:1fr}}`}</style>
+    </section>}
+    {tab==="shahada"&&<section className="profileEditor">
+      <div className="editorIntro"><span className="eyebrow">PRIVATE SAFE VAULT</span><h2>Your Shahada verification.</h2><p>Your original voice recording is private. Only your authenticated account can request a short-lived playback link. Your public profile never exposes the recording.</p></div>
+      <div className="shahadaVaultCard">
+        <div><span className="eyebrow">STATUS</span><h3>{profile.shahada_verified_at?"✓ SHAHADA VERIFIED":"Not verified"}</h3><p>{profile.shahada_language==="ar"?"Arabic":"English"} · {profile.shahada_verified_at?new Date(profile.shahada_verified_at).toLocaleDateString():"—"}</p></div>
+        {profile.shahada_audio_path&&vaultUrl?<audio controls preload="metadata" src={vaultUrl}/>:
+          <span className="muted">No private recording available.</span>}
+      </div>
+      <style jsx>{`.shahadaVaultCard{border:1px solid var(--line);background:var(--panel2);border-radius:18px;padding:18px;display:grid;gap:16px}.shahadaVaultCard h3{margin:6px 0;font-size:18px;color:#d6e7b8}.shahadaVaultCard p{margin:0;color:#7d8a82;font-size:11px}.shahadaVaultCard audio{width:100%}`}</style>
     </section>}
     {tab==="avatar"&&<section className="avatarEditor"><div className="avatarPreview"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/><strong>{tier.icon} {tier.name}</strong><span>{tier.quality}</span><small>{profile.xp_total.toLocaleString()} XP</small></div><div><span className="eyebrow">5 XP TIERS</span><h2>Earn your look.</h2><p className="muted">Everyone starts with a clean default avatar. More XP unlocks better accessories and richer avatar packages.</p><div className="tierGrid">{AVATAR_TIERS.map(t=><div className={`tierCard ${profile.xp_total>=t.minXp?"unlocked":"locked"}`} key={t.key}><b>{t.icon} {t.name}</b><span>{t.minXp.toLocaleString()} XP</span><small>{profile.xp_total>=t.minXp?t.quality:"Locked"}</small></div>)}</div><div className="accessoryGrid">{ACCESSORIES.map(item=>{const required=AVATAR_TIERS.find(x=>x.key===item.tier)!.minXp;const unlocked=profile.xp_total>=required;const selected=Array.isArray(profile.avatar_config?.accessories)&&profile.avatar_config.accessories.map(String).includes(item.id);return <button key={item.id} disabled={!unlocked} className={`accessoryCard ${selected?"selected":""} ${!unlocked?"locked":""}`} onClick={()=>toggleAccessory(item.id)}><span>{unlocked?item.icon:"🔒"}</span><b>{item.name}</b><small>{unlocked?"Tap to equip":`${required.toLocaleString()} XP`}</small></button>})}</div></div></section>}
 
