@@ -309,7 +309,7 @@ export default function GoLivePage() {
 
       startRecording();
       setLive(true);
-      setViewers(1);
+      setViewers(0);
     } catch (err) {
       roomRef.current?.disconnect();
       roomRef.current = null;
@@ -317,7 +317,7 @@ export default function GoLivePage() {
     }
   };
 
-  useEffect(() => { if (!live) return; const timer = window.setInterval(() => setViewers(v => Math.max(1, v + (Math.random() > 0.62 ? 1 : 0))), 5000); return () => window.clearInterval(timer); }, [live]);
+  useEffect(() => { if (!live || !liveStreamIdRef.current) return; const room = `1muslim-live-${liveStreamIdRef.current}`; const update = async () => { try { const response = await fetch("/api/livekit/viewer-count",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room})}); const data=await response.json(); if(response.ok) setViewers(Number(data.viewerCount ?? 0)); } catch {} }; void update(); const timer=window.setInterval(update,5000); return()=>window.clearInterval(timer); }, [live]);
 
   const endLive = () => {
     setLive(false); setViewers(0);
