@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ThemeToggle } from "./components/SiteNav";
 import { useEffect, useState } from "react";
 import { createClient } from "../utils/supabase/client";
+import LiveNowFocus from "./components/LiveNowFocus";
 
 type Path = "easy" | "advanced";
 
@@ -102,15 +103,18 @@ export default function Home() {
         </div>
 
         <section className="heroPost">
-          <div className="eyebrow">WELCOME TO ONEMUSLIM</div>
-          <h1>Start where you are.</h1>
-          <p>You don’t need to know everything today. Discover Islam, strengthen your foundations, ask honest questions, or go deep when you’re ready.</p>
+          <div className="eyebrow">1MUSLIM LIVE</div>
+          <h1>Watch. Learn. Reflect. Together.</h1>
+          <p>The heart of 1Muslim is becoming live community: one continuous channel, scheduled pro streamers, real conversations, and a place to return throughout the day.</p>
           <div className="heroActions">
-            <button className="primary" onClick={() => document.getElementById("paths")?.scrollIntoView({behavior:"smooth"})}>Find my path <Arrow /></button>
-            <button className="ghost">I already know the basics</button>
+            <Link href="/streaming" className="primary">Enter Live Now <Arrow /></Link>
+            <Link href="/streaming/scheduled" className="ghost">See Scheduled Lives</Link>
           </div>
-          <div className="welcomeMeta"><span>● Open to everyone</span><span>·</span><span>Learn at your pace</span></div>
+          <div className="welcomeMeta"><span>● Watch without an account</span><span>·</span><span>Sign in to participate</span></div>
         </section>
+        <LiveNowFocus />
+
+        <section className="sectionBlock"><div className="sectionTitle"><div><span className="eyebrow">STILL YOUR JOURNEY</span><h2>Start where you are.</h2></div><span className="counter">Learn at your pace</span></div><p className="adaptive" style={{marginTop:0}}>Live is the front door. Learning, Qur’an, community and reflection are still here when you want to go deeper.</p></section>
 
         <section className="sectionBlock" id="paths">
           <div className="sectionTitle"><div><span className="eyebrow">CHOOSE YOUR PACE</span><h2>Two ways in.</h2></div><span className="counter">1 / 2</span></div>
