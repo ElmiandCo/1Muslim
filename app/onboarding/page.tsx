@@ -31,7 +31,7 @@ export default function OnboardingPage(){
  const router=useRouter();
  const [step,setStep]=useState<"shahada"|"gender">("shahada");
  const [gender,setGender]=useState<"male"|"female"|"">("");
- const [checking,setChecking]=useState(true),[saving,setSaving]=useState(false),[message,setMessage]=useState(""),[transcript,setTranscript]=useState(""),[listening,setListening]=useState(false),[verified,setVerified]=useState(false);
+ const [checking,setChecking]=useState(true),[saving,setSaving]=useState(false),[message,setMessage]=useState(""),[transcript,setTranscript]=useState(""),[listening,setListening]=useState(false),[verified,setVerified]=useState(false),[recording,setRecording]=useState(false),[audioBlob,setAudioBlob]=useState<Blob|null>(null);\n const recorderRef=useRef<MediaRecorder|null>(null); const streamRef=useRef<MediaStream|null>(null);
  const recognitionRef=useRef<SpeechRecognitionLike|null>(null);
 
  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){router.replace("/auth");return}const {data:p}=await s.from("profiles").select("gender,shahada_verified_at").eq("id",user.id).single();if(p?.gender&&p?.shahada_verified_at){router.replace("/");return}if(p?.shahada_verified_at)setStep("gender");setChecking(false)})()},[router]);
@@ -43,7 +43,7 @@ export default function OnboardingPage(){
    const rec=new SR() as SpeechRecognitionLike; rec.lang="en-US";rec.continuous=false;rec.interimResults=false;
    rec.onresult=(event:any)=>{const text=event.results?.[0]?.[0]?.transcript??"";setTranscript(text);if(closeEnough(text)){setVerified(true);setMessage("Shahada recognized. Continue to your profile setup.");}else{setMessage("We heard you, but the Shahada was not recognized clearly enough. Please try again.");}};
    rec.onerror=()=>{setListening(false);setMessage("We couldn't capture the Shahada. Check microphone permission and try again.")};
-   rec.onend=()=>setListening(false); recognitionRef.current=rec;setListening(true);rec.start();
+   rec.onend=()=>{setListening(false);if(recorderRef.current?.state==="recording")recorderRef.current.stop();}; recognitionRef.current=rec;setListening(true);rec.start();
  };
  const finish=async()=>{
    if(!gender){setMessage("Please select a gender to continue.");return}
@@ -51,7 +51,7 @@ export default function OnboardingPage(){
    const {data:existing}=await s.from("profiles").select("gender,avatar_gender,avatar_config").eq("id",user.id).single();
    const selectedGender=gender || existing?.gender || "";
    if(!selectedGender){setMessage("Please select a gender to continue.");setSaving(false);return}
-   const {error}=await s.from("profiles").update({gender:selectedGender,avatar_gender:selectedGender,avatar_config:{...(existing?.avatar_config??{}),accent:"emerald",gender:selectedGender,package:"starter",accessories:Array.isArray(existing?.avatar_config?.accessories)?existing.avatar_config.accessories:[]},shahada_verified_at:new Date().toISOString(),shahada_verification_method:"voice-speech-recognition"}).eq("id",user.id);
+   const {error}=await s.from("profiles").update({shahada_audio_path:vaultPath,shahada_audio_recorded_at:new Date().toISOString(),gender:selectedGender,avatar_gender:selectedGender,avatar_config:{...(existing?.avatar_config??{}),accent:"emerald",gender:selectedGender,package:"starter",accessories:Array.isArray(existing?.avatar_config?.accessories)?existing.avatar_config.accessories:[]},shahada_verified_at:new Date().toISOString(),shahada_verification_method:"voice-speech-recognition"}).eq("id",user.id);
    if(error){setMessage(error.message);setSaving(false);return}router.replace("/");
  };
  if(checking)return <main className="onboardingPage"><section className="onboardingCard"><span className="eyebrow">1MUSLIM</span><h1>Preparing your profile…</h1></section></main>;
@@ -60,10 +60,10 @@ export default function OnboardingPage(){
    {step==="shahada"?<>
      <span className="eyebrow">COMMUNITY VERIFICATION</span><h1>Say the Shahada.</h1>
      <p className="lead">1Muslim is built for Muslims. Before creating a new account, say the Shahada aloud. Your browser transcribes the phrase locally in the sign-up flow so we can check that the words were spoken clearly.</p>
-     <div className="voiceCard"><div className={listening?"mic listening":"mic"}>◉</div><strong>{listening?"Listening…":"Voice Shahada"}</strong><p>“I bear witness that there is no deity worthy of worship except Allah, and I bear witness that Muhammad is His Messenger.”</p><button className="continue" onClick={startShahada} disabled={listening}>{listening?"Listening…":"Start recording"}</button>{transcript&&<div className="transcript"><small>Heard</small><span>{transcript}</span></div>}</div>
+     <div className="voiceCard"><div className={listening?"mic listening":"mic"}>◉</div><strong>{recording?"Recording securely…":listening?"Listening…":"Voice Shahada"}</strong><p>“I bear witness that there is no deity worthy of worship except Allah, and I bear witness that Muhammad is His Messenger.”</p><button className="continue" onClick={startShahada} disabled={listening||recording}>{recording?"Recording securely…":listening?"Listening…":"Record Shahada"}</button>{transcript&&<div className="transcript"><small>Heard</small><span>{transcript}</span></div>}</div>
      {message&&<div className={verified?"success":"error"}>{message}</div>}
      <button className="continue secondary" disabled={!verified} onClick={()=>setStep("gender")}>Continue to profile →</button>
-     <small className="fine">This checks the spoken phrase; it does not identify your physical voice or prove identity.</small>
+     <small className="fine">Your recording is private in the Safe Vault. Only you can play it. The public only sees the Shahada Verified badge.</small>
    </>:<>
      <span className="eyebrow">WELCOME TO 1MUSLIM</span><h1>Choose your profile.</h1><p className="lead">Select your gender once. This sets your default profile avatar and stays fixed after setup.</p>
      <div className="genderGrid"><button className={gender==="male"?"genderCard selected":"genderCard"} onClick={()=>setGender("male")}><img src="/assets/avatars/default-male.jpg" alt="" /><strong>Male</strong><span>Use the male default avatar</span></button><button className={gender==="female"?"genderCard selected":"genderCard"} onClick={()=>setGender("female")}><img src="/assets/avatars/default-female.jpg" alt="" /><strong>Female</strong><span>Use the female default avatar</span></button></div>
