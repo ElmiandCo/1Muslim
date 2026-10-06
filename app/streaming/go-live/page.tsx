@@ -40,8 +40,10 @@ export default function GoLivePage() {
   const [scheduleMessage, setScheduleMessage] = useState("");
   const [showScheduler, setShowScheduler] = useState(false);
   useEffect(() => {
-    const topic = new URLSearchParams(window.location.search).get("topic");
+    const params = new URLSearchParams(window.location.search);
+    const topic = params.get("topic");
     if (topic && categories.includes(topic)) setCategory(topic);
+    if (params.get("schedule") === "1") setShowScheduler(true);
   }, []);
   useEffect(() => {
     const loadScheduled = async () => {
