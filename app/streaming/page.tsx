@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 import RecordingThumbnail from "../../components/RecordingThumbnail";
+import ReconnectTrivia from "../components/ReconnectTrivia";
 
 type LiveStream = { id: string; title: string; category: string; room_name: string; viewer_count: number; started_at: string; scheduled_end_at: string | null; thumbnail_path: string | null; aspect_ratio: "9:16" | "1:1" | "16:9"; host_id: string; host_gender: string | null; host_avatar_url: string | null };
 
@@ -333,7 +334,19 @@ const openAdminEditor = (video?: Video) => {
                 </section>
               );
             })}
-          </div> : <div className="empty"><strong>No one is live right now.</strong>Be the first to go live, or check Scheduled Lives for the next rotation.</div>}
+          </div> : <div style={{position:"relative",minHeight:390,border:"1px solid #263029",borderRadius:22,overflow:"hidden",background:"radial-gradient(circle at 50% 35%,rgba(72,103,68,.18),rgba(5,8,6,.98) 68%)"}}>
+  <div style={{minHeight:390,display:"grid",placeItems:"center",textAlign:"center",padding:"80px 18px 150px"}}>
+    <div>
+      <div style={{fontSize:72,animation:"oneMuslimWaitingButterfly 3.2s ease-in-out infinite"}}>🦋</div>
+      <span className="eyebrow">1MUSLIM LIVE</span>
+      <h3 style={{fontSize:25,margin:"8px 0"}}>No Live right now</h3>
+      <p style={{maxWidth:430,margin:"0 auto",color:"#7f8b83",fontSize:11,lineHeight:1.6}}>Stay here for the next broadcast. The player will hand off to the next Live as soon as a host goes live.</p>
+      <Link href="/streaming/scheduled" className="topLink" style={{display:"inline-block",marginTop:15}}>See Next Scheduled Live →</Link>
+    </div>
+  </div>
+  <ReconnectTrivia mode="waiting" eventKey={`waiting-${liveStreams.length}`} />
+  <style jsx>{`@keyframes oneMuslimWaitingButterfly{0%,100%{transform:translateY(4px) rotate(-2deg)}50%{transform:translateY(-9px) rotate(2deg)}}`}</style>
+</div>}
         </section>
 
         <div className="controls">
