@@ -17,6 +17,7 @@ export function createLiveAudioProcessor(effect: AudioEffect, nasheedOn: boolean
   let destination: MediaStreamAudioDestinationNode | null = null;
   let nodes: AudioNode[] = [];
   let soundElement: HTMLAudioElement | null = null;
+  let soundGain: GainNode | null = null;
 
   let processor: Processor;
 
@@ -52,11 +53,14 @@ export function createLiveAudioProcessor(effect: AudioEffect, nasheedOn: boolean
       soundElement = new Audio("/audio/NasheedLoop.mp3");
       soundElement.loop = true;
       soundElement.preload = "auto";
-      soundElement.volume = Math.max(0, Math.min(1, soundVolume));
+      soundElement.volume = 1;
       soundElement.crossOrigin = "anonymous";
       const soundSource = context.createMediaElementSource(soundElement);
-      soundSource.connect(destination);
-      nodes.push(soundSource);
+      soundGain = context.createGain();
+      soundGain.gain.value = Math.max(0, Math.min(1, soundVolume));
+      soundSource.connect(soundGain);
+      soundGain.connect(destination);
+      nodes.push(soundSource, soundGain);
       try { await soundElement.play(); } catch {}
     }
 
@@ -73,11 +77,17 @@ export function createLiveAudioProcessor(effect: AudioEffect, nasheedOn: boolean
       await connect(opts);
     },
     setVolume: (value) => {
-      if (soundElement) soundElement.volume = Math.max(0, Math.min(1, value));
+      const next = Math.max(0, Math.min(1, value));
+      if (soundGain && context) {
+        const now = context.currentTime;
+        soundGain.gain.cancelScheduledValues(now);
+        soundGain.gain.setTargetAtTime(next, now, 0.015);
+      }
     },
     destroy: async () => {
       soundElement?.pause();
       soundElement = null;
+      soundGain = null;
       nodes.forEach((node) => { try { node.disconnect(); } catch {} });
       nodes = [];
       destination?.stream.getTracks().forEach((track) => track.stop());
