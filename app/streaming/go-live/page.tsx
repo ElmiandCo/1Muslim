@@ -5,7 +5,8 @@ import SiteNav from "../../components/SiteNav";
 import Link from "next/link";
 import { createClient } from "../../../utils/supabase/client";
 import { useEffect, useRef, useState } from "react";
-import { Room, Track } from "livekit-client";
+import { LocalAudioTrack, Room, Track } from "livekit-client";
+import { createLiveAudioProcessor } from "../../../components/live-audio-effects";
 import LiveChat from "../../../components/LiveChat";
 
 const categories = ["Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
@@ -35,7 +36,7 @@ export default function GoLivePage() {
   const [zoom, setZoom] = useState(1);
   const [focusMode, setFocusMode] = useState<"auto" | "manual">("auto");
   const [focusDistance, setFocusDistance] = useState(0.5);
-  const [cameraCapabilities, setCameraCapabilities] = useState<{zoom?:{min:number;max:number;step:number};focus?:boolean;focusDistance?:{min:number;max:number;step:number}} | null>(null);
+  const [cameraCapabilities, setCameraCapabilities] = useState<{zoom?:{min:number;max:number;step:number};focus?:boolean;focusDistance?:{min:number;max:number;step:number}} | null>(null);\n  const [audioEffect, setAudioEffect] = useState<"studio" | "mosque">("studio");\n  const [sound, setSound] = useState<"none" | "nasheed1" | "nasheed2">("none");\n  const [soundVolume, setSoundVolume] = useState(0.18);\n  const audioTrackRef = useRef<LocalAudioTrack | null>(null);\n  const audioProcessorRef = useRef<any>(null);\n  const processedAudioTrackRef = useRef<MediaStreamTrack | null>(null);
   const [title, setTitle] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [category, setCategory] = useState(categories[0]);
@@ -259,6 +260,46 @@ export default function GoLivePage() {
     }
   };
 
+  const applyAudioStudio = async (nextEffect = audioEffect, nextSound = sound, nextVolume = soundVolume) => {
+    const rawTrack = streamRef.current?.getAudioTracks()[0];
+    if (!rawTrack) return;
+    try {
+      if (audioTrackRef.current) {
+        await audioTrackRef.current.stopProcessor();
+      }
+      const processor = createLiveAudioProcessor(nextEffect, nextSound, nextVolume);
+      audioProcessorRef.current = processor;
+      if (!audioTrackRef.current) {
+        audioTrackRef.current = new LocalAudioTrack(rawTrack);
+      }
+      await audioTrackRef.current.setProcessor(processor as any);
+      processedAudioTrackRef.current = processor.processedTrack ?? audioTrackRef.current.mediaStreamTrack;
+      setAudioEffect(nextEffect);
+      setSound(nextSound);
+      setSoundVolume(nextVolume);
+      if (live && roomRef.current && audioTrackRef.current.sid == null) {
+        await roomRef.current.localParticipant.publishTrack(audioTrackRef.current, { source: Track.Source.Microphone });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Audio Studio could not be applied.");
+    }
+  };
+
+  const setAudioStudioEffect = async (effect: "studio" | "mosque") => {
+    setAudioEffect(effect);
+    await applyAudioStudio(effect, sound, soundVolume);
+  };
+
+  const setAudioStudioSound = async (nextSound: "none" | "nasheed1" | "nasheed2") => {
+    setSound(nextSound);
+    await applyAudioStudio(audioEffect, nextSound, soundVolume);
+  };
+
+  const setAudioStudioVolume = async (value: number) => {
+    setSoundVolume(value);
+    await applyAudioStudio(audioEffect, sound, value);
+  };
+
   const toggleMic = () => {
     const next = !micOn;
     streamRef.current?.getAudioTracks().forEach((track) => (track.enabled = next));
@@ -271,7 +312,7 @@ export default function GoLivePage() {
     const mimeType = ["video/mp4","video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"].find((type) => MediaRecorder.isTypeSupported(type));
     if (!mimeType) throw new Error("This browser cannot record video in a supported format.");
     chunksRef.current = [];
-    const recorder = new MediaRecorder(stream, { mimeType });
+    const recordingAudio = processedAudioTrackRef.current ?? stream.getAudioTracks()[0];\n    const recordingStream = new MediaStream([stream.getVideoTracks()[0], ...(recordingAudio ? [recordingAudio] : [])]);\n    const recorder = new MediaRecorder(recordingStream, { mimeType });
     recorder.ondataavailable = (event) => { if (event.data.size > 0) chunksRef.current.push(event.data); };
     recorderRef.current = recorder;
     recordingStartedAtRef.current = Date.now();
@@ -479,8 +520,8 @@ export default function GoLivePage() {
       recorder.onstop = async () => {
         await saveRecording();
         streamRef.current?.getTracks().forEach((track) => track.stop());
-        streamRef.current = null; setCameraReady(false); setCameraOn(true); setMicOn(true);
-        recorderRef.current = null;
+        streamRef.current = null; setCameraReady(false);\n      audioProcessorRef.current = null; audioTrackRef.current = null; processedAudioTrackRef.current = null; setCameraOn(true); setMicOn(true);
+        recorderRef.current = null;\n        audioProcessorRef.current = null;\n        audioTrackRef.current = null;\n        processedAudioTrackRef.current = null;
       };
       recorder.stop();
       setRecording(false);
@@ -497,7 +538,7 @@ export default function GoLivePage() {
         .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
         .brand{display:flex;gap:9px;align-items:center;font-weight:850}.mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#101811;border:1px solid #354237;color:#d6e7b8}.back{color:#98a49d;text-decoration:none;font-size:12px}
         .shell{max-width:1120px;margin:auto;padding:30px 18px 70px}.heading{margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#829b87;font-weight:850}.heading h1{font-size:42px;letter-spacing:-.06em;margin:8px 0}.heading p{color:#849087;font-size:13px;margin:0}
-        .layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:16px}.panel{border:1px solid #1b241f;border-radius:22px;background:#0a100c;overflow:hidden}.preview{aspect-ratio:9/16;background:radial-gradient(circle at 50% 40%,#18231b,#050806 65%);position:relative;display:grid;place-items:center}.preview video{width:100%;height:100%;object-fit:cover;display:block}.preview video.frontCamera{transform:scaleX(-1)}.preview video.backCamera{transform:none}.preview.format-square{aspect-ratio:1/1}.preview.format-landscape{aspect-ratio:16/9}.placeholder{text-align:center;color:#6f7d74}.cameraIcon{font-size:44px;margin-bottom:8px}.recording{position:absolute;top:14px;right:14px;padding:7px 10px;border-radius:999px;background:#261313;color:#ffd9d9;font-size:10px;font-weight:900}.live{position:absolute;top:14px;left:14px;padding:7px 10px;border-radius:999px;background:#e9f3db;color:#081007;font-size:10px;font-weight:900}.status{position:absolute;bottom:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}.status span{font-size:10px;color:#d9e2dc;background:rgba(0,0,0,.62);padding:7px 10px;border-radius:999px}.controls{display:flex;justify-content:center;gap:10px;padding:16px;border-top:1px solid #1b241f}.circle{width:46px;height:46px;border-radius:50%;border:1px solid #334038;background:#121913;color:#fff;cursor:pointer}.circle.off{opacity:.5}.cameraStudio{border-top:1px solid #1b241f;padding:14px 16px;background:#0b110d}.studioHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.studioHeader strong{font-size:11px}.studioHeader span{font-size:9px;color:#738078}.studioGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.studioControl{border:1px solid #263029;border-radius:13px;background:#0e1510;padding:10px}.studioControl label{display:flex;justify-content:space-between;font-size:9px;color:#aeb9b1;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}.studioControl select,.studioControl input[type=range]{width:100%}.studioControl select{border:1px solid #263029;background:#0a100c;color:#e8eee9;border-radius:8px;padding:8px;font-size:10px}.studioValue{color:#d6e7b8;font-weight:800}.studioHint{font-size:8px;color:#657269;margin-top:6px;line-height:1.4}.unsupported{opacity:.45}.qualityPills{display:flex;gap:5px}.qualityPill{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px 4px;font-size:9px;cursor:pointer}.qualityPill.active{border-color:#718c69;background:#132016;color:#d6e7b8}.qualityPill:disabled{cursor:not-allowed}.focusRow{display:flex;gap:5px}.focusRow button{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px;font-size:9px}.focusRow button.active{border-color:#718c69;background:#132016;color:#d6e7b8}.start{padding:12px 22px;border:0;border-radius:999px;background:#d6e7b8;color:#071008;font-weight:850;cursor:pointer}.end{padding:12px 22px;border:0;border-radius:999px;background:#251313;color:#ffd6d6;font-weight:850;cursor:pointer}
+        .layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:16px}.panel{border:1px solid #1b241f;border-radius:22px;background:#0a100c;overflow:hidden}.preview{aspect-ratio:9/16;background:radial-gradient(circle at 50% 40%,#18231b,#050806 65%);position:relative;display:grid;place-items:center}.preview video{width:100%;height:100%;object-fit:cover;display:block}.preview video.frontCamera{transform:scaleX(-1)}.preview video.backCamera{transform:none}.preview.format-square{aspect-ratio:1/1}.preview.format-landscape{aspect-ratio:16/9}.placeholder{text-align:center;color:#6f7d74}.cameraIcon{font-size:44px;margin-bottom:8px}.recording{position:absolute;top:14px;right:14px;padding:7px 10px;border-radius:999px;background:#261313;color:#ffd9d9;font-size:10px;font-weight:900}.live{position:absolute;top:14px;left:14px;padding:7px 10px;border-radius:999px;background:#e9f3db;color:#081007;font-size:10px;font-weight:900}.status{position:absolute;bottom:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}.status span{font-size:10px;color:#d9e2dc;background:rgba(0,0,0,.62);padding:7px 10px;border-radius:999px}.controls{display:flex;justify-content:center;gap:10px;padding:16px;border-top:1px solid #1b241f}.circle{width:46px;height:46px;border-radius:50%;border:1px solid #334038;background:#121913;color:#fff;cursor:pointer}.circle.off{opacity:.5}.cameraStudio{border-top:1px solid #1b241f;padding:14px 16px;background:#0b110d}.studioHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.studioHeader strong{font-size:11px}.studioHeader span{font-size:9px;color:#738078}.studioGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.studioControl{border:1px solid #263029;border-radius:13px;background:#0e1510;padding:10px}.studioControl label{display:flex;justify-content:space-between;font-size:9px;color:#aeb9b1;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}.studioControl select,.studioControl input[type=range]{width:100%}.studioControl select{border:1px solid #263029;background:#0a100c;color:#e8eee9;border-radius:8px;padding:8px;font-size:10px}.studioValue{color:#d6e7b8;font-weight:800}.studioHint{font-size:8px;color:#657269;margin-top:6px;line-height:1.4}.unsupported{opacity:.45}.qualityPills{display:flex;gap:5px}.qualityPill{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px 4px;font-size:9px;cursor:pointer}.qualityPill.active{border-color:#718c69;background:#132016;color:#d6e7b8}.qualityPill:disabled{cursor:not-allowed}.focusRow{display:flex;gap:5px}.focusRow button{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px;font-size:9px}.focusRow button.active{border-color:#718c69;background:#132016;color:#d6e7b8}.audioPills{display:flex;gap:5px;flex-wrap:wrap}.audioPill{flex:1;min-width:82px;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:8px 6px;font-size:9px;cursor:pointer}.audioPill.active{border-color:#718c69;background:#132016;color:#d6e7b8}.audioVolume{width:100%;margin-top:7px}.audioNote{font-size:8px;color:#657269;margin-top:6px;line-height:1.4}.start{padding:12px 22px;border:0;border-radius:999px;background:#d6e7b8;color:#071008;font-weight:850;cursor:pointer}.end{padding:12px 22px;border:0;border-radius:999px;background:#251313;color:#ffd6d6;font-weight:850;cursor:pointer}
         .form{padding:20px}.form h2{font-size:17px;margin:0 0 15px}.field{margin-bottom:15px}.field label{display:block;font-size:10px;color:#748178;margin-bottom:7px;text-transform:uppercase;letter-spacing:.1em}.input,.select{width:100%;border:1px solid #263029;background:#0d140f;color:#f3f6f3;border-radius:11px;padding:12px;outline:none}.input:focus,.select:focus{border-color:#61785a}.help{font-size:10px;color:#66736b;line-height:1.6;margin-top:14px}.error{border:1px solid #533536;background:#1b0f10;color:#ffcaca;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}.ready{border:1px solid #334333;background:#101810;color:#b8d2ae;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}.checkedIn{border-color:#6b815e;background:#111c12;color:#d6e7b8}
         .formatGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.formatButton{border:1px solid #263029;background:#0d140f;color:#aeb8b1;border-radius:13px;padding:11px;text-align:left;cursor:pointer}.formatButton strong{display:block;color:#e8eee9;font-size:11px}.formatButton small{display:block;color:#69766e;font-size:9px;margin-top:4px}.formatButton.active{border-color:#718c69;background:#132016;box-shadow:inset 0 0 0 1px #718c69}.formatButton:disabled{cursor:not-allowed;opacity:.55}.recordingsLink{display:inline-flex;margin-top:12px;color:#cbd8ce;text-decoration:none;font-size:11px}.notice{margin-top:16px;border:1px solid #273129;border-radius:16px;padding:15px;color:#7d8981;font-size:10px;line-height:1.6}.notice strong{color:#c7d2ca;display:block;margin-bottom:4px}
         @media(max-width:780px){.layout{grid-template-columns:1fr}.heading h1{font-size:36px}.shell{padding:24px 12px 50px}}
@@ -546,6 +587,21 @@ export default function GoLivePage() {
                   {focusMode === "manual" && <input type="range" min={cameraCapabilities?.focusDistance?.min ?? 0} max={cameraCapabilities?.focusDistance?.max ?? 1} step={cameraCapabilities?.focusDistance?.step ?? 0.01} value={focusDistance} disabled={!cameraCapabilities?.focusDistance} onChange={e=>{const v=Number(e.target.value);setFocusDistance(v);void setCameraFocus("manual",v)}}/>}
                   <div className="studioHint">{cameraCapabilities?.focus ? "Focus controls appear when the device exposes them." : "Manual focus isn't exposed by this camera/browser."}</div>
                 </div>
+              </div>
+              <div className="studioControl" style={{gridColumn:"1 / -1"}}>
+                <label>Audio Studio <span className="studioValue">{audioEffect === "studio" ? "Studio — Clear" : "Echo — Mosque"}{sound !== "none" ? ` · ${sound === "nasheed1" ? "Nasheed 1" : "Nasheed 2"}` : ""}</span></label>
+                <div className="audioPills">
+                  <button type="button" className={audioEffect==="studio" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioEffect("studio")}>Studio — Clear</button>
+                  <button type="button" className={audioEffect==="mosque" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioEffect("mosque")}>Echo — Mosque</button>
+                </div>
+                <div className="studioHint" style={{marginTop:9}}>SOUNDS</div>
+                <div className="audioPills">
+                  <button type="button" className={sound==="none" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioSound("none")}>None</button>
+                  <button type="button" className={sound==="nasheed1" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioSound("nasheed1")}>Nasheed 1</button>
+                  <button type="button" className={sound==="nasheed2" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioSound("nasheed2")}>Nasheed 2</button>
+                </div>
+                {sound !== "none" && <input className="audioVolume" type="range" min="0" max="0.5" step="0.01" value={soundVolume} onChange={e=>void setAudioStudioVolume(Number(e.target.value))}/>}
+                <div className="audioNote">Voice effects and background sound are sent through the LiveKit audio track, so changes can apply while you are live. Add <code>/public/audio/nasheed-1.mp3</code> and <code>/public/audio/nasheed-2.mp3</code> for the two sound beds.</div>
               </div>
             </div>}
           </section>
