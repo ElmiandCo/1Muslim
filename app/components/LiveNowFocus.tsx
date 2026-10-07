@@ -62,6 +62,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const primary = live && rankedLives.some((stream)=>stream.id===live.id) ? live : rankedLives[0];
   const activeHost = primary ? hostMap[(primary as LiveRow & {host_id:string}).host_id] : null;
   const activeHostName = activeHost?.display_name || (activeHost?.username ? "@"+activeHost.username : "1Muslim Host");
+  const currentIndex = primary ? Math.max(0, rankedLives.findIndex((stream)=>stream.id===primary.id)) : activeIndex;
   const hasNextStream = rankedLives.length > 1;
 
   const nextStarts=next?new Date(next.starts_at).getTime():0;
@@ -105,7 +106,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       </div>
       <div>
         {primary ? <div className="liveCard" style={{padding:0,overflow:"hidden"}}>
-          {hasNextStream && <button type="button" onClick={()=>{ const nextIndex=(activeIndex+1)%rankedLives.length; setActiveIndex(nextIndex); setLive(rankedLives[nextIndex]); }} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,border:0,borderBottom:"1px solid #26362b",background:"#0b120d",color:"#dce8dc",padding:"11px 14px",cursor:"pointer",textAlign:"left"}}>
+          {hasNextStream && <button type="button" onClick={()=>{ const nextIndex=(currentIndex+1)%rankedLives.length; setActiveIndex(nextIndex); setLive(rankedLives[nextIndex]); }} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,border:0,borderBottom:"1px solid #26362b",background:"#0b120d",color:"#dce8dc",padding:"11px 14px",cursor:"pointer",textAlign:"left"}}>
             <span style={{fontSize:9,fontWeight:900,letterSpacing:".14em",textTransform:"uppercase"}}>Next Stream</span>
             <span style={{fontSize:10,color:"#8da88f"}}>Switch to another host →</span>
           </button>}
