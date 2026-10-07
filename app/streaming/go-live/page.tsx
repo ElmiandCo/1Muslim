@@ -531,7 +531,7 @@ export default function GoLivePage() {
         let localAudioTrack = audioTrackRef.current;
         if (!localAudioTrack || localAudioTrack.mediaStreamTrack !== audioTrack) {
           localAudioTrack = new LocalAudioTrack(audioTrack);
-          const processor = createLiveAudioProcessor(audioEffect, sound, soundVolume);
+          const processor = createLiveAudioProcessor(audioEffect, nasheedOn, soundVolume);
           await localAudioTrack.setProcessor(processor as any);
           audioTrackRef.current = localAudioTrack;
           audioProcessorRef.current = processor;
