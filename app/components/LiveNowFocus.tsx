@@ -33,6 +33,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const [activeIndex,setActiveIndex]=useState(0);
   const [curatedVideos,setCuratedVideos]=useState<CuratedVideo[]>([]);
   const [next,setNext]=useState<Slot|null>(null);
+  const [nextHost,setNextHost]=useState<{display_name:string|null;username:string|null;avatar_url:string|null} | null>(null);
   const [now,setNow]=useState(Date.now());
   const [loading,setLoading]=useState(true);
   const [commentsOpen,setCommentsOpen]=useState(false);
@@ -56,6 +57,10 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       } else setHostMap({});
       const upcoming=(slots??[]).find((x:any)=>new Date(x.starts_at).getTime()>Date.now() || x.status==="waiting");
       setNext((upcoming??null) as Slot|null);
+      if(upcoming?.host_id){
+        const {data:profile}=await supabase.from("profiles").select("display_name,username,avatar_url").eq("id",upcoming.host_id).maybeSingle();
+        setNextHost(profile ?? null);
+      } else setNextHost(null);
       setLoading(false);
     };
     void load();
@@ -83,6 +88,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const handoffSoon=!!liveEnds && liveEnds-now<=120000 && liveEnds-now>0;
   const nextCountdown=next?countdown(nextStarts-now):"";
   const handoffCountdown=liveEnds?countdown(liveEnds-now):"";
+  const nextHostName=nextHost?.display_name || (nextHost?.username ? "@"+nextHost.username : "Scheduled 1Muslim Host");
 
   if(mode === "carousel"){
     return <section className="liveCarouselSection">
@@ -128,9 +134,14 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
             <span className="pill"><i className="dot"/> {primary ? "#1 LIVE NOW" : "1MUSLIM SELECT"}</span>
             <div><h3>{primary ? activeHostName : activeCurated?.title}</h3><div className="meta">{primary ? `${primary.title} · ${primary.category} · ${primary.viewer_count} watching` : `${activeCurated?.category} · Curated 1Muslim video`}</div>
             {handoffSoon && <div className="handoff">This stream is about to switch.<strong>{handoffCountdown}</strong>Next streamer is preparing now.</div>}</div>
-          </Link>
+          </div>
+        </div> : next ? <div className="liveCard" style={{justifyContent:"center"}}>
+          <span className="pill">◷ NEXT LIVE</span>
+          <div><h3>{nextHostName}</h3><div className="meta">{next.title} · {next.category || "Community"}</div></div>
+          <div className="nextTime">{nextCountdown}</div>
+          <div className="nextMeta">Scheduled for {new Date(next.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}<br/>Get ready — the next live session will appear here automatically.</div>
         </div> : <div className="liveCard"><span className="pill">● LIVE NOW</span><div><h3>24/7 channel ready</h3><div className="meta">{loading?"Checking the channel…":"No streamer is on air right now."}</div></div></div>}
-        {next && !activeCurated && <div className="nextCard" style={{marginTop:10}}><span className="eyebrow">NEXT UP</span><h3>{next.title}</h3><div className="nextTime">{nextCountdown}</div><div className="nextMeta">{next.category} · starts {new Date(next.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}<br/>The next streamer can enter early and wait in the room.</div></div>}
+        {primary && next && <div className="nextCard" style={{marginTop:10}}><span className="eyebrow">NEXT UP</span><h3>{nextHostName} · {next.title}</h3><div className="nextTime">{nextCountdown}</div><div className="nextMeta">{next.category} · starts {new Date(next.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}<br/>The next streamer can enter early and wait in the room.</div></div>}
       </div>
     </div>
     <div className="bar"><span><b>Watching:</b> public · no account required</span><span><b>Interacting:</b> sign in required · Shahada verification for new accounts</span></div>
