@@ -11,7 +11,7 @@ type Profile = {
   id: string; display_name: string; username: string | null; first_name: string | null; last_name: string | null;
   city: string | null; state: string | null; country: string | null; gender: string | null; bio: string | null;
   xp_total: number; avatar_gender: string; avatar_package: string; avatar_config: Record<string, unknown>;
-  profile_background: string; profile_accent: string;
+  profile_background: string; profile_accent: string; community: string | null;
   display_name_changed_at: string | null; username_changed_at: string | null; shahada_verified_at: string | null; shahada_audio_path: string | null; shahada_language: "ar" | "en" | null;
 };
 
