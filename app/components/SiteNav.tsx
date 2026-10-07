@@ -54,6 +54,7 @@ function MenuLink({ href, label, ar, onClick }: { href: string; label: ReactNode
 export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const [user, setUser] = useState<NavUser | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [openMenu, setOpenMenu] = useState<"explore" | "live" | "mobile" | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
 
@@ -62,7 +63,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
     const loadUser = async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!mounted) return;
-      if (!authUser) { setUser(null); setLoadingAuth(false); return; }
+      if (!authUser) { setUser(null); setUnreadCount(0); setLoadingAuth(false); return; }
       const { data: profile } = await supabase.from("profiles")
         .select("display_name,username,gender,avatar_gender,avatar_package,avatar_config,profile_accent,arabic_terms_enabled")
         .eq("id", authUser.id).maybeSingle();
@@ -80,6 +81,18 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => { void loadUser(); });
     return () => { mounted = false; subscription.unsubscribe(); };
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const s = createClient();
+    const loadUnread = async () => {
+      const { count } = await s.from("notifications").select("id", { count: "exact", head: true }).eq("recipient_id", user.id).is("read_at", null);
+      setUnreadCount(count ?? 0);
+    };
+    void loadUnread();
+    const timer = window.setInterval(() => void loadUnread(), 8000);
+    return () => window.clearInterval(timer);
+  }, [user?.id]);
 
   useEffect(() => {
     const outside = (e: PointerEvent) => { if (!navRef.current?.contains(e.target as Node)) setOpenMenu(null); };
@@ -124,11 +137,10 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       </div>
     </nav>
 
-    <div className="mobileNavActions">
-      <Link href="/">Home</Link><Link href="/streaming"><span className="liveDot">●</span> Live</Link>
-    </div>
+    <div className="mobileNavActions"><Link href="/">Home</Link><Link href="/streaming"><span className="liveDot">●</span> Live</Link></div>
 
     {loadingAuth ? <span className="authNav authLoading">Account</span> : user ? <div className="authAccount">
+      <Link href="/notifications" className="notificationBell" aria-label="Notifications">🔔{unreadCount > 0 && <span>{unreadCount > 99 ? "99+" : unreadCount}</span>}</Link>
       <Link href="/profile" className="authNav authProfileLink">
         <ProfileAvatar name={user.display_name} gender={user.gender} avatarGender={user.avatar_gender} avatarPackage={user.avatar_package} avatarConfig={user.avatar_config} accent={user.profile_accent ?? "emerald"} size="sm" />
         <span className="authAccountName">{accountLabel}</span>
@@ -150,11 +162,17 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
         {liveItems.map(item => <MenuLink key={item.href} href={item.href} label={item.label} ar={item.ar} onClick={closeMenu} />)}
       </section>
       {user && <section><span className="mobileMenuSection">ACCOUNT</span>
+        <MenuLink href="/notifications" label={<>Notifications {unreadCount > 0 ? `(${unreadCount > 99 ? "99+" : unreadCount})` : ""}</>} ar="الإشعارات" onClick={closeMenu}/>
         <MenuLink href="/profile" label="Profile" ar="الملف الشخصي" onClick={closeMenu}/>
         <MenuLink href="/settings" label="Settings" ar="الإعدادات" onClick={closeMenu}/>
         <MenuLink href="/support" label="Support" ar="الدعم" onClick={closeMenu}/>
       </section>}
       <div className="mobileMenuFooter"><ThemeToggle/>{user ? <button type="button" className="mobileMenuSignOut" onClick={signOut}>Sign out</button> : <Link href="/auth" onClick={closeMenu}>Sign in</Link>}</div>
     </div>}
+    <style jsx>{`
+      .notificationBell{position:relative;width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);border-radius:11px;background:var(--panel2);text-decoration:none;font-size:14px}
+      .notificationBell span{position:absolute;right:-5px;top:-6px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#dbe9c4;color:#071008;font-size:8px;font-weight:900;display:grid;place-items:center}
+      @media(max-width:700px){.notificationBell{display:none}}
+    `}</style>
   </header>;
 }
