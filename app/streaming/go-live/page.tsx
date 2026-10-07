@@ -76,6 +76,20 @@ export default function GoLivePage() {
   }, []);
   const [error, setError] = useState("");
   const [viewers, setViewers] = useState(0);
+
+  useEffect(() => {
+    if (!live || !liveStreamIdRef.current) return;
+    const heartbeat = async () => {
+      const id = liveStreamIdRef.current;
+      if (!id) return;
+      try {
+        await createClient().from("live_streams").update({ last_heartbeat_at: new Date().toISOString() }).eq("id", id).eq("status", "live");
+      } catch {}
+    };
+    void heartbeat();
+    const timer = window.setInterval(() => void heartbeat(), 15000);
+    return () => window.clearInterval(timer);
+  }, [live]);
   const [reaction, setReaction] = useState<string | null>(null);
   const [followed, setFollowed] = useState(false);
   const [notifications, setNotifications] = useState(false);
@@ -524,6 +538,7 @@ export default function GoLivePage() {
         visibility,
         room_name: roomName,
         status: "live",
+        last_heartbeat_at: new Date().toISOString(),
         schedule_slot_id: scheduledSlot?.id ?? null,
         scheduled_end_at: scheduledSlot?.ends_at ?? null,
         thumbnail_path: liveThumbnailPath,
