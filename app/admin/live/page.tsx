@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { createClient } from "../../utils/supabase/client";
-import SiteNav from "../components/SiteNav";
+import { createClient } from "../../../utils/supabase/client";
+import SiteNav from "../../components/SiteNav";
 
 type LiveStream = { id:string; host_id:string; title:string; category:string; room_name:string; status:string; viewer_count:number; started_at:string; thumbnail_path:string|null };
 type Recording = { id:string; user_id:string; title:string; category:string; video_path:string; thumbnail_path:string|null; mime_type:string; file_size:number; duration_seconds:number; views:number; created_at:string };
