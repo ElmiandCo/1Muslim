@@ -70,7 +70,7 @@ export default function XPTracker(){
 
   useEffect(()=>{
     if(!userId)return;
-    const mediaIsPlaying=()=>Array.from(document.querySelectorAll("video,audio")).some((media)=>!media.paused&&!media.ended&&media.readyState>=2);
+    const mediaIsPlaying=()=>Array.from(document.querySelectorAll<HTMLMediaElement>("video,audio")).some((media)=>!media.paused&&!media.ended&&media.readyState>=2);
     const timer=window.setInterval(async()=>{
       const visible=document.visibilityState==="visible";
       const activelyWatching=mediaIsPlaying();
