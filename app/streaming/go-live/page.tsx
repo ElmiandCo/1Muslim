@@ -38,7 +38,7 @@ export default function GoLivePage() {
   const [focusDistance, setFocusDistance] = useState(0.5);
   const [cameraCapabilities, setCameraCapabilities] = useState<{zoom?:{min:number;max:number;step:number};focus?:boolean;focusDistance?:{min:number;max:number;step:number}} | null>(null);
   const [audioEffect, setAudioEffect] = useState<"studio" | "mosque">("studio");
-  const [sound, setSound] = useState<"none" | "nasheed1" | "nasheed2">("none");
+  const [nasheedOn, setNasheedOn] = useState(false);
   const [soundVolume, setSoundVolume] = useState(0.18);
   const audioTrackRef = useRef<LocalAudioTrack | null>(null);
   const audioProcessorRef = useRef<any>(null);
@@ -266,7 +266,7 @@ export default function GoLivePage() {
     }
   };
 
-  const applyAudioStudio = async (nextEffect = audioEffect, nextSound = sound, nextVolume = soundVolume) => {
+  const applyAudioStudio = async (nextEffect = audioEffect, nextSound = nasheedOn, nextVolume = soundVolume) => {
     const rawTrack = streamRef.current?.getAudioTracks()[0];
     if (!rawTrack) return;
     try {
@@ -281,7 +281,7 @@ export default function GoLivePage() {
       await audioTrackRef.current.setProcessor(processor as any);
       processedAudioTrackRef.current = processor.processedTrack ?? audioTrackRef.current.mediaStreamTrack;
       setAudioEffect(nextEffect);
-      setSound(nextSound);
+      setNasheedOn(nextSound);
       setSoundVolume(nextVolume);
       if (live && roomRef.current && audioTrackRef.current.sid == null) {
         await roomRef.current.localParticipant.publishTrack(audioTrackRef.current, { source: Track.Source.Microphone });
@@ -293,17 +293,18 @@ export default function GoLivePage() {
 
   const setAudioStudioEffect = async (effect: "studio" | "mosque") => {
     setAudioEffect(effect);
-    await applyAudioStudio(effect, sound, soundVolume);
+    await applyAudioStudio(effect, nasheedOn, soundVolume);
   };
 
-  const setAudioStudioSound = async (nextSound: "none" | "nasheed1" | "nasheed2") => {
-    setSound(nextSound);
-    await applyAudioStudio(audioEffect, nextSound, soundVolume);
+  const toggleNasheed = async () => {
+    const next = !nasheedOn;
+    setNasheedOn(next);
+    await applyAudioStudio(audioEffect, next, soundVolume);
   };
 
   const setAudioStudioVolume = async (value: number) => {
     setSoundVolume(value);
-    await applyAudioStudio(audioEffect, sound, value);
+    await applyAudioStudio(audioEffect, nasheedOn, value);
   };
 
   const toggleMic = () => {
@@ -612,19 +613,17 @@ export default function GoLivePage() {
                 </div>
               </div>
               <div className="studioControl" style={{gridColumn:"1 / -1"}}>
-                <label>Audio Studio <span className="studioValue">{audioEffect === "studio" ? "Studio — Clear" : "Echo — Mosque"}{sound !== "none" ? ` · ${sound === "nasheed1" ? "Nasheed 1" : "Nasheed 2"}` : ""}</span></label>
+                <label>Audio Studio <span className="studioValue">{audioEffect === "studio" ? "Studio — Clear" : "Echo — Mosque"}{nasheedOn ? " · Nasheed Loop ON" : ""}</span></label>
                 <div className="audioPills">
                   <button type="button" className={audioEffect==="studio" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioEffect("studio")}>Studio — Clear</button>
                   <button type="button" className={audioEffect==="mosque" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioEffect("mosque")}>Echo — Mosque</button>
                 </div>
-                <div className="studioHint" style={{marginTop:9}}>SOUNDS</div>
+                <div className="studioHint" style={{marginTop:9}}>SOUND</div>
                 <div className="audioPills">
-                  <button type="button" className={sound==="none" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioSound("none")}>None</button>
-                  <button type="button" className={sound==="nasheed1" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioSound("nasheed1")}>Nasheed 1</button>
-                  <button type="button" className={sound==="nasheed2" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioSound("nasheed2")}>Nasheed 2</button>
+                  <button type="button" className={nasheedOn ? "audioPill active" : "audioPill"} onClick={()=>void toggleNasheed()}>{nasheedOn ? "Nasheed Loop · ON" : "Nasheed Loop · OFF"}</button>
                 </div>
-                {sound !== "none" && <input className="audioVolume" type="range" min="0" max="0.5" step="0.01" value={soundVolume} onChange={e=>void setAudioStudioVolume(Number(e.target.value))}/>}
-                <div className="audioNote">Voice effects and background sound are sent through the LiveKit audio track, so changes can apply while you are live. Add <code>/public/audio/nasheed-1.mp3</code> and <code>/public/audio/nasheed-2.mp3</code> for the two sound beds.</div>
+                {nasheedOn && <input className="audioVolume" type="range" min="0" max="0.5" step="0.01" value={soundVolume} onChange={e=>void setAudioStudioVolume(Number(e.target.value))}/>} 
+                <div className="audioNote">Toggle the saved Nasheed Loop on or off at any time, including while Live. It loops continuously until you turn it off or end the broadcast.</div>
               </div>
             </div>}
           </section>
