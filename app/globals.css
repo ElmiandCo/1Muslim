@@ -100,3 +100,70 @@ footer{display:flex;flex-direction:column;gap:6px;padding:30px;color:#66726a;fon
   .learningChoice{min-height:225px;padding:20px}
   .choiceLabel{margin-top:20px}
 }
+
+
+/* 1Muslim navigation v2 — grouped desktop menus + mobile-safe navigation */
+.siteNav{position:sticky;top:0;z-index:100;min-height:68px;height:auto}
+.siteNavLinks{overflow:visible}
+.siteNavLinks>a,.siteNavLinks>button{flex:0 0 auto}
+.navMenuWrap{position:relative;flex:0 0 auto}
+.navMenuButton{border:1px solid transparent;background:transparent;color:var(--muted);font:inherit;font-size:11px;font-weight:750;padding:9px 12px;border-radius:999px;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.navMenuButton:hover,.navMenuButton.isOpen{color:var(--text);background:var(--panel2);border-color:var(--line)}
+.liveMenuButton{color:#ffb0b0}
+.liveMenuButton.isOpen{background:rgba(110,25,30,.18);border-color:rgba(150,55,60,.4)}
+.navDropdown{position:absolute;top:calc(100% + 10px);left:0;min-width:220px;padding:10px;border:1px solid var(--line);border-radius:18px;background:rgba(10,15,12,.98);box-shadow:0 22px 60px rgba(0,0,0,.35);backdrop-filter:blur(22px);display:grid;gap:10px;animation:navDropIn .14s ease-out}
+.navDropdownGroup{display:grid;gap:3px}
+.navDropdownLabel,.mobileMenuSection{display:block;padding:5px 9px;color:#718077;font-size:9px;font-weight:850;letter-spacing:.14em;text-transform:uppercase}
+.navDropdown a{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);text-decoration:none;padding:10px 9px;border-radius:11px;font-size:11px;font-weight:700}
+.navDropdown a:hover{background:var(--panel2)}
+.navDropdown a small{color:var(--muted);font-size:9px;font-weight:600}
+.liveDropdown{min-width:205px}
+.liveDropdown .navDropdownLabel{color:#ff8e9a}
+.mobileNavActions,.mobileMenuButton,.mobileMenuPanel{display:none}
+@keyframes navDropIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.light .navDropdown{background:rgba(255,255,255,.98);box-shadow:0 22px 60px rgba(35,55,40,.15)}
+
+@media(max-width:900px) and (min-width:701px){
+  .siteNav{padding-left:12px;padding-right:12px}
+  .siteNavLinks a,.navMenuButton{padding-left:8px;padding-right:8px;font-size:10px}
+  .authAccountName{max-width:90px;overflow:hidden;text-overflow:ellipsis}
+  .authSignOut{display:none}
+  .themeToggle{padding:8px 9px}
+}
+
+@media(max-width:700px){
+  .siteNav{height:64px;min-height:64px;padding:0 10px;gap:6px;display:flex;align-items:center}
+  .siteBrand{flex:0 0 auto}
+  .siteLogo{width:92px;height:52px;transform:scale(1.08)}
+  .siteNavLinks{display:none}
+  .mobileNavActions{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+  .mobileNavActions a{color:var(--text);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:8px 10px;font-size:10px;font-weight:800;white-space:nowrap}
+  .mobileNavActions a:last-child{color:#ffb0b0}
+  .authAccount{gap:4px;flex:0 0 auto}
+  .authProfileLink{padding:5px!important;border-radius:999px!important;background:transparent!important;border-color:transparent!important}
+  .authAccountName,.authSignOut{display:none}
+  .authProfileLink .profileAvatar{width:38px;height:38px;border-radius:13px}
+  .themeToggle{font-size:0;padding:9px;width:39px;height:39px;display:grid;place-items:center}
+  .themeToggle:after{content:"☀";font-size:16px}
+  .mobileMenuButton{display:flex;flex:0 0 auto;width:40px;height:40px;border:1px solid var(--line);background:var(--panel);border-radius:12px;align-items:center;justify-content:center;flex-direction:column;gap:4px}
+  .mobileMenuButton span{display:block;width:16px;height:1.5px;background:var(--text);border-radius:2px;transition:.18s}
+  .mobileMenuButton.isOpen span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
+  .mobileMenuButton.isOpen span:nth-child(2){opacity:0}
+  .mobileMenuButton.isOpen span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+  .mobileMenuPanel{display:block;position:fixed;z-index:120;top:64px;left:0;right:0;bottom:0;overflow:auto;padding:18px 16px 30px;background:rgba(5,8,6,.98);border-top:1px solid var(--line);backdrop-filter:blur(24px);box-shadow:0 30px 80px rgba(0,0,0,.45)}
+  .mobileMenuHeader{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .mobileMenuHeader strong{font-size:21px;letter-spacing:-.04em}
+  .mobileMenuHeader button{border:1px solid var(--line);background:var(--panel);color:var(--text);width:36px;height:36px;border-radius:11px;font-size:24px;line-height:1}
+  .mobileMenuHome{display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:var(--text);padding:15px;border:1px solid var(--line);background:linear-gradient(145deg,var(--panel2),var(--panel));border-radius:15px;margin-bottom:18px;font-size:14px;font-weight:850}
+  .mobileMenuHome small{color:var(--muted);font-size:10px}
+  .mobileMenuPanel section{border-top:1px solid var(--line);padding:14px 0 6px}
+  .mobileMenuPanel section>a{display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:var(--text);padding:13px 10px;border-radius:12px;font-size:13px;font-weight:700}
+  .mobileMenuPanel section>a:hover,.mobileMenuPanel section>a:active{background:var(--panel2)}
+  .mobileMenuPanel section>a small{color:var(--muted);font-size:10px}
+  .mobileMenuFooter{border-top:1px solid var(--line);margin-top:12px;padding-top:18px;display:flex;align-items:center;gap:9px}
+  .mobileMenuFooter .themeToggle{font-size:10px;width:auto;height:auto;padding:9px 12px;display:inline-flex}
+  .mobileMenuFooter .themeToggle:after{display:none}
+  .mobileMenuFooter>a,.mobileMenuSignOut{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:9px 13px;text-decoration:none;font-size:10px;font-weight:800}
+  .mobileMenuSignOut{cursor:pointer}
+  .light .mobileMenuPanel{background:rgba(245,247,243,.98)}
+}
