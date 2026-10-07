@@ -8,6 +8,7 @@ type Processor = {
   init: (opts: { audioContext: AudioContext; track: MediaStreamTrack }) => Promise<void>;
   restart: (opts: { audioContext: AudioContext; track: MediaStreamTrack }) => Promise<void>;
   destroy: () => Promise<void>;
+  setVolume: (value: number) => void;
 };
 
 export function createLiveAudioProcessor(effect: AudioEffect, nasheedOn: boolean, soundVolume = 0.18): Processor {
@@ -70,6 +71,9 @@ export function createLiveAudioProcessor(effect: AudioEffect, nasheedOn: boolean
     restart: async (opts) => {
       await processor.destroy();
       await connect(opts);
+    },
+    setVolume: (value) => {
+      if (soundElement) soundElement.volume = Math.max(0, Math.min(1, value));
     },
     destroy: async () => {
       soundElement?.pause();
