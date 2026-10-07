@@ -40,6 +40,7 @@ export default function GoLivePage() {
   const [audioEffect, setAudioEffect] = useState<"studio" | "mosque">("studio");
   const [nasheedOn, setNasheedOn] = useState(false);
   const [soundVolume, setSoundVolume] = useState(0.18);
+  const nasheedPreviewRef = useRef<HTMLAudioElement | null>(null);
   const audioTrackRef = useRef<LocalAudioTrack | null>(null);
   const audioProcessorRef = useRef<any>(null);
   const processedAudioTrackRef = useRef<MediaStreamTrack | null>(null);
@@ -265,6 +266,33 @@ export default function GoLivePage() {
       await applyCameraControl({ advanced: [{ focusMode: "manual", focusDistance: distance } as MediaTrackConstraintSet] });
     }
   };
+
+  useEffect(() => {
+    const existing = nasheedPreviewRef.current;
+    if (existing) {
+      existing.pause();
+      nasheedPreviewRef.current = null;
+    }
+    if (live || !nasheedOn) return;
+    const preview = new Audio("/audio/NasheedLoop.mp3");
+    preview.loop = true;
+    preview.preload = "auto";
+    preview.volume = Math.max(0, Math.min(1, soundVolume));
+    nasheedPreviewRef.current = preview;
+    void preview.play().catch(() => {
+      setError("Tap the Nasheed Loop toggle again if your browser blocked preview audio.");
+    });
+    return () => {
+      preview.pause();
+      preview.currentTime = 0;
+      if (nasheedPreviewRef.current === preview) nasheedPreviewRef.current = null;
+    };
+  }, [nasheedOn, live]);
+
+  useEffect(() => {
+    const preview = nasheedPreviewRef.current;
+    if (preview) preview.volume = Math.max(0, Math.min(1, soundVolume));
+  }, [soundVolume]);
 
   const applyAudioStudio = async (nextEffect = audioEffect, nextSound = nasheedOn, nextVolume = soundVolume) => {
     const rawTrack = streamRef.current?.getAudioTracks()[0];
