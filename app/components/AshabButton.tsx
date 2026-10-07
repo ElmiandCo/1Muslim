@@ -3,12 +3,9 @@
 import { useEffect, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 
-type Row = { id: string; requester_id: string; addressee_id: string; status: "pending" | "accepted" | "declined" };
-
 export default function AshabButton({ targetId }: { targetId: string }) {
   const [me, setMe] = useState<string | null>(null);
-  const [row, setRow] = useState<Row | null>(null);
-  const [count, setCount] = useState(0);
+  const [following, setFollowing] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
@@ -16,57 +13,45 @@ export default function AshabButton({ targetId }: { targetId: string }) {
     const { data: { user } } = await s.auth.getUser();
     if (!user || user.id === targetId) return;
     setMe(user.id);
-    const { data } = await s.from("ashab_friendships")
-      .select("id,requester_id,addressee_id,status")
-      .or(`requester_id.eq.\${user.id},addressee_id.eq.\${user.id}`);
-    const rows = (data ?? []) as Row[];
-    const relation = rows.find(x =>
-      (x.requester_id === user.id && x.addressee_id === targetId) ||
-      (x.requester_id === targetId && x.addressee_id === user.id)
-    ) ?? null;
-    setRow(relation);
-    setCount(rows.filter(x => x.status === "accepted" && (x.requester_id === user.id || x.addressee_id === user.id)).length);
+    const { data } = await s.from("profile_follows")
+      .select("follower_id")
+      .eq("follower_id", user.id)
+      .eq("following_id", targetId)
+      .maybeSingle();
+    setFollowing(!!data);
   };
 
   useEffect(() => { void load(); }, [targetId]);
 
-  const act = async () => {
-    if (!me || busy || row?.status === "accepted") return;
+  const toggleFollow = async () => {
+    if (!me || busy) return;
     setBusy(true);
     const s = createClient();
 
-    if (row?.status === "pending" && row.addressee_id === me) {
-      const { error } = await s.from("ashab_friendships").update({ status: "accepted", updated_at: new Date().toISOString() }).eq("id", row.id);
-      if (!error) await load();
-      setBusy(false);
-      return;
+    if (following) {
+      const { error } = await s.from("profile_follows")
+        .delete()
+        .eq("follower_id", me)
+        .eq("following_id", targetId);
+      if (!error) setFollowing(false);
+      else window.alert(error.message);
+    } else {
+      const { error } = await s.from("profile_follows")
+        .insert({ follower_id: me, following_id: targetId });
+      if (!error) setFollowing(true);
+      else window.alert(error.message);
     }
 
-    if (row?.status === "pending") {
-      setBusy(false);
-      return;
-    }
-
-    if (count >= 5) {
-      window.alert("You already have 5 Ashab. Remove one before adding another.");
-      setBusy(false);
-      return;
-    }
-
-    const { error } = await s.from("ashab_friendships").insert({ requester_id: me, addressee_id: targetId, status: "pending" });
-    if (!error) await load();
-    else window.alert(error.message);
     setBusy(false);
   };
 
-  if (!me || row?.status === "accepted") return null;
-  const label = row?.status === "pending" && row.addressee_id === me ? "Accept Ashab" : row?.status === "pending" ? "Ashab requested" : "＋ Add Ashab";
+  if (!me) return null;
 
-  return <button className="ashabButton" onClick={() => void act()} disabled={busy}>
-    {busy ? "Working…" : label}
+  return <button className={following ? "ashabButton following" : "ashabButton"} onClick={() => void toggleFollow()} disabled={busy}>
+    {busy ? "Working…" : following ? "Following" : "Follow"}
     <style jsx>{`
       .ashabButton{border:1px solid #53695a;background:#dbe9c4;color:#071008;border-radius:999px;padding:10px 15px;font-size:10px;font-weight:900;cursor:pointer}
-      .ashabButton.accepted{background:transparent;color:#b9cbbd;border-color:var(--line)}
+      .ashabButton.following{background:transparent;color:#b9cbbd;border-color:var(--line)}
       .ashabButton:disabled{opacity:.65;cursor:default}
     `}</style>
   </button>;
