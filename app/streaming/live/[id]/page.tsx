@@ -11,7 +11,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
   const supabase = await createClient();
   const { data: stream } = await supabase
     .from("live_streams")
-    .select("id, host_id, title, category, room_name, viewer_count, started_at, ended_at, status, recording_id, thumbnail_path, aspect_ratio, visibility")
+    .select("id, host_id, title, category, room_name, viewer_count, started_at, ended_at, status, recording_id, thumbnail_path, aspect_ratio, visibility, last_heartbeat_at, scheduled_end_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -28,7 +28,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
     </main>
   );
 
-  const isLive = stream.status === "live";
+  const heartbeatFresh = !stream.last_heartbeat_at || (Date.now() - new Date(stream.last_heartbeat_at).getTime() < 75_000);\n  const scheduleStillActive = !stream.scheduled_end_at || new Date(stream.scheduled_end_at).getTime() > Date.now();\n  const isLive = stream.status === "live" && heartbeatFresh && scheduleStillActive;\n  const effectiveEndedAt = stream.ended_at ?? (stream.scheduled_end_at && new Date(stream.scheduled_end_at).getTime() <= Date.now() ? stream.scheduled_end_at : stream.last_heartbeat_at);
   const { data: recording } = stream.recording_id
     ? await supabase.from("live_recordings").select("id,title,category,video_path,mime_type,duration_seconds,views,likes,comments_count,created_at,thumbnail_path,visibility").eq("id", stream.recording_id).maybeSingle()
     : { data: null };
@@ -42,7 +42,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
         <div style={{marginBottom:16}}>
           <span style={{fontSize:10,letterSpacing:".15em",color:"#829b87",fontWeight:850}}>{isLive ? "1MUSLIM LIVE" : "1MUSLIM REPLAY"}</span>
           <h1 style={{fontSize:"clamp(30px,5vw,52px)",letterSpacing:"-.06em",margin:"8px 0"}}>{stream.title}</h1>
-          <p style={{color:"#849087",margin:0}}>{stream.category} · {isLive ? "Started " + new Date(stream.started_at).toLocaleString() : "Recorded " + new Date(recording?.created_at ?? stream.ended_at ?? stream.started_at).toLocaleString()}</p>{isLive && <div style={{marginTop:10,fontSize:11,color:"#b9c9bc"}}>{stream.visibility === "ashab" ? "🔒 Ashab Live · Companions only" : "🌐 Public Live · All 1Muslim users"}</div>}
+          <p style={{color:"#849087",margin:0}}>{stream.category} · {isLive ? "Started " + new Date(stream.started_at).toLocaleString() : "Ended " + new Date(effectiveEndedAt ?? recording?.created_at ?? stream.started_at).toLocaleString()}</p>{isLive && <div style={{marginTop:10,fontSize:11,color:"#b9c9bc"}}>{stream.visibility === "ashab" ? "🔒 Ashab Live · Companions only" : "🌐 Public Live · All 1Muslim users"}</div>}
         </div>
 
         <div style={{border:"1px solid #1b241f",borderRadius:22,overflow:"hidden",background:"#080d09"}}>
@@ -61,7 +61,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
               </div>
               <div style={{padding:18}}>
                 <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-                  <div><strong>▶ Recorded Live</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>Watch the full session and join the conversation below.</div></div>
+                  <div><strong>▶ Recorded Live</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>This Live has ended. Watch the full session and join the conversation below.</div>{effectiveEndedAt && <div style={{fontSize:10,color:"#9eaa9f",marginTop:7}}>Ended {new Date(effectiveEndedAt).toLocaleString()}</div>}</div>
                   <div style={{display:"flex",gap:8,alignItems:"center"}}><SaveRecording recordingId={recording.id} /><Link href="/streaming" style={{color:"#cbd8ce",fontSize:12}}>← All streaming</Link></div>
                 </div>
                 <div style={{marginTop:18}}><RecordingComments recordingId={recording.id} /></div>
