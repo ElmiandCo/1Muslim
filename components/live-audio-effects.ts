@@ -17,7 +17,7 @@ export function createLiveAudioProcessor(effect: AudioEffect, sound: "none" | "n
   let nodes: AudioNode[] = [];
   let soundElement: HTMLAudioElement | null = null;
 
-  const connect = async (opts: { audioContext: AudioContext; track: MediaStreamTrack }) => {
+  let processor: Processor;\n\n  const connect = async (opts: { audioContext: AudioContext; track: MediaStreamTrack }) => {
     context = opts.audioContext;
     if (context.state === "suspended") await context.resume();
 
@@ -59,15 +59,15 @@ export function createLiveAudioProcessor(effect: AudioEffect, sound: "none" | "n
 
     const output = destination.stream.getAudioTracks()[0];
     if (!output) throw new Error("Audio studio could not create an output track.");
-    this.processedTrack = output;
+    processor.processedTrack = output;
   };
 
-  const processor: Processor = {
+  processor = {
     name: `1muslim-audio-${effect}-${sound}`,
     init: connect,
     restart: async (opts) => {
       await processor.destroy();
-      await connect.call(processor, opts);
+      await connect(opts);
     },
     destroy: async () => {
       soundElement?.pause();
