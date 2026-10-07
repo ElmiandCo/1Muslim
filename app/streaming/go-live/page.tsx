@@ -260,9 +260,9 @@ export default function GoLivePage() {
   const setCameraFocus = async (mode: "auto" | "manual", distance = focusDistance) => {
     setFocusMode(mode);
     if (mode === "auto") {
-      await applyCameraControl({ advanced: [{ focusMode: "continuous" }] });
+      await applyCameraControl({ advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet] });
     } else {
-      await applyCameraControl({ advanced: [{ focusMode: "manual", focusDistance: distance }] });
+      await applyCameraControl({ advanced: [{ focusMode: "manual", focusDistance: distance } as MediaTrackConstraintSet] });
     }
   };
 
