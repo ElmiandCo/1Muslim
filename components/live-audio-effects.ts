@@ -10,7 +10,7 @@ type Processor = {
   destroy: () => Promise<void>;
 };
 
-export function createLiveAudioProcessor(effect: AudioEffect, sound: "none" | "nasheed1" | "nasheed2", soundVolume = 0.18): Processor {
+export function createLiveAudioProcessor(effect: AudioEffect, nasheedOn: boolean, soundVolume = 0.18): Processor {
   let context: AudioContext | null = null;
   let source: MediaStreamAudioSourceNode | null = null;
   let destination: MediaStreamAudioDestinationNode | null = null;
@@ -47,8 +47,8 @@ export function createLiveAudioProcessor(effect: AudioEffect, sound: "none" | "n
       nodes.push(delay, feedback, wet);
     }
 
-    if (sound !== "none") {
-      soundElement = new Audio(sound === "nasheed1" ? "/audio/nasheed-1.mp3" : "/audio/nasheed-2.mp3");
+    if (nasheedOn) {
+      soundElement = new Audio("/audio/NasheedLoop.mp3");
       soundElement.loop = true;
       soundElement.preload = "auto";
       soundElement.volume = Math.max(0, Math.min(1, soundVolume));
@@ -65,7 +65,7 @@ export function createLiveAudioProcessor(effect: AudioEffect, sound: "none" | "n
   };
 
   processor = {
-    name: `1muslim-audio-${effect}-${sound}`,
+    name: `1muslim-audio-${effect}-${nasheedOn ? "nasheed-on" : "nasheed-off"}-${Date.now()}`,
     init: connect,
     restart: async (opts) => {
       await processor.destroy();
