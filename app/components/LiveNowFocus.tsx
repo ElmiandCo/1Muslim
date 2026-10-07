@@ -122,7 +122,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
             <span style={{fontSize:10,color:"#8da88f"}}>Switch to another host →</span>
           </button>}
           <div style={{position:"relative"}}>{primary ? <LiveKitViewer roomName={primary.room_name ?? ""} streamId={primary.id} /> : activeCurated ? <video key={activeCurated.id} src={supabase.storage.from("admin-videos").getPublicUrl(activeCurated.storage_path).data.publicUrl} controls autoPlay playsInline onEnded={()=>setActiveIndex((safeIndex+1)%queue.length)} style={{display:"block",width:"100%",aspectRatio:"16/9",objectFit:"contain",background:"#020403"}} /> : null}</div>
-          <Link href={`/streaming/live/${primary.id}`} style={{textDecoration:"none",color:"inherit",display:"block",padding:"14px 18px 18px"}}>
+          <Link href={primary ? `/streaming/live/${primary.id}` : "#"} onClick={activeCurated ? (event)=>event.preventDefault() : undefined} style={{textDecoration:"none",color:"inherit",display:"block",padding:"14px 18px 18px"}}>
             <span className="pill"><i className="dot"/> {primary ? "#1 LIVE NOW" : "1MUSLIM SELECT"}</span>
             <div><h3>{primary ? activeHostName : activeCurated?.title}</h3><div className="meta">{primary ? `${primary.title} · ${primary.category} · ${primary.viewer_count} watching` : `${activeCurated?.category} · Curated 1Muslim video`}</div>
             {handoffSoon && <div className="handoff">This stream is about to switch.<strong>{handoffCountdown}</strong>Next streamer is preparing now.</div>}</div>
