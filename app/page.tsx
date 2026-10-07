@@ -63,9 +63,10 @@ export default function Home() {
   const [path, setPath] = useState<Path>("easy");
   const [active, setActive] = useState("Home");
   const [signedIn, setSignedIn] = useState(false);
+  const [isTestAdmin, setIsTestAdmin] = useState(false);
   const [accountName, setAccountName] = useState("");
   const [myScheduledLives, setMyScheduledLives] = useState<Array<{id:string;title:string;category:string;starts_at:string;ends_at:string}>>([]);
-  useEffect(() => { const supabase=createClient(); supabase.auth.getUser().then(async ({data}) => { if(!data.user) return; setSignedIn(true); const {data:profile}=await supabase.from("profiles").select("display_name,username").eq("id",data.user.id).maybeSingle(); setAccountName(profile?.display_name || (profile?.username ? "@"+profile.username : "My profile"));
+  useEffect(() => { const supabase=createClient(); supabase.auth.getUser().then(async ({data}) => { if(!data.user) return; setSignedIn(true); setIsTestAdmin((data.user.email ?? "").toLowerCase() === "hudhudbyelmi@gmail.com"); const {data:profile}=await supabase.from("profiles").select("display_name,username").eq("id",data.user.id).maybeSingle(); setAccountName(profile?.display_name || (profile?.username ? "@"+profile.username : "My profile"));
       const {data:scheduled}=await supabase.from("live_schedule_slots").select("id,title,category,starts_at,ends_at").eq("host_id",data.user.id).in("status",["scheduled","waiting"]).gt("starts_at",new Date().toISOString()).order("starts_at",{ascending:true}).limit(3);
       setMyScheduledLives((scheduled??[]) as Array<{id:string;title:string;category:string;starts_at:string;ends_at:string}>);
     }); }, []);
@@ -105,6 +106,18 @@ export default function Home() {
           </nav>
           <div className="tinyLine" />
         </div>
+
+        {isTestAdmin && <section className="adminWelcome" aria-label="Admin controls">
+          <div className="adminWelcomeTop"><div><span className="eyebrow">ADMIN MODE · TEST</span><h2>👋 Welcome, Admin</h2><p>Signed in as <strong>hudhudbyelmi@gmail.com</strong>. You have access to the 1Muslim control center.</p></div><span className="adminBadge">● ADMIN</span></div>
+          <div className="adminControls">
+            <Link href="/streaming/go-live" className="adminControl"><span>🔴</span><div><strong>Live Control</strong><small>Go live & manage the broadcast</small></div><b>→</b></Link>
+            <Link href="/streaming/scheduled" className="adminControl"><span>📅</span><div><strong>Scheduled Streams</strong><small>Review upcoming host sessions</small></div><b>→</b></Link>
+            <Link href="/admin/videos" className="adminControl"><span>🎥</span><div><strong>Saved Videos</strong><small>Manage the guaranteed video list</small></div><b>→</b></Link>
+            <Link href="/community" className="adminControl"><span>👥</span><div><strong>Community</strong><small>Open the community feed</small></div><b>→</b></Link>
+            <div className="adminControl disabled"><span>📊</span><div><strong>Platform Activity</strong><small>Command center coming next</small></div><b>•</b></div>
+            <div className="adminControl disabled"><span>⚙️</span><div><strong>Admin Settings</strong><small>Permissions coming next</small></div><b>•</b></div>
+          </div>
+        </section>}
 
         <LiveNowFocus mode="hero" />
         <section className="heroPost">
