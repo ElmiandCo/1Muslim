@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 import LiveKitViewer from "../../components/LiveKitViewer";
+import LiveChat from "../../components/LiveChat";
 
 type LiveRow = {
   id:string; title:string; category:string; viewer_count:number; started_at:string;
@@ -34,6 +35,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const [next,setNext]=useState<Slot|null>(null);
   const [now,setNow]=useState(Date.now());
   const [loading,setLoading]=useState(true);
+  const [commentsOpen,setCommentsOpen]=useState(false);
 
   useEffect(()=>{
     const load=async()=>{
@@ -122,7 +124,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
             <span style={{fontSize:10,color:"#8da88f"}}>Switch to another host →</span>
           </button>}
           <div style={{position:"relative"}}>{primary ? <LiveKitViewer roomName={primary.room_name ?? ""} streamId={primary.id} /> : activeCurated ? <video key={activeCurated.id} src={supabase.storage.from("admin-videos").getPublicUrl(activeCurated.storage_path).data.publicUrl} controls autoPlay playsInline onEnded={()=>setActiveIndex((safeIndex+1)%queue.length)} style={{display:"block",width:"100%",aspectRatio:"16/9",objectFit:"contain",background:"#020403"}} /> : null}</div>
-          <Link href={primary ? `/streaming/live/${primary.id}` : "#"} onClick={activeCurated ? (event)=>event.preventDefault() : undefined} style={{textDecoration:"none",color:"inherit",display:"block",padding:"14px 18px 18px"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:"10px 14px",borderTop:"1px solid #1c2a20",background:"#07100a"}}>{primary && <button type="button" onClick={()=>setCommentsOpen(true)} style={{border:"1px solid #304034",background:"#0b120d",color:"#dce8dc",borderRadius:999,padding:"8px 12px",fontSize:10,fontWeight:800,cursor:"pointer"}}>💬 Comments</button>}<Link href={primary ? `/streaming/live/${primary.id}` : "#"} onClick={activeCurated ? (event)=>event.preventDefault() : undefined} style={{textDecoration:"none",color:"#aebbb1",fontSize:10}}>Open Live ↗</Link></div><div style={{textDecoration:"none",color:"inherit",display:"block",padding:"14px 18px 18px"}}>
             <span className="pill"><i className="dot"/> {primary ? "#1 LIVE NOW" : "1MUSLIM SELECT"}</span>
             <div><h3>{primary ? activeHostName : activeCurated?.title}</h3><div className="meta">{primary ? `${primary.title} · ${primary.category} · ${primary.viewer_count} watching` : `${activeCurated?.category} · Curated 1Muslim video`}</div>
             {handoffSoon && <div className="handoff">This stream is about to switch.<strong>{handoffCountdown}</strong>Next streamer is preparing now.</div>}</div>
@@ -132,5 +134,11 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       </div>
     </div>
     <div className="bar"><span><b>Watching:</b> public · no account required</span><span><b>Interacting:</b> sign in required · Shahada verification for new accounts</span></div>
+    {commentsOpen && primary && <div onClick={(event)=>{if(event.target===event.currentTarget)setCommentsOpen(false)}} style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.68)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div style={{width:"min(680px,100%)",maxHeight:"min(760px,92vh)",overflow:"hidden",border:"1px solid #2b3b30",borderRadius:24,background:"#080d09",boxShadow:"0 30px 100px rgba(0,0,0,.5)",display:"flex",flexDirection:"column"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",borderBottom:"1px solid #1b241f"}}><div><div style={{fontSize:13,fontWeight:900}}>💬 Live comments</div><div style={{fontSize:9,color:"#748179",marginTop:3}}>{activeHostName} · {primary.viewer_count ?? 0} watching</div></div><button type="button" onClick={()=>setCommentsOpen(false)} aria-label="Close comments" style={{border:"1px solid #304034",background:"#0d140f",color:"#fff",borderRadius:999,width:34,height:34,cursor:"pointer"}}>×</button></div>
+        <div style={{overflow:"auto"}}><LiveChat streamId={primary.id} hostId={(primary as LiveRow & {host_id:string}).host_id} /></div>
+      </div>
+    </div>}
   </section>;
 }
