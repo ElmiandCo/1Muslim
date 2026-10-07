@@ -5,6 +5,7 @@ import { ThemeToggle } from "./components/SiteNav";
 import { useEffect, useState } from "react";
 import { createClient } from "../utils/supabase/client";
 import LiveNowFocus from "./components/LiveNowFocus";
+import StoriesRail from "./components/StoriesRail";
 
 type Path = "easy" | "advanced";
 
@@ -119,6 +120,7 @@ export default function Home() {
           </div>
         </section>}
 
+        <StoriesRail />
         <LiveNowFocus mode="hero" />
         <section className="heroPost">
           <div className="eyebrow">1MUSLIM LIVE</div>
