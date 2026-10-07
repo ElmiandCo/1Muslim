@@ -106,7 +106,7 @@ export default function Home() {
           <div className="tinyLine" />
         </div>
 
-        <LiveNowFocus />
+        <LiveNowFocus mode="hero" />
         <section className="heroPost">
           <div className="eyebrow">1MUSLIM LIVE</div>
           <h1>Watch. Learn. Reflect. Together.</h1>
@@ -117,7 +117,7 @@ export default function Home() {
           </div>
           <div className="welcomeMeta"><span>● Watch without an account</span><span>·</span><span>Sign in to participate</span></div>
         </section>
-        <LiveNowFocus />
+        <LiveNowFocus mode="carousel" />
         {signedIn && myScheduledLives.length > 0 && <section className="sectionBlock" style={{marginTop:18}}>
           <div className="sectionTitle"><div><span className="eyebrow">YOUR UPCOMING LIVES</span><h2>My scheduled Lives.</h2></div><Link href="/streaming/scheduled" className="counter">See all →</Link></div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12,marginTop:14}}>
