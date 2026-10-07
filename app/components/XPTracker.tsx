@@ -27,18 +27,29 @@ const levelEnd=(level:number)=>level*level*100;
 export default function XPTracker(){
   const supabase=useMemo(()=>createClient(),[]);
   const [userId,setUserId]=useState<string|null>(null),[xp,setXp]=useState(0),[notice,setNotice]=useState<string|null>(null);
-  const [seconds,setSeconds]=useState(0);
+  const [activeSeconds,setActiveSeconds]=useState(0);
   const lastClick=useRef<Record<string,number>>({});
-  const sessionStart=useRef<number>(Date.now());
+  const activeRef=useRef(0);
+  const lastActivity=useRef(Date.now());
+  const idleTimeout=60_000;
+  const storageKey=useRef("1muslim-xp-active-seconds");
+
   useEffect(()=>{
     let mounted=true;
     supabase.auth.getUser().then(async({data})=>{
       if(!mounted||!data.user)return;
       setUserId(data.user.id);
+      storageKey.current="1muslim-xp-active-seconds:"+data.user.id;
+      const saved=Number(sessionStorage.getItem(storageKey.current)||0);
+      activeRef.current=Math.min(299,Number.isFinite(saved)?saved:0);
+      setActiveSeconds(activeRef.current);
       const {data:p}=await supabase.from("profiles").select("xp_total").eq("id",data.user.id).maybeSingle();
       if(mounted)setXp(p?.xp_total??0);
     });
+
+    const markActivity=()=>{lastActivity.current=Date.now();};
     const onClick=(e:MouseEvent)=>{
+      markActivity();
       if(!userId)return;
       const key=classify(e.target as Element);
       if(!key)return;
@@ -50,23 +61,46 @@ export default function XPTracker(){
         if(awarded>0){setXp(Number(data.xp_total||0));setNotice("+"+awarded+" XP");window.setTimeout(()=>setNotice(null),1800);}
       });
     };
+
+    const events=["mousemove","pointerdown","keydown","touchstart","scroll","wheel"];
+    events.forEach(name=>window.addEventListener(name,markActivity,{passive:true}));
     document.addEventListener("click",onClick,true);
-    return()=>{mounted=false;document.removeEventListener("click",onClick,true)};
+    return()=>{mounted=false;events.forEach(name=>window.removeEventListener(name,markActivity));document.removeEventListener("click",onClick,true)};
   },[supabase,userId]);
+
   useEffect(()=>{
     if(!userId)return;
-    const timer=window.setInterval(()=>setSeconds(Math.floor((Date.now()-sessionStart.current)/1000)),1000);
-    const claim=async()=>{
-      const {data}=await supabase.rpc("claim_time_xp");
-      const awarded=Number(data?.awarded||0);
-      if(awarded){setXp(Number(data.xp_total||0));setNotice("+500 XP · 5 minutes active");window.setTimeout(()=>setNotice(null),2200);sessionStart.current=Date.now();}
-    };
-    const every=window.setInterval(claim,15000);
-    return()=>{window.clearInterval(timer);window.clearInterval(every)};
+    const mediaIsPlaying=()=>Array.from(document.querySelectorAll("video,audio")).some((media)=>!media.paused&&!media.ended&&media.readyState>=2);
+    const timer=window.setInterval(async()=>{
+      const visible=document.visibilityState==="visible";
+      const activelyWatching=mediaIsPlaying();
+      const recentlyActive=Date.now()-lastActivity.current<idleTimeout;
+      const isActive=visible&&(activelyWatching||recentlyActive);
+      if(!isActive)return;
+
+      activeRef.current=Math.min(300,activeRef.current+15);
+      sessionStorage.setItem(storageKey.current,String(activeRef.current));
+      setActiveSeconds(activeRef.current);
+
+      if(activeRef.current>=300){
+        const {data}=await supabase.rpc("claim_time_xp");
+        const awarded=Number(data?.awarded||0);
+        if(awarded){
+          setXp(Number(data.xp_total||0));
+          setNotice("+500 XP · 5 minutes active");
+          window.setTimeout(()=>setNotice(null),2200);
+          activeRef.current=0;
+          sessionStorage.setItem(storageKey.current,"0");
+          setActiveSeconds(0);
+        }
+      }
+    },15000);
+    return()=>window.clearInterval(timer);
   },[supabase,userId]);
+
   if(!userId)return null;
   const level=levelFor(xp),start=levelStart(level),end=levelEnd(level),progress=Math.min(100,Math.max(0,((xp-start)/(end-start))*100));
-  const timeProgress=Math.min(100,(seconds%300)/3);
+  const timeProgress=Math.min(100,activeSeconds/3);
   return <div className="xpTracker" aria-live="polite">
     <style jsx>{`
       .xpTracker{position:fixed;right:18px;bottom:82px;z-index:90;width:220px;padding:10px 11px;border:1px solid rgba(151,187,158,.25);border-radius:16px;background:rgba(8,13,10,.88);backdrop-filter:blur(16px);box-shadow:0 14px 38px rgba(0,0,0,.28);pointer-events:none;color:#eef5ef}
@@ -77,6 +111,6 @@ export default function XPTracker(){
     <div className="top"><span>Level {level}</span><span className="xp">{xp.toLocaleString()} XP</span></div>
     <div className="bar"><div className="fill" style={{width:progress+"%"}}/></div>
     <div className="time"><div className="fill" style={{width:timeProgress+"%"}}/></div>
-    <div className="meta"><span>{Math.max(0,end-xp).toLocaleString()} to next level</span><span>+500 / 5 min</span></div>
+    <div className="meta"><span>{Math.max(0,end-xp).toLocaleString()} to next level</span><span>+500 / 5 min active</span></div>
   </div>
 }
