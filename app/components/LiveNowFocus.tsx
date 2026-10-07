@@ -7,7 +7,7 @@ import LiveKitViewer from "../../components/LiveKitViewer";
 
 type LiveRow = {
   id:string; title:string; category:string; viewer_count:number; started_at:string;
-  scheduled_end_at:string|null; thumbnail_path:string|null; aspect_ratio?:string|null;
+  scheduled_end_at:string|null; thumbnail_path:string|null; aspect_ratio?:string|null; room_name?:string;
 };
 type Slot = {
   id:string; host_id:string; title:string; category:string; starts_at:string; ends_at:string;
@@ -35,7 +35,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   useEffect(()=>{
     const load=async()=>{
       const [{data:lives},{data:slots}]=await Promise.all([
-        supabase.from("live_streams").select("id,title,category,viewer_count,started_at,scheduled_end_at,thumbnail_path,host_id,aspect_ratio").eq("status","live").gte("last_heartbeat_at",new Date(Date.now()-60_000).toISOString()).order("viewer_count",{ascending:false}).order("started_at",{ascending:false}).limit(20),
+        supabase.from("live_streams").select("id,title,category,viewer_count,started_at,scheduled_end_at,thumbnail_path,host_id,aspect_ratio,room_name").eq("status","live").gte("last_heartbeat_at",new Date(Date.now()-60_000).toISOString()).order("viewer_count",{ascending:false}).order("started_at",{ascending:false}).limit(20),
         supabase.from("live_schedule_slots").select("id,host_id,title,category,starts_at,ends_at,status,thumbnail_path").in("status",["scheduled","waiting","live"]).order("starts_at",{ascending:true}).limit(8)
       ]);
       const rows=(lives??[]) as (LiveRow & {host_id:string})[];
@@ -104,7 +104,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       </div>
       <div>
         {primary ? <div className="liveCard" style={{padding:0,overflow:"hidden"}}>
-          <div style={{position:"relative"}}><LiveKitViewer roomName={(primary as LiveRow & {host_id:string}).id ? (primary as LiveRow & {host_id:string}).id : ""} streamId={primary.id} /></div>
+          <div style={{position:"relative"}}><LiveKitViewer roomName={primary.room_name ?? ""} streamId={primary.id} /></div>
           <Link href={`/streaming/live/${primary.id}`} style={{textDecoration:"none",color:"inherit",display:"block",padding:"14px 18px 18px"}}>
             <span className="pill"><i className="dot"/> #1 LIVE NOW</span>
             <div><h3>{primary.title}</h3><div className="meta">{primary.category} · <span className="viewers">{primary.viewer_count} watching</span></div>
