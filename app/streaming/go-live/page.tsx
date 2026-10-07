@@ -36,7 +36,13 @@ export default function GoLivePage() {
   const [zoom, setZoom] = useState(1);
   const [focusMode, setFocusMode] = useState<"auto" | "manual">("auto");
   const [focusDistance, setFocusDistance] = useState(0.5);
-  const [cameraCapabilities, setCameraCapabilities] = useState<{zoom?:{min:number;max:number;step:number};focus?:boolean;focusDistance?:{min:number;max:number;step:number}} | null>(null);\n  const [audioEffect, setAudioEffect] = useState<"studio" | "mosque">("studio");\n  const [sound, setSound] = useState<"none" | "nasheed1" | "nasheed2">("none");\n  const [soundVolume, setSoundVolume] = useState(0.18);\n  const audioTrackRef = useRef<LocalAudioTrack | null>(null);\n  const audioProcessorRef = useRef<any>(null);\n  const processedAudioTrackRef = useRef<MediaStreamTrack | null>(null);
+  const [cameraCapabilities, setCameraCapabilities] = useState<{zoom?:{min:number;max:number;step:number};focus?:boolean;focusDistance?:{min:number;max:number;step:number}} | null>(null);
+  const [audioEffect, setAudioEffect] = useState<"studio" | "mosque">("studio");
+  const [sound, setSound] = useState<"none" | "nasheed1" | "nasheed2">("none");
+  const [soundVolume, setSoundVolume] = useState(0.18);
+  const audioTrackRef = useRef<LocalAudioTrack | null>(null);
+  const audioProcessorRef = useRef<any>(null);
+  const processedAudioTrackRef = useRef<MediaStreamTrack | null>(null);
   const [title, setTitle] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [category, setCategory] = useState(categories[0]);
@@ -312,7 +318,9 @@ export default function GoLivePage() {
     const mimeType = ["video/mp4","video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"].find((type) => MediaRecorder.isTypeSupported(type));
     if (!mimeType) throw new Error("This browser cannot record video in a supported format.");
     chunksRef.current = [];
-    const recordingAudio = processedAudioTrackRef.current ?? stream.getAudioTracks()[0];\n    const recordingStream = new MediaStream([stream.getVideoTracks()[0], ...(recordingAudio ? [recordingAudio] : [])]);\n    const recorder = new MediaRecorder(recordingStream, { mimeType });
+    const recordingAudio = processedAudioTrackRef.current ?? stream.getAudioTracks()[0];
+    const recordingStream = new MediaStream([stream.getVideoTracks()[0], ...(recordingAudio ? [recordingAudio] : [])]);
+    const recorder = new MediaRecorder(recordingStream, { mimeType });
     recorder.ondataavailable = (event) => { if (event.data.size > 0) chunksRef.current.push(event.data); };
     recorderRef.current = recorder;
     recordingStartedAtRef.current = Date.now();
@@ -490,7 +498,18 @@ export default function GoLivePage() {
       const videoTrack = mediaStream.getVideoTracks()[0];
       const audioTrack = mediaStream.getAudioTracks()[0];
       if (videoTrack) await room.localParticipant.publishTrack(videoTrack, { source: Track.Source.Camera, simulcast: true });
-      if (audioTrack) await room.localParticipant.publishTrack(audioTrack, { source: Track.Source.Microphone });
+      if (audioTrack) {
+        let localAudioTrack = audioTrackRef.current;
+        if (!localAudioTrack || localAudioTrack.mediaStreamTrack !== audioTrack) {
+          localAudioTrack = new LocalAudioTrack(audioTrack);
+          const processor = createLiveAudioProcessor(audioEffect, sound, soundVolume);
+          await localAudioTrack.setProcessor(processor as any);
+          audioTrackRef.current = localAudioTrack;
+          audioProcessorRef.current = processor;
+          processedAudioTrackRef.current = processor.processedTrack ?? localAudioTrack.mediaStreamTrack;
+        }
+        await room.localParticipant.publishTrack(localAudioTrack, { source: Track.Source.Microphone });
+      }
       roomRef.current = room;
       liveStreamIdRef.current = liveStreamId;
 
@@ -520,8 +539,12 @@ export default function GoLivePage() {
       recorder.onstop = async () => {
         await saveRecording();
         streamRef.current?.getTracks().forEach((track) => track.stop());
-        streamRef.current = null; setCameraReady(false);\n      audioProcessorRef.current = null; audioTrackRef.current = null; processedAudioTrackRef.current = null; setCameraOn(true); setMicOn(true);
-        recorderRef.current = null;\n        audioProcessorRef.current = null;\n        audioTrackRef.current = null;\n        processedAudioTrackRef.current = null;
+        streamRef.current = null; setCameraReady(false);
+      audioProcessorRef.current = null; audioTrackRef.current = null; processedAudioTrackRef.current = null; setCameraOn(true); setMicOn(true);
+        recorderRef.current = null;
+        audioProcessorRef.current = null;
+        audioTrackRef.current = null;
+        processedAudioTrackRef.current = null;
       };
       recorder.stop();
       setRecording(false);
