@@ -28,7 +28,10 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
     </main>
   );
 
-  const heartbeatFresh = !stream.last_heartbeat_at || (Date.now() - new Date(stream.last_heartbeat_at).getTime() < 75_000);\n  const scheduleStillActive = !stream.scheduled_end_at || new Date(stream.scheduled_end_at).getTime() > Date.now();\n  const isLive = stream.status === "live" && heartbeatFresh && scheduleStillActive;\n  const effectiveEndedAt = stream.ended_at ?? (stream.scheduled_end_at && new Date(stream.scheduled_end_at).getTime() <= Date.now() ? stream.scheduled_end_at : stream.last_heartbeat_at);
+  const heartbeatFresh = !stream.last_heartbeat_at || (Date.now() - new Date(stream.last_heartbeat_at).getTime() < 75_000);
+  const scheduleStillActive = !stream.scheduled_end_at || new Date(stream.scheduled_end_at).getTime() > Date.now();
+  const isLive = stream.status === "live" && heartbeatFresh && scheduleStillActive;
+  const effectiveEndedAt = stream.ended_at ?? (stream.scheduled_end_at && new Date(stream.scheduled_end_at).getTime() <= Date.now() ? stream.scheduled_end_at : stream.last_heartbeat_at);
   const { data: recording } = stream.recording_id
     ? await supabase.from("live_recordings").select("id,title,category,video_path,mime_type,duration_seconds,views,likes,comments_count,created_at,thumbnail_path,visibility").eq("id", stream.recording_id).maybeSingle()
     : { data: null };
