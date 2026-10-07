@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createClient } from "../../utils/supabase/client";
 import ProfileAvatar from "./ProfileAvatar";
 
@@ -47,7 +47,7 @@ type NavUser = {
   arabic_terms_enabled?: boolean;
 };
 
-function MenuLink({ href, label, ar, onClick }: { href: string; label: string; ar?: string; onClick?: () => void }) {
+function MenuLink({ href, label, ar, onClick }: { href: string; label: ReactNode; ar?: string; onClick?: () => void }) {
   return <Link href={href} onClick={onClick}><span>{label}</span>{ar && <small>{ar}</small>}</Link>;
 }
 
