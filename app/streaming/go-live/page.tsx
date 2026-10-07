@@ -31,6 +31,11 @@ export default function GoLivePage() {
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [videoQuality, setVideoQuality] = useState<"480p" | "720p" | "1080p">("720p");
+  const [zoom, setZoom] = useState(1);
+  const [focusMode, setFocusMode] = useState<"auto" | "manual">("auto");
+  const [focusDistance, setFocusDistance] = useState(0.5);
+  const [cameraCapabilities, setCameraCapabilities] = useState<{zoom?:{min:number;max:number;step:number};focus?:boolean;focusDistance?:{min:number;max:number;step:number}} | null>(null);
   const [title, setTitle] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [category, setCategory] = useState(categories[0]);
@@ -68,6 +73,31 @@ export default function GoLivePage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const roomRef = useRef<Room | null>(null);
+  const qualityMap = { "480p": { width: 854, height: 480 }, "720p": { width: 1280, height: 720 }, "1080p": { width: 1920, height: 1080 } } as const;
+  const getCaptureSize = () => qualityMap[videoQuality];
+  const refreshCameraCapabilities = (track?: MediaStreamTrack) => {
+    const videoTrack = track ?? streamRef.current?.getVideoTracks()[0];
+    if (!videoTrack) return;
+    const capabilities = videoTrack.getCapabilities?.() as MediaTrackCapabilities & { zoom?: MediaTrackConstraintSet["zoom"]; focusMode?: string[]; focusDistance?: MediaTrackConstraintSet["focusDistance"] };
+    const zoomCap = capabilities.zoom as { min:number; max:number; step?:number } | undefined;
+    const focusCap = capabilities.focusMode?.includes("manual") || Boolean(capabilities.focusDistance);
+    const distanceCap = capabilities.focusDistance as { min:number; max:number; step?:number } | undefined;
+    setCameraCapabilities({
+      zoom: zoomCap ? { min: zoomCap.min, max: zoomCap.max, step: zoomCap.step ?? 0.1 } : undefined,
+      focus: focusCap,
+      focusDistance: distanceCap ? { min: distanceCap.min, max: distanceCap.max, step: distanceCap.step ?? 0.01 } : undefined,
+    });
+  };
+  const applyCameraControl = async (constraints: MediaTrackConstraints) => {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track) return;
+    try {
+      await track.applyConstraints(constraints);
+      refreshCameraCapabilities(track);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "That camera control is not supported on this device.");
+    }
+  };
   const liveStreamIdRef = useRef<string | null>(null);
 
   const scheduleLive = async () => {
@@ -126,14 +156,18 @@ export default function GoLivePage() {
         throw new Error("Camera and microphone access is not available in this browser.");
       }
       streamRef.current?.getTracks().forEach((track) => track.stop());
+      const size = getCaptureSize();
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: formats.find(f => f.key === aspectRatio)?.width ?? 720 }, height: { ideal: formats.find(f => f.key === aspectRatio)?.height ?? 1280 } },
+        video: { facingMode, width: { ideal: size.width }, height: { ideal: size.height } },
         audio: true,
       });
       streamRef.current = stream;
       setCameraReady(true);
       setCameraOn(true);
       setMicOn(true);
+      setZoom(1);
+      setFocusMode("auto");
+      refreshCameraCapabilities(stream.getVideoTracks()[0]);
     } catch (err) {
       setError(err instanceof DOMException && err.name === "NotAllowedError"
         ? "Camera or microphone access was denied. Allow access in your browser settings and try again."
@@ -174,8 +208,8 @@ export default function GoLivePage() {
       const newVideoStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { exact: nextFacingMode },
-          width: { ideal: formats.find(f => f.key === aspectRatio)?.width ?? 720 },
-          height: { ideal: formats.find(f => f.key === aspectRatio)?.height ?? 1280 },
+          width: { ideal: getCaptureSize().width },
+          height: { ideal: getCaptureSize().height },
         },
         audio: false,
       });
@@ -189,6 +223,9 @@ export default function GoLivePage() {
       streamRef.current = currentStream;
       setFacingMode(nextFacingMode);
       setCameraOn(true);
+      setZoom(1);
+      setFocusMode("auto");
+      refreshCameraCapabilities(newVideoTrack);
       if (videoRef.current) {
         videoRef.current.srcObject = currentStream;
         videoRef.current.muted = true;
@@ -199,6 +236,26 @@ export default function GoLivePage() {
       setError(err instanceof DOMException && (err.name === "OverconstrainedError" || err.name === "NotFoundError")
         ? "This device does not expose a switchable front/back camera."
         : err instanceof Error ? err.message : "We could not switch cameras.");
+    }
+  };
+
+  const setQuality = async (quality: "480p" | "720p" | "1080p") => {
+    setVideoQuality(quality);
+    const size = qualityMap[quality];
+    await applyCameraControl({ width: { ideal: size.width }, height: { ideal: size.height } });
+  };
+
+  const setCameraZoom = async (value: number) => {
+    setZoom(value);
+    await applyCameraControl({ advanced: [{ zoom: value }] });
+  };
+
+  const setCameraFocus = async (mode: "auto" | "manual", distance = focusDistance) => {
+    setFocusMode(mode);
+    if (mode === "auto") {
+      await applyCameraControl({ advanced: [{ focusMode: "continuous" }] });
+    } else {
+      await applyCameraControl({ advanced: [{ focusMode: "manual", focusDistance: distance }] });
     }
   };
 
@@ -440,7 +497,7 @@ export default function GoLivePage() {
         .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
         .brand{display:flex;gap:9px;align-items:center;font-weight:850}.mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#101811;border:1px solid #354237;color:#d6e7b8}.back{color:#98a49d;text-decoration:none;font-size:12px}
         .shell{max-width:1120px;margin:auto;padding:30px 18px 70px}.heading{margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#829b87;font-weight:850}.heading h1{font-size:42px;letter-spacing:-.06em;margin:8px 0}.heading p{color:#849087;font-size:13px;margin:0}
-        .layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:16px}.panel{border:1px solid #1b241f;border-radius:22px;background:#0a100c;overflow:hidden}.preview{aspect-ratio:9/16;background:radial-gradient(circle at 50% 40%,#18231b,#050806 65%);position:relative;display:grid;place-items:center}.preview video{width:100%;height:100%;object-fit:cover;display:block}.preview video.frontCamera{transform:scaleX(-1)}.preview video.backCamera{transform:none}.preview.format-square{aspect-ratio:1/1}.preview.format-landscape{aspect-ratio:16/9}.placeholder{text-align:center;color:#6f7d74}.cameraIcon{font-size:44px;margin-bottom:8px}.recording{position:absolute;top:14px;right:14px;padding:7px 10px;border-radius:999px;background:#261313;color:#ffd9d9;font-size:10px;font-weight:900}.live{position:absolute;top:14px;left:14px;padding:7px 10px;border-radius:999px;background:#e9f3db;color:#081007;font-size:10px;font-weight:900}.status{position:absolute;bottom:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}.status span{font-size:10px;color:#d9e2dc;background:rgba(0,0,0,.62);padding:7px 10px;border-radius:999px}.controls{display:flex;justify-content:center;gap:10px;padding:16px;border-top:1px solid #1b241f}.circle{width:46px;height:46px;border-radius:50%;border:1px solid #334038;background:#121913;color:#fff;cursor:pointer}.circle.off{opacity:.5}.start{padding:12px 22px;border:0;border-radius:999px;background:#d6e7b8;color:#071008;font-weight:850;cursor:pointer}.end{padding:12px 22px;border:0;border-radius:999px;background:#251313;color:#ffd6d6;font-weight:850;cursor:pointer}
+        .layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:16px}.panel{border:1px solid #1b241f;border-radius:22px;background:#0a100c;overflow:hidden}.preview{aspect-ratio:9/16;background:radial-gradient(circle at 50% 40%,#18231b,#050806 65%);position:relative;display:grid;place-items:center}.preview video{width:100%;height:100%;object-fit:cover;display:block}.preview video.frontCamera{transform:scaleX(-1)}.preview video.backCamera{transform:none}.preview.format-square{aspect-ratio:1/1}.preview.format-landscape{aspect-ratio:16/9}.placeholder{text-align:center;color:#6f7d74}.cameraIcon{font-size:44px;margin-bottom:8px}.recording{position:absolute;top:14px;right:14px;padding:7px 10px;border-radius:999px;background:#261313;color:#ffd9d9;font-size:10px;font-weight:900}.live{position:absolute;top:14px;left:14px;padding:7px 10px;border-radius:999px;background:#e9f3db;color:#081007;font-size:10px;font-weight:900}.status{position:absolute;bottom:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}.status span{font-size:10px;color:#d9e2dc;background:rgba(0,0,0,.62);padding:7px 10px;border-radius:999px}.controls{display:flex;justify-content:center;gap:10px;padding:16px;border-top:1px solid #1b241f}.circle{width:46px;height:46px;border-radius:50%;border:1px solid #334038;background:#121913;color:#fff;cursor:pointer}.circle.off{opacity:.5}.cameraStudio{border-top:1px solid #1b241f;padding:14px 16px;background:#0b110d}.studioHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.studioHeader strong{font-size:11px}.studioHeader span{font-size:9px;color:#738078}.studioGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.studioControl{border:1px solid #263029;border-radius:13px;background:#0e1510;padding:10px}.studioControl label{display:flex;justify-content:space-between;font-size:9px;color:#aeb9b1;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}.studioControl select,.studioControl input[type=range]{width:100%}.studioControl select{border:1px solid #263029;background:#0a100c;color:#e8eee9;border-radius:8px;padding:8px;font-size:10px}.studioValue{color:#d6e7b8;font-weight:800}.studioHint{font-size:8px;color:#657269;margin-top:6px;line-height:1.4}.unsupported{opacity:.45}.qualityPills{display:flex;gap:5px}.qualityPill{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px 4px;font-size:9px;cursor:pointer}.qualityPill.active{border-color:#718c69;background:#132016;color:#d6e7b8}.qualityPill:disabled{cursor:not-allowed}.focusRow{display:flex;gap:5px}.focusRow button{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px;font-size:9px}.focusRow button.active{border-color:#718c69;background:#132016;color:#d6e7b8}.start{padding:12px 22px;border:0;border-radius:999px;background:#d6e7b8;color:#071008;font-weight:850;cursor:pointer}.end{padding:12px 22px;border:0;border-radius:999px;background:#251313;color:#ffd6d6;font-weight:850;cursor:pointer}
         .form{padding:20px}.form h2{font-size:17px;margin:0 0 15px}.field{margin-bottom:15px}.field label{display:block;font-size:10px;color:#748178;margin-bottom:7px;text-transform:uppercase;letter-spacing:.1em}.input,.select{width:100%;border:1px solid #263029;background:#0d140f;color:#f3f6f3;border-radius:11px;padding:12px;outline:none}.input:focus,.select:focus{border-color:#61785a}.help{font-size:10px;color:#66736b;line-height:1.6;margin-top:14px}.error{border:1px solid #533536;background:#1b0f10;color:#ffcaca;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}.ready{border:1px solid #334333;background:#101810;color:#b8d2ae;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}.checkedIn{border-color:#6b815e;background:#111c12;color:#d6e7b8}
         .formatGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.formatButton{border:1px solid #263029;background:#0d140f;color:#aeb8b1;border-radius:13px;padding:11px;text-align:left;cursor:pointer}.formatButton strong{display:block;color:#e8eee9;font-size:11px}.formatButton small{display:block;color:#69766e;font-size:9px;margin-top:4px}.formatButton.active{border-color:#718c69;background:#132016;box-shadow:inset 0 0 0 1px #718c69}.formatButton:disabled{cursor:not-allowed;opacity:.55}.recordingsLink{display:inline-flex;margin-top:12px;color:#cbd8ce;text-decoration:none;font-size:11px}.notice{margin-top:16px;border:1px solid #273129;border-radius:16px;padding:15px;color:#7d8981;font-size:10px;line-height:1.6}.notice strong{color:#c7d2ca;display:block;margin-bottom:4px}
         @media(max-width:780px){.layout{grid-template-columns:1fr}.heading h1{font-size:36px}.shell{padding:24px 12px 50px}}
@@ -470,6 +527,27 @@ export default function GoLivePage() {
               {cameraReady && <><button className={cameraOn ? "circle" : "circle off"} onClick={toggleCamera} aria-label="Toggle camera">{cameraOn ? "◉" : "○"}</button><button className="circle" onClick={()=>void flipCamera()} aria-label="Flip camera" title="Flip camera">↻</button><button className={micOn ? "circle" : "circle off"} onClick={toggleMic} aria-label="Toggle microphone">{micOn ? "♫" : "×"}</button></>}
               {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In — I’m Ready</button> : scheduledSlot ? <button className="start" disabled>Waiting for scheduled time…</button> : <button className="start" onClick={startLive} disabled={saving}>Start Live + Record</button>}
             </div>
+            {cameraReady && <div className="cameraStudio">
+              <div className="studioHeader"><strong>Camera Studio</strong><span>{videoQuality} · {zoom.toFixed(1)}×</span></div>
+              <div className="studioGrid">
+                <div className="studioControl">
+                  <label>Quality <span className="studioValue">{videoQuality}</span></label>
+                  <div className="qualityPills">{(["480p","720p","1080p"] as const).map(q=><button key={q} type="button" className={videoQuality===q?"qualityPill active":"qualityPill"} onClick={()=>void setQuality(q)}>{q}</button>)}</div>
+                  <div className="studioHint">Applies a target capture resolution. The device may choose the closest supported mode.</div>
+                </div>
+                <div className={cameraCapabilities?.zoom ? "studioControl" : "studioControl unsupported"}>
+                  <label>Zoom <span className="studioValue">{zoom.toFixed(1)}×</span></label>
+                  <input type="range" min={cameraCapabilities?.zoom?.min ?? 1} max={cameraCapabilities?.zoom?.max ?? 1} step={cameraCapabilities?.zoom?.step ?? 0.1} value={zoom} disabled={!cameraCapabilities?.zoom} onChange={e=>void setCameraZoom(Number(e.target.value))}/>
+                  <div className="studioHint">{cameraCapabilities?.zoom ? "Use the camera's native optical/digital zoom control." : "Zoom isn't exposed by this camera/browser."}</div>
+                </div>
+                <div className={cameraCapabilities?.focus ? "studioControl" : "studioControl unsupported"}>
+                  <label>Focus <span className="studioValue">{focusMode === "auto" ? "Auto" : "Manual"}</span></label>
+                  <div className="focusRow"><button type="button" className={focusMode==="auto"?"active":""} disabled={!cameraCapabilities?.focus} onClick={()=>void setCameraFocus("auto")}>AUTO</button><button type="button" className={focusMode==="manual"?"active":""} disabled={!cameraCapabilities?.focus} onClick={()=>void setCameraFocus("manual")}>MANUAL</button></div>
+                  {focusMode === "manual" && <input type="range" min={cameraCapabilities?.focusDistance?.min ?? 0} max={cameraCapabilities?.focusDistance?.max ?? 1} step={cameraCapabilities?.focusDistance?.step ?? 0.01} value={focusDistance} disabled={!cameraCapabilities?.focusDistance} onChange={e=>{const v=Number(e.target.value);setFocusDistance(v);void setCameraFocus("manual",v)}}/>}
+                  <div className="studioHint">{cameraCapabilities?.focus ? "Focus controls appear when the device exposes them." : "Manual focus isn't exposed by this camera/browser."}</div>
+                </div>
+              </div>
+            </div>}
           </section>
 
           <aside className="panel form">
