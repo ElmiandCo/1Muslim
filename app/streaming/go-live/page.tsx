@@ -85,7 +85,7 @@ export default function GoLivePage() {
   const refreshCameraCapabilities = (track?: MediaStreamTrack) => {
     const videoTrack = track ?? streamRef.current?.getVideoTracks()[0];
     if (!videoTrack) return;
-    const capabilities = videoTrack.getCapabilities?.() as MediaTrackCapabilities & { zoom?: MediaTrackConstraintSet["zoom"]; focusMode?: string[]; focusDistance?: MediaTrackConstraintSet["focusDistance"] };
+    const capabilities = videoTrack.getCapabilities?.() as MediaTrackCapabilities & { zoom?: { min: number; max: number; step?: number }; focusMode?: string[]; focusDistance?: { min: number; max: number; step?: number } };
     const zoomCap = capabilities.zoom as { min:number; max:number; step?:number } | undefined;
     const focusCap = capabilities.focusMode?.includes("manual") || Boolean(capabilities.focusDistance);
     const distanceCap = capabilities.focusDistance as { min:number; max:number; step?:number } | undefined;
