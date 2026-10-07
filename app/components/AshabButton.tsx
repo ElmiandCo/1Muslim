@@ -47,8 +47,13 @@ export default function AshabButton({ targetId }: { targetId: string }) {
 
   if (!me) return null;
 
-  return <button className={following ? "ashabButton following" : "ashabButton"} onClick={() => void toggleFollow()} disabled={busy}>
-    {busy ? "Working…" : following ? "Following" : "Follow"}
+  return <button
+    className={following ? "ashabButton following" : "ashabButton"}
+    onClick={() => void toggleFollow()}
+    disabled={busy}
+    aria-pressed={following}
+  >
+    {busy ? "Working…" : following ? "Unfollow" : "Follow"}
     <style jsx>{`
       .ashabButton{border:1px solid #53695a;background:#dbe9c4;color:#071008;border-radius:999px;padding:10px 15px;font-size:10px;font-weight:900;cursor:pointer}
       .ashabButton.following{background:transparent;color:#b9cbbd;border-color:var(--line)}
