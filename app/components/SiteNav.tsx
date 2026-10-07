@@ -1,47 +1,61 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 import ProfileAvatar from "./ProfileAvatar";
 
-const links = [
-  { label: "Home", ar: "الرئيسية", href: "/" },
-  { label: "Learn", ar: "تعلّم", href: "/#paths" },
-  { label: "Elm Tent", ar: "الخيمة", href: "/learn/elm-tent" },
-  { label: "Community", ar: "المجتمع", href: "/community" },
-  { label: "Ashab", ar: "أصحاب", href: "/ashab" },
-  { label: "Find", ar: "بحث", href: "/find" },
-  { label: "Streaming", ar: "البث", href: "/streaming" },
-  { label: "Videos", ar: "الفيديوهات", href: "/streaming/library" },
-  { label: "Profile", ar: "الملف الشخصي", href: "/profile" },
-  { label: "Settings", ar: "الإعدادات", href: "/settings" },
-  { label: "Support", ar: "الدعم", href: "/support" },
+const exploreGroups = [
+  { title: "Learn", items: [
+    { label: "Learn", ar: "تعلّم", href: "/#paths" },
+    { label: "Elm Tent", ar: "الخيمة", href: "/learn/elm-tent" },
+    { label: "Videos", ar: "الفيديوهات", href: "/streaming/library" },
+  ]},
+  { title: "Community", items: [
+    { label: "Community", ar: "المجتمع", href: "/community" },
+    { label: "Ashab", ar: "أصحاب", href: "/ashab" },
+    { label: "Find People", ar: "بحث", href: "/find" },
+  ]},
+];
+
+const liveItems = [
+  { label: "Live Now", ar: "مباشر", href: "/streaming" },
+  { label: "Go Live", ar: "ابدأ البث", href: "/streaming/go-live" },
+  { label: "Recordings", ar: "التسجيلات", href: "/streaming/library" },
 ];
 
 export function ThemeToggle() {
   const [light, setLight] = useState(false);
-  useEffect(() => { const saved = localStorage.getItem("1muslim-theme"); const isLight = saved === "light"; setLight(isLight); document.documentElement.classList.toggle("light", isLight); }, []);
-  const toggle = () => { const next = !light; setLight(next); document.documentElement.classList.toggle("light", next); localStorage.setItem("1muslim-theme", next ? "light" : "dark"); };
+  useEffect(() => {
+    const isLight = localStorage.getItem("1muslim-theme") === "light";
+    setLight(isLight);
+    document.documentElement.classList.toggle("light", isLight);
+  }, []);
+  const toggle = () => {
+    const next = !light;
+    setLight(next);
+    document.documentElement.classList.toggle("light", next);
+    localStorage.setItem("1muslim-theme", next ? "light" : "dark");
+  };
   return <button className="themeToggle" onClick={toggle} aria-label={light ? "Switch to night mode" : "Switch to day mode"}>{light ? "☾ Night" : "☀ Day"}</button>;
 }
 
 type NavUser = {
-  id: string;
-  email?: string;
-  display_name?: string;
-  username?: string;
-  gender?: string | null;
-  avatar_gender?: string | null;
-  avatar_package?: string | null;
-  avatar_config?: Record<string, unknown> | null;
-  profile_accent?: string | null;
+  id: string; email?: string; display_name?: string; username?: string;
+  gender?: string | null; avatar_gender?: string | null; avatar_package?: string | null;
+  avatar_config?: Record<string, unknown> | null; profile_accent?: string | null;
   arabic_terms_enabled?: boolean;
 };
+
+function MenuLink({ href, label, ar, onClick }: { href: string; label: string; ar?: string; onClick?: () => void }) {
+  return <Link href={href} onClick={onClick}><span>{label}</span>{ar && <small>{ar}</small>}</Link>;
+}
 
 export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const [user, setUser] = useState<NavUser | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
+  const [openMenu, setOpenMenu] = useState<"explore" | "live" | "mobile" | null>(null);
+  const navRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const supabase = createClient(); let mounted = true;
@@ -54,16 +68,11 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
         .eq("id", authUser.id).maybeSingle();
       if (!mounted) return;
       setUser({
-        id: authUser.id,
-        email: authUser.email ?? undefined,
-        display_name: profile?.display_name ?? undefined,
-        username: profile?.username ?? undefined,
-        gender: profile?.gender ?? null,
-        avatar_gender: profile?.avatar_gender ?? null,
-        avatar_package: profile?.avatar_package ?? null,
-        avatar_config: profile?.avatar_config ?? null,
-        profile_accent: profile?.profile_accent ?? null,
-        arabic_terms_enabled: !!profile?.arabic_terms_enabled
+        id: authUser.id, email: authUser.email ?? undefined,
+        display_name: profile?.display_name ?? undefined, username: profile?.username ?? undefined,
+        gender: profile?.gender ?? null, avatar_gender: profile?.avatar_gender ?? null,
+        avatar_package: profile?.avatar_package ?? null, avatar_config: profile?.avatar_config ?? null,
+        profile_accent: profile?.profile_accent ?? null, arabic_terms_enabled: !!profile?.arabic_terms_enabled,
       });
       setLoadingAuth(false);
     };
@@ -72,30 +81,80 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
     return () => { mounted = false; subscription.unsubscribe(); };
   }, []);
 
-  const accountLabel = user?.display_name || (user?.username ? "@" + user.username : user?.email?.split("@")[0]) || "My account";
-  const signOut = async () => { const supabase = createClient(); await supabase.auth.signOut(); window.location.href = "/"; };
-  const label = (item: typeof links[number]) => user?.arabic_terms_enabled ? <>{item.label} <span className="arabicNav">{item.ar}</span></> : item.label;
+  useEffect(() => {
+    const outside = (e: PointerEvent) => { if (!navRef.current?.contains(e.target as Node)) setOpenMenu(null); };
+    const escape = (e: KeyboardEvent) => { if (e.key === "Escape") setOpenMenu(null); };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
+  }, []);
 
-  return <header className={compact ? "siteNav compact" : "siteNav"}>
+  useEffect(() => {
+    document.body.style.overflow = openMenu === "mobile" ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [openMenu]);
+
+  const accountLabel = user?.display_name || (user?.username ? "@" + user.username : user?.email?.split("@")[0]) || "My account";
+  const closeMenu = () => setOpenMenu(null);
+  const signOut = async () => { await createClient().auth.signOut(); window.location.href = "/"; };
+  const label = (text: string, ar: string) => user?.arabic_terms_enabled ? <>{text} <span className="arabicNav">{ar}</span></> : text;
+
+  return <header ref={navRef} className={compact ? "siteNav compact" : "siteNav"}>
     <Link href="/" className="siteBrand" aria-label="1Muslim Home"><img src="/1muslim-logo.svg" alt="1Muslim" className="siteLogo" /></Link>
-    <nav className="siteNavLinks">{links.map((link) => <Link key={link.href} href={link.href}>{label(link)}</Link>)}<Link href="/streaming" className="liveNav">🔴 Live</Link><Link href="/streaming/go-live" className="goLiveNav">Go Live</Link></nav>
-    {loadingAuth ? <span className="authNav authLoading">Account</span> : user ? (
-      <div className="authAccount">
-        <Link href="/profile" className="authNav" style={{display:"inline-flex",alignItems:"center",gap:8}}>
-          <ProfileAvatar
-            name={user.display_name}
-            gender={user.gender}
-            avatarGender={user.avatar_gender}
-            avatarPackage={user.avatar_package}
-            avatarConfig={user.avatar_config}
-            accent={user.profile_accent ?? "emerald"}
-            size="sm"
-          />
-          <span>{accountLabel}</span>
-        </Link>
-        <button type="button" className="authSignOut" onClick={signOut}>Sign out</button>
+
+    <nav className="siteNavLinks" aria-label="Primary navigation">
+      <Link href="/" className="siteHomeLink">Home</Link>
+
+      <div className="navMenuWrap">
+        <button type="button" className={`navMenuButton ${openMenu === "explore" ? "isOpen" : ""}`} aria-expanded={openMenu === "explore"} onClick={() => setOpenMenu(openMenu === "explore" ? null : "explore")}>Explore <span>⌄</span></button>
+        {openMenu === "explore" && <div className="navDropdown exploreDropdown">
+          {exploreGroups.map(group => <div className="navDropdownGroup" key={group.title}>
+            <span className="navDropdownLabel">{group.title}</span>
+            {group.items.map(item => <MenuLink key={item.href} href={item.href} label={label(item.label, item.ar)} onClick={closeMenu} />)}
+          </div>)}
+        </div>}
       </div>
-    ) : <Link href="/auth" className="authNav">Sign in</Link>}
+
+      <div className="navMenuWrap">
+        <button type="button" className={`navMenuButton liveMenuButton ${openMenu === "live" ? "isOpen" : ""}`} aria-expanded={openMenu === "live"} onClick={() => setOpenMenu(openMenu === "live" ? null : "live")}><span className="liveDot">●</span> Live <span>⌄</span></button>
+        {openMenu === "live" && <div className="navDropdown liveDropdown">
+          <span className="navDropdownLabel">LIVE</span>
+          {liveItems.map(item => <MenuLink key={item.href} href={item.href} label={label(item.label, item.ar)} onClick={closeMenu} />)}
+        </div>}
+      </div>
+    </nav>
+
+    <div className="mobileNavActions">
+      <Link href="/">Home</Link><Link href="/streaming"><span className="liveDot">●</span> Live</Link>
+    </div>
+
+    {loadingAuth ? <span className="authNav authLoading">Account</span> : user ? <div className="authAccount">
+      <Link href="/profile" className="authNav authProfileLink">
+        <ProfileAvatar name={user.display_name} gender={user.gender} avatarGender={user.avatar_gender} avatarPackage={user.avatar_package} avatarConfig={user.avatar_config} accent={user.profile_accent ?? "emerald"} size="sm" />
+        <span className="authAccountName">{accountLabel}</span>
+      </Link>
+      <button type="button" className="authSignOut" onClick={signOut}>Sign out</button>
+    </div> : <Link href="/auth" className="authNav">Sign in</Link>}
+
     <ThemeToggle />
+
+    <button type="button" className={`mobileMenuButton ${openMenu === "mobile" ? "isOpen" : ""}`} aria-label={openMenu === "mobile" ? "Close navigation menu" : "Open navigation menu"} aria-expanded={openMenu === "mobile"} onClick={() => setOpenMenu(openMenu === "mobile" ? null : "mobile")}><span/><span/><span/></button>
+
+    {openMenu === "mobile" && <div className="mobileMenuPanel" role="dialog" aria-label="1Muslim navigation">
+      <div className="mobileMenuHeader"><strong>Explore 1Muslim</strong><button type="button" onClick={closeMenu} aria-label="Close menu">×</button></div>
+      <Link href="/" className="mobileMenuHome" onClick={closeMenu}><span>Home</span><small>الرئيسية</small></Link>
+      <section><span className="mobileMenuSection">EXPLORE</span>
+        {exploreGroups.flatMap(g => g.items).map(item => <MenuLink key={item.href} href={item.href} label={item.label} ar={item.ar} onClick={closeMenu} />)}
+      </section>
+      <section><span className="mobileMenuSection">LIVE</span>
+        {liveItems.map(item => <MenuLink key={item.href} href={item.href} label={item.label} ar={item.ar} onClick={closeMenu} />)}
+      </section>
+      {user && <section><span className="mobileMenuSection">ACCOUNT</span>
+        <MenuLink href="/profile" label="Profile" ar="الملف الشخصي" onClick={closeMenu}/>
+        <MenuLink href="/settings" label="Settings" ar="الإعدادات" onClick={closeMenu}/>
+        <MenuLink href="/support" label="Support" ar="الدعم" onClick={closeMenu}/>
+      </section>}
+      <div className="mobileMenuFooter"><ThemeToggle/>{user ? <button type="button" className="mobileMenuSignOut" onClick={signOut}>Sign out</button> : <Link href="/auth" onClick={closeMenu}>Sign in</Link>}</div>
+    </div>}
   </header>;
-};
+}
