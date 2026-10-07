@@ -367,7 +367,8 @@ export default function GoLivePage() {
               {scheduledSlot && <div className="upcomingPrep"><div><span className="eyebrow">UPCOMING LIVE</span><strong>{scheduledSlot.title}</strong><span>{scheduledSlot.category} · {new Date(scheduledSlot.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div><button type="button" className="prepButton" onClick={()=>{setTitle(scheduledSlot.title);setCategory(scheduledSlot.category);setShowScheduler(false);setSaveMessage("Prep mode loaded. Check your title, topic, format, thumbnail, camera and microphone before going live.");}}>Prep for upcoming Live →</button></div>}
               {!live && <button type="button" className="scheduleButton" onClick={()=>setShowScheduler(!showScheduler)}>{showScheduler ? "Close scheduler" : "Schedule a Live"}</button>}
               {showScheduler && <div className="scheduleBox"><h3>Schedule a Live</h3><div className="scheduleFields"><input className="input" type="date" value={scheduleDate} onChange={e=>setScheduleDate(e.target.value)} /><input className="input" type="time" value={scheduleStart} onChange={e=>setScheduleStart(e.target.value)} /><input className="input" type="time" value={scheduleEnd} onChange={e=>setScheduleEnd(e.target.value)} /></div><button type="button" className="start" onClick={scheduleLive}>Save scheduled Live</button>{scheduleMessage&&<p className="help">{scheduleMessage}</p>}</div>}
-            </div>\n        <div className="heading">
+            </div>
+        <div className="heading">
           <span className="eyebrow">CREATOR STUDIO</span>
           <h1>Go Live</h1>
           <p>Share a lesson, reminder, conversation or community moment with 1Muslim.</p><Link href="/streaming/recordings" className="recordingsLink">View your Live Recordings →</Link>
