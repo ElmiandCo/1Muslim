@@ -168,7 +168,7 @@ export default function StreamingPage() {
       setAdmin(true);
       const { data } = await supabase.from("admin_videos").select("id,title,description,category,storage_path,duration_seconds").order("created_at", { ascending: false });
       setAdminVideos((data ?? []).map((v: any) => ({
-        id:v.id,title:v.title,creator:"1Muslim",category:v.category,duration:formatDuration(v.duration_seconds),description:v.description,accent:"✦",
+        id:v.id,title:v.title,creator:"1Muslim",category:v.category,duration:formatDuration(v.duration_seconds),description:v.description,accent:"✦",thumbnail:"/assets/avatars/default-male.jpg",
         src:supabase.storage.from("admin-videos").getPublicUrl(v.storage_path).data.publicUrl
       })));
     };
@@ -213,7 +213,7 @@ const openAdminEditor = (video?: Video) => {
     await supabase.storage.from("admin-videos").remove([path]);
     setAdminMessage(error?.message ?? "Could not save video."); setAdminSaving(false); return;
   }
-  setAdminVideos(v => [{id:data.id,title:data.title,creator:"1Muslim",category:data.category,duration:formatDuration(data.duration_seconds),description:data.description,accent:"✦",src:supabase.storage.from("admin-videos").getPublicUrl(data.storage_path).data.publicUrl}, ...v]);
+  setAdminVideos(v => [{id:data.id,title:data.title,creator:"1Muslim",category:data.category,duration:formatDuration(data.duration_seconds),description:data.description,accent:"✦",thumbnail:"/assets/avatars/default-male.jpg",src:supabase.storage.from("admin-videos").getPublicUrl(data.storage_path).data.publicUrl}, ...v]);
   setAdminSaving(false); setAdminModal(false);
   };
 
