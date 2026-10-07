@@ -12,7 +12,8 @@ type Profile={id:string;display_name:string;username:string|null;first_name:stri
 type LiveStream={id:string;title:string;category:string;room_name:string;viewer_count:number;started_at:string}; type LiveConnector={provider:string;handle:string|null;channel_url:string|null;enabled:boolean;is_live:boolean;live_title:string|null};
 type Recording={id:string;title:string;category:string;video_path:string;duration_seconds:number;views:number;likes:number;comments_count:number;created_at:string};
 type Post={id:string;body:string;created_at:string};
-type Lesson={title:string;slug:string;completed_at:string};\ntype RelationshipStats={followers:number;following:number;ashab:number};
+type Lesson={title:string;slug:string;completed_at:string};
+type RelationshipStats={followers:number;following:number;ashab:number};
 
 const duration=(n:number)=>Math.floor(n/60)+":"+String(n%60).padStart(2,"0");
 
