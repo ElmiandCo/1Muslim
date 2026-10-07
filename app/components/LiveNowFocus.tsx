@@ -22,8 +22,10 @@ function countdown(ms:number){
   return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
 }
 
-export default function LiveNowFocus(){
+export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carousel" }){
   const supabase=useMemo(()=>createClient(),[]);
+  const [lives,setLives]=useState<LiveRow[]>([]);
+  const [hostMap,setHostMap]=useState<Record<string,{display_name:string|null;username:string|null;avatar_url:string|null;gender:string|null}>>({});
   const [live,setLive]=useState<LiveRow|null>(null);
   const [next,setNext]=useState<Slot|null>(null);
   const [now,setNow]=useState(Date.now());
@@ -32,10 +34,17 @@ export default function LiveNowFocus(){
   useEffect(()=>{
     const load=async()=>{
       const [{data:lives},{data:slots}]=await Promise.all([
-        supabase.from("live_streams").select("id,title,category,viewer_count,started_at,scheduled_end_at,thumbnail_path").eq("status","live").eq("stream_lane","live-now").order("started_at",{ascending:false}).limit(1),
+        supabase.from("live_streams").select("id,title,category,viewer_count,started_at,scheduled_end_at,thumbnail_path,host_id").eq("status","live").gte("last_heartbeat_at",new Date(Date.now()-60_000).toISOString()).order("viewer_count",{ascending:false}).order("started_at",{ascending:false}).limit(20),
         supabase.from("live_schedule_slots").select("id,host_id,title,category,starts_at,ends_at,status,thumbnail_path").in("status",["scheduled","waiting","live"]).order("starts_at",{ascending:true}).limit(8)
       ]);
-      setLive((lives?.[0]??null) as LiveRow|null);
+      const rows=(lives??[]) as (LiveRow & {host_id:string})[];
+      setLives(rows);
+      setLive((rows[0]??null) as LiveRow|null);
+      const hostIds=Array.from(new Set(rows.map(row=>row.host_id).filter(Boolean)));
+      if(hostIds.length){
+        const {data:profiles}=await supabase.from("profiles").select("id,display_name,username,avatar_url,gender").in("id",hostIds);
+        setHostMap(Object.fromEntries((profiles??[]).map(profile=>[profile.id,profile])));
+      } else setHostMap({});
       const upcoming=(slots??[]).find((x:any)=>new Date(x.starts_at).getTime()>Date.now() || x.status==="waiting");
       setNext((upcoming??null) as Slot|null);
       setLoading(false);
@@ -47,10 +56,38 @@ export default function LiveNowFocus(){
   },[supabase]);
 
   const nextStarts=next?new Date(next.starts_at).getTime():0;
-  const liveEnds=live?.scheduled_end_at?new Date(live.scheduled_end_at).getTime():0;
+  const liveEnds=primary?.scheduled_end_at?new Date(primary.scheduled_end_at).getTime():0;
   const handoffSoon=!!liveEnds && liveEnds-now<=120000 && liveEnds-now>0;
   const nextCountdown=next?countdown(nextStarts-now):"";
   const handoffCountdown=liveEnds?countdown(liveEnds-now):"";
+
+  const rankedLives = lives.slice(0,5);
+  const primary = rankedLives[0];
+  const primaryHost = primary ? hostMap[(primary as LiveRow & {host_id:string}).host_id] : null;
+  const primaryThumbnail = primary
+    ? (primary.thumbnail_path ? supabase.storage.from("live-recordings").getPublicUrl(primary.thumbnail_path).data.publicUrl : primaryHost?.avatar_url || (primaryHost?.gender?.toLowerCase()==="female" ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg"))
+    : null;
+
+  if(mode === "carousel"){
+    return <section className="liveCarouselSection">
+      <style jsx>{`
+        .liveCarouselSection{margin:0 0 34px;padding:20px 0}
+        .head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:12px}.eyebrow{font-size:10px;letter-spacing:.17em;color:#8da88f;font-weight:900}.head h2{font-size:25px;letter-spacing:-.055em;margin:5px 0}.count{font-size:10px;color:#718077}
+        .rail{display:flex;gap:12px;overflow-x:auto;padding:3px 2px 10px;scroll-snap-type:x mandatory;scrollbar-width:none}.rail::-webkit-scrollbar{display:none}
+        .card{flex:0 0 205px;scroll-snap-align:start;border:1px solid #26362b;border-radius:18px;overflow:hidden;background:#080e0a;text-decoration:none;color:inherit;box-shadow:0 12px 30px rgba(0,0,0,.12)}
+        .thumb{height:120px;position:relative;background:linear-gradient(145deg,#172119,#070b08)}.thumb img{width:100%;height:100%;object-fit:cover;display:block}.live{position:absolute;top:8px;left:8px;background:#d8e9bd;color:#071008;border-radius:999px;padding:5px 7px;font-size:8px;font-weight:900}.rank{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.72);color:#fff;border-radius:999px;padding:5px 7px;font-size:8px;font-weight:900}
+        .body{padding:11px}.body h3{font-size:13px;line-height:1.2;margin:0 0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.topic{font-size:9px;color:#849188}.host{font-size:10px;color:#cbd8ce;margin-top:6px}.views{font-size:9px;color:#91a097;margin-top:4px}
+        @media(max-width:780px){.card{flex-basis:190px}.head{padding:0 2px}}
+      `}</style>
+      <div className="head"><div><span className="eyebrow">OTHER LIVE NOW</span><h2>More Lives happening now.</h2></div><span className="count">{loading ? "Checking…" : lives.length + " live"}</span></div>
+      {rankedLives.length ? <div className="rail">{rankedLives.map((stream,index)=>{
+        const s=stream as LiveRow & {host_id:string}; const profile=hostMap[s.host_id];
+        const thumbnail=stream.thumbnail_path ? supabase.storage.from("live-recordings").getPublicUrl(stream.thumbnail_path).data.publicUrl : profile?.avatar_url || (profile?.gender?.toLowerCase()==="female" ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg");
+        const name=profile?.display_name || (profile?.username ? "@"+profile.username : "1Muslim Host");
+        return <Link href={`/streaming/live/${stream.id}`} className="card" key={stream.id}><div className="thumb"><img src={thumbnail} alt="" /><span className="live">● LIVE</span><span className="rank">#{index+1}</span></div><div className="body"><h3>{stream.title}</h3><div className="topic">{stream.category || "Community"}</div><div className="host">{name}</div><div className="views">👥 {stream.viewer_count ?? 0} watching</div></div></Link>;
+      })}</div> : <div className="count">No other Lives are on right now.</div>}
+    </section>;
+  }
 
   return <section className="liveFocus">
     <style jsx>{`
@@ -65,9 +102,9 @@ export default function LiveNowFocus(){
         <div className="actions"><Link href="/streaming" className="primary">Watch Live Now →</Link><Link href="/streaming/scheduled" className="ghost">View Scheduled Lives</Link></div>
       </div>
       <div>
-        {live ? <Link href={`/streaming/live/${live.id}`} className="liveCard" style={{textDecoration:"none",color:"inherit"}}>
-          <span className="pill"><i className="dot"/> LIVE NOW</span>
-          <div><h3>{live.title}</h3><div className="meta">{live.category} · <span className="viewers">{live.viewer_count} watching</span></div>
+        {primary ? <Link href={`/streaming/live/${primary.id}`} className="liveCard" style={{textDecoration:"none",color:"inherit"}}>
+          <span className="pill"><i className="dot"/> #1 LIVE NOW</span>
+          <div><h3>{primary.title}</h3><div className="meta">{primary.category} · <span className="viewers">{primary.viewer_count} watching</span></div>
           {handoffSoon && <div className="handoff">This stream is about to switch.<strong>{handoffCountdown}</strong>Next streamer is preparing now.</div>}</div>
         </Link> : <div className="liveCard"><span className="pill">● LIVE NOW</span><div><h3>24/7 channel ready</h3><div className="meta">{loading?"Checking the channel…":"No streamer is on air right now."}</div></div></div>}
         {next && <div className="nextCard" style={{marginTop:10}}><span className="eyebrow">NEXT UP</span><h3>{next.title}</h3><div className="nextTime">{nextCountdown}</div><div className="nextMeta">{next.category} · starts {new Date(next.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}<br/>The next streamer can enter early and wait in the room.</div></div>}
