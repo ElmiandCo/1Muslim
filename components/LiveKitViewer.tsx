@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
+import ReconnectTrivia from "../app/components/ReconnectTrivia";
 
 export default function LiveKitViewer({ roomName, streamId }: { roomName: string; streamId?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -11,6 +12,8 @@ export default function LiveKitViewer({ roomName, streamId }: { roomName: string
   const [status, setStatus] = useState("Connecting to live…");
   const [error, setError] = useState("");
   const [muted, setMuted] = useState(true);
+  const [reconnecting, setReconnecting] = useState(false);
+  const [reconnectKey, setReconnectKey] = useState("initial");
 
   useEffect(() => {
     let mounted = true;
@@ -22,6 +25,7 @@ export default function LiveKitViewer({ roomName, streamId }: { roomName: string
         videoRef.current.muted = true;
         void videoRef.current.play().catch(() => {});
         setStatus("LIVE");
+        setReconnecting(false);
       } else if (track.kind === Track.Kind.Audio && audioContainerRef.current) {
         const audio = track.attach();
         audio.autoplay = true;
@@ -62,7 +66,7 @@ export default function LiveKitViewer({ roomName, streamId }: { roomName: string
           }
         }
 
-        if (!room.remoteParticipants.size && mounted) setStatus("Waiting for the host video…");
+        if (!room.remoteParticipants.size && mounted) { setStatus("Waiting for the host video…"); setReconnecting(true); setReconnectKey(String(Date.now())); }
       } catch (err) {
         if (mounted) setError(err instanceof Error ? err.message : "Unable to connect.");
       }
@@ -115,7 +119,20 @@ export default function LiveKitViewer({ roomName, streamId }: { roomName: string
           ⛶ Expand
         </button>
       </div>
-      {error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
+      {reconnecting ? (
+        <div style={{position:"absolute",inset:0,zIndex:10,background:"radial-gradient(circle at 50% 35%,rgba(72,103,68,.2),rgba(3,7,4,.96) 72%)",display:"grid",placeItems:"center",overflow:"hidden"}}>
+          <div style={{position:"absolute",width:190,height:190,borderRadius:"50%",border:"1px solid rgba(214,231,184,.08)",boxShadow:"0 0 80px rgba(126,170,106,.08)",animation:"oneMuslimPulse 3.5s ease-in-out infinite"}} />
+          <div style={{position:"relative",width:180,height:130,display:"grid",placeItems:"center",animation:"oneMuslimButterfly 3.2s ease-in-out infinite"}}>
+            <span style={{fontSize:74,filter:"drop-shadow(0 10px 35px rgba(174,214,143,.18))"}}>🦋</span>
+          </div>
+          <div style={{position:"absolute",top:16,left:16,right:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{padding:"6px 9px",borderRadius:999,background:"rgba(214,231,184,.12)",border:"1px solid rgba(214,231,184,.2)",color:"#d6e7b8",fontSize:9,fontWeight:900}}>1MUSLIM</span>
+            <span style={{padding:"6px 9px",borderRadius:999,background:"rgba(0,0,0,.4)",color:"#d7e0d8",fontSize:9,fontWeight:850}}>● RECONNECTING</span>
+          </div>
+          <ReconnectTrivia mode="reconnect" eventKey={reconnectKey} />
+          <style jsx>{`@keyframes oneMuslimButterfly{0%,100%{transform:translateY(5px) scale(1)}50%{transform:translateY(-8px) scale(1.035)}}@keyframes oneMuslimPulse{0%,100%{transform:scale(.94);opacity:.5}50%{transform:scale(1.08);opacity:1}}`}</style>
+        </div>
+      ) : error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
     </div>
   );
 }
