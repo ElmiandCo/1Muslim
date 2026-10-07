@@ -6,6 +6,7 @@ import type { FormEvent } from "react";
 import ProfileAvatar from "../app/components/ProfileAvatar";
 
 type Profile = {
+  id: string;
   display_name: string | null;
   username: string | null;
   gender?: string | null;
@@ -45,7 +46,7 @@ export default function LiveChat({ streamId, hostId }: { streamId: string; hostI
     const ids = Array.from(new Set((rows ?? []).map((row) => row.sender_id)));
     let profiles: Record<string, Profile> = {};
     if (ids.length) {
-      const { data } = await supabase.from("profiles").select("display_name,username,gender,avatar_gender,avatar_package,avatar_config,profile_accent").in("id", ids);
+      const { data } = await supabase.from("profiles").select("id,display_name,username,gender,avatar_gender,avatar_package,avatar_config,profile_accent").in("id", ids);
       profiles = Object.fromEntries((data ?? []).map((profile) => [profile.id, profile]));
     }
 
