@@ -6,9 +6,11 @@ import { Room, RoomEvent, Track } from "livekit-client";
 export default function LiveKitViewer({ roomName, streamId }: { roomName: string; streamId?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioContainerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
   const roomRef = useRef<Room | null>(null);
   const [status, setStatus] = useState("Connecting to live…");
   const [error, setError] = useState("");
+  const [muted, setMuted] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -23,6 +25,7 @@ export default function LiveKitViewer({ roomName, streamId }: { roomName: string
       } else if (track.kind === Track.Kind.Audio && audioContainerRef.current) {
         const audio = track.attach();
         audio.autoplay = true;
+        audio.muted = true;
         audio.setAttribute("playsinline", "true");
         audioContainerRef.current.appendChild(audio);
         void audio.play().catch(() => {});
@@ -44,12 +47,9 @@ export default function LiveKitViewer({ roomName, streamId }: { roomName: string
 
         const room = new Room({ adaptiveStream: true, dynacast: true });
         roomRef.current = room;
-
         room.on(RoomEvent.TrackSubscribed, (track) => attachTrack(track));
         room.on(RoomEvent.TrackUnsubscribed, (track) => track.detach());
-        room.on(RoomEvent.TrackSubscriptionFailed, () => {
-          if (mounted) setError("Live video could not be subscribed to. Please reconnect.");
-        });
+        room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live video could not be subscribed to. Please reconnect."));
         room.on(RoomEvent.ParticipantConnected, () => mounted && setStatus("LIVE"));
         room.on(RoomEvent.Disconnected, () => mounted && setStatus("Live connection ended."));
 
@@ -69,7 +69,9 @@ export default function LiveKitViewer({ roomName, streamId }: { roomName: string
     };
 
     void connect();
-    const countTimer = window.setInterval(() => { void fetch("/api/livekit/viewer-count", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({room:roomName}) }); }, 5000);
+    const countTimer = window.setInterval(() => {
+      void fetch("/api/livekit/viewer-count", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({room:roomName}) });
+    }, 5000);
 
     return () => {
       window.clearInterval(countTimer);
@@ -81,10 +83,38 @@ export default function LiveKitViewer({ roomName, streamId }: { roomName: string
     };
   }, [roomName]);
 
+  const toggleMute = () => {
+    const next = !muted;
+    setMuted(next);
+    if (audioContainerRef.current) {
+      audioContainerRef.current.querySelectorAll("audio").forEach((audio) => {
+        audio.muted = next;
+        if (!next) void audio.play().catch(() => {});
+      });
+    }
+  };
+
+  const toggleFullscreen = async () => {
+    if (!playerRef.current) return;
+    if (document.fullscreenElement) {
+      await document.exitFullscreen().catch(() => {});
+    } else {
+      await playerRef.current.requestFullscreen().catch(() => {});
+    }
+  };
+
   return (
-    <div style={{position:"relative",background:"#000",aspectRatio:"16/9",overflow:"hidden"}}>
+    <div ref={playerRef} style={{position:"relative",background:"#000",aspectRatio:"16/9",overflow:"hidden"}}>
       <video ref={videoRef} autoPlay muted playsInline controls style={{width:"100%",height:"100%",objectFit:"contain"}} />
       <div ref={audioContainerRef} />
+      <div style={{position:"absolute",left:12,bottom:12,display:"flex",gap:7,zIndex:5}}>
+        <button type="button" onClick={toggleMute} aria-label={muted ? "Unmute live audio" : "Mute live audio"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
+          {muted ? "🔇 Unmute" : "🔊 Mute"}
+        </button>
+        <button type="button" onClick={() => void toggleFullscreen()} aria-label="Expand live player" style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
+          ⛶ Expand
+        </button>
+      </div>
       {error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
     </div>
   );
