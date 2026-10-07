@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { RoomServiceClient } from "livekit-server-sdk";
-import { createClient } from "../../../../utils/supabase/server";
+import { createClient } from "../../../../../utils/supabase/server";
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   try {
