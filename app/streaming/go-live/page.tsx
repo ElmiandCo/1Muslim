@@ -331,8 +331,16 @@ export default function GoLivePage() {
   };
 
   const setAudioStudioVolume = async (value: number) => {
-    setSoundVolume(value);
-    await applyAudioStudio(audioEffect, nasheedOn, value);
+    const nextVolume = Math.max(0, Math.min(1, value));
+    setSoundVolume(nextVolume);
+    const processor = audioProcessorRef.current;
+    if (processor?.setVolume) {
+      processor.setVolume(nextVolume);
+      return;
+    }
+    if (nasheedOn) {
+      await applyAudioStudio(audioEffect, nasheedOn, nextVolume);
+    }
   };
 
   const toggleMic = () => {
