@@ -28,6 +28,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const [lives,setLives]=useState<LiveRow[]>([]);
   const [hostMap,setHostMap]=useState<Record<string,{display_name:string|null;username:string|null;avatar_url:string|null;gender:string|null}>>({});
   const [live,setLive]=useState<LiveRow|null>(null);
+  const [activeIndex,setActiveIndex]=useState(0);
   const [next,setNext]=useState<Slot|null>(null);
   const [now,setNow]=useState(Date.now());
   const [loading,setLoading]=useState(true);
@@ -41,6 +42,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       const rows=(lives??[]) as (LiveRow & {host_id:string})[];
       setLives(rows);
       setLive((rows[0]??null) as LiveRow|null);
+      setActiveIndex((current)=>rows.length ? Math.min(current, rows.length - 1) : 0);
       const hostIds=Array.from(new Set(rows.map(row=>row.host_id).filter(Boolean)));
       if(hostIds.length){
         const {data:profiles}=await supabase.from("profiles").select("id,display_name,username,avatar_url,gender").in("id",hostIds);
@@ -57,17 +59,16 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   },[supabase]);
 
   const rankedLives = lives.slice(0,5);
-  const primary = rankedLives[0];
+  const primary = live && rankedLives.some((stream)=>stream.id===live.id) ? live : rankedLives[0];
+  const activeHost = primary ? hostMap[(primary as LiveRow & {host_id:string}).host_id] : null;
+  const activeHostName = activeHost?.display_name || (activeHost?.username ? "@"+activeHost.username : "1Muslim Host");
+  const hasNextStream = rankedLives.length > 1;
 
   const nextStarts=next?new Date(next.starts_at).getTime():0;
   const liveEnds=primary?.scheduled_end_at?new Date(primary.scheduled_end_at).getTime():0;
   const handoffSoon=!!liveEnds && liveEnds-now<=120000 && liveEnds-now>0;
   const nextCountdown=next?countdown(nextStarts-now):"";
   const handoffCountdown=liveEnds?countdown(liveEnds-now):"";
-  const primaryHost = primary ? hostMap[(primary as LiveRow & {host_id:string}).host_id] : null;
-  const primaryThumbnail = primary
-    ? (primary.thumbnail_path ? supabase.storage.from("live-recordings").getPublicUrl(primary.thumbnail_path).data.publicUrl : primaryHost?.avatar_url || (primaryHost?.gender?.toLowerCase()==="female" ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg"))
-    : null;
 
   if(mode === "carousel"){
     return <section className="liveCarouselSection">
@@ -104,10 +105,14 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       </div>
       <div>
         {primary ? <div className="liveCard" style={{padding:0,overflow:"hidden"}}>
+          {hasNextStream && <button type="button" onClick={()=>{ const nextIndex=(activeIndex+1)%rankedLives.length; setActiveIndex(nextIndex); setLive(rankedLives[nextIndex]); }} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,border:0,borderBottom:"1px solid #26362b",background:"#0b120d",color:"#dce8dc",padding:"11px 14px",cursor:"pointer",textAlign:"left"}}>
+            <span style={{fontSize:9,fontWeight:900,letterSpacing:".14em",textTransform:"uppercase"}}>Next Stream</span>
+            <span style={{fontSize:10,color:"#8da88f"}}>Switch to another host →</span>
+          </button>}
           <div style={{position:"relative"}}><LiveKitViewer roomName={primary.room_name ?? ""} streamId={primary.id} /></div>
           <Link href={`/streaming/live/${primary.id}`} style={{textDecoration:"none",color:"inherit",display:"block",padding:"14px 18px 18px"}}>
             <span className="pill"><i className="dot"/> #1 LIVE NOW</span>
-            <div><h3>{primary.title}</h3><div className="meta">{primary.category} · <span className="viewers">{primary.viewer_count} watching</span></div>
+            <div><h3>{activeHostName}</h3><div className="meta">{primary.title} · {primary.category} · <span className="viewers">{primary.viewer_count} watching</span></div>
             {handoffSoon && <div className="handoff">This stream is about to switch.<strong>{handoffCountdown}</strong>Next streamer is preparing now.</div>}</div>
           </Link>
         </div> : <div className="liveCard"><span className="pill">● LIVE NOW</span><div><h3>24/7 channel ready</h3><div className="meta">{loading?"Checking the channel…":"No streamer is on air right now."}</div></div></div>}
