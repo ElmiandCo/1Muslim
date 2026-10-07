@@ -254,7 +254,7 @@ export default function GoLivePage() {
 
   const setCameraZoom = async (value: number) => {
     setZoom(value);
-    await applyCameraControl({ advanced: [{ zoom: value }] });
+    await applyCameraControl({ advanced: [{ zoom: value } as MediaTrackConstraintSet] });
   };
 
   const setCameraFocus = async (mode: "auto" | "manual", distance = focusDistance) => {
