@@ -59,8 +59,9 @@ export default function LiveChat({ streamId, hostId }: { streamId: string; hostI
     const channel = supabase.channel("live-chat-" + streamId)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "live_chat_messages", filter: "stream_id=eq." + streamId }, async (payload) => {
         const row = payload.new as Message;
-        const { data: profile } = await supabase.from("profiles").select("display_name,username,gender,avatar_gender,avatar_package,avatar_config,profile_accent").eq("id", row.sender_id).maybeSingle();
-        setMessages((current) => current.some((item) => item.id === row.id) ? current : [...current, { ...row, profile }]);
+        const { data: profile } = await supabase.from("profiles").select("id,display_name,username,gender,avatar_gender,avatar_package,avatar_config,profile_accent").eq("id", row.sender_id).maybeSingle();
+        const typedProfile = profile as Profile | null;
+        setMessages((current) => current.some((item) => item.id === row.id) ? current : [...current, { ...row, profile: typedProfile }]);
       }).subscribe();
 
     return () => { void supabase.removeChannel(channel); };
