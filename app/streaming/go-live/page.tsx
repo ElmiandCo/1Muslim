@@ -90,6 +90,49 @@ export default function GoLivePage() {
     const timer = window.setInterval(() => void heartbeat(), 15000);
     return () => window.clearInterval(timer);
   }, [live]);
+  useEffect(() => {
+    const streamId = liveStreamIdRef.current;
+    if (!live || !streamId) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel("live-moderation-" + streamId)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "live_streams", filter: "id=eq." + streamId }, (payload) => {
+        const nextStatus = (payload.new as { status?: string }).status;
+        if (nextStatus !== "cancelled") return;
+        setLive(false);
+        setViewers(0);
+        setError("An admin ended this Live.");
+        setSaveMessage("The broadcast was shut down by an admin and was not saved as a recording.");
+        roomRef.current?.disconnect();
+        roomRef.current = null;
+        const recorder = recorderRef.current;
+        if (recorder && recorder.state !== "inactive") {
+          recorder.onstop = () => {
+            chunksRef.current = [];
+            recordingStartedAtRef.current = null;
+            recorderRef.current = null;
+            setRecording(false);
+            setSaving(false);
+            streamRef.current?.getTracks().forEach((track) => track.stop());
+            streamRef.current = null;
+            setCameraReady(false);
+            audioProcessorRef.current = null;
+            audioTrackRef.current = null;
+            processedAudioTrackRef.current = null;
+            setCameraOn(true);
+            setMicOn(true);
+          };
+          recorder.stop();
+        } else {
+          streamRef.current?.getTracks().forEach((track) => track.stop());
+          streamRef.current = null;
+          setCameraReady(false);
+        }
+        liveStreamIdRef.current = null;
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [live]);
   const [reaction, setReaction] = useState<string | null>(null);
   const [followed, setFollowed] = useState(false);
   const [notifications, setNotifications] = useState(false);
