@@ -30,6 +30,7 @@ export default function GoLivePage() {
   const [saveMessage, setSaveMessage] = useState("");
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [title, setTitle] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [category, setCategory] = useState(categories[0]);
@@ -126,7 +127,7 @@ export default function GoLivePage() {
       }
       streamRef.current?.getTracks().forEach((track) => track.stop());
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: formats.find(f => f.key === aspectRatio)?.width ?? 720 }, height: { ideal: formats.find(f => f.key === aspectRatio)?.height ?? 1280 } },
+        video: { facingMode, width: { ideal: formats.find(f => f.key === aspectRatio)?.width ?? 720 }, height: { ideal: formats.find(f => f.key === aspectRatio)?.height ?? 1280 } },
         audio: true,
       });
       streamRef.current = stream;
@@ -161,6 +162,44 @@ export default function GoLivePage() {
     const next = !cameraOn;
     streamRef.current?.getVideoTracks().forEach((track) => (track.enabled = next));
     setCameraOn(next);
+  };
+
+  const flipCamera = async () => {
+    if (!streamRef.current || !navigator.mediaDevices?.getUserMedia) return;
+    setError("");
+    const nextFacingMode = facingMode === "user" ? "environment" : "user";
+    try {
+      const currentStream = streamRef.current;
+      const oldVideoTracks = currentStream.getVideoTracks();
+      const newVideoStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { exact: nextFacingMode },
+          width: { ideal: formats.find(f => f.key === aspectRatio)?.width ?? 720 },
+          height: { ideal: formats.find(f => f.key === aspectRatio)?.height ?? 1280 },
+        },
+        audio: false,
+      });
+      const newVideoTrack = newVideoStream.getVideoTracks()[0];
+      if (!newVideoTrack) throw new Error("The other camera could not be opened.");
+      oldVideoTracks.forEach((track) => {
+        currentStream.removeTrack(track);
+        track.stop();
+      });
+      currentStream.addTrack(newVideoTrack);
+      streamRef.current = currentStream;
+      setFacingMode(nextFacingMode);
+      setCameraOn(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = currentStream;
+        videoRef.current.muted = true;
+        videoRef.current.playsInline = true;
+        await videoRef.current.play().catch(() => undefined);
+      }
+    } catch (err) {
+      setError(err instanceof DOMException && (err.name === "OverconstrainedError" || err.name === "NotFoundError")
+        ? "This device does not expose a switchable front/back camera."
+        : err instanceof Error ? err.message : "We could not switch cameras.");
+    }
   };
 
   const toggleMic = () => {
@@ -425,10 +464,10 @@ export default function GoLivePage() {
             <div className={`preview format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"}`}>
               {cameraReady ? <video ref={videoRef} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               {live && <span className="live">● LIVE</span>}{recording && <span className="recording">● RECORDING</span>}
-              {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
+              {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
             </div>
             <div className="controls">
-              {cameraReady && <><button className={cameraOn ? "circle" : "circle off"} onClick={toggleCamera} aria-label="Toggle camera">{cameraOn ? "◉" : "○"}</button><button className={micOn ? "circle" : "circle off"} onClick={toggleMic} aria-label="Toggle microphone">{micOn ? "♫" : "×"}</button></>}
+              {cameraReady && <><button className={cameraOn ? "circle" : "circle off"} onClick={toggleCamera} aria-label="Toggle camera">{cameraOn ? "◉" : "○"}</button><button className="circle" onClick={()=>void flipCamera()} aria-label="Flip camera" title="Flip camera">↻</button><button className={micOn ? "circle" : "circle off"} onClick={toggleMic} aria-label="Toggle microphone">{micOn ? "♫" : "×"}</button></>}
               {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In — I’m Ready</button> : scheduledSlot ? <button className="start" disabled>Waiting for scheduled time…</button> : <button className="start" onClick={startLive} disabled={saving}>Start Live + Record</button>}
             </div>
           </section>
