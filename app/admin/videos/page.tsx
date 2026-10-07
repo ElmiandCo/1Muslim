@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { createClient } from "../../../utils/supabase/client";
 
 type ChannelVideo = {
@@ -115,7 +116,7 @@ export default function AdminChannelVideosPage() {
   return (
     <main style={{ minHeight: "100vh", padding: "34px 20px 70px", maxWidth: 1000, margin: "0 auto" }}>
       <div style={{ marginBottom: 26 }}>
-        <div style={{ fontSize: 10, letterSpacing: ".16em", fontWeight: 900, color: "#8da88f" }}>1MUSLIM CHANNEL CONTROL</div>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "center", marginBottom: 10 }}><div style={{ fontSize: 10, letterSpacing: ".16em", fontWeight: 900, color: "#8da88f" }}>1MUSLIM CHANNEL CONTROL</div><Link href="/admin/live" style={{ border: "1px solid #4b3030", borderRadius: 999, background: "#180e0f", color: "#ffcaca", padding: "8px 12px", textDecoration: "none", fontSize: 10, fontWeight: 900 }}>🛡 Live Moderation</Link></div>
         <h1 style={{ fontSize: "clamp(32px,5vw,52px)", letterSpacing: "-.06em", margin: "8px 0" }}>Guaranteed Videos</h1>
         <p style={{ color: "#8f9d94", maxWidth: 680, lineHeight: 1.6, fontSize: 13 }}>
           Upload videos that can appear in the Home Live channel rotation. These are curated 1Muslim videos, not advertisements.
