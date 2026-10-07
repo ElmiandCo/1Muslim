@@ -9,6 +9,7 @@ type LiveRow = {
   id:string; title:string; category:string; viewer_count:number; started_at:string;
   scheduled_end_at:string|null; thumbnail_path:string|null; aspect_ratio?:string|null; room_name?:string;
 };
+type CuratedVideo = { id:string; title:string; description:string; category:string; storage_path:string; mime_type:string; position:number; is_active:boolean; };
 type Slot = {
   id:string; host_id:string; title:string; category:string; starts_at:string; ends_at:string;
   status:string; thumbnail_path:string|null;
@@ -29,18 +30,21 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const [hostMap,setHostMap]=useState<Record<string,{display_name:string|null;username:string|null;avatar_url:string|null;gender:string|null}>>({});
   const [live,setLive]=useState<LiveRow|null>(null);
   const [activeIndex,setActiveIndex]=useState(0);
+  const [curatedVideos,setCuratedVideos]=useState<CuratedVideo[]>([]);
   const [next,setNext]=useState<Slot|null>(null);
   const [now,setNow]=useState(Date.now());
   const [loading,setLoading]=useState(true);
 
   useEffect(()=>{
     const load=async()=>{
-      const [{data:lives},{data:slots}]=await Promise.all([
+      const [{data:lives},{data:slots},{data:curated}]=await Promise.all([
         supabase.from("live_streams").select("id,title,category,viewer_count,started_at,scheduled_end_at,thumbnail_path,host_id,aspect_ratio,room_name").eq("status","live").gte("last_heartbeat_at",new Date(Date.now()-60_000).toISOString()).order("viewer_count",{ascending:false}).order("started_at",{ascending:false}).limit(20),
-        supabase.from("live_schedule_slots").select("id,host_id,title,category,starts_at,ends_at,status,thumbnail_path").in("status",["scheduled","waiting","live"]).order("starts_at",{ascending:true}).limit(8)
+        supabase.from("live_schedule_slots").select("id,host_id,title,category,starts_at,ends_at,status,thumbnail_path").in("status",["scheduled","waiting","live"]).order("starts_at",{ascending:true}).limit(8),
+        supabase.from("admin_videos").select("id,title,description,category,storage_path,mime_type,position,is_active").eq("is_active",true).order("position",{ascending:true}).limit(30)
       ]);
       const rows=(lives??[]) as (LiveRow & {host_id:string})[];
       setLives(rows);
+      setCuratedVideos((curated??[]) as CuratedVideo[]);
       setLive((rows[0]??null) as LiveRow|null);
       setActiveIndex((current)=>rows.length ? Math.min(current, rows.length - 1) : 0);
       const hostIds=Array.from(new Set(rows.map(row=>row.host_id).filter(Boolean)));
@@ -59,11 +63,18 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   },[supabase]);
 
   const rankedLives = lives.slice(0,5);
-  const primary = live && rankedLives.some((stream)=>stream.id===live.id) ? live : rankedLives[0];
+  const queue = [
+    ...rankedLives.map((stream)=>({ kind:"live" as const, item:stream })),
+    ...curatedVideos.map((video)=>({ kind:"video" as const, item:video })),
+  ];
+  const safeIndex = queue.length ? Math.min(activeIndex, queue.length - 1) : 0;
+  const active = queue[safeIndex];
+  const primary = active?.kind === "live" ? active.item : null;
+  const activeCurated = active?.kind === "video" ? active.item : null;
   const activeHost = primary ? hostMap[(primary as LiveRow & {host_id:string}).host_id] : null;
   const activeHostName = activeHost?.display_name || (activeHost?.username ? "@"+activeHost.username : "1Muslim Host");
-  const currentIndex = primary ? Math.max(0, rankedLives.findIndex((stream)=>stream.id===primary.id)) : activeIndex;
-  const hasNextStream = rankedLives.length > 1;
+  const hasNextStream = queue.length > 1;
+  const nextItem = hasNextStream ? queue[(safeIndex + 1) % queue.length] : null;
 
   const nextStarts=next?new Date(next.starts_at).getTime():0;
   const liveEnds=primary?.scheduled_end_at?new Date(primary.scheduled_end_at).getTime():0;
@@ -105,19 +116,19 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
         <div className="actions"><Link href="/streaming" className="primary">Watch Live Now →</Link><Link href="/streaming/scheduled" className="ghost">View Scheduled Lives</Link></div>
       </div>
       <div>
-        {primary ? <div className="liveCard" style={{padding:0,overflow:"hidden"}}>
-          {hasNextStream && <button type="button" onClick={()=>{ const nextIndex=(currentIndex+1)%rankedLives.length; setActiveIndex(nextIndex); setLive(rankedLives[nextIndex]); }} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,border:0,borderBottom:"1px solid #26362b",background:"#0b120d",color:"#dce8dc",padding:"11px 14px",cursor:"pointer",textAlign:"left"}}>
+        {active ? <div className="liveCard" style={{padding:0,overflow:"hidden"}}>
+          {hasNextStream && <button type="button" onClick={()=>setActiveIndex((safeIndex+1)%queue.length)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,border:0,borderBottom:"1px solid #26362b",background:"#0b120d",color:"#dce8dc",padding:"11px 14px",cursor:"pointer",textAlign:"left"}}>
             <span style={{fontSize:9,fontWeight:900,letterSpacing:".14em",textTransform:"uppercase"}}>Next Stream</span>
             <span style={{fontSize:10,color:"#8da88f"}}>Switch to another host →</span>
           </button>}
-          <div style={{position:"relative"}}><LiveKitViewer roomName={primary.room_name ?? ""} streamId={primary.id} /></div>
+          <div style={{position:"relative"}}>{primary ? <LiveKitViewer roomName={primary.room_name ?? ""} streamId={primary.id} /> : activeCurated ? <video key={activeCurated.id} src={supabase.storage.from("admin-videos").getPublicUrl(activeCurated.storage_path).data.publicUrl} controls autoPlay playsInline onEnded={()=>setActiveIndex((safeIndex+1)%queue.length)} style={{display:"block",width:"100%",aspectRatio:"16/9",objectFit:"contain",background:"#020403"}} /> : null}</div>
           <Link href={`/streaming/live/${primary.id}`} style={{textDecoration:"none",color:"inherit",display:"block",padding:"14px 18px 18px"}}>
-            <span className="pill"><i className="dot"/> #1 LIVE NOW</span>
-            <div><h3>{activeHostName}</h3><div className="meta">{primary.title} · {primary.category} · <span className="viewers">{primary.viewer_count} watching</span></div>
+            <span className="pill"><i className="dot"/> {primary ? "#1 LIVE NOW" : "1MUSLIM SELECT"}</span>
+            <div><h3>{primary ? activeHostName : activeCurated?.title}</h3><div className="meta">{primary ? `${primary.title} · ${primary.category} · ${primary.viewer_count} watching` : `${activeCurated?.category} · Curated 1Muslim video`}</div>
             {handoffSoon && <div className="handoff">This stream is about to switch.<strong>{handoffCountdown}</strong>Next streamer is preparing now.</div>}</div>
           </Link>
         </div> : <div className="liveCard"><span className="pill">● LIVE NOW</span><div><h3>24/7 channel ready</h3><div className="meta">{loading?"Checking the channel…":"No streamer is on air right now."}</div></div></div>}
-        {next && <div className="nextCard" style={{marginTop:10}}><span className="eyebrow">NEXT UP</span><h3>{next.title}</h3><div className="nextTime">{nextCountdown}</div><div className="nextMeta">{next.category} · starts {new Date(next.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}<br/>The next streamer can enter early and wait in the room.</div></div>}
+        {next && !activeCurated && <div className="nextCard" style={{marginTop:10}}><span className="eyebrow">NEXT UP</span><h3>{next.title}</h3><div className="nextTime">{nextCountdown}</div><div className="nextMeta">{next.category} · starts {new Date(next.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}<br/>The next streamer can enter early and wait in the room.</div></div>}
       </div>
     </div>
     <div className="bar"><span><b>Watching:</b> public · no account required</span><span><b>Interacting:</b> sign in required · Shahada verification for new accounts</span></div>
