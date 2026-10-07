@@ -43,6 +43,7 @@ export default function GoLivePage() {
   const nasheedPreviewRef = useRef<HTMLAudioElement | null>(null);
   const audioTrackRef = useRef<LocalAudioTrack | null>(null);
   const audioProcessorRef = useRef<any>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const processedAudioTrackRef = useRef<MediaStreamTrack | null>(null);
   const [title, setTitle] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -198,6 +199,11 @@ export default function GoLivePage() {
 
   useEffect(() => () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
+    void audioProcessorRef.current?.destroy?.();
+    if (audioContextRef.current) {
+      void audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
   }, []);
 
   const toggleCamera = () => {
@@ -294,17 +300,28 @@ export default function GoLivePage() {
     if (preview) preview.volume = Math.max(0, Math.min(1, soundVolume));
   }, [soundVolume]);
 
+  const ensureAudioContext = async () => {
+    if (!audioContextRef.current) {
+      const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextCtor) throw new Error("This browser does not support audio processing.");
+      audioContextRef.current = new AudioContextCtor();
+    }
+    if (audioContextRef.current.state === "suspended") await audioContextRef.current.resume();
+    return audioContextRef.current;
+  };
+
   const applyAudioStudio = async (nextEffect = audioEffect, nextSound = nasheedOn, nextVolume = soundVolume) => {
     const rawTrack = streamRef.current?.getAudioTracks()[0];
     if (!rawTrack) return;
     try {
+      const audioContext = await ensureAudioContext();
       if (audioTrackRef.current) {
         await audioTrackRef.current.stopProcessor();
       }
       const processor = createLiveAudioProcessor(nextEffect, nextSound, nextVolume);
       audioProcessorRef.current = processor;
       if (!audioTrackRef.current) {
-        audioTrackRef.current = new LocalAudioTrack(rawTrack);
+        audioTrackRef.current = new LocalAudioTrack(rawTrack, undefined, true, audioContext);
       }
       await audioTrackRef.current.setProcessor(processor as any);
       processedAudioTrackRef.current = processor.processedTrack ?? audioTrackRef.current.mediaStreamTrack;
@@ -538,7 +555,8 @@ export default function GoLivePage() {
       if (audioTrack) {
         let localAudioTrack = audioTrackRef.current;
         if (!localAudioTrack || localAudioTrack.mediaStreamTrack !== audioTrack) {
-          localAudioTrack = new LocalAudioTrack(audioTrack);
+          const audioContext = await ensureAudioContext();
+          localAudioTrack = new LocalAudioTrack(audioTrack, undefined, true, audioContext);
           const processor = createLiveAudioProcessor(audioEffect, nasheedOn, soundVolume);
           await localAudioTrack.setProcessor(processor as any);
           audioTrackRef.current = localAudioTrack;
