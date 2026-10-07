@@ -17,7 +17,9 @@ export function createLiveAudioProcessor(effect: AudioEffect, sound: "none" | "n
   let nodes: AudioNode[] = [];
   let soundElement: HTMLAudioElement | null = null;
 
-  let processor: Processor;\n\n  const connect = async (opts: { audioContext: AudioContext; track: MediaStreamTrack }) => {
+  let processor: Processor;
+
+  const connect = async (opts: { audioContext: AudioContext; track: MediaStreamTrack }) => {
     context = opts.audioContext;
     if (context.state === "suspended") await context.resume();
 
