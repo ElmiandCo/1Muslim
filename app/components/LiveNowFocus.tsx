@@ -56,14 +56,14 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
     return()=>{window.clearInterval(refresh);window.clearInterval(clock)};
   },[supabase]);
 
+  const rankedLives = lives.slice(0,5);
+  const primary = rankedLives[0];
+
   const nextStarts=next?new Date(next.starts_at).getTime():0;
   const liveEnds=primary?.scheduled_end_at?new Date(primary.scheduled_end_at).getTime():0;
   const handoffSoon=!!liveEnds && liveEnds-now<=120000 && liveEnds-now>0;
   const nextCountdown=next?countdown(nextStarts-now):"";
   const handoffCountdown=liveEnds?countdown(liveEnds-now):"";
-
-  const rankedLives = lives.slice(0,5);
-  const primary = rankedLives[0];
   const primaryHost = primary ? hostMap[(primary as LiveRow & {host_id:string}).host_id] : null;
   const primaryThumbnail = primary
     ? (primary.thumbnail_path ? supabase.storage.from("live-recordings").getPublicUrl(primary.thumbnail_path).data.publicUrl : primaryHost?.avatar_url || (primaryHost?.gender?.toLowerCase()==="female" ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg"))
