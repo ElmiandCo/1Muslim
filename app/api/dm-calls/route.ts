@@ -4,7 +4,7 @@ import {createClient} from "@supabase/supabase-js";
 import {AccessToken} from "livekit-server-sdk";
 export const runtime="nodejs";
 const uuid=(v:unknown):v is string=>typeof v==="string"&&/^[a-f0-9-]{36}$/i.test(v);
-export async function handler(request:Request,method:"GET"|"POST"){
+async function handler(request:Request,method:"GET"|"POST"){
  const session=await sessionClient();const {data:{user}}=await session.auth.getUser();
  if(!user)return NextResponse.json({error:"Sign in required"},{status:401});
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
