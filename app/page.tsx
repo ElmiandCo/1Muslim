@@ -3,6 +3,7 @@
 import Link from "next/link";
 import SiteNav, { ThemeToggle } from "./components/SiteNav";
 import DuaLesson from "./components/DuaLesson";
+import DiscoveryHold from "./components/DiscoveryHold";
 import { useEffect, useState } from "react";
 import { createClient } from "../utils/supabase/client";
 import LiveNowFocus from "./components/LiveNowFocus";
@@ -185,6 +186,8 @@ export default function Home() {
         </section>}
 
         <section className="sectionBlock"><div className="sectionTitle"><div><span className="eyebrow">STILL YOUR JOURNEY</span><h2>Start where you are.</h2></div><span className="counter">Learn at your pace</span></div><p className="adaptive" style={{marginTop:0}}>Live is the front door. Learning, Qur’an, community and reflection are still here when you want to go deeper.</p></section>
+
+        <DiscoveryHold />
 
         <section className="sectionBlock learnPaths" id="paths">
           <div className="learnPathsHead">
