@@ -50,8 +50,8 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  <div className="mc-header"><span className="mc-brand">1MUSLIM <span style={{color:"#8ae3b2"}}>MESSENGER</span></span><span className="mc-private">🔒 Private {call.mode==="video"?"video":"audio"} call</span></div>
  <div className="mc-center">
  {phase==="intro"&&<div className="mc-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>}
- {phase!=="connected"&&<div className="mc-ring" style={phase==="connected"&&call.mode==="audio"?{transform:`+"`scale(${1+Math.min(.15,audioLevel*.25)})`"+`,boxShadow:`+"`0 0 ${30+audioLevel*95}px #6af3b4a8`"+`}:undefined}><div className="mc-avatar">{peerAvatar?<img src={peerAvatar} alt={peerName}/>:peerName.slice(0,1).toUpperCase()}</div></div>}
- {phase==="connected"&&call.mode==="audio"&&<div className="mc-ring"><div className="mc-avatar">{peerName.slice(0,1).toUpperCase()}</div></div>}
+  {phase!=="connected"&&<div className="mc-ring"><div className="mc-avatar">{peerAvatar?<img src={peerAvatar} alt={peerName}/>:peerName.slice(0,1).toUpperCase()}</div></div>}
+  {phase==="connected"&&call.mode==="audio"&&<div className="mc-ring" style={{transform:`scale(${1+Math.min(.15,audioLevel*.25)})`,boxShadow:`0 0 ${30+audioLevel*95}px #6af3b4a8`}}><div className="mc-avatar">{peerAvatar?<img src={peerAvatar} alt={peerName}/>:peerName.slice(0,1).toUpperCase()}</div></div>}
  {(phase!=="connected"||call.mode==="audio")&&<><h2 className="mc-name">{peerName}</h2><p className="mc-state">{incoming?"Incoming "+call.mode+" call":outgoing?"Ringing…":phase==="intro"?"Connecting securely…":duration}</p></>}
  {phase==="connected"&&call.mode==="video"&&<p className="mc-state" style={{background:"#0008",borderRadius:20,padding:"7px 16px"}}>{peerName} · {duration}</p>}
  </div>
