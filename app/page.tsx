@@ -232,6 +232,7 @@ export default function Home() {
         </section>
 
         <section className="sectionBlock compact">
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginBottom:14,flexWrap:"wrap"}}><span className="eyebrow">BADGE TRAINING</span><Link href="/badges" style={{border:"1px solid #8c8357",padding:"9px 14px",borderRadius:999,color:"var(--text)",textDecoration:"none",fontWeight:800,fontSize:12}}>🏅 View Badge Journey & Unlocks →</Link></div>
           <div className="sectionTitle"><div><span className="eyebrow">FOUNDATIONS</span><h2>The words you’ll keep hearing.</h2></div><span className="counter">12 terms</span></div>
           <div className="horizontalCards">
             {foundations.slice(0,6).map(([a,b]) => <div className="termCard" key={a} role={a === "Dua" ? "button" : undefined} tabIndex={a === "Dua" ? 0 : undefined} onClick={a === "Dua" ? ()=>setDuaOpen(true) : undefined} onKeyDown={a === "Dua" ? e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setDuaOpen(true)}} : undefined} style={a === "Dua" ? {cursor:"pointer"} : undefined}>{a === "Dua" && <span style={{fontSize:12,color:"#d9c18b",fontWeight:800,marginBottom:8}}>{"✦ Open Dua lesson →"}</span>}{a === "Shahadah" && <span className="badgeEmblem" style={{width:104,maxWidth:"100%",margin:"0 auto 12px"}}><img src="/assets/badges/shahada-badge.png" alt="Shahadah badge" /></span>}<strong>{a}</strong><span>{b}</span></div>)}
