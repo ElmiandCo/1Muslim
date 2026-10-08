@@ -241,3 +241,152 @@ footer{display:flex;flex-direction:column;gap:6px;padding:30px;color:#66726a;fon
 .header-white{background:#fff!important;color:#171e1a!important}
 .header-white h1,.header-white strong,.header-white .eyebrow{color:#171e1a!important}
 .header-white p,.header-white span{color:#4a5750}
+
+
+/* Shared 1Muslim video frame: all HTML video players, including LiveKit, replay,
+   host previews, course videos and floating players. Border-image keeps the
+   central video visible and does not intercept player interactions. */
+video {
+  box-sizing: border-box;
+  border: 5px solid #b99c55;
+  border-image-source: url("/assets/1MuslimBorder.png");
+  border-image-slice: 28;
+  border-image-width: 5px;
+  border-image-outset: 0;
+  border-image-repeat: stretch;
+  border-radius: 12px;
+}
+@media (max-width: 640px) {
+  video { border-width: 3px; border-image-width: 3px; }
+}
+
+
+/* 1Muslim Expressions: motion is subtle, interaction is playful, accessibility wins. */
+@keyframes omFlame{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(7deg) scale(1.16)}}
+@keyframes omHeartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.24)}30%{transform:scale(1)}45%{transform:scale(1.14)}}
+@keyframes omLaugh{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg) translateY(-2px)}75%{transform:rotate(12deg) translateY(-2px)}}
+@keyframes omDua{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes omSparkle{0%,100%{filter:brightness(1);transform:scale(.94)}50%{filter:brightness(1.5);transform:scale(1.16)}}
+@keyframes omTrophy{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.16) rotate(8deg)}}
+@keyframes omMoon{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+@keyframes omEyes{0%,100%{transform:translateX(-2px)}50%{transform:translateX(2px)}}
+.oneMuslimEmoji{display:inline-block;will-change:transform;vertical-align:baseline;transition:filter .18s}
+.oneMuslimEmoji--flame{animation:omFlame 1.5s ease-in-out infinite}
+.oneMuslimEmoji--heart{animation:omHeartbeat 2.3s ease-in-out infinite}
+.oneMuslimEmoji--laugh{animation:omLaugh 1.3s ease-in-out infinite}
+.oneMuslimEmoji--dua{animation:omDua 2.4s ease-in-out infinite}
+.oneMuslimEmoji--sparkle{animation:omSparkle 1.7s ease-in-out infinite}
+.oneMuslimEmoji--trophy{animation:omTrophy 2s ease-in-out infinite}
+.oneMuslimEmoji--moon{animation:omMoon 2.8s ease-in-out infinite}
+.oneMuslimEmoji--eyes{animation:omEyes 1.4s ease-in-out infinite}
+.oneMuslimEmoji:hover{filter:drop-shadow(0 0 6px rgba(217,189,112,.65));animation-duration:.55s}
+@media(prefers-reduced-motion:reduce){.oneMuslimEmoji{animation:none!important;transition:none!important}}
+
+
+/* 1Muslim Expressions v2: high-visibility motion, click/tap sparkles. */
+@keyframes omBurst{0%{opacity:0;transform:translate(-50%,-15%) scale(.25)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-145%) scale(1.7)}}
+@keyframes omPopIn{0%{transform:scale(.65) rotate(-18deg)}45%{transform:scale(1.55) rotate(13deg)}75%{transform:scale(.93) rotate(-5deg)}100%{transform:scale(1)}}
+.oneMuslimEmojiWrap{isolation:isolate;outline-offset:3px}
+.oneMuslimEmojiWrap:focus-visible{outline:2px solid #d9bd70;border-radius:6px}
+.oneMuslimEmojiWrap--burst>.oneMuslimEmoji{animation:omPopIn .55s cubic-bezier(.2,1,.3,1) both!important}
+.oneMuslimEmojiBurst{position:absolute;left:50%;top:0;white-space:nowrap;pointer-events:none;color:#eac968;font-size:18px;font-weight:900;text-shadow:0 0 12px #d9bd70;animation:omBurst .8s ease-out forwards;z-index:5}
+.oneMuslimEmoji{font-size:1.24em;filter:drop-shadow(0 1px 3px #0004)}
+.oneMuslimEmoji--flame{animation:omFlame .8s ease-in-out infinite}
+.oneMuslimEmoji--heart{animation:omHeartbeat 1.25s ease-in-out infinite}
+.oneMuslimEmoji--laugh{animation:omLaugh .75s ease-in-out infinite}
+.oneMuslimEmoji--dua{animation:omDua 1.15s ease-in-out infinite}
+.oneMuslimEmoji--sparkle{animation:omSparkle .8s ease-in-out infinite}
+.oneMuslimEmoji--trophy{animation:omTrophy 1s ease-in-out infinite}
+.oneMuslimEmoji--moon{animation:omMoon 1.3s ease-in-out infinite}
+.oneMuslimEmoji--eyes{animation:omEyes .7s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.oneMuslimEmojiWrap--burst>.oneMuslimEmoji,.oneMuslimEmojiBurst{animation:none!important}.oneMuslimEmojiBurst{display:none}}
+
+
+/* Long-press reply and post celebration; fixed overlay does not block clicks. */
+@keyframes omScreenRain{0%{transform:translateY(-12vh) rotate(-25deg) scale(.6);opacity:0}12%{opacity:1}85%{opacity:1}100%{transform:translateY(110vh) rotate(420deg) scale(1.4);opacity:0}}
+@keyframes omReplyPop{0%{opacity:.1;transform:translateY(25px) scale(.72)}60%{opacity:1;transform:translateY(-6px) scale(1.07)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.omScreenCelebration{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden}
+.omScreenCelebration span{position:absolute;top:-12vh;font-size:clamp(20px,4vw,42px);animation:omScreenRain 1.6s ease-in both;filter:drop-shadow(0 3px 8px #0008)}
+.omCommentPop{animation:omReplyPop .55s cubic-bezier(.15,.8,.25,1) both;border-color:#d9bd70!important;box-shadow:0 0 25px #d9bd7038}
+@media(prefers-reduced-motion:reduce){.omScreenCelebration{display:none}.omCommentPop{animation:none}}
+
+/* Expressive messaging v3: playful, performant, and reduced-motion aware. */
+@keyframes omHeroBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(-22deg)}24%{opacity:1;transform:translate(-50%,-50%) scale(1.45) rotate(12deg)}55%{opacity:1;transform:translate(-50%,-50%) scale(.98) rotate(-4deg)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.25) rotate(0)}}
+@keyframes omHaloPulse{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}30%{opacity:.65}100%{opacity:0;transform:translate(-50%,-50%) scale(2.3)}}
+@keyframes omParticleBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(-45deg)}22%{opacity:1}75%{opacity:1}100%{opacity:0;transform:translate(-50%,calc(-50% - 100px)) scale(.75) rotate(180deg)}}
+.omExpressionStage{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;isolation:isolate}
+.omExpressionHalo{position:absolute;left:50%;top:48%;width:150px;height:150px;border:3px solid #e8c36a;border-radius:50%;background:radial-gradient(circle,#e6b95833,transparent 72%);box-shadow:0 0 70px #c5a54b66;animation:omHaloPulse 1.25s ease-out forwards}
+.omExpressionHero{position:absolute;left:50%;top:48%;font-size:clamp(72px,17vw,150px);filter:drop-shadow(0 8px 24px #0009) drop-shadow(0 0 20px #d8b86499);animation:omHeroBurst 1.35s cubic-bezier(.2,.8,.2,1) forwards}
+.omExpressionParticle{position:absolute;filter:drop-shadow(0 2px 8px #0009);animation:omParticleBurst 1.3s ease-out both}
+@media(prefers-reduced-motion:reduce){.omExpressionStage{display:none}}
+
+/* 1Muslim messenger: message-focused delight rather than constant full-screen effects. */
+.omMessengerShell{background:linear-gradient(145deg,#0c201624,#0b172211);box-shadow:0 18px 60px #0002}
+.omMessengerHeading{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;letter-spacing:-.04em}
+.omMessagesFeed{background:radial-gradient(ellipse at 50% 0%,#1c4b3930,transparent 60%)}
+.omMessageBubble{position:relative;box-shadow:0 5px 16px #0003;transition:transform .2s ease,box-shadow .2s ease;line-height:1.5}
+.omMessageBubble--mine{background:linear-gradient(135deg,#086c62,#0d817e 58%,#076f83);border:1px solid #7be2bd40;border-bottom-right-radius:5px!important}
+.omMessageBubble--theirs{background:linear-gradient(135deg,#303c49,#263849);border:1px solid #c6d8e226;border-bottom-left-radius:5px!important}
+.omMessageRow:hover .omMessageBubble{transform:translateY(-1px);box-shadow:0 8px 22px #0005}
+.omReactionRail{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-start;margin-top:6px}
+.omMessageRow--mine .omReactionRail{justify-content:flex-end}
+.omReactionChip{border:1px solid #a4b7a03d;border-radius:999px;padding:5px 8px!important;background:linear-gradient(145deg,#24382c,#182920);color:#f7f2e4;min-height:29px;font-size:12px;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.omReactionChip:hover,.omReactionChip:focus-visible{transform:translateY(-3px) scale(1.12);border-color:#e3c26c;box-shadow:0 5px 14px #0004}
+.omReactionChip:active{transform:scale(.87)}
+.omReactionChip--active{background:linear-gradient(135deg,#776128,#365d3e);border-color:#d9bd70;box-shadow:0 0 12px #d9bd7038}
+.omReactionReply{font-weight:700;color:#e3cf95}
+.omUnreadBadge{display:inline-flex;padding:8px 13px;border-radius:999px;border:1px solid #b99c5570;background:#b99c551c;color:var(--text);font-size:12px;font-weight:750}
+.omNotificationActions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}
+.omNotificationActions button{padding:9px 13px;border:1px solid #b99c5580;border-radius:999px;background:var(--panel2);color:var(--text);cursor:pointer}
+.omNotificationActions button:disabled{opacity:.45;cursor:default}
+.omUnreadDot{position:absolute;right:16px;top:16px;width:9px;height:9px;border-radius:50%;background:#e7c36e;box-shadow:0 0 12px #e7c36e80}
+@keyframes omNotificationWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-5deg)}80%{transform:rotate(4deg)}}
+@media(max-width:600px){.omMessengerShell{grid-template-columns:1fr!important}.omReactionRail{gap:3px}.omReactionChip{font-size:11px;padding:5px 6px!important}}
+@media(prefers-reduced-motion:reduce){.omReactionChip,.omMessageBubble,.notificationRow{transition:none!important}.omReactionChip:hover,.omMessageRow:hover .omMessageBubble,.notificationRow:hover{transform:none!important}.notificationRow.unread .notificationIcon{animation:none!important}}
+
+/* Mobile-first conversation flow: one pane at a time, persistent easy-to-reach composer. */
+.omBackToChats{display:none;border:1px solid #b99c5566;background:#183b2d;color:#f7e6ba;padding:8px 12px;border-radius:12px;font-weight:750;margin-right:12px}
+.omComposerExpand{flex:0 0 37px;height:39px;border-radius:50%;border:1px solid #b99c55;background:#1b3425;color:#f0d995;font-size:23px;cursor:pointer}
+.omComposerSend{border:0;background:linear-gradient(135deg,#e9cf83,#b99c55);color:#14251b;font-weight:850;box-shadow:0 4px 16px #b99c5544}
+.omComposerSend:disabled{opacity:.45;box-shadow:none}
+.omExpressionPanelTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.omExpressionPanelTitle button{border:0;background:#26382b;color:#f3e5c1;border-radius:9px;padding:6px 10px}
+.omExpressionRecent{padding:9px 0;border-bottom:1px solid #b99c5544;margin-bottom:10px}
+.omExpressionRecent>span{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin-bottom:8px}
+.omExpressionRecent>div{display:flex;gap:6px;overflow-x:auto}
+.omExpressionRecent button{flex:0 0 auto;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#29402e;color:#fff;border:1px solid #b99c5555;border-radius:999px;padding:7px 10px;font-size:12px}
+.omExpressionTrigger{transition:transform .2s ease,box-shadow .2s ease}
+.omExpressionTrigger:hover{transform:scale(1.06);box-shadow:0 0 16px #b99c5566}
+@media(min-width:701px){.omComposerTools,.omComposerSettings{display:flex!important}}
+@media(max-width:700px){
+ .omMessengerShell{display:flex!important;flex-direction:column;min-height:calc(100dvh - 150px)!important;border-radius:15px!important}
+ .omMessengerShell--chat .omConversationList{display:none}
+ .omMessengerShell--list .omChatPane{display:none!important}
+ .omConversationList,.omChatPane{width:100%;min-width:0}
+ .omChatPane{min-height:calc(100dvh - 165px);max-height:calc(100dvh - 110px)}
+ .omBackToChats{display:inline-flex}
+ .omChatHeader{padding:12px!important;display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+ .omMessagesFeed{max-height:none!important;min-height:160px;padding:12px!important}
+ .omComposerTools,.omComposerSettings{display:none!important}
+ .omComposerTools--open,.omComposerSettings--open{display:flex!important;flex-wrap:wrap;padding:9px 12px!important}
+ .omMessageComposer{position:sticky;bottom:0;z-index:12;background:var(--panel2,#0d1711);border-top:1px solid #b99c5555;align-items:center;padding:10px!important;gap:6px!important;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))!important}
+ .omMessageComposer input{font-size:16px!important;min-width:0}
+ .omComposerSend{min-width:43px;min-height:43px;padding:9px!important}
+ .omComposerSend span{display:none}
+ .omExpressionPanel{position:fixed!important;left:10px!important;right:10px!important;bottom:calc(68px + env(safe-area-inset-bottom,0px))!important;top:auto!important;width:auto!important;max-width:500px!important;margin:0 auto;max-height:min(66dvh,520px)!important;border-radius:22px!important;box-shadow:0 0 0 100vmax #0008,0 18px 70px #000b!important;animation:omKeyboardRise .25s cubic-bezier(.2,.8,.2,1) both}
+ .omExpressionRoot{position:static!important}
+ .omReactionRail{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin;justify-content:flex-start!important;padding-bottom:4px}
+ .omMessageRow--mine .omReactionRail{justify-content:flex-end!important}
+ .omReactionChip{flex:0 0 auto}
+}
+@keyframes omKeyboardRise{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.omExpressionPanel{animation:none!important}.omExpressionTrigger{transition:none!important}}
+
+/* Profile editor color choices tint the avatar image frame immediately and persist via profile_accent. */
+.profileAvatar.accent-dark-grey{background:#35383e;border-color:#7a818c}
+.profileAvatar.accent-dark-green{background:#153e2c;border-color:#4b9a72}
+.profileAvatar.accent-white{background:#f5f5f2;border-color:#e5e7eb}
+.profileAvatar.accent-dark-grey::after,.profileAvatar.accent-dark-green::after,.profileAvatar.accent-white::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;mix-blend-mode:color;opacity:.42}
+.profileAvatar.accent-dark-grey::after{background:#666b76}
+.profileAvatar.accent-dark-green::after{background:#26865a}
+.profileAvatar.accent-white::after{background:#ffffff;opacity:.25}

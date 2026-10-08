@@ -58,7 +58,7 @@ export default function ProfilePage() {
   const [postText,setPostText]=useState("");
   const [posting,setPosting]=useState(false);
   const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live"|"shahada">("profile");
-  const [saving,setSaving]=useState(false); const [message,setMessage]=useState(""); const [authRequired,setAuthRequired]=useState(false);
+  const [saving,setSaving]=useState(false); const [colorSaving,setColorSaving]=useState(false); const [message,setMessage]=useState(""); const [authRequired,setAuthRequired]=useState(false);
   const [liveConnectors,setLiveConnectors]=useState<Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>>({});
   const [vaultUrl,setVaultUrl]=useState("");
   const providers=["tiktok","youtube","twitch"] as const;
@@ -77,6 +77,16 @@ export default function ProfilePage() {
 
   const tier=useMemo(()=>tierForXp(profile?.xp_total??0),[profile?.xp_total]);
   const update=(patch:Partial<Profile>)=>setProfile(p=>p?{...p,...patch}:p);
+  const chooseBackground=async(key:string)=>{
+    if(!profile||colorSaving||key===profile.profile_accent)return;
+    const previous=profile.profile_accent;
+    update({profile_accent:key});
+    setColorSaving(true);setMessage("");
+    const {error}=await createClient().from("profiles").update({profile_accent:key}).eq("id",profile.id);
+    setColorSaving(false);
+    if(error){update({profile_accent:previous});setMessage("Could not save background: "+error.message);}
+    else setMessage("Background saved automatically.");
+  };
   const displayCooldown=cooldownRemaining(profile?.display_name_changed_at??null);
   const usernameCooldown=cooldownRemaining(profile?.username_changed_at??null);
 
@@ -117,7 +127,7 @@ export default function ProfilePage() {
   const publishFirstPost=async()=>{const body=postText.trim();if(!body||posting)return;setPosting(true);const s=createClient();const {error}=await s.from("posts").insert({user_id:profile.id,body});if(error){setMessage(error.message);setPosting(false);return;}setPostText("");setPostCount(x=>x+1);setPosting(false);};
 
   return <main className="profilePage"><SiteNav/>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>setEditing(true)}/>:<div className="profileShell">
-    <header className={`profileHero header-${profile.profile_accent}`}><div className="profileHeroTop"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/><div><span className="eyebrow">YOUR ONE MUSLIM PROFILE</span><h1>{profile.display_name||"Member"}</h1><p>@{profile.username||"member"} · {tier.name} · {profile.xp_total.toLocaleString()} XP</p></div></div><div className="profileHeroActions"><Link href="/find" className="ghost">Find People</Link><button className="primary" onClick={save} disabled={saving}>{saving?"Saving…":"Save changes"}</button></div></header>
+    <header className={`profileHero header-${profile.profile_accent}`}><div className="profileHeroTop"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/><div><span className="eyebrow">YOUR ONE MUSLIM PROFILE</span><h1>{profile.display_name||"Member"}</h1><p>@{profile.username||"member"} · {tier.name} · {profile.xp_total.toLocaleString()} XP</p></div></div><div className="profileHeroActions"><Link href="/find" className="ghost">Find People</Link><button className="primary" onClick={save} disabled={saving||colorSaving}>{saving?"Saving…":"Save & close"}</button></div></header>
     <div className="profileEditorToolbar"><button className="ghost" onClick={()=>setEditing(false)}>← Close editor</button><span>Profile settings</span></div><div className="profileTabs">{(["profile","avatar","header","live","shahada"] as const).map(x=><button className={tab===x?"active":""} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Profile":x==="avatar"?"Avatar & Accessories":x==="header"?"Header Color":x==="live"?"Live & Streaming":"Shahada Vault"}</button>)}</div>
 
     {tab==="profile"&&<section className="profileEditor"><div className="editorIntro"><span className="eyebrow">PERSONAL DETAILS</span><h2>Tell people who you are.</h2><p>Your profile is yours. Keep only the information you want to share.</p></div><div className="formGrid">
@@ -150,7 +160,7 @@ export default function ProfilePage() {
     </section>}
     {tab==="avatar"&&<section className="avatarEditor"><div className="avatarPreview"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/><strong>{tier.icon} {tier.name}</strong><span>{tier.quality}</span><small>{profile.xp_total.toLocaleString()} XP</small></div><div><span className="eyebrow">5 XP TIERS</span><h2>Earn your look.</h2><p className="muted">Everyone starts with a clean default avatar. More XP unlocks better accessories and richer avatar packages.</p><div className="tierGrid">{AVATAR_TIERS.map(t=><div className={`tierCard ${profile.xp_total>=t.minXp?"unlocked":"locked"}`} key={t.key}><b>{t.icon} {t.name}</b><span>{t.minXp.toLocaleString()} XP</span><small>{profile.xp_total>=t.minXp?t.quality:"Locked"}</small></div>)}</div><div className="accessoryGrid">{ACCESSORIES.map(item=>{const required=AVATAR_TIERS.find(x=>x.key===item.tier)!.minXp;const unlocked=profile.xp_total>=required;const selected=Array.isArray(profile.avatar_config?.accessories)&&profile.avatar_config.accessories.map(String).includes(item.id);return <button key={item.id} disabled={!unlocked} className={`accessoryCard ${selected?"selected":""} ${!unlocked?"locked":""}`} onClick={()=>toggleAccessory(item.id)}><span>{unlocked?item.icon:"🔒"}</span><b>{item.name}</b><small>{unlocked?"Tap to equip":`${required.toLocaleString()} XP`}</small></button>})}</div></div></section>}
 
-    {tab==="header"&&<section className="headerEditor"><span className="eyebrow">PROFILE HEADER</span><h2>Choose your background color.</h2><p className="muted">Choose from three clean backgrounds. Your selection appears on your public profile.</p><div className="colorGrid">{colors.map(([key,name])=><button key={key} className={profile.profile_accent===key?"selected":""} onClick={()=>update({profile_accent:key})}><span className={`swatch ${key}`}></span><b>{name}</b></button>)}</div><div className={`headerDemo header-${profile.profile_accent}`}><strong>{profile.display_name}</strong><span>Public profile header preview</span></div></section>}
+    {tab==="header"&&<section className="headerEditor"><span className="eyebrow">PROFILE HEADER</span><h2>Choose your background color.</h2><p className="muted">Tap a color to preview it instantly on your avatar and profile header. It saves automatically.</p><div className="colorGrid">{colors.map(([key,name])=><button key={key} className={profile.profile_accent===key?"selected":""} onClick={()=>void chooseBackground(key)} disabled={colorSaving} aria-pressed={profile.profile_accent===key}><span className={`swatch ${key}`}></span><b>{name}</b></button>)}</div><div className={`headerDemo header-${profile.profile_accent}`}><strong>{profile.display_name}</strong><span>Public profile header preview</span></div><p role="status" className="muted">{colorSaving?"Saving color…":message}</p></section>}
     <ProfileContentSections userId={profile.id}/>
   </div>}</main>;
 }

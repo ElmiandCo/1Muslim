@@ -2,9 +2,11 @@ import Link from "next/link";
 import { createClient } from "../../../../utils/supabase/server";
 import SiteNav from "../../../components/SiteNav";
 import LiveKitViewer from "../../../../components/LiveKitViewer";
+import LiveGuestStudio from "../../../../components/LiveGuestStudio";
 import LiveChat from "../../../../components/LiveChat";
 import RecordingComments from "../../../../components/RecordingComments";
 import SaveRecording from "../../../components/SaveRecording";
+import DeleteRecordingButton from "../../../components/DeleteRecordingButton";
 
 export default async function LiveViewerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -34,7 +36,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
   const effectiveEndedAt = stream.ended_at ?? (stream.scheduled_end_at && new Date(stream.scheduled_end_at).getTime() <= Date.now() ? stream.scheduled_end_at : stream.last_heartbeat_at);
   const { data: { user } } = await supabase.auth.getUser();
   const { data: adminRow } = user ? await supabase.from("admin_users").select("user_id").eq("user_id",user.id).maybeSingle() : { data: null };
-  const mayViewRecording = Boolean(adminRow);
+  const mayViewRecording = Boolean(adminRow) || Boolean(user && user.id === stream.host_id);
   const { data: recording } = !isLive && mayViewRecording && stream.recording_id
     ? await supabase.from("live_recordings").select("id,title,category,video_path,mime_type,duration_seconds,views,likes,comments_count,created_at,thumbnail_path,visibility").eq("id", stream.recording_id).maybeSingle()
     : { data: null };
@@ -55,8 +57,9 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
           {isLive ? (
             <>
               <LiveKitViewer roomName={stream.room_name} streamId={stream.id} />
+              <div style={{padding:"0 18px 18px"}}><LiveGuestStudio streamId={stream.id} roomName={stream.room_name} hostId={stream.host_id}/></div>
               <div style={{padding:18,display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(320px,.65fr)",gap:16}}>
-                <div><strong>🔴 Live now</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>Watch and participate in the conversation.</div><Link href="/streaming" style={{display:"inline-block",marginTop:12,color:"#cbd8ce",fontSize:12}}>← All streaming</Link></div>
+                <div><strong>🔴 Live now</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>Watch and participate in the conversation.</div><div style={{display:"flex",gap:14,flexWrap:"wrap",marginTop:12}}><Link href="/streaming" style={{color:"#cbd8ce",fontSize:12}}>← All streaming</Link><Link href={"/profile/"+stream.host_id} style={{color:"#d6e7b8",fontSize:12}}>Host profile</Link><Link href={"/messages?to="+stream.host_id} style={{color:"#d6e7b8",fontSize:12}}>💬 Message host</Link></div></div>
                 <LiveChat streamId={stream.id} hostId={stream.host_id} />
               </div>
             </>
@@ -70,7 +73,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
               <div style={{padding:18}}>
                 <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap"}}>
                   <div><strong>▶ Recorded Live</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>This Live has ended. Watch the full session and join the conversation below.</div>{effectiveEndedAt && <div style={{fontSize:10,color:"#9eaa9f",marginTop:7}}>Ended {new Date(effectiveEndedAt).toLocaleString()}</div>}</div>
-                  <div style={{display:"flex",gap:8,alignItems:"center"}}><SaveRecording recordingId={recording.id} /><Link href="/streaming" style={{color:"#cbd8ce",fontSize:12}}>← All streaming</Link></div>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}><SaveRecording recordingId={recording.id} />{mayViewRecording && <DeleteRecordingButton recordingId={recording.id} title={recording.title} />}<Link href="/streaming" style={{color:"#cbd8ce",fontSize:12}}>← All streaming</Link></div>
                 </div>
                 <div style={{marginTop:18}}><RecordingComments recordingId={recording.id} /></div>
               </div>

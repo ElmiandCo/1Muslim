@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 import SiteNav from "../components/SiteNav";
+import Link from "next/link";
 
 const PRODUCTION_ORIGIN = "https://1muslim.vercel.app";
 
@@ -55,6 +56,7 @@ export default function AuthPage() {
           Your Google account is used for authentication through Supabase Auth.
           1Muslim does not receive your Google password.
         </small>
+        <p style={{fontSize:12,lineHeight:1.7,marginTop:18,color:"#a9bcae"}}>By continuing, you agree to our <Link href="/terms" style={{color:"#a4edbc"}}>Terms of Service</Link> and acknowledge our <Link href="/privacy" style={{color:"#a4edbc"}}>Privacy Policy</Link>.</p>
       </section>
     </main>
   );

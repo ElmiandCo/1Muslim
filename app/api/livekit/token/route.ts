@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const room = typeof body?.room === "string" ? body.room.trim() : "";
-    const role = body?.role === "host" ? "host" : "viewer";
+    const role = body?.role === "host" ? "host" : body?.role === "guest" ? "guest" : "viewer";
 
     if (!room || !/^1muslim-live-[a-zA-Z0-9-]+$/.test(room)) {
       return NextResponse.json({ error: "Invalid live room." }, { status: 400 });
@@ -33,6 +33,11 @@ export async function POST(request: Request) {
 
     if (role === "host" && liveStream.host_id !== user.id) {
       return NextResponse.json({ error: "You are not the host of this live." }, { status: 403 });
+    }
+
+    if (role === "guest") {
+      const {data:seat}=await supabase.from("live_guest_requests").select("id").eq("stream_id",liveStream.id).eq("user_id",user.id).eq("status","approved").maybeSingle();
+      if (!seat) return NextResponse.json({error:"The host must approve your guest request first."},{status:403});
     }
 
     const apiKey = process.env.LIVEKIT_API_KEY;
@@ -55,7 +60,7 @@ export async function POST(request: Request) {
     token.addGrant({
       roomJoin: true,
       room,
-      canPublish: role === "host",
+      canPublish: role === "host" || role === "guest",
       canSubscribe: true,
       canPublishData: true,
     });
