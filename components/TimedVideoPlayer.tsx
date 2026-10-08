@@ -4,7 +4,7 @@ import Link from "next/link";
 import {createClient} from "../utils/supabase/client";
 type Entry={id:string;body:string;at_seconds:number;user_id:string};
 type Player={getCurrentTime:()=>number;getPlayerState:()=>number;destroy:()=>void};
-type YoutubeAPI={Player:new(element:HTMLElement,options:{videoId:string;playerVars:Record<string,number>;events:{onReady:()=>void}})=>Player};
+type YoutubeAPI={Player:new(element:HTMLElement,options:{videoId:string;playerVars:Record<string,number|string>;events:{onReady:()=>void}})=>Player};
 declare global {interface Window {YT?:YoutubeAPI;onYouTubeIframeAPIReady?:()=>void}}
 export default function TimedVideoPlayer({videoId,title,compact=false}:{videoId:string;title:string;compact?:boolean}){
 
