@@ -231,3 +231,13 @@ footer{display:flex;flex-direction:column;gap:6px;padding:30px;color:#66726a;fon
   .app .feed{padding-bottom:calc(105px + env(safe-area-inset-bottom,0px))}
   .app .feedHeader{position:relative}
 }
+
+/* Three curated profile background options */
+.swatch.dark-grey{background:#303337;border:1px solid #788080}
+.swatch.dark-green{background:#123c29;border:1px solid #56866a}
+.swatch.white{background:#fff;border:1px solid #b5bbb6}
+.header-dark-grey{background:linear-gradient(135deg,#303337,#17191b)!important;color:#f5f6f6!important}
+.header-dark-green{background:linear-gradient(135deg,#17442e,#071e14)!important;color:#edf7ed!important}
+.header-white{background:#fff!important;color:#171e1a!important}
+.header-white h1,.header-white strong,.header-white .eyebrow{color:#171e1a!important}
+.header-white p,.header-white span{color:#4a5750}
