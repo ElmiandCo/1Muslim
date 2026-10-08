@@ -5,8 +5,11 @@ import ExpressiveText from "./ExpressiveText";
 type Entry = { label: string; insert: string; meaning?: string };
 const packs: Record<string, Entry[]> = {
   "Reactions": [
-    {label:"🔥 Fire",insert:"🔥"},{label:"💚 Love",insert:"💚"},{label:"😂 Laugh",insert:"😂"},{label:"🤲 Ameen",insert:"🤲 آمين"},
-    {label:"✨ SubhanAllah",insert:"✨ سُبْحَانَ ٱللَّٰهِ"},{label:"🥹 Touched",insert:"🥹"},{label:"💯 Facts",insert:"💯"},{label:"🌙 Ramadan",insert:"🌙"}
+    {label:"🔥 Fire",insert:"🔥"},{label:"💚 Love",insert:"💚"},{label:"😂 Laugh",insert:"😂"},{label:"🤲 Dua",insert:"🤲"},
+    {label:"✨ Sparkle",insert:"✨"},{label:"🥹 Touched",insert:"🥹"},{label:"💯 Facts",insert:"💯"},{label:"🌙 Ramadan",insert:"🌙"},
+    {label:"🏆 Win",insert:"🏆"},{label:"🎉 Celebrate",insert:"🎉"},{label:"👀 Looking",insert:"👀"},{label:"💥 Boom",insert:"💥"},
+    {label:"😍 Admire",insert:"😍"},{label:"👏 Applause",insert:"👏"},{label:"😮 Wow",insert:"😮"},{label:"🕊️ Peace",insert:"🕊️"},
+    {label:"⭐ Star",insert:"⭐"},{label:"🙌 Raised hands",insert:"🙌"},{label:"💪 Strength",insert:"💪"},{label:"🌹 Rose",insert:"🌹"}
   ],
   "Muslim phrases": [
     {label:"As-salamu alaykum",insert:"السلام عليكم",meaning:"Peace be upon you"},
