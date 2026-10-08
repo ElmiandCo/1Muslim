@@ -3,7 +3,9 @@ create extension if not exists pgcrypto;
 create table if not exists public.dm_conversations (
  id uuid primary key default gen_random_uuid(),
  created_at timestamptz not null default now(),
- updated_at timestamptz not null default now()
+ updated_at timestamptz not null default now(),
+ request_status text not null default 'pending' check(request_status in ('pending','accepted')),
+ requested_by uuid not null references auth.users(id)
 );
 create table if not exists public.dm_participants (
  conversation_id uuid not null references public.dm_conversations(id) on delete cascade,
@@ -33,7 +35,7 @@ alter table public.dm_messages enable row level security;
 create policy "dm_conversations_read" on public.dm_conversations for select to authenticated using (public.dm_is_participant(id));
 create policy "dm_participants_read" on public.dm_participants for select to authenticated using (public.dm_is_participant(conversation_id));
 create policy "dm_messages_read" on public.dm_messages for select to authenticated using (public.dm_is_participant(conversation_id));
-create policy "dm_messages_send" on public.dm_messages for insert to authenticated with check (sender_id=(select auth.uid()) and public.dm_is_participant(conversation_id));
+create policy "dm_messages_send" on public.dm_messages for insert to authenticated with check (sender_id=(select auth.uid()) and public.dm_is_participant(conversation_id) and exists(select 1 from public.dm_conversations c where c.id=conversation_id and c.request_status='accepted'));
 -- Conversations must be created through a controlled RPC to avoid unauthorized membership injection.
 create or replace function public.dm_start_conversation(other_user uuid)
 returns uuid language plpgsql security definer set search_path = '' as $$
@@ -46,10 +48,28 @@ begin
  where p.user_id=me and (select count(*) from public.dm_participants z where z.conversation_id=p.conversation_id)=2
  limit 1;
  if cid is not null then return cid; end if;
- insert into public.dm_conversations default values returning id into cid;
+ perform pg_advisory_xact_lock(hashtextextended(least(me::text,other_user::text)||':'||greatest(me::text,other_user::text),0));
+ select p.conversation_id into cid from public.dm_participants p join public.dm_participants q on q.conversation_id=p.conversation_id and q.user_id=other_user where p.user_id=me limit 1;
+ if cid is not null then return cid; end if;
+ insert into public.dm_conversations(requested_by) values(me) returning id into cid;
  insert into public.dm_participants(conversation_id,user_id) values(cid,me),(cid,other_user);
  return cid;
 end $$;
 revoke all on function public.dm_start_conversation(uuid) from public;
 grant execute on function public.dm_start_conversation(uuid) to authenticated;
 -- Phase 5 will add request approval and blocking checks before enabling new conversations in production.
+
+-- Recipients explicitly accept a message request before anyone can send.
+create or replace function public.dm_accept_conversation(cid uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+ update public.dm_conversations c set request_status='accepted',updated_at=now()
+ where c.id=cid and c.request_status='pending' and c.requested_by<>auth.uid()
+ and exists(select 1 from public.dm_participants p where p.conversation_id=cid and p.user_id=auth.uid());
+ if not found then raise exception 'Request unavailable'; end if;
+end $$;
+revoke all on function public.dm_accept_conversation(uuid) from public;
+grant execute on function public.dm_accept_conversation(uuid) to authenticated;
+grant select on public.dm_conversations,public.dm_participants,public.dm_messages to authenticated;
+grant insert on public.dm_messages to authenticated;
+alter publication supabase_realtime add table public.dm_messages;
