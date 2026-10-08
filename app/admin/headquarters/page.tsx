@@ -2,15 +2,17 @@
 import {useCallback,useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
+import ModerationActions from "../../components/ModerationActions";
 import "./headquarters.css";
 type Member={id:string;display_name:string|null;username:string|null;city:string|null;state:string|null;xp_total:number|null;shahada_verified_at:string|null};
 type Post={id:string;user_id:string;body:string;created_at:string};
 type Live={id:string;host_id:string;title:string;category:string;status:string;started_at:string;viewer_count:number};
+type VerseComment={id:string;user_id:string;verse_key:string;body:string;created_at:string};
 type Recording={id:string;user_id:string;title:string;created_at:string;duration_seconds:number};
 type Report={id:string;target_type:string;target_id:string;reason:string;status:string;created_at:string};
-type Results={members:Member[];posts:Post[];lives:Live[];recordings:Recording[];reports:Report[];warnings:string[]};
-const empty:Results={members:[],posts:[],lives:[],recordings:[],reports:[],warnings:[]};
-const categories=[["all","All intelligence","✦"],["members","Members","◉"],["posts","Posts","▤"],["lives","Live streams","◉"],["reports","Reports","⚑"]] as const;
+type Results={members:Member[];posts:Post[];comments:VerseComment[];lives:Live[];recordings:Recording[];reports:Report[];warnings:string[]};
+const empty:Results={members:[],posts:[],comments:[],lives:[],recordings:[],reports:[],warnings:[]};
+const categories=[["all","All intelligence","✦"],["members","Members","◉"],["posts","Posts","▤"],["comments","Qur’an comments","۞"],["lives","Live streams","◉"],["reports","Reports","⚑"]] as const;
 const shortcuts=[{title:"Moderation Desk",description:"Review reports and pending actions",href:"/admin/desk",icon:"⚑"},{title:"Content library",description:"Manage featured video programming",href:"/admin/videos",icon:"▣"},{title:"Verse media",description:"Curate Qur’an learning resources",href:"/admin/verse-media",icon:"۞"},{title:"Community",description:"Browse the public community",href:"/community",icon:"⬡"}];
 const date=(v?:string)=>v?new Date(v).toLocaleString():"—";
 export default function Headquarters(){
@@ -29,9 +31,10 @@ export default function Headquarters(){
  useEffect(()=>{const controller=new AbortController();const timer=setTimeout(()=>void load(controller.signal),q?300:0);return()=>{clearTimeout(timer);controller.abort()}},[load]);
  const chooseMember=(id:string)=>{setMemberId(id);setCategory("all");setQ("")};
  const clearMember=()=>{setMemberId(null);setCategory("all")};
- const count=data.members.length+data.posts.length+data.lives.length+data.recordings.length+data.reports.length;
+ const count=data.members.length+data.posts.length+data.comments.length+data.lives.length+data.recordings.length+data.reports.length;
  const timeline=useMemo(()=>[
  ...data.posts.map(p=>({id:p.id,kind:"Post",title:p.body?.slice(0,110)||"Post",at:p.created_at,href:"/posts/"+p.id})),
+ ...data.comments.map(c=>({id:c.id,kind:"Verse reflection "+c.verse_key,title:c.body.slice(0,110),at:c.created_at,href:"/elm-tent/quran"})),
  ...data.lives.map(l=>({id:l.id,kind:"Live",title:l.title||"Live stream",at:l.started_at,href:"/streaming"})),
  ...data.recordings.map(v=>({id:v.id,kind:"Recording",title:v.title||"Recording",at:v.created_at,href:"/streaming/library"}))
  ].sort((a,b)=>new Date(b.at).getTime()-new Date(a.at).getTime()),[data.posts,data.lives,data.recordings]);
@@ -45,7 +48,8 @@ export default function Headquarters(){
  {data.warnings.length>0&&<div role="status" className="hqWarning"><strong>Some sources are not available yet.</strong>{data.warnings.map((w,i)=><p key={i}>{w}</p>)}</div>}
  <div className="hqContent"><div className="hqMain"><div className="hqSectionTitle"><div><span className="hqEyebrow">INTELLIGENCE / DISCOVERY</span><h2>{memberId?"Member activity":q?"Search results":"Recent platform activity"}</h2></div><small>{busy?"Searching…":count+" results loaded"}</small></div>
  {(category==="all"||category==="members")&&<section className="hqPanel"><div className="hqPanelHead"><h3>◉ Members</h3><span>{data.members.length} shown</span></div>{data.members.map(p=><div className="hqRow" key={p.id}><div className="hqAvatar">{(p.display_name||"M").slice(0,1).toUpperCase()}</div><div className="hqRowBody"><strong>{p.display_name||"Member"}</strong><small>@{p.username||"member"} · {[p.city,p.state].filter(Boolean).join(", ")||"Location not shared"} · {p.xp_total||0} XP</small></div><button type="button" onClick={()=>chooseMember(p.id)}>Investigate ↗</button></div>)}{!busy&&!data.members.length&&<p className="hqEmpty">No matching members.</p>}</section>}
- {(category==="all"||category==="posts")&&<section className="hqPanel"><div className="hqPanelHead"><h3>▤ Posts</h3><span>{data.posts.length} shown</span></div>{data.posts.map(p=><div className="hqRow" key={p.id}><div className="hqRowBody"><strong>{p.body?.slice(0,150)||"Untitled post"}</strong><small>{date(p.created_at)} · Author {p.user_id.slice(0,8)}…</small></div><div className="hqRowActions"><Link href={"/posts/"+p.id}>View ↗</Link><button onClick={()=>chooseMember(p.user_id)}>Author</button></div></div>)}{!busy&&!data.posts.length&&<p className="hqEmpty">No matching posts.</p>}</section>}
+ {(category==="all"||category==="posts")&&<section className="hqPanel"><div className="hqPanelHead"><h3>▤ Posts</h3><span>{data.posts.length} shown</span></div>{data.posts.map(p=><div className="hqRow" key={p.id}><div className="hqRowBody"><strong>{p.body?.slice(0,150)||"Untitled post"}</strong><small>{date(p.created_at)} · Author {p.user_id.slice(0,8)}…</small></div><div className="hqRowActions"><Link href={"/posts/"+p.id}>View ↗</Link><button onClick={()=>chooseMember(p.user_id)}>Author</button><ModerationActions targetType="post" targetId={p.id} onDeleted={()=>setData(v=>({...v,posts:v.posts.filter(x=>x.id!==p.id)}))}/></div></div>)}{!busy&&!data.posts.length&&<p className="hqEmpty">No matching posts.</p>}</section>}
+ {(category==="all"||category==="comments")&&<section className="hqPanel"><div className="hqPanelHead"><h3>۞ Qur’an reflections</h3><span>{data.comments.length} shown</span></div>{data.comments.map(c=><div className="hqRow" key={c.id}><div className="hqRowBody"><strong>Surah {c.verse_key.split(":")[0]} · Ayah {c.verse_key.split(":")[1]}</strong><p style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere"}}>{c.body}</p><small>{date(c.created_at)}</small></div><div className="hqRowActions"><button onClick={()=>chooseMember(c.user_id)}>Author</button><ModerationActions targetType="comment" targetId={c.id} onDeleted={()=>setData(v=>({...v,comments:v.comments.filter(x=>x.id!==c.id)}))}/></div></div>)}{!busy&&!data.comments.length&&<p className="hqEmpty">No matching reflections.</p>}</section>}
  {(category==="all"||category==="lives")&&<section className="hqPanel"><div className="hqPanelHead"><h3>◉ Livestreams</h3><span>{data.lives.length} shown</span></div>{data.lives.map(l=><div className="hqRow" key={l.id}><div className="hqRowBody"><strong>{l.title||"Untitled live"}</strong><small>{l.status} · {l.category} · {date(l.started_at)}</small></div><div className="hqRowActions"><Link href="/streaming">Streams ↗</Link><button onClick={()=>chooseMember(l.host_id)}>Host</button></div></div>)}{!busy&&!data.lives.length&&<p className="hqEmpty">No matching livestreams.</p>}</section>}
  {memberId&&(category==="all"||category==="lives")&&<section className="hqPanel"><div className="hqPanelHead"><h3>▣ Member recordings</h3><span>{data.recordings.length} shown</span></div>{data.recordings.map(v=><div className="hqRow" key={v.id}><div className="hqRowBody"><strong>{v.title||"Recording"}</strong><small>{date(v.created_at)} · {Math.round((v.duration_seconds||0)/60)} min</small></div><Link href="/streaming/library">Library ↗</Link></div>)}{!busy&&!data.recordings.length&&<p className="hqEmpty">No recordings found.</p>}</section>}
  {(category==="all"||category==="reports")&&<section className="hqPanel"><div className="hqPanelHead"><h3>⚑ Moderation reports</h3><Link href="/admin/desk">Open desk ↗</Link></div>{data.reports.map(r=><div className="hqRow" key={r.id}><div className="hqRowBody"><strong>{r.target_type} · {r.status}</strong><small>{r.reason.slice(0,130)} · {date(r.created_at)}</small></div><Link href="/admin/desk">Review ↗</Link></div>)}{!busy&&!data.reports.length&&<p className="hqEmpty">No matching reports.</p>}</section>}
