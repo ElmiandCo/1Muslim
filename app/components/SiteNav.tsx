@@ -134,7 +134,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const label = (text: string, ar: string) => user?.arabic_terms_enabled ? <>{text} <span className="arabicNav">{ar}</span></> : text;
 
   return <header ref={navRef} className={compact ? "siteNav compact" : "siteNav"}>
-    <Link href="/" className="siteBrand newBrand" aria-label="1Muslim Home"><span className="brandMark" aria-hidden="true"><span className="brandOne">1</span><span className="brandCrescent">☪</span></span><span className="brandWord">Muslim<span className="brandPeriod">.</span></span></Link>
+    <Link href="/" className="siteBrand logoBrand" aria-label="1Muslim.Live Home"><img src="/assets/1muslim-live-logo.PNG" alt="1Muslim.Live" className="premiumLogo" /></Link>
 
     <nav className="siteNavLinks" aria-label="Primary navigation">
       <Link href="/" className="siteHomeLink">Home</Link>
@@ -201,6 +201,9 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       <div className="mobileMenuFooter"><ThemeToggle/>{user ? <button type="button" className="mobileMenuSignOut" onClick={signOut}>Sign out</button> : <Link href="/auth" onClick={closeMenu}>Sign in</Link>}</div>
     </div>}
     <style jsx>{`
+      .logoBrand{display:flex;align-items:center;flex:0 1 auto;min-width:0;max-width:190px;overflow:hidden}
+      .premiumLogo{display:block;width:clamp(122px,14vw,182px);height:46px;max-width:100%;object-fit:contain;object-position:left center;border-radius:3px}
+      @media(max-width:700px){.logoBrand{max-width:138px}.premiumLogo{width:138px;height:40px}}
       .newBrand{display:inline-flex;align-items:center;gap:7px;text-decoration:none;white-space:nowrap;color:inherit}
       .brandMark{display:inline-flex;align-items:center;justify-content:center;position:relative;width:37px;height:37px;border:1px solid rgba(194,235,185,.6);border-radius:13px;background:linear-gradient(135deg,#172f23,#07110c);box-shadow:inset 0 1px rgba(255,255,255,.14),0 4px 18px rgba(0,0,0,.18)}
       .brandOne{font-weight:950;font-size:25px;line-height:1;color:#d9f2c7;letter-spacing:-.09em;transform:translateX(-3px)}
