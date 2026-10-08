@@ -309,3 +309,13 @@ video {
 .omScreenCelebration span{position:absolute;top:-12vh;font-size:clamp(20px,4vw,42px);animation:omScreenRain 1.6s ease-in both;filter:drop-shadow(0 3px 8px #0008)}
 .omCommentPop{animation:omReplyPop .55s cubic-bezier(.15,.8,.25,1) both;border-color:#d9bd70!important;box-shadow:0 0 25px #d9bd7038}
 @media(prefers-reduced-motion:reduce){.omScreenCelebration{display:none}.omCommentPop{animation:none}}
+
+/* Expressive messaging v3: playful, performant, and reduced-motion aware. */
+@keyframes omHeroBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(-22deg)}24%{opacity:1;transform:translate(-50%,-50%) scale(1.45) rotate(12deg)}55%{opacity:1;transform:translate(-50%,-50%) scale(.98) rotate(-4deg)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.25) rotate(0)}}
+@keyframes omHaloPulse{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}30%{opacity:.65}100%{opacity:0;transform:translate(-50%,-50%) scale(2.3)}}
+@keyframes omParticleBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(-45deg)}22%{opacity:1}75%{opacity:1}100%{opacity:0;transform:translate(-50%,calc(-50% - 100px)) scale(.75) rotate(180deg)}}
+.omExpressionStage{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;isolation:isolate}
+.omExpressionHalo{position:absolute;left:50%;top:48%;width:150px;height:150px;border:3px solid #e8c36a;border-radius:50%;background:radial-gradient(circle,#e6b95833,transparent 72%);box-shadow:0 0 70px #c5a54b66;animation:omHaloPulse 1.25s ease-out forwards}
+.omExpressionHero{position:absolute;left:50%;top:48%;font-size:clamp(72px,17vw,150px);filter:drop-shadow(0 8px 24px #0009) drop-shadow(0 0 20px #d8b86499);animation:omHeroBurst 1.35s cubic-bezier(.2,.8,.2,1) forwards}
+.omExpressionParticle{position:absolute;filter:drop-shadow(0 2px 8px #0009);animation:omParticleBurst 1.3s ease-out both}
+@media(prefers-reduced-motion:reduce){.omExpressionStage{display:none}}
