@@ -25,7 +25,7 @@ export async function DELETE(req:NextRequest){
  const {data:admin,error:adminError}=await session.rpc("is_1muslim_admin");
  if(adminError||admin!==true)return NextResponse.json({error:"Admin access required."},{status:403});
  const {targetType,targetId,confirmation}=await req.json();
- if(!["post","profile"].includes(targetType)||!uuid.test(targetId)||confirmation!=="DELETE")return NextResponse.json({error:"Invalid deletion request."},{status:400});
+ if(!["post","profile","comment"].includes(targetType)||!uuid.test(targetId)||confirmation!=="DELETE")return NextResponse.json({error:"Invalid deletion request."},{status:400});
  if(targetType==="profile"&&targetId===user.id)return NextResponse.json({error:"You cannot delete your own admin account here."},{status:400});
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
  const key=process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -33,6 +33,9 @@ export async function DELETE(req:NextRequest){
  const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
  if(targetType==="post"){
  const {error}=await db.from("posts").delete().eq("id",targetId).select("id").single();
+ if(error)return NextResponse.json({error:error.message},{status:400});
+ }else if(targetType==="comment"){
+ const {error}=await db.from("verse_comments").delete().eq("id",targetId).select("id").single();
  if(error)return NextResponse.json({error:error.message},{status:400});
  }else{
  // Auth deletion may fail when owned Storage objects or foreign keys remain.
