@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+
 import { createClient } from "../../utils/supabase/client";
 type Thread = { conversation_id:string; user_id:string };
 type Message = {id:string;conversation_id:string;sender_id:string;body:string;created_at:string;attachment_path:string|null;attachment_type:string|null;reply_to_id:string|null};
@@ -20,6 +21,7 @@ export default function MessagesPage(){
  const [recording,setRecording]=useState(false);
  const [status,setStatus]=useState<{request_status:string;requested_by:string}|null>(null);
  const [recipient,setRecipient]=useState("");
+ const [initialRecipient,setInitialRecipient]=useState<string|null>(null);
  const [error,setError]=useState("");
  const [busy,setBusy]=useState(false);
  const [loadingAuth,setLoadingAuth]=useState(true);
@@ -27,6 +29,7 @@ export default function MessagesPage(){
  const [peerTyping,setPeerTyping]=useState(false);
  const [peerReadAt,setPeerReadAt]=useState<string|null>(null);
  const [typingChannel,setTypingChannel]=useState<ReturnType<typeof client.channel>|null>(null);
+ useEffect(()=>{const to=new URLSearchParams(window.location.search).get("to");if(to&&/^[0-9a-f-]{36}$/i.test(to)){setRecipient(to);setInitialRecipient(to)}},[]);
  useEffect(()=>{let active=true;client.auth.getUser().then(({data})=>{if(active){setUid(data.user?.id??null);setLoadingAuth(false)}});return()=>{active=false}},[client]);
  useEffect(()=>{if(!uid)return;let active=true;
  const load=async()=>{const {data,error}=await client.from("dm_participants").select("conversation_id,user_id").order("joined_at",{ascending:false});if(active){if(error)setError(error.message);else setThreads((data??[]).filter(p=>p.user_id!==uid))}};
@@ -55,6 +58,10 @@ export default function MessagesPage(){
  const channel=client.channel("dm:"+selected).on("postgres_changes",{event:"INSERT",schema:"public",table:"dm_messages",filter:"conversation_id=eq."+selected},()=>{void load()}).subscribe();
  return()=>{active=false;window.clearInterval(statusTimer);window.clearInterval(readTimer);void client.removeChannel(presence);void client.removeChannel(reactionsChannel);void client.removeChannel(channel)};
  },[client,selected]);
+ useEffect(()=>{if(!uid||!initialRecipient||initialRecipient===uid)return;let canceled=false;
+ const open=async()=>{const {data,error}=await client.rpc("dm_start_conversation",{other_user:initialRecipient});if(!canceled){if(error)setError(error.message);else if(data){setSelected(data);setRecipient("")}setInitialRecipient(null)}};
+ void open();return()=>{canceled=true}
+ },[client,uid,initialRecipient]);
  async function start(){setError("");setBusy(true);try{const {data,error}=await client.rpc("dm_start_conversation",{other_user:recipient.trim()});if(error)throw error;setSelected(data);setStatus(null);setRecipient("");const {data:rows}=await client.from("dm_participants").select("conversation_id,user_id");setThreads((rows??[]).filter(p=>p.user_id!==uid));}catch(e){setError(e instanceof Error?e.message:"Unable to start conversation")}finally{setBusy(false)}}
  async function accept(){if(!selected)return;setBusy(true);const {error}=await client.rpc("dm_accept_conversation",{cid:selected});if(error)setError(error.message);else setStatus(s=>s?{...s,request_status:"accepted"}:s);setBusy(false)}
  async function upload(file:File){if(!selected||!uid||busy)return;
