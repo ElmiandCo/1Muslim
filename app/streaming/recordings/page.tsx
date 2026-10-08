@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "../../../utils/supabase/client";
 import RecordingComments from "../../../components/RecordingComments";
 import RecordingThumbnail from "../../../components/RecordingThumbnail";
+import LiveDebrief from "../../../components/LiveDebrief";
 
 type Recording = {
   id: string;
@@ -44,6 +45,8 @@ export default function RecordingsPage() {
   const [playing, setPlaying] = useState<Recording | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [recapStreamId,setRecapStreamId]=useState<string|null>(null);
+  useEffect(()=>{const id=new URLSearchParams(window.location.search).get("recap");if(id&&/^[0-9a-f-]{36}$/i.test(id))setRecapStreamId(id)},[]);
 
   useEffect(() => {
     const load = async () => {
@@ -131,6 +134,7 @@ export default function RecordingsPage() {
 
   return (
     <main className="recordingsPage">
+      {recapStreamId&&<LiveDebrief streamId={recapStreamId} onClose={()=>{setRecapStreamId(null);window.history.replaceState(null,"","/streaming/recordings")}} />}
       <style jsx>{`
         .recordingsPage{min-height:100vh;background:var(--bg);color:var(--text)}
         .shell{max-width:1180px;margin:auto;padding:36px 20px 80px}
