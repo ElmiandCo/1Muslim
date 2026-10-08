@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ExpressionKeyboard from "./ExpressionKeyboard";
 import ExpressiveText from "./ExpressiveText";
+import { ExpressionCelebration } from "./ExpressionEffects";
 import { createClient } from "../../utils/supabase/client";
 
 const VIDEO_ID = "_8yvTAnwbQ8";
@@ -120,8 +121,7 @@ export default function VideoOfDayComments() {
     {error&&<p role="status" style={{color:"#dfaa8b",fontSize:12}}>{error}</p>}
     {loading?<p>Loading comments…</p>:comments.length===0?<p style={{opacity:.7,fontSize:13}}>Be the first to share a reflection.</p>:
       <div style={{display:"grid",gap:10,marginTop:15}}>{comments.filter(c=>!c.parent_id).map(render)}</div>}
-    {effects&&celebrate>0&&<div key={celebrate} className="omScreenCelebration" aria-hidden="true">
-      {Array.from({length:22},(_,i)=><span key={i} style={{left:`${(i*47)%100}%`,animationDelay:`${(i%7)*.06}s`}}>{["✨","💚","⭐","🌙","🐦"][i%5]}</span>)}
-    </div>}
+    {effects&&<ExpressionCelebration trigger={celebrate} emoji={replyTo?"💬":"💚"}/>}
+
   </div>;
 }
