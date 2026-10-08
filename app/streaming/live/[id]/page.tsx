@@ -32,7 +32,10 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
   const scheduleStillActive = !stream.scheduled_end_at || new Date(stream.scheduled_end_at).getTime() > Date.now();
   const isLive = stream.status === "live" && heartbeatFresh && scheduleStillActive;
   const effectiveEndedAt = stream.ended_at ?? (stream.scheduled_end_at && new Date(stream.scheduled_end_at).getTime() <= Date.now() ? stream.scheduled_end_at : stream.last_heartbeat_at);
-  const { data: recording } = stream.recording_id
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: adminRow } = user ? await supabase.from("admin_users").select("user_id").eq("user_id",user.id).maybeSingle() : { data: null };
+  const mayViewRecording = Boolean(adminRow);
+  const { data: recording } = !isLive && mayViewRecording && stream.recording_id
     ? await supabase.from("live_recordings").select("id,title,category,video_path,mime_type,duration_seconds,views,likes,comments_count,created_at,thumbnail_path,visibility").eq("id", stream.recording_id).maybeSingle()
     : { data: null };
   const videoUrl = recording ? supabase.storage.from("live-recordings").getPublicUrl(recording.video_path).data.publicUrl : null;
@@ -57,6 +60,8 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
                 <LiveChat streamId={stream.id} hostId={stream.host_id} />
               </div>
             </>
+          ) : !mayViewRecording ? (
+            <section style={{padding:40,textAlign:"center"}}><h2>🔒 Recording restricted</h2><p style={{color:"#a6b3a9"}}>Only 1Muslim administrators can access past livestream recordings. Live broadcasts remain available while they are on air.</p><Link href="/streaming" style={{color:"#d6e7b8"}}>Back to Streaming →</Link></section>
           ) : recording && videoUrl ? (
             <>
               <div style={{background:"#000",aspectRatio:stream.aspect_ratio === "9:16" ? "9/16" : stream.aspect_ratio === "1:1" ? "1/1" : "16/9",maxHeight:"78vh",margin:"0 auto"}}>
