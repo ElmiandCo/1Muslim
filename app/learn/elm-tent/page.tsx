@@ -17,7 +17,8 @@ export default function ElmTentPage() {
         <h1>Elm Tent</h1>
         <p>A place to sit, learn, ask, and grow — through focused lessons and live teaching sessions.</p>
         <div className="elmTentActions">
-          <Link className="primary" href="#sessions">Explore sessions ↗</Link>
+          <Link className="primary" href="/learn/elm-tent/library">📚 Open Library ↗</Link>
+          <Link className="ghost" href="#sessions">Explore sessions</Link>
           <Link className="ghost" href="/streaming">See Live</Link>
         </div>
       </section>
@@ -26,6 +27,8 @@ export default function ElmTentPage() {
         <div><span className="elmTentEyebrow">THE IDEA</span><h2>Pull up a seat.</h2></div>
         <p>Elm Tent is OneMuslim’s dedicated learning space. Lessons can be watched at your pace, while live sessions give people a place to learn together, ask questions, and return to the recordings afterward.</p>
       </section>
+
+      <section className="elmTentIntro"><div><span className="elmTentEyebrow">BOOKS · PDFS · PRIMARY SOURCES</span><h2>Elm Tent Library 📚</h2></div><p>Explore the Seerah, Qur’an translations, classical works and curated reading resources. Save notes, follow source links, and bring your own legally obtained PDFs into your learning workspace. <Link href="/learn/elm-tent/library">Browse the library →</Link></p></section>
 
       <section className="elmTentSessions" id="sessions">
         <div className="elmTentSectionHead"><div><span className="elmTentEyebrow">SESSIONS</span><h2>Learn together.</h2></div><span>3 starting sessions</span></div>
