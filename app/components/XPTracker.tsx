@@ -31,6 +31,37 @@ export default function XPTracker(){
   const lastClick=useRef<Record<string,number>>({});
   const activeRef=useRef(0);
   const lastActivity=useRef(Date.now());
+
+  const [position,setPosition]=useState<{x:number;y:number}|null>(null);
+  const drag=useRef<{id:number;startX:number;startY:number;originX:number;originY:number;w:number;h:number}|null>(null);
+  const trackerRef=useRef<HTMLDivElement|null>(null);
+  useEffect(()=>{
+    try{const saved=localStorage.getItem("1muslim-xp-position");if(saved){const p=JSON.parse(saved);if(Number.isFinite(p.x)&&Number.isFinite(p.y))setPosition({x:p.x,y:p.y});}}catch{}
+  },[]);
+  useEffect(()=>{
+    const clamp=()=>setPosition(prev=>{
+      if(!prev)return prev;
+      const w=trackerRef.current?.offsetWidth||220,h=trackerRef.current?.offsetHeight||80;
+      return {x:Math.max(8,Math.min(prev.x,window.innerWidth-w-8)),y:Math.max(8,Math.min(prev.y,window.innerHeight-h-8))};
+    });
+    window.addEventListener("resize",clamp);
+    return()=>window.removeEventListener("resize",clamp);
+  },[]);
+  const startDrag=(e:React.PointerEvent<HTMLDivElement>)=>{
+    if(e.pointerType==="mouse"&&e.button!==0)return;
+    const rect=trackerRef.current?.getBoundingClientRect();if(!rect)return;
+    drag.current={id:e.pointerId,startX:e.clientX,startY:e.clientY,originX:rect.left,originY:rect.top,w:rect.width,h:rect.height};
+    e.currentTarget.setPointerCapture(e.pointerId);e.preventDefault();
+  };
+  const moveDrag=(e:React.PointerEvent<HTMLDivElement>)=>{
+    const d=drag.current;if(!d||d.id!==e.pointerId)return;
+    setPosition({x:Math.max(8,Math.min(d.originX+e.clientX-d.startX,window.innerWidth-d.w-8)),y:Math.max(8,Math.min(d.originY+e.clientY-d.startY,window.innerHeight-d.h-8))});
+  };
+  const endDrag=(e:React.PointerEvent<HTMLDivElement>)=>{
+    if(drag.current?.id!==e.pointerId)return;
+    drag.current=null;
+    setPosition(prev=>{if(prev)try{localStorage.setItem("1muslim-xp-position",JSON.stringify(prev));}catch{}return prev;});
+  };
   const idleTimeout=60_000;
   const storageKey=useRef("1muslim-xp-active-seconds");
 
@@ -101,10 +132,10 @@ export default function XPTracker(){
   if(!userId)return null;
   const level=levelFor(xp),start=levelStart(level),end=levelEnd(level),progress=Math.min(100,Math.max(0,((xp-start)/(end-start))*100));
   const timeProgress=Math.min(100,activeSeconds/3);
-  return <div className="xpTracker" aria-live="polite">
+  return <div ref={trackerRef} className="xpTracker" aria-live="polite" style={position?{left:position.x,top:position.y,right:"auto",bottom:"auto"}:undefined} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} title="Drag to move XP tracker">
     <style jsx>{`
-      .xpTracker{position:fixed;right:18px;bottom:82px;z-index:90;width:220px;padding:10px 11px;border:1px solid rgba(151,187,158,.25);border-radius:16px;background:rgba(8,13,10,.88);backdrop-filter:blur(16px);box-shadow:0 14px 38px rgba(0,0,0,.28);pointer-events:none;color:#eef5ef}
-      .top{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:850}.xp{color:#b7e0bd}.bar,.time{height:4px;border-radius:99px;background:#202b23;overflow:hidden;margin-top:7px}.fill{height:100%;background:linear-gradient(90deg,#8bbd94,#d8e9da);transition:width .5s ease}.time{height:2px;margin-top:5px}.time .fill{opacity:.55}.meta{display:flex;justify-content:space-between;margin-top:5px;color:#7e8c82;font-size:8px}.notice{position:absolute;right:10px;bottom:calc(100% + 7px);background:#dfeee1;color:#0b150d;border-radius:10px;padding:6px 8px;font-weight:900;font-size:10px;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+      .xpTracker{position:fixed;right:18px;bottom:82px;z-index:90;width:220px;padding:10px 11px;border:1px solid rgba(151,187,158,.25);border-radius:16px;background:rgba(8,13,10,.88);backdrop-filter:blur(16px);box-shadow:0 14px 38px rgba(0,0,0,.28);pointer-events:auto;cursor:grab;touch-action:none;user-select:none;color:#eef5ef}
+      .xpTracker:active{cursor:grabbing}.top{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:850}.xp{color:#b7e0bd}.bar,.time{height:4px;border-radius:99px;background:#202b23;overflow:hidden;margin-top:7px}.fill{height:100%;background:linear-gradient(90deg,#8bbd94,#d8e9da);transition:width .5s ease}.time{height:2px;margin-top:5px}.time .fill{opacity:.55}.meta{display:flex;justify-content:space-between;margin-top:5px;color:#7e8c82;font-size:8px}.notice{position:absolute;right:10px;bottom:calc(100% + 7px);background:#dfeee1;color:#0b150d;border-radius:10px;padding:6px 8px;font-weight:900;font-size:10px;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.25)}
       @media(max-width:600px){.xpTracker{right:10px;bottom:72px;width:190px}.top{font-size:9px}}
     `}</style>
     {notice&&<span className="notice">{notice}</span>}
