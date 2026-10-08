@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
-import {lessonNames,questions} from "../../../lib/elmTentCurriculum";
+import {lessonNames,questions} from "../../../../lib/elmTentCurriculum";
 const shuffled=<T,>(items:T[])=>items.map(v=>({v,k:Math.random()})).sort((a,b)=>a.k-b.k).map(x=>x.v);
 export default function Lessons(){
  const [completed,setCompleted]=useState(0),[signedIn,setSignedIn]=useState(false),[answer,setAnswer]=useState(""),[result,setResult]=useState<{correct:boolean;explanation:string;source:string;xp:number;certified?:boolean}|null>(null);
