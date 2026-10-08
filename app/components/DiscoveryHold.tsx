@@ -11,10 +11,47 @@ const discoveries=[
 export default function DiscoveryHold(){
  const [active,setActive]=useState<number|null>(null);
  const [seen,setSeen]=useState<number[]>([]);
+ const [xp,setXp]=useState(0);
+ const [signedIn,setSignedIn]=useState(false);
+ const [sound,setSound]=useState(true);
+ const [rewardNotice,setRewardNotice]=useState("");
+ const ids=["bismillah","salam","alhamdulillah","tawhid"];
+ const playChime=()=>{
+   if(!sound)return;
+   try{
+     const AC=window.AudioContext;
+     if(!AC)return;
+     const ctx=new AC();const now=ctx.currentTime;
+     [523.25,659.25,783.99].forEach((frequency,i)=>{
+       const oscillator=ctx.createOscillator();const gain=ctx.createGain();
+       oscillator.type="sine";oscillator.frequency.value=frequency;
+       gain.gain.setValueAtTime(0,now+i*.11);
+       gain.gain.linearRampToValueAtTime(.055,now+i*.11+.02);
+       gain.gain.exponentialRampToValueAtTime(.001,now+i*.11+.3);
+       oscillator.connect(gain).connect(ctx.destination);
+       oscillator.start(now+i*.11);oscillator.stop(now+i*.11+.31);
+     });
+     setTimeout(()=>void ctx.close(),900);
+   }catch{}
+ };
+ useEffect(()=>{void fetch("/api/discovery").then(r=>r.json()).then(d=>{
+   setSignedIn(!!d.signedIn);setXp(d.xp??0);
+   if(Array.isArray(d.completed))setSeen(ids.flatMap((id,i)=>d.completed.includes(id)?[i]:[]));
+ }).catch(()=>{})},[]);
+ const claim=async(i:number)=>{
+   if(!signedIn)return;
+   try{
+     const response=await fetch("/api/discovery",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lesson:ids[i]})});
+     if(!response.ok){setRewardNotice("Rewards will activate when the learning database is configured.");return;}
+     const result=await response.json();
+     setXp(Number(result.total_xp)||0);
+     setRewardNotice(result.awarded?"+25 Discovery XP earned! ✨":"You've already discovered this lesson 💚");
+   }catch{setRewardNotice("Could not save reward. Try again later.");}
+ };
  const timer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const point=useRef<{x:number;y:number}|null>(null);
  const cancel=()=>{if(timer.current)clearTimeout(timer.current);timer.current=null;point.current=null};
- const reveal=(i:number)=>{cancel();setActive(i);setSeen(s=>s.includes(i)?s:[...s,i]);navigator.vibrate?.(15)};
+ const reveal=(i:number)=>{cancel();setActive(i);setRewardNotice("");setSeen(s=>s.includes(i)?s:[...s,i]);navigator.vibrate?.(15);playChime();void claim(i)};
  useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current)},[]);
  useEffect(()=>{if(active===null)return;const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setActive(null)};window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key)},[active]);
  return <section className="discoverySection" aria-label="Interactive learning discoveries">
@@ -36,7 +73,12 @@ export default function DiscoveryHold(){
  @media(max-width:540px){.discoveryGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
  @media(prefers-reduced-motion:reduce){.discoveryCard,.discoveryBackdrop,.discoveryModal,.discoveryModal .spark{animation:none;transition:none}}
  `}</style>
- <div className="discoveryHeading"><div><span style={{fontSize:10,letterSpacing:2,color:"#cbe7b0",fontWeight:900}}>🌱 NEW HERE? START WITH A DISCOVERY</span><h2>Hold to uncover something beautiful.</h2><p>Press a card for 1 second to reveal a little piece of Islam. No quiz, no pressure.</p></div><span style={{fontSize:12,color:"#d8edbf"}}>{seen.length}/4 discovered ✨</span></div>
+ <div className="discoveryHeading"><div><span style={{fontSize:10,letterSpacing:2,color:"#cbe7b0",fontWeight:900}}>🌱 NEW HERE? START WITH A DISCOVERY</span><h2>Hold to uncover something beautiful.</h2><p>Press a card for 1 second to reveal a little piece of Islam. No quiz, no pressure.</p></div><span style={{fontSize:12,color:"#d8edbf"}}>{seen.length}/4 discovered ✨ · {xp} XP</span></div>
+ <div style={{display:"flex",alignItems:"center",gap:12,marginTop:12,flexWrap:"wrap"}}>
+ <button type="button" onClick={()=>setSound(v=>!v)} style={{background:"transparent",border:"1px solid #678b6e",color:"inherit",borderRadius:20,padding:"7px 12px"}}>{sound?"🔊 Sound on":"🔇 Sound off"}</button>
+ <Link href="/discovery-files" style={{color:"#d8edbf",fontSize:12}}>📁 My learning files & rewards ↗</Link>
+ {!signedIn&&<span style={{fontSize:11,opacity:.75}}>Sign in to save XP and unlock rewards.</span>}
+ </div>
  <div className="discoveryGrid">{discoveries.map((item,i)=><button key={item.title} type="button" className="discoveryCard" aria-label={"Discover "+item.title+"; press and hold for one second or click"}
  onPointerDown={e=>{if(e.pointerType==="mouse"&&e.button!==0)return;cancel();point.current={x:e.clientX,y:e.clientY};timer.current=setTimeout(()=>reveal(i),1000)}}
  onPointerMove={e=>{if(point.current&&Math.hypot(e.clientX-point.current.x,e.clientY-point.current.y)>12)cancel()}}
@@ -49,6 +91,7 @@ export default function DiscoveryHold(){
  <h3>{discoveries[active].title}</h3><div className="arabic" lang="ar">{discoveries[active].arabic}</div>
  <strong>{discoveries[active].meaning}</strong><p>{discoveries[active].detail}</p>
  <p style={{color:"#d8edbf"}}>🌱 {discoveries[active].action}</p>
+ {rewardNotice&&<p role="status" style={{fontWeight:800,color:"#d8edbf"}}>{rewardNotice}</p>}
  <button type="button" onClick={()=>setActive(null)}>Keep exploring ✨</button><Link href="/learn/elm-tent#sessions">Explore lessons ↗</Link>
  </div></div>}
  </section>;
