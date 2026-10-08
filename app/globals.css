@@ -259,3 +259,25 @@ video {
 @media (max-width: 640px) {
   video { border-width: 3px; border-image-width: 3px; }
 }
+
+
+/* 1Muslim Expressions: motion is subtle, interaction is playful, accessibility wins. */
+@keyframes omFlame{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(7deg) scale(1.16)}}
+@keyframes omHeartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.24)}30%{transform:scale(1)}45%{transform:scale(1.14)}}
+@keyframes omLaugh{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg) translateY(-2px)}75%{transform:rotate(12deg) translateY(-2px)}}
+@keyframes omDua{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes omSparkle{0%,100%{filter:brightness(1);transform:scale(.94)}50%{filter:brightness(1.5);transform:scale(1.16)}}
+@keyframes omTrophy{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.16) rotate(8deg)}}
+@keyframes omMoon{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+@keyframes omEyes{0%,100%{transform:translateX(-2px)}50%{transform:translateX(2px)}}
+.oneMuslimEmoji{display:inline-block;will-change:transform;vertical-align:baseline;transition:filter .18s}
+.oneMuslimEmoji--flame{animation:omFlame 1.5s ease-in-out infinite}
+.oneMuslimEmoji--heart{animation:omHeartbeat 2.3s ease-in-out infinite}
+.oneMuslimEmoji--laugh{animation:omLaugh 1.3s ease-in-out infinite}
+.oneMuslimEmoji--dua{animation:omDua 2.4s ease-in-out infinite}
+.oneMuslimEmoji--sparkle{animation:omSparkle 1.7s ease-in-out infinite}
+.oneMuslimEmoji--trophy{animation:omTrophy 2s ease-in-out infinite}
+.oneMuslimEmoji--moon{animation:omMoon 2.8s ease-in-out infinite}
+.oneMuslimEmoji--eyes{animation:omEyes 1.4s ease-in-out infinite}
+.oneMuslimEmoji:hover{filter:drop-shadow(0 0 6px rgba(217,189,112,.65));animation-duration:.55s}
+@media(prefers-reduced-motion:reduce){.oneMuslimEmoji{animation:none!important;transition:none!important}}
