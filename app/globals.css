@@ -241,3 +241,21 @@ footer{display:flex;flex-direction:column;gap:6px;padding:30px;color:#66726a;fon
 .header-white{background:#fff!important;color:#171e1a!important}
 .header-white h1,.header-white strong,.header-white .eyebrow{color:#171e1a!important}
 .header-white p,.header-white span{color:#4a5750}
+
+
+/* Shared 1Muslim video frame: all HTML video players, including LiveKit, replay,
+   host previews, course videos and floating players. Border-image keeps the
+   central video visible and does not intercept player interactions. */
+video {
+  box-sizing: border-box;
+  border: 5px solid #b99c55;
+  border-image-source: url("/assets/1MuslimBorder.png");
+  border-image-slice: 28 fill;
+  border-image-width: 5px;
+  border-image-outset: 0;
+  border-image-repeat: stretch;
+  border-radius: 12px;
+}
+@media (max-width: 640px) {
+  video { border-width: 3px; border-image-width: 3px; }
+}
