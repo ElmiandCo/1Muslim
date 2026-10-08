@@ -44,3 +44,12 @@
 @keyframes omPublishPop{0%{opacity:0;transform:translateX(-50%) scale(.5) translateY(30px)}25%{opacity:1;transform:translateX(-50%) scale(1.1)}65%{opacity:1;transform:translateX(-50%) scale(1)}100%{opacity:0;transform:translateX(-50%) scale(.95) translateY(-24px)}}
 .postActions button{transition:transform .16s ease,color .16s ease}.postActions button:active{transform:scale(.82)}
 @media(prefers-reduced-motion:reduce){.omPostBurst,.omPublishCelebration{display:none!important}.postActions button{transition:none!important}}
+
+/* Threads-style progressive reveal: text, images and video enter with restrained motion. */
+@media(prefers-reduced-motion:no-preference){
+ .socialPost .omPostTextReveal{opacity:0;transform:translateY(18px) scale(.97);filter:blur(5px);transition:opacity .55s ease,transform .65s cubic-bezier(.2,.8,.2,1),filter .55s ease}
+ .socialPost.omPostVisible .omPostTextReveal{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+ .socialPost .omPostMedia,.socialPost .omLinkPreview{opacity:0;transform:translateY(25px) scale(.96);transition:opacity .65s ease .12s,transform .65s cubic-bezier(.2,.8,.2,1) .12s}
+ .socialPost.omPostVisible .omPostMedia,.socialPost.omPostVisible .omLinkPreview{opacity:1;transform:translateY(0) scale(1)}
+}
+@media(prefers-reduced-motion:reduce){.omPostTextReveal,.socialPost .omPostMedia,.socialPost .omLinkPreview{opacity:1!important;filter:none!important;transform:none!important;transition:none!important}}
