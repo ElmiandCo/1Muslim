@@ -51,7 +51,7 @@ export default function ProfileAvatar({
   const accessoryIds = Array.isArray(config.accessories) ? config.accessories.map(String) : [];
   const accessories = ACCESSORIES.filter((item) => accessoryIds.includes(item.id));
   const isFemale = selectedGender === "female";
-  const avatarSrc = isFemale ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg";
+  const avatarSrc = isFemale ? "/assets/avatars/Default-women.png" : "/assets/avatars/default-male.jpg";
 
   const avatarContent = (
     <div className={`profileAvatar avatar-${size} accent-${accent} package-${packageKey}${isLive ? " isLive" : ""}`} aria-label={`${name ?? "Member"} avatar${isLive ? " · Live now" : ""}`}>
