@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import ExpressionKeyboard from "./ExpressionKeyboard";
+import ExpressiveText from "./ExpressiveText";
 import { createClient } from "../../utils/supabase/client";
 
 const VIDEO_ID = "_8yvTAnwbQ8";
@@ -58,7 +59,7 @@ export default function VideoOfDayComments() {
       <div style={{ display: "grid", gap: 10, marginTop: 15 }}>
         {comments.map(comment => <article key={comment.id} style={{ padding: 12, borderRadius: 12, border: "1px solid #b99c5533" }}>
           <div style={{ opacity: .65, fontSize: 11, marginBottom: 5 }}>Community member · {new Date(comment.created_at).toLocaleDateString()}</div>
-          <p style={{ margin: 0, whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontSize: 13 }}>{comment.body}</p>
+          <p style={{ margin: 0, whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontSize: 13 }}><ExpressiveText text={comment.body}/></p>
         </article>)}
       </div>}
   </div>;
