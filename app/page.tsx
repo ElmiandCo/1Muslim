@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ThemeToggle } from "./components/SiteNav";
+import SiteNav, { ThemeToggle } from "./components/SiteNav";
 import { useEffect, useState } from "react";
 import { createClient } from "../utils/supabase/client";
 import LiveNowFocus from "./components/LiveNowFocus";
@@ -106,7 +106,7 @@ export default function Home() {
   const lessonSet = path === "easy" ? easy : advanced;
 
   return (
-    <div className="app">
+    <><SiteNav compact /><div className="app">
       <aside className="sidebar">
         <Link href="/" className="homeLogo" aria-label="1Muslim Home"><img src="/assets/1muslim-mobile-logo.PNG" alt="1Muslim" /></Link>
         <nav>
@@ -287,7 +287,7 @@ export default function Home() {
         <div className="railCard quiet"><span className="eyebrow">COMMUNITY</span><h3>Leave something for the next person.</h3><p>Share a reflection, encouragement or honest question. Core lessons stay protected; community contributions add to them.</p></div>
       </aside>
 
-      <nav className="mobileNav"><Link href="/" >⌂<small>Home</small></Link><Link href="/#paths">◈<small>Learn</small></Link><Link href="/#explore">◎<small>Explore</small></Link><Link href="/community">♧<small>Community</small></Link><Link href="/ashab">👥<small>Ashab</small></Link><Link href="/streaming">🔴<small>Live</small></Link></nav>
-    </div>
+
+    </div></>
   );
 }
