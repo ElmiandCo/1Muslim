@@ -1,0 +1,44 @@
+/* 1Muslim text/link system — neutral typography across the entire site. */
+a,
+a:link,
+a:visited,
+a:hover,
+a:active {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Keep keyboard navigation obvious without introducing colored link states. */
+a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Neutralize legacy accent-colored hyperlink text globally. */
+.timelineSource a,
+.siteNavLinks a,
+.navDropdown a,
+.mobileMenuPanel a,
+.findSectionHead > a,
+.discoveryCard,
+.liveDiscoverCard,
+.authNav,
+.authSidebarLink,
+.siteBrand {
+  color: inherit;
+}
+
+/* LIVE is the intentional colored exception. */
+.siteNavLinks .liveNav,
+.liveMenuButton,
+.liveDropdown .navDropdownLabel,
+.livePill,
+.liveDot {
+  color: #ffb0b0;
+}
+
+/* Live action links remain neutral/white. */
+.liveWatch {
+  color: #fff;
+}
