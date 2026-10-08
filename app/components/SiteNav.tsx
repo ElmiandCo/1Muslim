@@ -116,7 +116,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const label = (text: string, ar: string) => user?.arabic_terms_enabled ? <>{text} <span className="arabicNav">{ar}</span></> : text;
 
   return <header ref={navRef} className={compact ? "siteNav compact" : "siteNav"}>
-    <Link href="/" className="siteBrand" aria-label="1Muslim Home"><img src="/1muslim-logo.svg" alt="1Muslim" className="siteLogo" /></Link>
+    <Link href="/" className="siteBrand" aria-label="1Muslim Home"><img src="/assets/1muslim-live-logo.PNG" alt="1Muslim.Live" className="siteLogo premiumDesktopLogo" /></Link>
 
     <nav className="siteNavLinks" aria-label="Primary navigation">
       <Link href="/" className="siteHomeLink">Home</Link>
@@ -144,7 +144,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       <div className="muslimDockShell">
         <Link href="/" className={pathname === "/" ? "dockItem selected" : "dockItem"} aria-label="Home"><span className="dockIcon">⌂</span><small>Home</small></Link>
         <Link href="/streaming" className={pathname.startsWith("/streaming") ? "dockItem selected" : "dockItem"} aria-label="Live"><span className="dockIcon">◉</span><small>Live</small></Link>
-        <Link href={user ? "/profile" : "/auth"} className="dockCenter" aria-label={user ? "My profile" : "Sign in to your profile"}><img src="/1muslim-logo.svg" alt="" /><span className="dockCenterText">Profile</span></Link>
+        <Link href={user ? "/profile" : "/auth"} className="dockCenter" aria-label={user ? "My profile" : "Sign in to your profile"}><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">Profile</span></Link>
         <Link href="/#paths" className="dockItem" aria-label="Learn"><span className="dockIcon">▤</span><small>Learn</small></Link>
         <button type="button" className="dockItem" aria-label="Create content" aria-expanded={createOpen} onClick={() => setCreateOpen(!createOpen)}><span className="dockIcon">＋</span><small>Create</small></button>
       </div>
@@ -183,6 +183,8 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       <div className="mobileMenuFooter"><ThemeToggle/>{user ? <button type="button" className="mobileMenuSignOut" onClick={signOut}>Sign out</button> : <Link href="/auth" onClick={closeMenu}>Sign in</Link>}</div>
     </div>}
     <style jsx>{`
+      :global(.premiumDesktopLogo){width:clamp(132px,15vw,192px);height:48px;max-width:100%;object-fit:contain;object-position:left center;transform:none;border-radius:4px}
+      @media(max-width:700px){:global(.premiumDesktopLogo){width:132px;height:40px}}
       .notificationBell{position:relative;width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);border-radius:11px;background:var(--panel2);text-decoration:none;font-size:14px}
       .notificationBell span{position:absolute;right:-5px;top:-6px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#dbe9c4;color:#071008;font-size:8px;font-weight:900;display:grid;place-items:center}
       @media(max-width:700px){.notificationBell{display:none}}
