@@ -95,15 +95,16 @@ export default function RecordingsPage() {
   };
 
   const deleteRecording = async (recording: Recording) => {
-    if (!window.confirm("Delete this recording permanently?")) return;
-    const supabase = createClient();
-    const files=[recording.video_path,...(recording.thumbnail_path?[recording.thumbnail_path]:[])];
-    const { error: fileError } = await supabase.storage.from("live-recordings").remove(files);
-    if (fileError) return setError(fileError.message);
-    const { error: rowError } = await supabase.from("live_recordings").delete().eq("id", recording.id);
-    if (rowError) return setError(rowError.message);
-    setRecordings(items => items.filter(item => item.id !== recording.id));
-    if (playing?.id === recording.id) setPlaying(null);
+    if (!window.confirm(`Permanently delete "${recording.title}"? This cannot be undone.`)) return;
+    setError("");
+    try {
+      const response = await fetch(`/api/recordings/${recording.id}`, { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not delete recording");
+      setRecordings(items => items.filter(item => item.id !== recording.id));
+      if (playing?.id === recording.id) setPlaying(null);
+      if (result.storageCleanupPending) setError("Recording deleted, but media cleanup needs administrator attention.");
+    } catch (e) { setError(e instanceof Error ? e.message : "Deletion failed"); }
   };
 
   return (
