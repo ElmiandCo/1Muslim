@@ -179,7 +179,7 @@ export default function GoLivePage() {
     if (!user) return setScheduleMessage("Sign in is required to schedule a Live.");
     const { data, error } = await supabase.from("live_schedule_slots").insert({host_id:user.id,title:title.trim(),category,starts_at:starts.toISOString(),ends_at:ends.toISOString(),status:"scheduled"}).select("id,title,category,starts_at,ends_at,status").single();
     if (error) return setScheduleMessage(error.message);
-    setScheduledSlot(data); setHostCheckedIn(false); setScheduleMessage("Scheduled. Return before the start time to check in and confirm your camera + microphone.");
+    setScheduledSlot(data); setHostCheckedIn(false); setScheduleMessage("Scheduled. You can schedule another Live too. Return before this start time to check in and confirm your camera + microphone.");
     setShowScheduler(false);
   };
 
@@ -207,7 +207,7 @@ export default function GoLivePage() {
       if (scheduledStartRef.current) return;
       if (Date.now() < new Date(scheduledSlot.starts_at).getTime()) return;
       scheduledStartRef.current = true;
-      await startLive();
+      await startLive(true);
       scheduledStartRef.current = false;
     };
     const timer = window.setInterval(() => void tick(), 500);
@@ -544,12 +544,13 @@ export default function GoLivePage() {
     } finally { setSaving(false); }
   };
 
-  const startLive = async () => {
+  const startLive = async (fromSchedule = false) => {
     if (!cameraReady) return setError("Turn on your camera and microphone first.");
     if (!title.trim()) return setError("Give your live stream a title first.");
-    if (scheduledSlot) {
+    if (fromSchedule && scheduledSlot) {
       if (!hostCheckedIn) return setError("Check in as ready before the scheduled Live can start.");
       if (Date.now() < new Date(scheduledSlot.starts_at).getTime()) return setError("This scheduled Live is still locked. It will start automatically at the scheduled time.");
+      if (scheduledSlot.ends_at && Date.now() > new Date(scheduledSlot.ends_at).getTime()) return setError("This scheduled Live has ended. Schedule another Live to continue.");
     }
     setError(""); setSaveMessage("");
     try {
@@ -557,7 +558,7 @@ export default function GoLivePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Sign in is required to go live.");
       setCurrentUserId(user.id);
-      if (scheduledSlot) {
+      if (fromSchedule && scheduledSlot) {
         const { error: unlockError } = await supabase.from("live_schedule_slots").update({status:"live"}).eq("id", scheduledSlot.id).eq("host_id", user.id);
         if (unlockError) throw unlockError;
         setScheduledSlot((slot:any) => slot ? {...slot, status:"live"} : slot);
@@ -582,8 +583,8 @@ export default function GoLivePage() {
         room_name: roomName,
         status: "live",
         last_heartbeat_at: new Date().toISOString(),
-        schedule_slot_id: scheduledSlot?.id ?? null,
-        scheduled_end_at: scheduledSlot?.ends_at ?? null,
+        schedule_slot_id: fromSchedule ? scheduledSlot?.id ?? null : null,
+        scheduled_end_at: fromSchedule ? scheduledSlot?.ends_at ?? null : null,
         thumbnail_path: liveThumbnailPath,
         aspect_ratio: aspectRatio,
         video_width: formats.find(f => f.key === aspectRatio)?.width ?? 720,
@@ -702,7 +703,7 @@ export default function GoLivePage() {
             </div>
             <div className="controls">
               {cameraReady && <><button className={cameraOn ? "circle" : "circle off"} onClick={toggleCamera} aria-label="Toggle camera">{cameraOn ? "◉" : "○"}</button><button className="circle" onClick={()=>void flipCamera()} aria-label="Flip camera" title="Flip camera">↻</button><button className={micOn ? "circle" : "circle off"} onClick={toggleMic} aria-label="Toggle microphone">{micOn ? "♫" : "×"}</button></>}
-              {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In — I’m Ready</button> : scheduledSlot ? <button className="start" disabled>Waiting for scheduled time…</button> : <button className="start" onClick={startLive} disabled={saving}>Start Live + Record</button>}
+              {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In for Scheduled Live</button> : null}<button className="start" onClick={()=>void startLive(false)} disabled={saving}>● Start Live Now</button></div>}
             </div>
             {cameraReady && <div className="cameraStudio">
               <div className="studioHeader"><strong>Camera Studio</strong><span>{videoQuality} · {zoom.toFixed(1)}×</span></div>
