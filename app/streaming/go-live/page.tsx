@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { LocalAudioTrack, Room, Track } from "livekit-client";
 import { createLiveAudioProcessor } from "../../../components/live-audio-effects";
 import LiveChat from "../../../components/LiveChat";
+import SyncedLiveIntro from "../../components/SyncedLiveIntro";
 
 const categories = ["Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
 type ChatMessage = { id: string; name: string; text: string };
@@ -20,6 +21,7 @@ const formats: Array<{ key: AspectRatio; label: string; width: number; height: n
 
 export default function GoLivePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [broadcastStartedAt,setBroadcastStartedAt] = useState<string|null>(null);
   const hostIntroRef = useRef<HTMLVideoElement>(null);
   const [showHostIntro,setShowHostIntro] = useState(false);
   const [hostIntroTap,setHostIntroTap] = useState(false);
@@ -702,7 +704,7 @@ export default function GoLivePage() {
           <section className="panel">
             <div className={`preview format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"}`}>
               {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
-              {showHostIntro && live && <div style={{position:"absolute",inset:0,zIndex:15,background:"#000",display:"grid",placeItems:"center"}}><video ref={hostIntroRef} src="/videos/prelive-intro.mp4" autoPlay muted playsInline onEnded={()=>setShowHostIntro(false)} onError={()=>setShowHostIntro(false)} style={{width:"100%",height:"100%",objectFit:"contain"}}/><span style={{position:"absolute",top:12,left:12,background:"rgba(0,0,0,.8)",color:"#fff",padding:"8px 12px",borderRadius:12,fontSize:12}}>🎬 Intro preview · Your broadcast is live</span><button type="button" onClick={()=>setShowHostIntro(false)} style={{position:"absolute",bottom:16,right:16,padding:"10px 14px",background:"rgba(0,0,0,.85)",border:"1px solid #777",borderRadius:12,color:"#fff",cursor:"pointer"}}>Skip intro →</button>{hostIntroTap && <button type="button" onClick={()=>void hostIntroRef.current?.play().then(()=>setHostIntroTap(false)).catch(()=>{})} style={{position:"absolute",top:"45%",left:"30%",padding:12}}>Play intro</button>}</div>}
+              {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
               {live && <span className="live">● LIVE</span>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
             </div>
