@@ -231,10 +231,10 @@ export default function Home() {
         <section className="sectionBlock compact">
           <div className="sectionTitle"><div><span className="eyebrow">FOUNDATIONS</span><h2>The words you’ll keep hearing.</h2></div><span className="counter">12 terms</span></div>
           <div className="horizontalCards">
-            {foundations.slice(0,6).map(([a,b]) => <div className="termCard" key={a}><strong>{a}</strong><span>{b}</span></div>)}
+            {foundations.slice(0,6).map(([a,b]) => <div className="termCard" key={a}>{a === "Shahadah" && <span className="badgeEmblem" style={{width:104,maxWidth:"100%",margin:"0 auto 12px"}}><img src="/assets/badges/shahada-badge.png" alt="Shahadah badge" /></span>}<strong>{a}</strong><span>{b}</span></div>)}
           </div>
           <div className="horizontalCards second">
-            {foundations.slice(6).map(([a,b]) => <div className="termCard" key={a}><strong>{a}</strong><span>{b}</span></div>)}
+            {foundations.slice(6).map(([a,b]) => <div className="termCard" key={a}>{a === "Shahadah" && <span className="badgeEmblem" style={{width:104,maxWidth:"100%",margin:"0 auto 12px"}}><img src="/assets/badges/shahada-badge.png" alt="Shahadah badge" /></span>}<strong>{a}</strong><span>{b}</span></div>)}
           </div>
         </section>
 
