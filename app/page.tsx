@@ -9,6 +9,7 @@ import LiveNowFocus from "./components/LiveNowFocus";
 import StoriesRail from "./components/StoriesRail";
 import TimelinePopup, { type TimelineItem } from "./components/TimelinePopup";
 import VideoOfDayComments from "./components/VideoOfDayComments";
+import FeaturedYoutubeVideo from "../components/FeaturedYoutubeVideo";
 
 type Path = "easy" | "advanced";
 
@@ -158,16 +159,7 @@ export default function Home() {
         <StoriesRail />
         <LiveNowFocus mode="hero" />
         <section aria-label="Video of the Day" style={{margin:"12px 0 28px",padding:"clamp(12px, 2.5vw, 30px)",border:"1px solid #b99c55",borderRadius:24,background:"var(--card, #101712)",boxShadow:"0 24px 70px rgba(0,0,0,.18)"}}>
-          <div className="eyebrow">WELCOME, MUSLIMS · VIDEO OF THE DAY</div>
-          <h2 style={{margin:"10px 0",fontSize:"clamp(26px, 3.8vw, 44px)",lineHeight:1.1}}>The Life of Prophet Muhammad ﷺ</h2>
-          <p style={{opacity:.8,fontSize:13}}>Watch today's featured video about the Prophet ﷺ. Share your reflections below.</p>
-          <div style={{position:"relative",width:"100%",aspectRatio:"16 / 9",overflow:"hidden",borderRadius:18,background:"#000"}}>
-            <iframe title="Video of the Day — The Prophet Muhammad" src="https://www.youtube-nocookie.com/embed/_8yvTAnwbQ8?autoplay=1&mute=1&playsinline=1&rel=0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" style={{width:"100%",height:"100%",border:0}} />
-          </div>
-          <div style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap",marginTop:12}}>
-            <span style={{fontSize:12,opacity:.75}}>Autoplay starts muted. Tap the player to enable sound.</span>
-            <a href="https://www.youtube.com/watch?v=_8yvTAnwbQ8" target="_blank" rel="noopener noreferrer" style={{color:"#b99c55",fontWeight:700}}>Watch on YouTube ↗</a>
-          </div>
+          <FeaturedYoutubeVideo />
           <VideoOfDayComments />
         </section>
         <section className="heroPost">
