@@ -148,13 +148,16 @@ export default function StreamingPage() {
         profileMap=Object.fromEntries((profiles??[]).map(profile=>[profile.id,profile]));
       }
       let streamMap:Record<string,string> = {};
+      let streamRows:Array<{id:string;recording_id:string|null;started_at:string|null;ended_at:string|null}> = [];
       if (ids.length) {
-        const { data: streams } = await supabase.from("live_streams").select("id,recording_id,started_at,ended_at").in("recording_id",ids);
-        streamMap = Object.fromEntries((streams ?? []).filter(stream => stream.recording_id).map(stream => [stream.recording_id,stream.id]));
+        const { data: streamData } = await supabase.from("live_streams").select("id,recording_id,started_at,ended_at").in("recording_id",ids);
+        streamRows = (streamData ?? []) as Array<{id:string;recording_id:string|null;started_at:string|null;ended_at:string|null}>;
+        streamMap = Object.fromEntries(streamRows.filter(stream => stream.recording_id).map(stream => [stream.recording_id as string,stream.id]));
       }
       setRecordedLives(rows.map(row => {
         const profile=profileMap[row.user_id];
-        const linked=(streams??[]).find(stream=>stream.recording_id===row.id); return {...row,stream_id:streamMap[row.id] ?? null,stream_started_at:linked?.started_at??null,stream_ended_at:linked?.ended_at??null,host_name:profile?.display_name||profile?.username||"1Muslim Host",host_avatar_url:profile?.avatar_url??null,host_gender:profile?.gender??null};
+        const linked=streamRows.find(stream=>stream.recording_id===row.id);
+        return {...row,stream_id:streamMap[row.id] ?? null,stream_started_at:linked?.started_at??null,stream_ended_at:linked?.ended_at??null,host_name:profile?.display_name||profile?.username||"1Muslim Host",host_avatar_url:profile?.avatar_url??null,host_gender:profile?.gender??null};
       }));
     };
     void loadRecordedLives();
