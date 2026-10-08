@@ -1,6 +1,6 @@
 "use client";
 
-export const AVATAR_TIERS = [
+const AVATAR_TIERS = [
   { key: "starter", name: "Starter", minXp: 0, icon: "○", quality: "Clean foundation" },
   { key: "bronze", name: "Bronze", minXp: 500, icon: "◆", quality: "First accessories" },
   { key: "silver", name: "Silver", minXp: 10500, icon: "✦", quality: "Emerald Aura" },
@@ -29,6 +29,7 @@ type Props = {
   accent?: string | null;
   size?: "sm" | "md" | "lg";
   isLive?: boolean;
+  profileId?: string | null;
 };
 
 export default function ProfileAvatar({
@@ -40,6 +41,7 @@ export default function ProfileAvatar({
   accent = "emerald",
   size = "md",
   isLive = false,
+  profileId,
 }: Props) {
   const config = avatarConfig ?? {};
   const selectedGender = String(config.gender ?? avatarGender ?? gender ?? "male").toLowerCase();
@@ -49,7 +51,7 @@ export default function ProfileAvatar({
   const isFemale = selectedGender === "female";
   const avatarSrc = isFemale ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg";
 
-  return (
+  const avatarContent = (
     <div className={`profileAvatar avatar-${size} accent-${accent} package-${packageKey}${isLive ? " isLive" : ""}`} aria-label={`${name ?? "Member"} avatar${isLive ? " · Live now" : ""}`}>
       <div className="avatarGlow" />
       <img className="avatarDefaultImage" src={avatarSrc} alt="" aria-hidden="true" draggable={false} />
@@ -59,4 +61,7 @@ export default function ProfileAvatar({
       ))}
     </div>
   );
+
+  if (!profileId) return avatarContent;
+  return <Link href={`/profile/${profileId}`} aria-label={`Open ${name ?? "Member"} profile`} style={{display:"inline-flex",textDecoration:"none",color:"inherit"}}>{avatarContent}</Link>;
 }
