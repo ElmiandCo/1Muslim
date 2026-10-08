@@ -1,6 +1,8 @@
 "use client";
 
-const AVATAR_TIERS = [
+import Link from "next/link";
+
+export const AVATAR_TIERS = [
   { key: "starter", name: "Starter", minXp: 0, icon: "○", quality: "Clean foundation" },
   { key: "bronze", name: "Bronze", minXp: 500, icon: "◆", quality: "First accessories" },
   { key: "silver", name: "Silver", minXp: 10500, icon: "✦", quality: "Emerald Aura" },
