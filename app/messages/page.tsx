@@ -40,6 +40,22 @@ export default function MessagesPage(){
  const recorder=useRef<MediaRecorder|null>(null);
  const chunks=useRef<Blob[]>([]);
  const [recording,setRecording]=useState(false);
+ const [voicePreview,setVoicePreview]=useState<{file:File;url:string}|null>(null);
+ const [voiceSeconds,setVoiceSeconds]=useState(0);
+ const [voicePlaying,setVoicePlaying]=useState(false);
+ const [voiceSpeed,setVoiceSpeed]=useState(1);
+ const [voiceProgress,setVoiceProgress]=useState(0);
+ const voiceAudio=useRef<HTMLAudioElement|null>(null);
+ const voiceTimer=useRef<ReturnType<typeof setInterval>|null>(null);
+ const voiceCancelled=useRef(false);
+ const voiceContext=useRef<AudioContext|null>(null);
+ const voiceAnalyzer=useRef<AnalyserNode|null>(null);
+ const [voiceLevels,setVoiceLevels]=useState<number[]>(Array(36).fill(0.12));
+ const voiceAnimation=useRef<number|null>(null);
+ const discardVoice=()=>{voiceCancelled.current=true;if(recorder.current?.state==="recording"){recorder.current.stop();setRecording(false)}if(voicePreview)URL.revokeObjectURL(voicePreview.url);setVoicePreview(null);setVoiceSeconds(0);setVoiceProgress(0);setVoicePlaying(false);if(voiceTimer.current)clearInterval(voiceTimer.current);if(voiceAnimation.current!==null)cancelAnimationFrame(voiceAnimation.current);void voiceContext.current?.close();voiceContext.current=null;voiceAnalyzer.current=null};
+ useEffect(()=>()=>{if(voiceTimer.current)clearInterval(voiceTimer.current);if(voiceAnimation.current!==null)cancelAnimationFrame(voiceAnimation.current);if(recorder.current?.state==="recording")recorder.current.stop();void voiceContext.current?.close()},[]);
+ const sendVoice=async()=>{if(!voicePreview)return;const file=voicePreview.file;discardVoice();await upload(file)};
+
  const [status,setStatus]=useState<{request_status:string;requested_by:string}|null>(null);
  const [recipient,setRecipient]=useState("");
  const [initialRecipient,setInitialRecipient]=useState<string|null>(null);
@@ -140,7 +156,25 @@ export default function MessagesPage(){
  setBusy(false)
  }
  async function toggleRecord(){if(recording){recorder.current?.stop();setRecording(false);return}
- try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});const mime=["audio/webm","audio/mp4","audio/ogg"].find(t=>MediaRecorder.isTypeSupported(t));if(!mime)throw Error("Audio recording unsupported");const rec=new MediaRecorder(stream,{mimeType:mime});chunks.current=[];rec.ondataavailable=e=>{if(e.data.size)chunks.current.push(e.data)};rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());const blob=new Blob(chunks.current,{type:mime});if(blob.size)void upload(new File([blob],"voice-note."+(mime==="audio/mp4"?"m4a":mime==="audio/ogg"?"ogg":"webm"),{type:mime}))};rec.start();recorder.current=rec;setRecording(true)}catch(e){setError(e instanceof Error?e.message:"Microphone unavailable")}
+ if(voicePreview)discardVoice();
+ try{
+ if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==="undefined")throw Error("This browser does not support voice recording");
+ const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+ const mime=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg"].find(t=>MediaRecorder.isTypeSupported(t));
+ if(!mime){stream.getTracks().forEach(t=>t.stop());throw Error("Audio recording unsupported")}
+ const rec=new MediaRecorder(stream,{mimeType:mime});chunks.current=[];voiceCancelled.current=false;setVoiceSeconds(0);setVoiceLevels(Array(36).fill(.12));setVoiceProgress(0);
+ rec.ondataavailable=e=>{if(e.data.size)chunks.current.push(e.data)};
+ rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());if(voiceTimer.current)clearInterval(voiceTimer.current);if(voiceAnimation.current!==null)cancelAnimationFrame(voiceAnimation.current);void voiceContext.current?.close();voiceContext.current=null;voiceAnalyzer.current=null;
+ if(voiceCancelled.current)return;
+ const blob=new Blob(chunks.current,{type:mime});if(!blob.size)return;
+ const ext=mime.startsWith("audio/mp4")?"m4a":mime.startsWith("audio/ogg")?"ogg":"webm";
+ const file=new File([blob],"voice-note-"+Date.now()+"."+ext,{type:mime.startsWith("audio/webm")?"audio/webm":mime});
+ setVoicePreview({file,url:URL.createObjectURL(blob)})};
+ rec.start(250);recorder.current=rec;setRecording(true);
+ voiceTimer.current=setInterval(()=>setVoiceSeconds(v=>{if(v>=179){rec.stop();setRecording(false);return v}return v+1}),1000);
+ try{const ctx=new AudioContext();voiceContext.current=ctx;const source=ctx.createMediaStreamSource(stream);const analyzer=ctx.createAnalyser();analyzer.fftSize=256;source.connect(analyzer);voiceAnalyzer.current=analyzer;const samples=new Uint8Array(analyzer.frequencyBinCount);
+ const draw=()=>{analyzer.getByteFrequencyData(samples);const level=samples.reduce((a,b)=>a+b,0)/samples.length/255;setVoiceLevels(prev=>[...prev.slice(1),Math.max(.1,Math.min(1,level*3))]);voiceAnimation.current=requestAnimationFrame(draw)};draw()}catch{}
+ }catch(e){setError(e instanceof Error?e.message:"Microphone unavailable")}
  }
  async function react(messageId:string,emoji:string){if(!uid)return;const existing=reactions.some(r=>r.message_id===messageId&&r.user_id===uid&&r.emoji===emoji);const query=client.from("dm_reactions");const {error}=existing?await query.delete().eq("message_id",messageId).eq("user_id",uid).eq("emoji",emoji):await query.insert({message_id:messageId,user_id:uid,emoji});if(error)setError(error.message);else {setReactions(prev=>existing?prev.filter(r=>!(r.message_id===messageId&&r.user_id===uid&&r.emoji===emoji)):[...prev,{message_id:messageId,user_id:uid,emoji}]);if(!existing)celebrate(emoji,"react")}}
  async function send(e:React.FormEvent){e.preventDefault();if(!selected||!uid||!draft.trim()||busy)return;setBusy(true);setError("");const body=draft.trim();const {error}=await client.from("dm_messages").insert({conversation_id:selected,sender_id:uid,body,reply_to_id:replyTo?.id??null});if(error)setError(error.message);else{celebrate(replyTo?"💬":"✨",replyTo?"reply":"send");setDraft("");setReplyTo(null);if(uid&&typingChannel)void typingChannel.send({type:"broadcast",event:"typing",payload:{user_id:uid,typing:false}});const {data}=await client.from("dm_messages").select("id,conversation_id,sender_id,body,created_at,attachment_path,attachment_type,reply_to_id").eq("conversation_id",selected).order("created_at",{ascending:true}).limit(200);setMessages(data??[]);if(data?.length)setNewMessageId(data[data.length-1].id)}setBusy(false)}
@@ -160,11 +194,22 @@ export default function MessagesPage(){
  {selected&&status?.request_status==="pending"&&<div style={{padding:16}}>{status.requested_by===uid?"Message request pending acceptance.":"This person wants to connect."}{status.requested_by!==uid&&<button onClick={accept} disabled={busy} style={{marginLeft:12,padding:10}}>Accept request</button>}</div>}
  {selected&&uid&&peerId&&status?.request_status==="accepted"&&!blocked.includes(peerId)&&<div style={{padding:"10px 14px",borderBottom:"1px solid #ffffff24"}}><ConnectCallExperience key={selected} conversationId={selected} userId={uid} peerName={names[peerId]||"Member"} peerAvatar={avatars[peerId]||null}/></div>}
  {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&replyTo&&<div style={{padding:"4px 12px",fontSize:12}}>Replying to: {replyTo.body.slice(0,80)} <button onClick={()=>setReplyTo(null)}>✕</button></div>}
- {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&<div className={"omComposerTools "+(showComposerTools?"omComposerTools--open":"")} style={{padding:"0 12px",display:"flex",gap:8,alignItems:"center"}}><label style={{cursor:"pointer"}}>📎 Attach<input type="file" accept="image/*,video/mp4,video/webm,audio/*,application/pdf,text/plain" hidden disabled={busy} onChange={e=>{const f=e.target.files?.[0];if(f)void upload(f);e.target.value=""}}/></label><button type="button" disabled={busy} onClick={()=>void toggleRecord()}>{recording?"⏹ Stop recording":"🎙 Voice note"}</button></div>}
- {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&<div className={"omComposerSettings "+(showComposerTools?"omComposerSettings--open":"")}><ExpressionSettings/></div>}
+ {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&<div className={"omComposerTools "+(showComposerTools?"omComposerTools--open":"")} style={{padding:"0 12px",display:"flex",gap:8,alignItems:"center"}}><label style={{cursor:"pointer"}}>📎 Attach<input type="file" accept="image/*,video/mp4,video/webm,audio/*,application/pdf,text/plain" hidden disabled={busy} onChange={e=>{const f=e.target.files?.[0];if(f)void upload(f);e.target.value=""}}/></label><button type="button" className="voiceLaunch" disabled={busy} onClick={()=>void toggleRecord()}>{recording?"⏸ Finish":"🎙 Voice note"}</button></div>}
+ {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&(recording||voicePreview)&&<section className="voiceStudio" aria-label="Voice message recorder">
+ <div className="voiceStudioTop"><div><strong>🎙️ Voice message</strong><small>{recording?"Recording privately · tap Finish to preview":"Listen before sending"}</small></div><span className={recording?"voiceLive":""}>{recording?"● REC":"✓ READY"}</span></div>
+ <div className="voiceStudioWave" aria-hidden="true">{voiceLevels.map((h,i)=><i key={i} style={{height:Math.max(5,h*46)+"px"}}/>)}</div>
+ <div className="voiceStudioBottom"><span className="voiceTime">{String(Math.floor(voiceSeconds/60)).padStart(2,"0")}:{String(voiceSeconds%60).padStart(2,"0")}</span>
+ {voicePreview&&<><audio ref={voiceAudio} src={voicePreview.url} preload="metadata" onTimeUpdate={e=>{const a=e.currentTarget;setVoiceProgress(a.duration?a.currentTime/a.duration:0)}} onEnded={()=>setVoicePlaying(false)}/>
+ <button type="button" className="voiceCircle" aria-label={voicePlaying?"Pause preview":"Play preview"} onClick={()=>{const a=voiceAudio.current;if(!a)return;if(a.paused){void a.play();setVoicePlaying(true)}else{a.pause();setVoicePlaying(false)}}}>{voicePlaying?"Ⅱ":"▶"}</button>
+ <input type="range" className="voiceSeek" aria-label="Seek recording" min={0} max={100} value={Math.round(voiceProgress*100)} onChange={e=>{const a=voiceAudio.current;if(a&&Number.isFinite(a.duration))a.currentTime=a.duration*Number(e.target.value)/100;setVoiceProgress(Number(e.target.value)/100)}}/>
+ <button type="button" className="voiceSpeed" onClick={()=>{const next=voiceSpeed===1?1.5:voiceSpeed===1.5?2:1;setVoiceSpeed(next);if(voiceAudio.current)voiceAudio.current.playbackRate=next}}>{voiceSpeed}×</button></>}
+ <button type="button" className="voiceDiscard" onClick={discardVoice}>✕ <span>Discard</span></button>
+ {recording?<button type="button" className="voiceFinish" onClick={()=>void toggleRecord()}>■ Finish</button>:<button type="button" className="voiceSend" disabled={busy} onClick={()=>void sendVoice()}>➤ Send</button>}
+ </div></section>}
+{selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&<div className={"omComposerSettings "+(showComposerTools?"omComposerSettings--open":"")}><ExpressionSettings/></div>}
  {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&<form className="omMessageComposer" onSubmit={send} style={{display:"flex",padding:12,gap:8}}><button type="button" className="omComposerExpand" aria-label="Toggle attachment and sound tools" aria-expanded={showComposerTools} onClick={()=>setShowComposerTools(v=>!v)}>{showComposerTools?"×":"+"}</button><ExpressionKeyboard onInsert={text=>setDraft(prev=>(prev?prev+" ":"")+text)} /><input ref={messageInput} aria-label="Message" maxLength={4000} value={draft} onChange={e=>{setDraft(e.target.value);if(uid&&typingChannel)void typingChannel.send({type:"broadcast",event:"typing",payload:{user_id:uid,typing:!!e.target.value}})}} placeholder="Write a message…" style={{flex:1,minWidth:0,padding:12,borderRadius:12,color:"#111"}}/><button className="omComposerSend" disabled={busy||!draft.trim()} type="submit" style={{padding:"10px 18px",borderRadius:12}} aria-label="Send message">➤ <span>Send</span></button></form>}
  </section></div><ExpressionCelebration trigger={expressionEvent} emoji={expressionEmoji}/>{notice&&<p role="status" style={{color:"#a7f3d0"}}>{notice}</p>}{error&&<p role="alert" style={{color:"#f87171"}}>{error}</p>}
  <p style={{opacity:.7,fontSize:13}}>Messaging foundation preview. Requests require acceptance before messages can be sent. Media, voice notes, replies and reactions are available. Blocking, reporting and request privacy controls are available.</p>
- <style jsx>{`@media(max-width:600px){main>div{grid-template-columns:1fr!important}aside{border-right:0!important;border-bottom:1px solid #64748b55}}`}</style>
+ <style jsx>{`.voiceStudio{margin:12px 12px 4px;padding:17px;border-radius:23px;border:1px solid #40886a;background:linear-gradient(145deg,#163d30,#0d211d);box-shadow:0 12px 40px #0004;color:#f4fff9}.voiceStudioTop,.voiceStudioBottom{display:flex;align-items:center;justify-content:space-between;gap:10px}.voiceStudioTop strong{font-size:15px}.voiceStudioTop small{display:block;font-size:11px;color:#aac9b9;margin-top:3px}.voiceStudioTop>span{font-size:10px;font-weight:800;letter-spacing:.08em;color:#b6efc8}.voiceStudioTop .voiceLive{color:#ff9ca6;animation:voicePulse 1.2s infinite}.voiceStudioWave{height:70px;display:flex;align-items:center;justify-content:center;gap:3px;margin:8px 0}.voiceStudioWave i{display:block;flex:1;max-width:6px;min-width:2px;background:linear-gradient(#8ff3bd,#2fa879);border-radius:9px;transition:height .12s}.voiceStudioBottom{justify-content:flex-start;flex-wrap:wrap}.voiceStudioBottom button{border:1px solid #ffffff35;border-radius:99px;padding:10px 13px;color:#e9fff1;background:#ffffff15;cursor:pointer;font-weight:700}.voiceStudioBottom .voiceCircle{background:#b8f6ce;color:#0b2519;border:0;width:43px;height:43px}.voiceStudioBottom .voiceSend{background:#52d68c;color:#062112;border:0}.voiceStudioBottom .voiceDiscard{color:#ffbbc2}.voiceTime{font-variant-numeric:tabular-nums;font-weight:800;font-size:14px}.voiceSeek{flex:1;min-width:65px;accent-color:#70e5a2}.voiceLaunch{border-radius:999px;padding:9px 13px;background:#205d42;color:#e5ffec;border:1px solid #479c6c;cursor:pointer}.voiceSpeed{white-space:nowrap}@keyframes voicePulse{50%{opacity:.4}}@media(max-width:600px){main>div{grid-template-columns:1fr!important}aside{border-right:0!important;border-bottom:1px solid #64748b55}}`}</style>
  </main>
 }
