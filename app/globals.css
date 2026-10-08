@@ -381,3 +381,12 @@ video {
 }
 @keyframes omKeyboardRise{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.omExpressionPanel{animation:none!important}.omExpressionTrigger{transition:none!important}}
+
+/* Profile editor color choices tint the avatar image frame immediately and persist via profile_accent. */
+.profileAvatar.accent-dark-grey{background:#35383e;border-color:#7a818c}
+.profileAvatar.accent-dark-green{background:#153e2c;border-color:#4b9a72}
+.profileAvatar.accent-white{background:#f5f5f2;border-color:#e5e7eb}
+.profileAvatar.accent-dark-grey::after,.profileAvatar.accent-dark-green::after,.profileAvatar.accent-white::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;mix-blend-mode:color;opacity:.42}
+.profileAvatar.accent-dark-grey::after{background:#666b76}
+.profileAvatar.accent-dark-green::after{background:#26865a}
+.profileAvatar.accent-white::after{background:#ffffff;opacity:.25}
