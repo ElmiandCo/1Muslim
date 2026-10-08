@@ -8,6 +8,7 @@ import { createClient } from "../utils/supabase/client";
 import LiveNowFocus from "./components/LiveNowFocus";
 import StoriesRail from "./components/StoriesRail";
 import TimelinePopup, { type TimelineItem } from "./components/TimelinePopup";
+import VideoOfDayComments from "./components/VideoOfDayComments";
 
 type Path = "easy" | "advanced";
 
@@ -165,6 +166,19 @@ export default function Home() {
             <Link href="/streaming/scheduled" className="ghost">See Scheduled Lives</Link>
           </div>
           <div className="welcomeMeta"><span>● Watch without an account</span><span>·</span><span>Sign in to participate</span></div>
+        </section>
+        <section aria-label="Video of the Day" style={{margin:"22px 0",padding:18,border:"1px solid #b99c55",borderRadius:20,background:"var(--card, #101712)"}}>
+          <div className="eyebrow">WELCOME, MUSLIMS · VIDEO OF THE DAY</div>
+          <h2 style={{margin:"9px 0"}}>The Life of Prophet Muhammad ﷺ</h2>
+          <p style={{opacity:.8,fontSize:13}}>Watch today's featured video about the Prophet ﷺ. Share your reflections below.</p>
+          <div style={{position:"relative",width:"100%",aspectRatio:"16 / 9",overflow:"hidden",borderRadius:14,background:"#000"}}>
+            <iframe title="Video of the Day — The Prophet Muhammad" src="https://www.youtube-nocookie.com/embed/_8yvTAnwbQ8?autoplay=1&mute=1&playsinline=1&rel=0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" style={{width:"100%",height:"100%",border:0}} />
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap",marginTop:12}}>
+            <span style={{fontSize:12,opacity:.75}}>Autoplay starts muted. Tap the player to enable sound.</span>
+            <a href="https://www.youtube.com/watch?v=_8yvTAnwbQ8" target="_blank" rel="noopener noreferrer" style={{color:"#b99c55",fontWeight:700}}>Watch on YouTube ↗</a>
+          </div>
+          <VideoOfDayComments />
         </section>
         <LiveNowFocus mode="carousel" />
         {signedIn && myScheduledLives.length > 0 && <section className="sectionBlock" style={{marginTop:18}}>
