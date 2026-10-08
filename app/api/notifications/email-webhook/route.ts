@@ -15,16 +15,19 @@ export async function POST(req:NextRequest) {
  let payload:{type?:string;record?:{id?:string;recipient_id?:string;type?:string;entity_type?:string;entity_id?:string;title?:string}};
  try{payload=await req.json()}catch{return NextResponse.json({error:"Invalid payload"},{status:400})}
  const record=payload.record;
- if(payload.type!=="INSERT"||!record?.id||!record.recipient_id||!["dm_reply","featured_comment_reply"].includes(record.type??""))return NextResponse.json({ignored:true});
+ if(payload.type!=="INSERT"||!record?.id||!record.recipient_id||!["dm_message","dm_reply","featured_comment_reply","featured_comment","post_comment","recording_comment","xp_tier"].includes(record.type??""))return NextResponse.json({ignored:true});
  const admin=createClient(url,key,{auth:{autoRefreshToken:false,persistSession:false}});
  const {data:notification}=await admin.from("notifications").select("id,recipient_id,type,title,entity_type,entity_id").eq("id",record.id).eq("recipient_id",record.recipient_id).maybeSingle();
  if(!notification)return NextResponse.json({error:"Notification not found"},{status:404});
  const {data:userData,error:userError}=await admin.auth.admin.getUserById(notification.recipient_id);
  if(userError||!userData.user?.email)return NextResponse.json({ignored:true});
+ const preferenceKey=notification.type==="dm_message"?"email_messages":notification.type==="dm_reply"?"email_replies":notification.type==="xp_tier"?"email_xp":"email_comments";
+ const {data:preferences}=await admin.from("notification_preferences").select("email_messages,email_replies,email_comments,email_xp").eq("user_id",notification.recipient_id).maybeSingle();
+ if(preferences&&preferences[preferenceKey as keyof typeof preferences]===false)return NextResponse.json({ignored:true,reason:"User disabled email category"});
  const id=notification.entity_id??"";
  const base=(process.env.NEXT_PUBLIC_SITE_URL||"https://1muslim.vercel.app").replace(/\/$/,"");
- const path=notification.entity_type==="dm_message"?"/messages?message="+encodeURIComponent(id):"/?comment="+encodeURIComponent(id)+"#featured-video-comments";
- const title=notification.type==="dm_reply"?"Someone replied to your message":"Someone replied to your comment";
+ const path=notification.entity_type==="dm_message"?"/messages?message="+encodeURIComponent(id):notification.entity_type==="featured_video_comment"?"/?comment="+encodeURIComponent(id)+"#featured-video-comments":notification.entity_type==="xp_tier"?"/notifications":"/notifications";
+ const title=notification.title||"You have a new notification";
  // Idempotency key prevents duplicate email if the webhook retries.
  const response=await fetch("https://api.resend.com/emails",{
   method:"POST",headers:{"Authorization":"Bearer "+resendKey,"Content-Type":"application/json","Idempotency-Key":"1muslim-reply-"+notification.id},
