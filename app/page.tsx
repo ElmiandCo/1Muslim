@@ -159,8 +159,8 @@ export default function Home() {
         </section>}
 
         <StoriesRail />
+        <LiveNowFocus mode="hero" />
         <PublicGroupMeetings />
-      <LiveNowFocus mode="hero" />
         <section aria-label="Video of the Day" style={{margin:"12px 0 28px",padding:"clamp(12px, 2.5vw, 30px)",border:"1px solid #b99c55",borderRadius:24,background:"var(--card, #101712)",boxShadow:"0 24px 70px rgba(0,0,0,.18)"}}>
           <FeaturedYoutubeVideo />
           <VideoOfDayComments />
