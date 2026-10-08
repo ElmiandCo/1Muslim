@@ -103,7 +103,7 @@ export default function MessagesPage(){
   const seen=seenRef.current;
   const incoming=messages.filter(m=>m.sender_id!==uid);
   const firstOpen=targetMessage?incoming.find(m=>m.id===targetMessage):null;
-  const fresh=firstOpen&&!seen.has(firstOpen.id)?firstOpen:incoming.find(m=>!seen.has(m.id));
+  const fresh=firstOpen&&!seen.has(firstOpen.id)?firstOpen:incoming.find(m=>!seen.has(m.id)&&Date.now()-new Date(m.created_at).getTime()<120000);
   if(fresh){
    const match=fresh.body.match(/🔥|💚|❤️|😂|🤲|✨|🥹|🏆|🌙|🎉|👀|💯|😍|👏|😮|🕊️|⭐|💥|🙌|🌹/u);
    const reaction=reactions.find(x=>x.message_id===fresh.id&&x.user_id!==uid);
