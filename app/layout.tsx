@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./site-text.css";
 import Script from "next/script";
 import XPTracker from "./components/XPTracker";
 import NotificationToaster from "./components/NotificationToaster";
