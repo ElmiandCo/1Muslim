@@ -15,7 +15,7 @@ export async function GET(req:NextRequest){
  if(!["all","members","posts","lives","reports"].includes(category))return NextResponse.json({error:"Invalid category"},{status:400});
  if(member&&!uuid.test(member))return NextResponse.json({error:"Invalid member"},{status:400});
  const limit=25;
- const result:Record<string,unknown>={members:[],posts:[],lives:[],reports:[],warnings:[]};
+ const result:Record<string,unknown>={members:[],posts:[],lives:[],recordings:[],reports:[],warnings:[]};
  const warnings:string[]=[];
  const tasks:Promise<void>[]=[];
  if(category==="all"||category==="members")tasks.push((async()=>{
@@ -33,6 +33,10 @@ export async function GET(req:NextRequest){
   let query=db.from("live_streams").select("id,host_id,title,category,status,started_at,viewer_count").order("started_at",{ascending:false}).limit(limit);
   if(member)query=query.eq("host_id",member);else if(q)query=uuid.test(q)?query.eq("id",q):query.ilike("title","%"+q+"%");
   const {data,error}=await query;if(error)warnings.push("Lives: "+error.message);else result.lives=data||[];
+ })());
+ if((category==="all"||category==="lives")&&member)tasks.push((async()=>{
+  const {data,error}=await db.from("live_recordings").select("id,user_id,title,created_at,duration_seconds").eq("user_id",member).order("created_at",{ascending:false}).limit(limit);
+  if(error)warnings.push("Recordings: "+error.message);else result.recordings=data||[];
  })());
  if(category==="all"||category==="reports")tasks.push((async()=>{
   let query=db.from("moderation_reports").select("id,reporter_id,target_type,target_id,reason,status,created_at").order("created_at",{ascending:false}).limit(limit);
