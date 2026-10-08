@@ -223,3 +223,11 @@ footer{display:flex;flex-direction:column;gap:6px;padding:30px;color:#66726a;fon
   .siteNav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
   .muslimMobileDock{position:fixed!important;top:auto!important;bottom:calc(8px + env(safe-area-inset-bottom,0px))!important}
 }
+
+/* Homepage uses the same global mobile dock as every other page. */
+@media(max-width:700px){
+  .app>.sidebar{display:none}
+  .app .mobileTop{display:none!important}
+  .app .feed{padding-bottom:calc(105px + env(safe-area-inset-bottom,0px))}
+  .app .feedHeader{position:relative}
+}
