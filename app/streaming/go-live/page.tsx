@@ -746,6 +746,23 @@ export default function GoLivePage() {
 
   useEffect(() => { if (!live || !liveStreamIdRef.current) return; const room = `1muslim-live-${liveStreamIdRef.current}`; const update = async () => { try { const response = await fetch("/api/livekit/viewer-count",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room})}); const data=await response.json(); if(response.ok) setViewers(Number(data.viewerCount ?? 0)); } catch {} }; void update(); const timer=window.setInterval(update,5000); return()=>window.clearInterval(timer); }, [live]);
 
+  // Store audience snapshots during a live so the recap can display historical peaks.
+  useEffect(()=>{
+    if(!live)return;
+    const sample=async()=>{
+      const id=liveStreamIdRef.current;
+      if(!id)return;
+      try{
+        const room=roomRef.current;
+        const count=room?room.remoteParticipants.size:Math.max(0,viewers);
+        await fetch("/api/live-analytics",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({streamId:id,viewers:count})});
+      }catch{}
+    };
+    void sample();
+    const timer=window.setInterval(()=>void sample(),15000);
+    return()=>window.clearInterval(timer);
+  },[live,viewers]);
+
   const endLive = () => {
     setLive(false); setViewers(0); setShowHostIntro(false);
     const supabase = createClient();
