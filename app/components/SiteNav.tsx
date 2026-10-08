@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createClient } from "../../utils/supabase/client";
 import ProfileAvatar from "./ProfileAvatar";
@@ -52,6 +53,8 @@ function MenuLink({ href, label, ar, onClick }: { href: string; label: ReactNode
 }
 
 export default function SiteNav({ compact = false }: { compact?: boolean }) {
+  const pathname = usePathname();
+  const [createOpen, setCreateOpen] = useState(false);
   const [user, setUser] = useState<NavUser | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -137,6 +140,16 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       </div>
     </nav>
 
+    <nav className="muslimMobileDock" aria-label="Mobile primary navigation">
+      <div className="muslimDockShell">
+        <Link href="/" className={pathname === "/" ? "dockItem selected" : "dockItem"} aria-label="Home"><span className="dockIcon">⌂</span><small>Home</small></Link>
+        <Link href="/streaming" className={pathname.startsWith("/streaming") ? "dockItem selected" : "dockItem"} aria-label="Live"><span className="dockIcon">◉</span><small>Live</small></Link>
+        <Link href={user ? "/profile" : "/auth"} className="dockCenter" aria-label={user ? "My profile" : "Sign in to your profile"}><img src="/1muslim-logo.svg" alt="" /><span className="dockCenterText">Profile</span></Link>
+        <Link href="/#paths" className="dockItem" aria-label="Learn"><span className="dockIcon">▤</span><small>Learn</small></Link>
+        <button type="button" className="dockItem" aria-label="Create content" aria-expanded={createOpen} onClick={() => setCreateOpen(!createOpen)}><span className="dockIcon">＋</span><small>Create</small></button>
+      </div>
+      {createOpen && <div className="dockCreateMenu" role="menu"><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>🔴 Go Live</Link><Link href="/community" onClick={() => setCreateOpen(false)}>✦ Community</Link><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>◷ Schedule a Live</Link></div>}
+    </nav>
     <div className="mobileNavActions"><Link href="/">Home</Link><Link href="/streaming"><span className="liveDot">●</span> Live</Link></div>
 
     {loadingAuth ? <span className="authNav authLoading">Account</span> : user ? <div className="authAccount">
