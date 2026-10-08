@@ -216,3 +216,10 @@ footer{display:flex;flex-direction:column;gap:6px;padding:30px;color:#66726a;fon
   .mobileTop .homeLogo.compactLogo img{width:100%;height:100%;max-height:84px;object-fit:contain;object-position:left center;transform:none}
   .mobileTop .themeToggle{flex:0 0 auto}
 }
+
+/* Fix mobile dock pinned at top: backdrop-filter on sticky siteNav creates
+   a containing block for its fixed-position descendant in mobile Safari. */
+@media(max-width:700px){
+  .siteNav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  .muslimMobileDock{position:fixed!important;top:auto!important;bottom:calc(8px + env(safe-area-inset-bottom,0px))!important}
+}
