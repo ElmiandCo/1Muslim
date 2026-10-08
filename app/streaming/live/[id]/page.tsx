@@ -57,7 +57,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
             <>
               <LiveKitViewer roomName={stream.room_name} streamId={stream.id} />
               <div style={{padding:18,display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(320px,.65fr)",gap:16}}>
-                <div><strong>🔴 Live now</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>Watch and participate in the conversation.</div><Link href="/streaming" style={{display:"inline-block",marginTop:12,color:"#cbd8ce",fontSize:12}}>← All streaming</Link></div>
+                <div><strong>🔴 Live now</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>Watch and participate in the conversation.</div><div style={{display:"flex",gap:14,flexWrap:"wrap",marginTop:12}}><Link href="/streaming" style={{color:"#cbd8ce",fontSize:12}}>← All streaming</Link><Link href={"/profile/"+stream.host_id} style={{color:"#d6e7b8",fontSize:12}}>Host profile</Link><Link href={"/messages?to="+stream.host_id} style={{color:"#d6e7b8",fontSize:12}}>💬 Message host</Link></div></div>
                 <LiveChat streamId={stream.id} hostId={stream.host_id} />
               </div>
             </>
