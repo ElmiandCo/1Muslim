@@ -319,3 +319,27 @@ video {
 .omExpressionHero{position:absolute;left:50%;top:48%;font-size:clamp(72px,17vw,150px);filter:drop-shadow(0 8px 24px #0009) drop-shadow(0 0 20px #d8b86499);animation:omHeroBurst 1.35s cubic-bezier(.2,.8,.2,1) forwards}
 .omExpressionParticle{position:absolute;filter:drop-shadow(0 2px 8px #0009);animation:omParticleBurst 1.3s ease-out both}
 @media(prefers-reduced-motion:reduce){.omExpressionStage{display:none}}
+
+/* 1Muslim messenger: message-focused delight rather than constant full-screen effects. */
+.omMessengerShell{background:linear-gradient(145deg,#0c201624,#0b172211);box-shadow:0 18px 60px #0002}
+.omMessengerHeading{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;letter-spacing:-.04em}
+.omMessagesFeed{background:radial-gradient(ellipse at 50% 0%,#1c4b3930,transparent 60%)}
+.omMessageBubble{position:relative;box-shadow:0 5px 16px #0003;transition:transform .2s ease,box-shadow .2s ease;line-height:1.5}
+.omMessageBubble--mine{background:linear-gradient(135deg,#086c62,#0d817e 58%,#076f83);border:1px solid #7be2bd40;border-bottom-right-radius:5px!important}
+.omMessageBubble--theirs{background:linear-gradient(135deg,#303c49,#263849);border:1px solid #c6d8e226;border-bottom-left-radius:5px!important}
+.omMessageRow:hover .omMessageBubble{transform:translateY(-1px);box-shadow:0 8px 22px #0005}
+.omReactionRail{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-start;margin-top:6px}
+.omMessageRow--mine .omReactionRail{justify-content:flex-end}
+.omReactionChip{border:1px solid #a4b7a03d;border-radius:999px;padding:5px 8px!important;background:linear-gradient(145deg,#24382c,#182920);color:#f7f2e4;min-height:29px;font-size:12px;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.omReactionChip:hover,.omReactionChip:focus-visible{transform:translateY(-3px) scale(1.12);border-color:#e3c26c;box-shadow:0 5px 14px #0004}
+.omReactionChip:active{transform:scale(.87)}
+.omReactionChip--active{background:linear-gradient(135deg,#776128,#365d3e);border-color:#d9bd70;box-shadow:0 0 12px #d9bd7038}
+.omReactionReply{font-weight:700;color:#e3cf95}
+.omUnreadBadge{display:inline-flex;padding:8px 13px;border-radius:999px;border:1px solid #b99c5570;background:#b99c551c;color:var(--text);font-size:12px;font-weight:750}
+.omNotificationActions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}
+.omNotificationActions button{padding:9px 13px;border:1px solid #b99c5580;border-radius:999px;background:var(--panel2);color:var(--text);cursor:pointer}
+.omNotificationActions button:disabled{opacity:.45;cursor:default}
+.omUnreadDot{position:absolute;right:16px;top:16px;width:9px;height:9px;border-radius:50%;background:#e7c36e;box-shadow:0 0 12px #e7c36e80}
+@keyframes omNotificationWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-5deg)}80%{transform:rotate(4deg)}}
+@media(max-width:600px){.omMessengerShell{grid-template-columns:1fr!important}.omReactionRail{gap:3px}.omReactionChip{font-size:11px;padding:5px 6px!important}}
+@media(prefers-reduced-motion:reduce){.omReactionChip,.omMessageBubble,.notificationRow{transition:none!important}.omReactionChip:hover,.omMessageRow:hover .omMessageBubble,.notificationRow:hover{transform:none!important}.notificationRow.unread .notificationIcon{animation:none!important}}
