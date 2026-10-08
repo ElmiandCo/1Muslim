@@ -1,0 +1,7 @@
+/* Apply class badgeEmblem to the wrapper of an image. */
+.badgeEmblem{position:relative;display:inline-grid;place-items:center;isolation:isolate;overflow:hidden;border-radius:50%;animation:badgeFloat 5s ease-in-out infinite}
+.badgeEmblem img{display:block;width:100%;height:auto;object-fit:contain}
+.badgeEmblem::after{content:"";position:absolute;inset:-70%;pointer-events:none;background:linear-gradient(110deg,transparent 43%,rgba(255,255,255,.04) 47%,rgba(255,248,216,.5) 50%,rgba(255,255,255,.04) 53%,transparent 57%);transform:translateX(-110%) rotate(8deg);animation:badgeShine 5.5s ease-in-out infinite;mix-blend-mode:screen}
+@keyframes badgeFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes badgeShine{0%,18%{transform:translateX(-110%) rotate(8deg)}45%,100%{transform:translateX(110%) rotate(8deg)}}
+@media(prefers-reduced-motion:reduce){.badgeEmblem,.badgeEmblem::after{animation:none}}
