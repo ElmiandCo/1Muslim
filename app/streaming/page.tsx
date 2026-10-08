@@ -235,7 +235,8 @@ const openAdminEditor = (video?: Video) => {
 
   return (
     <main className="streamingPage">
-      <style jsx>{`
+      <style jsx>{`@keyframes oneMuslimWaitingButterfly{0%,100%{transform:translateY(4px) rotate(-2deg)}50%{transform:translateY(-9px) rotate(2deg)}}
+
         .streamingPage{min-height:100vh;background:var(--bg);color:var(--text)}.topicLiveList{display:grid;gap:22px}.topicLiveSection{border:1px solid #1b241f;border-radius:20px;background:linear-gradient(145deg,#0d130f,#080d09);padding:15px}.topicLiveHead{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 13px}.topicLiveHead h3{font-size:18px;margin:5px 0 3px;letter-spacing:-.035em}.topicLiveHead p{font-size:10px;color:#748078;margin:0}.topicGoLive{white-space:nowrap;text-decoration:none;border:1px solid #354238;border-radius:999px;padding:9px 12px;color:#d6e7b8;background:#101811;font-size:10px;font-weight:800}.topicGoLive:hover{background:#182219;border-color:#61785a}@media(max-width:620px){.topicLiveHead{align-items:flex-start;flex-direction:column}.topicGoLive{width:100%;text-align:center}}
         .streamTop{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:16px max(22px,calc((100vw - 1180px)/2));border-bottom:1px solid #1b241f;background:rgba(5,8,6,.9);backdrop-filter:blur(18px)}
         .brand{display:flex;align-items:center;gap:10px;font-weight:850;letter-spacing:-.04em}
@@ -348,7 +349,6 @@ const openAdminEditor = (video?: Video) => {
     </div>
   </div>
   <ReconnectTrivia mode="waiting" eventKey={`waiting-${liveStreams.length}`} />
-  <style jsx>{`@keyframes oneMuslimWaitingButterfly{0%,100%{transform:translateY(4px) rotate(-2deg)}50%{transform:translateY(-9px) rotate(2deg)}}`}</style>
 </div>}
         </section>
 
