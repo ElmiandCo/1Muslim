@@ -637,6 +637,8 @@ export default function GoLivePage() {
       startRecording();
       setLive(true);
       setShowHostIntro(true);
+      // Notify administrators only after the broadcast is actually connected.
+      void fetch("/api/live-alert", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ streamId: liveStreamId }) }).catch((error) => console.warn("Live alert request failed", error));
       setViewers(0);
     } catch (err) {
       roomRef.current?.disconnect();
