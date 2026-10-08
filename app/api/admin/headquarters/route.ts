@@ -12,10 +12,10 @@ export async function GET(req:NextRequest){
  const q=clean(req.nextUrl.searchParams.get("q")||"").replace(/^@/,"");
  const category=req.nextUrl.searchParams.get("category")||"all";
  const member=req.nextUrl.searchParams.get("member")||"";
- if(!["all","members","posts","lives","reports"].includes(category))return NextResponse.json({error:"Invalid category"},{status:400});
+ if(!["all","members","posts","comments","lives","recordings","reports"].includes(category))return NextResponse.json({error:"Invalid category"},{status:400});
  if(member&&!uuid.test(member))return NextResponse.json({error:"Invalid member"},{status:400});
  const limit=25;
- const result:Record<string,unknown>={members:[],posts:[],lives:[],recordings:[],reports:[],warnings:[]};
+ const result:Record<string,unknown>={members:[],posts:[],comments:[],lives:[],recordings:[],reports:[],warnings:[]};
  const warnings:string[]=[];
  const tasks:Promise<void>[]=[];
  if(category==="all"||category==="members")tasks.push((async()=>{
@@ -29,12 +29,18 @@ export async function GET(req:NextRequest){
   if(member)query=query.eq("user_id",member);else if(q)query=uuid.test(q)?query.eq("id",q):query.ilike("body","%"+q+"%");
   const {data,error}=await query;if(error)warnings.push("Posts: "+error.message);else result.posts=data||[];
  })());
+ if(category==="all"||category==="comments")tasks.push((async()=>{
+  let query=db.from("verse_comments").select("id,user_id,verse_key,body,created_at").order("created_at",{ascending:false}).limit(limit);
+  if(member)query=query.eq("user_id",member);
+  else if(q){const match=q.match(/^(\\d{1,3}):(\\d{1,3})$/);query=match?query.eq("verse_key",q):uuid.test(q)?query.eq("id",q):query.ilike("body","%"+q+"%");}
+  const {data,error}=await query;if(error)warnings.push("Verse comments: "+error.message);else result.comments=data||[];
+ })());
  if(category==="all"||category==="lives")tasks.push((async()=>{
   let query=db.from("live_streams").select("id,host_id,title,category,status,started_at,viewer_count").order("started_at",{ascending:false}).limit(limit);
   if(member)query=query.eq("host_id",member);else if(q)query=uuid.test(q)?query.eq("id",q):query.ilike("title","%"+q+"%");
   const {data,error}=await query;if(error)warnings.push("Lives: "+error.message);else result.lives=data||[];
  })());
- if((category==="all"||category==="lives")&&member)tasks.push((async()=>{
+ if((category==="all"||category==="lives"||category==="recordings")&&member)tasks.push((async()=>{
   const {data,error}=await db.from("live_recordings").select("id,user_id,title,created_at,duration_seconds").eq("user_id",member).order("created_at",{ascending:false}).limit(limit);
   if(error)warnings.push("Recordings: "+error.message);else result.recordings=data||[];
  })());
