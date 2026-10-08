@@ -23,7 +23,7 @@ export function ExpressionCelebration({trigger,emoji="✨"}:{trigger:number;emoj
  const [enabled,setEnabled]=useState(true);
  useEffect(()=>{try{setEnabled(localStorage.getItem("1muslim-expression-effects")!=="off")}catch{}},[trigger]);
  if(!trigger||!enabled)return null;
- return <div key={trigger} className="omScreenCelebration" aria-hidden="true">{Array.from({length:16},(_,i)=><span key={i} style={{left:`${(i*41)%100}%`,animationDelay:`${(i%6)*.065}s`}}>{emoji}</span>)}</div>;
+ return <div key={trigger} className="omExpressionStage" aria-hidden="true"><div className="omExpressionHalo"/><div className="omExpressionHero">{emoji}</div>{Array.from({length:22},(_,i)=><span className="omExpressionParticle" key={i} style={{left:`${50+Math.cos(i*2.4)*((i%4)*7+12)}%`,top:`${48+Math.sin(i*2.4)*((i%4)*7+12)}%`,animationDelay:`${(i%6)*.035}s`,fontSize:`${16+(i%4)*7}px`}}>{i%5===0?"✦":emoji}</span>)}</div>;
 }
 export function ExpressionSettings(){
  const [sound,setSound]=useState(false),[effects,setEffects]=useState(true);
