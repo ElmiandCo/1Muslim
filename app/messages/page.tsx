@@ -10,6 +10,9 @@ export default function MessagesPage(){
  const [client] = useState(()=>createClient());
  const [uid,setUid]=useState<string|null>(null);
  const [threads,setThreads]=useState<Thread[]>([]);
+ const [names,setNames]=useState<Record<string,string>>({});
+ const [search,setSearch]=useState("");
+ const [people,setPeople]=useState<{id:string;display_name:string;username:string|null}[]>([]);
  const [selected,setSelected]=useState<string|null>(null);
  const [messages,setMessages]=useState<Message[]>([]);
  const [draft,setDraft]=useState("");
@@ -32,7 +35,7 @@ export default function MessagesPage(){
  useEffect(()=>{const to=new URLSearchParams(window.location.search).get("to");if(to&&/^[0-9a-f-]{36}$/i.test(to)){setRecipient(to);setInitialRecipient(to)}},[]);
  useEffect(()=>{let active=true;client.auth.getUser().then(({data})=>{if(active){setUid(data.user?.id??null);setLoadingAuth(false)}});return()=>{active=false}},[client]);
  useEffect(()=>{if(!uid)return;let active=true;
- const load=async()=>{const {data,error}=await client.from("dm_participants").select("conversation_id,user_id").order("joined_at",{ascending:false});if(active){if(error)setError(error.message);else setThreads((data??[]).filter(p=>p.user_id!==uid))}};
+ const load=async()=>{const {data,error}=await client.from("dm_participants").select("conversation_id,user_id").order("joined_at",{ascending:false});if(active){if(error)setError(error.message);else {const peers=(data??[]).filter(p=>p.user_id!==uid);setThreads(peers);const ids=[...new Set(peers.map(p=>p.user_id))];if(ids.length){const {data:profiles}=await client.from("profiles").select("id,display_name,username").in("id",ids);if(active)setNames(Object.fromEntries((profiles??[]).map(p=>[p.id,p.display_name||p.username||"Member"])))}}}};
  load();const timer=window.setInterval(()=>{void load()},5000);return()=>{active=false;window.clearInterval(timer)};
  },[client,uid]);
  useEffect(()=>{if(!selected)return;let active=true;setMessages([]);setReactions([]);setMediaUrls({});setReplyTo(null);setStatus(null);
@@ -46,7 +49,7 @@ export default function MessagesPage(){
  presence.on("broadcast",{event:"typing"},({payload})=>{if(payload.user_id!==uid){setPeerTyping(!!payload.typing);if(payload.typing)window.setTimeout(()=>setPeerTyping(false),3500)}});
  presence.subscribe(async state=>{if(state==="SUBSCRIBED"&&uid)await presence.track({user_id:uid,online_at:new Date().toISOString()})});
  setTypingChannel(presence);
- const loadReactions=async()=>{const {data}=await client.from("dm_reactions").select("message_id,user_id,emoji").in("message_id",messages.filter(m=>m.conversation_id===selected).map(m=>m.id).concat(["00000000-0000-0000-0000-000000000000"]));if(active)setReactions(data??[])};
+
  const load=async()=>{const {data,error}=await client.from("dm_messages").select("id,conversation_id,sender_id,body,created_at,attachment_path,attachment_type,reply_to_id").eq("conversation_id",selected).is("deleted_at",null).order("created_at",{ascending:true}).limit(200);if(active){if(error)setError(error.message);else {setMessages(data??[]);void markRead();
  const ids=(data??[]).map(m=>m.id);
  if(ids.length){const {data:rx}=await client.from("dm_reactions").select("message_id,user_id,emoji").in("message_id",ids);if(active)setReactions(rx??[])}
@@ -62,6 +65,7 @@ export default function MessagesPage(){
  const open=async()=>{const {data,error}=await client.rpc("dm_start_conversation",{other_user:initialRecipient});if(!canceled){if(error)setError(error.message);else if(data){setSelected(data);setRecipient("")}setInitialRecipient(null)}};
  void open();return()=>{canceled=true}
  },[client,uid,initialRecipient]);
+ useEffect(()=>{if(!uid||search.trim().length<2){setPeople([]);return}let active=true;const timer=setTimeout(async()=>{const q=search.trim().replace(/[%_,]/g,"");const {data}=await client.from("profiles").select("id,display_name,username").or(`display_name.ilike.%${q}%,username.ilike.%${q}%`).neq("id",uid).limit(8);if(active)setPeople(data??[])},350);return()=>{active=false;clearTimeout(timer)}},[client,uid,search]);
  async function start(){setError("");setBusy(true);try{const {data,error}=await client.rpc("dm_start_conversation",{other_user:recipient.trim()});if(error)throw error;setSelected(data);setStatus(null);setRecipient("");const {data:rows}=await client.from("dm_participants").select("conversation_id,user_id");setThreads((rows??[]).filter(p=>p.user_id!==uid));}catch(e){setError(e instanceof Error?e.message:"Unable to start conversation")}finally{setBusy(false)}}
  async function accept(){if(!selected)return;setBusy(true);const {error}=await client.rpc("dm_accept_conversation",{cid:selected});if(error)setError(error.message);else setStatus(s=>s?{...s,request_status:"accepted"}:s);setBusy(false)}
  async function upload(file:File){if(!selected||!uid||busy)return;
@@ -88,10 +92,10 @@ export default function MessagesPage(){
  <Link href="/">← Home</Link><h1 style={{fontSize:32,margin:"18px 0"}}>Messages</h1>
  <div style={{display:"grid",gridTemplateColumns:"minmax(220px,1fr) minmax(0,2fr)",minHeight:560,border:"1px solid #64748b55",borderRadius:18,overflow:"hidden"}}>
  <aside style={{padding:18,borderRight:"1px solid #64748b55"}}>
- <h2 style={{fontSize:18}}>Conversations</h2><label htmlFor="recipient">Start a conversation (user ID)</label>
+ <h2 style={{fontSize:18}}>Conversations</h2><label htmlFor="member-search">Find a member</label><input id="member-search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name or @username" style={{width:"100%",padding:12,margin:"10px 0",borderRadius:10,color:"#111"}}/>{people.map(person=><button key={person.id} onClick={()=>{setRecipient(person.id);setSearch("");setPeople([])}} style={{display:"block",width:"100%",padding:10,marginBottom:4,textAlign:"left",borderRadius:8}}>{person.display_name} {person.username?"@"+person.username:""}</button>)}<label htmlFor="recipient">Selected member ID</label>
  <input id="recipient" value={recipient} onChange={e=>setRecipient(e.target.value)} placeholder="Recipient UUID" style={{width:"100%",padding:12,margin:"10px 0",borderRadius:10,color:"#111"}}/>
  <button disabled={busy||!recipient.trim()} onClick={start} style={{padding:10,borderRadius:10}}>New conversation</button>
- <div style={{marginTop:20}}>{Array.from(new Set(threads.map(t=>t.conversation_id))).map(cid=><button key={cid} onClick={()=>setSelected(cid)} style={{display:"block",width:"100%",padding:14,marginBottom:8,textAlign:"left",borderRadius:12,background:selected===cid?"#155e75":"#334155",color:"white"}}>💬 {threads.find(t=>t.conversation_id===cid)?.user_id.slice(0,8)}…</button>)}</div>
+ <div style={{marginTop:20}}>{Array.from(new Set(threads.map(t=>t.conversation_id))).map(cid=><button key={cid} onClick={()=>setSelected(cid)} style={{display:"block",width:"100%",padding:14,marginBottom:8,textAlign:"left",borderRadius:12,background:selected===cid?"#155e75":"#334155",color:"white"}}>💬 {names[threads.find(t=>t.conversation_id===cid)?.user_id??""]||"Member"}</button>)}</div>
  </aside><section style={{display:"flex",flexDirection:"column",minWidth:0}}>
  <header style={{padding:18,borderBottom:"1px solid #64748b55"}}>{selected?<>Private conversation <span style={{fontSize:12,opacity:.75}}>{peerOnline?"🟢 Online":"Offline"} {peerTyping?" · typing…":""}</span></>:"Choose a conversation"}</header>
  <div aria-live="polite" style={{flex:1,padding:20,overflowY:"auto",maxHeight:480}}>{messages.filter(m=>m.conversation_id===selected).map(m=><div key={m.id} style={{margin:"10px 0",textAlign:m.sender_id===uid?"right":"left"}}><span style={{display:"inline-block",padding:"12px 16px",borderRadius:16,maxWidth:"85%",overflowWrap:"anywhere",background:m.sender_id===uid?"#0e7490":"#334155",color:"white"}}>{m.reply_to_id&&<div style={{fontSize:12,opacity:.75,marginBottom:6,borderLeft:"2px solid white",paddingLeft:8}}>↪ {messages.find(x=>x.id===m.reply_to_id)?.body??"Earlier message"}</div>}{m.body}{m.attachment_path&&mediaUrls[m.attachment_path]&&<div style={{marginTop:8}}>{m.attachment_type==="image"?<img src={mediaUrls[m.attachment_path]} alt="Message attachment" style={{maxWidth:"100%",maxHeight:280,borderRadius:8}}/>:m.attachment_type==="video"?<video controls src={mediaUrls[m.attachment_path]} style={{maxWidth:"100%",maxHeight:280}}/>:m.attachment_type==="audio"?<audio controls src={mediaUrls[m.attachment_path]}/>:<a href={mediaUrls[m.attachment_path]} target="_blank" rel="noopener noreferrer" style={{textDecoration:"underline"}}>Open attachment</a>}</div>}</span><div style={{fontSize:12}}><button onClick={()=>setReplyTo(m)} aria-label="Reply" style={{padding:4}}>↩ Reply</button>{["❤️","👍","😂"].map(emoji=><button key={emoji} onClick={()=>void react(m.id,emoji)} style={{padding:4}}>{emoji} {reactions.filter(r=>r.message_id===m.id&&r.emoji===emoji).length||""}</button>)}</div>{m.sender_id===uid&&<small style={{display:"block",opacity:.65}}>{peerReadAt&&new Date(peerReadAt)>=new Date(m.created_at)?"✓✓ Read":"✓ Sent"}</small>}</div>)}</div>
