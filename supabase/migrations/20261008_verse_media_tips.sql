@@ -16,3 +16,10 @@ alter table public.verse_media_tips enable row level security;
 create policy "Read published verse media tips" on public.verse_media_tips for select to anon,authenticated using (published=true);
 -- Publishing/editing requires an admin-only server endpoint with verified authorization.
 -- No direct client insert/update/delete policies.
+
+-- Reuse the existing is_1muslim_admin() authorization function.
+-- Admins may read drafts and manage resources; public users see published rows only.
+create policy "Admins read all verse media tips" on public.verse_media_tips for select to authenticated using (public.is_1muslim_admin());
+create policy "Admins create verse media tips" on public.verse_media_tips for insert to authenticated with check (public.is_1muslim_admin());
+create policy "Admins update verse media tips" on public.verse_media_tips for update to authenticated using (public.is_1muslim_admin()) with check (public.is_1muslim_admin());
+create policy "Admins delete verse media tips" on public.verse_media_tips for delete to authenticated using (public.is_1muslim_admin());
