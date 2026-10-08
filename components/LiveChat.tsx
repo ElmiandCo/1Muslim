@@ -110,7 +110,7 @@ export default function LiveChat({ streamId, hostId }: { streamId: string; hostI
         {messages.length ? messages.map((message) => {
           const isHost = message.sender_id === hostId;
           const isMuted = mutedUsers.has(message.sender_id);
-          const avatar = <ProfileAvatar name={displayName(message)} gender={message.profile?.gender} avatarGender={message.profile?.avatar_gender} avatarPackage={message.profile?.avatar_package} avatarConfig={message.profile?.avatar_config} accent={message.profile?.profile_accent ?? "emerald"} size="sm" />;
+          const avatar = <ProfileAvatar name={displayName(message)} gender={message.profile?.gender} avatarGender={message.profile?.avatar_gender} avatarPackage={message.profile?.avatar_package} avatarConfig={message.profile?.avatar_config} accent={message.profile?.profile_accent ?? "emerald"} size="sm" profileId={message.sender_id} />;
           return <div className="message" key={message.id}>
             <div className="avatar">{avatar}</div>
             <div className="bubble">
