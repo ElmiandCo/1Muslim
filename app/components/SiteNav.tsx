@@ -58,6 +58,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const [user, setUser] = useState<NavUser | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [anyoneLive, setAnyoneLive] = useState(false);
   const [openMenu, setOpenMenu] = useState<"explore" | "live" | "mobile" | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
 
@@ -98,6 +99,23 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   }, [user?.id]);
 
   useEffect(() => {
+    const supabase = createClient();
+    let mounted = true;
+    const checkLive = async () => {
+      const { data, error } = await supabase.from("live_streams")
+        .select("id").eq("status", "live")
+        .gte("last_heartbeat_at", new Date(Date.now() - 60_000).toISOString())
+        .limit(1);
+      if (mounted && !error) setAnyoneLive((data?.length ?? 0) > 0);
+    };
+    void checkLive();
+    const interval = window.setInterval(() => void checkLive(), 10000);
+    const onVisible = () => { if (document.visibilityState === "visible") void checkLive(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { mounted = false; window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
+  }, []);
+
+  useEffect(() => {
     const outside = (e: PointerEvent) => { if (!navRef.current?.contains(e.target as Node)) setOpenMenu(null); };
     const escape = (e: KeyboardEvent) => { if (e.key === "Escape") setOpenMenu(null); };
     document.addEventListener("pointerdown", outside);
@@ -116,7 +134,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const label = (text: string, ar: string) => user?.arabic_terms_enabled ? <>{text} <span className="arabicNav">{ar}</span></> : text;
 
   return <header ref={navRef} className={compact ? "siteNav compact" : "siteNav"}>
-    <Link href="/" className="siteBrand" aria-label="1Muslim Home"><img src="/assets/1muslim-live-logo.PNG" alt="1Muslim.Live" className="siteLogo premiumDesktopLogo" /></Link>
+    <Link href="/" className="siteBrand logoBrand" aria-label="1Muslim.Live Home"><img src="/assets/1muslim-live-logo.PNG" alt="1Muslim.Live" className="premiumLogo" /></Link>
 
     <nav className="siteNavLinks" aria-label="Primary navigation">
       <Link href="/" className="siteHomeLink">Home</Link>
@@ -132,7 +150,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       </div>
 
       <div className="navMenuWrap">
-        <button type="button" className={`navMenuButton liveMenuButton ${openMenu === "live" ? "isOpen" : ""}`} aria-expanded={openMenu === "live"} onClick={() => setOpenMenu(openMenu === "live" ? null : "live")}><span className="liveDot">●</span> Live <span>⌄</span></button>
+        <button type="button" className={`navMenuButton liveMenuButton ${openMenu === "live" ? "isOpen" : ""}`} aria-expanded={openMenu === "live"} onClick={() => setOpenMenu(openMenu === "live" ? null : "live")}><span className={anyoneLive ? "liveSignal isLive" : "liveSignal"} aria-hidden="true" /> Live {anyoneLive && <span className="onAirLabel">ON AIR</span>} <span>⌄</span></button>
         {openMenu === "live" && <div className="navDropdown liveDropdown">
           <span className="navDropdownLabel">LIVE</span>
           {liveItems.map(item => <MenuLink key={item.href} href={item.href} label={label(item.label, item.ar)} onClick={closeMenu} />)}
@@ -143,14 +161,14 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
     <nav className="muslimMobileDock" aria-label="Mobile primary navigation">
       <div className="muslimDockShell">
         <Link href="/" className={pathname === "/" ? "dockItem selected" : "dockItem"} aria-label="Home"><span className="dockIcon">⌂</span><small>Home</small></Link>
-        <Link href="/streaming" className={pathname.startsWith("/streaming") ? "dockItem selected" : "dockItem"} aria-label="Live"><span className="dockIcon">◉</span><small>Live</small></Link>
+        <Link href="/streaming" className={pathname.startsWith("/streaming") ? "dockItem selected" : "dockItem"} aria-label="Live"><span className="dockIcon">◉{anyoneLive && <span className="dockLiveBeacon" aria-hidden="true" />}</span><small>{anyoneLive ? "On Air" : "Live"}</small></Link>
         <Link href={user ? "/profile" : "/auth"} className="dockCenter" aria-label={user ? "My profile" : "Sign in to your profile"}><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">Profile</span></Link>
         <Link href="/#paths" className="dockItem" aria-label="Learn"><span className="dockIcon">▤</span><small>Learn</small></Link>
         <button type="button" className="dockItem" aria-label="Create content" aria-expanded={createOpen} onClick={() => setCreateOpen(!createOpen)}><span className="dockIcon">＋</span><small>Create</small></button>
       </div>
       {createOpen && <div className="dockCreateMenu" role="menu"><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>🔴 Go Live</Link><Link href="/community" onClick={() => setCreateOpen(false)}>✦ Community</Link><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>◷ Schedule a Live</Link></div>}
     </nav>
-    <div className="mobileNavActions"><Link href="/">Home</Link><Link href="/streaming"><span className="liveDot">●</span> Live</Link></div>
+    <div className="mobileNavActions"><Link href="/">Home</Link><Link href="/streaming"><span className={anyoneLive ? "liveSignal isLive" : "liveSignal"} /> {anyoneLive ? "On Air" : "Live"}</Link></div>
 
     {loadingAuth ? <span className="authNav authLoading">Account</span> : user ? <div className="authAccount">
       <Link href="/notifications" className="notificationBell" aria-label="Notifications">🔔{unreadCount > 0 && <span>{unreadCount > 99 ? "99+" : unreadCount}</span>}</Link>
@@ -183,8 +201,20 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       <div className="mobileMenuFooter"><ThemeToggle/>{user ? <button type="button" className="mobileMenuSignOut" onClick={signOut}>Sign out</button> : <Link href="/auth" onClick={closeMenu}>Sign in</Link>}</div>
     </div>}
     <style jsx>{`
-      :global(.premiumDesktopLogo){width:clamp(132px,15vw,192px);height:48px;max-width:100%;object-fit:contain;object-position:left center;transform:none;border-radius:4px}
-      @media(max-width:700px){:global(.premiumDesktopLogo){width:132px;height:40px}}
+      .logoBrand{display:flex;align-items:center;flex:0 1 auto;min-width:0;max-width:190px;overflow:hidden}
+      .premiumLogo{display:block;width:clamp(122px,14vw,182px);height:46px;max-width:100%;object-fit:contain;object-position:left center;border-radius:3px}
+      @media(max-width:700px){.logoBrand{max-width:138px}.premiumLogo{width:138px;height:40px}}
+      .newBrand{display:inline-flex;align-items:center;gap:7px;text-decoration:none;white-space:nowrap;color:inherit}
+      .brandMark{display:inline-flex;align-items:center;justify-content:center;position:relative;width:37px;height:37px;border:1px solid rgba(194,235,185,.6);border-radius:13px;background:linear-gradient(135deg,#172f23,#07110c);box-shadow:inset 0 1px rgba(255,255,255,.14),0 4px 18px rgba(0,0,0,.18)}
+      .brandOne{font-weight:950;font-size:25px;line-height:1;color:#d9f2c7;letter-spacing:-.09em;transform:translateX(-3px)}
+      .brandCrescent{position:absolute;right:3px;top:4px;font-size:12px;color:#b4d7a3}
+      .brandWord{font-size:clamp(17px,1.7vw,22px);font-weight:950;letter-spacing:-.07em;color:var(--text,#f2f5f0)}
+      .brandPeriod{color:#a9d99a}
+      .liveSignal{display:inline-block;width:9px;height:9px;flex:none;border-radius:50%;background:#65726a;vertical-align:middle}
+      .liveSignal.isLive,.dockLiveBeacon{background:#ff334a;box-shadow:0 0 0 3px rgba(255,51,74,.14),0 0 12px rgba(255,51,74,.9);animation:liveBeaconPulse 1.8s ease-in-out infinite}
+      .onAirLabel{font-size:8px;font-weight:900;letter-spacing:.08em;color:#ff6674}
+      .dockLiveBeacon{position:absolute;right:-5px;top:-2px;width:9px;height:9px;border-radius:50%}
+      @keyframes liveBeaconPulse{0%,100%{opacity:1;box-shadow:0 0 0 3px rgba(255,51,74,.14),0 0 12px rgba(255,51,74,.9)}50%{opacity:.65;box-shadow:0 0 0 6px rgba(255,51,74,.04),0 0 5px rgba(255,51,74,.45)}}
       .notificationBell{position:relative;width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);border-radius:11px;background:var(--panel2);text-decoration:none;font-size:14px}
       .notificationBell span{position:absolute;right:-5px;top:-6px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#dbe9c4;color:#071008;font-size:8px;font-weight:900;display:grid;place-items:center}
       @media(max-width:700px){.notificationBell{display:none}}
