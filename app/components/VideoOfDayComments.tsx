@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import ExpressionKeyboard from "./ExpressionKeyboard";
 import { createClient } from "../../utils/supabase/client";
 
 const VIDEO_ID = "_8yvTAnwbQ8";
@@ -49,6 +50,7 @@ export default function VideoOfDayComments() {
       <label htmlFor="featured-video-comment" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>Write a comment</label>
       <input id="featured-video-comment" value={body} onChange={e => setBody(e.target.value)} maxLength={1000}
         placeholder="Share a respectful reflection…" style={{ flex: "1 1 230px", padding: 12, borderRadius: 10, border: "1px solid #b99c5588", background: "var(--bg, #080d09)", color: "var(--text, white)" }} />
+      <ExpressionKeyboard onInsert={text => setBody(prev => (prev ? prev + " " : "") + text)} />
       <button type="submit" disabled={saving || !body.trim()} style={{ padding: "11px 18px", borderRadius: 10, border: 0, background: "#b99c55", color: "#111", fontWeight: 700, cursor: "pointer" }}>{saving ? "Posting…" : "Post"}</button>
     </form> : <p style={{ fontSize: 13 }}><Link href="/auth">Sign in</Link> to join the conversation. Everyone can read comments.</p>}
     {error && <p role="status" style={{ color: "#dfaa8b", fontSize: 12 }}>{error}</p>}
