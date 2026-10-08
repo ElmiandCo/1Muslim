@@ -41,6 +41,10 @@ export default function MessagesPage(){
  useEffect(()=>{const to=new URLSearchParams(window.location.search).get("to");if(to&&/^[0-9a-f-]{36}$/i.test(to)){setRecipient(to);setInitialRecipient(to)}},[]);
  useEffect(()=>{let active=true;client.auth.getUser().then(({data})=>{if(active){setUid(data.user?.id??null);setLoadingAuth(false)}});return()=>{active=false}},[client]);
  useEffect(()=>{if(!uid)return;let active=true;
+ void client.from("dm_blocks").select("blocked_id").eq("blocker_id",uid).then(({data})=>{if(active)setBlocked((data??[]).map(x=>x.blocked_id))});
+ void client.from("dm_privacy").select("allow_requests").eq("user_id",uid).maybeSingle().then(({data})=>{if(active&&data)setAllowRequests(data.allow_requests)});
+ return()=>{active=false}},[client,uid]);
+ useEffect(()=>{if(!uid)return;let active=true;
  const load=async()=>{const {data,error}=await client.from("dm_participants").select("conversation_id,user_id").order("joined_at",{ascending:false});if(active){if(error)setError(error.message);else {const peers=(data??[]).filter(p=>p.user_id!==uid);setThreads(peers);const ids=[...new Set(peers.map(p=>p.user_id))];if(ids.length){const {data:profiles}=await client.from("profiles").select("id,display_name,username").in("id",ids);if(active)setNames(Object.fromEntries((profiles??[]).map(p=>[p.id,p.display_name||p.username||"Member"])))}}}};
  load();const timer=window.setInterval(()=>{void load()},5000);return()=>{active=false;window.clearInterval(timer)};
  },[client,uid]);
