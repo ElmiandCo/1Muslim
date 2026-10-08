@@ -7,7 +7,7 @@ import SiteNav from "../../components/SiteNav";
 import ProfileAvatar, { tierForXp } from "../../components/ProfileAvatar";
 import AshabButton from "../../components/AshabButton";
 import { createClient } from "../../../utils/supabase/client";
-import LiveKitViewer from "../../components/LiveKitViewer";
+import LiveKitViewer from "../../../components/LiveKitViewer";
 
 type Profile={id:string;display_name:string;username:string|null;first_name:string|null;last_name:string|null;city:string|null;state:string|null;country:string|null;gender:string|null;bio:string|null;xp_total:number;avatar_gender:string;avatar_package:string;avatar_config:Record<string,unknown>;profile_accent:string;profile_background:string;profile_title:string;shahada_verified_at:string|null};
 type LiveStream={id:string;title:string;category:string;room_name:string;viewer_count:number;started_at:string;ended_at:string|null;last_heartbeat_at:string|null;scheduled_end_at:string|null}; type LiveConnector={provider:string;handle:string|null;channel_url:string|null;enabled:boolean;is_live:boolean;live_title:string|null};
