@@ -4,6 +4,7 @@ import "./community.css";
 
 import { FormEvent, useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import SiteNav from "../components/SiteNav";
 
 type Comment = { id: string; name: string; text: string; created: number };
@@ -17,7 +18,9 @@ const seed: Post[] = [
 const key = "1muslim-community-posts";
 
 export default function Community() {
+  const router=useRouter();
   const [posts,setPosts]=useState<Post[]>(seed);
+  const [publishing,setPublishing]=useState(false);
   const [draft,setDraft]=useState("");
   useEffect(()=>{try{const saved=sessionStorage.getItem("1muslim-verse-share-draft");if(saved){setDraft(saved);sessionStorage.removeItem("1muslim-verse-share-draft")}}catch{}},[]);
   useEffect(()=>{const verse=new URLSearchParams(window.location.search).get("verse");if(verse&&/^(?:[1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(verse)){setDraft("Reflecting on Qur’an "+verse+" 📖\\nhttps://quran.com/"+verse+"\\n");setLink("https://quran.com/"+verse)}},[]);
@@ -63,11 +66,24 @@ export default function Community() {
   useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)return;const d=await r.json();const rows=d.posts||[];if(active)setServerPosts(rows.map((p:{id:string;body:string;created_at:string})=>({id:p.id,name:"Community member",handle:"@member",text:p.body,created:new Date(p.created_at).getTime(),likes:0,liked:false,comments:[]})))}catch{}};void load();const t=setInterval(()=>void load(),20000);return()=>{active=false;clearInterval(t)}},[]);
   const sorted=useMemo(()=>[...serverPosts,...posts].sort((a,b)=>b.created-a.created),[serverPosts,posts]);
 
-  const createPost=(e:FormEvent)=>{
+  const createPost=async(e:FormEvent)=>{
     e.preventDefault();
-    if(!draft.trim()&&!media&&!safe(link)) return;
-    setPosts(p=>[{id:crypto.randomUUID(),name:"You",handle:"@you",text:draft.trim(),created:Date.now(),likes:0,liked:false,comments:[],media,mediaType,overlay,filter,link:safe(link)},...p]);
-    setDraft("");setMedia("");setOverlay("");setFilter("none");setLink("");setEdit(false);chime();setNotice("✨ Saved to this browser.");animate("new","✨","publish");
+    if(publishing)return;
+    const text=[draft.trim(),safe(link)].filter(Boolean).join("\n");
+    if(!text&&!media)return;
+    if(media){setNotice("Photo and video publishing is not available yet. Remove the attachment to publish a text or link post.");return;}
+    if(text.length>2000){setNotice("Posts must be 2,000 characters or fewer.");return;}
+    setPublishing(true);setNotice("");
+    try{
+      const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
+      if(response.status===401){setNotice("Sign in to publish your post.");router.push("/auth?next="+encodeURIComponent("/community"));return;}
+      const result=await response.json();
+      if(!response.ok)throw new Error(result.error||"Could not publish post");
+      const row=result.post;
+      setServerPosts(p=>[{id:row.id,name:"Community member",handle:"@member",text:row.body,created:new Date(row.created_at).getTime(),likes:0,liked:false,comments:[]},...p.filter(x=>x.id!==row.id)]);
+      setDraft("");setLink("");setEdit(false);chime();setNotice("✨ Published to the community!");animate("new","✨","publish");
+    }catch(err){setNotice(err instanceof Error?err.message:"Could not publish post");}
+    finally{setPublishing(false);}
   };
 
   const like=(id:string)=>{animate(id,"❤️","like");chime();
@@ -95,7 +111,7 @@ export default function Community() {
     </div>}
     <SiteNav />
     <div className="communityShell">
-      <section className="communityHero"><span className="eyebrow">COMMUNITY</span><h1>Make your moment pop. ✨</h1><p>Ask, reflect, encourage and learn with the 1Muslim community.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">Preview: posts currently save only in your browser, not for other members.</p></section>
+      <section className="communityHero"><span className="eyebrow">COMMUNITY</span><h1>Make your moment pop. ✨</h1><p>Ask, reflect, encourage and learn with the 1Muslim community.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">Text and link posts are shared with the community. Photo and video publishing is coming soon.</p></section>
       <div className="communityGrid">
         <section ref={feedRef}>
           <form className="composer" onSubmit={createPost}>
@@ -103,7 +119,7 @@ export default function Community() {
 {edit&&<div className="omPostEditor"><input placeholder="Text over photo / video" maxLength={80} value={overlay} onChange={e=>setOverlay(e.target.value)}/><select value={filter} onChange={e=>setFilter(e.target.value)}><option value="none">Original</option><option value="grayscale(1)">Classic</option><option value="sepia(.8)">Warm</option><option value="saturate(1.7) contrast(1.1)">Vibrant</option><option value="contrast(1.4) brightness(.85)">Cinematic</option></select></div>}
 {link&&<input className="omPostLinkInput" type="url" placeholder="Paste a YouTube or website link" value={link} onChange={e=>setLink(e.target.value)}/>}
 {(media||safe(link))&&<div className="omPostPreview">{preview({id:"",name:"",handle:"",text:"",created:0,likes:0,liked:false,comments:[],media,mediaType,overlay,filter,link:safe(link)})}<button type="button" onClick={()=>{setMedia("");setLink("");setOverlay("")}}>✕ Remove media</button></div>}
-<div className="composerBottom"><span>{draft.length}/500</span><button className="postButton" disabled={!draft.trim()&&!media&&!safe(link)}>✨ Post it</button></div></div>
+<div className="composerBottom"><span>{draft.length}/500</span><button className="postButton" disabled={publishing||(!draft.trim()&&!media&&!safe(link))}>{publishing?"Publishing…":"✨ Post it"}</button></div></div>
           </form>
           {notice&&<p role="status" className="omPostNotice">{notice}</p>}
           {sorted.map(post=><article className={"socialPost "+(burst?.id===post.id?"omPostCelebrating":"")} id={"post-"+post.id} key={post.id}>{burst?.id===post.id&&<span className="omPostBurst" aria-hidden="true">{Array.from({length:9},(_,i)=><i key={i} style={{["--i" as string]:i} as React.CSSProperties}>{burst.emoji}</i>)}</span>}
