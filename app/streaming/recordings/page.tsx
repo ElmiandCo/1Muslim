@@ -42,6 +42,8 @@ export default function RecordingsPage() {
   const [signedIn, setSignedIn] = useState(true);
   const [error, setError] = useState("");
   const [playing, setPlaying] = useState<Recording | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -107,6 +109,26 @@ export default function RecordingsPage() {
     } catch (e) { setError(e instanceof Error ? e.message : "Deletion failed"); }
   };
 
+  const deleteSelected = async () => {
+    if (!selectedIds.length || bulkBusy) return;
+    if (!window.confirm("Permanently delete " + selectedIds.length + " recordings? This cannot be undone.")) return;
+    setBulkBusy(true);
+    setError("");
+    const deleted: string[] = [];
+    let failed = 0;
+    for (const id of selectedIds) {
+      try {
+        const response = await fetch("/api/recordings/" + id, { method: "DELETE" });
+        if (!response.ok) throw new Error("Delete failed");
+        deleted.push(id);
+      } catch { failed++; }
+    }
+    setRecordings(previous => previous.filter(item => !deleted.includes(item.id)));
+    setSelectedIds(previous => previous.filter(id => !deleted.includes(id)));
+    if (failed) setError(failed + " recording(s) could not be deleted.");
+    setBulkBusy(false);
+  };
+
   return (
     <main className="recordingsPage">
       <style jsx>{`
@@ -127,15 +149,19 @@ export default function RecordingsPage() {
 
         {!signedIn ? <div className="signin"><h2>Sign in to see your recordings</h2><p>Your Live Studio archive is tied to your 1Muslim account.</p><Link href="/auth">Sign in</Link></div>
         : loading ? <div className="empty"><strong>Loading your recordings…</strong></div>
-        : error ? <div className="error">{error}</div>
-        : <>
+        : <>\n          {error && <div className="error" role="alert">{error}</div>}
           <div className="summary"><div className="stat"><strong>{recordings.length}</strong><span>Saved Lives</span></div><div className="stat"><strong>{recordings.reduce((sum,r)=>sum+r.views,0)}</strong><span>Total Views</span></div><div className="stat"><strong>{formatSize(recordings.reduce((sum,r)=>sum+r.file_size,0))}</strong><span>Video Storage</span></div></div>
+          {recordings.length > 0 && <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap",marginBottom:16}}>
+            <label><input type="checkbox" checked={recordings.every(r=>selectedIds.includes(r.id))} onChange={e=>setSelectedIds(e.target.checked?recordings.map(r=>r.id):[])} /> Select all</label>
+            <span>{selectedIds.length} selected</span>
+            <button type="button" disabled={!selectedIds.length||bulkBusy} onClick={()=>void deleteSelected()} className="action danger" style={{flex:"none"}}>{bulkBusy?"Deleting…":"Delete selected ("+selectedIds.length+")"}</button>
+          </div>}
           {recordings.length === 0 ? <div className="empty"><strong>No recordings yet.</strong><p>Start a Live session and press “End live & save” when you are finished.</p><Link href="/streaming/go-live" className="back">Open Live Studio →</Link></div> :
           <div className="grid">{recordings.map(recording => {
             const url = getUrl(recording.video_path);
             return <article className="card" key={recording.id}>
               <div className="thumb"><RecordingThumbnail title={recording.title} hostName={recording.host_name || "1Muslim Host"} date={new Date(recording.created_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})} durationSeconds={recording.duration_seconds} photoUrl={recording.host_avatar_url} customThumbnailUrl={recording.thumbnail_path ? getUrl(recording.thumbnail_path) : null} /><button className="play" onClick={()=>setPlaying(recording)} aria-label={`Play ${recording.title}`}>▶</button></div>
-              <div className="body"><span className="meta">{recording.category} · {new Date(recording.created_at).toLocaleDateString()}</span><h3>{recording.title}</h3><div className="details"><span>👁 {recording.views}</span><span>♥ {recording.likes}</span><span>{formatSize(recording.file_size)}</span></div><div className="actions">{recording.stream_id ? <Link className="action" href={`/streaming/live/${recording.stream_id}`}>Watch & comment</Link> : <button className="action" onClick={()=>setPlaying(recording)}>Watch</button>}<button className="action danger" onClick={()=>void deleteRecording(recording)}>Delete</button></div></div>
+              <div className="body"><label style={{fontSize:11,display:"inline-flex",gap:7,marginBottom:9}}><input type="checkbox" checked={selectedIds.includes(recording.id)} onChange={()=>setSelectedIds(ids=>ids.includes(recording.id)?ids.filter(id=>id!==recording.id):[...ids,recording.id])} /> Select</label><br/><span className="meta">{recording.category} · {new Date(recording.created_at).toLocaleDateString()}</span><h3>{recording.title}</h3><div className="details"><span>👁 {recording.views}</span><span>♥ {recording.likes}</span><span>{formatSize(recording.file_size)}</span></div><div className="actions">{recording.stream_id ? <Link className="action" href={`/streaming/live/${recording.stream_id}`}>Watch & comment</Link> : <button className="action" onClick={()=>setPlaying(recording)}>Watch</button>}<button className="action danger" onClick={()=>void deleteRecording(recording)}>Delete</button></div></div>
             </article>
           })}</div>}
         </>}
