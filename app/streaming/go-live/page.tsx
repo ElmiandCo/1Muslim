@@ -9,6 +9,7 @@ import { LocalAudioTrack, Room, Track } from "livekit-client";
 import { createLiveAudioProcessor } from "../../../components/live-audio-effects";
 import LiveChat from "../../../components/LiveChat";
 import SyncedLiveIntro from "../../components/SyncedLiveIntro";
+import ShareLiveButton from "../../components/ShareLiveButton";
 
 const categories = ["Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
 type ChatMessage = { id: string; name: string; text: string };
@@ -803,7 +804,7 @@ export default function GoLivePage() {
             <div className={`preview format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"}`}>
               {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
-              {live && <span className="live">● LIVE</span>}{recording && <span className="recording">● RECORDING</span>}
+              {live && <span className="live">● LIVE</span>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
             </div>
             <div style={{display:"flex",gap:9,alignItems:"center",flexWrap:"wrap",padding:"10px 0"}}>
