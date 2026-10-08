@@ -2,7 +2,7 @@
 
 import "./community.css";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import SiteNav from "../components/SiteNav";
 
@@ -19,6 +19,8 @@ const key = "1muslim-community-posts";
 export default function Community() {
   const [posts,setPosts]=useState<Post[]>(seed);
   const [draft,setDraft]=useState("");
+  const feedRef=useRef<HTMLDivElement>(null);
+  useEffect(()=>{const root=feedRef.current;if(!root||typeof IntersectionObserver==="undefined")return;const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("omPostVisible");observer.unobserve(entry.target)}})},{threshold:.12,rootMargin:"0px 0px -30px 0px"});root.querySelectorAll(".socialPost").forEach(node=>observer.observe(node));return()=>observer.disconnect()},[posts]);
   const [media,setMedia]=useState("");
   const [mediaType,setMediaType]=useState("image");
   const [overlay,setOverlay]=useState("");
@@ -69,7 +71,7 @@ export default function Community() {
     <div className="communityShell">
       <section className="communityHero"><span className="eyebrow">COMMUNITY</span><h1>Make your moment pop. ✨</h1><p>Ask, reflect, encourage and learn with the 1Muslim community.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">Preview: posts currently save only in your browser, not for other members.</p></section>
       <div className="communityGrid">
-        <section>
+        <section ref={feedRef}>
           <form className="composer" onSubmit={createPost}>
             <div className="avatar">YOU</div><div className="composerBody"><textarea value={draft} onChange={e=>setDraft(e.target.value)} placeholder="What’s on your mind? Share a reflection or question…" maxLength={500}/><div className="omPostTools"><label>📷 Photo / Video<input type="file" accept="image/*,video/*" hidden onChange={e=>{if(e.target.files?.[0])pick(e.target.files[0]);e.target.value=""}}/></label><button type="button" onClick={()=>setEdit(v=>!v)}>🎨 Edit</button><button type="button" onClick={()=>setDraft(v=>v+" ✨")}>✨ Express</button><button type="button" onClick={()=>setLink(v=>v||"https://")}>🔗 Link</button></div>
 {edit&&<div className="omPostEditor"><input placeholder="Text over photo / video" maxLength={80} value={overlay} onChange={e=>setOverlay(e.target.value)}/><select value={filter} onChange={e=>setFilter(e.target.value)}><option value="none">Original</option><option value="grayscale(1)">Classic</option><option value="sepia(.8)">Warm</option><option value="saturate(1.7) contrast(1.1)">Vibrant</option><option value="contrast(1.4) brightness(.85)">Cinematic</option></select></div>}
@@ -82,7 +84,7 @@ export default function Community() {
             <div className="avatar">{post.name==="You"?"YOU":"1M"}</div>
             <div className="postBody">
               <div className="postHeader"><strong>{post.name}</strong><span>{post.handle} · {new Date(post.created).toLocaleDateString()}</span><button>•••</button></div>
-              <p>{post.text}</p>{preview(post)}
+              <p className="omPostTextReveal">{post.text}</p>{preview(post)}
               <div className="postActions">
                 <button onClick={()=>setCommentDraft(c=>({...c,[post.id]:c[post.id]===undefined?"":c[post.id]}))}>💬 {post.comments.length}</button>
                 <button className={post.liked?"liked":""} onClick={()=>like(post.id)}>❤️ {post.likes}</button>
