@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 import LiveKitViewer from "../../components/LiveKitViewer";
 import LiveChat from "../../components/LiveChat";
+import AshabButton from "./AshabButton";
 
 type LiveRow = {
   id:string; title:string; category:string; viewer_count:number; started_at:string;
@@ -164,7 +165,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
           <div className="playerTools"><span style={{fontSize:11,color:"#cbd5cc",fontWeight:800}}>▶ 1MUSLIM PLAYER · {primary ? "LIVE" : "ON DEMAND"}</span><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button type="button" onClick={()=>setTheaterMode(v=>!v)} aria-pressed={theaterMode}>{theaterMode ? "▣ Default view" : "▭ Theater mode"}</button><button type="button" onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>{isFullscreen ? "⤡ Exit fullscreen" : "⛶ Fullscreen"}</button></div></div>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:"10px 14px",borderTop:"1px solid #1c2a20",background:"#07100a"}}>{primary && <button type="button" onClick={()=>setCommentsOpen(true)} style={{border:"1px solid #304034",background:"#0b120d",color:"#dce8dc",borderRadius:999,padding:"8px 12px",fontSize:10,fontWeight:800,cursor:"pointer"}}>💬 Comments</button>}<Link href={primary ? `/streaming/live/${primary.id}` : "#"} onClick={activeCurated ? (event)=>event.preventDefault() : undefined} style={{textDecoration:"none",color:"#aebbb1",fontSize:10}}>Open Live ↗</Link></div><div style={{textDecoration:"none",color:"inherit",display:"block",padding:"14px 18px 18px"}}>
             <span className="pill"><i className="dot"/> {primary ? "#1 LIVE NOW" : "1MUSLIM SELECT"}</span>
-            <div>{primary ? <Link href={`/profile/${(primary as LiveRow & {host_id:string}).host_id}`} style={{display:"inline-flex",alignItems:"center",gap:8,textDecoration:"none",color:"inherit"}} aria-label={`Open ${activeHostName} profile`}><h3 style={{marginBottom:0}}>{activeHostName}</h3><span style={{fontSize:10,color:"#8da88f"}}>View profile →</span></Link> : <h3>{activeCurated?.title}</h3>}<div className="meta">{primary ? `${primary.title} · ${primary.category} · ${primary.viewer_count} watching` : `${activeCurated?.category} · Curated 1Muslim video`}</div>
+            <div>{primary ? <Link href={`/profile/${(primary as LiveRow & {host_id:string}).host_id}`} style={{display:"inline-flex",alignItems:"center",gap:8,textDecoration:"none",color:"inherit"}} aria-label={`Open ${activeHostName} profile`}><h3 style={{marginBottom:0}}>{activeHostName}</h3><span style={{fontSize:10,color:"#8da88f"}}>View profile →</span></Link><AshabButton targetId={(primary as LiveRow & {host_id:string}).host_id} /> : <h3>{activeCurated?.title}</h3>}<div className="meta">{primary ? `${primary.title} · ${primary.category} · ${primary.viewer_count} watching` : `${activeCurated?.category} · Curated 1Muslim video`}</div>
             {handoffSoon && <div className="handoff">This stream is about to switch.<strong>{handoffCountdown}</strong>Next streamer is preparing now.</div>}</div>
           </div>
         </div> : next ? <div className="liveCard" style={{justifyContent:"center"}}>
