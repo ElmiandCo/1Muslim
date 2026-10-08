@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 import RecordingThumbnail from "../../components/RecordingThumbnail";
 import ReconnectTrivia from "../components/ReconnectTrivia";
+import LiveKitViewer from "../../components/LiveKitViewer";
 
 type LiveStream = { id: string; title: string; category: string; room_name: string; viewer_count: number; started_at: string; scheduled_end_at: string | null; thumbnail_path: string | null; aspect_ratio: "9:16" | "1:1" | "16:9"; host_id: string; host_gender: string | null; host_avatar_url: string | null };
 
@@ -246,7 +247,7 @@ const openAdminEditor = (video?: Video) => {
         .shell{max-width:1180px;margin:auto;padding:38px 22px 80px}
         .hero{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;align-items:stretch}
         .heroMain,.heroSide{border:1px solid #1b241f;border-radius:24px;background:linear-gradient(145deg,#101712,#080d09);padding:30px;overflow:hidden}
-        .heroMain{position:relative;min-height:285px}.heroMain:after{content:"";position:absolute;width:330px;height:330px;border-radius:50%;right:-110px;top:-150px;background:radial-gradient(circle,rgba(145,180,125,.18),transparent 68%);pointer-events:none}
+        .heroMain{position:relative;min-height:285px}.mainLivePlayer{margin-top:22px;border:1px solid #29352d;border-radius:18px;overflow:hidden;background:#050805}.mainLivePlayerHead{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.mainLivePlayerHead h3{margin:7px 0 3px;font-size:17px}.mainLivePlayerHead p{margin:0;font-size:10px;color:#7e8982}.heroMain:after{content:"";position:absolute;width:330px;height:330px;border-radius:50%;right:-110px;top:-150px;background:radial-gradient(circle,rgba(145,180,125,.18),transparent 68%);pointer-events:none}
         .eyebrow{font-size:10px;letter-spacing:.15em;color:#829b87;font-weight:850}.hero h1{font-size:48px;line-height:1;letter-spacing:-.065em;margin:12px 0}.hero p{max-width:650px;color:#9ba69f;line-height:1.65;font-size:14px}
         .stats{display:flex;gap:20px;margin-top:25px}.stat strong{display:block;font-size:19px}.stat span{font-size:10px;color:#6e7a72}
         .heroSide h3{font-size:18px;margin:7px 0}.heroSide p{font-size:11px;color:#7f8b83;line-height:1.6}.liveBadge{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #3a463d;border-radius:999px;font-size:10px;color:#cbd8ce}.dot{width:7px;height:7px;border-radius:50%;background:#b9d98e;box-shadow:0 0 12px #b9d98e}
@@ -267,7 +268,7 @@ const openAdminEditor = (video?: Video) => {
             <span className="eyebrow">1MUSLIM LIVE</span>
             <h1>Live Now.</h1>
             <p>The main 1Muslim channel: a continuous rotation of pro streamers, scheduled handoffs, and live community conversation. Watch publicly; sign in when you want to participate.</p>
-            <div className="stats"><div className="stat"><strong>LIVE NOW</strong><span>CONTINUOUS CHANNEL</span></div><div className="stat"><strong>SCHEDULED</strong><span>NEXT UP</span></div><div className="stat"><strong>24/7</strong><span>ROTATION MODEL</span></div></div>
+            <div className="stats"><div className="stat"><strong>LIVE NOW</strong><span>CONTINUOUS CHANNEL</span></div><div className="stat"><strong>SCHEDULED</strong><span>NEXT UP</span></div><div className="stat"><strong>24/7</strong><span>ROTATION MODEL</span></div></div>{liveStreams[0]&&<div className="mainLivePlayer"><div className="mainLivePlayerHead"><div><span className="liveBadge"><i className="dot" /> LIVE NOW</span><h3>{liveStreams[0].title}</h3><p>{liveStreams[0].category} · 👥 {liveStreams[0].viewer_count||0} watching</p></div><Link href={"/streaming/live/"+liveStreams[0].id} className="topLink">Open Live →</Link></div><LiveKitViewer roomName={liveStreams[0].room_name} streamId={liveStreams[0].id} /></div>}
           </div>
           <div className="heroSide">
             <span className="liveBadge"><i className="dot" /> MAIN CHANNEL</span>
