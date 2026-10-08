@@ -139,6 +139,10 @@ export default function StreamingPage() {
 
   useEffect(() => {
     const loadRecordedLives = async () => {
+      const {data:{user}}=await supabase.auth.getUser();
+      if(!user){setRecordedLives([]);return;}
+      const {data:adminRow}=await supabase.from("admin_users").select("user_id").eq("user_id",user.id).maybeSingle();
+      if(!adminRow){setRecordedLives([]);return;}
       const { data } = await supabase.from("live_recordings").select("id,title,category,duration_seconds,created_at,thumbnail_path,user_id").eq("visibility","public").order("created_at",{ascending:false}).limit(12);
       const rows = (data ?? []) as Omit<RecordedLive,"stream_id"|"stream_started_at"|"stream_ended_at"|"host_name"|"host_avatar_url"|"host_gender">[];
       const ids = rows.map(row => row.id);
