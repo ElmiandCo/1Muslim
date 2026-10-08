@@ -10,6 +10,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const playerRef = useRef<HTMLDivElement>(null);
   const roomRef = useRef<Room | null>(null);
   const [status, setStatus] = useState("Connecting to live…");
+  const [viewerCount, setViewerCount] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [muted, setMuted] = useState(true);
   const [reconnecting, setReconnecting] = useState(false);
@@ -73,9 +74,17 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
     };
 
     void connect();
-    const countTimer = window.setInterval(() => {
-      void fetch("/api/livekit/viewer-count", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({room:roomName}) });
-    }, 5000);
+    const refreshViewers = async () => {
+      if (!roomRef.current || roomRef.current.state !== "connected") return;
+      try {
+        const response = await fetch("/api/livekit/viewer-count", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName}),cache:"no-store"});
+        if (!response.ok) return;
+        const data = await response.json();
+        if (mounted && typeof data.viewerCount === "number") setViewerCount(Math.max(0,data.viewerCount));
+      } catch { /* Preserve the last known count during temporary network failures. */ }
+    };
+    const countTimer = window.setInterval(() => void refreshViewers(), 5000);
+    void refreshViewers();
 
     return () => {
       window.clearInterval(countTimer);
@@ -111,6 +120,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
     <div ref={playerRef} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:"16/9",overflow:"hidden"}}>
       <video ref={videoRef} autoPlay muted playsInline controls={!embedded} style={{width:"100%",height:"100%",objectFit:"contain"}} />
       <div ref={audioContainerRef} />
+      {viewerCount !== null && !error && <div role="status" aria-label={`${viewerCount.toLocaleString()} watching live`} style={{position:"absolute",top:12,right:12,zIndex:6,display:"flex",alignItems:"center",gap:6,padding:"7px 11px",borderRadius:999,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.22)",color:"#fff",fontSize:12,fontWeight:800,backdropFilter:"blur(10px)",pointerEvents:"none"}}>👁 {viewerCount.toLocaleString()} <span style={{fontSize:10,opacity:.8}}>watching</span></div>}
       <div style={{position:"absolute",left:12,bottom:12,display:"flex",gap:7,zIndex:5}}>
         <button type="button" onClick={toggleMute} aria-label={muted ? "Unmute live audio" : "Mute live audio"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
           {muted ? "🔇 Unmute" : "🔊 Mute"}
