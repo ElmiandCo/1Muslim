@@ -7,7 +7,7 @@ import { createClient } from "../../utils/supabase/client";
 
 type N={id:string;type:string;title:string;body:string;entity_type:string|null;entity_id:string|null;read_at:string|null;created_at:string;};
 
-function hrefFor(n:N){if(n.entity_type==="live_stream"&&n.entity_id)return `/streaming/live/${n.entity_id}`;if(n.entity_type==="live_schedule"&&n.entity_id)return "/streaming/scheduled";if((n.entity_type==="dm_message"||n.entity_type==="message")&&n.entity_id&&/^[0-9a-f-]{36}$/i.test(n.entity_id))return "/messages?message="+encodeURIComponent(n.entity_id);if((n.entity_type==="dm_conversation"||n.entity_type==="conversation")&&n.entity_id&&/^[0-9a-f-]{36}$/i.test(n.entity_id))return "/messages?conversation="+encodeURIComponent(n.entity_id);return "/";}
+function hrefFor(n:N){if(n.entity_type==="live_stream"&&n.entity_id)return `/streaming/live/${n.entity_id}`;if(n.entity_type==="live_schedule"&&n.entity_id)return "/streaming/scheduled";if((n.entity_type==="dm_message"||n.entity_type==="message")&&n.entity_id&&/^[0-9a-f-]{36}$/i.test(n.entity_id))return "/messages?message="+encodeURIComponent(n.entity_id);if((n.entity_type==="dm_conversation"||n.entity_type==="conversation")&&n.entity_id&&/^[0-9a-f-]{36}$/i.test(n.entity_id))return "/messages?conversation="+encodeURIComponent(n.entity_id);if(n.entity_type==="featured_video_comment"&&n.entity_id&&/^[0-9a-f-]{36}$/i.test(n.entity_id))return "/?comment="+encodeURIComponent(n.entity_id)+"#featured-video-comments";return "/";}
 
 export default function NotificationsPage(){
   const [items,setItems]=useState<N[]>([]);
