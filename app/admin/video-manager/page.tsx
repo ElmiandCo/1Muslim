@@ -13,7 +13,7 @@ const sections=[
  ["learning_beginner","🎓 Learning · Beginner Courses"],
 ] as const;
 const inputStyle={width:"100%",padding:"10px 12px",border:"1px solid #52604c",borderRadius:10,background:"#111d15",color:"#fff"} as const;
-function validYoutube(raw:string){try{const u=new URL(raw);return u.protocol==="https:"&&["youtube.com","www.youtube.com","m.youtube.com","youtu.be","www.youtu.be"].includes(u.hostname)&&Boolean(u.searchParams.get("v")||u.pathname.replace(/^\\/+/,""));}catch{return false}}
+function validYoutube(raw:string){try{const u=new URL(raw);return u.protocol==="https:"&&["youtube.com","www.youtube.com","m.youtube.com","youtu.be","www.youtu.be"].includes(u.hostname)&&Boolean(u.searchParams.get("v")||u.pathname.replace(/^\/+/, ""));}catch{return false}}
 export default function VideoManager(){
  const supabase=useMemo(()=>createClient(),[]);
  const [authorized,setAuthorized]=useState(false),[loading,setLoading]=useState(true),[rows,setRows]=useState<Video[]>([]),[message,setMessage]=useState(""),[busy,setBusy]=useState(false);
