@@ -32,3 +32,15 @@
 @keyframes omFloatIn{from{opacity:0;transform:translateY(60px) rotate(-4deg) scale(.8)}to{opacity:1;transform:translateY(0) rotate(0) scale(1)}}
 @media(max-width:600px){.communityShell{padding-left:12px;padding-right:12px}.composer{padding:13px}.omPostTools{gap:6px}.omPostTools button,.omPostTools label{font-size:11px;padding:9px}.omPostMedia img,.omPostMedia video{max-height:65dvh}}
 @media(prefers-reduced-motion:reduce){.socialPost,.omFloatingPost{animation:none!important}.omLinkPreview:hover,.omPostTools button:hover,.socialPost .postActions button:hover{transform:none!important}}
+
+/* Delightful post interactions: local emoji bursts, share sparkle, publish success. */
+.socialPost{position:relative}
+.omPostCelebrating{border-color:#d9bd70!important}
+.omPostBurst{position:absolute;left:50%;top:42%;pointer-events:none;z-index:5}
+.omPostBurst i{position:absolute;left:0;top:0;font-size:clamp(19px,3vw,33px);font-style:normal;filter:drop-shadow(0 3px 9px #0008);--angle:calc(var(--i)*40deg);animation:omPostBurst 850ms cubic-bezier(.1,.8,.2,1) both;animation-delay:calc(var(--i)*18ms)}
+@keyframes omPostBurst{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--angle)) translateY(0) scale(.25)}25%{opacity:1}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--angle)) translateY(-85px) scale(1.15)}}
+.omPublishCelebration{position:fixed;left:50%;top:28%;transform:translateX(-50%);z-index:60;display:grid;place-items:center;gap:5px;padding:18px 30px;border:1px solid #e8cb7b;border-radius:20px;background:#123f2de8;color:#f7eacb;box-shadow:0 15px 55px #0008;pointer-events:none;animation:omPublishPop 1s ease-out forwards}
+.omPublishCelebration span{font-size:54px}.omPublishCelebration strong{white-space:nowrap;font-size:15px}
+@keyframes omPublishPop{0%{opacity:0;transform:translateX(-50%) scale(.5) translateY(30px)}25%{opacity:1;transform:translateX(-50%) scale(1.1)}65%{opacity:1;transform:translateX(-50%) scale(1)}100%{opacity:0;transform:translateX(-50%) scale(.95) translateY(-24px)}}
+.postActions button{transition:transform .16s ease,color .16s ease}.postActions button:active{transform:scale(.82)}
+@media(prefers-reduced-motion:reduce){.omPostBurst,.omPublishCelebration{display:none!important}.postActions button{transition:none!important}}
