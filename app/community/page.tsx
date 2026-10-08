@@ -29,6 +29,8 @@ export default function Community() {
   const [sounds,setSounds]=useState(false);
   const [effects,setEffects]=useState(true);
   const [notice,setNotice]=useState("");
+  const [burst,setBurst]=useState<{id:string;emoji:string;kind:string}|null>(null);
+  const animate=(id:string,emoji:string,kind:string)=>{if(!effects)return;setBurst({id,emoji,kind});setTimeout(()=>setBurst(v=>v?.id===id?v&&v.kind===kind?null:v:v),1000)};
   const safe=(s:string)=>{try{const u=new URL(s);return ["https:","http:"].includes(u.protocol)?u.toString():""}catch{return ""}};
   const youtube=(s:string)=>{try{const u=new URL(s);const id=u.hostname==="youtu.be"?u.pathname.slice(1):["youtube.com","www.youtube.com","m.youtube.com"].includes(u.hostname)?u.searchParams.get("v")||u.pathname.split("/shorts/")[1]:"";return id&&/^[a-zA-Z0-9_-]{11}$/.test(id)?id:""}catch{return ""}};
   const chime=()=>{if(!sounds)return;try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.frequency.value=740;g.gain.setValueAtTime(.04,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.2);setTimeout(()=>void c.close(),350)}catch{}};
@@ -49,17 +51,17 @@ export default function Community() {
     e.preventDefault();
     if(!draft.trim()&&!media&&!safe(link)) return;
     setPosts(p=>[{id:crypto.randomUUID(),name:"You",handle:"@you",text:draft.trim(),created:Date.now(),likes:0,liked:false,comments:[],media,mediaType,overlay,filter,link:safe(link)},...p]);
-    setDraft("");setMedia("");setOverlay("");setFilter("none");setLink("");setEdit(false);chime();setNotice("✨ Saved to this browser.");
+    setDraft("");setMedia("");setOverlay("");setFilter("none");setLink("");setEdit(false);chime();setNotice("✨ Saved to this browser.");animate("new","✨","publish");
   };
 
-  const like=(id:string)=>{
+  const like=(id:string)=>{animate(id,"❤️","like");chime();
     setPosts(p=>p.map(x=>x.id===id?{...x,liked:!x.liked,likes:x.likes+(x.liked?-1:1)}:x));
   };
 
   const addComment=(id:string)=>{
     const text=(commentDraft[id]||"").trim(); if(!text)return;
     setPosts(p=>p.map(x=>x.id===id?{...x,comments:[...x.comments,{id:crypto.randomUUID(),name:"You",text,created:Date.now()}]}:x));
-    setCommentDraft(c=>({...c,[id]:""}));
+    setCommentDraft(c=>({...c,[id]:""}));animate(id,"💬","reply");chime();
   };
 
   return <main className="communityPage">
@@ -76,7 +78,7 @@ export default function Community() {
 <div className="composerBottom"><span>{draft.length}/500</span><button className="postButton" disabled={!draft.trim()&&!media&&!safe(link)}>✨ Post it</button></div></div>
           </form>
           {notice&&<p role="status" className="omPostNotice">{notice}</p>}
-          {sorted.map(post=><article className="socialPost" id={"post-"+post.id} key={post.id}>
+          {sorted.map(post=><article className={"socialPost "+(burst?.id===post.id?"omPostCelebrating":"")} id={"post-"+post.id} key={post.id}>{burst?.id===post.id&&<span className="omPostBurst" aria-hidden="true">{Array.from({length:9},(_,i)=><i key={i} style={{["--i" as string]:i} as React.CSSProperties}>{burst.emoji}</i>)}</span>}
             <div className="avatar">{post.name==="You"?"YOU":"1M"}</div>
             <div className="postBody">
               <div className="postHeader"><strong>{post.name}</strong><span>{post.handle} · {new Date(post.created).toLocaleDateString()}</span><button>•••</button></div>
@@ -84,7 +86,7 @@ export default function Community() {
               <div className="postActions">
                 <button onClick={()=>setCommentDraft(c=>({...c,[post.id]:c[post.id]===undefined?"":c[post.id]}))}>💬 {post.comments.length}</button>
                 <button className={post.liked?"liked":""} onClick={()=>like(post.id)}>❤️ {post.likes}</button>
-                <button onClick={()=>{const url=location.origin+"/community";if(navigator.share)void navigator.share({title:"1Muslim",text:post.text,url}).then(chime).catch(()=>{});else void navigator.clipboard.writeText(post.text+"\n"+url).then(()=>{setNotice("🔗 Copied post and community link!");chime()})}}>↗ Share</button>
+                <button onClick={()=>{animate(post.id,"✨","share");const url=location.origin+"/community";if(navigator.share)void navigator.share({title:"1Muslim",text:post.text,url}).then(chime).catch(()=>{});else void navigator.clipboard.writeText(post.text+"\n"+url).then(()=>{setNotice("🔗 Copied post and community link!");chime()})}}>↗ Share</button>
               </div>
               <div className="commentBox"><input value={commentDraft[post.id]||""} onChange={e=>setCommentDraft(c=>({...c,[post.id]:e.target.value}))} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();addComment(post.id)}}} placeholder="Reply to this post…"/><button onClick={()=>addComment(post.id)}>Reply</button></div>
               {post.comments.map(c=><div className="comment" key={c.id}><div className="smallAvatar">1M</div><div><strong>{c.name}</strong><p>{c.text}</p></div></div>)}
@@ -100,5 +102,5 @@ export default function Community() {
         </aside>
       </div>
     </div>
-  {floating&&effects&&<button type="button" className="omFloatingPost" onClick={()=>{document.getElementById("post-"+floating)?.scrollIntoView({behavior:"smooth",block:"center"});setFloating(null)}}>✨ Discover a community post <span>Tap to see ↗</span></button>}</main>;
+  {burst?.id==="new"&&<div className="omPublishCelebration" aria-hidden="true"><span>✨</span><strong>Post created!</strong></div>}{floating&&effects&&<button type="button" className="omFloatingPost" onClick={()=>{document.getElementById("post-"+floating)?.scrollIntoView({behavior:"smooth",block:"center"});setFloating(null)}}>✨ Discover a community post <span>Tap to see ↗</span></button>}</main>;
 }
