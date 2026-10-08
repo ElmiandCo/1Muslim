@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "../../../../utils/supabase/server";
 import SiteNav from "../../../components/SiteNav";
 import LiveKitViewer from "../../../../components/LiveKitViewer";
+import LiveGuestStudio from "../../../../components/LiveGuestStudio";
 import LiveChat from "../../../../components/LiveChat";
 import RecordingComments from "../../../../components/RecordingComments";
 import SaveRecording from "../../../components/SaveRecording";
@@ -56,6 +57,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
           {isLive ? (
             <>
               <LiveKitViewer roomName={stream.room_name} streamId={stream.id} />
+              <div style={{padding:"0 18px 18px"}}><LiveGuestStudio streamId={stream.id} roomName={stream.room_name} hostId={stream.host_id}/></div>
               <div style={{padding:18,display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(320px,.65fr)",gap:16}}>
                 <div><strong>🔴 Live now</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>Watch and participate in the conversation.</div><div style={{display:"flex",gap:14,flexWrap:"wrap",marginTop:12}}><Link href="/streaming" style={{color:"#cbd8ce",fontSize:12}}>← All streaming</Link><Link href={"/profile/"+stream.host_id} style={{color:"#d6e7b8",fontSize:12}}>Host profile</Link><Link href={"/messages?to="+stream.host_id} style={{color:"#d6e7b8",fontSize:12}}>💬 Message host</Link></div></div>
                 <LiveChat streamId={stream.id} hostId={stream.host_id} />
