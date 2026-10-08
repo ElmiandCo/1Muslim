@@ -580,7 +580,7 @@ export default function GoLivePage() {
         const { error: thumbnailError } = await supabase.storage.from("live-recordings").upload(liveThumbnailPath, thumbnailFile, { contentType: thumbnailFile.type, upsert: false, cacheControl: "31536000" });
         if (thumbnailError) throw thumbnailError;
       }
-      const { error: rowError } = await supabase.from("live_streams").insert({
+      const { data: insertedStream, error: rowError } = await supabase.from("live_streams").insert({
         id: liveStreamId,
         host_id: user.id,
         title: title.trim(),
@@ -595,8 +595,9 @@ export default function GoLivePage() {
         aspect_ratio: aspectRatio,
         video_width: formats.find(f => f.key === aspectRatio)?.width ?? 720,
         video_height: formats.find(f => f.key === aspectRatio)?.height ?? 1280,
-      });
+      }).select("started_at").single();
       if (rowError) throw rowError;
+      setBroadcastStartedAt(insertedStream?.started_at ?? new Date().toISOString());
 
       const tokenResponse = await fetch("/api/livekit/token", {
         method: "POST",
@@ -635,6 +636,7 @@ export default function GoLivePage() {
 
       startRecording();
       setLive(true);
+      setShowHostIntro(true);
       setViewers(0);
     } catch (err) {
       roomRef.current?.disconnect();
