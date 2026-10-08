@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import ExpressiveText from "./ExpressiveText";
 
 type Entry = { label: string; insert: string; meaning?: string };
 const packs: Record<string, Entry[]> = {
@@ -52,7 +53,7 @@ export default function ExpressionKeyboard({onInsert}:{onInsert:(text:string)=>v
       <div style={{fontWeight:850,marginBottom:8}}>🐦 1Muslim Expressions</div>
       <div style={{display:"flex",gap:5,overflowX:"auto",paddingBottom:7}}>{Object.keys(packs).map(t=><button type="button" key={t} onClick={()=>{setTab(t);setQuery("")}} aria-pressed={tab===t} style={{fontSize:11,whiteSpace:"nowrap",borderRadius:999,padding:"7px 9px",border:"1px solid #b99c5566",background:tab===t?"#b99c55":"transparent",color:tab===t?"#15120b":"#eee"}}>{t}</button>)}</div>
       <input aria-label="Search expressions" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search expressions…" style={{width:"100%",padding:9,marginBottom:9,borderRadius:9,border:"1px solid #b99c5566",background:"#09100c",color:"white"}}/>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:6}}>{entries.map(e=><button type="button" key={e.label} title={e.meaning} onClick={()=>{onInsert(e.insert);setOpen(false)}} style={{textAlign:"left",padding:10,borderRadius:10,border:"1px solid #b99c5533",background:"#18251b",color:"#f5f3e8",fontSize:12}}><strong>{e.label}</strong>{e.meaning&&<small style={{display:"block",opacity:.7,marginTop:4}}>{e.meaning}</small>}</button>)}</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:6}}>{entries.map(e=><button type="button" key={e.label} title={e.meaning} onClick={()=>{onInsert(e.insert);setOpen(false)}} style={{textAlign:"left",padding:10,borderRadius:10,border:"1px solid #b99c5533",background:"#18251b",color:"#f5f3e8",fontSize:12}}><strong><ExpressiveText text={e.label}/></strong>{e.meaning&&<small style={{display:"block",opacity:.7,marginTop:4}}>{e.meaning}</small>}</button>)}</div>
       {!entries.length&&<p style={{fontSize:12}}>No expressions found.</p>}
       <p style={{fontSize:10,opacity:.65,marginBottom:0}}>Tap an expression to add it to your message. Curated GIFs and illustrated stickers are coming next.</p>
     </div>}
