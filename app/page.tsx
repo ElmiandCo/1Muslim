@@ -231,10 +231,10 @@ export default function Home() {
         <section className="sectionBlock compact">
           <div className="sectionTitle"><div><span className="eyebrow">FOUNDATIONS</span><h2>The words you’ll keep hearing.</h2></div><span className="counter">12 terms</span></div>
           <div className="horizontalCards">
-            {foundations.slice(0,6).map(([a,b]) => <div className="termCard" key={a}>{a === "Shahadah" && <span className="badgeEmblem" style={{width:104,maxWidth:"100%",margin:"0 auto 12px"}}><img src="/assets/badges/shahada-badge.png" alt="Shahadah badge" /></span>}<strong>{a}</strong><span>{b}</span></div>)}
+            {foundations.slice(0,6).map(([a,b]) => <div className="termCard" key={a} role={a === "Dua" ? "button" : undefined} tabIndex={a === "Dua" ? 0 : undefined} onClick={a === "Dua" ? ()=>setDuaOpen(true) : undefined} onKeyDown={a === "Dua" ? e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setDuaOpen(true)}} : undefined} style={a === "Dua" ? {cursor:"pointer"} : undefined}>{a === "Dua" && <span style={{fontSize:12,color:"#d9c18b",fontWeight:800,marginBottom:8}}>{duaEarned?"✦ Dua practice badge earned":"✦ Open Dua lesson →"}</span>}{a === "Shahadah" && <span className="badgeEmblem" style={{width:104,maxWidth:"100%",margin:"0 auto 12px"}}><img src="/assets/badges/shahada-badge.png" alt="Shahadah badge" /></span>}<strong>{a}</strong><span>{b}</span></div>)}
           </div>
           <div className="horizontalCards second">
-            {foundations.slice(6).map(([a,b]) => <div className="termCard" key={a}>{a === "Shahadah" && <span className="badgeEmblem" style={{width:104,maxWidth:"100%",margin:"0 auto 12px"}}><img src="/assets/badges/shahada-badge.png" alt="Shahadah badge" /></span>}<strong>{a}</strong><span>{b}</span></div>)}
+            {foundations.slice(6).map(([a,b]) => <div className="termCard" key={a} role={a === "Dua" ? "button" : undefined} tabIndex={a === "Dua" ? 0 : undefined} onClick={a === "Dua" ? ()=>setDuaOpen(true) : undefined} onKeyDown={a === "Dua" ? e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setDuaOpen(true)}} : undefined} style={a === "Dua" ? {cursor:"pointer"} : undefined}>{a === "Dua" && <span style={{fontSize:12,color:"#d9c18b",fontWeight:800,marginBottom:8}}>{duaEarned?"✦ Dua practice badge earned":"✦ Open Dua lesson →"}</span>}{a === "Shahadah" && <span className="badgeEmblem" style={{width:104,maxWidth:"100%",margin:"0 auto 12px"}}><img src="/assets/badges/shahada-badge.png" alt="Shahadah badge" /></span>}<strong>{a}</strong><span>{b}</span></div>)}
           </div>
         </section>
 
@@ -280,6 +280,26 @@ export default function Home() {
         <footer><strong>1Muslim</strong><span>Learn · Connect · Reflect · Return</span><span>Built for people wherever they are in their journey.</span></footer>
       </main>
 
+        {duaOpen && <div role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setDuaOpen(false)}} style={{position:"fixed",inset:0,zIndex:2000,background:"rgba(0,0,0,.82)",display:"grid",placeItems:"center",padding:16,overflowY:"auto"}}>
+          <section role="dialog" aria-modal="true" aria-label="Learn to make Dua" style={{width:"min(100%,560px)",maxHeight:"90dvh",overflowY:"auto",background:"#101b14",color:"#eef5ed",border:"1px solid #657b60",borderRadius:24,padding:24,boxShadow:"0 24px 90px #000c"}}>
+            <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center"}}><span style={{letterSpacing:2,color:"#d8c28b",fontWeight:900,fontSize:12}}>FOUNDATIONS · DUA</span><button type="button" onClick={()=>setDuaOpen(false)} aria-label="Close Dua lesson" style={{background:"transparent",border:"1px solid #52624d",color:"white",borderRadius:50,padding:"8px 13px",cursor:"pointer"}}>✕</button></div>
+            <h2 style={{fontSize:30,margin:"16px 0 8px"}}>Make Dua with your heart.</h2>
+            <p style={{lineHeight:1.7,color:"#b7c8b8"}}>A beautiful prophetic etiquette is to begin by praising Allah, send blessings upon the Prophet ﷺ, then ask Allah for what you need. You can make sincere dua in any language.</p>
+            <div style={{display:"grid",gap:10,margin:"18px 0"}}>
+              <p><b style={{color:"#d8c28b"}}>1. Praise Allah.</b><br/>“Alhamdulillah, all praise belongs to Allah, the Most Merciful.”</p>
+              <p><b style={{color:"#d8c28b"}}>2. Send salawat.</b><br/>“Allahumma salli ‘ala Muhammad.”</p>
+              <p><b style={{color:"#d8c28b"}}>3. Ask sincerely.</b><br/>“O Allah, please guide me and forgive me.”</p>
+            </div>
+            <p style={{fontSize:13,color:"#b7c8b8"}}>Practice challenge: Write a dua that <strong>praises Allah first</strong> and <strong>then asks Him for something</strong>. The salawat step is recommended but not required for this beginner exercise.</p>
+            <label htmlFor="dua-practice" style={{fontWeight:800,display:"block",marginBottom:8}}>Your practice dua</label>
+            <textarea id="dua-practice" value={duaText} onChange={e=>{setDuaText(e.target.value);setDuaAttempted(false)}} rows={5} placeholder="Alhamdulillah, all praise belongs to You, Allah. Please guide me..." style={{width:"100%",resize:"vertical",padding:14,borderRadius:12,background:"#09120d",border:"1px solid #4b604c",color:"white",font:"inherit"}}/>
+            <div aria-live="polite" style={{fontSize:13,lineHeight:1.8,margin:"12px 0",color:"#c8d9c4"}}><div>{duaHasPraise?"✓":"○"} Praise Allah</div><div>{duaHasAsk?"✓":"○"} Ask Allah for something</div><div>{duaCorrect?"✓":"○"} Praise comes before asking</div></div>
+            {duaAttempted&&!duaCorrect&&<p role="alert" style={{color:"#f1c58d"}}>Try beginning with praise of Allah, then make your request. This simple practice checker recognizes common English and Arabic phrases.</p>}
+            {duaEarned&&<p role="status" style={{color:"#dceab7",fontWeight:900}}>✦ Dua Practice Badge unlocked on this device! This is a learning achievement, not verification of your faith.</p>}
+            <button type="button" onClick={submitDua} style={{width:"100%",padding:15,borderRadius:12,border:0,background:"#dceab7",color:"#122014",fontWeight:900,cursor:"pointer"}}>{duaEarned?"Practice again / Save":"Check my dua · Earn practice badge"}</button>
+            <p style={{fontSize:11,color:"#839487",marginTop:12}}>Your dua stays in this browser session and is not sent to a server. The practice badge is saved locally, not yet connected to your account's permanent badges.</p>
+          </section>
+        </div>}
       <aside className="rightRail">
         <div className="search">⌕ <input placeholder="Search 1Muslim" /></div>
         <div className="railCard"><span className="eyebrow">START HERE</span><h3>New to Islam?</h3><p>Take the gentle route through Allah, Qur’an, prayer, forgiveness and daily life.</p><button className="primary">Start Easy Path</button></div>
