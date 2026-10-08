@@ -21,8 +21,18 @@ export default function Community() {
   const [draft,setDraft]=useState("");
   useEffect(()=>{try{const saved=sessionStorage.getItem("1muslim-verse-share-draft");if(saved){setDraft(saved);sessionStorage.removeItem("1muslim-verse-share-draft")}}catch{}},[]);
   useEffect(()=>{const verse=new URLSearchParams(window.location.search).get("verse");if(verse&&/^(?:[1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(verse)){setDraft("Reflecting on Qur’an "+verse+" 📖\\nhttps://quran.com/"+verse+"\\n");setLink("https://quran.com/"+verse)}},[]);
-  const feedRef=useRef<HTMLDivElement>(null);
+  const feedRef=useRef<HTMLElement>(null);
   useEffect(()=>{const root=feedRef.current;if(!root||typeof IntersectionObserver==="undefined")return;const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("omPostVisible");observer.unobserve(entry.target)}})},{threshold:.12,rootMargin:"0px 0px -30px 0px"});root.querySelectorAll(".socialPost").forEach(node=>observer.observe(node));return()=>observer.disconnect()},[posts]);
+  const [videoIndex,setVideoIndex]=useState<number|null>(null);
+  const [videoMuted,setVideoMuted]=useState(false);
+  const [videoPaused,setVideoPaused]=useState(false);
+  const videoRef=useRef<HTMLVideoElement>(null);
+  const touchStart=useRef<number|null>(null);
+  const videos=useMemo(()=>posts.filter(p=>p.mediaType==="video"&&!!p.media),[posts]);
+  const openVideo=(id:string)=>{const index=videos.findIndex(p=>p.id===id);if(index>=0){setVideoIndex(index);setVideoPaused(false)}};
+  const nextVideo=(direction:number)=>{setVideoIndex(index=>index===null?null:Math.max(0,Math.min(videos.length-1,index+direction)));setVideoPaused(false)};
+  useEffect(()=>{if(videoIndex===null)return;const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setVideoIndex(null);if(e.key==="ArrowDown")nextVideo(1);if(e.key==="ArrowUp")nextVideo(-1)};document.addEventListener("keydown",key);const previous=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.removeEventListener("keydown",key);document.body.style.overflow=previous}},[videoIndex,videos.length]);
+  useEffect(()=>{if(videoIndex===null)return;const player=videoRef.current;if(player){player.currentTime=0;void player.play().catch(()=>{setVideoPaused(true)})}},[videoIndex]);
   const [media,setMedia]=useState("");
   const [mediaType,setMediaType]=useState("image");
   const [overlay,setOverlay]=useState("");
@@ -40,7 +50,7 @@ export default function Community() {
   const chime=()=>{if(!sounds)return;try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.frequency.value=740;g.gain.setValueAtTime(.04,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.2);setTimeout(()=>void c.close(),350)}catch{}};
   const pick=(file:File)=>{if(!file.type.startsWith("image/")&&!file.type.startsWith("video/"))return setNotice("Choose a photo or video");if(file.size>2500000)return setNotice("Preview uploads must be under 2.5MB until cloud storage is connected.");const reader=new FileReader();reader.onload=()=>{setMedia(String(reader.result||""));setMediaType(file.type.startsWith("video/")?"video":"image");setEdit(true)};reader.readAsDataURL(file)};
   useEffect(()=>{if(!effects)return;const t=setInterval(()=>setFloating(p=>p?null:posts[Math.floor(Math.random()*posts.length)]?.id||null),45000);return()=>clearInterval(t)},[effects,posts]);
-  const preview=(p:Post)=><>{p.media&&<div className="omPostMedia" style={{filter:p.filter||"none"}}>{p.mediaType==="video"?<video src={p.media} controls playsInline/>:<img src={p.media} alt="Attached post media"/>}{p.overlay&&<strong className="omPostOverlay">{p.overlay}</strong>}</div>}{p.link&&<a className="omLinkPreview" href={p.link} target="_blank" rel="noopener noreferrer">{youtube(p.link)?<img src={"https://img.youtube.com/vi/"+youtube(p.link)+"/hqdefault.jpg"} alt="Video thumbnail"/>:<span>🔗</span>}<span> {youtube(p.link)?"▶ Watch video":"↗ Open website"}<small>{new URL(p.link).hostname}</small></span></a>}</>;
+  const preview=(p:Post)=><>{p.media&&<div className="omPostMedia" style={{filter:p.filter||"none"}}>{p.mediaType==="video"?<button type="button" className="omVideoOpen" onClick={()=>openVideo(p.id)} aria-label="Play video in swipe viewer" style={{display:"block",width:"100%",position:"relative",padding:0,border:0,background:"#000",cursor:"pointer"}}><video src={p.media} preload="metadata" muted playsInline style={{width:"100%",maxHeight:420,objectFit:"contain",pointerEvents:"none"}}/><span style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"#000b",borderRadius:999,padding:"15px 20px",color:"#fff",fontSize:24}}>▶</span></button>:<img src={p.media} alt="Attached post media"/>}{p.overlay&&<strong className="omPostOverlay">{p.overlay}</strong>}</div>}{p.link&&<a className="omLinkPreview" href={p.link} target="_blank" rel="noopener noreferrer">{youtube(p.link)?<img src={"https://img.youtube.com/vi/"+youtube(p.link)+"/hqdefault.jpg"} alt="Video thumbnail"/>:<span>🔗</span>}<span> {youtube(p.link)?"▶ Watch video":"↗ Open website"}<small>{new URL(p.link).hostname}</small></span></a>}</>;
 
   const [commentDraft,setCommentDraft]=useState<Record<string,string>>({});
   const [following,setFollowing]=useState<Record<string,boolean>>({});
@@ -69,6 +79,18 @@ export default function Community() {
   };
 
   return <main className="communityPage">
+    <div style={{display:"flex",justifyContent:"flex-end",padding:"8px 16px"}}><button type="button" disabled={!videos.length} onClick={()=>setVideoIndex(0)} style={{borderRadius:999,padding:"10px 16px",background:"#183c2b",color:"white",border:"1px solid #47765c"}}>▶ Swipe Videos {videos.length?("("+videos.length+")"):""}</button></div>
+    {videoIndex!==null&&videos[videoIndex]&&<div role="dialog" aria-modal="true" aria-label="Swipe video posts" onTouchStart={e=>{touchStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(touchStart.current===null)return;const delta=touchStart.current-e.changedTouches[0].clientY;touchStart.current=null;if(Math.abs(delta)>55)nextVideo(delta>0?1:-1)}} onWheel={e=>{if(Math.abs(e.deltaY)>30)nextVideo(e.deltaY>0?1:-1)}} style={{position:"fixed",inset:0,zIndex:9999,background:"#050806",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"pan-y"}}>
+      <video key={videos[videoIndex].id} ref={videoRef} src={videos[videoIndex].media} autoPlay loop playsInline muted={videoMuted} onClick={()=>{const player=videoRef.current;if(!player)return;if(player.paused){void player.play();setVideoPaused(false)}else{player.pause();setVideoPaused(true)}}} style={{width:"100%",height:"100%",maxWidth:580,objectFit:"contain",background:"#000"}}/>
+      {videoPaused&&<span style={{position:"absolute",pointerEvents:"none",fontSize:52}}>▶</span>}
+      <button type="button" onClick={()=>setVideoIndex(null)} aria-label="Close video viewer" style={{position:"absolute",top:20,left:20,zIndex:2,background:"#0009",color:"#fff",border:0,borderRadius:99,padding:"12px 16px"}}>✕ Close</button>
+      <div style={{position:"absolute",right:16,top:"45%",display:"grid",gap:14,zIndex:2}}>
+        <button type="button" onClick={()=>nextVideo(-1)} disabled={videoIndex===0} aria-label="Previous video" style={{padding:14,borderRadius:99}}>↑</button>
+        <button type="button" onClick={()=>nextVideo(1)} disabled={videoIndex===videos.length-1} aria-label="Next video" style={{padding:14,borderRadius:99}}>↓</button>
+        <button type="button" onClick={()=>setVideoMuted(v=>!v)} aria-label={videoMuted?"Unmute":"Mute"} style={{padding:14,borderRadius:99}}>{videoMuted?"🔇":"🔊"}</button>
+      </div>
+      <div style={{position:"absolute",bottom:32,left:20,right:80,pointerEvents:"none",textShadow:"0 2px 10px #000"}}><strong>{videos[videoIndex].name} · {videos[videoIndex].handle}</strong><p>{videos[videoIndex].text}</p><small>{videoIndex+1} / {videos.length} · Swipe up for next</small></div>
+    </div>}
     <SiteNav />
     <div className="communityShell">
       <section className="communityHero"><span className="eyebrow">COMMUNITY</span><h1>Make your moment pop. ✨</h1><p>Ask, reflect, encourage and learn with the 1Muslim community.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">Preview: posts currently save only in your browser, not for other members.</p></section>
