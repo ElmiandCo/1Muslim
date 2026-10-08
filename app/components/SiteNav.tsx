@@ -162,7 +162,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       <div className="muslimDockShell">
         <Link href="/" className={pathname === "/" ? "dockItem selected" : "dockItem"} aria-label="Home"><span className="dockIcon">⌂</span><small>Home</small></Link>
         <Link href="/streaming" className={pathname.startsWith("/streaming") ? "dockItem selected" : "dockItem"} aria-label="Live"><span className="dockIcon">◉{anyoneLive && <span className="dockLiveBeacon" aria-hidden="true" />}</span><small>{anyoneLive ? "On Air" : "Live"}</small></Link>
-        <Link href={user ? "/profile" : "/auth"} className="dockCenter" aria-label={user ? "My profile" : "Sign in to your profile"}><img src="/1muslim-logo.svg" alt="" /><span className="dockCenterText">Profile</span></Link>
+        <Link href={user ? "/profile" : "/auth"} className="dockCenter" aria-label={user ? "My profile" : "Sign in to your profile"}><img src="/assets/1muslim-live-logo.PNG" alt="" /><span className="dockCenterText">Profile</span></Link>
         <Link href="/#paths" className="dockItem" aria-label="Learn"><span className="dockIcon">▤</span><small>Learn</small></Link>
         <button type="button" className="dockItem" aria-label="Create content" aria-expanded={createOpen} onClick={() => setCreateOpen(!createOpen)}><span className="dockIcon">＋</span><small>Create</small></button>
       </div>
