@@ -41,6 +41,8 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const [preliveFor,setPreliveFor]=useState<string|null>(null);
   const [introNeedsTap,setIntroNeedsTap]=useState(false);
   const introRef=useRef<HTMLVideoElement|null>(null);
+  const introSeenRef=useRef<Set<string>>(new Set());
+  const previousLiveRef=useRef<string|null>(null);
   const playerRef=useRef<HTMLDivElement|null>(null);
   const [theaterMode,setTheaterMode]=useState(false);
   const [isFullscreen,setIsFullscreen]=useState(false);
@@ -58,7 +60,17 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       setLives(rows);
       setCuratedVideos((curated??[]) as CuratedVideo[]);
       setLive((rows[0]??null) as LiveRow|null);
-      setPreliveFor((current)=>current ?? (rows[0]?.id ?? null));
+      // Refreshes and scrolling must not replay the introduction.
+      const leadId=rows[0]?.id ?? null;
+      if(leadId && previousLiveRef.current!==leadId && !introSeenRef.current.has(leadId)) {
+        const alreadyPlayed=typeof window!=="undefined" && sessionStorage.getItem("1muslim-intro-played")==="yes";
+        if(!alreadyPlayed || previousLiveRef.current!==null){
+          introSeenRef.current.add(leadId);
+          sessionStorage.setItem("1muslim-intro-played","yes");
+          setPreliveFor(leadId);
+        }
+      }
+      previousLiveRef.current=leadId;
       setActiveIndex((current)=>rows.length ? Math.min(current, rows.length - 1) : 0);
       const hostIds=Array.from(new Set(rows.map(row=>row.host_id).filter(Boolean)));
       if(hostIds.length){
@@ -144,7 +156,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       </div>
       <div>
         {active ? <div className={`liveCard${theaterMode ? " theater" : ""}`} style={{padding:0,overflow:"hidden"}}>
-          {hasNextStream && <button type="button" onClick={()=>{ const nextQueueIndex=(safeIndex+1)%queue.length; const nextQueueItem=queue[nextQueueIndex]; setActiveIndex(nextQueueIndex); setPreliveFor(nextQueueItem?.kind==="live" ? nextQueueItem.item.id : null); }} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,border:0,borderBottom:"1px solid #26362b",background:"#0b120d",color:"#dce8dc",padding:"11px 14px",cursor:"pointer",textAlign:"left"}}>
+          {hasNextStream && <button type="button" onClick={()=>{ const nextQueueIndex=(safeIndex+1)%queue.length; const nextQueueItem=queue[nextQueueIndex]; setActiveIndex(nextQueueIndex); if(nextQueueItem?.kind==="live" && !introSeenRef.current.has(nextQueueItem.item.id)){introSeenRef.current.add(nextQueueItem.item.id);setPreliveFor(nextQueueItem.item.id)}else setPreliveFor(null); }} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,border:0,borderBottom:"1px solid #26362b",background:"#0b120d",color:"#dce8dc",padding:"11px 14px",cursor:"pointer",textAlign:"left"}}>
             <span style={{fontSize:9,fontWeight:900,letterSpacing:".14em",textTransform:"uppercase"}}>Next Stream</span>
             <span style={{fontSize:10,color:"#8da88f"}}>Switch to another host →</span>
           </button>}
