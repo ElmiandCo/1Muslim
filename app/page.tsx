@@ -108,7 +108,7 @@ export default function Home() {
   return (
     <div className="app">
       <aside className="sidebar">
-        <Link href="/" className="homeLogo" aria-label="1Muslim Home"><img src="/1muslim-logo.svg" alt="1Muslim" /></Link>
+        <Link href="/" className="homeLogo" aria-label="1Muslim Home"><img src="/assets/1muslim-mobile-logo.PNG" alt="1Muslim" /></Link>
         <nav>
           {[
             ["Home","/","⌂"],["Learn","/#paths","◈"],["Explore","/#explore","◎"],["Community","/community","♧"],["Streaming","/streaming","▶"]
@@ -126,7 +126,7 @@ export default function Home() {
 
       <main className="feed">
         <header className="mobileTop">
-          <Link href="/" className="homeLogo compactLogo" aria-label="1Muslim Home"><img src="/1muslim-logo.svg" alt="1Muslim" /></Link>
+          <Link href="/" className="homeLogo compactLogo" aria-label="1Muslim Home"><img src="/assets/1muslim-mobile-logo.PNG" alt="1Muslim" /></Link>
           <ThemeToggle />
         </header>
 
