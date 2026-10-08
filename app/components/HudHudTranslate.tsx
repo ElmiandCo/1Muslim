@@ -14,6 +14,7 @@ export default function HudHudTranslate() {
   const active=useRef<Lang>("en");
   const cache=useRef(new Map<string,string>());
   const pending=useRef(false);
+  const suppress=useRef(false);
   useEffect(()=>{const stored=localStorage.getItem("1muslim-language");if(stored==="ar"||stored==="so")setLang(stored)},[]);
   useEffect(()=>{
     let observer:MutationObserver|undefined;
@@ -40,12 +41,14 @@ export default function HudHudTranslate() {
         }
         if(id!==generation.current)return;
         observer?.disconnect();
+        suppress.current=true;
         nodes.forEach(n=>{const original=originals.current.get(n)??"";const translated=cache.current.get(target+"|"+original);if(translated!==undefined)n.textContent=translated});
         setNotice(UI[target][2]);
+        suppress.current=false;
       }catch{if(id===generation.current){setNotice(UI[target][3]);setLang("en")}}
-      finally{if(id===generation.current)setBusy(false);observer?.observe(document.body,{subtree:true,childList:true,characterData:true})}
+      finally{if(id===generation.current)setBusy(false);suppress.current=false;observer?.observe(document.body,{subtree:true,childList:true,characterData:true})}
     };
-    const schedule=()=>{if(pending.current)return;pending.current=true;setTimeout(()=>{pending.current=false;if(active.current!=="en")void run(active.current);else collect()},400)};
+    const schedule=()=>{if(suppress.current||pending.current)return;pending.current=true;setTimeout(()=>{pending.current=false;if(active.current!=="en")void run(active.current);else collect()},400)};
     observer=new MutationObserver(schedule);
     void run(lang);
     observer.observe(document.body,{subtree:true,childList:true,characterData:true});
@@ -54,7 +57,7 @@ export default function HudHudTranslate() {
   return <div className="hudhud-translator" data-no-translate="true" aria-live="polite">
     <img className={busy?"hudhud-translator-bird translating":"hudhud-translator-bird"} src="/assets/hudhud-logo.PNG" alt="HudHud" onError={e=>{e.currentTarget.style.display="none"}} />
     <label htmlFor="hudhud-language">🌐 <span>{UI[lang][0]}</span></label>
-    <select id="hudhud-language" value={lang} onChange={e=>setLang(e.target.value as Lang)} disabled={busy} aria-label="Website language">
+    <select id="hudhud-language" value={lang} onChange={e=>{setNotice("");setLang(e.target.value as Lang)}} aria-label="Website language">
       {(Object.keys(labels) as Lang[]).map(l=><option key={l} value={l}>{labels[l]}</option>)}
     </select>
     {busy&&<span className="hudhud-shine" role="status">{UI[lang][1]}</span>}
