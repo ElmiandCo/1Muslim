@@ -343,3 +343,41 @@ video {
 @keyframes omNotificationWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-5deg)}80%{transform:rotate(4deg)}}
 @media(max-width:600px){.omMessengerShell{grid-template-columns:1fr!important}.omReactionRail{gap:3px}.omReactionChip{font-size:11px;padding:5px 6px!important}}
 @media(prefers-reduced-motion:reduce){.omReactionChip,.omMessageBubble,.notificationRow{transition:none!important}.omReactionChip:hover,.omMessageRow:hover .omMessageBubble,.notificationRow:hover{transform:none!important}.notificationRow.unread .notificationIcon{animation:none!important}}
+
+/* Mobile-first conversation flow: one pane at a time, persistent easy-to-reach composer. */
+.omBackToChats{display:none;border:1px solid #b99c5566;background:#183b2d;color:#f7e6ba;padding:8px 12px;border-radius:12px;font-weight:750;margin-right:12px}
+.omComposerExpand{flex:0 0 37px;height:39px;border-radius:50%;border:1px solid #b99c55;background:#1b3425;color:#f0d995;font-size:23px;cursor:pointer}
+.omComposerSend{border:0;background:linear-gradient(135deg,#e9cf83,#b99c55);color:#14251b;font-weight:850;box-shadow:0 4px 16px #b99c5544}
+.omComposerSend:disabled{opacity:.45;box-shadow:none}
+.omExpressionPanelTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.omExpressionPanelTitle button{border:0;background:#26382b;color:#f3e5c1;border-radius:9px;padding:6px 10px}
+.omExpressionRecent{padding:9px 0;border-bottom:1px solid #b99c5544;margin-bottom:10px}
+.omExpressionRecent>span{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin-bottom:8px}
+.omExpressionRecent>div{display:flex;gap:6px;overflow-x:auto}
+.omExpressionRecent button{flex:0 0 auto;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#29402e;color:#fff;border:1px solid #b99c5555;border-radius:999px;padding:7px 10px;font-size:12px}
+.omExpressionTrigger{transition:transform .2s ease,box-shadow .2s ease}
+.omExpressionTrigger:hover{transform:scale(1.06);box-shadow:0 0 16px #b99c5566}
+@media(min-width:701px){.omComposerTools,.omComposerSettings{display:flex!important}}
+@media(max-width:700px){
+ .omMessengerShell{display:flex!important;flex-direction:column;min-height:calc(100dvh - 150px)!important;border-radius:15px!important}
+ .omMessengerShell--chat .omConversationList{display:none}
+ .omMessengerShell--list .omChatPane{display:none!important}
+ .omConversationList,.omChatPane{width:100%;min-width:0}
+ .omChatPane{min-height:calc(100dvh - 165px);max-height:calc(100dvh - 110px)}
+ .omBackToChats{display:inline-flex}
+ .omChatHeader{padding:12px!important;display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+ .omMessagesFeed{max-height:none!important;min-height:160px;padding:12px!important}
+ .omComposerTools,.omComposerSettings{display:none!important}
+ .omComposerTools--open,.omComposerSettings--open{display:flex!important;flex-wrap:wrap;padding:9px 12px!important}
+ .omMessageComposer{position:sticky;bottom:0;z-index:12;background:var(--panel2,#0d1711);border-top:1px solid #b99c5555;align-items:center;padding:10px!important;gap:6px!important;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))!important}
+ .omMessageComposer input{font-size:16px!important;min-width:0}
+ .omComposerSend{min-width:43px;min-height:43px;padding:9px!important}
+ .omComposerSend span{display:none}
+ .omExpressionPanel{position:fixed!important;left:10px!important;right:10px!important;bottom:calc(68px + env(safe-area-inset-bottom,0px))!important;top:auto!important;width:auto!important;max-width:500px!important;margin:0 auto;max-height:min(66dvh,520px)!important;border-radius:22px!important;box-shadow:0 0 0 100vmax #0008,0 18px 70px #000b!important;animation:omKeyboardRise .25s cubic-bezier(.2,.8,.2,1) both}
+ .omExpressionRoot{position:static!important}
+ .omReactionRail{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin;justify-content:flex-start!important;padding-bottom:4px}
+ .omMessageRow--mine .omReactionRail{justify-content:flex-end!important}
+ .omReactionChip{flex:0 0 auto}
+}
+@keyframes omKeyboardRise{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.omExpressionPanel{animation:none!important}.omExpressionTrigger{transition:none!important}}
