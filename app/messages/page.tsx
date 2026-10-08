@@ -57,6 +57,7 @@ export default function MessagesPage(){
  const [typingChannel,setTypingChannel]=useState<ReturnType<typeof client.channel>|null>(null);
  useEffect(()=>{const params=new URLSearchParams(window.location.search);const conversation=params.get("conversation");const message=params.get("message");if(conversation&&/^[0-9a-f-]{36}$/i.test(conversation))setSelected(conversation);if(message&&/^[0-9a-f-]{36}$/i.test(message))setTargetMessage(message);const to=params.get("to");if(to&&/^[0-9a-f-]{36}$/i.test(to)){setRecipient(to);setInitialRecipient(to)}},[]);
  useEffect(()=>{let active=true;client.auth.getUser().then(({data})=>{if(active){setUid(data.user?.id??null);setLoadingAuth(false)}});return()=>{active=false}},[client]);
+ useEffect(()=>{if(!uid||!targetMessage||selected)return;let active=true;void client.from("dm_messages").select("conversation_id").eq("id",targetMessage).maybeSingle().then(({data})=>{if(active&&data?.conversation_id)setSelected(data.conversation_id)});return()=>{active=false}},[client,uid,targetMessage,selected]);
  useEffect(()=>{if(!uid)return;let active=true;
  void client.from("dm_blocks").select("blocked_id").eq("blocker_id",uid).then(({data})=>{if(active)setBlocked((data??[]).map(x=>x.blocked_id))});
  void client.from("dm_privacy").select("allow_requests").eq("user_id",uid).maybeSingle().then(({data})=>{if(active&&data)setAllowRequests(data.allow_requests)});
