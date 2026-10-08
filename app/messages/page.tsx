@@ -27,6 +27,12 @@ export default function MessagesPage(){
  const [initialRecipient,setInitialRecipient]=useState<string|null>(null);
  const [error,setError]=useState("");
  const [busy,setBusy]=useState(false);
+ const [blocked,setBlocked]=useState<string[]>([]);
+ const [allowRequests,setAllowRequests]=useState(true);
+ const [reportReason,setReportReason]=useState("spam");
+ const [reportDetails,setReportDetails]=useState("");
+ const [showReport,setShowReport]=useState(false);
+ const [notice,setNotice]=useState("");
  const [loadingAuth,setLoadingAuth]=useState(true);
  const [peerOnline,setPeerOnline]=useState(false);
  const [peerTyping,setPeerTyping]=useState(false);
@@ -66,6 +72,10 @@ export default function MessagesPage(){
  void open();return()=>{canceled=true}
  },[client,uid,initialRecipient]);
  useEffect(()=>{if(!uid||search.trim().length<2){setPeople([]);return}let active=true;const timer=setTimeout(async()=>{const q=search.trim().replace(/[%_,]/g,"");const {data}=await client.from("profiles").select("id,display_name,username").or(`display_name.ilike.%${q}%,username.ilike.%${q}%`).neq("id",uid).limit(8);if(active)setPeople(data??[])},350);return()=>{active=false;clearTimeout(timer)}},[client,uid,search]);
+ const peerId=threads.find(t=>t.conversation_id===selected)?.user_id;
+ async function toggleBlock(){if(!uid||!peerId)return;const wasBlocked=blocked.includes(peerId);const {error}=wasBlocked?await client.from("dm_blocks").delete().eq("blocker_id",uid).eq("blocked_id",peerId):await client.from("dm_blocks").insert({blocker_id:uid,blocked_id:peerId});if(error)setError(error.message);else{setBlocked(v=>wasBlocked?v.filter(x=>x!==peerId):[...v,peerId]);setNotice(wasBlocked?"Member unblocked":"Member blocked")}}
+ async function savePrivacy(next:boolean){if(!uid)return;const {error}=await client.from("dm_privacy").upsert({user_id:uid,allow_requests:next});if(error)setError(error.message);else setAllowRequests(next)}
+ async function submitReport(){if(!uid||!selected||!peerId)return;const {error}=await client.from("dm_reports").insert({reporter_id:uid,reported_id:peerId,conversation_id:selected,reason:reportReason,details:reportDetails.slice(0,1000)});if(error)setError(error.message);else{setNotice("Report submitted");setShowReport(false);setReportDetails("")}}
  async function start(){setError("");setBusy(true);try{const {data,error}=await client.rpc("dm_start_conversation",{other_user:recipient.trim()});if(error)throw error;setSelected(data);setStatus(null);setRecipient("");const {data:rows}=await client.from("dm_participants").select("conversation_id,user_id");setThreads((rows??[]).filter(p=>p.user_id!==uid));}catch(e){setError(e instanceof Error?e.message:"Unable to start conversation")}finally{setBusy(false)}}
  async function accept(){if(!selected)return;setBusy(true);const {error}=await client.rpc("dm_accept_conversation",{cid:selected});if(error)setError(error.message);else setStatus(s=>s?{...s,request_status:"accepted"}:s);setBusy(false)}
  async function upload(file:File){if(!selected||!uid||busy)return;
