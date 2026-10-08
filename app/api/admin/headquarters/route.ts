@@ -9,7 +9,7 @@ export async function GET(req:NextRequest){
  if(authError||!user)return NextResponse.json({error:"Sign in required"},{status:401});
  const {data:admin,error:adminError}=await db.rpc("is_1muslim_admin");
  if(adminError||admin!==true)return NextResponse.json({error:"Administrator access required"},{status:403});
- const q=clean(req.nextUrl.searchParams.get("q")||"");
+ const q=clean(req.nextUrl.searchParams.get("q")||"").replace(/^@/,"");
  const category=req.nextUrl.searchParams.get("category")||"all";
  const member=req.nextUrl.searchParams.get("member")||"";
  if(!["all","members","posts","lives","reports"].includes(category))return NextResponse.json({error:"Invalid category"},{status:400});
@@ -21,7 +21,7 @@ export async function GET(req:NextRequest){
  if(category==="all"||category==="members")tasks.push((async()=>{
   let query=db.from("profiles").select("id,display_name,username,first_name,last_name,city,state,country,xp_total,shahada_verified_at").order("xp_total",{ascending:false}).limit(limit);
   if(member)query=query.eq("id",member);
-  else if(q)query=query.or("display_name.ilike.%"+q+"%,username.ilike.%"+q+"%,first_name.ilike.%"+q+"%,last_name.ilike.%"+q+"%,city.ilike.%"+q+"%");
+  else if(q)query=uuid.test(q)?query.eq("id",q):query.or("display_name.ilike.%"+q+"%,username.ilike.%"+q+"%,first_name.ilike.%"+q+"%,last_name.ilike.%"+q+"%,city.ilike.%"+q+"%");
   const {data,error}=await query;if(error)warnings.push("Members: "+error.message);else result.members=data||[];
  })());
  if(category==="all"||category==="posts")tasks.push((async()=>{
