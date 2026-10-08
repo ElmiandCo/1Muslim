@@ -15,21 +15,23 @@ export default function MessagesPage(){
  const [recipient,setRecipient]=useState("");
  const [error,setError]=useState("");
  const [busy,setBusy]=useState(false);
- useEffect(()=>{let active=true;client.auth.getUser().then(({data})=>{if(active)setUid(data.user?.id??null)});return()=>{active=false}},[client]);
+ const [loadingAuth,setLoadingAuth]=useState(true);
+ useEffect(()=>{let active=true;client.auth.getUser().then(({data})=>{if(active){setUid(data.user?.id??null);setLoadingAuth(false)}});return()=>{active=false}},[client]);
  useEffect(()=>{if(!uid)return;let active=true;
  const load=async()=>{const {data,error}=await client.from("dm_participants").select("conversation_id,user_id").order("joined_at",{ascending:false});if(active){if(error)setError(error.message);else setThreads((data??[]).filter(p=>p.user_id!==uid))}};
- load();return()=>{active=false};
+ load();const timer=window.setInterval(()=>{void load()},5000);return()=>{active=false;window.clearInterval(timer)};
  },[client,uid]);
- useEffect(()=>{if(!selected)return;let active=true;
- client.from("dm_conversations").select("request_status,requested_by").eq("id",selected).single().then(({data})=>{if(active)setStatus(data)});
+ useEffect(()=>{if(!selected)return;let active=true;setMessages([]);setStatus(null);
+ const loadStatus=async()=>{const {data}=await client.from("dm_conversations").select("request_status,requested_by").eq("id",selected).single();if(active)setStatus(data)};void loadStatus();const statusTimer=window.setInterval(()=>{void loadStatus()},5000);
  const load=async()=>{const {data,error}=await client.from("dm_messages").select("id,conversation_id,sender_id,body,created_at").eq("conversation_id",selected).is("deleted_at",null).order("created_at",{ascending:true}).limit(200);if(active){if(error)setError(error.message);else setMessages(data??[])}};
  load();
  const channel=client.channel("dm:"+selected).on("postgres_changes",{event:"INSERT",schema:"public",table:"dm_messages",filter:"conversation_id=eq."+selected},()=>{void load()}).subscribe();
- return()=>{active=false;void client.removeChannel(channel)};
+ return()=>{active=false;window.clearInterval(statusTimer);void client.removeChannel(channel)};
  },[client,selected]);
  async function start(){setError("");setBusy(true);try{const {data,error}=await client.rpc("dm_start_conversation",{other_user:recipient.trim()});if(error)throw error;setSelected(data);setStatus(null);setRecipient("");const {data:rows}=await client.from("dm_participants").select("conversation_id,user_id");setThreads((rows??[]).filter(p=>p.user_id!==uid));}catch(e){setError(e instanceof Error?e.message:"Unable to start conversation")}finally{setBusy(false)}}
  async function accept(){if(!selected)return;setBusy(true);const {error}=await client.rpc("dm_accept_conversation",{cid:selected});if(error)setError(error.message);else setStatus(s=>s?{...s,request_status:"accepted"}:s);setBusy(false)}
  async function send(e:React.FormEvent){e.preventDefault();if(!selected||!uid||!draft.trim()||busy)return;setBusy(true);setError("");const body=draft.trim();const {error}=await client.from("dm_messages").insert({conversation_id:selected,sender_id:uid,body});if(error)setError(error.message);else{setDraft("");const {data}=await client.from("dm_messages").select("id,conversation_id,sender_id,body,created_at").eq("conversation_id",selected).order("created_at",{ascending:true}).limit(200);setMessages(data??[])}setBusy(false)}
+ if(loadingAuth)return <main style={{padding:32}}>Loading messages…</main>;
  if(!uid)return <main style={{padding:32,maxWidth:720,margin:"auto"}}><h1>Messages</h1><p>Sign in to access private conversations.</p><Link href="/auth">Sign in →</Link></main>;
  return <main style={{maxWidth:1150,margin:"30px auto",padding:"0 16px",color:"var(--text,#f4f4f5)"}}>
  <Link href="/">← Home</Link><h1 style={{fontSize:32,margin:"18px 0"}}>Messages</h1>
@@ -45,7 +47,7 @@ export default function MessagesPage(){
  {selected&&status?.request_status==="pending"&&<div style={{padding:16}}>{status.requested_by===uid?"Message request pending acceptance.":"This person wants to connect."}{status.requested_by!==uid&&<button onClick={accept} disabled={busy} style={{marginLeft:12,padding:10}}>Accept request</button>}</div>}
  {selected&&status?.request_status==="accepted"&&<form onSubmit={send} style={{display:"flex",padding:12,gap:8}}><input aria-label="Message" maxLength={4000} value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Write a message…" style={{flex:1,minWidth:0,padding:12,borderRadius:12,color:"#111"}}/><button disabled={busy||!draft.trim()} type="submit" style={{padding:"10px 18px",borderRadius:12}}>Send</button></form>}
  </section></div>{error&&<p role="alert" style={{color:"#f87171"}}>{error}</p>}
- <p style={{opacity:.7,fontSize:13}}>Messaging foundation preview. Recipient discovery, message requests, blocking, and media arrive in later stages.</p>
+ <p style={{opacity:.7,fontSize:13}}>Messaging foundation preview. Requests require acceptance before messages can be sent. Member discovery, blocking, and media are coming next.</p>
  <style jsx>{`@media(max-width:600px){main>div{grid-template-columns:1fr!important}aside{border-right:0!important;border-bottom:1px solid #64748b55}}`}</style>
  </main>
 }
