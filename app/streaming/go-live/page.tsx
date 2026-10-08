@@ -589,7 +589,7 @@ export default function GoLivePage() {
   };
 
   const saveRecording = async () => {
-    if (!chunksRef.current.length) { setError("No recording data was captured."); return; }
+    if (!chunksRef.current.length) { setError("No recording data was captured."); return false; }
     setSaving(true); setError(""); setSaveMessage("");
     try {
       const supabase = createClient();
@@ -640,8 +640,10 @@ export default function GoLivePage() {
       chunksRef.current = [];
       recordingStartedAtRef.current = null;
       setSaveMessage("Saved to your Live Recordings.");
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "The recording could not be saved.");
+      return false;
     } finally { setSaving(false); }
   };
 
@@ -756,7 +758,8 @@ export default function GoLivePage() {
     const recorder = recorderRef.current;
     if (recorder && recorder.state !== "inactive") {
       recorder.onstop = async () => {
-        await saveRecording();
+        const saved = await saveRecording();
+        if (saved && liveStreamId) window.location.assign("/streaming/recordings?recap="+encodeURIComponent(liveStreamId));
         streamRef.current?.getTracks().forEach((track) => track.stop());
         streamRef.current = null; setCameraReady(false);
       audioProcessorRef.current = null; audioTrackRef.current = null; processedAudioTrackRef.current = null; setCameraOn(true); setMicOn(true);
@@ -770,6 +773,7 @@ export default function GoLivePage() {
     } else {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null; setCameraReady(false);
+      if (liveStreamId) window.location.assign("/streaming/recordings?recap="+encodeURIComponent(liveStreamId));
     }
   };
 
