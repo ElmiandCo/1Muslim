@@ -21,6 +21,17 @@ const formats: Array<{ key: AspectRatio; label: string; width: number; height: n
 
 export default function GoLivePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const greenVideoRef = useRef<HTMLVideoElement | null>(null);
+  const greenCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const greenFrameRef = useRef<number | null>(null);
+  const rawCameraRef = useRef<MediaStreamTrack | null>(null);
+  const backgroundRef = useRef<HTMLImageElement | null>(null);
+  const [greenEnabled,setGreenEnabled] = useState(false);
+  const [greenStrength,setGreenStrength] = useState(75);
+  const [greenImageName,setGreenImageName] = useState("");
+  const greenSettingsRef = useRef({enabled:false,strength:75});
+  greenSettingsRef.current = {enabled:greenEnabled,strength:greenStrength};
+
   const [broadcastStartedAt,setBroadcastStartedAt] = useState<string|null>(null);
   const hostIntroRef = useRef<HTMLVideoElement>(null);
   const [showHostIntro,setShowHostIntro] = useState(false);
@@ -221,18 +232,97 @@ export default function GoLivePage() {
     return () => window.clearInterval(timer);
   }, [scheduledSlot, hostCheckedIn, live, cameraReady, cameraOn, micOn]);
 
+  // Local chroma key: replaces a physical green backdrop, without uploading the chosen photo.
+  const stopGreen = () => {
+    if (greenFrameRef.current !== null) cancelAnimationFrame(greenFrameRef.current);
+    greenFrameRef.current = null;
+    greenVideoRef.current?.pause();
+    greenVideoRef.current = null;
+    greenCanvasRef.current = null;
+  };
+  const startGreen = async (raw:MediaStreamTrack) => {
+    stopGreen();
+    const source = document.createElement("video");
+    source.srcObject = new MediaStream([raw]);
+    source.muted=true; source.playsInline=true; source.autoplay=true;
+    await source.play();
+    const canvas=document.createElement("canvas");
+    canvas.width=640;canvas.height=360;
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});
+    if(!ctx)throw new Error("Green screen is unavailable in this browser.");
+    greenVideoRef.current=source;greenCanvasRef.current=canvas;
+    const draw=()=>{
+      if(!source.videoWidth || !source.videoHeight){greenFrameRef.current=requestAnimationFrame(draw);return;}
+      if(canvas.width!==source.videoWidth||canvas.height!==source.videoHeight){canvas.width=source.videoWidth;canvas.height=source.videoHeight;}
+      ctx.drawImage(source,0,0,canvas.width,canvas.height);
+      const image=ctx.getImageData(0,0,canvas.width,canvas.height);
+      const pixels=image.data;
+      const threshold=greenSettingsRef.current.strength/100;
+      for(let i=0;i<pixels.length;i+=4){
+        const rr=pixels[i],gg=pixels[i+1],bb=pixels[i+2];
+        const dominance=gg-Math.max(rr,bb);
+        const cutoff=12+threshold*65;
+        if(dominance>cutoff && gg>65){pixels[i+3]=0;}
+        else if(dominance>cutoff-18 && gg>65){pixels[i+3]=Math.round(255*(cutoff-dominance)/18);}
+      }
+      if(greenSettingsRef.current.enabled&&backgroundRef.current){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        const bg=backgroundRef.current;
+        const scale=Math.max(canvas.width/bg.width,canvas.height/bg.height);
+        const w=bg.width*scale,h=bg.height*scale;
+        ctx.drawImage(bg,(canvas.width-w)/2,(canvas.height-h)/2,w,h);
+        const foreground=document.createElement("canvas");
+        foreground.width=canvas.width;foreground.height=canvas.height;
+        foreground.getContext("2d")?.putImageData(image,0,0);
+        ctx.drawImage(foreground,0,0);
+      } else ctx.putImageData(image,0,0);
+      greenFrameRef.current=requestAnimationFrame(draw);
+    };
+    draw();
+    return canvas.captureStream(24).getVideoTracks()[0];
+  };
+  const selectGreenPhoto=async(file?:File)=>{
+    if(!file)return;
+    if(!file.type.startsWith("image/")||file.size>12*1024*1024){setError("Choose an image smaller than 12 MB.");return;}
+    const url=URL.createObjectURL(file);
+    try{
+      const image=new Image();
+      image.src=url;
+      await image.decode();
+      backgroundRef.current=image;
+      setGreenImageName(file.name);
+      setGreenEnabled(true);
+      if(streamRef.current&&!greenCanvasRef.current&&!live){
+        const raw=rawCameraRef.current;
+        if(raw){
+          const output=await startGreen(raw);
+          streamRef.current.getVideoTracks().forEach(t=>streamRef.current?.removeTrack(t));
+          streamRef.current.addTrack(output);
+          if(videoRef.current){videoRef.current.srcObject=streamRef.current;void videoRef.current.play().catch(()=>{});}
+        }
+      }
+    }catch{setError("This image could not be opened.");}finally{URL.revokeObjectURL(url);}
+  };
   const startPreview = async () => {
     setError("");
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error("Camera and microphone access is not available in this browser.");
       }
+      stopGreen();
+      rawCameraRef.current?.stop();
       streamRef.current?.getTracks().forEach((track) => track.stop());
       const size = getCaptureSize();
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode, width: { ideal: size.width }, height: { ideal: size.height } },
         audio: true,
       });
+      rawCameraRef.current=stream.getVideoTracks()[0];
+      if(greenEnabled&&backgroundRef.current){
+        const output=await startGreen(rawCameraRef.current);
+        stream.removeTrack(rawCameraRef.current);
+        stream.addTrack(output);
+      }
       streamRef.current = stream;
       setCameraReady(true);
       setCameraOn(true);
@@ -261,6 +351,8 @@ export default function GoLivePage() {
   }, [cameraReady]);
 
   useEffect(() => () => {
+    stopGreen();
+    rawCameraRef.current?.stop();
     streamRef.current?.getTracks().forEach((track) => track.stop());
     void audioProcessorRef.current?.destroy?.();
     if (audioContextRef.current) {
@@ -280,6 +372,7 @@ export default function GoLivePage() {
     setError("");
     const nextFacingMode = facingMode === "user" ? "environment" : "user";
     try {
+      if(greenCanvasRef.current) throw new Error("Turn off Green Screen and restart camera preview before flipping the camera.");
       const currentStream = streamRef.current;
       const oldVideoTracks = currentStream.getVideoTracks();
       const newVideoStream = await navigator.mediaDevices.getUserMedia({
@@ -298,6 +391,7 @@ export default function GoLivePage() {
       });
       currentStream.addTrack(newVideoTrack);
       streamRef.current = currentStream;
+      rawCameraRef.current=newVideoTrack;
       setFacingMode(nextFacingMode);
       setCameraOn(true);
       setZoom(1);
@@ -711,6 +805,16 @@ export default function GoLivePage() {
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
               {live && <span className="live">● LIVE</span>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
+            </div>
+            <div style={{display:"flex",gap:9,alignItems:"center",flexWrap:"wrap",padding:"10px 0"}}>
+              <label style={{fontSize:12,color:"#d6e7b8",cursor:"pointer"}}>🟢 Green Screen · Choose Photo
+                <input type="file" accept="image/*" onChange={e=>void selectGreenPhoto(e.target.files?.[0])} style={{display:"block",fontSize:11,marginTop:5,maxWidth:240}} />
+              </label>
+              {greenImageName&&<><span style={{fontSize:11}}>{greenImageName}</span>
+                <button type="button" onClick={()=>{setGreenEnabled(false);greenSettingsRef.current.enabled=false;}} style={{padding:8,borderRadius:10}}>Remove effect</button>
+                <label style={{fontSize:11}}>Green sensitivity <input type="range" min="0" max="100" value={greenStrength} onChange={e=>setGreenStrength(Number(e.target.value))}/></label>
+              </>}
+              <small style={{color:"#a5b7a8"}}>Use a real green backdrop for best results. Choose your photo before starting camera preview.</small>
             </div>
             <div className="controls">
               {cameraReady && <><button className={cameraOn ? "circle" : "circle off"} onClick={toggleCamera} aria-label="Toggle camera">{cameraOn ? "◉" : "○"}</button><button className="circle" onClick={()=>void flipCamera()} aria-label="Flip camera" title="Flip camera">↻</button><button className={micOn ? "circle" : "circle off"} onClick={toggleMic} aria-label="Toggle microphone">{micOn ? "♫" : "×"}</button></>}
