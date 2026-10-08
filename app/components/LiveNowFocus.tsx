@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 import LiveKitViewer from "../../components/LiveKitViewer";
 import LiveChat from "../../components/LiveChat";
@@ -38,6 +38,8 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const [loading,setLoading]=useState(true);
   const [commentsOpen,setCommentsOpen]=useState(false);
   const [preliveFor,setPreliveFor]=useState<string|null>(null);
+  const [introNeedsTap,setIntroNeedsTap]=useState(false);
+  const introRef=useRef<HTMLVideoElement|null>(null);
 
   useEffect(()=>{
     const load=async()=>{
@@ -92,6 +94,15 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const handoffCountdown=liveEnds?countdown(liveEnds-now):"";
   const nextHostName=nextHost?.display_name || (nextHost?.username ? "@"+nextHost.username : "Scheduled 1Muslim Host");
 
+  useEffect(()=>{
+    if(!preliveFor) { setIntroNeedsTap(false); return; }
+    const video=introRef.current;
+    if(!video) return;
+    video.muted=false;
+    const attempt=video.play();
+    attempt?.catch(()=>setIntroNeedsTap(true));
+  },[preliveFor]);
+
   if(mode === "carousel"){
     return <section className="liveCarouselSection">
       <style jsx>{`
@@ -131,7 +142,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
             <span style={{fontSize:9,fontWeight:900,letterSpacing:".14em",textTransform:"uppercase"}}>Next Stream</span>
             <span style={{fontSize:10,color:"#8da88f"}}>Switch to another host →</span>
           </button>}
-          <div style={{position:"relative"}}>{primary && preliveFor===primary.id ? <video key={`prelive-${primary.id}`} src="/videos/prelive-intro.mp4" controls autoPlay playsInline onEnded={()=>setPreliveFor(null)} style={{display:"block",width:"100%",aspectRatio:"16/9",objectFit:"contain",background:"#020403"}} /> : primary ? <LiveKitViewer roomName={primary.room_name ?? ""} streamId={primary.id} /> : activeCurated ? <video key={activeCurated.id} src={supabase.storage.from("admin-videos").getPublicUrl(activeCurated.storage_path).data.publicUrl} controls autoPlay playsInline onEnded={()=>setActiveIndex((safeIndex+1)%queue.length)} style={{display:"block",width:"100%",aspectRatio:"16/9",objectFit:"contain",background:"#020403"}} /> : null}</div>
+          <div style={{position:"relative"}}>{primary && preliveFor===primary.id ? <div style={{position:"relative"}}><video ref={introRef} key={`prelive-${primary.id}`} src="/videos/prelive-intro.mp4" controls autoPlay playsInline muted={false} onEnded={()=>{setPreliveFor(null);setIntroNeedsTap(false)}} onError={()=>setIntroNeedsTap(false)} style={{display:"block",width:"100%",aspectRatio:"16/9",objectFit:"contain",background:"#020403"}} />{introNeedsTap && <button type="button" onClick={()=>{const video=introRef.current;if(video){video.muted=false;video.play().then(()=>setIntroNeedsTap(false)).catch(()=>{});}}} style={{position:"absolute",inset:"50% auto auto 50%",transform:"translate(-50%,-50%)",border:"1px solid rgba(255,255,255,.28)",background:"rgba(8,13,9,.92)",color:"#fff",borderRadius:999,padding:"13px 20px",fontSize:12,fontWeight:900,cursor:"pointer",boxShadow:"0 12px 40px rgba(0,0,0,.45)"}}>🔊 Tap to start with sound</button>}</div> : primary ? <LiveKitViewer roomName={primary.room_name ?? ""} streamId={primary.id} /> : activeCurated ? <video key={activeCurated.id} src={supabase.storage.from("admin-videos").getPublicUrl(activeCurated.storage_path).data.publicUrl} controls autoPlay playsInline onEnded={()=>setActiveIndex((safeIndex+1)%queue.length)} style={{display:"block",width:"100%",aspectRatio:"16/9",objectFit:"contain",background:"#020403"}} /> : null}</div>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:"10px 14px",borderTop:"1px solid #1c2a20",background:"#07100a"}}>{primary && <button type="button" onClick={()=>setCommentsOpen(true)} style={{border:"1px solid #304034",background:"#0b120d",color:"#dce8dc",borderRadius:999,padding:"8px 12px",fontSize:10,fontWeight:800,cursor:"pointer"}}>💬 Comments</button>}<Link href={primary ? `/streaming/live/${primary.id}` : "#"} onClick={activeCurated ? (event)=>event.preventDefault() : undefined} style={{textDecoration:"none",color:"#aebbb1",fontSize:10}}>Open Live ↗</Link></div><div style={{textDecoration:"none",color:"inherit",display:"block",padding:"14px 18px 18px"}}>
             <span className="pill"><i className="dot"/> {primary ? "#1 LIVE NOW" : "1MUSLIM SELECT"}</span>
             <div>{primary ? <Link href={`/profile/${(primary as LiveRow & {host_id:string}).host_id}`} style={{display:"inline-flex",alignItems:"center",gap:8,textDecoration:"none",color:"inherit"}} aria-label={`Open ${activeHostName} profile`}><h3 style={{marginBottom:0}}>{activeHostName}</h3><span style={{fontSize:10,color:"#8da88f"}}>View profile →</span></Link> : <h3>{activeCurated?.title}</h3>}<div className="meta">{primary ? `${primary.title} · ${primary.category} · ${primary.viewer_count} watching` : `${activeCurated?.category} · Curated 1Muslim video`}</div>
