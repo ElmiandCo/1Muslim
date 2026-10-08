@@ -96,6 +96,15 @@ export default function Home() {
   const [signedIn, setSignedIn] = useState(false);
   const [isTestAdmin, setIsTestAdmin] = useState(false);
   const [selectedTimeline, setSelectedTimeline] = useState<TimelineItem | null>(null);
+
+  const [duaOpen,setDuaOpen]=useState(false);
+  const [duaText,setDuaText]=useState("");
+  const [duaAttempted,setDuaAttempted]=useState(false);
+  const praisePattern=/(alhamdulillah|alhamdu lillah|all praise|praise (be to|belongs to|you)|glory (be to|to)|subhanallah|subhan allah|الحمد لله|سبحان الله|اللهم لك الحمد)/i;
+  const askPattern=/(please|grant|forgive|guide|help|protect|bless|give me|i ask|i seek|make me|allow me|ارزق|اغفر|اهد|احفظ|أسألك|ربنا آتنا)/i;
+  const duaHasPraise=praisePattern.test(duaText),duaHasAsk=askPattern.test(duaText);
+  const duaCorrect=duaHasPraise&&duaHasAsk&&duaText.search(praisePattern)<duaText.search(askPattern);
+  const submitDua=()=>setDuaAttempted(true);
   const [accountName, setAccountName] = useState("");
   const [myScheduledLives, setMyScheduledLives] = useState<Array<{id:string;title:string;category:string;starts_at:string;ends_at:string}>>([]);
   useEffect(() => { const supabase=createClient(); supabase.auth.getUser().then(async ({data}) => { if(!data.user) return; setSignedIn(true); setIsTestAdmin((data.user.email ?? "").toLowerCase() === "hudhudbyelmi@gmail.com"); const {data:profile}=await supabase.from("profiles").select("display_name,username").eq("id",data.user.id).maybeSingle(); setAccountName(profile?.display_name || (profile?.username ? "@"+profile.username : "My profile"));
@@ -231,10 +240,10 @@ export default function Home() {
         <section className="sectionBlock compact">
           <div className="sectionTitle"><div><span className="eyebrow">FOUNDATIONS</span><h2>The words you’ll keep hearing.</h2></div><span className="counter">12 terms</span></div>
           <div className="horizontalCards">
-            {foundations.slice(0,6).map(([a,b]) => <div className="termCard" key={a} role={a === "Dua" ? "button" : undefined} tabIndex={a === "Dua" ? 0 : undefined} onClick={a === "Dua" ? ()=>setDuaOpen(true) : undefined} onKeyDown={a === "Dua" ? e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setDuaOpen(true)}} : undefined} style={a === "Dua" ? {cursor:"pointer"} : undefined}>{a === "Dua" && <span style={{fontSize:12,color:"#d9c18b",fontWeight:800,marginBottom:8}}>{duaEarned?"✦ Dua practice badge earned":"✦ Open Dua lesson →"}</span>}{a === "Shahadah" && <span className="badgeEmblem" style={{width:104,maxWidth:"100%",margin:"0 auto 12px"}}><img src="/assets/badges/shahada-badge.png" alt="Shahadah badge" /></span>}<strong>{a}</strong><span>{b}</span></div>)}
+            {foundations.slice(0,6).map(([a,b]) => <div className="termCard" key={a} role={a === "Dua" ? "button" : undefined} tabIndex={a === "Dua" ? 0 : undefined} onClick={a === "Dua" ? ()=>setDuaOpen(true) : undefined} onKeyDown={a === "Dua" ? e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setDuaOpen(true)}} : undefined} style={a === "Dua" ? {cursor:"pointer"} : undefined}>{a === "Dua" && <span style={{fontSize:12,color:"#d9c18b",fontWeight:800,marginBottom:8}}>{"✦ Open Dua lesson →"}</span>}{a === "Shahadah" && <span className="badgeEmblem" style={{width:104,maxWidth:"100%",margin:"0 auto 12px"}}><img src="/assets/badges/shahada-badge.png" alt="Shahadah badge" /></span>}<strong>{a}</strong><span>{b}</span></div>)}
           </div>
           <div className="horizontalCards second">
-            {foundations.slice(6).map(([a,b]) => <div className="termCard" key={a} role={a === "Dua" ? "button" : undefined} tabIndex={a === "Dua" ? 0 : undefined} onClick={a === "Dua" ? ()=>setDuaOpen(true) : undefined} onKeyDown={a === "Dua" ? e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setDuaOpen(true)}} : undefined} style={a === "Dua" ? {cursor:"pointer"} : undefined}>{a === "Dua" && <span style={{fontSize:12,color:"#d9c18b",fontWeight:800,marginBottom:8}}>{duaEarned?"✦ Dua practice badge earned":"✦ Open Dua lesson →"}</span>}{a === "Shahadah" && <span className="badgeEmblem" style={{width:104,maxWidth:"100%",margin:"0 auto 12px"}}><img src="/assets/badges/shahada-badge.png" alt="Shahadah badge" /></span>}<strong>{a}</strong><span>{b}</span></div>)}
+            {foundations.slice(6).map(([a,b]) => <div className="termCard" key={a} role={a === "Dua" ? "button" : undefined} tabIndex={a === "Dua" ? 0 : undefined} onClick={a === "Dua" ? ()=>setDuaOpen(true) : undefined} onKeyDown={a === "Dua" ? e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setDuaOpen(true)}} : undefined} style={a === "Dua" ? {cursor:"pointer"} : undefined}>{a === "Dua" && <span style={{fontSize:12,color:"#d9c18b",fontWeight:800,marginBottom:8}}>{"✦ Open Dua lesson →"}</span>}{a === "Shahadah" && <span className="badgeEmblem" style={{width:104,maxWidth:"100%",margin:"0 auto 12px"}}><img src="/assets/badges/shahada-badge.png" alt="Shahadah badge" /></span>}<strong>{a}</strong><span>{b}</span></div>)}
           </div>
         </section>
 
@@ -290,13 +299,13 @@ export default function Home() {
               <p><b style={{color:"#d8c28b"}}>2. Send salawat.</b><br/>“Allahumma salli ‘ala Muhammad.”</p>
               <p><b style={{color:"#d8c28b"}}>3. Ask sincerely.</b><br/>“O Allah, please guide me and forgive me.”</p>
             </div>
-            <p style={{fontSize:13,color:"#b7c8b8"}}>Practice challenge: Write a dua that <strong>praises Allah first</strong> and <strong>then asks Him for something</strong>. The salawat step is recommended but not required for this beginner exercise.</p>
+            <p style={{fontSize:13,color:"#b7c8b8"}}>Practice: Write a dua that <strong>praises Allah first</strong> and <strong>then asks Him for something</strong>. The salawat step is recommended but not required for this beginner exercise.</p>
             <label htmlFor="dua-practice" style={{fontWeight:800,display:"block",marginBottom:8}}>Your practice dua</label>
             <textarea id="dua-practice" value={duaText} onChange={e=>{setDuaText(e.target.value);setDuaAttempted(false)}} rows={5} placeholder="Alhamdulillah, all praise belongs to You, Allah. Please guide me..." style={{width:"100%",resize:"vertical",padding:14,borderRadius:12,background:"#09120d",border:"1px solid #4b604c",color:"white",font:"inherit"}}/>
             <div aria-live="polite" style={{fontSize:13,lineHeight:1.8,margin:"12px 0",color:"#c8d9c4"}}><div>{duaHasPraise?"✓":"○"} Praise Allah</div><div>{duaHasAsk?"✓":"○"} Ask Allah for something</div><div>{duaCorrect?"✓":"○"} Praise comes before asking</div></div>
             {duaAttempted&&!duaCorrect&&<p role="alert" style={{color:"#f1c58d"}}>Try beginning with praise of Allah, then make your request. This simple practice checker recognizes common English and Arabic phrases.</p>}
-            {duaEarned&&<p role="status" style={{color:"#dceab7",fontWeight:900}}>✦ Dua Practice Badge unlocked on this device! This is a learning achievement, not verification of your faith.</p>}
-            <button type="button" onClick={submitDua} style={{width:"100%",padding:15,borderRadius:12,border:0,background:"#dceab7",color:"#122014",fontWeight:900,cursor:"pointer"}}>{duaEarned?"Practice again / Save":"Check my dua · Earn practice badge"}</button>
+            {duaAttempted&&duaCorrect&&<p role="status" style={{color:"#dceab7",fontWeight:900}}>Beautiful structure! You praised Allah before making your request. May Allah accept your dua.</p>}
+            <button type="button" onClick={submitDua} style={{width:"100%",padding:15,borderRadius:12,border:0,background:"#dceab7",color:"#122014",fontWeight:900,cursor:"pointer"}}>Check my dua</button>
             <p style={{fontSize:11,color:"#839487",marginTop:12}}>Your dua stays in this browser session and is not sent to a server. The practice badge is saved locally, not yet connected to your account's permanent badges.</p>
           </section>
         </div>}
