@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
 import ReconnectTrivia from "../app/components/ReconnectTrivia";
 
-export default function LiveKitViewer({ roomName, streamId }: { roomName: string; streamId?: string }) {
+export default function LiveKitViewer({ roomName, streamId, embedded = false }: { roomName: string; streamId?: string; embedded?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
@@ -108,16 +108,16 @@ export default function LiveKitViewer({ roomName, streamId }: { roomName: string
   };
 
   return (
-    <div ref={playerRef} style={{position:"relative",background:"#000",aspectRatio:"16/9",overflow:"hidden"}}>
-      <video ref={videoRef} autoPlay muted playsInline controls style={{width:"100%",height:"100%",objectFit:"contain"}} />
+    <div ref={playerRef} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:"16/9",overflow:"hidden"}}>
+      <video ref={videoRef} autoPlay muted playsInline controls={!embedded} style={{width:"100%",height:"100%",objectFit:"contain"}} />
       <div ref={audioContainerRef} />
       <div style={{position:"absolute",left:12,bottom:12,display:"flex",gap:7,zIndex:5}}>
         <button type="button" onClick={toggleMute} aria-label={muted ? "Unmute live audio" : "Mute live audio"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
           {muted ? "🔇 Unmute" : "🔊 Mute"}
         </button>
-        <button type="button" onClick={() => void toggleFullscreen()} aria-label="Expand live player" style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
+        {!embedded && <button type="button" onClick={() => void toggleFullscreen()} aria-label="Expand live player" style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
           ⛶ Expand
-        </button>
+        </button>}
       </div>
       {reconnecting ? (
         <div style={{position:"absolute",inset:0,zIndex:10,background:"radial-gradient(circle at 50% 35%,rgba(72,103,68,.2),rgba(3,7,4,.96) 72%)",display:"grid",placeItems:"center",overflow:"hidden"}}>
