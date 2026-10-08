@@ -37,6 +37,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const [now,setNow]=useState(Date.now());
   const [loading,setLoading]=useState(true);
   const [commentsOpen,setCommentsOpen]=useState(false);
+  const [preliveFor,setPreliveFor]=useState<string|null>(null);
 
   useEffect(()=>{
     const load=async()=>{
@@ -49,6 +50,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       setLives(rows);
       setCuratedVideos((curated??[]) as CuratedVideo[]);
       setLive((rows[0]??null) as LiveRow|null);
+      setPreliveFor((current)=>current ?? (rows[0]?.id ?? null));
       setActiveIndex((current)=>rows.length ? Math.min(current, rows.length - 1) : 0);
       const hostIds=Array.from(new Set(rows.map(row=>row.host_id).filter(Boolean)));
       if(hostIds.length){
@@ -125,11 +127,11 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       </div>
       <div>
         {active ? <div className="liveCard" style={{padding:0,overflow:"hidden"}}>
-          {hasNextStream && <button type="button" onClick={()=>setActiveIndex((safeIndex+1)%queue.length)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,border:0,borderBottom:"1px solid #26362b",background:"#0b120d",color:"#dce8dc",padding:"11px 14px",cursor:"pointer",textAlign:"left"}}>
+          {hasNextStream && <button type="button" onClick={()=>{ const nextQueueIndex=(safeIndex+1)%queue.length; const nextQueueItem=queue[nextQueueIndex]; setActiveIndex(nextQueueIndex); setPreliveFor(nextQueueItem?.kind==="live" ? nextQueueItem.item.id : null); }} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,border:0,borderBottom:"1px solid #26362b",background:"#0b120d",color:"#dce8dc",padding:"11px 14px",cursor:"pointer",textAlign:"left"}}>
             <span style={{fontSize:9,fontWeight:900,letterSpacing:".14em",textTransform:"uppercase"}}>Next Stream</span>
             <span style={{fontSize:10,color:"#8da88f"}}>Switch to another host →</span>
           </button>}
-          <div style={{position:"relative"}}>{primary ? <LiveKitViewer roomName={primary.room_name ?? ""} streamId={primary.id} /> : activeCurated ? <video key={activeCurated.id} src={supabase.storage.from("admin-videos").getPublicUrl(activeCurated.storage_path).data.publicUrl} controls autoPlay playsInline onEnded={()=>setActiveIndex((safeIndex+1)%queue.length)} style={{display:"block",width:"100%",aspectRatio:"16/9",objectFit:"contain",background:"#020403"}} /> : null}</div>
+          <div style={{position:"relative"}}>{primary && preliveFor===primary.id ? <video key={`prelive-${primary.id}`} src="/videos/prelive-intro.mp4" controls autoPlay playsInline onEnded={()=>setPreliveFor(null)} style={{display:"block",width:"100%",aspectRatio:"16/9",objectFit:"contain",background:"#020403"}} /> : primary ? <LiveKitViewer roomName={primary.room_name ?? ""} streamId={primary.id} /> : activeCurated ? <video key={activeCurated.id} src={supabase.storage.from("admin-videos").getPublicUrl(activeCurated.storage_path).data.publicUrl} controls autoPlay playsInline onEnded={()=>setActiveIndex((safeIndex+1)%queue.length)} style={{display:"block",width:"100%",aspectRatio:"16/9",objectFit:"contain",background:"#020403"}} /> : null}</div>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:"10px 14px",borderTop:"1px solid #1c2a20",background:"#07100a"}}>{primary && <button type="button" onClick={()=>setCommentsOpen(true)} style={{border:"1px solid #304034",background:"#0b120d",color:"#dce8dc",borderRadius:999,padding:"8px 12px",fontSize:10,fontWeight:800,cursor:"pointer"}}>💬 Comments</button>}<Link href={primary ? `/streaming/live/${primary.id}` : "#"} onClick={activeCurated ? (event)=>event.preventDefault() : undefined} style={{textDecoration:"none",color:"#aebbb1",fontSize:10}}>Open Live ↗</Link></div><div style={{textDecoration:"none",color:"inherit",display:"block",padding:"14px 18px 18px"}}>
             <span className="pill"><i className="dot"/> {primary ? "#1 LIVE NOW" : "1MUSLIM SELECT"}</span>
             <div>{primary ? <Link href={`/profile/${(primary as LiveRow & {host_id:string}).host_id}`} style={{display:"inline-flex",alignItems:"center",gap:8,textDecoration:"none",color:"inherit"}} aria-label={`Open ${activeHostName} profile`}><h3 style={{marginBottom:0}}>{activeHostName}</h3><span style={{fontSize:10,color:"#8da88f"}}>View profile →</span></Link> : <h3>{activeCurated?.title}</h3>}<div className="meta">{primary ? `${primary.title} · ${primary.category} · ${primary.viewer_count} watching` : `${activeCurated?.category} · Curated 1Muslim video`}</div>
