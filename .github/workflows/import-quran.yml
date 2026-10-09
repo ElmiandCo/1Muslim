@@ -1,0 +1,43 @@
+name: Import verified Quran corpus
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/import_quran.py'
+      - '.github/workflows/import-quran.yml'
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Import and verify all 6236 Arabic verses
+        run: python scripts/import_quran.py
+      - name: Validate 114 chapter files
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('public/quran-data')
+          files=[root/f'{n}.json' for n in range(1,115)]
+          assert all(f.is_file() for f in files)
+          chapters=[json.loads(f.read_text()) for f in files]
+          assert sum(map(len,chapters))==6236
+          assert all(v['arabic'].strip() for c in chapters for v in c)
+          print('Verified: 114 chapters, 6236 Arabic verses')
+          PY
+      - name: Commit immutable verified corpus
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/quran-data/
+          if ! git diff --cached --quiet; then
+            git commit -m "Store verified Tanzil Quran Arabic corpus (6236 verses)"
+            git push
+          fi
