@@ -2,12 +2,12 @@
 import {useEffect,useState} from "react";
 import {usePathname} from "next/navigation";
 const KEY="1muslim-welcome-tour-v2";
-const targets=["[data-tour=primary-nav]","[data-tour=menu-button]","[data-tour=hudhud]"];
+const targets=["[data-tour=primary-nav]","[data-tour=menu-button]","[data-tour=hudhud]"];\nfunction tourTarget(step:number){if(step===1)return document.querySelector(window.matchMedia("(max-width: 700px)").matches?"[data-tour=menu-button]":"[data-tour=desktop-menu-button]");return document.querySelector(targets[step])|| (step===2?document.querySelector("[class*=hudhud i]"):null)}
 export default function WelcomeTour(){
  const path=usePathname();const [step,setStep]=useState(-1);const [rect,setRect]=useState<{left:number;top:number;width:number;height:number}|null>(null);
  useEffect(()=>{if(path!=="/"||localStorage.getItem(KEY))return;const timer=window.setTimeout(()=>setStep(0),1100);return()=>window.clearTimeout(timer)},[path]);
  useEffect(()=>{if(step<0)return;const update=()=>{const el=document.querySelector(targets[step]);const r=el?.getBoundingClientRect();setRect(r?{left:r.left,top:r.top,width:r.width,height:r.height}:null)};update();window.addEventListener("resize",update);window.addEventListener("scroll",update,true);const t=window.setInterval(update,500);return()=>{window.removeEventListener("resize",update);window.removeEventListener("scroll",update,true);window.clearInterval(t)}},[step]);
- useEffect(()=>{if(step!==1)return;const button=document.querySelector<HTMLButtonElement>(targets[1]);if(!button){setStep(2);return}const onClick=()=>window.setTimeout(()=>setStep(2),250);button.addEventListener("click",onClick);return()=>button.removeEventListener("click",onClick)},[step]);
+ useEffect(()=>{if(step!==1)return;const button=tourTarget(1) as HTMLButtonElement | null;if(!button){setStep(2);return}const onClick=()=>window.setTimeout(()=>setStep(2),250);button.addEventListener("click",onClick);return()=>button.removeEventListener("click",onClick)},[step]);
  useEffect(()=>{if(step!==2)return;const t=window.setTimeout(()=>finish(),5200);return()=>window.clearTimeout(t)},[step]);
  function finish(){localStorage.setItem(KEY,"done");setStep(-1)}
  if(step<0||path!=="/")return null;
