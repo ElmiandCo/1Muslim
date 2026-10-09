@@ -5,6 +5,7 @@ import Link from "next/link";
 import SiteNav from "../components/SiteNav";
 import ProfileAvatar from "../components/ProfileAvatar";
 import AshabButton from "../components/AshabButton";
+import AshabEncouragement from "../components/AshabEncouragement";
 import { createClient } from "../../utils/supabase/client";
 import "./ashab.css";
 
@@ -95,6 +96,7 @@ export default function AshabPage() {
 
       {message && <div className="ashabMessage">{message}</div>}
 
+      <AshabEncouragement />
       <section className="ashabSection" id="ashab">
         <div className="sectionHead">
           <div><span className="eyebrow">MUTUAL FOLLOWING</span><h2>Your Ashab.</h2></div>
