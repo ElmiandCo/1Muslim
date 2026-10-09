@@ -233,7 +233,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       </div>
       {createOpen && <div className="dockCreateMenu" role="menu"><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>🔴 Go Live</Link><Link href="/community" onClick={() => setCreateOpen(false)}>✦ Community</Link><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>◷ Schedule a Live</Link></div>}
     </nav>
-    <div className="mobileNavActions"><Link href="/">Home</Link><Link href="/streaming"><span className={anyoneLive ? "liveSignal isLive" : "liveSignal"} /> {anyoneLive ? "On Air" : "Live"}</Link></div>
+    <Link href="/learn/elm-tent/library" className="mobileLibraryShortcut" aria-label="Open the 1Muslim Library"><span aria-hidden="true">✦</span><span>Library</span></Link>
 
     {loadingAuth ? <span className="authNav authLoading">Account</span> : user ? <div className="authAccount">
       <Link href="/notifications" className="notificationBell" aria-label="Notifications">🔔{unreadCount > 0 && <span>{unreadCount > 99 ? "99+" : unreadCount}</span>}</Link>
