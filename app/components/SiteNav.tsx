@@ -39,6 +39,7 @@ export function ThemeToggle() {
     setLight(next);
     document.documentElement.classList.toggle("light", next);
     localStorage.setItem("1muslim-theme", next ? "light" : "dark");
+    window.dispatchEvent(new Event("1muslim:theme-changed"));
   };
   return <button className="themeToggle" onClick={toggle} aria-label={light ? "Switch to night mode" : "Switch to day mode"}>{light ? "☾ Night" : "☀ Day"}</button>;
 }
