@@ -13,7 +13,10 @@ export default function HudHudHomeIntro() {
   const [step, setStep] = useState(0);
   const [spot, setSpot] = useState<DOMRect | null>(null);
   const video = useRef<HTMLVideoElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const [videoFailed,setVideoFailed]=useState(false);
   const started = useRef(false);
+  useEffect(()=>{if(phase!=="video")return;const v=video.current,c=canvas.current;if(!v||!c)return;let frame=0;const draw=()=>{if(!v.videoWidth||!v.videoHeight){frame=requestAnimationFrame(draw);return}const ctx=c.getContext("2d",{willReadFrequently:true});if(!ctx)return;const w=360,h=Math.max(1,Math.round(360*v.videoHeight/v.videoWidth));if(c.width!==w||c.height!==h){c.width=w;c.height=h}try{ctx.drawImage(v,0,0,w,h);const img=ctx.getImageData(0,0,w,h),d=img.data;for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];const green=g-Math.max(r,b);if(g>65&&green>12){const alpha=Math.max(0,Math.min(1,(green-12)/55));d[i+3]=Math.round(d[i+3]*(1-alpha));if(alpha<1){d[i]=Math.min(255,r+green*.12);d[i+2]=Math.min(255,b+green*.12)}}}ctx.putImageData(img,0,0)}catch{setVideoFailed(true);return}frame=requestAnimationFrame(draw)};frame=requestAnimationFrame(draw);return()=>cancelAnimationFrame(frame)},[phase]);
   useEffect(() => {
     setPhase("video"); // Green-screen bird flies on every home refresh.
     const onJourneyFinished=()=>{
@@ -44,7 +47,9 @@ export default function HudHudHomeIntro() {
   return <div className="hh-onboard" role="dialog" aria-modal="true" aria-label="HudHud welcome and guided tour">
     {phase === "video" ? <>
       <div className="hh-video-bg" />
-      <video ref={video} className="hh-cinema" autoPlay playsInline muted preload="auto"
+      <canvas ref={canvas} className="hh-cinema" aria-hidden="true" />
+      {videoFailed&&<img className="hh-cinema hh-bird-fallback" src="/assets/hudhud-logo.PNG" alt="HudHud" />}
+      <video ref={video} className="hh-source-video" autoPlay playsInline muted preload="auto"
         onLoadedMetadata={e => { const v=e.currentTarget; if (v.duration && Number.isFinite(v.duration)) window.setTimeout(beginTour, Math.max(1000,v.duration*500)); }}
         onTimeUpdate={e => { const v=e.currentTarget; if (v.duration && v.currentTime >= v.duration/2) beginTour(); }}
         onEnded={beginTour} onError={beginTour} aria-label="HudHud cinematic entrance">
@@ -67,8 +72,8 @@ export default function HudHudHomeIntro() {
     </>}
     <style jsx>{`
       .hh-onboard{position:fixed;inset:0;z-index:99999;color:#fff;isolation:isolate}
-      .hh-video-bg{position:absolute;inset:0;background:radial-gradient(ellipse at center,#152b48 0%,#03060f 78%);animation:hhFade .5s ease}
-      .hh-cinema{position:absolute;inset:0;width:100vw;height:100dvh;object-fit:contain;filter:drop-shadow(0 0 32px rgba(61,177,255,.32))}
+      .hh-video-bg{position:absolute;inset:0;background:rgba(3,10,22,.32);backdrop-filter:brightness(.76);animation:hhFade .5s ease}
+      .hh-cinema{position:absolute;inset:0;width:100vw;height:100dvh;object-fit:contain;filter:drop-shadow(0 0 32px rgba(61,177,255,.32))}.hh-source-video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.hh-bird-fallback{object-fit:contain;width:min(70vw,360px);height:min(70vw,360px);inset:0;margin:auto}
       .hh-cinema-caption{position:absolute;bottom:7%;width:100%;text-align:center;font-size:clamp(19px,3vw,34px);font-weight:700;text-shadow:0 2px 20px #000}
       .hh-skip{position:absolute;right:24px;top:24px;border:1px solid #ffffff66;background:#101e34df;color:#fff;border-radius:99px;padding:12px 19px;cursor:pointer}
       .hh-tour-dim{position:absolute;inset:0;background:rgba(0,5,18,.83);animation:hhFade .6s ease}
