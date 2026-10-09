@@ -1,25 +1,88 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../utils/supabase/client";
 
 type Language = "ar" | "en";
+type SpeechRecognitionLike = {
+  lang: string; continuous: boolean; interimResults: boolean;
+  start: () => void; stop: () => void;
+  onresult: ((event: any) => void) | null;
+  onerror: ((event: any) => void) | null;
+  onend: (() => void) | null;
+};
+
 const SHAHADA = {
   ar: "أشهد أن لا إله إلا الله، وأشهد أن محمدًا رسول الله",
   en: "I bear witness that there is no deity worthy of worship except Allah, and I bear witness that Muhammad is the Messenger of Allah.",
 };
+
+function normalizeArabic(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "")
+    .replace(/[إأآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ؤ/g, "و")
+    .replace(/ئ/g, "ي")
+    .replace(/ـ/g, "")
+    .replace(/[^\u0621-\u063A\u0641-\u064A\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeEnglish(value: string) {
+  return value.toLowerCase().replace(/[’']/g, "").replace(/[^a-z\s]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function verifyTranscript(transcript: string, language: Language) {
+  if (language === "ar") {
+    const t = normalizeArabic(transcript);
+    const groups = [
+      ["اشهد"],
+      ["الله"],
+      ["محمد"],
+      ["رسول"],
+      ["اله", "إله"],
+      ["الا", "إلا"],
+    ];
+    const hits = groups.filter(group => group.some(word => t.includes(normalizeArabic(word)))).length;
+    return hits >= 5 && t.length >= 18;
+  }
+  const t = normalizeEnglish(transcript);
+  const groups = [
+    ["bear witness", "testify"],
+    ["deity", "god"],
+    ["worthy", "worship"],
+    ["except"],
+    ["allah"],
+    ["muhammad"],
+    ["messenger"],
+  ];
+  const hits = groups.filter(group => group.some(word => t.includes(word))).length;
+  return hits >= 6 && t.length >= 35;
+}
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState<"shahada" | "gender">("shahada");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [writtenDeclaration, setWrittenDeclaration] = useState(false);
+  const [verificationMode, setVerificationMode] = useState<"audio" | "declaration">("audio");
   const [language, setLanguage] = useState<Language>("ar");
   const [gender, setGender] = useState<"male" | "female" | "">("");
   const [checking, setChecking] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [transcript, setTranscript] = useState("");
+  const [listening, setListening] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -34,25 +97,101 @@ export default function OnboardingPage() {
     })();
   }, [router]);
 
+  const stopMedia = () => {
+    recognitionRef.current?.stop();
+    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    streamRef.current = null;
+    setListening(false);
+    setRecording(false);
+  };
+
+  const startShahada = async () => {
+    setVerificationMode("audio");
+    setWrittenDeclaration(false);
+    setMessage(""); setTranscript(""); setVerified(false); setAudioBlob(null);
+    const W = window as any;
+    const SR = W.SpeechRecognition || W.webkitSpeechRecognition;
+    if (!SR) {
+      setMessage("Voice verification is not supported in this browser. Please use Safari or Chrome with microphone speech recognition enabled.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm";
+      const recorder = new MediaRecorder(stream, { mimeType: mime });
+      const chunks: BlobPart[] = [];
+      recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+      recorder.onstop = () => {
+        setAudioBlob(new Blob(chunks, { type: mime }));
+        setRecording(false);
+        stream.getTracks().forEach(track => track.stop());
+      };
+      recorderRef.current = recorder;
+
+      const rec = new SR() as SpeechRecognitionLike;
+      rec.lang = language === "ar" ? "ar-SA" : "en-US";
+      rec.continuous = false;
+      rec.interimResults = false;
+      rec.onresult = (event: any) => {
+        const text = event.results?.[0]?.[0]?.transcript ?? "";
+        setTranscript(text);
+        if (verifyTranscript(text, language)) {
+          setVerified(true);
+          setMessage("Shahada recognized. Your voice recording is ready for the private Safe Vault.");
+        } else {
+          setMessage("That doesn't match the Shahada closely enough. Please say the displayed Shahada clearly and try again.");
+        }
+      };
+      rec.onerror = () => {
+        setListening(false); setRecording(false);
+        if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+        setMessage("We couldn't capture the Shahada. Check microphone permission and try again.");
+      };
+      rec.onend = () => {
+        setListening(false);
+        if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+      };
+
+      recognitionRef.current = rec;
+      recorder.start();
+      setRecording(true);
+      setListening(true);
+      rec.start();
+    } catch {
+      setMessage("Microphone permission is required for Shahada verification.");
+    }
+  };
+
   const finish = async () => {
     if (!gender) { setMessage("Please select a gender to continue."); return; }
-    if (!writtenDeclaration || !acceptedTerms) { setMessage("Please affirm the Shahada and accept the Terms first."); setStep("shahada"); return; }
+    const declarationVerified = verificationMode === "declaration" && writtenDeclaration;
+    if (!declarationVerified && (!verified || !audioBlob)) { setMessage("Complete voice verification or affirm the Shahada declaration first."); setStep("shahada"); return; }
 
     setSaving(true); setMessage("");
     const s = createClient();
     const { data: { user } } = await s.auth.getUser();
     if (!user) { router.replace("/auth"); return; }
 
+    let path: string | null = null;
+    if (!declarationVerified && audioBlob) {
+      path = `${user.id}/shahada-${Date.now()}.webm`;
+      const upload = await s.storage.from("shahada-safe-vault").upload(path, audioBlob, { contentType: audioBlob.type || "audio/webm", upsert: false });
+      if (upload.error) { setMessage(upload.error.message); setSaving(false); return; }
+    }
+
     const { data: existing } = await s.from("profiles").select("gender,avatar_gender,avatar_config").eq("id", user.id).single();
     const selectedGender = gender || existing?.gender || "";
     if (!selectedGender) { setMessage("Please select a gender to continue."); setSaving(false); return; }
 
     const { error } = await s.from("profiles").update({
-      shahada_audio_path: null,
-      shahada_audio_recorded_at: null,
+      shahada_audio_path: path,
+      shahada_audio_recorded_at: path ? new Date().toISOString() : null,
       shahada_language: language,
       shahada_verified_at: new Date().toISOString(),
-      shahada_verification_method: "self-attested-checkbox",
+      shahada_verification_method: declarationVerified ? "self-attested-checkbox" : "speech-recognition-semantic-match",
       gender: selectedGender,
       avatar_gender: selectedGender,
       avatar_config: {
@@ -65,11 +204,10 @@ export default function OnboardingPage() {
     }).eq("id", user.id);
 
     if (error) { setMessage(error.message); setSaving(false); return; }
-    // Best-effort badge award; badge privileges must still be enforced server-side.
     const { error: badgeError } = await s.rpc("award_profile_badge", {
       p_badge_key: "shahadah",
       p_badge_name: "Shahada Verified",
-      p_description: "Completed the Shahada self-declaration during onboarding."
+      p_description: "Completed Shahada verification during onboarding."
     });
     if (badgeError) console.warn("Shahada badge award pending:", badgeError.message);
     router.replace("/");
@@ -81,19 +219,26 @@ export default function OnboardingPage() {
     <div className="steps"><span className={step === "shahada" ? "active" : ""}>1 Shahada</span><i>→</i><span className={step === "gender" ? "active" : ""}>2 Profile</span></div>
     {step === "shahada" ? <>
       <span className="eyebrow">COMMUNITY VERIFICATION</span>
-      <h1>Affirm the Shahada.</h1>
-      <p className="lead">Read the Shahada in Arabic or English, then check the declaration below to continue. No microphone or voice recognition is needed.</p>
+      <h1>Say the Shahada.</h1>
+      <p className="lead">Choose your language, then verify your Shahada by voice or by checking the written declaration below.</p>
       <div className="languagePicker">
-        <button className={language === "ar" ? "selected" : ""} onClick={() => { setLanguage("ar"); setMessage(""); }}>العربية <small>Arabic</small></button>
-        <button className={language === "en" ? "selected" : ""} onClick={() => { setLanguage("en"); setMessage(""); }}>English <small>English</small></button>
+        <button className={language === "ar" ? "selected" : ""} onClick={() => { stopMedia(); setLanguage("ar"); setVerified(false); setMessage(""); }}>العربية <small>Arabic</small></button>
+        <button className={language === "en" ? "selected" : ""} onClick={() => { stopMedia(); setLanguage("en"); setVerified(false); setMessage(""); }}>English <small>English</small></button>
       </div>
       <div className="phraseCard" dir={language === "ar" ? "rtl" : "ltr"}>{SHAHADA[language]}</div>
-      <div className="declarationFallback"><strong>Shahada declaration</strong><p>Read the statement above and affirm it to join 1Muslim. No voice recording is required.</p><label><input type="checkbox" checked={writtenDeclaration} onChange={e => { setWrittenDeclaration(e.target.checked); setMessage(""); }} /><span>I sincerely affirm the Shahada displayed above and wish to join the 1Muslim community.</span></label>{writtenDeclaration && <small>✓ Shahada declaration accepted.</small>}</div>
-      {message && <div className={writtenDeclaration ? "success" : "error"}>{message}</div>}
-      <div className="badgePreview"><div className="badgeSeal" aria-hidden="true">✦</div><div><span className="badgeKicker">YOUR FIRST 1MUSLIM BADGE</span><strong>Shahada Verified</strong><p>Earn this badge after completing your Shahada verification and profile setup. It will appear on your public profile.</p></div><span className="badgeStatus">{writtenDeclaration ? "✓ Ready" : "🔒 Unlock"}</span></div>
+      <div className="voiceCard">
+        <div className={listening ? "mic listening" : "mic"}>◉</div>
+        <strong>{recording ? "Recording securely…" : listening ? "Listening…" : "Voice Shahada"}</strong>
+        <p>Say the statement above naturally and clearly. Different accents are okay; saying something unrelated is not.</p>
+        <button className="continue" onClick={() => void startShahada()} disabled={listening || recording}>{recording ? "Recording securely…" : listening ? "Listening…" : "Record Shahada"}</button>
+        {transcript && <div className="transcript" dir={language === "ar" ? "rtl" : "ltr"}><small>Speech recognition heard</small><span>{transcript}</span></div>}
+      </div>
+      <div className="declarationFallback"><strong>Prefer a checkbox?</strong><p>Choose either voice recognition or a written Shahada declaration. Both allow you to complete onboarding.</p><label><input type="checkbox" checked={writtenDeclaration} onChange={e => { stopMedia(); setWrittenDeclaration(e.target.checked); setVerificationMode(e.target.checked ? "declaration" : "audio"); setMessage(""); }} /><span>I sincerely affirm the Shahada displayed above and wish to join the 1Muslim community.</span></label>{writtenDeclaration && <small>✓ Written declaration selected. No microphone recording will be required.</small>}</div>
+      {message && <div className={verified || writtenDeclaration ? "success" : "error"}>{message}</div>}
+      <div className="badgePreview"><div className="badgeSeal" aria-hidden="true">✦</div><div><span className="badgeKicker">YOUR FIRST 1MUSLIM BADGE</span><strong>Shahada Verified</strong><p>Earn this badge after completing your Shahada verification and profile setup. It will appear on your public profile.</p></div><span className="badgeStatus">{verified || writtenDeclaration ? "✓ Declared" : "🔒 Unlock"}</span></div>
       <div className="legalScroll" role="region" aria-label="Terms and conditions" tabIndex={0}><strong>1Muslim · Terms &amp; Conditions</strong><p>1Muslim is a faith-centered platform supporting Muslim communities, Islamic education, and connections consistent with Islamic principles.</p><p>Our commitment to Islam does not constitute hostility toward any other religion, belief system, or individual. We respect the dignity of people of all religious backgrounds, including those with no religion.</p><strong>Protection of Islamic Values</strong><p>1Muslim may establish and enforce standards for content, conduct, programming, and participation consistent with applicable law. We may prioritize Islamic education, worship, and community development, and are not required to endorse every religious or philosophical viewpoint.</p><strong>Religious Discussions and Differences</strong><p>Respectful theological discussions, comparative religion, scholarly disagreements, and criticism of religious ideas may be permitted. Harassment, threats, targeted abuse, incitement to violence, and dehumanizing treatment are prohibited. Disagreement with a religious belief is not, by itself, harassment or discrimination.</p><strong>Content Moderation</strong><p>1Muslim may review, restrict, remove, or decline to feature content conflicting with published community standards, subject to applicable law. Decisions should follow documented standards rather than hostility toward a person's religious identity.</p><strong>Our Guiding Principle</strong><p>1Muslim exists to preserve, celebrate, and strengthen Muslim identity—not to attack or diminish the dignity of others.</p></div><label className="termsConsent"><input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} required /><span>I have read and agree to the Terms &amp; Conditions above.</span></label>
-      <button className="continue secondary" disabled={!writtenDeclaration || !acceptedTerms} onClick={() => setStep("gender")}>Continue to profile →</button>
-      <small className="fine">This is a written Shahada declaration. No audio is collected.</small>
+      <button className="continue secondary" disabled={!(verified || writtenDeclaration) || !acceptedTerms} onClick={() => setStep("gender")}>Continue to profile →</button>
+      <small className="fine">Either method qualifies for the Shahada badge. Voice recordings stay private; checkbox verification is recorded as a self-attested declaration.</small>
     </> : <>
       <span className="eyebrow">WELCOME TO 1MUSLIM</span><h1>Choose your profile.</h1><p className="lead">Select your gender once. This sets your default profile avatar and stays fixed after setup.</p>
       <div className="genderGrid"><button className={gender === "male" ? "genderCard selected" : "genderCard"} onClick={() => setGender("male")}><img src="/assets/avatars/default-male.jpg" alt="" /><strong>Male</strong><span>Use the male default avatar</span></button><button className={gender === "female" ? "genderCard selected" : "genderCard"} onClick={() => setGender("female")}><img src="/assets/avatars/Default-women.png" alt="" /><strong>Female</strong><span>Use the female default avatar</span></button></div>
