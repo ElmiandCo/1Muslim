@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import FirstVisitGuide from "../components/FirstVisitGuide";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../utils/supabase/client";
 
@@ -213,7 +214,7 @@ export default function OnboardingPage() {
     router.replace("/");
   };
 
-  if (checking) return <main className="onboardingPage"><section className="onboardingCard"><span className="eyebrow">1MUSLIM</span><h1>Preparing your profile…</h1></section></main>;
+  if (checking) return <main className="onboardingPage"><FirstVisitGuide area="shahada"/><section className="onboardingCard"><span className="eyebrow">1MUSLIM</span><h1>Preparing your profile…</h1></section></main>;
 
   return <main className="onboardingPage"><section className="onboardingCard">
     <div className="steps"><span className={step === "shahada" ? "active" : ""}>1 Shahada</span><i>→</i><span className={step === "gender" ? "active" : ""}>2 Profile</span></div>
