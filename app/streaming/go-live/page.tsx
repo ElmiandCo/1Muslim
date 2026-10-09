@@ -65,6 +65,13 @@ export default function GoLivePage() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const processedAudioTrackRef = useRef<MediaStreamTrack | null>(null);
   const [title, setTitle] = useState("");
+  // Inform the mobile dock only when the host has a working camera and a title.
+  useEffect(()=>{
+    const ready=cameraReady&&cameraOn&&Boolean(title.trim())&&!live&&!saving;
+    window.dispatchEvent(new CustomEvent("1muslim:go-live-ready",{detail:{ready}}));
+    return()=>window.dispatchEvent(new CustomEvent("1muslim:go-live-ready",{detail:{ready:false}}));
+  },[cameraReady,cameraOn,title,live,saving]);
+
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [category, setCategory] = useState(categories[0]);
   const [visibility, setVisibility] = useState<"public" | "ashab">("public");
@@ -841,7 +848,7 @@ export default function GoLivePage() {
             </div>
             <div className="controls">
               {cameraReady && <><button className={cameraOn ? "circle" : "circle off"} onClick={toggleCamera} aria-label="Toggle camera">{cameraOn ? "◉" : "○"}</button><button className="circle" onClick={()=>void flipCamera()} aria-label="Flip camera" title="Flip camera">↻</button><button className={micOn ? "circle" : "circle off"} onClick={toggleMic} aria-label="Toggle microphone">{micOn ? "♫" : "×"}</button></>}
-              {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In for Scheduled Live</button> : null}<button className="start" onClick={()=>void startLive(false)} disabled={saving}>● Start Live Now</button></div>}
+              {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In for Scheduled Live</button> : null}<button data-go-live-start className="start" onClick={()=>void startLive(false)} disabled={saving}>● Start Live Now</button></div>}
             </div>
             {cameraReady && <div className="cameraStudio">
               <div className="studioHeader"><strong>Camera Studio</strong><span>{videoQuality} · {zoom.toFixed(1)}×</span></div>
