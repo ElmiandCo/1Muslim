@@ -1,6 +1,7 @@
 "use client";
 
 import SiteNav from "../../components/SiteNav";
+import FirstVisitGuide from "../../components/FirstVisitGuide";
 
 import Link from "next/link";
 import { createClient } from "../../../utils/supabase/client";
@@ -795,7 +796,7 @@ export default function GoLivePage() {
   };
 
   return (
-    <main className="goLive">
+    <main className="goLive"><FirstVisitGuide area="go-live"/>
       <style jsx>{`
         .goLive{min-height:100vh;background:var(--bg);color:var(--text)}.studioTools{display:grid;gap:10px;margin:0 0 18px}.upcomingPrep{display:flex;justify-content:space-between;align-items:center;gap:14px;border:1px solid #6b815e;background:linear-gradient(145deg,#121c12,#0b110c);border-radius:18px;padding:14px}.upcomingPrep strong,.upcomingPrep span{display:block}.upcomingPrep strong{font-size:13px;margin:4px 0}.upcomingPrep>div>span:last-child{font-size:10px;color:#7f8d84}.prepButton,.scheduleButton{border:1px solid #41503d;background:#d6e7b8;color:#071008;border-radius:999px;padding:10px 13px;font-size:10px;font-weight:850;cursor:pointer}.scheduleButton{justify-self:start;background:#101811;color:#d6e7b8}.scheduleBox{border:1px solid #263029;border-radius:17px;padding:15px;background:#0a100c}.scheduleBox h3{font-size:14px;margin:0 0 10px}.scheduleFields{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin-bottom:10px}@media(max-width:620px){.upcomingPrep{align-items:flex-start;flex-direction:column}.prepButton{width:100%}.scheduleFields{grid-template-columns:1fr}}
         .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
