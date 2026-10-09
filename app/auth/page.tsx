@@ -15,6 +15,7 @@ export default function AuthPage() {
   const [isShahadaSignup, setIsShahadaSignup] = useState(false);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("shahada") === "1") setIsShahadaSignup(true);
     if (new URLSearchParams(window.location.search).get("error")) {
       setMessage("Sign-in could not be completed. Please try again.");
     }
