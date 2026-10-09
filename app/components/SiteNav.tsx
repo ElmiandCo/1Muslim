@@ -13,7 +13,7 @@ const exploreGroups = [
     { label: "Elm Tent", ar: "الخيمة", href: "/learn/elm-tent" },
     { label: "Qur’an Studio", ar: "القرآن", href: "/quran-studio" },
     { label: "Videos", ar: "الفيديوهات", href: "/streaming/library" },
-    { label: "HudHud Video Scroll", ar: "مقاطع", href: "/hudhud/videos" },
+    { label: "1Muslim Videos", ar: "مقاطع", href: "/videos" },
   ]},
   { title: "Community", items: [
     { label: "Community", ar: "المجتمع", href: "/community" },
