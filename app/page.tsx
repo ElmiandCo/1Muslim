@@ -13,6 +13,7 @@ import StoriesRail from "./components/StoriesRail";
 import TimelinePopup, { type TimelineItem } from "./components/TimelinePopup";
 import VideoOfDayComments from "./components/VideoOfDayComments";
 import FeaturedYoutubeVideo from "../components/FeaturedYoutubeVideo";
+import HomeConnectedAccounts from "./components/HomeConnectedAccounts";
 
 type Path = "easy" | "advanced";
 
@@ -298,6 +299,7 @@ export default function Home() {
 
         {duaOpen && <DuaLesson onClose={()=>setDuaOpen(false)} />}
       <aside className="rightRail">
+        <HomeConnectedAccounts />
         <div className="search">⌕ <input placeholder="Search 1Muslim" /></div>
         <div className="railCard"><span className="eyebrow">START HERE</span><h3>New to Islam?</h3><p>Take the gentle route through Allah, Qur’an, prayer, forgiveness and daily life.</p><button className="primary">Start Easy Path</button></div>
         <div className="railCard"><span className="eyebrow">PRAYER ACADEMY</span><h3>Learn salah by seeing it.</h3><div className="prayerMini"><span>Standing</span><span>↕</span><span>Bowing</span><span>↕</span><span>Prostration</span></div><button className="ghost full">Take the quiz</button></div>
