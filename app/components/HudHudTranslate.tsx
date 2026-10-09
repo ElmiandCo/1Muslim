@@ -1,13 +1,17 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-type Lang = "en" | "ar" | "so";
-const labels: Record<Lang,string> = { en:"English", ar:"العربية", so:"Soomaali" };
-const UI = {en:["Translate with HudHud","Translating…","Translation ready","Translation unavailable"],ar:["ترجم مع هدهد","جارٍ الترجمة…","اكتملت الترجمة","الترجمة غير متاحة"],so:["Ku turjun HudHud","Waa la turjumayaa…","Turjumaaddu waa diyaar","Turjumaad lama heli karo"]};
+type Lang = "en" | "ar";
+const labels: Record<Lang,string> = { en:"English", ar:"العربية" };
+const UI = {en:["Translate with HudHud","Translating…","Translation ready","Translation unavailable"],ar:["ترجم مع هدهد","جارٍ الترجمة…","اكتملت الترجمة","الترجمة غير متاحة"]};
 export default function HudHudTranslate() {
   const [lang,setLang]=useState<Lang>("en");
   const [busy,setBusy]=useState(false);
   const [notice,setNotice]=useState("");
+  const [settings,setSettings]=useState(false);
+  const [chat,setChat]=useState(false);
+  const [position,setPosition]=useState<{x:number;y:number}|null>(null);
+  const dragging=useRef<{x:number;y:number;originX:number;originY:number}|null>(null);
   const originals=useRef(new WeakMap<Text,string>());
   const sourceNodes=useRef(new Set<Text>());
   const generation=useRef(0);
@@ -15,7 +19,7 @@ export default function HudHudTranslate() {
   const cache=useRef(new Map<string,string>());
   const pending=useRef(false);
   const suppress=useRef(false);
-  useEffect(()=>{const stored=localStorage.getItem("1muslim-language");if(stored==="ar"||stored==="so")setLang(stored)},[]);
+  useEffect(()=>{const stored=localStorage.getItem("1muslim-language");if(stored==="ar")setLang(stored)},[]);
   useEffect(()=>{
     let observer:MutationObserver|undefined;
     const ignored=(n:Text)=>{const el=n.parentElement;return !el||!!el.closest("[data-no-translate],script,style,textarea,input,select,option,code,pre,[contenteditable='true']")};
@@ -54,12 +58,17 @@ export default function HudHudTranslate() {
     observer.observe(document.body,{subtree:true,childList:true,characterData:true});
     return()=>{generation.current++;observer.disconnect()};
   },[lang]);
-  return <div className="hudhud-translator" data-no-translate="true" aria-live="polite">
+  return <div className="hudhud-translator" data-no-translate="true" aria-live="polite" style={position?{left:position.x,top:position.y,right:"auto",bottom:"auto"}:undefined}>
+    <button type="button" aria-label="Drag HudHud" title="Drag to move HudHud" onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);const r=e.currentTarget.parentElement!.getBoundingClientRect();dragging.current={x:e.clientX,y:e.clientY,originX:r.left,originY:r.top}}} onPointerMove={e=>{if(!dragging.current)return;const d=dragging.current;setPosition({x:Math.max(0,Math.min(window.innerWidth-220,d.originX+e.clientX-d.x)),y:Math.max(0,Math.min(window.innerHeight-60,d.originY+e.clientY-d.y))})}} onPointerUp={()=>{dragging.current=null}} style={{touchAction:"none",cursor:"grab",border:0,background:"transparent",color:"white",fontSize:18}}>⠿</button>
     <img className={busy?"hudhud-translator-bird translating":"hudhud-translator-bird"} src="/assets/hudhud-logo.PNG" alt="HudHud" onError={e=>{e.currentTarget.style.display="none"}} />
     <label htmlFor="hudhud-language">🌐 <span>{UI[lang][0]}</span></label>
     <select id="hudhud-language" value={lang} onChange={e=>{setNotice("");setLang(e.target.value as Lang)}} aria-label="Website language">
       {(Object.keys(labels) as Lang[]).map(l=><option key={l} value={l}>{labels[l]}</option>)}
     </select>
+    <button type="button" aria-label="HudHud settings" onClick={()=>{setSettings(v=>!v);setChat(false)}} style={{background:"transparent",color:"white",border:0,cursor:"pointer"}}>⚙️</button>
+    <button type="button" aria-label="HudHud chat" onClick={()=>{setChat(v=>!v);setSettings(false)}} style={{background:"transparent",color:"white",border:0,cursor:"pointer"}}>💬</button>
+    {settings&&<div className="hudhud-panel"><strong>HudHud Settings</strong><p>Website language: English or Arabic</p><button type="button" onClick={()=>{setPosition(null);setSettings(false)}}>Reset position</button></div>}
+    {chat&&<div className="hudhud-panel"><strong>Chat with HudHud</strong><p>AI chat is not connected yet. You can use 1Muslim messages while this is being prepared.</p><a href="/messages">Open messages →</a></div>}
     {busy&&<span className="hudhud-shine" role="status">{UI[lang][1]}</span>}
     {!busy&&notice&&<span className="hudhud-translate-status">{notice}</span>}
   </div>;
