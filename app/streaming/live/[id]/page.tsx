@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FirstVisitGuide from "../../../components/FirstVisitGuide";
 import { createClient } from "../../../../utils/supabase/server";
 import SiteNav from "../../../components/SiteNav";
 import LiveKitViewer from "../../../../components/LiveKitViewer";
@@ -19,7 +20,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
 
   if (!stream) return (
     <main style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}>
-      <SiteNav />
+      <SiteNav /><FirstVisitGuide area="watch-live"/>
       <div style={{maxWidth:900,margin:"0 auto",padding:"70px 18px"}}>
         <section style={{border:"1px solid #263029",borderRadius:20,padding:40,textAlign:"center"}}>
           <h1>Live not found</h1>
@@ -45,7 +46,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
 
   return (
     <main style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}>
-      <SiteNav />
+      <SiteNav /><FirstVisitGuide area="watch-live"/>
       <div style={{maxWidth:1100,margin:"0 auto",padding:"30px 18px 70px"}}>
         <div style={{marginBottom:16}}>
           <span style={{fontSize:10,letterSpacing:".15em",color:"#829b87",fontWeight:850}}>{isLive ? "1MUSLIM LIVE" : "1MUSLIM REPLAY"}</span>
