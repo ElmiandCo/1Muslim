@@ -26,18 +26,20 @@ function playElmiSequence(){
 }
 const motes=Array.from({length:15},(_,i)=>({id:i,angle:i*137.5,radius:60+(i%5)*21,delay:(i%7)*42}));
 export default function ElmiVerseMoment(){
- const [phase,setPhase]=useState<Phase>("float"),[count,setCount]=useState(0);
+ const [phase,setPhase]=useState<Phase>("float");
+ const [lightEnabled,setLightEnabled]=useState(true);
  const timers=useRef<number[]>([]);
  const start=()=>{if(phase==="anticipate"||phase==="converge")return;
   timers.current.forEach(clearTimeout);timers.current=[];
-  setCount(n=>n+1);setPhase("anticipate");
+  if(!lightEnabled)return;
+  setPhase("anticipate");
   playElmiSequence();
   timers.current.push(window.setTimeout(()=>setPhase("converge"),680));
   timers.current.push(window.setTimeout(()=>setPhase("reveal"),1240));
   timers.current.push(window.setTimeout(()=>setPhase("float"),3100));
  };
- useEffect(()=>()=>timers.current.forEach(clearTimeout),[]);
- return <section className={"evmStage evm-"+phase} aria-label="Interactive Elmi Light Qur'an verse animation">
+ useEffect(()=>{const sync=()=>{try{setLightEnabled(localStorage.getItem("1muslim-elmi-light")!=="off")}catch{setLightEnabled(true)}};sync();window.addEventListener("1muslim-elmi-light-updated",sync);window.addEventListener("storage",sync);return()=>{timers.current.forEach(clearTimeout);window.removeEventListener("1muslim-elmi-light-updated",sync);window.removeEventListener("storage",sync)}},[]);
+ return <section className={"evmStage evm-"+(lightEnabled?phase:"disabled")} aria-label="Interactive Elmi Light Qur'an verse animation">
   <div className="evmAurora" aria-hidden="true"/>
   <div className="evmOrbit evmOrbitOne" aria-hidden="true"/><div className="evmOrbit evmOrbitTwo" aria-hidden="true"/>
   <div className="evmMotes" aria-hidden="true">{motes.map(m=><span key={m.id} className="evmMote" style={{["--a" as string]:m.angle+"deg",["--r" as string]:m.radius+"px",["--d" as string]:m.delay+"ms",["--n" as string]:m.id}}/>)}</div>
@@ -49,11 +51,11 @@ export default function ElmiVerseMoment(){
   </button>
   <span className="evmCaption" aria-live="polite">{phase==="anticipate"?"✦ Elmi Light is gathering…":phase==="converge"?"✦ Light meets the words":phase==="reveal"?"✦ سبحان الله":"✧ Touch the floating verse"}</span>
   <style jsx>{`
-.evmStage{--mint:#a1ffe0;position:relative;isolation:isolate;overflow:hidden;display:grid;place-items:center;min-height:335px;margin:20px 0;border-radius:30px;border:1px solid #b1e6da38;background:radial-gradient(ellipse at 48% 75%,#3a667655,transparent 65%),linear-gradient(140deg,#071a25,#101a35 55%,#122b2c);perspective:850px}
-.evmAurora{position:absolute;inset:-35%;background:conic-gradient(from 35deg at 50% 50%,transparent,#83fbd322,transparent,#a7a0ff25,transparent,#e7c77d21,transparent);filter:blur(33px);animation:evmAurora 13s linear infinite}
+.evmStage{contain:layout paint;--mint:#a1ffe0;position:relative;isolation:isolate;overflow:hidden;display:grid;place-items:center;min-height:335px;margin:20px 0;border-radius:30px;border:1px solid #b1e6da38;background:radial-gradient(ellipse at 48% 75%,#3a667655,transparent 65%),linear-gradient(140deg,#071a25,#101a35 55%,#122b2c);perspective:850px}
+.evmAurora{pointer-events:none;position:absolute;inset:-35%;background:conic-gradient(from 35deg at 50% 50%,transparent,#83fbd322,transparent,#a7a0ff25,transparent,#e7c77d21,transparent);filter:blur(20px);animation:evmAurora 18s linear infinite}
 .evmOrbit{position:absolute;width:290px;height:190px;border:1px solid #b4ffe529;border-radius:50%;transform:rotate(-22deg);filter:drop-shadow(0 0 12px #93ffd340);animation:evmOrbitA 9s ease-in-out infinite}
 .evmOrbitTwo{width:340px;height:165px;transform:rotate(28deg);border-color:#a8a4ff32;animation:evmOrbitB 11s ease-in-out infinite}
-.evmBubble{position:relative;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:min(82%,520px);min-height:182px;padding:26px 20px;border:1px solid #d5fff5a3;border-radius:50% 48% 49% 51% / 48% 52% 48% 52%;color:#fffbed;background:radial-gradient(ellipse at 25% 12%,#ffffff2c,transparent 45%),radial-gradient(ellipse at 80% 90%,#70f6c91c,transparent 52%),linear-gradient(130deg,#b8eaff1c,#b8b4ff12 55%,#ffd49d15);box-shadow:inset 0 0 25px #f3ffff29,inset 0 -16px 25px #82f7d514,0 18px 50px #0007,0 0 34px #9bf6df1f;backdrop-filter:blur(14px) saturate(1.5);-webkit-backdrop-filter:blur(14px) saturate(1.5);cursor:pointer;touch-action:manipulation;animation:evmFloat 6.5s ease-in-out infinite;transition:border-color .3s,box-shadow .3s}
+.evmBubble{-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;transform:translateZ(0);backface-visibility:hidden;position:relative;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:min(82%,520px);min-height:182px;padding:26px 20px;border:1px solid #d5fff5a3;border-radius:50% 48% 49% 51% / 48% 52% 48% 52%;color:#fffbed;background:radial-gradient(ellipse at 25% 12%,#ffffff2c,transparent 45%),radial-gradient(ellipse at 80% 90%,#70f6c91c,transparent 52%),linear-gradient(130deg,#b8eaff1c,#b8b4ff12 55%,#ffd49d15);box-shadow:inset 0 0 25px #f3ffff29,inset 0 -16px 25px #82f7d514,0 18px 50px #0007,0 0 34px #9bf6df1f;backdrop-filter:blur(9px) saturate(1.3);-webkit-backdrop-filter:blur(9px) saturate(1.3);cursor:pointer;touch-action:manipulation;animation:evmFloat 6.5s ease-in-out infinite;transition:border-color .3s,box-shadow .3s}
 .evmBubble:focus-visible{outline:3px solid #fff0b0;outline-offset:5px}
 .evmGlass{position:absolute;inset:5px;border-radius:inherit;border:1px solid #ffffff25;pointer-events:none}
 .evmShimmer{position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 28%,#ffffff20 44%,transparent 59%);background-size:230% 100%;animation:evmShimmer 6s linear infinite}
@@ -88,7 +90,11 @@ export default function ElmiVerseMoment(){
 @keyframes evmStageShake{0%,100%{transform:translate(0)}20%{transform:translate(4px,-3px)}38%{transform:translate(-6px,2px)}55%{transform:translate(3px,3px)}75%{transform:translate(-2px,-1px)}}
 @keyframes evmAfterglow{0%{transform:scale(1.04);filter:brightness(1.8)}100%{transform:scale(1);filter:brightness(1)}}
 @keyframes evmScatter{0%{transform:translate(0);opacity:1}100%{transform:rotate(var(--a)) translateX(calc(var(--r) + 85px)) scale(.2);opacity:0}}
-@media(max-width:560px){.evmStage{min-height:275px}.evmBubble{min-height:160px;width:91%;padding:20px 12px}.evmOrbit{width:220px}}
+@media(max-width:560px){.evmStage{min-height:275px;border-radius:22px}.evmBubble{min-height:160px;width:91%;padding:20px 12px;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}.evmOrbit{width:220px}.evmAurora{filter:blur(12px);animation-duration:24s}.evmMote:nth-child(n+10){display:none}.evmArabic{font-size:clamp(25px,7vw,38px)}}
+@media(hover:hover){.evmBubble:hover{border-color:#f7ffec}}
+@media(hover:none){.evmBubble{min-height:165px}}
+.evm-disabled .evmAurora,.evm-disabled .evmOrbit,.evm-disabled .evmMotes,.evm-disabled .evmFlash,.evm-disabled .evmShimmer{display:none}.evm-disabled .evmBubble{animation:none;transform:none;box-shadow:inset 0 0 20px #ffffff1b}.evm-disabled .evmCaption{opacity:.55}
+@media(prefers-reduced-transparency:reduce){.evmBubble{backdrop-filter:none;-webkit-backdrop-filter:none;background:#23363e}}
 @media(prefers-reduced-motion:reduce){.evmStage *, .evmStage{animation:none!important;transition:none!important}.evmBubble{transform:none!important}.evmMote{opacity:.5}.evmFlash{display:none}}
 `}</style>
  </section>
