@@ -14,6 +14,7 @@ import TimelinePopup, { type TimelineItem } from "./components/TimelinePopup";
 import VideoOfDayComments from "./components/VideoOfDayComments";
 import FeaturedYoutubeVideo from "../components/FeaturedYoutubeVideo";
 import HomeConnectedAccounts from "./components/HomeConnectedAccounts";
+import HudHudHomeIntro from "./components/HudHudHomeIntro";
 
 type Path = "easy" | "advanced";
 
@@ -298,6 +299,7 @@ export default function Home() {
       </main>
 
         {duaOpen && <DuaLesson onClose={()=>setDuaOpen(false)} />}
+      <HudHudHomeIntro />
       <aside className="rightRail">
         <HomeConnectedAccounts />
         <div className="search">⌕ <input placeholder="Search 1Muslim" /></div>
