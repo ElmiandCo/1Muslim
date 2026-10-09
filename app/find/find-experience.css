@@ -39,3 +39,19 @@
 .findSoonTag{display:flex;align-items:center;gap:10px;border:1px solid #35684b;background:#102d1e;border-radius:999px;padding:10px 16px;color:#b4f4c7;font-size:10px;font-weight:800;letter-spacing:.1em;margin:16px 0}
 @media(max-width:700px){.findExperienceHero{padding:25px 18px!important;border-radius:22px!important}.findOrbitOne{right:-235px}.findOrbitTwo{right:-180px}.findExperienceHero .findHeroTop{display:block}.findExperienceHero .findHeroTop .ghost{display:none}.findCommandSearch{min-height:52px}.findCommandSearch kbd{display:none}.findFilterRail{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;margin-right:-18px;padding-right:18px;padding-bottom:8px}.findFilterRail::-webkit-scrollbar{display:none}.findFilterRail button{white-space:nowrap;flex:none;padding:10px 14px!important}.findHeroFooter{font-size:8px}.findExperienceHero .findHeroTop h1{font-size:42px}}
 @media(prefers-reduced-motion:reduce){.findOrbit,.findPulse{animation:none!important}.findPage .personCard,.findPage .liveDiscoverCard,.findPage .discoveryCard{transition:none}}
+
+
+/* Library-inspired shimmer over Home's bold emerald discovery cards */
+.findPage .personCard,.findPage .liveDiscoverCard,.findPage .discoveryCard{position:relative;isolation:isolate;overflow:hidden;animation:findReveal .55s cubic-bezier(.2,.8,.2,1) both;will-change:transform}
+.findPage .personCard:nth-child(4n+2),.findPage .liveDiscoverCard:nth-child(4n+2){animation-delay:65ms}
+.findPage .personCard:nth-child(4n+3),.findPage .liveDiscoverCard:nth-child(4n+3){animation-delay:130ms}
+.findPage .personCard:nth-child(4n),.findPage .liveDiscoverCard:nth-child(4n){animation-delay:195ms}
+@keyframes findReveal{from{opacity:0;transform:translateY(16px) scale(.975);filter:brightness(.65)}to{opacity:1;transform:translateY(0) scale(1);filter:brightness(1)}}
+.findPage .personCard:before,.findPage .liveDiscoverCard:before,.findPage .discoveryCard:before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;transform:translateX(-160%) skewX(-22deg);background:linear-gradient(90deg,transparent 30%,rgba(186,255,216,.06) 42%,rgba(240,255,247,.42) 50%,rgba(154,255,204,.09) 58%,transparent 70%);transition:transform .8s cubic-bezier(.18,.75,.2,1)}
+.findPage .personCard:hover:before,.findPage .personCard:focus-visible:before,.findPage .personCard:active:before,.findPage .liveDiscoverCard:hover:before,.findPage .liveDiscoverCard:focus-visible:before,.findPage .liveDiscoverCard:active:before,.findPage .discoveryCard:hover:before,.findPage .discoveryCard:focus-visible:before,.findPage .discoveryCard:active:before{transform:translateX(160%) skewX(-22deg)}
+.findPage .personCard:focus-visible,.findPage .liveDiscoverCard:focus-visible,.findPage .discoveryCard:focus-visible{outline:2px solid #b7ffcf;outline-offset:4px}
+.findPage .personCard:active,.findPage .liveDiscoverCard:active,.findPage .discoveryCard:active{transform:scale(.975);box-shadow:0 0 0 2px #b2ffd1,0 0 32px #62f8a37a,inset 0 0 26px #73e9ad24}
+.findCommandSearch:focus-within{animation:findSearchGlow 1.8s ease-in-out infinite alternate}
+@keyframes findSearchGlow{from{box-shadow:0 0 0 3px #6ce7a71b,0 12px 45px #0007}to{box-shadow:0 0 0 4px #6ce7a72c,0 0 32px #62f8a33d,0 12px 45px #0007}}
+.findFilterRail button:active{transform:scale(.94);box-shadow:0 0 24px #9cffbb7d}
+@media(prefers-reduced-motion:reduce){.findPage .personCard,.findPage .liveDiscoverCard,.findPage .discoveryCard,.findCommandSearch:focus-within{animation:none!important}.findPage .personCard:before,.findPage .liveDiscoverCard:before,.findPage .discoveryCard:before{display:none}}
