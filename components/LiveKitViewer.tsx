@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
 import ReconnectTrivia from "../app/components/ReconnectTrivia";
 import ShareLiveButton from "../app/components/ShareLiveButton";
+import LiveLightOverlay from "./LiveLightOverlay";
 
 export default function LiveKitViewer({ roomName, streamId, embedded = false }: { roomName: string; streamId?: string; embedded?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -123,6 +124,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
     <div ref={playerRef} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:"16/9",overflow:"hidden"}}>
       <video ref={videoRef} autoPlay muted playsInline controls={!embedded} style={{width:"100%",height:"100%",objectFit:"contain"}} />
       <div ref={audioContainerRef} />
+      {streamId&&<LiveLightOverlay streamId={streamId}/>}
       {viewerCount !== null && !error && <div role="status" aria-label={`${viewerCount.toLocaleString()} watching live`} style={{position:"absolute",top:12,right:12,zIndex:6,display:"flex",alignItems:"center",gap:6,padding:"7px 11px",borderRadius:999,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.22)",color:"#fff",fontSize:12,fontWeight:800,backdropFilter:"blur(10px)",pointerEvents:"none"}}>👁 {viewerCount.toLocaleString()} <span style={{fontSize:10,opacity:.8}}>watching</span>{totalViews!==null&&<span style={{fontSize:10,opacity:.9,borderLeft:"1px solid #ffffff55",paddingLeft:8,marginLeft:2}}>↗ {totalViews.toLocaleString()} total</span>}</div>}
       <div style={{position:"absolute",left:12,bottom:12,display:"flex",gap:7,alignItems:"center",flexWrap:"wrap",zIndex:5}}>
         <button type="button" onClick={toggleMute} aria-label={muted ? "Unmute live audio" : "Mute live audio"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
