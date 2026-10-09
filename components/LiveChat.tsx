@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import ProfileAvatar from "../app/components/ProfileAvatar";
 
+const EMOTES = ["💚","🤲","☪️","✨","🦅","🌙"];
+const limit35=(value:string)=>Array.from(value).slice(0,35).join("");
 type Profile = {
   id: string;
   display_name: string | null;
@@ -88,7 +90,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
 
   const send = async (event: FormEvent) => {
     event.preventDefault();
-    const body = draft.trim();
+    const body = limit35(draft.trim());
     if (!body || !userId || sending || userId !== hostId && mutedUsers.has(userId)) return;
     setSending(true); setNotice("");
     const { error } = await supabase.from("live_chat_messages").insert({ stream_id: streamId, sender_id: userId, body });
@@ -96,6 +98,8 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
     else setDraft("");
     setSending(false);
   };
+
+  const sendEmote = async (emote:string) => {if(!userId||sending||(userId!==hostId&&mutedUsers.has(userId)))return;setSending(true);setNotice("");const {error}=await supabase.from("live_chat_messages").insert({stream_id:streamId,sender_id:userId,body:emote});if(error)setNotice(error.message);setSending(false)};
 
   const toggleMute = async (targetUserId: string) => {
     if (userId !== hostId || targetUserId === hostId) return;
@@ -129,7 +133,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
         .reportSheet button:disabled{opacity:.5}
         @keyframes reportFade{from{opacity:0}to{opacity:1}}@keyframes reportPop{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
         @media(prefers-reduced-motion:reduce){.reportBackdrop,.reportSheet{animation:none}}
-        .composer{display:flex;gap:7px;padding:12px;border-top:1px solid #1b241f}.composer input{flex:1;min-width:0;border:1px solid #263029;background:#0d140f;color:#fff;border-radius:999px;padding:10px 12px;outline:none;font-size:11px}.composer button{border:0;border-radius:999px;padding:0 14px;background:#d6e9b8;color:#071008;font-weight:850;font-size:10px;cursor:pointer}.composer button:disabled{opacity:.45;cursor:not-allowed}.mutedNotice,.notice{margin:10px 12px;padding:9px 11px;border-radius:10px;font-size:9px}.mutedNotice{background:#1b1510;border:1px solid #4a3927;color:#d7bd9c}.notice{background:#1b0f10;border:1px solid #533536;color:#ffcaca}
+        .emoteTray{display:flex;gap:7px;padding:9px 12px 2px;flex-wrap:wrap}.emoteTray button{background:linear-gradient(135deg,#12342c,#172d40);border:1px solid #80c9b277;border-radius:12px;padding:7px 10px;font-size:19px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}.emoteTray button:hover{transform:translateY(-3px);box-shadow:0 0 16px #75e5b955}.emoteTray button:disabled{opacity:.35;cursor:not-allowed}.composer{display:flex;gap:7px;padding:12px;border-top:1px solid #1b241f}.composer input{flex:1;min-width:0;border:1px solid #263029;background:#0d140f;color:#fff;border-radius:999px;padding:10px 12px;outline:none;font-size:11px}.composer button{border:0;border-radius:999px;padding:0 14px;background:#d6e9b8;color:#071008;font-weight:850;font-size:10px;cursor:pointer}.composer button:disabled{opacity:.45;cursor:not-allowed}.mutedNotice,.notice{margin:10px 12px;padding:9px 11px;border-radius:10px;font-size:9px}.mutedNotice{background:#1b1510;border:1px solid #4a3927;color:#d7bd9c}.notice{background:#1b0f10;border:1px solid #533536;color:#ffcaca}
       `}</style>
       {!overlay && <div className="chatHead"><strong>💬 Live chat</strong><span>{messages.length} messages</span></div>}
       <div className="messages">
@@ -164,9 +168,10 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
       </div>}
       {notice && <div className="notice">{notice}</div>}
       {selfMuted && <div className="mutedNotice">The host has muted you. You can still watch the Live.</div>}
+      <div className="emoteTray" aria-label="1Muslim emotes">{EMOTES.map(emote=><button type="button" key={emote} title={"Send "+emote} disabled={!userId||selfMuted||sending} onClick={()=>void sendEmote(emote)}>{emote}</button>)}</div>
       <form className="composer" onSubmit={send}>
-        <input value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={500} placeholder={selfMuted ? "You are muted" : userId ? (userId === hostId ? "Comment as host…" : "Say something…") : "Sign in to comment"} disabled={!userId || selfMuted || sending} />
-        <button type="submit" disabled={!userId || selfMuted || !draft.trim() || sending}>{sending ? "…" : "Send"}</button>
+        <input value={draft} onChange={(event) => setDraft(limit35(event.target.value))} maxLength={35} placeholder={selfMuted ? "You are muted" : userId ? (userId === hostId ? "Comment as host…" : "Say something…") : "Sign in to comment"} disabled={!userId || selfMuted || sending} />
+        <small style={{alignSelf:"center",fontSize:9,opacity:.7}}>{Array.from(draft).length}/35</small><button type="submit" disabled={!userId || selfMuted || !draft.trim() || sending}>{sending ? "…" : "Send"}</button>
       </form>
     </div>
   );
