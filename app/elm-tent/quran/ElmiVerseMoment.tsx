@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 const VERSE="فَإِنَّ مَعَ الْعُسْرِ يُسْرًا"; // Qur'an 94:5; text is never modified.
-type Phase="float"|"anticipate"|"converge"|"reveal";
+type Phase="float"|"holding"|"charged"|"converge"|"reveal";
 type AudioWindow=Window & {webkitAudioContext?:typeof AudioContext};
 function elmiChime(ctx:AudioContext,frequency:number,at:number,duration:number,volume:number,kind:OscillatorType="sine"){
  const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=kind;osc.frequency.setValueAtTime(frequency,at);
@@ -29,28 +29,41 @@ export default function ElmiVerseMoment(){
  const [phase,setPhase]=useState<Phase>("float");
  const [lightEnabled,setLightEnabled]=useState(true);
  const timers=useRef<number[]>([]);
- const start=()=>{if(phase==="anticipate"||phase==="converge")return;
+ const held=useRef(false);
+ const started=useRef(0);
+ const [progress,setProgress]=useState(0);
+ const [explained,setExplained]=useState(false);
+ const chargeTimer=useRef<number|undefined>(undefined);
+ const chargeFrame=useRef<number|undefined>(undefined);
+ const clearCharge=()=>{if(chargeTimer.current!==undefined)clearTimeout(chargeTimer.current);if(chargeFrame.current!==undefined)cancelAnimationFrame(chargeFrame.current);chargeTimer.current=undefined;chargeFrame.current=undefined;};
+ const release=()=>{if(!held.current)return;held.current=false;clearCharge();setProgress(0);
+  if(!lightEnabled){setPhase("float");return}
   timers.current.forEach(clearTimeout);timers.current=[];
-  if(!lightEnabled)return;
-  setPhase("anticipate");
-  playElmiSequence();
-  timers.current.push(window.setTimeout(()=>setPhase("converge"),680));
-  timers.current.push(window.setTimeout(()=>setPhase("reveal"),1240));
-  timers.current.push(window.setTimeout(()=>setPhase("float"),3100));
+  setPhase("converge");playElmiSequence();
+  timers.current.push(window.setTimeout(()=>setPhase("reveal"),540));
+  timers.current.push(window.setTimeout(()=>{setPhase("float");setExplained(false)},3300));
  };
- useEffect(()=>{const sync=()=>{try{setLightEnabled(localStorage.getItem("1muslim-elmi-light")!=="off")}catch{setLightEnabled(true)}};sync();window.addEventListener("1muslim-elmi-light-updated",sync);window.addEventListener("storage",sync);return()=>{timers.current.forEach(clearTimeout);window.removeEventListener("1muslim-elmi-light-updated",sync);window.removeEventListener("storage",sync)}},[]);
+ const press=(e:React.PointerEvent<HTMLButtonElement>)=>{if(phase==="converge"||phase==="reveal"||held.current)return;
+  e.currentTarget.setPointerCapture(e.pointerId);
+  held.current=true;started.current=performance.now();setProgress(0);setExplained(false);setPhase("holding");
+  const tick=()=>{if(!held.current)return;setProgress(Math.min(100,(performance.now()-started.current)/16));chargeFrame.current=requestAnimationFrame(tick)};chargeFrame.current=requestAnimationFrame(tick);
+  chargeTimer.current=window.setTimeout(()=>{if(held.current){setPhase("charged");setExplained(true)}},900);
+ };
+ const keyboardActivate=(e:React.KeyboardEvent<HTMLButtonElement>)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();if(!held.current){held.current=true;setPhase("charged");setExplained(true);release()}}};
+ useEffect(()=>{const sync=()=>{try{setLightEnabled(localStorage.getItem("1muslim-elmi-light")!=="off")}catch{setLightEnabled(true)}};sync();window.addEventListener("1muslim-elmi-light-updated",sync);window.addEventListener("storage",sync);return()=>{held.current=false;clearCharge();timers.current.forEach(clearTimeout);window.removeEventListener("1muslim-elmi-light-updated",sync);window.removeEventListener("storage",sync)}},[]);
  return <section className={"evmStage evm-"+(lightEnabled?phase:"disabled")} aria-label="Interactive Elmi Light Qur'an verse animation">
   <div className="evmAurora" aria-hidden="true"/>
   <div className="evmOrbit evmOrbitOne" aria-hidden="true"/><div className="evmOrbit evmOrbitTwo" aria-hidden="true"/>
   <div className="evmMotes" aria-hidden="true">{motes.map(m=><span key={m.id} className="evmMote" style={{["--a" as string]:m.angle+"deg",["--r" as string]:m.radius+"px",["--d" as string]:m.delay+"ms",["--n" as string]:m.id}}/>)}</div>
   <div className="evmFlash" aria-hidden="true"/>
-  <button type="button" className="evmBubble" onClick={start} aria-label="Touch the floating Quran verse bubble to activate Elmi Light">
+  <button type="button" className="evmBubble" onPointerDown={press} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release} onKeyDown={keyboardActivate} onContextMenu={e=>e.preventDefault()} aria-label="Press and hold the Quran verse bubble, then release to activate Elmi Light" style={{["--charge" as string]:progress+"%"}}>
    <span className="evmGlass" aria-hidden="true"/><span className="evmShimmer" aria-hidden="true"/>
    <span className="evmArabic" lang="ar" dir="rtl">{VERSE}</span>
    <span className="evmReference">سورة الشرح · 94:5</span>
   </button>
-  <span className="evmCaption" aria-live="polite">{phase==="anticipate"?"✦ Elmi Light is gathering…":phase==="converge"?"✦ Light meets the words":phase==="reveal"?"✦ سبحان الله":"✧ Touch the floating verse"}</span>
-  <style jsx>{`
+  {explained && (phase==="holding"||phase==="charged") && <div className="evmMeaning" role="status"><strong>94:5 · Ash-Sharh</strong><span>Indeed, with hardship comes ease.</span><small>Release to let Elmi Light meet the verse ✨</small></div>}
+  <span className="evmCaption" aria-live="polite">{phase==="holding"?"✦ Keep holding to discover its meaning…":phase==="charged"?"✦ Fully charged · Release!":phase==="converge"?"✦ Elmi Light rushes in!":phase==="reveal"?"✦ فَإِنَّ مَعَ الْعُسْرِ يُسْرًا":"✧ Press and hold the floating verse"}</span>
+  <style jsx>{`\n.evmBubble{touch-action:none;--charge:0%}\n.evm-holding .evmBubble,.evm-charged .evmBubble{animation:none;transform:translate3d(0,-5px,0) scale(calc(1 + var(--charge) / 1000));box-shadow:0 0 32px #b6ffe26b,inset 0 0 32px #fff6d633;transition:transform .16s ease-out}\n.evm-holding .evmMote,.evm-charged .evmMote{animation:evmHoldBack 1.1s ease-in-out infinite alternate;animation-delay:var(--d)}\n.evm-charged .evmBubble{transform:translateY(-8px) scale(1.075);border-color:#fff4bc}\n.evmMeaning{position:absolute;z-index:7;top:8px;left:8%;right:8%;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;color:#f8fff7;font-size:13px;text-shadow:0 1px 8px #000;background:#0d2939c9;border:1px solid #c8ffda88;border-radius:16px;padding:9px;backdrop-filter:blur(5px)}\n.evmMeaning small{font-size:10px;color:#c9ffe5}\n@keyframes evmHoldBack{0%{transform:rotate(var(--a)) translateX(calc(var(--r) + 30px)) scale(.6);opacity:.45}100%{transform:rotate(var(--a)) translateX(calc(var(--r) + 10px)) scale(1.4);opacity:1}}\n.evm-converge .evmBubble{animation:evmAirPop .54s cubic-bezier(.2,.8,.25,1) both}\n@keyframes evmAirPop{0%{transform:scale(1.07)}32%{transform:scale(.78)}64%{transform:scale(1.16)}100%{transform:scale(1)}}
 .evmStage{contain:layout paint;--mint:#a1ffe0;position:relative;isolation:isolate;overflow:hidden;display:grid;place-items:center;min-height:335px;margin:20px 0;border-radius:30px;border:1px solid #b1e6da38;background:radial-gradient(ellipse at 48% 75%,#3a667655,transparent 65%),linear-gradient(140deg,#071a25,#101a35 55%,#122b2c);perspective:850px}
 .evmAurora{pointer-events:none;position:absolute;inset:-35%;background:conic-gradient(from 35deg at 50% 50%,transparent,#83fbd322,transparent,#a7a0ff25,transparent,#e7c77d21,transparent);filter:blur(20px);animation:evmAurora 18s linear infinite}
 .evmOrbit{position:absolute;width:290px;height:190px;border:1px solid #b4ffe529;border-radius:50%;transform:rotate(-22deg);filter:drop-shadow(0 0 12px #93ffd340);animation:evmOrbitA 9s ease-in-out infinite}
