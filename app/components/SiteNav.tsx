@@ -57,6 +57,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
   const [wakeUp, setWakeUp] = useState(false);
+  const [exploreHint, setExploreHint] = useState(false);
   const wakeLastY = useRef(0);
   const wakeDistance = useRef(0);
   const [user, setUser] = useState<NavUser | null>(null);
@@ -171,6 +172,25 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   }, [loadingAuth, user, pathname, openMenu]);
   useEffect(() => { if (user) setWakeUp(false); }, [user]);
 
+  // A quiet invitation to explore on the homepage; independent of scroll pulses.
+  useEffect(() => {
+    if (loadingAuth || user || pathname !== "/" || openMenu === "mobile") { setExploreHint(false); return; }
+    if (!window.matchMedia("(max-width: 700px)").matches) return;
+    let alreadyShown = false;
+    try { alreadyShown = sessionStorage.getItem("1muslim-explore-hint") === "1"; } catch {}
+    if (alreadyShown) return;
+    let hide: ReturnType<typeof setTimeout> | undefined;
+    const show = setTimeout(() => {
+      if (window.scrollY > 500) return;
+      setExploreHint(true);
+      try { sessionStorage.setItem("1muslim-explore-hint", "1"); } catch {}
+      hide = setTimeout(() => setExploreHint(false), 3800);
+    }, 3200);
+    const onScroll = () => { if (window.scrollY > 500) setExploreHint(false); };
+    window.addEventListener("scroll", onScroll, {passive:true});
+    return () => { clearTimeout(show); if (hide) clearTimeout(hide); window.removeEventListener("scroll", onScroll); };
+  }, [loadingAuth, user, pathname, openMenu]);
+
   const accountLabel = user?.display_name || (user?.username ? "@" + user.username : user?.email?.split("@")[0]) || "My account";
   const closeMenu = () => setOpenMenu(null);
   const signOut = async () => { await createClient().auth.signOut(); window.location.href = "/"; };
@@ -202,6 +222,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
     </nav>
 
     <div className={wakeUp ? "wakeUpBackdrop wakeUpActive" : "wakeUpBackdrop"} aria-hidden="true" />
+    {exploreHint && !wakeUp && <button type="button" className="wakeExploreHint" onClick={() => { setExploreHint(false); window.scrollBy({top: Math.round(window.innerHeight * .75),behavior: "smooth"}); }} aria-label="Scroll down and explore more">✦ Scroll down &amp; explore more <span aria-hidden="true">↓</span></button>}
     <nav className="muslimMobileDock" aria-label="Mobile primary navigation">
       <div className="muslimDockShell">
         <Link href="/" className={pathname === "/" ? "dockItem selected" : "dockItem"} aria-label="Home"><span className="dockIcon">⌂</span><small>Home</small></Link>
@@ -245,11 +266,14 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       <div className="mobileMenuFooter"><ThemeToggle/>{user ? <button type="button" className="mobileMenuSignOut" onClick={signOut}>Sign out</button> : <Link href="/auth" onClick={closeMenu}>Sign in</Link>}</div>
     </div>}
     <style jsx>{`
+      :global(.wakeExploreHint){position:fixed;bottom:calc(104px + env(safe-area-inset-bottom,0px));right:14px;z-index:9900;max-width:calc(100vw - 28px);border:1px solid #a3e8c2;background:linear-gradient(130deg,#15382d,#253553);color:#f3fff9;padding:10px 13px;border-radius:999px;box-shadow:0 9px 28px #0007;font-size:12px;font-weight:700;cursor:pointer;animation:exploreFloatIn .55s ease both}
+      :global(.wakeExploreHint span){display:inline-block;margin-left:5px;color:#a3e8c2}
+      @keyframes exploreFloatIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
       :global(.wakeUpBackdrop){position:fixed;inset:0;background:rgba(3,9,15,.22);pointer-events:none;z-index:9990;opacity:0;visibility:hidden;transition:opacity .35s ease,visibility .35s}
       :global(.wakeUpBackdrop.wakeUpActive){opacity:1;visibility:visible}
       :global(.muslimMobileDock:has(.wakeUpSpotlight)){z-index:9991!important}
       :global(.wakeUpSpotlight){position:relative!important;z-index:9992!important;filter:drop-shadow(0 0 11px #5fffc2) drop-shadow(0 0 16px #a388ff);transition:filter .3s ease}
-      @media(prefers-reduced-motion:reduce){:global(.wakeUpBackdrop){transition:none!important}:global(.wakeUpSpotlight){filter:none!important}}
+      @media(prefers-reduced-motion:reduce){:global(.wakeUpBackdrop){transition:none!important}:global(.wakeExploreHint){animation:none!important}:global(.wakeUpSpotlight){filter:none!important}}
       .logoBrand{display:flex;align-items:center;flex:0 1 auto;min-width:0;max-width:190px;overflow:hidden}
       .premiumLogo{display:block;width:clamp(122px,14vw,182px);height:46px;max-width:100%;object-fit:contain;object-position:left center;border-radius:3px}
       @media(max-width:700px){.logoBrand{max-width:138px}.premiumLogo{width:138px;height:40px}}
