@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SiteNav from "../components/SiteNav";
+import MyBadges from "../components/MyBadges";
 
 const tiers=[
  {name:"Shahadah Badge",icon:"✦",image:"/assets/badges/shahada-badge.png",subtitle:"Join the conversation",earn:"Complete the Shahadah verification process.",features:["Watch livestreams","Create posts","Comment and react","Like and share content","Go live"],next:"Dua Badge"},
@@ -11,6 +12,7 @@ const tiers=[
 export default function BadgeGuide(){
  return <main style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}><SiteNav/><div style={{maxWidth:1120,margin:"auto",padding:"44px 18px 90px"}}>
  <span style={{color:"#c7b37c",fontSize:12,letterSpacing:3,fontWeight:900}}>1MUSLIM · TRAINING & ACHIEVEMENTS</span><h1 style={{fontSize:"clamp(35px,6vw,64px)",letterSpacing:"-.05em",margin:"10px 0"}}>Your Badge Journey</h1><p style={{maxWidth:740,color:"var(--muted)",lineHeight:1.8}}>Learn, contribute and grow. Each badge represents a new milestone and unlocks more ways to participate in 1Muslim.</p>
+ <MyBadges />
  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(265px,1fr))",gap:18,marginTop:30}}>{tiers.map((tier,i)=><article key={tier.name} style={{border:"1px solid #5b674e",borderRadius:24,padding:24,background:"linear-gradient(155deg,#1a2920,#0c1510)",color:"#eef4e9",display:"flex",flexDirection:"column",gap:13,boxShadow:"0 12px 40px #0003"}}>
  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}><span style={{fontSize:11,letterSpacing:2,color:"#d8c58c",fontWeight:800}}>LEVEL {i+1}</span><span style={{border:"1px solid #786e4b",borderRadius:30,padding:"5px 10px",fontSize:11,color:"#e5d5a5"}}>{i===4?"Highest trust":i===3?"Safety":i===2?"Creator":"Training"}</span></div>
  <div style={{height:145,display:"grid",placeItems:"center"}}>{tier.image?<img src={tier.image} alt={tier.name} style={{height:142,maxWidth:"100%",objectFit:"contain",filter:"drop-shadow(0 8px 20px #0008)"}}/>:<span style={{fontSize:72,filter:"drop-shadow(0 6px 18px #d0aa5555)"}}>{tier.icon}</span>}</div>
