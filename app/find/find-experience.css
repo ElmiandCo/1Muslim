@@ -39,3 +39,22 @@
 .findSoonTag{display:flex;align-items:center;gap:10px;border:1px solid #35684b;background:#102d1e;border-radius:999px;padding:10px 16px;color:#b4f4c7;font-size:10px;font-weight:800;letter-spacing:.1em;margin:16px 0}
 @media(max-width:700px){.findExperienceHero{padding:25px 18px!important;border-radius:22px!important}.findOrbitOne{right:-235px}.findOrbitTwo{right:-180px}.findExperienceHero .findHeroTop{display:block}.findExperienceHero .findHeroTop .ghost{display:none}.findCommandSearch{min-height:52px}.findCommandSearch kbd{display:none}.findFilterRail{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;margin-right:-18px;padding-right:18px;padding-bottom:8px}.findFilterRail::-webkit-scrollbar{display:none}.findFilterRail button{white-space:nowrap;flex:none;padding:10px 14px!important}.findHeroFooter{font-size:8px}.findExperienceHero .findHeroTop h1{font-size:42px}}
 @media(prefers-reduced-motion:reduce){.findOrbit,.findPulse{animation:none!important}.findPage .personCard,.findPage .liveDiscoverCard,.findPage .discoveryCard{transition:none}}
+
+
+/* Elm Tent Library-inspired discovery motion and illuminated member panels */
+.findExperienceHero:after{inset:-75%;border-radius:0;z-index:-1;background:conic-gradient(from 90deg,transparent 0 75%,rgba(198,241,189,.12) 85%,transparent 95%);animation:findHeroSweep 12s linear infinite}
+@keyframes findHeroSweep{to{transform:rotate(360deg)}}
+.findPage .peopleGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:16px}
+.findPage .personCard{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;gap:10px;animation:findCardReveal .52s cubic-bezier(.2,.9,.2,1) both;will-change:transform}
+.findPage .personCard:nth-child(6n + 2){animation-delay:50ms}.findPage .personCard:nth-child(6n + 3){animation-delay:100ms}.findPage .personCard:nth-child(6n + 4){animation-delay:150ms}.findPage .personCard:nth-child(6n + 5){animation-delay:200ms}.findPage .personCard:nth-child(6n + 6){animation-delay:250ms}
+.findPage .personCard:before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(115deg,transparent 15%,rgba(255,255,255,.075) 48%,transparent 70%);transform:translateX(-130%);transition:transform .7s ease}
+.findPage .personCard:hover:before{transform:translateX(130%)}
+.findPage .personArt{height:128px;position:relative;overflow:hidden;border-radius:15px;border:1px solid rgba(177,239,195,.17);background:radial-gradient(circle at 35% 25%,rgba(200,255,223,.17),transparent 55%),linear-gradient(135deg,#285840,#10262b);display:grid;place-items:center}
+.findPage .personArtOrbit{height:118px;width:118px;border:1px solid rgba(217,249,195,.44);border-radius:50%;box-shadow:0 0 0 14px rgba(217,249,195,.055),0 0 0 30px rgba(217,249,195,.035);animation:findProfileOrbit 12s linear infinite}
+.findPage .personArtOrbit:before{content:"";position:absolute;top:-5px;left:50%;width:9px;height:9px;border-radius:50%;background:#c7f5b8;box-shadow:0 0 18px #b6ffc4}
+.findPage .personTop{position:relative;z-index:1}
+.findPage .personCard:hover .personArtOrbit{box-shadow:0 0 0 18px rgba(217,249,195,.07),0 0 0 36px rgba(217,249,195,.04)}
+@keyframes findProfileOrbit{to{transform:rotate(360deg)}}
+@keyframes findCardReveal{from{opacity:0;transform:translateY(20px) scale(.97);filter:blur(3px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@media(max-width:620px){.findPage .peopleGrid{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}.findPage .personArt{height:100px}}
+@media(prefers-reduced-motion:reduce){.findExperienceHero:after,.findPage .personArtOrbit,.findPage .personCard{animation:none!important}.findPage .personCard:before{transition:none!important}.findPage .personCard:hover:before{transform:none}}
