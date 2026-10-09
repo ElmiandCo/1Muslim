@@ -7,12 +7,14 @@ import { createClient } from "../../utils/supabase/client";
 
 export default function SettingsPage() {
   const [enabled, setEnabled] = useState(false);
+  const [elmiLight, setElmiLight] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    try { setElmiLight(localStorage.getItem("1muslim-elmi-light") !== "off"); } catch {}
     (async () => {
       const s = createClient();
       const { data: { user } } = await s.auth.getUser();
@@ -22,6 +24,13 @@ export default function SettingsPage() {
       setLoading(false);
     })();
   }, []);
+
+  const saveElmiLight = (next: boolean) => {
+    setElmiLight(next);
+    try { localStorage.setItem("1muslim-elmi-light", next ? "on" : "off"); } catch {}
+    window.dispatchEvent(new Event("1muslim-elmi-light-updated"));
+    setMessage(next ? "The Elmi Light is on. ✨" : "The Elmi Light is off on this device.");
+  };
 
   const saveArabic = async (next: boolean) => {
     setEnabled(next);
@@ -57,6 +66,11 @@ export default function SettingsPage() {
         <h1>Make 1Muslim yours.</h1>
         <p>Control the small things that follow you around the site.</p>
       </header>
+
+      <section className="settingsCard" data-no-tap-shimmer>
+        <div className="settingCopy"><span className="settingIcon">✨</span><div><span className="eyebrow">SIGNATURE EFFECT · DEFAULT ON</span><h2>The Elmi Light</h2><p>Our signature vertical blue-and-gold glow follows HudHud as you move the handle, and adds shimmering light, sparkles, and dust to taps and celebrations across 1Muslim. Turn it off for a calmer experience. Your choice is saved on this device.</p></div></div>
+        <button type="button" className={"switch " + (elmiLight ? "on" : "")} onClick={() => saveElmiLight(!elmiLight)} aria-pressed={elmiLight} aria-label="Toggle The Elmi Light"><span>{elmiLight ? "ON" : "OFF"}</span><i /></button>
+      </section>
 
       <section className="settingsCard">
         <div className="settingCopy">
