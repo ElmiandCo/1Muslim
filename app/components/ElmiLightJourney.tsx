@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useState} from "react";
+import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
 
@@ -9,6 +9,7 @@ const SIGNUP="/auth?shahada=1";
 const packets=Array.from({length:32},(_,i)=>({x:(i*37+13)%100,y:(i*61+19)%100,delay:(i%11)*.19,size:2+(i%4)*2}));
 export default function ElmiLightJourney(){
  const pathname=usePathname();
+ const responded=useRef(false);
  const [stage,setStage]=useState<"off"|"dark"|"path"|"library"|"quran">("off");
  useEffect(()=>{
   if(!pathname)return;
@@ -24,8 +25,10 @@ export default function ElmiLightJourney(){
    if(!done){setStage("dark");const timer=setTimeout(()=>setStage(s=>s==="dark"?"path":s),2200);return()=>clearTimeout(timer)}
   }catch{setStage("off")}
  },[pathname]);
- useEffect(()=>{const replay=()=>{if(pathname==="/"){setStage("dark");window.setTimeout(()=>setStage("path"),2200)}else window.location.href="/"};window.addEventListener("1muslim:replay-intro",replay);return()=>window.removeEventListener("1muslim:replay-intro",replay)},[pathname]);
- const finish=()=>{try{localStorage.setItem("1muslim-elmi-journey-v1","done")}catch{}setStage("off")};
+ useEffect(()=>{if(pathname!=="/"||stage!=="path"||responded.current)return;const hide=window.setTimeout(()=>setStage("off"),10000);return()=>window.clearTimeout(hide)},[stage,pathname]);
+ useEffect(()=>{if(pathname!=="/")return;const timer=window.setInterval(()=>{if(!responded.current)setStage(s=>s==="off"?"path":s)},180000);return()=>window.clearInterval(timer)},[pathname]);
+ useEffect(()=>{const replay=()=>{if(pathname==="/"){responded.current=false;setStage("dark");window.setTimeout(()=>setStage("path"),2200)}else window.location.href="/"};window.addEventListener("1muslim:replay-intro",replay);return()=>window.removeEventListener("1muslim:replay-intro",replay)},[pathname]);
+ const finish=()=>{responded.current=true;try{localStorage.setItem("1muslim-elmi-journey-v1","done")}catch{}setStage("off")};
  if(stage==="off")return null;
  const reduced=typeof window!=="undefined"&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
  return <div className="eljRoot" role="dialog" aria-modal="true" aria-label="Elmi Light guided journey to the Qur'an">
