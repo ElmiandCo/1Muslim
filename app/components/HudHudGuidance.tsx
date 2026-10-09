@@ -3,7 +3,7 @@ import {useEffect,useState} from "react";
 import {usePathname,useRouter} from "next/navigation";
 const key="1muslim-hudhud-guidance-visit-v1";
 const stops=[
- {name:"Qur'an Studio",href:"/elm-tent/quran",hint:"Begin with the words of Allah."},
+ {name:"Qur'an Studio",href:"/elm-tent/quran?surah=20&verse=114",hint:"Begin with the words of Allah."},
  {name:"Community Posts",href:"/#community",hint:"Read and reflect with the community."},
  {name:"Daily Video",href:"/#video-of-day",hint:"Watch today's featured lesson."},
  {name:"Main Live Stream",href:"/#live-now",hint:"Join the community live when a stream is available."}
@@ -17,15 +17,18 @@ const verses=[
 export default function HudHudGuidance(){
  const router=useRouter(),pathname=usePathname();
  const [active,setActive]=useState(false),[index,setIndex]=useState(0),[strength,setStrength]=useState(0);
+ const [target,setTarget]=useState<string|null>(null);
  useEffect(()=>{const launch=()=>{
   let count=0;try{count=Math.max(0,Number(localStorage.getItem(key)||"0"))}catch{}
-  const next=count%stops.length;try{localStorage.setItem(key,String(count+1))}catch{}
+  const next=count===0?0:Math.floor(Math.random()*stops.length);try{localStorage.setItem(key,String(count+1))}catch{}
+  setTarget(new URLSearchParams(window.location.search).get("guidanceTarget"));
   setIndex(next);setStrength(Math.min(.75,.30*Math.pow(1.5,count)));setActive(true);
+  try{if(localStorage.getItem("1muslim-hudhud-voice")==="on"&&"speechSynthesis" in window){window.speechSynthesis.cancel();const v=verses[next];const speech=new SpeechSynthesisUtterance(v.translation+". "+stops[next].hint);speech.rate=.92;window.speechSynthesis.speak(speech)}}catch{}
  };window.addEventListener("1muslim:hudhud-guidance",launch);return()=>window.removeEventListener("1muslim:hudhud-guidance",launch)},[]);
  useEffect(()=>{if(!active)return;const t=window.setTimeout(()=>setActive(false),9500);return()=>window.clearTimeout(t)},[active,index]);
  if(!active)return null;
  const verse=verses[index],stop=stops[index];
- const go=()=>{setActive(false);if(stop.href.includes("#")&&pathname==="/"){document.getElementById(stop.href.split("#")[1])?.scrollIntoView({behavior:"smooth",block:"center"})}else router.push(stop.href)};
+ const go=()=>{setActive(false);const href=target?.startsWith("/")&&!target.startsWith("//")?target:stop.href;if(href.includes("#")&&pathname==="/"){const id=href.split("#")[1];const node=document.getElementById(id);if(node){node.scrollIntoView({behavior:"smooth",block:"center"});node.classList.add("hudhud-guidance-target");window.setTimeout(()=>node.classList.remove("hudhud-guidance-target"),4500)}else router.push(href)}else router.push(href)};
  return <div className="hh-guide-root" role="dialog" aria-modal="true" aria-label="HudHud Guidance">
  <div className="hh-guide-dim" style={{background:`rgba(0,8,20,${strength})`}} onClick={()=>setActive(false)}/>
  <div className="hh-guide-lights" aria-hidden="true">{Array.from({length:65},(_,i)=><i key={i} style={{left:`${(i*47.1)%100}%`,top:`${(i*23.7)%100}%`,animationDelay:`${(i%13)*.12}s`}}/>)}</div>
