@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-type Ayah = { numberInSurah: number; text: string; audio?: string };
-const SURAHS = [{id:1,name:"Al-Fatihah"},{id:112,name:"Al-Ikhlas"},{id:113,name:"Al-Falaq"},{id:114,name:"An-Nas"}];
+type Ayah = { numberInSurah: number; text: string; audio?: string; translation?: string };
+type Surah = { number: number; englishName: string; name: string; numberOfAyahs: number };
+const SURAH_NUMBERS = Array.from({length:114},(_,i)=>i+1);
 
 export default function QuranStudioPage() {
-  const [surah,setSurah]=useState(112);
+  const [surah,setSurah]=useState(1);
+  const [surahs,setSurahs]=useState<Surah[]>([]);
+  const [listError,setListError]=useState(false);
   const [ayahs,setAyahs]=useState<Ayah[]>([]);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState("");
@@ -15,7 +18,16 @@ export default function QuranStudioPage() {
   const [audio,setAudio]=useState<HTMLAudioElement|null>(null);
   useEffect(()=>{
     const param=new URLSearchParams(window.location.search).get("surah");
-    if(param && SURAHS.some(s=>s.id===Number(param))) setSurah(Number(param));
+    if(param && Number.isInteger(Number(param)) && Number(param)>=1 && Number(param)<=114) setSurah(Number(param));
+  },[]);
+  useEffect(()=>{
+    let active=true;
+    fetch("https://api.alquran.cloud/v1/surah").then(r=>{if(!r.ok)throw Error("Surah list unavailable");return r.json()}).then(json=>{
+      if(!active)return;
+      if(json.code!==200 || !Array.isArray(json.data) || json.data.length!==114)throw Error("Incomplete surah list");
+      setSurahs(json.data);
+    }).catch(()=>{if(active)setListError(true)});
+    return ()=>{active=false};
   },[]);
   useEffect(()=>{
     let active=true;
@@ -45,11 +57,12 @@ export default function QuranStudioPage() {
     <Link href="/" style={{color:"inherit"}}>← Home</Link>
     <p style={{letterSpacing:3,opacity:.7,marginTop:32}}>1MUSLIM · QUR’AN</p>
     <h1 style={{fontSize:"clamp(32px,6vw,54px)",marginBottom:8}}>Read. Reflect. Return.</h1>
-    <p style={{opacity:.8}}>Qur’an Studio · verse-by-verse recitation and translation.</p>
+    <p style={{opacity:.8}}>Qur’an Studio · all 114 surahs · verse-by-verse recitation and translation.</p>
     <label htmlFor="surah" style={{display:"block",marginTop:28,marginBottom:8}}>Choose a surah</label>
     <select id="surah" value={surah} onChange={e=>{audio?.pause();setPlaying(null);setSurah(Number(e.target.value));window.history.replaceState(null,"",`/quran-studio?surah=${e.target.value}`)}} style={{padding:12,borderRadius:10,width:"100%",background:"#17241e",color:"#fff",border:"1px solid #ad9862"}}>
-      {SURAHS.map(s=><option value={s.id} key={s.id}>{s.id}. {s.name}</option>)}
+      {SURAH_NUMBERS.map(id=>{const s=surahs[id-1];return <option value={id} key={id}>{id}. {s ? `${s.englishName} — ${s.name} (${s.numberOfAyahs} ayahs)` : `Surah ${id}`}</option>})}
     </select>
+    {listError&&<p role="status">Surah names are temporarily unavailable. All 114 surahs remain selectable by number.</p>}
     {loading&&<p role="status">Loading verses…</p>}
     {error&&<p role="alert">{error} · Please retry later.</p>}
     {ayahs.map(a=><article key={a.numberInSurah} style={{border:"1px solid #665c40",borderRadius:18,padding:24,marginTop:16}}>
@@ -58,7 +71,7 @@ export default function QuranStudioPage() {
         <button type="button" onClick={()=>play(a)} disabled={!a.audio} aria-label={`Play verse ${a.numberInSurah}`} style={{padding:"10px 16px",borderRadius:24,border:"1px solid #ad9862",background:"#23382d",color:"#fff",cursor:"pointer"}}>{playing===a.numberInSurah?"■ Stop":"▶ Listen"}</button>
       </div>
       <p dir="rtl" lang="ar" style={{fontSize:"clamp(27px,4vw,38px)",lineHeight:2.1,textAlign:"right"}}>{a.text}</p>
-      <p style={{lineHeight:1.8,opacity:.85}}>{(a as Ayah & {translation?:string}).translation}</p>
+      <p style={{lineHeight:1.8,opacity:.85}}>{a.translation}</p>
     </article>)}
     <p style={{fontSize:12,opacity:.65,marginTop:24}}>Recitation: Mishary Alafasy · Translation: Sahih International · Powered by AlQuran.cloud. Audio requires an internet connection.</p>
   </main>;
