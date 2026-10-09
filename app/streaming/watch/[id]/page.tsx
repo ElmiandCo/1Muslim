@@ -1,6 +1,7 @@
 "use client";
 
 import SiteNav from "../../../components/SiteNav";
+import FirstVisitGuide from "../../../components/FirstVisitGuide";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -24,7 +25,7 @@ export default function WatchPage() {
 
   return <main className="watchPage">
     <style jsx>{css}</style>
-      <SiteNav />
+      <FirstVisitGuide area="watch-live"/><SiteNav />
     <div className="watchShell">
       <div className="videoFrame"><video src={video.src} controls autoPlay playsInline /></div>
       <div className="watchMeta"><span>{video.category} · {video.creator}</span><h1>{video.title}</h1><p>{video.description}</p><div className="actions"><button onClick={() => navigator.share?.({title:video.title,url:window.location.href})}>↗ Share</button><button onClick={() => alert("Saved to your 1Muslim library.")}>＋ Save</button></div></div>
