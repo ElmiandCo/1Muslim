@@ -45,13 +45,13 @@ export default function ElmiTransition(){
    .elmi-cinema{position:fixed;inset:0;pointer-events:none;z-index:2147483645;overflow:hidden}
    .elmi-cinema-veil{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#173c4d88,#020c1bd9);animation:elmiVeil .4s both}
    .elmi-cinema-veil.pop{opacity:.35}.elmi-cinema-veil.poof{opacity:.9}.elmi-cinema-veil.reveal{animation:elmiReveal .75s both}
-   .elmi-cinema-beam{position:absolute;left:50%;top:-15%;height:130%;width:5px;background:linear-gradient(transparent,#6ff9ff,#fff3be,#6ff9ff,transparent);box-shadow:0 0 28px 10px #72ebff88;animation:elmiSweep .8s ease-in-out both}
+   .elmi-cinema-beam{position:absolute;inset:0;width:100vw;height:100dvh;background:linear-gradient(90deg,transparent 0%,#6ff9ff12 16%,#6ff9ff55 37%,#fff3be8a 50%,#6ff9ff55 63%,#6ff9ff12 84%,transparent 100%);filter:blur(26px);mix-blend-mode:screen;animation:elmiSweep .8s ease-in-out both}
    .elmi-cinema-burst{position:absolute;width:1px;height:1px}
    .elmi-cinema-burst i{position:absolute;width:4px;height:22px;border-radius:50%;background:linear-gradient(transparent,#79f4ff,#fff0b4,transparent);box-shadow:0 0 10px #8ffaff;animation:elmiParticle 1.25s ease-out both;animation-delay:calc(var(--i)*18ms)}
    @keyframes elmiParticle{0%{opacity:0;transform:translate(0,0) scale(.4)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),calc(var(--dy) + 130px)) scale(.3)}}
    @keyframes elmiVeil{from{opacity:0}to{opacity:1}}
    @keyframes elmiReveal{from{opacity:.85}to{opacity:0}}
-   @keyframes elmiSweep{0%{opacity:0;transform:translateX(-45vw) scaleY(.2)}30%{opacity:1}100%{opacity:0;transform:translateX(45vw) scaleY(1)}}
+   @keyframes elmiSweep{0%{opacity:0;transform:translateX(-100vw)}35%{opacity:.95}100%{opacity:0;transform:translateX(100vw)}}
    @media(prefers-reduced-motion:reduce){.elmi-cinema{display:none}}
   `}</style>
  </div>
