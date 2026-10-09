@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./site-motion.css";
 import "./site-text.css";
 import "./badge-effects.css";
 import "./hudhud-translate.css";
@@ -10,6 +11,7 @@ import HudHudTranslate from "./components/HudHudTranslate";
 import HudHudSelectionTranslate from "./components/HudHudSelectionTranslate";
 import HudHudLiveMiniPlayer from "./components/HudHudLiveMiniPlayer";
 import NotificationToaster from "./components/NotificationToaster";
+import SiteMotion from "./components/SiteMotion";
 
 export const metadata = {
   title: "OneMuslim — Start where you are.",
@@ -17,7 +19,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}<HudHudTranslate /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
+  return <html lang="en"><body><SiteMotion />{children}<HudHudTranslate /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag("js", new Date());
 gtag("config", "G-DSLVB0HSGV");`}</Script></body></html>;
