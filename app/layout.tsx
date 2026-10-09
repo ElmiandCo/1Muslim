@@ -10,7 +10,6 @@ import HudHudChatLauncher from "./components/HudHudChatLauncher";
 import TapShimmer from "./components/TapShimmer";
 import ElmiTransition from "./components/ElmiTransition";
 import HudHudDimensionDust from "./components/HudHudDimensionDust";
-import HudHudTranslate from "./components/HudHudTranslate";
 import HudHudSelectionTranslate from "./components/HudHudSelectionTranslate";
 import HudHudLiveMiniPlayer from "./components/HudHudLiveMiniPlayer";
 import NotificationToaster from "./components/NotificationToaster";
@@ -23,7 +22,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}<GuestWelcomeGate /><ElmiLightJourney /><HudHudDimensionDust /><TapShimmer /><ElmiTransition /><HudHudChatLauncher /><HudHudTranslate /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
+  return <html lang="en"><body>{children}<GuestWelcomeGate /><ElmiLightJourney /><HudHudDimensionDust /><TapShimmer /><ElmiTransition /><HudHudChatLauncher /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag("js", new Date());
 gtag("config", "G-DSLVB0HSGV");`}</Script></body></html>;
