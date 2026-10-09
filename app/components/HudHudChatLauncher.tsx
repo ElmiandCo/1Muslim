@@ -20,6 +20,7 @@ export default function HudHudChatLauncher(){
  const [voiceOn,setVoiceOn]=useState(false);
  useEffect(()=>{try{setVoiceOn(localStorage.getItem("1muslim-hudhud-voice")==="on")}catch{}},[]);
  const toggleVoice=()=>setVoiceOn(v=>{const next=!v;try{localStorage.setItem("1muslim-hudhud-voice",next?"on":"off")}catch{}window.dispatchEvent(new CustomEvent("1muslim:hudhud-voice",{detail:{enabled:next}}));if(!next&&typeof window!=="undefined")window.speechSynthesis?.cancel();return next});
+ const [quickOpen,setQuickOpen]=useState(false),[open,setOpen]=useState(false),[uid,setUid]=useState<string|null>(null),[profile,setProfile]=useState<Profile|null>(null);
  const [observation,setObservation]=useState("");
  const observations=[
   "Wow, we could use more Ashab! Want to find new friends?",
@@ -34,7 +35,6 @@ export default function HudHudChatLauncher(){
  useEffect(()=>{if(!farewell)return;const t=window.setTimeout(()=>setFarewell(false),6500);return()=>clearTimeout(t)},[farewell]);
  useEffect(()=>{const sync=()=>{try{setLightEnabled(localStorage.getItem("1muslim-elmi-light")!=="off")}catch{setLightEnabled(true)}};sync();window.addEventListener("1muslim-elmi-light-updated",sync);return()=>window.removeEventListener("1muslim-elmi-light-updated",sync)},[]);
  const [labOpen,setLabOpen]=useState(false),[admin,setAdmin]=useState(false);
- const [quickOpen,setQuickOpen]=useState(false),[open,setOpen]=useState(false),[uid,setUid]=useState<string|null>(null),[profile,setProfile]=useState<Profile|null>(null);
  const [position,setPosition]=useState({x:20,y:170}),[dragged,setDragged]=useState(false),[trail,setTrail]=useState<{id:number;x:number;y:number}[]>([]);
  const [messages,setMessages]=useState<Message[]>([welcome]),[draft,setDraft]=useState(""),[pending,setPending]=useState<{url:string;name:string}|null>(null),[notice,setNotice]=useState("");
  const drag=useRef<{x:number;y:number;px:number;py:number}|null>(null),file=useRef<HTMLInputElement>(null),bottom=useRef<HTMLDivElement>(null),nextId=useRef(1);
