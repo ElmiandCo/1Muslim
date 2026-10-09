@@ -2,6 +2,28 @@
 import {useEffect,useRef,useState} from "react";
 const VERSE="فَإِنَّ مَعَ الْعُسْرِ يُسْرًا"; // Qur'an 94:5; text is never modified.
 type Phase="float"|"anticipate"|"converge"|"reveal";
+type AudioWindow=Window & {webkitAudioContext?:typeof AudioContext};
+function elmiChime(ctx:AudioContext,frequency:number,at:number,duration:number,volume:number,kind:OscillatorType="sine"){
+ const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=kind;osc.frequency.setValueAtTime(frequency,at);
+ gain.gain.setValueAtTime(.0001,at);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),at+.025);
+ gain.gain.exponentialRampToValueAtTime(.0001,at+duration);osc.connect(gain);gain.connect(ctx.destination);
+ osc.start(at);osc.stop(at+duration+.01);
+}
+function playElmiSequence(){
+ if(typeof window==="undefined"||localStorage.getItem("1muslim-elmi-light-sound")!=="on"||localStorage.getItem("1muslim-elmi-light")==="off")return;
+ try{
+  const AudioCtor=window.AudioContext||(window as AudioWindow).webkitAudioContext;if(!AudioCtor)return;
+  const ctx=new AudioCtor();const t=ctx.currentTime+.03;
+  // Gentle suspense, converging sparkles, and a soft glass-pop. No speech or recitation.
+  elmiChime(ctx,392,t,.35,.018);
+  elmiChime(ctx,523.25,t+.23,.4,.018);
+  elmiChime(ctx,659.25,t+.49,.25,.024);
+  elmiChime(ctx,1046.5,t+.68,.3,.038);
+  elmiChime(ctx,783.99,t+.73,.5,.019);
+  elmiChime(ctx,1318.5,t+.86,.75,.022);
+  window.setTimeout(()=>{void ctx.close().catch(()=>{})},2500);
+ }catch{/* Audio unavailable or blocked: animation remains silent. */}
+}
 const motes=Array.from({length:15},(_,i)=>({id:i,angle:i*137.5,radius:60+(i%5)*21,delay:(i%7)*42}));
 export default function ElmiVerseMoment(){
  const [phase,setPhase]=useState<Phase>("float"),[count,setCount]=useState(0);
@@ -9,6 +31,7 @@ export default function ElmiVerseMoment(){
  const start=()=>{if(phase==="anticipate"||phase==="converge")return;
   timers.current.forEach(clearTimeout);timers.current=[];
   setCount(n=>n+1);setPhase("anticipate");
+  playElmiSequence();
   timers.current.push(window.setTimeout(()=>setPhase("converge"),680));
   timers.current.push(window.setTimeout(()=>setPhase("reveal"),1240));
   timers.current.push(window.setTimeout(()=>setPhase("float"),3100));
