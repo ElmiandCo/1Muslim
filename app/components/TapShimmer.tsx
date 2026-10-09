@@ -55,6 +55,9 @@ export default function TapShimmer(){
   </span>)}
   {dust.map(p=><span key={p.id} className="tap-dust" style={{left:p.x,top:p.y,width:p.size,height:p.size,animationDuration:`${p.duration}ms`,animationDelay:`${p.delay}ms`,["--dx" as string]:`${p.dx}px`,["--dy" as string]:`${p.dy}px`}}/>)}
   <style jsx>{`
+   .tap-confirmed::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:100%;border-radius:100%;background:linear-gradient(transparent,#78f5ff,#fff1b3,#78f5ff,transparent);box-shadow:0 0 18px #75f5ff;transform:translate(-50%,-50%);animation:tapVertical 1s ease-out both}
+   @keyframes tapVertical{0%{opacity:0;scale:.2 1}25%{opacity:1;scale:1 1}100%{opacity:0;scale:.3 1}}
+
    .tap-shimmer-layer{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden}
    .tap-shimmer{position:absolute;pointer-events:none;--tap-color:#a7dfff;transform:translate(-50%,-50%);overflow:hidden;border-radius:12px}
    .tap-success{--tap-color:#79ffd7}.tap-confirmed{--tap-color:#f6dd7b}
