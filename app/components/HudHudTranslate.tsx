@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-type Lang = "en" | "ar";
-const labels: Record<Lang,string> = { en:"English", ar:"العربية" };
-const UI = {en:["Translate with HudHud","Translating…","Translation ready","Translation unavailable"],ar:["ترجم مع هدهد","جارٍ الترجمة…","اكتملت الترجمة","الترجمة غير متاحة"]};
+type Lang = "en" | "ar" | "so";
+const labels: Record<Lang,string> = { en:"English", ar:"العربية", so:"Soomaali" };
+const UI = {en:["Translate with HudHud","Translating…","Translation ready","Translation unavailable"],ar:["ترجم مع هدهد","جارٍ الترجمة…","اكتملت الترجمة","الترجمة غير متاحة"],so:["Ku turjun HudHud","Waa la turjumayaa…","Turjumaaddu waa diyaar","Turjumaad lama heli karo"]};
 export default function HudHudTranslate() {
   const [lang,setLang]=useState<Lang>("en");
   const [busy,setBusy]=useState(false);
@@ -19,7 +19,7 @@ export default function HudHudTranslate() {
   const cache=useRef(new Map<string,string>());
   const pending=useRef(false);
   const suppress=useRef(false);
-  useEffect(()=>{const stored=localStorage.getItem("1muslim-language");if(stored==="ar")setLang(stored)},[]);
+  useEffect(()=>{const stored=localStorage.getItem("1muslim-language");if(stored==="ar"||stored==="so")setLang(stored)},[]);
   useEffect(()=>{
     let observer:MutationObserver|undefined;
     const ignored=(n:Text)=>{const el=n.parentElement;return !el||!!el.closest("[data-no-translate],script,style,textarea,input,select,option,code,pre,[contenteditable='true']")};
@@ -67,7 +67,7 @@ export default function HudHudTranslate() {
     </select>
     <button type="button" aria-label="HudHud settings" onClick={()=>{setSettings(v=>!v);setChat(false)}} style={{background:"transparent",color:"white",border:0,cursor:"pointer"}}>⚙️</button>
     <button type="button" aria-label="HudHud chat" onClick={()=>{setChat(v=>!v);setSettings(false)}} style={{background:"transparent",color:"white",border:0,cursor:"pointer"}}>💬</button>
-    {settings&&<div className="hudhud-panel"><strong>HudHud Settings</strong><p>Website language: English or Arabic</p><button type="button" onClick={()=>{setPosition(null);setSettings(false)}}>Reset position</button></div>}
+    {settings&&<div className="hudhud-panel"><strong>HudHud Settings</strong><p>Website language: English, Somali, or Arabic</p><button type="button" onClick={()=>{setPosition(null);setSettings(false)}}>Reset position</button></div>}
     {chat&&<div className="hudhud-panel"><strong>Chat with HudHud</strong><p>AI chat is not connected yet. You can use 1Muslim messages while this is being prepared.</p><a href="/messages">Open messages →</a></div>}
     {busy&&<span className="hudhud-shine" role="status">{UI[lang][1]}</span>}
     {!busy&&notice&&<span className="hudhud-translate-status">{notice}</span>}
