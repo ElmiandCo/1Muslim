@@ -11,10 +11,12 @@ export default function ElmiLightJourney(){
  const [stage,setStage]=useState<"off"|"dark"|"path"|"library"|"quran">("off");
  useEffect(()=>{
   if(!pathname)return;
+  // The cinematic journey replays on every home-page load/refresh.
   const excluded=["/auth","/welcome","/onboarding","/streaming/live","/streaming/watch"];
   if(excluded.some(p=>pathname.startsWith(p))){setStage("off");return}
   try{
    const done=localStorage.getItem("1muslim-elmi-journey-v1");
+   if(pathname==="/"){setStage("dark");const timer=setTimeout(()=>setStage(s=>s==="dark"?"path":s),2200);return()=>clearTimeout(timer)}
    if(done==="done"){setStage("off");return}
    if(pathname===LIBRARY){setStage("library");return}
    if(pathname===QURAN||pathname==="/quran-studio"){setStage("quran");return}
