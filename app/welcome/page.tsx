@@ -24,6 +24,7 @@ export default function WelcomePage(){
  <button className="welcomePrimary" disabled={busy||!agreed} onClick={submit}>{busy?"Submitting…":"Request access →"}</button>
  {message&&<p role="alert">{message}</p>}
  </>}
+ <div className="welcomeShahada"><p>Ready to sincerely affirm the Shahada instead?</p><Link href="/auth?shahada=1">✓ Yes — create an account and continue to Shahada →</Link><small>You can return here to request guest access instead.</small></div>
  <div className="welcomeLinks"><Link href="/auth">Already approved? Sign in</Link><Link href="/terms">Community terms</Link></div>
  </section><style jsx>{`
  .welcomeRoot{min-height:100dvh;background:radial-gradient(circle at 50% 15%,#152e50,#050916 72%);color:#f2faff;padding-bottom:120px}
@@ -37,6 +38,7 @@ export default function WelcomePage(){
  .welcomeEmail input{display:block;width:100%;padding:15px;margin:9px 0 22px;border:1px solid #73bce8;border-radius:12px;background:#071626;color:white}
  .welcomePrimary{padding:15px 24px;border:0;border-radius:14px;background:linear-gradient(100deg,#6de7ff,#b798ff);color:#071329;font-weight:900;cursor:pointer}
  .welcomePrimary:disabled{opacity:.45}
+ .welcomeShahada{margin-top:25px;padding:18px;border:1px solid #987aff77;border-radius:16px;background:#201a3d}.welcomeShahada a{display:block;color:#c8baff;font-weight:800;margin:8px 0}.welcomeShahada small{display:block;color:#b4c2d4;font-size:11px}
  .welcomeLinks{display:flex;justify-content:center;gap:22px;margin-top:28px;font-size:12px}
  .welcomeLinks a{color:#a5dfff}
  `}</style></main>
