@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {createClient} from "../../../utils/supabase/client";
+import Link from "next/link";
 const VERSE="فَإِنَّ مَعَ الْعُسْرِ يُسْرًا"; // Qur'an 94:5; text is never modified.
 type Phase="float"|"holding"|"charged"|"converge"|"reveal";
 type AudioWindow=Window & {webkitAudioContext?:typeof AudioContext};
@@ -37,11 +38,31 @@ export default function ElmiVerseMoment(){
  const [reward,setReward]=useState("");
  const readyToClaim=useRef(false);
  const startedOnServer=useRef(false);
+ const claiming=useRef(false);
+ const holdId=useRef(0);
  const chargeTimer=useRef<number|undefined>(undefined);
  const chargeFrame=useRef<number|undefined>(undefined);
  const clearCharge=()=>{if(chargeTimer.current!==undefined)clearTimeout(chargeTimer.current);if(chargeFrame.current!==undefined)cancelAnimationFrame(chargeFrame.current);chargeTimer.current=undefined;chargeFrame.current=undefined;};
+ const claimReward=async()=>{
+  if(claiming.current||!readyToClaim.current||!startedOnServer.current)return;
+  claiming.current=true;
+  const client=createClient();
+  const {data:before}=await client.from("profiles").select("xp_total").maybeSingle();
+  const previous=Number(before?.xp_total||0);
+  const {data,error}=await client.rpc("claim_elmi_verse_hold");
+  const result=Array.isArray(data)?data[0]:data;
+  if(error){setReward("Could not award XP yet: "+error.message)}
+  else if(Number(result?.awarded)===10000){
+   const next=Number(result.xp_total||0);
+   const oldLevel=Math.floor(Math.sqrt(Math.max(0,previous)/100))+1;
+   const newLevel=Math.floor(Math.sqrt(Math.max(0,next)/100))+1;
+   setReward(newLevel>oldLevel?"🏆 Level up! +10,000 XP · Level "+newLevel:"🎉 +10,000 XP earned! Continue in Qur'an Studio with HudHud 🦅");
+   window.dispatchEvent(new Event("1muslim-xp-updated"));
+  }else setReward("You've already earned this verse bonus. Continue in Qur'an Studio with HudHud 🦅");
+  claiming.current=false;
+ };
  const release=()=>{if(!held.current)return;held.current=false;clearCharge();setProgress(0);
-  if(readyToClaim.current && startedOnServer.current){void createClient().rpc("claim_elmi_verse_hold").then(({data,error})=>{const result=Array.isArray(data)?data[0]:data;if(!error&&Number(result?.awarded)===10000){setReward("🎉 +10,000 XP! Check your profile for your new level and badges.");window.dispatchEvent(new Event("1muslim-xp-updated"));}else if(error){setReward("XP could not be awarded: "+error.message)}else{setReward("Verse reward already claimed. ✨")}})}
+  if(readyToClaim.current)void claimReward();
   readyToClaim.current=false;startedOnServer.current=false;
   if(!lightEnabled){setPhase("float");return}
   timers.current.forEach(clearTimeout);timers.current=[];
@@ -52,9 +73,9 @@ export default function ElmiVerseMoment(){
  const press=(e:React.PointerEvent<HTMLButtonElement>)=>{if(phase==="converge"||phase==="reveal"||held.current)return;
   e.currentTarget.setPointerCapture(e.pointerId);
   held.current=true;started.current=performance.now();setProgress(0);setExplained(false);setReward("");setPhase("holding");
-  readyToClaim.current=false;startedOnServer.current=false;
-  void createClient().rpc("begin_elmi_verse_hold").then(({error})=>{if(!error&&held.current)startedOnServer.current=true});
-  const tick=()=>{if(!held.current)return;const elapsed=performance.now()-started.current;setProgress(Math.min(100,elapsed/50));if(elapsed>=5200)readyToClaim.current=true;chargeFrame.current=requestAnimationFrame(tick)};chargeFrame.current=requestAnimationFrame(tick);
+  readyToClaim.current=false;startedOnServer.current=false;const id=++holdId.current;
+  void createClient().rpc("begin_elmi_verse_hold").then(({error})=>{if(!error&&held.current&&holdId.current===id)startedOnServer.current=true});
+  const tick=()=>{if(!held.current)return;const elapsed=performance.now()-started.current;setProgress(Math.min(100,elapsed/50));if(elapsed>=5200&&!readyToClaim.current){readyToClaim.current=true;if(startedOnServer.current)void claimReward()}chargeFrame.current=requestAnimationFrame(tick)};chargeFrame.current=requestAnimationFrame(tick);
   chargeTimer.current=window.setTimeout(()=>{if(held.current){setPhase("charged");setExplained(true)}},900);
  };
  const keyboardActivate=(e:React.KeyboardEvent<HTMLButtonElement>)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();if(!held.current){held.current=true;setPhase("charged");setExplained(true);release()}}};
@@ -71,9 +92,9 @@ export default function ElmiVerseMoment(){
   </button>
   {explained && (phase==="holding"||phase==="charged") && <div className="evmMeaning" role="status"><strong>94:5 · Ash-Sharh</strong><span>Indeed, with hardship comes ease.</span><small>Release to let Elmi Light meet the verse ✨</small></div>}
   {(phase==="holding"||phase==="charged")&&<div className="evmProgress" role="progressbar" aria-label="Hold for five seconds to earn ten thousand XP" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.floor(progress)}><div style={{width:progress+"%"}}/><span>{Math.min(5,Math.floor(progress/20))}/5 seconds · 10,000 XP</span></div>}
-  {reward&&<div className="evmReward" role="status">{reward}</div>}
+  {reward&&<div className="evmReward" role="status">{reward}<Link href="/elm-tent/quran">Continue with HudHud →</Link></div>}
   <span className="evmCaption" aria-live="polite">{phase==="holding"?"✦ Keep holding to discover its meaning…":phase==="charged"?"✦ Fully charged · Release!":phase==="converge"?"✦ Elmi Light rushes in!":phase==="reveal"?"✦ فَإِنَّ مَعَ الْعُسْرِ يُسْرًا":"✧ Press and hold the floating verse"}</span>
-  <style jsx>{`\n.evmProgress{position:absolute;z-index:8;bottom:41px;left:12%;right:12%;height:22px;border-radius:14px;background:#0b1927c9;border:1px solid #b9ffe188;overflow:hidden}.evmProgress>div{height:100%;background:linear-gradient(90deg,#50f5b0,#f6eaa0);transition:width .08s linear}.evmProgress span{position:absolute;inset:0;display:grid;place-items:center;font-size:10px;color:#fff;text-shadow:0 1px 3px #000}.evmReward{position:absolute;z-index:9;top:8px;left:5%;right:5%;text-align:center;border:1px solid #ffeeb6;background:#123d36e8;color:#fff9d7;padding:9px;border-radius:14px;font-size:12px}\n\n.evmBubble{touch-action:none;--charge:0%}\n.evm-holding .evmBubble,.evm-charged .evmBubble{animation:none;transform:translate3d(0,-5px,0) scale(1.045);box-shadow:0 0 32px #b6ffe26b,inset 0 0 32px #fff6d633;transition:transform .16s ease-out}\n.evm-holding .evmMote,.evm-charged .evmMote{animation:evmHoldBack 1.1s ease-in-out infinite alternate;animation-delay:var(--d)}\n.evm-charged .evmBubble{transform:translateY(-8px) scale(1.075);border-color:#fff4bc}\n.evmMeaning{position:absolute;z-index:7;top:8px;left:8%;right:8%;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;color:#f8fff7;font-size:13px;text-shadow:0 1px 8px #000;background:#0d2939c9;border:1px solid #c8ffda88;border-radius:16px;padding:9px;backdrop-filter:blur(5px)}\n.evmMeaning small{font-size:10px;color:#c9ffe5}\n@keyframes evmHoldBack{0%{transform:rotate(var(--a)) translateX(calc(var(--r) + 30px)) scale(.6);opacity:.45}100%{transform:rotate(var(--a)) translateX(calc(var(--r) + 10px)) scale(1.4);opacity:1}}\n.evm-converge .evmBubble{animation:evmAirPop .54s cubic-bezier(.2,.8,.25,1) both}\n@keyframes evmAirPop{0%{transform:scale(1.07)}32%{transform:scale(.78)}64%{transform:scale(1.16)}100%{transform:scale(1)}}
+  <style jsx>{`\n.evmReward :global(a){display:block;margin-top:6px;color:#b4ffdd;text-decoration:underline;font-weight:700}.evmProgress{position:absolute;z-index:8;bottom:41px;left:12%;right:12%;height:22px;border-radius:14px;background:#0b1927c9;border:1px solid #b9ffe188;overflow:hidden}.evmProgress>div{height:100%;background:linear-gradient(90deg,#50f5b0,#f6eaa0);transition:width .08s linear}.evmProgress span{position:absolute;inset:0;display:grid;place-items:center;font-size:10px;color:#fff;text-shadow:0 1px 3px #000}.evmReward{position:absolute;z-index:9;top:8px;left:5%;right:5%;text-align:center;border:1px solid #ffeeb6;background:#123d36e8;color:#fff9d7;padding:9px;border-radius:14px;font-size:12px}\n\n.evmBubble{touch-action:none;--charge:0%}\n.evm-holding .evmBubble,.evm-charged .evmBubble{animation:none;transform:translate3d(0,-5px,0) scale(1.045);box-shadow:0 0 32px #b6ffe26b,inset 0 0 32px #fff6d633;transition:transform .16s ease-out}\n.evm-holding .evmMote,.evm-charged .evmMote{animation:evmHoldBack 1.1s ease-in-out infinite alternate;animation-delay:var(--d)}\n.evm-charged .evmBubble{transform:translateY(-8px) scale(1.075);border-color:#fff4bc}\n.evmMeaning{position:absolute;z-index:7;top:8px;left:8%;right:8%;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;color:#f8fff7;font-size:13px;text-shadow:0 1px 8px #000;background:#0d2939c9;border:1px solid #c8ffda88;border-radius:16px;padding:9px;backdrop-filter:blur(5px)}\n.evmMeaning small{font-size:10px;color:#c9ffe5}\n@keyframes evmHoldBack{0%{transform:rotate(var(--a)) translateX(calc(var(--r) + 30px)) scale(.6);opacity:.45}100%{transform:rotate(var(--a)) translateX(calc(var(--r) + 10px)) scale(1.4);opacity:1}}\n.evm-converge .evmBubble{animation:evmAirPop .54s cubic-bezier(.2,.8,.25,1) both}\n@keyframes evmAirPop{0%{transform:scale(1.07)}32%{transform:scale(.78)}64%{transform:scale(1.16)}100%{transform:scale(1)}}
 .evmStage{contain:layout paint;--mint:#a1ffe0;position:relative;isolation:isolate;overflow:hidden;display:grid;place-items:center;min-height:335px;margin:20px 0;border-radius:30px;border:1px solid #b1e6da38;background:radial-gradient(ellipse at 48% 75%,#3a667655,transparent 65%),linear-gradient(140deg,#071a25,#101a35 55%,#122b2c);perspective:850px}
 .evmAurora{pointer-events:none;position:absolute;inset:-35%;background:conic-gradient(from 35deg at 50% 50%,transparent,#83fbd322,transparent,#a7a0ff25,transparent,#e7c77d21,transparent);filter:blur(20px);animation:evmAurora 18s linear infinite}
 .evmOrbit{position:absolute;width:290px;height:190px;border:1px solid #b4ffe529;border-radius:50%;transform:rotate(-22deg);filter:drop-shadow(0 0 12px #93ffd340);animation:evmOrbitA 9s ease-in-out infinite}
