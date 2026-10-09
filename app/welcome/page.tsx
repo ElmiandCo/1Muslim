@@ -3,23 +3,41 @@ import {useState} from "react";
 import Link from "next/link";
 import SiteNav from "../components/SiteNav";
 import {createClient} from "../../utils/supabase/client";
-const questions=[
- {title:"Why are you here?",options:["To learn respectfully","To watch and understand","To explore Islam"]},
- {title:"Will you respect this Muslim space?",options:["Yes, I will follow the community rules","I want to read the rules first"]},
- {title:"What does the Shahada badge mean?",options:["A sincere declaration of faith","A badge I should click just to watch","I'm not sure yet"]},
- {title:"Do you understand the guest pass?",options:["I can watch respectfully without claiming to be Muslim","I want to learn more before deciding"]}
-];
 export default function WelcomePage(){
- const [step,setStep]=useState(0),[answers,setAnswers]=useState<Record<number,string>>({}),[email,setEmail]=useState(""),[consent,setConsent]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[complete,setComplete]=useState(false);
- const question=questions[step];const ready=Object.keys(answers).length===questions.length;
- const request=async()=>{
-  if(!ready||!consent||!email.includes("@")){setMessage("Answer each question, enter a valid email, and consent to a 30-day follow-up.");return}
+ const [email,setEmail]=useState(""),[agreed,setAgreed]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[complete,setComplete]=useState(false);
+ const submit=async()=>{
+  if(!agreed||!/^\S+@\S+\.\S+$/.test(email.trim())){setMessage("Please check the box and enter a valid email.");return}
   setBusy(true);setMessage("");
-  const db=createClient();
-  const {error}=await db.from("guest_pass_requests").insert({email:email.trim().toLowerCase(),answers:questions.map((q,i)=>({question:q.title,answer:answers[i]})),follow_up_at:new Date(Date.now()+30*86400000).toISOString(),consent_follow_up:true});
+  const {error}=await createClient().from("guest_pass_requests").insert({email:email.trim().toLowerCase(),answers:[{question:"Do you agree to respect this Muslim learning space and await guest access approval?",answer:"Yes"}],follow_up_at:new Date(Date.now()+2*86400000).toISOString(),consent_follow_up:true});
   setBusy(false);
-  if(error){setMessage("Request could not be submitted. Please try again.");return}
+  if(error){setMessage("We couldn't submit your request. Please try again.");return}
   setComplete(true);
  };
- return <main className="welcomeRoot"><SiteNav compact/><section className="welcomeBox"><div className="welcomeSpark" aria-hidden="true">✦ ✨ ✦</div><div className="welcomeBird">🦅</div><div className="welcomeEyebrow">1MUSLIM · HUDHUD WELCOME</div><h1>{complete?"Your request is received":step===0?"Welcome to 1Muslim":question.title}</h1>{complete?<><p>Thank you for approaching this space respectfully. A guest pass is a request, not automatic approval. If approved, you may watch under the community rules. We may check in by email after 30 days if you consented.</p><Link className="welcomePrimary" href="/auth">Sign in / Sign up</Link></>:<><p>{step===0?"Watch, learn, reflect, and grow together. The Shahada badge is for members who sincerely affirm the declaration of faith. You never need to pretend to believe to request respectful guest access.":"HudHud asks one question at a time. There are no trick questions or pressure to convert."}</p><div className="welcomeBenefits"><span>📺 Live learning</span><span>📖 Qur'an & lessons</span><span>🤲 Respectful community</span></div><div className="welcomeProgress">QUESTION {step+1} OF {questions.length}</div><div className="welcomeOptions">{question.options.map((o,i)=><button type="button" key={o} className={answers[step]===o?"chosen":""} onClick={()=>setAnswers(a=>({...a,[step]:o}))}><span>{i+1}</span>{o}<b>{answers[step]===o?"✓":"✦"}</b></button>)}</div>{step===questions.length-1&&<div className="welcomeRequest"><h2>Request a respectful guest pass</h2><p>Optional, subject to review. A guest pass does not award the Shahada badge or grant member posting privileges.</p><label>Email for the request<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email"/></label><label className="welcomeConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/> I agree to receive a follow-up about my guest request in approximately 30 days. This is not a commitment to convert.</label><button type="button" className="welcomePrimary" disabled={busy||!ready||!consent} onClick={request}>{busy?"Sending…":"Request guest pass ✨"}</button>{message&&<p role="alert">{message}</p>}</div>}<div className="welcomeNav"><button disabled={step===0} onClick={()=>setStep(s=>Math.max(0,s-1))}>← Back</button>{step<questions.length-1&&<button className={answers[step]?"glow":""} disabled={!answers[step]} onClick={()=>setStep(s=>s+1)}>Next →</button>}</div><div className="welcomeLinks"><Link href="/auth">Sign in / Sign up</Link><Link href="/onboarding">Learn about the Shahada badge</Link><Link href="/terms">Community terms</Link></div></>}</section><style jsx>{`.welcomeRoot{min-height:100vh;background:radial-gradient(circle at 50% 15%,#174450,#040d17 70%);color:#f2fff9}.welcomeBox{position:relative;overflow:hidden;max-width:610px;margin:45px auto;padding:30px;border:1px solid #8cffe077;border-radius:28px;background:#091d29eb;text-align:center;box-shadow:0 0 55px #4cfad02e;animation:welcomeIn .7s ease}.welcomeBird{font-size:65px;filter:drop-shadow(0 0 20px #5efee2);animation:welcomeFloat 3s ease-in-out infinite}.welcomeSpark{color:#c4ffe7;letter-spacing:25px}.welcomeEyebrow{font-size:11px;letter-spacing:.18em;color:#a6ffe3;margin-top:12px}.welcomeBox h1{font-size:clamp(26px,6vw,40px)}.welcomeBox p{font-size:14px;line-height:1.7;color:#c6e3da}.welcomeBenefits{display:flex;justify-content:center;flex-wrap:wrap;gap:9px;margin:20px 0}.welcomeBenefits span{border:1px solid #67e4c344;border-radius:999px;padding:8px;font-size:12px}.welcomeProgress{font-size:11px;letter-spacing:.2em;color:#a6ffdb;margin:20px 0}.welcomeOptions{display:grid;gap:12px}.welcomeOptions button{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid #55acac;border-radius:14px;background:#103140;color:white;padding:15px;animation:welcomeIn .4s ease both}.welcomeOptions button:nth-child(2){animation-delay:.1s}.welcomeOptions button:nth-child(3){animation-delay:.2s}.welcomeOptions button.chosen{background:#165647;border-color:#b3ffe7;box-shadow:0 0 25px #4effc866}.welcomeOptions button span{border-radius:50%;padding:5px 10px;background:#27545c}.welcomeOptions button b{margin-left:auto;color:#aaffdf}.welcomeNav{display:flex;gap:12px;margin:20px 0}.welcomeNav button{flex:1;padding:12px;border:1px solid #a3ffe0;border-radius:12px;background:#173e48;color:white;font-weight:800}.welcomeNav button.glow,.welcomePrimary{background:#b6ffe2!important;color:#052e24!important;box-shadow:0 0 24px #61ffdb66}.welcomeNav button:disabled{opacity:.3}.welcomeRequest{border:1px solid #75e5c966;border-radius:16px;margin-top:20px;padding:18px;text-align:left}.welcomeRequest h2{font-size:18px}.welcomeRequest label{display:block;font-size:13px;margin:13px 0}.welcomeRequest input[type=email]{display:block;width:100%;padding:13px;border:1px solid #7be3c5;border-radius:10px;background:#071c29;color:white;margin-top:8px}.welcomeConsent{display:flex!important;align-items:start;gap:10px;line-height:1.6}.welcomeConsent input{margin-top:4px}.welcomePrimary{display:inline-block;text-decoration:none;border:0;border-radius:12px;padding:14px 18px;font-weight:800;cursor:pointer}.welcomePrimary:disabled{opacity:.45}.welcomeLinks{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin-top:20px}.welcomeLinks a{font-size:12px;color:#adffe0}@keyframes welcomeIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}@keyframes welcomeFloat{50%{transform:translateY(-8px)}}@media(prefers-reduced-motion:reduce){.welcomeBird,.welcomeBox,.welcomeOptions button{animation:none}}`}</style></main>;
+ return <main className="welcomeRoot"><SiteNav compact/><section className="welcomeBox">
+ <img className="welcomeBird" src="/assets/hudhud-logo.PNG" alt="HudHud"/>
+ <div className="welcomeEyebrow">1MUSLIM · GUEST ACCESS</div>
+ <h1>{complete?"Request received":"Welcome to 1Muslim"}</h1>
+ {complete?<><p>Thanks! Look out for an email in the next 1–2 days. Access is pending review; submitting this form does not automatically unlock the site.</p><p>We cannot guarantee an email delivery time until the approval and email process is connected.</p></>:<>
+ <p>One question before you enter: <strong>Do you agree to respect this Muslim learning space and wait for your access request to be reviewed?</strong></p>
+ <label className="welcomeConsent"><input type="checkbox" checked={agreed} onChange={e=>setAgreed(e.target.checked)}/><span>✓ Yes, I agree. I understand access is not automatic and I may receive an email about my request.</span></label>
+ <label className="welcomeEmail">Email address<input type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)}/></label>
+ <button className="welcomePrimary" disabled={busy||!agreed} onClick={submit}>{busy?"Submitting…":"Request access →"}</button>
+ {message&&<p role="alert">{message}</p>}
+ </>}
+ <div className="welcomeLinks"><Link href="/auth">Already approved? Sign in</Link><Link href="/terms">Community terms</Link></div>
+ </section><style jsx>{`
+ .welcomeRoot{min-height:100dvh;background:radial-gradient(circle at 50% 15%,#152e50,#050916 72%);color:#f2faff;padding-bottom:120px}
+ .welcomeBox{max-width:550px;margin:35px auto;padding:clamp(20px,5vw,40px);border:1px solid #6eafff66;border-radius:26px;background:#0b1929ee;text-align:center;box-shadow:0 0 60px #624cff1c}
+ .welcomeBird{width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 0 19px #7f68ff)}
+ .welcomeEyebrow{font-size:11px;letter-spacing:.2em;color:#9edcff;margin-top:12px}
+ h1{font-size:clamp(27px,6vw,42px)}p{line-height:1.75;color:#d0dcea}
+ .welcomeConsent{display:flex;align-items:center;gap:13px;text-align:left;border:1px solid #6bcbff77;background:#123047;padding:20px;border-radius:16px;margin:26px 0;line-height:1.6}
+ .welcomeConsent input{width:23px;height:23px;accent-color:#66b8ff;flex:none}
+ .welcomeEmail{display:block;text-align:left;color:#b9dff2;font-size:13px}
+ .welcomeEmail input{display:block;width:100%;padding:15px;margin:9px 0 22px;border:1px solid #73bce8;border-radius:12px;background:#071626;color:white}
+ .welcomePrimary{padding:15px 24px;border:0;border-radius:14px;background:linear-gradient(100deg,#6de7ff,#b798ff);color:#071329;font-weight:900;cursor:pointer}
+ .welcomePrimary:disabled{opacity:.45}
+ .welcomeLinks{display:flex;justify-content:center;gap:22px;margin-top:28px;font-size:12px}
+ .welcomeLinks a{color:#a5dfff}
+ `}</style></main>
 }
