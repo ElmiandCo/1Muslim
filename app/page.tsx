@@ -13,6 +13,7 @@ import StoriesRail from "./components/StoriesRail";
 import TimelinePopup, { type TimelineItem } from "./components/TimelinePopup";
 import VideoOfDayComments from "./components/VideoOfDayComments";
 import FeaturedYoutubeVideo from "../components/FeaturedYoutubeVideo";
+import HudHudHomeIntro from "./components/HudHudHomeIntro";
 
 type Path = "easy" | "advanced";
 
@@ -297,6 +298,7 @@ export default function Home() {
       </main>
 
         {duaOpen && <DuaLesson onClose={()=>setDuaOpen(false)} />}
+      <HudHudHomeIntro />
       <aside className="rightRail">
         <div className="search">⌕ <input placeholder="Search 1Muslim" /></div>
         <div className="railCard"><span className="eyebrow">START HERE</span><h3>New to Islam?</h3><p>Take the gentle route through Allah, Qur’an, prayer, forgiveness and daily life.</p><button className="primary">Start Easy Path</button></div>
