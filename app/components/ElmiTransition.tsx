@@ -1,12 +1,14 @@
 "use client";
-import {useEffect,useState} from "react";
+import {useEffect,useRef,useState} from "react";
 import {usePathname,useRouter} from "next/navigation";
 type Burst={id:number;x:number;y:number};
 export default function ElmiTransition(){
  const router=useRouter(),pathname=usePathname();
+ const videoRef=useRef<HTMLVideoElement>(null),canvasRef=useRef<HTMLCanvasElement>(null);
  const [phase,setPhase]=useState<"idle"|"pop"|"poof"|"reveal">("idle");
  const [burst,setBurst]=useState<Burst[]>([]);
  const [farewell,setFarewell]=useState(false);
+ useEffect(()=>{if(!farewell)return;const video=videoRef.current,canvas=canvasRef.current;if(!video||!canvas)return;let frame=0;const ctx=canvas.getContext("2d",{willReadFrequently:true});if(!ctx)return;const draw=()=>{if(video.readyState>=2){const w=320,h=Math.round(320*(video.videoHeight||360)/(video.videoWidth||640));if(canvas.width!==w){canvas.width=w;canvas.height=h}ctx.drawImage(video,0,0,w,h);const im=ctx.getImageData(0,0,w,h);for(let i=0;i<im.data.length;i+=4){const r=im.data[i],g=im.data[i+1],b=im.data[i+2];if(g>65&&g>r*1.3&&g>b*1.2){im.data[i+3]=Math.max(0,255-(g-Math.max(r,b))*4)}}ctx.putImageData(im,0,0)}frame=requestAnimationFrame(draw)};void video.play().catch(()=>{});frame=requestAnimationFrame(draw);return()=>{cancelAnimationFrame(frame);video.pause()}},[farewell]);
  useEffect(()=>{if(phase==="idle")return;setPhase("reveal");const t=setTimeout(()=>setPhase("idle"),750);return()=>clearTimeout(t)},[pathname]);
  useEffect(()=>{
   let navigating=false;const timers:number[]=[];
@@ -34,10 +36,11 @@ export default function ElmiTransition(){
   return()=>{document.removeEventListener("click",onClick,true);document.removeEventListener("submit",onSubmit);window.removeEventListener("1muslim:action-success",onAction);window.removeEventListener("1muslim:farewell",onFarewell);timers.forEach(clearTimeout)};
  },[router]);
  return <div className="elmi-cinema" aria-hidden="true">
-  {farewell&&<div className="elmi-farewell-title">✦ Until next time ✦</div>}
+  {farewell&&<div className="elmi-farewell-video"><video ref={videoRef} src="/videos/hudhud-intro-alpha.webm" muted playsInline autoPlay preload="auto" style={{display:"none"}}/><canvas ref={canvasRef} aria-hidden="true"/><div className="elmi-farewell-title">✦ Until next time ✦</div></div>}
   {phase!=="idle"&&<div className={"elmi-cinema-veil "+phase}><i className="elmi-cinema-beam"/></div>}
   {burst.map(b=><div key={b.id} className="elmi-cinema-burst" style={{left:b.x,top:b.y}}>{Array.from({length:16},(_,i)=><i key={i} style={{["--i" as string]:i,["--dx" as string]:Math.cos(i*Math.PI/8)*((i%3+1)*26)+"px",["--dy" as string]:Math.sin(i*Math.PI/8)*((i%3+1)*26)+"px"}}/>)}</div>)}
   <style jsx>{`
+   .elmi-farewell-video{position:absolute;inset:0;display:grid;place-items:center;z-index:4}.elmi-farewell-video canvas{width:min(90vw,600px);max-height:80vh;object-fit:contain;filter:drop-shadow(0 0 20px #77ffb655)}
    .elmi-farewell-title{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);color:#fff3cb;text-shadow:0 0 24px #67efff;font-size:clamp(20px,5vw,38px);font-weight:900;letter-spacing:.1em;white-space:nowrap;z-index:2;animation:elmiVeil .35s both}
    .elmi-cinema{position:fixed;inset:0;pointer-events:none;z-index:2147483645;overflow:hidden}
    .elmi-cinema-veil{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#173c4d88,#020c1bd9);animation:elmiVeil .4s both}
