@@ -76,6 +76,7 @@ export default function MessagesPage(){
  const [peerTyping,setPeerTyping]=useState(false);
  const [peerReadAt,setPeerReadAt]=useState<string|null>(null);
  const [typingChannel,setTypingChannel]=useState<ReturnType<typeof client.channel>|null>(null);
+ useEffect(()=>{const params=new URLSearchParams(window.location.search);if(!params.get("verse"))return;try{const prepared=sessionStorage.getItem("1muslim-verse-dm-draft");if(prepared){setDraft(prepared);sessionStorage.removeItem("1muslim-verse-dm-draft")}}catch{}},[]);
  useEffect(()=>{const params=new URLSearchParams(window.location.search);const conversation=params.get("conversation");const message=params.get("message");if(conversation&&/^[0-9a-f-]{36}$/i.test(conversation))setSelected(conversation);if(message&&/^[0-9a-f-]{36}$/i.test(message))setTargetMessage(message);const to=params.get("to");if(to&&/^[0-9a-f-]{36}$/i.test(to)){setRecipient(to);setInitialRecipient(to)}},[]);
  useEffect(()=>{let active=true;client.auth.getUser().then(({data})=>{if(active){setUid(data.user?.id??null);setLoadingAuth(false)}});return()=>{active=false}},[client]);
  useEffect(()=>{if(!uid||!targetMessage||selected)return;let active=true;void client.from("dm_messages").select("conversation_id").eq("id",targetMessage).maybeSingle().then(({data})=>{if(active&&data?.conversation_id)setSelected(data.conversation_id)});return()=>{active=false}},[client,uid,targetMessage,selected]);
