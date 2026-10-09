@@ -57,6 +57,8 @@ function MenuLink({ href, label, ar, onClick }: { href: string; label: ReactNode
 export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
+  const [goLiveReady,setGoLiveReady]=useState(false);
+  useEffect(()=>{const onReady=(event:Event)=>setGoLiveReady(Boolean((event as CustomEvent<{ready:boolean}>).detail?.ready));window.addEventListener("1muslim:go-live-ready",onReady);if(pathname!=="/streaming/go-live")setGoLiveReady(false);return()=>window.removeEventListener("1muslim:go-live-ready",onReady)},[pathname]);
   const [dockMounted, setDockMounted] = useState(false);
   useEffect(() => setDockMounted(true), []);
   const [wakeUp, setWakeUp] = useState(false);
@@ -230,7 +232,9 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       <div className="muslimDockShell">
         <Link href="/" className={pathname === "/" ? "dockItem selected" : "dockItem"} aria-label="Home"><span className="dockIcon">⌂</span><small>Home</small></Link>
         <Link href="/streaming" className={pathname.startsWith("/streaming") ? "dockItem selected" : "dockItem"} aria-label="Live"><span className="dockIcon">◉{anyoneLive && <span className="dockLiveBeacon" aria-hidden="true" />}</span><small>{anyoneLive ? "On Air" : "Live"}</small></Link>
-        <Link href={user ? "/profile" : "/auth"} className={wakeUp ? "dockCenter wakeUpSpotlight" : "dockCenter"} onClick={() => setWakeUp(false)} aria-label={user ? "My profile" : "Sign in to your profile"}><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">Profile</span></Link>
+        {pathname==="/streaming/go-live"&&goLiveReady
+          ? <button type="button" className="dockCenter dockGoLiveReady" aria-label="Go Live now" onClick={()=>document.querySelector<HTMLButtonElement>("[data-go-live-start]")?.click()}><span className="dockLiveDot" aria-hidden="true">●</span><span className="dockCenterText">Go Live</span></button>
+          : <Link href={user ? "/profile" : "/auth"} className={wakeUp ? "dockCenter wakeUpSpotlight" : "dockCenter"} onClick={() => setWakeUp(false)} aria-label={user ? "My profile" : "Sign in to your profile"}><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">Profile</span></Link>}
         <Link href="/#paths" className="dockItem" aria-label="Learn"><span className="dockIcon">▤</span><small>Learn</small></Link>
         <button type="button" className="dockItem" aria-label="Create content" aria-expanded={createOpen} onClick={() => setCreateOpen(!createOpen)}><span className="dockIcon">＋</span><small>Create</small></button>
       </div>
@@ -270,6 +274,10 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       <div className="mobileMenuFooter"><ThemeToggle/>{user ? <button type="button" className="mobileMenuSignOut" onClick={signOut}>Sign out</button> : <Link href="/auth" onClick={closeMenu}>Sign in</Link>}</div>
     </div>}
     <style jsx>{`
+      :global(.dockGoLiveReady){background:linear-gradient(145deg,#a10f22,#ed2939)!important;border:2px solid #ff7580!important;color:#fff!important;box-shadow:0 0 20px #f5224a99,0 5px 25px #0009!important;cursor:pointer;display:flex!important;flex-direction:column;align-items:center;justify-content:center}
+      :global(.dockGoLiveReady .dockLiveDot){font-size:22px;line-height:1;color:#fff;animation:dockReadyPulse 1.7s ease-in-out infinite}
+      :global(.dockGoLiveReady .dockCenterText){color:white!important;font-weight:900!important;font-size:12px!important}
+      @keyframes dockReadyPulse{50%{opacity:.5;transform:scale(.85)}}
       :global(.wakeExploreHint){position:fixed;bottom:calc(104px + env(safe-area-inset-bottom,0px));right:14px;z-index:9900;max-width:calc(100vw - 28px);border:1px solid #a3e8c2;background:linear-gradient(130deg,#15382d,#253553);color:#f3fff9;padding:10px 13px;border-radius:999px;box-shadow:0 9px 28px #0007;font-size:12px;font-weight:700;cursor:pointer;animation:exploreFloatIn .55s ease both}
       :global(.wakeExploreHint span){display:inline-block;margin-left:5px;color:#a3e8c2}
       @keyframes exploreFloatIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
