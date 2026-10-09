@@ -1,7 +1,6 @@
 "use client";
 import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
-import {useSearchParams} from "next/navigation";
 import SiteNav from "../../components/SiteNav";
 import VerseStudio from "./VerseStudio";
 import VerseEngagement from "./VerseEngagement";
@@ -14,8 +13,7 @@ const API="https://api.quran.com/api/v4";
 const activeChapterCount=(chapters:Chapter[],id:number)=>chapters.find(c=>c.id===id)?.verses_count||0;
 const strip=(s:string)=>s.replace(/<[^>]*>/g,"").replace(/&[^;]+;/g," ");
 export default function QuranLessons(){
- const params=useSearchParams();
- const [chapters,setChapters]=useState<Chapter[]>([]),[chapter,setChapter]=useState(()=>{const n=Number(params.get("chapter")||params.get("verse")?.split(":")[0]||1);return Number.isInteger(n)&&n>=1&&n<=114?n:1}),[page,setPage]=useState(1),[verses,setVerses]=useState<Verse[]>([]),[total,setTotal]=useState(0),[search,setSearch]=useState(""),[busy,setBusy]=useState(true),[error,setError]=useState(""),[showTranslation,setShowTranslation]=useState(true);
+ const [chapters,setChapters]=useState<Chapter[]>([]),[chapter,setChapter]=useState(()=>{const params=typeof window!=="undefined"?new URLSearchParams(window.location.search):new URLSearchParams();const n=Number(params.get("chapter")||params.get("verse")?.split(":")[0]||1);return Number.isInteger(n)&&n>=1&&n<=114?n:1}),[page,setPage]=useState(1),[verses,setVerses]=useState<Verse[]>([]),[total,setTotal]=useState(0),[search,setSearch]=useState(""),[busy,setBusy]=useState(true),[error,setError]=useState(""),[showTranslation,setShowTranslation]=useState(true);
  useEffect(()=>{let live=true;fetch(API+"/chapters?language=en").then(r=>{if(!r.ok)throw Error("Qur'an chapter service unavailable");return r.json()}).then(d=>{if(live)setChapters(d.chapters||[])}).catch(()=>{if(live)setError("Could not load chapters. Please try again.")});return()=>{live=false}},[]);
  useEffect(()=>{let live=true;setBusy(true);setError("");fetch(API+"/verses/by_chapter/"+chapter+"?language=en&words=true&word_fields=text_uthmani&word_translation_language=en&fields=text_uthmani&translations=131&per_page=50&page="+page).then(r=>{if(!r.ok)throw Error("Verses unavailable");return r.json()}).then(d=>{if(!live)return;setVerses(d.verses||[]);setTotal(d.pagination?.total_pages||1);setBusy(false)}).catch(()=>{if(live){setError("Verses could not be loaded. Try again shortly.");setBusy(false)}});return()=>{live=false}},[chapter,page]);
  const [focusIndex,setFocusIndex]=useState(0);
