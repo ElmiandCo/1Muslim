@@ -234,7 +234,9 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       <div className="muslimDockShell">
         <Link href="/" className={pathname === "/" ? "dockItem selected" : "dockItem"} aria-label="Home"><span className="dockIcon">⌂</span><small>Home</small></Link>
         <Link href="/streaming" className={pathname.startsWith("/streaming") ? "dockItem selected" : "dockItem"} aria-label="Live"><span className="dockIcon">◉{anyoneLive && <span className="dockLiveBeacon" aria-hidden="true" />}</span><small>{anyoneLive ? "On Air" : "Live"}</small></Link>
-        {pathname==="/streaming/go-live"&&goLiveReady
+        {(pathname==="/quran-studio"||pathname.startsWith("/elm-tent/quran"))
+          ? <button type="button" className="dockCenter" aria-label="Record current Qur’an verse" onClick={()=>{window.dispatchEvent(new Event("1muslim:quran-record"));document.querySelector<HTMLElement>(".omAyahFocused .qrv")?.scrollIntoView({behavior:"smooth",block:"center"})}}><img src="/assets/hudhud-logo.PNG" alt=""/><span className="dockCenterText">Record</span></button>
+          : pathname==="/streaming/go-live"&&goLiveReady
           ? <button type="button" className="dockCenter dockGoLiveReady" aria-label="Go Live now" onClick={()=>document.querySelector<HTMLButtonElement>("[data-go-live-start]")?.click()}><span className="dockLiveDot" aria-hidden="true">●</span><span className="dockCenterText">Go Live</span></button>
           : <Link href={user ? "/profile" : "/auth"} className={wakeUp ? "dockCenter wakeUpSpotlight" : "dockCenter"} onClick={() => setWakeUp(false)} aria-label={user ? "My profile" : "Sign in to your profile"}><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">Profile</span></Link>}
         <Link href="/#paths" className="dockItem" aria-label="Learn"><span className="dockIcon">▤</span><small>Learn</small></Link>
