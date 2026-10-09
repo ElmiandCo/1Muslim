@@ -204,6 +204,12 @@ export default function OnboardingPage() {
     }).eq("id", user.id);
 
     if (error) { setMessage(error.message); setSaving(false); return; }
+    const { error: badgeError } = await s.rpc("award_profile_badge", {
+      p_badge_key: "shahadah",
+      p_badge_name: "Shahada Verified",
+      p_description: "Completed Shahada verification during onboarding."
+    });
+    if (badgeError) console.warn("Shahada badge award pending:", badgeError.message);
     router.replace("/");
   };
 
@@ -214,7 +220,7 @@ export default function OnboardingPage() {
     {step === "shahada" ? <>
       <span className="eyebrow">COMMUNITY VERIFICATION</span>
       <h1>Say the Shahada.</h1>
-      <p className="lead">Choose your language, then say the Shahada aloud. Speech recognition checks whether what you said matches the required statement. A private recording is stored in your Safe Vault.</p>
+      <p className="lead">Choose your language, then verify your Shahada by voice or by checking the written declaration below.</p>
       <div className="languagePicker">
         <button className={language === "ar" ? "selected" : ""} onClick={() => { stopMedia(); setLanguage("ar"); setVerified(false); setMessage(""); }}>العربية <small>Arabic</small></button>
         <button className={language === "en" ? "selected" : ""} onClick={() => { stopMedia(); setLanguage("en"); setVerified(false); setMessage(""); }}>English <small>English</small></button>
@@ -227,12 +233,12 @@ export default function OnboardingPage() {
         <button className="continue" onClick={() => void startShahada()} disabled={listening || recording}>{recording ? "Recording securely…" : listening ? "Listening…" : "Record Shahada"}</button>
         {transcript && <div className="transcript" dir={language === "ar" ? "rtl" : "ltr"}><small>Speech recognition heard</small><span>{transcript}</span></div>}
       </div>
-      <div className="declarationFallback"><strong>Microphone not working?</strong><p>You can affirm your Shahada in writing instead. This is a self-declaration, not an audio-verified recording.</p><label><input type="checkbox" checked={writtenDeclaration} onChange={e => { stopMedia(); setWrittenDeclaration(e.target.checked); setVerificationMode(e.target.checked ? "declaration" : "audio"); setMessage(""); }} /><span>I sincerely affirm the Shahada displayed above and wish to join the 1Muslim community.</span></label>{writtenDeclaration && <small>✓ Written declaration selected. No microphone recording will be required.</small>}</div>
+      <div className="declarationFallback"><strong>Prefer a checkbox?</strong><p>Choose either voice recognition or a written Shahada declaration. Both allow you to complete onboarding.</p><label><input type="checkbox" checked={writtenDeclaration} onChange={e => { stopMedia(); setWrittenDeclaration(e.target.checked); setVerificationMode(e.target.checked ? "declaration" : "audio"); setMessage(""); }} /><span>I sincerely affirm the Shahada displayed above and wish to join the 1Muslim community.</span></label>{writtenDeclaration && <small>✓ Written declaration selected. No microphone recording will be required.</small>}</div>
       {message && <div className={verified || writtenDeclaration ? "success" : "error"}>{message}</div>}
       <div className="badgePreview"><div className="badgeSeal" aria-hidden="true">✦</div><div><span className="badgeKicker">YOUR FIRST 1MUSLIM BADGE</span><strong>Shahada Verified</strong><p>Earn this badge after completing your Shahada verification and profile setup. It will appear on your public profile.</p></div><span className="badgeStatus">{verified || writtenDeclaration ? "✓ Declared" : "🔒 Unlock"}</span></div>
       <div className="legalScroll" role="region" aria-label="Terms and conditions" tabIndex={0}><strong>1Muslim · Terms &amp; Conditions</strong><p>1Muslim is a faith-centered platform supporting Muslim communities, Islamic education, and connections consistent with Islamic principles.</p><p>Our commitment to Islam does not constitute hostility toward any other religion, belief system, or individual. We respect the dignity of people of all religious backgrounds, including those with no religion.</p><strong>Protection of Islamic Values</strong><p>1Muslim may establish and enforce standards for content, conduct, programming, and participation consistent with applicable law. We may prioritize Islamic education, worship, and community development, and are not required to endorse every religious or philosophical viewpoint.</p><strong>Religious Discussions and Differences</strong><p>Respectful theological discussions, comparative religion, scholarly disagreements, and criticism of religious ideas may be permitted. Harassment, threats, targeted abuse, incitement to violence, and dehumanizing treatment are prohibited. Disagreement with a religious belief is not, by itself, harassment or discrimination.</p><strong>Content Moderation</strong><p>1Muslim may review, restrict, remove, or decline to feature content conflicting with published community standards, subject to applicable law. Decisions should follow documented standards rather than hostility toward a person's religious identity.</p><strong>Our Guiding Principle</strong><p>1Muslim exists to preserve, celebrate, and strengthen Muslim identity—not to attack or diminish the dignity of others.</p></div><label className="termsConsent"><input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} required /><span>I have read and agree to the Terms &amp; Conditions above.</span></label>
       <button className="continue secondary" disabled={!(verified || writtenDeclaration) || !acceptedTerms} onClick={() => setStep("gender")}>Continue to profile →</button>
-      <small className="fine">Audio is stored privately only when you choose voice verification. Checkbox verification is saved as a self-attested declaration.</small>
+      <small className="fine">Either method qualifies for the Shahada badge. Voice recordings stay private; checkbox verification is recorded as a self-attested declaration.</small>
     </> : <>
       <span className="eyebrow">WELCOME TO 1MUSLIM</span><h1>Choose your profile.</h1><p className="lead">Select your gender once. This sets your default profile avatar and stays fixed after setup.</p>
       <div className="genderGrid"><button className={gender === "male" ? "genderCard selected" : "genderCard"} onClick={() => setGender("male")}><img src="/assets/avatars/default-male.jpg" alt="" /><strong>Male</strong><span>Use the male default avatar</span></button><button className={gender === "female" ? "genderCard selected" : "genderCard"} onClick={() => setGender("female")}><img src="/assets/avatars/Default-women.png" alt="" /><strong>Female</strong><span>Use the female default avatar</span></button></div>
