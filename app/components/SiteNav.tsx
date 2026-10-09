@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createClient } from "../../utils/supabase/client";
@@ -56,6 +57,8 @@ function MenuLink({ href, label, ar, onClick }: { href: string; label: ReactNode
 export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
+  const [dockMounted, setDockMounted] = useState(false);
+  useEffect(() => setDockMounted(true), []);
   const [wakeUp, setWakeUp] = useState(false);
   const [exploreHint, setExploreHint] = useState(false);
   const wakeLastY = useRef(0);
@@ -223,7 +226,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
 
     <div className={wakeUp ? "wakeUpBackdrop wakeUpActive" : "wakeUpBackdrop"} aria-hidden="true" />
     {exploreHint && !wakeUp && <button type="button" className="wakeExploreHint" onClick={() => { setExploreHint(false); window.scrollBy({top: Math.round(window.innerHeight * .75),behavior: "smooth"}); }} aria-label="Scroll down and explore more">✦ Scroll down &amp; explore more <span aria-hidden="true">↓</span></button>}
-    <nav className="muslimMobileDock" aria-label="Mobile primary navigation">
+    {dockMounted && createPortal(<>    <nav className="muslimMobileDock" aria-label="Mobile primary navigation">
       <div className="muslimDockShell">
         <Link href="/" className={pathname === "/" ? "dockItem selected" : "dockItem"} aria-label="Home"><span className="dockIcon">⌂</span><small>Home</small></Link>
         <Link href="/streaming" className={pathname.startsWith("/streaming") ? "dockItem selected" : "dockItem"} aria-label="Live"><span className="dockIcon">◉{anyoneLive && <span className="dockLiveBeacon" aria-hidden="true" />}</span><small>{anyoneLive ? "On Air" : "Live"}</small></Link>
@@ -233,6 +236,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       </div>
       {createOpen && <div className="dockCreateMenu" role="menu"><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>🔴 Go Live</Link><Link href="/community" onClick={() => setCreateOpen(false)}>✦ Community</Link><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>◷ Schedule a Live</Link></div>}
     </nav>
+</>, document.body)}
     <Link href="/learn/elm-tent/library" className="mobileLibraryShortcut" aria-label="Open the 1Muslim Library"><span aria-hidden="true">✦</span><span>Library</span></Link>
 
     {loadingAuth ? <span className="authNav authLoading">Account</span> : user ? <div className="authAccount">
