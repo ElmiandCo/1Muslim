@@ -6,6 +6,7 @@ export default function ElmiTransition(){
  const router=useRouter(),pathname=usePathname();
  const [phase,setPhase]=useState<"idle"|"pop"|"poof"|"reveal">("idle");
  const [burst,setBurst]=useState<Burst[]>([]);
+ const [farewell,setFarewell]=useState(false);
  useEffect(()=>{if(phase==="idle")return;setPhase("reveal");const t=setTimeout(()=>setPhase("idle"),750);return()=>clearTimeout(t)},[pathname]);
  useEffect(()=>{
   let navigating=false;const timers:number[]=[];
@@ -27,13 +28,17 @@ export default function ElmiTransition(){
   };
   const onSubmit=(e:Event)=>{const t=e.target;if(t instanceof HTMLFormElement){const r=t.getBoundingClientRect();sparkle(r.left+r.width/2,r.top+r.height/2)}};
   document.addEventListener("click",onClick,true);document.addEventListener("submit",onSubmit);
+  const onFarewell=()=>{if(!enabled())return;setFarewell(true);setPhase("pop");for(let i=0;i<7;i++){timers.push(window.setTimeout(()=>{sparkle(innerWidth*(.15+.7*(i%2)),innerHeight*(.2+.6*((i%3)/2)));setPhase(i%2?"poof":"pop")},i*155))}timers.push(window.setTimeout(()=>{setPhase("reveal");setFarewell(false)},1280))};
+  window.addEventListener("1muslim:farewell",onFarewell);
   window.addEventListener("1muslim:action-success",onAction);
-  return()=>{document.removeEventListener("click",onClick,true);document.removeEventListener("submit",onSubmit);window.removeEventListener("1muslim:action-success",onAction);timers.forEach(clearTimeout)};
+  return()=>{document.removeEventListener("click",onClick,true);document.removeEventListener("submit",onSubmit);window.removeEventListener("1muslim:action-success",onAction);window.removeEventListener("1muslim:farewell",onFarewell);timers.forEach(clearTimeout)};
  },[router]);
  return <div className="elmi-cinema" aria-hidden="true">
+  {farewell&&<div className="elmi-farewell-title">✦ Until next time ✦</div>}
   {phase!=="idle"&&<div className={"elmi-cinema-veil "+phase}><i className="elmi-cinema-beam"/></div>}
   {burst.map(b=><div key={b.id} className="elmi-cinema-burst" style={{left:b.x,top:b.y}}>{Array.from({length:16},(_,i)=><i key={i} style={{["--i" as string]:i,["--dx" as string]:Math.cos(i*Math.PI/8)*((i%3+1)*26)+"px",["--dy" as string]:Math.sin(i*Math.PI/8)*((i%3+1)*26)+"px"}}/>)}</div>)}
   <style jsx>{`
+   .elmi-farewell-title{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);color:#fff3cb;text-shadow:0 0 24px #67efff;font-size:clamp(20px,5vw,38px);font-weight:900;letter-spacing:.1em;white-space:nowrap;z-index:2;animation:elmiVeil .35s both}
    .elmi-cinema{position:fixed;inset:0;pointer-events:none;z-index:2147483645;overflow:hidden}
    .elmi-cinema-veil{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#173c4d88,#020c1bd9);animation:elmiVeil .4s both}
    .elmi-cinema-veil.pop{opacity:.35}.elmi-cinema-veil.poof{opacity:.9}.elmi-cinema-veil.reveal{animation:elmiReveal .75s both}
