@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-type Ripple = { id: number; x: number; y: number; success: boolean };
+type Ripple = { id: number; x: number; y: number; success: boolean; confirmed?: boolean };
 const MAX = 7;
 export default function TapShimmer() {
   const [ripples, setRipples] = useState<Ripple[]>([]);
@@ -23,17 +23,17 @@ export default function TapShimmer() {
       }, 780);
       timers.add(timer);
     };
-    document.addEventListener("pointerdown", onTap, {passive:true});
-    return () => { document.removeEventListener("pointerdown", onTap); timers.forEach(clearTimeout); };
+    const onConfirmed = (event: Event) => {\n      const e = event as CustomEvent<{ x?:number; y?:number }>;\n      const x = e.detail?.x ?? window.innerWidth/2;\n      const y = e.detail?.y ?? window.innerHeight/2;\n      const id = ++seq;\n      setRipples(old => [...old.slice(-(MAX-1)), {id,x,y,success:true,confirmed:true}]);\n      const timer = window.setTimeout(() => {setRipples(old=>old.filter(r=>r.id!==id));timers.delete(timer)},1100);\n      timers.add(timer);\n    };\n    window.addEventListener("1muslim:action-success",onConfirmed);\n    document.addEventListener("pointerdown", onTap, {passive:true});
+    return () => { document.removeEventListener("pointerdown", onTap); window.removeEventListener("1muslim:action-success",onConfirmed); timers.forEach(clearTimeout); };
   }, []);
   return <div className="tap-shimmer-layer" aria-hidden="true" data-no-tap-shimmer>
-    {ripples.map(r => <span key={r.id} className={r.success?"tap-shimmer tap-success":"tap-shimmer"} style={{left:r.x,top:r.y}}>
+    {ripples.map(r => <span key={r.id} className={r.confirmed?"tap-shimmer tap-confirmed":r.success?"tap-shimmer tap-success":"tap-shimmer"} style={{left:r.x,top:r.y}}>
       <i className="tap-shimmer-ring" /><i className="tap-shimmer-streak" /><i className="tap-shimmer-star" />
     </span>)}
     <style jsx>{`
       .tap-shimmer-layer{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden}
       .tap-shimmer{position:absolute;width:0;height:0;pointer-events:none;--tap-color:#a7dfff}
-      .tap-success{--tap-color:#79ffd7}
+      .tap-success{--tap-color:#79ffd7}\n      .tap-confirmed{--tap-color:#f6dd7b}\n      .tap-confirmed .tap-shimmer-ring{animation:tapRing .9s ease-out both;border-width:3px}\n      .tap-confirmed .tap-shimmer-star{width:12px;height:12px;left:-6px;top:-6px;animation:tapStar 1s ease-out both}
       .tap-shimmer-ring{position:absolute;left:-16px;top:-16px;width:32px;height:32px;border:1.5px solid var(--tap-color);border-radius:50%;box-shadow:0 0 12px var(--tap-color);animation:tapRing .65s ease-out both}
       .tap-shimmer-streak{position:absolute;left:-36px;top:-1px;width:72px;height:2px;background:linear-gradient(90deg,transparent,var(--tap-color),#fff,transparent);box-shadow:0 0 10px var(--tap-color);transform:rotate(-25deg);animation:tapStreak .6s ease-out both}
       .tap-shimmer-star{position:absolute;left:-3px;top:-3px;width:6px;height:6px;background:white;transform:rotate(45deg);box-shadow:0 0 10px var(--tap-color);animation:tapStar .7s ease-out both}
