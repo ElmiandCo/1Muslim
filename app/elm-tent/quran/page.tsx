@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
+import {useSearchParams} from "next/navigation";
 import SiteNav from "../../components/SiteNav";
 import VerseStudio from "./VerseStudio";
 import VerseEngagement from "./VerseEngagement";
@@ -13,7 +14,8 @@ const API="https://api.quran.com/api/v4";
 const activeChapterCount=(chapters:Chapter[],id:number)=>chapters.find(c=>c.id===id)?.verses_count||0;
 const strip=(s:string)=>s.replace(/<[^>]*>/g,"").replace(/&[^;]+;/g," ");
 export default function QuranLessons(){
- const [chapters,setChapters]=useState<Chapter[]>([]),[chapter,setChapter]=useState(1),[page,setPage]=useState(1),[verses,setVerses]=useState<Verse[]>([]),[total,setTotal]=useState(0),[search,setSearch]=useState(""),[busy,setBusy]=useState(true),[error,setError]=useState(""),[showTranslation,setShowTranslation]=useState(true);
+ const params=useSearchParams();
+ const [chapters,setChapters]=useState<Chapter[]>([]),[chapter,setChapter]=useState(()=>{const n=Number(params.get("chapter")||params.get("verse")?.split(":")[0]||1);return Number.isInteger(n)&&n>=1&&n<=114?n:1}),[page,setPage]=useState(1),[verses,setVerses]=useState<Verse[]>([]),[total,setTotal]=useState(0),[search,setSearch]=useState(""),[busy,setBusy]=useState(true),[error,setError]=useState(""),[showTranslation,setShowTranslation]=useState(true);
  useEffect(()=>{let live=true;fetch(API+"/chapters?language=en").then(r=>{if(!r.ok)throw Error("Qur'an chapter service unavailable");return r.json()}).then(d=>{if(live)setChapters(d.chapters||[])}).catch(()=>{if(live)setError("Could not load chapters. Please try again.")});return()=>{live=false}},[]);
  useEffect(()=>{let live=true;setBusy(true);setError("");fetch(API+"/verses/by_chapter/"+chapter+"?language=en&words=true&word_fields=text_uthmani&word_translation_language=en&fields=text_uthmani&translations=131&per_page=50&page="+page).then(r=>{if(!r.ok)throw Error("Verses unavailable");return r.json()}).then(d=>{if(!live)return;setVerses(d.verses||[]);setTotal(d.pagination?.total_pages||1);setBusy(false)}).catch(()=>{if(live){setError("Verses could not be loaded. Try again shortly.");setBusy(false)}});return()=>{live=false}},[chapter,page]);
  const [focusIndex,setFocusIndex]=useState(0);
@@ -23,6 +25,7 @@ export default function QuranLessons(){
  useEffect(()=>{const root=verseArea.current;if(!root||busy||!verses.length)return;const cards=Array.from(root.querySelectorAll<HTMLElement>("[data-verse-index]"));let frame=0;const track=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{const anchor=Math.min(window.innerHeight*.4,310);let best=0,dist=Infinity;cards.forEach((el,i)=>{const box=el.getBoundingClientRect();const d=box.top<=anchor&&box.bottom>=anchor?0:Math.min(Math.abs(box.top-anchor),Math.abs(box.bottom-anchor));if(d<dist){dist=d;best=i}});setFocusIndex(best);const key=verses[best]?.verse_key;if(key)setVisited(v=>v[key]?v:{...v,[key]:true})})};track();window.addEventListener("scroll",track,{passive:true});window.addEventListener("resize",track);return()=>{cancelAnimationFrame(frame);window.removeEventListener("scroll",track);window.removeEventListener("resize",track)}},[busy,verses]);
  const jump=(index:number)=>{const card=verseArea.current?.querySelector<HTMLElement>('[data-verse-index="'+index+'"]');if(card){card.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});setFocusIndex(index)}else if(index<0&&page>1)setPage(p=>p-1);else if(index>=verses.length&&page<total)setPage(p=>p+1)};
  const versePosition=(page-1)*50+focusIndex+1;
+ useEffect(()=>{try{localStorage.setItem("1muslim-quran-progress",JSON.stringify({chapter,verse:versePosition}))}catch{}},[chapter,versePosition]);
  const chapterCount=activeChapterCount(chapters,chapter);
  const chapterPercent=chapterCount?Math.min(100,Math.round(versePosition/chapterCount*100)):0;
  const previousTopics=verses.slice(Math.max(0,focusIndex-2),focusIndex);
