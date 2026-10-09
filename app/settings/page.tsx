@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -43,6 +44,18 @@ export default function SettingsPage() {
     if (error) { setEnabled(!next); setMessage(error.message); return; }
     setMessage(next ? "Common Arabic terms are now shown across 1Muslim." : "Arabic term labels are off.");
     window.dispatchEvent(new Event("1muslim-settings-updated"));
+  };
+
+  const deactivateAccount = async () => {
+    if (!window.confirm("Temporarily deactivate your 1Muslim account? Your content will be retained. You can sign in again to reactivate it.")) return;
+    setDeactivating(true);setMessage("");
+    const s=createClient();
+    const {data:{user},error:authError}=await s.auth.getUser();
+    if(authError||!user){setMessage("Sign in before deactivating.");setDeactivating(false);return}
+    const {error}=await s.from("account_deactivations").upsert({user_id:user.id,deactivated_at:new Date().toISOString()},{onConflict:"user_id"});
+    if(error){setMessage("Could not deactivate: "+error.message);setDeactivating(false);return}
+    await s.auth.signOut();
+    window.location.assign("/login?deactivated=1");
   };
 
   const deleteAccount = async () => {
@@ -96,6 +109,11 @@ export default function SettingsPage() {
           </div>
         </div>
         <Link href="/ashab" className="ghost">Open Ashab →</Link>
+      </section>
+
+      <section className="settingsCard">
+        <div className="settingCopy"><span className="settingIcon">⏸</span><div><span className="eyebrow">ACCOUNT · TEMPORARY</span><h2>Deactivate account</h2><p>Take a break without deleting your profile or posts. Your account is marked inactive and you will be signed out. Reactivation is available when you return.</p></div></div>
+        <button type="button" className="deleteButton" onClick={()=>void deactivateAccount()} disabled={deactivating}>{deactivating?"Deactivating…":"Deactivate"}</button>
       </section>
 
       <section className="dangerCard">
