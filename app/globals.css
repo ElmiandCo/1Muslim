@@ -422,3 +422,38 @@ video {
  .siteNav,.siteNav.compact{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;filter:none!important;transform:none!important;contain:none!important;will-change:auto!important}
  .siteNav .muslimMobileDock{position:fixed!important;top:auto!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;left:10px!important;right:10px!important;transform:none!important}
 }
+
+/* Compact bottom dock, anchored to iPhone safe area. Animate only after inactivity. */
+@media(max-width:700px){
+ .siteNav,.siteNav.compact{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;filter:none!important;transform:none!important;contain:none!important}
+ .siteNav .muslimMobileDock,.muslimMobileDock{
+  position:fixed!important;top:auto!important;
+  bottom:calc(5px + env(safe-area-inset-bottom,0px))!important;
+  left:12px!important;right:12px!important;
+  width:auto!important;height:70px!important;
+  z-index:9500!important;transform:none!important;
+  animation:none!important;transition:none!important;
+ }
+ .muslimMobileDock .muslimDockShell{
+  height:65px!important;min-height:65px!important;
+  grid-template-columns:1fr 1fr 82px 1fr 1fr!important;
+  padding:5px 5px 4px!important;
+  border-radius:23px 23px 26px 26px!important;
+  background:linear-gradient(155deg,rgba(14,32,24,.92),rgba(3,15,13,.94))!important;
+  border:1px solid rgba(131,236,182,.22)!important;
+  box-shadow:0 9px 27px #0009,0 0 17px #54dca21a!important;
+  transform:translateY(0);
+  animation:hhDockIdle 5.2s ease-in-out 4s infinite;
+ }
+ .muslimMobileDock:active .muslimDockShell,
+ .muslimMobileDock:focus-within .muslimDockShell,
+ .muslimMobileDock:hover .muslimDockShell{
+  animation:none!important;transform:translateY(0)!important;
+ }
+ .muslimMobileDock .dockItem{min-height:53px!important;padding:3px 2px!important}
+ .muslimMobileDock .dockCenter{transform:translateY(-4px) scale(.94)!important}
+ @keyframes hhDockIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+}
+@media(max-width:700px) and (prefers-reduced-motion:reduce){
+ .muslimMobileDock .muslimDockShell{animation:none!important}
+}
