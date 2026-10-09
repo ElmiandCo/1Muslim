@@ -23,6 +23,7 @@ export default function ElmiLightJourney(){
    if(!done){setStage("dark");const timer=setTimeout(()=>setStage(s=>s==="dark"?"path":s),2200);return()=>clearTimeout(timer)}
   }catch{setStage("off")}
  },[pathname]);
+ useEffect(()=>{const replay=()=>{if(pathname==="/"){setStage("dark");window.setTimeout(()=>setStage("path"),2200)}else window.location.href="/"};window.addEventListener("1muslim:replay-intro",replay);return()=>window.removeEventListener("1muslim:replay-intro",replay)},[pathname]);
  const finish=()=>{try{localStorage.setItem("1muslim-elmi-journey-v1","done")}catch{}setStage("off")};
  if(stage==="off")return null;
  const reduced=typeof window!=="undefined"&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
