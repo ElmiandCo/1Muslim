@@ -278,7 +278,7 @@ export default function Home() {
 
         <section className="quranPost">
           <div className="eyebrow">QUR’AN</div><h2>Read. Reflect. Return.</h2><p>Use the Qur’an alongside a trusted translation, recitation, tafsir and scholarly context. Start with a passage that speaks to the question you’re asking.</p>
-          <div className="quranActions"><button className="primary">Open Qur’an <Arrow /></button><button className="ghost">Read Surah Al-Ikhlas</button></div>
+          <div className="quranActions"><Link href="/quran-studio" className="primary">Open Qur’an Studio <Arrow /></Link><Link href="/quran-studio?surah=112" className="ghost">Read Surah Al-Ikhlas</Link></div>
         </section>
 
         <section className="sectionBlock compact">
