@@ -50,6 +50,8 @@ export default function GoLivePage() {
   const [saveMessage, setSaveMessage] = useState("");
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
+  const [autoCameraPreview, setAutoCameraPreview] = useState(true);
+  const autoPreviewAttempted = useRef(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [videoQuality, setVideoQuality] = useState<"480p" | "720p" | "1080p">("720p");
   const [zoom, setZoom] = useState(1);
@@ -69,7 +71,7 @@ export default function GoLivePage() {
   useEffect(()=>{
     const ready=cameraReady&&cameraOn&&Boolean(title.trim())&&!live&&!saving;
     window.dispatchEvent(new CustomEvent("1muslim:go-live-ready",{detail:{ready}}));
-    return()=>window.dispatchEvent(new CustomEvent("1muslim:go-live-ready",{detail:{ready:false}}));
+    return()=>{window.dispatchEvent(new CustomEvent("1muslim:go-live-ready",{detail:{ready:false}}));};
   },[cameraReady,cameraOn,title,live,saving]);
 
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -345,6 +347,17 @@ export default function GoLivePage() {
         : err instanceof Error ? err.message : "We could not access your camera and microphone.");
     }
   };
+
+  // Auto-preview is on by default; creators can opt out persistently.
+  useEffect(() => {
+    const enabled = localStorage.getItem("1muslim-go-live-auto-camera") !== "off";
+    setAutoCameraPreview(enabled);
+    if (!enabled || autoPreviewAttempted.current) return;
+    autoPreviewAttempted.current = true;
+    void startPreview();
+  // Only on initial mount; never automatically start broadcasting.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -848,6 +861,7 @@ export default function GoLivePage() {
             </div>
             <div className="controls">
               {cameraReady && <><button className={cameraOn ? "circle" : "circle off"} onClick={toggleCamera} aria-label="Toggle camera">{cameraOn ? "◉" : "○"}</button><button className="circle" onClick={()=>void flipCamera()} aria-label="Flip camera" title="Flip camera">↻</button><button className={micOn ? "circle" : "circle off"} onClick={toggleMic} aria-label="Toggle microphone">{micOn ? "♫" : "×"}</button></>}
+              <label style={{display:"flex",alignItems:"center",gap:7,fontSize:12,color:"#d6e7b8",padding:"8px 10px",border:"1px solid #ffffff30",borderRadius:12,background:"#ffffff0c",cursor:"pointer"}}><input type="checkbox" checked={autoCameraPreview} onChange={e=>{const enabled=e.target.checked;setAutoCameraPreview(enabled);localStorage.setItem("1muslim-go-live-auto-camera",enabled?"on":"off");}} aria-label="Automatically enable camera preview when opening Go Live" /> Auto-start camera preview</label>
               {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In for Scheduled Live</button> : null}<button data-go-live-start className="start" onClick={()=>void startLive(false)} disabled={saving}>● Start Live Now</button></div>}
             </div>
             {cameraReady && <div className="cameraStudio">
