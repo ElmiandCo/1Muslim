@@ -38,7 +38,7 @@ export default function HudHudTranslate(){
      const batch=missing.slice(i,i+30);
      const res=await fetch("/api/translate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({texts:batch,target:"ar"})});
      if(!res.ok)throw Error("provider unavailable");
-     const data:unknown=await res.json();
+     const data:{translations?:unknown}=await res.json();
      if(!data||typeof data!=="object"||!("translations" in data)||!Array.isArray(data.translations)||data.translations.length!==batch.length||data.translations.some((v:unknown)=>typeof v!=="string"))throw Error("invalid response");
      batch.forEach((source,j)=>cache.current.set(source,data.translations[j]));
     }
