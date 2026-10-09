@@ -2,11 +2,13 @@
 import { useEffect, useState } from "react";
 
 type Ripple = { id:number;x:number;y:number;width:number;height:number;success:boolean;confirmed?:boolean };
+type TouchLight = {id:number;x:number;y:number};
 type Dust = { id:number;x:number;y:number;dx:number;dy:number;size:number;duration:number;delay:number };
 const MAX=7;
 export default function TapShimmer(){
  const [ripples,setRipples]=useState<Ripple[]>([]);
  const [dust,setDust]=useState<Dust[]>([]);
+ const [touchLights,setTouchLights]=useState<TouchLight[]>([]);
  const [lightEnabled,setLightEnabled]=useState(true);
  useEffect(()=>{const sync=()=>{try{setLightEnabled(localStorage.getItem("1muslim-elmi-light")!=="off")}catch{setLightEnabled(true)}};sync();window.addEventListener("1muslim-elmi-light-updated",sync);return()=>window.removeEventListener("1muslim-elmi-light-updated",sync)},[]);
  useEffect(()=>{
@@ -37,7 +39,8 @@ export default function TapShimmer(){
    const id=++seq;
    setRipples(old=>[...old.slice(-(MAX-1)),{id,x,y,width,height,success}]);
    addDust(event.clientX,event.clientY,6);
-   const timer=window.setTimeout(()=>{setRipples(old=>old.filter(r=>r.id!==id));timers.delete(timer)},900);
+   setTouchLights(old=>[...old.slice(-19),{id,x:event.clientX,y:event.clientY}]);
+   const timer=window.setTimeout(()=>{setRipples(old=>old.filter(r=>r.id!==id));setTouchLights(old=>old.filter(t=>t.id!==id));timers.delete(timer)},900);
    timers.add(timer);
   };
   const onConfirmed=(event:Event)=>{
@@ -49,12 +52,24 @@ export default function TapShimmer(){
    const timer=window.setTimeout(()=>{setRipples(old=>old.filter(r=>r.id!==id));timers.delete(timer)},1100);
    timers.add(timer);
   };
+  let lastMove=0;
+  const onMove=(event:PointerEvent)=>{
+   if(event.pointerType==="mouse" && event.buttons!==1)return;
+   if(event.pointerType!=="mouse" && event.pressure===0)return;
+   try{if(localStorage.getItem("1muslim-elmi-light")==="off")return}catch{}
+   const now=performance.now();if(now-lastMove<38)return;lastMove=now;
+   const id=++seq;
+   setTouchLights(old=>[...old.slice(-22),{id,x:event.clientX,y:event.clientY}]);
+   const timer=window.setTimeout(()=>{setTouchLights(old=>old.filter(t=>t.id!==id));timers.delete(timer)},850);timers.add(timer);
+  };
+  document.addEventListener("pointermove",onMove,{passive:true});
   document.addEventListener("pointerdown",onTap,{passive:true});
   window.addEventListener("1muslim:action-success",onConfirmed);
-  return()=>{document.removeEventListener("pointerdown",onTap);window.removeEventListener("1muslim:action-success",onConfirmed);timers.forEach(clearTimeout)};
+  return()=>{document.removeEventListener("pointermove",onMove);document.removeEventListener("pointerdown",onTap);window.removeEventListener("1muslim:action-success",onConfirmed);timers.forEach(clearTimeout)};
  },[]);
  if(!lightEnabled)return null;
  return <div className="tap-shimmer-layer" aria-hidden="true" data-no-tap-shimmer>
+  {touchLights.map(t=><span key={t.id} className="elmi-touch-light" style={{left:t.x,top:t.y}}><i/></span>)}
   {ripples.map(r=><span key={r.id} className={r.confirmed?"tap-shimmer tap-confirmed":r.success?"tap-shimmer tap-success":"tap-shimmer"} style={{left:r.x,top:r.y,width:r.width,height:r.height}}>
    <i className="tap-shimmer-ring"/><i className="tap-shimmer-streak"/><i className="tap-shimmer-star"/>
   </span>)}
@@ -63,6 +78,7 @@ export default function TapShimmer(){
    .tap-confirmed::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:100%;border-radius:100%;background:linear-gradient(transparent,#78f5ff,#fff1b3,#78f5ff,transparent);box-shadow:0 0 18px #75f5ff;transform:translate(-50%,-50%);animation:tapVertical 1s ease-out both}
    @keyframes tapVertical{0%{opacity:0;scale:.2 1}25%{opacity:1;scale:1 1}100%{opacity:0;scale:.3 1}}
 
+   .elmi-touch-light{position:absolute;width:5px;height:70px;pointer-events:none;border-radius:100%;transform:translate(-50%,-50%);background:linear-gradient(transparent,#6be9ff,#fff1ba,#6be9ff,transparent);box-shadow:0 0 12px #78f9ff,0 0 20px #78f9ff55;animation:elmiTouchFade .85s ease-out both}.elmi-touch-light i{position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:#fff8d5;box-shadow:0 0 12px 5px #84eaff88;transform:translate(-50%,-50%)}@keyframes elmiTouchFade{0%{opacity:.95;scale:1}100%{opacity:0;scale:.35;translate:0 -16px}}
    .tap-shimmer-layer{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden}
    .tap-shimmer{position:absolute;pointer-events:none;--tap-color:#a7dfff;transform:translate(-50%,-50%);overflow:hidden;border-radius:12px}
    .tap-success{--tap-color:#79ffd7}.tap-confirmed{--tap-color:#f6dd7b}
