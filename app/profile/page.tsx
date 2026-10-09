@@ -56,6 +56,8 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
 export default function ProfilePage() {
   const router=useRouter();
   const [signingOut,setSigningOut]=useState(false);
+  const [isHudHudAdmin,setIsHudHudAdmin]=useState(false);
+  const [uploadingAvatar,setUploadingAvatar]=useState(false);
   const signOut=async()=>{
     if(signingOut)return;
     setSigningOut(true);
@@ -78,7 +80,7 @@ export default function ProfilePage() {
   const providers=["tiktok","youtube","twitch"] as const;
 
   useEffect(()=>{window.addEventListener("1muslim:profile-signout",signOut);return()=>window.removeEventListener("1muslim:profile-signout",signOut)},[signingOut]);
-  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data)setProfile(data as Profile);
+  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}setIsHudHudAdmin((user.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data)setProfile(data as Profile);
     const {data:postRows}=await s.from("posts").select("id").eq("user_id",user.id); setPostCount(postRows?.length??0);
     const {data:friendships}=await s.from("ashab_friendships").select("requester_id,addressee_id").eq("status","accepted").or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
     const ashabIds=(friendships??[]).map((row:any)=>row.requester_id===user.id?row.addressee_id:row.requester_id).filter(Boolean);
@@ -90,6 +92,25 @@ export default function ProfilePage() {
 
   useEffect(()=>{if(tab!=="shahada"||!profile?.shahada_audio_path)return;let active=true;(async()=>{const s=createClient();const {data}=await s.storage.from("shahada-safe-vault").createSignedUrl(profile.shahada_audio_path!,600);if(active&&data?.signedUrl)setVaultUrl(data.signedUrl)})();return()=>{active=false}},[tab,profile?.shahada_audio_path]);
 
+  const uploadAdminAvatar=async(file:File|undefined)=>{
+    if(!file||!profile||!isHudHudAdmin)return;
+    if(!["image/png","image/jpeg","image/webp"].includes(file.type)){setMessage("Use a PNG, JPEG or WebP avatar.");return}
+    if(file.size>3*1024*1024){setMessage("Avatar must be under 3 MB.");return}
+    setUploadingAvatar(true);setMessage("");
+    const s=createClient();
+    const {data:{user}}=await s.auth.getUser();
+    if(!user||user.id!==profile.id||user.email?.toLowerCase()!=="hudhudbyelmi@gmail.com"){setUploadingAvatar(false);setMessage("Admin authentication required.");return}
+    const extension=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";
+    const path=`hudhud-admin/${user.id}/avatar-${Date.now()}.${extension}`;
+    const {error:uploadError}=await s.storage.from("avatars").upload(path,file,{contentType:file.type,upsert:false});
+    if(uploadError){setUploadingAvatar(false);setMessage("Avatar upload failed: "+uploadError.message);return}
+    const url=s.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+    const avatar_config={...(profile.avatar_config||{}),adminAvatarUrl:url};
+    const {error:saveError}=await s.from("profiles").update({avatar_config}).eq("id",user.id);
+    setUploadingAvatar(false);
+    if(saveError){setMessage("Avatar uploaded but could not be saved: "+saveError.message);return}
+    update({avatar_config});setMessage("HudHud admin avatar saved.");
+  };
   const tier=useMemo(()=>tierForXp(profile?.xp_total??0),[profile?.xp_total]);
   const update=(patch:Partial<Profile>)=>setProfile(p=>p?{...p,...patch}:p);
   const chooseBackground=async(key:string)=>{
@@ -177,7 +198,7 @@ export default function ProfilePage() {
       </div>
       <style jsx>{`.shahadaVaultCard{border:1px solid var(--line);background:var(--panel2);border-radius:18px;padding:18px;display:grid;gap:16px}.shahadaVaultCard h3{margin:6px 0;font-size:18px;color:#d6e7b8}.shahadaVaultCard p{margin:0;color:#7d8a82;font-size:11px}.shahadaVaultCard audio{width:100%}`}</style>
     </section>}
-    {tab==="avatar"&&<section className="avatarEditor"><div className="avatarPreview"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/><strong>{tier.icon} {tier.name}</strong><span>{tier.quality}</span><small>{profile.xp_total.toLocaleString()} XP</small></div><div><span className="eyebrow">5 XP TIERS</span><h2>Earn your look.</h2><p className="muted">Everyone starts with a clean default avatar. More XP unlocks better accessories and richer avatar packages.</p><div className="tierGrid">{AVATAR_TIERS.map(t=><div className={`tierCard ${profile.xp_total>=t.minXp?"unlocked":"locked"}`} key={t.key}><b>{t.icon} {t.name}</b><span>{t.minXp.toLocaleString()} XP</span><small>{profile.xp_total>=t.minXp?t.quality:"Locked"}</small></div>)}</div><div className="accessoryGrid">{ACCESSORIES.map(item=>{const required=AVATAR_TIERS.find(x=>x.key===item.tier)!.minXp;const unlocked=profile.xp_total>=required;const selected=Array.isArray(profile.avatar_config?.accessories)&&profile.avatar_config.accessories.map(String).includes(item.id);return <button key={item.id} disabled={!unlocked} className={`accessoryCard ${selected?"selected":""} ${!unlocked?"locked":""}`} onClick={()=>toggleAccessory(item.id)}><span>{unlocked?item.icon:"🔒"}</span><b>{item.name}</b><small>{unlocked?"Tap to equip":`${required.toLocaleString()} XP`}</small></button>})}</div></div></section>}
+    {tab==="avatar"&&<section className="avatarEditor">{isHudHudAdmin&&<div style={{gridColumn:"1 / -1",padding:20,border:"1px solid #77e7ef",borderRadius:18,background:"#102b36",marginBottom:18}}><strong>✦ HudHud Admin · Custom Avatar Upload</strong><p className="muted">Admin-only avatar upload. PNG, JPG or WebP, up to 3 MB.</p><input aria-label="Upload HudHud admin avatar" type="file" accept="image/png,image/jpeg,image/webp" disabled={uploadingAvatar} onChange={e=>{void uploadAdminAvatar(e.target.files?.[0]);e.target.value=""}}/>{uploadingAvatar&&<p>Uploading avatar…</p>}{message&&<p role="status">{message}</p>}</div>}<div className="avatarPreview"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/><strong>{tier.icon} {tier.name}</strong><span>{tier.quality}</span><small>{profile.xp_total.toLocaleString()} XP</small></div><div><span className="eyebrow">5 XP TIERS</span><h2>Earn your look.</h2><p className="muted">Everyone starts with a clean default avatar. More XP unlocks better accessories and richer avatar packages.</p><div className="tierGrid">{AVATAR_TIERS.map(t=><div className={`tierCard ${profile.xp_total>=t.minXp?"unlocked":"locked"}`} key={t.key}><b>{t.icon} {t.name}</b><span>{t.minXp.toLocaleString()} XP</span><small>{profile.xp_total>=t.minXp?t.quality:"Locked"}</small></div>)}</div><div className="accessoryGrid">{ACCESSORIES.map(item=>{const required=AVATAR_TIERS.find(x=>x.key===item.tier)!.minXp;const unlocked=profile.xp_total>=required;const selected=Array.isArray(profile.avatar_config?.accessories)&&profile.avatar_config.accessories.map(String).includes(item.id);return <button key={item.id} disabled={!unlocked} className={`accessoryCard ${selected?"selected":""} ${!unlocked?"locked":""}`} onClick={()=>toggleAccessory(item.id)}><span>{unlocked?item.icon:"🔒"}</span><b>{item.name}</b><small>{unlocked?"Tap to equip":`${required.toLocaleString()} XP`}</small></button>})}</div></div></section>}
 
     {tab==="header"&&<section className="headerEditor"><span className="eyebrow">PROFILE HEADER</span><h2>Choose your background color.</h2><p className="muted">Tap a color to preview it instantly on your avatar and profile header. It saves automatically.</p><div className="colorGrid">{colors.map(([key,name])=><button key={key} className={profile.profile_accent===key?"selected":""} onClick={()=>void chooseBackground(key)} disabled={colorSaving} aria-pressed={profile.profile_accent===key}><span className={`swatch ${key}`}></span><b>{name}</b></button>)}</div><div className={`headerDemo header-${profile.profile_accent}`}><strong>{profile.display_name}</strong><span>Public profile header preview</span></div><p role="status" className="muted">{colorSaving?"Saving color…":message}</p></section>}
     <ProfileContentSections userId={profile.id}/>
