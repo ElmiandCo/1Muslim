@@ -390,3 +390,21 @@ video {
 .profileAvatar.accent-dark-grey::after{background:#666b76}
 .profileAvatar.accent-dark-green::after{background:#26865a}
 .profileAvatar.accent-white::after{background:#ffffff;opacity:.25}
+
+/* 2026 mobile top navigation refresh: uncluttered, accessible, premium */
+.mobileLibraryShortcut{display:none}
+@media(max-width:700px){
+ .siteNav{height:72px!important;min-height:72px!important;padding:0 12px!important;gap:10px!important;background:rgba(4,10,19,.89)!important;border-bottom:1px solid rgba(85,218,226,.26)!important;box-shadow:0 8px 34px rgba(0,0,0,.3);backdrop-filter:blur(24px)!important}
+ .siteNav .logoBrand{flex:1 1 auto!important;min-width:0!important;max-width:none!important}
+ .siteNav .premiumLogo{width:min(34vw,145px)!important;height:44px!important;object-fit:contain!important}
+ .siteNav .mobileLibraryShortcut{display:flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;text-decoration:none;color:#d6fbff;font-size:11px;font-weight:800;letter-spacing:.02em;border:1px solid rgba(83,207,245,.35);background:linear-gradient(135deg,rgba(24,90,110,.32),rgba(92,49,154,.24));border-radius:15px;padding:11px 10px;box-shadow:inset 0 1px rgba(255,255,255,.1)}
+ .siteNav .mobileLibraryShortcut span:first-child{font-size:17px;color:#79e9ff}
+ .siteNav .mobileNavActions{display:none!important}
+ .siteNav .themeToggle{flex:0 0 auto!important;width:40px!important;height:42px!important;padding:0!important;border-radius:14px!important;font-size:0!important;background:rgba(15,31,51,.7)!important;border:1px solid rgba(121,197,229,.32)!important}
+ .siteNav .themeToggle::first-letter{font-size:20px}
+ .siteNav .mobileMenuButton{width:44px!important;height:44px!important;border-radius:15px!important;background:linear-gradient(140deg,rgba(27,49,77,.85),rgba(42,27,72,.85))!important;border:1px solid rgba(121,197,229,.42)!important;box-shadow:0 0 16px rgba(55,164,232,.12)}
+ .siteNav .mobileMenuButton span{width:19px!important;height:2px!important;background:#c9f8ff!important}
+ .siteNav .mobileMenuPanel{top:72px!important;height:calc(100dvh - 72px)!important;max-height:calc(100dvh - 72px)!important;background:linear-gradient(160deg,rgba(5,17,33,.99),rgba(18,11,37,.99))!important}
+ .siteNav .authNav,.siteNav .authAccount,.siteNav .authLoading{display:none!important}
+}
+@media(max-width:365px){.siteNav{gap:6px!important;padding:0 7px!important}.siteNav .mobileLibraryShortcut{padding:10px 7px;font-size:10px}.siteNav .premiumLogo{width:116px!important}}
