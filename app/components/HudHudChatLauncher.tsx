@@ -1,48 +1,42 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { createClient } from "../../utils/supabase/client";
+import {useEffect,useRef,useState} from "react";
+import {createClient} from "../../utils/supabase/client";
+import ProfileAvatar from "./ProfileAvatar";
 
-export default function HudHudChatLauncher() {
- const [open,setOpen]=useState(false);
- const [signedIn,setSignedIn]=useState(false);
- const [position,setPosition]=useState({x:20,y:170});
- const [dragged,setDragged]=useState(false);
- const drag=useRef<{x:number;y:number;px:number;py:number}|null>(null);
- useEffect(()=>{
-  const supabase=createClient();
-  let active=true;
-  void supabase.auth.getUser().then(({data})=>{if(active)setSignedIn(!!data.user)});
-  const {data:listener}=supabase.auth.onAuthStateChange((_event,session)=>setSignedIn(!!session?.user));
-  return()=>{active=false;listener.subscription.unsubscribe()};
- },[]);
- const move=(e:React.PointerEvent<HTMLButtonElement>)=>{
-  if(!drag.current)return;
-  const d=drag.current;
-  if(Math.abs(e.clientX-d.x)+Math.abs(e.clientY-d.y)>8)setDragged(true);
-  setPosition({x:Math.max(8,Math.min(window.innerWidth-74,d.px+e.clientX-d.x)),y:Math.max(8,Math.min(window.innerHeight-74,d.py+e.clientY-d.y))});
+type Profile={display_name:string|null;gender:string|null;avatar_gender:string|null;avatar_package:string|null;avatar_config:Record<string,unknown>|null;profile_accent:string|null};
+type Message={id:number;role:"user"|"hudhud";text:string;image?:string;avatar?:boolean};
+const welcome:Message={id:0,role:"hudhud",text:"Assalamu alaikum! 🦅 I'm HudHud. Ask me how to use 1Muslim, change your profile photo, find your Ashab, or share a verse."};
+export default function HudHudChatLauncher(){
+ const [open,setOpen]=useState(false),[uid,setUid]=useState<string|null>(null),[profile,setProfile]=useState<Profile|null>(null);
+ const [position,setPosition]=useState({x:20,y:170}),[dragged,setDragged]=useState(false);
+ const [messages,setMessages]=useState<Message[]>([welcome]),[draft,setDraft]=useState(""),[pending,setPending]=useState<{url:string;name:string}|null>(null),[notice,setNotice]=useState("");
+ const drag=useRef<{x:number;y:number;px:number;py:number}|null>(null),file=useRef<HTMLInputElement>(null),bottom=useRef<HTMLDivElement>(null),nextId=useRef(1);
+ useEffect(()=>{const s=createClient();let active=true;const load=async()=>{const {data:{user}}=await s.auth.getUser();if(!active)return;setUid(user?.id||null);if(!user){setProfile(null);return}const {data}=await s.from("profiles").select("display_name,gender,avatar_gender,avatar_package,avatar_config,profile_accent").eq("id",user.id).maybeSingle();if(active)setProfile(data||null)};void load();const {data:sub}=s.auth.onAuthStateChange(()=>{void load()});return()=>{active=false;sub.subscription.unsubscribe()}},[]);
+ useEffect(()=>{if(open)bottom.current?.scrollIntoView({block:"end",behavior:"smooth"})},[open,messages]);
+ useEffect(()=>{if(!open)return;const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setOpen(false)};document.addEventListener("keydown",key);return()=>document.removeEventListener("keydown",key)},[open]);
+ const move=(e:React.PointerEvent<HTMLButtonElement>)=>{if(!drag.current)return;const d=drag.current;if(Math.abs(e.clientX-d.x)+Math.abs(e.clientY-d.y)>8)setDragged(true);setPosition({x:Math.max(8,Math.min(window.innerWidth-74,d.px+e.clientX-d.x)),y:Math.max(8,Math.min(window.innerHeight-74,d.py+e.clientY-d.y))})};
+ const answer=(question:string,hasImage:boolean)=>{
+  const q=question.toLowerCase();
+  if(/(photo|avatar|picture|profile image|profile pic)/.test(q))return {text:"Here's your current 1Muslim avatar! To change it: open Profile → tap ✦ Edit profile → choose the Avatar section, then save your changes. You can see the updated avatar on your profile.",avatar:true};
+  if(/(settings|account|password)/.test(q))return {text:"Open Settings to manage your account preferences. For your avatar or profile photo, go to Profile → Edit profile instead.",avatar:false};
+  if(/(ashab|friend|people|find user|search user)/.test(q))return {text:"Open Ashab to see your mutual followers, or Find People to search by name or @username. You can also send Qur'an verses through the verse-sharing button.",avatar:false};
+  if(/(qur|verse|ayah|surah)/.test(q))return {text:"Open Elm Tent → Qur'an Studio. Choose a surah and verse, then use Chat with HudHud or Send Verse to Ashab. For interpretation, consult a reliable tafsir.",avatar:false};
+  if(/(live|stream|camera)/.test(q))return {text:"Open Streaming → Go Live. Allow camera access, add a title, and check your microphone and camera before starting.",avatar:false};
+  if(hasImage)return {text:"I can display the image you attached in this chat preview, but image recognition and uploads aren't connected yet. Tell me what you're trying to do and I'll guide you through 1Muslim.",avatar:false};
+  return {text:"I can guide you around 1Muslim right now. Try asking: “How can I change my photo?”, “Where are my Ashab?”, or “How do I share a Qur'an verse?” Full AI conversation is not connected yet.",avatar:false};
  };
+ const send=(e:React.FormEvent)=>{e.preventDefault();if(!draft.trim()&&!pending)return;const text=draft.trim(),image=pending?.url;setMessages(prev=>[...prev,{id:nextId.current++,role:"user",text,image}]);setDraft("");setPending(null);const reply=answer(text,!!image);window.setTimeout(()=>{setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",...reply}]);window.dispatchEvent(new CustomEvent("1muslim:action-success"))},400)};
+ const attach=(e:React.ChangeEvent<HTMLInputElement>)=>{const item=e.target.files?.[0];if(!item)return;if(!item.type.startsWith("image/")){setNotice("Choose an image file.");return}if(item.size>3_000_000){setNotice("Choose an image smaller than 3 MB.");return}const reader=new FileReader();reader.onload=()=>{if(typeof reader.result==="string"){setPending({url:reader.result,name:item.name});setNotice("Image ready for local preview.")}};reader.readAsDataURL(item);e.target.value=""};
  return <>
-  <button className="hh-chat-orb" style={{left:position.x,top:position.y}} aria-label="Start a chat with HudHud" title="Chat with HudHud"
-   onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,px:position.x,py:position.y};setDragged(false);e.currentTarget.setPointerCapture(e.pointerId)}}
-   onPointerMove={move}
-   onPointerUp={()=>{drag.current=null}}
-   onClick={()=>{if(dragged){setDragged(false);return}setOpen(v=>!v)}}><img src="/assets/hudhud-logo.PNG" alt="" /><span className="hh-orb-glow" /></button>
-  {open&&<aside className="hh-chat-panel" aria-label="HudHud assistant" data-no-translate="true">
-   <header><img src="/assets/hudhud-logo.PNG" alt="" /><strong>Chat with HudHud ✨</strong><button onClick={()=>setOpen(false)} aria-label="Close HudHud">✕</button></header>
-   <div className="hh-chat-body"><div className="hh-chat-welcome">🦅 Assalamu alaikum! Welcome to 1Muslim.</div>
-    <p>{signedIn?"HudHud is here to help you explore. Full AI chat will be available once the assistant service is connected.":"Explore the site with me! Sign in to access member-only HudHud features."}</p>
-    {!signedIn&&<Link href="/auth" className="hh-chat-signin">Sign in to continue →</Link>}
-   </div>
-  </aside>}
-  <style jsx>{`
-   .hh-chat-orb{position:fixed;z-index:9990;width:64px;height:64px;display:grid;place-items:center;border-radius:50%;border:1px solid #7ce6ff;background:radial-gradient(circle,#19416a,#061427);box-shadow:0 0 22px #43b9ff80;cursor:grab;touch-action:none;animation:hhFloat 3.5s ease-in-out infinite}
-   .hh-chat-orb:active{cursor:grabbing}.hh-chat-orb img{width:53px;height:53px;object-fit:contain;position:relative;z-index:2}.hh-orb-glow{position:absolute;inset:-6px;border-radius:50%;border:1px solid #78e9ff66;animation:hhPulse 2.8s ease-in-out infinite}
-   .hh-chat-panel{position:fixed;z-index:9991;bottom:90px;left:clamp(10px,4vw,80px);width:min(92vw,365px);background:#071629f5;color:#fff;border:1px solid #63d3ff88;border-radius:22px;box-shadow:0 20px 60px #0009,0 0 25px #2e8ac744;overflow:hidden;animation:hhOpen .35s ease-out}
-   .hh-chat-panel header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(110deg,#0c3359,#18234c)}.hh-chat-panel header img{width:34px;height:34px;object-fit:contain}.hh-chat-panel header strong{flex:1}.hh-chat-panel header button{background:none;border:0;color:#fff;cursor:pointer;font-size:19px}
-   .hh-chat-body{padding:22px}.hh-chat-welcome{padding:14px;background:#16436b;border:1px solid #71c6ff55;border-radius:15px;animation:hhOpen .6s ease-out}.hh-chat-body p{line-height:1.55;color:#d4e4f4}.hh-chat-signin{display:block;text-align:center;margin-top:20px;background:#0c9cbd;color:white;text-decoration:none;border-radius:13px;padding:13px;font-weight:700}
-   @keyframes hhFloat{50%{transform:translateY(-7px)}}@keyframes hhPulse{50%{box-shadow:0 0 20px #6be4ff99;transform:scale(1.09)}}@keyframes hhOpen{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
-   @media(prefers-reduced-motion:reduce){.hh-chat-orb,.hh-orb-glow,.hh-chat-panel,.hh-chat-welcome{animation:none}}
-  `}</style>
- </>;
+ <button className="hh-chat-orb" style={{left:position.x,top:position.y}} aria-label="Open HudHud control panel" title="Chat with HudHud" onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,px:position.x,py:position.y};setDragged(false);e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={move} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}} onClick={()=>{if(dragged){setDragged(false);return}setOpen(true)}}><img src="/assets/hudhud-logo.PNG" alt=""/><span className="hh-orb-glow"/><span className="hh-handle">Chat</span></button>
+ {open&&<section className="hh-fullscreen" role="dialog" aria-modal="true" aria-label="Chat with HudHud" data-no-translate="true">
+  <header className="hh-top"><img src="/assets/hudhud-logo.PNG" alt=""/><div><strong>HudHud Control Panel</strong><small>🟢 1Muslim guide · {uid?"Signed in":"Guest"}</small></div><button type="button" onClick={()=>setOpen(false)} aria-label="Close HudHud chat">✕</button></header>
+  <div className="hh-scroll"><div className="hh-thread">{messages.map(m=><div key={m.id} className={"hh-row "+m.role}><div className="hh-bubble">{m.role==="hudhud"&&<small>🦅 HUDHUD</small>}{m.text&&<p>{m.text}</p>}{m.image&&<img className="hh-attached" src={m.image} alt="Image shared in chat"/>}{m.avatar&&profile&&<div className="hh-avatar-card"><ProfileAvatar name={profile.display_name||"Member"} gender={profile.gender} avatarGender={profile.avatar_gender||"male"} avatarPackage={profile.avatar_package||"default"} avatarConfig={profile.avatar_config||{}} accent={profile.profile_accent||"dark-green"}/><span>Your current avatar<br/><Link href="/profile" onClick={()=>setOpen(false)}>Edit on Profile →</Link></span></div>}{m.avatar&&!profile&&<Link href="/profile" onClick={()=>setOpen(false)}>Open Profile to view or edit your avatar →</Link>}</div></div>)}<div ref={bottom}/></div></div>
+  <form className="hh-compose" onSubmit={send}><div className="hh-compose-inner">{pending&&<div className="hh-preview"><img src={pending.url} alt="Image preview"/><span>{pending.name}</span><button type="button" onClick={()=>setPending(null)}>Remove ✕</button></div>}<div className="hh-input-row"><input ref={file} type="file" accept="image/*" hidden onChange={attach}/><button type="button" onClick={()=>file.current?.click()} aria-label="Attach an image" title="Attach image">📎</button><input value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Ask HudHud anything about 1Muslim…" aria-label="Message HudHud"/><button className="hh-send" type="submit" disabled={!draft.trim()&&!pending}>Send ↗</button></div>{notice&&<small role="status">{notice}</small>}<small>Images stay in this browser preview. HudHud currently gives guided help, not live AI or image analysis.</small></div></form>
+ </section>}
+ <style jsx>{`
+ .hh-chat-orb{position:fixed;z-index:9990;width:64px;height:64px;display:grid;place-items:center;border-radius:50%;border:1px solid #7ce6ff;background:radial-gradient(circle,#19416a,#061427);box-shadow:0 0 22px #43b9ff80;cursor:grab;touch-action:none;animation:hhFloat 3.5s ease-in-out infinite}.hh-chat-orb:active{cursor:grabbing}.hh-chat-orb img{width:53px;height:53px;object-fit:contain;position:relative;z-index:2}.hh-orb-glow{position:absolute;inset:-6px;border-radius:50%;border:1px solid #78e9ff66;animation:hhPulse 2.8s ease-in-out infinite}.hh-handle{position:absolute;left:53px;top:20px;background:#071c2c;border:1px solid #77cfff88;border-radius:0 10px 10px 0;padding:5px 11px;color:white;font-size:11px;font-weight:800;z-index:-1}
+ .hh-fullscreen{position:fixed;inset:0;z-index:9995;display:flex;flex-direction:column;background:radial-gradient(ellipse at 60% 0%,#19345c 0%,#050912 60%);color:#fff;animation:hhOpen .3s ease-out}.hh-top{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) max(18px,calc((100vw - 960px)/2)) 14px;border-bottom:1px solid #8acfff44;background:#040b15c9;backdrop-filter:blur(16px)}.hh-top img{width:43px;height:43px;object-fit:contain}.hh-top div{display:grid;gap:4px;flex:1}.hh-top strong{font-size:16px}.hh-top small{color:#a9d7e7;font-size:11px}.hh-top button{width:44px;height:44px;border:1px solid #ffffff55;border-radius:14px;background:#ffffff15;color:#fff;font-size:21px;cursor:pointer}.hh-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}.hh-thread{width:min(100%,850px);margin:auto;display:flex;flex-direction:column;gap:22px;padding:32px 18px 45px}.hh-row{display:flex;justify-content:center;animation:hhOpen .35s ease-out}.hh-bubble{width:min(100%,680px);padding:20px 24px;border-radius:22px;line-height:1.75;white-space:pre-wrap;box-shadow:0 10px 35px #0004}.hh-row.user .hh-bubble{background:#ffffff0f;border:1px solid #ffffff36;text-align:center}.hh-row.hudhud .hh-bubble{background:linear-gradient(130deg,#113955a6,#1932529c);border:1px solid #70d6ff66;backdrop-filter:blur(18px)}.hh-bubble small{color:#a2f1dd;font-weight:900;letter-spacing:.12em}.hh-bubble p{margin:9px 0;font-size:clamp(15px,2.8vw,18px)}.hh-attached{display:block;max-width:100%;max-height:300px;object-fit:contain;margin:12px auto;border-radius:15px}.hh-avatar-card{display:flex;align-items:center;gap:15px;margin-top:15px;border:1px solid #ffffff33;background:#ffffff10;border-radius:16px;padding:12px}.hh-avatar-card span{line-height:1.6}.hh-avatar-card a,.hh-bubble a{color:#8eead7}.hh-compose{border-top:1px solid #8acfff44;background:#050d18ee;padding:12px 16px calc(16px + env(safe-area-inset-bottom))}.hh-compose-inner{max-width:850px;margin:auto;display:grid;gap:9px}.hh-input-row{display:flex;gap:10px;align-items:center}.hh-input-row>button{border:1px solid #81d9f977;border-radius:14px;padding:12px;background:#1b3d57;color:#fff;cursor:pointer}.hh-input-row input{flex:1;min-width:0;padding:15px;border:1px solid #ffffff55;border-radius:14px;background:#101f31;color:#fff;font:inherit}.hh-input-row .hh-send{background:#087d87;font-weight:800}.hh-input-row button:disabled{opacity:.5}.hh-compose-inner>small{color:#a6c4d6;font-size:10px}.hh-preview{display:flex;align-items:center;gap:10px;font-size:12px}.hh-preview img{width:50px;height:50px;object-fit:cover;border-radius:9px}.hh-preview span{flex:1;overflow:hidden;text-overflow:ellipsis}.hh-preview button{border:0;background:none;color:#91e8dc;cursor:pointer}@keyframes hhFloat{50%{transform:translateY(-7px)}}@keyframes hhPulse{50%{box-shadow:0 0 20px #6be4ff99;transform:scale(1.09)}}@keyframes hhOpen{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}@media(prefers-reduced-motion:reduce){.hh-chat-orb,.hh-orb-glow,.hh-fullscreen,.hh-row{animation:none}}@media(max-width:550px){.hh-thread{padding:18px 12px 25px;gap:14px}.hh-bubble{padding:15px}.hh-input-row{gap:6px}.hh-input-row input{padding:12px;font-size:14px}.hh-input-row .hh-send{padding:12px 10px}}
+ `}</style></>
 }
