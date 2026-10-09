@@ -10,6 +10,7 @@ const exploreGroups = [
   { title: "Learn", items: [
     { label: "Learn", ar: "تعلّم", href: "/#paths" },
     { label: "Elm Tent", ar: "الخيمة", href: "/learn/elm-tent" },
+    { label: "Qur’an Studio", ar: "القرآن", href: "/quran-studio" },
     { label: "Videos", ar: "الفيديوهات", href: "/streaming/library" },
   ]},
   { title: "Community", items: [
