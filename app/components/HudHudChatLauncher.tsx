@@ -13,6 +13,9 @@ type Message={id:number;role:"user"|"hudhud";text:string;image?:string;avatar?:b
 const welcome:Message={id:0,role:"hudhud",text:"Assalamu alaikum! I'm HudHud. Ask me how to use 1Muslim, change your profile photo, find your Ashab, or share a verse."};
 export default function HudHudChatLauncher(){
  const [lightEnabled,setLightEnabled]=useState(true);
+ const [voiceOn,setVoiceOn]=useState(false);
+ useEffect(()=>{try{setVoiceOn(localStorage.getItem("1muslim-hudhud-voice")==="on")}catch{}},[]);
+ const toggleVoice=()=>setVoiceOn(v=>{const next=!v;try{localStorage.setItem("1muslim-hudhud-voice",next?"on":"off")}catch{}window.dispatchEvent(new CustomEvent("1muslim:hudhud-voice",{detail:{enabled:next}}));if(!next&&typeof window!=="undefined")window.speechSynthesis?.cancel();return next});
  const [farewell,setFarewell]=useState(false);
  useEffect(()=>{const onFarewell=()=>setFarewell(true);window.addEventListener("1muslim:farewell",onFarewell);try{if(sessionStorage.getItem("1muslim-hudhud-farewell")==="1"){sessionStorage.removeItem("1muslim-hudhud-farewell");setFarewell(true)}}catch{}return()=>window.removeEventListener("1muslim:farewell",onFarewell)},[]);
  useEffect(()=>{if(!farewell)return;const t=window.setTimeout(()=>setFarewell(false),6500);return()=>clearTimeout(t)},[farewell]);
@@ -43,10 +46,10 @@ export default function HudHudChatLauncher(){
  {labOpen&&admin&&<ElmiLightLab onClose={()=>setLabOpen(false)}/>}
  <div className="hh-trail-layer" aria-hidden="true">{lightEnabled&&trail.map(p=><span key={p.id} className="hh-trail-mark" style={{left:p.x,top:p.y}}><i/></span>)}</div>
  {farewell&&<div className="hh-farewell" role="status"><span>HudHud</span><strong>See you next time! 💚</strong><small>Assalamu alaikum ✨</small><button type="button" aria-label="Dismiss farewell" onClick={()=>setFarewell(false)}>✕</button></div>}
- <button className="hh-chat-orb" style={{left:position.x,top:position.y}} aria-label="Open HudHud control panel" title="Chat with HudHud" onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,px:position.x,py:position.y};setDragged(false);e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={move} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}} onClick={()=>{if(dragged){setDragged(false);return}setQuickOpen(v=>!v)}}><img src="/assets/hudhud-logo.PNG" alt=""/>{lightEnabled&&<span className="hh-orb-glow"/>}<span className="hh-handle">Chat</span></button>
- {quickOpen&&!open&&<div className="hh-quick-menu" style={{left:Math.min(position.x+4,Math.max(8,typeof window!=="undefined"?window.innerWidth-240:200)),top:Math.max(10,position.y-190)}} role="group" aria-label="HudHud quick actions">
+ <button className="hh-chat-orb" style={{left:position.x,top:position.y}} aria-label="HudHud actions" title="HudHud actions" onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,px:position.x,py:position.y};setDragged(false);e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={move} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}} onClick={()=>{if(dragged){setDragged(false);return}setQuickOpen(v=>!v)}}><img src="/assets/hudhud-logo.PNG" alt=""/>{lightEnabled&&<span className="hh-orb-glow"/>}<span className="hh-handle">{voiceOn?"Voice on":"HudHud"}</span></button>
+ {quickOpen&&!open&&<div className="hh-quick-menu" style={{left:Math.min(position.x+4,Math.max(8,typeof window!=="undefined"?window.innerWidth-240:200)),top:Math.max(10,Math.min(position.y-190,typeof window!=="undefined"?window.innerHeight-195:300))}} role="group" aria-label="HudHud quick actions">
  <button type="button" onClick={()=>{setQuickOpen(false);setOpen(true)}}><span>✦</span><strong>Chat with HudHud</strong><small>Ask about 1Muslim</small></button>
- <button type="button" onClick={()=>{setQuickOpen(false);setOpen(true);window.setTimeout(()=>document.querySelector(".hh-settings")?.scrollIntoView({block:"start"}),80)}}><span>⚙</span><strong>Voice & Language</strong><small>Real microphone and translation settings</small></button>
+ <button type="button" aria-pressed={voiceOn} onClick={toggleVoice}><span>{voiceOn?"◉":"◎"}</span><strong>HudHud Voice: {voiceOn?"ON":"OFF"}</strong><small>Toggle spoken guidance</small></button>
  <button type="button" onClick={()=>{setQuickOpen(false);window.dispatchEvent(new Event("1muslim:hudhud-guidance"))}}><span>✧</span><strong>HudHud Guidance</strong><small>Light packets, Qur’an verse & guided destination</small></button>
  </div>}
  {open&&<section className="hh-fullscreen" role="dialog" aria-modal="true" aria-label="Chat with HudHud" data-no-translate="true">
