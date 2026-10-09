@@ -186,7 +186,7 @@ export default function GoLivePage() {
 
   const scheduleLive = async () => {
     setScheduleMessage("");
-    if (!title.trim()) return setScheduleMessage("Add a Live title first.");
+    if (!title.trim()) {setScheduleMessage("Add a Live title first.");document.getElementById("title")?.scrollIntoView({behavior:"smooth",block:"center"});window.setTimeout(()=>document.getElementById("title")?.focus({preventScroll:true}),350);return;}
     if (!scheduleDate || !scheduleStart || !scheduleEnd) return setScheduleMessage("Choose a date, start time, and end time.");
     const starts = new Date(`${scheduleDate}T${scheduleStart}`);
     const ends = new Date(`${scheduleDate}T${scheduleEnd}`);
@@ -649,7 +649,7 @@ export default function GoLivePage() {
 
   const startLive = async (fromSchedule = false) => {
     if (!cameraReady) return setError("Turn on your camera and microphone first.");
-    if (!title.trim()) return setError("Give your live stream a title first.");
+    if (!title.trim()) {setError("Give your live stream a title first.");document.getElementById("title")?.scrollIntoView({behavior:"smooth",block:"center"});window.setTimeout(()=>document.getElementById("title")?.focus({preventScroll:true}),350);return;}
     if (fromSchedule && scheduledSlot) {
       if (!hostCheckedIn) return setError("Check in as ready before the scheduled Live can start.");
       if (Date.now() < new Date(scheduledSlot.starts_at).getTime()) return setError("This scheduled Live is still locked. It will start automatically at the scheduled time.");
