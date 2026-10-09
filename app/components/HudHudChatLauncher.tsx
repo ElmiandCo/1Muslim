@@ -32,7 +32,7 @@ export default function HudHudChatLauncher() {
    <header><img src="/assets/hudhud-logo.PNG" alt="" /><strong>Chat with HudHud ✨</strong><button onClick={()=>setOpen(false)} aria-label="Close HudHud">✕</button></header>
    <div className="hh-chat-body"><div className="hh-chat-welcome">🦅 Assalamu alaikum! Welcome to 1Muslim.</div>
     <p>{signedIn?"HudHud is here to help you explore. Full AI chat will be available once the assistant service is connected.":"Explore the site with me! Sign in to access member-only HudHud features."}</p>
-    {!signedIn&&<Link href="/login" className="hh-chat-signin">Sign in to continue →</Link>}
+    {!signedIn&&<Link href="/auth" className="hh-chat-signin">Sign in to continue →</Link>}
    </div>
   </aside>}
   <style jsx>{`
