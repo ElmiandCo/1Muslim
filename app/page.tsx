@@ -299,6 +299,20 @@ export default function Home() {
         {duaOpen && <DuaLesson onClose={()=>setDuaOpen(false)} />}
       <aside className="rightRail">
         <div className="search">⌕ <input placeholder="Search 1Muslim" /></div>
+        <section className="railCard" aria-label="Connect your social accounts">
+          <span className="eyebrow">YOUR SOCIAL ACCOUNTS</span>
+          <h3>Connect your community.</h3>
+          <p>Bring your TikTok or YouTube presence into 1Muslim. Account authorization is being prepared.</p>
+          <div style={{display:"grid",gap:10,marginTop:14}}>
+            <Link href="/tiktok" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:"12px 14px",borderRadius:13,border:"1px solid #435c52",color:"inherit",textDecoration:"none",background:"rgba(25,45,38,.4)"}}>
+              <span><strong>♪ TikTok</strong><small style={{display:"block",fontSize:10,opacity:.7,marginTop:3}}>Connection preview</small></span><span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/youtube" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:"12px 14px",borderRadius:13,border:"1px solid #435c52",color:"inherit",textDecoration:"none",background:"rgba(25,45,38,.4)"}}>
+              <span><strong>▶ YouTube</strong><small style={{display:"block",fontSize:10,opacity:.7,marginTop:3}}>Connection preview</small></span><span aria-hidden="true">→</span>
+            </Link>
+          </div>
+          <small style={{display:"block",marginTop:12,opacity:.65}}>No accounts are connected until you authorize them. OAuth connection is not live yet.</small>
+        </section>
         <div className="railCard"><span className="eyebrow">START HERE</span><h3>New to Islam?</h3><p>Take the gentle route through Allah, Qur’an, prayer, forgiveness and daily life.</p><button className="primary">Start Easy Path</button></div>
         <div className="railCard"><span className="eyebrow">PRAYER ACADEMY</span><h3>Learn salah by seeing it.</h3><div className="prayerMini"><span>Standing</span><span>↕</span><span>Bowing</span><span>↕</span><span>Prostration</span></div><button className="ghost full">Take the quiz</button></div>
         <div className="railCard quiet"><span className="eyebrow">COMMUNITY</span><h3>Leave something for the next person.</h3><p>Share a reflection, encouragement or honest question. Core lessons stay protected; community contributions add to them.</p></div>
