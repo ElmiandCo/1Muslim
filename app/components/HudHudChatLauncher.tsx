@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {usePathname} from "next/navigation";
 import {useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import ProfileAvatar from "./ProfileAvatar";
@@ -12,6 +13,7 @@ type Profile={display_name:string|null;gender:string|null;avatar_gender:string|n
 type Message={id:number;role:"user"|"hudhud";text:string;image?:string;avatar?:boolean};
 const welcome:Message={id:0,role:"hudhud",text:"Assalamu alaikum! I'm HudHud. Ask me how to use 1Muslim, change your profile photo, find your Ashab, or share a verse."};
 export default function HudHudChatLauncher(){
+ const pathname=usePathname()||"/";
  const [lightEnabled,setLightEnabled]=useState(true);
  const [tourStep,setTourStep]=useState(-1);
  const holdTimer=useRef<ReturnType<typeof setTimeout>|null>(null),held=useRef(false),movedOnce=useRef(false);
@@ -22,14 +24,8 @@ export default function HudHudChatLauncher(){
  const toggleVoice=()=>setVoiceOn(v=>{const next=!v;try{localStorage.setItem("1muslim-hudhud-voice",next?"on":"off")}catch{}window.dispatchEvent(new CustomEvent("1muslim:hudhud-voice",{detail:{enabled:next}}));if(!next&&typeof window!=="undefined")window.speechSynthesis?.cancel();return next});
  const [quickOpen,setQuickOpen]=useState(false),[open,setOpen]=useState(false),[uid,setUid]=useState<string|null>(null),[profile,setProfile]=useState<Profile|null>(null);
  const [observation,setObservation]=useState("");
- const observations=[
-  "Wow, we could use more Ashab! Want to find new friends?",
-  "Did you know? HudHud carried news to Prophet Sulayman (peace be upon him). See Qur'an 27:20–28.",
-  "A fun story: in The Lion King, a hornbill called Zazu serves a lion king. I'm HudHud, though — my Qur'anic story is different!",
-  "Have you visited Qur'an Studio today? One verse can start a beautiful reflection.",
-  "What's happening in the community today? Explore a post or check whether someone is live."
- ];
- useEffect(()=>{let count=0;const show=()=>{if(document.visibilityState!=="visible"||open||quickOpen||tourStep>=0)return;setObservation(observations[count%observations.length]);count++;window.setTimeout(()=>setObservation(""),9500)};const timer=window.setInterval(show,90000);return()=>window.clearInterval(timer)},[open,quickOpen,tourStep]);
+ const observations=pathname.startsWith("/ashab")?["أصحاب means companions. Your mutual followers form your circle.","Discover the Prophet's Companions on the As-Sahabah learning page."]:pathname.startsWith("/as-sahaba")?["الصحابة means the Companions of the Prophet ﷺ. Open a card to learn more.","Search by name and consult the linked hadith sources."]:pathname.startsWith("/streaming")?["Before going live, check your camera, microphone and title.","Make space for respectful conversations during live sessions."]:pathname.startsWith("/messages")?["Keep conversations respectful and check who can contact you.","Group conversations work best with a clear purpose."]:pathname.startsWith("/learn")?["One lesson at a time. Reflect on what you learn.","Check the source and grading of narrations you encounter."]:pathname.startsWith("/profile")?["Your profile helps other members recognize you.","A thoughtful bio can help others connect with you."]:["أصحاب means companions. Discover الصحابة on our learning page.","HudHud carried news to Prophet Sulayman. See Qur'an 27:20–28.","Have you visited Qur'an Studio today?"];
+ useEffect(()=>{let count=0;const show=()=>{if(document.visibilityState!=="visible"||open||quickOpen||tourStep>=0)return;setObservation(observations[count%observations.length]);count++;window.setTimeout(()=>setObservation(""),9500)};const timer=window.setInterval(show,90000);return()=>window.clearInterval(timer)},[open,quickOpen,tourStep,pathname]);
  const [farewell,setFarewell]=useState(false);
  useEffect(()=>{const onFarewell=()=>setFarewell(true);window.addEventListener("1muslim:farewell",onFarewell);try{if(sessionStorage.getItem("1muslim-hudhud-farewell")==="1"){sessionStorage.removeItem("1muslim-hudhud-farewell");setFarewell(true)}}catch{}return()=>window.removeEventListener("1muslim:farewell",onFarewell)},[]);
  useEffect(()=>{if(!farewell)return;const t=window.setTimeout(()=>setFarewell(false),6500);return()=>clearTimeout(t)},[farewell]);
