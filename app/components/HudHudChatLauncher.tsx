@@ -21,6 +21,8 @@ export default function HudHudChatLauncher(){
  const endHold=()=>{if(holdTimer.current)clearTimeout(holdTimer.current);holdTimer.current=null};
  const openLanguage=()=>{setQuickOpen(false);setOpen(true);window.setTimeout(()=>document.querySelector(".hh-settings")?.scrollIntoView({block:"start"}),150)};
  const [voiceOn,setVoiceOn]=useState(false);
+ const [sightOn,setSightOn]=useState(true);
+ const [dayMode,setDayMode]=useState(false);
  useEffect(()=>{try{setSightOn(localStorage.getItem("1muslim-hudhud-tactical-vision")!=="off");setDayMode(localStorage.getItem("1muslim-theme")==="light")}catch{}},[]);
  const toggleSight=()=>setSightOn(v=>{const next=!v;try{localStorage.setItem("1muslim-hudhud-tactical-vision",next?"on":"off")}catch{}window.dispatchEvent(new Event("1muslim:hudhud-vision-changed"));return next});
  const toggleDay=()=>setDayMode(v=>{const next=!v;document.documentElement.classList.toggle("light",next);try{localStorage.setItem("1muslim-theme",next?"light":"dark")}catch{}window.dispatchEvent(new Event("1muslim:theme-changed"));return next});
