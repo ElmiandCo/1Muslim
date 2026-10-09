@@ -6,6 +6,7 @@ import "./hudhud-selection.css";
 import "./hudhud-live-mini.css";
 import Script from "next/script";
 import XPTracker from "./components/XPTracker";
+import HudHudChatLauncher from "./components/HudHudChatLauncher";
 import TapShimmer from "./components/TapShimmer";
 import HudHudTranslate from "./components/HudHudTranslate";
 import HudHudSelectionTranslate from "./components/HudHudSelectionTranslate";
@@ -18,7 +19,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}<TapShimmer /><HudHudTranslate /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
+  return <html lang="en"><body>{children}<TapShimmer /><HudHudChatLauncher /><HudHudTranslate /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag("js", new Date());
 gtag("config", "G-DSLVB0HSGV");`}</Script></body></html>;
