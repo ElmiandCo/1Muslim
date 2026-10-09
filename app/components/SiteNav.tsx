@@ -136,11 +136,11 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   return <header ref={navRef} className={compact ? "siteNav compact" : "siteNav"}>
     <Link href="/" className="siteBrand logoBrand" aria-label="1Muslim.Live Home"><img src="/assets/1muslim-live-logo.PNG" alt="1Muslim.Live" className="premiumLogo" /></Link>
 
-    <nav className="siteNavLinks" aria-label="Primary navigation">
+    <nav data-tour="primary-nav" className="siteNavLinks" aria-label="Primary navigation">
       <Link href="/" className="siteHomeLink">Home</Link>
 
       <div className="navMenuWrap">
-        <button type="button" className={`navMenuButton ${openMenu === "explore" ? "isOpen" : ""}`} aria-expanded={openMenu === "explore"} onClick={() => setOpenMenu(openMenu === "explore" ? null : "explore")}>Explore <span>⌄</span></button>
+        <button data-tour="desktop-menu-button" type="button" className={`navMenuButton ${openMenu === "explore" ? "isOpen" : ""}`} aria-expanded={openMenu === "explore"} onClick={() => setOpenMenu(openMenu === "explore" ? null : "explore")}>Explore <span>⌄</span></button>
         {openMenu === "explore" && <div className="navDropdown exploreDropdown">
           {exploreGroups.map(group => <div className="navDropdownGroup" key={group.title}>
             <span className="navDropdownLabel">{group.title}</span>
@@ -181,7 +181,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
 
     <ThemeToggle />
 
-    <button type="button" className={`mobileMenuButton ${openMenu === "mobile" ? "isOpen" : ""}`} aria-label={openMenu === "mobile" ? "Close navigation menu" : "Open navigation menu"} aria-expanded={openMenu === "mobile"} onClick={() => setOpenMenu(openMenu === "mobile" ? null : "mobile")}><span/><span/><span/></button>
+    <button data-tour="menu-button" type="button" className={`mobileMenuButton ${openMenu === "mobile" ? "isOpen" : ""}`} aria-label={openMenu === "mobile" ? "Close navigation menu" : "Open navigation menu"} aria-expanded={openMenu === "mobile"} onClick={() => setOpenMenu(openMenu === "mobile" ? null : "mobile")}><span/><span/><span/></button>
 
     {openMenu === "mobile" && <div className="mobileMenuPanel" role="dialog" aria-label="1Muslim navigation">
       <div className="mobileMenuHeader"><strong>Explore 1Muslim</strong><button type="button" onClick={closeMenu} aria-label="Close menu">×</button></div>
