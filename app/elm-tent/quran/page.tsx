@@ -19,18 +19,48 @@ const strip=(s:string)=>s.replace(/<[^>]*>/g,"").replace(/&[^;]+;/g," ");
 export default function QuranLessons(){
  const [chapters,setChapters]=useState<Chapter[]>([]),[chapter,setChapter]=useState(()=>{const params=typeof window!=="undefined"?new URLSearchParams(window.location.search):new URLSearchParams();const n=Number(params.get("chapter")||params.get("verse")?.split(":")[0]||1);return Number.isInteger(n)&&n>=1&&n<=114?n:1}),[page,setPage]=useState(1),[verses,setVerses]=useState<Verse[]>([]),[total,setTotal]=useState(0),[search,setSearch]=useState(""),[busy,setBusy]=useState(true),[error,setError]=useState(""),[showTranslation,setShowTranslation]=useState(true);
  useEffect(()=>{let live=true;fetch(API+"/chapters?language=en").then(r=>{if(!r.ok)throw Error("Qur'an chapter service unavailable");return r.json()}).then(d=>{if(live)setChapters(d.chapters||[])}).catch(()=>{if(live)setError("Could not load chapters. Please try again.")});return()=>{live=false}},[]);
- useEffect(()=>{let live=true;setBusy(true);setError("");fetch(API+"/verses/by_chapter/"+chapter+"?language=en&words=true&word_fields=text_uthmani&word_translation_language=en&fields=text_uthmani&translations=131&per_page=50&page="+page).then(r=>{if(!r.ok)throw Error("Verses unavailable");return r.json()}).then(d=>{if(!live)return;const incoming:Verse[]=d.verses||[];setVerses(incoming);setTotal(d.pagination?.total_pages||1);setBusy(false);
-  // Quran.com sometimes returns verse metadata without Arabic/translation. Restore both from a separate verified Qur'an text API.
-  if(incoming.some(v=>!v.text_uthmani&&!v.words?.some(w=>w.text_uthmani)||!v.translations?.[0]?.text)){
-   Promise.all([
-    fetch(FALLBACK+"/surah/"+chapter+"/quran-uthmani").then(r=>r.ok?r.json():null).catch(()=>null),
-    fetch(FALLBACK+"/surah/"+chapter+"/en.sahih").then(r=>r.ok?r.json():null).catch(()=>null)
-   ]).then(([ar,en])=>{if(!live)return;
-    const arabic=new Map<number,string>((ar?.data?.ayahs||[]).map((a:{numberInSurah:number;text:string})=>[a.numberInSurah,a.text]));
-    const english=new Map<number,string>((en?.data?.ayahs||[]).map((a:{numberInSurah:number;text:string})=>[a.numberInSurah,a.text]));
-    setVerses(prev=>prev.map(v=>{const n=Number(v.verse_key.split(":")[1]);return {...v,text_uthmani:v.text_uthmani||arabic.get(n)||"",translations:v.translations?.[0]?.text?v.translations:(english.has(n)?[{text:english.get(n)||""}]:[])};}));
-   });
-  }}).catch(()=>{if(live){setError("Verses could not be loaded. Try again shortly.");setBusy(false)}});return()=>{live=false}},[chapter,page]);
+ useEffect(()=>{
+  let live=true;
+  setBusy(true);setError("");setVerses([]);
+  const load=async()=>{
+   const first=(page-1)*50;
+   const normalize=(items:Verse[])=>items.map(v=>({...v,words:v.words?.filter(w=>w.char_type_name!=="end"&&!!w.text_uthmani)}));
+   const primary=async()=>{
+    const response=await fetch(API+"/verses/by_chapter/"+chapter+"?language=en&words=true&word_fields=text_uthmani&word_translation_language=en&fields=text_uthmani&translations=131&per_page=50&page="+page);
+    if(!response.ok)throw Error("Primary source unavailable");
+    const data=await response.json();
+    const items:Verse[]=normalize(data.verses||[]);
+    if(!items.length)throw Error("No verses returned");
+    return {items,pages:data.pagination?.total_pages||1};
+   };
+   const backup=async()=>{
+    const [arResponse,enResponse]=await Promise.all([fetch(FALLBACK+"/surah/"+chapter+"/quran-uthmani"),fetch(FALLBACK+"/surah/"+chapter+"/en.sahih")]);
+    if(!arResponse.ok||!enResponse.ok)throw Error("Backup source unavailable");
+    const [ar,en]=await Promise.all([arResponse.json(),enResponse.json()]);
+    const arabic=ar?.data?.ayahs||[],english=en?.data?.ayahs||[];
+    if(!arabic.length)throw Error("No backup verses");
+    const translated=new Map<number,string>(english.map((a:{numberInSurah:number;text:string})=>[a.numberInSurah,a.text]));
+    return {items:arabic.slice(first,first+50).map((a:{number:number;numberInSurah:number;text:string})=>({id:a.number,verse_key:chapter+":"+a.numberInSurah,text_uthmani:a.text,translations:[{text:translated.get(a.numberInSurah)||""}]})) as Verse[],pages:Math.ceil(arabic.length/50)};
+   };
+   try{
+    let result:{items:Verse[];pages:number};
+    try{result=await primary()}catch{result=await backup()}
+    // Always supply full Arabic text: some primary API responses only contain word metadata.
+    const missing=result.items.some(v=>!v.text_uthmani&&!v.words?.some(w=>w.text_uthmani)||!v.translations?.[0]?.text);
+    if(missing){
+     try{
+      const fallback=await backup();
+      const byKey=new Map(fallback.items.map(v=>[v.verse_key,v]));
+      result.items=result.items.map(v=>{const other=byKey.get(v.verse_key);return {...v,text_uthmani:v.text_uthmani||other?.text_uthmani||"",translations:v.translations?.[0]?.text?v.translations:other?.translations||[]}})
+     }catch{/* Keep primary verses visible when backup is temporarily unavailable. */}
+    }
+    if(live){setVerses(result.items);setTotal(result.pages)}
+   }catch{if(live)setError("Could not load verses from either Qur'an source. Please retry.")}
+   finally{if(live)setBusy(false)}
+  };
+  void load();
+  return()=>{live=false};
+ },[chapter,page]);
  const [shareVerse,setShareVerse]=useState<Verse|null>(null);
  const [hudhudMode,setHudhudMode]=useState(false);
  const [focusIndex,setFocusIndex]=useState(0);
