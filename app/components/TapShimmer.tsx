@@ -7,6 +7,8 @@ const MAX=7;
 export default function TapShimmer(){
  const [ripples,setRipples]=useState<Ripple[]>([]);
  const [dust,setDust]=useState<Dust[]>([]);
+ const [lightEnabled,setLightEnabled]=useState(true);
+ useEffect(()=>{const sync=()=>{try{setLightEnabled(localStorage.getItem("1muslim-elmi-light")!=="off")}catch{setLightEnabled(true)}};sync();window.addEventListener("1muslim-elmi-light-updated",sync);return()=>window.removeEventListener("1muslim-elmi-light-updated",sync)},[]);
  useEffect(()=>{
   let seq=0;
   const timers=new Set<number>();
@@ -21,6 +23,7 @@ export default function TapShimmer(){
    timers.add(timer);
   };
   const onTap=(event:PointerEvent)=>{
+   try{if(localStorage.getItem("1muslim-elmi-light")==="off")return}catch{}
    if(!event.isPrimary||event.button!==0)return;
    const target=event.target;
    if(!(target instanceof Element)||target.closest("[data-no-tap-shimmer], [aria-disabled='true'], :disabled"))return;
@@ -38,6 +41,7 @@ export default function TapShimmer(){
    timers.add(timer);
   };
   const onConfirmed=(event:Event)=>{
+   try{if(localStorage.getItem("1muslim-elmi-light")==="off")return}catch{}
    const detail=(event as CustomEvent<{x?:number;y?:number}>).detail;
    const x=detail?.x??window.innerWidth/2,y=detail?.y??window.innerHeight/2,id=++seq;
    setRipples(old=>[...old.slice(-(MAX-1)),{id,x,y,width:130,height:56,success:true,confirmed:true}]);
@@ -49,6 +53,7 @@ export default function TapShimmer(){
   window.addEventListener("1muslim:action-success",onConfirmed);
   return()=>{document.removeEventListener("pointerdown",onTap);window.removeEventListener("1muslim:action-success",onConfirmed);timers.forEach(clearTimeout)};
  },[]);
+ if(!lightEnabled)return null;
  return <div className="tap-shimmer-layer" aria-hidden="true" data-no-tap-shimmer>
   {ripples.map(r=><span key={r.id} className={r.confirmed?"tap-shimmer tap-confirmed":r.success?"tap-shimmer tap-success":"tap-shimmer"} style={{left:r.x,top:r.y,width:r.width,height:r.height}}>
    <i className="tap-shimmer-ring"/><i className="tap-shimmer-streak"/><i className="tap-shimmer-star"/>
