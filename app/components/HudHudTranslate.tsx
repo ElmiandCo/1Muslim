@@ -40,7 +40,8 @@ export default function HudHudTranslate(){
      if(!res.ok)throw Error("provider unavailable");
      const data:{translations?:unknown}=await res.json();
      if(!data||typeof data!=="object"||!("translations" in data)||!Array.isArray(data.translations)||data.translations.length!==batch.length||data.translations.some((v:unknown)=>typeof v!=="string"))throw Error("invalid response");
-     batch.forEach((source,j)=>cache.current.set(source,data.translations[j]));
+     const translations=data.translations as string[];
+     batch.forEach((source,j)=>cache.current.set(source,translations[j]));
     }
    }catch{if(!disposed&&id===generation.current)setNotice("Some text could not be translated. Configure the translation provider for full coverage.");}
    if(disposed||id!==generation.current)return;
