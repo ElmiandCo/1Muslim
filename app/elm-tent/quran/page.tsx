@@ -25,6 +25,13 @@ export default function QuranLessons(){
   const load=async()=>{
    const first=(page-1)*50;
    const normalize=(items:Verse[])=>items.map(v=>({...v,words:v.words?.filter(w=>w.char_type_name!=="end"&&!!w.text_uthmani)}));
+   const local=async()=>{
+    const response=await fetch("/quran-data/"+chapter+".json");
+    if(!response.ok)throw Error("Local corpus not available");
+    const all=await response.json() as {verse_key:string;arabic:string;english?:string}[];
+    if(!Array.isArray(all)||!all.length)throw Error("Invalid local corpus");
+    return {items:all.slice(first,first+50).map((v,i)=>({id:first+i+1,verse_key:v.verse_key,text_uthmani:v.arabic,translations:v.english?[{text:v.english}]:[]})) as Verse[],pages:Math.ceil(all.length/50)};
+   };
    const primary=async()=>{
     const response=await fetch(API+"/verses/by_chapter/"+chapter+"?language=en&words=true&word_fields=text_uthmani&word_translation_language=en&fields=text_uthmani&translations=131&per_page=50&page="+page);
     if(!response.ok)throw Error("Primary source unavailable");
@@ -44,7 +51,7 @@ export default function QuranLessons(){
    };
    try{
     let result:{items:Verse[];pages:number};
-    try{result=await primary()}catch{result=await backup()}
+    try{result=await local()}catch{try{result=await primary()}catch{result=await backup()}}
     // Always supply full Arabic text: some primary API responses only contain word metadata.
     const missing=result.items.some(v=>!v.text_uthmani&&!v.words?.some(w=>w.text_uthmani)||!v.translations?.[0]?.text);
     if(missing){
