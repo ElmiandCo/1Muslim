@@ -15,12 +15,17 @@ export default function HudHudHomeIntro() {
   const video = useRef<HTMLVideoElement>(null);
   const started = useRef(false);
   useEffect(() => {
-    try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, "1"); } catch { /* continue without storage */ }
-    setPhase("video");
+    setPhase("video"); // Green-screen bird flies on every home refresh.
+    const onJourneyFinished=()=>{
+      try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY,"1"); } catch {}
+      setPhase("tour");
+    };
+    window.addEventListener("elmi-journey-finished",onJourneyFinished);
+    return ()=>window.removeEventListener("elmi-journey-finished",onJourneyFinished);
   }, []);
   useEffect(() => {
     if (phase !== "video") return;
-    const timeout = window.setTimeout(() => { if (!started.current) { started.current = true; setPhase("tour"); } }, 4200);
+    const timeout = window.setTimeout(() => { if (!started.current) { started.current = true; setPhase("hidden"); window.dispatchEvent(new Event("hudhud-bird-finished")); } }, 4200);
     return () => window.clearTimeout(timeout);
   }, [phase]);
   useEffect(() => {
@@ -34,7 +39,7 @@ export default function HudHudHomeIntro() {
     window.addEventListener("scroll", update, true);
     return () => { window.removeEventListener("resize", update); window.removeEventListener("scroll", update, true); };
   }, [phase, step]);
-  const beginTour = () => { if (started.current) return; started.current = true; setPhase("tour"); };
+  const beginTour = () => { if (started.current) return; started.current = true; setPhase("hidden"); window.dispatchEvent(new Event("hudhud-bird-finished")); };
   if (phase === "hidden") return null;
   return <div className="hh-onboard" role="dialog" aria-modal="true" aria-label="HudHud welcome and guided tour">
     {phase === "video" ? <>
