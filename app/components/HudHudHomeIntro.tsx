@@ -1,22 +1,78 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-const KEY="1muslim-hudhud-home-intro-seen-v1";
-export default function HudHudHomeIntro(){
- const [visible,setVisible]=useState(false);
- const video=useRef<HTMLVideoElement>(null);
- useEffect(()=>{
-  try{if(sessionStorage.getItem(KEY))return;sessionStorage.setItem(KEY,"1");}catch{return;}
-  setVisible(true);
- },[]);
- useEffect(()=>{if(!visible)return;const timeout=window.setTimeout(()=>setVisible(false),7500);return()=>window.clearTimeout(timeout)},[visible]);
- if(!visible)return null;
- return <div className="hudhudIntro" role="dialog" aria-label="HudHud welcome animation" aria-modal="false">
-  <button className="hudhudSkip" onClick={()=>setVisible(false)} aria-label="Skip HudHud animation">Skip ✕</button>
-  <video ref={video} autoPlay playsInline muted preload="auto" onEnded={()=>setVisible(false)} onError={()=>setVisible(false)} aria-label="HudHud flying in with a book">
-   <source src="/videos/hudhud-intro-alpha.webm" type="video/webm" />
-  </video>
-  <div className="hudhudCaption">HudHud welcomes you to 1Muslim ✨</div>
-  <style jsx>{`.hudhudIntro{position:fixed;inset:0;z-index:9999;pointer-events:none;display:flex;justify-content:center;align-items:center;background:rgba(2,10,15,.16);animation:appear .4s ease-out}.hudhudIntro video{height:min(85vh,760px);max-width:94vw;object-fit:contain;filter:drop-shadow(0 0 25px rgba(51,170,255,.2))}.hudhudSkip{position:absolute;right:clamp(14px,5vw,70px);top:clamp(16px,5vh,45px);z-index:2;pointer-events:auto;border:1px solid rgba(255,255,255,.3);background:rgba(4,12,23,.82);color:white;border-radius:999px;padding:11px 18px;cursor:pointer}.hudhudCaption{position:absolute;bottom:6vh;left:50%;transform:translateX(-50%);color:white;text-align:center;text-shadow:0 2px 12px #050e19;font-size:clamp(13px,2vw,19px);white-space:nowrap}@keyframes appear{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){.hudhudIntro{animation:none}}`}</style>
- </div>
+const KEY = "1muslim-hudhud-home-intro-seen-v2";
+type Phase = "hidden" | "video" | "tour";
+const steps = [
+  { selector: "nav, header", title: "Find your way", detail: "Explore the navigation and discover what 1Muslim offers." },
+  { selector: "main, .app", title: "Explore 1Muslim", detail: "Watch, learn and discover the community. Some features require signing in." },
+  { selector: ".hudhud-translator, [class*='hudhud']", title: "Meet HudHud", detail: "Your guide stays close by. Sign in to unlock member-only assistance." }
+];
+export default function HudHudHomeIntro() {
+  const [phase, setPhase] = useState<Phase>("hidden");
+  const [step, setStep] = useState(0);
+  const [spot, setSpot] = useState<DOMRect | null>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  const started = useRef(false);
+  useEffect(() => {
+    try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY, "1"); } catch { /* continue without storage */ }
+    setPhase("video");
+  }, []);
+  useEffect(() => {
+    if (phase !== "video") return;
+    const timeout = window.setTimeout(() => { if (!started.current) { started.current = true; setPhase("tour"); } }, 4200);
+    return () => window.clearTimeout(timeout);
+  }, [phase]);
+  useEffect(() => {
+    if (phase !== "tour") return;
+    const update = () => {
+      const target = document.querySelector(steps[step].selector);
+      setSpot(target?.getBoundingClientRect() ?? null);
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => { window.removeEventListener("resize", update); window.removeEventListener("scroll", update, true); };
+  }, [phase, step]);
+  const beginTour = () => { if (started.current) return; started.current = true; setPhase("tour"); };
+  if (phase === "hidden") return null;
+  return <div className="hh-onboard" role="dialog" aria-modal="true" aria-label="HudHud welcome and guided tour">
+    {phase === "video" ? <>
+      <div className="hh-video-bg" />
+      <video ref={video} className="hh-cinema" autoPlay playsInline muted preload="auto"
+        onLoadedMetadata={e => { const v=e.currentTarget; if (v.duration && Number.isFinite(v.duration)) window.setTimeout(beginTour, Math.max(1000,v.duration*500)); }}
+        onTimeUpdate={e => { const v=e.currentTarget; if (v.duration && v.currentTime >= v.duration/2) beginTour(); }}
+        onEnded={beginTour} onError={beginTour} aria-label="HudHud cinematic entrance">
+        <source src="/videos/hudhud-intro-alpha.webm" type="video/webm" />
+      </video>
+      <div className="hh-cinema-caption">Welcome to 1Muslim ✨</div>
+      <button className="hh-skip" onClick={beginTour}>Skip intro →</button>
+    </> : <>
+      <div className="hh-tour-dim" />
+      {spot && <div className="hh-spotlight" style={{top:Math.max(0,spot.top-8),left:Math.max(0,spot.left-8),width:Math.min(window.innerWidth,spot.width+16),height:spot.height+16}} />}
+      <section className="hh-tour-card" aria-live="polite">
+        <span className="hh-step">HUDHUD · {step+1} / {steps.length}</span>
+        <h2>{steps[step].title}</h2>
+        <p>{steps[step].detail}</p>
+        <div className="hh-actions">
+          <button onClick={()=>setPhase("hidden")}>Skip tutorial</button>
+          <button className="hh-next" onClick={()=>step === steps.length-1 ? setPhase("hidden") : setStep(step+1)}>{step === steps.length-1 ? "Finish ✓" : "Next →"}</button>
+        </div>
+      </section>
+    </>}
+    <style jsx>{`
+      .hh-onboard{position:fixed;inset:0;z-index:99999;color:#fff;isolation:isolate}
+      .hh-video-bg{position:absolute;inset:0;background:radial-gradient(ellipse at center,#152b48 0%,#03060f 78%);animation:hhFade .5s ease}
+      .hh-cinema{position:absolute;inset:0;width:100vw;height:100dvh;object-fit:contain;filter:drop-shadow(0 0 32px rgba(61,177,255,.32))}
+      .hh-cinema-caption{position:absolute;bottom:7%;width:100%;text-align:center;font-size:clamp(19px,3vw,34px);font-weight:700;text-shadow:0 2px 20px #000}
+      .hh-skip{position:absolute;right:24px;top:24px;border:1px solid #ffffff66;background:#101e34df;color:#fff;border-radius:99px;padding:12px 19px;cursor:pointer}
+      .hh-tour-dim{position:absolute;inset:0;background:rgba(0,5,18,.83);animation:hhFade .6s ease}
+      .hh-spotlight{position:fixed;pointer-events:none;border:2px solid #7bdbff;border-radius:16px;box-shadow:0 0 0 9999px rgba(0,5,18,.12),0 0 36px #6dbeffbb;animation:hhZoom .55s ease;transition:top .4s ease,left .4s ease,width .4s ease,height .4s ease}
+      .hh-tour-card{position:absolute;bottom:clamp(24px,8vh,100px);left:50%;transform:translateX(-50%);width:min(90vw,450px);background:#09172bf2;border:1px solid #67c9ff88;border-radius:24px;padding:26px;box-shadow:0 16px 60px #000b;animation:hhCard .5s ease}
+      .hh-step{color:#89dfff;font-size:12px;letter-spacing:2px}.hh-tour-card h2{font-size:25px;margin:12px 0}.hh-tour-card p{line-height:1.6;color:#d8e7f8}
+      .hh-actions{display:flex;justify-content:space-between;gap:12px;margin-top:20px}.hh-actions button{border:1px solid #7b9bb7;background:transparent;color:#fff;border-radius:12px;padding:11px 17px;cursor:pointer}.hh-actions .hh-next{background:#1285ba;border-color:#1285ba}
+      @keyframes hhFade{from{opacity:0}to{opacity:1}}@keyframes hhZoom{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}@keyframes hhCard{from{opacity:0;transform:translate(-50%,18px)}to{opacity:1;transform:translate(-50%,0)}}
+      @media(prefers-reduced-motion:reduce){.hh-video-bg,.hh-tour-dim,.hh-spotlight,.hh-tour-card{animation:none}}
+    `}</style>
+  </div>;
 }
