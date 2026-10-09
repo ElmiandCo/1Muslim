@@ -56,6 +56,8 @@ function MenuLink({ href, label, ar, onClick }: { href: string; label: ReactNode
 export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
+  const [wakeUp, setWakeUp] = useState(false);
+  const wakeSeen = useRef(false);
   const [user, setUser] = useState<NavUser | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -129,6 +131,24 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
     return () => { document.body.style.overflow = ""; };
   }, [openMenu]);
 
+  // Wake Up Call #1: one gentle, dismissible nudge per visitor, after their first scroll.
+  useEffect(() => {
+    if (loadingAuth || user || pathname.startsWith("/auth") || pathname.startsWith("/onboarding")) return;
+    if (typeof window === "undefined" || !window.matchMedia("(max-width: 700px)").matches) return;
+    try { if (sessionStorage.getItem("1muslim-wakeup-1")) return; } catch {}
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const start = () => {
+      if (wakeSeen.current || window.scrollY < 18 || openMenu === "mobile") return;
+      wakeSeen.current = true;
+      try { sessionStorage.setItem("1muslim-wakeup-1", "seen"); } catch {}
+      setWakeUp(true);
+      timer = setTimeout(() => setWakeUp(false), 2800);
+    };
+    window.addEventListener("scroll", start, { passive: true });
+    return () => { window.removeEventListener("scroll", start); if (timer) clearTimeout(timer); };
+  }, [loadingAuth, user, pathname, openMenu]);
+  useEffect(() => { if (user) setWakeUp(false); }, [user]);
+
   const accountLabel = user?.display_name || (user?.username ? "@" + user.username : user?.email?.split("@")[0]) || "My account";
   const closeMenu = () => setOpenMenu(null);
   const signOut = async () => { await createClient().auth.signOut(); window.location.href = "/"; };
@@ -159,11 +179,12 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       </div>
     </nav>
 
+    {wakeUp && <div className="wakeUpBackdrop" role="presentation" onClick={() => setWakeUp(false)}><div className="wakeUpHint" role="status">✦ Wake Up Call #1<br/><strong>Join the community</strong><small>Tap Profile to sign in</small><button type="button" onClick={() => setWakeUp(false)} aria-label="Dismiss sign-in tip">Not now ×</button></div></div>}
     <nav className="muslimMobileDock" aria-label="Mobile primary navigation">
       <div className="muslimDockShell">
         <Link href="/" className={pathname === "/" ? "dockItem selected" : "dockItem"} aria-label="Home"><span className="dockIcon">⌂</span><small>Home</small></Link>
         <Link href="/streaming" className={pathname.startsWith("/streaming") ? "dockItem selected" : "dockItem"} aria-label="Live"><span className="dockIcon">◉{anyoneLive && <span className="dockLiveBeacon" aria-hidden="true" />}</span><small>{anyoneLive ? "On Air" : "Live"}</small></Link>
-        <Link href={user ? "/profile" : "/auth"} className="dockCenter" aria-label={user ? "My profile" : "Sign in to your profile"}><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">Profile</span></Link>
+        <Link href={user ? "/profile" : "/auth"} className={wakeUp ? "dockCenter wakeUpSpotlight" : "dockCenter"} onClick={() => setWakeUp(false)} aria-label={user ? "My profile" : "Sign in to your profile"}><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">Profile</span></Link>
         <Link href="/#paths" className="dockItem" aria-label="Learn"><span className="dockIcon">▤</span><small>Learn</small></Link>
         <button type="button" className="dockItem" aria-label="Create content" aria-expanded={createOpen} onClick={() => setCreateOpen(!createOpen)}><span className="dockIcon">＋</span><small>Create</small></button>
       </div>
@@ -202,6 +223,17 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       <div className="mobileMenuFooter"><ThemeToggle/>{user ? <button type="button" className="mobileMenuSignOut" onClick={signOut}>Sign out</button> : <Link href="/auth" onClick={closeMenu}>Sign in</Link>}</div>
     </div>}
     <style jsx>{`
+      :global(.wakeUpBackdrop){position:fixed;inset:0;background:rgba(2,8,13,.72);backdrop-filter:blur(3px);z-index:9990;animation:wakeFadeIn .35s ease-out}
+      :global(.wakeUpHint){position:absolute;bottom:calc(116px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);width:min(290px,calc(100vw - 30px));padding:16px 18px;text-align:center;border:1px solid #79e7bc;border-radius:18px;background:#102e2b;color:#f1fff7;box-shadow:0 0 38px #57dcb544;font-size:12px}
+      :global(.wakeUpHint strong),:global(.wakeUpHint small){display:block;margin-top:5px}
+      :global(.wakeUpHint strong){font-size:18px}
+      :global(.wakeUpHint small){color:#b8e8d4}
+      :global(.wakeUpHint button){display:block;margin:11px auto 0;background:transparent;border:0;color:#b8e8d4;text-decoration:underline;cursor:pointer}
+      :global(.muslimMobileDock:has(.wakeUpSpotlight)){z-index:9991!important;pointer-events:none}
+      :global(.wakeUpSpotlight){position:relative!important;z-index:9992!important;pointer-events:auto!important;filter:drop-shadow(0 0 13px #5fffc2) drop-shadow(0 0 24px #a388ff);animation:wakePulse 1.4s ease-in-out infinite}
+      @keyframes wakeFadeIn{from{opacity:0}to{opacity:1}}
+      @keyframes wakePulse{50%{filter:drop-shadow(0 0 23px #5fffc2) drop-shadow(0 0 35px #a388ff)}}
+      @media(prefers-reduced-motion:reduce){:global(.wakeUpBackdrop),:global(.wakeUpSpotlight){animation:none!important}}
       .logoBrand{display:flex;align-items:center;flex:0 1 auto;min-width:0;max-width:190px;overflow:hidden}
       .premiumLogo{display:block;width:clamp(122px,14vw,182px);height:46px;max-width:100%;object-fit:contain;object-position:left center;border-radius:3px}
       @media(max-width:700px){.logoBrand{max-width:138px}.premiumLogo{width:138px;height:40px}}
