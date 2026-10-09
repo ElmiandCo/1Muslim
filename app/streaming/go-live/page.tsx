@@ -11,6 +11,7 @@ import { createLiveAudioProcessor } from "../../../components/live-audio-effects
 import LiveChat from "../../../components/LiveChat";
 import SyncedLiveIntro from "../../components/SyncedLiveIntro";
 import ShareLiveButton from "../../components/ShareLiveButton";
+import LiveVisualEffects, {type LiveEffect} from "../../components/LiveVisualEffects";
 
 const categories = ["Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
 type ChatMessage = { id: string; name: string; text: string };
@@ -44,6 +45,7 @@ export default function GoLivePage() {
   const chunksRef = useRef<Blob[]>([]);
   const recordingStartedAtRef = useRef<number | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const [visualEffect,setVisualEffect] = useState<LiveEffect>("off");
   const [live, setLive] = useState(false);
   const [recording, setRecording] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -845,6 +847,7 @@ export default function GoLivePage() {
           <section className="panel">
             <div className={`preview format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"}`}>
               {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
+              <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
               {live && <span className="live">● LIVE</span>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
