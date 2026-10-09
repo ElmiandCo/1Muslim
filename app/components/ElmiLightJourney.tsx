@@ -5,6 +5,7 @@ import {usePathname} from "next/navigation";
 
 const LIBRARY="/learn/elm-tent/library";
 const QURAN="/elm-tent/quran";
+const SIGNUP="/auth?shahada=1";
 const packets=Array.from({length:32},(_,i)=>({x:(i*37+13)%100,y:(i*61+19)%100,delay:(i%11)*.19,size:2+(i%4)*2}));
 export default function ElmiLightJourney(){
  const pathname=usePathname();
@@ -33,7 +34,7 @@ export default function ElmiLightJourney(){
   <div className="eljCenter">
    <div className="eljLight" aria-hidden="true">✦</div>
    <div className="eljKicker">1MUSLIM · ELMI LIGHT</div>
-   {stage==="dark"?<><h2>From darkness, a light.</h2><p>Follow the light toward knowledge.</p></>:stage==="path"?<><h2>Every light leads somewhere.</h2><p>Begin in the Library. Discover the Qur'an with HudHud.</p><Link className="eljPrimary" href={LIBRARY}>Enter the Library ✨ →</Link></>:stage==="library"?<><h2>The Library of Knowledge</h2><p>Explore the books and learning resources. Your next destination is the Qur'an.</p><Link className="eljPrimary" href={QURAN}>Continue to Qur'an Studio 📖 →</Link></>:<><h2>You've reached the Qur'an.</h2><div className="eljVerse" lang="ar" dir="rtl">هَٰذَا بَيَانٌ لِّلنَّاسِ وَهُدًى وَمَوْعِظَةٌ لِّلْمُتَّقِينَ</div><p>Qur'an 3:138 · Explore Allah's words with HudHud.</p><button className="eljPrimary" onClick={finish}>Open Qur'an Studio ✨</button></>}
+   {stage==="dark"?<><h2>From darkness, a light.</h2><p>Follow the light toward knowledge.</p></>:stage==="path"?<><h2>Your journey begins with a choice.</h2><p>To sign up for 1Muslim, you’ll be asked to sincerely affirm the Shahada. You can begin now, or explore the homepage first.</p><div className="eljChoices"><Link className="eljPrimary" href={SIGNUP} onClick={finish}>Sign up · Shahada →</Link><button className="eljSecondary" type="button" onClick={finish}>Not now · Home page</button></div></>:stage==="library"?<><h2>The Library of Knowledge</h2><p>Explore the books and learning resources. Your next destination is the Qur'an.</p><Link className="eljPrimary" href={QURAN}>Continue to Qur'an Studio 📖 →</Link></>:<><h2>You've reached the Qur'an.</h2><div className="eljVerse" lang="ar" dir="rtl">هَٰذَا بَيَانٌ لِّلنَّاسِ وَهُدًى وَمَوْعِظَةٌ لِّلْمُتَّقِينَ</div><p>Qur'an 3:138 · Explore Allah's words with HudHud.</p><button className="eljPrimary" onClick={finish}>Open Qur'an Studio ✨</button></>}
   </div>
   <button className="eljSkip" onClick={finish} aria-label="Skip guided introduction">Skip intro ✕</button>
   <style jsx>{`
@@ -48,6 +49,7 @@ export default function ElmiLightJourney(){
   .eljCenter p{line-height:1.65;color:#b6dcd1;margin:14px auto 24px;max-width:420px}
   .eljVerse{font-family:serif;font-size:clamp(24px,5vw,37px);line-height:2;color:#f6f9e4;margin:20px 0}
   .eljPrimary{display:inline-block;cursor:pointer;border:1px solid #aaffd6;border-radius:999px;background:linear-gradient(100deg,#c6ffe1,#8be6d5);padding:15px 24px;color:#04221a;font-weight:800;text-decoration:none;box-shadow:0 0 35px #6afec65a}
+  .eljChoices{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center;margin-top:12px}.eljSecondary{cursor:pointer;border:1px solid #aaffd67a;border-radius:999px;background:rgba(13,53,41,.55);padding:15px 24px;color:#d5ffec;font-weight:800;backdrop-filter:blur(8px)}
   .eljSkip{position:absolute;right:18px;top:calc(18px + env(safe-area-inset-top));background:#102622a8;border:1px solid #d8ffe266;border-radius:999px;color:#d6fff0;padding:10px 16px;cursor:pointer}
   @keyframes eljPulse{to{opacity:.35;transform:scale(.8)}}@keyframes eljFade{from{opacity:0}to{opacity:1}}@keyframes eljRise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
   @media(prefers-reduced-motion:reduce){.eljRoot *{animation:none!important;backdrop-filter:none!important}}
