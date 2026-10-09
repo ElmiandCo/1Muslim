@@ -408,3 +408,10 @@ video {
  .siteNav .authNav,.siteNav .authAccount,.siteNav .authLoading{display:none!important}
 }
 @media(max-width:365px){.siteNav{gap:6px!important;padding:0 7px!important}.siteNav .mobileLibraryShortcut{padding:10px 7px;font-size:10px}.siteNav .premiumLogo{width:116px!important}}
+
+/* Keep bottom navigation pinned to the visible mobile viewport, never in document flow. */
+@media(max-width:700px){
+ .muslimMobileDock{position:fixed!important;top:auto!important;bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;left:10px!important;right:10px!important;z-index:9500!important;transform:none!important;display:block!important;pointer-events:none!important}
+ .muslimMobileDock .muslimDockShell,.muslimMobileDock a,.muslimMobileDock button{pointer-events:auto}
+ .siteNav .muslimMobileDock{position:fixed!important}
+}
