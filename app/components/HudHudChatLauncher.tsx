@@ -6,6 +6,7 @@ import ProfileAvatar from "./ProfileAvatar";
 import ElmiLightLab from "./ElmiLightLab";
 import HudHudTranslate from "./HudHudTranslate";
 import HudHudVoiceSpiral from "./HudHudVoiceSpiral";
+import HudHudGuidance from "./HudHudGuidance";
 
 type Profile={display_name:string|null;gender:string|null;avatar_gender:string|null;avatar_package:string|null;avatar_config:Record<string,unknown>|null;profile_accent:string|null};
 type Message={id:number;role:"user"|"hudhud";text:string;image?:string;avatar?:boolean};
@@ -38,6 +39,7 @@ export default function HudHudChatLauncher(){
  const send=(e:React.FormEvent)=>{e.preventDefault();if(!draft.trim()&&!pending)return;const text=draft.trim(),image=pending?.url;setMessages(prev=>[...prev,{id:nextId.current++,role:"user",text,image}]);setDraft("");setPending(null);const reply=answer(text,!!image);window.setTimeout(()=>{setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",...reply}]);window.dispatchEvent(new CustomEvent("1muslim:action-success"))},400)};
  const attach=(e:React.ChangeEvent<HTMLInputElement>)=>{const item=e.target.files?.[0];if(!item)return;if(!item.type.startsWith("image/")){setNotice("Choose an image file.");return}if(item.size>3_000_000){setNotice("Choose an image smaller than 3 MB.");return}const reader=new FileReader();reader.onload=()=>{if(typeof reader.result==="string"){setPending({url:reader.result,name:item.name});setNotice("Image ready for local preview.")}};reader.readAsDataURL(item);e.target.value=""};
  return <>
+ <HudHudGuidance />
  {labOpen&&admin&&<ElmiLightLab onClose={()=>setLabOpen(false)}/>}
  <div className="hh-trail-layer" aria-hidden="true">{lightEnabled&&trail.map(p=><span key={p.id} className="hh-trail-mark" style={{left:p.x,top:p.y}}><i/></span>)}</div>
  {farewell&&<div className="hh-farewell" role="status"><span>HudHud</span><strong>See you next time! 💚</strong><small>Assalamu alaikum ✨</small><button type="button" aria-label="Dismiss farewell" onClick={()=>setFarewell(false)}>✕</button></div>}
@@ -45,7 +47,7 @@ export default function HudHudChatLauncher(){
  {quickOpen&&!open&&<div className="hh-quick-menu" style={{left:Math.min(position.x+4,Math.max(8,typeof window!=="undefined"?window.innerWidth-240:200)),top:Math.max(10,position.y-190)}} role="group" aria-label="HudHud quick actions">
  <button type="button" onClick={()=>{setQuickOpen(false);setOpen(true)}}><span>✦</span><strong>Chat with HudHud</strong><small>Ask about 1Muslim</small></button>
  <button type="button" onClick={()=>{setQuickOpen(false);setOpen(true);window.setTimeout(()=>document.querySelector(".hh-settings")?.scrollIntoView({block:"start"}),80)}}><span>⚙</span><strong>Voice & Language</strong><small>Real microphone and translation settings</small></button>
- <button type="button" onClick={()=>{setQuickOpen(false);window.dispatchEvent(new Event("1muslim:replay-intro"))}}><span>↻</span><strong>Replay Elmi Light</strong><small>Restart the cinematic journey</small></button>
+ <button type="button" onClick={()=>{setQuickOpen(false);window.dispatchEvent(new Event("1muslim:hudhud-guidance"))}}><span>✧</span><strong>HudHud Guidance</strong><small>Light packets, Qur’an verse & guided destination</small></button>
  </div>}
  {open&&<section className="hh-fullscreen" role="dialog" aria-modal="true" aria-label="Chat with HudHud" data-no-translate="true">
   <header className="hh-top"><img src="/assets/hudhud-logo.PNG" alt=""/><div><strong>HudHud Control Panel</strong><small>🟢 1Muslim guide · {uid?"Signed in":"Guest"}</small></div><button type="button" onClick={()=>setOpen(false)} aria-label="Close HudHud chat">✕</button></header>
