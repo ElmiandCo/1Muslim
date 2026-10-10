@@ -135,7 +135,7 @@ export default function Home() {
         </div>
       </aside>
 
-      <main className="feed">
+      <main className="feed"><form className="mobileHomeSearch" action="/search" method="get"><span aria-hidden="true">⌕</span><input type="search" name="q" placeholder="Search 1Muslim…" aria-label="Search 1Muslim"/><button type="submit">Search</button></form>
         <header className="mobileTop">
           <Link href="/" className="homeLogo compactLogo" aria-label="1Muslim Home"><img src="/assets/1muslim-mobile-logo.PNG" alt="1Muslim" /></Link>
           <ThemeToggle />
@@ -157,8 +157,8 @@ export default function Home() {
             <Link href="/streaming/scheduled" className="adminControl"><span>📅</span><div><strong>Scheduled Streams</strong><small>Review upcoming host sessions</small></div><b>→</b></Link>
             <Link href="/admin/videos" className="adminControl"><span>🎥</span><div><strong>Saved Videos</strong><small>Manage the guaranteed video list</small></div><b>→</b></Link>
             <Link href="/community" className="adminControl"><span>👥</span><div><strong>Community</strong><small>Open the community feed</small></div><b>→</b></Link>
-            <div className="adminControl disabled"><span>📊</span><div><strong>Platform Activity</strong><small>Command center coming next</small></div><b>•</b></div>
-            <div className="adminControl disabled"><span>⚙️</span><div><strong>Admin Settings</strong><small>Permissions coming next</small></div><b>•</b></div>
+            <Link href="/admin/control" className="adminControl"><span>📊</span><div><strong>Platform Activity</strong><small>Open moderation and activity controls</small></div><b>→</b></Link>
+            <Link href="/admin/control" className="adminControl"><span>⚙️</span><div><strong>Admin Control Panel</strong><small>Review restricted submissions</small></div><b>→</b></Link>
           </div>
         </section>}
 
@@ -304,7 +304,7 @@ export default function Home() {
       <HomeLayoutStudio />
       <HudHudVoiceSpiral />
       <aside className="rightRail">
-        <div className="search">⌕ <input placeholder="Search 1Muslim" /></div>
+        <form className="search" action="/search" method="get">⌕ <input name="q" type="search" aria-label="Search 1Muslim" placeholder="Search 1Muslim" /></form>
         <div className="railCard"><span className="eyebrow">START HERE</span><h3>New to Islam?</h3><p>Take the gentle route through Allah, Qur’an, prayer, forgiveness and daily life.</p><button className="primary">Start Easy Path</button></div>
         <div className="railCard"><span className="eyebrow">PRAYER ACADEMY</span><h3>Learn salah by seeing it.</h3><div className="prayerMini"><span>Standing</span><span>↕</span><span>Bowing</span><span>↕</span><span>Prostration</span></div><button className="ghost full">Take the quiz</button></div>
         <div className="railCard quiet"><span className="eyebrow">COMMUNITY</span><h3>Leave something for the next person.</h3><p>Share a reflection, encouragement or honest question. Core lessons stay protected; community contributions add to them.</p></div>
