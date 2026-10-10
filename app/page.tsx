@@ -3,6 +3,7 @@
 import Link from "next/link";
 import SiteNav, { ThemeToggle } from "./components/SiteNav";
 import DuaLesson from "./components/DuaLesson";
+import HudHudLearningNudge from "./components/HudHudLearningJourney";
 import DiscoveryHold from "./components/DiscoveryHold";
 import { useEffect, useState } from "react";
 import { createClient } from "../utils/supabase/client";
@@ -228,7 +229,7 @@ export default function Home() {
           </div>
           <div className="carousel">
             {lessonSet.map(([num,title,text,tag]) => (
-              <Link href="/learn/elm-tent#sessions" className="lessonCard" key={num}>
+              <Link href="/elm-tent/lessons" className="lessonCard" key={num}>
                 <span className="num">{num}</span><div className="cardTag">{tag}</div><h3>{title}</h3><p>{text}</p><span className="textButton">Open lesson <Arrow /></span>
               </Link>
             ))}
@@ -300,13 +301,13 @@ export default function Home() {
       </main>
 
         {duaOpen && <DuaLesson onClose={()=>setDuaOpen(false)} />}
-      <HudHudHomeIntro />
+      <HudHudLearningNudge /><HudHudHomeIntro />
       <HomeLayoutStudio />
       <HudHudVoiceSpiral />
       <aside className="rightRail">
         <form className="search" action="/search" method="get">⌕ <input name="q" type="search" aria-label="Search 1Muslim" placeholder="Search 1Muslim" /></form>
         <div className="railCard"><span className="eyebrow">START HERE</span><h3>New to Islam?</h3><p>Take the gentle route through Allah, Qur’an, prayer, forgiveness and daily life.</p><button className="primary">Start Easy Path</button></div>
-        <div className="railCard"><span className="eyebrow">PRAYER ACADEMY</span><h3>Learn salah by seeing it.</h3><div className="prayerMini"><span>Standing</span><span>↕</span><span>Bowing</span><span>↕</span><span>Prostration</span></div><button className="ghost full">Take the quiz</button></div>
+        <div className="railCard"><span className="eyebrow">PRAYER ACADEMY</span><h3>Learn salah by seeing it.</h3><div className="prayerMini"><span>Standing</span><span>↕</span><span>Bowing</span><span>↕</span><span>Prostration</span></div><Link className="ghost full" href="/elm-tent/lessons">Resume learning quiz →</Link></div>
         <div className="railCard quiet"><span className="eyebrow">COMMUNITY</span><h3>Leave something for the next person.</h3><p>Share a reflection, encouragement or honest question. Core lessons stay protected; community contributions add to them.</p></div>
       </aside>
 
