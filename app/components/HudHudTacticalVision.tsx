@@ -7,9 +7,10 @@ const hints=[
  {match:/^\/as-sahaba/,words:["الصحابة","أصحاب"],text:"These are the Companions of the Prophet ﷺ. Open a card to explore their lives and hadith references.",href:"/as-sahaba",label:"Explore the Companions"},
  {match:/^\/ashab/,words:["أصحاب","Ashab"],text:"أصحاب means companions. Here it means people you follow who follow you back. The Prophet's Companions are called الصحابة.",href:"/as-sahaba",label:"Learn about الصحابة"},
  {match:/^\/streaming/,words:["Go Live","Live Now","Streaming"],text:"Preparing to stream? Check your camera, microphone and title before going live.",href:"/streaming/go-live",label:"Prepare a live"},
- {match:/^\/messages/,words:["Messages","Message"],text:"Messages help you connect with your community. Check who can contact you in your privacy settings.",href:"/settings",label:"Privacy settings"},
+ {match:/^\/notifications/,words:["Notifications","Requests"],text:"Your activity hub includes message requests, connection requests, and updates from your community.",href:"/notifications",label:"Review notifications"},
+ {match:/^\/messages/,words:["Messages","Message"],text:"Messages and message requests belong together. Open conversations here, and review new activity in Notifications.",href:"/notifications",label:"Review requests and alerts"},
  {match:/^\/learn/,words:["Learn","Lessons"],text:"Take one lesson at a time. Understanding matters more than rushing through the material.",href:"/learn",label:"Browse lessons"},
- {match:/^\/profile/,words:["Profile","Avatar"],text:"Your profile is how other members recognize you. Keep your information and avatar up to date.",href:"/profile",label:"Your profile"},
+ {match:/^\/profile/,words:["Profile","Avatar"],text:"Your own posts belong to your page. Posts that someone leaves on another member’s profile are separate profile posts.",href:"/profile",label:"Your profile"},
  {match:/^\/$/,words:["أصحاب","Ashab","Learn"],text:"Welcome! Explore the community, learn something new, or discover the meaning of أصحاب.",href:"/as-sahaba",label:"Discover أصحاب"}
 ];
 const KEY="1muslim-hudhud-tactical-vision";
