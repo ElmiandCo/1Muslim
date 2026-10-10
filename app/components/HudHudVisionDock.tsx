@@ -1,5 +1,5 @@
 "use client";
-import {useState} from "react";
+import {useEffect,useState} from "react";
 import {useRouter} from "next/navigation";
 
 const options=[
@@ -10,6 +10,7 @@ const options=[
 ];
 export default function HudHudVisionDock(){
  const [vision,setVision]=useState(false);
+ useEffect(()=>{const key="1muslim-hudhud-entry-preferences-v1";const load=()=>{try{const p=JSON.parse(localStorage.getItem(key)||"{}");setVision(p.vision===true)}catch{setVision(false)}};const changed=(event:Event)=>setVision(Boolean((event as CustomEvent<{enabled:boolean}>).detail?.enabled));load();window.addEventListener("hudhud-vision-preference",changed);return()=>window.removeEventListener("hudhud-vision-preference",changed)},[]);
  const [pinned,setPinned]=useState(false);
  const [choice,setChoice]=useState<number|null>(null);
  const router=useRouter();
