@@ -19,10 +19,38 @@ export default function HudHudHomeIntro() {
   const fadeTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const finishTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const started = useRef(false);
-  const audioContext=useRef<AudioContext|null>(null);
-  const [soundEnabled,setSoundEnabled]=useState(false);
-  const stopSound=()=>{const ctx=audioContext.current;audioContext.current=null;if(ctx)void ctx.close().catch(()=>{});};
-  const enableSound=()=>{if(audioContext.current){stopSound();setSoundEnabled(false);return;}try{const ctx=new AudioContext();audioContext.current=ctx;void ctx.resume();const now=ctx.currentTime;const master=ctx.createGain();master.gain.setValueAtTime(0,now);master.gain.linearRampToValueAtTime(.065,now+.45);master.gain.setValueAtTime(.065,now+3.3);master.gain.exponentialRampToValueAtTime(.0001,now+4.2);master.connect(ctx.destination);[174.61,261.63,349.23,523.25].forEach((hz,i)=>{const oscillator=ctx.createOscillator();const voice=ctx.createGain();oscillator.type="sine";oscillator.frequency.setValueAtTime(hz,now);oscillator.frequency.linearRampToValueAtTime(hz*1.045,now+3.6);voice.gain.value=.24/(i+1);oscillator.connect(voice).connect(master);oscillator.start(now+i*.07);oscillator.stop(now+4.3)});setSoundEnabled(true);setTimeout(()=>{if(audioContext.current===ctx){stopSound();setSoundEnabled(false)}},4500)}catch{setSoundEnabled(false)}};
+  const soundtrack = useRef<HTMLAudioElement | null>(null);
+  const fadeOutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [soundEnabled,setSoundEnabled]=useState(true);
+  const stopSound = (immediate=false) => {
+    const audio=soundtrack.current;
+    if(!audio)return;
+    if(fadeOutTimer.current)clearTimeout(fadeOutTimer.current);
+    if(immediate){audio.pause();audio.currentTime=0;return;}
+    const from=audio.volume;
+    const start=performance.now();
+    const fade=()=>{const elapsed=performance.now()-start;audio.volume=Math.max(0,from*(1-elapsed/4000));if(elapsed<4000&&!audio.paused)fadeOutTimer.current=setTimeout(fade,60);else{audio.pause();audio.currentTime=0;}};
+    fade();
+  };
+  const enableSound=()=>{const audio=soundtrack.current;if(!audio)return;if(soundEnabled){setSoundEnabled(false);stopSound(true);}else{setSoundEnabled(true);audio.volume=0;void audio.play().then(()=>{rampUpAudio(audio)}).catch(()=>{});}};
+  const rampUpAudio=(audio:HTMLAudioElement)=>{
+    const start=performance.now();
+    const tick=()=>{if(audio.paused||!soundtrack.current)return;const elapsed=performance.now()-start;audio.volume=Math.min(.7,.7*elapsed/1700);if(elapsed<1700)setTimeout(tick,50);};
+    tick();
+  };
+  useEffect(()=>{
+    if(phase!=="video")return;
+    const audio=new Audio("/audio/nasheed.mp3");
+    soundtrack.current=audio;
+    audio.preload="auto";
+    audio.loop=true;
+    audio.volume=0;
+    // Browsers can block autoplay with sound. Retry on the first user gesture.
+    const play=()=>{if(!soundEnabled||!audio.paused)return;void audio.play().then(()=>rampUpAudio(audio)).catch(()=>{});};
+    play();
+    window.addEventListener("pointerdown",play,{once:true});
+    return()=>{window.removeEventListener("pointerdown",play);audio.pause();if(soundtrack.current===audio)soundtrack.current=null;};
+  },[phase]);
   useEffect(()=>{if(phase!=="video")return;const v=video.current,c=canvas.current;if(!v||!c)return;let frame=0;const draw=()=>{if(!v.videoWidth||!v.videoHeight){frame=requestAnimationFrame(draw);return}const ctx=c.getContext("2d",{willReadFrequently:true});if(!ctx)return;const w=360,h=Math.max(1,Math.round(360*v.videoHeight/v.videoWidth));if(c.width!==w||c.height!==h){c.width=w;c.height=h}try{ctx.drawImage(v,0,0,w,h);const img=ctx.getImageData(0,0,w,h),d=img.data;for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];const green=g-Math.max(r,b);if(g>65&&green>12){const alpha=Math.max(0,Math.min(1,(green-12)/55));d[i+3]=Math.round(d[i+3]*(1-alpha));if(alpha<1){d[i]=Math.min(255,r+green*.12);d[i+2]=Math.min(255,b+green*.12)}}}ctx.putImageData(img,0,0)}catch{setVideoFailed(true);return}frame=requestAnimationFrame(draw)};frame=requestAnimationFrame(draw);return()=>cancelAnimationFrame(frame)},[phase]);
   useEffect(() => {
     setPhase("video"); // Green-screen bird flies on every home refresh.
@@ -31,7 +59,7 @@ export default function HudHudHomeIntro() {
       setPhase("tour");
     };
     window.addEventListener("elmi-journey-finished",onJourneyFinished);
-    return ()=>{window.removeEventListener("elmi-journey-finished",onJourneyFinished);if(audioContext.current)void audioContext.current.close().catch(()=>{});};
+    return ()=>{window.removeEventListener("elmi-journey-finished",onJourneyFinished);stopSound(true);};
   }, []);
   useEffect(() => {
     if (phase !== "video") return;
