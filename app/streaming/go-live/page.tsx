@@ -106,6 +106,18 @@ export default function GoLivePage() {
   }, []);
   const [error, setError] = useState("");
   const [viewers, setViewers] = useState(0);
+  const [viewerIncrease, setViewerIncrease] = useState(false);
+  const previousViewerCount = useRef<number | null>(null);
+  useEffect(() => {
+    if (!live) { previousViewerCount.current = null; setViewerIncrease(false); return; }
+    if (previousViewerCount.current !== null && viewers > previousViewerCount.current) {
+      setViewerIncrease(true);
+      const timeout = window.setTimeout(() => setViewerIncrease(false), 2300);
+      previousViewerCount.current = viewers;
+      return () => window.clearTimeout(timeout);
+    }
+    previousViewerCount.current = viewers;
+  }, [viewers, live]);
 
   useEffect(() => {
     if (!live || !liveStreamIdRef.current) return;
@@ -849,7 +861,7 @@ export default function GoLivePage() {
               {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
-              {live && <span className="live">● LIVE</span>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
+              {live && <span className="live">● LIVE</span>}{live && <div role="status" aria-live="polite" style={{position:"absolute",left:12,bottom:64,zIndex:13,padding:"12px 16px",borderRadius:18,background:"rgba(5,10,20,.80)",border:viewerIncrease?"2px solid #39ee8d":"1px solid rgba(255,255,255,.35)",boxShadow:viewerIncrease?"0 0 24px rgba(57,238,141,.48)":"0 8px 25px #0008",color:viewerIncrease?"#4cff9c":"white",transition:"color .3s,border .3s,box-shadow .3s",pointerEvents:"none",textAlign:"center"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1.5}}>🔴 YOU ARE LIVE</div><div style={{fontSize:"clamp(26px,5vw,40px)",fontWeight:900,lineHeight:1.15,fontVariantNumeric:"tabular-nums"}}>{viewers.toLocaleString()}</div><div style={{fontSize:11,opacity:.85}}>VIEWERS {viewerIncrease?"↑":""}</div></div>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
             </div>
             <div style={{display:"flex",gap:9,alignItems:"center",flexWrap:"wrap",padding:"10px 0"}}>
