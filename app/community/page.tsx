@@ -17,7 +17,7 @@ const seed: Post[] = [
 const key = "1muslim-community-posts";
 
 export default function Community() {
-  const [posts,setPosts]=useState<Post[]>(seed);
+  const [posts,setPosts]=useState<Post[]>([]);
   const [draft,setDraft]=useState("");
   useEffect(()=>{try{const saved=sessionStorage.getItem("1muslim-verse-share-draft");if(saved){setDraft(saved);sessionStorage.removeItem("1muslim-verse-share-draft")}}catch{}},[]);
   useEffect(()=>{const verse=new URLSearchParams(window.location.search).get("verse");if(verse&&/^(?:[1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(verse)){setDraft("Reflecting on Qur’an "+verse+" 📖\\nhttps://quran.com/"+verse+"\\n");setLink("https://quran.com/"+verse)}},[]);
@@ -28,6 +28,7 @@ export default function Community() {
   const [videoPaused,setVideoPaused]=useState(false);
   const videoRef=useRef<HTMLVideoElement>(null);
   const touchStart=useRef<number|null>(null);
+  const [serverPosts,setServerPosts]=useState<Post[]>([]);
   const videos=useMemo(()=>[...serverPosts,...posts].sort((a,b)=>b.created-a.created),[serverPosts,posts]);
   const openVideo=(id:string)=>{const index=videos.findIndex(p=>p.id===id);if(index>=0){setVideoIndex(index);setVideoPaused(false)}};
   const nextVideo=(direction:number)=>{setVideoIndex(index=>index===null?null:Math.max(0,Math.min(videos.length-1,index+direction)));setVideoPaused(false)};
@@ -56,12 +57,11 @@ export default function Community() {
   const [following,setFollowing]=useState<Record<string,boolean>>({});
   const [notifications,setNotifications]=useState(false);
 
-  useEffect(()=>{ try { const saved=localStorage.getItem(key); if(saved) setPosts(JSON.parse(saved)); } catch {} },[]);
-  useEffect(()=>{ localStorage.setItem(key,JSON.stringify(posts)); },[posts]);
 
-  const [serverPosts,setServerPosts]=useState<Post[]>([]);
+
+
   useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)return;const d=await r.json();const rows=d.posts||[];if(active)setServerPosts(rows.map((p:{id:string;body:string;created_at:string})=>({id:p.id,name:"Community member",handle:"@member",text:p.body,created:new Date(p.created_at).getTime(),likes:0,liked:false,comments:[]})))}catch{}};void load();const t=setInterval(()=>void load(),20000);return()=>{active=false;clearInterval(t)}},[]);
-  const sorted=useMemo(()=>[...serverPosts,...posts].sort((a,b)=>b.created-a.created),[serverPosts,posts]);
+  const sorted=videos;
 
   const createPost=async(e:FormEvent)=>{
     e.preventDefault();
