@@ -18,11 +18,14 @@ export default function HudHudTacticalVision(){
  const pathname=usePathname()||"/";
  const [on,setOn]=useState(true),[open,setOpen]=useState(false),[settings,setSettings]=useState(false);
  const [anchor,setAnchor]=useState<{x:number;y:number}|null>(null),[pos,setPos]=useState({x:20,y:160}),[dragged,setDragged]=useState(false);
+ const [requested,setRequested]=useState<{title:string;description:string;target:string|null}|null>(null);
+ useEffect(()=>{const fn=(event:Event)=>{const detail=(event as CustomEvent<{title:string;description:string;target:string|null}>).detail;if(!detail)return;setRequested(detail);setOn(true);setOpen(true);setDragged(false);};window.addEventListener("1muslim:hudhud-vision-explain",fn);return()=>window.removeEventListener("1muslim:hudhud-vision-explain",fn)},[]);
  const drag=useRef<{x:number;y:number;px:number;py:number}|null>(null);
- const hint=hints.find(h=>h.match.test(pathname))||{words:["أصحاب"],text:"HudHud can explain Arabic words and guide you to the most relevant learning page.",href:"/as-sahaba",label:"Explore Arabic words"};
+ const defaultHint=hints.find(h=>h.match.test(pathname))||{words:["أصحاب"],text:"HudHud can explain Arabic words and guide you to the most relevant learning page.",href:"/as-sahaba",label:"Explore Arabic words"};
+ const hint=requested?{words:[requested.title],text:requested.description,href:pathname,label:requested.title}:defaultHint;
  useEffect(()=>{try{setOn(localStorage.getItem(KEY)!=="off")}catch{}},[]);
  useEffect(()=>{const sync=()=>{try{setOn(localStorage.getItem(KEY)!=="off")}catch{}};window.addEventListener("1muslim:hudhud-vision-changed",sync);return()=>window.removeEventListener("1muslim:hudhud-vision-changed",sync)},[]);
- useEffect(()=>{setOpen(false);setDragged(false);const t=setTimeout(()=>setOpen(true),4200);return()=>clearTimeout(t)},[pathname]);
+ useEffect(()=>{setRequested(null);setOpen(false);setDragged(false);const t=setTimeout(()=>setOpen(true),4200);return()=>clearTimeout(t)},[pathname]);
  useEffect(()=>{if(!on||!open)return;
  const locate=()=>{
   const elements=Array.from(document.querySelectorAll<HTMLElement>("h1,h2,h3,a,button,span"));
