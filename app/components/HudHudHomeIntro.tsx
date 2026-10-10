@@ -19,6 +19,10 @@ export default function HudHudHomeIntro() {
   const fadeTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const finishTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const started = useRef(false);
+  const audioContext=useRef<AudioContext|null>(null);
+  const [soundEnabled,setSoundEnabled]=useState(false);
+  const stopSound=()=>{const ctx=audioContext.current;audioContext.current=null;if(ctx)void ctx.close().catch(()=>{});};
+  const enableSound=()=>{if(audioContext.current){stopSound();setSoundEnabled(false);return;}try{const ctx=new AudioContext();audioContext.current=ctx;void ctx.resume();const now=ctx.currentTime;const master=ctx.createGain();master.gain.setValueAtTime(0,now);master.gain.linearRampToValueAtTime(.065,now+.45);master.gain.setValueAtTime(.065,now+3.3);master.gain.exponentialRampToValueAtTime(.0001,now+4.2);master.connect(ctx.destination);[174.61,261.63,349.23,523.25].forEach((hz,i)=>{const oscillator=ctx.createOscillator();const voice=ctx.createGain();oscillator.type="sine";oscillator.frequency.setValueAtTime(hz,now);oscillator.frequency.linearRampToValueAtTime(hz*1.045,now+3.6);voice.gain.value=.24/(i+1);oscillator.connect(voice).connect(master);oscillator.start(now+i*.07);oscillator.stop(now+4.3)});setSoundEnabled(true);setTimeout(()=>{if(audioContext.current===ctx){stopSound();setSoundEnabled(false)}},4500)}catch{setSoundEnabled(false)}};
   useEffect(()=>{if(phase!=="video")return;const v=video.current,c=canvas.current;if(!v||!c)return;let frame=0;const draw=()=>{if(!v.videoWidth||!v.videoHeight){frame=requestAnimationFrame(draw);return}const ctx=c.getContext("2d",{willReadFrequently:true});if(!ctx)return;const w=360,h=Math.max(1,Math.round(360*v.videoHeight/v.videoWidth));if(c.width!==w||c.height!==h){c.width=w;c.height=h}try{ctx.drawImage(v,0,0,w,h);const img=ctx.getImageData(0,0,w,h),d=img.data;for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];const green=g-Math.max(r,b);if(g>65&&green>12){const alpha=Math.max(0,Math.min(1,(green-12)/55));d[i+3]=Math.round(d[i+3]*(1-alpha));if(alpha<1){d[i]=Math.min(255,r+green*.12);d[i+2]=Math.min(255,b+green*.12)}}}ctx.putImageData(img,0,0)}catch{setVideoFailed(true);return}frame=requestAnimationFrame(draw)};frame=requestAnimationFrame(draw);return()=>cancelAnimationFrame(frame)},[phase]);
   useEffect(() => {
     setPhase("video"); // Green-screen bird flies on every home refresh.
@@ -27,7 +31,7 @@ export default function HudHudHomeIntro() {
       setPhase("tour");
     };
     window.addEventListener("elmi-journey-finished",onJourneyFinished);
-    return ()=>window.removeEventListener("elmi-journey-finished",onJourneyFinished);
+    return ()=>{window.removeEventListener("elmi-journey-finished",onJourneyFinished);if(audioContext.current)void audioContext.current.close().catch(()=>{});};
   }, []);
   useEffect(() => {
     if (phase !== "video") return;
@@ -45,7 +49,7 @@ export default function HudHudHomeIntro() {
     window.addEventListener("scroll", update, true);
     return () => { window.removeEventListener("resize", update); window.removeEventListener("scroll", update, true); };
   }, [phase, step]);
-  const beginTour = () => { if (started.current) return; started.current = true; if(fadeTimer.current)clearTimeout(fadeTimer.current);if(finishTimer.current)clearTimeout(finishTimer.current);setPhase("hidden"); window.dispatchEvent(new Event("hudhud-bird-finished")); };
+  const beginTour = () => { stopSound(); if (started.current) return; started.current = true; if(fadeTimer.current)clearTimeout(fadeTimer.current);if(finishTimer.current)clearTimeout(finishTimer.current);setPhase("hidden"); window.dispatchEvent(new Event("hudhud-bird-finished")); };
   const fadeBeforeEnd=(duration:number)=>{if(started.current)return;if(fadeTimer.current)clearTimeout(fadeTimer.current);if(finishTimer.current)clearTimeout(finishTimer.current);const remaining=Math.max(0,duration);fadeTimer.current=setTimeout(()=>setFading(true),Math.max(0,remaining-1000));finishTimer.current=setTimeout(beginTour,remaining);};
   if (phase === "hidden") return null;
   return <div className={`hh-onboard ${fading?"hh-fading":""}`} role="dialog" aria-modal="true" aria-label="HudHud welcome and guided tour">
@@ -60,6 +64,7 @@ export default function HudHudHomeIntro() {
         <source src="/videos/hudhud-no-background-extended.webm" type="video/webm" />
       </video>
       <div className="hh-cinema-caption">Welcome to 1Muslim ✨</div>
+      <button className="hh-sound" type="button" aria-pressed={soundEnabled} onClick={enableSound}>{soundEnabled?"🔊 Sound on":"🔈 Enable sound"}</button>
       <button className="hh-skip" onClick={beginTour}>Skip intro →</button>
     </> : <>
       <div className="hh-tour-dim" />
@@ -80,7 +85,7 @@ export default function HudHudHomeIntro() {
       .hh-elmi-waves{position:absolute;inset:0;overflow:hidden;pointer-events:none;background:radial-gradient(ellipse at 50% 65%,#15205b77,transparent 65%),linear-gradient(140deg,#030914,#071126 60%,#160c2e)}.hh-elmi-waves i{position:absolute;display:block;left:-35%;width:170%;height:32%;border-radius:50%;border:clamp(14px,5vw,58px) solid transparent;border-top-color:#30e9ff;border-bottom-color:#ac49ff;filter:drop-shadow(0 0 25px #38dfffbb);transform:rotate(-22deg);animation:hhElmiWave 6s ease-in-out infinite alternate}.hh-elmi-waves i:nth-child(1){top:15%}.hh-elmi-waves i:nth-child(2){top:43%;animation-delay:-2s;border-top-color:#f33dff;border-bottom-color:#1caeff}.hh-elmi-waves i:nth-child(3){top:72%;animation-delay:-4s;border-top-color:#8e5bff;border-bottom-color:#27eaff}@keyframes hhElmiWave{from{transform:translateX(-13%) rotate(-22deg) scaleY(.65)}to{transform:translateX(13%) rotate(12deg) scaleY(1.1)}}
       .hh-cinema{position:absolute;inset:0;width:100vw;height:100dvh;object-fit:contain;filter:drop-shadow(0 0 32px rgba(61,177,255,.32))}.hh-source-video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.hh-bird-fallback{object-fit:contain;width:min(70vw,360px);height:min(70vw,360px);inset:0;margin:auto}
       .hh-cinema-caption{position:absolute;bottom:7%;width:100%;text-align:center;font-size:clamp(19px,3vw,34px);font-weight:700;text-shadow:0 2px 20px #000}
-      .hh-skip{position:absolute;right:24px;top:24px;border:1px solid #ffffff66;background:#101e34df;color:#fff;border-radius:99px;padding:12px 19px;cursor:pointer}
+      .hh-sound{position:absolute;top:24px;left:24px;border:1px solid #78dfff99;background:#101e34e9;color:white;border-radius:99px;padding:12px 16px;cursor:pointer;z-index:2}.hh-skip{position:absolute;right:24px;top:24px;border:1px solid #ffffff66;background:#101e34df;color:#fff;border-radius:99px;padding:12px 19px;cursor:pointer}
       .hh-tour-dim{position:absolute;inset:0;background:rgba(0,5,18,.83);animation:hhFade .6s ease}
       .hh-spotlight{position:fixed;pointer-events:none;border:2px solid #7bdbff;border-radius:16px;box-shadow:0 0 0 9999px rgba(0,5,18,.12),0 0 36px #6dbeffbb;animation:hhZoom .55s ease;transition:top .4s ease,left .4s ease,width .4s ease,height .4s ease}
       .hh-tour-card{position:absolute;bottom:clamp(24px,8vh,100px);left:50%;transform:translateX(-50%);width:min(90vw,450px);background:#09172bf2;border:1px solid #67c9ff88;border-radius:24px;padding:26px;box-shadow:0 16px 60px #000b;animation:hhCard .5s ease}
