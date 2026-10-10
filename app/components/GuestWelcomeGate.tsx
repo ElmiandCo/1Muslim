@@ -25,7 +25,7 @@ export default function GuestWelcomeGate(){
   const timer=window.setTimeout(()=>{if(document.visibilityState==="visible")setShow(true)},DELAY);
   return()=>window.clearTimeout(timer);
  },[pathname,identity]);
- const dismiss=()=>{setShow(false);setTraining(false);try{localStorage.setItem("1muslim:training-dismissed:"+identity,"1")}catch{}window.dispatchEvent(new Event("1muslim:training-cancel"))};
+ const dismiss=()=>{setShow(false);setTraining(false);try{localStorage.setItem("1muslim:training-dismissed:"+identity,"1")}catch{}window.dispatchEvent(new Event("1muslim:training-dismissed"))};
  const begin=()=>{setShow(false);setTraining(true);window.dispatchEvent(new Event("1muslim:training-start"))};
  useEffect(()=>{const stop=()=>dismiss();window.addEventListener("1muslim:training-close",stop);window.addEventListener("1muslim:training-cancel",stop);return()=>{window.removeEventListener("1muslim:training-close",stop);window.removeEventListener("1muslim:training-cancel",stop)}},[identity]);
  if(!show&&!training)return null;
