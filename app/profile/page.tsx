@@ -8,6 +8,7 @@ import ProfileAvatar, { ACCESSORIES, AVATAR_TIERS, tierForXp } from "../componen
 import { createClient } from "../../utils/supabase/client";
 import ProfileContentSections from "../components/ProfileContentSections";
 import FeaturedBadge from "../components/FeaturedBadge";
+import PublicBadgeSelector from "../components/PublicBadgeSelector";
 import FirstProfileTour from "../components/FirstProfileTour";
 import HudHudTenFriends from "../components/HudHudTenFriends";
 
@@ -74,7 +75,7 @@ export default function ProfilePage() {
   const [postCount,setPostCount]=useState(0);
   const [postText,setPostText]=useState("");
   const [posting,setPosting]=useState(false);
-  const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live"|"shahada">("profile");
+  const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live"|"shahada"|"badges">("profile");
   const [saving,setSaving]=useState(false); const [colorSaving,setColorSaving]=useState(false); const [message,setMessage]=useState(""); const [authRequired,setAuthRequired]=useState(false);
   const [liveConnectors,setLiveConnectors]=useState<Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>>({});
   const [vaultUrl,setVaultUrl]=useState("");
@@ -165,8 +166,9 @@ export default function ProfilePage() {
 
   return <main className="profilePage"><SiteNav/><HudHudTenFriends userId={profile.id} connectionCount={ashab.length}/><FirstProfileTour userId={profile.id} onNavigate={(target)=>{setTab(target);setEditing(true)}}/>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>setEditing(true)}/>:<div className="profileShell">
     <header className={`profileHero header-${profile.profile_accent}`}><div className="profileHeroTop"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/><div><span className="eyebrow">YOUR ONE MUSLIM PROFILE</span><h1>{profile.display_name||"Member"}</h1><p>@{profile.username||"member"} · {tier.name} · {profile.xp_total.toLocaleString()} XP</p></div></div><div className="profileHeroActions"><Link href="/find" className="ghost">Find People</Link><button className="primary" onClick={save} disabled={saving||colorSaving}>{saving?"Saving…":"Save & close"}</button></div></header>
-    <div className="profileEditorToolbar"><button className="ghost" onClick={()=>setEditing(false)}>← Close editor</button><span>Profile settings</span></div><div style={{padding:"12px 0"}}><FeaturedBadge userId={profile.id} verifiedAt={profile.shahada_verified_at} editable/></div><div className="profileTabs">{(["profile","avatar","header","live","shahada"] as const).map(x=><button className={tab===x?"active":""} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Profile":x==="avatar"?"Avatar & Accessories":x==="header"?"Header Color":x==="live"?"Live & Streaming":"Shahada Vault"}</button>)}</div>
+    <div className="profileEditorToolbar"><button className="ghost" onClick={()=>setEditing(false)}>← Close editor</button><span>Profile settings</span></div><div style={{padding:"12px 0"}}><FeaturedBadge userId={profile.id} verifiedAt={profile.shahada_verified_at} editable/></div><div className="profileTabs">{(["profile","avatar","header","live","shahada","badges"] as const).map(x=><button className={tab===x?"active":""} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Profile":x==="avatar"?"Avatar & Accessories":x==="header"?"Header Color":x==="live"?"Live & Streaming":x==="badges"?"🏅 Badges":"Shahada Vault"}</button>)}</div>
 
+    {tab==="badges"&&<PublicBadgeSelector userId={profile.id} verifiedAt={profile.shahada_verified_at}/>}
     {tab==="profile"&&<section className="profileEditor"><div className="editorIntro"><span className="eyebrow">PERSONAL DETAILS</span><h2>Tell people who you are.</h2><p>Your profile is yours. Keep only the information you want to share.</p></div><div className="formGrid">
       <label>Display name<input value={profile.display_name??""} disabled={!!displayCooldown} onChange={e=>update({display_name:e.target.value})}/><small className="fieldNote">{displayCooldown?`You can change your display name again in ${displayCooldown}.`:"You can change this once every 3 days."}</small></label><label>@ Member handle<input value={profile.username?`@${profile.username}`:""} placeholder="@member" disabled={!!usernameCooldown} onChange={e=>update({username:e.target.value.replace(/^@+/,"")})}/><small className="fieldNote">{usernameCooldown?`You can change your handle again in ${usernameCooldown}.`:"You can change this once every 3 days."}</small></label><label>First name<input value={profile.first_name??""} onChange={e=>update({first_name:e.target.value})}/></label><label>Last name<input value={profile.last_name??""} onChange={e=>update({last_name:e.target.value})}/></label>
       <label>Gender<input value={profile.gender ? profile.gender.charAt(0).toUpperCase()+profile.gender.slice(1) : "Not selected"} disabled /><small className="fieldNote">Gender is selected once during onboarding and cannot be changed.</small></label>
