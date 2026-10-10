@@ -18,7 +18,7 @@ export default function VersePostStudio({verse,arabic,translation,onClose}:{vers
  const [language,setLanguage]=useState<Language>("both"),[theme,setTheme]=useState<Theme>("emerald"),[ratio,setRatio]=useState<"1:1"|"4:5"|"9:16">("4:5"),[caption,setCaption]=useState(""),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
  const [xp,setXp]=useState(0);
  const [customBackground,setCustomBackground]=useState<string|null>(null);
- useEffect(()=>{let live=true;void import("../../../utils/supabase/client").then(({createClient})=>{const db=createClient();return db.auth.getUser().then(async ({data:{user}})=>{if(!user)return;const {data}=await db.from("profiles").select("xp_total").eq("id",user.id).maybeSingle();if(live)setXp(Number(data?.xp_total||0)})});return()=>{live=false}},[]);
+ useEffect(()=>{let live=true;void import("../../../utils/supabase/client").then(({createClient})=>{const db=createClient();return db.auth.getUser().then(async ({data:{user}})=>{if(!user)return;const {data}=await db.from("profiles").select("xp_total").eq("id",user.id).maybeSingle();if(live)setXp(Number(data?.xp_total||0))})});return()=>{live=false}},[]);
  const [includeBack,setIncludeBack]=useState(false);
  const [backNote,setBackNote]=useState("");
  const [authorHandle,setAuthorHandle]=useState("");
