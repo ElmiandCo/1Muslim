@@ -4,7 +4,7 @@ import {usePathname} from "next/navigation";
 import Link from "next/link";
 
 const KEY="1muslim-hudhud-tactical-vision";
-const VERSION="1.0";
+const VERSION="1.1";
 const features=[
  {test:/qur.?an|verse|surah|ayah|annotation|tajw/i,title:"Qur’an Studio",info:"Read Arabic verses with translations, highlight words, annotate, and open study and recording tools. Saved highlights may be stored on this device.",href:"/elm-tent/quran"},
  {test:/live|stream|camera/i,title:"Live",info:"Explore live streams and Go Live with camera controls. Availability depends on permissions and account access.",href:"/streaming"},
@@ -13,11 +13,13 @@ const features=[
  {test:/profile|setting|theme|vision|orb|hudhud/i,title:"HudHud & Preferences",info:"HudHud 1.0 offers contextual targeting, draggable Vision cards, explanations, feature help and links. The bottom-center Orb opens controls; hold it for Vision on supported pages. Features may vary by page.",href:"/settings"},
  {test:/home|start|explore/i,title:"Explore 1Muslim",info:"Explore Qur’an, lessons, live streams, member profiles and the community from the main navigation.",href:"/"}
 ];
+type VisionMedia={kind:"image"|"video";src:string;alt:string};
+const mediaFor=(t:Target|null,path:string):VisionMedia|null=>{if(!t)return null;const el=t.element;const img=el.matches("img")?el as HTMLImageElement:el.querySelector("img");if(img instanceof HTMLImageElement&&img.currentSrc)return {kind:"image",src:img.currentSrc,alt:img.alt||t.label};const vid=el.matches("video")?el as HTMLVideoElement:el.querySelector("video");if(vid instanceof HTMLVideoElement&&(vid.currentSrc||vid.poster))return vid.currentSrc?{kind:"video",src:vid.currentSrc,alt:t.label}:{kind:"image",src:vid.poster,alt:t.label};if(/hudhud|orb|vision/i.test(t.label))return {kind:"image",src:"/assets/hudhud-logo.PNG",alt:"HudHud guide"};return null};
 type Target={element:HTMLElement;label:string;x:number;y:number;href:string|null};
 const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
 function candidate(el:Element|null):HTMLElement|null{
  if(!el||el.closest("[data-hudhud-vision-ui]"))return null;
- const picked=el.closest("a,button,[data-annotation-id],[data-annotation],mark,[data-vision-context],[data-verse-index],h1,h2,h3,h4,p,li,article,section,[role='button']")||el;
+ const picked=el.closest("img,video,a,button,[data-annotation-id],[data-annotation],mark,[data-vision-context],[data-verse-index],h1,h2,h3,h4,p,li,article,section,[role='button']")||el;
  if(!(picked instanceof HTMLElement))return null;
  if(picked.matches("html,body")||picked.closest("[aria-hidden='true']"))return null;
  return picked;
@@ -84,7 +86,8 @@ export default function HudHudTacticalVision(){
  const move=(e:React.PointerEvent<HTMLElement>)=>{const d=dragging.current;if(!d)return;const x=d.ox+e.clientX-d.x,y=d.oy+e.clientY-d.y;if(d.kind==="target")setPoint({x:clamp(x,12,innerWidth-12),y:clamp(y,60,innerHeight-50)});else setCard({x:clamp(x,8,Math.max(8,innerWidth-300)),y:clamp(y,65,Math.max(65,innerHeight-160))})};
  const end=(e:React.PointerEvent<HTMLElement>)=>{const d=dragging.current;dragging.current=null;if(d?.kind==="target")pick(e.clientX,e.clientY)};
  const info=explain(target,pathname);
- const ask=()=>{const q=query.trim();if(!q)return;const f=features.find(x=>x.test.test(q));setReply(f?f.title+": "+f.info:"HudHud Vision 1.0 can explain site features, highlight screen elements and link to pages. Ask about Qur’an, live streams, messages, lessons, badges, settings or the Orb.");};
+ const media=mediaFor(target,pathname);
+ const ask=()=>{const q=query.trim();if(!q)return;const f=features.find(x=>x.test.test(q));setReply(f?f.title+": "+f.info:"HudHud Vision 1.1 can explain site features, highlight screen elements and link to pages. Ask about Qur’an, live streams, messages, lessons, badges, settings or the Orb.");};
  if(!enabled||!open)return null;
  const cardWidth= Math.min(300,typeof window==="undefined"?300:window.innerWidth-20);
  return <div data-hudhud-vision-ui="true">
@@ -94,11 +97,12 @@ export default function HudHudTacticalVision(){
   <button type="button" aria-label="HudHud target. Drag to another element; arrow keys reposition" onPointerDown={e=>begin(e,"target")} onPointerMove={move} onPointerUp={end} onPointerCancel={()=>dragging.current=null} onKeyDown={e=>{const steps:{[key:string]:[number,number]}={ArrowLeft:[-22,0],ArrowRight:[22,0],ArrowUp:[0,-22],ArrowDown:[0,22]};const step=steps[e.key];if(step){e.preventDefault();const x=clamp(point.x+step[0],12,innerWidth-12),y=clamp(point.y+step[1],60,innerHeight-50);setPoint({x,y});pick(x,y)}}} style={{position:"fixed",left:point.x,top:point.y,transform:"translate(-50%,-50%)",zIndex:9302,width:43,height:43,borderRadius:"50%",border:"2px solid #8bffe0",background:"#1b735c55",boxShadow:"0 0 0 8px #55ffc122,0 0 20px #7bffe0",touchAction:"none",cursor:"grab",color:"white"}}>✧</button>
   <section aria-label="HudHud Vision 1.0 contextual guidance" style={{position:"fixed",left:clamp(card.x,8,Math.max(8,innerWidth-cardWidth-8)),top:card.y,width:cardWidth,zIndex:9301,borderRadius:20,padding:14,background:"linear-gradient(130deg,#092e28ef,#101e35f2)",border:"1px solid #8beac2",boxShadow:"0 12px 45px #0009,0 0 20px #66eeb022",color:"#f3fff9",maxHeight:"min(65vh,470px)",overflowY:"auto"}}>
    <div style={{display:"flex",alignItems:"center",gap:8}}><button type="button" aria-label="Drag HudHud Vision card" onPointerDown={e=>begin(e,"card")} onPointerMove={move} onPointerUp={end} onPointerCancel={()=>dragging.current=null} style={{touchAction:"none",padding:"8px",borderRadius:10,border:"1px solid #9affd977",background:"#204a45",color:"#e6fff5",cursor:"grab"}}>⠿</button><strong style={{flex:1}}>✦ HudHud · Vision v{VERSION}</strong><button type="button" aria-label="Close HudHud Vision" onClick={()=>setOpen(false)} style={{borderRadius:30,padding:"5px 12px"}}>×</button></div>
-   <h3 style={{fontSize:16,margin:"14px 0 6px"}}>{info.title}</h3><p style={{fontSize:13,lineHeight:1.55}}>{info.info}</p>
+   <h3 style={{fontSize:16,margin:"14px 0 6px"}}>{info.title}</h3>
+   {media&&<div style={{borderRadius:14,overflow:"hidden",background:"#020c10",margin:"10px 0",border:"1px solid #ffffff22"}}>{media.kind==="video"?<video src={media.src} controls muted playsInline style={{width:"100%",maxHeight:230,objectFit:"contain"}} aria-label={media.alt}/>:<img src={media.src} alt={media.alt} style={{width:"100%",maxHeight:230,objectFit:"contain"}}/>}</div>}<p style={{fontSize:13,lineHeight:1.55}}>{info.info}</p>
    {info.href&&<Link href={info.href} style={{color:"#8fffdc",fontWeight:700}}>Explore related page ↗</Link>}
    <form onSubmit={e=>{e.preventDefault();ask()}} style={{marginTop:14,display:"flex",gap:6}}><input aria-label="Ask HudHud about a site feature" placeholder="Ask about 1Muslim…" value={query} onChange={e=>setQuery(e.target.value)} style={{minWidth:0,flex:1,borderRadius:9,padding:8,background:"#082027",border:"1px solid #6ca",color:"white"}}/><button type="submit" style={{borderRadius:9,padding:"6px 9px"}}>Ask</button></form>
    {reply&&<p role="status" style={{fontSize:13,lineHeight:1.5}}>{reply}</p>}
-   <small style={{display:"block",marginTop:10,opacity:.75}}>Drag ✧ to retarget · Drag ⠿ to move · HudHud 1.0 · 1Muslim 2.1</small>
+   <small style={{display:"block",marginTop:10,opacity:.75}}>Drag ✧ to retarget · Drag ⠿ to move · HudHud 1.1 · 1Muslim 2.1</small>
   </section>
  </div>;
 }
