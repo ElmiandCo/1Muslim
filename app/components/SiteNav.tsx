@@ -58,7 +58,9 @@ function MenuLink({ href, label, ar, onClick }: { href: string; label: ReactNode
 
 export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const pathname = usePathname();
-  const [createOpen, setCreateOpen] = useState(false);\n  const [voiceRecording,setVoiceRecording]=useState(false);\n  useEffect(()=>{const fn=(e:Event)=>setVoiceRecording(Boolean((e as CustomEvent<{recording:boolean}>).detail?.recording));window.addEventListener("1muslim:recorder-status",fn);return()=>window.removeEventListener("1muslim:recorder-status",fn)},[]);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [voiceRecording,setVoiceRecording]=useState(false);
+  useEffect(()=>{const fn=(e:Event)=>setVoiceRecording(Boolean((e as CustomEvent<{recording:boolean}>).detail?.recording));window.addEventListener("1muslim:recorder-status",fn);return()=>window.removeEventListener("1muslim:recorder-status",fn)},[]);
   const [goLiveReady,setGoLiveReady]=useState(false);
   useEffect(()=>{const onReady=(event:Event)=>setGoLiveReady(Boolean((event as CustomEvent<{ready:boolean}>).detail?.ready));window.addEventListener("1muslim:go-live-ready",onReady);if(pathname!=="/streaming/go-live")setGoLiveReady(false);return()=>window.removeEventListener("1muslim:go-live-ready",onReady)},[pathname]);
   const [dockMounted, setDockMounted] = useState(false);
