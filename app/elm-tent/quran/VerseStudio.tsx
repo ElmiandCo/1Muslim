@@ -50,10 +50,10 @@ export default function VerseStudio({verse}:{verse:string}){
   catch{setError("Could not copy. Please use your browser's share feature.")}
  };
  return <div className="hh-verse">
-  <button className="hh-verse-toggle" type="button" onClick={()=>setOpen(v=>!v)} aria-expanded={open}>
+  <div style={{display:"flex",alignItems:"center",gap:8}}><button type="button" title="Toggle HudHud Vision" aria-label={`Toggle HudHud Vision for ${verse}`} onClick={()=>window.dispatchEvent(new Event("1muslim:hudhud-vision-toggle"))} style={{flex:"0 0 42px",width:42,height:42,borderRadius:"50%",border:"1px solid #6b6dd7",background:"radial-gradient(circle,#34426e,#14172f)",boxShadow:"0 0 13px #6f8cff66",cursor:"pointer",display:"grid",placeItems:"center"}}><img src="/assets/hudhud-logo.PNG" alt="" style={{width:28,height:28,objectFit:"contain"}}/></button><button className="hh-verse-toggle" type="button" onClick={()=>setOpen(v=>!v)} aria-expanded={open}>
    <img src="/assets/hudhud-logo.PNG" alt="" /><span><strong>Chat with HudHud about {verse}</strong><small>Understand · Reflect · Remember</small></span><b>{open?"−":"+"}</b>
   </button>
-  {open&&<section className="hh-verse-panel" aria-label={`HudHud verse ${verse} chat`}>
+  </div>{open&&<section className="hh-verse-panel" aria-label={`HudHud verse ${verse} chat`}>
    <div className="hh-verse-header"><span>🦅 HUDHUD · QUR'AN STUDIO</span><strong>Let's explore ayah {verse}</strong></div>
    <div className="hh-verse-messages" aria-live="polite">{messages.map((m,i)=><div key={i} className={m.role==="you"?"hh-verse-message user":"hh-verse-message bird"}>{m.role==="hudhud"&&<span>✨ HudHud</span>}<p>{m.text}</p></div>)}</div>
    <div className="hh-verse-prompts">{prompts.map(p=><button key={p.kind} type="button" onClick={()=>ask(p.kind,p.label)}>{p.label}</button>)}</div>
