@@ -17,6 +17,8 @@ const KEY="1muslim-hudhud-tactical-vision";
 export default function HudHudTacticalVision(){
  const pathname=usePathname()||"/";
  const [on,setOn]=useState(true),[open,setOpen]=useState(false),[settings,setSettings]=useState(false);
+ const [smartInfo,setSmartInfo]=useState<string|null>(null);
+ useEffect(()=>{const handler=(e:Event)=>{const detail=(e as CustomEvent<{context?:string}>).detail;setSmartInfo(detail?.context||"Current screen");setOpen(true);setOn(true);localStorage.setItem(KEY,"on")};window.addEventListener("1muslim:hudhud-smart-explain",handler);return()=>window.removeEventListener("1muslim:hudhud-smart-explain",handler)},[]);
  const [anchor,setAnchor]=useState<{x:number;y:number}|null>(null),[pos,setPos]=useState({x:20,y:160}),[dragged,setDragged]=useState(false);
  const drag=useRef<{x:number;y:number;px:number;py:number}|null>(null);
  const hint=hints.find(h=>h.match.test(pathname))||{words:["أصحاب"],text:"HudHud can explain Arabic words and guide you to the most relevant learning page.",href:"/as-sahaba",label:"Explore Arabic words"};
@@ -42,7 +44,7 @@ export default function HudHudTacticalVision(){
  {on&&open&&<>{anchor&&<svg aria-hidden="true" style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:9300}}><path d={`M${anchor.x} ${anchor.y} Q${(anchor.x+pos.x)/2} ${anchor.y-36} ${pos.x+14} ${pos.y+35}`} stroke="#8af5ca" strokeWidth="1.5" strokeDasharray="5 5" fill="none"/><circle cx={anchor.x} cy={anchor.y} r="5" stroke="#9dffda" fill="none"/></svg>}
  <section aria-label="HudHud contextual guidance" onPointerDown={start} onPointerMove={move} onPointerUp={()=>drag.current=null} onPointerCancel={()=>drag.current=null} style={{position:"fixed",left:pos.x,top:pos.y,width:Math.min(300,innerWidth-24),zIndex:9301,borderRadius:20,padding:16,background:"linear-gradient(130deg,rgba(9,47,36,.48),rgba(13,40,46,.42))",backdropFilter:"blur(10px)",WebkitBackdropFilter:"blur(10px)",border:"1px solid #8beac2",boxShadow:"0 12px 45px #0009,0 0 20px #66eeb022",color:"#f3fff9",touchAction:"auto",cursor:"default",animation:"hudhudCalloutIn .45s ease both"}}>
  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}><button type="button" data-vision-handle aria-label="Drag HudHud Vision card" title="Drag this handle to move the card" style={{cursor:"grab",touchAction:"none",border:"1px solid #9affd977",borderRadius:10,padding:"7px 10px",background:"rgba(85,211,158,.13)",color:"#c3ffe9",fontSize:19,letterSpacing:2}}>⠿</button><b style={{flex:1}}>✦ HudHud · Vision</b><span><button title="Dismiss" onClick={()=>setOpen(false)}>✕</button></span></div>
- <p style={{fontSize:14,lineHeight:1.6}}>{hint.text}</p><Link href={hint.href} style={{color:"#9ef6cd",fontWeight:700}}>{hint.label} →</Link>
+ <p style={{fontSize:14,lineHeight:1.6}}>{smartInfo?`You are viewing: ${smartInfo}. This section belongs to ${pathname}. Use the controls here to explore the content or ask HudHud for guidance.`:hint.text}</p><Link href={hint.href} style={{color:"#9ef6cd",fontWeight:700}}>{hint.label} →</Link>
  </section></>}
  <style>{`@keyframes hudhudCalloutIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}@media(prefers-reduced-motion:reduce){section[aria-label="HudHud contextual guidance"]{animation:none!important}}`}</style>
  </>;
