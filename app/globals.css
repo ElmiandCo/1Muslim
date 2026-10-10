@@ -457,3 +457,17 @@ video {
 @media(max-width:700px) and (prefers-reduced-motion:reduce){
  .muslimMobileDock .muslimDockShell{animation:none!important}
 }
+
+/* Keep the desktop utility cards in the third grid column rather than below the feed. */
+@media(min-width:1101px){
+ .app{grid-template-columns:250px minmax(0,680px) 320px!important;align-items:start}
+ .app>.sidebar{grid-column:1;grid-row:1}
+ .app>.feed{grid-column:2;grid-row:1;min-width:0}
+ .app>.rightRail{grid-column:3;grid-row:1;position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto}
+}
+.mobileHomeSearch{display:none}
+@media(max-width:700px){
+ .mobileHomeSearch{display:flex;align-items:center;gap:8px;margin:10px 12px 18px;padding:7px 10px;border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--text)}
+ .mobileHomeSearch input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:inherit;font-size:15px}
+ .mobileHomeSearch button{border:0;border-radius:10px;padding:9px 12px;background:var(--accent);color:#07100a;font-weight:700}
+}
