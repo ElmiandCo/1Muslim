@@ -12,22 +12,26 @@ export default function ElmiLightJourney(){
  const responded=useRef(false);
  const [stage,setStage]=useState<"off"|"dark"|"path"|"library"|"quran">("off");
  useEffect(()=>{
-  if(!pathname)return;
-  // The cinematic journey replays on every home-page load/refresh.
-  const excluded=["/auth","/welcome","/onboarding","/streaming/live","/streaming/watch"];
-  if(excluded.some(p=>pathname.startsWith(p))){setStage("off");return}
-  try{
-   const done=localStorage.getItem("1muslim-elmi-journey-v1");
-   if(pathname==="/"){setStage("dark");const timer=setTimeout(()=>setStage(s=>s==="dark"?"path":s),2200);return()=>clearTimeout(timer)}
-   if(done==="done"){setStage("off");return}
-   if(pathname===LIBRARY){setStage("library");return}
-   if(pathname===QURAN||pathname==="/quran-studio"){setStage("quran");return}
-   if(!done){setStage("dark");const timer=setTimeout(()=>setStage(s=>s==="dark"?"path":s),2200);return()=>clearTimeout(timer)}
-  }catch{setStage("off")}
+  // The journey is a home-page-only invitation, after 60 seconds of continuous presence.
+  setStage("off");
+  if(pathname!=="/")return;
+  if(responded.current)return;
+  try{if(localStorage.getItem("1muslim-elmi-journey-v1")==="done")return}catch{}
+  let remaining=60000;
+  let since=0;
+  let timeout:ReturnType<typeof setTimeout>|undefined;
+  const stop=()=>{if(timeout)clearTimeout(timeout);timeout=undefined;if(since){remaining=Math.max(0,remaining-(Date.now()-since));since=0}};
+  const tick=()=>{if(document.visibilityState!=="visible")return;since=Date.now();timeout=setTimeout(()=>{since=0;if(!responded.current)setStage("path")},remaining)};
+  const visibility=()=>{if(document.visibilityState==="visible")tick();else stop()};
+  tick();
+  document.addEventListener("visibilitychange",visibility);
+  return()=>{stop();document.removeEventListener("visibilitychange",visibility)};
  },[pathname]);
- useEffect(()=>{if(pathname!=="/"||stage!=="path"||responded.current)return;const hide=window.setTimeout(()=>setStage("off"),10000);return()=>window.clearTimeout(hide)},[stage,pathname]);
- useEffect(()=>{if(pathname!=="/")return;const timer=window.setInterval(()=>{if(!responded.current)setStage(s=>s==="off"?"path":s)},180000);return()=>window.clearInterval(timer)},[pathname]);
- useEffect(()=>{const replay=()=>{if(pathname==="/"){responded.current=false;setStage("dark");window.setTimeout(()=>setStage("path"),2200)}else window.location.href="/"};window.addEventListener("1muslim:replay-intro",replay);return()=>window.removeEventListener("1muslim:replay-intro",replay)},[pathname]);
+ useEffect(()=>{
+  if(pathname!=="/"||stage!=="path")return;
+  const hide=window.setTimeout(()=>setStage("off"),10000);
+  return()=>clearTimeout(hide);
+ },[stage,pathname]);
  const finish=()=>{responded.current=true;try{localStorage.setItem("1muslim-elmi-journey-v1","done")}catch{}setStage("off")};
  if(stage==="off")return null;
  const reduced=typeof window!=="undefined"&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
