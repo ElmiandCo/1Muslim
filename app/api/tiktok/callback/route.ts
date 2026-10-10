@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../utils/supabase/server";
 import { timingSafeEqual } from "node:crypto";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
@@ -30,7 +31,10 @@ export async function GET(request: NextRequest) {
     const result = await fetch("https://open.tiktokapis.com/v2/oauth/token/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", "Cache-Control": "no-store" }, body: params.toString(), cache: "no-store" });
     const token = await result.json();
     if (!result.ok || !token.access_token || !token.open_id) return finish("token_exchange");
-    const { error } = await supabase.from("tiktok_connections").upsert({ user_id: user.id, open_id: token.open_id, access_token: token.access_token, refresh_token: token.refresh_token, expires_at: new Date(Date.now() + token.expires_in * 1000).toISOString(), connected_at: new Date().toISOString() }, { onConflict: "user_id" });
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return finish("storage_configuration");
+    const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { error } = await admin.from("tiktok_connections").upsert({ user_id: user.id, open_id: token.open_id, access_token: token.access_token, refresh_token: token.refresh_token, expires_at: new Date(Date.now() + token.expires_in * 1000).toISOString(), connected_at: new Date().toISOString() }, { onConflict: "user_id" });
     if (error) return finish("storage");
     return finish(undefined, true);
   } catch { return finish("network"); }
