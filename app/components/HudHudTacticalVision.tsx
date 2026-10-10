@@ -24,11 +24,13 @@ export default function HudHudTacticalVision(){
  const hint=hints.find(h=>h.match.test(pathname))||{words:["أصحاب"],text:"HudHud can explain Arabic words and guide you to the most relevant learning page.",href:"/as-sahaba",label:"Explore Arabic words"};
  useEffect(()=>{try{setOn(localStorage.getItem(KEY)!=="off")}catch{}},[]);
  useEffect(()=>{const sync=()=>{try{setOn(localStorage.getItem(KEY)!=="off")}catch{}};window.addEventListener("1muslim:hudhud-vision-changed",sync);return()=>window.removeEventListener("1muslim:hudhud-vision-changed",sync)},[]);
- useEffect(()=>{setOpen(false);setDragged(false);const t=setTimeout(()=>setOpen(true),4200);return()=>clearTimeout(t)},[pathname]);
+ useEffect(()=>{setOpen(false);setDragged(false)},[pathname]);
+ useEffect(()=>{const show=()=>{setOn(true);setOpen(true);localStorage.setItem(KEY,"on")};window.addEventListener("1muslim:hudhud-vision-enable",show);return()=>window.removeEventListener("1muslim:hudhud-vision-enable",show)},[]);
  useEffect(()=>{if(!on||!open)return;
  const locate=()=>{
   const elements=Array.from(document.querySelectorAll<HTMLElement>("h1,h2,h3,a,button,span"));
-  const found=elements.find(el=>el.offsetWidth>0&&el.offsetWidth<innerWidth*.75&&hint.words.some(w=>el.textContent?.trim().includes(w))&&(()=>{const r=el.getBoundingClientRect();return r.top>70&&r.top<innerHeight-90})());
+  const annotated=pathname.startsWith("/elm-tent/quran")?Array.from(document.querySelectorAll<HTMLElement>("[data-annotation-id],[data-annotation],[data-verse-index] mark,.omQuranPage mark")):[];
+  const found=annotated.find(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.top>70&&r.top<innerHeight-90})||elements.find(el=>el.offsetWidth>0&&el.offsetWidth<innerWidth*.75&&hint.words.some(w=>el.textContent?.trim().includes(w))&&(()=>{const r=el.getBoundingClientRect();return r.top>70&&r.top<innerHeight-90})());
   const r=found?.getBoundingClientRect();if(!r){setAnchor(null);return}
   setAnchor({x:r.left+r.width/2,y:r.top+r.height/2});
   if(!dragged){const width=Math.min(300,innerWidth-24);const x=r.right+width+18<innerWidth?r.right+14:r.left-width-14>8?r.left-width-14:Math.max(8,innerWidth-width-12);setPos({x,y:Math.max(88,Math.min(innerHeight-205,r.top))})}
