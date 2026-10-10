@@ -69,6 +69,7 @@ export default function GoLivePage() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const processedAudioTrackRef = useRef<MediaStreamTrack | null>(null);
   const [title, setTitle] = useState("");
+  const [orbStartRequested,setOrbStartRequested]=useState(false);
   // Inform the mobile dock only when the host has a working camera and a title.
   useEffect(()=>{
     const ready=cameraReady&&cameraOn&&Boolean(title.trim())&&!live&&!saving;
@@ -682,6 +683,7 @@ export default function GoLivePage() {
     } finally { setSaving(false); }
   };
 
+  useEffect(()=>{const onOrb=()=>{if(live||saving)return;if(!cameraReady||!cameraOn||!micOn){setError("Enable your camera and microphone before starting Live.");return}if(scheduledSlot){setError("Scheduled Lives must use their existing check-in and start-time controls.");return}if(!title.trim())setTitle("Live with 1Muslim · "+new Date().toLocaleDateString(undefined,{month:"short",day:"numeric"}));setOrbStartRequested(true)};window.addEventListener("1muslim:hudhud-orb-start-live",onOrb);return()=>window.removeEventListener("1muslim:hudhud-orb-start-live",onOrb)},[live,saving,cameraReady,cameraOn,micOn,scheduledSlot,title]);
   const startLive = async (fromSchedule = false) => {
     if (!cameraReady) return setError("Turn on your camera and microphone first.");
     if (!title.trim()) return setError("Give your live stream a title first.");
@@ -798,6 +800,7 @@ export default function GoLivePage() {
     return()=>window.clearInterval(timer);
   },[live,viewers]);
 
+  useEffect(()=>{if(!orbStartRequested||!title.trim())return;setOrbStartRequested(false);if(!live&&!saving&&cameraReady&&cameraOn&&micOn&&!scheduledSlot)void startLive(false)},[orbStartRequested,title,live,saving,cameraReady,cameraOn,micOn,scheduledSlot]);
   const endLive = () => {
     setLive(false); setViewers(0); setShowHostIntro(false);
     const supabase = createClient();

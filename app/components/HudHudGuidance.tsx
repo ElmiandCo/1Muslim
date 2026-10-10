@@ -1,60 +1,50 @@
 "use client";
-import {useEffect,useState} from "react";
+import {useEffect,useRef,useState} from "react";
 import {usePathname,useRouter} from "next/navigation";
-const key="1muslim-hudhud-guidance-visit-v1";
-const stops=[
- {name:"Qur'an Studio",href:"/elm-tent/quran?surah=20&verse=114",hint:"Begin with the words of Allah."},
- {name:"Community Posts",href:"/#community",hint:"Read and reflect with the community."},
- {name:"Daily Video",href:"/#video-of-day",hint:"Watch today's featured lesson."},
- {name:"Main Live Stream",href:"/#live-now",hint:"Join the community live when a stream is available."}
-];
-const verses=[
- {arabic:"وَقُل رَّبِّ زِدْنِي عِلْمًا",translation:"My Lord, increase me in knowledge.",ref:"Qur'an 20:114"},
- {arabic:"فَإِنَّ مَعَ الْعُسْرِ يُسْرًا",translation:"Indeed, with hardship comes ease.",ref:"Qur'an 94:5"},
- {arabic:"إِنَّ اللَّهَ مَعَ الصَّابِرِينَ",translation:"Indeed, Allah is with the patient.",ref:"Qur'an 2:153"},
- {arabic:"وَهُوَ مَعَكُمْ أَيْنَ مَا كُنْتُمْ",translation:"He is with you wherever you are.",ref:"Qur'an 57:4"}
-];
+
+type Stop={id:string;title:string;href:string;selector?:string;description:string;dwell:number};
+const verse:Stop={id:"verse",title:"Read a verse",href:"/elm-tent/quran?surah=20&verse=114",description:"Qur'an 20:114 — My Lord, increase me in knowledge. Take a moment to read and reflect.",dwell:7000};
+const community:Stop={id:"community",title:"Explore the community",href:"/#community",selector:"#community",description:"See how members discuss and share beneficial reminders.",dwell:6000};
+const video:Stop={id:"video",title:"Watch a lesson",href:"/#video-of-day",selector:"#video-of-day",description:"Explore today's video and think about what you learned.",dwell:6500};
+const share:Stop={id:"share",title:"Prepare a Verse Share",href:"/#community",selector:"#community",description:"Create a post about Qur'an 20:114. Review the verse and your own reflection before publishing.",dwell:6500};
+const live:Stop={id:"live",title:"Explore Live",href:"/#live-now",selector:"#live-now",description:"Discover live learning and conversations. Joining is your choice.",dwell:6000};
+const routes:Record<string,Stop[]>={reflect:[verse,community,share],watch:[verse,video,share],live:[verse,live,share]};
+const storage="1muslim:hudhud-guidance-journey-v2";
+const settingKey="1muslim:hudhud-guidance-enabled";
 export default function HudHudGuidance(){
  const router=useRouter(),pathname=usePathname();
- const [active,setActive]=useState(false),[index,setIndex]=useState(0),[strength,setStrength]=useState(0);
- const [target,setTarget]=useState<string|null>(null);
- useEffect(()=>{const launch=()=>{
-  let count=0;try{count=Math.max(0,Number(localStorage.getItem(key)||"0"))}catch{}
-  const next=count===0?0:Math.floor(Math.random()*stops.length);try{localStorage.setItem(key,String(count+1))}catch{}
-  setTarget(new URLSearchParams(window.location.search).get("guidanceTarget"));
-  setIndex(next);setStrength(Math.min(.75,.30*Math.pow(1.5,count)));setActive(true);
-  try{if(localStorage.getItem("1muslim-hudhud-voice")==="on"&&"speechSynthesis" in window){window.speechSynthesis.cancel();const v=verses[next];const speech=new SpeechSynthesisUtterance(v.translation+". "+stops[next].hint);speech.rate=.92;window.speechSynthesis.speak(speech)}}catch{}
- };window.addEventListener("1muslim:hudhud-guidance",launch);return()=>window.removeEventListener("1muslim:hudhud-guidance",launch)},[]);
- useEffect(()=>{if(!active)return;const t=window.setTimeout(()=>setActive(false),9500);return()=>window.clearTimeout(t)},[active,index]);
- if(!active)return null;
- const verse=verses[index],stop=stops[index];
- const go=()=>{setActive(false);const href=target?.startsWith("/")&&!target.startsWith("//")?target:stop.href;if(href.includes("#")&&pathname==="/"){const id=href.split("#")[1];const node=document.getElementById(id);if(node){node.scrollIntoView({behavior:"smooth",block:"center"});node.classList.add("hudhud-guidance-target");window.setTimeout(()=>node.classList.remove("hudhud-guidance-target"),4500)}else router.push(href)}else router.push(href)};
- return <div className="hh-guide-root" role="dialog" aria-modal="true" aria-label="HudHud Guidance">
- <div className="hh-guide-dim" style={{background:`rgba(0,8,20,${strength})`}} onClick={()=>setActive(false)}/>
- <div className="hh-guide-lights" aria-hidden="true">{Array.from({length:65},(_,i)=><i key={i} style={{left:`${(i*47.1)%100}%`,top:`${(i*23.7)%100}%`,animationDelay:`${(i%13)*.12}s`}}/>)}</div>
- <section className="hh-guide-card"><img src="/assets/hudhud-logo.PNG" alt="HudHud"/><small>HUDHUD GUIDANCE · {index+1} / 4</small>
- <div className="hh-guide-arabic" lang="ar" dir="rtl">{verse.arabic}</div><p>{verse.translation}</p><small>{verse.ref}</small>
- <h2>Let's explore {stop.name}</h2><p>{stop.hint}</p>
- <div className="hh-guide-actions"><button type="button" onClick={()=>setActive(false)}>Not now</button><button type="button" onClick={go}>Take me there →</button></div>
+ const [running,setRunning]=useState(false),[step,setStep]=useState(0),[route,setRoute]=useState("reflect"),[phase,setPhase]=useState<"travel"|"observe"|"question"|"finish">("travel"),[remaining,setRemaining]=useState(0),[paused,setPaused]=useState(false);
+ const [answer,setAnswer]=useState<string|null>(null);
+ const timer=useRef<ReturnType<typeof setTimeout>|null>(null),token=useRef(0);
+ const stops=routes[route]||routes.reflect,stop=stops[Math.min(step,stops.length-1)];
+ const cancelTimer=()=>{if(timer.current){clearTimeout(timer.current);timer.current=null}};
+ const finish=()=>{cancelTimer();setPhase("finish");setPaused(false);try{sessionStorage.removeItem(storage)}catch{}};
+ const close=()=>{cancelTimer();token.current++;setRunning(false);setPaused(false);try{sessionStorage.removeItem(storage)}catch{}window.dispatchEvent(new Event("1muslim:guidance-finished"))};
+ const advance=()=>{cancelTimer();if(step>=stops.length-1){finish();return}setStep(s=>s+1);setPhase("travel");setAnswer(null)};
+ useEffect(()=>{const launch=()=>{if(localStorage.getItem(settingKey)==="off")return;token.current++;cancelTimer();setRoute("reflect");setStep(0);setPhase("travel");setAnswer(null);setPaused(false);setRunning(true)};const onSetting=()=>{if(localStorage.getItem(settingKey)==="off"){cancelTimer();token.current++;setRunning(false);try{sessionStorage.removeItem(storage)}catch{}}};window.addEventListener("1muslim:hudhud-guidance",launch);window.addEventListener("1muslim:hudhud-guidance-setting-changed",onSetting);return()=>{window.removeEventListener("1muslim:hudhud-guidance",launch);window.removeEventListener("1muslim:hudhud-guidance-setting-changed",onSetting);cancelTimer()}},[]);
+ useEffect(()=>{if(!running||phase!=="travel")return;const current=token.current;const url=new URL(stop.href,window.location.origin);if(url.pathname!==pathname){router.push(stop.href);return}const id=stop.selector||url.hash;const node=id?document.querySelector<HTMLElement>(id):document.querySelector<HTMLElement>("main");if(id&&!node){finish();return}node?.scrollIntoView({behavior:"smooth",block:"center"});node?.classList.add("hudhud-guidance-target");timer.current=setTimeout(()=>{if(current!==token.current)return;node?.classList.remove("hudhud-guidance-target");setRemaining(stop.dwell);setPhase("observe")},950);return()=>{cancelTimer();node?.classList.remove("hudhud-guidance-target")}},[running,phase,pathname,step,route,router,stop.href,stop.selector,stop.dwell]);
+ useEffect(()=>{if(!running||phase!=="observe"||paused)return;timer.current=setTimeout(()=>{if(step===0){setPhase("question")}else advance()},remaining||stop.dwell);return cancelTimer},[running,phase,paused,step,remaining,stop.dwell]);
+ useEffect(()=>{if(!running||phase==="finish")return;try{sessionStorage.setItem(storage,JSON.stringify({route,step,phase}))}catch{}},[running,route,step,phase]);
+ if(!running)return null;
+ const choose=(choice:string)=>{setAnswer(choice);setRoute(choice);setStep(1);setPhase("travel")};
+ return <div className="hh-trip-root" role="dialog" aria-modal="true" aria-label="HudHud Guided Journey">
+ <div className="hh-trip-dim"/>
+ <section className="hh-trip-card">
+ <header><img src="/assets/hudhud-logo.PNG" alt="HudHud"/><div><small>HUDHUD GUIDED JOURNEY</small><strong>{phase==="finish"?"Journey complete":stop.title}</strong><small>{phase==="finish"?"All stops completed":`Stop ${step+1} of ${stops.length}`}</small></div><button type="button" onClick={close} aria-label="Exit guided journey">✕</button></header>
+ {phase==="finish"?<><p>🎉 Your guided trip is over! You explored a Qur'an verse and discovered ways to learn and share. Nothing was posted automatically.</p><button type="button" onClick={close}>Finish journey ✓</button></>:
+ phase==="question"?<><p>You've read Qur'an 20:114. Where would you like HudHud to take you next?</p><div className="hh-trip-options"><button onClick={()=>choose("reflect")}>Explore community discussion</button><button onClick={()=>choose("watch")}>Watch a related lesson</button><button onClick={()=>choose("live")}>See what's Live</button></div></>:
+ <><p>{stop.description}</p><p className="hh-trip-hint">{phase==="travel"?"Moving to your next stop…":paused?"Paused — take your time.":"Take a few seconds to look at this section."}</p><div className="hh-trip-actions"><button type="button" onClick={()=>{setPaused(p=>!p);setRemaining(stop.dwell)}} disabled={phase!=="observe"}>{paused?"Resume":"Pause"}</button><button type="button" onClick={advance}>Next stop →</button></div></>}
+ <footer><span>{answer?"Route: "+answer:"Your route can change after the first stop"}</span><button type="button" onClick={close}>End trip</button></footer>
  </section>
  <style jsx>{`
- .hh-guide-root{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;pointer-events:none;color:white;padding:18px}
- .hh-guide-dim{position:absolute;inset:0;pointer-events:auto;backdrop-filter:brightness(.75);animation:guideFade .45s ease both}
- .hh-guide-lights{position:absolute;inset:0;overflow:hidden;pointer-events:none}
- .hh-guide-lights i{position:absolute;width:5px;height:5px;border-radius:50%;background:#a8ffe9;box-shadow:0 0 14px 5px #58ffd9aa,0 0 40px 12px #8d66ff66;animation:guideFlicker 3s ease-in-out infinite alternate}
- .hh-guide-card{position:relative;pointer-events:auto;width:min(440px,94vw);max-height:85dvh;overflow:auto;text-align:center;padding:23px;border:1px solid #79f3e7a6;border-radius:27px;background:linear-gradient(140deg,#0b2335ee,#1c1434f2);box-shadow:0 15px 90px #000a,0 0 55px #63eaff55;animation:guideAppear .5s cubic-bezier(.2,1.3,.3,1) both}
- .hh-guide-card img{width:76px;height:76px;object-fit:contain;filter:drop-shadow(0 0 20px #7a8cff)}
- .hh-guide-card small{display:block;color:#a5f2e8;font-size:11px;letter-spacing:.1em}
- .hh-guide-arabic{font-family:serif;font-size:clamp(26px,7vw,36px);line-height:1.8;margin:20px 0 8px;color:#f2ffda}
- .hh-guide-card p{color:#c7dfeb;line-height:1.55}
- .hh-guide-card h2{font-size:24px;margin:25px 0 8px}
- .hh-guide-actions{display:flex;gap:10px;justify-content:center;margin-top:20px}
- .hh-guide-actions button{border:1px solid #7be6f5;border-radius:14px;padding:13px;color:white;background:#16364e;cursor:pointer}
- .hh-guide-actions button:last-child{background:linear-gradient(110deg,#167c8d,#6548a3);font-weight:800}
- @keyframes guideAppear{from{opacity:0;transform:translateY(24px) scale(.88)}to{opacity:1;transform:none}}
- @keyframes guideFade{from{opacity:0}to{opacity:1}}
- @keyframes guideFlicker{from{opacity:.2;transform:translateY(18px) scale(.5)}to{opacity:1;transform:translateY(-24px) scale(1.4)}}
- @media(prefers-reduced-motion:reduce){.hh-guide-root *{animation:none!important}}
+ .hh-trip-root{position:fixed;inset:0;z-index:10050;pointer-events:none;color:#fff;font-family:inherit}
+ .hh-trip-dim{position:absolute;inset:0;background:rgba(0,8,18,.48);backdrop-filter:brightness(.76);pointer-events:none;animation:tripDim .4s ease both}
+ .hh-trip-card{position:absolute;bottom:max(88px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(450px,calc(100vw - 28px));max-height:70dvh;overflow:auto;pointer-events:auto;padding:16px;border:1px solid #72daca88;border-radius:22px;background:#091c2af2;box-shadow:0 12px 60px #0009;animation:tripIn .4s ease both}
+ .hh-trip-card header{display:flex;align-items:center;gap:12px}.hh-trip-card header img{width:48px;height:48px;object-fit:contain}.hh-trip-card header div{flex:1;display:grid;gap:3px}.hh-trip-card small{font-size:10px;color:#8be8d8}.hh-trip-card strong{font-size:17px}.hh-trip-card p{font-size:13px;line-height:1.6;color:#e4f0f2}.hh-trip-hint{color:#95c7c9!important}
+ .hh-trip-card button{border:1px solid #66b8bb;border-radius:11px;background:#163f51;color:white;padding:9px 12px;cursor:pointer}.hh-trip-card button:disabled{opacity:.4}
+ .hh-trip-actions,.hh-trip-options{display:flex;gap:8px;flex-wrap:wrap}.hh-trip-options{flex-direction:column}.hh-trip-card footer{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;color:#8fb4c2;font-size:10px}
+ @keyframes tripIn{from{opacity:0;translate:0 20px}to{opacity:1;translate:0 0}}@keyframes tripDim{from{opacity:0}to{opacity:1}}
+ @media(prefers-reduced-motion:reduce){.hh-trip-root *{animation:none!important}}
  `}</style>
- </div>
+ </div>;
 }
