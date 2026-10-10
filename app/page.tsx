@@ -18,6 +18,7 @@ import HudHudHomeIntro from "./components/HudHudHomeIntro";
 import HomeLayoutStudio from "./components/HomeLayoutStudio";
 import HudHudVoiceSpiral from "./components/HudHudVoiceSpiral";
 import HudHudVisionDock from "./components/HudHudVisionDock";
+import HudHudPersonalWelcome from "./components/HudHudPersonalWelcome";
 
 type Path = "easy" | "advanced";
 
@@ -324,6 +325,7 @@ export default function Home() {
       <HomeLayoutStudio />
       <HudHudVoiceSpiral />
       <HudHudVisionDock />
+      <HudHudPersonalWelcome />
       <aside className="rightRail">
         <form className="search" action="/search" method="get">⌕ <input name="q" type="search" aria-label="Search 1Muslim" placeholder="Search 1Muslim" /></form>
         <div className="railCard"><span className="eyebrow">START HERE</span><h3>New to Islam?</h3><p>Take the gentle route through Allah, Qur’an, prayer, forgiveness and daily life.</p><button className="primary">Start Easy Path</button></div>
