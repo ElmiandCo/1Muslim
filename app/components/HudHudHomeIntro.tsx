@@ -41,6 +41,7 @@ export default function HudHudHomeIntro() {
   useEffect(()=>{
     if(phase!=="video")return;
     const audio=new Audio("/audio/nasheed.mp3");
+    if(soundtrack.current)return;
     soundtrack.current=audio;
     audio.preload="auto";
     audio.loop=true;
@@ -49,7 +50,7 @@ export default function HudHudHomeIntro() {
     const play=()=>{if(!soundEnabled||!audio.paused)return;void audio.play().then(()=>rampUpAudio(audio)).catch(()=>{});};
     play();
     window.addEventListener("pointerdown",play,{once:true});
-    return()=>{window.removeEventListener("pointerdown",play);audio.pause();if(soundtrack.current===audio)soundtrack.current=null;};
+    return()=>{window.removeEventListener("pointerdown",play);};
   },[phase]);
   useEffect(()=>{if(phase!=="video")return;const v=video.current,c=canvas.current;if(!v||!c)return;let frame=0;const draw=()=>{if(!v.videoWidth||!v.videoHeight){frame=requestAnimationFrame(draw);return}const ctx=c.getContext("2d",{willReadFrequently:true});if(!ctx)return;const w=360,h=Math.max(1,Math.round(360*v.videoHeight/v.videoWidth));if(c.width!==w||c.height!==h){c.width=w;c.height=h}try{ctx.drawImage(v,0,0,w,h);const img=ctx.getImageData(0,0,w,h),d=img.data;for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];const green=g-Math.max(r,b);if(g>65&&green>12){const alpha=Math.max(0,Math.min(1,(green-12)/55));d[i+3]=Math.round(d[i+3]*(1-alpha));if(alpha<1){d[i]=Math.min(255,r+green*.12);d[i+2]=Math.min(255,b+green*.12)}}}ctx.putImageData(img,0,0)}catch{setVideoFailed(true);return}frame=requestAnimationFrame(draw)};frame=requestAnimationFrame(draw);return()=>cancelAnimationFrame(frame)},[phase]);
   useEffect(() => {
