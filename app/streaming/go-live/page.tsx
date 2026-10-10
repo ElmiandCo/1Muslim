@@ -833,6 +833,7 @@ export default function GoLivePage() {
   };
 
   const [studioSettingsOpen,setStudioSettingsOpen] = useState(false);
+  const [liveDetailsOpen,setLiveDetailsOpen] = useState(false);
   return (
     <main className="goLive"><FirstVisitGuide area="go-live"/>
       <style jsx>{`
@@ -844,9 +845,29 @@ export default function GoLivePage() {
         .form{padding:20px}.form h2{font-size:17px;margin:0 0 15px}.field{margin-bottom:15px}.field label{display:block;font-size:10px;color:#748178;margin-bottom:7px;text-transform:uppercase;letter-spacing:.1em}.input,.select{width:100%;border:1px solid #263029;background:#0d140f;color:#f3f6f3;border-radius:11px;padding:12px;outline:none}.input:focus,.select:focus{border-color:#61785a}.help{font-size:10px;color:#66736b;line-height:1.6;margin-top:14px}.error{border:1px solid #533536;background:#1b0f10;color:#ffcaca;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}.ready{border:1px solid #334333;background:#101810;color:#b8d2ae;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}.checkedIn{border-color:#6b815e;background:#111c12;color:#d6e7b8}
         .formatGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.formatButton{border:1px solid #263029;background:#0d140f;color:#aeb8b1;border-radius:13px;padding:11px;text-align:left;cursor:pointer}.formatButton strong{display:block;color:#e8eee9;font-size:11px}.formatButton small{display:block;color:#69766e;font-size:9px;margin-top:4px}.formatButton.active{border-color:#718c69;background:#132016;box-shadow:inset 0 0 0 1px #718c69}.formatButton:disabled{cursor:not-allowed;opacity:.55}.recordingsLink{display:inline-flex;margin-top:12px;color:#cbd8ce;text-decoration:none;font-size:11px}.notice{margin-top:16px;border:1px solid #273129;border-radius:16px;padding:15px;color:#7d8981;font-size:10px;line-height:1.6}.notice strong{color:#c7d2ca;display:block;margin-bottom:4px}
         @media(max-width:780px){.layout{grid-template-columns:1fr}.heading h1{font-size:36px}.shell{padding:24px 12px 50px}}
+        .mobileStudioTop,.mobileStudioSettings,.mobileDetailsClose{display:none}
+        @media(max-width:780px){
+          .goLive{background:#030706;color:#fff}.desktopStudioNav,.heading,.studioTools{display:none}
+          .shell{padding:0;max-width:none}.layout{display:block}
+          .layout>.panel:first-child{position:relative;border:0;border-radius:0;background:#030706;min-height:100dvh;overflow:visible}
+          .preview,.preview.format-portrait,.preview.format-square,.preview.format-landscape{position:relative;width:100vw;max-width:none;max-height:none;height:100dvh;min-height:100dvh;aspect-ratio:auto;border-radius:0;overflow:hidden;background:#030706}
+          .preview video{width:100%;height:100%;object-fit:cover}
+          .mobileStudioTop{display:flex;position:absolute;z-index:30;top:0;left:0;right:0;align-items:center;justify-content:space-between;gap:8px;padding:calc(env(safe-area-inset-top) + 14px) 16px 14px;background:linear-gradient(#0009,transparent);font-size:12px;pointer-events:none}
+          .mobileStudioTop>*{pointer-events:auto}.mobileStudioTop button,.mobileStudioExit{border:1px solid #fff6;border-radius:99px;padding:10px 13px;background:#0009;color:#fff;text-decoration:none;font:inherit;cursor:pointer}
+          .mobileStudioSettings{display:grid;place-items:center;position:absolute;right:13px;top:calc(env(safe-area-inset-top) + 86px);z-index:31;width:46px;height:46px;border-radius:50%;border:1px solid #fff6;background:#000a;color:#fff;font-size:22px}
+          .previewOverlayTools{top:48%;right:13px}.previewOverlayTools button{width:46px;height:46px}
+          .preview .status{bottom:calc(env(safe-area-inset-bottom) + 135px);left:10px;right:10px;justify-content:center;flex-wrap:wrap}.preview .status span{font-size:9px}
+          .controls{position:absolute;z-index:32;left:0;right:0;top:calc(100dvh - env(safe-area-inset-bottom) - 116px);min-height:96px;border:0;background:linear-gradient(transparent,#000b);padding:10px 12px calc(env(safe-area-inset-bottom) + 8px);align-items:center;flex-wrap:wrap}
+          .controls .start,.controls .end{font-size:13px;padding:13px 18px}
+          .cameraStudio{display:none}.cameraStudio.studioOpen{display:block;position:absolute;z-index:40;left:8px;right:8px;top:calc(env(safe-area-inset-top) + 142px);max-height:50dvh;overflow:auto;border:1px solid #ffffff55;border-radius:18px;box-shadow:0 12px 45px #000c}
+          .layout>.form{display:none}.layout>.form.mobileDetailsOpen{display:block;position:fixed;z-index:70;inset:auto 0 0;max-height:82dvh;overflow:auto;border-radius:24px 24px 0 0;box-shadow:0 -20px 70px #000b;padding-bottom:calc(env(safe-area-inset-bottom) + 24px)}
+          .mobileDetailsClose{display:block;margin:0 0 15px auto;border:1px solid #fff5;border-radius:99px;padding:9px 13px;background:#152419;color:#fff}
+          .layout>.panel:first-child>div[style]{display:none}
+          .liveRoom{margin:14px}
+        }
       `}</style>
 
-      <SiteNav />
+      <div className="desktopStudioNav"><SiteNav /></div>
       <div className="shell">
         <div className="studioTools">
               {scheduledSlot && <div className="upcomingPrep"><div><span className="eyebrow">UPCOMING LIVE</span><strong>{scheduledSlot.title}</strong><span>{scheduledSlot.category} · {new Date(scheduledSlot.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div><button type="button" className="prepButton" onClick={()=>{setTitle(scheduledSlot.title);setCategory(scheduledSlot.category);setShowScheduler(false);setSaveMessage("Prep mode loaded. Check your title, topic, format, thumbnail, camera and microphone before going live.");}}>{hostCheckedIn ? "✓ Host Checked In" : "Prep for upcoming Live →"}</button></div>}
@@ -862,6 +883,8 @@ export default function GoLivePage() {
         <div className="layout">
           <section className="panel">
             <div className={`preview format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"}`}>
+              <div className="mobileStudioTop"><Link href="/streaming" aria-label="Exit Go Live studio" className="mobileStudioExit">✕</Link><strong>{live?"● LIVE":"✦ 1MUSLIM STUDIO"}</strong><button type="button" onClick={()=>setLiveDetailsOpen(v=>!v)} aria-label="Live details" aria-expanded={liveDetailsOpen}>✎ Details</button></div>
+              <button type="button" className="mobileStudioSettings" onClick={()=>setStudioSettingsOpen(v=>!v)} aria-label="Toggle camera studio settings" aria-expanded={studioSettingsOpen}>⚙</button>
               {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
               {cameraReady && <div className="previewOverlayTools" aria-label="Camera controls"><button type="button" onClick={()=>void flipCamera()} title="Flip camera" aria-label="Flip camera">🔄</button><button type="button" onClick={toggleCamera} title={cameraOn?"Turn camera off":"Turn camera on"} aria-label={cameraOn?"Turn camera off":"Turn camera on"}>{cameraOn?"📷":"🚫"}</button><button type="button" onClick={toggleMic} title={micOn?"Mute microphone":"Unmute microphone"} aria-label={micOn?"Mute microphone":"Unmute microphone"}>{micOn?"🎙️":"🔇"}</button></div>}
@@ -884,7 +907,7 @@ export default function GoLivePage() {
               <label style={{display:"flex",alignItems:"center",gap:7,fontSize:12,color:"#d6e7b8",padding:"8px 10px",border:"1px solid #ffffff30",borderRadius:12,background:"#ffffff0c",cursor:"pointer"}}><input type="checkbox" checked={autoCameraPreview} onChange={e=>{const enabled=e.target.checked;setAutoCameraPreview(enabled);localStorage.setItem("1muslim-go-live-auto-camera",enabled?"on":"off");}} aria-label="Automatically enable camera preview when opening Go Live" /> Auto-start camera preview</label>
               {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In for Scheduled Live</button> : null}<button data-go-live-start className="start" onClick={()=>void startLive(false)} disabled={saving}>● Start Live Now</button></div>}
             </div>
-            {cameraReady && <div className="cameraStudio">
+            {cameraReady && <div className={studioSettingsOpen ? "cameraStudio studioOpen" : "cameraStudio"}>
               <div className="studioHeader"><strong>Camera Studio</strong><span>{videoQuality} · {zoom.toFixed(1)}×</span></div>
               <div className="studioGrid">
                 <div className="studioControl">
@@ -920,7 +943,7 @@ export default function GoLivePage() {
             </div>}
           </section>
 
-          <aside className="panel form">
+          <aside className={liveDetailsOpen ? "panel form mobileDetailsOpen" : "panel form"}><button type="button" className="mobileDetailsClose" onClick={()=>setLiveDetailsOpen(false)}>✕ Close details</button>
             <h2>Live details</h2>
             {error && <div className="error">{error}</div>}
             {scheduledSlot && !live && <div className={hostCheckedIn ? "ready checkedIn" : "ready"}>{hostCheckedIn ? "✓ HOST CHECKED IN — Viewers can see that you are ready. The broadcast stays locked until the scheduled time." : "Scheduled Live: camera and microphone can be prepared now. Check in when you are fully ready."}</div>}{live && <div className="ready">Your live session is active and being recorded.</div>}{saveMessage && <div className="ready">{saveMessage}</div>}
