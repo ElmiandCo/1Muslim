@@ -6,9 +6,11 @@ type Recognition={lang:string;continuous:boolean;interimResults:boolean;onresult
 type SpeechWindow=Window&{SpeechRecognition?:new()=>Recognition;webkitSpeechRecognition?:new()=>Recognition};
 export default function HudHudVoiceCommands(){
  const router=useRouter(),recognition=useRef<Recognition|null>(null),[enabled,setEnabled]=useState(false),[listening,setListening]=useState(false),[feedback,setFeedback]=useState("");
+ const [quranVerse,setQuranVerse]=useState("");
  const [undocked,setUndocked]=useState(false),[orbPos,setOrbPos]=useState({x:0,y:0}),[tutorial,setTutorial]=useState(false);
  const moving=useRef<{x:number;y:number;ox:number;oy:number;source:"orb"|"dock";moved:boolean}|null>(null);
  const dockRef=useRef<HTMLDivElement|null>(null);
+ useEffect(()=>{const on=(e:Event)=>{const verse=(e as CustomEvent<{verse:string}>).detail?.verse||"";setQuranVerse(verse);if(verse){setUndocked(true);setOrbPos({x:Math.max(42,innerWidth-58),y:Math.max(140,innerHeight-250)})}};window.addEventListener("1muslim:quran-recorder-orb",on);return()=>window.removeEventListener("1muslim:quran-recorder-orb",on)},[]);
  useEffect(()=>{const start=()=>{if(!localStorage.getItem("1muslim:voice-drag-tutorial-seen"))setTutorial(true)};window.addEventListener("1muslim:voice-drag-tutorial",start);return()=>window.removeEventListener("1muslim:voice-drag-tutorial",start)},[]);
  const finishTutorial=()=>{setTutorial(false);try{localStorage.setItem("1muslim:voice-drag-tutorial-seen","1")}catch{}};
  const dragStart=(e:React.PointerEvent<HTMLElement>,source:"orb"|"dock")=>{if(source==="dock"&&(e.target as HTMLElement).closest("button[data-voice-toggle]"))return;moving.current={x:e.clientX,y:e.clientY,ox:orbPos.x,oy:orbPos.y,source,moved:false};e.currentTarget.setPointerCapture(e.pointerId)};
@@ -21,7 +23,7 @@ export default function HudHudVoiceCommands(){
    <span className="hhVoiceGrip" aria-hidden="true">⠿</span><button data-voice-toggle type="button" onClick={()=>{localStorage.setItem("1muslim:hudhud-voice",enabled?"off":"on");setEnabled(!enabled)}} aria-pressed={enabled}>{listening?"🎙 Voice on":"🎙 Voice off"}</button>
   </div>
   {tutorial&&<div className="hhVoiceTutorialPrompt" role="dialog" aria-label="HudHud voice dock tutorial"><strong>✦ Discover HudHud</strong><p>Drag the highlighted Voice control to pull out your floating HudHud Orb.</p><button onClick={finishTutorial}>Got it · Skip</button></div>}
-  {undocked&&<button type="button" className="hhSecondaryOrb" style={{left:orbPos.x,top:orbPos.y}} onPointerDown={e=>dragStart(e,"orb")} onPointerMove={dragMove} onPointerUp={dragEnd} onPointerCancel={()=>moving.current=null} onClick={()=>{if(!moving.current)window.dispatchEvent(new Event("1muslim:hudhud-vision-enable"))}} aria-label="Movable HudHud Vision orb. Drag to the voice dock to hide."><span className="hhSecondaryHalo"/><img src="/assets/hudhud-logo.PNG" alt="HudHud"/></button>}
+  {undocked&&<button type="button" className="hhSecondaryOrb" style={{left:orbPos.x,top:orbPos.y}} onPointerDown={e=>dragStart(e,"orb")} onPointerMove={dragMove} onPointerUp={dragEnd} onPointerCancel={()=>moving.current=null} onClick={()=>{if(!moving.current)window.dispatchEvent(new Event(quranVerse?"1muslim:quran-record":"1muslim:hudhud-vision-enable"))}} aria-label={quranVerse?"Record current Quran verse in private vault":"Movable HudHud Vision orb. Drag to the voice dock to hide."}><span className="hhSecondaryHalo"/>{quranVerse&&<span style={{position:"absolute",top:-18,fontSize:10,fontWeight:900,color:"#8fffe0",whiteSpace:"nowrap"}}>● REC {quranVerse}</span>}<img src="/assets/hudhud-logo.PNG" alt="HudHud"/></button>}
   <style jsx>{`
   .hhVoiceTutorial{z-index:9601!important;animation:hhVoiceSpotlight 1.8s ease-in-out infinite}
   .hhVoiceTutorialPrompt{position:fixed;z-index:9600;right:12px;bottom:calc(175px + env(safe-area-inset-bottom,0px));width:min(300px,calc(100vw - 24px));border:1px solid #8effd6;border-radius:18px;padding:15px;color:#effffb;background:#0b2031f5;box-shadow:0 0 0 9999px #0008,0 0 25px #74ffe577;line-height:1.45}
