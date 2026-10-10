@@ -832,6 +832,7 @@ export default function GoLivePage() {
     }
   };
 
+  const [studioSettingsOpen,setStudioSettingsOpen] = useState(false);
   return (
     <main className="goLive"><FirstVisitGuide area="go-live"/>
       <style jsx>{`
