@@ -14,7 +14,8 @@ import HudHudSelectionTranslate from "./components/HudHudSelectionTranslate";
 import HudHudLiveMiniPlayer from "./components/HudHudLiveMiniPlayer";
 import NotificationToaster from "./components/NotificationToaster";
 import GuestWelcomeGate from "./components/GuestWelcomeGate";
-import ElmiLightJourney from "./components/ElmiLightJourney";\nimport HudHudVoiceCommands from "./components/HudHudVoiceCommands";
+import ElmiLightJourney from "./components/ElmiLightJourney";
+import HudHudVoiceCommands from "./components/HudHudVoiceCommands";
 
 export const metadata = {
   title: "OneMuslim — Start where you are.",
