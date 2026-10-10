@@ -6,6 +6,7 @@ import SiteNav from "../components/SiteNav";
 import ProfileAvatar from "../components/ProfileAvatar";
 import AshabButton from "../components/AshabButton";
 import AshabEncouragement from "../components/AshabEncouragement";
+import FollowerLevelBadges from "../components/FollowerLevelBadges";
 import { createClient } from "../../utils/supabase/client";
 import "./ashab.css";
 
@@ -96,6 +97,7 @@ export default function AshabPage() {
 
       {message && <div className="ashabMessage">{message}</div>}
 
+      <FollowerLevelBadges followers={stats.followers} ownerId={me} celebrate />
       <AshabEncouragement />
       <section className="ashabSection" id="ashab">
         <div className="sectionHead">
