@@ -17,18 +17,19 @@ const seed: Post[] = [
 const key = "1muslim-community-posts";
 
 export default function Community() {
-  const [posts,setPosts]=useState<Post[]>(seed);
+  const [posts,setPosts]=useState<Post[]>([]);
   const [draft,setDraft]=useState("");
   useEffect(()=>{try{const saved=sessionStorage.getItem("1muslim-verse-share-draft");if(saved){setDraft(saved);sessionStorage.removeItem("1muslim-verse-share-draft")}}catch{}},[]);
   useEffect(()=>{const verse=new URLSearchParams(window.location.search).get("verse");if(verse&&/^(?:[1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(verse)){setDraft("Reflecting on Qur’an "+verse+" 📖\\nhttps://quran.com/"+verse+"\\n");setLink("https://quran.com/"+verse)}},[]);
   const feedRef=useRef<HTMLElement>(null);
   useEffect(()=>{const root=feedRef.current;if(!root||typeof IntersectionObserver==="undefined")return;const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("omPostVisible");observer.unobserve(entry.target)}})},{threshold:.12,rootMargin:"0px 0px -30px 0px"});root.querySelectorAll(".socialPost").forEach(node=>observer.observe(node));return()=>observer.disconnect()},[posts]);
   const [videoIndex,setVideoIndex]=useState<number|null>(null);
-  const [videoMuted,setVideoMuted]=useState(false);
+  const [videoMuted,setVideoMuted]=useState(true);
   const [videoPaused,setVideoPaused]=useState(false);
   const videoRef=useRef<HTMLVideoElement>(null);
   const touchStart=useRef<number|null>(null);
-  const videos=useMemo(()=>posts.filter(p=>p.mediaType==="video"&&!!p.media),[posts]);
+  const [serverPosts,setServerPosts]=useState<Post[]>([]);
+  const videos=useMemo(()=>[...serverPosts,...posts].sort((a,b)=>b.created-a.created),[serverPosts,posts]);
   const openVideo=(id:string)=>{const index=videos.findIndex(p=>p.id===id);if(index>=0){setVideoIndex(index);setVideoPaused(false)}};
   const nextVideo=(direction:number)=>{setVideoIndex(index=>index===null?null:Math.max(0,Math.min(videos.length-1,index+direction)));setVideoPaused(false)};
   useEffect(()=>{if(videoIndex===null)return;const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setVideoIndex(null);if(e.key==="ArrowDown")nextVideo(1);if(e.key==="ArrowUp")nextVideo(-1)};document.addEventListener("keydown",key);const previous=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.removeEventListener("keydown",key);document.body.style.overflow=previous}},[videoIndex,videos.length]);
@@ -56,18 +57,18 @@ export default function Community() {
   const [following,setFollowing]=useState<Record<string,boolean>>({});
   const [notifications,setNotifications]=useState(false);
 
-  useEffect(()=>{ try { const saved=localStorage.getItem(key); if(saved) setPosts(JSON.parse(saved)); } catch {} },[]);
-  useEffect(()=>{ localStorage.setItem(key,JSON.stringify(posts)); },[posts]);
 
-  const [serverPosts,setServerPosts]=useState<Post[]>([]);
+
+
   useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)return;const d=await r.json();const rows=d.posts||[];if(active)setServerPosts(rows.map((p:{id:string;body:string;created_at:string})=>({id:p.id,name:"Community member",handle:"@member",text:p.body,created:new Date(p.created_at).getTime(),likes:0,liked:false,comments:[]})))}catch{}};void load();const t=setInterval(()=>void load(),20000);return()=>{active=false;clearInterval(t)}},[]);
-  const sorted=useMemo(()=>[...serverPosts,...posts].sort((a,b)=>b.created-a.created),[serverPosts,posts]);
+  const sorted=videos;
 
-  const createPost=(e:FormEvent)=>{
+  const createPost=async(e:FormEvent)=>{
     e.preventDefault();
     if(!draft.trim()&&!media&&!safe(link)) return;
-    setPosts(p=>[{id:crypto.randomUUID(),name:"You",handle:"@you",text:draft.trim(),created:Date.now(),likes:0,liked:false,comments:[],media,mediaType,overlay,filter,link:safe(link)},...p]);
-    setDraft("");setMedia("");setOverlay("");setFilter("none");setLink("");setEdit(false);chime();setNotice("✨ Saved to this browser.");animate("new","✨","publish");
+    if(media){setNotice("Cloud media uploads are not ready. Please share a video or file link for now.");return}
+    try{const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:[draft.trim(),safe(link)].filter(Boolean).join("\\n")})});const result=await response.json();if(!response.ok){setNotice(result.error||"Unable to publish");return}setServerPosts(p=>[{id:result.post.id,name:"You",handle:"@you",text:result.post.body,created:new Date(result.post.created_at).getTime(),likes:0,liked:false,comments:[]},...p]);}catch{setNotice("Could not publish. Please retry.");return}
+    setDraft("");setMedia("");setOverlay("");setFilter("none");setLink("");setEdit(false);chime();setNotice("✨ Shared with the Ummah.");animate("new","✨","publish");
   };
 
   const like=(id:string)=>{animate(id,"❤️","like");chime();
@@ -81,21 +82,21 @@ export default function Community() {
   };
 
   return <main className="communityPage">
-    <div style={{display:"flex",justifyContent:"flex-end",padding:"8px 16px"}}><button type="button" disabled={!videos.length} onClick={()=>setVideoIndex(0)} style={{borderRadius:999,padding:"10px 16px",background:"#183c2b",color:"white",border:"1px solid #47765c"}}>▶ Swipe Videos {videos.length?("("+videos.length+")"):""}</button></div>
-    {videoIndex!==null&&videos[videoIndex]&&<div role="dialog" aria-modal="true" aria-label="Swipe video posts" onTouchStart={e=>{touchStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(touchStart.current===null)return;const delta=touchStart.current-e.changedTouches[0].clientY;touchStart.current=null;if(Math.abs(delta)>55)nextVideo(delta>0?1:-1)}} onWheel={e=>{if(Math.abs(e.deltaY)>30)nextVideo(e.deltaY>0?1:-1)}} style={{position:"fixed",inset:0,zIndex:9999,background:"#050806",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"pan-y"}}>
-      <video key={videos[videoIndex].id} ref={videoRef} src={videos[videoIndex].media} autoPlay loop playsInline muted={videoMuted} onClick={()=>{const player=videoRef.current;if(!player)return;if(player.paused){void player.play();setVideoPaused(false)}else{player.pause();setVideoPaused(true)}}} style={{width:"100%",height:"100%",maxWidth:580,objectFit:"contain",background:"#000"}}/>
-      {videoPaused&&<span style={{position:"absolute",pointerEvents:"none",fontSize:52}}>▶</span>}
-      <button type="button" onClick={()=>setVideoIndex(null)} aria-label="Close video viewer" style={{position:"absolute",top:20,left:20,zIndex:2,background:"#0009",color:"#fff",border:0,borderRadius:99,padding:"12px 16px"}}>✕ Close</button>
+    <div style={{display:"flex",justifyContent:"flex-end",padding:"8px 16px"}}><button type="button" disabled={!videos.length} onClick={()=>setVideoIndex(0)} style={{borderRadius:999,padding:"10px 16px",background:"#183c2b",color:"white",border:"1px solid #47765c"}}>↕ Swipe Posts {videos.length?("("+videos.length+")"):""}</button></div>
+    {videoIndex!==null&&videos[videoIndex]&&<div role="dialog" aria-modal="true" aria-label="Swipe community posts" onTouchStart={e=>{touchStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(touchStart.current===null)return;const delta=touchStart.current-e.changedTouches[0].clientY;touchStart.current=null;if(Math.abs(delta)>55)nextVideo(delta>0?1:-1)}} onWheel={e=>{if(Math.abs(e.deltaY)>30)nextVideo(e.deltaY>0?1:-1)}} style={{position:"fixed",inset:0,zIndex:9999,background:"#050806",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"pan-y"}}>
+      {videos[videoIndex].mediaType==="video"&&videos[videoIndex].media?<video key={videos[videoIndex].id} ref={videoRef} src={videos[videoIndex].media} autoPlay loop playsInline muted={videoMuted} onClick={()=>{const player=videoRef.current;if(!player)return;if(player.paused){void player.play();setVideoPaused(false)}else{player.pause();setVideoPaused(true)}}} style={{width:"100%",height:"100%",maxWidth:580,objectFit:"contain",background:"#000"}}/>:<div style={{width:"min(90vw,540px)",maxHeight:"75dvh",overflowY:"auto",padding:28,border:"1px solid #4a9369",borderRadius:24,background:"linear-gradient(145deg,#0c271a,#0a1210)",fontSize:"clamp(19px,4vw,29px)",lineHeight:1.5,whiteSpace:"pre-wrap"}}>{videos[videoIndex].mediaType==="image"&&videos[videoIndex].media&&<img src={videos[videoIndex].media} alt="Community post" style={{maxWidth:"100%",maxHeight:"45dvh",objectFit:"contain"}}/>}{videos[videoIndex].text}</div>}
+      {videoPaused&&videos[videoIndex].mediaType==="video"&&<span style={{position:"absolute",pointerEvents:"none",fontSize:52}}>▶</span>}
+      <button type="button" onClick={()=>setVideoIndex(null)} aria-label="Close post viewer" style={{position:"absolute",top:20,left:20,zIndex:2,background:"#0009",color:"#fff",border:0,borderRadius:99,padding:"12px 16px"}}>✕ Close</button>
       <div style={{position:"absolute",right:16,top:"45%",display:"grid",gap:14,zIndex:2}}>
         <button type="button" onClick={()=>nextVideo(-1)} disabled={videoIndex===0} aria-label="Previous video" style={{padding:14,borderRadius:99}}>↑</button>
         <button type="button" onClick={()=>nextVideo(1)} disabled={videoIndex===videos.length-1} aria-label="Next video" style={{padding:14,borderRadius:99}}>↓</button>
-        <button type="button" onClick={()=>setVideoMuted(v=>!v)} aria-label={videoMuted?"Unmute":"Mute"} style={{padding:14,borderRadius:99}}>{videoMuted?"🔇":"🔊"}</button>
+        {videos[videoIndex].mediaType==="video"&&<button type="button" onClick={()=>setVideoMuted(v=>!v)} aria-label={videoMuted?"Unmute":"Mute"} style={{padding:14,borderRadius:99}}>{videoMuted?"🔇":"🔊"}</button>}
       </div>
-      <div style={{position:"absolute",bottom:32,left:20,right:80,pointerEvents:"none",textShadow:"0 2px 10px #000"}}><strong>{videos[videoIndex].name} · {videos[videoIndex].handle}</strong><p>{videos[videoIndex].text}</p><small>{videoIndex+1} / {videos.length} · Swipe up for next</small></div>
+      <div style={{position:"absolute",bottom:32,left:20,right:80,pointerEvents:"none",textShadow:"0 2px 10px #000"}}><strong>{videos[videoIndex].name} · {videos[videoIndex].handle}</strong><p>{videos[videoIndex].text}</p><small>{videoIndex+1} / {videos.length} · Swipe up for next post</small></div>
     </div>}
     <SiteNav />
     <div className="communityShell">
-      <section className="communityHero"><span className="eyebrow">COMMUNITY</span><h1>Make your moment pop. ✨</h1><p>Ask, reflect, encourage and learn with the 1Muslim community.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">Preview: posts currently save only in your browser, not for other members.</p></section>
+      <section className="communityHero"><span className="eyebrow">COMMUNITY</span><h1>Make your moment pop. ✨</h1><p>Ask, reflect, encourage and learn with the 1Muslim community.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">One community post per day. Posts shared here appear across 1Muslim.</p></section>
       <div className="communityGrid">
         <section ref={feedRef}>
           <form className="composer" onSubmit={createPost}>
@@ -111,7 +112,7 @@ export default function Community() {
             <div className="postBody">
               <div className="postHeader"><strong>{post.name}</strong><span>{post.handle} · {new Date(post.created).toLocaleDateString()}</span><button>•••</button></div>
               <p className="omPostTextReveal">{post.text}</p>{preview(post)}
-              <div className="postActions">
+              <div className="postActions"><button type="button" onClick={()=>{const idx=videos.findIndex(v=>v.id===post.id);if(idx>=0)setVideoIndex(idx)}}>↕ View post</button>
                 <button onClick={()=>setCommentDraft(c=>({...c,[post.id]:c[post.id]===undefined?"":c[post.id]}))}>💬 {post.comments.length}</button>
                 <button className={post.liked?"liked":""} onClick={()=>like(post.id)}>❤️ {post.likes}</button>
                 <button onClick={()=>{animate(post.id,"✨","share");const url=location.origin+"/community";if(navigator.share)void navigator.share({title:"1Muslim",text:post.text,url}).then(chime).catch(()=>{});else void navigator.clipboard.writeText(post.text+"\n"+url).then(()=>{setNotice("🔗 Copied post and community link!");chime()})}}>↗ Share</button>
