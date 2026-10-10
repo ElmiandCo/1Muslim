@@ -33,7 +33,7 @@ export default function HudHudTacticalVision(){
  locate();window.addEventListener("scroll",locate,true);window.addEventListener("resize",locate);
  const timer=setInterval(locate,2500);
  return()=>{window.removeEventListener("scroll",locate,true);window.removeEventListener("resize",locate);clearInterval(timer)}
- },[pathname,on,open,dragged,pinned]);
+ },[pathname,on,open,dragged]);
  const setEnabled=(value:boolean)=>{setOn(value);localStorage.setItem(KEY,value?"on":"off")};
  const start=(e:React.PointerEvent<HTMLElement>)=>{if(!(e.target as HTMLElement).closest("[data-vision-handle]"))return;drag.current={x:e.clientX,y:e.clientY,px:pos.x,py:pos.y};e.currentTarget.setPointerCapture(e.pointerId)};
  const move=(e:React.PointerEvent<HTMLElement>)=>{if(!drag.current)return;if(Math.abs(e.clientX-drag.current.x)+Math.abs(e.clientY-drag.current.y)<5)return;setDragged(true);setPos({x:Math.max(8,Math.min(innerWidth-290,drag.current.px+e.clientX-drag.current.x)),y:Math.max(80,Math.min(innerHeight-130,drag.current.py+e.clientY-drag.current.y))})};
