@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createClient } from "../../utils/supabase/client";
 import ProfileAvatar from "./ProfileAvatar";
+import SmartContextOrb from "./SmartContextOrb";
 
 const exploreGroups = [
   { title: "Learn", items: [
@@ -236,11 +237,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       <div className="muslimDockShell">
         <Link href="/" className={pathname === "/" ? "dockItem selected" : "dockItem"} aria-label="Home"><span className="dockIcon">⌂</span><small>Home</small></Link>
         <Link href="/streaming" className={pathname.startsWith("/streaming") ? "dockItem selected" : "dockItem"} aria-label="Live"><span className="dockIcon">◉{anyoneLive && <span className="dockLiveBeacon" aria-hidden="true" />}</span><small>{anyoneLive ? "On Air" : "Live"}</small></Link>
-        {(pathname==="/quran-studio"||pathname.startsWith("/elm-tent/quran"))
-          ? <button type="button" className={voiceRecording?"dockCenter dockGoLiveReady":"dockCenter"} aria-label={voiceRecording?"Recording in progress":"Tajweed practice recorder (HudHud Mode required)"} onClick={()=>{let active=false;try{active=JSON.parse(localStorage.getItem("1muslim-hudhud-entry-preferences-v1")||"{}").vision===true}catch{}if(!active){window.dispatchEvent(new CustomEvent("hudhud-recorder-locked"));alert("Enable HudHud Vision Beta to use Tajweed recording.");return;}window.dispatchEvent(new Event("1muslim:quran-record"));document.querySelector<HTMLElement>(".omAyahFocused .qrv")?.scrollIntoView({behavior:"smooth",block:"center"})}}><img src="/assets/hudhud-logo.PNG" alt=""/><span className="dockCenterText">{voiceRecording?"● Recording":"Record"}</span></button>
-          : pathname==="/streaming/go-live"&&goLiveReady
-          ? <button type="button" className="dockCenter dockGoLiveReady" aria-label="Go Live now" onClick={()=>document.querySelector<HTMLButtonElement>("[data-go-live-start]")?.click()}><span className="dockLiveDot" aria-hidden="true">●</span><span className="dockCenterText">Go Live</span></button>
-          : <Link href={user ? "/quran-practice" : "/auth?next=%2Fquran-practice"} className={wakeUp ? "dockCenter wakeUpSpotlight" : "dockCenter"} onClick={() => setWakeUp(false)} aria-label={user ? "Open HudHud Qur’an practice" : "Sign in to practice Qur’an"}><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">Practice</span></Link>}
+        <SmartContextOrb />
         <Link href="/#paths" className="dockItem" aria-label="Learn"><span className="dockIcon">▤</span><small>Learn</small></Link>
         <button type="button" className="dockItem" aria-label="Create content" aria-expanded={createOpen} onClick={() => setCreateOpen(!createOpen)}><span className="dockIcon">＋</span><small>Create</small></button>
       </div>
