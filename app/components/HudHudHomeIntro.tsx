@@ -28,7 +28,7 @@ export default function HudHudHomeIntro() {
   }, []);
   useEffect(() => {
     if (phase !== "video") return;
-    const timeout = window.setTimeout(() => { if (!started.current) { started.current = true; setPhase("hidden"); window.dispatchEvent(new Event("hudhud-bird-finished")); } }, 4200);
+    const timeout = window.setTimeout(() => { if (!started.current) { started.current = true; setPhase("hidden"); window.dispatchEvent(new Event("hudhud-bird-finished")); } }, 8500);
     return () => window.clearTimeout(timeout);
   }, [phase]);
   useEffect(() => {
@@ -50,10 +50,10 @@ export default function HudHudHomeIntro() {
       <canvas ref={canvas} className="hh-cinema" aria-hidden="true" />
       {videoFailed&&<img className="hh-cinema hh-bird-fallback" src="/assets/hudhud-logo.PNG" alt="HudHud" />}
       <video ref={video} className="hh-source-video" autoPlay playsInline muted preload="auto"
-        onLoadedMetadata={e => { const v=e.currentTarget; if (v.duration && Number.isFinite(v.duration)) window.setTimeout(beginTour, Math.max(1000,v.duration*500)); }}
-        onTimeUpdate={e => { const v=e.currentTarget; if (v.duration && v.currentTime >= v.duration/2) beginTour(); }}
+        onLoadedMetadata={e => { const v=e.currentTarget; if (v.duration && Number.isFinite(v.duration)) window.setTimeout(beginTour, Math.max(1000,v.duration*1000)); }}
+        onTimeUpdate={e => { const v=e.currentTarget; if (v.duration && v.currentTime >= v.duration) beginTour(); }}
         onEnded={beginTour} onError={beginTour} aria-label="HudHud cinematic entrance">
-        <source src="/videos/hudhud-intro-alpha.webm" type="video/webm" />
+        <source src="/videos/hudhud-no-background-extended.webm" type="video/webm" />
       </video>
       <div className="hh-cinema-caption">Welcome to 1Muslim ✨</div>
       <button className="hh-skip" onClick={beginTour}>Skip intro →</button>
