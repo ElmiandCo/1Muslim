@@ -4,7 +4,7 @@ import {usePathname} from "next/navigation";
 import Link from "next/link";
 
 const KEY="1muslim-hudhud-tactical-vision";
-const VERSION="1.1";
+const VERSION="1.2";
 const features=[
  {test:/qur.?an|verse|surah|ayah|annotation|tajw/i,title:"Qur’an Studio",info:"Read Arabic verses with translations, highlight words, annotate, and open study and recording tools. Saved highlights may be stored on this device.",href:"/elm-tent/quran"},
  {test:/live|stream|camera/i,title:"Live",info:"Explore live streams and Go Live with camera controls. Availability depends on permissions and account access.",href:"/streaming"},
@@ -19,7 +19,7 @@ type Target={element:HTMLElement;label:string;x:number;y:number;href:string|null
 const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
 function candidate(el:Element|null):HTMLElement|null{
  if(!el||el.closest("[data-hudhud-vision-ui]"))return null;
- const picked=el.closest("img,video,a,button,[data-annotation-id],[data-annotation],mark,[data-vision-context],[data-verse-index],h1,h2,h3,h4,p,li,article,section,[role='button']")||el;
+ const picked=el.closest("[data-vision-word],img,video,a,button,[data-annotation-id],[data-annotation],mark,[data-vision-context],[data-verse-index],h1,h2,h3,h4,p,li,article,section,[role='button']")||el;
  if(!(picked instanceof HTMLElement))return null;
  if(picked.matches("html,body")||picked.closest("[aria-hidden='true']"))return null;
  return picked;
@@ -34,6 +34,8 @@ function describe(el:HTMLElement):Target{
 function explain(t:Target|null,path:string){
  if(!t)return {title:"Choose a target",info:"Drag the glowing target onto any visible text or control to explore it.",href:null as string|null};
  const f=features.find(x=>x.test.test(t.label+" "+path));
+ if(t.element.hasAttribute("data-vision-word")){const e=t.element;const verse=e.getAttribute("data-vision-verse")||"";const meaning=e.getAttribute("data-vision-translation")||"";const transliteration=e.getAttribute("data-vision-transliteration")||"";return {title:e.getAttribute("data-vision-word")||"Arabic word",info:"Verse "+verse+" · "+(transliteration?"Pronunciation: "+transliteration+" · ":"")+(meaning?"Word-level translation: "+meaning+". ":"Word-level translation not available. ")+"Translations vary with context; this is not an exhaustive list of possible meanings. Compare the full ayah and trusted tafsir.",href:"/elm-tent/quran?verse="+verse};}
+ if(t.element.hasAttribute("data-verse-index")){const verse=t.element.querySelector(".omAyahMeta strong")?.textContent||"";return {title:"Qur’an "+verse,info:"Read the Arabic, compare the full translation, and consider what the verse asks of you. HudHud can suggest reflection questions but cannot establish tafsir without cited sources.",href:"/elm-tent/quran?verse="+verse};}
  if(t.element.matches("button,[role='button']"))return {title:t.label,info:"This is an interactive control. Tap it to perform its labeled action. HudHud Vision does not activate it while targeting.",href:t.href||f?.href||null};
  if(t.element.matches("a"))return {title:t.label,info:"This is a navigation link. Open it to visit the related page.",href:t.href||f?.href||null};
  if(t.element.matches("mark,[data-annotation-id],[data-annotation]"))return {title:"Qur’an annotation",info:"This is highlighted or annotated text. Tap the highlighted word in the Qur’an reader to review its saved annotation.",href:"/elm-tent/quran"};
@@ -42,6 +44,7 @@ function explain(t:Target|null,path:string){
 export default function HudHudTacticalVision(){
  const pathname=usePathname()||"/";
  const [enabled,setEnabled]=useState(false),[open,setOpen]=useState(false),[target,setTarget]=useState<Target|null>(null);
+ const [readingHistory,setReadingHistory]=useState<string[]>([]);
  const [point,setPoint]=useState({x:0,y:0}),[card,setCard]=useState({x:12,y:145}),[query,setQuery]=useState(""),[reply,setReply]=useState("");
  const dragging=useRef<{kind:"target"|"card";x:number;y:number;ox:number;oy:number}|null>(null);
  const targetRef=useRef<Target|null>(null);
@@ -61,6 +64,7 @@ export default function HudHudTacticalVision(){
   window.addEventListener("1muslim:hudhud-smart-explain",smart);
   return()=>{window.removeEventListener("1muslim:hudhud-vision-changed",sync);window.removeEventListener("1muslim:hudhud-vision-enable",show);window.removeEventListener("1muslim:hudhud-smart-explain",smart)};
  },[]);
+ useEffect(()=>{const listener=(e:Event)=>{const d=(e as CustomEvent<{verse:string;arabic:string}>).detail;if(!d?.verse)return;setReadingHistory(prev=>[...prev.filter(x=>x!==d.verse),d.verse].slice(-5))};window.addEventListener("1muslim:quran-word-selected",listener);return()=>window.removeEventListener("1muslim:quran-word-selected",listener)},[]);
  useEffect(()=>{setOpen(false);setTarget(null);targetRef.current=null;setReply("")},[pathname]);
  useEffect(()=>{
   if(!enabled||!open)return;
@@ -87,6 +91,7 @@ export default function HudHudTacticalVision(){
  const end=(e:React.PointerEvent<HTMLElement>)=>{const d=dragging.current;dragging.current=null;if(d?.kind==="target")pick(e.clientX,e.clientY)};
  const info=explain(target,pathname);
  const media=mediaFor(target,pathname);
+ const reflect=()=>{const key=target?.element.getAttribute("data-vision-verse")||target?.element.closest("[data-verse-index]")?.querySelector(".omAyahMeta strong")?.textContent||readingHistory[readingHistory.length-1]||"";setReply("Reflection · "+(key||"your reading")+": What is the main message of this ayah? How does its wording connect with the verses before and after it? "+(readingHistory.length>1?"You recently examined "+readingHistory.slice(-3).join(", ")+". Compare their themes without assuming a connection.":"Select another word to compare its meaning.")+" These are study prompts, not AI-generated tafsir.")};
  const ask=()=>{const q=query.trim();if(!q)return;const f=features.find(x=>x.test.test(q));setReply(f?f.title+": "+f.info:"HudHud Vision 1.1 can explain site features, highlight screen elements and link to pages. Ask about Qur’an, live streams, messages, lessons, badges, settings or the Orb.");};
  if(!enabled||!open)return null;
  const cardWidth= Math.min(300,typeof window==="undefined"?300:window.innerWidth-20);
@@ -101,6 +106,7 @@ export default function HudHudTacticalVision(){
    {media&&<div style={{borderRadius:14,overflow:"hidden",background:"#020c10",margin:"10px 0",border:"1px solid #ffffff22"}}>{media.kind==="video"?<video src={media.src} controls muted playsInline style={{width:"100%",maxHeight:230,objectFit:"contain"}} aria-label={media.alt}/>:<img src={media.src} alt={media.alt} style={{width:"100%",maxHeight:230,objectFit:"contain"}}/>}</div>}<p style={{fontSize:13,lineHeight:1.55}}>{info.info}</p>
    {info.href&&<Link href={info.href} style={{color:"#8fffdc",fontWeight:700}}>Explore related page ↗</Link>}
    <form onSubmit={e=>{e.preventDefault();ask()}} style={{marginTop:14,display:"flex",gap:6}}><input aria-label="Ask HudHud about a site feature" placeholder="Ask about 1Muslim…" value={query} onChange={e=>setQuery(e.target.value)} style={{minWidth:0,flex:1,borderRadius:9,padding:8,background:"#082027",border:"1px solid #6ca",color:"white"}}/><button type="submit" style={{borderRadius:9,padding:"6px 9px"}}>Ask</button></form>
+   {pathname.includes("quran")&&<button type="button" onClick={reflect} style={{marginTop:10,padding:"8px 12px",borderRadius:10,background:"#1d665b",color:"white",border:"1px solid #85eac9"}}>✦ Iqra · Ask a reflection question</button>}
    {reply&&<p role="status" style={{fontSize:13,lineHeight:1.5}}>{reply}</p>}
    <small style={{display:"block",marginTop:10,opacity:.75}}>Drag ✧ to retarget · Drag ⠿ to move · HudHud 1.1 · 1Muslim 2.1</small>
   </section>
