@@ -9,6 +9,7 @@ export default function SettingsPage() {
   const [enabled, setEnabled] = useState(false);
   const [elmiLight, setElmiLight] = useState(true);
   const [elmiSound, setElmiSound] = useState(false);
+  const [hudhudVision, setHudhudVision] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -16,7 +17,7 @@ export default function SettingsPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    try { setElmiLight(localStorage.getItem("1muslim-elmi-light") !== "off"); setElmiSound(localStorage.getItem("1muslim-elmi-light-sound") === "on"); } catch {}
+    try { setElmiLight(localStorage.getItem("1muslim-elmi-light") !== "off"); setElmiSound(localStorage.getItem("1muslim-elmi-light-sound") === "on"); setHudhudVision(localStorage.getItem("1muslim-hudhud-vision-enabled") !== "off"); } catch {}
     (async () => {
       const s = createClient();
       const { data: { user } } = await s.auth.getUser();
@@ -39,6 +40,13 @@ export default function SettingsPage() {
     try { localStorage.setItem("1muslim-elmi-light-sound", next ? "on" : "off"); } catch {}
     window.dispatchEvent(new Event("1muslim-elmi-light-updated"));
     setMessage(next ? "Elmi Light sound effects enabled on this device. 🔊" : "Elmi Light sound effects muted.");
+  };
+
+  const saveHudhudVision = (next: boolean) => {
+    setHudhudVision(next);
+    try { localStorage.setItem("1muslim-hudhud-vision-enabled", next ? "on" : "off"); } catch {}
+    window.dispatchEvent(new Event("1muslim:hudhud-vision-settings-updated"));
+    setMessage(next ? "HudHud Vision is enabled. 🐦" : "HudHud Vision is disabled on this device.");
   };
 
   const saveArabic = async (next: boolean) => {
@@ -88,6 +96,10 @@ export default function SettingsPage() {
         <p>Control the small things that follow you around the site.</p>
       </header>
 
+      <section className="settingsCard" data-no-tap-shimmer>
+        <div className="settingCopy"><span className="settingIcon">🐦</span><div><span className="eyebrow">QUR'AN STUDIO · LEARNING</span><h2>HudHud Vision</h2><p>Enable HudHud's verse connections, contextual explanations, and learning guidance. You can still open and close Vision while studying.</p></div></div>
+        <button type="button" className={"switch " + (hudhudVision ? "on" : "")} onClick={() => saveHudhudVision(!hudhudVision)} aria-pressed={hudhudVision} aria-label="Toggle HudHud Vision"><span>{hudhudVision ? "ON" : "OFF"}</span><i /></button>
+      </section>
       <section className="settingsCard" data-no-tap-shimmer>
         <div className="settingCopy"><span className="settingIcon">✨</span><div><span className="eyebrow">SIGNATURE EFFECT · DEFAULT ON</span><h2>The Elmi Light</h2><p>Our signature vertical blue-and-gold glow follows HudHud as you move the handle, and adds shimmering light, sparkles, and dust to taps and celebrations across 1Muslim. Turn it off for a calmer experience. Your choice is saved on this device.</p></div></div>
         <button type="button" className={"switch " + (elmiLight ? "on" : "")} onClick={() => saveElmiLight(!elmiLight)} aria-pressed={elmiLight} aria-label="Toggle The Elmi Light"><span>{elmiLight ? "ON" : "OFF"}</span><i /></button>
