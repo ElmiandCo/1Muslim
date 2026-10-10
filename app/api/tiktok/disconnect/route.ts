@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../utils/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const origin = request.headers.get("origin");
   if (origin !== new URL(request.url).origin) return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
-  const { data: connection } = await supabase.from("tiktok_connections").select("access_token").eq("user_id", user.id).maybeSingle();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return NextResponse.json({ error: "Server not configured" }, { status: 503 });
+  const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data: connection } = await admin.from("tiktok_connections").select("access_token").eq("user_id", user.id).maybeSingle();
   if (connection?.access_token) {
     try { await fetch("https://open.tiktokapis.com/v2/oauth/revoke/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_key: process.env.TIKTOK_CLIENT_KEY || "", client_secret: process.env.TIKTOK_CLIENT_SECRET || "", token: connection.access_token }), signal: AbortSignal.timeout(5000) }); } catch { /* Local disconnect still removes stored tokens. */ }
   }
-  const { error } = await supabase.from("tiktok_connections").delete().eq("user_id", user.id);
+  const { error } = await admin.from("tiktok_connections").delete().eq("user_id", user.id);
   if (error) return NextResponse.json({ error: "Could not disconnect" }, { status: 500 });
   return NextResponse.json({ connected: false });
 }
