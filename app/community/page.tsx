@@ -69,8 +69,8 @@ export default function Community() {
     try{
       const text=[draft.trim(),safe(link)].filter(Boolean).join("\n");
       const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
-      const data=await response.json();
-      if(!response.ok)throw Error(data.error||"Could not publish");
+      const data=await response.json().catch(()=>({error:"The posting service returned an unexpected response. Please retry."}));
+      if(!response.ok)throw Error(data.error||("Posting failed (HTTP "+response.status+"). Please try again."));
       if(data.removed){setNotice("🥚 This post did not meet community language standards and was removed.");return}
       const p=data.post;
       setServerPosts(v=>[{id:p.id,name:"You",handle:"@you",text:p.body,created:new Date(p.created_at).getTime(),likes:0,liked:false,comments:[]},...v.filter(x=>x.id!==p.id)]);
@@ -106,11 +106,11 @@ export default function Community() {
       <div className="ummahQuickActions"><a href="#ummah-compose">✦ Share a Moment</a><a href="/streaming">🔴 Watch Live</a><a href="/ashab">🤝 Find Ashab</a></div><div className="communityGrid">
         <section ref={feedRef}>{feedError&&<p role="alert">{feedError}</p>}
           <form id="ummah-compose" className="composer" onSubmit={createPost}>
-            <div className="avatar">YOU</div><div className="composerBody"><textarea value={draft} onChange={e=>setDraft(e.target.value)} placeholder="What’s on your mind? Share a reflection or question…" maxLength={500}/><div className="omPostTools"><label>📷 Photo / Video<input type="file" accept="image/*,video/*" hidden onChange={e=>{if(e.target.files?.[0])pick(e.target.files[0]);e.target.value=""}}/></label><button type="button" onClick={()=>setEdit(v=>!v)}>🎨 Edit</button><button type="button" onClick={()=>setDraft(v=>v+" ✨")}>✨ Express</button><button type="button" onClick={()=>setLink(v=>v||"https://")}>🔗 Link</button></div>
+            <div className="avatar">YOU</div><div className="composerBody"><textarea value={draft} onChange={e=>setDraft(e.target.value)} placeholder="What’s on your mind? Share a reflection or question…" maxLength={500}/><div className="omPostTools"><span title="Media publishing is not available yet" style={{fontSize:12,opacity:.75}}>📷 Media posting coming soon</span><button type="button" onClick={()=>setEdit(v=>!v)}>🎨 Edit</button><button type="button" onClick={()=>setDraft(v=>v+" ✨")}>✨ Express</button><button type="button" onClick={()=>setLink(v=>v||"https://")}>🔗 Link</button></div>
 {edit&&<div className="omPostEditor"><input placeholder="Text over photo / video" maxLength={80} value={overlay} onChange={e=>setOverlay(e.target.value)}/><select value={filter} onChange={e=>setFilter(e.target.value)}><option value="none">Original</option><option value="grayscale(1)">Classic</option><option value="sepia(.8)">Warm</option><option value="saturate(1.7) contrast(1.1)">Vibrant</option><option value="contrast(1.4) brightness(.85)">Cinematic</option></select></div>}
 {link&&<input className="omPostLinkInput" type="url" placeholder="Paste a YouTube or website link" value={link} onChange={e=>setLink(e.target.value)}/>}
 {(media||safe(link))&&<div className="omPostPreview">{preview({id:"",name:"",handle:"",text:"",created:0,likes:0,liked:false,comments:[],media,mediaType,overlay,filter,link:safe(link)})}<button type="button" onClick={()=>{setMedia("");setLink("");setOverlay("")}}>✕ Remove media</button></div>}
-<div className="composerBottom"><span>{draft.length}/500</span><button className="postButton" disabled={!draft.trim()&&!media&&!safe(link)}>✨ Post it</button></div></div>
+<div className="composerBottom"><span>{draft.length}/500</span><button className="postButton" disabled={publishing||(!draft.trim()&&!safe(link))}>{publishing?"Publishing…":"✨ Post it"}</button></div></div>
           </form>
           {notice&&<p role="status" className="omPostNotice">{notice}</p>}
           {sorted.map(post=><article className={"socialPost "+(post.text?.startsWith("✦ DAILY UMMAH ✦")?"dailyPostLit ":"")+(burst?.id===post.id?"omPostCelebrating":"")} id={"post-"+post.id} key={post.id}>{post.text?.startsWith("✦ DAILY UMMAH ✦")&&<span className="dailyPostParticles" aria-hidden="true">{Array.from({length:16},(_,i)=><i key={i} style={{["--p" as string]:i} as React.CSSProperties}/>)}</span>}{burst?.id===post.id&&<span className="omPostBurst" aria-hidden="true">{Array.from({length:9},(_,i)=><i key={i} style={{["--i" as string]:i} as React.CSSProperties}>{burst.emoji}</i>)}</span>}
