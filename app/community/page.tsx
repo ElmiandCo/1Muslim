@@ -1,6 +1,7 @@
 "use client";
 
 import "./community.css";
+import "./daily-post-particles.css";
 
 import { FormEvent, useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
@@ -108,7 +109,7 @@ export default function Community() {
 <div className="composerBottom"><span>{draft.length}/500</span><button className="postButton" disabled={!draft.trim()&&!media&&!safe(link)}>✨ Post it</button></div></div>
           </form>
           {notice&&<p role="status" className="omPostNotice">{notice}</p>}
-          {sorted.map(post=><article className={"socialPost "+(burst?.id===post.id?"omPostCelebrating":"")} id={"post-"+post.id} key={post.id}>{burst?.id===post.id&&<span className="omPostBurst" aria-hidden="true">{Array.from({length:9},(_,i)=><i key={i} style={{["--i" as string]:i} as React.CSSProperties}>{burst.emoji}</i>)}</span>}
+          {sorted.map(post=><article className={"socialPost "+(post.text?.startsWith("✦ DAILY UMMAH ✦")?"dailyPostLit ":"")+(burst?.id===post.id?"omPostCelebrating":"")} id={"post-"+post.id} key={post.id}>{post.text?.startsWith("✦ DAILY UMMAH ✦")&&<span className="dailyPostParticles" aria-hidden="true">{Array.from({length:16},(_,i)=><i key={i} style={{["--p" as string]:i} as React.CSSProperties}/>)}</span>}{burst?.id===post.id&&<span className="omPostBurst" aria-hidden="true">{Array.from({length:9},(_,i)=><i key={i} style={{["--i" as string]:i} as React.CSSProperties}>{burst.emoji}</i>)}</span>}
             <div className="avatar">{post.name==="You"?"YOU":"1M"}</div>
             <div className="postBody">
               <div className="postHeader"><strong>{post.name}</strong><span>{post.handle} · {new Date(post.created).toLocaleDateString()}</span><button>•••</button></div>
