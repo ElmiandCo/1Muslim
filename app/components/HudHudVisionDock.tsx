@@ -3,6 +3,8 @@ import {useEffect,useState} from "react";
 import {useRouter} from "next/navigation";
 
 const options=[
+ {label:"Regular Post",href:"/?compose=1",description:"Write and share with the Ummah"},
+ {label:"Daily Post ✨",href:"/?compose=1",description:"Upgrade to a shiny daily reflection"},
  {label:"Watch Live",href:"/streaming",description:"Explore streams happening now"},
  {label:"Go Live",href:"/streaming/go-live",description:"Start your own broadcast"},
  {label:"Scheduled Lives",href:"/streaming/scheduled",description:"See upcoming broadcasts"},
@@ -12,16 +14,18 @@ export default function HudHudVisionDock(){
  const [vision,setVision]=useState(false);
  useEffect(()=>{const key="1muslim-hudhud-entry-preferences-v1";const load=()=>{try{const p=JSON.parse(localStorage.getItem(key)||"{}");setVision(p.vision===true)}catch{setVision(false)}};const changed=(event:Event)=>setVision(Boolean((event as CustomEvent<{enabled:boolean}>).detail?.enabled));load();window.addEventListener("hudhud-vision-preference",changed);return()=>window.removeEventListener("hudhud-vision-preference",changed)},[]);
  const [pinned,setPinned]=useState(false);
+ const [dailyUsed,setDailyUsed]=useState(false);
+ useEffect(()=>{const handler=(e:Event)=>setDailyUsed(Boolean((e as CustomEvent<{used:boolean}>).detail?.used));window.addEventListener("hudhud-daily-status",handler);return()=>window.removeEventListener("hudhud-daily-status",handler)},[]);
  const [choice,setChoice]=useState<number|null>(null);
  const router=useRouter();
- const run=()=>{if(choice!==null)router.push(options[choice].href)};
+ const run=()=>{if(choice===null)return;if(choice<2){if(choice===1&&dailyUsed)return;window.dispatchEvent(new CustomEvent("hudhud-compose",{detail:{mode:choice===1?"daily":"regular"}}));setPinned(false);setChoice(null);if(location.pathname!=="/")router.push(options[choice].href);return}router.push(options[choice].href)};
  return <div className="hhVisionRoot">
    {vision&&<div className="hhVisionHint" role="status">{pinned?"HudHud Vision · Live Now pinned":"HudHud Vision ON · Select Live Now to inspect its actions"}</div>}
    {vision&&<button className="hhVisionTarget" type="button" onClick={()=>{setPinned(v=>!v);setChoice(null)}} aria-pressed={pinned} aria-label={pinned?"Unpin HudHud Vision from Live Now":"Pin HudHud Vision to Live Now"}>{pinned?"✕ Unpin Live Now":"⌖ Pin to Live Now"}</button>}
    {vision&&pinned&&<div className="hhVisionCard" role="region" aria-label="HudHud Live Now actions">
     <div className="hhVisionCardTitle"><span>🌀 HudHud · Live Now</span><button type="button" aria-label="Close Live Now actions" onClick={()=>{setPinned(false);setChoice(null)}}>×</button></div>
     <p>What would you like to do with Live Now?</p>
-    <div className="hhVisionOptions">{options.map((item,i)=><button type="button" key={item.label} className={choice===i?"chosen":""} onClick={()=>setChoice(i)}><strong>{item.label}</strong><small>{item.description}</small></button>)}</div>
+    <div className="hhVisionOptions">{options.map((item,i)=><button type="button" key={item.label} disabled={i===1&&dailyUsed} className={choice===i?"chosen":""} onClick={()=>setChoice(i)}><strong>{i===1&&dailyUsed?"✓ Daily Post Done":item.label}</strong><small>{item.description}</small></button>)}</div>
     {choice!==null&&<button className="hhVisionRun" type="button" onClick={run}>✦ {options[choice].label} →</button>}
    </div>}
    <button className={"hhVisionOrb "+(vision?"active":"")} type="button" onClick={()=>{if(!vision){setVision(true)}else if(pinned&&choice!==null){run()}else{setVision(false);setPinned(false);setChoice(null)}}} aria-label={vision?(pinned&&choice!==null?"Open selected HudHud action":"Turn HudHud Vision off"):"Turn HudHud Vision on"} aria-pressed={vision}><span className="hhVisionRing"><img src="/assets/1muslim-live-logo.PNG" alt="" /></span><span className="hhVisionLabel">HudHud <span aria-hidden="true">✧</span></span></button>
@@ -38,7 +42,7 @@ export default function HudHudVisionDock(){
     .hhVisionCardTitle{display:flex;justify-content:space-between;align-items:center;font-weight:850}.hhVisionCardTitle button{border:0;background:transparent;color:white;font-size:24px;cursor:pointer}
     .hhVisionCard p{font-size:12px;color:#bcd7e6}.hhVisionOptions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .hhVisionOptions button{display:flex;flex-direction:column;text-align:left;gap:4px;border:1px solid #52718a;border-radius:12px;background:#12233d;color:white;padding:10px;cursor:pointer}
-    .hhVisionOptions button.chosen{border-color:#62f7cf;box-shadow:0 0 14px #40ffbe77;background:#123e45}.hhVisionOptions small{font-size:10px;color:#b8ccdf;line-height:1.35}
+    .hhVisionOptions button:disabled{opacity:.4;cursor:not-allowed}.hhVisionOptions button.chosen{border-color:#62f7cf;box-shadow:0 0 14px #40ffbe77;background:#123e45}.hhVisionOptions small{font-size:10px;color:#b8ccdf;line-height:1.35}
     .hhVisionRun{width:100%;border:0;border-radius:12px;margin-top:10px;padding:11px;color:#061f25;background:#72f6dc;font-weight:900;cursor:pointer}
     @keyframes hhVisionSpin{to{transform:rotate(360deg)}}@keyframes hhVisionCounterSpin{to{transform:rotate(-360deg)}}@media(prefers-reduced-motion:reduce){.hhVisionRing,.hhVisionRing img{animation:none}}
    `}</style>
