@@ -296,14 +296,15 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
           : pathname==="/streaming/go-live"&&goLiveReady
           ? <button type="button" className="dockCenter dockGoLiveReady" aria-label="Go Live now" onClick={()=>document.querySelector<HTMLButtonElement>("[data-go-live-start]")?.click()}><span className="dockLiveDot" aria-hidden="true">●</span><span className="dockCenterText">Go Live</span></button>
           : <button type="button" className={wakeUp ? "dockCenter wakeUpSpotlight" : "dockCenter"} disabled={pathname==="/community"&&dailyDone&&!smartReady} onClick={() => {setWakeUp(false);smartTap()}} aria-label={"HudHud Smart-Tap: "+smartLabel}><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">{smartLabel}</span></button>}
-        <Link href="/#paths" className="dockItem" aria-label="Learn"><span className="dockIcon">▤</span><small>Learn</small></Link>
+        <Link href="/messages" className={pathname.startsWith("/messages")?"dockItem selected":"dockItem"} aria-label="Messages and one-to-one Muslim calls"><span className="dockIcon">💬</span><small>Messages</small></Link>
         <button type="button" className="dockItem" aria-label="Create content" aria-expanded={createOpen} onClick={() => setCreateOpen(!createOpen)}><span className="dockIcon">＋</span><small>Create</small></button>
       </div>
-      {createOpen && <div className="dockCreateMenu" role="menu"><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>🔴 Go Live</Link><Link href="/community" onClick={() => setCreateOpen(false)}>✦ Community</Link><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>◷ Schedule a Live</Link></div>}
+      {createOpen && <div className="dockCreateMenu" role="menu"><Link href="/messages" onClick={() => setCreateOpen(false)}>💬 Message or 1:1 Call</Link><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>🔴 Go Live</Link><Link href="/community" onClick={() => setCreateOpen(false)}>✦ Community</Link><Link href="/streaming/go-live" onClick={() => setCreateOpen(false)}>◷ Schedule a Live</Link></div>}
     </nav>
 </>, document.body)}
     <Link href="/learn/elm-tent/library" className="mobileLibraryShortcut" aria-label="Open the 1Muslim Library"><span aria-hidden="true">✦</span><span>Library</span></Link>
 
+    <Link href="/messages" className="authNav" aria-label="Open Messages and one-to-one Muslim calls" title="Messages · 1:1 Muslim Call" style={{display:"inline-flex",alignItems:"center",gap:6,whiteSpace:"nowrap"}}><span aria-hidden="true" style={{fontSize:20}}>💬</span><span>Messages</span></Link>
     {loadingAuth ? <span className="authNav authLoading">Account</span> : user ? <div className="authAccount">
       <Link href="/notifications" className="notificationBell" aria-label="Notifications">🔔{unreadCount > 0 && <span>{unreadCount > 99 ? "99+" : unreadCount}</span>}</Link>
       <Link href="/profile" className="authNav authProfileLink">
