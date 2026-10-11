@@ -73,26 +73,45 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
     document.addEventListener("focusout",()=>setTimeout(sync,0));
     return()=>{document.removeEventListener("focusin",onFocus);document.removeEventListener("input",onInput)};
   },[pathname]);
+  const isVideoPage=pathname==="/videos"||pathname.startsWith("/videos/")||pathname.startsWith("/streaming/library");
+  const isReplay=pathname.startsWith("/streaming/replay/")||pathname.startsWith("/streaming/recordings/");
+  const isLiveWatch=pathname.startsWith("/streaming/live/")||pathname.startsWith("/streaming/watch/");
+  const isLiveHost=pathname==="/streaming/go-live";
+  const isProfile=pathname.startsWith("/profile")||pathname.startsWith("/users/")||pathname.startsWith("/member/");
+  const smartLabel=smartInput&&smartReady?"Send":isLiveHost?"Go Live":isLiveWatch?"Chat":isReplay?"Comment":isVideoPage?"Videos":pathname==="/community"?(dailyDone?"Daily Done":"Daily Post"):pathname.startsWith("/learn")||pathname.startsWith("/elm-tent")||pathname==="/quran-studio"?"Qur’an":isProfile?"Share":"Ummah";
+  const routerSmart=(href:string)=>{window.location.assign(href)};
   const smartTap=()=>{
     if(smartInput?.isConnected&&smartReady){
       const form=smartInput.closest("form");
       if(form){form.requestSubmit();return}
       const scope=smartInput.closest('[role="dialog"],section,article,main')||document;
       const buttons=Array.from(scope.querySelectorAll<HTMLButtonElement>('button:not([disabled])'));
-      const send=buttons.find(b=>/^(send|post|publish|reply|share|submit)(\b|\s|$)/i.test((b.textContent||"").trim().replace(/^[^\w]+/,"")));
+      const send=buttons.find(b=>/^(send|post|publish|reply|share|submit)(\\b|\\s|$)/i.test((b.textContent||"").trim().replace(/^[^\\w]+/,"")));
       if(send){send.click();return}
     }
+    if(isLiveWatch||isReplay){
+      const field=document.querySelector<HTMLElement>('textarea[placeholder*="comment" i],input[placeholder*="comment" i],textarea[placeholder*="chat" i],input[placeholder*="message" i]');
+      if(field){field.focus();field.scrollIntoView({behavior:"smooth",block:"center"});return}
+      return;
+    }
+    if(isVideoPage){routerSmart("/streaming/library");return}
     if(pathname==="/community"){
       if(dailyDone)return;
       try{sessionStorage.setItem("1muslim-compose-mode","daily")}catch{}
       routerSmart("/?compose=1");return;
     }
     if(pathname.startsWith("/learn")||pathname==="/quran-studio"||pathname.startsWith("/elm-tent")){routerSmart("/quran-studio");return}
-    if(pathname.startsWith("/profile")||pathname.startsWith("/users/")||pathname.startsWith("/member/")){document.querySelector<HTMLElement>(".composer textarea,textarea[placeholder*='post'],textarea[placeholder*='message']")?.focus();return}
+    if(isProfile){
+      const composer=document.querySelector<HTMLElement>('.firstPostComposer textarea,.composer textarea,textarea[placeholder*="post" i]');
+      if(composer){composer.focus();composer.scrollIntoView({behavior:"smooth",block:"center"});return}
+      const profileId=pathname.match(/^\\/profile\\/([^/]+)/)?.[1];
+      const url=location.origin+(profileId?"/profile/"+profileId:"/profile");
+      if(navigator.share)void navigator.share({title:"1Muslim Profile",url}).catch(()=>{});
+      else void navigator.clipboard.writeText(url).catch(()=>{});
+      return;
+    }
     routerSmart("/community");
   };
-  const routerSmart=(href:string)=>{window.location.assign(href)};
-  const smartLabel=smartInput&&smartReady?"Send":pathname==="/community"?(dailyDone?"Daily Done":"Daily Post"):pathname.startsWith("/learn")||pathname.startsWith("/elm-tent")?"Qur’an":pathname.startsWith("/profile")||pathname.startsWith("/users/")||pathname.startsWith("/member/")?"Post":"Ummah";
   useEffect(()=>{if(pathname!=="/")return;try{if(localStorage.getItem("1muslim-smart-tap-intro"))return;const t=setTimeout(()=>{window.dispatchEvent(new CustomEvent("hudhud-smart-tap-intro",{detail:{message:"🌀 Smart-Tap: The center HudHud button changes with your page. Open Ummah, create a Daily Post, jump into Qur’an Studio, or send what you're writing!"}}));localStorage.setItem("1muslim-smart-tap-intro","1")},1800);return()=>clearTimeout(t)}catch{}},[pathname]);
 
   const [voiceRecording,setVoiceRecording]=useState(false);
