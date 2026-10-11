@@ -45,6 +45,7 @@ export default function GoLivePage() {
   const chunksRef = useRef<Blob[]>([]);
   const recordingStartedAtRef = useRef<number | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const [settingsOpen,setSettingsOpen] = useState(false);
   const [visualEffect,setVisualEffect] = useState<LiveEffect>("off");
   const [live, setLive] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -840,10 +841,28 @@ export default function GoLivePage() {
         .form{padding:20px}.form h2{font-size:17px;margin:0 0 15px}.field{margin-bottom:15px}.field label{display:block;font-size:10px;color:#748178;margin-bottom:7px;text-transform:uppercase;letter-spacing:.1em}.input,.select{width:100%;border:1px solid #263029;background:#0d140f;color:#f3f6f3;border-radius:11px;padding:12px;outline:none}.input:focus,.select:focus{border-color:#61785a}.help{font-size:10px;color:#66736b;line-height:1.6;margin-top:14px}.error{border:1px solid #533536;background:#1b0f10;color:#ffcaca;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}.ready{border:1px solid #334333;background:#101810;color:#b8d2ae;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}.checkedIn{border-color:#6b815e;background:#111c12;color:#d6e7b8}
         .formatGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.formatButton{border:1px solid #263029;background:#0d140f;color:#aeb8b1;border-radius:13px;padding:11px;text-align:left;cursor:pointer}.formatButton strong{display:block;color:#e8eee9;font-size:11px}.formatButton small{display:block;color:#69766e;font-size:9px;margin-top:4px}.formatButton.active{border-color:#718c69;background:#132016;box-shadow:inset 0 0 0 1px #718c69}.formatButton:disabled{cursor:not-allowed;opacity:.55}.recordingsLink{display:inline-flex;margin-top:12px;color:#cbd8ce;text-decoration:none;font-size:11px}.notice{margin-top:16px;border:1px solid #273129;border-radius:16px;padding:15px;color:#7d8981;font-size:10px;line-height:1.6}.notice strong{color:#c7d2ca;display:block;margin-bottom:4px}
         @media(max-width:780px){.layout{grid-template-columns:1fr}.heading h1{font-size:36px}.shell{padding:24px 12px 50px}}
+        .goLive{position:fixed;inset:0;height:100dvh;min-height:0;overflow:hidden;z-index:30;background:#050806}
+        .immersiveHeader{position:absolute;top:0;left:0;right:0;z-index:50;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;justify-content:space-between;align-items:center;color:white;background:linear-gradient(#000b,transparent)}
+        .immersiveHeader a,.immersiveHeader button{border:1px solid #ffffff55;background:#07110ac9;border-radius:30px;padding:9px 13px;color:white;text-decoration:none;cursor:pointer}
+        .shell{position:absolute;inset:0;max-width:none;margin:0;padding:0!important;overflow:hidden}
+        .heading,.studioTools,.liveRoom{display:none!important}
+        .layout{display:block;width:100%;height:100%}
+        .layout>.panel:first-child{position:absolute;inset:0;border:0;border-radius:0;overflow:hidden}
+        .preview,.preview.format-portrait,.preview.format-square,.preview.format-landscape{position:absolute;inset:0;width:100%!important;height:100%!important;max-height:none!important;aspect-ratio:auto!important}
+        .preview video{width:100%;height:100%;object-fit:cover}
+        .previewOverlayTools{z-index:24;top:43%;right:12px}
+        .status{bottom:calc(105px + env(safe-area-inset-bottom))}
+        .controls{position:absolute;bottom:env(safe-area-inset-bottom);left:0;right:0;z-index:27;border:0;background:linear-gradient(transparent,#000b);padding:15px 8px;flex-wrap:wrap}
+        .controls label{display:none!important}
+        .cameraStudio,.layout>.form,.layout>.panel:first-child>div[style]{display:none!important}
+        .settingsOpen .layout>.form{display:block!important;position:absolute;top:calc(70px + env(safe-area-inset-top));bottom:calc(90px + env(safe-area-inset-bottom));left:12px;right:12px;z-index:40;overflow-y:auto;overscroll-behavior:contain;border-radius:18px;background:#08110df5}
+        .settingsOpen .cameraStudio{display:block!important;position:absolute;bottom:calc(90px + env(safe-area-inset-bottom));left:12px;right:12px;z-index:42;max-height:35dvh;overflow-y:auto;border-radius:15px;background:#08110df7}
+        @media(min-width:850px){.settingsOpen .layout>.form{left:auto;width:420px}}
+
       `}</style>
 
-      <SiteNav />
-      <div className="shell">
+      <header className="immersiveHeader"><Link href="/streaming">← Back</Link><strong>Go Live</strong><button onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕ Close":"⚙ Settings"}</button></header>
+      <div className={settingsOpen?"shell settingsOpen":"shell"}>
         <div className="studioTools">
               {scheduledSlot && <div className="upcomingPrep"><div><span className="eyebrow">UPCOMING LIVE</span><strong>{scheduledSlot.title}</strong><span>{scheduledSlot.category} · {new Date(scheduledSlot.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div><button type="button" className="prepButton" onClick={()=>{setTitle(scheduledSlot.title);setCategory(scheduledSlot.category);setShowScheduler(false);setSaveMessage("Prep mode loaded. Check your title, topic, format, thumbnail, camera and microphone before going live.");}}>{hostCheckedIn ? "✓ Host Checked In" : "Prep for upcoming Live →"}</button></div>}
               {!live && <button type="button" className="scheduleButton" onClick={()=>setShowScheduler(!showScheduler)}>{showScheduler ? "Close scheduler" : "Schedule a Live"}</button>}
