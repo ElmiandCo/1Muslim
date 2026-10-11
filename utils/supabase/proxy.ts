@@ -31,7 +31,30 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getClaims();
-
+  // Guests may view the landing page, but must sign in before navigating elsewhere.
+  // Keep auth callbacks, static assets, legal pages and API endpoints accessible.
+  const pathname = request.nextUrl.pathname;
+  const guestAllowed = pathname === "/" || pathname.startsWith("/auth") ||
+    pathname.startsWith("/welcome") || pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/terms") || pathname.startsWith("/privacy") ||
+    pathname.startsWith("/api/") || pathname.startsWith("/_next/") ||
+    pathname.startsWith("/assets/") || pathname.startsWith("/videos/") ||
+    pathname.startsWith("/favicon") || pathname.startsWith("/robots") ||
+    pathname.startsWith("/sitemap") || pathname.startsWith("/.well-known/") ||
+    /\\.[a-z0-9]{2,6}$/i.test(pathname);
+  if (!guestAllowed) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/auth";
+      loginUrl.search = "";
+      loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
+      const redirect = NextResponse.redirect(loginUrl);
+      supabaseResponse.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie));
+      return redirect;
+    }
+  } else {
+    await supabase.auth.getClaims();
+  }
   return supabaseResponse;
 }
