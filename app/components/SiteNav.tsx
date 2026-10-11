@@ -59,6 +59,41 @@ function MenuLink({ href, label, ar, onClick }: { href: string; label: ReactNode
 export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
+  const [smartInput,setSmartInput]=useState<HTMLElement|null>(null);
+  const [smartReady,setSmartReady]=useState(false);
+  const [dailyDone,setDailyDone]=useState(false);
+  useEffect(()=>{const onStatus=(e:Event)=>setDailyDone(Boolean((e as CustomEvent<{used:boolean}>).detail?.used));window.addEventListener("hudhud-daily-status",onStatus);return()=>window.removeEventListener("hudhud-daily-status",onStatus)},[]);
+  useEffect(()=>{
+    const editable=(el:Element|null):HTMLElement|null=>{if(!(el instanceof HTMLElement))return null;if(el.matches('textarea,input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),[contenteditable="true"]'))return el;return el.closest('[contenteditable="true"]') as HTMLElement|null};
+    const sync=()=>{const el=editable(document.activeElement);if(el&&!el.closest(".muslimMobileDock")){setSmartInput(el);setSmartReady(Boolean((el instanceof HTMLInputElement||el instanceof HTMLTextAreaElement?el.value:el.textContent)?.trim()))}else{setSmartInput(null);setSmartReady(false)}};
+    const onInput=()=>sync();
+    const onFocus=()=>sync();
+    document.addEventListener("focusin",onFocus);document.addEventListener("input",onInput);
+    document.addEventListener("focusout",()=>setTimeout(sync,0));
+    return()=>{document.removeEventListener("focusin",onFocus);document.removeEventListener("input",onInput)};
+  },[pathname]);
+  const smartTap=()=>{
+    if(smartInput?.isConnected&&smartReady){
+      const form=smartInput.closest("form");
+      if(form){form.requestSubmit();return}
+      const scope=smartInput.closest('[role="dialog"],section,article,main')||document;
+      const buttons=Array.from(scope.querySelectorAll<HTMLButtonElement>('button:not([disabled])'));
+      const send=buttons.find(b=>/^(send|post|publish|reply|share|submit)(\b|\s|$)/i.test((b.textContent||"").trim().replace(/^[^\w]+/,"")));
+      if(send){send.click();return}
+    }
+    if(pathname==="/community"){
+      if(dailyDone)return;
+      try{sessionStorage.setItem("1muslim-compose-mode","daily")}catch{}
+      routerSmart("/?compose=1");return;
+    }
+    if(pathname.startsWith("/learn")||pathname==="/quran-studio"||pathname.startsWith("/elm-tent")){routerSmart("/quran-studio");return}
+    if(pathname.startsWith("/profile")||pathname.startsWith("/users/")||pathname.startsWith("/member/")){document.querySelector<HTMLElement>(".composer textarea,textarea[placeholder*='post'],textarea[placeholder*='message']")?.focus();return}
+    routerSmart("/community");
+  };
+  const routerSmart=(href:string)=>{window.location.assign(href)};
+  const smartLabel=smartInput&&smartReady?"Send":pathname==="/community"?(dailyDone?"Daily Done":"Daily Post"):pathname.startsWith("/learn")||pathname.startsWith("/elm-tent")?"Qur’an":pathname.startsWith("/profile")||pathname.startsWith("/users/")||pathname.startsWith("/member/")?"Post":"Ummah";
+  useEffect(()=>{if(pathname!=="/")return;try{if(localStorage.getItem("1muslim-smart-tap-intro"))return;const t=setTimeout(()=>{window.dispatchEvent(new CustomEvent("hudhud-smart-tap-intro",{detail:{message:"🌀 Smart-Tap: The center HudHud button changes with your page. Open Ummah, create a Daily Post, jump into Qur’an Studio, or send what you're writing!"}}));localStorage.setItem("1muslim-smart-tap-intro","1")},1800);return()=>clearTimeout(t)}catch{}},[pathname]);
+
   const [voiceRecording,setVoiceRecording]=useState(false);
   useEffect(()=>{const fn=(e:Event)=>setVoiceRecording(Boolean((e as CustomEvent<{recording:boolean}>).detail?.recording));window.addEventListener("1muslim:recorder-status",fn);return()=>window.removeEventListener("1muslim:recorder-status",fn)},[]);
   const [goLiveReady,setGoLiveReady]=useState(false);
@@ -240,7 +275,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
           ? <button type="button" className={voiceRecording?"dockCenter dockGoLiveReady":"dockCenter"} aria-label={voiceRecording?"Recording in progress":"Tajweed practice recorder (HudHud Mode required)"} onClick={()=>{let active=false;try{active=JSON.parse(localStorage.getItem("1muslim-hudhud-entry-preferences-v1")||"{}").vision===true}catch{}if(!active){window.dispatchEvent(new CustomEvent("hudhud-recorder-locked"));alert("Enable HudHud Vision Beta to use Tajweed recording.");return;}window.dispatchEvent(new Event("1muslim:quran-record"));document.querySelector<HTMLElement>(".omAyahFocused .qrv")?.scrollIntoView({behavior:"smooth",block:"center"})}}><img src="/assets/hudhud-logo.PNG" alt=""/><span className="dockCenterText">{voiceRecording?"● Recording":"Record"}</span></button>
           : pathname==="/streaming/go-live"&&goLiveReady
           ? <button type="button" className="dockCenter dockGoLiveReady" aria-label="Go Live now" onClick={()=>document.querySelector<HTMLButtonElement>("[data-go-live-start]")?.click()}><span className="dockLiveDot" aria-hidden="true">●</span><span className="dockCenterText">Go Live</span></button>
-          : <Link href="/community" className={wakeUp ? "dockCenter wakeUpSpotlight" : "dockCenter"} onClick={() => setWakeUp(false)} aria-label="Open Ummah community"><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">Ummah</span></Link>}
+          : <button type="button" className={wakeUp ? "dockCenter wakeUpSpotlight" : "dockCenter"} disabled={pathname==="/community"&&dailyDone&&!smartReady} onClick={() => {setWakeUp(false);smartTap()}} aria-label={"HudHud Smart-Tap: "+smartLabel}><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">{smartLabel}</span></button>}
         <Link href="/#paths" className="dockItem" aria-label="Learn"><span className="dockIcon">▤</span><small>Learn</small></Link>
         <button type="button" className="dockItem" aria-label="Create content" aria-expanded={createOpen} onClick={() => setCreateOpen(!createOpen)}><span className="dockIcon">＋</span><small>Create</small></button>
       </div>
