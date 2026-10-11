@@ -4,7 +4,11 @@ export async function GET(){
  const db=await createClient();
  const {data,error}=await db.from("community_posts").select("id,author_id,body,created_at").order("created_at",{ascending:false}).limit(100);
  if(error)return NextResponse.json({error:"Community feed unavailable"},{status:503});
- return NextResponse.json({posts:data||[]});
+ const posts=data||[];
+ const ids=[...new Set(posts.map(p=>p.author_id).filter((id):id is string=>typeof id==="string"))];
+ const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username").in("id",ids):{data:[]};
+ const authors=new Map((profiles||[]).map(p=>[p.id,p]));
+ return NextResponse.json({posts:posts.map(p=>({...p,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member"}))});
 }
 export async function POST(request:Request){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();
