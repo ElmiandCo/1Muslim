@@ -5,6 +5,7 @@ import "./community.css";
 import { FormEvent, useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import SiteNav from "../components/SiteNav";
+import StoriesRail from "../components/StoriesRail";
 
 type Comment = { id: string; name: string; text: string; created: number };
 type Post = { media?:string; mediaType?:string; overlay?:string; filter?:string; link?:string; id: string; name: string; handle: string; text: string; created: number; likes: number; liked: boolean; comments: Comment[] };
@@ -95,10 +96,11 @@ export default function Community() {
     </div>}
     <SiteNav />
     <div className="communityShell">
-      <section className="communityHero"><span className="eyebrow">COMMUNITY</span><h1>Make your moment pop. ✨</h1><p>Ask, reflect, encourage and learn with the 1Muslim community.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">Preview: posts currently save only in your browser, not for other members.</p></section>
-      <div className="communityGrid">
+      <div className="ummahStoriesSpotlight"><StoriesRail /></div>
+      <section className="communityHero"><span className="eyebrow">✦ THE UMMAH · TOGETHER</span><h1>Our Ummah. Our Moments. ✨</h1><p>Stories, reflections and conversations from your community — all in one place.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">Preview: posts currently save only in your browser, not for other members.</p></section>
+      <div className="ummahQuickActions"><a href="#ummah-compose">✦ Share a Moment</a><a href="/streaming">🔴 Watch Live</a><a href="/ashab">🤝 Find Ashab</a></div><div className="communityGrid">
         <section ref={feedRef}>
-          <form className="composer" onSubmit={createPost}>
+          <form id="ummah-compose" className="composer" onSubmit={createPost}>
             <div className="avatar">YOU</div><div className="composerBody"><textarea value={draft} onChange={e=>setDraft(e.target.value)} placeholder="What’s on your mind? Share a reflection or question…" maxLength={500}/><div className="omPostTools"><label>📷 Photo / Video<input type="file" accept="image/*,video/*" hidden onChange={e=>{if(e.target.files?.[0])pick(e.target.files[0]);e.target.value=""}}/></label><button type="button" onClick={()=>setEdit(v=>!v)}>🎨 Edit</button><button type="button" onClick={()=>setDraft(v=>v+" ✨")}>✨ Express</button><button type="button" onClick={()=>setLink(v=>v||"https://")}>🔗 Link</button></div>
 {edit&&<div className="omPostEditor"><input placeholder="Text over photo / video" maxLength={80} value={overlay} onChange={e=>setOverlay(e.target.value)}/><select value={filter} onChange={e=>setFilter(e.target.value)}><option value="none">Original</option><option value="grayscale(1)">Classic</option><option value="sepia(.8)">Warm</option><option value="saturate(1.7) contrast(1.1)">Vibrant</option><option value="contrast(1.4) brightness(.85)">Cinematic</option></select></div>}
 {link&&<input className="omPostLinkInput" type="url" placeholder="Paste a YouTube or website link" value={link} onChange={e=>setLink(e.target.value)}/>}
@@ -130,5 +132,6 @@ export default function Community() {
         </aside>
       </div>
     </div>
+    <style jsx>{` .ummahStoriesSpotlight{position:relative;margin:12px 0 24px;padding:20px 12px;border-radius:28px;border:1px solid #a4ffb747;background:linear-gradient(135deg,#132f28,#10211f 60%,#222338);box-shadow:0 12px 45px #0005,0 0 30px #60ffac1b;overflow:hidden}.ummahStoriesSpotlight:before{content:"";position:absolute;inset:-130%;pointer-events:none;background:linear-gradient(105deg,transparent 47%,#caffdd1a 50%,transparent 53%);animation:ummahStoriesShimmer 9s linear infinite}.ummahQuickActions{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 22px}.ummahQuickActions a{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border:1px solid #87f3b87a;border-radius:999px;color:#e5fff0;text-decoration:none;background:linear-gradient(130deg,#174e37,#182e35);font-weight:750;box-shadow:0 0 18px #74ffc326;transition:transform .2s,box-shadow .2s}.ummahQuickActions a:hover{transform:translateY(-3px);box-shadow:0 0 25px #74ffc355}@keyframes ummahStoriesShimmer{to{transform:translateX(40%)}}@media(max-width:600px){.ummahStoriesSpotlight{padding:12px 6px;border-radius:20px}.ummahQuickActions a{flex:1;font-size:12px;padding:11px 8px}}@media(prefers-reduced-motion:reduce){.ummahStoriesSpotlight:before{animation:none}} `}</style>
   {burst?.id==="new"&&<div className="omPublishCelebration" aria-hidden="true"><span>✨</span><strong>Post created!</strong></div>}{floating&&effects&&<button type="button" className="omFloatingPost" onClick={()=>{document.getElementById("post-"+floating)?.scrollIntoView({behavior:"smooth",block:"center"});setFloating(null)}}>✨ Discover a community post <span>Tap to see ↗</span></button>}</main>;
 }
