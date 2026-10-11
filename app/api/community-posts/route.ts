@@ -18,7 +18,17 @@ export async function POST(request:Request){
   if(checkError)return NextResponse.json({error:"Could not verify today's daily post"},{status:503});
   if((today||[]).some(p=>p.body?.startsWith("✦ DAILY UMMAH ✦")))return NextResponse.json({error:"Your daily post is already published today"},{status:409});
  }
+ const profanity=/(^|[^a-z])f[\\W_]*u[\\W_]*c[\\W_]*k(?:[\\W_]*(?:s|e[\\W_]*d|i[\\W_]*n[\\W_]*g))?(?=$|[^a-z])/i.test(text.normalize("NFKC"));
  const {data,error}=await db.from("community_posts").insert({author_id:user.id,body:text}).select("id,author_id,body,created_at").single();
  if(error)return NextResponse.json({error:"Could not publish your post"},{status:503});
+ if(profanity){
+  // A submitted post is briefly accepted, then immediately removed server-side.
+  const {error:removeError}=await db.from("community_posts").delete().eq("id",data.id).eq("author_id",user.id);
+  if(removeError)return NextResponse.json({error:"Post flagged; removal pending moderator review",flagged:true},{status:503});
+  // Persist a review record where the moderation table is provisioned.
+  const {error:flagError}=await db.from("moderation_flags").insert({user_id:user.id,post_id:data.id,reason:"profanity",status:"pending"});
+  if(flagError)console.error("Moderation flag could not be persisted",flagError.message);
+  return NextResponse.json({post:data,flagged:true,removed:true,flagRecorded:!flagError},{status:201});
+ }
  return NextResponse.json({post:data},{status:201});
 }
