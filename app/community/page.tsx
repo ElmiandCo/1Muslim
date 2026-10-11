@@ -11,15 +11,10 @@ import StoriesRail from "../components/StoriesRail";
 type Comment = { id: string; name: string; text: string; created: number };
 type Post = { media?:string; mediaType?:string; overlay?:string; filter?:string; link?:string; id: string; name: string; handle: string; text: string; created: number; likes: number; liked: boolean; comments: Comment[] };
 
-const seed: Post[] = [
-  { id:"welcome", name:"1Muslim", handle:"@1muslim", text:"Welcome to the community. Ask questions, share a reflection, encourage someone, or simply listen. 🤍", created:Date.now()-7200000, likes:18, liked:false, comments:[{id:"c1",name:"Amina",text:"May Allah make the path easy for everyone.",created:Date.now()-3600000}] },
-  { id:"question", name:"Abdullah", handle:"@abdullah", text:"What helped you stay consistent with salah when you were first learning?", created:Date.now()-3600000, likes:11, liked:false, comments:[] },
-];
 
-const key = "1muslim-community-posts";
 
 export default function Community() {
-  const [posts,setPosts]=useState<Post[]>(seed);
+  const [posts,setPosts]=useState<Post[]>([]);
   const [draft,setDraft]=useState("");
   useEffect(()=>{try{const saved=sessionStorage.getItem("1muslim-verse-share-draft");if(saved){setDraft(saved);sessionStorage.removeItem("1muslim-verse-share-draft")}}catch{}},[]);
   useEffect(()=>{const verse=new URLSearchParams(window.location.search).get("verse");if(verse&&/^(?:[1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(verse)){setDraft("Reflecting on Qur’an "+verse+" 📖\\nhttps://quran.com/"+verse+"\\n");setLink("https://quran.com/"+verse)}},[]);
@@ -30,7 +25,7 @@ export default function Community() {
   const [videoPaused,setVideoPaused]=useState(false);
   const videoRef=useRef<HTMLVideoElement>(null);
   const touchStart=useRef<number|null>(null);
-  const videos=useMemo(()=>posts.filter(p=>p.mediaType==="video"&&!!p.media),[posts]);
+  const videos=useMemo(()=>serverPosts.filter(p=>p.mediaType==="video"&&!!p.media),[serverPosts]);
   const openVideo=(id:string)=>{const index=videos.findIndex(p=>p.id===id);if(index>=0){setVideoIndex(index);setVideoPaused(false)}};
   const nextVideo=(direction:number)=>{setVideoIndex(index=>index===null?null:Math.max(0,Math.min(videos.length-1,index+direction)));setVideoPaused(false)};
   useEffect(()=>{if(videoIndex===null)return;const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setVideoIndex(null);if(e.key==="ArrowDown")nextVideo(1);if(e.key==="ArrowUp")nextVideo(-1)};document.addEventListener("keydown",key);const previous=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.removeEventListener("keydown",key);document.body.style.overflow=previous}},[videoIndex,videos.length]);
@@ -52,19 +47,19 @@ export default function Community() {
   const youtube=(s:string)=>{try{const u=new URL(s);const id=u.hostname==="youtu.be"?u.pathname.slice(1):["youtube.com","www.youtube.com","m.youtube.com"].includes(u.hostname)?u.searchParams.get("v")||u.pathname.split("/shorts/")[1]:"";return id&&/^[a-zA-Z0-9_-]{11}$/.test(id)?id:""}catch{return ""}};
   const chime=()=>{if(!sounds)return;try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.frequency.value=740;g.gain.setValueAtTime(.04,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.2);setTimeout(()=>void c.close(),350)}catch{}};
   const pick=(file:File)=>{if(!file.type.startsWith("image/")&&!file.type.startsWith("video/"))return setNotice("Choose a photo or video");if(file.size>2500000)return setNotice("Preview uploads must be under 2.5MB until cloud storage is connected.");const reader=new FileReader();reader.onload=()=>{setMedia(String(reader.result||""));setMediaType(file.type.startsWith("video/")?"video":"image");setEdit(true)};reader.readAsDataURL(file)};
-  useEffect(()=>{if(!effects)return;const t=setInterval(()=>setFloating(p=>p?null:posts[Math.floor(Math.random()*posts.length)]?.id||null),45000);return()=>clearInterval(t)},[effects,posts]);
+  useEffect(()=>{if(!effects)return;const t=setInterval(()=>setFloating(p=>p?null:serverPosts[Math.floor(Math.random()*serverPosts.length)]?.id||null),45000);return()=>clearInterval(t)},[effects,serverPosts]);
   const preview=(p:Post)=><>{p.media&&<div className="omPostMedia" style={{filter:p.filter||"none"}}>{p.mediaType==="video"?<button type="button" className="omVideoOpen" onClick={()=>openVideo(p.id)} aria-label="Play video in swipe viewer" style={{display:"block",width:"100%",position:"relative",padding:0,border:0,background:"#000",cursor:"pointer"}}><video src={p.media} preload="metadata" muted playsInline style={{width:"100%",maxHeight:420,objectFit:"contain",pointerEvents:"none"}}/><span style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"#000b",borderRadius:999,padding:"15px 20px",color:"#fff",fontSize:24}}>▶</span></button>:<img src={p.media} alt="Attached post media"/>}{p.overlay&&<strong className="omPostOverlay">{p.overlay}</strong>}</div>}{p.link&&<a className="omLinkPreview" href={p.link} target="_blank" rel="noopener noreferrer">{youtube(p.link)?<img src={"https://img.youtube.com/vi/"+youtube(p.link)+"/hqdefault.jpg"} alt="Video thumbnail"/>:<span>🔗</span>}<span> {youtube(p.link)?"▶ Watch video":"↗ Open website"}<small>{new URL(p.link).hostname}</small></span></a>}</>;
 
   const [commentDraft,setCommentDraft]=useState<Record<string,string>>({});
   const [following,setFollowing]=useState<Record<string,boolean>>({});
   const [notifications,setNotifications]=useState(false);
 
-  useEffect(()=>{ try { const saved=localStorage.getItem(key); if(saved) setPosts(JSON.parse(saved)); } catch {} },[]);
-  useEffect(()=>{ localStorage.setItem(key,JSON.stringify(posts)); },[posts]);
+
 
   const [serverPosts,setServerPosts]=useState<Post[]>([]);
-  useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)return;const d=await r.json();const rows=d.posts||[];if(active)setServerPosts(rows.map((p:{id:string;body:string;created_at:string})=>({id:p.id,name:"Community member",handle:"@member",text:p.body,created:new Date(p.created_at).getTime(),likes:0,liked:false,comments:[]})))}catch{}};void load();const t=setInterval(()=>void load(),20000);return()=>{active=false;clearInterval(t)}},[]);
-  const sorted=useMemo(()=>[...serverPosts,...posts].sort((a,b)=>b.created-a.created),[serverPosts,posts]);
+  const [feedError,setFeedError]=useState("");
+  useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok){if(active)setFeedError("Unable to load the shared Ummah feed.");return}const d=await r.json();if(active)setFeedError("");const rows=d.posts||[];if(active)setServerPosts(rows.map((p:{id:string;body:string;created_at:string})=>({id:p.id,name:"Community member",handle:"@member",text:p.body,created:new Date(p.created_at).getTime(),likes:0,liked:false,comments:[]})))}catch{}};void load();const t=setInterval(()=>void load(),20000);return()=>{active=false;clearInterval(t)}},[]);
+  const sorted=useMemo(()=>[...serverPosts].sort((a,b)=>b.created-a.created),[serverPosts]);
 
   const createPost=async(e:FormEvent)=>{
     e.preventDefault();
@@ -84,13 +79,11 @@ export default function Community() {
     finally{setPublishing(false)}
   };
 
-  const like=(id:string)=>{animate(id,"❤️","like");chime();
-    setPosts(p=>p.map(x=>x.id===id?{...x,liked:!x.liked,likes:x.likes+(x.liked?-1:1)}:x));
-  };
+  const like=(id:string)=>{animate(id,"❤️","like");setNotice("Shared likes are not available yet; nothing was saved.")};
 
   const addComment=(id:string)=>{
     const text=(commentDraft[id]||"").trim(); if(!text)return;
-    setPosts(p=>p.map(x=>x.id===id?{...x,comments:[...x.comments,{id:crypto.randomUUID(),name:"You",text,created:Date.now()}]}:x));
+    setNotice("Shared comments are not available yet; nothing was saved.");
     setCommentDraft(c=>({...c,[id]:""}));animate(id,"💬","reply");chime();
   };
 
@@ -110,9 +103,9 @@ export default function Community() {
     <SiteNav />
     <div className="communityShell">
       <div className="ummahStoriesSpotlight"><StoriesRail /></div>
-      <section className="communityHero"><span className="eyebrow">✦ THE UMMAH · TOGETHER</span><h1>Our Ummah. Our Moments. ✨</h1><p>Stories, reflections and conversations from your community — all in one place.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">Text posts publish to the whole Ummah. Photo and video uploads are not connected yet.</p></section>
+      <section className="communityHero"><span className="eyebrow">✦ THE UMMAH · TOGETHER</span><h1>Our Ummah. Our Moments. ✨</h1><p>Stories, reflections and conversations from your community — all in one place.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">Only published database posts appear here. Media uploads, shared likes, and comments are not connected yet.</p></section>
       <div className="ummahQuickActions"><a href="#ummah-compose">✦ Share a Moment</a><a href="/streaming">🔴 Watch Live</a><a href="/ashab">🤝 Find Ashab</a></div><div className="communityGrid">
-        <section ref={feedRef}>
+        <section ref={feedRef}>{feedError&&<p role="alert">{feedError}</p>}
           <form id="ummah-compose" className="composer" onSubmit={createPost}>
             <div className="avatar">YOU</div><div className="composerBody"><textarea value={draft} onChange={e=>setDraft(e.target.value)} placeholder="What’s on your mind? Share a reflection or question…" maxLength={500}/><div className="omPostTools"><label>📷 Photo / Video<input type="file" accept="image/*,video/*" hidden onChange={e=>{if(e.target.files?.[0])pick(e.target.files[0]);e.target.value=""}}/></label><button type="button" onClick={()=>setEdit(v=>!v)}>🎨 Edit</button><button type="button" onClick={()=>setDraft(v=>v+" ✨")}>✨ Express</button><button type="button" onClick={()=>setLink(v=>v||"https://")}>🔗 Link</button></div>
 {edit&&<div className="omPostEditor"><input placeholder="Text over photo / video" maxLength={80} value={overlay} onChange={e=>setOverlay(e.target.value)}/><select value={filter} onChange={e=>setFilter(e.target.value)}><option value="none">Original</option><option value="grayscale(1)">Classic</option><option value="sepia(.8)">Warm</option><option value="saturate(1.7) contrast(1.1)">Vibrant</option><option value="contrast(1.4) brightness(.85)">Cinematic</option></select></div>}
