@@ -60,6 +60,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(false);
   const [smartInput,setSmartInput]=useState<HTMLElement|null>(null);
+  const [smartIntro,setSmartIntro]=useState(false);
   const [smartReady,setSmartReady]=useState(false);
   const [dailyDone,setDailyDone]=useState(false);
   useEffect(()=>{const onStatus=(e:Event)=>setDailyDone(Boolean((e as CustomEvent<{used:boolean}>).detail?.used));window.addEventListener("hudhud-daily-status",onStatus);return()=>window.removeEventListener("hudhud-daily-status",onStatus)},[]);
@@ -267,7 +268,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
 
     <div className={wakeUp ? "wakeUpBackdrop wakeUpActive" : "wakeUpBackdrop"} aria-hidden="true" />
     {exploreHint && !wakeUp && <button type="button" className="wakeExploreHint" onClick={() => { setExploreHint(false); window.scrollBy({top: Math.round(window.innerHeight * .75),behavior: "smooth"}); }} aria-label="Scroll down and explore more">✦ Scroll down &amp; explore more <span aria-hidden="true">↓</span></button>}
-    {dockMounted && createPortal(<>    <nav className="muslimMobileDock" aria-label="Mobile primary navigation">
+    {dockMounted && createPortal(<>{smartIntro&&<div role="status" style={{position:"fixed",bottom:165,left:"50%",transform:"translateX(-50%)",zIndex:9999,width:"min(330px,90vw)",padding:16,borderRadius:20,background:"linear-gradient(135deg,#102f29,#172b44)",color:"#eafff3",border:"1px solid #83ffc1",boxShadow:"0 0 30px #55ffb344",fontSize:13}}><button type="button" onClick={()=>setSmartIntro(false)} aria-label="Dismiss Smart-Tap introduction" style={{float:"right",background:"transparent",border:0,color:"white",fontSize:20}}>×</button><strong>🌀 HudHud Smart-Tap</strong><p>The center orb changes to help you move: Ummah, Daily Post, Qur’an Studio, or Send when you’re writing. ✨</p></div>}    <nav className="muslimMobileDock" aria-label="Mobile primary navigation">
       <div className="muslimDockShell">
         <Link href="/" className={pathname === "/" ? "dockItem selected" : "dockItem"} aria-label="Home"><span className="dockIcon">⌂</span><small>Home</small></Link>
         <Link href="/streaming" className={pathname.startsWith("/streaming") ? "dockItem selected" : "dockItem"} aria-label="Live"><span className="dockIcon">◉{anyoneLive && <span className="dockLiveBeacon" aria-hidden="true" />}</span><small>{anyoneLive ? "On Air" : "Live"}</small></Link>
