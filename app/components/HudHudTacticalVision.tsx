@@ -35,7 +35,8 @@ export default function HudHudTacticalVision(){
  const [tipIndex,setTipIndex]=useState(0);const [dismissed,setDismissed]=useState(false);const choices=pageTips(pathname);const hint=tips[choices[tipIndex%choices.length]];
  useEffect(()=>{try{setOn(localStorage.getItem(KEY)!=="off")}catch{}},[]);
  useEffect(()=>{const sync=()=>{try{setOn(localStorage.getItem(KEY)!=="off")}catch{}};window.addEventListener("1muslim:hudhud-vision-changed",sync);return()=>window.removeEventListener("1muslim:hudhud-vision-changed",sync)},[]);
- useEffect(()=>{setOpen(false);setDragged(false);setDismissed(false);const t=setTimeout(()=>setOpen(true),4200);return()=>clearTimeout(t)},[pathname]);\n useEffect(()=>{const timer=setInterval(()=>{if(!open||dismissed)return;setTipIndex(v=>v+1)},22000);return()=>clearInterval(timer)},[open,dismissed]);
+ useEffect(()=>{setOpen(false);setDragged(false);setDismissed(false);const t=setTimeout(()=>setOpen(true),4200);return()=>clearTimeout(t)},[pathname]);
+ useEffect(()=>{const timer=setInterval(()=>{if(!open||dismissed)return;setTipIndex(v=>v+1)},22000);return()=>clearInterval(timer)},[open,dismissed]);
  useEffect(()=>{if(!on||!open||dismissed)return;
  const locate=()=>{
   const elements=Array.from(document.querySelectorAll<HTMLElement>("h1,h2,h3,a,button,span"));
