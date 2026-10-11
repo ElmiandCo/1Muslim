@@ -83,7 +83,7 @@ export default function ProfilePage() {
 
   useEffect(()=>{window.addEventListener("1muslim:profile-signout",signOut);return()=>window.removeEventListener("1muslim:profile-signout",signOut)},[signingOut]);
   useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}setIsHudHudAdmin((user.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data)setProfile(data as Profile);
-    const {data:postRows}=await s.from("posts").select("id").eq("user_id",user.id); setPostCount(postRows?.length??0);
+    const [profilePosts,communityPosts]=await Promise.all([s.from("posts").select("id").eq("user_id",user.id),s.from("community_posts").select("id").eq("author_id",user.id)]);setPostCount((profilePosts.data?.length??0)+(communityPosts.data?.length??0));
     const {data:friendships}=await s.from("ashab_friendships").select("requester_id,addressee_id").eq("status","accepted").or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
     const ashabIds=(friendships??[]).map((row:any)=>row.requester_id===user.id?row.addressee_id:row.requester_id).filter(Boolean);
     if(ashabIds.length){const {data:ashabRows}=await s.from("profiles").select("*").in("id",ashabIds);setAshab((ashabRows??[]) as Profile[]);}
