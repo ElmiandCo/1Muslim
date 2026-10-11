@@ -18,6 +18,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const [muted, setMuted] = useState(true);
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectKey, setReconnectKey] = useState("initial");
+  const [retryAttempt, setRetryAttempt] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -50,8 +51,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ room: roomName, role: "viewer" }),
         });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Could not connect to the live.");
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.url || !data.token) throw new Error("Live connection is temporarily unavailable. Please try again.");
 
         const room = new Room({ adaptiveStream: true, dynacast: true });
         roomRef.current = room;
@@ -72,7 +73,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
 
         if (!room.remoteParticipants.size && mounted) { setStatus("Waiting for the host video…"); setReconnecting(true); setReconnectKey(String(Date.now())); }
       } catch (err) {
-        if (mounted) setError(err instanceof Error ? err.message : "Unable to connect.");
+        if (mounted) { setReconnecting(false); setStatus("Connection unavailable"); setError("The live connection could not be established. Please retry or return to Streaming."); }
       }
     };
 
@@ -98,7 +99,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       if (videoRef.current) videoRef.current.srcObject = null;
       audioContainerRef.current?.replaceChildren();
     };
-  }, [roomName]);
+  }, [roomName, retryAttempt]);
 
   const toggleMute = () => {
     const next = !muted;
@@ -135,7 +136,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           ⛶ Expand
         </button>}
       </div>
-      {reconnecting ? (
+      {error ? <div role="alert" style={{position:"absolute",inset:0,zIndex:12,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",gap:14,padding:24,color:"#e6f2e7",background:"#0b1510",fontSize:14,textAlign:"center"}}><strong style={{fontSize:19}}>Live connection unavailable</strong><span>{error}</span><div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}><button type="button" onClick={() => { setError(""); setReconnecting(false); setRetryAttempt(n => n + 1); }} style={{border:"1px solid #76ae83",background:"#173d27",color:"#fff",borderRadius:12,padding:"10px 18px",cursor:"pointer"}}>↻ Retry connection</button><a href="/streaming" style={{border:"1px solid #566b5b",color:"#fff",borderRadius:12,padding:"10px 18px",textDecoration:"none"}}>← All streaming</a></div></div> : reconnecting ? (
         <div style={{position:"absolute",inset:0,zIndex:10,background:"radial-gradient(circle at 50% 35%,rgba(72,103,68,.2),rgba(3,7,4,.96) 72%)",display:"grid",placeItems:"center",overflow:"hidden"}}>
           <div style={{position:"absolute",width:190,height:190,borderRadius:"50%",border:"1px solid rgba(214,231,184,.08)",boxShadow:"0 0 80px rgba(126,170,106,.08)",animation:"oneMuslimPulse 3.5s ease-in-out infinite"}} />
           <div style={{position:"relative",width:180,height:130,display:"grid",placeItems:"center",animation:"oneMuslimButterfly 3.2s ease-in-out infinite"}}>
