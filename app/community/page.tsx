@@ -45,6 +45,7 @@ export default function Community() {
   const [sounds,setSounds]=useState(false);
   const [effects,setEffects]=useState(true);
   const [notice,setNotice]=useState("");
+  const [publishing,setPublishing]=useState(false);
   const [burst,setBurst]=useState<{id:string;emoji:string;kind:string}|null>(null);
   const animate=(id:string,emoji:string,kind:string)=>{if(!effects)return;setBurst({id,emoji,kind});setTimeout(()=>setBurst(v=>v?.id===id?v&&v.kind===kind?null:v:v),1000)};
   const safe=(s:string)=>{try{const u=new URL(s);return ["https:","http:"].includes(u.protocol)?u.toString():""}catch{return ""}};
@@ -65,11 +66,22 @@ export default function Community() {
   useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)return;const d=await r.json();const rows=d.posts||[];if(active)setServerPosts(rows.map((p:{id:string;body:string;created_at:string})=>({id:p.id,name:"Community member",handle:"@member",text:p.body,created:new Date(p.created_at).getTime(),likes:0,liked:false,comments:[]})))}catch{}};void load();const t=setInterval(()=>void load(),20000);return()=>{active=false;clearInterval(t)}},[]);
   const sorted=useMemo(()=>[...serverPosts,...posts].sort((a,b)=>b.created-a.created),[serverPosts,posts]);
 
-  const createPost=(e:FormEvent)=>{
+  const createPost=async(e:FormEvent)=>{
     e.preventDefault();
-    if(!draft.trim()&&!media&&!safe(link)) return;
-    setPosts(p=>[{id:crypto.randomUUID(),name:"You",handle:"@you",text:draft.trim(),created:Date.now(),likes:0,liked:false,comments:[],media,mediaType,overlay,filter,link:safe(link)},...p]);
-    setDraft("");setMedia("");setOverlay("");setFilter("none");setLink("");setEdit(false);chime();setNotice("✨ Saved to this browser.");animate("new","✨","publish");
+    if((!draft.trim()&&!media&&!safe(link))||publishing)return;
+    if(media){setNotice("Photo/video publishing is not connected yet. Your draft is preserved; no post was published.");return}
+    setPublishing(true);
+    try{
+      const text=[draft.trim(),safe(link)].filter(Boolean).join("\n");
+      const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
+      const data=await response.json();
+      if(!response.ok)throw Error(data.error||"Could not publish");
+      if(data.removed){setNotice("🥚 This post did not meet community language standards and was removed.");return}
+      const p=data.post;
+      setServerPosts(v=>[{id:p.id,name:"You",handle:"@you",text:p.body,created:new Date(p.created_at).getTime(),likes:0,liked:false,comments:[]},...v.filter(x=>x.id!==p.id)]);
+      setDraft("");setLink("");setEdit(false);chime();setNotice("✨ Published to the Ummah! Other members can now see your post.");
+    }catch(err){setNotice(err instanceof Error?err.message:"Could not publish; your draft was kept.")}
+    finally{setPublishing(false)}
   };
 
   const like=(id:string)=>{animate(id,"❤️","like");chime();
@@ -98,7 +110,7 @@ export default function Community() {
     <SiteNav />
     <div className="communityShell">
       <div className="ummahStoriesSpotlight"><StoriesRail /></div>
-      <section className="communityHero"><span className="eyebrow">✦ THE UMMAH · TOGETHER</span><h1>Our Ummah. Our Moments. ✨</h1><p>Stories, reflections and conversations from your community — all in one place.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">Preview: posts currently save only in your browser, not for other members.</p></section>
+      <section className="communityHero"><span className="eyebrow">✦ THE UMMAH · TOGETHER</span><h1>Our Ummah. Our Moments. ✨</h1><p>Stories, reflections and conversations from your community — all in one place.</p><label className="omPostToggle"><input type="checkbox" checked={effects} onChange={e=>setEffects(e.target.checked)}/> ✨ Floating posts</label><label className="omPostToggle"><input type="checkbox" checked={sounds} onChange={e=>setSounds(e.target.checked)}/> 🔊 Sounds</label><p className="omPostNotice">Text posts publish to the whole Ummah. Photo and video uploads are not connected yet.</p></section>
       <div className="ummahQuickActions"><a href="#ummah-compose">✦ Share a Moment</a><a href="/streaming">🔴 Watch Live</a><a href="/ashab">🤝 Find Ashab</a></div><div className="communityGrid">
         <section ref={feedRef}>
           <form id="ummah-compose" className="composer" onSubmit={createPost}>
