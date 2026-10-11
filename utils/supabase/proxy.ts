@@ -35,7 +35,6 @@ export async function updateSession(request: NextRequest) {
   // Keep auth callbacks, static assets, legal pages and API endpoints accessible.
   const pathname = request.nextUrl.pathname;
   const guestAllowed = pathname === "/" || pathname.startsWith("/auth") ||
-    pathname.startsWith("/welcome") || pathname.startsWith("/onboarding") ||
     pathname.startsWith("/terms") || pathname.startsWith("/privacy") ||
     pathname.startsWith("/api/") || pathname.startsWith("/_next/") ||
     pathname.startsWith("/assets/") || pathname.startsWith("/videos/") ||
