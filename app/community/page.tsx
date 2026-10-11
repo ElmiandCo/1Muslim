@@ -20,6 +20,7 @@ export default function Community() {
   useEffect(()=>{const verse=new URLSearchParams(window.location.search).get("verse");if(verse&&/^(?:[1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(verse)){setDraft("Reflecting on Qur’an "+verse+" 📖\\nhttps://quran.com/"+verse+"\\n");setLink("https://quran.com/"+verse)}},[]);
   const feedRef=useRef<HTMLElement>(null);
   useEffect(()=>{const root=feedRef.current;if(!root||typeof IntersectionObserver==="undefined")return;const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("omPostVisible");observer.unobserve(entry.target)}})},{threshold:.12,rootMargin:"0px 0px -30px 0px"});root.querySelectorAll(".socialPost").forEach(node=>observer.observe(node));return()=>observer.disconnect()},[serverPosts]);
+  const [serverPosts,setServerPosts]=useState<Post[]>([]);
   const [videoIndex,setVideoIndex]=useState<number|null>(null);
   const [videoMuted,setVideoMuted]=useState(false);
   const [videoPaused,setVideoPaused]=useState(false);
@@ -56,7 +57,6 @@ export default function Community() {
 
 
 
-  const [serverPosts,setServerPosts]=useState<Post[]>([]);
   const [feedError,setFeedError]=useState("");
   useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok){if(active)setFeedError("Unable to load the shared Ummah feed.");return}const d=await r.json();if(active)setFeedError("");const rows=d.posts||[];if(active)setServerPosts(previous=>{const existing=new Map(previous.map(p=>[p.id,p]));const next=rows.map((p:{id:string;body:string;created_at:string})=>{const old=existing.get(p.id);return old&&old.text===p.body?old:{id:p.id,name:"Community member",handle:"@member",text:p.body,created:new Date(p.created_at).getTime(),likes:0,liked:false,comments:[]}});return next.length===previous.length&&next.every((p:Post,i:number)=>p===previous[i])?previous:next})}catch{}};void load();const t=setInterval(()=>void load(),20000);return()=>{active=false;clearInterval(t)}},[]);
   const sorted=useMemo(()=>serverPosts.slice().sort((a,b)=>b.created-a.created),[serverPosts]);
