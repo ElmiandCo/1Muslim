@@ -86,7 +86,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       if(form){form.requestSubmit();return}
       const scope=smartInput.closest('[role="dialog"],section,article,main')||document;
       const buttons=Array.from(scope.querySelectorAll<HTMLButtonElement>('button:not([disabled])'));
-      const send=buttons.find(b=>/^(send|post|publish|reply|share|submit)(\\b|\\s|$)/i.test((b.textContent||"").trim().replace(/^[^\\w]+/,"")));
+      const send=buttons.find(b=>/^(send|post|publish|reply|share|submit)(\b|\s|$)/i.test((b.textContent||"").trim().replace(/^[^\w]+/,"")));
       if(send){send.click();return}
     }
     if(isLiveWatch||isReplay){
@@ -104,7 +104,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
     if(isProfile){
       const composer=document.querySelector<HTMLElement>('.firstPostComposer textarea,.composer textarea,textarea[placeholder*="post" i]');
       if(composer){composer.focus();composer.scrollIntoView({behavior:"smooth",block:"center"});return}
-      const profileId=pathname.match(/^\\/profile\\/([^/]+)/)?.[1];
+      const profileId=pathname.split("/")[2];
       const url=location.origin+(profileId?"/profile/"+profileId:"/profile");
       if(navigator.share)void navigator.share({title:"1Muslim Profile",url}).catch(()=>{});
       else void navigator.clipboard.writeText(url).catch(()=>{});
