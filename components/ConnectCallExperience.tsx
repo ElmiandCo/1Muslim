@@ -29,6 +29,8 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  const switchSpeaker=async()=>{const el=remoteAudio.current;if(!el)return;const next=!speakerOn;el.muted=!next;setSpeakerOn(next)};
 
  useEffect(()=>{if(phase!=="connected"){setElapsed(0);return}const timer=setInterval(()=>setElapsed(v=>v+1),1000);return()=>clearInterval(timer)},[phase]);
+ const [linkNotice,setLinkNotice]=useState("");
+ const shareCall=async()=>{const url=window.location.origin+"/messages?conversation="+encodeURIComponent(conversationId)+"&call=1";try{if(navigator.share){await navigator.share({title:"Join my 1Muslim call",text:"Open this link to join our private 1Muslim call.",url});setLinkNotice("Call link shared")}else{await navigator.clipboard.writeText(url);setLinkNotice("Call link copied")}}catch(e){if((e as Error)?.name!=="AbortError")setLinkNotice("Could not share link")}};
  const duration=String(Math.floor(elapsed/60)).padStart(2,"0")+":"+String(elapsed%60).padStart(2,"0");
  return <><style>{`
  .mc-launch{display:flex;gap:9px;align-items:center}.mc-launch button{display:grid;place-items:center;width:43px;height:43px;border:1px solid #6ca88855;background:#153a2b;color:#d4f8de;border-radius:50%;font-size:19px;cursor:pointer;transition:transform .2s,background .2s}.mc-launch button:hover{transform:translateY(-2px);background:#266347}.mc-launch button:disabled{opacity:.35;cursor:default}
@@ -43,7 +45,7 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  @keyframes mcAppear{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}@keyframes mcBreathe{50%{transform:scale(1.045);box-shadow:0 0 0 20px #a3e8ba12,0 0 0 42px #a3e8ba06,0 0 65px #9dddb375}}
  @media(prefers-reduced-motion:reduce){.mc-ring,.mc-bismillah{animation:none}}
  `}</style>
- <div className="mc-launch"><button type="button" title="Voice call" aria-label="Start private voice call" onClick={()=>void start("audio")} disabled={!!call}>☎</button><button type="button" title="Video call" aria-label="Start private video call" onClick={()=>void start("video")} disabled={!!call}>▣</button></div>
+ <div className="mc-launch"><button type="button" title="Share call link" aria-label="Share link to this 1Muslim call" onClick={()=>void shareCall()}>↗</button>{linkNotice&&<span role="status" style={{fontSize:12}}>{linkNotice}</span>}<button type="button" title="Voice call" aria-label="Start private voice call" onClick={()=>void start("audio")} disabled={!!call}>☎</button><button type="button" title="Video call" aria-label="Start private video call" onClick={()=>void start("video")} disabled={!!call}>▣</button></div>
  {error&&<p role="alert" style={{color:"#fca5a5"}}>{error}</p>}
  {call&&<div className="mc-screen" role="dialog" aria-modal="true" aria-label="1Muslim Messenger call"><div className="mc-shell">
  {phase==="intro"&&<video className="mc-intro" src="/videos/prelive-intro.mp4" autoPlay muted playsInline/>}
