@@ -25,18 +25,36 @@ const tips=[
  {text:"🧑‍🤝‍🧑 Invite your Ashab to watch a Live together, ask questions and learn.",href:"/streaming",label:"Explore Lives"},
  {text:"🚀 Pioneers build the culture. Share beneficial content, be welcoming, and help 1Muslim grow responsibly.",href:"/community",label:"Be a pioneer"}
 ];
-const pageTips=(pathname:string)=>pathname.startsWith("/streaming")?[3,4,8,16,18]:pathname.startsWith("/messages")?[6,7,8,14]:pathname.startsWith("/profile")?[2,14,15,19]:pathname.startsWith("/learn")||pathname.startsWith("/quran")?[9,10,12,13]:pathname.startsWith("/ashab")||pathname.startsWith("/find")?[5,7,12,18]:Array.from({length:tips.length},(_,i)=>i);
+const pickRandomTip=(previous:number)=>{
+ const options=tips.map((_,i)=>i).filter(i=>i!==previous);
+ return options[Math.floor(Math.random()*options.length)];
+};
 const KEY="1muslim-hudhud-tactical-vision";
 export default function HudHudTacticalVision(){
  const pathname=usePathname()||"/";
  const [on,setOn]=useState(true),[open,setOpen]=useState(false),[settings,setSettings]=useState(false);
  const [anchor,setAnchor]=useState<{x:number;y:number}|null>(null),[pos,setPos]=useState({x:20,y:160}),[dragged,setDragged]=useState(false);
  const drag=useRef<{x:number;y:number;px:number;py:number}|null>(null);
- const [tipIndex,setTipIndex]=useState(0);const [dismissed,setDismissed]=useState(false);const choices=pageTips(pathname);const hint=tips[choices[tipIndex%choices.length]];
+ const [tipIndex,setTipIndex]=useState(0);const [dismissed,setDismissed]=useState(false);
+ const hint=tips[tipIndex];
+ const nextRandomTip=()=>setTipIndex(previous=>{
+   const next=pickRandomTip(previous);
+   try{sessionStorage.setItem("1muslim-hudhud-last-tip",String(next))}catch{}
+   return next;
+ });
  useEffect(()=>{try{setOn(localStorage.getItem(KEY)!=="off")}catch{}},[]);
  useEffect(()=>{const sync=()=>{try{setOn(localStorage.getItem(KEY)!=="off")}catch{}};window.addEventListener("1muslim:hudhud-vision-changed",sync);return()=>window.removeEventListener("1muslim:hudhud-vision-changed",sync)},[]);
- useEffect(()=>{setOpen(false);setDragged(false);setDismissed(false);const t=setTimeout(()=>setOpen(true),4200);return()=>clearTimeout(t)},[pathname]);
- useEffect(()=>{const timer=setInterval(()=>{if(!open||dismissed)return;setTipIndex(v=>v+1)},22000);return()=>clearInterval(timer)},[open,dismissed]);
+ useEffect(()=>{
+  setOpen(false);setDragged(false);setDismissed(false);
+  let previous=-1;
+  try{previous=Number(sessionStorage.getItem("1muslim-hudhud-last-tip")??-1)}catch{}
+  const next=pickRandomTip(previous);
+  setTipIndex(next);
+  try{sessionStorage.setItem("1muslim-hudhud-last-tip",String(next))}catch{}
+  const t=setTimeout(()=>setOpen(true),4200);
+  return()=>clearTimeout(t)
+ },[pathname]);
+ useEffect(()=>{const timer=setInterval(()=>{if(!open||dismissed)return;nextRandomTip()},22000);return()=>clearInterval(timer)},[open,dismissed]);
  useEffect(()=>{if(!on||!open||dismissed)return;
  const locate=()=>{
   const elements=Array.from(document.querySelectorAll<HTMLElement>("h1,h2,h3,a,button,span"));
@@ -56,7 +74,7 @@ export default function HudHudTacticalVision(){
  {on&&open&&!dismissed&&<>{anchor&&<svg aria-hidden="true" style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:9300}}><path d={`M${anchor.x} ${anchor.y} Q${(anchor.x+pos.x)/2} ${anchor.y-36} ${pos.x+14} ${pos.y+35}`} stroke="#8af5ca" strokeWidth="1.5" strokeDasharray="5 5" fill="none"/><circle cx={anchor.x} cy={anchor.y} r="5" stroke="#9dffda" fill="none"/></svg>}
  <section aria-label="HudHud contextual guidance" onPointerDown={start} onPointerMove={move} onPointerUp={()=>drag.current=null} onPointerCancel={()=>drag.current=null} style={{position:"fixed",left:pos.x,top:pos.y,width:Math.min(300,innerWidth-24),zIndex:9301,borderRadius:20,padding:16,background:"linear-gradient(130deg,rgba(9,47,36,.48),rgba(13,40,46,.42))",backdropFilter:"blur(10px)",WebkitBackdropFilter:"blur(10px)",border:"1px solid #8beac2",boxShadow:"0 12px 45px #0009,0 0 20px #66eeb022",color:"#f3fff9",touchAction:"auto",cursor:"default",animation:"hudhudCalloutIn .45s ease both"}}>
  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}><button type="button" data-vision-handle aria-label="Drag HudHud Vision card" title="Drag this handle to move the card" style={{cursor:"grab",touchAction:"none",border:"1px solid #9affd977",borderRadius:10,padding:"7px 10px",background:"rgba(85,211,158,.13)",color:"#c3ffe9",fontSize:19,letterSpacing:2}}>⠿</button><b style={{flex:1}}>✦ HudHud · Vision</b><span><button title="Dismiss" onClick={()=>{setDismissed(true);setOpen(false)}}>✕</button></span></div>
- <p style={{fontSize:14,lineHeight:1.6}}>{hint.text}</p><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:9,fontSize:11,color:"#a8ebd1"}}><span>Tip {tipIndex%choices.length+1} of {choices.length}</span><button type="button" onClick={()=>setTipIndex(v=>v+1)} style={{border:"1px solid #9affd977",borderRadius:999,padding:"6px 11px",background:"#154337",color:"#e9fff5",cursor:"pointer"}}>Next tip →</button></div><Link href={hint.href} style={{color:"#9ef6cd",fontWeight:700}}>{hint.label} →</Link>
+ <p style={{fontSize:14,lineHeight:1.6}}>{hint.text}</p><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:9,fontSize:11,color:"#a8ebd1"}}><span>Tip {tipIndex+1} of {tips.length}</span><button type="button" onClick={()=>setTipIndex(v=>v+1)} style={{border:"1px solid #9affd977",borderRadius:999,padding:"6px 11px",background:"#154337",color:"#e9fff5",cursor:"pointer"}}>Next tip →</button></div><Link href={hint.href} style={{color:"#9ef6cd",fontWeight:700}}>{hint.label} →</Link>
  </section></>}
  <style>{`@keyframes hudhudCalloutIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}@media(prefers-reduced-motion:reduce){section[aria-label="HudHud contextual guidance"]{animation:none!important}}`}</style>
  </>;
