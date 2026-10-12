@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import {useRouter} from "next/navigation";
+import HudHudVoiceCommands from "./HudHudVoiceCommands";
 
 const options=[
  {label:"Regular Post",href:"/?compose=1",description:"Write and share with the Ummah"},
@@ -24,7 +25,7 @@ export default function HudHudVisionDock(){
    {vision&&<button className="hhVisionTarget" type="button" onClick={()=>{setPinned(v=>!v);setChoice(null)}} aria-pressed={pinned} aria-label={pinned?"Unpin HudHud Vision from Live Now":"Pin HudHud Vision to Live Now"}>{pinned?"✕ Unpin Live Now":"⌖ Pin to Live Now"}</button>}
    {vision&&pinned&&<div className="hhVisionCard" role="region" aria-label="HudHud Live Now actions">
     <div className="hhVisionCardTitle"><span>🌀 HudHud · Live Now</span><button type="button" aria-label="Close Live Now actions" onClick={()=>{setPinned(false);setChoice(null)}}>×</button></div>
-    <p>What would you like to do with Live Now?</p>
+    <p>What would you like to do with Live Now?</p><div style={{margin:"10px 0"}}><HudHudVoiceCommands /></div>
     <div className="hhVisionOptions">{options.map((item,i)=><button type="button" key={item.label} disabled={i===1&&dailyUsed} className={choice===i?"chosen":""} onClick={()=>setChoice(i)}><strong>{i===1&&dailyUsed?"✓ Daily Post Done":item.label}</strong><small>{item.description}</small></button>)}</div>
     {choice!==null&&<button className="hhVisionRun" type="button" onClick={run}>✦ {options[choice].label} →</button>}
    </div>}
