@@ -17,6 +17,7 @@ import FeaturedYoutubeVideo from "../components/FeaturedYoutubeVideo";
 import HudHudVoiceSpiral from "./components/HudHudVoiceSpiral";
 import HudHudVisionDock from "./components/HudHudVisionDock";
 import HudHudPersonalWelcome from "./components/HudHudPersonalWelcome";
+import InstallAppInvitation from "./components/InstallAppInvitation";
 
 type Path = "easy" | "advanced";
 
@@ -118,7 +119,7 @@ export default function Home() {
   const lessonSet = path === "easy" ? easy : advanced;
 
   return (
-    <><SiteNav compact /><div className="app">
+    <><InstallAppInvitation /><SiteNav compact /><div className="app">
       <aside className="sidebar">
         <Link href="/" className="homeLogo" aria-label="1Muslim Home"><img src="/assets/1muslim-mobile-logo.PNG" alt="1Muslim" /></Link>
         <nav>
