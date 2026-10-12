@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 import LiveKitViewer from "../../components/LiveKitViewer";
@@ -7,6 +8,8 @@ import LiveKitViewer from "../../components/LiveKitViewer";
 type Stream={id:string;title:string;room_name:string;visibility:string|null;started_at:string};
 const DISMISSED="1muslim-live-mini-dismissed";
 export default function HudHudLiveMiniPlayer(){
+ const pathname=usePathname();
+ const isBroadcastScreen=pathname.startsWith("/streaming/go-live")||pathname.startsWith("/streaming/live/");
  const [stream,setStream]=useState<Stream|null>(null);
  const [open,setOpen]=useState(false);
  const [minimized,setMinimized]=useState(false);
@@ -42,7 +45,7 @@ export default function HudHudLiveMiniPlayer(){
   return()=>{active=false;window.clearInterval(timer);void supabase.current.removeChannel(channel)};
  },[]);
  const close=()=>{dismissed.current=true;sessionStorage.setItem(DISMISSED,"yes");setOpen(false)};
- if(!initialized||loading||!open||!stream)return null;
+ if(isBroadcastScreen||!initialized||loading||!open||!stream)return null;
  return <aside className={"hudhud-live-mini"+(minimized?" is-minimized":"")} aria-label="Live stream notification" data-no-translate="true">
   <div className="hudhud-live-mini-head">
    <img src="/assets/hudhud-logo.PNG" alt="" className="hudhud-live-bird" onError={e=>{e.currentTarget.style.display="none"}} />
