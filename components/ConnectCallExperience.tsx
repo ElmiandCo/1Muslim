@@ -1,25 +1,53 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {Room,RoomEvent,Track} from "livekit-client";
+import {createClient} from "../utils/supabase/client";
 type Call={id:string;caller_id:string;callee_id:string;mode:"audio"|"video";status:string};
 export default function ConnectCallExperience({conversationId,userId,peerName,peerAvatar}:{conversationId:string;userId:string;peerName:string;peerAvatar?:string|null}){
  const [call,setCall]=useState<Call|null>(null),[phase,setPhase]=useState<"idle"|"intro"|"connected">("idle"),[error,setError]=useState(""),[muted,setMuted]=useState(false),[cameraOff,setCameraOff]=useState(false);
  const [cameraEffects,setCameraEffects]=useState(true),[cameraEffect,setCameraEffect]=useState<"glow"|"stars"|"soft">("glow");
  const [menuOpen,setMenuOpen]=useState(false),[speakerOn,setSpeakerOn]=useState(true),[showChat,setShowChat]=useState(false),[chatDraft,setChatDraft]=useState(""),[chatMessages,setChatMessages]=useState<{sender:string;body:string}[]>([]),[audioLevel,setAudioLevel]=useState(0),[flipping,setFlipping]=useState(false);
+ const connectingId=useRef<string|null>(null);
+ const activeCallId=useRef<string|null>(null);
+ const callRef=useRef<Call|null>(null);
+ const [connectionState,setConnectionState]=useState<"normal"|"reconnecting"|"failed">("normal");
  const room=useRef<Room|null>(null),local=useRef<HTMLVideoElement>(null),remote=useRef<HTMLVideoElement>(null),remoteAudio=useRef<HTMLAudioElement>(null);
  const request=async(body:Record<string,unknown>)=>{const r=await fetch("/api/dm-calls",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({conversationId,...body})});const data=await r.json();if(!r.ok)throw Error(data.error||"Call request failed");return data};
- useEffect(()=>{let alive=true;setCall(null);setPhase("idle");const poll=async()=>{try{const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId),{cache:"no-store"});if(!r.ok)return;const d=await r.json();if(alive){setCall(d.call??null);if(!d.call||!["accepted","ringing"].includes(d.call.status)){setPhase("idle");room.current?.disconnect();room.current=null}}}catch{}};void poll();const timer=setInterval(()=>void poll(),2500);return()=>{alive=false;clearInterval(timer);room.current?.disconnect();room.current=null}},[conversationId]);
+ useEffect(()=>{let alive=true;setCall(null);setPhase("idle");const poll=async()=>{try{const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId),{cache:"no-store"});if(!r.ok)return;const d=await r.json();if(alive){
+  const next:Call|null=d.call??null;
+  callRef.current=next;setCall(next);
+  if(!next||!["accepted","ringing"].includes(next.status)){
+   setPhase("idle");setConnectionState("normal");activeCallId.current=null;connectingId.current=null;
+   room.current?.disconnect();room.current=null;
+  }else if(next.status==="accepted"&&next.caller_id===userId&&activeCallId.current!==next.id&&connectingId.current!==next.id){
+   void connect(next.id,next.mode);
+  }
+ }}catch{}};void poll();const timer=setInterval(()=>void poll(),1200);
+ const onFocus=()=>void poll();
+ window.addEventListener("focus",onFocus);
+ const supabase=createClient();
+ const channel=supabase.channel("dm-call-"+conversationId)
+  .on("postgres_changes",{event:"*",schema:"public",table:"dm_calls",filter:"conversation_id=eq."+conversationId},()=>void poll())
+  .subscribe();
+ return()=>{alive=false;window.removeEventListener("focus",onFocus);void supabase.removeChannel(channel);clearInterval(timer);room.current?.disconnect();room.current=null}},[conversationId]);
  const start=async(mode:"audio"|"video")=>{setError("");try{await request({action:"invite",mode});const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId));const d=await r.json();setCall(d.call??null)}catch(e){setError(e instanceof Error?e.message:"Could not call")}};
- const connect=async(id:string,mode:"audio"|"video")=>{setPhase("intro");setError("");try{const data=await request({action:"token",callId:id});const r=new Room({adaptiveStream:true,dynacast:true});room.current=r;
+ const connect=async(id:string,mode:"audio"|"video")=>{
+ if(connectingId.current===id||activeCallId.current===id)return;
+ connectingId.current=id;setPhase("intro");setError("");setConnectionState("normal");
+ try{const data=await request({action:"token",callId:id});const r=new Room({adaptiveStream:true,dynacast:true});room.current=r;
+ r.on(RoomEvent.Reconnecting,()=>{setConnectionState("reconnecting");setError("Connection interrupted. Reconnecting…")});
+ r.on(RoomEvent.Reconnected,()=>{setConnectionState("normal");setError("")});
+ r.on(RoomEvent.Disconnected,()=>{if(room.current===r){activeCallId.current=null;connectingId.current=null;setConnectionState("failed");setError("Call disconnected. Tap Reconnect to try again.")}});
  r.on(RoomEvent.TrackSubscribed,(track)=>{if(track.kind===Track.Kind.Video&&remote.current)track.attach(remote.current);if(track.kind===Track.Kind.Audio&&remoteAudio.current)track.attach(remoteAudio.current)});
  r.on(RoomEvent.TrackUnsubscribed,track=>track.detach());
  r.on(RoomEvent.DataReceived,(payload,participant)=>{try{const d=JSON.parse(new TextDecoder().decode(payload));if(d.type==="call-chat"&&typeof d.body==="string")setChatMessages(v=>[...v.slice(-39),{sender:participant?.identity||"Peer",body:d.body.slice(0,500)}])}catch{}});
  await r.connect(data.url,data.token);await r.localParticipant.setMicrophoneEnabled(true);
  if(mode==="video"){await r.localParticipant.setCameraEnabled(true);const track=r.localParticipant.videoTrackPublications.values().next().value?.track;if(track&&local.current)track.attach(local.current)}
- setTimeout(()=>setPhase("connected"),2200);
- }catch(e){setError(e instanceof Error?e.message:"Could not connect");room.current?.disconnect();room.current=null;setPhase("idle")}};
+ activeCallId.current=id;connectingId.current=null;
+ setTimeout(()=>{if(room.current===r)setPhase("connected")},700);
+ }catch(e){setError(e instanceof Error?e.message:"Could not connect");room.current?.disconnect();room.current=null;activeCallId.current=null;connectingId.current=null;setConnectionState("failed");setPhase("idle")}};
  const accept=async()=>{if(!call)return;try{await request({action:"accept",callId:call.id});setCall({...call,status:"accepted"});void connect(call.id,call.mode)}catch(e){setError(e instanceof Error?e.message:"Could not accept")}};
- const end=async()=>{if(call)try{await request({action:"end",callId:call.id})}catch{}room.current?.disconnect();room.current=null;setCall(null);setPhase("idle")};
+ const end=async()=>{if(call)try{await request({action:"end",callId:call.id})}catch{}room.current?.disconnect();room.current=null;activeCallId.current=null;connectingId.current=null;setCall(null);setPhase("idle")};
  const incoming=call?.status==="ringing"&&call.callee_id===userId;
  const outgoing=call?.status==="ringing"&&call.caller_id===userId;
  const [elapsed,setElapsed]=useState(0);
@@ -66,6 +94,8 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  <div className="mc-controls"><div className="mc-control"><button type="button" onClick={()=>void shareCall()} aria-label="Share this call link">↗</button><span>Share link</span></div>
  {incoming&&<div className="mc-control"><button type="button" className="mc-answer" onClick={()=>void accept()} aria-label="Accept call">✓</button><span>Accept</span></div>}
  {call.status==="accepted"&&phase==="idle"&&<div className="mc-control"><button type="button" className="mc-answer" onClick={()=>void connect(call.id,call.mode)} aria-label="Join call">↗</button><span>Join</span></div>}
+ {call.status==="accepted"&&connectionState==="failed"&&<div className="mc-control"><button type="button" className="mc-answer" onClick={()=>void connect(call.id,call.mode)} aria-label="Reconnect call">↻</button><span>Reconnect</span></div>}
+ {connectionState==="reconnecting"&&<span role="status" aria-live="polite">Reconnecting…</span>}
  {phase==="connected"&&<><div className="mc-control"><button type="button" aria-label={muted?"Unmute microphone":"Mute microphone"} aria-pressed={muted} onClick={()=>{const r=room.current;if(r){void r.localParticipant.setMicrophoneEnabled(muted);setMuted(!muted)}}}>{muted?"🔇":"🎙"}</button><span>{muted?"Unmute":"Mute"}</span></div>
  {call.mode==="video"&&<div className="mc-control"><button type="button" aria-label={cameraOff?"Turn camera on":"Turn camera off"} aria-pressed={cameraOff} onClick={()=>{const r=room.current;if(r){void r.localParticipant.setCameraEnabled(cameraOff);setCameraOff(!cameraOff)}}}>{cameraOff?"◩":"▣"}</button><span>Camera</span></div>}{call.mode==="video"&&<div className="mc-control"><button type="button" onClick={()=>void flip()} disabled={flipping} aria-label="Flip camera">🔄</button><span>Flip</span></div>}<div className="mc-control"><button type="button" onClick={()=>void switchSpeaker()} aria-pressed={!speakerOn} aria-label="Toggle speaker">{speakerOn?"🔊":"🔈"}</button><span>Speaker</span></div><div className="mc-control"><button type="button" onClick={()=>setShowChat(v=>!v)} aria-label="Call messages">💬</button><span>Message</span></div><div className="mc-control"><button type="button" onClick={()=>setMenuOpen(v=>!v)} aria-label="Call settings">⋯</button><span>More</span></div></>}
  <div className="mc-control"><button type="button" className="mc-end" onClick={()=>void end()} aria-label={incoming?"Decline call":"End call"}>☎</button><span>{incoming?"Decline":"End"}</span></div>
