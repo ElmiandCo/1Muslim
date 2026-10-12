@@ -82,7 +82,7 @@ export default function QuranLessons(){
  const [verseMarkers,setVerseMarkers]=useState<Record<string,{id:number;x:number;y:number;size:number}[]>>({});
  const [markerSize,setMarkerSize]=useState(42);
  const markerDrag=useRef<{id:number;x:number;y:number;startX:number;startY:number;key:string}|null>(null);
- const activeVerseKey=verses[focusIndex]?.verse_key||chapter+":"+versePosition;
+ const activeVerseKey=verses[focusIndex]?.verse_key||chapter+":"+(focusIndex+1);
  const addVerseMarker=()=>setVerseMarkers(prev=>({...prev,[activeVerseKey]:[...(prev[activeVerseKey]||[]),{id:Date.now(),x:50,y:50,size:markerSize}]}));
  const undoVerseMarker=()=>setVerseMarkers(prev=>({...prev,[activeVerseKey]:(prev[activeVerseKey]||[]).slice(0,-1)}));
  const moveVerseMarker=(id:number,x:number,y:number,key:string)=>setVerseMarkers(prev=>({...prev,[key]:(prev[key]||[]).map(m=>m.id===id?{...m,x:Math.max(4,Math.min(96,x)),y:Math.max(4,Math.min(96,y))}:m)}));
