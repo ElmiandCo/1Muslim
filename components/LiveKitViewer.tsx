@@ -63,7 +63,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         room.on(RoomEvent.TrackSubscribed, (track) => attachTrack(track));
         room.on(RoomEvent.TrackUnsubscribed, (track) => {
           track.detach().forEach(el => el.remove());
-          if (track.kind === Track.Kind.Audio) attachedAudioRef.current.delete(track.sid);
+          if (track.kind === Track.Kind.Audio) track.sid && attachedAudioRef.current.delete(track.sid);
         });
         room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live video could not be subscribed to. Please reconnect."));
         room.on(RoomEvent.ParticipantConnected, () => mounted && setStatus("LIVE"));
