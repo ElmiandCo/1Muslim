@@ -130,6 +130,10 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const [anyoneLive, setAnyoneLive] = useState(false);
   const [openMenu, setOpenMenu] = useState<"explore" | "live" | "mobile" | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
+  const [navHidden,setNavHidden]=useState(false);
+  const [pageGlow,setPageGlow]=useState(false);
+  useEffect(()=>{setNavHidden(false);setPageGlow(true);const t=setTimeout(()=>setPageGlow(false),1100);return()=>clearTimeout(t)},[pathname]);
+  useEffect(()=>{let last=window.scrollY;const onScroll=()=>{const y=window.scrollY;const delta=y-last;if(y<36)setNavHidden(false);else if(Math.abs(delta)>7&&openMenu!=="mobile")setNavHidden(delta>0);last=y};window.addEventListener("scroll",onScroll,{passive:true});return()=>window.removeEventListener("scroll",onScroll)},[openMenu]);
   const [mobilePanelVisible,setMobilePanelVisible]=useState(false);
   useEffect(()=>{if(openMenu==="mobile")setMobilePanelVisible(true);else if(mobilePanelVisible){const timer=window.setTimeout(()=>setMobilePanelVisible(false),620);return()=>window.clearTimeout(timer)}},[openMenu,mobilePanelVisible]);
   useEffect(()=>{document.body.classList.toggle("oneMuslimNavExpanded",openMenu==="mobile");return()=>document.body.classList.remove("oneMuslimNavExpanded")},[openMenu]);
@@ -263,7 +267,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const signOut = async () => { await createClient().auth.signOut(); window.location.href = "/"; };
   const label = (text: string, ar: string) => user?.arabic_terms_enabled ? <>{text} <span className="arabicNav">{ar}</span></> : text;
 
-  return <header ref={navRef} className={compact ? "siteNav compact" : "siteNav"}>
+  return <header ref={navRef} className={`${compact ? "siteNav compact" : "siteNav"} muslimTopGlass ${navHidden && !openMenu ? "muslimTopHidden" : ""} ${pageGlow ? "muslimPageGlow" : ""}`}>
     <Link href="/" className="siteBrand logoBrand" aria-label="1Muslim.Live Home"><img src="/assets/1muslim-live-logo.PNG" alt="1Muslim.Live" className="premiumLogo" /></Link>
 
     <nav className="siteNavLinks" aria-label="Primary navigation">
@@ -358,6 +362,12 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       :global(.muslimMobileDock:has(.wakeUpSpotlight)){z-index:9991!important}
       :global(.wakeUpSpotlight){position:relative!important;z-index:9992!important;filter:drop-shadow(0 0 11px #5fffc2) drop-shadow(0 0 16px #a388ff);transition:filter .3s ease}
       @media(prefers-reduced-motion:reduce){:global(.wakeUpBackdrop){transition:none!important}:global(.wakeExploreHint){animation:none!important}:global(.wakeUpSpotlight){filter:none!important}}
+      :global(.siteNav.muslimTopGlass){background:rgba(9,29,23,.64)!important;backdrop-filter:blur(22px) saturate(1.35);-webkit-backdrop-filter:blur(22px) saturate(1.35);border-bottom:1px solid rgba(166,242,195,.22);transition:transform .32s cubic-bezier(.2,.8,.2,1),background .3s ease!important;position:sticky;top:0;z-index:1000}
+      :global(.siteNav.muslimTopHidden){transform:translateY(-110%);pointer-events:none}
+      :global(.siteNav.muslimPageGlow:after){content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(100deg,transparent 20%,rgba(147,255,186,.22) 50%,transparent 80%);animation:muslimNavSweep 1.05s ease-out both}
+      @keyframes muslimNavSweep{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+      @media(prefers-reduced-motion:reduce){:global(.siteNav.muslimTopGlass){transition:none!important}:global(.siteNav.muslimPageGlow:after){animation:none}}
+      @media(max-width:700px){:global(.siteNav.muslimTopGlass .mobileMenuButton),:global(.siteNav.muslimTopGlass .themeToggle),:global(.siteNav.muslimTopGlass .mobileLibraryShortcut){border-radius:16px!important;background:rgba(32,77,55,.25)!important;box-shadow:inset 0 1px rgba(255,255,255,.12),0 3px 15px rgba(0,0,0,.12)}}
       .logoBrand{display:flex;align-items:center;flex:0 1 auto;min-width:0;max-width:190px;overflow:hidden}
       .premiumLogo{display:block;width:clamp(122px,14vw,182px);height:46px;max-width:100%;object-fit:contain;object-position:left center;border-radius:3px}
       @media(max-width:700px){.logoBrand{max-width:138px}.premiumLogo{width:138px;height:40px}}
