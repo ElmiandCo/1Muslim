@@ -13,7 +13,21 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
  const load=async()=>{const {data}=await db.from("live_guest_requests").select("id,user_id,status,mode").eq("stream_id",streamId);if(active)setRequests(data??[])};
  void load();const timer=setInterval(()=>void load(),2500);return()=>{active=false;clearInterval(timer)}},[streamId]);
  useEffect(()=>()=>{room.current?.disconnect();stream.current?.getTracks().forEach(t=>t.stop())},[]);
- async function request(){setError("");const {error}=await createClient().rpc("request_live_guest",{p_stream:streamId,p_mode:mode});if(error)setError(error.message)}
+ async function request(){
+  setError("");
+  const db=createClient();
+  const {error}=await db.rpc("request_live_guest",{p_stream:streamId,p_mode:mode});
+  if(!error)return;
+  // A missing RPC in PostgREST's schema cache should not block a first-time guest request.
+  if(error.code==="PGRST202"||error.message.includes("Could not find the function")){
+    if(!uid){setError("Please sign in before requesting to join.");return}
+    const {error:insertError}=await db.from("live_guest_requests").insert({stream_id:streamId,user_id:uid,mode,status:"pending"});
+    if(!insertError)return;
+    if(insertError.code==="23505"){setError("Your previous guest request already exists. Ask the host to review it.");return}
+    setError(insertError.message);return;
+  }
+  setError(error.message);
+ }
  async function moderate(id:string,status:string){const {error}=await createClient().rpc("moderate_live_guest",{p_request:id,p_status:status});if(error)setError(error.message)}
  async function join(){try{
   setError("");const response=await fetch("/api/livekit/token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName,role:"guest"})});
