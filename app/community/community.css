@@ -53,3 +53,18 @@
  .socialPost.omPostVisible .omPostMedia,.socialPost.omPostVisible .omLinkPreview{opacity:1;transform:translateY(0) scale(1)}
 }
 @media(prefers-reduced-motion:reduce){.omPostTextReveal,.socialPost .omPostMedia,.socialPost .omLinkPreview{opacity:1!important;filter:none!important;transform:none!important;transition:none!important}}
+
+
+/* Responsive Ummah feed: content controls card height, never nested scrolling. */
+.communityShell,.communityGrid,.socialPost,.postBody{min-width:0;max-width:100%}
+.socialPost{height:auto!important;min-height:0;max-height:none!important;overflow:visible!important;align-items:flex-start}
+.socialPost .postBody,.socialPost .omPostTextReveal{height:auto!important;max-height:none!important;overflow:visible!important}
+.socialPost .omPostTextReveal{white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;line-height:1.6}
+.socialPost .postHeader{min-width:0;flex-wrap:wrap}
+.socialPost .postHeader strong,.socialPost .postHeader span{overflow-wrap:anywhere}
+.socialPost .postActions{max-width:100%;flex-wrap:wrap;gap:4px}
+.socialPost .commentBox{min-width:0;max-width:100%;flex-wrap:wrap}
+.socialPost .commentBox input{min-width:0;flex:1 1 150px}
+.socialPost .commentBox button{flex:0 0 auto}
+.socialPost .comment{min-width:0;overflow-wrap:anywhere}
+@media(max-width:600px){.socialPost{gap:9px;padding:16px 0}.socialPost>.avatar{width:34px;height:34px}.socialPost .postHeader{gap:4px 8px}.socialPost .postHeader button{margin-left:auto}.socialPost .postActions button{min-height:36px}}
