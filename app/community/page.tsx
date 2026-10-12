@@ -117,7 +117,7 @@ export default function Community() {
             <div className="avatar">{post.name==="You"?"YOU":"1M"}</div>
             <div className="postBody">
               <div className="postHeader"><strong>{post.name}</strong><span>{post.handle} · {new Date(post.created).toLocaleDateString()}</span><button>•••</button></div>
-              <p className="omPostTextReveal">{post.text}</p>{preview(post)}
+              <p className="omPostTextReveal">{post.text.replace(/\\r\\n|\\n|\\r/g, "\n")}</p>{preview(post)}
               <div className="postActions">
                 <button onClick={()=>setCommentDraft(c=>({...c,[post.id]:c[post.id]===undefined?"":c[post.id]}))}>💬 {post.comments.length}</button>
                 <button className={post.liked?"liked":""} onClick={()=>like(post.id)}>❤️ {post.likes}</button>
