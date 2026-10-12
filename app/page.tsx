@@ -329,7 +329,7 @@ export default function Home() {
         {duaOpen && <DuaLesson onClose={()=>setDuaOpen(false)} />}
       <HudHudLearningNudge />
       
-      <HudHudVoiceSpiral />
+      
       <HudHudVisionDock />
       <HudHudPersonalWelcome />
       <aside className="rightRail">
