@@ -413,7 +413,7 @@ body:has(.omQuranPage) header:has(nav),body:has(.omQuranPage) [class*="bottomNav
 .omQuranPage .omQuranModeOrb img{width:45px;height:45px;object-fit:contain;pointer-events:none}
 .omQuranPage.omQuranSimpleMode .omQuranGlassDeck{display:none!important}
 .omQuranPage.omQuranSimpleMode .omQuranSimpleReader{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:clamp(12px,4vw,30px) 13% 15px;box-sizing:border-box;overflow-y:auto;scrollbar-width:none;text-align:center}
-.omQuranPage.omQuranSimpleMode .omQuranFirstReader{background:linear-gradient(180deg,#080d24a3,#1410346b 52%,#0b0c27aa),radial-gradient(ellipse at 70% 26%,#9e70ca7a,transparent 38%),radial-gradient(ellipse at 40% 75%,#3438a280,transparent 55%)!important}
+.omQuranPage.omQuranSimpleMode .omQuranFirstReader{background:linear-gradient(180deg,rgba(3,6,18,.48) 0%,rgba(7,8,24,.18) 36%,rgba(5,5,20,.58) 100%),url("/assets/quran-studio-background.PNG") center center / cover no-repeat!important;background-color:#080d24!important}
 .omQuranPage .omQuranSimpleHeading{display:grid;gap:6px;place-items:center;color:#fff;text-shadow:0 0 15px #c5a7ff77}
 .omQuranPage .omQuranSimpleHeading>span{font-size:23px;color:#e2c6ff}
 .omQuranPage .omQuranSimpleHeading h2{font-size:clamp(30px,7vw,47px);font-weight:500;margin:0;line-height:1.35}
