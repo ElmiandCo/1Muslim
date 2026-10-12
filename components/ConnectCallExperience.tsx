@@ -8,6 +8,8 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  const [cameraEffects,setCameraEffects]=useState(true),[cameraEffect,setCameraEffect]=useState<"glow"|"stars"|"soft">("glow");
  const [menuOpen,setMenuOpen]=useState(false),[speakerOn,setSpeakerOn]=useState(true),[showChat,setShowChat]=useState(false),[chatDraft,setChatDraft]=useState(""),[chatMessages,setChatMessages]=useState<{sender:string;body:string}[]>([]),[audioLevel,setAudioLevel]=useState(0),[flipping,setFlipping]=useState(false);
  const [serviceUnavailable,setServiceUnavailable]=useState(false);
+ const [voiceListening,setVoiceListening]=useState(false),[voiceNotice,setVoiceNotice]=useState("");
+ const speechRef=useRef<{stop:()=>void}|null>(null);
  const connectingId=useRef<string|null>(null);
  const activeCallId=useRef<string|null>(null);
  const callRef=useRef<Call|null>(null);
@@ -49,6 +51,26 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  }catch(e){setError(e instanceof Error?e.message:"Could not connect");room.current?.disconnect();room.current=null;activeCallId.current=null;connectingId.current=null;setConnectionState("failed");setPhase("idle")}};
  const accept=async()=>{if(!call)return;try{await request({action:"accept",callId:call.id});setCall({...call,status:"accepted"});void connect(call.id,call.mode)}catch(e){setError(e instanceof Error?e.message:"Could not accept")}};
  const end=async()=>{if(call)try{await request({action:"end",callId:call.id})}catch{}room.current?.disconnect();room.current=null;activeCallId.current=null;connectingId.current=null;setCall(null);setPhase("idle")};
+ const voiceCommand=()=>{
+  if(voiceListening){speechRef.current?.stop();setVoiceListening(false);return}
+  const w=window as Window & {SpeechRecognition?:new()=>any;webkitSpeechRecognition?:new()=>any};
+  const Speech=w.SpeechRecognition||w.webkitSpeechRecognition;
+  if(!Speech){setVoiceNotice("Voice commands are not supported in this browser.");return}
+  const recognition=new Speech();recognition.lang="en-US";recognition.continuous=false;recognition.interimResults=false;
+  recognition.onresult=(event:any)=>{
+   const phrase=String(event.results?.[0]?.[0]?.transcript||"").trim();
+   const match=phrase.match(/^(?:hey\\s+)?hud\\s*hud[,\\s]+call\\s+(.+?)(?:\\s+on\\s+video)?[.!]?$/i);
+   if(!match){setVoiceNotice('Try: "HudHud, call '+peerName+'".');return}
+   const requested=match[1].trim().replace(/[.!]$/,"");
+   if(requested.localeCompare(peerName.trim(),undefined,{sensitivity:"base"})!==0){setVoiceNotice('Open '+requested+'’s conversation to call them.');return}
+   if(call||serviceUnavailable){setVoiceNotice("Calling is unavailable while another call is active.");return}
+   setVoiceNotice("Calling "+peerName+"…");void start("video");
+  };
+  recognition.onerror=()=>{setVoiceNotice("Could not recognize your voice. Try again.");setVoiceListening(false)};
+  recognition.onend=()=>{setVoiceListening(false);speechRef.current=null};
+  try{recognition.start();speechRef.current=recognition;setVoiceListening(true);setVoiceNotice("Listening for: HudHud, call "+peerName)}catch{setVoiceNotice("Microphone unavailable.");setVoiceListening(false)}
+ };
+ useEffect(()=>()=>speechRef.current?.stop(),[]);
  const incoming=call?.status==="ringing"&&call.callee_id===userId;
  const outgoing=call?.status==="ringing"&&call.caller_id===userId;
  const [elapsed,setElapsed]=useState(0);
@@ -76,7 +98,8 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  @keyframes mcAppear{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}@keyframes mcBreathe{50%{transform:scale(1.045);box-shadow:0 0 0 20px #a3e8ba12,0 0 0 42px #a3e8ba06,0 0 65px #9dddb375}}
  @media(prefers-reduced-motion:reduce){.mc-ring,.mc-bismillah{animation:none}}
  `}</style>
- <div className="mc-launch"><span className="mc-call-label">📞 1Muslim Calls</span><button type="button" title="Share call link" aria-label="Share link to this 1Muslim call" onClick={()=>void shareCall()}>↗</button>{linkNotice&&<span role="status" style={{fontSize:12}}>{linkNotice}</span>}<button type="button" title="Voice call" aria-label="Start private voice call" onClick={()=>void start("audio")} disabled={!!call||serviceUnavailable}>☎</button><button type="button" title="Video call" aria-label="Start private video call" onClick={()=>void start("video")} disabled={!!call||serviceUnavailable}>▣</button>{openedFromLink&&!call&&<span className="mc-link-hint" role="status">This call is not ringing right now. Start a voice or video call above, or wait for the other member to call.</span>}</div>
+ <div className="mc-launch"><button type="button" onClick={voiceCommand} aria-label={voiceListening?"Stop HudHud listening":"Enable HudHud voice commands"} aria-pressed={voiceListening} title={voiceListening?"HudHud is listening — tap to stop":"Tap to speak to HudHud"} style={voiceListening?{animation:"mcBreathe 2s ease-in-out infinite",boxShadow:"0 0 24px #a78bfa",background:"radial-gradient(circle,#a78bfa,#4338ca)",borderColor:"#c4b5fd"}:{}}>{voiceListening?"🌀":"🎙"}</button><span className="mc-call-label">📞 1Muslim Calls</span><button type="button" title="Share call link" aria-label="Share link to this 1Muslim call" onClick={()=>void shareCall()}>↗</button>{linkNotice&&<span role="status" style={{fontSize:12}}>{linkNotice}</span>}<button type="button" title="Voice call" aria-label="Start private voice call" onClick={()=>void start("audio")} disabled={!!call||serviceUnavailable}>☎</button><button type="button" title="Video call" aria-label="Start private video call" onClick={()=>void start("video")} disabled={!!call||serviceUnavailable}>▣</button>{openedFromLink&&!call&&<span className="mc-link-hint" role="status">This call is not ringing right now. Start a voice or video call above, or wait for the other member to call.</span>}</div>
+ {voiceNotice&&<p role="status" style={{fontSize:12,color:"#c4b5fd"}}>{voiceNotice}</p>}
  {error&&<p role="alert" style={{color:"#fca5a5"}}>{error}</p>}
  {call&&<div className="mc-screen" role="dialog" aria-modal="true" aria-label="1Muslim Messenger call"><div className="mc-shell">
  {phase==="intro"&&<video className="mc-intro" src="/videos/prelive-intro.mp4" autoPlay muted playsInline/>}
