@@ -14,7 +14,6 @@ import StoriesRail from "./components/StoriesRail";
 import TimelinePopup, { type TimelineItem } from "./components/TimelinePopup";
 import VideoOfDayComments from "./components/VideoOfDayComments";
 import FeaturedYoutubeVideo from "../components/FeaturedYoutubeVideo";
-import HudHudHomeIntro from "./components/HudHudHomeIntro";
 import HudHudVoiceSpiral from "./components/HudHudVoiceSpiral";
 import HudHudVisionDock from "./components/HudHudVisionDock";
 import HudHudPersonalWelcome from "./components/HudHudPersonalWelcome";
@@ -320,7 +319,7 @@ export default function Home() {
       </main>
 
         {duaOpen && <DuaLesson onClose={()=>setDuaOpen(false)} />}
-      <HudHudLearningNudge /><HudHudHomeIntro />
+      <HudHudLearningNudge />
       
       <HudHudVoiceSpiral />
       <HudHudVisionDock />
