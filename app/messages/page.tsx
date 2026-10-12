@@ -272,8 +272,6 @@ export default function MessagesPage(){
 .omImessagePage .voiceStudioWave i{background:linear-gradient(#c49bff,#65c8ff)!important}
 @media(max-width:700px){.omImessagePage .omMessengerShell{min-height:calc(100dvh - 180px)!important}.omImessagePage .omConversationList{padding:12px!important}.omImessagePage .omMessagesFeed{min-height:250px!important}.omImessagePage .omMessageBubble{max-width:88%!important}}
 @media(prefers-reduced-motion:reduce){.omImessagePage .omMessageRow{animation:none!important}}
-</style>
- </main>
 `}</style>
  </main>
 }
