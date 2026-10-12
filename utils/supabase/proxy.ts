@@ -2,6 +2,13 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
+  // Keep OAuth PKCE cookies and callback on one origin. A cross-domain callback
+  // can lose the stored OAuth state and strand viewers on an error screen.
+  const host = request.nextUrl.hostname.toLowerCase();
+  if (host === "1muslim.vercel.app" || host === "www.1muslim.live" || host === "1muslimlive.com" || host === "www.1muslimlive.com") {
+    const canonical = new URL(request.nextUrl.pathname + request.nextUrl.search, "https://1muslim.live");
+    return NextResponse.redirect(canonical, 307);
+  }
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
