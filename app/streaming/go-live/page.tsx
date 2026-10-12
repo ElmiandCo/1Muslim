@@ -48,6 +48,8 @@ export default function GoLivePage() {
   const [settingsOpen,setSettingsOpen] = useState(false);
   const [visualEffect,setVisualEffect] = useState<LiveEffect>("off");
   const [live, setLive] = useState(false);
+  const [connecting,setConnecting] = useState(false);
+  const [connectionStep,setConnectionStep] = useState("");
   const [recording, setRecording] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -684,14 +686,15 @@ export default function GoLivePage() {
   };
 
   const startLive = async (fromSchedule = false) => {
+    if (connecting) return;
     if (!cameraReady) return setError("Turn on your camera and microphone first.");
-    if (!title.trim()) return setError("Give your live stream a title first.");
+    if (!title.trim()) {setSettingsOpen(true);return setError("Give your live stream a title first in Live details.");}
     if (fromSchedule && scheduledSlot) {
       if (!hostCheckedIn) return setError("Check in as ready before the scheduled Live can start.");
       if (Date.now() < new Date(scheduledSlot.starts_at).getTime()) return setError("This scheduled Live is still locked. It will start automatically at the scheduled time.");
       if (scheduledSlot.ends_at && Date.now() > new Date(scheduledSlot.ends_at).getTime()) return setError("This scheduled Live has ended. Schedule another Live to continue.");
     }
-    setError(""); setSaveMessage("");
+    setError(""); setSaveMessage("");setConnecting(true);setConnectionStep("Checking account…");
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
@@ -713,6 +716,7 @@ export default function GoLivePage() {
         const { error: thumbnailError } = await supabase.storage.from("live-recordings").upload(liveThumbnailPath, thumbnailFile, { contentType: thumbnailFile.type, upsert: false, cacheControl: "31536000" });
         if (thumbnailError) throw thumbnailError;
       }
+      setConnectionStep("Creating your live stream…");
       const { data: insertedStream, error: rowError } = await supabase.from("live_streams").insert({
         id: liveStreamId,
         host_id: user.id,
@@ -732,6 +736,7 @@ export default function GoLivePage() {
       if (rowError) throw rowError;
       setBroadcastStartedAt(insertedStream?.started_at ?? new Date().toISOString());
 
+      setConnectionStep("Connecting to LiveKit…");
       const tokenResponse = await fetch("/api/livekit/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -744,8 +749,10 @@ export default function GoLivePage() {
         throw new Error(tokenData.error || "LiveKit could not be started.");
       }
 
+      setConnectionStep("Opening live connection…");
       const room = new Room({ adaptiveStream: true, dynacast: true });
       await room.connect(tokenData.url, tokenData.token);
+      setConnectionStep("Publishing camera and microphone…");
       const mediaStream = streamRef.current;
       if (!mediaStream) throw new Error("Camera and microphone must be enabled first.");
       const videoTrack = mediaStream.getVideoTracks()[0];
@@ -768,7 +775,7 @@ export default function GoLivePage() {
       liveStreamIdRef.current = liveStreamId;
 
       startRecording();
-      setLive(true);
+      setLive(true);setConnectionStep("You are LIVE!");
       setShowHostIntro(true);
       // Notify administrators only after the broadcast is actually connected.
       void fetch("/api/live-alert", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ streamId: liveStreamId }) }).catch((error) => console.warn("Live alert request failed", error));
@@ -777,7 +784,7 @@ export default function GoLivePage() {
       roomRef.current?.disconnect();
       roomRef.current = null;
       setError(err instanceof Error ? err.message : "Live broadcast could not start.");
-    }
+    } finally {setConnecting(false);}
   };
 
   useEffect(() => { if (!live || !liveStreamIdRef.current) return; const room = `1muslim-live-${liveStreamIdRef.current}`; const update = async () => { try { const response = await fetch("/api/livekit/viewer-count",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room})}); const data=await response.json(); if(response.ok) setViewers(Number(data.viewerCount ?? 0)); } catch {} }; void update(); const timer=window.setInterval(update,5000); return()=>window.clearInterval(timer); }, [live]);
@@ -861,6 +868,7 @@ export default function GoLivePage() {
 
       `}</style>
 
+      {(error||connecting||live)&&<div role={error?"alert":"status"} aria-live="polite" style={{position:"fixed",top:65,left:"50%",transform:"translateX(-50%)",width:"min(92vw,520px)",zIndex:9999,padding:"12px 18px",borderRadius:14,background:error?"#5c1725":"#113e31",color:"#fff",boxShadow:"0 8px 30px #0009",fontWeight:700,textAlign:"center"}}>{error?"⚠️ "+error:live?"🔴 LIVE — Broadcasting":connectionStep||"Starting…"}</div>}
       <header className="immersiveHeader"><Link href="/streaming">← Back</Link><strong>Go Live</strong><button onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕ Close":"⚙ Settings"}</button></header>
       <div className={settingsOpen?"shell settingsOpen":"shell"}>
         <div className="studioTools">
@@ -897,7 +905,7 @@ export default function GoLivePage() {
             <div className="controls">
               {cameraReady && <><button className={cameraOn ? "circle" : "circle off"} onClick={toggleCamera} aria-label="Toggle camera">{cameraOn ? "◉" : "○"}</button><button className="circle" onClick={()=>void flipCamera()} aria-label="Flip camera" title="Flip camera">↻</button><button className={micOn ? "circle" : "circle off"} onClick={toggleMic} aria-label="Toggle microphone">{micOn ? "♫" : "×"}</button></>}
               <label style={{display:"flex",alignItems:"center",gap:7,fontSize:12,color:"#d6e7b8",padding:"8px 10px",border:"1px solid #ffffff30",borderRadius:12,background:"#ffffff0c",cursor:"pointer"}}><input type="checkbox" checked={autoCameraPreview} onChange={e=>{const enabled=e.target.checked;setAutoCameraPreview(enabled);localStorage.setItem("1muslim-go-live-auto-camera",enabled?"on":"off");}} aria-label="Automatically enable camera preview when opening Go Live" /> Auto-start camera preview</label>
-              {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In for Scheduled Live</button> : null}<button data-go-live-start className="start" onClick={()=>void startLive(false)} disabled={saving}>● Start Live Now</button></div>}
+              {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In for Scheduled Live</button> : null}<button data-go-live-start className="start" onClick={()=>void startLive(false)} disabled={saving||connecting}>{connecting?"Connecting…":"● Start Live Now"}</button></div>}
             </div>
             {cameraReady && <div className="cameraStudio">
               <div className="studioHeader"><strong>Camera Studio</strong><span>{videoQuality} · {zoom.toFixed(1)}×</span></div>
