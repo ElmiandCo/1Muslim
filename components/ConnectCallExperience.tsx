@@ -7,13 +7,14 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  const [call,setCall]=useState<Call|null>(null),[phase,setPhase]=useState<"idle"|"intro"|"connected">("idle"),[error,setError]=useState(""),[muted,setMuted]=useState(false),[cameraOff,setCameraOff]=useState(false);
  const [cameraEffects,setCameraEffects]=useState(true),[cameraEffect,setCameraEffect]=useState<"glow"|"stars"|"soft">("glow");
  const [menuOpen,setMenuOpen]=useState(false),[speakerOn,setSpeakerOn]=useState(true),[showChat,setShowChat]=useState(false),[chatDraft,setChatDraft]=useState(""),[chatMessages,setChatMessages]=useState<{sender:string;body:string}[]>([]),[audioLevel,setAudioLevel]=useState(0),[flipping,setFlipping]=useState(false);
+ const [serviceUnavailable,setServiceUnavailable]=useState(false);
  const connectingId=useRef<string|null>(null);
  const activeCallId=useRef<string|null>(null);
  const callRef=useRef<Call|null>(null);
  const [connectionState,setConnectionState]=useState<"normal"|"reconnecting"|"failed">("normal");
  const room=useRef<Room|null>(null),local=useRef<HTMLVideoElement>(null),remote=useRef<HTMLVideoElement>(null),remoteAudio=useRef<HTMLAudioElement>(null);
  const request=async(body:Record<string,unknown>)=>{const r=await fetch("/api/dm-calls",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({conversationId,...body})});const data=await r.json();if(!r.ok)throw Error(data.error||"Call request failed");return data};
- useEffect(()=>{let alive=true;setCall(null);setPhase("idle");const poll=async()=>{try{const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId),{cache:"no-store"});if(!r.ok)return;const d=await r.json();if(alive){
+ useEffect(()=>{let alive=true;let unavailable=false;setServiceUnavailable(false);setCall(null);setPhase("idle");const poll=async()=>{if(unavailable)return;try{const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId),{cache:"no-store"});if(r.status===503){unavailable=true;if(alive){setServiceUnavailable(true);setError("Calling service is temporarily unavailable. Please try again later.")}return}if(!r.ok)return;const d=await r.json();if(alive){
   const next:Call|null=d.call??null;
   callRef.current=next;setCall(next);
   if(!next||!["accepted","ringing"].includes(next.status)){
@@ -22,8 +23,8 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
   }else if(next.status==="accepted"&&next.caller_id===userId&&activeCallId.current!==next.id&&connectingId.current!==next.id){
    void connect(next.id,next.mode);
   }
- }}catch{}};void poll();const timer=setInterval(()=>void poll(),1200);
- const onFocus=()=>void poll();
+ }}catch{}};void poll();const timer=setInterval(()=>void poll(),5000);
+ const onFocus=()=>{unavailable=false;setServiceUnavailable(false);void poll()};
  window.addEventListener("focus",onFocus);
  const supabase=createClient();
  const channel=supabase.channel("dm-call-"+conversationId)
@@ -75,7 +76,7 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  @keyframes mcAppear{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}@keyframes mcBreathe{50%{transform:scale(1.045);box-shadow:0 0 0 20px #a3e8ba12,0 0 0 42px #a3e8ba06,0 0 65px #9dddb375}}
  @media(prefers-reduced-motion:reduce){.mc-ring,.mc-bismillah{animation:none}}
  `}</style>
- <div className="mc-launch"><span className="mc-call-label">📞 1Muslim Calls</span><button type="button" title="Share call link" aria-label="Share link to this 1Muslim call" onClick={()=>void shareCall()}>↗</button>{linkNotice&&<span role="status" style={{fontSize:12}}>{linkNotice}</span>}<button type="button" title="Voice call" aria-label="Start private voice call" onClick={()=>void start("audio")} disabled={!!call}>☎</button><button type="button" title="Video call" aria-label="Start private video call" onClick={()=>void start("video")} disabled={!!call}>▣</button>{openedFromLink&&!call&&<span className="mc-link-hint" role="status">This call is not ringing right now. Start a voice or video call above, or wait for the other member to call.</span>}</div>
+ <div className="mc-launch"><span className="mc-call-label">📞 1Muslim Calls</span><button type="button" title="Share call link" aria-label="Share link to this 1Muslim call" onClick={()=>void shareCall()}>↗</button>{linkNotice&&<span role="status" style={{fontSize:12}}>{linkNotice}</span>}<button type="button" title="Voice call" aria-label="Start private voice call" onClick={()=>void start("audio")} disabled={!!call||serviceUnavailable}>☎</button><button type="button" title="Video call" aria-label="Start private video call" onClick={()=>void start("video")} disabled={!!call||serviceUnavailable}>▣</button>{openedFromLink&&!call&&<span className="mc-link-hint" role="status">This call is not ringing right now. Start a voice or video call above, or wait for the other member to call.</span>}</div>
  {error&&<p role="alert" style={{color:"#fca5a5"}}>{error}</p>}
  {call&&<div className="mc-screen" role="dialog" aria-modal="true" aria-label="1Muslim Messenger call"><div className="mc-shell">
  {phase==="intro"&&<video className="mc-intro" src="/videos/prelive-intro.mp4" autoPlay muted playsInline/>}
