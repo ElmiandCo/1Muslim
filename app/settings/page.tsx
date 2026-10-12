@@ -7,6 +7,11 @@ import { createClient } from "../../utils/supabase/client";
 
 export default function SettingsPage() {
   const [enabled, setEnabled] = useState(false);
+  const [notificationPrefs,setNotificationPrefs]=useState<Record<string,boolean>>({messages:true,calls:true,live:true,ashab:true,learning:true});
+  const [permission,setPermission]=useState("default");
+  const notificationCategories=[["messages","💬 Direct messages"],["calls","📞 Incoming calls"],["live","🔴 Ashab going live"],["ashab","🤝 Ashab requests"],["learning","📖 Quran & learning reminders"]];
+  const setNotification=(key:string,value:boolean)=>setNotificationPrefs(old=>{const next={...old,[key]:value};try{localStorage.setItem("1muslim-notification-preferences",JSON.stringify(next))}catch{}return next});
+  const requestNotifications=async()=>{if(!("Notification" in window)){setMessage("Phone notifications are not supported in this browser. On iPhone, open 1Muslim from your Home Screen.");return}try{const status=await Notification.requestPermission();setPermission(status);setMessage(status==="granted"?"Notification permission granted on this device. Phone push delivery still needs server setup.":status==="denied"?"Notifications were blocked. Enable them in your phone settings.":"Notification permission not enabled.")}catch{setMessage("Could not request notification permission.")}};
   const [elmiLight, setElmiLight] = useState(true);
   const [elmiSound, setElmiSound] = useState(false);
   const [hudhudVision, setHudhudVision] = useState(true);
@@ -17,6 +22,7 @@ export default function SettingsPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    try { const saved=localStorage.getItem("1muslim-notification-preferences");if(saved)setNotificationPrefs(old=>({...old,...JSON.parse(saved)}));if("Notification" in window)setPermission(Notification.permission); } catch {}
     try { setElmiLight(localStorage.getItem("1muslim-elmi-light") !== "off"); setElmiSound(localStorage.getItem("1muslim-elmi-light-sound") === "on"); setHudhudVision(localStorage.getItem("1muslim-hudhud-vision-enabled") !== "off"); } catch {}
     (async () => {
       const s = createClient();
@@ -96,6 +102,13 @@ export default function SettingsPage() {
         <p>Control the small things that follow you around the site.</p>
       </header>
 
+      <section className="settingsCard" data-no-tap-shimmer style={{display:"block"}}>
+        <div className="settingCopy"><span className="settingIcon">🔔</span><div><span className="eyebrow">NOTIFICATIONS · DEFAULT ON</span><h2>Phone notifications</h2><p>Choose what you'd like to hear about. Your choices start ON, but your phone must grant notification permission. Push delivery requires a separate server integration.</p></div></div>
+        <div style={{display:"grid",gap:12,marginTop:18}}>
+          {notificationCategories.map(([key,label])=><label key={key} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:14,fontSize:14}}><span>{label}</span><input type="checkbox" checked={notificationPrefs[key]!==false} onChange={e=>setNotification(key,e.target.checked)} aria-label={label} style={{width:22,height:22,accentColor:"#54c889"}}/></label>)}
+          <button type="button" onClick={()=>void requestNotifications()} disabled={permission==="granted"} style={{borderRadius:999,padding:"13px 18px",border:"1px solid #7ae1a1",background:"linear-gradient(110deg,#155f39,#24814f)",color:"#fff",fontWeight:800,cursor:"pointer"}}>{permission==="granted"?"✓ Phone permission granted":"🔔 Enable Phone Notifications"}</button>
+        </div>
+      </section>
       <section className="settingsCard" data-no-tap-shimmer>
         <div className="settingCopy"><span className="settingIcon">🐦</span><div><span className="eyebrow">QUR'AN STUDIO · LEARNING</span><h2>HudHud Vision</h2><p>Enable HudHud's verse connections, contextual explanations, and learning guidance. You can still open and close Vision while studying.</p></div></div>
         <button type="button" className={"switch " + (hudhudVision ? "on" : "")} onClick={() => saveHudhudVision(!hudhudVision)} aria-pressed={hudhudVision} aria-label="Toggle HudHud Vision"><span>{hudhudVision ? "ON" : "OFF"}</span><i /></button>
