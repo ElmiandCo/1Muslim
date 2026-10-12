@@ -83,7 +83,7 @@ export default function QuranLessons(){
  const [readingProject,setReadingProject]=useState("Read Quran First Time");
  const [verseNotes,setVerseNotes]=useState<Record<string,{note:string;highlights:number[];underlines:number[]}>>({});
  useEffect(()=>{try{const p=localStorage.getItem("1muslim-quran-reading-project");if(p)setReadingProject(p);const n=localStorage.getItem("1muslim-quran-private-verse-notes");if(n)setVerseNotes(JSON.parse(n))}catch{}},[]);
- const updateVerseNote=(key:string,patch:Partial<{note:string;highlights:number[];underlines:number[]}>)=>setVerseNotes(prev=>{const next={...prev,[key]:{note:"",highlights:[],underlines:[],...prev[key],...patch}};try{localStorage.setItem("1muslim-quran-private-verse-notes",JSON.stringify(next))}catch{}return next});
+ const updateVerseNote=(key:string,patch:Partial<{note:string;highlights:number[];underlines:number[]}>)=>setVerseNotes(prev=>{const next={...prev,[key]:{...(prev[key]||{note:"",highlights:[],underlines:[]}),...patch}};try{localStorage.setItem("1muslim-quran-private-verse-notes",JSON.stringify(next))}catch{}return next});
  const toggleWordMark=(key:string,index:number,kind:"highlights"|"underlines")=>{const current=verseNotes[key]?.[kind]||[];updateVerseNote(key,{[kind]:current.includes(index)?current.filter(i=>i!==index):[...current,index]})};
  useEffect(()=>{setCardBack(false)},[chapter,page,focusIndex]);
  const [chapterFinish,setChapterFinish]=useState(false);
