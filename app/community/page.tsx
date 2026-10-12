@@ -62,11 +62,11 @@ export default function Community() {
   const [verseSeed,setVerseSeed]=useState(0);
   useEffect(()=>{setVerseSeed(Math.floor(Math.random()*10000))},[]);
   const verseCards=[
-    {text:"Indeed, with hardship comes ease.",ref:"Qur’an 94:6"},
-    {text:"My Lord, increase me in knowledge.",ref:"Qur’an 20:114"},
-    {text:"Surely in the remembrance of Allah do hearts find comfort.",ref:"Qur’an 13:28"},
-    {text:"Allah does not burden a soul beyond that it can bear.",ref:"Qur’an 2:286"},
-    {text:"Do not despair of the mercy of Allah.",ref:"Qur’an 39:53"}
+    {text:"Indeed, with hardship comes ease.",arabic:"إِنَّ مَعَ الْعُسْرِ يُسْرًا",ref:"Qur’an 94:6",verse:"94:6"},
+    {text:"My Lord, increase me in knowledge.",arabic:"رَبِّ زِدْنِي عِلْمًا",ref:"Qur’an 20:114",verse:"20:114"},
+    {text:"Surely in the remembrance of Allah do hearts find comfort.",arabic:"أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ",ref:"Qur’an 13:28",verse:"13:28"},
+    {text:"Allah does not burden a soul beyond that it can bear.",arabic:"لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا",ref:"Qur’an 2:286",verse:"2:286"},
+    {text:"Do not despair of the mercy of Allah.",arabic:"لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ",ref:"Qur’an 39:53",verse:"39:53"}
   ];
   const sorted=useMemo(()=>serverPosts.slice().sort((a,b)=>b.created-a.created),[serverPosts]);
 
@@ -136,7 +136,7 @@ export default function Community() {
               <div className="commentBox"><input value={commentDraft[post.id]||""} onChange={e=>setCommentDraft(c=>({...c,[post.id]:e.target.value}))} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();addComment(post.id)}}} placeholder="Reply to this post…"/><button onClick={()=>addComment(post.id)}>Reply</button></div>
               {post.comments.map(c=><div className="comment" key={c.id}><div className="smallAvatar">1M</div><div><strong>{c.name}</strong><p>{c.text}</p></div></div>)}
             </div>
-          </article>{(index+1)%5===0&&<aside className="omVerseGlass" aria-label="Quran reflection"><span className="omVerseMark">۞</span><p>{verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].text}</p><small>{verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].ref}</small><Link href="/quran-studio" aria-label="Open Quran Studio">↗</Link></aside>}</div>)}
+          </article>{(index+1)%5===0&&<aside className="omVerseGlass" aria-label="Quran reflection"><span className="omVerseMark">۞</span><p className="omVerseArabic" lang="ar" dir="rtl">{verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].arabic}</p><p>{verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].text}</p><small>{verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].ref}</small><Link href={"/quran-studio?verse="+encodeURIComponent(verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].verse)} aria-label="Open verse in Quran Studio">↗</Link></aside>}</div>)}
         </section>
         <aside className="communityRail">
           <div className="railBox"><span className="eyebrow">YOUR COMMUNITY</span><h3>Build your circle.</h3><p>Follow creators and turn on notifications for the people and topics you want to keep up with.</p>
