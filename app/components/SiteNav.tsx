@@ -130,6 +130,9 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const [anyoneLive, setAnyoneLive] = useState(false);
   const [openMenu, setOpenMenu] = useState<"explore" | "live" | "mobile" | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
+  const [mobilePanelVisible,setMobilePanelVisible]=useState(false);
+  useEffect(()=>{if(openMenu==="mobile")setMobilePanelVisible(true);else if(mobilePanelVisible){const timer=window.setTimeout(()=>setMobilePanelVisible(false),620);return()=>window.clearTimeout(timer)}},[openMenu,mobilePanelVisible]);
+  useEffect(()=>{document.body.classList.toggle("oneMuslimNavExpanded",openMenu==="mobile");return()=>document.body.classList.remove("oneMuslimNavExpanded")},[openMenu]);
 
   useEffect(() => {
     const supabase = createClient(); let mounted = true;
@@ -318,7 +321,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
 
     <button type="button" className={`mobileMenuButton ${openMenu === "mobile" ? "isOpen" : ""}`} aria-label={openMenu === "mobile" ? "Close navigation menu" : "Open navigation menu"} aria-expanded={openMenu === "mobile"} onClick={() => setOpenMenu(openMenu === "mobile" ? null : "mobile")}><span/><span/><span/></button>
 
-    {openMenu === "mobile" && <div className="mobileMenuPanel" role="dialog" aria-label="1Muslim navigation">
+    {mobilePanelVisible && <div className={`mobileMenuPanel ${openMenu==="mobile"?"oneMuslimMenuEntering":"oneMuslimMenuLeaving"}`} role="dialog" aria-label="1Muslim navigation" aria-hidden={openMenu!=="mobile"}>
       <div className="mobileMenuHeader"><strong>Explore 1Muslim</strong><button type="button" onClick={closeMenu} aria-label="Close menu">×</button></div>
       <Link href="/" className="mobileMenuHome" onClick={closeMenu}><span>Home</span><small>الرئيسية</small></Link>
       <section><span className="mobileMenuSection">EXPLORE</span>
@@ -343,6 +346,13 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       :global(.wakeExploreHint){position:fixed;bottom:calc(104px + env(safe-area-inset-bottom,0px));right:14px;z-index:9900;max-width:calc(100vw - 28px);border:1px solid #a3e8c2;background:linear-gradient(130deg,#15382d,#253553);color:#f3fff9;padding:10px 13px;border-radius:999px;box-shadow:0 9px 28px #0007;font-size:12px;font-weight:700;cursor:pointer;animation:exploreFloatIn .55s ease both}
       :global(.wakeExploreHint span){display:inline-block;margin-left:5px;color:#a3e8c2}
       @keyframes exploreFloatIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+      :global(body.oneMuslimNavExpanded .muslimMobileDock){transform:translateY(calc(110% + env(safe-area-inset-bottom,0px)))!important;opacity:.35;pointer-events:none}
+      :global(.muslimMobileDock){transition:transform .65s cubic-bezier(.22,1,.36,1),opacity .55s ease!important}
+      :global(.mobileMenuPanel.oneMuslimMenuEntering){animation:oneMuslimMenuDrop .68s cubic-bezier(.16,1,.3,1) both!important;transform-origin:top center}
+      :global(.mobileMenuPanel.oneMuslimMenuLeaving){animation:oneMuslimMenuRetract .6s cubic-bezier(.45,0,.2,1) both!important;pointer-events:none}
+      @keyframes oneMuslimMenuDrop{0%{opacity:0;transform:translateY(-48px) scale(.97);filter:blur(5px)}70%{opacity:1;filter:blur(0)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+      @keyframes oneMuslimMenuRetract{0%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}100%{opacity:0;transform:translateY(-55px) scale(.97);filter:blur(4px)}}
+      @media(prefers-reduced-motion:reduce){:global(.muslimMobileDock){transition:none!important}:global(.mobileMenuPanel.oneMuslimMenuEntering),:global(.mobileMenuPanel.oneMuslimMenuLeaving){animation:none!important}}
       :global(.wakeUpBackdrop){position:fixed;inset:0;background:rgba(3,9,15,.22);pointer-events:none;z-index:9990;opacity:0;visibility:hidden;transition:opacity .35s ease,visibility .35s}
       :global(.wakeUpBackdrop.wakeUpActive){opacity:1;visibility:visible}
       :global(.muslimMobileDock:has(.wakeUpSpotlight)){z-index:9991!important}
