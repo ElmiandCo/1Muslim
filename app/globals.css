@@ -481,3 +481,9 @@ input[type="file"][accept*="image"]::file-selector-button:hover,input[type="file
 .mobileMenuPanel .mobileMenuFooter{position:sticky;bottom:0;z-index:2;margin-top:auto!important;flex-shrink:0;padding:14px 8px max(16px,env(safe-area-inset-bottom))!important;background:var(--panel,#101523);border-radius:14px;box-shadow:0 -12px 30px #0008}
 .mobileMenuPanel .mobileMenuSignOut{min-height:44px!important;font-size:13px!important;padding:10px 18px!important}
 }
+
+/* Shared glass photo/video selection controls for post composers. */
+.omMediaPickButton{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:9px 13px;border:1px solid #b99aff90;border-radius:13px;background:linear-gradient(135deg,#3b2964,#1b365b);color:#f3eaff;font-weight:700;font-size:12px;cursor:pointer;box-shadow:0 4px 18px #7147c344;transition:transform .2s,box-shadow .2s}
+.omMediaPickButton:active{transform:scale(.96)}
+.omMediaPickButton:focus-within{outline:2px solid #c4a5ff;outline-offset:3px}
+.omMediaPickButton input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;padding:0;border:0}
