@@ -28,6 +28,8 @@ export default function XPTracker(){
   const supabase=useMemo(()=>createClient(),[]);
   const [userId,setUserId]=useState<string|null>(null),[xp,setXp]=useState(0),[notice,setNotice]=useState<string|null>(null);
   const [activeSeconds,setActiveSeconds]=useState(0);
+  const [xpVisible,setXpVisible]=useState(true);
+  useEffect(()=>{const toggle=()=>setXpVisible(v=>!v);window.addEventListener("1muslim:toggle-xp-tracker",toggle);return()=>window.removeEventListener("1muslim:toggle-xp-tracker",toggle)},[]);
   const lastClick=useRef<Record<string,number>>({});
   const activeRef=useRef(0);
   const lastActivity=useRef(Date.now());
@@ -129,7 +131,7 @@ export default function XPTracker(){
     return()=>window.clearInterval(timer);
   },[supabase,userId]);
 
-  if(!userId)return null;
+  if(!userId||!xpVisible)return null;
   const level=levelFor(xp),start=levelStart(level),end=levelEnd(level),progress=Math.min(100,Math.max(0,((xp-start)/(end-start))*100));
   const timeProgress=Math.min(100,activeSeconds/3);
   return <div ref={trackerRef} className="xpTracker" aria-live="polite" style={position?{left:position.x,top:position.y,right:"auto",bottom:"auto"}:undefined} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} title="Drag to move XP tracker">
