@@ -324,6 +324,37 @@ export default function MessagesPage(){
 .omImessagePage .voiceStudioWave i{background:linear-gradient(#c49bff,#65c8ff)!important}
 @media(max-width:700px){.omImessagePage .omMessengerShell{min-height:calc(100dvh - 180px)!important}.omImessagePage .omConversationList{padding:12px!important}.omImessagePage .omMessagesFeed{min-height:250px!important}.omImessagePage .omMessageBubble{max-width:88%!important}}
 @media(prefers-reduced-motion:reduce){.omImessagePage .omMessageRow{animation:none!important}}
+
+/* 1Muslim Messages — restrained, native-inspired conversation layout */
+.omImessagePage{--im-blue:#3868f6!important;max-width:1100px!important}
+.omImessagePage .omMessengerShell{border:1px solid rgba(125,151,170,.22)!important;border-radius:23px!important;box-shadow:0 12px 38px #0003!important;background:#0d151b!important}
+.omImessagePage .omChatPane{background:#0d151b!important}
+.omImessagePage .omChatHeader{background:#101b20!important;border-bottom:1px solid #ffffff15!important;padding:13px 15px!important}
+.omImessagePage .omChatPeerName{font-size:17px!important;font-weight:700!important}
+.omImessagePage .omDmModeControl{opacity:.75!important;margin-top:4px!important}
+.omImessagePage .omDmModeAuthority{font-size:10px!important;color:#b9c8c3!important}
+.omImessagePage .omDmModeChoices{border-color:#ffffff1d!important;background:#ffffff0a!important}
+.omImessagePage .omDmModeChoices button.isSelected{background:#ffffff22!important;box-shadow:none!important}
+.omImessagePage .omMessagesFeed,.omImessagePage .omMessagesFeed.omDmNormalMode{background:#0c141a!important;padding:20px 15px!important}
+.omImessagePage .omMessagesFeed.omDmHudHudMode{background:linear-gradient(160deg,#0c151b,#10231e)!important}
+.omImessagePage .omMessagesFeed::before,.omImessagePage .omMessagesFeed::after{display:none!important}
+.omImessagePage .omMessageBubble,.omImessagePage .omMessageBubble--theirs{background:#25313a!important;color:#f2f5f6!important;border:0!important;border-radius:19px 19px 19px 6px!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;font-size:15px!important;line-height:1.45!important;max-width:min(82%,500px)!important;padding:11px 15px!important}
+.omImessagePage .omMessageBubble--mine{background:linear-gradient(125deg,#2863e8,#4967e8)!important;color:#fff!important;border:0!important;border-radius:19px 19px 6px 19px!important;box-shadow:none!important}
+.omImessagePage .omMessageRow{animation:omGlassMessageEnter .2s ease-out both!important}
+.omImessagePage .omReactionRail{opacity:.35!important;transition:opacity .2s!important;gap:1px!important;justify-content:flex-end!important}
+.omImessagePage .omMessageRow:hover .omReactionRail,.omImessagePage .omMessageRow:focus-within .omReactionRail{opacity:1!important}
+.omImessagePage .omReactionRail .omReactionChip{font-size:12px!important;min-height:22px!important;min-width:22px!important;padding:1px 3px!important;background:transparent!important;box-shadow:none!important}
+.omImessagePage .omReactionRail .omReactionReply{font-size:10px!important}
+.omImessagePage .omMessageComposer{background:#111d23!important;border-top:1px solid #ffffff16!important;padding:10px 12px!important;box-shadow:none!important}
+.omImessagePage .omMessageComposer input[aria-label="Message"]{background:#1a272e!important;border:1px solid #ffffff30!important;border-radius:999px!important;color:#fff!important;box-shadow:none!important;font-size:15px!important}
+.omImessagePage .omMessageComposer button,.omImessagePage .voiceLaunch{background:#23333b!important;border:1px solid #ffffff25!important;color:#e9f6f0!important;box-shadow:none!important}
+.omImessagePage .omComposerSend{background:#3868f6!important;border:0!important;box-shadow:none!important}
+.omImessagePage .omConversationList{background:#111e24!important;border-color:#ffffff17!important}
+.omImessagePage .omConversationList button{background:#1a2a31!important;border:1px solid #ffffff18!important;box-shadow:none!important;border-radius:13px!important}
+.omImessagePage .voiceStudio{background:#182b30!important;border:1px solid #ffffff25!important;box-shadow:none!important}
+@media(max-width:700px){.omImessagePage{padding:5px 6px 18px!important}.omImessagePage .omMessengerShell{border-radius:18px!important}.omImessagePage .omMessagesFeed{padding:15px 12px!important}.omImessagePage .omMessageBubble{max-width:84%!important}.omImessagePage .omReactionRail{opacity:.58!important}}
+@media(prefers-reduced-motion:reduce){.omImessagePage .omMessageRow{animation:none!important}}
+
 `}</style>
  </main>
 }
