@@ -128,7 +128,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [anyoneLive, setAnyoneLive] = useState(false);
-  const [openMenu, setOpenMenu] = useState<"explore" | "live" | "mobile" | null>(null);
+  const [openMenu, setOpenMenu] = useState<"explore" | "live" | "mobile" | "hudhud" | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
   const [navHidden,setNavHidden]=useState(false);
   const [pageGlow,setPageGlow]=useState(false);
@@ -268,8 +268,20 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const label = (text: string, ar: string) => user?.arabic_terms_enabled ? <>{text} <span className="arabicNav">{ar}</span></> : text;
 
   return <header ref={navRef} className={`${compact ? "siteNav compact" : "siteNav"} muslimTopGlass ${navHidden && !openMenu ? "muslimTopHidden" : ""} ${pageGlow ? "muslimPageGlow" : ""}`}>
-    <button type="button" className="siteBrand hudhudTopOrb" aria-label="HudHud orb: tap to open navigation" onClick={()=>{setWakeUp(false);setOpenMenu(openMenu==="mobile"?null:"mobile")}}><img src="/assets/hudhud-logo.PNG" alt="" /><span className="hudhudTopGlow" aria-hidden="true"/></button>
+    <button type="button" className="siteBrand hudhudTopOrb" aria-label="HudHud Mode menu" aria-expanded={openMenu==="hudhud"} onClick={()=>{setWakeUp(false);setOpenMenu(openMenu==="hudhud"?null:"hudhud")}}><img src="/assets/hudhud-logo.PNG" alt="" /><span className="hudhudTopGlow" aria-hidden="true"/></button>
 
+    {openMenu==="hudhud"&&<div className="hudhudModeMenu" role="menu" aria-label="HudHud Mode quick actions">
+      <div className="hudhudModeTitle"><span className="hudhudModeSpark">✦</span><strong>HUDHUD MODE</strong><button type="button" onClick={closeMenu} aria-label="Close HudHud Mode">×</button></div>
+      <p className="hudhudModeHint">Your illuminated shortcuts</p>
+      {[
+        {icon:"◉",title:"Go Live",href:"/streaming/go-live",ar:"بث مباشر"},
+        {icon:"۞",title:"Quran Studio",href:"/quran-studio",ar:"القرآن"},
+        {icon:"✧",title:"Tajweed AI",href:"/quran-studio",ar:"تجويد"},
+        {icon:"✦",title:"Elm Tent",href:"/learn/elm-tent",ar:"خيمة العلم"},
+        {icon:"♧",title:"Video Chat 💬",href:"/messages",ar:"محادثة"},
+      ].map((item,index)=><Link key={item.title} role="menuitem" href={item.href} onClick={()=>{closeMenu();if(item.title==="Tajweed AI")sessionStorage.setItem("1muslim-hudhud-tajweed","1")}} className="hudhudModeItem" style={{animationDelay:index*65+"ms"}}><span className="hudhudModeIcon" aria-hidden="true">{item.icon}</span><span className="hudhudModeText"><strong>{item.title}</strong><small lang="ar">{item.ar}</small></span><span className="hudhudModeArrow">↗</span></Link>)}
+      <button type="button" className="hudhudModeSignOut" role="menuitem" onClick={()=>void signOut()}><span aria-hidden="true">⇥</span> Sign Out</button>
+    </div>}
     <nav className="siteNavLinks" aria-label="Primary navigation">
       <Link href="/" className="siteHomeLink">Home</Link>
 
@@ -369,6 +381,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       @media(prefers-reduced-motion:reduce){:global(.siteNav.muslimTopGlass){transition:none!important}:global(.siteNav.muslimPageGlow:after){animation:none}}
       @media(max-width:700px){:global(.siteNav.muslimTopGlass .mobileMenuButton),:global(.siteNav.muslimTopGlass .themeToggle),:global(.siteNav.muslimTopGlass .mobileLibraryShortcut){border-radius:16px!important;background:rgba(32,77,55,.25)!important;box-shadow:inset 0 1px rgba(255,255,255,.12),0 3px 15px rgba(0,0,0,.12)}}
       .hudhudTopOrb{width:48px;height:48px;flex:0 0 48px;position:relative;border:1px solid #58bf9866;border-radius:50%;padding:7px;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,#164a37,#071912);box-shadow:0 0 18px #29d18a22;cursor:pointer;animation:hudhudTopFloat 3.5s ease-in-out infinite}.hudhudTopOrb img{width:100%;height:100%;object-fit:contain;position:relative;z-index:1}.hudhudTopGlow{position:absolute;inset:-4px;border-radius:50%;border:1px solid #6fdfad33;animation:hudhudTopPulse 2.5s ease-in-out infinite;pointer-events:none}@keyframes hudhudTopFloat{50%{transform:translateY(-4px)}}@keyframes hudhudTopPulse{50%{opacity:.3;transform:scale(1.15)}}@media(prefers-reduced-motion:reduce){.hudhudTopOrb,.hudhudTopGlow{animation:none}}
+      .hudhudModeMenu{position:absolute;left:12px;top:calc(100% + 9px);width:min(340px,calc(100vw - 24px));z-index:1100;padding:18px;border:1px solid #63e5a355;border-radius:23px;background:linear-gradient(145deg,#0d2923f5,#081719f7);box-shadow:0 22px 70px #000b,0 0 34px #36de8a1a;backdrop-filter:blur(22px);color:#eafff2;animation:hudhudMenuEnter .35s cubic-bezier(.2,1,.3,1) both}.hudhudModeTitle{display:flex;align-items:center;gap:9px;letter-spacing:.18em;font-size:12px;color:#9cf5c2}.hudhudModeTitle button{margin-left:auto;background:transparent;color:#bff9d6;border:0;font-size:24px;cursor:pointer}.hudhudModeSpark{font-size:22px;animation:hudhudSpark 2.6s ease-in-out infinite}.hudhudModeHint{font-size:11px;color:#a6c9b7;margin:4px 0 16px}.hudhudModeItem{display:flex;align-items:center;gap:13px;padding:10px 8px;border:1px solid transparent;border-radius:16px;color:#ecfff3;text-decoration:none;background:#ffffff06;margin-bottom:7px;animation:hudhudMenuEnter .45s both;transition:background .25s,border-color .25s,transform .25s}.hudhudModeItem:hover,.hudhudModeItem:focus-visible{background:#5cffa017;border-color:#66f1aa55;transform:translateX(3px)}.hudhudModeIcon{height:43px;width:43px;flex:0 0 43px;border:1px solid #79efad77;border-radius:15px;display:grid;place-items:center;background:radial-gradient(circle,#55e89e20,#ffffff04);color:#a3ffd0;font-size:25px;text-shadow:0 0 15px #64ffc4;box-shadow:inset 0 0 15px #5af0a211;animation:hudhudIconBreathe 3s ease-in-out infinite}.hudhudModeText{display:flex;flex-direction:column;gap:2px;font-size:14px}.hudhudModeText small{color:#8db9a4;font-size:11px}.hudhudModeArrow{margin-left:auto;color:#9df5bd}.hudhudModeSignOut{width:100%;margin-top:11px;padding:13px 12px;text-align:left;background:#ffffff06;color:#f6d9d9;border:1px solid #ffffff1c;border-radius:14px;cursor:pointer;font-size:13px}.hudhudModeSignOut span{margin-right:12px;font-size:20px}@keyframes hudhudMenuEnter{from{opacity:0;transform:translateY(-10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes hudhudIconBreathe{50%{box-shadow:0 0 15px #4df0a755;filter:brightness(1.2)}}@keyframes hudhudSpark{50%{opacity:.5;transform:rotate(20deg)}}@media(prefers-reduced-motion:reduce){.hudhudModeMenu,.hudhudModeItem,.hudhudModeIcon,.hudhudModeSpark{animation:none}}
       .logoBrand{display:flex;align-items:center;flex:0 1 auto;min-width:0;max-width:190px;overflow:hidden}
       .premiumLogo{display:block;width:clamp(122px,14vw,182px);height:46px;max-width:100%;object-fit:contain;object-position:left center;border-radius:3px}
       @media(max-width:700px){.logoBrand{max-width:138px}.premiumLogo{width:138px;height:40px}}
