@@ -72,3 +72,18 @@
 /* Keep posts continuously visible during likes, comments and feed refreshes. */
 .communityPage .socialPost{animation:none!important;opacity:1!important;visibility:visible!important;transform:none!important}
 .communityPage .socialPost .omPostTextReveal,.communityPage .socialPost .omPostMedia,.communityPage .socialPost .omLinkPreview{opacity:1!important;visibility:visible!important;filter:none!important;transform:none!important;transition:none!important}
+
+
+/* Ummah feed: restrained push/pop and luminous Islamic pauses. */
+.communityGrid .omFeedSequence>.socialPost{position:relative;transform-origin:center top;transition:transform .32s cubic-bezier(.2,.8,.2,1),box-shadow .32s ease,background-color .32s ease;animation:ummahPostPop .55s cubic-bezier(.2,.8,.2,1) both}
+.communityGrid .omFeedSequence>.socialPost:active{transform:scale(.982);box-shadow:0 0 24px rgba(132,242,179,.12)}
+.communityGrid .omFeedSequence>.socialPost:focus-within{box-shadow:0 0 0 1px rgba(125,236,167,.15),0 8px 30px rgba(16,95,51,.1)}
+.communityGrid .omFeedSequence>.socialPost .postActions button{transition:transform .22s cubic-bezier(.2,1.7,.4,1),filter .22s ease}
+.communityGrid .omFeedSequence>.socialPost .postActions button:active{transform:scale(.84);filter:brightness(1.35)}
+.communityGrid .omFeedSequence .omVerseGlass{isolation:isolate;text-align:center;padding:24px 28px;margin:20px 0 26px;background:radial-gradient(ellipse at 50% 0%,rgba(143,255,184,.1),transparent 70%),linear-gradient(120deg,rgba(15,74,44,.2),rgba(255,255,255,.025));box-shadow:inset 0 1px rgba(255,255,255,.15),0 8px 32px rgba(0,0,0,.06)}
+.communityGrid .omFeedSequence .omVerseGlass:after{content:"۞";position:absolute;right:12px;bottom:-30px;font-size:100px;line-height:1;color:rgba(154,229,170,.06);pointer-events:none;z-index:-1}
+.communityGrid .omFeedSequence .omVerseGlass p{max-width:540px;margin:10px auto;font-size:clamp(14px,2.4vw,18px);line-height:1.7}
+.communityGrid .omFeedSequence .omVerseGlass .omVerseArabic{font-family:"Amiri","Noto Naskh Arabic",serif;font-size:clamp(19px,3.5vw,27px);line-height:1.9;direction:rtl;color:var(--text);letter-spacing:0}
+.communityGrid .omFeedSequence .omVerseGlass small{letter-spacing:.08em}
+@keyframes ummahPostPop{from{opacity:.65;transform:translateY(10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.communityGrid .omFeedSequence>.socialPost{animation:none;transition:none}.communityGrid .omFeedSequence>.socialPost:active{transform:none}.communityGrid .omFeedSequence>.socialPost .postActions button{transition:none}}
