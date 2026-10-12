@@ -21,6 +21,14 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
   if (!stream) return (
     <main style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}>
       <SiteNav /><FirstVisitGuide area="watch-live"/>
+      <style>{`
+        @media(max-width:700px){
+          .omLiveViewerFullscreen{width:100%!important;max-width:none!important;margin:0!important;padding:0 0 85px!important}
+          .omLiveViewerFullscreen>div:first-child{padding:12px 16px!important;margin:0!important;background:#090812}
+          .omLiveViewerFullscreen>div:nth-child(2){border:0!important;border-radius:0!important;overflow:visible!important}
+          .omLiveViewerFullscreen video{max-height:calc(100dvh - 145px)!important;object-fit:contain!important}
+        }
+      `}</style>
       <div style={{maxWidth:900,margin:"0 auto",padding:"70px 18px"}}>
         <section style={{border:"1px solid #263029",borderRadius:20,padding:40,textAlign:"center"}}>
           <h1>Live not found</h1>
@@ -47,7 +55,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
   return (
     <main style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}>
       <SiteNav /><FirstVisitGuide area="watch-live"/>
-      <div style={{maxWidth:1100,margin:"0 auto",padding:"30px 18px 70px"}}>
+      <div className="omLiveViewerFullscreen" style={{maxWidth:1100,margin:"0 auto",padding:"30px 18px 70px"}}>
         <div style={{marginBottom:16}}>
           <span style={{fontSize:10,letterSpacing:".15em",color:"#829b87",fontWeight:850}}>{isLive ? "1MUSLIM LIVE" : "1MUSLIM REPLAY"}</span>
           <h1 style={{fontSize:"clamp(30px,5vw,52px)",letterSpacing:"-.06em",margin:"8px 0"}}>{stream.title}</h1>
