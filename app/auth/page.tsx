@@ -5,7 +5,7 @@ import { createClient } from "../../utils/supabase/client";
 import SiteNav from "../components/SiteNav";
 import Link from "next/link";
 
-const PRODUCTION_ORIGIN = "https://1muslim.vercel.app";
+const PRODUCTION_ORIGIN = "https://1muslim.live";
 
 export default function AuthPage() {
   const [loading, setLoading] = useState(false);
@@ -42,7 +42,7 @@ export default function AuthPage() {
       options: {
         // Always return to the current OneMuslim production site.
         // This prevents an old ESecure/WonMuslim origin from being reused.
-        redirectTo: `${PRODUCTION_ORIGIN}/auth/callback?next=/`,
+        redirectTo: `${PRODUCTION_ORIGIN}/auth/callback?next=${encodeURIComponent((()=>{const p=new URLSearchParams(window.location.search).get("next");return p?.startsWith("/")&&!p.startsWith("//")?p:"/"})())}`,
       },
     });
 
