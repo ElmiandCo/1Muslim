@@ -19,7 +19,7 @@ import ElmiLightJourney from "./components/ElmiLightJourney";
 import HudHudVoiceCommands from "./components/HudHudVoiceCommands";
 
 export const metadata = {
-  title: "OneMuslim — Start where you are.",
+  title: "1Muslim",
   description: "A welcoming Muslim platform for learning, community, media, and discovery."
 };
 
