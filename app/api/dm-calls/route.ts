@@ -22,6 +22,11 @@ async function handler(request:Request,method:"GET"|"POST"){
  if(conversation?.request_status!=="accepted")return NextResponse.json({error:"Messaging request must be accepted first"},{status:403});
  const {data:blocks}=await db.from("dm_blocks").select("blocker_id").in("blocker_id",[user.id,peer]).in("blocked_id",[user.id,peer]);
  if(blocks?.length)return NextResponse.json({error:"Call unavailable"},{status:403});
+ if(method==="GET"&&new URL(request.url).searchParams.get("history")==="1"){
+  const {data,error}=await db.from("dm_calls").select("id,caller_id,callee_id,mode,status,created_at,accepted_at,ended_at").eq("conversation_id",conversationId).order("created_at",{ascending:false}).limit(25);
+  if(error)return NextResponse.json({error:"Call history unavailable"},{status:503});
+  return NextResponse.json({calls:data??[]});
+ }
  if(method==="GET"){
   const {data,error}=await db.from("dm_calls").select("id,caller_id,callee_id,mode,status,created_at").eq("conversation_id",conversationId).in("status",["ringing","accepted"]).order("created_at",{ascending:false}).limit(1);
   if(error)return NextResponse.json({error:"Unable to load call state; apply migration"},{status:503});
