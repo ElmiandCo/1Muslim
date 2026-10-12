@@ -11,6 +11,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const audioContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
   const roomRef = useRef<Room | null>(null);
+  const attachedAudioRef = useRef<Map<string,HTMLMediaElement>>(new Map());
   const [status, setStatus] = useState("Connecting to live…");
   const [viewerCount, setViewerCount] = useState<number | null>(null);
   const [totalViews, setTotalViews] = useState<number | null>(null);
@@ -32,7 +33,10 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         setStatus("LIVE");
         setReconnecting(false);
       } else if (track.kind === Track.Kind.Audio && audioContainerRef.current) {
+        // Avoid duplicating playback elements when a remote track is re-subscribed.
+        if (attachedAudioRef.current.has(track.sid)) return;
         const audio = track.attach();
+        attachedAudioRef.current.set(track.sid,audio);
         audio.autoplay = true;
         audio.muted = true;
         audio.setAttribute("playsinline", "true");
@@ -57,12 +61,16 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         const room = new Room({ adaptiveStream: true, dynacast: true });
         roomRef.current = room;
         room.on(RoomEvent.TrackSubscribed, (track) => attachTrack(track));
-        room.on(RoomEvent.TrackUnsubscribed, (track) => track.detach());
+        room.on(RoomEvent.TrackUnsubscribed, (track) => {
+          track.detach().forEach(el => el.remove());
+          if (track.kind === Track.Kind.Audio) attachedAudioRef.current.delete(track.sid);
+        });
         room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live video could not be subscribed to. Please reconnect."));
         room.on(RoomEvent.ParticipantConnected, () => mounted && setStatus("LIVE"));
         room.on(RoomEvent.Disconnected, () => mounted && setStatus("Live connection ended."));
 
         await room.connect(data.url, data.token, { autoSubscribe: true });
+        if (!mounted) { await room.disconnect(); return; }
 
         for (const participant of room.remoteParticipants.values()) {
           for (const publication of participant.trackPublications.values()) {
@@ -94,8 +102,10 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
     return () => {
       window.clearInterval(countTimer);
       mounted = false;
-      roomRef.current?.disconnect();
+      const oldRoom = roomRef.current;
       roomRef.current = null;
+      if (oldRoom) void oldRoom.disconnect();
+      attachedAudioRef.current.clear();
       if (videoRef.current) videoRef.current.srcObject = null;
       audioContainerRef.current?.replaceChildren();
     };
