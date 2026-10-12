@@ -32,7 +32,7 @@ const pickRandomTip=(previous:number)=>{
 const KEY="1muslim-hudhud-tactical-vision";
 export default function HudHudTacticalVision(){
  const pathname=usePathname()||"/";
- const [on,setOn]=useState(true),[open,setOpen]=useState(false),[settings,setSettings]=useState(false);
+ const [on,setOn]=useState(false),[open,setOpen]=useState(false),[settings,setSettings]=useState(false);
  const [anchor,setAnchor]=useState<{x:number;y:number}|null>(null),[pos,setPos]=useState({x:20,y:160}),[dragged,setDragged]=useState(false);
  const drag=useRef<{x:number;y:number;px:number;py:number}|null>(null);
  const [tipIndex,setTipIndex]=useState(0);const [dismissed,setDismissed]=useState(false);
@@ -42,7 +42,7 @@ export default function HudHudTacticalVision(){
    try{sessionStorage.setItem("1muslim-hudhud-last-tip",String(next))}catch{}
    return next;
  });
- useEffect(()=>{try{setOn(localStorage.getItem(KEY)!=="off")}catch{}},[]);
+ useEffect(()=>{try{setOn(localStorage.getItem(KEY)==="on")}catch{}},[]);
  useEffect(()=>{const sync=()=>{try{setOn(localStorage.getItem(KEY)!=="off")}catch{}};window.addEventListener("1muslim:hudhud-vision-changed",sync);return()=>window.removeEventListener("1muslim:hudhud-vision-changed",sync)},[]);
  useEffect(()=>{
   setOpen(false);setDragged(false);setDismissed(false);
@@ -51,7 +51,7 @@ export default function HudHudTacticalVision(){
   const next=pickRandomTip(previous);
   setTipIndex(next);
   try{sessionStorage.setItem("1muslim-hudhud-last-tip",String(next))}catch{}
-  const t=setTimeout(()=>setOpen(true),4200);
+  const t=setTimeout(()=>setOpen(false),4200);
   return()=>clearTimeout(t)
  },[pathname]);
  useEffect(()=>{const timer=setInterval(()=>{if(!open||dismissed)return;nextRandomTip()},22000);return()=>clearInterval(timer)},[open,dismissed]);
