@@ -164,7 +164,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
             <span style={{padding:"6px 9px",borderRadius:999,background:"rgba(0,0,0,.4)",color:"#d7e0d8",fontSize:9,fontWeight:850}}>● RECONNECTING</span>
           </div>
           <ReconnectTrivia mode="reconnect" eventKey={reconnectKey} />
-          <style jsx>{`@keyframes oneMuslimButterfly{0%,100%{transform:translateY(5px) scale(1)}50%{transform:translateY(-8px) scale(1.035)}}@keyframes oneMuslimPulse{0%,100%{transform:scale(.94);opacity:.5}50%{transform:scale(1.08);opacity:1}}`}</style>
+          
         </div>
       ) : error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
       <style jsx>{`
