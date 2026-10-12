@@ -471,3 +471,13 @@ video {
  .mobileHomeSearch input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:inherit;font-size:15px}
  .mobileHomeSearch button{border:0;border-radius:10px;padding:9px 12px;background:var(--accent);color:#07100a;font-weight:700}
 }
+
+/* 1Muslim media picker: polished photo-library-first styling, shared site-wide. */
+input[type="file"][accept*="image"],input[type="file"][accept*="video"]{max-width:100%;box-sizing:border-box;color:var(--text,#e9e5ff);font-size:12px;border:1px solid #9f80e080;border-radius:16px;padding:9px;background:linear-gradient(135deg,#221b43e8,#13253ee8);box-shadow:inset 0 1px #ffffff18,0 5px 24px #7150c325}
+input[type="file"][accept*="image"]::file-selector-button,input[type="file"][accept*="video"]::file-selector-button{border:1px solid #c3a7ff9e;border-radius:13px;padding:11px 14px;margin-right:12px;color:#fff;background:linear-gradient(135deg,#7142c9,#245b9d);font-weight:700;cursor:pointer;box-shadow:0 0 15px #8054e955;transition:transform .2s,box-shadow .2s}
+input[type="file"][accept*="image"]::file-selector-button:hover,input[type="file"][accept*="video"]::file-selector-button:hover{transform:translateY(-1px);box-shadow:0 0 23px #936eff77}
+@media(max-width:700px){
+.mobileMenuPanel{display:flex!important;flex-direction:column!important;overflow-y:auto!important;overscroll-behavior:contain!important;max-height:calc(100dvh - 64px)!important;height:calc(100dvh - 64px)!important;padding-bottom:max(32px,env(safe-area-inset-bottom))!important;scroll-padding-bottom:100px!important;-webkit-overflow-scrolling:touch}
+.mobileMenuPanel .mobileMenuFooter{position:sticky;bottom:0;z-index:2;margin-top:auto!important;flex-shrink:0;padding:14px 8px max(16px,env(safe-area-inset-bottom))!important;background:var(--panel,#101523);border-radius:14px;box-shadow:0 -12px 30px #0008}
+.mobileMenuPanel .mobileMenuSignOut{min-height:44px!important;font-size:13px!important;padding:10px 18px!important}
+}
