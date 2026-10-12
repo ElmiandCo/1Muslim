@@ -171,7 +171,7 @@ export default function Home() {
           <FeaturedYoutubeVideo compact />
         </section>
         
-        <style jsx global>{`
+        <style>{`
 .omDailyVideoSilverFrame{position:relative;isolation:isolate;margin:12px 0 28px;padding:clamp(12px,2.5vw,30px);border:2px solid transparent;border-radius:26px;background:linear-gradient(var(--card,#101712),var(--card,#101712)) padding-box,linear-gradient(115deg,#77838d 0%,#faffff 14%,#9ba7b4 25%,#e6f4ff 38%,#64727d 52%,#ffffff 66%,#91a1ad 78%,#f8fcff 90%,#6e7d88 100%) border-box;box-shadow:0 24px 70px #0005,0 0 25px #dceaff28,inset 0 1px #ffffff3a;overflow:hidden}
 .omDailyVideoSilverFrame:before{content:"";position:absolute;z-index:0;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(108deg,transparent 0%,transparent 36%,#ffffff00 42%,#f2faff80 49%,#ffffffb5 50%,#f2faff66 51%,transparent 58%,transparent 100%);transform:translateX(-130%);animation:omSilverVideoSweep 7s ease-in-out infinite}
 .omDailyVideoSilverFrame:after{content:"";position:absolute;inset:4px;border:1px solid #f4faff3d;border-radius:21px;pointer-events:none;z-index:2;box-shadow:inset 0 0 16px #ffffff0d}
