@@ -54,6 +54,7 @@ export default function LiveLightOverlay({streamId,host=false}:{streamId:string;
  window.speechSynthesis.speak(utterance);
  };
  const [lights,setLights]=useState(true);
+ const [active,setActive]=useState<FloatEntry[]>([]);
  const [pinned,setPinned]=useState<Entry[]>([]);
  const [released,setReleased]=useState<Entry[]>([]);
  const [avatarUrls,setAvatarUrls]=useState<Record<string,string>>({});
@@ -62,7 +63,7 @@ export default function LiveLightOverlay({streamId,host=false}:{streamId:string;
  const pinComment=(m:Entry)=>{if(!host)return;const next=pinned.some(p=>p.id===m.id)?pinned.filter(p=>p.id!==m.id):pinned.length<3?[...pinned,m]:pinned;publishPins(next)};
  const bulkRelease=()=>{if(!host||!pinned.length)return;const exiting=[...pinned];publishPins([]);void db.channel("live-pin-"+streamId).send({type:"broadcast",event:"pin",payload:{entries:[],released:exiting}});setReleased(v=>[...v,...exiting]);window.setTimeout(()=>setReleased(v=>v.filter(m=>!exiting.some(e=>e.id===m.id))),1050)};
  useEffect(()=>{const ids=active.map(m=>m.sender_id).filter(id=>!Object.prototype.hasOwnProperty.call(avatarUrls,id));if(!ids.length)return;let alive=true;void db.from("profiles").select("id,avatar_url").in("id",ids).then(({data})=>{if(alive&&data)setAvatarUrls(v=>({...v,...Object.fromEntries(data.map(p=>[p.id,p.avatar_url||""]))}))});return()=>{alive=false}},[active,db,avatarUrls]);
- const [active,setActive]=useState<FloatEntry[]>([]);
+
  useEffect(()=>{const el=shellRef.current;if(!el)return;const observer=new ResizeObserver(([entry])=>{if(!entry)return;const {width,height}=entry.contentRect;setSize({width,height})});observer.observe(el);return()=>observer.disconnect()},[]);
  useEffect(()=>{const sync=()=>{try{setLights(localStorage.getItem("1muslim-elmi-light")!=="off")}catch{setLights(true)}};sync();window.addEventListener("1muslim-elmi-light-updated",sync);return()=>window.removeEventListener("1muslim-elmi-light-updated",sync)},[]);
  useEffect(()=>{const channel=db.channel("elmi-light-overlay-"+streamId).on("postgres_changes",{event:"INSERT",schema:"public",table:"live_chat_messages",filter:"stream_id=eq."+streamId},payload=>{const m=payload.new as Entry;const duration=8000;const displayDuration=8000;setActive(prev=>[...prev.slice(-13),place(m,prev,size.width,size.height,displayDuration)]);scheduleHide(m.id,8000)}).subscribe();return()=>{void db.removeChannel(channel)}},[db,streamId,size.width,size.height]);
