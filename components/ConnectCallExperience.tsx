@@ -8,6 +8,10 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  const [cameraEffects,setCameraEffects]=useState(true),[cameraEffect,setCameraEffect]=useState<"glow"|"stars"|"soft">("glow");
  const [menuOpen,setMenuOpen]=useState(false),[speakerOn,setSpeakerOn]=useState(true),[showChat,setShowChat]=useState(false),[chatDraft,setChatDraft]=useState(""),[chatMessages,setChatMessages]=useState<{sender:string;body:string}[]>([]),[audioLevel,setAudioLevel]=useState(0),[flipping,setFlipping]=useState(false);
  const [serviceUnavailable,setServiceUnavailable]=useState(false);
+ const [ratingCallId,setRatingCallId]=useState<string|null>(null);
+ const [rating,setRating]=useState(0);
+ const [ratingBusy,setRatingBusy]=useState(false);
+ const completedCall=useRef<string|null>(null);
  const [voiceListening,setVoiceListening]=useState(false),[voiceNotice,setVoiceNotice]=useState("");
  const speechRef=useRef<{stop:()=>void}|null>(null);
  const connectingId=useRef<string|null>(null);
@@ -20,6 +24,7 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
   const next:Call|null=d.call??null;
   callRef.current=next;setCall(next);
   if(!next||!["accepted","ringing"].includes(next.status)){
+   if(completedCall.current){setRatingCallId(completedCall.current);completedCall.current=null;}
    setPhase("idle");setConnectionState("normal");activeCallId.current=null;connectingId.current=null;
    room.current?.disconnect();room.current=null;
   }else if(next.status==="accepted"&&next.caller_id===userId&&activeCallId.current!==next.id&&connectingId.current!==next.id){
@@ -46,11 +51,12 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  r.on(RoomEvent.DataReceived,(payload,participant)=>{try{const d=JSON.parse(new TextDecoder().decode(payload));if(d.type==="call-chat"&&typeof d.body==="string")setChatMessages(v=>[...v.slice(-39),{sender:participant?.identity||"Peer",body:d.body.slice(0,500)}])}catch{}});
  await r.connect(data.url,data.token);await r.localParticipant.setMicrophoneEnabled(true);
  if(mode==="video"){await r.localParticipant.setCameraEnabled(true);const track=r.localParticipant.videoTrackPublications.values().next().value?.track;if(track&&local.current)track.attach(local.current)}
- activeCallId.current=id;connectingId.current=null;
+ activeCallId.current=id;completedCall.current=id;connectingId.current=null;
  setTimeout(()=>{if(room.current===r)setPhase("connected")},700);
  }catch(e){setError(e instanceof Error?e.message:"Could not connect");room.current?.disconnect();room.current=null;activeCallId.current=null;connectingId.current=null;setConnectionState("failed");setPhase("idle")}};
  const accept=async()=>{if(!call)return;try{await request({action:"accept",callId:call.id});setCall({...call,status:"accepted"});void connect(call.id,call.mode)}catch(e){setError(e instanceof Error?e.message:"Could not accept")}};
- const end=async()=>{if(call)try{await request({action:"end",callId:call.id})}catch{}room.current?.disconnect();room.current=null;activeCallId.current=null;connectingId.current=null;setCall(null);setPhase("idle")};
+ const end=async()=>{const wasConnected=phase==="connected"||!!activeCallId.current;const endedId=call?.id;if(call)try{await request({action:"end",callId:call.id})}catch{}room.current?.disconnect();room.current=null;activeCallId.current=null;connectingId.current=null;completedCall.current=null;setCall(null);setPhase("idle");if(wasConnected&&endedId){setRating(0);setRatingCallId(endedId)}else window.location.assign("/")};
+ const finishRating=async(stars:number)=>{if(ratingBusy)return;setRatingBusy(true);if(stars&&ratingCallId){try{const key="1muslim:call-quality-ratings";const all=JSON.parse(localStorage.getItem(key)||"[]");localStorage.setItem(key,JSON.stringify([...all,{callId:ratingCallId,stars,createdAt:new Date().toISOString()}]));}catch{}}window.location.assign("/")};
  const voiceCommand=()=>{
   if(voiceListening){speechRef.current?.stop();setVoiceListening(false);return}
   const w=window as Window & {SpeechRecognition?:new()=>any;webkitSpeechRecognition?:new()=>any};
@@ -101,6 +107,7 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  <div className="mc-launch"><button type="button" onClick={voiceCommand} aria-label={voiceListening?"Stop HudHud listening":"Enable HudHud voice commands"} aria-pressed={voiceListening} title={voiceListening?"HudHud is listening — tap to stop":"Tap to speak to HudHud"} style={voiceListening?{animation:"mcBreathe 2s ease-in-out infinite",boxShadow:"0 0 24px #4ade80",background:"radial-gradient(circle,#4ade80,#15803d)",borderColor:"#86efac"}:{}}>{voiceListening?"🌀":"🎙"}</button><span className="mc-call-label">📞 1Muslim Calls</span><button type="button" title="Share call link" aria-label="Share link to this 1Muslim call" onClick={()=>void shareCall()}>↗</button>{linkNotice&&<span role="status" style={{fontSize:12}}>{linkNotice}</span>}<button type="button" title="Voice call" aria-label="Start private voice call" onClick={()=>void start("audio")} disabled={!!call||serviceUnavailable}>☎</button><button type="button" title="Video call" aria-label="Start private video call" onClick={()=>void start("video")} disabled={!!call||serviceUnavailable}>▣</button>{openedFromLink&&!call&&<span className="mc-link-hint" role="status">This call is not ringing right now. Start a voice or video call above, or wait for the other member to call.</span>}</div>
  {voiceNotice&&<p role="status" style={{fontSize:12,color:"#86efac"}}>{voiceNotice}</p>}
  {error&&<p role="alert" style={{color:"#fca5a5"}}>{error}</p>}
+ {ratingCallId&&<div role="dialog" aria-modal="true" aria-label="Rate call quality" style={{position:"fixed",inset:0,zIndex:9999,display:"grid",placeItems:"center",background:"rgba(2,18,13,.83)",backdropFilter:"blur(18px)",padding:20}}><div style={{width:"min(100%,360px)",border:"1px solid #77caa755",borderRadius:26,padding:28,textAlign:"center",background:"linear-gradient(150deg,#173d30,#071b16)",color:"#f1fff6",boxShadow:"0 22px 65px #0009"}}><div style={{fontSize:13,letterSpacing:2,opacity:.65}}>1MUSLIM CALLS</div><h2 style={{fontSize:22,margin:"14px 0 6px"}}>How was your call?</h2><p style={{fontSize:13,opacity:.7}}>Rate the connection quality</p><div style={{display:"flex",justifyContent:"center",gap:6,margin:"22px 0"}}>{[1,2,3,4,5].map(n=><button key={n} type="button" aria-label={n+" stars"} onClick={()=>setRating(n)} style={{border:0,background:"none",fontSize:37,color:n<=rating?"#f4d48b":"#9ab3a6",opacity:n<=rating?1:.5,cursor:"pointer"}}>{n<=rating?"★":"☆"}</button>)}</div><button disabled={!rating||ratingBusy} onClick={()=>void finishRating(rating)} style={{width:"100%",padding:13,border:0,borderRadius:16,background:"#66d59b",color:"#09251a",fontWeight:700,opacity:rating?1:.45}}>Submit & Return Home</button><button onClick={()=>void finishRating(0)} style={{marginTop:13,background:"none",border:0,color:"#d2ebdc",opacity:.7,cursor:"pointer"}}>Skip · Return Home</button></div></div>}
  {call&&<div className="mc-screen" role="dialog" aria-modal="true" aria-label="1Muslim Messenger call"><div className="mc-shell">
  {phase==="intro"&&<video className="mc-intro" src="/videos/prelive-intro.mp4" autoPlay muted playsInline/>}
  {phase==="connected"&&call.mode==="video"&&<div className="mc-stage"><video ref={remote} className="mc-remote" autoPlay playsInline/><video ref={local} className="mc-self" autoPlay muted playsInline/>{cameraEffects&&<div className={"mc-camera-effects "+cameraEffect} aria-hidden="true">{cameraEffect==="stars"&&Array.from({length:15},(_,i)=><i key={i} style={{["--i" as string]:i} as React.CSSProperties}/>)}</div>}<button type="button" className="mc-effect-badge" onClick={()=>setCameraEffect(v=>v==="glow"?"stars":v==="stars"?"soft":"glow")} aria-label="Change camera overlay effect">✨ {cameraEffects?cameraEffect:"Effects off"}</button></div>}
