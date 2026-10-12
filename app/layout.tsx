@@ -24,7 +24,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}<OneMuslimShare /><GuestWelcomeGate /><ElmiLightJourney /><HudHudDimensionDust /><TapShimmer /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><HudHudVoiceCommands /><XPTracker /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
+  return <html lang="en"><body>{children}<GuestWelcomeGate /><ElmiLightJourney /><HudHudDimensionDust /><TapShimmer /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag("js", new Date());
 gtag("config", "G-DSLVB0HSGV");`}</Script></body></html>;
