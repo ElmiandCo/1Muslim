@@ -68,3 +68,7 @@
 .socialPost .commentBox button{flex:0 0 auto}
 .socialPost .comment{min-width:0;overflow-wrap:anywhere}
 @media(max-width:600px){.socialPost{gap:9px;padding:16px 0}.socialPost>.avatar{width:34px;height:34px}.socialPost .postHeader{gap:4px 8px}.socialPost .postHeader button{margin-left:auto}.socialPost .postActions button{min-height:36px}}
+
+/* Keep posts continuously visible during likes, comments and feed refreshes. */
+.communityPage .socialPost{animation:none!important;opacity:1!important;visibility:visible!important;transform:none!important}
+.communityPage .socialPost .omPostTextReveal,.communityPage .socialPost .omPostMedia,.communityPage .socialPost .omLinkPreview{opacity:1!important;visibility:visible!important;filter:none!important;transform:none!important;transition:none!important}
