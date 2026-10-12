@@ -59,15 +59,18 @@ export default function HudHudHomeIntro() {
   },[phase]);
   useEffect(()=>{if(phase!=="video")return;const v=video.current,c=canvas.current;if(!v||!c)return;let frame=0;const draw=()=>{if(!v.videoWidth||!v.videoHeight){frame=requestAnimationFrame(draw);return}const ctx=c.getContext("2d",{willReadFrequently:true});if(!ctx)return;const w=360,h=Math.max(1,Math.round(360*v.videoHeight/v.videoWidth));if(c.width!==w||c.height!==h){c.width=w;c.height=h}try{ctx.drawImage(v,0,0,w,h);const img=ctx.getImageData(0,0,w,h),d=img.data;for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];const green=g-Math.max(r,b);if(g>65&&green>12){const alpha=Math.max(0,Math.min(1,(green-12)/55));d[i+3]=Math.round(d[i+3]*(1-alpha));if(alpha<1){d[i]=Math.min(255,r+green*.12);d[i+2]=Math.min(255,b+green*.12)}}}ctx.putImageData(img,0,0)}catch{setVideoFailed(true);return}frame=requestAnimationFrame(draw)};frame=requestAnimationFrame(draw);return()=>cancelAnimationFrame(frame)},[phase]);
   useEffect(() => {
-    try { const stored=localStorage.getItem(PREF_KEY); if(stored){const p=JSON.parse(stored);setWithLights(p.lights!==false);setWithTutorial(Boolean(p.tutorial));setWithVision(Boolean(p.vision));} } catch {}
-    // Entry choices are disabled: default to the experience and show the tour only once.
-    try { setPhase(localStorage.getItem(KEY) ? "hidden" : "video"); } catch { setPhase("video"); }
-    const onJourneyFinished=()=>{
-      try { if (localStorage.getItem(KEY)) return; localStorage.setItem(KEY,"1"); } catch {}
-      setPhase("tour");
+    const activate = () => {
+      if (!window.matchMedia("(max-width: 767px) and (pointer: coarse)").matches) return;
+      started.current = false;
+      setFading(false);
+      setVideoFailed(false);
+      setPhase("video");
     };
-    window.addEventListener("elmi-journey-finished",onJourneyFinished);
-    return ()=>{window.removeEventListener("elmi-journey-finished",onJourneyFinished);stopSound(true);};
+    window.addEventListener("1muslim:hudhud-quran-mobile-intro", activate);
+    return () => {
+      window.removeEventListener("1muslim:hudhud-quran-mobile-intro", activate);
+      stopSound(true);
+    };
   }, []);
   useEffect(() => {
     if (phase !== "video") return;
@@ -85,7 +88,7 @@ export default function HudHudHomeIntro() {
     window.addEventListener("scroll", update, true);
     return () => { window.removeEventListener("resize", update); window.removeEventListener("scroll", update, true); };
   }, [phase, step]);
-  const beginTour = () => { try { localStorage.setItem(KEY,"1"); } catch {} stopSound(); if (started.current) return; started.current = true; if(fadeTimer.current)clearTimeout(fadeTimer.current);if(finishTimer.current)clearTimeout(finishTimer.current);setPhase(withTutorial?"tour":"hidden"); window.dispatchEvent(new Event("hudhud-bird-finished")); };
+  const beginTour = () => { try { localStorage.setItem(KEY,"1"); } catch {} stopSound(); if (started.current) return; started.current = true; if(fadeTimer.current)clearTimeout(fadeTimer.current);if(finishTimer.current)clearTimeout(finishTimer.current);setPhase("hidden"); window.dispatchEvent(new Event("hudhud-bird-finished")); };
   const fadeBeforeEnd=(duration:number)=>{if(started.current)return;if(fadeTimer.current)clearTimeout(fadeTimer.current);if(finishTimer.current)clearTimeout(finishTimer.current);const remaining=Math.max(0,duration);fadeTimer.current=setTimeout(()=>setFading(true),Math.max(0,remaining-1000));finishTimer.current=setTimeout(beginTour,remaining);};
   const enter=()=>{localStorage.setItem(PREF_KEY,JSON.stringify({lights:withLights,tutorial:withTutorial,vision:withVision}));window.dispatchEvent(new CustomEvent("hudhud-vision-preference",{detail:{enabled:withVision}}));setEntryConfirmed(true);started.current=false;setPhase(withLights?"video":withTutorial?"tour":"hidden");};
   if (phase === "hidden") return null;
