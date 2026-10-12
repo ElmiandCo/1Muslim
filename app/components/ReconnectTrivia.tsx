@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 
 type TriviaQuestion = {
@@ -42,6 +42,9 @@ export default function ReconnectTrivia({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [streak, setStreak] = useState(0);
+  const [dismissed, setDismissed] = useState(false);
+  const [review, setReview] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [question, setQuestion] = useState<TriviaQuestion | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [result, setResult] = useState<{ correct: boolean; points: number; multiplier: number } | null>(null);
@@ -54,14 +57,21 @@ export default function ReconnectTrivia({
   }, []);
 
   useEffect(() => {
-    const index = Math.floor(Math.random() * QUESTIONS.length);
-    setQuestion(QUESTIONS[index]);
-    setSelected(null);
-    setResult(null);
+    if(timerRef.current)clearTimeout(timerRef.current);
+    let mastered:string[]=[];
+    try{mastered=JSON.parse(localStorage.getItem("1muslim-trivia-mastered-v1")||"[]")}catch{}
+    const fresh=QUESTIONS.filter(q=>!mastered.includes(q.id));
+    // Occasional spaced memory checks only after every question has been learned.
+    const revisit=fresh.length===0&&Math.random()<0.15;
+    const pool=fresh.length?fresh:revisit?QUESTIONS:[];
+    const next=pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
+    setQuestion(next);setReview(Boolean(next&&mastered.includes(next.id)));
+    setSelected(null);setResult(null);setDismissed(false);
+    return()=>{if(timerRef.current)clearTimeout(timerRef.current)};
   }, [eventKey]);
 
   const answer = async (choice: number) => {
-    if (!question || selected !== null) return;
+    if (!question || selected !== null || dismissed) return;
     setSelected(choice);
     const correct = choice === question.answer;
     const nextStreak = correct ? streak + 1 : 0;
@@ -72,14 +82,16 @@ export default function ReconnectTrivia({
 
     if (!correct) {
       setResult({ correct:false, points:0, multiplier:1 });
+      timerRef.current=setTimeout(()=>setDismissed(true),1400);
       return;
     }
+    try{const key="1muslim-trivia-mastered-v1";const mastered:string[]=JSON.parse(localStorage.getItem(key)||"[]");localStorage.setItem(key,JSON.stringify(Array.from(new Set([...mastered,question.id]))))}catch{}
 
-    const actionKey = `trivia:${eventKey}:${question.id}:${Date.now()}`;
+    const actionKey = `trivia:mastery:${question.id}`;
     const { data } = await supabase.rpc("award_trivia_xp", {
       p_action_key: actionKey,
       p_page_key: mode === "reconnect" ? "live_reconnect" : "live_waiting",
-      p_base_points: 25,
+      p_base_points: 1000,
       p_streak: nextStreak,
     });
     const row = Array.isArray(data) ? data[0] : data;
@@ -88,18 +100,19 @@ export default function ReconnectTrivia({
       points:Number(row?.awarded_points || 0),
       multiplier:Number(row?.multiplier || multiplierFor(nextStreak)),
     });
+    timerRef.current=setTimeout(()=>setDismissed(true),1700);
   };
 
   if (!question) return null;
 
   return (
-    <div style={{position:"absolute",left:"50%",bottom:18,transform:"translateX(-50%)",width:"min(430px,calc(100% - 28px))",zIndex:12}}>
+    <div className={"omTriviaCollapse"+(dismissed?" omTriviaDismissed":"")} style={{position:"absolute",left:"50%",bottom:18,transform:"translateX(-50%)",width:"min(430px,calc(100% - 28px))",zIndex:12,overflow:"hidden",maxHeight:dismissed?0:650,opacity:dismissed?0:1,transition:"max-height .55s cubic-bezier(.22,1,.36,1),opacity .35s ease,filter .4s ease",filter:dismissed?"blur(7px)":"none",pointerEvents:dismissed?"none":"auto"}}>
       <div style={{border:"1px solid rgba(214,231,184,.24)",borderRadius:20,background:"rgba(5,9,6,.86)",backdropFilter:"blur(18px)",boxShadow:"0 18px 60px rgba(0,0,0,.4)",padding:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginBottom:8}}>
           <span style={{fontSize:9,letterSpacing:".14em",fontWeight:900,color:"#9db98d"}}>1MUSLIM QUICK TRIVIA</span>
           <span style={{fontSize:10,fontWeight:900,color:streak ? "#d6e7b8" : "#8e9991"}}>🔥 STREAK ×{multiplierFor(streak || 1)}</span>
         </div>
-        <strong style={{display:"block",fontSize:15,lineHeight:1.35}}>{question.question}</strong>
+        {review&&<div style={{fontSize:11,color:"#bcd8ef",marginBottom:6}}>🧠 You got this right before — just keeping your memory sharp!</div>}<strong style={{display:"block",fontSize:15,lineHeight:1.35}}>{question.question}</strong>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginTop:12}}>
           {question.choices.map((choice,index) => {
             const picked = selected === index;
@@ -112,7 +125,7 @@ export default function ReconnectTrivia({
         </div>
         {result ? <div style={{marginTop:10,fontSize:10,lineHeight:1.5,color:result.correct?"#d6e7b8":"#d2aaa7"}}>
           {result.correct ? <>✅ Correct! <strong>+{result.points} XP</strong> · Streak ×{result.multiplier}</> : <>Not quite. Streak reset. {question.explanation}</>}
-          {result.correct && <span style={{display:"block",color:"#849087",marginTop:3}}>{question.explanation}</span>}
+          {result.correct && <span style={{display:"block",color:"#849087",marginTop:3}}>{review?"You remembered it! ": ""}{question.explanation}</span>}
         </div> : null}
         {mode === "reconnect" ? <div style={{marginTop:8,fontSize:9,color:"#69766e"}}>Your answer never delays the broadcast. When the Live is ready, we cut straight back to it.</div> : null}
       </div>
