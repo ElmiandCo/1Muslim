@@ -268,7 +268,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   const label = (text: string, ar: string) => user?.arabic_terms_enabled ? <>{text} <span className="arabicNav">{ar}</span></> : text;
 
   return <header ref={navRef} className={`${compact ? "siteNav compact" : "siteNav"} muslimTopGlass ${navHidden && !openMenu ? "muslimTopHidden" : ""} ${pageGlow ? "muslimPageGlow" : ""}`}>
-    <Link href="/" className="siteBrand logoBrand" aria-label="1Muslim.Live Home"><img src="/assets/1muslim-live-logo.PNG" alt="1Muslim.Live" className="premiumLogo" /></Link>
+    <button type="button" className="siteBrand hudhudTopOrb" aria-label="HudHud orb: tap to open navigation" onClick={()=>{setWakeUp(false);setOpenMenu(openMenu==="mobile"?null:"mobile")}}><img src="/assets/hudhud-logo.PNG" alt="" /><span className="hudhudTopGlow" aria-hidden="true"/></button>
 
     <nav className="siteNavLinks" aria-label="Primary navigation">
       <Link href="/" className="siteHomeLink">Home</Link>
@@ -368,6 +368,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       @keyframes muslimNavSweep{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
       @media(prefers-reduced-motion:reduce){:global(.siteNav.muslimTopGlass){transition:none!important}:global(.siteNav.muslimPageGlow:after){animation:none}}
       @media(max-width:700px){:global(.siteNav.muslimTopGlass .mobileMenuButton),:global(.siteNav.muslimTopGlass .themeToggle),:global(.siteNav.muslimTopGlass .mobileLibraryShortcut){border-radius:16px!important;background:rgba(32,77,55,.25)!important;box-shadow:inset 0 1px rgba(255,255,255,.12),0 3px 15px rgba(0,0,0,.12)}}
+      .hudhudTopOrb{width:48px;height:48px;flex:0 0 48px;position:relative;border:1px solid #58bf9866;border-radius:50%;padding:7px;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,#164a37,#071912);box-shadow:0 0 18px #29d18a22;cursor:pointer;animation:hudhudTopFloat 3.5s ease-in-out infinite}.hudhudTopOrb img{width:100%;height:100%;object-fit:contain;position:relative;z-index:1}.hudhudTopGlow{position:absolute;inset:-4px;border-radius:50%;border:1px solid #6fdfad33;animation:hudhudTopPulse 2.5s ease-in-out infinite;pointer-events:none}@keyframes hudhudTopFloat{50%{transform:translateY(-4px)}}@keyframes hudhudTopPulse{50%{opacity:.3;transform:scale(1.15)}}@media(prefers-reduced-motion:reduce){.hudhudTopOrb,.hudhudTopGlow{animation:none}}
       .logoBrand{display:flex;align-items:center;flex:0 1 auto;min-width:0;max-width:190px;overflow:hidden}
       .premiumLogo{display:block;width:clamp(122px,14vw,182px);height:46px;max-width:100%;object-fit:contain;object-position:left center;border-radius:3px}
       @media(max-width:700px){.logoBrand{max-width:138px}.premiumLogo{width:138px;height:40px}}
