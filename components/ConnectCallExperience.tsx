@@ -7,6 +7,10 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  const [call,setCall]=useState<Call|null>(null),[phase,setPhase]=useState<"idle"|"intro"|"connected">("idle"),[error,setError]=useState(""),[muted,setMuted]=useState(false),[cameraOff,setCameraOff]=useState(false);
  const [cameraEffects,setCameraEffects]=useState(true),[cameraEffect,setCameraEffect]=useState<"glow"|"stars"|"soft">("glow");
  const [menuOpen,setMenuOpen]=useState(false),[speakerOn,setSpeakerOn]=useState(true),[showChat,setShowChat]=useState(false),[chatDraft,setChatDraft]=useState(""),[chatMessages,setChatMessages]=useState<{sender:string;body:string}[]>([]),[audioLevel,setAudioLevel]=useState(0),[flipping,setFlipping]=useState(false);
+ const [showHistory,setShowHistory]=useState(false);
+ const [history,setHistory]=useState<Array<Call&{created_at:string;accepted_at?:string|null}>>([]);
+ const [historyLoading,setHistoryLoading]=useState(false);
+ const loadHistory=async()=>{setHistoryLoading(true);try{const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId)+"&history=1",{cache:"no-store"});if(!r.ok)throw Error("History unavailable");const d=await r.json();setHistory(d.calls??[])}catch{setError("Unable to load call history")}finally{setHistoryLoading(false)}};
  const connectingId=useRef<string|null>(null);
  const activeCallId=useRef<string|null>(null);
  const callRef=useRef<Call|null>(null);
@@ -30,7 +34,20 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
   .on("postgres_changes",{event:"*",schema:"public",table:"dm_calls",filter:"conversation_id=eq."+conversationId},()=>void poll())
   .subscribe();
  return()=>{alive=false;window.removeEventListener("focus",onFocus);void supabase.removeChannel(channel);clearInterval(timer);room.current?.disconnect();room.current=null}},[conversationId]);
- const start=async(mode:"audio"|"video")=>{setError("");try{await request({action:"invite",mode});const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId));const d=await r.json();setCall(d.call??null)}catch(e){setError(e instanceof Error?e.message:"Could not call")}};
+ // Ring only while an incoming invitation is pending; stop immediately on acceptance/decline.
+ useEffect(()=>{
+  if(call?.status!=="ringing"||call.callee_id!==userId)return;
+  let ctx:AudioContext|null=null;let timer:ReturnType<typeof setInterval>|undefined;
+  const ring=()=>{if(document.visibilityState!=="visible")return;
+   try{navigator.vibrate?.([160,100,160])}catch{}
+   try{ctx??=new AudioContext();if(ctx.state==="suspended")void ctx.resume();
+    const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type="sine";osc.frequency.value=660;gain.gain.value=.035;osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.18);
+   }catch{/* Browser audio may require a gesture. */}
+  };
+  ring();timer=setInterval(ring,2400);
+  return()=>{if(timer)clearInterval(timer);try{navigator.vibrate?.(0)}catch{}void ctx?.close()};
+ },[call?.id,call?.status,call?.callee_id,userId]);
+  const start=async(mode:"audio"|"video")=>{setError("");try{await request({action:"invite",mode});const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId));const d=await r.json();setCall(d.call??null)}catch(e){setError(e instanceof Error?e.message:"Could not call")}};
  const connect=async(id:string,mode:"audio"|"video")=>{
  if(connectingId.current===id||activeCallId.current===id)return;
  connectingId.current=id;setPhase("intro");setError("");setConnectionState("normal");
@@ -75,7 +92,7 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  @keyframes mcAppear{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}@keyframes mcBreathe{50%{transform:scale(1.045);box-shadow:0 0 0 20px #a3e8ba12,0 0 0 42px #a3e8ba06,0 0 65px #9dddb375}}
  @media(prefers-reduced-motion:reduce){.mc-ring,.mc-bismillah{animation:none}}
  `}</style>
- <div className="mc-launch"><span className="mc-call-label">📞 1Muslim Calls</span><button type="button" title="Share call link" aria-label="Share link to this 1Muslim call" onClick={()=>void shareCall()}>↗</button>{linkNotice&&<span role="status" style={{fontSize:12}}>{linkNotice}</span>}<button type="button" title="Voice call" aria-label="Start private voice call" onClick={()=>void start("audio")} disabled={!!call}>☎</button><button type="button" title="Video call" aria-label="Start private video call" onClick={()=>void start("video")} disabled={!!call}>▣</button>{openedFromLink&&!call&&<span className="mc-link-hint" role="status">This call is not ringing right now. Start a voice or video call above, or wait for the other member to call.</span>}</div>
+ <div className="mc-launch"><span className="mc-call-label">📞 1Muslim Calls</span><button type="button" title="Recent calls" aria-label="Show recent calls" aria-expanded={showHistory} onClick={()=>{setShowHistory(v=>!v);if(!showHistory)void loadHistory()}}>🕘</button><button type="button" title="Share call link" aria-label="Share link to this 1Muslim call" onClick={()=>void shareCall()}>↗</button>{linkNotice&&<span role="status" style={{fontSize:12}}>{linkNotice}</span>}{showHistory&&<div style={{width:"100%",maxHeight:190,overflowY:"auto",padding:"8px",border:"1px solid #ffffff30",borderRadius:12}} aria-label="Recent call history">{historyLoading?"Loading calls…":history.length===0?"No recent calls":history.map(h=><div key={h.id} style={{fontSize:12,padding:"7px 4px",borderBottom:"1px solid #ffffff15"}}><strong>{h.caller_id===userId?"↗ Outgoing":"↙ Incoming"} {h.mode}</strong> · <span style={{color:!h.accepted_at&&h.callee_id===userId?"#ffb2a6":"#c7e4d5"}}>{!h.accepted_at&&h.callee_id===userId&&h.status!=="ringing"?"Missed / declined":h.status}</span><br/><time dateTime={h.created_at}>{new Date(h.created_at).toLocaleString()}</time></div>)}</div>}<button type="button" title="Voice call" aria-label="Start private voice call" onClick={()=>void start("audio")} disabled={!!call}>☎</button><button type="button" title="Video call" aria-label="Start private video call" onClick={()=>void start("video")} disabled={!!call}>▣</button>{openedFromLink&&!call&&<span className="mc-link-hint" role="status">This call is not ringing right now. Start a voice or video call above, or wait for the other member to call.</span>}</div>
  {error&&<p role="alert" style={{color:"#fca5a5"}}>{error}</p>}
  {call&&<div className="mc-screen" role="dialog" aria-modal="true" aria-label="1Muslim Messenger call"><div className="mc-shell">
  {phase==="intro"&&<video className="mc-intro" src="/videos/prelive-intro.mp4" autoPlay muted playsInline/>}
