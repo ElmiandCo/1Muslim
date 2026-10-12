@@ -10,6 +10,7 @@ import { LocalAudioTrack, Room, Track } from "livekit-client";
 import { createLiveAudioProcessor } from "../../../components/live-audio-effects";
 import LiveChat from "../../../components/LiveChat";
 import SyncedLiveIntro from "../../components/SyncedLiveIntro";
+import LiveLightOverlay from "../../../components/LiveLightOverlay";
 import ShareLiveButton from "../../components/ShareLiveButton";
 import LiveVisualEffects, {type LiveEffect} from "../../components/LiveVisualEffects";
 
@@ -902,6 +903,7 @@ export default function GoLivePage() {
             <div className={`preview format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"}`}>
               {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
+              {live&&liveStreamIdRef.current&&<LiveLightOverlay streamId={liveStreamIdRef.current} host />}
               {cameraReady && <div className="previewOverlayTools" aria-label="Camera controls"><button type="button" onClick={()=>void flipCamera()} title="Flip camera" aria-label="Flip camera">🔄</button><button type="button" onClick={toggleCamera} title={cameraOn?"Turn camera off":"Turn camera on"} aria-label={cameraOn?"Turn camera off":"Turn camera on"}>{cameraOn?"📷":"🚫"}</button><button type="button" onClick={toggleMic} title={micOn?"Mute microphone":"Unmute microphone"} aria-label={micOn?"Mute microphone":"Unmute microphone"}>{micOn?"🎙️":"🔇"}</button></div>}
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
               {live && <span className="live">● LIVE</span>}{live && <div role="status" aria-live="polite" style={{position:"absolute",left:12,bottom:64,zIndex:13,padding:"12px 16px",borderRadius:18,background:"rgba(5,10,20,.80)",border:viewerIncrease?"2px solid #39ee8d":"1px solid rgba(255,255,255,.35)",boxShadow:viewerIncrease?"0 0 24px rgba(57,238,141,.48)":"0 8px 25px #0008",color:viewerIncrease?"#4cff9c":"white",transition:"color .3s,border .3s,box-shadow .3s",pointerEvents:"none",textAlign:"center"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1.5}}>🔴 YOU ARE LIVE</div><div style={{fontSize:"clamp(26px,5vw,40px)",fontWeight:900,lineHeight:1.15,fontVariantNumeric:"tabular-nums"}}>{viewers.toLocaleString()}</div><div style={{fontSize:11,opacity:.85}}>VIEWERS {viewerIncrease?"↑":""}</div></div>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
