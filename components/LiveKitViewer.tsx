@@ -168,6 +168,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         </div>
       ) : error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
       <style jsx>{`
+      @keyframes oneMuslimButterfly{0%,100%{transform:translateY(5px) scale(1)}50%{transform:translateY(-8px) scale(1.035)}}
+      @keyframes oneMuslimPulse{0%,100%{transform:scale(.94);opacity:.5}50%{opacity:1;transform:scale(1.08)}}
       .omViewerTapCounter{position:absolute;top:54px;right:12px;z-index:8;border-radius:99px;padding:7px 11px;background:#0a0a16a8;border:1px solid #cfb4ff55;color:#eadbff;font-size:11px;font-weight:800;pointer-events:none}
       .omViewerTapBurst{position:absolute;z-index:9;pointer-events:none;font-size:30px;transform:translate(-50%,-50%);animation:omViewerHeartFloat .9s ease-out forwards}
       .omViewerExit{position:absolute;top:12px;left:12px;z-index:11;border:1px solid #ffffff66;background:#080811a8;border-radius:99px;color:#fff;text-decoration:none;padding:8px 13px;font-size:16px}
