@@ -195,7 +195,23 @@ body:has(.omQuranPage) nav:not(.omQuranGlassControls),body:has(.omQuranPage) [cl
  .omQuranPages{gap:8px;flex-wrap:wrap}.omQuranPages button{padding:9px}
  .omVerseTransition{scroll-margin-top:85px}
 }
-`}</style><style>{`
+`}
+/* Quran reader: viewport-filling glass pages refinement */
+@media(max-width:760px){
+.omQuranPage{position:fixed!important;inset:0!important;height:100dvh!important;overflow:hidden!important;padding:0!important;z-index:999!important}
+.omQuranPage .omQuranFirstReader{display:flex!important;position:fixed!important;inset:0!important;height:100dvh!important;box-sizing:border-box!important;padding:max(12px,env(safe-area-inset-top)) 0 max(12px,env(safe-area-inset-bottom))!important;gap:6px!important;border:0!important;border-radius:0!important;background:transparent!important;overflow:hidden!important}
+.omQuranPage .omQuranGlassTop{flex:0 0 52px!important}
+.omQuranPage .omQuranGlassDeck{flex:1 1 auto!important;min-height:0!important;height:auto!important;padding:3px 23px!important;align-items:stretch!important}
+.omQuranPage .omQuranGlassPage{height:100%!important;max-height:none!important;min-height:0!important;box-sizing:border-box!important;padding:22px 22px 25px!important;justify-content:space-between!important;border-radius:27px!important}
+.omQuranPage .omQuranGlassGhost{top:4%!important;bottom:4%!important}
+.omQuranPage .omQuranGlassArabic{flex:1 1 auto!important;display:flex!important;align-items:center!important;justify-content:center!important;min-height:0!important;font-size:clamp(29px,7.3vw,43px)!important;line-height:2.1!important;margin:6px 0!important;overflow-y:auto!important;overflow-wrap:anywhere!important}
+.omQuranPage .omQuranGlassTranslation{flex:0 0 auto!important;max-height:28%!important;overflow-y:auto!important;font-size:clamp(15px,3.9vw,19px)!important;line-height:1.65!important}
+.omQuranPage .omQuranGlassControls{flex:0 0 66px!important}
+.omQuranPage .omQuranGlassProgress{flex:0 0 4px!important;margin-bottom:4px!important}
+.omQuranPage .omQuranGlassArrow{top:50%!important}
+.omQuranPage .omQuranLegalNote,.omQuranPage .omQuranDisclaimer{display:none!important}
+}
+</style><style>{`
 .omQuranMarkerToolbar{position:relative;z-index:20!important;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px;padding:9px;border:1px solid #a59fff55;border-radius:18px;background:#101c35d9;backdrop-filter:blur(18px);color:#e9edff}
 .omQuranMarkerToolbar span{font-weight:800;font-size:12px;margin-right:auto}
 .omQuranMarkerToolbar button{border:1px solid #a58aff66;border-radius:999px;background:#6142b933;color:#fff;padding:8px 11px;cursor:pointer}
