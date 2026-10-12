@@ -14,6 +14,12 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const attachedAudioRef = useRef<Map<string,HTMLMediaElement>>(new Map());
   const [status, setStatus] = useState("Connecting to live…");
   const [viewerCount, setViewerCount] = useState<number | null>(null);
+  const [viewerPulse,setViewerPulse]=useState(false);
+  const previousViewerCount=useRef<number|null>(null);
+  const [tapCount,setTapCount]=useState(0);
+  const [tapBursts,setTapBursts]=useState<{id:number,x:number,y:number}[]>([]);
+  const tapSequence=useRef(0);
+  const registerTap=(e:React.MouseEvent<HTMLDivElement>)=>{if(embedded||!streamId||!(e.target instanceof HTMLElement)||e.target.closest("button,a,input"))return;const bounds=e.currentTarget.getBoundingClientRect();const id=++tapSequence.current;setTapCount(v=>v+1);setTapBursts(v=>[...v.slice(-8),{id,x:e.clientX-bounds.left,y:e.clientY-bounds.top}]);window.setTimeout(()=>setTapBursts(v=>v.filter(t=>t.id!==id)),900)};
   const [totalViews, setTotalViews] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [muted, setMuted] = useState(true);
@@ -92,7 +98,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         const response = await fetch("/api/livekit/viewer-count", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName}),cache:"no-store"});
         if (!response.ok) return;
         const data = await response.json();
-        if (mounted && typeof data.viewerCount === "number") setViewerCount(Math.max(0,data.viewerCount));
+        if (mounted && typeof data.viewerCount === "number") {const next=Math.max(0,data.viewerCount);if(previousViewerCount.current!==null&&next>previousViewerCount.current){setViewerPulse(true);window.setTimeout(()=>setViewerPulse(false),1700)}previousViewerCount.current=next;setViewerCount(next)}
         if (mounted && typeof data.totalViews === "number") setTotalViews(Math.max(0,data.totalViews));
       } catch { /* Preserve the last known count during temporary network failures. */ }
     };
@@ -132,11 +138,12 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   };
 
   return (
-    <div ref={playerRef} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:"16/9",overflow:"hidden"}}>
+    <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:"16/9",overflow:"hidden"}}>
       <video ref={videoRef} autoPlay muted playsInline controls={!embedded} style={{width:"100%",height:"100%",objectFit:"contain"}} />
       <div ref={audioContainerRef} />
       {streamId&&<LiveLightOverlay streamId={streamId}/>}
-      {viewerCount !== null && !error && <div role="status" aria-label={`${viewerCount.toLocaleString()} watching live`} style={{position:"absolute",top:12,right:12,zIndex:6,display:"flex",alignItems:"center",gap:6,padding:"7px 11px",borderRadius:999,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.22)",color:"#fff",fontSize:12,fontWeight:800,backdropFilter:"blur(10px)",pointerEvents:"none"}}>👁 {viewerCount.toLocaleString()} <span style={{fontSize:10,opacity:.8}}>watching</span>{totalViews!==null&&<span style={{fontSize:10,opacity:.9,borderLeft:"1px solid #ffffff55",paddingLeft:8,marginLeft:2}}>↗ {totalViews.toLocaleString()} total</span>}</div>}
+      {!embedded&&<><div className="omViewerTapCounter" aria-label={`${tapCount} screen taps`}>✨ {tapCount.toLocaleString()} taps</div>{tapBursts.map(t=><span key={t.id} className="omViewerTapBurst" style={{left:t.x,top:t.y}}>💜</span>)}<a className="omViewerExit" href="/streaming" aria-label="Exit live viewer">✕</a></>}
+      {viewerCount !== null && !error && <div role="status" aria-label={`${viewerCount.toLocaleString()} watching live`} className={viewerPulse?"omViewerCountPulse":""} style={{position:"absolute",top:12,right:12,zIndex:6,display:"flex",alignItems:"center",gap:6,padding:"7px 11px",borderRadius:999,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.22)",color:"#fff",fontSize:12,fontWeight:800,backdropFilter:"blur(10px)",pointerEvents:"none"}}>👁 {viewerCount.toLocaleString()} <span style={{fontSize:10,opacity:.8}}>watching</span>{totalViews!==null&&<span style={{fontSize:10,opacity:.9,borderLeft:"1px solid #ffffff55",paddingLeft:8,marginLeft:2}}>↗ {totalViews.toLocaleString()} total</span>}</div>}
       <div style={{position:"absolute",left:12,bottom:12,display:"flex",gap:7,alignItems:"center",flexWrap:"wrap",zIndex:5}}>
         <button type="button" onClick={toggleMute} aria-label={muted ? "Unmute live audio" : "Mute live audio"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
           {muted ? "🔇 Unmute" : "🔊 Mute"}
@@ -160,6 +167,16 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           <style jsx>{`@keyframes oneMuslimButterfly{0%,100%{transform:translateY(5px) scale(1)}50%{transform:translateY(-8px) scale(1.035)}}@keyframes oneMuslimPulse{0%,100%{transform:scale(.94);opacity:.5}50%{transform:scale(1.08);opacity:1}}`}</style>
         </div>
       ) : error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
+      <style jsx>{`
+      .omViewerTapCounter{position:absolute;top:54px;right:12px;z-index:8;border-radius:99px;padding:7px 11px;background:#0a0a16a8;border:1px solid #cfb4ff55;color:#eadbff;font-size:11px;font-weight:800;pointer-events:none}
+      .omViewerTapBurst{position:absolute;z-index:9;pointer-events:none;font-size:30px;transform:translate(-50%,-50%);animation:omViewerHeartFloat .9s ease-out forwards}
+      .omViewerExit{position:absolute;top:12px;left:12px;z-index:11;border:1px solid #ffffff66;background:#080811a8;border-radius:99px;color:#fff;text-decoration:none;padding:8px 13px;font-size:16px}
+      .omViewerCountPulse{animation:omViewerCountGlow 1.7s ease-out!important}
+      @keyframes omViewerHeartFloat{from{opacity:1;transform:translate(-50%,-50%) scale(.6)}to{opacity:0;transform:translate(-50%,-155%) scale(1.6)}}
+      @keyframes omViewerCountGlow{0%,100%{box-shadow:0 0 0 transparent;color:#fff}30%{box-shadow:0 0 24px #bd8dff,0 0 38px #6ee7e3;color:#e5c4ff}60%{box-shadow:0 0 22px #85e9ff;color:#c7fff8}}
+      @media(max-width:700px){.omLiveImmersiveViewer{height:100dvh!important;min-height:100dvh!important;aspect-ratio:auto!important}.omLiveImmersiveViewer video{width:100%!important;height:100%!important;object-fit:cover!important}.omLiveImmersiveViewer .omViewerExit{top:calc(env(safe-area-inset-top) + 12px)}}
+      @media(prefers-reduced-motion:reduce){.omViewerTapBurst,.omViewerCountPulse{animation:none!important}}
+      `}</style>
     </div>
   );
 }
