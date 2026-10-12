@@ -12,6 +12,15 @@ async function handler(request:Request,method:"GET"|"POST"){
  const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
  const body=method==="POST"?await request.json().catch(()=>({})):null;
  const conversationId=method==="GET"?new URL(request.url).searchParams.get("conversationId"):body?.conversationId;
+ if(method==="GET"&&new URL(request.url).searchParams.get("inbox")==="1"){
+  const {data:calls,error}=await db.from("dm_calls").select("id,conversation_id,caller_id,mode,status,created_at").eq("callee_id",user.id).eq("status","ringing").order("created_at",{ascending:false}).limit(1);
+  if(error)return NextResponse.json({error:"Could not check incoming calls"},{status:503});
+  const call=calls?.[0];if(!call)return NextResponse.json({call:null});
+  const {data:members}=await db.from("dm_participants").select("user_id").eq("conversation_id",call.conversation_id);
+  if(!members?.some(m=>m.user_id===user.id))return NextResponse.json({call:null});
+  const {data:profile}=await db.from("profiles").select("display_name,username,avatar_url").eq("id",call.caller_id).maybeSingle();
+  return NextResponse.json({call:{...call,peerName:profile?.display_name||profile?.username||"1Muslim member",peerAvatar:profile?.avatar_url||null}});
+ }
  if(!uuid(conversationId))return NextResponse.json({error:"Invalid conversation"},{status:400});
  const {data:members,error:memberError}=await db.from("dm_participants").select("user_id").eq("conversation_id",conversationId);
  if(memberError||!members?.some(m=>m.user_id===user.id))return NextResponse.json({error:"Conversation access denied"},{status:403});
