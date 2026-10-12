@@ -167,10 +167,18 @@ export default function Home() {
         <LiveNowFocus mode="hero" />
         <PublicGroupMeetings />
         <HomeCreatePost />
-        <section aria-label="Video of the Day" style={{margin:"12px 0 28px",padding:"clamp(12px, 2.5vw, 30px)",border:"1px solid #b99c55",borderRadius:24,background:"var(--card, #101712)",boxShadow:"0 24px 70px rgba(0,0,0,.18)"}}>
+        <section aria-label="Video of the Day" className="omDailyVideoSilverFrame">
           <FeaturedYoutubeVideo compact />
         </section>
         
+        <style jsx global>{`
+.omDailyVideoSilverFrame{position:relative;isolation:isolate;margin:12px 0 28px;padding:clamp(12px,2.5vw,30px);border:2px solid transparent;border-radius:26px;background:linear-gradient(var(--card,#101712),var(--card,#101712)) padding-box,linear-gradient(115deg,#77838d 0%,#faffff 14%,#9ba7b4 25%,#e6f4ff 38%,#64727d 52%,#ffffff 66%,#91a1ad 78%,#f8fcff 90%,#6e7d88 100%) border-box;box-shadow:0 24px 70px #0005,0 0 25px #dceaff28,inset 0 1px #ffffff3a;overflow:hidden}
+.omDailyVideoSilverFrame:before{content:"";position:absolute;z-index:0;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(108deg,transparent 0%,transparent 36%,#ffffff00 42%,#f2faff80 49%,#ffffffb5 50%,#f2faff66 51%,transparent 58%,transparent 100%);transform:translateX(-130%);animation:omSilverVideoSweep 7s ease-in-out infinite}
+.omDailyVideoSilverFrame:after{content:"";position:absolute;inset:4px;border:1px solid #f4faff3d;border-radius:21px;pointer-events:none;z-index:2;box-shadow:inset 0 0 16px #ffffff0d}
+.omDailyVideoSilverFrame>*:not(style){position:relative;z-index:1}
+@keyframes omSilverVideoSweep{0%,12%{transform:translateX(-140%)}45%,100%{transform:translateX(140%)}}
+@media(prefers-reduced-motion:reduce){.omDailyVideoSilverFrame:before{animation:none;display:none}}
+`}</style>
         <section aria-label="Explore 1Muslim products" className="hudhudProducts">
           <div className="hudhudProductsHeading"><div><span className="eyebrow">CONNECT YOUR 1MUSLIM NETWORK</span><h2>Explore with HudHud</h2><p>Connect, go live, watch, and grow together.</p></div><span className="hudhudOrb" aria-hidden="true"><span /></span></div>
           <div className="hudhudProductsGrid">
