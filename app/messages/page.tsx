@@ -225,6 +225,13 @@ export default function MessagesPage(){
 .omImessagePage .omMessageRow{animation:omImessageIn .3s cubic-bezier(.2,.9,.2,1) both}
 .omImessagePage .omMessageBubble{max-width:min(82%,520px)!important;line-height:1.45;font-size:15px;white-space:pre-wrap;border:1px solid #ffffff2b!important;box-shadow:0 5px 17px #0003,0 1px 0 #ffffff28 inset;position:relative}
 .omImessagePage .omMessageBubble--mine{background:linear-gradient(150deg,#329bff,#0877e9 80%)!important;color:#fff!important;border-radius:22px 22px 7px 22px!important}
+/* Quran Studio-inspired frosted glass messaging, without obscuring the text */
+.omImessagePage .omMessageBubble{backdrop-filter:blur(22px) saturate(145%);-webkit-backdrop-filter:blur(22px) saturate(145%);border:1px solid rgba(198,179,255,.42)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 9px 30px rgba(16,7,45,.34),0 0 18px rgba(132,90,255,.13)!important;transition:transform .2s ease,box-shadow .2s ease}
+.omImessagePage .omMessageBubble--mine{background:linear-gradient(135deg,rgba(88,56,181,.75),rgba(30,95,151,.68))!important;border-radius:24px 24px 8px 24px!important}
+.omImessagePage .omMessageBubble--theirs{background:linear-gradient(135deg,rgba(40,42,92,.78),rgba(33,73,107,.65))!important;border-radius:24px 24px 24px 8px!important}
+.omImessagePage .omMessageBubble:active{transform:scale(.99)}
+@media(prefers-reduced-motion:reduce){.omImessagePage .omMessageBubble{transition:none}}
+
 .omImessagePage .omMessageBubble--theirs{background:linear-gradient(145deg,#35465c,#27374c)!important;color:#f8fbff!important;border-radius:22px 22px 22px 7px!important}
 .omImessagePage .omMessageRow--mine .omMessageBubble{box-shadow:0 7px 24px #0066cc35,0 1px 0 #ffffff40 inset}
 .omImessagePage .omMessageComposer{align-items:center!important;gap:9px!important;padding:12px!important;border-top:1px solid #a3b9d633;background:#19263aeb;backdrop-filter:blur(18px)}
