@@ -124,7 +124,9 @@ export default function QuranLessons(){
    const reduced=typeof window!=="undefined"&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
    if(!reduced){
     setTurningPage({direction:index>focusIndex?"next":"previous",verse:verses[focusIndex],position:(page-1)*50+focusIndex+1});
-    pageTurnTimer.current=setTimeout(()=>{setFocusIndex(index);setTurningPage(null);pageTurnTimer.current=null},690);
+    setFocusIndex(index);
+    const key=verses[index]?.verse_key;if(key)setVisited(v=>({...v,[key]:true}));
+    pageTurnTimer.current=setTimeout(()=>{setTurningPage(null);pageTurnTimer.current=null},510);
     return;
    }
   }
@@ -283,19 +285,17 @@ body:has(.omQuranPage) header:has(nav),body:has(.omQuranPage) [class*="bottomNav
 .omQuranPage .omQuranGlassDeck{flex:1 1 auto!important;min-height:0!important}
 }
 
-/* Glass-book turn: old verse remains on its own 3D sheet until transition finishes. */
-.omQuranPage .omQuranGlassDeck{perspective:1400px;transform-style:preserve-3d}
-.omQuranPage .omQuranTurnSheet{position:absolute;z-index:8;inset:3px 23px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:28px;padding:25px;border:1px solid #ddc7ff;border-radius:27px;background:linear-gradient(118deg,#27284be8,#171d3eec 52%,#312452e8);box-shadow:0 20px 65px #000a,inset 0 0 25px #c8b7ff17;backdrop-filter:blur(20px);backface-visibility:hidden;transform-style:preserve-3d;overflow:hidden;pointer-events:none}
-.omQuranPage .omQuranTurnSheet p{font-family:inherit;color:#fff;text-align:center;font-size:clamp(28px,6.5vw,44px);line-height:2;max-height:65%;overflow:hidden}
-.omQuranPage .omQuranTurnSheet small{color:#eee5ff;font-size:clamp(14px,3.6vw,19px);text-align:center;line-height:1.55}
+/* Refined page transition: reveal the destination immediately under a lightweight departing sheet. */
+.omQuranPage .omQuranGlassDeck{perspective:1600px;transform-style:preserve-3d}
+.omQuranPage .omQuranTurnSheet{position:absolute;z-index:8;inset:3px 23px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;padding:25px;border:1px solid #d4b8ff9c;border-radius:27px;background:linear-gradient(115deg,#252748f0,#17203ff0 55%,#2c2850f0);box-shadow:0 12px 35px #0006;backface-visibility:hidden;transform-style:preserve-3d;overflow:hidden;pointer-events:none;will-change:transform,opacity}
+.omQuranPage .omQuranTurnSheet p{color:#fff;text-align:center;font-size:clamp(28px,6.5vw,44px);line-height:2;max-height:65%;overflow:hidden}
 .omQuranPage .omQuranTurnNumber{position:absolute;top:25px;left:25px;border:1px solid #c8b7ff88;border-radius:50%;width:40px;height:40px;display:grid;place-items:center;color:white}
-.omQuranPage .omQuranTurnNext{transform-origin:right center;animation:omQuranTurnRTL .7s cubic-bezier(.3,.05,.23,1) forwards}
-.omQuranPage .omQuranTurnPrevious{transform-origin:left center;animation:omQuranTurnLTR .7s cubic-bezier(.3,.05,.23,1) forwards}
-.omQuranPage .omQuranTurnSheen{position:absolute;inset:0;background:linear-gradient(110deg,transparent 28%,#d4baff33 46%,#ffffff4d 50%,transparent 65%);transform:translateX(-120%);animation:omQuranTurnShine .7s ease forwards}
-@keyframes omQuranTurnRTL{0%{transform:rotateY(0);opacity:1}55%{transform:rotateY(70deg);opacity:.95}100%{transform:rotateY(104deg);opacity:0}}
-@keyframes omQuranTurnLTR{0%{transform:rotateY(0);opacity:1}55%{transform:rotateY(-70deg);opacity:.95}100%{transform:rotateY(-104deg);opacity:0}}
-@keyframes omQuranTurnShine{0%{transform:translateX(-120%)}100%{transform:translateX(130%)}}
-@media(prefers-reduced-motion:reduce){.omQuranPage .omQuranTurnSheet,.omQuranPage .omQuranTurnSheen{animation:none!important}}
+.omQuranPage .omQuranTurnNext{transform-origin:right center;animation:omQuranTurnRTL .52s cubic-bezier(.22,.68,.25,1) both}
+.omQuranPage .omQuranTurnPrevious{transform-origin:left center;animation:omQuranTurnLTR .52s cubic-bezier(.22,.68,.25,1) both}
+.omQuranPage .omQuranTurnSheen{position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,#ddd0ff12 53%,transparent 68%);pointer-events:none}
+@keyframes omQuranTurnRTL{0%{transform:rotateY(0) translateZ(1px);opacity:1}65%{transform:rotateY(48deg) translateZ(1px);opacity:.75}100%{transform:rotateY(72deg) translateZ(1px);opacity:0}}
+@keyframes omQuranTurnLTR{0%{transform:rotateY(0) translateZ(1px);opacity:1}65%{transform:rotateY(-48deg) translateZ(1px);opacity:.75}100%{transform:rotateY(-72deg) translateZ(1px);opacity:0}}
+@media(prefers-reduced-motion:reduce){.omQuranPage .omQuranTurnSheet{animation:none!important}}
 `}</style>
  <style>{`
 .omQuranAppStage{position:relative;isolation:isolate;overflow:hidden;border:1px solid #ffffff2a;border-radius:30px;padding:clamp(12px,2vw,25px);background:linear-gradient(135deg,#0a1227f2,#0a2430eb 60%,#10162bed);box-shadow:0 22px 65px #0008;min-height:70dvh}
