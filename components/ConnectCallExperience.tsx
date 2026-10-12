@@ -42,6 +42,7 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
   .subscribe();
  return()=>{alive=false;window.removeEventListener("focus",onFocus);void supabase.removeChannel(channel);clearInterval(timer);room.current?.disconnect();room.current=null}},[conversationId]);
  const start=async(mode:"audio"|"video")=>{setError("");try{await request({action:"invite",mode});const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId));const d=await r.json();setCall(d.call??null)}catch(e){setError(e instanceof Error?e.message:"Could not call")}};
+ useEffect(()=>{const onStart=(event:Event)=>{const mode=(event as CustomEvent<"audio"|"video">).detail;if(mode!=="audio"&&mode!=="video")return;if(callRef.current||serviceUnavailable)return;void start(mode)};window.addEventListener("1muslim:start-call",onStart);return()=>window.removeEventListener("1muslim:start-call",onStart)},[conversationId,serviceUnavailable]);
  const connect=async(id:string,mode:"audio"|"video")=>{
  if(connectingId.current===id||activeCallId.current===id)return;
  connectingId.current=id;setPhase("intro");setError("");setConnectionState("normal");
