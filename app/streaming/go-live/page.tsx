@@ -70,12 +70,35 @@ export default function GoLivePage() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const processedAudioTrackRef = useRef<MediaStreamTrack | null>(null);
   const [title, setTitle] = useState("");
+  // Auto-name untitled broadcasts using the host's display name and lifetime Live count.
+  // Manual titles remain editable and are never overwritten.
+  const [defaultLiveTitle,setDefaultLiveTitle] = useState("1Muslim Host - Live 1");
+  useEffect(()=>{
+    let cancelled=false;
+    const loadDefaultTitle=async()=>{
+      const db=createClient();
+      const {data:{user}}=await db.auth.getUser();
+      if(!user||cancelled)return;
+      const [{data:profile},{count,error:countError}]=await Promise.all([
+        db.from("profiles").select("display_name,username").eq("id",user.id).maybeSingle(),
+        db.from("live_streams").select("id",{count:"exact",head:true}).eq("host_id",user.id)
+      ]);
+      if(cancelled)return;
+      const name=(profile?.display_name||profile?.username||user.user_metadata?.full_name||"1Muslim Host").trim();
+      const nextNumber=countError?1:(count??0)+1;
+      setDefaultLiveTitle(`${name} - Live ${nextNumber}`);
+    };
+    void loadDefaultTitle();
+    return()=>{cancelled=true};
+  },[]);
+  const effectiveLiveTitle=title.trim()||defaultLiveTitle;
+
   // Inform the mobile dock only when the host has a working camera and a title.
   useEffect(()=>{
-    const ready=cameraReady&&cameraOn&&Boolean(title.trim())&&!live&&!saving;
+    const ready=cameraReady&&cameraOn&&Boolean(effectiveLiveTitle.trim())&&!live&&!saving;
     window.dispatchEvent(new CustomEvent("1muslim:go-live-ready",{detail:{ready}}));
     return()=>{window.dispatchEvent(new CustomEvent("1muslim:go-live-ready",{detail:{ready:false}}));};
-  },[cameraReady,cameraOn,title,live,saving]);
+  },[cameraReady,cameraOn,effectiveLiveTitle,live,saving]);
 
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [category, setCategory] = useState(categories[0]);
@@ -211,7 +234,7 @@ export default function GoLivePage() {
 
   const scheduleLive = async () => {
     setScheduleMessage("");
-    if (!title.trim()) return setScheduleMessage("Add a Live title first.");
+    if (!effectiveLiveTitle.trim()) return setScheduleMessage("Add a Live title first.");
     if (!scheduleDate || !scheduleStart || !scheduleEnd) return setScheduleMessage("Choose a date, start time, and end time.");
     const starts = new Date(`${scheduleDate}T${scheduleStart}`);
     const ends = new Date(`${scheduleDate}T${scheduleEnd}`);
@@ -220,7 +243,7 @@ export default function GoLivePage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return setScheduleMessage("Sign in is required to schedule a Live.");
-    const { data, error } = await supabase.from("live_schedule_slots").insert({host_id:user.id,title:title.trim(),category,starts_at:starts.toISOString(),ends_at:ends.toISOString(),status:"scheduled"}).select("id,title,category,starts_at,ends_at,status").single();
+    const { data, error } = await supabase.from("live_schedule_slots").insert({host_id:user.id,title:effectiveLiveTitle,category,starts_at:starts.toISOString(),ends_at:ends.toISOString(),status:"scheduled"}).select("id,title,category,starts_at,ends_at,status").single();
     if (error) return setScheduleMessage(error.message);
     setScheduledSlot(data); setHostCheckedIn(false); setScheduleMessage("Scheduled. You can schedule another Live too. Return before this start time to check in and confirm your camera + microphone.");
     setShowScheduler(false);
@@ -685,7 +708,7 @@ export default function GoLivePage() {
 
   const startLive = async (fromSchedule = false) => {
     if (!cameraReady) return setError("Turn on your camera and microphone first.");
-    if (!title.trim()) return setError("Give your live stream a title first.");
+    if (!effectiveLiveTitle.trim()) return setError("Give your live stream a title first.");
     if (fromSchedule && scheduledSlot) {
       if (!hostCheckedIn) return setError("Check in as ready before the scheduled Live can start.");
       if (Date.now() < new Date(scheduledSlot.starts_at).getTime()) return setError("This scheduled Live is still locked. It will start automatically at the scheduled time.");
@@ -716,7 +739,7 @@ export default function GoLivePage() {
       const { data: insertedStream, error: rowError } = await supabase.from("live_streams").insert({
         id: liveStreamId,
         host_id: user.id,
-        title: title.trim(),
+        title: effectiveLiveTitle,
         category,
         visibility,
         room_name: roomName,
@@ -939,7 +962,7 @@ export default function GoLivePage() {
             <h2>Live details</h2>
             {error && <div className="error">{error}</div>}
             {scheduledSlot && !live && <div className={hostCheckedIn ? "ready checkedIn" : "ready"}>{hostCheckedIn ? "✓ HOST CHECKED IN — Viewers can see that you are ready. The broadcast stays locked until the scheduled time." : "Scheduled Live: camera and microphone can be prepared now. Check in when you are fully ready."}</div>}{live && <div className="ready">Your live session is active and being recorded.</div>}{saveMessage && <div className="ready">{saveMessage}</div>}
-            <div className="field"><label htmlFor="title">Title</label><input id="title" className="input" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="What are you sharing?" disabled={live}/></div>
+            <div className="field"><label htmlFor="title">Title</label><input id="title" className="input" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder={defaultLiveTitle} disabled={live}/></div>
             <div className="field"><label>Screen format</label><div className="formatGrid">{formats.map((format)=><button type="button" key={format.key} className={aspectRatio===format.key?"formatButton active":"formatButton"} onClick={()=>setAspectRatio(format.key)} disabled={live}><strong>{format.label} · {format.key}</strong><small>{format.hint}</small></button>)}</div><p className="help">Pick this before going live. Once the Live starts, the frame is locked for the whole broadcast.</p></div>
             <div className="field"><label htmlFor="thumbnail">Thumbnail image</label><input id="thumbnail" className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>setThumbnailFile(e.target.files?.[0]??null)} disabled={live}/><p className="help">Choose a cover image so your saved Live recording does not appear as a black thumbnail.</p></div>
             <div className="field"><label htmlFor="category">Topic</label><select id="category" className="select" value={category} onChange={(e)=>setCategory(e.target.value)} disabled={live}>{categories.map((item)=><option key={item}>{item}</option>)}</select></div>
