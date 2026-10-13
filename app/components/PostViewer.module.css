@@ -9,3 +9,11 @@
 .content p{font-size:clamp(19px,3vw,30px);line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;max-width:60ch;margin:0;text-align:left;width:100%}
 .actions{display:flex;align-items:center;gap:12px;padding:15px clamp(15px,3vw,24px);border-top:1px solid #b7a56b25;flex-wrap:wrap}.actions button{border:1px solid #c6b47b5e;background:#1b3d2d;color:#f0e8c9;border-radius:999px;padding:10px 17px;cursor:pointer;font:inherit}
 @media(max-width:600px){.viewer{border-radius:20px}.content{min-height:32dvh}.author{padding:15px}.avatar{width:44px;height:44px}.actions{padding:12px 15px}}
+
+/* Media-first post layouts: never crop uploaded video or let it escape the viewport. */
+.content:has(.mediaGallery){display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:18px;padding:0 0 22px;min-height:0}
+.mediaGallery{width:100%;display:grid;gap:8px;place-items:center;overflow:hidden;background:#030a08;border-bottom:1px solid #d1bd7740}
+.media{display:block;width:100%;max-width:100%;height:auto;max-height:min(67dvh,720px);object-fit:contain;background:#000}
+video.media{aspect-ratio:auto}
+.content .caption{width:100%;padding:0 clamp(17px,3vw,30px);font-size:clamp(15px,2vw,19px);line-height:1.55;max-width:none}
+@media(max-width:600px){.media{max-height:59dvh}.content:has(.mediaGallery){gap:14px}}
