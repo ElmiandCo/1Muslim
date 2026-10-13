@@ -18,7 +18,8 @@ const QUESTIONS:Question[]=[
 {q:"What does the word ‘Tawḥīd’ refer to?",answers:["Fasting","Charity","Pilgrimage","Oneness of Allah"],correct:3,explain:"Tawḥīd is affirming Allah’s oneness and worshipping Him alone.",reference:"Qur’an 112:1–4",topic:"Creed"}];
 function shuffle(){return [...QUESTIONS].sort(()=>Math.random()-.5)}
 export default function IslamTriviaStudio(){
- const [earnedXp,setEarnedXp]=useState(0),[celebrate,setCelebrate]=useState(false);\n const [pool,setPool]=useState<Question[]>(QUESTIONS),[index,setIndex]=useState(0),[choice,setChoice]=useState<number|null>(null),[score,setScore]=useState(0),[finished,setFinished]=useState(false),[best,setBest]=useState(0),[topic,setTopic]=useState("All");
+ const [earnedXp,setEarnedXp]=useState(0),[celebrate,setCelebrate]=useState(false);
+ const [pool,setPool]=useState<Question[]>(QUESTIONS),[index,setIndex]=useState(0),[choice,setChoice]=useState<number|null>(null),[score,setScore]=useState(0),[finished,setFinished]=useState(false),[best,setBest]=useState(0),[topic,setTopic]=useState("All");
  useEffect(()=>{try{setBest(Number(localStorage.getItem("1muslim-islam-trivia-best")||0))}catch{}},[]);
  const topics=["All","Qur’an","Creed","Prophets","Worship","Revelation"];
  const filtered=useMemo(()=>pool.filter(q=>topic==="All"||q.topic===topic),[pool,topic]);
