@@ -22,18 +22,19 @@ export default function PublicBadgeSelector({ userId, verifiedAt }: { userId: st
    db.from("public_badge_preferences").select("visible_badges").eq("user_id",userId).maybeSingle(),
    fetch("/api/tiktok/status",{cache:"no-store"}).then(r=>r.json()).catch(()=>({connected:false})),
    db.from("member_badges").select("badge_key").eq("user_id",userId)
-  ]).then(([prefs,status,badges])=>{if(!active)return;if(prefs.data?.visible_badges)setEnabled(prefs.data.visible_badges);setConnected(Boolean(status.connected));setEarnedKeys((badges.data??[]).map(x=>x.badge_key))});
+  ]).then(([prefs,status,badges])=>{if(!active)return;if(prefs.data?.visible_badges)setEnabled(prefs.data.visible_badges.slice(0,3));setConnected(Boolean(status.connected));setEarnedKeys((badges.data??[]).map(x=>x.badge_key))});
   return()=>{active=false};
  },[userId]);
  const toggle=async (id:string) => {
   const next=enabled.includes(id)?enabled.filter(x=>x!==id):[...enabled,id];
+  if(next.length>3){setMessage("Choose up to three badges for your profile.");return;}
   setSaving(true);setMessage("");
   const {error}=await createClient().from("public_badge_preferences").upsert({user_id:userId,visible_badges:next,updated_at:new Date().toISOString()},{onConflict:"user_id"});
   if(error)setMessage("Could not save badge visibility.");else{setEnabled(next);setMessage("Public badge selection saved.")}
   setSaving(false);
  };
  return <section className="profileEditor" style={{padding:24,border:"1px solid #49675c",borderRadius:20}}>
-  <h2>🏅 Public Badges</h2><p>Choose which earned badges appear on your public profile. You can show multiple badges at once. Visibility does not change the benefits or permissions you have earned.</p>
+  <h2>🏅 Public Badges</h2><p>Choose which earned badges appear on your public profile. Show up to three earned badges at once. Visibility does not change the benefits or permissions you have earned.</p>
   <div style={{display:"grid",gap:12,marginTop:18}}>
    {options.map(b=>{const earned=b.id==="tiktok"?connected:(b.id==="shahada"&&Boolean(verifiedAt))||earnedKeys.includes(b.id);return <label key={b.id} style={{display:"flex",alignItems:"center",gap:14,padding:14,border:"1px solid #46645b",borderRadius:14,opacity:earned?1:.55}}>
     {b.image?<img src={b.image} alt="" style={{width:48,height:48,objectFit:"contain"}}/>:<span style={{fontSize:32}}>✦</span>}
