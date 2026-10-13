@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import SiteNav from "../components/SiteNav";
+import LocationPreferences from "../components/LocationPreferences";
 import { createClient } from "../../utils/supabase/client";
 
 export default function SettingsPage() {
@@ -102,6 +103,7 @@ export default function SettingsPage() {
         <p>Control the small things that follow you around the site.</p>
       </header>
 
+      <section className="settingsCard" data-no-tap-shimmer style={{display:"block"}}><div className="settingCopy"><span className="settingIcon">📍</span><div><span className="eyebrow">LOCATION · COMMUNITY</span><h2>Your city</h2><p>Set once for Prayer Times and future mosque and event discovery.</p></div></div><div style={{marginTop:16}}><LocationPreferences/></div></section>
       <section className="settingsCard" data-no-tap-shimmer style={{display:"block"}}>
         <div className="settingCopy"><span className="settingIcon">🔔</span><div><span className="eyebrow">NOTIFICATIONS · DEFAULT ON</span><h2>Phone notifications</h2><p>Choose what you'd like to hear about. Your choices start ON, but your phone must grant notification permission. Push delivery requires a separate server integration.</p></div></div>
         <div style={{display:"grid",gap:12,marginTop:18}}>
