@@ -13,13 +13,13 @@ export default function GuestShahadaWelcome({signedIn}:{signedIn:boolean|null}){
  const close=()=>{setOpen(false);try{sessionStorage.setItem("1muslim:guest-shahada-dismissed","yes")}catch{}};
  const signIn=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setError("");const {error:authError}=await createClient().auth.signInWithPassword({email:email.trim(),password});setBusy(false);if(authError){setError(authError.message);return}close()};
  const google=async()=>{setBusy(true);setError("");const {error:authError}=await createClient().auth.signInWithOAuth({provider:"google",options:{redirectTo:`${window.location.origin}/auth/callback?next=/`}});if(authError){setError(authError.message);setBusy(false)}};
- if(!open)return null;
+ if(!open||signedIn!==false)return null;
  return <div className="guestShahadaBackdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}>
  <section className="guestShahadaCard" role="dialog" aria-modal="true" aria-labelledby="guest-shahada-title">
  <button className="guestShahadaClose" type="button" aria-label="Close welcome" onClick={close}>×</button>
- <span className="guestShahadaEyebrow">✦ بِسْمِ اللَّهِ ✦</span>
- <h2 id="guest-shahada-title">Welcome to 1Muslim</h2>
- <p>Begin with the Shahada. Record your declaration or choose the written affirmation option.</p>
+ <span className="guestShahadaEyebrow">1MUSLIM <span aria-hidden="true">✦</span> بِسْمِ اللَّهِ</span>
+ <h2 id="guest-shahada-title">Welcome to <span>1Muslim.</span></h2>
+ <p className="guestShahadaLead">Your journey begins here. Affirm the Shahada in your own voice or choose the written declaration.</p>
  <div className="guestShahadaChoices"><Link onClick={close} href="/onboarding">🎙 Record Shahada</Link><Link onClick={close} href="/onboarding">✓ Written affirmation</Link></div>
  <div className="guestShahadaDivider"><span>Already a 1Muslim account holder?</span></div>
  <form onSubmit={signIn}><label>Email address<input autoComplete="username" type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address"/></label><label>Password<input autoComplete="current-password" type="password" required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password"/></label><button type="submit" disabled={busy}>{busy?"Signing in…":"Sign in →"}</button></form>
@@ -28,6 +28,20 @@ export default function GuestShahadaWelcome({signedIn}:{signedIn:boolean|null}){
  <small>New here? <Link href="/auth?shahada=1" onClick={close}>Create an account</Link> · <Link href="/auth" onClick={close}>Account help</Link></small>
  </section>
  <style>{`
+ .guestShahadaCard{font-family:inherit!important;text-align:left;background:radial-gradient(ellipse at 18% 0%,#235944 0%,transparent 54%),radial-gradient(ellipse at 95% 95%,#193d36 0%,transparent 50%),#071914;border:1px solid #947a4e;box-shadow:0 25px 90px #000a;letter-spacing:normal}
+ .guestShahadaCard:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.08;background-image:repeating-linear-gradient(45deg,transparent 0 37px,#d7bf7d 38px,transparent 39px 76px),repeating-linear-gradient(-45deg,transparent 0 37px,#d7bf7d 38px,transparent 39px 76px);mask-image:linear-gradient(to bottom,#000,transparent 85%)}
+ .guestShahadaCard>*{position:relative;z-index:1}
+ .guestShahadaEyebrow{display:block;font-weight:750;letter-spacing:.2em;font-size:10px;color:#e1c58c}
+ .guestShahadaCard h2{font-size:clamp(30px,6vw,44px);font-weight:850;letter-spacing:-.055em;line-height:1.06;margin:17px 0 10px;color:#f6f6eb}
+ .guestShahadaCard h2 span{color:#e1c58c}
+ .guestShahadaCard .guestShahadaLead{font-size:clamp(13px,2.5vw,15px);line-height:1.65;color:#adc2b2;margin:0}
+ .guestShahadaChoices a{min-height:54px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(11px,2vw,13px);border-radius:16px;transition:transform .25s ease,background .25s ease}
+ .guestShahadaChoices a:hover,.guestShahadaCard button:hover{transform:translateY(-2px)}
+ .guestShahadaDivider{font-size:clamp(11px,2vw,13px);font-weight:650;white-space:normal}
+ .guestShahadaCard label{font-size:12px;font-weight:650;letter-spacing:.015em}
+ .guestShahadaCard input{font-family:inherit;font-size:14px;min-height:45px}
+ .guestShahadaCard form button,.guestShahadaGoogle{min-height:47px;font-size:13px;letter-spacing:.01em;border-radius:14px;transition:transform .25s ease}
+ @media(max-width:440px){.guestShahadaChoices{grid-template-columns:1fr}.guestShahadaCard{padding:24px 20px}.guestShahadaCard h2{font-size:34px}}
  .guestShahadaBackdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;background:#04110bc9;backdrop-filter:blur(13px);animation:guestShahadaIn .4s ease}
  .guestShahadaCard{position:relative;overflow:auto;max-height:min(94dvh,800px);width:min(100%,440px);padding:clamp(20px,4vw,34px);border:1px solid #cdb26c88;border-radius:25px;background:radial-gradient(ellipse at 10% 0%,#245540,#0a231b 72%);color:#f7f2dc;box-shadow:0 24px 90px #0009;text-align:center}
  .guestShahadaClose{position:absolute;right:15px;top:12px;background:transparent;border:0;color:#e4cf9d;font-size:27px;cursor:pointer}
