@@ -38,7 +38,26 @@ export default function Home(){
  const [editWidgets,setEditWidgets]=useState(false);const [widgetLayout,setWidgetLayout]=useState<WidgetLayout[]>(DEFAULT_LAYOUT);const [dragged,setDragged]=useState<string|null>(null);const holdTimer=useRef<ReturnType<typeof setTimeout>|null>(null);const holdStart=useRef<{x:number;y:number}|null>(null);const activeDrag=useRef<{pointerId:number;name:string}|null>(null);
  const clearHold=()=>{if(holdTimer.current)clearTimeout(holdTimer.current);holdTimer.current=null};
  const transitionLayout=(fn:()=>void)=>{const d=document as Document & {startViewTransition?:(fn:()=>void)=>unknown};if(d.startViewTransition&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches)d.startViewTransition(()=>flushSync(fn));else fn()};
- const changeSize=(name:string)=>transitionLayout(()=>setWidgetLayout(items=>items.map(item=>item.name===name?{...item,size:item.size==="compact"?"standard":item.size==="standard"?"expanded":item.size==="expanded"?"featured":"compact"}:item)));
+ // Place resized widgets near their original position, then pack neighbors into the nearest free cells.
+ const packNearby=(items:WidgetLayout[],changed:string):WidgetLayout[]=>{
+  const columns=typeof window!=="undefined"&&window.innerWidth<=700?2:4;
+  const footprint=(item:WidgetLayout):[number,number]=>item.size==="compact"?[1,1]:item.size==="standard"?[2,1]:item.size==="expanded"?[Math.min(3,columns),1]:[2,2];
+  const occupied=new Set<string>();const placed:{item:WidgetLayout;row:number;col:number}[]=[];
+  const fits=(row:number,col:number,w:number,h:number)=>col+w<=columns&&Array.from({length:h},(_,y)=>Array.from({length:w},(_,x)=>occupied.has((row+y)+":"+(col+x)))).every(line=>line.every(v=>!v));
+  const reserve=(item:WidgetLayout,row:number,col:number,w:number,h:number)=>{for(let y=0;y<h;y++)for(let x=0;x<w;x++)occupied.add((row+y)+":"+(col+x));placed.push({item,row,col})};
+  // Keep the resized tile at its approximate previous row; let the others settle around it.
+  const oldIndex=items.findIndex(i=>i.name===changed);
+  const order=[items[oldIndex],...items.filter(i=>i.name!==changed)].filter(Boolean);
+  for(const item of order){const [w,h]=footprint(item);const preferred=Math.floor(Math.max(0,items.indexOf(item))/columns);
+   let best:{row:number;col:number;score:number}|null=null;
+   for(let row=0;row<Math.max(8,items.length*3);row++)for(let col=0;col<=columns-w;col++){if(!fits(row,col,w,h))continue;
+    const score=Math.abs(row-preferred)*8+row*.2+col*.1+(item.name===changed?Math.abs(row-preferred)*5:0);
+    if(!best||score<best.score)best={row,col,score};
+   }if(best)reserve(item,best.row,best.col,w,h);
+  }
+  return placed.sort((a,b)=>a.row-b.row||a.col-b.col).map(p=>p.item);
+ };
+ const changeSize=(name:string)=>transitionLayout(()=>setWidgetLayout(items=>packNearby(items.map(item=>item.name===name?{...item,size:item.size==="compact"?"standard":item.size==="standard"?"expanded":item.size==="expanded"?"featured":"compact"}:item),name)));
  const reorder=(from:string,to:string)=>transitionLayout(()=>setWidgetLayout(items=>{const copy=[...items];const a=copy.findIndex(x=>x.name===from),b=copy.findIndex(x=>x.name===to);if(a<0||b<0||a===b)return items;copy.splice(b,0,copy.splice(a,1)[0]);return copy}));
  const [layoutLoaded,setLayoutLoaded]=useState(false);const [layoutUser,setLayoutUser]=useState<string|null>(null);const [syncReady,setSyncReady]=useState(false);const [personal,setPersonal]=useState<{Messages?:number;Calls?:number;Quran?:string}>({});const [selected,setSelected]=useState<string|null>(null);const [counts,setCounts]=useState<Record<string,number>>({});
  const [myXp,setMyXp]=useState<number|null>(null);const [query,setQuery]=useState("");const [results,setResults]=useState<Result[]>([]);const [loading,setLoading]=useState(false);const [error,setError]=useState(false);const [light,setLight]=useState(false);
