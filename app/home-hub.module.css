@@ -388,3 +388,10 @@
 .control .customGrid .sizeexpanded .widgetSmartPreview{bottom:28%;max-height:36%;padding:9px 12px;gap:5px}
 .control .customGrid .sizeexpanded .widgetCanvas .widgetArtwork{max-width:45%;object-fit:contain}
 @media(max-width:700px){.control .customGrid>.sizeexpanded{grid-column:span 2;grid-row:span 1}.control .customGrid .sizeexpanded .widgetSmartPreview{bottom:27%;max-height:33%;padding:6px 9px}}
+
+/* Magnetic layout: native view transitions animate the whole grid instead of snapping abruptly. */
+@keyframes magneticSettle{0%{filter:brightness(1.07)}100%{filter:brightness(1)}}
+::view-transition-group(widget-live),::view-transition-group(widget-quran),::view-transition-group(widget-video),::view-transition-group(widget-ummah),::view-transition-group(widget-message),::view-transition-group(widget-call),::view-transition-group(widget-lesson),::view-transition-group(widget-people){animation-duration:520ms;animation-timing-function:cubic-bezier(.22,1.12,.36,1)}
+.control .customGrid>.widgetSlot{will-change:transform;contain:layout style}
+.control .customGrid>.draggedWidget>.widgetCanvas{border-color:#f4db9b;box-shadow:0 0 22px #d5b96b66,inset 0 1px #fff5}
+@media(prefers-reduced-motion:reduce){::view-transition-group(*){animation-duration:0.01ms!important}.control .customGrid>.widgetSlot{transition:none;will-change:auto}}
