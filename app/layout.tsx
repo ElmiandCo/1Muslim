@@ -19,6 +19,7 @@ import NotificationToaster from "./components/NotificationToaster";
 import GuestWelcomeGate from "./components/GuestWelcomeGate";
 import ElmiLightJourney from "./components/ElmiLightJourney";
 import HudHudVoiceCommands from "./components/HudHudVoiceCommands";
+import DesignRolloutCountdown from "./components/DesignRolloutCountdown";
 
 export const metadata = {
   title: "1Muslim",
@@ -29,7 +30,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}<PersistentMessengerCall /><PersistentDailyVideo /><GuestWelcomeGate /><ElmiLightJourney /><HudHudDimensionDust /><TapShimmer /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
+  return <html lang="en"><body><DesignRolloutCountdown />{children}<PersistentMessengerCall /><PersistentDailyVideo /><GuestWelcomeGate /><ElmiLightJourney /><HudHudDimensionDust /><TapShimmer /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag("js", new Date());
 gtag("config", "G-DSLVB0HSGV");`}</Script></body></html>;
