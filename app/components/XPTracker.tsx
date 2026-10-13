@@ -28,8 +28,12 @@ export default function XPTracker(){
   const supabase=useMemo(()=>createClient(),[]);
   const [userId,setUserId]=useState<string|null>(null),[xp,setXp]=useState(0),[notice,setNotice]=useState<string|null>(null);
   const [activeSeconds,setActiveSeconds]=useState(0);
-  const [xpVisible,setXpVisible]=useState(true);
-  useEffect(()=>{const toggle=()=>setXpVisible(v=>!v);window.addEventListener("1muslim:toggle-xp-tracker",toggle);return()=>window.removeEventListener("1muslim:toggle-xp-tracker",toggle)},[]);
+  const [xpVisible,setXpVisible]=useState(false);
+  const levelRef=useRef<number|null>(null);
+  const hideTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+  const showLevelUp=(nextXp:number)=>{const next=levelFor(nextXp);if(levelRef.current===null){levelRef.current=next;return;}if(next>levelRef.current){setXpVisible(true);if(hideTimer.current)clearTimeout(hideTimer.current);hideTimer.current=setTimeout(()=>setXpVisible(false),6000);}levelRef.current=next;};
+  useEffect(()=>()=>{if(hideTimer.current)clearTimeout(hideTimer.current)},[]);
+
   const lastClick=useRef<Record<string,number>>({});
   const activeRef=useRef(0);
   const lastActivity=useRef(Date.now());
@@ -77,7 +81,7 @@ export default function XPTracker(){
       activeRef.current=Math.min(299,Number.isFinite(saved)?saved:0);
       setActiveSeconds(activeRef.current);
       const {data:p}=await supabase.from("profiles").select("xp_total").eq("id",data.user.id).maybeSingle();
-      if(mounted)setXp(p?.xp_total??0);
+      if(mounted){const total=Number(p?.xp_total??0);setXp(total);levelRef.current=levelFor(total);}
     });
 
     const markActivity=()=>{lastActivity.current=Date.now();};
@@ -91,7 +95,7 @@ export default function XPTracker(){
       lastClick.current[key]=now;
       void supabase.rpc("award_xp",{p_action_key:key,p_page_key:window.location.pathname}).then(({data})=>{
         const awarded=Number(data?.awarded||0);
-        if(awarded>0){setXp(Number(data.xp_total||0));setNotice("+"+awarded+" XP");window.setTimeout(()=>setNotice(null),1800);}
+        if(awarded>0){showLevelUp(Number(data.xp_total||0));setXp(Number(data.xp_total||0));setNotice("+"+awarded+" XP");window.setTimeout(()=>setNotice(null),1800);}
       });
     };
 
@@ -119,7 +123,7 @@ export default function XPTracker(){
         const {data}=await supabase.rpc("claim_time_xp");
         const awarded=Number(data?.awarded||0);
         if(awarded){
-          setXp(Number(data.xp_total||0));
+          showLevelUp(Number(data.xp_total||0));setXp(Number(data.xp_total||0));
           setNotice("+500 XP · 5 minutes active");
           window.setTimeout(()=>setNotice(null),2200);
           activeRef.current=0;
