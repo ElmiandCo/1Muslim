@@ -548,3 +548,20 @@ input[type="file"][accept*="image"]::file-selector-button:hover,input[type="file
  .omImessagePage .omMessengerListHead{gap:8px}
  .settingsPage .settingsCard>.settingCopy h2{font-size:clamp(16px,4vw,21px)}
 }
+
+/* Quran + Live: emerald and gold Seamless Crown widget */
+.quran-live-widget{position:relative;min-width:0;color:#f8efcf;pointer-events:auto}
+.quran-live-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:9px;border:1px solid #d9be7b88;border-radius:12px;padding:10px 13px;background:linear-gradient(125deg,#21583e,#102d27);color:#f8edca;font-size:13px;font-weight:700;cursor:pointer}
+.quran-live-trigger>span:first-child{color:#ed7770;text-shadow:0 0 8px #f65a5a}
+.quran-live-panel{width:min(350px,calc(100vw - 36px));max-height:60dvh;overflow-y:auto;margin-top:8px;border:1px solid #d9be7b88;border-radius:17px;padding:15px;background:linear-gradient(145deg,#183e32,#0c2421);box-shadow:0 12px 35px #0007}
+.quran-live-crown{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid #d9be7b55}
+.quran-live-crown strong{font-size:14px}.quran-live-crown small{font-size:9px;color:#ddca91}
+.quran-live-panel p{font-size:12px;line-height:1.5;color:#e0e8da}
+.quran-live-steps{display:grid;gap:8px;font-size:12px;color:#f0e4c1}
+.quran-live-actions{display:flex;flex-wrap:wrap;gap:8px;margin:15px 0}
+.quran-live-actions a{padding:10px 12px;border:1px solid #c7ad6b88;border-radius:10px;color:#f8ebc5;text-decoration:none;font-size:12px}
+.quran-live-actions .quran-live-primary{background:#e1c887;color:#163d2d;font-weight:750}
+.quran-live-note{display:block;font-size:10px;line-height:1.5;color:#c3d2c5}
+.omQuranPage>.quran-live-widget.is-compact{position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 145px);z-index:85;width:min(245px,calc(100vw - 28px))}
+.omQuranPage>.quran-live-widget.is-compact .quran-live-panel{position:absolute;right:0;bottom:100%;margin:0 0 9px}
+@media(max-width:700px){.omQuranPage>.quran-live-widget.is-compact{right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 145px);width:190px}.quran-live-crown{flex-wrap:wrap}}
