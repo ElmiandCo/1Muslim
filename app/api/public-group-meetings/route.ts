@@ -28,15 +28,16 @@ export async function POST(request:Request){
   return error?NextResponse.json({error:"Could not update visibility; migration required"},{status:503}):NextResponse.json({public:body.public});
  }
  if(body.action==="watch"){
+  if(!user)return NextResponse.json({error:"Sign in to 1Muslim to join public calls"},{status:401});
   if(!call.is_public||!call.broadcast_started_at)return NextResponse.json({error:"This meeting is private"},{status:403});
   const now=Date.now(),start=new Date(call.starts_at).getTime();
   if(now<start-15*60000||now>start+(call.duration_minutes+30)*60000)return NextResponse.json({error:"Meeting not live"},{status:403});
   const key=process.env.LIVEKIT_API_KEY,secret=process.env.LIVEKIT_API_SECRET,url=process.env.LIVEKIT_URL;
   if(!key||!secret||!url)return NextResponse.json({error:"Live video unavailable"},{status:503});
-  const identity=user?.id||"viewer-"+crypto.randomUUID();
-  const token=new AccessToken(key,secret,{identity,name:user?.user_metadata?.full_name||"Viewer",ttl:"30m"});
-  token.addGrant({roomJoin:true,room:"1muslim-group-"+call.id,canPublish:false,canSubscribe:true,canPublishData:!!user});
-  return NextResponse.json({token:await token.toJwt(),url,canComment:!!user});
+  const identity=user.id+"-viewer-"+crypto.randomUUID().slice(0,8);
+  const token=new AccessToken(key,secret,{identity,name:user.user_metadata?.full_name||"Viewer",ttl:"30m"});
+  token.addGrant({roomJoin:true,room:"1muslim-group-"+call.id,canPublish:false,canSubscribe:true,canPublishData:false});
+  return NextResponse.json({token:await token.toJwt(),url,canComment:false});
  }
  return NextResponse.json({error:"Invalid action"},{status:400});
 }
