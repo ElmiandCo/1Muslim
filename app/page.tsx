@@ -14,7 +14,7 @@ const spaces=[
  {name:"Messages",arabic:"رسائل",symbol:"◌",image:"/assets/control-center/1messenger.PNG",href:"/messages",cls:"message"},
  {name:"Calls",arabic:"اتصال",symbol:"♧",image:"/assets/control-center/1calls.PNG",href:"/messages",cls:"call"},
  {name:"Lessons",arabic:"العلم",symbol:"✦",image:"/assets/control-center/elm-tent-en.PNG",href:"/elm-tent/lessons",cls:"lesson"},
- {name:"People",arabic:"أصحاب",symbol:"♙",image:"/assets/control-center/1posts.PNG",href:"/find",cls:"people"}
+ {name:"People",arabic:"أصحاب",symbol:"♙",image:"/assets/1muslim-mobile-logo.PNG",href:"/find",cls:"people"}
 ];
 export default function Home(){
  const [selected,setSelected]=useState<string|null>(null);const [counts,setCounts]=useState<Record<string,number>>({});
