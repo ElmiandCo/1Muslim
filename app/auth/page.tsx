@@ -5,7 +5,7 @@ import { createClient } from "../../utils/supabase/client";
 import SiteNav from "../components/SiteNav";
 import Link from "next/link";
 
-const PRODUCTION_ORIGIN = "https://1muslim.live";
+const safeMethod = () => { const m = new URLSearchParams(window.location.search).get("method"); return m === "declaration" ? "declaration" : "audio"; };
 
 export default function AuthPage() {
   const [loading, setLoading] = useState(false);
@@ -25,10 +25,10 @@ export default function AuthPage() {
     e.preventDefault();
     if(password.length < 8){setMessage("Choose a password with at least 8 characters.");return;}
     setLoading(true);setMessage("");
-    const {data,error}=await createClient().auth.signUp({email:email.trim().toLowerCase(),password,options:{emailRedirectTo:`${window.location.origin}/auth/callback?next=/onboarding`}});
+    const {data,error}=await createClient().auth.signUp({email:email.trim().toLowerCase(),password,options:{emailRedirectTo:`${window.location.origin}/auth/callback?next=${encodeURIComponent("/onboarding?method="+safeMethod())}`}});
     setLoading(false);
     if(error){setMessage(error.message);return;}
-    if(data.session){window.location.assign("/onboarding");return;}
+    if(data.session){window.location.assign("/onboarding?method="+safeMethod());return;}
     setMessage("Check your email to confirm your account, then continue to the Shahada page.");
   };
 
@@ -40,9 +40,8 @@ export default function AuthPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        // Always return to the current OneMuslim production site.
-        // This prevents an old ESecure/WonMuslim origin from being reused.
-        redirectTo: `${PRODUCTION_ORIGIN}/auth/callback?next=${encodeURIComponent((()=>{const p=new URLSearchParams(window.location.search).get("next");return p?.startsWith("/")&&!p.startsWith("//")?p:"/"})())}`,
+        // Return to the same authorized site origin (including preview) and preserve a safe relative destination.
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent((()=>{const p=new URLSearchParams(window.location.search).get("next");return p?.startsWith("/")&&!p.startsWith("//")?p:(isShahadaSignup?"/onboarding?method="+safeMethod():"/")})())}`,
       },
     });
 
@@ -70,7 +69,7 @@ export default function AuthPage() {
         {message && <div className="authError">{message}</div>}
 
         <small>
-          Your Google account is used for authentication through Supabase Auth.
+          Google can sign you in or create a new account if you are new. Your Google account is used for authentication through Supabase Auth.
           1Muslim does not receive your Google password.
         </small>
         <p style={{fontSize:12,lineHeight:1.7,marginTop:18,color:"#a9bcae"}}>By continuing, you agree to our <Link href="/terms" style={{color:"#a4edbc"}}>Terms of Service</Link> and acknowledge our <Link href="/privacy" style={{color:"#a4edbc"}}>Privacy Policy</Link>.</p>
