@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useParams} from "next/navigation";
 import DhikrStudio from "./DhikrStudio";
 import PrayerTimes from "./PrayerTimes";
+import NotificationFeed from "./NotificationFeed";
 import ProgressWidget from "./ProgressWidget";
 const names:Record<string,string>={prayer:"Prayer Times",dhikr:"Dhikr",progress:"XP & Progress",notifications:"Notifications"};
 export default function WidgetToolPage(){
@@ -17,7 +18,7 @@ export default function WidgetToolPage(){
  {tool==="dhikr"&&<DhikrStudio/>}
  {tool==="prayer"&&<PrayerTimes/>}
  {tool==="progress"&&<ProgressWidget/>}
- {tool==="notifications"&&<div><h2>Stay connected</h2><p>Messages, lives, and community updates belong here.</p><p>Browser notification permission: <strong>{permission}</strong></p><button style={button} onClick={async()=>{if(typeof Notification!=="undefined"){const p=await Notification.requestPermission();setPermission(p)}}}>Enable Browser Notifications</button><p style={{opacity:.7}}>Permission alone does not enable server push; notification feed integration is still needed.</p></div>}
+ {tool==="notifications"&&<NotificationFeed/>}
  </section></div></main>;
 }
 const button:React.CSSProperties={padding:"13px 18px",background:"#e4d299",color:"#173c2c",border:0,borderRadius:12,fontWeight:750,cursor:"pointer"};
