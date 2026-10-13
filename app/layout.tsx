@@ -24,7 +24,7 @@ export const metadata = {
   title: "1Muslim",
   applicationName: "1Muslim",
   appleWebApp: {capable:true,title:"1Muslim",statusBarStyle:"black-translucent" as const},
-  icons: {apple:"/assets/1muslim-live-logo.PNG",icon:"/assets/1muslim-live-logo.PNG"},
+  icons: {apple:"/assets/1muslim-live-logo.PNG",icon:[{url:"/icon.svg",type:"image/svg+xml"},{url:"/assets/1muslim-live-logo.PNG",type:"image/png"}]},
   description: "A welcoming Muslim platform for learning, community, media, and discovery."
 };
 
