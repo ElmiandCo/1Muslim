@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { AccessToken } from "livekit-server-sdk";
+import { TrackSource } from "livekit-server-sdk";
 import { createClient } from "../../../../utils/supabase/server";
 
 export const runtime = "nodejs";
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
       roomJoin: true,
       room,
       canPublish: role === "host" || role === "guest" || role === "companion",
-      canPublishSources: role === "companion" ? ["screen_share"] : undefined,
+      canPublishSources: role === "companion" ? [TrackSource.SCREEN_SHARE] : undefined,
       canSubscribe: true,
       canPublishData: true,
     });
