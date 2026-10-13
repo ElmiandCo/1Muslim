@@ -160,3 +160,26 @@
 .control.day .widgetToolbar button{background:#f5f9e9d9;color:#184333;border-color:#719b8359}
 .control .customGrid .widgetCanvas:focus-visible{outline:2px solid #edcc85;outline-offset:2px}
 @media(max-width:700px){.control .customGrid>.widgetSlot>.widgetCanvas{border-radius:19px}.control .customGrid .sizefeatured .widgetFeatureDetail{font-size:9px;padding-top:5px}.control .widgetToolbar{min-height:28px}}
+
+/* Stage 2: widgets are different instruments, not scaled copies. */
+.control .customGrid .widgetCanvas .widgetVisual{position:relative;display:grid;place-items:center;min-height:0;max-height:100%;width:100%;height:100%;flex:1}
+.control .customGrid .widgetCanvas .widgetGlyph{display:grid;place-items:center;width:min(74%,100px);aspect-ratio:1;border-radius:28%;font-size:clamp(30px,7vh,74px);line-height:1;color:#f8d999;background:radial-gradient(circle at 30% 20%,#b6edba40,#247b5d2e 55%,#123c353b);border:1px solid #f3dc9b65;box-shadow:inset 0 1px #ffffff8c,0 9px 25px #00271945,0 0 23px #d7b66e18;text-shadow:0 2px 16px #f1d6948c}
+.control .customGrid .widgetCanvas .widgetHeading{display:flex;align-items:center;justify-content:space-between;gap:5px}
+.control .customGrid .widgetCanvas .widgetPill{font-size:9px;font-weight:800;letter-spacing:.08em;padding:4px 7px;border:1px solid #f5d58e5c;border-radius:999px;color:#f8dca1;white-space:nowrap}
+.control .customGrid .sizecompact .widgetCanvas .widgetGlyph{width:min(65%,62px);font-size:clamp(23px,4vh,40px);border-radius:22%}
+.control .customGrid .sizecompact .widgetCanvas .widgetVisual{align-items:center}
+.control .customGrid .sizestandard .widgetCanvas{flex-direction:row!important;align-items:center;gap:8px}
+.control .customGrid .sizestandard .widgetCanvas .widgetTop{width:43%;flex:0 0 43%;height:100%;align-items:center}
+.control .customGrid .sizestandard .widgetCanvas .widgetDetails{width:57%;flex:1;min-width:0}
+.control .customGrid .sizestandard .widgetCanvas .widgetVisual{height:100%}
+.control .customGrid .sizestandard .widgetCanvas .widgetGlyph{width:min(78%,88px);font-size:clamp(28px,5vh,56px)}
+.control .customGrid .sizestandard .widgetCanvas .widgetArtwork{max-width:100%;max-height:76%}
+.control .customGrid .sizefeatured .widgetCanvas{justify-content:space-between}
+.control .customGrid .sizefeatured .widgetCanvas .widgetTop{flex:1}
+.control .customGrid .sizefeatured .widgetCanvas .widgetVisual{align-items:center}
+.control .customGrid .sizefeatured .widgetCanvas .widgetGlyph{width:min(67%,165px);font-size:clamp(55px,11vh,110px);border-radius:50%;background:radial-gradient(circle at 28% 22%,#e5dba260,#58a97736 46%,#123f3338);box-shadow:inset 0 1px #ffffffaa,0 14px 28px #00271850,0 0 45px #c9bb7042}
+.control .customGrid .sizefeatured .widgetCanvas .widgetDetails{padding:5px 0}
+.control .customGrid .sizefeatured .widgetCanvas .widgetPill{font-size:9px}
+.control.day .customGrid .widgetCanvas .widgetGlyph{color:#82601f;background:radial-gradient(circle at 25% 15%,#fff8d2b5,#c5e3c6a8 55%,#7fb4a14f);border-color:#ffffffdf;box-shadow:inset 0 1px #fff,0 8px 20px #35664c33;text-shadow:0 2px 12px #d7b35b7a}
+.control.day .customGrid .widgetCanvas .widgetPill{color:#326048;border-color:#59846b70;background:#ffffff47}
+@media(max-width:700px){.control .customGrid .sizestandard .widgetCanvas{gap:5px}.control .customGrid .sizestandard .widgetCanvas .widgetTop{width:41%;flex-basis:41%}.control .customGrid .sizestandard .widgetCanvas .widgetDetails{width:59%}.control .customGrid .sizestandard .widgetCanvas .widgetName{font-size:clamp(12px,2.7vw,17px)}.control .customGrid .sizestandard .widgetCanvas .widgetMetric{font-size:clamp(9px,2vw,12px)}.control .customGrid .widgetCanvas .widgetPill{font-size:8px;padding:3px 5px}}
