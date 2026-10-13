@@ -183,3 +183,16 @@
 .control.day .customGrid .widgetCanvas .widgetGlyph{color:#82601f;background:radial-gradient(circle at 25% 15%,#fff8d2b5,#c5e3c6a8 55%,#7fb4a14f);border-color:#ffffffdf;box-shadow:inset 0 1px #fff,0 8px 20px #35664c33;text-shadow:0 2px 12px #d7b35b7a}
 .control.day .customGrid .widgetCanvas .widgetPill{color:#326048;border-color:#59846b70;background:#ffffff47}
 @media(max-width:700px){.control .customGrid .sizestandard .widgetCanvas{gap:5px}.control .customGrid .sizestandard .widgetCanvas .widgetTop{width:41%;flex-basis:41%}.control .customGrid .sizestandard .widgetCanvas .widgetDetails{width:59%}.control .customGrid .sizestandard .widgetCanvas .widgetName{font-size:clamp(12px,2.7vw,17px)}.control .customGrid .sizestandard .widgetCanvas .widgetMetric{font-size:clamp(9px,2vw,12px)}.control .customGrid .widgetCanvas .widgetPill{font-size:8px;padding:3px 5px}}
+
+/* Stage 4: single-purpose bottom action and resilient responsive canvas */
+.control .liveDock{flex:0 0 auto;display:flex;justify-content:center;align-items:center;min-height:47px;padding:3px 0 max(3px,env(safe-area-inset-bottom))}
+.control .liveDockButton{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-width:148px;min-height:41px;padding:9px 22px;border-radius:999px;text-decoration:none;color:#f9f6e9;font-size:12px;font-weight:800;letter-spacing:.11em;border:1px solid #e5c9898c;background:linear-gradient(135deg,#27674dcb,#0c3e33ed);box-shadow:inset 0 1px #ffffff5c,0 4px 20px #0a271b45;animation:goLiveGlow 3.4s ease-in-out infinite}
+.control .liveDockDot{width:9px;height:9px;border-radius:50%;background:#ff766b;box-shadow:0 0 0 3px #fa777326,0 0 12px #ff7265;animation:goLiveDot 2.1s ease-in-out infinite}
+.control.day .liveDockButton{color:#194334;background:linear-gradient(135deg,#ffffffdc,#d1e7d3e8);border-color:#ffffffc9;box-shadow:inset 0 1px #fff,0 5px 20px #39624a38}
+@keyframes goLiveGlow{0%,100%{box-shadow:inset 0 1px #ffffff5c,0 4px 17px #0a271b35}50%{box-shadow:inset 0 1px #ffffff91,0 5px 24px #d3b77a65}}
+@keyframes goLiveDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.52;transform:scale(.76)}}
+.control .customGrid{grid-auto-rows:minmax(0,1fr);height:100%;min-height:0;overflow:hidden}
+.control .customGrid>.widgetSlot{transition:transform .42s cubic-bezier(.2,.8,.2,1),opacity .28s ease}
+.control .customGrid .widgetCanvas .widgetName,.control .customGrid .widgetCanvas .widgetMetric{overflow:hidden;text-overflow:ellipsis}
+@media(max-width:700px){.control .liveDock{min-height:43px}.control .liveDockButton{min-height:37px;padding:8px 19px}.control .customGrid{grid-auto-rows:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.control .liveDockButton,.control .liveDockDot{animation:none}.control .customGrid>.widgetSlot{transition:none}}
