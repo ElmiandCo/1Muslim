@@ -4,11 +4,24 @@ import {useParams} from "next/navigation";
 import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
 import ModerationActions from "../../components/ModerationActions";
+import PostViewer,{type ViewerPost,type ViewerAuthor} from "../../components/PostViewer";
 import {createClient} from "../../../utils/supabase/client";
-type Post={id:string;body:string;created_at:string;user_id:string};
 export default function PostDetail(){
- const params=useParams();const id=String(params.id||"");const [post,setPost]=useState<Post|null>(null);const [loading,setLoading]=useState(true);const [error,setError]=useState("");
- useEffect(()=>{if(!/^[0-9a-f-]{36}$/i.test(id)){setLoading(false);setError("Invalid post link.");return}let alive=true;const db=createClient();void db.from("posts").select("id,body,created_at,user_id").eq("id",id).maybeSingle().then(({data,error})=>{if(!alive)return;setPost(data);setError(error?.message||(!data?"This post is unavailable.":""));setLoading(false)});return()=>{alive=false}},[id]);
+ const params=useParams();const id=String(params.id||"");
+ const [post,setPost]=useState<ViewerPost|null>(null);
+ const [author,setAuthor]=useState<ViewerAuthor|null>(null);
+ const [loading,setLoading]=useState(true);
+ const [error,setError]=useState("");
+ useEffect(()=>{if(!/^[0-9a-f-]{36}$/i.test(id)){setLoading(false);setError("Invalid post link.");return}
+ let alive=true;const db=createClient();
+ void (async()=>{const {data,error}=await db.from("posts").select("id,body,created_at,user_id").eq("id",id).maybeSingle();if(!alive)return;
+ setPost(data);setError(error?.message||(!data?"This post is unavailable.":""));setLoading(false);
+ if(data?.user_id){const {data:profile}=await db.from("profiles").select("display_name,username,avatar_url").eq("id",data.user_id).maybeSingle();if(alive)setAuthor(profile)}
+ })();return()=>{alive=false}},[id]);
  const share=async()=>{try{if(navigator.share)await navigator.share({title:"1Muslim post",text:post?.body||"",url:location.href});else await navigator.clipboard.writeText(location.href)}catch{}};
- return <main style={{minHeight:"100dvh",background:"var(--bg)",color:"var(--text)"}}><SiteNav/><section style={{maxWidth:690,margin:"auto",padding:"35px 18px"}}><Link href="/community" style={{color:"var(--accent)"}}>← Community</Link><h1 style={{fontSize:32,margin:"20px 0"}}>Post ✨</h1>{loading?<p>Loading post…</p>:error?<p role="status">{error}</p>:post&&<article style={{padding:24,borderRadius:24,border:"1px solid #b99c5588",background:"var(--panel2)",boxShadow:"0 15px 55px #0003"}}><Link href={"/profile/"+post.user_id} style={{color:"var(--accent)",fontWeight:800}}>View creator profile ↗</Link><p style={{fontSize:12,opacity:.7}}>{new Date(post.created_at).toLocaleString()}</p><p style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere",fontSize:21,lineHeight:1.6}}>{post.body}</p><ModerationActions targetType="post" targetId={post.id} onDeleted={()=>{setPost(null);setError("This post was permanently deleted.")}}/><button onClick={()=>void share()} style={{border:"1px solid #b99c55",borderRadius:999,padding:"11px 18px",background:"#244532",color:"white"}}>↗ Share post</button></article>}</section></main>;
+ return <main style={{minHeight:"100dvh",background:"var(--bg)",color:"var(--text)"}}><SiteNav/>
+ <section style={{width:"min(100% - 24px,820px)",margin:"auto",padding:"clamp(20px,4vw,36px) 0 130px"}}>
+ <Link href="/community" style={{display:"inline-flex",alignItems:"center",gap:8,color:"var(--accent)",textDecoration:"none",marginBottom:18,fontSize:14}}>← Back to Ummah</Link>
+ {loading?<p role="status">Loading post…</p>:error?<p role="status">{error}</p>:post&&<PostViewer post={post} author={author} share={()=>void share()} actions={<ModerationActions targetType="post" targetId={post.id} onDeleted={()=>{setPost(null);setError("This post was permanently deleted.")}}/>}/>}
+ </section></main>
 }
