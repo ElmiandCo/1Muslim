@@ -1,37 +1,32 @@
 "use client";
-import { useEffect, useState } from "react";
+import {useEffect,useState} from "react";
 
-type Speck = { id:number; left:number; delay:number; duration:number; size:number; drift:number; opacity:number };
-const specks:Speck[] = Array.from({length:95},(_,id)=>({
- id,left:(id*37.73)%100,delay:-((id*1.87)%17),duration:12+(id*7.31)%15,
- size:2+(id%6),drift:-65+(id*29)%130,opacity:.38+(id%5)*.105
-}));
+/** Short, restrained entry shimmer. No persistent particle field or interaction blocking. */
 export default function HudHudDimensionDust(){
- const [active,setActive]=useState(true);
- const [opening,setOpening]=useState(false);
- const [fading,setFading]=useState(false);
+ const [visible,setVisible]=useState(false);
+ const [ending,setEnding]=useState(false);
  useEffect(()=>{
-  setOpening(true);
-  const fadeTimer=window.setTimeout(()=>setFading(true),11500);
-  const timeout=window.setTimeout(()=>setOpening(false),16000);
-  const query=window.matchMedia("(prefers-reduced-motion: reduce)");
-  const update=()=>setActive(!query.matches);
-  update();query.addEventListener("change",update);
-  return()=>{window.clearTimeout(fadeTimer);window.clearTimeout(timeout);query.removeEventListener("change",update)};
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  if(window.matchMedia("(prefers-reduced-data: reduce)").matches)return;
+  try{if(sessionStorage.getItem("1muslim:intro-seen")==="1")return;sessionStorage.setItem("1muslim:intro-seen","1")}catch{}
+  const start=window.setTimeout(()=>setVisible(true),120);
+  const fade=window.setTimeout(()=>setEnding(true),1550);
+  const end=window.setTimeout(()=>setVisible(false),2300);
+  return()=>{clearTimeout(start);clearTimeout(fade);clearTimeout(end)};
  },[]);
- if(!active||!opening)return null;
- return <div className={"hh-dimension-dust"+(fading?" fading":"")} aria-hidden="true" data-no-tap-shimmer>
-  {specks.map(p=><span key={p.id} className="hh-dust-speck" style={{
-   left:`${p.left}%`,top:`${(p.id*19.83)%100}%`,width:p.size,height:p.size,
-   opacity:p.opacity,animationDelay:`${Math.max(0,(p.id%9)*.22)}s`,animationDuration:`${6+(p.id%6)*.6}s`,
-   ["--hh-drift" as string]:`${p.drift}px`,["--hh-x" as string]:`${p.id%2===0?120:-120}vw`
-  }}/>)}
+ if(!visible)return null;
+ return <div className={"hh-entry-light"+(ending?" isLeaving":"")} aria-hidden="true" data-no-tap-shimmer>
+  <span className="hh-entry-halo"/><span className="hh-entry-ray"/><span className="hh-entry-line"/>
   <style jsx>{`
-   .hh-dimension-dust{position:fixed;inset:0;z-index:900;pointer-events:none;overflow:hidden;contain:strict;opacity:1;transition:opacity 4.5s cubic-bezier(.22,1,.36,1)}
-   .hh-dimension-dust.fading{opacity:0}
-   .hh-dust-speck{position:absolute;border-radius:50%;background:linear-gradient(135deg,#dfffff,#55eaff,#a66bff);box-shadow:0 0 10px 3px #42dfffaa,0 0 28px #ad78ff99;animation:hhDustFall linear infinite both;will-change:transform}
-   @keyframes hhDustFall{0%{transform:translate3d(calc(var(--hh-x) * -1),0,0);opacity:0}18%{opacity:.75}82%{opacity:.65}100%{transform:translate3d(var(--hh-x),var(--hh-drift),0);opacity:0}}
-   @media(prefers-reduced-motion:reduce){.hh-dimension-dust{display:none}}
+   .hh-entry-light{position:fixed;inset:0;z-index:60;overflow:hidden;pointer-events:none;opacity:1;transition:opacity .7s ease;contain:strict}
+   .hh-entry-light.isLeaving{opacity:0}
+   .hh-entry-halo{position:absolute;left:50%;top:42%;width:min(80vw,540px);aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%) scale(.7);background:radial-gradient(circle,#c8f8da16 0%,#66d6a50c 35%,transparent 72%);animation:hhHalo 1.8s cubic-bezier(.2,.8,.2,1) both}
+   .hh-entry-ray{position:absolute;inset:-35%;background:conic-gradient(from 180deg at 50% 42%,transparent 0deg,transparent 148deg,#e2c78116 175deg,#92f0bb1b 185deg,transparent 211deg,transparent 360deg);transform:rotate(-18deg);animation:hhRay 2s ease-out both}
+   .hh-entry-line{position:absolute;left:50%;top:42%;width:min(65vw,380px);height:1px;transform:translate(-50%,-50%) scaleX(0);background:linear-gradient(90deg,transparent,#d6bc7c,#a4f4c3,transparent);box-shadow:0 0 18px #d8c07d55;animation:hhLine 1.3s ease-out both}
+   @keyframes hhHalo{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}50%{opacity:1}100%{opacity:.25;transform:translate(-50%,-50%) scale(1.25)}}
+   @keyframes hhRay{from{opacity:0;transform:rotate(-18deg)}45%{opacity:.9}to{opacity:0;transform:rotate(14deg)}}
+   @keyframes hhLine{0%{opacity:0;transform:translate(-50%,-50%) scaleX(0)}35%{opacity:.85}100%{opacity:0;transform:translate(-50%,-50%) scaleX(1)}}
+   @media(prefers-reduced-motion:reduce){.hh-entry-light{display:none}}
   `}</style>
  </div>;
 }
