@@ -25,6 +25,18 @@ export default function AuthPage() {
   const [emailLogin,setEmailLogin]=useState(false);
 
   useEffect(() => {
+    // First-time guests see the real homepage before a sign-in screen.
+    // Explicit sign-in, signup, OAuth and protected-route redirects remain available.
+    const params=new URLSearchParams(window.location.search);
+    const explicit=params.has("next")||params.has("shahada")||params.has("method")||params.has("login")||params.has("error");
+    try {
+      if(!explicit&&sessionStorage.getItem("1muslim:homepage-visited-v1")!=="yes"){
+        window.location.replace("/");
+      }
+    } catch {}
+  },[]);
+
+  useEffect(() => {
     if (new URLSearchParams(window.location.search).get("shahada") === "1") setIsShahadaSignup(true);
     const stored=localStorage.getItem("1muslim-theme-mode");
     const mode=stored==="day"||stored==="night"||stored==="auto"?stored:"night";
