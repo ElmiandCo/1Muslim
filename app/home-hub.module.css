@@ -595,3 +595,17 @@
 .day>.searchDock{background:linear-gradient(110deg,#f8f5e9,#e9f2e9);border-color:#b7a270;box-shadow:0 8px 25px #193c2421}
 .day>.searchDock input{color:#153a2a}.day>.searchDock input::placeholder{color:#587364}.day>.searchDock a,.day>.searchDock button{color:#856522}
 @media(max-width:560px){.control>.searchDock{min-height:52px;padding:5px 10px 5px 6px;margin:10px auto 13px;width:calc(100% - 28px)}.control>.searchDock .orb{width:36px;height:36px;flex-basis:36px}}
+
+/* Celestial atmosphere — a single 900ms transition shared by backdrop, ornament, glass and widgets. */
+.control{--celestial-time:900ms;--celestial-ease:cubic-bezier(.22,1,.36,1);transition:background var(--celestial-time) var(--celestial-ease),color var(--celestial-time) var(--celestial-ease)}
+.control::before,.control::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity var(--celestial-time) var(--celestial-ease)}
+.control::before{background:radial-gradient(ellipse at 77% 4%,#d5e6db20 0%,transparent 42%),radial-gradient(ellipse at 8% 78%,#89bb9a0e 0%,transparent 45%);opacity:1}
+.control::after{background:radial-gradient(ellipse at 77% 4%,#fff0b88a 0%,transparent 42%),radial-gradient(ellipse at 8% 78%,#c5dfbb50 0%,transparent 45%)}
+.control.day::before{opacity:0}
+.control.day::after{opacity:1}
+.control .pattern{transition:opacity var(--celestial-time) var(--celestial-ease),filter var(--celestial-time) var(--celestial-ease)}
+.control.day .pattern{filter:sepia(.3);opacity:.09}
+.control .surface,.control .widget,.control .widgetCanvas,.control .searchDock,.control .dockNav,.control .headerActions>*{transition:background-color var(--celestial-time) var(--celestial-ease),background var(--celestial-time) var(--celestial-ease),border-color var(--celestial-time) var(--celestial-ease),box-shadow var(--celestial-time) var(--celestial-ease),color var(--celestial-time) var(--celestial-ease),transform .35s ease}
+.control .islamicDecoration::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 22%,#e5c8801b,transparent 54%);opacity:.24;transition:opacity var(--celestial-time) var(--celestial-ease)}
+.control.day .islamicDecoration::before{opacity:.8}
+@media(prefers-reduced-motion:reduce){.control,.control::before,.control::after,.control .pattern,.control .surface,.control .widget,.control .widgetCanvas,.control .searchDock,.control .dockNav,.control .headerActions>*,.control .islamicDecoration::before{transition:none!important}}
