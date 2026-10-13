@@ -504,6 +504,17 @@ export default function MessagesPage(){
 </style>
 
 <style jsx global>{`
+
+/* Responsive type follows the homepage's compact baseline, then scales more broadly. */
+.omImessagePage{--om-type-micro:clamp(8px,1.9vw,12px);--om-type-small:clamp(9px,2.25vw,14px);--om-type-body:clamp(11px,2.75vw,18px);--om-type-title:clamp(12px,3vw,21px);--om-type-heading:clamp(22px,4vw,39px)}
+.omImessagePage .omMessengerHeading{font-size:var(--om-type-heading)!important;line-height:1.08!important;letter-spacing:-.055em!important}
+.omImessagePage .omThreadMeta strong{font-size:var(--om-type-title)!important}
+.omImessagePage .omThreadMeta small{font-size:var(--om-type-small)!important}
+.omImessagePage .omMessengerFilters button,.omImessagePage .omQuickActions button,.omImessagePage .omQuickActions a{font-size:var(--om-type-small)!important}
+.omImessagePage .omMessagesFeed,.omImessagePage .omMessageComposer{font-size:var(--om-type-body)!important}
+.omImessagePage .omMessengerExtras,.omImessagePage .omUnreadBadge{font-size:var(--om-type-micro)!important}
+@media(min-width:800px){.omImessagePage{--om-type-micro:clamp(9px,.75vw,13px);--om-type-small:clamp(11px,.95vw,15px);--om-type-body:clamp(12px,1.1vw,18px);--om-type-title:clamp(13px,1.3vw,21px)}}
+
 /* Home-style compact Messenger: app-height canvas, emerald/gold controls and comfortable touch targets */
 @media(max-width:760px){
  body:has(.omImessagePage){overflow:hidden}
