@@ -609,3 +609,37 @@
 .control .islamicDecoration::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 22%,#e5c8801b,transparent 54%);opacity:.24;transition:opacity var(--celestial-time) var(--celestial-ease)}
 .control.day .islamicDecoration::before{opacity:.8}
 @media(prefers-reduced-motion:reduce){.control,.control::before,.control::after,.control .pattern,.control .surface,.control .widget,.control .widgetCanvas,.control .searchDock,.control .dockNav,.control .headerActions>*,.control .islamicDecoration::before{transition:none!important}}
+
+/* Celestial dust: tiny, slow, noninteractive particles that shift with the sky.
+   CSS only, no timers, no canvas, and no extra network requests. */
+.control .islamicDecoration::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:
+    radial-gradient(circle,#e8f5dd99 0 1px,transparent 1.8px),
+    radial-gradient(circle,#f3deb777 0 1px,transparent 1.8px),
+    radial-gradient(circle,#e2efe855 0 .7px,transparent 1.6px);
+  background-size:187px 221px,269px 293px,137px 173px;
+  background-position:18px 39px,112px 71px,73px 118px;
+  opacity:.30;filter:drop-shadow(0 0 3px #e2e9c055);
+  transform:translate3d(0,0,0);
+  animation:celestialDustDrift 36s ease-in-out infinite alternate;
+  transition:opacity 900ms cubic-bezier(.22,1,.36,1),filter 900ms cubic-bezier(.22,1,.36,1);
+}
+.control.day .islamicDecoration::after{
+  opacity:.18;filter:drop-shadow(0 0 4px #e9c46b55);
+  background-image:
+    radial-gradient(circle,#bb944caa 0 .9px,transparent 1.8px),
+    radial-gradient(circle,#d2a86688 0 .8px,transparent 1.8px),
+    radial-gradient(circle,#f5e4b988 0 1px,transparent 1.8px);
+}
+@keyframes celestialDustDrift{
+  from{transform:translate3d(-5px,8px,0)}
+  to{transform:translate3d(9px,-14px,0)}
+}
+@media(max-width:700px){
+  .control .islamicDecoration::after{opacity:.19;background-size:231px 257px,301px 337px,191px 227px}
+  .control.day .islamicDecoration::after{opacity:.12}
+}
+@media(prefers-reduced-motion:reduce){
+  .control .islamicDecoration::after{animation:none!important;transition:none!important;transform:none!important}
+}
