@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
       !Number.isInteger(verse) || verse < 1 || verse > VERSE_COUNTS[chapter - 1]) {
     return NextResponse.json({ error: "Invalid reciter or verse" }, { status: 400 });
   }
-  const base = process.env.QURAN_AUDIO_PUBLIC_BASE_URL?.trim().replace(/\\/$/, "");
-  if (!base || !/^https:\/\//.test(base)) {
+  const rawBase = process.env.QURAN_AUDIO_PUBLIC_BASE_URL?.trim() || ""; const base = rawBase.endsWith("/") ? rawBase.slice(0, -1) : rawBase;
+  if (!base.startsWith("https://")) {
     return NextResponse.json({ available: false, reason: "Self-hosted audio not configured" }, { status: 404 });
   }
   // Immutable paths: an approved recording is never silently replaced.
