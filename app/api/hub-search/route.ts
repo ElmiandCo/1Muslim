@@ -12,7 +12,7 @@ export async function GET(request:Request){
  db.from("lessons").select("id,slug,title,description").eq("active",true).or("title.ilike."+pattern+",description.ilike."+pattern).limit(8),
  db.from("live_streams").select("id,title,category,status,viewer_count,created_at").eq("visibility","public").or("title.ilike."+pattern+",category.ilike."+pattern).order("created_at",{ascending:false}).limit(8),
  db.from("profiles").select("id,display_name,username").or("display_name.ilike."+pattern+",username.ilike."+pattern).limit(12),
- (async()=>{try{const response=await fetch("https://api.quran.com/api/v4/search?"+new URLSearchParams({q,language:"en",size:"10",page:"1"}),{signal:AbortSignal.timeout(4500),next:{revalidate:1800}});if(!response.ok)return {items:[],error:true};const data=await response.json();return {items:Array.isArray(data?.search?.results)?data.search.results:[],error:false};}catch{return {items:[],error:true}}})()
+ (async()=>{try{const response=await fetch("https://api.quran.com/api/v4/search?"+new URLSearchParams({q,language:"en",size:"10",page:"1"}),{signal:AbortSignal.timeout(4500),next:{revalidate:1800}});if(!response.ok)return {items:[],error:true};const data=await response.json();return {items:(Array.isArray(data?.search?.results)?data.search.results:[]) as {verse_key?:string;text?:string;highlighted?:string}[],error:false};}catch{return {items:[],error:true}}})()
  ]);
  const results=[
  ...(people.data||[]).map(x=>({id:String(x.id),kind:"Person",title:x.display_name||x.username||"1Muslim member",subtitle:x.username?"@"+x.username:"1Muslim member",href:"/messages?to="+encodeURIComponent(x.id)})),
