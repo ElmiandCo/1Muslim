@@ -117,3 +117,26 @@
 @keyframes omDropBreathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @media(max-width:600px){.omLivingDropTrigger{min-height:110px;padding:14px}.omLivingDrop{border-radius:18px}}
 @media(prefers-reduced-motion:reduce){.omLivingDrop,.omLivingDrop:before,.omLivingDropIcon{animation:none!important;transition:none!important}}
+
+
+/* Camera studio + laminated media */
+.omCameraBackdrop{position:fixed;inset:0;z-index:11000;background:rgba(1,10,7,.92);backdrop-filter:blur(24px);display:grid;place-items:center;padding:12px}
+.omCameraStudio{width:min(100%,540px);max-height:96dvh;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(213,179,95,.62);border-radius:28px;background:linear-gradient(155deg,#12291e,#07120e);box-shadow:0 22px 100px #000b,0 0 38px #d6b36a28;color:#fff}
+.omCameraStudio header,.omCameraStudio footer{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;gap:12px}
+.omCameraStudio button{color:inherit;border:1px solid #d7bd8359;background:#ffffff12;border-radius:999px;padding:10px 14px;cursor:pointer}
+.omCameraView{position:relative;min-height:180px;flex:1;overflow:hidden;background:#020403;display:grid;place-items:center}
+.omCameraView video{width:100%;height:100%;max-height:65dvh;object-fit:cover;aspect-ratio:3/4}
+.omCameraView i{position:absolute;inset:0;pointer-events:none;border:8px solid #f9e5aa13;box-shadow:inset 0 0 65px #d5b57522}
+.omCameraView p{position:absolute;inset:auto 15px 15px;background:#101b16dd;padding:15px;border-radius:14px}
+.omCameraLooks{display:flex;gap:8px;overflow-x:auto;padding:12px 14px;scrollbar-width:none}
+.omCameraLooks button{white-space:nowrap;font-size:12px}
+.omCameraLooks button.active{border-color:#e4c778;background:#d5b57535;box-shadow:0 0 16px #c9a95a40}
+.omCameraStudio footer{justify-content:space-around}
+.omCameraStudio .omCameraShutter{width:72px;height:72px;border:3px solid #e7c87b;display:grid;place-items:center;padding:5px;background:transparent}
+.omCameraShutter span{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#fff,#d9c27e);box-shadow:0 0 25px #e7c87b50}
+.omLaminatedVideo,.omExternalVideo,.omPostMedia{position:relative;overflow:hidden;border:1px solid #d8bc7b70;border-radius:20px;box-shadow:inset 0 1px #fff5,0 12px 30px #0003}
+.omLaminatedVideo video{display:block;max-width:100%;width:100%;background:#000}
+.omLaminatedVideo button{position:relative;margin:8px;border-radius:999px;padding:7px 12px;border:1px solid #e5c77c80;background:#10281ee8;color:#fff}
+.omExternalVideo iframe{width:100%;min-height:330px;border:0;display:block}
+.omExternalVideo a{display:block;padding:10px 14px}
+@media(prefers-reduced-motion:reduce){.omCameraStudio,.omLaminatedVideo{animation:none!important;transition:none!important}}
