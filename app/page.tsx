@@ -45,6 +45,8 @@ export default function Home(){
  const shopTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const teaseShop=()=>{setShopTease(false);if(shopTimer.current)clearTimeout(shopTimer.current);requestAnimationFrame(()=>setShopTease(true));shopTimer.current=setTimeout(()=>setShopTease(false),1700)};
  useEffect(()=>()=>{if(shopTimer.current)clearTimeout(shopTimer.current)},[]);
+ const [homeSignedIn,setHomeSignedIn]=useState<boolean|null>(null);
+ useEffect(()=>{let active=true;const db=createClient();const check=async()=>{const {data:{user}}=await db.auth.getUser();if(active)setHomeSignedIn(!!user)};void check();const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void check()});return()=>{active=false;subscription.unsubscribe()}},[]);
  const [upgradeVisible,setUpgradeVisible]=useState(false);
  useEffect(()=>{let show=true;try{show=localStorage.getItem("1muslim:calling-upgrade-dismissed-v1")!=="yes";if(show)localStorage.setItem("1muslim:calling-upgrade-dismissed-v1","yes")}catch{}if(!show)return;setUpgradeVisible(true);const timer=window.setTimeout(()=>setUpgradeVisible(false),8000);return()=>window.clearTimeout(timer)},[]);
  const dismissUpgrade=()=>{setUpgradeVisible(false);try{localStorage.setItem("1muslim:calling-upgrade-dismissed-v1","yes")}catch{}};
