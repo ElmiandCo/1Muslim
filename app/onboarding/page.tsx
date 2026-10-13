@@ -71,6 +71,7 @@ export default function OnboardingPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [writtenDeclaration, setWrittenDeclaration] = useState(false);
   const [verificationMode, setVerificationMode] = useState<"audio" | "declaration">("audio");
+  useEffect(() => {if(new URLSearchParams(window.location.search).get("method")==="declaration"){setVerificationMode("declaration");}}, []);
   const [language, setLanguage] = useState<Language>("ar");
   const [gender, setGender] = useState<"male" | "female" | "">("");
   const [checking, setChecking] = useState(true);
@@ -89,7 +90,7 @@ export default function OnboardingPage() {
     (async () => {
       const s = createClient();
       const { data: { user } } = await s.auth.getUser();
-      if (!user) { router.replace("/auth"); return; }
+      if (!user) { const method=new URLSearchParams(window.location.search).get("method");router.replace("/auth?shahada=1&method="+(method==="declaration"?"declaration":"audio")); return; }
       const { data: p } = await s.from("profiles").select("gender,shahada_verified_at,shahada_language").eq("id", user.id).single();
       if (p?.gender && p?.shahada_verified_at) { router.replace("/"); return; }
       if (p?.shahada_verified_at) setStep("gender");
