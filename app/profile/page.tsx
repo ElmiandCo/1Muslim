@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import SiteNav from "../components/SiteNav";
+import XpJourney from "../components/XpJourney";
 import ProfileAvatar, { ACCESSORIES, AVATAR_TIERS, tierForXp } from "../components/ProfileAvatar";
 import { createClient } from "../../utils/supabase/client";
 import ProfileContentSections from "../components/ProfileContentSections";
@@ -36,6 +37,7 @@ const colors = [["dark-grey","Dark Grey"],["dark-green","Dark Green"],["white","
 
 function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,posting,publishFirstPost,onEdit}:{profile:Profile;tier:any;ashab:Profile[];postCount:number;postText:string;setPostText:(v:string)=>void;posting:boolean;publishFirstPost:()=>void;onEdit:()=>void}){
   return <section className="profileOverview">
+    <XpJourney xp={profile.xp_total||0} gender={profile.avatar_gender||profile.gender}/>
     <header className={"profileOverviewHero header-"+profile.profile_accent}>
       <div className="profileOverviewCover"><div className="profileOverviewActions"><button type="button" className="profileSignOut" onClick={()=>window.dispatchEvent(new Event("1muslim:profile-signout"))}>✦ Sign out</button><Link href="/find" className="ghost">Find People</Link><button className="primary" onClick={onEdit}>✦ Edit profile</button></div></div>
       <div className="profileOverviewBody"><div className="profileOverviewAvatar"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/></div>
