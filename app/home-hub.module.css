@@ -391,10 +391,8 @@
 
 /* Magnetic layout: native view transitions animate the whole grid instead of snapping abruptly. */
 @keyframes magneticSettle{0%{filter:brightness(1.07)}100%{filter:brightness(1)}}
-:global(::view-transition-group(widget-live)),:global(::view-transition-group(widget-quran)),:global(::view-transition-group(widget-video)),:global(::view-transition-group(widget-ummah)),:global(::view-transition-group(widget-message)),:global(::view-transition-group(widget-call)),:global(::view-transition-group(widget-lesson)),:global(::view-transition-group(widget-people)){animation-duration:520ms;animation-timing-function:cubic-bezier(.22,1.12,.36,1)}
 .control .customGrid>.widgetSlot{will-change:transform;contain:layout style}
 .control .customGrid>.draggedWidget>.widgetCanvas{border-color:#f4db9b;box-shadow:0 0 22px #d5b96b66,inset 0 1px #fff5}
-@media(prefers-reduced-motion:reduce){:global(::view-transition-group(*)){animation-duration:0.01ms!important}.control .customGrid>.widgetSlot{transition:none;will-change:auto}}
 
 /* Keep the packing algorithm and CSS grid in the same stable row-major order. */
 .control .customGrid{grid-auto-flow:row!important}
@@ -403,10 +401,8 @@
 @media(prefers-reduced-motion:reduce){.control .customGrid>.widgetSlot{transition:none}}
 
 /* FLIP-style view transition: overshooting spring easing for magnetic settling. */
-:global(::view-transition-group(widget-live)),:global(::view-transition-group(widget-quran)),:global(::view-transition-group(widget-video)),:global(::view-transition-group(widget-ummah)),:global(::view-transition-group(widget-message)),:global(::view-transition-group(widget-call)),:global(::view-transition-group(widget-lesson)),:global(::view-transition-group(widget-people)){animation-duration:600ms!important;animation-timing-function:linear(0, .035 2%, .18 9%, .54 23%, .91 42%, 1.045 58%, 1.055 67%, 1.025 80%, 1 100%)!important}
 .control .customGrid>.widgetSlot{transition:filter 220ms ease,opacity 220ms ease}
 .control .customGrid>.widgetSlot .widgetEditControls button:focus-visible{outline:2px solid #f5d995;outline-offset:3px}
-@media(prefers-reduced-motion:reduce){:global(::view-transition-group(widget-live)),:global(::view-transition-group(widget-quran)),:global(::view-transition-group(widget-video)),:global(::view-transition-group(widget-ummah)),:global(::view-transition-group(widget-message)),:global(::view-transition-group(widget-call)),:global(::view-transition-group(widget-lesson)),:global(::view-transition-group(widget-people)){animation-duration:0.01ms!important}}
 
 /* Compact mobile-native widget gallery. */
 .control .galleryBackdrop{position:fixed;inset:0;z-index:9999;background:#021d1bd1;backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;padding:16px}
