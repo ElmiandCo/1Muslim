@@ -487,3 +487,10 @@ input[type="file"][accept*="image"]::file-selector-button:hover,input[type="file
 .omMediaPickButton:active{transform:scale(.96)}
 .omMediaPickButton:focus-within{outline:2px solid #c4a5ff;outline-offset:3px}
 .omMediaPickButton input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;padding:0;border:0}
+
+/* HudHud route-aware docking: one orb glides between home control and navigation. */
+.hh-chat-orb.hh-orb-route-nav{position:fixed!important;z-index:1005!important;transition:left .85s cubic-bezier(.22,1,.36,1),top .85s cubic-bezier(.22,1,.36,1),transform .3s ease,box-shadow .45s ease!important;touch-action:none;will-change:left,top}
+.hh-chat-orb.hh-orb-landing{box-shadow:0 0 0 5px #c1e7c01a,0 0 32px #4bbd9980!important}
+.hh-chat-orb.hh-orb-header{box-shadow:0 0 0 3px #d8ca9a22,0 0 18px #5ca9b459!important}
+.hh-chat-orb.hh-orb-route-nav:active{transform:scale(.95)}
+@media(prefers-reduced-motion:reduce){.hh-chat-orb.hh-orb-route-nav{transition:none!important}}
