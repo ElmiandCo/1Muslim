@@ -78,3 +78,23 @@
     transition-duration:.01ms!important;
   }
 }
+
+/* Phase 2 — layered glass cover and progressive earned frames */
+.profileGlass{--profile-tint:#34755a;--profile-rim:#63736a;--profile-rim-glow:transparent;border:2px solid var(--profile-rim)!important;box-shadow:0 0 0 1px var(--profile-rim-glow),0 15px 45px #0003,inset 0 1px #ffffff44!important;transition:border-color .65s,box-shadow .65s,background .65s}
+.profileTone-dark-grey{--profile-tint:#4b5458}.profileTone-dark-green{--profile-tint:#34755a}.profileTone-white{--profile-tint:#e6e6d9}.profileTone-ocean{--profile-tint:#3484a0}.profileTone-amethyst{--profile-tint:#8466a5}.profileTone-sunset{--profile-tint:#c18a61}
+.profileGlass .profileOverviewCover{position:relative;overflow:hidden;isolation:isolate;background:linear-gradient(120deg,color-mix(in srgb,var(--profile-tint) 60%,#071f19),color-mix(in srgb,var(--profile-tint) 35%,#142c29))!important}
+.profileGlassLayer{position:absolute;inset:-15%;pointer-events:none;z-index:-1;transition:transform .65s cubic-bezier(.2,.8,.2,1),opacity .65s}
+.profileGlassLayerBack{background:radial-gradient(ellipse at 20% 10%,#ffffff65,transparent 47%),linear-gradient(140deg,#ffffff21,transparent 60%);transform:translate(calc(var(--parallax-x,0px)*.45),calc(var(--parallax-y,0px)*.45))}
+.profileGlassLayerFront{inset:8px;border-radius:24px;border:1px solid #ffffff38;background:linear-gradient(120deg,#ffffff24,transparent 40%,#ffffff0d 80%);backdrop-filter:blur(5px);transform:translate(var(--parallax-x,0px),var(--parallax-y,0px))}
+.profileGlass .profileOverviewActions{position:relative;z-index:2}
+.profilePaletteButton{border:1px solid #ffffff88;border-radius:999px;padding:8px 13px;background:#ffffff26;color:#fff;backdrop-filter:blur(14px);font-weight:700;cursor:pointer}
+.profileAvatarFrame{position:relative;isolation:isolate;filter:drop-shadow(0 8px 18px #0005);transition:transform .4s,filter .4s}
+.profileAvatarFrame:hover{transform:translateY(-3px) scale(1.025);filter:drop-shadow(0 12px 22px #0007)}
+.profileRank-0{--profile-rim:#71837b}.profileRank-1{--profile-rim:#ba855d}.profileRank-2{--profile-rim:#bfcbd1}.profileRank-3{--profile-rim:#dfbc6d;--profile-rim-glow:#dfbc6d55}.profileRank-4{--profile-rim:#7ac89d;--profile-rim-glow:#d9ba6b66}.profileRank-5{--profile-rim:#51dba6;--profile-rim-glow:#51dba677}.profileRank-6{--profile-rim:#f1d188;--profile-rim-glow:#f1d18888}.profileRank-7{--profile-rim:#f3edc7;--profile-rim-glow:#b7f5d8aa}
+.profileGlass.profileRank-5,.profileGlass.profileRank-6,.profileGlass.profileRank-7{box-shadow:0 0 0 2px var(--profile-rim-glow),0 0 26px var(--profile-rim-glow),0 20px 50px #0003!important}
+.headerEditor .colorGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.headerEditor .colorGrid button{min-height:64px;border-radius:15px;transition:transform .25s,box-shadow .35s}
+.headerEditor .colorGrid button:active{transform:scale(.97)}
+.headerEditor .swatch.ocean{background:#3484a0}.headerEditor .swatch.amethyst{background:#8466a5}.headerEditor .swatch.sunset{background:#c18a61}
+@media(hover:none){.profileGlassLayer{transform:none!important}}
+@media(prefers-reduced-motion:reduce){.profileGlassLayer,.profileAvatarFrame{transition:none!important;transform:none!important}}
