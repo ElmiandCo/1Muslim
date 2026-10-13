@@ -145,9 +145,9 @@ export default function QuranLessons(){
  useEffect(()=>{const key=verses[focusIndex]?.verse_key;if(key)setVisited(prev=>prev[key]?prev:{...prev,[key]:true})},[verses,focusIndex]);
 
  const verseArea=useRef<HTMLElement>(null);
- const pendingVerse=useRef<string|null>(null);
+ const pendingVerse=useRef<string|null>(null);const progressReady=useRef(false);
  const [linkedQuestion,setLinkedQuestion]=useState<string|null>(null);
- useEffect(()=>{const params=new URLSearchParams(window.location.search);const key=params.get("verse")||(params.get("surah")&&params.get("ayah")?params.get("surah")+":"+params.get("ayah"):null);if(key&&/^([1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(key)){pendingVerse.current=key;const [ch,num]=key.split(":").map(Number);setChapter(ch);setPage(Math.ceil(num/50))}setLinkedQuestion(params.get("question"));if(params.get("vision")==="1"){window.setTimeout(()=>window.dispatchEvent(new Event("1muslim:hudhud-vision-enable")),400)}},[]);
+ useEffect(()=>{const params=new URLSearchParams(window.location.search);let key=params.get("verse")||(params.get("surah")&&params.get("ayah")?params.get("surah")+":"+params.get("ayah"):null);if(!key){try{const saved=JSON.parse(localStorage.getItem("1muslim-quran-progress")||"null");if(Number.isInteger(saved?.chapter)&&Number.isInteger(saved?.verse))key=saved.chapter+":"+saved.verse}catch{}}if(key&&/^([1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(key)){pendingVerse.current=key;const [ch,num]=key.split(":").map(Number);setChapter(ch);setPage(Math.ceil(num/50))}progressReady.current=true;setLinkedQuestion(params.get("question"));if(params.get("vision")==="1"){window.setTimeout(()=>window.dispatchEvent(new Event("1muslim:hudhud-vision-enable")),400)}},[]);
  const navigateVerse=(key:string)=>{const [ch,num]=key.split(":").map(Number);if(!Number.isInteger(ch)||ch<1||ch>114||!Number.isInteger(num)||num<1)return;pendingVerse.current=key;setChapter(ch);setPage(Math.ceil(num/50));};
  useEffect(()=>{if(busy||!verses.length||!pendingVerse.current)return;const target=pendingVerse.current;const index=verses.findIndex(v=>v.verse_key===target);if(index<0)return;pendingVerse.current=null;const id=window.setTimeout(()=>{verseArea.current?.querySelector<HTMLElement>('[data-verse-index="'+index+'"]')?.scrollIntoView({behavior:"smooth",block:"center"});setFocusIndex(index)},100);return()=>clearTimeout(id)},[busy,verses]);
  useEffect(()=>{setFocusIndex(0)},[chapter,page]);
@@ -174,7 +174,7 @@ export default function QuranLessons(){
  useEffect(()=>{if(busy||!verses.length||!pendingBoundary.current)return;setFocusIndex(pendingBoundary.current==="last"?verses.length-1:0);pendingBoundary.current=null},[busy,verses]);
 
  const versePosition=(page-1)*50+focusIndex+1;
- useEffect(()=>{try{localStorage.setItem("1muslim-quran-progress",JSON.stringify({chapter,verse:versePosition}))}catch{}},[chapter,versePosition]);
+ useEffect(()=>{if(!progressReady.current||pendingVerse.current||busy||!verses[focusIndex]||verses[focusIndex].verse_key!==chapter+":"+versePosition)return;try{localStorage.setItem("1muslim-quran-progress",JSON.stringify({chapter,verse:versePosition}))}catch{}},[chapter,versePosition,busy,verses,focusIndex]);
  const chapterCount=activeChapterCount(chapters,chapter);
  const nextChapter=chapters.find(c=>c.id===chapter+1);
  const chapterMilestones:Record<number,{cheer:string;preview:string;question:string}>={
