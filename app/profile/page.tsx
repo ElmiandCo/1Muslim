@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import "./profile-foundation.css";
 import {useRouter} from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import SiteNav from "../components/SiteNav";
