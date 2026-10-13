@@ -395,3 +395,9 @@
 .control .customGrid>.widgetSlot{will-change:transform;contain:layout style}
 .control .customGrid>.draggedWidget>.widgetCanvas{border-color:#f4db9b;box-shadow:0 0 22px #d5b96b66,inset 0 1px #fff5}
 @media(prefers-reduced-motion:reduce){::view-transition-group(*){animation-duration:0.01ms!important}.control .customGrid>.widgetSlot{transition:none;will-change:auto}}
+
+/* Keep the packing algorithm and CSS grid in the same stable row-major order. */
+.control .customGrid{grid-auto-flow:row!important}
+.control .customGrid>.widgetSlot{transition:transform 460ms cubic-bezier(.2,.85,.25,1),opacity 240ms ease,filter 240ms ease}
+.control .customGrid>.draggedWidget{z-index:5;filter:drop-shadow(0 0 12px #d6bf77a8)}
+@media(prefers-reduced-motion:reduce){.control .customGrid>.widgetSlot{transition:none}}
