@@ -200,5 +200,5 @@
 /* Drag handle is the only touch-drag surface; prevent browser gestures from stealing it. */
 .control .widgetEditControls button:first-child{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
 .control .draggedWidget{z-index:12;filter:drop-shadow(0 10px 16px #00190f66)}
-:global(::view-transition-group(*)){animation-duration:360ms;animation-timing-function:cubic-bezier(.22,.9,.2,1)}
-@media(prefers-reduced-motion:reduce){:global(::view-transition-group(*)){animation-duration:0ms}}
+.control :global(::view-transition-group(*)){animation-duration:360ms;animation-timing-function:cubic-bezier(.22,.9,.2,1)}
+@media(prefers-reduced-motion:reduce){.control :global(::view-transition-group(*)){animation-duration:0ms}}
