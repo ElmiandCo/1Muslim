@@ -3,27 +3,29 @@ import {useEffect,useState} from "react";
 import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
 
-export default function GuestShahadaWelcome({signedIn}:{signedIn:boolean|null}){
+export default function GuestShahadaWelcome({signedIn,dayMode}:{signedIn:boolean|null;dayMode:boolean}){
  const [open,setOpen]=useState(false);
  const [email,setEmail]=useState("");
  const [password,setPassword]=useState("");
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
- useEffect(()=>{if(signedIn!==false){setOpen(false);return}const timer=window.setTimeout(()=>{try{if(sessionStorage.getItem("1muslim:guest-shahada-dismissed")==="yes")return}catch{}setOpen(true)},2000);return()=>clearTimeout(timer)},[signedIn]);
- const close=()=>{setOpen(false);try{sessionStorage.setItem("1muslim:guest-shahada-dismissed","yes")}catch{}};
- const signIn=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setError("");const {error:authError}=await createClient().auth.signInWithPassword({email:email.trim(),password});setBusy(false);if(authError){setError(authError.message);return}close()};
+ const [attempts,setAttempts]=useState(0);
+ useEffect(()=>{if(signedIn!==false){setOpen(false);return}const timer=window.setTimeout(()=>{try{if(localStorage.getItem("1muslim:guest-shahada-dismissed-v2")==="yes")return}catch{}setOpen(true)},2000);return()=>clearTimeout(timer)},[signedIn]);
+ const close=()=>{setOpen(false);try{localStorage.setItem("1muslim:guest-shahada-dismissed-v2","yes")}catch{}};
+ const signIn=async(e:React.FormEvent)=>{e.preventDefault();if(busy||attempts>=5)return;setBusy(true);setError("");const {error:authError}=await createClient().auth.signInWithPassword({email:email.trim(),password});setBusy(false);if(authError){setAttempts(v=>v+1);setError("Sign-in failed. Check your details or try again later.");return}close()};
  const google=async()=>{setBusy(true);setError("");const {error:authError}=await createClient().auth.signInWithOAuth({provider:"google",options:{redirectTo:`${window.location.origin}/auth/callback?next=/`}});if(authError){setError(authError.message);setBusy(false)}};
  if(!open||signedIn!==false)return null;
- return <div className="guestShahadaBackdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}>
+ return <div className={"guestShahadaBackdrop"+(dayMode?" guestShahadaDay":"")} role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}>
  <section className="guestShahadaCard" role="dialog" aria-modal="true" aria-labelledby="guest-shahada-title">
  <button className="guestShahadaClose" type="button" aria-label="Close welcome" onClick={close}>×</button>
  <span className="guestShahadaEyebrow">1MUSLIM <span aria-hidden="true">✦</span> بِسْمِ اللَّهِ</span>
  <h2 id="guest-shahada-title">Welcome to <span>1Muslim.</span></h2>
  <p className="guestShahadaLead">Your journey begins here. Affirm the Shahada in your own voice or choose the written declaration.</p>
- <div className="guestShahadaChoices"><Link onClick={close} href="/onboarding">🎙 Record Shahada</Link><Link onClick={close} href="/onboarding">✓ Written affirmation</Link></div>
+ <div className="guestShahadaChoices"><Link onClick={close} href="/auth?shahada=1&method=audio">🎙 Record Shahada</Link><Link onClick={close} href="/auth?shahada=1&method=declaration">✓ Written affirmation</Link></div>
  <div className="guestShahadaDivider"><span>Already a 1Muslim account holder?</span></div>
- <form onSubmit={signIn}><label>Email address<input autoComplete="username" type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address"/></label><label>Password<input autoComplete="current-password" type="password" required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password"/></label><button type="submit" disabled={busy}>{busy?"Signing in…":"Sign in →"}</button></form>
+ <form onSubmit={signIn}><label>Email address<input autoComplete="username" type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address"/></label><label>Password<input autoComplete="current-password" type="password" required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password"/></label><button type="submit" disabled={busy||attempts>=5}>{attempts>=5?"Try again later":busy?"Signing in…":"Sign in →"}</button></form>
  <button className="guestShahadaGoogle" type="button" disabled={busy} onClick={google}>G &nbsp; Continue with Google</button>
+ <p className="guestShahadaGoogleNote">Google may sign you in or create an account if you are new.</p>
  {error&&<p role="alert" className="guestShahadaError">{error}</p>}
  <small>New here? <Link href="/auth?shahada=1" onClick={close}>Create an account</Link> · <Link href="/auth" onClick={close}>Account help</Link></small>
  </section>
@@ -42,6 +44,12 @@ export default function GuestShahadaWelcome({signedIn}:{signedIn:boolean|null}){
  .guestShahadaCard input{font-family:inherit;font-size:14px;min-height:45px}
  .guestShahadaCard form button,.guestShahadaGoogle{min-height:47px;font-size:13px;letter-spacing:.01em;border-radius:14px;transition:transform .25s ease}
  @media(max-width:440px){.guestShahadaChoices{grid-template-columns:1fr}.guestShahadaCard{padding:24px 20px}.guestShahadaCard h2{font-size:34px}}
+ .guestShahadaGoogleNote{font-size:11px!important;margin:-3px 0 10px!important;color:#b8cbbb!important}
+ .guestShahadaDay .guestShahadaCard{background:radial-gradient(ellipse at 12% 0%,#f2ecd8,#f9f9f0 78%);color:#143c2d;border-color:#bfa56a;box-shadow:0 24px 80px #163a2738}
+ .guestShahadaDay .guestShahadaCard h2{color:#143c2d}.guestShahadaDay .guestShahadaCard h2 span,.guestShahadaDay .guestShahadaEyebrow{color:#84631f}
+ .guestShahadaDay .guestShahadaCard p,.guestShahadaDay .guestShahadaCard .guestShahadaLead,.guestShahadaDay .guestShahadaCard label,.guestShahadaDay .guestShahadaCard small,.guestShahadaDay .guestShahadaGoogleNote{color:#38594b!important}
+ .guestShahadaDay .guestShahadaDivider{color:#785c2d}.guestShahadaDay .guestShahadaCard input{background:#fff;color:#163a2b;border-color:#a5b8a6}
+ .guestShahadaDay .guestShahadaClose{color:#755b27}.guestShahadaDay .guestShahadaCard small a{color:#146440}
  .guestShahadaBackdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;background:#04110bc9;backdrop-filter:blur(13px);animation:guestShahadaIn .4s ease}
  .guestShahadaCard{position:relative;overflow:auto;max-height:min(94dvh,800px);width:min(100%,440px);padding:clamp(20px,4vw,34px);border:1px solid #cdb26c88;border-radius:25px;background:radial-gradient(ellipse at 10% 0%,#245540,#0a231b 72%);color:#f7f2dc;box-shadow:0 24px 90px #0009;text-align:center}
  .guestShahadaClose{position:absolute;right:15px;top:12px;background:transparent;border:0;color:#e4cf9d;font-size:27px;cursor:pointer}
