@@ -8,6 +8,7 @@ import Image from "next/image";
 import homeStyles from "../home-hub.module.css";
 import CelestialOrb from "../components/CelestialOrb";
 
+const safeNext = () => { const p=new URLSearchParams(window.location.search).get("next"); return p?.startsWith("/")&&!p.startsWith("//")&&!p.startsWith("/\\\\") ? p : "/"; };
 const safeMethod = () => { const m = new URLSearchParams(window.location.search).get("method"); return m === "declaration" || m === "type" ? "declaration" : "audio"; };
 
 export default function AuthPage() {
@@ -50,7 +51,7 @@ export default function AuthPage() {
     setMessage("Check your email to confirm your account, then continue to the Shahada page.");
   };
 
-  const signInWithEmail = async(e:React.FormEvent)=>{e.preventDefault();setLoading(true);setMessage("");const {error}=await createClient().auth.signInWithPassword({email:email.trim(),password});setLoading(false);if(error){setMessage("Sign-in failed. Check your email and password.");return}window.location.assign("/")};
+  const signInWithEmail = async(e:React.FormEvent)=>{e.preventDefault();setLoading(true);setMessage("");const {error}=await createClient().auth.signInWithPassword({email:email.trim(),password});setLoading(false);if(error){setMessage("Sign-in failed. Check your email and password.");return}window.location.assign(safeNext())};
 
   const signInWithGoogle = async () => {
     setLoading(true);
@@ -61,7 +62,7 @@ export default function AuthPage() {
       provider: "google",
       options: {
         // Return to the same authorized site origin (including preview) and preserve a safe relative destination.
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent((()=>{const p=new URLSearchParams(window.location.search).get("next");return p?.startsWith("/")&&!p.startsWith("//")?p:(isShahadaSignup?"/onboarding?method="+safeMethod():"/")})())}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent((()=>{return isShahadaSignup?"/onboarding?method="+safeMethod():safeNext()})())}`,
       },
     });
 
