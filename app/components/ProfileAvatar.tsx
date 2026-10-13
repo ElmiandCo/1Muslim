@@ -5,7 +5,7 @@ import Link from "next/link";
 export const AVATAR_TIERS = [
   { key: "starter", name: "Starter", minXp: 0, icon: "○", quality: "Clean foundation" },
   { key: "bronze", name: "Bronze", minXp: 500, icon: "◆", quality: "First accessories" },
-  { key: "silver", name: "Silver", minXp: 10500, icon: "✦", quality: "Emerald Aura" },
+  { key: "silver", name: "Silver", minXp: 5000, icon: "✦", quality: "Emerald Aura" },
   { key: "gold", name: "Gold", minXp: 25000, icon: "✧", quality: "Gold Crest" },
   { key: "elite", name: "Elite", minXp: 50000, icon: "☪", quality: "Light of Iman" },
 ] as const;
