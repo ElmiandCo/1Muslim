@@ -15,7 +15,6 @@ import TimelinePopup, { type TimelineItem } from "./components/TimelinePopup";
 import VideoOfDayComments from "./components/VideoOfDayComments";
 import FeaturedYoutubeVideo from "../components/FeaturedYoutubeVideo";
 import HudHudVoiceSpiral from "./components/HudHudVoiceSpiral";
-import HudHudVisionDock from "./components/HudHudVisionDock";
 import HudHudPersonalWelcome from "./components/HudHudPersonalWelcome";
 import InstallAppInvitation from "./components/InstallAppInvitation";
 
@@ -329,9 +328,6 @@ export default function Home() {
 
         {duaOpen && <DuaLesson onClose={()=>setDuaOpen(false)} />}
       <HudHudLearningNudge />
-      
-      
-      <HudHudVisionDock />
       <HudHudPersonalWelcome />
       <aside className="rightRail">
         <form className="search" action="/search" method="get">⌕ <input name="q" type="search" aria-label="Search 1Muslim" placeholder="Search 1Muslim" /></form>
