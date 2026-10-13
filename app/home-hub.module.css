@@ -202,3 +202,71 @@
 .control .draggedWidget{z-index:12;filter:drop-shadow(0 10px 16px #00190f66)}
 
 
+
+/* 1Muslim Signature Edition — art-directed, editorial dashboard. */
+.control{background:radial-gradient(ellipse 75% 45% at 12% -8%,#427e5c38,transparent 72%),radial-gradient(ellipse 50% 70% at 102% 78%,#aa955024,transparent 70%),linear-gradient(155deg,#081c18,#0a2721 50%,#071712);color:#f5f4e9}
+.control.day{background:radial-gradient(ellipse at 5% 0%,#f9e9c5,transparent 58%),radial-gradient(ellipse at 100% 90%,#9ccab34a,transparent 60%),linear-gradient(155deg,#f7f8ef,#e1ede1 62%,#e7e6d5);color:#1a3a2b}
+.control .pattern{opacity:.055;background-size:95px 95px;mask-image:linear-gradient(#0008,transparent 85%)}
+.control .controlHeader{height:clamp(51px,8vh,73px);border-bottom:1px solid #e2d5a62b}
+.control .brand{gap:12px}.control .brand strong{font-weight:780;letter-spacing:.12em;font-size:clamp(16px,2vw,21px)}
+.control .brand small{letter-spacing:.17em;font-size:9px;text-transform:uppercase}
+.control .brandLogo{width:clamp(36px,5vh,49px);height:clamp(36px,5vh,49px);filter:drop-shadow(0 4px 14px #c8b46b4a)}
+.control .headerActions>*{border-radius:50%;width:37px;height:37px;border:1px solid #e6dfbf4a;background:linear-gradient(145deg,#ffffff1e,#ffffff08);box-shadow:inset 0 1px #ffffff25}
+.control.day .headerActions>*{background:#ffffffa8;border-color:#ffffff}
+.control .intro{padding:clamp(8px,1.8vh,18px) 3px clamp(9px,1.8vh,17px)}
+.control .intro h1{font-weight:570;font-size:clamp(22px,3.6vw,39px);line-height:1.08;letter-spacing:-.055em}
+.control .eyebrow{letter-spacing:.24em;font-size:9px}
+.control .surface{max-width:1120px;border-radius:30px;padding:clamp(8px,1.3vw,15px);background:linear-gradient(160deg,#ffffff0c,#ffffff02 60%,#c9b17e0a);border:1px solid #f3e7c135;box-shadow:inset 0 1px #ffffff21,0 22px 60px #00000026;backdrop-filter:blur(28px)}
+.control.day .surface{background:linear-gradient(145deg,#ffffff7d,#ffffff36 70%,#e8e8d35c);border-color:#ffffffba;box-shadow:inset 0 1px #fff,0 15px 44px #52705a1b}
+.control .widgetArea{gap:clamp(6px,1.1vh,11px)}
+.control .widgetToolbar{font-size:10px;letter-spacing:.08em;color:#e8d9b8;min-height:26px}
+.control.day .widgetToolbar{color:#486451}
+.control .widgetToolbar button{font-size:10px;border-radius:10px;background:#ffffff14;border-color:#e7d6a454;padding:6px 11px}
+.control .customGrid{gap:clamp(6px,1vw,12px);grid-auto-flow:row dense}
+.control .customGrid>.widgetSlot>.widgetCanvas{border-radius:clamp(15px,2.4vw,27px);background:linear-gradient(145deg,#ffffff18,#ffffff06 48%,#143d301a)!important;border:1px solid #f3e7c154;box-shadow:inset 0 1px #ffffff43,0 12px 30px #00150e27;padding:clamp(9px,1.5vw,19px);transition:transform .4s cubic-bezier(.22,.85,.25,1),box-shadow .4s,border-color .4s;overflow:hidden}
+.control .customGrid>.widgetSlot>.widgetCanvas::before{background:linear-gradient(130deg,#ffffff22,transparent 44%),radial-gradient(ellipse at 80% 20%,#f5e0a10b,transparent 55%);opacity:1}
+.control .customGrid>.widgetSlot>.widgetCanvas::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.7;background:linear-gradient(90deg,transparent 0%,#ffffff0a 50%,transparent 100%);transform:translateX(-110%);transition:transform .8s ease}
+.control .customGrid>.widgetSlot>.widgetCanvas:hover::after{transform:translateX(110%)}
+.control .customGrid>.widgetSlot>.widgetCanvas:hover{transform:translateY(-2px);border-color:#f6e0a2a6;box-shadow:inset 0 1px #ffffff6b,0 15px 36px #00160e40}
+.control .customGrid>.widgetSlot[data-widget="Live"]>.widgetCanvas{background:radial-gradient(ellipse at 48% 33%,#8fb99a30,transparent 70%),linear-gradient(145deg,#3876583d,#0c332d5c)!important}
+.control .customGrid>.widgetSlot[data-widget="Qur’an"]>.widgetCanvas{background:radial-gradient(ellipse at 20% 20%,#e3ca8640,transparent 70%),linear-gradient(145deg,#6e65402e,#163b3454)!important}
+.control .customGrid>.widgetSlot[data-widget="Videos"]>.widgetCanvas{background:linear-gradient(135deg,#77989a35,#133f4340)!important}
+.control .customGrid>.widgetSlot[data-widget="Ummah"]>.widgetCanvas{background:linear-gradient(135deg,#88ab6d30,#1d493d45)!important}
+.control .customGrid>.widgetSlot[data-widget="Messages"]>.widgetCanvas{background:linear-gradient(130deg,#6aa9a63a,#184d4633)!important}
+.control .customGrid>.widgetSlot[data-widget="Calls"]>.widgetCanvas{background:linear-gradient(130deg,#77a4c33b,#1b405046)!important}
+.control .customGrid>.widgetSlot[data-widget="Lessons"]>.widgetCanvas{background:linear-gradient(130deg,#c6ac7240,#504d3233)!important}
+.control .customGrid>.widgetSlot[data-widget="People"]>.widgetCanvas{background:linear-gradient(130deg,#a0c39435,#214c3833)!important}
+.control .customGrid .widgetCanvas .widgetTop{z-index:1}
+.control .customGrid .widgetCanvas .widgetArtwork{mix-blend-mode:screen;object-fit:contain;max-width:95%;max-height:90%;filter:drop-shadow(0 8px 17px #001b1360);animation:productFloat 7s ease-in-out infinite}
+.control .customGrid .widgetCanvas .widgetVisual{min-width:0}
+.control .customGrid .widgetCanvas .widgetArabic{font-size:clamp(10px,1.1vw,13px);opacity:.72;color:#f1e5c9;z-index:2}
+.control .customGrid .widgetCanvas .widgetName{font-size:clamp(13px,1.6vw,20px);font-weight:750;letter-spacing:-.035em;color:#fffaf0}
+.control .customGrid .sizefeatured .widgetCanvas .widgetName{font-size:clamp(21px,2.6vw,32px)}
+.control .customGrid .widgetCanvas .widgetMetric{font-size:clamp(10px,1.05vw,13px);color:#d2e4d7;opacity:.95}
+.control .customGrid .widgetCanvas .widgetFeatureDetail{color:#eedcb1;font-size:11px}
+.control .customGrid .widgetCanvas .widgetPill{border-color:#e8d4a164;color:#f5e0ae;background:#ffffff10}
+.control.day .customGrid>.widgetSlot>.widgetCanvas{border-color:#ffffffb8;box-shadow:inset 0 1px #ffffffea,0 9px 24px #466b5522}
+.control.day .customGrid>.widgetSlot[data-widget]>.widgetCanvas{background:linear-gradient(145deg,#ffffffad,#c8e2d3a3)!important}
+.control.day .customGrid>.widgetSlot[data-widget="Qur’an"]>.widgetCanvas{background:linear-gradient(145deg,#fff5d5d9,#dce9d3a3)!important}
+.control.day .customGrid>.widgetSlot[data-widget="Live"]>.widgetCanvas{background:linear-gradient(145deg,#cdebd9ed,#9cc5b4a8)!important}
+.control.day .customGrid .widgetCanvas .widgetName{color:#183d2e}
+.control.day .customGrid .widgetCanvas .widgetArabic{color:#4d735d}
+.control.day .customGrid .widgetCanvas .widgetMetric{color:#385b49}
+.control.day .customGrid .widgetCanvas .widgetFeatureDetail{color:#77633e}
+.control.day .customGrid .widgetCanvas .widgetPill{color:#547351;background:#ffffff8a}
+.control.day .customGrid .widgetCanvas .widgetArtwork{mix-blend-mode:multiply}
+@media(max-width:700px){
+ .control{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+ .control .surface{border-radius:22px;padding:7px}
+ .control .customGrid{gap:6px}
+ .control .customGrid>.widgetSlot>.widgetCanvas{border-radius:17px;padding:clamp(7px,1.8vw,10px)}
+ .control .customGrid .widgetCanvas .widgetName{font-size:clamp(11px,3.3vw,15px)}
+ .control .customGrid .sizefeatured .widgetCanvas .widgetName{font-size:clamp(17px,5vw,24px)}
+ .control .customGrid .widgetCanvas .widgetMetric{font-size:10px}
+ .control .customGrid .widgetCanvas .widgetArabic{font-size:9px}
+ .control .customGrid .widgetCanvas .widgetArtwork{max-height:78%}
+ .control .customGrid .sizecompact .widgetCanvas .widgetArtwork{max-height:58%}
+ .control .intro h1{font-size:clamp(21px,5.7vw,29px)}
+}
+@media(max-height:700px){.control .intro{padding:4px 2px 7px}.control .widgetToolbar{min-height:22px}.control .customGrid .widgetCanvas .widgetArtwork{max-height:67%}}
+@media(prefers-reduced-motion:reduce){.control .customGrid>.widgetSlot>.widgetCanvas::after{display:none}.control .customGrid .widgetCanvas .widgetArtwork{animation:none}}
