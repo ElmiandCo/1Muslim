@@ -565,3 +565,21 @@ input[type="file"][accept*="image"]::file-selector-button:hover,input[type="file
 .omQuranPage>.quran-live-widget.is-compact{position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 145px);z-index:85;width:min(245px,calc(100vw - 28px))}
 .omQuranPage>.quran-live-widget.is-compact .quran-live-panel{position:absolute;right:0;bottom:100%;margin:0 0 9px}
 @media(max-width:700px){.omQuranPage>.quran-live-widget.is-compact{right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 145px);width:190px}.quran-live-crown{flex-wrap:wrap}}
+
+/* Qur’an-only live overlay: draggable host camera + ambient comments */
+.omQuranPage>.quran-live-overlay.is-compact{position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 136px);z-index:110;width:auto;max-width:calc(100vw - 24px);pointer-events:none}
+.quran-live-idle{pointer-events:auto;width:190px}
+.quran-live-error{display:block;margin-top:5px;padding:8px;border-radius:9px;background:#3e1c1c;color:#ffe1d1;font-size:11px}
+.quran-live-floating{position:fixed;top:clamp(65px,14vh,150px);right:15px;bottom:auto;left:auto;width:clamp(145px,20vw,210px);border:1px solid #d9be7b88;border-radius:16px;overflow:hidden;background:#102f27f5;color:#f9edce;box-shadow:0 18px 50px #0009;pointer-events:auto;touch-action:none;user-select:none;z-index:112}
+.quran-live-floating .quran-live-crown{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#164b38;border-bottom:1px solid #d9be7b55}
+.quran-live-floating .quran-live-crown strong{font-size:10px;letter-spacing:.12em;color:#f3d59a}
+.quran-live-floating .quran-live-crown button{border:0;background:#ffffff17;border-radius:8px;color:#fff;padding:3px 8px}
+.quran-live-camera{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;background:#071812;transition:height .25s}
+.quran-live-camera-small{height:64px;aspect-ratio:auto}
+.quran-live-stats{display:flex;justify-content:space-between;gap:3px;padding:8px 7px;font-size:10px;font-variant-numeric:tabular-nums}
+.quran-live-end{display:block;width:calc(100% - 14px);margin:0 7px 7px;padding:7px;background:#793332;color:#fff;border:1px solid #b85e5a;border-radius:9px;font-size:11px;font-weight:700}
+.quran-live-comment-field{position:fixed;inset:0;z-index:109;pointer-events:none;overflow:hidden}
+.quran-live-float-comment{position:absolute;bottom:-70px;max-width:min(24vw,240px);min-width:100px;padding:9px 13px;border:1px solid #ddc68a88;border-radius:18px;background:#133f33dd;backdrop-filter:blur(10px);color:#fff4d5;font-size:clamp(11px,1.5vw,14px);line-height:1.4;overflow-wrap:anywhere;box-shadow:0 6px 20px #0004;animation:quranCommentFloat 12.5s cubic-bezier(.16,.43,.42,.95) forwards}
+@keyframes quranCommentFloat{0%{transform:translateY(0);opacity:0}9%{opacity:1}42%{transform:translateY(-44vh);opacity:1}72%{transform:translateY(-67vh);opacity:.92}95%{opacity:.5}100%{transform:translateY(-86vh);opacity:0}}
+@media(max-width:700px){.quran-live-floating{width:155px}.quran-live-float-comment{max-width:34vw;min-width:80px;font-size:11px;padding:7px 9px}.omQuranPage>.quran-live-overlay.is-compact{bottom:calc(env(safe-area-inset-bottom,0px) + 142px)}}
+@media(prefers-reduced-motion:reduce){.quran-live-float-comment{animation-duration:16s}}
