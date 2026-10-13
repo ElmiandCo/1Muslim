@@ -41,3 +41,12 @@
 .modeMenu{position:absolute;right:0;top:calc(100% + 12px);z-index:200;min-width:166px;padding:7px;border:1px solid #c9b07888;border-radius:14px;background:#153b31;color:#f6e8c6;box-shadow:0 14px 35px #0008;display:grid;gap:3px}
 .modeMenu button{display:block!important;text-align:left!important;white-space:nowrap;width:100%!important;padding:10px!important;border:0!important;border-radius:9px!important;background:transparent!important;color:inherit!important;font-size:12px!important;cursor:pointer}
 .modeMenu button:hover,.modeMenu button[aria-pressed="true"]{background:#e6d29a24!important}
+
+/* Celestial polish: sun corona, lunar halo and a comfortably sized touch target. */
+.orbHolder{min-width:44px;min-height:44px;justify-content:center}
+.orb::after{content:"";position:absolute;inset:-4px;border-radius:50%;pointer-events:none;background:conic-gradient(from 10deg,transparent 0 9%,#f3cf7e33 11%,transparent 16% 30%,#f3cf7e30 34%,transparent 40% 62%,#f3cf7e2c 68%,transparent 74%);opacity:.28;filter:blur(2px);transition:opacity .9s,transform 1s;z-index:-1}
+.day.orb::after{opacity:.85;transform:rotate(35deg) scale(1.12)}
+.day .sun{box-shadow:0 0 4px #fff6c9,0 0 13px #efbb55cc,0 0 22px #f4d48c66}
+.night .moon{box-shadow:0 0 5px #fff4cf99,0 0 15px #c4dcdb66,0 0 24px #c4dcdb22}
+.modeTrigger{right:-2px;bottom:-2px}
+@media(prefers-reduced-motion:reduce){.orb::after{transition:none!important}}
