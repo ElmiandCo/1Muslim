@@ -211,7 +211,7 @@ export default function MessagesPage(){
  useEffect(()=>{if(!selected||!uid||!peerId||status?.request_status!=="accepted"||blocked.includes(peerId))return;window.dispatchEvent(new CustomEvent("1muslim:call-context",{detail:{conversationId:selected,userId:uid,peerName:names[peerId]||"Member",peerAvatar:avatars[peerId]||null}}));},[selected,uid,peerId,status?.request_status,blocked,names,avatars]);
  if(loadingAuth)return <main style={{padding:32}}>Loading messages…</main>;
  if(!uid)return <main style={{padding:32,maxWidth:720,margin:"auto"}}><h1>Messages</h1><p>Sign in to access private conversations.</p><Link href="/auth">Sign in →</Link></main>;
- return <main className={"omImessagePage "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"20px auto",padding:"0 12px",color:"var(--text,#f4f4f5)"}}>
+ return <main className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"20px auto",padding:"0 12px",color:"var(--text,#f4f4f5)"}}><div className="omMessengerPattern" aria-hidden="true"/><div className="omMessengerOrnaments" aria-hidden="true"><span className="omMessengerOrnamentNight"/><span className="omMessengerOrnamentDay"/></div>
  <div className="omMessengerTop"><div><Link href="/" className="omMessengerHome">← Home</Link><h1 className="omMessengerHeading">Messages</h1></div><button className="omMessengerNewButton" type="button" onClick={()=>setNewChatOpen(v=>!v)} aria-label="Create message, group, or call" aria-expanded={newChatOpen}>＋</button></div>
  {selected&&<nav className="omMobileThreadStrip" aria-label="Switch conversations">{Array.from(new Set(threads.map(t=>t.conversation_id))).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return <button key={cid} type="button" className={"omMobileThread "+(selected===cid?"isActive":"")} onClick={()=>setSelected(cid)}><span className="omMobileThreadAvatar">{avatars[peer]?<img src={avatars[peer]} alt=""/>:"☪"}</span><strong>{names[peer]||"Member"}</strong><small>{threadPreviews[cid]||"Start chatting"}</small></button>})}</nav>}
  <div className={"omMessengerShell "+(selected?"omMessengerShell--chat":"omMessengerShell--list")} style={{display:"grid",gridTemplateColumns:"minmax(220px,1fr) minmax(0,2fr)",minHeight:560,border:"1px solid #64748b55",borderRadius:28,overflow:"hidden"}}>
@@ -531,6 +531,17 @@ export default function MessagesPage(){
 .omImessagePage .omMessengerHeading{letter-spacing:-.035em!important}
 .omImessagePage .omThreadAvatar{border-color:#d8be78!important}
 .omImessagePage .omMessageComposer button{border-radius:14px!important}
-`}</style>
+`}
+/* Home and Messenger share the same ornament assets, alignment, and theme palette. */
+.omImessagePage.omMessengerUnified{position:relative;isolation:isolate;background:radial-gradient(ellipse at 25% 5%,#235944 0%,transparent 48%),radial-gradient(ellipse at 100% 85%,#193d36 0%,transparent 45%),#071914!important;border-radius:26px;min-height:calc(100dvh - 40px);transition:background-color .9s ease,color .5s ease;overflow:hidden}
+.omImessagePage.omMessengerUnified.omMessengerDay{background:radial-gradient(ellipse at 10% 0%,#f4e5bd,transparent 60%),#e8eee1!important;color:#183c2d!important}
+.omMessengerPattern,.omMessengerOrnaments{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.omMessengerPattern{opacity:.12;background-image:repeating-linear-gradient(45deg,transparent 0 37px,#d7bf7d 38px,transparent 39px 76px),repeating-linear-gradient(-45deg,transparent 0 37px,#d7bf7d 38px,transparent 39px 76px);mask-image:linear-gradient(to bottom,#000,transparent 75%)}
+.omMessengerOrnamentNight,.omMessengerOrnamentDay{position:absolute;display:block;left:50%;top:clamp(60px,11vh,130px);width:min(84vw,760px);height:min(60vh,590px);transform:translateX(-50%);background-position:center top;background-repeat:no-repeat;background-size:contain;transition:opacity 900ms cubic-bezier(.22,1,.36,1);opacity:0}
+.omMessengerOrnamentNight{background-image:url('/assets/decorations/islamic-white-ornament.PNG');opacity:.12}.omMessengerOrnamentDay{background-image:url('/assets/decorations/islamic-gold-ornament.PNG');opacity:0}.omMessengerDay .omMessengerOrnamentNight{opacity:0}.omMessengerDay .omMessengerOrnamentDay{opacity:.16}
+.omMessengerUnified>*:not(.omMessengerPattern):not(.omMessengerOrnaments):not(style){position:relative;z-index:1}
+@media(max-width:700px){.omImessagePage.omMessengerUnified{border-radius:0;min-height:100dvh;margin:0!important}.omMessengerOrnamentNight,.omMessengerOrnamentDay{top:90px;width:110vw;height:58vh}}
+@media(prefers-reduced-motion:reduce){.omMessengerOrnamentNight,.omMessengerOrnamentDay{transition:none}}
+</style>
  </main>
 }
