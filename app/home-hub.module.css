@@ -426,3 +426,20 @@
 @keyframes upgradeEnter{from{opacity:0;transform:translateY(-9px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:600px){.upgradeNotice{margin:0 10px 12px;gap:10px;flex-wrap:wrap;padding:13px 37px 13px 12px}.upgradeSparkle{width:33px;height:33px}.upgradeCopy{flex-basis:calc(100% - 48px)}.upgradeTry{margin-left:43px;padding:9px 15px}}
 @media(prefers-reduced-motion:reduce){.upgradeNotice{animation:none}.upgradeTry{transition:none}}
+
+/* Floating announcement: drops in, hovers like a live comment, and fades by eight seconds. */
+.upgradeNotice{position:fixed!important;z-index:1200;top:clamp(150px,37vh,390px);left:50%;width:min(440px,calc(100vw - 30px));margin:0!important;box-sizing:border-box;transform:translateX(-50%);box-shadow:0 16px 54px #001d18a6,0 0 28px #d6bf7140;animation:upgradeFloat8 8s both!important;will-change:transform,opacity;pointer-events:auto}
+@keyframes upgradeFloat8{
+0%{opacity:0;transform:translate(-50%,-140px) scale(.91)}
+9%{opacity:1;transform:translate(-50%,8px) scale(1.02)}
+18%{transform:translate(-50%,-5px) scale(1)}
+27%{transform:translate(calc(-50% + 7px),0) rotate(.7deg)}
+40%{transform:translate(calc(-50% - 8px),-7px) rotate(-.7deg)}
+53%{transform:translate(calc(-50% + 5px),-2px) rotate(.35deg)}
+66%{transform:translate(calc(-50% - 4px),-6px) rotate(-.3deg)}
+78%{opacity:1;transform:translate(-50%,-4px)}
+100%{opacity:0;transform:translate(-50%,-28px) scale(.97)}
+}
+@media(max-width:600px){.upgradeNotice{top:clamp(130px,35vh,340px)}}
+@media(prefers-reduced-motion:reduce){.upgradeNotice{animation:upgradeAccessible8 8s both!important}}
+@keyframes upgradeAccessible8{0%{opacity:0;transform:translateX(-50%)}8%,78%{opacity:1;transform:translateX(-50%)}100%{opacity:0;transform:translateX(-50%)}}
