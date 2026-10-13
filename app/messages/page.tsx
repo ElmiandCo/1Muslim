@@ -500,6 +500,16 @@ export default function MessagesPage(){
 /* Unread conversations glow softly in gold until opened. */
 .omImessagePage .omMessengerThreadList>button.omUnreadThread{position:relative;border-color:#d7b65eaa!important;box-shadow:0 0 0 1px #e8ca7c33,0 0 16px #d9b35735!important;animation:omUnreadGold 2.8s ease-in-out infinite!important}.omImessagePage .omUnreadThread .omThreadMeta strong{color:#f3d996!important}.omImessagePage .omUnreadBadge{min-width:24px;height:24px;border-radius:999px;background:#e8c777;color:#332500;font-size:12px;font-weight:800;display:grid;place-items:center;padding:0 5px;box-shadow:0 0 12px #f6d68055}.omImessagePage .omUnreadThread .omThreadChevron{display:none}@keyframes omUnreadGold{0%,100%{box-shadow:0 0 0 1px #e8ca7c33,0 0 10px #d9b35720}50%{box-shadow:0 0 0 1px #f0d89177,0 0 22px #e6bf6260}}@media(prefers-reduced-motion:reduce){.omImessagePage .omMessengerThreadList>button.omUnreadThread{animation:none!important}}
 
+/* Home and Messenger share the same ornament assets, alignment, and theme palette. */
+.omImessagePage.omMessengerUnified{position:relative;isolation:isolate;background:radial-gradient(ellipse at 25% 5%,#235944 0%,transparent 48%),radial-gradient(ellipse at 100% 85%,#193d36 0%,transparent 45%),#071914!important;border-radius:26px;min-height:calc(100dvh - 40px);transition:background-color .9s ease,color .5s ease;overflow:hidden}
+.omImessagePage.omMessengerUnified.omMessengerDay{background:radial-gradient(ellipse at 10% 0%,#f4e5bd,transparent 60%),#e8eee1!important;color:#183c2d!important}
+.omMessengerPattern,.omMessengerOrnaments{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.omMessengerPattern{opacity:.12;background-image:repeating-linear-gradient(45deg,transparent 0 37px,#d7bf7d 38px,transparent 39px 76px),repeating-linear-gradient(-45deg,transparent 0 37px,#d7bf7d 38px,transparent 39px 76px);mask-image:linear-gradient(to bottom,#000,transparent 75%)}
+.omMessengerOrnamentNight,.omMessengerOrnamentDay{position:absolute;display:block;left:50%;top:clamp(60px,11vh,130px);width:min(84vw,760px);height:min(60vh,590px);transform:translateX(-50%);background-position:center top;background-repeat:no-repeat;background-size:contain;transition:opacity 900ms cubic-bezier(.22,1,.36,1);opacity:0}
+.omMessengerOrnamentNight{background-image:url('/assets/decorations/islamic-white-ornament.PNG');opacity:.12}.omMessengerOrnamentDay{background-image:url('/assets/decorations/islamic-gold-ornament.PNG');opacity:0}.omMessengerDay .omMessengerOrnamentNight{opacity:0}.omMessengerDay .omMessengerOrnamentDay{opacity:.16}
+.omMessengerUnified>*:not(.omMessengerPattern):not(.omMessengerOrnaments):not(style){position:relative;z-index:1}
+@media(max-width:700px){.omImessagePage.omMessengerUnified{border-radius:0;min-height:100dvh;margin:0!important}.omMessengerOrnamentNight,.omMessengerOrnamentDay{top:90px;width:110vw;height:58vh}}
+@media(prefers-reduced-motion:reduce){.omMessengerOrnamentNight,.omMessengerOrnamentDay{transition:none}}
 `}
 </style>
 
@@ -532,16 +542,6 @@ export default function MessagesPage(){
 .omImessagePage .omThreadAvatar{border-color:#d8be78!important}
 .omImessagePage .omMessageComposer button{border-radius:14px!important}
 `}
-/* Home and Messenger share the same ornament assets, alignment, and theme palette. */
-.omImessagePage.omMessengerUnified{position:relative;isolation:isolate;background:radial-gradient(ellipse at 25% 5%,#235944 0%,transparent 48%),radial-gradient(ellipse at 100% 85%,#193d36 0%,transparent 45%),#071914!important;border-radius:26px;min-height:calc(100dvh - 40px);transition:background-color .9s ease,color .5s ease;overflow:hidden}
-.omImessagePage.omMessengerUnified.omMessengerDay{background:radial-gradient(ellipse at 10% 0%,#f4e5bd,transparent 60%),#e8eee1!important;color:#183c2d!important}
-.omMessengerPattern,.omMessengerOrnaments{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.omMessengerPattern{opacity:.12;background-image:repeating-linear-gradient(45deg,transparent 0 37px,#d7bf7d 38px,transparent 39px 76px),repeating-linear-gradient(-45deg,transparent 0 37px,#d7bf7d 38px,transparent 39px 76px);mask-image:linear-gradient(to bottom,#000,transparent 75%)}
-.omMessengerOrnamentNight,.omMessengerOrnamentDay{position:absolute;display:block;left:50%;top:clamp(60px,11vh,130px);width:min(84vw,760px);height:min(60vh,590px);transform:translateX(-50%);background-position:center top;background-repeat:no-repeat;background-size:contain;transition:opacity 900ms cubic-bezier(.22,1,.36,1);opacity:0}
-.omMessengerOrnamentNight{background-image:url('/assets/decorations/islamic-white-ornament.PNG');opacity:.12}.omMessengerOrnamentDay{background-image:url('/assets/decorations/islamic-gold-ornament.PNG');opacity:0}.omMessengerDay .omMessengerOrnamentNight{opacity:0}.omMessengerDay .omMessengerOrnamentDay{opacity:.16}
-.omMessengerUnified>*:not(.omMessengerPattern):not(.omMessengerOrnaments):not(style){position:relative;z-index:1}
-@media(max-width:700px){.omImessagePage.omMessengerUnified{border-radius:0;min-height:100dvh;margin:0!important}.omMessengerOrnamentNight,.omMessengerOrnamentDay{top:90px;width:110vw;height:58vh}}
-@media(prefers-reduced-motion:reduce){.omMessengerOrnamentNight,.omMessengerOrnamentDay{transition:none}}
 </style>
  </main>
 }
