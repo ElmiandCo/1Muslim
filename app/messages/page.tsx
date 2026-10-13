@@ -480,6 +480,18 @@ export default function MessagesPage(){
  .omImessagePage .omConversationList,.omImessagePage .omChatPane{height:100%!important;min-height:0!important}
  .omImessagePage .omMessagesFeed{flex:1 1 0!important;min-height:0!important;max-height:none!important}
 }
+
+/* Mobile chat: reclaim bottom viewport and remove duplicate floating call dock.
+   Voice/video actions remain in the chat header. */
+@media(max-width:700px){
+ html:has(.omImessagePage),body:has(.omImessagePage){overflow:hidden!important}
+ body:has(.omImessagePage) .omImessagePage{height:calc(100dvh - 12px - env(safe-area-inset-bottom))!important;max-height:calc(100dvh - 12px - env(safe-area-inset-bottom))!important}
+ .omImessagePage .omMessengerShell{flex:1 1 auto!important;height:auto!important;min-height:0!important}
+ .omImessagePage .omChatPane{display:flex!important;flex-direction:column!important}
+ .omImessagePage .omMessagesFeed{flex:1 1 0!important;min-height:0!important}
+ .omImessagePage .omMessageComposer{position:relative!important;z-index:5!important}
+ body:has(.omImessagePage) .mc-idleDock,body:has(.omImessagePage) .mc-callLauncher{display:none!important}
+}
 `}</style>
  </main>
 }
