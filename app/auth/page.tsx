@@ -125,6 +125,23 @@ export default function AuthPage() {
 }
 /* Keep the existing HudHud header control; remove distracting floating controls on auth only. */
 
+
+/* Unified Shahada widget panel: one seamless surface, like the homepage dashboard. */
+.authShahada .authGlass{gap:0;border:1px solid #a9c8ac75;border-radius:24px;background:linear-gradient(155deg,#103d30f2,#082820f4);box-shadow:inset 0 1px #ffffff24,0 18px 55px #00180e52}
+.authShahada .authArt{background:transparent!important;border:0!important;border-radius:0!important;padding-bottom:6px}
+.authShahada .authPanel{background:transparent!important;border:0!important;border-radius:0!important;padding-top:6px}
+.authShahada .authArt h1{letter-spacing:-.035em}
+.authShahada .authTop{padding-top:9px;border-top:1px solid #d4c59133}
+.authShahada .authMethods{gap:8px}
+.authShahada .authMethods button{background:linear-gradient(155deg,#ffffff0e,#4f9b7420);border:1px solid #a3d0b263;box-shadow:inset 0 1px #ffffff13}
+.authShahada .authMethods button.selected{border-color:#d4c58e;box-shadow:inset 0 1px #ffffff35,0 0 0 1px #d4c58e44,0 4px 15px #09271a44}
+.authShahada .authSwitch,.authShahada .authForm input{background:#ffffff0b;border-color:#9cbaa56e}
+.authShahada .authAction.ready{background:linear-gradient(120deg,#d9c58c,#b9d9ad);box-shadow:inset 0 1px #ffffff80}
+.authShahada .authGoogle{background:#f0f3e9}
+.authPreviewDay.authShahada .authGlass{background:linear-gradient(145deg,#fffef5ed,#edf4eaf2);border-color:#b8c5a5}
+.authPreviewDay.authShahada .authTop{border-top-color:#476b5533}
+.authPreviewDay.authShahada .authMethods button{background:#ffffffa8;border-color:#9bbb9b}
+@media(max-width:700px){.authShahada .authGlass{width:100%;max-width:540px}.authShahada .authArt{padding:16px 18px 4px}.authShahada .authPanel{padding:4px 18px 18px}.authShahada .authTop{padding-top:10px}}
 @media(prefers-reduced-motion:reduce){.authShahada *{scroll-behavior:auto!important}}
 `}</style><style jsx global>{`body:has(.authPreview) .muslimMobileDock,body:has(.authPreview) .hudhudTopOrb,body:has(.authPreview) .hudhudFloatingOrb{display:none!important}body:has(.authPreview){overflow-x:hidden}`}</style></main>;
 }
