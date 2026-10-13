@@ -16,12 +16,14 @@
     "@supabase/supabase-js": "2.117.2",
     "livekit-client": "2.22.3",
     "livekit-server-sdk": "2.19.1",
-    "@livekit/track-processors": "^0.7.0"
+    "@livekit/track-processors": "^0.7.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@types/web-push": "^3.6.4"
   }
 }
