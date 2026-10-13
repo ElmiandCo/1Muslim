@@ -1,0 +1,11 @@
+"use client";
+import {useEffect,useState} from "react";
+import Link from "next/link";
+import {createClient} from "../../utils/supabase/client";
+import styles from "../home-hub.module.css";
+export default function PersonSearchCard({person}:{person:{id:string;title:string;subtitle:string;href:string}}){
+ const [expanded,setExpanded]=useState(false),[following,setFollowing]=useState(false),[me,setMe]=useState<string|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ useEffect(()=>{let active=true;const db=createClient();void (async()=>{const {data:{user}}=await db.auth.getUser();if(!active)return;setMe(user?.id||null);if(!user||user.id===person.id)return;const {data}=await db.from("profile_follows").select("follower_id").eq("follower_id",user.id).eq("following_id",person.id).maybeSingle();if(active)setFollowing(!!data)})();return()=>{active=false}},[person.id]);
+ const follow=async()=>{if(!me){setError("Sign in to follow and connect.");return}setBusy(true);setError("");const {error:e}=await createClient().from("profile_follows").insert({follower_id:me,following_id:person.id});if(e)setError(e.message);else setFollowing(true);setBusy(false)};
+ return <article className={[styles.tile,styles.resultTile,expanded?styles.personExpanded:""].join(" ")}><button type="button" className={styles.personTrigger} onClick={()=>setExpanded(v=>!v)} aria-expanded={expanded}><span className={styles.icon}>👤</span><div><b>1MUSLIM MEMBER</b><br/><strong>{person.title}</strong><br/><small>{person.subtitle}</small></div><span aria-hidden="true">{expanded?"⌃":"⌄"}</span></button>{expanded&&<div className={styles.personDetails}><Link href={"/profile/"+encodeURIComponent(person.id)} className={styles.personAction}>👤 Profile</Link>{me===person.id?<span>Your profile</span>:!following?<button type="button" disabled={busy} className={styles.personAction} onClick={()=>void follow()}>{busy?"Following…":"＋ Follow to connect"}</button>:<><span className={styles.followed}>✓ Following</span><Link href={person.href} className={styles.personAction}>💬 Message</Link><Link href={person.href+"&call=audio"} className={styles.personAction}>📞 Call</Link><Link href={person.href+"&call=video"} className={styles.personAction}>📹 Video</Link></>}{error&&<small role="alert">{error}</small>}</div>}</article>;
+}
