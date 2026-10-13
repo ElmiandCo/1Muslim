@@ -218,3 +218,11 @@
  .communityPage .socialPost .postHeader span{font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){.communityPage .ummahQuickActions a{transition:none}}
+
+
+/* Ummah: compact homepage-aligned typography and cards. */
+.ummahPage h1,.omUmmahPage h1{font-size:clamp(22px,3.6vw,39px);letter-spacing:-.055em;line-height:1.12}
+.ummahPage h2,.omUmmahPage h2{font-size:clamp(16px,2.6vw,26px);letter-spacing:-.04em}
+.ummahPage h3,.omUmmahPage h3{font-size:clamp(12px,2.7vw,20px);letter-spacing:-.03em}
+.ummahPage :where(small,.eyebrow,.postMeta),.omUmmahPage :where(small,.eyebrow,.postMeta){font-size:clamp(9px,1.9vw,12px)}
+.ummahPage :where(.postCard,.ummahCard),.omUmmahPage :where(.postCard,.ummahCard){padding:clamp(8px,1.5vw,14px)}
