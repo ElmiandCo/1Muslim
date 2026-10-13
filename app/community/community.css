@@ -101,3 +101,19 @@
 .communityGrid .omFeedSequence>.socialPost.dailyPostLit{border-color:rgba(195,157,71,.62);background:radial-gradient(ellipse at 90% 0%,rgba(192,154,64,.14),transparent 58%),linear-gradient(145deg,color-mix(in srgb,var(--panel) 89%,#0c6a47 11%),var(--panel));box-shadow:0 14px 38px rgba(0,0,0,.13),0 0 22px rgba(195,157,71,.10)}
 @media(max-width:640px){.communityGrid .omFeedSequence{margin-bottom:13px}.communityGrid .omFeedSequence>.socialPost{padding:15px 12px;border-radius:19px}}
 @media(prefers-reduced-motion:reduce){.communityGrid .omFeedSequence>.socialPost,.communityGrid .omFeedSequence>.socialPost .postActions button{transition:none!important}.communityGrid .omFeedSequence>.socialPost:hover{transform:none}}
+
+/* Living Post Studio: accessible drag-and-tap invitation, both themes */
+.omLivingDrop{position:relative;isolation:isolate;margin:0 0 14px;border:1px solid color-mix(in srgb,#bda56a 55%,var(--line));border-radius:22px;overflow:hidden;background:linear-gradient(125deg,color-mix(in srgb,var(--panel) 92%,#d5bd7c),var(--panel));box-shadow:0 9px 28px #0000000b,inset 0 1px #ffffff25;transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease,background .28s ease}
+.omLivingDrop:before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(110deg,transparent 20%,#dcbf7620 47%,transparent 70%);background-size:220% 100%;animation:omDropShimmer 9s ease-in-out infinite}
+.omLivingDropTrigger{position:relative;z-index:1;width:100%;min-height:126px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;border:0;background:transparent;color:var(--text);cursor:pointer;padding:18px;text-align:center}
+.omLivingDropIcon{width:43px;height:43px;display:grid;place-items:center;border-radius:16px;background:color-mix(in srgb,var(--panel) 65%,#137b52);border:1px solid #bca36888;color:#159b65;font-size:26px;line-height:1;box-shadow:0 3px 14px #008a3b1a;animation:omDropBreathe 4.5s ease-in-out infinite}
+.omLivingDropTitle{font-size:14px;font-weight:750;letter-spacing:-.02em}.omLivingDropHint{font-size:11px;opacity:.7;overflow-wrap:anywhere}
+.omLivingDropInput{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.omLivingDrop:focus-within{outline:2px solid #168e61;outline-offset:3px}
+.omLivingDropActive{transform:scale(1.018);border-color:#17a56b;box-shadow:0 0 0 4px #18a46c20,0 14px 34px #0680522a;background:color-mix(in srgb,var(--panel) 83%,#16a36b)}
+.omLivingDropActive .omLivingDropIcon{transform:scale(1.1);background:#137a51;color:white;animation:none}
+.omLivingDropFilled{border-color:color-mix(in srgb,#bda56a 70%,var(--line))}
+@keyframes omDropShimmer{0%,72%,100%{background-position:120% 0}85%{background-position:-110% 0}}
+@keyframes omDropBreathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media(max-width:600px){.omLivingDropTrigger{min-height:110px;padding:14px}.omLivingDrop{border-radius:18px}}
+@media(prefers-reduced-motion:reduce){.omLivingDrop,.omLivingDrop:before,.omLivingDropIcon{animation:none!important;transition:none!important}}
