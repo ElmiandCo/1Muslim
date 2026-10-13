@@ -1,19 +1,21 @@
 "use client";
 import {useEffect,useState} from "react";
+import {usePathname} from "next/navigation";
 
 /** Short, restrained entry shimmer. No persistent particle field or interaction blocking. */
 export default function HudHudDimensionDust(){
+ const pathname=usePathname();
  const [visible,setVisible]=useState(false);
  const [ending,setEnding]=useState(false);
  useEffect(()=>{
   if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   if(window.matchMedia("(prefers-reduced-data: reduce)").matches)return;
-  try{if(sessionStorage.getItem("1muslim:intro-seen")==="1")return;sessionStorage.setItem("1muslim:intro-seen","1")}catch{}
+  if(pathname!=="/")return;
   const start=window.setTimeout(()=>setVisible(true),120);
   const fade=window.setTimeout(()=>setEnding(true),1550);
   const end=window.setTimeout(()=>setVisible(false),2300);
   return()=>{clearTimeout(start);clearTimeout(fade);clearTimeout(end)};
- },[]);
+ },[pathname]);
  if(!visible)return null;
  return <div className={"hh-entry-light"+(ending?" isLeaving":"")} aria-hidden="true" data-no-tap-shimmer>
   <span className="hh-entry-halo"/><span className="hh-entry-ray"/><span className="hh-entry-line"/>
