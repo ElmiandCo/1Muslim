@@ -87,3 +87,17 @@
 .communityGrid .omFeedSequence .omVerseGlass small{letter-spacing:.08em}
 @keyframes ummahPostPop{from{opacity:.65;transform:translateY(10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.communityGrid .omFeedSequence>.socialPost{animation:none;transition:none}.communityGrid .omFeedSequence>.socialPost:active{transform:none}.communityGrid .omFeedSequence>.socialPost .postActions button{transition:none}}
+
+
+/* 1Muslim — premium individual post treatment. No changes to feed data or controls. */
+.communityGrid .omFeedSequence{position:relative;isolation:isolate;margin:0 0 18px}
+.communityGrid .omFeedSequence>.socialPost{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--line2) 72%,#c39a43 28%);border-radius:22px;padding:19px;background:linear-gradient(145deg,color-mix(in srgb,var(--panel) 94%,#145b3a 6%),var(--panel));box-shadow:0 12px 34px rgba(0,0,0,.12),inset 0 1px rgba(255,255,255,.12);transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease}
+.communityGrid .omFeedSequence>.socialPost:before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,transparent,#bd9651 28%,#e7cb82 48%,#17764d 72%,transparent);opacity:.72;pointer-events:none}
+.communityGrid .omFeedSequence>.socialPost:hover{transform:translateY(-2px);border-color:rgba(198,162,88,.55);box-shadow:0 18px 40px rgba(0,0,0,.16),0 0 18px rgba(169,132,52,.07)}
+.communityGrid .omFeedSequence>.socialPost .postHeader strong{letter-spacing:-.015em;font-weight:750}
+.communityGrid .omFeedSequence>.socialPost .omPostTextReveal{line-height:1.7;overflow-wrap:anywhere}
+.communityGrid .omFeedSequence>.socialPost .postActions button{transition:transform .18s ease,color .18s ease,background .18s ease}
+.communityGrid .omFeedSequence>.socialPost .postActions button:active{transform:scale(.91)}
+.communityGrid .omFeedSequence>.socialPost.dailyPostLit{border-color:rgba(195,157,71,.62);background:radial-gradient(ellipse at 90% 0%,rgba(192,154,64,.14),transparent 58%),linear-gradient(145deg,color-mix(in srgb,var(--panel) 89%,#0c6a47 11%),var(--panel));box-shadow:0 14px 38px rgba(0,0,0,.13),0 0 22px rgba(195,157,71,.10)}
+@media(max-width:640px){.communityGrid .omFeedSequence{margin-bottom:13px}.communityGrid .omFeedSequence>.socialPost{padding:15px 12px;border-radius:19px}}
+@media(prefers-reduced-motion:reduce){.communityGrid .omFeedSequence>.socialPost,.communityGrid .omFeedSequence>.socialPost .postActions button{transition:none!important}.communityGrid .omFeedSequence>.socialPost:hover{transform:none}}
