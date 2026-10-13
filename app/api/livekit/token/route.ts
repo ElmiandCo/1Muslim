@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const room = typeof body?.room === "string" ? body.room.trim() : "";
-    const role = body?.role === "host" ? "host" : body?.role === "guest" ? "guest" : "viewer";
+    const role = body?.role === "host" ? "host" : body?.role === "guest" ? "guest" : body?.role === "companion" ? "companion" : "viewer";
 
     if (!room || !/^1muslim-live-[a-zA-Z0-9-]+$/.test(room)) {
       return NextResponse.json({ error: "Invalid live room." }, { status: 400 });
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "This live stream is no longer active." }, { status: 404 });
     }
 
-    if (role === "host" && liveStream.host_id !== user.id) {
+    if ((role === "host" || role === "companion") && liveStream.host_id !== user.id) {
       return NextResponse.json({ error: "You are not the host of this live." }, { status: 403 });
     }
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     }
 
     const token = new AccessToken(apiKey, apiSecret, {
-      identity: user.id,
+      identity: role === "companion" ? `${user.id}:screen:${crypto.randomUUID()}` : user.id,
       name: user.user_metadata?.full_name || user.email || "1Muslim user",
       ttl: "2h",
     });
@@ -60,7 +60,8 @@ export async function POST(request: Request) {
     token.addGrant({
       roomJoin: true,
       room,
-      canPublish: role === "host" || role === "guest",
+      canPublish: role === "host" || role === "guest" || role === "companion",
+      canPublishSources: role === "companion" ? ["screen_share"] : undefined,
       canSubscribe: true,
       canPublishData: true,
     });
