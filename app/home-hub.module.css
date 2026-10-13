@@ -415,3 +415,14 @@
 @media(max-width:700px){.control .galleryBackdrop{padding:0;align-items:flex-end}.control .gallerySheet{width:100%;max-height:91dvh;border-radius:26px 26px 0 0;padding-top:7px;animation:galleryRise .32s cubic-bezier(.2,.8,.25,1)}.control .galleryHandle{display:block;width:42px;height:5px;border-radius:8px;background:#ffffff70;margin:5px auto 0}.control .galleryHead{padding:17px 18px 9px}.control .galleryItems{padding:0 12px 10px}.control .galleryActions{padding:9px 18px}.control .customGrid>.sizeimmersive,.control .customGrid>.sizestudio{grid-column:span 2;grid-row:span 2}}
 @keyframes galleryRise{from{transform:translateY(30px);opacity:.7}to{transform:translateY(0);opacity:1}}
 @media(prefers-reduced-motion:reduce){.control .gallerySheet{animation:none}}
+
+
+/* One-time calling upgrade announcement — preserves the existing dashboard. */
+.upgradeNotice{position:relative;display:flex;align-items:center;gap:14px;margin:0 16px 14px;padding:15px 46px 15px 16px;border:1px solid #e3d19c88;border-radius:19px;background:linear-gradient(115deg,#0a382de8,#14523dcf 55%,#1c3e35e8);box-shadow:0 8px 32px #001c1633,inset 0 1px #fff2;color:#f7f3e4;animation:upgradeEnter .45s ease-out}
+.upgradeSparkle{display:grid;place-items:center;width:39px;height:39px;flex-shrink:0;border:1px solid #e3cf9588;border-radius:13px;color:#ead18c;background:#e4cf9219;font-size:23px}
+.upgradeCopy{flex:1;min-width:0}.upgradeKicker{display:block;margin-bottom:4px;font-size:9px;letter-spacing:.17em;font-weight:800;color:#e9d596}.upgradeCopy strong{display:block;font-size:14px;line-height:1.35}.upgradeCopy p{font-size:12px;opacity:.83;margin:4px 0 0}
+.upgradeTry{flex-shrink:0;display:inline-flex;gap:8px;align-items:center;justify-content:center;padding:11px 15px;border-radius:13px;background:#e3dfb5;color:#173d30!important;text-decoration:none;font-size:12px;font-weight:800;transition:transform .2s,box-shadow .2s}.upgradeTry:hover{transform:translateY(-2px);box-shadow:0 5px 19px #d5c88a44}
+.upgradeDismiss{position:absolute;right:10px;top:8px;display:grid;place-items:center;width:27px;height:27px;border:0;background:transparent;color:#e7e6d0;font-size:21px;cursor:pointer}
+@keyframes upgradeEnter{from{opacity:0;transform:translateY(-9px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.upgradeNotice{margin:0 10px 12px;gap:10px;flex-wrap:wrap;padding:13px 37px 13px 12px}.upgradeSparkle{width:33px;height:33px}.upgradeCopy{flex-basis:calc(100% - 48px)}.upgradeTry{margin-left:43px;padding:9px 15px}}
+@media(prefers-reduced-motion:reduce){.upgradeNotice{animation:none}.upgradeTry{transition:none}}
