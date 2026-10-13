@@ -552,3 +552,21 @@
 .control .customGrid .sizefeatured .widgetName{font-size:clamp(20px,3vw,34px);letter-spacing:-.045em}
 .control .widgetArabic,.control .widgetMetric,.control .widgetFeatureDetail{font-size:clamp(9px,1.7vw,12px)}
 .control .widgetCanvas,.control .widget{min-width:0}
+
+
+/* Islamic day/night ornaments: same aspect ratio, smaller and higher; never crop. */
+.control .decorationNight,.control .decorationDay{
+ top:clamp(42px,7vh,90px);
+ width:min(67.2vw,608px);
+ height:min(48vh,472px);
+ background-size:contain;
+ background-position:center top;
+}
+@media(max-width:700px){
+ .control .decorationNight,.control .decorationDay{
+  top:62px;
+  width:88vw;
+  height:46.4vh;
+  background-size:contain;
+ }
+}
