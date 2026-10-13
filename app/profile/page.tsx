@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import "./profile-foundation.css";
+import {useRef} from "react";
 import {useRouter} from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import SiteNav from "../components/SiteNav";
@@ -32,16 +33,21 @@ function cooldownRemaining(changedAt: string | null) {
   return hours >= 24 ? `${Math.floor(hours / 24)}d ${hours % 24}h remaining` : `${hours}h remaining`;
 }
 
-const colors = [["dark-grey","Dark Grey"],["dark-green","Dark Green"],["white","White"]];
+const colors = [["dark-grey","Obsidian"],["dark-green","Emerald"],["white","Pearl"],["ocean","Ocean"],["amethyst","Amethyst"],["sunset","Sunset"]];
+const profileBorderRanks=[0,500,1500,3000,6000,10500,25000,50000];
+function borderRank(xp:number){return profileBorderRanks.reduce((rank,min,i)=>xp>=min?i:rank,0);}
 
 
 
-function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,posting,publishFirstPost,onEdit}:{profile:Profile;tier:any;ashab:Profile[];postCount:number;postText:string;setPostText:(v:string)=>void;posting:boolean;publishFirstPost:()=>void;onEdit:()=>void}){
+function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,posting,publishFirstPost,onEdit,onCustomize}:{profile:Profile;tier:any;ashab:Profile[];postCount:number;postText:string;setPostText:(v:string)=>void;posting:boolean;publishFirstPost:()=>void;onEdit:()=>void;onCustomize:()=>void}){
+  const coverRef=useRef<HTMLDivElement>(null);
+  const moveCover=(e:React.PointerEvent<HTMLDivElement>)=>{const rect=e.currentTarget.getBoundingClientRect();const x=(e.clientX-rect.left)/rect.width-.5;const y=(e.clientY-rect.top)/rect.height-.5;coverRef.current?.style.setProperty("--parallax-x",`${x*12}px`);coverRef.current?.style.setProperty("--parallax-y",`${y*9}px`)};
+  const resetCover=()=>{coverRef.current?.style.setProperty("--parallax-x","0px");coverRef.current?.style.setProperty("--parallax-y","0px")};
   return <section className="profileOverview">
     <XpJourney xp={profile.xp_total||0} gender={profile.avatar_gender||profile.gender}/>
-    <header className={"profileOverviewHero header-"+profile.profile_accent}>
-      <div className="profileOverviewCover"><div className="profileOverviewActions"><button type="button" className="profileSignOut" onClick={()=>window.dispatchEvent(new Event("1muslim:profile-signout"))}>✦ Sign out</button><Link href="/find" className="ghost">Find People</Link><button className="primary" onClick={onEdit}>✦ Edit profile</button></div></div>
-      <div className="profileOverviewBody"><div className="profileOverviewAvatar"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/></div>
+    <header className={"profileOverviewHero profileGlass profileTone-"+profile.profile_accent+" profileRank-"+borderRank(profile.xp_total||0)+" header-"+profile.profile_accent}>
+      <div className="profileOverviewCover" ref={coverRef} onPointerMove={moveCover} onPointerLeave={resetCover}><div className="profileGlassLayer profileGlassLayerBack" aria-hidden="true"/><div className="profileGlassLayer profileGlassLayerFront" aria-hidden="true"/><div className="profileOverviewActions"><button type="button" className="profilePaletteButton" onClick={onCustomize} aria-label="Customize profile colors and layers">◈ Appearance</button><button type="button" className="profileSignOut" onClick={()=>window.dispatchEvent(new Event("1muslim:profile-signout"))}>✦ Sign out</button><Link href="/find" className="ghost">Find People</Link><button className="primary" onClick={onEdit}>✦ Edit profile</button></div></div>
+      <div className="profileOverviewBody"><div className={"profileOverviewAvatar profileAvatarFrame profileRank-"+borderRank(profile.xp_total||0)}><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/></div>
         <div className="profileOverviewMain"><span className="eyebrow">YOUR ONE MUSLIM PROFILE</span><h1>{profile.display_name||"Member"}</h1><p className="profileHandle">@{profile.username||"member"} · {tier.name} · {profile.xp_total.toLocaleString()} XP</p><p className="profileBio">{profile.bio||"Your profile is your space. Add a short bio so the community can get to know you."}</p>
           <FeaturedBadge userId={profile.id} verifiedAt={profile.shahada_verified_at}/><Link href="/arabic-badges" className="ghost" style={{display:"inline-flex",marginTop:10}}>🔤 Arabic Badge Program →</Link><div className="profileChips">{profile.city&&<span>📍 {profile.city}{profile.state?", "+profile.state:""}</span>}<span>⭐ {profile.xp_total.toLocaleString()} XP</span>{profile.shahada_verified_at&&<span>✓ Shahadah verified</span>}</div>
         </div></div>
@@ -168,7 +174,7 @@ export default function ProfilePage() {
 
   const publishFirstPost=async()=>{const body=postText.trim();if(!body||posting)return;setPosting(true);const s=createClient();const {error}=await s.from("posts").insert({user_id:profile.id,body});if(error){setMessage(error.message);setPosting(false);return;}setPostText("");setPostCount(x=>x+1);setPosting(false);};
 
-  return <main className="profilePage"><SiteNav/><HudHudTenFriends userId={profile.id} connectionCount={ashab.length}/><FirstProfileTour userId={profile.id} onNavigate={(target)=>{setTab(target);setEditing(true)}}/>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>setEditing(true)}/>:<div className="profileShell">
+  return <main className="profilePage"><SiteNav/><HudHudTenFriends userId={profile.id} connectionCount={ashab.length}/><FirstProfileTour userId={profile.id} onNavigate={(target)=>{setTab(target);setEditing(true)}}/>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>setEditing(true)} onCustomize={()=>{setEditing(true);setTab("header")}}/>:<div className="profileShell">
     <header className={`profileHero header-${profile.profile_accent}`}><div className="profileHeroTop"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/><div><span className="eyebrow">YOUR ONE MUSLIM PROFILE</span><h1>{profile.display_name||"Member"}</h1><p>@{profile.username||"member"} · {tier.name} · {profile.xp_total.toLocaleString()} XP</p></div></div><div className="profileHeroActions"><Link href="/find" className="ghost">Find People</Link><button className="primary" onClick={save} disabled={saving||colorSaving}>{saving?"Saving…":"Save & close"}</button></div></header>
     <div className="profileEditorToolbar"><button className="ghost" onClick={()=>setEditing(false)}>← Close editor</button><span>Profile settings</span></div><div style={{padding:"12px 0"}}><FeaturedBadge userId={profile.id} verifiedAt={profile.shahada_verified_at} editable/></div><div className="profileTabs">{(["profile","avatar","header","live","shahada","badges"] as const).map(x=><button className={tab===x?"active":""} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Profile":x==="avatar"?"Avatar & Accessories":x==="header"?"Header Color":x==="live"?"Live & Streaming":x==="badges"?"🏅 Badges":"Shahada Vault"}</button>)}</div>
 
