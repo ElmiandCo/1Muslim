@@ -457,3 +457,15 @@
 @keyframes dhikrModalIn{from{opacity:0;transform:translateY(30px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:600px){.dhikrOverlay{align-items:flex-end;padding:0}.dhikrModal{width:100%;max-height:90dvh;border-radius:26px 26px 0 0;border-bottom:0}.dhikrModalBody{padding:15px}.dhikrModalHeader{padding:14px 17px}}
 @media(prefers-reduced-motion:reduce){.dhikrOverlay,.dhikrModal{animation:none}}
+
+
+/* Transparent Islamic ornaments share one anchor; only opacity changes with theme. */
+.islamicDecoration{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;isolation:isolate}
+.decorationNight,.decorationDay{position:absolute;display:block;left:50%;top:clamp(60px,11vh,130px);width:min(84vw,760px);height:min(60vh,590px);transform:translateX(-50%);background-position:center top;background-repeat:no-repeat;background-size:contain;pointer-events:none;transition:opacity 900ms cubic-bezier(.22,1,.36,1);will-change:opacity;opacity:0}
+.decorationNight{background-image:url('/assets/decorations/islamic-decoration-white-gold.png');opacity:.16}
+.decorationDay{background-image:url('/assets/decorations/islamic-decoration-gold.png');opacity:0}
+.day .decorationNight{opacity:0}
+.day .decorationDay{opacity:.21}
+.controlHeader,.intro,.surface,.searchDock,.dockNav{position:relative;z-index:1}
+@media(max-width:700px){.decorationNight,.decorationDay{top:90px;width:110vw;height:58vh}}
+@media(prefers-reduced-motion:reduce){.decorationNight,.decorationDay{transition:none}}
