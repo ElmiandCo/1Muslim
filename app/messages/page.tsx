@@ -502,5 +502,24 @@ export default function MessagesPage(){
 
 `}
 </style>
+
+<style jsx global>{`
+/* Home-style compact Messenger: app-height canvas, emerald/gold controls and comfortable touch targets */
+@media(max-width:760px){
+ body:has(.omImessagePage){overflow:hidden}
+ .omImessagePage{height:100dvh!important;min-height:0!important;max-height:100dvh!important;width:100%!important;max-width:100vw!important;padding:calc(env(safe-area-inset-top,0px) + 6px) 9px calc(env(safe-area-inset-bottom,0px) + 8px)!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;background:radial-gradient(ellipse at 10% 0%,#194b3b,#071b17 78%)!important}
+ .omImessagePage .omMessengerShell{flex:1 1 0!important;min-height:0!important;height:auto!important;max-height:100%!important;overflow:hidden!important;border-radius:19px!important;border:1px solid #d7bd7544!important;box-shadow:0 16px 45px #0006!important}
+ .omImessagePage .omChatPane,.omImessagePage .omConversationList{min-height:0!important;max-height:100%!important;overflow:hidden!important}
+ .omImessagePage .omMessagesFeed{overflow-y:auto!important;overscroll-behavior:contain!important;scrollbar-width:thin}
+ .omImessagePage .omMessageComposer{flex-shrink:0!important;padding-bottom:max(8px,env(safe-area-inset-bottom,0px))!important}
+ .omImessagePage button,.omImessagePage a{touch-action:manipulation}
+ .omImessagePage .omMessengerThreadList>button{min-height:64px!important;border:1px solid #d7bd7530!important;background:linear-gradient(115deg,#1b4234,#103127)!important}
+ .omImessagePage .omMessengerThreadList>button:active{transform:scale(.985)!important}
+ .omImessagePage .omMessengerFilters button{min-height:42px!important}
+}
+.omImessagePage .omMessengerHeading{letter-spacing:-.035em!important}
+.omImessagePage .omThreadAvatar{border-color:#d8be78!important}
+.omImessagePage .omMessageComposer button{border-radius:14px!important}
+`}</style>
  </main>
 }
