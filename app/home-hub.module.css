@@ -34,3 +34,16 @@
 .day .searchViewport .personDetails [role="alert"]{color:#863d24}
 @media(max-width:420px){.searchViewport .personDetails{grid-template-columns:repeat(2,minmax(0,1fr))}.searchViewport .personAction{font-size:11px;padding:9px 6px}}
 @media(prefers-reduced-motion:reduce){.searchViewport .personAction,.searchViewport .resultTile{transition:none}}
+
+
+/* Product artwork upgrade: quiet ambient motion, responsive and accessible. */
+.widgetArtwork{width:clamp(70px,12vw,132px);height:clamp(70px,12vw,132px);max-height:78%;object-fit:contain;animation:productFloat 5.5s ease-in-out infinite;animation-delay:calc(var(--tile-index, 0) * -.4s);filter:drop-shadow(0 9px 17px #0008) drop-shadow(0 0 12px #9dcda53d)}
+.widget:nth-child(2n) .widgetArtwork{animation-duration:6.4s}
+.widget::before{content:"";position:absolute;inset:-40%;pointer-events:none;background:radial-gradient(circle at 50% 40%,#c8e8b31e,transparent 48%);animation:productGlow 7s ease-in-out infinite}
+.widget:hover .widgetArtwork,.widget:focus-visible .widgetArtwork{animation-play-state:paused;transform:translateY(-8px) scale(1.12);filter:drop-shadow(0 12px 18px #0008) drop-shadow(0 0 16px #c4df9c9c)}
+.widget:focus-visible{outline:2px solid #f2d99b;outline-offset:2px}
+@keyframes productFloat{0%,100%{transform:translate3d(0,0,0) rotate(-1deg)}50%{transform:translate3d(0,-6px,0) rotate(1deg)}}
+@keyframes productGlow{0%,100%{opacity:.4}50%{opacity:1}}
+@media(max-width:700px){.widgetArtwork{width:clamp(64px,20vw,105px);height:clamp(64px,20vw,105px)}.widgetTop{min-height:0}.widget{padding:9px 11px}}
+@media(max-height:680px){.widgetArtwork{width:clamp(42px,12vh,70px);height:clamp(42px,12vh,70px)}}
+@media(prefers-reduced-motion:reduce){.widgetArtwork,.widget::before{animation:none}}
