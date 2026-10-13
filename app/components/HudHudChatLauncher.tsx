@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import {usePathname} from "next/navigation";
+import {usePathname,useRouter} from "next/navigation";
 import {useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import ProfileAvatar from "./ProfileAvatar";
@@ -15,6 +15,8 @@ type Message={id:number;role:"user"|"hudhud";text:string;image?:string;avatar?:b
 const welcome:Message={id:0,role:"hudhud",text:"Assalamu alaikum! I'm HudHud. Ask me how to use 1Muslim, change your profile photo, find your Ashab, or share a verse."};
 export default function HudHudChatLauncher(){
  const pathname=usePathname()||"/";
+ const router=useRouter();
+ const landingOrb=pathname==="/";
  const [lightEnabled,setLightEnabled]=useState(true);
  const [tourStep,setTourStep]=useState(-1);
  const holdTimer=useRef<ReturnType<typeof setTimeout>|null>(null),held=useRef(false),movedOnce=useRef(false);
@@ -38,6 +40,7 @@ export default function HudHudChatLauncher(){
  useEffect(()=>{const sync=()=>{try{setLightEnabled(localStorage.getItem("1muslim-elmi-light")!=="off")}catch{setLightEnabled(true)}};sync();window.addEventListener("1muslim-elmi-light-updated",sync);return()=>window.removeEventListener("1muslim-elmi-light-updated",sync)},[]);
  const [labOpen,setLabOpen]=useState(false),[admin,setAdmin]=useState(false);
  const [position,setPosition]=useState({x:20,y:170}),[orbReady,setOrbReady]=useState(false),[dismissed,setDismissed]=useState(false),[overDismiss,setOverDismiss]=useState(false),[poof,setPoof]=useState(false),[dragged,setDragged]=useState(false),[trail,setTrail]=useState<{id:number;x:number;y:number}[]>([]);
+ useEffect(()=>{const place=()=>{if(drag.current)return;const mobile=window.matchMedia("(max-width: 800px)").matches;const target=landingOrb?{x:Math.round((window.innerWidth-54)/2),y:Math.round(window.innerHeight-(mobile?116:96))}:{x:mobile?14:24,y:mobile?18:22};setPosition(target);setDismissed(false)};place();window.addEventListener("resize",place);return()=>window.removeEventListener("resize",place)},[landingOrb,pathname]);
  const [messages,setMessages]=useState<Message[]>([welcome]),[draft,setDraft]=useState(""),[pending,setPending]=useState<{url:string;name:string}|null>(null),[notice,setNotice]=useState("");
  const drag=useRef<{x:number;y:number;px:number;py:number}|null>(null),file=useRef<HTMLInputElement>(null),bottom=useRef<HTMLDivElement>(null),nextId=useRef(1);
  useEffect(()=>{let live=true;const logo=new Image();logo.onload=()=>{if(live)setOrbReady(true)};logo.onerror=()=>{if(live)setOrbReady(true)};logo.src="/assets/hudhud-logo.PNG";if(logo.complete)setOrbReady(true);return()=>{live=false}},[]);
@@ -70,7 +73,7 @@ export default function HudHudChatLauncher(){
  {dragged&&!dismissed&&<div className={"hh-dismiss-target "+(overDismiss?"active":"")} aria-hidden="true">✕</div>}
  {poof&&<div className="hh-dismiss-poof" aria-hidden="true">✧ ✦ ✧</div>}
  {dismissed?<button type="button" className="hh-restore-tab" onClick={()=>{setDismissed(false);setPosition({x:20,y:170});setDragged(false)}} aria-label="Restore HudHud">✦ HudHud</button>:
- <button className={"hh-chat-orb hh-chat-orb-small "+(overDismiss?"hh-over-dismiss":"")} style={{left:position.x,top:position.y,visibility:orbReady?"visible":"hidden"}} aria-label="HudHud: tap for Vision, hold for settings, drag to move or hide" aria-pressed={sightOn} onPointerDown={e=>{held.current=false;endHold();holdTimer.current=setTimeout(()=>{if(!dragged){held.current=true;drag.current=null;openLanguage()}},950);drag.current={x:e.clientX,y:e.clientY,px:position.x,py:position.y};setDragged(false);e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={move} onPointerUp={finishDrag} onPointerCancel={finishDrag} onClick={()=>{if(held.current){held.current=false;return}if(dragged){setDragged(false);return}if(pathname.startsWith("/messages")){window.dispatchEvent(new Event("1muslim:toggle-xp-tracker"));setQuickOpen(false);return}toggleSight();setQuickOpen(false)}}><img src="/assets/hudhud-logo.PNG" alt="" width={53} height={53} decoding="async"/><span className="hh-avatar-swipe" aria-hidden="true"/></button>}
+ <button className={"hh-chat-orb hh-chat-orb-small hh-orb-route-nav "+(landingOrb?"hh-orb-landing ":"hh-orb-header ")+(overDismiss?"hh-over-dismiss":"")} style={{left:position.x,top:position.y,visibility:orbReady?"visible":"hidden"}} aria-label="HudHud: tap for Vision, hold for settings, drag to move or hide" aria-pressed={sightOn} onPointerDown={e=>{held.current=false;endHold();holdTimer.current=setTimeout(()=>{if(!dragged){held.current=true;drag.current=null;openLanguage()}},950);drag.current={x:e.clientX,y:e.clientY,px:position.x,py:position.y};setDragged(false);e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={move} onPointerUp={finishDrag} onPointerCancel={finishDrag} onClick={()=>{if(held.current){held.current=false;return}if(dragged){setDragged(false);return}if(!landingOrb){router.push("/");setQuickOpen(false);return}setQuickOpen(v=>!v)}}><img src="/assets/hudhud-logo.PNG" alt="" width={53} height={53} decoding="async"/><span className="hh-avatar-swipe" aria-hidden="true"/></button>}
 
  {quickOpen&&!open&&<div className="hh-quick-menu" style={{left:Math.min(position.x+4,Math.max(8,typeof window!=="undefined"?window.innerWidth-240:200)),top:Math.max(10,Math.min(position.y-190,typeof window!=="undefined"?window.innerHeight-195:300))}} role="group" aria-label="HudHud quick actions">
  <button type="button" onClick={()=>{setQuickOpen(false);setOpen(true)}}><span>✦</span><strong>Chat with HudHud</strong><small>Ask about 1Muslim</small></button>
