@@ -47,3 +47,22 @@
 @media(max-width:700px){.widgetArtwork{width:clamp(64px,20vw,105px);height:clamp(64px,20vw,105px)}.widgetTop{min-height:0}.widget{padding:9px 11px}}
 @media(max-height:680px){.widgetArtwork{width:clamp(42px,12vh,70px);height:clamp(42px,12vh,70px)}}
 @media(prefers-reduced-motion:reduce){.widgetArtwork,.widget::before{animation:none}}
+
+/* Hotfix: supplied product PNGs contain opaque black canvas backgrounds.
+   Screen compositing removes black squares while retaining luminous artwork. */
+.widget .widgetArtwork{
+  mix-blend-mode:screen;
+  background:transparent;
+  width:clamp(82px,11vw,136px);
+  height:clamp(82px,11vw,136px);
+  max-width:66%;
+  max-height:66%;
+  object-fit:contain;
+  align-self:center;
+  justify-self:center;
+  filter:drop-shadow(0 0 10px rgba(202,237,175,.14));
+}
+.widget{overflow:hidden}
+@media(max-width:600px){
+  .widget .widgetArtwork{width:clamp(90px,28vw,142px);height:clamp(90px,28vw,142px);max-width:72%;max-height:64%}
+}
