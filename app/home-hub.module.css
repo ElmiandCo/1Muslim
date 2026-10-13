@@ -133,3 +133,30 @@
 .control .customGrid .widgetSlot:nth-child(3n) .widgetArtwork{animation-delay:-3.7s}
 @media(max-width:700px){.control .customGrid{grid-auto-rows:minmax(70px,1fr);gap:7px}.control .widgetToolbar{font-size:10px}.control .customGrid .widgetCanvas .widgetArtwork{width:clamp(46px,9vh,86px);height:clamp(46px,9vh,86px)}.control .customGrid .sizecompact .widgetArtwork{width:clamp(29px,6vh,53px);height:clamp(29px,6vh,53px)}.control .customGrid .sizefeatured .widgetArtwork{width:clamp(80px,15vh,145px);height:clamp(80px,15vh,145px)}.control .customGrid>.widgetSlot>.widgetCanvas{padding:8px}.control .customGrid .sizecompact .widgetMetric{display:none}.control .customGrid .widgetFeatureDetail{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.control .customGrid .widgetArtwork{animation:none!important}.control .customGrid>.widgetSlot>.widgetCanvas:hover{transform:none}}
+
+/* STAGE 1 — distinct, light-responsive glass surfaces and readable visual hierarchy */
+.control .surface{background:linear-gradient(145deg,#d7f6e008,#05291f18 60%,#c9b68d0a);border-color:#d9e9c73d;box-shadow:inset 0 1px #ffffff22,0 12px 40px #00190f1a}
+.control .customGrid>.widgetSlot>.widgetCanvas{background:linear-gradient(145deg,#ffffff25 0%,#8cc9a11a 48%,#0e42352c 100%)!important;border:1px solid #e7f1d050;box-shadow:inset 0 1px #ffffff63,inset 0 -1px #00190f12,0 9px 24px #001c1225;backdrop-filter:blur(23px) saturate(125%);-webkit-backdrop-filter:blur(23px) saturate(125%);transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s}
+.control .customGrid>.widgetSlot>.widgetCanvas::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 10% 0%,#ffffff2e,transparent 53%),linear-gradient(155deg,#ffffff0e,transparent 45%);border-radius:inherit}
+.control .customGrid>.sizefeatured>.widgetCanvas{background:radial-gradient(ellipse at 40% 20%,#8bce9c2b,transparent 62%),linear-gradient(155deg,#ffffff1e,#10513e40)!important}
+.control .customGrid>.sizecompact>.widgetCanvas{background:radial-gradient(circle at 50% 30%,#d9b87522,transparent 70%),linear-gradient(145deg,#ffffff20,#1b68502e)!important}
+.control .customGrid .widgetCanvas .widgetDetails{position:relative;z-index:1;display:flex;flex-direction:column;gap:3px;flex-shrink:0}
+.control .customGrid .widgetCanvas .widgetMetric{opacity:.9;line-height:1.2}
+.control .customGrid .sizefeatured .widgetCanvas .widgetDetails{padding:7px 0}
+.control .customGrid .sizefeatured .widgetCanvas .widgetMetric{font-size:clamp(12px,1.6vw,15px)}
+.control .customGrid .sizecompact .widgetCanvas .widgetTop{flex:1;min-height:0}
+.control .customGrid .sizecompact .widgetCanvas .widgetDetails{gap:0}
+.control .customGrid .sizecompact .widgetCanvas .widgetName{line-height:1.05}
+.control .customGrid .sizecompact .widgetCanvas .widgetArabic{opacity:.55;font-size:9px}
+.control .customGrid .sizefeatured .widgetCanvas .widgetFeatureDetail{position:relative;z-index:1;display:block;line-height:1.25;border-top:1px solid #f5e9c52d;margin-top:5px;padding-top:8px}
+.control .customGrid .widgetCanvas .widgetArtwork{filter:drop-shadow(0 7px 15px #001b1250)}
+.control .day .surface{background:linear-gradient(150deg,#ffffff2b,#c5e6cf17 60%,#ffffff14);border-color:#ffffff8c;box-shadow:inset 0 1px #ffffffa8,0 12px 34px #16433020}
+.control.day .customGrid>.widgetSlot>.widgetCanvas{color:#103c2c!important;background:linear-gradient(145deg,#ffffff70,#e0f0dd38 52%,#8bbfae31)!important;border:1px solid #ffffffbd;box-shadow:inset 0 1px #ffffffd9,inset 0 -1px #3b6e4b13,0 8px 22px #1e513324}
+.control.day .customGrid>.sizefeatured>.widgetCanvas{background:radial-gradient(ellipse at 40% 20%,#c7e9d478,transparent 67%),linear-gradient(150deg,#ffffffa8,#95c8a94a)!important}
+.control.day .customGrid>.sizecompact>.widgetCanvas{background:linear-gradient(155deg,#ffffffa3,#d4e5c85c)!important}
+.control.day .customGrid .widgetCanvas .widgetName{color:#123c2e!important;text-shadow:none}
+.control.day .customGrid .widgetCanvas .widgetMetric,.control.day .customGrid .widgetCanvas .widgetFeatureDetail{color:#315b4b!important}
+.control.day .widgetToolbar{color:#234d3d}
+.control.day .widgetToolbar button{background:#f5f9e9d9;color:#184333;border-color:#719b8359}
+.control .customGrid .widgetCanvas:focus-visible{outline:2px solid #edcc85;outline-offset:2px}
+@media(max-width:700px){.control .customGrid>.widgetSlot>.widgetCanvas{border-radius:19px}.control .customGrid .sizefeatured .widgetFeatureDetail{font-size:9px;padding-top:5px}.control .widgetToolbar{min-height:28px}}
