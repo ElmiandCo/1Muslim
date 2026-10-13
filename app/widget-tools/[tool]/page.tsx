@@ -3,6 +3,7 @@ import {useEffect,useState} from "react";
 import Link from "next/link";
 import {useParams} from "next/navigation";
 import DhikrStudio from "./DhikrStudio";
+import PrayerTimes from "./PrayerTimes";
 const names:Record<string,string>={prayer:"Prayer Times",dhikr:"Dhikr",progress:"XP & Progress",notifications:"Notifications"};
 export default function WidgetToolPage(){
  const params=useParams();const tool=String(params.tool||"");
@@ -13,7 +14,7 @@ export default function WidgetToolPage(){
  <div style={{maxWidth:680,margin:"auto"}}><Link href="/" style={{color:"#dfca91",textDecoration:"none"}}>← Home · Widget Gallery</Link><p style={{color:"#d7c38a",letterSpacing:3,fontSize:12,marginTop:40}}>1MUSLIM · WIDGETS</p><h1 style={{fontSize:"clamp(30px,7vw,52px)",margin:"12px 0 24px"}}>{names[tool]}</h1>
  <section style={{border:"1px solid #b6a76b66",borderRadius:24,padding:24,background:"#ffffff0d",boxShadow:"0 20px 60px #0003"}}>
  {tool==="dhikr"&&<DhikrStudio/>}
- {tool==="prayer"&&<div><h2>Prayer schedule</h2><p>Accurate prayer times require your location and a calculation method. We won't guess them.</p><label>City or location <input value={location} onChange={e=>setLocation(e.target.value)} placeholder="Enter your city" style={{display:"block",width:"100%",margin:"12px 0",padding:12,borderRadius:10}}/></label><p style={{opacity:.7}}>Location entered: {location||"Not selected"}. Prayer-time calculations and alerts are coming in the next integration.</p></div>}
+ {tool==="prayer"&&<PrayerTimes/>}
  {tool==="progress"&&<div><h2>Your learning journey</h2><p>Track your badges, learning milestones, and XP from your profile.</p><Link href="/profile" style={{...button,display:"inline-block",textDecoration:"none"}}>Open Profile →</Link><p style={{opacity:.7}}>Live XP totals will appear here once connected to the profile data source.</p></div>}
  {tool==="notifications"&&<div><h2>Stay connected</h2><p>Messages, lives, and community updates belong here.</p><p>Browser notification permission: <strong>{permission}</strong></p><button style={button} onClick={async()=>{if(typeof Notification!=="undefined"){const p=await Notification.requestPermission();setPermission(p)}}}>Enable Browser Notifications</button><p style={{opacity:.7}}>Permission alone does not enable server push; notification feed integration is still needed.</p></div>}
  </section></div></main>;
