@@ -494,3 +494,57 @@ input[type="file"][accept*="image"]::file-selector-button:hover,input[type="file
 .hh-chat-orb.hh-orb-header{box-shadow:0 0 0 3px #d8ca9a22,0 0 18px #5ca9b459!important}
 .hh-chat-orb.hh-orb-route-nav:active{transform:scale(.95)}
 @media(prefers-reduced-motion:reduce){.hh-chat-orb.hh-orb-route-nav{transition:none!important}}
+
+/* Seamless Crown: shared editorial surface treatment on key inner pages.
+   Layout-only enhancements; existing functionality and component structure remain intact. */
+.profilePage .profileOverviewSection,
+.profilePage .profileOverviewStats,
+.settingsPage .settingsCard,
+.omImessagePage .omMessengerHome,
+.omImessagePage .omConversationList,
+.omImessagePage .omMessengerExtras,
+.elmCrownPage .elmCrownPanel{
+  min-width:0;
+  overflow-wrap:anywhere;
+  border-radius:clamp(15px,2vw,25px);
+}
+.profilePage .profileOverviewSection,
+.settingsPage .settingsCard,
+.omImessagePage .omMessengerExtras,
+.elmCrownPage .elmCrownPanel{
+  border-top:1px solid rgba(211,186,120,.35);
+  box-shadow:inset 0 1px 0 rgba(255,248,225,.045);
+}
+.profilePage .profileOverviewSection>.sectionHeading,
+.settingsPage .settingsCard>.settingCopy,
+.omImessagePage .omMessengerListHead,
+.elmCrownPage .elmCrownPanel>h2{
+  position:relative;
+  border-bottom:1px solid rgba(211,186,120,.24);
+  padding-bottom:10px;
+  margin-bottom:12px;
+}
+.profilePage .profileOverviewSection>.sectionHeading::after,
+.settingsPage .settingsCard>.settingCopy::after,
+.omImessagePage .omMessengerListHead::after,
+.elmCrownPage .elmCrownPanel>h2::after{
+  content:"";position:absolute;bottom:-1px;left:0;
+  width:min(76px,24%);height:1px;
+  background:linear-gradient(90deg,#d8bc76,transparent);
+}
+.settingsPage .settingsCard>.settingCopy h2,
+.profilePage .profileOverviewSection>.sectionHeading,
+.omImessagePage .omMessengerListHead,
+.elmCrownPage .elmCrownPanel>h2{
+  letter-spacing:.015em;
+}
+.settingsPage .settingsCard>.settingCopy .settingIcon{flex-shrink:0}
+.omImessagePage .omMessengerHeading{letter-spacing:.015em}
+.elmCrownPage .elmCrownPanel{padding:clamp(14px,3vw,25px)}
+.elmCrownPage .elmCrownPanel>h2{font-size:clamp(17px,2.5vw,23px);line-height:1.3}
+@media(max-width:700px){
+ .profilePage .profileOverviewSection>.sectionHeading,
+ .settingsPage .settingsCard>.settingCopy,
+ .omImessagePage .omMessengerListHead{gap:8px}
+ .settingsPage .settingsCard>.settingCopy h2{font-size:clamp(16px,4vw,21px)}
+}
