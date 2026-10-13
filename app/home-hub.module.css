@@ -313,3 +313,22 @@
 .control.day .surface{background:linear-gradient(145deg,#ffffff50,#ffffff16)!important}
 .control .customGrid .widgetCanvas .widgetPill{background:linear-gradient(120deg,#e7d6a34d,#a4d8b32a)!important}
 .control.day .customGrid .widgetCanvas .widgetPill{background:linear-gradient(120deg,#fff9e5d9,#cfe8d7a8)!important}
+
+/* Dashboard polish: preserve art on first paint and give each tile an actual stage. */
+.control .customGrid .widgetCanvas .widgetTop{position:relative;flex:1 1 auto;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center}
+.control .customGrid .widgetCanvas .widgetVisual{position:relative;display:flex;align-items:center;justify-content:center;flex:1 1 auto;width:100%;height:100%;min-height:0;overflow:visible}
+.control .customGrid .widgetCanvas .widgetArtwork{display:block;flex:0 1 auto;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain;opacity:1;mix-blend-mode:screen!important;animation:signatureDrift 8.2s ease-in-out infinite}
+.control.day .customGrid .widgetCanvas .widgetArtwork{mix-blend-mode:multiply!important}
+.control .customGrid .sizestandard .widgetCanvas .widgetTop{width:48%;flex:0 0 48%}
+.control .customGrid .sizestandard .widgetCanvas .widgetDetails{width:52%;flex:1;min-width:0}
+.control .customGrid .sizecompact .widgetCanvas .widgetTop{flex:1;min-height:0}
+.control .customGrid .sizefeatured .widgetCanvas .widgetTop{flex:1 1 auto;min-height:0}
+.control .customGrid .sizefeatured .widgetCanvas .widgetArtwork{object-position:center}
+.control .customGrid .widgetCanvas .widgetDetails::before{pointer-events:none}
+.control .customGrid .widgetCanvas .widgetArabic{pointer-events:none}
+@media(max-width:700px){
+ .control .customGrid .sizestandard .widgetCanvas .widgetTop{width:47%;flex-basis:47%}
+ .control .customGrid .sizestandard .widgetCanvas .widgetDetails{width:53%}
+ .control .customGrid .widgetCanvas .widgetArtwork{min-height:0}
+}
+@media(prefers-reduced-motion:reduce){.control .customGrid .widgetCanvas .widgetArtwork{animation:none}}
