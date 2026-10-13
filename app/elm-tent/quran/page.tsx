@@ -15,6 +15,7 @@ import ElmiVerseMoment from "./ElmiVerseMoment";
 import VersePostStudio from "./VersePostStudio";
 import QuranFloatingSearch from "./QuranFloatingSearch";
 import ReadingAtmosphere from "./ReadingAtmosphere";
+import QuranLiveWidget from "../../components/QuranLiveWidget";
 type Chapter={id:number;name_simple:string;name_arabic:string;verses_count:number;translated_name?:{name:string}};
 type QuranWord={id:number;text_uthmani?:string;char_type_name?:string;translation?:{text:string};transliteration?:{text:string}};
 type Verse={id:number;verse_key:string;text_uthmani?:string;words?:QuranWord[];translations?:{text:string}[]};
@@ -485,5 +486,5 @@ body:has(.omQuranPage) header:has(nav),body:has(.omQuranPage) [class*="bottomNav
 `}</style>
  <style>{`
 .omHudhudQuickWrap{position:relative;margin:8px 0 16px;isolation:isolate}.omHudhudQuickButton{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid #9d85ff99;border-radius:999px;background:linear-gradient(115deg,#302269,#173b77);color:white;font-weight:800;box-shadow:0 0 16px #7863ef55;cursor:pointer;transition:transform .25s,box-shadow .25s}.omHudhudQuickButton:hover,.omHudhudQuickButton.is-open{transform:translateY(-2px);box-shadow:0 0 24px #8c63ff99}.omHudhudQuickPanel{position:relative;z-index:15;margin-top:10px;padding:16px;border:1px solid #aa91ff77;border-radius:22px;background:linear-gradient(145deg,#15142df5,#142c44f5);color:#f8f7ff;box-shadow:0 22px 60px #08091a88;animation:omHudhudQuickPop .38s cubic-bezier(.2,.9,.2,1) both}.omHudhudQuickHead,.omHudhudQuickActions,.omHudhudQuickLinks{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.omHudhudQuickHead button{border:0;background:#ffffff24;color:white;border-radius:50%;width:30px;height:30px;font-size:21px;cursor:pointer}.omHudhudQuickSlide{min-height:110px;padding:12px 0;animation:omHudhudQuickPop .34s ease both}.omHudhudQuickSlide small{color:#a9caff}.omHudhudQuickSlide h3{margin:5px 0;font-size:19px}.omHudhudQuickSlide p{margin:0;line-height:1.5;color:#d7d9f6}.omHudhudQuickActions button,.omHudhudQuickVision{border:1px solid #b8b5ff66;border-radius:12px;background:#ffffff16;color:#fff;padding:9px 12px;cursor:pointer}.omHudhudQuickActions button:disabled{opacity:.3}.omHudhudQuickVision{width:100%;margin:12px 0;background:linear-gradient(100deg,#6246b9,#155ba4)}.omHudhudQuickLinks a{color:#b4e8ff;font-size:13px}@keyframes omHudhudQuickPop{from{opacity:0;transform:translateY(12px) scale(.97);filter:blur(5px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}@media(prefers-reduced-motion:reduce){.omHudhudQuickPanel,.omHudhudQuickSlide{animation:none}.omHudhudQuickButton{transition:none}}
-`}</style></main>;
+`}</style><QuranLiveWidget compact/></main>;
 }
