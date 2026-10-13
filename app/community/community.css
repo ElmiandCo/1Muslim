@@ -140,3 +140,24 @@
 .omExternalVideo iframe{width:100%;min-height:330px;border:0;display:block}
 .omExternalVideo a{display:block;padding:10px 14px}
 @media(prefers-reduced-motion:reduce){.omCameraStudio,.omLaminatedVideo{animation:none!important;transition:none!important}}
+
+
+/* Royal-white attachment sheet: native-feeling, intentionally minimal */
+.omAttachBackdrop{position:fixed;inset:0;z-index:12000;display:flex;align-items:flex-end;justify-content:center;background:#061c14a3;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);animation:omAttachFade .22s ease both}
+.omAttachSheet{width:min(100%,560px);max-height:min(84dvh,750px);overflow:auto;box-sizing:border-box;background:linear-gradient(155deg,#fffefa,#f9f7ef 70%,#f1efe5);color:#173328;border:1px solid #d9c58d;border-radius:29px 29px 0 0;box-shadow:0 -18px 90px #061f1a55,inset 0 2px #fff;animation:omAttachRise .32s cubic-bezier(.2,.8,.2,1) both;padding:12px 21px max(22px,env(safe-area-inset-bottom))}
+.omAttachHandle{width:43px;height:4px;border-radius:99px;background:#c5c9c0;margin:0 auto 20px}
+.omAttachSheet header{display:flex;align-items:center;gap:12px;padding-bottom:19px;border-bottom:1px solid #d5c8a66b}
+.omAttachMark{display:grid;place-items:center;width:49px;height:49px;border-radius:16px;background:linear-gradient(145deg,#f8f3dc,#e9d6a3);color:#98772d;font-size:29px;border:1px solid #d6bc7e}
+.omAttachSheet header>div{flex:1;min-width:0}.omAttachSheet header small{font-size:9px;letter-spacing:.21em;font-weight:850;color:#987d48}.omAttachSheet h3{margin:4px 0 0;font-size:clamp(18px,4vw,24px);line-height:1.25;color:#142d21}
+.omAttachClose{width:39px;height:39px;display:grid;place-items:center;border:1px solid #e1dac7;border-radius:50%;background:#fff;color:#173428;font-size:25px;cursor:pointer}
+.omAttachItems{display:grid;gap:3px;padding:12px 0}
+.omAttachItems button{display:grid;grid-template-columns:52px 1fr;grid-template-rows:auto auto;align-items:center;text-align:left;column-gap:13px;padding:13px 7px;background:transparent;border:0;border-bottom:1px solid #e7e4d8;color:#193427;cursor:pointer;border-radius:13px;transition:background .2s,transform .2s}
+.omAttachItems button:hover,.omAttachItems button:focus-visible{background:#f0e9d8;transform:translateX(2px)}
+.omAttachItems button>span{grid-row:span 2;width:48px;height:48px;display:grid;place-items:center;background:#f3f1e9;border:1px solid #e5ddc9;border-radius:16px;font-size:23px;color:#ad8a42}
+.omAttachItems button strong{font-size:16px}.omAttachItems button small{font-size:12px;color:#748076;margin-top:2px}
+.omAttachSheet footer{text-align:center;color:#998659;font-size:11px;letter-spacing:.05em;padding:15px 0 0}
+.omAttachSub{padding:25px 5px;display:grid;gap:12px}.omAttachSub p{color:#66766b;line-height:1.6}.omAttachSub button{border:1px solid #c9b57e;background:#f7f3e7;border-radius:14px;padding:14px;text-align:left;color:#1b4934;font-weight:750;cursor:pointer}
+.omPostToolsCompact .omAttachTrigger{background:linear-gradient(145deg,#fdf9e9,#f1e3bc)!important;color:#795a24!important;border:1px solid #cbb16c!important;font-size:30px!important;box-shadow:0 3px 12px #a28a4733!important}
+@keyframes omAttachFade{from{opacity:0}to{opacity:1}}@keyframes omAttachRise{from{opacity:.6;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@media(min-width:760px){.omAttachBackdrop{align-items:center}.omAttachSheet{border-radius:27px;max-height:80dvh;padding-bottom:25px;box-shadow:0 25px 100px #061f1a66}}
+@media(prefers-reduced-motion:reduce){.omAttachBackdrop,.omAttachSheet{animation:none!important}.omAttachItems button{transition:none!important}}
