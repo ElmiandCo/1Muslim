@@ -382,3 +382,9 @@
 .control .customGrid .sizefeatured .quranWindow .widgetSmartPreview{max-height:66%;bottom:19%}
 .control.day .customGrid .quranWindow .widgetSmartPreview{background:linear-gradient(145deg,#fffcf2e6,#d9eddfdc);border-color:#a28e5a88}
 @media(max-width:700px){.control .customGrid .quranWindow .widgetSmartPreview{max-height:49%;bottom:26%}.control .customGrid .quranWindow .widgetSmartPreview b[dir="rtl"]{font-size:16px;-webkit-line-clamp:2}}
+
+/* Fourth dashboard size: Expanded offers a wider canvas without changing saved widget sizes. */
+.control .customGrid>.sizeexpanded{grid-column:span 3;grid-row:span 1}
+.control .customGrid .sizeexpanded .widgetSmartPreview{bottom:28%;max-height:36%;padding:9px 12px;gap:5px}
+.control .customGrid .sizeexpanded .widgetCanvas .widgetArtwork{max-width:45%;object-fit:contain}
+@media(max-width:700px){.control .customGrid>.sizeexpanded{grid-column:span 2;grid-row:span 1}.control .customGrid .sizeexpanded .widgetSmartPreview{bottom:27%;max-height:33%;padding:6px 9px}}
