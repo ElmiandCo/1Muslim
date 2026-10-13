@@ -10,7 +10,7 @@ export default function GuestShahadaWelcome({signedIn,dayMode}:{signedIn:boolean
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
  const [attempts,setAttempts]=useState(0);
- useEffect(()=>{if(signedIn!==false){setOpen(false);return}const timer=window.setTimeout(()=>{try{if(localStorage.getItem("1muslim:guest-shahada-dismissed-v2")==="yes")return}catch{}setOpen(true)},2000);return()=>clearTimeout(timer)},[signedIn]);
+ useEffect(()=>{if(signedIn!==false){setOpen(false);return}const timer=window.setTimeout(()=>{try{if(localStorage.getItem("1muslim:guest-shahada-dismissed-v2")==="yes")return}catch{}setOpen(true)},12000);return()=>clearTimeout(timer)},[signedIn]);
  const close=()=>{setOpen(false);try{localStorage.setItem("1muslim:guest-shahada-dismissed-v2","yes")}catch{}};
  const signIn=async(e:React.FormEvent)=>{e.preventDefault();if(busy||attempts>=5)return;setBusy(true);setError("");const {error:authError}=await createClient().auth.signInWithPassword({email:email.trim(),password});setBusy(false);if(authError){setAttempts(v=>v+1);setError("Sign-in failed. Check your details or try again later.");return}close()};
  const google=async()=>{setBusy(true);setError("");const {error:authError}=await createClient().auth.signInWithOAuth({provider:"google",options:{redirectTo:`${window.location.origin}/auth/callback?next=/`}});if(authError){setError(authError.message);setBusy(false)}};
