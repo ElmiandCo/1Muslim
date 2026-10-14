@@ -11,6 +11,7 @@ import DhikrBigWidget from "./widget-tools/[tool]/DhikrBigWidget";
 import CelestialOrb from "./components/CelestialOrb";
 import GuestShahadaWelcome from "./components/GuestShahadaWelcome";
 import ShahadaWelcomeToast from "./components/ShahadaWelcomeToast";
+import PreviewGuestGate from "./components/PreviewGuestGate";
 import FirstVisitWidgetFocus from "./components/FirstVisitWidgetFocus";
 import styles from "./home-hub.module.css";
 type WidgetSize="compact"|"standard"|"expanded"|"featured"|"immersive"|"studio";
