@@ -931,3 +931,41 @@
  .control .editGrid .widgetEditControls button{font-size:10px!important;padding:5px 3px!important}
 }
 @media(prefers-reduced-motion:reduce){.control .customGrid>.widgetSlot{transition:none!important}}
+
+
+/* Three-mode adaptive layout and contextual guidance */
+.hudhudWidgetTip{display:flex;align-items:center;gap:10px;padding:10px 15px;margin:8px 0 14px;border:1px solid #d7c18a55;border-radius:16px;background:linear-gradient(120deg,#1d493b77,#071d1699);color:#e4f1e6;font-size:12px;line-height:1.45;animation:widgetTipArrival .8s ease-out both}
+.hudhudWidgetTip>span:first-child{font-size:22px;color:#e8d099;filter:drop-shadow(0 0 8px #e7d48c77)}.hudhudWidgetTip strong{font-size:10px;letter-spacing:.13em;color:#e5d29d;margin-right:8px}
+@keyframes widgetTipArrival{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.control .customGrid{grid-auto-flow:row dense!important;grid-auto-rows:minmax(145px,auto)!important;align-items:stretch!important}
+.control .customGrid>.sizecompact{grid-column:span 1!important;grid-row:span 1!important;min-height:145px!important}
+.control .customGrid>.sizestandard{grid-column:span 2!important;grid-row:span 1!important;min-height:175px!important}
+.control .customGrid>.sizefeatured{grid-column:1/-1!important;grid-row:span 2!important;min-height:320px!important}
+.control .customGrid>.sizefeatured .widgetTop{flex:0 1 auto!important;min-height:100px!important}
+.control .customGrid>.sizefeatured .widgetSmartPreview{flex:1 1 auto!important;min-height:0;overflow:auto;display:flex;flex-direction:column;justify-content:center;gap:9px}
+.control .customGrid>.sizefeatured .widgetDetails{flex:0 0 auto}
+.control .customGrid>.widgetSlot>.widgetCanvas{overflow:hidden!important}
+.control .customGrid .widgetSmartPreview,.control .customGrid .widgetDetails{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.control .customGrid .widgetSmartPreview>*{max-width:100%;overflow-wrap:anywhere}
+.control .customGrid .widgetEditControls{position:absolute!important;display:grid!important;grid-template-columns:32px minmax(0,1fr) 32px!important;align-items:center!important;gap:5px!important}
+.control .customGrid .widgetEditControls button{min-width:0!important;width:100%!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.control .editGrid .widgetCanvas{padding-top:57px!important}
+.control .customGrid>.sizecompact .widgetDetails{margin-top:auto!important}
+.control .customGrid>.sizecompact .widgetVisual{flex:0 0 auto}
+.control .customGrid>.sizecompact .widgetSmartPreview,.control .customGrid>.sizecompact .widgetFeatureDetail{display:none!important}
+.control .customGrid>.sizecompact .widgetTop{flex:1 1 auto!important;min-height:0!important}
+.control .customGrid>.sizecompact .widgetCrown{flex:0 0 auto}
+.control .customGrid>.sizecompact .widgetMetric{overflow-wrap:normal!important;word-break:normal!important;white-space:normal;line-height:1.25!important}
+@media(max-width:700px){
+ .control .customGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-rows:minmax(145px,auto)!important}
+ .control .customGrid>.sizecompact{grid-column:span 1!important;min-height:145px!important}
+ .control .customGrid>.sizestandard{grid-column:span 2!important;min-height:175px!important}
+ .control .customGrid>.sizefeatured{grid-column:1/-1!important;grid-row:span 2!important;min-height:330px!important}
+ .control .customGrid>.sizecompact .widgetCrown strong{font-size:11px!important}
+ .control .customGrid>.sizecompact .widgetArtwork{width:min(45px,35cqw)!important;height:min(45px,35cqw)!important}
+ .control .customGrid>.sizecompact .widgetDetails{width:100%;overflow:hidden}
+ .control .customGrid>.sizecompact .widgetName{font-size:11px!important}
+ .control .customGrid>.sizecompact .widgetMetric{font-size:11px!important;overflow-wrap:anywhere!important}
+ .hudhudWidgetTip{font-size:11px;padding:9px 11px}
+}
+@media(prefers-reduced-motion:reduce){.hudhudWidgetTip{animation:none}}
