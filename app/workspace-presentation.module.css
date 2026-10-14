@@ -369,3 +369,26 @@
 @media(max-width:650px){.quranVerseWidget{padding:10px!important}.quranVerseArticle{padding:12px!important;border-radius:17px}.quranVerseArabic{font-size:clamp(22px,5.5vw,32px)}}
 
 .messagesChoiceCard{display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:0!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+
+/* Night mode: retain the photographic wallpaper; remove the opaque green
+   backing and avoid dimming the scene into a flat canvas. */
+:global(.control:not(.day)) .slide[data-workspace-page="0"] .night,
+:global(.control:not(.day)) .slide[data-workspace-page="1"] .night,
+:global(.control:not(.day)) .slide[data-workspace-page="2"] .night,
+:global(.control:not(.day)) .slide[data-workspace-page="3"] .night{
+ opacity:1!important;
+ background-color:transparent!important;
+ filter:none!important;
+}
+:global(.control:not(.day)) .slide .day{opacity:0!important}
+:global(.control.day) .slide .night{opacity:0!important}
+:global(.control.day) .slide .day{opacity:1!important}
+:global(.control:not(.day)) .scene::after{
+ background:linear-gradient(180deg,rgba(0,12,10,.06),rgba(0,15,13,.14))!important;
+}
+:global(.control:not(.day)) .slide [class*="widgetCanvas"]{
+ background:rgba(5,28,24,.075)!important;
+ background-color:rgba(5,28,24,.075)!important;
+ backdrop-filter:blur(2px) saturate(110%)!important;
+ -webkit-backdrop-filter:blur(2px) saturate(110%)!important;
+}
