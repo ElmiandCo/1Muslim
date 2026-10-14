@@ -144,6 +144,46 @@ export default function OnboardingPage() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const audioMeterRef = useRef<{context: AudioContext; frame: number; source: MediaStreamAudioSourceNode} | null>(null);
+  const [voiceLevel, setVoiceLevel] = useState(0);
+  const stopVoiceMeter = () => {
+    const meter = audioMeterRef.current;
+    audioMeterRef.current = null;
+    if (meter) {
+      cancelAnimationFrame(meter.frame);
+      meter.source.disconnect();
+      void meter.context.close().catch(() => {});
+    }
+    setVoiceLevel(0);
+  };
+  const startVoiceMeter = (stream: MediaStream) => {
+    stopVoiceMeter();
+    try {
+      const context = new AudioContext();
+      const source = context.createMediaStreamSource(stream);
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 1024;
+      analyser.smoothingTimeConstant = 0.78;
+      source.connect(analyser);
+      const samples = new Uint8Array(analyser.fftSize);
+      const meter = {context, source, frame: 0};
+      audioMeterRef.current = meter;
+      const tick = () => {
+        if (audioMeterRef.current !== meter) return;
+        analyser.getByteTimeDomainData(samples);
+        let power = 0;
+        for (const sample of samples) { const value = (sample - 128) / 128; power += value * value; }
+        setVoiceLevel(Math.min(1, Math.sqrt(power / samples.length) * 5));
+        meter.frame = requestAnimationFrame(tick);
+      };
+      meter.frame = requestAnimationFrame(tick);
+    } catch { setVoiceLevel(0); }
+  };
+  useEffect(() => () => {
+    const meter = audioMeterRef.current;
+    audioMeterRef.current = null;
+    if (meter) { cancelAnimationFrame(meter.frame); meter.source.disconnect(); void meter.context.close().catch(() => {}); }
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -159,6 +199,7 @@ export default function OnboardingPage() {
   }, [router]);
 
   const stopMedia = () => {
+    stopVoiceMeter();
     recognitionRef.current?.stop();
     recognitionRef.current = null;
     if (recorderRef.current?.state === "recording") recorderRef.current.stop();
@@ -185,6 +226,7 @@ export default function OnboardingPage() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
+      startVoiceMeter(stream);
       try { const key="1muslim:shahada-voice-attempts"; const count=Math.max(0,Number(localStorage.getItem(key))||0);localStorage.setItem(key,String(Math.min(count+1,999999))); } catch {}
       consentRef.current = true;
       resetRef.current = false;
@@ -194,6 +236,7 @@ export default function OnboardingPage() {
       recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
       recorder.onstop = () => {
         stream.getTracks().forEach(track => track.stop());
+        stopVoiceMeter();
         setRecording(false);
         if (resetRef.current || attempt !== attemptRef.current || !recognizedRef.current) return;
         setProcessingAudio(true);
@@ -229,12 +272,14 @@ export default function OnboardingPage() {
       rec.onerror = (event: any) => {
         if (resetRef.current) return;
         setListening(false); setRecording(false);
+        stopVoiceMeter();
         if (recorderRef.current?.state === "recording") recorderRef.current.stop();
         setMessage("We couldn't capture the Shahada. Check microphone permission and try again.");
       };
       rec.onend = () => {
         if (resetRef.current) return;
         setListening(false);
+        stopVoiceMeter();
         if (recorderRef.current?.state === "recording") recorderRef.current.stop();
       };
 
@@ -244,6 +289,7 @@ export default function OnboardingPage() {
       setListening(true);
       rec.start();
     } catch {
+      stopMedia();
       setMessage("Microphone permission is required for Shahada verification.");
     }
   };
@@ -318,7 +364,7 @@ export default function OnboardingPage() {
 .onboardingPage .studioVoiceCompact .hudhudCore img{width:88%!important;height:88%!important;object-fit:contain}
 .onboardingPage .studioVoiceCompact .studioVoiceWave{height:44px;display:flex;align-items:center;justify-content:center;gap:4px;width:100%;pointer-events:none}
 .onboardingPage .studioVoiceCompact .studioVoiceWave i{display:block;width:3px;max-height:36px;border-radius:8px;background:linear-gradient(#bbffda,#20dca1);opacity:.55;transform:scaleY(.45);transition:transform .3s}
-.onboardingPage .studioVoiceLive .studioVoiceWave i{animation:studioVoiceBounce .72s ease-in-out infinite alternate;opacity:1}
+.onboardingPage .studioVoiceLive .studioVoiceWave i{transition:transform 90ms ease-out,opacity 90ms ease-out}
 .onboardingPage .studioVoiceCompact>strong{font-size:clamp(19px,4vw,25px)!important;line-height:1.2;margin:0!important}
 .onboardingPage .studioVoiceCompact>p{font-size:12px!important;line-height:1.5!important;max-width:320px;margin:0!important;color:#b9d8cb!important}
 .onboardingPage .studioVoiceCompact .transcript{width:100%;max-width:450px;text-align:start;max-height:105px;overflow:auto;border-radius:16px;background:#001810a8;border:1px solid #b0e8c53d;padding:10px}
@@ -338,7 +384,7 @@ export default function OnboardingPage() {
           <span className="hudhudHalo" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{transform:`rotate(${i*30}deg) translateY(-58px)`,animationDelay:`${i*-.18}s`}}/>)}</span>
           <span className="hudhudCore" aria-hidden="true"><img src="/assets/hudhud-logo.PNG" alt="" /></span>
         </button>
-        <div className="studioVoiceWave" aria-hidden="true">{Array.from({length:25},(_,i)=><i key={i} style={{height:`${12+Math.abs(Math.sin(i*1.3))*32}px`,animationDelay:`${i*-.065}s`}} />)}</div>
+        <div className="studioVoiceWave" aria-hidden="true">{Array.from({length:25},(_,i)=><i key={i} style={{height:`${12+Math.abs(Math.sin(i*1.3))*32}px`,transform:`scaleY(${(listening || recording) ? Math.max(.2,Math.min(1.8,.2+voiceLevel*2.3*(.35+.65*Math.abs(Math.sin(i*1.3))))) : .25})`,opacity:(listening || recording) ? .55+voiceLevel*.45 : .35}} />)}</div>
         <strong>{verified ? "Shahada recognized" : listening ? "Listening…" : "Speak your Shahada"}</strong>
         <p>{listening ? "Speak naturally in your selected language. Tap HudHud to reset your attempt." : "Tap HudHud to allow microphone access. After permission, simply say the Shahada. Or use the checkbox below."}</p>
         {processingAudio && <p role="status">Preparing your private Shahada clip…</p>}
