@@ -841,3 +841,11 @@
 .control .widgetSlot:global(.hh-magnetic-target)::after{content:"";position:absolute;inset:-4px;pointer-events:none;border-radius:inherit;border:2px solid transparent;background:linear-gradient(110deg,#e5cd78,#48e9bc,#ffffff,#e5cd78) border-box;mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);mask-composite:exclude;animation:hhMagneticHalo 2.4s linear infinite}
 @keyframes hhMagneticHalo{0%{filter:hue-rotate(0deg) brightness(1)}50%{filter:hue-rotate(16deg) brightness(1.2)}100%{filter:hue-rotate(0deg) brightness(1)}}
 @media(prefers-reduced-motion:reduce){.control .widgetSlot:global(.hh-magnetic-target){animation:none!important}.control .widgetSlot:global(.hh-magnetic-target)::after{animation:none!important}}
+
+
+/* Motion 2.0 spring lift and drag — compositor transform, no left/top animation */
+.control .widgetSlot.hh-magnetic-lift{z-index:30!important;position:relative;transform:translate3d(var(--hh-drag-x,0px),var(--hh-drag-y,0px),0) scale(1.035)!important;transition:box-shadow .35s ease!important;will-change:transform;filter:drop-shadow(0 22px 26px #0008);touch-action:none;cursor:grabbing}
+.control .editGrid .widgetEditControls button:first-child{touch-action:none;cursor:grab}
+.control .widgetSlot.hh-magnetic-lift::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 0 1px #f5d88a9e,0 0 30px #39d4a35c;animation:hhLiftBreathe 1.8s ease-in-out infinite}
+@keyframes hhLiftBreathe{50%{opacity:.55;box-shadow:inset 0 0 0 1px #f5d88a,0 0 42px #39d4a380}}
+@media(prefers-reduced-motion:reduce){.control .widgetSlot.hh-magnetic-lift::before{animation:none}}
