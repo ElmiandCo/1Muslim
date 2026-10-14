@@ -80,6 +80,7 @@ export default function Home(){
  const [inbox,setInbox]=useState<Array<{id:string;content:string;created_at:string}>>([]);
  const [callHistory,setCallHistory]=useState<Array<{id:string;created_at:string}>>([]);
  const [lessonPreview,setLessonPreview]=useState<Array<{id:string;title:string}>>([]);
+ const [workspacePage,setWorkspacePage]=useState(0);
  const [quranPreview,setQuranPreview]=useState<{arabic:string;translation:string;chapter:number;verse:number;globalAyah:number}|null>(null);
  const [quranAudioPlaying,setQuranAudioPlaying]=useState(false);
  const [quranAudioLoading,setQuranAudioLoading]=useState(false);
@@ -104,7 +105,7 @@ export default function Home(){
  useEffect(()=>()=>{quranAudioRef.current?.pause()},[]);
 
 
- const [workspacePage,setWorkspacePage]=useState(0);
+
  const quranLoadSeq=useRef(0);
  const loadQuranVerse=async(chapter:number,verse:number,save=false)=>{
   const seq=++quranLoadSeq.current;
