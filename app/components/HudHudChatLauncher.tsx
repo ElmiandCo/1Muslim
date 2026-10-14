@@ -19,7 +19,8 @@ export default function HudHudChatLauncher(){
  const landingOrb=pathname==="/";
  const [orbSlot,setOrbSlot]=useState<"bottom"|"top">("bottom");
  const slotPosition=(slot:"bottom"|"top")=>slot==="bottom"?{x:Math.round((window.innerWidth-54)/2),y:Math.round(window.innerHeight-(window.matchMedia("(max-width: 800px)").matches?116:96))}:{x:window.matchMedia("(max-width: 800px)").matches?14:24,y:window.matchMedia("(max-width: 800px)").matches?18:22};
- const switchOrbSlot=()=>{const next=orbSlot==="bottom"?"top":"bottom";setOrbSlot(next);setPosition(slotPosition(next));setQuickOpen(false);try{localStorage.setItem("1muslim-hudhud-orb-slot",next)}catch{}};
+ const switchOrbSlot=(requested?:"bottom"|"top")=>{const next=requested??(orbSlot==="bottom"?"top":"bottom");setOrbSlot(next);setPosition(slotPosition(next));setQuickOpen(false);try{localStorage.setItem("1muslim-hudhud-orb-slot",next)}catch{}};
+ useEffect(()=>{if(!landingOrb)return;const sync=(event:Event)=>{const detail=(event as CustomEvent<{collapsed?:boolean}>).detail;if(typeof detail?.collapsed==="boolean")switchOrbSlot(detail.collapsed?"top":"bottom")};window.addEventListener("1muslim:hudhud-nav-state",sync);return()=>window.removeEventListener("1muslim:hudhud-nav-state",sync)},[landingOrb,orbSlot]);
  const [lightEnabled,setLightEnabled]=useState(true);
  const [tourStep,setTourStep]=useState(-1);
  const holdTimer=useRef<ReturnType<typeof setTimeout>|null>(null),held=useRef(false),movedOnce=useRef(false);
@@ -51,7 +52,7 @@ export default function HudHudChatLauncher(){
  useEffect(()=>{if(open)bottom.current?.scrollIntoView({block:"end",behavior:"smooth"})},[open,messages]);
  useEffect(()=>{if(!open)return;const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setOpen(false)};document.addEventListener("keydown",key);return()=>document.removeEventListener("keydown",key)},[open]);
  const inDismiss=(x:number,y:number)=>Math.hypot(x+24-(window.innerWidth-54),y+24-(window.innerHeight-155))<57;
- const move=(e:React.PointerEvent<HTMLButtonElement>)=>{if(!drag.current)return;const d=drag.current;if(Math.abs(e.clientX-d.x)+Math.abs(e.clientY-d.y)>8){setDragged(true);endHold()}const x=Math.max(8,Math.min(window.innerWidth-56,d.px+e.clientX-d.x)),y=Math.max(8,Math.min(window.innerHeight-56,d.py+e.clientY-d.y));setPosition({x,y});setOverDismiss(inDismiss(x,y))};
+ const move=(e:React.PointerEvent<HTMLButtonElement>)=>{if(!drag.current)return;const d=drag.current;const dx=e.clientX-d.x,dy=e.clientY-d.y,dist=Math.hypot(dx,dy);if(dist>7){setDragged(true);endHold()}if(dist<=7)return;const magneticRelease=dist<32?Math.pow((dist-7)/25,1.5):1;const x=Math.max(8,Math.min(window.innerWidth-56,d.px+dx*magneticRelease)),y=Math.max(8,Math.min(window.innerHeight-56,d.py+dy*magneticRelease));setPosition({x,y});setOverDismiss(inDismiss(x,y))};
  const finishDrag=()=>{endHold();if(drag.current&&dragged&&inDismiss(position.x,position.y)){setPoof(true);setDismissed(true);setObservation("");window.setTimeout(()=>setPoof(false),550)}drag.current=null;setOverDismiss(false)};
  const answer=(question:string,hasImage:boolean)=>{
   const q=question.toLowerCase();
