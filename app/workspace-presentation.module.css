@@ -1,0 +1,24 @@
+/* Isolated presentation architecture: the scene owns imagery; widgets own content. */
+.viewport{position:relative!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:x mandatory!important;scroll-padding:0!important;box-sizing:border-box!important;background:transparent!important;isolation:isolate}
+.viewport::before,.viewport::after{content:none!important;display:none!important}
+.track{display:flex!important;width:100%!important;gap:0!important;min-width:0!important;align-items:stretch!important;background:transparent!important}
+.slide{position:relative!important;isolation:isolate!important;flex:0 0 100%!important;width:100%!important;min-width:100%!important;max-width:100%!important;box-sizing:border-box!important;scroll-snap-align:start!important;scroll-snap-stop:always!important;overflow-x:hidden!important;overflow-y:auto!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important;border-radius:0!important}
+.slide::before,.slide::after{content:none!important;display:none!important}
+.scene{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;border-radius:inherit}
+.night,.day{position:absolute;inset:0;background-position:center;background-size:cover;background-repeat:no-repeat;will-change:opacity}
+.night{opacity:1}
+.day{opacity:0;transition:opacity 1500ms cubic-bezier(.22,1,.36,1)}
+:global(.control.day) .day{opacity:1}
+:global(.control.day) .night{opacity:1}
+.slide[data-workspace-page="0"] .night,.slide[data-workspace-page="3"] .night{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-night.PNG&w=1920&q=95")}
+.slide[data-workspace-page="0"] .day,.slide[data-workspace-page="3"] .day{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-day.PNG&w=1920&q=95")}
+.slide[data-workspace-page="1"] .night{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-night.PNG&w=1920&q=95")}
+.slide[data-workspace-page="1"] .day{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-day.PNG&w=1920&q=95")}
+.slide[data-workspace-page="2"] .night{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-nature-night.PNG&w=1920&q=95")}
+.slide[data-workspace-page="2"] .day{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-nature-day.PNG&w=1920&q=95")}
+.content{position:relative!important;z-index:1!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;padding:12px!important;margin:0!important;background:transparent!important}
+.content>[data-widget]{min-width:0!important;max-width:100%!important;box-sizing:border-box!important;background:transparent!important}
+.content>[data-widget]>:global(.widgetCanvas){box-sizing:border-box!important;min-width:0!important;width:100%!important;max-width:100%!important;background:linear-gradient(180deg,rgba(7,35,28,.12),rgba(2,26,22,.19))!important;backdrop-filter:blur(4px) saturate(120%)!important;-webkit-backdrop-filter:blur(4px) saturate(120%)!important;border:1px solid rgba(235,209,151,.42)!important}
+:global(.control.day) .content>[data-widget]>:global(.widgetCanvas){background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(7,55,37,.14))!important}
+@media(max-width:650px){.content{padding:8px!important}}
+@media(prefers-reduced-motion:reduce){.day{transition:none}}
