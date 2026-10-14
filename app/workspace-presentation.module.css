@@ -293,3 +293,39 @@
 .quranStudioTranslation{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;text-align:center;font-size:clamp(11px,2.1vw,15px);line-height:1.55;color:rgba(241,229,255,.83)}
 .quranStudioEnter{align-self:center;display:inline-flex;align-items:center;gap:12px;padding:9px 17px;border:1px solid rgba(220,193,255,.5);border-radius:999px;color:#f4e9ff;font-size:11px;font-weight:700;letter-spacing:.12em;background:rgba(134,88,182,.22)}
 @media(max-width:420px){.quranStudioPreview{padding:12px;gap:8px}.quranStudioArabic{font-size:clamp(24px,7vw,38px)!important}.quranStudioMeta>span{gap:4px}}
+
+/* Canvas sizing repair: distribute available height to the slide's actual widget,
+   rather than growing only the wallpaper / carousel shell. */
+.fillArea{display:flex!important;flex-direction:column!important;min-height:0!important}
+.fillArea .viewport{display:block!important;flex:1 1 0%!important;min-height:0!important;max-height:none!important;overflow:hidden!important}
+.fillArea .track{display:flex!important;height:100%!important;min-height:0!important;align-items:stretch!important}
+.fillArea .slide{height:100%!important;min-height:0!important;max-height:100%!important;display:flex!important;flex-direction:column!important;overflow-y:hidden!important}
+.fillArea .slide .content{
+ display:flex!important;flex-direction:column!important;
+ flex:1 1 0%!important;
+ width:100%!important;
+ height:100%!important;min-height:0!important;max-height:100%!important;
+ grid-template-rows:none!important;grid-auto-rows:auto!important;
+ align-content:stretch!important;justify-content:stretch!important;
+ box-sizing:border-box!important;
+}
+.fillArea .slide .content > [data-widget]{
+ flex:1 1 0%!important;
+ height:100%!important;min-height:0!important;max-height:100%!important;
+ width:100%!important;min-width:0!important;
+ align-self:stretch!important;
+ display:flex!important;flex-direction:column!important;
+ grid-row:auto!important;grid-column:auto!important;
+}
+.fillArea .slide .content > [data-widget] > [class*="widgetCanvas"]{
+ flex:1 1 0%!important;height:100%!important;min-height:0!important;
+ max-height:100%!important;width:100%!important;
+ display:flex!important;flex-direction:column!important;
+ box-sizing:border-box!important;
+}
+.fillArea > :global([class*="workspaceDownButton"]){flex:0 0 auto!important;margin-top:0!important}
+.fillArea > :global([class*="workspacePager"]){flex:0 0 auto!important;margin-top:0!important;margin-bottom:4px!important}
+@media(max-width:700px){
+ .fillArea .slide .content{min-height:0!important;height:100%!important}
+ .fillArea .slide .content > [data-widget]{min-height:0!important;height:100%!important}
+}
