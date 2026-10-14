@@ -65,6 +65,53 @@ function verifyTranscript(transcript: string, language: Language) {
   return hits >= 6 && t.length >= 35;
 }
 
+// Conservative voice-activity trim: retains a short margin to avoid clipping words.
+// Speech recognition establishes eligibility; energy detection only removes silence.
+async function trimShahadaAudio(raw: Blob): Promise<Blob> {
+  const ctx = new AudioContext();
+  try {
+    const decoded = await ctx.decodeAudioData(await raw.arrayBuffer());
+    const samples = decoded.getChannelData(0);
+    const rate = decoded.sampleRate;
+    const windowSize = Math.max(1, Math.floor(rate * .02));
+    let peak = 0;
+    const energies: number[] = [];
+    for (let i = 0; i < samples.length; i += windowSize) {
+      let sum = 0;
+      for (let j = i; j < Math.min(i + windowSize, samples.length); j++) sum += samples[j] * samples[j];
+      const rms = Math.sqrt(sum / Math.min(windowSize, samples.length - i));
+      energies.push(rms);
+      peak = Math.max(peak, rms);
+    }
+    if (peak < .003) throw new Error("No clear speech was detected. Please try again.");
+    const threshold = Math.max(.003, peak * .12);
+    const first = energies.findIndex(v => v > threshold);
+    let last = energies.length - 1;
+    while (last >= 0 && energies[last] <= threshold) last--;
+    if (first < 0 || last < first) throw new Error("No clear speech was detected.");
+    const start = Math.max(0, first * windowSize - Math.floor(rate * .4));
+    const end = Math.min(samples.length, (last + 1) * windowSize + Math.floor(rate * .5));
+    if ((end - start) / rate < 2) throw new Error("Recording is too short. Please repeat the Shahada.");
+    // PCM WAV is widely playable and supports precise local trimming.
+    const length = end - start;
+    const bytes = new ArrayBuffer(44 + length * 2);
+    const view = new DataView(bytes);
+    const ascii = (offset: number, value: string) => { for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i)); };
+    ascii(0, "RIFF"); view.setUint32(4, 36 + length * 2, true); ascii(8, "WAVE");
+    ascii(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true); view.setUint32(24, rate, true);
+    view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+    ascii(36, "data"); view.setUint32(40, length * 2, true);
+    for (let i = 0; i < length; i++) {
+      let mixed = 0;
+      for (let channel = 0; channel < decoded.numberOfChannels; channel++) mixed += decoded.getChannelData(channel)[start + i];
+      const value = Math.max(-1, Math.min(1, mixed / decoded.numberOfChannels));
+      view.setInt16(44 + i * 2, value < 0 ? value * 32768 : value * 32767, true);
+    }
+    return new Blob([bytes], { type: "audio/wav" });
+  } finally { await ctx.close(); }
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState<"shahada" | "gender">("shahada");
@@ -82,6 +129,10 @@ export default function OnboardingPage() {
   const [verified, setVerified] = useState(false);
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [processingAudio, setProcessingAudio] = useState(false);
+  const [audioPreview, setAudioPreview] = useState<string | null>(null);
+  const recognizedRef = useRef(false);
+  const attemptRef = useRef(0);
   const consentRef = useRef(false);
   const resetRef = useRef(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -116,6 +167,8 @@ export default function OnboardingPage() {
     setVerificationMode("audio");
     setWrittenDeclaration(false);
     setMessage(""); setTranscript(""); setVerified(false); setAudioBlob(null);
+    setAudioPreview(null); recognizedRef.current = false;
+    const attempt = ++attemptRef.current;
     const W = window as any;
     const SR = W.SpeechRecognition || W.webkitSpeechRecognition;
     if (!SR) {
@@ -133,9 +186,20 @@ export default function OnboardingPage() {
       const chunks: BlobPart[] = [];
       recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
       recorder.onstop = () => {
-        if (!resetRef.current) setAudioBlob(new Blob(chunks, { type: recorder.mimeType }));
-        setRecording(false);
         stream.getTracks().forEach(track => track.stop());
+        setRecording(false);
+        if (resetRef.current || attempt !== attemptRef.current || !recognizedRef.current) return;
+        setProcessingAudio(true);
+        void trimShahadaAudio(new Blob(chunks, { type: recorder.mimeType })).then(trimmed => {
+          if (attempt !== attemptRef.current) return;
+          setAudioBlob(trimmed);
+          setAudioPreview(URL.createObjectURL(trimmed));
+          setMessage("Shahada recognized. Review your trimmed recording before continuing.");
+        }).catch((error: Error) => {
+          if (attempt !== attemptRef.current) return;
+          setVerified(false);
+          setMessage(error.message || "Audio processing failed. Please try again.");
+        }).finally(() => { if (attempt === attemptRef.current) setProcessingAudio(false); });
       };
       recorderRef.current = recorder;
 
@@ -147,6 +211,7 @@ export default function OnboardingPage() {
         const text = Array.from(event.results ?? []).map((result: any) => result?.[0]?.transcript ?? "").join(" ");
         setTranscript(text);
         if (verifyTranscript(text, language)) {
+          recognizedRef.current = true;
           setVerified(true);
           setMessage("Shahada recognized. You can continue to your profile.");
           rec.stop();
@@ -178,8 +243,10 @@ export default function OnboardingPage() {
 
   const resetShahada = () => {
     resetRef.current = true;
+    attemptRef.current++;
+    recognizedRef.current = false;
     stopMedia();
-    setAudioBlob(null); setTranscript(""); setVerified(false); setMessage("Ready again.");
+    setAudioBlob(null); setAudioPreview(null); setTranscript(""); setVerified(false); setProcessingAudio(false); setMessage("Ready again.");
     if (consentRef.current && verificationMode === "audio") window.setTimeout(() => void startShahada(), 300);
   };
 
@@ -195,7 +262,7 @@ export default function OnboardingPage() {
 
     let path: string | null = null;
     if (!declarationVerified && audioBlob) {
-      path = `${user.id}/shahada-${Date.now()}.webm`;
+      path = `${user.id}/shahada-${Date.now()}.wav`;
       const upload = await s.storage.from("shahada-safe-vault").upload(path, audioBlob, { contentType: audioBlob.type || "audio/webm", upsert: false });
       if (upload.error) { setMessage(upload.error.message); setSaving(false); return; }
     }
@@ -221,7 +288,7 @@ export default function OnboardingPage() {
       }
     }).eq("id", user.id);
 
-    if (error) { setMessage(error.message); setSaving(false); return; }
+    if (error) { if (path) await s.storage.from("shahada-safe-vault").remove([path]); setMessage(error.message); setSaving(false); return; }
     const { error: badgeError } = await s.rpc("award_profile_badge", {
       p_badge_key: "shahadah",
       p_badge_name: "Shahada Verified",
@@ -240,8 +307,8 @@ export default function OnboardingPage() {
       <h1>Say the Shahada.</h1>
       <p className="lead">Choose your language, then verify your Shahada by voice or by checking the written declaration below.</p>
       <div className="languagePicker">
-        <button className={language === "ar" ? "selected" : ""} onClick={() => { stopMedia(); setLanguage("ar"); setVerified(false); setMessage(""); }}>العربية <small>Arabic</small></button>
-        <button className={language === "en" ? "selected" : ""} onClick={() => { stopMedia(); setLanguage("en"); setVerified(false); setMessage(""); }}>English <small>English</small></button>
+        <button className={language === "ar" ? "selected" : ""} onClick={() => { resetRef.current = true; attemptRef.current++; stopMedia(); setAudioBlob(null); setAudioPreview(null); setLanguage("ar"); setVerified(false); setMessage(""); }}>العربية <small>Arabic</small></button>
+        <button className={language === "en" ? "selected" : ""} onClick={() => { resetRef.current = true; attemptRef.current++; stopMedia(); setAudioBlob(null); setAudioPreview(null); setLanguage("en"); setVerified(false); setMessage(""); }}>English <small>English</small></button>
       </div>
       <div className="phraseCard" dir={language === "ar" ? "rtl" : "ltr"}>{SHAHADA[language]}</div>
       <div className="voiceCard">
@@ -252,14 +319,16 @@ export default function OnboardingPage() {
         </button>
         <strong>{verified ? "Shahada recognized" : listening ? "HudHud is listening" : "Say your Shahada"}</strong>
         <p>{listening ? "Speak naturally in your selected language. Tap HudHud to reset your attempt." : "Tap HudHud to allow microphone access. After permission, simply say the Shahada. Or use the checkbox below."}</p>
+        {processingAudio && <p role="status">Preparing your private Shahada clip…</p>}
+        {audioPreview && verified && <div className="transcript"><small>Review your trimmed Shahada</small><audio controls src={audioPreview} style={{width:"100%",marginTop:8}} /></div>}
         {transcript && <div className="transcript" dir={language === "ar" ? "rtl" : "ltr"}><small>Speech recognition heard</small><span>{transcript}</span></div>}
       </div>
-      <div className="declarationFallback"><strong>Prefer a checkbox?</strong><p>Choose either voice recognition or a written Shahada declaration. Both allow you to complete onboarding.</p><label><input type="checkbox" checked={writtenDeclaration} onChange={e => { stopMedia(); setWrittenDeclaration(e.target.checked); setVerificationMode(e.target.checked ? "declaration" : "audio"); setMessage(""); }} /><span>I sincerely affirm the Shahada displayed above and wish to join the 1Muslim community.</span></label>{writtenDeclaration && <small>✓ Written declaration selected. No microphone recording will be required.</small>}</div>
+      <div className="declarationFallback"><strong>Prefer a checkbox?</strong><p>Choose either voice recognition or a written Shahada declaration. Both allow you to complete onboarding.</p><label><input type="checkbox" checked={writtenDeclaration} onChange={e => { resetRef.current = true; attemptRef.current++; stopMedia(); setAudioBlob(null); setAudioPreview(null); setVerified(false); setWrittenDeclaration(e.target.checked); setVerificationMode(e.target.checked ? "declaration" : "audio"); setMessage(""); }} /><span>I sincerely affirm the Shahada displayed above and wish to join the 1Muslim community.</span></label>{writtenDeclaration && <small>✓ Written declaration selected. No microphone recording will be required.</small>}</div>
       {message && <div className={verified || writtenDeclaration ? "success" : "error"}>{message}</div>}
       <div className="badgePreview"><div className="badgeSeal" aria-hidden="true">✦</div><div><span className="badgeKicker">YOUR FIRST 1MUSLIM BADGE</span><strong>Shahada Verified</strong><p>Earn this badge after completing your Shahada verification and profile setup. It will appear on your public profile.</p></div><span className="badgeStatus">{verified || writtenDeclaration ? "✓ Declared" : "🔒 Unlock"}</span></div>
       <div className="legalScroll" role="region" aria-label="Terms and conditions" tabIndex={0}><strong>1Muslim · Terms &amp; Conditions</strong><p>1Muslim is a faith-centered platform supporting Muslim communities, Islamic education, and connections consistent with Islamic principles.</p><p>Our commitment to Islam does not constitute hostility toward any other religion, belief system, or individual. We respect the dignity of people of all religious backgrounds, including those with no religion.</p><strong>Protection of Islamic Values</strong><p>1Muslim may establish and enforce standards for content, conduct, programming, and participation consistent with applicable law. We may prioritize Islamic education, worship, and community development, and are not required to endorse every religious or philosophical viewpoint.</p><strong>Religious Discussions and Differences</strong><p>Respectful theological discussions, comparative religion, scholarly disagreements, and criticism of religious ideas may be permitted. Harassment, threats, targeted abuse, incitement to violence, and dehumanizing treatment are prohibited. Disagreement with a religious belief is not, by itself, harassment or discrimination.</p><strong>Content Moderation</strong><p>1Muslim may review, restrict, remove, or decline to feature content conflicting with published community standards, subject to applicable law. Decisions should follow documented standards rather than hostility toward a person's religious identity.</p><strong>Our Guiding Principle</strong><p>1Muslim exists to preserve, celebrate, and strengthen Muslim identity—not to attack or diminish the dignity of others.</p></div><label className="termsConsent"><input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} required /><span>I have read and agree to the Terms &amp; Conditions above.</span></label>
-      <button className="continue secondary" disabled={!(verified || writtenDeclaration) || !acceptedTerms} onClick={() => setStep("gender")}>Continue to profile →</button>
-      <small className="fine">Either method qualifies for the Shahada badge. Voice recordings stay private; checkbox verification is recorded as a self-attested declaration.</small>
+      <button className="continue secondary" disabled={!(writtenDeclaration || (verified && !!audioBlob && !processingAudio)) || !acceptedTerms} onClick={() => setStep("gender")}>Continue to profile →</button>
+      <small className="fine">Either method qualifies for the Shahada badge. Only the locally silence-trimmed clip is uploaded to the private vault. Review it before continuing; unrelated speech within the clip may still be present. Checkbox verification is self-attested.</small>
     </> : <>
       <span className="eyebrow">WELCOME TO 1MUSLIM</span><h1>Choose your profile.</h1><p className="lead">Select your gender once. This sets your default profile avatar and stays fixed after setup.</p>
       <div className="genderGrid"><button className={gender === "male" ? "genderCard selected" : "genderCard"} onClick={() => setGender("male")}><img src="/assets/avatars/default-male.jpg" alt="" /><strong>Male</strong><span>Use the male default avatar</span></button><button className={gender === "female" ? "genderCard selected" : "genderCard"} onClick={() => setGender("female")}><img src="/assets/avatars/Default-women.png" alt="" /><strong>Female</strong><span>Use the female default avatar</span></button></div>
