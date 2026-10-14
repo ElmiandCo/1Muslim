@@ -454,5 +454,17 @@ export default function AuthPage() {
 .authPreview.authShahada .authMethods button.selected{border-color:#a6b6ffcc!important;box-shadow:inset 0 1px 0 #ffffff50,0 0 20px #727df13a!important}
 @media(max-height:700px){.authPreview.authShahada .shahadaCinematicHero{flex-basis:100px!important}.authPreview.authShahada .authHudHudFirst{min-height:145px!important}}
 @media(prefers-reduced-motion:reduce){.authPreview.authShahada .shahadaHeroGuardian{animation:none!important}}
+
+/* Obsidian Mirror V2 */
+.authPreview.authShahada .authGlass{isolation:isolate!important;background:linear-gradient(135deg,rgba(27,30,43,.88),rgba(3,5,12,.95) 50%,rgba(17,20,35,.90))!important;border:1px solid rgba(216,227,255,.35)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 22px 54px rgba(0,0,0,.75)!important}
+.authPreview.authShahada .authGlass:before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(130deg,rgba(255,255,255,.10),transparent 33%,rgba(150,174,255,.06));z-index:0}
+.authPreview.authShahada .authGlass:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(110deg,transparent 30%,rgba(210,225,255,.09) 50%,transparent 70%);background-size:250% 100%;animation:obsidianSweepV2 19s ease-in-out infinite;z-index:0}
+.authPreview.authShahada .authGlass>.shahadaCinematicHero,.authPreview.authShahada .authGlass>.authPanel{position:relative!important;z-index:1!important}
+.authPreview.authShahada .authPanel{background:linear-gradient(145deg,rgba(26,29,44,.85),rgba(3,5,12,.94) 55%,rgba(16,19,32,.87))!important;color:#f5f6ff!important;border:1px solid rgba(220,229,255,.24)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 12px 30px rgba(0,0,0,.55)!important}
+.authPreview.authShahada .authMethods button{background:linear-gradient(145deg,rgba(41,47,69,.91),rgba(8,11,24,.96))!important;color:#f5f7ff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.21)!important}
+.authPreview.authShahada .authMethods button.selected{box-shadow:inset 0 1px 0 rgba(255,255,255,.46),0 0 18px rgba(125,146,255,.28)!important}
+.authPreview.authShahada .authForm input{background:rgba(2,4,11,.94)!important;color:#fff!important;border-color:rgba(169,187,230,.55)!important}
+@keyframes obsidianSweepV2{0%,30%{background-position:120% 0}75%,100%{background-position:-120% 0}}
+@media(prefers-reduced-motion:reduce){.authPreview.authShahada .authGlass:after{animation:none!important}}
 body:has(.authPreview) .muslimMobileDock{display:none!important}body:has(.authPreview){overflow:hidden!important;overscroll-behavior:none!important}`}</style></main>;
 }
