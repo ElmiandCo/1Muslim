@@ -10,3 +10,11 @@
 @keyframes hhSharedNavEnter{0%{transform:translate3d(0,-115%,0) scale(.95);opacity:0}40%{transform:translate3d(0,7px,0) scale(1.012);opacity:1}75%{transform:translate3d(0,-3px,0) scale(.997)}100%{transform:translate3d(0,0,0) scale(1);opacity:1}}
 @keyframes hhSharedCamera{0%{transform:translate3d(0,0,0) scale(1)}23%{transform:translate3d(0,5px,0) scale(1.012)}51%{transform:translate3d(0,-4px,0) scale(1.022)}77%{transform:translate3d(0,1px,0) scale(1.007)}100%{transform:translate3d(0,0,0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.hh-motion-shell.hh-shell-moving .siteNav,.hh-motion-shell.hh-shell-moving :is(.communityPage,.profilePage,.streamingPage,.hh-reels) :is(.pageContent,.content,.mainContent,.communityFeed,.profileContent,.streamingContent){animation:none!important}}
+
+/* Messenger is an app surface: animate its chrome, never the conversation scroller. */
+.hh-motion-shell:has(.omImessagePage) .omMessengerTop{transform-origin:top center;backface-visibility:hidden}
+.hh-motion-shell.hh-shell-moving.hh-shell-collapsed .omMessengerTop{animation:hhSharedNavExit var(--hh-duration) var(--hh-ease) both}
+.hh-motion-shell.hh-shell-moving.hh-shell-expanded .omMessengerTop{animation:hhSharedNavEnter var(--hh-duration) var(--hh-ease) both}
+.hh-motion-shell.hh-shell-collapsed:not(.hh-shell-moving) .omMessengerTop{transform:translate3d(0,-115%,0);opacity:0;pointer-events:none}
+.hh-motion-shell.hh-shell-moving .omImessagePage :is(.omChatHeader,.omMessengerPattern){animation:hhSharedCamera var(--hh-duration) var(--hh-ease) both;backface-visibility:hidden}
+@media(prefers-reduced-motion:reduce){.hh-motion-shell.hh-shell-moving .omMessengerTop,.hh-motion-shell.hh-shell-moving .omImessagePage :is(.omChatHeader,.omMessengerPattern){animation:none!important}}
