@@ -7,7 +7,7 @@ import "./hudhud-motion-shell.css";
 const supported=["/community","/profile","/streaming","/videos"];
 export default function HudHudMotionShell({children}:{children:ReactNode}){
  const pathname=usePathname()||"/";
- const eligible=supported.some(p=>pathname===p||pathname.startsWith(p+"/"));
+ const eligible=supported.includes(pathname);
  const [collapsed,setCollapsed]=useState(false);
  const [moving,setMoving]=useState(false);
  const collapsedRef=useRef(false);
