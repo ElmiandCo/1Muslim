@@ -394,3 +394,22 @@
 }
 
 .videoPlayerCard{display:flex!important;flex-direction:column!important;padding:10px!important;overflow:hidden!important;min-height:0!important}
+
+/* Qur'an Studio: vignette the luminous artwork, not the text.
+   The gradient fades to transparency at its center so the landscape remains visible. */
+.slide[data-workspace-page="1"] .scene::after{
+ content:""!important;
+ display:block!important;
+ position:absolute!important;
+ inset:0!important;
+ z-index:2!important;
+ pointer-events:none!important;
+ background:
+   radial-gradient(ellipse at 50% 45%,transparent 14%,rgba(0,0,0,.24) 58%,rgba(0,0,0,.66) 100%),
+   linear-gradient(180deg,rgba(0,0,0,.48) 0%,rgba(0,0,0,.10) 28%,transparent 48%,rgba(0,0,0,.12) 76%,rgba(0,0,0,.56) 100%)!important;
+}
+:global(.control.day) .slide[data-workspace-page="1"] .scene::after{
+ background:
+   radial-gradient(ellipse at 50% 45%,transparent 12%,rgba(0,0,0,.20) 58%,rgba(0,0,0,.58) 100%),
+   linear-gradient(180deg,rgba(0,0,0,.42),transparent 43%,rgba(0,0,0,.48))!important;
+}
