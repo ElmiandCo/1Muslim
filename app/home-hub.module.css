@@ -682,11 +682,11 @@
 .control .customGrid>.widgetSlot[data-widget="Posts"]{
   overflow:hidden;border-radius:22px;background-position:center;background-size:cover;
 }
-.control .customGrid>.widgetSlot[data-widget="Live"]{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-night.PNG&w=1080&q=75")}
-.control .customGrid>.widgetSlot[data-widget="Qur’an"]{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-night.PNG&w=1080&q=75")}
-.control .customGrid>.widgetSlot[data-widget="Videos"]{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-night.PNG&w=1080&q=75")}
+.control .customGrid>.widgetSlot[data-widget="Live"]{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-night.PNG&w=1920&q=90")}
+.control .customGrid>.widgetSlot[data-widget="Qur’an"]{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-night.PNG&w=1920&q=90")}
+.control .customGrid>.widgetSlot[data-widget="Videos"]{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-night.PNG&w=1920&q=90")}
 .control .customGrid>.widgetSlot[data-widget="Ummah"],
-.control .customGrid>.widgetSlot[data-widget="Posts"]{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-nature-night.PNG&w=1080&q=75")}
+.control .customGrid>.widgetSlot[data-widget="Posts"]{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-nature-night.PNG&w=1920&q=90")}
 .control .customGrid>.widgetSlot[data-widget="Live"]::before,
 .control .customGrid>.widgetSlot[data-widget="Qur’an"]::before,
 .control .customGrid>.widgetSlot[data-widget="Videos"]::before,
@@ -697,10 +697,10 @@
  transition:opacity 1.35s ease-in-out;
 }
 .control .customGrid>.widgetSlot[data-widget="Live"]::before,
-.control .customGrid>.widgetSlot[data-widget="Qur’an"]::before{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-day.PNG&w=1080&q=75")}
-.control .customGrid>.widgetSlot[data-widget="Videos"]::before{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-day.PNG&w=1080&q=75")}
+.control .customGrid>.widgetSlot[data-widget="Qur’an"]::before{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-day.PNG&w=1920&q=90")}
+.control .customGrid>.widgetSlot[data-widget="Videos"]::before{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-day.PNG&w=1920&q=90")}
 .control .customGrid>.widgetSlot[data-widget="Ummah"]::before,
-.control .customGrid>.widgetSlot[data-widget="Posts"]::before{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-nature-day.PNG&w=1080&q=75")}
+.control .customGrid>.widgetSlot[data-widget="Posts"]::before{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-nature-day.PNG&w=1920&q=90")}
 .control.day .customGrid>.widgetSlot[data-widget]::before{opacity:1}
 .control .customGrid>.widgetSlot[data-widget="Live"]>.widgetCanvas,
 .control .customGrid>.widgetSlot[data-widget="Qur’an"]>.widgetCanvas,
@@ -721,3 +721,20 @@
  color:#fffdf2!important;
 }
 @media(prefers-reduced-motion:reduce){.control .customGrid>.widgetSlot[data-widget]::before{transition:none}}
+
+/* Keep landscape photography crisp; frost only the foreground UI surfaces. */
+.control .customGrid>.widgetSlot[data-widget="Live"]>.widgetCanvas,
+.control .customGrid>.widgetSlot[data-widget="Qur’an"]>.widgetCanvas,
+.control .customGrid>.widgetSlot[data-widget="Videos"]>.widgetCanvas,
+.control .customGrid>.widgetSlot[data-widget="Ummah"]>.widgetCanvas,
+.control .customGrid>.widgetSlot[data-widget="Posts"]>.widgetCanvas{
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ background:linear-gradient(180deg,rgba(3,24,19,.10),rgba(3,24,19,.52))!important;
+}
+.control.day .customGrid>.widgetSlot[data-widget="Live"]>.widgetCanvas,
+.control.day .customGrid>.widgetSlot[data-widget="Qur’an"]>.widgetCanvas,
+.control.day .customGrid>.widgetSlot[data-widget="Videos"]>.widgetCanvas,
+.control.day .customGrid>.widgetSlot[data-widget="Ummah"]>.widgetCanvas,
+.control.day .customGrid>.widgetSlot[data-widget="Posts"]>.widgetCanvas{
+ background:linear-gradient(180deg,rgba(250,255,245,.07),rgba(3,41,27,.39))!important;
+}
