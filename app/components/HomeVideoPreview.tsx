@@ -8,7 +8,9 @@ export default function HomeVideoPreview(){
  const [clips,setClips]=useState<Clip[]>([]);
  const [active,setActive]=useState(0);
  const [loading,setLoading]=useState(true);
- const video=useRef<HTMLVideoElement>(null);
+ const track=useRef<HTMLDivElement>(null);
+ const [paused,setPaused]=useState(false);
+ const [interacting,setInteracting]=useState(false);
  useEffect(()=>{let alive=true;(async()=>{try{
  const db=createClient();
  const {data:media,error}=await db.from("post_media").select("id,post_id,user_id,storage_path,created_at").ilike("mime_type","video/%").order("created_at",{ascending:false}).limit(12);
@@ -21,8 +23,10 @@ export default function HomeVideoPreview(){
  const {data:urls}=await db.storage.from("community-media").createSignedUrls(valid.map(x=>x.storage_path),3600);
  if(alive)setClips(valid.flatMap((x,i)=>urls?.[i]?.signedUrl?[{id:x.id,postId:x.post_id,body:postMap.get(x.post_id)?.body||"",src:urls[i].signedUrl}]:[]));
  }catch{}finally{if(alive)setLoading(false)}})();return()=>{alive=false}},[]);
- useEffect(()=>{const el=video.current;if(!el)return;const observer=new IntersectionObserver(entries=>{if(entries[0]?.isIntersecting&&!document.hidden){void el.play().catch(()=>{})}else el.pause()},{threshold:.3});observer.observe(el);const onVisibility=()=>{if(document.hidden)el.pause();else void el.play().catch(()=>{})};document.addEventListener("visibilitychange",onVisibility);return()=>{observer.disconnect();document.removeEventListener("visibilitychange",onVisibility);el.pause()}},[active,clips]);
+ useEffect(()=>{const root=track.current;if(!root||clips.length<2||paused||interacting||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;let frame=0;let last=0;const tick=(now:number)=>{if(!document.hidden){if(last){root.scrollLeft+=Math.min((now-last)*0.013,1.2);const half=root.scrollWidth/2;if(half>0&&root.scrollLeft>=half)root.scrollLeft-=half;}last=now;}else last=0;frame=requestAnimationFrame(tick)};frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame)},[clips,paused,interacting]);
+ const onScroll=()=>{const root=track.current;if(!root||!clips.length)return;const width=root.scrollWidth/(clips.length*2);if(width>0)setActive(Math.floor((root.scrollLeft+width*.5)/width)%clips.length)};
+ const stopInteraction=()=>{setInteracting(false)};
  return <div className={styles.root}><header><strong>COMMUNITY VIDEOS</strong><span>{clips.length?active+1+" / "+clips.length:"1MUSLIM"}</span></header>
- {clips.length?<div className={styles.player}><video key={clips[active].id} ref={video} src={clips[active].src} muted autoPlay loop playsInline preload="metadata" aria-label="Community video preview"/><div className={styles.controls}><button type="button" onClick={()=>setActive(i=>(i+clips.length-1)%clips.length)} aria-label="Previous video">‹</button><Link href={"/posts/"+clips[active].postId}>Open video ↗</Link><button type="button" onClick={()=>setActive(i=>(i+1)%clips.length)} aria-label="Next video">›</button></div></div>:<div className={styles.empty}>{loading?"Loading community videos…":"No community videos yet."}<Link href="/videos">Explore Videos ↗</Link></div>}
+ {clips.length?<div className={styles.carouselWrap}><div className={styles.track} ref={track} onScroll={onScroll} onTouchStart={()=>setInteracting(true)} onTouchEnd={stopInteraction} onTouchCancel={stopInteraction} onPointerDown={()=>setInteracting(true)} onPointerUp={stopInteraction} onPointerCancel={stopInteraction} aria-label="Community video carousel">{[...clips,...clips].map((clip,i)=><Link className={styles.tile} href="/videos" key={clip.id+"-"+i} aria-label={"Open videos, preview "+(i%clips.length+1)}><video src={clip.src} muted autoPlay loop playsInline preload={i<3?"metadata":"none"} aria-hidden="true"/><span className={styles.tileOverlay}>Watch videos ↗</span></Link>)}</div><div className={styles.controls}><span>{active+1} / {clips.length}</span><button type="button" onClick={()=>setPaused(p=>!p)} aria-label={paused?"Resume carousel":"Pause carousel"}>{paused?"▶":"Ⅱ"}</button><Link href="/videos">Open Videos ↗</Link></div></div>:<div className={styles.empty}>{loading?"Loading community videos…":"No community videos yet."}<Link href="/videos">Explore Videos ↗</Link></div>}
  </div>
 }
