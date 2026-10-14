@@ -294,7 +294,8 @@ export default function OnboardingPage() {
       p_badge_name: "Shahada Verified",
       p_description: "Completed Shahada verification during onboarding."
     });
-    if (badgeError) console.warn("Shahada badge award pending:", badgeError.message);
+    if (badgeError) { setMessage("Your Shahada was saved, but the badge could not be awarded. Please try again."); setSaving(false); return; }
+    try { sessionStorage.setItem("1muslim:shahada-welcome", "yes"); } catch {}
     router.replace("/");
   };
 
