@@ -1057,5 +1057,5 @@
 @media(prefers-reduced-motion:reduce){.workspacePage .customGrid>.widgetSlot>.widgetCanvas::before,.liveButterfly,.liveButterfly::before,.liveButterfly::after{animation:none!important}}
 
 /* Dedicated responsive day/night artwork for the scrollable dashboard gallery. */
-.workspaceScroller{background:linear-gradient(135deg,rgba(4,27,23,.55),rgba(3,18,17,.7)),url("/assets/control-center/backgrounds/workspace-night.png") center/cover no-repeat,#09251e}
-.day .workspaceScroller{background:linear-gradient(135deg,rgba(255,251,232,.24),rgba(240,247,225,.35)),url("/assets/control-center/backgrounds/workspace-day.png") center/cover no-repeat,#e5f0e2}
+.workspaceScroller{background:linear-gradient(135deg,rgba(4,27,23,.55),rgba(3,18,17,.7)),url("/assets/control-center/backgrounds/%20%20%20%20workspace-night.PNG") center/cover no-repeat,#09251e}
+.day .workspaceScroller{background:linear-gradient(135deg,rgba(255,251,232,.24),rgba(240,247,225,.35)),url("/assets/control-center/backgrounds/%20%20%20%20workspace-day.PNG") center/cover no-repeat,#e5f0e2}
