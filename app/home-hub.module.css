@@ -1090,3 +1090,15 @@
 .control .workspacePage .customGrid>.sizefeatured{min-height:285px!important;grid-row:span 2!important}
 .control .workspacePage .customGrid>.widgetSlot .widgetCanvas{min-height:100%;height:100%;box-sizing:border-box}
 @media(max-width:650px){.control .workspacePage .customGrid{grid-auto-rows:minmax(205px,auto)!important;gap:18px!important;padding:14px 12px 56px!important}.control .workspacePage .customGrid>.sizefeatured{min-height:300px!important;grid-row:span 2!important}}
+
+/* Mobile overflow correction: each widget owns one row; scrolling belongs to the slide. */
+.control .widgetArea{min-height:0!important;overflow:hidden}
+.control .workspaceScroller{flex:1 1 0!important;min-height:0!important;height:100%!important;overflow-x:auto!important;overflow-y:hidden!important}
+.control .workspaceTrack{height:100%!important;min-height:0!important}
+.control .workspacePage{flex:0 0 100%!important;height:100%!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;scrollbar-width:thin;overscroll-behavior-y:contain;touch-action:pan-y;padding-bottom:70px!important}
+.control .workspacePage .customGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-rows:auto!important;grid-auto-flow:row!important;gap:20px!important;align-content:start!important;padding:16px 12px 55px!important}
+.control .workspacePage .customGrid>[data-widget]{grid-row:auto!important;min-height:210px!important;height:auto!important;align-self:stretch!important}
+.control .workspacePage .customGrid>[data-widget][data-featured="true"]{grid-column:1/-1!important;grid-row:auto!important;min-height:245px!important;max-height:none!important}
+.control .workspacePage .customGrid>[data-widget] .widgetCanvas{height:100%!important;min-height:210px!important;box-sizing:border-box}
+.control .workspacePage .customGrid>[data-widget][data-featured="true"] .widgetCanvas{min-height:245px!important}
+@media(max-width:650px){.control .workspacePage .customGrid>[data-widget]{grid-column:1/-1!important;grid-row:auto!important;min-height:205px!important}.control .workspacePage .customGrid>[data-widget][data-featured="true"]{min-height:255px!important}.control .workspacePage .customGrid>[data-widget] .widgetCanvas{min-height:205px!important}.control .workspacePage .customGrid>[data-widget][data-featured="true"] .widgetCanvas{min-height:255px!important}}
