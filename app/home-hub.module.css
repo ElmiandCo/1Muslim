@@ -1159,3 +1159,18 @@
 .control .workspaceScroller::before{opacity:1}.control .workspaceScroller::after{opacity:0}
 .control.day .workspaceScroller::before{opacity:0}.control.day .workspaceScroller::after{opacity:1}
 @media(prefers-reduced-motion:reduce){.control .workspaceScroller,.control .workspaceScroller::before,.control .workspaceScroller::after{transition:none!important}}
+
+/* Sunrise choreography: hold night for the first second, then reveal day
+   through the remaining 2.2s of the 3.2s celestial transformation.
+   Sunset retains its existing full-length, immediate crossfade. */
+.control.day .workspaceScroller::before,
+.control.day .workspaceScroller::after{
+  transition-property:opacity!important;
+  transition-duration:2200ms!important;
+  transition-timing-function:cubic-bezier(.42,0,.2,1)!important;
+  transition-delay:1000ms!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .control.day .workspaceScroller::before,
+  .control.day .workspaceScroller::after{transition:none!important}
+}
