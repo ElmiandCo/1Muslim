@@ -854,3 +854,43 @@
 .control .widgetSlot:global(.hh-magnetic-target)::after{background:conic-gradient(from var(--hh-angle,0deg),transparent 0deg,#e8d087 55deg,#54e6bb 95deg,transparent 155deg,transparent 360deg) border-box;animation:hhPerimeterTravel 3s linear infinite;opacity:.86}
 @keyframes hhPerimeterTravel{to{filter:hue-rotate(24deg);opacity:.95}}
 @media(prefers-reduced-motion:reduce){.control .widgetSlot:global(.hh-magnetic-target)::after{animation:none!important}}
+
+
+/* 1Muslim Glass Perimeter — vignette depth + size-aware ambient rim light.
+   Applied to existing widget canvases only; never steals touch/drag events. */
+.control .customGrid>.widgetSlot>.widgetCanvas{
+  --rim-gold:#edcf87;
+  --rim-ice:#f5fff8;
+  --rim-strength:.20;
+  isolation:isolate;
+  box-shadow:inset 0 0 23px 2px #010d0b48,inset 0 1px 0 #ffffff5c,0 9px 24px #00160d42;
+}
+.control .customGrid>.widgetSlot>.widgetCanvas::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:4;
+  background:
+    radial-gradient(ellipse at 50% 50%,transparent 49%,#020a0960 100%),
+    linear-gradient(118deg,#fff9d600, var(--rim-gold) 27%,#fff9d600 55%,var(--rim-ice) 78%,#fff9d600) border-box;
+  border:1px solid transparent;
+  background-clip:padding-box,border-box;
+  /* Keep a soft edge shadow on the glass while the moving rim is ultra thin. */
+  opacity:var(--rim-strength);
+  animation:oneMuslimRimBreathe 10.8s ease-in-out infinite alternate;
+}
+.control .customGrid>.sizecompact>.widgetCanvas{--rim-gold:#eafaf4;--rim-ice:#ffffff;--rim-strength:.18}
+.control .customGrid>.sizestandard>.widgetCanvas{--rim-strength:.30}
+.control .customGrid>.sizeexpanded>.widgetCanvas{--rim-strength:.40}
+.control .customGrid>.sizefeatured>.widgetCanvas,
+.control .customGrid>.sizeimmersive>.widgetCanvas,
+.control .customGrid>.sizestudio>.widgetCanvas{--rim-strength:.52}
+.control .customGrid>.widgetSlot:nth-child(2n)>.widgetCanvas::after{animation-delay:-4.2s;animation-duration:13.6s}
+.control .customGrid>.widgetSlot:nth-child(3n)>.widgetCanvas::after{animation-delay:-7.1s;animation-duration:12.2s}
+@keyframes oneMuslimRimBreathe{
+  0%,100%{opacity:calc(var(--rim-strength) * .75)}
+  50%{opacity:var(--rim-strength)}
+}
+.control .customGrid>.widgetSlot>.widgetCanvas:hover::after,
+.control .customGrid>.widgetSlot>.widgetCanvas:focus-within::after{opacity:var(--rim-strength);animation-play-state:paused}
+.control .widgetSlot:global(.hh-magnetic-lift)>.widgetCanvas::after{animation-play-state:paused}
+.control.day .customGrid>.widgetSlot>.widgetCanvas::after{opacity:calc(var(--rim-strength) * .55)}
+@media(prefers-reduced-motion:reduce){.control .customGrid>.widgetSlot>.widgetCanvas::after{animation:none!important}}
+@media(prefers-reduced-transparency:reduce){.control .customGrid>.widgetSlot>.widgetCanvas::after{opacity:.12}}
