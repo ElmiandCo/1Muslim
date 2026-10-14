@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ProductionUpgradeOverlay from "./components/ProductionUpgradeOverlay";
 import SiteNav, { ThemeToggle } from "./components/SiteNav";
 import DuaLesson from "./components/DuaLesson";
 import HudHudLearningNudge from "./components/HudHudLearningJourney";
@@ -337,6 +338,6 @@ export default function Home() {
       </aside>
 
 
-    </div></>
+    </div><ProductionUpgradeOverlay /></>
   );
 }
