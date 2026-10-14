@@ -282,3 +282,14 @@
  .toolbarButtonLabel{display:none!important}
 }
 @media(prefers-reduced-motion:reduce){.canvasToolbarActions > button{transition:none!important}}
+
+/* The second featured workspace is a miniature Qur'an reading studio. */
+.quranStudioPreview{display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;gap:clamp(9px,2vh,22px);width:100%;height:100%;min-height:0;padding:clamp(12px,2vw,24px);border:1px solid rgba(217,191,255,.35);border-radius:22px;background:linear-gradient(150deg,rgba(54,29,95,.44),rgba(23,14,61,.46));box-shadow:inset 0 1px rgba(255,255,255,.14),0 12px 36px rgba(13,6,35,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-sizing:border-box;overflow:hidden}
+.quranStudioEyebrow{font-size:clamp(9px,1.8vw,12px);letter-spacing:.18em;color:#e9d6ff;font-weight:700;text-align:center}
+.quranStudioMeta{display:flex;justify-content:space-evenly;gap:8px;border-top:1px solid rgba(220,191,255,.22);border-bottom:1px solid rgba(220,191,255,.22);padding:9px 0;color:rgba(237,220,255,.78)}
+.quranStudioMeta>span{display:flex;align-items:center;gap:8px;font-size:clamp(9px,1.8vw,12px);letter-spacing:.08em}
+.quranStudioMeta b{color:#fff;font-size:clamp(13px,2.7vw,18px)}
+.quranStudioArabic{display:block!important;text-align:center!important;font-family:serif!important;font-size:clamp(27px,5.5vw,52px)!important;line-height:1.9!important;color:#fff6ff!important;text-shadow:0 0 24px rgba(231,197,255,.48);max-height:45%;overflow:hidden}
+.quranStudioTranslation{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;text-align:center;font-size:clamp(11px,2.1vw,15px);line-height:1.55;color:rgba(241,229,255,.83)}
+.quranStudioEnter{align-self:center;display:inline-flex;align-items:center;gap:12px;padding:9px 17px;border:1px solid rgba(220,193,255,.5);border-radius:999px;color:#f4e9ff;font-size:11px;font-weight:700;letter-spacing:.12em;background:rgba(134,88,182,.22)}
+@media(max-width:420px){.quranStudioPreview{padding:12px;gap:8px}.quranStudioArabic{font-size:clamp(24px,7vw,38px)!important}.quranStudioMeta>span{gap:4px}}
