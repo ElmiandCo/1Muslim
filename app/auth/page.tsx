@@ -466,5 +466,17 @@ export default function AuthPage() {
 .authPreview.authShahada .authForm input{background:rgba(2,4,11,.94)!important;color:#fff!important;border-color:rgba(169,187,230,.55)!important}
 @keyframes obsidianSweepV2{0%,30%{background-position:120% 0}75%,100%{background-position:-120% 0}}
 @media(prefers-reduced-motion:reduce){.authPreview.authShahada .authGlass:after{animation:none!important}}
+
+/* Mobile Shahada viewport: reclaim unused top gutter; keep signup controls reachable. */
+@media(max-width:1100px){
+.authPreview.authShahada{box-sizing:border-box!important;padding:env(safe-area-inset-top,0px) 8px env(safe-area-inset-bottom,0px)!important;min-height:100dvh!important;height:100dvh!important;max-height:100dvh!important;display:flex!important;align-items:stretch!important;justify-content:center!important;overflow:hidden!important}
+.authPreview.authShahada .authGlass{box-sizing:border-box!important;margin:0 auto!important;height:100%!important;max-height:100%!important;width:min(100%,540px)!important;display:flex!important;flex-direction:column!important;padding:5px!important;overflow:hidden!important}
+.authPreview.authShahada .shahadaCinematicHero{flex:0 0 clamp(72px,12dvh,112px)!important;min-height:72px!important}
+.authPreview.authShahada .authPanel{flex:1 1 0!important;min-height:0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:thin;padding:9px 10px 14px!important;margin-top:-8px!important}
+.authPreview.authShahada .authHudHudFirst{min-height:clamp(110px,18dvh,175px)!important}
+.authPreview.authShahada .authHudHudRecord{width:clamp(76px,11dvh,112px)!important;height:clamp(58px,8dvh,85px)!important}
+.authPreview.authShahada .signupProgress{margin:5px 0 10px!important}
+}
+@media(max-width:1100px) and (max-height:740px){.authPreview.authShahada .shahadaCinematicHero{flex-basis:70px!important}.authPreview.authShahada .authHudHudFirst{min-height:104px!important}}
 body:has(.authPreview) .muslimMobileDock{display:none!important}body:has(.authPreview){overflow:hidden!important;overscroll-behavior:none!important}`}</style></main>;
 }
