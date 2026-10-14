@@ -56,16 +56,16 @@ function verifyTranscript(transcript: string, language: Language) {
   }
   const t = normalizeEnglish(transcript);
   const groups = [
-    ["bear witness", "testify"],
-    ["deity", "god"],
-    ["worthy", "worship"],
-    ["except"],
+    ["bear witness", "testify", "witness"],
+    ["deity", "god", "gods", "ilah"],
+    ["worthy", "worship", "no god", "no deity", "none"],
+    ["except", "but", "other than", "besides"],
     ["allah"],
     ["muhammad"],
-    ["messenger"],
+    ["messenger", "prophet", "rasul"],
   ];
   const hits = groups.filter(group => group.some(word => t.includes(word))).length;
-  return hits >= 6 && t.length >= 35;
+  return hits >= 5 && t.length >= 32 && (t.includes("muhammad") || t.includes("mohammed")) && (t.includes("allah") || t.includes("god"));
 }
 
 // Conservative voice-activity trim: retains a short margin to avoid clipping words.
@@ -146,6 +146,12 @@ export default function OnboardingPage() {
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const audioMeterRef = useRef<{context: AudioContext; frame: number; source: MediaStreamAudioSourceNode} | null>(null);
   const [voiceLevel, setVoiceLevel] = useState(0);
+  const [voiceStatus,setVoiceStatus] = useState<"ready"|"recording"|"speaking"|"analyzing"|"resetting"|"recognized"|"retry"|"processing">("ready");
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout>|null>(null);
+  const speechStartedRef = useRef(false);
+  const finalTranscriptRef = useRef("");
+  const clearSilenceTimer = () => {if(silenceTimerRef.current){clearTimeout(silenceTimerRef.current);silenceTimerRef.current=null;}};
+  useEffect(()=>()=>{if(silenceTimerRef.current)clearTimeout(silenceTimerRef.current)},[]);
   const stopVoiceMeter = () => {
     const meter = audioMeterRef.current;
     audioMeterRef.current = null;
@@ -199,6 +205,7 @@ export default function OnboardingPage() {
   }, [router]);
 
   const stopMedia = () => {
+    clearSilenceTimer();
     stopVoiceMeter();
     recognitionRef.current?.stop();
     recognitionRef.current = null;
@@ -214,7 +221,7 @@ export default function OnboardingPage() {
     setVerificationMode("audio");
     setWrittenDeclaration(false);
     setMessage(""); setTranscript(""); setVerified(false); setAudioBlob(null);
-    setAudioPreview(null); recognizedRef.current = false;
+    setAudioPreview(null); recognizedRef.current = false; speechStartedRef.current=false; finalTranscriptRef.current=""; clearSilenceTimer(); setVoiceStatus("recording");
     const attempt = ++attemptRef.current;
     const W = window as any;
     const SR = W.SpeechRecognition || W.webkitSpeechRecognition;
@@ -239,15 +246,18 @@ export default function OnboardingPage() {
         stopVoiceMeter();
         setRecording(false);
         if (resetRef.current || attempt !== attemptRef.current || !recognizedRef.current) return;
+        setVoiceStatus("processing");
         setProcessingAudio(true);
         void trimShahadaAudio(new Blob(chunks, { type: recorder.mimeType })).then(trimmed => {
           if (attempt !== attemptRef.current) return;
+          setVoiceStatus("recognized");
           setAudioBlob(trimmed);
           setAudioPreview(URL.createObjectURL(trimmed));
           setMessage("Shahada recognized. Review your trimmed recording before continuing.");
         }).catch((error: Error) => {
           if (attempt !== attemptRef.current) return;
           setVerified(false);
+          setVoiceStatus("retry");
           setMessage(error.message || "Audio processing failed. Please try again.");
         }).finally(() => { if (attempt === attemptRef.current) setProcessingAudio(false); });
       };
@@ -257,20 +267,37 @@ export default function OnboardingPage() {
       rec.lang = language === "ar" ? "ar-SA" : "en-US";
       rec.continuous = true;
       rec.interimResults = true;
-      rec.onresult = (event: any) => {
-        const text = Array.from(event.results ?? []).map((result: any) => result?.[0]?.transcript ?? "").join(" ");
+      const finishSpeech = (text: string) => {
+        clearSilenceTimer();
+        if(attempt!==attemptRef.current||resetRef.current)return;
+        setVoiceStatus("analyzing");
         setTranscript(text);
-        if (verifyTranscript(text, language)) {
-          recognizedRef.current = true;
-          setVerified(true);
-          setMessage("Shahada recognized. You can continue to your profile.");
-          rec.stop();
-        } else {
-          setMessage("Listening for your Shahada — take your time.");
+        if(verifyTranscript(text,language)){
+          recognizedRef.current=true;setVerified(true);setVoiceStatus("recognized");
+          setMessage("Shahada recognized. Finalizing your private recording…");
+        }else{
+          setVoiceStatus("retry");
+          setMessage("We heard part of your Shahada. Please try again and say the full declaration in "+(language==="en"?"English.":"Arabic."));
         }
+        rec.stop();
+      };
+      rec.onresult = (event: any) => {
+        if(attempt!==attemptRef.current||resetRef.current)return;
+        const results=Array.from(event.results??[]) as any[];
+        const text=results.map((result:any)=>result?.[0]?.transcript??"").join(" ").trim();
+        const finalText=results.filter((result:any)=>result?.isFinal).map((result:any)=>result?.[0]?.transcript??"").join(" ").trim();
+        if(finalText)finalTranscriptRef.current=finalText;
+        setTranscript(text);
+        if(!text)return;
+        speechStartedRef.current=true;
+        setVoiceStatus("speaking");
+        clearSilenceTimer();
+        // A short pause ends an attempt; interim results are never treated as a final verdict.
+        silenceTimerRef.current=setTimeout(()=>finishSpeech(finalTranscriptRef.current||text),2200);
       };
       rec.onerror = (event: any) => {
         if (resetRef.current) return;
+        clearSilenceTimer();setVoiceStatus("retry");
         setListening(false); setRecording(false);
         stopVoiceMeter();
         if (recorderRef.current?.state === "recording") recorderRef.current.stop();
@@ -278,6 +305,8 @@ export default function OnboardingPage() {
       };
       rec.onend = () => {
         if (resetRef.current) return;
+        clearSilenceTimer();
+        if(!recognizedRef.current){setVoiceStatus("retry");setMessage(speechStartedRef.current?"Speech ended before the full Shahada was confirmed. Tap to try again.":"No speech detected. Tap to record again.");}
         setListening(false);
         stopVoiceMeter();
         if (recorderRef.current?.state === "recording") recorderRef.current.stop();
@@ -290,11 +319,13 @@ export default function OnboardingPage() {
       rec.start();
     } catch {
       stopMedia();
+      setVoiceStatus("retry");
       setMessage("Microphone permission is required for Shahada verification.");
     }
   };
 
   const resetShahada = () => {
+    setVoiceStatus("resetting");
     resetRef.current = true;
     attemptRef.current++;
     recognizedRef.current = false;
@@ -385,8 +416,8 @@ export default function OnboardingPage() {
           <span className="hudhudCore" aria-hidden="true"><img src="/assets/hudhud-logo.PNG" alt="" /></span>
         </button>
         <div className="studioVoiceWave" aria-hidden="true">{Array.from({length:25},(_,i)=><i key={i} style={{height:`${12+Math.abs(Math.sin(i*1.3))*32}px`,transform:`scaleY(${(listening || recording) ? Math.max(.2,Math.min(1.8,.2+voiceLevel*2.3*(.35+.65*Math.abs(Math.sin(i*1.3))))) : .25})`,opacity:(listening || recording) ? .55+voiceLevel*.45 : .35}} />)}</div>
-        <strong>{verified ? "Shahada recognized" : listening ? "Listening…" : "Speak your Shahada"}</strong>
-        <p>{listening ? "Speak naturally in your selected language. Tap HudHud to reset your attempt." : "Tap HudHud to allow microphone access. After permission, simply say the Shahada. Or use the checkbox below."}</p>
+        <strong role="status" aria-live="polite">{{ready:"Ready to record",recording:"Recording · waiting for speech",speaking:"Recording · hearing your voice",analyzing:"Analyzing your Shahada…",resetting:"Resetting recorder…",recognized:"Shahada recognized",retry:"Ready to try again",processing:"Preparing your recording…"}[voiceStatus]}</strong>
+        <p>{listening ? "Speak in "+(language==="en"?"English":"Arabic")+". A short pause finishes your attempt. Tap HudHud to start over." : "Choose Arabic or English below, then tap HudHud to record."}</p>
         {processingAudio && <p role="status">Preparing your private Shahada clip…</p>}
         {audioPreview && verified && <div className="transcript"><small>Review your trimmed Shahada</small><audio controls src={audioPreview} style={{width:"100%",marginTop:8}} /></div>}
         {transcript && <div className="transcript" dir={language === "ar" ? "rtl" : "ltr"}><small>Speech recognition heard</small><span>{transcript}</span></div>}
