@@ -214,12 +214,12 @@ export default function QuranLessons(){
  const enableFloatingStudio=()=>{
   const verse=verses[focusIndex];if(!verse)return;
   const annotations=verseNotes[verse.verse_key];
-  const payload={key:verse.verse_key,arabic:verse.text_uthmani||"",translation:strip(verse.translations?.[0]?.text||""),chapter:active?.name_simple||"Quran",reciter,note:annotations?.note||"",highlights:annotations?.highlights?.length||0,underlines:annotations?.underlines?.length||0};
+  const payload={key:verse.verse_key,arabic:verse.text_uthmani||"",translation:strip(verse.translations?.[0]?.text||""),chapter:chapters.find(c=>c.id===chapter)?.name_simple||"Quran",reciter,note:annotations?.note||"",highlights:annotations?.highlights?.length||0,underlines:annotations?.underlines?.length||0};
   try{sessionStorage.setItem("1muslim:quran-floating-session",JSON.stringify({verse:payload,mode:"mini"}))}catch{}
   window.dispatchEvent(new CustomEvent("1muslim:quran-floating-update",{detail:payload}));
   setFloatingEnabled(true);
  };
- useEffect(()=>{if(!floatingEnabled)return;const verse=verses[focusIndex];if(!verse)return;const annotations=verseNotes[verse.verse_key];const payload={key:verse.verse_key,arabic:verse.text_uthmani||"",translation:strip(verse.translations?.[0]?.text||""),chapter:active?.name_simple||"Quran",reciter,note:annotations?.note||"",highlights:annotations?.highlights?.length||0,underlines:annotations?.underlines?.length||0};try{sessionStorage.setItem("1muslim:quran-floating-session",JSON.stringify({verse:payload,mode:"mini"}))}catch{}window.dispatchEvent(new CustomEvent("1muslim:quran-floating-update",{detail:payload}))},[floatingEnabled,verses,focusIndex,verseNotes,reciter,active]);
+ useEffect(()=>{if(!floatingEnabled)return;const verse=verses[focusIndex];if(!verse)return;const annotations=verseNotes[verse.verse_key];const payload={key:verse.verse_key,arabic:verse.text_uthmani||"",translation:strip(verse.translations?.[0]?.text||""),chapter:chapters.find(c=>c.id===chapter)?.name_simple||"Quran",reciter,note:annotations?.note||"",highlights:annotations?.highlights?.length||0,underlines:annotations?.underlines?.length||0};try{sessionStorage.setItem("1muslim:quran-floating-session",JSON.stringify({verse:payload,mode:"mini"}))}catch{}window.dispatchEvent(new CustomEvent("1muslim:quran-floating-update",{detail:payload}))},[floatingEnabled,verses,focusIndex,verseNotes,reciter,chapters,chapter]);
  const versePosition=(page-1)*50+focusIndex+1;
  useEffect(()=>{if(!progressReady.current||pendingVerse.current||busy||!verses[focusIndex]||verses[focusIndex].verse_key!==chapter+":"+versePosition)return;try{localStorage.setItem("1muslim-quran-progress",JSON.stringify({chapter,verse:versePosition}))}catch{}},[chapter,versePosition,busy,verses,focusIndex]);
  const chapterCount=activeChapterCount(chapters,chapter);
