@@ -308,19 +308,38 @@ export default function OnboardingPage() {
 
   if (checking) return <main className="onboardingPage"><FirstVisitGuide area="shahada"/><section className="onboardingCard"><span className="eyebrow">1MUSLIM</span><h1>Preparing your profile…</h1></section></main>;
 
-  return <main className="onboardingPage"><section className="onboardingCard">
+  return <main className="onboardingPage"><style>{`
+.onboardingPage .studioVoiceCompact{position:relative;max-width:560px;width:100%;margin:12px auto;padding:18px 22px 20px!important;border:1px solid #8cba9b75!important;border-radius:30px!important;background:radial-gradient(ellipse at 50% 36%,#104a3b99,#061511 75%)!important;box-shadow:inset 0 1px 0 #e0ffdc4a,0 15px 45px #0006!important;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;overflow:hidden}
+.onboardingPage .studioVoiceCompact .securityGuardianHeader{width:100%;margin-bottom:0}
+.onboardingPage .studioVoiceCompact>.eyebrow{display:none}
+.onboardingPage .studioVoiceCompact .hudhudRecord{width:132px!important;height:132px!important;min-height:132px!important;margin:10px auto 0!important;filter:drop-shadow(0 0 16px #33f6a455);transition:transform .25s ease,filter .25s ease}
+.onboardingPage .studioVoiceCompact .hudhudRecord:hover{transform:scale(1.045);filter:drop-shadow(0 0 24px #48ffb6a0)}
+.onboardingPage .studioVoiceCompact .hudhudCore{width:100%!important;height:100%!important;border:2px solid #c6f8d7a8!important;border-radius:50%!important;background:#021b14!important;display:grid;place-items:center}
+.onboardingPage .studioVoiceCompact .hudhudCore img{width:88%!important;height:88%!important;object-fit:contain}
+.onboardingPage .studioVoiceCompact .studioVoiceWave{height:44px;display:flex;align-items:center;justify-content:center;gap:4px;width:100%;pointer-events:none}
+.onboardingPage .studioVoiceCompact .studioVoiceWave i{display:block;width:3px;max-height:36px;border-radius:8px;background:linear-gradient(#bbffda,#20dca1);opacity:.55;transform:scaleY(.45);transition:transform .3s}
+.onboardingPage .studioVoiceLive .studioVoiceWave i{animation:studioVoiceBounce .72s ease-in-out infinite alternate;opacity:1}
+.onboardingPage .studioVoiceCompact>strong{font-size:clamp(19px,4vw,25px)!important;line-height:1.2;margin:0!important}
+.onboardingPage .studioVoiceCompact>p{font-size:12px!important;line-height:1.5!important;max-width:320px;margin:0!important;color:#b9d8cb!important}
+.onboardingPage .studioVoiceCompact .transcript{width:100%;max-width:450px;text-align:start;max-height:105px;overflow:auto;border-radius:16px;background:#001810a8;border:1px solid #b0e8c53d;padding:10px}
+.onboardingPage .studioVoiceCompact .transcript audio{height:38px}
+@keyframes studioVoiceBounce{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+@media(max-width:600px){.onboardingPage .studioVoiceCompact{padding:12px 14px!important;border-radius:24px!important;gap:6px}.onboardingPage .studioVoiceCompact .hudhudRecord{width:110px!important;height:110px!important;min-height:110px!important}.onboardingPage .studioVoiceCompact .studioVoiceWave{height:32px}.onboardingPage .studioVoiceCompact .transcript{max-height:85px}}
+@media(prefers-reduced-motion:reduce){.onboardingPage .studioVoiceLive .studioVoiceWave i{animation:none;transform:scaleY(.8)}}
+`}</style><section className="onboardingCard">
     <AdmissionJourney stage={step==="shahada"?1:3} detail={step==="shahada"?(verified||writtenDeclaration?"Declaration recognized. Agree to the terms to proceed to admission.":"Complete your Shahada by voice or self-attested declaration."):(saving?"Saving admission and awarding your badge…":"Finish your profile to enter 1Muslim and receive your badge. XP is subject to the rewards system.")}/>
     {step === "shahada" ? <>
       <span className="eyebrow">COMMUNITY VERIFICATION</span>
       <h1>Say the Shahada.</h1>
       <p className="lead">Begin with HudHud recording, or choose Arabic, English, or the written declaration below.</p>
-      <div className={`voiceCard securityGuardianStage ${listening || recording ? "securityGuardianActive" : ""}`}><div className="securityGuardianArt" aria-hidden="true"/><RisingEnergyOrbs tone="blue"/><GuardianParticles active={listening || recording} stream={streamRef.current} /><GuardianParticles active={listening || recording} stream={streamRef.current} foreground /><div className="securityGuardianHeader"><span>HUDHUD / SECURE VOICE</span><span className="securityGuardianStatus">{listening || recording ? "● LISTENING" : "● STANDBY"}</span></div>
+      <div className={`voiceCard securityGuardianStage studioVoiceCompact ${listening || recording ? "securityGuardianActive studioVoiceLive" : ""}`}><div className="securityGuardianArt" aria-hidden="true"/><RisingEnergyOrbs tone="blue"/><GuardianParticles active={listening || recording} stream={streamRef.current} /><GuardianParticles active={listening || recording} stream={streamRef.current} foreground /><div className="securityGuardianHeader"><span>HUDHUD / SECURE VOICE</span><span className="securityGuardianStatus">{listening || recording ? "● LISTENING" : "● STANDBY"}</span></div>
         <span className="eyebrow">SECURE · VOICE VERIFICATION</span>
-        <button type="button" className={`hudhudRecord ${listening ? "isListening" : ""} ${verified ? "isVerified" : ""}`} aria-label={listening ? "Reset Shahada recording" : "Enable microphone and begin Shahada"} onClick={() => listening || recording ? resetShahada() : void startShahada()}>
+        <button type="button" className={`hudhudRecord ${listening ? "isListening" : ""} ${verified ? "isVerified" : ""}`} aria-label={listening ? "Restart Shahada recording" : "Enable microphone and begin Shahada"} onClick={() => listening || recording ? resetShahada() : void startShahada()}>
           <span className="hudhudHalo" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{transform:`rotate(${i*30}deg) translateY(-58px)`,animationDelay:`${i*-.18}s`}}/>)}</span>
           <span className="hudhudCore" aria-hidden="true"><img src="/assets/hudhud-logo.PNG" alt="" /></span>
         </button>
-        <strong>{verified ? "Shahada recognized" : listening ? "HudHud is listening" : "Say your Shahada"}</strong>
+        <div className="studioVoiceWave" aria-hidden="true">{Array.from({length:25},(_,i)=><i key={i} style={{height:`${12+Math.abs(Math.sin(i*1.3))*32}px`,animationDelay:`${i*-.065}s`}} />)}</div>
+        <strong>{verified ? "Shahada recognized" : listening ? "Listening…" : "Speak your Shahada"}</strong>
         <p>{listening ? "Speak naturally in your selected language. Tap HudHud to reset your attempt." : "Tap HudHud to allow microphone access. After permission, simply say the Shahada. Or use the checkbox below."}</p>
         {processingAudio && <p role="status">Preparing your private Shahada clip…</p>}
         {audioPreview && verified && <div className="transcript"><small>Review your trimmed Shahada</small><audio controls src={audioPreview} style={{width:"100%",marginTop:8}} /></div>}
