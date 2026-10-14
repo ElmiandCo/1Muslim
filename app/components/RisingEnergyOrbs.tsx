@@ -1,30 +1,67 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 type Props = { tone?: "blue" | "green"; density?: "ambient" | "focused" };
-export default function RisingEnergyOrbs({tone="blue",density="focused"}:Props){
- const [reduce,setReduce]=useState(false);
- useEffect(()=>{const q=window.matchMedia("(prefers-reduced-motion: reduce)");const sync=()=>setReduce(q.matches);sync();q.addEventListener("change",sync);return()=>q.removeEventListener("change",sync)},[]);
- const count=reduce?5:density==="ambient"?12:18;
- const rgb=tone==="green"?"67,225,150":"38,152,255";
- return <div className="risingEnergyField" aria-hidden="true" data-tone={tone}>
-  {Array.from({length:count},(_,i)=>{
-   const front=i%6===0;
-   const size=front?8+(i%3)*5:12+(i*11)%27;
-   return <i key={i} className={front?"energyOrb front":"energyOrb"} style={{
-    left:`${(i*37+11)%96}%`,width:size,height:size,
-    animationDuration:`${12+(i*7)%15}s`,
-    animationDelay:`${-((i*13)%25)}s`,
-    opacity:front?.18:.12+(i%4)*.055,
-    background:`radial-gradient(circle at 35% 30%,rgba(230,255,255,.85),rgba(${rgb},.85) 35%,rgba(${rgb},0) 74%)`,
-    boxShadow:`0 0 ${front?12:22}px rgba(${rgb},.36)`,
-    filter:front?"blur(1px)":"blur(3px)"
-   }}/>)}
-  <style jsx>{`
-   .risingEnergyField{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;isolation:isolate}
-   .energyOrb{position:absolute;bottom:-12%;border-radius:50%;animation:energyAscend linear infinite;will-change:transform}
-   .energyOrb.front{z-index:2}
-   @keyframes energyAscend{0%{transform:translate3d(0,20px,0) scale(.7)}50%{transform:translate3d(13px,-52vh,0) scale(1)}100%{transform:translate3d(-10px,-108vh,0) scale(.5)}}
-   @media(prefers-reduced-motion:reduce){.energyOrb{animation:none;bottom:20%;opacity:.1!important}}
-  `}</style>
- </div>
+export default function RisingEnergyOrbs({ tone = "blue", density = "focused" }: Props) {
+  const host = useRef<HTMLDivElement>(null);
+  const [reduced, setReduced] = useState(false);
+  const [coarse, setCoarse] = useState(false);
+  const [bursts, setBursts] = useState<{ x: number; y: number; id: number }[]>([]);
+  useEffect(() => {
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const pointer = window.matchMedia("(pointer: coarse)");
+    const sync = () => { setReduced(motion.matches); setCoarse(pointer.matches); };
+    sync();
+    motion.addEventListener("change", sync); pointer.addEventListener("change", sync);
+    return () => { motion.removeEventListener("change", sync); pointer.removeEventListener("change", sync); };
+  }, []);
+  useEffect(() => {
+    if (reduced) return;
+    const node = host.current;
+    const parent = node?.parentElement;
+    if (!parent) return;
+    let nextId = 0;
+    const onTap = (e: PointerEvent) => {
+      const target = e.target as Element | null;
+      if (!target?.closest("button, a, [data-widget], .voiceCard, .authHudHudFirst, .authPanel")) return;
+      const bounds = parent.getBoundingClientRect();
+      const id = ++nextId;
+      setBursts(prev => [...prev.slice(-3), { x: e.clientX - bounds.left, y: e.clientY - bounds.top, id }]);
+      window.setTimeout(() => setBursts(prev => prev.filter(b => b.id !== id)), 780);
+    };
+    parent.addEventListener("pointerdown", onTap, { passive: true });
+    return () => parent.removeEventListener("pointerdown", onTap);
+  }, [reduced]);
+  const count = reduced ? 4 : coarse ? (density === "ambient" ? 9 : 13) : (density === "ambient" ? 16 : 24);
+  const rgb = tone === "green" ? "72,230,152" : "48,162,255";
+  return <div ref={host} className="risingEnergyField" aria-hidden="true" data-tone={tone}>
+    <div className="atmosphere" />
+    {Array.from({ length: count }, (_, i) => {
+      const foreground = i % 7 === 0;
+      const far = i % 3 === 0 && !foreground;
+      const size = foreground ? 3 + i % 4 : far ? 26 + i % 4 * 13 : 8 + i % 5 * 4;
+      return <i key={i} className={`energyOrb ${foreground ? "near" : far ? "far" : "mid"}`} style={{
+        left: `${(i * 37 + 11) % 96}%`,
+        width: size, height: size,
+        animationDuration: `${foreground ? 9 + i % 7 : far ? 23 + i % 13 : 15 + i % 10}s`,
+        animationDelay: `${-((i * 13) % 29)}s`,
+        ["--drift" as string]: `${(i % 2 ? 1 : -1) * (20 + i % 6 * 13)}px`,
+        ["--rgb" as string]: rgb
+      }} />;
+    })}
+    {bursts.map(b => <span key={b.id} className="orbTouchRipple" style={{ left: b.x, top: b.y }} />)}
+    <style jsx>{`
+      .risingEnergyField{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;isolation:isolate}
+      .atmosphere{position:absolute;inset:-20%;background:radial-gradient(ellipse 34% 24% at 32% 82%,rgba(${rgb},.075),transparent 80%),radial-gradient(ellipse 30% 30% at 76% 38%,rgba(${rgb},.045),transparent 85%);animation:atmosphericDrift 27s ease-in-out infinite alternate}
+      .energyOrb{position:absolute;bottom:-15%;border-radius:50%;will-change:transform;animation:energyRise linear infinite;transform:translate3d(0,0,0)}
+      .energyOrb.far{background:radial-gradient(circle,rgba(${rgb},.38),rgba(${rgb},0) 75%);filter:blur(12px);opacity:.3}
+      .energyOrb.mid{background:radial-gradient(circle at 35% 30%,rgba(235,255,255,.75),rgba(${rgb},.7) 33%,transparent 80%);filter:blur(3px);box-shadow:0 0 15px rgba(${rgb},.2);opacity:.3}
+      .energyOrb.near{background:rgba(${rgb},.8);box-shadow:0 0 8px rgba(${rgb},.6);opacity:.3;filter:blur(.4px)}
+      .orbTouchRipple{position:absolute;width:10px;height:10px;border:1px solid rgba(${rgb},.4);box-shadow:0 0 12px rgba(${rgb},.18);border-radius:50%;animation:touchGlow .75s ease-out forwards}
+      @keyframes energyRise{0%{transform:translate3d(0,15vh,0) scale(.7)}25%{transform:translate3d(calc(var(--drift)*.7),-15vh,0) scale(1)}50%{transform:translate3d(calc(var(--drift)*-.35),-42vh,0) scale(1.1)}75%{transform:translate3d(var(--drift),-75vh,0) scale(.85)}100%{transform:translate3d(calc(var(--drift)*-.5),-120vh,0) scale(.5)}}
+      @keyframes atmosphericDrift{from{transform:translate3d(-2%,2%,0)}to{transform:translate3d(3%,-3%,0)}}
+      @keyframes touchGlow{from{transform:translate(-50%,-50%) scale(.3);opacity:.8}to{transform:translate(-50%,-50%) scale(9);opacity:0}}
+      @media(prefers-reduced-motion:reduce){.energyOrb,.atmosphere{animation:none!important}.energyOrb{bottom:15%;opacity:.08!important}}
+    `}</style>
+  </div>;
 }
