@@ -268,7 +268,7 @@ export default function AuthPage() {
 .authShahada .authSecurityStages>div>span{width:23px;height:23px;font-size:18px}
 .authShahada .authSecurityStages small{font-size:8px!important}
 }
-`}
+
 /* Preview mobile admission: one fixed, purpose-built glass widget, not stacked cards. */
 @media(max-width:700px){
  .authPreview,.authPreview.authShahada{padding:calc(env(safe-area-inset-top) + 60px) 12px calc(env(safe-area-inset-bottom) + 12px)!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;touch-action:none!important}
@@ -307,5 +307,5 @@ export default function AuthPage() {
  .authArt,.authShahada .authArt{display:none!important}
  .authPanel,.authShahada .authPanel{justify-content:flex-start!important;overflow-y:auto!important;touch-action:pan-y!important}
 }
-</style><style jsx global>{`body:has(.authPreview) .muslimMobileDock{display:none!important}body:has(.authPreview){overflow:hidden!important;overscroll-behavior:none!important}`}</style></main>;
+`}</style><style jsx global>{`body:has(.authPreview) .muslimMobileDock{display:none!important}body:has(.authPreview){overflow:hidden!important;overscroll-behavior:none!important}`}</style></main>;
 }
