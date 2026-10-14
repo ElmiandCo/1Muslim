@@ -594,7 +594,6 @@ body:has(.omQuranPage) header:has(nav),body:has(.omQuranPage) [class*="bottomNav
 .omQuranPage .omQuranStudioSettings:hover{border-color:#e1c78a!important}
 @media(max-width:520px){.omQuranPage .omQuranPreferences{padding:15px!important;border-radius:20px!important}.omQuranPage .omQuranPreferencesSection{padding:12px;gap:10px}}
 @media(prefers-reduced-motion:reduce){.omQuranPage .omQuranPreferences button,.omQuranPage .omQuranStudioSettings{transition:none}}
-`}
 /* Quran Studio preview: readable verse canvas and bilingual luminous top navigation. */
 .omQuranPage .omQuranGlassTop{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto auto!important;align-items:center!important;gap:clamp(5px,1.2vw,12px)!important;min-height:54px!important;padding:8px 10px!important;background:linear-gradient(145deg,#0a3026e6,#0b2336e5)!important;border:1px solid #e4cb8b85!important;border-radius:22px!important;backdrop-filter:blur(19px)!important;box-shadow:0 10px 30px #0007,inset 0 1px #fff3}
 .omQuranPage .omQuranGlassTop>select{min-width:0!important;width:100%!important;max-width:100%!important;border-color:#d6bd7b91!important;text-overflow:ellipsis!important;color:#f9f4dc!important}
@@ -616,5 +615,6 @@ body:has(.omQuranPage) header:has(nav),body:has(.omQuranPage) [class*="bottomNav
 @keyframes omQuranDataArrive{from{opacity:0;transform:translateY(13px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
 @media(max-width:700px){.omQuranPage .omQuranStudioData{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px auto}.omQuranPage .omQuranStudioDataCard{min-height:68px;padding:9px 10px;border-radius:15px}.omQuranPage .omQuranStudioDataCard>span{font-size:8px}.omQuranPage .omQuranStudioDataCard>strong{font-size:14px}.omQuranPage .omQuranStudioDataFuture{grid-column:span 2}.omQuranPage .omQuranSimpleVerse{min-height:240px!important}}
 @media(prefers-reduced-motion:reduce){.omQuranPage .omQuranStudioDataCard{animation:none!important}.omQuranPage .omQuranStudioMiniTrack i{transition:none!important}}
+`}
 </style><QuranLiveWidget compact/></main>;
 }
