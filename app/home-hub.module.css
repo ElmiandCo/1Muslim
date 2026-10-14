@@ -671,3 +671,53 @@
 .galleryFooter>button{min-width:45%;flex:0 0 auto!important}
 @media(max-width:480px){.galleryItems{gap:9px!important;padding:8px 12px 20px!important}.galleryItem{min-height:190px!important;padding:11px!important}.galleryIcon{height:78px!important;min-height:78px!important}.galleryCardCopy strong{font-size:14px!important}.galleryCardCopy small{font-size:10px!important}}
 @media(min-width:900px){.galleryItems{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+
+/* Day/night photographic artwork for homepage widget cards.
+   Each card keeps its existing glass UI and transitions its own backdrop. */
+.control .customGrid>.widgetSlot[data-widget="Live"],
+.control .customGrid>.widgetSlot[data-widget="Qur’an"],
+.control .customGrid>.widgetSlot[data-widget="Videos"],
+.control .customGrid>.widgetSlot[data-widget="Ummah"],
+.control .customGrid>.widgetSlot[data-widget="Posts"]{
+  overflow:hidden;border-radius:22px;background-position:center;background-size:cover;
+}
+.control .customGrid>.widgetSlot[data-widget="Live"]{background-image:url("/assets/decorations/background-mosque-night.PNG")}
+.control .customGrid>.widgetSlot[data-widget="Qur’an"]{background-image:url("/assets/decorations/background-mosque-night.PNG")}
+.control .customGrid>.widgetSlot[data-widget="Videos"]{background-image:url("/assets/decorations/background-valley-night.PNG")}
+.control .customGrid>.widgetSlot[data-widget="Ummah"],
+.control .customGrid>.widgetSlot[data-widget="Posts"]{background-image:url("/assets/decorations/background-nature-night.PNG")}
+.control .customGrid>.widgetSlot[data-widget="Live"]::before,
+.control .customGrid>.widgetSlot[data-widget="Qur’an"]::before,
+.control .customGrid>.widgetSlot[data-widget="Videos"]::before,
+.control .customGrid>.widgetSlot[data-widget="Ummah"]::before,
+.control .customGrid>.widgetSlot[data-widget="Posts"]::before{
+ content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+ background-position:center;background-size:cover;opacity:0;
+ transition:opacity 1.35s ease-in-out;
+}
+.control .customGrid>.widgetSlot[data-widget="Live"]::before,
+.control .customGrid>.widgetSlot[data-widget="Qur’an"]::before{background-image:url("/assets/decorations/background-mosque-day.PNG")}
+.control .customGrid>.widgetSlot[data-widget="Videos"]::before{background-image:url("/assets/decorations/background-valley-day.PNG")}
+.control .customGrid>.widgetSlot[data-widget="Ummah"]::before,
+.control .customGrid>.widgetSlot[data-widget="Posts"]::before{background-image:url("/assets/decorations/background-nature-day.PNG")}
+.control.day .customGrid>.widgetSlot[data-widget]::before{opacity:1}
+.control .customGrid>.widgetSlot[data-widget="Live"]>.widgetCanvas,
+.control .customGrid>.widgetSlot[data-widget="Qur’an"]>.widgetCanvas,
+.control .customGrid>.widgetSlot[data-widget="Videos"]>.widgetCanvas,
+.control .customGrid>.widgetSlot[data-widget="Ummah"]>.widgetCanvas,
+.control .customGrid>.widgetSlot[data-widget="Posts"]>.widgetCanvas{
+ background:linear-gradient(180deg,rgba(3,24,19,.25),rgba(3,24,19,.50))!important;
+ backdrop-filter:blur(1px) saturate(115%);
+ -webkit-backdrop-filter:blur(1px) saturate(115%);
+ z-index:1;
+}
+.control.day .customGrid>.widgetSlot[data-widget="Live"]>.widgetCanvas,
+.control.day .customGrid>.widgetSlot[data-widget="Qur’an"]>.widgetCanvas,
+.control.day .customGrid>.widgetSlot[data-widget="Videos"]>.widgetCanvas,
+.control.day .customGrid>.widgetSlot[data-widget="Ummah"]>.widgetCanvas,
+.control.day .customGrid>.widgetSlot[data-widget="Posts"]>.widgetCanvas{
+ background:linear-gradient(180deg,rgba(242,255,244,.18),rgba(3,41,27,.33))!important;
+ color:#fffdf2!important;
+}
+@media(prefers-reduced-motion:reduce){.control .customGrid>.widgetSlot[data-widget]::before{transition:none}}
