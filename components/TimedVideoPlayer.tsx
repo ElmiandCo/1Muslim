@@ -18,7 +18,7 @@ export default function TimedVideoPlayer({videoId,title,compact=false}:{videoId:
  const react=(id:string,emoji:string)=>{setReactions(prev=>({...prev,[id]:emoji}));setReactionMenu(null)};
  const [demoProfile,setDemoProfile]=useState<{name:string;avatar:string|null}|null>(null);
  useEffect(()=>{let active=true;const db=createClient();void db.from("profiles").select("display_name,avatar_url,email").ilike("email","CertifiedCeo@gmail.com").limit(1).maybeSingle().then(({data,error})=>{if(!active)return;if(!error&&data)setDemoProfile({name:data.display_name||"CertifiedCeo",avatar:data.avatar_url||null})});return()=>{active=false}},[]);
- useEffect(()=>{if(process.env.NODE_ENV==="production")return;const start=window.setTimeout(()=>setPreviewDemo(true),1200);const end=window.setTimeout(()=>setPreviewDemo(false),7200);return()=>{clearTimeout(start);clearTimeout(end)}},[videoId]);
+ useEffect(()=>{if(window.location.hostname==="1muslim.live"||window.location.hostname==="www.1muslim.live"||window.location.hostname==="1muslim.vercel.app")return;const start=window.setTimeout(()=>setPreviewDemo(true),1200);const end=window.setTimeout(()=>setPreviewDemo(false),7200);return()=>{clearTimeout(start);clearTimeout(end)}},[videoId]);
  const videoKey=videoId;
  const watchUrl="/video-of-the-day?video="+encodeURIComponent(videoId);
  useEffect(()=>{let alive=true;const db=createClient();void db.auth.getUser().then(({data})=>{if(alive)setSignedIn(!!data.user)});
