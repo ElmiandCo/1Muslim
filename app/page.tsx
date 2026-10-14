@@ -119,10 +119,6 @@ const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HT
    const stop=()=>{cancelled=true;cancelAnimationFrame(raf);clearTimeout(timer)};
    const play=()=>{
      if(cancelled||viewport.scrollLeft>2||document.visibilityState!=="visible")return;
-     if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){
-       try{localStorage.setItem(key,"1")}catch{}
-       return;
-     }
      const distance=Math.min(78,viewport.clientWidth*.17);
      const duration=1050;
      const start=performance.now();
