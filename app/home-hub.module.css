@@ -1151,3 +1151,12 @@
 .control .workspacePager{flex:0 0 auto!important;position:relative!important;bottom:auto!important;z-index:4!important}
 @media(max-width:650px){.control .introActionDock{gap:8px}.control .introActionDock .introLiveButton{font-size:11px!important;padding:8px 10px!important}.control .introGreeting{min-width:0;flex:1 1 auto;max-width:none!important}.control .intro{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important}.control .workspaceScroller{height:clamp(370px,56dvh,680px)!important;max-height:clamp(370px,56dvh,680px)!important;min-height:370px!important}.control .workspacePage .customGrid{grid-template-columns:minmax(0,1fr)!important}.control .widgetCrown .widgetArabicGold{font-size:16px!important}}
 @media(prefers-reduced-motion:reduce){.control .widgetCrown .widgetArabicGold{animation:none!important}}
+
+/* Synchronize homepage environmental lighting with CelestialOrb's 2600ms cycle. */
+.control .workspaceScroller{transition:background-color 2600ms cubic-bezier(.45,0,.2,1)!important}
+.control .workspaceScroller::before,.control .workspaceScroller::after{transition:opacity 2600ms cubic-bezier(.45,0,.2,1)!important}
+.control .workspaceScroller::before{opacity:1}
+.control .workspaceScroller::after{opacity:0}
+.control.day .workspaceScroller::before{opacity:0}
+.control.day .workspaceScroller::after{opacity:1}
+@media(prefers-reduced-motion:reduce){.control .workspaceScroller,.control .workspaceScroller::before,.control .workspaceScroller::after{transition:none!important}}
