@@ -1183,3 +1183,15 @@
 .control .workspaceDownButton:hover{transform:translateY(2px);box-shadow:0 5px 20px #071c1888}
 @keyframes workspaceDownNudge{0%,100%{transform:translateY(-2px)}50%{transform:translateY(3px)}}
 @media(prefers-reduced-motion:reduce){.control .workspaceDownButton,.control .workspaceDownButton span{animation:none!important;transition:none!important}}
+
+/* Go Live: softly breathing broadcast light, dimensional shadow and tactile press. */
+.control .introActionDock .introLiveButton{position:relative!important;isolation:isolate;overflow:visible!important;box-shadow:0 7px 15px #290d1399,0 0 18px #ee687633,inset 0 1px 1px #ffd2ce77!important;animation:liveButtonBreathe 3.8s ease-in-out infinite!important;transform-origin:center;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease,filter .35s ease!important}
+.control .introActionDock .introLiveButton::after{content:"";position:absolute;inset:-5px;border-radius:inherit;border:1px solid #ffb6a455;pointer-events:none;opacity:.25;animation:liveButtonHalo 3.8s ease-in-out infinite}
+.control .introActionDock .introLiveButton:hover{filter:brightness(1.1);box-shadow:0 9px 22px #290d13bb,0 0 25px #ee687666,inset 0 1px 1px #ffd2ce99!important}
+.control .introActionDock .introLiveButton:active{transform:scale(.94)!important;animation-play-state:paused!important;box-shadow:0 2px 6px #290d13aa,inset 0 2px 6px #310b17aa!important}
+.control .introActionDock .introLiveButton:focus-visible{outline:2px solid #ffe1a5;outline-offset:5px}
+.control .introActionDock .liveDockDot{box-shadow:0 0 0 3px #ff737322,0 0 10px #ff7d7daa;animation:liveSignal 2.3s ease-in-out infinite}
+@keyframes liveButtonBreathe{0%,100%{box-shadow:0 7px 15px #290d1399,0 0 13px #ee68762a,inset 0 1px 1px #ffd2ce77}50%{box-shadow:0 10px 22px #290d13aa,0 0 24px #ee687655,inset 0 1px 1px #ffd2ce99}}
+@keyframes liveButtonHalo{0%,100%{opacity:.18;transform:scale(.99)}50%{opacity:.56;transform:scale(1.035)}}
+@keyframes liveSignal{0%,100%{opacity:.75;transform:scale(.9)}50%{opacity:1;transform:scale(1.15)}}
+@media(prefers-reduced-motion:reduce){.control .introActionDock .introLiveButton,.control .introActionDock .introLiveButton::after,.control .introActionDock .liveDockDot{animation:none!important;transition:none!important}}
