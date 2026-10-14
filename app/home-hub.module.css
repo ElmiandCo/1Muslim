@@ -1016,3 +1016,19 @@
 .workspacePager button:focus-visible{outline:2px solid #efd5a2;outline-offset:2px}
 @media(max-width:600px){.workspacePage .controlGrid{grid-template-columns:minmax(0,1fr);gap:14px}.workspacePage .controlGrid>[data-widget]:first-child{grid-column:auto!important}.workspaceScroller{scroll-padding-inline:0}.workspacePager{gap:6px}}
 @media(prefers-reduced-motion:reduce){.workspaceScroller{scroll-behavior:auto!important}.workspacePage *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Premium workspace polish: discoverable navigation without adding another card. */
+.workspaceScroller{position:relative;border-radius:20px;outline-offset:3px;scroll-behavior:smooth;isolation:isolate}
+.workspaceScroller:focus-visible{outline:2px solid #e9ce91}
+.workspacePage{position:relative;padding:12px 8px 20px;min-height:180px}
+.workspacePage:before{content:"";pointer-events:none;position:absolute;inset:0;border-radius:20px;border:1px solid rgba(239,211,148,.13);background:linear-gradient(130deg,rgba(235,205,137,.045),transparent 36%,rgba(111,211,179,.035));z-index:0}
+.workspacePage>.controlGrid{position:relative;z-index:1}
+.workspacePager{box-shadow:0 12px 35px #001c1766, inset 0 1px 0 #f9dfad25;flex-wrap:wrap}
+.workspacePagerLabel{font-size:10px;letter-spacing:.16em;font-weight:700;color:#e8c98f;padding:0 7px;white-space:nowrap}
+.workspaceSwipeHint{font-size:9px;letter-spacing:.13em;color:#f4dfb59e;padding:0 5px;white-space:nowrap}
+.workspacePager button{transition:background-color .25s ease,color .25s ease,transform .25s ease}
+.workspacePager button:active{transform:scale(.94)}
+.workspacePage .controlGrid>[data-widget]{box-sizing:border-box;overflow:hidden;min-width:0;isolation:isolate}
+.workspacePage .controlGrid>[data-widget] img{max-width:100%}
+@media(max-width:600px){.workspacePage{padding:8px 5px 14px}.workspacePager{position:sticky;bottom:calc(12px + env(safe-area-inset-bottom,0px));gap:4px;padding:6px 9px}.workspacePager button{padding:7px 8px}.workspaceSwipeHint{flex-basis:100%;text-align:center;padding:0 0 3px}.workspacePagerLabel{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.workspaceScroller{scroll-behavior:auto!important}.workspacePager button{transition:none!important}}
