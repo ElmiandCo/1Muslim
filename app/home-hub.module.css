@@ -1032,3 +1032,26 @@
 .workspacePage .controlGrid>[data-widget] img{max-width:100%}
 @media(max-width:600px){.workspacePage{padding:8px 5px 14px}.workspacePager{position:sticky;bottom:calc(12px + env(safe-area-inset-bottom,0px));gap:4px;padding:6px 9px}.workspacePager button{padding:7px 8px}.workspaceSwipeHint{flex-basis:100%;text-align:center;padding:0 0 3px}.workspacePagerLabel{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.workspaceScroller{scroll-behavior:auto!important}.workspacePager button{transition:none!important}}
+
+
+/* Workspace gallery: an independent scrollable gallery with its own quiet night-sky texture.
+   The outer app frame, navigation and glass widget composition remain unchanged. */
+.workspaceScroller{flex:1 1 auto;min-height:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior:contain;background:radial-gradient(ellipse at 18% 12%,rgba(113,190,160,.15),transparent 42%),radial-gradient(ellipse at 86% 85%,rgba(215,177,106,.11),transparent 46%),linear-gradient(155deg,rgba(6,37,31,.8),rgba(5,23,24,.92));border:1px solid rgba(221,194,136,.16)}
+.workspaceTrack{height:100%;align-items:stretch}
+.workspacePage{height:100%;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scrollbar-width:thin;scrollbar-color:rgba(216,190,134,.38) transparent;scroll-padding-top:14px;-webkit-overflow-scrolling:touch;content-visibility:visible}
+.workspacePage::before{background:radial-gradient(circle at 12% 24%,rgba(233,210,154,.10) 0 1px,transparent 2px),radial-gradient(circle at 75% 62%,rgba(159,231,213,.12) 0 1px,transparent 2px),linear-gradient(135deg,rgba(183,217,186,.045),transparent 45%,rgba(220,183,109,.055));background-size:95px 103px,137px 149px,100% 100%;position:sticky;top:0;display:block;height:0;inset:auto;border:0;pointer-events:none}
+.workspacePage .controlGrid{position:relative}
+/* Each card gets independently phased orbiting dust, without covering text or controls. */
+.workspacePage .customGrid>.widgetSlot>.widgetCanvas{isolation:isolate}
+.workspacePage .customGrid>.widgetSlot>.widgetCanvas::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;background:radial-gradient(circle at 22% 25%,rgba(252,226,166,.9) 0 1px,transparent 2.4px),radial-gradient(circle at 73% 69%,rgba(160,240,226,.75) 0 1.5px,transparent 3px),radial-gradient(circle at 49% 81%,rgba(252,241,201,.65) 0 1px,transparent 2px),radial-gradient(ellipse at 50% 55%,rgba(130,208,180,.085),transparent 70%);background-size:100% 100%;opacity:.62;animation:workspaceOrbitDust 17s ease-in-out infinite alternate;animation-delay:calc(var(--tile-index, 0) * -1.7s)}
+.workspacePage .customGrid>.widgetSlot:nth-child(3n+2)>.widgetCanvas::before{animation-duration:23s;animation-direction:alternate-reverse}
+.workspacePage .customGrid>.widgetSlot:nth-child(3n+3)>.widgetCanvas::before{animation-duration:27s}
+.workspacePage .customGrid>.widgetSlot>.widgetCanvas>*{position:relative;z-index:1}
+@keyframes workspaceOrbitDust{0%{transform:translate3d(-4%,-3%,0) rotate(-4deg);opacity:.32}50%{transform:translate3d(3%,2%,0) rotate(3deg);opacity:.72}100%{transform:translate3d(-1%,4%,0) rotate(-2deg);opacity:.42}}
+/* Replace the placeholder butterfly with a luminous, orbiting constellation. */
+.liveButterfly{position:relative;width:clamp(74px,14vh,145px);height:clamp(74px,14vh,145px);display:grid!important;place-items:center;font-size:clamp(25px,5vh,52px)!important;color:#e7d6a5;filter:drop-shadow(0 0 12px rgba(150,233,206,.35));animation:workspaceConstellation 12s ease-in-out infinite!important}
+.liveButterfly::before,.liveButterfly::after{content:"";position:absolute;inset:11%;border-radius:50%;border:1px solid rgba(229,207,149,.52);box-shadow:0 0 15px rgba(124,230,208,.13);animation:workspaceOrbitRing 13s linear infinite}
+.liveButterfly::after{inset:26%;border-color:rgba(139,229,212,.48);animation-duration:19s;animation-direction:reverse;transform:rotateX(62deg)}
+@keyframes workspaceConstellation{0%,100%{transform:translateY(3px) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
+@keyframes workspaceOrbitRing{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.workspacePage .customGrid>.widgetSlot>.widgetCanvas::before,.liveButterfly,.liveButterfly::before,.liveButterfly::after{animation:none!important}}
