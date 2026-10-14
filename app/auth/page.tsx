@@ -50,7 +50,7 @@ export default function AuthPage() {
 
   const visionStep = isShahadaSignup ? (!affirmed ? 1 : 2) : (emailLogin ? 2 : 1);
   const visionLabel = isShahadaSignup ? (!affirmed ? "Choose your Shahada method" : "Create your account") : (emailLogin ? "Enter your account details" : "Choose how to continue");
-  useEffect(()=>{setVisionVisible(true);const t=window.setTimeout(()=>setVisionVisible(false),4800);return()=>window.clearTimeout(t)},[visionStep,isShahadaSignup,method]);
+  useEffect(()=>{setVisionVisible(true);const hide=window.setTimeout(()=>setVisionVisible(false),4800);const cycle=window.setInterval(()=>{setVisionVisible(true);window.setTimeout(()=>setVisionVisible(false),2400)},7200);return()=>{window.clearTimeout(hide);window.clearInterval(cycle)}},[visionStep,isShahadaSignup,method]);
   const chooseTheme=(mode:"day"|"night"|"auto")=>{setThemeMode(mode);localStorage.setItem("1muslim-theme-mode",mode);const next=mode==="auto"?window.matchMedia("(prefers-color-scheme: light)").matches:mode==="day";setDay(next);localStorage.setItem("1muslim-theme",next?"light":"dark");window.dispatchEvent(new Event("1muslim:theme-changed"))};
   useEffect(()=>{if(themeMode!=="auto")return;const media=window.matchMedia("(prefers-color-scheme: light)");const update=()=>setDay(media.matches);media.addEventListener("change",update);return()=>media.removeEventListener("change",update)},[themeMode]);
 
