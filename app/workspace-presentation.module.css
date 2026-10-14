@@ -82,3 +82,15 @@
 :global(.control.day) .slide [class*="widgetCanvas"]{background:rgba(6,39,28,.10)!important}
 .slide [class*="widgetCanvas"]::before,
 .slide [class*="widgetCanvas"]::after{background-color:transparent!important}
+
+/* Full-viewport studio portal grows from the dashboard region. */
+.studioPortal{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;overflow:hidden;isolation:isolate;animation:studioPortalGrow 560ms cubic-bezier(.2,.85,.2,1) both;transform-origin:50% 60%;border-radius:22px;pointer-events:all}
+.studioPortalBackdrop{position:absolute;inset:0;background:linear-gradient(145deg,rgba(5,17,34,.60),rgba(24,12,57,.86)),url("/assets/decorations/background-mosque-night.PNG") center/cover;animation:studioPortalShift 560ms ease-out both}
+.studioPortalContent{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;color:#f8f0d8;text-shadow:0 2px 22px rgba(0,0,0,.55);animation:studioPortalReveal 500ms ease both}
+.studioPortalContent span{font-size:clamp(34px,6vw,68px)}
+.studioPortalContent strong{font-size:clamp(16px,3vw,26px);letter-spacing:.24em}
+.studioPortalContent small{font-size:12px;letter-spacing:.12em;opacity:.82}
+@keyframes studioPortalGrow{from{opacity:.7;clip-path:inset(22% 9% 30% 9% round 24px);transform:scale(.90)}to{opacity:1;clip-path:inset(0 0 0 0 round 0);transform:scale(1)}}
+@keyframes studioPortalShift{from{filter:hue-rotate(-35deg) brightness(.8)}to{filter:hue-rotate(0) brightness(1)}}
+@keyframes studioPortalReveal{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.studioPortal,.studioPortalBackdrop,.studioPortalContent{animation:none!important}}
