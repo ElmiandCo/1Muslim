@@ -211,3 +211,27 @@
 .guestBannerOpen > :global(aside){margin-block:6px!important}
 .guestBannerClose{position:absolute;right:10px;top:8px;display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(240,221,169,.45);border-radius:50%;background:rgba(7,38,30,.55);color:#fff1c9;font-size:22px;line-height:1;cursor:pointer;z-index:3}
 @media(prefers-reduced-motion:reduce){.guestBannerSlot{transition:none}}
+
+/* Compact landing invitation: preserve glass borders without taking over the canvas. */
+.guestBannerSlot{flex:0 0 auto!important;min-height:0!important}
+.guestBannerSlot > :global(aside){
+ display:flex!important;flex-direction:row!important;align-items:center!important;
+ gap:12px!important;min-height:0!important;max-width:100%!important;
+ padding:10px 46px 10px 15px!important;border-radius:18px!important;
+ box-sizing:border-box!important;
+}
+.guestBannerSlot > :global(aside) > div{flex:1 1 auto!important;min-width:0!important;padding:0!important}
+.guestBannerSlot > :global(aside) small{display:block!important;font-size:10px!important;letter-spacing:.12em!important}
+.guestBannerSlot > :global(aside) strong{display:block!important;font-size:clamp(12px,2.4vw,16px)!important;line-height:1.3!important}
+.guestBannerSlot > :global(aside) > a{
+ flex:0 0 auto!important;min-height:34px!important;
+ padding:7px 12px!important;font-size:clamp(11px,2.3vw,14px)!important;
+ white-space:nowrap!important;
+}
+.guestBannerClose{right:7px!important;top:50%!important;transform:translateY(-50%)!important;width:30px!important;height:30px!important}
+@media(max-width:420px){
+ .guestBannerSlot > :global(aside){padding:9px 40px 9px 10px!important;gap:7px!important}
+ .guestBannerSlot > :global(aside) small{font-size:8px!important}
+ .guestBannerSlot > :global(aside) strong{font-size:11px!important}
+ .guestBannerSlot > :global(aside) > a{padding:7px 9px!important;font-size:11px!important}
+}
