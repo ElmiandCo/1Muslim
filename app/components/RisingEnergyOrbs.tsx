@@ -34,6 +34,7 @@ export default function RisingEnergyOrbs({ tone = "blue", density = "focused" }:
   }, [reduced]);
   const count = reduced ? 4 : coarse ? (density === "ambient" ? 9 : 13) : (density === "ambient" ? 16 : 24);
   const rgb = tone === "green" ? "72,230,152" : "48,162,255";
+  const violet = "165,104,255";
   return <div ref={host} className="risingEnergyField" aria-hidden="true" data-tone={tone}>
     <div className="atmosphere" />
     {Array.from({ length: count }, (_, i) => {
@@ -46,17 +47,17 @@ export default function RisingEnergyOrbs({ tone = "blue", density = "focused" }:
         animationDuration: `${foreground ? 9 + i % 7 : far ? 23 + i % 13 : 15 + i % 10}s`,
         animationDelay: `${-((i * 13) % 29)}s`,
         ["--drift" as string]: `${(i % 2 ? 1 : -1) * (20 + i % 6 * 13)}px`,
-        ["--rgb" as string]: rgb
+        ["--rgb" as string]: tone === "blue" && i % 4 === 0 ? violet : rgb
       }} />;
     })}
     {bursts.map(b => <span key={b.id} className="orbTouchRipple" style={{ left: b.x, top: b.y }} />)}
     <style jsx>{`
       .risingEnergyField{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;isolation:isolate}
-      .atmosphere{position:absolute;inset:-20%;background:radial-gradient(ellipse 34% 24% at 32% 82%,rgba(${rgb},.075),transparent 80%),radial-gradient(ellipse 30% 30% at 76% 38%,rgba(${rgb},.045),transparent 85%);animation:atmosphericDrift 27s ease-in-out infinite alternate}
+      .atmosphere{position:absolute;inset:-20%;background:radial-gradient(ellipse 34% 24% at 32% 82%,rgba(${rgb},.075),transparent 80%),radial-gradient(ellipse 30% 30% at 76% 38%,rgba(${tone === "blue" ? violet : rgb},.045),transparent 85%);animation:atmosphericDrift 27s ease-in-out infinite alternate}
       .energyOrb{position:absolute;bottom:-15%;border-radius:50%;will-change:transform;animation:energyRise linear infinite;transform:translate3d(0,0,0)}
-      .energyOrb.far{background:radial-gradient(circle,rgba(${rgb},.38),rgba(${rgb},0) 75%);filter:blur(12px);opacity:.3}
-      .energyOrb.mid{background:radial-gradient(circle at 35% 30%,rgba(235,255,255,.75),rgba(${rgb},.7) 33%,transparent 80%);filter:blur(3px);box-shadow:0 0 15px rgba(${rgb},.2);opacity:.3}
-      .energyOrb.near{background:rgba(${rgb},.8);box-shadow:0 0 8px rgba(${rgb},.6);opacity:.3;filter:blur(.4px)}
+      .energyOrb.far{background:radial-gradient(circle,rgba(var(--rgb),.38),rgba(var(--rgb),0) 75%);filter:blur(12px);opacity:.3}
+      .energyOrb.mid{background:radial-gradient(circle at 35% 30%,rgba(235,255,255,.75),rgba(var(--rgb),.7) 33%,transparent 80%);filter:blur(3px);box-shadow:0 0 15px rgba(var(--rgb),.2);opacity:.3}
+      .energyOrb.near{background:rgba(var(--rgb),.8);box-shadow:0 0 8px rgba(var(--rgb),.6);opacity:.3;filter:blur(.4px)}
       .orbTouchRipple{position:absolute;width:10px;height:10px;border:1px solid rgba(${rgb},.4);box-shadow:0 0 12px rgba(${rgb},.18);border-radius:50%;animation:touchGlow .75s ease-out forwards}
       @keyframes energyRise{0%{transform:translate3d(0,15vh,0) scale(.7)}25%{transform:translate3d(calc(var(--drift)*.7),-15vh,0) scale(1)}50%{transform:translate3d(calc(var(--drift)*-.35),-42vh,0) scale(1.1)}75%{transform:translate3d(var(--drift),-75vh,0) scale(.85)}100%{transform:translate3d(calc(var(--drift)*-.5),-120vh,0) scale(.5)}}
       @keyframes atmosphericDrift{from{transform:translate3d(-2%,2%,0)}to{transform:translate3d(3%,-3%,0)}}
