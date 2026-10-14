@@ -2,11 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
+import { createClient } from "../utils/supabase/client";
+import { useRouter } from "next/navigation";
 import ReconnectTrivia from "../app/components/ReconnectTrivia";
 import ShareLiveButton from "../app/components/ShareLiveButton";
 import LiveLightOverlay from "./LiveLightOverlay";
 
 export default function LiveKitViewer({ roomName, streamId, embedded = false }: { roomName: string; streamId?: string; embedded?: boolean }) {
+  const router=useRouter();
+  const [hostEnded,setHostEnded]=useState(false);
+  const endedOnce=useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
@@ -26,6 +31,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
+
+  useEffect(()=>{if(!streamId)return;let alive=true;const db=createClient();const check=async()=>{const {data}=await db.from("live_streams").select("status,ended_at").eq("id",streamId).maybeSingle();if(!alive||endedOnce.current)return;if(data&&(data.status==="ended"||data.ended_at)){endedOnce.current=true;setHostEnded(true);roomRef.current?.disconnect();window.setTimeout(()=>{if(embedded){window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));setHostEnded(false)}else router.replace("/")},3800)}};const timer=window.setInterval(()=>void check(),3000);return()=>{alive=false;window.clearInterval(timer)}},[streamId,embedded,router]);
 
   useEffect(() => {
     let mounted = true;
@@ -139,6 +146,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
 
   return (
     <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:"16/9",overflow:"hidden"}}>
+      {hostEnded&&<div role="status" aria-live="assertive" className="omHostEndedNotice"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>{embedded?"Closing your floating player…":"Taking you Home…"}</small><button type="button" onClick={()=>{if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));else router.replace("/")}}>Go Home now →</button></div>}
       <video ref={videoRef} autoPlay muted playsInline controls={!embedded} style={{width:"100%",height:"100%",objectFit:"contain"}} />
       <div ref={audioContainerRef} />
       {streamId&&<LiveLightOverlay streamId={streamId}/>}
@@ -178,6 +186,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       @keyframes omViewerCountGlow{0%,100%{box-shadow:0 0 0 transparent;color:#fff}30%{box-shadow:0 0 24px #bd8dff,0 0 38px #6ee7e3;color:#e5c4ff}60%{box-shadow:0 0 22px #85e9ff;color:#c7fff8}}
       @media(max-width:700px){.omLiveImmersiveViewer{height:100dvh!important;min-height:100dvh!important;aspect-ratio:auto!important}.omLiveImmersiveViewer video{width:100%!important;height:100%!important;object-fit:cover!important}.omLiveImmersiveViewer .omViewerExit{top:calc(env(safe-area-inset-top) + 12px)}}
       @media(prefers-reduced-motion:reduce){.omViewerTapBurst,.omViewerCountPulse{animation:none!important}}
+      .omHostEndedNotice{position:absolute;z-index:50;top:15%;left:50%;transform:translateX(-50%);width:min(88%,380px);padding:20px 18px;text-align:center;color:#f6f4e9;background:#0a2925ed;border:1px solid #edcf8a9c;border-radius:23px;box-shadow:0 16px 60px #0009;backdrop-filter:blur(16px);display:grid;gap:10px;animation:omHostEndIn .45s ease-out both}.omHostEndedNotice span{font-size:10px;letter-spacing:.2em;color:#ecd19a}.omHostEndedNotice strong{font-size:19px}.omHostEndedNotice small{color:#bbd0c6}.omHostEndedNotice button{padding:10px;border-radius:99px;background:#edd39e;color:#103126;border:0;font-weight:800;cursor:pointer}@keyframes omHostEndIn{from{opacity:0;transform:translate(-50%,28px)}to{opacity:1;transform:translate(-50%,0)}}@media(prefers-reduced-motion:reduce){.omHostEndedNotice{animation:none}}
       `}</style>
     </div>
   );
