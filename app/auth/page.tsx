@@ -380,5 +380,19 @@ export default function AuthPage() {
  .authArt,.authShahada .authArt{display:none!important}
  .authPanel,.authShahada .authPanel{justify-content:flex-start!important;overflow-y:auto!important;touch-action:pan-y!important}
 }
-`}</style><style jsx global>{`body:has(.authPreview) .muslimMobileDock{display:none!important}body:has(.authPreview){overflow:hidden!important;overscroll-behavior:none!important}`}</style></main>;
+`}</style><style jsx global>{`
+/* Shahada-first screen: free the hero and make particles visible across glass layers. */
+.authPreview.authShahada .authSimpleHeader{display:none!important}
+.authPreview.authShahada .authArt{display:none!important}
+.authPreview.authShahada .authGlass{height:calc(100dvh - 18px)!important;max-height:calc(100dvh - 18px)!important;margin:9px auto!important}
+.authPreview.authShahada .authPanel{padding:8px 10px!important;overflow-y:auto!important}
+.authPreview.authShahada .authHudHudFirst{min-height:clamp(210px,31dvh,350px)!important;flex-shrink:0!important;position:relative!important;isolation:isolate!important;background:radial-gradient(ellipse at 50% 50%,#101025,#03040a 76%)!important;border-color:#53457d!important}
+.authPreview.authShahada .securityGuardianEntryArt{opacity:.7!important;z-index:0!important}
+.authPreview.authShahada .authHudHudFirst>.risingEnergyField{z-index:2!important;opacity:1!important}
+.authPreview.authShahada .securityGuardianEntryHeader,.authPreview.authShahada .authHudHudRecord,.authPreview.authShahada .authHudHudFirst>strong,.authPreview.authShahada .authHudHudFirst>small,.authPreview.authShahada .authHudHudPulse{position:relative!important;z-index:3!important}
+.authPreview.authShahada .authHudHudRecord{width:clamp(96px,17dvh,160px)!important;height:clamp(96px,17dvh,160px)!important}
+.authPreview.authShahada>.risingEnergyField{z-index:3!important;opacity:.8!important}
+.authPreview.authShahada>.risingEnergyField .energyOrb{mix-blend-mode:screen}
+@media(max-width:700px){.authPreview.authShahada .authGlass{width:calc(100% - 12px)!important}.authPreview.authShahada .authHudHudFirst{min-height:clamp(195px,29dvh,310px)!important}}
+body:has(.authPreview) .muslimMobileDock{display:none!important}body:has(.authPreview){overflow:hidden!important;overscroll-behavior:none!important}`}</style></main>;
 }
