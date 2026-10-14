@@ -150,6 +150,18 @@ export default function MessagesPage(){
   if(targetMessage){const el=document.getElementById("dm-message-"+targetMessage);if(el)el.scrollIntoView({behavior:"smooth",block:"center"});}
  },[uid,selected,messages,reactions,targetMessage]);
  const peerId=threads.find(t=>t.conversation_id===selected)?.user_id;
+ const launchCallOnce=useRef(false);
+ useEffect(()=>{
+  if(!peerId||!selected||!status||blocked.includes(peerId)||launchCallOnce.current)return;
+  const requested=new URLSearchParams(window.location.search).get("call");
+  if(requested!=="audio"&&requested!=="video")return;
+  if(status.request_status!=="accepted"&&status.request_status!=="pending")return;
+  launchCallOnce.current=true;
+  const timer=window.setTimeout(()=>window.dispatchEvent(new CustomEvent("1muslim:start-call",{detail:requested})),450);
+  window.history.replaceState(null,"",window.location.pathname+"?conversation="+encodeURIComponent(selected));
+  return()=>window.clearTimeout(timer);
+ },[peerId,selected,status,blocked]);
+
 
  const [conversationMode,setConversationMode]=useState<"normal"|"hudhud">("normal");
  const [myConversationXp,setMyConversationXp]=useState(0);
