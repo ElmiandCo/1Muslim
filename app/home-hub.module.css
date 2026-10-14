@@ -1174,3 +1174,12 @@
   .control.day .workspaceScroller::before,
   .control.day .workspaceScroller::after{transition:none!important}
 }
+
+/* Explicit affordance: the active widget panel is vertically scrollable. */
+.control .workspacePage{overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;min-height:0!important;scrollbar-width:thin;scrollbar-color:#d7bb78aa transparent}
+.control .workspaceTrack{align-items:stretch!important}
+.control .workspaceDownButton{align-self:center;flex:0 0 auto;display:inline-flex!important;align-items:center;justify-content:center;gap:12px;min-height:36px;padding:7px 19px!important;margin:6px auto 2px;border:1px solid #ddc48977!important;border-radius:999px!important;background:linear-gradient(125deg,#183c32ed,#295648dd)!important;color:#f5dfa8!important;font-size:12px;font-weight:650;letter-spacing:.05em;box-shadow:0 4px 16px #071c1866;cursor:pointer;transition:transform .3s ease,box-shadow .3s ease}
+.control .workspaceDownButton span{font-size:20px;line-height:1;animation:workspaceDownNudge 2.4s ease-in-out infinite}
+.control .workspaceDownButton:hover{transform:translateY(2px);box-shadow:0 5px 20px #071c1888}
+@keyframes workspaceDownNudge{0%,100%{transform:translateY(-2px)}50%{transform:translateY(3px)}}
+@media(prefers-reduced-motion:reduce){.control .workspaceDownButton,.control .workspaceDownButton span{animation:none!important;transition:none!important}}
