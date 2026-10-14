@@ -7,7 +7,7 @@
 .scene{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;border-radius:inherit}
 .night,.day{position:absolute;inset:0;background-position:center;background-size:cover;background-repeat:no-repeat;will-change:opacity}
 .night{opacity:1}
-.day{opacity:0;transition:opacity 1500ms cubic-bezier(.22,1,.36,1)}
+.day{opacity:0;transition:opacity 2000ms cubic-bezier(.45,0,.18,1)}
 :global(.control.day) .day{opacity:1}
 :global(.control.day) .night{opacity:1}
 .slide[data-workspace-page="0"] .night,.slide[data-workspace-page="3"] .night{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-night.PNG&w=1920&q=95")}
@@ -22,3 +22,45 @@
 :global(.control.day) .content>[data-widget]>[class*="widgetCanvas"]{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(7,55,37,.14))!important}
 @media(max-width:650px){.content{padding:8px!important}}
 @media(prefers-reduced-motion:reduce){.day{transition:none}}
+
+/* Cinema: image geometry stays fixed; a maximum seven-pixel offset creates
+   a restrained sense of depth while the cards track the finger exactly. */
+.scene{inset:0!important;overflow:hidden!important;contain:paint!important}
+.night,.day{inset:-9px!important;transform:translate3d(var(--scene-offset,0px),0,0);background-size:cover!important;filter:none!important}
+.slide{border-radius:0!important}
+.content>[data-widget]>[class*="widgetCanvas"]{
+  background:linear-gradient(180deg,rgba(3,27,22,.09),rgba(3,27,22,.13))!important;
+  backdrop-filter:blur(6px) saturate(125%)!important;
+  -webkit-backdrop-filter:blur(6px) saturate(125%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 12px 28px rgba(0,12,9,.15)!important;
+  transition:background 2000ms ease,border-color 2000ms ease,box-shadow 2000ms ease!important;
+}
+.content>[data-featured="true"]>[class*="widgetCanvas"]{
+  background:linear-gradient(180deg,rgba(3,27,22,.06),rgba(3,27,22,.11))!important;
+  backdrop-filter:blur(4px) saturate(125%)!important;
+  -webkit-backdrop-filter:blur(4px) saturate(125%)!important;
+}
+:global(.control.day) .content>[data-widget]>[class*="widgetCanvas"]{
+  background:linear-gradient(180deg,rgba(7,40,30,.13),rgba(5,37,28,.18))!important;
+  border-color:rgba(195,159,93,.45)!important;
+}
+:global(.control:not(.day)) .content>[data-widget]>[class*="widgetCanvas"]{
+  border-color:rgba(243,207,130,.60)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 0 20px rgba(231,190,109,.07)!important;
+}
+.content>[data-widget] [class*="widgetDetails"]{
+  background:linear-gradient(90deg,rgba(2,21,17,.36),rgba(2,21,17,.06))!important;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+:global(.control.day) .content>[data-widget] [class*="widgetDetails"]{
+  background:linear-gradient(90deg,rgba(5,41,31,.26),rgba(5,41,31,.04))!important;
+}
+:global(.control) [class*="workspacePager"]{
+  backdrop-filter:blur(12px) saturate(125%);
+  -webkit-backdrop-filter:blur(12px) saturate(125%);
+}
+@media(prefers-reduced-motion:reduce){
+  .night,.day{transform:none!important;transition:none!important}
+  .content>[data-widget]>[class*="widgetCanvas"]{transition:none!important}
+}
