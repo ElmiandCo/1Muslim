@@ -10,8 +10,10 @@
 .day{opacity:0;transition:opacity 2000ms cubic-bezier(.45,0,.18,1)}
 :global(.control.day) .day{opacity:1}
 :global(.control.day) .night{opacity:1}
-.slide[data-workspace-page="0"] .night,.slide[data-workspace-page="3"] .night{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-night.PNG&w=1920&q=95")}
-.slide[data-workspace-page="0"] .day,.slide[data-workspace-page="3"] .day{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-day.PNG&w=1920&q=95")}
+.slide[data-workspace-page="0"] .night{background-image:url("/assets/decorations/islamic-white-ornament.PNG");background-size:min(90%,760px) auto;background-color:#08362c;filter:sepia(.45) hue-rotate(92deg) saturate(1.4)}
+.slide[data-workspace-page="3"] .night{background-image:url("/assets/decorations/background-mosque-night.PNG")}
+.slide[data-workspace-page="0"] .day{background-image:url("/assets/decorations/islamic-gold-ornament.PNG");background-size:min(90%,760px) auto;background-color:#244c3b}
+.slide[data-workspace-page="3"] .day{background-image:url("/assets/decorations/background-mosque-day.PNG")}
 .slide[data-workspace-page="1"] .night{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-night.PNG&w=1920&q=95")}
 .slide[data-workspace-page="1"] .day{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-day.PNG&w=1920&q=95")}
 .slide[data-workspace-page="2"] .night{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-nature-night.PNG&w=1920&q=95")}
@@ -64,3 +66,19 @@
   .night,.day{transform:none!important;transition:none!important}
   .content>[data-widget]>[class*="widgetCanvas"]{transition:none!important}
 }
+
+/* Signed-in workspace: the wallpaper belongs to the scene, never to a card.
+   One translucent veil controls readability without obscuring the artwork. */
+.scene::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(0,16,12,.17),rgba(0,19,15,.27));transition:background 2s ease}
+:global(.control.day) .scene::after{background:linear-gradient(180deg,rgba(0,24,17,.10),rgba(0,20,15,.20))}
+.slide>[class*="controlGrid"]{background:transparent!important}
+.slide [class*="widgetSlot"]{background:transparent!important;box-shadow:none!important}
+.slide [class*="widgetCanvas"]{
+ background:rgba(5,32,26,.12)!important;
+ background-color:rgba(5,32,26,.12)!important;
+ backdrop-filter:blur(4px) saturate(120%)!important;
+ -webkit-backdrop-filter:blur(4px) saturate(120%)!important;
+}
+:global(.control.day) .slide [class*="widgetCanvas"]{background:rgba(6,39,28,.10)!important}
+.slide [class*="widgetCanvas"]::before,
+.slide [class*="widgetCanvas"]::after{background-color:transparent!important}
