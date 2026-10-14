@@ -969,3 +969,34 @@
  .hudhudWidgetTip{font-size:11px;padding:9px 11px}
 }
 @media(prefers-reduced-motion:reduce){.hudhudWidgetTip{animation:none}}
+
+
+/* Signature 1Muslim premium motion — quiet, layered, and tactile. */
+.control .customGrid>.widgetSlot{--ease-lux:cubic-bezier(.22,1,.36,1);transform-origin:center center;transition:transform 780ms var(--ease-lux),box-shadow 850ms ease,border-color 850ms ease,filter 700ms ease,opacity 600ms ease!important;will-change:auto}
+.control .customGrid>.widgetSlot>.widgetCanvas{position:relative;isolation:isolate;transition:background 950ms ease,box-shadow 850ms ease!important}
+.control .customGrid>.widgetSlot>.widgetCanvas::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:0;background:linear-gradient(116deg,transparent 16%,#f6e5b20b 43%,#f6e5b21c 50%,#b5f4d50b 57%,transparent 82%);background-size:230% 100%;background-position:130% 0;opacity:.42;animation:glassLightTravel 21s ease-in-out infinite alternate}
+.control .customGrid>.widgetSlot:nth-child(3n+2)>.widgetCanvas::after{animation-delay:-8s;animation-duration:26s}
+.control .customGrid>.widgetSlot:nth-child(3n+3)>.widgetCanvas::after{animation-delay:-14s;animation-duration:29s}
+.control .customGrid>.widgetSlot>.widgetCanvas>*{position:relative;z-index:1}
+.control .customGrid>.widgetSlot:hover{transform:translate3d(0,-3px,0);filter:drop-shadow(0 13px 22px #010e0966)}
+.control .customGrid>.widgetSlot:focus-within{outline:1px solid #e8d39b88;outline-offset:3px}
+.control .customGrid>.widgetSlot:hover>.widgetCanvas{box-shadow:inset 0 1px 0 #f5e6bb42,0 0 28px #d7c18b14!important}
+.control .customGrid>.widgetSlot .widgetArtwork{transition:transform 950ms cubic-bezier(.16,1,.3,1),filter 950ms ease!important}
+.control .customGrid>.widgetSlot:hover .widgetArtwork{transform:translateY(-3px) scale(1.045);filter:drop-shadow(0 0 13px #d5eeb533)}
+.control .customGrid>.widgetSlot .widgetMetric{transition:color 650ms ease,text-shadow 800ms ease}
+.control .customGrid>.widgetSlot:hover .widgetMetric{color:#f6f2df;text-shadow:0 0 15px #e5d4a42a}
+.control .customGrid>.sizefeatured{animation:premiumFeatureArrive 1.05s cubic-bezier(.16,1,.3,1) both}
+.control .editGrid>.widgetSlot{animation:premiumArrangeEnter 620ms cubic-bezier(.16,1,.3,1) both}
+.control .editGrid>.widgetSlot:nth-child(3n+2){animation-delay:65ms}
+.control .editGrid>.widgetSlot:nth-child(3n+3){animation-delay:125ms}
+.control .editGrid>.widgetSlot:hover{transform:translateY(-6px) scale(1.012)!important;filter:drop-shadow(0 20px 30px #0008)}
+.control .editGrid .widgetEditControls button{transition:background 360ms ease,border-color 360ms ease,transform 420ms cubic-bezier(.22,1,.36,1)}
+.control .editGrid .widgetEditControls button:active{transform:scale(.94)}
+.hudhudWidgetTip{position:relative;overflow:hidden;animation:premiumTipEnter 1.05s cubic-bezier(.16,1,.3,1) both!important}
+.hudhudWidgetTip:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(100deg,transparent 20%,#e4d39b12 50%,transparent 80%);background-size:230% 100%;animation:glassLightTravel 18s ease-in-out infinite alternate}
+@keyframes glassLightTravel{0%,12%{background-position:130% 0}85%,100%{background-position:-70% 0}}
+@keyframes premiumFeatureArrive{from{opacity:.45;transform:translateY(18px) scale(.975);filter:blur(5px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes premiumArrangeEnter{from{opacity:.65;transform:translateY(9px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes premiumTipEnter{from{opacity:0;transform:translateY(12px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@media(hover:none){.control .customGrid>.widgetSlot:hover{transform:none;filter:none}.control .customGrid>.widgetSlot:hover .widgetArtwork{transform:none}}
+@media(prefers-reduced-motion:reduce){.control .customGrid>.widgetSlot,.control .customGrid>.widgetSlot>.widgetCanvas,.control .customGrid>.widgetSlot .widgetArtwork,.control .customGrid>.widgetSlot .widgetMetric,.control .editGrid .widgetEditControls button{transition:none!important}.control .customGrid>.widgetSlot>.widgetCanvas::after,.control .customGrid>.sizefeatured,.control .editGrid>.widgetSlot,.hudhudWidgetTip,.hudhudWidgetTip:after{animation:none!important}}
