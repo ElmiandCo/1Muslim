@@ -67,8 +67,8 @@ export default function GuardianParticles({ active, stream, foreground = false }
         const pulse = active ? 1 + smoothedEnergy * 1.35 : 1;
         const alpha = (foreground ? .26 : .47) * (.55 + d.depth) * (active ? 1.4 : 1);
         context.beginPath();
-        context.fillStyle = `rgba(${foreground ? "129,211,255" : "42,155,255"},${Math.min(.9, alpha)})`;
-        context.shadowColor = "#1b94ff"; context.shadowBlur = (active ? 12 : 6) * pulse;
+        context.fillStyle = `rgba(${foreground ? "180,125,255" : "42,155,255"},${Math.min(.9, alpha)})`;
+        context.shadowColor = foreground ? "#a06aff" : "#1b94ff"; context.shadowBlur = (active ? 12 : 6) * pulse;
         context.arc(x, y, d.size * pulse, 0, Math.PI * 2); context.fill();
       }
       context.shadowBlur = 0;
