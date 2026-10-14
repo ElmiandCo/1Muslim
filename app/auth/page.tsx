@@ -75,6 +75,10 @@ export default function AuthPage() {
     setMessage("");
 
     const supabase = createClient();
+    // Preserve the exact deployment origin across the hosted OAuth round trip.
+    // Supabase may otherwise use its production Site URL when a preview host is not matched.
+    const callbackOrigin = window.location.origin;
+    try { sessionStorage.setItem("1muslim:oauth-origin", callbackOrigin); } catch {}
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
