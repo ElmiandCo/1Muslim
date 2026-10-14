@@ -399,12 +399,14 @@ export default function AuthPage() {
 .authPreview.authShahada .authForm input{background:rgba(6,16,31,.65)!important;border-color:rgba(127,154,205,.4)!important;backdrop-filter:blur(10px)!important}
 @media(max-width:390px){.authPreview.authShahada .authMethods button{gap:5px!important;min-height:58px!important}.authPreview.authShahada .authMethodIcon{width:28px;height:28px;font-size:16px}}
 
+/* Official Shahada hero: preserve full-color PNG and readable overlay. */
+.authPreview.authShahada .shahadaHeroGuardian{filter:drop-shadow(0 0 18px rgba(49,162,246,.25))!important;animation:shahadaGuardianFloat 10s ease-in-out infinite alternate!important}
 /* Cinematic guardian / smoked-glass overlap. Original guardian art remains the source image. */
 .authPreview.authShahada{background:radial-gradient(ellipse at 50% 5%,#191039 0%,#050711 42%,#020204 80%)!important}
 .authPreview.authShahada .authGlass{overflow:visible!important;position:relative!important;border-radius:24px!important;background:transparent!important;border:0!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;isolation:isolate!important}
 .authPreview.authShahada .shahadaCinematicHero{position:relative;flex:0 0 clamp(165px,28dvh,295px);width:100%;min-height:0;overflow:visible;isolation:isolate;pointer-events:none}
 .authPreview.authShahada .shahadaHeroHalo{position:absolute;inset:-12% -4% -10%;background:radial-gradient(ellipse at 47% 55%,rgba(89,57,214,.26),transparent 47%),radial-gradient(ellipse at 57% 55%,rgba(27,159,255,.21),transparent 62%);filter:blur(19px);animation:shahadaHalo 13s ease-in-out infinite alternate}
-.authPreview.authShahada .shahadaHeroGuardian{position:absolute;inset:-12% 0 -28%;background:url('/assets/hudhud-security-guardian.webp') center 40% / contain no-repeat;filter:drop-shadow(0 0 18px rgba(61,136,255,.4)) drop-shadow(0 0 30px rgba(159,71,255,.25));animation:shahadaGuardianFloat 10s ease-in-out infinite alternate;z-index:1}
+.authPreview.authShahada .shahadaHeroGuardian{position:absolute;inset:-12% 0 -28%;background:linear-gradient(180deg,rgba(2,3,11,.06) 0%,rgba(2,3,11,.02) 65%,rgba(3,6,18,.44) 100%),url('/assets/hudhud-shahada-hero.PNG') center 43% / cover no-repeat;filter:drop-shadow(0 0 18px rgba(61,136,255,.4)) drop-shadow(0 0 30px rgba(159,71,255,.25));animation:shahadaGuardianFloat 10s ease-in-out infinite alternate;z-index:1}
 .authPreview.authShahada .shahadaHeroTitle{position:absolute;z-index:3;left:0;right:0;top:1%;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;text-shadow:0 2px 10px #000,0 0 15px #427eff}
 .authPreview.authShahada .shahadaHeroTitle span{font-size:clamp(13px,2dvh,18px);font-weight:900;letter-spacing:.35em;color:#e6f5ff}
 .authPreview.authShahada .shahadaHeroTitle strong{font-size:clamp(14px,2.7dvh,25px);font-weight:950;letter-spacing:.15em;color:#f6f2ff;transform:rotate(-2deg);text-shadow:0 0 15px rgba(169,85,255,.85),0 2px 3px #03020b}
