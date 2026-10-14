@@ -884,7 +884,7 @@ body:has(.omQuranPage) header:has(nav),body:has(.omQuranPage) [class*="bottomNav
 @keyframes omQuranWordsArrive{0%{opacity:.55;filter:blur(1px)}100%{opacity:1;filter:blur(0)}}
 @media(prefers-reduced-motion:reduce){.omQuranPage .omQuranVerseFloat,.omQuranPage .omQuranVerseFloat.omQuranVerseRefocusing,.omQuranPage .omQuranGentleVerse,.omQuranPage .omQuranVerseFloat .omQuranGlassArabic,.omQuranPage .omQuranVerseFloat .omQuranGlassTranslation{animation:none!important;translate:none!important;rotate:none!important;filter:none!important}}
 
-`}</style><QuranLiveWidget compact/></main><style jsx global>{`
+`}</style><QuranLiveWidget compact/></main><style>{`
 .quranStudioEntryCurtain{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;pointer-events:none;background:linear-gradient(145deg,rgba(5,17,34,.65),rgba(24,12,57,.93));animation:quranStudioEntryOut .85s ease both}
 .quranStudioEntryCurtain span{color:#f3dfad;font-size:clamp(34px,6vw,68px);text-shadow:0 0 24px rgba(229,196,132,.4)}
 @keyframes quranStudioEntryOut{0%,22%{opacity:1}100%{opacity:0}}
