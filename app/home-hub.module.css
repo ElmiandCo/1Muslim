@@ -1236,3 +1236,24 @@
 @keyframes guestFeatureSlide{0%{opacity:.4;transform:translateY(9px) scale(.965);filter:blur(2px)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
 @keyframes guestFeatureZoom{0%{opacity:.75;transform:scale(1.04)}55%{opacity:1;transform:scale(.88)}100%{opacity:1;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.control .guestWidgetTitle,.control .guestWidgetTitleZoom{animation:none!important;will-change:auto!important}}
+
+/* Preview gallery: explicit compact/off state, bright active state, large preview action. */
+.control .galleryItem{display:grid!important;grid-template-columns:42px minmax(0,1fr) auto auto!important;gap:10px!important;align-items:center!important;min-width:0}
+.control .galleryItem>div{min-width:0!important}
+.control .galleryItem>button{min-height:36px;white-space:nowrap}
+.control .galleryItem .galleryAdded{box-shadow:0 0 0 1px #a7edb28c,0 0 15px #76d9a65a!important;color:#e4ffdc!important;background:#1e7554!important}
+.control .galleryPreviewButton{padding:8px 12px;border:1px solid #e7c98899;border-radius:12px;background:linear-gradient(130deg,#ad8752,#4a6b55);color:#fff6db;font-weight:650;cursor:pointer}
+.control .galleryPreviewButton:disabled{opacity:.35;cursor:not-allowed}
+.control .workspacePage .customGrid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-flow:row!important;grid-auto-rows:minmax(190px,auto)!important;align-content:start!important;gap:14px!important}
+.control .workspacePage .customGrid>.widgetSlot{position:relative!important;grid-row:auto!important;grid-column:span 1!important;min-height:190px!important;height:auto!important;max-height:none!important;transform:none!important;inset:auto!important}
+.control .workspacePage .customGrid>.widgetSlot[data-featured="true"]{grid-column:1/-1!important;grid-row:auto!important;min-height:260px!important;order:-1}
+.control .workspacePage .customGrid>.widgetSlot>.widgetCanvas{position:relative!important;inset:auto!important;min-height:190px!important;height:100%!important;max-height:none!important;box-sizing:border-box}
+.control .workspacePage{overflow-y:auto!important;min-height:0!important}
+.control .hudhudWidgetTip{height:auto!important;min-height:0;overflow:visible!important}
+@media(max-width:650px){
+ .control .galleryItem{grid-template-columns:38px minmax(0,1fr) auto!important;gap:8px!important}
+ .control .galleryItem .galleryPreviewButton{grid-column:2/-1;justify-self:end}
+ .control .workspacePage .customGrid{grid-template-columns:minmax(0,1fr)!important;grid-auto-rows:minmax(190px,auto)!important}
+ .control .workspacePage .customGrid>.widgetSlot{grid-column:1/-1!important}
+}
+@media(max-width:440px){.control .hudhudWidgetTip{display:none!important}}
