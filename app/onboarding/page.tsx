@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import FirstVisitGuide from "../components/FirstVisitGuide";
+import AdmissionJourney from "../components/AdmissionJourney";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../utils/supabase/client";
 
@@ -302,7 +303,7 @@ export default function OnboardingPage() {
   if (checking) return <main className="onboardingPage"><FirstVisitGuide area="shahada"/><section className="onboardingCard"><span className="eyebrow">1MUSLIM</span><h1>Preparing your profile…</h1></section></main>;
 
   return <main className="onboardingPage"><section className="onboardingCard">
-    <div className="steps"><span className={step === "shahada" ? "active" : ""}>1 Shahada</span><i>→</i><span className={step === "gender" ? "active" : ""}>2 Profile</span></div>
+    <AdmissionJourney stage={step==="shahada"?2:3} detail={step==="shahada"?(verified||writtenDeclaration?"Declaration recognized. Agree to the terms to proceed to admission.":"Complete your Shahada by voice or self-attested declaration."):(saving?"Saving admission and awarding your badge…":"Finish your profile to enter 1Muslim and receive your badge. XP is subject to the rewards system.")}/>
     {step === "shahada" ? <>
       <span className="eyebrow">COMMUNITY VERIFICATION</span>
       <h1>Say the Shahada.</h1>
