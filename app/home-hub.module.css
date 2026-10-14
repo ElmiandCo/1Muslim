@@ -1349,3 +1349,44 @@
 .control.day .workspacePage .customGrid>.widgetSlot>.widgetCanvas{
  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(10,54,38,.13))!important;
 }
+
+/* Structural mobile canvas fix: legacy 56dvh/750px scroller caps and 70-90px
+   slide padding were keeping the widget short and leaving a blank footer. */
+.control .widgetArea .workspaceScroller{
+ flex:1 1 0%!important;
+ height:auto!important;min-height:0!important;max-height:none!important;
+ margin-bottom:0!important;
+}
+.control .widgetArea .workspaceTrack,
+.control .widgetArea .workspacePage{
+ height:100%!important;min-height:0!important;max-height:100%!important;
+}
+.control .widgetArea .workspacePage{
+ padding-top:0!important;padding-bottom:0!important;
+ overflow-y:hidden!important;
+}
+.control .widgetArea .workspacePage .customGrid{
+ display:flex!important;flex-direction:column!important;
+ flex:1 1 0%!important;
+ height:100%!important;min-height:0!important;max-height:100%!important;
+ padding:clamp(6px,1.2vw,12px)!important;
+ gap:0!important;
+}
+.control .widgetArea .workspacePage .customGrid>.widgetSlot,
+.control .widgetArea .workspacePage .customGrid>[data-widget]{
+ flex:1 1 0%!important;
+ width:100%!important;height:100%!important;
+ min-height:0!important;max-height:100%!important;
+ margin:0!important;
+}
+.control .widgetArea .workspacePage .customGrid>.widgetSlot>.widgetCanvas{
+ height:100%!important;min-height:0!important;max-height:100%!important;
+}
+.control .widgetArea .workspaceDownButton{margin:2px auto!important}
+.control .widgetArea .workspacePager{margin:2px auto 4px!important}
+@media(max-width:650px){
+ .control .widgetArea .workspaceScroller{height:auto!important;max-height:none!important;min-height:0!important}
+ .control .widgetArea .workspacePage .customGrid{padding:6px 8px!important}
+ .control .widgetArea .workspacePage .customGrid>.widgetSlot[data-featured="true"],
+ .control .widgetArea .workspacePage .customGrid>.widgetSlot[data-featured="true"]>.widgetCanvas{height:100%!important;min-height:0!important;max-height:100%!important}
+}
