@@ -413,3 +413,38 @@
    radial-gradient(ellipse at 50% 45%,transparent 12%,rgba(0,0,0,.20) 58%,rgba(0,0,0,.58) 100%),
    linear-gradient(180deg,rgba(0,0,0,.42),transparent 43%,rgba(0,0,0,.48))!important;
 }
+
+/* Qur'an workspace invariant: exactly one full-height widget, one tall
+   reading pane, one compact studio action. Keep this after generic rules. */
+.fillArea .slide[data-workspace-page="1"] .content{
+ display:flex!important;
+ flex-direction:column!important;
+ height:100%!important;
+ min-height:0!important;
+ padding:clamp(7px,1.5vw,13px)!important;
+}
+.fillArea .slide[data-workspace-page="1"] .content>[data-widget="Qur’an"]{
+ display:flex!important;
+ flex:1 1 100%!important;
+ height:100%!important;
+ min-height:0!important;
+}
+.fillArea .slide[data-workspace-page="1"] .content>[data-widget="Qur’an"]>.quranVerseWidget{
+ display:flex!important;
+ flex-direction:column!important;
+ justify-content:stretch!important;
+ height:100%!important;
+ min-height:0!important;
+ gap:clamp(8px,1.3vh,14px)!important;
+}
+.fillArea .slide[data-workspace-page="1"] .quranVerseArticle{
+ flex:1 1 auto!important;
+ min-height:0!important;
+ justify-content:safe center!important;
+ overflow-y:auto!important;
+ padding:clamp(18px,4vw,32px)!important;
+}
+.fillArea .slide[data-workspace-page="1"] .quranVerseOpen{
+ flex:0 0 auto!important;
+ margin:0 auto!important;
+}
