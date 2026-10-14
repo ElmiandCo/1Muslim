@@ -701,3 +701,23 @@
 @keyframes muslimArtSparkle{0%{transform:scale(.25) rotate(0);opacity:0}35%{transform:scale(1.5) rotate(45deg);opacity:.9}100%{transform:scale(.25) rotate(90deg);opacity:0}}
 @media(max-width:700px){.control .decoratedSurface>.surfaceArtwork{background-size:cover,130% auto;background-position:center,center 48%;opacity:.22}.control.day .decoratedSurface>.surfaceArtwork{opacity:.17}}
 @media(prefers-reduced-motion:reduce){.control .decoratedSurface>.surfaceArtwork{transition:none!important}.control .surfaceSparkle{display:none!important}}
+
+
+/* Fix: the search belongs INSIDE the header on the SAME row, not below it. */
+.control .controlHeader{display:grid!important;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto!important;grid-template-rows:minmax(44px,auto)!important;align-items:center!important;column-gap:clamp(7px,1.4vw,15px)!important;row-gap:0!important;flex-wrap:nowrap!important}
+.control .controlHeader .brand{grid-column:1!important;grid-row:1!important;min-width:0;flex:none!important}
+.control .controlHeader .searchDock{grid-column:2!important;grid-row:1!important;order:0!important;flex:none!important;width:100%!important;min-width:0!important;max-width:none!important;height:37px!important;min-height:37px!important;margin:0!important;padding:3px 9px!important;border-radius:999px!important}
+.control .controlHeader .headerActions{grid-column:3!important;grid-row:1!important;display:flex;align-items:center;flex-wrap:nowrap;gap:5px}
+.control .controlHeader .searchDock input{min-width:0!important;width:100%;font-size:clamp(10px,1.5vw,13px)!important;text-overflow:ellipsis}
+.control .controlHeader .searchDock .orb{display:none!important}
+@media(max-width:700px){
+.control .controlHeader{grid-template-columns:minmax(0,auto) minmax(0,1fr) auto!important;gap:7px!important;padding:7px 9px!important}
+.control .controlHeader .brand{gap:5px!important}
+.control .controlHeader .brandLogo{width:29px!important;height:29px!important}
+.control .controlHeader .brand strong{font-size:clamp(11px,3vw,15px)!important;letter-spacing:.06em!important}
+.control .controlHeader .brand small{display:none!important}
+.control .controlHeader .searchDock{height:32px!important;min-height:32px!important;padding:2px 6px!important}
+.control .controlHeader .searchDock input{font-size:11px!important}
+.control .controlHeader .headerActions>*{width:28px!important;height:28px!important}
+}
+@media(max-width:390px){.control .controlHeader .brand strong{font-size:11px!important}.control .controlHeader .brandLogo{width:25px!important;height:25px!important}.control .controlHeader{column-gap:5px!important}.control .controlHeader .searchDock input{font-size:10px!important}}
