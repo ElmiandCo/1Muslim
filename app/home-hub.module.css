@@ -1292,3 +1292,36 @@
 .control .workspacePage .widgetCrown,.control .workspacePage .widgetTop,.control .workspacePage .widgetDetails{min-width:0;max-width:100%;box-sizing:border-box}
 .control .workspacePage .widgetCrown strong,.control .workspacePage .widgetName{overflow-wrap:anywhere}
 @media(max-width:650px){.control .workspacePage>.controlGrid{padding-inline:8px!important}.control .workspacePage .customGrid>.widgetSlot{grid-column:1/-1!important}}
+
+
+/* Seamless workspace imagery: remove the top gutter/crack and expose the day/night
+   landscape through the cards instead of painting an opaque green sheet. */
+.control .workspaceTrack>.workspacePage{
+ padding-top:0!important;
+ background-color:transparent!important;
+ border-top:0!important;
+}
+.control .workspacePage::before,.control .workspacePage::after{
+ inset:-2px -1px -2px -1px!important;
+ border:0!important;
+ border-radius:inherit!important;
+ background-size:cover!important;
+ background-position:center!important;
+}
+.control .workspacePage>.controlGrid{
+ margin-top:0!important;
+ padding-top:0!important;
+ background:transparent!important;
+}
+.control .workspacePage .customGrid>.widgetSlot{
+ background:transparent!important;
+}
+.control .workspacePage .customGrid>.widgetSlot>.widgetCanvas{
+ background:linear-gradient(160deg,rgba(7,43,34,.19),rgba(3,28,24,.31))!important;
+ border-color:rgba(232,210,155,.34)!important;
+ backdrop-filter:blur(3px) saturate(125%)!important;
+ -webkit-backdrop-filter:blur(3px) saturate(125%)!important;
+}
+.control.day .workspacePage .customGrid>.widgetSlot>.widgetCanvas{
+ background:linear-gradient(160deg,rgba(250,255,247,.13),rgba(12,70,48,.22))!important;
+}
