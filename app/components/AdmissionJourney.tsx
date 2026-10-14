@@ -2,7 +2,7 @@
 import {useEffect,useState} from "react";
 import {usePathname} from "next/navigation";
 type Props={stage:1|2|3;detail?:string;compact?:boolean};
-const stages=[{title:"Account",subtitle:"Sign-in form · approval"},{title:"Shahada",subtitle:"Declaration · verification"},{title:"Admission",subtitle:"Entry · badge & XP"}] as const;
+const stages=[{title:"Shahada",subtitle:"Begin · declare"},{title:"Account",subtitle:"Secure sign-in · save"},{title:"Admission",subtitle:"Entry · badge & XP"}] as const;
 /** Visual journey only: stage 3 is not complete until onboarding saves successfully. */
 export default function AdmissionJourney({stage,detail,compact=false}:Props){
  const pathname=usePathname()||"/";
@@ -10,12 +10,12 @@ export default function AdmissionJourney({stage,detail,compact=false}:Props){
  const [theme,setTheme]=useState<"day"|"night">("night");
  const [tip,setTip]=useState("");
  const tips=pathname.startsWith("/onboarding")?{
-  initial:"Choose Arabic or English, then use the recording orb or the self-attested declaration checkbox.",
+  initial:"Start with the HudHud recording orb, or select Arabic, English, or the self-attested declaration.",
   field:"This field is part of your profile setup. Review your choice before continuing.",
   button:"Tap to advance only when you have completed the required declaration and terms.",
   checkbox:"A checkbox records your own affirmation; it is not independent voice verification."
  }:pathname.startsWith("/auth")?{
-  initial:"Use email or Google to sign in. New members can begin the Shahada journey here.",
+  initial:"New members begin with HudHud Shahada. Create an account to securely save the recording, or sign in if already registered.",
   field:"Enter your account details. Your password is never read or saved by HudHud tips.",
   button:"Choose your sign-in method or start the Shahada process.",
   checkbox:"Read the declaration carefully before confirming your intention."
