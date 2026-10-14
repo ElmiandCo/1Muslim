@@ -129,8 +129,9 @@ export default function Home(){
  useEffect(()=>{
   const next=()=>{if(workspacePage!==1||quranAdvancing.current)return;
    quranAdvancing.current=true;
-   if(quranAudioFinished.current&&!quranContinuous.current){quranContinuous.current=true;quranContinuousVerseCount.current=0}
-   if(quranContinuous.current)quranAutoPlayNext.current=true;
+   if(quranContinuous.current){quranContinuous.current=false;quranAutoPlayNext.current=false;quranAudioRef.current?.pause();setQuranAudioPlaying(false);quranAdvancing.current=false;return}
+   if(quranAudioRef.current&&!quranAudioRef.current.paused&&!quranAudioRef.current.ended){quranContinuous.current=true;quranContinuousVerseCount.current=0;quranAutoPlayNext.current=true}
+   else{quranAutoPlayNext.current=false}
    const current=quranPreview;const chapter=current?.chapter||1,verse=current?.verse||1;
    void (async()=>{try{const response=await fetch("https://api.alquran.cloud/v1/surah/"+chapter);if(!response.ok)throw Error("Surah lookup failed");const json=await response.json();const max=Number(json.data?.numberOfAyahs);if(!max)throw Error("Missing ayah count");
     const newChapter=verse>=max?(chapter===114?1:chapter+1):chapter;const newVerse=verse>=max?1:verse+1;
