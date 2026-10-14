@@ -723,7 +723,6 @@ body:has(.omQuranPage) header:has(nav),body:has(.omQuranPage) [class*="bottomNav
 @media(max-width:760px){.omQuranPage .omQuranOrbitWidget{top:22%;right:8px;width:min(190px,48vw)}.omQuranPage .omQuranOrbitDot{top:31%}}
 @media(prefers-reduced-motion:reduce){.omQuranPage .omQuranVerseFlow,.omQuranPage .omQuranVerseFlow:before,.omQuranPage .omQuranFirstReader:before{animation:none!important}.omQuranPage .omQuranSimpleReader,.omQuranPage .omQuranGlassDeck{transform:none!important;transition:none!important}}
 
-`}
 
 /* Quran Studio: three-depth atmosphere between the reading card glass and verse ink. */
 .omQuranPage .omQuranCardFront{position:relative;isolation:isolate;overflow:hidden}
@@ -754,5 +753,5 @@ body:has(.omQuranPage) header:has(nav),body:has(.omQuranPage) [class*="bottomNav
 .omQuranPage .omQuranGlassArabic{transition:letter-spacing 1.2s ease,filter 1.2s ease}
 .omQuranPage.omQuranHudHudExpanded .omQuranGlassArabic{filter:drop-shadow(0 0 9px #b9a0ff22)}
 @media(prefers-reduced-motion:reduce){.omQuranPage.omQuranHudHudExpanded .omQuranVerseAtmosphere,.omQuranPage.omQuranHudHudExpanded .omQuranGlassArabic{animation:none!important;transition:none!important;filter:none!important;transform:none!important}}
-</style><QuranLiveWidget compact/></main>;
+`}</style><QuranLiveWidget compact/></main>;
 }
