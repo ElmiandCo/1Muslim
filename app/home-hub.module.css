@@ -1257,3 +1257,25 @@
  .control .workspacePage .customGrid>.widgetSlot{grid-column:1/-1!important}
 }
 @media(max-width:440px){.control .hudhudWidgetTip{display:none!important}}
+
+
+/* Four swipeable workspaces: high-detail cached 95%-quality landscape imagery.
+   Keep the image itself sharp, with separate glass widgets above it. */
+.control .workspacePage{position:relative;isolation:isolate;border-radius:22px}
+.control .workspacePage::before,.control .workspacePage::after{
+ content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+ background-position:center;background-size:cover;background-repeat:no-repeat;
+}
+.control .workspacePage::before{z-index:0;opacity:1;border:1px solid rgba(239,211,148,.22)}
+.control .workspacePage::after{z-index:0;opacity:0;transition:opacity 1.1s ease-in-out}
+.control .workspacePage[data-workspace-page="0"]::before{background-image:linear-gradient(180deg,rgba(0,18,12,.13),rgba(0,19,15,.30)),url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-night.PNG&w=1920&q=95")}
+.control .workspacePage[data-workspace-page="0"]::after{background-image:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,30,18,.23)),url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-day.PNG&w=1920&q=95")}
+.control .workspacePage[data-workspace-page="1"]::before{background-image:linear-gradient(180deg,rgba(0,18,12,.13),rgba(0,19,15,.30)),url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-night.PNG&w=1920&q=95")}
+.control .workspacePage[data-workspace-page="1"]::after{background-image:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,30,18,.23)),url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-day.PNG&w=1920&q=95")}
+.control .workspacePage[data-workspace-page="2"]::before{background-image:linear-gradient(180deg,rgba(0,18,12,.13),rgba(0,19,15,.30)),url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-nature-night.PNG&w=1920&q=95")}
+.control .workspacePage[data-workspace-page="2"]::after{background-image:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,30,18,.23)),url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-nature-day.PNG&w=1920&q=95")}
+.control .workspacePage[data-workspace-page="3"]::before{background-image:linear-gradient(180deg,rgba(0,18,12,.13),rgba(0,19,15,.30)),url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-night.PNG&w=1920&q=95")}
+.control .workspacePage[data-workspace-page="3"]::after{background-image:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,30,18,.23)),url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-mosque-day.PNG&w=1920&q=95")}
+.control.day .workspacePage::after{opacity:1}
+.control .workspacePage>.controlGrid{position:relative;z-index:1}
+@media(prefers-reduced-motion:reduce){.control .workspacePage::after{transition:none}}
