@@ -88,7 +88,37 @@ export default function Home(){
  useEffect(()=>{quranAudioRef.current?.pause();setQuranAudioPlaying(false)},[quranPreview?.globalAyah]);
  useEffect(()=>()=>{quranAudioRef.current?.pause()},[]);
 
- useEffect(()=>{let cancelled=false;const load=async()=>{try{const saved=JSON.parse(localStorage.getItem("1muslim-quran-progress")||"null");const chapter=Number(saved?.chapter)||1,verse=Number(saved?.verse)||1;if(chapter<1||chapter>114||verse<1||verse>286)return;const key=chapter+":"+verse;const [ar,en]=await Promise.all([fetch("https://api.alquran.cloud/v1/ayah/"+key+"/ar.alafasy"),fetch("https://api.alquran.cloud/v1/ayah/"+key+"/en.sahih")]);if(!ar.ok||!en.ok)return;const [a,b]=await Promise.all([ar.json(),en.json()]);if(!cancelled&&a.data?.text)setQuranPreview({arabic:String(a.data.text),translation:String(b.data?.text||""),chapter,verse,globalAyah:Number(a.data.number)})}catch{}};void load();window.addEventListener("focus",load);window.addEventListener("pageshow",load);return()=>{cancelled=true;window.removeEventListener("focus",load);window.removeEventListener("pageshow",load)}},[]);
+
+ const quranLoadSeq=useRef(0);
+ const loadQuranVerse=async(chapter:number,verse:number,save=false)=>{
+  const seq=++quranLoadSeq.current;
+  if(chapter<1||chapter>114||verse<1||verse>286)return;
+  const key=chapter+":"+verse;
+  try{
+   const [ar,en]=await Promise.all([fetch("https://api.alquran.cloud/v1/ayah/"+key+"/ar.alafasy"),fetch("https://api.alquran.cloud/v1/ayah/"+key+"/en.sahih")]);
+   if(!ar.ok||!en.ok)return;
+   const [a,b]=await Promise.all([ar.json(),en.json()]);
+   if(seq!==quranLoadSeq.current||!a.data?.text||!b.data?.text)return;
+   setQuranPreview({arabic:String(a.data.text),translation:String(b.data.text),chapter,verse,globalAyah:Number(a.data.number)});
+   if(save){try{localStorage.setItem("1muslim-quran-progress",JSON.stringify({chapter,verse}))}catch{}}
+  }catch{}
+ };
+ useEffect(()=>{
+  const resume=()=>{let chapter=1,verse=1;try{const saved=JSON.parse(localStorage.getItem("1muslim-quran-progress")||"null");chapter=Number(saved?.chapter)||1;verse=Number(saved?.verse)||1}catch{}void loadQuranVerse(chapter,verse)};
+  resume();window.addEventListener("focus",resume);window.addEventListener("pageshow",resume);
+  return()=>{quranLoadSeq.current++;window.removeEventListener("focus",resume);window.removeEventListener("pageshow",resume)};
+ },[]);
+ useEffect(()=>{
+  const next=()=>{if(workspacePage!==1)return;const current=quranPreview;const chapter=current?.chapter||1,verse=current?.verse||1;
+   void (async()=>{try{const response=await fetch("https://api.alquran.cloud/v1/surah/"+chapter);if(!response.ok)return;const json=await response.json();const max=Number(json.data?.numberOfAyahs);if(!max)return;
+    const newChapter=verse>=max?(chapter===114?1:chapter+1):chapter;const newVerse=verse>=max?1:verse+1;
+    await loadQuranVerse(newChapter,newVerse,true);
+   }catch{}})();
+  };
+  window.addEventListener("1muslim:quran-next-verse",next);
+  return()=>window.removeEventListener("1muslim:quran-next-verse",next);
+ },[workspacePage,quranPreview]);
+
  useEffect(()=>{let alive=true;const db=createClient();const load=async()=>{const {data:{user}}=await db.auth.getUser();const jobs=[db.from("lessons").select("id,title").eq("active",true).limit(3)];const [lessons]=await Promise.all(jobs);if(!alive)return;if(!lessons.error)setLessonPreview((lessons.data||[]).map(v=>({id:String(v.id),title:String(v.title||"Continue learning")})));if(!user)return;const [messages,calls]=await Promise.all([db.from("dm_messages").select("id,body,created_at").eq("sender_id",user.id).order("created_at",{ascending:false}).limit(3),db.from("dm_calls").select("id,created_at").eq("caller_id",user.id).order("created_at",{ascending:false}).limit(3)]);if(!alive)return;if(!messages.error)setInbox((messages.data||[]).map(v=>({id:String(v.id),content:String(v.body||""),created_at:String(v.created_at)})));if(!calls.error)setCallHistory((calls.data||[]).map(v=>({id:String(v.id),created_at:String(v.created_at)})))};void load();const timer=setInterval(()=>void load(),60000);return()=>{alive=false;clearInterval(timer)}},[]);
  const [sparkleKey,setSparkleKey]=useState(0);
  const [sparkling,setSparkling]=useState(false);
