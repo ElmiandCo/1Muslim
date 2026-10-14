@@ -85,6 +85,8 @@ export default function Home(){
  const [sparkling,setSparkling]=useState(false);
  useEffect(()=>{let timer:ReturnType<typeof setTimeout>|undefined;const sparkle=()=>{setSparkleKey(v=>v+1);setSparkling(true);if(timer)clearTimeout(timer);timer=setTimeout(()=>setSparkling(false),1150)};const toggle=()=>{const collapsed=!navCollapsedRef.current;navCollapsedRef.current=collapsed;setNavMotionStarted(true);setNavCollapsed(collapsed);window.dispatchEvent(new CustomEvent("1muslim:hudhud-nav-state",{detail:{collapsed}}));sparkle()};window.addEventListener("1muslim:hudhud-nav-toggle",toggle);window.addEventListener("1muslim:theme-changed",sparkle);return()=>{window.removeEventListener("1muslim:hudhud-nav-toggle",toggle);window.removeEventListener("1muslim:theme-changed",sparkle);if(timer)clearTimeout(timer)}},[]);
  const [workspacePage,setWorkspacePage]=useState(0);
+ useEffect(()=>{window.dispatchEvent(new CustomEvent("1muslim:quran-workspace-focus",{detail:{active:workspacePage===1}}));return()=>{window.dispatchEvent(new CustomEvent("1muslim:quran-workspace-focus",{detail:{active:false}}))}},[workspacePage]);
+
  const [quranExpanding,setQuranExpanding]=useState(false);
  const router=useRouter();
  const [singleWidget,setSingleWidget]=useState<string|null>(null);
