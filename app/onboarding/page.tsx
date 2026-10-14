@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import FirstVisitGuide from "../components/FirstVisitGuide";
 import GuardianParticles from "../components/GuardianParticles";
+import RisingEnergyOrbs from "../components/RisingEnergyOrbs";
 import AdmissionJourney from "../components/AdmissionJourney";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../utils/supabase/client";
@@ -313,7 +314,7 @@ export default function OnboardingPage() {
       <span className="eyebrow">COMMUNITY VERIFICATION</span>
       <h1>Say the Shahada.</h1>
       <p className="lead">Begin with HudHud recording, or choose Arabic, English, or the written declaration below.</p>
-      <div className={`voiceCard securityGuardianStage ${listening || recording ? "securityGuardianActive" : ""}`}><div className="securityGuardianArt" aria-hidden="true"/><GuardianParticles active={listening || recording} stream={streamRef.current} /><GuardianParticles active={listening || recording} stream={streamRef.current} foreground /><div className="securityGuardianHeader"><span>HUDHUD / SECURE VOICE</span><span className="securityGuardianStatus">{listening || recording ? "● LISTENING" : "● STANDBY"}</span></div>
+      <div className={`voiceCard securityGuardianStage ${listening || recording ? "securityGuardianActive" : ""}`}><div className="securityGuardianArt" aria-hidden="true"/><RisingEnergyOrbs tone="blue"/><GuardianParticles active={listening || recording} stream={streamRef.current} /><GuardianParticles active={listening || recording} stream={streamRef.current} foreground /><div className="securityGuardianHeader"><span>HUDHUD / SECURE VOICE</span><span className="securityGuardianStatus">{listening || recording ? "● LISTENING" : "● STANDBY"}</span></div>
         <span className="eyebrow">SECURE · VOICE VERIFICATION</span>
         <button type="button" className={`hudhudRecord ${listening ? "isListening" : ""} ${verified ? "isVerified" : ""}`} aria-label={listening ? "Reset Shahada recording" : "Enable microphone and begin Shahada"} onClick={() => listening || recording ? resetShahada() : void startShahada()}>
           <span className="hudhudHalo" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{transform:`rotate(${i*30}deg) translateY(-58px)`,animationDelay:`${i*-.18}s`}}/>)}</span>
