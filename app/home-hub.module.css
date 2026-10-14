@@ -1279,3 +1279,16 @@
 .control.day .workspacePage::after{opacity:1}
 .control .workspacePage>.controlGrid{position:relative;z-index:1}
 @media(prefers-reduced-motion:reduce){.control .workspacePage::after{transition:none}}
+
+
+/* Workspace isolation: a swipe can reveal adjacent slides without offsetting their contents. */
+.control .workspaceScroller{box-sizing:border-box!important;scroll-snap-type:x mandatory!important;scroll-padding-inline:0!important;overscroll-behavior-x:contain!important}
+.control .workspaceTrack{width:100%!important;min-width:0!important;box-sizing:border-box!important;gap:0!important}
+.control .workspaceTrack>.workspacePage{flex:0 0 100%!important;width:100%!important;min-width:100%!important;max-width:100%!important;box-sizing:border-box!important;scroll-snap-align:start!important;scroll-snap-stop:always!important;overflow-x:clip!important;background-color:#08271f}
+.control .workspacePage>.controlGrid{width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important;padding-inline:clamp(8px,2vw,18px)!important}
+.control .workspacePage .customGrid>.widgetSlot{min-width:0!important;max-width:100%!important;box-sizing:border-box!important;overflow:hidden!important;border-radius:22px}
+.control .workspacePage .customGrid>.widgetSlot>.widgetCanvas{min-width:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow:hidden!important;transform:none!important;backdrop-filter:blur(10px) saturate(130%)!important;-webkit-backdrop-filter:blur(10px) saturate(130%)!important;background:linear-gradient(160deg,rgba(8,47,37,.46),rgba(2,25,22,.58))!important;border:1px solid rgba(232,210,155,.42)!important}
+.control.day .workspacePage .customGrid>.widgetSlot>.widgetCanvas{background:linear-gradient(155deg,rgba(244,255,246,.42),rgba(10,63,43,.35))!important}
+.control .workspacePage .widgetCrown,.control .workspacePage .widgetTop,.control .workspacePage .widgetDetails{min-width:0;max-width:100%;box-sizing:border-box}
+.control .workspacePage .widgetCrown strong,.control .workspacePage .widgetName{overflow-wrap:anywhere}
+@media(max-width:650px){.control .workspacePage>.controlGrid{padding-inline:8px!important}.control .workspacePage .customGrid>.widgetSlot{grid-column:1/-1!important}}
