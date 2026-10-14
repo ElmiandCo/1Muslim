@@ -66,3 +66,12 @@
 @keyframes orbHaloPulse{0%,100%{opacity:.45;transform:scale(.9)}24%{opacity:.9;transform:scale(1.6)}60%{opacity:.65;transform:scale(1.3)}}
 @keyframes orbTurn{0%{transform:rotate(0)}55%{transform:rotate(135deg)}100%{transform:rotate(180deg)}}
 @media(prefers-reduced-motion:reduce){.transitioning,.transitioning .geometry,.transitioning .aura,.transitioning .sparkField i{animation:none!important;transform:none!important}}
+
+/* Orb polish: soft expanding corona, smoother return and restrained depth. */
+.transitioning{backface-visibility:hidden;transform-style:preserve-3d;filter:drop-shadow(0 0 7px rgba(234,206,145,.30))}
+.transitioning::after{animation:celestialCorona 2.6s cubic-bezier(.16,1,.3,1) both}
+.transitioning .sky{filter:drop-shadow(0 0 3px rgba(255,236,181,.55));transition:transform 1.25s cubic-bezier(.16,1,.3,1),filter 1.3s ease}
+.transitioning .aura{filter:blur(7px)}
+.transitioning .sparkField i{width:2px;height:2px}
+@keyframes celestialCorona{0%{opacity:.2;transform:scale(.85) rotate(0)}23%{opacity:.9;transform:scale(1.4) rotate(38deg)}55%{opacity:.55;transform:scale(1.22) rotate(76deg)}100%{opacity:.28;transform:scale(1) rotate(95deg)}}
+@media(prefers-reduced-motion:reduce){.transitioning{filter:none!important}.transitioning::after{animation:none!important}.transitioning .sky{transition:none!important}}
