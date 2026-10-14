@@ -392,3 +392,5 @@
  backdrop-filter:blur(2px) saturate(110%)!important;
  -webkit-backdrop-filter:blur(2px) saturate(110%)!important;
 }
+
+.videoPlayerCard{display:flex!important;flex-direction:column!important;padding:10px!important;overflow:hidden!important;min-height:0!important}
