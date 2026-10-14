@@ -105,6 +105,45 @@ const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HT
     return ()=>{if(workspaceRaf.current!==null)cancelAnimationFrame(workspaceRaf.current)};
   },[]);
 
+ // A one-time, partial carousel nudge teaches newly signed-in members to swipe.
+ // It never changes the selected page and yields immediately to real touch input.
+ useEffect(()=>{
+   if(homeSignedIn!==true)return;
+   const key="1muslim:swipe-hint-seen-v1";
+   try{if(localStorage.getItem(key)==="1")return}catch{}
+   const viewport=workspaceRef.current;
+   if(!viewport)return;
+   let cancelled=false;
+   let raf=0;
+   let timer=0;
+   const stop=()=>{cancelled=true;cancelAnimationFrame(raf);clearTimeout(timer)};
+   const play=()=>{
+     if(cancelled||viewport.scrollLeft>2||document.visibilityState!=="visible")return;
+     if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+       try{localStorage.setItem(key,"1")}catch{}
+       return;
+     }
+     const distance=Math.min(78,viewport.clientWidth*.17);
+     const duration=1050;
+     const start=performance.now();
+     const ease=(t:number)=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+     const tick=(now:number)=>{
+       if(cancelled)return;
+       const t=Math.min(1,(now-start)/duration);
+       const offset=distance*Math.sin(Math.PI*ease(t));
+       viewport.scrollLeft=offset;
+       if(t<1)raf=requestAnimationFrame(tick);
+       else{viewport.scrollLeft=0;try{localStorage.setItem(key,"1")}catch{}}
+     };
+     raf=requestAnimationFrame(tick);
+   };
+   const interrupt=()=>{stop();viewport.scrollTo({left:0,behavior:"instant"})};
+   viewport.addEventListener("pointerdown",interrupt,{once:true});
+   viewport.addEventListener("touchstart",interrupt,{once:true});
+   viewport.addEventListener("wheel",interrupt,{once:true});
+   timer=window.setTimeout(play,1250);
+   return ()=>{stop();viewport.removeEventListener("pointerdown",interrupt);viewport.removeEventListener("touchstart",interrupt);viewport.removeEventListener("wheel",interrupt)};
+ },[homeSignedIn]);
  const moveWorkspace=(page:number)=>{const next=Math.max(0,Math.min(3,page));workspaceRef.current?.scrollTo({left:next*workspaceRef.current.clientWidth,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});setWorkspacePage(next);try{sessionStorage.setItem("1muslim:workspace-index",String(next))}catch{}};
  const [replacementPending,setReplacementPending]=useState(false);const [editWidgets,setEditWidgets]=useState(false);const [galleryOpen,setGalleryOpen]=useState(false);const [navCollapsed,setNavCollapsed]=useState(false);const navCollapsedRef=useRef(false);const [navMotionStarted,setNavMotionStarted]=useState(false);const [hiddenWidgets,setHiddenWidgets]=useState<string[]>(()=>spaces.filter(w=>w.name!=="Live").map(w=>w.name));const [widgetLimitNotice,setWidgetLimitNotice]=useState("");const [quranResume,setQuranResume]=useState("1:1");const [widgetLayout,setWidgetLayout]=useState<WidgetLayout[]>(DEFAULT_LAYOUT);const [dragged,setDragged]=useState<string|null>(null);const [layoutPreview,setLayoutPreview]=useState<WidgetLayout[]|null>(null);const layoutPreviewRef=useRef<WidgetLayout[]|null>(null);const magneticGesture=useRef<{x:number;y:number;name:string;pointerId:number}|null>(null);const holdTimer=useRef<ReturnType<typeof setTimeout>|null>(null);const holdStart=useRef<{x:number;y:number}|null>(null);const activeDrag=useRef<{pointerId:number;name:string}|null>(null);const dragHover=useRef<string|null>(null);const magneticOrigin=useRef<WidgetLayout[]|null>(null);const [magneticZone,setMagneticZone]=useState<string|null>(null);const magneticLast=useRef(0);const magneticPointer=useRef<{element:HTMLElement;startX:number;startY:number;lastX:number;lastY:number;vx:number;vy:number;time:number}|null>(null);const magneticFrame=useRef<number|null>(null);const [motionMode,setMotionMode]=useState<"cinematic"|"balanced"|"minimal">("balanced");const undoStack=useRef<WidgetLayout[][]>([]);const [layoutSettled,setLayoutSettled]=useState(true);const settleTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  useEffect(()=>{try{const saved=localStorage.getItem("1muslim-widget-motion");if(saved==="cinematic"||saved==="balanced"||saved==="minimal")setMotionMode(saved)}catch{}const motion=(e:Event)=>{const mode=(e as CustomEvent<{mode:string}>).detail?.mode;if(mode==="cinematic"||mode==="balanced"||mode==="minimal")setMotionMode(mode)};const arrange=()=>setEditWidgets(v=>!v);const undo=()=>{const previous=undoStack.current.pop();if(previous)setWidgetLayout(previous)};const reset=()=>{undoStack.current.push(widgetLayout);setWidgetLayout(DEFAULT_LAYOUT)};window.addEventListener("1muslim:widget-motion",motion);window.addEventListener("1muslim:widgets-arrange",arrange);window.addEventListener("1muslim:widgets-undo",undo);window.addEventListener("1muslim:widgets-reset",reset);return()=>{window.removeEventListener("1muslim:widget-motion",motion);window.removeEventListener("1muslim:widgets-arrange",arrange);window.removeEventListener("1muslim:widgets-undo",undo);window.removeEventListener("1muslim:widgets-reset",reset)}},[widgetLayout]);
