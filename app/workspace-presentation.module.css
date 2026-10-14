@@ -329,3 +329,13 @@
  .fillArea .slide .content{min-height:0!important;height:100%!important}
  .fillArea .slide .content > [data-widget]{min-height:0!important;height:100%!important}
 }
+
+/* Third workspace: the existing Daily Post publishing module, embedded in glass. */
+.postStudioCard{display:flex!important;flex-direction:column!important;justify-content:stretch!important;overflow:hidden!important;padding:clamp(10px,2vw,18px)!important;gap:8px!important}
+.postStudioHeader{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;color:#f6dba4;letter-spacing:.13em;font-size:clamp(11px,2.6vw,15px);padding:4px 6px}
+.postStudioHeader span{letter-spacing:normal;color:#d4e8c9;font-size:1.2em}
+.postStudioBody{flex:1 1 0%;min-height:0;width:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#b9a26a77 transparent}
+.postStudioBody :global(.ummah-shell){width:100%;min-height:100%;box-sizing:border-box}
+.postStudioBody :global(.ummah-card){width:100%;max-width:100%;box-sizing:border-box;margin:0 auto}
+.postStudioFeedLink{flex:0 0 auto;display:block;text-align:center;padding:9px 12px;border:1px solid #e1c78d66;border-radius:999px;color:#f4dbac!important;background:#163e32a8;font-size:12px;text-decoration:none}
+@media(max-width:700px){.postStudioCard{padding:9px!important}.postStudioBody :global(.ummah-card){padding:10px!important}}
