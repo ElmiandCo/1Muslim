@@ -450,3 +450,38 @@
 }
 
 .quranAudioRow{display:flex;align-items:center;justify-content:center;flex:0 0 auto;min-height:42px}.quranAudioButton{border:1px solid rgba(237,210,150,.55);border-radius:999px;padding:10px 20px;color:#fff0ce;background:rgba(4,35,31,.68);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-size:13px;letter-spacing:.05em;cursor:pointer;min-height:42px}.quranAudioButton:disabled{opacity:.55;cursor:wait}.quranAudioButton:focus-visible{outline:2px solid #f4d994;outline-offset:3px}
+
+/* Qur'an reading-card refinement: compact play control belongs inside the
+   verse glass pane, leaving the outer canvas to the reading experience. */
+.fillArea .slide[data-workspace-page="1"] .quranVerseArticle{
+ position:relative!important;
+ flex:1 1 100%!important;
+ gap:clamp(14px,2.4vh,26px)!important;
+ padding:clamp(20px,5vw,38px) clamp(16px,4vw,30px)!important;
+}
+.quranInlinePlay{
+ display:grid;
+ place-items:center;
+ align-self:center;
+ flex:0 0 auto;
+ width:clamp(52px,10vw,64px);
+ height:clamp(52px,10vw,64px);
+ margin-top:clamp(6px,1.4vh,16px);
+ padding:0;
+ border:1px solid rgba(248,223,166,.72);
+ border-radius:50%;
+ background:linear-gradient(145deg,rgba(19,78,65,.62),rgba(6,32,35,.52));
+ color:#fff4d8;
+ box-shadow:0 0 0 5px rgba(232,211,162,.07),0 9px 25px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.24);
+ backdrop-filter:blur(12px);
+ -webkit-backdrop-filter:blur(12px);
+ cursor:pointer;
+ transition:transform .25s ease,box-shadow .25s ease;
+}
+.quranInlinePlay:hover{transform:scale(1.06);box-shadow:0 0 0 7px rgba(232,211,162,.12),0 12px 27px rgba(0,0,0,.24)}
+.quranInlinePlay:focus-visible{outline:2px solid #ffe3a5;outline-offset:5px}
+.quranInlinePlay:disabled{opacity:.6;cursor:wait}
+.quranInlinePlay>span{font-size:clamp(22px,5vw,27px);line-height:1;transform:translateX(1px)}
+.quranInlineSpinner{width:22px;height:22px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff4d8;border-radius:50%;animation:quranPlaySpin .9s linear infinite}
+@keyframes quranPlaySpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.quranInlinePlay{transition:none}.quranInlineSpinner{animation:none}}
