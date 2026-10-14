@@ -4,7 +4,7 @@ import {usePathname} from "next/navigation";
 import "./hudhud-motion-shell.css";
 
 /** Shared, opt-in page motion framework. Never alters page scroll ownership. */
-const supported=["/community","/profile","/streaming","/videos"];
+const supported=["/community","/profile","/streaming","/videos","/messages"];
 export default function HudHudMotionShell({children}:{children:ReactNode}){
  const pathname=usePathname()||"/";
  const eligible=supported.includes(pathname);
