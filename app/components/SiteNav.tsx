@@ -135,7 +135,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   useEffect(()=>{setNavHidden(false);setPageGlow(true);const t=setTimeout(()=>setPageGlow(false),1100);return()=>clearTimeout(t)},[pathname]);
   useEffect(()=>{let last=window.scrollY;const onScroll=()=>{const y=window.scrollY;const delta=y-last;if(y<36)setNavHidden(false);else if(Math.abs(delta)>7&&openMenu!=="mobile")setNavHidden(delta>0);last=y};window.addEventListener("scroll",onScroll,{passive:true});return()=>window.removeEventListener("scroll",onScroll)},[openMenu]);
   const [mobilePanelVisible,setMobilePanelVisible]=useState(false);
-  useEffect(()=>{if(openMenu==="mobile")setMobilePanelVisible(true);else if(mobilePanelVisible){const timer=window.setTimeout(()=>setMobilePanelVisible(false),620);return()=>window.clearTimeout(timer)}},[openMenu,mobilePanelVisible]);
+  useEffect(()=>{if(openMenu==="mobile")setMobilePanelVisible(true);else if(mobilePanelVisible){const timer=window.setTimeout(()=>setMobilePanelVisible(false),850);return()=>window.clearTimeout(timer)}},[openMenu,mobilePanelVisible]);
   useEffect(()=>{document.body.classList.toggle("oneMuslimNavExpanded",openMenu==="mobile");return()=>document.body.classList.remove("oneMuslimNavExpanded")},[openMenu]);
 
   useEffect(() => {
@@ -337,21 +337,32 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
 
     <button type="button" className={`mobileMenuButton ${openMenu === "mobile" ? "isOpen" : ""}`} aria-label={openMenu === "mobile" ? "Close navigation menu" : "Open navigation menu"} aria-expanded={openMenu === "mobile"} onClick={() => setOpenMenu(openMenu === "mobile" ? null : "mobile")}><span/><span/><span/></button>
 
-    {mobilePanelVisible && <div className={`mobileMenuPanel ${openMenu==="mobile"?"oneMuslimMenuEntering":"oneMuslimMenuLeaving"}`} role="dialog" aria-label="1Muslim navigation" aria-hidden={openMenu!=="mobile"}>
-      <div className="mobileMenuHeader"><strong>Explore 1Muslim</strong><button type="button" onClick={closeMenu} aria-label="Close menu">×</button></div>
-      <Link href="/" className="mobileMenuHome" onClick={closeMenu}><span>Home</span><small>الرئيسية</small></Link>
-      <section><span className="mobileMenuSection">EXPLORE</span>
-        {exploreGroups.flatMap(g => g.items).map(item => <MenuLink key={item.href} href={item.href} label={item.label} ar={item.ar} onClick={closeMenu} />)}
-      </section>
-      <section><span className="mobileMenuSection">LIVE</span>
-        {liveItems.map(item => <MenuLink key={item.href} href={item.href} label={item.label} ar={item.ar} onClick={closeMenu} />)}
-      </section>
-      {user && <section><span className="mobileMenuSection">ACCOUNT</span>
-        <MenuLink href="/notifications" label={<>Notifications {unreadCount > 0 ? `(${unreadCount > 99 ? "99+" : unreadCount})` : ""}</>} ar="الإشعارات" onClick={closeMenu}/>
-        <MenuLink href="/profile" label="Profile" ar="الملف الشخصي" onClick={closeMenu}/>
-        <MenuLink href="/settings" label="Settings" ar="الإعدادات" onClick={closeMenu}/>
-        <MenuLink href="/support" label="Support" ar="الدعم" onClick={closeMenu}/>
-      </section>}
+    {mobilePanelVisible && <div className={`mobileMenuPanel muslimNavGallery ${openMenu==="mobile"?"oneMuslimMenuEntering":"oneMuslimMenuLeaving"}`} role="dialog" aria-modal="true" aria-label="1Muslim navigation" aria-hidden={openMenu!=="mobile"} inert={openMenu!=="mobile"}>
+      <div className="mobileMenuHeader"><div><small className="muslimNavKicker">✦ YOUR 1MUSLIM SPACE</small><strong>Explore 1Muslim</strong><span className="muslimNavSubhead">Choose where you want to go.</span></div><button type="button" onClick={closeMenu} aria-label="Close navigation">×</button></div>
+      <div className="muslimNavGalleryGrid">
+        <Link href="/" className="muslimNavTile muslimNavHome" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">⌂</span><span className="muslimNavTileText"><strong>Home</strong><small>الرئيسية</small></span></Link>
+        <Link href="/quran-studio" className="muslimNavTile muslimNavFeatured" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">۞</span><span className="muslimNavTileText"><strong>Qur’an Studio</strong><small>القرآن</small></span></Link>
+        <Link href="/streaming" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">◉</span><span className="muslimNavTileText"><strong>Live Now</strong><small>مباشر</small></span></Link>
+        <Link href="/community" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">✦</span><span className="muslimNavTileText"><strong>Community</strong><small>المجتمع</small></span></Link>
+      </div>
+      <section className="muslimNavSection"><span className="mobileMenuSection">✧ DISCOVER & LEARN</span><div className="muslimNavGalleryGrid">
+        <Link href="/#paths" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">✧</span><span className="muslimNavTileText"><strong>Learn</strong><small>تعلّم</small></span></Link>
+        <Link href="/learn/elm-tent" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">☪</span><span className="muslimNavTileText"><strong>Elm Tent</strong><small>الخيمة</small></span></Link>
+        <Link href="/streaming/library" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">▣</span><span className="muslimNavTileText"><strong>Videos</strong><small>الفيديوهات</small></span></Link>
+        <Link href="/videos" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">▷</span><span className="muslimNavTileText"><strong>1Muslim Videos</strong><small>مقاطع</small></span></Link>
+        <Link href="/ashab" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">♧</span><span className="muslimNavTileText"><strong>Ashab</strong><small>أصحاب</small></span></Link>
+        <Link href="/find" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">⌕</span><span className="muslimNavTileText"><strong>Find People</strong><small>بحث</small></span></Link>
+      </div></section>
+      <section className="muslimNavSection"><span className="mobileMenuSection">◉ LIVE & CREATE</span><div className="muslimNavGalleryGrid">
+        <Link href="/streaming/go-live" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">●</span><span className="muslimNavTileText"><strong>Go Live</strong><small>ابدأ البث</small></span></Link>
+        <Link href="/streaming/library" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">◷</span><span className="muslimNavTileText"><strong>Recordings</strong><small>التسجيلات</small></span></Link>
+      </div></section>
+      {user && <section className="muslimNavSection muslimNavAccount"><span className="mobileMenuSection">⚙ YOUR SPACE & SETTINGS</span><div className="muslimNavGalleryGrid">
+        <Link href="/profile" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">◎</span><span className="muslimNavTileText"><strong>Profile</strong><small>الملف الشخصي</small></span></Link>
+        <Link href="/notifications" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">♧</span><span className="muslimNavTileText"><strong>Notifications {unreadCount>0?`(${unreadCount>99?"99+":unreadCount})`:""}</strong><small>الإشعارات</small></span></Link>
+        <Link href="/settings" className="muslimNavTile muslimNavSettings" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">⚙</span><span className="muslimNavTileText"><strong>Settings</strong><small>الإعدادات</small></span></Link>
+        <Link href="/support" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">✧</span><span className="muslimNavTileText"><strong>Support</strong><small>الدعم</small></span></Link>
+      </div></section>}
       <div className="mobileMenuFooter"><ThemeToggle/>{user ? <button type="button" className="mobileMenuSignOut" onClick={signOut}>Sign out</button> : <Link href="/auth" onClick={closeMenu}>Sign in</Link>}</div>
     </div>}
     <style jsx>{`
