@@ -658,7 +658,7 @@
 /* Preview: unified floating navigation and more usable home canvas */
 .control{padding-bottom:max(28px,env(safe-area-inset-bottom))!important}
 .control .controlHeader{position:relative;z-index:4;display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;max-width:1120px;width:100%;margin:8px auto 4px!important;padding:9px 14px!important;border:1px solid #e3d6a468;border-radius:25px;background:linear-gradient(145deg,#164538e8,#0b3028ed);box-shadow:0 14px 40px #00160f65,inset 0 1px #ffffff27;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);transition:opacity .48s ease,transform .62s cubic-bezier(.22,1,.36,1),max-height .48s ease,padding .48s ease,margin .48s ease,border-width .48s ease;transform-origin:50% 0}
-.control .controlHeaderCollapsed{opacity:0;transform:translateY(-25px) scale(.88);pointer-events:none;max-height:0!important;min-height:0!important;overflow:hidden;margin:0 auto!important;padding:0!important;border-width:0}
+.control .controlHeaderCollapsed{pointer-events:none;overflow:hidden}
 .control .controlHeader .searchDock{order:3;flex:1 1 100%;width:100%;max-width:none;height:39px;min-height:39px;margin:0!important;padding:3px 9px!important;gap:8px;border-radius:14px;background:#07291f9c;box-shadow:inset 0 1px #ffffff15}
 .control .controlHeader .searchDock input{font-size:12px!important;line-height:1.2}
 .control .controlHeader .searchDock .orb{width:27px;height:27px;flex-basis:27px;box-shadow:none}
@@ -724,7 +724,7 @@
 
 /* HudHud-driven navigation choreography: anticipate, rise, then settle (~2s). */
 .control .controlHeader{transform-origin:50% 0;will-change:transform,opacity,max-height;transition:transform 1.95s cubic-bezier(.2,.75,.2,1),opacity 1.65s ease,max-height 1.9s cubic-bezier(.2,.75,.2,1),margin 1.9s ease,padding 1.9s ease,border-width 1.9s ease;max-height:105px}
-.control.navMotionCollapsed .controlHeader.controlHeaderCollapsed{animation:navLiftAway 1.95s both;max-height:0!important;opacity:0;pointer-events:none;margin:0 auto!important;padding:0!important;border-width:0;overflow:hidden}
+.control.navMotionCollapsed .controlHeader.controlHeaderCollapsed{animation:navLiftAway 1.95s both;pointer-events:none;overflow:hidden}
 .control.navMotionExpanded .controlHeader{animation:navReturn 1.95s both}
 @keyframes navLiftAway{0%{transform:translateY(0) scale(1);opacity:1;max-height:105px}20%{transform:translateY(10px) scale(1.015);opacity:1;max-height:105px}42%{transform:translateY(0) scale(.99);opacity:1;max-height:105px}80%{transform:translateY(-90px) scale(.94);opacity:.2;max-height:45px}100%{transform:translateY(-125px) scale(.9);opacity:0;max-height:0}}
 @keyframes navReturn{0%{transform:translateY(-90px) scale(.94);opacity:0}30%{transform:translateY(8px) scale(1.01);opacity:.85}70%{transform:translateY(-3px) scale(.995);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
@@ -772,3 +772,47 @@
 }
 @media(max-width:390px){.control .controlHeader:not(.controlHeaderCollapsed){padding:8px!important;gap:6px!important}.control .guestWelcome{padding:14px!important}}
 @media(prefers-reduced-motion:reduce){.control .guestWelcome a{transition:none}}
+
+/* One shared 1950ms timeline: header space, orb travel and surface response. */
+.control.navMotionCollapsed .controlHeader.controlHeaderCollapsed{
+ animation:hhNavExit 1.95s cubic-bezier(.22,.78,.18,1) both!important;
+ overflow:hidden!important;flex-shrink:0!important;min-height:0!important;
+}
+.control.navMotionExpanded .controlHeader{
+ animation:hhNavEnter 1.95s cubic-bezier(.22,.78,.18,1) both!important;
+ overflow:hidden!important;flex-shrink:0!important;
+}
+@keyframes hhNavExit{
+ 0%{transform:translateY(0) scale(1);opacity:1;height:74px;max-height:110px;margin-top:8px;margin-bottom:4px;padding-top:9px;padding-bottom:9px;border-width:1px}
+ 20%{transform:translateY(9px) scale(1.01);opacity:1;height:74px;max-height:110px;margin-top:8px;margin-bottom:4px;padding-top:9px;padding-bottom:9px;border-width:1px}
+ 42%{transform:translateY(-3px) scale(.997);opacity:1;height:74px;max-height:110px;margin-top:8px;margin-bottom:4px;padding-top:9px;padding-bottom:9px;border-width:1px}
+ 76%{transform:translateY(-62px) scale(.96);opacity:.28;height:28px;max-height:36px;margin-top:2px;margin-bottom:0;padding-top:0;padding-bottom:0;border-width:0}
+ 100%{transform:translateY(-95px) scale(.94);opacity:0;height:0;max-height:0;margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0;border-width:0}
+}
+@keyframes hhNavEnter{
+ 0%{transform:translateY(-95px) scale(.94);opacity:0;height:0;max-height:0;margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0;border-width:0}
+ 30%{transform:translateY(-8px) scale(.98);opacity:.75;height:40px;max-height:52px;margin-top:2px;margin-bottom:0;padding-top:4px;padding-bottom:4px;border-width:1px}
+ 64%{transform:translateY(8px) scale(1.01);opacity:1;height:74px;max-height:110px;margin-top:8px;margin-bottom:4px;padding-top:9px;padding-bottom:9px;border-width:1px}
+ 85%{transform:translateY(-3px) scale(.998);opacity:1;height:74px;max-height:110px;margin-top:8px;margin-bottom:4px;padding-top:9px;padding-bottom:9px;border-width:1px}
+ 100%{transform:translateY(0) scale(1);opacity:1;height:74px;max-height:110px;margin-top:8px;margin-bottom:4px;padding-top:9px;padding-bottom:9px;border-width:1px}
+}
+.control.navMotionCollapsed .intro,.control.navMotionExpanded .intro,
+.control.navMotionCollapsed .guestWelcome,.control.navMotionExpanded .guestWelcome,
+.control.navMotionCollapsed .surfaceArtwork,.control.navMotionExpanded .surfaceArtwork{
+ animation:hhContentBreathe 1.95s cubic-bezier(.22,.78,.18,1) both!important;
+}
+@keyframes hhContentBreathe{
+ 0%{transform:translateY(0) scale(1)}
+ 22%{transform:translateY(6px) scale(1.012)}
+ 48%{transform:translateY(-4px) scale(1.025)}
+ 76%{transform:translateY(1px) scale(1.008)}
+ 100%{transform:translateY(0) scale(1)}
+}
+@media(max-width:700px){
+ .control.navMotionCollapsed .controlHeader.controlHeaderCollapsed,.control.navMotionExpanded .controlHeader{animation-duration:1.95s!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .control.navMotionCollapsed .controlHeader.controlHeaderCollapsed{animation:none!important;opacity:0!important;height:0!important;max-height:0!important;margin:0!important;padding:0!important;border-width:0!important}
+ .control.navMotionExpanded .controlHeader{animation:none!important}
+ .control.navMotionCollapsed .intro,.control.navMotionExpanded .intro,.control.navMotionCollapsed .guestWelcome,.control.navMotionExpanded .guestWelcome,.control.navMotionCollapsed .surfaceArtwork,.control.navMotionExpanded .surfaceArtwork{animation:none!important}
+}
