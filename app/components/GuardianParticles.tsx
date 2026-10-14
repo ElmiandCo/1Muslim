@@ -21,7 +21,7 @@ export default function GuardianParticles({ active, stream, foreground = false }
       size: .6 + (i % 4) * .35,
       depth: (i % 3) / 3,
     }));
-    let width = 1, height = 1, frame = 0, last = 0, visible = true;
+    let width = 1, height = 1, frame = 0, last = 0, visible = true, smoothedEnergy = 0;
     const resize = () => {
       const rect = host.getBoundingClientRect();
       width = Math.max(1, rect.width); height = Math.max(1, rect.height);
@@ -56,13 +56,15 @@ export default function GuardianParticles({ active, stream, foreground = false }
         for (let i = 0; i < buffer.length; i++) energy += buffer[i];
         energy = Math.min(1, energy / buffer.length / 105);
       }
+      smoothedEnergy += (energy - smoothedEnergy) * (energy > smoothedEnergy ? .13 : .045);
       const cx = width * .5, cy = height * .51;
       for (const d of dots) {
         const angle = d.angle + (reduced ? 0 : now * d.speed);
         const rx = width * (.16 + d.radius * .32), ry = height * (.10 + d.radius * .27);
-        const x = cx + Math.cos(angle) * rx;
+        const magnetic = foreground ? .035 : .085;
+        const x = cx + Math.cos(angle + Math.sin(now * .00018 + d.angle) * magnetic) * rx;
         const y = cy + Math.sin(angle) * ry + (reduced ? 0 : Math.sin(now * .00035 + d.angle) * 5);
-        const pulse = active ? 1 + energy * 1.8 : 1;
+        const pulse = active ? 1 + smoothedEnergy * 1.35 : 1;
         const alpha = (foreground ? .26 : .47) * (.55 + d.depth) * (active ? 1.4 : 1);
         context.beginPath();
         context.fillStyle = `rgba(${foreground ? "129,211,255" : "42,155,255"},${Math.min(.9, alpha)})`;
