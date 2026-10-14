@@ -564,5 +564,18 @@ export default function AuthPage() {
 .authPreview.authShahada .authAffirm input{accent-color:#1e956d}
 .authPreview.authEmbedded .authPanel{overflow-y:auto!important}
 @media(max-width:600px){.authPreview.authShahada .shahadaStudioCompact{min-height:120px;padding:10px;gap:8px}.authPreview.authShahada .shahadaMicRing{width:72px;height:72px}.authPreview.authShahada .shahadaMicRing b{font-size:29px}.authPreview.authShahada .shahadaUnified{gap:10px}.authPreview.authShahada .shahadaStudioCopy p{font-size:12px}}
+/* Keep the Shahada overlay navigation compact on phones: never let the center label force overflow. */
+.authPreview.authShahada .authSimpleHeader{max-width:100%!important;min-width:0!important;overflow:hidden!important}
+.authPreview.authShahada .authNavBrand{min-width:0!important;flex:0 1 auto!important;white-space:nowrap!important}
+.authPreview.authShahada .authNavSearch{min-width:0!important;flex:1 1 0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.authPreview.authShahada .authNavActions{flex:0 0 auto!important;display:flex!important;align-items:center!important;gap:6px!important}
+@media(max-width:650px){
+ .authPreview.authShahada .authSimpleHeader{padding:7px 9px!important;gap:7px!important}
+ .authPreview.authShahada .authNavBrand strong{font-size:clamp(12px,3.5vw,17px)!important;letter-spacing:.03em!important}
+ .authPreview.authShahada .authNavBrand img{width:30px!important;height:30px!important;object-fit:contain!important}
+ .authPreview.authShahada .authNavSearch{font-size:10px!important;letter-spacing:.02em!important}
+ .authPreview.authShahada .authNavActions a,.authPreview.authShahada .authNavActions button{width:36px!important;height:36px!important;min-width:36px!important;padding:0!important;display:grid!important;place-items:center!important}
+}
+@media(max-width:410px){.authPreview.authShahada .authNavSearch{display:none!important}.authPreview.authShahada .authNavBrand{flex:1 1 auto!important}}
 body:has(.authPreview) .muslimMobileDock{display:none!important}body:has(.authPreview){overflow:hidden!important;overscroll-behavior:none!important}`}</style></main>;
 }
