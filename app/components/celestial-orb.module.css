@@ -50,3 +50,19 @@
 .night .moon{box-shadow:0 0 5px #fff4cf99,0 0 15px #c4dcdb66,0 0 24px #c4dcdb22}
 .modeTrigger{right:-2px;bottom:-2px}
 @media(prefers-reduced-motion:reduce){.orb::after{transition:none!important}}
+
+/* Three restrained 2.6-second celestial transitions; no layout shift. */
+.transitioning{z-index:3;transform-origin:center;animation:orbBreath 2.6s cubic-bezier(.22,1,.36,1) both}
+.transitioning .aura{animation:orbHaloPulse 2.6s ease-in-out both}
+.transitioning .sparkField i{animation:orbSpark 1.4s ease-out var(--delay) both}
+.transitioning.variant0{animation:orbBreath 2.6s cubic-bezier(.22,1,.36,1) both}
+.transitioning.variant1{animation:orbSway 2.6s cubic-bezier(.22,1,.36,1) both}
+.transitioning.variant2{animation:orbFloat 2.6s cubic-bezier(.22,1,.36,1) both}
+.transitioning.variant1 .geometry{animation:orbTurn 2.6s cubic-bezier(.22,1,.36,1) both}
+.transitioning.variant2 .aura{animation:orbHaloPulse 2.6s ease-in-out both}
+@keyframes orbBreath{0%,100%{transform:scale(1)}18%{transform:scale(1.18)}40%{transform:scale(1.1)}65%{transform:scale(1.15)}}
+@keyframes orbSway{0%,100%{transform:scale(1) rotate(0)}20%{transform:scale(1.13) rotate(-8deg)}48%{transform:scale(1.19) rotate(7deg)}75%{transform:scale(1.08) rotate(-3deg)}}
+@keyframes orbFloat{0%,100%{transform:scale(1) translateY(0)}25%{transform:scale(1.14) translateY(-3px)}52%{transform:scale(1.21) translateY(-1px)}75%{transform:scale(1.07) translateY(1px)}}
+@keyframes orbHaloPulse{0%,100%{opacity:.45;transform:scale(.9)}24%{opacity:.9;transform:scale(1.6)}60%{opacity:.65;transform:scale(1.3)}}
+@keyframes orbTurn{0%{transform:rotate(0)}55%{transform:rotate(135deg)}100%{transform:rotate(180deg)}}
+@media(prefers-reduced-motion:reduce){.transitioning,.transitioning .geometry,.transitioning .aura,.transitioning .sparkField i{animation:none!important;transform:none!important}}
