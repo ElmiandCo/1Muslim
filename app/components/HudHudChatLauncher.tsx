@@ -62,6 +62,37 @@ export default function HudHudChatLauncher(){
  useEffect(()=>{let saved:"bottom"|"top"="bottom";try{saved=localStorage.getItem("1muslim-hudhud-orb-slot")==="top"?"top":"bottom"}catch{}setOrbSlot(saved);setPosition(slotPosition(saved));setDismissed(false);const resize=()=>{if(!drag.current){let current:"bottom"|"top"="bottom";try{current=localStorage.getItem("1muslim-hudhud-orb-slot")==="top"?"top":"bottom"}catch{}setPosition(slotPosition(current))}};window.addEventListener("resize",resize);return()=>window.removeEventListener("resize",resize)},[]);
  const [messages,setMessages]=useState<Message[]>([welcome]),[draft,setDraft]=useState(""),[pending,setPending]=useState<{url:string;name:string}|null>(null),[notice,setNotice]=useState("");
  const drag=useRef<{x:number;y:number;px:number;py:number}|null>(null),file=useRef<HTMLInputElement>(null),bottom=useRef<HTMLDivElement>(null),nextId=useRef(1);
+ // Temporarily dock beside the Qur'an workspace; restore the exact pre-dock
+ // screen coordinates rather than the default top/bottom slot.
+ const quranDockOrigin=useRef<{x:number;y:number}|null>(null);
+ const quranDocked=useRef(false);
+ useEffect(()=>{
+  const onFocus=(event:Event)=>{
+   if(pathname!=="/")return;
+   const active=(event as CustomEvent<{active:boolean}>).detail?.active===true;
+   if(active&&!quranDocked.current){
+    if(drag.current)return;
+    const button=orbButtonRef.current;
+    const rect=button?.getBoundingClientRect();
+    quranDockOrigin.current=rect?{x:rect.left,y:rect.top}:(orbCoords.current?{...orbCoords.current}:{...position});
+    quranDocked.current=true;
+    const widget=document.querySelector<HTMLElement>('[data-workspace-page="1"] [data-widget="Qur’an"]');
+    const bounds=widget?.getBoundingClientRect();
+    const diameter=button?.offsetWidth||54;
+    const x=bounds?Math.min(window.innerWidth-diameter-10,Math.max(10,bounds.right-diameter-12)):window.innerWidth-diameter-14;
+    const y=bounds?Math.min(window.innerHeight-diameter-20,Math.max(80,bounds.top+Math.min(105,bounds.height*.16))):Math.round(window.innerHeight*.38);
+    animateOrb({x:Math.round(x),y:Math.round(y)});
+   }else if(!active&&quranDocked.current){
+    quranDocked.current=false;
+    const origin=quranDockOrigin.current;
+    quranDockOrigin.current=null;
+    if(origin)animateOrb(origin);
+   }
+  };
+  window.addEventListener("1muslim:quran-workspace-focus",onFocus);
+  return()=>{window.removeEventListener("1muslim:quran-workspace-focus",onFocus);if(quranDocked.current&&quranDockOrigin.current){cancelOrbMotion();setPosition(quranDockOrigin.current);orbCoords.current=quranDockOrigin.current;quranDocked.current=false;quranDockOrigin.current=null}};
+ },[pathname]);
+
  useEffect(()=>{let live=true;const logo=new Image();logo.onload=()=>{if(live)setOrbReady(true)};logo.onerror=()=>{if(live)setOrbReady(true)};logo.src="/assets/hudhud-logo.PNG";if(logo.complete)setOrbReady(true);return()=>{live=false}},[]);
  useEffect(()=>{const s=createClient();let active=true;const load=async()=>{const {data:{user}}=await s.auth.getUser();if(!active)return;setUid(user?.id||null);setAdmin((user?.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");if(!user){setProfile(null);return}const {data}=await s.from("profiles").select("display_name,gender,avatar_gender,avatar_package,avatar_config,profile_accent").eq("id",user.id).maybeSingle();if(active)setProfile(data||null)};void load();const {data:sub}=s.auth.onAuthStateChange(()=>{void load()});return()=>{active=false;sub.subscription.unsubscribe()}},[]);
  useEffect(()=>{if(open)bottom.current?.scrollIntoView({block:"end",behavior:"smooth"})},[open,messages]);
