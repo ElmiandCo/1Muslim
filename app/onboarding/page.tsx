@@ -312,7 +312,7 @@ export default function OnboardingPage() {
       <span className="eyebrow">COMMUNITY VERIFICATION</span>
       <h1>Say the Shahada.</h1>
       <p className="lead">Begin with HudHud recording, or choose Arabic, English, or the written declaration below.</p>
-      <div className="voiceCard">
+      <div className={`voiceCard securityGuardianStage ${listening || recording ? "securityGuardianActive" : ""}`}><div className="securityGuardianArt" aria-hidden="true"/><div className="securityGuardianHeader"><span>HUDHUD / SECURE VOICE</span><span className="securityGuardianStatus">{listening || recording ? "● LISTENING" : "● STANDBY"}</span></div>
         <span className="eyebrow">SECURE · VOICE VERIFICATION</span>
         <button type="button" className={`hudhudRecord ${listening ? "isListening" : ""} ${verified ? "isVerified" : ""}`} aria-label={listening ? "Reset Shahada recording" : "Enable microphone and begin Shahada"} onClick={() => listening || recording ? resetShahada() : void startShahada()}>
           <span className="hudhudHalo" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{transform:`rotate(${i*30}deg) translateY(-58px)`,animationDelay:`${i*-.18}s`}}/>)}</span>
@@ -341,7 +341,20 @@ export default function OnboardingPage() {
       <div className="genderGrid"><button className={gender === "male" ? "genderCard selected" : "genderCard"} onClick={() => setGender("male")}><img src="/assets/avatars/default-male.jpg" alt="" /><strong>Male</strong><span>Use the male default avatar</span></button><button className={gender === "female" ? "genderCard selected" : "genderCard"} onClick={() => setGender("female")}><img src="/assets/avatars/Default-women.png" alt="" /><strong>Female</strong><span>Use the female default avatar</span></button></div>
       {message && <div className="error">{message}</div>}<button className="continue" onClick={() => void finish()} disabled={saving}>{saving ? "Saving…" : "Enter 1Muslim →"}</button><small className="fine">Gender is selected once during onboarding and cannot be changed.</small>
     </>}
-  </section><style jsx>{`/* BLACK SECURITY STUDIO: viewport-locked layout, compact controls, HudHud voice focus */
+  </section><style jsx>{`
+/* Premium guardian voice chamber. Asset: /public/assets/hudhud-security-guardian.webp */
+.onboardingPage .securityGuardianStage{position:relative!important;isolation:isolate;overflow:hidden!important;min-height:clamp(175px,29dvh,270px)!important;background:radial-gradient(ellipse at 50% 42%,#101617,#020303 76%)!important;border:1px solid #535c5c!important;box-shadow:inset 0 0 35px #000,0 0 30px #050c10!important}
+.onboardingPage .securityGuardianArt{position:absolute;inset:-10% -4%;z-index:-1;pointer-events:none;background-image:linear-gradient(0deg,#020303ed 0%,#0203032b 50%,#0203037d 100%),url('/assets/hudhud-security-guardian.webp');background-position:center,center 47%;background-repeat:no-repeat;background-size:cover,contain;opacity:.42;filter:saturate(.86);transform:scale(1.05);animation:guardianBreathe 12s ease-in-out infinite alternate}
+.onboardingPage .securityGuardianActive .securityGuardianArt{opacity:.72;animation:guardianListen 4s ease-in-out infinite alternate}
+.onboardingPage .securityGuardianHeader{position:relative;z-index:2;width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:9px;font-weight:700;letter-spacing:.17em;color:#cbd7d0;padding:4px 8px;border-bottom:1px solid #ffffff1f}
+.onboardingPage .securityGuardianStatus{color:#b4e8d2;text-shadow:0 0 8px #91edca80}
+.onboardingPage .securityGuardianStage .hudhudRecord{z-index:2;box-shadow:0 0 25px #7cdebb44!important;animation:guardianOrbFloat 5s ease-in-out infinite}
+.onboardingPage .securityGuardianActive .hudhudRecord{box-shadow:0 0 35px #a3e9d080!important;animation:guardianOrbFloat 2.4s ease-in-out infinite}
+@keyframes guardianBreathe{from{transform:scale(1.03) translateY(2px);filter:saturate(.75)}to{transform:scale(1.14) translateY(-8px);filter:saturate(1.2)}}
+@keyframes guardianListen{from{transform:scale(1.08);filter:brightness(.85)}to{transform:scale(1.2) translateY(-9px);filter:brightness(1.4)}}
+@keyframes guardianOrbFloat{0%,100%{transform:translateY(2px)}50%{transform:translateY(-5px)}}
+@media(prefers-reduced-motion:reduce){.onboardingPage .securityGuardianArt,.onboardingPage .securityGuardianStage .hudhudRecord{animation:none!important}}
+/* BLACK SECURITY STUDIO: viewport-locked layout, compact controls, HudHud voice focus */
 .onboardingPage{height:100dvh!important;min-height:0!important;overflow:hidden!important;background:#020303!important;color:#f2f4f1!important;display:flex!important;align-items:stretch!important;justify-content:center!important;padding:clamp(8px,1.5dvh,16px)!important;box-sizing:border-box!important}
 .onboardingPage .onboardingCard{height:100%!important;max-height:100%!important;min-height:0!important;width:min(100%,650px)!important;max-width:650px!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:none!important;box-sizing:border-box!important;background:linear-gradient(160deg,#080a09,#020303)!important;border:1px solid #46544b!important;border-radius:20px!important;padding:clamp(10px,2dvh,18px)!important;box-shadow:0 16px 60px #000!important}
 .onboardingPage .onboardingCard::-webkit-scrollbar{display:none}
