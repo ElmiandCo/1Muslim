@@ -10,6 +10,8 @@ export default function GuestShahadaWelcome({signedIn,dayMode}:{signedIn:boolean
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
  const [attempts,setAttempts]=useState(0);
+ const [voiceAttempts,setVoiceAttempts]=useState<number|null>(null);
+ useEffect(()=>{try{setVoiceAttempts(Math.max(0,Number(localStorage.getItem("1muslim:shahada-voice-attempts"))||0))}catch{setVoiceAttempts(0)}},[]);
  useEffect(()=>{if(signedIn!==false){setOpen(false);return}let timer:ReturnType<typeof setTimeout>;const show=()=>{if(document.visibilityState!=="visible")return;try{if(sessionStorage.getItem("1muslim:guest-gate-dismissed")==="yes")return}catch{}setOpen(true)};const restart=()=>{clearTimeout(timer);timer=setTimeout(show,5000)};const events=["pointerdown","keydown","touchstart","scroll"] as const;events.forEach(name=>window.addEventListener(name,restart,{passive:true}));document.addEventListener("visibilitychange",restart);restart();return()=>{clearTimeout(timer);events.forEach(name=>window.removeEventListener(name,restart));document.removeEventListener("visibilitychange",restart)}},[signedIn]);
  const close=()=>{setOpen(false);try{sessionStorage.setItem("1muslim:guest-gate-dismissed","yes")}catch{}};
  const signIn=async(e:React.FormEvent)=>{e.preventDefault();if(busy||attempts>=5)return;setBusy(true);setError("");const {error:authError}=await createClient().auth.signInWithPassword({email:email.trim(),password});setBusy(false);if(authError){setAttempts(v=>v+1);setError("Sign-in failed. Check your details or try again later.");return}close()};
@@ -19,7 +21,7 @@ export default function GuestShahadaWelcome({signedIn,dayMode}:{signedIn:boolean
  <section className="guestShahadaCard" role="dialog" aria-modal="true" aria-labelledby="guest-shahada-title">
  <button className="guestShahadaClose" type="button" aria-label="Close welcome" onClick={close}>×</button>
  <div className="guestParticleField" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:`${(i*37)%100}%`,top:`${(i*29)%100}%`,animationDelay:`${(i%9)*-.37}s`}}/>)}</div><span className="guestShahadaEyebrow">1MUSLIM <span aria-hidden="true">✦</span> بِسْمِ اللَّهِ</span>
- <h2 id="guest-shahada-title">Your way into <span>1Muslim.</span></h2>
+ <div className="guestVoiceCounter"><span>SHAHADA VOICE ATTEMPTS</span><strong>{voiceAttempts===null?"—":voiceAttempts.toLocaleString()}</strong><small>THIS DEVICE</small></div><h2 id="guest-shahada-title">Your way into <span>1Muslim.</span></h2>
  <p className="guestShahadaLead">Choose your path. Returning members can sign in; new members can begin with HudHud and the Shahada.</p>
  <div className="guestShahadaChoices"><Link onClick={close} href="/auth?shahada=1&method=audio">✦ Shahada Voice</Link><button type="button" onClick={()=>document.getElementById("guest-existing-signin")?.scrollIntoView({behavior:"smooth",block:"center"})}>↗ Sign In</button></div><div className="guestAlternative"><Link onClick={close} href="/auth?shahada=1&method=declaration">Written Shahada instead →</Link></div>
  <div className="guestShahadaDivider" id="guest-existing-signin"><span>Already have an account? Email or Google</span></div>
@@ -60,6 +62,7 @@ export default function GuestShahadaWelcome({signedIn,dayMode}:{signedIn:boolean
  .guestShahadaCard form{display:grid;gap:10px;text-align:left}.guestShahadaCard label{font-size:12px;color:#d5dcca}.guestShahadaCard input{display:block;width:100%;box-sizing:border-box;margin-top:5px;border-radius:10px;padding:12px;border:1px solid #bbad7c65;background:#071d16;color:#fff;font-size:14px}.guestShahadaCard form button{cursor:pointer;margin-top:5px}.guestShahadaGoogle{width:100%;margin:11px 0 14px;padding:12px;border:1px solid #bca67180;border-radius:12px;background:#f9f7ef;color:#183c2c;font-weight:700;cursor:pointer}.guestShahadaCard button:disabled{opacity:.55}.guestShahadaCard small{font-size:11px;color:#c8d1c4}.guestShahadaCard small a{color:#f0d18b}.guestShahadaError{color:#ffc5b6!important}
  @keyframes guestShahadaIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.guestShahadaBackdrop{animation:none}}
 
+ .guestVoiceCounter{position:relative;z-index:1;display:flex;justify-content:center;align-items:center;gap:10px;margin:8px 0;padding:8px;border:1px solid #35443a;border-radius:12px;background:#080b09;color:#d8e1d9;font-size:10px;letter-spacing:.07em}.guestVoiceCounter strong{font-size:17px;font-variant-numeric:tabular-nums;color:#fff}.guestVoiceCounter small{font-size:9px;color:#a6b8a9}
 /* SECURITY MODE: the first guest entrance matches the black HudHud authentication screen. */
 .guestShahadaBackdrop,.guestShahadaDay.guestShahadaBackdrop{background:#000e!important;backdrop-filter:blur(17px) brightness(.38)!important}
 .guestShahadaCard,.guestShahadaDay .guestShahadaCard{background:radial-gradient(ellipse at 50% 12%,#141817 0%,#050606 44%,#000 100%)!important;border:1px solid #414a45!important;color:#f2f4f0!important;box-shadow:0 24px 90px #000,inset 0 1px #ffffff22!important}
