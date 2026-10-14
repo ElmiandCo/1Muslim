@@ -603,8 +603,8 @@ body:has(.omQuranPage) header:has(nav),body:has(.omQuranPage) [class*="bottomNav
 .omQuranPage .omQuranBackgroundOverlay{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
 .omQuranPage .omQuranBackgroundLeaving{position:absolute;inset:0;animation:omQuranImageDissolve 1.4s cubic-bezier(.2,.7,.2,1) forwards}
 .omQuranPage .omQuranBackground-original{background:linear-gradient(#07131d55,#07131d55),url("/assets/quran-studio-background.PNG") center/cover no-repeat}
-.omQuranPage .omQuranBackground-day{background:linear-gradient(#1029226e,#0920198c),url("/assets/control-center/backgrounds/workspace-day.png") center/cover no-repeat}
-.omQuranPage .omQuranBackground-night{background:linear-gradient(#061b19a1,#041412ae),url("/assets/control-center/backgrounds/workspace-night.png") center/cover no-repeat}
+.omQuranPage .omQuranBackground-day{background:linear-gradient(#1029226e,#0920198c),url("/assets/control-center/backgrounds/%20%20%20%20workspace-day.PNG") center/cover no-repeat}
+.omQuranPage .omQuranBackground-night{background:linear-gradient(#061b19a1,#041412ae),url("/assets/control-center/backgrounds/%20%20%20%20workspace-night.PNG") center/cover no-repeat}
 @keyframes omQuranImageDissolve{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.025)}}
 @media(prefers-reduced-motion:reduce){.omQuranPage .omQuranBackgroundLeaving{animation:none;opacity:0}}
 
