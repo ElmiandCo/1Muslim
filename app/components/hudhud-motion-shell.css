@@ -1,0 +1,12 @@
+/* HudHud Motion 2.0: shared opt-in framework. No global scroll locking. */
+.hh-motion-shell{--hh-duration:1950ms;--hh-ease:cubic-bezier(.2,.72,.18,1);min-width:0;isolation:isolate}
+.hh-motion-shell>.communityPage,.hh-motion-shell>.profilePage,.hh-motion-shell>.streamingPage,.hh-motion-shell>.hh-reels{min-width:0}
+.hh-motion-shell .siteNav{transform-origin:top center;backface-visibility:hidden}
+.hh-motion-shell.hh-shell-moving.hh-shell-collapsed .siteNav{animation:hhSharedNavExit var(--hh-duration) var(--hh-ease) both}
+.hh-motion-shell.hh-shell-moving.hh-shell-expanded .siteNav{animation:hhSharedNavEnter var(--hh-duration) var(--hh-ease) both}
+.hh-motion-shell.hh-shell-collapsed:not(.hh-shell-moving) .siteNav{transform:translate3d(0,-115%,0);opacity:0;pointer-events:none}
+.hh-motion-shell.hh-shell-moving :is(.communityPage,.profilePage,.streamingPage,.hh-reels) :is(.pageContent,.content,.mainContent,.communityFeed,.profileContent,.streamingContent){animation:hhSharedCamera var(--hh-duration) var(--hh-ease) both;transform-origin:50% 18%;backface-visibility:hidden}
+@keyframes hhSharedNavExit{0%{transform:translate3d(0,0,0) scale(1);opacity:1}20%{transform:translate3d(0,9px,0) scale(1.01);opacity:1}43%{transform:translate3d(0,-4px,0) scale(.995);opacity:1}82%{transform:translate3d(0,-90%,0) scale(.96);opacity:.12}100%{transform:translate3d(0,-115%,0) scale(.95);opacity:0;pointer-events:none}}
+@keyframes hhSharedNavEnter{0%{transform:translate3d(0,-115%,0) scale(.95);opacity:0}40%{transform:translate3d(0,7px,0) scale(1.012);opacity:1}75%{transform:translate3d(0,-3px,0) scale(.997)}100%{transform:translate3d(0,0,0) scale(1);opacity:1}}
+@keyframes hhSharedCamera{0%{transform:translate3d(0,0,0) scale(1)}23%{transform:translate3d(0,5px,0) scale(1.012)}51%{transform:translate3d(0,-4px,0) scale(1.022)}77%{transform:translate3d(0,1px,0) scale(1.007)}100%{transform:translate3d(0,0,0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.hh-motion-shell.hh-shell-moving .siteNav,.hh-motion-shell.hh-shell-moving :is(.communityPage,.profilePage,.streamingPage,.hh-reels) :is(.pageContent,.content,.mainContent,.communityFeed,.profileContent,.streamingContent){animation:none!important}}
