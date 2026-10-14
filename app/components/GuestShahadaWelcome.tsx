@@ -10,7 +10,7 @@ export default function GuestShahadaWelcome({signedIn,dayMode}:{signedIn:boolean
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
  const [attempts,setAttempts]=useState(0);
- useEffect(()=>{if(signedIn!==false){setOpen(false);return}const timer=window.setTimeout(()=>{try{if(localStorage.getItem("1muslim:guest-shahada-dismissed-v2")==="yes")return}catch{}setOpen(true)},12000);return()=>clearTimeout(timer)},[signedIn]);
+ useEffect(()=>{if(signedIn!==false){setOpen(false);return}const timer=window.setTimeout(()=>{try{if(localStorage.getItem("1muslim:guest-shahada-dismissed-v2")==="yes")return}catch{}setOpen(true)},2000);return()=>clearTimeout(timer)},[signedIn]);
  const close=()=>{setOpen(false);try{localStorage.setItem("1muslim:guest-shahada-dismissed-v2","yes")}catch{}};
  const signIn=async(e:React.FormEvent)=>{e.preventDefault();if(busy||attempts>=5)return;setBusy(true);setError("");const {error:authError}=await createClient().auth.signInWithPassword({email:email.trim(),password});setBusy(false);if(authError){setAttempts(v=>v+1);setError("Sign-in failed. Check your details or try again later.");return}close()};
  const google=async()=>{setBusy(true);setError("");const {error:authError}=await createClient().auth.signInWithOAuth({provider:"google",options:{redirectTo:`${window.location.origin}/auth/callback?next=/`}});if(authError){setError(authError.message);setBusy(false)}};
@@ -22,6 +22,7 @@ export default function GuestShahadaWelcome({signedIn,dayMode}:{signedIn:boolean
  <h2 id="guest-shahada-title">Welcome to <span>1Muslim.</span></h2>
  <p className="guestShahadaLead">Your journey begins here. Affirm the Shahada in your own voice or choose the written declaration.</p>
  <div className="guestShahadaChoices"><Link onClick={close} href="/auth?shahada=1&method=audio">🎙 Record Shahada</Link><Link onClick={close} href="/auth?shahada=1&method=declaration">✓ Written affirmation</Link></div>
+ <button className="guestShahadaExplore" type="button" onClick={close}>Explore as guest →</button>
  <div className="guestShahadaDivider"><span>Already a 1Muslim account holder?</span></div>
  <form onSubmit={signIn}><label>Email address<input autoComplete="username" type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address"/></label><label>Password<input autoComplete="current-password" type="password" required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password"/></label><button type="submit" disabled={busy||attempts>=5}>{attempts>=5?"Try again later":busy?"Signing in…":"Sign in →"}</button></form>
  <button className="guestShahadaGoogle" type="button" disabled={busy} onClick={google}>G &nbsp; Continue with Google</button>
@@ -30,6 +31,7 @@ export default function GuestShahadaWelcome({signedIn,dayMode}:{signedIn:boolean
  <small>New here? <Link href="/auth?shahada=1" onClick={close}>Create an account</Link> · <Link href="/auth" onClick={close}>Account help</Link></small>
  </section>
  <style>{`
+ .guestShahadaExplore{display:block;width:100%;padding:12px;margin:-6px 0 16px;border:1px solid #a8d8b26b;border-radius:13px;background:#ffffff12;color:#e8f6e9;font-weight:700;cursor:pointer;transition:background .25s ease,transform .25s ease}.guestShahadaExplore:hover{background:#ffffff22}.guestShahadaDay .guestShahadaExplore{color:#173c2e;background:#dcebe0}
  .guestShahadaCard{font-family:inherit!important;text-align:left;background:radial-gradient(ellipse at 18% 0%,#235944 0%,transparent 54%),radial-gradient(ellipse at 95% 95%,#193d36 0%,transparent 50%),#071914;border:1px solid #947a4e;box-shadow:0 25px 90px #000a;letter-spacing:normal}
  .guestShahadaCard:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.08;background-image:repeating-linear-gradient(45deg,transparent 0 37px,#d7bf7d 38px,transparent 39px 76px),repeating-linear-gradient(-45deg,transparent 0 37px,#d7bf7d 38px,transparent 39px 76px);mask-image:linear-gradient(to bottom,#000,transparent 85%)}
  .guestShahadaCard>*{position:relative;z-index:1}
