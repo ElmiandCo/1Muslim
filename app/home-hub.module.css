@@ -1059,3 +1059,15 @@
 /* Dedicated responsive day/night artwork for the scrollable dashboard gallery. */
 .workspaceScroller{background:linear-gradient(135deg,rgba(4,27,23,.55),rgba(3,18,17,.7)),url("/assets/control-center/backgrounds/workspace-night.PNG") center/cover no-repeat,#09251e}
 .day .workspaceScroller{background:linear-gradient(135deg,rgba(255,251,232,.24),rgba(240,247,225,.35)),url("/assets/control-center/backgrounds/workspace-day.PNG") center/cover no-repeat,#e5f0e2}
+
+/* Preview: accessible vertical workspace scrolling and aligned card rows. */
+.control .workspaceScroller{min-height:0;overflow-x:auto;overflow-y:hidden;touch-action:pan-x pan-y}
+.control .workspaceTrack{height:100%;min-height:0;align-items:stretch}
+.control .workspacePage{height:100%;min-height:0;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding-bottom:clamp(24px,6vh,64px);scrollbar-gutter:stable}
+.control .workspacePage .customGrid{align-content:start;align-items:stretch;grid-auto-flow:row;gap:clamp(12px,2.2vw,20px)!important;padding-bottom:20px}
+.control .workspacePage .customGrid>.widgetSlot{height:100%;min-height:190px;box-sizing:border-box}
+.control .workspacePage .customGrid>.sizestandard{min-height:230px}
+.control .workspacePage .customGrid>.sizecompact{min-height:190px}
+.control .workspacePage .customGrid>.widgetSlot .widgetCanvas{height:100%;min-height:inherit}
+.control .widgetQuietHint{display:block;font-size:11px;opacity:.64;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:650px){.control .workspacePage .customGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-rows:minmax(195px,auto)!important}.control .workspacePage .customGrid>.sizestandard,.control .workspacePage .customGrid>.sizefeatured{grid-column:span 2!important}.control .workspacePage .customGrid>.sizecompact{grid-column:span 1!important}.control .workspacePage{padding-bottom:42px}}
