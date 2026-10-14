@@ -97,7 +97,60 @@
 
 .slide[data-workspace-page='0'] .night{background-image:url('/assets/decorations/background-mosque-night.PNG')!important;background-position:center!important;background-size:cover!important;filter:none!important}
 .slide[data-workspace-page='0'] .day{background-image:url('/assets/decorations/background-mosque-day.PNG')!important;background-position:center!important;background-size:cover!important;filter:none!important}
-:global([class*='navMotionCollapsed']) .viewport{height:calc(100dvh - 120px)!important;min-height:560px!important;transition:height 850ms ease!important}
+
 :global([class*='navMotionCollapsed']) .content{min-height:100%!important;display:flex!important;flex-direction:column!important}
 :global([class*='navMotionCollapsed']) .content>[data-widget]{flex:1 1 auto!important;min-height:0!important}
 :global([class*='navMotionCollapsed']) .content>[data-widget]>[class*='widgetCanvas']{height:100%!important;min-height:100%!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important}
+
+/* Measured viewport fit: the outer region, carousel, cards and footer all
+   participate in the same flex layout rather than shifting independently. */
+.fillArea{
+  display:flex!important;
+  flex-direction:column!important;
+  height:var(--workspace-fit-height,560px)!important;
+  min-height:350px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  transition:height 700ms cubic-bezier(.2,.75,.25,1)!important;
+}
+.fillArea > :global([class*="widgetToolbar"]),
+.fillArea > :global([class*="hudhudWidgetTip"]){flex:0 0 auto!important}
+.fillArea .viewport{
+  flex:1 1 auto!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow-y:hidden!important;
+  transition:none!important;
+}
+.fillArea .track,.fillArea .slide{height:100%!important;min-height:0!important}
+.fillArea .slide{display:flex!important;flex-direction:column!important;overflow-y:auto!important}
+.fillArea .content{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:stretch!important;
+}
+.fillArea .content > [data-widget]{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+.fillArea .content > [data-widget] > [class*="widgetCanvas"]{
+  flex:1 1 auto!important;
+  height:100%!important;
+  min-height:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:space-between!important;
+}
+.fillArea > :global([class*="workspaceDownButton"]),
+.fillArea > :global([class*="workspacePager"]){flex:0 0 auto!important}
+@media(max-width:700px){
+ .fillArea .viewport{height:auto!important;max-height:none!important;min-height:0!important}
+ .fillArea .slide .content{min-height:100%!important}
+}
+@media(prefers-reduced-motion:reduce){.fillArea{transition:none!important}}
