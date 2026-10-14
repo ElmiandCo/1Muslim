@@ -677,3 +677,27 @@
 .control .customGrid .widgetCta{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:700px){.control .controlHeader{padding:7px 10px!important;border-radius:19px;margin-top:5px!important}.control .controlHeader .brand strong{font-size:15px}.control .controlHeader .brand small{font-size:7px}.control .controlHeader .headerActions>*{width:31px;height:31px}.control .controlHeader .searchDock{height:35px;min-height:35px}.control .intro{padding-bottom:6px!important}.control .widgetArea{padding-bottom:25px}}
 @media(prefers-reduced-motion:reduce){.control .controlHeader{transition:none!important}}
+
+
+/* Shared Islamic ornament within the dashboard surface; interactive widgets remain above it. */
+.control .decoratedSurface{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(160deg,#123f35b8,#082b25a6 60%,#133d318c)!important;border-color:#d8c48c55}
+.control .decoratedSurface>.surfaceArtwork{position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(180deg,#06291e1a,#082c2499 85%),url('/assets/decorations/islamic-white-ornament.PNG');background-repeat:no-repeat;background-position:center,center 45%;background-size:cover,min(95%,740px) auto;opacity:.35;filter:drop-shadow(0 0 24px #b6d4ad12);transition:opacity .8s ease,filter .8s ease}
+.control.day .decoratedSurface{background:linear-gradient(160deg,#f9f7e2a8,#e5f0ddac 75%,#e7f1e4c9)!important;border-color:#bca97691}
+.control.day .decoratedSurface>.surfaceArtwork{background-image:linear-gradient(180deg,#fffdfb4d,#f6f7e6a8 85%),url('/assets/decorations/islamic-gold-ornament.PNG');opacity:.26}
+.control .decoratedSurface>.widgetArea,.control .decoratedSurface>.searchHeading,.control .decoratedSurface>.searchViewport{position:relative;z-index:1}
+.control .surfaceSparkling>.surfaceArtwork{opacity:.48;filter:drop-shadow(0 0 24px #e2c37c55)}
+.control .surfaceSparkle{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none}
+.control .surfaceSparkle:before{content:"";position:absolute;inset:-45% -65%;background:linear-gradient(115deg,transparent 44%,#e7d6a400 47%,#f5d68a42 50%,#fff5c966 51%,#e7d6a400 54%,transparent 58%);transform:translateX(-65%) rotate(-8deg);animation:muslimArtSweep 1.05s cubic-bezier(.18,.75,.24,1) both}
+.control .surfaceSparkle i{position:absolute;display:block;width:5px;height:5px;border-radius:50%;background:#ffe6a0;box-shadow:0 0 8px 2px #f4d38899,0 0 19px 4px #e4bb584a;opacity:0;animation:muslimArtSparkle 1s ease-out both}
+.control .surfaceSparkle i:nth-child(1){left:11%;top:23%;animation-delay:.08s}
+.control .surfaceSparkle i:nth-child(2){left:32%;top:61%;animation-delay:.2s}
+.control .surfaceSparkle i:nth-child(3){left:53%;top:18%;animation-delay:.1s}
+.control .surfaceSparkle i:nth-child(4){left:78%;top:38%;animation-delay:.28s}
+.control .surfaceSparkle i:nth-child(5){left:89%;top:72%;animation-delay:.15s}
+.control .surfaceSparkle i:nth-child(6){left:21%;top:83%;animation-delay:.3s}
+.control .surfaceSparkle i:nth-child(7){left:66%;top:78%;animation-delay:.4s}
+.control .surfaceSparkle i:nth-child(8){left:44%;top:43%;animation-delay:.24s}
+@keyframes muslimArtSweep{from{transform:translateX(-65%) rotate(-8deg);opacity:0}18%{opacity:.65}to{transform:translateX(65%) rotate(-8deg);opacity:0}}
+@keyframes muslimArtSparkle{0%{transform:scale(.25) rotate(0);opacity:0}35%{transform:scale(1.5) rotate(45deg);opacity:.9}100%{transform:scale(.25) rotate(90deg);opacity:0}}
+@media(max-width:700px){.control .decoratedSurface>.surfaceArtwork{background-size:cover,130% auto;background-position:center,center 48%;opacity:.22}.control.day .decoratedSurface>.surfaceArtwork{opacity:.17}}
+@media(prefers-reduced-motion:reduce){.control .decoratedSurface>.surfaceArtwork{transition:none!important}.control .surfaceSparkle{display:none!important}}
