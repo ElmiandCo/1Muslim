@@ -448,3 +448,5 @@
  flex:0 0 auto!important;
  margin:0 auto!important;
 }
+
+.quranAudioRow{display:flex;align-items:center;justify-content:center;flex:0 0 auto;min-height:42px}.quranAudioButton{border:1px solid rgba(237,210,150,.55);border-radius:999px;padding:10px 20px;color:#fff0ce;background:rgba(4,35,31,.68);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-size:13px;letter-spacing:.05em;cursor:pointer;min-height:42px}.quranAudioButton:disabled{opacity:.55;cursor:wait}.quranAudioButton:focus-visible{outline:2px solid #f4d994;outline-offset:3px}
