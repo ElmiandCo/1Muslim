@@ -16,7 +16,7 @@ const welcome:Message={id:0,role:"hudhud",text:"Assalamu alaikum! I'm HudHud. As
 export default function HudHudChatLauncher(){
  const pathname=usePathname()||"/";
  const router=useRouter();
- const landingOrb=pathname==="/";
+ const landingOrb=pathname==="/"||["/community","/profile","/streaming","/videos"].some(p=>pathname===p||pathname.startsWith(p+"/"));
  const [orbSlot,setOrbSlot]=useState<"bottom"|"top">("bottom");
  const [orbInMotion,setOrbInMotion]=useState(false);
  const orbButtonRef=useRef<HTMLButtonElement|null>(null);
