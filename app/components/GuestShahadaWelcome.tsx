@@ -59,6 +59,25 @@ export default function GuestShahadaWelcome({signedIn,dayMode}:{signedIn:boolean
  .guestShahadaDivider{display:flex;align-items:center;gap:10px;font-size:12px;color:#e5cb90;margin:15px 0}.guestShahadaDivider:before,.guestShahadaDivider:after{content:"";height:1px;flex:1;background:#d5b97750}
  .guestShahadaCard form{display:grid;gap:10px;text-align:left}.guestShahadaCard label{font-size:12px;color:#d5dcca}.guestShahadaCard input{display:block;width:100%;box-sizing:border-box;margin-top:5px;border-radius:10px;padding:12px;border:1px solid #bbad7c65;background:#071d16;color:#fff;font-size:14px}.guestShahadaCard form button{cursor:pointer;margin-top:5px}.guestShahadaGoogle{width:100%;margin:11px 0 14px;padding:12px;border:1px solid #bca67180;border-radius:12px;background:#f9f7ef;color:#183c2c;font-weight:700;cursor:pointer}.guestShahadaCard button:disabled{opacity:.55}.guestShahadaCard small{font-size:11px;color:#c8d1c4}.guestShahadaCard small a{color:#f0d18b}.guestShahadaError{color:#ffc5b6!important}
  @keyframes guestShahadaIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.guestShahadaBackdrop{animation:none}}
+
+/* SECURITY MODE: the first guest entrance matches the black HudHud authentication screen. */
+.guestShahadaBackdrop,.guestShahadaDay.guestShahadaBackdrop{background:#000e!important;backdrop-filter:blur(17px) brightness(.38)!important}
+.guestShahadaCard,.guestShahadaDay .guestShahadaCard{background:radial-gradient(ellipse at 50% 12%,#141817 0%,#050606 44%,#000 100%)!important;border:1px solid #414a45!important;color:#f2f4f0!important;box-shadow:0 24px 90px #000,inset 0 1px #ffffff22!important}
+.guestShahadaCard:before{opacity:.035!important}
+.guestShahadaEyebrow,.guestShahadaDay .guestShahadaEyebrow{color:#c8d2ca!important}
+.guestShahadaCard h2,.guestShahadaDay .guestShahadaCard h2{color:#f3f4f1!important}
+.guestShahadaCard h2 span,.guestShahadaDay .guestShahadaCard h2 span{color:#f2f3f0!important}
+.guestShahadaCard p,.guestShahadaCard .guestShahadaLead,.guestShahadaDay .guestShahadaCard p,.guestShahadaDay .guestShahadaCard .guestShahadaLead{color:#aeb7b0!important}
+.guestShahadaCard label,.guestShahadaDay .guestShahadaCard label{color:#d4d9d4!important}
+.guestShahadaDivider,.guestShahadaDay .guestShahadaDivider{color:#c8d2cb!important}
+.guestShahadaDivider:before,.guestShahadaDivider:after{background:#58615a!important}
+.guestShahadaCard input,.guestShahadaDay .guestShahadaCard input{background:#070a08!important;color:#f8f9f6!important;border:1px solid #4a5850!important}
+.guestShahadaChoices a,.guestShahadaCard form button{background:#e4e8e3!important;color:#111713!important;border-color:#d9e0d9!important}
+.guestShahadaChoices button,.guestShahadaCard .guestSkip{background:#090d0b!important;color:#f0f3ef!important;border:1px solid #657268!important}
+.guestShahadaGoogle{background:#dce1dd!important;color:#151b17!important;border-color:#e6ebe6!important}
+.guestAlternative a,.guestShahadaCard small a{color:#cbd8ce!important}
+.guestShahadaClose,.guestShahadaDay .guestShahadaClose{color:#e5eae5!important}
+.guestParticleField i{background:#cdebd9!important;box-shadow:0 0 9px #a2d9b4!important}
  `}</style>
  </div>
 }
