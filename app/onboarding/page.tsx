@@ -183,6 +183,7 @@ export default function OnboardingPage() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
+      try { const key="1muslim:shahada-voice-attempts"; const count=Math.max(0,Number(localStorage.getItem(key))||0);localStorage.setItem(key,String(Math.min(count+1,999999))); } catch {}
       consentRef.current = true;
       resetRef.current = false;
       const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "";
