@@ -82,6 +82,8 @@ export default function OnboardingPage() {
   const [verified, setVerified] = useState(false);
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const consentRef = useRef(false);
+  const resetRef = useRef(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -101,6 +103,7 @@ export default function OnboardingPage() {
 
   const stopMedia = () => {
     recognitionRef.current?.stop();
+    recognitionRef.current = null;
     if (recorderRef.current?.state === "recording") recorderRef.current.stop();
     streamRef.current?.getTracks().forEach(track => track.stop());
     streamRef.current = null;
@@ -109,6 +112,7 @@ export default function OnboardingPage() {
   };
 
   const startShahada = async () => {
+    if (recorderRef.current?.state === "recording" || listening) return;
     setVerificationMode("audio");
     setWrittenDeclaration(false);
     setMessage(""); setTranscript(""); setVerified(false); setAudioBlob(null);
@@ -122,12 +126,14 @@ export default function OnboardingPage() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm";
-      const recorder = new MediaRecorder(stream, { mimeType: mime });
+      consentRef.current = true;
+      resetRef.current = false;
+      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "";
+      const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
       const chunks: BlobPart[] = [];
       recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
       recorder.onstop = () => {
-        setAudioBlob(new Blob(chunks, { type: mime }));
+        if (!resetRef.current) setAudioBlob(new Blob(chunks, { type: recorder.mimeType }));
         setRecording(false);
         stream.getTracks().forEach(track => track.stop());
       };
@@ -135,24 +141,27 @@ export default function OnboardingPage() {
 
       const rec = new SR() as SpeechRecognitionLike;
       rec.lang = language === "ar" ? "ar-SA" : "en-US";
-      rec.continuous = false;
-      rec.interimResults = false;
+      rec.continuous = true;
+      rec.interimResults = true;
       rec.onresult = (event: any) => {
-        const text = event.results?.[0]?.[0]?.transcript ?? "";
+        const text = Array.from(event.results ?? []).map((result: any) => result?.[0]?.transcript ?? "").join(" ");
         setTranscript(text);
         if (verifyTranscript(text, language)) {
           setVerified(true);
-          setMessage("Shahada recognized. Your voice recording is ready for the private Safe Vault.");
+          setMessage("Shahada recognized. You can continue to your profile.");
+          rec.stop();
         } else {
-          setMessage("That doesn't match the Shahada closely enough. Please say the displayed Shahada clearly and try again.");
+          setMessage("Listening for your Shahada — take your time.");
         }
       };
-      rec.onerror = () => {
+      rec.onerror = (event: any) => {
+        if (resetRef.current) return;
         setListening(false); setRecording(false);
         if (recorderRef.current?.state === "recording") recorderRef.current.stop();
         setMessage("We couldn't capture the Shahada. Check microphone permission and try again.");
       };
       rec.onend = () => {
+        if (resetRef.current) return;
         setListening(false);
         if (recorderRef.current?.state === "recording") recorderRef.current.stop();
       };
@@ -165,6 +174,13 @@ export default function OnboardingPage() {
     } catch {
       setMessage("Microphone permission is required for Shahada verification.");
     }
+  };
+
+  const resetShahada = () => {
+    resetRef.current = true;
+    stopMedia();
+    setAudioBlob(null); setTranscript(""); setVerified(false); setMessage("Ready again.");
+    if (consentRef.current && verificationMode === "audio") window.setTimeout(() => void startShahada(), 300);
   };
 
   const finish = async () => {
@@ -229,10 +245,13 @@ export default function OnboardingPage() {
       </div>
       <div className="phraseCard" dir={language === "ar" ? "rtl" : "ltr"}>{SHAHADA[language]}</div>
       <div className="voiceCard">
-        <div className={listening ? "mic listening" : "mic"}>◉</div>
-        <strong>{recording ? "Recording securely…" : listening ? "Listening…" : "Voice Shahada"}</strong>
-        <p>Say the statement above naturally and clearly. Different accents are okay; saying something unrelated is not.</p>
-        <button className="continue" onClick={() => void startShahada()} disabled={listening || recording}>{recording ? "Recording securely…" : listening ? "Listening…" : "Record Shahada"}</button>
+        <span className="eyebrow">HUDHUD · SHAHADA STUDIO</span>
+        <button type="button" className={`hudhudRecord ${listening ? "isListening" : ""} ${verified ? "isVerified" : ""}`} aria-label={listening ? "Reset Shahada recording" : "Enable microphone and begin Shahada"} onClick={() => listening || recording ? resetShahada() : void startShahada()}>
+          <span className="hudhudHalo" aria-hidden="true">✦</span>
+          <span className="hudhudCore" aria-hidden="true">◉</span>
+        </button>
+        <strong>{verified ? "Shahada recognized" : listening ? "HudHud is listening" : "Say your Shahada"}</strong>
+        <p>{listening ? "Speak naturally in your selected language. Tap HudHud to reset your attempt." : "Tap HudHud to allow microphone access. After permission, simply say the Shahada. Or use the checkbox below."}</p>
         {transcript && <div className="transcript" dir={language === "ar" ? "rtl" : "ltr"}><small>Speech recognition heard</small><span>{transcript}</span></div>}
       </div>
       <div className="declarationFallback"><strong>Prefer a checkbox?</strong><p>Choose either voice recognition or a written Shahada declaration. Both allow you to complete onboarding.</p><label><input type="checkbox" checked={writtenDeclaration} onChange={e => { stopMedia(); setWrittenDeclaration(e.target.checked); setVerificationMode(e.target.checked ? "declaration" : "audio"); setMessage(""); }} /><span>I sincerely affirm the Shahada displayed above and wish to join the 1Muslim community.</span></label>{writtenDeclaration && <small>✓ Written declaration selected. No microphone recording will be required.</small>}</div>
@@ -247,6 +266,6 @@ export default function OnboardingPage() {
       {message && <div className="error">{message}</div>}<button className="continue" onClick={() => void finish()} disabled={saving}>{saving ? "Saving…" : "Enter 1Muslim →"}</button><small className="fine">Gender is selected once during onboarding and cannot be changed.</small>
     </>}
   </section><style jsx>{`
-.declarationFallback{padding:19px;border:1px solid #537353;border-radius:17px;background:linear-gradient(125deg,#13251a,#0a120e);margin:14px 0}.declarationFallback>strong{display:block;color:#d8e9bd}.declarationFallback p{color:#a8bcae;font-size:12px;line-height:1.65}.declarationFallback label{display:flex;align-items:flex-start;gap:12px;font-size:13px;line-height:1.6;cursor:pointer}.declarationFallback input{width:20px;height:20px;flex-shrink:0;accent-color:#c8e7b5}.declarationFallback small{display:block;color:#b9d9b7;margin-top:12px}.legalScroll{height:40px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:10px 12px;border:1px solid #3b4a3f;border-radius:9px;background:#080e0a;color:#d9e0d9;font-size:11px;line-height:1.6}.legalScroll strong{display:block;color:#f3f5f2;font-size:11px;margin:4px 0}.legalScroll p{margin:5px 0 12px}.legalScroll:focus-visible{outline:2px solid #d6e7b8;outline-offset:2px}.badgePreview{display:flex;align-items:center;gap:15px;margin:17px 0 10px;padding:17px;border:1px solid #52604c;border-radius:17px;background:linear-gradient(120deg,#172017,#0a110d);box-shadow:inset 0 0 24px rgba(220,227,196,.05)}.badgeSeal{width:66px;height:66px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;border:3px double #d8d4b2;background:radial-gradient(circle at 30% 20%,#fff9df,#bcb899 42%,#56594e 100%);color:#242820;font-size:33px;box-shadow:0 0 18px rgba(228,220,172,.22)}.badgePreview strong{display:block;color:#f3f0df;font-size:16px;margin:4px 0}.badgeKicker{font-size:9px;letter-spacing:.13em;color:#b9c3ad;font-weight:850}.badgePreview p{font-size:11px;color:#b2bdb2;line-height:1.5;margin:4px 0 0}.badgeStatus{font-size:10px;color:#d8e9bd;white-space:nowrap;margin-left:auto}@media(max-width:600px){.badgePreview{flex-wrap:wrap}.badgeStatus{margin-left:0}}.termsConsent{display:flex;align-items:flex-start;gap:12px;margin:15px 0 8px;color:#cbd6cd;font-size:12px;line-height:1.6;cursor:pointer}.termsConsent input{width:18px;height:18px;flex-shrink:0;accent-color:#d6e7b8;margin-top:1px}.termsConsent a{color:#f4f7f4;text-decoration:underline;text-underline-offset:3px} .onboardingPage{min-height:100vh;background:#050805;color:#f4f7f4;display:grid;place-items:center;padding:24px}.onboardingCard{width:min(760px,100%);border:1px solid #1d2921;background:radial-gradient(circle at 85% 10%,rgba(132,174,116,.13),transparent 35%),linear-gradient(145deg,#0d140f,#070b08);border-radius:28px;padding:34px;box-shadow:0 30px 100px rgba(0,0,0,.45)}.eyebrow{font-size:10px;letter-spacing:.16em;color:#94ad91;font-weight:850}.onboardingCard h1{font-size:42px;letter-spacing:-.06em;margin:12px 0 8px}.lead{color:#89968d;line-height:1.65;font-size:14px;max-width:610px}.steps{display:flex;align-items:center;gap:10px;margin-bottom:26px;color:#657269;font-size:10px}.steps .active{color:#d8e9bd;font-weight:850}.steps i{font-style:normal;color:#4b5a50}.languagePicker{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0 12px}.languagePicker button{border:1px solid #29372e;background:#0a100c;color:#aab7ae;border-radius:14px;padding:12px;cursor:pointer;font-weight:850}.languagePicker button.selected{border-color:#a9c890;background:#132016;color:#d8e9bd;box-shadow:0 0 20px rgba(169,200,144,.08)}.languagePicker small{display:block;color:#6f7c73;font-size:9px;margin-top:3px}.phraseCard{border:1px solid #35453a;background:#09100b;border-radius:16px;padding:18px;text-align:center;color:#e6f0e5;font-size:18px;line-height:1.8}.voiceCard{margin:16px 0;border:1px solid #29372e;border-radius:22px;padding:24px;background:#0a100c;text-align:center}.mic{width:68px;height:68px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:#152017;border:1px solid #3c4d3e;color:#d8e9bd;font-size:28px}.mic.listening{box-shadow:0 0 0 10px rgba(148,183,129,.08),0 0 30px rgba(148,183,129,.22)}.voiceCard strong{font-size:18px}.voiceCard p{color:#829087;font-size:12px;line-height:1.6;max-width:560px;margin:10px auto 18px}.continue{width:100%;border:0;border-radius:12px;padding:13px;background:#d6e7b8;color:#071008;font-weight:850;cursor:pointer}.continue:disabled{opacity:.45;cursor:not-allowed}.continue.secondary{margin-top:10px;background:#132016;color:#d8e9bd;border:1px solid #3a4c3d}.transcript{margin-top:15px;text-align:left;border:1px solid #26342b;border-radius:12px;padding:11px}.transcript small{display:block;color:#6f7c73;font-size:9px;text-transform:uppercase;letter-spacing:.12em}.transcript span{display:block;color:#dce7df;font-size:11px;margin-top:5px}.genderGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:26px 0}.genderCard{background:#0a100c;border:1px solid #253128;border-radius:20px;padding:16px;color:#eaf0eb;text-align:left;cursor:pointer;transition:.2s}.genderCard:hover,.genderCard.selected{border-color:#a9c890;transform:translateY(-2px)}.genderCard img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;object-position:center 58%;background:#000;border:2px solid #2f3d32;border-radius:50%;margin-bottom:13px;overflow:hidden}.genderCard strong{display:block;font-size:16px}.genderCard span{display:block;color:#76837a;font-size:10px;margin-top:5px}.fine{display:block;text-align:center;color:#657269;font-size:10px;margin-top:11px}.error{color:#ffbcbc;font-size:11px;margin:10px 0}.success{color:#cce7c2;font-size:11px;margin:10px 0}@media(max-width:620px){.onboardingCard{padding:22px}.onboardingCard h1{font-size:34px}.genderGrid{grid-template-columns:1fr}.phraseCard{font-size:16px}}
+.hudhudRecord{display:grid;place-items:center;position:relative;width:124px;height:124px;border-radius:50%;margin:20px auto 18px;border:1px solid rgba(195,220,173,.5);background:radial-gradient(circle at 40% 35%,#1c3928,#09160f 70%);color:#d8e9bd;cursor:pointer;box-shadow:0 12px 40px #0008;transition:transform .4s,box-shadow .4s}.hudhudRecord:hover{transform:translateY(-3px)}.hudhudHalo{position:absolute;inset:8px;border:1px solid #b5d5a755;border-radius:50%;display:grid;place-items:center;font-size:50px;opacity:.35}.hudhudCore{position:relative;font-size:43px}.hudhudRecord.isListening{animation:hudhudPulse 2.1s ease-in-out infinite}.hudhudRecord.isVerified{box-shadow:0 0 42px #39dd7780;border-color:#65f3a2;background:radial-gradient(circle,#207d4a,#0b2116)}@keyframes hudhudPulse{0%,100%{box-shadow:0 0 0 0 #5fe89a22,0 0 18px #53b87a33}50%{box-shadow:0 0 0 15px #5fe89a05,0 0 42px #4ce58b70}}@media(prefers-reduced-motion:reduce){.hudhudRecord{animation:none!important;transition:none!important}}.declarationFallback{padding:19px;border:1px solid #537353;border-radius:17px;background:linear-gradient(125deg,#13251a,#0a120e);margin:14px 0}.declarationFallback>strong{display:block;color:#d8e9bd}.declarationFallback p{color:#a8bcae;font-size:12px;line-height:1.65}.declarationFallback label{display:flex;align-items:flex-start;gap:12px;font-size:13px;line-height:1.6;cursor:pointer}.declarationFallback input{width:20px;height:20px;flex-shrink:0;accent-color:#c8e7b5}.declarationFallback small{display:block;color:#b9d9b7;margin-top:12px}.legalScroll{height:40px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:10px 12px;border:1px solid #3b4a3f;border-radius:9px;background:#080e0a;color:#d9e0d9;font-size:11px;line-height:1.6}.legalScroll strong{display:block;color:#f3f5f2;font-size:11px;margin:4px 0}.legalScroll p{margin:5px 0 12px}.legalScroll:focus-visible{outline:2px solid #d6e7b8;outline-offset:2px}.badgePreview{display:flex;align-items:center;gap:15px;margin:17px 0 10px;padding:17px;border:1px solid #52604c;border-radius:17px;background:linear-gradient(120deg,#172017,#0a110d);box-shadow:inset 0 0 24px rgba(220,227,196,.05)}.badgeSeal{width:66px;height:66px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;border:3px double #d8d4b2;background:radial-gradient(circle at 30% 20%,#fff9df,#bcb899 42%,#56594e 100%);color:#242820;font-size:33px;box-shadow:0 0 18px rgba(228,220,172,.22)}.badgePreview strong{display:block;color:#f3f0df;font-size:16px;margin:4px 0}.badgeKicker{font-size:9px;letter-spacing:.13em;color:#b9c3ad;font-weight:850}.badgePreview p{font-size:11px;color:#b2bdb2;line-height:1.5;margin:4px 0 0}.badgeStatus{font-size:10px;color:#d8e9bd;white-space:nowrap;margin-left:auto}@media(max-width:600px){.badgePreview{flex-wrap:wrap}.badgeStatus{margin-left:0}}.termsConsent{display:flex;align-items:flex-start;gap:12px;margin:15px 0 8px;color:#cbd6cd;font-size:12px;line-height:1.6;cursor:pointer}.termsConsent input{width:18px;height:18px;flex-shrink:0;accent-color:#d6e7b8;margin-top:1px}.termsConsent a{color:#f4f7f4;text-decoration:underline;text-underline-offset:3px} .onboardingPage{min-height:100vh;background:#050805;color:#f4f7f4;display:grid;place-items:center;padding:24px}.onboardingCard{width:min(760px,100%);border:1px solid #1d2921;background:radial-gradient(circle at 85% 10%,rgba(132,174,116,.13),transparent 35%),linear-gradient(145deg,#0d140f,#070b08);border-radius:28px;padding:34px;box-shadow:0 30px 100px rgba(0,0,0,.45)}.eyebrow{font-size:10px;letter-spacing:.16em;color:#94ad91;font-weight:850}.onboardingCard h1{font-size:42px;letter-spacing:-.06em;margin:12px 0 8px}.lead{color:#89968d;line-height:1.65;font-size:14px;max-width:610px}.steps{display:flex;align-items:center;gap:10px;margin-bottom:26px;color:#657269;font-size:10px}.steps .active{color:#d8e9bd;font-weight:850}.steps i{font-style:normal;color:#4b5a50}.languagePicker{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0 12px}.languagePicker button{border:1px solid #29372e;background:#0a100c;color:#aab7ae;border-radius:14px;padding:12px;cursor:pointer;font-weight:850}.languagePicker button.selected{border-color:#a9c890;background:#132016;color:#d8e9bd;box-shadow:0 0 20px rgba(169,200,144,.08)}.languagePicker small{display:block;color:#6f7c73;font-size:9px;margin-top:3px}.phraseCard{border:1px solid #35453a;background:#09100b;border-radius:16px;padding:18px;text-align:center;color:#e6f0e5;font-size:18px;line-height:1.8}.voiceCard{margin:16px 0;border:1px solid #29372e;border-radius:22px;padding:24px;background:#0a100c;text-align:center}.mic{width:68px;height:68px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:#152017;border:1px solid #3c4d3e;color:#d8e9bd;font-size:28px}.mic.listening{box-shadow:0 0 0 10px rgba(148,183,129,.08),0 0 30px rgba(148,183,129,.22)}.voiceCard strong{font-size:18px}.voiceCard p{color:#829087;font-size:12px;line-height:1.6;max-width:560px;margin:10px auto 18px}.continue{width:100%;border:0;border-radius:12px;padding:13px;background:#d6e7b8;color:#071008;font-weight:850;cursor:pointer}.continue:disabled{opacity:.45;cursor:not-allowed}.continue.secondary{margin-top:10px;background:#132016;color:#d8e9bd;border:1px solid #3a4c3d}.transcript{margin-top:15px;text-align:left;border:1px solid #26342b;border-radius:12px;padding:11px}.transcript small{display:block;color:#6f7c73;font-size:9px;text-transform:uppercase;letter-spacing:.12em}.transcript span{display:block;color:#dce7df;font-size:11px;margin-top:5px}.genderGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:26px 0}.genderCard{background:#0a100c;border:1px solid #253128;border-radius:20px;padding:16px;color:#eaf0eb;text-align:left;cursor:pointer;transition:.2s}.genderCard:hover,.genderCard.selected{border-color:#a9c890;transform:translateY(-2px)}.genderCard img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;object-position:center 58%;background:#000;border:2px solid #2f3d32;border-radius:50%;margin-bottom:13px;overflow:hidden}.genderCard strong{display:block;font-size:16px}.genderCard span{display:block;color:#76837a;font-size:10px;margin-top:5px}.fine{display:block;text-align:center;color:#657269;font-size:10px;margin-top:11px}.error{color:#ffbcbc;font-size:11px;margin:10px 0}.success{color:#cce7c2;font-size:11px;margin:10px 0}@media(max-width:620px){.onboardingCard{padding:22px}.onboardingCard h1{font-size:34px}.genderGrid{grid-template-columns:1fr}.phraseCard{font-size:16px}}
  `}</style></main>;
 }
