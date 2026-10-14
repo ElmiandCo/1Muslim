@@ -721,3 +721,15 @@
 .control .controlHeader .headerActions>*{width:28px!important;height:28px!important}
 }
 @media(max-width:390px){.control .controlHeader .brand strong{font-size:11px!important}.control .controlHeader .brandLogo{width:25px!important;height:25px!important}.control .controlHeader{column-gap:5px!important}.control .controlHeader .searchDock input{font-size:10px!important}}
+
+/* HudHud-driven navigation choreography: anticipate, rise, then settle (~2s). */
+.control .controlHeader{transform-origin:50% 0;will-change:transform,opacity,max-height;transition:transform 1.95s cubic-bezier(.2,.75,.2,1),opacity 1.65s ease,max-height 1.9s cubic-bezier(.2,.75,.2,1),margin 1.9s ease,padding 1.9s ease,border-width 1.9s ease;max-height:105px}
+.control.navMotionCollapsed .controlHeader.controlHeaderCollapsed{animation:navLiftAway 1.95s both;max-height:0!important;opacity:0;pointer-events:none;margin:0 auto!important;padding:0!important;border-width:0;overflow:hidden}
+.control.navMotionExpanded .controlHeader{animation:navReturn 1.95s both}
+@keyframes navLiftAway{0%{transform:translateY(0) scale(1);opacity:1;max-height:105px}20%{transform:translateY(10px) scale(1.015);opacity:1;max-height:105px}42%{transform:translateY(0) scale(.99);opacity:1;max-height:105px}80%{transform:translateY(-90px) scale(.94);opacity:.2;max-height:45px}100%{transform:translateY(-125px) scale(.9);opacity:0;max-height:0}}
+@keyframes navReturn{0%{transform:translateY(-90px) scale(.94);opacity:0}30%{transform:translateY(8px) scale(1.01);opacity:.85}70%{transform:translateY(-3px) scale(.995);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
+.control.navMotionCollapsed .intro,.control.navMotionCollapsed .guestWelcome,.control.navMotionCollapsed .upgradeNotice{animation:navRefill 1.95s cubic-bezier(.2,.75,.2,1) both}
+.control.navMotionExpanded .intro,.control.navMotionExpanded .guestWelcome,.control.navMotionExpanded .upgradeNotice{animation:navRefillBack 1.95s ease both}
+@keyframes navRefill{0%{transform:translateY(0) scale(1)}20%{transform:translateY(6px) scale(1.016)}65%{transform:translateY(-3px) scale(1.01)}100%{transform:translateY(0) scale(1)}}
+@keyframes navRefillBack{0%{transform:translateY(-4px) scale(1.01)}65%{transform:translateY(3px) scale(1.005)}100%{transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.control .controlHeader,.control.navMotionCollapsed .controlHeader.controlHeaderCollapsed,.control.navMotionExpanded .controlHeader,.control.navMotionCollapsed .intro,.control.navMotionExpanded .intro,.control.navMotionCollapsed .guestWelcome,.control.navMotionExpanded .guestWelcome{animation:none!important;transition:none!important}}
