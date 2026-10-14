@@ -5,7 +5,7 @@ type Mode="day"|"night"|"auto";
 export default function CelestialOrb({light,onToggle,mode,onModeChange}:{light:boolean;onToggle:()=>void;mode:Mode;onModeChange:(mode:Mode)=>void}){
  const [open,setOpen]=useState(false);const [transitionVariant,setTransitionVariant]=useState(0);const [animating,setAnimating]=useState(false);const motionTimer=useRef<ReturnType<typeof setTimeout>|null>(null);const previousLight=useRef(light);const timer=useRef<ReturnType<typeof setTimeout>|null>(null);const longPress=useRef(false);
  useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);if(motionTimer.current)clearTimeout(motionTimer.current)},[]);
- useEffect(()=>{if(previousLight.current===light)return;previousLight.current=light;setTransitionVariant(v=>(v+1)%3);setAnimating(true);if(motionTimer.current)clearTimeout(motionTimer.current);motionTimer.current=setTimeout(()=>setAnimating(false),2600)},[light]);
+ useEffect(()=>{if(previousLight.current===light)return;previousLight.current=light;setTransitionVariant(v=>(v+1)%3);setAnimating(true);if(motionTimer.current)clearTimeout(motionTimer.current);motionTimer.current=setTimeout(()=>setAnimating(false),3200)},[light]);
  const start=()=>{longPress.current=false;timer.current=setTimeout(()=>{longPress.current=true;setOpen(true)},550)};
  const stop=()=>{if(timer.current)clearTimeout(timer.current)};
  return <div className={styles.orbHolder}>
