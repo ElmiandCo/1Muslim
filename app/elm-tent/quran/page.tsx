@@ -753,5 +753,20 @@ body:has(.omQuranPage) header:has(nav),body:has(.omQuranPage) [class*="bottomNav
 .omQuranPage .omQuranGlassArabic{transition:letter-spacing 1.2s ease,filter 1.2s ease}
 .omQuranPage.omQuranHudHudExpanded .omQuranGlassArabic{filter:drop-shadow(0 0 9px #b9a0ff22)}
 @media(prefers-reduced-motion:reduce){.omQuranPage.omQuranHudHudExpanded .omQuranVerseAtmosphere,.omQuranPage.omQuranHudHudExpanded .omQuranGlassArabic{animation:none!important;transition:none!important;filter:none!important;transform:none!important}}
+
+/* Quran workspace redesign: home-inspired glass dashboard with independently scrollable facts.
+   Keeps original reader, navigation, audio, progress and user-selected artwork intact. */
+.omQuranPage .omQuranAppStage{isolation:isolate;overflow:visible;border:1px solid rgba(223,198,143,.48);border-radius:30px;box-shadow:0 18px 70px #0007,inset 0 1px #fff2;backdrop-filter:blur(4px)}
+.omQuranPage .omQuranStudioData{box-sizing:border-box;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(14px,2.2vw,24px)!important;padding:clamp(13px,2.2vw,25px);margin:16px auto 22px;max-width:1080px;max-height:min(48dvh,470px);overflow-y:auto;overscroll-behavior-y:contain;scrollbar-width:thin;scrollbar-color:#c9ae77aa transparent;border:1px solid #d7bf8259;border-radius:26px;background:linear-gradient(145deg,#08281fb3,#091e30a3);box-shadow:0 12px 38px #0005,inset 0 1px #fff2;backdrop-filter:blur(9px);-webkit-overflow-scrolling:touch;align-content:start}
+.omQuranPage .omQuranStudioDataCard{min-height:clamp(115px,14dvh,158px);height:auto;box-sizing:border-box;gap:8px;padding:clamp(15px,2.8vw,23px);border-radius:22px;border-color:#d7bf8273;background:linear-gradient(140deg,#18473ec4,#0b2635c4);box-shadow:0 8px 22px #0003,inset 0 1px #ffffff2a;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.omQuranPage .omQuranStudioDataCard>span{font-size:clamp(10px,1.3vw,13px);letter-spacing:.12em}
+.omQuranPage .omQuranStudioDataCard>strong{font-size:clamp(19px,3vw,29px)}
+.omQuranPage .omQuranStudioDataCard>small{font-size:clamp(12px,1.65vw,15px);line-height:1.45}
+.omQuranPage .omQuranStudioDataFuture{grid-column:1/-1}
+.omQuranPage .omQuranStudioDataPlay{transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s ease,border-color .4s ease}
+.omQuranPage .omQuranStudioDataPlay:hover{transform:translateY(-2px);border-color:#f1d69bb5;box-shadow:0 14px 34px #0005,0 0 18px #e6c47a22}
+@media(max-width:650px){.omQuranPage .omQuranStudioData{max-height:46dvh;gap:14px!important;padding:13px;border-radius:24px}.omQuranPage .omQuranStudioDataCard{min-height:118px;padding:15px;border-radius:19px}.omQuranPage .omQuranStudioDataCard>strong{font-size:clamp(18px,4.3vw,24px)}}
+@media(prefers-reduced-motion:reduce){.omQuranPage .omQuranStudioDataPlay{transition:none!important}}
+
 `}</style><QuranLiveWidget compact/></main>;
 }
