@@ -14,23 +14,6 @@ const safeNext = () => { const p=new URLSearchParams(window.location.search).get
 const safeMethod = () => { const m = new URLSearchParams(window.location.search).get("method"); return m === "declaration" || m === "type" ? "declaration" : "audio"; };
 
 export default function AuthPage() {
-  // Prevent legacy global entry-choice dialog from covering the Shahada page.
-  useEffect(()=>{
-    const suppressLegacyEntry=()=>{
-      for(const node of document.querySelectorAll('[role="dialog"],[aria-modal="true"]')){
-        if(!(node instanceof HTMLElement))continue;
-        const title=node.textContent||"";
-        if(title.includes("Your way into 1Muslim")&&title.includes("Shahada Voice")){
-          node.style.setProperty("display","none","important");
-          node.setAttribute("aria-hidden","true");
-        }
-      }
-    };
-    suppressLegacyEntry();
-    const observer=new MutationObserver(suppressLegacyEntry);
-    observer.observe(document.body,{childList:true,subtree:true});
-    return ()=>observer.disconnect();
-  },[]);
   const [loading, setLoading] = useState(false);
   const [voiceAttempts,setVoiceAttempts]=useState<number|null>(null);
   useEffect(()=>{try{setVoiceAttempts(Math.max(0,Number(localStorage.getItem("1muslim:shahada-voice-attempts"))||0))}catch{setVoiceAttempts(0)}},[]);
