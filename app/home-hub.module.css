@@ -1208,3 +1208,24 @@
 .control.navMotionExpanded .introActionDock{opacity:1;transition:opacity .85s ease .7s}
 @media(max-width:650px){.control .introGreeting .greetingWithOrb{gap:6px}.control .introGreeting .greetingWithOrb>.greetingText{font-size:clamp(16px,4.1vw,23px)}.control .introGreeting .greetingWithOrb .orbHolder{transform:scale(.88);transform-origin:center}.control.navMotionCollapsed .introGreeting{left:50%!important;transform:translate3d(-50%,0,0)!important}}
 @media(prefers-reduced-motion:reduce){.control .introGreeting,.control .introActionDock{transition:none!important}}
+
+/* Precise viewport-centered HudHud greeting: center the combined orb+text,
+   not the wider introGreeting container or the Go Live dock. */
+.control .intro{position:relative!important}
+.control .introGreeting{position:relative!important;left:0;flex:0 1 auto!important;max-width:calc(100% - 120px)!important}
+.control.navMotionCollapsed .introGreeting{
+ position:absolute!important;left:50%!important;top:50%!important;
+ width:max-content!important;max-width:calc(100% - 12px)!important;
+ transform:translate3d(-50%,-50%,0)!important;
+ text-align:center!important;z-index:8;
+}
+.control.navMotionCollapsed .introGreeting .greetingWithOrb{
+ width:max-content!important;max-width:100%!important;
+ margin-inline:auto!important;justify-content:center!important;
+}
+.control.navMotionCollapsed .introGreeting>.eyebrow{display:block;text-align:center}
+.control.navMotionExpanded .introGreeting{position:relative!important;left:0!important;top:auto!important;transform:translate3d(0,0,0)!important}
+@media(max-width:650px){
+ .control.navMotionCollapsed .introGreeting{left:50%!important;transform:translate3d(-50%,-50%,0)!important;max-width:calc(100% - 12px)!important}
+ .control.navMotionCollapsed .introGreeting .greetingWithOrb>.greetingText{font-size:clamp(15px,4vw,22px)!important}
+}
