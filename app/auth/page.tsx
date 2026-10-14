@@ -78,23 +78,35 @@ export default function AuthPage() {
   const signInWithGoogle = async () => {
     setLoading(true);
     setMessage("");
+    const destination = isShahadaSignup ? "/onboarding?method=" + safeMethod() : safeNext();
+    const callback = new URL("/auth/callback", window.location.origin);
+    callback.searchParams.set("next", destination);
+    const expectedOrigin = callback.origin;
 
-    const supabase = createClient();
-    // Preserve the exact deployment origin across the hosted OAuth round trip.
-    // Supabase may otherwise use its production Site URL when a preview host is not matched.
-    const callbackOrigin = window.location.origin;
-    try { sessionStorage.setItem("1muslim:oauth-origin", callbackOrigin); } catch {}
-    const { error } = await supabase.auth.signInWithOAuth({
+    // Do not let Supabase silently fall back to its production Site URL.
+    // Inspect the generated OAuth authorization URL before leaving this host.
+    const { data, error } = await createClient().auth.signInWithOAuth({
       provider: "google",
-      options: {
-        // Return to the same authorized site origin (including preview) and preserve a safe relative destination.
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent((()=>{return isShahadaSignup?"/onboarding?method="+safeMethod():safeNext()})())}`,
-      },
+      options: { redirectTo: callback.toString(), skipBrowserRedirect: true },
     });
-
-    if (error) {
+    if (error || !data?.url) {
       setLoading(false);
-      setMessage(error.message);
+      setMessage(error?.message || "Could not start Google sign-in.");
+      return;
+    }
+    try {
+      const authorize = new URL(data.url);
+      const returnUrl = authorize.searchParams.get("redirect_to");
+      if (!returnUrl || new URL(returnUrl).origin !== expectedOrigin ||
+          new URL(returnUrl).pathname !== "/auth/callback") {
+        setLoading(false);
+        setMessage("Preview sign-in was blocked to prevent a redirect to production. Check the Supabase Auth redirect allowlist for this exact preview callback URL.");
+        return;
+      }
+      window.location.assign(data.url);
+    } catch {
+      setLoading(false);
+      setMessage("Unable to verify the sign-in callback destination.");
     }
   };
 
