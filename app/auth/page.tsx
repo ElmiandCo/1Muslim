@@ -30,6 +30,10 @@ export default function AuthPage() {
   const [microphoneStatus,setMicrophoneStatus]=useState<"idle"|"available"|"denied"|"unavailable">("idle");
   const [emailLogin,setEmailLogin]=useState(false);
   const [visionVisible,setVisionVisible]=useState(true);
+  const [entryStage,setEntryStage]=useState<"welcome"|"membership"|"guest"|"auth">("welcome");
+  const [entryReady,setEntryReady]=useState(false);
+  useEffect(()=>{const timer=window.setTimeout(()=>setEntryReady(true),5000);return()=>window.clearTimeout(timer)},[]);
+
 
   useEffect(() => {
     // First-time guests see the real homepage before a sign-in screen.
@@ -110,6 +114,34 @@ export default function AuthPage() {
     }
   };
 
+  if(entryStage!=="auth")return <main className={"authPreview "+(day?"authPreviewDay":"")+" authEntryShell"}>
+    <div className="authHomeBackdrop" aria-hidden="true"><div className="authHomeNight"/><div className="authHomeDay"/><div className="authHomeShade"/></div>
+    <section className={"authEntryCard "+(entryReady?"authEntryReady":"")} aria-label="1Muslim welcome">
+      <span className="authEntryEyebrow">✦ 1MUSLIM · WELCOME</span>
+      <div className="authEntryMark" aria-hidden="true">۞</div>
+      {entryStage==="welcome"?<><h1>As-salāmu ʿalaykum</h1><p>Your place to connect, learn, and reflect.</p><div className="authEntryActions"><button type="button" onClick={()=>{setIsShahadaSignup(false);setEntryStage("auth")}}>Sign In →</button><button type="button" onClick={()=>setEntryStage("membership")}>Not a Member ✦</button></div></>:
+       entryStage==="membership"?<><h1>Are you Muslim?</h1><p>Choose the path that fits you.</p><div className="authEntryActions"><button type="button" onClick={()=>{setIsShahadaSignup(true);setEntryStage("auth")}}>Yes · Sign Up →</button><button type="button" onClick={()=>setEntryStage("guest")}>No · Explore as Guest</button></div></>:
+       <><h1>You're welcome here.</h1><p>Explore public Qur'an, lessons, and livestreams. Posting, comments, and messaging are for members.</p><div className="authEntryActions"><button type="button" onClick={()=>window.location.assign("/")}>Explore 1Muslim →</button><button type="button" onClick={()=>setEntryStage("membership")}>← Back</button></div><small>One-day guest access and the dedicated introduction to Islam are coming soon. Public browsing is available now.</small></>}
+      {entryStage!=="welcome"&&entryStage!=="guest"&&<button className="authEntryBack" type="button" onClick={()=>setEntryStage("welcome")}>← Back</button>}
+      <button className="authEntryHome" type="button" onClick={()=>window.location.assign("/")}>✕ <span className="sr-only">Return home</span></button>
+    </section>
+    <style>{`
+      .authEntryShell{display:grid!important;place-items:center!important;min-height:100dvh!important;padding:clamp(15px,4vw,35px)!important;overflow:hidden!important}
+      .authEntryCard{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;gap:15px;width:min(100%,490px);min-height:340px;padding:clamp(25px,5vw,42px);border:1px solid rgba(238,212,157,.63);border-radius:32px;background:linear-gradient(145deg,rgba(6,58,46,.84),rgba(5,39,34,.73));backdrop-filter:blur(22px);box-shadow:0 30px 80px #001b1590,inset 0 1px #fff3;color:#f9eed7;opacity:0;transform:translateY(13px) scale(.985);transition:opacity 1s ease,transform 1s ease}
+      .authEntryReady{opacity:1;transform:none}
+      .authEntryEyebrow{font-size:11px;font-weight:750;letter-spacing:.2em;color:#e8ce91}
+      .authEntryMark{font-size:65px;color:#ebd394;text-shadow:0 0 35px #e2c47d88;line-height:1}
+      .authEntryCard h1{margin:0;font-size:clamp(25px,5vw,38px);font-family:Georgia,serif;font-weight:600}
+      .authEntryCard p{max-width:340px;margin:0;color:#d2e4d6;line-height:1.5;font-size:14px}
+      .authEntryActions{display:grid;gap:10px;width:100%;margin-top:14px}
+      .authEntryActions button{min-height:51px;border:1px solid #d8c78e;border-radius:18px;background:linear-gradient(110deg,#c1e8c0,#e7d39e);color:#103a2b;font-size:15px;font-weight:800;cursor:pointer}
+      .authEntryActions button+button{background:rgba(9,58,45,.76);color:#f4e4b8}
+      .authEntryBack{border:0;background:none;color:#e8d8b4;cursor:pointer;padding:9px}
+      .authEntryHome{position:absolute;top:13px;right:13px;border:1px solid #d8c78e77;border-radius:50%;width:38px;height:38px;background:#12493e;color:#f6dfb0;cursor:pointer}
+      .authEntryCard small{font-size:11px;line-height:1.5;color:#c7d7cb}
+      @media(prefers-reduced-motion:reduce){.authEntryCard{transition:none;transform:none}}
+    `}</style>
+  </main>;
   return <main className={"authPreview "+(day?"authPreviewDay":"")+(isShahadaSignup?" authShahada":"")+(typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("embedded")?" authEmbedded":"")}><RisingEnergyOrbs tone="blue" density="ambient"/><div className="authHomeBackdrop" aria-hidden="true"><div className="authHomeNight"/><div className="authHomeDay"/><div className="authHomeShade"/></div><div className="authOrbit authOrbitOne"/><div className="authOrbit authOrbitTwo"/><section className={"authGlass "+(isShahadaSignup?"visionShahada ":"visionLogin ")+(visionStep===2?"visionSecond":"visionFirst") } aria-label="1Muslim account">{isShahadaSignup&&<div className="shahadaCinematicHero" aria-label="HudHud protects your secure Shahada journey"><div className="shahadaHeroHalo" aria-hidden="true"/><div className="shahadaHeroGuardian" aria-hidden="true"><Image src="/assets/hudhud-logo.PNG" alt="" width={116} height={116} className="shahadaHeaderBird"/></div><RisingEnergyOrbs tone="blue" density="focused"/><div className="shahadaHeroTitle"><span>HUDHUD</span><strong>SECURE COMMUNITY</strong></div></div>}<div className="authArt"><span>✦ 1MUSLIM · THE UMMAH</span><div className="authSymbol"><Image src="/assets/HudHud-Quran.png" alt="Qur’an Studio artwork" width={185} height={185} style={{objectFit:"contain",maxWidth:"100%",height:"auto"}}/></div><h1>{isShahadaSignup?"1Muslim":"Welcome home."}</h1><p>Connect. Learn. Reflect. Together.</p><div className="shahadaCounter" aria-label="Shahada voice attempts on this device"><span className="shahadaCounterLight" aria-hidden="true"/><span>SHAHADA VOICE ATTEMPTS</span><strong>{voiceAttempts===null?"—":voiceAttempts.toLocaleString()}</strong><small>THIS DEVICE</small></div><div className="securitySequence" aria-label="Shahada, account, admission">SHAHADA <span>—</span> ACCOUNT <span>—</span> ADMISSION</div></div><div className="authPanel"><div className="authJourneyDuplicate"><AdmissionJourney stage={1} compact detail={isShahadaSignup?"Begin with the Shahada. Create your account to securely save the recording and complete verification.":"Already Muslim? Sign in to your existing account."}/></div><div className="authTop"><span>{isShahadaSignup?"Secure with HudHud":"Secure sign in"}</span></div><p className="authLead">{isShahadaSignup?"Your Shahada comes first. Tap HudHud to begin; create an account to securely record and save your declaration.":"Your conversations, learning, and community await."}</p><button className="authSwitch" type="button" onClick={()=>{setIsShahadaSignup(v=>!v);setMessage("");setAffirmed(false)}}>{isShahadaSignup?"← I already have an account":"← Begin with the Shahada"}</button>{isShahadaSignup&&<div className="shahadaUnified">
 <div className="shahadaStudioCompact"><div className="shahadaMicVisual" aria-hidden="true"><span className="shahadaMicRing"><span>♩</span><b>🎙</b></span><small>READY TO LISTEN</small></div><div className="shahadaStudioCopy"><strong>HudHud</strong><span>Shahada Studio</span><p>Record your Shahada with guidance in Arabic or English.</p></div></div>
 <div className="authMethods" role="radiogroup" aria-label="Shahada method">{([{id:"audio",title:"Voice",desc:"Arabic or English",icon:"♩"},{id:"declaration",title:"Touch",desc:"Sincere affirmation",icon:"☝"}] as const).map(m=><button type="button" role="radio" aria-checked={method===m.id} className={method===m.id?"selected":""} key={m.id} onClick={()=>{setMethod(m.id);setAffirmed(false);setMicrophoneStatus("idle")}}><span className="authMethodIcon" aria-hidden="true">{m.icon}</span><span className="authMethodText"><b>{m.title}</b><small>{m.desc}</small></span></button>)}</div>
