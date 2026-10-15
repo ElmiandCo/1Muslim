@@ -33,17 +33,20 @@ export async function POST(request: Request) {
   if(!serviceKey||!supabaseUrl)return NextResponse.json({error:"Member notifications require Supabase service role configuration",adminEmailAttempted:Boolean(apiKey&&recipient&&sender)},{status:503});
   const admin=createAdminClient(supabaseUrl,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
   let count=0;let failures=0;
-  for(let page=1;page<=100;page++){
-    const {data,error}=await admin.auth.admin.listUsers({page,perPage:500});
-    if(error){console.error("Live audience lookup failed",error.message);failures++;break;}
-    const members=data.users.filter(member=>member.id!==user.id);
+  // Query public member profiles rather than Auth Admin listUsers, which can fail
+  // when a malformed auth record prevents Supabase from enumerating users.
+  // Pagination keeps large communities within the PostgREST row limit.
+  const pageSize=500;
+  for(let offset=0;offset<50000;offset+=pageSize){
+    const {data:members,error}=await admin.from("profiles").select("id").neq("id",user.id).order("id",{ascending:true}).range(offset,offset+pageSize-1);
+    if(error){console.error("Live audience profile lookup failed",error.message);failures++;break;}
+    if(!members?.length)break;
     for(let i=0;i<members.length;i+=200){
       const rows=members.slice(i,i+200).map(member=>({user_id:member.id,type:"live_started",title:"🔴 Live Now: "+stream.title.slice(0,120),body:host+" just went live on 1Muslim. Tap to watch.",entity_type:"live_stream",entity_id:stream.id}));
-      if(!rows.length)continue;
       const {error:insertError}=await admin.from("notifications").insert(rows);
       if(insertError){console.error("Live audience alert batch failed",insertError.message);failures++;}else count+=rows.length;
     }
-    if(data.users.length<500)break;
+    if(members.length<pageSize)break;
   }
   return NextResponse.json({ok:failures===0,notified:count,failedBatches:failures},{status:failures?207:200});
 }
