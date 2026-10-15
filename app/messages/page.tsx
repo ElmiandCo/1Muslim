@@ -211,7 +211,7 @@ export default function MessagesPage(){
  useEffect(()=>{if(!selected||!uid||!peerId||status?.request_status!=="accepted"||blocked.includes(peerId))return;window.dispatchEvent(new CustomEvent("1muslim:call-context",{detail:{conversationId:selected,userId:uid,peerName:names[peerId]||"Member",peerAvatar:avatars[peerId]||null}}));},[selected,uid,peerId,status?.request_status,blocked,names,avatars]);
  if(loadingAuth)return <main style={{padding:32}}>Loading messages…</main>;
  if(!uid)return <main style={{padding:32,maxWidth:720,margin:"auto"}}><h1>Messages</h1><p>Sign in to access private conversations.</p><Link href="/auth">Sign in →</Link></main>;
- return <main className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"20px auto",padding:"0 12px",color:"var(--text,#f4f4f5)"}}><div className="omMessengerPattern" aria-hidden="true"/><div className="omMessengerOrnaments" aria-hidden="true"><span className="omMessengerOrnamentNight"/><span className="omMessengerOrnamentDay"/></div>
+ return <main className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{color:"var(--text,#f4f4f5)"}}><div className="omMessengerPattern" aria-hidden="true"/><div className="omMessengerOrnaments" aria-hidden="true"><span className="omMessengerOrnamentNight"/><span className="omMessengerOrnamentDay"/></div>
  <div className="omMessengerTop"><div><Link href="/" className="omMessengerHome">← Home</Link><h1 className="omMessengerHeading">Messages</h1></div><button className="omMessengerNewButton" type="button" onClick={()=>setNewChatOpen(v=>!v)} aria-label="Create message, group, or call" aria-expanded={newChatOpen}>＋</button></div>
  {selected&&<nav className="omMobileThreadStrip" aria-label="Switch conversations">{Array.from(new Set(threads.map(t=>t.conversation_id))).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return <button key={cid} type="button" className={"omMobileThread "+(selected===cid?"isActive":"")} onClick={()=>setSelected(cid)}><span className="omMobileThreadAvatar">{avatars[peer]?<img src={avatars[peer]} alt=""/>:"☪"}</span><strong>{names[peer]||"Member"}</strong><small>{threadPreviews[cid]||"Start chatting"}</small></button>})}</nav>}
  <div className={"omMessengerShell "+(selected?"omMessengerShell--chat":"omMessengerShell--list")} style={{display:"grid",gridTemplateColumns:"minmax(220px,1fr) minmax(0,2fr)",minHeight:560,border:"1px solid #64748b55",borderRadius:28,overflow:"hidden"}}>
@@ -543,5 +543,46 @@ export default function MessagesPage(){
 .omImessagePage .omMessageComposer button{border-radius:14px!important}
 `}
 </style>
+ <style jsx global>{`
+/* Messenger is a full-page 1Muslim workspace, not a centered embedded widget. */
+html:has(.omMessengerUnified),body:has(.omMessengerUnified){min-height:100%;overflow-x:hidden}
+body:has(.omMessengerUnified){padding-bottom:0!important;background:#041810!important}
+.omImessagePage.omMessengerUnified{
+ box-sizing:border-box!important;position:relative!important;isolation:isolate;
+ width:100%!important;max-width:none!important;margin:0!important;
+ min-height:100dvh!important;height:100dvh!important;
+ padding:calc(env(safe-area-inset-top,0px) + 12px) clamp(10px,2.2vw,32px) calc(env(safe-area-inset-bottom,0px) + 10px)!important;
+ display:flex!important;flex-direction:column!important;overflow:hidden!important;
+ background:radial-gradient(ellipse at 18% 10%,#23865a42,transparent 48%),radial-gradient(ellipse at 86% 78%,#b5a35c17,transparent 42%),linear-gradient(145deg,#03130e,#09291e 52%,#04150f)!important;
+}
+.omMessengerUnified::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 25% 20%,#a5ffd20b,transparent 25%),linear-gradient(125deg,transparent 35%,#a4e4b508 49%,transparent 62%);animation:omMessengerAmbient 18s ease-in-out infinite alternate}
+@keyframes omMessengerAmbient{to{opacity:.65;transform:scale(1.045) translateY(-1%)}}
+.omMessengerUnified .omMessengerTop{flex:0 0 auto!important;margin:0 0 10px!important;min-height:50px!important}
+.omMessengerUnified .omMessengerShell{flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;width:100%!important;margin:0!important;border-radius:clamp(16px,2vw,28px)!important;border:1px solid #c9e8bf36!important;background:linear-gradient(145deg,#0b3026b5,#041711d9)!important;backdrop-filter:blur(24px) saturate(125%);-webkit-backdrop-filter:blur(24px) saturate(125%);box-shadow:inset 0 1px #ffffff20,0 20px 65px #0006!important;overflow:hidden!important}
+.omMessengerUnified .omConversationList,.omMessengerUnified .omChatPane{min-height:0!important;max-height:100%!important;overflow:hidden!important}
+.omMessengerUnified .omConversationList{overflow-y:auto!important;background:#071f1b6e!important}
+.omMessengerUnified .omChatPane{display:flex!important;flex-direction:column!important;background:#041713a8!important}
+.omMessengerUnified .omChatHeader{flex:0 0 auto!important;background:linear-gradient(120deg,#0b3c2eaa,#0a2421b8)!important;backdrop-filter:blur(18px)}
+.omMessengerUnified .omMessagesFeed{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain}
+.omMessengerUnified .omMessageComposer{flex:0 0 auto!important;position:relative!important;bottom:auto!important;margin:0!important;padding-bottom:max(10px,env(safe-area-inset-bottom,0px))!important;background:#09271fdf!important;backdrop-filter:blur(18px)}
+.omMessengerUnified .omMobileThreadStrip{flex:0 0 auto!important}
+.omMessengerUnified .omChatCallActions{display:flex!important}
+.omMessengerUnified .mc-launch{display:none!important}
+@media(max-width:700px){
+ .omImessagePage.omMessengerUnified{padding:calc(env(safe-area-inset-top,0px) + 4px) 0 max(4px,env(safe-area-inset-bottom,0px))!important;border-radius:0!important}
+ .omMessengerUnified .omMessengerTop{padding:0 12px!important;margin:0 0 5px!important}
+ .omMessengerUnified .omMessengerShell{border-radius:18px 18px 0 0!important;min-height:0!important}
+ .omMessengerUnified .omMessengerShell--chat{display:flex!important;flex-direction:column!important}
+ .omMessengerUnified .omMessengerShell--chat .omConversationList{display:none!important}
+ .omMessengerUnified .omMessengerShell--chat .omChatPane{flex:1 1 auto!important;min-height:0!important}
+ .omMessengerUnified .omMessengerShell--list .omConversationList{height:100%!important}
+ .omMessengerUnified .omMessengerShell--list .omChatPane{display:none!important}
+ .omMessengerUnified .omMobileThreadStrip{min-height:0!important;max-height:102px!important;padding:3px 10px 6px!important}
+ .omMessengerUnified .omChatHeader{padding:10px!important}
+ .omMessengerUnified .omMessageComposer{padding:8px 9px max(10px,env(safe-area-inset-bottom,0px))!important}
+ .omMessengerUnified .omMessageComposer input[aria-label="Message"]{width:0!important;flex:1 1 0!important}
+}
+@media(prefers-reduced-motion:reduce){.omMessengerUnified::before{animation:none}}
+`}</style>
  </main>
 }
