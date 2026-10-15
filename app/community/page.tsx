@@ -64,6 +64,14 @@ export default function Community() {
   const preview=(p:Post)=><>{p.media&&<div className="omPostMedia" style={{filter:p.filter||"none"}}>{p.mediaType==="video"?<div className="omLaminatedVideo"><video src={p.media} autoPlay loop muted={inlineMuted} playsInline preload="metadata" style={{width:"100%",maxHeight:420,objectFit:"cover"}}/><button type="button" onClick={()=>setInlineMuted(v=>!v)} aria-label={inlineMuted?"Unmute video":"Mute video"}>{inlineMuted?"🔇 Tap to unmute":"🔊 Tap to mute"}</button>{p.id&&<button type="button" onClick={()=>openVideo(p.id)}>⛶ Expand</button>}</div>:<img src={p.media} alt="Attached post media"/>}{p.overlay&&<strong className="omPostOverlay">{p.overlay}</strong>}</div>}{p.link&&youtube(p.link)&&<div className="omExternalVideo"><iframe title="YouTube shared video" src={"https://www.youtube-nocookie.com/embed/"+youtube(p.link)} loading="lazy" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerPolicy="strict-origin-when-cross-origin"/><a href={p.link} target="_blank" rel="noopener noreferrer">View original on YouTube ↗</a></div>}{p.link&&tiktok(p.link)&&<div className="omExternalVideo"><iframe title="TikTok shared video" src={"https://www.tiktok.com/embed/v2/"+tiktok(p.link)} loading="lazy" allow="fullscreen" referrerPolicy="strict-origin-when-cross-origin"/><a href={p.link} target="_blank" rel="noopener noreferrer">View original on TikTok ↗</a></div>}{p.link&&liveUrl(p.link)&&<a className="omLivePostCard" href={liveUrl(p.link)}>🔴 Open 1Muslim Live · Watch in real time ↗</a>}{p.link&&<a className="omLinkPreview" href={p.link} target="_blank" rel="noopener noreferrer">{youtube(p.link)?<img src={"https://img.youtube.com/vi/"+youtube(p.link)+"/hqdefault.jpg"} alt="Video thumbnail"/>:<span>🔗</span>}<span> {youtube(p.link)?"▶ Watch video":"↗ Open website"}<small>{new URL(p.link).hostname}</small></span></a>}</>;
 
   const [commentDraft,setCommentDraft]=useState<Record<string,string>>({});
+  type SharedComment={id:string;post_id:string;parent_id:string|null;name:string;body:string;likes:number;liked:boolean};
+  const [sharedComments,setSharedComments]=useState<Record<string,SharedComment[]>>({});
+  const [replyTo,setReplyTo]=useState<Record<string,string|null>>({});
+  const [commentBusy,setCommentBusy]=useState(false);
+  const refreshComments=async()=>{try{const r=await fetch("/api/ummah-comments",{cache:"no-store"});if(!r.ok)return;const data=await r.json();const grouped:Record<string,SharedComment[]>={};for(const c of data.comments||[]){(grouped[c.post_id]??=[]).push(c)}setSharedComments(grouped)}catch{}};
+  useEffect(()=>{refreshComments();const t=setInterval(refreshComments,15000);return()=>clearInterval(t)},[]);
+  const toggleCommentLike=async(id:string)=>{const r=await fetch("/api/ummah-comment-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({commentId:id})});if(!r.ok){setNotice("Sign in to like comments.");return}await refreshComments()};
+
   const [following,setFollowing]=useState<Record<string,boolean>>({});
   const [notifications,setNotifications]=useState(false);
 
@@ -102,9 +110,10 @@ export default function Community() {
 
   const like=(id:string)=>{animate(id,"❤️","like");setNotice("Shared likes are not available yet; nothing was saved.")};
 
-  const addComment=(id:string)=>{
-    const text=(commentDraft[id]||"").trim(); if(!text)return;
-    setNotice("Shared comments are not available yet; your reply was not submitted.");
+  const addComment=async(id:string)=>{
+    const text=(commentDraft[id]||"").trim();if(!text||commentBusy)return;
+    setCommentBusy(true);
+    try{const r=await fetch("/api/ummah-comments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:id,parentId:replyTo[id]||null,body:text})});const result=await r.json();if(!r.ok){setNotice(result.error||"Could not save comment");return}setCommentDraft(d=>({...d,[id]:""}));setReplyTo(d=>({...d,[id]:null}));await refreshComments()}catch{setNotice("Unable to save comment. Try again.")}finally{setCommentBusy(false)}
   };
 
   return <main className="communityPage">
@@ -143,12 +152,12 @@ export default function Community() {
               <div className="postHeader"><strong>{post.name}</strong><span>{post.handle} · {new Date(post.created).toLocaleDateString()}</span><button>•••</button></div>
               <p className="omPostTextReveal">{post.text.replace(/\\r\\n|\\n|\\r/g, "\n")}</p>{preview(post)}
               <div className="postActions">
-                <button onClick={()=>setCommentDraft(c=>({...c,[post.id]:c[post.id]===undefined?"":c[post.id]}))}>💬 {post.comments.length}</button>
+                <button onClick={()=>setCommentDraft(c=>({...c,[post.id]:c[post.id]===undefined?"":c[post.id]}))}>💬 {(sharedComments[post.id]||[]).length}</button>
                 <button className={post.liked?"liked":""} onClick={()=>like(post.id)}>❤️ {post.likes}</button>
                 <button onClick={()=>{animate(post.id,"✨","share");const url=location.origin+"/community";if(navigator.share)void navigator.share({title:"1Muslim",text:post.text,url}).then(chime).catch(()=>{});else void navigator.clipboard.writeText(post.text+"\n"+url).then(()=>{setNotice("🔗 Copied post and community link!");chime()})}}>↗ Share</button>
               </div>
-              <div className="commentBox"><input value={commentDraft[post.id]||""} onChange={e=>setCommentDraft(c=>({...c,[post.id]:e.target.value}))} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();addComment(post.id)}}} placeholder="Reply to this post…"/><button onClick={()=>addComment(post.id)}>Reply</button></div>
-              {post.comments.map(c=><div className="comment" key={c.id}><div className="smallAvatar">1M</div><div><strong>{c.name}</strong><p>{c.text}</p></div></div>)}
+              <div className="commentBox"><input value={commentDraft[post.id]||""} onChange={e=>setCommentDraft(c=>({...c,[post.id]:e.target.value}))} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();addComment(post.id)}}} placeholder={replyTo[post.id]?"Write a reply…":"Reply to this post…"}/><button disabled={commentBusy} onClick={()=>addComment(post.id)}>Reply</button>{replyTo[post.id]&&<button onClick={()=>setReplyTo(v=>({...v,[post.id]:null}))}>Cancel</button>}</div>
+              {(sharedComments[post.id]||[]).map(c=><div className="comment" key={c.id} style={{marginLeft:c.parent_id?24:0}}><div className="smallAvatar">1M</div><div><strong>{c.name}</strong><p>{c.body}</p><button type="button" onClick={()=>setReplyTo(v=>({...v,[post.id]:c.id}))}>↩ Reply</button><button type="button" aria-pressed={c.liked} onClick={()=>toggleCommentLike(c.id)}>{c.liked?"❤️":"♡"} {c.likes}</button></div></div>)}
             </div>
           </article>{(index+1)%5===0&&<aside className="omVerseGlass" aria-label="Quran reflection"><span className="omVerseMark">۞</span><p className="omVerseArabic" lang="ar" dir="rtl">{verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].arabic}</p><p>{verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].text}</p><small>{verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].ref}</small><Link href={"/quran-studio?verse="+encodeURIComponent(verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].verse)} aria-label="Open verse in Quran Studio">↗</Link></aside>}</div>)}
         </section>
