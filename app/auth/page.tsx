@@ -114,7 +114,8 @@ export default function AuthPage() {
     }
   };
 
-  if(entryStage!=="auth")return <main className={"authPreview "+(day?"authPreviewDay":"")+" authEntryShell"}>
+  const embedded=typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("embedded");
+  if(entryStage!=="auth")return <main className={"authPreview "+(day?"authPreviewDay":"")+" authEntryShell"+(embedded?" authEntryEmbedded":"")}>
     <div className="authHomeBackdrop" aria-hidden="true"><div className="authHomeNight"/><div className="authHomeDay"/><div className="authHomeShade"/></div>
     <section className={"authEntryCard "+(entryReady?"authEntryReady":"")} aria-label="1Muslim welcome">
       <span className="authEntryEyebrow">✦ 1MUSLIM · WELCOME</span>
@@ -140,6 +141,12 @@ export default function AuthPage() {
       .authEntryHome{position:absolute;top:13px;right:13px;border:1px solid #d8c78e77;border-radius:50%;width:38px;height:38px;background:#12493e;color:#f6dfb0;cursor:pointer}
       .authEntryCard small{font-size:11px;line-height:1.5;color:#c7d7cb}
       @media(prefers-reduced-motion:reduce){.authEntryCard{transition:none;transform:none}}
+    `}</style>
+    <style>{`
+      .authEntryEmbedded{background:transparent!important;min-height:100%!important;height:100dvh!important;padding:8px!important}
+      .authEntryEmbedded .authHomeBackdrop{display:none!important}
+      .authEntryEmbedded .authEntryCard{max-height:100%;min-height:0;overflow-y:auto;scrollbar-width:thin;box-shadow:0 14px 35px #001e163b}
+      @media(max-width:600px){.authEntryEmbedded .authEntryCard{padding:22px 16px;border-radius:22px}}
     `}</style>
   </main>;
   return <main className={"authPreview "+(day?"authPreviewDay":"")+(isShahadaSignup?" authShahada":"")+(typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("embedded")?" authEmbedded":"")}><RisingEnergyOrbs tone="blue" density="ambient"/><div className="authHomeBackdrop" aria-hidden="true"><div className="authHomeNight"/><div className="authHomeDay"/><div className="authHomeShade"/></div><div className="authOrbit authOrbitOne"/><div className="authOrbit authOrbitTwo"/><section className={"authGlass "+(isShahadaSignup?"visionShahada ":"visionLogin ")+(visionStep===2?"visionSecond":"visionFirst") } aria-label="1Muslim account">{isShahadaSignup&&<div className="shahadaCinematicHero" aria-label="HudHud protects your secure Shahada journey"><div className="shahadaHeroHalo" aria-hidden="true"/><div className="shahadaHeroGuardian" aria-hidden="true"><Image src="/assets/hudhud-logo.PNG" alt="" width={116} height={116} className="shahadaHeaderBird"/></div><RisingEnergyOrbs tone="blue" density="focused"/><div className="shahadaHeroTitle"><span>HUDHUD</span><strong>SECURE COMMUNITY</strong></div></div>}<div className="authArt"><span>✦ 1MUSLIM · THE UMMAH</span><div className="authSymbol"><Image src="/assets/HudHud-Quran.png" alt="Qur’an Studio artwork" width={185} height={185} style={{objectFit:"contain",maxWidth:"100%",height:"auto"}}/></div><h1>{isShahadaSignup?"1Muslim":"Welcome home."}</h1><p>Connect. Learn. Reflect. Together.</p><div className="shahadaCounter" aria-label="Shahada voice attempts on this device"><span className="shahadaCounterLight" aria-hidden="true"/><span>SHAHADA VOICE ATTEMPTS</span><strong>{voiceAttempts===null?"—":voiceAttempts.toLocaleString()}</strong><small>THIS DEVICE</small></div><div className="securitySequence" aria-label="Shahada, account, admission">SHAHADA <span>—</span> ACCOUNT <span>—</span> ADMISSION</div></div><div className="authPanel"><div className="authJourneyDuplicate"><AdmissionJourney stage={1} compact detail={isShahadaSignup?"Begin with the Shahada. Create your account to securely save the recording and complete verification.":"Already Muslim? Sign in to your existing account."}/></div><div className="authTop"><span>{isShahadaSignup?"Secure with HudHud":"Secure sign in"}</span></div><p className="authLead">{isShahadaSignup?"Your Shahada comes first. Tap HudHud to begin; create an account to securely record and save your declaration.":"Your conversations, learning, and community await."}</p><button className="authSwitch" type="button" onClick={()=>{setIsShahadaSignup(v=>!v);setMessage("");setAffirmed(false)}}>{isShahadaSignup?"← I already have an account":"← Begin with the Shahada"}</button>{isShahadaSignup&&<div className="shahadaUnified">
