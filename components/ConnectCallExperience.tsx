@@ -4,7 +4,7 @@ import {Room,RoomEvent,Track} from "livekit-client";
 import {createClient} from "../utils/supabase/client";
 import {usePathname,useRouter} from "next/navigation";
 type Call={id:string;caller_id:string;callee_id:string;mode:"audio"|"video";status:string};
-export default function ConnectCallExperience({conversationId,userId,peerName,peerAvatar}:{conversationId:string;userId:string;peerName:string;peerAvatar?:string|null}){
+export default function ConnectCallExperience({conversationId,userId,peerName,peerAvatar,autoStartMode}:{conversationId:string;userId:string;peerName:string;peerAvatar?:string|null;autoStartMode?:"audio"|"video"}){
  const router=useRouter();const pathname=usePathname();
  const [minimized,setMinimized]=useState(false);
  const [miniPosition,setMiniPosition]=useState<{x:number;y:number}|null>(null);
@@ -56,6 +56,8 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  return()=>{alive=false;window.removeEventListener("focus",onFocus);void supabase.removeChannel(channel);clearInterval(timer);room.current?.disconnect();room.current=null}},[conversationId]);
  const start=async(mode:"audio"|"video")=>{setError("");try{await request({action:"invite",mode});const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId));const d=await r.json();setCall(d.call??null)}catch(e){setError(e instanceof Error?e.message:"Could not call")}};
  useEffect(()=>{const onStart=(event:Event)=>{const mode=(event as CustomEvent<"audio"|"video">).detail;if(mode!=="audio"&&mode!=="video")return;if(callRef.current||serviceUnavailable)return;void start(mode)};window.addEventListener("1muslim:start-call",onStart);return()=>window.removeEventListener("1muslim:start-call",onStart)},[conversationId,serviceUnavailable]);
+ const autoStarted=useRef(false);
+ useEffect(()=>{if(!autoStartMode||autoStarted.current)return;autoStarted.current=true;const timer=window.setTimeout(()=>{window.dispatchEvent(new CustomEvent("1muslim:start-call",{detail:autoStartMode}))},950);return()=>window.clearTimeout(timer)},[autoStartMode]);
  const connect=async(id:string,mode:"audio"|"video")=>{
  if(connectingId.current===id||activeCallId.current===id)return;
  connectingId.current=id;setIntroFinished(false);setPhase("intro");setError("");setConnectionState("normal");
