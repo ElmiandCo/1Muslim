@@ -1416,3 +1416,15 @@
  top:110px!important;width:min(70vw,390px)!important;height:165px!important;
  }
 }
+
+/* Keep the one canonical navigation and decorative artwork anchored above every canvas.
+   The name arrives slightly ahead of the greeting and remains within the viewport. */
+.control .introGreeting>.eyebrow{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:transform 1.45s cubic-bezier(.22,1,.36,1),opacity .7s ease}
+.control.navMotionCollapsed .introGreeting>.eyebrow{transform:translate3d(0,0,0);transition-duration:1.45s,.7s}
+.control.navMotionCollapsed .introGreeting{max-width:calc(100vw - 28px)!important;overflow:visible}
+.control.navMotionCollapsed .introGreeting .greetingWithOrb{max-width:100%!important}
+.control.navMotionCollapsed .introGreeting .greetingWithOrb>.greetingText{font-size:clamp(14px,3.7vw,30px)!important}
+.control.navMotionCollapsed .introGreeting>.eyebrow{font-size:clamp(10px,2.4vw,15px);max-width:100%;padding-inline:5px}
+.control .introArabicName{font-size:1.08em!important;white-space:nowrap}
+@media(max-width:650px){.control.navMotionCollapsed .introGreeting{width:calc(100vw - 24px)!important}.control.navMotionCollapsed .introGreeting>.eyebrow{font-size:clamp(10px,2.5vw,13px)}}
+@media(prefers-reduced-motion:reduce){.control .introGreeting>.eyebrow{transition:none!important}}
