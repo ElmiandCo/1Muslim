@@ -564,3 +564,10 @@
 .fillArea> :global([class*="workspacePager"]){position:relative!important;z-index:4!important;width:max-content!important;max-width:calc(100% - 60px)!important;min-height:38px!important;margin:5px auto 7px!important;padding:4px 12px!important;gap:3px!important;flex-wrap:nowrap!important}
 .fillArea> :global([class*="workspacePager"]) button{min-width:28px!important;min-height:28px!important;padding:3px!important}
 @media(max-width:650px){.fillArea::before{inset:4px;border-radius:20px}.fillArea>.canvasExpandHandle{margin-right:10px!important}.fillArea> :global([class*="workspaceDownButton"]){margin-right:10px!important}}
+
+/* Elm Tent · fifth Canvas. Reuses existing themed scene assets and motion field. */
+.slide[data-workspace-page="4"] .night{background-image:url("/assets/decorations/background-valley-night.PNG")}
+.slide[data-workspace-page="4"] .day{background-image:url("/assets/decorations/background-valley-day.PNG")}
+.elmTentCard{display:flex!important;flex-direction:column!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;padding:clamp(7px,1.6vw,14px)!important;border-radius:clamp(19px,3vw,30px)!important;background:rgba(5,40,35,.13)!important}
+.elmTentCard>div{flex:1;min-height:0}
+@media(prefers-reduced-motion:reduce){.slide[data-workspace-page="4"] .night,.slide[data-workspace-page="4"] .day{transition:none!important}}
