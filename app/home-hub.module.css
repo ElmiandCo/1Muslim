@@ -1428,3 +1428,10 @@
 .control .introArabicName{font-size:1.08em!important;white-space:nowrap}
 @media(max-width:650px){.control.navMotionCollapsed .introGreeting{width:calc(100vw - 24px)!important}.control.navMotionCollapsed .introGreeting>.eyebrow{font-size:clamp(10px,2.5vw,13px)}}
 @media(prefers-reduced-motion:reduce){.control .introGreeting>.eyebrow{transition:none!important}}
+
+/* Tighten the control strip without sacrificing tap targets or existing actions. */
+.control .widgetArea .workspaceDownButton{width:32px!important;height:32px!important;min-height:32px!important;padding:0!important;margin:0 14px -33px auto!important;border-radius:50%!important;font-size:0!important;gap:0!important;display:inline-flex!important}
+.control .widgetArea .workspaceDownButton span{font-size:19px!important;animation:none!important}
+.control .widgetArea .workspacePager{width:max-content!important;max-width:calc(100% - 64px)!important;min-height:38px!important;padding:4px 11px!important;margin:5px auto 7px!important;gap:3px!important;flex-wrap:nowrap!important}
+.control .widgetArea .workspacePager button{min-width:28px!important;min-height:28px!important;padding:3px!important}
+.control .widgetArea .workspacePagerLabel{font-size:9px!important;letter-spacing:.10em!important;padding:0 5px!important}
