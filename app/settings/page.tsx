@@ -13,6 +13,7 @@ export default function SettingsPage() {
   const notificationCategories=[["messages","💬 Direct messages"],["calls","📞 Incoming calls"],["live","🔴 Ashab going live"],["ashab","🤝 Ashab requests"],["learning","📖 Quran & learning reminders"]];
   const setNotification=(key:string,value:boolean)=>setNotificationPrefs(old=>{const next={...old,[key]:value};try{localStorage.setItem("1muslim-notification-preferences",JSON.stringify(next))}catch{}return next});
   const requestNotifications=async()=>{if(!("Notification" in window)){setMessage("Phone notifications are not supported in this browser. On iPhone, open 1Muslim from your Home Screen.");return}try{const status=await Notification.requestPermission();setPermission(status);setMessage(status==="granted"?"Notification permission granted on this device. Phone push delivery still needs server setup.":status==="denied"?"Notifications were blocked. Enable them in your phone settings.":"Notification permission not enabled.")}catch{setMessage("Could not request notification permission.")}};
+  const [appearanceMode,setAppearanceMode]=useState<"day"|"night"|"auto">("night");
   const [elmiLight, setElmiLight] = useState(true);
   const [elmiSound, setElmiSound] = useState(false);
   const [hudhudVision, setHudhudVision] = useState(true);
@@ -24,6 +25,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     try { const saved=localStorage.getItem("1muslim-notification-preferences");if(saved)setNotificationPrefs(old=>({...old,...JSON.parse(saved)}));if("Notification" in window)setPermission(Notification.permission); } catch {}
+    try {const stored=localStorage.getItem("1muslim-theme-mode");setAppearanceMode(stored==="day"||stored==="night"||stored==="auto"?stored:(document.documentElement.classList.contains("light")?"day":"night"));} catch {}
     try { setElmiLight(localStorage.getItem("1muslim-elmi-light") !== "off"); setElmiSound(localStorage.getItem("1muslim-elmi-light-sound") === "on"); setHudhudVision(localStorage.getItem("1muslim-hudhud-vision-enabled") !== "off"); } catch {}
     (async () => {
       const s = createClient();
@@ -34,6 +36,8 @@ export default function SettingsPage() {
       setLoading(false);
     })();
   }, []);
+
+  const saveAppearance=(mode:"day"|"night"|"auto")=>{setAppearanceMode(mode);localStorage.setItem("1muslim-theme-mode",mode);const day=mode==="day"||(mode==="auto"&&window.matchMedia("(prefers-color-scheme: light)").matches);localStorage.setItem("1muslim-theme",day?"light":"dark");document.documentElement.classList.toggle("light",day);window.dispatchEvent(new Event("1muslim:appearance-updated"));window.dispatchEvent(new Event("1muslim:theme-changed"));setMessage("Appearance updated to "+(mode==="auto"?"Auto":mode==="day"?"Day":"Night")+".");};
 
   const saveElmiLight = (next: boolean) => {
     setElmiLight(next);
@@ -103,6 +107,7 @@ export default function SettingsPage() {
         <p>Control the small things that follow you around the site.</p>
       </header>
 
+      <section className="settingsCard" data-no-tap-shimmer style={{display:"block"}} aria-label="Appearance settings"><div className="settingCopy"><span className="settingIcon">☀</span><div><span className="eyebrow">APPEARANCE · DAY / NIGHT</span><h2>Theme & atmosphere</h2><p>Choose the Canvas lighting. Auto follows your device appearance. Your orb stays a simple day/night toggle.</p></div></div><div role="group" aria-label="Theme mode" style={{display:"flex",flexWrap:"wrap",gap:9,marginTop:16}}>{(["day","night","auto"] as const).map(mode=><button type="button" key={mode} aria-pressed={appearanceMode===mode} onClick={()=>saveAppearance(mode)} style={{minHeight:44,padding:"9px 18px",borderRadius:999,border:appearanceMode===mode?"2px solid #cda65a":"1px solid #698d7b",background:appearanceMode===mode?"#1b6647":"transparent",color:"inherit",cursor:"pointer",fontWeight:700}}>{mode==="day"?"☀ Day":mode==="night"?"☾ Night":"◉ Auto"}</button>)}</div></section>
       <section className="settingsCard" data-no-tap-shimmer style={{display:"block"}}><div className="settingCopy"><span className="settingIcon">📍</span><div><span className="eyebrow">LOCATION · COMMUNITY</span><h2>Your city</h2><p>Set once for Prayer Times and future mosque and event discovery.</p></div></div><div style={{marginTop:16}}><LocationPreferences/></div></section>
       <section className="settingsCard" data-no-tap-shimmer style={{display:"block"}}>
         <div className="settingCopy"><span className="settingIcon">🔔</span><div><span className="eyebrow">NOTIFICATIONS · DEFAULT ON</span><h2>Phone notifications</h2><p>Choose what you'd like to hear about. Your choices start ON, but your phone must grant notification permission. Push delivery requires a separate server integration.</p></div></div>
