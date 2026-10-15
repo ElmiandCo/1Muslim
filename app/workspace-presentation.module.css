@@ -509,3 +509,11 @@
 :global(html:not(.light)) .slide .day{opacity:0!important}
 :global(html.light) .slide .night{opacity:1!important}
 @media(prefers-reduced-motion:reduce){.canvasParticles span{animation:none!important;opacity:.22!important;will-change:auto}}
+
+/* Canvas expansion never changes shared navigation or scene decoration. */
+.fillArea[data-canvas-expanded="true"]{height:calc(var(--workspace-fit-height,560px) + clamp(90px,18dvh,220px))!important}
+.canvasExpandHandle{position:relative;z-index:5;align-self:center;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:26px;margin:2px auto 4px;padding:3px 13px;border:1px solid rgba(228,198,134,.43);border-radius:999px;background:rgba(8,42,33,.58);color:#e5d6ad;font-size:9px;font-weight:750;letter-spacing:.17em;cursor:pointer;backdrop-filter:blur(12px);transition:background .3s ease,transform .3s ease,border-color .3s ease}
+.canvasExpandHandle:hover,.canvasExpandHandle:focus-visible{background:rgba(28,75,57,.85);border-color:#e6d09b;transform:translateY(-1px)}
+.canvasExpandHandle span:first-child{font-size:17px;line-height:1}
+:global(html.light) .canvasExpandHandle{background:rgba(50,76,48,.52);color:#ffe5b0}
+@media(prefers-reduced-motion:reduce){.canvasExpandHandle{transition:none!important}}
