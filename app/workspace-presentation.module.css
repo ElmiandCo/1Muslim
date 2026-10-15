@@ -550,3 +550,17 @@
   .canvasParticles span{opacity:.10!important}
   .viewport{scroll-behavior:auto!important}
 }
+
+/* Ornamental frame: use previously unused perimeter as intentional Islamic decoration. */
+.fillArea{position:relative!important;isolation:isolate}
+.fillArea::before{content:"";position:absolute;inset:6px 8px;z-index:0;pointer-events:none;border:1px solid rgba(243,221,166,.34);border-radius:26px;background:repeating-linear-gradient(45deg,transparent 0 23px,rgba(247,228,179,.035) 23px 24px),radial-gradient(ellipse at 50% 0%,rgba(234,199,112,.13),transparent 56%);box-shadow:inset 0 0 0 6px rgba(218,180,96,.035)}
+:global(html.light) .fillArea::before{border-color:rgba(44,104,73,.45);background:repeating-linear-gradient(45deg,transparent 0 23px,rgba(28,105,71,.045) 23px 24px),radial-gradient(ellipse at 50% 0%,rgba(224,181,84,.20),transparent 58%);box-shadow:inset 0 0 0 6px rgba(42,121,76,.035)}
+.fillArea::after{content:"۞";position:absolute;top:6px;left:50%;transform:translateX(-50%);z-index:1;pointer-events:none;color:rgba(247,218,151,.62);font-family:serif;font-size:22px;line-height:1;opacity:.75}
+:global(html.light) .fillArea::after{color:rgba(30,112,72,.62)}
+.fillArea>.canvasExpandHandle{position:relative;z-index:5;align-self:flex-end!important;margin:4px 16px 0 0!important;width:27px!important;height:27px!important;min-height:27px!important;padding:0!important;gap:0!important;border-radius:50%!important;font-size:0!important}
+.fillArea>.canvasExpandHandle span:first-child{font-size:18px!important}
+.fillArea> :global([class*="workspaceDownButton"]){position:relative!important;z-index:5!important;align-self:flex-end!important;width:32px!important;height:32px!important;min-height:32px!important;margin:0 18px -33px 0!important;padding:0!important;border-radius:50%!important;font-size:0!important;gap:0!important}
+.fillArea> :global([class*="workspaceDownButton"]) span{font-size:19px!important;animation:none!important}
+.fillArea> :global([class*="workspacePager"]){position:relative!important;z-index:4!important;width:max-content!important;max-width:calc(100% - 60px)!important;min-height:38px!important;margin:5px auto 7px!important;padding:4px 12px!important;gap:3px!important;flex-wrap:nowrap!important}
+.fillArea> :global([class*="workspacePager"]) button{min-width:28px!important;min-height:28px!important;padding:3px!important}
+@media(max-width:650px){.fillArea::before{inset:4px;border-radius:20px}.fillArea>.canvasExpandHandle{margin-right:10px!important}.fillArea> :global([class*="workspaceDownButton"]){margin-right:10px!important}}
