@@ -7,21 +7,21 @@
 .scene{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;border-radius:inherit}
 .night,.day{position:absolute;inset:0;background-position:center;background-size:cover;background-repeat:no-repeat;will-change:opacity}
 .night{opacity:1}
-.day{opacity:0;transition:opacity 2000ms cubic-bezier(.45,0,.18,1)}
-:global(.control.day) .day{opacity:1}
-:global(.control.day) .night{opacity:1}
+.day{opacity:0;transition:opacity 1600ms cubic-bezier(.45,0,.18,1)}
+:global(html.light) .day{opacity:1}
+:global(html.light) .night{opacity:1}
 .slide[data-workspace-page="0"] .night{background-image:url("/assets/decorations/islamic-white-ornament.PNG");background-size:min(90%,760px) auto;background-color:#08362c;filter:sepia(.45) hue-rotate(92deg) saturate(1.4)}
 .slide[data-workspace-page="3"] .night{background-image:url("/assets/decorations/background-mosque-night.PNG")}
 .slide[data-workspace-page="0"] .day{background-image:url("/assets/decorations/islamic-gold-ornament.PNG");background-size:min(90%,760px) auto;background-color:#244c3b}
 .slide[data-workspace-page="3"] .day{background-image:url("/assets/decorations/background-mosque-day.PNG")}
-.slide[data-workspace-page="1"] .night{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-night.PNG&w=1920&q=95")}
-.slide[data-workspace-page="1"] .day{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-valley-day.PNG&w=1920&q=95")}
-.slide[data-workspace-page="2"] .night{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-nature-night.PNG&w=1920&q=95")}
-.slide[data-workspace-page="2"] .day{background-image:url("/_next/image?url=%2Fassets%2Fdecorations%2Fbackground-nature-day.PNG&w=1920&q=95")}
+.slide[data-workspace-page="1"] .night{background-image:url("/assets/decorations/background-valley-night.PNG")}
+.slide[data-workspace-page="1"] .day{background-image:url("/assets/decorations/background-valley-day.PNG")}
+.slide[data-workspace-page="2"] .night{background-image:url("/assets/decorations/background-nature-night.PNG")}
+.slide[data-workspace-page="2"] .day{background-image:url("/assets/decorations/background-nature-day.PNG")}
 .content{position:relative!important;z-index:1!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;padding:12px!important;margin:0!important;background:transparent!important}
 .content>[data-widget]{min-width:0!important;max-width:100%!important;box-sizing:border-box!important;background:transparent!important}
 .content>[data-widget]>[class*="widgetCanvas"]{box-sizing:border-box!important;min-width:0!important;width:100%!important;max-width:100%!important;background:linear-gradient(180deg,rgba(7,35,28,.12),rgba(2,26,22,.19))!important;backdrop-filter:blur(4px) saturate(120%)!important;-webkit-backdrop-filter:blur(4px) saturate(120%)!important;border:1px solid rgba(235,209,151,.42)!important}
-:global(.control.day) .content>[data-widget]>[class*="widgetCanvas"]{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(7,55,37,.14))!important}
+:global(html.light) .content>[data-widget]>[class*="widgetCanvas"]{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(7,55,37,.14))!important}
 @media(max-width:650px){.content{padding:8px!important}}
 @media(prefers-reduced-motion:reduce){.day{transition:none}}
 
@@ -42,11 +42,11 @@
   backdrop-filter:blur(4px) saturate(125%)!important;
   -webkit-backdrop-filter:blur(4px) saturate(125%)!important;
 }
-:global(.control.day) .content>[data-widget]>[class*="widgetCanvas"]{
+:global(html.light) .content>[data-widget]>[class*="widgetCanvas"]{
   background:linear-gradient(180deg,rgba(7,40,30,.13),rgba(5,37,28,.18))!important;
   border-color:rgba(195,159,93,.45)!important;
 }
-:global(.control:not(.day)) .content>[data-widget]>[class*="widgetCanvas"]{
+:global(html:not(.light)) .content>[data-widget]>[class*="widgetCanvas"]{
   border-color:rgba(243,207,130,.60)!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 0 20px rgba(231,190,109,.07)!important;
 }
@@ -55,7 +55,7 @@
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
 }
-:global(.control.day) .content>[data-widget] [class*="widgetDetails"]{
+:global(html.light) .content>[data-widget] [class*="widgetDetails"]{
   background:linear-gradient(90deg,rgba(5,41,31,.26),rgba(5,41,31,.04))!important;
 }
 .viewport ~ [class*="workspacePager"]{
@@ -70,7 +70,7 @@
 /* Signed-in workspace: the wallpaper belongs to the scene, never to a card.
    One translucent veil controls readability without obscuring the artwork. */
 .scene::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(0,16,12,.17),rgba(0,19,15,.27));transition:background 2s ease}
-:global(.control.day) .scene::after{background:linear-gradient(180deg,rgba(0,24,17,.10),rgba(0,20,15,.20))}
+:global(html.light) .scene::after{background:linear-gradient(180deg,rgba(0,24,17,.10),rgba(0,20,15,.20))}
 .slide>[class*="controlGrid"]{background:transparent!important}
 .slide [class*="widgetSlot"]{background:transparent!important;box-shadow:none!important}
 .slide [class*="widgetCanvas"]{
@@ -79,7 +79,7 @@
  backdrop-filter:blur(4px) saturate(120%)!important;
  -webkit-backdrop-filter:blur(4px) saturate(120%)!important;
 }
-:global(.control.day) .slide [class*="widgetCanvas"]{background:rgba(6,39,28,.10)!important}
+:global(html.light) .slide [class*="widgetCanvas"]{background:rgba(6,39,28,.10)!important}
 .slide [class*="widgetCanvas"]::before,
 .slide [class*="widgetCanvas"]::after{background-color:transparent!important}
 
@@ -350,10 +350,10 @@
 .slide[data-workspace-page="2"] .day{background-image:url("/assets/decorations/background-nature-day.PNG")!important}
 .slide[data-workspace-page="3"] .night{background-image:url("/assets/decorations/background-mosque-night.PNG")!important}
 .slide[data-workspace-page="3"] .day{background-image:url("/assets/decorations/background-mosque-day.PNG")!important}
-:global(.control.day) .slide .night{opacity:0!important}
-:global(.control.day) .slide .day{opacity:1!important}
-:global(.control:not(.day)) .slide .night{opacity:1!important}
-:global(.control:not(.day)) .slide .day{opacity:0!important}
+:global(html.light) .slide .night{opacity:0!important}
+:global(html.light) .slide .day{opacity:1!important}
+:global(html:not(.light)) .slide .night{opacity:1!important}
+:global(html:not(.light)) .slide .day{opacity:0!important}
 
 /* Quran widget: readable translucent article above the cinematic backdrop. */
 .quranVerseWidget{display:flex!important;flex-direction:column!important;gap:10px!important;padding:clamp(12px,3vw,22px)!important;overflow:hidden!important}
@@ -365,28 +365,28 @@
 .quranVerseTranslation{margin:0;color:#e4eae3;font-size:clamp(12px,2.9vw,16px);line-height:1.65;max-width:54ch}
 .quranVerseLoading{color:#e8d8b3;font-size:14px;line-height:1.7}
 .quranVerseOpen{flex:0 0 auto;align-self:center;border-radius:999px;border:1px solid rgba(238,205,136,.55);padding:10px 18px;color:#f4ddae!important;background:rgba(7,44,37,.8);font-size:12px;letter-spacing:.09em;text-decoration:none}
-:global(.control.day) .quranVerseArticle{background:linear-gradient(160deg,rgba(30,52,46,.65),rgba(18,43,52,.59))}
+:global(html.light) .quranVerseArticle{background:linear-gradient(160deg,rgba(30,52,46,.65),rgba(18,43,52,.59))}
 @media(max-width:650px){.quranVerseWidget{padding:10px!important}.quranVerseArticle{padding:12px!important;border-radius:17px}.quranVerseArabic{font-size:clamp(22px,5.5vw,32px)}}
 
 .messagesChoiceCard{display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:0!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 
 /* Night mode: retain the photographic wallpaper; remove the opaque green
    backing and avoid dimming the scene into a flat canvas. */
-:global(.control:not(.day)) .slide[data-workspace-page="0"] .night,
-:global(.control:not(.day)) .slide[data-workspace-page="1"] .night,
-:global(.control:not(.day)) .slide[data-workspace-page="2"] .night,
-:global(.control:not(.day)) .slide[data-workspace-page="3"] .night{
+:global(html:not(.light)) .slide[data-workspace-page="0"] .night,
+:global(html:not(.light)) .slide[data-workspace-page="1"] .night,
+:global(html:not(.light)) .slide[data-workspace-page="2"] .night,
+:global(html:not(.light)) .slide[data-workspace-page="3"] .night{
  opacity:1!important;
  background-color:transparent!important;
  filter:none!important;
 }
-:global(.control:not(.day)) .slide .day{opacity:0!important}
-:global(.control.day) .slide .night{opacity:0!important}
-:global(.control.day) .slide .day{opacity:1!important}
-:global(.control:not(.day)) .scene::after{
+:global(html:not(.light)) .slide .day{opacity:0!important}
+:global(html.light) .slide .night{opacity:0!important}
+:global(html.light) .slide .day{opacity:1!important}
+:global(html:not(.light)) .scene::after{
  background:linear-gradient(180deg,rgba(0,12,10,.06),rgba(0,15,13,.14))!important;
 }
-:global(.control:not(.day)) .slide [class*="widgetCanvas"]{
+:global(html:not(.light)) .slide [class*="widgetCanvas"]{
  background:rgba(5,28,24,.075)!important;
  background-color:rgba(5,28,24,.075)!important;
  backdrop-filter:blur(2px) saturate(110%)!important;
@@ -408,7 +408,7 @@
    radial-gradient(ellipse at 50% 45%,transparent 14%,rgba(0,0,0,.24) 58%,rgba(0,0,0,.66) 100%),
    linear-gradient(180deg,rgba(0,0,0,.48) 0%,rgba(0,0,0,.10) 28%,transparent 48%,rgba(0,0,0,.12) 76%,rgba(0,0,0,.56) 100%)!important;
 }
-:global(.control.day) .slide[data-workspace-page="1"] .scene::after{
+:global(html.light) .slide[data-workspace-page="1"] .scene::after{
  background:
    radial-gradient(ellipse at 50% 45%,transparent 12%,rgba(0,0,0,.20) 58%,rgba(0,0,0,.58) 100%),
    linear-gradient(180deg,rgba(0,0,0,.42),transparent 43%,rgba(0,0,0,.48))!important;
