@@ -1436,8 +1436,9 @@
 .control .widgetArea .workspacePager button{min-width:28px!important;min-height:28px!important;padding:3px!important}
 .control .widgetArea .workspacePagerLabel{font-size:9px!important;letter-spacing:.10em!important;padding:0 5px!important}
 
-/* Mobile greeting typography alignment: lower labels without moving HudHud orb or nav. */
+/* Mobile greeting alignment: orb and salutation travel as one unit. */
 @media(max-width:700px){
  .control .introGreeting>.eyebrow{position:relative;top:12px}
- .control .introGreeting .greetingWithOrb>.greetingText{position:relative;top:10px}
+ .control .introGreeting .greetingWithOrb{position:relative;top:10px}
+ .control .introGreeting .greetingWithOrb>.greetingText{top:auto;position:static}
 }
