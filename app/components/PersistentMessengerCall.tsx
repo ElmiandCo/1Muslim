@@ -3,7 +3,7 @@ import {useEffect,useState} from "react";
 import {usePathname} from "next/navigation";
 import {createClient} from "../../utils/supabase/client";
 import ConnectCallExperience from "../../components/ConnectCallExperience";
-type Context={conversationId:string;userId:string;peerName:string;peerAvatar:string|null};
+type Context={conversationId:string;userId:string;peerName:string;peerAvatar:string|null;autoStartMode?:"audio"|"video"};
 export default function PersistentMessengerCall(){
  const pathname=usePathname();
  const [context,setContext]=useState<Context|null>(null);
@@ -34,5 +34,5 @@ export default function PersistentMessengerCall(){
   window.addEventListener("1muslim:call-context",listener);
   return()=>window.removeEventListener("1muslim:call-context",listener);
  },[]);
- return <div className={"persistentMessengerCall "+(pathname?.startsWith("/messages")?"onMessages":"offMessages")}>{context&&<ConnectCallExperience key={context.conversationId} conversationId={context.conversationId} userId={context.userId} peerName={context.peerName} peerAvatar={context.peerAvatar}/>}</div>;
+ return <div className={"persistentMessengerCall "+(pathname?.startsWith("/messages")?"onMessages":"offMessages")}>{context&&<ConnectCallExperience key={context.conversationId} conversationId={context.conversationId} userId={context.userId} peerName={context.peerName} peerAvatar={context.peerAvatar} autoStartMode={context.autoStartMode}/>}</div>;
 }
