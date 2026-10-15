@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import SiteNav from "../components/SiteNav";
 import LocationPreferences from "../components/LocationPreferences";
+import SocialConnectionsWidget from "../components/SocialConnectionsWidget";
 import { createClient } from "../../utils/supabase/client";
 
 export default function SettingsPage() {
@@ -107,6 +108,7 @@ export default function SettingsPage() {
         <p>Control the small things that follow you around the site.</p>
       </header>
 
+      <SocialConnectionsWidget />
       <section className="settingsCard" data-no-tap-shimmer style={{display:"block"}} aria-label="Appearance settings"><div className="settingCopy"><span className="settingIcon">☀</span><div><span className="eyebrow">APPEARANCE · DAY / NIGHT</span><h2>Theme & atmosphere</h2><p>Choose the Canvas lighting. Auto follows your device appearance. Your orb stays a simple day/night toggle.</p></div></div><div role="group" aria-label="Theme mode" style={{display:"flex",flexWrap:"wrap",gap:9,marginTop:16}}>{(["day","night","auto"] as const).map(mode=><button type="button" key={mode} aria-pressed={appearanceMode===mode} onClick={()=>saveAppearance(mode)} style={{minHeight:44,padding:"9px 18px",borderRadius:999,border:appearanceMode===mode?"2px solid #cda65a":"1px solid #698d7b",background:appearanceMode===mode?"#1b6647":"transparent",color:"inherit",cursor:"pointer",fontWeight:700}}>{mode==="day"?"☀ Day":mode==="night"?"☾ Night":"◉ Auto"}</button>)}</div></section>
       <section className="settingsCard" data-no-tap-shimmer style={{display:"block"}}><div className="settingCopy"><span className="settingIcon">📍</span><div><span className="eyebrow">LOCATION · COMMUNITY</span><h2>Your city</h2><p>Set once for Prayer Times and future mosque and event discovery.</p></div></div><div style={{marginTop:16}}><LocationPreferences/></div></section>
       <section className="settingsCard" data-no-tap-shimmer style={{display:"block"}}>
