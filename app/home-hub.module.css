@@ -1442,3 +1442,33 @@
  .control .introGreeting .greetingWithOrb{position:relative;top:10px}
  .control .introGreeting .greetingWithOrb>.greetingText{top:auto;position:static}
 }
+
+/* Desktop Headquarters 2.0 — scoped above laptop breakpoint; mobile untouched. */
+.desktopHQ{display:none}
+@media(min-width:1100px) and (min-height:650px){
+ .control{padding-left:clamp(22px,3vw,58px)!important;padding-right:clamp(22px,3vw,58px)!important}
+ .control .controlHeader,.control .intro,.control .surface{max-width:1720px!important}
+ .control .controlHeader{min-height:76px!important;height:76px!important;padding-inline:clamp(10px,1.5vw,28px)!important;border-radius:24px;background:linear-gradient(110deg,#b5efce13,#082b2140);border:1px solid #d8c69435;backdrop-filter:blur(22px)}
+ .control .brand strong{font-size:21px!important;letter-spacing:.13em}
+ .control .brandLogo{width:54px!important;height:54px!important}
+ .control .intro{padding-block:clamp(14px,2vh,25px)!important}
+ .control .intro h1{font-size:clamp(30px,2.7vw,46px)!important}
+ .control .surface{padding:clamp(12px,1.2vw,22px)!important;border-radius:32px!important;box-shadow:inset 0 1px #fff3,0 24px 75px #0007}
+ .control .widgetArea{position:relative!important;padding-right:clamp(272px,25vw,365px)!important}
+ .control .widgetArea .workspaceScroller{width:100%!important;max-width:none!important}
+ .control .widgetArea .workspacePage .customGrid{padding:clamp(12px,1.5vw,24px)!important}
+ .control .widgetArea .workspacePage .customGrid>.widgetSlot>.widgetCanvas{border-radius:30px!important;border-color:#f1ddad85!important;box-shadow:inset 0 1px #fff5,0 18px 45px #0005!important}
+ .control .widgetArea .workspacePager{margin-inline:auto!important}
+ .desktopHQ{display:flex;position:absolute;right:0;top:0;bottom:0;width:clamp(255px,24vw,350px);flex-direction:column;gap:clamp(10px,1.5vh,18px);padding:clamp(8px,1vw,16px);overflow:auto;z-index:3;scrollbar-width:thin}
+ .desktopHQHeading{display:flex;flex-direction:column;gap:5px;padding:10px 7px;color:#f6e6b9}
+ .desktopHQHeading span{font-weight:850;font-size:clamp(17px,1.5vw,22px);letter-spacing:.12em}
+ .desktopHQHeading small{font-size:10px;letter-spacing:.13em;color:#c8d8c9}
+ .desktopHQCard{display:flex;flex:1 1 0;min-height:105px;flex-direction:column;justify-content:center;gap:9px;padding:clamp(13px,1.3vw,20px);border-radius:23px;border:1px solid #dfd3a267;color:#f7f7eb;text-decoration:none;background:linear-gradient(130deg,#c8f3db1c,#174e3b78 54%,#0c312a8c);backdrop-filter:blur(24px);box-shadow:inset 0 1px #fff4,0 12px 25px #00170e55;transition:transform .3s,border-color .3s,background .3s}
+ .desktopHQCard:hover,.desktopHQCard:focus-visible{transform:translateY(-3px);border-color:#f6d99c;background:linear-gradient(135deg,#d6f4dd30,#27644c8c)}
+ .desktopHQCard strong{font-size:clamp(16px,1.3vw,21px);line-height:1.2}
+ .desktopHQCard small{font-size:12px;color:#d7e9db;line-height:1.35}
+ .desktopHQLabel{font-size:10px;letter-spacing:.14em;font-weight:800;color:#ead5a0}
+ .desktopHQProgress{display:block;height:5px;border-radius:10px;background:#ffffff26;overflow:hidden}
+ .desktopHQProgress>span{display:block;height:100%;background:linear-gradient(90deg,#79c6a2,#ead79e);border-radius:inherit}
+}
+@media(prefers-reduced-motion:reduce){.desktopHQCard{transition:none!important}}
