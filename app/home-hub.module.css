@@ -1435,3 +1435,9 @@
 .control .widgetArea .workspacePager{width:max-content!important;max-width:calc(100% - 64px)!important;min-height:38px!important;padding:4px 11px!important;margin:5px auto 7px!important;gap:3px!important;flex-wrap:nowrap!important}
 .control .widgetArea .workspacePager button{min-width:28px!important;min-height:28px!important;padding:3px!important}
 .control .widgetArea .workspacePagerLabel{font-size:9px!important;letter-spacing:.10em!important;padding:0 5px!important}
+
+/* Mobile greeting typography alignment: lower labels without moving HudHud orb or nav. */
+@media(max-width:700px){
+ .control .introGreeting>.eyebrow{position:relative;top:12px}
+ .control .introGreeting .greetingWithOrb>.greetingText{position:relative;top:10px}
+}
