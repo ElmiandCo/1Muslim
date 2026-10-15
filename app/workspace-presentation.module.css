@@ -517,3 +517,36 @@
 .canvasExpandHandle span:first-child{font-size:17px;line-height:1}
 :global(html.light) .canvasExpandHandle{background:rgba(50,76,48,.52);color:#ffe5b0}
 @media(prefers-reduced-motion:reduce){.canvasExpandHandle{transition:none!important}}
+
+/* Canvas Motion Engine v1 — shared timing, GPU-friendly layers and accessible motion. */
+.viewport{scroll-snap-type:x mandatory!important;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
+.slide{scroll-snap-align:start!important;scroll-snap-stop:always!important}
+.scene{--canvas-motion-time:2500ms}
+.slide .night,.slide .day{transition:opacity var(--canvas-motion-time) cubic-bezier(.22,.68,.22,1),transform 650ms cubic-bezier(.2,.75,.2,1)!important;backface-visibility:hidden}
+.slide .day{opacity:0!important}
+:global(html.light) .slide .day{opacity:1!important}
+:global(html:not(.light)) .slide .day{opacity:0!important}
+.slide .scene::after{transition:background var(--canvas-motion-time) ease!important}
+.canvasParticles{z-index:3!important;opacity:.7;transition:opacity 500ms ease;transform:translateZ(0)}
+.slide[data-canvas-active="false"] .canvasParticles{opacity:.18}
+.canvasParticles span{animation-name:canvasMotionDrift!important;animation-timing-function:ease-in-out!important;animation-direction:alternate!important;animation-iteration-count:infinite!important;transition:background-color 2500ms ease,box-shadow 2500ms ease!important;will-change:transform,opacity}
+@keyframes canvasMotionDrift{
+  0%{opacity:.04;transform:translate3d(-6px,16px,0) scale(.72)}
+  33%{opacity:.28;transform:translate3d(3px,1px,0) scale(.95)}
+  66%{opacity:.19;transform:translate3d(-2px,-14px,0) scale(1.1)}
+  100%{opacity:.04;transform:translate3d(7px,-30px,0) scale(.78)}
+}
+.slide[data-canvas-active="false"] .canvasParticles span{animation-play-state:paused!important}
+.content{z-index:4!important}
+.content>[data-widget]>[class*="widgetCanvas"]{transition:background 2500ms ease,border-color 2500ms ease,box-shadow 2500ms ease!important}
+:global(html.light) .content>[data-widget]>[class*="widgetCanvas"]{box-shadow:inset 0 1px 0 rgba(255,243,207,.22),0 10px 26px rgba(35,30,11,.10)!important}
+:global(html:not(.light)) .content>[data-widget]>[class*="widgetCanvas"]{box-shadow:inset 0 1px 0 rgba(191,255,223,.13),0 12px 28px rgba(0,12,9,.16)!important}
+@media(max-width:650px){
+  .canvasParticles span:nth-child(n+11){display:none}
+  .content>[data-widget]>[class*="widgetCanvas"]{backdrop-filter:blur(4px) saturate(115%)!important;-webkit-backdrop-filter:blur(4px) saturate(115%)!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .slide .night,.slide .day,.slide .scene::after,.canvasParticles,.canvasParticles span,.content>[data-widget]>[class*="widgetCanvas"]{animation:none!important;transition:none!important;will-change:auto!important}
+  .canvasParticles span{opacity:.10!important}
+  .viewport{scroll-behavior:auto!important}
+}
