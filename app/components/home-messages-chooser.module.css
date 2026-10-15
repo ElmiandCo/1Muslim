@@ -1,1 +1,33 @@
 .root{display:flex;flex-direction:column;gap:clamp(12px,2vw,22px);height:100%;min-height:0;padding:clamp(12px,2.5vw,24px);color:#f3f9ef}.heading{display:flex;align-items:center;justify-content:space-between;color:#e6d19a;font-size:clamp(11px,2vw,15px);letter-spacing:.1em}.heading span{font-size:1.5em}.actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,2vw,18px);flex:1;min-height:0;align-items:stretch}.action{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;min-width:0;min-height:100px;border:1px solid rgba(238,222,180,.29);border-radius:clamp(16px,3vw,28px);background:linear-gradient(155deg,rgba(11,54,45,.35),rgba(9,29,33,.18));backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:#fff6e2;cursor:pointer;transition:transform .3s,border-color .3s,background .3s}.action:hover,.action[aria-pressed=true]{transform:translateY(-3px);border-color:rgba(239,212,147,.8);background:rgba(17,74,60,.55)}.action img{width:clamp(44px,9vw,88px);height:clamp(44px,9vw,88px);object-fit:contain;filter:drop-shadow(0 5px 15px rgba(0,0,0,.2))}.action span{font-size:clamp(12px,2.6vw,16px);font-weight:600;text-align:center}.hint{margin:0;text-align:center;color:#d5e0d6;font-size:12px}.picker{display:flex;flex-direction:column;gap:10px;min-height:0;flex:1;border-radius:20px;padding:12px;border:1px solid rgba(232,211,166,.36);background:rgba(4,26,28,.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}.pickerHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.pickerHead button{background:transparent;color:inherit;border:0;font-size:20px;cursor:pointer;min-width:40px;min-height:40px}.picker input{width:100%;min-height:44px;padding:10px 14px;border-radius:14px;border:1px solid rgba(237,215,169,.4);background:rgba(0,0,0,.2);color:white;font-size:16px}.picker input::placeholder{color:#c3cfc6}.people{overflow-y:auto;min-height:0;flex:1}.people>button{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:10px;background:transparent;color:inherit;border:0;border-bottom:1px solid rgba(255,255,255,.12);cursor:pointer}.people>button>span:nth-child(2){display:flex;flex-direction:column;flex:1;min-width:0}.people small{opacity:.7}.people p{color:#e5eadf;text-align:center}.avatar{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border-radius:50%;background:rgba(226,201,143,.22);color:#f5dfaa}@media(max-width:600px){.root{padding:10px}.actions{gap:8px}.action{gap:6px;min-height:92px}.picker{padding:8px}}
+/* Distinct communication studios, shared premium glass treatment. */
+.root{overflow-y:auto;overscroll-behavior:contain}
+.actions{flex:0 0 auto;min-height:92px}
+.action{min-height:90px;padding:9px}
+.picker{flex:1 0 auto;min-height:230px;max-height:min(65dvh,590px);overflow-y:auto;gap:12px;background:linear-gradient(160deg,rgba(5,34,30,.90),rgba(10,45,41,.76));box-shadow:inset 0 1px rgba(255,239,196,.13),0 14px 36px rgba(0,0,0,.24)}
+.searchLabel{display:flex;flex-direction:column;gap:5px;font-size:11px;color:#ead7a7;letter-spacing:.07em}
+.searchLabel input{font-size:16px}
+.people{min-height:90px;max-height:220px;overflow-y:auto}
+.peopleGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:9px}
+.people .personCard{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;padding:10px 5px;border:1px solid rgba(237,215,169,.17);border-radius:15px;background:rgba(15,73,57,.32);color:#fff;cursor:pointer}
+.people .personCard[aria-pressed=true]{border-color:#f0d397;background:rgba(64,121,81,.54);box-shadow:0 0 15px rgba(230,190,115,.15)}
+.personCard strong,.personCard small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.personCard small{font-size:9px}
+.people .avatar{width:47px;height:47px;flex:0 0 47px;overflow:hidden;border:1px solid rgba(249,219,157,.4);background:rgba(228,195,123,.19)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.cameraStage,.callStage{display:flex;flex-direction:column;align-items:center;gap:9px;border:1px solid rgba(227,209,157,.24);border-radius:18px;padding:10px;background:rgba(2,23,21,.48)}
+.cameraView{height:clamp(110px,23dvh,210px);width:100%;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 40%,rgba(42,108,83,.75),#051c1c)}
+.cameraView video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.cameraPlaceholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:6px;color:#ebd6a3;font-size:30px}
+.cameraPlaceholder small{font-size:12px}
+.cameraControls,.callActions{display:flex;flex-wrap:wrap;gap:8px;width:100%;justify-content:center}
+.cameraControls button,.callStage button,.callActions button,.messageComposer button{min-height:38px;padding:7px 13px;border:1px solid rgba(231,212,163,.45);border-radius:999px;background:rgba(30,99,74,.68);color:#fff2d7;cursor:pointer;font-size:12px}
+.callStage .callHalo{display:grid;place-items:center;width:65px;height:65px;border-radius:50%;font-size:31px;color:#f1d799;background:radial-gradient(circle,rgba(40,117,86,.8),rgba(7,45,36,.6));box-shadow:0 0 24px rgba(104,222,156,.18)}
+.callStage small{text-align:center;color:#c9d7cd;max-width:320px}
+.callActions button:disabled,.messageComposer button:disabled{opacity:.4;cursor:not-allowed}
+.callActions .endCall{background:rgba(112,42,43,.65)}
+.messageComposer{display:flex;flex-direction:column;gap:8px;padding:11px;border:1px solid rgba(242,213,157,.26);border-radius:18px;background:rgba(12,55,47,.65)}
+.messageComposer>span{font-size:12px;color:#e7d3a0}
+.messageComposer textarea{resize:vertical;width:100%;min-height:66px;border-radius:13px;border:1px solid rgba(236,214,170,.33);background:rgba(1,20,17,.54);color:#fff;padding:10px;font:inherit;font-size:15px}
+.messageComposer small{color:#b7c9be;font-size:10px}
+@media(max-width:600px){.picker{max-height:60dvh}.peopleGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.actions{min-height:76px}.action{min-height:78px}.action img{width:40px;height:40px}}
+@media(prefers-reduced-motion:reduce){.action,.personCard{transition:none!important}}
