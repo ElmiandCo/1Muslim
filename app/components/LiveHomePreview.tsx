@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from "react";
 import {Room,RoomEvent,Track,VideoQuality} from "livekit-client";
 
 /** Silent, noninteractive thumbnail player: safe to render inside homepage links. */
-export default function LiveHomePreview({roomName}:{roomName:string}){
+export default function LiveHomePreview({roomName,streamId}:{roomName:string;streamId:string}){
  const video=useRef<HTMLVideoElement>(null);
  const [ready,setReady]=useState(false);
  const [status,setStatus]=useState("Connecting to live…");
@@ -26,7 +26,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
   room.on(RoomEvent.TrackUnsubscribed,()=>{if(active){setReady(false);setStatus("Broadcaster video disconnected")}});
   void (async()=>{
    try{
-    const res=await fetch("/api/livekit/token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName,role:"viewer"})});
+    const res=await fetch("/api/livekit/token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({streamId,role:"viewer"})});
     if(!res.ok)throw new Error(res.status===401?"Sign-in required":`Viewer access failed (${res.status})`);
     const data=await res.json();
     if(!active)return;
@@ -43,7 +43,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
    }catch(err){if(active){setReady(false);setStatus(err instanceof Error?err.message:"Live connection unavailable")}}
   })();
   return()=>{active=false;room.removeAllListeners();void room.disconnect();if(video.current)video.current.srcObject=null};
- },[roomName,attempt]);
+ },[roomName,streamId,attempt]);
  useEffect(()=>{if(ready)return;const timer=window.setTimeout(()=>setAttempt(n=>n+1),8000);return()=>clearTimeout(timer)},[ready,attempt,roomName]);
  return <span style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:170,overflow:"hidden",borderRadius:12}}>
   <video ref={video} autoPlay muted playsInline onClick={()=>{void video.current?.play().then(()=>setReady(true)).catch(()=>{})}} aria-label="Live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:170,objectFit:"cover",background:"transparent",opacity:ready?1:0}}/>
