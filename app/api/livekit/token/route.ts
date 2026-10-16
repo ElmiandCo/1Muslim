@@ -10,10 +10,6 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json({ error: "Sign in is required." }, { status: 401 });
-    }
-
     const body = await request.json();
     const room = typeof body?.room === "string" ? body.room.trim() : "";
     const role = body?.role === "host" ? "host" : body?.role === "guest" ? "guest" : body?.role === "companion" ? "companion" : "viewer";
@@ -24,7 +20,7 @@ export async function POST(request: Request) {
 
     const { data: liveStream } = await supabase
       .from("live_streams")
-      .select("id, host_id, status")
+      .select("id, host_id, status, visibility")
       .eq("room_name", room)
       .maybeSingle();
 
@@ -32,12 +28,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "This live stream is no longer active." }, { status: 404 });
     }
 
-    if ((role === "host" || role === "companion") && liveStream.host_id !== user.id) {
+    if (!user && (role !== "viewer" || liveStream.visibility !== "public")) {
+      return NextResponse.json({error:"Sign in is required."},{status:401});
+    }
+
+    if ((role === "host" || role === "companion") && liveStream.host_id !== user?.id) {
       return NextResponse.json({ error: "You are not the host of this live." }, { status: 403 });
     }
 
+    if (role === "viewer" && liveStream.visibility !== "public" && liveStream.host_id !== user?.id) {
+      return NextResponse.json({error:"This stream is private."},{status:403});
+    }
+
     if (role === "guest") {
-      const {data:seat}=await supabase.from("live_guest_requests").select("id").eq("stream_id",liveStream.id).eq("user_id",user.id).eq("status","approved").maybeSingle();
+      const {data:seat}=await supabase.from("live_guest_requests").select("id").eq("stream_id",liveStream.id).eq("user_id",user!.id).eq("status","approved").maybeSingle();
       if (!seat) return NextResponse.json({error:"The host must approve your guest request first."},{status:403});
     }
 
@@ -53,8 +57,8 @@ export async function POST(request: Request) {
     }
 
     const token = new AccessToken(apiKey, apiSecret, {
-      identity: role === "companion" ? `${user.id}:screen:${crypto.randomUUID()}` : user.id,
-      name: user.user_metadata?.full_name || user.email || "1Muslim user",
+      identity: !user ? `anonymous-viewer:${crypto.randomUUID()}` : role === "viewer" ? `${user.id}:viewer:${crypto.randomUUID()}` : role === "companion" ? `${user.id}:screen:${crypto.randomUUID()}` : user.id,
+      name: user?.user_metadata?.full_name || user?.email || "1Muslim viewer",
       ttl: "2h",
     });
 
