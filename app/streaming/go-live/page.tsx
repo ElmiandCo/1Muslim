@@ -924,12 +924,56 @@ export default function GoLivePage() {
           .controls{padding:5px 8px max(5px,env(safe-area-inset-bottom))}
           .settingsOpen .layout>.form{top:calc(56px + env(safe-area-inset-top));bottom:calc(72px + env(safe-area-inset-bottom))}
         }
+
+        /* Creator Studio 2: mobile composition follows the approved emerald reference.
+           Functional controls are reused; legacy floating rows are not duplicated. */
+        .studioBrandMark{color:#c4d993;font-size:25px;vertical-align:middle}
+        .preliveInspire,.preliveIdentity,.preliveMobileActions{display:none}
+        @media(max-width:850px){
+          .immersiveHeader{min-height:64px!important;align-items:center!important;padding:calc(8px + env(safe-area-inset-top)) 14px 8px!important;background:linear-gradient(#05130cd9,#05130c45)!important}
+          .immersiveHeader strong{font-size:20px!important;letter-spacing:0!important}
+          .immersiveHeader button{font-size:13px!important}
+          .preliveInspire{display:flex;position:absolute;top:calc(84px + env(safe-area-inset-top));left:clamp(16px,5vw,28px);right:clamp(16px,5vw,28px);z-index:23;align-items:center;gap:9px;padding:12px 15px;border:1px solid #c5c49c50;border-radius:18px;background:#06180fb0;color:#f3efdd;font-size:clamp(11px,2.9vw,14px);backdrop-filter:blur(14px);pointer-events:none}
+          .preliveInspire span{flex:1;min-width:0}
+          .preliveIdentity{display:flex;position:absolute;left:12px;right:12px;bottom:calc(172px + env(safe-area-inset-bottom));z-index:25;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border:1px solid #b9e5b17d;border-radius:22px;background:linear-gradient(110deg,#09291fdc,#071b14ba);backdrop-filter:blur(16px)}
+          .preliveTitleButton{display:flex;align-items:center;gap:10px;min-width:0;flex:1;border:0;background:none;color:white;text-align:left;cursor:pointer}
+          .preliveIdentityIcon{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1px solid #8dd7a3;color:#a9f6bf;background:#0a4c37}
+          .preliveTitleButton span:nth-child(2){min-width:0}
+          .preliveTitleButton small{display:block;color:#6df1af;font-size:10px;font-weight:750}
+          .preliveTitleButton strong{display:block;font-size:clamp(13px,4vw,18px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+          .preliveVisibility{border:1px solid #54e5a3;border-radius:999px;padding:10px 12px;flex-shrink:0;background:#04271edb;color:white;font-size:12px}
+          .preliveMobileActions{display:flex;position:absolute;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:28;flex-direction:column;gap:9px}
+          .preliveGoButton{min-height:60px;border:2px solid #8dfac6;border-radius:999px;background:linear-gradient(115deg,#08724e,#02a66b 62%,#056644);box-shadow:0 0 19px #19d88d8c,inset 0 2px 12px #ffffff22;color:white;font-size:clamp(21px,5vw,27px);font-weight:850;cursor:pointer}
+          .preliveGoButton:disabled{opacity:.7}
+          .preliveQuickOptions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+          .preliveQuickOptions button{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;min-height:59px;min-width:0;padding:7px 3px;border:1px solid #72c9a071;border-radius:15px;background:#061a13df;color:#fff;cursor:pointer}
+          .preliveQuickOptions button span{font-size:20px}
+          .preliveQuickOptions button strong{font-size:clamp(9px,2.6vw,12px);white-space:nowrap}
+          .preliveQuickOptions button small{width:100%;font-size:10px;color:#9adcb7}
+          .previewOverlayTools{top:43%!important;right:9px!important;gap:8px!important}
+          .previewOverlayTools button{width:44px!important;height:44px!important;background:#062c21d9!important;border-color:#6bd6a0a1!important}
+          .layout>.panel:first-child>.controls{display:none!important}
+          .layout>.panel:first-child>.status{display:none!important}
+          .layout>.panel:first-child>.preview .preliveIdentity~.status{display:none!important}
+          .layout>.panel:first-child>.preview [class*="liveVisualEffects"]{max-width:50px}
+          .settingsOpen .layout>.form{z-index:45!important}
+          .settingsOpen .preliveMobileActions,.settingsOpen .preliveIdentity{visibility:hidden}
+        }
+        @media(max-width:850px) and (max-height:680px){
+          .preliveInspire{display:none}
+          .preliveIdentity{bottom:calc(145px + env(safe-area-inset-bottom))}
+          .preliveGoButton{min-height:52px}
+          .preliveQuickOptions button{min-height:48px}
+          .preliveMobileActions{gap:5px}
+        }
+        @media(min-width:851px){.preliveInspire,.preliveIdentity,.preliveMobileActions{display:none!important}}
+
         @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 
       `}</style>
 
-      <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong>1Muslim <span className="studioHeaderLabel">· Go Live Studio</span></strong><button type="button" aria-expanded={settingsOpen} aria-controls="prelive-settings" onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕ Close":"⚙ Settings"}</button></header>
+      <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong><button type="button" aria-expanded={settingsOpen} aria-controls="prelive-settings" onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕ Close":"⚙ Settings"}</button></header>
       <div className={settingsOpen?"shell settingsOpen":"shell"}>
         <div className="studioTools">
               {scheduledSlot && <div className="upcomingPrep"><div><span className="eyebrow">UPCOMING LIVE</span><strong>{scheduledSlot.title}</strong><span>{scheduledSlot.category} · {new Date(scheduledSlot.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div><button type="button" className="prepButton" onClick={()=>{setTitle(scheduledSlot.title);setCategory(scheduledSlot.category);setShowScheduler(false);setSaveMessage("Prep mode loaded. Check your title, topic, format, thumbnail, camera and microphone before going live.");}}>{hostCheckedIn ? "✓ Host Checked In" : "Prep for upcoming Live →"}</button></div>}
@@ -948,6 +992,8 @@ export default function GoLivePage() {
               {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
               {live&&liveStreamIdRef.current&&<LiveLightOverlay streamId={liveStreamIdRef.current} host />}
+              {!live && <div className="preliveInspire" aria-hidden="true">✧ <span>Share knowledge. Inspire. Build the Ummah.</span> ›</div>}
+              {!live && <div className="preliveIdentity"><button type="button" className="preliveTitleButton" onClick={()=>setSettingsOpen(true)} aria-label="Edit live title"><span className="preliveIdentityIcon" aria-hidden="true">✧</span><span><small>LIVE TITLE · TAP TO EDIT</small><strong>{title || defaultLiveTitle}</strong></span></button><button type="button" className="preliveVisibility" onClick={()=>setSettingsOpen(true)} aria-label="Change live audience">◎ {visibility==="public"?"Public":"Ashab"} ⌄</button></div>}
               {cameraReady && <div className="previewOverlayTools" aria-label="Camera controls"><button type="button" onClick={()=>void flipCamera()} title="Flip camera" aria-label="Flip camera">🔄</button><button type="button" onClick={toggleCamera} title={cameraOn?"Turn camera off":"Turn camera on"} aria-label={cameraOn?"Turn camera off":"Turn camera on"}>{cameraOn?"📷":"🚫"}</button><button type="button" onClick={toggleMic} title={micOn?"Mute microphone":"Unmute microphone"} aria-label={micOn?"Mute microphone":"Unmute microphone"}>{micOn?"🎙️":"🔇"}</button></div>}
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
               {live && <span className="live">● LIVE</span>}{live && <div role="status" aria-live="polite" style={{position:"absolute",left:12,bottom:64,zIndex:13,padding:"12px 16px",borderRadius:18,background:"rgba(5,10,20,.80)",border:viewerIncrease?"2px solid #39ee8d":"1px solid rgba(255,255,255,.35)",boxShadow:viewerIncrease?"0 0 24px rgba(57,238,141,.48)":"0 8px 25px #0008",color:viewerIncrease?"#4cff9c":"white",transition:"color .3s,border .3s,box-shadow .3s",pointerEvents:"none",textAlign:"center"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1.5}}>🔴 YOU ARE LIVE</div><div style={{fontSize:"clamp(26px,5vw,40px)",fontWeight:900,lineHeight:1.15,fontVariantNumeric:"tabular-nums"}}>{viewers.toLocaleString()}</div><div style={{fontSize:11,opacity:.85}}>VIEWERS {viewerIncrease?"↑":""}</div></div>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
@@ -962,6 +1008,16 @@ export default function GoLivePage() {
                 <label style={{fontSize:11}}>Green sensitivity <input type="range" min="0" max="100" value={greenStrength} onChange={e=>setGreenStrength(Number(e.target.value))}/></label>
               </>}
               <small style={{color:"#a5b7a8"}}>Use a real green backdrop for best results. Choose your photo before starting camera preview.</small>
+            </div>
+            <div className="preliveMobileActions" aria-label="Pre-live creator controls">
+              {!live && <>
+                <button type="button" className="preliveGoButton" disabled={saving || !cameraReady} onClick={()=>void startLive(false)}>{cameraReady?"◉ Go Live":"Enable Camera to Go Live"}</button>
+                <div className="preliveQuickOptions">
+                  <button type="button" onClick={toggleMic} aria-pressed={micOn}><span aria-hidden="true">🎙</span><strong>Voice Chat</strong><small>{micOn?"On":"Off"}</small></button>
+                  <button type="button" onClick={()=>void flipCamera()}><span aria-hidden="true">▣</span><strong>Device Camera</strong><small>{facingMode==="user"?"Front":"Back"}</small></button>
+                  <button type="button" onClick={()=>setSettingsOpen(true)}><span aria-hidden="true">♧</span><strong>Allow Guests</strong><small>Settings</small></button>
+                </div>
+              </>}
             </div>
             <div className="controls">
               {cameraReady && <><button className={cameraOn ? "circle" : "circle off"} onClick={toggleCamera} aria-label="Toggle camera">{cameraOn ? "◉" : "○"}</button><button className="circle" onClick={()=>void flipCamera()} aria-label="Flip camera" title="Flip camera">↻</button><button className={micOn ? "circle" : "circle off"} onClick={toggleMic} aria-label="Toggle microphone">{micOn ? "♫" : "×"}</button></>}
