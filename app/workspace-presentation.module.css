@@ -640,3 +640,5 @@
 @media(max-width:650px){
  .fillArea>.canvasExpandHandle{top:8px!important;right:9px!important}
 }
+
+.fillArea{position:relative!important}
