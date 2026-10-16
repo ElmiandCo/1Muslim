@@ -885,10 +885,51 @@ export default function GoLivePage() {
         .settingsOpen .layout>.form{display:block!important;position:absolute;top:calc(70px + env(safe-area-inset-top));bottom:calc(90px + env(safe-area-inset-bottom));left:12px;right:12px;z-index:40;overflow-y:auto;overscroll-behavior:contain;border-radius:18px;background:#08110df5}
         .settingsOpen .cameraStudio{display:block!important;position:absolute;bottom:calc(90px + env(safe-area-inset-bottom));left:12px;right:12px;z-index:42;max-height:35dvh;overflow-y:auto;border-radius:15px;background:#08110df7}
         @media(min-width:850px){.settingsOpen .layout>.form{left:auto;width:420px}}
+        /* Phase 1: one real streaming page, two deliberate creator layouts. */
+        .goLive{background:radial-gradient(ellipse at 48% -20%,#204635 0%,transparent 62%),linear-gradient(145deg,#05120c,#020806 70%);color:#f3f1e8}
+        .immersiveHeader{background:linear-gradient(180deg,#020b08eb,#04160db0);border-bottom:1px solid #d4bd7850;backdrop-filter:blur(20px);min-height:68px}
+        .immersiveHeader strong{font-size:15px;letter-spacing:.035em;color:#f2e1aa}
+        .immersiveHeader a,.immersiveHeader button{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;border-color:#c8b47965;background:#09251cdb}
+        .immersiveHeader button:focus-visible,.immersiveHeader a:focus-visible,.goLive button:focus-visible{outline:2px solid #f4d58e;outline-offset:3px}
+        .layout>.form{border:1px solid #cbb16a57;background:linear-gradient(155deg,#09241bdc,#04100df2);box-shadow:0 18px 60px #0007;backdrop-filter:blur(22px)}
+        .layout>.form h2{color:#f4e2b0}
+        .goLive .start{background:linear-gradient(120deg,#0b694a,#11ae75 55%,#075338);color:#fff;border:1px solid #e5ce8d;box-shadow:0 0 22px #15c48a65;font-weight:800}
+        .previewOverlayTools button{background:#09251ccf;border:1px solid #d2bb8266;backdrop-filter:blur(12px);min-width:44px;min-height:44px}
+        @media(min-width:851px){
+          .goLive{overflow:hidden}
+          .shell{top:82px;bottom:12px;left:clamp(18px,3vw,58px);right:clamp(18px,3vw,58px);height:auto}
+          .layout{display:grid;grid-template-columns:minmax(0,1.36fr) minmax(320px,.9fr);gap:clamp(14px,1.5vw,28px);height:100%;align-items:stretch}
+          .layout>.panel:first-child{position:relative;inset:auto;border:1px solid #d1b76a80;border-radius:25px;background:#071710b0;min-height:0;overflow:hidden}
+          .preview,.preview.format-portrait,.preview.format-square,.preview.format-landscape{position:relative;inset:auto;width:100%!important;height:min(65%,calc(100% - 210px))!important;max-height:none!important;min-height:230px;aspect-ratio:auto!important;border-radius:22px;overflow:hidden}
+          .preview video{object-fit:cover}
+          .cameraStudio{display:block!important;position:relative;max-height:calc(35% - 10px);overflow-y:auto;overscroll-behavior:contain;margin:10px;border:1px solid #bd9e5966;border-radius:16px;background:#081a14e8}
+          .layout>.form,.settingsOpen .layout>.form{display:block!important;position:relative;inset:auto;width:auto;min-width:0;height:100%;overflow-y:auto;overscroll-behavior:contain;border-radius:25px;padding:clamp(14px,1.7vw,26px)}
+          .settingsOpen .cameraStudio{position:relative;inset:auto;max-height:calc(35% - 10px)}
+          .controls{position:absolute;bottom:calc(35% + 12px);padding:10px;justify-content:center;background:linear-gradient(transparent,#03100bcf)}
+          .studioHeaderLabel{display:inline}
+          .immersiveHeader button{display:none}
+        }
+        @media(max-width:850px){
+          .goLive{height:100dvh;overflow:hidden}
+          .studioHeaderLabel{display:none}
+          .shell{top:0;bottom:0}
+          .previewOverlayTools{right:10px;top:48%}
+          .controls{bottom:calc(6px + env(safe-area-inset-bottom));padding:10px 12px max(12px,env(safe-area-inset-bottom));gap:8px;background:linear-gradient(transparent,#020a08f5)}
+          .settingsOpen .layout>.form{top:calc(76px + env(safe-area-inset-top));bottom:calc(88px + env(safe-area-inset-bottom));left:10px;right:10px;overflow-y:auto;padding:18px;border-radius:22px}
+          .settingsOpen .cameraStudio{display:none!important}
+          .preview{background:#06160f}
+        }
+        @media(max-width:850px) and (max-height:650px){
+          .immersiveHeader{min-height:48px;padding-top:env(safe-area-inset-top);padding-bottom:2px}
+          .controls{padding:5px 8px max(5px,env(safe-area-inset-bottom))}
+          .settingsOpen .layout>.form{top:calc(56px + env(safe-area-inset-top));bottom:calc(72px + env(safe-area-inset-bottom))}
+        }
+        @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
 
       `}</style>
 
-      <header className="immersiveHeader"><Link href="/streaming">← Back</Link><strong>Go Live</strong><button onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕ Close":"⚙ Settings"}</button></header>
+      <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong>1Muslim <span className="studioHeaderLabel">· Go Live Studio</span></strong><button type="button" aria-expanded={settingsOpen} aria-controls="prelive-settings" onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕ Close":"⚙ Settings"}</button></header>
       <div className={settingsOpen?"shell settingsOpen":"shell"}>
         <div className="studioTools">
               {scheduledSlot && <div className="upcomingPrep"><div><span className="eyebrow">UPCOMING LIVE</span><strong>{scheduledSlot.title}</strong><span>{scheduledSlot.category} · {new Date(scheduledSlot.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div><button type="button" className="prepButton" onClick={()=>{setTitle(scheduledSlot.title);setCategory(scheduledSlot.category);setShowScheduler(false);setSaveMessage("Prep mode loaded. Check your title, topic, format, thumbnail, camera and microphone before going live.");}}>{hostCheckedIn ? "✓ Host Checked In" : "Prep for upcoming Live →"}</button></div>}
@@ -963,7 +1004,7 @@ export default function GoLivePage() {
             </div>}
           </section>
 
-          <aside className="panel form">
+          <aside id="prelive-settings" className="panel form" aria-label="Live stream settings">
             <h2>Live details</h2>
             {error && <div className="error">{error}</div>}
             {scheduledSlot && !live && <div className={hostCheckedIn ? "ready checkedIn" : "ready"}>{hostCheckedIn ? "✓ HOST CHECKED IN — Viewers can see that you are ready. The broadcast stays locked until the scheduled time." : "Scheduled Live: camera and microphone can be prepared now. Check in when you are fully ready."}</div>}{live && <div className="ready">Your live session is active and being recorded.</div>}{saveMessage && <div className="ready">{saveMessage}</div>}
