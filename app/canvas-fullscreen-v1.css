@@ -1,0 +1,17 @@
+/* Canvas fullscreen V1: reversible, no remounting of workspaces or floating widgets. */
+.canvas-fullscreen-toggle{appearance:none;border:1px solid rgba(222,202,139,.5);border-radius:50%;width:44px;height:44px;display:grid;place-items:center;background:rgba(10,67,52,.56);color:#f4e9c6;box-shadow:0 0 0 5px rgba(144,213,185,.12),inset 0 0 12px rgba(197,238,208,.12);cursor:pointer;position:relative;z-index:110}
+.canvas-fullscreen-toggle:focus-visible{outline:2px solid #e8dba5;outline-offset:4px}
+main[data-canvas-fullscreen="true"]{--canvas-fullscreen-duration:680ms}
+main[data-canvas-fullscreen="true"] > header{position:fixed!important;inset:0 0 auto auto!important;width:auto!important;height:auto!important;min-height:0!important;padding:12px 16px!important;background:transparent!important;border:0!important;box-shadow:none!important;z-index:110!important;opacity:1!important;transform:none!important;pointer-events:none}
+main[data-canvas-fullscreen="true"] > header > :not(:has(.canvas-fullscreen-toggle)){display:none!important}
+main[data-canvas-fullscreen="true"] > header .canvas-fullscreen-toggle{pointer-events:auto}
+main[data-canvas-fullscreen="true"] > .canvas-fullscreen-toggle{z-index:110}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{position:fixed!important;inset:0!important;width:100vw!important;max-width:none!important;height:100dvh!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;z-index:90!important;overflow:hidden!important;transition:inset var(--canvas-fullscreen-duration) cubic-bezier(.2,.7,.15,1),border-radius var(--canvas-fullscreen-duration) ease!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [data-canvas-expanded]{height:100%!important;min-height:0!important;max-height:none!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [role="region"][aria-roledescription="carousel"]{height:100%!important;max-height:none!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] nav[aria-label="Dashboard workspaces"]{display:none!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] button[aria-label="Expand canvas height"],
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] button[aria-label="Restore canvas height"]{display:none!important}
+main[data-canvas-fullscreen="true"] > .canvas-fullscreen-backdrop{display:none}
+main[data-canvas-fullscreen="true"] > div:has(> .canvas-fullscreen-toggle){z-index:110}
+@media(prefers-reduced-motion:reduce){main[data-canvas-fullscreen] *,main[data-canvas-fullscreen] *::before,main[data-canvas-fullscreen] *::after{scroll-behavior:auto!important}main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{transition:none!important}}
