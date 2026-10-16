@@ -1442,3 +1442,81 @@
  .control .introGreeting .greetingWithOrb{position:relative;top:10px}
  .control .introGreeting .greetingWithOrb>.greetingText{top:auto;position:static}
 }
+
+
+/* Desktop Live Theater — preserve mobile and the existing LiveKit player. */
+@media (min-width:1024px) {
+ .control .workspacePage[data-workspace-page="0"] .customGrid,
+ .control .workspacePage:first-child .customGrid {
+   min-width:0!important;
+ }
+ .control .livePreviewStrip {
+   display:grid!important;
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+   align-items:stretch!important;
+   gap:clamp(12px,1.4vw,22px)!important;
+   width:min(100%,1100px)!important;
+   height:auto!important;
+   max-height:none!important;
+   margin-inline:auto!important;
+ }
+ .control .livePreviewCard {
+   display:flex!important;
+   flex-direction:column!important;
+   min-width:0!important;
+   height:auto!important;
+   max-height:none!important;
+   overflow:hidden!important;
+ }
+ .control .livePreviewCard:first-child:nth-last-child(1) {
+   grid-column:1/-1;
+   width:min(100%,980px)!important;
+   justify-self:center;
+ }
+ .control .livePreviewCard > span:first-child {
+   position:relative!important;
+   width:100%!important;
+   height:auto!important;
+   min-height:0!important;
+   aspect-ratio:16/9!important;
+   flex:0 0 auto!important;
+   overflow:hidden!important;
+   background:rgba(3,18,15,.72)!important;
+ }
+ .control .livePreviewCard > span:first-child > span {
+   width:100%!important;
+   height:100%!important;
+   min-height:0!important;
+   aspect-ratio:16/9!important;
+ }
+ .control .livePreviewCard video {
+   display:block!important;
+   width:100%!important;
+   height:100%!important;
+   min-height:0!important;
+   object-fit:contain!important;
+   object-position:center!important;
+ }
+ .control .widgetCanvas:has(.livePreviewStrip) .widgetVisual,
+ .control .widgetCanvas:has(.livePreviewStrip) .widgetTop {
+   height:auto!important;
+   min-height:0!important;
+   max-height:none!important;
+   overflow:visible!important;
+ }
+ .control .widgetCanvas:has(.livePreviewStrip) {
+   min-height:clamp(330px,48vw,670px)!important;
+   max-height:none!important;
+ }
+ .control .widgetArea:has(.livePreviewStrip) {
+   height:auto!important;
+   min-height:min(78vh,750px)!important;
+   overflow:visible!important;
+ }
+ .control .widgetArea:has(.livePreviewStrip) .workspaceScroller,
+ .control .widgetArea:has(.livePreviewStrip) .workspacePage,
+ .control .widgetArea:has(.livePreviewStrip) .customGrid {
+   overflow-y:visible!important;
+   max-height:none!important;
+ }
+}
