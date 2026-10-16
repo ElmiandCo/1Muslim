@@ -585,30 +585,33 @@
 .quranHudHudPositionToggle{left:calc(50% - 74px)!important;right:auto!important;top:8px!important;width:42px;height:42px}
 
 
-/* Every home carousel slide owns its title OUTSIDE the functional widget.
-   The slim heading consumes the previously unused top gutter, rather than
-   reducing the actual canvas. Preserve all interactive widget content. */
+/* External slide titles occupy the existing top gutter, not the canvas height.
+   Remove only repeated display headings; leave actual studio controls intact. */
+.slide{position:relative!important}
 .slideHeading{
- position:relative;z-index:4;box-sizing:border-box;
- display:flex;align-items:center;justify-content:space-between;
- gap:12px;width:calc(100% - 36px);min-width:0;
- height:clamp(36px,5dvh,48px);margin:0 18px;
- padding:2px clamp(12px,2vw,24px);
+ position:absolute!important;top:clamp(4px,1.2dvh,12px)!important;
+ left:clamp(12px,2vw,24px)!important;right:clamp(12px,2vw,24px)!important;
+ z-index:8!important;box-sizing:border-box!important;
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ gap:12px;height:clamp(32px,4.4dvh,42px)!important;
+ margin:0!important;padding:2px clamp(10px,2vw,18px)!important;
  color:#f5e6bd;letter-spacing:.13em;
- border:1px solid rgba(226,196,125,.22);
- border-bottom-color:rgba(226,196,125,.38);
- border-radius:16px 16px 9px 9px;
- background:linear-gradient(90deg,rgba(9,37,28,.52),rgba(9,37,28,.16));
- backdrop-filter:blur(10px);
- -webkit-backdrop-filter:blur(10px);
+ border:1px solid rgba(226,196,125,.26);
+ border-radius:13px;
+ background:linear-gradient(90deg,rgba(9,37,28,.5),rgba(9,37,28,.14));
+ backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
  pointer-events:none;
 }
 .slideHeading strong{font-size:clamp(10px,2.4vw,14px);font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .slideHeading span{font-size:clamp(14px,3vw,20px);color:#ebd6a4;flex-shrink:0}
-.slide .content{padding-top:5px!important}
+.slide .content{padding-top:0!important;min-height:0!important}
 .slide .content [class*="widgetCrown"]{display:none!important}
+.slide .content .postStudioHeader{display:none!important}
 .slide .content [class*="messagesChoiceCard"] [class*="heading"]{display:none!important}
+.slide .content .postStudioCard{padding-top:clamp(6px,1vw,10px)!important;gap:5px!important}
+.slide .content .postStudioBody{flex:1 1 auto!important;min-height:0!important}
+.fillArea .slide .content{min-height:0!important}
 @media(max-width:600px){
- .slideHeading{width:calc(100% - 24px);margin:0 12px;height:clamp(34px,4.8dvh,42px);padding-inline:12px}
- .slide .content{padding-top:3px!important}
+ .slideHeading{left:12px!important;right:12px!important;height:clamp(32px,4.3dvh,40px)!important}
+ .slide .content{padding-top:0!important}
 }
