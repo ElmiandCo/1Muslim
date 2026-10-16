@@ -9,7 +9,9 @@ type Stream={id:string;title:string;room_name:string;visibility:string|null;star
 const DISMISSED="1muslim-live-mini-dismissed";
 export default function HudHudLiveMiniPlayer(){
  const pathname=usePathname();
- const isBroadcastScreen=pathname.startsWith("/streaming/go-live")||pathname.startsWith("/streaming/live/");
+ const isBroadcastScreen=pathname==="/"||pathname.startsWith("/streaming")||pathname.startsWith("/live");
+ const [position,setPosition]=useState({x:0,y:0});
+ const drag=useRef<{x:number;y:number;ox:number;oy:number}|null>(null);
  const [stream,setStream]=useState<Stream|null>(null);
  const [open,setOpen]=useState(false);
  const [minimized,setMinimized]=useState(false);
@@ -51,8 +53,8 @@ export default function HudHudLiveMiniPlayer(){
  },[]);
  const close=()=>{dismissed.current=true;sessionStorage.setItem(DISMISSED,"yes");dismissWithMotion()};
  if(isBroadcastScreen||!initialized||loading||!open||!stream)return null;
- return <aside className={"hudhud-live-mini"+(minimized?" is-minimized":"")+(exiting?" is-exiting":"")+(endedNotice?" is-live-ended":"")} aria-label="Live stream notification" data-no-translate="true">
-  <div className="hudhud-live-mini-head">
+ return <aside className={"hudhud-live-mini"+(minimized?" is-minimized":"")+(exiting?" is-exiting":"")+(endedNotice?" is-live-ended":"")} aria-label="Live stream notification" data-no-translate="true" style={{transform:`translate3d(${position.x}px,${position.y}px,0)`,touchAction:"pan-y"}}>
+  <div className="hudhud-live-mini-head" style={{touchAction:"none",cursor:"grab"}} onPointerDown={e=>{if((e.target as HTMLElement).closest("button,a"))return;drag.current={x:e.clientX,y:e.clientY,ox:position.x,oy:position.y};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{if(!drag.current)return;setPosition({x:Math.max(-window.innerWidth*.65,Math.min(window.innerWidth*.65,drag.current.ox+e.clientX-drag.current.x)),y:Math.max(-window.innerHeight*.65,Math.min(window.innerHeight*.65,drag.current.oy+e.clientY-drag.current.y))})}} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}}>
    <img src="/assets/hudhud-logo.PNG" alt="" className="hudhud-live-bird" onError={e=>{e.currentTarget.style.display="none"}} />
    <div className="hudhud-live-mini-copy"><span className="hudhud-live-mini-badge">● LIVE NOW</span><strong>HudHud found a live stream!</strong><small>Keep learning while you listen.</small></div>
    <button type="button" onClick={()=>setMinimized(v=>!v)} aria-label={minimized?"Expand mini player":"Minimize mini player"}>{minimized?"▢":"−"}</button>
