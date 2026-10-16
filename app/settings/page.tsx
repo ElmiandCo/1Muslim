@@ -15,7 +15,7 @@ export default function SettingsPage() {
   const setNotification=(key:string,value:boolean)=>setNotificationPrefs(old=>{const next={...old,[key]:value};try{localStorage.setItem("1muslim-notification-preferences",JSON.stringify(next))}catch{}return next});
   const requestNotifications=async()=>{if(!("Notification" in window)){setMessage("Phone notifications are not supported in this browser. On iPhone, open 1Muslim from your Home Screen.");return}try{const status=await Notification.requestPermission();setPermission(status);setMessage(status==="granted"?"Notification permission granted on this device. Phone push delivery still needs server setup.":status==="denied"?"Notifications were blocked. Enable them in your phone settings.":"Notification permission not enabled.")}catch{setMessage("Could not request notification permission.")}};
   const [appearanceMode,setAppearanceMode]=useState<"day"|"night"|"auto">("night");
-  const [elmiLight, setElmiLight] = useState(true);
+  const [elmiLight, setElmiLight] = useState(false);
   const [elmiSound, setElmiSound] = useState(false);
   const [hudhudVision, setHudhudVision] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ export default function SettingsPage() {
   useEffect(() => {
     try { const saved=localStorage.getItem("1muslim-notification-preferences");if(saved)setNotificationPrefs(old=>({...old,...JSON.parse(saved)}));if("Notification" in window)setPermission(Notification.permission); } catch {}
     try {const stored=localStorage.getItem("1muslim-theme-mode");setAppearanceMode(stored==="day"||stored==="night"||stored==="auto"?stored:(document.documentElement.classList.contains("light")?"day":"night"));} catch {}
-    try { setElmiLight(localStorage.getItem("1muslim-elmi-light") !== "off"); setElmiSound(localStorage.getItem("1muslim-elmi-light-sound") === "on"); setHudhudVision(localStorage.getItem("1muslim-hudhud-vision-enabled") !== "off"); } catch {}
+    try { setElmiLight(localStorage.getItem("1muslim-elmi-light") === "on"); setElmiSound(localStorage.getItem("1muslim-elmi-light-sound") === "on"); setHudhudVision(localStorage.getItem("1muslim-hudhud-vision-enabled") !== "off"); } catch {}
     (async () => {
       const s = createClient();
       const { data: { user } } = await s.auth.getUser();
@@ -123,7 +123,7 @@ export default function SettingsPage() {
         <button type="button" className={"switch " + (hudhudVision ? "on" : "")} onClick={() => saveHudhudVision(!hudhudVision)} aria-pressed={hudhudVision} aria-label="Toggle HudHud Vision"><span>{hudhudVision ? "ON" : "OFF"}</span><i /></button>
       </section>
       <section className="settingsCard" data-no-tap-shimmer>
-        <div className="settingCopy"><span className="settingIcon">✨</span><div><span className="eyebrow">SIGNATURE EFFECT · DEFAULT ON</span><h2>The Elmi Light</h2><p>Our signature vertical blue-and-gold glow follows HudHud as you move the handle, and adds shimmering light, sparkles, and dust to taps and celebrations across 1Muslim. Turn it off for a calmer experience. Your choice is saved on this device.</p></div></div>
+        <div className="settingCopy"><span className="settingIcon">✨</span><div><span className="eyebrow">SIGNATURE EFFECT · DEFAULT OFF</span><h2>The Elmi Light</h2><p>Our signature vertical blue-and-gold glow follows HudHud as you move the handle, and adds shimmering light, sparkles, and dust to taps and celebrations across 1Muslim. Turn it off for a calmer experience. Your choice is saved on this device.</p></div></div>
         <button type="button" className={"switch " + (elmiLight ? "on" : "")} onClick={() => saveElmiLight(!elmiLight)} aria-pressed={elmiLight} aria-label="Toggle The Elmi Light"><span>{elmiLight ? "ON" : "OFF"}</span><i /></button>
       </section>
 
