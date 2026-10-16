@@ -53,7 +53,8 @@ export default function HudHudLiveMiniPlayer({canvas=false}:{canvas?:boolean}={}
  },[]);
  const close=()=>{dismissed.current=true;sessionStorage.setItem(DISMISSED,"yes");dismissWithMotion()};
  if(!canvas&&(isBroadcastScreen||!initialized||loading||!open||!stream))return null;
- if(canvas)return <div className="hudhud-live-mini-canvas" style={{width:"100%",height:"100%",minHeight:170,overflow:"hidden",border:0,borderRadius:0,background:"transparent",pointerEvents:"none"}}>{stream?<LiveKitViewer key={stream.id} roomName={stream.room_name} streamId={stream.id} embedded canvas forceMuted />:<span style={{display:"grid",placeItems:"center",height:"100%",minHeight:170,color:"#d6e7b8",fontSize:12}}>{loading?"Finding live stream…":"No active live stream"}</span>}</div>;
+ const activeStream=stream;
+ if(canvas)return <div className="hudhud-live-mini-canvas" style={{width:"100%",height:"100%",minHeight:170,overflow:"hidden",border:0,borderRadius:0,background:"transparent",pointerEvents:"none"}}>{stream?<LiveKitViewer key={activeStream?.id} roomName={activeStream?.room_name??""} streamId={activeStream?.id} embedded canvas forceMuted />:<span style={{display:"grid",placeItems:"center",height:"100%",minHeight:170,color:"#d6e7b8",fontSize:12}}>{loading?"Finding live stream…":"No active live stream"}</span>}</div>;
  return <aside className={"hudhud-live-mini"+(minimized?" is-minimized":"")+(exiting?" is-exiting":"")+(endedNotice?" is-live-ended":"")} aria-label="Live stream notification" data-no-translate="true" style={{transform:`translate3d(${position.x}px,${position.y}px,0)`,touchAction:"pan-y"}}>
   <div className="hudhud-live-mini-head" style={{touchAction:"none",cursor:"grab"}} onPointerDown={e=>{if((e.target as HTMLElement).closest("button,a"))return;drag.current={x:e.clientX,y:e.clientY,ox:position.x,oy:position.y};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{if(!drag.current)return;setPosition({x:Math.max(-window.innerWidth*.65,Math.min(window.innerWidth*.65,drag.current.ox+e.clientX-drag.current.x)),y:Math.max(-window.innerHeight*.65,Math.min(window.innerHeight*.65,drag.current.oy+e.clientY-drag.current.y))})}} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}}>
    <img src="/assets/hudhud-logo.PNG" alt="" className="hudhud-live-bird" onError={e=>{e.currentTarget.style.display="none"}} />
@@ -63,7 +64,7 @@ export default function HudHudLiveMiniPlayer({canvas=false}:{canvas?:boolean}={}
   </div>
   {endedNotice&&<div className="hudhud-live-ended-toast" role="status" aria-live="polite"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>Closing your player…</small></div>}
   {!minimized&&!endedNotice&&<><div className="hudhud-live-mini-video"><LiveKitViewer key={stream.id} roomName={stream.room_name} streamId={stream.id} embedded /></div>
-   <div className="hudhud-live-mini-bottom"><span title={stream.title}>{stream.title}</span><Link href={`/streaming/live/${stream.id}`}>Open stream ↗</Link></div>
+   <div className="hudhud-live-mini-bottom"><span title={activeStream?.title??""}>{activeStream?.title}</span><Link href={`/streaming/live/${activeStream?.id??""}`}>Open stream ↗</Link></div>
    <p className="hudhud-live-mini-hint">🐦 Continue courses and explore 1Muslim with this player open. Tap Unmute to listen.</p></>}
  </aside>;
 }
