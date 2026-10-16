@@ -885,10 +885,95 @@ export default function GoLivePage() {
         .settingsOpen .layout>.form{display:block!important;position:absolute;top:calc(70px + env(safe-area-inset-top));bottom:calc(90px + env(safe-area-inset-bottom));left:12px;right:12px;z-index:40;overflow-y:auto;overscroll-behavior:contain;border-radius:18px;background:#08110df5}
         .settingsOpen .cameraStudio{display:block!important;position:absolute;bottom:calc(90px + env(safe-area-inset-bottom));left:12px;right:12px;z-index:42;max-height:35dvh;overflow-y:auto;border-radius:15px;background:#08110df7}
         @media(min-width:850px){.settingsOpen .layout>.form{left:auto;width:420px}}
+        /* Phase 1: one real streaming page, two deliberate creator layouts. */
+        .goLive{background:radial-gradient(ellipse at 48% -20%,#204635 0%,transparent 62%),linear-gradient(145deg,#05120c,#020806 70%);color:#f3f1e8}
+        .immersiveHeader{background:linear-gradient(180deg,#020b08eb,#04160db0);border-bottom:1px solid #d4bd7850;backdrop-filter:blur(20px);min-height:68px}
+        .immersiveHeader strong{font-size:15px;letter-spacing:.035em;color:#f2e1aa}
+        .immersiveHeader a,.immersiveHeader button{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;border-color:#c8b47965;background:#09251cdb}
+        .immersiveHeader button:focus-visible,.immersiveHeader a:focus-visible,.goLive button:focus-visible{outline:2px solid #f4d58e;outline-offset:3px}
+        .layout>.form{border:1px solid #cbb16a57;background:linear-gradient(155deg,#09241bdc,#04100df2);box-shadow:0 18px 60px #0007;backdrop-filter:blur(22px)}
+        .layout>.form h2{color:#f4e2b0}
+        .goLive .start{background:linear-gradient(120deg,#0b694a,#11ae75 55%,#075338);color:#fff;border:1px solid #e5ce8d;box-shadow:0 0 22px #15c48a65;font-weight:800}
+        .previewOverlayTools button{background:#09251ccf;border:1px solid #d2bb8266;backdrop-filter:blur(12px);min-width:44px;min-height:44px}
+        @media(min-width:851px){
+          .goLive{overflow:hidden}
+          .shell{top:82px;bottom:12px;left:clamp(18px,3vw,58px);right:clamp(18px,3vw,58px);height:auto}
+          .layout{display:grid;grid-template-columns:minmax(0,1.36fr) minmax(320px,.9fr);gap:clamp(14px,1.5vw,28px);height:100%;align-items:stretch}
+          .layout>.panel:first-child{position:relative;inset:auto;border:1px solid #d1b76a80;border-radius:25px;background:#071710b0;min-height:0;overflow:hidden}
+          .preview,.preview.format-portrait,.preview.format-square,.preview.format-landscape{position:relative;inset:auto;width:100%!important;height:min(65%,calc(100% - 210px))!important;max-height:none!important;min-height:230px;aspect-ratio:auto!important;border-radius:22px;overflow:hidden}
+          .preview video{object-fit:cover}
+          .cameraStudio{display:block!important;position:relative;max-height:calc(35% - 10px);overflow-y:auto;overscroll-behavior:contain;margin:10px;border:1px solid #bd9e5966;border-radius:16px;background:#081a14e8}
+          .layout>.form,.settingsOpen .layout>.form{display:block!important;position:relative;inset:auto;width:auto;min-width:0;height:100%;overflow-y:auto;overscroll-behavior:contain;border-radius:25px;padding:clamp(14px,1.7vw,26px)}
+          .settingsOpen .cameraStudio{position:relative;inset:auto;max-height:calc(35% - 10px)}
+          .controls{position:absolute;bottom:calc(35% + 12px);padding:10px;justify-content:center;background:linear-gradient(transparent,#03100bcf)}
+          .studioHeaderLabel{display:inline}
+          .immersiveHeader button{display:none}
+        }
+        @media(max-width:850px){
+          .goLive{height:100dvh;overflow:hidden}
+          .studioHeaderLabel{display:none}
+          .shell{top:0;bottom:0}
+          .previewOverlayTools{right:10px;top:48%}
+          .controls{bottom:calc(6px + env(safe-area-inset-bottom));padding:10px 12px max(12px,env(safe-area-inset-bottom));gap:8px;background:linear-gradient(transparent,#020a08f5)}
+          .settingsOpen .layout>.form{top:calc(76px + env(safe-area-inset-top));bottom:calc(88px + env(safe-area-inset-bottom));left:10px;right:10px;overflow-y:auto;padding:18px;border-radius:22px}
+          .settingsOpen .cameraStudio{display:none!important}
+          .preview{background:#06160f}
+        }
+        @media(max-width:850px) and (max-height:650px){
+          .immersiveHeader{min-height:48px;padding-top:env(safe-area-inset-top);padding-bottom:2px}
+          .controls{padding:5px 8px max(5px,env(safe-area-inset-bottom))}
+          .settingsOpen .layout>.form{top:calc(56px + env(safe-area-inset-top));bottom:calc(72px + env(safe-area-inset-bottom))}
+        }
+
+        /* Creator Studio 2: mobile composition follows the approved emerald reference.
+           Functional controls are reused; legacy floating rows are not duplicated. */
+        .studioBrandMark{color:#c4d993;font-size:25px;vertical-align:middle}
+        .preliveInspire,.preliveIdentity,.preliveMobileActions{display:none}
+        @media(max-width:850px){
+          .immersiveHeader{min-height:64px!important;align-items:center!important;padding:calc(8px + env(safe-area-inset-top)) 14px 8px!important;background:linear-gradient(#05130cd9,#05130c45)!important}
+          .immersiveHeader strong{font-size:20px!important;letter-spacing:0!important}
+          .immersiveHeader button{font-size:13px!important}
+          .preliveInspire{display:flex;position:absolute;top:calc(84px + env(safe-area-inset-top));left:clamp(16px,5vw,28px);right:clamp(16px,5vw,28px);z-index:23;align-items:center;gap:9px;padding:12px 15px;border:1px solid #c5c49c50;border-radius:18px;background:#06180fb0;color:#f3efdd;font-size:clamp(11px,2.9vw,14px);backdrop-filter:blur(14px);pointer-events:none}
+          .preliveInspire span{flex:1;min-width:0}
+          .preliveIdentity{display:flex;position:absolute;left:12px;right:12px;bottom:calc(172px + env(safe-area-inset-bottom));z-index:25;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border:1px solid #b9e5b17d;border-radius:22px;background:linear-gradient(110deg,#09291fdc,#071b14ba);backdrop-filter:blur(16px)}
+          .preliveTitleButton{display:flex;align-items:center;gap:10px;min-width:0;flex:1;border:0;background:none;color:white;text-align:left;cursor:pointer}
+          .preliveIdentityIcon{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1px solid #8dd7a3;color:#a9f6bf;background:#0a4c37}
+          .preliveTitleButton span:nth-child(2){min-width:0}
+          .preliveTitleButton small{display:block;color:#6df1af;font-size:10px;font-weight:750}
+          .preliveTitleButton strong{display:block;font-size:clamp(13px,4vw,18px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+          .preliveVisibility{border:1px solid #54e5a3;border-radius:999px;padding:10px 12px;flex-shrink:0;background:#04271edb;color:white;font-size:12px}
+          .preliveMobileActions{display:flex;position:absolute;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:28;flex-direction:column;gap:9px}
+          .preliveGoButton{min-height:60px;border:2px solid #8dfac6;border-radius:999px;background:linear-gradient(115deg,#08724e,#02a66b 62%,#056644);box-shadow:0 0 19px #19d88d8c,inset 0 2px 12px #ffffff22;color:white;font-size:clamp(21px,5vw,27px);font-weight:850;cursor:pointer}
+          .preliveGoButton:disabled{opacity:.7}
+          .preliveQuickOptions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+          .preliveQuickOptions button{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;min-height:59px;min-width:0;padding:7px 3px;border:1px solid #72c9a071;border-radius:15px;background:#061a13df;color:#fff;cursor:pointer}
+          .preliveQuickOptions button span{font-size:20px}
+          .preliveQuickOptions button strong{font-size:clamp(9px,2.6vw,12px);white-space:nowrap}
+          .preliveQuickOptions button small{width:100%;font-size:10px;color:#9adcb7}
+          .previewOverlayTools{top:43%!important;right:9px!important;gap:8px!important}
+          .previewOverlayTools button{width:44px!important;height:44px!important;background:#062c21d9!important;border-color:#6bd6a0a1!important}
+          .layout>.panel:first-child>.controls{display:none!important}
+          .layout>.panel:first-child>.status{display:none!important}
+          .layout>.panel:first-child>.preview .preliveIdentity~.status{display:none!important}
+          .layout>.panel:first-child>.preview [class*="liveVisualEffects"]{max-width:50px}
+          .settingsOpen .layout>.form{z-index:45!important}
+          .settingsOpen .preliveMobileActions,.settingsOpen .preliveIdentity{visibility:hidden}
+        }
+        @media(max-width:850px) and (max-height:680px){
+          .preliveInspire{display:none}
+          .preliveIdentity{bottom:calc(145px + env(safe-area-inset-bottom))}
+          .preliveGoButton{min-height:52px}
+          .preliveQuickOptions button{min-height:48px}
+          .preliveMobileActions{gap:5px}
+        }
+        @media(min-width:851px){.preliveInspire,.preliveIdentity,.preliveMobileActions{display:none!important}}
+
+        @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
 
       `}</style>
 
-      <header className="immersiveHeader"><Link href="/streaming">← Back</Link><strong>Go Live</strong><button onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕ Close":"⚙ Settings"}</button></header>
+      <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong><button type="button" aria-expanded={settingsOpen} aria-controls="prelive-settings" onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕ Close":"⚙ Settings"}</button></header>
       <div className={settingsOpen?"shell settingsOpen":"shell"}>
         <div className="studioTools">
               {scheduledSlot && <div className="upcomingPrep"><div><span className="eyebrow">UPCOMING LIVE</span><strong>{scheduledSlot.title}</strong><span>{scheduledSlot.category} · {new Date(scheduledSlot.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div><button type="button" className="prepButton" onClick={()=>{setTitle(scheduledSlot.title);setCategory(scheduledSlot.category);setShowScheduler(false);setSaveMessage("Prep mode loaded. Check your title, topic, format, thumbnail, camera and microphone before going live.");}}>{hostCheckedIn ? "✓ Host Checked In" : "Prep for upcoming Live →"}</button></div>}
@@ -907,6 +992,8 @@ export default function GoLivePage() {
               {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
               {live&&liveStreamIdRef.current&&<LiveLightOverlay streamId={liveStreamIdRef.current} host />}
+              {!live && <div className="preliveInspire" aria-hidden="true">✧ <span>Share knowledge. Inspire. Build the Ummah.</span> ›</div>}
+              {!live && <div className="preliveIdentity"><button type="button" className="preliveTitleButton" onClick={()=>setSettingsOpen(true)} aria-label="Edit live title"><span className="preliveIdentityIcon" aria-hidden="true">✧</span><span><small>LIVE TITLE · TAP TO EDIT</small><strong>{title || defaultLiveTitle}</strong></span></button><button type="button" className="preliveVisibility" onClick={()=>setSettingsOpen(true)} aria-label="Change live audience">◎ {visibility==="public"?"Public":"Ashab"} ⌄</button></div>}
               {cameraReady && <div className="previewOverlayTools" aria-label="Camera controls"><button type="button" onClick={()=>void flipCamera()} title="Flip camera" aria-label="Flip camera">🔄</button><button type="button" onClick={toggleCamera} title={cameraOn?"Turn camera off":"Turn camera on"} aria-label={cameraOn?"Turn camera off":"Turn camera on"}>{cameraOn?"📷":"🚫"}</button><button type="button" onClick={toggleMic} title={micOn?"Mute microphone":"Unmute microphone"} aria-label={micOn?"Mute microphone":"Unmute microphone"}>{micOn?"🎙️":"🔇"}</button></div>}
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
               {live && <span className="live">● LIVE</span>}{live && <div role="status" aria-live="polite" style={{position:"absolute",left:12,bottom:64,zIndex:13,padding:"12px 16px",borderRadius:18,background:"rgba(5,10,20,.80)",border:viewerIncrease?"2px solid #39ee8d":"1px solid rgba(255,255,255,.35)",boxShadow:viewerIncrease?"0 0 24px rgba(57,238,141,.48)":"0 8px 25px #0008",color:viewerIncrease?"#4cff9c":"white",transition:"color .3s,border .3s,box-shadow .3s",pointerEvents:"none",textAlign:"center"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1.5}}>🔴 YOU ARE LIVE</div><div style={{fontSize:"clamp(26px,5vw,40px)",fontWeight:900,lineHeight:1.15,fontVariantNumeric:"tabular-nums"}}>{viewers.toLocaleString()}</div><div style={{fontSize:11,opacity:.85}}>VIEWERS {viewerIncrease?"↑":""}</div></div>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
@@ -921,6 +1008,16 @@ export default function GoLivePage() {
                 <label style={{fontSize:11}}>Green sensitivity <input type="range" min="0" max="100" value={greenStrength} onChange={e=>setGreenStrength(Number(e.target.value))}/></label>
               </>}
               <small style={{color:"#a5b7a8"}}>Use a real green backdrop for best results. Choose your photo before starting camera preview.</small>
+            </div>
+            <div className="preliveMobileActions" aria-label="Pre-live creator controls">
+              {!live && <>
+                <button type="button" className="preliveGoButton" disabled={saving || !cameraReady} onClick={()=>void startLive(false)}>{cameraReady?"◉ Go Live":"Enable Camera to Go Live"}</button>
+                <div className="preliveQuickOptions">
+                  <button type="button" onClick={toggleMic} aria-pressed={micOn}><span aria-hidden="true">🎙</span><strong>Voice Chat</strong><small>{micOn?"On":"Off"}</small></button>
+                  <button type="button" onClick={()=>void flipCamera()}><span aria-hidden="true">▣</span><strong>Device Camera</strong><small>{facingMode==="user"?"Front":"Back"}</small></button>
+                  <button type="button" onClick={()=>setSettingsOpen(true)}><span aria-hidden="true">♧</span><strong>Allow Guests</strong><small>Settings</small></button>
+                </div>
+              </>}
             </div>
             <div className="controls">
               {cameraReady && <><button className={cameraOn ? "circle" : "circle off"} onClick={toggleCamera} aria-label="Toggle camera">{cameraOn ? "◉" : "○"}</button><button className="circle" onClick={()=>void flipCamera()} aria-label="Flip camera" title="Flip camera">↻</button><button className={micOn ? "circle" : "circle off"} onClick={toggleMic} aria-label="Toggle microphone">{micOn ? "♫" : "×"}</button></>}
@@ -963,7 +1060,7 @@ export default function GoLivePage() {
             </div>}
           </section>
 
-          <aside className="panel form">
+          <aside id="prelive-settings" className="panel form" aria-label="Live stream settings">
             <h2>Live details</h2>
             {error && <div className="error">{error}</div>}
             {scheduledSlot && !live && <div className={hostCheckedIn ? "ready checkedIn" : "ready"}>{hostCheckedIn ? "✓ HOST CHECKED IN — Viewers can see that you are ready. The broadcast stays locked until the scheduled time." : "Scheduled Live: camera and microphone can be prepared now. Check in when you are fully ready."}</div>}{live && <div className="ready">Your live session is active and being recorded.</div>}{saveMessage && <div className="ready">{saveMessage}</div>}

@@ -32,7 +32,7 @@ export default function AuthPage() {
   const [visionVisible,setVisionVisible]=useState(true);
   const [entryStage,setEntryStage]=useState<"welcome"|"membership"|"guest"|"auth">("welcome");
   const [entryReady,setEntryReady]=useState(false);
-  useEffect(()=>{const timer=window.setTimeout(()=>setEntryReady(true),5000);return()=>window.clearTimeout(timer)},[]);
+  useEffect(()=>{setEntryReady(true)},[]);
 
 
   useEffect(() => {
@@ -128,7 +128,7 @@ export default function AuthPage() {
     </section>
     <style>{`
       .authEntryShell{display:grid!important;place-items:center!important;min-height:100dvh!important;padding:clamp(15px,4vw,35px)!important;overflow:hidden!important}
-      .authEntryCard{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;gap:15px;width:min(100%,490px);min-height:340px;padding:clamp(25px,5vw,42px);border:1px solid rgba(238,212,157,.63);border-radius:32px;background:linear-gradient(145deg,rgba(6,58,46,.84),rgba(5,39,34,.73));backdrop-filter:blur(22px);box-shadow:0 30px 80px #001b1590,inset 0 1px #fff3;color:#f9eed7;opacity:0;transform:translateY(13px) scale(.985);transition:opacity 1s ease,transform 1s ease}
+      .authEntryCard{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;gap:15px;width:min(100%,490px);min-height:340px;padding:clamp(25px,5vw,42px);border:1px solid rgba(238,212,157,.63);border-radius:32px;background:linear-gradient(145deg,rgba(6,58,46,.84),rgba(5,39,34,.73));backdrop-filter:blur(22px);box-shadow:0 30px 80px #001b1590,inset 0 1px #fff3;color:#f9eed7;opacity:1;transform:none;transition:opacity .3s ease,transform .3s ease}
       .authEntryReady{opacity:1;transform:none}
       .authEntryEyebrow{font-size:11px;font-weight:750;letter-spacing:.2em;color:#e8ce91}
       .authEntryMark{font-size:65px;color:#ebd394;text-shadow:0 0 35px #e2c47d88;line-height:1}
@@ -642,5 +642,27 @@ export default function AuthPage() {
 .authPreview .authGlass{background:rgba(4,35,29,.65)!important;backdrop-filter:blur(17px)!important;-webkit-backdrop-filter:blur(17px)!important}
 .authPreview.authPreviewDay .authGlass{background:rgba(14,49,39,.62)!important}
 .authPreview .authOrbit{display:none!important}
+
+/* Unified Entry visual pass: retain existing Supabase and Shahada behavior,
+   remove the oversized login artwork and preserve the shared emerald glass. */
+.authPreview .authGlass{border:1px solid rgba(224,196,125,.58)!important;border-radius:26px!important;box-shadow:0 20px 65px #00160f75,inset 0 1px #ffffff1b!important}
+.authPreview .authPanel{background:linear-gradient(150deg,rgba(6,48,37,.84),rgba(3,27,23,.74))!important;color:#f5efdc!important}
+.authPreview .authPanel input{border-radius:14px!important;border:1px solid #a4c7a16e!important;background:#052a22c9!important;color:#fff!important;min-height:48px!important;font-size:16px!important}
+.authPreview .authPanel input:focus-visible,.authPreview .authPanel button:focus-visible{outline:2px solid #f1d494!important;outline-offset:3px!important}
+.authPreview .authAction.ready{background:linear-gradient(105deg,#b5eec3,#f0d59c)!important;color:#123a2d!important;border:1px solid #efdbab!important;border-radius:17px!important;min-height:51px!important;font-weight:800!important}
+.authPreview .authTop span{color:#e9d8aa!important;letter-spacing:.1em!important}
+.authPreview.visionLogin .authArt,.authPreview .visionLogin .authArt{display:none!important}
+.authPreview .visionLogin.authGlass{max-width:540px!important;min-height:0!important;height:auto!important;max-height:calc(100dvh - 120px)!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+.authPreview .visionLogin .authPanel{padding:clamp(22px,4vw,36px)!important;justify-content:center!important;gap:14px!important;overflow-y:auto!important;touch-action:pan-y!important}
+.authPreview .visionLogin .authJourneyDuplicate{display:none!important}
+.authPreview .visionLogin .authLead{font-size:14px!important;line-height:1.5!important;color:#d4e2d7!important}
+@media(max-width:700px){
+ .authPreview:not(.authShahada){padding:calc(env(safe-area-inset-top) + 68px) 14px calc(env(safe-area-inset-bottom) + 18px)!important;overflow-y:auto!important;touch-action:pan-y!important}
+ .authPreview .visionLogin.authGlass{height:auto!important;min-height:0!important;max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 100px)!important;margin:auto!important}
+ .authPreview .visionLogin .authPanel{flex:0 1 auto!important;min-height:0!important;overflow-y:auto!important;padding:22px 18px!important;justify-content:flex-start!important}
+ .authPreview .visionLogin .authTop{font-size:16px!important}
+}
+@media(prefers-reduced-motion:reduce){.authPreview .authGlass{scroll-behavior:auto!important}}
+
  .authPreview.authShahada .authGlass{margin-top:0!important;max-height:calc(100dvh - 28px)!important} .authPreview.authShahada{padding-top:12px!important} body:has(.authPreview) .muslimMobileDock{display:none!important}body:has(.authPreview){overflow:hidden!important;overscroll-behavior:none!important}`}</style></main>;
 }
