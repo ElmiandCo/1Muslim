@@ -1610,3 +1610,46 @@
  .control .widgetArea .workspacePage .customGrid{padding:1px 4px!important}
  .control .widgetArea .workspacePage .customGrid>.widgetSlot>.widgetCanvas .widgetFeatureDetail{display:none!important}
 }
+
+/* HudHud iOS-style motion pass: one shared timeline, no competing 1.95s keyframes.
+   Keep existing expanded/collapsed geometry and homepage visuals unchanged. */
+.control.navMotionCollapsed .controlHeader.controlHeaderCollapsed,
+.control.navMotionExpanded .controlHeader,
+.control.navMotionCollapsed .intro,
+.control.navMotionExpanded .intro,
+.control.navMotionCollapsed .guestWelcome,
+.control.navMotionExpanded .guestWelcome,
+.control.navMotionCollapsed .upgradeNotice,
+.control.navMotionExpanded .upgradeNotice,
+.control.navMotionCollapsed .surfaceArtwork,
+.control.navMotionExpanded .surfaceArtwork{
+ animation:none!important;
+}
+.control .controlHeader{
+ transition:opacity .46s cubic-bezier(.22,1,.36,1),
+            transform .46s cubic-bezier(.22,1,.36,1)!important;
+}
+.control .introGreeting{
+ transition:transform .46s cubic-bezier(.22,1,.36,1),
+            left .46s cubic-bezier(.22,1,.36,1),
+            opacity .46s cubic-bezier(.22,1,.36,1)!important;
+ will-change:transform;
+}
+.control .introGreeting>.eyebrow{
+ transition:transform .46s cubic-bezier(.22,1,.36,1),
+            opacity .46s cubic-bezier(.22,1,.36,1)!important;
+}
+.control .introActionDock{
+ transition:opacity .34s ease!important;
+ transition-delay:0s!important;
+}
+.control .intro,.control .surface,.control .workspaceScroller{
+ transition-duration:.46s!important;
+ transition-timing-function:cubic-bezier(.22,1,.36,1)!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .control .controlHeader,.control .introGreeting,.control .introGreeting>.eyebrow,
+ .control .introActionDock,.control .intro,.control .surface,.control .workspaceScroller{
+  animation:none!important;transition:none!important;will-change:auto!important;
+ }
+}
