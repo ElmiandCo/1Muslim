@@ -642,3 +642,20 @@
 }
 
 .fillArea{position:relative!important}
+
+/* Bidirectional canvas growth: viewport grows upward into the released
+   greeting area and downward toward the browser-safe bottom inset. */
+.fillArea{
+ transition:height .46s cubic-bezier(.22,1,.36,1)!important;
+}
+.fillArea[data-canvas-expanded="true"]{
+ height:max(480px,calc(100dvh - 36px))!important;
+}
+.fillArea>.canvasExpandHandle{
+ transition:background .46s cubic-bezier(.22,1,.36,1),
+ border-color .46s cubic-bezier(.22,1,.36,1),
+ transform .46s cubic-bezier(.22,1,.36,1)!important;
+}
+@media(max-height:600px){
+ .fillArea[data-canvas-expanded="true"]{height:max(390px,calc(100dvh - 20px))!important}
+}
