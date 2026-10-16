@@ -15,3 +15,9 @@ main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center
 main[data-canvas-fullscreen="true"] > .canvas-fullscreen-backdrop{display:none}
 main[data-canvas-fullscreen="true"] > div:has(> .canvas-fullscreen-toggle){z-index:110}
 @media(prefers-reduced-motion:reduce){main[data-canvas-fullscreen] *,main[data-canvas-fullscreen] *::before,main[data-canvas-fullscreen] *::after{scroll-behavior:auto!important}main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{transition:none!important}}
+
+/* Persistent day/night orb: never a child of the lifting navigation. */
+.canvas-light-orb-anchor{display:inline-block;flex:none;width:36px;height:36px;vertical-align:middle}
+.canvas-light-orb-dock{position:fixed;z-index:2147482000;top:calc(env(safe-area-inset-top, 0px) + 16px);right:16px;width:36px;height:36px;pointer-events:auto;transition:left 820ms cubic-bezier(.2,.75,.2,1),top 820ms cubic-bezier(.2,.75,.2,1);will-change:left,top}
+.canvas-light-orb-dock[style*="left"]{right:auto}
+@media(prefers-reduced-motion:reduce){.canvas-light-orb-dock{transition:none!important}}
