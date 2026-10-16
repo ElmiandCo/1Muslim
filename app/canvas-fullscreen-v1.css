@@ -28,3 +28,17 @@ main[data-canvas-fullscreen="true"] > div:has(> .canvas-fullscreen-toggle){z-ind
 .canvas-light-orb-float{width:36px;height:36px;display:grid;place-items:center;animation:canvasOrbHover 6.4s ease-in-out infinite}
 @keyframes canvasOrbHover{0%,100%{transform:translate3d(0,0,0)}25%{transform:translate3d(2px,-2px,0)}50%{transform:translate3d(-1px,2px,0)}75%{transform:translate3d(-2px,-1px,0)}}
 @media(prefers-reduced-motion:reduce){.canvas-light-orb-float{animation:none!important}}
+
+/* Two-dimensional Canvas: horizontal columns, vertical row portal. */
+.canvas-vertical-portal{position:relative;width:100%;height:100%;overflow:hidden}
+.canvas-vertical-main,.canvas-vertical-secondary{position:absolute;inset:0;transition:transform 560ms cubic-bezier(.22,.7,.2,1),opacity 360ms ease;min-height:0}
+.canvas-vertical-main{transform:translate3d(0,0,0);opacity:1}
+.canvas-vertical-secondary{transform:translate3d(0,100%,0);opacity:0;pointer-events:none;display:grid;place-items:center;padding:clamp(12px,3vw,32px);background:linear-gradient(150deg,rgba(5,48,41,.75),rgba(13,42,53,.52));}
+.canvas-vertical-portal[data-row="1"] .canvas-vertical-main{transform:translate3d(0,-100%,0);opacity:0;pointer-events:none}
+.canvas-vertical-portal[data-row="1"] .canvas-vertical-secondary{transform:translate3d(0,0,0);opacity:1;pointer-events:auto}
+.canvas-secondary-card{width:min(100%,680px);padding:clamp(24px,5vw,54px);border-radius:28px;border:1px solid rgba(220,202,140,.38);background:rgba(12,68,57,.42);box-shadow:0 20px 60px rgba(0,0,0,.22);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#f5eccc;text-align:center}
+.canvas-secondary-kicker{font-size:12px;letter-spacing:.25em;color:#c8dcba}
+.canvas-secondary-card h2{font-size:clamp(28px,6vw,52px);margin:18px 0}
+.canvas-secondary-card p{font-size:clamp(15px,2vw,20px);opacity:.85;line-height:1.5}
+.canvas-secondary-card a{display:inline-flex;margin-top:24px;padding:14px 24px;border-radius:100px;background:linear-gradient(100deg,#84d9a3,#bce6bb);color:#07392f;font-weight:750;text-decoration:none}
+@media(prefers-reduced-motion:reduce){.canvas-vertical-main,.canvas-vertical-secondary{transition:none!important}}
