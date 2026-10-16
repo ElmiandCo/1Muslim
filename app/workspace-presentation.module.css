@@ -571,3 +571,15 @@
 .elmTentCard{display:flex!important;flex-direction:column!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;padding:clamp(7px,1.6vw,14px)!important;border-radius:clamp(19px,3vw,30px)!important;background:rgba(5,40,35,.13)!important}
 .elmTentCard>div{flex:1;min-height:0}
 @media(prefers-reduced-motion:reduce){.slide[data-workspace-page="4"] .night,.slide[data-workspace-page="4"] .day{transition:none!important}}
+
+/* Quran-only HudHud placement control: unobtrusive, keyboard accessible and theme aware. */
+.quranHudHudPositionToggle{position:absolute;top:9px;right:10px;z-index:6;display:grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid rgba(235,210,157,.72);border-radius:50%;background:rgba(28,73,61,.65);color:#f0d8a8;box-shadow:inset 0 1px rgba(255,255,255,.22);backdrop-filter:blur(12px);cursor:pointer;transition:background .2s ease,border-color .2s ease}
+.quranHudHudPositionToggle:hover{background:rgba(43,99,76,.85)}
+.quranHudHudPositionToggle:focus-visible{outline:2px solid #f6e3b5;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.quranHudHudPositionToggle,.quranHudHudPositionToggle svg{transition:none!important}}
+
+/* Keep Quran glass panel geometry independent of short/long verses. */
+.fillArea .slide[data-workspace-page="1"] .quranVerseArticle{width:100%!important;max-width:100%!important;min-width:0!important;align-self:stretch!important;box-sizing:border-box!important;flex:1 1 0%!important;padding-bottom:clamp(92px,13vh,110px)!important;scrollbar-width:thin}
+.fillArea .slide[data-workspace-page="1"] .quranVerseIndex,.fillArea .slide[data-workspace-page="1"] .quranVerseArabic,.fillArea .slide[data-workspace-page="1"] .quranVerseTranslation{max-width:100%;flex-shrink:0}
+/* Previous verse control sits left of center above the Surah header. */
+.quranHudHudPositionToggle{left:calc(50% - 74px)!important;right:auto!important;top:8px!important;width:42px;height:42px}

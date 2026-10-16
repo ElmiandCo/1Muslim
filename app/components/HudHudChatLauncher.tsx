@@ -81,8 +81,10 @@ export default function HudHudChatLauncher(){
     const widget=document.querySelector<HTMLElement>('[data-workspace-page="1"] [data-widget="Qur’an"]');
     const bounds=widget?.getBoundingClientRect();
     const diameter=button?.offsetWidth||54;
-    const x=bounds?Math.min(window.innerWidth-diameter-10,Math.max(10,bounds.right-diameter-12)):window.innerWidth-diameter-14;
-    const y=bounds?Math.min(window.innerHeight-diameter-20,Math.max(80,bounds.top+Math.min(105,bounds.height*.16))):Math.round(window.innerHeight*.38);
+    const article=widget?.querySelector<HTMLElement>('[class*="quranVerseArticle"]');
+    const articleBounds=article?.getBoundingClientRect();
+    const x=articleBounds?articleBounds.left+(articleBounds.width-diameter)/2:bounds?bounds.left+(bounds.width-diameter)/2:(window.innerWidth-diameter)/2;
+    const y=articleBounds?articleBounds.bottom-diameter-16:bounds?bounds.bottom-diameter-85:window.innerHeight*.7;
     animateOrb({x:Math.round(x),y:Math.round(y)});
    }else if(!active&&quranDocked.current){
     quranDocked.current=false;
