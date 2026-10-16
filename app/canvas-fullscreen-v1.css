@@ -21,3 +21,10 @@ main[data-canvas-fullscreen="true"] > div:has(> .canvas-fullscreen-toggle){z-ind
 .canvas-light-orb-dock{position:fixed;z-index:2147482000;top:calc(env(safe-area-inset-top, 0px) + 16px);right:16px;width:36px;height:36px;pointer-events:auto;transition:left 820ms cubic-bezier(.2,.75,.2,1),top 820ms cubic-bezier(.2,.75,.2,1);will-change:left,top}
 .canvas-light-orb-dock[style*="left"]{right:auto}
 @media(prefers-reduced-motion:reduce){.canvas-light-orb-dock{transition:none!important}}
+
+/* Light orb occupies the highlighted upper-right circle; fullscreen remains a separate control below. */
+.canvas-fullscreen-toggle{transform:translateY(54px)}
+.canvas-light-orb-dock{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(210,232,218,.34);background:rgba(17,68,57,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);will-change:auto}
+.canvas-light-orb-float{width:36px;height:36px;display:grid;place-items:center;animation:canvasOrbHover 6.4s ease-in-out infinite}
+@keyframes canvasOrbHover{0%,100%{transform:translate3d(0,0,0)}25%{transform:translate3d(2px,-2px,0)}50%{transform:translate3d(-1px,2px,0)}75%{transform:translate3d(-2px,-1px,0)}}
+@media(prefers-reduced-motion:reduce){.canvas-light-orb-float{animation:none!important}}
