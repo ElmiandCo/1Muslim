@@ -32,7 +32,7 @@ export default function AuthPage() {
   const [visionVisible,setVisionVisible]=useState(true);
   const [entryStage,setEntryStage]=useState<"welcome"|"membership"|"guest"|"auth">("welcome");
   const [entryReady,setEntryReady]=useState(false);
-  useEffect(()=>{const timer=window.setTimeout(()=>setEntryReady(true),5000);return()=>window.clearTimeout(timer)},[]);
+  useEffect(()=>{setEntryReady(true)},[]);
 
 
   useEffect(() => {
@@ -128,7 +128,7 @@ export default function AuthPage() {
     </section>
     <style>{`
       .authEntryShell{display:grid!important;place-items:center!important;min-height:100dvh!important;padding:clamp(15px,4vw,35px)!important;overflow:hidden!important}
-      .authEntryCard{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;gap:15px;width:min(100%,490px);min-height:340px;padding:clamp(25px,5vw,42px);border:1px solid rgba(238,212,157,.63);border-radius:32px;background:linear-gradient(145deg,rgba(6,58,46,.84),rgba(5,39,34,.73));backdrop-filter:blur(22px);box-shadow:0 30px 80px #001b1590,inset 0 1px #fff3;color:#f9eed7;opacity:0;transform:translateY(13px) scale(.985);transition:opacity 1s ease,transform 1s ease}
+      .authEntryCard{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;gap:15px;width:min(100%,490px);min-height:340px;padding:clamp(25px,5vw,42px);border:1px solid rgba(238,212,157,.63);border-radius:32px;background:linear-gradient(145deg,rgba(6,58,46,.84),rgba(5,39,34,.73));backdrop-filter:blur(22px);box-shadow:0 30px 80px #001b1590,inset 0 1px #fff3;color:#f9eed7;opacity:1;transform:none;transition:opacity .3s ease,transform .3s ease}
       .authEntryReady{opacity:1;transform:none}
       .authEntryEyebrow{font-size:11px;font-weight:750;letter-spacing:.2em;color:#e8ce91}
       .authEntryMark{font-size:65px;color:#ebd394;text-shadow:0 0 35px #e2c47d88;line-height:1}
