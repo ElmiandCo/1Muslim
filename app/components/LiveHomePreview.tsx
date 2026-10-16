@@ -22,7 +22,8 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
    void video.current.play().then(()=>{if(active)setReady(true)}).catch(()=>{if(active)setStatus("Tap to start video")});
   };
   room.on(RoomEvent.TrackSubscribed,attach);
-  room.on(RoomEvent.TrackUnsubscribed,()=>{if(active)setReady(false)});
+  room.on(RoomEvent.ConnectionStateChanged,state=>{if(active&&!ready)setStatus(`LiveKit: ${state}`)});
+  room.on(RoomEvent.TrackUnsubscribed,()=>{if(active){setReady(false);setStatus("Broadcaster video disconnected")}});
   void (async()=>{
    try{
     const res=await fetch("/api/livekit/token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName,role:"viewer"})});
@@ -46,6 +47,6 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
  useEffect(()=>{if(ready)return;const timer=window.setTimeout(()=>setAttempt(n=>n+1),8000);return()=>clearTimeout(timer)},[ready,attempt,roomName]);
  return <span style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:170,overflow:"hidden",borderRadius:12}}>
   <video ref={video} autoPlay muted playsInline onClick={()=>{void video.current?.play().then(()=>setReady(true)).catch(()=>{})}} aria-label="Live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:170,objectFit:"cover",background:"transparent",opacity:ready?1:0}}/>
-  {!ready&&<span style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{status}</span>}
+  {!ready&&<span onClick={()=>{void video.current?.play().then(()=>setReady(true)).catch(()=>{})}} style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{status}</span>}
  </span>;
 }
