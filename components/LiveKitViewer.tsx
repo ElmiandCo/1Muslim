@@ -32,6 +32,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ca
   const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
   const retryRef=useRef<ReturnType<typeof setTimeout>|null>(null);
+  const videoPlayingRef=useRef(false);
   const [sourceRatio,setSourceRatio]=useState<number | null>(null);
   const [frameRatio,setFrameRatio]=useState(1);
   useEffect(()=>{if(!canvas)return;const el=playerRef.current;if(!el)return;const observer=new ResizeObserver(()=>{const rect=el.getBoundingClientRect();if(rect.height>0)setFrameRatio(rect.width/rect.height)});observer.observe(el);return()=>observer.disconnect()},[canvas]);
@@ -43,6 +44,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ca
 
   useEffect(() => {
     let mounted = true;
+    videoPlayingRef.current=false;
 
     const attachTrack = (track: any) => {
       if (!mounted) return;
@@ -51,6 +53,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ca
         if(canvas){const v=videoRef.current;const measure=()=>{if(v.videoWidth&&v.videoHeight)setSourceRatio(v.videoWidth/v.videoHeight)};v.addEventListener("loadedmetadata",measure,{once:true});measure()}
         videoRef.current.muted = true;
         void videoRef.current.play().catch(() => {});
+        videoPlayingRef.current=true;
         setStatus("LIVE");
         if(retryRef.current){clearTimeout(retryRef.current);retryRef.current=null}
         setReconnecting(false);
@@ -119,7 +122,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ca
       } catch { /* Preserve the last known count during temporary network failures. */ }
     };
     const countTimer = canvas?null:window.setInterval(() => void refreshViewers(), 5000);
-    if(canvas){retryRef.current=setTimeout(()=>{if(mounted&&status!=="LIVE")setRetryAttempt(n=>n+1)},11000)}
+    if(canvas){retryRef.current=setTimeout(()=>{if(mounted&&!videoPlayingRef.current)setRetryAttempt(n=>n+1)},11000)}
     void refreshViewers();
 
     return () => {
