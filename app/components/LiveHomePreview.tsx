@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
-import {Room,RoomEvent,Track} from "livekit-client";
+import {Room,RoomEvent,Track,VideoQuality} from "livekit-client";
 
 /** Silent, noninteractive thumbnail player: safe to render inside homepage links. */
 export default function LiveHomePreview({roomName}:{roomName:string}){
@@ -28,7 +28,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
     for(const participant of room.remoteParticipants.values())
      for(const publication of participant.trackPublications.values()){
       if(!publication.isSubscribed)await publication.setSubscribed(true);
-      if(publication.kind===Track.Kind.Video)publication.setVideoQuality("high");
+      if(publication.kind===Track.Kind.Video)publication.setVideoQuality(VideoQuality.HIGH);
       if(publication.track)attach(publication.track);
      }
    }catch{/* Keep the existing thumbnail fallback. */}
