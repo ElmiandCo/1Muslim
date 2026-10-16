@@ -48,3 +48,25 @@ nav[aria-label="Dashboard workspaces"]{position:absolute!important;bottom:clamp(
 nav[aria-label="Dashboard workspaces"] button{width:7px!important;height:7px!important;min-width:7px!important;min-height:7px!important;padding:0!important;border:1px solid rgba(226,234,215,.66)!important;border-radius:50%!important;background:rgba(245,249,235,.12)!important;box-shadow:none!important;font-size:0!important;line-height:0!important}
 nav[aria-label="Dashboard workspaces"] button span{display:none!important}
 nav[aria-label="Dashboard workspaces"] button[aria-current="page"]{background:#e4d6a2!important;border-color:#f8e9bd!important;box-shadow:0 0 7px rgba(238,219,160,.55)!important}
+
+/* Real native application surfaces for the five lower Canvas slots. */
+.canvas-vertical-secondary{display:block!important;padding:clamp(8px,2vw,18px)!important;overflow-y:auto!important;overscroll-behavior:contain}
+.canvas-native-app{display:flex;flex-direction:column;min-height:100%;width:100%;max-width:900px;margin:auto;padding:clamp(14px,3vw,28px);border-radius:26px;border:1px solid rgba(230,216,160,.24);background:rgba(9,51,47,.56);backdrop-filter:blur(14px);color:#f7efd9}
+.canvas-native-app>header{flex:none;text-align:center}
+.canvas-native-app>header span{font-size:11px;letter-spacing:.2em;color:#d5c88f}
+.canvas-native-app>header h2{font-size:clamp(23px,5vw,36px);margin:8px 0 12px}
+.canvas-native-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.canvas-native-app>footer{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:10px}
+.canvas-native-app a,.canvas-native-recorder button{color:#f4e5b5;font-weight:650}
+.canvas-native-profile,.canvas-native-recorder{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;padding:18px 8px}
+.canvas-native-avatar,.canvas-recorder-ring{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;border:1px solid #d6c38a;background:radial-gradient(circle,#397965,#0a3b35);font-size:40px;box-shadow:0 0 35px #c8e5ba22}
+.canvas-recorder-ring.is-recording{animation:canvasRecordPulse 1.5s ease-in-out infinite}
+@keyframes canvasRecordPulse{50%{box-shadow:0 0 30px #f16b6b99}}
+.canvas-native-recorder button{padding:14px 22px;border-radius:99px;border:1px solid #d6c38a;background:#134e42;cursor:pointer}
+.canvas-native-recorder audio{width:min(100%,380px)}
+.canvas-native-recorder small{opacity:.7}
+.canvas-native-feed{display:grid;gap:12px;padding:8px}
+.canvas-native-feed article{padding:18px;border-radius:18px;background:#ffffff0c;border:1px solid #ffffff25}
+.canvas-native-feed article p{white-space:pre-wrap;overflow-wrap:anywhere}
+.canvas-native-feed article small{opacity:.65}
+@media(prefers-reduced-motion:reduce){.canvas-recorder-ring.is-recording{animation:none}}
