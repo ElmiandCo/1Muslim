@@ -79,8 +79,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           if (track.kind === Track.Kind.Audio) track.sid && track.sid && attachedAudioRef.current.delete(track.sid);
         });
         room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live video could not be subscribed to. Please reconnect."));
-        room.on(RoomEvent.ParticipantConnected, () => mounted && setStatus("LIVE"));
-        room.on(RoomEvent.Disconnected, () => mounted && setStatus("Live connection ended."));
+        room.on(RoomEvent.ParticipantConnected, () => mounted && setStatus("Waiting for host video…"));
+        room.on(RoomEvent.Disconnected, () => {if(mounted){setStatus("Live connection ended.");setReconnecting(false);}});
 
         await room.connect(data.url, data.token, { autoSubscribe: true });
         if (!mounted) { await room.disconnect(); return; }
@@ -92,7 +92,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           }
         }
 
-        if (!room.remoteParticipants.size && mounted) { setStatus("Waiting for the host video…"); setReconnecting(true); setReconnectKey(String(Date.now())); }
+        if (mounted && ![...room.remoteParticipants.values()].some(p=>[...p.trackPublications.values()].some(pub=>pub.kind===Track.Kind.Video && pub.track))) { setStatus("Waiting for host video…"); setReconnecting(true); setReconnectKey(String(Date.now())); }
       } catch (err) {
         if (mounted) { setReconnecting(false); setStatus("Connection unavailable"); setError("The live connection could not be established. Please retry or return to Streaming."); }
       }
