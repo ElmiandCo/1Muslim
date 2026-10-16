@@ -585,33 +585,34 @@
 .quranHudHudPositionToggle{left:calc(50% - 74px)!important;right:auto!important;top:8px!important;width:42px;height:42px}
 
 
-/* External slide titles occupy the existing top gutter, not the canvas height.
-   Remove only repeated display headings; leave actual studio controls intact. */
-.slide{position:relative!important}
-.slideHeading{
- position:absolute!important;top:clamp(4px,1.2dvh,12px)!important;
- left:clamp(12px,2vw,24px)!important;right:clamp(12px,2vw,24px)!important;
- z-index:8!important;box-sizing:border-box!important;
- display:flex!important;align-items:center!important;justify-content:space-between!important;
- gap:12px;height:clamp(32px,4.4dvh,42px)!important;
- margin:0!important;padding:2px clamp(10px,2vw,18px)!important;
- color:#f5e6bd;letter-spacing:.13em;
- border:1px solid rgba(226,196,125,.26);
- border-radius:13px;
- background:linear-gradient(90deg,rgba(9,37,28,.5),rgba(9,37,28,.14));
- backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
- pointer-events:none;
+/* Title and expand chevron share ONE real header row outside the slides.
+   The header overlays the existing canvas top gutter, not its content area. */
+.fillArea{position:relative!important}
+.fillArea>.canvasHeaderTitle{
+ position:absolute!important;top:4px!important;left:clamp(14px,3vw,28px)!important;
+ right:clamp(54px,7vw,76px)!important;height:32px!important;
+ z-index:7!important;display:flex!important;align-items:center!important;
+ justify-content:space-between!important;gap:12px!important;
+ margin:0!important;padding:0 6px!important;pointer-events:none!important;
+ color:#f5e6bd;letter-spacing:.12em;min-width:0!important;
 }
-.slideHeading strong{font-size:clamp(10px,2.4vw,14px);font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.slideHeading span{font-size:clamp(14px,3vw,20px);color:#ebd6a4;flex-shrink:0}
-.slide .content{padding-top:0!important;min-height:0!important}
-.slide .content [class*="widgetCrown"]{display:none!important}
-.slide .content .postStudioHeader{display:none!important}
-.slide .content [class*="messagesChoiceCard"] [class*="heading"]{display:none!important}
-.slide .content .postStudioCard{padding-top:clamp(6px,1vw,10px)!important;gap:5px!important}
-.slide .content .postStudioBody{flex:1 1 auto!important;min-height:0!important}
+.canvasHeaderTitle strong{font-size:clamp(10px,2.5vw,14px);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.canvasHeaderTitle span{font-size:clamp(13px,3vw,19px);color:#ebd6a4;flex-shrink:0}
+.fillArea>.canvasExpandHandle{
+ position:relative!important;z-index:8!important;align-self:flex-end!important;
+ width:32px!important;height:32px!important;min-height:32px!important;
+ margin:4px clamp(14px,3vw,28px) 0 0!important;padding:0!important;
+ border-radius:50%!important;font-size:0!important;
+}
+.fillArea>.canvasExpandHandle span:first-child{font-size:18px!important}
+.fillArea .slide .content{padding-top:0!important;min-height:0!important}
+.fillArea .slide .content [class*="widgetCrown"]{display:none!important}
+.fillArea .slide .content .postStudioHeader{display:none!important}
+.fillArea .slide .content [class*="messagesChoiceCard"] [class*="heading"]{display:none!important}
+.fillArea .slide .content .postStudioCard{padding-top:clamp(6px,1vw,10px)!important;gap:5px!important}
+.fillArea .slide .content .postStudioBody{flex:1 1 auto!important;min-height:0!important}
 .fillArea .slide .content{min-height:0!important}
 @media(max-width:600px){
- .slideHeading{left:12px!important;right:12px!important;height:clamp(32px,4.3dvh,40px)!important}
- .slide .content{padding-top:0!important}
+ .fillArea>.canvasHeaderTitle{left:15px!important;right:60px!important;height:32px!important}
+ .fillArea>.canvasExpandHandle{margin-right:14px!important}
 }
