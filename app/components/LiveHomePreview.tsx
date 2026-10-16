@@ -28,6 +28,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
     for(const participant of room.remoteParticipants.values())
      for(const publication of participant.trackPublications.values()){
       if(!publication.isSubscribed)await publication.setSubscribed(true);
+      if(publication.kind===Track.Kind.Video)publication.setVideoQuality("high");
       if(publication.track)attach(publication.track);
      }
    }catch{/* Keep the existing thumbnail fallback. */}
