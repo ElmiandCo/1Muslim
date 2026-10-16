@@ -31,12 +31,13 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ca
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
+  const retryRef=useRef<ReturnType<typeof setTimeout>|null>(null);
   const [sourceRatio,setSourceRatio]=useState<number | null>(null);
   const [frameRatio,setFrameRatio]=useState(1);
   useEffect(()=>{if(!canvas)return;const el=playerRef.current;if(!el)return;const observer=new ResizeObserver(()=>{const rect=el.getBoundingClientRect();if(rect.height>0)setFrameRatio(rect.width/rect.height)});observer.observe(el);return()=>observer.disconnect()},[canvas]);
   const ratioMismatch=sourceRatio!==null?Math.max(sourceRatio/frameRatio,frameRatio/sourceRatio):1;
   // Only crop modest differences. Extreme portrait/landscape mismatches retain the full image.
-  const canvasFit=ratioMismatch<=1.32?"cover":"contain";
+  const canvasFit="cover";
 
   useEffect(()=>{if(!streamId)return;let alive=true;const db=createClient();const check=async()=>{const {data}=await db.from("live_streams").select("status,ended_at").eq("id",streamId).maybeSingle();if(!alive||endedOnce.current)return;if(data&&(data.status==="ended"||data.ended_at)){endedOnce.current=true;setHostEnded(true);roomRef.current?.disconnect();window.setTimeout(()=>{if(embedded){window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));setHostEnded(false)}else router.replace("/")},3800)}};const timer=window.setInterval(()=>void check(),3000);return()=>{alive=false;window.clearInterval(timer)}},[streamId,embedded,router]);
 
@@ -51,6 +52,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ca
         videoRef.current.muted = true;
         void videoRef.current.play().catch(() => {});
         setStatus("LIVE");
+        if(retryRef.current){clearTimeout(retryRef.current);retryRef.current=null}
         setReconnecting(false);
       } else if (track.kind === Track.Kind.Audio && audioContainerRef.current) {
         // Avoid duplicating playback elements when a remote track is re-subscribed.
@@ -99,9 +101,9 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ca
           }
         }
 
-        if (mounted && ![...room.remoteParticipants.values()].some(p=>[...p.trackPublications.values()].some(pub=>pub.kind===Track.Kind.Video && pub.track))) { setStatus("Waiting for host video…"); setReconnecting(true); setReconnectKey(String(Date.now())); }
+        if (mounted && ![...room.remoteParticipants.values()].some(p=>[...p.trackPublications.values()].some(pub=>pub.kind===Track.Kind.Video && pub.track))) { setStatus("Waiting for host video…"); if(!canvas){setReconnecting(true);setReconnectKey(String(Date.now()));} }
       } catch (err) {
-        if (mounted) { setReconnecting(false); setStatus("Connection unavailable"); setError("The live connection could not be established. Please retry or return to Streaming."); }
+        if (mounted) { setReconnecting(false); setStatus("Connection unavailable"); if(!canvas)setError("The live connection could not be established. Please retry or return to Streaming."); }
       }
     };
 
@@ -116,11 +118,13 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ca
         if (mounted && typeof data.totalViews === "number") setTotalViews(Math.max(0,data.totalViews));
       } catch { /* Preserve the last known count during temporary network failures. */ }
     };
-    const countTimer = window.setInterval(() => void refreshViewers(), 5000);
+    const countTimer = canvas?null:window.setInterval(() => void refreshViewers(), 5000);
+    if(canvas){retryRef.current=setTimeout(()=>{if(mounted&&status!=="LIVE")setRetryAttempt(n=>n+1)},11000)}
     void refreshViewers();
 
     return () => {
-      window.clearInterval(countTimer);
+      if(countTimer)window.clearInterval(countTimer);
+      if(retryRef.current){clearTimeout(retryRef.current);retryRef.current=null}
       mounted = false;
       const oldRoom = roomRef.current;
       roomRef.current = null;
@@ -157,7 +161,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ca
   return (
     <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} style={{position:"relative",background:canvas?"radial-gradient(ellipse at center,rgba(8,48,34,.5),rgba(4,21,16,.1))":"#000",border:canvas?"none":undefined,borderRadius:canvas?18:undefined,maskImage:canvas?"radial-gradient(ellipse 106% 108% at center,#000 74%,transparent 100%)":undefined,WebkitMaskImage:canvas?"radial-gradient(ellipse 106% 108% at center,#000 74%,transparent 100%)":undefined,width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:"16/9",overflow:"hidden"}}>
       {hostEnded&&<div role="status" aria-live="assertive" className="omHostEndedNotice"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>{embedded?"Closing your floating player…":"Taking you Home…"}</small><button type="button" onClick={()=>{if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));else router.replace("/")}}>Go Home now →</button></div>}
-      <video ref={videoRef} autoPlay muted playsInline controls={!embedded} style={{width:"100%",height:"100%",objectFit:canvas?canvasFit:"contain",objectPosition:"center",transform:canvas?"scale(1.012)":undefined}} />
+      <video ref={videoRef} autoPlay muted playsInline controls={!embedded} style={{width:"100%",height:"100%",objectFit:canvas?canvasFit:"cover",objectPosition:"center",transform:canvas?"scale(1.012)":undefined}} />
       <div ref={audioContainerRef} />
       {!canvas&&streamId&&<LiveLightOverlay streamId={streamId}/>}
       {!embedded&&<><div className="omViewerTapCounter" aria-label={`${tapCount} screen taps`}>✨ {tapCount.toLocaleString()} taps</div>{tapBursts.map(t=><span key={t.id} className="omViewerTapBurst" style={{left:t.x,top:t.y}}>💜</span>)}<a className="omViewerExit" href="/streaming" aria-label="Exit live viewer">✕</a></>}
