@@ -1653,3 +1653,48 @@
   animation:none!important;transition:none!important;will-change:auto!important;
  }
 }
+
+/* Restore actual header exit/return: prior motion pass disabled the keyframes
+   while the collapsed class immediately set height:0. Animate the height too. */
+@keyframes hudhudHeaderOut{
+ 0%{opacity:1;transform:translate3d(0,0,0);height:74px;max-height:110px;margin-bottom:10px;padding-top:10px;padding-bottom:10px}
+ 100%{opacity:0;transform:translate3d(0,-48px,0);height:0;max-height:0;margin-bottom:0;padding-top:0;padding-bottom:0;border-width:0}
+}
+@keyframes hudhudHeaderIn{
+ 0%{opacity:0;transform:translate3d(0,-48px,0);height:0;max-height:0;margin-bottom:0;padding-top:0;padding-bottom:0;border-width:0}
+ 100%{opacity:1;transform:translate3d(0,0,0);height:74px;max-height:110px;margin-bottom:10px;padding-top:10px;padding-bottom:10px}
+}
+.control.navMotionCollapsed .controlHeader.controlHeaderCollapsed{
+ animation:hudhudHeaderOut .46s cubic-bezier(.22,1,.36,1) both!important;
+}
+.control.navMotionExpanded .controlHeader{
+ animation:hudhudHeaderIn .46s cubic-bezier(.22,1,.36,1) both!important;
+}
+/* Embedded browsers can have much shorter dynamic viewports than Safari.
+   Allow vertical access to controls without widening or clipping the canvas. */
+.control{min-width:0;max-width:100%;overflow-x:clip}
+.control .surface,.control .widgetArea,.control .workspaceScroller,
+.control .workspacePage,.control .customGrid,.control .widgetSlot{
+ min-width:0;max-width:100%;box-sizing:border-box;
+}
+@media(max-height:760px){
+ .control .workspaceScroller{
+  min-height:0!important;
+  height:clamp(300px,58dvh,580px)!important;
+  max-height:calc(100dvh - 185px)!important;
+ }
+ .control .surface{min-height:0!important}
+ .control .widgetArea{min-height:0!important}
+}
+@media(max-height:580px){
+ .control .workspaceScroller{height:clamp(230px,54dvh,410px)!important;max-height:none!important}
+ .control{overflow-y:auto;overscroll-behavior-y:contain}
+}
+@media(max-width:390px){
+ .control .surface{padding-inline:clamp(4px,1.5vw,9px)!important}
+ .control .workspacePage,.control .customGrid{min-width:0!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .control.navMotionCollapsed .controlHeader.controlHeaderCollapsed,
+ .control.navMotionExpanded .controlHeader{animation:none!important}
+}
