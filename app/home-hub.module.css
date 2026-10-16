@@ -1542,3 +1542,32 @@
   .control .intro {padding-bottom:3px!important}
   .control .widgetArea {margin-top:2px!important}
 }
+
+/* Mobile canvas: remove redundant chrome and give the artwork the recovered space. */
+@media (max-width:1023px) {
+ .control .widgetArea .workspaceDownButton{display:none!important}
+ .control .widgetArea .workspacePager{
+   position:relative!important;
+   bottom:auto!important;
+   width:max-content!important;
+   min-height:22px!important;
+   height:22px!important;
+   padding:2px 7px!important;
+   margin:1px auto 0!important;
+   gap:4px!important;
+   border-radius:999px!important;
+ }
+ .control .widgetArea .workspacePagerLabel{display:none!important}
+ .control .widgetArea .workspacePager button{
+   width:18px!important;min-width:18px!important;
+   height:18px!important;min-height:18px!important;
+   padding:0!important;font-size:13px!important;
+   line-height:18px!important;
+ }
+ .control .widgetArea .workspacePage .customGrid{padding-top:2px!important;padding-bottom:2px!important}
+ .control .widgetArea .workspacePage .customGrid>.widgetSlot,
+ .control .widgetArea .workspacePage .customGrid>.widgetSlot>.widgetCanvas{
+   min-height:0!important;
+ }
+ .control .liveStreamStats{display:none!important}
+}
