@@ -364,7 +364,7 @@ export default function GoLivePage() {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       const size = getCaptureSize();
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: size.width }, height: { ideal: size.height } },
+        video: { facingMode, width: { ideal: size.width }, height: { ideal: size.height }, frameRate: { ideal: 30, max: 30 } },
         audio: true,
       });
       rawCameraRef.current=stream.getVideoTracks()[0];
@@ -774,7 +774,7 @@ export default function GoLivePage() {
       if (!mediaStream) throw new Error("Camera and microphone must be enabled first.");
       const videoTrack = mediaStream.getVideoTracks()[0];
       const audioTrack = mediaStream.getAudioTracks()[0];
-      if (videoTrack) await room.localParticipant.publishTrack(videoTrack, { source: Track.Source.Camera, simulcast: true });
+      if (videoTrack) await room.localParticipant.publishTrack(videoTrack, { source: Track.Source.Camera, simulcast: true, videoEncoding: { maxBitrate: 3500000, maxFramerate: 30 } });
       if (audioTrack) {
         let localAudioTrack = audioTrackRef.current;
         if (!localAudioTrack || localAudioTrack.mediaStreamTrack !== audioTrack) {
