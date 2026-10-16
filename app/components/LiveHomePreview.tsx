@@ -9,7 +9,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
  useEffect(()=>{
   if(!roomName)return;
   let active=true;
-  const room=new Room({adaptiveStream:true});
+  const room=new Room({adaptiveStream:false});
   const attach=(track:any)=>{
    if(!active||track.kind!==Track.Kind.Video||!video.current)return;
    track.attach(video.current);
