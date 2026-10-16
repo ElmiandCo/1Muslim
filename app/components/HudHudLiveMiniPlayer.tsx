@@ -7,7 +7,7 @@ import LiveKitViewer from "../../components/LiveKitViewer";
 
 type Stream={id:string;title:string;room_name:string;visibility:string|null;started_at:string};
 const DISMISSED="1muslim-live-mini-dismissed";
-export default function HudHudLiveMiniPlayer(){
+export default function HudHudLiveMiniPlayer({canvas=false}:{canvas?:boolean}={}){
  const pathname=usePathname();
  const isBroadcastScreen=pathname==="/"||pathname.startsWith("/streaming")||pathname.startsWith("/live");
  const [position,setPosition]=useState({x:0,y:0});
@@ -52,7 +52,8 @@ export default function HudHudLiveMiniPlayer(){
   return()=>{active=false;window.clearInterval(timer);void supabase.current.removeChannel(channel)};
  },[]);
  const close=()=>{dismissed.current=true;sessionStorage.setItem(DISMISSED,"yes");dismissWithMotion()};
- if(isBroadcastScreen||!initialized||loading||!open||!stream)return null;
+ if(!canvas&&(isBroadcastScreen||!initialized||loading||!open||!stream))return null;
+ if(canvas)return <div className="hudhud-live-mini-canvas" style={{width:"100%",height:"100%",minHeight:170,overflow:"hidden",border:0,borderRadius:0,background:"transparent",pointerEvents:"none"}}>{stream?<LiveKitViewer key={stream.id} roomName={stream.room_name} streamId={stream.id} embedded canvas forceMuted />:<span style={{display:"grid",placeItems:"center",height:"100%",minHeight:170,color:"#d6e7b8",fontSize:12}}>{loading?"Finding live stream…":"No active live stream"}</span>}</div>;
  return <aside className={"hudhud-live-mini"+(minimized?" is-minimized":"")+(exiting?" is-exiting":"")+(endedNotice?" is-live-ended":"")} aria-label="Live stream notification" data-no-translate="true" style={{transform:`translate3d(${position.x}px,${position.y}px,0)`,touchAction:"pan-y"}}>
   <div className="hudhud-live-mini-head" style={{touchAction:"none",cursor:"grab"}} onPointerDown={e=>{if((e.target as HTMLElement).closest("button,a"))return;drag.current={x:e.clientX,y:e.clientY,ox:position.x,oy:position.y};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{if(!drag.current)return;setPosition({x:Math.max(-window.innerWidth*.65,Math.min(window.innerWidth*.65,drag.current.ox+e.clientX-drag.current.x)),y:Math.max(-window.innerHeight*.65,Math.min(window.innerHeight*.65,drag.current.oy+e.clientY-drag.current.y))})}} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}}>
    <img src="/assets/hudhud-logo.PNG" alt="" className="hudhud-live-bird" onError={e=>{e.currentTarget.style.display="none"}} />
