@@ -248,7 +248,7 @@ const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HT
    const measure=()=>{
      const rect=orbTargetRef.current?.getBoundingClientRect();
      if(!navCollapsed&&!canvasFullscreen&&rect&&rect.width>0&&rect.top>=0){
-       orbHomeRef.current={left:rect.left+(rect.width-36)/2,top:rect.top+(rect.height-36)/2};
+       orbHomeRef.current={left:rect.left+(rect.width-36)/2,top:rect.top+(rect.height-36)/2-54};
      }
      setOrbDock(orbHomeRef.current??{left:Math.max(12,window.innerWidth-56),top:Math.max(72,window.innerHeight*.045)});
    };
