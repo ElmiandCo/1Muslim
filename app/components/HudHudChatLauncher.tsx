@@ -26,6 +26,7 @@ export default function HudHudChatLauncher(){
  const lastPointer=useRef<{x:number;y:number;t:number}|null>(null);
  const cancelOrbMotion=()=>{if(orbFrame.current!==null){cancelAnimationFrame(orbFrame.current);orbFrame.current=null}};
  const quranTapScoped=useRef(false);
+ const quranPlacement=useRef<"top"|"bottom">("top");
  const animateOrb=(target:{x:number;y:number},momentum={x:0,y:0})=>{cancelOrbMotion();const button=orbButtonRef.current;if(!button){setPosition(target);return}const start=orbCoords.current??position;let x=start.x,y=start.y,vx=momentum.x,vy=momentum.y,last=performance.now();setOrbInMotion(true);const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;if(reduced){setPosition(target);orbCoords.current=target;setOrbInMotion(false);return}const frame=(now:number)=>{const dt=Math.min((now-last)/16.667,2);last=now;const spring=.045,damping=.84;vx=(vx+(target.x-x)*spring*dt)*Math.pow(damping,dt);vy=(vy+(target.y-y)*spring*dt)*Math.pow(damping,dt);x+=vx*dt;y+=vy*dt;button.style.left=x+"px";button.style.top=y+"px";orbCoords.current={x,y};if(Math.abs(target.x-x)+Math.abs(target.y-y)+Math.abs(vx)+Math.abs(vy)<.75){button.style.left=target.x+"px";button.style.top=target.y+"px";orbCoords.current=target;setPosition(target);setOrbInMotion(false);orbFrame.current=null;return}orbFrame.current=requestAnimationFrame(frame)};orbFrame.current=requestAnimationFrame(frame)};
  useEffect(()=>()=>cancelOrbMotion(),[]);
  const orbMotionTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -82,7 +83,9 @@ export default function HudHudChatLauncher(){
     const bounds=widget?.getBoundingClientRect();
     const diameter=button?.offsetWidth||54;
     const x=bounds?Math.min(window.innerWidth-diameter-10,Math.max(10,bounds.right-diameter-12)):window.innerWidth-diameter-14;
-    const y=bounds?Math.min(window.innerHeight-diameter-20,Math.max(80,bounds.top+Math.min(105,bounds.height*.16))):Math.round(window.innerHeight*.38);
+    const article=widget?.querySelector<HTMLElement>('[class*="quranVerseArticle"]');
+    const articleBounds=article?.getBoundingClientRect();
+    const y=bounds?Math.min(window.innerHeight-diameter-20,Math.max(80,quranPlacement.current==="bottom"?(articleBounds?articleBounds.bottom-diameter-16:bounds.bottom-diameter-90):(articleBounds?articleBounds.top+12:bounds.top+Math.min(60,bounds.height*.10)))):Math.round(window.innerHeight*.38);
     animateOrb({x:Math.round(x),y:Math.round(y)});
    }else if(!active&&quranDocked.current){
     quranDocked.current=false;
@@ -91,8 +94,10 @@ export default function HudHudChatLauncher(){
     if(origin)animateOrb(origin);
    }
   };
-  window.addEventListener("1muslim:quran-workspace-focus",onFocus);
-  return()=>{window.removeEventListener("1muslim:quran-workspace-focus",onFocus);if(quranDocked.current&&quranDockOrigin.current){cancelOrbMotion();setPosition(quranDockOrigin.current);orbCoords.current=quranDockOrigin.current;quranDocked.current=false;quranDockOrigin.current=null}};
+  const onPlacement=(event:Event)=>{if(pathname!=="/"||!quranDocked.current)return;const next=(event as CustomEvent<{position?:"top"|"bottom"}>).detail?.position;if(next!=="top"&&next!=="bottom")return;quranPlacement.current=next;const button=orbButtonRef.current;const widget=document.querySelector<HTMLElement>('[data-workspace-page="1"] [data-widget="Qur’an"]');const article=widget?.querySelector<HTMLElement>('[class*="quranVerseArticle"]');const bounds=article?.getBoundingClientRect();if(!bounds)return;const diameter=button?.offsetWidth||54;animateOrb({x:Math.round(Math.min(window.innerWidth-diameter-10,Math.max(10,bounds.right-diameter-14))),y:Math.round(Math.min(window.innerHeight-diameter-12,Math.max(70,next==="bottom"?bounds.bottom-diameter-16:bounds.top+12)))})};
+ window.addEventListener("1muslim:quran-hudhud-position",onPlacement);
+ window.addEventListener("1muslim:quran-workspace-focus",onFocus);
+  return()=>{window.removeEventListener("1muslim:quran-workspace-focus",onFocus);window.removeEventListener("1muslim:quran-hudhud-position",onPlacement);if(quranDocked.current&&quranDockOrigin.current){cancelOrbMotion();setPosition(quranDockOrigin.current);orbCoords.current=quranDockOrigin.current;quranDocked.current=false;quranDockOrigin.current=null}};
  },[pathname]);
 
  useEffect(()=>{let live=true;const logo=new Image();logo.onload=()=>{if(live)setOrbReady(true)};logo.onerror=()=>{if(live)setOrbReady(true)};logo.src="/assets/hudhud-logo.PNG";if(logo.complete)setOrbReady(true);return()=>{live=false}},[]);
