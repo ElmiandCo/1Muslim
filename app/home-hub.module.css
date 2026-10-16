@@ -1442,3 +1442,171 @@
  .control .introGreeting .greetingWithOrb{position:relative;top:10px}
  .control .introGreeting .greetingWithOrb>.greetingText{top:auto;position:static}
 }
+
+
+/* Desktop Live Theater — preserve mobile and the existing LiveKit player. */
+@media (min-width:1024px) {
+ .control .workspacePage[data-workspace-page="0"] .customGrid,
+ .control .workspacePage:first-child .customGrid {
+   min-width:0!important;
+ }
+ .control .livePreviewStrip {
+   display:grid!important;
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+   align-items:stretch!important;
+   gap:clamp(12px,1.4vw,22px)!important;
+   width:min(100%,1100px)!important;
+   height:auto!important;
+   max-height:none!important;
+   margin-inline:auto!important;
+ }
+ .control .livePreviewCard {
+   display:flex!important;
+   flex-direction:column!important;
+   min-width:0!important;
+   height:auto!important;
+   max-height:none!important;
+   overflow:hidden!important;
+ }
+ .control .livePreviewCard:first-child:nth-last-child(1) {
+   grid-column:1/-1;
+   width:min(100%,980px)!important;
+   justify-self:center;
+ }
+ .control .livePreviewCard > span:first-child {
+   position:relative!important;
+   width:100%!important;
+   height:auto!important;
+   min-height:0!important;
+   aspect-ratio:16/9!important;
+   flex:0 0 auto!important;
+   overflow:hidden!important;
+   background:rgba(3,18,15,.72)!important;
+ }
+ .control .livePreviewCard > span:first-child > span {
+   width:100%!important;
+   height:100%!important;
+   min-height:0!important;
+   aspect-ratio:16/9!important;
+ }
+ .control .livePreviewCard video {
+   display:block!important;
+   width:100%!important;
+   height:100%!important;
+   min-height:0!important;
+   object-fit:contain!important;
+   object-position:center!important;
+ }
+ .control .widgetCanvas:has(.livePreviewStrip) .widgetVisual,
+ .control .widgetCanvas:has(.livePreviewStrip) .widgetTop {
+   height:auto!important;
+   min-height:0!important;
+   max-height:none!important;
+   overflow:visible!important;
+ }
+ .control .widgetCanvas:has(.livePreviewStrip) {
+   min-height:clamp(330px,48vw,670px)!important;
+   max-height:none!important;
+ }
+ .control .widgetArea:has(.livePreviewStrip) {
+   height:auto!important;
+   min-height:min(78vh,750px)!important;
+   overflow:visible!important;
+ }
+ .control .widgetArea:has(.livePreviewStrip) .workspaceScroller,
+ .control .widgetArea:has(.livePreviewStrip) .workspacePage,
+ .control .widgetArea:has(.livePreviewStrip) .customGrid {
+   overflow-y:visible!important;
+   max-height:none!important;
+ }
+}
+
+
+/* Workspace proximity: reclaim the dead band below the greeting on every screen.
+   Scoped to the dashboard, without moving the day/night or Go Live controls. */
+.control .intro {
+  padding-bottom:clamp(3px,.65vh,8px)!important;
+  margin-bottom:0!important;
+}
+.control .widgetArea {
+  margin-top:clamp(2px,.5vh,7px)!important;
+}
+@media (min-width:1024px) {
+  .control .intro {padding-top:clamp(3px,.6vh,8px)!important}
+  .control .widgetArea {margin-top:3px!important}
+  .control .widgetArea:not(:has(.livePreviewStrip)) {
+    min-height:clamp(420px,68vh,850px)!important;
+  }
+}
+@media (max-width:1023px) {
+  .control .intro {padding-bottom:3px!important}
+  .control .widgetArea {margin-top:2px!important}
+}
+
+/* Mobile canvas: remove redundant chrome and give the artwork the recovered space. */
+@media (max-width:1023px) {
+ .control .widgetArea .workspaceDownButton{display:none!important}
+ .control .widgetArea .workspacePager{
+   position:relative!important;
+   bottom:auto!important;
+   width:max-content!important;
+   min-height:22px!important;
+   height:22px!important;
+   padding:2px 7px!important;
+   margin:1px auto 0!important;
+   gap:4px!important;
+   border-radius:999px!important;
+ }
+ .control .widgetArea .workspacePagerLabel{display:none!important}
+ .control .widgetArea .workspacePager button{
+   width:18px!important;min-width:18px!important;
+   height:18px!important;min-height:18px!important;
+   padding:0!important;font-size:13px!important;
+   line-height:18px!important;
+ }
+ .control .widgetArea .workspacePage .customGrid{padding-top:2px!important;padding-bottom:2px!important}
+ .control .widgetArea .workspacePage .customGrid>.widgetSlot,
+ .control .widgetArea .workspacePage .customGrid>.widgetSlot>.widgetCanvas{
+   min-height:0!important;
+ }
+ .control .liveStreamStats{display:none!important}
+}
+
+/* Immersive home canvas: the core feature owns the viewport, pager is only dots. */
+.control .widgetArea .workspacePager {
+ display:flex!important;
+ align-items:center!important;
+ justify-content:center!important;
+ align-self:center!important;
+ gap:clamp(5px,1.5vw,10px)!important;
+ width:max-content!important;
+ max-width:calc(100% - 24px)!important;
+ height:24px!important;
+ min-height:24px!important;
+ padding:2px 9px!important;
+ margin:0 auto 2px!important;
+ border-radius:999px!important;
+}
+.control .widgetArea .workspacePager button {
+ width:20px!important;height:20px!important;
+ min-width:20px!important;min-height:20px!important;
+ padding:0!important;line-height:20px!important;
+ font-size:15px!important;
+}
+.control .widgetArea .workspaceDownButton{display:none!important}
+.control .widgetArea .workspacePagerLabel{display:none!important}
+.control .widgetArea .workspacePage .customGrid{padding-block:2px!important}
+.control .widgetArea .workspacePage .customGrid>.widgetSlot>.widgetCanvas{justify-content:stretch!important}
+.control .widgetArea .workspacePage .customGrid>.widgetSlot>.widgetCanvas .widgetTop,
+.control .widgetArea .workspacePage .customGrid>.widgetSlot>.widgetCanvas .widgetVisual{
+ flex:1 1 0%!important;min-height:0!important;
+}
+.control .widgetArea .workspacePage .customGrid>.widgetSlot>.widgetCanvas .widgetDetails:has(.widgetName){
+ flex:0 0 auto!important;
+}
+@media(max-width:700px){
+ .control .widgetArea .workspacePager{height:21px!important;min-height:21px!important;padding:1px 8px!important;margin:0 auto 1px!important}
+ .control .widgetArea .workspacePager button{width:18px!important;height:18px!important;min-width:18px!important;min-height:18px!important;font-size:13px!important}
+ .control .widgetArea .workspacePage .customGrid{padding:1px 4px!important}
+ .control .widgetArea .workspacePage .customGrid>.widgetSlot>.widgetCanvas .widgetFeatureDetail{display:none!important}
+}
