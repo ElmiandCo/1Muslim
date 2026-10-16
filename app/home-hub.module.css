@@ -1520,3 +1520,25 @@
    max-height:none!important;
  }
 }
+
+
+/* Workspace proximity: reclaim the dead band below the greeting on every screen.
+   Scoped to the dashboard, without moving the day/night or Go Live controls. */
+.control .intro {
+  padding-bottom:clamp(3px,.65vh,8px)!important;
+  margin-bottom:0!important;
+}
+.control .widgetArea {
+  margin-top:clamp(2px,.5vh,7px)!important;
+}
+@media (min-width:1024px) {
+  .control .intro {padding-top:clamp(3px,.6vh,8px)!important}
+  .control .widgetArea {margin-top:3px!important}
+  .control .widgetArea:not(:has(.livePreviewStrip)) {
+    min-height:clamp(420px,68vh,850px)!important;
+  }
+}
+@media (max-width:1023px) {
+  .control .intro {padding-bottom:3px!important}
+  .control .widgetArea {margin-top:2px!important}
+}
