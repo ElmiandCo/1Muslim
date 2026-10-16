@@ -1698,3 +1698,36 @@
  .control.navMotionCollapsed .controlHeader.controlHeaderCollapsed,
  .control.navMotionExpanded .controlHeader{animation:none!important}
 }
+
+/* Canvas immersive mode: remove the greeting/brand/theme strip upward,
+   letting the canvas grow in both directions in one 460ms motion. */
+.control[data-canvas-immersive="true"] .controlHeader,
+.control[data-canvas-immersive="true"] .intro,
+.control[data-canvas-immersive="true"] .guestBannerSlot,
+.control[data-canvas-immersive="true"] .upgradeNotice{
+ opacity:0!important;
+ transform:translate3d(0,-55px,0)!important;
+ max-height:0!important;
+ min-height:0!important;
+ height:0!important;
+ margin-block:0!important;
+ padding-block:0!important;
+ border-width:0!important;
+ overflow:hidden!important;
+ pointer-events:none!important;
+}
+.control .controlHeader,.control .intro,
+.control .guestBannerSlot,.control .upgradeNotice{
+ transition:opacity .46s cubic-bezier(.22,1,.36,1),
+ transform .46s cubic-bezier(.22,1,.36,1),
+ max-height .46s cubic-bezier(.22,1,.36,1),
+ margin .46s cubic-bezier(.22,1,.36,1),
+ padding .46s cubic-bezier(.22,1,.36,1)!important;
+}
+.control[data-canvas-immersive="true"] .widgetArea{
+ margin-top:0!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .control .controlHeader,.control .intro,
+ .control .guestBannerSlot,.control .upgradeNotice{transition:none!important}
+}
