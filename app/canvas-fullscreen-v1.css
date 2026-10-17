@@ -757,3 +757,25 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
   background:radial-gradient(ellipse at center,rgba(17,31,31,.7),#05090b 78%)!important;
  }
 }
+
+/* Premium night finish — all screen sizes. Quiet black, emerald ambience, fine gold edging.
+   Background polish only; never move the orbs or modify workspace interactions. */
+main[class*="control"]{
+ background-color:#050809!important;
+ background-image:radial-gradient(ellipse 75% 50% at 86% 68%,rgba(17,68,52,.19) 0%,rgba(12,37,31,.08) 43%,transparent 78%),radial-gradient(ellipse 65% 45% at 9% 9%,rgba(21,66,51,.14),transparent 75%),linear-gradient(165deg,#040607 0%,#070b0c 54%,#030506 100%)!important;
+}
+main[class*="control"]>[class*="pattern"]{opacity:.045!important}
+main[class*="control"]>[class*="islamicDecoration"]{opacity:.12!important}
+main[class*="control"]>[class*="surface"]{
+ background:linear-gradient(150deg,rgba(7,20,19,.86),rgba(4,11,13,.93))!important;
+ border:1px solid rgba(213,185,119,.38)!important;
+ box-shadow:inset 0 1px rgba(255,237,189,.12),0 0 0 1px rgba(212,172,94,.06),0 22px 64px rgba(0,0,0,.42)!important;
+}
+main[class*="control"]>[class*="surface"] [class*="surfaceArtwork"]{opacity:.10!important}
+main[class*="control"] .homeLiveChannelPlayer{
+ background:radial-gradient(ellipse at 50% 40%,rgba(15,54,43,.50),rgba(3,16,17,.94) 74%)!important;
+ border-color:rgba(220,188,124,.38)!important;
+}
+@media(max-width:899px){
+ main[class*="control"]>[class*="surface"]{box-shadow:inset 0 1px rgba(255,237,189,.10),0 10px 34px rgba(0,0,0,.3)!important}
+}
