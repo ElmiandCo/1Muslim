@@ -154,3 +154,8 @@
 .orbitWorkspaceTrack[data-orbit-direction="left"] [data-workspace-page][data-canvas-active="true"] [data-magnetic-grid]{animation:canvasOrbitLeft .58s cubic-bezier(.16,.78,.18,1) both}
 .orbitWorkspaceTrack[data-orbit-direction="right"] [data-workspace-page][data-canvas-active="true"] [data-magnetic-grid]{animation:canvasOrbitRight .58s cubic-bezier(.16,.78,.18,1) both}
 @media(prefers-reduced-motion:reduce){.orbitWorkspaceTrack [data-workspace-page] [data-magnetic-grid]{animation:none!important}}
+
+/* Closing Test Live gives the Makkah/community panel the entire available space. */
+.homeMakkahLive.livePanelSolo{width:100%;max-height:none;min-height:300px;transform:none;opacity:1;flex:1}
+.homeMakkahLive.livePanelSolo .homeMakkahLiveCompact{min-height:130px;display:flex;align-items:center;justify-content:space-between}
+.homeLiveReopen{border:1px solid rgba(235,210,145,.65);background:rgba(0,0,0,.22);color:inherit;border-radius:999px;padding:7px 12px;cursor:pointer;font-size:12px}
