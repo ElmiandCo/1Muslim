@@ -155,3 +155,13 @@
 .homeMakkahLive.livePanelSolo{width:100%;max-height:none;min-height:300px;transform:none;opacity:1;flex:1}
 .homeMakkahLive.livePanelSolo .homeMakkahLiveCompact{min-height:130px;display:flex;align-items:center;justify-content:space-between}
 .homeLiveReopen{border:1px solid rgba(235,210,145,.65);background:rgba(0,0,0,.22);color:inherit;border-radius:999px;padding:7px 12px;cursor:pointer;font-size:12px}
+
+/* Official Makkah broadcast lives inside the first workspace, not an external-only link. */
+.homeMakkahLive .homeMakkahLiveCompact:has(.homeMakkahPlayer){display:flex;flex-direction:column;gap:9px;align-items:stretch;min-height:0;padding:10px!important}
+.homeMakkahPlayer{position:relative;width:100%;aspect-ratio:16/9;min-height:180px;overflow:hidden;border-radius:16px;border:1px solid rgba(226,201,140,.35);background:#041d18}
+.homeMakkahPlayer iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.homeMakkahPlayerFooter{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;padding:2px 4px}
+.homeMakkahPlayerFooter a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.homeMakkahLive.livePanelMinimized .homeMakkahPlayer{min-height:110px;max-height:155px}
+.homeMakkahLive.livePanelSolo .homeMakkahLiveCompact:has(.homeMakkahPlayer){display:flex;min-height:0;align-items:stretch;justify-content:initial}
+@media(max-width:600px){.homeMakkahPlayer{min-height:155px;border-radius:12px}.homeMakkahPlayerFooter{font-size:11px}}
