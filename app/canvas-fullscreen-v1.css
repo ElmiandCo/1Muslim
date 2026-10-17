@@ -30,11 +30,19 @@ main[data-canvas-fullscreen="true"] > div:has(> .canvas-fullscreen-toggle){z-ind
 .canvas-secondary-card a{display:inline-flex;margin-top:24px;padding:14px 24px;border-radius:100px;background:linear-gradient(100deg,#84d9a3,#bce6bb);color:#07392f;font-weight:750;text-decoration:none}
 @media(prefers-reduced-motion:reduce){.canvas-vertical-main,.canvas-vertical-secondary{transition:none!important}}
 
-/* Ten tiny navigation lights on the image portion, one horizontal line. */
-nav[aria-label="Dashboard workspaces"]{position:absolute!important;bottom:clamp(8px,2.4%,22px)!important;left:50%!important;transform:translateX(-50%)!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;width:max-content!important;max-width:90%!important;padding:5px 9px!important;background:rgba(3,31,29,.22)!important;border:0!important;border-radius:99px!important;backdrop-filter:blur(5px)!important;z-index:12!important}
-nav[aria-label="Dashboard workspaces"] button{width:7px!important;height:7px!important;min-width:7px!important;min-height:7px!important;padding:0!important;border:1px solid rgba(226,234,215,.66)!important;border-radius:50%!important;background:rgba(245,249,235,.12)!important;box-shadow:none!important;font-size:0!important;line-height:0!important}
+/* Compact two-row 5×2 navigation dots on the Canvas image. */
+nav[aria-label="Dashboard workspaces"]{position:absolute!important;bottom:clamp(8px,2.4%,22px)!important;left:50%!important;transform:translateX(-50%)!important;display:grid!important;grid-template-columns:repeat(5,8px)!important;grid-template-rows:repeat(2,8px)!important;gap:7px 9px!important;justify-content:center!important;align-content:center!important;width:max-content!important;max-width:90%!important;padding:6px 10px!important;background:rgba(3,31,29,.22)!important;border:0!important;border-radius:18px!important;backdrop-filter:blur(5px)!important;z-index:12!important}
+nav[aria-label="Dashboard workspaces"] button{width:8px!important;height:8px!important;min-width:8px!important;min-height:8px!important;padding:0!important;border:1px solid rgba(226,234,215,.66)!important;border-radius:50%!important;background:rgba(245,249,235,.12)!important;box-shadow:none!important;font-size:0!important;line-height:0!important}
 nav[aria-label="Dashboard workspaces"] button span{display:none!important}
 nav[aria-label="Dashboard workspaces"] button[aria-current="page"]{background:#e4d6a2!important;border-color:#f8e9bd!important;box-shadow:0 0 7px rgba(238,219,160,.55)!important}
+
+/* Day/night orb follows nav until used or nav leaves the frame. */
+.canvas-orb-nav-anchor{display:inline-block;flex:0 0 44px;width:44px;height:44px;vertical-align:middle}
+.canvas-orb-floating-dock{position:fixed;z-index:2147482000;width:44px;height:44px;border:1px solid rgba(222,236,221,.4);border-radius:50%;display:grid;place-items:center;background:rgba(7,60,51,.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:left 650ms cubic-bezier(.2,.8,.2,1),top 650ms cubic-bezier(.2,.8,.2,1);pointer-events:auto}
+.canvas-orb-float-motion{width:36px;height:36px;display:grid;place-items:center;animation:canvasOrbNavFloat 6s ease-in-out infinite}
+.canvas-orb-return{position:absolute;right:0;bottom:-17px;font-size:11px;color:#f5e9c2;background:rgba(10,52,43,.85);border:1px solid #d9c99688;border-radius:50%;width:20px;height:20px;cursor:pointer}
+@keyframes canvasOrbNavFloat{0%,100%{transform:translate(0,0)}25%{transform:translate(2px,-2px)}50%{transform:translate(-2px,1px)}75%{transform:translate(1px,2px)}}
+@media(prefers-reduced-motion:reduce){.canvas-orb-floating-dock{transition:none!important}.canvas-orb-float-motion{animation:none!important}}
 
 /* Real native application surfaces for the five lower Canvas slots. */
 .canvas-vertical-secondary{display:block!important;padding:clamp(8px,2vw,18px)!important;overflow-y:auto!important;overscroll-behavior:contain}
