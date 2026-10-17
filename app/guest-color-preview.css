@@ -26,3 +26,18 @@
 .guestColorPreviewDone{width:100%;min-height:51px;border-radius:14px;border:1px solid #f0dba0;background:linear-gradient(110deg,#d0e8bb,#f0d7a4);color:#123a30;font-weight:800;font-size:15px}
 @media(min-width:700px){.guestColorPreviewBackdrop{align-items:center}.guestColorPreviewTeaser{left:auto;right:24px;transform:none}.guestColorPreviewTeaserIntro{animation:none}}
 @media(prefers-reduced-motion:reduce){.guestColorPreviewTeaserIntro,.guestColorPreviewPanel{animation:none}}
+
+
+/* Compact settings: five chips in a balanced grid, minimal vertical footprint. */
+.guestColorPreviewPanel{padding:18px 18px 16px}
+.guestColorPreviewPanel header h2{font-size:22px;margin:4px 0}
+.guestColorPreviewPanel header p{margin:3px 0 12px}
+.guestColorPreviewCompact{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.guestColorPreviewCompact button{min-height:44px;gap:5px;padding:5px 7px;font-size:11px;border-radius:12px}
+.guestColorPreviewCompact .guestColorPreviewSwatch{width:25px;height:25px}
+.guestColorPreviewDayNight{margin:13px 0 8px}
+.guestColorPreviewLanguage{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0 4px;font-size:13px;font-weight:700}
+.guestColorPreviewLanguage select{width:min(62%,210px);min-height:39px;padding:6px 10px;border-radius:11px;background:#133b36;color:#fff1d3;border:1px solid #dfc48c;font:inherit}
+.guestColorPreviewPanel .guestColorPreviewLanguageNote{font-size:11px;opacity:.8;margin:2px 0 8px}
+.guestColorPreviewPanel .guestColorPreviewNote{margin:5px 0 12px}
+@media(max-width:370px){.guestColorPreviewCompact{grid-template-columns:repeat(2,minmax(0,1fr))}}
