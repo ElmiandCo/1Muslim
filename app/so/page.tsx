@@ -1,2 +1,2 @@
-import LocalizedEntry from "../components/LocalizedEntry";
-export default function Page(){return <LocalizedEntry lang="so"/>;}
+import {redirect} from "next/navigation";
+export default function SomaliPreview(){redirect("/?lang=so");}
