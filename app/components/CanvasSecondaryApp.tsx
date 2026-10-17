@@ -9,8 +9,8 @@ import "./canvas-ummah-feed.css";
 
 type Profile={display_name?:string|null;username?:string|null;xp_total?:number|null;bio?:string|null};
 type DailyPost={id:string;content?:string|null;body?:string|null;text?:string|null;created_at?:string|null};
-const destinations=["/profile","/recording-studio/shahadah","/community","/messages","/elm-tent"];
-const titles=["Friends · Community Map","Record Studio","Daily Posts · Ummah","Messenger","Elm Tent 🏕️"];
+const destinations=["/profile","/recording-studio/shahadah","/community","/messages","/elm-tent","/community"];
+const titles=["My Profile","Record Studio","Daily Posts · Ummah","Messenger","Elm Tent 🏕️","Community"];
 
 function ProfileApp({active}:{active:boolean}){
  const [profile,setProfile]=useState<Profile|null>(null);const [status,setStatus]=useState("Loading your profile…");
@@ -90,7 +90,7 @@ function DailyPostsApp({active}:{active:boolean}){
   </div>}
  </div>;
 }
-function CommunityMap({active}:{active:boolean}){
+export function CommunityMap({active}:{active:boolean}){
  const [tab,setTab]=useState<"map"|"profile">("map");
  const [zoom,setZoom]=useState(0);
  const [search,setSearch]=useState("");
@@ -110,6 +110,6 @@ function CommunityMap({active}:{active:boolean}){
 }
 export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boolean}){
  return <div className="canvas-native-app"><header><span>0{slot+6} · 1MUSLIM</span><h2>{titles[slot]}</h2></header><div className="canvas-native-body">
- {slot===0?<CommunityMap active={active}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:<ElmTentAlphabet/>}
+ {slot===0?<ProfileApp active={active}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:slot===4?<ElmTentAlphabet/>:<div className="canvas-community-map-panel"><strong>Community connections</strong><p>Discover Muslims and mosques through the Community Map above.</p></div>}
  </div><footer><Link href={destinations[slot]}>Open full experience ↗</Link></footer></div>
 }
