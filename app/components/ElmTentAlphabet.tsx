@@ -27,6 +27,8 @@ export default function ElmTentAlphabet(){
  const [audioMessage,setAudioMessage]=useState("");
  const [showAll,setShowAll]=useState(false);
  const speech=useRef<SpeechSynthesisUtterance|null>(null);
+ const [autoPlayNext,setAutoPlayNext]=useState(false);
+ const [practiceFlash,setPracticeFlash]=useState(false);
  useEffect(()=>{try{
    const next:Record<number,number[]>={};
    for(let i=0;i<LESSON_COUNT;i++){
@@ -56,9 +58,10 @@ export default function ElmTentAlphabet(){
   utterance.onstart=()=>setPlaying(true);utterance.onend=()=>setPlaying(false);utterance.onerror=()=>{setPlaying(false);setAudioMessage("Could not play this letter on your device.")};
   speech.current=utterance;setAudioMessage(arabic?"":"Device pronunciation preview; an Arabic voice may not be installed.");window.speechSynthesis.speak(utterance);
  };
+ useEffect(()=>{if(!autoPlayNext||lesson>1)return;setAutoPlayNext(false);const timer=setTimeout(()=>{hear();setHudhudPlayed(true)},280);return()=>clearTimeout(timer)},[autoPlayNext,selected,lesson]);
  const chooseLesson=(index:number)=>{const next=Math.max(0,Math.min(LESSON_COUNT-1,index));setLesson(next);setLessonWindow(Math.floor(next/4));setPracticed(lessonProgress[next]||[]);setSelected(0);setHudhudPlayed(false);setAudioMessage("");if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()};
  const select=(index:number)=>{setHudhudPlayed(false);if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel();setPlaying(false);setSelected(index);setAudioMessage("")};
- useEffect(()=>{const onHudHud=()=>{if(lesson>1)return;if(!hudhudPlayed){hear();setHudhudPlayed(true)}else{mark();setHudhudPlayed(false);if(selected===LETTERS.length-1){chooseLesson(Math.min(lesson+1,LESSON_COUNT-1))}else select(selected+1)}};window.addEventListener("1muslim:elm-tent-hudhud",onHudHud);return()=>window.removeEventListener("1muslim:elm-tent-hudhud",onHudHud)});
+ useEffect(()=>{const onHudHud=()=>{if(lesson>1)return;if(!hudhudPlayed){hear();setHudhudPlayed(true)}else{mark();setPracticeFlash(true);setTimeout(()=>setPracticeFlash(false),420);setHudhudPlayed(false);if(selected===LETTERS.length-1){chooseLesson(Math.min(lesson+1,LESSON_COUNT-1));setAutoPlayNext(true)}else{select(selected+1);setAutoPlayNext(true)}}};window.addEventListener("1muslim:elm-tent-hudhud",onHudHud);return()=>window.removeEventListener("1muslim:elm-tent-hudhud",onHudHud)});
  return <div className={styles.root} onTouchStart={e=>{swipeStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(swipeStart.current===null)return;const delta=e.changedTouches[0].clientY-swipeStart.current;swipeStart.current=null;if(Math.abs(delta)>90)chooseLesson(lesson+(delta<0?1:-1))}}>
   <nav className={styles.lessonNav} aria-label="Elm Tent lessons"><button type="button" aria-label="Previous lessons" onClick={()=>setLessonWindow(0)}>‹</button>{Array.from({length:4},(_,i)=>lessonWindow*4+i).map(i=><button type="button" key={i} className={lesson===i?styles.lessonActive:""} aria-current={lesson===i?"step":undefined} onClick={()=>chooseLesson(i)}><span>{i+1}</span><small>{completedLessons.includes(i)?"✓ Done":i<2?"Letters":"Soon"}</small></button>)}<button type="button" aria-label="Next lessons" onClick={()=>setLessonWindow(1)}>›</button></nav>
   <div className={styles.lessonStage} key={lesson}><strong>LESSON {lesson+1} / 8</strong>{lesson>1?<div className={styles.soon}>✦ Lesson {lesson+1} · Coming Soon</div>:completedLessons.includes(lesson)?<span>✓ Completed</span>:null}</div>
@@ -68,7 +71,7 @@ export default function ElmTentAlphabet(){
   <div className={styles.progress} role="progressbar" aria-label="Letters practiced" aria-valuemin={0} aria-valuemax={28} aria-valuenow={practiced.length}><span style={{width:(practiced.length/28*100)+"%"}}/></div>
   <div className={styles.stage}>
    <button className={styles.previous} type="button" onClick={()=>select((selected+27)%28)} aria-label="Previous letter">‹</button>
-   <div className={styles.letterFocus} aria-live="polite"><span className={styles.arabic} lang="ar" dir="rtl">{LETTERS[selected][0]}</span><strong>{LETTERS[selected][1]}</strong><small>{String(selected+1).padStart(2,"0")} / 28</small></div>
+   <div className={styles.letterFocus} aria-live="polite" data-practice-flash={practiceFlash?"true":"false"}><span className={styles.arabic} lang="ar" dir="rtl">{LETTERS[selected][0]}</span><strong>{LETTERS[selected][1]}</strong><small>{String(selected+1).padStart(2,"0")} / 28</small></div>
    <button className={styles.next} type="button" onClick={()=>select((selected+1)%28)} aria-label="Next letter">›</button>
   </div>
   <div className={styles.controls}><button type="button" className={styles.hear} onClick={()=>{hear();setHudhudPlayed(true)}} disabled={lesson>1} aria-label={"Hear "+LETTERS[selected][1]}>{playing?"◖)) Playing":"◖)) Hear letter"}</button><button type="button" className={styles.mark} onClick={()=>{mark();setHudhudPlayed(false)}} disabled={lesson>1||practiced.includes(selected)}>{practiced.includes(selected)?"✓ Practiced":"✓ I practiced"}</button></div>
