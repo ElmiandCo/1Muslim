@@ -7,9 +7,13 @@ import {createClient} from "../../utils/supabase/client";
 import {PALETTE_KEY, PALETTES, type Palette, applyPalette} from "../components/ColorPaletteSync";
 import LocationPreferences from "../components/LocationPreferences";
 import SocialConnectionsWidget from "../components/SocialConnectionsWidget";
+import {ORB_ITEMS,ORB_PREF_KEY} from "../components/OrbGestureManager";
 
 export default function SettingsPage() {
   const [enabled, setEnabled] = useState(false);
+  const [orbPrefs,setOrbPrefs]=useState<Record<string,boolean>>({});
+  useEffect(()=>{try{setOrbPrefs(JSON.parse(localStorage.getItem(ORB_PREF_KEY)||"{}"))}catch{}},[]);
+  const changeOrbVisibility=(id:string,visible:boolean)=>{setOrbPrefs(old=>{const next={...old,[id]:visible};localStorage.setItem(ORB_PREF_KEY,JSON.stringify(next));window.dispatchEvent(new Event("1muslim:orb-visibility-updated"));return next})};
   const [notificationPrefs,setNotificationPrefs]=useState<Record<string,boolean>>({messages:true,calls:true,live:true,ashab:true,learning:true});
   const [permission,setPermission]=useState("default");
   const notificationCategories=[["messages","💬 Direct messages"],["calls","📞 Incoming calls"],["live","🔴 Ashab going live"],["ashab","🤝 Ashab requests"],["learning","📖 Quran & learning reminders"]];
@@ -114,6 +118,7 @@ export default function SettingsPage() {
       </header>
 
       <SocialConnectionsWidget />
+      <section className="settingsCard" aria-label="Floating orb visibility" style={{display:"block",padding:"18px"}}><h2>Floating orb visibility</h2><p>Swipe an orb quickly toward a corner to hide it. Restore any orb here, or use the temporary recovery card.</p>{ORB_ITEMS.map(orb=><label key={orb.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"10px 0",borderBottom:"1px solid #ffffff20"}}><span>{orb.label}</span><input type="checkbox" checked={orbPrefs[orb.id]!==false} onChange={e=>changeOrbVisibility(orb.id,e.target.checked)} aria-label={"Show "+orb.label}/></label>)}</section>
       <section className="settingsCard" data-no-tap-shimmer style={{display:"block"}} aria-label="Appearance settings"><div className="settingCopy"><span className="settingIcon">☀</span><div><span className="eyebrow">APPEARANCE · DAY / NIGHT</span><h2>Theme & atmosphere</h2><p>Choose the Canvas lighting. Auto follows your device appearance. Your orb stays a simple day/night toggle.</p></div></div><div role="group" aria-label="Theme mode" style={{display:"flex",flexWrap:"wrap",gap:9,marginTop:16}}>{(["day","night","auto"] as const).map(mode=><button type="button" key={mode} aria-pressed={appearanceMode===mode} onClick={()=>saveAppearance(mode)} style={{minHeight:44,padding:"9px 18px",borderRadius:999,border:appearanceMode===mode?"2px solid #cda65a":"1px solid #698d7b",background:appearanceMode===mode?"#1b6647":"transparent",color:"inherit",cursor:"pointer",fontWeight:700}}>{mode==="day"?"☀ Day":mode==="night"?"☾ Night":"◉ Auto"}</button>)}</div></section>
       <section className="settingsCard" data-no-tap-shimmer aria-label="Color palette settings" style={{display:"block"}}>
         <div className="settingCopy"><span className="settingIcon">🎨</span><div><span className="eyebrow">APPEARANCE · COLORS</span><h2>Your color palette</h2><p>Emerald Green is our signature. Choose another color without changing your Day / Night preference. Every palette has both.</p></div></div>
