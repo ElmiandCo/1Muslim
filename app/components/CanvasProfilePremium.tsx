@@ -31,7 +31,7 @@ export default function CanvasProfilePremium({active}:{active:boolean}){
   <div className="cp-cover">
    <div className="cp-cover-actions"><Link href="/find" aria-label="Find people">↗</Link><Link href="/profile" aria-label="Profile options">⋮</Link></div>
    <div className="cp-identity">
-    <div className="cp-avatar-ring">{profile?<ProfileAvatar name={profile.display_name||"Member"} gender={profile.gender||undefined} avatarGender={profile.avatar_gender||undefined} avatarPackage={profile.avatar_package||undefined} avatarConfig={profile.avatar_config||{}} accent={profile.profile_accent||undefined} size="lg"/>:<span className="cp-guest-avatar">☪</span>}</div>
+    <div className="cp-avatar-ring">{profile?<ProfileAvatar name={profile.display_name||"Member"} gender={profile.gender||undefined} avatarGender={profile.avatar_gender||undefined} avatarPackage={profile.avatar_package||undefined} avatarConfig={profile.avatar_config||{}} accent={profile.profile_accent||undefined} size="lg"/>:<span className="cp-guest-avatar">☪</span>}<Link href="/profile?tab=avatar" className="cp-avatar-add" aria-label="Change profile avatar" title="Change avatar">+</Link></div>
     {profile?<><strong>{profile.display_name||"Member"} {profile.shahada_verified_at?<span title="Shahada verified">✦</span>:null}</strong><span className="cp-handle">@{profile.username||"member"}</span></>:<><strong>Welcome to 1Muslim</strong><span className="cp-handle">Your journey starts here</span></>}
    </div>
    {profile?<Link className="cp-edit" href="/profile">✎ Edit profile</Link>:<Link className="cp-edit" href="/login">Sign in ↗</Link>}
