@@ -573,13 +573,20 @@
 }
 
 
-/* Desktop ornament lift: show roughly 60% more of the decorative motif above the Canvas. */
+/* Desktop decoration is a PAGE backdrop, not a Canvas ornament.
+   Position it above the Canvas so most of its silhouette is visible in the
+   header/intro space; the lower ~38% flows behind the translucent Canvas. */
 @media(min-width:701px){
+ .control .islamicDecoration{inset:0;overflow:visible;z-index:0}
  .control .decorationNight,.control .decorationDay{
-  top:clamp(12px,2.5vh,34px);
-  width:min(84vw,760px);
-  height:min(60vh,590px);
+  top:clamp(-115px,-8vh,-48px);
+  width:min(90vw,980px);
+  height:clamp(460px,76vh,850px);
+  background-position:center top;
+  background-size:contain;
+  /* The ornament remains a single, unbroken page-level image. */
  }
+ .control .surface{position:relative;z-index:1}
 }
 
 /* 1Muslim Shop playful 1.7-second coming-soon reveal */
