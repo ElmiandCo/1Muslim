@@ -573,3 +573,37 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
 @media(prefers-reduced-motion:reduce){
  main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[aria-label="1Muslim Control Center"]{animation:none!important}
 }
+
+/* Horizontal workspace navigation belongs between greeting and Canvas. */
+.canvas-workspace-indicators{position:relative;display:flex;align-items:center;justify-content:center;width:100%;max-width:1050px;margin:0 auto 6px;z-index:40;flex:0 0 auto}
+.canvas-workspace-indicators nav[aria-label="Dashboard workspaces"][data-canvas-horizontal-dots="true"]{
+ position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+ transform:none!important;display:flex!important;justify-content:space-between!important;
+ width:70%!important;min-width:0!important;max-width:70%!important;
+ margin:0 auto!important;padding:5px 0!important;gap:0!important;
+ background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;
+}
+.canvas-workspace-indicators nav[aria-label="Dashboard workspaces"]>button{width:10px!important;height:10px!important;min-width:10px!important;min-height:10px!important;flex:0 0 10px!important}
+.homeMakkahEmpty{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:10px;min-height:135px;padding:12px}
+.homeMakkahEmpty>strong{text-align:center}
+.homeLiveCommentForm{display:grid;gap:7px;width:100%;max-width:520px;margin:0 auto}
+.homeLiveCommentForm label{font-size:12px;color:#d9e9dd}
+.homeLiveCommentForm>div{display:flex;gap:8px}
+.homeLiveCommentForm input{flex:1;min-width:0;padding:9px 11px;border:1px solid #d4bb8366;border-radius:12px;background:#072b25b8;color:#fff}
+.homeLiveCommentForm button{padding:8px 12px;border:1px solid #e5cb8c77;border-radius:12px;background:#174d3b;color:#fff}
+.homeLiveCommentForm button:disabled{opacity:.45}
+.homeLiveCommentForm small{color:#f2dca8}
+@media(min-width:760px){
+ .canvas-workspace-indicators{margin-bottom:3px}
+ main:not([data-canvas-fullscreen="true"]) > section[aria-label="1Muslim Control Center"]{min-height:calc(100dvh - 230px)!important}
+}
+/* Full orbit within the floating day/night orb's circular glass frame. */
+@keyframes celestialOrbitAroundRing{
+ 0%{transform:translate(0,-5px) rotate(0deg)}
+ 25%{transform:translate(5px,0) rotate(90deg)}
+ 50%{transform:translate(0,5px) rotate(180deg)}
+ 75%{transform:translate(-5px,0) rotate(270deg)}
+ 100%{transform:translate(0,-5px) rotate(360deg)}
+}
+.canvas-orb-floating-dock .canvas-orb-float-motion{animation:celestialOrbitAroundRing 9s linear infinite;transform-origin:center center}
+@media(prefers-reduced-motion:reduce){.canvas-orb-floating-dock .canvas-orb-float-motion{animation:none}}
