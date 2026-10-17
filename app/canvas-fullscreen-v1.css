@@ -449,3 +449,20 @@ nav[aria-label="Dashboard workspaces"]>button{
  box-sizing:border-box!important;
  transform:none!important;
 }
+
+.canvas-greeting-settings-trigger{background:transparent;border:0;color:#e9ce88;font:inherit;cursor:pointer;padding:4px 6px;border-radius:10px;touch-action:manipulation}
+.canvas-greeting-settings-trigger:focus-visible{outline:2px solid #f4dc9a;outline-offset:2px}
+.orbitWorkspaceTrack[data-orbit-motion="on"] [data-workspace-page] [data-magnetic-grid="true"],
+.orbitWorkspaceTrack[data-orbit-motion="on"] [data-workspace-page] .canvas-vertical-secondary>.canvas-native-app{
+ animation:none!important;
+ transform:translate3d(var(--orbit-x,0%),var(--orbit-y,0%),0) rotateY(var(--orbit-yaw,0deg)) rotateZ(var(--orbit-roll,0deg)) scale(var(--orbit-scale,1))!important;
+ opacity:var(--orbit-opacity,1);transform-origin:center center;transform-style:preserve-3d;
+ backface-visibility:hidden;-webkit-backface-visibility:hidden;will-change:transform,opacity;
+}
+.orbitWorkspaceTrack[data-orbit-motion="on"] [data-workspace-page] .canvas-vertical-main [data-widget] [class*="widgetCanvas"]{animation:none!important}
+@media(prefers-reduced-motion:reduce){
+ .orbitWorkspaceTrack [data-workspace-page] [data-magnetic-grid="true"],
+ .orbitWorkspaceTrack [data-workspace-page] .canvas-vertical-secondary>.canvas-native-app{
+  animation:none!important;transform:none!important;opacity:1!important;will-change:auto!important
+ }
+}

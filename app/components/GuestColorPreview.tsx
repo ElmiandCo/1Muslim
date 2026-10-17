@@ -42,8 +42,8 @@ export default function GuestColorPreview(){
   setDay(light);
   document.documentElement.classList.toggle("light",light);
   document.body.classList.toggle("light",light);
-  try{localStorage.setItem("1muslim-theme-mode",light?"day":"night")}catch{}
-  window.dispatchEvent(new Event("1muslim:theme-changed"));
+  try{localStorage.setItem("1muslim-theme-mode",light?"day":"night");localStorage.setItem("1muslim-theme",light?"light":"dark")}catch{}
+  window.dispatchEvent(new Event("1muslim:appearance-updated"));window.dispatchEvent(new Event("1muslim:theme-changed"));
  };
  const close=()=>{
   setOpen(false);
