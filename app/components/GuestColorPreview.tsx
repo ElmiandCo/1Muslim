@@ -16,6 +16,9 @@ export default function GuestColorPreview(){
  const [palette,setPalette]=useState<Palette>("green");
  const [day,setDay]=useState<boolean|null>(null);
  const [language,setLanguage]=useState("en");
+ const [sound,setSound]=useState(false);
+ const [haptics,setHaptics]=useState(true);
+ const [touchLight,setTouchLight]=useState(false);
  useEffect(()=>{
   const openFromOrb=()=>setOpen(true);
   window.addEventListener("1muslim:open-color-settings",openFromOrb);
@@ -24,7 +27,7 @@ export default function GuestColorPreview(){
 
   }catch{}
   setDay(document.documentElement.classList.contains("light"));
-  try{setLanguage(localStorage.getItem("1muslim-language")||"en")}catch{}
+  try{setLanguage(localStorage.getItem("1muslim-language")||"en");setSound(localStorage.getItem("1muslim:ui-sound")==="on");setHaptics(localStorage.getItem("1muslim:ui-haptics")!=="off");setTouchLight(localStorage.getItem("1muslim:touch-light")==="on")}catch{}
   setReady(true);
   return()=>window.removeEventListener("1muslim:open-color-settings",openFromOrb);
  },[]);
@@ -59,6 +62,11 @@ export default function GuestColorPreview(){
     </div>
     <div className="guestColorPreviewDayNight" role="group" aria-label="Preview lighting">
      <span>Lighting</span><button type="button" aria-pressed={day===true} onClick={()=>changeLight(true)}>☀ Day</button><button type="button" aria-pressed={day===false} onClick={()=>changeLight(false)}>☾ Night</button>
+    </div>
+    <div className="guestColorPreviewPreferences" role="group" aria-label="Sound, haptics and touch lighting">
+      <label>🔊 Sounds <input type="checkbox" checked={sound} onChange={e=>{const on=e.target.checked;setSound(on);localStorage.setItem("1muslim:ui-sound",on?"on":"off");window.dispatchEvent(new CustomEvent("1muslim:ui-preferences-changed",{detail:{sound:on}}))}}/></label>
+      <label>📳 Haptics <input type="checkbox" checked={haptics} onChange={e=>{const on=e.target.checked;setHaptics(on);localStorage.setItem("1muslim:ui-haptics",on?"on":"off");window.dispatchEvent(new CustomEvent("1muslim:ui-preferences-changed",{detail:{haptics:on}}));if(on&&navigator.vibrate)navigator.vibrate(15)}}/></label>
+      <label>✨ Touch light <input type="checkbox" checked={touchLight} onChange={e=>{const on=e.target.checked;setTouchLight(on);localStorage.setItem("1muslim:touch-light",on?"on":"off");document.documentElement.dataset.touchLight=on?"on":"off";window.dispatchEvent(new CustomEvent("1muslim:ui-preferences-changed",{detail:{touchLight:on}}))}}/></label>
     </div>
     <div className="guestColorPreviewLanguage"><label htmlFor="guestColorPreviewLanguage">🌐 Language</label><select id="guestColorPreviewLanguage" value={language} onChange={e=>{const value=e.target.value;setLanguage(value);try{localStorage.setItem("1muslim-language",value)}catch{}document.documentElement.lang=value;window.dispatchEvent(new CustomEvent("1muslim:language-changed",{detail:{language:value}}))}}><option value="en">English</option><option value="ar">العربية</option><option value="so">Soomaali</option></select></div>
     <p className="guestColorPreviewLanguageNote">Language preference is saved. Full translations are coming later.</p>
