@@ -651,3 +651,10 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
 .homeLiveProfilePrompt span:last-child{font-size:23px;line-height:1;animation:liveProfileDown 2s ease-in-out infinite}
 @keyframes liveProfileDown{0%,100%{transform:translateY(-4px);opacity:.5}55%{transform:translateY(5px);opacity:1}}
 @media(prefers-reduced-motion:reduce){.homeLiveProfilePrompt span:last-child{animation:none}}
+
+
+/* Live player only: remove decorative upper area and its reserved height. */
+.liveWidgetPlayerOnly{display:flex!important;flex-direction:column!important;justify-content:flex-start!important;align-items:stretch!important;gap:8px!important;min-height:0!important;height:auto!important;padding-top:10px!important;background-image:none!important}
+.liveWidgetPlayerOnly .liveWidgetLegacy{display:none!important}
+.liveWidgetPlayerOnly .homeLiveCarouselArrows{flex:none!important;margin:0!important;padding:0 12px!important;height:52px!important}
+.liveWidgetPlayerOnly .homeMakkahLive{margin:0!important;flex:none!important}
