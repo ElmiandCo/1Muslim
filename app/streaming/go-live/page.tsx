@@ -47,6 +47,7 @@ export default function GoLivePage() {
   const recordingStartedAtRef = useRef<number | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [settingsOpen,setSettingsOpen] = useState(false);
+  const [setupPreset,setSetupPreset] = useState<"default"|"custom">("default");
   const [visualEffect,setVisualEffect] = useState<LiveEffect>("off");
   const [live, setLive] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -945,9 +946,10 @@ export default function GoLivePage() {
           .preliveMobileActions{display:flex;position:absolute;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:28;flex-direction:column;gap:9px}
           .preliveGoButton{min-height:60px;border:2px solid #8dfac6;border-radius:999px;background:linear-gradient(115deg,#08724e,#02a66b 62%,#056644);box-shadow:0 0 19px #19d88d8c,inset 0 2px 12px #ffffff22;color:white;font-size:clamp(21px,5vw,27px);font-weight:850;cursor:pointer}
           .preliveGoButton:disabled{opacity:.7}
+          .preliveSetupWidget{display:flex;flex-direction:column;gap:7px;padding:11px 13px;border:1px solid #d9c58a7a;border-radius:17px;background:linear-gradient(125deg,#08392fdd,#061d1adb);backdrop-filter:blur(12px);color:#f3e6bd}.preliveSetupHeader{display:flex;align-items:center;justify-content:space-between;gap:8px}.preliveSetupHeader>strong{font-size:13px}.preliveSetupWidget>small{font-size:10px;color:#bdd5c5}.preliveSetupPills{display:flex;gap:5px}.preliveSetupPills button{border:1px solid #d8c38b80;border-radius:99px;padding:7px 10px;background:#062c24;color:#ebddba;font-size:11px;cursor:pointer}.preliveSetupPills button[aria-pressed="true"]{background:#16654d;border-color:#e9d49a;color:white}
           .preliveQuickOptions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-          .preliveQuickOptions button{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;min-height:59px;min-width:0;padding:7px 3px;border:1px solid #72c9a071;border-radius:15px;background:#061a13df;color:#fff;cursor:pointer}
-          .preliveQuickOptions button span{font-size:20px}
+          .preliveQuickOptions button{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;min-height:46px;min-width:0;padding:5px 3px;border:1px solid #72c9a071;border-radius:12px;background:#061a13df;color:#fff;cursor:pointer}
+          .preliveQuickOptions button span{font-size:16px}
           .preliveQuickOptions button strong{font-size:clamp(9px,2.6vw,12px);white-space:nowrap}
           .preliveQuickOptions button small{width:100%;font-size:10px;color:#9adcb7}
           .previewOverlayTools{top:43%!important;right:9px!important;gap:8px!important}
@@ -1012,9 +1014,10 @@ export default function GoLivePage() {
             <div className="preliveMobileActions" aria-label="Pre-live creator controls">
               {!live && <>
                 <button type="button" className="preliveGoButton" disabled={saving || !cameraReady} onClick={()=>void startLive(false)}>{cameraReady?"◉ Go Live":"Enable Camera to Go Live"}</button>
+                <div className="preliveSetupWidget" aria-label="Go Live setup"><div className="preliveSetupHeader"><strong>✦ Go Live Setup</strong><div className="preliveSetupPills"><button type="button" aria-pressed={setupPreset==="default"} onClick={()=>{setSetupPreset("default");setAspectRatio(window.innerWidth>window.innerHeight?"16:9":"9:16");setVideoQuality("720p");}}>1Muslim</button><button type="button" aria-pressed={setupPreset==="custom"} onClick={()=>{setSetupPreset("custom");setSettingsOpen(true);}}>Custom ⚙</button></div></div><small>{setupPreset==="default"?"Optimized automatically for your screen.":"Your custom broadcast settings."}</small></div>
                 <div className="preliveQuickOptions">
                   <button type="button" onClick={toggleMic} aria-pressed={micOn}><span aria-hidden="true">🎙</span><strong>Voice Chat</strong><small>{micOn?"On":"Off"}</small></button>
-                  <button type="button" onClick={()=>void flipCamera()}><span aria-hidden="true">▣</span><strong>Device Camera</strong><small>{facingMode==="user"?"Front":"Back"}</small></button>
+                  <button type="button" onClick={()=>{if(!cameraReady)void startPreview();else if(!cameraOn)toggleCamera();else void flipCamera()}} aria-label={!cameraReady?"Turn camera on":!cameraOn?"Enable camera":"Switch camera"}><span aria-hidden="true">▣</span><strong>Camera</strong><small>{!cameraReady?"Turn On":!cameraOn?"Off":facingMode==="user"?"Front":"Back"}</small></button>
                   <button type="button" onClick={()=>setSettingsOpen(true)}><span aria-hidden="true">♧</span><strong>Allow Guests</strong><small>Settings</small></button>
                 </div>
               </>}
