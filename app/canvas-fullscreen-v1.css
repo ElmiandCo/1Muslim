@@ -232,3 +232,35 @@ nav[aria-label="Dashboard workspaces"]>button[aria-current="page"]{background:#e
 .home-live-demo-full{position:fixed;z-index:2147480000;inset:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);margin:0;padding:clamp(10px,3vw,25px);border-radius:0;background:#062d28f7;overflow-y:auto}
 .home-live-demo-full .home-live-demo-screen{flex:1;min-height:250px;max-height:none}
 @media(prefers-reduced-motion:reduce){.home-live-demo *{transition:none!important}}
+
+/* Screenshot recovery: six columns, two rows, bottom center; no orb overlap. */
+nav[aria-label="Dashboard workspaces"]{
+ position:sticky!important;bottom:6px!important;left:auto!important;right:auto!important;
+ margin:4px auto 6px!important;transform:none!important;
+ display:grid!important;grid-template-columns:repeat(6,14px)!important;
+ grid-template-rows:repeat(2,14px)!important;gap:7px 10px!important;
+ width:max-content!important;max-width:calc(100% - 110px)!important;
+ padding:9px 14px!important;justify-content:center!important;
+ border-radius:20px!important;z-index:20!important;
+}
+nav[aria-label="Dashboard workspaces"]>button{
+ display:grid!important;place-items:center!important;width:14px!important;height:14px!important;
+ min-width:14px!important;min-height:14px!important;padding:0!important;margin:0!important;
+ border:1.5px solid #d7ddca!important;border-radius:50%!important;background:transparent!important;
+}
+nav[aria-label="Dashboard workspaces"]>button[aria-current="page"]{background:#e9d69e!important;border-color:#f7e4b1!important}
+nav[aria-label="Dashboard workspaces"]>button>span{display:none!important}
+.canvas-language-globe:not([style*="left"]){right:10px!important;bottom:calc(105px + env(safe-area-inset-bottom,0px))!important}
+.homeMakkahLive{padding:7px 10px!important;margin:5px 0!important;gap:5px!important}
+.homeMakkahLiveCompact{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:9px;border-radius:12px;background:#052c27aa;color:#eee0bc;font-size:11px}
+.homeMakkahLiveCompact a{color:#f7e3a4;text-decoration:underline}
+.homeLiveStudio{min-height:0}
+.home-live-demo-screen{max-height:clamp(180px,30vh,320px)}
+/* The former height-chevron is now the actual fullscreen orb in the title row. */
+button[aria-label="Expand Canvas to full view"],button[aria-label="Exit full Canvas view"]{
+ position:absolute!important;right:12px!important;top:7px!important;z-index:30!important;
+ width:42px!important;height:42px!important;min-height:42px!important;
+ padding:0!important;margin:0!important;border-radius:50%!important;
+ border:1px solid #e4c991!important;background:radial-gradient(circle at 30% 20%,#327662,#073c33)!important;
+ box-shadow:0 2px 15px #001e1866!important;font-size:22px!important;
+}
