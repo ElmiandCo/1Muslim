@@ -47,6 +47,7 @@ export default function GoLivePage() {
   const recordingStartedAtRef = useRef<number | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [settingsOpen,setSettingsOpen] = useState(false);
+  const [setupPreset,setSetupPreset] = useState<"default"|"custom">("default");
   const [visualEffect,setVisualEffect] = useState<LiveEffect>("off");
   const [live, setLive] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -330,6 +331,12 @@ export default function GoLivePage() {
     };
     draw();
     return canvas.captureStream(24).getVideoTracks()[0];
+  };
+  const studioBackgrounds=[["Mosque","🕌","#174b43"],["Night","🌙","#0b203c"],["Makkah","🕋","#4b4232"],["Nature","🌿","#286a48"],["Purple Studio","💜","#422568"]];
+  const selectStudioBackground=async(name:string,color:string)=>{
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280"><rect width="720" height="1280" fill="${color}"/><circle cx="360" cy="430" r="250" fill="#ddc78e" opacity=".16"/><path d="M0 1080V720Q90 580 180 720V1080M240 1080V600Q360 390 480 600V1080M540 1080V720Q630 580 720 720V1080" fill="#0b2422" stroke="#e2c98a" stroke-width="9" opacity=".8"/></svg>`;
+    await selectGreenPhoto(new File([svg],name+".svg",{type:"image/svg+xml"}));
+    setGreenImageName(name);
   };
   const selectGreenPhoto=async(file?:File)=>{
     if(!file)return;
@@ -945,9 +952,10 @@ export default function GoLivePage() {
           .preliveMobileActions{display:flex;position:absolute;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:28;flex-direction:column;gap:9px}
           .preliveGoButton{min-height:60px;border:2px solid #8dfac6;border-radius:999px;background:linear-gradient(115deg,#08724e,#02a66b 62%,#056644);box-shadow:0 0 19px #19d88d8c,inset 0 2px 12px #ffffff22;color:white;font-size:clamp(21px,5vw,27px);font-weight:850;cursor:pointer}
           .preliveGoButton:disabled{opacity:.7}
+          .preliveSetupWidget{display:flex;flex-direction:column;gap:7px;padding:11px 13px;border:1px solid #d9c58a7a;border-radius:17px;background:linear-gradient(125deg,#08392fdd,#061d1adb);backdrop-filter:blur(12px);color:#f3e6bd}.preliveSetupHeader{display:flex;align-items:center;justify-content:space-between;gap:8px}.preliveSetupHeader>strong{font-size:13px}.preliveSetupWidget>small{font-size:10px;color:#bdd5c5}.preliveSetupPills{display:flex;gap:5px}.preliveSetupPills button{border:1px solid #d8c38b80;border-radius:99px;padding:7px 10px;background:#062c24;color:#ebddba;font-size:11px;cursor:pointer}.preliveSetupPills button[aria-pressed="true"]{background:#16654d;border-color:#e9d49a;color:white}
           .preliveQuickOptions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-          .preliveQuickOptions button{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;min-height:59px;min-width:0;padding:7px 3px;border:1px solid #72c9a071;border-radius:15px;background:#061a13df;color:#fff;cursor:pointer}
-          .preliveQuickOptions button span{font-size:20px}
+          .preliveQuickOptions button{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;min-height:46px;min-width:0;padding:5px 3px;border:1px solid #72c9a071;border-radius:12px;background:#061a13df;color:#fff;cursor:pointer}
+          .preliveQuickOptions button span{font-size:16px}
           .preliveQuickOptions button strong{font-size:clamp(9px,2.6vw,12px);white-space:nowrap}
           .preliveQuickOptions button small{width:100%;font-size:10px;color:#9adcb7}
           .previewOverlayTools{top:43%!important;right:9px!important;gap:8px!important}
@@ -971,7 +979,10 @@ export default function GoLivePage() {
         @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 
-      `}</style>
+      .studioBgGallery{padding:12px;margin:10px 0;border:1px solid #e1c68775;border-radius:17px;background:#092e28dc;backdrop-filter:blur(12px);color:#f2dfb6}.studioBgGallery>small{font-size:10px;color:#b9d3c4}.studioBgGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0}.studioBgGrid button,.studioBgCustom{position:relative;min-height:76px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;border:1px solid #e1c68788;border-radius:12px;color:#fff2d7;cursor:pointer}.studioBgGrid button.chosen{outline:2px solid #5fe9b0}.studioBgGrid b{font-size:23px}.studioBgGrid span{font-size:10px}.studioBgCustom{background:#185244}.studioBgCustom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+
+      `}
+</style>
 
       <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong><button type="button" aria-expanded={settingsOpen} aria-controls="prelive-settings" onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕ Close":"⚙ Settings"}</button></header>
       <div className={settingsOpen?"shell settingsOpen":"shell"}>
@@ -999,6 +1010,7 @@ export default function GoLivePage() {
               {live && <span className="live">● LIVE</span>}{live && <div role="status" aria-live="polite" style={{position:"absolute",left:12,bottom:64,zIndex:13,padding:"12px 16px",borderRadius:18,background:"rgba(5,10,20,.80)",border:viewerIncrease?"2px solid #39ee8d":"1px solid rgba(255,255,255,.35)",boxShadow:viewerIncrease?"0 0 24px rgba(57,238,141,.48)":"0 8px 25px #0008",color:viewerIncrease?"#4cff9c":"white",transition:"color .3s,border .3s,box-shadow .3s",pointerEvents:"none",textAlign:"center"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1.5}}>🔴 YOU ARE LIVE</div><div style={{fontSize:"clamp(26px,5vw,40px)",fontWeight:900,lineHeight:1.15,fontVariantNumeric:"tabular-nums"}}>{viewers.toLocaleString()}</div><div style={{fontSize:11,opacity:.85}}>VIEWERS {viewerIncrease?"↑":""}</div></div>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
             </div>
+            <section className="studioBgGallery"><strong>🎨 Backgrounds</strong><small> · Choose a scene for your green screen</small><div className="studioBgGrid">{studioBackgrounds.map(([name,icon,color])=><button key={name} type="button" disabled={live} className={greenEnabled&&greenImageName===name?"chosen":""} style={{backgroundColor:color}} onClick={()=>void selectStudioBackground(name,color)}><b>{icon}</b><span>{name}</span></button>)}<label className="studioBgCustom"><b>📷</b><span>Custom</span><input type="file" accept="image/*" disabled={live} onChange={e=>void selectGreenPhoto(e.target.files?.[0])}/></label></div><small>Works with a physical green backdrop. Choose before starting your broadcast.</small></section>
             <div style={{display:"flex",gap:9,alignItems:"center",flexWrap:"wrap",padding:"10px 0"}}>
               <label style={{fontSize:12,color:"#d6e7b8",cursor:"pointer"}}>🟢 Green Screen · Choose Photo
                 <input type="file" accept="image/*" onChange={e=>void selectGreenPhoto(e.target.files?.[0])} style={{display:"block",fontSize:11,marginTop:5,maxWidth:240}} />
@@ -1012,9 +1024,10 @@ export default function GoLivePage() {
             <div className="preliveMobileActions" aria-label="Pre-live creator controls">
               {!live && <>
                 <button type="button" className="preliveGoButton" disabled={saving || !cameraReady} onClick={()=>void startLive(false)}>{cameraReady?"◉ Go Live":"Enable Camera to Go Live"}</button>
+                <div className="preliveSetupWidget" aria-label="Go Live setup"><div className="preliveSetupHeader"><strong>✦ Go Live Setup</strong><div className="preliveSetupPills"><button type="button" aria-pressed={setupPreset==="default"} onClick={()=>{setSetupPreset("default");setAspectRatio(window.innerWidth>window.innerHeight?"16:9":"9:16");setVideoQuality("720p");}}>1Muslim</button><button type="button" aria-pressed={setupPreset==="custom"} onClick={()=>{setSetupPreset("custom");setSettingsOpen(true);}}>Custom ⚙</button></div></div><small>{setupPreset==="default"?"Optimized automatically for your screen.":"Your custom broadcast settings."}</small></div>
                 <div className="preliveQuickOptions">
                   <button type="button" onClick={toggleMic} aria-pressed={micOn}><span aria-hidden="true">🎙</span><strong>Voice Chat</strong><small>{micOn?"On":"Off"}</small></button>
-                  <button type="button" onClick={()=>void flipCamera()}><span aria-hidden="true">▣</span><strong>Device Camera</strong><small>{facingMode==="user"?"Front":"Back"}</small></button>
+                  <button type="button" onClick={()=>{if(!cameraReady)void startPreview();else if(!cameraOn)toggleCamera();else void flipCamera()}} aria-label={!cameraReady?"Turn camera on":!cameraOn?"Enable camera":"Switch camera"}><span aria-hidden="true">▣</span><strong>Camera</strong><small>{!cameraReady?"Turn On":!cameraOn?"Off":facingMode==="user"?"Front":"Back"}</small></button>
                   <button type="button" onClick={()=>setSettingsOpen(true)}><span aria-hidden="true">♧</span><strong>Allow Guests</strong><small>Settings</small></button>
                 </div>
               </>}

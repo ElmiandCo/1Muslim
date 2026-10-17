@@ -1,0 +1,95 @@
+/* Full profile cinematic presentation. Scoped to the public overview; editors remain intact. */
+body:has(.cinematicProfile){background:radial-gradient(ellipse at 50% 0,#174d3d,#041d19 58%,#06130f 100%)!important}
+.cinematicProfile.profileOverview{max-width:1180px;padding:20px clamp(10px,3vw,30px) 80px}
+.cinematicProfile .profileOverviewHero{position:relative;overflow:hidden;border:1px solid #e3c98980;border-radius:30px;background:linear-gradient(160deg,#07362fef,#06251fe9);box-shadow:0 24px 60px #0006,0 0 36px #c1b07815;color:#fff1d1;text-align:center;padding-bottom:22px}
+.cinematicProfile .profileOverviewCover{height:clamp(210px,28vw,320px);background:linear-gradient(180deg,#03261a05 0%,#052b26a0 75%,#052921 100%),url("/assets/control-center/backgrounds/workspace-night.PNG") center 36%/cover no-repeat,radial-gradient(ellipse at 50% 20%,#4d7a61,#0a332a)}
+.cinematicProfile .profileOverviewCover:after{background:radial-gradient(ellipse at 50% 25%,transparent 10%,#031e1b83 100%);pointer-events:none}
+.cinematicProfile .profileOverviewActions{top:15px;right:18px;left:18px;justify-content:flex-end;flex-wrap:wrap;align-items:center;gap:10px}
+.cinematicProfile .profileOverviewActions .ghost,.cinematicProfile .profileOverviewActions .primary,.cinematicProfile .profileOverviewActions .profileSignOut{display:inline-flex!important;align-items:center;justify-content:center;padding:10px 16px;border:1px solid #e7d29a9c!important;border-radius:999px;background:#093f36c9!important;color:#fff3d7!important;font-weight:700;font-size:12px;text-decoration:none;box-shadow:0 3px 20px #0005,0 0 14px #e8dba424;cursor:pointer}
+.cinematicProfile .profileOverviewActions .profileSignOut{width:41px;height:41px;font-size:24px;padding:0}
+.cinematicProfile .profileOverviewBody{padding:0 16px 8px;display:flex;flex-direction:column;align-items:center}
+.cinematicProfile .profileOverviewAvatar{margin:-86px auto 0;width:158px;height:158px;display:grid;place-items:center;border:3px solid #f2d894;border-radius:50%;background:#0c4239;box-shadow:0 0 0 7px #f2e0a622,0 0 34px #f2cb8066;z-index:3}
+.cinematicProfile .profileOverviewAvatar .profileAvatar{transform:scale(.95)}
+.cinematicProfile .profileOverviewMain{margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.cinematicProfile .profileOverviewMain h1{font-size:clamp(26px,4vw,42px);letter-spacing:-.035em;margin:0;color:#fff6e6}
+.cinematicProfile .cinematicVerified{font-size:.7em;color:#f0d28a}
+.cinematicProfile .profileHandle{font-size:clamp(12px,1.6vw,16px);color:#e8ddc4;margin:0 0 8px}
+.cinematicProfile .profileOverviewStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(7px,1.5vw,16px);padding:18px clamp(12px,5vw,80px) 10px}
+.cinematicProfile .profileOverviewStats>div{padding:13px 8px;border:1px solid #ebd5a582;border-radius:18px;background:linear-gradient(140deg,#1a5a4c88,#073b348a);backdrop-filter:blur(14px);box-shadow:inset 0 1px #fff2,0 5px 20px #001e1d77}
+.cinematicProfile .profileOverviewStats b{font-size:clamp(18px,3vw,29px);color:#fff9eb}
+.cinematicProfile .profileOverviewStats span{font-size:clamp(10px,1.4vw,13px);text-transform:none;letter-spacing:0;color:#e7dfcb}
+.cinematicProfile .cinematicBioCard{display:grid;justify-items:center;gap:4px;width:fit-content;max-width:calc(100% - 28px);margin:6px auto 15px;padding:10px 24px;border:1px solid #e8d29a55;border-radius:16px;background:#073c34bb;backdrop-filter:blur(12px)}
+.cinematicProfile .cinematicBioCard p{margin:0;line-height:1.5;font-size:clamp(12px,1.7vw,16px);overflow-wrap:anywhere}
+.cinematicProfile .cinematicBioCard small{color:#e7d7aa}
+.cinematicProfile .cinematicProfileActions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;padding:0 12px}
+.cinematicProfile .cinematicProfileActions a,.cinematicProfile .cinematicProfileActions button{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:9px clamp(12px,2.5vw,23px);border:1px solid #d8c88b80;border-radius:999px;background:linear-gradient(150deg,#195449dd,#0c322ccc);color:#fff1d4;text-decoration:none;font-size:12px;font-weight:700;box-shadow:0 6px 16px #001e1b66;cursor:pointer}
+.cinematicProfile .profileOverviewSection{margin-top:18px;border:1px solid #dfc99467;border-radius:26px;background:linear-gradient(160deg,#0d3d34d9,#082923e8);padding:clamp(14px,2.8vw,26px);box-shadow:0 12px 28px #001f1c66}
+.cinematicProfile .sectionHeading h2{color:#f7e6bf}
+.cinematicProfile .sectionHeading p{color:#b9d3c7}
+.cinematicProfile .contentSection{background:transparent;border:0}
+.cinematicProfile .contentSection .tabs{display:flex;gap:7px;overflow-x:auto;scrollbar-width:thin;position:sticky;top:0;z-index:3;padding:8px;border:1px solid #e4d0a466;border-radius:17px;background:#0a352fea;backdrop-filter:blur(14px)}
+.cinematicProfile .contentSection .tabs button{flex:1 0 auto;min-width:80px;border:1px solid transparent;border-radius:13px;color:#e8e2d1;background:transparent;padding:12px 14px;cursor:pointer}
+.cinematicProfile .contentSection .tabs button.on{border-color:#e9d39e88;background:#e0cb8d25;color:#fff1c5}
+.cinematicProfile .contentSection .contentList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+.cinematicProfile .contentSection .contentList>a,.cinematicProfile .contentSection .contentList>.savedSummary{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-width:0;aspect-ratio:3/4;padding:14px;border:1px solid #e2c68b78;border-radius:18px;color:#fff2d6;text-decoration:none;overflow:hidden;background:radial-gradient(circle at 15% 10%,#d3b66a35,transparent 50%),linear-gradient(150deg,#1b6154,#0c3435 85%);box-shadow:0 9px 22px #001a1866;transition:transform .25s,box-shadow .25s}
+.cinematicProfile .contentSection .contentList>a:nth-child(3n+2){background:radial-gradient(circle at 20% 10%,#e6b77133,transparent 55%),linear-gradient(150deg,#4b432b,#143c35 85%)}
+.cinematicProfile .contentSection .contentList>a:nth-child(3n){background:radial-gradient(circle at 70% 5%,#d4cf9a25,transparent 55%),linear-gradient(150deg,#23494d,#082d31 85%)}
+.cinematicProfile .contentSection .contentList>a:hover{transform:translateY(-4px);box-shadow:0 12px 26px #0008,0 0 15px #e6c98e33}
+.cinematicProfile .contentSection .contentList>a b{font-size:clamp(12px,1.9vw,20px);line-height:1.5;display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.cinematicProfile .contentSection .contentList>a small{font-size:11px;color:#e3d2a9}
+.cinematicProfile .ashabCard{border:1px solid #d9c48b77;background:#13463c88;border-radius:18px;color:#fff1d6}
+.cinematicProfile .ashabCard small{color:#d6cbaa}
+@media(max-width:700px){.cinematicProfile.profileOverview{padding:10px 8px 70px}.cinematicProfile .profileOverviewHero{border-radius:24px}.cinematicProfile .profileOverviewCover{height:220px}.cinematicProfile .profileOverviewActions{top:10px;right:9px;left:9px;gap:6px}.cinematicProfile .profileOverviewActions .ghost,.cinematicProfile .profileOverviewActions .primary{padding:9px 11px;font-size:11px}.cinematicProfile .profileOverviewAvatar{width:132px;height:132px;margin-top:-74px}.cinematicProfile .profileOverviewStats{padding:14px 12px 10px}.cinematicProfile .cinematicProfileActions{gap:6px}.cinematicProfile .cinematicProfileActions a,.cinematicProfile .cinematicProfileActions button{font-size:10px;padding:8px 10px}.cinematicProfile .contentSection .contentList{gap:7px}.cinematicProfile .contentSection .contentList>a,.cinematicProfile .contentSection .contentList>.savedSummary{padding:8px;border-radius:12px}.cinematicProfile .contentSection .contentList>a b{font-size:11px;-webkit-line-clamp:6}.cinematicProfile .contentSection .contentList>a small{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.cinematicProfile .contentSection .contentList>a{transition:none}}
+
+
+/* Premium social profile v4: full-bleed cinematic hero and dense social grid */
+.cinematicProfile.profileOverview{max-width:1150px;margin:0 auto;padding:0 12px 120px}
+.cinematicProfile .profileOverviewHero{position:relative;overflow:hidden;border:0!important;border-radius:0 0 32px 32px!important;background:linear-gradient(180deg,#123b34,#081b18)!important;box-shadow:0 18px 60px #0007!important}
+.cinematicProfile .profileOverviewCover{height:clamp(190px,32vw,320px)!important;position:relative;background:linear-gradient(180deg,#082f2b44,#05221cdd),url('/assets/control-center/backgrounds/workspace-night.PNG') center 44%/cover!important}
+.cinematicProfile .profileOverviewCover:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 32%,transparent 15%,#061b1888 100%),linear-gradient(transparent 65%,#08251f 100%)!important}
+.cinematicProfile .profileOverviewActions{position:absolute;top:18px;right:18px;left:auto;display:flex;align-items:center;gap:9px;z-index:4}
+.cinematicProfile .profileOverviewActions .primary,.cinematicProfile .profileOverviewActions .ghost,.cinematicProfile .profileSignOut{border:1px solid #eddbab85!important;border-radius:999px!important;padding:12px 17px!important;background:#0b382e88!important;color:#fff3d9!important;box-shadow:0 5px 24px #0005!important;backdrop-filter:blur(20px)}
+.cinematicProfile .profileOverviewActions .primary{background:linear-gradient(110deg,#2b5548cc,#092f29cc)!important}
+.cinematicProfile .profileOverviewBody{display:flex!important;flex-direction:column;align-items:center;text-align:center;margin-top:-96px;padding:0 20px 6px!important;position:relative;z-index:3}
+.cinematicProfile .profileOverviewAvatar{width:172px!important;height:172px!important;margin:0 auto 14px!important;filter:drop-shadow(0 0 18px #d8bb7c5b)}
+.cinematicProfile .profileOverviewAvatar>*{max-width:100%}
+.cinematicProfile .profileOverviewMain{margin:0!important}
+.cinematicProfile .profileOverviewMain h1{margin:0!important;font-size:clamp(30px,5vw,52px)!important;letter-spacing:-.05em!important;color:#fff7e8!important;text-shadow:0 4px 18px #000b}
+.cinematicProfile .profileHandle{font-size:clamp(13px,2vw,17px)!important;color:#d7e5d9!important;margin:8px 0!important}
+.cinematicProfile .profileOverviewStats{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px!important;max-width:850px;margin:20px auto 8px;padding:0 18px!important}
+.cinematicProfile .profileOverviewStats>div{padding:15px 8px!important;text-align:center;border:1px solid #e6d4a185!important;border-radius:22px!important;background:linear-gradient(145deg,#16473cb8,#0b302ab8)!important;box-shadow:inset 0 1px #fff2,0 8px 28px #0005;backdrop-filter:blur(15px)}
+.cinematicProfile .profileOverviewStats b{font-size:clamp(22px,3.8vw,33px)!important;color:#fff9e8!important}
+.cinematicProfile .profileOverviewStats span{font-size:11px!important;letter-spacing:.03em!important;color:#d9d7bb!important}
+.cinematicProfile .cinematicBioCard{max-width:720px;margin:12px auto!important;text-align:center;border:1px solid #d8c58a55!important;border-radius:22px!important;background:#10392f80!important;backdrop-filter:blur(14px);padding:14px 22px!important}
+.cinematicProfile .cinematicBioCard p{font-size:14px!important;line-height:1.6}
+.cinematicProfile .cinematicProfileActions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px!important;max-width:950px;margin:12px auto 25px;padding:0 18px}
+.cinematicProfile .cinematicProfileActions a,.cinematicProfile .cinematicProfileActions button{display:grid;place-items:center;text-align:center;min-height:48px!important;border:1px solid #e5d5a477!important;border-radius:999px!important;background:linear-gradient(145deg,#215448a8,#0a342fa6)!important;backdrop-filter:blur(20px);box-shadow:0 5px 22px #0004;font-size:12px!important}
+.cinematicProfile .profileOverviewSection{border-radius:25px!important;background:linear-gradient(160deg,#103c33b8,#071c18e8)!important;margin-top:14px!important}
+.cinematicProfile .contentSection .contentList{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}
+.cinematicProfile .contentSection .contentList>a{aspect-ratio:3/4!important;min-height:0!important;border:1px solid #e5d39d85!important;border-radius:17px!important}
+@media(max-width:700px){
+.cinematicProfile.profileOverview{padding:0 8px 115px!important}
+.cinematicProfile .profileOverviewCover{height:215px!important}
+.cinematicProfile .profileOverviewActions{top:12px;right:10px;left:10px;justify-content:flex-end;gap:7px}
+.cinematicProfile .profileOverviewActions .ghost{display:none!important}
+.cinematicProfile .profileOverviewActions .primary,.cinematicProfile .profileSignOut{padding:10px 13px!important;font-size:11px!important}
+.cinematicProfile .profileOverviewBody{margin-top:-82px!important}
+.cinematicProfile .profileOverviewAvatar{width:142px!important;height:142px!important}
+.cinematicProfile .profileOverviewStats{gap:7px!important;margin-top:16px;padding:0 9px!important}
+.cinematicProfile .profileOverviewStats>div{padding:12px 5px!important;border-radius:17px!important}
+.cinematicProfile .cinematicBioCard{margin:12px 13px!important;padding:11px 14px!important}
+.cinematicProfile .cinematicProfileActions{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px!important;padding:0 13px;margin-bottom:20px}
+.cinematicProfile .cinematicProfileActions a,.cinematicProfile .cinematicProfileActions button{min-height:42px!important}
+.cinematicProfile .contentSection .contentList{gap:6px!important}
+.cinematicProfile .contentSection .contentList>a{border-radius:11px!important;padding:8px!important}
+}
+
+
+.cinematicProfile .profileOverviewAvatar{position:relative!important;display:grid!important;place-items:center!important;flex-shrink:0;isolation:isolate}
+.cinematicProfile .profileOverviewAvatar .profileAvatar{margin:auto!important;transform:none!important}
+.cinematicProfile .profileAvatarChange{position:absolute;right:-7px;bottom:5px;z-index:7;display:grid;place-items:center;width:44px;height:44px;border:2px solid #f2dfa9;border-radius:50%;background:linear-gradient(135deg,#0b9c73,#056849);color:#fff;font-size:30px;font-weight:500;line-height:1;box-shadow:0 0 0 4px #063b31,0 5px 22px #0009;cursor:pointer;transition:transform .18s ease}
+.cinematicProfile .profileAvatarChange:hover{transform:scale(1.08)}
+.cinematicProfile .profileAvatarChange:focus-visible{outline:3px solid #fff;outline-offset:5px}
+@media(max-width:700px){.cinematicProfile .profileAvatarChange{right:-4px;bottom:0;width:40px;height:40px;font-size:27px}}
+@media(prefers-reduced-motion:reduce){.cinematicProfile .profileAvatarChange{transition:none}}

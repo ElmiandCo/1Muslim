@@ -1,0 +1,22 @@
+"use client";
+import {useEffect} from "react";
+export type SiteLanguage="en"|"so"|"ar";
+export const translations:Record<Exclude<SiteLanguage,"en">,Record<string,string>>={
+so:{"Sign in":"Soo gal","Sign In":"Soo gal","Sign up":"Isdiiwaangeli","Sign Up":"Isdiiwaangeli","Log in":"Soo gal","Email":"Iimayl","Password":"Furaha sirta ah","Continue":"Sii wad","Welcome":"Soo dhawoow","Settings":"Dejinta","Language":"Luqadda","Languages":"Luqadaha","Day / Night":"Maalin / Habeen","The 1Muslim App":"Barnaamijka 1Muslim","My Profile":"Astaantayda","Your journey starts here":"Safarkaagu halkan ayuu ka bilaabmaa","Go Live":"Bilow toos","LIVE":"TOOS","QUR’AN":"QUR'AAN","POST":"QORAAL","MESSAGES":"FARRIIMO","ELM TENT":"TEENDHADA CILMIGA","PROFILE":"ASTAANTA","UMMAH":"UMMADDA","MESSENGER":"FARRIIMAHA","Be the first to go live":"Noqo qofka ugu horreeya ee toos u baxa","Explore freely. Join when ready.":"Si xor ah u daawo. Ku soo biir markaad diyaar tahay.","1MUSLIM · WELCOME":"1MUSLIM · SOO DHAWOW","Not a Member":"Weli xubin ma tihid","Home":"Bogga hore","Messages":"Farriimaha","Profile":"Astaanta","Notifications":"Ogeysiisyo","Open full experience":"Fur waayo-aragnimada oo dhan","Create account":"Samee akoon","Forgot password?":"Ma illowday furaha sirta ah?","Back":"Dib u noqo","Next":"Xiga","Close":"Xir","Cancel":"Jooji","Your conversations":"Wada sheekaysigaaga","Watch live":"Daawo toos","Read & listen":"Akhri oo dhegayso","The Ummah is one call away.":"Ummaddu hal wicitaan ayay kuu jirtaa.","Your Qur’an circle just went global.":"Xalaqadaada Qur’aanka hadda dunida ayay gaartay.","Start a Call":"Bilow wicitaan","Explore Qur’an":"Baro Qur’aanka"},
+ar:{"Sign in":"تسجيل الدخول","Sign In":"تسجيل الدخول","Sign up":"إنشاء حساب","Sign Up":"إنشاء حساب","Log in":"تسجيل الدخول","Email":"البريد الإلكتروني","Password":"كلمة المرور","Continue":"متابعة","Welcome":"مرحبًا بك","Settings":"الإعدادات","Language":"اللغة","Languages":"اللغات","Day / Night":"النهار / الليل","The 1Muslim App":"تطبيق 1Muslim","My Profile":"ملفي الشخصي","Your journey starts here":"رحلتك تبدأ هنا","Go Live":"ابدأ بثًا مباشرًا","LIVE":"مباشر","QUR’AN":"القرآن","POST":"منشور","MESSAGES":"الرسائل","ELM TENT":"خيمة العلم","PROFILE":"الملف الشخصي","UMMAH":"الأمة","MESSENGER":"المحادثات","Be the first to go live":"كن أول من يبدأ البث المباشر","Explore freely. Join when ready.":"تصفّح بحرية وانضم عندما تكون مستعدًا.","1MUSLIM · WELCOME":"1MUSLIM · أهلاً وسهلاً","Not a Member":"لست عضوًا بعد","Home":"الرئيسية","Messages":"الرسائل","Profile":"الملف الشخصي","Notifications":"الإشعارات","Open full experience":"افتح التجربة الكاملة","Create account":"إنشاء حساب","Forgot password?":"هل نسيت كلمة المرور؟","Back":"رجوع","Next":"التالي","Close":"إغلاق","Cancel":"إلغاء","Your conversations":"محادثاتك","Watch live":"شاهد البث المباشر","Read & listen":"اقرأ واستمع","The Ummah is one call away.":"الأمة على بُعد مكالمة واحدة.","Your Qur’an circle just went global.":"حلقتك القرآنية أصبحت عالمية.","Start a Call":"ابدأ مكالمة","Explore Qur’an":"استكشف القرآن"}
+};
+const originals=new WeakMap<Text,string>();
+export function setSiteLanguage(lang:SiteLanguage){localStorage.setItem("1muslim:language",lang);window.dispatchEvent(new Event("1muslim:language-change"))}
+export default function SiteLanguageBridge(){
+useEffect(()=>{
+let lang:SiteLanguage="en";const apply=()=>{
+try{const stored=localStorage.getItem("1muslim:language");lang=stored==="ar"||stored==="so"?stored:"en"}catch{lang="en"}
+document.documentElement.lang=lang;
+const dictionary=lang==="en"?{}:translations[lang];
+const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+while(walker.nextNode()){const node=walker.currentNode as Text;const parent=node.parentElement;if(!parent||parent.closest("script,style,textarea,code,[data-no-translate]"))continue;const raw=originals.get(node)??node.nodeValue??"";if(!originals.has(node))originals.set(node,raw);const trimmed=raw.trim();const translated=dictionary[trimmed];const value=translated?raw.replace(trimmed,translated):raw;if(node.nodeValue!==value)node.nodeValue=value}
+};
+let pending=false;const schedule=()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;apply()})};
+const observer=new MutationObserver(schedule);observer.observe(document.body,{subtree:true,childList:true,characterData:true});window.addEventListener("1muslim:language-change",schedule);apply();return()=>{observer.disconnect();window.removeEventListener("1muslim:language-change",schedule)}
+},[]);return null
+}

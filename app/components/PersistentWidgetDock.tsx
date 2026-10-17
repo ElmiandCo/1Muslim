@@ -1,16 +1,22 @@
 "use client";
-import {useState} from "react";
+import {useEffect,useState} from "react";
 import {usePathname} from "next/navigation";
-import DhikrStudio from "../widget-tools/[tool]/DhikrStudio";
-import Link from "next/link";
-const tools=[{label:"📿 Dhikr",href:"/widget-tools/dhikr"},{label:"☪ Prayer",href:"/widget-tools/prayer"},{label:"✧ Progress",href:"/widget-tools/progress"},{label:"♧ Alerts",href:"/widget-tools/notifications"}];
+import {setSiteLanguage,type SiteLanguage} from "./SiteLanguageBridge";
 export default function PersistentWidgetDock(){
- const [open,setOpen]=useState(false);const [studio,setStudio]=useState(false);
- const pathname=usePathname();
- // Keep security/onboarding forms unobstructed by global floating shortcut menus.
- if(pathname==="/auth"||pathname==="/onboarding")return null;
- return <aside aria-label="Quick widgets" style={{position:"fixed",right:14,bottom:"calc(env(safe-area-inset-bottom, 0px) + 88px)",zIndex:90,display:"grid",justifyItems:"end",gap:8,pointerEvents:"none"}}>
- {studio&&<section role="dialog" aria-label="Persistent Dhikr Studio" style={{width:"min(360px,calc(100vw - 28px))",maxHeight:"min(70dvh,580px)",overflow:"auto",border:"1px solid #d8c38988",borderRadius:18,padding:14,background:"#12392ff5",color:"#f3e8ca",boxShadow:"0 16px 45px #0009",pointerEvents:"auto"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><strong>📿 Dhikr · Anywhere</strong><button type="button" onClick={()=>setStudio(false)} aria-label="Minimize Dhikr" style={{background:"transparent",border:0,color:"#f3e8ca",fontSize:22}}>−</button></div><DhikrStudio/></section>}
- {open&&<nav aria-label="Widget shortcuts" style={{display:"grid",gap:6,padding:9,border:"1px solid #d8c38988",borderRadius:15,background:"#12392fee",boxShadow:"0 8px 28px #0008",pointerEvents:"auto"}}><button type="button" onClick={()=>{setStudio(true);setOpen(false)}} style={{padding:"9px 13px",textAlign:"left",background:"#ffffff15",border:0,borderRadius:9,color:"#f4e6c0"}}>📿 Open floating Dhikr</button>{tools.map(t=><Link key={t.href} href={t.href} onClick={()=>setOpen(false)} style={{color:"#f4e6c0",textDecoration:"none",padding:"9px 13px",borderRadius:10,fontSize:13}}>{t.label}</Link>)}</nav>}
- <button type="button" onClick={()=>setOpen(v=>!v)} aria-expanded={open} aria-label={open?"Close widget shortcuts":"Open widget shortcuts"} style={{pointerEvents:"auto",width:40,height:40,borderRadius:20,border:"1px solid #d8c389",background:"radial-gradient(circle at 30% 25%,#32674e,#102e26)",color:"#f4db9b",boxShadow:"0 3px 16px #0008",fontSize:18,cursor:"pointer"}}>{open?"×":"✧"}</button></aside>;
+const [open,setOpen]=useState(false);const [lang,setLang]=useState<SiteLanguage>("en");const [light,setLight]=useState(false);const pathname=usePathname();
+useEffect(()=>{try{const saved=localStorage.getItem("1muslim:language");setLang(saved==="so"||saved==="ar"?saved:"en");setLight(document.documentElement.classList.contains("light"))}catch{}},[]);
+const choose=(value:SiteLanguage)=>{setLang(value);setSiteLanguage(value);setOpen(false)};
+const toggleDay=()=>{const next=!light;setLight(next);document.documentElement.classList.toggle("light",next);try{localStorage.setItem("1muslim-theme",next?"light":"dark")}catch{}window.dispatchEvent(new Event("1muslim:theme-changed"))};
+if(pathname==="/onboarding")return null;
+const glass="linear-gradient(135deg,rgba(19,52,47,.49),rgba(8,27,26,.38))";
+return <aside aria-label="Language and settings" style={{position:"fixed",right:14,bottom:"calc(env(safe-area-inset-bottom, 0px) + 88px)",zIndex:90,display:"grid",justifyItems:"end",gap:8,pointerEvents:"none"}}>
+{open&&<nav aria-label="Language and appearance settings" style={{display:"grid",gap:8,padding:14,width:"min(250px,calc(100vw - 28px))",border:"1px solid #e5d59a66",borderRadius:22,background:glass,backdropFilter:"blur(24px) saturate(1.3)",WebkitBackdropFilter:"blur(24px) saturate(1.3)",boxShadow:"0 10px 38px #0005",pointerEvents:"auto",color:"#f7edcf"}}>
+<strong style={{fontSize:14,fontWeight:600}}>🌐 {lang==="ar"?"اللغة":lang==="so"?"Luqadda":"Language"}</strong>
+{([["en","🇺🇸 English"],["so","🇸🇴 Af-Soomaali"],["ar","🇸🇦 العربية"]] as const).map(([value,label])=><button key={value} type="button" onClick={()=>choose(value)} aria-pressed={lang===value} style={{border:lang===value?"1px solid #f3db96a6":"1px solid #ffffff23",borderRadius:12,background:lang===value?"#d8bd7840":"#ffffff0a",color:"#fff1cd",padding:"11px 12px",textAlign:"start",fontSize:14,cursor:"pointer"}}>{label} {lang===value?"✓":""}</button>)}
+<div style={{height:1,background:"#e7d5a73d",margin:"3px 0"}}/>
+<button type="button" onClick={toggleDay} style={{border:"1px solid #ffffff29",borderRadius:12,background:"#ffffff0b",color:"#fff1cd",padding:"11px 12px",fontSize:14,cursor:"pointer",textAlign:"start"}}>{light?"🌙":"☀️"} {lang==="ar"?"النهار / الليل":lang==="so"?"Maalin / Habeen":"Day / Night"} <span style={{float:"right"}}>{light?"☀":"☾"}</span></button>
+<a href="/settings" style={{border:"1px solid #ffffff29",borderRadius:12,background:"#ffffff0b",color:"#fff1cd",padding:"11px 12px",fontSize:14,textDecoration:"none"}}>⚙️ {lang==="ar"?"الإعدادات":lang==="so"?"Dejinta":"Settings"} ↗</a>
+</nav>}
+<button type="button" onClick={()=>setOpen(v=>!v)} aria-expanded={open} aria-label={open?"Close language and settings":"Open language and settings"} style={{pointerEvents:"auto",width:43,height:43,borderRadius:22,border:"1px solid #e5d59a85",background:glass,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",color:"#f4db9b",boxShadow:"0 3px 14px #0004",fontSize:21,cursor:"pointer"}}>{open?"×":"🌐"}</button>
+</aside>;
 }
