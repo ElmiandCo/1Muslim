@@ -7,7 +7,6 @@ import {createClient} from "../../utils/supabase/client";
 import {PALETTE_KEY, PALETTES, type Palette, applyPalette} from "../components/ColorPaletteSync";
 import LocationPreferences from "../components/LocationPreferences";
 import SocialConnectionsWidget from "../components/SocialConnectionsWidget";
-import { createClient } from "../../utils/supabase/client";
 
 export default function SettingsPage() {
   const [enabled, setEnabled] = useState(false);
