@@ -466,3 +466,24 @@ nav[aria-label="Dashboard workspaces"]>button{
   animation:none!important;transform:none!important;opacity:1!important;will-change:auto!important
  }
 }
+
+/* Fullscreen expansion borrows the orbital signature without flipping readable content.
+   The surface scales and arcs; the content remains upright at the end. */
+@keyframes canvasFullscreenOrbitIn{
+  0%{transform:translate3d(15%,12%,0) rotateZ(28deg) scale(.72);opacity:.58;border-radius:34px}
+  48%{transform:translate3d(-3%,-6%,0) rotateZ(-7deg) scale(.92);opacity:.94;border-radius:20px}
+  100%{transform:translate3d(0,0,0) rotateZ(0) scale(1);opacity:1;border-radius:0}
+}
+@keyframes canvasFullscreenOrbitOut{
+  0%{transform:translate3d(0,0,0) rotateZ(0) scale(1);opacity:1}
+  48%{transform:translate3d(4%,-6%,0) rotateZ(7deg) scale(.9);opacity:.95}
+  100%{transform:translate3d(15%,12%,0) rotateZ(28deg) scale(.72);opacity:.58}
+}
+@media(prefers-reduced-motion:no-preference){
+ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[aria-label="1Muslim Control Center"]{
+  animation:canvasFullscreenOrbitIn 620ms cubic-bezier(.2,.75,.18,1) both!important;transform-origin:center center;will-change:transform,opacity
+ }
+ main[data-canvas-fullscreen="false"][data-fullscreen-orbit="exit"] > section[aria-label="1Muslim Control Center"]{
+  animation:canvasFullscreenOrbitOut 620ms cubic-bezier(.2,.75,.18,1) reverse both!important;transform-origin:center center;will-change:transform,opacity
+ }
+}
