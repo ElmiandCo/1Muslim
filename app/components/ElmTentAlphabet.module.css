@@ -13,3 +13,13 @@
 @media(max-width:600px){.root{padding:12px;border-radius:18px;gap:8px}.stage{min-height:125px;max-height:210px}.arabic{font-size:clamp(65px,11dvh,96px)}.grid{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.tile{min-height:53px;border-radius:9px}.tile small{font-size:8px}.controls button{min-height:43px}}
 @media(max-height:700px){.root{gap:6px}.stage{min-height:105px;max-height:155px}.arabic{font-size:68px}.disclaimer{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.progress span{transition:none}}
+
+.lessonNav{display:grid;grid-template-columns:28px repeat(4,minmax(0,1fr)) 28px;gap:6px;align-items:center}
+.lessonNav button{min-width:0;border:1px solid rgba(232,205,141,.36);border-radius:999px;background:rgba(255,255,255,.07);color:#f6e5b5;min-height:34px;cursor:pointer}
+.lessonNav button:not(:first-child):not(:last-child){aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;padding:3px}
+.lessonNav button span{font-size:14px;font-weight:800}.lessonNav button small{font-size:8px}
+.lessonNav .lessonActive{background:rgba(234,202,120,.28)!important;box-shadow:0 0 15px rgba(241,215,140,.3);border-color:#f3da9d!important}
+.lessonStage{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#e8d3a5;font-size:11px;animation:elmLessonOrbit .5s cubic-bezier(.2,.8,.2,1) both}
+.soon{border-radius:12px;padding:8px;background:rgba(255,255,255,.08)}
+@keyframes elmLessonOrbit{from{opacity:.2;transform:translateY(34px) rotateX(-24deg) scale(.82)}to{opacity:1;transform:translateY(0) rotateX(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.lessonStage{animation:none}}
