@@ -1,0 +1,67 @@
+/* Canvas fullscreen V1: reversible, no remounting of workspaces or floating widgets. */
+.canvas-fullscreen-toggle{appearance:none;border:1px solid rgba(222,202,139,.5);border-radius:50%;width:44px;height:44px;display:grid;place-items:center;background:rgba(10,67,52,.56);color:#f4e9c6;box-shadow:0 0 0 5px rgba(144,213,185,.12),inset 0 0 12px rgba(197,238,208,.12);cursor:pointer;position:relative;z-index:110}
+.canvas-fullscreen-toggle:focus-visible{outline:2px solid #e8dba5;outline-offset:4px}
+main[data-canvas-fullscreen="true"]{--canvas-fullscreen-duration:680ms}
+main[data-canvas-fullscreen="true"] > header{position:fixed!important;inset:0 0 auto auto!important;width:auto!important;height:auto!important;min-height:0!important;padding:12px 16px!important;background:transparent!important;border:0!important;box-shadow:none!important;z-index:110!important;opacity:1!important;transform:none!important;pointer-events:none}
+main[data-canvas-fullscreen="true"] > header > :not(:has(.canvas-fullscreen-toggle)){display:none!important}
+main[data-canvas-fullscreen="true"] > header .canvas-fullscreen-toggle{pointer-events:auto}
+main[data-canvas-fullscreen="true"] > .canvas-fullscreen-toggle{z-index:110}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{position:fixed!important;inset:0!important;width:100vw!important;max-width:none!important;height:100dvh!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;z-index:90!important;overflow:hidden!important;transition:inset var(--canvas-fullscreen-duration) cubic-bezier(.2,.7,.15,1),border-radius var(--canvas-fullscreen-duration) ease!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [data-canvas-expanded]{height:100%!important;min-height:0!important;max-height:none!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [role="region"][aria-roledescription="carousel"]{height:100%!important;max-height:none!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] nav[aria-label="Dashboard workspaces"]{display:none!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] button[aria-label="Expand canvas height"],
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] button[aria-label="Restore canvas height"]{display:none!important}
+main[data-canvas-fullscreen="true"] > .canvas-fullscreen-backdrop{display:none}
+main[data-canvas-fullscreen="true"] > div:has(> .canvas-fullscreen-toggle){z-index:110}
+@media(prefers-reduced-motion:reduce){main[data-canvas-fullscreen] *,main[data-canvas-fullscreen] *::before,main[data-canvas-fullscreen] *::after{scroll-behavior:auto!important}main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{transition:none!important}}
+
+/* Two-dimensional Canvas: horizontal columns, vertical row portal. */
+.canvas-vertical-portal{position:relative;width:100%;height:100%;overflow:hidden}
+.canvas-vertical-main,.canvas-vertical-secondary{position:absolute;inset:0;transition:transform 560ms cubic-bezier(.22,.7,.2,1),opacity 360ms ease;min-height:0}
+.canvas-vertical-main{transform:translate3d(0,0,0);opacity:1}
+.canvas-vertical-secondary{transform:translate3d(0,100%,0);opacity:0;pointer-events:none;display:grid;place-items:center;padding:clamp(12px,3vw,32px);background:linear-gradient(150deg,rgba(5,48,41,.75),rgba(13,42,53,.52));}
+.canvas-vertical-portal[data-row="1"] .canvas-vertical-main{transform:translate3d(0,-100%,0);opacity:0;pointer-events:none}
+.canvas-vertical-portal[data-row="1"] .canvas-vertical-secondary{transform:translate3d(0,0,0);opacity:1;pointer-events:auto}
+.canvas-secondary-card{width:min(100%,680px);padding:clamp(24px,5vw,54px);border-radius:28px;border:1px solid rgba(220,202,140,.38);background:rgba(12,68,57,.42);box-shadow:0 20px 60px rgba(0,0,0,.22);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#f5eccc;text-align:center}
+.canvas-secondary-kicker{font-size:12px;letter-spacing:.25em;color:#c8dcba}
+.canvas-secondary-card h2{font-size:clamp(28px,6vw,52px);margin:18px 0}
+.canvas-secondary-card p{font-size:clamp(15px,2vw,20px);opacity:.85;line-height:1.5}
+.canvas-secondary-card a{display:inline-flex;margin-top:24px;padding:14px 24px;border-radius:100px;background:linear-gradient(100deg,#84d9a3,#bce6bb);color:#07392f;font-weight:750;text-decoration:none}
+@media(prefers-reduced-motion:reduce){.canvas-vertical-main,.canvas-vertical-secondary{transition:none!important}}
+
+/* Compact two-row 5×2 navigation dots on the Canvas image. */
+nav[aria-label="Dashboard workspaces"]{position:absolute!important;bottom:clamp(8px,2.4%,22px)!important;left:50%!important;transform:translateX(-50%)!important;display:grid!important;grid-template-columns:repeat(5,8px)!important;grid-template-rows:repeat(2,8px)!important;gap:7px 9px!important;justify-content:center!important;align-content:center!important;width:max-content!important;max-width:90%!important;padding:6px 10px!important;background:rgba(3,31,29,.22)!important;border:0!important;border-radius:18px!important;backdrop-filter:blur(5px)!important;z-index:12!important}
+nav[aria-label="Dashboard workspaces"] button{width:8px!important;height:8px!important;min-width:8px!important;min-height:8px!important;padding:0!important;border:1px solid rgba(226,234,215,.66)!important;border-radius:50%!important;background:rgba(245,249,235,.12)!important;box-shadow:none!important;font-size:0!important;line-height:0!important}
+nav[aria-label="Dashboard workspaces"] button span{display:none!important}
+nav[aria-label="Dashboard workspaces"] button[aria-current="page"]{background:#e4d6a2!important;border-color:#f8e9bd!important;box-shadow:0 0 7px rgba(238,219,160,.55)!important}
+
+/* Day/night orb follows nav until used or nav leaves the frame. */
+.canvas-orb-nav-anchor{display:inline-block;flex:0 0 44px;width:44px;height:44px;vertical-align:middle}
+.canvas-orb-floating-dock{position:fixed;z-index:2147482000;width:44px;height:44px;border:1px solid rgba(222,236,221,.4);border-radius:50%;display:grid;place-items:center;background:rgba(7,60,51,.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:left 650ms cubic-bezier(.2,.8,.2,1),top 650ms cubic-bezier(.2,.8,.2,1);pointer-events:auto}
+.canvas-orb-float-motion{width:36px;height:36px;display:grid;place-items:center;animation:canvasOrbNavFloat 6s ease-in-out infinite}
+.canvas-orb-return{position:absolute;right:0;bottom:-17px;font-size:11px;color:#f5e9c2;background:rgba(10,52,43,.85);border:1px solid #d9c99688;border-radius:50%;width:20px;height:20px;cursor:pointer}
+@keyframes canvasOrbNavFloat{0%,100%{transform:translate(0,0)}25%{transform:translate(2px,-2px)}50%{transform:translate(-2px,1px)}75%{transform:translate(1px,2px)}}
+@media(prefers-reduced-motion:reduce){.canvas-orb-floating-dock{transition:none!important}.canvas-orb-float-motion{animation:none!important}}
+
+/* Real native application surfaces for the five lower Canvas slots. */
+.canvas-vertical-secondary{display:block!important;padding:clamp(8px,2vw,18px)!important;overflow-y:auto!important;overscroll-behavior:contain}
+.canvas-native-app{display:flex;flex-direction:column;min-height:100%;width:100%;max-width:900px;margin:auto;padding:clamp(14px,3vw,28px);border-radius:26px;border:1px solid rgba(230,216,160,.24);background:rgba(9,51,47,.56);backdrop-filter:blur(14px);color:#f7efd9}
+.canvas-native-app>header{flex:none;text-align:center}
+.canvas-native-app>header span{font-size:11px;letter-spacing:.2em;color:#d5c88f}
+.canvas-native-app>header h2{font-size:clamp(23px,5vw,36px);margin:8px 0 12px}
+.canvas-native-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.canvas-native-app>footer{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:10px}
+.canvas-native-app a,.canvas-native-recorder button{color:#f4e5b5;font-weight:650}
+.canvas-native-profile,.canvas-native-recorder{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;padding:18px 8px}
+.canvas-native-avatar,.canvas-recorder-ring{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;border:1px solid #d6c38a;background:radial-gradient(circle,#397965,#0a3b35);font-size:40px;box-shadow:0 0 35px #c8e5ba22}
+.canvas-recorder-ring.is-recording{animation:canvasRecordPulse 1.5s ease-in-out infinite}
+@keyframes canvasRecordPulse{50%{box-shadow:0 0 30px #f16b6b99}}
+.canvas-native-recorder button{padding:14px 22px;border-radius:99px;border:1px solid #d6c38a;background:#134e42;cursor:pointer}
+.canvas-native-recorder audio{width:min(100%,380px)}
+.canvas-native-recorder small{opacity:.7}
+.canvas-native-feed{display:grid;gap:12px;padding:8px}
+.canvas-native-feed article{padding:18px;border-radius:18px;background:#ffffff0c;border:1px solid #ffffff25}
+.canvas-native-feed article p{white-space:pre-wrap;overflow-wrap:anywhere}
+.canvas-native-feed article small{opacity:.65}
+@media(prefers-reduced-motion:reduce){.canvas-recorder-ring.is-recording{animation:none}}
