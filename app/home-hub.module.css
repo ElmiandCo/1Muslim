@@ -555,6 +555,7 @@
 
 
 /* Islamic day/night ornaments: same aspect ratio, smaller and higher; never crop. */
+
 .control .decorationNight,.control .decorationDay{
  top:clamp(42px,7vh,90px);
  width:min(67.2vw,608px);
@@ -571,6 +572,15 @@
  }
 }
 
+
+/* Desktop ornament lift: show roughly 60% more of the decorative motif above the Canvas. */
+@media(min-width:701px){
+ .control .decorationNight,.control .decorationDay{
+  top:clamp(12px,2.5vh,34px);
+  width:min(84vw,760px);
+  height:min(60vh,590px);
+ }
+}
 
 /* 1Muslim Shop playful 1.7-second coming-soon reveal */
 .shopTease{position:fixed;z-index:999;left:50%;top:43%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:5px;min-width:min(78vw,280px);padding:22px 28px;border:1px solid #e2c57b99;border-radius:24px;background:linear-gradient(150deg,#184e3deF,#09281fed);color:#fff9e8;box-shadow:0 18px 70px #0009,0 0 35px #c9b66a38;backdrop-filter:blur(20px);pointer-events:none;animation:shopTeaseIn 1.7s ease-in-out both;text-align:center}
