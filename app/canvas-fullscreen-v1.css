@@ -399,3 +399,53 @@ nav[aria-label="Dashboard workspaces"]>button{
 @media(max-width:600px){
  .canvas-orb-floating-dock{left:16px!important;top:calc(env(safe-area-inset-top,0px) + 215px)!important}
 }
+
+/* 6x2 Canvas pager — remove the old 5x3 layout without removing any slots.
+   Use CSS grid's own auto-placement; fixed track sizing prevents 3rd row. */
+nav[aria-label="Dashboard workspaces"]{
+ display:grid!important;
+ grid-template-columns:repeat(6,minmax(0,12px))!important;
+ grid-template-rows:repeat(2,minmax(0,12px))!important;
+ grid-auto-flow:row!important;
+ grid-auto-rows:0!important;
+ grid-auto-columns:0!important;
+ gap:8px!important;
+ justify-items:center!important;
+ align-items:center!important;
+ justify-content:start!important;
+ align-content:center!important;
+ position:absolute!important;
+ left:8px!important;
+ right:auto!important;
+ top:auto!important;
+ bottom:8px!important;
+ width:136px!important;
+ min-width:136px!important;
+ max-width:136px!important;
+ height:54px!important;
+ min-height:54px!important;
+ max-height:54px!important;
+ padding:7px 8px!important;
+ margin:0!important;
+ overflow:hidden!important;
+ box-sizing:border-box!important;
+ flex-direction:unset!important;
+ flex-wrap:unset!important;
+ transform:none!important;
+}
+nav[aria-label="Dashboard workspaces"]>button{
+ display:block!important;
+ position:static!important;
+ grid-column:auto!important;
+ grid-row:auto!important;
+ width:12px!important;
+ height:12px!important;
+ min-width:12px!important;
+ min-height:12px!important;
+ max-width:12px!important;
+ max-height:12px!important;
+ margin:0!important;
+ padding:0!important;
+ box-sizing:border-box!important;
+ transform:none!important;
+}
