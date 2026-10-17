@@ -173,3 +173,25 @@ nav[aria-label="Dashboard workspaces"]>button[aria-current="page"]{background:#e
  [data-magnetic-grid="true"] [data-widget]:hover [class*="widgetCanvas"]{transform:none!important}
  .canvas-vertical-main,.canvas-vertical-secondary{transition:none!important}
 }
+
+/* Home swipe: a brief half-turn of the arriving widget, not the full Canvas. */
+@keyframes canvasWidgetHalfSpin{
+ 0%{transform:perspective(1200px) rotateY(-76deg) scale(.965);opacity:.65}
+ 58%{transform:perspective(1200px) rotateY(7deg) scale(1.008);opacity:1}
+ 100%{transform:perspective(1200px) rotateY(0) scale(1);opacity:1}
+}
+[data-workspace-page][data-canvas-active="true"] .canvas-vertical-main [data-widget] [class*="widgetCanvas"]{
+ animation:canvasWidgetHalfSpin 720ms cubic-bezier(.2,.76,.16,1) both;
+}
+.canvas-profile-badges{width:100%;max-width:540px;padding:12px;border:1px solid rgba(223,199,139,.38);border-radius:18px;background:rgba(5,38,34,.35);backdrop-filter:blur(8px)}
+.canvas-profile-badges h4{margin:0 0 10px;color:#f1dba7}
+.canvas-profile-badge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.canvas-profile-badge{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;padding:8px 4px;border:1px solid rgba(226,203,145,.3);border-radius:14px;background:rgba(4,32,30,.35);font-size:11px}
+.canvas-profile-badge img{width:clamp(38px,8vw,64px);height:clamp(38px,8vw,64px);object-fit:contain}
+.canvas-profile-badge span{overflow-wrap:anywhere}
+.canvas-profile-badge small{opacity:.75}
+.canvas-profile-badge.is-locked{opacity:.48;filter:grayscale(1)}
+.canvas-profile-badges>small{display:block;margin-top:10px;opacity:.75}
+@media(prefers-reduced-motion:reduce){
+ [data-workspace-page][data-canvas-active="true"] .canvas-vertical-main [data-widget] [class*="widgetCanvas"]{animation:none!important}
+}
