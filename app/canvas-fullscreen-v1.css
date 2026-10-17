@@ -514,3 +514,27 @@ main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center
  .canvas-vertical-portal[data-row="1"] .canvas-vertical-secondary{translate:0 0;rotate:0deg;scale:1}
 }
 @media(prefers-reduced-motion:reduce){.canvas-vertical-portal .canvas-vertical-main,.canvas-vertical-portal .canvas-vertical-secondary{translate:none!important;rotate:none!important;scale:none!important}}
+
+/* Preserve production's 6×2 footer placement and Live camera containment.
+   Visibility is controlled by React so Elm Tent can hide its pager. */
+nav[aria-label="Dashboard workspaces"]{
+ position:absolute!important;left:10px!important;right:auto!important;top:auto!important;bottom:12px!important;
+ grid-template-columns:repeat(6,12px)!important;grid-template-rows:repeat(2,12px)!important;
+ grid-auto-flow:row!important;grid-auto-columns:unset!important;gap:8px!important;
+ width:132px!important;min-width:132px!important;max-width:132px!important;
+ padding:7px 8px!important;margin:0!important;transform:none!important;
+ justify-content:start!important;align-content:center!important;box-sizing:border-box!important;
+ overflow:visible!important;z-index:30!important;
+}
+nav[aria-label="Dashboard workspaces"]>button{
+ position:static!important;float:none!important;width:12px!important;height:12px!important;
+ min-width:12px!important;min-height:12px!important;padding:0!important;margin:0!important;box-sizing:border-box!important;
+}
+nav[aria-label="Dashboard workspaces"]>button>span{display:none!important}
+.canvas-orb-floating-dock{z-index:2147482000}
+.homeLiveStudio,.home-live-demo{min-height:0!important;max-width:100%!important}
+.home-live-demo-screen{max-height:clamp(155px,25dvh,290px)!important}
+@media(max-width:430px){
+ nav[aria-label="Dashboard workspaces"]{left:6px!important;gap:7px!important;width:125px!important;min-width:125px!important;max-width:125px!important}
+ .home-live-demo-screen{max-height:clamp(135px,22dvh,230px)!important}
+}
