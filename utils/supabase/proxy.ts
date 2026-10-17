@@ -44,7 +44,7 @@ export async function updateSession(request: NextRequest) {
   const guestAllowed = pathname === "/" || pathname.startsWith("/auth") ||
     pathname.startsWith("/terms") || pathname.startsWith("/privacy") ||
     pathname.startsWith("/api/") || pathname.startsWith("/_next/") ||
-    pathname.startsWith("/assets/") || pathname.startsWith("/videos/") ||
+    pathname.startsWith("/assets/") || pathname.startsWith("/audio/") || pathname.startsWith("/videos/") ||
     pathname.startsWith("/favicon") || pathname.startsWith("/robots") ||
     pathname.startsWith("/sitemap") || pathname.startsWith("/.well-known/") ||
     /\\.[a-z0-9]{2,6}$/i.test(pathname);
