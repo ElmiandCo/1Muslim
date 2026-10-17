@@ -65,3 +65,12 @@ nav[aria-label="Dashboard workspaces"] button[aria-current="page"]{background:#e
 .canvas-native-feed article p{white-space:pre-wrap;overflow-wrap:anywhere}
 .canvas-native-feed article small{opacity:.65}
 @media(prefers-reduced-motion:reduce){.canvas-recorder-ring.is-recording{animation:none}}
+
+/* Unified Canvas motion: fast, spring-like row transitions without lingering ghosts. */
+.canvas-vertical-main,.canvas-vertical-secondary{transition:transform 290ms cubic-bezier(.2,.85,.25,1),opacity 190ms ease-out!important;will-change:transform,opacity;backface-visibility:hidden}
+.canvas-vertical-portal[data-row="1"] .canvas-vertical-main{visibility:hidden;transition:transform 290ms cubic-bezier(.2,.85,.25,1),opacity 190ms ease-out,visibility 0s linear 290ms!important}
+.canvas-vertical-portal[data-row="0"] .canvas-vertical-secondary{visibility:hidden;transition:transform 290ms cubic-bezier(.2,.85,.25,1),opacity 190ms ease-out,visibility 0s linear 290ms!important}
+.canvas-vertical-portal[data-row="1"] .canvas-vertical-secondary,.canvas-vertical-portal[data-row="0"] .canvas-vertical-main{visibility:visible}
+.canvas-native-app{height:100%;min-height:0;box-sizing:border-box}.canvas-native-body{min-height:0;overflow-y:auto}
+.canvas-native-app:has(.cp-profile){padding:clamp(9px,2vw,18px);gap:6px}
+@media(prefers-reduced-motion:reduce){.canvas-vertical-main,.canvas-vertical-secondary{transition:none!important}}
