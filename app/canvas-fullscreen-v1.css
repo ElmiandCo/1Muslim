@@ -738,3 +738,22 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
   background:radial-gradient(ellipse at 50% 45%,#111e21 0%,#060b0e 75%)!important;
  }
 }
+
+/* Desktop night finish: nearly-black backdrop with restrained emerald highlights.
+   Background-only pass: leave the mobile theme and widget content untouched. */
+@media(min-width:900px){
+ main[class*="control"]{
+  background:#050607!important;
+  background-image:radial-gradient(ellipse 65% 60% at 70% 52%,rgba(14,37,32,.13) 0%,transparent 76%),linear-gradient(180deg,#030405 0%,#080a0c 55%,#030405 100%)!important;
+ }
+ main[class*="control"]>[class*="pattern"]{opacity:.035!important}
+ main[class*="control"]>[class*="islamicDecoration"]{opacity:.08!important}
+ main[class*="control"]>[class*="surface"]{
+  background:linear-gradient(145deg,rgba(7,11,13,.94),rgba(3,6,8,.97))!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.045),0 20px 65px rgba(0,0,0,.52)!important;
+ }
+ main[class*="control"] [class*="surfaceArtwork"]{opacity:.055!important}
+ main[class*="control"] .homeLiveChannelPlayer{
+  background:radial-gradient(ellipse at center,rgba(17,31,31,.7),#05090b 78%)!important;
+ }
+}
