@@ -143,3 +143,14 @@
 .homeLiveOverlayControls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:7px 10px;background:rgba(0,0,0,.23);border-radius:10px;margin:5px 0}
 .homeLiveOverlayControls button{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.3);border-radius:999px;color:inherit;padding:5px 10px;font-size:11px;cursor:pointer}
 .homeLiveOverlayControls span{font-size:10px;opacity:.8}
+
+
+/* Orbital half-spin: outgoing and incoming workspaces orbit while changing scale.
+   Native horizontal scrolling remains intact; only inner cards transform. */
+@keyframes canvasOrbitLeft{0%{transform:translate3d(26%,12%,0) rotateY(-180deg) rotateZ(-25deg) scale(.25);opacity:.15}55%{transform:translate3d(-7%,-7%,0) rotateY(-55deg) rotateZ(9deg) scale(.77);opacity:.85}100%{transform:translate3d(0,0,0) rotateY(0) rotateZ(0) scale(1);opacity:1}}
+@keyframes canvasOrbitRight{0%{transform:translate3d(-26%,12%,0) rotateY(180deg) rotateZ(25deg) scale(.25);opacity:.15}55%{transform:translate3d(7%,-7%,0) rotateY(55deg) rotateZ(-9deg) scale(.77);opacity:.85}100%{transform:translate3d(0,0,0) rotateY(0) rotateZ(0) scale(1);opacity:1}}
+.orbitWorkspaceTrack [data-workspace-page]{perspective:1100px}
+.orbitWorkspaceTrack [data-workspace-page] [data-magnetic-grid]{transform-style:preserve-3d;transform-origin:center center;backface-visibility:hidden}
+.orbitWorkspaceTrack[data-orbit-direction="left"] [data-workspace-page][data-canvas-active="true"] [data-magnetic-grid]{animation:canvasOrbitLeft .58s cubic-bezier(.16,.78,.18,1) both}
+.orbitWorkspaceTrack[data-orbit-direction="right"] [data-workspace-page][data-canvas-active="true"] [data-magnetic-grid]{animation:canvasOrbitRight .58s cubic-bezier(.16,.78,.18,1) both}
+@media(prefers-reduced-motion:reduce){.orbitWorkspaceTrack [data-workspace-page] [data-magnetic-grid]{animation:none!important}}
