@@ -5,6 +5,7 @@ import {createClient} from "../../utils/supabase/client";
 import HomeMessagesChooser from "./HomeMessagesChooser";
 import ElmTentAlphabet from "./ElmTentAlphabet";
 import PostDesignStudio from "./PostDesignStudio";
+import CanvasProfilePremium from "./CanvasProfilePremium";
 
 type Profile={display_name?:string|null;username?:string|null;xp_total?:number|null;bio?:string|null};
 type DailyPost={id:string;content?:string|null;body?:string|null;text?:string|null;created_at?:string|null};
@@ -49,6 +50,6 @@ function DailyPostsApp({active}:{active:boolean}){
 }
 export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boolean}){
  return <div className="canvas-native-app"><header><span>0{slot+6} · 1MUSLIM</span><h2>{titles[slot]}</h2></header><div className="canvas-native-body">
- {slot===0?<ProfileApp active={active}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:<ElmTentAlphabet/>}
+ {slot===0?<CanvasProfilePremium active={active}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:<ElmTentAlphabet/>}
  </div><footer>{slot===2?<PostDesignStudio/>:null}<Link href={destinations[slot]}>Open full experience ↗</Link></footer></div>
 }
