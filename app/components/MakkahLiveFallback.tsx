@@ -1,11 +1,9 @@
 "use client";
-import {useState} from "react";
 import Link from "next/link";
 export default function MakkahLiveFallback(){
- const [playing,setPlaying]=useState(false);
  return <span className="makkahFallback" onClick={e=>e.stopPropagation()}>
  <span className="makkahVideo">
- {playing?<iframe title="Live from Makkah — Masjid al-Haram" src="https://www.youtube-nocookie.com/embed/oqQ8XEPEwTg?autoplay=1&mute=1&playsinline=1&rel=0" allow="autoplay;encrypted-media;picture-in-picture;fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>:<button type="button" className="makkahStart" onClick={()=>setPlaying(true)}><span className="makkahIcon">🕋</span><span>▶ Watch Makkah Live</span><small>Live broadcast · tap to play</small></button>}
+ <iframe title="Live from Makkah — Masjid al-Haram" src="https://www.youtube-nocookie.com/embed/oqQ8XEPEwTg?autoplay=1&mute=1&playsinline=1&rel=0" allow="autoplay;encrypted-media;picture-in-picture;fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" loading="eager"/>
  <span className="makkahLiveBadge"><i/> LIVE · MAKKAH</span>
  </span>
  <span className="makkahCaption"><strong>Wanna address the Ummah?</strong><small>Get featured here when you go live.</small><Link href="/live">🎥 Go Live ↗</Link></span>
