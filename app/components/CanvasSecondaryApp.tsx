@@ -10,7 +10,7 @@ import "./canvas-ummah-feed.css";
 type Profile={display_name?:string|null;username?:string|null;xp_total?:number|null;bio?:string|null};
 type DailyPost={id:string;content?:string|null;body?:string|null;text?:string|null;created_at?:string|null};
 const destinations=["/profile","/recording-studio/shahadah","/community","/messages","/elm-tent"];
-const titles=["My Profile","Record Studio","Daily Posts · Ummah","Messenger","Elm Tent 🏕️"];
+const titles=["Friends · Community Map","Record Studio","Daily Posts · Ummah","Messenger","Elm Tent 🏕️"];
 
 function ProfileApp({active}:{active:boolean}){
  const [profile,setProfile]=useState<Profile|null>(null);const [status,setStatus]=useState("Loading your profile…");
@@ -90,8 +90,26 @@ function DailyPostsApp({active}:{active:boolean}){
   </div>}
  </div>;
 }
+function CommunityMap({active}:{active:boolean}){
+ const [tab,setTab]=useState<"map"|"profile">("map");
+ const [zoom,setZoom]=useState(0);
+ const [search,setSearch]=useState("");
+ 
+ const bounds=[[-125,24,-66,50],[-111,29,-79,47],[-104,32,-85,45],[-99,35,-90,43],[-96,37,-92,41]] as const;
+ const bbox=bounds[zoom];
+ const url="https://www.openstreetmap.org/export/embed.html?bbox="+encodeURIComponent(bbox.join(","))+"&layer=mapnik";
+ return <div className="canvas-community-map-shell">
+  <div className="canvas-community-tabs" role="tablist" aria-label="Canvas six views"><button type="button" role="tab" aria-selected={tab==="map"} onClick={()=>setTab("map")}>🌎 Community Map</button><button type="button" role="tab" aria-selected={tab==="profile"} onClick={()=>setTab("profile")}>My Profile</button></div>
+  {tab==="profile"?<ProfileApp active={active}/>:<div className="canvas-community-map-panel">
+   <div className="canvas-community-map-heading"><strong>Discover your Ummah</strong><span>United States · Mosque and community markers coming next</span></div>
+   <form className="canvas-community-map-search" onSubmit={e=>e.preventDefault()}><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search city (coming next)" aria-label="Search for a city" disabled title="City search will be connected with mosque data in the next phase"/><button type="submit" disabled title="City search is not connected yet">Search</button></form>
+   <div className="canvas-community-map-frame"><iframe title="Interactive map of the United States" loading="lazy" src={url} referrerPolicy="no-referrer-when-downgrade" allowFullScreen={false}/><div className="canvas-community-map-zoom"><button type="button" onClick={()=>setZoom(v=>Math.min(4,v+1))} disabled={zoom===4} aria-label="Zoom in">+</button><button type="button" onClick={()=>setZoom(v=>Math.max(0,v-1))} disabled={zoom===0} aria-label="Zoom out">−</button><button type="button" onClick={()=>setZoom(0)} aria-label="Reset map to United States">⌂</button></div></div>
+   <p className="canvas-community-map-caption">Drag the map to explore. Pinch to zoom on supported devices. No mosque or member locations are displayed yet.</p>
+  </div>}
+ </div>;
+}
 export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boolean}){
  return <div className="canvas-native-app"><header><span>0{slot+6} · 1MUSLIM</span><h2>{titles[slot]}</h2></header><div className="canvas-native-body">
- {slot===0?<ProfileApp active={active}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:<ElmTentAlphabet/>}
+ {slot===0?<CommunityMap active={active}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:<ElmTentAlphabet/>}
  </div><footer><Link href={destinations[slot]}>Open full experience ↗</Link></footer></div>
 }
