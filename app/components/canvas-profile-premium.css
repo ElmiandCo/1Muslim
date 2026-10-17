@@ -37,3 +37,10 @@
 .cp-grid-empty a,.cp-guest a{color:#f5dda0;font-weight:700;text-decoration:none}
 @media(max-width:450px){.cp-profile{gap:9px;padding-inline:3px}.cp-cover{min-height:207px}.cp-identity{padding:12px 20px 55px}.cp-avatar-ring{width:90px;height:90px}.cp-post-grid{gap:5px}.cp-post-tile{padding:8px 5px;border-radius:11px}.cp-actions a{padding:7px 10px}.cp-tabs button small{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.cp-profile *{scroll-behavior:auto!important}}
+
+/* Anchor the actual avatar to the center of its halo on mobile and desktop. */
+.cp-identity{width:100%;box-sizing:border-box;padding-left:16px!important;padding-right:16px!important;align-items:center!important}
+.cp-avatar-ring{position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;margin-inline:auto!important;isolation:isolate;box-sizing:border-box}
+.cp-avatar-ring> :not(.cp-avatar-add){margin:0!important;position:relative;left:auto!important;top:auto!important;transform:none!important;flex-shrink:0}
+.cp-avatar-ring .profileAvatar{transform:scale(.69)!important;transform-origin:center center!important}
+.cp-avatar-add{position:absolute;z-index:5;right:-7px;bottom:-7px;width:30px;height:30px;display:grid;place-items:center;border:2px solid #e9d08e;border-radius:50%;background:#0c664f;color:#fff7d9;font-size:22px;font-weight:600;text-decoration:none;line-height:1;box-shadow:0 3px 12px #0008}
