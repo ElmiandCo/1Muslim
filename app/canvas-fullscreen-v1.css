@@ -6,7 +6,7 @@ main[data-canvas-fullscreen="true"] > header{position:fixed!important;inset:0 0 
 main[data-canvas-fullscreen="true"] > header > :not(:has(.canvas-fullscreen-toggle)){display:none!important}
 main[data-canvas-fullscreen="true"] > header .canvas-fullscreen-toggle{pointer-events:auto}
 main[data-canvas-fullscreen="true"] > .canvas-fullscreen-toggle{z-index:110}
-main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{position:fixed!important;inset:0!important;width:100vw!important;max-width:none!important;height:100dvh!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;z-index:90!important;overflow:hidden!important;transition:inset var(--canvas-fullscreen-duration) cubic-bezier(.2,.7,.15,1),border-radius var(--canvas-fullscreen-duration) ease!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{position:fixed!important;inset:clamp(20px,3.5dvh,42px) clamp(12px,2.2vw,26px) clamp(18px,3dvh,38px)!important;width:auto!important;max-width:none!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;z-index:90!important;overflow:hidden!important;transition:inset var(--canvas-fullscreen-duration) cubic-bezier(.2,.7,.15,1),border-radius var(--canvas-fullscreen-duration) ease!important}
 main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [data-canvas-expanded]{height:100%!important;min-height:0!important;max-height:none!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
 main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [role="region"][aria-roledescription="carousel"]{height:100%!important;max-height:none!important}
 main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] nav[aria-label="Dashboard workspaces"]{display:none!important}
@@ -487,3 +487,7 @@ nav[aria-label="Dashboard workspaces"]>button{
   animation:canvasFullscreenOrbitOut 620ms cubic-bezier(.2,.75,.18,1) reverse both!important;transform-origin:center center;will-change:transform,opacity
  }
 }
+
+/* Expanded Canvas follows the highlighted near-edge frame, rather than clipping against screen edges. */
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{border:1px solid rgba(218,197,135,.58)!important;border-radius:clamp(20px,4vw,38px)!important;box-shadow:0 18px 70px rgba(0,0,0,.3),inset 0 0 0 1px rgba(241,230,180,.1)!important}
+@media(max-width:600px){main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{inset:30px 14px 24px!important}}
