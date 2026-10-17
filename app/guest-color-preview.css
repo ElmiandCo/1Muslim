@@ -41,3 +41,7 @@
 .guestColorPreviewPanel .guestColorPreviewLanguageNote{font-size:11px;opacity:.8;margin:2px 0 8px}
 .guestColorPreviewPanel .guestColorPreviewNote{margin:5px 0 12px}
 @media(max-width:370px){.guestColorPreviewCompact{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.guestColorPreviewPreferences{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0}
+.guestColorPreviewPreferences label{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:63px;padding:7px 4px;border:1px solid #ffffff45;border-radius:12px;background:#ffffff0d;color:#fff2da;font-size:11px;font-weight:700;text-align:center}
+.guestColorPreviewPreferences input{accent-color:#e9d08d;width:20px;height:20px;cursor:pointer}
