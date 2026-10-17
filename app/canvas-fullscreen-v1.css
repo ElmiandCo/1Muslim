@@ -624,3 +624,23 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
 .homeMakkahEmpty>strong{display:none!important}
 @keyframes liveWaitingPulse{0%,100%{transform:scale(.97);box-shadow:0 0 0 6px #9d44402a}50%{transform:scale(1.04);box-shadow:0 0 0 13px #9d444012}}
 @media(prefers-reduced-motion:reduce){.homeLiveWaitingPulse{animation:none}}
+
+
+/* Preview: Live-first workspace, clean desktop and mobile comments. */
+.homeLiveCommentDock{display:flex;flex-direction:column;gap:10px;width:100%;padding:12px;border:1px solid #cfb56c55;border-radius:18px;background:linear-gradient(135deg,#0b3029d9,#103a32bb);backdrop-filter:blur(18px)}
+.homeLiveCommentTitle{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#f2dda3;font-size:11px;letter-spacing:.06em}
+.homeLiveCommentTitle small{font-size:10px;color:#b9d3c9;letter-spacing:0}
+.homeLiveDemoThread{display:flex;flex-direction:column;gap:8px;min-height:132px;overflow:hidden}
+.homeLiveDemoComment{display:flex;gap:9px;align-items:center;animation:liveCommentFloat 12s ease-in-out infinite both;max-width:100%}
+.homeLiveDemoAvatar{flex:none;width:31px;height:31px;display:grid;place-items:center;border-radius:50%;border:1px solid #c4a85b;background:#256d59;color:#f7e9bd;font-size:12px}
+.homeLiveDemoComment>span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.homeLiveDemoComment strong{color:#e9d49e;font-size:11px}
+.homeLiveDemoComment small{color:#f1f7f1;font-size:12px;white-space:normal;line-height:1.35}
+.homeLiveCommentComposer{display:flex;gap:8px;align-items:center;border:1px solid #c3ae7070;background:#071f1bd9;border-radius:99px;padding:5px 6px 5px 14px}
+.homeLiveCommentComposer input{flex:1;min-width:0;background:transparent;border:0;outline:none;color:white;font-size:13px}
+.homeLiveCommentComposer button{flex:none;width:35px;height:35px;border-radius:50%;border:1px solid #d5bc74;background:#276f57;color:#f9e6aa}
+.homeLiveCommentComposer button:disabled{opacity:.5}
+@keyframes liveCommentFloat{0%,10%{opacity:0;transform:translateY(9px)}20%,73%{opacity:1;transform:translateY(0)}90%,100%{opacity:0;transform:translateY(-9px)}}
+@media(min-width:900px){.homeLiveChannelPlayer{min-height:440px!important;aspect-ratio:auto!important;height:min(58vh,690px)!important}.homeLiveDemoThread{min-height:180px}.homeMakkahLive{min-height:680px!important}}
+@media(max-width:600px){.homeLiveChannelPlayer{min-height:220px;aspect-ratio:4/3}.homeLiveCommentDock{padding:10px}.homeLiveDemoThread{min-height:125px}}
+@media(prefers-reduced-motion:reduce){.homeLiveDemoComment{animation:none;opacity:1}}
