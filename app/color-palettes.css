@@ -139,3 +139,7 @@
 .livePanelMinimized .home-live-demo-actions,.livePanelMinimized .homeLiveStudioControls{display:none}
 .homeLiveStudioHeader button[aria-label^="Hide test"]{border:1px solid #ffffff55;background:#ffffff16;border-radius:50%;color:inherit;width:28px;height:28px;cursor:pointer}
 @media(prefers-reduced-motion:reduce){.livePanelSelectable{transition:none!important;transform:none!important}}
+
+.homeLiveOverlayControls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:7px 10px;background:rgba(0,0,0,.23);border-radius:10px;margin:5px 0}
+.homeLiveOverlayControls button{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.3);border-radius:999px;color:inherit;padding:5px 10px;font-size:11px;cursor:pointer}
+.homeLiveOverlayControls span{font-size:10px;opacity:.8}
