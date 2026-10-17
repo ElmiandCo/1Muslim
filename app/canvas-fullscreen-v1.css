@@ -709,3 +709,32 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
  main[class*="control"]>[class*="intro"]{min-height:52px!important;max-height:60px!important;padding:3px 4px!important}
  main[class*="control"]>[class*="surface"]{padding:8px!important}
 }
+
+/* Desktop compact theater: remove the large dead band above the workspace.
+   Charcoal/black surrounds; emerald remains an accent inside glass cards. */
+@media(min-width:900px){
+ main[class*="control"]{
+  background:radial-gradient(ellipse at 85% 20%,rgba(17,44,39,.26),transparent 48%),linear-gradient(160deg,#050708 0%,#090d10 55%,#030506 100%)!important;
+  justify-content:flex-start!important;
+ }
+ main[class*="control"]>[class*="intro"]{
+  min-height:48px!important;max-height:58px!important;
+  height:52px!important;flex:0 0 52px!important;
+  margin:0 auto!important;padding:2px 4px 4px!important;
+ }
+ main[class*="control"]>.canvas-workspace-indicators{
+  height:28px!important;min-height:28px!important;max-height:28px!important;
+  margin:0 auto 4px!important;padding:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+ }
+ main[class*="control"]>.canvas-workspace-indicators nav{margin:0 auto!important;padding:0!important}
+ main[class*="control"]>[class*="surface"]{
+  margin-top:0!important;
+  background:linear-gradient(150deg,rgba(9,20,22,.88),rgba(5,11,13,.94))!important;
+  border-color:rgba(186,162,109,.35)!important;
+ }
+ main[class*="control"] [class*="surfaceArtwork"]{opacity:.12!important}
+ main[class*="control"] .homeLiveChannelPlayer{
+  background:radial-gradient(ellipse at 50% 45%,#111e21 0%,#060b0e 75%)!important;
+ }
+}
