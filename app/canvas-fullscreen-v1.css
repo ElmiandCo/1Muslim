@@ -65,3 +65,26 @@ nav[aria-label="Dashboard workspaces"] button[aria-current="page"]{background:#e
 .canvas-native-feed article p{white-space:pre-wrap;overflow-wrap:anywhere}
 .canvas-native-feed article small{opacity:.65}
 @media(prefers-reduced-motion:reduce){.canvas-recorder-ring.is-recording{animation:none}}
+
+/* Canvas 6: map-first Friends workspace, no decorative wallpaper PNG. */
+.canvas-vertical-secondary:has(.canvas-community-map-shell){background-image:none!important}
+.canvas-native-app:has(.canvas-community-map-shell){max-width:none;background:rgba(4,28,28,.48);padding:clamp(8px,1.5vw,16px)}
+.canvas-native-app:has(.canvas-community-map-shell)>.canvas-native-body{min-height:0;flex:1}
+.canvas-community-map-shell{display:flex;flex-direction:column;gap:10px;height:100%;min-height:390px}
+.canvas-community-tabs{display:flex;gap:8px}
+.canvas-community-tabs button{flex:1;min-height:39px;border:1px solid #d9c99166;border-radius:16px;background:#062c29bb;color:#e8dbb5;font-weight:700}
+.canvas-community-tabs button[aria-selected=true]{background:#377963;color:#fff;border-color:#d9c991}
+.canvas-community-map-panel{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0}
+.canvas-community-map-heading{display:flex;flex-direction:column;gap:2px}
+.canvas-community-map-heading strong{font-size:clamp(15px,3vw,21px);color:#f5e6c1}
+.canvas-community-map-heading span,.canvas-community-map-caption{font-size:11px;color:#d3dfd5}
+.canvas-community-map-search{display:flex;gap:6px}
+.canvas-community-map-search input{flex:1;min-width:0;min-height:40px;padding:8px 12px;border:1px solid #d9c99166;border-radius:12px;background:#0a3d37aa;color:#fff;font-size:16px}
+.canvas-community-map-search button{padding:6px 14px;border:1px solid #d9c99166;border-radius:12px;background:#316a57;color:#fff}
+.canvas-community-map-search :disabled{opacity:.58}
+.canvas-community-map-frame{position:relative;flex:1;min-height:250px;border-radius:18px;overflow:hidden;border:1px solid #c9c59a88;background:#e5e8df}
+.canvas-community-map-frame iframe{display:block;width:100%;height:100%;min-height:250px;border:0}
+.canvas-community-map-zoom{position:absolute;right:10px;top:10px;display:grid;gap:5px}
+.canvas-community-map-zoom button{width:42px;height:42px;border:1px solid #d9c991;border-radius:12px;background:#083d35e8;color:#fff;font-size:23px;box-shadow:0 3px 12px #0004}
+.canvas-community-map-zoom button:disabled{opacity:.45}
+.canvas-community-map-caption{margin:0}
