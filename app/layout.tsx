@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./color-palettes.css";
+import "./guest-color-preview.css";
 import "./site-text.css";
 import "./badge-effects.css";
 import "./hudhud-translate.css";
@@ -8,6 +9,7 @@ import "./hudhud-live-mini.css";
 import Script from "next/script";
 import XPTracker from "./components/XPTracker";
 import ColorPaletteSync from "./components/ColorPaletteSync";
+import GuestColorPreview from "./components/GuestColorPreview";
 import PersistentWidgetDock from "./components/PersistentWidgetDock";
 import PersistentQuranStudio from "./components/PersistentQuranStudio";
 import PersistentMessengerCall from "./components/PersistentMessengerCall";
@@ -33,7 +35,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><ColorPaletteSync/><HudHudMotionShell>{children}</HudHudMotionShell><PersistentMessengerCall /><PersistentDailyVideo /><GuestWelcomeGate /><HudHudDimensionDust /><TapShimmer /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><PersistentWidgetDock /><PersistentQuranStudio /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
+  return <html lang="en"><body><ColorPaletteSync/><GuestColorPreview/><HudHudMotionShell>{children}</HudHudMotionShell><PersistentMessengerCall /><PersistentDailyVideo /><GuestWelcomeGate /><HudHudDimensionDust /><TapShimmer /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><PersistentWidgetDock /><PersistentQuranStudio /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag("js", new Date());
 gtag("config", "G-DSLVB0HSGV");`}</Script></body></html>;
