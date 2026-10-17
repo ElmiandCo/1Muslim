@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import SiteNav from "../components/SiteNav";
+import {createClient} from "../../utils/supabase/client";
 import {PALETTE_KEY, PALETTES, type Palette, applyPalette} from "../components/ColorPaletteSync";
 import LocationPreferences from "../components/LocationPreferences";
 import SocialConnectionsWidget from "../components/SocialConnectionsWidget";
@@ -43,7 +44,7 @@ export default function SettingsPage() {
 
   const saveAppearance=(mode:"day"|"night"|"auto")=>{setAppearanceMode(mode);localStorage.setItem("1muslim-theme-mode",mode);const day=mode==="day"||(mode==="auto"&&window.matchMedia("(prefers-color-scheme: light)").matches);localStorage.setItem("1muslim-theme",day?"light":"dark");document.documentElement.classList.toggle("light",day);window.dispatchEvent(new Event("1muslim:appearance-updated"));window.dispatchEvent(new Event("1muslim:theme-changed"));setMessage("Appearance updated to "+(mode==="auto"?"Auto":mode==="day"?"Day":"Night")+".");};
 
-  const saveColorPalette=(palette:Palette)=>{setColorPalette(palette);localStorage.setItem(PALETTE_KEY,palette);applyPalette(palette);window.dispatchEvent(new Event("1muslim:palette-changed"));setMessage("Color updated to "+(palette==="gray-coral"?"Gray / Coral":palette[0].toUpperCase()+palette.slice(1))+". Your Day / Night setting stays the same.");};
+  const saveColorPalette=async(palette:Palette)=>{setColorPalette(palette);localStorage.setItem(PALETTE_KEY,palette);applyPalette(palette);window.dispatchEvent(new Event("1muslim:palette-changed"));setMessage("Color updated. Your Day / Night setting stays the same.");try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(user){const {error}=await db.from("profiles").update({profile_accent:palette}).eq("id",user.id);if(error)setMessage("Your device color was saved, but the public profile color could not be updated: "+error.message);else setMessage("Color saved to your profile. Others will see it on your profile background.");}}catch{setMessage("Device color saved. Could not sync public profile color.");}};
 
   const saveElmiLight = (next: boolean) => {
     setElmiLight(next);
