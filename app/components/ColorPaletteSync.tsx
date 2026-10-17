@@ -1,7 +1,7 @@
 "use client";
 import {useEffect} from "react";
 
-export const PALETTES = ["green","blue","gray-coral","yellow"] as const;
+export const PALETTES = ["green","blue","gray-coral","yellow","pink"] as const;
 export type Palette = (typeof PALETTES)[number];
 export const PALETTE_KEY = "1muslim-color-palette";
 
