@@ -332,6 +332,12 @@ export default function GoLivePage() {
     draw();
     return canvas.captureStream(24).getVideoTracks()[0];
   };
+  const studioBackgrounds=[["Mosque","🕌","#174b43"],["Night","🌙","#0b203c"],["Makkah","🕋","#4b4232"],["Nature","🌿","#286a48"],["Purple Studio","💜","#422568"]];
+  const selectStudioBackground=async(name:string,color:string)=>{
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280"><rect width="720" height="1280" fill="${color}"/><circle cx="360" cy="430" r="250" fill="#ddc78e" opacity=".16"/><path d="M0 1080V720Q90 580 180 720V1080M240 1080V600Q360 390 480 600V1080M540 1080V720Q630 580 720 720V1080" fill="#0b2422" stroke="#e2c98a" stroke-width="9" opacity=".8"/></svg>`;
+    await selectGreenPhoto(new File([svg],name+".svg",{type:"image/svg+xml"}));
+    setGreenImageName(name);
+  };
   const selectGreenPhoto=async(file?:File)=>{
     if(!file)return;
     if(!file.type.startsWith("image/")||file.size>12*1024*1024){setError("Choose an image smaller than 12 MB.");return;}
@@ -973,7 +979,9 @@ export default function GoLivePage() {
         @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 
-      `}</style>
+      `}
+.studioBgGallery{padding:12px;margin:10px 0;border:1px solid #e1c68775;border-radius:17px;background:#092e28dc;backdrop-filter:blur(12px);color:#f2dfb6}.studioBgGallery>small{font-size:10px;color:#b9d3c4}.studioBgGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0}.studioBgGrid button,.studioBgCustom{position:relative;min-height:76px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;border:1px solid #e1c68788;border-radius:12px;color:#fff2d7;cursor:pointer}.studioBgGrid button.chosen{outline:2px solid #5fe9b0}.studioBgGrid b{font-size:23px}.studioBgGrid span{font-size:10px}.studioBgCustom{background:#185244}.studioBgCustom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+</style>
 
       <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong><button type="button" aria-expanded={settingsOpen} aria-controls="prelive-settings" onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕ Close":"⚙ Settings"}</button></header>
       <div className={settingsOpen?"shell settingsOpen":"shell"}>
@@ -1001,6 +1009,7 @@ export default function GoLivePage() {
               {live && <span className="live">● LIVE</span>}{live && <div role="status" aria-live="polite" style={{position:"absolute",left:12,bottom:64,zIndex:13,padding:"12px 16px",borderRadius:18,background:"rgba(5,10,20,.80)",border:viewerIncrease?"2px solid #39ee8d":"1px solid rgba(255,255,255,.35)",boxShadow:viewerIncrease?"0 0 24px rgba(57,238,141,.48)":"0 8px 25px #0008",color:viewerIncrease?"#4cff9c":"white",transition:"color .3s,border .3s,box-shadow .3s",pointerEvents:"none",textAlign:"center"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1.5}}>🔴 YOU ARE LIVE</div><div style={{fontSize:"clamp(26px,5vw,40px)",fontWeight:900,lineHeight:1.15,fontVariantNumeric:"tabular-nums"}}>{viewers.toLocaleString()}</div><div style={{fontSize:11,opacity:.85}}>VIEWERS {viewerIncrease?"↑":""}</div></div>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
             </div>
+            <section className="studioBgGallery"><strong>🎨 Backgrounds</strong><small> · Choose a scene for your green screen</small><div className="studioBgGrid">{studioBackgrounds.map(([name,icon,color])=><button key={name} type="button" disabled={live} className={greenEnabled&&greenImageName===name?"chosen":""} style={{backgroundColor:color}} onClick={()=>void selectStudioBackground(name,color)}><b>{icon}</b><span>{name}</span></button>)}<label className="studioBgCustom"><b>📷</b><span>Custom</span><input type="file" accept="image/*" disabled={live} onChange={e=>void selectGreenPhoto(e.target.files?.[0])}/></label></div><small>Works with a physical green backdrop. Choose before starting your broadcast.</small></section>
             <div style={{display:"flex",gap:9,alignItems:"center",flexWrap:"wrap",padding:"10px 0"}}>
               <label style={{fontSize:12,color:"#d6e7b8",cursor:"pointer"}}>🟢 Green Screen · Choose Photo
                 <input type="file" accept="image/*" onChange={e=>void selectGreenPhoto(e.target.files?.[0])} style={{display:"block",fontSize:11,marginTop:5,maxWidth:240}} />
