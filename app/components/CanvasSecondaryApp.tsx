@@ -43,7 +43,7 @@ type UmmahPost={id:string;body:string;created_at:string;author_name:string;autho
 type UmmahComment={id:string;post_id:string;name:string;body:string;created_at:string};
 function DailyPostsApp({active}:{active:boolean}){
  const [posts,setPosts]=useState<UmmahPost[]>([]);
- const [status,setStatus]=useState("Loading Ummah posts…");
+ const [status,setStatus]=useState("Loading Ummah posts…");const [signedIn,setSignedIn]=useState<boolean|null>(null);
  const [selected,setSelected]=useState<string|null>(null);
  const [comments,setComments]=useState<UmmahComment[]>([]);
  const [draft,setDraft]=useState("");
@@ -51,7 +51,7 @@ function DailyPostsApp({active}:{active:boolean}){
  const [notice,setNotice]=useState("");
  const feedRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{if(!active)return;let alive=true;
-  const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)throw Error();const data=await r.json();if(alive){setPosts(data.posts||[]);setStatus(data.posts?.length?"":"No posts yet. Be the first to share.");}}catch{if(alive)setStatus("Unable to load the Ummah feed.");}};
+  const load=async()=>{try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!alive)return;setSignedIn(Boolean(user));if(!user){setPosts([]);setStatus("Sign in to see posts.");return}const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)throw Error();const data=await r.json();if(alive){setPosts(data.posts||[]);setStatus(data.posts?.length?"":"No posts yet. Be the first to share.");}}catch{if(alive)setStatus("Unable to load the Ummah feed.");}};
   void load();const timer=setInterval(()=>void load(),30000);return()=>{alive=false;clearInterval(timer)};
  },[active]);
  useEffect(()=>{if(!active)return;const root=feedRef.current;if(!root)return;
@@ -67,7 +67,7 @@ function DailyPostsApp({active}:{active:boolean}){
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
  return <div className="ummah-canvas-shell">
   <div className="ummah-floating-feed" ref={feedRef} aria-label="Community posts">
-   {posts.length?posts.map((post,i)=><div className="ummah-floating-pair" key={post.id} style={{["--ummah-tilt" as string]:(i%2===0?"-3deg":"3deg")}}>
+   {signedIn===false?<div className="ummah-feed-status" role="status"><p>Sign in to see posts.</p><Link href="/auth?next=%2Fcommunity">Sign in ↗</Link></div>:posts.length?posts.map((post,i)=><div className="ummah-floating-pair" key={post.id} style={{["--ummah-tilt" as string]:(i%2===0?"-3deg":"3deg")}}>
     <button type="button" className="ummah-floating-post" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}} aria-label={"Open comments on post by "+post.author_name}>
      <span className="ummah-post-glow" aria-hidden="true"/>
      <span className="ummah-post-body">{post.body}</span>
