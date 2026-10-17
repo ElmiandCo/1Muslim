@@ -25,3 +25,15 @@
 @media(max-width:600px){.studio{gap:7px;padding:9px;border-radius:17px}.previewArea{height:clamp(205px,31vh,270px);min-height:185px;padding:2px 3px 6px}.floating{min-height:175px;padding:12px;border-radius:17px}.tools button{gap:2px}.tools button span{font-size:9px}.editor{font-size:19px}.toolArea{max-height:112px}}
 @media(max-height:650px){.studio{gap:5px}.header{display:none}.steps button{min-height:31px}.previewArea{height:185px;min-height:155px}.floating{min-height:145px;padding:9px}.toolArea{max-height:90px}.footer button{min-height:37px}}
 @media(prefers-reduced-motion:reduce){.floating,.floating[data-motion=float]{animation:none!important;transition:none!important}}
+
+/* User-selected photograph stays behind the translucent writing card. */
+.photoBackdrop,.photoMask{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+.photoBackdrop{z-index:-2;background-position:center;background-size:cover}
+.photoMask{z-index:-1}
+.floating:has(.photoBackdrop){background:rgba(10,41,35,.18);backdrop-filter:blur(1px)}
+.floating:has(.photoBackdrop) .editor{background:rgba(8,28,27,.17);border-radius:12px;padding:9px;text-shadow:0 1px 5px #001d1b}
+.floating:has(.photoBackdrop) .previewTop,.floating:has(.photoBackdrop) .previewTitle,.floating:has(.photoBackdrop) .previewBottom{color:#fff9e7;text-shadow:0 1px 5px #001d1b}
+.mediaControls{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.mediaControls button{min-height:35px;padding:6px 12px;border:1px solid rgba(237,211,161,.55);border-radius:18px;background:rgba(12,71,56,.8);color:#fff1c9;cursor:pointer}
+.maskControl{display:flex;align-items:center;gap:6px;color:#f7e5bb;font-size:12px}
+.maskControl input{width:80px;accent-color:#b9edc5}
