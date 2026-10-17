@@ -84,3 +84,12 @@ body:has(.cinematicProfile){background:radial-gradient(ellipse at 50% 0,#174d3d,
 .cinematicProfile .contentSection .contentList{gap:6px!important}
 .cinematicProfile .contentSection .contentList>a{border-radius:11px!important;padding:8px!important}
 }
+
+
+.cinematicProfile .profileOverviewAvatar{position:relative!important;display:grid!important;place-items:center!important;flex-shrink:0;isolation:isolate}
+.cinematicProfile .profileOverviewAvatar .profileAvatar{margin:auto!important;transform:none!important}
+.cinematicProfile .profileAvatarChange{position:absolute;right:-7px;bottom:5px;z-index:7;display:grid;place-items:center;width:44px;height:44px;border:2px solid #f2dfa9;border-radius:50%;background:linear-gradient(135deg,#0b9c73,#056849);color:#fff;font-size:30px;font-weight:500;line-height:1;box-shadow:0 0 0 4px #063b31,0 5px 22px #0009;cursor:pointer;transition:transform .18s ease}
+.cinematicProfile .profileAvatarChange:hover{transform:scale(1.08)}
+.cinematicProfile .profileAvatarChange:focus-visible{outline:3px solid #fff;outline-offset:5px}
+@media(max-width:700px){.cinematicProfile .profileAvatarChange{right:-4px;bottom:0;width:40px;height:40px;font-size:27px}}
+@media(prefers-reduced-motion:reduce){.cinematicProfile .profileAvatarChange{transition:none}}
