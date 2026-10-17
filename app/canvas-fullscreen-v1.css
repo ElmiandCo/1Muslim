@@ -129,3 +129,47 @@ nav[aria-label="Dashboard workspaces"]>button{
 }
 nav[aria-label="Dashboard workspaces"]>button[aria-current="page"]{background:#e4d6a2!important}
 @media(max-width:370px){nav[aria-label="Dashboard workspaces"]{column-gap:5px!important;left:10px!important}}
+
+/* Widget Motion 3.0: GPU-friendly, restrained depth and eased interaction.
+   Applies to widget surfaces, not the entire swipeable Canvas. */
+:root{--widget-ease-out:cubic-bezier(.22,.72,.18,1);--widget-ease-spring:cubic-bezier(.2,.85,.25,1);--widget-motion-fast:220ms;--widget-motion-main:520ms}
+[data-magnetic-grid="true"] [data-widget],
+[data-magnetic-grid="true"] [data-widget] [class*="widgetCanvas"],
+.canvas-native-app,
+.canvas-community-map-shell{
+ transform-style:preserve-3d;
+ backface-visibility:hidden;
+ -webkit-backface-visibility:hidden;
+ transition-property:transform,opacity,box-shadow,border-color,background-color,filter;
+ transition-duration:var(--widget-motion-main);
+ transition-timing-function:var(--widget-ease-out);
+}
+[data-magnetic-grid="true"] [data-widget]{perspective:1200px;transform-origin:center center}
+[data-magnetic-grid="true"] [data-widget] [class*="widgetCanvas"]{transform-origin:center center}
+@media(hover:hover) and (pointer:fine){
+ [data-magnetic-grid="true"] [data-widget]:hover [class*="widgetCanvas"]{
+  transform:translate3d(0,-3px,0) rotateX(1deg);
+  box-shadow:0 12px 30px rgba(0,0,0,.13),inset 0 1px 0 rgba(255,246,208,.14);
+  border-color:rgba(236,212,155,.62)!important;
+ }
+}
+[data-magnetic-grid="true"] [data-widget]:focus-within [class*="widgetCanvas"]{border-color:rgba(239,215,161,.72)!important}
+[data-magnetic-grid="true"] [data-widget] :is(button,a,input,textarea,select){
+ transition-property:background-color,border-color,color,box-shadow,opacity,filter;
+ transition-duration:var(--widget-motion-fast);
+ transition-timing-function:var(--widget-ease-out);
+}
+.canvas-vertical-main,.canvas-vertical-secondary{
+ transition:transform 660ms var(--widget-ease-spring),opacity 430ms ease!important;
+}
+.canvas-native-body,.canvas-community-map-panel{min-width:0;transform:translateZ(0)}
+@media(prefers-reduced-motion:reduce){
+ [data-magnetic-grid="true"] [data-widget],
+ [data-magnetic-grid="true"] [data-widget] [class*="widgetCanvas"],
+ .canvas-native-app,.canvas-community-map-shell,
+ [data-magnetic-grid="true"] [data-widget] :is(button,a,input,textarea,select){
+  transition-duration:0.01ms!important;animation-duration:0.01ms!important;
+ }
+ [data-magnetic-grid="true"] [data-widget]:hover [class*="widgetCanvas"]{transform:none!important}
+ .canvas-vertical-main,.canvas-vertical-secondary{transition:none!important}
+}
