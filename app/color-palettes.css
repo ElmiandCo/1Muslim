@@ -51,3 +51,27 @@
  transition:background-color .35s,border-color .35s,box-shadow .35s;
  }
 }
+
+:root[data-palette="pink"]{
+ --palette-surface:#683354;--palette-deep:#30152e;
+ --palette-border:#f4b3d8;--palette-glow:rgba(232,105,176,.26);
+ --palette-accent:#ffc0e0;--palette-tint:rgba(190,74,142,.15);
+}
+:root.light[data-palette="pink"]{
+ --palette-surface:#ffe0f0;--palette-deep:#efb6d2;
+ --palette-tint:rgba(224,105,170,.12);--palette-accent:#a34478;
+}
+/* Public profile banners use the member's stored palette, not the viewer's. */
+.profileOverviewHero[data-profile-palette="green"],.profileHero[data-profile-palette="green"]{--member-surface:#07513f;--member-accent:#83d6a7}
+.profileOverviewHero[data-profile-palette="blue"],.profileHero[data-profile-palette="blue"]{--member-surface:#153c66;--member-accent:#8acdf7}
+.profileOverviewHero[data-profile-palette="gray-coral"],.profileHero[data-profile-palette="gray-coral"]{--member-surface:#494950;--member-accent:#f1afa3}
+.profileOverviewHero[data-profile-palette="yellow"],.profileHero[data-profile-palette="yellow"]{--member-surface:#6c531b;--member-accent:#f5da85}
+.profileOverviewHero[data-profile-palette="pink"],.profileHero[data-profile-palette="pink"]{--member-surface:#743959;--member-accent:#ffbedf}
+:is(.profileOverviewHero,.profileHero)[data-profile-palette]{
+ background:linear-gradient(145deg,color-mix(in srgb,var(--member-surface) 82%,transparent),rgba(4,27,30,.75))!important;
+ border-color:color-mix(in srgb,var(--member-accent) 60%,transparent)!important;
+ box-shadow:0 15px 42px color-mix(in srgb,var(--member-surface) 38%,transparent),inset 0 1px 0 #ffffff30!important;
+}
+:is(.profileOverviewHero,.profileHero)[data-profile-palette] .profileOverviewCover{
+ background:linear-gradient(120deg,color-mix(in srgb,var(--member-surface) 85%,transparent),color-mix(in srgb,var(--member-accent) 25%,transparent))!important;
+}
