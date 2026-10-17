@@ -662,3 +662,6 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
 .liveWidgetRootClean{display:flex!important;flex-direction:column!important;justify-content:flex-start!important;gap:0!important;padding:0!important;min-height:0!important;height:auto!important;background:transparent!important;border:0!important;box-shadow:none!important}
 .liveWidgetRootClean::before,.liveWidgetRootClean::after{display:none!important}
 .liveWidgetRootClean>.liveWidgetPlayerOnly{display:none!important}
+
+/* Tighten empty strip between greeting and workspace dots on mobile. */
+@media(max-width:759px){main[data-canvas-fullscreen] > [class*="intro"]{padding-bottom:0!important;margin-bottom:0!important}main[data-canvas-fullscreen] > .canvas-workspace-indicators{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}main[data-canvas-fullscreen] > .canvas-workspace-indicators nav{margin-top:0!important;margin-bottom:0!important}}
