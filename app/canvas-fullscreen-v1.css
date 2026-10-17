@@ -264,3 +264,32 @@ button[aria-label="Expand Canvas to full view"],button[aria-label="Exit full Can
  border:1px solid #e4c991!important;background:radial-gradient(circle at 30% 20%,#327662,#073c33)!important;
  box-shadow:0 2px 15px #001e1866!important;font-size:22px!important;
 }
+
+/* Canvas navigation invariant: twelve buttons, six per row, no wrap or third row. */
+nav[aria-label="Dashboard workspaces"]{
+ display:grid!important;grid-template-columns:repeat(6,minmax(0,14px))!important;
+ grid-template-rows:repeat(2,14px)!important;grid-auto-flow:row!important;
+ grid-auto-columns:unset!important;gap:8px 10px!important;
+ width:max-content!important;max-width:calc(100% - 90px)!important;
+ min-width:0!important;box-sizing:content-box!important;
+ position:sticky!important;inset:auto!important;bottom:5px!important;
+ margin:4px auto 8px!important;flex-wrap:nowrap!important;
+ align-content:center!important;justify-content:center!important;
+ padding:9px 13px!important;overflow:visible!important;
+}
+nav[aria-label="Dashboard workspaces"]>button{
+ width:14px!important;height:14px!important;min-width:14px!important;min-height:14px!important;
+ padding:0!important;margin:0!important;display:grid!important;place-items:center!important;
+ box-sizing:border-box!important;border-radius:50%!important;position:static!important;
+ transform:none!important;
+}
+nav[aria-label="Dashboard workspaces"]>button>span{display:none!important}
+/* The theme orb has one portal instance; never overlap the HudHud identity at top left. */
+.canvas-orb-floating-dock{isolation:isolate}
+/* Guest Profile: deliberate compact glass panel centered in available workspace. */
+.canvas-vertical-secondary .canvas-native-app:has(a[href="/profile"]){
+ justify-content:center;min-height:100%;background:rgba(4,37,34,.14);
+}
+.canvas-vertical-secondary .canvas-native-app:has(a[href="/profile"]) .canvas-native-body{
+ flex:0 1 auto;min-height:0;justify-content:center;
+}
