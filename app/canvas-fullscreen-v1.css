@@ -688,3 +688,24 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
 @keyframes orbRecoverySlideRight{0%{opacity:0;translate:110% 0}8%,82%{opacity:1;translate:0 0}100%{opacity:0;translate:110% 0}}
 @keyframes orbRecoverySlideBottom{0%{opacity:0;translate:0 110%}8%,82%{opacity:1;translate:0 0}100%{opacity:0;translate:0 110%}}
 @media(prefers-reduced-motion:reduce){.orb-recovery-toast{animation:none!important}}
+
+/* Desktop-only workspace polish: preserve the mobile layout completely.
+   Keep the main header available in expanded mode and use the whole viewport. */
+@media(min-width:900px) and (min-height:560px){
+ main[class*="control"]{padding:12px clamp(20px,3vw,56px) 14px!important;gap:0!important}
+ main[class*="control"]>[class*="controlHeader"]{width:100%!important;max-width:1600px!important;height:58px!important;min-height:58px!important;flex:0 0 58px!important;opacity:1!important;visibility:visible!important;transform:none!important;pointer-events:auto!important;margin:0 auto!important}
+ main[class*="control"]>[class*="intro"]{width:100%!important;max-width:1600px!important;min-height:70px!important;max-height:82px!important;padding:7px 4px 9px!important;align-items:center!important;opacity:1!important;visibility:visible!important;transform:none!important}
+ main[class*="control"]>[class*="intro"] [class*="introGreeting"]{margin:0!important}
+ main[class*="control"]>[class*="intro"] h1{font-size:clamp(22px,2.5vw,31px)!important;margin:3px 0!important}
+ main[class*="control"]>.canvas-workspace-indicators{width:100%!important;max-width:1600px!important;margin:0 auto 8px!important;flex:0 0 auto!important}
+ main[class*="control"]>[class*="surface"]{width:100%!important;max-width:1600px!important;min-height:0!important;flex:1 1 0%!important;margin:0 auto!important;padding:clamp(10px,1.4vw,20px)!important;border-radius:28px!important;overflow:hidden!important}
+ main[class*="control"]>[class*="surface"] [class*="fillArea"]{min-height:0!important}
+ main[data-canvas-fullscreen="true"]>[class*="controlHeader"]{display:flex!important}
+ main[data-canvas-fullscreen="true"]>[class*="intro"]{display:flex!important}
+ main[data-canvas-fullscreen="true"]>.canvas-workspace-indicators{display:block!important}
+ main[data-canvas-fullscreen="true"]>[class*="surface"]{max-width:1600px!important}
+}
+@media(min-width:900px) and (max-height:700px){
+ main[class*="control"]>[class*="intro"]{min-height:52px!important;max-height:60px!important;padding:3px 4px!important}
+ main[class*="control"]>[class*="surface"]{padding:8px!important}
+}
