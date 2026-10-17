@@ -252,8 +252,13 @@ const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HT
  useEffect(()=>{
   const update=()=>{
    const rect=orbNavAnchor.current?.getBoundingClientRect();
-   const dock=navCollapsed||canvasFullscreen||orbPinned||!rect||rect.width===0||rect.top<0;
-   setOrbPosition(dock?{left:Math.max(8,window.innerWidth-54),top:Math.max(8,Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--safe-top"))||0)+12}:{left:rect.left,top:rect.top});
+   const dock=navCollapsed||canvasFullscreen||orbPinned||!rect||rect.width===0||rect.top<0||rect.bottom>window.innerHeight||rect.right>window.innerWidth;
+   // Reserve the top-right corner for the fullscreen expand/shrink control.
+   // The light orb docks in the opposite corner whenever the Canvas is fullscreen.
+   const safeTop=Math.max(8,Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--safe-top"))||0)+12;
+   const topRight={left:Math.max(8,window.innerWidth-54),top:safeTop+64};
+   const topLeft={left:16,top:safeTop};
+   setOrbPosition(canvasFullscreen?topLeft:dock?topRight:{left:rect.left,top:rect.top});
   };
   update();const id=window.setTimeout(update,350);
   window.addEventListener("resize",update);window.addEventListener("scroll",update,{passive:true});
