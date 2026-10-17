@@ -65,3 +65,12 @@ nav[aria-label="Dashboard workspaces"] button[aria-current="page"]{background:#e
 .canvas-native-feed article p{white-space:pre-wrap;overflow-wrap:anywhere}
 .canvas-native-feed article small{opacity:.65}
 @media(prefers-reduced-motion:reduce){.canvas-recorder-ring.is-recording{animation:none}}
+
+/* Finger-following vertical Canvas motion: only activated by gestures outside widgets. */
+.canvas-vertical-portal[data-dragging="true"] .canvas-vertical-main,
+.canvas-vertical-portal[data-dragging="true"] .canvas-vertical-secondary{transition:none!important}
+.canvas-vertical-portal[data-dragging="true"][data-row="0"] .canvas-vertical-main{transform:translate3d(0,var(--canvas-drag-y,0px),0);opacity:1}
+.canvas-vertical-portal[data-dragging="true"][data-row="0"] .canvas-vertical-secondary{transform:translate3d(0,calc(100% + var(--canvas-drag-y,0px)),0);opacity:1}
+.canvas-vertical-portal[data-dragging="true"][data-row="1"] .canvas-vertical-main{transform:translate3d(0,calc(-100% + var(--canvas-drag-y,0px)),0);opacity:1}
+.canvas-vertical-portal[data-dragging="true"][data-row="1"] .canvas-vertical-secondary{transform:translate3d(0,var(--canvas-drag-y,0px),0);opacity:1}
+@media(prefers-reduced-motion:reduce){.canvas-vertical-portal[data-dragging="true"] .canvas-vertical-main,.canvas-vertical-portal[data-dragging="true"] .canvas-vertical-secondary{transition:none!important}}
