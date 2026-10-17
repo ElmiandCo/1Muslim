@@ -274,7 +274,7 @@ const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HT
    // The light orb docks in the opposite corner whenever the Canvas is fullscreen.
    const safeTop=Math.max(8,Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--safe-top"))||0)+12;
    const topRight={left:Math.max(8,window.innerWidth-54),top:safeTop+64};
-   setOrbPosition(dock?{left:Math.max(12,Math.min(18,window.innerWidth-54)),top:safeTop+100}:rect?{left:Math.max(8,rect.left),top:Math.max(8,rect.top)}:topRight);
+   setOrbPosition({left:Math.max(8,window.innerWidth-62),top:safeTop+10});
   };
   update();const id=window.setTimeout(update,350);
   window.addEventListener("resize",update);window.addEventListener("scroll",update,{passive:true});
