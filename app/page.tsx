@@ -1,5 +1,5 @@
-import MakkahLiveFallback from "./components/MakkahLiveFallback";
 "use client";
+import MakkahLiveFallback from "./components/MakkahLiveFallback";
 import workspaceStyles from "./workspace-presentation.module.css";
 import "./canvas-fullscreen-v1.css";
 import CanvasSecondaryApp from "./components/CanvasSecondaryApp";
