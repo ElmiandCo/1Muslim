@@ -665,3 +665,6 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
 
 /* Tighten empty strip between greeting and workspace dots on mobile. */
 @media(max-width:759px){main[data-canvas-fullscreen] > [class*="intro"]{padding-bottom:0!important;margin-bottom:0!important}main[data-canvas-fullscreen] > .canvas-workspace-indicators{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}main[data-canvas-fullscreen] > .canvas-workspace-indicators nav{margin-top:0!important;margin-bottom:0!important}}
+
+/* Desktop Live Theater: player is the primary canvas; no suggestions card. */
+@media(min-width:900px){.liveWidgetRootClean{width:100%!important;max-width:none!important;min-width:0!important;flex:1 1 auto!important}.liveWidgetRootClean>.homeMakkahLive{width:100%!important;max-width:none!important;min-height:720px!important}.liveWidgetRootClean .homeLiveChannelPlayer{width:100%!important;height:clamp(480px,68vh,900px)!important;min-height:480px!important;aspect-ratio:auto!important}.liveWidgetRootClean .homeLiveCommentDock{width:100%!important;max-width:none!important}.liveWidgetRootClean .homeLiveCarouselArrows{align-self:stretch!important}}
