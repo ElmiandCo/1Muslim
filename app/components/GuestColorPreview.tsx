@@ -15,6 +15,7 @@ export default function GuestColorPreview(){
  
  const [palette,setPalette]=useState<Palette>("green");
  const [day,setDay]=useState<boolean|null>(null);
+ const [language,setLanguage]=useState("en");
  useEffect(()=>{
   const openFromOrb=()=>setOpen(true);
   window.addEventListener("1muslim:open-color-settings",openFromOrb);
@@ -23,6 +24,7 @@ export default function GuestColorPreview(){
 
   }catch{}
   setDay(document.documentElement.classList.contains("light"));
+  try{setLanguage(localStorage.getItem("1muslim-language")||"en")}catch{}
   setReady(true);
   return()=>window.removeEventListener("1muslim:open-color-settings",openFromOrb);
  },[]);
@@ -49,7 +51,7 @@ export default function GuestColorPreview(){
   {open&&<div className="guestColorPreviewBackdrop" onPointerDown={e=>{if(e.target===e.currentTarget)close()}}>
    <section className="guestColorPreviewPanel" role="dialog" aria-modal="true" aria-labelledby="guestColorPreviewTitle">
     <header><div><span className="guestColorPreviewEyebrow">1MUSLIM · LIVE COLOR TEST</span><h2 id="guestColorPreviewTitle">Make it yours 🎨</h2><p>Try a color instantly, without leaving this page.</p></div><button type="button" className="guestColorPreviewClose" onClick={close} aria-label="Save and close">×</button></header>
-    <div className="guestColorPreviewSwatches" role="group" aria-label="Choose color">
+    <div className="guestColorPreviewSwatches guestColorPreviewCompact" role="group" aria-label="Choose color">
      {PALETTES.map(value=><button type="button" key={value} onClick={()=>choose(value)} aria-pressed={palette===value} className={palette===value?"guestColorPreviewSelected":""}>
       <span className="guestColorPreviewSwatch" style={{background:`linear-gradient(135deg,${colors[value][0]} 50%,${colors[value][1]} 50%)`}}/>
       <span>{names[value]}</span><span aria-hidden="true">{palette===value?"✓":""}</span>
@@ -58,6 +60,8 @@ export default function GuestColorPreview(){
     <div className="guestColorPreviewDayNight" role="group" aria-label="Preview lighting">
      <span>Lighting</span><button type="button" aria-pressed={day===true} onClick={()=>changeLight(true)}>☀ Day</button><button type="button" aria-pressed={day===false} onClick={()=>changeLight(false)}>☾ Night</button>
     </div>
+    <div className="guestColorPreviewLanguage"><label htmlFor="guestColorPreviewLanguage">🌐 Language</label><select id="guestColorPreviewLanguage" value={language} onChange={e=>{const value=e.target.value;setLanguage(value);try{localStorage.setItem("1muslim-language",value)}catch{}document.documentElement.lang=value;window.dispatchEvent(new CustomEvent("1muslim:language-changed",{detail:{language:value}}))}}><option value="en">English</option><option value="ar">العربية</option><option value="so">Soomaali</option></select></div>
+    <p className="guestColorPreviewLanguageNote">Language preference is saved. Full translations are coming later.</p>
     <p className="guestColorPreviewNote">Changes apply live and save on this device. Public profile colors require sign-in.</p>
     <button type="button" className="guestColorPreviewDone" onClick={close}>Save & see the result ✓</button>
    </section>
