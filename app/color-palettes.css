@@ -75,3 +75,58 @@
 :is(.profileOverviewHero,.profileHero)[data-profile-palette] .profileOverviewCover{
  background:linear-gradient(120deg,color-mix(in srgb,var(--member-surface) 85%,transparent),color-mix(in srgb,var(--member-accent) 25%,transparent))!important;
 }
+
+
+/* Full-site chromatic atmosphere: three complementary shades, translucent cards.
+   Default Emerald retains its original artwork and existing design. */
+:root[data-palette="blue"]{--site-dark:#061a30;--site-mid:#11436a;--site-light:#3789b4;--site-glass:rgba(20,76,116,.67)}
+:root[data-palette="gray-coral"]{--site-dark:#1c222c;--site-mid:#50555c;--site-light:#db8f81;--site-glass:rgba(76,76,84,.69)}
+:root[data-palette="yellow"]{--site-dark:#241e0b;--site-mid:#735921;--site-light:#e8ba4d;--site-glass:rgba(99,78,24,.65)}
+:root[data-palette="pink"]{--site-dark:#291126;--site-mid:#7e365e;--site-light:#e68ab9;--site-glass:rgba(103,43,83,.66)}
+:root.light[data-palette="blue"]{--site-dark:#b5d7e9;--site-mid:#d8ecf6;--site-light:#7ab5d7;--site-glass:rgba(201,232,248,.67)}
+:root.light[data-palette="gray-coral"]{--site-dark:#b9b6b9;--site-mid:#e7dfe0;--site-light:#e3a396;--site-glass:rgba(233,226,226,.66)}
+:root.light[data-palette="yellow"]{--site-dark:#e2ca80;--site-mid:#fff1c1;--site-light:#f5d96e;--site-glass:rgba(255,241,188,.68)}
+:root.light[data-palette="pink"]{--site-dark:#eab3d0;--site-mid:#ffdfef;--site-light:#f3a8d0;--site-glass:rgba(255,223,240,.67)}
+:root[data-palette]:not([data-palette="green"]){
+ background:var(--site-dark);
+}
+:root[data-palette]:not([data-palette="green"]) body{
+ background:radial-gradient(ellipse at 85% 8%,color-mix(in srgb,var(--site-light) 38%,transparent),transparent 48%),
+ radial-gradient(ellipse at 12% 80%,color-mix(in srgb,var(--site-mid) 70%,transparent),transparent 62%),
+ linear-gradient(160deg,var(--site-dark),var(--site-mid) 53%,var(--site-dark)) fixed!important;
+ background-color:var(--site-dark)!important;
+}
+:root[data-palette]:not([data-palette="green"]) :is(
+ [class*="homePage"],[class*="homeShell"],[class*="homeBackground"],
+ [class*="pageBackground"],[class*="homeBackdrop"],[class*="mainBackground"],
+ [class*="workspaceBackdrop"]
+){
+ background-image:radial-gradient(ellipse at 80% 12%,color-mix(in srgb,var(--site-light) 24%,transparent),transparent 54%),
+ linear-gradient(145deg,var(--site-dark),var(--site-mid),var(--site-dark))!important;
+ background-color:var(--site-dark)!important;
+}
+:root[data-palette]:not([data-palette="green"]) :is(
+ [class*="surface"],[class*="workspaceShell"],[class*="canvasStage"],
+ [class*="canvasFrame"],[class*="workspacePanel"],[class*="widgetArea"],
+ [class*="widgetCanvas"],[class*="workspacePage"],[class*="widget"],
+ .canvas-native-app,.homeLiveStudio,.homeMakkahLive,.settingsCard
+){
+ border-color:color-mix(in srgb,var(--palette-border) 53%,transparent)!important;
+ box-shadow:inset 0 1px 0 color-mix(in srgb,var(--site-light) 22%,transparent),
+ 0 12px 34px color-mix(in srgb,var(--site-dark) 35%,transparent)!important;
+}
+:root[data-palette]:not([data-palette="green"]) :is(
+ [class*="surface"],[class*="workspaceShell"],[class*="canvasStage"],
+ [class*="canvasFrame"],[class*="workspacePanel"],[class*="widgetArea"],
+ [class*="widgetCanvas"],[class*="workspacePage"],[class*="widget"],
+ .canvas-native-app,.homeLiveStudio,.homeMakkahLive,.settingsCard
+){
+ background-color:var(--site-glass)!important;
+ background-image:linear-gradient(135deg,color-mix(in srgb,var(--site-light) 15%,transparent),var(--site-glass) 45%,color-mix(in srgb,var(--site-dark) 62%,transparent))!important;
+ backdrop-filter:blur(16px) saturate(130%);-webkit-backdrop-filter:blur(16px) saturate(130%);
+}
+@media(prefers-reduced-motion:no-preference){
+ :root[data-palette]:not([data-palette="green"]) :is(body,[class*="surface"],[class*="widgetArea"],[class*="widgetCanvas"],[class*="workspacePage"]){
+ transition:background-color .45s ease,background-image .45s ease,border-color .45s ease,box-shadow .45s ease;
+ }
+}
