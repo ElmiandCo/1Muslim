@@ -1661,3 +1661,6 @@
  }
 }
 
+
+/* Remove left-to-right light sweep on all decorated surfaces; retain tap dust/sparkle particles. */
+.control .surfaceSparkle::before{content:none!important;display:none!important;animation:none!important}
