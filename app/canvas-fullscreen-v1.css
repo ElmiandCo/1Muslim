@@ -88,3 +88,12 @@ nav[aria-label="Dashboard workspaces"] button[aria-current="page"]{background:#e
 .canvas-community-map-zoom button{width:42px;height:42px;border:1px solid #d9c991;border-radius:12px;background:#083d35e8;color:#fff;font-size:23px;box-shadow:0 3px 12px #0004}
 .canvas-community-map-zoom button:disabled{opacity:.45}
 .canvas-community-map-caption{margin:0}
+
+/* Official Makkah broadcast sits above, never replaces, the emerald Go Live controls. */
+.homeMakkahLive{display:flex;flex-direction:column;gap:6px;width:100%;min-width:0;margin:7px 0;padding:9px;border:1px solid rgba(224,202,144,.48);border-radius:17px;background:rgba(3,33,28,.66);color:#f7ecd0}
+.homeMakkahLiveHeading{display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap;font-size:11px}
+.homeMakkahLiveHeading strong{font-size:12px;letter-spacing:.07em}
+.homeMakkahLiveHeading span{opacity:.77}
+.homeMakkahLiveFrame{width:100%;aspect-ratio:16/9;min-height:145px;overflow:hidden;border-radius:12px;background:#061715}
+.homeMakkahLiveFrame iframe{display:block;width:100%;height:100%;border:0}
+.homeMakkahLiveLink{align-self:flex-end;color:#e8d4a0;font-size:11px;text-decoration:underline;text-underline-offset:3px}
