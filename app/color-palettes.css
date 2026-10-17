@@ -130,3 +130,12 @@
  transition:background-color .45s ease,background-image .45s ease,border-color .45s ease,box-shadow .45s ease;
  }
 }
+
+
+/* Two live surfaces exchange prominence without reflow jumps. */
+.livePanelSelectable{cursor:pointer;transform-origin:center center;transition:transform .42s cubic-bezier(.2,.8,.2,1),opacity .42s ease,max-height .42s ease,filter .42s ease!important;overflow:hidden}
+.livePanelExpanded{transform:scale(1);opacity:1;max-height:850px;filter:none}
+.livePanelMinimized{transform:scale(.975);opacity:.83;max-height:210px;filter:saturate(.8)}
+.livePanelMinimized .home-live-demo-actions,.livePanelMinimized .homeLiveStudioControls{display:none}
+.homeLiveStudioHeader button[aria-label^="Hide test"]{border:1px solid #ffffff55;background:#ffffff16;border-radius:50%;color:inherit;width:28px;height:28px;cursor:pointer}
+@media(prefers-reduced-motion:reduce){.livePanelSelectable{transition:none!important;transform:none!important}}
