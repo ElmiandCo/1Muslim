@@ -8,7 +8,7 @@ import ElmTentAlphabet from "./components/ElmTentAlphabet";
 import HomeVideoPreview from "./components/HomeVideoPreview";
 import LiveHomePreview from "./components/LiveHomePreview";
 import {useEffect,useRef,useState} from "react";
-import {flushSync} from "react-dom";
+import {flushSync,createPortal} from "react-dom";
 import Image from "next/image";
 import {createClient} from "../utils/supabase/client";
 import Link from "next/link";
