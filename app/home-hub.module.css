@@ -1610,3 +1610,43 @@
  .control .widgetArea .workspacePage .customGrid{padding:1px 4px!important}
  .control .widgetArea .workspacePage .customGrid>.widgetSlot>.widgetCanvas .widgetFeatureDetail{display:none!important}
 }
+
+/* Canvas 10-slot pager contract: two rows of five, never a ten-dot strip.
+   Override older .workspacePager flex rules at their own specificity. */
+.control .widgetArea nav.workspacePager[aria-label="Dashboard workspaces"]{
+ display:grid!important;
+ grid-template-columns:repeat(5,10px)!important;
+ grid-template-rows:repeat(2,10px)!important;
+ grid-auto-flow:row!important;
+ align-items:center!important;
+ justify-items:center!important;
+ justify-content:center!important;
+ align-content:center!important;
+ gap:7px 10px!important;
+ width:max-content!important;
+ height:auto!important;
+ min-height:0!important;
+ max-width:calc(100% - 20px)!important;
+ padding:6px 10px!important;
+ margin:0 auto 2px!important;
+ flex-wrap:initial!important;
+}
+.control .widgetArea nav.workspacePager[aria-label="Dashboard workspaces"] button{
+ width:10px!important;height:10px!important;
+ min-width:10px!important;min-height:10px!important;
+ max-width:10px!important;max-height:10px!important;
+ padding:0!important;margin:0!important;
+ border-radius:50%!important;
+}
+@media(max-width:700px){
+ .control .widgetArea nav.workspacePager[aria-label="Dashboard workspaces"]{
+  grid-template-columns:repeat(5,8px)!important;
+  grid-template-rows:repeat(2,8px)!important;
+  gap:6px 9px!important;
+  padding:4px 9px!important;
+  height:auto!important;min-height:0!important;
+ }
+ .control .widgetArea nav.workspacePager[aria-label="Dashboard workspaces"] button{
+  width:8px!important;height:8px!important;min-width:8px!important;min-height:8px!important;
+ }
+}
