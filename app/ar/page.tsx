@@ -1,2 +1,2 @@
-import LocalizedEntry from "../components/LocalizedEntry";
-export default function Page(){return <LocalizedEntry lang="ar"/>;}
+import {redirect} from "next/navigation";
+export default function ArabicPreview(){redirect("/?lang=ar");}
