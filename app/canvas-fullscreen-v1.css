@@ -779,3 +779,34 @@ main[class*="control"] .homeLiveChannelPlayer{
 @media(max-width:899px){
  main[class*="control"]>[class*="surface"]{box-shadow:inset 0 1px rgba(255,237,189,.10),0 10px 34px rgba(0,0,0,.3)!important}
 }
+
+/* Premium Night v2: depth layers, responsive glass and restrained gold touch dust.
+   Keep the existing layout, colors, orbs and Live functionality intact. */
+main[class*="control"]{isolation:isolate!important}
+main[class*="control"]>[class*="pattern"],
+main[class*="control"]>[class*="islamicDecoration"]{pointer-events:none!important;transform:translateZ(0)}
+main[class*="control"]>[class*="pattern"]{opacity:.045!important;filter:blur(.45px)}
+main[class*="control"]>[class*="islamicDecoration"]{opacity:.13!important;filter:blur(1.4px)}
+main[class*="control"]>[class*="surface"]{
+ position:relative!important;isolation:isolate!important;
+ backdrop-filter:blur(18px) saturate(112%)!important;
+ -webkit-backdrop-filter:blur(18px) saturate(112%)!important;
+ box-shadow:inset 0 1px rgba(255,235,185,.13),inset 0 -1px rgba(255,255,255,.025),0 16px 48px rgba(0,0,0,.44),0 0 38px rgba(16,72,54,.075)!important;
+}
+main[class*="control"]>[class*="surface"]::after{
+ content:"";position:absolute;inset:1px;border-radius:inherit;z-index:0;pointer-events:none;
+ background:linear-gradient(160deg,rgba(255,232,175,.035),transparent 29%,transparent 75%,rgba(28,94,69,.045));
+}
+main[class*="control"]>[class*="surface"]>[class*="surfaceArtwork"]{z-index:0!important;opacity:.10!important;filter:blur(.65px)}
+main[class*="control"]>[class*="surface"]>[class*="surfaceArtwork"]~*{position:relative;z-index:1}
+@media(max-width:899px){
+ main[class*="control"]>[class*="surface"]{backdrop-filter:blur(11px) saturate(106%)!important;-webkit-backdrop-filter:blur(11px) saturate(106%)!important;box-shadow:inset 0 1px rgba(255,234,185,.11),0 9px 27px rgba(0,0,0,.35),0 0 16px rgba(19,74,54,.045)!important}
+ main[class*="control"]>[class*="surface"]::after{background:linear-gradient(165deg,rgba(255,232,175,.024),transparent 35%,rgba(28,94,69,.025))}
+}
+@media(min-width:900px){
+ main[class*="control"]>[class*="surface"]{backdrop-filter:blur(22px) saturate(112%)!important;-webkit-backdrop-filter:blur(22px) saturate(112%)!important}
+}
+.premium-touch-dust{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:2147482500}
+.premium-touch-dust i{position:absolute;left:0;top:0;width:3px;height:3px;border-radius:50%;background:#f7d99a;box-shadow:0 0 6px rgba(245,202,119,.65);opacity:0;animation:premiumTouchDust .72s ease-out forwards;transform:translate(-50%,-50%)}
+@keyframes premiumTouchDust{0%{opacity:.8;transform:translate(-50%,-50%) scale(.65)}75%{opacity:.5}100%{opacity:0;transform:translate(calc(-50% + var(--dust-x)),calc(-50% + var(--dust-y))) scale(.2)}}
+@media(prefers-reduced-motion:reduce){.premium-touch-dust{display:none!important}}
