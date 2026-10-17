@@ -75,7 +75,7 @@ export default function Home(){
  useEffect(()=>{
   // Preview: greet on landing. Production: greet only when an authenticated session begins.
   const isPreview=process.env.NEXT_PUBLIC_VERCEL_ENV!=="production";
-  if(!isPreview&&homeSignedIn!==true)return;
+  if(homeSignedIn===null||(!isPreview&&homeSignedIn!==true))return;
   const sessionKey=isPreview?"1muslim:welcome-audio-preview-v1":"1muslim:welcome-audio-signed-in-v1";
   try{if(sessionStorage.getItem(sessionKey)==="yes")return}catch{}
   const audio=new Audio("/audio/hudhud-welcome.mp3");
