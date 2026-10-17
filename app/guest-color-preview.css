@@ -1,0 +1,28 @@
+/* Preview-only guest color tester. No route changes, no auth changes. */
+.guestColorPreviewRoot{position:relative;z-index:2147483000;font-family:inherit}
+.guestColorPreviewTeaser{position:fixed;left:50%;bottom:calc(95px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:11px;min-height:55px;width:max-content;max-width:calc(100vw - 28px);padding:8px 15px;border-radius:22px;border:1px solid #f0d79a;background:linear-gradient(125deg,#093b30ed,#194f43ed);color:#f7e6b4;box-shadow:0 12px 40px #0009,0 0 20px #a5d3a522;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);font-weight:750;font-size:15px;text-align:left;cursor:pointer}
+.guestColorPreviewTeaser small{display:block;font-size:11px;font-weight:450;color:#e2d9b9;margin-top:2px}
+.guestColorPreviewTeaserDot{display:grid;place-items:center;width:36px;height:36px;background:#ffffff12;border-radius:50%;font-size:21px}
+.guestColorPreviewTeaserIntro{animation:guestColorTeaserEnter .65s cubic-bezier(.2,1,.3,1) both}
+@keyframes guestColorTeaserEnter{from{opacity:0;transform:translate(-50%,35px) scale(.91)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+.guestColorPreviewBackdrop{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:flex-end;justify-content:center;padding:12px 12px calc(15px + env(safe-area-inset-bottom,0px));background:#001a17a3;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.guestColorPreviewPanel{width:min(100%,480px);max-height:min(85dvh,720px);overflow:auto;border-radius:27px;padding:23px 20px 20px;border:1px solid var(--palette-border,#bcae83);background:linear-gradient(145deg,color-mix(in srgb,var(--palette-surface,#104437) 94%,#000),color-mix(in srgb,var(--palette-deep,#052b22) 96%,#000));box-shadow:0 20px 90px #000b,0 0 25px var(--palette-glow,#8ac9aa55);color:#fff4db;animation:guestColorPanelEnter .38s cubic-bezier(.2,1,.25,1) both}
+@keyframes guestColorPanelEnter{from{opacity:.5;transform:translateY(65px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.guestColorPreviewPanel header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.guestColorPreviewEyebrow{font-size:10px;font-weight:800;letter-spacing:.17em;color:#e4d29a}
+.guestColorPreviewPanel h2{font-size:25px;margin:7px 0}
+.guestColorPreviewPanel p{font-size:13px;line-height:1.5;color:#e4e1d4;margin:4px 0 17px}
+.guestColorPreviewClose{flex:0 0 42px;width:42px;height:42px;border-radius:50%;background:#ffffff14;border:1px solid #ffffff60;color:#fff;font-size:27px}
+.guestColorPreviewSwatches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.guestColorPreviewSwatches button{display:flex;align-items:center;gap:9px;min-width:0;min-height:58px;padding:8px;border-radius:14px;background:#ffffff0e;color:#fff2db;border:1px solid #ffffff55;font-size:13px;font-weight:700;text-align:left}
+.guestColorPreviewSwatches button.guestColorPreviewSelected{border:2px solid #f4d48c;background:#ffffff23}
+.guestColorPreviewSwatch{width:34px;height:34px;flex-shrink:0;border-radius:50%;border:1px solid #ffffff88}
+.guestColorPreviewSwatches button span:last-child{margin-left:auto}
+.guestColorPreviewDayNight{display:flex;align-items:center;gap:8px;margin:20px 0 12px}
+.guestColorPreviewDayNight>span{font-weight:700;font-size:13px;margin-right:auto}
+.guestColorPreviewDayNight button{padding:10px 12px;min-height:42px;border-radius:12px;border:1px solid #ffffff55;background:#ffffff13;color:#fff1d4;font-weight:700}
+.guestColorPreviewDayNight button[aria-pressed="true"]{background:#eed797;color:#15382e}
+.guestColorPreviewPanel .guestColorPreviewNote{font-size:12px;margin:8px 0 15px}
+.guestColorPreviewDone{width:100%;min-height:51px;border-radius:14px;border:1px solid #f0dba0;background:linear-gradient(110deg,#d0e8bb,#f0d7a4);color:#123a30;font-weight:800;font-size:15px}
+@media(min-width:700px){.guestColorPreviewBackdrop{align-items:center}.guestColorPreviewTeaser{left:auto;right:24px;transform:none}.guestColorPreviewTeaserIntro{animation:none}}
+@media(prefers-reduced-motion:reduce){.guestColorPreviewTeaserIntro,.guestColorPreviewPanel{animation:none}}
