@@ -1067,8 +1067,8 @@
 @media(prefers-reduced-motion:reduce){.workspacePage .customGrid>.widgetSlot>.widgetCanvas::before,.liveButterfly,.liveButterfly::before,.liveButterfly::after{animation:none!important}}
 
 /* Dedicated responsive day/night artwork for the scrollable dashboard gallery. */
-.workspaceScroller{background:linear-gradient(135deg,rgba(4,27,23,.55),rgba(3,18,17,.7)),url("/assets/control-center/backgrounds/workspace-night.PNG") center/cover no-repeat,#09251e}
-.day .workspaceScroller{background:linear-gradient(135deg,rgba(255,251,232,.24),rgba(240,247,225,.35)),url("/assets/control-center/backgrounds/workspace-day.PNG") center/cover no-repeat,#e5f0e2}
+.workspaceScroller{background:linear-gradient(135deg,rgba(4,27,23,.55),rgba(3,18,17,.7)),none center/cover no-repeat,#09251e}
+.day .workspaceScroller{background:linear-gradient(135deg,rgba(255,251,232,.24),rgba(240,247,225,.35)),none center/cover no-repeat,#e5f0e2}
 
 /* Preview: accessible vertical workspace scrolling and aligned card rows. */
 .control .workspaceScroller{min-height:0;overflow-x:auto;overflow-y:hidden;touch-action:pan-x pan-y}
@@ -1085,8 +1085,8 @@
 /* Soft cinematic crossfade for workspace theme changes; never swap image abruptly. */
 .control .workspaceScroller{position:relative;isolation:isolate;background:#09251e!important;transition:background-color 1100ms ease}
 .control .workspaceScroller::before,.control .workspaceScroller::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background-position:center;background-size:cover;background-repeat:no-repeat;transition:opacity 1350ms cubic-bezier(.22,1,.36,1);will-change:opacity}
-.control .workspaceScroller::before{background-image:linear-gradient(135deg,rgba(4,27,23,.45),rgba(3,18,17,.66)),url("/assets/control-center/backgrounds/workspace-night.PNG");opacity:1}
-.control .workspaceScroller::after{background-image:linear-gradient(135deg,rgba(255,251,232,.22),rgba(240,247,225,.30)),url("/assets/control-center/backgrounds/workspace-day.PNG");opacity:0}
+.control .workspaceScroller::before{background-image:linear-gradient(135deg,rgba(4,27,23,.45),rgba(3,18,17,.66)),none;opacity:1}
+.control .workspaceScroller::after{background-image:linear-gradient(135deg,rgba(255,251,232,.22),rgba(240,247,225,.30)),none;opacity:0}
 .day .control .workspaceScroller,.control.day .workspaceScroller,.day .workspaceScroller{background-color:#dce9df!important}
 .day .control .workspaceScroller::after,.control.day .workspaceScroller::after,.day .workspaceScroller::after{opacity:1}
 .day .control .workspaceScroller::before,.control.day .workspaceScroller::before,.day .workspaceScroller::before{opacity:0}
