@@ -293,3 +293,38 @@ nav[aria-label="Dashboard workspaces"]>button>span{display:none!important}
 .canvas-vertical-secondary .canvas-native-app:has(a[href="/profile"]) .canvas-native-body{
  flex:0 1 auto;min-height:0;justify-content:center;
 }
+
+/* HOME COMPOSITION LOCK: fullscreen must never hide the actual app identity,
+   search and welcome header. Preserve all existing carousel/workspace code. */
+main[data-canvas-fullscreen="true"] > header{
+ position:relative!important;inset:auto!important;width:100%!important;
+ min-height:64px!important;padding:8px 12px!important;
+ background:rgba(5,48,41,.92)!important;border:1px solid rgba(218,196,133,.4)!important;
+ border-radius:20px!important;box-shadow:0 8px 26px #001b1744!important;
+ pointer-events:auto!important;z-index:112!important;
+}
+main[data-canvas-fullscreen="true"] > header > :not(:has(.canvas-fullscreen-toggle)){display:initial!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{
+ position:relative!important;inset:auto!important;width:100%!important;
+ height:calc(100dvh - 165px)!important;min-height:440px!important;
+ border:1px solid rgba(218,196,133,.45)!important;border-radius:28px!important;
+ margin:12px 0!important;overflow:hidden!important;
+}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] nav[aria-label="Dashboard workspaces"]{display:grid!important}
+/* Secondary row should read as one transparent glass workspace, not a solid
+   full-screen application stacked inside another application. */
+.canvas-vertical-secondary{padding:clamp(6px,1.4vw,14px)!important;background:transparent!important}
+.canvas-vertical-secondary .canvas-native-app{
+ border:1px solid rgba(230,210,153,.33)!important;
+ background:linear-gradient(145deg,rgba(7,56,47,.44),rgba(3,36,34,.3))!important;
+ box-shadow:inset 0 1px 0 #f8e9bf24,0 12px 30px #001b1722!important;
+ backdrop-filter:blur(11px)!important;-webkit-backdrop-filter:blur(11px)!important;
+ padding:clamp(10px,2vw,18px)!important;
+}
+.canvas-vertical-secondary .canvas-native-app>header h2{font-size:clamp(19px,4vw,29px)!important;margin:4px 0 8px!important}
+.canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-body{display:flex;align-items:center;justify-content:center}
+.canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-profile{gap:clamp(8px,2vh,18px)!important;padding:10px 8px!important}
+.canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-avatar{width:78px!important;height:78px!important;font-size:32px!important}
+@media(max-width:600px){
+ main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{height:calc(100dvh - 180px)!important;min-height:400px!important}
+}
