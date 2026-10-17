@@ -1,0 +1,53 @@
+/* 1Muslim color palettes. Green is the unchanged default.
+   The palette is independent of the existing .light day/night mode. */
+:root{
+ --palette-surface:#063d32;--palette-deep:#04271f;
+ --palette-border:#a1bc8c;--palette-glow:rgba(65,168,116,.25);
+ --palette-accent:#83d6a7;--palette-tint:rgba(20,119,77,.10);
+}
+:root[data-palette="blue"]{
+ --palette-surface:#123e64;--palette-deep:#071d39;
+ --palette-border:#8ac2ec;--palette-glow:rgba(67,149,226,.28);
+ --palette-accent:#8acdf7;--palette-tint:rgba(32,101,198,.17);
+}
+:root[data-palette="gray-coral"]{
+ --palette-surface:#45474d;--palette-deep:#252932;
+ --palette-border:#e8a79c;--palette-glow:rgba(226,139,132,.22);
+ --palette-accent:#ffb4a5;--palette-tint:rgba(143,104,112,.16);
+}
+:root[data-palette="yellow"]{
+ --palette-surface:#64521c;--palette-deep:#292609;
+ --palette-border:#e9cf73;--palette-glow:rgba(238,189,64,.25);
+ --palette-accent:#f8dd86;--palette-tint:rgba(170,133,22,.16);
+}
+:root.light[data-palette="blue"]{--palette-surface:#b9dbf0;--palette-deep:#7daece;--palette-tint:rgba(67,154,226,.12);--palette-accent:#24679d}
+:root.light[data-palette="gray-coral"]{--palette-surface:#e1dfe0;--palette-deep:#c4b9ba;--palette-tint:rgba(221,136,122,.11);--palette-accent:#a54d46}
+:root.light[data-palette="yellow"]{--palette-surface:#fff1bc;--palette-deep:#f0d782;--palette-tint:rgba(237,188,50,.12);--palette-accent:#977117}
+/* Preserve green untouched; palette only themes surfaces when user opts in. */
+:root[data-palette]:not([data-palette="green"]) body{
+ --green:var(--palette-accent);--accent:var(--palette-accent);
+ --line:var(--palette-border);
+}
+:root[data-palette]:not([data-palette="green"]) :is(
+ .settingsCard,.settingsHero,[class*="workspaceShell"],[class*="canvasStage"],
+ [class*="canvasFrame"],[class*="workspacePanel"],[class*="homeLiveStudio"],
+ .homeMakkahLive,.homeLiveStudio,.canvas-native-app
+){
+ border-color:color-mix(in srgb,var(--palette-border) 60%,transparent)!important;
+ box-shadow:inset 0 1px 0 color-mix(in srgb,var(--palette-border) 20%,transparent),
+ 0 10px 36px var(--palette-glow)!important;
+}
+:root[data-palette]:not([data-palette="green"]) :is(.settingsCard,.homeMakkahLive,.homeLiveStudio,.canvas-native-app){
+ background:linear-gradient(145deg,color-mix(in srgb,var(--palette-surface) 75%,transparent),
+ color-mix(in srgb,var(--palette-deep) 64%,transparent))!important;
+ backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+:root[data-palette]:not([data-palette="green"]) [class*="workspacePager"] button[aria-current="page"]{
+ background:var(--palette-accent)!important;border-color:var(--palette-border)!important;
+}
+:root[data-palette]:not([data-palette="green"]) .settingsPage .eyebrow{color:var(--palette-accent)}
+@media(prefers-reduced-motion:no-preference){
+ :root[data-palette] :is(.settingsCard,.homeLiveStudio,.canvas-native-app){
+ transition:background-color .35s,border-color .35s,box-shadow .35s;
+ }
+}
