@@ -3,7 +3,7 @@ import Link from "next/link";
 import {useState} from "react";
 const broadcasts=[
  {name:"Makkah",detail:"Masjid al-Haram · broadcast",video:"oqQ8XEPEwTg",kind:"LIVE FEED",source:"https://www.youtube.com/watch?v=oqQ8XEPEwTg"},
- {name:"Madinah",detail:"Masjid an-Nabawi · Saudi Sunnah TV",video:"9A1S0xAPVIs",kind:"LIVE FEED",source:"https://www.youtube.com/watch?v=9A1S0xAPVIs"},
+ {name:"Madinah",detail:"Masjid an-Nabawi · Saudi Sunnah TV",video:"Rs7St51oDDc",kind:"LIVE FEED",source:"https://www.youtube.com/watch?v=Rs7St51oDDc"},
  {name:"Al-Aqsa",detail:"Jumu’ah khutbah · July 2026 replay",video:"u1uFu1jH2iM",kind:"REPLAY",source:"https://www.youtube.com/watch?v=u1uFu1jH2iM"}
 ] as const;
 export default function MakkahLiveFallback(){
