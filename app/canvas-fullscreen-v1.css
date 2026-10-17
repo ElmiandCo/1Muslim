@@ -109,3 +109,23 @@ nav[aria-label="Dashboard workspaces"]{grid-template-columns:repeat(6,8px)!impor
 .canvas-vertical-secondary .canvas-native-app>footer{padding:7px 0 4px}
 .canvas-six-map-top{position:absolute;inset:0;z-index:2;display:flex;padding:clamp(6px,1.5vw,16px);background:linear-gradient(140deg,rgba(3,39,32,.35),rgba(3,30,35,.18))}
 .canvas-six-map-top>.canvas-community-map-shell{flex:1;min-height:0;padding:10px;border-radius:22px;border:1px solid rgba(224,201,143,.45);background:rgba(7,52,45,.44);backdrop-filter:blur(10px)}
+
+/* Keep all 12 Canvas indicators in a true 6×2 grid, safely left of the light orb. */
+nav[aria-label="Dashboard workspaces"]{
+ left:clamp(12px,7%,42px)!important;right:auto!important;
+ transform:none!important;
+ display:grid!important;grid-template-columns:repeat(6,12px)!important;
+ grid-template-rows:repeat(2,12px)!important;
+ grid-auto-flow:row!important;grid-auto-columns:unset!important;
+ justify-items:center!important;align-items:center!important;
+ column-gap:8px!important;row-gap:8px!important;
+ width:max-content!important;max-width:calc(100% - 110px)!important;
+ padding:8px 10px!important;
+}
+nav[aria-label="Dashboard workspaces"]>button{
+ position:static!important;display:grid!important;place-items:center!important;
+ width:12px!important;height:12px!important;min-width:12px!important;min-height:12px!important;
+ margin:0!important;transform:none!important;flex:none!important;
+}
+nav[aria-label="Dashboard workspaces"]>button[aria-current="page"]{background:#e4d6a2!important}
+@media(max-width:370px){nav[aria-label="Dashboard workspaces"]{column-gap:5px!important;left:10px!important}}
