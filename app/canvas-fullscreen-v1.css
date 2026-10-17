@@ -538,3 +538,38 @@ nav[aria-label="Dashboard workspaces"]>button>span{display:none!important}
  nav[aria-label="Dashboard workspaces"]{left:6px!important;gap:7px!important;width:125px!important;min-width:125px!important;max-width:125px!important}
  .home-live-demo-screen{max-height:clamp(135px,22dvh,230px)!important}
 }
+
+/* Six horizontal workspace markers above Canvas, independent of vertical lessons. */
+nav[aria-label="Dashboard workspaces"][data-canvas-horizontal-dots="true"]{
+ display:flex!important;position:absolute!important;left:50%!important;right:auto!important;
+ top:-27px!important;bottom:auto!important;transform:translateX(-50%)!important;
+ grid-template-columns:none!important;grid-template-rows:none!important;
+ width:max-content!important;min-width:0!important;max-width:none!important;
+ padding:5px 10px!important;gap:18px!important;justify-content:center!important;
+ overflow:visible!important;
+}
+nav[aria-label="Dashboard workspaces"][data-canvas-horizontal-dots="true"]>button{
+ width:9px!important;height:9px!important;min-width:9px!important;min-height:9px!important;
+ border-radius:50%!important;
+}
+.homeMakkahEmpty{display:grid;place-items:center;min-height:120px;border:1px dashed rgba(222,204,157,.32);border-radius:14px;color:#e8dfc4;font-size:14px}
+/* Give the Canvas the vertical room formerly lost to oversized intro spacing. */
+@media(min-width:760px){
+ main:not([data-canvas-fullscreen="true"]) > section[aria-label="1Muslim Control Center"]{margin-top:4px!important}
+}
+@keyframes canvasFullscreenSoftZoomIn{
+ 0%{transform:scale(.92) translateY(14px);opacity:.72}
+ 67%{transform:scale(1.028) translateY(-4px);opacity:1}
+ 84%{transform:scale(.993) translateY(1px)}
+ 100%{transform:scale(1) translateY(0)}
+}
+@keyframes canvasFullscreenSoftZoomOut{
+ 0%{transform:scale(1.018);opacity:1}
+ 100%{transform:scale(.96);opacity:.86}
+}
+main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[aria-label="1Muslim Control Center"]{
+ animation:canvasFullscreenSoftZoomIn 640ms cubic-bezier(.2,.78,.2,1) both!important
+}
+@media(prefers-reduced-motion:reduce){
+ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[aria-label="1Muslim Control Center"]{animation:none!important}
+}
