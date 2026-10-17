@@ -7,21 +7,21 @@ import ElmTentAlphabet from "./ElmTentAlphabet";
 import PostDesignStudio from "./PostDesignStudio";
 import "./canvas-ummah-feed.css";
 
-type Profile={display_name?:string|null;username?:string|null;xp_total?:number|null;bio?:string|null};
+type Profile={display_name?:string|null;username?:string|null;xp_total?:number|null;bio?:string|null;shahada_verified_at?:string|null};
 type DailyPost={id:string;content?:string|null;body?:string|null;text?:string|null;created_at?:string|null};
-const destinations=["/profile","/recording-studio/shahadah","/community","/messages","/elm-tent"];
-const titles=["My Profile","Record Studio","Daily Posts · Ummah","Messenger","Elm Tent 🏕️"];
+const destinations=["/profile","/recording-studio/shahadah","/community","/messages","/elm-tent","/community"];
+const titles=["My Profile","Record Studio","Daily Posts · Ummah","Messenger","Elm Tent 🏕️","Community"];
 
 function ProfileApp({active}:{active:boolean}){
- const [profile,setProfile]=useState<Profile|null>(null);const [status,setStatus]=useState("Loading your profile…");
+ const [profile,setProfile]=useState<Profile|null>(null);const [earnedBadges,setEarnedBadges]=useState<string[]>([]);const [status,setStatus]=useState("Loading your profile…");
  useEffect(()=>{if(!active)return;let alive=true;const db=createClient();(async()=>{
   const {data:{user}}=await db.auth.getUser();if(!alive)return;
   if(!user){setStatus("Sign in to see your profile.");return}
-  const {data,error}=await db.from("profiles").select("display_name,username,xp_total,bio").eq("id",user.id).maybeSingle();
+  const {data,error}=await db.from("profiles").select("display_name,username,xp_total,bio,shahada_verified_at").eq("id",user.id).maybeSingle();
   if(!alive)return;if(error){setStatus("Profile is unavailable right now.");return}
-  setProfile(data);setStatus(data?"":"Complete your profile to begin.");
+  setProfile(data);setStatus(data?"":"Complete your profile to begin.");const badges=await db.from("member_badges").select("badge_key").eq("user_id",user.id);if(alive)setEarnedBadges((badges.data??[]).map(row=>row.badge_key));
  })();return()=>{alive=false}},[active]);
- return <div className="canvas-native-profile">{profile?<><div className="canvas-native-avatar" aria-hidden="true">{(profile.display_name||profile.username||"M").slice(0,1).toUpperCase()}</div><h3>{profile.display_name||profile.username||"Member"}</h3><p>{profile.bio||"Your journey with the Ummah"}</p><strong>✦ {(profile.xp_total||0).toLocaleString()} XP</strong></>:<p role="status">{status}</p>}<Link href="/profile">View profile, badges & settings ↗</Link></div>
+ return <div className="canvas-native-profile">{profile?<><div className="canvas-native-avatar" aria-hidden="true">{(profile.display_name||profile.username||"M").slice(0,1).toUpperCase()}</div><h3>{profile.display_name||profile.username||"Member"}</h3><p>{profile.bio||"Your journey with the Ummah"}</p><strong>✦ {(profile.xp_total||0).toLocaleString()} XP</strong><div className="canvas-profile-badges"><h4>🏅 Your badges</h4><div className="canvas-profile-badge-grid">{([{key:"shahada",name:"Shahadah Certified",image:"/assets/badges/shahada-badge.png"},{key:"dua",name:"Dua Badge",image:"/assets/badges/dua-badge.PNG"},{key:"tiktok",name:"TikTok Connected",image:"/assets/badges/1Muslim-TikTok-badge.PNG"}] as const).map(b=>{const earned=earnedBadges.includes(b.key)||(b.key==="shahada"&&Boolean(profile.shahada_verified_at));return <div key={b.key} className={"canvas-profile-badge"+(earned?" is-earned":" is-locked")}><img src={b.image} alt="" loading="lazy"/><span>{b.name}</span><small>{earned?"Earned":"Not earned"}</small></div>})}</div><small>Only badges with existing artwork in the repository are shown. See your full profile for badge settings.</small></div></>:<p role="status">{status}</p>}<Link href="/profile">View profile, badges & settings ↗</Link></div>
 }
 function RecorderApp({active}:{active:boolean}){
  const [recording,setRecording]=useState(false);const [clip,setClip]=useState<string|null>(null);const [error,setError]=useState("");const recorder=useRef<MediaRecorder|null>(null);const stream=useRef<MediaStream|null>(null);const chunks=useRef<Blob[]>([]);
@@ -90,8 +90,26 @@ function DailyPostsApp({active}:{active:boolean}){
   </div>}
  </div>;
 }
+export function CommunityMap({active}:{active:boolean}){
+ const [tab,setTab]=useState<"map"|"profile">("map");
+ const [zoom,setZoom]=useState(0);
+ const [search,setSearch]=useState("");
+ 
+ const bounds=[[-125,24,-66,50],[-111,29,-79,47],[-104,32,-85,45],[-99,35,-90,43],[-96,37,-92,41]] as const;
+ const bbox=bounds[zoom];
+ const url="https://www.openstreetmap.org/export/embed.html?bbox="+encodeURIComponent(bbox.join(","))+"&layer=mapnik";
+ return <div className="canvas-community-map-shell">
+  <div className="canvas-community-tabs" role="tablist" aria-label="Canvas six views"><button type="button" role="tab" aria-selected={tab==="map"} onClick={()=>setTab("map")}>🌎 Community Map</button><button type="button" role="tab" aria-selected={tab==="profile"} onClick={()=>setTab("profile")}>My Profile</button></div>
+  {tab==="profile"?<ProfileApp active={active}/>:<div className="canvas-community-map-panel">
+   <div className="canvas-community-map-heading"><strong>Discover your Ummah</strong><span>United States · Mosque and community markers coming next</span></div>
+   <form className="canvas-community-map-search" onSubmit={e=>e.preventDefault()}><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search city (coming next)" aria-label="Search for a city" disabled title="City search will be connected with mosque data in the next phase"/><button type="submit" disabled title="City search is not connected yet">Search</button></form>
+   <div className="canvas-community-map-frame"><iframe title="Interactive map of the United States" loading="lazy" src={url} referrerPolicy="no-referrer-when-downgrade" allowFullScreen={false}/><div className="canvas-community-map-zoom"><button type="button" onClick={()=>setZoom(v=>Math.min(4,v+1))} disabled={zoom===4} aria-label="Zoom in">+</button><button type="button" onClick={()=>setZoom(v=>Math.max(0,v-1))} disabled={zoom===0} aria-label="Zoom out">−</button><button type="button" onClick={()=>setZoom(0)} aria-label="Reset map to United States">⌂</button></div></div>
+   <p className="canvas-community-map-caption">Drag the map to explore. Pinch to zoom on supported devices. No mosque or member locations are displayed yet.</p>
+  </div>}
+ </div>;
+}
 export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boolean}){
  return <div className="canvas-native-app"><header><span>0{slot+6} · 1MUSLIM</span><h2>{titles[slot]}</h2></header><div className="canvas-native-body">
- {slot===0?<ProfileApp active={active}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:<ElmTentAlphabet/>}
+ {slot===0?<ProfileApp active={active}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:slot===4?<ElmTentAlphabet/>:<div className="canvas-community-map-panel"><strong>Community connections</strong><p>Discover Muslims and mosques through the Community Map above.</p></div>}
  </div><footer><Link href={destinations[slot]}>Open full experience ↗</Link></footer></div>
 }

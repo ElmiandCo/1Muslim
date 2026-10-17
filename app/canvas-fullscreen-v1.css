@@ -65,3 +65,231 @@ nav[aria-label="Dashboard workspaces"] button[aria-current="page"]{background:#e
 .canvas-native-feed article p{white-space:pre-wrap;overflow-wrap:anywhere}
 .canvas-native-feed article small{opacity:.65}
 @media(prefers-reduced-motion:reduce){.canvas-recorder-ring.is-recording{animation:none}}
+
+/* Canvas 6: map-first Friends workspace, no decorative wallpaper PNG. */
+.canvas-vertical-secondary:has(.canvas-community-map-shell){background-image:none!important}
+.canvas-native-app:has(.canvas-community-map-shell){max-width:none;background:rgba(4,28,28,.48);padding:clamp(8px,1.5vw,16px)}
+.canvas-native-app:has(.canvas-community-map-shell)>.canvas-native-body{min-height:0;flex:1}
+.canvas-community-map-shell{display:flex;flex-direction:column;gap:10px;height:100%;min-height:390px}
+.canvas-community-tabs{display:flex;gap:8px}
+.canvas-community-tabs button{flex:1;min-height:39px;border:1px solid #d9c99166;border-radius:16px;background:#062c29bb;color:#e8dbb5;font-weight:700}
+.canvas-community-tabs button[aria-selected=true]{background:#377963;color:#fff;border-color:#d9c991}
+.canvas-community-map-panel{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0}
+.canvas-community-map-heading{display:flex;flex-direction:column;gap:2px}
+.canvas-community-map-heading strong{font-size:clamp(15px,3vw,21px);color:#f5e6c1}
+.canvas-community-map-heading span,.canvas-community-map-caption{font-size:11px;color:#d3dfd5}
+.canvas-community-map-search{display:flex;gap:6px}
+.canvas-community-map-search input{flex:1;min-width:0;min-height:40px;padding:8px 12px;border:1px solid #d9c99166;border-radius:12px;background:#0a3d37aa;color:#fff;font-size:16px}
+.canvas-community-map-search button{padding:6px 14px;border:1px solid #d9c99166;border-radius:12px;background:#316a57;color:#fff}
+.canvas-community-map-search :disabled{opacity:.58}
+.canvas-community-map-frame{position:relative;flex:1;min-height:250px;border-radius:18px;overflow:hidden;border:1px solid #c9c59a88;background:#e5e8df}
+.canvas-community-map-frame iframe{display:block;width:100%;height:100%;min-height:250px;border:0}
+.canvas-community-map-zoom{position:absolute;right:10px;top:10px;display:grid;gap:5px}
+.canvas-community-map-zoom button{width:42px;height:42px;border:1px solid #d9c991;border-radius:12px;background:#083d35e8;color:#fff;font-size:23px;box-shadow:0 3px 12px #0004}
+.canvas-community-map-zoom button:disabled{opacity:.45}
+.canvas-community-map-caption{margin:0}
+
+/* Official Makkah broadcast sits above, never replaces, the emerald Go Live controls. */
+.homeMakkahLive{display:flex;flex-direction:column;gap:6px;width:100%;min-width:0;margin:7px 0;padding:9px;border:1px solid rgba(224,202,144,.48);border-radius:17px;background:rgba(3,33,28,.66);color:#f7ecd0}
+.homeMakkahLiveHeading{display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap;font-size:11px}
+.homeMakkahLiveHeading strong{font-size:12px;letter-spacing:.07em}
+.homeMakkahLiveHeading span{opacity:.77}
+.homeMakkahLiveFrame{width:100%;aspect-ratio:16/9;min-height:145px;overflow:hidden;border-radius:12px;background:#061715}
+.homeMakkahLiveFrame iframe{display:block;width:100%;height:100%;border:0}
+.homeMakkahLiveLink{align-self:flex-end;color:#e8d4a0;font-size:11px;text-decoration:underline;text-underline-offset:3px}
+
+/* 6×2 navigation and native secondary workspaces. */
+nav[aria-label="Dashboard workspaces"]{grid-template-columns:repeat(6,8px)!important;grid-template-rows:repeat(2,8px)!important}
+.canvas-vertical-secondary{display:flex;align-items:stretch;justify-content:stretch;padding:clamp(3px,.8vw,9px);background:transparent!important}
+.canvas-vertical-secondary>.canvas-native-app{flex:1;min-height:0;max-width:none;margin:0;padding:clamp(8px,1.5vw,16px);border:1px solid rgba(224,201,143,.34);border-radius:24px;background:linear-gradient(145deg,rgba(11,62,53,.36),rgba(4,40,35,.2));box-shadow:inset 0 1px 0 rgba(255,250,214,.12),0 0 22px rgba(220,197,119,.06);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+.canvas-vertical-secondary .canvas-native-app>header h2{font-size:clamp(17px,3.3vw,26px);margin:3px 0 7px}
+.canvas-vertical-secondary .canvas-native-body{display:flex;flex-direction:column;min-height:0;flex:1;overflow:auto}
+.canvas-vertical-secondary .canvas-native-feed{align-content:start}
+.canvas-vertical-secondary .canvas-native-feed>.ummah-feed-status{align-self:start;justify-self:center;margin:clamp(18px,5vw,44px) auto;padding:16px 22px;border-radius:20px;border:1px solid rgba(224,201,143,.38);background:rgba(4,40,35,.43);backdrop-filter:blur(12px)}
+.canvas-vertical-secondary .canvas-native-app>footer{padding:7px 0 4px}
+.canvas-six-map-top{position:absolute;inset:0;z-index:2;display:flex;padding:clamp(6px,1.5vw,16px);background:linear-gradient(140deg,rgba(3,39,32,.35),rgba(3,30,35,.18))}
+.canvas-six-map-top>.canvas-community-map-shell{flex:1;min-height:0;padding:10px;border-radius:22px;border:1px solid rgba(224,201,143,.45);background:rgba(7,52,45,.44);backdrop-filter:blur(10px)}
+
+/* Keep all 12 Canvas indicators in a true 6×2 grid, safely left of the light orb. */
+nav[aria-label="Dashboard workspaces"]{
+ left:clamp(12px,7%,42px)!important;right:auto!important;
+ transform:none!important;
+ display:grid!important;grid-template-columns:repeat(6,12px)!important;
+ grid-template-rows:repeat(2,12px)!important;
+ grid-auto-flow:row!important;grid-auto-columns:unset!important;
+ justify-items:center!important;align-items:center!important;
+ column-gap:8px!important;row-gap:8px!important;
+ width:max-content!important;max-width:calc(100% - 110px)!important;
+ padding:8px 10px!important;
+}
+nav[aria-label="Dashboard workspaces"]>button{
+ position:static!important;display:grid!important;place-items:center!important;
+ width:12px!important;height:12px!important;min-width:12px!important;min-height:12px!important;
+ margin:0!important;transform:none!important;flex:none!important;
+}
+nav[aria-label="Dashboard workspaces"]>button[aria-current="page"]{background:#e4d6a2!important}
+@media(max-width:370px){nav[aria-label="Dashboard workspaces"]{column-gap:5px!important;left:10px!important}}
+
+/* Widget Motion 3.0: GPU-friendly, restrained depth and eased interaction.
+   Applies to widget surfaces, not the entire swipeable Canvas. */
+:root{--widget-ease-out:cubic-bezier(.22,.72,.18,1);--widget-ease-spring:cubic-bezier(.2,.85,.25,1);--widget-motion-fast:220ms;--widget-motion-main:520ms}
+[data-magnetic-grid="true"] [data-widget],
+[data-magnetic-grid="true"] [data-widget] [class*="widgetCanvas"],
+.canvas-native-app,
+.canvas-community-map-shell{
+ transform-style:preserve-3d;
+ backface-visibility:hidden;
+ -webkit-backface-visibility:hidden;
+ transition-property:transform,opacity,box-shadow,border-color,background-color,filter;
+ transition-duration:var(--widget-motion-main);
+ transition-timing-function:var(--widget-ease-out);
+}
+[data-magnetic-grid="true"] [data-widget]{perspective:1200px;transform-origin:center center}
+[data-magnetic-grid="true"] [data-widget] [class*="widgetCanvas"]{transform-origin:center center}
+@media(hover:hover) and (pointer:fine){
+ [data-magnetic-grid="true"] [data-widget]:hover [class*="widgetCanvas"]{
+  transform:translate3d(0,-3px,0) rotateX(1deg);
+  box-shadow:0 12px 30px rgba(0,0,0,.13),inset 0 1px 0 rgba(255,246,208,.14);
+  border-color:rgba(236,212,155,.62)!important;
+ }
+}
+[data-magnetic-grid="true"] [data-widget]:focus-within [class*="widgetCanvas"]{border-color:rgba(239,215,161,.72)!important}
+[data-magnetic-grid="true"] [data-widget] :is(button,a,input,textarea,select){
+ transition-property:background-color,border-color,color,box-shadow,opacity,filter;
+ transition-duration:var(--widget-motion-fast);
+ transition-timing-function:var(--widget-ease-out);
+}
+.canvas-vertical-main,.canvas-vertical-secondary{
+ transition:transform 660ms var(--widget-ease-spring),opacity 430ms ease!important;
+}
+.canvas-native-body,.canvas-community-map-panel{min-width:0;transform:translateZ(0)}
+@media(prefers-reduced-motion:reduce){
+ [data-magnetic-grid="true"] [data-widget],
+ [data-magnetic-grid="true"] [data-widget] [class*="widgetCanvas"],
+ .canvas-native-app,.canvas-community-map-shell,
+ [data-magnetic-grid="true"] [data-widget] :is(button,a,input,textarea,select){
+  transition-duration:0.01ms!important;animation-duration:0.01ms!important;
+ }
+ [data-magnetic-grid="true"] [data-widget]:hover [class*="widgetCanvas"]{transform:none!important}
+ .canvas-vertical-main,.canvas-vertical-secondary{transition:none!important}
+}
+
+/* Home swipe: a brief half-turn of the arriving widget, not the full Canvas. */
+@keyframes canvasWidgetHalfSpin{
+ 0%{transform:perspective(1200px) rotateY(-76deg) scale(.965);opacity:.65}
+ 58%{transform:perspective(1200px) rotateY(7deg) scale(1.008);opacity:1}
+ 100%{transform:perspective(1200px) rotateY(0) scale(1);opacity:1}
+}
+[data-workspace-page][data-canvas-active="true"] .canvas-vertical-main [data-widget] [class*="widgetCanvas"]{
+ animation:canvasWidgetHalfSpin 720ms cubic-bezier(.2,.76,.16,1) both;
+}
+.canvas-profile-badges{width:100%;max-width:540px;padding:12px;border:1px solid rgba(223,199,139,.38);border-radius:18px;background:rgba(5,38,34,.35);backdrop-filter:blur(8px)}
+.canvas-profile-badges h4{margin:0 0 10px;color:#f1dba7}
+.canvas-profile-badge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.canvas-profile-badge{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;padding:8px 4px;border:1px solid rgba(226,203,145,.3);border-radius:14px;background:rgba(4,32,30,.35);font-size:11px}
+.canvas-profile-badge img{width:clamp(38px,8vw,64px);height:clamp(38px,8vw,64px);object-fit:contain}
+.canvas-profile-badge span{overflow-wrap:anywhere}
+.canvas-profile-badge small{opacity:.75}
+.canvas-profile-badge.is-locked{opacity:.48;filter:grayscale(1)}
+.canvas-profile-badges>small{display:block;margin-top:10px;opacity:.75}
+@media(prefers-reduced-motion:reduce){
+ [data-workspace-page][data-canvas-active="true"] .canvas-vertical-main [data-widget] [class*="widgetCanvas"]{animation:none!important}
+}
+
+/* Independent language globe: draggable, safe-area aware, never inside pager. */
+.canvas-language-globe{position:fixed;right:14px;bottom:calc(104px + env(safe-area-inset-bottom,0px));width:48px;height:48px;z-index:2147482100;touch-action:none;user-select:none;-webkit-user-select:none}
+.canvas-language-globe-button{display:grid;place-items:center;width:48px;height:48px;padding:0;border:1px solid rgba(231,208,150,.85);border-radius:50%;background:radial-gradient(circle at 35% 25%,#28735e,#063b32);color:#f6e7bf;font-size:24px;box-shadow:0 4px 20px #001b1788,inset 0 1px 1px #f8e4b777;cursor:grab;touch-action:none}
+.canvas-language-globe-button:active{cursor:grabbing}
+.canvas-language-menu{position:absolute;right:0;bottom:58px;width:min(230px,calc(100vw - 20px));padding:12px;display:grid;gap:6px;border:1px solid #d7bd80;border-radius:16px;background:rgba(4,45,39,.97);color:#fff;box-shadow:0 12px 30px #0008;touch-action:auto}
+.canvas-language-menu strong{font-size:13px;color:#eedba8}
+.canvas-language-menu button{min-height:39px;padding:7px 10px;border:1px solid #d7bd8055;border-radius:10px;background:#155849;color:#fff;text-align:left}
+.canvas-language-menu button[aria-pressed=true]{border-color:#e6d19a}
+.canvas-language-menu small{font-size:10px;line-height:1.4;color:#d2d7cb}
+
+/* Private live camera demo inside the existing emerald studio */
+.home-live-demo{display:flex;flex-direction:column;gap:8px;margin:10px 0;padding:9px;border:1px solid rgba(225,200,138,.52);border-radius:18px;background:rgba(2,28,27,.62);color:#f8ebcb;min-width:0}
+.home-live-demo-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.home-live-demo-head>div{display:grid;gap:3px}
+.home-live-demo-head strong{font-size:12px;letter-spacing:.07em}
+.home-live-demo-head small,.home-live-demo-note{font-size:10px;opacity:.8}
+.home-live-demo-pill,.home-live-demo-watermark{padding:5px 8px;border-radius:20px;background:#aa672a;color:#fff;font-size:10px;font-weight:800;letter-spacing:.07em}
+.home-live-demo-screen{position:relative;overflow:hidden;aspect-ratio:9/12;max-height:380px;border-radius:13px;background:radial-gradient(circle at 50% 30%,#1c6659,#062824 75%);border:1px solid #d8c48d66}
+.home-live-demo-video{display:block;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.home-live-demo-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}
+.home-live-demo-placeholder>span{font-size:40px}
+.home-live-demo-placeholder small{font-size:11px}
+.home-live-demo-watermark{position:absolute;top:10px;left:10px}
+.home-live-demo-comments{position:absolute;left:10px;bottom:10px;right:10px;display:grid;gap:4px;pointer-events:none}
+.home-live-demo-comments>div{width:fit-content;max-width:100%;padding:5px 9px;border-radius:12px;background:#001b18b8;color:#fff;font-size:11px;overflow-wrap:anywhere}
+.home-live-demo-actions{display:flex;gap:6px;flex-wrap:wrap}
+.home-live-demo-actions button,.home-live-demo-comment-form button{min-height:36px;padding:7px 10px;border:1px solid #d8c48d77;border-radius:10px;background:#22614e;color:#fff;font-size:12px}
+.home-live-demo-comment-form{display:flex;gap:6px}
+.home-live-demo-comment-form input{flex:1;min-width:0;min-height:38px;padding:7px 10px;border:1px solid #d8c48d77;border-radius:10px;background:#032f2b;color:#fff;font-size:16px}
+.home-live-demo-comment-form button:disabled{opacity:.45}
+.home-live-demo-note{margin:0}
+.home-live-demo-error{color:#ffd7ae;font-size:12px}
+.home-live-demo-real-link{align-self:flex-end;color:#f6d998;font-size:12px;text-decoration:underline}
+.home-live-demo-full{position:fixed;z-index:2147480000;inset:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);margin:0;padding:clamp(10px,3vw,25px);border-radius:0;background:#062d28f7;overflow-y:auto}
+.home-live-demo-full .home-live-demo-screen{flex:1;min-height:250px;max-height:none}
+@media(prefers-reduced-motion:reduce){.home-live-demo *{transition:none!important}}
+
+/* Screenshot recovery: six columns, two rows, bottom center; no orb overlap. */
+nav[aria-label="Dashboard workspaces"]{
+ position:sticky!important;bottom:6px!important;left:auto!important;right:auto!important;
+ margin:4px auto 6px!important;transform:none!important;
+ display:grid!important;grid-template-columns:repeat(6,14px)!important;
+ grid-template-rows:repeat(2,14px)!important;gap:7px 10px!important;
+ width:max-content!important;max-width:calc(100% - 110px)!important;
+ padding:9px 14px!important;justify-content:center!important;
+ border-radius:20px!important;z-index:20!important;
+}
+nav[aria-label="Dashboard workspaces"]>button{
+ display:grid!important;place-items:center!important;width:14px!important;height:14px!important;
+ min-width:14px!important;min-height:14px!important;padding:0!important;margin:0!important;
+ border:1.5px solid #d7ddca!important;border-radius:50%!important;background:transparent!important;
+}
+nav[aria-label="Dashboard workspaces"]>button[aria-current="page"]{background:#e9d69e!important;border-color:#f7e4b1!important}
+nav[aria-label="Dashboard workspaces"]>button>span{display:none!important}
+.canvas-language-globe:not([style*="left"]){right:10px!important;bottom:calc(105px + env(safe-area-inset-bottom,0px))!important}
+.homeMakkahLive{padding:7px 10px!important;margin:5px 0!important;gap:5px!important}
+.homeMakkahLiveCompact{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:9px;border-radius:12px;background:#052c27aa;color:#eee0bc;font-size:11px}
+.homeMakkahLiveCompact a{color:#f7e3a4;text-decoration:underline}
+.homeLiveStudio{min-height:0}
+.home-live-demo-screen{max-height:clamp(180px,30vh,320px)}
+/* The former height-chevron is now the actual fullscreen orb in the title row. */
+button[aria-label="Expand Canvas to full view"],button[aria-label="Exit full Canvas view"]{
+ position:absolute!important;right:12px!important;top:7px!important;z-index:30!important;
+ width:42px!important;height:42px!important;min-height:42px!important;
+ padding:0!important;margin:0!important;border-radius:50%!important;
+ border:1px solid #e4c991!important;background:radial-gradient(circle at 30% 20%,#327662,#073c33)!important;
+ box-shadow:0 2px 15px #001e1866!important;font-size:22px!important;
+}
+
+/* Canvas navigation invariant: twelve buttons, six per row, no wrap or third row. */
+nav[aria-label="Dashboard workspaces"]{
+ display:grid!important;grid-template-columns:repeat(6,minmax(0,14px))!important;
+ grid-template-rows:repeat(2,14px)!important;grid-auto-flow:row!important;
+ grid-auto-columns:unset!important;gap:8px 10px!important;
+ width:max-content!important;max-width:calc(100% - 90px)!important;
+ min-width:0!important;box-sizing:content-box!important;
+ position:sticky!important;inset:auto!important;bottom:5px!important;
+ margin:4px auto 8px!important;flex-wrap:nowrap!important;
+ align-content:center!important;justify-content:center!important;
+ padding:9px 13px!important;overflow:visible!important;
+}
+nav[aria-label="Dashboard workspaces"]>button{
+ width:14px!important;height:14px!important;min-width:14px!important;min-height:14px!important;
+ padding:0!important;margin:0!important;display:grid!important;place-items:center!important;
+ box-sizing:border-box!important;border-radius:50%!important;position:static!important;
+ transform:none!important;
+}
+nav[aria-label="Dashboard workspaces"]>button>span{display:none!important}
+/* The theme orb has one portal instance; never overlap the HudHud identity at top left. */
+.canvas-orb-floating-dock{isolation:isolate}
+/* Guest Profile: deliberate compact glass panel centered in available workspace. */
+.canvas-vertical-secondary .canvas-native-app:has(a[href="/profile"]){
+ justify-content:center;min-height:100%;background:rgba(4,37,34,.14);
+}
+.canvas-vertical-secondary .canvas-native-app:has(a[href="/profile"]) .canvas-native-body{
+ flex:0 1 auto;min-height:0;justify-content:center;
+}
