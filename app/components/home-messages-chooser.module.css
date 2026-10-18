@@ -34,3 +34,7 @@
 .avatar{box-shadow:0 3px 14px rgba(0,0,0,.22),0 0 10px rgba(227,198,130,.11)}
 @keyframes memberFloat{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-5px,0)}}
 @media(prefers-reduced-motion:reduce){.personCard{animation:none!important;will-change:auto}}
+
+.groupSelection{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;padding:9px;border:1px solid #d9bf7b55;border-radius:16px;background:#0b362c;color:#f5e4b5;font-size:12px}
+.groupSelection button{border:1px solid #ddc48188;border-radius:999px;background:#155c44;color:#fff2ce;padding:8px 13px;cursor:pointer;font-weight:650}
+.groupSelection button:disabled{opacity:.5;cursor:wait}
