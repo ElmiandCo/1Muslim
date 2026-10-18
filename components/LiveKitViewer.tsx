@@ -65,7 +65,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         audio.setAttribute("playsinline", "true");
         audioContainerRef.current.appendChild(audio);
         void audio.play().catch(() => {});
-        setStatus("LIVE");
+        // Audio alone does not establish video playback.
       }
     };
 
@@ -103,7 +103,9 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         });
         room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live video could not be subscribed to. Please reconnect."));
         room.on(RoomEvent.ParticipantConnected, () => mounted && setStatus("Waiting for host video…"));
-        room.on(RoomEvent.Disconnected, () => {if(mounted){setStatus("Live connection ended.");setReconnecting(false);}});
+        room.on(RoomEvent.Reconnecting, () => {if(mounted){setStatus("Reconnecting…");setReconnecting(true);setReconnectKey(String(Date.now()));}});
+        room.on(RoomEvent.Reconnected, () => {if(mounted){setReconnecting(false);setStatus("Waiting for host video…");}});
+        room.on(RoomEvent.Disconnected, () => {if(mounted){setStatus("Live connection ended.");setReconnecting(false);setError("The live connection ended. Please retry.");}});
 
         await room.connect(data.url, data.token, { autoSubscribe: true });
         if (!mounted) { await room.disconnect(); return; }
@@ -115,7 +117,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           }
         }
 
-        if (mounted && ![...room.remoteParticipants.values()].some(p=>[...p.trackPublications.values()].some(pub=>pub.kind===Track.Kind.Video && pub.track))) { setStatus("Waiting for host video…"); setReconnecting(true); setReconnectKey(String(Date.now())); }
+        if (mounted && ![...room.remoteParticipants.values()].some(p=>[...p.trackPublications.values()].some(pub=>pub.kind===Track.Kind.Video && pub.track))) { setStatus("Waiting for host video…"); setReconnecting(false); }
       } catch (err) {
         if (mounted) { setReconnecting(false); setStatus("Connection unavailable"); setError("The live connection could not be established. Please retry or return to Streaming."); }
       }
