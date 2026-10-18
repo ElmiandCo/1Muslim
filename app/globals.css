@@ -644,3 +644,42 @@ main:not(.control):not(.omQuranPage) :where(.card,.roomCard,.streamCard,.lessonC
 .homeLiveCarouselArrows button{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;border:1px solid #e3c9829c;border-radius:50%;background:linear-gradient(150deg,#14483b,#041f19);color:#fff4cc;font-size:36px;line-height:1;box-shadow:0 3px 12px #00180c99;cursor:pointer}
 .homeLiveCarouselArrows button:focus-visible{outline:3px solid #fff1a6;outline-offset:2px}
 .homeLiveCarouselArrows button:active{background:#157357}
+
+
+/* Black-gold Live Canvas: one outer shell, compact controls, video + conversation.
+   Scoped to the homepage Live workspace; preserves LiveKit and comment behavior. */
+.control .workspacePage:has(.homeMakkahLive) .homeLiveCarouselArrows{
+  margin:0 0 5px!important;padding:0 4px!important;min-height:34px;
+}
+.control .workspacePage:has(.homeMakkahLive) .homeLiveCarouselArrows button{
+  width:34px!important;height:34px!important;flex-basis:34px!important;
+  font-size:25px!important;box-shadow:none!important;
+}
+.control .workspacePage:has(.homeMakkahLive) .homeMakkahLive{
+  display:flex!important;flex-direction:column!important;min-height:0!important;
+  border:0!important;outline:0!important;border-radius:18px!important;
+  box-shadow:none!important;background:transparent!important;
+  padding:4px!important;gap:7px!important;
+}
+.control .workspacePage:has(.homeMakkahLive) .homeMakkahLiveHeading{
+  display:flex;align-items:center;justify-content:space-between;
+  min-height:28px;padding:0 5px!important;margin:0!important;
+}
+.control .workspacePage:has(.homeMakkahLive) .homeLiveChannelPlayer{
+  position:relative;flex:1 1 64%!important;min-height:190px!important;
+  border-radius:17px!important;overflow:hidden;
+  margin:0!important;
+}
+.control .workspacePage:has(.homeMakkahLive) .homeLiveCommentDock{
+  flex:0 1 36%!important;min-height:145px!important;
+  margin:0!important;border-radius:17px!important;
+  overflow:hidden;display:flex;flex-direction:column;
+}
+.control .workspacePage:has(.homeMakkahLive) .homeLiveDemoThread{
+  flex:1 1 auto;min-height:0;overflow-y:auto;
+}
+@media(max-width:650px){
+ .control .workspacePage:has(.homeMakkahLive){padding-inline:5px!important}
+ .control .workspacePage:has(.homeMakkahLive) .homeMakkahLive{padding:2px!important;gap:5px!important}
+ .control .workspacePage:has(.homeMakkahLive) .homeLiveCarouselArrows{margin-bottom:3px!important}
+}
