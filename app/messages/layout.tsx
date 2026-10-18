@@ -4,6 +4,7 @@ import "./messenger-clean-search.css";
 import "./messenger-clean-inbox.css";
 import "./messenger-clean-responsive.css";
 import "./messenger-reference-polish.css";
+import "./messenger-rebuild.css";
 
 export default function MessengerLayout({children}:{children:React.ReactNode}){
  return <div className="muslimMessengerFrame">
