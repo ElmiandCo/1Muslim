@@ -1662,3 +1662,17 @@
 .control .intro .islamicDecoration{z-index:0!important}
 .control .intro .decorationNight,.control .intro .decorationDay{top:145%!important}
 .control .surface,.control .widgetArea,.control .workspaceScroller{position:relative;z-index:2}
+
+/* Day-only pearl ivory and champagne gold: night theme remains untouched. */
+.control.day{
+ background:radial-gradient(ellipse at 15% 0%,#fffdf2 0%,transparent 56%),radial-gradient(ellipse at 90% 85%,#f1dfb977 0%,transparent 58%),linear-gradient(155deg,#fffdf7,#f8f2e5 60%,#f0e5d1)!important;
+ color:#493d2a;
+}
+.control.day .surface{background:linear-gradient(145deg,#fffef2ed,#f7eddaeb)!important;border-color:#d7b97d!important;box-shadow:inset 0 1px #fff,0 16px 42px #94754a21!important}
+.control.day .workspaceScroller{background-color:#f8f1e4!important}
+.control.day .workspaceScroller::after{opacity:.38!important}
+.control.day .workspaceScroller .workspacePage{background-color:transparent!important}
+.control.day .widgetToolbar{color:#715c3b!important}
+.control.day .introGreeting,.control.day .introGreeting h1{color:#534329!important}
+.control.day .introGreeting .eyebrow{color:#a17b39!important}
+.control.day .islamicDecoration::before{opacity:.18!important}
