@@ -208,7 +208,7 @@
 }
 
 /* Landing notice folds away, allowing the measured workspace to fill its place. */
-.guestBannerSlot{display:grid;grid-template-rows:0fr;opacity:0;visibility:hidden;transition:grid-template-rows 650ms cubic-bezier(.2,.75,.25,1),opacity 400ms ease,visibility 650ms}
+.guestBannerSlot{display:grid;grid-template-rows:0fr;opacity:0;visibility:hidden;transition:grid-template-rows 220ms cubic-bezier(.2,.75,.25,1),opacity 180ms ease,visibility 220ms}
 .guestBannerOpen{grid-template-rows:1fr;opacity:1;visibility:visible}
 .guestBannerSlot > :global(aside){min-height:0;overflow:hidden;position:relative;margin-block:0!important}
 .guestBannerOpen > :global(aside){margin-block:6px!important}
