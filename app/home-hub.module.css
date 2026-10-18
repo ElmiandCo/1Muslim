@@ -1656,3 +1656,23 @@
 .control.day .intro .decorationNight{opacity:0!important}
 .control.day .intro .decorationDay{background-image:url('/assets/decorations/islamic-white-ornament.PNG')!important;opacity:1!important}
 @media(prefers-reduced-motion:reduce){.control .intro .decorationNight,.control .intro .decorationDay{animation:none!important}}
+
+
+/* Black-and-gold approved fix: ornament is decorative background, never a foreground overlay.
+   Keep the greeting and Go Live above the ornament without altering their geometry. */
+.control .intro{isolation:isolate!important}
+.control .intro .islamicDecoration{
+  z-index:0!important;
+  pointer-events:none!important;
+}
+.control .intro .introGreeting,
+.control .intro .introActionDock{
+  position:relative;
+  z-index:2!important;
+}
+.control .intro .introGreeting .eyebrow,
+.control .intro .introGreeting .greetingWithOrb,
+.control .intro .introActionDock .introLiveButton{
+  position:relative;
+  z-index:3;
+}
