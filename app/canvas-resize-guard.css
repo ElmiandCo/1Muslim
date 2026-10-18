@@ -1,0 +1,19 @@
+/* 1Muslim Canvas resize guard.
+   The parent Canvas owns the 220ms height easing. Do not let legacy 460-780ms
+   widget transform springs chase its changing flex geometry. Scope this to
+   active viewport measurement or widget-edit mode; keep normal drag motion. */
+main[data-widget-motion] [class*="fillArea"][data-fit-measuring="true"] [data-magnetic-grid] > [data-widget],
+main[data-widget-motion] [class*="fillArea"] [data-magnetic-grid][class*="editGrid"] > [data-widget]:not(.hh-magnetic-lift) {
+  transition: opacity 180ms ease, box-shadow 180ms ease !important;
+}
+/* Disable scroll anchoring inside the resizing carousel to avoid jumpy offsets. */
+main[data-widget-motion] [class*="fillArea"] [class*="viewport"],
+main[data-widget-motion] [class*="fillArea"] [class*="slide"] {
+  overflow-anchor: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  main[data-widget-motion] [class*="fillArea"][data-fit-measuring="true"] [data-magnetic-grid] > [data-widget],
+  main[data-widget-motion] [class*="fillArea"] [data-magnetic-grid][class*="editGrid"] > [data-widget] {
+    transition: none !important;
+  }
+}
