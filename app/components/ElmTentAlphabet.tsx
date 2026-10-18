@@ -83,6 +83,7 @@ export default function ElmTentAlphabet(){
  const answerQuestion=(choice:number)=>{if(claiming)return;const next=[...answers,choice];setAnswers(next);if(next.length===28)void submitQuiz(next);else setQuizIndex(next.length)};
  return <div className={styles.root} onTouchStart={e=>{swipeStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(swipeStart.current===null)return;const delta=e.changedTouches[0].clientY-swipeStart.current;swipeStart.current=null;if(Math.abs(delta)>90)chooseLesson(lesson+(delta<0?1:-1))}}>
   <nav className={styles.lessonNav} aria-label="Elm Tent lessons"><button type="button" aria-label="Previous lessons" onClick={()=>setLessonWindow(0)}>‹</button>{Array.from({length:4},(_,i)=>lessonWindow*4+i).filter(i=>i!==0||!completedLessons.includes(1)).map(i=><button type="button" key={i} className={lesson===i?styles.lessonActive:""} aria-current={lesson===i?"step":undefined} onClick={()=>chooseLesson(i)}><span>{i+1}</span><small>{completedLessons.includes(i)?"✓ Done":i<2?"Letters":"Soon"}</small></button>)}<button type="button" aria-label="Next lessons" onClick={()=>setLessonWindow(1)}>›</button></nav>
+  {lesson===0&&milestone&&<div className={styles.milestoneToast} role="status"><strong>✦ First three letters learned!</strong><span>Continue exploring or begin Lesson 2.</span><div><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);advanceLetter()}}>Keep learning</button><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);chooseLesson(1)}}>Ready for Lesson 2 →</button></div></div>}
   {lesson===1&&<ElmTentLetterQuiz onPass={answers=>void submitQuiz(answers)} onReady={()=>chooseLesson(2)}/>}
   {lesson===2&&<ElmTentVowels/>}
   {lesson===0&&<div className={styles.lessonStage} key={lesson}><strong>LESSON {lesson+1} / 8</strong>{lesson>1?<div className={styles.soon}>✦ Lesson {lesson+1} · Coming Soon</div>:completedLessons.includes(lesson)?<span>✓ Completed</span>:null}</div>
@@ -104,6 +105,6 @@ export default function ElmTentAlphabet(){
   {showAll&&<div className={styles.grid} aria-label="Arabic alphabet">{LETTERS.map(([glyph,name],i)=><button type="button" key={glyph} onClick={()=>{select(i);setShowAll(false)}} aria-label={name} aria-pressed={selected===i} className={styles.tile}><span lang="ar">{glyph}</span><small>{name}</small>{practiced.includes(i)&&<b aria-label="Practiced">✓</b>}</button>)}</div>}
   </>}
   {badgeMessage&&lesson!==0&&<p role="status" className={styles.note}>{badgeMessage}</p>}
-  {lesson===0&&<p className={styles.disclaimer}>Audio uses your device's speech engine; pronunciation is not verified. Native-speaker recordings will improve future lessons.</p>
+  {lesson===0&&<p className={styles.disclaimer}>Audio uses your device's speech engine; pronunciation is not verified. Native-speaker recordings will improve future lessons.</p>}
  </div>;
 }
