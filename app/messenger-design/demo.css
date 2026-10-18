@@ -4,3 +4,10 @@ body:has(.mmDemo) .guestGateFade,body:has(.mmDemo) .welcomeOverlay,body:has(.mmD
 body:has(.mmDemo) .mmDemo{position:relative;z-index:2}
 
 .mmGuestAction{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 18px;border-radius:24px;background:#00875e;color:white!important;text-decoration:none;font-weight:700;align-self:flex-start}.mmChat h2{margin:0;font-size:22px}.mmChat p{color:var(--sub);margin:0}.mmChat .mmFilters{margin:0}
+
+/* Production: the approved Messenger surface is the actual inbox, not a CSS approximation. */
+.muslimMessengerFrame:has(.mmDemo){background:#fff!important;min-height:100dvh!important}
+.muslimMessengerFrame:has(.mmDemo)>.muslimMessengerDock{display:none!important}
+.muslimMessengerFrame .mmDemo{width:100%!important;min-height:100dvh!important}
+.muslimMessengerFrame .mmPage{max-width:850px!important;margin:0 auto!important}
+.muslimMessengerFrame .mmPortrait{overflow:hidden!important}
