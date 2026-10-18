@@ -1,0 +1,14 @@
+/* Step 1: page foundation; only top fifth carries emerald */
+body:has(.omMessengerUnified){margin:0;background:#fff!important}
+.omImessagePage.omMessengerUnified,.omImessagePage.omMessengerUnified.omMessengerDay{--inbox-bg:#fff;--inbox-ink:#101c26;--inbox-muted:#657181;--inbox-line:#e9ebed;--inbox-surface:#fff;background:linear-gradient(180deg,#003f30 0%,#087d5d 9%,#e2f7ef 16%,#fff 20%,#fff 100%)!important;color:var(--inbox-ink)!important;max-width:none!important;min-height:100dvh!important;margin:0!important;padding:0 16px 108px!important;border-radius:0!important}
+.omImessagePage.omMessengerUnified.omMessengerNight{--inbox-bg:#080b12;--inbox-ink:#f8fafc;--inbox-muted:#a1a8b4;--inbox-line:#242932;--inbox-surface:#0b1019;background:linear-gradient(180deg,#003e30 0%,#08775b 9%,#09261f 16%,#080b12 20%,#080b12 100%)!important;color:var(--inbox-ink)!important}
+.omMessengerUnified .omMessengerPattern,.omMessengerUnified .omMessengerOrnaments{display:none!important}
+.omMessengerUnified .omMessengerTop{min-height:155px!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;padding:32px 8px 12px!important}
+.omMessengerUnified .omMessengerTop .omMessengerHome{color:#e7cb86!important;font-size:14px!important}
+.omMessengerUnified .omMessengerHeading{font-size:clamp(25px,6vw,39px)!important;font-weight:750!important;letter-spacing:-.035em!important;color:white!important;margin:10px 0 0!important}
+.omMessengerUnified .omMessengerNewButton{width:52px!important;height:52px!important;background:#fff!important;color:#007c57!important;border:1px solid #e3c77b!important;box-shadow:0 6px 20px #00352644!important;border-radius:50%!important;font-size:29px!important}
+.omMessengerUnified .omMessengerShell{border:0!important;box-shadow:none!important;background:transparent!important;border-radius:0!important;overflow:visible!important;min-height:calc(100dvh - 260px)!important}
+.omMessengerUnified .omConversationList{background:transparent!important;border:0!important;box-shadow:none!important;color:var(--inbox-ink)!important}
+.omMessengerUnified .omMessengerDiscovery{background:transparent!important;border:0!important;box-shadow:none!important}
+.omMessengerUnified .omMessengerDiscoveryTitle{color:var(--inbox-ink)!important}
+@media(max-width:700px){.omMessengerUnified .omMessengerShell{display:block!important}.omMessengerUnified .omConversationList{padding:0!important}.omMessengerUnified .omMessengerTop{min-height:150px!important}}
