@@ -251,6 +251,18 @@ export default function OnboardingPage() {
         void trimShahadaAudio(new Blob(chunks, { type: recorder.mimeType })).then(trimmed => {
           if (attempt !== attemptRef.current) return;
           setVoiceStatus("recognized");
+          // Play the welcome only after microphone recording has stopped, so it cannot enter the Shahada recording.
+          try {
+            const welcomeKey = "1muslim:first-login-intro-played:" + (userId || "");
+            if (userId && localStorage.getItem(welcomeKey) !== "1") {
+              const welcome = new Audio("/audio/hudhud-welcome.mp3");
+              welcome.volume = 0.75;
+              welcome.addEventListener("ended", () => localStorage.setItem(welcomeKey, "1"), { once: true });
+              void welcome.play().catch(() => {
+                // Autoplay may be blocked; homepage provides a user-gesture playback fallback.
+              });
+            }
+          } catch { /* Audio unavailable: never block Shahada verification. */ }
           setAudioBlob(trimmed);
           setAudioPreview(URL.createObjectURL(trimmed));
           setMessage("Shahada recognized. Review your trimmed recording before continuing.");
