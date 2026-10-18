@@ -32,3 +32,21 @@
 .backgroundTile{position:relative;display:flex;align-items:flex-end;justify-content:center;min-height:70px;padding:8px 4px;border:1px solid rgba(244,220,157,.48);border-radius:12px;background-size:cover;background-position:center;color:#fff9e6;cursor:pointer;text-shadow:0 2px 7px #000;font-size:10px;font-weight:750;text-align:center}
 .backgroundTile[aria-pressed=true]{border:2px solid #f7e2a5;box-shadow:0 0 0 2px rgba(177,243,191,.45),0 0 16px rgba(240,213,134,.38)}
 @media(max-width:600px){.backgroundGallery{grid-template-columns:repeat(3,minmax(0,1fr))}.backgroundTile{min-height:65px;font-size:9px}}
+
+
+/* Compact Post Studio: preserve the editor, step controls and sharing workflow. */
+@media(max-width:650px){
+ .studio{gap:5px;padding:7px 9px;border-radius:16px}
+ .header{font-size:10px;min-height:20px}
+ .steps{gap:5px}
+ .steps button{min-height:30px;border-radius:11px;font-size:10px;padding:4px 2px}
+ .previewArea{height:clamp(175px,24dvh,230px);min-height:165px;padding:2px 2px 3px}
+ .floating{min-height:155px;max-height:230px;padding:10px 12px;border-radius:15px;gap:3px}
+ .previewTitle{font-size:clamp(13px,3.4vw,17px)}
+ .editor{font-size:clamp(16px,4vw,22px);min-height:48px}
+ .toolArea{gap:4px;max-height:95px}
+ .quickRow{font-size:10px}
+ .quickRow button{min-height:28px;padding:3px 9px}
+ .choices button{min-height:28px;padding:4px 10px}
+ .footer button{min-height:37px;padding:6px 12px}
+}
