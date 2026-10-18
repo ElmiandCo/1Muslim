@@ -111,7 +111,7 @@
   min-height:350px!important;
   box-sizing:border-box!important;
   overflow:hidden!important;
-  transition:height 700ms cubic-bezier(.2,.75,.25,1)!important;
+  transition:height 220ms cubic-bezier(.2,.75,.25,1)!important;
 }
 .fillArea > :global([class*="widgetToolbar"]),
 .fillArea > :global([class*="hudhudWidgetTip"]){flex:0 0 auto!important}
@@ -170,12 +170,12 @@
   justify-content:stretch!important;
   gap:clamp(7px,1.2vh,14px)!important;
 }
-.fillArea .content > [data-widget]{min-height:0!important;transition:flex-grow 700ms cubic-bezier(.2,.75,.25,1),min-height 700ms cubic-bezier(.2,.75,.25,1)!important}
+.fillArea .content > [data-widget]{min-height:0!important;transition:none!important}
 .fillArea .content > [data-widget] > [class*="widgetCanvas"]{
   position:relative!important;
   height:100%!important;
   min-height:0!important;
-  transition:height 700ms cubic-bezier(.2,.75,.25,1),border-color 700ms ease,box-shadow 700ms ease!important;
+  transition:border-color 180ms ease,box-shadow 180ms ease!important;
 }
 .fillArea .content [class*="widgetTop"],.fillArea .content [class*="widgetVisual"]{
   flex:1 1 auto!important;
