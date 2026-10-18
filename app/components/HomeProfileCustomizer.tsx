@@ -12,7 +12,7 @@ const options=[
  {url:"/assets/avatars/water-avatar-male.PNG",label:"Water Male",xp:5000},
  {url:"/assets/avatars/water-avatar-female.PNG",label:"Water Female",xp:5000}
 ];
-export default function HomeProfileCustomizer(){
+export default function HomeProfileCustomizer({variant="orb"}:{variant?:"orb"|"badge"}){
  const [open,setOpen]=useState(false),[index,setIndex]=useState(0),[xp,setXp]=useState(0);
  const [id,setId]=useState(""),[config,setConfig]=useState<Record<string,unknown>>({}),[saving,setSaving]=useState(false),[status,setStatus]=useState("");
  useEffect(()=>{
@@ -49,7 +49,7 @@ export default function HomeProfileCustomizer(){
  }
  const current=options[index];
  return <>
-  <button type="button" onClick={()=>setOpen(true)} aria-label="Customize profile avatar" title="Customize profile avatar" style={{border:"1px solid #bc9b57",borderRadius:"50%",width:37,height:37,background:"rgba(6,25,18,.75)",color:"#e9cf8b",cursor:"pointer"}}>◉</button>
+  <button type="button" onClick={()=>setOpen(true)} aria-label="Customize profile avatar" title="Customize profile avatar" style={variant==="badge"?{display:"inline-flex",alignItems:"center",gap:8,padding:"9px 14px",border:"1px solid rgba(226,190,102,.6)",borderRadius:999,background:"rgba(8,45,33,.7)",color:"#f1d68c",fontWeight:700,cursor:"pointer"}:{border:"1px solid #bc9b57",borderRadius:"50%",width:37,height:37,background:"rgba(6,25,18,.75)",color:"#e9cf8b",cursor:"pointer"}}>{variant==="badge"?"✦ Customize Avatar":"◉"}</button>
   {open&&<div role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setOpen(false)}} style={{position:"fixed",inset:0,zIndex:99999,display:"grid",placeItems:"center",background:"rgba(0,0,0,.77)",backdropFilter:"blur(14px)",padding:16}}>
    <section role="dialog" aria-modal="true" aria-label="Profile avatar customization" style={{width:"min(420px,100%)",border:"1px solid rgba(226,190,102,.5)",borderRadius:28,padding:22,background:"linear-gradient(145deg,#102b20,#040a08)",boxShadow:"0 25px 90px #000,0 0 40px #10462d",color:"#f7edd2",textAlign:"center"}}>
     <header style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><strong>✦ Customize Profile</strong><button type="button" onClick={()=>setOpen(false)} aria-label="Close" style={{background:"transparent",border:0,color:"white",fontSize:23}}>×</button></header>
