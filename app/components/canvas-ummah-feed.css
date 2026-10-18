@@ -39,3 +39,13 @@
 .ummah-like-button{align-self:center;flex:0 0 30px;min-width:30px;min-height:38px;border:1px solid #e4cf98;border-radius:50%;background:#134b40;color:#ffe0ab;font-size:23px;cursor:pointer}
 .ummah-like-button[aria-pressed=true]{color:#ff9ba8}
 @media(max-width:480px){.ummah-floating-pair{gap:4px}.ummah-floating-post{width:73%;padding:11px}.ummah-floating-author{flex-basis:16%}.ummah-like-button{flex-basis:28px;min-width:28px}}
+
+/* Keep the conversation overlay centered in the visible canvas rather than anchored below it. */
+.ummah-comments-backdrop{align-items:center;justify-content:center;padding:clamp(10px,3%,22px);box-sizing:border-box}
+.ummah-comments-sheet{width:100%;max-width:640px;min-height:0;max-height:calc(100% - 12px);overflow:hidden;box-sizing:border-box;border-radius:24px;padding:clamp(14px,3%,22px);animation:ummahSheetCentered .35s cubic-bezier(.2,.9,.3,1) both}
+.ummah-comments-sheet>header{flex-shrink:0}
+.ummah-comment-post-preview{flex-shrink:0;max-height:min(24%,130px);overflow-y:auto}
+.ummah-comments-list{min-height:48px;overflow-y:auto;overscroll-behavior:contain}
+.ummah-comments-sheet form{flex-shrink:0;margin-top:8px}
+@keyframes ummahSheetCentered{from{opacity:.4;transform:translateY(20px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.ummah-comments-sheet{animation:none}}
