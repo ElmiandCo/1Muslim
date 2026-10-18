@@ -25,3 +25,10 @@
 @media(max-width:600px){.studio{gap:7px;padding:9px;border-radius:17px}.previewArea{height:clamp(205px,31vh,270px);min-height:185px;padding:2px 3px 6px}.floating{min-height:175px;padding:12px;border-radius:17px}.tools button{gap:2px}.tools button span{font-size:9px}.editor{font-size:19px}.toolArea{max-height:112px}}
 @media(max-height:650px){.studio{gap:5px}.header{display:none}.steps button{min-height:31px}.previewArea{height:185px;min-height:155px}.floating{min-height:145px;padding:9px}.toolArea{max-height:90px}.footer button{min-height:37px}}
 @media(prefers-reduced-motion:reduce){.floating,.floating[data-motion=float]{animation:none!important;transition:none!important}}
+
+/* Illustrated Islamic backgrounds — responsive, selectable thumbnails. */
+.floating{background-size:cover!important;background-position:center!important}
+.backgroundGallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;max-height:105px;overflow-y:auto}
+.backgroundTile{position:relative;display:flex;align-items:flex-end;justify-content:center;min-height:70px;padding:8px 4px;border:1px solid rgba(244,220,157,.48);border-radius:12px;background-size:cover;background-position:center;color:#fff9e6;cursor:pointer;text-shadow:0 2px 7px #000;font-size:10px;font-weight:750;text-align:center}
+.backgroundTile[aria-pressed=true]{border:2px solid #f7e2a5;box-shadow:0 0 0 2px rgba(177,243,191,.45),0 0 16px rgba(240,213,134,.38)}
+@media(max-width:600px){.backgroundGallery{grid-template-columns:repeat(3,minmax(0,1fr))}.backgroundTile{min-height:65px;font-size:9px}}
