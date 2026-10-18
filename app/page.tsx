@@ -24,6 +24,7 @@ import OrbGestureManager from "./components/OrbGestureManager";
 import PremiumTouchDust from "./components/PremiumTouchDust";
 import FirstLoginIntroAudio from "./components/FirstLoginIntroAudio";
 import LandingNasheed from "./components/LandingNasheed";
+import HomeProfileCustomizer from "./components/HomeProfileCustomizer";
 import RisingEnergyOrbs from "./components/RisingEnergyOrbs";
 import ShahadaWelcomeToast from "./components/ShahadaWelcomeToast";
 import PreviewGuestGate from "./components/PreviewGuestGate";
