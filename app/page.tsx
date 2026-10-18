@@ -384,7 +384,7 @@ const navCollapsedRef=useRef(false);
    if(!area)return;
    let frame=0;
    let lastHeight=0;
-   let fitSettleTimer:ReturnType<typeof setTimeout>|null=null;
+   let fitSettleTimer:number|null=null;
    const measure=()=>{
      // Coalesce ResizeObserver and visualViewport callbacks into one read per frame.
      if(frame)return;
