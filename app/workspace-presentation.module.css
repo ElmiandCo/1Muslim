@@ -113,6 +113,9 @@
   overflow:hidden!important;
   transition:height 220ms cubic-bezier(.2,.75,.25,1)!important;
 }
+/* Viewport-fit updates track header/keyboard movement immediately; only the
+   intentional expand/collapse action uses the 220ms height transition. */
+.fillArea[data-fit-measuring="true"]{transition:none!important}
 .fillArea > :global([class*="widgetToolbar"]),
 .fillArea > :global([class*="hudhudWidgetTip"]){flex:0 0 auto!important}
 .fillArea .viewport{

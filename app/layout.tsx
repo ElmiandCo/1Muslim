@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./canvas-layout-view-transitions.css";
 import "./color-palettes.css";
 import "./guest-color-preview.css";
 import "./site-text.css";
