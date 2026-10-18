@@ -461,13 +461,14 @@
 
 /* Transparent Islamic ornaments share one anchor; only opacity changes with theme. */
 .islamicDecoration{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;isolation:isolate}
-.decorationNight,.decorationDay{position:absolute;display:block;left:50%;top:clamp(60px,11vh,130px);width:min(84vw,760px);height:min(60vh,590px);transform:translateX(-50%);background-position:center top;background-repeat:no-repeat;background-size:contain;pointer-events:none;transition:opacity 900ms cubic-bezier(.22,1,.36,1);will-change:opacity;opacity:0}
-.decorationNight{background-image:url('/assets/decorations/islamic-white-ornament.PNG');opacity:.16}
-.decorationDay{background-image:url('/assets/decorations/islamic-gold-ornament.PNG');opacity:0}
+.decorationNight,.decorationDay{position:absolute;display:block;left:76%;top:clamp(130px,20vh,240px);width:min(58vw,650px);height:min(48vh,480px);transform:translateX(-50%);background-position:center center;background-repeat:no-repeat;background-size:contain;pointer-events:none;transition:opacity 1200ms cubic-bezier(.22,1,.36,1);will-change:opacity;opacity:0}
+/* Both ornaments share identical geometry so switching themes is a true crossfade. */
+.decorationNight{background-image:url('/assets/decorations/islamic-gold-ornament.PNG');opacity:.23}
+.decorationDay{background-image:url('/assets/decorations/islamic-white-ornament.PNG');opacity:0}
 .day .decorationNight{opacity:0}
-.day .decorationDay{opacity:.21}
+.day .decorationDay{opacity:.28}
 .controlHeader,.intro,.surface,.searchDock,.dockNav{position:relative;z-index:1}
-@media(max-width:700px){.decorationNight,.decorationDay{top:90px;width:110vw;height:58vh}}
+@media(max-width:700px){.decorationNight,.decorationDay{left:76%;top:135px;width:66vw;height:330px}}
 @media(prefers-reduced-motion:reduce){.decorationNight,.decorationDay{transition:none}}
 
 /* 1Muslim seamless crown cards — isolated to custom dashboard widgets */
