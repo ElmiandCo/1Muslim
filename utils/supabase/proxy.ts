@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
   // Guests may view the landing page, but must sign in before navigating elsewhere.
   // Keep auth callbacks, static assets, legal pages and API endpoints accessible.
   const pathname = request.nextUrl.pathname;
-  const guestAllowed = pathname === "/" || pathname.startsWith("/auth") ||
+  const guestAllowed = pathname === "/" || (pathname === "/messenger-design" || pathname === "/messages") || pathname.startsWith("/auth") ||
     pathname.startsWith("/terms") || pathname.startsWith("/privacy") ||
     pathname.startsWith("/api/") || pathname.startsWith("/_next/") ||
     pathname.startsWith("/assets/") || pathname.startsWith("/videos/") ||
