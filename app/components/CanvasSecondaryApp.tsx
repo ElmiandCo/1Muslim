@@ -3,11 +3,13 @@ import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
 import HomeMessagesChooser from "./HomeMessagesChooser";
+import ProfileAvatar from "./ProfileAvatar";
+import PublicBadgeSelector from "./PublicBadgeSelector";
 import ElmTentAlphabet from "./ElmTentAlphabet";
 import PostDesignStudio from "./PostDesignStudio";
 import "./canvas-ummah-feed.css";
 
-type Profile={display_name?:string|null;username?:string|null;xp_total?:number|null;bio?:string|null;shahada_verified_at?:string|null};
+type Profile={display_name?:string|null;username?:string|null;xp_total?:number|null;bio?:string|null;shahada_verified_at?:string|null;id?:string;gender?:string|null;avatar_gender?:string|null;avatar_package?:string|null;avatar_config?:Record<string,unknown>|null;profile_accent?:string|null};
 type DailyPost={id:string;content?:string|null;body?:string|null;text?:string|null;created_at?:string|null};
 const destinations=["/profile","/recording-studio/shahadah","/community","/messages","/elm-tent","/community"];
 const titles=["My Profile","Record Studio","Daily Posts · Ummah","Messenger","Elm Tent 🏕️","Community"];
@@ -17,11 +19,11 @@ function ProfileApp({active}:{active:boolean}){
  useEffect(()=>{if(!active)return;let alive=true;const db=createClient();(async()=>{
   const {data:{user}}=await db.auth.getUser();if(!alive)return;
   if(!user){setStatus("Sign in to see your profile.");return}
-  const {data,error}=await db.from("profiles").select("display_name,username,xp_total,bio,shahada_verified_at").eq("id",user.id).maybeSingle();
+  const {data,error}=await db.from("profiles").select("id,display_name,username,xp_total,bio,shahada_verified_at,gender,avatar_gender,avatar_package,avatar_config,profile_accent").eq("id",user.id).maybeSingle();
   if(!alive)return;if(error){setStatus("Profile is unavailable right now.");return}
   setProfile(data);setStatus(data?"":"Complete your profile to begin.");const badges=await db.from("member_badges").select("badge_key").eq("user_id",user.id);if(alive)setEarnedBadges((badges.data??[]).map(row=>row.badge_key));
  })();return()=>{alive=false}},[active]);
- return <div className="canvas-native-profile">{profile?<><div className="canvas-native-avatar" aria-hidden="true">{(profile.display_name||profile.username||"M").slice(0,1).toUpperCase()}</div><h3>{profile.display_name||profile.username||"Member"}</h3><p>{profile.bio||"Your journey with the Ummah"}</p><strong>✦ {(profile.xp_total||0).toLocaleString()} XP</strong><div className="canvas-profile-badges"><h4>🏅 Your badges</h4><div className="canvas-profile-badge-grid">{([{key:"shahada",name:"Shahadah Certified",image:"/assets/badges/shahada-badge.png"},{key:"dua",name:"Dua Badge",image:"/assets/badges/dua-badge.PNG"},{key:"tiktok",name:"TikTok Connected",image:"/assets/badges/1Muslim-TikTok-badge.PNG"}] as const).map(b=>{const earned=earnedBadges.includes(b.key)||(b.key==="shahada"&&Boolean(profile.shahada_verified_at));return <div key={b.key} className={"canvas-profile-badge"+(earned?" is-earned":" is-locked")}><img src={b.image} alt="" loading="lazy"/><span>{b.name}</span><small>{earned?"Earned":"Not earned"}</small></div>})}</div><small>Only badges with existing artwork in the repository are shown. See your full profile for badge settings.</small></div></>:<p role="status">{status}</p>}<Link href="/profile">View profile, badges & settings ↗</Link></div>
+ return <div className="canvas-native-profile">{profile?<><div className="canvas-native-avatar" aria-label="Your selected avatar"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/></div><Link href="/profile" className="canvas-avatar-change">✦ Change avatar · Gold / Water / Silver ↗</Link><h3>{profile.display_name||profile.username||"Member"}</h3><p>{profile.bio||"Your journey with the Ummah"}</p><strong>✦ {(profile.xp_total||0).toLocaleString()} XP</strong><div className="canvas-profile-badges"><h4>🏅 Your badges</h4><div className="canvas-profile-badge-grid">{([{key:"shahada",name:"Shahadah Certified",image:"/assets/badges/shahada-badge.png"},{key:"dua",name:"Dua Badge",image:"/assets/badges/dua-badge.PNG"},{key:"tiktok",name:"TikTok Connected",image:"/assets/badges/1Muslim-TikTok-badge.PNG"}] as const).map(b=>{const earned=earnedBadges.includes(b.key)||(b.key==="shahada"&&Boolean(profile.shahada_verified_at));return <div key={b.key} className={"canvas-profile-badge"+(earned?" is-earned":" is-locked")}><img src={b.image} alt="" loading="lazy"/><span>{b.name}</span><small>{earned?"Earned":"Not earned"}</small></div>})}</div><small>Swipe through and choose your public badges below.</small>{profile.id&&<PublicBadgeSelector userId={profile.id} verifiedAt={profile.shahada_verified_at??null}/>}</div></>:<p role="status">{status}</p>}<Link href="/profile">View profile, badges & settings ↗</Link></div>
 }
 function RecorderApp({active}:{active:boolean}){
  const [recording,setRecording]=useState(false);const [clip,setClip]=useState<string|null>(null);const [error,setError]=useState("");const recorder=useRef<MediaRecorder|null>(null);const stream=useRef<MediaStream|null>(null);const chunks=useRef<Blob[]>([]);
