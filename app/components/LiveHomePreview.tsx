@@ -15,7 +15,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
   setFailure("");
   setConnectionState("connecting");
   let active=true;
-  let retryTimer: ReturnType<typeof setTimeout> | undefined;
+  let retryTimer: number | undefined;
   const scheduleRetry=()=>{
    if(!active||retryTimer)return;
    const delay=Math.min(30000,2000*2**Math.min(attempt,4));
