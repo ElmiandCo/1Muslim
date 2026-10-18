@@ -133,6 +133,7 @@ export default function OnboardingPage() {
   const [transcript, setTranscript] = useState("");
   const [listening, setListening] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [welcomeUserId, setWelcomeUserId] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [processingAudio, setProcessingAudio] = useState(false);
@@ -195,6 +196,7 @@ export default function OnboardingPage() {
     (async () => {
       const s = createClient();
       const { data: { user } } = await s.auth.getUser();
+      if (user) setWelcomeUserId(user.id);
       if (!user) { const method=new URLSearchParams(window.location.search).get("method");router.replace("/auth?shahada=1&method="+(method==="declaration"?"declaration":"audio")); return; }
       const { data: p } = await s.from("profiles").select("gender,shahada_verified_at,shahada_language").eq("id", user.id).single();
       if (p?.gender && p?.shahada_verified_at) { router.replace("/"); return; }
@@ -253,8 +255,8 @@ export default function OnboardingPage() {
           setVoiceStatus("recognized");
           // Play the welcome only after microphone recording has stopped, so it cannot enter the Shahada recording.
           try {
-            const welcomeKey = "1muslim:first-login-intro-played:" + (userId || "");
-            if (userId && localStorage.getItem(welcomeKey) !== "1") {
+            const welcomeKey = "1muslim:first-login-intro-played:" + (welcomeUserId || "");
+            if (welcomeUserId && localStorage.getItem(welcomeKey) !== "1") {
               const welcome = new Audio("/audio/hudhud-welcome.mp3");
               welcome.volume = 0.75;
               welcome.addEventListener("ended", () => localStorage.setItem(welcomeKey, "1"), { once: true });
