@@ -461,8 +461,8 @@
 
 /* Transparent Islamic ornaments share one anchor; only opacity changes with theme. */
 /* Full floating crescent, independently overlaid without changing the page geometry. */
-.control .intro{position:relative;z-index:3;overflow:visible;isolation:visible}
-.control .intro .islamicDecoration{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:visible}
+.control .intro{position:relative;z-index:2147483646;overflow:visible}
+.control .intro .islamicDecoration{position:absolute;inset:0;z-index:2147483647;pointer-events:none;overflow:visible}
 .control .intro .decorationNight,.control .intro .decorationDay{position:absolute;right:-1%;top:50%;display:block;width:min(64vw,450px);height:min(38vw,275px);min-height:175px;transform:translateY(-40%);background-position:center;background-repeat:no-repeat;background-size:contain;pointer-events:none;transition:opacity 1200ms ease;opacity:0;filter:drop-shadow(0 6px 15px rgba(241,205,107,.25));animation:ornamentFloat 6s ease-in-out infinite alternate}
 .control .intro .decorationNight{background-image:url('/assets/decorations/islamic-gold-ornament.PNG');opacity:1}
 .control .intro .decorationDay{background-image:url('/assets/decorations/islamic-white-ornament.PNG');opacity:0}
