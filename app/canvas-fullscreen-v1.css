@@ -387,8 +387,11 @@ nav[aria-label="Dashboard workspaces"]>button>span{display:none!important}
     z-index: 2;
   }
   main:not([data-canvas-fullscreen="true"]) [class*="workspaceScroller"] {
-    height: min(72dvh, 860px) !important;
-    max-height: min(72dvh, 860px) !important;
+    /* The measured Canvas parent owns height. A second 72dvh cap caused clipping
+       and made the carousel chase its parent during collapse and widget resize. */
+    flex: 1 1 0% !important;
+    height: auto !important;
+    max-height: none !important;
     min-height: 0 !important;
   }
   main:not([data-canvas-fullscreen="true"]) [class*="workspacePage"] {
@@ -403,5 +406,24 @@ nav[aria-label="Dashboard workspaces"]>button>span{display:none!important}
 }
 @media (max-width: 700px) and (max-height: 700px) {
   main:not([data-canvas-fullscreen="true"]) [class*="widgetArea"] { margin-top: -8px !important; }
-  main:not([data-canvas-fullscreen="true"]) [class*="workspaceScroller"] { height: min(65dvh, 650px) !important; max-height: min(65dvh, 650px) !important; }
+  main:not([data-canvas-fullscreen="true"]) [class*="workspaceScroller"] { flex: 1 1 0% !important; height: auto !important; max-height: none !important; min-height: 0 !important; }
+}
+
+/* One Canvas height owner, one motion clock: match parent, widget flex and card
+   height at 220ms. The approved black surface, ornaments and sizing stay intact. */
+main[data-widget-motion] [class*="widgetArea"][class*="fillArea"] {
+  transition: height 220ms cubic-bezier(.2,.75,.25,1) !important;
+}
+main[data-widget-motion] [class*="fillArea"] [class*="content"] > [data-widget] {
+  transition: flex-grow 220ms cubic-bezier(.2,.75,.25,1) !important;
+}
+main[data-widget-motion] [class*="fillArea"] [class*="content"] > [data-widget] > [class*="widgetCanvas"] {
+  transition: height 220ms cubic-bezier(.2,.75,.25,1), border-color 180ms ease, box-shadow 180ms ease !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  main[data-widget-motion] [class*="widgetArea"][class*="fillArea"],
+  main[data-widget-motion] [class*="fillArea"] [class*="content"] > [data-widget],
+  main[data-widget-motion] [class*="fillArea"] [class*="content"] > [data-widget] > [class*="widgetCanvas"] {
+    transition: none !important;
+  }
 }
