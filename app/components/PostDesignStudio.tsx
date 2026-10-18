@@ -4,11 +4,12 @@ import {useRouter} from "next/navigation";
 import {createClient} from "../../utils/supabase/client";
 import styles from "./PostDesignStudio.module.css";
 
-type Theme="emerald"|"gold"|"midnight"|"ivory";
+type Theme="emerald"|"gold"|"makkah"|"midnight"|"garden"|"purple";
 type Template="reflection"|"reminder"|"verse"|"hadith"|"question"|"announcement";
 type Motion="none"|"glow"|"float";
 const templates:Template[]=["reflection","reminder","verse","hadith","question","announcement"];
-const themes:Theme[]=["emerald","gold","midnight","ivory"];
+const themes:Theme[]=["emerald","gold","makkah","midnight","garden","purple"];
+const themeLabels:Record<Theme,string>={emerald:"Emerald Mosque",gold:"Golden Ramadan",makkah:"Makkah",midnight:"Midnight Stars",garden:"Paradise Garden",purple:"Purple Serenity"};
 const draftKey="1muslim-home-community-draft";
 const badLanguage=(value:string)=>/(^|[^a-z])f[\\W_]*u[\\W_]*c[\\W_]*k(?:[\\W_]*(?:s|e[\\W_]*d|i[\\W_]*n[\\W_]*g))?(?=$|[^a-z])/i.test(value.normalize("NFKC"));
 export default function PostDesignStudio(){
@@ -38,7 +39,7 @@ export default function PostDesignStudio(){
  return <section className={styles.studio} aria-label="Design Post Share studio">
   <div className={styles.header}><span>✦ POST STUDIO</span><span lang="ar">صمّم · اكتب · شارك</span></div>
   <div className={styles.steps} role="tablist" aria-label="Post creation steps">{(["design","post","share"] as const).map((step,i)=><button key={step} type="button" role="tab" aria-selected={panel===step} onClick={()=>{setPanel(step);setTool(null)}}><small>0{i+1}</small> {step.toUpperCase()}</button>)}</div>
-  <div className={styles.previewArea}><div className={styles.floating} data-theme={theme} data-motion={motion} data-template={template}>
+  <div className={styles.previewArea}><div className={styles.floating} style={{backgroundImage:`linear-gradient(180deg,rgba(2,20,17,.22),rgba(2,20,17,.78)),url(/post-backgrounds/${theme}.svg)`}} data-theme={theme} data-motion={motion} data-template={template}>
    <span className={styles.accent} aria-hidden="true">۞</span><div className={styles.previewTop}><span>✦ 1MUSLIM</span><span>{template.toUpperCase()}</span></div>
    <span className={styles.previewTitle}>{title}</span>
    <textarea ref={editorRef} aria-label="Write your post directly on the preview" maxLength={2000} placeholder="What's on your mind? Tap to write…" value={text} onFocus={()=>setPanel("post")} onChange={e=>updateText(e.target.value)} className={styles.editor}/>
@@ -46,7 +47,7 @@ export default function PostDesignStudio(){
    <div className={styles.previewBottom}><span>✧</span><span>{text.length} / 2000</span></div>
   </div></div>
   {panel==="design"&&<div className={styles.toolArea}><div className={styles.tools}>{(["background","template","effects","media"] as const).map((name)=><button type="button" key={name} aria-pressed={tool===name} onClick={()=>{setTool(tool===name?null:name);if(name==="media")mediaRef.current?.click()}}>{name==="background"?"◐":name==="template"?"▦":name==="effects"?"✧":"＋"} <span>{name}</span></button>)}</div>
-   {tool==="background"&&<div className={styles.choices}>{themes.map(name=><button type="button" key={name} aria-pressed={theme===name} onClick={()=>setTheme(name)}>{name}</button>)}</div>}
+   {tool==="background"&&<div className={styles.backgroundGallery}>{themes.map(name=><button type="button" className={styles.backgroundTile} key={name} aria-label={`Use ${themeLabels[name]} background`} aria-pressed={theme===name} onClick={()=>setTheme(name)} style={{backgroundImage:`linear-gradient(0deg,rgba(0,19,16,.83),transparent 75%),url(/post-backgrounds/${name}.svg)`}}><span>{themeLabels[name]}</span></button>)}</div>}
    {tool==="template"&&<div className={styles.choices}>{templates.map(name=><button type="button" key={name} aria-pressed={template===name} onClick={()=>setTemplate(name)}>{name}</button>)}</div>}
    {tool==="effects"&&<div className={styles.choices}>{(["none","glow","float"] as const).map(name=><button type="button" key={name} aria-pressed={motion===name} onClick={()=>setMotion(name)}>{name}</button>)}</div>}
    {media&&<button type="button" className={styles.removeMedia} onClick={()=>setMedia(null)}>Remove attachment · {media.name}</button>}
