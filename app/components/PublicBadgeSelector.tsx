@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import "./royal-badge-carousel.css";
 import { createClient } from "../../utils/supabase/client";
 const options = [
  { id:"shahada",label:"Shahadah Certified",image:"/assets/badges/shahada-badge.png",benefit:"Watch, post, comment, like, share, and go live after certification." },
@@ -15,6 +16,8 @@ export default function PublicBadgeSelector({ userId, verifiedAt }: { userId: st
  const [earnedKeys, setEarnedKeys] = useState<string[]>([]);
  const [saving, setSaving] = useState(false);
  const [message, setMessage] = useState("");
+ const [focusedBadge,setFocusedBadge]=useState(0);
+ const rotate=(step:number)=>setFocusedBadge(i=>(i+step+options.length)%options.length);
  useEffect(() => {
   let active=true;
   const db=createClient();
@@ -35,12 +38,12 @@ export default function PublicBadgeSelector({ userId, verifiedAt }: { userId: st
  };
  return <section className="profileEditor" style={{padding:24,border:"1px solid #49675c",borderRadius:20}}>
   <h2>🏅 Public Badges</h2><p>Choose which earned badges appear on your public profile. Show up to three earned badges at once. Visibility does not change the benefits or permissions you have earned.</p>
-  <div style={{display:"grid",gap:12,marginTop:18}}>
-   {options.map(b=>{const earned=b.id==="tiktok"?connected:(b.id==="shahada"&&Boolean(verifiedAt))||earnedKeys.includes(b.id);return <label key={b.id} style={{display:"flex",alignItems:"center",gap:14,padding:14,border:"1px solid #46645b",borderRadius:14,opacity:earned?1:.55}}>
+  <div className="royalBadgeCarousel" aria-label="Royal Carousel badge selection"><div className="royalBadgeControls"><button type="button" onClick={()=>rotate(-1)} aria-label="Previous badge">‹</button><span>ROYAL CAROUSEL · {focusedBadge+1} / {options.length}</span><button type="button" onClick={()=>rotate(1)} aria-label="Next badge">›</button></div><div className="royalBadgeStage">
+   {options.map((b,index)=>{const offset=(index-focusedBadge+options.length)%options.length;const distance=offset>options.length/2?offset-options.length:offset;const earned=b.id==="tiktok"?connected:(b.id==="shahada"&&Boolean(verifiedAt))||earnedKeys.includes(b.id);return <label key={b.id} className={"royalBadgeCard"+(distance===0?" isFocused":"")} style={{"--royal-offset":distance,"--royal-depth":Math.abs(distance)} as React.CSSProperties} onClick={()=>{if(distance!==0)setFocusedBadge(index)}}>
     {b.image?<img src={b.image} alt="" style={{width:48,height:48,objectFit:"contain"}}/>:<span style={{fontSize:32}}>✦</span>}
     <span style={{flex:1}}><strong>{b.label}</strong><small style={{display:"block"}}>{earned?"Earned • available to display":"Locked • not currently earned"}</small><small style={{display:"block",marginTop:5,opacity:.85}}>Benefit: {b.benefit}</small></span>
     <input type="checkbox" checked={earned&&enabled.includes(b.id)} disabled={!earned||saving} onChange={()=>toggle(b.id)} aria-label={"Show "+b.label+" publicly"}/>
    </label>})}
-  </div><p role="status">{message}</p><p style={{fontSize:12,opacity:.75}}>Disconnecting TikTok automatically removes its badge from public view, even if you previously selected it.</p>
+  </div></div><p role="status">{message}</p><p style={{fontSize:12,opacity:.75}}>Disconnecting TikTok automatically removes its badge from public view, even if you previously selected it.</p>
  </section>;
 }
