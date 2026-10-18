@@ -24,3 +24,13 @@
 @media(max-width:600px){.root{padding:5px;gap:7px}.heading{font-size:10px}.action{min-height:49px;gap:4px;padding:4px;border-radius:12px}.action img{width:26px;height:26px}.action span{font-size:10px}.stage{padding:9px;gap:6px;border-radius:16px}.stageBar{font-size:11px}.videoStage{max-height:38%}.peopleGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.avatar{width:39px;height:39px;flex-basis:39px}.voiceStage{min-height:54px}.voiceOrb{width:48px;height:48px;font-size:22px}}
 @media(max-height:680px){.heading{display:none}.action{min-height:43px}.videoStage{max-height:32%}.memberArea{min-height:70px}}
 @media(prefers-reduced-motion:reduce){.stage{animation:none}.action{transition:none}.action:hover{transform:none}}
+
+/* Member registry stays visible across Voice, Video, and Message modes. */
+.personCard{animation:memberFloat 5.2s ease-in-out infinite;will-change:transform;transition:background .25s,border-color .25s,box-shadow .25s}
+.personCard:nth-child(3n+2){animation-duration:6.3s}
+.personCard:nth-child(4n+3){animation-duration:4.7s}
+.personCard[aria-pressed=true]{box-shadow:0 0 0 1px rgba(248,223,154,.42),0 0 18px rgba(115,222,157,.2)}
+.personCard:focus-visible{outline:2px solid #f2d89e;outline-offset:2px}
+.avatar{box-shadow:0 3px 14px rgba(0,0,0,.22),0 0 10px rgba(227,198,130,.11)}
+@keyframes memberFloat{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-5px,0)}}
+@media(prefers-reduced-motion:reduce){.personCard{animation:none!important;will-change:auto}}
