@@ -39,7 +39,7 @@ function RecorderApp({active}:{active:boolean}){
  };
  return <div className="canvas-native-recorder"><div className={"canvas-recorder-ring"+(recording?" is-recording":"")}>♫</div><p>{recording?"Recording your voice…":"Record an audio message or reflection."}</p><button type="button" onClick={()=>void toggle()}>{recording?"■ Stop recording":"● Start recording"}</button>{clip&&<><audio controls src={clip}/><a href={clip} download="1muslim-recording.webm">Save recording to device ↓</a></>}{error&&<p role="alert">{error}</p>}<small>Recordings stay on this device until you choose to save them.</small></div>
 }
-type UmmahPost={id:string;body:string;created_at:string;author_name:string;author_handle:string;author_id?:string};
+type UmmahPost={id:string;body:string;created_at:string;author_name:string;author_handle:string;author_id?:string;avatar_url?:string|null};
 type UmmahComment={id:string;post_id:string;name:string;body:string;created_at:string};
 function DailyPostsApp({active}:{active:boolean}){
  const [posts,setPosts]=useState<UmmahPost[]>([]);
@@ -49,11 +49,16 @@ function DailyPostsApp({active}:{active:boolean}){
  const [draft,setDraft]=useState("");
  const [busy,setBusy]=useState(false);
  const [notice,setNotice]=useState("");
+ const [likes,setLikes]=useState<Record<string,boolean>>({});
+ const [paused,setPaused]=useState(false);
+ const lastTouch=useRef(0);
  const feedRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{if(!active)return;let alive=true;
   const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)throw Error();const data=await r.json();if(alive){setPosts(data.posts||[]);setStatus(data.posts?.length?"":"No posts yet. Be the first to share.");}}catch{if(alive)setStatus("Unable to load the Ummah feed.");}};
-  void load();const timer=setInterval(()=>void load(),30000);return()=>{alive=false;clearInterval(timer)};
+  void load();const timer=setInterval(()=>void load(),5000);const refresh=()=>void load();window.addEventListener("1muslim:community-post-published",refresh);return()=>{alive=false;clearInterval(timer);window.removeEventListener("1muslim:community-post-published",refresh)};
  },[active]);
+ useEffect(()=>{if(!active||paused||posts.length<2||typeof window==="undefined"||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;const root=feedRef.current;if(!root)return;let last=0;let frame=0;const tick=(now:number)=>{if(!last)last=now;const delta=Math.min(now-last,100);last=now;if(Date.now()-lastTouch.current>500){const end=root.scrollHeight-root.clientHeight;if(end>1){root.scrollTop+=delta*.024;if(root.scrollTop>=end-1)root.scrollTop=0}}frame=requestAnimationFrame(tick)};frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame)},[active,paused,posts.length]);
+ const likePost=async(id:string)=>{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setNotice("Sign in to like posts.");return}const was=!!likes[id];setLikes(p=>({...p,[id]:!was}));const res=was?await db.from("ummah_post_likes").delete().eq("post_id",id).eq("user_id",user.id):await db.from("ummah_post_likes").upsert({post_id:id,user_id:user.id},{onConflict:"post_id,user_id"});if(res.error){setLikes(p=>({...p,[id]:was}));setNotice("Unable to save like.")}};
  useEffect(()=>{if(!active)return;const root=feedRef.current;if(!root)return;
   const observer=new IntersectionObserver(entries=>{for(const entry of entries)entry.target.classList.toggle("ummah-in-view",entry.isIntersecting)},{root,threshold:.12,rootMargin:"0px 0px -8% 0px"});
   root.querySelectorAll(".ummah-floating-pair").forEach(el=>observer.observe(el));
@@ -66,15 +71,16 @@ function DailyPostsApp({active}:{active:boolean}){
   setComments(previous=>[...previous,d.comment]);setDraft("");
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
  return <div className="ummah-canvas-shell">
-  <div className="ummah-floating-feed" ref={feedRef} aria-label="Community posts">
+  <div className="ummah-floating-feed" ref={feedRef} aria-label="Community posts" onTouchStart={()=>{lastTouch.current=Date.now();setPaused(true)}} onTouchEnd={()=>{lastTouch.current=Date.now();setPaused(false)}} onPointerDown={()=>{lastTouch.current=Date.now();setPaused(true)}} onPointerUp={()=>{lastTouch.current=Date.now();setPaused(false)}} onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}>
    {posts.length?posts.map((post,i)=><div className="ummah-floating-pair" key={post.id} style={{["--ummah-tilt" as string]:(i%2===0?"-3deg":"3deg")}}>
     <button type="button" className="ummah-floating-post" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}} aria-label={"Open comments on post by "+post.author_name}>
      <span className="ummah-post-glow" aria-hidden="true"/>
      <span className="ummah-post-body">{post.body}</span>
      <span className="ummah-post-bottom"><span>✦ Ummah</span><span>{new Date(post.created_at).toLocaleDateString()}</span><span>Comments ↗</span></span>
     </button>
+    <button type="button" className="ummah-like-button" aria-label={likes[post.id]?"Unlike post":"Like post"} aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥":"♡"}</button>
     <div className="ummah-floating-author" aria-label={"Posted by "+post.author_name}>
-     <span className="ummah-floating-avatar" aria-hidden="true">{(post.author_name||"M").charAt(0).toUpperCase()}</span>
+     <span className="ummah-floating-avatar" aria-hidden="true">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span>
      <span className="ummah-floating-author-name">{post.author_name}</span>
     </div>
    </div>):<p className="ummah-feed-status" role="status">{status}</p>}
