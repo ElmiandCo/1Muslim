@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import ExpressionKeyboard from "../components/ExpressionKeyboard";
 import HomeMessagesChooser from "../components/HomeMessagesChooser";
-import MessengerDesignDemo from "../messenger-design/page";
+import MessengerDesignDemo from "../messenger-design/MessengerDesignClient";
 import ExpressiveText from "../components/ExpressiveText";
 import { ExpressionCelebration, ExpressionSettings, playExpressionSound } from "../components/ExpressionEffects";
 
