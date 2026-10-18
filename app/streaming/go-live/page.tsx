@@ -769,7 +769,16 @@ export default function GoLivePage() {
       }
 
       const room = new Room({ adaptiveStream: true, dynacast: true });
-      await room.connect(tokenData.url, tokenData.token);
+      // Do not leave a phantom live stream visible if LiveKit signalling fails.
+      try {
+        await room.connect(tokenData.url, tokenData.token, {autoSubscribe:true, maxRetries:3});
+      } catch (connectionError) {
+        room.disconnect();
+        await supabase.from("live_streams").update({status:"ended",ended_at:new Date().toISOString()}).eq("id",liveStreamId);
+        if (liveThumbnailPath) await supabase.storage.from("live-recordings").remove([liveThumbnailPath]);
+        const detail = connectionError instanceof Error ? connectionError.message : String(connectionError);
+        throw new Error("LiveKit signal connection failed. Check LIVEKIT_URL (wss:// LiveKit host), LiveKit server availability and network access. " + detail);
+      }
       const mediaStream = streamRef.current;
       if (!mediaStream) throw new Error("Camera and microphone must be enabled first.");
       const videoTrack = mediaStream.getVideoTracks()[0];
