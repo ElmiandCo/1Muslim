@@ -625,3 +625,9 @@
 .quranVerseArticle .quranVerseArabic{font-size:clamp(27px,5.8cqw,54px)!important;line-height:1.95!important;max-width:100%;overflow-wrap:anywhere;text-wrap:pretty}
 .quranVerseArticle .quranVerseTranslation{font-size:clamp(14px,2.6cqw,20px)!important;line-height:1.75!important;max-width:60ch;text-wrap:pretty}
 @media(max-width:650px){.quranVerseArticle .quranVerseArabic{font-size:clamp(25px,6.8cqw,42px)!important;line-height:1.9!important}.quranVerseArticle .quranVerseTranslation{font-size:clamp(14px,3.8cqw,18px)!important}}
+
+/* HudHud collapsed navigation: reclaim the vacant header gap in document flow.
+   Negative margin (not transform) also moves subsequent content upward. */
+:global([class*='navMotionCollapsed']) .fillArea{margin-top:clamp(-92px,-10dvh,-48px)!important}
+@media(max-width:650px){:global([class*='navMotionCollapsed']) .fillArea{margin-top:clamp(-106px,-12dvh,-58px)!important}}
+@media(prefers-reduced-motion:reduce){:global([class*='navMotionCollapsed']) .fillArea{scroll-behavior:auto!important}}
