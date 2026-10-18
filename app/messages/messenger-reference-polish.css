@@ -1,0 +1,24 @@
+/* 1Muslim Messenger visual reference refinement — phone-first */
+.omImessagePage.omMessengerUnified{--mm-gold:#d7b568;--mm-green:#008a61;--mm-radius:20px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif!important}
+.omImessagePage.omMessengerUnified.omMessengerDay{background:linear-gradient(to bottom,#004735 0%,#07885f 8%,#d5f0e4 17%,#ffffff 20%,#ffffff 100%)!important}
+.omImessagePage.omMessengerUnified.omMessengerNight{background:linear-gradient(to bottom,#003d31 0%,#057a59 8%,#112a24 17%,#080b12 20%,#080b12 100%)!important}
+.omMessengerUnified .omMessengerTop{padding-top:max(20px,env(safe-area-inset-top,0px))!important;min-height:clamp(140px,20dvh,205px)!important;max-width:800px!important}
+.omMessengerUnified .omMessengerHeading{font-size:clamp(25px,6.5vw,36px)!important;line-height:1.12!important;letter-spacing:-.04em!important;text-shadow:0 2px 12px #002c2a40!important}
+.omMessengerUnified .omMessengerHome{display:inline-flex!important;align-items:center!important;gap:6px!important;font-weight:650!important;text-decoration:none!important;color:#fff1c7!important}
+.omMessengerUnified .omMessengerNewButton{align-self:center!important}
+.omMessengerUnified .omMessengerShell{max-width:800px!important;min-height:0!important}
+.omMessengerUnified .omMessengerShell--list .omConversationList{max-width:800px!important;padding:0 6px!important}
+.omMessengerUnified .omMessengerListHead{gap:12px!important;padding:4px 0 8px!important}
+.omMessengerUnified .omMessengerListHead>input{box-sizing:border-box!important;width:100%!important;border-radius:22px!important;min-height:52px!important;outline-offset:3px!important}
+.omMessengerUnified .omMessengerFilters{gap:8px!important;padding:4px 0 12px!important}
+.omMessengerUnified .omMessengerFilters button{min-height:38px!important;font-weight:600!important}
+.omMessengerUnified .omMessengerThreadList>button{min-height:82px!important;padding:12px 5px!important;gap:14px!important;text-align:left!important}
+.omMessengerUnified .omThreadAvatar{border-width:2px!important;box-shadow:0 0 0 3px #00b87922,0 4px 16px #0002!important}
+.omMessengerUnified .omThreadMeta strong{font-weight:750!important;letter-spacing:-.02em!important}
+.omMessengerUnified .omThreadMeta small{font-weight:400!important;line-height:1.35!important}
+.omMessengerUnified .omMessengerThreadList>button:focus-visible{outline:3px solid #09a976!important;outline-offset:-3px!important}
+.omMessengerUnified .omMessengerShell--chat .omChatPane{border-radius:20px!important;overflow:hidden!important}
+.omMessengerUnified.omMessengerDay .omConversationList,.omMessengerUnified.omMessengerDay .omMessengerThreadList{color:#12251e!important}
+.omMessengerUnified.omMessengerNight .omConversationList,.omMessengerUnified.omMessengerNight .omMessengerThreadList{color:#f4f6f8!important}
+@media(max-width:700px){.omMessengerUnified .omMessengerTop{min-height:20dvh!important;padding:calc(env(safe-area-inset-top,0px) + 16px) 4px 8px!important}.omMessengerUnified .omMessengerShell--list .omConversationList{padding:0!important}.omMessengerUnified .omMessengerThreadList>button{min-height:77px!important}.omMessengerUnified .omThreadAvatar{width:59px!important;height:59px!important;flex-basis:59px!important}.omMessengerUnified .omMessengerShell--chat .omChatPane{border-radius:0!important}.omMessengerUnified{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}}
+@media(prefers-reduced-motion:reduce){.omMessengerUnified *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
