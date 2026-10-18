@@ -28,3 +28,14 @@
 @keyframes ummahSheet{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @media(max-width:480px){.ummah-floating-feed{padding-inline:2px}.ummah-floating-pair{gap:9px}.ummah-floating-post{width:76%;padding:13px;min-height:185px}.ummah-post-bottom{flex-wrap:wrap}.ummah-floating-author{flex-basis:19%}}
 @media(prefers-reduced-motion:reduce){.ummah-floating-post,.ummah-floating-author{transition:none;transform:none;opacity:1}.ummah-comments-backdrop,.ummah-comments-sheet{animation:none}}
+
+/* Compact expanded Ummah workspace and automated upward feed */
+.ummah-floating-feed{scroll-snap-type:none;padding:4px 4px 18px;scrollbar-width:none}
+.ummah-floating-feed::-webkit-scrollbar{display:none}
+.ummah-floating-pair{min-height:clamp(205px,53%,330px);padding:5px 0;gap:7px}
+.ummah-floating-post{min-height:190px;width:min(78%,560px);background-image:linear-gradient(145deg,rgba(7,43,39,.82),rgba(9,33,40,.84)),url('/post-backgrounds/emerald.svg');background-size:cover;background-position:center}
+.ummah-floating-avatar{overflow:hidden}
+.ummah-floating-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.ummah-like-button{align-self:center;flex:0 0 30px;min-width:30px;min-height:38px;border:1px solid #e4cf98;border-radius:50%;background:#134b40;color:#ffe0ab;font-size:23px;cursor:pointer}
+.ummah-like-button[aria-pressed=true]{color:#ff9ba8}
+@media(max-width:480px){.ummah-floating-pair{gap:4px}.ummah-floating-post{width:73%;padding:11px}.ummah-floating-author{flex-basis:16%}.ummah-like-button{flex-basis:28px;min-width:28px}}
