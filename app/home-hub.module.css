@@ -1768,3 +1768,22 @@
  .control.navMotionCollapsed .focusGoldOrnament,
  .control.navMotionCollapsed .focusGoldParticles{animation:none!important}
 }
+
+
+/* Reclaim the unused top gap in HudHud's immersive Canvas mode.
+   The fixed HudHud orb can overlap; keep the full Canvas within the viewport. */
+@media(max-width:650px){
+ .control.navMotionCollapsed .surface{
+   margin-top:-44px!important;
+   height:calc(100% + 44px)!important;
+   max-height:calc(100% + 44px)!important;
+   padding-top:3px!important;
+   padding-bottom:3px!important;
+ }
+ .control.navMotionCollapsed .surface .widgetArea{
+   padding-top:0!important;
+ }
+ .control.navMotionCollapsed .surface .workspacePage:has(.homeMakkahLive) .homeLiveCarouselArrows{
+   min-height:29px!important;margin-bottom:2px!important;
+ }
+}
