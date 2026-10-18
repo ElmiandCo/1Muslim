@@ -17,6 +17,7 @@ export default function HomeMessagesChooser(){
  const [search,setSearch]=useState("");
  const [people,setPeople]=useState<Person[]>([]);
  const [selected,setSelected]=useState<Person|null>(null);
+ const [picked,setPicked]=useState<Person[]>([]);
  const [draft,setDraft]=useState("");
  const [loading,setLoading]=useState(false);
  const [error,setError]=useState("");
@@ -63,7 +64,7 @@ export default function HomeMessagesChooser(){
     {callError&&<small role="alert" className={styles.status}>{callError}</small>}
     <div className={styles.memberArea}>
      <label className={styles.searchLabel}><span className={styles.srOnly}>Search members</span><input aria-label="Search members" placeholder="⌕  Search members" value={search} onChange={e=>setSearch(e.target.value)}/></label>
-     <div className={styles.people} aria-live="polite">{loading?<p>Finding members…</p>:error?<p>{error}</p>:people.length?<div className={styles.peopleGrid}>{people.map(person=><button type="button" key={person.id} className={styles.personCard} style={{animationDelay:`${(people.findIndex(p=>p.id===person.id)%12)*0.13}s`}} aria-pressed={selected?.id===person.id} onClick={()=>setSelected(person)}><span className={styles.avatar}>{avatar(person)}</span><strong>{displayName(person)}</strong></button>)}</div>:<p>No members to show yet.</p>}</div>
+     <div className={styles.people} aria-live="polite">{loading?<p>Finding members…</p>:error?<p>{error}</p>:people.length?<div className={styles.peopleGrid}>{people.map(person=><button type="button" key={person.id} className={styles.personCard} style={{animationDelay:`${(people.findIndex(p=>p.id===person.id)%12)*0.13}s`}} aria-pressed={picked.some(p=>p.id===person.id)} onClick={()=>{setSelected(person);setPicked(current=>current.some(p=>p.id===person.id)?current.filter(p=>p.id!==person.id):current.length<49?[...current,person]:current)}}><span className={styles.avatar}>{avatar(person)}</span><strong>{displayName(person)}</strong></button>)}</div>:<p>No members to show yet.</p>}</div>
     </div>
     {mode==="chat"?<div className={styles.composer}><span>{selected?"✦ "+displayName(selected):"Choose an avatar to start"}</span><div className={styles.composerRow}><input aria-label="Your message" placeholder="As-salāmu ʿalaykum…" value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&selected)openConversation(selected)}}/><button type="button" disabled={!selected} onClick={()=>selected&&openConversation(selected)} aria-label="Open conversation">➤</button></div></div>:<div className={styles.callBar}><button type="button" className={styles.hangup} onClick={()=>setSelected(null)} aria-label="Clear selected member">✕</button><button type="button" className={styles.callNow} disabled={!selected||callBusy} onClick={()=>selected&&void startCanvasCall(selected,mode)}>{callBusy?"Connecting…":mode==="video"?"◉ Video call":"☎ Call"}</button></div>}
   </section>
