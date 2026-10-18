@@ -3,6 +3,8 @@ import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
 import styles from "./ElmTentAlphabet.module.css";
+import ElmTentLetterQuiz from "./ElmTentLetterQuiz";
+import ElmTentVowels from "./ElmTentVowels";
 
 const LETTERS=[
 ["ا","Alif"],["ب","Bā"],["ت","Tā"],["ث","Thā"],["ج","Jīm"],["ح","Ḥā"],["خ","Khā"],
@@ -48,7 +50,7 @@ export default function ElmTentAlphabet(){
    }
    setLessonProgress(next);setPracticed(next[0]||[]);
    if((next[0]||[]).length>=3&&(next[0]||[]).length<28)setMilestone(true);
-   if(next[1]?.length===LETTERS.length){setLesson(1);setPracticed(next[1]);setChallenge(true)}
+   if(next[1]?.length===LETTERS.length){setLesson(2);setPracticed(next[1])}
    setCompletedLessons(Array.from({length:LESSON_COUNT},(_,i)=>i).filter(i=>(next[i]||[]).length===LETTERS.length));
   }catch{}setReady(true);
   return()=>{if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()}
@@ -72,11 +74,11 @@ export default function ElmTentAlphabet(){
   speech.current=utterance;setAudioMessage(arabic?"":"Device pronunciation preview; an Arabic voice may not be installed.");window.speechSynthesis.speak(utterance);
  };
  useEffect(()=>{if(!autoPlayNext||lesson>1)return;setAutoPlayNext(false);const timer=setTimeout(()=>{hear();setHudhudPlayed(true)},280);return()=>clearTimeout(timer)},[autoPlayNext,selected,lesson]);
- const chooseLesson=(index:number)=>{const next=Math.max(completedLessons.includes(1)?1:0,Math.min(LESSON_COUNT-1,index));setLesson(next);setLessonWindow(Math.floor(next/4));setPracticed(lessonProgress[next]||[]);setSelected(0);setHudhudPlayed(false);setAudioMessage("");if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()};
+ const chooseLesson=(index:number)=>{const next=Math.max(0,Math.min(LESSON_COUNT-1,index));setLesson(next);setLessonWindow(Math.floor(next/4));setPracticed(lessonProgress[next]||[]);setSelected(0);setHudhudPlayed(false);setAudioMessage("");if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()};
  const nextUnpracticed=()=>{const remaining=LETTERS.map((_,i)=>i).filter(i=>!practiced.includes(i)&&i!==selected);if(!remaining.length)return -1;if(practiced.length<3){const next=[0,1,2].find(i=>!practiced.includes(i)&&i!==selected);if(next!==undefined)return next}const random=new Uint32Array(1);crypto.getRandomValues(random);return remaining[random[0]%remaining.length]};
  const advanceLetter=()=>{const next=nextUnpracticed();if(next<0){setMilestone(true);return}setMirrorSpin(true);setTimeout(()=>{select(next);setAutoPlayNext(true)},270);setTimeout(()=>setMirrorSpin(false),700)};
  const select=(index:number)=>{setHudhudPlayed(false);if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel();setPlaying(false);setSelected(index);setAudioMessage("")};
- useEffect(()=>{const onHudHud=()=>{if(lesson>1)return;if(!hudhudPlayed){hear();setHudhudPlayed(true)}else{mark();setPracticeFlash(true);setTimeout(()=>setPracticeFlash(false),420);setHudhudPlayed(false);advanceLetter()}};window.addEventListener("1muslim:elm-tent-hudhud",onHudHud);return()=>window.removeEventListener("1muslim:elm-tent-hudhud",onHudHud)});
+ useEffect(()=>{const onHudHud=()=>{if(lesson!==0)return;if(!hudhudPlayed){hear();setHudhudPlayed(true)}else{mark();setPracticeFlash(true);setTimeout(()=>setPracticeFlash(false),420);setHudhudPlayed(false);advanceLetter()}};window.addEventListener("1muslim:elm-tent-hudhud",onHudHud);return()=>window.removeEventListener("1muslim:elm-tent-hudhud",onHudHud)});
  const submitQuiz=async(nextAnswers:number[])=>{setClaiming(true);try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setBadgeMessage("Sign in to save your badge and claim 5,000 XP.");return}const {data,error}=await db.rpc("claim_arabic_letters_badge",{answers:nextAnswers});if(error)throw error;if(data?.awarded||data?.already_earned){setBadgeEarned(true);setBadgeMessage(data.awarded?"🏅 Arabic Letters Certified · +5,000 XP!":"🏅 Arabic Letters Certified · Already earned")}else setBadgeMessage(`Score: ${data?.score??0}% · Reach 90% to earn your badge.`)}catch(e){setBadgeMessage(e instanceof Error?e.message:"Unable to claim badge")}finally{setClaiming(false)}};
  const answerQuestion=(choice:number)=>{if(claiming)return;const next=[...answers,choice];setAnswers(next);if(next.length===28)void submitQuiz(next);else setQuizIndex(next.length)};
  return <div className={styles.root} onTouchStart={e=>{swipeStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(swipeStart.current===null)return;const delta=e.changedTouches[0].clientY-swipeStart.current;swipeStart.current=null;if(Math.abs(delta)>90)chooseLesson(lesson+(delta<0?1:-1))}}>
