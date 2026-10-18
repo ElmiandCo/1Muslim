@@ -376,3 +376,32 @@ nav[aria-label="Dashboard workspaces"]>button>span{display:none!important}
  nav[aria-label="Dashboard workspaces"]{left:6px!important;gap:7px 7px!important;width:125px!important;min-width:125px!important;max-width:125px!important}
  .home-live-demo-screen{max-height:clamp(135px,22dvh,230px)!important}
 }
+
+
+/* October 18 approved mobile composition: dark glass, wider Canvas, less dead space.
+   Keep the ornament in its own layer and do not move HudHud or the site header. */
+@media (max-width: 700px) {
+  main:not([data-canvas-fullscreen="true"]) [class*="widgetArea"] {
+    margin-top: -14px !important;
+    position: relative;
+    z-index: 2;
+  }
+  main:not([data-canvas-fullscreen="true"]) [class*="workspaceScroller"] {
+    height: min(72dvh, 860px) !important;
+    max-height: min(72dvh, 860px) !important;
+    min-height: 0 !important;
+  }
+  main:not([data-canvas-fullscreen="true"]) [class*="workspacePage"] {
+    padding-inline: 0 !important;
+  }
+  main:not([data-canvas-fullscreen="true"]) [class*="widgetArea"] [class*="surface"] {
+    background: linear-gradient(155deg, rgba(2, 8, 8, .89), rgba(4, 15, 14, .81)) !important;
+    border-color: rgba(222, 189, 116, .48) !important;
+    backdrop-filter: blur(16px) saturate(115%);
+    -webkit-backdrop-filter: blur(16px) saturate(115%);
+  }
+}
+@media (max-width: 700px) and (max-height: 700px) {
+  main:not([data-canvas-fullscreen="true"]) [class*="widgetArea"] { margin-top: -8px !important; }
+  main:not([data-canvas-fullscreen="true"]) [class*="workspaceScroller"] { height: min(65dvh, 650px) !important; max-height: min(65dvh, 650px) !important; }
+}
