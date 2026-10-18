@@ -1656,3 +1656,9 @@
 .control.day .intro .decorationNight{opacity:0!important}
 .control.day .intro .decorationDay{background-image:url('/assets/decorations/islamic-white-ornament.PNG')!important;opacity:1!important}
 @media(prefers-reduced-motion:reduce){.control .intro .decorationNight,.control .intro .decorationDay{animation:none!important}}
+
+/* Ornament sits lower, behind the Canvas rather than above its contents. */
+.control .intro{z-index:1!important}
+.control .intro .islamicDecoration{z-index:0!important}
+.control .intro .decorationNight,.control .intro .decorationDay{top:145%!important}
+.control .surface,.control .widgetArea,.control .workspaceScroller{position:relative;z-index:2}
