@@ -1,0 +1,51 @@
+name: Production regression guard
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  regression-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect deleted or renamed application components
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          if [[ "$BASE" =~ ^0+$ ]] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "No valid base revision; refusing to silently skip regression checks"
+            exit 1
+          fi
+          git diff --name-status -M "$BASE" "${{ github.sha }}" > /tmp/changes.txt
+          cat /tmp/changes.txt
+          if grep -E '^(D|R[0-9]+)[[:space:]]' /tmp/changes.txt | grep -E '(app/|src/|components/|public/|pages/|lib/)' ; then
+            echo "::error::Application file deletion/rename detected. Review and approve explicitly before release."
+            exit 1
+          fi
+          if grep -E '^[AM][[:space:]]' /tmp/changes.txt | grep -E '(app/|src/|components/|pages/)' ; then
+            echo "::notice::Application files changed: require visual and LiveKit smoke-test review before production."
+          fi
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
