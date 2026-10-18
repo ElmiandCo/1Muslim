@@ -1676,3 +1676,46 @@
   position:relative;
   z-index:3;
 }
+
+
+/* HudHud focus mode: collapse navigation AND greeting; give the Canvas the viewport.
+   The floating HudHud remains independent and may overlap the Canvas by design. */
+.control.navMotionCollapsed{
+  padding-top:max(3px,env(safe-area-inset-top))!important;
+  padding-bottom:max(3px,env(safe-area-inset-bottom))!important;
+}
+.control.navMotionCollapsed .controlHeader,
+.control.navMotionCollapsed .intro,
+.control.navMotionCollapsed .canvas-workspace-indicators{
+  display:none!important;
+  height:0!important;min-height:0!important;max-height:0!important;
+  margin:0!important;padding:0!important;border:0!important;
+  opacity:0!important;pointer-events:none!important;
+}
+.control.navMotionCollapsed .surface{
+  flex:1 1 0!important;min-height:0!important;
+  width:100%!important;max-height:none!important;
+  margin:0 auto!important;
+  padding:clamp(3px,.6vw,8px)!important;
+  display:flex!important;flex-direction:column!important;
+}
+.control.navMotionCollapsed .surface .widgetArea{
+  flex:1 1 0!important;min-height:0!important;
+  height:100%!important;margin:0!important;padding-bottom:0!important;
+}
+.control.navMotionCollapsed .surface .workspaceScroller{
+  flex:1 1 0!important;height:100%!important;
+  min-height:0!important;max-height:none!important;
+}
+.control.navMotionCollapsed .surface .workspaceTrack,
+.control.navMotionCollapsed .surface .workspacePage{
+  height:100%!important;min-height:0!important;
+}
+/* The ornamental PNG is at most 45% opaque in both themes. */
+.control .intro .decorationNight,.control .intro .decorationDay{
+  opacity:.45!important;
+}
+.control.day .intro .decorationNight,
+.control:not(.day) .intro .decorationDay{opacity:0!important}
+.control.navMotionCollapsed .intro .decorationNight,
+.control.navMotionCollapsed .intro .decorationDay{opacity:0!important}
