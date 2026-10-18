@@ -2,3 +2,5 @@
 /* Keep the public design showroom independent of global onboarding overlays. */
 body:has(.mmDemo) .guestGateFade,body:has(.mmDemo) .welcomeOverlay,body:has(.mmDemo) [aria-label="HudHud welcome"],body:has(.mmDemo) [aria-label="Welcome to 1Muslim"],body:has(.mmDemo) [data-welcome-overlay]{display:none!important}
 body:has(.mmDemo) .mmDemo{position:relative;z-index:2}
+
+.mmGuestAction{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 18px;border-radius:24px;background:#00875e;color:white!important;text-decoration:none;font-weight:700;align-self:flex-start}.mmChat h2{margin:0;font-size:22px}.mmChat p{color:var(--sub);margin:0}.mmChat .mmFilters{margin:0}
