@@ -460,16 +460,16 @@
 
 
 /* Transparent Islamic ornaments share one anchor; only opacity changes with theme. */
-/* Spot 2: upper-right greeting region, with explicit dimensions and visible image. */
-.intro{position:relative;isolation:isolate;overflow:visible;min-height:170px}
+/* Spot 2 decorative background: full artwork, no layout height changes. */
+.intro{position:relative;isolation:isolate;overflow:visible}
 .intro .islamicDecoration{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:visible}
-.intro .decorationNight,.intro .decorationDay{position:absolute;right:1%;top:18px;display:block;width:48%;height:140px;background-position:center;background-repeat:no-repeat;background-size:contain;pointer-events:none;transition:opacity 1200ms cubic-bezier(.22,1,.36,1);opacity:0;filter:drop-shadow(0 0 12px rgba(239,214,150,.28))}
-.intro .decorationNight{background-image:url('/assets/decorations/islamic-gold-ornament.PNG');opacity:.82}
+.intro .decorationNight,.intro .decorationDay{position:absolute;right:0;top:50%;display:block;width:53%;height:155px;transform:translateY(-50%);background-position:center;background-repeat:no-repeat;background-size:contain;pointer-events:none;transition:opacity 1200ms cubic-bezier(.22,1,.36,1);opacity:0;filter:drop-shadow(0 0 10px rgba(235,212,155,.18))}
+.intro .decorationNight{background-image:url('/assets/decorations/islamic-gold-ornament.PNG');opacity:.72}
 .intro .decorationDay{background-image:url('/assets/decorations/islamic-white-ornament.PNG');opacity:0}
 .day .intro .decorationNight{opacity:0}
-.day .intro .decorationDay{opacity:.88}
+.day .intro .decorationDay{opacity:.82}
 .intro .introGreeting,.intro .introActionDock{position:relative;z-index:1}
-@media(max-width:700px){.intro{min-height:170px}.intro .decorationNight,.intro .decorationDay{right:0;top:35px;width:49%;height:120px}}
+@media(max-width:700px){.intro .decorationNight,.intro .decorationDay{right:0;width:53%;height:135px}}
 @media(prefers-reduced-motion:reduce){.intro .decorationNight,.intro .decorationDay{transition:none}}
 
 /* 1Muslim seamless crown cards — isolated to custom dashboard widgets */
