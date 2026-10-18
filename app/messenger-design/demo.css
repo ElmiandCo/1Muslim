@@ -11,3 +11,12 @@ body:has(.mmDemo) .mmDemo{position:relative;z-index:2}
 .muslimMessengerFrame .mmDemo{width:100%!important;min-height:100dvh!important}
 .muslimMessengerFrame .mmPage{max-width:850px!important;margin:0 auto!important}
 .muslimMessengerFrame .mmPortrait{overflow:hidden!important}
+
+/* Day/night orb and seamless white-to-black lower Messenger canvas. */
+.mmDemo .mmThemeOrb{position:relative;z-index:31;touch-action:none;user-select:none;cursor:grab!important;background:radial-gradient(circle at 30% 20%,#f7edbc,#d9a73d 55%,#80500b)!important;color:#114634!important;border:2px solid #fff7c6!important;box-shadow:0 0 0 3px #d3ae5c55,0 8px 24px #00291d55!important;transition:box-shadow .2s ease,background .35s ease!important}
+.mmDemo .mmThemeOrb:active{cursor:grabbing!important}
+.mmDemo.night .mmThemeOrb{background:radial-gradient(circle at 28% 20%,#a2fce0,#05885f 55%,#003d32)!important;color:#e5fff2!important;border-color:#7bf4c4!important;box-shadow:0 0 0 3px #10e49a44,0 8px 26px #00b47855!important}
+.mmDemo.night .mmPage{background:linear-gradient(180deg,#00291f 0%,#00533f 8%,#102b23 17%,#090b0d 20%,#090b0d 100%)!important}
+.mmDemo.night .mmThreads,.mmDemo.night .mmRow,.mmDemo.night .mmChat{background:#090b0d!important}
+.mmDemo.night .mmDock{background:#111714f5!important;border-color:#2b3c32!important}
+.mmDemo.night .mmDock button.on{background:#075b42!important;color:#caffdf!important}
