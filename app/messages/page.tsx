@@ -594,5 +594,42 @@ export default function MessagesPage(){
 @media(max-width:700px){.omImessagePage.omMessengerUnified{background:radial-gradient(ellipse at 15% 0%,#194f3e,#061a17 80%)!important}.omMessengerDiscovery>div{max-height:300px}.omMessengerDiscovery{padding:9px 5px;margin-bottom:12px}.omMessengerDiscovery [class*="personCard"]{font-size:11px}}
 `}
 </style>
+
+<style>{`
+/* Approved Messenger composition, scoped to functional authenticated inbox. */
+.muslimMessengerFrame>.omImessagePage.omMessengerUnified{display:block!important;position:relative!important;height:auto!important;min-height:100dvh!important;max-height:none!important;overflow:visible!important;margin:0!important;padding:0 18px 116px!important;background:linear-gradient(to bottom,#003c2d 0%,#00805c 8%,#bce8d8 17%,#fff 20%,#fff 100%)!important}
+.muslimMessengerFrame>.omImessagePage.omMessengerNight{background:linear-gradient(to bottom,#003c2d 0%,#00805c 8%,#183c31 17%,#090b0d 20%,#090b0d 100%)!important}
+.muslimMessengerFrame .omMessengerTop{height:clamp(145px,20dvh,205px)!important;max-width:850px!important;padding:20px 0!important;margin:0 auto!important;background:transparent!important}
+.muslimMessengerFrame .omMessengerTop>div{gap:0!important}
+.muslimMessengerFrame .omMessengerHeading{font:600 clamp(29px,7vw,46px)/1.04 Georgia,serif!important;color:#f4d998!important;letter-spacing:-.05em!important}
+.muslimMessengerFrame .omMessengerBrandSub{font:500 10px/1.6 system-ui,sans-serif!important;letter-spacing:.5em!important;text-align:center!important;color:#f6e5b5!important}
+.muslimMessengerFrame .omMessengerShell--list{display:block!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;backdrop-filter:none!important;max-width:850px!important;margin:auto!important}
+.muslimMessengerFrame .omMessengerShell--list>.omConversationList{display:flex!important;flex-direction:column!important;overflow:visible!important;height:auto!important;max-height:none!important;padding:0!important;background:none!important;border:0!important}
+.muslimMessengerFrame .omMessengerShell--list>.omChatPane{display:none!important}
+.muslimMessengerFrame .omMessengerDiscovery{display:none!important}
+.muslimMessengerFrame .omMessengerListHead{order:0!important;display:flex!important;flex-direction:column!important;background:none!important;padding:0!important;margin:0!important}
+.muslimMessengerFrame .omMessengerListHead>input{height:54px!important;border-radius:28px!important;background:#fff!important;color:#23372e!important;border:1px solid #dce7e1!important;box-shadow:0 5px 16px #0001!important}
+.muslimMessengerFrame .omMessengerStories{order:1!important;display:flex!important;overflow-x:auto!important;gap:13px!important;padding:22px 2px 16px!important;margin:0!important;min-height:0!important}
+.muslimMessengerFrame .omMessengerFilters{order:2!important;display:flex!important;overflow-x:auto!important;gap:8px!important;margin:0!important;padding:0 0 13px!important}
+.muslimMessengerFrame .omMessengerFilters button{flex-shrink:0!important;background:#fff!important;color:#25342d!important;border:1px solid #e4e8e5!important;border-radius:16px!important;box-shadow:0 2px 6px #0001!important}
+.muslimMessengerFrame .omMessengerFilters button.active{background:linear-gradient(110deg,#008e61,#00ba7e)!important;color:white!important;border-color:#00a875!important}
+.muslimMessengerFrame .omMessengerExtras{order:5!important}
+.muslimMessengerFrame .omMessengerNewChat{order:6!important}
+.muslimMessengerFrame .omMessengerThreadList{order:4!important;margin:0!important;padding:0!important;overflow:visible!important}
+.muslimMessengerFrame .omMessengerThreadList>button{display:flex!important;align-items:center!important;gap:12px!important;width:100%!important;min-height:84px!important;padding:10px 4px!important;margin:0!important;border:0!important;border-bottom:1px solid #ebeeeb!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#17231d!important}
+.muslimMessengerFrame .omMessengerThreadList>button .omThreadAvatar{flex:0 0 62px!important;width:62px!important;height:62px!important;border:2px solid #d5b46b!important;border-radius:50%!important;overflow:hidden!important}
+.muslimMessengerFrame .omMessengerThreadList>button .omThreadMeta{flex:1!important;min-width:0!important;display:flex!important;flex-direction:column!important;gap:5px!important}
+.muslimMessengerFrame .omMessengerThreadList>button .omThreadMeta strong{color:inherit!important;font-size:17px!important}
+.muslimMessengerFrame .omMessengerThreadList>button .omThreadMeta small{color:#65736b!important;font-size:13px!important}
+.muslimMessengerFrame .omMessengerThreadList>button .omThreadChevron{color:#63736d!important}
+.muslimMessengerFrame .omMessengerThreadList>button .omUnreadBadge{position:static!important;border:0!important;box-shadow:none!important;background:#08bc77!important;color:white!important;border-radius:15px!important}
+.muslimMessengerFrame .omMessengerNight .omMessengerThreadList>button{color:#f4f7f4!important;border-bottom-color:#29342e!important}
+.muslimMessengerFrame .omMessengerNight .omMessengerThreadList>button .omThreadMeta small{color:#a4aea7!important}
+.muslimMessengerFrame .omMessengerNight .omMessengerFilters button{background:#17201b!important;color:#f5f6f4!important;border-color:#35433a!important}
+.muslimMessengerFrame .omMessengerNight .omMessengerFilters button.active{background:#008a63!important;color:white!important}
+.muslimMessengerFrame .omMessengerNight .omMessengerListHead>input{background:#19211c!important;color:white!important;border-color:#35463d!important}
+.muslimMessengerFrame .omMessengerShell--chat{display:grid!important;max-width:850px!important;min-height:65dvh!important;height:calc(100dvh - 220px)!important;overflow:hidden!important;margin:auto!important}
+@media(max-width:700px){.muslimMessengerFrame>.omImessagePage.omMessengerUnified{padding:0 15px 105px!important}.muslimMessengerFrame .omMessengerTop{height:20dvh!important}.muslimMessengerFrame .omMessengerShell--chat{height:calc(100dvh - 185px)!important}.muslimMessengerFrame .omMessengerThreadList>button{min-height:78px!important}}
+`}</style>
  </main>
 }
