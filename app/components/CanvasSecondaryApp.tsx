@@ -40,6 +40,8 @@ function RecorderApp({active}:{active:boolean}){
  return <div className="canvas-native-recorder"><div className={"canvas-recorder-ring"+(recording?" is-recording":"")}>♫</div><p>{recording?"Recording your voice…":"Record an audio message or reflection."}</p><button type="button" onClick={()=>void toggle()}>{recording?"■ Stop recording":"● Start recording"}</button>{clip&&<><audio controls src={clip}/><a href={clip} download="1muslim-recording.webm">Save recording to device ↓</a></>}{error&&<p role="alert">{error}</p>}<small>Recordings stay on this device until you choose to save them.</small></div>
 }
 type UmmahPost={id:string;body:string;created_at:string;author_name:string;author_handle:string;author_id?:string;avatar_url?:string|null};
+const postThemes=["emerald","gold","makkah","midnight","garden","purple"] as const;
+const backgroundForPost=(id:string)=>{let hash=2166136261;for(let i=0;i<id.length;i++)hash=Math.imul(hash^id.charCodeAt(i),16777619);return `/post-backgrounds/${postThemes[(hash>>>0)%postThemes.length]}.svg`};
 type UmmahComment={id:string;post_id:string;name:string;body:string;created_at:string};
 function DailyPostsApp({active}:{active:boolean}){
  const [posts,setPosts]=useState<UmmahPost[]>([]);
@@ -73,7 +75,7 @@ function DailyPostsApp({active}:{active:boolean}){
  return <div className="ummah-canvas-shell">
   <div className="ummah-floating-feed" ref={feedRef} aria-label="Community posts" onTouchStart={()=>{lastTouch.current=Date.now();setPaused(true)}} onTouchEnd={()=>{lastTouch.current=Date.now();setPaused(false)}} onPointerDown={()=>{lastTouch.current=Date.now();setPaused(true)}} onPointerUp={()=>{lastTouch.current=Date.now();setPaused(false)}} onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}>
    {posts.length?posts.map((post,i)=><div className="ummah-floating-pair" key={post.id} style={{["--ummah-tilt" as string]:(i%2===0?"-3deg":"3deg")}}>
-    <button type="button" className="ummah-floating-post" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}} aria-label={"Open comments on post by "+post.author_name}>
+    <button type="button" className="ummah-floating-post" style={{backgroundImage:`linear-gradient(180deg,rgba(1,18,16,.22),rgba(1,18,16,.78)),url("${backgroundForPost(post.id)}")`,backgroundSize:"cover",backgroundPosition:"center"}} onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}} aria-label={"Open comments on post by "+post.author_name}>
      <span className="ummah-post-glow" aria-hidden="true"/>
      <span className="ummah-post-body">{post.body}</span>
      <span className="ummah-post-bottom"><span>✦ Ummah</span><span>{new Date(post.created_at).toLocaleDateString()}</span><span>Comments ↗</span></span>
