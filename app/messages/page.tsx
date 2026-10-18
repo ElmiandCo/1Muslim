@@ -225,7 +225,7 @@ export default function MessagesPage(){
  if(loadingAuth)return <main style={{padding:32}}>Loading messages…</main>;
  if(!uid)return <main className="omImessagePage omMessengerUnified omMessengerNight omMessengerGuest"><header className="omMessengerTop"><Link href="/">← Home</Link><h1>Messages · Ummah</h1><Link href="/auth">Sign in ↗</Link></header><HomeMessagesChooser/><style jsx global>{`body:has(.omMessengerGuest){background:#061b17!important}.omMessengerGuest{min-height:100dvh!important;background:radial-gradient(circle at 15% 0%,#174e3d,#061b17 75%)!important;padding:24px 12px!important;color:#f6e7b8!important}.omMessengerGuest .omMessengerTop{display:flex;justify-content:space-between;align-items:center;gap:12px}.omMessengerGuest .omMessengerTop a{color:#e8ce86}.omMessengerGuest .omMessengerTop h1{font-size:clamp(19px,4vw,28px)}.omMessengerGuest>div{flex:1;min-height:0;max-width:850px;width:100%;margin:auto}`}</style></main>;
  return <main className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"20px auto",padding:"0 12px",color:"var(--text,#f4f4f5)"}}><div className="omMessengerPattern" aria-hidden="true"/><div className="omMessengerOrnaments" aria-hidden="true"><span className="omMessengerOrnamentNight"/><span className="omMessengerOrnamentDay"/></div>
- <div className="omMessengerTop"><div><Link href="/" className="omMessengerHome">← Home</Link><h1 className="omMessengerHeading">Messages</h1></div><button className="omMessengerNewButton" type="button" onClick={()=>setNewChatOpen(v=>!v)} aria-label="Create message, group, or call" aria-expanded={newChatOpen}>＋</button></div>
+ <div className="omMessengerTop"><div><Link href="/" className="omMessengerHome">← Home</Link><h1 className="omMessengerHeading">Messages · Ummah</h1></div><button className="omMessengerNewButton" type="button" onClick={()=>setNewChatOpen(v=>!v)} aria-label="Create message, group, or call" aria-expanded={newChatOpen}>＋</button></div>
  {selected&&<nav className="omMobileThreadStrip" aria-label="Switch conversations">{Array.from(new Set(threads.map(t=>t.conversation_id))).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return <button key={cid} type="button" className={"omMobileThread "+(selected===cid?"isActive":"")} onClick={()=>setSelected(cid)}><span className="omMobileThreadAvatar">{avatars[peer]?<img src={avatars[peer]} alt=""/>:"☪"}</span><strong>{names[peer]||"Member"}</strong><small>{threadPreviews[cid]||"Start chatting"}</small></button>})}</nav>}
  <div className={"omMessengerShell "+(selected?"omMessengerShell--chat":"omMessengerShell--list")} style={{display:"grid",gridTemplateColumns:"minmax(220px,1fr) minmax(0,2fr)",minHeight:560,border:"1px solid #64748b55",borderRadius:28,overflow:"hidden"}}>
  <aside className="omConversationList" style={{padding:18,borderRight:"1px solid #64748b55"}}><section className="omMessengerDiscovery" aria-label="Explore Ummah members"><div className="omMessengerDiscoveryTitle"><strong>✦ Connect with the Ummah</strong><small>Discover members</small></div><HomeMessagesChooser/></section>
@@ -528,6 +528,26 @@ export default function MessagesPage(){
 
 <style jsx global>{`
 
+/* Messenger 3.0 steps 1-2: page-scoped cinematic framework and public avatar discovery. */
+.omImessagePage.omMessengerUnified{background:radial-gradient(ellipse at 10% 0%,rgba(32,105,80,.62),transparent 50%),radial-gradient(ellipse at 90% 85%,rgba(20,75,71,.55),transparent 55%),#051b17!important;color:#f7e8bb!important}
+.omImessagePage.omMessengerUnified .omMessengerShell{background:rgba(4,35,29,.78)!important;border:1px solid rgba(226,194,113,.45)!important;box-shadow:0 20px 55px rgba(0,0,0,.4),inset 0 1px rgba(255,241,190,.12)!important}
+.omImessagePage.omMessengerUnified .omConversationList{background:linear-gradient(150deg,rgba(8,63,48,.92),rgba(5,31,29,.93))!important;color:#f6eacb!important}
+.omImessagePage.omMessengerUnified .omMessengerListHead input,.omImessagePage.omMessengerUnified .omMessengerNewChat input{background:#061c1e!important;color:#f6edda!important;border:1px solid rgba(225,200,134,.4)!important}
+.omImessagePage.omMessengerUnified .omMessengerFilters button{background:rgba(11,67,52,.88)!important;color:#f7e6bd!important;border:1px solid rgba(230,208,149,.35)!important}
+.omImessagePage.omMessengerUnified .omMessengerFilters button.active{background:linear-gradient(125deg,#bda465,#e9d391)!important;color:#123a2e!important}
+.omImessagePage.omMessengerUnified .omMessengerExtras{color:#d4e8da!important}
+.omImessagePage.omMessengerUnified .omMessengerThreadList>button{background:linear-gradient(120deg,rgba(18,79,60,.88),rgba(8,42,37,.9))!important;color:#fff1cd!important}
+.omImessagePage .omMessengerDiscovery{background:linear-gradient(155deg,rgba(9,74,57,.48),rgba(5,31,30,.48));border:1px solid rgba(228,199,126,.35);border-radius:23px;padding:12px!important;margin:8px 0 16px!important;box-shadow:inset 0 1px rgba(255,255,255,.09)}
+.omImessagePage .omMessengerDiscovery>div{max-height:none!important;overflow:visible!important}
+.omImessagePage .omMessengerDiscovery [class*="people"]{max-height:330px;overflow-y:auto;overscroll-behavior:contain}
+.omImessagePage .omMessengerDiscovery [class*="personCard"]{background:rgba(7,53,43,.7);border-radius:16px}
+.omImessagePage .omMessengerDiscovery [class*="avatar"]{width:clamp(52px,13vw,76px);height:clamp(52px,13vw,76px);border:1.5px solid #dfc77d;box-shadow:0 0 15px #d3b76a33}
+.omImessagePage .omMessengerDiscoveryTitle{display:flex;justify-content:space-between;align-items:center;gap:12px;color:#efd69b;margin:0 0 10px}
+.omImessagePage .omGuestDirectory{position:relative;z-index:1;flex:1;min-height:0;overflow-y:auto;padding:16px;border:1px solid #e3c67b66;border-radius:24px;background:linear-gradient(145deg,#0a4235df,#061e1de8)}
+.omImessagePage .omGuestDirectory [class*="people"]{max-height:55dvh;overflow-y:auto}
+.omImessagePage .omGuestSignIn{text-align:center;color:#ead6a6;font-size:13px}
+@media(max-width:700px){.omImessagePage .omMessengerDiscovery [class*="people"]{max-height:270px}.omImessagePage .omMessengerDiscovery [class*="peopleGrid"]{grid-template-columns:repeat(4,minmax(0,1fr))!important}.omImessagePage .omMessengerDiscovery{padding:8px!important}}
+@media(prefers-reduced-motion:reduce){.omImessagePage .omMessengerDiscovery [class*="personCard"]{animation:none!important}}
 /* Responsive type follows the homepage's compact baseline, then scales more broadly. */
 .omImessagePage{--om-type-micro:clamp(8px,1.9vw,12px);--om-type-small:clamp(9px,2.25vw,14px);--om-type-body:clamp(11px,2.75vw,18px);--om-type-title:clamp(12px,3vw,21px);--om-type-heading:clamp(22px,4vw,39px)}
 .omImessagePage .omMessengerHeading{font-size:var(--om-type-heading)!important;line-height:1.08!important;letter-spacing:-.055em!important}
