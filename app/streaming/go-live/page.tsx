@@ -728,6 +728,8 @@ export default function GoLivePage() {
     if(connectingLive||live)return;
     setConnectingLive(true);
     setError(""); setSaveMessage("");
+    let pendingStreamId: string | null = null;
+    let pendingRoom: Room | null = null;
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
@@ -740,6 +742,7 @@ export default function GoLivePage() {
       }
 
       const liveStreamId = crypto.randomUUID();
+      pendingStreamId = liveStreamId;
       const roomName = `1muslim-live-${liveStreamId}`;
       let liveThumbnailPath: string | null = null;
       if (thumbnailFile) {
@@ -781,6 +784,7 @@ export default function GoLivePage() {
       }
 
       const room = new Room({ adaptiveStream: true, dynacast: true });
+      pendingRoom = room;
       // Do not leave a phantom live stream visible if LiveKit signalling fails.
       try {
         await room.connect(tokenData.url, tokenData.token, {autoSubscribe:true, maxRetries:3});
@@ -814,13 +818,22 @@ export default function GoLivePage() {
 
       startRecording();
       setLive(true);
+      pendingStreamId = null;
+      pendingRoom = null;
       setShowHostIntro(true);
       // Notify administrators only after the broadcast is actually connected.
       void fetch("/api/live-alert", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ streamId: liveStreamId }) }).catch((error) => console.warn("Live alert request failed", error));
       setViewers(0);
     } catch (err) {
+      pendingRoom?.disconnect();
       roomRef.current?.disconnect();
       roomRef.current = null;
+      if (pendingStreamId) {
+        const db = createClient();
+        await db.from("live_streams").update({status:"ended",ended_at:new Date().toISOString()}).eq("id",pendingStreamId);
+      }
+      setBroadcastStartedAt(null);
+      setShowHostIntro(false);
       setError(err instanceof Error ? err.message : "Live broadcast could not start.");
     } finally { setConnectingLive(false); }
   };
