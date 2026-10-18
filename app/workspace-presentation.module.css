@@ -329,8 +329,8 @@
 .fillArea > :global([class*="workspaceDownButton"]){flex:0 0 auto!important;margin-top:0!important}
 .fillArea > :global([class*="workspacePager"]){flex:0 0 auto!important;margin-top:0!important;margin-bottom:4px!important}
 @media(max-width:700px){
- .fillArea .slide .content{min-height:0!important;height:100%!important}
- .fillArea .slide .content > [data-widget]{min-height:0!important;height:100%!important}
+ .fillArea .slide .content{min-height:0!important;height:auto!important;flex:1 1 auto!important}
+ .fillArea .slide .content > [data-widget]{min-height:0!important;height:auto!important;flex:1 1 auto!important}
 }
 
 /* Third workspace: the existing Daily Post publishing module, embedded in glass. */
