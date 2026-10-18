@@ -460,16 +460,17 @@
 
 
 /* Transparent Islamic ornaments share one anchor; only opacity changes with theme. */
-/* Ornament belongs to the greeting band, NEVER to the Canvas/player. */
-.islamicDecoration{position:absolute;left:0;right:0;top:0;height:clamp(210px,32vh,350px);z-index:0;pointer-events:none;overflow:hidden;isolation:isolate}
-.decorationNight,.decorationDay{position:absolute;display:block;left:75%;top:clamp(105px,16vh,175px);width:min(44vw,420px);height:clamp(95px,14vh,155px);transform:translateX(-50%);background-position:center center;background-repeat:no-repeat;background-size:contain;pointer-events:none;transition:opacity 1200ms cubic-bezier(.22,1,.36,1);will-change:opacity;opacity:0}
-.decorationNight{background-image:url('/assets/decorations/islamic-gold-ornament.PNG');opacity:.32}
-.decorationDay{background-image:url('/assets/decorations/islamic-white-ornament.PNG');opacity:0}
-.day .decorationNight{opacity:0}
-.day .decorationDay{opacity:.38}
-.controlHeader,.intro,.surface,.searchDock,.dockNav{position:relative;z-index:1}
-@media(max-width:700px){.islamicDecoration{height:clamp(210px,31vh,300px)}.decorationNight,.decorationDay{left:75%;top:clamp(120px,17vh,170px);width:46vw;height:clamp(90px,13vh,140px)}}
-@media(prefers-reduced-motion:reduce){.decorationNight,.decorationDay{transition:none}}
+/* Ornament is a direct child of the greeting row: no Canvas backdrop or page-level stacking. */
+.intro{position:relative;isolation:isolate;overflow:visible}
+.intro .islamicDecoration{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:visible}
+.intro .decorationNight,.intro .decorationDay{position:absolute;right:3%;top:0;display:block;width:40%;height:100%;background-position:center center;background-repeat:no-repeat;background-size:contain;pointer-events:none;transition:opacity 1200ms cubic-bezier(.22,1,.36,1);opacity:0}
+.intro .decorationNight{background-image:url('/assets/decorations/islamic-gold-ornament.PNG');opacity:.56}
+.intro .decorationDay{background-image:url('/assets/decorations/islamic-white-ornament.PNG');opacity:0}
+.day .intro .decorationNight{opacity:0}
+.day .intro .decorationDay{opacity:.58}
+.intro .introGreeting,.intro .introActionDock{position:relative;z-index:1}
+@media(max-width:700px){.intro .decorationNight,.intro .decorationDay{right:7%;top:0;width:42%;height:100%}}
+@media(prefers-reduced-motion:reduce){.intro .decorationNight,.intro .decorationDay{transition:none}}
 
 /* 1Muslim seamless crown cards — isolated to custom dashboard widgets */
 .control .customGrid .widgetCanvas{
