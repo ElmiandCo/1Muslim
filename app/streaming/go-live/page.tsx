@@ -37,15 +37,6 @@ export default function GoLivePage() {
   greenSettingsRef.current = {enabled:greenEnabled,strength:greenStrength};
 
   const [broadcastStartedAt,setBroadcastStartedAt] = useState<string|null>(null);
-  const [connectingLive,setConnectingLive] = useState(false);
-  const [liveSeconds,setLiveSeconds] = useState(0);
-  useEffect(()=>{
-    if(!live||!broadcastStartedAt){setLiveSeconds(0);return;}
-    const tick=()=>setLiveSeconds(Math.max(0,Math.floor((Date.now()-new Date(broadcastStartedAt).getTime())/1000)));
-    tick();const timer=window.setInterval(tick,1000);return()=>window.clearInterval(timer);
-  },[live,broadcastStartedAt]);
-  const liveClock = `${String(Math.floor(liveSeconds/3600)).padStart(2,"0")}:${String(Math.floor(liveSeconds%3600/60)).padStart(2,"0")}:${String(liveSeconds%60).padStart(2,"0")}`;
-
   const hostIntroRef = useRef<HTMLVideoElement>(null);
   const [showHostIntro,setShowHostIntro] = useState(false);
   const [hostIntroTap,setHostIntroTap] = useState(false);
@@ -58,6 +49,16 @@ export default function GoLivePage() {
   const [settingsOpen,setSettingsOpen] = useState(false);
   const [visualEffect,setVisualEffect] = useState<LiveEffect>("off");
   const [live, setLive] = useState(false);
+  const [connectingLive,setConnectingLive] = useState(false);
+  const [liveSeconds,setLiveSeconds] = useState(0);
+  useEffect(()=>{
+    if(!live||!broadcastStartedAt){setLiveSeconds(0);return;}
+    const tick=()=>setLiveSeconds(Math.max(0,Math.floor((Date.now()-new Date(broadcastStartedAt).getTime())/1000)));
+    tick();const timer=window.setInterval(tick,1000);return()=>window.clearInterval(timer);
+  },[live,broadcastStartedAt]);
+  const liveClock = `${String(Math.floor(liveSeconds/3600)).padStart(2,"0")}:${String(Math.floor(liveSeconds%3600/60)).padStart(2,"0")}:${String(liveSeconds%60).padStart(2,"0")}`;
+
+
   const [recording, setRecording] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
