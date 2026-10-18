@@ -130,6 +130,8 @@ export default function GoLivePage() {
     void loadScheduled();
   }, []);
   const [error, setError] = useState("");
+  const [connectingLive, setConnectingLive] = useState(false);
+  const [launchCountdown, setLaunchCountdown] = useState<number | null>(null);
   const [viewers, setViewers] = useState(0);
   const [viewerIncrease, setViewerIncrease] = useState(false);
   const previousViewerCount = useRef<number | null>(null);
@@ -715,7 +717,11 @@ export default function GoLivePage() {
       if (Date.now() < new Date(scheduledSlot.starts_at).getTime()) return setError("This scheduled Live is still locked. It will start automatically at the scheduled time.");
       if (scheduledSlot.ends_at && Date.now() > new Date(scheduledSlot.ends_at).getTime()) return setError("This scheduled Live has ended. Schedule another Live to continue.");
     }
+    if (connectingLive || live) return;
+    setConnectingLive(true);
     setError(""); setSaveMessage("");
+    let pendingStreamId: string | null = null;
+    let pendingRoom: Room | null = null;
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
@@ -728,6 +734,7 @@ export default function GoLivePage() {
       }
 
       const liveStreamId = crypto.randomUUID();
+      pendingStreamId = liveStreamId;
       const roomName = `1muslim-live-${liveStreamId}`;
       let liveThumbnailPath: string | null = null;
       if (thumbnailFile) {
@@ -769,7 +776,13 @@ export default function GoLivePage() {
       }
 
       const room = new Room({ adaptiveStream: true, dynacast: true });
-      await room.connect(tokenData.url, tokenData.token);
+      pendingRoom = room;
+      try {
+        await room.connect(tokenData.url, tokenData.token);
+      } catch (cause) {
+        const detail = cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause);
+        throw new Error(`LiveKit connection failed: ${detail} | Server: ${tokenData.url}`);
+      }
       const mediaStream = streamRef.current;
       if (!mediaStream) throw new Error("Camera and microphone must be enabled first.");
       const videoTrack = mediaStream.getVideoTracks()[0];
@@ -793,16 +806,30 @@ export default function GoLivePage() {
 
       startRecording();
       setLive(true);
+      pendingStreamId = null;
+      pendingRoom = null;
+      setLaunchCountdown(3);
       setShowHostIntro(true);
       // Notify administrators only after the broadcast is actually connected.
       void fetch("/api/live-alert", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ streamId: liveStreamId }) }).catch((error) => console.warn("Live alert request failed", error));
       setViewers(0);
     } catch (err) {
+      pendingRoom?.disconnect();
       roomRef.current?.disconnect();
       roomRef.current = null;
+      if (pendingStreamId) {
+        await createClient().from("live_streams").update({status:"ended",ended_at:new Date().toISOString()}).eq("id",pendingStreamId);
+      }
       setError(err instanceof Error ? err.message : "Live broadcast could not start.");
-    }
+    } finally { setConnectingLive(false); }
   };
+
+  useEffect(() => {
+    if (launchCountdown === null) return;
+    if (launchCountdown === 0) { const timer = window.setTimeout(() => setLaunchCountdown(null), 1200); return () => window.clearTimeout(timer); }
+    const timer = window.setTimeout(() => setLaunchCountdown(n => n === null ? null : n - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [launchCountdown]);
 
   useEffect(() => { if (!live || !liveStreamIdRef.current) return; const room = `1muslim-live-${liveStreamIdRef.current}`; const update = async () => { try { const response = await fetch("/api/livekit/viewer-count",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room})}); const data=await response.json(); if(response.ok) setViewers(Number(data.viewerCount ?? 0)); } catch {} }; void update(); const timer=window.setInterval(update,5000); return()=>window.clearInterval(timer); }, [live]);
 
@@ -995,6 +1022,8 @@ export default function GoLivePage() {
               {!live && <div className="preliveInspire" aria-hidden="true">✧ <span>Share knowledge. Inspire. Build the Ummah.</span> ›</div>}
               {!live && <div className="preliveIdentity"><button type="button" className="preliveTitleButton" onClick={()=>setSettingsOpen(true)} aria-label="Edit live title"><span className="preliveIdentityIcon" aria-hidden="true">✧</span><span><small>LIVE TITLE · TAP TO EDIT</small><strong>{title || defaultLiveTitle}</strong></span></button><button type="button" className="preliveVisibility" onClick={()=>setSettingsOpen(true)} aria-label="Change live audience">◎ {visibility==="public"?"Public":"Ashab"} ⌄</button></div>}
               {cameraReady && <div className="previewOverlayTools" aria-label="Camera controls"><button type="button" onClick={()=>void flipCamera()} title="Flip camera" aria-label="Flip camera">🔄</button><button type="button" onClick={toggleCamera} title={cameraOn?"Turn camera off":"Turn camera on"} aria-label={cameraOn?"Turn camera off":"Turn camera on"}>{cameraOn?"📷":"🚫"}</button><button type="button" onClick={toggleMic} title={micOn?"Mute microphone":"Unmute microphone"} aria-label={micOn?"Mute microphone":"Unmute microphone"}>{micOn?"🎙️":"🔇"}</button></div>}
+              {launchCountdown !== null && <div role="status" aria-live="assertive" style={{position:"absolute",inset:0,zIndex:30,display:"grid",placeItems:"center",background:"rgba(0,14,12,.72)",color:"#f8e8ae",fontWeight:900,fontSize:"clamp(38px,10vw,78px)",textShadow:"0 0 28px #29dc8a",pointerEvents:"none"}}>{launchCountdown > 0 ? `GOING LIVE ${launchCountdown}` : `🔴 LIVE · 👁 ${viewers}`}</div>}
+              {error && !live && <div role="alert" style={{position:"absolute",left:12,right:12,top:12,zIndex:40,padding:16,border:"2px solid #ff7a7a",borderRadius:16,background:"rgba(30,0,0,.95)",color:"#fff",fontSize:14,overflowWrap:"anywhere"}}><strong>⚠️ Live connection failed — camera stays open</strong><div style={{marginTop:8,whiteSpace:"pre-wrap"}}>{error}</div><button type="button" onClick={()=>setError("")} style={{marginTop:10,padding:"8px 16px"}}>Dismiss error</button></div>}
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
               {live && <span className="live">● LIVE</span>}{live && <div role="status" aria-live="polite" style={{position:"absolute",left:12,bottom:64,zIndex:13,padding:"12px 16px",borderRadius:18,background:"rgba(5,10,20,.80)",border:viewerIncrease?"2px solid #39ee8d":"1px solid rgba(255,255,255,.35)",boxShadow:viewerIncrease?"0 0 24px rgba(57,238,141,.48)":"0 8px 25px #0008",color:viewerIncrease?"#4cff9c":"white",transition:"color .3s,border .3s,box-shadow .3s",pointerEvents:"none",textAlign:"center"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1.5}}>🔴 YOU ARE LIVE</div><div style={{fontSize:"clamp(26px,5vw,40px)",fontWeight:900,lineHeight:1.15,fontVariantNumeric:"tabular-nums"}}>{viewers.toLocaleString()}</div><div style={{fontSize:11,opacity:.85}}>VIEWERS {viewerIncrease?"↑":""}</div></div>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
@@ -1022,7 +1051,7 @@ export default function GoLivePage() {
             <div className="controls">
               {cameraReady && <><button className={cameraOn ? "circle" : "circle off"} onClick={toggleCamera} aria-label="Toggle camera">{cameraOn ? "◉" : "○"}</button><button className="circle" onClick={()=>void flipCamera()} aria-label="Flip camera" title="Flip camera">↻</button><button className={micOn ? "circle" : "circle off"} onClick={toggleMic} aria-label="Toggle microphone">{micOn ? "♫" : "×"}</button></>}
               <label style={{display:"flex",alignItems:"center",gap:7,fontSize:12,color:"#d6e7b8",padding:"8px 10px",border:"1px solid #ffffff30",borderRadius:12,background:"#ffffff0c",cursor:"pointer"}}><input type="checkbox" checked={autoCameraPreview} onChange={e=>{const enabled=e.target.checked;setAutoCameraPreview(enabled);localStorage.setItem("1muslim-go-live-auto-camera",enabled?"on":"off");}} aria-label="Automatically enable camera preview when opening Go Live" /> Auto-start camera preview</label>
-              {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In for Scheduled Live</button> : null}<button data-go-live-start className="start" onClick={()=>void startLive(false)} disabled={saving}>● Start Live Now</button></div>}
+              {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In for Scheduled Live</button> : null}<button data-go-live-start className="start" onClick={()=>void startLive(false)} disabled={saving || connectingLive}>{connectingLive ? "Connecting to LiveKit…" : "● Start Live Now"}</button></div>}
             </div>
             {cameraReady && <div className="cameraStudio">
               <div className="studioHeader"><strong>Camera Studio</strong><span>{videoQuality} · {zoom.toFixed(1)}×</span></div>
