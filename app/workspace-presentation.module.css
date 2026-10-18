@@ -628,6 +628,6 @@
 
 /* HudHud collapsed navigation: reclaim the vacant header gap in document flow.
    Negative margin (not transform) also moves subsequent content upward. */
-:global([class*='navMotionCollapsed']) .fillArea{margin-top:clamp(-92px,-10dvh,-48px)!important}
-@media(max-width:650px){:global([class*='navMotionCollapsed']) .fillArea{margin-top:clamp(-106px,-12dvh,-58px)!important}}
+:global([class*='navMotionCollapsed']) .fillArea{margin-top:clamp(-184px,-20dvh,-96px)!important}
+@media(max-width:650px){:global([class*='navMotionCollapsed']) .fillArea{margin-top:clamp(-212px,-24dvh,-116px)!important}}
 @media(prefers-reduced-motion:reduce){:global([class*='navMotionCollapsed']) .fillArea{scroll-behavior:auto!important}}
