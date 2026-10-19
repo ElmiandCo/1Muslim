@@ -8,6 +8,8 @@ export default function HomeLiveConversation({live,roomName}:{live:boolean;roomN
  const [draft,setDraft]=useState("");
  const [user,setUser]=useState<{id:string;name:string}|null>(null);
  const [status,setStatus]=useState("");
+ const [connected,setConnected]=useState(false);
+ const [sending,setSending]=useState(false);
  const [demoComments,setDemoComments]=useState<Comment[]>([]);
  const scrollRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{if(live)return;const samples=[{name:"Amina",text:"As-salāmu ʿalaykum 🌙"},{name:"Yusuf",text:"May Allah bless this Ummah 🤲"},{name:"Maryam",text:"Beautiful reminder, mā shā’ Allāh ✨"},{name:"Bilal",text:"Alhamdulillah 💚"}];let index=0;const timer=window.setInterval(()=>{const item=samples[index%samples.length];setDemoComments(prev=>[...prev,{id:`demo-${index}`,name:item.name,text:item.text,at:Date.now()}].slice(-5));index++},3200);return()=>window.clearInterval(timer)},[live]);
@@ -18,7 +20,7 @@ export default function HomeLiveConversation({live,roomName}:{live:boolean;roomN
  db.auth.getUser().then(async({data:{user:u}})=>{if(!active||!u)return;const {data}=await db.from("profiles").select("display_name,username").eq("id",u.id).maybeSingle();if(active)setUser({id:u.id,name:data?.display_name||data?.username||"Member"})}).catch(()=>{});
  return()=>{active=false}},[]);
  useEffect(()=>{
-  setComments([]);setStatus("");
+  setComments([]);setStatus("");setConnected(false);
   if(!live||!roomName)return;
   const db=dbRef.current||createClient();
   const channel=db.channel("live-comments:"+roomName,{config:{broadcast:{self:true}}});
@@ -27,19 +29,20 @@ export default function HomeLiveConversation({live,roomName}:{live:boolean;roomN
    if(typeof payload?.id!=="string"||typeof payload?.text!=="string"||typeof payload?.name!=="string")return;
    const c:Comment={id:payload.id,name:payload.name.slice(0,48),text:payload.text.slice(0,280),at:Date.now()};
    setComments(prev=>prev.some(p=>p.id===c.id)?prev:[...prev,c].slice(-60));
-  }).subscribe(state=>{if(state==="SUBSCRIBED")setStatus("");else if(state==="CHANNEL_ERROR"||state==="TIMED_OUT")setStatus("Live comments temporarily unavailable")});
-  return()=>{channelRef.current=null;void db.removeChannel(channel)};
+  }).subscribe(state=>{if(state==="SUBSCRIBED"){setConnected(true);setStatus("")}else if(state==="CHANNEL_ERROR"||state==="TIMED_OUT"){setConnected(false);setStatus("Live comments temporarily unavailable")}});
+  return()=>{channelRef.current=null;setConnected(false);void db.removeChannel(channel)};
  },[live,roomName]);
  const send=async(e:React.FormEvent)=>{e.preventDefault();const text=draft.trim();if(!text||!user)return;
   if(!live||!roomName){setDemoComments(prev=>[...prev,{id:crypto.randomUUID(),name:user.name,text,at:Date.now()}].slice(-12));setDraft("");return;}
-  const channel=channelRef.current;if(!channel)return;
+  const channel=channelRef.current;if(!channel||!connected||sending){setStatus("Connecting to this livestream’s chat. Try again shortly.");return;}
   const payload={id:crypto.randomUUID(),name:user.name,text};
-  try{const result=await channel.send({type:"broadcast",event:"comment",payload});if(result!=="ok")throw Error("Send failed");setDraft("");setStatus("")}
-  catch{setStatus("Could not send comment. Try again.")}};
+  setSending(true);
+  try{const result=await channel.send({type:"broadcast",event:"comment",payload});if(result!=="ok")throw Error("Send failed");setComments(prev=>prev.some(p=>p.id===payload.id)?prev:[...prev,{...payload,at:Date.now()}].slice(-60));setDraft("");setStatus("")}
+  catch{setStatus("Could not send comment. Try again.")}finally{setSending(false)}};
  return <section className="homeLiveViewerConversation" aria-label="Live conversation">
-  <header className="chatTop"><strong><i/> LIVE CHAT</strong><small>{live?"● Live conversation":"Preview conversation"}</small></header>
+  <header className="chatTop"><strong><i/> LIVE CHAT</strong><small>{live?(connected?"● Connected to this Live":"Connecting to Live chat…"):"Preview conversation"}</small></header>
   <div ref={scrollRef} className="homeLiveDemoComments" aria-live="polite">{(live?comments:demoComments).length?(live?comments:demoComments).map(c=><p key={c.id} className="chatBubble"><span className="homeLiveCommentAvatar">{c.name.slice(0,1).toUpperCase()}</span><span><strong>{c.name}</strong><small>{c.text}</small></span></p>):<p className="chatEmpty">{live?"Say salaam 👋 Be the first to join the conversation.":"💬 Live comments will appear here when a stream begins."}</p>}</div>
-  <form className="homeLiveCommentForm" onSubmit={send}><input aria-label="Write a live comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={280} disabled={!user} placeholder={!user?"Sign in to comment":live?"Say something kind…":"Write a preview comment…"}/><button type="submit" disabled={!draft.trim()||!user} aria-label="Send comment">➤</button></form>
+  <form className="homeLiveCommentForm" onSubmit={send}><input aria-label="Write a live comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={280} disabled={!user} placeholder={!user?"Sign in to comment":live?"Say something kind…":"Write a preview comment…"}/><button type="submit" disabled={!draft.trim()||!user||sending||(live&&!connected)} aria-label="Send comment">➤</button></form>
   {status&&<small role="status" className="homeLiveCommentDisclaimer">{status}</small>}
 
   {live&&roomName?<Link className="homeLiveStudioEntry" href="/live">Open Live Studio ↗</Link>:<Link className="homeLiveStudioEntry" href="/streaming/go-live">Start your own Live ↗</Link>}
