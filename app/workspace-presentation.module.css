@@ -692,3 +692,43 @@
 .quranSlide[style*="--quran-slide-index: 1"]{animation-delay:-90s}
 .quranSlide[style*="--quran-slide-index: 2"]{animation-delay:-60s}
 .quranSlide[style*="--quran-slide-index: 3"]{animation-delay:-30s}
+
+/* Guest invite: a floating, non-layout-shifting card arrives only after the
+   Canvas reveal has finished. Slow spring settle, with no obstruction on load. */
+.guestBannerFloating{
+ position:fixed!important;
+ top:43%!important;
+ left:50%!important;
+ width:min(88vw,440px)!important;
+ z-index:120!important;
+ display:block!important;
+ margin:0!important;
+ transform:translate(-50%,-50%)!important;
+ pointer-events:none!important;
+ grid-template-rows:none!important;
+ transition:opacity .4s ease,visibility .4s ease!important;
+}
+.guestBannerFloating:not(.guestBannerOpen){opacity:0!important;visibility:hidden!important}
+.guestBannerFloating.guestBannerOpen{opacity:1!important;visibility:visible!important;pointer-events:auto!important}
+.guestBannerFloating > :global(aside){
+ margin:0!important;
+ padding:17px 45px 17px 20px!important;
+ border-radius:23px!important;
+ overflow:visible!important;
+ background:linear-gradient(115deg,rgba(7,51,42,.97),rgba(8,32,29,.96))!important;
+ box-shadow:0 24px 65px rgba(0,0,0,.5),0 0 32px rgba(49,206,146,.12)!important;
+ backdrop-filter:blur(18px);
+}
+.guestBannerFloating.guestBannerOpen > :global(aside){
+ animation:guestFloatIn 1.45s cubic-bezier(.2,.72,.24,1) both!important;
+}
+@keyframes guestFloatIn{
+ 0%{opacity:0;transform:translateX(-110vw) translateY(10px) rotate(-3deg)}
+ 58%{opacity:1;transform:translateX(12px) translateY(-6px) rotate(.5deg)}
+ 76%{transform:translateX(-5px) translateY(1px) rotate(-.2deg)}
+ 90%{transform:translateX(2px) translateY(-2px)}
+ 100%{opacity:1;transform:translateX(0) translateY(0) rotate(0)}
+}
+@media(prefers-reduced-motion:reduce){
+ .guestBannerFloating.guestBannerOpen > :global(aside){animation:none!important}
+}
