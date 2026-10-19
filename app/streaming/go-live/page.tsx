@@ -1036,6 +1036,35 @@ export default function GoLivePage() {
         @keyframes studioRise{from{opacity:.5;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @media(prefers-reduced-motion:reduce){.preliveIdentity,.settingsOpen .layout>.form{animation:none!important}}
 
+
+        /* Studio 2.1: ultra-thin transparent chrome, clear camera and non-overlapping hit areas. */
+        @media(max-width:850px){
+          .immersiveHeader{padding:calc(6px + env(safe-area-inset-top)) 12px 4px!important;min-height:52px!important}
+          .immersiveHeader a,.immersiveHeader button{width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;font-size:19px!important;background:#061a134d!important;border-color:#d8c68b50!important;box-shadow:none!important}
+          .immersiveHeader strong{font-size:15px!important}
+          .preliveIdentity{bottom:calc(123px + env(safe-area-inset-bottom))!important;left:14px!important;right:14px!important;min-height:43px;padding:5px 9px!important;border-radius:14px!important;background:#061c1661!important;border-color:#dbcc9360!important;backdrop-filter:blur(9px)!important;box-shadow:none!important;gap:6px}
+          .preliveTitleButton{gap:4px}
+          .preliveTitleButton small{font-size:8px!important;letter-spacing:.08em}
+          .preliveTitleButton strong{font-size:13px!important;line-height:1.2}
+          .preliveVisibility{font-size:10px!important;padding:6px 9px!important;background:#061b1559!important;border-color:#c8dfc08c!important}
+          .preliveMobileActions{left:14px!important;right:14px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;gap:6px!important}
+          .preliveQuickOptions{padding:2px 3px!important;gap:1px!important;border-radius:15px!important;background:#061b154f!important;border-color:#e0d29b40!important;backdrop-filter:blur(8px)!important;box-shadow:none!important}
+          .preliveQuickOptions button{min-height:42px!important;padding:3px 1px!important;gap:0!important;border-radius:11px!important}
+          .preliveQuickOptions button span{font-size:18px!important;line-height:1.2}
+          .preliveQuickOptions button strong{font-size:9px!important;line-height:1.25}
+          .preliveGoButton{min-height:45px!important;font-size:15px!important;font-weight:800!important;border:1px solid #d3e6bc8c!important;background:linear-gradient(100deg,#087653dc,#08aa73db,#076c4cdb)!important;box-shadow:0 3px 12px #003b2950,inset 0 1px #ffffff40!important;backdrop-filter:blur(8px)}
+          .previewOverlayTools{top:44%!important;right:7px!important;gap:6px!important}
+          .previewOverlayTools button{width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;font-size:17px!important;background:#061c1655!important;border-color:#e4d7aa55!important;box-shadow:none!important}
+          .settingsOpen .layout>.form{max-height:min(72dvh,650px)!important;background:linear-gradient(155deg,#092c23e8,#041710ed)!important;backdrop-filter:blur(20px)!important}
+          .live{font-size:9px!important;padding:6px 9px!important;background:#06251b99!important}
+          .previewOverlayTools button:focus-visible,.preliveQuickOptions button:focus-visible,.preliveGoButton:focus-visible{outline:2px solid #f5d996;outline-offset:2px}
+        }
+        @media(max-width:850px) and (max-height:680px){
+          .preliveIdentity{bottom:calc(116px + env(safe-area-inset-bottom))!important}
+          .preliveQuickOptions button{min-height:38px!important}
+          .preliveGoButton{min-height:41px!important}
+        }
+
         @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 
