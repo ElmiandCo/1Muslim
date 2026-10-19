@@ -1893,3 +1893,16 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 .canvas-layer-controls{position:absolute;z-index:90;bottom:6px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:4px 10px;border-radius:22px;background:rgba(1,25,22,.8);color:#e7cb86;white-space:nowrap;font-size:11px}
 .canvas-layer-controls button{border:0;background:transparent;color:#e7cb86;font-size:19px;cursor:pointer;padding:2px 9px}
 @media(prefers-reduced-motion:reduce){.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-vertical-main,.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-vertical-secondary,.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-extra-layer{transition:none!important}}
+
+/* Direct-manipulation Canvas: panels follow the finger; release snaps to nearest layer. */
+.canvas-vertical-portal[data-canvas-dragging="1"] .canvas-vertical-main,
+.canvas-vertical-portal[data-canvas-dragging="1"] .canvas-vertical-secondary,
+.canvas-vertical-portal[data-canvas-dragging="1"] .canvas-extra-layer{transition:none!important;will-change:transform}
+.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-vertical-main,
+.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-vertical-secondary,
+.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-extra-layer{backface-visibility:hidden}
+[data-canvas-active="true"] .canvas-layer-card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+[data-canvas-active="true"] .canvas-layer-card a,[data-canvas-active="true"] .canvas-layer-card button{touch-action:manipulation}
+@media(prefers-reduced-motion:no-preference){
+ .canvas-vertical-portal[data-canvas-dragging="1"] ~ *{will-change:transform}
+}
