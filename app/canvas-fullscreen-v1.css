@@ -1554,3 +1554,21 @@ main[class*="control"] .canvas-header-brand-link strong{white-space:nowrap}
  .oneMuslimLiveStage:has(.portraitLiveFeed) .oneMuslimLiveBottom > *{border-radius:16px!important}
  .oneMuslimLiveStage:has(.portraitLiveFeed) .homeLiveDemoComments{max-height:110px!important}
 }
+
+/* Two-format carousel test: desktop-format placeholder -> mobile 9:16 preview. */
+@media(max-width:767px){
+ .oneMuslimLiveStage.livePortraitDemoStage{grid-template-rows:minmax(0,1.65fr) minmax(0,.6fr)!important}
+ .oneMuslimLiveStage.livePortraitDemoStage .oneMuslimLiveBottom{padding-top:3px!important}
+ .oneMuslimLiveStage.livePortraitDemoStage .oneMuslimLiveBottom>*{border-radius:16px!important}
+}
+.portraitLiveDemo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(145deg,#02130f,#08271f 45%,#030b0b);z-index:0}
+.portraitLiveDemoScreen{position:relative;height:100%;width:min(100%,calc(100% * 9 / 16));aspect-ratio:9/16;max-width:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;color:#f1e6c7;background:radial-gradient(ellipse at 50% 35%,#135841,#03120f 75%);border-inline:1px solid #c7ab7655;box-shadow:0 0 35px #0009;padding:12px;box-sizing:border-box}
+.portraitLiveDemoLabel{position:absolute;top:20px;left:12px;right:12px;color:#d6b87c;font-size:10px;letter-spacing:.14em;font-weight:700}
+.portraitLiveDemoSpinner{display:block;width:46px;height:46px;border:3px solid #6ce8b044;border-top-color:#6ce8b0;border-radius:50%;animation:portraitDemoSpin 1.3s linear infinite}
+.portraitLiveDemoScreen strong{font-size:16px;font-weight:650}.portraitLiveDemoScreen small{font-size:11px;color:#a7c6b9;line-height:1.5}
+@keyframes portraitDemoSpin{to{transform:rotate(360deg)}}
+.oneMuslimLiveStage.liveCarouselEnterNext .oneMuslimLiveTop,.oneMuslimLiveStage.liveCarouselEnterNext .oneMuslimLiveBottom{animation:liveCarouselFromRight .4s cubic-bezier(.2,.8,.2,1) both}
+.oneMuslimLiveStage.liveCarouselEnterPrevious .oneMuslimLiveTop,.oneMuslimLiveStage.liveCarouselEnterPrevious .oneMuslimLiveBottom{animation:liveCarouselFromLeft .4s cubic-bezier(.2,.8,.2,1) both}
+@keyframes liveCarouselFromRight{from{opacity:.5;transform:translate3d(26px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes liveCarouselFromLeft{from{opacity:.5;transform:translate3d(-26px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@media(prefers-reduced-motion:reduce){.portraitLiveDemoSpinner,.oneMuslimLiveStage.liveCarouselEnterNext .oneMuslimLiveTop,.oneMuslimLiveStage.liveCarouselEnterNext .oneMuslimLiveBottom,.oneMuslimLiveStage.liveCarouselEnterPrevious .oneMuslimLiveTop,.oneMuslimLiveStage.liveCarouselEnterPrevious .oneMuslimLiveBottom{animation:none!important}}
