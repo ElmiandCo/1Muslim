@@ -54,7 +54,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
 
   return (
     <main style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}>
-      <SiteNav /><FirstVisitGuide area="watch-live"/>
+      <SiteNav /><FirstVisitGuide area="watch-live"/><style>{`.omCinematicViewer{position:relative;min-height:clamp(440px,75dvh,860px);overflow:hidden;background:#030b08}.omCinematicViewer>div:first-child{min-height:inherit}.omCinematicComments{position:absolute;left:12px;bottom:72px;z-index:20;width:min(76%,340px);height:clamp(170px,32dvh,340px);mask-image:linear-gradient(to bottom,transparent,#000 15%)}.omCinematicComments .liveChat{height:100%;background:transparent!important;border:0!important}.omCinematicComments .messages{height:100%!important;max-height:none!important;justify-content:flex-end}.omCinematicComments .emoteTray{display:none!important}.omCinematicComments .composer{background:#04191080!important;border-radius:999px!important;padding:5px!important}.omCinematicComments .message{animation:cinematicCommentIn .3s ease-out both}@keyframes cinematicCommentIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@media(max-width:700px){.omCinematicViewer{min-height:calc(100dvh - 150px)}.omCinematicComments{bottom:75px;width:78%}}@media(prefers-reduced-motion:reduce){.omCinematicComments .message{animation:none}}`}</style>
       <div className="omLiveViewerFullscreen" style={{maxWidth:1100,margin:"0 auto",padding:"30px 18px 70px"}}>
         <div style={{marginBottom:16}}>
           <span style={{fontSize:10,letterSpacing:".15em",color:"#829b87",fontWeight:850}}>{isLive ? "1MUSLIM LIVE" : "1MUSLIM REPLAY"}</span>
@@ -65,11 +65,11 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
         <div style={{border:"1px solid #1b241f",borderRadius:22,overflow:"hidden",background:"#080d09"}}>
           {isLive ? (
             <>
-              <LiveKitViewer roomName={stream.room_name} streamId={stream.id} />
+              <div className="omCinematicViewer"><LiveKitViewer roomName={stream.room_name} streamId={stream.id} /><div className="omCinematicComments"><LiveChat streamId={stream.id} hostId={stream.host_id} overlay /></div></div>
               <div style={{padding:"0 18px 18px"}}><LiveGuestStudio streamId={stream.id} roomName={stream.room_name} hostId={stream.host_id}/></div>
               <div style={{padding:18,display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(320px,.65fr)",gap:16}}>
                 <div><strong>🔴 Live now</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>Watch and participate in the conversation.</div><div style={{display:"flex",gap:14,flexWrap:"wrap",marginTop:12}}><Link href="/streaming" style={{color:"#cbd8ce",fontSize:12}}>← All streaming</Link><Link href={"/profile/"+stream.host_id} style={{color:"#d6e7b8",fontSize:12}}>Host profile</Link><Link href={"/messages?to="+stream.host_id} style={{color:"#d6e7b8",fontSize:12}}>💬 Message host</Link></div></div>
-                <LiveChat streamId={stream.id} hostId={stream.host_id} />
+                <div style={{fontSize:12,color:"#a8bcb0"}}>Comments appear over the live video. Tap the video to send reactions.</div>
               </div>
             </>
           ) : !mayViewRecording ? (
