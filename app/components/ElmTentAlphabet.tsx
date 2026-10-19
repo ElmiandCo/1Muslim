@@ -52,7 +52,7 @@ export default function ElmTentAlphabet(){
     next[i]=Array.isArray(saved)?Array.from(new Set(saved.filter((x:unknown)=>typeof x==="number"&&Number.isInteger(x)&&x>=0&&x<LETTERS.length))):[];
    }
    setLessonProgress(next);setPracticed(next[0]||[]);
-   if((next[0]||[]).length>=3&&(next[0]||[]).length<28)setMilestone(true);
+   
    if(next[1]?.length===LETTERS.length){setLesson(2);setPracticed(next[1])}
    setCompletedLessons(Array.from({length:LESSON_COUNT},(_,i)=>i).filter(i=>(next[i]||[]).length===LETTERS.length));
   }catch{}setReady(true);
@@ -64,7 +64,7 @@ export default function ElmTentAlphabet(){
   setPracticed(next);
   setLessonProgress(current=>({...current,[lesson]:next}));
   try{localStorage.setItem(lessonKey(lesson),JSON.stringify(next))}catch{}
-  if(lesson===0&&next.length>=3&&!milestoneDismissed)setMilestone(true);
+  if(lesson===0&&next.length>=3&&!milestoneDismissed){setMilestoneDismissed(true)}
   if(next.length===LETTERS.length){setCompletedLessons(current=>current.includes(lesson)?current:[...current,lesson]);if(lesson===1)setChallenge(true)}
  };
 
@@ -81,13 +81,13 @@ export default function ElmTentAlphabet(){
  const nextUnpracticed=()=>{const remaining=LETTERS.map((_,i)=>i).filter(i=>!practiced.includes(i)&&i!==selected);if(!remaining.length)return -1;if(practiced.length<3){const next=[0,1,2].find(i=>!practiced.includes(i)&&i!==selected);if(next!==undefined)return next}const random=new Uint32Array(1);crypto.getRandomValues(random);return remaining[random[0]%remaining.length]};
  const advanceLetter=()=>{const next=nextUnpracticed();if(next<0){setMilestone(true);return}setMirrorSpin(true);setTimeout(()=>{select(next);setAutoPlayNext(true)},1500);setTimeout(()=>setMirrorSpin(false),700)};
  const select=(index:number)=>{setHudhudPlayed(false);if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel();setPlaying(false);setSelected(index);setAudioMessage("")};
- useEffect(()=>{const onHudHud=()=>{if(lesson!==0)return;if(milestone){setMilestone(false);setMilestoneDismissed(true);chooseLesson(1);return}if(!hudhudPlayed){hear();setHudhudPlayed(true)}else{mark();setPracticeFlash(true);setTimeout(()=>setPracticeFlash(false),420);setHudhudPlayed(false);advanceLetter()}};window.addEventListener("1muslim:elm-tent-hudhud",onHudHud);return()=>window.removeEventListener("1muslim:elm-tent-hudhud",onHudHud)});
+ useEffect(()=>{const onHudHud=()=>{if(lesson!==0)return;if(milestone){setMilestone(false);setMilestoneDismissed(true);advanceLetter();return}if(!hudhudPlayed){hear();setHudhudPlayed(true)}else{mark();setPracticeFlash(true);setTimeout(()=>setPracticeFlash(false),420);setHudhudPlayed(false);advanceLetter()}};window.addEventListener("1muslim:elm-tent-hudhud",onHudHud);return()=>window.removeEventListener("1muslim:elm-tent-hudhud",onHudHud)});
  const submitQuiz=async(nextAnswers:number[])=>{setClaiming(true);try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setBadgeMessage("Sign in to save your badge and claim 5,000 XP.");return}const {data,error}=await db.rpc("claim_arabic_letters_badge",{answers:nextAnswers});if(error)throw error;if(data?.awarded||data?.already_earned){setBadgeEarned(true);setCompletedLessons(current=>current.includes(1)?current:[...current,1]);setBadgeMessage(data.awarded?"🏅 Arabic Letters Certified · +5,000 XP!":"🏅 Arabic Letters Certified · Already earned");chooseLesson(2)}else setBadgeMessage(`Score: ${data?.score??0}% · Reach 90% to earn your badge.`)}catch(e){setBadgeMessage(e instanceof Error?e.message:"Unable to claim badge")}finally{setClaiming(false)}};
  const answerQuestion=(choice:number)=>{if(claiming)return;const next=[...answers,choice];setAnswers(next);if(next.length===28)void submitQuiz(next);else setQuizIndex(next.length)};
  return <div className={styles.root} onTouchStart={e=>{swipeStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(swipeStart.current===null)return;const delta=e.changedTouches[0].clientY-swipeStart.current;swipeStart.current=null;if(Math.abs(delta)>90)chooseLesson(lesson+(delta<0?1:-1))}}>
   {sabrNotice&&<div className={styles.milestoneToast} role="status"><strong>يا أخي، اصبر · Yaqni, ṣabr! 🌙</strong><span>Why are you in a rush? Seek beneficial knowledge with patience. Confirm you have practiced every letter before moving on. May Allah increase you in knowledge.</span><button type="button" onClick={()=>setSabrNotice(false)}>بِسْمِ اللَّهِ · Continue practicing</button></div>}
   <nav className={styles.lessonNav} aria-label="Elm Tent lessons"><button type="button" aria-label="Previous lessons" onClick={()=>setLessonWindow(0)}>‹</button>{Array.from({length:4},(_,i)=>lessonWindow*4+i).filter(i=>i!==0||!completedLessons.includes(1)).map(i=><button type="button" key={i} className={lesson===i?styles.lessonActive:""} aria-current={lesson===i?"step":undefined} onClick={()=>chooseLesson(i)}><span>{i+1}</span><small>{completedLessons.includes(i)?"✓ Done":i<2?"Letters":"Soon"}</small></button>)}<button type="button" aria-label="Next lessons" onClick={()=>setLessonWindow(1)}>›</button></nav>
-  {lesson===0&&milestone&&<div className={styles.milestoneToast} role="status"><strong>✦ First three letters learned!</strong><span>Continue exploring or begin Lesson 2.</span><div><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);advanceLetter()}}>Keep learning</button><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);chooseLesson(1)}}>Ready for Lesson 2 →</button></div></div>}
+  {lesson===0&&milestone&&<div className={styles.milestoneToast} role="status"><strong>✦ First three letters learned!</strong><span>Continue exploring or begin Lesson 2.</span><div><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);advanceLetter()}}>Keep learning</button><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);warnSabr()}}>Continue patiently →</button></div></div>}
   {lesson===1&&<ElmTentLetterQuiz onPass={answers=>void submitQuiz(answers)} onReady={()=>chooseLesson(2)}/>}
   {lesson===2&&<ElmTentVowels/>}
   {lesson===0&&<div className={styles.lessonStage} key={lesson}><strong>LESSON {lesson+1} / 8</strong>{lesson>1?<div className={styles.soon}>✦ Lesson {lesson+1} · Coming Soon</div>:completedLessons.includes(lesson)?<span>✓ Completed</span>:null}</div>
