@@ -1869,3 +1869,27 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 .audioRoomsEmpty small{opacity:.75;font-size:12px}
 @keyframes audioRoomsBreath{50%{transform:scale(1.045);box-shadow:0 0 48px rgba(33,177,116,.35),inset 0 0 25px rgba(228,194,99,.2)}}
 @media(prefers-reduced-motion:reduce){.audioRoomsEmpty .audioRoomsHalo{animation:none}}
+
+/* Five-layer Live Canvas; preserve the original artwork behind every layer. */
+.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-vertical-main,
+.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-vertical-secondary,
+.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-extra-layer{
+ transform:translate3d(0,calc((var(--layer-index,0) - var(--canvas-layer,0))*100%),0)!important;
+ opacity:1!important;pointer-events:auto;transition:transform 520ms cubic-bezier(.22,.7,.2,1)!important;
+}
+.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-vertical-main{--layer-index:0}
+.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-vertical-secondary{--layer-index:1;background:transparent!important}
+.canvas-extra-layer{position:absolute;inset:0;min-height:0;display:grid;place-items:stretch;padding:clamp(10px,2vw,24px);background:transparent}
+.canvas-vertical-portal:has(.canvas-extra-layer) [aria-hidden="true"].canvas-extra-layer,
+.canvas-vertical-portal:has(.canvas-extra-layer) [aria-hidden="true"].canvas-vertical-secondary{pointer-events:none}
+.canvas-layer-card{height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:clamp(18px,3vw,36px);border-radius:22px;border:1px solid rgba(216,188,105,.3);background:linear-gradient(140deg,rgba(5,36,34,.63),rgba(2,17,22,.38));backdrop-filter:blur(12px);color:#f3e8ce;display:flex;flex-direction:column;gap:18px;scrollbar-width:thin}
+.canvas-layer-card header small{letter-spacing:.2em;color:#d9b86c}.canvas-layer-card h2{font-size:clamp(22px,3.6vw,36px);margin:8px 0}.canvas-layer-card p{opacity:.83;line-height:1.55}
+.canvas-layer-card a{color:#e8ca80;text-decoration:none;padding:12px;border:1px solid rgba(219,190,104,.3);border-radius:12px;width:fit-content}
+.canvas-layer-profile{display:flex;align-items:center;gap:18px}.canvas-layer-avatar{width:84px;height:84px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,#3b8b72,#09352e);font-size:35px}
+.canvas-layer-avatar-list,.canvas-layer-badges,.canvas-layer-tabs,.canvas-layer-settings{display:flex;gap:10px;flex-wrap:wrap}
+.canvas-layer-avatar-list{overflow-x:auto;flex-wrap:nowrap;touch-action:pan-x}.canvas-layer-avatar-list span,.canvas-layer-badges span{padding:16px;border:1px solid rgba(230,200,124,.35);border-radius:15px;background:rgba(13,64,51,.45);white-space:nowrap}
+.canvas-layer-xp strong{font-size:clamp(36px,7vw,64px);display:block;color:#e7cb86}
+.canvas-layer-tabs button{border:1px solid rgba(216,188,105,.4);border-radius:14px;background:rgba(9,57,45,.4);padding:10px 14px;color:#f3e8ce}.canvas-layer-tabs button[aria-pressed=true]{background:rgba(38,124,87,.8)}
+.canvas-layer-controls{position:absolute;z-index:90;bottom:6px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:4px 10px;border-radius:22px;background:rgba(1,25,22,.8);color:#e7cb86;white-space:nowrap;font-size:11px}
+.canvas-layer-controls button{border:0;background:transparent;color:#e7cb86;font-size:19px;cursor:pointer;padding:2px 9px}
+@media(prefers-reduced-motion:reduce){.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-vertical-main,.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-vertical-secondary,.canvas-vertical-portal:has(.canvas-extra-layer) .canvas-extra-layer{transition:none!important}}
