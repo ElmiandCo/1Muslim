@@ -1912,3 +1912,9 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 .canvas-elm-tent-door:hover,.canvas-elm-tent-door:focus-visible{max-width:170px;padding-right:16px}
 .canvas-elm-tent-door span:first-child{font-size:22px}
 @media(prefers-reduced-motion:reduce){.canvas-elm-tent-door{transition:none}}
+
+/* Elm Tent is a local secret chamber, not another stop in the main horizontal carousel. */
+.canvas-elm-tent-secret{position:absolute;z-index:110;inset:0;background:linear-gradient(155deg,rgba(2,30,27,.97),rgba(9,49,38,.94));transform:translate3d(101%,0,0);transition:transform .48s cubic-bezier(.22,.7,.2,1);pointer-events:none;overflow-y:auto;overscroll-behavior:contain;padding:56px 12px 18px}
+.canvas-elm-tent-secret[data-open=true]{transform:translate3d(0,0,0);pointer-events:auto}
+.canvas-elm-tent-back{position:absolute;top:12px;left:12px;z-index:2;border:1px solid rgba(218,191,117,.4);background:rgba(0,0,0,.4);color:#ead38f;padding:9px 14px;border-radius:12px}
+@media(prefers-reduced-motion:reduce){.canvas-elm-tent-secret{transition:none}}
