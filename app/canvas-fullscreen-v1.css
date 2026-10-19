@@ -1754,3 +1754,36 @@ main[class*="control"] .canvas-header-brand-link strong{white-space:nowrap}
 .oneMuslimLiveStage .homeLiveCommentForm{
  background:rgba(0,17,14,.2)!important;
 }
+
+/* Live carousel: remove unused bottom gap; waiting-room chat occupies lower half. */
+@media(max-width:767px){
+ [data-workspace-page="0"] .oneMuslimLiveStage,
+ [data-workspace-page="0"] .oneMuslimLiveStage.livePortraitDemoStage{
+  grid-template-rows:minmax(0,46%) minmax(0,54%)!important;
+  gap:4px!important;
+  padding:8px 8px 0!important;
+  overflow:hidden!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop{
+  min-height:0!important;height:100%!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom{
+  min-height:0!important;height:100%!important;max-height:none!important;
+  align-self:stretch!important;padding:0!important;margin:0!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom>*{
+  height:100%!important;max-height:none!important;min-height:0!important;
+  box-sizing:border-box!important;overflow:hidden!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveDemoComments{
+  flex:1 1 0%!important;min-height:0!important;max-height:none!important;
+  overflow-y:auto!important;overscroll-behavior:contain;scroll-behavior:smooth;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveCommentForm{
+  flex-shrink:0!important;margin-top:0!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage .portraitLiveDemoScreen{
+  width:min(90%,calc(100% - 90px))!important;height:100%!important;
+ }
+ [data-workspace-page="0"] .canvas-orb-return{display:none!important}
+}
