@@ -2251,3 +2251,21 @@ main[class*="control"] [class*="introActionDock"]{
 @keyframes premiumAvatarPivot{0%,100%{transform:perspective(800px) rotateY(-10deg)}50%{transform:perspective(800px) rotateY(10deg)}}
 @keyframes premiumAvatarDissolve{0%,20%{opacity:1;filter:none}100%{opacity:0;filter:blur(8px)}}
 @media(prefers-reduced-motion:reduce){.canvas-direction-arrow,.canvas-boot-curtain .canvas-intro-scan-card,.canvas-boot-curtain.canvas-boot-backdrop-gone .canvas-intro-avatar-card{animation:none!important}}
+
+/* Neon street-art inspired identity backdrop. Avatar remains the foreground focus. */
+.canvas-intro-hudhud-backdrop{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:.85;transition:opacity .42s ease,filter .42s ease}
+.canvas-intro-hudhud-backdrop>img{position:absolute;left:50%;top:49%;width:min(80%,500px);height:80%;object-fit:contain;transform:translate(-50%,-50%) scale(1.1);opacity:.24;filter:grayscale(1) brightness(2.3) contrast(1.7) drop-shadow(-16px 2px 13px rgba(0,198,255,.55)) drop-shadow(14px -7px 16px rgba(208,0,255,.55));animation:neonHudHudLook 1.25s ease-in-out infinite alternate}
+.canvas-intro-hudhud-aura{position:absolute;inset:0;background:radial-gradient(ellipse at 46% 46%,rgba(165,35,230,.13),transparent 31%),radial-gradient(ellipse at 55% 60%,rgba(0,183,244,.12),transparent 35%);animation:neonHudHudPulse 1.6s ease-in-out infinite alternate}
+.canvas-intro-hudhud-orbit{position:absolute;left:50%;top:50%;width:min(85%,500px);height:34%;border:2px solid rgba(229,236,250,.2);border-left-color:rgba(218,45,251,.42);border-right-color:rgba(0,195,255,.42);border-radius:50%;transform:translate(-50%,-50%) rotate(-19deg);filter:drop-shadow(0 0 8px rgba(174,55,255,.45));animation:neonHudHudOrbit 1.5s ease-in-out infinite alternate}
+.canvas-intro-hudhud-sparks{position:absolute;inset:0}
+.canvas-intro-hudhud-sparks i{position:absolute;left:calc(12% + mod(var(--spark-index) * 37, 77) * 1%);top:calc(14% + mod(var(--spark-index) * 29, 69) * 1%);width:3px;height:3px;border-radius:50%;background:rgba(235,242,255,.9);box-shadow:0 0 8px #02bfff,0 0 12px #d326ff;animation:neonHudHudSpark 1.1s ease-in-out infinite alternate;animation-delay:calc(var(--spark-index) * -70ms)}
+.canvas-intro-hudhud-found>img{animation:none;opacity:.13;transform:translate(-50%,-50%) scale(1.04)}
+.canvas-intro-hudhud-found .canvas-intro-hudhud-orbit{animation:neonRecognitionFlash .55s ease-out forwards}
+.canvas-boot-backdrop-gone .canvas-intro-hudhud-backdrop{opacity:0;filter:blur(10px)}
+.canvas-boot-curtain .canvas-intro-avatar-card{z-index:4!important}
+@keyframes neonHudHudLook{from{transform:translate(-50%,-50%) scale(1.06) rotate(-2deg)}to{transform:translate(-50%,-50%) scale(1.13) rotate(2deg)}}
+@keyframes neonHudHudPulse{from{opacity:.45}to{opacity:1}}
+@keyframes neonHudHudOrbit{from{transform:translate(-50%,-50%) rotate(-21deg) scale(.97)}to{transform:translate(-50%,-50%) rotate(-17deg) scale(1.04)}}
+@keyframes neonHudHudSpark{from{opacity:.18;scale:.7}to{opacity:.95;scale:1.6}}
+@keyframes neonRecognitionFlash{0%{opacity:1;scale:1}100%{opacity:0;scale:1.45}}
+@media(prefers-reduced-motion:reduce){.canvas-intro-hudhud-backdrop *{animation:none!important}}
