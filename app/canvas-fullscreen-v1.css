@@ -1825,3 +1825,39 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
  }
  [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveCommentForm{margin-top:auto!important;flex-shrink:0!important}
 }
+
+
+/* Final Live Preview: keep the removed green shortcut orb hidden and anchor chat
+   slightly higher without changing the approved player, HudHud, or artwork. */
+body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-orb-floating-dock,
+body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
+[data-workspace-page="0"] .canvas-orb-return {
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom {
+  transform:translateY(-10px);
+  transition:transform 240ms ease-out;
+  min-height:0!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom > .homeLiveViewerConversation {
+  min-height:0!important;
+  overflow:hidden!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage .homeLiveDemoComments {
+  min-height:0!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  scroll-behavior:smooth;
+}
+@media(max-width:759px) {
+  [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom {
+    transform:translateY(-5px);
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom {
+    transition:none;
+  }
+}
