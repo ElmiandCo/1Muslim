@@ -810,3 +810,29 @@ main[class*="control"]>[class*="surface"]>[class*="surfaceArtwork"]~*{position:r
 .premium-touch-dust i{position:absolute;left:0;top:0;width:3px;height:3px;border-radius:50%;background:#f7d99a;box-shadow:0 0 6px rgba(245,202,119,.65);opacity:0;animation:premiumTouchDust .72s ease-out forwards;transform:translate(-50%,-50%)}
 @keyframes premiumTouchDust{0%{opacity:.8;transform:translate(-50%,-50%) scale(.65)}75%{opacity:.5}100%{opacity:0;transform:translate(calc(-50% + var(--dust-x)),calc(-50% + var(--dust-y))) scale(.2)}}
 @media(prefers-reduced-motion:reduce){.premium-touch-dust{display:none!important}}
+
+/* Consolidated 2026-10-18: keep original six-slide Canvas and its live/call widgets intact. */
+main[class*="control"]>[class*="islamicDecoration"]{
+ position:absolute!important;top:clamp(3px,3vh,32px)!important;left:auto!important;right:0!important;
+ width:min(72vw,580px)!important;height:clamp(145px,24vh,280px)!important;
+ z-index:3!important;opacity:1!important;overflow:visible!important;
+ pointer-events:none!important;filter:none!important;
+}
+main[class*="control"]>[class*="islamicDecoration"]>[class*="decorationNight"],
+main[class*="control"]>[class*="islamicDecoration"]>[class*="decorationDay"]{
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+ background-size:contain!important;background-repeat:no-repeat!important;background-position:right top!important;
+ filter:drop-shadow(0 4px 12px rgba(198,137,40,.24))!important;
+ transform:none!important;
+}
+main[class*="control"]:not([class*="day"])>[class*="islamicDecoration"]>[class*="decorationNight"]{
+ background-image:url('/assets/decorations/islamic-gold-ornament.PNG')!important;opacity:.86!important;
+}
+main[class*="control"][class*="day"]>[class*="islamicDecoration"]>[class*="decorationDay"]{
+ background-image:url('/assets/decorations/islamic-gold-ornament.PNG')!important;opacity:.78!important;
+}
+main[class*="control"]>[class*="surface"]{background-color:rgba(4,14,13,.28)!important}
+.homeLiveActualIdle{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:22px!important;min-height:260px!important;background:rgba(1,17,15,.92)!important;color:#e7dfc9!important}
+.homeLiveClassicPlay{display:grid!important;place-items:center!important;width:106px!important;height:106px!important;border-radius:50%!important;background:#a32632!important;color:white!important;text-decoration:none!important;border:12px solid rgba(5,20,17,.72)!important;box-shadow:0 0 0 10px rgba(42,57,48,.35),0 10px 26px #0008!important}
+.homeLiveClassicPlay span{font-size:34px!important;color:white!important;margin-left:6px!important}
+@media(max-width:700px){main[class*="control"]>[class*="islamicDecoration"]{top:12px!important;right:0!important;width:min(78vw,430px)!important;height:165px!important}.homeLiveClassicPlay{width:92px!important;height:92px!important}}
