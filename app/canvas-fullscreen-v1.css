@@ -1278,3 +1278,77 @@ main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveS
 main[class*="control"] [data-widget="Live"] > [class*="widgetCrown"]{
  position:relative!important;z-index:21!important;pointer-events:none!important;
 }
+
+/* 1Muslim approved Live composition: 3-layer stage, no fabricated streams. */
+main[class*="control"] [data-widget="Live"]{position:relative!important;isolation:isolate!important;overflow:hidden!important}
+main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage{
+position:absolute!important;inset:4px!important;width:auto!important;height:auto!important;
+display:block!important;overflow:hidden!important;z-index:20!important;opacity:1!important;
+visibility:visible!important;border-radius:22px!important;background:rgba(0,20,17,.12)!important;
+}
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveStreamCarousel{
+position:absolute!important;inset:8px 3% auto!important;height:20%!important;min-height:104px!important;
+width:94%!important;z-index:45!important;display:flex!important;flex-direction:column!important;
+gap:5px!important;overflow:hidden!important;padding:9px!important;box-sizing:border-box!important;
+border:1px solid rgba(226,201,134,.44)!important;border-radius:18px!important;
+background:rgba(1,31,26,.56)!important;backdrop-filter:blur(11px)!important;
+-webkit-backdrop-filter:blur(11px)!important;visibility:visible!important;opacity:1!important;
+}
+main[class*="control"] .homeLiveCarouselHeading{display:flex!important;align-items:center!important;
+justify-content:space-between!important;color:#fff5d6!important;font-size:13px!important;flex:none!important}
+main[class*="control"] .homeLiveCarouselHeading a{color:#fff5d6!important;text-decoration:none!important}
+main[class*="control"] .homeLiveCarouselTrack{display:flex!important;align-items:stretch!important;gap:8px!important;
+flex:1 1 auto!important;min-height:0!important;overflow-x:auto!important;overflow-y:hidden!important;
+scrollbar-width:none!important}
+main[class*="control"] .homeLiveCarouselTrack::-webkit-scrollbar{display:none!important}
+main[class*="control"] .homeLiveStreamTile{flex:0 0 48%!important;min-width:112px!important;max-width:180px!important;
+height:100%!important;min-height:0!important;display:flex!important;align-items:flex-end!important;
+padding:10px!important;border-radius:12px!important;background:linear-gradient(180deg,rgba(3,58,44,.17),rgba(1,22,19,.83))!important;
+border:1px solid rgba(213,184,112,.4)!important;box-sizing:border-box!important;text-align:left!important}
+main[class*="control"] .homeLiveStreamTileLabel{display:flex!important;flex-direction:column!important;gap:4px!important;
+color:white!important;font-size:12px!important;font-weight:700!important}
+main[class*="control"] .homeLiveStreamTileLabel small{font-size:10px!important;font-weight:400!important}
+main[class*="control"] .homeLiveStreamEmpty{align-self:center!important;text-align:center!important}
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveActualPlayer{
+position:absolute!important;inset:23% 15% 25%!important;width:70%!important;height:52%!important;
+min-height:0!important;max-width:none!important;display:block!important;z-index:4!important;
+border:1px solid rgba(227,192,111,.65)!important;border-radius:24px!important;
+background:rgba(0,27,23,.7)!important;overflow:visible!important;visibility:visible!important;opacity:1!important;
+}
+main[class*="control"] [data-widget="Live"] .homeLiveActualIdle{
+position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;
+justify-content:center!important;flex-direction:column!important;gap:18px!important;
+background:rgba(1,25,22,.42)!important;color:#fff!important;border-radius:24px!important;
+visibility:visible!important;opacity:1!important}
+main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls{
+position:absolute!important;left:-22%!important;right:-22%!important;top:45%!important;
+width:144%!important;display:flex!important;justify-content:space-between!important;
+pointer-events:none!important;z-index:35!important}
+main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button{pointer-events:auto!important}
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveConversationDock{
+position:absolute!important;inset:auto 3% 2%!important;height:23%!important;width:94%!important;
+max-height:none!important;display:block!important;z-index:48!important;overflow:hidden!important;
+border:1px solid rgba(227,192,111,.5)!important;border-radius:20px!important;
+background:rgba(0,44,35,.45)!important;backdrop-filter:blur(13px)!important;
+-webkit-backdrop-filter:blur(13px)!important;box-sizing:border-box!important;
+}
+main[class*="control"] .homeLiveConversationDock > .homeLiveViewerConversation{
+position:relative!important;inset:auto!important;display:flex!important;flex-direction:column!important;
+gap:7px!important;width:100%!important;height:100%!important;max-height:none!important;
+padding:10px 13px!important;margin:0!important;overflow:auto!important;box-sizing:border-box!important;
+background:transparent!important;border:0!important;box-shadow:none!important;
+backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+main[class*="control"] .homeLiveConversationDock .homeLiveDemoComments{flex:1 1 auto!important;min-height:0!important;overflow:auto!important}
+main[class*="control"] .homeLiveConversationDock .homeLiveCommentForm{flex:none!important}
+main[class*="control"] .homeLiveConversationDock .homeLiveCommentDisclaimer{display:none!important}
+main[class*="control"] .homeLiveConversationDock .homeLiveStudioEntry{display:none!important}
+main[class*="control"] .introActionDock button.homeAuthSignIn{
+background:linear-gradient(135deg,#078b45,#014b2d)!important;border:1px solid #36f27b!important;
+box-shadow:0 0 18px rgba(8,255,108,.56)!important;color:white!important}
+main[class*="control"] .introActionDock button.homeAuthSignIn [class*="liveDockDot"]{
+background:#21ff70!important;box-shadow:0 0 12px #21ff70!important}
+@media(max-width:600px){
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveStreamCarousel{min-height:90px!important}
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveActualPlayer{inset:23% 13% 26%!important;width:74%!important;height:51%!important}
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveConversationDock{height:24%!important}
+}
