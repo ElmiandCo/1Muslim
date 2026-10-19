@@ -122,6 +122,8 @@ export default function Home(){
  const [canvasBooting,setCanvasBooting]=useState(true);
  const [canvasRevealStarted,setCanvasRevealStarted]=useState(false);
  const [introQuickWelcome,setIntroQuickWelcome]=useState(false);
+ const [introStartedScanning,setIntroStartedScanning]=useState(false);
+ useEffect(()=>{const t=window.setTimeout(()=>{if(!introScanLockRef.current)setIntroStartedScanning(true)},450);return()=>clearTimeout(t)},[]);
  useEffect(()=>{if(!canvasBooting||introScanLockRef.current)return;let cancelled=false;let timer:ReturnType<typeof setTimeout>;const files=introScanFiles.map(file=>"/assets/avatars/"+file);files.forEach(src=>{const img=new window.Image();img.src=src});setIntroScanIndex(0);let index=0;const advance=()=>{if(cancelled||introScanLockRef.current)return;index++;if(index>=introScanFiles.length){index=0}setIntroScanIndex(index);timer=setTimeout(advance,300)};timer=setTimeout(advance,300);return()=>{cancelled=true;clearTimeout(timer)}},[canvasBooting]);
  const canvasIntroAudio=useRef<HTMLAudioElement|null>(null);
  useEffect(()=>{const duration=8500+Math.floor(Math.random()*1501);const audio=new Audio("/audio/hudhud-welcome.mp3");audio.volume=.10;audio.preload="auto";canvasIntroAudio.current=audio;const fxCtx=typeof window!=="undefined"?new (window.AudioContext||((window as unknown as {webkitAudioContext:typeof AudioContext}).webkitAudioContext))():null;
@@ -139,19 +141,22 @@ export default function Home(){
   if(homeSignedIn===null)return;
   if(homeSignedIn&&!homeNames)return;
   if(homeSignedIn){
+   // Wait for the profile to resolve, then show the actual member avatar immediately.
    introScanLockRef.current=true;
-   setIntroQuickWelcome(true);
+   setIntroQuickWelcome(!introStartedScanning);
    setIntroScanComplete(true);
    setIntroRecognized(true);
-   const reveal=window.setTimeout(()=>setCanvasRevealStarted(true),1100);
-   const finish=window.setTimeout(()=>{setCanvasBooting(false);canvasIntroAudio.current?.pause()},2000);
+   // Keep the dark scanner backdrop for an initially unresolved identity.
+   // The correct avatar and name remain together through the one-second lock.
+   const reveal=window.setTimeout(()=>setCanvasRevealStarted(true),introStartedScanning?1100:1000);
+   const finish=window.setTimeout(()=>{setCanvasBooting(false);canvasIntroAudio.current?.pause()},introStartedScanning?2200:2000);
    return()=>{clearTimeout(reveal);clearTimeout(finish)};
   }
   // Guests see a short scan, not a recognized identity.
   const reveal=window.setTimeout(()=>setCanvasRevealStarted(true),2300);
   const finish=window.setTimeout(()=>{setCanvasBooting(false);canvasIntroAudio.current?.pause()},3900);
   return()=>{clearTimeout(reveal);clearTimeout(finish)};
- },[canvasBooting,homeSignedIn,homeNames]);
+ },[canvasBooting,homeSignedIn,homeNames,introStartedScanning]);
  const verticalSwipeStart=useRef<{x:number;y:number;row:number;height:number;locked:boolean;portal:HTMLElement|null;scene:HTMLElement|null}|null>(null);
  const verticalDragRef=useRef(0);
  const clearVerticalDrag=(start:NonNullable<typeof verticalSwipeStart.current>,commit:boolean,dy=0)=>{
