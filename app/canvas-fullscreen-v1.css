@@ -2269,3 +2269,7 @@ main[class*="control"] [class*="introActionDock"]{
 @keyframes neonHudHudSpark{from{opacity:.18;scale:.7}to{opacity:.95;scale:1.6}}
 @keyframes neonRecognitionFlash{0%{opacity:1;scale:1}100%{opacity:0;scale:1.45}}
 @media(prefers-reduced-motion:reduce){.canvas-intro-hudhud-backdrop *{animation:none!important}}
+
+/* Profile portal: short upward glide, then client-side route change. */
+.canvas-vertical-portal.canvas-profile-transitioning{transform:translate3d(0,-18px,0) scale(.985)!important;opacity:.15!important;filter:blur(5px)!important;transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .26s ease,filter .26s ease!important;pointer-events:none!important}
+@media(prefers-reduced-motion:reduce){.canvas-vertical-portal.canvas-profile-transitioning{transition:none!important;filter:none!important}}
