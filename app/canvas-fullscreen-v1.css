@@ -2177,3 +2177,19 @@ main[class*="control"] [class*="introActionDock"]{
 @keyframes identityFlare{0%{opacity:0}28%{opacity:.85}100%{opacity:0}}
 @keyframes identityFinalDissolve{0%{opacity:1;filter:drop-shadow(0 0 14px rgba(220,188,97,.25))}45%{opacity:.85;filter:drop-shadow(0 0 38px rgba(220,188,97,.65))}100%{opacity:0;transform:scale(1.55) translateY(-10px);filter:blur(14px)}}
 @media(prefers-reduced-motion:reduce){.canvas-boot-curtain::before,.canvas-intro-cinematic-halo,.canvas-intro-cinematic-flare{animation:none!important}.canvas-boot-backdrop-gone .canvas-intro-avatar-card{animation:none!important;opacity:0!important}}
+
+/* Identity Reveal 3.1: no jumping during avatar scans; reveal the last page immediately. */
+.canvas-boot-curtain .canvas-intro-avatar-card,.canvas-boot-curtain .canvas-intro-avatar-flip,.canvas-boot-curtain .canvas-intro-avatar-face{transition:none!important;transform:none!important;animation:none!important;will-change:opacity!important}
+.canvas-boot-curtain .canvas-intro-avatar-card{position:relative!important;z-index:6!important;transform:scale(1.42)!important;transform-origin:center!important;max-width:min(68vw,320px)!important}
+.canvas-boot-curtain .canvas-intro-scan-card{animation:none!important;transform:none!important}
+.canvas-boot-curtain .canvas-intro-scan-visible img{animation:none!important;transform:none!important;object-fit:contain!important}
+.canvas-boot-curtain.canvas-boot-backdrop-gone{transition:background .3s ease-out,opacity .45s ease-out!important;background:transparent!important;backdrop-filter:none!important}
+.canvas-boot-curtain.canvas-boot-backdrop-gone::before,.canvas-boot-curtain.canvas-boot-backdrop-gone::after{opacity:0!important;transition:opacity .35s ease!important}
+.canvas-boot-backdrop-gone .canvas-intro-avatar-card{animation:identityStayAndFade .95s ease-out forwards!important}
+.canvas-intro-identity-art{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.canvas-intro-identity-stamp{position:absolute;top:12%;right:10%;transform:rotate(13deg);font-weight:900;letter-spacing:.16em;font-size:clamp(11px,2.2vw,17px);line-height:1.25;text-align:center;color:rgba(216,177,82,.4);border:2px dashed rgba(213,169,68,.23);padding:12px;border-radius:16px;text-shadow:0 0 16px rgba(220,169,70,.3)}
+.canvas-intro-identity-art img{position:absolute;bottom:17%;left:12%;width:clamp(42px,10vw,90px);height:auto;opacity:.38;transform:rotate(-15deg);filter:drop-shadow(0 0 18px rgba(226,190,88,.32))}
+.canvas-intro-identity-stars{position:absolute;bottom:16%;right:12%;color:rgba(226,195,111,.4);font-size:clamp(14px,3vw,24px);letter-spacing:12px}
+@keyframes identityStayAndFade{0%,32%{opacity:1;filter:drop-shadow(0 0 20px rgba(211,174,88,.25))}100%{opacity:0;filter:blur(11px)}}
+@media(max-width:520px){.canvas-boot-curtain .canvas-intro-avatar-card{transform:scale(1.28)!important}.canvas-intro-identity-stamp{right:4%;top:9%;font-size:10px}.canvas-intro-identity-art img{left:6%;bottom:13%}}
+@media(prefers-reduced-motion:reduce){.canvas-boot-backdrop-gone .canvas-intro-avatar-card{animation:none!important;opacity:0!important}}
