@@ -1,6 +1,7 @@
 "use client";
 
 import SiteNav from "../../components/SiteNav";
+import HudHudLiveVerse from "../../components/HudHudLiveVerse";
 import GoLiveHudHudTip from "../../components/GoLiveHudHudTip";
 
 import Link from "next/link";
@@ -1125,6 +1126,7 @@ export default function GoLivePage() {
           <div className="freeNote">Free-first mode: this room provides the camera preview and social interaction layer without a paid video provider. A true cross-device broadcast still needs a WebRTC media backend.</div>
         </section>}
       </div>
+      {live && <HudHudLiveVerse />}
     </main>
   );
 }
