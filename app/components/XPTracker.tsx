@@ -29,11 +29,13 @@ export default function XPTracker(){
   const [userId,setUserId]=useState<string|null>(null),[xp,setXp]=useState(0),[notice,setNotice]=useState<string|null>(null);
   const [activeSeconds,setActiveSeconds]=useState(0);
   const [xpVisible,setXpVisible]=useState(false);
+  const [celebration,setCelebration]=useState(false);
   const levelRef=useRef<number|null>(null);
   const hideTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
-  const showLevelUp=(nextXp:number)=>{const next=levelFor(nextXp);if(levelRef.current===null){levelRef.current=next;return;}if(next>levelRef.current){setXpVisible(true);if(hideTimer.current)clearTimeout(hideTimer.current);hideTimer.current=setTimeout(()=>setXpVisible(false),6000);}levelRef.current=next;};
+  const showLevelUp=(nextXp:number)=>{const next=levelFor(nextXp);const old=levelRef.current;if(old===null){levelRef.current=next;return;}const milestone=(n:number)=>n===2||n===5||n===10||n>=20&&n%10===0;const major=next>old&&Array.from({length:Math.min(next-old,10000)},(_,i)=>old+i+1).some(milestone);setCelebration(major);setXpVisible(true);if(hideTimer.current)clearTimeout(hideTimer.current);hideTimer.current=setTimeout(()=>{setXpVisible(false);setCelebration(false)},major?2000:1600);levelRef.current=next;};
   useEffect(()=>()=>{if(hideTimer.current)clearTimeout(hideTimer.current)},[]);
 
+  useEffect(()=>{const onAward=(event:Event)=>{const d=(event as CustomEvent<{awarded:number;xp_total:number}>).detail;if(!d||!Number.isFinite(d.xp_total)||d.awarded<=0)return;showLevelUp(d.xp_total);setXp(d.xp_total);setNotice("+"+d.awarded.toLocaleString()+" XP");};window.addEventListener("1muslim:xp-awarded",onAward);return()=>window.removeEventListener("1muslim:xp-awarded",onAward)},[]);
   const lastClick=useRef<Record<string,number>>({});
   const activeRef=useRef(0);
   const lastActivity=useRef(Date.now());
@@ -138,13 +140,13 @@ export default function XPTracker(){
   if(!userId||!xpVisible)return null;
   const level=levelFor(xp),start=levelStart(level),end=levelEnd(level),progress=Math.min(100,Math.max(0,((xp-start)/(end-start))*100));
   const timeProgress=Math.min(100,activeSeconds/3);
-  return <div ref={trackerRef} className="xpTracker" aria-live="polite" style={position?{left:position.x,top:position.y,right:"auto",bottom:"auto"}:undefined} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} title="Drag to move XP tracker">
+  return <div ref={trackerRef} className={"xpTracker"+(celebration?" xpMilestone":"")} aria-live="polite" style={position?{left:position.x,top:position.y,right:"auto",bottom:"auto"}:undefined} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} title="Drag to move XP tracker">
     <style jsx>{`
       .xpTracker{position:fixed;right:18px;bottom:82px;z-index:90;width:220px;padding:10px 11px;border:1px solid rgba(151,187,158,.25);border-radius:16px;background:rgba(8,13,10,.88);backdrop-filter:blur(16px);box-shadow:0 14px 38px rgba(0,0,0,.28);pointer-events:auto;cursor:grab;touch-action:none;user-select:none;color:#eef5ef}
-      .xpTracker:active{cursor:grabbing}.top{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:850}.xp{color:#b7e0bd}.bar,.time{height:4px;border-radius:99px;background:#202b23;overflow:hidden;margin-top:7px}.fill{height:100%;background:linear-gradient(90deg,#8bbd94,#d8e9da);transition:width .5s ease}.time{height:2px;margin-top:5px}.time .fill{opacity:.55}.meta{display:flex;justify-content:space-between;margin-top:5px;color:#7e8c82;font-size:8px}.notice{position:absolute;right:10px;bottom:calc(100% + 7px);background:#dfeee1;color:#0b150d;border-radius:10px;padding:6px 8px;font-weight:900;font-size:10px;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+      .xpMilestone{border-color:#e8d18a!important;box-shadow:0 0 0 2px #e8d18a99,0 0 28px #4cdbad88!important;animation:xpCelebrate 2s ease both}@keyframes xpCelebrate{0%{opacity:0;transform:scale(.85)}20%,75%{opacity:1;transform:scale(1.06)}100%{opacity:0;transform:scale(.98)}}@media(prefers-reduced-motion:reduce){.xpMilestone{animation:none}}.xpTracker:active{cursor:grabbing}.top{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:850}.xp{color:#b7e0bd}.bar,.time{height:4px;border-radius:99px;background:#202b23;overflow:hidden;margin-top:7px}.fill{height:100%;background:linear-gradient(90deg,#8bbd94,#d8e9da);transition:width .5s ease}.time{height:2px;margin-top:5px}.time .fill{opacity:.55}.meta{display:flex;justify-content:space-between;margin-top:5px;color:#7e8c82;font-size:8px}.notice{position:absolute;right:10px;bottom:calc(100% + 7px);background:#dfeee1;color:#0b150d;border-radius:10px;padding:6px 8px;font-weight:900;font-size:10px;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.25)}
       @media(max-width:600px){.xpTracker{right:10px;bottom:72px;width:190px}.top{font-size:9px}}
     `}</style>
-    {notice&&<span className="notice">{notice}</span>}
+    {notice&&<span className="notice">{celebration?"✨ Keep Going! · ":""}{notice}</span>}
     <div className="top"><span>Level {level}</span><span className="xp">{xp.toLocaleString()} XP</span></div>
     <div className="bar"><div className="fill" style={{width:progress+"%"}}/></div>
     <div className="time"><div className="fill" style={{width:timeProgress+"%"}}/></div>
