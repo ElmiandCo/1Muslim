@@ -41,6 +41,7 @@ export default function ElmTentAlphabet(){
  const [mirrorSpin,setMirrorSpin]=useState(false);
  const [milestone,setMilestone]=useState(false);
  const [sabrNotice,setSabrNotice]=useState(false);
+ const [quizUnlock,setQuizUnlock]=useState(false);
  const sabrTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const warnSabr=()=>{setSabrNotice(true);if(sabrTimer.current)clearTimeout(sabrTimer.current);sabrTimer.current=setTimeout(()=>setSabrNotice(false),4800)};
  const [milestoneDismissed,setMilestoneDismissed]=useState(false);
@@ -65,6 +66,7 @@ export default function ElmTentAlphabet(){
   setLessonProgress(current=>({...current,[lesson]:next}));
   try{localStorage.setItem(lessonKey(lesson),JSON.stringify(next))}catch{}
   if(lesson===0&&next.length>=3&&!milestoneDismissed){setMilestoneDismissed(true)}
+  if(lesson===0&&next.length===LETTERS.length){setQuizUnlock(true);setTimeout(()=>{setQuizUnlock(false);chooseLesson(1)},1550)}
   if(next.length===LETTERS.length){setCompletedLessons(current=>current.includes(lesson)?current:[...current,lesson]);if(lesson===1)setChallenge(true)}
  };
 
@@ -85,6 +87,7 @@ export default function ElmTentAlphabet(){
  const submitQuiz=async(nextAnswers:number[])=>{setClaiming(true);try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setBadgeMessage("Sign in to save your badge and claim 5,000 XP.");return}const {data,error}=await db.rpc("claim_arabic_letters_badge",{answers:nextAnswers});if(error)throw error;if(data?.awarded||data?.already_earned){setBadgeEarned(true);setCompletedLessons(current=>current.includes(1)?current:[...current,1]);setBadgeMessage(data.awarded?"🏅 Arabic Letters Certified · +5,000 XP!":"🏅 Arabic Letters Certified · Already earned");chooseLesson(2)}else setBadgeMessage(`Score: ${data?.score??0}% · Reach 90% to earn your badge.`)}catch(e){setBadgeMessage(e instanceof Error?e.message:"Unable to claim badge")}finally{setClaiming(false)}};
  const answerQuestion=(choice:number)=>{if(claiming)return;const next=[...answers,choice];setAnswers(next);if(next.length===28)void submitQuiz(next);else setQuizIndex(next.length)};
  return <div className={styles.root} onTouchStart={e=>{swipeStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(swipeStart.current===null)return;const delta=e.changedTouches[0].clientY-swipeStart.current;swipeStart.current=null;if(Math.abs(delta)>90)chooseLesson(lesson+(delta<0?1:-1))}}>
+  {quizUnlock&&<div className={styles.milestoneToast} role="status"><strong>🔓 ما شاء الله · Quiz unlocked!</strong><span>All 28 letters practiced. Moving to your sound-recognition quiz…</span></div>}
   {sabrNotice&&<div className={styles.milestoneToast} role="status"><strong>يا أخي، اصبر · Yaqni, ṣabr! 🌙</strong><span>Why are you in a rush? Seek beneficial knowledge with patience. Confirm you have practiced every letter before moving on. May Allah increase you in knowledge.</span><button type="button" onClick={()=>setSabrNotice(false)}>بِسْمِ اللَّهِ · Continue practicing</button></div>}
   <nav className={styles.lessonNav} aria-label="Elm Tent lessons"><button type="button" aria-label="Previous lessons" onClick={()=>setLessonWindow(0)}>‹</button>{Array.from({length:4},(_,i)=>lessonWindow*4+i).filter(i=>i!==0||!completedLessons.includes(1)).map(i=><button type="button" key={i} className={lesson===i?styles.lessonActive:""} aria-current={lesson===i?"step":undefined} onClick={()=>chooseLesson(i)}><span>{i+1}</span><small>{completedLessons.includes(i)?"✓ Done":i<2?"Letters":"Soon"}</small></button>)}<button type="button" aria-label="Next lessons" onClick={()=>setLessonWindow(1)}>›</button></nav>
   {lesson===0&&milestone&&<div className={styles.milestoneToast} role="status"><strong>✦ First three letters learned!</strong><span>Continue exploring or begin Lesson 2.</span><div><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);advanceLetter()}}>Keep learning</button><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);warnSabr()}}>Continue patiently →</button></div></div>}
