@@ -1007,12 +1007,41 @@ export default function GoLivePage() {
         }
         @media(min-width:851px){.preliveInspire,.preliveIdentity,.preliveMobileActions{display:none!important}}
 
+
+        /* Live Studio 2.0 — mobile-first, camera-first. Existing broadcast handlers remain intact. */
+        @media(max-width:850px){
+          .immersiveHeader{background:linear-gradient(180deg,#04130dbb,transparent)!important;border-bottom:0!important;backdrop-filter:none!important;pointer-events:none}
+          .immersiveHeader a,.immersiveHeader button{pointer-events:auto;border:1px solid #d7c58a55!important;background:#061d17aa!important;backdrop-filter:blur(18px);border-radius:50%!important;width:44px;height:44px;padding:0!important;font-size:23px!important}
+          .immersiveHeader strong{font-size:17px!important;text-shadow:0 2px 10px #000a}
+          .preliveInspire{display:none!important}
+          .preliveIdentity{bottom:calc(145px + env(safe-area-inset-bottom));padding:9px 12px;border-radius:18px;border-color:#e5cb8a6b;background:linear-gradient(110deg,#071d17d9,#103a2bb9);box-shadow:0 8px 30px #0006;animation:studioRise .35s ease both}
+          .preliveIdentityIcon{display:none}
+          .preliveTitleButton small{font-size:9px;letter-spacing:.1em;color:#b4e6c9}
+          .preliveVisibility{padding:8px 10px;font-size:11px;border-color:#b8e7c47d}
+          .preliveMobileActions{bottom:calc(10px + env(safe-area-inset-bottom));gap:10px}
+          .preliveGoButton{order:2;min-height:52px;font-size:18px;border-width:1px;letter-spacing:.08em;box-shadow:0 5px 24px #00b87655,inset 0 1px 1px #ffffff6b;transition:transform .18s ease,filter .18s ease}
+          .preliveGoButton:active{transform:scale(.97);filter:brightness(1.15)}
+          .preliveQuickOptions{order:1;display:flex;justify-content:space-around;gap:4px;padding:4px 6px;border:1px solid #e2d29a52;border-radius:20px;background:#071a14a8;backdrop-filter:blur(22px);box-shadow:0 8px 30px #0005}
+          .preliveQuickOptions button{flex:1;display:flex;flex-direction:column;gap:2px;min-height:53px;padding:4px 0;border:0;border-radius:13px;background:transparent}
+          .preliveQuickOptions button:active{background:#2d775a88;transform:scale(.94)}
+          .preliveQuickOptions button span{font-size:22px}
+          .preliveQuickOptions button strong{font-size:10px;font-weight:650}
+          .preliveQuickOptions button small{display:none}
+          .previewOverlayTools{top:46%!important;right:10px!important;gap:8px!important}
+          .previewOverlayTools button{width:42px!important;height:42px!important;background:#08231a8c!important;border-color:#e4d7aa70!important;box-shadow:0 4px 15px #0004}
+          .settingsOpen .layout>.form{top:auto!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;left:8px!important;right:8px!important;max-height:min(76dvh,740px);border-radius:28px!important;background:linear-gradient(150deg,#123c2ff5,#061912fa)!important;box-shadow:0 -18px 70px #000a;animation:studioRise .3s cubic-bezier(.2,.8,.2,1) both}
+          .settingsOpen .preliveIdentity,.settingsOpen .preliveMobileActions{visibility:hidden}
+          .live{max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#062a20e8;color:#f6eee1;border:1px solid #d8bb7780}
+        }
+        @keyframes studioRise{from{opacity:.5;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        @media(prefers-reduced-motion:reduce){.preliveIdentity,.settingsOpen .layout>.form{animation:none!important}}
+
         @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 
       `}</style>
 
-      <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong><button type="button" aria-expanded={settingsOpen} aria-controls="prelive-settings" onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕ Close":"⚙ Settings"}</button></header>
+      <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong><button type="button" aria-expanded={settingsOpen} aria-controls="prelive-settings" onClick={()=>setSettingsOpen(v=>!v)}>{settingsOpen?"✕":"⚙"}</button></header>
       <div className={settingsOpen?"shell settingsOpen":"shell"}>
         <div className="studioTools">
               {scheduledSlot && <div className="upcomingPrep"><div><span className="eyebrow">UPCOMING LIVE</span><strong>{scheduledSlot.title}</strong><span>{scheduledSlot.category} · {new Date(scheduledSlot.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div><button type="button" className="prepButton" onClick={()=>{setTitle(scheduledSlot.title);setCategory(scheduledSlot.category);setShowScheduler(false);setSaveMessage("Prep mode loaded. Check your title, topic, format, thumbnail, camera and microphone before going live.");}}>{hostCheckedIn ? "✓ Host Checked In" : "Prep for upcoming Live →"}</button></div>}
@@ -1032,7 +1061,7 @@ export default function GoLivePage() {
               <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
               {live&&liveStreamIdRef.current&&<LiveLightOverlay streamId={liveStreamIdRef.current} host />}
               {!live && <div className="preliveInspire" aria-hidden="true">✧ <span>Share knowledge. Inspire. Build the Ummah.</span> ›</div>}
-              {!live && <div className="preliveIdentity"><button type="button" className="preliveTitleButton" onClick={()=>setSettingsOpen(true)} aria-label="Edit live title"><span className="preliveIdentityIcon" aria-hidden="true">✧</span><span><small>LIVE TITLE · TAP TO EDIT</small><strong>{title || defaultLiveTitle}</strong></span></button><button type="button" className="preliveVisibility" onClick={()=>setSettingsOpen(true)} aria-label="Change live audience">◎ {visibility==="public"?"Public":"Ashab"} ⌄</button></div>}
+              {!live && <div className="preliveIdentity"><button type="button" className="preliveTitleButton" onClick={()=>setSettingsOpen(true)} aria-label="Edit live title"><span><small>✦ LIVE TITLE · EDIT</small><strong>{title || defaultLiveTitle}</strong></span></button><button type="button" className="preliveVisibility" onClick={()=>setSettingsOpen(true)} aria-label="Change live audience">◎ {visibility==="public"?"Public":"Ashab"} ⌄</button></div>}
               {cameraReady && <div className="previewOverlayTools" aria-label="Camera controls"><button type="button" onClick={()=>void flipCamera()} title="Flip camera" aria-label="Flip camera">🔄</button><button type="button" onClick={toggleCamera} title={cameraOn?"Turn camera off":"Turn camera on"} aria-label={cameraOn?"Turn camera off":"Turn camera on"}>{cameraOn?"📷":"🚫"}</button><button type="button" onClick={toggleMic} title={micOn?"Mute microphone":"Unmute microphone"} aria-label={micOn?"Mute microphone":"Unmute microphone"}>{micOn?"🎙️":"🔇"}</button></div>}
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
               {live && <span className="live" aria-label="You are live">● YOU’RE LIVE · {liveClock} · {roomRef.current?.state==="connected"?"Connected":"Reconnecting"} · {micOn?"🎙 Mic on":"🔇 Muted"}</span>}{live && <div role="status" aria-live="polite" style={{position:"absolute",left:12,bottom:64,zIndex:13,padding:"12px 16px",borderRadius:18,background:"rgba(5,10,20,.80)",border:viewerIncrease?"2px solid #39ee8d":"1px solid rgba(255,255,255,.35)",boxShadow:viewerIncrease?"0 0 24px rgba(57,238,141,.48)":"0 8px 25px #0008",color:viewerIncrease?"#4cff9c":"white",transition:"color .3s,border .3s,box-shadow .3s",pointerEvents:"none",textAlign:"center"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1.5}}>🔴 YOU ARE LIVE</div><div style={{fontSize:"clamp(26px,5vw,40px)",fontWeight:900,lineHeight:1.15,fontVariantNumeric:"tabular-nums"}}>{viewers.toLocaleString()}</div><div style={{fontSize:11,opacity:.85}}>VIEWERS {viewerIncrease?"↑":""}</div></div>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
@@ -1051,11 +1080,7 @@ export default function GoLivePage() {
             <div className="preliveMobileActions" aria-label="Pre-live creator controls">
               {!live && <>
                 <button type="button" className="preliveGoButton" disabled={saving || connectingLive || !cameraReady} onClick={()=>void startLive(false)}>{connectingLive?"Connecting to LiveKit…":cameraReady?"◉ GO LIVE":"Enable Camera to Go Live"}</button>
-                <div className="preliveQuickOptions">
-                  <button type="button" onClick={toggleMic} aria-pressed={micOn}><span aria-hidden="true">🎙</span><strong>Voice Chat</strong><small>{micOn?"On":"Off"}</small></button>
-                  <button type="button" onClick={()=>void flipCamera()}><span aria-hidden="true">▣</span><strong>Device Camera</strong><small>{facingMode==="user"?"Front":"Back"}</small></button>
-                  <button type="button" onClick={()=>setSettingsOpen(true)}><span aria-hidden="true">♧</span><strong>Allow Guests</strong><small>Settings</small></button>
-                </div>
+                <div className="preliveQuickOptions" role="toolbar" aria-label="Live quick actions"><button type="button" onClick={()=>void flipCamera()} aria-label="Flip camera"><span aria-hidden="true">↻</span><strong>Flip</strong></button><button type="button" onClick={toggleMic} aria-pressed={micOn} aria-label={micOn?"Mute microphone":"Unmute microphone"}><span aria-hidden="true">{micOn?"♬":"⊘"}</span><strong>{micOn?"Mic on":"Muted"}</strong></button><button type="button" onClick={toggleCamera} aria-pressed={cameraOn} aria-label="Toggle camera"><span aria-hidden="true">▣</span><strong>Camera</strong></button><button type="button" onClick={()=>setSettingsOpen(true)} aria-label="Open effects and advanced settings"><span aria-hidden="true">✧</span><strong>Effects</strong></button><button type="button" onClick={()=>setSettingsOpen(true)} aria-label="Open guest settings"><span aria-hidden="true">♧</span><strong>Guests</strong></button></div>
               </>}
             </div>
             <div className="controls">
