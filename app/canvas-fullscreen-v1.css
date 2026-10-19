@@ -1981,3 +1981,19 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 @keyframes canvasIntroScanGlow{to{box-shadow:0 0 35px rgba(233,193,86,.4)}}
 @keyframes canvasIntroWelcome{0%,73%{opacity:0;transform:translateY(9px)}100%{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.canvas-intro-avatar-flip{transform:rotateY(180deg)!important}.canvas-intro-avatar-final{opacity:1!important;animation:none!important}.canvas-intro-scanner,.canvas-intro-scanner::after,.canvas-intro-welcome-name{animation:none!important}}
+
+/* Profile Canvas: transparent premium avatar display; swipe horizontally for all tiers. */
+.canvas-avatar-showcase{display:flex;flex-direction:column;gap:12px;min-width:0}
+.canvas-avatar-gender-toggle{display:flex;gap:8px;align-self:flex-start;padding:4px;border:1px solid rgba(227,196,111,.36);border-radius:999px;background:rgba(0,20,18,.28)}
+.canvas-avatar-gender-toggle button{border:0;border-radius:999px;background:transparent;color:#e6d9bb;padding:7px 16px;cursor:pointer}
+.canvas-avatar-gender-toggle button[aria-pressed=true]{background:linear-gradient(120deg,rgba(40,145,112,.75),rgba(183,142,61,.35));color:#fff}
+.canvas-layer-avatar img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+.canvas-layer-avatar-gallery{display:flex!important;gap:12px!important;overflow-x:auto!important;overflow-y:hidden!important;flex-wrap:nowrap!important;padding:8px 4px 18px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.canvas-layer-card .canvas-layer-avatar-glass{position:relative;display:flex;flex:0 0 clamp(130px,37vw,195px);flex-direction:column;gap:8px;align-items:center;justify-content:flex-end;min-height:210px;padding:12px!important;border-radius:22px!important;border:1px solid rgba(239,213,145,.65)!important;overflow:hidden;scroll-snap-align:center;color:#f4e6bd;background:linear-gradient(150deg,rgba(240,255,250,.15),rgba(3,62,51,.14) 55%,rgba(255,214,116,.12))!important;box-shadow:inset 0 1px 1px rgba(255,255,255,.4),0 14px 30px rgba(0,0,0,.2);backdrop-filter:blur(6px);transition:transform .35s ease,box-shadow .35s ease}
+.canvas-layer-avatar-glass:before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.22) 48%,transparent 68%);transform:translateX(-135%);pointer-events:none;animation:canvasAvatarShimmer 5s ease-in-out infinite}
+.canvas-layer-avatar-glass img{width:100%;height:155px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
+.canvas-layer-avatar-glass strong{font-size:15px;letter-spacing:.08em}
+.canvas-layer-avatar-glass span{font-size:10px;opacity:.7}
+.canvas-layer-avatar-glass:hover{transform:translateY(-4px);box-shadow:0 14px 36px rgba(220,184,95,.18)}
+@keyframes canvasAvatarShimmer{0%,25%{transform:translateX(-135%)}60%,100%{transform:translateX(135%)}}
+@media(prefers-reduced-motion:reduce){.canvas-layer-avatar-glass:before{animation:none!important}}
