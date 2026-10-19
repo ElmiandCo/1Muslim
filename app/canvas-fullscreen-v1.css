@@ -1032,3 +1032,44 @@ main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button{
   min-height:clamp(340px,53dvh,850px)!important;
  }
 }
+
+/* Mobile Live: centered outer region (blue), portrait video (green).
+   Maintain centering in both expanded and collapsed navigation modes. */
+@media(max-width:759px){
+ main[class*="control"] section[aria-label="1Muslim Control Center"],
+ main[class*="control"] [data-magnetic-grid="true"],
+ main[class*="control"] [data-widget="Live"]{
+  box-sizing:border-box!important;
+  margin-left:auto!important;margin-right:auto!important;
+  left:auto!important;right:auto!important;
+  transform:none!important;
+ }
+ main[class*="control"] [data-widget="Live"]{
+  width:100%!important;max-width:100%!important;
+  padding-left:4px!important;padding-right:4px!important;
+  align-items:center!important;
+ }
+ main[class*="control"] [data-widget="Live"] .homeLiveActualPlayer{
+  box-sizing:border-box!important;
+  width:min(76%,410px)!important;max-width:410px!important;
+  min-height:0!important;height:auto!important;
+  aspect-ratio:9/16!important;flex:0 0 auto!important;
+  align-self:center!important;margin:0 auto!important;
+  border-radius:22px!important;overflow:hidden!important;
+ }
+ main[class*="control"] [data-widget="Live"] .homeLiveActualVideo,
+ main[class*="control"] [data-widget="Live"] .homeLiveActualIdle{
+  width:100%!important;height:100%!important;
+ }
+ main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls{
+  inset:0 -16%!important;padding:0!important;overflow:visible!important;
+ }
+ main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button{
+  width:38px!important;height:42px!important;
+ }
+ main[class*="control"] [data-widget="Live"] [class*="widgetCrown"]{
+  display:none!important;
+ }
+}
+/* Yellow-circled HudHud orb remains movable; keep it above the Live card. */
+.canvas-orb-floating-dock{z-index:2147482100!important;touch-action:none!important}
