@@ -1861,3 +1861,11 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
     transition:none;
   }
 }
+
+/* Preview: audio rooms preserve the approved glass canvas, without a fake video. */
+.oneMuslimLiveVideo .audioRoomsEmpty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;color:#f4e8c3;background:rgba(2,20,19,.18);border-radius:18px;backdrop-filter:blur(5px);padding:16px}
+.audioRoomsEmpty .audioRoomsHalo{width:clamp(78px,12vw,130px);height:clamp(78px,12vw,130px);border-radius:50%;display:grid;place-items:center;font-size:54px;color:#dbbc69;background:radial-gradient(circle at 40% 35%,rgba(37,173,124,.28),rgba(4,40,34,.05) 68%);box-shadow:0 0 36px rgba(33,177,116,.22),inset 0 0 24px rgba(228,194,99,.16);animation:audioRoomsBreath 4s ease-in-out infinite}
+.audioRoomsEmpty strong{font-size:clamp(14px,2vw,20px);font-weight:600}
+.audioRoomsEmpty small{opacity:.75;font-size:12px}
+@keyframes audioRoomsBreath{50%{transform:scale(1.045);box-shadow:0 0 48px rgba(33,177,116,.35),inset 0 0 25px rgba(228,194,99,.2)}}
+@media(prefers-reduced-motion:reduce){.audioRoomsEmpty .audioRoomsHalo{animation:none}}
