@@ -2045,3 +2045,12 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 @keyframes canvasScanAvatarSwap{from{opacity:.25;filter:blur(4px);transform:scale(.93)}to{opacity:1;filter:blur(0);transform:scale(1)}}
 @keyframes canvasScanLock{from{transform:perspective(950px) rotateY(8deg) scale(1.06)}to{transform:perspective(950px) rotateY(0deg) scale(1)}}
 @media(prefers-reduced-motion:reduce){.canvas-intro-scan-card,.canvas-intro-scan-card.canvas-intro-locked,.canvas-intro-scan-visible img{animation:none!important;transform:none!important}}
+
+/* 24-frame identity scan: edge-on swaps mask image changes like a film flip.
+   Card never exposes an empty backface; selected avatar settles front-on. */
+.canvas-intro-scan-card:not(.canvas-intro-locked){animation:canvasIdentityEdgeFlip .4s ease-in-out infinite!important}
+.canvas-intro-scan-visible img{animation:canvasIdentityImageReveal .2s ease-out both!important;backface-visibility:hidden}
+.canvas-intro-scan-card.canvas-intro-locked{animation:canvasScanLock .65s cubic-bezier(.17,.8,.3,1) both!important}
+@keyframes canvasIdentityEdgeFlip{0%{transform:perspective(950px) rotateY(-80deg) scale(.96)}50%{transform:perspective(950px) rotateY(0deg) scale(1.04)}100%{transform:perspective(950px) rotateY(80deg) scale(.96)}}
+@keyframes canvasIdentityImageReveal{0%{opacity:.65;transform:scaleX(.06);filter:brightness(1.6)}100%{opacity:1;transform:scaleX(1);filter:brightness(1)}}
+@media(prefers-reduced-motion:reduce){.canvas-intro-scan-card:not(.canvas-intro-locked),.canvas-intro-scan-visible img{animation:none!important;transform:none!important}}
