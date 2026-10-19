@@ -1906,3 +1906,9 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 @media(prefers-reduced-motion:no-preference){
  .canvas-vertical-portal[data-canvas-dragging="1"] ~ *{will-change:transform}
 }
+
+/* One shared Elm Tent entrance, tucked into the right edge of the bottom three layers. */
+.canvas-elm-tent-door{position:absolute;z-index:95;right:0;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:8px;padding:15px 6px 15px 12px;border:1px solid rgba(218,191,117,.32);border-right:0;border-radius:18px 0 0 18px;background:rgba(4,37,32,.8);color:#ead38f;cursor:pointer;max-width:39px;overflow:hidden;white-space:nowrap;transition:max-width .28s ease,padding .28s ease;backdrop-filter:blur(10px)}
+.canvas-elm-tent-door:hover,.canvas-elm-tent-door:focus-visible{max-width:170px;padding-right:16px}
+.canvas-elm-tent-door span:first-child{font-size:22px}
+@media(prefers-reduced-motion:reduce){.canvas-elm-tent-door{transition:none}}
