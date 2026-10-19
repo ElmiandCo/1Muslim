@@ -1483,3 +1483,21 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
 [data-workspace-page="0"] .canvas-vertical-main > [data-live-stage-version="top-layer-v2"]{z-index:2147483000!important;position:absolute!important;inset:0!important;display:grid!important;grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;transform:none!important;filter:none!important}
 [data-workspace-page="0"] .oneMuslimLiveTop,[data-workspace-page="0"] .oneMuslimLiveBottom{position:relative!important;z-index:2!important;visibility:visible!important;opacity:1!important}
 [data-workspace-page="0"] .oneMuslimLiveVideo{z-index:3!important}
+
+/* Diagnostic v2 showed stage 398x16, player 382x2: parent collapsed.
+   Give the independent Live stage a viewport-sized layout box instead of inheriting 16px. */
+@media (max-width: 767px){
+ .canvas-vertical-main:has(> [data-live-mount-proof]){
+   position:relative!important;
+   height:calc(100dvh - 190px)!important;
+   min-height:580px!important;
+   overflow:visible!important;
+ }
+ .canvas-vertical-main > [data-live-mount-proof]{
+   position:absolute!important;
+   top:0!important;left:0!important;right:0!important;bottom:0!important;
+   width:100%!important;height:100%!important;min-height:580px!important;
+   grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;
+   overflow:hidden!important;
+ }
+}
