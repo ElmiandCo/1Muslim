@@ -1929,17 +1929,16 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 @media(prefers-reduced-motion:reduce){.canvas-boot-curtain,.canvas-boot-mark,.canvas-boot-loading i,.canvas-boot-curtain::before{animation:none}}
 
 
-/* A moving transparent peephole opens in the black Canvas curtain,
-   starting beside the Go Live / Sign In-Out dock, then reveals the player. */
+/* Smooth center-first aperture: begins on the red play button, not Go Live. */
 .canvas-boot-curtain.canvas-boot-revealing{background:transparent;animation:canvasBootCurtainFade 3s ease both;overflow:hidden}
-.canvas-boot-revealing::after{content:"";position:absolute;left:90%;top:4%;width:0;height:0;border-radius:50%;background:transparent;box-shadow:0 0 0 200vmax #030505;transform:translate(-50%,-50%);animation:canvasBootHole 3s cubic-bezier(.4,0,.2,1) both;pointer-events:none}
+.canvas-boot-revealing::after{content:"";position:absolute;left:50%;top:38%;width:0;height:0;border-radius:50%;background:transparent;box-shadow:0 0 0 200vmax #030505;transform:translate(-50%,-50%);animation:canvasBootHole 3s cubic-bezier(.22,.61,.25,1) both;pointer-events:none}
 .canvas-boot-revealing .canvas-boot-mark,.canvas-boot-revealing .canvas-boot-label,.canvas-boot-revealing .canvas-boot-loading{animation:canvasBootContentOut .45s ease both}
 @keyframes canvasBootHole{
-  0%{left:90%;top:4%;width:0;height:0}
-  16%{left:90%;top:6%;width:40px;height:40px}
-  38%{left:73%;top:24%;width:90px;height:90px}
-  58%{left:38%;top:44%;width:175px;height:175px}
-  78%{left:63%;top:60%;width:75vmax;height:75vmax}
+  0%{left:50%;top:38%;width:0;height:0}
+  18%{left:50%;top:38%;width:48px;height:48px}
+  38%{left:49%;top:40%;width:115px;height:115px}
+  58%{left:51%;top:44%;width:235px;height:235px}
+  80%{left:50%;top:50%;width:95vmax;height:95vmax}
   100%{left:50%;top:50%;width:320vmax;height:320vmax}
 }
 @keyframes canvasBootCurtainFade{0%,88%{opacity:1}100%{opacity:0}}
