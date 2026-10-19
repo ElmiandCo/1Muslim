@@ -936,3 +936,31 @@ main[class*="control"] a[class*="introLiveButton"]{
  z-index:1002!important;
  pointer-events:auto!important;
 }
+
+/* Homepage auth action: matching Go Live pill, dark green before login,
+   blinking black after login. Keep both controls above Canvas layers. */
+main[class*="control"] .introActionDock button.homeAuthSignIn,
+main[class*="control"] .introActionDock button.homeAuthSignOut{
+ appearance:none!important;cursor:pointer!important;pointer-events:auto!important;
+ position:relative!important;z-index:1003!important;
+ font:inherit!important;font-size:11px!important;font-weight:750!important;
+ letter-spacing:.035em!important;min-height:33px!important;
+ border-radius:999px!important;padding:8px 12px!important;
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ gap:7px!important;white-space:nowrap!important;
+}
+main[class*="control"] .introActionDock button.homeAuthSignIn{
+ background:linear-gradient(135deg,#0e4838,#092e28)!important;
+ border:1px solid #4e9d7d!important;color:#e9fff2!important;
+}
+main[class*="control"] .introActionDock button.homeAuthSignOut{
+ background:#080a0a!important;border:1px solid #555e58!important;color:#fff!important;
+ animation:homeSignOutBlink 1.6s ease-in-out infinite!important;
+}
+@keyframes homeSignOutBlink{
+ 0%,100%{box-shadow:0 0 0 0 rgba(209,229,211,.05);opacity:1}
+ 50%{box-shadow:0 0 13px 2px rgba(209,229,211,.46);opacity:.75}
+}
+@media(prefers-reduced-motion:reduce){
+ main[class*="control"] .introActionDock button.homeAuthSignOut{animation:none!important}
+}
