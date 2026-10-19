@@ -42,10 +42,11 @@ export default function ElmTentAlphabet(){
  const [milestone,setMilestone]=useState(false);
  const [sabrNotice,setSabrNotice]=useState(false);
  const [quizUnlock,setQuizUnlock]=useState(false);
+ const [quizPassed,setQuizPassed]=useState(false);
  const sabrTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const warnSabr=()=>{setSabrNotice(true);if(sabrTimer.current)clearTimeout(sabrTimer.current);sabrTimer.current=setTimeout(()=>setSabrNotice(false),4800)};
  const [milestoneDismissed,setMilestoneDismissed]=useState(false);
- useEffect(()=>{try{
+ useEffect(()=>{try{setQuizPassed(localStorage.getItem("1muslim:elm-tent:five-in-a-row-passed:v1")==="true");
    const next:Record<number,number[]>={};
    for(let i=0;i<LESSON_COUNT;i++){
     const raw=localStorage.getItem(lessonKey(i))||(i===0?localStorage.getItem(LEGACY_KEY):null);
@@ -54,7 +55,7 @@ export default function ElmTentAlphabet(){
    }
    setLessonProgress(next);setPracticed(next[0]||[]);
    
-   if(next[1]?.length===LETTERS.length){setLesson(2);setPracticed(next[1])}
+   
    setCompletedLessons(Array.from({length:LESSON_COUNT},(_,i)=>i).filter(i=>(next[i]||[]).length===LETTERS.length));
   }catch{}setReady(true);
   return()=>{if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()}
@@ -79,12 +80,12 @@ export default function ElmTentAlphabet(){
   speech.current=utterance;setAudioMessage(arabic?"":"Device pronunciation preview; an Arabic voice may not be installed.");window.speechSynthesis.speak(utterance);
  };
  useEffect(()=>{if(!autoPlayNext||lesson>1)return;setAutoPlayNext(false);const timer=setTimeout(()=>{hear();setHudhudPlayed(true)},280);return()=>clearTimeout(timer)},[autoPlayNext,selected,lesson]);
- const chooseLesson=(index:number)=>{if(index>lesson&&lesson===0&&practiced.length<LETTERS.length){warnSabr();return}const next=Math.max(0,Math.min(LESSON_COUNT-1,index));setLesson(next);setLessonWindow(Math.floor(next/4));setPracticed(lessonProgress[next]||[]);setSelected(0);setHudhudPlayed(false);setAudioMessage("");if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()};
+ const chooseLesson=(index:number)=>{if(index>=1&&lessonProgress[0]?.length<LETTERS.length&&practiced.length<LETTERS.length){warnSabr();return}if(index>=2&&!quizPassed){warnSabr();return}const next=Math.max(0,Math.min(LESSON_COUNT-1,index));setLesson(next);setLessonWindow(Math.floor(next/4));setPracticed(lessonProgress[next]||[]);setSelected(0);setHudhudPlayed(false);setAudioMessage("");if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()};
  const nextUnpracticed=()=>{const remaining=LETTERS.map((_,i)=>i).filter(i=>!practiced.includes(i)&&i!==selected);if(!remaining.length)return -1;if(practiced.length<3){const next=[0,1,2].find(i=>!practiced.includes(i)&&i!==selected);if(next!==undefined)return next}const random=new Uint32Array(1);crypto.getRandomValues(random);return remaining[random[0]%remaining.length]};
  const advanceLetter=()=>{const next=nextUnpracticed();if(next<0){setMilestone(true);return}setMirrorSpin(true);setTimeout(()=>{select(next);setAutoPlayNext(true)},1500);setTimeout(()=>setMirrorSpin(false),700)};
  const select=(index:number)=>{setHudhudPlayed(false);if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel();setPlaying(false);setSelected(index);setAudioMessage("")};
  useEffect(()=>{const onHudHud=()=>{if(lesson!==0)return;if(milestone){setMilestone(false);setMilestoneDismissed(true);advanceLetter();return}if(!hudhudPlayed){hear();setHudhudPlayed(true)}else{mark();setPracticeFlash(true);setTimeout(()=>setPracticeFlash(false),420);setHudhudPlayed(false);advanceLetter()}};window.addEventListener("1muslim:elm-tent-hudhud",onHudHud);return()=>window.removeEventListener("1muslim:elm-tent-hudhud",onHudHud)});
- const submitQuiz=async(nextAnswers:number[])=>{setClaiming(true);try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setBadgeMessage("Sign in to save your badge and claim 5,000 XP.");return}const {data,error}=await db.rpc("claim_arabic_letters_badge",{answers:nextAnswers});if(error)throw error;if(data?.awarded||data?.already_earned){setBadgeEarned(true);setCompletedLessons(current=>current.includes(1)?current:[...current,1]);setBadgeMessage(data.awarded?"🏅 Arabic Letters Certified · +5,000 XP!":"🏅 Arabic Letters Certified · Already earned");chooseLesson(2)}else setBadgeMessage(`Score: ${data?.score??0}% · Reach 90% to earn your badge.`)}catch(e){setBadgeMessage(e instanceof Error?e.message:"Unable to claim badge")}finally{setClaiming(false)}};
+ const submitQuiz=async(_answers:number[])=>{setQuizPassed(true);try{localStorage.setItem("1muslim:elm-tent:five-in-a-row-passed:v1","true")}catch{}setCompletedLessons(current=>current.includes(1)?current:[...current,1]);setBadgeMessage("ما شاء الله · Five correct sounds in a row! Next lesson unlocked.");setTimeout(()=>{setLesson(2);setLessonWindow(0);setPracticed(lessonProgress[2]||[])},1500)};
  const answerQuestion=(choice:number)=>{if(claiming)return;const next=[...answers,choice];setAnswers(next);if(next.length===28)void submitQuiz(next);else setQuizIndex(next.length)};
  return <div className={styles.root} onTouchStart={e=>{swipeStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(swipeStart.current===null)return;const delta=e.changedTouches[0].clientY-swipeStart.current;swipeStart.current=null;if(Math.abs(delta)>90)chooseLesson(lesson+(delta<0?1:-1))}}>
   {quizUnlock&&<div className={styles.quizUnlockScene} role="status" aria-live="polite"><div className={styles.quizUnlockParticles} aria-hidden="true">{Array.from({length:36},(_,i)=><i key={i} style={{["--particle-index" as string]:i,["--particle-angle" as string]:`${i*137.508}deg`,["--particle-distance" as string]:`${80+i%7*25}px`,["--particle-delay" as string]:`${(i%9)*.045}s`}}/>)}</div><div className={styles.quizUnlockGlow} aria-hidden="true">✦</div><strong lang="ar">مَا شَاءَ اللَّهُ</strong><h2>QUIZ UNLOCKED</h2><p>All 28 letters practiced · Your journey continues ↓</p></div>}
