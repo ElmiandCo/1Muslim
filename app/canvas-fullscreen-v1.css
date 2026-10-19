@@ -1122,3 +1122,53 @@ main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button{
   display:none!important;
  }
 }
+
+/* Live Unified Stage: conversation floats over the bottom of the video.
+   Overrides the earlier 50/50 split that hid the comments. */
+main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage{
+ position:relative!important;display:block!important;
+ grid-column:1!important;grid-row:1/-1!important;
+ width:100%!important;height:100%!important;
+ min-height:0!important;max-width:100%!important;
+ margin:0 auto!important;padding:0!important;
+ overflow:hidden!important;box-sizing:border-box!important;
+}
+main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveActualPlayer{
+ position:absolute!important;inset:0!important;
+ display:flex!important;width:100%!important;height:100%!important;
+ max-width:100%!important;min-height:0!important;
+ aspect-ratio:auto!important;margin:0!important;
+ overflow:hidden!important;box-sizing:border-box!important;
+ border-radius:20px!important;
+}
+main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveViewerConversation{
+ position:absolute!important;left:3%!important;right:3%!important;
+ bottom:2%!important;top:auto!important;z-index:35!important;
+ display:block!important;width:94%!important;
+ height:auto!important;max-height:45%!important;min-height:0!important;
+ margin:0 auto!important;overflow-y:auto!important;
+ border-radius:20px!important;
+ background:linear-gradient(180deg,rgba(2,24,20,.56),rgba(2,28,22,.86))!important;
+ border:1px solid rgba(216,188,109,.4)!important;
+ backdrop-filter:blur(14px)!important;
+ -webkit-backdrop-filter:blur(14px)!important;
+ box-sizing:border-box!important;
+}
+main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage .homeLivePlayerSideControls{
+ z-index:32!important;
+}
+@media(max-width:759px){
+ main[class*="control"] [data-widget="Live"]{
+  display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:stretch!important;
+  gap:0!important;padding:4px!important;
+ }
+ main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage{
+  flex:1 1 auto!important;align-self:center!important;
+  min-height:0!important;height:100%!important;
+  width:100%!important;max-width:100%!important;
+ }
+ main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveViewerConversation{
+  max-height:44%!important;
+ }
+}
