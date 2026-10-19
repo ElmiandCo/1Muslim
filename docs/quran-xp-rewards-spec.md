@@ -20,3 +20,11 @@
 - Arabic recitation: recording → compare to target Arabic verse → save successful attempt automatically → +2,500 XP; handle errors and retries clearly. Never claim this is validated until real microphone/audio tests pass.
 - A full chapter grants +10,000 once when every verse qualifies under chapter completion policy, even if its per-verse XP was previously awarded.
 - Deploy only after verifying migration, RLS, recognition, audio completion, and XP level milestone logic. Keep production unchanged until validated.
+
+## Automatic XP recording and UI notification — clarified
+- Persist every validated XP grant automatically, without any manual claim or Save action from the user. Save a durable, unique XP event and update the user's XP total atomically on the server. After success, update the displayed XP and progress without reload.
+- All ordinary level-ups show ONLY a subtle, draggable XP-widget notification for 1–2 seconds, then fade away. Do not interrupt reading, listening, recording, or navigation.
+- Exceptional milestone level-ups entering levels **2, 5, 10, 20, 30, 40, 50, ...** use the full ~2-second avatar/glow/level/“Keep Going” celebration. The pattern is 1→2, 4→5, 9→10, 19→20, and every 10th level thereafter.
+- A large XP award may cross several levels at once: award XP once, persist once, and show at most one milestone celebration for the highest qualifying threshold crossed. Ordinary level notifications must not stack or delay playback.
+- Successful Arabic-recitation recording is saved automatically when verification passes; recording upload and XP grant must be linked to prevent double-awards.
+- No toast or level celebration before server confirms the reward; don't replay already-consumed notifications on refresh or on a second device.
