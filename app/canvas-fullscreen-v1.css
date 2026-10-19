@@ -1508,3 +1508,7 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
 /* Homepage signed-out action: green regardless of CSS-module class name. */
 button.homeAuthSignIn{background:linear-gradient(135deg,#0a9b53,#02643d)!important;border:1px solid #55ffa0!important;color:#fff!important;box-shadow:0 0 16px rgba(20,239,119,.42)!important}
 button.homeAuthSignIn [class*="liveDockDot"]{background:#27ff7e!important;box-shadow:0 0 10px #27ff7e!important}
+
+/* Alternating auth actions: signed out = green Sign In, signed in = green Go Live. */
+main[class*="control"] .introActionDock a.homeGoLiveSignedIn{background:linear-gradient(135deg,#078b45,#014b2d)!important;border:1px solid #36f27b!important;box-shadow:0 0 18px rgba(8,255,108,.45)!important;color:#fff!important}
+main[class*="control"] .introActionDock a.homeGoLiveSignedIn [class*="liveDockDot"]{background:#21ff70!important;box-shadow:0 0 12px #21ff70!important}
