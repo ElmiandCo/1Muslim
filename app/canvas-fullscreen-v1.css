@@ -986,3 +986,49 @@ main[class*="control"] [data-widget="Live"] [class*="widgetCrown"] button,
 main[class*="control"] [data-widget="Live"] [class*="widgetCrown"] a{
  display:none!important;
 }
+
+/* Live viewport-first layout: eliminate the full-width empty feature strip.
+   Controls live INSIDE the player, not in a dedicated row. */
+main[class*="control"] [data-widget="Live"]{
+ display:flex!important;flex-direction:column!important;
+ row-gap:0!important;gap:0!important;min-height:0!important;
+}
+main[class*="control"] [data-widget="Live"] [class*="widgetCrown"]{
+ flex:0 0 auto!important;min-height:24px!important;height:24px!important;
+ margin:0!important;padding:0 8px!important;
+}
+main[class*="control"] [data-widget="Live"] > a{
+ display:contents!important;
+}
+main[class*="control"] [data-widget="Live"] .homeLiveActualPlayer{
+ position:relative!important;flex:1 1 auto!important;
+ min-height:clamp(300px,47dvh,780px)!important;
+ margin:0!important;
+}
+main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls{
+ position:absolute!important;inset:0!important;z-index:30!important;
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ pointer-events:none!important;padding:0 5px!important;
+}
+main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button{
+ pointer-events:auto!important;cursor:pointer!important;
+ width:40px!important;height:44px!important;border-radius:999px!important;
+ border:1px solid rgba(224,197,119,.6)!important;
+ background:rgba(3,45,35,.76)!important;color:#fff2d3!important;
+ font-size:30px!important;line-height:1!important;backdrop-filter:blur(10px)!important;
+}
+@media(max-width:759px){
+ main[class*="control"]:not([data-canvas-fullscreen="true"]){
+  --hudhud-canvas-top:calc(env(safe-area-inset-top,0px) + 94px);
+ }
+ main[class*="control"][class*="navMotionCollapsed"]:not([data-canvas-fullscreen="true"]){
+  --hudhud-canvas-top:calc(env(safe-area-inset-top,0px) + 8px);
+  --hudhud-dots-top:calc(env(safe-area-inset-top,0px) + 4px);
+ }
+ main[class*="control"][class*="navMotionCollapsed"] > section[aria-label="1Muslim Control Center"]{
+  z-index:60!important;
+ }
+ main[class*="control"] [data-widget="Live"] .homeLiveActualPlayer{
+  min-height:clamp(340px,53dvh,850px)!important;
+ }
+}
