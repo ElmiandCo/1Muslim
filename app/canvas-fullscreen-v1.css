@@ -836,3 +836,30 @@ main[class*="control"]>[class*="surface"]{background-color:rgba(4,14,13,.28)!imp
 .homeLiveClassicPlay{display:grid!important;place-items:center!important;width:106px!important;height:106px!important;border-radius:50%!important;background:#a32632!important;color:white!important;text-decoration:none!important;border:12px solid rgba(5,20,17,.72)!important;box-shadow:0 0 0 10px rgba(42,57,48,.35),0 10px 26px #0008!important}
 .homeLiveClassicPlay span{font-size:34px!important;color:white!important;margin-left:6px!important}
 @media(max-width:700px){main[class*="control"]>[class*="islamicDecoration"]{top:12px!important;right:0!important;width:min(78vw,430px)!important;height:165px!important}.homeLiveClassicPlay{width:92px!important;height:92px!important}}
+
+/* HUDHUD NAV ISOLATION — 2026-10-18
+   Anchor the six workspace dots and Canvas independently of header/nav flow.
+   Both nav states share identical coordinates; never translate the Canvas. */
+@media(max-width:759px){
+ main[class*="control"]:not([data-canvas-fullscreen="true"]){
+  --hudhud-canvas-top:calc(env(safe-area-inset-top,0px) + 157px);
+  --hudhud-dots-top:calc(env(safe-area-inset-top,0px) + 125px);
+ }
+ main[class*="control"]:not([data-canvas-fullscreen="true"])>.canvas-workspace-indicators{
+  position:absolute!important;top:var(--hudhud-dots-top)!important;
+  left:12px!important;right:12px!important;width:auto!important;
+  height:28px!important;min-height:28px!important;max-height:28px!important;
+  margin:0!important;padding:0!important;transform:none!important;
+  z-index:8!important;
+ }
+ main[class*="control"]:not([data-canvas-fullscreen="true"])>section[aria-label="1Muslim Control Center"]{
+  position:absolute!important;top:var(--hudhud-canvas-top)!important;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 12px)!important;
+  left:max(12px,env(safe-area-inset-left,0px))!important;
+  right:max(12px,env(safe-area-inset-right,0px))!important;
+  width:auto!important;max-width:none!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  margin:0!important;transform:none!important;translate:none!important;
+  transition:background-color .25s ease,border-color .25s ease!important;
+ }
+}
