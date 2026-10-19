@@ -2303,3 +2303,9 @@ main[class*="control"] [class*="introActionDock"]{
 .canvas-community-map-frame iframe{opacity:.74!important;mix-blend-mode:multiply!important;filter:saturate(.75) contrast(1.13) sepia(.16)!important}
 .canvas-community-map-zoom{z-index:4}
 .canvas-community-map-caption{color:rgba(228,242,230,.8)!important}
+
+/* Elm Tent fills its full Canvas workspace, matching Community Map. */
+.canvas-native-app:has([class*="ElmTentAlphabet_root"]){height:100%!important;min-height:100%!important;max-width:none!important;padding:clamp(8px,1.5vw,16px)!important;background:rgba(4,31,29,.38)!important}
+.canvas-native-app:has([class*="ElmTentAlphabet_root"])>.canvas-native-body{flex:1 1 auto!important;display:flex!important;flex-direction:column!important;min-height:0!important;overflow:hidden!important}
+.canvas-native-app:has([class*="ElmTentAlphabet_root"])>.canvas-native-body>[class*="ElmTentAlphabet_root"]{flex:1 1 auto!important;height:100%!important;min-height:0!important}
+.canvas-native-app:has([class*="ElmTentAlphabet_root"])>header{flex:0 0 auto!important}
