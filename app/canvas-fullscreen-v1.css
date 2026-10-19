@@ -2211,3 +2211,10 @@ main[class*="control"] [class*="introActionDock"]{
 @keyframes hudhudIntroHover{0%,100%{transform:translate(-50%,0) scale(.96);opacity:.8}50%{transform:translate(-50%,-5px) scale(1.04);opacity:1}}
 @keyframes hudhudIntroExit{to{opacity:0;transform:translate(-50%,-10px)}}
 @media(prefers-reduced-motion:reduce){.canvas-intro-hudhud-motion{animation:none!important}}
+
+/* Final loading polish: pure black veil melts away without a visible edge. */
+.canvas-boot-curtain{background:#000!important;opacity:1;transition:opacity .62s cubic-bezier(.22,1,.36,1)!important}
+.canvas-boot-curtain.canvas-boot-backdrop-gone{background:#000!important;opacity:0!important;transition:opacity .62s cubic-bezier(.22,1,.36,1)!important;pointer-events:none!important}
+.canvas-boot-curtain.canvas-boot-backdrop-gone .canvas-intro-avatar-card,.canvas-boot-curtain.canvas-boot-backdrop-gone .canvas-boot-label,.canvas-boot-curtain.canvas-boot-backdrop-gone .canvas-intro-welcome-name{animation:none!important;transition:opacity .35s ease!important;opacity:0!important}
+.canvas-boot-curtain .canvas-intro-hudhud-motion{display:none!important}
+@media(prefers-reduced-motion:reduce){.canvas-boot-curtain,.canvas-boot-curtain.canvas-boot-backdrop-gone{transition:none!important}}
