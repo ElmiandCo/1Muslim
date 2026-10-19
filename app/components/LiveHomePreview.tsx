@@ -6,17 +6,22 @@ import {Room,RoomEvent,Track,VideoQuality} from "livekit-client";
 export default function LiveHomePreview({roomName}:{roomName:string}){
  const video=useRef<HTMLVideoElement>(null);
  const [ready,setReady]=useState(false);
+ const [portrait,setPortrait]=useState(false);
  const [failure,setFailure]=useState("");
  const [attempt,setAttempt]=useState(0);
  useEffect(()=>{
   if(!roomName)return;
   setReady(false);
+  setPortrait(false);
   setFailure("");
   let active=true;
   const room=new Room({adaptiveStream:false});
   const attach=(track:any)=>{
    if(!active||track.kind!==Track.Kind.Video||!video.current)return;
    track.attach(video.current);
+   const updateAspect=()=>{const el=video.current;if(el&&el.videoWidth&&el.videoHeight)setPortrait(el.videoHeight>el.videoWidth*1.1)};
+   video.current.addEventListener("loadedmetadata",updateAspect,{once:true});
+   window.setTimeout(updateAspect,250);
    video.current.muted=true;
    void video.current.play().then(()=>{if(active)setReady(true)}).catch(()=>{});
   };
@@ -42,8 +47,8 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
   return()=>{active=false;room.removeAllListeners();void room.disconnect();if(video.current)video.current.srcObject=null};
  },[roomName,attempt]);
  useEffect(()=>{if(ready)return;const timer=window.setTimeout(()=>setAttempt(n=>n+1),8000);return()=>clearTimeout(timer)},[ready,attempt,roomName]);
- return <span style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:170,overflow:"hidden",borderRadius:12}}>
-  <video ref={video} autoPlay muted playsInline aria-label="Live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:170,objectFit:"cover",background:"transparent",opacity:ready?1:0}}/>
+ return <span data-live-orientation={portrait?"portrait":"landscape"} className={portrait?"portraitLiveFeed":"landscapeLiveFeed"} style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:170,overflow:"hidden",borderRadius:12}}>
+  <video ref={video} autoPlay muted playsInline aria-label="Live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:170,objectFit:portrait?"contain":"cover",background:"transparent",opacity:ready?1:0}}/>
   {!ready&&<span style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{failure?"Live connection unavailable · retrying…":"Connecting to live…"}</span>}
  </span>;
 }
