@@ -2034,3 +2034,14 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 @keyframes canvasIntroSearchFinal{0%,91.9%{opacity:0}92%,100%{opacity:1}}
 @keyframes canvasIntroIdentitySpinFast{0%{transform:rotateY(0deg) scale(.84)}20%{transform:rotateY(1080deg) scale(1.03)}44%{transform:rotateY(2160deg) scale(1.06)}70%{transform:rotateY(3060deg) scale(1.02)}92%{transform:rotateY(3420deg) scale(1)}100%{transform:rotateY(3420deg) scale(1)}}
 @media(prefers-reduced-motion:reduce){.canvas-intro-search-face{animation:none!important;opacity:0!important}.canvas-intro-avatar-flip{animation:none!important;transform:rotateY(180deg)!important}.canvas-intro-avatar-final{animation:none!important;opacity:1!important}}
+
+/* Identity scanner: keep the SAME front-facing card visible during every
+   material swap. Previous rotating backfaces hid all but the default. */
+.canvas-intro-scan-card{animation:canvasScanCardMotion 4.25s cubic-bezier(.2,.7,.22,1) both!important}
+.canvas-intro-scan-visible{opacity:1!important;transform:none!important;backface-visibility:visible!important;-webkit-backface-visibility:visible!important}
+.canvas-intro-scan-visible img{width:100%;height:100%;object-fit:contain;background:#020707;animation:canvasScanAvatarSwap .26s ease-out both}
+.canvas-intro-scan-card.canvas-intro-locked{animation:canvasScanLock .65s cubic-bezier(.17,.8,.3,1) both!important}
+@keyframes canvasScanCardMotion{0%{transform:perspective(950px) rotateY(-24deg) scale(.83)}20%{transform:perspective(950px) rotateY(22deg) scale(1.02)}40%{transform:perspective(950px) rotateY(-20deg) scale(1.06)}60%{transform:perspective(950px) rotateY(16deg) scale(1.02)}80%{transform:perspective(950px) rotateY(-10deg) scale(1)}100%{transform:perspective(950px) rotateY(0deg) scale(1)}}
+@keyframes canvasScanAvatarSwap{from{opacity:.25;filter:blur(4px);transform:scale(.93)}to{opacity:1;filter:blur(0);transform:scale(1)}}
+@keyframes canvasScanLock{from{transform:perspective(950px) rotateY(8deg) scale(1.06)}to{transform:perspective(950px) rotateY(0deg) scale(1)}}
+@media(prefers-reduced-motion:reduce){.canvas-intro-scan-card,.canvas-intro-scan-card.canvas-intro-locked,.canvas-intro-scan-visible img{animation:none!important;transform:none!important}}
