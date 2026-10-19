@@ -8,6 +8,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
  const [ready,setReady]=useState(false);
  const [failure,setFailure]=useState("");
  const [attempt,setAttempt]=useState(0);
+ const [visible,setVisible]=useState(true);
  useEffect(()=>{
   if(!roomName)return;
   setReady(false);
@@ -21,6 +22,8 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
    void video.current.play().then(()=>{if(active)setReady(true)}).catch(()=>{});
   };
   room.on(RoomEvent.TrackSubscribed,attach);
+  room.on(RoomEvent.ParticipantConnected,participant=>{for(const publication of participant.trackPublications.values())if(publication.kind===Track.Kind.Video){publication.setSubscribed(true);publication.setVideoQuality(VideoQuality.HIGH)}});
+  room.on(RoomEvent.TrackPublished,publication=>{if(publication.kind===Track.Kind.Video){publication.setSubscribed(true);publication.setVideoQuality(VideoQuality.HIGH)}});
   room.on(RoomEvent.TrackUnsubscribed,()=>{if(active)setReady(false)});
   void (async()=>{
    try{
@@ -29,7 +32,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
     const data=await res.json();
     if(!active)return;
     if(!data.url||!data.token)throw new Error("Missing token");
-    await room.connect(data.url,data.token,{autoSubscribe:true,maxRetries:3});
+    await room.connect(data.url,data.token,{autoSubscribe:true,maxRetries:5,websocketTimeout:20000});
     if(!active)return;
     for(const participant of room.remoteParticipants.values())
      for(const publication of participant.trackPublications.values()){
@@ -41,9 +44,10 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
   })();
   return()=>{active=false;room.removeAllListeners();void room.disconnect();if(video.current)video.current.srcObject=null};
  },[roomName,attempt]);
- useEffect(()=>{if(ready)return;const timer=window.setTimeout(()=>setAttempt(n=>n+1),8000);return()=>clearTimeout(timer)},[ready,attempt,roomName]);
+ useEffect(()=>{const refresh=()=>{if(document.visibilityState==="visible"){setVisible(true);setAttempt(n=>n+1)}else setVisible(false)};document.addEventListener("visibilitychange",refresh);window.addEventListener("focus",refresh);return()=>{document.removeEventListener("visibilitychange",refresh);window.removeEventListener("focus",refresh)}},[]);
+ useEffect(()=>{if(ready)return;const timer=window.setTimeout(()=>setAttempt(n=>n+1),5000);return()=>clearTimeout(timer)},[ready,attempt,roomName]);
  return <span style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:170,overflow:"hidden",borderRadius:12}}>
   <video ref={video} autoPlay muted playsInline aria-label="Live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:170,objectFit:"cover",background:"transparent",opacity:ready?1:0}}/>
-  {!ready&&<span style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{failure?"Live connection unavailable · retrying…":"Connecting to live…"}</span>}
+  {!ready&&<span style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{failure?"Reconnecting to live video…":"Connecting to live…"}</span>}
  </span>;
 }
