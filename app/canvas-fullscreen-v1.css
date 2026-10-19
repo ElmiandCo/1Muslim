@@ -1543,3 +1543,14 @@ main[class*="control"] .canvas-header-brand-link strong{white-space:nowrap}
 @media(prefers-reduced-motion:reduce){
  main[class*="control"] button.homeAuthSignOut{animation:none!important}
 }
+
+/* Portrait mobile livestreams: prioritize the full vertical video on mobile viewers.
+   Desktop/landscape streams retain the approved 50/50 video-chat layout. */
+@media(max-width:767px){
+ .oneMuslimLiveStage:has(.portraitLiveFeed){grid-template-rows:minmax(0,1.65fr) minmax(0,.6fr)!important}
+ .oneMuslimLiveStage:has(.portraitLiveFeed) .oneMuslimLiveVideo{background:#020d0a!important;border-radius:18px!important}
+ .oneMuslimLiveStage:has(.portraitLiveFeed) .oneMuslimLiveVideo video{object-fit:contain!important}
+ .oneMuslimLiveStage:has(.portraitLiveFeed) .oneMuslimLiveBottom{padding-top:3px!important}
+ .oneMuslimLiveStage:has(.portraitLiveFeed) .oneMuslimLiveBottom > *{border-radius:16px!important}
+ .oneMuslimLiveStage:has(.portraitLiveFeed) .homeLiveDemoComments{max-height:110px!important}
+}
