@@ -661,3 +661,25 @@
   animation:none!important;transform:none!important;opacity:.75!important;will-change:auto!important
  }
 }
+
+/* Keep Live's imagery. Quran cycles its four existing day/night assets every 30s. */
+.slide[data-workspace-page="0"] .night,.slide[data-workspace-page="0"] .day{background-image:revert-layer}
+.slide[data-workspace-page="1"] .night,.slide[data-workspace-page="1"] .day{background-image:none!important}
+.quranSlideshow{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none}
+.quranSlide{position:absolute;inset:-10px;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transform:translate3d(0,0,0) scale(1.04);animation:quranSceneCycle 120s linear infinite;animation-delay:calc(var(--quran-slide-index) * -30s)}
+.quranSlideDay{visibility:hidden}
+:global(html.light) .quranSlideNight{visibility:hidden}
+:global(html.light) .quranSlideDay{visibility:visible}
+@keyframes quranSceneCycle{
+ 0%{opacity:0;transform:translate3d(-1%,0,0) scale(1.04)}
+ 1.5%,23%{opacity:1}
+ 25%{opacity:0;transform:translate3d(1%,0,0) scale(1.075)}
+ 25.01%,100%{opacity:0}
+}
+.slide[data-workspace-page="1"] .scene::before{
+ content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+ background:radial-gradient(circle at 50% 45%,rgba(90,232,173,.2),transparent 38%);
+ animation:quranOrbPulse 8s ease-in-out infinite alternate
+}
+@keyframes quranOrbPulse{from{opacity:.35;transform:scale(.85)}to{opacity:.8;transform:scale(1.15)}}
+@media(prefers-reduced-motion:reduce){.quranSlide{animation:none!important;opacity:0!important;transform:none!important}.quranSlide:first-child{opacity:1!important}:global(html.light) .quranSlide:first-child{opacity:0!important}:global(html.light) .quranSlideDay:nth-child(2){opacity:1!important}.slide[data-workspace-page="1"] .scene::before{animation:none!important}}
