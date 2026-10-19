@@ -2106,3 +2106,12 @@ main[class*="control"] [class*="introActionDock"]{
 @keyframes canvasRecognitionParticle{0%{opacity:0;transform:rotate(var(--a)) translateX(20px) scale(.2)}20%{opacity:1}85%{opacity:.7}100%{opacity:0;transform:rotate(var(--a)) translateX(155px) scale(.35)}}
 @keyframes canvasRecognitionHalo{0%{box-shadow:0 0 0 0 rgba(238,206,118,.9)}55%{box-shadow:0 0 0 18px rgba(238,206,118,.12)}100%{box-shadow:0 0 0 34px rgba(238,206,118,0)}}
 @media(prefers-reduced-motion:reduce){.canvas-intro-recognition-particles{display:none}.canvas-intro-avatar-card.canvas-intro-recognized .canvas-intro-scanner{animation:none!important}}
+
+/* Returning members: short, transparent recognition over the already rendered Canvas. */
+.canvas-boot-curtain.canvas-boot-quick-welcome{background:rgba(1,16,13,.17)!important;backdrop-filter:blur(4px)!important;-webkit-backdrop-filter:blur(4px)!important}
+.canvas-boot-quick-welcome::before,.canvas-boot-quick-welcome::after{background:transparent!important;box-shadow:none!important}
+.canvas-intro-avatar-card.canvas-intro-quick-welcome .canvas-intro-scan-card:not(.canvas-intro-locked){animation:none!important}
+.canvas-intro-avatar-card.canvas-intro-quick-welcome .canvas-intro-scan-card.canvas-intro-locked{animation:canvasQuickIdentityHalfSpin .8s cubic-bezier(.12,.82,.2,1) both!important}
+.canvas-intro-avatar-card.canvas-intro-quick-welcome .canvas-intro-avatar-face{border-radius:50%!important}
+@keyframes canvasQuickIdentityHalfSpin{0%{transform:perspective(950px) rotateY(-180deg) scale(.9)}75%{transform:perspective(950px) rotateY(8deg) scale(1.06)}100%{transform:perspective(950px) rotateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.canvas-intro-avatar-card.canvas-intro-quick-welcome .canvas-intro-scan-card.canvas-intro-locked{animation:none!important}}
