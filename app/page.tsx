@@ -4,7 +4,6 @@ import "./canvas-fullscreen-v1.css";
 import CanvasSecondaryApp, {CommunityMap} from "./components/CanvasSecondaryApp";
 import PostDesignStudio from "./components/PostDesignStudio";
 import HomeMessagesChooser from "./components/HomeMessagesChooser";
-import ElmTentAlphabet from "./components/ElmTentAlphabet";
 import HomeVideoPreview from "./components/HomeVideoPreview";
 import LiveHomePreview from "./components/LiveHomePreview";
 import HomeLiveConversation from "./components/HomeLiveConversation";
