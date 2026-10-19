@@ -2158,3 +2158,22 @@ main[class*="control"] [class*="introActionDock"]{
 .canvas-avatar-future span,.canvas-avatar-future small{font-size:10px;color:#8c8c8c;letter-spacing:.06em}
 .canvas-avatar-earn-link{display:block;text-align:center;margin:12px auto 2px;color:#e8cc80!important;font-weight:700;text-decoration:none}
 @media(max-width:520px){.canvas-avatar-locked-row{gap:5px}.canvas-avatar-locked-row .canvas-avatar-future{min-height:112px;padding:8px 3px}.canvas-avatar-locked-silhouette{width:min(90%,54px)}.canvas-avatar-future strong{font-size:10px}.canvas-avatar-future span,.canvas-avatar-future small{font-size:9px}}
+
+/* Identity Reveal 3.0: cinematic, borderless, full-canvas recognition. */
+.canvas-boot-curtain{overflow:hidden!important;background:radial-gradient(ellipse at 50% 46%,#0b1c18 0%,#030708 58%,#000 100%)!important;isolation:isolate}
+.canvas-boot-curtain::before{content:"";position:absolute;inset:-35%;background:conic-gradient(from 45deg,transparent 0 20%,rgba(31,112,85,.12) 34%,transparent 45% 70%,rgba(212,173,72,.11) 82%,transparent 94%);animation:identityAmbientOrbit 9s linear infinite;pointer-events:none}
+.canvas-boot-curtain .canvas-intro-avatar-card{z-index:3!important;filter:drop-shadow(0 18px 38px rgba(0,0,0,.65)) drop-shadow(0 0 24px rgba(196,157,70,.16));transform:scale(1.2)!important;border:none!important;box-shadow:none!important;background:transparent!important}
+.canvas-boot-curtain .canvas-intro-avatar-flip,.canvas-boot-curtain .canvas-intro-avatar-face{background:transparent!important;border:none!important;box-shadow:none!important}
+.canvas-boot-curtain .canvas-intro-avatar-face img{object-fit:contain!important;filter:drop-shadow(0 9px 22px rgba(0,0,0,.55))}
+.canvas-intro-cinematic-halo{position:absolute;z-index:2;left:50%;top:50%;width:min(70vw,440px);aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%) scale(.72);border:1.5px solid rgba(239,202,112,.08);box-shadow:0 0 35px rgba(223,181,73,.08),inset 0 0 38px rgba(18,130,91,.07);opacity:.35;pointer-events:none}
+.canvas-intro-recognized .canvas-intro-cinematic-halo,.canvas-intro-recognized~.canvas-intro-cinematic-halo{animation:identityRingBloom 1.15s ease-out both}
+.canvas-intro-cinematic-flare{position:absolute;z-index:1;inset:0;opacity:0;background:radial-gradient(circle at 50% 47%,rgba(232,201,112,.25),rgba(13,110,76,.13) 24%,transparent 62%);pointer-events:none}
+.canvas-intro-recognized~.canvas-intro-cinematic-flare{animation:identityFlare 1.45s ease-out both}
+.canvas-boot-curtain .canvas-boot-label,.canvas-boot-curtain .canvas-intro-welcome-name{z-index:5;letter-spacing:.13em;text-shadow:0 2px 12px #000}
+.canvas-boot-curtain.canvas-boot-backdrop-gone{background:transparent!important}
+.canvas-boot-backdrop-gone .canvas-intro-avatar-card{animation:identityFinalDissolve 1.2s ease-out forwards!important}
+@keyframes identityAmbientOrbit{to{transform:rotate(360deg)}}
+@keyframes identityRingBloom{0%{opacity:.12;transform:translate(-50%,-50%) scale(.65)}35%{opacity:.95;box-shadow:0 0 42px rgba(230,195,105,.5),inset 0 0 25px rgba(18,130,91,.25)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.85)}}
+@keyframes identityFlare{0%{opacity:0}28%{opacity:.85}100%{opacity:0}}
+@keyframes identityFinalDissolve{0%{opacity:1;filter:drop-shadow(0 0 14px rgba(220,188,97,.25))}45%{opacity:.85;filter:drop-shadow(0 0 38px rgba(220,188,97,.65))}100%{opacity:0;transform:scale(1.55) translateY(-10px);filter:blur(14px)}}
+@media(prefers-reduced-motion:reduce){.canvas-boot-curtain::before,.canvas-intro-cinematic-halo,.canvas-intro-cinematic-flare{animation:none!important}.canvas-boot-backdrop-gone .canvas-intro-avatar-card{animation:none!important;opacity:0!important}}
