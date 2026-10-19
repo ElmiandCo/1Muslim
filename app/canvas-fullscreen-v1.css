@@ -918,3 +918,21 @@ main[class*="control"] [data-widget="Live"] [class*="widgetFeatureDetail"]{
 main[class*="control"] [data-widget="Live"] .homeLiveActualPlayer{
  margin-top:0!important;
 }
+
+/* Keep the homepage Go Live action above the Canvas, ornament and widget layers.
+   Preserve its existing location and click target. */
+main[class*="control"] > [class*="intro"]{
+ position:relative!important;
+ z-index:1000!important;
+ isolation:isolate;
+}
+main[class*="control"] [class*="introActionDock"]{
+ position:relative!important;
+ z-index:1001!important;
+ pointer-events:auto!important;
+}
+main[class*="control"] a[class*="introLiveButton"]{
+ position:relative!important;
+ z-index:1002!important;
+ pointer-events:auto!important;
+}
