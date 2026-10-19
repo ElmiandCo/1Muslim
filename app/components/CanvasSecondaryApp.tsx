@@ -3,41 +3,25 @@ import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
 import HomeMessagesChooser from "./HomeMessagesChooser";
-import ProfileAvatar from "./ProfileAvatar";
-import PublicBadgeSelector from "./PublicBadgeSelector";
 import ElmTentAlphabet from "./ElmTentAlphabet";
 import PostDesignStudio from "./PostDesignStudio";
 import "./canvas-ummah-feed.css";
 
-type Profile={display_name?:string|null;username?:string|null;xp_total?:number|null;bio?:string|null;shahada_verified_at?:string|null;id?:string;gender?:string|null;avatar_gender?:string|null;avatar_package?:string|null;avatar_config?:Record<string,unknown>|null;profile_accent?:string|null};
+type Profile={display_name?:string|null;username?:string|null;xp_total?:number|null;bio?:string|null;shahada_verified_at?:string|null};
 type DailyPost={id:string;content?:string|null;body?:string|null;text?:string|null;created_at?:string|null};
 const destinations=["/profile","/recording-studio/shahadah","/community","/messages","/elm-tent","/community"];
 const titles=["My Profile","Record Studio","Daily Posts · Ummah","Messenger","Elm Tent 🏕️","Community"];
 
 function ProfileApp({active}:{active:boolean}){
- const [profile,setProfile]=useState<Profile|null>(null);const [earnedBadges,setEarnedBadges]=useState<string[]>([]);const [status,setStatus]=useState("Loading your profile…");const [editingAvatar,setEditingAvatar]=useState(false);const [savingAvatar,setSavingAvatar]=useState(false);const [editNotice,setEditNotice]=useState("");
+ const [profile,setProfile]=useState<Profile|null>(null);const [earnedBadges,setEarnedBadges]=useState<string[]>([]);const [status,setStatus]=useState("Loading your profile…");
  useEffect(()=>{if(!active)return;let alive=true;const db=createClient();(async()=>{
   const {data:{user}}=await db.auth.getUser();if(!alive)return;
   if(!user){setStatus("Sign in to see your profile.");return}
-  const {data,error}=await db.from("profiles").select("id,display_name,username,xp_total,bio,shahada_verified_at,gender,avatar_gender,avatar_package,avatar_config,profile_accent").eq("id",user.id).maybeSingle();
+  const {data,error}=await db.from("profiles").select("display_name,username,xp_total,bio,shahada_verified_at").eq("id",user.id).maybeSingle();
   if(!alive)return;if(error){setStatus("Profile is unavailable right now.");return}
   setProfile(data);setStatus(data?"":"Complete your profile to begin.");const badges=await db.from("member_badges").select("badge_key").eq("user_id",user.id);if(alive)setEarnedBadges((badges.data??[]).map(row=>row.badge_key));
  })();return()=>{alive=false}},[active]);
- const chooseAvatar=async(url:string)=>{
-  if(!profile?.id||savingAvatar)return;
-  const silver=url.includes("silver-avatar");
-  if(silver&&(profile.xp_total??0)<5000){setEditNotice("Silver unlocks at 5,000 XP.");return;}
-  setSavingAvatar(true);setEditNotice("");
-  const db=createClient();const {data:{user}}=await db.auth.getUser();
-  if(!user||user.id!==profile.id){setEditNotice("Sign in to customize your profile.");setSavingAvatar(false);return;}
-  const config={...(profile.avatar_config??{}),selectedAvatarUrl:url};
-  const {error}=await db.from("profiles").update({avatar_config:config}).eq("id",user.id);
-  if(error)setEditNotice(error.message);else{setProfile(p=>p?{...p,avatar_config:config}:p);setEditNotice("✓ Avatar saved");setEditingAvatar(false);}
-  setSavingAvatar(false);
- };
- const gender=(profile?.avatar_gender||profile?.gender||"male").toLowerCase()==="female"?"female":"male";
- const avatars=[{name:"Classic",url:gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg",xp:0},{name:"Silver",url:gender==="female"?"/assets/avatars/silver-avatar-female.jpg":"/assets/avatars/silver-avatar-male.jpg",xp:5000}];
- return <div className="canvas-native-profile">{profile?<><div className="canvas-native-avatar" aria-label="Your selected avatar"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/></div><button type="button" className="canvas-avatar-change" onClick={()=>setEditingAvatar(v=>!v)} aria-expanded={editingAvatar}>✦ Change avatar here ▾</button>{editingAvatar&&<div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap",padding:"10px 0"}}>{avatars.map(a=><button key={a.name} type="button" disabled={savingAvatar||(profile.xp_total??0)<a.xp} onClick={()=>void chooseAvatar(a.url)} style={{border:"1px solid #c9ad6c",borderRadius:14,padding:8,background:"#083e35",color:"#f6e9c8",display:"grid",gap:5,justifyItems:"center"}}><img src={a.url} alt="" style={{width:58,height:58,objectFit:"cover",borderRadius:12}}/><span>{a.name}{(profile.xp_total??0)<a.xp?" · 5,000 XP":""}</span></button>)}<Link href="/profile#avatar" style={{alignSelf:"center",color:"#f2d58a"}}>More styles ↗</Link></div>}{editNotice&&<small role="status">{editNotice}</small>}<h3>{profile.display_name||profile.username||"Member"}</h3><p>{profile.bio||"Your journey with the Ummah"}</p><strong>✦ {(profile.xp_total||0).toLocaleString()} XP</strong><div className="canvas-profile-badges"><h4>🏅 Your badges</h4><div className="canvas-profile-badge-grid">{([{key:"shahada",name:"Shahadah Certified",image:"/assets/badges/shahada-badge.png"},{key:"dua",name:"Dua Badge",image:"/assets/badges/dua-badge.PNG"},{key:"tiktok",name:"TikTok Connected",image:"/assets/badges/1Muslim-TikTok-badge.PNG"}] as const).map(b=>{const earned=earnedBadges.includes(b.key)||(b.key==="shahada"&&Boolean(profile.shahada_verified_at));return <div key={b.key} className={"canvas-profile-badge"+(earned?" is-earned":" is-locked")}><img src={b.image} alt="" loading="lazy"/><span>{b.name}</span><small>{earned?"Earned":"Not earned"}</small></div>})}</div><small>Tap earned badges below to choose which appear publicly.</small>{profile.id&&<PublicBadgeSelector userId={profile.id} verifiedAt={profile.shahada_verified_at??null}/>}</div><div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center",padding:"12px 0"}}><Link href="/tiktok">♪ TikTok Connect ↗</Link><Link href="/profile#connections">◈ Social connections ↗</Link><Link href="/find">♙ Companions ↗</Link></div></>:<p role="status">{status}</p>}<Link href="/profile">Advanced profile settings ↗</Link></div>
+ return <div className="canvas-native-profile">{profile?<><div className="canvas-native-avatar" aria-hidden="true">{(profile.display_name||profile.username||"M").slice(0,1).toUpperCase()}</div><h3>{profile.display_name||profile.username||"Member"}</h3><p>{profile.bio||"Your journey with the Ummah"}</p><strong>✦ {(profile.xp_total||0).toLocaleString()} XP</strong><div className="canvas-profile-badges"><h4>🏅 Your badges</h4><div className="canvas-profile-badge-grid">{([{key:"shahada",name:"Shahadah Certified",image:"/assets/badges/shahada-badge.png"},{key:"dua",name:"Dua Badge",image:"/assets/badges/dua-badge.PNG"},{key:"tiktok",name:"TikTok Connected",image:"/assets/badges/1Muslim-TikTok-badge.PNG"}] as const).map(b=>{const earned=earnedBadges.includes(b.key)||(b.key==="shahada"&&Boolean(profile.shahada_verified_at));return <div key={b.key} className={"canvas-profile-badge"+(earned?" is-earned":" is-locked")}><img src={b.image} alt="" loading="lazy"/><span>{b.name}</span><small>{earned?"Earned":"Not earned"}</small></div>})}</div><small>Only badges with existing artwork in the repository are shown. See your full profile for badge settings.</small></div></>:<p role="status">{status}</p>}<Link href="/profile">View profile, badges & settings ↗</Link></div>
 }
 function RecorderApp({active}:{active:boolean}){
  const [recording,setRecording]=useState(false);const [clip,setClip]=useState<string|null>(null);const [error,setError]=useState("");const recorder=useRef<MediaRecorder|null>(null);const stream=useRef<MediaStream|null>(null);const chunks=useRef<Blob[]>([]);
@@ -55,7 +39,9 @@ function RecorderApp({active}:{active:boolean}){
  };
  return <div className="canvas-native-recorder"><div className={"canvas-recorder-ring"+(recording?" is-recording":"")}>♫</div><p>{recording?"Recording your voice…":"Record an audio message or reflection."}</p><button type="button" onClick={()=>void toggle()}>{recording?"■ Stop recording":"● Start recording"}</button>{clip&&<><audio controls src={clip}/><a href={clip} download="1muslim-recording.webm">Save recording to device ↓</a></>}{error&&<p role="alert">{error}</p>}<small>Recordings stay on this device until you choose to save them.</small></div>
 }
-type UmmahPost={id:string;body:string;created_at:string;author_name:string;author_handle:string;author_id?:string};
+type UmmahPost={id:string;body:string;created_at:string;author_name:string;author_handle:string;author_id?:string;avatar_url?:string|null};
+const postThemes=["emerald","gold","makkah","midnight","garden","purple"] as const;
+const backgroundForPost=(id:string)=>{let hash=2166136261;for(let i=0;i<id.length;i++)hash=Math.imul(hash^id.charCodeAt(i),16777619);return `/post-backgrounds/${postThemes[(hash>>>0)%postThemes.length]}.svg`};
 type UmmahComment={id:string;post_id:string;name:string;body:string;created_at:string};
 function DailyPostsApp({active}:{active:boolean}){
  const [posts,setPosts]=useState<UmmahPost[]>([]);
@@ -65,11 +51,16 @@ function DailyPostsApp({active}:{active:boolean}){
  const [draft,setDraft]=useState("");
  const [busy,setBusy]=useState(false);
  const [notice,setNotice]=useState("");
+ const [likes,setLikes]=useState<Record<string,boolean>>({});
+ const [paused,setPaused]=useState(false);
+ const lastTouch=useRef(0);
  const feedRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{if(!active)return;let alive=true;
   const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)throw Error();const data=await r.json();if(alive){setPosts(data.posts||[]);setStatus(data.posts?.length?"":"No posts yet. Be the first to share.");}}catch{if(alive)setStatus("Unable to load the Ummah feed.");}};
-  void load();const timer=setInterval(()=>void load(),30000);return()=>{alive=false;clearInterval(timer)};
+  void load();const timer=setInterval(()=>void load(),5000);const refresh=()=>void load();window.addEventListener("1muslim:community-post-published",refresh);return()=>{alive=false;clearInterval(timer);window.removeEventListener("1muslim:community-post-published",refresh)};
  },[active]);
+ useEffect(()=>{if(!active||paused||posts.length<2||typeof window==="undefined"||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;const root=feedRef.current;if(!root)return;let last=0;let frame=0;const tick=(now:number)=>{if(!last)last=now;const delta=Math.min(now-last,100);last=now;if(Date.now()-lastTouch.current>500){const end=root.scrollHeight-root.clientHeight;if(end>1){root.scrollTop+=delta*.024;if(root.scrollTop>=end-1)root.scrollTop=0}}frame=requestAnimationFrame(tick)};frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame)},[active,paused,posts.length]);
+ const likePost=async(id:string)=>{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setNotice("Sign in to like posts.");return}const was=!!likes[id];setLikes(p=>({...p,[id]:!was}));const res=was?await db.from("ummah_post_likes").delete().eq("post_id",id).eq("user_id",user.id):await db.from("ummah_post_likes").upsert({post_id:id,user_id:user.id},{onConflict:"post_id,user_id"});if(res.error){setLikes(p=>({...p,[id]:was}));setNotice("Unable to save like.")}};
  useEffect(()=>{if(!active)return;const root=feedRef.current;if(!root)return;
   const observer=new IntersectionObserver(entries=>{for(const entry of entries)entry.target.classList.toggle("ummah-in-view",entry.isIntersecting)},{root,threshold:.12,rootMargin:"0px 0px -8% 0px"});
   root.querySelectorAll(".ummah-floating-pair").forEach(el=>observer.observe(el));
@@ -82,15 +73,16 @@ function DailyPostsApp({active}:{active:boolean}){
   setComments(previous=>[...previous,d.comment]);setDraft("");
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
  return <div className="ummah-canvas-shell">
-  <div className="ummah-floating-feed" ref={feedRef} aria-label="Community posts">
+  <div className="ummah-floating-feed" ref={feedRef} aria-label="Community posts" onTouchStart={()=>{lastTouch.current=Date.now();setPaused(true)}} onTouchEnd={()=>{lastTouch.current=Date.now();setPaused(false)}} onPointerDown={()=>{lastTouch.current=Date.now();setPaused(true)}} onPointerUp={()=>{lastTouch.current=Date.now();setPaused(false)}} onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}>
    {posts.length?posts.map((post,i)=><div className="ummah-floating-pair" key={post.id} style={{["--ummah-tilt" as string]:(i%2===0?"-3deg":"3deg")}}>
-    <button type="button" className="ummah-floating-post" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}} aria-label={"Open comments on post by "+post.author_name}>
+    <button type="button" className="ummah-floating-post" style={{backgroundImage:`linear-gradient(180deg,rgba(1,18,16,.22),rgba(1,18,16,.78)),url("${backgroundForPost(post.id)}")`,backgroundSize:"cover",backgroundPosition:"center"}} onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}} aria-label={"Open comments on post by "+post.author_name}>
      <span className="ummah-post-glow" aria-hidden="true"/>
      <span className="ummah-post-body">{post.body}</span>
      <span className="ummah-post-bottom"><span>✦ Ummah</span><span>{new Date(post.created_at).toLocaleDateString()}</span><span>Comments ↗</span></span>
     </button>
+    <button type="button" className="ummah-like-button" aria-label={likes[post.id]?"Unlike post":"Like post"} aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥":"♡"}</button>
     <div className="ummah-floating-author" aria-label={"Posted by "+post.author_name}>
-     <span className="ummah-floating-avatar" aria-hidden="true">{(post.author_name||"M").charAt(0).toUpperCase()}</span>
+     <span className="ummah-floating-avatar" aria-hidden="true">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span>
      <span className="ummah-floating-author-name">{post.author_name}</span>
     </div>
    </div>):<p className="ummah-feed-status" role="status">{status}</p>}
