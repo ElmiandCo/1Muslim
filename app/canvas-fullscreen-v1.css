@@ -2193,3 +2193,9 @@ main[class*="control"] [class*="introActionDock"]{
 @keyframes identityStayAndFade{0%,32%{opacity:1;filter:drop-shadow(0 0 20px rgba(211,174,88,.25))}100%{opacity:0;filter:blur(11px)}}
 @media(max-width:520px){.canvas-boot-curtain .canvas-intro-avatar-card{transform:scale(1.28)!important}.canvas-intro-identity-stamp{right:4%;top:9%;font-size:10px}.canvas-intro-identity-art img{left:6%;bottom:13%}}
 @media(prefers-reduced-motion:reduce){.canvas-boot-backdrop-gone .canvas-intro-avatar-card{animation:none!important;opacity:0!important}}
+
+/* Scanner is only a delayed placeholder: first 50ms are clean black. */
+.canvas-boot-curtain.canvas-boot-pending{background:#000!important;animation:none!important}
+.canvas-boot-pending .canvas-intro-avatar-card,.canvas-boot-pending .canvas-intro-scanner,.canvas-boot-pending .canvas-intro-identity-art,.canvas-boot-pending .canvas-intro-cinematic-halo,.canvas-boot-pending .canvas-intro-cinematic-flare,.canvas-boot-pending .canvas-boot-label,.canvas-boot-pending .canvas-intro-welcome-name,.canvas-boot-pending .canvas-boot-loading{opacity:0!important;visibility:hidden!important}
+.canvas-boot-curtain:not(.canvas-boot-pending):not(.canvas-boot-backdrop-gone) .canvas-intro-avatar-card{animation:identityPlaceholderFadeIn .28s ease-out both!important}
+@keyframes identityPlaceholderFadeIn{from{opacity:0}to{opacity:1}}
