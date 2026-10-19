@@ -905,3 +905,16 @@ main[class*="control"]>[class*="guestBannerSlot"]>aside{
   top:calc(env(safe-area-inset-top,0px) + 55px)!important;
  }
 }
+
+/* Live slide cleanup: remove the legacy decorative preview strip above the real player.
+   Keep the canonical LIVE crown, actual LiveKit player, carousel and comments. */
+main[class*="control"] [data-widget="Live"] [class*="widgetTop"],
+main[class*="control"] [data-widget="Live"] [class*="widgetSmartPreview"],
+main[class*="control"] [data-widget="Live"] [class*="widgetDetails"],
+main[class*="control"] [data-widget="Live"] [class*="widgetFeatureDetail"]{
+ display:none!important;height:0!important;min-height:0!important;
+ margin:0!important;padding:0!important;
+}
+main[class*="control"] [data-widget="Live"] .homeLiveActualPlayer{
+ margin-top:0!important;
+}
