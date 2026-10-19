@@ -2218,3 +2218,13 @@ main[class*="control"] [class*="introActionDock"]{
 .canvas-boot-curtain.canvas-boot-backdrop-gone .canvas-intro-avatar-card,.canvas-boot-curtain.canvas-boot-backdrop-gone .canvas-boot-label,.canvas-boot-curtain.canvas-boot-backdrop-gone .canvas-intro-welcome-name{animation:none!important;transition:opacity .35s ease!important;opacity:0!important}
 .canvas-boot-curtain .canvas-intro-hudhud-motion{display:none!important}
 @media(prefers-reduced-motion:reduce){.canvas-boot-curtain,.canvas-boot-curtain.canvas-boot-backdrop-gone{transition:none!important}}
+
+/* Floating canvas direction cues: minimal, nonblocking, functional. */
+.canvas-vertical-direction-controls{position:absolute;inset:0;z-index:35;pointer-events:none;overflow:visible}
+.canvas-direction-arrow{position:absolute;left:50%;width:44px;height:44px;display:grid;place-items:center;transform:translateX(-50%);border:0!important;border-radius:50%;background:rgba(10,20,19,.08)!important;box-shadow:none!important;color:rgba(244,244,233,.48)!important;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);pointer-events:auto;cursor:pointer;touch-action:manipulation;transition:color .22s,background .22s,opacity .22s;animation:canvasArrowFloat 2.6s ease-in-out infinite}
+.canvas-direction-arrow svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.canvas-direction-up{top:4px}.canvas-direction-down{bottom:4px;animation-delay:-1.3s}
+.canvas-direction-arrow:hover,.canvas-direction-arrow:focus-visible{color:rgba(255,255,255,.9)!important;background:rgba(15,30,27,.22)!important;outline-offset:2px}
+.canvas-direction-arrow:active{opacity:.6}
+@keyframes canvasArrowFloat{0%,100%{translate:0 0;opacity:.55}50%{translate:0 -5px;opacity:.88}}
+@media(prefers-reduced-motion:reduce){.canvas-direction-arrow{animation:none!important;opacity:.75}}
