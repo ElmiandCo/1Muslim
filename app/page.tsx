@@ -129,7 +129,7 @@ export default function Home(){
  const canvasIntroAudio=useRef<HTMLAudioElement|null>(null);
  useEffect(()=>{const duration=8500+Math.floor(Math.random()*1501);const audio=new Audio("/audio/hudhud-welcome.mp3");audio.volume=.10;audio.preload="auto";canvasIntroAudio.current=audio;const fxCtx=typeof window!=="undefined"?new (window.AudioContext||((window as unknown as {webkitAudioContext:typeof AudioContext}).webkitAudioContext))():null;
  const playTone=(frequency:number,durationSeconds:number,gain:number,type:OscillatorType="sine",sweep?:number)=>{if(!fxCtx||fxCtx.state!=="running")return;const oscillator=fxCtx.createOscillator();const envelope=fxCtx.createGain();const t=fxCtx.currentTime;oscillator.type=type;oscillator.frequency.setValueAtTime(frequency,t);if(sweep)oscillator.frequency.exponentialRampToValueAtTime(sweep,t+durationSeconds);envelope.gain.setValueAtTime(.0001,t);envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,gain),t+.02);envelope.gain.exponentialRampToValueAtTime(.0001,t+durationSeconds);oscillator.connect(envelope);envelope.connect(fxCtx.destination);oscillator.start(t);oscillator.stop(t+durationSeconds+.02)};
- const start=()=>{if(audio.paused)void audio.play().catch(()=>{});if(fxCtx?.state==="suspended")void fxCtx.resume().catch(()=>{})};start();
+ const start=()=>{if(fxCtx?.state==="suspended")void fxCtx.resume().catch(()=>{})};
  const soundTimers:Array<ReturnType<typeof setTimeout>>=[];
  soundTimers.push(setTimeout(()=>playTone(85,.55,.055,"sine",55),80));
  soundTimers.push(setTimeout(()=>playTone(340,.48,.025,"triangle",120),260));
@@ -148,6 +148,8 @@ export default function Home(){
    setIntroBackdropGone(false);
    setIntroScanComplete(true);
    setIntroRecognized(true);
+   // Start the HudHud welcome at the exact moment the signed-in profile is recognized.
+   const welcome=canvasIntroAudio.current;if(welcome){welcome.currentTime=0;void welcome.play().catch(()=>{});}
    // Keep the dark scanner backdrop for an initially unresolved identity.
    // The correct avatar and name remain together through the one-second lock.
    const reveal=window.setTimeout(()=>{setCanvasRevealStarted(true);setIntroBackdropGone(true)},introStartedScanning?450:350);
