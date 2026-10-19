@@ -1787,3 +1787,41 @@ main[class*="control"] .canvas-header-brand-link strong{white-space:nowrap}
  }
  [data-workspace-page="0"] .canvas-orb-return{display:none!important}
 }
+
+/* Live-only correction: remove the floating green orb, not the player or HudHud. */
+body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-orb-floating-dock,
+body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
+[data-workspace-page="0"] .canvas-orb-return{display:none!important;visibility:hidden!important;pointer-events:none!important}
+
+/* Fix the real source of the empty space: the live stage's containing block.
+   Stretch its containing block to the full Canvas height, then pin chat to bottom. */
+@media(max-width:767px){
+ [data-workspace-page="0"] .canvas-vertical-portal{
+  height:100%!important;min-height:100%!important;padding:0!important;
+ }
+ main[class*="control"] [data-workspace-page="0"] .canvas-vertical-main{
+  position:absolute!important;inset:0!important;height:100%!important;
+  min-height:100%!important;width:100%!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage{
+  position:absolute!important;inset:0!important;
+  height:100%!important;min-height:100%!important;
+  display:grid!important;grid-template-rows:minmax(0,45%) minmax(0,55%)!important;
+  gap:0!important;padding:8px 8px 0!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom{
+  position:relative!important;align-self:stretch!important;
+  height:100%!important;min-height:0!important;max-height:none!important;
+  padding:3px 0 0!important;overflow:hidden!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom > .homeLiveViewerConversation{
+  height:100%!important;min-height:0!important;max-height:none!important;
+  display:flex!important;flex-direction:column!important;
+  padding:12px 14px 8px!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveDemoComments{
+  flex:1 1 0%!important;min-height:0!important;max-height:none!important;
+  overflow-y:auto!important;scroll-behavior:smooth!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveCommentForm{margin-top:auto!important;flex-shrink:0!important}
+}
