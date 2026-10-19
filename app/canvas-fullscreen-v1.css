@@ -1957,3 +1957,27 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 .canvas-boot-revealing .canvas-intro-avatar-card{animation:canvasIntroAvatarExit .55s ease both}
 @keyframes canvasIntroAvatarExit{to{opacity:0;transform:scale(.82)}}
 @media(prefers-reduced-motion:reduce){.canvas-intro-avatar-flip{animation:none!important;transform:rotateY(180deg)}.canvas-boot-revealing .canvas-intro-avatar-card{animation:none!important}}
+
+/* Identity reveal: large faceless profile avatars flip like a spy-film dossier.
+   Scan beam tracks the card; last frame is the actual signed-in profile image. */
+.canvas-intro-avatar-card{width:clamp(154px,36vw,270px);height:clamp(190px,46vw,330px);perspective:1400px;isolation:isolate}
+.canvas-intro-avatar-flip{animation:canvasIntroIdentitySpin 5.8s cubic-bezier(.16,.68,.2,1) both!important}
+.canvas-intro-avatar-face{border-radius:22px;background:#000;border:1px solid rgba(225,191,106,.72);box-shadow:0 0 30px rgba(222,179,84,.15),inset 0 0 20px rgba(16,90,68,.2)}
+.canvas-intro-avatar-face img{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+.canvas-intro-avatar-final{transform:rotateY(180deg);opacity:0;animation:canvasIntroFinalFace 5.8s ease both}
+.canvas-intro-scanner{position:absolute;inset:-8px;z-index:4;pointer-events:none;border:1px solid rgba(133,238,212,.5);border-radius:25px;box-shadow:0 0 22px rgba(52,236,179,.25);animation:canvasIntroScanGlow 2s ease-in-out infinite alternate}
+.canvas-intro-scanner::after{content:"";position:absolute;left:0;right:0;height:2px;top:0;background:linear-gradient(90deg,transparent,#74ffce,transparent);box-shadow:0 0 14px #6dffcd;animation:canvasIntroScanSweep 2.5s ease-in-out 2}
+.canvas-intro-welcome-name{position:relative;z-index:2;font-size:clamp(11px,2.4vw,15px);color:#b8e7d5;letter-spacing:.13em;text-transform:uppercase;text-align:center;animation:canvasIntroWelcome 5.8s ease both}
+@keyframes canvasIntroIdentitySpin{
+ 0%{transform:rotateY(0deg) scale(.78)}
+ 15%{transform:rotateY(540deg) scale(.97)}
+ 35%{transform:rotateY(1080deg) scale(1.07)}
+ 58%{transform:rotateY(1620deg) scale(1)}
+ 79%{transform:rotateY(1980deg) scale(1.04)}
+ 100%{transform:rotateY(2340deg) scale(1)}
+}
+@keyframes canvasIntroFinalFace{0%,78%{opacity:0}80%,100%{opacity:1}}
+@keyframes canvasIntroScanSweep{0%{top:0;opacity:0}10%,80%{opacity:1}100%{top:100%;opacity:0}}
+@keyframes canvasIntroScanGlow{to{box-shadow:0 0 35px rgba(233,193,86,.4)}}
+@keyframes canvasIntroWelcome{0%,73%{opacity:0;transform:translateY(9px)}100%{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.canvas-intro-avatar-flip{transform:rotateY(180deg)!important}.canvas-intro-avatar-final{opacity:1!important;animation:none!important}.canvas-intro-scanner,.canvas-intro-scanner::after,.canvas-intro-welcome-name{animation:none!important}}
