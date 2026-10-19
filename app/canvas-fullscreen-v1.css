@@ -863,3 +863,19 @@ main[class*="control"]>[class*="surface"]{background-color:rgba(4,14,13,.28)!imp
   transition:background-color .25s ease,border-color .25s ease!important;
  }
 }
+
+/* Elegant 2-second black-screen reveal on homepage mount.
+   Purely visual: never traps touch, focus, or screen readers. */
+main[class*="control"]>.canvas-cinematic-entry{
+ position:fixed;inset:0;z-index:2147482000;pointer-events:none;
+ background:#000;opacity:1;
+ animation:canvasCinematicReveal 2000ms cubic-bezier(.42,0,.22,1) both;
+}
+@keyframes canvasCinematicReveal{
+ 0%{opacity:1}
+ 18%{opacity:1}
+ 100%{opacity:0;visibility:hidden}
+}
+@media(prefers-reduced-motion:reduce){
+ main[class*="control"]>.canvas-cinematic-entry{animation:none;opacity:0;visibility:hidden}
+}
