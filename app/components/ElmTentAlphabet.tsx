@@ -40,8 +40,13 @@ export default function ElmTentAlphabet(){
  const [practiceFlash,setPracticeFlash]=useState(false);
  const [mirrorSpin,setMirrorSpin]=useState(false);
  const [milestone,setMilestone]=useState(false);
+ const [sabrNotice,setSabrNotice]=useState(false);
+ const [quizUnlock,setQuizUnlock]=useState(false);
+ const [quizPassed,setQuizPassed]=useState(false);
+ const sabrTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const warnSabr=()=>{setSabrNotice(true);if(sabrTimer.current)clearTimeout(sabrTimer.current);sabrTimer.current=setTimeout(()=>setSabrNotice(false),4800)};
  const [milestoneDismissed,setMilestoneDismissed]=useState(false);
- useEffect(()=>{try{
+ useEffect(()=>{try{setQuizPassed(localStorage.getItem("1muslim:elm-tent:five-in-a-row-passed:v1")==="true");
    const next:Record<number,number[]>={};
    for(let i=0;i<LESSON_COUNT;i++){
     const raw=localStorage.getItem(lessonKey(i))||(i===0?localStorage.getItem(LEGACY_KEY):null);
@@ -49,8 +54,8 @@ export default function ElmTentAlphabet(){
     next[i]=Array.isArray(saved)?Array.from(new Set(saved.filter((x:unknown)=>typeof x==="number"&&Number.isInteger(x)&&x>=0&&x<LETTERS.length))):[];
    }
    setLessonProgress(next);setPracticed(next[0]||[]);
-   if((next[0]||[]).length>=3&&(next[0]||[]).length<28)setMilestone(true);
-   if(next[1]?.length===LETTERS.length){setLesson(2);setPracticed(next[1])}
+   
+   
    setCompletedLessons(Array.from({length:LESSON_COUNT},(_,i)=>i).filter(i=>(next[i]||[]).length===LETTERS.length));
   }catch{}setReady(true);
   return()=>{if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()}
@@ -61,7 +66,8 @@ export default function ElmTentAlphabet(){
   setPracticed(next);
   setLessonProgress(current=>({...current,[lesson]:next}));
   try{localStorage.setItem(lessonKey(lesson),JSON.stringify(next))}catch{}
-  if(lesson===0&&next.length>=3&&!milestoneDismissed)setMilestone(true);
+  if(lesson===0&&next.length>=3&&!milestoneDismissed){setMilestoneDismissed(true)}
+  if(lesson===0&&next.length===LETTERS.length){setQuizUnlock(true);setTimeout(()=>{setQuizUnlock(false);chooseLesson(1)},1550)}
   if(next.length===LETTERS.length){setCompletedLessons(current=>current.includes(lesson)?current:[...current,lesson]);if(lesson===1)setChallenge(true)}
  };
 
@@ -74,16 +80,18 @@ export default function ElmTentAlphabet(){
   speech.current=utterance;setAudioMessage(arabic?"":"Device pronunciation preview; an Arabic voice may not be installed.");window.speechSynthesis.speak(utterance);
  };
  useEffect(()=>{if(!autoPlayNext||lesson>1)return;setAutoPlayNext(false);const timer=setTimeout(()=>{hear();setHudhudPlayed(true)},280);return()=>clearTimeout(timer)},[autoPlayNext,selected,lesson]);
- const chooseLesson=(index:number)=>{const next=Math.max(0,Math.min(LESSON_COUNT-1,index));setLesson(next);setLessonWindow(Math.floor(next/4));setPracticed(lessonProgress[next]||[]);setSelected(0);setHudhudPlayed(false);setAudioMessage("");if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()};
+ const chooseLesson=(index:number)=>{if(index>=1&&lessonProgress[0]?.length<LETTERS.length&&practiced.length<LETTERS.length){warnSabr();return}if(index>=2&&!quizPassed){warnSabr();return}const next=Math.max(0,Math.min(LESSON_COUNT-1,index));setLesson(next);setLessonWindow(Math.floor(next/4));setPracticed(lessonProgress[next]||[]);setSelected(0);setHudhudPlayed(false);setAudioMessage("");if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()};
  const nextUnpracticed=()=>{const remaining=LETTERS.map((_,i)=>i).filter(i=>!practiced.includes(i)&&i!==selected);if(!remaining.length)return -1;if(practiced.length<3){const next=[0,1,2].find(i=>!practiced.includes(i)&&i!==selected);if(next!==undefined)return next}const random=new Uint32Array(1);crypto.getRandomValues(random);return remaining[random[0]%remaining.length]};
- const advanceLetter=()=>{const next=nextUnpracticed();if(next<0){setMilestone(true);return}setMirrorSpin(true);setTimeout(()=>{select(next);setAutoPlayNext(true)},270);setTimeout(()=>setMirrorSpin(false),700)};
+ const advanceLetter=()=>{const next=nextUnpracticed();if(next<0){setMilestone(true);return}setMirrorSpin(true);setTimeout(()=>{select(next);setAutoPlayNext(true)},1500);setTimeout(()=>setMirrorSpin(false),700)};
  const select=(index:number)=>{setHudhudPlayed(false);if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel();setPlaying(false);setSelected(index);setAudioMessage("")};
- useEffect(()=>{const onHudHud=()=>{if(lesson!==0)return;if(milestone){setMilestone(false);setMilestoneDismissed(true);chooseLesson(1);return}if(!hudhudPlayed){hear();setHudhudPlayed(true)}else{mark();setPracticeFlash(true);setTimeout(()=>setPracticeFlash(false),420);setHudhudPlayed(false);advanceLetter()}};window.addEventListener("1muslim:elm-tent-hudhud",onHudHud);return()=>window.removeEventListener("1muslim:elm-tent-hudhud",onHudHud)});
- const submitQuiz=async(nextAnswers:number[])=>{setClaiming(true);try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setBadgeMessage("Sign in to save your badge and claim 5,000 XP.");return}const {data,error}=await db.rpc("claim_arabic_letters_badge",{answers:nextAnswers});if(error)throw error;if(data?.awarded||data?.already_earned){setBadgeEarned(true);setCompletedLessons(current=>current.includes(1)?current:[...current,1]);setBadgeMessage(data.awarded?"🏅 Arabic Letters Certified · +5,000 XP!":"🏅 Arabic Letters Certified · Already earned");chooseLesson(2)}else setBadgeMessage(`Score: ${data?.score??0}% · Reach 90% to earn your badge.`)}catch(e){setBadgeMessage(e instanceof Error?e.message:"Unable to claim badge")}finally{setClaiming(false)}};
+ useEffect(()=>{const onHudHud=()=>{if(lesson!==0)return;if(milestone){setMilestone(false);setMilestoneDismissed(true);advanceLetter();return}if(!hudhudPlayed){hear();setHudhudPlayed(true)}else{mark();setPracticeFlash(true);setTimeout(()=>setPracticeFlash(false),420);setHudhudPlayed(false);advanceLetter()}};window.addEventListener("1muslim:elm-tent-hudhud",onHudHud);return()=>window.removeEventListener("1muslim:elm-tent-hudhud",onHudHud)});
+ const submitQuiz=async(_answers:number[])=>{setQuizPassed(true);try{localStorage.setItem("1muslim:elm-tent:five-in-a-row-passed:v1","true")}catch{}setCompletedLessons(current=>current.includes(1)?current:[...current,1]);setBadgeMessage("ما شاء الله · Five correct sounds in a row! Next lesson unlocked.");setTimeout(()=>{setLesson(2);setLessonWindow(0);setPracticed(lessonProgress[2]||[])},1500)};
  const answerQuestion=(choice:number)=>{if(claiming)return;const next=[...answers,choice];setAnswers(next);if(next.length===28)void submitQuiz(next);else setQuizIndex(next.length)};
  return <div className={styles.root} onTouchStart={e=>{swipeStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(swipeStart.current===null)return;const delta=e.changedTouches[0].clientY-swipeStart.current;swipeStart.current=null;if(Math.abs(delta)>90)chooseLesson(lesson+(delta<0?1:-1))}}>
+  {quizUnlock&&<div className={styles.quizUnlockScene} role="status" aria-live="polite"><div className={styles.quizUnlockParticles} aria-hidden="true">{Array.from({length:36},(_,i)=><i key={i} style={{["--particle-index" as string]:i,["--particle-angle" as string]:`${i*137.508}deg`,["--particle-distance" as string]:`${80+i%7*25}px`,["--particle-delay" as string]:`${(i%9)*.045}s`}}/>)}</div><div className={styles.quizUnlockGlow} aria-hidden="true">✦</div><strong lang="ar">مَا شَاءَ اللَّهُ</strong><h2>QUIZ UNLOCKED</h2><p>All 28 letters practiced · Your journey continues ↓</p></div>}
+  {sabrNotice&&<div className={styles.milestoneToast} role="status"><strong>يا أخي، اصبر · Yaqni, ṣabr! 🌙</strong><span>Why are you in a rush? Seek beneficial knowledge with patience. Confirm you have practiced every letter before moving on. May Allah increase you in knowledge.</span><button type="button" onClick={()=>setSabrNotice(false)}>بِسْمِ اللَّهِ · Continue practicing</button></div>}
   <nav className={styles.lessonNav} aria-label="Elm Tent lessons"><button type="button" aria-label="Previous lessons" onClick={()=>setLessonWindow(0)}>‹</button>{Array.from({length:4},(_,i)=>lessonWindow*4+i).filter(i=>i!==0||!completedLessons.includes(1)).map(i=><button type="button" key={i} className={lesson===i?styles.lessonActive:""} aria-current={lesson===i?"step":undefined} onClick={()=>chooseLesson(i)}><span>{i+1}</span><small>{completedLessons.includes(i)?"✓ Done":i<2?"Letters":"Soon"}</small></button>)}<button type="button" aria-label="Next lessons" onClick={()=>setLessonWindow(1)}>›</button></nav>
-  {lesson===0&&milestone&&<div className={styles.milestoneToast} role="status"><strong>✦ First three letters learned!</strong><span>Continue exploring or begin Lesson 2.</span><div><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);advanceLetter()}}>Keep learning</button><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);chooseLesson(1)}}>Ready for Lesson 2 →</button></div></div>}
+  {lesson===0&&milestone&&<div className={styles.milestoneToast} role="status"><strong>✦ First three letters learned!</strong><span>Continue exploring or begin Lesson 2.</span><div><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);advanceLetter()}}>Keep learning</button><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);warnSabr()}}>Continue patiently →</button></div></div>}
   {lesson===1&&<ElmTentLetterQuiz onPass={answers=>void submitQuiz(answers)} onReady={()=>chooseLesson(2)}/>}
   {lesson===2&&<ElmTentVowels/>}
   {lesson===0&&<div className={styles.lessonStage} key={lesson}><strong>LESSON {lesson+1} / 8</strong>{lesson>1?<div className={styles.soon}>✦ Lesson {lesson+1} · Coming Soon</div>:completedLessons.includes(lesson)?<span>✓ Completed</span>:null}</div>
@@ -97,7 +105,7 @@ export default function ElmTentAlphabet(){
    <div className={styles.letterFocus} data-mirror-spin={mirrorSpin?"true":"false"} aria-live="polite" data-practice-flash={practiceFlash?"true":"false"}><span className={styles.arabic} lang="ar" dir="rtl">{LETTERS[selected][0]}</span><strong>{LETTERS[selected][1]}</strong><small>{String(selected+1).padStart(2,"0")} / 28</small></div>
    <button className={styles.next} type="button" onClick={()=>advanceLetter()} aria-label="Next letter">›</button>
   </div>
-  <div className={styles.controls}><button type="button" className={styles.hear} onClick={()=>{hear();setHudhudPlayed(true)}} disabled={lesson>1} aria-label={"Hear "+LETTERS[selected][1]}>{playing?"◖)) Playing":"◖)) Hear letter"}</button><button type="button" className={styles.mark} onClick={()=>{mark();setHudhudPlayed(false)}} disabled={lesson>1||practiced.includes(selected)}>{practiced.includes(selected)?"✓ Practiced":"✓ I practiced"}</button></div>
+  <div className={styles.controls}><button type="button" className={styles.hear} onClick={()=>{hear();setHudhudPlayed(true)}} disabled={lesson>1} aria-label={"Hear "+LETTERS[selected][1]}>{playing?"◖)) Playing":"◖)) Hear letter"}</button><button type="button" className={styles.mark} onClick={()=>{mark();setHudhudPlayed(false);if(lesson===0&&practiced.length<27)advanceLetter()}} disabled={lesson>1||practiced.includes(selected)}>{practiced.includes(selected)?"✓ Practiced":"✓ I practiced"}</button></div>
 
   {lesson===0&&practiced.length===LETTERS.length&&<div className={styles.compactNext}><button type="button" onClick={()=>chooseLesson(1)}>✓ All 28 practiced · Lesson 2 →</button></div>}
   {audioMessage&&<p role="status" className={styles.note}>{audioMessage}</p>}

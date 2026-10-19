@@ -13,3 +13,20 @@
 @media(max-width:600px){.root{padding:12px;border-radius:18px;gap:8px}.stage{min-height:125px;max-height:210px}.arabic{font-size:clamp(65px,11dvh,96px)}.grid{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.tile{min-height:53px;border-radius:9px}.tile small{font-size:8px}.controls button{min-height:43px}}
 @media(max-height:700px){.root{gap:6px}.stage{min-height:105px;max-height:155px}.arabic{font-size:68px}.disclaimer{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.progress span{transition:none}}
+
+/* Immersive particle unlock: no toast, panel, or card. */
+.quizUnlockScene{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;pointer-events:none;color:#fff5d4;background:radial-gradient(ellipse at center,rgba(15,92,67,.93),rgba(0,22,21,.97) 75%);animation:elmUnlockFade 1.55s ease both}
+.quizUnlockScene::before{content:"";position:absolute;inset:-50%;background:conic-gradient(from 0deg,transparent 0 20%,rgba(224,191,96,.12) 28%,transparent 38% 60%,rgba(91,244,175,.1) 70%,transparent 78%);animation:elmUnlockRotate 9s linear infinite}
+.quizUnlockScene strong{position:relative;font-size:clamp(24px,7vw,52px);font-family:"Amiri","Noto Naskh Arabic",serif;letter-spacing:.04em;text-shadow:0 0 35px rgba(255,224,131,.6);animation:elmUnlockRise .9s ease both}
+.quizUnlockScene h2{position:relative;font-size:clamp(24px,7vw,52px);font-weight:850;letter-spacing:.16em;color:#f9d888;text-shadow:0 0 35px rgba(245,210,114,.55);margin:12px 0;animation:elmUnlockRise 1s .12s ease both}
+.quizUnlockScene p{position:relative;font-size:clamp(12px,3vw,17px);color:#d5f5de;animation:elmUnlockRise 1s .25s ease both}
+.quizUnlockGlow{position:absolute;font-size:clamp(180px,60vw,440px);color:rgba(238,202,108,.18);text-shadow:0 0 110px #e2c67a;animation:elmUnlockPulse 1.5s ease-in-out infinite}
+.quizUnlockParticles{position:absolute;inset:0;display:grid;place-items:center}
+.quizUnlockParticles i{position:absolute;width:clamp(3px,.75vw,7px);height:clamp(3px,.75vw,7px);border-radius:50%;background:#f8d77d;box-shadow:0 0 11px #ffdb80,0 0 24px rgba(114,247,177,.8);animation:elmUnlockBurst 1.4s var(--particle-delay) cubic-bezier(.14,.65,.25,1) both}
+.quizUnlockParticles i:nth-child(3n){background:#69f0ad;box-shadow:0 0 13px #75f7ba}
+@keyframes elmUnlockBurst{0%{opacity:0;transform:rotate(var(--particle-angle)) translateX(0) scale(.2)}15%{opacity:1}85%{opacity:1}100%{opacity:0;transform:rotate(var(--particle-angle)) translateX(var(--particle-distance)) scale(1.1)}}
+@keyframes elmUnlockRise{from{opacity:0;transform:translateY(30px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes elmUnlockFade{0%{opacity:0}12%{opacity:1}85%{opacity:1}100%{opacity:0}}
+@keyframes elmUnlockRotate{to{transform:rotate(360deg)}}
+@keyframes elmUnlockPulse{50%{transform:scale(1.15);opacity:.8}}
+@media(prefers-reduced-motion:reduce){.quizUnlockScene,.quizUnlockScene::before,.quizUnlockScene strong,.quizUnlockScene h2,.quizUnlockScene p,.quizUnlockGlow,.quizUnlockParticles i{animation:none!important}.quizUnlockParticles i{opacity:.65;transform:rotate(var(--particle-angle)) translateX(var(--particle-distance))}}
