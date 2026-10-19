@@ -6,7 +6,6 @@ import "./hudhud-selection.css";
 import "./hudhud-live-mini.css";
 import Script from "next/script";
 import XPTracker from "./components/XPTracker";
-import PersistentWidgetDock from "./components/PersistentWidgetDock";
 import PersistentQuranStudio from "./components/PersistentQuranStudio";
 import PersistentMessengerCall from "./components/PersistentMessengerCall";
 import PersistentDailyVideo from "../components/PersistentDailyVideo";
@@ -31,7 +30,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><HudHudMotionShell>{children}</HudHudMotionShell><PersistentMessengerCall /><PersistentDailyVideo /><GuestWelcomeGate /><HudHudDimensionDust /><TapShimmer /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><PersistentWidgetDock /><PersistentQuranStudio /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
+  return <html lang="en"><body><HudHudMotionShell>{children}</HudHudMotionShell><PersistentMessengerCall /><PersistentDailyVideo /><GuestWelcomeGate /><HudHudDimensionDust /><TapShimmer /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><PersistentQuranStudio /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag("js", new Date());
 gtag("config", "G-DSLVB0HSGV");`}</Script></body></html>;
