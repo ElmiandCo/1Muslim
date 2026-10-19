@@ -1687,3 +1687,35 @@
 .control.day .controlHeader .headerActions>*{
  background:#fffef5!important;color:#1a4938!important;border-color:#b7a477!important;
 }
+
+/* HudHud Motion 3.0 — preview-only: fast, interruptible, no layout bounce. */
+.control .controlHeader{
+ will-change:auto!important;
+ transition:opacity 180ms ease,transform 360ms cubic-bezier(.22,1,.36,1),
+   max-height 360ms cubic-bezier(.22,1,.36,1),height 360ms cubic-bezier(.22,1,.36,1),
+   margin 360ms cubic-bezier(.22,1,.36,1),padding 360ms cubic-bezier(.22,1,.36,1)!important;
+}
+.control.navMotionCollapsed .controlHeader.controlHeaderCollapsed{
+ animation:none!important;opacity:0!important;transform:translate3d(0,-18px,0)!important;
+ height:0!important;max-height:0!important;min-height:0!important;
+ margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important;
+ border-width:0!important;pointer-events:none!important;
+}
+.control.navMotionExpanded .controlHeader{animation:none!important;opacity:1!important;transform:translate3d(0,0,0)!important}
+.control.navMotionCollapsed .intro,.control.navMotionExpanded .intro,
+.control.navMotionCollapsed .guestWelcome,.control.navMotionExpanded .guestWelcome,
+.control.navMotionCollapsed .surfaceArtwork,.control.navMotionExpanded .surfaceArtwork{
+ animation:none!important;
+}
+.control .surfaceArtwork,.control .islamicDecoration,.control .pattern{
+ animation-play-state:running!important;
+}
+.control .surfaceArtwork{
+ transform:none!important;transition:opacity 350ms ease!important;
+}
+.control .surface{
+ transition:background-color 350ms ease,border-color 350ms ease,box-shadow 350ms ease!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .control .controlHeader,.control .surface,.control .surfaceArtwork{transition:none!important}
+}
