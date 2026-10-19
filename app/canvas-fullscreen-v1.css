@@ -879,3 +879,29 @@ main[class*="control"]>.canvas-cinematic-entry{
 @media(prefers-reduced-motion:reduce){
  main[class*="control"]>.canvas-cinematic-entry{animation:none;opacity:0;visibility:hidden}
 }
+
+/* Fixed-position Shahada invitation — floats above the layout; never reflows Canvas. */
+main[class*="control"]>[class*="guestBannerSlot"]{
+ position:fixed!important;top:calc(env(safe-area-inset-top,0px) + 72px)!important;
+ left:max(16px,env(safe-area-inset-left,0px))!important;
+ right:max(16px,env(safe-area-inset-right,0px))!important;
+ width:auto!important;height:auto!important;max-width:680px!important;
+ margin:0 auto!important;z-index:90!important;pointer-events:none!important;
+ display:block!important;transform:none!important;
+}
+main[class*="control"]>[class*="guestBannerSlot"][class*="guestBannerOpen"]{pointer-events:auto!important}
+main[class*="control"]>[class*="guestBannerSlot"]>aside{
+ width:100%!important;margin:0!important;overflow:visible!important;
+ background:rgba(4,26,22,.90)!important;backdrop-filter:blur(18px)!important;
+ -webkit-backdrop-filter:blur(18px)!important;
+ box-shadow:0 12px 42px rgba(0,0,0,.55)!important;
+}
+@media(max-width:759px){
+ main[class*="control"]:not([data-canvas-fullscreen="true"]){
+  --hudhud-dots-top:calc(env(safe-area-inset-top,0px) + 78px);
+  --hudhud-canvas-top:calc(env(safe-area-inset-top,0px) + 108px);
+ }
+ main[class*="control"]>[class*="guestBannerSlot"]{
+  top:calc(env(safe-area-inset-top,0px) + 55px)!important;
+ }
+}
