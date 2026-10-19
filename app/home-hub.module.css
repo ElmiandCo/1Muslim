@@ -1732,20 +1732,21 @@
 .control .islamicDecoration .decorationDay{display:block!important;visibility:visible!important;opacity:.58!important;animation:none!important;transition:none!important}
 .control .islamicDecoration .decorationNight{opacity:0!important}
 
-/* The real menu briefly introduces itself during Canvas boot, then lifts away.
-   This overrides only the header entrance; Canvas, decoration, actions and dock stay unchanged. */
+/* Intro: menu grows from a gold hairline, briefly settles, then retracts upward.
+   After the intro, the standard collapsed-navigation state takes over. */
 .control.canvas-menu-boot-intro.navMotionCollapsed .controlHeader.controlHeaderCollapsed{
-  animation:canvasMenuWelcomeLift 2.45s cubic-bezier(.22,.75,.24,1) both!important;
-  pointer-events:none!important;
-  will-change:transform,opacity;
+ animation:canvasMenuLineReveal 2.7s cubic-bezier(.22,.7,.22,1) both!important;
+ transform-origin:top center;pointer-events:none!important;
+ will-change:transform,opacity,clip-path;
 }
-@keyframes canvasMenuWelcomeLift{
-  0%{transform:translateY(0) scale(.98);opacity:0;max-height:105px}
-  16%{transform:translateY(0) scale(1);opacity:1;max-height:105px}
-  48%{transform:translateY(0) scale(1);opacity:1;max-height:105px}
-  70%{transform:translateY(-34px) scale(.985);opacity:.85;max-height:90px}
-  100%{transform:translateY(-125px) scale(.94);opacity:0;max-height:0}
+@keyframes canvasMenuLineReveal{
+ 0%{transform:translateY(-18px) scaleY(.025);clip-path:inset(48% 3% 48% 3% round 30px);opacity:0;max-height:105px}
+  12%{transform:translateY(0) scaleY(.025);clip-path:inset(48% 3% 48% 3% round 30px);opacity:1;max-height:105px}
+  38%{transform:translateY(0) scaleY(1);clip-path:inset(0 0 0 0 round 24px);opacity:1;max-height:105px}
+  64%{transform:translateY(0) scaleY(1);clip-path:inset(0 0 0 0 round 24px);opacity:1;max-height:105px}
+  82%{transform:translateY(-35px) scaleY(.68);clip-path:inset(0 0 0 0 round 24px);opacity:.78;max-height:90px}
+  100%{transform:translateY(-130px) scaleY(.2);clip-path:inset(0 0 0 0 round 24px);opacity:0;max-height:0}
 }
 @media(prefers-reduced-motion:reduce){
-  .control.canvas-menu-boot-intro.navMotionCollapsed .controlHeader.controlHeaderCollapsed{animation:none!important;opacity:0;max-height:0;transform:translateY(-125px)}
+ .control.canvas-menu-boot-intro.navMotionCollapsed .controlHeader.controlHeaderCollapsed{animation:none!important;opacity:0;max-height:0;transform:translateY(-125px)}
 }
