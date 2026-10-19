@@ -1125,7 +1125,7 @@ main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button{
 
 /* Live Unified Stage: conversation floats over the bottom of the video.
    Overrides the earlier 50/50 split that hid the comments. */
-main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage{
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage{
  position:relative!important;display:block!important;
  grid-column:1!important;grid-row:1/-1!important;
  width:100%!important;height:100%!important;
@@ -1133,7 +1133,7 @@ main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage{
  margin:0 auto!important;padding:0!important;
  overflow:hidden!important;box-sizing:border-box!important;
 }
-main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveActualPlayer{
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveActualPlayer{
  position:absolute!important;inset:0!important;
  display:flex!important;width:100%!important;height:100%!important;
  max-width:100%!important;min-height:0!important;
@@ -1141,7 +1141,7 @@ main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveA
  overflow:hidden!important;box-sizing:border-box!important;
  border-radius:20px!important;
 }
-main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveViewerConversation{
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
  position:absolute!important;left:3%!important;right:3%!important;
  bottom:2%!important;top:auto!important;z-index:35!important;
  display:block!important;width:94%!important;
@@ -1154,7 +1154,7 @@ main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveV
  -webkit-backdrop-filter:blur(14px)!important;
  box-sizing:border-box!important;
 }
-main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage .homeLivePlayerSideControls{
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage .homeLivePlayerSideControls{
  z-index:32!important;
 }
 @media(max-width:759px){
@@ -1163,12 +1163,12 @@ main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage .homeLivePla
   align-items:center!important;justify-content:stretch!important;
   gap:0!important;padding:4px!important;
  }
- main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage{
+ main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage{
   flex:1 1 auto!important;align-self:center!important;
   min-height:0!important;height:100%!important;
   width:100%!important;max-width:100%!important;
  }
- main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveViewerConversation{
+ main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
   max-height:44%!important;
  }
 }
@@ -1243,7 +1243,7 @@ main[class*="control"] [data-widget="Live"]{
  position:relative!important;display:block!important;
  overflow:hidden!important;min-width:0!important;
 }
-main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage{
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage{
  position:absolute!important;inset:5px!important;
  width:auto!important;height:auto!important;
  min-height:0!important;max-height:none!important;
@@ -1251,18 +1251,18 @@ main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage{
  opacity:1!important;visibility:visible!important;
  pointer-events:auto!important;transform:none!important;
 }
-main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveActualPlayer{
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveActualPlayer{
  display:block!important;position:absolute!important;inset:0!important;
  opacity:1!important;visibility:visible!important;z-index:1!important;
 }
-main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage .homeLiveActualIdle{
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage .homeLiveActualIdle{
  display:flex!important;position:absolute!important;inset:0!important;
  flex-direction:column!important;align-items:center!important;
  justify-content:center!important;gap:12px!important;
  visibility:visible!important;opacity:1!important;z-index:3!important;
  background:rgba(0,24,20,.48)!important;
 }
-main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveViewerConversation{
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
  display:block!important;position:absolute!important;
  bottom:9px!important;left:3%!important;right:3%!important;
  width:94%!important;height:auto!important;max-height:39%!important;
@@ -1272,7 +1272,7 @@ main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveV
  border:1px solid rgba(226,198,125,.38)!important;
  backdrop-filter:blur(11px)!important;-webkit-backdrop-filter:blur(11px)!important;
 }
-main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage > .homeLiveStreamCarousel{
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveStreamCarousel{
  z-index:45!important;visibility:visible!important;opacity:1!important;
 }
 main[class*="control"] [data-widget="Live"] > [class*="widgetCrown"]{
@@ -1281,7 +1281,7 @@ main[class*="control"] [data-widget="Live"] > [class*="widgetCrown"]{
 
 /* 1Muslim approved Live composition: 3-layer stage, no fabricated streams. */
 main[class*="control"] [data-widget="Live"]{position:relative!important;isolation:isolate!important;overflow:hidden!important}
-main[class*="control"] [data-widget="Live"] > .homeLiveUnifiedStage{
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage{
 position:absolute!important;inset:4px!important;width:auto!important;height:auto!important;
 display:block!important;overflow:hidden!important;z-index:20!important;opacity:1!important;
 visibility:visible!important;border-radius:22px!important;background:rgba(0,20,17,.12)!important;
