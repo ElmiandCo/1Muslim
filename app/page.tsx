@@ -124,7 +124,8 @@ export default function Home(){
  soundTimers.push(setTimeout(()=>playTone(85,.55,.055,"sine",55),80));
  soundTimers.push(setTimeout(()=>playTone(340,.48,.025,"triangle",120),260));
  for(let n=0;n<24;n++){soundTimers.push(setTimeout(()=>{playTone(690+(n%4)*100,.095,.012,"sine",420);if(n%4===0)playTone(180,.22,.014,"triangle",110)},300*(n+1)))}
- soundTimers.push(setTimeout(()=>{playTone(520,.45,.038);setTimeout(()=>playTone(780,.55,.03),145)},7450));window.addEventListener("pointerdown",start,{once:true});const revealTimer=window.setTimeout(()=>setCanvasRevealStarted(true),Math.max(1000,duration-3000));const timer=window.setTimeout(()=>{setCanvasBooting(false);audio.pause();window.removeEventListener("pointerdown",start)},duration);return()=>{clearTimeout(revealTimer);clearTimeout(timer);audio.pause();soundTimers.forEach(clearTimeout);void fxCtx?.close();window.removeEventListener("pointerdown",start)}},[]);
+ // A single birdlike chirp confirms the signed-in member's identity.
+ soundTimers.push(setTimeout(()=>{if(homeSignedIn)playTone(1550,.19,.045,"sine",2450)},7450));window.addEventListener("pointerdown",start,{once:true});const revealTimer=window.setTimeout(()=>setCanvasRevealStarted(true),Math.max(1000,duration-3000));const timer=window.setTimeout(()=>{setCanvasBooting(false);audio.pause();window.removeEventListener("pointerdown",start)},duration);return()=>{clearTimeout(revealTimer);clearTimeout(timer);audio.pause();soundTimers.forEach(clearTimeout);void fxCtx?.close();window.removeEventListener("pointerdown",start)}},[]);
  const verticalSwipeStart=useRef<{x:number;y:number;row:number;height:number;locked:boolean;portal:HTMLElement|null;scene:HTMLElement|null}|null>(null);
  const verticalDragRef=useRef(0);
  const clearVerticalDrag=(start:NonNullable<typeof verticalSwipeStart.current>,commit:boolean,dy=0)=>{
