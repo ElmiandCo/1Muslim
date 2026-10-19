@@ -616,3 +616,48 @@
  .fillArea>.canvasHeaderTitle{left:15px!important;right:60px!important;height:32px!important}
  .fillArea>.canvasExpandHandle{margin-right:14px!important}
 }
+
+
+/* Orb background experiment — non-Qur'an workspaces only.
+   CSS gradients avoid fetching the per-slide PNG artwork. */
+.slide:not([data-workspace-page="1"]) .night,
+.slide:not([data-workspace-page="1"]) .day{
+ background-image:none!important;
+ background-color:transparent!important;
+ filter:none!important;
+}
+.slide:not([data-workspace-page="1"]) .scene{
+ background:radial-gradient(ellipse at 50% 45%,#0d3a2c 0%,#071c17 46%,#030d0c 100%)!important;
+}
+:global(html.light) .slide:not([data-workspace-page="1"]) .scene{
+ background:radial-gradient(ellipse at 50% 45%,#c6e7cf 0%,#78bba0 52%,#316a59 100%)!important;
+}
+.slide:not([data-workspace-page="1"]) .scene::before{
+ content:"";position:absolute;inset:-30%;z-index:1;pointer-events:none;
+ background:
+ radial-gradient(circle at 50% 50%,rgba(42,243,168,.50) 0 3%,rgba(31,186,137,.18) 10%,transparent 28%),
+ radial-gradient(circle at 28% 34%,rgba(135,242,195,.33) 0 5%,transparent 24%),
+ radial-gradient(circle at 73% 62%,rgba(211,177,94,.23) 0 4%,transparent 22%),
+ radial-gradient(circle at 56% 78%,rgba(50,177,143,.28) 0 3%,transparent 19%),
+ radial-gradient(circle at 79% 22%,rgba(133,218,179,.19) 0 2%,transparent 17%);
+ transform:scale(.2);opacity:0;
+ animation:orbCanvasBurst 1300ms cubic-bezier(.17,.8,.2,1) both,orbCanvasDrift 22s ease-in-out 1300ms infinite alternate;
+ will-change:transform;
+}
+:global(html.light) .slide:not([data-workspace-page="1"]) .scene::before{
+ filter:hue-rotate(-12deg) saturate(.85);
+}
+@keyframes orbCanvasBurst{
+ 0%{transform:scale(.2) rotate(-8deg);opacity:0}
+ 40%{opacity:.88}
+ 100%{transform:scale(1) rotate(0deg);opacity:.85}
+}
+@keyframes orbCanvasDrift{
+ 0%{transform:translate3d(-2%,1%,0) scale(1)}
+ 100%{transform:translate3d(2%,-2%,0) scale(1.08)}
+}
+@media(prefers-reduced-motion:reduce){
+ .slide:not([data-workspace-page="1"]) .scene::before{
+  animation:none!important;transform:none!important;opacity:.75!important;will-change:auto!important
+ }
+}
