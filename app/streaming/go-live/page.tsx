@@ -1007,6 +1007,47 @@ export default function GoLivePage() {
         }
         @media(min-width:851px){.preliveInspire,.preliveIdentity,.preliveMobileActions{display:none!important}}
 
+
+        /* Cinematic Live Studio — compact camera-first mobile composition.
+           Camera/media/LiveKit state and existing handlers are intentionally preserved. */
+        @media(max-width:850px){
+          .goLive{background:#030806!important}
+          .preview{background:radial-gradient(ellipse at 50% 42%,#16352a 0%,#07140e 42%,#010604 100%)!important}
+          .preview:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:4;background:linear-gradient(180deg,#01070590 0%,transparent 20%,transparent 54%,#01080680 78%,#010806ee 100%)}
+          .preview video{position:relative;z-index:1}
+          .placeholder{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;gap:7px;color:#bed0c5;font-size:12px;letter-spacing:.02em}
+          .placeholder .cameraIcon{display:grid;place-items:center;width:64px;height:64px;border:1px solid #d5b97b66;border-radius:50%;font-size:32px;color:#dfc78c;background:#0b241b99;box-shadow:0 0 38px #12a87019;margin-bottom:6px}
+          .immersiveHeader{min-height:0!important;padding:calc(10px + env(safe-area-inset-top)) 18px 10px!important;border:0!important;background:linear-gradient(#010705b8,transparent)!important;backdrop-filter:none!important;gap:10px}
+          .immersiveHeader a{width:40px;min-width:40px;height:40px;min-height:40px;padding:0!important;border:0!important;background:#08130b88!important;font-size:23px}
+          .immersiveHeader strong{font-size:15px!important;font-weight:800!important;letter-spacing:.015em!important;text-shadow:0 2px 8px #000a}
+          .immersiveHeader button{min-width:42px!important;min-height:40px!important;padding:8px 12px!important;border:1px solid #ffffff42!important;background:#071b14a6!important;font-size:12px!important;backdrop-filter:blur(12px)}
+          .preliveInspire{display:none!important}
+          .preliveIdentity{bottom:calc(178px + env(safe-area-inset-bottom))!important;left:18px!important;right:18px!important;min-height:56px;padding:7px 10px!important;border:1px solid #ffffff2d!important;border-radius:16px!important;background:#06140e99!important;box-shadow:0 8px 28px #0004;backdrop-filter:blur(22px)!important;z-index:25}
+          .preliveIdentityIcon{width:34px!important;height:34px!important;border:1px solid #e4c68766!important;background:#10382a!important;color:#e9d09b!important}
+          .preliveTitleButton small{color:#b4d5c2!important;font-size:9px!important;letter-spacing:.09em}
+          .preliveTitleButton strong{font-size:clamp(14px,4vw,17px)!important;letter-spacing:-.02em}
+          .preliveVisibility{border:1px solid #ffffff44!important;background:#10291c99!important;font-size:11px!important;padding:9px 10px!important}
+          .preliveMobileActions{left:18px!important;right:18px!important;bottom:calc(13px + env(safe-area-inset-bottom))!important;gap:12px!important;z-index:28}
+          .preliveGoButton{min-height:56px!important;border:1px solid #dbb97688!important;border-radius:999px!important;background:linear-gradient(105deg,#078758,#0abf7c 55%,#078458)!important;box-shadow:0 8px 30px #0007,0 0 24px #08c27a44!important;font-size:19px!important;font-weight:800!important;letter-spacing:.015em;transition:transform .2s ease,filter .2s ease}
+          .preliveGoButton:active{transform:scale(.975)}
+          .preliveGoButton:disabled{opacity:.6;box-shadow:none!important}
+          .preliveQuickOptions{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+          .preliveQuickOptions button{min-height:54px!important;padding:7px 2px!important;flex-direction:column!important;gap:3px!important;border:0!important;border-radius:13px!important;background:#071b1399!important;backdrop-filter:blur(10px);box-shadow:none!important}
+          .preliveQuickOptions button span{font-size:21px!important}
+          .preliveQuickOptions button strong{font-size:10px!important;font-weight:650!important}
+          .preliveQuickOptions button small{display:none!important}
+          .previewOverlayTools{top:auto!important;bottom:calc(285px + env(safe-area-inset-bottom))!important;right:16px!important;gap:12px!important;transform:none!important;z-index:26!important}
+          .previewOverlayTools button{width:42px!important;height:42px!important;border:1px solid #ffffff44!important;background:#071810a6!important;box-shadow:0 4px 16px #0006!important;backdrop-filter:blur(14px)!important;font-size:19px!important}
+          .settingsOpen .layout>.form{border:1px solid #d8bd7966!important;border-radius:24px!important;background:#071810f7!important;backdrop-filter:blur(26px)!important}
+          .settingsOpen .preliveMobileActions,.settingsOpen .preliveIdentity{visibility:hidden!important}
+        }
+        @media(max-width:850px) and (max-height:680px){
+          .preliveIdentity{bottom:calc(153px + env(safe-area-inset-bottom))!important}
+          .preliveMobileActions{gap:6px!important}
+          .preliveQuickOptions button{min-height:44px!important}
+          .preliveGoButton{min-height:50px!important}
+          .previewOverlayTools{bottom:calc(245px + env(safe-area-inset-bottom))!important}
+        }
         @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 
@@ -1050,7 +1091,7 @@ export default function GoLivePage() {
             </div>
             <div className="preliveMobileActions" aria-label="Pre-live creator controls">
               {!live && <>
-                <button type="button" className="preliveGoButton" disabled={saving || connectingLive || !cameraReady} onClick={()=>void startLive(false)}>{connectingLive?"Connecting to LiveKit…":cameraReady?"◉ GO LIVE":"Enable Camera to Go Live"}</button>
+                <button type="button" className="preliveGoButton" disabled={saving || connectingLive} onClick={()=>cameraReady?void startLive(false):void startPreview()}>{connectingLive?"Connecting to LiveKit…":cameraReady?"Go LIVE":"Enable Camera"}</button>
                 <div className="preliveQuickOptions">
                   <button type="button" onClick={toggleMic} aria-pressed={micOn}><span aria-hidden="true">🎙</span><strong>Voice Chat</strong><small>{micOn?"On":"Off"}</small></button>
                   <button type="button" onClick={()=>void flipCamera()}><span aria-hidden="true">▣</span><strong>Device Camera</strong><small>{facingMode==="user"?"Front":"Back"}</small></button>
