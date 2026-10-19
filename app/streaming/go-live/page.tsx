@@ -787,7 +787,12 @@ export default function GoLivePage() {
       pendingRoom = room;
       // Do not leave a phantom live stream visible if LiveKit signalling fails.
       try {
-        await room.connect(tokenData.url, tokenData.token, {autoSubscribe:true, maxRetries:3});
+        // Pre-warm the LiveKit Cloud region route before opening the signal socket.
+        // LiveKit's SDK can then choose an available region if the initial edge fails.
+        try { await room.prepareConnection(tokenData.url, tokenData.token); } catch (warmupError) {
+          console.warn("LiveKit region warmup failed; attempting direct connection", warmupError);
+        }
+        await room.connect(tokenData.url, tokenData.token, {autoSubscribe:true, maxRetries:5, websocketTimeout:20000});
       } catch (connectionError) {
         room.disconnect();
         await supabase.from("live_streams").update({status:"ended",ended_at:new Date().toISOString()}).eq("id",liveStreamId);
