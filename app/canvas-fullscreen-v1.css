@@ -1572,3 +1572,58 @@ main[class*="control"] .canvas-header-brand-link strong{white-space:nowrap}
 @keyframes liveCarouselFromRight{from{opacity:.5;transform:translate3d(26px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @keyframes liveCarouselFromLeft{from{opacity:.5;transform:translate3d(-26px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @media(prefers-reduced-motion:reduce){.portraitLiveDemoSpinner,.oneMuslimLiveStage.liveCarouselEnterNext .oneMuslimLiveTop,.oneMuslimLiveStage.liveCarouselEnterNext .oneMuslimLiveBottom,.oneMuslimLiveStage.liveCarouselEnterPrevious .oneMuslimLiveTop,.oneMuslimLiveStage.liveCarouselEnterPrevious .oneMuslimLiveBottom{animation:none!important}}
+
+/* Portrait story framing: transparent side wings, rounded phone frame and edge fade.
+   Carousel arrows remain on their original side positions. */
+.oneMuslimLiveStage.livePortraitDemoStage .oneMuslimLiveVideo{
+ overflow:visible!important;
+ background:transparent!important;
+ border-color:transparent!important;
+ box-shadow:none!important;
+}
+.oneMuslimLiveStage.livePortraitDemoStage .portraitLiveDemo{
+ background:transparent!important;
+ overflow:visible!important;
+ border-radius:0!important;
+}
+.oneMuslimLiveStage.livePortraitDemoStage .portraitLiveDemoScreen{
+ width:auto!important;
+ max-width:min(74%,calc(100% - 112px))!important;
+ height:100%!important;
+ aspect-ratio:9/16!important;
+ border:1px solid rgba(223,191,119,.5)!important;
+ border-radius:28px!important;
+ overflow:hidden!important;
+ isolation:isolate;
+ background:radial-gradient(ellipse at 50% 30%,#166247,#041b15 72%,#020c0a)!important;
+ box-shadow:0 14px 36px rgba(0,0,0,.25)!important;
+}
+.oneMuslimLiveStage.livePortraitDemoStage .portraitLiveDemoScreen::after{
+ content:"";position:absolute;inset:0;pointer-events:none;z-index:4;
+ border-radius:inherit;
+ background:linear-gradient(90deg,rgba(0,0,0,.28),transparent 13%,transparent 87%,rgba(0,0,0,.28)),linear-gradient(0deg,rgba(0,0,0,.35),transparent 14%,transparent 86%,rgba(0,0,0,.24));
+}
+.oneMuslimLiveStage.livePortraitDemoStage .portraitLiveDemoSpinner{
+ position:relative;width:62px;height:62px;
+ border:0!important;
+ display:grid;place-items:center;
+ background:rgba(9,185,114,.24);
+ box-shadow:0 0 0 2px rgba(84,237,173,.4),0 0 22px rgba(30,221,142,.3);
+ animation:portraitLiveBeacon 1.5s ease-in-out infinite!important;
+}
+.oneMuslimLiveStage.livePortraitDemoStage .portraitLiveDemoSpinner::after{
+ content:"▶";font-size:26px;color:#e9fff1;transform:translateX(2px);
+}
+@keyframes portraitLiveBeacon{
+ 0%,100%{opacity:.55;box-shadow:0 0 0 2px rgba(84,237,173,.25),0 0 8px rgba(30,221,142,.12);transform:scale(.96)}
+ 50%{opacity:1;box-shadow:0 0 0 9px rgba(84,237,173,.10),0 0 30px rgba(30,221,142,.55);transform:scale(1.04)}
+}
+@media(max-width:767px){
+ .oneMuslimLiveStage.livePortraitDemoStage .portraitLiveDemoScreen{
+  max-width:min(74%,calc(100% - 100px))!important;
+  border-radius:24px!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .oneMuslimLiveStage.livePortraitDemoStage .portraitLiveDemoSpinner{animation:none!important;opacity:1!important}
+}
