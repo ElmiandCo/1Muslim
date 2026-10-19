@@ -1731,3 +1731,21 @@
 .control .islamicDecoration{display:block!important;visibility:visible!important;opacity:1!important;animation:none!important}
 .control .islamicDecoration .decorationDay{display:block!important;visibility:visible!important;opacity:.58!important;animation:none!important;transition:none!important}
 .control .islamicDecoration .decorationNight{opacity:0!important}
+
+/* The real menu briefly introduces itself during Canvas boot, then lifts away.
+   This overrides only the header entrance; Canvas, decoration, actions and dock stay unchanged. */
+.control.canvas-menu-boot-intro.navMotionCollapsed .controlHeader.controlHeaderCollapsed{
+  animation:canvasMenuWelcomeLift 2.45s cubic-bezier(.22,.75,.24,1) both!important;
+  pointer-events:none!important;
+  will-change:transform,opacity;
+}
+@keyframes canvasMenuWelcomeLift{
+  0%{transform:translateY(0) scale(.98);opacity:0;max-height:105px}
+  16%{transform:translateY(0) scale(1);opacity:1;max-height:105px}
+  48%{transform:translateY(0) scale(1);opacity:1;max-height:105px}
+  70%{transform:translateY(-34px) scale(.985);opacity:.85;max-height:90px}
+  100%{transform:translateY(-125px) scale(.94);opacity:0;max-height:0}
+}
+@media(prefers-reduced-motion:reduce){
+  .control.canvas-menu-boot-intro.navMotionCollapsed .controlHeader.controlHeaderCollapsed{animation:none!important;opacity:0;max-height:0;transform:translateY(-125px)}
+}
