@@ -1512,3 +1512,34 @@ button.homeAuthSignIn [class*="liveDockDot"]{background:#27ff7e!important;box-sh
 /* Alternating auth actions: signed out = green Sign In, signed in = green Go Live. */
 main[class*="control"] .introActionDock a.homeGoLiveSignedIn{background:linear-gradient(135deg,#078b45,#014b2d)!important;border:1px solid #36f27b!important;box-shadow:0 0 18px rgba(8,255,108,.45)!important;color:#fff!important}
 main[class*="control"] .introActionDock a.homeGoLiveSignedIn [class*="liveDockDot"]{background:#21ff70!important;box-shadow:0 0 12px #21ff70!important}
+
+/* Auth colors: target the actual CSS-module dock using stable auth classes. */
+main[class*="control"] button.homeAuthSignOut{
+ background:#090b0b!important;border-color:#55645c!important;color:#fff!important;
+ animation:homeSignOutBlink 1.6s ease-in-out infinite!important;
+}
+main[class*="control"] a.homeGoLiveSignedIn,
+main[class*="control"] a[class*="introLiveButton"].homeGoLiveSignedIn{
+ background:linear-gradient(135deg,#079a4b,#005e36)!important;
+ border:1px solid #36f27b!important;color:white!important;
+ box-shadow:0 0 18px rgba(8,255,108,.45)!important;
+}
+main[class*="control"] a.homeGoLiveSignedIn [class*="liveDockDot"]{
+ background:#21ff70!important;box-shadow:0 0 12px #21ff70!important;
+}
+/* Place the interactive day/night orb exactly where the header logo lived. */
+main[class*="control"] .canvas-header-theme-orb{
+ display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;
+ position:relative;z-index:20;pointer-events:auto;
+}
+main[class*="control"] .canvas-header-theme-orb button{
+ pointer-events:auto;cursor:pointer;
+}
+main[class*="control"] .canvas-header-brand-link{
+ display:flex;flex-direction:column;justify-content:center;
+ text-decoration:none;color:inherit;min-width:0;
+}
+main[class*="control"] .canvas-header-brand-link strong{white-space:nowrap}
+@media(prefers-reduced-motion:reduce){
+ main[class*="control"] button.homeAuthSignOut{animation:none!important}
+}
