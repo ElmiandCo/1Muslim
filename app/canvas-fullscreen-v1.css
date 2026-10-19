@@ -1928,19 +1928,21 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 @keyframes canvasBootAppear{from{opacity:0}to{opacity:1}}@keyframes canvasBootBreath{50%{transform:scale(1.14);opacity:.65}}@keyframes canvasBootDots{50%{transform:translateY(-8px);opacity:.4}}
 @media(prefers-reduced-motion:reduce){.canvas-boot-curtain,.canvas-boot-mark,.canvas-boot-loading i,.canvas-boot-curtain::before{animation:none}}
 
-/* Playful moving peephole: black curtain starts opening beside the Go Live/auth dock,
-   drifts over the live player, then grows until the entire Canvas is revealed. */
-.canvas-boot-curtain.canvas-boot-revealing{animation:canvasBootUnmask 3s cubic-bezier(.42,0,.15,1) both;will-change:clip-path}
-.canvas-boot-revealing .canvas-boot-mark,.canvas-boot-revealing .canvas-boot-label,.canvas-boot-revealing .canvas-boot-loading{animation:canvasBootContentOut .6s ease both}
-@keyframes canvasBootUnmask{
-  0%{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 0);opacity:1}
-  8%{clip-path:circle(130% at 91% 7%);opacity:1}
-  25%{clip-path:circle(96% at 91% 7%);opacity:1}
-  42%{clip-path:circle(82% at 69% 22%);opacity:1}
-  58%{clip-path:circle(63% at 35% 43%);opacity:1}
-  74%{clip-path:circle(45% at 66% 62%);opacity:.7}
-  100%{clip-path:circle(0% at 50% 50%);opacity:0}
+
+/* A moving transparent peephole opens in the black Canvas curtain,
+   starting beside the Go Live / Sign In-Out dock, then reveals the player. */
+.canvas-boot-curtain.canvas-boot-revealing{background:transparent;animation:canvasBootCurtainFade 3s ease both;overflow:hidden}
+.canvas-boot-revealing::after{content:"";position:absolute;left:90%;top:4%;width:0;height:0;border-radius:50%;background:transparent;box-shadow:0 0 0 200vmax #030505;transform:translate(-50%,-50%);animation:canvasBootHole 3s cubic-bezier(.4,0,.2,1) both;pointer-events:none}
+.canvas-boot-revealing .canvas-boot-mark,.canvas-boot-revealing .canvas-boot-label,.canvas-boot-revealing .canvas-boot-loading{animation:canvasBootContentOut .45s ease both}
+@keyframes canvasBootHole{
+  0%{left:90%;top:4%;width:0;height:0}
+  16%{left:90%;top:6%;width:40px;height:40px}
+  38%{left:73%;top:24%;width:90px;height:90px}
+  58%{left:38%;top:44%;width:175px;height:175px}
+  78%{left:63%;top:60%;width:75vmax;height:75vmax}
+  100%{left:50%;top:50%;width:320vmax;height:320vmax}
 }
+@keyframes canvasBootCurtainFade{0%,88%{opacity:1}100%{opacity:0}}
 @keyframes canvasBootContentOut{to{opacity:0;transform:translateY(-12px) scale(.92)}}
-@media(prefers-reduced-motion:reduce){.canvas-boot-curtain.canvas-boot-revealing{animation:canvasBootReduced .3s ease forwards!important}}
+@media(prefers-reduced-motion:reduce){.canvas-boot-curtain.canvas-boot-revealing{animation:canvasBootReduced .3s ease forwards!important}.canvas-boot-revealing::after{animation:none!important;display:none}}
 @keyframes canvasBootReduced{to{opacity:0}}
