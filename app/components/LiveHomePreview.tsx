@@ -8,7 +8,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
  const [ready,setReady]=useState(false);
  const [failure,setFailure]=useState("");
  const [attempt,setAttempt]=useState(0);
- const [visible,setVisible]=useState(true);
+ 
  useEffect(()=>{
   if(!roomName)return;
   setReady(false);
@@ -44,8 +44,8 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
   })();
   return()=>{active=false;room.removeAllListeners();void room.disconnect();if(video.current)video.current.srcObject=null};
  },[roomName,attempt]);
- useEffect(()=>{const refresh=()=>{if(document.visibilityState==="visible"){setVisible(true);setAttempt(n=>n+1)}else setVisible(false)};document.addEventListener("visibilitychange",refresh);window.addEventListener("focus",refresh);return()=>{document.removeEventListener("visibilitychange",refresh);window.removeEventListener("focus",refresh)}},[]);
- useEffect(()=>{if(ready)return;const timer=window.setTimeout(()=>setAttempt(n=>n+1),5000);return()=>clearTimeout(timer)},[ready,attempt,roomName]);
+ useEffect(()=>{const refresh=()=>{if(document.visibilityState==="visible"){setAttempt(n=>n+1)}};document.addEventListener("visibilitychange",refresh);window.addEventListener("focus",refresh);return()=>{document.removeEventListener("visibilitychange",refresh);window.removeEventListener("focus",refresh)}},[]);
+ useEffect(()=>{if(ready)return;const timer=window.setTimeout(()=>setAttempt(n=>n+1),1800);return()=>clearTimeout(timer)},[ready,attempt,roomName]);
  return <span style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:170,overflow:"hidden",borderRadius:12}}>
   <video ref={video} autoPlay muted playsInline aria-label="Live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:170,objectFit:"cover",background:"transparent",opacity:ready?1:0}}/>
   {!ready&&<span style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{failure?"Reconnecting to live video…":"Connecting to live…"}</span>}
