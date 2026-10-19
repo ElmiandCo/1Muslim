@@ -86,8 +86,8 @@ export default function Home(){
  const [liveCarouselMotion,setLiveCarouselMotion]=useState<"next"|"previous"|null>(null);
  const carouselMotionTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const demoPortraitSlot=livePreviews.length<2;
- const liveCarouselCount=livePreviews.length+(demoPortraitSlot?1:0);
- const showPortraitDemo=demoPortraitSlot&&liveCarouselIndex===livePreviews.length;
+ const liveCarouselCount=Math.max(2,livePreviews.length+(demoPortraitSlot?1:0));
+ const showPortraitDemo=demoPortraitSlot&&liveCarouselIndex===(livePreviews.length||1);
  const navigateLiveCarousel=(direction:1|-1)=>{if(!liveCarouselCount)return;setLiveCarouselMotion(direction===1?"next":"previous");setLiveCarouselIndex(i=>(i+direction+liveCarouselCount)%liveCarouselCount);if(carouselMotionTimer.current)clearTimeout(carouselMotionTimer.current);carouselMotionTimer.current=setTimeout(()=>setLiveCarouselMotion(null),420)};
  useEffect(()=>()=>{if(carouselMotionTimer.current)clearTimeout(carouselMotionTimer.current)},[]);
  useEffect(()=>{setLiveCarouselIndex(i=>Math.min(i,livePreviews.length))},[livePreviews.length]);
