@@ -1073,3 +1073,52 @@ main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button{
 }
 /* Yellow-circled HudHud orb remains movable; keep it above the Live card. */
 .canvas-orb-floating-dock{z-index:2147482100!important;touch-action:none!important}
+
+/* Production mobile Live: exact 50/50 vertical allocation, centered in every Canvas state.
+   Grid rows = player region and conversation region. */
+@media(max-width:759px){
+ main[class*="control"] [data-widget="Live"]{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;
+  align-items:stretch!important;
+  justify-items:center!important;
+  align-content:stretch!important;
+  justify-content:center!important;
+  gap:0!important;
+  padding:4px!important;
+  width:100%!important;height:100%!important;min-height:0!important;
+  margin-inline:auto!important;
+  transform:none!important;
+ }
+ main[class*="control"] [data-widget="Live"] > .homeLiveActualPlayer{
+  grid-row:1!important;grid-column:1!important;
+  height:100%!important;min-height:0!important;
+  width:auto!important;max-width:100%!important;
+  aspect-ratio:9/16!important;
+  justify-self:center!important;align-self:center!important;
+  margin:0 auto!important;flex:none!important;
+  box-sizing:border-box!important;
+  overflow:visible!important;
+ }
+ main[class*="control"] [data-widget="Live"] > .homeLiveViewerConversation{
+  grid-row:2!important;grid-column:1!important;
+  width:100%!important;height:100%!important;
+  min-height:0!important;max-width:100%!important;
+  margin:0 auto!important;box-sizing:border-box!important;
+  overflow-y:auto!important;
+  justify-self:center!important;align-self:stretch!important;
+ }
+ main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls{
+  inset:0!important;overflow:visible!important;
+ }
+ main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button:first-child{
+  transform:translateX(-100%)!important;
+ }
+ main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button:last-child{
+  transform:translateX(100%)!important;
+ }
+ main[class*="control"] [data-widget="Live"] > :not(.homeLiveActualPlayer):not(.homeLiveViewerConversation){
+  display:none!important;
+ }
+}
