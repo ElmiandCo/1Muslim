@@ -95,6 +95,7 @@ export default function Home(){
  const [workspacePage,setWorkspacePage]=useState(0);
  const [canvasRow,setCanvasRow]=useState<0|1>(0);
  const verticalSwipeStart=useRef<{x:number;y:number}|null>(null);
+ useEffect(()=>{const onToggle=()=>setCanvasRow(row=>row===0?1:0);window.addEventListener("1muslim:vertical-panel-toggle",onToggle);return()=>window.removeEventListener("1muslim:vertical-panel-toggle",onToggle)},[]);
  const [quranPreview,setQuranPreview]=useState<{arabic:string;translation:string;chapter:number;verse:number;globalAyah:number}|null>(null);
  const [quranAudioPlaying,setQuranAudioPlaying]=useState(false);
  const [quranAudioLoading,setQuranAudioLoading]=useState(false);
