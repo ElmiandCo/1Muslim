@@ -1451,3 +1451,28 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
  display:flex!important;width:100%!important;height:100%!important;max-height:none!important;
  flex-direction:column!important;overflow:auto!important;background:transparent!important;
 }
+
+
+/* Rebuilt Live Canvas: one stage, two equal halves. Legacy widget CSS does not apply. */
+.canvas-vertical-main:has(> .oneMuslimLiveStage){position:relative!important;isolation:isolate!important}
+.canvas-vertical-main > .oneMuslimLiveStage{
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+ box-sizing:border-box!important;z-index:20!important;display:grid!important;
+ grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;gap:0!important;
+ padding:8px!important;overflow:hidden!important;opacity:1!important;visibility:visible!important;
+ background:transparent!important;
+}
+.oneMuslimLiveTop{min-width:0!important;min-height:0!important;position:relative!important;display:flex!important;flex-direction:column!important;gap:6px!important;overflow:hidden!important}
+.oneMuslimLiveCarousel{height:52px!important;flex:0 0 52px!important;display:flex!important;align-items:center!important;gap:12px!important;padding:4px 12px!important;border-radius:16px!important;background:rgba(0,30,25,.55)!important;backdrop-filter:blur(10px)!important;color:#f8e7bd!important;font-size:13px!important}
+.oneMuslimLiveCarouselItems{display:flex!important;flex:1!important;min-width:0!important;gap:8px!important;overflow-x:auto!important;align-items:center!important;white-space:nowrap!important}
+.oneMuslimLiveCarouselItems button{border:1px solid #bba366!important;border-radius:12px!important;background:rgba(5,56,43,.65)!important;color:white!important;padding:8px!important}
+.oneMuslimLiveCarouselItems span{opacity:.78!important}
+.oneMuslimLiveVideo{position:relative!important;flex:1 1 auto!important;min-height:0!important;min-width:0!important;display:flex!important;align-items:center!important;justify-content:center!important;border:1px solid rgba(222,187,103,.6)!important;border-radius:20px!important;overflow:hidden!important;background:rgba(0,25,23,.7)!important}
+.oneMuslimLiveVideo video{width:100%!important;height:100%!important;object-fit:contain!important}
+.oneMuslimLiveIdle{position:absolute!important;inset:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:16px!important;color:white!important}
+.oneMuslimLivePlay{width:100px!important;height:100px!important;border-radius:50%!important;display:grid!important;place-items:center!important;background:#ae2639!important;box-shadow:0 0 0 15px rgba(174,38,57,.22)!important;color:white!important;font-size:36px!important;text-decoration:none!important}
+.oneMuslimLiveArrows{position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;pointer-events:none!important;padding:0 6px!important}
+.oneMuslimLiveArrows button{pointer-events:auto!important;width:42px!important;height:42px!important;border-radius:50%!important;border:1px solid #c4aa6b!important;background:rgba(0,60,49,.65)!important;color:white!important;font-size:28px!important}
+.oneMuslimLiveWatch{position:absolute!important;bottom:8px!important;left:12px!important;color:white!important;background:rgba(0,45,35,.8)!important;padding:7px 12px!important;border-radius:10px!important}
+.oneMuslimLiveBottom{min-width:0!important;min-height:0!important;display:flex!important;overflow:hidden!important;padding:6px 0 0!important}
+.oneMuslimLiveBottom > *{display:flex!important;flex:1 1 auto!important;min-height:0!important;min-width:0!important;overflow:auto!important;background:rgba(0,45,35,.4)!important;backdrop-filter:blur(12px)!important;border:1px solid rgba(222,187,103,.55)!important;border-radius:20px!important}
