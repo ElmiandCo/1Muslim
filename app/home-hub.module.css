@@ -1661,3 +1661,29 @@
  }
 }
 
+
+/* Day mode: bright ivory/white navigation, preserving night-mode emerald styling. */
+.control.day .controlHeader:not(.controlHeaderCollapsed){
+ background:linear-gradient(145deg,rgba(255,255,250,.97),rgba(239,247,237,.95))!important;
+ border-color:rgba(183,154,93,.8)!important;
+ box-shadow:0 12px 34px rgba(40,65,49,.19),inset 0 1px rgba(255,255,255,.95)!important;
+ color:#174535!important;
+}
+.control.day .controlHeader:not(.controlHeaderCollapsed)::before{
+ background:linear-gradient(135deg,rgba(255,255,255,.48),rgba(215,232,215,.14))!important;
+}
+.control.day .controlHeader .brand strong{
+ color:#174535!important;text-shadow:none!important;
+}
+.control.day .controlHeader .searchDock{
+ background:linear-gradient(145deg,#fffef7,#e8f1e8)!important;
+ border-color:#bca36c!important;
+ box-shadow:inset 0 1px 4px rgba(31,78,53,.09),0 1px rgba(255,255,255,.9)!important;
+}
+.control.day .controlHeader .searchDock input{color:#173d2d!important}
+.control.day .controlHeader .searchDock input::placeholder{color:#597568!important}
+.control.day .controlHeader .searchDock a,
+.control.day .controlHeader .searchDock button{color:#456a50!important}
+.control.day .controlHeader .headerActions>*{
+ background:#fffef5!important;color:#1a4938!important;border-color:#b7a477!important;
+}
