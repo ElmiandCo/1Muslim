@@ -73,7 +73,7 @@ export default function Home(){
  const [introAvatarStyle,setIntroAvatarStyle]=useState("default");
  const [introAvatarGender,setIntroAvatarGender]=useState<"male"|"female">("male");
  const [introImageFailed,setIntroImageFailed]=useState(false);
- const introScanFiles=["default-men.png","silver-avatar-female.jpg","gold-avatar-male.PNG","water-avatar-female.PNG","default-women.png","silver-avatar-male.jpg","gold-avatar-female.PNG","water-avatar-male.PNG","default-men.png","gold-avatar-female.PNG","water-avatar-male.PNG","silver-avatar-female.jpg"];
+ const introScanFiles=["default-men.png","silver-avatar-female.jpg","gold-avatar-male.PNG","water-avatar-female.PNG","default-women.png","silver-avatar-male.jpg","gold-avatar-female.PNG","water-avatar-male.PNG","gold-avatar-male.PNG","default-women.png","water-avatar-male.PNG","silver-avatar-female.jpg","default-men.png","gold-avatar-female.PNG","silver-avatar-male.jpg","water-avatar-female.PNG","default-women.png","gold-avatar-male.PNG","silver-avatar-female.jpg","water-avatar-male.PNG","gold-avatar-female.PNG","default-men.png","water-avatar-female.PNG","silver-avatar-male.jpg"];
  const [introScanIndex,setIntroScanIndex]=useState(0);
  const [introScanComplete,setIntroScanComplete]=useState(false);
 
@@ -115,7 +115,7 @@ export default function Home(){
  const [elmTentDoorOpen,setElmTentDoorOpen]=useState(false);
  const [canvasBooting,setCanvasBooting]=useState(true);
  const [canvasRevealStarted,setCanvasRevealStarted]=useState(false);
- useEffect(()=>{if(!canvasBooting)return;setIntroScanIndex(0);setIntroScanComplete(false);let index=0;let timer:ReturnType<typeof setTimeout>;const advance=()=>{index++;if(index>=introScanFiles.length){setIntroScanComplete(true);return}setIntroScanIndex(index);timer=setTimeout(advance, index<7?190:index<10?290:450)};timer=setTimeout(advance,180);return()=>clearTimeout(timer)},[canvasBooting]);
+ useEffect(()=>{if(!canvasBooting)return;setIntroScanIndex(0);setIntroScanComplete(false);let index=0;let timer:ReturnType<typeof setTimeout>;const advance=()=>{index++;if(index>=introScanFiles.length){setIntroScanComplete(true);return}setIntroScanIndex(index);timer=setTimeout(advance, index<16?200:index<21?260:360)};timer=setTimeout(advance,200);return()=>clearTimeout(timer)},[canvasBooting]);
  const canvasIntroAudio=useRef<HTMLAudioElement|null>(null);
  useEffect(()=>{const duration=8500+Math.floor(Math.random()*1501);const audio=new Audio(Math.random()<.5?"/audio/hudhud-welcome.mp3":"/audio/nasheed.mp3");audio.volume=.15;audio.preload="auto";canvasIntroAudio.current=audio;const start=()=>{if(audio.paused)void audio.play().catch(()=>{})};start();window.addEventListener("pointerdown",start,{once:true});const revealTimer=window.setTimeout(()=>setCanvasRevealStarted(true),Math.max(1000,duration-3000));const timer=window.setTimeout(()=>{setCanvasBooting(false);audio.pause();window.removeEventListener("pointerdown",start)},duration);return()=>{clearTimeout(revealTimer);clearTimeout(timer);audio.pause();window.removeEventListener("pointerdown",start)}},[]);
  const verticalSwipeStart=useRef<{x:number;y:number;row:number;height:number;locked:boolean;portal:HTMLElement|null;scene:HTMLElement|null}|null>(null);
