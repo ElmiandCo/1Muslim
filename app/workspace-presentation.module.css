@@ -684,3 +684,11 @@
 }
 @keyframes quranOrbPulse{from{opacity:.35;transform:scale(.85)}to{opacity:.8;transform:scale(1.15)}}
 @media(prefers-reduced-motion:reduce){.quranSlide{animation:none!important;opacity:0!important;transform:none!important}.quranSlide:first-child{opacity:1!important}:global(html.light) .quranSlide:first-child{opacity:0!important}:global(html.light) .quranSlideDay:nth-child(2){opacity:1!important}.slide[data-workspace-page="1"] .scene::before{animation:none!important}}
+
+/* The home mosque image is always the first Quran scene; each later scene enters at 30s. */
+.quranSlide{animation-delay:calc(var(--quran-slide-index) * -30s)}
+.quranSlide{animation-delay:calc(var(--quran-slide-index) * 30s - 120s)}
+.quranSlide[style*="--quran-slide-index: 0"]{animation-delay:0s}
+.quranSlide[style*="--quran-slide-index: 1"]{animation-delay:-90s}
+.quranSlide[style*="--quran-slide-index: 2"]{animation-delay:-60s}
+.quranSlide[style*="--quran-slide-index: 3"]{animation-delay:-30s}
