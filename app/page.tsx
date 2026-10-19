@@ -123,8 +123,8 @@ export default function Home(){
  const [canvasRevealStarted,setCanvasRevealStarted]=useState(false);
  const [introQuickWelcome,setIntroQuickWelcome]=useState(false);
  const [introBackdropGone,setIntroBackdropGone]=useState(false);
- const [introStartedScanning,setIntroStartedScanning]=useState(false);
- useEffect(()=>{const t=window.setTimeout(()=>{if(!introScanLockRef.current)setIntroStartedScanning(true)},50);return()=>clearTimeout(t)},[]);
+ const [introStartedScanning,setIntroStartedScanning]=useState(true);
+ 
  useEffect(()=>{if(!canvasBooting||introScanLockRef.current)return;let cancelled=false;let timer:ReturnType<typeof setTimeout>;const files=introScanFiles.map(file=>"/assets/avatars/"+file);files.forEach(src=>{const img=new window.Image();img.src=src});setIntroScanIndex(0);let index=0;const advance=()=>{if(cancelled||introScanLockRef.current)return;index++;if(index>=introScanFiles.length){index=0}setIntroScanIndex(index);timer=setTimeout(advance,300)};timer=setTimeout(advance,300);return()=>{cancelled=true;clearTimeout(timer)}},[canvasBooting]);
  const canvasIntroAudio=useRef<HTMLAudioElement|null>(null);
  useEffect(()=>{const duration=8500+Math.floor(Math.random()*1501);const audio=new Audio("/audio/hudhud-welcome.mp3");audio.volume=.10;audio.preload="auto";canvasIntroAudio.current=audio;const fxCtx=typeof window!=="undefined"?new (window.AudioContext||((window as unknown as {webkitAudioContext:typeof AudioContext}).webkitAudioContext))():null;
