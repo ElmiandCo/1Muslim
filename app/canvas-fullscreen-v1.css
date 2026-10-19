@@ -964,3 +964,25 @@ main[class*="control"] .introActionDock button.homeAuthSignOut{
 @media(prefers-reduced-motion:reduce){
  main[class*="control"] .introActionDock button.homeAuthSignOut{animation:none!important}
 }
+
+/* LIVE Canvas reclaim: remove the redundant top preview strip (red marked).
+   The actual player, carousel, comments, and artwork remain visible.
+   No position shifts to the approved header or Go Live / Sign Out controls. */
+main[class*="control"] [data-widget="Live"] [class*="widgetTop"],
+main[class*="control"] [data-widget="Live"] [class*="widgetSmartPreview"],
+main[class*="control"] [data-widget="Live"] [class*="widgetDetails"],
+main[class*="control"] [data-widget="Live"] [class*="widgetFeatureDetail"]{
+ display:none!important;min-height:0!important;height:0!important;
+ margin:0!important;padding:0!important;border:0!important;
+}
+main[class*="control"] [data-widget="Live"]{
+ padding-top:4px!important;
+}
+main[class*="control"] [data-widget="Live"] .homeLiveActualPlayer{
+ margin-top:0!important;
+}
+/* Keep the crown text; hide only the extra action icon at its far right. */
+main[class*="control"] [data-widget="Live"] [class*="widgetCrown"] button,
+main[class*="control"] [data-widget="Live"] [class*="widgetCrown"] a{
+ display:none!important;
+}
