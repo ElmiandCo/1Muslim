@@ -1725,3 +1725,9 @@
 .control .decorationDay,.control.day .decorationDay{opacity:.58!important}
 .control .introActionDock{display:flex!important;visibility:visible!important;opacity:1!important;transform:none!important;animation:none!important;pointer-events:auto!important;z-index:90!important}
 .control .introActionDock .introLiveButton{display:inline-flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+
+/* Keep the gold decoration mounted and immediately visible alongside the action buttons,
+   including while the Canvas boot curtain is playing. Do not alter Canvas geometry. */
+.control .islamicDecoration{display:block!important;visibility:visible!important;opacity:1!important;animation:none!important}
+.control .islamicDecoration .decorationDay{display:block!important;visibility:visible!important;opacity:.58!important;animation:none!important;transition:none!important}
+.control .islamicDecoration .decorationNight{opacity:0!important}
