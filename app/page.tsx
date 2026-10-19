@@ -274,7 +274,7 @@ const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HT
    }
    fullscreenSnapshot.current=null;
  };
- const [replacementPending,setReplacementPending]=useState(false);const [editWidgets,setEditWidgets]=useState(false);const [galleryOpen,setGalleryOpen]=useState(false);const [navCollapsed,setNavCollapsed]=useState(false);const [canvasExpanded,setCanvasExpanded]=useState(false);const [canvasFullscreen,setCanvasFullscreen]=useState(false); const orbNavAnchor=useRef<HTMLSpanElement>(null);
+ const [replacementPending,setReplacementPending]=useState(false);const [editWidgets,setEditWidgets]=useState(false);const [galleryOpen,setGalleryOpen]=useState(false);const [navCollapsed,setNavCollapsed]=useState(true);const [canvasExpanded,setCanvasExpanded]=useState(false);const [canvasFullscreen,setCanvasFullscreen]=useState(false); const orbNavAnchor=useRef<HTMLSpanElement>(null);
  const [orbPinned,setOrbPinned]=useState(false);
  const [orbPosition,setOrbPosition]=useState<{left:number;top:number}|null>(null);
  const orbDrag=useRef<{id:number;x:number;y:number;left:number;top:number;moved:boolean}|null>(null);
@@ -330,11 +330,11 @@ const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HT
   if(d.moved){const pos={left:Math.min(Math.max(8,d.left+e.clientX-d.x),innerWidth-58),top:Math.min(Math.max(8,d.top+e.clientY-d.y),innerHeight-58)};setGlobePosition(pos);localStorage.setItem("1muslim-language-globe-position",JSON.stringify(pos));}
   globeDrag.current=null;
  };
-const navCollapsedRef=useRef(false);
+const navCollapsedRef=useRef(true);
  // Guests begin with HudHud docked and the navigation collapsed. A subsequent
  // HudHud tap still toggles the menu normally; auth changes reset this default.
  useEffect(()=>{
-  if(homeSignedIn!==false)return;
+  if(homeSignedIn===null)return;
   navCollapsedRef.current=true;
   setNavCollapsed(true);
   setNavMotionStarted(true);
