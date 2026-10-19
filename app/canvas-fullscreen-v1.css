@@ -1476,3 +1476,10 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
 .oneMuslimLiveWatch{position:absolute!important;bottom:8px!important;left:12px!important;color:white!important;background:rgba(0,45,35,.8)!important;padding:7px 12px!important;border-radius:10px!important}
 .oneMuslimLiveBottom{min-width:0!important;min-height:0!important;display:flex!important;overflow:hidden!important;padding:6px 0 0!important}
 .oneMuslimLiveBottom > *{display:flex!important;flex:1 1 auto!important;min-height:0!important;min-width:0!important;overflow:auto!important;background:rgba(0,45,35,.4)!important;backdrop-filter:blur(12px)!important;border:1px solid rgba(222,187,103,.55)!important;border-radius:20px!important}
+
+/* Live stage visibility lock: render above the decorative scene and legacy widget layers. */
+[data-workspace-page="0"] .canvas-vertical-portal{position:relative!important;z-index:100!important;isolation:isolate!important;overflow:hidden!important}
+[data-workspace-page="0"] .canvas-vertical-main{z-index:101!important;overflow:visible!important}
+[data-workspace-page="0"] .canvas-vertical-main > [data-live-stage-version="top-layer-v2"]{z-index:2147483000!important;position:absolute!important;inset:0!important;display:grid!important;grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;transform:none!important;filter:none!important}
+[data-workspace-page="0"] .oneMuslimLiveTop,[data-workspace-page="0"] .oneMuslimLiveBottom{position:relative!important;z-index:2!important;visibility:visible!important;opacity:1!important}
+[data-workspace-page="0"] .oneMuslimLiveVideo{z-index:3!important}
