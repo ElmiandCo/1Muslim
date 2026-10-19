@@ -2273,3 +2273,21 @@ main[class*="control"] [class*="introActionDock"]{
 /* Profile portal: short upward glide, then client-side route change. */
 .canvas-vertical-portal.canvas-profile-transitioning{transform:translate3d(0,-18px,0) scale(.985)!important;opacity:.15!important;filter:blur(5px)!important;transition:transform .26s cubic-bezier(.2,.8,.2,1),opacity .26s ease,filter .26s ease!important;pointer-events:none!important}
 @media(prefers-reduced-motion:reduce){.canvas-vertical-portal.canvas-profile-transitioning{transition:none!important;filter:none!important}}
+
+/* 2026-10-19: Community Map mobile polish — give the map the available canvas height. */
+.canvas-six-map-top>.canvas-community-map-shell{padding:clamp(10px,2.6vw,20px)!important;gap:clamp(12px,2vh,20px)!important;background:linear-gradient(165deg,rgba(8,51,44,.86),rgba(2,23,25,.7))!important;box-shadow:inset 0 1px 0 rgba(255,236,184,.16),0 20px 45px rgba(0,0,0,.18)!important}
+.canvas-community-tabs{gap:10px!important}
+.canvas-community-tabs button{min-height:48px!important;border-radius:999px!important;font-size:clamp(13px,3.3vw,17px)!important;transition:background .22s ease,border-color .22s ease,transform .22s ease!important}
+.canvas-community-tabs button[aria-selected=true]{background:linear-gradient(125deg,rgba(67,162,128,.95),rgba(21,100,83,.95))!important;box-shadow:0 4px 24px rgba(55,206,151,.18),inset 0 1px rgba(255,255,255,.22)!important}
+.canvas-community-map-heading{gap:5px!important}
+.canvas-community-map-heading strong{font-size:clamp(20px,4.4vw,27px)!important;letter-spacing:-.025em}
+.canvas-community-map-heading span{font-size:clamp(11px,2.7vw,13px)!important;line-height:1.5}
+.canvas-community-map-search{gap:10px!important}
+.canvas-community-map-search input,.canvas-community-map-search button{min-height:48px!important;border-radius:14px!important}
+.canvas-community-map-frame{flex:1 1 auto!important;min-height:clamp(360px,55dvh,740px)!important;border:1px solid rgba(232,211,156,.65)!important;border-radius:22px!important;box-shadow:0 12px 36px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.2)!important}
+.canvas-community-map-frame iframe{min-height:100%!important}
+.canvas-community-map-zoom{top:14px!important;right:14px!important;gap:9px!important}
+.canvas-community-map-zoom button{width:46px!important;height:46px!important;border-radius:14px!important;background:rgba(5,55,48,.92)!important;backdrop-filter:blur(12px);box-shadow:0 5px 18px rgba(0,0,0,.26)!important}
+.canvas-community-map-caption{padding:4px 2px 0!important;font-size:12px!important;line-height:1.5!important}
+@media(max-width:700px){.canvas-six-map-top>.canvas-community-map-shell{min-height:100%!important}.canvas-community-map-frame{min-height:clamp(400px,61dvh,820px)!important}.canvas-community-map-search input{font-size:14px!important}}
+@media(prefers-reduced-motion:reduce){.canvas-community-tabs button{transition:none!important}}
