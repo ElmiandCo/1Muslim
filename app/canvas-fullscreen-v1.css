@@ -2082,3 +2082,12 @@ main[class*="control"] [class*="introActionDock"]{
 @media(prefers-reduced-motion:reduce){
  main[class*="control"] [class*="introActionDock"]{animation:none!important}
 }
+
+/* Profile avatar selection: black transparent glass with a GPU-friendly spin on save. */
+.canvas-layer-card .canvas-layer-avatar-glass{background:rgba(0,0,0,.42)!important;backdrop-filter:blur(9px)!important;cursor:pointer;font:inherit;appearance:none;text-align:center}
+.canvas-layer-card .canvas-layer-avatar-glass:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.65)}
+.canvas-layer-card .canvas-layer-avatar-glass.canvas-avatar-picked{border-color:#e9c675!important;box-shadow:0 0 0 2px rgba(233,198,117,.3),0 18px 40px rgba(0,0,0,.35)}
+.canvas-avatar-save-button{display:block;margin:14px auto 8px;padding:11px 24px;border:1px solid rgba(230,196,112,.7);border-radius:24px;background:rgba(0,0,0,.62);color:#f4d991;font:inherit;cursor:pointer}
+.canvas-avatar-save-button:disabled{opacity:.45;cursor:not-allowed}
+.canvas-layer-card:has(.canvas-avatar-save-button:disabled) .canvas-avatar-picked img{transition:transform .5s ease}
+@media(prefers-reduced-motion:reduce){.canvas-layer-card .canvas-layer-avatar-glass{transition:none!important}}
