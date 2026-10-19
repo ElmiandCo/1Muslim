@@ -2142,3 +2142,8 @@ main[class*="control"] [class*="introActionDock"]{
 @keyframes avatarSaveNewSwap{0%,54%{opacity:0}55%,100%{opacity:1}}
 @keyframes avatarSaveFade{0%,15%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.canvas-avatar-save-spin .canvas-avatar-save-orbit,.canvas-avatar-save-spin .canvas-avatar-save-old,.canvas-avatar-save-spin .canvas-avatar-save-new{animation:none!important}.canvas-avatar-save-spin .canvas-avatar-save-old{opacity:0}.canvas-avatar-save-spin .canvas-avatar-save-new{opacity:1}}
+
+/* Save feedback must float above the entire Canvas rather than being clipped by its scroll panel. */
+.canvas-avatar-save-overlay{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:2147483000!important;isolation:isolate!important;overflow:visible!important;transform:none!important}
+.canvas-avatar-save-orbit{flex-shrink:0}
+.canvas-avatar-save-spin .canvas-avatar-save-orbit{animation:avatarSaveHalfSpin .5s cubic-bezier(.24,.8,.2,1) both!important}
