@@ -2054,3 +2054,17 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 @keyframes canvasIdentityEdgeFlip{0%{transform:perspective(950px) rotateY(-80deg) scale(.96)}50%{transform:perspective(950px) rotateY(0deg) scale(1.04)}100%{transform:perspective(950px) rotateY(80deg) scale(.96)}}
 @keyframes canvasIdentityImageReveal{0%{opacity:.65;transform:scaleX(.06);filter:brightness(1.6)}100%{opacity:1;transform:scaleX(1);filter:brightness(1)}}
 @media(prefers-reduced-motion:reduce){.canvas-intro-scan-card:not(.canvas-intro-locked),.canvas-intro-scan-visible img{animation:none!important;transform:none!important}}
+
+/* Edge-synchronized identity flip: at 150ms the card is exactly edge-on,
+   when React replaces the avatar image. It reopens with the new character. */
+.canvas-intro-scan-card:not(.canvas-intro-locked){animation:canvasAvatarEdgeSynced .3s linear infinite!important;transform-style:preserve-3d}
+.canvas-intro-scan-visible{opacity:1!important;transform:none!important;backface-visibility:visible!important}
+.canvas-intro-scan-visible img{animation:none!important;opacity:1!important;transform:none!important;filter:none!important}
+@keyframes canvasAvatarEdgeSynced{
+ 0%{transform:perspective(950px) rotateY(0deg) scale(1)}
+ 49.9%{transform:perspective(950px) rotateY(89.8deg) scale(1.04)}
+ 50%{transform:perspective(950px) rotateY(90deg) scale(1.04)}
+ 100%{transform:perspective(950px) rotateY(180deg) scale(1)}
+}
+.canvas-intro-scan-card.canvas-intro-locked{animation:canvasScanLock .65s cubic-bezier(.17,.8,.3,1) both!important}
+@media(prefers-reduced-motion:reduce){.canvas-intro-scan-card:not(.canvas-intro-locked){animation:none!important}}
