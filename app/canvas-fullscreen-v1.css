@@ -1997,3 +1997,19 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 .canvas-layer-avatar-glass:hover{transform:translateY(-4px);box-shadow:0 14px 36px rgba(220,184,95,.18)}
 @keyframes canvasAvatarShimmer{0%,25%{transform:translateX(-135%)}60%,100%{transform:translateX(135%)}}
 @media(prefers-reduced-motion:reduce){.canvas-layer-avatar-glass:before{animation:none!important}}
+
+/* Real four-tier identity search. Cycle avatar faces during decelerating spins;
+   finish on the signed-in member's saved profile tier and gender. */
+.canvas-intro-avatar-flip{animation:canvasIntroIdentitySpin 5.8s cubic-bezier(.16,.68,.2,1) both!important}
+.canvas-intro-tier{transform:rotateY(180deg);opacity:0}
+.canvas-intro-tier-0{animation:canvasIntroTier0 5.8s steps(1,end) both}
+.canvas-intro-tier-1{animation:canvasIntroTier1 5.8s steps(1,end) both}
+.canvas-intro-tier-2{animation:canvasIntroTier2 5.8s steps(1,end) both}
+.canvas-intro-tier-3{animation:canvasIntroTier3 5.8s steps(1,end) both}
+.canvas-intro-avatar-final{transform:rotateY(180deg);animation:canvasIntroFinalFace 5.8s steps(1,end) both}
+@keyframes canvasIntroTier0{0%,17%{opacity:1}18%,100%{opacity:0}}
+@keyframes canvasIntroTier1{0%,17%{opacity:0}18%,35%{opacity:1}36%,100%{opacity:0}}
+@keyframes canvasIntroTier2{0%,35%{opacity:0}36%,57%{opacity:1}58%,100%{opacity:0}}
+@keyframes canvasIntroTier3{0%,57%{opacity:0}58%,79%{opacity:1}80%,100%{opacity:0}}
+@keyframes canvasIntroFinalFace{0%,79%{opacity:0}80%,100%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.canvas-intro-tier{animation:none!important;opacity:0!important}.canvas-intro-avatar-final{opacity:1!important}}
