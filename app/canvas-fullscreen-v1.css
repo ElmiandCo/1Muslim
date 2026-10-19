@@ -1945,3 +1945,15 @@ body:has([data-workspace-page="0"] .oneMuslimLiveStage) .canvas-language-globe,
 @keyframes canvasBootContentOut{to{opacity:0;transform:translateY(-12px) scale(.92)}}
 @media(prefers-reduced-motion:reduce){.canvas-boot-curtain.canvas-boot-revealing{animation:canvasBootReduced .3s ease forwards!important}.canvas-boot-revealing::after{animation:none!important;display:none}}
 @keyframes canvasBootReduced{to{opacity:0}}
+
+/* Intro avatar uses the Quran Studio-style 3D mirror flip: rapid beginning,
+   smooth deceleration, then rests on the authenticated avatar. */
+.canvas-intro-avatar-card{width:clamp(90px,19vw,148px);height:clamp(90px,19vw,148px);position:relative;perspective:950px;z-index:1;filter:drop-shadow(0 12px 26px rgba(0,0,0,.5))}
+.canvas-intro-avatar-flip{position:absolute;inset:0;transform-style:preserve-3d;animation:canvasIntroAvatarSpin 4.5s cubic-bezier(.18,.62,.2,1) both}
+.canvas-intro-avatar-face{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1.5px solid rgba(235,202,123,.7);border-radius:26px;background:linear-gradient(135deg,#103f32,#061d19 65%,#62451b);box-shadow:inset 0 0 24px rgba(222,188,100,.2);color:#edce80;font-size:65px}
+.canvas-intro-avatar-back{transform:rotateY(180deg);font-size:58px}
+.canvas-intro-avatar-back img{width:100%;height:100%;object-fit:cover}
+@keyframes canvasIntroAvatarSpin{0%{transform:rotateY(0deg) scale(.83)}18%{transform:rotateY(540deg) scale(1.06)}45%{transform:rotateY(900deg) scale(1)}75%{transform:rotateY(1260deg) scale(1.04)}100%{transform:rotateY(1620deg) scale(1)}}
+.canvas-boot-revealing .canvas-intro-avatar-card{animation:canvasIntroAvatarExit .55s ease both}
+@keyframes canvasIntroAvatarExit{to{opacity:0;transform:scale(.82)}}
+@media(prefers-reduced-motion:reduce){.canvas-intro-avatar-flip{animation:none!important;transform:rotateY(180deg)}.canvas-boot-revealing .canvas-intro-avatar-card{animation:none!important}}
