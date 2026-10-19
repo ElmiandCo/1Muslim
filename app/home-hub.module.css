@@ -1732,22 +1732,7 @@
 .control .islamicDecoration .decorationDay{display:block!important;visibility:visible!important;opacity:.58!important;animation:none!important;transition:none!important}
 .control .islamicDecoration .decorationNight{opacity:0!important}
 
-/* Persistent homepage chrome: Canvas curtain only masks the Canvas, never the
-   navigation, ornament or action buttons. Keep the approved layout intact. */
-.control .controlHeader,
-.control.navMotionCollapsed .controlHeader.controlHeaderCollapsed,
-.control.canvas-menu-boot-intro.navMotionCollapsed .controlHeader.controlHeaderCollapsed{
-  animation:none!important;
-  display:flex!important;
-  visibility:visible!important;
-  opacity:1!important;
-  transform:none!important;
-  max-height:none!important;
-  overflow:visible!important;
-  pointer-events:auto!important;
-  position:relative;
-  z-index:95!important;
-}
+/* Restore approved collapsed header behavior; keep the ornament and actions
+   independently visible while Canvas intro plays. */
 .control .islamicDecoration{z-index:40!important;pointer-events:none!important}
 .control .introActionDock{z-index:100!important}
-.control .introActionDock .introLiveButton{opacity:1!important;visibility:visible!important}
