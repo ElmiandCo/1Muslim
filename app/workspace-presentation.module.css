@@ -663,7 +663,8 @@
 }
 
 /* Keep Live's imagery. Quran cycles its four existing day/night assets every 30s. */
-.slide[data-workspace-page="0"] .night,.slide[data-workspace-page="0"] .day{background-image:revert-layer}
+.slide[data-workspace-page="0"] .night{background-image:url("/assets/decorations/background-mosque-night.PNG")!important}
+.slide[data-workspace-page="0"] .day{background-image:url("/assets/decorations/background-mosque-day.PNG")!important}
 .slide[data-workspace-page="1"] .night,.slide[data-workspace-page="1"] .day{background-image:none!important}
 .quranSlideshow{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none}
 .quranSlide{position:absolute;inset:-10px;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transform:translate3d(0,0,0) scale(1.04);animation:quranSceneCycle 120s linear infinite;animation-delay:calc(var(--quran-slide-index) * -30s)}
