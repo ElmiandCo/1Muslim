@@ -1712,3 +1712,25 @@ main[class*="control"] .canvas-header-brand-link strong{white-space:nowrap}
   overflow-y:auto!important;
  }
 }
+
+/* Waiting-room conversation: enough height for ~5-7 compact messages before scrolling. */
+@media(max-width:767px){
+ .oneMuslimLiveStage.livePortraitDemoStage{
+  grid-template-rows:minmax(0,1fr) minmax(300px,39%)!important;
+ }
+ .oneMuslimLiveStage.livePortraitDemoStage .oneMuslimLiveBottom{
+  height:100%!important;
+  min-height:300px!important;
+ }
+ .oneMuslimLiveStage.livePortraitDemoStage .oneMuslimLiveBottom > *{
+  height:100%!important;
+  min-height:0!important;
+ }
+ .oneMuslimLiveStage.livePortraitDemoStage .homeLiveDemoComments{
+  min-height:0!important;
+  flex:1 1 auto!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  scroll-behavior:smooth;
+ }
+}
