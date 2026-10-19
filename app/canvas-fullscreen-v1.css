@@ -1504,3 +1504,7 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
 
 /* Keep the former Live status strip space empty; do not shift the player. */
 .oneMuslimLiveCarouselSpacer{height:52px!important;flex:0 0 52px!important;min-height:52px!important;background:transparent!important;border:0!important;pointer-events:none!important}
+
+/* Homepage signed-out action: green regardless of CSS-module class name. */
+button.homeAuthSignIn{background:linear-gradient(135deg,#0a9b53,#02643d)!important;border:1px solid #55ffa0!important;color:#fff!important;box-shadow:0 0 16px rgba(20,239,119,.42)!important}
+button.homeAuthSignIn [class*="liveDockDot"]{background:#27ff7e!important;box-shadow:0 0 10px #27ff7e!important}
