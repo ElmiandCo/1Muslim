@@ -1501,3 +1501,6 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
    overflow:hidden!important;
  }
 }
+
+/* Keep the former Live status strip space empty; do not shift the player. */
+.oneMuslimLiveCarouselSpacer{height:52px!important;flex:0 0 52px!important;min-height:52px!important;background:transparent!important;border:0!important;pointer-events:none!important}
