@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
 type Comment={id:string;name:string;text:string;at:number};
-export default function HomeLiveConversation({live,roomName}:{live:boolean;roomName?:string|null}){
+export default function HomeLiveConversation({live,roomName,mode="Desktop Live"}:{live:boolean;roomName?:string|null;mode?:"Desktop Live"|"Mobile Streaming"|"Audio Rooms"}){
  const [comments,setComments]=useState<Comment[]>([]);
  const [draft,setDraft]=useState("");
  const [user,setUser]=useState<{id:string;name:string}|null>(null);
@@ -12,7 +12,7 @@ export default function HomeLiveConversation({live,roomName}:{live:boolean;roomN
  const [sending,setSending]=useState(false);
  const [demoComments,setDemoComments]=useState<Comment[]>([]);
  const scrollRef=useRef<HTMLDivElement|null>(null);
- const WAITING_KEY="1muslim:live-waiting-room:v1";
+ const WAITING_KEY="1muslim:live-waiting-room:v2:"+mode;
  const WAITING_TTL=20*60*1000;
  const [checkpoint,setCheckpoint]=useState(false);
  useEffect(()=>{
@@ -30,7 +30,7 @@ export default function HomeLiveConversation({live,roomName}:{live:boolean;roomN
    index++;
   },4500);
   return()=>window.clearInterval(timer);
- },[live]);
+ },[live,mode]);
  useEffect(()=>{if(live)return;try{window.localStorage.setItem(WAITING_KEY,JSON.stringify(demoComments.filter(v=>Date.now()-v.at<WAITING_TTL).slice(-80)))}catch{}},[demoComments,live]);
  useEffect(()=>{scrollRef.current?.scrollTo({top:scrollRef.current.scrollHeight,behavior:"smooth"})},[comments,demoComments]);
  const dbRef=useRef<ReturnType<typeof createClient>|null>(null);
@@ -59,7 +59,7 @@ export default function HomeLiveConversation({live,roomName}:{live:boolean;roomN
   try{const result=await channel.send({type:"broadcast",event:"comment",payload});if(result!=="ok")throw Error("Send failed");setComments(prev=>prev.some(p=>p.id===payload.id)?prev:[...prev,{...payload,at:Date.now()}].slice(-60));setDraft("");setStatus("")}
   catch{setStatus("Could not send comment. Try again.")}finally{setSending(false)}};
  return <section className="homeLiveViewerConversation" aria-label="Live conversation">
-  <header className="chatTop"><strong><i/> {live?"LIVE CHAT":"WAITING ROOM"}</strong><small>{live?(connected?"● Connected to this Live":"Connecting to Live chat…"):"Last 20 minutes · local history"}</small></header>
+  <header className="chatTop"><strong><i/> {live?"LIVE CHAT":"WAITING ROOM"}</strong><small>{live?(connected?"● Connected to this Live":"Connecting to Live chat…"):"Illustrative waiting-room messages · local history"}</small></header>
   {live&&checkpoint&&<div className="waitingRoomCheckpoint" role="status">✦ Waiting room closed · Live comments begin here</div>}<div ref={scrollRef} className="homeLiveDemoComments" aria-live="polite">{(live?comments:demoComments).length?(live?comments:demoComments).map(c=><p key={c.id} className="chatBubble"><span className="homeLiveCommentAvatar">{c.name.slice(0,1).toUpperCase()}</span><span><strong>{c.name}</strong><small>{c.text}</small></span></p>):<p className="chatEmpty">{live?"Say salaam 👋 Be the first to join the conversation.":"💬 Live comments will appear here when a stream begins."}</p>}</div>
   <form className="homeLiveCommentForm" onSubmit={send}><input aria-label="Write a live comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={280} placeholder={live?"Comment on this livestream…":"Write a comment…"}/><button type="submit" disabled={!draft.trim()||sending||(live&&!connected)} aria-label="Send comment">➤</button></form>
   {status&&<small role="status" className="homeLiveCommentDisclaimer">{status}</small>}
