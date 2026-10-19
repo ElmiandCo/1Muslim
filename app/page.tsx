@@ -317,6 +317,28 @@ const navCollapsedRef=useRef(false);
  },[homeSignedIn]);const [navMotionStarted,setNavMotionStarted]=useState(false);const [hiddenWidgets,setHiddenWidgets]=useState<string[]>(()=>spaces.filter(w=>w.name!=="Live"&&w.name!=="Qur’an").map(w=>w.name));const [widgetLimitNotice,setWidgetLimitNotice]=useState("");const [quranResume,setQuranResume]=useState("1:1");const [widgetLayout,setWidgetLayout]=useState<WidgetLayout[]>(DEFAULT_LAYOUT);const [dragged,setDragged]=useState<string|null>(null);const [layoutPreview,setLayoutPreview]=useState<WidgetLayout[]|null>(null);const layoutPreviewRef=useRef<WidgetLayout[]|null>(null);const magneticGesture=useRef<{x:number;y:number;name:string;pointerId:number}|null>(null);const holdTimer=useRef<ReturnType<typeof setTimeout>|null>(null);const holdStart=useRef<{x:number;y:number}|null>(null);const activeDrag=useRef<{pointerId:number;name:string}|null>(null);const dragHover=useRef<string|null>(null);const magneticOrigin=useRef<WidgetLayout[]|null>(null);const [magneticZone,setMagneticZone]=useState<string|null>(null);const magneticLast=useRef(0);const magneticPointer=useRef<{element:HTMLElement;startX:number;startY:number;lastX:number;lastY:number;vx:number;vy:number;time:number}|null>(null);const magneticFrame=useRef<number|null>(null);const [motionMode,setMotionMode]=useState<"cinematic"|"balanced"|"minimal">("balanced");const undoStack=useRef<WidgetLayout[][]>([]);const [layoutSettled,setLayoutSettled]=useState(true);const settleTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  useEffect(()=>{try{const saved=localStorage.getItem("1muslim-widget-motion");if(saved==="cinematic"||saved==="balanced"||saved==="minimal")setMotionMode(saved)}catch{}const motion=(e:Event)=>{const mode=(e as CustomEvent<{mode:string}>).detail?.mode;if(mode==="cinematic"||mode==="balanced"||mode==="minimal")setMotionMode(mode)};const arrange=()=>setEditWidgets(v=>!v);const undo=()=>{const previous=undoStack.current.pop();if(previous)setWidgetLayout(previous)};const reset=()=>{undoStack.current.push(widgetLayout);setWidgetLayout(DEFAULT_LAYOUT)};window.addEventListener("1muslim:widget-motion",motion);window.addEventListener("1muslim:widgets-arrange",arrange);window.addEventListener("1muslim:widgets-undo",undo);window.addEventListener("1muslim:widgets-reset",reset);return()=>{window.removeEventListener("1muslim:widget-motion",motion);window.removeEventListener("1muslim:widgets-arrange",arrange);window.removeEventListener("1muslim:widgets-undo",undo);window.removeEventListener("1muslim:widgets-reset",reset)}},[widgetLayout]);
  const clearHold=()=>{if(holdTimer.current)clearTimeout(holdTimer.current);holdTimer.current=null};
+ // Once per signed-in tab: let the entry visuals settle, then descend one Canvas row.
+ useEffect(()=>{
+   if(homeSignedIn!==true||!layoutSettled||canvasRow!==0)return;
+   const key="1muslim:post-login-auto-down-v1";
+   try{if(sessionStorage.getItem(key)==="1")return}catch{}
+   let cancelled=false;let timer:ReturnType<typeof setTimeout>|undefined;
+   const cancel=()=>{cancelled=true;if(timer)clearTimeout(timer)};
+   const onInteraction=()=>cancel();
+   for(const event of ["pointerdown","touchstart","wheel","keydown"] as const)window.addEventListener(event,onInteraction,{once:true,passive:true});
+   const settle=()=>{
+     if(cancelled||document.visibilityState!=="visible")return;
+     const active=document.getAnimations().some(animation=>animation.playState==="running"&&((animation.effect as KeyframeEffect|null)?.target instanceof Element)&&Boolean(((animation.effect as KeyframeEffect).target as Element).closest(".canvas-cinematic-entry, .canvas-vertical-portal, .profileAvatar")));
+     if(active){timer=setTimeout(settle,250);return}
+     timer=setTimeout(()=>{
+       if(cancelled||document.visibilityState!=="visible")return;
+       try{sessionStorage.setItem(key,"1")}catch{}
+       setCanvasRow(1);
+     },2500);
+   };
+   timer=setTimeout(settle,350);
+   return()=>{cancel();for(const event of ["pointerdown","touchstart","wheel","keydown"] as const)window.removeEventListener(event,onInteraction)};
+ },[homeSignedIn,layoutSettled,canvasRow]);
  const transitionLayout=(fn:()=>void)=>{setLayoutSettled(false);if(settleTimer.current)clearTimeout(settleTimer.current);settleTimer.current=setTimeout(()=>setLayoutSettled(true),650);const d=document as Document & {startViewTransition?:(fn:()=>void)=>unknown};if(d.startViewTransition&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches)d.startViewTransition(()=>flushSync(fn));else fn()};
  // Magnetic layout: stable first-fit packing, preserving user order and avoiding collisions.
  const packNearby=(items:WidgetLayout[],_changed:string):WidgetLayout[]=>{
