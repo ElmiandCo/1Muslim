@@ -1037,6 +1037,13 @@ export default function GoLivePage() {
         @media(prefers-reduced-motion:reduce){.preliveIdentity,.settingsOpen .layout>.form{animation:none!important}}
 
 
+        .studioFloatingComments{position:absolute;z-index:19;left:12px;bottom:90px;width:min(74%,330px);height:clamp(170px,28dvh,300px);pointer-events:auto;mask-image:linear-gradient(to bottom,transparent,#000 17%)}
+        .studioFloatingComments :global(.liveChat){height:100%;background:transparent!important;border:0!important;box-shadow:none!important}
+        .studioFloatingComments :global(.emoteTray){display:none!important}
+        .studioFloatingComments :global(.composer){display:none!important}
+        .studioFloatingComments :global(.messages){max-height:100%!important;height:100%!important;justify-content:flex-end;overflow-y:auto}
+        .studioFloatingComments :global(.message){animation:studioRise .25s ease-out both}
+        @media(max-width:850px){.studioFloatingComments{bottom:calc(18px + env(safe-area-inset-bottom));width:76%;height:30dvh}.previewOverlayTools{right:8px!important}}
         /* Studio 2.1: ultra-thin transparent chrome, clear camera and non-overlapping hit areas. */
         @media(max-width:850px){
           .immersiveHeader{padding:calc(6px + env(safe-area-inset-top)) 12px 4px!important;min-height:52px!important}
@@ -1093,6 +1100,7 @@ export default function GoLivePage() {
               {!live && <div className="preliveIdentity"><button type="button" className="preliveTitleButton" onClick={()=>setSettingsOpen(true)} aria-label="Edit live title"><span><small>✦ LIVE TITLE · EDIT</small><strong>{title || defaultLiveTitle}</strong></span></button><button type="button" className="preliveVisibility" onClick={()=>setSettingsOpen(true)} aria-label="Change live audience">◎ {visibility==="public"?"Public":"Ashab"} ⌄</button></div>}
               {cameraReady && <div className="previewOverlayTools" aria-label="Camera controls"><button type="button" onClick={()=>void flipCamera()} title="Flip camera" aria-label="Flip camera">🔄</button><button type="button" onClick={toggleCamera} title={cameraOn?"Turn camera off":"Turn camera on"} aria-label={cameraOn?"Turn camera off":"Turn camera on"}>{cameraOn?"📷":"🚫"}</button><button type="button" onClick={toggleMic} title={micOn?"Mute microphone":"Unmute microphone"} aria-label={micOn?"Mute microphone":"Unmute microphone"}>{micOn?"🎙️":"🔇"}</button></div>}
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
+              {live && liveStreamIdRef.current && currentUserId && <div className="studioFloatingComments"><LiveChat streamId={liveStreamIdRef.current} hostId={currentUserId} overlay /></div>}
               {live && <span className="live" aria-label="You are live">● YOU’RE LIVE · {liveClock} · {roomRef.current?.state==="connected"?"Connected":"Reconnecting"} · {micOn?"🎙 Mic on":"🔇 Muted"}</span>}{live && <div role="status" aria-live="polite" style={{position:"absolute",left:12,bottom:64,zIndex:13,padding:"12px 16px",borderRadius:18,background:"rgba(5,10,20,.80)",border:viewerIncrease?"2px solid #39ee8d":"1px solid rgba(255,255,255,.35)",boxShadow:viewerIncrease?"0 0 24px rgba(57,238,141,.48)":"0 8px 25px #0008",color:viewerIncrease?"#4cff9c":"white",transition:"color .3s,border .3s,box-shadow .3s",pointerEvents:"none",textAlign:"center"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1.5}}>🔴 YOU ARE LIVE</div><div style={{fontSize:"clamp(26px,5vw,40px)",fontWeight:900,lineHeight:1.15,fontVariantNumeric:"tabular-nums"}}>{viewers.toLocaleString()}</div><div style={{fontSize:11,opacity:.85}}>VIEWERS {viewerIncrease?"↑":""}</div></div>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
             </div>
