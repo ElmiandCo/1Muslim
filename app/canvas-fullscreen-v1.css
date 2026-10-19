@@ -2091,3 +2091,9 @@ main[class*="control"] [class*="introActionDock"]{
 .canvas-avatar-save-button:disabled{opacity:.45;cursor:not-allowed}
 .canvas-layer-card:has(.canvas-avatar-save-button:disabled) .canvas-avatar-picked img{transition:transform .5s ease}
 @media(prefers-reduced-motion:reduce){.canvas-layer-card .canvas-layer-avatar-glass{transition:none!important}}
+
+/* Profile customization: Avatar / Background tabs and transparent dark swatches. */
+.canvas-avatar-gender-toggle [role="tab"][aria-selected="true"]{background:rgba(71,131,95,.48)!important;color:#fff!important}
+.canvas-avatar-gender-toggle [role="tab"][aria-selected="false"]{background:transparent!important}
+.canvas-avatar-gender-secondary{margin:12px 0 4px!important;transform:scale(.82);transform-origin:left center;opacity:.8}
+.canvas-background-swatch{display:block!important;width:100%!important;height:155px!important;min-height:155px!important;border-radius:12px!important;border:1px solid rgba(235,205,131,.3)!important;box-shadow:inset 0 0 45px rgba(0,0,0,.25)!important;opacity:1!important}
