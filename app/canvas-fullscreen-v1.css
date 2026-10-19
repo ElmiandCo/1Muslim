@@ -1413,3 +1413,41 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
   max-width:none!important;aspect-ratio:auto!important;
  }
 }
+
+
+/* Live visibility hotfix: unscoped selectors, independent of the parent tag/class.
+   The earlier main[class*=control] scope did not reliably match the Canvas. */
+.canvas-vertical-main:has(> .canvas-live-independent-stage){position:relative!important;isolation:isolate!important}
+.canvas-vertical-main:has(> .canvas-live-independent-stage) > [data-magnetic-grid]{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+.canvas-vertical-main > .canvas-live-independent-stage{
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+ z-index:999!important;display:block!important;opacity:1!important;visibility:visible!important;
+ overflow:hidden!important;pointer-events:none!important;transform:none!important;
+}
+.canvas-vertical-main > .canvas-live-independent-stage > *{pointer-events:auto!important}
+.canvas-vertical-main > .canvas-live-independent-stage > .homeLiveStreamCarousel{
+ position:absolute!important;inset:1% 4% auto!important;width:92%!important;height:11%!important;
+ display:flex!important;z-index:10!important;background:rgba(0,30,25,.32)!important;
+}
+.canvas-vertical-main > .canvas-live-independent-stage > .homeLiveActualPlayer{
+ position:absolute!important;inset:13% 3% auto!important;width:94%!important;height:43%!important;
+ min-height:0!important;max-height:none!important;aspect-ratio:auto!important;
+ z-index:11!important;display:block!important;opacity:1!important;visibility:visible!important;
+ background:rgba(0,24,20,.7)!important;border:1px solid rgba(223,187,106,.65)!important;
+ border-radius:20px!important;overflow:hidden!important;transform:none!important;
+}
+.canvas-vertical-main > .canvas-live-independent-stage > .homeLiveConversationDock{
+ position:absolute!important;inset:58% 3% auto!important;width:94%!important;height:39%!important;
+ z-index:12!important;display:block!important;opacity:1!important;visibility:visible!important;
+ background:rgba(0,33,28,.35)!important;border:1px solid rgba(223,187,106,.55)!important;
+ border-radius:20px!important;overflow:hidden!important;backdrop-filter:blur(12px)!important;
+}
+.canvas-vertical-main > .canvas-live-independent-stage .homeLiveActualIdle{
+ position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;
+ justify-content:center!important;flex-direction:column!important;gap:15px!important;
+ visibility:visible!important;opacity:1!important;color:white!important;
+}
+.canvas-vertical-main > .canvas-live-independent-stage .homeLiveViewerConversation{
+ display:flex!important;width:100%!important;height:100%!important;max-height:none!important;
+ flex-direction:column!important;overflow:auto!important;background:transparent!important;
+}
