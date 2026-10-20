@@ -1549,3 +1549,10 @@ main[class*="control"] .canvas-header-brand-link strong{white-space:nowrap}
 .canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-body{align-items:stretch!important;justify-content:flex-start!important;width:100%;min-width:0}
 .canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-profile{width:100%!important;min-width:0!important;max-width:none!important;flex:1 0 auto;align-self:stretch!important;box-sizing:border-box}
 .canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-profile>section{width:100%;min-width:0;box-sizing:border-box}
+
+/* Full mode: extend the workspace artwork to every viewport edge, like a lock-screen wallpaper. */
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"]{inset:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;min-height:0!important;border:0!important;border-radius:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [data-workspace-page]{border-radius:0!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [class*="scene"]{inset:0!important;border-radius:0!important}
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [class*="night"],
+main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [class*="day"]{background-size:cover!important;background-position:center center!important;background-repeat:no-repeat!important}
