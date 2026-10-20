@@ -4,7 +4,6 @@ import Image from "next/image";
 import {useRouter} from "next/navigation";
 import {createClient} from "../../utils/supabase/client";
 import styles from "./home-messages-chooser.module.css";
-import QuickConnect from "./QuickConnect";
 type Mode="audio"|"video"|"chat";
 type Person={id:string;display_name:string|null;username:string|null;avatar_url:string|null;profile_image_url:string|null;avatar_path:string|null};
 const actions:{mode:Mode;label:string;asset:string}[]=[
@@ -51,7 +50,7 @@ export default function HomeMessagesChooser(){
  const openConversation=(person:Person,call?:Mode)=>{const params=new URLSearchParams({to:person.id});if(call&&call!=="chat")params.set("call",call);if(!call&&draft.trim())params.set("draft",draft.trim());router.push("/messages?"+params.toString())};
  const displayName=(p:Person)=>p.display_name||p.username||"Member";
  const avatar=(p:Person)=>{const url=p.avatar_url||p.profile_image_url||p.avatar_path;return url&&(/^(https?:|\/)/.test(url))?<img src={url} alt="" loading="lazy" referrerPolicy="no-referrer"/>:<span>{displayName(p).slice(0,1).toUpperCase()}</span>};
- return <div className={`${styles.root} ${expanded?styles.expanded:""}`} data-mode={mode||"choose"}><QuickConnect/>
+ return <div className={`${styles.root} ${expanded?styles.expanded:""}`} data-mode={mode||"choose"}>
   <header className={styles.heading}><strong>CONNECT WITH THE UMMAH</strong><span lang="ar" dir="rtl">تواصل</span></header>
   <nav className={styles.actions} aria-label="Communication mode">{actions.map(action=><button type="button" key={action.mode} className={styles.action} aria-pressed={mode===action.mode} onClick={()=>chooseMode(action.mode)}><Image src={action.asset} width={44} height={44} alt="" unoptimized/><span>{action.label}</span></button>)}</nav>
   <section key={mode||"choose"} className={styles.stage} aria-label="Communication workspace">
