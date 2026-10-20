@@ -1544,3 +1544,8 @@ main[class*="control"] .canvas-header-brand-link strong{white-space:nowrap}
 @media(prefers-reduced-motion:reduce){
  main[class*="control"] button.homeAuthSignOut{animation:none!important}
 }
+
+/* Keep Profile, Ranks and Settings at one full-width canvas size. */
+.canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-body{align-items:stretch!important;justify-content:flex-start!important;width:100%;min-width:0}
+.canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-profile{width:100%!important;min-width:0!important;max-width:none!important;flex:1 0 auto;align-self:stretch!important;box-sizing:border-box}
+.canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-profile>section{width:100%;min-width:0;box-sizing:border-box}
