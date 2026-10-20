@@ -619,3 +619,21 @@
 
 /* Legacy full-scene photos removed from dashboard slides; ornament remains as fallback.
    Profile theme imagery is provided by the saved theme layer in CanvasSecondaryApp. */
+
+/* User-saved profile backgrounds are shared by every home workspace slide. */
+:global(html[data-profile-background]) .slide .night,
+:global(html[data-profile-background]) .slide .day{
+ background-image:linear-gradient(var(--profile-scene-tint,rgba(3,27,21,.3)),var(--profile-scene-tint,rgba(3,27,21,.3))),var(--profile-scene-image)!important;
+ background-position:center!important;background-size:cover!important;
+ filter:none!important;
+}
+:global(html[data-profile-background]) .slide .scene{
+ transform:translate3d(var(--scene-offset,0px),var(--profile-scene-y,0px),0) scale(1.04);
+ transition:transform .72s cubic-bezier(.22,1,.36,1);
+ will-change:transform;
+}
+:global(html[data-profile-background]) .studioPortalBackdrop{
+ background-image:linear-gradient(145deg,rgba(3,14,19,.55),rgba(3,14,19,.7)),var(--profile-scene-image)!important;
+ background-position:center!important;background-size:cover!important;
+}
+@media(prefers-reduced-motion:reduce){:global(html[data-profile-background]) .slide .scene{transition:none!important;transform:none!important}}
