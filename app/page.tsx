@@ -74,16 +74,6 @@ export default function Home(){
  const [hudHudDraft,setHudHudDraft]=useState("");
  const [hudHudWelcome,setHudHudWelcome]=useState(false);
  const adminSwipeArmed=useRef(false);
- // Capture touches globally: nested Profile components can consume touch events before the carousel.
- useEffect(()=>{
-   if(!adminHudHud||!navCollapsed||canvasFullscreen||canvasRow!==1||workspacePage!==0)return;
-   let start:{x:number;y:number}|null=null;
-   const down=(e:TouchEvent)=>{if(e.touches.length===1)start={x:e.touches[0].clientX,y:e.touches[0].clientY}};
-   const up=(e:TouchEvent)=>{if(!start)return;const end=e.changedTouches[0];if(!end){start=null;return}const dx=end.clientX-start.x,dy=end.clientY-start.y;start=null;if(dx< -65&&Math.abs(dx)>Math.abs(dy)*1.25){setHudHudPanel("admin");workspaceRef.current?.scrollTo({left:0,behavior:"instant"})}};
-   document.addEventListener("touchstart",down,{capture:true,passive:true});
-   document.addEventListener("touchend",up,{capture:true,passive:true});
-   return()=>{document.removeEventListener("touchstart",down,true);document.removeEventListener("touchend",up,true)};
- },[adminHudHud,navCollapsed,canvasFullscreen,canvasRow,workspacePage]);
  const [shahadaOverlay,setShahadaOverlay]=useState(false);
  const [shahadaDismissed,setShahadaDismissed]=useState(false);
  useEffect(()=>{try{if(sessionStorage.getItem("1muslim:entry-dismissed")==="yes")setShahadaDismissed(true)}catch{}},[]);
@@ -268,6 +258,16 @@ const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HT
    fullscreenSnapshot.current=null;
  };
  const [replacementPending,setReplacementPending]=useState(false);const [editWidgets,setEditWidgets]=useState(false);const [galleryOpen,setGalleryOpen]=useState(false);const [navCollapsed,setNavCollapsed]=useState(false);const [canvasExpanded,setCanvasExpanded]=useState(false);const [canvasFullscreen,setCanvasFullscreen]=useState(false);
+ // Capture touches globally: nested Profile components can consume touch events before the carousel.
+ useEffect(()=>{
+   if(!adminHudHud||!navCollapsed||canvasFullscreen||canvasRow!==1||workspacePage!==0)return;
+   let start:{x:number;y:number}|null=null;
+   const down=(e:TouchEvent)=>{if(e.touches.length===1)start={x:e.touches[0].clientX,y:e.touches[0].clientY}};
+   const up=(e:TouchEvent)=>{if(!start)return;const end=e.changedTouches[0];if(!end){start=null;return}const dx=end.clientX-start.x,dy=end.clientY-start.y;start=null;if(dx< -65&&Math.abs(dx)>Math.abs(dy)*1.25){setHudHudPanel("admin");workspaceRef.current?.scrollTo({left:0,behavior:"instant"})}};
+   document.addEventListener("touchstart",down,{capture:true,passive:true});
+   document.addEventListener("touchend",up,{capture:true,passive:true});
+   return()=>{document.removeEventListener("touchstart",down,true);document.removeEventListener("touchend",up,true)};
+ },[adminHudHud,navCollapsed,canvasFullscreen,canvasRow,workspacePage]);
  useEffect(()=>{if(canvasFullscreen||!navCollapsed||canvasRow!==1||workspacePage!==0)setHudHudPanel(null)},[canvasFullscreen,navCollapsed,canvasRow,workspacePage]);
  useEffect(()=>{if(hudHudPanel!=="admin")return;setHudHudWelcome(true);const timer=window.setTimeout(()=>setHudHudWelcome(false),3000);return()=>window.clearTimeout(timer)},[hudHudPanel]); const orbNavAnchor=useRef<HTMLSpanElement>(null);
  const [orbPinned,setOrbPinned]=useState(false);
