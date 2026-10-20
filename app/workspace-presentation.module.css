@@ -655,3 +655,10 @@
   transform:none!important;transition:none!important;
  }
 }
+
+/* Quran home: elongated reading canvas and fixed bottom playback control. */
+.quranVerseWidget{min-height:min(80dvh,850px)!important;position:relative!important}
+.quranVerseArticle{min-height:0!important;flex:1 1 auto!important;justify-content:flex-start!important;padding-top:clamp(26px,6vh,70px)!important;padding-bottom:110px!important;scroll-padding-bottom:110px}
+.quranInlinePlay{position:sticky!important;bottom:12px!important;z-index:22!important;margin-top:auto!important;width:clamp(68px,17vw,90px)!important;height:clamp(68px,17vw,90px)!important;box-shadow:0 0 0 5px rgba(232,211,162,.12),0 12px 30px rgba(0,0,0,.36)!important}
+.quranVerseArticle:has(.quranInlinePlay){scrollbar-width:thin}
+@media(max-width:650px){.quranVerseWidget{min-height:calc(100dvh - 90px)!important}.quranVerseArticle{padding-bottom:90px!important}}
