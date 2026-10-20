@@ -20,3 +20,17 @@ body:has(.mmDemo) .mmDemo{position:relative;z-index:2}
 .mmDemo.night .mmThreads,.mmDemo.night .mmRow,.mmDemo.night .mmChat{background:#090b0d!important}
 .mmDemo.night .mmDock{background:#111714f5!important;border-color:#2b3c32!important}
 .mmDemo.night .mmDock button.on{background:#075b42!important;color:#caffdf!important}
+
+/* Messenger mobile refresh: navigation lives at the top, never over the composer. */
+.mmTopNav{display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none;padding:5px;margin:-8px 0 16px;border:1px solid #d9c68a66;border-radius:18px;background:rgba(5,56,43,.85);backdrop-filter:blur(16px)}
+.mmTopNav a{flex:1;min-width:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:7px 3px;border-radius:12px;color:#f5e9c8;text-decoration:none;font-size:20px;white-space:nowrap}
+.mmTopNav a span{font-size:10px;letter-spacing:.01em}
+.mmTopNav a[aria-current="page"]{background:#087b57;color:white;box-shadow:inset 0 0 0 1px #d6bc7a70}
+.mmPage{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+.mmHero{height:clamp(116px,16dvh,160px)}
+.mmStories{margin:14px 0 12px;gap:10px}
+.mmRow{min-height:70px;padding:8px 3px;gap:11px}
+.mmRow .mmPortrait{flex-basis:50px;width:50px;height:50px}
+.mmRowText{gap:3px}
+.mmSearch{height:48px}
+@media(max-width:700px){.mmPage{padding-left:14px;padding-right:14px}.mmTopNav a{min-width:44px}.mmTopNav a span{font-size:9px}.mmHero{height:116px}.mmBrand strong{font-size:35px}.mmStories .mmPortrait{width:52px;height:52px;flex-basis:52px}.mmStory{flex-basis:60px}.mmFilters{margin-top:10px;margin-bottom:10px}}
