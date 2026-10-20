@@ -4,7 +4,7 @@ import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
 import QuickConnect from "./QuickConnect";
 type Comment={id:string;name:string;text:string;at:number};
-export default function HomeLiveConversation({live,roomName}:{live:boolean;roomName?:string|null}){
+export default function HomeLiveConversation({live,roomName,onFormatChange}:{live:boolean;roomName?:string|null;onFormatChange?:(format:"desktop"|"phone"|"audio")=>void}){
  const [comments,setComments]=useState<Comment[]>([]);
  const [draft,setDraft]=useState("");
  const [user,setUser]=useState<{id:string;name:string}|null>(null);
@@ -32,7 +32,7 @@ export default function HomeLiveConversation({live,roomName}:{live:boolean;roomN
   const payload={id:crypto.randomUUID(),name:user.name,text};
   try{const result=await channel.send({type:"broadcast",event:"comment",payload});if(result!=="ok")throw Error("Send failed");setDraft("");setStatus("")}
   catch{setStatus("Could not send comment. Try again.")}};
- return <section className="homeLiveViewerConversation" aria-label="Live conversation"><QuickConnect/>
+ return <section className="homeLiveViewerConversation" aria-label="Live conversation"><QuickConnect onFormatChange={onFormatChange}/>
   <header><strong>💬 LIVE CONVERSATION</strong><small>1Muslim · {live?"Live room":"Waiting for a stream"}</small></header>
   <div className="homeLiveDemoComments" aria-live="polite">{comments.length?comments.map(c=><p key={c.id}><span className="homeLiveCommentAvatar">{c.name.slice(0,1).toUpperCase()}</span><span><strong>{c.name}</strong><small>{c.text}</small></span></p>):<p>{live?"Be the first to comment in this live room.":"Comments appear when someone goes live."}</p>}</div>
   <form className="homeLiveCommentForm" onSubmit={send}><input aria-label="Write a live comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={280} disabled={!live||!roomName||!user} placeholder={!user?"Sign in to comment":live?"Comment on this livestream…":"Waiting for a live…"}/><button type="submit" disabled={!draft.trim()||!user||!live||!roomName}>Send</button></form>
