@@ -59,7 +59,7 @@ function ProfileApp({active}:{active:boolean}){
   const config={...(profile.avatar_config??{}),profileBackgroundTheme:key};
   const {error}=await db.from("profiles").update({avatar_config:config}).eq("id",user.id);
   if(error){setEditNotice("Could not save background.");}else{
-   setProfile(p=>p?{...p,avatar_config:config}:p);setSelectedBackground(null);setEditNotice("✓ Background saved");
+   setProfile(p=>p?{...p,avatar_config:config}:p);setSelectedBackground(null);setEditNotice("✓ Background saved");window.dispatchEvent(new CustomEvent("1muslim:profile-background-changed",{detail:key}));
    if(key==="carbon-fiber"){localStorage.setItem("1muslim-theme-mode","night");localStorage.setItem("1muslim-theme","dark");document.documentElement.classList.remove("light");window.dispatchEvent(new Event("1muslim:theme-changed"));}
   }
   setSavingBackground(false);
