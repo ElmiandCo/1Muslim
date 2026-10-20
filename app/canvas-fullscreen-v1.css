@@ -1556,3 +1556,15 @@ main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center
 main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [class*="scene"]{inset:0!important;border-radius:0!important}
 main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [class*="night"],
 main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center"] [class*="day"]{background-size:cover!important;background-position:center center!important;background-repeat:no-repeat!important}
+
+/* Profile hero: enlarge only the black avatar stage, never the character artwork. */
+.canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-avatar{
+ width:min(220px,72vw)!important;height:min(220px,72vw)!important;
+ min-width:0!important;max-width:220px!important;flex:0 0 auto!important;
+ border-radius:28px!important;background:#050607!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ padding:0!important;box-sizing:border-box!important;
+}
+.canvas-vertical-secondary .canvas-native-avatar>.profileAvatar.avatar-lg{
+ width:150px!important;height:150px!important;flex:0 0 150px!important;
+}
