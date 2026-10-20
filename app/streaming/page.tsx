@@ -122,7 +122,7 @@ export default function StreamingPage() {
 
   useEffect(() => {
     const loadLives = async () => {
-      const { data, error: liveDiscoveryError } = await supabase.from("live_streams").select("id,title,category,room_name,viewer_count,started_at,scheduled_end_at,thumbnail_path,aspect_ratio,host_id").eq("status","live").gte("last_heartbeat_at", new Date(Date.now() - 75_000).toISOString()).order("started_at",{ascending:false});
+      const { data, error: liveDiscoveryError } = await supabase.from("live_streams").select("id,title,category,room_name,viewer_count,started_at,scheduled_end_at,thumbnail_path,aspect_ratio,host_id").eq("status","live").gte("last_heartbeat_at", new Date(Date.now() - 45_000).toISOString()).order("started_at",{ascending:false});
       if (liveDiscoveryError) console.error("Live discovery failed:", liveDiscoveryError.message);
       const rows = (data ?? []) as Omit<LiveStream,"host_gender"|"host_avatar_url">[];
       const hostIds = Array.from(new Set(rows.map(row => row.host_id).filter(Boolean)));
@@ -139,7 +139,7 @@ export default function StreamingPage() {
     };
     void loadLives();
     const channel = supabase.channel("1muslim-live-discovery").on("postgres_changes",{event:"*",schema:"public",table:"live_streams"},() => void loadLives()).subscribe();
-    const timer = window.setInterval(loadLives, 10000);
+    const timer = window.setInterval(loadLives, 5000);
     return () => { window.clearInterval(timer); void supabase.removeChannel(channel); };
   }, []);
 
