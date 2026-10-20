@@ -25,6 +25,8 @@ const exploreGroups = [
 const liveItems = [
   { label: "Live Now", ar: "مباشر", href: "/streaming" },
   { label: "Go Live", ar: "ابدأ البث", href: "/streaming/go-live" },
+  { label: "Audio Rooms", ar: "غرف صوتية", href: "/audio-rooms" },
+  { label: "Group Calls", ar: "مكالمات جماعية", href: "/messages/groups" },
   { label: "Recordings", ar: "التسجيلات", href: "/streaming/library" },
 ];
 
@@ -330,6 +332,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
         <ProfileAvatar name={user.display_name} gender={user.gender} avatarGender={user.avatar_gender} avatarPackage={user.avatar_package} avatarConfig={user.avatar_config} accent={user.profile_accent ?? "emerald"} size="sm" />
         <span className="authAccountName">{accountLabel}</span>
       </Link>
+      <Link href="/settings" className="authNav" aria-label="Open Settings" title="Settings">⚙ <span>Settings</span></Link>
       <button type="button" className="authSignOut" onClick={signOut}>Sign out</button>
     </div> : <Link href="/auth" className="authNav">Sign in</Link>}
 

@@ -36,8 +36,9 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
+  const [connectionActive, setConnectionActive] = useState(false);
 
-  useEffect(()=>{if(!streamId)return;let alive=true;const db=createClient();const check=async()=>{const {data}=await db.from("live_streams").select("status,ended_at").eq("id",streamId).maybeSingle();if(!alive||endedOnce.current)return;if(data&&(data.status==="ended"||data.ended_at)){endedOnce.current=true;setHostEnded(true);roomRef.current?.disconnect();window.setTimeout(()=>{if(embedded){window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));setHostEnded(false)}else router.replace("/")},3800)}};const timer=window.setInterval(()=>void check(),3000);return()=>{alive=false;window.clearInterval(timer)}},[streamId,embedded,router]);
+  useEffect(()=>{if(!streamId)return;let alive=true;const db=createClient();const end=()=>{if(!alive||endedOnce.current)return;endedOnce.current=true;setHostEnded(true);roomRef.current?.disconnect();window.setTimeout(()=>{if(embedded){window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));setHostEnded(false)}else router.replace("/")},3800)};const check=async()=>{const {data}=await db.from("live_streams").select("status,ended_at").eq("id",streamId).maybeSingle();if(data&&(data.status==="ended"||data.status==="cancelled"||data.ended_at))end()};void check();const channel=db.channel("live-end:"+streamId).on("postgres_changes",{event:"UPDATE",schema:"public",table:"live_streams",filter:"id=eq."+streamId},payload=>{const next=payload.new as {status?:string;ended_at?:string|null};if(next.status==="ended"||next.status==="cancelled"||next.ended_at)end()}).subscribe();const timer=connectionActive?undefined:window.setInterval(()=>void check(),1000);return()=>{alive=false;if(timer)window.clearInterval(timer);void db.removeChannel(channel)}},[streamId,embedded,router,connectionActive]);
 
   useEffect(() => {
     let mounted = true;
@@ -81,7 +82,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.url || !data.token) throw new Error("Live connection is temporarily unavailable. Please try again.");
 
-        const room = new Room({ adaptiveStream: true, dynacast: true });
+        const room = new Room({ adaptiveStream: false, dynacast: true });
         roomRef.current = room;
         room.on(RoomEvent.TrackSubscribed, (track, publication) => attachTrack(track, publication.source));
         room.on(RoomEvent.TrackUnsubscribed, (track, publication) => {
@@ -103,12 +104,13 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         });
         room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live video could not be subscribed to. Please reconnect."));
         room.on(RoomEvent.ParticipantConnected, () => mounted && setStatus("Waiting for host video…"));
-        room.on(RoomEvent.Reconnecting, () => {if(mounted){setStatus("Reconnecting…");setReconnecting(true);setReconnectKey(String(Date.now()));}});
-        room.on(RoomEvent.Reconnected, () => {if(mounted){setReconnecting(false);setStatus("Waiting for host video…");}});
-        room.on(RoomEvent.Disconnected, () => {if(mounted){setStatus("Live connection ended.");setReconnecting(false);setError("The live connection ended. Please retry.");}});
+        room.on(RoomEvent.Reconnecting, () => {if(mounted){setConnectionActive(false);setStatus("Reconnecting…");setReconnecting(true);setReconnectKey(String(Date.now()));}});
+        room.on(RoomEvent.Reconnected, () => {if(mounted){setConnectionActive(true);setReconnecting(false);setStatus("Waiting for host video…");}});
+        room.on(RoomEvent.Disconnected, () => {if(mounted){setConnectionActive(false);setStatus("Live connection ended.");setReconnecting(false);setError("The live connection ended. Please retry.");}});
 
         await room.connect(data.url, data.token, { autoSubscribe: true });
         if (!mounted) { await room.disconnect(); return; }
+        setConnectionActive(true);
 
         for (const participant of room.remoteParticipants.values()) {
           for (const publication of participant.trackPublications.values()) {
@@ -119,7 +121,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
 
         if (mounted && ![...room.remoteParticipants.values()].some(p=>[...p.trackPublications.values()].some(pub=>pub.kind===Track.Kind.Video && pub.track))) { setStatus("Waiting for host video…"); setReconnecting(false); }
       } catch (err) {
-        if (mounted) { setReconnecting(false); setStatus("Connection unavailable"); setError("The live connection could not be established. Please retry or return to Streaming."); }
+        if (mounted) { setConnectionActive(false); setReconnecting(false); setStatus("Connection unavailable"); setError("The live connection could not be established. Please retry or return to Streaming."); }
       }
     };
 

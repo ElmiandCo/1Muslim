@@ -1,6 +1,7 @@
 "use client";
 import {useCallback,useEffect,useState} from "react";
 import Link from "next/link";
+import SiteNav from "../../components/SiteNav";
 import GroupMeeting from "../../../components/GroupMeeting";
 import {createClient} from "../../../utils/supabase/client";
 type Person={id:string;display_name:string|null;username:string|null};
@@ -54,7 +55,7 @@ export default function GroupRooms(){
  async function setRole(target:string,newRole:string){setBusy(true);const {error}=await db.rpc("dm_set_group_role",{g:active,target,new_role:newRole});if(error)setError(error.message);else await loadRoom(active);setBusy(false)}
  async function remove(target:string){if(!window.confirm("Remove this member from the group?"))return;setBusy(true);const {error}=await db.rpc("dm_remove_group_member",{g:active,target});if(error)setError(error.message);else await loadRoom(active);setBusy(false)}
  async function schedule(e:React.FormEvent){e.preventDefault();if(!callWhen||!active)return;const at=new Date(callWhen);if(!Number.isFinite(at.getTime())||at<=new Date()){setError("Choose a future date and time");return}setBusy(true);setError("");const {error}=await db.from("dm_group_calls").insert({group_id:active,creator_id:uid,title:callTitle.trim(),mode:callMode,starts_at:at.toISOString(),duration_minutes:callDuration});if(error)setError(error.message);else{setNotice("Call scheduled for your group");setCallTitle("");setCallWhen("");await loadRoom(active)}setBusy(false)}
- if(!uid)return <main style={{padding:30}}><h1>Group Messages</h1><Link href="/auth">Sign in to use group rooms →</Link></main>;
+ if(!uid)return <main><SiteNav/><section style={{padding:30}}><h1>Group Messages</h1><Link href="/auth">Sign in to use group rooms →</Link></section></main>;
  const current=groups.find(g=>g.id===active);
  return <main className={"gm gm-"+theme}><header className="gm-head"><Link href="/messages">← Messenger</Link><Link href="/messages/public" className="gm-publicLink">🌍 Public Calls</Link><div><span>1MUSLIM MESSENGER</span><h1>Groups & Calls</h1><p>Private group messages, scheduled video calls and discoverable public conversations.</p></div><div className="gm-headActions"><button className="gm-theme" type="button" aria-label="Toggle group chat day and night mode" onClick={()=>setTheme(v=>{const next=v==="day"?"night":"day";try{localStorage.setItem("1muslim:group-theme",next)}catch{}return next})}>{theme==="day"?"☀️ Day":"🌙 Night"} ↔</button><button className="gm-primary" onClick={()=>setCreating(v=>!v)}>＋ New group</button></div></header>
  {error&&<p role="alert" className="gm-error">{error} <button onClick={()=>setError("")}>×</button></p>}{notice&&<p role="status" className="gm-notice">{notice}</p>}
