@@ -11,13 +11,13 @@
 :global(html.light) .day{opacity:1}
 :global(html.light) .night{opacity:1}
 .slide[data-workspace-page="0"] .night{background-image:url("/assets/decorations/islamic-white-ornament.PNG");background-size:min(90%,760px) auto;background-color:#08362c;filter:sepia(.45) hue-rotate(92deg) saturate(1.4)}
-.slide[data-workspace-page="3"] .night{background-image:url("/assets/decorations/background-mosque-night.PNG")}
+.slide[data-workspace-page="3"] .night{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")}
 .slide[data-workspace-page="0"] .day{background-image:url("/assets/decorations/islamic-gold-ornament.PNG");background-size:min(90%,760px) auto;background-color:#244c3b}
-.slide[data-workspace-page="3"] .day{background-image:url("/assets/decorations/background-mosque-day.PNG")}
-.slide[data-workspace-page="1"] .night{background-image:url("/assets/decorations/background-valley-night.PNG")}
-.slide[data-workspace-page="1"] .day{background-image:url("/assets/decorations/background-valley-day.PNG")}
-.slide[data-workspace-page="2"] .night{background-image:url("/assets/decorations/background-nature-night.PNG")}
-.slide[data-workspace-page="2"] .day{background-image:url("/assets/decorations/background-nature-day.PNG")}
+.slide[data-workspace-page="3"] .day{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")}
+.slide[data-workspace-page="1"] .night{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")}
+.slide[data-workspace-page="1"] .day{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")}
+.slide[data-workspace-page="2"] .night{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")}
+.slide[data-workspace-page="2"] .day{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")}
 .content{position:relative!important;z-index:1!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;padding:12px!important;margin:0!important;background:transparent!important}
 .content>[data-widget]{min-width:0!important;max-width:100%!important;box-sizing:border-box!important;background:transparent!important}
 .content>[data-widget]>[class*="widgetCanvas"]{box-sizing:border-box!important;min-width:0!important;width:100%!important;max-width:100%!important;background:linear-gradient(180deg,rgba(7,35,28,.12),rgba(2,26,22,.19))!important;backdrop-filter:blur(4px) saturate(120%)!important;-webkit-backdrop-filter:blur(4px) saturate(120%)!important;border:1px solid rgba(235,209,151,.42)!important}
@@ -85,7 +85,7 @@
 
 /* Full-viewport studio portal grows from the dashboard region. */
 .studioPortal{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;overflow:hidden;isolation:isolate;animation:studioPortalGrow 560ms cubic-bezier(.2,.85,.2,1) both;transform-origin:50% 60%;border-radius:22px;pointer-events:all}
-.studioPortalBackdrop{position:absolute;inset:0;background:linear-gradient(145deg,rgba(5,17,34,.60),rgba(24,12,57,.86)),url("/assets/decorations/background-mosque-night.PNG") center/cover;animation:studioPortalShift 560ms ease-out both}
+.studioPortalBackdrop{position:absolute;inset:0;background:linear-gradient(145deg,rgba(5,17,34,.60),rgba(24,12,57,.86)),url("/assets/decorations/islamic-gold-ornament.PNG") center/cover;animation:studioPortalShift 560ms ease-out both}
 .studioPortalContent{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;color:#f8f0d8;text-shadow:0 2px 22px rgba(0,0,0,.55);animation:studioPortalReveal 500ms ease both}
 .studioPortalContent span{font-size:clamp(34px,6vw,68px)}
 .studioPortalContent strong{font-size:clamp(16px,3vw,26px);letter-spacing:.24em}
@@ -95,8 +95,8 @@
 @keyframes studioPortalReveal{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.studioPortal,.studioPortalBackdrop,.studioPortalContent{animation:none!important}}
 
-.slide[data-workspace-page='0'] .night{background-image:url('/assets/decorations/background-mosque-night.PNG')!important;background-position:center!important;background-size:cover!important;filter:none!important}
-.slide[data-workspace-page='0'] .day{background-image:url('/assets/decorations/background-mosque-day.PNG')!important;background-position:center!important;background-size:cover!important;filter:none!important}
+.slide[data-workspace-page='0'] .night{background-image:url('/assets/decorations/islamic-gold-ornament.PNG')!important;background-position:center!important;background-size:cover!important;filter:none!important}
+.slide[data-workspace-page='0'] .day{background-image:url('/assets/decorations/islamic-gold-ornament.PNG')!important;background-position:center!important;background-size:cover!important;filter:none!important}
 
 :global([class*='navMotionCollapsed']) .content{min-height:100%!important;display:flex!important;flex-direction:column!important}
 :global([class*='navMotionCollapsed']) .content>[data-widget]{flex:1 1 auto!important;min-height:0!important}
@@ -342,14 +342,14 @@
 
 /* Canonical scene assets: dark and light each use their own illustration.
    This override comes after legacy slide-0 ornament and image rules. */
-.slide[data-workspace-page="0"] .night{background-image:url("/assets/decorations/background-mosque-night.PNG")!important;background-size:cover!important;background-position:center!important}
-.slide[data-workspace-page="0"] .day{background-image:url("/assets/decorations/background-mosque-day.PNG")!important;background-size:cover!important;background-position:center!important}
-.slide[data-workspace-page="1"] .night{background-image:url("/assets/decorations/background-valley-night.PNG")!important}
-.slide[data-workspace-page="1"] .day{background-image:url("/assets/decorations/background-valley-day.PNG")!important}
-.slide[data-workspace-page="2"] .night{background-image:url("/assets/decorations/background-nature-night.PNG")!important}
-.slide[data-workspace-page="2"] .day{background-image:url("/assets/decorations/background-nature-day.PNG")!important}
-.slide[data-workspace-page="3"] .night{background-image:url("/assets/decorations/background-mosque-night.PNG")!important}
-.slide[data-workspace-page="3"] .day{background-image:url("/assets/decorations/background-mosque-day.PNG")!important}
+.slide[data-workspace-page="0"] .night{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")!important;background-size:cover!important;background-position:center!important}
+.slide[data-workspace-page="0"] .day{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")!important;background-size:cover!important;background-position:center!important}
+.slide[data-workspace-page="1"] .night{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")!important}
+.slide[data-workspace-page="1"] .day{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")!important}
+.slide[data-workspace-page="2"] .night{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")!important}
+.slide[data-workspace-page="2"] .day{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")!important}
+.slide[data-workspace-page="3"] .night{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")!important}
+.slide[data-workspace-page="3"] .day{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")!important}
 :global(html.light) .slide .night{opacity:0!important}
 :global(html.light) .slide .day{opacity:1!important}
 :global(html:not(.light)) .slide .night{opacity:1!important}
@@ -566,8 +566,8 @@
 @media(max-width:650px){.fillArea::before{inset:4px;border-radius:20px}.fillArea>.canvasExpandHandle{margin-right:10px!important}.fillArea> :global([class*="workspaceDownButton"]){margin-right:10px!important}}
 
 /* Elm Tent · fifth Canvas. Reuses existing themed scene assets and motion field. */
-.slide[data-workspace-page="4"] .night{background-image:url("/assets/decorations/background-valley-night.PNG")}
-.slide[data-workspace-page="4"] .day{background-image:url("/assets/decorations/background-valley-day.PNG")}
+.slide[data-workspace-page="4"] .night{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")}
+.slide[data-workspace-page="4"] .day{background-image:url("/assets/decorations/islamic-gold-ornament.PNG")}
 .elmTentCard{display:flex!important;flex-direction:column!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;overflow:hidden!important;padding:clamp(7px,1.6vw,14px)!important;border-radius:clamp(19px,3vw,30px)!important;background:rgba(5,40,35,.13)!important}
 .elmTentCard>div{flex:1;min-height:0}
 @media(prefers-reduced-motion:reduce){.slide[data-workspace-page="4"] .night,.slide[data-workspace-page="4"] .day{transition:none!important}}
@@ -616,3 +616,6 @@
  .fillArea>.canvasHeaderTitle{left:15px!important;right:60px!important;height:32px!important}
  .fillArea>.canvasExpandHandle{margin-right:14px!important}
 }
+
+/* Legacy full-scene photos removed from dashboard slides; ornament remains as fallback.
+   Profile theme imagery is provided by the saved theme layer in CanvasSecondaryApp. */
