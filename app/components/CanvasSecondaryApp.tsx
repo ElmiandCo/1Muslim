@@ -45,7 +45,7 @@ function ProfileApp({active}:{active:boolean}){
  const [backgroundImageReady,setBackgroundImageReady]=useState(false);
  const [parallaxOffset,setParallaxOffset]=useState({x:0,y:0});
  const swipeStart=useRef<{x:number;y:number}|null>(null);
- const backgroundUrl=(key:string)=>"/assets/profile-backgrounds/"+key+".webp";
+ const backgroundUrl=(key:string)=>"/assets/profile-backgrounds/"+key+".png";
  useEffect(()=>{setBackgroundImageReady(false);const image=new Image();image.onload=()=>setBackgroundImageReady(true);image.onerror=()=>setBackgroundImageReady(false);image.src=backgroundUrl(currentBackground);return()=>{image.onload=null;image.onerror=null}},[currentBackground]);
  const profileParallax={onTouchStart:(e:React.TouchEvent<HTMLDivElement>)=>{swipeStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}},onTouchMove:(e:React.TouchEvent<HTMLDivElement>)=>{if(!swipeStart.current)return;const dx=e.touches[0].clientX-swipeStart.current.x,dy=e.touches[0].clientY-swipeStart.current.y;setParallaxOffset({x:Math.max(-22,Math.min(22,-dx*.11)),y:Math.max(-22,Math.min(22,-dy*.11))})},onTouchEnd:()=>{swipeStart.current=null;setParallaxOffset({x:0,y:0})}};
 
