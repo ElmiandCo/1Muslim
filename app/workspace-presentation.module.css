@@ -655,3 +655,9 @@
   transform:none!important;transition:none!important;
  }
 }
+
+/* Production layering: ambient dust must render in front of every wallpaper, but behind cards. */
+.slide{isolation:isolate!important}
+.slide>.scene{z-index:0!important}
+.slide>.canvasParticles{z-index:3!important;opacity:.72;pointer-events:none!important;mix-blend-mode:screen}
+.slide>.content{position:relative!important;z-index:4!important}
