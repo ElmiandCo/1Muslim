@@ -637,3 +637,21 @@
  background-position:center!important;background-size:cover!important;
 }
 @media(prefers-reduced-motion:reduce){:global(html[data-profile-background]) .slide .scene{transition:none!important;transform:none!important}}
+
+/* Shared depth motion: backdrop moves opposite scroll, mid-layer dust drifts more slowly.
+   Five seconds after the last movement, both gently return to their resting position. */
+:global(html[data-profile-background]) .viewport .slide .scene{
+ transform:translate3d(calc(var(--scene-offset,0px) + var(--profile-scene-x,0px)),var(--profile-scene-y,0px),0) scale(var(--profile-scene-zoom,1.035))!important;
+ transition:transform 2200ms cubic-bezier(.22,1,.36,1)!important;
+}
+:global(html[data-profile-background]) .viewport .slide .canvasParticles{
+ transform:translate3d(calc(var(--profile-scene-x,0px) * -.35),calc(var(--profile-scene-y,0px) * -.35),0);
+ transition:transform 2800ms cubic-bezier(.22,1,.36,1);
+ opacity:.48;
+}
+@media(prefers-reduced-motion:reduce){
+ :global(html[data-profile-background]) .viewport .slide .scene,
+ :global(html[data-profile-background]) .viewport .slide .canvasParticles{
+  transform:none!important;transition:none!important;
+ }
+}
