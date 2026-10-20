@@ -10,12 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
   "background_color": "#08150e",
   "theme_color": "#123b29",
   "icons": [
-    {
-      "src": "/assets/1muslim-live-logo.PNG",
-      "sizes": "any",
-      "type": "image/png",
-      "purpose": "any"
-    }
+    {"src":"/app-install-icon","sizes":"512x512","type":"image/png","purpose":"any maskable"},
+    {"src":"/apple-icon","sizes":"180x180","type":"image/png","purpose":"any"}
   ]
 };
 }
