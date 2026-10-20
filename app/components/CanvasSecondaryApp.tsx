@@ -40,7 +40,10 @@ function ProfileApp({active}:{active:boolean}){
 {name:"Default",url:"/assets/avatars/Default-women.png",xp:0,gender:"female",category:"Basic"},
 ...(["Silver","Gold","Water","Cosmic"] as const).flatMap(name=>(["male","female"] as const).map(gender=>({name,url:`/assets/avatars/${name.toLowerCase()}-avatar-${gender}.${name==="Silver"?"jpg":"PNG"}`,xp:5000,gender,category:["Silver","Gold","Water"].includes(name)?"Elemental":"Elite"}))),
 {name:"Floral",url:"/assets/avatars/floral-avatar-female.PNG",xp:5000,gender:"female",category:"Elite"},
-{name:"Diamond",url:"/assets/avatars/diamond-avatar-female.PNG",xp:5000,gender:"female",category:"Elite"}
+{name:"Diamond",url:"/assets/avatars/diamond-avatar-female.PNG",xp:5000,gender:"female",category:"Elite"},
+{name:"Silk",url:"/assets/avatars/silk-avatar-female.PNG",xp:5000,gender:"female",category:"Elite"},
+{name:"Lunar",url:"/assets/avatars/lunar-avatar-female.PNG",xp:5000,gender:"female",category:"Elite"},
+{name:"Ice",url:"/assets/avatars/ice-avatar-female.PNG",xp:5000,gender:"female",category:"Elite"}
 ];
 const avatarGender=(profile?.avatar_gender||profile?.gender||"").toLowerCase();const visibleAvatars=avatars.filter(a=>avatarGender==="male"||avatarGender==="female"?a.gender===avatarGender:true);
 const badgeOptions=[{key:"shahada",name:"Shahadah Certified",image:"/assets/badges/shahada-badge.png"},{key:"dua",name:"Dua Badge",image:"/assets/badges/dua-badge.PNG"},{key:"tiktok",name:"TikTok Connected",image:"/assets/badges/1Muslim-TikTok-badge.PNG"}];
