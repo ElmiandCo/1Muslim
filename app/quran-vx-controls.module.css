@@ -47,11 +47,3 @@
 @media(max-width:650px){.quranWidget{padding:10px!important}.quranWidget>.quranFrame>.quranArticle{padding:12px!important;border-radius:17px!important}.quranWidget>.quranFrame>.quranPrevious{left:9px!important;top:9px!important}.quranWidget>.quranFrame>.quranPlay{right:9px!important;top:9px!important}}
 @media(prefers-reduced-motion:reduce){.quranFrame::before,.quranFrame::after{animation:none;will-change:auto}.quranWidget>.quranFrame>.quranPlay:hover,.quranWidget>.quranFrame>.quranPlay:active{transform:none!important}}
 
-/* Extend only the transparent mirror pane to the green guide (~80% of frame).
-   Keep the original Quran text layout and independent buttons untouched. */
-.quranWidget>.quranFrame>.quranArticle::before{
- content:"";position:absolute;top:0;left:0;right:0;height:80%;
- border:1px solid rgba(var(--qvx-border),.20);border-radius:inherit;
- background:rgba(var(--qvx-surface),.045);pointer-events:none;z-index:-1;
-}
-.quranWidget>.quranFrame>.quranArticle{isolation:isolate!important}
