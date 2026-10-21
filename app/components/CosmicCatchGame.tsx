@@ -10,8 +10,8 @@ const LETTERS=[
  ["ض","Daad"],["ط","Taa (heavy)"],["ظ","Dhaa (heavy)"],["ع","Ayn"],["غ","Ghayn"],["ف","Faa"],
  ["ق","Qaaf"],["ك","Kaaf"],["ل","Laam"],["م","Meem"],["ن","Noon"],["ه","Haa"],["و","Waaw"],["ي","Yaa"]
 ] as const;
-const STARTS=[0,6,12,18,24,28] as const;
-const LEVEL_NAMES=["First Flight","Letter Orbit","Star Navigator","Nebula Challenge","Guardian Review"] as const;
+const STARTS=[0,9,19,28] as const;
+const LEVEL_NAMES=["Easy · Flight School","Medium · Star Routes","Challenging · Nebula Run"] as const;
 const BOSS_REVIEW=[3,14,25] as const;
 type Phase="ready"|"playing"|"paused"|"between"|"over"|"won";
 type Orb={id:number;x:number;y:number;letter:number;radius:number;speed:number;boss:boolean};
@@ -20,18 +20,18 @@ type Shot={x:number;y:number;life:number;correct:boolean};
 type Game={
  running:boolean;paused:boolean;stage:number;progress:number;bossHits:number;score:number;mistakes:number;
  checkpointScore:number;checkpointMistakes:number;orbs:Orb[];shards:Shard[];shot:Shot|null;
- nextId:number;last:number;lastPaint:number;waveDelay:number;shipX:number;shipY:number;targetId:number|null;waveClock:number
+ nextId:number;last:number;lastPaint:number;waveDelay:number;shipX:number;desiredX:number;held:number;travel:number;shipX:number;shipY:number;targetId:number|null;waveClock:number
 };
 const newGame=():Game=>({
  running:false,paused:false,stage:0,progress:0,bossHits:0,score:0,mistakes:0,
- checkpointScore:0,checkpointMistakes:0,orbs:[],shards:[],shot:null,nextId:0,last:0,lastPaint:0,waveDelay:0,shipX:W/2,shipY:H-50,targetId:null,waveClock:0
+ checkpointScore:0,checkpointMistakes:0,orbs:[],shards:[],shot:null,nextId:0,last:0,lastPaint:0,waveDelay:0,shipX:180,desiredX:180,held:0,travel:0,shipX:W/2,shipY:H-50,targetId:null,waveClock:0
 } as Game);
 const goal=(g:Game)=>g.progress<LETTERS.length?g.progress:BOSS_REVIEW[Math.min(g.bossHits,BOSS_REVIEW.length-1)];
 const shuffle=<T,>(array:T[]):T[]=>{for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array};
 const makeWave=(g:Game)=>{
  if(!g.running||g.paused||g.orbs.length)return;
  const boss=g.progress===LETTERS.length;
- const count=g.stage===0?2:g.stage<3?3:4;
+ const count=g.stage===0?2:g.stage===1?3:4;
  const correct=goal(g);
  const similar:Record<number,number[]>={1:[2,3,4],2:[1,3],3:[1,2],4:[5,6],5:[4,6],6:[4,5],7:[8],8:[7],9:[10],10:[9],11:[12],12:[11],13:[14],14:[13],15:[16],16:[15],17:[18],18:[17],19:[20],20:[19],21:[22],22:[21],23:[24],24:[23],25:[5,6]};
  const distractors=shuffle(LETTERS.map((_,i)=>i).filter(i=>i!==correct));
@@ -42,7 +42,7 @@ const makeWave=(g:Game)=>{
  g.orbs=options.map((letter,i)=>({
   id:++g.nextId,x:positions[i],y:122+(i%2)*38,letter,
   radius:boss&&letter===correct?34:count===4?27:30,
-  speed:44+g.stage*9+(boss?10:0),boss:boss&&letter===correct
+  speed:83+g.stage*32+(boss?10:0),boss:boss&&letter===correct
  }));
 };
 export default function CosmicCatchGame(){
@@ -98,7 +98,7 @@ export default function CosmicCatchGame(){
   if(fresh){game.current=newGame()}
   const current=game.current;
   current.running=true;current.paused=false;current.last=0;current.lastPaint=0;
-  current.orbs=[];current.shards=[];current.shot=null;current.waveDelay=0;
+  current.orbs=[];current.shards=[];current.shot=null;current.waveDelay=0;current.shipX=180;current.desiredX=180;current.held=0;
   current.shipX=W/2;current.shipY=H-50;current.targetId=null;current.waveClock=0;
   current.progress=STARTS[current.stage];current.bossHits=0;
   current.score=current.checkpointScore;current.mistakes=current.checkpointMistakes;
@@ -108,7 +108,7 @@ export default function CosmicCatchGame(){
   setFeedback("Read the Arabic letter, then steer into its transliteration bubble.");
  };
  const start=()=>{game.current=newGame();beginLevel(true)};
- const restartLevel=()=>{const g=game.current;if(g.stage<0||g.stage>4)return;beginLevel(false)};
+ const restartLevel=()=>{const g=game.current;if(g.stage<0||g.stage>2)return;beginLevel(false)};
  const togglePause=()=>{const g=game.current;if(!g.running)return;g.paused=!g.paused;g.last=0;setPhase(g.paused?"paused":"playing")};
  useEffect(()=>{
   const onVisibility=()=>{const g=game.current;if(document.hidden&&g.running&&!g.paused){g.paused=true;g.last=0;setPhase("paused")}};
@@ -144,7 +144,7 @@ export default function CosmicCatchGame(){
     setFeedback("Guardian hit "+g.bossHits+"/3! Read the next Arabic letter")
    }else{
     const learned=LETTERS[g.progress];g.progress++;setProgress(g.progress);
-    if(g.progress===STARTS[g.stage+1]&&g.stage<4){
+    if(g.progress===STARTS[g.stage+1]&&g.stage<2){
      g.stage++;g.checkpointScore=g.score;g.checkpointMistakes=0;
      g.running=false;g.orbs=[];setOrbs([]);setStage(g.stage);setPhase("between");
      setFeedback("Level cleared! "+learned[0]+" · "+learned[1]);saveBest(g.score);return
@@ -203,8 +203,8 @@ export default function CosmicCatchGame(){
     for(let i=0;i<9;i++){const y=110+i*i*5.8;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
     ctx.restore();
     for(const o of g.orbs){
-     const depth=Math.max(.75,Math.min(1.16,.76+o.y/H*.35));
-     ctx.save();ctx.translate(o.x,o.y);ctx.scale(depth,depth);
+     const depth=Math.max(.32,Math.min(1.18,.20+o.y/H));
+     ctx.save();ctx.translate(W/2+(o.x-W/2)*depth,o.y);ctx.scale(depth,depth);
      ctx.shadowColor=o.boss?"#ffd36a":"#6de4cd";ctx.shadowBlur=reducedRef.current?0:17;
      const fill=ctx.createRadialGradient(-11,-14,2,0,0,o.radius);
      fill.addColorStop(0,"#ffffff");fill.addColorStop(.16,o.boss?"#ffe5a5":"#b3fff0");
@@ -255,7 +255,7 @@ export default function CosmicCatchGame(){
   if(active&&phase==="playing"&&["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){e.preventDefault();const g=game.current;g.targetId=null;g.shipX=Math.max(16,Math.min(W-16,g.shipX+(e.key==="ArrowRight"?28:e.key==="ArrowLeft"?-28:0)));g.shipY=Math.max(45,Math.min(H-25,g.shipY+(e.key==="ArrowDown"?28:e.key==="ArrowUp"?-28:0))) }
  }}>
   <header className={styles.hud}>
-   <span className={styles.brand}>✦ ARABIC LETTER QUEST <small>LEVEL {stage+1}/5 · {LEVEL_NAMES[stage]}</small></span>
+   <span className={styles.brand}>✦ ARABIC LETTER QUEST <small>LEVEL {stage+1}/3 · {LEVEL_NAMES[stage]}</small></span>
    <span className={styles.stats}>⭐ {score} <span>♥ {Math.max(0,5-misses)}</span></span>
   </header>
   <div className={styles.lesson} aria-live="polite">
@@ -280,7 +280,7 @@ export default function CosmicCatchGame(){
     <small>Personal best · {best}</small>
    </div>}
   </div>
-  <div className={styles.targetBar} aria-label="Accessible transliteration targets">
+  <div className={styles.targetBar} aria-label="Accessible flight lanes">
    <span className={styles.targetLabel}>Fly to:</span>
    {active&&orbs.length?orbs.map((o,i)=><button key={o.id} type="button" disabled={phase==="paused"}
      onClick={()=>flyToId(o.id)} aria-label={"Fly to target "+(i+1)+", "+LETTERS[o.letter][1]}>
