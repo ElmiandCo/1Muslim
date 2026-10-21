@@ -1646,3 +1646,40 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 }
 .canvas-edge-chevron.is-visible{background:rgba(var(--canvas-control-surface-rgb),.65)!important}
 .oneMuslimLiveBottom .homeLiveCommentForm button:disabled{opacity:.5!important}
+
+
+/* TITAN Game Lab: the game and chat occupy separate, non-overlapping regions.
+   These rules override the legacy floating-comments Live layout ONLY in Games. */
+[data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:has([aria-label="Arabic Letter Quest educational game"]){
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ grid-template-rows:minmax(0,1fr) minmax(130px,25%)!important;
+ gap:8px!important;overflow:hidden!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage:has([aria-label="Arabic Letter Quest educational game"]) > .oneMuslimLiveTop{
+ grid-column:1!important;grid-row:1!important;min-height:0!important;height:100%!important;overflow:hidden!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage:has([aria-label="Arabic Letter Quest educational game"]) > .oneMuslimLiveBottom{
+ display:block!important;position:relative!important;inset:auto!important;z-index:1!important;
+ grid-column:1!important;grid-row:2!important;width:100%!important;height:100%!important;
+ min-height:0!important;max-height:none!important;padding:0!important;overflow:hidden!important;
+ pointer-events:auto!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage:has([aria-label="Arabic Letter Quest educational game"]) .oneMuslimLiveBottom > .homeLiveViewerConversation{
+ display:flex!important;position:relative!important;inset:auto!important;width:100%!important;
+ height:100%!important;max-height:none!important;margin:0!important;min-height:0!important;
+ border:1px solid rgba(218,185,110,.38)!important;border-radius:14px!important;
+ background:rgba(2,31,28,.72)!important;padding:8px!important;overflow:hidden!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage:has([aria-label="Arabic Letter Quest educational game"]) .oneMuslimLiveBottom .homeLiveDemoComments{
+ flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;
+ justify-content:flex-start!important;
+}
+@media(min-width:1000px){
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:has([aria-label="Arabic Letter Quest educational game"]){
+  grid-template-columns:minmax(0,1fr) minmax(250px,28%)!important;
+  grid-template-rows:minmax(0,1fr)!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage:has([aria-label="Arabic Letter Quest educational game"]) > .oneMuslimLiveBottom{
+  grid-column:2!important;grid-row:1!important;
+ }
+}
