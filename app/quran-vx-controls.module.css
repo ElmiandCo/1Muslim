@@ -217,3 +217,11 @@
 @media(max-width:650px){
  .quranWidget>.quranFrame>.quranArticle{padding:150px 18px 80px!important;gap:22px!important}
 }
+
+/* Full viewport reading layer: explicit dynamic screen height, not parent %. */
+.quranWidget>.quranFrame>.quranArticle{
+ height:100dvh!important;
+ min-height:100dvh!important;
+ max-height:none!important;
+ box-sizing:border-box!important;
+}
