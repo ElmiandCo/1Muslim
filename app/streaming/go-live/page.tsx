@@ -160,8 +160,9 @@ export default function GoLivePage() {
       const id = liveStreamIdRef.current;
       if (!id) return;
       try {
-        await createClient().from("live_streams").update({ last_heartbeat_at: new Date().toISOString() }).eq("id", id).eq("status", "live");
-      } catch {}
+        const { error: heartbeatError } = await createClient().from("live_streams").update({ last_heartbeat_at: new Date().toISOString() }).eq("id", id).eq("status", "live");
+        if (heartbeatError) console.warn("Live heartbeat update failed:", heartbeatError.message);
+      } catch (error) { console.warn("Live heartbeat request failed:", error); }
     };
     void heartbeat();
     const timer = window.setInterval(() => void heartbeat(), 15000);
