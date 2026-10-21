@@ -8,7 +8,7 @@ const LETTERS=[
  ["ا","Alif"],["ب","Baa"],["ت","Taa"],["ث","Thaa"],["ج","Jeem"],["ح","Haa"],["خ","Khaa"],
  ["د","Daal"],["ذ","Dhaal"],["ر","Raa"],["ز","Zaay"],["س","Seen"],["ش","Sheen"],["ص","Saad"],
  ["ض","Daad"],["ط","Taa (heavy)"],["ظ","Dhaa (heavy)"],["ع","Ayn"],["غ","Ghayn"],["ف","Faa"],
- ["ق","Qaaf"],["ك","Kaaf"],["ل","Laam"],["م","Meem"],["ن","Noon"],["ه","Haa"],["و","Waaw"],["ي","Yaa"]
+ ["ق","Qaaf"],["ك","Kaaf"],["ل","Laam"],["م","Meem"],["ن","Noon"],["ه","Haa (soft)"],["و","Waaw"],["ي","Yaa"]
 ] as const;
 const STARTS=[0,9,19,28] as const;
 const LEVEL_NAMES=["Easy · Flight School","Medium · Star Routes","Challenging · Nebula Run"] as const;
@@ -125,17 +125,18 @@ export default function CosmicCatchGame(){
   const g=game.current;if(!g.running||g.paused)return;
   const index=g.orbs.findIndex(o=>o.id===id);if(index<0)return;
   const orb=g.orbs.splice(index,1)[0];
-  g.targetId=null;g.shipX=W/2;g.shipY=H-50;
+  g.targetId=null;
   const correct=orb.letter===goal(g);
-  g.shot={x:orb.x,y:orb.y,life:.2,correct};
+  const impactX=W/2+(orb.x-W/2)*Math.max(.32,Math.min(1.18,.20+orb.y/H));
+  g.shot={x:impactX,y:orb.y,life:.2,correct};
   if(!reducedRef.current)for(let i=0;i<18;i++){
    const angle=i*Math.PI/9,velocity=75+Math.random()*90;
-   g.shards.push({x:orb.x,y:orb.y,vx:Math.cos(angle)*velocity,vy:Math.sin(angle)*velocity,
+   g.shards.push({x:impactX,y:orb.y,vx:Math.cos(angle)*velocity,vy:Math.sin(angle)*velocity,
     rotation:angle,spin:(Math.random()-.5)*10,life:.55,color:correct?"#ffdf91":"#ff859c"})
   }
   tone(correct);
   if(correct){
-   g.score+=100+(g.stage*20);setScore(g.score);
+   g.score+=100;setScore(g.score);
    if(g.progress===LETTERS.length){
     g.bossHits++;setBossHits(g.bossHits);
     if(g.bossHits===BOSS_REVIEW.length){
@@ -160,7 +161,7 @@ export default function CosmicCatchGame(){
  const flyToId=(id:number)=>{const g=game.current;if(!g.running||g.paused)return;if(g.orbs.some(o=>o.id===id))g.targetId=id};
  const shootPoint=(x:number,y:number)=>{
   const g=game.current;if(!g.running||g.paused)return;
-  for(let i=g.orbs.length-1;i>=0;i--){const o=g.orbs[i];if(Math.hypot(o.x-x,o.y-y)<=o.radius+16){flyToId(o.id);return}}
+  for(let i=g.orbs.length-1;i>=0;i--){const o=g.orbs[i];if(Math.hypot(W/2+(o.x-W/2)*Math.max(.32,Math.min(1.18,.20+o.y/H))-x,o.y-y)<=o.radius*Math.max(.32,Math.min(1.18,.20+o.y/H))+16){flyToId(o.id);return}}
  };
  useEffect(()=>{
   const c=canvas.current,ctx=c?.getContext("2d");if(!c||!ctx)return;
@@ -178,11 +179,12 @@ export default function CosmicCatchGame(){
      g.waveClock+=dt;
      const target=g.orbs.find(o=>o.id===g.targetId);
      if(target){
-      const dx=target.x-g.shipX,dy=target.y-g.shipY,distance=Math.hypot(dx,dy);
+      const projectedX=W/2+(target.x-W/2)*Math.max(.32,Math.min(1.18,.20+target.y/H));
+      const dx=projectedX-g.shipX,dy=target.y-g.shipY,distance=Math.hypot(dx,dy);
       const step=(225+g.stage*22)*dt;
       if(distance>0){g.shipX+=dx/distance*Math.min(step,distance);g.shipY+=dy/distance*Math.min(step,distance)}
      }else g.targetId=null;
-     const collision=g.orbs.find(o=>Math.hypot(o.x-g.shipX,o.y-g.shipY)<o.radius*.7+12);
+     const collision=g.orbs.find(o=>{const depth=Math.max(.32,Math.min(1.18,.20+o.y/H));return Math.hypot(W/2+(o.x-W/2)*depth-g.shipX,o.y-g.shipY)<o.radius*depth+12});
      if(collision)impactRef.current(collision.id);
      else if(g.waveClock>(g.stage===0?20:g.stage===1?17:g.stage===2?14:g.stage===3?12:10)){
       g.orbs=[];g.targetId=null;g.shipX=W/2;g.shipY=H-50;g.waveDelay=.5;
@@ -274,7 +276,7 @@ export default function CosmicCatchGame(){
    {phase!=="playing"&&<div className={styles.overlay}>
     <span className={styles.planet} aria-hidden="true">{phase==="won"?"🏆":phase==="over"?"✧":"✦"}</span>
     <h2>{phase==="ready"?"LEARN THE ARABIC ALPHABET":phase==="between"?"LEVEL COMPLETE":phase==="paused"?"PAUSED":phase==="won"?"ALL 28 LETTERS MASTERED!":"MISSION ENDED"}</h2>
-    <p>{phase==="ready"?"Read the Arabic letter above, then steer your ship through the bubble with its transliteration. Tap to fly, drag to steer, or use the arrow keys. Clear five levels and the Guardian.":phase==="between"?"Next: Level "+(stage+1)+" · "+LEVEL_NAMES[stage]:phase==="paused"?"Your spacecraft and game timer are paused.":phase==="won"?"You completed all five levels and the Guardian review!":"Five mistakes used. Restart this level to practice again."}</p>
+    <p>{phase==="ready"?"Read the Arabic letter above, then steer your ship through the bubble with its transliteration. Tap to fly, drag to steer, or use the arrow keys. Clear three levels and the Guardian.":phase==="between"?"Next: Level "+(stage+1)+" · "+LEVEL_NAMES[stage]:phase==="paused"?"Your spacecraft and game timer are paused.":phase==="won"?"You completed all three levels and the Guardian review!":"Five mistakes used. Restart this level to practice again."}</p>
     <button type="button" onClick={phase==="paused"?togglePause:phase==="between"?()=>beginLevel(false):phase==="ready"||phase==="won"?start:restartLevel}>
      {phase==="paused"?"▶ RESUME":phase==="between"?"▶ NEXT LEVEL":phase==="ready"?"▶ START LEARNING":phase==="won"?"↻ PLAY AGAIN":"↻ RETRY LEVEL"}
     </button>
