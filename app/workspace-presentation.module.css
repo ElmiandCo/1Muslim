@@ -697,3 +697,13 @@
 /* Correct the containing block: previous absolute positioning used the short verse widget,
    placing tiles halfway up the canvas. Dock to the viewport's lower edge instead. */
 .fillArea .slide[data-workspace-page="1"] .quranProgressCards{position:fixed!important;inset:auto 7% clamp(48px,7vh,90px) 7%!important;top:auto!important;bottom:clamp(48px,7vh,90px)!important;left:7%!important;right:7%!important;width:86%!important;margin:0!important;transform:none!important;z-index:100!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+
+/* Quran top toolbar: three mini trackers BETWEEN left Play and right Back. */
+.fillArea .slide[data-workspace-page="1"] .quranVerseWidget{position:relative!important;padding-bottom:0!important}
+.fillArea .slide[data-workspace-page="1"] .quranProgressCards{position:absolute!important;inset:12px 78px auto 78px!important;top:12px!important;bottom:auto!important;left:78px!important;right:78px!important;width:auto!important;max-width:none!important;margin:0!important;transform:none!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;z-index:30!important;align-items:stretch!important}
+.fillArea .slide[data-workspace-page="1"] .quranProgressCard{min-height:51px!important;max-height:59px!important;height:55px!important;padding:4px 2px!important;gap:2px!important;border-radius:10px!important;background:rgba(5,37,35,.46)!important;overflow:hidden!important}
+.fillArea .slide[data-workspace-page="1"] .quranProgressCard>span{font-size:clamp(6px,1.25vw,9px)!important;letter-spacing:0!important;white-space:nowrap!important}
+.fillArea .slide[data-workspace-page="1"] .quranProgressCard>strong{font-size:clamp(10px,2vw,14px)!important;white-space:nowrap!important}
+.fillArea .slide[data-workspace-page="1"] .quranProgressCard>small{font-size:clamp(6px,1.2vw,8px)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
+.fillArea .slide[data-workspace-page="1"] .quranProgressTrack{height:2px!important}
+.fillArea .slide[data-workspace-page="1"] .quranVerseHeader{margin-top:65px!important;padding-left:0!important}
