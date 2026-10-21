@@ -85,3 +85,8 @@
 .quranWidget>.quranFrame>.quranCardScroller{z-index:21!important;pointer-events:auto!important;touch-action:pan-y!important;overscroll-behavior:contain!important;overflow-y:auto!important;contain:layout!important}
 .quranWidget>.quranFrame>.quranCardScroller>.quranFloatingCard{pointer-events:auto!important;touch-action:pan-y!important}
 .quranWidget>.quranFrame::before,.quranWidget>.quranFrame::after{pointer-events:none!important}
+
+/* iOS native reading surface: one bounded scroll container, no competing gesture interception. */
+.quranWidget>.quranFrame{min-height:0!important;position:relative!important}
+.quranWidget>.quranFrame>.quranCardScroller{position:absolute!important;top:58px!important;right:7px!important;bottom:7px!important;left:7px!important;height:calc(100% - 65px)!important;max-height:calc(100% - 65px)!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;overscroll-behavior-y:contain!important;contain:none!important;z-index:21!important;pointer-events:auto!important}
+.quranWidget>.quranFrame>.quranCardScroller>.quranFloatingCard{flex-shrink:0!important;touch-action:pan-y!important}
