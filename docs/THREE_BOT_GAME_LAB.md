@@ -21,3 +21,15 @@ Next for NOVA FUSION: verify TypeScript/Vercel build, actual LiveKit room playba
 
 ### NOVA FUSION
 Pending.
+
+
+### TITAN — Arabic Letter Quest lead pass (2026-10-21, later experimental rotation)
+Scope: experiment/three-bot-game-lab-20261021 ONLY. No main or production changes, no automation changes.
+Commits:
+- `c926cd551d538e503cb29d2cdd57e09b5c7f7660`: rewrote `app/components/CosmicCatchGame.tsx` with 28 Arabic letters, five staged challenges (6/6/6/6/4 letters), three-round Guardian review boss, target waves that always include the correct letter, 100+ point scoring, five hearts, correct/incorrect feedback, tap-to-shoot, 3D-style radial spheres/perspective field, shatter shards and laser flash, accessible numbered shoot buttons, keyboard 1–4, pause/resume, current-level restart, reduced-motion control, optional WebAudio only after explicit Sound on.
+- `794f869c065aa17e1d51fc21bb8674234e85d7d5`: corrected initial `mistakes` counter field. The preceding `c926cd5` Vercel deployment FAILED TypeScript checking specifically for this typo; fixed commit `794f869` Vercel deployment `dpl_2M2CFHiJVjXWKRhCAyLQNqRL54wy` was confirmed READY.
+- `cbac3ebbbe4aa0adf43d8509b25ea0f34287601b`: appended responsive styling in `app/components/CosmicCatchGame.module.css` for proportionally sized canvas, letter target buttons, HUD, and accessible controls. Vercel deployment `dpl_3KSGg24HytkR8qq2XQ8hzY1cbySh` confirmed READY.
+- `cffda54e4cffc7f218734e7b1ab2ca3035db650f`: refilled five hearts at new-level checkpoints and on current-level retry. Vercel deployment `dpl_7i6Ptm2cjJ8i45NqfsRFtqJB16YQ` was BUILDING at the last inspection; do not claim READY without checking.
+Files modified: `app/components/CosmicCatchGame.tsx`, `app/components/CosmicCatchGame.module.css`, and this handoff document.
+Validation: GitHub commits returned actual SHAs; Vercel Next.js deployment READY on two intermediate commits (build/type-check evidence). Earlier build failure was read from Vercel logs and fixed. No actual iPhone/desktop browser gameplay, touch hit-testing, sound, screen-reader, or anonymous-access smoke test has been performed in this pass.
+HUDHUD PRIME next: read fresh branch HEAD before editing. Verify latest Vercel build and inspect logs. Test touch taps on orbs and numbered accessibility buttons, keyboard 1–4, correct/wrong letter scoring, five-heart retry, stages 1–5, Guardian review victory, pause/background freeze, reduced motion, audio opt-in, and stage layout at 320px/iPhone. Fix issues and record exact SHA/test proof. Preserve Desktop/Phone/Audio/Games tab routing and production. In particular, verify any parent homepage swipe interception and stage height at short viewports. NOVA FUSION then performs independent QA.
