@@ -136,6 +136,7 @@ export default function Home(){
   moveWorkspace(next);
  };
 
+ useEffect(()=>{const handle=()=>{if(workspacePage===0&&canvasRow===2)setCanvasRow(1)};window.addEventListener("1muslim:umma-return-profile",handle);return()=>window.removeEventListener("1muslim:umma-return-profile",handle)},[workspacePage,canvasRow]);
  const verticalSwipeStart=useRef<{x:number;y:number}|null>(null);
  const [quranPreview,setQuranPreview]=useState<{arabic:string;translation:string;chapter:number;verse:number;globalAyah:number}|null>(null);
  const [quranAudioPlaying,setQuranAudioPlaying]=useState(false);
