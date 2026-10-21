@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
+import GameLabProfileHub from "./GameLabProfileHub";
 import {createClient} from "../../utils/supabase/client";
 import HomeMessagesChooser from "./HomeMessagesChooser";
 import ProfileAvatar from "./ProfileAvatar";
