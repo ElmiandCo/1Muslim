@@ -200,6 +200,6 @@ export function CommunityMap({active}:{active:boolean}){
 }
 export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boolean}){
  return <div className={slot===0?"canvas-native-app canvas-profile-mirror":"canvas-native-app"}>{slot!==0&&<header><span>0{slot+6} · 1MUSLIM</span><h2>{titles[slot]}</h2></header>}<div className="canvas-native-body">
- {slot===0?<ProfileApp active={active}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:slot===4?<ElmTentAlphabet/>:<div className="canvas-community-map-panel"><strong>Community connections</strong><p>Discover Muslims and mosques through the Community Map above.</p></div>}
+ {slot===0?<GameLabProfileHub active={active} profile={<ProfileApp active={active}/>}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:slot===4?<ElmTentAlphabet/>:<div className="canvas-community-map-panel"><strong>Community connections</strong><p>Discover Muslims and mosques through the Community Map above.</p></div>}
  </div>{slot!==0&&<footer><Link href={destinations[slot]}>Open full experience ↗</Link></footer>}</div>
 }
