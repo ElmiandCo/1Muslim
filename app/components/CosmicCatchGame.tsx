@@ -23,7 +23,7 @@ type Game={
  nextId:number;last:number;lastPaint:number;waveDelay:number
 };
 const newGame=():Game=>({
- running:false,paused:false,stage:0,progress:0,bossHits:0,score:0,misses:0,
+ running:false,paused:false,stage:0,progress:0,bossHits:0,score:0,mistakes:0,
  checkpointScore:0,checkpointMistakes:0,orbs:[],shards:[],shot:null,nextId:0,last:0,lastPaint:0,waveDelay:0
 } as Game);
 const goal=(g:Game)=>g.progress<LETTERS.length?g.progress:BOSS_REVIEW[Math.min(g.bossHits,BOSS_REVIEW.length-1)];
