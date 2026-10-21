@@ -15,3 +15,13 @@
 .quranFrame>.quranPrevious,.quranFrame>.quranPlay{border-color:rgba(var(--qvx-border),.7)!important;background:linear-gradient(140deg,rgba(var(--qvx-accent),.84),rgba(var(--qvx-surface),.8))!important}
 :global(html.light) .quranFrame>.quranArticle{background:linear-gradient(155deg,rgba(246,242,229,.7),rgba(228,237,233,.62))!important;color:#18362d}
 :global(html.light) .quranFrame>.quranArticle p{color:#1c3d35!important;text-shadow:none}
+
+/* Three subtle depth planes: existing widget dust behind, these two inside the verse frame.
+   Purely decorative, never capture touch/scroll or change the fixed frame geometry. */
+.quranFrame::before,.quranFrame::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background-repeat:repeat;will-change:transform}
+.quranFrame::before{z-index:0;opacity:.19;background-image:radial-gradient(circle,rgba(var(--qvx-border),.95) 1px,transparent 2px);background-size:67px 79px;animation:qvxDustMid 21s ease-in-out infinite alternate}
+.quranFrame::after{z-index:2;opacity:.13;background-image:radial-gradient(circle,rgba(255,251,224,.9) 1px,transparent 2px);background-size:101px 113px;animation:qvxDustNear 27s ease-in-out infinite alternate}
+.quranFrame>.quranArticle{z-index:1}
+@keyframes qvxDustMid{from{transform:translate3d(0,9px,0)}to{transform:translate3d(7px,-8px,0)}}
+@keyframes qvxDustNear{from{transform:translate3d(-4px,4px,0)}to{transform:translate3d(5px,-7px,0)}}
+@media(prefers-reduced-motion:reduce){.quranFrame::before,.quranFrame::after{animation:none;will-change:auto}}
