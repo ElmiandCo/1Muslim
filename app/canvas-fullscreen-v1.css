@@ -1649,3 +1649,6 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 
 /* Remove legacy floating green sparkle orb; preserve four-way navigation. */
 .canvas-orb-floating-dock{display:none!important;visibility:hidden!important;pointer-events:none!important}
+
+/* Retire the green sparkle fullscreen toggle shown over Profile and 1Umma. */
+.canvas-fullscreen-toggle{display:none!important;visibility:hidden!important;pointer-events:none!important}
