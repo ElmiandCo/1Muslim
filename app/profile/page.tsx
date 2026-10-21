@@ -11,6 +11,7 @@ import ProfileContentSections from "../components/ProfileContentSections";
 import FeaturedBadge from "../components/FeaturedBadge";
 import PublicBadgeSelector from "../components/PublicBadgeSelector";
 import HudHudTenFriends from "../components/HudHudTenFriends";
+import "./profile-cinematic.css";
 
 type Profile = {
   id: string; display_name: string; username: string | null; first_name: string | null; last_name: string | null;
@@ -56,22 +57,42 @@ const BACKGROUND_CHOICES=[
 
 
 function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,posting,publishFirstPost,onEdit}:{profile:Profile;tier:any;ashab:Profile[];postCount:number;postText:string;setPostText:(v:string)=>void;posting:boolean;publishFirstPost:()=>void;onEdit:()=>void}){
-  return <section className="profileOverview">
-
+  return <section className="profileOverview cinematicProfile">
     <header className={"profileOverviewHero header-"+profile.profile_accent}>
-      <div className="profileOverviewCover"><div className="profileOverviewActions"><button type="button" className="profileSignOut" onClick={()=>window.dispatchEvent(new Event("1muslim:profile-signout"))}>✦ Sign out</button><Link href="/find" className="ghost">Find People</Link><button className="primary" onClick={onEdit}>✦ Edit profile</button></div></div>
-      <div className="profileOverviewBody"><div className="profileOverviewAvatar"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/></div>
-        <div className="profileOverviewMain"><span className="eyebrow">YOUR ONE MUSLIM PROFILE</span><h1>{profile.display_name||"Member"}</h1><p className="profileHandle">@{profile.username||"member"} · {tier.name} · {profile.xp_total.toLocaleString()} XP</p><p className="profileBio">{profile.bio||"Your profile is your space. Add a short bio so the community can get to know you."}</p>
-          <FeaturedBadge userId={profile.id} verifiedAt={profile.shahada_verified_at}/><Link href="/arabic-badges" className="ghost" style={{display:"inline-flex",marginTop:10}}>🔤 Arabic Badge Program →</Link><div className="profileChips">{profile.city&&<span>📍 {profile.city}{profile.state?", "+profile.state:""}</span>}<span>⭐ {profile.xp_total.toLocaleString()} XP</span>{profile.shahada_verified_at&&<span>✓ Shahadah verified</span>}</div>
-        </div></div>
-      <div className="profileOverviewStats"><div><b>{postCount}</b><span>Posts</span></div><div><b>{ashab.length}</b><span>Ashab</span></div><div><b>{profile.community?"1":"0"}</b><span>Community</span></div></div>
+      <div className="profileOverviewCover">
+        <div className="profileOverviewActions">
+          <Link href="/find" className="ghost" aria-label="Find people">↗ Find people</Link>
+          <button className="primary" onClick={onEdit}>✎ Edit profile</button>
+          <button type="button" className="profileSignOut" onClick={()=>window.dispatchEvent(new Event("1muslim:profile-signout"))} aria-label="Sign out">⋮</button>
+        </div>
+      </div>
+      <div className="profileOverviewBody">
+        <div className="profileOverviewAvatar"><ProfileAvatar name={profile.display_name} gender={profile.gender} avatarGender={profile.avatar_gender} avatarPackage={profile.avatar_package} avatarConfig={profile.avatar_config} accent={profile.profile_accent} size="lg"/></div>
+        <div className="profileOverviewMain">
+          <h1>{profile.display_name||"Member"} {profile.shahada_verified_at?<span className="cinematicVerified" title="Shahada verified">✦</span>:null}</h1>
+          <p className="profileHandle">@{profile.username||"member"}</p>
+          <FeaturedBadge userId={profile.id} verifiedAt={profile.shahada_verified_at}/>
+        </div>
+      </div>
+      <div className="profileOverviewStats" aria-label="Your profile statistics">
+        <div><b>{postCount}</b><span>Posts</span></div>
+        <div><b>{ashab.length}</b><span>Ashab</span></div>
+        <div><b>{profile.xp_total.toLocaleString()}</b><span>XP</span></div>
+      </div>
+      <div className="cinematicBioCard"><p>{profile.bio||"Connect. Learn. Reflect. Together."}</p>{profile.city&&<small>⌖ {profile.city}{profile.state?", "+profile.state:""}</small>}</div>
+      <div className="cinematicProfileActions">
+        <Link href="/arabic-badges">✦ Badges</Link>
+        <Link href="/find">♧ Find Ashab</Link>
+        <Link href="/settings">⚙ Settings</Link>
+        <button type="button" onClick={onEdit}>✎ Customize</button>
+      </div>
     </header>
-    <section className="profileOverviewSection"><div className="sectionHeading"><div><span className="eyebrow">YOUR CIRCLE</span><h2>Your Ashab</h2><p>People you’ve accepted as Ashab.</p></div><span className="carouselHint">Swipe →</span></div>
-      <div className="ashabCarousel">{ashab.length?ashab.map(a=><button key={a.id} className="ashabCard" onClick={()=>window.location.href="/find?profile="+a.id}><ProfileAvatar name={a.display_name} gender={a.gender} avatarGender={a.avatar_gender} avatarPackage={a.avatar_package} avatarConfig={a.avatar_config} accent={a.profile_accent} size="md"/><strong>{a.display_name||a.username||"Member"}</strong><small>@{a.username||"member"}</small><FeaturedBadge userId={a.id} verifiedAt={a.shahada_verified_at} compact/><em>ASHAB</em></button>):<div className="ashabEmpty"><div className="ashabEmptyIcon">✦</div><div><h3>Your Ashab circle starts here.</h3><p>When you accept an Ashab request, they’ll appear here.</p></div><Link href="/find" className="ghost">Find People</Link></div>}</div>
-    </section>
     <section className="profileOverviewSection"><div className="sectionHeading"><div><span className="eyebrow">YOUR VOICE</span><h2>Your posts</h2><p>{postCount?"Your latest reflections and community posts.":"Your profile is ready for its first post."}</p></div></div>
       {!postCount&&<div className="firstPostCard"><span className="eyebrow">FIRST POST</span><h3>Say something to the community ✨</h3><p>Share a thought, reminder, lesson, or something useful.</p><div className="firstPostComposer"><textarea value={postText} maxLength={500} onChange={e=>setPostText(e.target.value)} placeholder="What would you like to share?"/><div><small>{postText.length}/500</small><button className="primary" onClick={publishFirstPost} disabled={!postText.trim()||posting}>{posting?"Posting…":"Post"}</button></div></div></div>}
       <ProfileContentSections userId={profile.id}/>
+    </section>
+    <section className="profileOverviewSection"><div className="sectionHeading"><div><span className="eyebrow">YOUR CIRCLE</span><h2>Your Ashab</h2><p>People you’ve accepted as Ashab.</p></div><span className="carouselHint">Swipe →</span></div>
+      <div className="ashabCarousel">{ashab.length?ashab.map(a=><button key={a.id} className="ashabCard" onClick={()=>window.location.href="/find?profile="+a.id}><ProfileAvatar name={a.display_name} gender={a.gender} avatarGender={a.avatar_gender} avatarPackage={a.avatar_package} avatarConfig={a.avatar_config} accent={a.profile_accent} size="md"/><strong>{a.display_name||a.username||"Member"}</strong><small>@{a.username||"member"}</small><FeaturedBadge userId={a.id} verifiedAt={a.shahada_verified_at} compact/><em>ASHAB</em></button>):<div className="ashabEmpty"><div className="ashabEmptyIcon">✦</div><div><h3>Your Ashab circle starts here.</h3><p>When you accept an Ashab request, they’ll appear here.</p></div><Link href="/find" className="ghost">Find People</Link></div>}</div>
     </section>
     <style jsx>{`.profileOverview{max-width:1120px;margin:0 auto;padding:24px 18px 80px}.profileOverviewHero{overflow:hidden;border:1px solid var(--line);border-radius:28px;background:var(--panel);box-shadow:var(--shadow)}.profileOverviewCover{height:185px;position:relative;background:linear-gradient(135deg,#102218,#0b130e)}.profileOverviewCover:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(214,231,184,.18),transparent 30%)}.profileOverviewActions{position:absolute;right:18px;top:18px;z-index:2;display:flex;gap:8px}.profileOverviewActions button,.profileOverviewActions a{backdrop-filter:blur(12px)}.profileSignOut{background:linear-gradient(120deg,#123b57,#142339)!important;border:1px solid #80e6ff!important;color:#fff!important;box-shadow:0 0 16px #65caff55;font-weight:800;cursor:pointer}.profileOverviewBody{padding:0 30px 10px;position:relative}.profileOverviewAvatar{margin-top:-76px;position:relative;z-index:3;width:150px}.profileOverviewMain{margin-top:15px}.profileOverviewMain h1{font-size:44px;letter-spacing:-.06em;margin:6px 0 2px}.profileHandle{color:var(--muted);font-size:12px;margin:0}.profileBio{max-width:680px;color:#aab5ae;line-height:1.65;font-size:14px;margin:14px 0 0}.profileChips{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}.profileChips span{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:7px 10px;color:var(--muted);font-size:10px;font-weight:800}.profileOverviewStats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:18px 30px 28px}.profileOverviewStats>div{border:1px solid var(--line);background:var(--panel2);border-radius:16px;padding:14px}.profileOverviewStats b{display:block;font-size:23px}.profileOverviewStats span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.1em;margin-top:3px}.profileOverviewSection{margin-top:18px;border:1px solid var(--line);background:var(--panel);border-radius:24px;padding:24px}.sectionHeading{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:14px}.sectionHeading h2{margin:6px 0 2px;font-size:24px;letter-spacing:-.04em}.sectionHeading p{margin:0;color:var(--muted);font-size:11px}.carouselHint{color:#6f7d75;font-size:9px;text-transform:uppercase;letter-spacing:.1em}.ashabCarousel{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 8px;scrollbar-width:none}.ashabCarousel::-webkit-scrollbar{display:none}.ashabCard{flex:0 0 175px;scroll-snap-align:start;text-align:left;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:18px;padding:14px;display:flex;flex-direction:column;align-items:flex-start;gap:5px;transition:.18s}.ashabCard:hover{transform:translateY(-2px);border-color:#52664f}.ashabCard strong{font-size:13px;margin-top:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ashabCard small{font-size:10px;color:var(--muted)}.ashabCard em{font-style:normal;font-size:8px;font-weight:900;letter-spacing:.12em;color:var(--gold);margin-top:4px}.ashabEmpty{min-width:100%;box-sizing:border-box;border:1px dashed #354239;border-radius:18px;padding:20px;display:flex;align-items:center;gap:14px}.ashabEmptyIcon{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#1a241b;color:var(--gold)}.ashabEmpty h3{margin:0 0 4px;font-size:15px}.ashabEmpty p{margin:0;color:var(--muted);font-size:11px}.ashabEmpty .ghost{margin-left:auto;white-space:nowrap}.firstPostCard{border:1px solid #344237;background:linear-gradient(145deg,#101912,#0b110d);border-radius:20px;padding:20px}.firstPostCard h3{margin:6px 0 3px;font-size:20px}.firstPostCard p{margin:0;color:var(--muted);font-size:11px}.firstPostComposer{margin-top:16px}.firstPostComposer textarea{width:100%;min-height:100px;box-sizing:border-box;border:1px solid var(--line);background:#080d09;color:var(--text);border-radius:14px;padding:12px;resize:vertical}.firstPostComposer>div{display:flex;justify-content:space-between;align-items:center;margin-top:8px}.firstPostComposer small{color:var(--muted);font-size:9px}@media(max-width:700px){.profileOverview{padding:12px 12px 70px}.profileOverviewCover{height:150px}.profileOverviewBody{padding:0 18px 8px}.profileOverviewAvatar{width:120px;margin-top:-60px}.profileOverviewMain h1{font-size:34px}.profileOverviewActions .ghost{display:none}.profileOverviewActions button{padding:9px 12px}.profileOverviewStats{padding:16px 18px 20px}.profileOverviewSection{padding:18px}.ashabCard{flex-basis:160px}.ashabEmpty{display:grid}.ashabEmpty .ghost{margin:0;width:100%;text-align:center}}`}</style>
   </section>
