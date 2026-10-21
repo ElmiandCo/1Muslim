@@ -69,3 +69,9 @@ Created branch from latest active preview feature branch and documented complete
 7. Inspect `app/page.tsx` frame className `[workspaceStyles.quranVerseFrame,quranVxStyles.quranFrame]`; `workspaceStyles.quranVerseFrame` appears undeclared and can be removed safely if TSX write permitted. Check whether `data-widget="Qur’an"` is present on the actual wrapper before relying on the 8px attribute selector.
 
 **Remaining:** functional selector, completion bars, atmosphere sliders, HudHud spin/bubble animation, recording transition, reliable verification, secure XP, and real mobile QA. Preserve approved homepage and never promote unverified code.
+
+
+## TITAN retry — 2026-10-21
+- Commit `f82b471c2f94e818baabd589614f6f8525eaa203` modifies only `app/quran-vx-controls.module.css` on feature/quran-x-studio-vx.
+- Quran frame is absolutely inset 8px on every side relative to positioned Quran widget; removes conflicting flex height sizing. Light-mode settings text now uses `--qvx-accent` rather than hardcoded green.
+- GitHub write succeeded; browser-measured dimensions, visual regression and build/test results are NOT yet verified. HUDHUD PRIME/NOVA: verify actual rendered frame/card geometry on mobile and desktop, inspect clipping and previous/play controls, and confirm three saved themes in day/night before claiming acceptance. Do not merge into main or production.
