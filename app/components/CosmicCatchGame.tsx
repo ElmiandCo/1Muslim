@@ -20,11 +20,11 @@ type Shot={x:number;y:number;life:number;correct:boolean};
 type Game={
  running:boolean;paused:boolean;stage:number;progress:number;bossHits:number;score:number;mistakes:number;
  checkpointScore:number;checkpointMistakes:number;orbs:Orb[];shards:Shard[];shot:Shot|null;
- nextId:number;last:number;lastPaint:number;waveDelay:number
+ nextId:number;last:number;lastPaint:number;waveDelay:number;shipX:number;shipY:number;targetId:number|null;waveClock:number
 };
 const newGame=():Game=>({
  running:false,paused:false,stage:0,progress:0,bossHits:0,score:0,mistakes:0,
- checkpointScore:0,checkpointMistakes:0,orbs:[],shards:[],shot:null,nextId:0,last:0,lastPaint:0,waveDelay:0
+ checkpointScore:0,checkpointMistakes:0,orbs:[],shards:[],shot:null,nextId:0,last:0,lastPaint:0,waveDelay:0,shipX:W/2,shipY:H-50,targetId:null,waveClock:0
 } as Game);
 const goal=(g:Game)=>g.progress<LETTERS.length?g.progress:BOSS_REVIEW[Math.min(g.bossHits,BOSS_REVIEW.length-1)];
 const shuffle=<T,>(array:T[]):T[]=>{for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array};
@@ -37,9 +37,10 @@ const makeWave=(g:Game)=>{
  const distractors=shuffle(LETTERS.map((_,i)=>i).filter(i=>i!==correct));
  const pool=g.stage>=2?Array.from(new Set([...shuffle(similar[correct]||[]),...distractors])).slice(0,count-1):distractors.slice(0,count-1);
  const options=shuffle([correct,...pool]);
+ g.waveClock=0;
  const positions=count===2?[100,260]:count===3?[62,180,298]:[45,135,225,315];
  g.orbs=options.map((letter,i)=>({
-  id:++g.nextId,x:positions[i],y:58,letter,
+  id:++g.nextId,x:positions[i],y:122+(i%2)*38,letter,
   radius:boss&&letter===correct?34:count===4?27:30,
   speed:44+g.stage*9+(boss?10:0),boss:boss&&letter===correct
  }));
@@ -55,7 +56,9 @@ export default function CosmicCatchGame(){
  const [score,setScore]=useState(0),[misses,setMisses]=useState(0),[stage,setStage]=useState(0);
  const [progress,setProgress]=useState(0),[bossHits,setBossHits]=useState(0);
  const [orbs,setOrbs]=useState<Orb[]>([]);
- const [feedback,setFeedback]=useState("Find the named Arabic letter and tap its orb.");
+ const [feedback,setFeedback]=useState("Read the Arabic letter, then fly your ship through the matching transliteration.");
+ const impactRef=useRef<(id:number)=>void>(()=>{});
+ const loseLifeRef=useRef<(message:string)=>void>(()=>{});
  const [reduced,setReduced]=useState(false),[sound,setSound]=useState(false),[best,setBest]=useState(0);
  const [size,setSize]=useState({width:288,height:400});
  const [audioAvailable,setAudioAvailable]=useState(true);
@@ -96,12 +99,13 @@ export default function CosmicCatchGame(){
   const current=game.current;
   current.running=true;current.paused=false;current.last=0;current.lastPaint=0;
   current.orbs=[];current.shards=[];current.shot=null;current.waveDelay=0;
+  current.shipX=W/2;current.shipY=H-50;current.targetId=null;current.waveClock=0;
   current.progress=STARTS[current.stage];current.bossHits=0;
   current.score=current.checkpointScore;current.mistakes=current.checkpointMistakes;
   makeWave(current);
   setOrbs([...current.orbs]);setStage(current.stage);setProgress(current.progress);setBossHits(0);
   setScore(current.score);setMisses(current.mistakes);setPhase("playing");
-  setFeedback("Read the Arabic letter and shoot its transliteration.");
+  setFeedback("Read the Arabic letter, then steer into its transliteration bubble.");
  };
  const start=()=>{game.current=newGame();beginLevel(true)};
  const restartLevel=()=>{const g=game.current;if(g.stage<0||g.stage>4)return;beginLevel(false)};
@@ -116,10 +120,12 @@ export default function CosmicCatchGame(){
   setFeedback(message+" · "+Math.max(0,5-g.mistakes)+" hearts left");
   if(g.mistakes>=5){g.running=false;g.orbs=[];setOrbs([]);setPhase("over");saveBest(g.score)}
  };
+ loseLifeRef.current=loseLife;
  const shootId=(id:number)=>{
   const g=game.current;if(!g.running||g.paused)return;
   const index=g.orbs.findIndex(o=>o.id===id);if(index<0)return;
   const orb=g.orbs.splice(index,1)[0];
+  g.targetId=null;g.shipX=W/2;g.shipY=H-50;
   const correct=orb.letter===goal(g);
   g.shot={x:orb.x,y:orb.y,life:.2,correct};
   if(!reducedRef.current)for(let i=0;i<18;i++){
@@ -147,12 +153,14 @@ export default function CosmicCatchGame(){
     else setFeedback("Great! "+learned[0]+" · "+learned[1]+". Read the next letter.")
    }
    g.orbs=[];g.waveDelay=.45;
-  }else{loseLife("That was "+LETTERS[orb.letter][1]+". Find "+LETTERS[goal(g)][1])}
+  }else{loseLife("That was "+LETTERS[orb.letter][1]+". Read the Arabic prompt and try again")}
   setOrbs([...g.orbs])
  };
+ impactRef.current=shootId;
+ const flyToId=(id:number)=>{const g=game.current;if(!g.running||g.paused)return;if(g.orbs.some(o=>o.id===id))g.targetId=id};
  const shootPoint=(x:number,y:number)=>{
   const g=game.current;if(!g.running||g.paused)return;
-  for(let i=g.orbs.length-1;i>=0;i--){const o=g.orbs[i];if(Math.hypot(o.x-x,o.y-y)<=o.radius+13){shootId(o.id);return}}
+  for(let i=g.orbs.length-1;i>=0;i--){const o=g.orbs[i];if(Math.hypot(o.x-x,o.y-y)<=o.radius+16){flyToId(o.id);return}}
  };
  useEffect(()=>{
   const c=canvas.current,ctx=c?.getContext("2d");if(!c||!ctx)return;
@@ -163,13 +171,22 @@ export default function CosmicCatchGame(){
    const dt=g.last?Math.min((now-g.last)/1000,.05):0;g.last=now;
    if(g.running&&!g.paused){
     if(g.orbs.length===0){g.waveDelay-=dt;if(g.waveDelay<=0){makeWave(g);setOrbs([...g.orbs])}}
-    for(const o of g.orbs)o.y+=o.speed*dt;
-    const escaped=g.orbs.filter(o=>o.y>H+o.radius);
-    if(escaped.length){
-     g.orbs=g.orbs.filter(o=>o.y<=H+o.radius);
-     setOrbs([...g.orbs]);
-     if(escaped.some(o=>o.letter===goal(g)))loseLife("The target escaped");
-     if(g.orbs.length===0)g.waveDelay=.35
+    // The player flies to the letters: the orbs hold their place in 3D space.
+    // Tap or a numbered key locks the ship onto a bubble; arrow keys steer manually.
+    if(g.orbs.length){
+     g.waveClock+=dt;
+     const target=g.orbs.find(o=>o.id===g.targetId);
+     if(target){
+      const dx=target.x-g.shipX,dy=target.y-g.shipY,distance=Math.hypot(dx,dy);
+      const step=(225+g.stage*22)*dt;
+      if(distance>0){g.shipX+=dx/distance*Math.min(step,distance);g.shipY+=dy/distance*Math.min(step,distance)}
+     }else g.targetId=null;
+     const collision=g.orbs.find(o=>Math.hypot(o.x-g.shipX,o.y-g.shipY)<o.radius*.7+12);
+     if(collision)impactRef.current(collision.id);
+     else if(g.waveClock>(g.stage===0?20:g.stage===1?17:g.stage===2?14:g.stage===3?12:10)){
+      g.orbs=[];g.targetId=null;g.shipX=W/2;g.shipY=H-50;g.waveDelay=.5;
+      setOrbs([]);loseLifeRef.current("Time ran out");
+     }
     }
     if(!reducedRef.current){
      g.shards=g.shards.filter(s=>{s.x+=s.vx*dt;s.y+=s.vy*dt;s.vy+=100*dt;s.rotation+=s.spin*dt;s.life-=dt;return s.life>0});
@@ -182,7 +199,7 @@ export default function CosmicCatchGame(){
     ctx.save();
     for(let i=0;i<55;i++){const x=(i*137+29)%W,y=(i*91+13)%H;ctx.fillStyle=i%4?"rgba(226,250,246,.36)":"rgba(251,227,168,.65)";ctx.fillRect(x,y,i%6?1:2,i%6?1:2)}
     ctx.strokeStyle="rgba(104,218,194,.18)";ctx.lineWidth=1;
-    for(let i=0;i<=10;i++){ctx.beginPath();ctx.moveTo(W/2,100);ctx.lineTo(i*W/10,H);ctx.stroke()}
+    for(let i=0;i<=10;i++){ctx.beginPath();ctx.moveTo(W/2+(g.shipX-W/2)*.08,100);ctx.lineTo(i*W/10-(g.shipX-W/2)*.2,H);ctx.stroke()}
     for(let i=0;i<9;i++){const y=110+i*i*5.8;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
     ctx.restore();
     for(const o of g.orbs){
@@ -201,9 +218,18 @@ export default function CosmicCatchGame(){
      if(o.boss){ctx.font="20px serif";ctx.fillText("♛",0,-o.radius-10)}
      ctx.restore()
     }
+    // The moving ship is the player, not a fixed cannon at the bottom.
+    ctx.save();ctx.translate(g.shipX,g.shipY);
+    const heading=g.targetId!==null?g.orbs.find(o=>o.id===g.targetId):null;
+    if(heading)ctx.rotate(Math.atan2(heading.y-g.shipY,heading.x-g.shipX)+Math.PI/2);
+    ctx.shadowColor="#55f8df";ctx.shadowBlur=reducedRef.current?0:18;
+    ctx.fillStyle="#d9fff4";ctx.strokeStyle="#d7c080";ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(0,-20);ctx.lineTo(13,15);ctx.lineTo(0,9);ctx.lineTo(-13,15);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.shadowBlur=0;ctx.fillStyle="#22bfae";ctx.beginPath();ctx.ellipse(0,-2,5,8,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#ffcd70";ctx.beginPath();ctx.moveTo(-5,15);ctx.lineTo(0,23+(reducedRef.current?0:Math.sin(now/110)*3));ctx.lineTo(5,15);ctx.fill();ctx.restore();
     if(g.shot&&!reducedRef.current){
      ctx.save();ctx.globalAlpha=Math.min(1,g.shot.life*5);ctx.strokeStyle=g.shot.correct?"#ffe3a5":"#ff8eaa";ctx.lineWidth=4;
-     ctx.beginPath();ctx.moveTo(W/2,H);ctx.lineTo(g.shot.x,g.shot.y);ctx.stroke();ctx.restore()
+     ctx.beginPath();ctx.arc(g.shot.x,g.shot.y,32*(1-g.shot.life/.2),0,Math.PI*2);ctx.stroke();ctx.restore()
     }
     for(const s of g.shards){
      ctx.save();ctx.globalAlpha=Math.max(0,s.life/.55);ctx.translate(s.x,s.y);ctx.rotate(s.rotation);
@@ -225,7 +251,8 @@ export default function CosmicCatchGame(){
  const boss=progress===LETTERS.length;
  return <section className={styles.root} aria-label="Arabic Letter Quest educational game" onKeyDown={e=>{
   if(e.altKey||e.ctrlKey||e.metaKey||e.repeat)return;
-  if(/^[1-4]$/.test(e.key)&&active){const target=orbs[Number(e.key)-1];if(target){e.preventDefault();shootId(target.id)}}
+  if(/^[1-4]$/.test(e.key)&&active){const target=orbs[Number(e.key)-1];if(target){e.preventDefault();flyToId(target.id)}}
+  if(active&&phase==="playing"&&["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){e.preventDefault();const g=game.current;g.targetId=null;g.shipX=Math.max(16,Math.min(W-16,g.shipX+(e.key==="ArrowRight"?28:e.key==="ArrowLeft"?-28:0)));g.shipY=Math.max(45,Math.min(H-25,g.shipY+(e.key==="ArrowDown"?28:e.key==="ArrowUp"?-28:0))) }
  }}>
   <header className={styles.hud}>
    <span className={styles.brand}>✦ ARABIC LETTER QUEST <small>LEVEL {stage+1}/5 · {LEVEL_NAMES[stage]}</small></span>
@@ -234,19 +261,19 @@ export default function CosmicCatchGame(){
   <div className={styles.lesson} aria-live="polite">
    <span>{boss?"👑 GUARDIAN "+Math.min(bossHits+1,3)+"/3":"LETTER "+Math.min(progress+1,28)+"/28"}</span>
    <strong lang="ar" dir="rtl">{LETTERS[targetIndex][0]}</strong>
-   <span>SHOOT ITS TRANSLITERATION</span>
+   <span>FLY THROUGH THE RIGHT TRANSLITERATION</span>
   </div>
   <div className={styles.stage} ref={stageRef}>
    <canvas ref={canvas} className={styles.canvas} width={W} height={H}
     style={{width:size.width,height:size.height}} tabIndex={0}
-    aria-label={"Read the Arabic letter "+LETTERS[targetIndex][0]+". Shoot its transliteration by tapping an orb or using the numbered target buttons below."}
+    aria-label={"Read Arabic letter "+LETTERS[targetIndex][0]+". Tap a transliteration bubble to fly through it, or steer with arrow keys. Number keys 1 through 4 select bubbles."}
     onPointerDown={e=>{e.preventDefault();e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();shootPoint((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height)}}
-    onPointerMove={e=>{if(e.pointerType==="touch")e.stopPropagation()}}
+    onPointerMove={e=>{if(e.pointerType==="touch")e.stopPropagation();if(e.buttons===1&&phase==="playing"){const r=e.currentTarget.getBoundingClientRect();const g=game.current;g.targetId=null;g.shipX=Math.max(16,Math.min(W-16,(e.clientX-r.left)*W/r.width));g.shipY=Math.max(45,Math.min(H-25,(e.clientY-r.top)*H/r.height))}}}
    />
    {phase!=="playing"&&<div className={styles.overlay}>
     <span className={styles.planet} aria-hidden="true">{phase==="won"?"🏆":phase==="over"?"✧":"✦"}</span>
     <h2>{phase==="ready"?"LEARN THE ARABIC ALPHABET":phase==="between"?"LEVEL COMPLETE":phase==="paused"?"PAUSED":phase==="won"?"ALL 28 LETTERS MASTERED!":"MISSION ENDED"}</h2>
-    <p>{phase==="ready"?"Read the Arabic letter above and shoot the bubble containing its transliteration. Clear five levels and defeat the Guardian review.":phase==="between"?"Next: Level "+(stage+1)+" · "+LEVEL_NAMES[stage]:phase==="paused"?"Your falling letters and timer are frozen.":phase==="won"?"You completed all five levels and the Guardian review!":"Five mistakes used. Restart this level to practice again."}</p>
+    <p>{phase==="ready"?"Read the Arabic letter above, then steer your ship through the bubble with its transliteration. Tap to fly, drag to steer, or use the arrow keys. Clear five levels and the Guardian.":phase==="between"?"Next: Level "+(stage+1)+" · "+LEVEL_NAMES[stage]:phase==="paused"?"Your falling letters and timer are frozen.":phase==="won"?"You completed all five levels and the Guardian review!":"Five mistakes used. Restart this level to practice again."}</p>
     <button type="button" onClick={phase==="paused"?togglePause:phase==="between"?()=>beginLevel(false):phase==="ready"||phase==="won"?start:restartLevel}>
      {phase==="paused"?"▶ RESUME":phase==="between"?"▶ NEXT LEVEL":phase==="ready"?"▶ START LEARNING":phase==="won"?"↻ PLAY AGAIN":"↻ RETRY LEVEL"}
     </button>
@@ -254,9 +281,9 @@ export default function CosmicCatchGame(){
    </div>}
   </div>
   <div className={styles.targetBar} aria-label="Accessible transliteration targets">
-   <span className={styles.targetLabel}>Shoot:</span>
+   <span className={styles.targetLabel}>Fly to:</span>
    {active&&orbs.length?orbs.map((o,i)=><button key={o.id} type="button" disabled={phase==="paused"}
-     onClick={()=>shootId(o.id)} aria-label={"Shoot target "+(i+1)+", "+LETTERS[o.letter][1]}>
+     onClick={()=>flyToId(o.id)} aria-label={"Fly to target "+(i+1)+", "+LETTERS[o.letter][1]}>
      <small>{i+1}</small> <span>{LETTERS[o.letter][1]}</span>
     </button>):<span className={styles.waiting}>{phase==="playing"?"New letters incoming…":"Start or resume to shoot"}</span>}
   </div>
