@@ -274,7 +274,7 @@ export default function CosmicCatchGame(){
     onPointerDown={e=>{e.preventDefault();e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();shootPoint((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height)}}
     onPointerMove={e=>{if(e.pointerType==="touch")e.stopPropagation();if(e.buttons===1&&phase==="playing"){const r=e.currentTarget.getBoundingClientRect();const g=game.current;g.targetId=null;g.shipX=Math.max(16,Math.min(W-16,(e.clientX-r.left)*W/r.width));g.shipY=Math.max(45,Math.min(H-25,(e.clientY-r.top)*H/r.height))}}}
    />
-   {phase!=="playing"&&<div className={styles.overlay}>
+   {phase!=="playing"&&phase!=="ready"&&<div className={styles.overlay}>
     <span className={styles.planet} aria-hidden="true">{phase==="won"?"🏆":phase==="over"?"✧":"✦"}</span>
     <h2>{phase==="ready"?"LEARN THE ARABIC ALPHABET":phase==="between"?"LEVEL COMPLETE":phase==="paused"?"PAUSED":phase==="won"?"ALL 28 LETTERS MASTERED!":"MISSION ENDED"}</h2>
     <p>{phase==="ready"?"Read the Arabic letter above, then steer your ship through the bubble with its transliteration. Tap to fly, drag to steer, or use the arrow keys. Clear three levels and the Guardian.":phase==="between"?"Next: Level "+(stage+1)+" · "+LEVEL_NAMES[stage]:phase==="paused"?"Your spacecraft and game timer are paused.":phase==="won"?"You completed all three levels and the Guardian review!":"Five mistakes used. Restart this level to practice again."}</p>
@@ -296,8 +296,6 @@ export default function CosmicCatchGame(){
    <div className={styles.controls}>
     <button type="button" onClick={togglePause} disabled={!active}>{phase==="paused"?"▶ Resume":"Ⅱ Pause"}</button>
     <button type="button" onClick={restartLevel} disabled={phase==="ready"}>↻ Restart level</button>
-    <button type="button" onClick={()=>setReduced(v=>!v)} aria-pressed={reduced}>{reduced?"Motion off":"Reduce motion"}</button>
-    <button type="button" onClick={()=>{void toggleSound()}} aria-pressed={sound} disabled={!audioAvailable}>{sound?"🔊 Sound on":"🔇 Sound off"}</button>
    </div>
   </footer>
  </section>
