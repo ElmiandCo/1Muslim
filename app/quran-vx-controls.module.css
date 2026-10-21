@@ -218,10 +218,14 @@
  .quranWidget>.quranFrame>.quranArticle{padding:150px 18px 80px!important;gap:22px!important}
 }
 
-/* Full viewport reading layer: explicit dynamic screen height, not parent %. */
+
+
+/* Restore bounded article geometry and center its contents within the frame. */
 .quranWidget>.quranFrame>.quranArticle{
- height:100dvh!important;
- min-height:100dvh!important;
- max-height:none!important;
- box-sizing:border-box!important;
+ position:absolute!important;inset:0!important;
+ width:100%!important;height:100%!important;min-height:0!important;max-height:100%!important;
+ display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+ box-sizing:border-box!important;overflow-y:auto!important;overflow-x:hidden!important;
+ padding:130px 22px 90px!important;
 }
+.quranWidget>.quranFrame>.quranArticle>*{flex-shrink:0!important}
