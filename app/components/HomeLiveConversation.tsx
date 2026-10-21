@@ -8,7 +8,6 @@ export default function HomeLiveConversation({live,streamId,onFormatChange}:{liv
  const [draft,setDraft]=useState("");
  const [user,setUser]=useState<{id:string;name:string}|null>(null);
  const [status,setStatus]=useState("");
- const [demoComments,setDemoComments]=useState<Comment[]>([]);
  const dbRef=useRef<ReturnType<typeof createClient>|null>(null);
  useEffect(()=>{const db=createClient();dbRef.current=db;let active=true;
  db.auth.getUser().then(async({data:{user:u}})=>{if(!active||!u)return;const {data}=await db.from("profiles").select("display_name,username").eq("id",u.id).maybeSingle();if(active)setUser({id:u.id,name:data?.display_name||data?.username||"Member"})}).catch(()=>{});
@@ -23,14 +22,14 @@ export default function HomeLiveConversation({live,streamId,onFormatChange}:{liv
   return()=>{active=false;void db.removeChannel(channel)};
  },[live,streamId,user]);
  const send=async(e:React.FormEvent)=>{e.preventDefault();const text=draft.trim();if(!text)return;
-  if(!live||!streamId){setDemoComments(previous=>[...previous,{id:"demo-"+Date.now(),name:user?.name||"You",text,at:Date.now()}].slice(-8));setDraft("");return}
+  if(!live||!streamId){setStatus("Comments are available only during an active stream.");return}
   if(!user){setStatus("Sign in to comment on an active livestream.");return}
   try{const {error}=await (dbRef.current||createClient()).from("live_chat_messages").insert({stream_id:streamId,sender_id:user.id,body:text});if(error)throw error;setDraft("");setStatus("")}
   catch{setStatus("Could not send comment. Try again.")}};
  return <section className="homeLiveViewerConversation" aria-label="Live conversation">
   <header><strong>💬 LIVE CONVERSATION</strong><small>1Muslim · {live?"Live room":"Waiting for a stream"}</small></header>
-  <div className="homeLiveDemoComments" aria-live="polite">{(live?comments:demoComments).length?(live?comments:demoComments).map(c=><p key={c.id}><span className="homeLiveCommentAvatar">{c.name.slice(0,1).toUpperCase()}</span><span><strong>{c.name} {c.id.startsWith("demo-")?"· Demo":""}</strong><small>{c.text}</small></span></p>):<p>{live?"Be the first to comment in this live room.":"Demo mode · write a comment to try it."}</p>}</div>
-  <form className="homeLiveCommentForm" onSubmit={send}><input aria-label="Write a live comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={500} placeholder={live?"Comment on this livestream…":"Try a demo comment…"}/><button type="submit" disabled={!draft.trim()}>Send</button></form>
+  <div className="homeLiveDemoComments" aria-live="polite">{comments.length?comments.map(c=><p key={c.id}><span className="homeLiveCommentAvatar">{c.name.slice(0,1).toUpperCase()}</span><span><strong>{c.name}</strong><small>{c.text}</small></span></p>):<p>{live?"Be the first to comment in this live room." :"Comments appear when a real stream is active."}</p>}</div>
+  <form className="homeLiveCommentForm" onSubmit={send}><input aria-label="Write a live comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={500} placeholder={live?"Comment on this livestream…" :"Waiting for an active stream…"}/><button type="submit" disabled={!live||!streamId||!user||!draft.trim()}>Send</button></form>
   {status&&<small role="status" className="homeLiveCommentDisclaimer">{status}</small>}
   <small className="homeLiveCommentDisclaimer">Persistent live chat · visible to signed-in viewers of this stream</small>
   {live&&streamId?<Link className="homeLiveStudioEntry" href={`/streaming/live/${streamId}`}>Open Live Studio ↗</Link>:<Link className="homeLiveStudioEntry" href="/streaming/go-live">Start your own Live ↗</Link>}
