@@ -72,3 +72,12 @@
 :global(html.light) .quranSettingsPanel{color:color-mix(in srgb,rgb(var(--qvx-accent)) 67%,#121c1d)!important}
 @media(max-width:650px){.quranRecord{right:9px;bottom:10px;padding:0 8px;font-size:11px}}
 @media(prefers-reduced-motion:reduce){.quranRecord{transition:none!important}}
+
+/* Quran VX: full-height transparent reading glass, independent of control positions. */
+.quranWidget>.quranFrame>.quranArticle{align-self:stretch!important;flex:1 1 auto!important;height:100%!important;max-height:100%!important;margin:0!important;min-height:0!important;box-sizing:border-box!important;overflow-y:auto!important}
+/* Playback is pinned to the upper right, not inside scrolling verse content. */
+.quranWidget>.quranFrame>.quranPlay{top:12px!important;right:12px!important;left:auto!important;bottom:auto!important;transform:none!important;margin:0!important}
+.quranWidget>.quranFrame>.quranPlay:hover{transform:scale(1.06)!important}
+.quranWidget>.quranFrame>.quranPlay:active{transform:scale(.98)!important}
+@media(max-width:650px){.quranWidget>.quranFrame>.quranPlay{top:9px!important;right:9px!important}}
+@media(prefers-reduced-motion:reduce){.quranWidget>.quranFrame>.quranPlay:hover,.quranWidget>.quranFrame>.quranPlay:active{transform:none!important}}
