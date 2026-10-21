@@ -108,6 +108,7 @@ export default function CosmicCatchGame(){
   setFeedback("Read the Arabic letter, then steer into its transliteration bubble.");
  };
  const start=()=>{game.current=newGame();beginLevel(true)};
+ useEffect(()=>{const g=game.current;if(!g.running&&g.progress===0&&g.score===0){game.current=newGame();const current=game.current;current.running=true;current.paused=false;current.last=0;makeWave(current);setOrbs([...current.orbs]);setPhase("playing");setFeedback("Steer through the correct transliteration bubble to learn the Arabic letters.")}},[]);
  const restartLevel=()=>{const g=game.current;if(g.stage<0||g.stage>2)return;beginLevel(false)};
  const togglePause=()=>{const g=game.current;if(!g.running)return;g.paused=!g.paused;g.last=0;setPhase(g.paused?"paused":"playing")};
  useEffect(()=>{
