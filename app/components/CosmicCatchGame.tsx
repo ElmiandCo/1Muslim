@@ -137,7 +137,7 @@ export default function CosmicCatchGame(){
    }else{
     const learned=LETTERS[g.progress];g.progress++;setProgress(g.progress);
     if(g.progress===STARTS[g.stage+1]&&g.stage<4){
-     g.stage++;g.checkpointScore=g.score;g.checkpointMistakes=g.mistakes;
+     g.stage++;g.checkpointScore=g.score;g.checkpointMistakes=0;
      g.running=false;g.orbs=[];setOrbs([]);setStage(g.stage);setPhase("between");
      setFeedback("Level cleared! "+learned[0]+" · "+learned[1]);saveBest(g.score);return
     }
