@@ -44,3 +44,28 @@ Created branch from latest active preview feature branch and documented complete
 5. NEVER award XP based on client events; no backend XP or verified recitation exists in this Bot 1 work. Bot 3 must design server-authoritative idempotent grants and real verse verification.
 
 **Known risks:** No full interactive browser/mobile test yet. Legacy Quran CSS has multiple !important declarations, so screenshots are needed to prove geometry. This branch has NOT been merged or promoted to production.
+
+## Bot 2 — implementation and verification, 2026-10-21 04:12–04:16 CDT
+**Committed on feature branch (not production):**
+- `39eddd58dab506b2180cb4d5b83648927b75b96b` — `app/quran-vx-controls.module.css`: scoped Quran widget now reads the existing Canvas theme RGB CSS variables (`--canvas-control-surface-rgb`, `--canvas-control-border-rgb`, `--canvas-control-accent-rgb`) for glass, border, previous and play controls. Brighter light-mode Quran verse article; text contrast is adjusted for the light background. Added `--qvx-blur` and `--qvx-brightness` CSS variable hooks, but these do NOT yet have functional user sliders.
+- `2f46f3a771b00684a85bf759f2fa4515ec074f64` — scoped subtle mid/foreground particle layers in the Quran frame, supplementing the existing behind-widget particles; pointer-events:none, reduced-motion fallback.
+- `7c6054cd8378e9a707f19f62b6b826e6bd81fd94` — hash-safe attribute selector targeting Quran slide and widget to enforce 8px inset, avoiding dependence on legacy CSS-module class names. This is a source-level correction; physical 8px geometry still requires browser screenshot validation.
+
+**Validation evidence:**
+- Vercel preview for `39eddd58` is **READY** at `https://1muslim-o9znctd6q-elmiandco.vercel.app`. This means deployment built, NOT that UI behavior was tested.
+- At last Vercel check, `2f46f3a` and `7c6054c` were **BUILDING**; do not call the latest branch READY until those finish. No full browser/mobile interaction or screenshot verification was possible here.
+- Bot 1's earlier `b42fae2` preview is **READY**.
+- No production deployment or merge performed.
+
+**Critical write blocker:** GitHub connector safety checks blocked two attempted new `.tsx` component creates (Quran verse selector / position bars and atmosphere controls), and one attempted minimal `app/page.tsx` change (validate canonical verse metadata and store surah total). These attempts made **NO CODE CHANGES**. Scoped CSS updates succeeded. Do not report a working chapter selector, progress bars, dim/volume sliders or HudHud settings bubbles yet.
+
+**Bot 3 precise instructions:**
+1. First re-fetch branch files and verify Vercel deployment of `7c6054c`; inspect build logs if ERROR. Do not overwrite Bot 2 CSS without checking SHA.
+2. Fix pending `app/page.tsx` integration when code writes are allowed: existing `loadQuranVerse(chapter,verse,save)` calls `api.alquran.cloud/v1/ayah/{chapter}:{verse}/ar.alafasy` and `en.sahih`; validate returned `data.surah.number`, `data.numberInSurah`, `data.surah.numberOfAyahs` and `data.number` before updating. Store `chapterTotal` in `quranPreview` for accurate current-surah position. Do not accept arbitrary verse<=286 as sufficient validation.
+3. Add compact chapter:verse form to Quran frame, with accessible label, validation, disabled loading, and error feedback; call `loadQuranVerse(chapter,verse,true)` and keep existing audio pause/continuous behavior. Reuse chapter selector semantics from `app/elm-tent/quran/page.tsx`, not a duplicate fake data source. Two slim bars can initially display *position* (verse/chapterTotal, globalAyah/6236), explicitly labelled **position**, NOT completion. For true completion bars, use durable server-authoritative verified per-verse read/listen/recite records.
+4. Studio's current `1muslim-quran-visited-v1` localStorage marks verses visited merely on focus; it is NOT reading completion and MUST NOT be used for completion XP or completed progress.
+5. Implement recording vault/verse verification/XP carefully: `app/elm-tent/quran/VerseRecorder.tsx` uploads to Supabase `quran-recitation-vault` and upserts `quran_recitations`, but currently does not establish trustworthy verse-matching. Require real verification and idempotent server-side grants, never client-only XP. Keep original Quran audio unaltered.
+6. Bot 4 should connect HudHud quick circular spin to scoped reading settings (blur/dim/brightness/volume) via UI state; use CSS hooks in `quran-vx-controls.module.css`. Do not let settings resize the canvas. Verify theme changes, mobile gestures, pointer events, reduced-motion and readability before release.
+7. Inspect `app/page.tsx` frame className `[workspaceStyles.quranVerseFrame,quranVxStyles.quranFrame]`; `workspaceStyles.quranVerseFrame` appears undeclared and can be removed safely if TSX write permitted. Check whether `data-widget="Qur’an"` is present on the actual wrapper before relying on the 8px attribute selector.
+
+**Remaining:** functional selector, completion bars, atmosphere sliders, HudHud spin/bubble animation, recording transition, reliable verification, secure XP, and real mobile QA. Preserve approved homepage and never promote unverified code.
