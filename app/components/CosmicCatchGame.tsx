@@ -33,7 +33,9 @@ const makeWave=(g:Game)=>{
  const boss=g.progress===LETTERS.length;
  const count=g.stage===0?2:g.stage<3?3:4;
  const correct=goal(g);
- const pool=shuffle(LETTERS.map((_,i)=>i).filter(i=>i!==correct)).slice(0,count-1);
+ const similar:Record<number,number[]>={1:[2,3,4],2:[1,3],3:[1,2],4:[5,6],5:[4,6],6:[4,5],7:[8],8:[7],9:[10],10:[9],11:[12],12:[11],13:[14],14:[13],15:[16],16:[15],17:[18],18:[17],19:[20],20:[19],21:[22],22:[21],23:[24],24:[23],25:[5,6]};
+ const distractors=shuffle(LETTERS.map((_,i)=>i).filter(i=>i!==correct));
+ const pool=g.stage>=2?Array.from(new Set([...shuffle(similar[correct]||[]),...distractors])).slice(0,count-1):distractors.slice(0,count-1);
  const options=shuffle([correct,...pool]);
  const positions=count===2?[100,260]:count===3?[62,180,298]:[45,135,225,315];
  g.orbs=options.map((letter,i)=>({
@@ -99,7 +101,7 @@ export default function CosmicCatchGame(){
   makeWave(current);
   setOrbs([...current.orbs]);setStage(current.stage);setProgress(current.progress);setBossHits(0);
   setScore(current.score);setMisses(current.mistakes);setPhase("playing");
-  setFeedback("Find "+LETTERS[goal(current)][1]+" · "+LETTERS[goal(current)][0]);
+  setFeedback("Read the Arabic letter and shoot its transliteration.");
  };
  const start=()=>{game.current=newGame();beginLevel(true)};
  const restartLevel=()=>{const g=game.current;if(g.stage<0||g.stage>4)return;beginLevel(false)};
@@ -133,7 +135,7 @@ export default function CosmicCatchGame(){
     if(g.bossHits===BOSS_REVIEW.length){
      g.running=false;g.orbs=[];setOrbs([]);setPhase("won");setFeedback("All 28 letters mastered! Guardian defeated.");saveBest(g.score);return
     }
-    setFeedback("Guardian hit "+g.bossHits+"/3! Find "+LETTERS[goal(g)][1])
+    setFeedback("Guardian hit "+g.bossHits+"/3! Read the next Arabic letter")
    }else{
     const learned=LETTERS[g.progress];g.progress++;setProgress(g.progress);
     if(g.progress===STARTS[g.stage+1]&&g.stage<4){
@@ -141,8 +143,8 @@ export default function CosmicCatchGame(){
      g.running=false;g.orbs=[];setOrbs([]);setStage(g.stage);setPhase("between");
      setFeedback("Level cleared! "+learned[0]+" · "+learned[1]);saveBest(g.score);return
     }
-    if(g.progress===LETTERS.length)setFeedback("28 letters complete! Guardian review: find "+LETTERS[goal(g)][1]);
-    else setFeedback("Great! "+learned[0]+" · "+learned[1]+". Next: "+LETTERS[goal(g)][1])
+    if(g.progress===LETTERS.length)setFeedback("28 letters complete! Guardian review begins.");
+    else setFeedback("Great! "+learned[0]+" · "+learned[1]+". Read the next letter.")
    }
    g.orbs=[];g.waveDelay=.45;
   }else{loseLife("That was "+LETTERS[orb.letter][1]+". Find "+LETTERS[goal(g)][1])}
@@ -194,8 +196,8 @@ export default function CosmicCatchGame(){
      ctx.shadowBlur=0;ctx.strokeStyle=o.boss?"#fff0a5":"rgba(228,255,249,.7)";ctx.lineWidth=1.5;ctx.stroke();
      ctx.beginPath();ctx.ellipse(-o.radius*.3,-o.radius*.45,o.radius*.26,o.radius*.11,-.55,0,Math.PI*2);
      ctx.fillStyle="rgba(255,255,255,.5)";ctx.fill();
-     ctx.fillStyle="#ffffff";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="bold 38px serif";
-     ctx.fillText(LETTERS[o.letter][0],0,1);
+     ctx.fillStyle="#ffffff";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="bold "+(LETTERS[o.letter][1].length>10? "11px":"15px")+" system-ui, sans-serif";
+     ctx.fillText(LETTERS[o.letter][1],0,1,o.radius*1.82);
      if(o.boss){ctx.font="20px serif";ctx.fillText("♛",0,-o.radius-10)}
      ctx.restore()
     }
@@ -232,30 +234,30 @@ export default function CosmicCatchGame(){
   <div className={styles.lesson} aria-live="polite">
    <span>{boss?"👑 GUARDIAN "+Math.min(bossHits+1,3)+"/3":"LETTER "+Math.min(progress+1,28)+"/28"}</span>
    <strong lang="ar" dir="rtl">{LETTERS[targetIndex][0]}</strong>
-   <span>Find <b>{LETTERS[targetIndex][1]}</b></span>
+   <span>SHOOT ITS TRANSLITERATION</span>
   </div>
   <div className={styles.stage} ref={stageRef}>
    <canvas ref={canvas} className={styles.canvas} width={W} height={H}
     style={{width:size.width,height:size.height}} tabIndex={0}
-    aria-label={"Floating Arabic letters. Find "+LETTERS[targetIndex][1]+". Tap a letter or use the numbered target buttons below."}
+    aria-label={"Read the Arabic letter "+LETTERS[targetIndex][0]+". Shoot its transliteration by tapping an orb or using the numbered target buttons below."}
     onPointerDown={e=>{e.preventDefault();e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();shootPoint((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height)}}
     onPointerMove={e=>{if(e.pointerType==="touch")e.stopPropagation()}}
    />
    {phase!=="playing"&&<div className={styles.overlay}>
     <span className={styles.planet} aria-hidden="true">{phase==="won"?"🏆":phase==="over"?"✧":"✦"}</span>
     <h2>{phase==="ready"?"LEARN THE ARABIC ALPHABET":phase==="between"?"LEVEL COMPLETE":phase==="paused"?"PAUSED":phase==="won"?"ALL 28 LETTERS MASTERED!":"MISSION ENDED"}</h2>
-    <p>{phase==="ready"?"Shoot the matching Arabic letter. Clear five levels and defeat the three-round Guardian review.":phase==="between"?"Next: Level "+(stage+1)+" · "+LEVEL_NAMES[stage]:phase==="paused"?"Your falling letters and timer are frozen.":phase==="won"?"You completed all five levels and the Guardian review!":"Five mistakes used. Restart this level to practice again."}</p>
+    <p>{phase==="ready"?"Read the Arabic letter above and shoot the bubble containing its transliteration. Clear five levels and defeat the Guardian review.":phase==="between"?"Next: Level "+(stage+1)+" · "+LEVEL_NAMES[stage]:phase==="paused"?"Your falling letters and timer are frozen.":phase==="won"?"You completed all five levels and the Guardian review!":"Five mistakes used. Restart this level to practice again."}</p>
     <button type="button" onClick={phase==="paused"?togglePause:phase==="between"?()=>beginLevel(false):phase==="ready"||phase==="won"?start:restartLevel}>
      {phase==="paused"?"▶ RESUME":phase==="between"?"▶ NEXT LEVEL":phase==="ready"?"▶ START LEARNING":phase==="won"?"↻ PLAY AGAIN":"↻ RETRY LEVEL"}
     </button>
     <small>Personal best · {best}</small>
    </div>}
   </div>
-  <div className={styles.targetBar} aria-label="Accessible letter targets">
+  <div className={styles.targetBar} aria-label="Accessible transliteration targets">
    <span className={styles.targetLabel}>Shoot:</span>
    {active&&orbs.length?orbs.map((o,i)=><button key={o.id} type="button" disabled={phase==="paused"}
-     onClick={()=>shootId(o.id)} aria-label={"Shoot target "+(i+1)+", "+LETTERS[o.letter][1]+", "+LETTERS[o.letter][0]}>
-     <small>{i+1}</small> <span lang="ar">{LETTERS[o.letter][0]}</span>
+     onClick={()=>shootId(o.id)} aria-label={"Shoot target "+(i+1)+", "+LETTERS[o.letter][1]}>
+     <small>{i+1}</small> <span>{LETTERS[o.letter][1]}</span>
     </button>):<span className={styles.waiting}>{phase==="playing"?"New letters incoming…":"Start or resume to shoot"}</span>}
   </div>
   <footer className={styles.footer}>
