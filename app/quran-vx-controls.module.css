@@ -36,3 +36,27 @@
 @media(hover:none){.quranFrame>.quranPlay:hover{transform:translateX(-50%)}}
 @media(prefers-contrast:more){.quranFrame>.quranArticle{border-width:2px!important}.quranFrame>.quranPrevious,.quranFrame>.quranPlay{border-width:2px!important}.quranFrame::before,.quranFrame::after{opacity:.06}}
 @media(prefers-reduced-motion:reduce){.quranFrame>.quranPlay:hover,.quranFrame>.quranPlay:active{transform:translateX(-50%)}}
+
+/* HUDHUD PRIME VX inset and adaptive glass: 2026-10-21 */
+/* Header overlays the frame rather than consuming the 8px top inset. */
+.quranWidget{box-sizing:border-box!important;position:relative!important;padding:8px!important;gap:0!important;min-height:0;overflow:hidden}
+.quranWidget>:first-child{position:absolute!important;top:16px;left:22px;right:22px;z-index:4;pointer-events:none;color:rgba(var(--qvx-border),.96)!important}
+.quranWidget>.quranFrame{flex:1 1 auto!important;min-height:0;height:100%;box-sizing:border-box}
+.quranFrame>.quranArticle{min-height:0;max-height:100%;padding-top:clamp(58px,8vh,74px)!important;scroll-padding-top:58px;scrollbar-width:thin;box-shadow:inset 0 0 0 999px rgba(0,0,0,var(--qvx-dim,0)),inset 0 1px rgba(255,255,255,.13),0 14px 36px rgba(0,0,0,.17)!important}
+.quranFrame>.quranPrevious{top:54px!important}
+.quranFrame>.quranPlay{bottom:12px!important}
+.quranFrame>.quranArticle{background:linear-gradient(155deg,rgba(var(--qvx-surface),.58),rgba(var(--qvx-surface),.3) 74%,rgba(8,17,25,.48))!important}
+:global(html.light) .quranFrame>.quranArticle{background:linear-gradient(155deg,rgba(255,253,247,.82),rgba(var(--qvx-surface),.24) 62%,rgba(251,249,244,.76))!important;box-shadow:inset 0 0 0 999px rgba(0,0,0,var(--qvx-dim,0)),inset 0 1px rgba(255,255,255,.6),0 12px 26px rgba(0,0,0,.09)!important}
+:global(html.light) .quranWidget>:first-child{color:rgba(var(--qvx-accent),.96)!important}
+:global(html.light) .quranFrame>.quranPrevious,:global(html.light) .quranFrame>.quranPlay{color:#fffdf8!important}
+.quranFrame::after{background-image:radial-gradient(circle,rgba(var(--qvx-border),.88) 1px,transparent 2px)}
+.quranSettingsToggle{position:absolute;right:12px;top:52px;z-index:7;width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(var(--qvx-border),.72);border-radius:50%;background:rgba(var(--qvx-surface),.86);color:#fffaf0;cursor:pointer;touch-action:manipulation}
+.quranSettingsToggle:focus-visible,.quranSettingsPanel input:focus-visible{outline:3px solid rgba(var(--qvx-border),.95);outline-offset:3px}
+.quranSettingsPanel{position:absolute;right:12px;top:100px;z-index:8;width:min(220px,calc(100% - 24px));max-height:calc(100% - 175px);overflow-y:auto;overscroll-behavior:contain;padding:12px;border:1px solid rgba(var(--qvx-border),.68);border-radius:16px;background:linear-gradient(145deg,rgba(var(--qvx-surface),.95),rgba(13,27,35,.95));color:#fffdf6;box-shadow:0 12px 28px rgba(0,0,0,.28);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)}
+.quranSettingsPanel label{display:grid;gap:3px;margin:0 0 9px;font-size:12px;letter-spacing:.03em}
+.quranSettingsPanel input{width:100%;min-height:24px;accent-color:rgba(var(--qvx-border),1);touch-action:pan-x}
+.quranSettingsPanel strong{display:block;font-size:12px;margin-bottom:8px}
+:global(html.light) .quranSettingsPanel{background:linear-gradient(145deg,rgba(252,250,246,.98),rgba(var(--qvx-surface),.88));color:#18362d}
+:global(html.light) .quranSettingsToggle{color:#fffdf8}
+@media(max-width:650px){.quranWidget{padding:8px!important}.quranWidget>:first-child{top:14px;left:17px;right:17px}.quranFrame>.quranPrevious{top:48px!important}.quranSettingsToggle{top:46px}.quranSettingsPanel{top:94px;max-height:calc(100% - 165px)}.quranFrame>.quranArticle{padding-top:58px!important}}
+@media(prefers-reduced-motion:reduce){.quranSettingsToggle,.quranSettingsPanel{animation:none!important;transition:none!important}}
