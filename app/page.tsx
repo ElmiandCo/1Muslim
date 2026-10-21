@@ -103,9 +103,7 @@ export default function Home(){
  const [workspacePage,setWorkspacePage]=useState(0);
  const [canvasRow,setCanvasRow]=useState<0|1|2>(0);
  const [slidePadsVisible,setSlidePadsVisible]=useState(false);
- const slidePadSeen=useRef(false);
- useEffect(()=>{if(!slidePadSeen.current){slidePadSeen.current=true;setSlidePadsVisible(true)}},[]);
- useEffect(()=>{setSlidePadsVisible(true);const timer=window.setTimeout(()=>setSlidePadsVisible(false),1000);return()=>window.clearTimeout(timer)},[workspacePage,canvasRow,navCollapsed]);
+ useEffect(()=>{setSlidePadsVisible(true);const timer=window.setTimeout(()=>setSlidePadsVisible(false),1000);return()=>window.clearTimeout(timer)},[workspacePage,canvasRow]);
  const [navigationHintSeen,setNavigationHintSeen]=useState(false);
  useEffect(()=>{
   const applyPalette=(key?:string)=>{
@@ -329,7 +327,8 @@ const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HT
    }
    fullscreenSnapshot.current=null;
  };
- const [replacementPending,setReplacementPending]=useState(false);const [editWidgets,setEditWidgets]=useState(false);const [galleryOpen,setGalleryOpen]=useState(false);const [navCollapsed,setNavCollapsed]=useState(false);const [canvasExpanded,setCanvasExpanded]=useState(false);const [canvasFullscreen,setCanvasFullscreen]=useState(false);
+ const [replacementPending,setReplacementPending]=useState(false);const [editWidgets,setEditWidgets]=useState(false);const [galleryOpen,setGalleryOpen]=useState(false);const [navCollapsed,setNavCollapsed]=useState(false);
+ useEffect(()=>{setSlidePadsVisible(true);const timer=window.setTimeout(()=>setSlidePadsVisible(false),1000);return()=>window.clearTimeout(timer)},[navCollapsed]);const [canvasExpanded,setCanvasExpanded]=useState(false);const [canvasFullscreen,setCanvasFullscreen]=useState(false);
  // Capture touches globally: nested Profile components can consume touch events before the carousel.
  useEffect(()=>{
    if(!adminHudHud||!navCollapsed||canvasFullscreen||canvasRow!==1||workspacePage!==0)return;
