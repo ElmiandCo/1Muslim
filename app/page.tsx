@@ -103,6 +103,29 @@ export default function Home(){
  const [workspacePage,setWorkspacePage]=useState(0);
  const [canvasRow,setCanvasRow]=useState<0|1|2>(0);
  const [navigationHintSeen,setNavigationHintSeen]=useState(false);
+ useEffect(()=>{
+  const applyPalette=(key?:string)=>{
+   const chosen=key||localStorage.getItem("1muslim:profile-background")||"emerald";
+   const palette:Record<string,[string,string,string]>={
+    emerald:["8,75,57","204,176,103","19,92,67"],
+    "emerald-rose-gold":["83,42,45","224,157,126","113,62,70"],
+    "rose-gold":["83,42,45","224,157,126","113,62,70"],
+    "silver-dust":["38,48,66","195,207,223","76,91,111"],
+    silver:["38,48,66","195,207,223","76,91,111"],
+    "carbon-fiber":["22,25,32","164,175,187","55,64,78"]
+   };
+   const [surface,stroke,accent]=palette[chosen]||palette.emerald;
+   document.documentElement.style.setProperty("--canvas-control-surface-rgb",surface);
+   document.documentElement.style.setProperty("--canvas-control-border-rgb",stroke);
+   document.documentElement.style.setProperty("--canvas-control-accent-rgb",accent);
+  };
+  const changed=(event:Event)=>{const key=(event as CustomEvent<string>).detail;if(key)localStorage.setItem("1muslim:profile-background",key);applyPalette(key)};
+  applyPalette();
+  window.addEventListener("1muslim:profile-background-changed",changed);
+  window.addEventListener("1muslim:theme-changed",()=>applyPalette());
+  return()=>window.removeEventListener("1muslim:profile-background-changed",changed);
+ },[]);
+
  useEffect(()=>{try{setNavigationHintSeen(localStorage.getItem("1muslim:canvas-nav-used")==="1")}catch{}},[]);
  const navigateCanvas=(direction:"left"|"right"|"up"|"down")=>{
   try{localStorage.setItem("1muslim:canvas-nav-used","1")}catch{}
