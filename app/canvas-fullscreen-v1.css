@@ -1595,3 +1595,17 @@ main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center
 [data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button{width:auto!important;min-width:60px!important;flex:none!important;border-radius:22px!important;padding:10px!important;background:rgba(3,94,65,.6)!important}
 [data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentDisclaimer,
 [data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveStudioEntry{display:none!important}
+
+/* Profile is a scrollable document, not a swipe-to-leave surface. */
+.canvas-vertical-secondary{overflow-y:auto!important;overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important}
+.canvas-vertical-secondary .canvas-native-app,.canvas-vertical-secondary .canvas-native-body{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+.canvas-vertical-secondary .canvas-native-profile{overflow:visible!important;touch-action:pan-y!important;overscroll-behavior-y:contain!important;padding:10px 12px!important}
+.canvas-vertical-secondary .canvas-native-profile .canvas-native-avatar{max-width:165px!important}
+.canvas-vertical-secondary .canvas-native-profile h3{margin:4px 0 2px!important}
+.canvas-vertical-secondary .canvas-native-profile form{margin:6px auto!important}
+.canvas-vertical-secondary .canvas-native-profile [role="tablist"]{margin:6px 0!important}
+.canvas-vertical-secondary .canvas-native-profile [data-profile-return-zone]{display:none!important}
+.canvas-edge-chevron-nav .canvas-edge-chevron-up,.canvas-edge-chevron-nav .canvas-edge-chevron-down{top:auto!important;bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;transform:none!important;width:44px!important;height:44px!important;border-radius:50%!important;opacity:.78!important}
+.canvas-edge-chevron-nav .canvas-edge-chevron-up{left:calc(50% - 50px)!important}
+.canvas-edge-chevron-nav .canvas-edge-chevron-down{left:calc(50% + 6px)!important}
+.canvas-edge-chevron-nav .canvas-edge-chevron-up:only-child{left:calc(50% - 22px)!important}

@@ -516,7 +516,7 @@ const navCollapsedRef=useRef(false);
    if(!start||fired||e.touches.length!==1)return;
    const t=e.touches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;
    if(Math.abs(dy)<68||Math.abs(dy)<Math.abs(dx)*1.5)return;
-   if(start.target.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],[data-live-video-region]"))return;
+   if(start.target.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],[data-live-video-region],.canvas-native-profile,.canvas-umma-vertical-gallery"))return;
    if((canvasRow===0||canvasRow===1)&&dy< -68&&start.atTop&&!start.target.closest("[data-ranks-scroll],[data-gallery-scroll]")){fired=true;if(e.cancelable)e.preventDefault();setCanvasRow(row=>Math.min(2,row+1) as 0|1|2);}
    else if((canvasRow===1||canvasRow===2)&&dy>120&&start.atTop){
     const nested=start.target.closest("[data-ranks-scroll],[data-gallery-scroll]");
@@ -540,7 +540,7 @@ const navCollapsedRef=useRef(false);
  if(gesture&&touch&&!editWidgets){
   const dx=touch.clientX-gesture.x,dy=touch.clientY-gesture.y;
   const origin=profileSwipeStart.current?.target;
-  const blocked=Boolean(origin?.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],[data-live-video-region]"));
+  const blocked=Boolean(origin?.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],[data-live-video-region],.canvas-native-profile,.canvas-umma-vertical-gallery"));
   if(!blocked&&Math.abs(dy)>Math.abs(dx)*1.35){
    if((canvasRow===0||canvasRow===1)&&dy< -52&&profileSwipeStart.current?.scrollAtTop&&!origin?.closest("[data-ranks-scroll],[data-gallery-scroll]")){
     if(e.cancelable)e.preventDefault();
@@ -560,7 +560,7 @@ const navCollapsedRef=useRef(false);
  }
  if(!swipeOrigin.current)return;if(adminSwipeArmed.current){const t=e.touches[0];const dx=t.clientX-swipeOrigin.current.x,dy=t.clientY-swipeOrigin.current.y;if(dx < -12&&Math.abs(dx)>Math.abs(dy)*1.2){if(e.cancelable)e.preventDefault();return}}const dx=e.touches[0].clientX-swipeOrigin.current.x,dy=e.touches[0].clientY-swipeOrigin.current.y;if(Math.abs(dy)>Math.abs(dx)+10)swipeOrigin.current=null}} onTouchEnd={e=>{const start=verticalSwipeStart.current;const end=e.changedTouches[0];if(start&&end&&!editWidgets){const dx=end.clientX-start.x,dy=end.clientY-start.y;if(Math.abs(dx)>85&&Math.abs(dx)>Math.abs(dy)*1.5&&canvasRow===1&&workspacePage===0&&navCollapsed&&!canvasFullscreen){if(adminHudHud&&dx<0){setHudHudPanel("admin");workspaceRef.current?.scrollTo({left:0,behavior:"instant"});}}else if(Math.abs(dy)>60&&Math.abs(dy)>Math.abs(dx)*1.25){
  const origin=profileSwipeStart.current?.target??(e.target as HTMLElement);
- const interactive=Boolean(origin.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true]"));
+ const interactive=Boolean(origin.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],.canvas-native-profile,.canvas-umma-vertical-gallery"));
  const inVideo=Boolean(origin.closest("[data-live-video-region]"));
  if(!interactive&&!inVideo){
   if((canvasRow===0||canvasRow===1)&&dy< -60&&profileSwipeStart.current?.scrollAtTop&&!origin.closest("[data-ranks-scroll],[data-gallery-scroll]")){setCanvasRow(row=>Math.min(2,row+1) as 0|1|2);}
@@ -586,6 +586,6 @@ const navCollapsedRef=useRef(false);
  {navigationHintSeen&&workspacePage>0&&canvasRow!==0&&<button type="button" className="canvas-edge-chevron canvas-edge-chevron-left" aria-label="Previous workspace" onClick={()=>navigateCanvas("left")}>‹</button>}
  {canvasRow!==0&&workspacePage<HOME_SLIDES.length-1&&<button type="button" className="canvas-edge-chevron canvas-edge-chevron-right" aria-label="Next workspace" onClick={()=>navigateCanvas("right")}>›</button>}
  {false&&navigationHintSeen&&canvasRow===0&&<button type="button" className="canvas-edge-chevron canvas-edge-chevron-down" aria-label="Open Profile" onClick={()=>navigateCanvas("down")}>⌄</button>}
- {navigationHintSeen&&canvasRow>0&&<button type="button" className="canvas-edge-chevron canvas-edge-chevron-up" aria-label="Return Home" onClick={()=>navigateCanvas("up")}>⌃</button>}
+ {canvasRow>0&&<button type="button" className="canvas-edge-chevron canvas-edge-chevron-up" aria-label="Previous vertical slide" onClick={()=>navigateCanvas("down")}>⌄</button>}{canvasRow===1&&<button type="button" className="canvas-edge-chevron canvas-edge-chevron-down" aria-label="Next vertical slide: 1Umma" onClick={()=>navigateCanvas("up")}>⌃</button>}
  </nav><style>{`.canvas-edge-chevron-nav{position:fixed;inset:0;z-index:2147481900;pointer-events:none}.canvas-edge-chevron{position:absolute;pointer-events:auto;display:grid;place-items:center;width:42px;height:56px;border:1px solid rgba(223,246,230,.25);border-radius:28px;background:rgba(7,42,39,.24);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:rgba(244,255,249,.8);font-size:36px;line-height:1;box-shadow:0 4px 18px rgba(0,0,0,.12);transition:background .25s,opacity .25s}.canvas-edge-chevron:active{background:rgba(25,112,86,.65)}.canvas-edge-chevron-left{left:calc(8px + env(safe-area-inset-left,0px));top:50%;transform:translateY(-50%)}.canvas-edge-chevron-right{right:calc(8px + env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%)}.canvas-edge-chevron-down{bottom:calc(22px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);height:42px;width:56px}.canvas-edge-chevron-up{top:calc(14px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);height:42px;width:56px}@media(prefers-reduced-motion:reduce){.canvas-edge-chevron{transition:none}}`}</style></main>;
 }
