@@ -9,7 +9,7 @@ Branch: experiment/three-bot-game-lab-20261021
 First homepage Live center player replaced by Cosmic Catch only on the experiment branch. Touch-drag spaceship, collect stars for 10 points, avoid meteors, three lives, keyboard arrows, restart, locally saved best score and motion toggle.
 
 ## Validation
-GitHub commits succeeded. Vercel dpl_1KRQYRMdpFFcVL7kVWBLasMkfMuA was BUILDING when checked. TypeScript compilation, mobile gameplay and browser smoke test not yet verified. Production unchanged.
+GitHub commits succeeded. Vercel dpl_1KRQYRMdpFFcVL7kVWBLasMkfMuA was BUILDING when checked. Vercel Next.js build completed successfully in 48s. Browser/mobile gameplay not yet verified. Production unchanged.
 
 ## Next for HUDHUD PRIME
 Check Vercel build and test on touch device. Parent carousel touch capture or widget long-press may interfere with gameplay; add game-region exclusions if necessary. Improve visuals, scoring feedback, difficulty and accessibility. Existing HomeLiveConversation bottom panel remains, possibly incongruous with the game. Append your own exact commit/test evidence.
