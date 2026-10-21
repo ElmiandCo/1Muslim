@@ -62,9 +62,9 @@ export default function GoLivePage() {
   const [recording, setRecording] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
-  const [micOn, setMicOn] = useState(true);
-  const [cameraOn, setCameraOn] = useState(true);
-  const [autoCameraPreview, setAutoCameraPreview] = useState(true);
+  const [micOn, setMicOn] = useState(false);
+  const [cameraOn, setCameraOn] = useState(false);
+  const [autoCameraPreview, setAutoCameraPreview] = useState(false);
   const autoPreviewAttempted = useRef(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [videoQuality, setVideoQuality] = useState<"480p" | "720p" | "1080p">("720p");
