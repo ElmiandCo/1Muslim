@@ -1628,3 +1628,21 @@ main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center
 .canvas-edge-chevron-nav .canvas-edge-chevron-down{left:calc(50% + 5px)!important;right:auto!important}
 .canvas-edge-chevron-nav .canvas-edge-chevron-right{left:calc(50% + 59px)!important;right:auto!important}
 @media(prefers-reduced-motion:reduce){.canvas-edge-chevron-nav .canvas-edge-chevron{transition:none!important;transform:none!important}}
+
+/* Theme-synced navigation and interactive controls: emerald, rose gold, silver, carbon. */
+:root{--canvas-control-surface-rgb:8,75,57;--canvas-control-border-rgb:204,176,103;--canvas-control-accent-rgb:19,92,67}
+header[class*="controlHeader"],header[class*="controlHeader"] form[class*="searchDock"],
+header[class*="controlHeader"] [class*="headerActions"] a{
+ background-color:rgba(var(--canvas-control-surface-rgb),.83)!important;
+ border-color:rgba(var(--canvas-control-border-rgb),.56)!important;
+ transition:background-color .55s ease,border-color .55s ease,box-shadow .55s ease!important;
+}
+[class*="introActionDock"] [class*="introLiveButton"],.canvas-edge-chevron,
+.oneMuslimLiveBottom .homeLiveCommentForm button,
+.oneMuslimLiveTop button:not([class*="play"]){
+ background-color:rgba(var(--canvas-control-accent-rgb),.76)!important;
+ border-color:rgba(var(--canvas-control-border-rgb),.72)!important;
+ transition:background-color .55s ease,border-color .55s ease,opacity .38s ease,transform .38s ease!important;
+}
+.canvas-edge-chevron.is-visible{background:rgba(var(--canvas-control-surface-rgb),.65)!important}
+.oneMuslimLiveBottom .homeLiveCommentForm button:disabled{opacity:.5!important}
