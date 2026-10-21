@@ -134,7 +134,7 @@ export default function Home(){
   try{localStorage.setItem("1muslim:canvas-nav-used","1")}catch{}
   setNavigationHintSeen(true);
   if(direction==="down"){setCanvasRow(row=>Math.max(0,row-1) as 0|1|2);return}
-  if(direction==="up"){setCanvasRow(row=>Math.min(workspacePage===0?2:1,row+1) as 0|1|2);return}
+  if(direction==="up"){if(workspacePage===1)return;setCanvasRow(row=>Math.min(workspacePage===0?2:1,row+1) as 0|1|2);return}
   const next=Math.max(0,Math.min(HOME_SLIDES.length-1,workspacePage+(direction==="right"?1:-1)));
   moveWorkspace(next);
  };
@@ -548,7 +548,7 @@ const navCollapsedRef=useRef(false);
    const t=e.touches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;
    if(Math.abs(dy)<68||Math.abs(dy)<Math.abs(dx)*1.5)return;
    if(start.target.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],[data-live-video-region],.canvas-native-profile,.canvas-umma-vertical-gallery"))return;
-   if((canvasRow===0||canvasRow===1)&&dy< -68&&start.atTop&&!start.target.closest("[data-ranks-scroll],[data-gallery-scroll]")){fired=true;if(e.cancelable)e.preventDefault();setCanvasRow(row=>Math.min(workspacePage===0?2:1,row+1) as 0|1|2);}
+   if(workspacePage!==1&&(canvasRow===0||canvasRow===1)&&dy< -68&&start.atTop&&!start.target.closest("[data-ranks-scroll],[data-gallery-scroll]")){fired=true;if(e.cancelable)e.preventDefault();setCanvasRow(row=>Math.min(workspacePage===0?2:1,row+1) as 0|1|2);}
    else if((canvasRow===1||canvasRow===2)&&dy>120&&start.atTop){
     const nested=start.target.closest("[data-ranks-scroll],[data-gallery-scroll]");
     const profile=start.target.closest(".canvas-native-profile") as HTMLElement|null;
@@ -573,7 +573,7 @@ const navCollapsedRef=useRef(false);
   const origin=profileSwipeStart.current?.target;
   const blocked=Boolean(origin?.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],[data-live-video-region],.canvas-native-profile,.canvas-umma-vertical-gallery,[data-quran-card-scroll]"));
   if(!blocked&&Math.abs(dy)>Math.abs(dx)*1.35){
-   if((canvasRow===0||canvasRow===1)&&dy< -52&&profileSwipeStart.current?.scrollAtTop&&!origin?.closest("[data-ranks-scroll],[data-gallery-scroll]")){
+   if(workspacePage!==1&&(canvasRow===0||canvasRow===1)&&dy< -52&&profileSwipeStart.current?.scrollAtTop&&!origin?.closest("[data-ranks-scroll],[data-gallery-scroll]")){
     if(e.cancelable)e.preventDefault();
     setCanvasRow(row=>Math.min(workspacePage===0?2:1,row+1) as 0|1|2);verticalSwipeStart.current=null;profileSwipeStart.current=null;swipeOrigin.current=null;
     return;
