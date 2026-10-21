@@ -1734,3 +1734,17 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   height:100%!important;
   overflow-y:auto!important;
 }
+
+
+/* Keep the LIVE player functional while revealing the single background mirror. */
+[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveVideo,
+[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveVideo:not(:has(video)){
+ background:transparent!important;
+ backdrop-filter:none!important;
+ box-shadow:none!important;
+}
+[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveBottom > *{
+ background:transparent!important;
+ backdrop-filter:none!important;
+ box-shadow:none!important;
+}
