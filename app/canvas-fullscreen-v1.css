@@ -1646,3 +1646,6 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 }
 .canvas-edge-chevron.is-visible{background:rgba(var(--canvas-control-surface-rgb),.65)!important}
 .oneMuslimLiveBottom .homeLiveCommentForm button:disabled{opacity:.5!important}
+
+/* Remove legacy floating green sparkle orb; preserve four-way navigation. */
+.canvas-orb-floating-dock{display:none!important;visibility:hidden!important;pointer-events:none!important}
