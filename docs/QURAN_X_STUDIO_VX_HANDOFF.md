@@ -23,3 +23,24 @@ Bot 5 Release Guardian: audit branch vs latest main/preview, run build checks, r
 
 ## Initial handoff — Bot 1
 Created branch from latest active preview feature branch and documented complete acceptance criteria. Known starting point: app/page.tsx contains previous verse control using workspaceStyles.quranHudHudPositionToggle and event 1muslim:quran-previous-verse; inspect surrounding markup before moving. Existing active preview branch may have outstanding Vercel build issues; verify rather than assuming success. Next: locate Quran widget/studio styles, implement isolated layout improvement and commit; inspect data layer for XP schema and verification.
+
+
+## Bot 1 completed — 2026-10-21 04:10–04:13 CDT
+**Actual committed code, preview branch only:**
+- `bd92dc472d8f3267564dbf9ff1f7d8eaded9c03c` — app/page.tsx: move previous-verse button into Quran verse frame, move play button OUT of scrollable verse content into a stable frame overlay, disable play until verse loaded, remove bottom Open Quran Studio link. Existing audio element and navigation event retained.
+- `583edda58bd4da7fd34fa0bd41f8eb92082c35c6` — new app/quran-vx-controls.module.css: isolated stable layout and 8px widget inset; no global redesign.
+- `e7d1a489d720dd6ca012c2a691bdf4dc5a1edc22` — app/page.tsx: import and bind new scoped CSS module classes to Quran widget, frame, verse article, previous control and play control.
+- `b42fae277e43fe6834d715a5127e98920268abed` — increase inset selector specificity in scoped CSS module.
+
+**Inspection map:** Quran homepage lives in `app/page.tsx` (~106KB), styles `app/workspace-presentation.module.css` (~48KB) plus `app/home-hub.module.css`. Main Quran Studio is `app/elm-tent/quran/page.tsx` (~160KB). It imports `VerseRecorder` from `app/elm-tent/quran/VerseRecorder.tsx` (~10KB), which currently uploads to Supabase bucket `quran-recitation-vault` and upserts `quran_recitations` but contains no verified verse matching. Studio has `readerBlur`/`readerDim` state and `<select aria-label="Choose surah">`; use those as reference for Bot 2. Homepage uses `loadQuranVerse`, `quranPreview`, `quranAudioRef`, `quranAudioFinished` and custom events `1muslim:quran-next-verse` / `1muslim:quran-previous-verse`.
+
+**Validation:** Structural source checks confirmed exactly one new frame, previous button and play button in homepage source; no production change. Vercel preview deployment for first code commit `bd92dc4` reported READY. Deployment for final CSS commit `b42fae2` was still BUILDING at last check; no complete final-build or mobile gesture validation claimed. Earlier build `e7d1a4` reported successful Next.js compilation, with type-check still in progress when inspected. Do not infer later deployment success from this.
+
+**Bot 2 immediate steps:**
+1. FIRST check latest branch deployment for `b42fae2` is READY; inspect Vercel build logs and fix any CSS-module/TS errors. Source currently references `workspaceStyles.quranVerseFrame` as one member of a className array, but that class is NOT declared in legacy workspace CSS; safely simplify to `className={quranVxStyles.quranFrame}` (the other class is harmless undefined at runtime, but remove it for cleanliness).
+2. Check CSS specificity and inspect mobile: `:global(.fillArea)` in the new module may not match CSS-module-hashed legacy `fillArea`; ensure actual 8px padding via a reliable selector scoped to the Quran slide (e.g. `:global([data-workspace-page="1"]) .quranWidget`) and avoid touching other slides.
+3. Confirm play and previous controls remain visually fixed as verse content scrolls, do not obstruct Arabic text; verify no overflow and that previous control is INSIDE the glass pane at upper left. Retain the Quran widget's existing click-through to Studio via the surrounding Link.
+4. Add chapter:verse selector, legitimate progress bars, compact dim/brightness/volume/blur, particle polish, theme synchronization, as possible; commit changes and update handoff for Bot 3.
+5. NEVER award XP based on client events; no backend XP or verified recitation exists in this Bot 1 work. Bot 3 must design server-authoritative idempotent grants and real verse verification.
+
+**Known risks:** No full interactive browser/mobile test yet. Legacy Quran CSS has multiple !important declarations, so screenshots are needed to prove geometry. This branch has NOT been merged or promoted to production.
