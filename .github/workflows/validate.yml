@@ -2,8 +2,11 @@ name: Validate TypeScript and Build
 on:
   push:
     branches:
-      - feature/video-day-timed-comments
+      - main
   pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 jobs:
   validate:
     runs-on: ubuntu-latest
