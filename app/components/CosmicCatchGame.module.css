@@ -17,3 +17,6 @@
 .controls button:focus-visible,.targetBar button:focus-visible{outline:3px solid #ffe3a6;outline-offset:2px}
 .overlay button{min-height:44px}
 @media(max-width:400px){.lesson{font-size:11px;gap:6px}.controls button{font-size:10px;padding:5px}.targetBar{gap:4px}}
+
+/* TITAN flight HUD: keep navigation targets within the viewport. */
+.targetBar{overflow-x:auto;justify-content:flex-start;scrollbar-width:thin}.targetBar button{flex-shrink:0;font:700 12px system-ui,sans-serif;padding:4px 7px}.lesson{flex-wrap:wrap}.canvas{cursor:grab}.canvas:active{cursor:grabbing}
