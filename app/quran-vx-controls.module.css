@@ -25,3 +25,7 @@
 @keyframes qvxDustMid{from{transform:translate3d(0,9px,0)}to{transform:translate3d(7px,-8px,0)}}
 @keyframes qvxDustNear{from{transform:translate3d(-4px,4px,0)}to{transform:translate3d(5px,-7px,0)}}
 @media(prefers-reduced-motion:reduce){.quranFrame::before,.quranFrame::after{animation:none;will-change:auto}}
+
+/* Attribute selectors survive CSS-module hashing of legacy slide/fillArea classes. */
+:global([data-workspace-page="1"]) :global([data-widget="Qur’an"]) .quranWidget.quranWidget.quranWidget.quranWidget{padding:8px!important;gap:8px!important}
+@media(max-width:650px){:global([data-workspace-page="1"]) :global([data-widget="Qur’an"]) .quranWidget.quranWidget.quranWidget.quranWidget{padding:8px!important}}
