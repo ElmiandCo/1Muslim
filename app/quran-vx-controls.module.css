@@ -47,3 +47,10 @@
 @media(max-width:650px){.quranWidget{padding:10px!important}.quranWidget>.quranFrame>.quranArticle{padding:12px!important;border-radius:17px!important}.quranWidget>.quranFrame>.quranPrevious{left:9px!important;top:9px!important}.quranWidget>.quranFrame>.quranPlay{right:9px!important;top:9px!important}}
 @media(prefers-reduced-motion:reduce){.quranFrame::before,.quranFrame::after{animation:none;will-change:auto}.quranWidget>.quranFrame>.quranPlay:hover,.quranWidget>.quranFrame>.quranPlay:active{transform:none!important}}
 
+
+/* Reading typography: larger Arabic and translation with generous separation.
+   Preserve the original centered flex layout and single mirror pane. */
+.quranWidget>.quranFrame>.quranArticle{gap:clamp(25px,4.5vh,54px)!important}
+.quranWidget>.quranFrame>.quranArticle p{max-width:100%!important}
+.quranWidget>.quranFrame>.quranArticle p[dir="rtl"]{font-size:clamp(30px,7.3vw,52px)!important;line-height:2.05!important}
+@media(max-width:650px){.quranWidget>.quranFrame>.quranArticle{gap:clamp(26px,4vh,44px)!important}}
