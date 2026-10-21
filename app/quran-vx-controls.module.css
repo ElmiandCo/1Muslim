@@ -56,7 +56,7 @@
 @media(max-width:650px){.quranWidget>.quranFrame>.quranArticle{gap:clamp(26px,4vh,44px)!important}}
 
 /* Independent floating verse cards; the mosque wallpaper and outer canvas remain fixed. */
-.quranWidget>.quranFrame>.quranCardScroller{display:block!important;overflow-y:auto!important;overscroll-behavior:contain!important;touch-action:pan-y!important;scroll-behavior:smooth!important;scroll-snap-type:y:proximity!important;padding:70px 12px 36px!important;scrollbar-width:none!important}
+.quranWidget>.quranFrame>.quranCardScroller{display:block!important;overflow-y:auto!important;overscroll-behavior:contain!important;touch-action:pan-y!important;scroll-behavior:smooth!important;scroll-snap-type:y proximity!important;padding:70px 12px 36px!important;scrollbar-width:none!important}
 .quranCardScroller::-webkit-scrollbar{display:none}
 .quranFloatingCard{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(25px,4vh,48px);width:100%;min-height:clamp(330px,62vh,680px);margin:0 0 26px;padding:clamp(30px,7vw,52px) clamp(15px,4vw,34px);box-sizing:border-box;border:1px solid rgba(var(--qvx-border),.33);border-radius:28px;background:linear-gradient(155deg,rgba(var(--qvx-surface),.17),rgba(2,22,25,.07));box-shadow:0 16px 36px rgba(0,0,0,.11);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);scroll-snap-align:start;text-align:center}
 .quranFloatingCard p{margin:0;max-width:100%;flex-shrink:0}
