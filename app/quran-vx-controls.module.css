@@ -81,3 +81,8 @@
 .quranWidget>.quranFrame>.quranPlay:active{transform:scale(.98)!important}
 @media(max-width:650px){.quranWidget>.quranFrame>.quranPlay{top:9px!important;right:9px!important}}
 @media(prefers-reduced-motion:reduce){.quranWidget>.quranFrame>.quranPlay:hover,.quranWidget>.quranFrame>.quranPlay:active{transform:none!important}}
+
+/* Mobile correction: the GLASS itself occupies the frame; never shrink into a header strip. */
+.quranWidget>.quranFrame{display:block!important;overflow:visible!important}
+.quranWidget>.quranFrame>.quranArticle{position:absolute!important;inset:0!important;top:0!important;right:0!important;bottom:0!important;left:0!important;width:100%!important;height:100%!important;max-height:none!important;min-height:0!important;display:flex!important;flex-direction:column!important;box-sizing:border-box!important;overflow-y:auto!important;z-index:1!important}
+.quranWidget>.quranFrame>.quranPlay{position:absolute!important;top:12px!important;right:12px!important;bottom:auto!important;left:auto!important;z-index:9!important}
