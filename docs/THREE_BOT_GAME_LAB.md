@@ -13,7 +13,11 @@ On branch `experiment/three-bot-game-lab-20261021`, replace ONLY the center home
 ## Handoffs
 ### TITAN
 Completed initial implementation. Read docs/TITAN_GAME_LAB_HANDOFF.md for commits, tests, blockers and next steps.
-### HUDHUD PRIME
-Pending.
+### HUDHUD PRIME — follow-up integration (2026-10-21)
+Commit: `94cd599936d5b25aa48d52b31ae7846d477f387a`
+Changed: `app/page.tsx` — added Desktop/Phone/Audio/Games format tabs, isolated Cosmic Catch to Games, routed Desktop/Phone to LiveHomePreview, added empty-state links and stream navigation. Existing conversation remains below player.
+Tests: GitHub write returned commit SHA; no build, browser, or iPhone gameplay test completed. Blockers: audio-only tab currently displays a placeholder rather than an actual audio player; live-stream filtering currently queries desktop/phone by aspect ratio and does not query audio streams. LiveHomePreview is muted and thumbnail-oriented; production-grade interactive viewing still requires validation. The shared conversation can still show demo mode in Games.
+Next for NOVA FUSION: verify TypeScript/Vercel build, actual LiveKit room playback, touch switching and responsive layout; implement audio stream discovery/player and disable live chat in Games if appropriate. Preserve production and other homepage features.
+
 ### NOVA FUSION
 Pending.
