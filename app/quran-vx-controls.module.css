@@ -164,3 +164,27 @@
  border-color:transparent!important;box-shadow:none!important;
  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
 }
+
+/* Quran VX: lock both geometry levels to the widget edges; center verse independently.
+   Header remains compact and overlays without affecting frame height. */
+.quranWidget{position:relative!important;display:block!important;min-height:0!important;padding:0!important;overflow:hidden!important}
+.quranWidget>:first-child{position:absolute!important;top:14px!important;left:18px!important;right:18px!important;width:auto!important;height:auto!important;z-index:5!important;pointer-events:none!important}
+.quranWidget>.quranFrame{
+ position:absolute!important;inset:8px!important;top:8px!important;bottom:8px!important;left:8px!important;right:8px!important;
+ width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;
+ display:block!important;overflow:hidden!important;box-sizing:border-box!important;
+}
+.quranWidget>.quranFrame>.quranArticle{
+ position:absolute!important;inset:0!important;top:0!important;bottom:0!important;left:0!important;right:0!important;
+ width:100%!important;height:100%!important;min-height:0!important;max-height:none!important;
+ display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:safe center!important;
+ overflow-y:auto!important;overflow-x:hidden!important;box-sizing:border-box!important;
+ padding:112px clamp(16px,4vw,30px) 24px!important;
+ background:transparent!important;background-color:transparent!important;
+ border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+.quranWidget>.quranFrame>.quranPlay{top:65px!important;right:10px!important;left:auto!important;bottom:auto!important;z-index:9!important}
+.quranWidget>.quranFrame>.quranPrevious{top:65px!important;left:10px!important;z-index:9!important}
+.quranWidget>.quranFrame>.quranSettingsToggle{top:125px!important;right:10px!important;z-index:9!important}
+.quranWidget>.quranFrame>.quranSettingsPanel{top:175px!important;z-index:10!important}
+@media(max-width:650px){.quranWidget>.quranFrame>.quranArticle{padding-top:110px!important;padding-bottom:22px!important}}
