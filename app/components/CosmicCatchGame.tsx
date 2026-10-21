@@ -20,11 +20,11 @@ type Shot={x:number;y:number;life:number;correct:boolean};
 type Game={
  running:boolean;paused:boolean;stage:number;progress:number;bossHits:number;score:number;mistakes:number;
  checkpointScore:number;checkpointMistakes:number;orbs:Orb[];shards:Shard[];shot:Shot|null;
- nextId:number;last:number;lastPaint:number;waveDelay:number;shipX:number;desiredX:number;held:number;travel:number;shipX:number;shipY:number;targetId:number|null;waveClock:number
+ nextId:number;last:number;lastPaint:number;waveDelay:number;shipX:number;shipY:number;targetId:number|null;waveClock:number;travel:number
 };
 const newGame=():Game=>({
  running:false,paused:false,stage:0,progress:0,bossHits:0,score:0,mistakes:0,
- checkpointScore:0,checkpointMistakes:0,orbs:[],shards:[],shot:null,nextId:0,last:0,lastPaint:0,waveDelay:0,shipX:180,desiredX:180,held:0,travel:0,shipX:W/2,shipY:H-50,targetId:null,waveClock:0
+ checkpointScore:0,checkpointMistakes:0,orbs:[],shards:[],shot:null,nextId:0,last:0,lastPaint:0,waveDelay:0,shipX:W/2,shipY:H-50,targetId:null,waveClock:0,travel:0
 } as Game);
 const goal=(g:Game)=>g.progress<LETTERS.length?g.progress:BOSS_REVIEW[Math.min(g.bossHits,BOSS_REVIEW.length-1)];
 const shuffle=<T,>(array:T[]):T[]=>{for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array};
@@ -98,7 +98,7 @@ export default function CosmicCatchGame(){
   if(fresh){game.current=newGame()}
   const current=game.current;
   current.running=true;current.paused=false;current.last=0;current.lastPaint=0;
-  current.orbs=[];current.shards=[];current.shot=null;current.waveDelay=0;current.shipX=180;current.desiredX=180;current.held=0;
+  current.orbs=[];current.shards=[];current.shot=null;current.waveDelay=0;
   current.shipX=W/2;current.shipY=H-50;current.targetId=null;current.waveClock=0;
   current.progress=STARTS[current.stage];current.bossHits=0;
   current.score=current.checkpointScore;current.mistakes=current.checkpointMistakes;
@@ -170,6 +170,7 @@ export default function CosmicCatchGame(){
    const g=game.current;
    const dt=g.last?Math.min((now-g.last)/1000,.05):0;g.last=now;
    if(g.running&&!g.paused){
+    g.travel+=dt*(1+g.stage*.5);
     if(g.orbs.length===0){g.waveDelay-=dt;if(g.waveDelay<=0){makeWave(g);setOrbs([...g.orbs])}}
     // The player flies to the letters: the orbs hold their place in 3D space.
     // Tap or a numbered key locks the ship onto a bubble; arrow keys steer manually.
@@ -197,10 +198,10 @@ export default function CosmicCatchGame(){
     g.lastPaint=now;
     ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
     ctx.save();
-    for(let i=0;i<55;i++){const x=(i*137+29)%W,y=(i*91+13)%H;ctx.fillStyle=i%4?"rgba(226,250,246,.36)":"rgba(251,227,168,.65)";ctx.fillRect(x,y,i%6?1:2,i%6?1:2)}
+    for(let i=0;i<55;i++){const x=(i*137+29)%W,y=((i*91+13)+(reducedRef.current?0:g.travel*(17+i%5*8)))%H;ctx.fillStyle=i%4?"rgba(226,250,246,.36)":"rgba(251,227,168,.65)";ctx.fillRect(x,y,i%6?1:2,i%6?1:2)}
     ctx.strokeStyle="rgba(104,218,194,.18)";ctx.lineWidth=1;
     for(let i=0;i<=10;i++){ctx.beginPath();ctx.moveTo(W/2+(g.shipX-W/2)*.08,100);ctx.lineTo(i*W/10-(g.shipX-W/2)*.2,H);ctx.stroke()}
-    for(let i=0;i<9;i++){const y=110+i*i*5.8;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+    for(let i=0;i<9;i++){const y=110+((i*i*5.8+(reducedRef.current?0:g.travel*22))%390);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
     ctx.restore();
     for(const o of g.orbs){
      const depth=Math.max(.32,Math.min(1.18,.20+o.y/H));
@@ -285,7 +286,7 @@ export default function CosmicCatchGame(){
    {active&&orbs.length?orbs.map((o,i)=><button key={o.id} type="button" disabled={phase==="paused"}
      onClick={()=>flyToId(o.id)} aria-label={"Fly to target "+(i+1)+", "+LETTERS[o.letter][1]}>
      <small>{i+1}</small> <span>{LETTERS[o.letter][1]}</span>
-    </button>):<span className={styles.waiting}>{phase==="playing"?"New letters incoming…":"Start or resume to shoot"}</span>}
+    </button>):<span className={styles.waiting}>{phase==="playing"?"New letters incoming…":"Start or resume flight"}</span>}
   </div>
   <footer className={styles.footer}>
    <span className={styles.feedback} role="status" aria-live="polite" aria-atomic="true">{feedback}</span>
