@@ -3,7 +3,7 @@
  * Apply these when constructing LiveKit Room and publishing camera tracks.
  * Quality targets require real-device measurements; these options do not guarantee <1s latency.
  */
-import type { RoomOptions, VideoCaptureOptions, VideoPublishOptions } from "livekit-client";
+import type { RoomOptions, VideoCaptureOptions } from "livekit-client";
 
 export const liveRoomOptions: RoomOptions = {
   adaptiveStream: true,
@@ -22,7 +22,7 @@ export const liveCameraCaptureOptions: VideoCaptureOptions = {
   resolution: { width: 1920, height: 1080, frameRate: 30 },
 };
 
-export const liveCameraPublishOptions: VideoPublishOptions = {
+export const liveCameraPublishOptions = {
   simulcast: true,
   videoEncoding: { maxBitrate: 3_000_000, maxFramerate: 30 },
 };
