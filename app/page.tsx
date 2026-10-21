@@ -145,6 +145,15 @@ export default function Home(){
  const [quranCards,setQuranCards]=useState<{arabic:string;translation:string;chapter:number;verse:number;globalAyah:number}[]>([]);
  const quranCardsRef=useRef<HTMLDivElement|null>(null);
  const quranTouchY=useRef<number|null>(null);
+ /* iOS fallback: intercept touches at capture phase so a visual overlay cannot steal verse scrolling. */
+ useEffect(()=>{if(workspacePage!==1)return;let lastY:number|null=null;let active=false;
+  const inside=(x:number,y:number)=>{const el=quranCardsRef.current;if(!el)return false;const box=el.getBoundingClientRect();return x>=box.left&&x<=box.right&&y>=box.top&&y<=box.bottom};
+  const start=(e:TouchEvent)=>{const t=e.touches[0];if(!t||!inside(t.clientX,t.clientY)||((e.target as Element)?.closest?.("button,input,select,textarea")))return;lastY=t.clientY;active=true};
+  const move=(e:TouchEvent)=>{if(!active||lastY===null)return;const t=e.touches[0],el=quranCardsRef.current;if(!t||!el)return;const delta=lastY-t.clientY;lastY=t.clientY;if(el.scrollHeight>el.clientHeight+2){el.scrollTop+=delta;if(e.cancelable)e.preventDefault();e.stopImmediatePropagation()}};
+  const end=()=>{active=false;lastY=null};
+  document.addEventListener("touchstart",start,{capture:true,passive:true});document.addEventListener("touchmove",move,{capture:true,passive:false});document.addEventListener("touchend",end,{capture:true});document.addEventListener("touchcancel",end,{capture:true});
+  return()=>{document.removeEventListener("touchstart",start,true);document.removeEventListener("touchmove",move,true);document.removeEventListener("touchend",end,true);document.removeEventListener("touchcancel",end,true)};
+ },[workspacePage]);
  useEffect(()=>{if(!quranPreview)return;let cancelled=false;const chapter=quranPreview.chapter;
   setQuranCards([]);
   void(async()=>{try{
