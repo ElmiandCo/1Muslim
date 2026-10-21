@@ -1,18 +1,21 @@
-/* Quran VX — single authoritative layout. Scoped to the VX widget only. */
-.quranWidget{--qvx-surface:var(--canvas-control-surface-rgb,8,75,57);--qvx-border:var(--canvas-control-border-rgb,204,176,103);--qvx-accent:var(--canvas-control-accent-rgb,19,92,67);position:relative!important;display:block!important;box-sizing:border-box!important;padding:0!important;min-height:0!important;overflow:hidden!important;isolation:isolate}
-.quranWidget>.quranFrame{position:absolute!important;inset:8px!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;display:block!important;box-sizing:border-box!important;overflow:hidden!important;isolation:isolate;z-index:1}
-.quranWidget>:first-child{position:absolute!important;top:64px!important;left:20px!important;right:20px!important;width:auto!important;height:auto!important;z-index:5!important;pointer-events:none!important;color:rgba(var(--qvx-border),.96)!important}
-.quranWidget>.quranFrame>.quranArticle{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-height:none!important;min-height:0!important;box-sizing:border-box!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:safe center!important;gap:clamp(9px,2vh,18px);padding:140px clamp(16px,4vw,30px) 44px!important;margin:0!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;text-align:center;scrollbar-width:thin;z-index:1!important;border:0!important;border-radius:17px;background:transparent!important;background-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-.quranWidget>.quranFrame>.quranArticle p{visibility:visible!important;opacity:1!important}
-.quranWidget>.quranFrame>.quranPrevious,.quranWidget>.quranFrame>.quranPlay{position:absolute!important;top:70px!important;z-index:9!important;width:44px;height:44px;min-width:44px;min-height:44px;touch-action:manipulation;border-color:rgba(var(--qvx-border),.7)!important;background:linear-gradient(140deg,rgba(var(--qvx-accent),.84),rgba(var(--qvx-surface),.8))!important}
-.quranWidget>.quranFrame>.quranPrevious{left:10px!important;right:auto!important}
-.quranWidget>.quranFrame>.quranPlay{right:10px!important;left:auto!important;bottom:auto!important;margin:0!important;transform:none!important}
-.quranWidget>.quranFrame>.quranPlay:hover{transform:scale(1.06)!important}
-.quranWidget>.quranFrame>.quranPlay:active{transform:scale(.98)!important}
-.quranWidget>.quranFrame>.quranPlay:disabled{opacity:.52;cursor:not-allowed}
-.quranWidget>.quranFrame>.quranPrevious:focus-visible,.quranWidget>.quranFrame>.quranPlay:focus-visible{outline:3px solid rgba(var(--qvx-border),.98)!important;outline-offset:3px}
-:global(html.light) .quranWidget>.quranFrame>.quranArticle p{color:#1c3d35!important;text-shadow:none}
-:global(html.light) .quranWidget>:first-child{color:rgba(var(--qvx-accent),.96)!important}
+/* Scoped Quran VX layout. Keep legacy Quran Studio styling untouched. */
+:global(.fillArea) :global(.slide[data-workspace-page="1"]) .quranWidget{padding:8px!important;gap:8px!important}
+.quranFrame{position:relative;z-index:1;display:flex;flex:1 1 0%;width:100%;min-width:0;min-height:0;isolation:isolate}
+.quranFrame>.quranArticle{flex:1 1 0%!important;width:100%!important;height:100%;min-height:0;box-sizing:border-box;padding-bottom:clamp(92px,13vh,110px)!important}
+.quranFrame>.quranPrevious{position:absolute;left:12px!important;right:auto!important;top:12px!important;z-index:5;width:44px;height:44px;touch-action:manipulation}
+.quranFrame>.quranPlay{position:absolute;left:50%;bottom:12px;z-index:5;align-self:auto;flex:none;margin:0;min-width:44px;min-height:44px;transform:translateX(-50%);touch-action:manipulation}
+.quranFrame>.quranPlay:hover{transform:translateX(-50%) scale(1.06)}
+.quranFrame>.quranPlay:active{transform:translateX(-50%) scale(.98)}
+@media(max-width:650px){:global(.fillArea) :global(.slide[data-workspace-page="1"]) .quranWidget{padding:8px!important}.quranFrame>.quranPrevious{left:9px!important;top:9px!important;width:44px;height:44px}.quranFrame>.quranPlay{bottom:10px}}
+@media(prefers-reduced-motion:reduce){.quranFrame>.quranPlay{transition:none!important}}
+
+/* VX theme sync: reuse the existing saved Canvas palette, without repainting unrelated pages. */
+.quranWidget{--qvx-surface:var(--canvas-control-surface-rgb,8,75,57);--qvx-border:var(--canvas-control-border-rgb,204,176,103);--qvx-accent:var(--canvas-control-accent-rgb,19,92,67)}
+.quranFrame>.quranArticle{border-color:rgba(var(--qvx-border),.46)!important;background:linear-gradient(155deg,rgba(var(--qvx-surface),.35),rgba(6,22,30,.45))!important;backdrop-filter:blur(var(--qvx-blur,12px)) brightness(var(--qvx-brightness,1));-webkit-backdrop-filter:blur(var(--qvx-blur,12px)) brightness(var(--qvx-brightness,1))}
+.quranFrame>.quranPrevious,.quranFrame>.quranPlay{border-color:rgba(var(--qvx-border),.7)!important;background:linear-gradient(140deg,rgba(var(--qvx-accent),.84),rgba(var(--qvx-surface),.8))!important}
+:global(html.light) .quranFrame>.quranArticle{background:linear-gradient(155deg,rgba(250,248,239,.76),rgba(var(--qvx-surface),.19) 72%,rgba(237,240,234,.68))!important;border-color:rgba(var(--qvx-border),.68)!important;color:#18362d}
+:global(html.light) .quranFrame>.quranArticle p{color:#1c3d35!important;text-shadow:none}
+
 /* Three subtle depth planes: existing widget dust behind, these two inside the verse frame.
    Purely decorative, never capture touch/scroll or change the fixed frame geometry. */
 .quranFrame::before,.quranFrame::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background-repeat:repeat;will-change:transform}
@@ -23,8 +26,30 @@
 @keyframes qvxDustNear{from{transform:translate3d(-4px,4px,0)}to{transform:translate3d(5px,-7px,0)}}
 @media(prefers-reduced-motion:reduce){.quranFrame::before,.quranFrame::after{animation:none;will-change:auto}}
 
+/* Attribute selectors survive CSS-module hashing of legacy slide/fillArea classes. */
+:global([data-workspace-page="1"]) :global([data-widget="Qur’an"]) .quranWidget.quranWidget.quranWidget.quranWidget{padding:8px!important;gap:8px!important}
+@media(max-width:650px){:global([data-workspace-page="1"]) :global([data-widget="Qur’an"]) .quranWidget.quranWidget.quranWidget.quranWidget{padding:8px!important}}
 
-/* Controls and recording: styling only, no competing frame geometry. */
+/* Keyboard and touch accessibility: do not rely on hover or decorative glow. */
+.quranFrame>.quranPrevious:focus-visible,.quranFrame>.quranPlay:focus-visible{outline:3px solid rgba(var(--qvx-border),.98)!important;outline-offset:3px;box-shadow:0 0 0 5px rgba(var(--qvx-surface),.5)!important}
+.quranFrame>.quranPlay:disabled{opacity:.52;cursor:not-allowed}
+@media(hover:none){.quranFrame>.quranPlay:hover{transform:translateX(-50%)}}
+@media(prefers-contrast:more){.quranFrame>.quranArticle{border-width:2px!important}.quranFrame>.quranPrevious,.quranFrame>.quranPlay{border-width:2px!important}.quranFrame::before,.quranFrame::after{opacity:.06}}
+@media(prefers-reduced-motion:reduce){.quranFrame>.quranPlay:hover,.quranFrame>.quranPlay:active{transform:translateX(-50%)}}
+
+/* HUDHUD PRIME VX inset and adaptive glass: 2026-10-21 */
+/* Header overlays the frame rather than consuming the 8px top inset. */
+.quranWidget{box-sizing:border-box!important;position:relative!important;padding:8px!important;gap:0!important;min-height:0;overflow:hidden}
+.quranWidget>:first-child{position:absolute!important;top:16px;left:22px;right:22px;z-index:4;pointer-events:none;color:rgba(var(--qvx-border),.96)!important}
+.quranWidget>.quranFrame{flex:1 1 auto!important;min-height:0;height:100%;box-sizing:border-box}
+.quranFrame>.quranArticle{min-height:0;max-height:100%;padding-top:clamp(58px,8vh,74px)!important;scroll-padding-top:58px;scrollbar-width:thin;box-shadow:inset 0 0 0 999px rgba(0,0,0,var(--qvx-dim,0)),inset 0 1px rgba(255,255,255,.13),0 14px 36px rgba(0,0,0,.17)!important}
+.quranFrame>.quranPrevious{top:54px!important}
+.quranFrame>.quranPlay{bottom:12px!important}
+.quranFrame>.quranArticle{background:linear-gradient(155deg,rgba(var(--qvx-surface),.58),rgba(var(--qvx-surface),.3) 74%,rgba(8,17,25,.48))!important}
+:global(html.light) .quranFrame>.quranArticle{background:linear-gradient(155deg,rgba(255,253,247,.82),rgba(var(--qvx-surface),.24) 62%,rgba(251,249,244,.76))!important;box-shadow:inset 0 0 0 999px rgba(0,0,0,var(--qvx-dim,0)),inset 0 1px rgba(255,255,255,.6),0 12px 26px rgba(0,0,0,.09)!important}
+:global(html.light) .quranWidget>:first-child{color:rgba(var(--qvx-accent),.96)!important}
+:global(html.light) .quranFrame>.quranPrevious,:global(html.light) .quranFrame>.quranPlay{color:#fffdf8!important}
+.quranFrame::after{background-image:radial-gradient(circle,rgba(var(--qvx-border),.88) 1px,transparent 2px)}
 .quranSettingsToggle{position:absolute;right:12px;top:52px;z-index:7;width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(var(--qvx-border),.72);border-radius:50%;background:rgba(var(--qvx-surface),.86);color:#fffaf0;cursor:pointer;touch-action:manipulation}
 .quranSettingsToggle:focus-visible,.quranSettingsPanel input:focus-visible{outline:3px solid rgba(var(--qvx-border),.95);outline-offset:3px}
 .quranSettingsPanel{position:absolute;right:12px;top:100px;z-index:8;width:min(220px,calc(100% - 24px));max-height:calc(100% - 175px);overflow-y:auto;overscroll-behavior:contain;padding:12px;border:1px solid rgba(var(--qvx-border),.68);border-radius:16px;background:linear-gradient(145deg,rgba(var(--qvx-surface),.95),rgba(13,27,35,.95));color:#fffdf6;box-shadow:0 12px 28px rgba(0,0,0,.28);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)}
@@ -36,6 +61,10 @@
 @media(max-width:650px){.quranWidget{padding:8px!important}.quranWidget>:first-child{top:14px;left:17px;right:17px}.quranFrame>.quranPrevious{top:48px!important}.quranSettingsToggle{top:46px}.quranSettingsPanel{top:94px;max-height:calc(100% - 165px)}.quranFrame>.quranArticle{padding-top:58px!important}}
 @media(prefers-reduced-motion:reduce){.quranSettingsToggle,.quranSettingsPanel{animation:none!important;transition:none!important}}
 
+/* TITAN: geometry is measured from the widget padding edge, not flex height. */
+.quranWidget>.quranFrame{position:absolute!important;inset:8px!important;width:auto!important;height:auto!important;flex:none!important;min-height:0!important;box-sizing:border-box!important}
+:global(html.light) .quranSettingsPanel{color:rgba(var(--qvx-accent),1)!important}
+
 /* NOVA FUSION: recording entry stays above the fixed frame without shifting the verse. */
 .quranRecord{position:absolute;right:12px;bottom:12px;z-index:6;display:inline-flex;align-items:center;justify-content:center;min-height:44px;max-width:calc(50% - 40px);padding:0 12px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(var(--qvx-border),.76);border-radius:999px;background:linear-gradient(145deg,rgba(var(--qvx-accent),.92),rgba(var(--qvx-surface),.87));color:#fffdf7;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 6px 16px rgba(0,0,0,.24);touch-action:manipulation}
 .quranRecord:focus-visible{outline:3px solid rgba(var(--qvx-border),.98);outline-offset:3px}
@@ -44,9 +73,100 @@
 @media(max-width:650px){.quranRecord{right:9px;bottom:10px;padding:0 8px;font-size:11px}}
 @media(prefers-reduced-motion:reduce){.quranRecord{transition:none!important}}
 
+/* Quran VX: full-height transparent reading glass, independent of control positions. */
+.quranWidget>.quranFrame>.quranArticle{align-self:stretch!important;flex:1 1 auto!important;height:100%!important;max-height:100%!important;margin:0!important;min-height:0!important;box-sizing:border-box!important;overflow-y:auto!important}
+/* Playback is pinned to the upper right, not inside scrolling verse content. */
+.quranWidget>.quranFrame>.quranPlay{top:12px!important;right:12px!important;left:auto!important;bottom:auto!important;transform:none!important;margin:0!important}
+.quranWidget>.quranFrame>.quranPlay:hover{transform:scale(1.06)!important}
+.quranWidget>.quranFrame>.quranPlay:active{transform:scale(.98)!important}
+@media(max-width:650px){.quranWidget>.quranFrame>.quranPlay{top:9px!important;right:9px!important}}
+@media(prefers-reduced-motion:reduce){.quranWidget>.quranFrame>.quranPlay:hover,.quranWidget>.quranFrame>.quranPlay:active{transform:none!important}}
 
-/* Final control positions, declared once. */
-.quranWidget>.quranFrame>.quranSettingsToggle{top:124px;right:10px}
-.quranWidget>.quranFrame>.quranSettingsPanel{top:174px;right:10px;z-index:10}
-@media(max-width:650px){.quranWidget>.quranFrame>.quranArticle{padding-top:140px!important;padding-bottom:30px!important}.quranWidget>.quranFrame>.quranRecord{right:9px;bottom:10px}}
-@media(prefers-reduced-motion:reduce){.quranWidget>.quranFrame::before,.quranWidget>.quranFrame::after{animation:none;will-change:auto}.quranWidget>.quranFrame>.quranPlay:hover,.quranWidget>.quranFrame>.quranPlay:active{transform:none!important}}
+/* Mobile correction: the GLASS itself occupies the frame; never shrink into a header strip. */
+.quranWidget>.quranFrame{display:block!important;overflow:visible!important}
+.quranWidget>.quranFrame>.quranArticle{position:absolute!important;inset:0!important;top:0!important;right:0!important;bottom:0!important;left:0!important;width:100%!important;height:100%!important;max-height:none!important;min-height:0!important;display:flex!important;flex-direction:column!important;box-sizing:border-box!important;overflow-y:auto!important;z-index:1!important}
+.quranWidget>.quranFrame>.quranPlay{position:absolute!important;top:12px!important;right:12px!important;bottom:auto!important;left:auto!important;z-index:9!important}
+
+/* Approved Quran VX correction: invisible glass with full-height frame geometry.
+   Do not move verse, controls, background, or decorative frame. */
+.quranWidget{position:relative!important;min-height:0!important}
+.quranWidget>.quranFrame{
+  position:absolute!important;
+  top:8px!important;bottom:8px!important;
+  left:8px!important;right:8px!important;
+  width:auto!important;height:auto!important;
+  min-height:0!important;max-height:none!important;
+  margin:0!important;flex:none!important;
+  overflow:visible!important;
+}
+.quranWidget>.quranFrame>.quranArticle{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;height:100%!important;
+  min-height:0!important;max-height:none!important;
+  margin:0!important;box-sizing:border-box!important;
+  overflow-y:auto!important;
+  background:transparent!important;
+  background-color:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+:global(html.light) .quranWidget>.quranFrame>.quranArticle,
+:global(html:not(.light)) .quranWidget>.quranFrame>.quranArticle{
+  background:transparent!important;
+  background-color:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+
+
+/* Quran VX repair: header stays compact; reading content is laid out below it.
+   Avoid absolute-positioned verse content and keep controls independent. */
+.quranWidget{display:flex!important;flex-direction:column!important;position:relative!important;min-height:0!important;padding:8px!important;overflow:hidden!important}
+.quranWidget>:first-child{
+  position:relative!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;
+  width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
+  flex:0 0 auto!important;align-self:stretch!important;z-index:4!important;
+  pointer-events:none!important;box-sizing:border-box!important;
+}
+.quranWidget>.quranFrame{
+  position:relative!important;inset:auto!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+  display:flex!important;flex:1 1 0%!important;min-height:0!important;
+  width:100%!important;height:auto!important;max-height:none!important;
+  margin:0!important;box-sizing:border-box!important;overflow:hidden!important;
+}
+.quranWidget>.quranFrame>.quranArticle{
+  position:relative!important;inset:auto!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+  display:flex!important;flex-direction:column!important;flex:1 1 0%!important;
+  align-items:center!important;justify-content:safe center!important;
+  width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
+  box-sizing:border-box!important;overflow-y:auto!important;overflow-x:hidden!important;
+  background:transparent!important;background-color:transparent!important;
+  border-color:transparent!important;box-shadow:none!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  z-index:1!important;
+}
+.quranWidget>.quranFrame>.quranArticle p{visibility:visible!important;opacity:1!important}
+.quranWidget>.quranFrame>.quranPlay{
+  position:absolute!important;top:10px!important;right:10px!important;
+  bottom:auto!important;left:auto!important;transform:none!important;z-index:9!important;
+}
+.quranWidget>.quranFrame>.quranPrevious{top:10px!important;left:10px!important;z-index:9!important}
+.quranWidget>.quranFrame>.quranSettingsToggle{top:62px!important;right:10px!important}
+.quranWidget>.quranFrame>.quranSettingsPanel{top:110px!important}
+:global(html.light) .quranWidget>.quranFrame>.quranArticle,
+:global(html:not(.light)) .quranWidget>.quranFrame>.quranArticle{
+ background:transparent!important;background-color:transparent!important;
+ border-color:transparent!important;box-shadow:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+
+/* Minimal extension of the last visibly working Quran layout.
+   Preserve verse/header/control styling; only lock the frame's bottom edge. */
+.quranWidget{position:relative!important;min-height:0!important}
+.quranWidget>.quranFrame{position:absolute!important;top:8px!important;bottom:8px!important;left:8px!important;right:8px!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;box-sizing:border-box!important}
+.quranWidget>.quranFrame>.quranArticle{height:100%!important;min-height:0!important;max-height:none!important;box-sizing:border-box!important;overflow-y:auto!important}
