@@ -20,3 +20,16 @@
 
 /* TITAN flight HUD: keep navigation targets within the viewport. */
 .targetBar{overflow-x:auto;justify-content:flex-start;scrollbar-width:thin}.targetBar button{flex-shrink:0;font:700 12px system-ui,sans-serif;padding:4px 7px}.lesson{flex-wrap:wrap}.canvas{cursor:grab}.canvas:active{cursor:grabbing}
+
+/* HUDHUD PRIME: compact cockpit layout, 320px/iPhone safe targets and touch steering. */
+.root{min-width:0;max-width:100%;overscroll-behavior:contain}
+.hud{min-width:0;flex-wrap:wrap;row-gap:4px}
+.lesson{min-width:0;flex-wrap:wrap;text-align:center;line-height:1.25;overflow-wrap:anywhere}
+.lesson strong{flex:0 0 auto;min-width:32px}
+.targetBar{min-width:0;overflow-x:auto;overscroll-behavior-x:contain;justify-content:flex-start;scrollbar-width:thin}
+.targetBar button{flex:1 0 auto;min-width:55px;max-width:140px;min-height:44px;padding:4px 6px;white-space:normal;overflow-wrap:anywhere;font:700 clamp(10px,2.9vw,13px) system-ui,sans-serif}
+.targetBar button small{display:inline-block;vertical-align:middle;margin-right:2px}
+.targetLabel{flex:0 0 auto}
+.stage{touch-action:none}
+@media(max-height:580px){.hud{padding:4px 8px}.lesson{padding:2px 6px;min-height:36px}.lesson strong{font-size:26px}.targetBar{min-height:42px;padding:2px 4px}.controls button{min-height:32px}.footer{padding:3px 6px}}
+@media(prefers-reduced-motion:reduce){.canvas{scroll-behavior:auto}}
