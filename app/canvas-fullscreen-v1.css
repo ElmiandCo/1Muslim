@@ -1646,3 +1646,17 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 }
 .canvas-edge-chevron.is-visible{background:rgba(var(--canvas-control-surface-rgb),.65)!important}
 .oneMuslimLiveBottom .homeLiveCommentForm button:disabled{opacity:.5!important}
+
+/* 1Umma Level 3: a single scroll surface, matching the other Canvas panes. */
+.canvas-vertical-tertiary .canvas-umma-explorer-surface{width:100%;max-width:760px;max-height:100%;height:100%;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-width:thin;scrollbar-color:rgba(208,180,111,.38) transparent}
+.canvas-vertical-tertiary .canvas-umma-explorer-surface .canvas-native-profile{border:0!important;box-shadow:none!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;overflow:visible!important}
+.canvas-vertical-tertiary .canvas-umma-explorer-surface [data-gallery-scroll]:not([aria-label="Community discovery"]){overscroll-behavior-x:contain}
+
+/* Discovery tidy-up: prevent oversized avatar widgets and horizontal viewport bleed. */
+.canvas-umma-explorer-surface,.canvas-umma-explorer-surface section{min-width:0;max-width:100%;box-sizing:border-box}
+.canvas-umma-explorer-surface .umma-discovery-avatar{display:grid;place-items:center;width:78px;height:78px;max-width:100%;overflow:hidden;border-radius:50%;isolation:isolate}
+.canvas-umma-explorer-surface .umma-discovery-avatar>*{transform:scale(.38);transform-origin:center center;flex-shrink:0}
+.canvas-umma-explorer-surface [data-gallery-scroll]{scrollbar-width:none}
+.canvas-umma-explorer-surface [data-gallery-scroll]::-webkit-scrollbar{display:none}
+.canvas-umma-explorer-surface a,.canvas-umma-explorer-surface button{overflow-wrap:anywhere}
+@media(max-width:480px){.canvas-umma-explorer-surface .umma-discovery-avatar{width:66px;height:66px}}
