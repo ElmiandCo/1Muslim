@@ -70,3 +70,11 @@
 .quranWidget>.quranFrame>.quranCardScroller>.quranFloatingCard{flex:0 0 auto!important;min-height:0!important;height:auto!important;width:100%!important;max-width:100%!important;margin:0!important;padding:clamp(22px,5vw,38px) clamp(14px,4vw,30px)!important;gap:clamp(24px,4vh,42px)!important;background:rgba(var(--qvx-surface),.075)!important;border:1px solid rgba(var(--qvx-border),.22)!important;backdrop-filter:blur(2px)!important;-webkit-backdrop-filter:blur(2px)!important;box-shadow:0 12px 30px rgba(0,0,0,.09)!important;scroll-snap-align:center!important;transition:transform .5s ease,opacity .5s ease,background .5s ease!important}
 .quranWidget>.quranFrame>.quranCardScroller>.quranFloatingCard:focus-within{transform:scale(1.025);background:rgba(var(--qvx-surface),.13)!important}
 @media(max-width:650px){.quranWidget>.quranFrame>.quranCardScroller{inset:58px 7px 7px!important;padding:20vh 7px 32vh!important;gap:18px!important}}
+
+.quranWidget>.quranFrame>.quranCardScroller{scroll-snap-type:none!important;scroll-behavior:auto!important}
+.quranWidget>.quranFrame>.quranCardScroller>.quranFloatingCard{scroll-snap-align:none!important}
+.quranAudioAtmosphere{animation:qvxAudioGlow 18s ease-in-out infinite alternate}
+.quranAudioAtmosphere>.quranFrame>.quranCardScroller>.quranPlayingCard{animation:qvxReadingBreathe 20s ease-in-out infinite alternate!important;background:rgba(var(--qvx-surface),.12)!important}
+@keyframes qvxReadingBreathe{0%{transform:scale(1)}50%{transform:scale(1.018);filter:brightness(1.08)}100%{transform:scale(1.005)}}
+@keyframes qvxAudioGlow{0%{filter:brightness(1)}50%{filter:brightness(1.07)}100%{filter:brightness(1.02)}}
+@media(prefers-reduced-motion:reduce){.quranAudioAtmosphere,.quranAudioAtmosphere>.quranFrame>.quranCardScroller>.quranPlayingCard{animation:none!important}}
