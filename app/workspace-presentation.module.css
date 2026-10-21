@@ -707,3 +707,6 @@
 .fillArea .slide[data-workspace-page="1"] .quranProgressCard>small{font-size:clamp(6px,1.2vw,8px)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
 .fillArea .slide[data-workspace-page="1"] .quranProgressTrack{height:2px!important}
 .fillArea .slide[data-workspace-page="1"] .quranVerseHeader{margin-top:65px!important;padding-left:0!important}
+
+/* Final mobile toolbar alignment: move Quran Back button clear of third tracker. */
+.fillArea .slide[data-workspace-page="1"] .quranHudHudPositionToggle{right:0!important;transform:translateX(13px)!important;z-index:35!important}
