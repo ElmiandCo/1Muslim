@@ -1683,3 +1683,54 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   grid-column:2!important;grid-row:1!important;
  }
 }
+
+
+/* Game Lab: profile and 1Umma share the homepage's single mirror surface. */
+.canvas-vertical-secondary:has(.canvas-profile-mirror),
+.canvas-vertical-tertiary:has(.canvas-umma-vertical-gallery){
+  padding:0!important;
+  display:block!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  overflow:hidden!important;
+}
+.canvas-vertical-secondary .canvas-profile-mirror,
+.canvas-vertical-tertiary .canvas-umma-vertical-gallery{
+  width:100%!important;
+  max-width:none!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  overflow:hidden!important;
+}
+.canvas-profile-mirror .canvas-native-body{
+  height:100%!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  padding:0!important;
+  background:transparent!important;
+}
+.canvas-profile-mirror .canvas-native-profile,
+.canvas-umma-vertical-gallery .canvas-native-profile{
+  width:100%!important;
+  max-width:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  border:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  backdrop-filter:none!important;
+  box-sizing:border-box!important;
+}
+.canvas-vertical-tertiary .canvas-umma-vertical-gallery > .canvas-native-profile{
+  height:100%!important;
+  overflow-y:auto!important;
+}
