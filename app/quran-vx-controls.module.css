@@ -123,5 +123,44 @@
   -webkit-backdrop-filter:none!important;
 }
 
-/* Full-height Quran title overlay: keep labels at top, stretch header layer through frame. */
-.quranWidget>:first-child{position:absolute!important;inset:8px!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;box-sizing:border-box!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;align-content:flex-start!important;pointer-events:none!important;z-index:4!important}
+
+/* Quran VX repair: header stays compact; reading content is laid out below it.
+   Avoid absolute-positioned verse content and keep controls independent. */
+.quranWidget{display:flex!important;flex-direction:column!important;position:relative!important;min-height:0!important;padding:8px!important;overflow:hidden!important}
+.quranWidget>:first-child{
+  position:relative!important;inset:auto!important;top:auto!important;left:auto!important;right:auto!important;
+  width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
+  flex:0 0 auto!important;align-self:stretch!important;z-index:4!important;
+  pointer-events:none!important;box-sizing:border-box!important;
+}
+.quranWidget>.quranFrame{
+  position:relative!important;inset:auto!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+  display:flex!important;flex:1 1 0%!important;min-height:0!important;
+  width:100%!important;height:auto!important;max-height:none!important;
+  margin:0!important;box-sizing:border-box!important;overflow:hidden!important;
+}
+.quranWidget>.quranFrame>.quranArticle{
+  position:relative!important;inset:auto!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+  display:flex!important;flex-direction:column!important;flex:1 1 0%!important;
+  align-items:center!important;justify-content:safe center!important;
+  width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
+  box-sizing:border-box!important;overflow-y:auto!important;overflow-x:hidden!important;
+  background:transparent!important;background-color:transparent!important;
+  border-color:transparent!important;box-shadow:none!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  z-index:1!important;
+}
+.quranWidget>.quranFrame>.quranArticle p{visibility:visible!important;opacity:1!important}
+.quranWidget>.quranFrame>.quranPlay{
+  position:absolute!important;top:10px!important;right:10px!important;
+  bottom:auto!important;left:auto!important;transform:none!important;z-index:9!important;
+}
+.quranWidget>.quranFrame>.quranPrevious{top:10px!important;left:10px!important;z-index:9!important}
+.quranWidget>.quranFrame>.quranSettingsToggle{top:62px!important;right:10px!important}
+.quranWidget>.quranFrame>.quranSettingsPanel{top:110px!important}
+:global(html.light) .quranWidget>.quranFrame>.quranArticle,
+:global(html:not(.light)) .quranWidget>.quranFrame>.quranArticle{
+ background:transparent!important;background-color:transparent!important;
+ border-color:transparent!important;box-shadow:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
