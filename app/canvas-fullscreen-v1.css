@@ -1568,3 +1568,30 @@ main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center
 .canvas-vertical-secondary .canvas-native-avatar>.profileAvatar.avatar-lg{
  width:150px!important;height:150px!important;flex:0 0 150px!important;
 }
+
+/* Native vertical touch scrolling cancels touchend on iOS; reserve Home surface for Canvas vertical gestures. */
+@media (pointer:coarse){.canvas-vertical-main{touch-action:pan-x}.canvas-vertical-secondary{touch-action:pan-y}.canvas-vertical-secondary .canvas-native-profile{touch-action:pan-y;overscroll-behavior-y:contain}}
+
+/* Third vertical page: dedicated 1Umma member gallery. */
+.canvas-vertical-tertiary{position:absolute;inset:0;min-height:0;overflow:auto;transform:translate3d(0,100%,0);opacity:0;pointer-events:none;display:grid;place-items:center;padding:clamp(12px,3vw,32px);background:linear-gradient(150deg,rgba(5,48,41,.82),rgba(13,42,53,.62));transition:transform 560ms cubic-bezier(.22,.7,.2,1),opacity 360ms ease;overscroll-behavior-y:contain;touch-action:pan-y}
+.canvas-vertical-portal[data-row="2"] .canvas-vertical-main{transform:translate3d(0,-200%,0);opacity:0;pointer-events:none}
+.canvas-vertical-portal[data-row="2"] .canvas-vertical-secondary{transform:translate3d(0,-100%,0);opacity:0;pointer-events:none}
+.canvas-vertical-portal[data-row="2"] .canvas-vertical-tertiary{transform:translate3d(0,0,0);opacity:1;pointer-events:auto}
+.canvas-umma-vertical-gallery{width:100%;max-width:760px;max-height:100%;overflow:auto;overscroll-behavior:contain}
+
+/* Approved Live overlay: comments float over the video, not in a second card. */
+[data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage,
+[data-workspace-page="0"] .canvas-vertical-main > [data-live-stage-version="top-layer-v2"]{
+ grid-template-rows:minmax(0,1fr)!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveTop{grid-row:1!important;grid-column:1!important;height:100%!important;min-height:0!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom{position:absolute!important;z-index:35!important;left:10%!important;right:10%!important;bottom:clamp(12px,4%,30px)!important;height:auto!important;max-height:42%!important;min-height:0!important;overflow:visible!important;padding:0!important;pointer-events:none!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom > .homeLiveViewerConversation{pointer-events:auto!important;display:flex!important;flex-direction:column!important;gap:6px!important;width:100%!important;height:auto!important;min-height:0!important;max-height:100%!important;padding:8px 10px!important;border:0!important;border-radius:14px!important;background:linear-gradient(0deg,rgba(0,16,15,.38),rgba(0,16,15,.04))!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;overflow:hidden!important;color:#fff!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveViewerConversation header{display:none!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{flex:0 1 auto!important;max-height:155px!important;min-height:36px!important;overflow:auto!important;display:flex!important;flex-direction:column!important;justify-content:flex-end!important;gap:5px!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments p{margin:0!important;padding:3px 6px!important;border:0!important;background:rgba(0,17,15,.18)!important;border-radius:12px!important;color:white!important;text-shadow:0 1px 4px #000!important;font-size:13px!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{display:flex!important;flex-direction:row!important;align-items:center!important;gap:7px!important;flex:0 0 auto!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input{flex:1!important;min-width:0!important;width:0!important;border-radius:24px!important;background:rgba(0,20,18,.3)!important;border:1px solid rgba(255,255,255,.28)!important;color:white!important;padding:10px 12px!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button{width:auto!important;min-width:60px!important;flex:none!important;border-radius:22px!important;padding:10px!important;background:rgba(3,94,65,.6)!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentDisclaimer,
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveStudioEntry{display:none!important}
