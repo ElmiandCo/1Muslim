@@ -212,4 +212,14 @@ export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boo
  </div><footer><Link href={destinations[slot]}>Open full experience ↗</Link></footer></div>
 }
 
-export function CanvasUmmaGallery({active}:{active:boolean}){return <div className="canvas-umma-explorer-surface"><ProfileApp active={active} galleryOnly/></div>}
+export function CanvasUmmaGallery({active}:{active:boolean}){
+ const gesture=useRef<{y:number;x:number;started:number;eligible:boolean}|null>(null);
+ const lastScroll=useRef(0);
+ return <div className="canvas-umma-explorer-surface"
+ onScroll={()=>{lastScroll.current=Date.now()}}
+ onTouchStart={e=>{const el=e.currentTarget;const t=e.touches[0];gesture.current={x:t.clientX,y:t.clientY,started:Date.now(),eligible:active&&el.scrollTop<=2&&Date.now()-lastScroll.current>450&&!Boolean((e.target as HTMLElement).closest("button,a,input,select,textarea,[data-gallery-scroll]"))};e.stopPropagation()}}
+ onTouchMove={e=>{e.stopPropagation()}}
+ onTouchEnd={e=>{e.stopPropagation();const g=gesture.current;gesture.current=null;if(!g||!g.eligible||!active)return;const t=e.changedTouches[0];const dy=t.clientY-g.y,dx=t.clientX-g.x;const elapsed=Date.now()-g.started;if(dy>165&&dy>Math.abs(dx)*1.7&&elapsed>=170&&elapsed<1300&&e.currentTarget.scrollTop<=2){window.dispatchEvent(new CustomEvent("1muslim:umma-return-profile"))}}}
+ onTouchCancel={e=>{gesture.current=null;e.stopPropagation()}}>
+ <ProfileApp active={active} galleryOnly/></div>
+}
