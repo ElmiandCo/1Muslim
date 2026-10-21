@@ -276,10 +276,10 @@ export default function CosmicCatchGame(){
    />
    {phase!=="playing"&&phase!=="ready"&&<div className={styles.overlay}>
     <span className={styles.planet} aria-hidden="true">{phase==="won"?"🏆":phase==="over"?"✧":"✦"}</span>
-    <h2>{phase==="paused"?"LEARN THE ARABIC ALPHABET":phase==="between"?"LEVEL COMPLETE":phase==="paused"?"PAUSED":phase==="won"?"ALL 28 LETTERS MASTERED!":"MISSION ENDED"}</h2>
-    <p>{phase==="paused"?"Read the Arabic letter above, then steer your ship through the bubble with its transliteration. Tap to fly, drag to steer, or use the arrow keys. Clear three levels and the Guardian.":phase==="between"?"Next: Level "+(stage+1)+" · "+LEVEL_NAMES[stage]:phase==="paused"?"Your spacecraft and game timer are paused.":phase==="won"?"You completed all three levels and the Guardian review!":"Five mistakes used. Restart this level to practice again."}</p>
+    <h2>{phase==="between"?"LEVEL COMPLETE":phase==="paused"?"PAUSED":phase==="won"?"ALL 28 LETTERS MASTERED!":"MISSION ENDED"}</h2>
+    <p>{phase==="between"?"Next: Level "+(stage+1)+" · "+LEVEL_NAMES[stage]:phase==="paused"?"Your spacecraft and game timer are paused.":phase==="won"?"You completed all three levels and the Guardian review!":"Five mistakes used. Restart this level to practice again."}</p>
     <button type="button" onClick={phase==="paused"?togglePause:phase==="between"?()=>beginLevel(false):phase==="won"?start:restartLevel}>
-     {phase==="paused"?"▶ RESUME":phase==="between"?"▶ NEXT LEVEL":phase==="paused"?"▶ START LEARNING":phase==="won"?"↻ PLAY AGAIN":"↻ RETRY LEVEL"}
+     {phase==="paused"?"▶ RESUME":phase==="between"?"▶ NEXT LEVEL":phase==="won"?"↻ PLAY AGAIN":"↻ RETRY LEVEL"}
     </button>
     <small>Personal best · {best}</small>
    </div>}
@@ -291,12 +291,6 @@ export default function CosmicCatchGame(){
      <small>{i+1}</small> <span>{LETTERS[o.letter][1]}</span>
     </button>):<span className={styles.waiting}>{phase==="playing"?"New letters incoming…":"Start or resume flight"}</span>}
   </div>
-  <footer className={styles.footer}>
-   <span className={styles.feedback} role="status" aria-live="polite" aria-atomic="true">{feedback}</span>
-   <div className={styles.controls}>
-    <button type="button" onClick={togglePause} disabled={!active}>{phase==="paused"?"▶ Resume":"Ⅱ Pause"}</button>
-    <button type="button" onClick={restartLevel} disabled={phase==="ready"}>↻ Restart level</button>
-   </div>
-  </footer>
+
  </section>
 }
