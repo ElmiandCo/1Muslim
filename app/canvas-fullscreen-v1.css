@@ -1568,3 +1568,15 @@ main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center
 .canvas-vertical-secondary .canvas-native-avatar>.profileAvatar.avatar-lg{
  width:150px!important;height:150px!important;flex:0 0 150px!important;
 }
+
+/* Homepage workstream: three non-scaling Canvas view modes. */
+.canvas-view-mode-control{position:relative;z-index:15;display:flex;justify-content:center;gap:4px;width:max-content;max-width:100%;margin:4px auto 10px;padding:4px;border:1px solid rgba(220,191,121,.32);border-radius:999px;background:rgba(3,24,22,.68);backdrop-filter:blur(12px)}
+.canvas-view-mode-control button{appearance:none;border:0;border-radius:999px;background:transparent;color:#e6ddc6;padding:8px 12px;font-size:12px;line-height:1.2;white-space:nowrap;cursor:pointer}
+.canvas-view-mode-control button[aria-pressed="true"]{background:#dfc77f;color:#112b25;font-weight:700}
+main[data-canvas-view-mode="full"]{--canvas-frame-radius:0px}
+main[data-canvas-view-mode="full"] > section[aria-label="1Muslim Control Center"]{border-radius:0!important;border-color:transparent!important;box-shadow:none!important;transition:border-radius 650ms cubic-bezier(.22,1,.36,1),border-color 650ms ease,box-shadow 650ms ease!important}
+main[data-canvas-view-mode="full"] .canvas-vertical-portal,
+main[data-canvas-view-mode="full"] .canvas-vertical-main,
+main[data-canvas-view-mode="full"] .canvas-vertical-secondary{border-radius:0!important}
+main[data-canvas-view-mode="full"] [data-canvas-expanded]{border-radius:0!important;box-shadow:none!important;transition:border-radius 650ms cubic-bezier(.22,1,.36,1),box-shadow 650ms ease!important}
+@media(prefers-reduced-motion:reduce){main[data-canvas-view-mode="full"] > section[aria-label="1Muslim Control Center"],main[data-canvas-view-mode="full"] [data-canvas-expanded]{transition:none!important}}
