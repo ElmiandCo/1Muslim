@@ -145,7 +145,27 @@ export default function Home(){
  const [quranCards,setQuranCards]=useState<{arabic:string;translation:string;chapter:number;verse:number;globalAyah:number}[]>([]);
  const quranCardsRef=useRef<HTMLDivElement|null>(null);
  const quranTouchY=useRef<number|null>(null);
- useEffect(()=>{if(!quranPreview)return;let cancelled=false;const chapter=quranPreview.chapter;void(async()=>{try{const [a,b]=await Promise.all([fetch("https://api.alquran.cloud/v1/surah/"+chapter+"/ar.alafasy"),fetch("https://api.alquran.cloud/v1/surah/"+chapter+"/en.sahih")]);if(!a.ok||!b.ok)return;const [ar,en]=await Promise.all([a.json(),b.json()]);if(cancelled)return;const english=new Map((en.data?.ayahs||[]).map((v:{numberInSurah:number;text:string})=>[v.numberInSurah,v.text]));setQuranCards((ar.data?.ayahs||[]).map((v:{numberInSurah:number;number:number;text:string})=>({arabic:v.text,translation:String(english.get(v.numberInSurah)||""),chapter,verse:v.numberInSurah,globalAyah:v.number})));}catch{}})();return()=>{cancelled=true}},[quranPreview?.chapter]);
+ useEffect(()=>{if(!quranPreview)return;let cancelled=false;const chapter=quranPreview.chapter;
+  setQuranCards([]);
+  void(async()=>{try{
+   const [a,b]=await Promise.all([fetch("https://api.alquran.cloud/v1/surah/"+chapter+"/ar.alafasy"),fetch("https://api.alquran.cloud/v1/surah/"+chapter+"/en.sahih")]);
+   if(!a.ok||!b.ok)throw Error("Surah fetch failed");
+   const [ar,en]=await Promise.all([a.json(),b.json()]);
+   const verses=ar.data?.ayahs||[],translations=en.data?.ayahs||[];
+   if(!verses.length||!translations.length)throw Error("Surah data empty");
+   const english=new Map<number,string>(translations.map((v:{numberInSurah:number;text:string})=>[v.numberInSurah,v.text]));
+   if(!cancelled)setQuranCards(verses.map((v:{numberInSurah:number;number:number;text:string})=>({arabic:v.text,translation:english.get(v.numberInSurah)||"",chapter,verse:v.numberInSurah,globalAyah:v.number})));
+  }catch{
+   /* If the full-surah endpoint is unavailable, still populate scrollable verses. */
+   const fallback=await Promise.all(Array.from({length:chapter===1?7:8},(_,i)=>i+1).map(async verse=>{try{
+    const [a,b]=await Promise.all([fetch("https://api.alquran.cloud/v1/ayah/"+chapter+":"+verse+"/ar.alafasy"),fetch("https://api.alquran.cloud/v1/ayah/"+chapter+":"+verse+"/en.sahih")]);
+    if(!a.ok||!b.ok)return null;const [ar,en]=await Promise.all([a.json(),b.json()]);
+    return {arabic:String(ar.data?.text||""),translation:String(en.data?.text||""),chapter,verse,globalAyah:Number(ar.data?.number)||verse};
+   }catch{return null}}));
+   if(!cancelled)setQuranCards(fallback.filter((v):v is NonNullable<typeof v>=>v!==null));
+  }})();
+  return()=>{cancelled=true}
+ },[quranPreview?.chapter]);
  const [quranAudioPlaying,setQuranAudioPlaying]=useState(false);
  const [quranAudioLoading,setQuranAudioLoading]=useState(false);const [quranSettingsOpen,setQuranSettingsOpen]=useState(false);const [quranBlur,setQuranBlur]=useState(12);const [quranDim,setQuranDim]=useState(0);const [quranBrightness,setQuranBrightness]=useState(1);const [quranVolume,setQuranVolume]=useState(1);
  const quranAudioRef=useRef<HTMLAudioElement|null>(null);useEffect(()=>{if(quranAudioRef.current)quranAudioRef.current.volume=quranVolume},[quranVolume,quranPreview]);
