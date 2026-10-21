@@ -33,3 +33,6 @@
 .stage{touch-action:none}
 @media(max-height:580px){.hud{padding:4px 8px}.lesson{padding:2px 6px;min-height:36px}.lesson strong{font-size:26px}.targetBar{min-height:42px;padding:2px 4px}.controls button{min-height:32px}.footer{padding:3px 6px}}
 @media(prefers-reduced-motion:reduce){.canvas{scroll-behavior:auto}}
+
+/* TITAN: keep game controls reachable even when the Live panel is resized. */
+.root{min-height:0;contain:layout paint}
