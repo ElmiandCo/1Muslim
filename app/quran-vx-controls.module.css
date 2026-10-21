@@ -60,3 +60,7 @@
 :global(html.light) .quranSettingsToggle{color:#fffdf8}
 @media(max-width:650px){.quranWidget{padding:8px!important}.quranWidget>:first-child{top:14px;left:17px;right:17px}.quranFrame>.quranPrevious{top:48px!important}.quranSettingsToggle{top:46px}.quranSettingsPanel{top:94px;max-height:calc(100% - 165px)}.quranFrame>.quranArticle{padding-top:58px!important}}
 @media(prefers-reduced-motion:reduce){.quranSettingsToggle,.quranSettingsPanel{animation:none!important;transition:none!important}}
+
+/* TITAN: geometry is measured from the widget padding edge, not flex height. */
+.quranWidget>.quranFrame{position:absolute!important;inset:8px!important;width:auto!important;height:auto!important;flex:none!important;min-height:0!important;box-sizing:border-box!important}
+:global(html.light) .quranSettingsPanel{color:rgba(var(--qvx-accent),1)!important}
