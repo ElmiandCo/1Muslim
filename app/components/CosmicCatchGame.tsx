@@ -1,36 +1,271 @@
 "use client";
-import {useEffect,useRef,useState} from "react";
+
+import {useCallback,useEffect,useRef,useState} from "react";
 import styles from "./CosmicCatchGame.module.css";
+
 const W=360,H=500;
-const letters=[["ا","Alif"],["ب","Baa"],["ت","Taa"],["ث","Thaa"],["ج","Jeem"],["ح","Haa"],["خ","Khaa"],["د","Daal"],["ذ","Dhaal"],["ر","Raa"],["ز","Zaay"],["س","Seen"],["ش","Sheen"],["ص","Saad"],["ض","Daad"],["ط","Taa (heavy)"],["ظ","Dhaa"],["ع","Ayn"],["غ","Ghayn"],["ف","Faa"],["ق","Qaaf"],["ك","Kaaf"],["ل","Laam"],["م","Meem"],["ن","Noon"],["ه","Haa"],["و","Waaw"],["ي","Yaa"]] as const;
-type Target={x:number;y:number;letter:number;id:number};
-type Spark={x:number;y:number;vx:number;vy:number;life:number};
+const LETTERS=[
+ ["ا","Alif"],["ب","Baa"],["ت","Taa"],["ث","Thaa"],["ج","Jeem"],["ح","Haa"],["خ","Khaa"],
+ ["د","Daal"],["ذ","Dhaal"],["ر","Raa"],["ز","Zaay"],["س","Seen"],["ش","Sheen"],["ص","Saad"],
+ ["ض","Daad"],["ط","Taa (heavy)"],["ظ","Dhaa (heavy)"],["ع","Ayn"],["غ","Ghayn"],["ف","Faa"],
+ ["ق","Qaaf"],["ك","Kaaf"],["ل","Laam"],["م","Meem"],["ن","Noon"],["ه","Haa"],["و","Waaw"],["ي","Yaa"]
+] as const;
+const STARTS=[0,6,12,18,24,28] as const;
+const LEVEL_NAMES=["First Flight","Letter Orbit","Star Navigator","Nebula Challenge","Guardian Review"] as const;
+const BOSS_REVIEW=[3,14,25] as const;
+type Phase="ready"|"playing"|"paused"|"between"|"over"|"won";
+type Orb={id:number;x:number;y:number;letter:number;radius:number;speed:number;boss:boolean};
+type Shard={x:number;y:number;vx:number;vy:number;rotation:number;spin:number;life:number;color:string};
+type Shot={x:number;y:number;life:number;correct:boolean};
+type Game={
+ running:boolean;paused:boolean;stage:number;progress:number;bossHits:number;score:number;mistakes:number;
+ checkpointScore:number;checkpointMistakes:number;orbs:Orb[];shards:Shard[];shot:Shot|null;
+ nextId:number;last:number;lastPaint:number;waveDelay:number
+};
+const newGame=():Game=>({
+ running:false,paused:false,stage:0,progress:0,bossHits:0,score:0,misses:0,
+ checkpointScore:0,checkpointMistakes:0,orbs:[],shards:[],shot:null,nextId:0,last:0,lastPaint:0,waveDelay:0
+} as Game);
+const goal=(g:Game)=>g.progress<LETTERS.length?g.progress:BOSS_REVIEW[Math.min(g.bossHits,BOSS_REVIEW.length-1)];
+const shuffle=<T,>(array:T[]):T[]=>{for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array};
+const makeWave=(g:Game)=>{
+ if(!g.running||g.paused||g.orbs.length)return;
+ const boss=g.progress===LETTERS.length;
+ const count=g.stage===0?2:g.stage<3?3:4;
+ const correct=goal(g);
+ const pool=shuffle(LETTERS.map((_,i)=>i).filter(i=>i!==correct)).slice(0,count-1);
+ const options=shuffle([correct,...pool]);
+ const positions=count===2?[100,260]:count===3?[62,180,298]:[45,135,225,315];
+ g.orbs=options.map((letter,i)=>({
+  id:++g.nextId,x:positions[i],y:58,letter,
+  radius:boss&&letter===correct?34:count===4?27:30,
+  speed:44+g.stage*9+(boss?10:0),boss:boss&&letter===correct
+ }));
+};
 export default function CosmicCatchGame(){
  const canvas=useRef<HTMLCanvasElement>(null);
- const game=useRef({running:false,paused:false,targets:[] as Target[],sparks:[] as Spark[],score:0,misses:0,level:0,last:0,spawn:0,nextId:0});
- const [phase,setPhase]=useState<"ready"|"playing"|"paused"|"over">("ready");
- const [score,setScore]=useState(0),[misses,setMisses]=useState(0),[level,setLevel]=useState(0),[feedback,setFeedback]=useState("Tap the matching Arabic letter to shoot it!");
- const [reduced,setReduced]=useState(false);
- useEffect(()=>{setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches)},[]);
- const reset=()=>{game.current={running:true,paused:false,targets:[],sparks:[],score:0,misses:0,level:0,last:0,spawn:0,nextId:0};setScore(0);setMisses(0);setLevel(0);setFeedback("Find "+letters[0][1]);setPhase("playing");canvas.current?.focus()};
+ const stageRef=useRef<HTMLDivElement>(null);
+ const game=useRef<Game>(newGame());
+ const audio=useRef<AudioContext|null>(null);
+ const soundEnabled=useRef(false);
+ const reducedRef=useRef(false);
+ const [phase,setPhase]=useState<Phase>("ready");
+ const [score,setScore]=useState(0),[misses,setMisses]=useState(0),[stage,setStage]=useState(0);
+ const [progress,setProgress]=useState(0),[bossHits,setBossHits]=useState(0);
+ const [orbs,setOrbs]=useState<Orb[]>([]);
+ const [feedback,setFeedback]=useState("Find the named Arabic letter and tap its orb.");
+ const [reduced,setReduced]=useState(false),[sound,setSound]=useState(false),[best,setBest]=useState(0);
+ const [size,setSize]=useState({width:288,height:400});
+ const [audioAvailable,setAudioAvailable]=useState(true);
+ useEffect(()=>{
+  setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  setAudioAvailable(typeof window.AudioContext!=="undefined");
+  try{const value=Number(window.localStorage.getItem("1muslim-arabic-letter-quest-best"));if(Number.isFinite(value)&&value>0)setBest(value)}catch{}
+  return()=>{if(audio.current){void audio.current.close().catch(()=>{});audio.current=null}}
+ },[]);
+ useEffect(()=>{reducedRef.current=reduced},[reduced]);
+ useEffect(()=>{
+  const element=stageRef.current;if(!element)return;
+  const resize=()=>{const width=element.clientWidth,height=element.clientHeight;if(!width||!height)return;const scale=Math.min(width/W,height/H);setSize(prev=>{const next={width:Math.max(1,Math.floor(W*scale)),height:Math.max(1,Math.floor(H*scale))};return prev.width===next.width&&prev.height===next.height?prev:next})};
+  resize();if(typeof ResizeObserver==="undefined"){window.addEventListener("resize",resize);return()=>window.removeEventListener("resize",resize)}
+  const observer=new ResizeObserver(resize);observer.observe(element);return()=>observer.disconnect()
+ },[]);
+ const tone=useCallback((correct:boolean)=>{
+  if(!soundEnabled.current||!audio.current)return;
+  const ctx=audio.current;
+  if(ctx.state==="suspended")void ctx.resume().catch(()=>{});
+  try{
+   const osc=ctx.createOscillator(),gain=ctx.createGain(),now=ctx.currentTime;
+   osc.type=correct?"sine":"triangle";
+   osc.frequency.setValueAtTime(correct?540:240,now);
+   osc.frequency.exponentialRampToValueAtTime(correct?820:155,now+.14);
+   gain.gain.setValueAtTime(.0001,now);
+   gain.gain.exponentialRampToValueAtTime(.08,now+.018);
+   gain.gain.exponentialRampToValueAtTime(.0001,now+.2);
+   osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+.22)
+  }catch{}
+ },[]);
+ const saveBest=useCallback((value:number)=>{
+  setBest(previous=>{const updated=Math.max(previous,value);try{window.localStorage.setItem("1muslim-arabic-letter-quest-best",String(updated))}catch{}return updated})
+ },[]);
+ const beginLevel=(fresh:boolean)=>{
+  const g=game.current;
+  if(fresh){game.current=newGame()}
+  const current=game.current;
+  current.running=true;current.paused=false;current.last=0;current.lastPaint=0;
+  current.orbs=[];current.shards=[];current.shot=null;current.waveDelay=0;
+  current.progress=STARTS[current.stage];current.bossHits=0;
+  current.score=current.checkpointScore;current.mistakes=current.checkpointMistakes;
+  makeWave(current);
+  setOrbs([...current.orbs]);setStage(current.stage);setProgress(current.progress);setBossHits(0);
+  setScore(current.score);setMisses(current.mistakes);setPhase("playing");
+  setFeedback("Find "+LETTERS[goal(current)][1]+" · "+LETTERS[goal(current)][0]);
+ };
+ const start=()=>{game.current=newGame();beginLevel(true)};
+ const restartLevel=()=>{const g=game.current;if(g.stage<0||g.stage>4)return;beginLevel(false)};
  const togglePause=()=>{const g=game.current;if(!g.running)return;g.paused=!g.paused;g.last=0;setPhase(g.paused?"paused":"playing")};
- useEffect(()=>{const hide=()=>{if(document.hidden&&game.current.running&&!game.current.paused){game.current.paused=true;game.current.last=0;setPhase("paused")}};document.addEventListener("visibilitychange",hide);return()=>document.removeEventListener("visibilitychange",hide)},[]);
- useEffect(()=>{const c=canvas.current,ctx=c?.getContext("2d");if(!c||!ctx)return;let raf=0;const draw=(now:number)=>{
- const g=game.current,dt=g.last?Math.min((now-g.last)/1000,.035):0;g.last=now;
- if(g.running&&!g.paused){
- g.spawn+=dt;if(g.spawn>Math.max(.62,1.55-g.level*.035)){g.spawn=0;const correct=Math.random()<.5;let letter=correct?g.level:(g.level+1+Math.floor(Math.random()*6))%letters.length;g.targets.push({x:43+Math.random()*(W-86),y:-30,letter,id:++g.nextId})}
- for(const t of g.targets)t.y+=dt*(48+g.level*2);
- g.targets=g.targets.filter(t=>{if(t.y<H+30)return true;if(t.letter===g.level){g.misses++;setMisses(g.misses);setFeedback("Missed "+letters[g.level][0]+" · try again");if(g.misses>=5){g.running=false;setPhase("over")}}return false});
- }
- if(!reduced)g.sparks=g.sparks.filter(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;return p.life>0});else g.sparks=[];
- const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,"#051a2a");bg.addColorStop(.55,"#102e46");bg.addColorStop(1,"#06261f");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
- ctx.save();ctx.strokeStyle="rgba(133,241,204,.13)";for(let i=0;i<12;i++){ctx.beginPath();ctx.moveTo(W/2,H*.22);ctx.lineTo(i*W/11,H);ctx.stroke()}for(let i=0;i<8;i++){let y=H*.23+i*i*5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}ctx.restore();
- for(const t of g.targets){const radius=30;ctx.save();ctx.translate(t.x,t.y);ctx.shadowColor=t.letter===g.level?"#f8d97c":"#67e4da";ctx.shadowBlur=reduced?0:22;const orb=ctx.createRadialGradient(-11,-13,2,0,0,radius);orb.addColorStop(0,"#faffff");orb.addColorStop(.2,t.letter===g.level?"#e4b85e":"#5ccabf");orb.addColorStop(1,"#102a3d");ctx.fillStyle=orb;ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle="rgba(255,255,255,.65)";ctx.lineWidth=1.5;ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle="#fff";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="bold 38px serif";ctx.fillText(letters[t.letter][0],0,1);ctx.restore()}
- for(const p of g.sparks){ctx.globalAlpha=Math.max(0,p.life/.55);ctx.fillStyle="#ffe4a3";ctx.fillRect(p.x,p.y,5,5)}ctx.globalAlpha=1;
- raf=requestAnimationFrame(draw)};raf=requestAnimationFrame(draw);return()=>cancelAnimationFrame(raf)},[reduced]);
- const shoot=(x:number,y:number)=>{const g=game.current;if(!g.running||g.paused)return;let index=-1;for(let i=g.targets.length-1;i>=0;i--){const t=g.targets[i];if(Math.hypot(t.x-x,t.y-y)<38){index=i;break}}if(index<0)return;const t=g.targets.splice(index,1)[0];if(!reduced)for(let i=0;i<16;i++){const a=i*Math.PI/8;g.sparks.push({x:t.x,y:t.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120,life:.55})}if(t.letter===g.level){g.score+=100;setScore(g.score);const next=(g.level+1)%letters.length;g.level=next;setLevel(next);setFeedback("Excellent! "+letters[t.letter][0]+" · "+letters[t.letter][1]);g.targets=[]}else{g.misses++;setMisses(g.misses);setFeedback("Try again: find "+letters[g.level][0]);if(g.misses>=5){g.running=false;setPhase("over")}}};
- return <section className={styles.root} aria-label="Arabic alphabet arcade"><header className={styles.hud}><span className={styles.brand}>✦ ARABIC LETTER QUEST <small>3D ARCADE</small></span><span className={styles.stats}>⭐ {score} <span>♥ {Math.max(0,5-misses)}</span></span></header>
- <div className={styles.stage}><canvas ref={canvas} className={styles.canvas} width={W} height={H} tabIndex={0} aria-label={`Shoot the Arabic letter ${letters[level][0]}, ${letters[level][1]}. Tap a floating letter or use keyboard keys 1 through 9 to select visible targets.`} onPointerDown={e=>{e.stopPropagation();e.preventDefault();const r=e.currentTarget.getBoundingClientRect();shoot((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height)}} onTouchStart={e=>e.stopPropagation()} onTouchMove={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key===" "){e.preventDefault();togglePause()}const n=Number(e.key);if(n>=1&&n<=9){const t=game.current.targets[n-1];if(t)shoot(t.x,t.y)}}}/>
- {phase!=="playing"&&<div className={styles.overlay}><span className={styles.planet}>✦</span><h2>{phase==="ready"?"ARABIC LETTER QUEST":phase==="paused"?"PAUSED":"MISSION COMPLETE"}</h2><p>{phase==="ready"?"Find the requested Arabic letter and tap to shoot its floating 3D orb. Learn all 28 letters!":phase==="over"?"Score: "+score+" · Practice again!":"Take your time — your progress is safe."}</p><button type="button" onClick={phase==="paused"?togglePause:reset}>{phase==="paused"?"▶ RESUME":phase==="over"?"↻ RESTART":"▶ START LEARNING"}</button></div>}</div>
- <footer className={styles.footer} style={{flexWrap:"wrap",gap:8}}><span aria-live="polite">Find: <strong lang="ar" style={{fontSize:26}}>{letters[level][0]}</strong> {letters[level][1]} · {level+1}/28</span><span aria-live="polite">{feedback}</span><button type="button" onClick={togglePause} disabled={phase==="ready"||phase==="over"}>{phase==="paused"?"Resume":"Pause"}</button><button type="button" onClick={reset}>Restart</button><button type="button" onClick={()=>setReduced(v=>!v)} aria-pressed={reduced}>{reduced?"Effects off":"Reduce effects"}</button></footer></section>
+ useEffect(()=>{
+  const onVisibility=()=>{const g=game.current;if(document.hidden&&g.running&&!g.paused){g.paused=true;g.last=0;setPhase("paused")}};
+  document.addEventListener("visibilitychange",onVisibility);
+  return()=>document.removeEventListener("visibilitychange",onVisibility)
+ },[]);
+ const loseLife=(message:string)=>{
+  const g=game.current;g.mistakes++;setMisses(g.mistakes);
+  setFeedback(message+" · "+Math.max(0,5-g.mistakes)+" hearts left");
+  if(g.mistakes>=5){g.running=false;g.orbs=[];setOrbs([]);setPhase("over");saveBest(g.score)}
+ };
+ const shootId=(id:number)=>{
+  const g=game.current;if(!g.running||g.paused)return;
+  const index=g.orbs.findIndex(o=>o.id===id);if(index<0)return;
+  const orb=g.orbs.splice(index,1)[0];
+  const correct=orb.letter===goal(g);
+  g.shot={x:orb.x,y:orb.y,life:.2,correct};
+  if(!reducedRef.current)for(let i=0;i<18;i++){
+   const angle=i*Math.PI/9,velocity=75+Math.random()*90;
+   g.shards.push({x:orb.x,y:orb.y,vx:Math.cos(angle)*velocity,vy:Math.sin(angle)*velocity,
+    rotation:angle,spin:(Math.random()-.5)*10,life:.55,color:correct?"#ffdf91":"#ff859c"})
+  }
+  tone(correct);
+  if(correct){
+   g.score+=100+(g.stage*20);setScore(g.score);
+   if(g.progress===LETTERS.length){
+    g.bossHits++;setBossHits(g.bossHits);
+    if(g.bossHits===BOSS_REVIEW.length){
+     g.running=false;g.orbs=[];setOrbs([]);setPhase("won");setFeedback("All 28 letters mastered! Guardian defeated.");saveBest(g.score);return
+    }
+    setFeedback("Guardian hit "+g.bossHits+"/3! Find "+LETTERS[goal(g)][1])
+   }else{
+    const learned=LETTERS[g.progress];g.progress++;setProgress(g.progress);
+    if(g.progress===STARTS[g.stage+1]&&g.stage<4){
+     g.stage++;g.checkpointScore=g.score;g.checkpointMistakes=g.mistakes;
+     g.running=false;g.orbs=[];setOrbs([]);setStage(g.stage);setPhase("between");
+     setFeedback("Level cleared! "+learned[0]+" · "+learned[1]);saveBest(g.score);return
+    }
+    if(g.progress===LETTERS.length)setFeedback("28 letters complete! Guardian review: find "+LETTERS[goal(g)][1]);
+    else setFeedback("Great! "+learned[0]+" · "+learned[1]+". Next: "+LETTERS[goal(g)][1])
+   }
+   g.orbs=[];g.waveDelay=.45;
+  }else{loseLife("That was "+LETTERS[orb.letter][1]+". Find "+LETTERS[goal(g)][1])}
+  setOrbs([...g.orbs])
+ };
+ const shootPoint=(x:number,y:number)=>{
+  const g=game.current;if(!g.running||g.paused)return;
+  for(let i=g.orbs.length-1;i>=0;i--){const o=g.orbs[i];if(Math.hypot(o.x-x,o.y-y)<=o.radius+13){shootId(o.id);return}}
+ };
+ useEffect(()=>{
+  const c=canvas.current,ctx=c?.getContext("2d");if(!c||!ctx)return;
+  let raf=0;const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,"#041325");bg.addColorStop(.53,"#18354a");bg.addColorStop(1,"#063b32");
+  const frame=(now:number)=>{
+   const g=game.current;
+   const dt=g.last?Math.min((now-g.last)/1000,.05):0;g.last=now;
+   if(g.running&&!g.paused){
+    if(g.orbs.length===0){g.waveDelay-=dt;if(g.waveDelay<=0){makeWave(g);setOrbs([...g.orbs])}}
+    for(const o of g.orbs)o.y+=o.speed*dt;
+    const escaped=g.orbs.filter(o=>o.y>H+o.radius);
+    if(escaped.length){
+     g.orbs=g.orbs.filter(o=>o.y<=H+o.radius);
+     setOrbs([...g.orbs]);
+     if(escaped.some(o=>o.letter===goal(g)))loseLife("The target escaped");
+     if(g.orbs.length===0)g.waveDelay=.35
+    }
+    if(!reducedRef.current){
+     g.shards=g.shards.filter(s=>{s.x+=s.vx*dt;s.y+=s.vy*dt;s.vy+=100*dt;s.rotation+=s.spin*dt;s.life-=dt;return s.life>0});
+     if(g.shot){g.shot.life-=dt;if(g.shot.life<=0)g.shot=null}
+    }else{g.shards=[];g.shot=null}
+   }
+   if(now-g.lastPaint>=32||g.lastPaint===0){
+    g.lastPaint=now;
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    ctx.save();
+    for(let i=0;i<55;i++){const x=(i*137+29)%W,y=(i*91+13)%H;ctx.fillStyle=i%4?"rgba(226,250,246,.36)":"rgba(251,227,168,.65)";ctx.fillRect(x,y,i%6?1:2,i%6?1:2)}
+    ctx.strokeStyle="rgba(104,218,194,.18)";ctx.lineWidth=1;
+    for(let i=0;i<=10;i++){ctx.beginPath();ctx.moveTo(W/2,100);ctx.lineTo(i*W/10,H);ctx.stroke()}
+    for(let i=0;i<9;i++){const y=110+i*i*5.8;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+    ctx.restore();
+    for(const o of g.orbs){
+     const depth=Math.max(.75,Math.min(1.16,.76+o.y/H*.35));
+     ctx.save();ctx.translate(o.x,o.y);ctx.scale(depth,depth);
+     ctx.shadowColor=o.boss?"#ffd36a":"#6de4cd";ctx.shadowBlur=reducedRef.current?0:17;
+     const fill=ctx.createRadialGradient(-11,-14,2,0,0,o.radius);
+     fill.addColorStop(0,"#ffffff");fill.addColorStop(.16,o.boss?"#ffe5a5":"#b3fff0");
+     fill.addColorStop(.5,o.boss?"#b88937":"#208b8b");fill.addColorStop(1,"#102239");
+     ctx.fillStyle=fill;ctx.beginPath();ctx.arc(0,0,o.radius,0,Math.PI*2);ctx.fill();
+     ctx.shadowBlur=0;ctx.strokeStyle=o.boss?"#fff0a5":"rgba(228,255,249,.7)";ctx.lineWidth=1.5;ctx.stroke();
+     ctx.beginPath();ctx.ellipse(-o.radius*.3,-o.radius*.45,o.radius*.26,o.radius*.11,-.55,0,Math.PI*2);
+     ctx.fillStyle="rgba(255,255,255,.5)";ctx.fill();
+     ctx.fillStyle="#ffffff";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="bold 38px serif";
+     ctx.fillText(LETTERS[o.letter][0],0,1);
+     if(o.boss){ctx.font="20px serif";ctx.fillText("♛",0,-o.radius-10)}
+     ctx.restore()
+    }
+    if(g.shot&&!reducedRef.current){
+     ctx.save();ctx.globalAlpha=Math.min(1,g.shot.life*5);ctx.strokeStyle=g.shot.correct?"#ffe3a5":"#ff8eaa";ctx.lineWidth=4;
+     ctx.beginPath();ctx.moveTo(W/2,H);ctx.lineTo(g.shot.x,g.shot.y);ctx.stroke();ctx.restore()
+    }
+    for(const s of g.shards){
+     ctx.save();ctx.globalAlpha=Math.max(0,s.life/.55);ctx.translate(s.x,s.y);ctx.rotate(s.rotation);
+     ctx.fillStyle=s.color;ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(5,4);ctx.lineTo(-5,4);ctx.closePath();ctx.fill();ctx.restore()
+    }
+   }
+   raf=requestAnimationFrame(frame)
+  };
+  raf=requestAnimationFrame(frame);
+  return()=>cancelAnimationFrame(raf)
+ },[saveBest,tone]);
+ const toggleSound=async()=>{
+  if(soundEnabled.current){soundEnabled.current=false;setSound(false);if(audio.current)await audio.current.suspend().catch(()=>{});return}
+  if(typeof window.AudioContext==="undefined")return;
+  try{if(!audio.current)audio.current=new window.AudioContext();await audio.current.resume();soundEnabled.current=true;setSound(true)}catch{setFeedback("Audio unavailable; you can still play silently.")}
+ };
+ const active=phase==="playing"||phase==="paused";
+ const targetIndex=goal(game.current);
+ const boss=progress===LETTERS.length;
+ return <section className={styles.root} aria-label="Arabic Letter Quest educational game" onKeyDown={e=>{
+  if(e.altKey||e.ctrlKey||e.metaKey||e.repeat)return;
+  if(/^[1-4]$/.test(e.key)&&active){const target=orbs[Number(e.key)-1];if(target){e.preventDefault();shootId(target.id)}}
+ }}>
+  <header className={styles.hud}>
+   <span className={styles.brand}>✦ ARABIC LETTER QUEST <small>LEVEL {stage+1}/5 · {LEVEL_NAMES[stage]}</small></span>
+   <span className={styles.stats}>⭐ {score} <span>♥ {Math.max(0,5-misses)}</span></span>
+  </header>
+  <div className={styles.lesson} aria-live="polite">
+   <span>{boss?"👑 GUARDIAN "+Math.min(bossHits+1,3)+"/3":"LETTER "+Math.min(progress+1,28)+"/28"}</span>
+   <strong lang="ar" dir="rtl">{LETTERS[targetIndex][0]}</strong>
+   <span>Find <b>{LETTERS[targetIndex][1]}</b></span>
+  </div>
+  <div className={styles.stage} ref={stageRef}>
+   <canvas ref={canvas} className={styles.canvas} width={W} height={H}
+    style={{width:size.width,height:size.height}} tabIndex={0}
+    aria-label={"Floating Arabic letters. Find "+LETTERS[targetIndex][1]+". Tap a letter or use the numbered target buttons below."}
+    onPointerDown={e=>{e.preventDefault();e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();shootPoint((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height)}}
+    onPointerMove={e=>{if(e.pointerType==="touch")e.stopPropagation()}}
+   />
+   {phase!=="playing"&&<div className={styles.overlay}>
+    <span className={styles.planet} aria-hidden="true">{phase==="won"?"🏆":phase==="over"?"✧":"✦"}</span>
+    <h2>{phase==="ready"?"LEARN THE ARABIC ALPHABET":phase==="between"?"LEVEL COMPLETE":phase==="paused"?"PAUSED":phase==="won"?"ALL 28 LETTERS MASTERED!":"MISSION ENDED"}</h2>
+    <p>{phase==="ready"?"Shoot the matching Arabic letter. Clear five levels and defeat the three-round Guardian review.":phase==="between"?"Next: Level "+(stage+1)+" · "+LEVEL_NAMES[stage]:phase==="paused"?"Your falling letters and timer are frozen.":phase==="won"?"You completed all five levels and the Guardian review!":"Five mistakes used. Restart this level to practice again."}</p>
+    <button type="button" onClick={phase==="paused"?togglePause:phase==="between"?()=>beginLevel(false):phase==="ready"||phase==="won"?start:restartLevel}>
+     {phase==="paused"?"▶ RESUME":phase==="between"?"▶ NEXT LEVEL":phase==="ready"?"▶ START LEARNING":phase==="won"?"↻ PLAY AGAIN":"↻ RETRY LEVEL"}
+    </button>
+    <small>Personal best · {best}</small>
+   </div>}
+  </div>
+  <div className={styles.targetBar} aria-label="Accessible letter targets">
+   <span className={styles.targetLabel}>Shoot:</span>
+   {active&&orbs.length?orbs.map((o,i)=><button key={o.id} type="button" disabled={phase==="paused"}
+     onClick={()=>shootId(o.id)} aria-label={"Shoot target "+(i+1)+", "+LETTERS[o.letter][1]+", "+LETTERS[o.letter][0]}>
+     <small>{i+1}</small> <span lang="ar">{LETTERS[o.letter][0]}</span>
+    </button>):<span className={styles.waiting}>{phase==="playing"?"New letters incoming…":"Start or resume to shoot"}</span>}
+  </div>
+  <footer className={styles.footer}>
+   <span className={styles.feedback} role="status" aria-live="polite" aria-atomic="true">{feedback}</span>
+   <div className={styles.controls}>
+    <button type="button" onClick={togglePause} disabled={!active}>{phase==="paused"?"▶ Resume":"Ⅱ Pause"}</button>
+    <button type="button" onClick={restartLevel} disabled={phase==="ready"}>↻ Restart level</button>
+    <button type="button" onClick={()=>setReduced(v=>!v)} aria-pressed={reduced}>{reduced?"Motion off":"Reduce motion"}</button>
+    <button type="button" onClick={()=>{void toggleSound()}} aria-pressed={sound} disabled={!audioAvailable}>{sound?"🔊 Sound on":"🔇 Sound off"}</button>
+   </div>
+  </footer>
+ </section>
 }
