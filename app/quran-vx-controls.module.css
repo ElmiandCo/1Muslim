@@ -8,3 +8,10 @@
 .quranFrame>.quranPlay:active{transform:translateX(-50%) scale(.98)}
 @media(max-width:650px){:global(.fillArea) :global(.slide[data-workspace-page="1"]) .quranWidget{padding:8px!important}.quranFrame>.quranPrevious{left:9px!important;top:9px!important;width:36px;height:36px}.quranFrame>.quranPlay{bottom:10px}}
 @media(prefers-reduced-motion:reduce){.quranFrame>.quranPlay{transition:none!important}}
+
+/* VX theme sync: reuse the existing saved Canvas palette, without repainting unrelated pages. */
+.quranWidget{--qvx-surface:var(--canvas-control-surface-rgb,8,75,57);--qvx-border:var(--canvas-control-border-rgb,204,176,103);--qvx-accent:var(--canvas-control-accent-rgb,19,92,67)}
+.quranFrame>.quranArticle{border-color:rgba(var(--qvx-border),.46)!important;background:linear-gradient(155deg,rgba(var(--qvx-surface),.35),rgba(6,22,30,.45))!important;backdrop-filter:blur(var(--qvx-blur,12px)) brightness(var(--qvx-brightness,1));-webkit-backdrop-filter:blur(var(--qvx-blur,12px)) brightness(var(--qvx-brightness,1))}
+.quranFrame>.quranPrevious,.quranFrame>.quranPlay{border-color:rgba(var(--qvx-border),.7)!important;background:linear-gradient(140deg,rgba(var(--qvx-accent),.84),rgba(var(--qvx-surface),.8))!important}
+:global(html.light) .quranFrame>.quranArticle{background:linear-gradient(155deg,rgba(246,242,229,.7),rgba(228,237,233,.62))!important;color:#18362d}
+:global(html.light) .quranFrame>.quranArticle p{color:#1c3d35!important;text-shadow:none}
