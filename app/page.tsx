@@ -166,6 +166,7 @@ export default function Home(){
   }})();
   return()=>{cancelled=true}
  },[quranPreview?.chapter]);
+ useEffect(()=>{const el=quranCardsRef.current;if(!el||!quranPreview||!quranCards.length)return;const index=quranCards.findIndex(v=>v.globalAyah===quranPreview.globalAyah);if(index<0)return;const card=el.children[index] as HTMLElement|undefined;if(card)el.scrollTo({top:Math.max(0,card.offsetTop-el.offsetTop-(el.clientHeight-card.clientHeight)/2),behavior:"smooth"});},[quranPreview?.globalAyah,quranCards]);
  const [quranAudioPlaying,setQuranAudioPlaying]=useState(false);
  const [quranAudioLoading,setQuranAudioLoading]=useState(false);const [quranSettingsOpen,setQuranSettingsOpen]=useState(false);const [quranBlur,setQuranBlur]=useState(12);const [quranDim,setQuranDim]=useState(0);const [quranBrightness,setQuranBrightness]=useState(1);const [quranVolume,setQuranVolume]=useState(1);
  const quranAudioRef=useRef<HTMLAudioElement|null>(null);useEffect(()=>{if(quranAudioRef.current)quranAudioRef.current.volume=quranVolume},[quranVolume,quranPreview]);
@@ -218,7 +219,7 @@ export default function Home(){
    if(quranContinuous.current&&!fromAudioEnd){quranContinuous.current=false;quranAutoPlayNext.current=false;quranAudioRef.current?.pause();setQuranAudioPlaying(false);quranAdvancing.current=false;return}
    if(!fromAudioEnd&&!quranContinuous.current&&quranAudioRef.current&&!quranAudioRef.current.paused&&!quranAudioRef.current.ended){quranContinuous.current=true;quranContinuousVerseCount.current=0}
    quranAutoPlayNext.current=quranContinuous.current;
-   const current=quranPreview;const chapter=current?.chapter||1,verse=current?.verse||1;
+   const current=quranPreview;const chapter=current?.chapter||1,verse=current?.verse||1; const cached=quranCards.find(v=>v.chapter===chapter&&v.verse===verse+1);if(cached){setQuranPreview(cached);try{localStorage.setItem("1muslim-quran-progress",JSON.stringify({chapter,verse:verse+1}))}catch{}quranAdvancing.current=false;return;}
    void (async()=>{try{const response=await fetch("https://api.alquran.cloud/v1/surah/"+chapter);if(!response.ok)throw Error("Surah lookup failed");const json=await response.json();const max=Number(json.data?.numberOfAyahs);if(!max)throw Error("Missing ayah count");
     const newChapter=verse>=max?(chapter===114?1:chapter+1):chapter;const newVerse=verse>=max?1:verse+1;
     await loadQuranVerse(newChapter,newVerse,true);
@@ -228,7 +229,7 @@ export default function Home(){
   window.addEventListener("1muslim:quran-previous-verse",previous);
   window.addEventListener("1muslim:quran-next-verse",next);
   return()=>{window.removeEventListener("1muslim:quran-next-verse",next);window.removeEventListener("1muslim:quran-previous-verse",previous)};
- },[workspacePage,quranPreview]);
+ },[workspacePage,quranPreview,quranCards]);
 
  useEffect(()=>{let alive=true;const db=createClient();const load=async()=>{const {data:{user}}=await db.auth.getUser();const jobs=[db.from("lessons").select("id,title").eq("active",true).limit(3)];const [lessons]=await Promise.all(jobs);if(!alive)return;if(!lessons.error)setLessonPreview((lessons.data||[]).map(v=>({id:String(v.id),title:String(v.title||"Continue learning")})));if(!user)return;const [messages,calls]=await Promise.all([db.from("dm_messages").select("id,body,created_at").eq("sender_id",user.id).order("created_at",{ascending:false}).limit(3),db.from("dm_calls").select("id,created_at").eq("caller_id",user.id).order("created_at",{ascending:false}).limit(3)]);if(!alive)return;if(!messages.error)setInbox((messages.data||[]).map(v=>({id:String(v.id),content:String(v.body||""),created_at:String(v.created_at)})));if(!calls.error)setCallHistory((calls.data||[]).map(v=>({id:String(v.id),created_at:String(v.created_at)})))};void load();const timer=setInterval(()=>void load(),60000);return()=>{alive=false;clearInterval(timer)}},[]);
  const [sparkleKey,setSparkleKey]=useState(0);
