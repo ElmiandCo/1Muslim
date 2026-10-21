@@ -64,3 +64,11 @@
 /* TITAN: geometry is measured from the widget padding edge, not flex height. */
 .quranWidget>.quranFrame{position:absolute!important;inset:8px!important;width:auto!important;height:auto!important;flex:none!important;min-height:0!important;box-sizing:border-box!important}
 :global(html.light) .quranSettingsPanel{color:rgba(var(--qvx-accent),1)!important}
+
+/* NOVA FUSION: recording entry stays above the fixed frame without shifting the verse. */
+.quranRecord{position:absolute;right:12px;bottom:12px;z-index:6;display:inline-flex;align-items:center;justify-content:center;min-height:44px;max-width:calc(50% - 40px);padding:0 12px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(var(--qvx-border),.76);border-radius:999px;background:linear-gradient(145deg,rgba(var(--qvx-accent),.92),rgba(var(--qvx-surface),.87));color:#fffdf7;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 6px 16px rgba(0,0,0,.24);touch-action:manipulation}
+.quranRecord:focus-visible{outline:3px solid rgba(var(--qvx-border),.98);outline-offset:3px}
+:global(html.light) .quranFrame>.quranArticle,:global(html.light) .quranFrame>.quranArticle p{color:color-mix(in srgb,rgb(var(--qvx-accent)) 67%,#121c1d)!important}
+:global(html.light) .quranSettingsPanel{color:color-mix(in srgb,rgb(var(--qvx-accent)) 67%,#121c1d)!important}
+@media(max-width:650px){.quranRecord{right:9px;bottom:10px;padding:0 8px;font-size:11px}}
+@media(prefers-reduced-motion:reduce){.quranRecord{transition:none!important}}
