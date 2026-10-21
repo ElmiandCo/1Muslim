@@ -680,3 +680,9 @@
 .quranProgressCard>small{font-size:clamp(8px,1.8vw,10px);line-height:1.25;opacity:.85}
 .quranProgressTrack{height:4px;width:85%;overflow:hidden;border-radius:20px;background:rgba(255,255,255,.16)}
 .quranProgressTrack i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#55c7a1,#e8cf8e);transition:width .4s ease}
+
+/* Bottom-docked, visually independent progress tiles. */
+.fillArea .slide[data-workspace-page="1"] .quranVerseWidget{position:relative!important;padding-bottom:112px!important}
+.fillArea .slide[data-workspace-page="1"] .quranProgressCards{position:absolute!important;left:clamp(12px,3vw,22px)!important;right:clamp(12px,3vw,22px)!important;bottom:clamp(10px,2vh,20px)!important;width:auto!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:clamp(10px,2.5vw,18px)!important;z-index:12!important;pointer-events:auto!important}
+.fillArea .slide[data-workspace-page="1"] .quranProgressCard{min-height:84px!important;border-radius:17px!important;background:rgba(7,49,43,.32)!important;border:1px solid rgba(233,203,143,.43)!important;box-shadow:0 8px 20px rgba(0,0,0,.16)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important}
+.fillArea .slide[data-workspace-page="1"] .quranVerseArticle{max-height:calc(100% - 160px)!important}
