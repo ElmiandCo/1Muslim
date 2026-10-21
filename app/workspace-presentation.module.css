@@ -667,3 +667,7 @@
 .fillArea .slide[data-workspace-page="1"] .quranVerseWidget{position:relative!important}
 .fillArea .slide[data-workspace-page="1"] .quranVerseWidget>.quranInlinePlay{position:absolute!important;top:12px!important;left:12px!important;right:auto!important;bottom:auto!important;z-index:15!important;width:48px!important;height:48px!important;margin:0!important;align-self:auto!important;touch-action:manipulation!important}
 .fillArea .slide[data-workspace-page="1"] .quranVerseHeader{padding-left:56px!important}
+
+/* Keep the transparent Quran mirror snug around its reading content. */
+.fillArea .slide[data-workspace-page="1"] .quranVerseArticle{flex:0 1 auto!important;align-self:stretch!important;min-height:0!important;max-height:calc(100% - 82px)!important;height:auto!important;gap:clamp(8px,1.5vh,16px)!important;padding:clamp(12px,2.6vw,20px)!important;justify-content:center!important}
+.fillArea .slide[data-workspace-page="1"] .quranVerseWidget{justify-content:center!important}
