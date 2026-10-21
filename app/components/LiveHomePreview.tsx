@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {Room,RoomEvent,Track,VideoQuality} from "livekit-client";
+import {liveRoomOptions} from "../../lib/live/live-quality";
 
 /** Silent, noninteractive thumbnail player: safe to render inside homepage links. */
 export default function LiveHomePreview({roomName}:{roomName:string}){
@@ -14,7 +15,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
   setReady(false);
   setFailure("");
   let active=true;
-  const room=new Room({adaptiveStream:false});
+  const room=new Room(liveRoomOptions);
   const attach=(track:any)=>{
    if(!active||track.kind!==Track.Kind.Video||!video.current)return;
    track.attach(video.current);
