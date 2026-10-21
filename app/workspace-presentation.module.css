@@ -693,3 +693,7 @@
 .fillArea .slide[data-workspace-page="1"] .quranVerseArticle{flex:0 1 auto!important;max-height:52%!important;margin-bottom:auto!important}
 .fillArea .slide[data-workspace-page="1"] .quranProgressCards{position:absolute!important;top:auto!important;bottom:clamp(14px,3vh,30px)!important;left:clamp(12px,3vw,22px)!important;right:clamp(12px,3vw,22px)!important;transform:none!important;z-index:20!important;gap:12px!important}
 .fillArea .slide[data-workspace-page="1"] .quranProgressCard{min-height:104px!important;max-height:120px!important;background:rgba(5,36,34,.29)!important}
+
+/* Correct the containing block: previous absolute positioning used the short verse widget,
+   placing tiles halfway up the canvas. Dock to the viewport's lower edge instead. */
+.fillArea .slide[data-workspace-page="1"] .quranProgressCards{position:fixed!important;inset:auto 7% clamp(48px,7vh,90px) 7%!important;top:auto!important;bottom:clamp(48px,7vh,90px)!important;left:7%!important;right:7%!important;width:86%!important;margin:0!important;transform:none!important;z-index:100!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
