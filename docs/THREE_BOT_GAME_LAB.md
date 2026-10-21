@@ -48,3 +48,18 @@ Branch: `experiment/three-bot-game-lab-20261021`; preview only, no production ch
 **Write blockers:** GitHub updates to `app/page.tsx` (format tab navigation, non-overlapping expandable Games comments and richer placeholders), `app/components/HomeLiveConversation.tsx` (remove demo chat), and creation of a standalone Live format CSS stylesheet were each rejected by tool safety checks. NO code was committed for those three attempted changes. The existing Games panel still hides its shared conversation, while non-game conversation may display demo comments when no real stream exists. Audio-only and Games stream discovery still have no proven backend stream-type filter; never invent broadcasts or claim working game livestreaming.
 
 **NOVA FUSION next:** verify latest HEAD and build, iPhone 320px cockpit, pointer steering, keyboard, three difficulty transitions and boss review; confirm real video is cropped, not stretched. Implement accessible Desktop/Phone/Audio/Games navigation and real-only scrollable comments in a non-overlapping panel if writes are permitted. Do not mistake placeholder or demo comments for real stream chat. Confirm secure game canvas publishing + explicit microphone opt-in before calling game streaming functional. No deployment or production promotion.
+
+
+### TITAN — Game comments separation pass (2026-10-21)
+Scope: preview branch only. No production changes.
+Committed:
+- `3c274e46`: game layout containment.
+- `59c92845`: paused-game copy corrected.
+- `92d3f607`: Live stage marker updated to v3.
+- `cfc36a8d`: scoped CSS isolates game and comments into a lower mobile row or desktop right-side panel, overriding legacy absolute overlays.
+- `fe02a9e1`: dedicated comments row available in stage.
+- `23c9a897`: no longer hide comments dock in Games.
+Validation: GitHub writes confirmed. Vercel was BUILDING for the newest commits when inspected; intermediate commits `59c92845` and `3c274e46` were READY. No browser/iPhone visual or host/viewer test has yet confirmed the layout.
+IMPORTANT: Current Games conversation still has a demo-mode input and is NOT attached to a real game stream. Do not mistake visible comments for real live chat. A targeted attempt to remove demo mode was rejected by tool safety checks; this remains a blocker.
+Live transition audit: Existing `app/streaming/go-live/page.tsx` creates a live_streams row with status 'live' BEFORE LiveKit connects and publishes media. Consequently, `status=live` alone is insufficient proof of an active broadcast. The host's LiveKit Room lives inside the Go Live route component; navigating away to homepage on the same tab will unmount the publisher and may end the stream. Automatic game pause, successful-publish signaling, stream-ID-pinned homepage navigation and state preservation are NOT implemented; attempted TSX changes were rejected by tool safety checks. Do not claim working automatic transition.
+Next HUDHUD/NOVA: implement a verified publication signal after `publishTrack` succeeds, keep publisher mounted (separate host studio tab or persistent session manager), pause game without resetting state, switch homepage to exact room/stream ID only after confirmation, and ensure real stream-scoped chat. Fix demo comments and test both iPhone and 1440px desktop. Preserve production.
