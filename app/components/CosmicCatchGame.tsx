@@ -259,13 +259,22 @@ export default function CosmicCatchGame(){
   if(active&&phase==="playing"&&["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){e.preventDefault();const g=game.current;g.targetId=null;g.shipX=Math.max(16,Math.min(W-16,g.shipX+(e.key==="ArrowRight"?28:e.key==="ArrowLeft"?-28:0)));g.shipY=Math.max(45,Math.min(H-25,g.shipY+(e.key==="ArrowDown"?28:e.key==="ArrowUp"?-28:0))) }
  }}>
   <header className={styles.hud}>
-   <span className={styles.brand}>✦ ARABIC LETTER QUEST <small>LEVEL {stage+1}/3 · {LEVEL_NAMES[stage]}</small></span>
-   <span className={styles.stats}>⭐ {score} <span>♥ {Math.max(0,5-misses)}</span></span>
+   <div className={styles.brandRow}>
+    <span className={styles.brand}><span className={styles.brandMark} aria-hidden="true">✦</span> GAMELABS <em>STUDIO</em><small>ARABIC LETTER QUEST · LEVEL {stage+1}/3</small></span>
+    <span className={styles.stats} aria-label={`Score ${score}, ${Math.max(0,5-misses)} hearts remaining`}>✦ {score} <span>♥ {Math.max(0,5-misses)}</span></span>
+   </div>
+   <div className={styles.toolbar} aria-label="GameLabs game controls">
+    <button type="button" onClick={start} title="Start a new game" aria-label="Start new game">▶ <span>Start</span></button>
+    <button type="button" onClick={togglePause} disabled={!game.current.running} aria-label={phase==="paused"?"Resume game":"Pause game"}>{phase==="paused"?"▶":"Ⅱ"} <span>{phase==="paused"?"Resume":"Pause"}</span></button>
+    <button type="button" onClick={restartLevel} title="Restart current level" aria-label="Restart current level">↻ <span>Restart</span></button>
+    <button type="button" onClick={()=>{void toggleSound()}} disabled={!audioAvailable} aria-pressed={sound} aria-label={sound?"Mute game audio":"Enable game audio"}>{sound?"♫":"♪"} <span>{sound?"Sound on":"Sound off"}</span></button>
+   </div>
   </header>
   <div className={styles.lesson} aria-live="polite">
    <span>{boss?"👑 GUARDIAN "+Math.min(bossHits+1,3)+"/3":"LETTER "+Math.min(progress+1,28)+"/28"}</span>
    <strong lang="ar" dir="rtl">{LETTERS[targetIndex][0]}</strong>
-   <span>FLY THROUGH THE RIGHT TRANSLITERATION</span>
+   <span className={styles.lessonHint}>FLY THROUGH THE MATCHING SOUND</span>
+   <span className={styles.levelName}>{LEVEL_NAMES[stage]}</span>
   </div>
   <div className={styles.stage} ref={stageRef}>
    <canvas ref={canvas} className={styles.canvas} width={W} height={H}
@@ -284,6 +293,7 @@ export default function CosmicCatchGame(){
     <small>Personal best · {best}</small>
    </div>}
   </div>
+  <div className={styles.feedback} role="status" aria-live="polite">{feedback}</div>
   <div className={styles.targetBar} aria-label="Accessible flight lanes">
    <span className={styles.targetLabel}>Fly to:</span>
    {active&&orbs.length?orbs.map((o,i)=><button key={o.id} type="button" disabled={phase==="paused"}
