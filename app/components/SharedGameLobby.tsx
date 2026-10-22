@@ -51,7 +51,7 @@ export default function SharedGameLobby(){
  const labels=useRef<HTMLDivElement>(null),workerNotice=useRef(false);const canvas=useRef<HTMLCanvasElement>(null),panel=useRef<HTMLDivElement>(null),portalLabel=useRef<HTMLDivElement>(null);
  const arrivals=useRef<Map<string,number>>(new Map());const keys=useRef<Record<string,boolean>>({}),peerRef=useRef<Map<string,Player>>(new Map()),suitRef=useRef<Suit>("gold");
  const local=useRef<Player>({id:"",x:0,y:terrain(0,0),z:0,yaw:Math.PI/2,flying:false,boost:false,suit:"gold",seen:0});
- const combatChannel=useRef<{send:(args:{type:string;event:string;payload:unknown})=>Promise<unknown>}|null>(null);
+ const combatChannel=useRef<{send:(args:{type:"broadcast";event:string;payload:unknown})=>Promise<unknown>}|null>(null);
  const projectiles=useRef<Array<{id:string;owner:string;x:number;y:number;z:number;vx:number;vz:number;life:number;power:number}>>([]);
  const knockdownUntil=useRef(0); const lastShot=useRef(0); const [downed,setDowned]=useState(false);
  const [combatShop,setCombatShop]=useState(false);const [combatXp,setCombatXp]=useState(5000);const [weapon,setWeapon]=useState("pulse");const [shield,setShield]=useState(false);
