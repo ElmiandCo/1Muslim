@@ -44,6 +44,8 @@
 
 /* Elite mobile-controls pass: keep movement reachable above phone home indicators. */
 @media (pointer:coarse){
+ /* Keep the bottom status and selector row clear of mobile home bars and side notches. */
+ .bottom{bottom:calc(12px + env(safe-area-inset-bottom, 0px));left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px))}
  .controls{bottom:calc(52px + env(safe-area-inset-bottom, 0px))}
  .controls button{min-width:44px;min-height:44px}
 }
