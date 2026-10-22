@@ -102,7 +102,7 @@ export default function OneMuslimWorldGame(){
    ctx.restore();
    if(r>10){label("JUMP INTO",p.x,p.y-r*1.95,limit(r*.24,10,22),"#115f59",800);label("1MUSLIMGAMES",p.x,p.y-r*1.67,limit(r*.31,12,27),"#936c22",900)}
   };
-  const drawLive=(c:V3,yaw,t:number)=>{
+  const drawLive=(c:V3,yaw:number,t:number)=>{
    const z=LIVE_Z,y=7.2,wide=8.3,high=4.9;
    const corners=[{x:-wide,y:y+high,z},{x:wide,y:y+high,z},{x:wide,y:y-high,z},{x:-wide,y:y-high,z}];
    const pts=corners.map(v=>point(v,c,yaw));if(pts.some(v=>!v))return;
@@ -123,7 +123,7 @@ export default function OneMuslimWorldGame(){
    }
    ctx.restore();
   };
-  const drawAvatar=(c:V3,yaw,t:number)=>{
+  const drawAvatar=(c:V3,yaw:number,t:number)=>{
    const p=player.current,s=SUITS[suitRef.current],motion=Math.sin(t*11)*(p.flight?0.03:.09);
    const base=point({x:p.x,y:p.y+.15,z:p.z},c,yaw),head=point({x:p.x,y:p.y+2.4,z:p.z},c,yaw);
    if(!base||!head)return;
