@@ -73,7 +73,10 @@ export default function SharedGameLobby(){
  const combatChannel=useRef<{send:(args:{type:"broadcast";event:string;payload:unknown})=>Promise<unknown>}|null>(null);
  const projectiles=useRef<Array<{id:string;owner:string;x:number;y:number;z:number;vx:number;vz:number;life:number;power:number}>>([]);
  const knockdownUntil=useRef(0); const lastShot=useRef(0); const [downed,setDowned]=useState(false);
- const [combatShop,setCombatShop]=useState(false);const [combatXp,setCombatXp]=useState(5000);const [weapon,setWeapon]=useState("pulse");const [shield,setShield]=useState(false);const [shieldLevel,setShieldLevel]=useState(1);const [blasterLevel,setBlasterLevel]=useState(1);const [gameSettingsOpen,setGameSettingsOpen]=useState(false);
+ const [combatShop,setCombatShop]=useState(false);const [combatXp,setCombatXp]=useState(5000);const [weapon,setWeapon]=useState("pulse");const [shield,setShield]=useState(false);const [shieldLevel,setShieldLevel]=useState(1);
+ const shieldStateRef=useRef({active:shield,level:shieldLevel});
+ // The WebGL animation loop mounts once, so read current shield values from a ref.
+ useEffect(()=>{shieldStateRef.current={active:shield,level:shieldLevel};},[shield,shieldLevel]);const [blasterLevel,setBlasterLevel]=useState(1);const [gameSettingsOpen,setGameSettingsOpen]=useState(false);
  const [ownedWeapons,setOwnedWeapons]=useState<string[]>(["pulse"]);
  const fireShot=()=>{const now=performance.now();if(now-lastShot.current<380||now<knockdownUntil.current)return;lastShot.current=now;const p=local.current;const power=weapon==="nova"||blasterLevel>=2?2:1;const shot={id:p.id+"-"+Math.floor(now),owner:p.id,x:p.x+Math.sin(p.yaw)*2,y:p.y+1.4,z:p.z+Math.cos(p.yaw)*2,vx:Math.sin(p.yaw)*(weapon==="nova"?120:90),vz:Math.cos(p.yaw)*(weapon==="nova"?120:90),life:1.7,power};projectiles.current.push(shot);void combatChannel.current?.send({type:"broadcast",event:"shot",payload:shot});};
  const [worldMapOpen,setWorldMapOpen]=useState(false);
@@ -160,7 +163,7 @@ export default function SharedGameLobby(){
   const render=(now:number)=>{
    const dt=clamp((now-prev)/1000,0,.05);prev=now;
    const p=local.current,k=keys.current;
-   for(const shot of projectiles.current){shot.x+=shot.vx*dt;shot.z+=shot.vz*dt;shot.life-=dt;if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shield&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldLevel>=2||shot.power<2);if(!guarded){knockdownUntil.current=now+2300;setDowned(true);setHint("💥 Hit! Get back up in 2 seconds.");}else setHint("🛡️ Shield absorbed the shot.");}}
+   for(const shot of projectiles.current){shot.x+=shot.vx*dt;shot.z+=shot.vz*dt;shot.life-=dt;if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shieldStateRef.current.active&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldStateRef.current.level>=2||shot.power<2);if(!guarded){knockdownUntil.current=now+2300;setDowned(true);setHint("💥 Hit! Get back up in 2 seconds.");}else setHint("🛡️ Shield absorbed the shot.");}}
    projectiles.current=projectiles.current.filter(s=>s.life>0);
    if(downed&&now>=knockdownUntil.current)setDowned(false);
    for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000);const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=audioRoomLocked?1:feet<=200?1:feet<=300?1-(feet-200)*.005:feet<=400?.5-(feet-300)*.005:0;}
