@@ -166,6 +166,36 @@ export default function SharedGameLobby(){
       draw(vp,jx,height/2,jz,.8,height,.8,[.29,.22,.14]);
       for(const off of [-2,0,2])draw(vp,jx+off,height,jz,5,4,5,[.07,.22+(i%3)*.03,.13],.96);
     }
+    // Street upgrades: walkable sidewalk slabs, curbs, painted crossings and streetlamps.
+    for(let i=0;i<22;i++){const x=2+i*4;for(const side of [-1,1]){const z=side*6.8;
+      draw(vp,x,.16,z,3.95,.25,3,[.72,.75,.73]);draw(vp,x,.27,side*5.2,3.95,.25,.25,[.93,.9,.77]);
+      if(i%3===0){draw(vp,x,2.2,side*8.4,.22,4.4,.22,[.22,.35,.34]);draw(vp,x,4.45,side*8.4,1.1,.3,.7,[.98,.87,.58],.8);}
+    }}
+    for(const x of [14,42,70])for(let z=-4;z<=4;z+=1.5)draw(vp,x,.11,z,2.1,.04,.8,[.97,.95,.85]);
+    // Dense tufts of grass with varied heights; avoid paved road and sidewalks.
+    for(let i=0;i<320;i++){const x=((i*53)%370)-185,z=((i*97)%360)-180;if(Math.abs(z)<10&&x>-10&&x<100)continue;
+      const h=.18+(i%7)*.09;draw(vp,x,h/2+.02,z,.13,h,.12,[.15+(i%4)*.025,.38+(i%5)*.04,.15]);}
+    // Shallow reflective rain puddles: translucent surfaces with small ripple rings.
+    for(let i=0;i<18;i++){const x=8+(i*13)%85,z=(i%2?1:-1)*(4.1+(i%3)*1.8);const ripple=.45+.08*Math.sin(now*.003+i);
+      draw(vp,x,.13,z,1.1,.018,.7,[.37,.66,.72],.53);
+      draw(vp,x,.145,z,.4+ripple,.012,.28+ripple*.3,[.79,.92,.94],.25);
+    }
+    // Meandering river and grassy embankments outside the market district.
+    for(let i=0;i<56;i++){const x=-95+i*4,z=-43+Math.sin(i*.24)*9;
+      draw(vp,x,.075,z,4.3,.08,9,[.14,.48,.62],.85);
+      draw(vp,x,.12,z+5.5,4.4,.18,1.2,[.27,.53,.27]);
+      draw(vp,x,.12,z-5.5,4.4,.18,1.2,[.27,.53,.27]);
+      if(i%4===0)draw(vp,x,.13,z,2.2,.02,2,[.7,.88,.92],.12+.08*Math.sin(now*.002+i));
+    }
+    // Footbridge with safety rails connecting the town to the river gardens.
+    draw(vp,8,.65,-43,5,1.2,17,[.54,.39,.25]);
+    for(const z of [-51,-35])draw(vp,8,1.65,z,5,.18,.22,[.78,.61,.34]);
+    // More distinctive civic architecture: columns, glass atrium and tiered roof.
+    draw(vp,56,5,29,19,10,14,[.77,.84,.81]);
+    draw(vp,56,10.5,29,21,1,16,[.17,.56,.48]);
+    draw(vp,56,12,29,15,2,10,[.76,.88,.88],.82);
+    for(let i=0;i<7;i++){const x=48+i*2.6;draw(vp,x,3,21.8,.65,6,.65,[.91,.86,.69]);}
+    for(let level=2;level<9;level+=2)for(let j=0;j<5;j++)draw(vp,48+j*4,level,36.15,2.5,1.2,.13,[.36,.67,.73],.78);
     // Portal: glowing arch with a translucent doorway and depth.
     for(let i=0;i<17;i++){const a=i*Math.PI/16;draw(vp,95,2.8+Math.sin(a)*4.1,Math.cos(a)*4.1,.85,.85,.75,[.19,.79,.66],1,-a)}
     draw(vp,95,2.8,0,.2,6.3,7.1,[.23,.85,.76],.28);
