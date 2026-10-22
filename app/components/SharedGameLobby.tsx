@@ -24,7 +24,7 @@ const mapX=(x:number)=>((x-EXPLORATION_BOUNDS.minX)/(EXPLORATION_BOUNDS.maxX-EXP
 const mapY=(z:number)=>((z-EXPLORATION_BOUNDS.minZ)/(EXPLORATION_BOUNDS.maxZ-EXPLORATION_BOUNDS.minZ))*320;
 const SUIT_COLORS:Record<Suit,[number,number,number]>={gold:[.99,.73,.23],silver:[.72,.83,.89],cosmic:[.53,.36,.94],diamond:[.62,.92,1]};
 const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
-const terrain=(x:number,z:number)=>.12*Math.sin(x*.11)*Math.cos(z*.09);
+const terrain=(x:number,z:number)=>{const far=Math.max(0,Math.hypot(x,z)-250);const mountains=Math.pow(Math.max(0,Math.sin(x*.0037)*Math.cos(z*.0041)),3)*Math.min(135,far*.16);return .12*Math.sin(x*.11)*Math.cos(z*.09)+mountains;};
 const distance=(a:{x:number;z:number},b:{x:number;z:number})=>Math.hypot(a.x-b.x,a.z-b.z);
 type M=number[];
 const mul=(a:M,b:M):M=>{const o=Array(16).fill(0);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o};
@@ -72,7 +72,7 @@ export default function SharedGameLobby(){
  const local=useRef<Player>({id:"",x:0,y:terrain(0,0),z:0,yaw:Math.PI/2,flying:false,boost:false,suit:"gold",seen:0});
  const combatChannel=useRef<{send:(args:{type:"broadcast";event:string;payload:unknown})=>Promise<unknown>}|null>(null);
  const projectiles=useRef<Array<{id:string;owner:string;x:number;y:number;z:number;vx:number;vz:number;life:number;power:number}>>([]);
- const knockdownUntil=useRef(0); const damagedStructures=useRef<Map<string,number>>(new Map()); const BREAK_REPAIR_MS=300000; const lastShot=useRef(0); const [downed,setDowned]=useState(false);
+ const recentDamage=useRef<{kind:"animal"|"blaster";at:number}[]>([]); const animalContact=useRef<Map<number,number>>(new Map()); const knockdownUntil=useRef(0); const damagedStructures=useRef<Map<string,number>>(new Map()); const BREAK_REPAIR_MS=300000; const lastShot=useRef(0); const [downed,setDowned]=useState(false);
  const [meetingSeat,setMeetingSeat]=useState<number|null>(null); const meetingCamera=useRef({angle:0.65,distance:23,height:11}); const [selectedCouncilPlayer,setSelectedCouncilPlayer]=useState<string|null>(null); const meetingSeatRef=useRef<number|null>(null); const [meetingGesture,setMeetingGesture]=useState<"rest"|"hand"|"lean">("rest"); const [combatShop,setCombatShop]=useState(false); const [storeTab,setStoreTab]=useState<"store"|"loadout">("store"); const [boostLevel,setBoostLevel]=useState(1);const [combatXp,setCombatXp]=useState(5000);const [weapon,setWeapon]=useState("pulse");const [shield,setShield]=useState(false);const [shieldLevel,setShieldLevel]=useState(1);const [blasterLevel,setBlasterLevel]=useState(1);const [gameSettingsOpen,setGameSettingsOpen]=useState(false); const [chatAutoVisible,setChatAutoVisible]=useState(false); const chatAutoTimer=useRef<ReturnType<typeof setTimeout>|null>(null); const [chatClosing,setChatClosing]=useState(false); const showIncomingChat=useCallback(()=>{setChatClosing(false);setChatAutoVisible(true);if(chatAutoTimer.current)clearTimeout(chatAutoTimer.current);chatAutoTimer.current=setTimeout(()=>{setChatClosing(true);chatAutoTimer.current=setTimeout(()=>{setChatAutoVisible(false);setChatClosing(false)},350)},3000)},[]); useEffect(()=>()=>{if(chatAutoTimer.current)clearTimeout(chatAutoTimer.current)},[]);
  const [ownedWeapons,setOwnedWeapons]=useState<string[]>(["pulse"]);
  const fireShot=()=>{const now=performance.now();if(now-lastShot.current<380||now<knockdownUntil.current)return;lastShot.current=now;const p=local.current;const power=weapon==="nova"||blasterLevel>=2?2:1;const shot={id:p.id+"-"+Math.floor(now),owner:p.id,x:p.x+Math.sin(p.yaw)*2,y:p.y+1.4,z:p.z+Math.cos(p.yaw)*2,vx:Math.sin(p.yaw)*(weapon==="nova"?120:90),vz:Math.cos(p.yaw)*(weapon==="nova"?120:90),life:1.7,power};projectiles.current.push(shot);void combatChannel.current?.send({type:"broadcast",event:"shot",payload:shot});};
@@ -162,9 +162,13 @@ export default function SharedGameLobby(){
    const dt=clamp((now-prev)/1000,0,.05);prev=now;
    const p=local.current,k=keys.current;
    if(meetingSeatRef.current!==null){const a=meetingSeatRef.current*Math.PI/6;p.x=-125+Math.cos(a)*15;p.z=-120+Math.sin(a)*15;p.y=45;p.yaw=a+Math.PI;p.flying=false;p.boost=false;}
+   const damage=(kind:"animal"|"blaster")=>{if(meetingSeatRef.current!==null)return;recentDamage.current=recentDamage.current.filter(hit=>now-hit.at<=10000);recentDamage.current.push({kind,at:now});if(recentDamage.current.filter(hit=>hit.kind===kind).length>=3){recentDamage.current=[];p.x=0;p.z=0;p.y=terrain(0,0)+1;p.flying=false;p.boost=false;setDowned(false);knockdownUntil.current=now+2000;setHint(kind==="animal"?"🐾 Three animal attacks — respawned!":"💥 Three blaster hits — respawned!");}else setHint(`${kind==="animal"?"🐾 Animal attack":"💥 Blaster hit"} — ${recentDamage.current.filter(hit=>hit.kind===kind).length}/3 strikes in 10 seconds`);};
    for(const [id,until] of damagedStructures.current)if(Date.now()>=until)damagedStructures.current.delete(id);
-   for(const shot of projectiles.current){shot.x+=shot.vx*dt;shot.z+=shot.vz*dt;shot.life-=dt;if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shield&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldLevel>=2||shot.power<2);if(!guarded){knockdownUntil.current=now+2300;setDowned(true);setHint("💥 Hit! Get back up in 2 seconds.");}else setHint("🛡️ Shield absorbed the shot.");}}
+   for(const shot of projectiles.current){shot.x+=shot.vx*dt;shot.z+=shot.vz*dt;shot.life-=dt;if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shield&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldLevel>=2||shot.power<2);if(!guarded){damage("blaster");}else setHint("🛡️ Shield absorbed the shot.");}}
    projectiles.current=projectiles.current.filter(s=>s.life>0);
+   // Deterministic dangerous wildlife, shared by all clients without per-frame networking.
+   if(!moonModeRef.current.landed&&!ship.current.active&&meetingSeatRef.current===null&&p.y<terrain(p.x,p.z)+3){for(let i=0;i<30;i++){const ax=Math.sin(i*83.17)*650,az=Math.cos(i*41.83)*650;if(Math.hypot(p.x-ax,p.z-az)>2.8||now-(animalContact.current.get(i)??0)<1200)continue;animalContact.current.set(i,now);damage("animal");break;}}
+
    if(downed&&now>=knockdownUntil.current)setDowned(false);
    for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000);const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=audioRoomLocked?1:feet<=200?1:feet<=300?1-(feet-200)*.005:feet<=400?.5-(feet-300)*.005:0;}
    const moving=now<knockdownUntil.current?0:Number(!!(k.w||k.ArrowUp))-Number(!!(k.s||k.ArrowDown));
@@ -418,7 +422,10 @@ export default function SharedGameLobby(){
        const desert=moisture<-.65,rock=elevation>.65,wet=moisture>1.35;
        const shade=.92+.08*Math.sin(ix*17.13+iz*9.71);
        const tint=desert?[.67*shade,.52*shade,.29*shade]:rock?[.36*shade,.38*shade,.34*shade]:wet?[.18*shade,.37*shade,.29*shade]:[.23*shade,.43*shade,.21*shade];
-       draw(vp,x,-.26,z,terrainTile+.2,.48,terrainTile+.2,tint);
+       const groundY=terrain(x,z);draw(vp,x,groundY-.26,z,terrainTile+.2,.48,terrainTile+.2,tint);
+       if(rock&&groundY>5){draw(vp,x,groundY*.5,z,terrainTile*.94,groundY,terrainTile*.94,[.34,.36,.34]);if((ix+iz)%7===0)for(let drop=0;drop<5;drop++)draw(vp,x+8,groundY-drop*3,z-8,1.3,3,2,[.35,.72,.93],.65);}
+       if((ix*3+iz*11)%19===0&&!desert){const tx=x+8,tz=z-6;draw(vp,tx,groundY+1.2,tz,1,2.4,1,[.39,.26,.17]);draw(vp,tx,groundY+4,tz,5,4,5,[.13,.39,.19]);}
+
        if((ix*13+iz*7)%9===0&&!desert&&!rock){
          const tx=x+Math.sin(ix*5.7+iz)*10,tz=z+Math.cos(iz*3.9+ix)*10;
          draw(vp,tx,1.5,tz,.8,3,.8,[.32,.24,.15]);
@@ -426,6 +433,8 @@ export default function SharedGameLobby(){
        }
        if(rock&&(ix+iz)%4===0)draw(vp,x,1,z,5,2.3,4,[.43,.44,.4]);
      }
+     // Wildlife silhouettes: dangerous roaming animals can trigger the three-strike respawn.
+     for(let i=0;i<30;i++){const ax=Math.sin(i*83.17)*650,az=Math.cos(i*41.83)*650;if(Math.hypot(ax-p.x,az-p.z)>320)continue;const ay=terrain(ax,az);draw(vp,ax,ay+1.2,az,3.3,2,1.5,[.43,.29,.17]);draw(vp,ax+1.8,ay+1.6,az,1.3,1.3,1.2,[.48,.32,.19]);for(const zOff of [-.5,.5])for(const xOff of [-1,1])draw(vp,ax+xOff,ay+.45,az+zOff,.45,.9,.45,[.32,.22,.15]);}
      // White reflective ground and long-runway guidance to the Games portal.
     draw(vp,0,-.35,0,420,.65,420,[.24,.43,.23]);
     for(let i=-200;i<=200;i+=10){draw(vp,i,.008,0,.025,.018,420,[.76,.88,.85]);draw(vp,0,.008,i,420,.018,.025,[.76,.88,.85])}
