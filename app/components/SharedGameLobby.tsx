@@ -202,7 +202,7 @@ export default function SharedGameLobby(){
     draw(vp,56,12,29,15,2,10,[.76,.88,.88],.82);
     for(let i=0;i<7;i++){const x=48+i*2.6;draw(vp,x,3,21.8,.65,6,.65,[.91,.86,.69]);}
     for(let level=2;level<9;level+=2)for(let j=0;j<5;j++)draw(vp,48+j*4,level,36.15,2.5,1.2,.13,[.36,.67,.73],.78);
-    // Skyborne city: a distant, fully reachable floating district above the cloud layer.
+    // THE BLESSED CHAMBERS — the floating sky city and home of the Belt Boyz Meeting Hall.\n    // Skyborne city: a distant, fully reachable floating district above the cloud layer.
     // The central platform sits at y=45, matching the landing collision surface.
     draw(vp,-125,43,-120,76,4,76,[.24,.45,.44]);
     draw(vp,-125,45.05,-120,72,.16,72,[.76,.84,.77]);
@@ -215,7 +215,7 @@ export default function SharedGameLobby(){
       draw(vp,x,45+ht+.4,z,11,.8,11,[.86,.72,.37]);
       for(let y=49;y<45+ht-2;y+=4)draw(vp,x, y,z+5.15,7,2,.15,[.91,.95,.72],.8);
     }
-    // Belt Boyz Meeting hall: an accessible open-front entrance and a long, illuminated interior.
+    // Emerald-and-gold landmark above the sky-city entrance.\n    draw(vp,-125,62,-143,22,3,.65,[.11,.52,.39]);\n    for(const x of [-135,-115])draw(vp,x,61,-143,.5,4,.6,[.94,.77,.32]);\n    // Belt Boyz Meeting hall: an accessible open-front entrance and a long, illuminated interior.
     draw(vp,-125,45.2,-119,30,.3,52,[.19,.29,.33]);
     for(const side of [-1,1]){const x=-125+side*15;draw(vp,x,51,-119,1,12,52,[.25,.43,.43]);for(let z=-143;z<=-96;z+=8)draw(vp,x-side*.9,51,z,.65,11,.65,[.86,.72,.4]);}
     draw(vp,-125,57,-119,32,1,54,[.17,.38,.39],.86);
@@ -270,7 +270,7 @@ export default function SharedGameLobby(){
  return <section className={styles.root} aria-label="1Muslim shared 3D game lobby">
   <canvas ref={canvas} className={styles.canvas} tabIndex={0} aria-label="Third-person 3D world; click to control. WASD move, mouse drag look, Space jump or ascend, F fly, Shift boost, C descend." onPointerDown={down} onPointerMove={move} onPointerUp={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}} onPointerCancel={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}}/>
   <div className={styles.top}><span>✦ 1Muslim Lobby</span><span className={online?styles.connected:styles.offline}>{online?"● Shared room":"○ Connecting"} · {peerCount+1} visible</span></div>
-  <div aria-hidden="true" style={{position:"absolute",left:12,top:90,zIndex:5,color:"#b9f9cc",fontWeight:900,textShadow:"0 2px 8px #002d25"}}>✦ MUSLIMVILLE · SPAWN ZONE</div>
+  <div aria-hidden="true" style={{position:"absolute",right:12,top:90,zIndex:5,color:"#ffe7a0",fontWeight:900,textShadow:"0 2px 8px #002d25"}}>☁ THE BLESSED CHAMBERS · SKY CITY</div>\n  <div aria-hidden="true" style={{position:"absolute",left:12,top:90,zIndex:5,color:"#b9f9cc",fontWeight:900,textShadow:"0 2px 8px #002d25"}}>✦ MUSLIMVILLE · SPAWN ZONE</div>
   <div ref={labels} aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",zIndex:4}}/>
   {workerMessage&&<div role="dialog" aria-label="Construction worker" style={{position:"absolute",left:"12%",right:"12%",bottom:"24%",zIndex:9,background:"#092f2deb",border:"1px solid #e8c56e",borderRadius:18,color:"white",padding:18,textAlign:"center"}}><strong>🚀 Space Station Worker</strong><p>Come back soon… we’re going to the Moon! 🌙</p><button onClick={()=>setWorkerMessage(false)} style={{padding:"8px 18px",borderRadius:12}}>See you soon!</button></div>}
   <div ref={panel} className={styles.liveScreen}><div className={styles.liveHeader}>◉ 1MUSLIM LIVE</div>{live?<><div className={styles.liveVideo}><LiveHomePreview roomName={live.room_name||live.id}/></div><a href={"/streaming/live/"+live.id} className={styles.watch}>Watch {live.title} ↗</a></>:<div className={styles.waiting}><span className={styles.spinner}>◌</span><strong>Loading — waiting for the next 1Muslim Live</strong><small>{liveError?"Live status temporarily unavailable":"Broadcast will appear when someone goes live"}</small></div>}</div>
