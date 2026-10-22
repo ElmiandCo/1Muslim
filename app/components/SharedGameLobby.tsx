@@ -181,6 +181,42 @@ export default function SharedGameLobby(){
       for(const dz of [-.9,.9])draw(vp,x+2.95,26.07,z+dz,.12,.18,.55,[1,.98,.8]); // headlamps
       draw(vp,x,25.24,z,7,.025,3.7,[.96,.98,1],.55); // reflective showroom stripe
     }
+    // Twelve-way golden road hub beyond the exotic-car showroom.
+    draw(vp,1216,24.95,0,38,.32,38,[.94,.72,.22]);
+    draw(vp,1216,25.16,0,16,.07,16,[1,.88,.44]);
+    const portalColors:[[number,number,number],string][]=[
+      [[.96,.16,.23],"Crimson"],[[.15,.65,1],"Azure"],[[.26,.93,.4],"Emerald"],
+      [[.94,.35,.96],"Violet"],[[1,.72,.17],"Amber"],[[.18,.91,.91],"Cyan"],
+      [[1,.43,.16],"Orange"],[[.55,.53,1],"Indigo"],[[1,.93,.95],"Pearl"],
+      [[.28,.45,.96],"Cobalt"],[[.93,.25,.7],"Rose"],[[.65,.32,.93],"Purple"]
+    ];
+    for(let i=0;i<12;i++){
+      const a=i*Math.PI/6,ux=Math.cos(a),uz=Math.sin(a),ex=1216+ux*72,ez=uz*72;
+      // Segment the radial road to avoid relying on a long rotated ground slab.
+      for(let step=0;step<7;step++){
+        const t=15+step*8;
+        draw(vp,1216+ux*t,25.02,uz*t,9,.15,9,[.91,.7,.2],1,-a);
+        draw(vp,1216+ux*t,25.13,uz*t,2,.04,2,[1,.9,.53],.9);
+      }
+      const col=portalColors[i][0];
+      draw(vp,ex,28.4,ez,7,7,.9,col,.94,-a);
+      draw(vp,ex,28.4,ez,4.7,5.8,1.05,[.04,.05,.12],.95,-a);
+      draw(vp,ex,32.1,ez,8,.65,1.5,[.98,.83,.35],1,-a);
+      draw(vp,ex,25.4,ez,9,.6,7,[.25,.23,.35]);
+      // Door #2 is deliberately different: reserved for its unique destination.
+      if(i===1)draw(vp,ex,29,ez,2.8,4.2,1.2,[.97,.97,1],.5,-a);
+    }
+    // Underground hangar and a raised helicopter silhouette by the space station.
+    draw(vp,155,-5,-27,28,.6,26,[.24,.28,.34]);
+    for(const side of [-1,1])draw(vp,155,-.5,-27+side*13,28,10,.8,[.38,.44,.52]);
+    draw(vp,155,1.6,-27,11,2.2,3.5,[.13,.19,.24]); // helicopter cabin
+    draw(vp,149,1.2,-27,9,.5,.65,[.15,.19,.22]); // tail
+    draw(vp,155,3.3,-27,19,.12,.45,[.85,.87,.91]); // main rotor
+    draw(vp,155,.15,-27,7,.25,5,[.94,.73,.25]); // lift deck
+    // A visible lift entrance and split ground hatch.
+    draw(vp,143,2,-27,4,4,4,[.18,.38,.47],.85);
+    draw(vp,155,.04,-34,15,.15,8,[.47,.51,.55]);
+    draw(vp,155,.04,-20,15,.15,8,[.47,.51,.55]);
     // Procedural town foundations: roads, market arcades, greenery and inhabited blocks.
     draw(vp,37,.035,0,110,.08,8,[.32,.39,.41]);
     for(let x=5;x<85;x+=14){draw(vp,x,.045,0,.28,.09,8,[.93,.76,.39]);for(const side of [-1,1]){
