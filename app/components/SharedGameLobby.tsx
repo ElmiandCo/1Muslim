@@ -261,6 +261,61 @@ export default function SharedGameLobby(){
     for(let i=0;i<18;i++){const x=-115+(i*31)%255,z=-610-(i*53)%740;draw(vp,x+Math.sin(t+i)*1.2,.28,z,.85,.5,1.3,i%2?[.36,.35,.32]:[.81,.75,.63]);draw(vp,x+.4,.65,z-.45,.55,.55,.55,[.64,.6,.52]);}
     for(let i=0;i<25;i++){const x=-140+(i*37)%340,z=-580-(i*59)%820,y=12+(i%7)*3+Math.sin(t*2+i)*1.8;draw(vp,x+Math.sin(t+i)*8,y,z+Math.cos(t+i)*8,1.3,.12,.35,[.78,.82,.84]);draw(vp,x+Math.sin(t+i)*8,y+.3,z+Math.cos(t+i)*8,.2,.5,.25,[.88,.89,.9]);}
     for(let i=0;i<3;i++){const z=-700-((t*17+i*360)%1250),x=-180+i*180,y=60+i*17;draw(vp,x,y,z,4,1.5,13,[.84,.87,.91]);draw(vp,x,y,z,24,.2,2,[.68,.79,.85]);draw(vp,x,y+1.6,z+4,2,2,3,[.78,.85,.9]);}
+    // Five explorable satellite districts: distances from spawn approximate 2–5 minutes at walking speed.
+    // Keep them away from the eastern portal corridor and the existing northern forest.
+    const districts=[
+      {x:-720,z:180,kind:0}, // Nile: Egypt-inspired pyramids
+      {x:-420,z:850,kind:1}, // Mecca-inspired courtyard district
+      {x:-1260,z:-170,kind:2}, // dense New York / Chicago skyline
+      {x:-110,z:1580,kind:3}, // beach city
+      {x:-1530,z:760,kind:4} // largest distant metropolitan center
+    ];
+    for(let ci=0;ci<districts.length;ci++){
+      const city=districts[ci],range=Math.hypot(p.x-city.x,p.z-city.z);
+      if(range>650)continue; // cull geometry beyond view radius for mobile
+      draw(vp,city.x,-.12,city.z,ci===4?340:220,.2,ci===4?340:220,[.44,.46,.43]);
+      const count=ci===4?44:22;
+      for(let i=0;i<count;i++){
+        const col=i%8,row=Math.floor(i/8),x=city.x+(col-3.5)*35,z=city.z+(row-2)*41;
+        const h=ci===0?5+(i%4)*3:ci===1?9+(i%5)*3:ci===3?7+(i%4)*4:16+(i*11)%76;
+        const tint=ci===0?[.77,.62,.37]:ci===1?[.83,.79,.64]:ci===3?[.77,.84,.8]:[.35,.45,.53];
+        draw(vp,x,h/2,z,19,h,22,tint);
+        draw(vp,x,h+.15,z,20,.3,23,ci===1?[.78,.67,.31]:[.16,.34,.31]);
+        if(ci===0&&i%6===0){for(let tier=0;tier<6;tier++)draw(vp,x,h+tier*2,z,23-tier*3,2,23-tier*3,[.78,.64,.36]);}
+        if(i%5===0){draw(vp,x+12,2,z+9,.6,4,.6,[.38,.27,.19]);draw(vp,x+12,5,z+9,5,5,5,[.15,.43,.25]);}
+      }
+      if(ci===3){for(let j=0;j<14;j++)draw(vp,city.x-130+j*19,-.06,city.z+145,18,.12,110,[.87,.77,.55]);}
+    }
+    // Highway connections with lane markers. Segments are drawn only near the camera.
+    for(const city of districts){
+      const length=Math.hypot(city.x,city.z),segments=Math.ceil(length/24);
+      for(let s=0;s<=segments;s++){
+        const ratio=s/segments,x=city.x*ratio,z=city.z*ratio;
+        if(Math.hypot(p.x-x,p.z-z)>330)continue;
+        const angle=Math.atan2(-city.z,city.x);
+        draw(vp,x,-.07,z,24, .14,25,[.19,.23,.27],1,angle);
+        if(s%3===0)draw(vp,x,.018,z,2,.03,3,[.91,.79,.44],1,angle);
+      }
+    }
+    // Glass skywalk to the beachward district, with a translucent deck and side rails.
+    for(let s=0;s<50;s++){
+      const x=-6-s*2.1,z=70+s*30;
+      if(Math.hypot(p.x-x,p.z-z)>350)continue;
+      draw(vp,x,13,z,10,.35,30,[.49,.79,.85],.42);
+      for(const side of [-1,1])draw(vp,x+side*5,14.4,z,.22,2.8,30,[.68,.9,.95],.38);
+      if(s%4===0)for(const side of [-1,1])draw(vp,x+side*3.3,13.9,z,2.8,1.3,5,[.85,.19,.16]);
+    }
+    // Great Lake between the skyscraper city and the beach: swim surface and animated dolphin pods.
+    const lakeX=-790,lakeZ=720,lakeRX=350,lakeRZ=280;
+    if(Math.hypot(p.x-lakeX,p.z-lakeZ)<850){
+      draw(vp,lakeX,-.13,lakeZ,lakeRX*2,.12,lakeRZ*2,[.09,.43,.68],.73);
+      for(let d=0;d<20;d++){
+        const a=d*2.399+t*.35,r=24+(d%6)*31,x=lakeX+Math.cos(a)*r,z=lakeZ+Math.sin(a)*r;
+        const leap=Math.max(0,Math.sin(t*1.7+d*1.7))*2.8;
+        draw(vp,x,.15+leap,z,2.8,.85,1.1,[.43,.65,.74],.9,a);
+        draw(vp,x-1.3,.25+leap,z,.8,1.5,.3,[.36,.57,.7],.9,a);
+      }
+    }
     // White reflective ground and long-runway guidance to the Games portal.
     draw(vp,0,-.35,0,420,.65,420,[.89,.96,.95]);
     for(let i=-200;i<=200;i+=10){draw(vp,i,.008,0,.025,.018,420,[.76,.88,.85]);draw(vp,0,.008,i,420,.018,.025,[.76,.88,.85])}
