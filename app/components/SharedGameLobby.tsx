@@ -220,15 +220,22 @@ export default function SharedGameLobby(){
    for(let x=235;x<=285;x+=12)for(const side of [-1,1])solids.push({x,z:side*5.5,hx:6.1,hz:.48,bottom:0,top:6.1});
    for(let x=1090;x<=1140;x+=12)for(const side of [-1,1])solids.push({x,z:side*5.5,hx:6.1,hz:.48,bottom:25,top:31.1});
    for(const x of [1155,1174,1190])for(const z of [-13,13])solids.push({x,z,hx:3.1,hz:1.8,bottom:25,top:27.6});
+   // Satellite district buildings: mirror the actual rendered footprints, including ground-floor walls.
+   for(let i=0;i<46;i++){const row=Math.floor(i/8),col=i%8,x=-90+col*27,z=-625-row*42,h=7+((i*13)%19);solids.push({x,z,hx:7,hz:8,bottom:terrain(x,z)-.5,top:h+.55});}
+   // Outer avenue mountain walls and elevated ridges are physical rather than decorative.
+   for(let n=0;n<25;n++){const z=-620-n*34;for(const side of [-1,1]){const x=side*(110+n*6),height=18+Math.abs(Math.sin(n*2.3))*37;solids.push({x,z,hx:26,hz:24,bottom:-1,top:height});}}
+   // Trees, trunks and arena occupy real world volumes.
+   for(let i=0;i<75;i++){const x=-180+(i*47)%365,z=-580-(i*31)%380;solids.push({x,z,hx:.45,hz:.45,bottom:0,top:4.6});}
+   solids.push({x:180,z:-780,hx:48,hz:39,bottom:0,top:15});
    // Upper city tower volumes are solid above their open walk-through lobbies.
    for(let row=0;row<4;row++)for(let col=0;col<6;col++){
      const x=-120+col*37,z=-380-row*38,h=19+((row*7+col*11)%7)*12;
-     solids.push({x,z,hx:11,hz:11.5,bottom:7.1,top:h+.8});
+     solids.push({x,z,hx:11,hz:11.5,bottom:0,top:h+.8});
    }
    // Block side penetration and reflect travel away from the struck surface.
    // Roofs remain solid landing surfaces, so players cannot fall through buildings.
    let struck=false,roof=-Infinity;
-   for(const b of plane.current.active||ship.current.active||eva||lunar?[]:solids){
+   for(const b of plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null?[]:solids){
      const overlapsXZ=Math.abs(proposedX-b.x)<b.hx+.42&&Math.abs(proposedZ-b.z)<b.hz+.42;
      if(!overlapsXZ)continue;
      if(p.y>=b.top-.2&&p.y<=b.top+2.2){roof=Math.max(roof,b.top);continue;}
@@ -244,14 +251,14 @@ export default function SharedGameLobby(){
      struck=true;break;
    }
    if(!struck&&!plane.current.active&&!ship.current.active){p.x=proposedX;p.z=proposedZ}
-   else{ // Small, damped rebound rather than teleporting or sticking to a wall.
+   else if(struck){ // Small, damped rebound rather than teleporting or sticking to a wall.
      p.x=clamp(p.x-dx*Math.min(.6,speed*dt*.45),travelBounds.minX,travelBounds.maxX);
      p.z=clamp(p.z-dz*Math.min(.6,speed*dt*.45),travelBounds.minZ,travelBounds.maxZ);
      crashUntil=now+260;setCrashed(true);
    }
    p.boost=boosted; 
    const cityRoof=p.z<=-365&&p.z>=-515&&p.x>=-132&&p.x<=75;
-   const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=onRoad?bridgeHeight:(p.x>300?-100:terrain(p.x,p.z));const floor=Math.max(skyLanding?45:roadFloor,roof);
+   const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=onRoad?bridgeHeight:terrain(p.x,p.z);const floor=Math.max(skyLanding?45:roadFloor,roof);
    if(!lunar&&!eva&&!ship.current.inSpace&&p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
    if(eva){p.flying=true;const fall=evaFall.current;const thrust=(k.Space||k.ascend?1:0)-(k.c?1:0);if(p.y<1300)fall.active=true;if(fall.active){fall.speed=clamp(fall.speed+20*dt-thrust*8*dt,0,145);p.y-=fall.speed*dt;if(p.y<=Math.max(terrain(p.x,p.z),0)+2){p.y=Math.max(terrain(p.x,p.z),0)+2;setEva(false);setFlying(false);ship.current.inSpace=false;fall.active=false;setHint("🌍 Atmospheric re-entry complete. You landed back on Earth.");}}else p.y+=thrust*5.5*dt;}else if(ship.current.active){p.flying=true;}else if(plane.current.active){
      const takeoff=plane.current.speed>24;
