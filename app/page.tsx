@@ -541,6 +541,15 @@ const navCollapsedRef=useRef(false);
    if(!start||fired||e.touches.length!==1)return;
    const t=e.touches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;
    if(Math.abs(dy)<68||Math.abs(dy)<Math.abs(dx)*1.5)return;
+   // When the gallery's own scroll reaches its top, an intentional extra pull
+   // returns to the upper Profile canvas. Normal scrolling remains native.
+   const gallery=start.target.closest(".canvas-native-profile,.canvas-umma-vertical-gallery") as HTMLElement|null;
+   if(gallery&&canvasRow===1&&workspacePage===0&&dy>=115&&start.atTop){
+    const scrollable=start.target.closest(".canvas-native-profile") as HTMLElement|null;
+    if((scrollable?.scrollTop??0)<=2&&!start.target.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true]")){
+     fired=true;if(e.cancelable)e.preventDefault();setCanvasRow(0);return;
+    }
+   }
    if(start.target.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],[data-live-video-region],.canvas-native-profile,.canvas-umma-vertical-gallery"))return;
    if((canvasRow===0||canvasRow===1)&&dy< -68&&start.atTop&&!start.target.closest("[data-ranks-scroll],[data-gallery-scroll]")){fired=true;if(e.cancelable)e.preventDefault();setCanvasRow(row=>Math.min(1,row+1) as 0|1|2);}
    else if((canvasRow===1)&&dy>120&&start.atTop){
