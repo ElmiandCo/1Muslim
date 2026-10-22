@@ -703,18 +703,25 @@ export default function SharedGameLobby(){
       draw(vp,x,1.3,z,.65,2.6,.65,[.43,.32,.21]);
       draw(vp,x,4.2,z,5,5,5,[.14,.48,.28]);
     }
-    // Downtown towers: open lobby space below a supported upper structure.
+    // High-rise entry courts: defined ground-level doors, canopies and accessible passages.
+     // Visual doorways align with the existing open lobby and collision volume beginning at y=7.1.
+     // Downtown towers: open lobby space below a supported upper structure.
     // Player can enter the lobby and land on rooftops by flying.
     const cityTowers:{x:number;z:number;w:number;d:number;h:number;type:number}[]=[];
     for(let row=0;row<4;row++)for(let col=0;col<6;col++){
       const x=-120+col*37,z=-380-row*38;
-      const h=19+((row*7+col*11)%7)*12;
+      const h=42+((row*7+col*11)%7)*16;
       const type=(row+col)%4;
       cityTowers.push({x,z,w:22,d:23,h,type});
       draw(vp,x,.12,z,30,.2,31,[.74,.75,.7]);
       // Four pillars instead of a solid ground floor: walk-in entrance.
       for(const ox of [-9,9])for(const oz of [-9.5,9.5])draw(vp,x+ox,3.4,z+oz,.9,6.8,.9,[.48,.55,.59]);
       draw(vp,x,7.1,z,22,.7,23,[.65,.72,.72]);
+       // Front entrance with paired sliding glass leaves and a gold lintel.
+       for(const side of [-1,1])draw(vp,x+side*2.4,2.7,z+11.3,2.1,5.2,.18,[.23,.49,.55],.32);
+       draw(vp,x,5.7,z+11.3,7,.45,.65,[.83,.66,.32]);
+       for(const side of [-1,1])draw(vp,x+side*4,3,z+11.4,.35,6,.35,[.67,.72,.69]);
+       draw(vp,x,6.1,z+14,9,.28,5,[.69,.55,.28]);
       const facade=type===0?[.26,.44,.54]:type===1?[.7,.59,.43]:type===2?[.39,.52,.47]:[.46,.47,.59];
       draw(vp,x,7.5+(h-7)/2,z,22,h-7,23,facade);
       for(let y=12;y<h;y+=6){
