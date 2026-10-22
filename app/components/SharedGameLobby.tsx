@@ -386,6 +386,8 @@ export default function SharedGameLobby(){
       draw(vp,lakeX,-.13,lakeZ,lakeRX*2,.12,lakeRZ*2,[.09,.43,.68],.73);
       for(let d=0;d<20;d++){
         const a=d*2.399+t*.35,r=24+(d%6)*31,x=lakeX+Math.cos(a)*r,z=lakeZ+Math.sin(a)*r;
+        // Skip distant dolphins; preserve lake water and full pod animation nearby.
+        if((x-p.x)*(x-p.x)+(z-p.z)*(z-p.z)>260*260)continue;
         const leap=Math.max(0,Math.sin(t*1.7+d*1.7))*2.8;
         draw(vp,x,.15+leap,z,2.8,.85,1.1,[.43,.65,.74],.9,a);
         draw(vp,x-1.3,.25+leap,z,.8,1.5,.3,[.36,.57,.7],.9,a);
