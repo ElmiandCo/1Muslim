@@ -181,6 +181,20 @@ export default function SharedGameLobby(){
       for(const dz of [-.9,.9])draw(vp,x+2.95,26.07,z+dz,.12,.18,.55,[1,.98,.8]); // headlamps
       draw(vp,x,25.24,z,7,.025,3.7,[.96,.98,1],.55); // reflective showroom stripe
     }
+    // Eight parked four-seat city vehicles; seats and drive controls are a later gameplay phase.
+    for(let i=0;i<8;i++){
+      const x=10+i*11,z=(i%2===0?1:-1)*7.5;
+      const colors=[[.14,.33,.84],[.92,.19,.22],[.88,.88,.9],[.12,.15,.19],[.16,.7,.52],[.94,.72,.22],[.5,.3,.78],[.65,.72,.79]];
+      const col=colors[i];
+      draw(vp,x,.85,z,5.4,1.1,2.5,col);
+      draw(vp,x-.2,1.7,z,2.6,.85,2.15,col);
+      draw(vp,x+.7,1.75,z,1.05,.68,2.18,[.21,.43,.55],.86);
+      draw(vp,x-1.1,1.75,z,.8,.68,2.18,[.21,.43,.55],.86);
+      for(const ox of [-1.7,1.7])for(const oz of [-1.25,1.25]){
+        draw(vp,x+ox,.43,z+oz,.8,.8,.28,[.1,.11,.14]);
+        draw(vp,x+ox,.43,z+oz*1.12,.36,.36,.08,[.8,.82,.84]);
+      }
+    }
     // Twelve-way golden road hub beyond the exotic-car showroom.
     draw(vp,1216,24.95,0,38,.32,38,[.94,.72,.22]);
     draw(vp,1216,25.16,0,16,.07,16,[1,.88,.44]);
