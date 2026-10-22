@@ -52,7 +52,7 @@ export default function SharedGameLobby(){
  const local=useRef<Player>({id:"",x:0,y:terrain(0,0),z:0,yaw:Math.PI/2,flying:false,boost:false,suit:"gold",seen:0});
  const [suit,setSuit]=useState<Suit>("gold"),[online,setOnline]=useState(false),[peerCount,setPeerCount]=useState(0);
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
- const [error,setError]=useState(""),[hint,setHint]=useState("Run toward the glowing portal, or turn around for 1Muslim Live.");
+ const [error,setError]=useState(""),[hint,setHint]=useState("Explore the market road toward the portal; sky villages float beyond the city.");
  const [flying,setFlying]=useState(false); const gesture=useRef({lastTap:0,downAt:0,hold:false}); const [crashed,setCrashed]=useState(false);
  const setKey=(k:string,on:boolean)=>{keys.current[k]=on};
  const toggleFly=useCallback(()=>{const p=local.current;p.flying=!p.flying;setFlying(p.flying);if(p.flying)p.y=Math.max(p.y,terrain(p.x,p.z)+1.3)},[]);
@@ -100,6 +100,43 @@ export default function SharedGameLobby(){
     draw(vp,0,-.35,0,420,.65,420,[.89,.96,.95]);
     for(let i=-200;i<=200;i+=10){draw(vp,i,.008,0,.025,.018,420,[.76,.88,.85]);draw(vp,0,.008,i,420,.018,.025,[.76,.88,.85])}
     for(let i=8;i<95;i+=7)draw(vp,i,.025,0,3,.025,1.2,[.89,.75,.42],.7);
+    // Procedural town foundations: roads, market arcades, greenery and inhabited blocks.
+    draw(vp,37,.035,0,110,.08,8,[.32,.39,.41]);
+    for(let x=5;x<85;x+=14){draw(vp,x,.045,0,.28,.09,8,[.93,.76,.39]);for(const side of [-1,1]){
+      const z=side*15;draw(vp,x,.09,z,10,.2,10,[.78,.83,.79]);
+      const height=5+(Math.floor(x/14)%3)*2;
+      draw(vp,x,height/2+.2,z,7,height,6,side===1?[.84,.9,.83]:[.88,.83,.73]);
+      draw(vp,x,height+.55,z,8,.7,7,[.22,.52,.43]);
+      draw(vp,x,1.5,z-side*3.1,2,2.6,.18,[.32,.58,.54]);
+      for(let level=2;level<height;level+=2.3)for(const off of [-2,0,2])draw(vp,x+off,level,z-side*3.08,.7,.9,.12,[.42,.74,.82],.85);
+      draw(vp,x+4,.8,z-side*5,2,1.6,1.4,[.87,.67,.36]); // market stall
+      draw(vp,x+4,1.85,z-side*5,2.5,.28,2,[.24,.65,.5]); // awning
+    }}
+    // Avenues branching toward future neighborhoods.
+    for(const x of [16,44,72])draw(vp,x,.055,0,6,.08,88,[.4,.48,.47]);
+    // Trees and gardens along the roads.
+    for(let i=0;i<34;i++){const x=-5+(i%17)*6,z=(i%2?1:-1)*(9+(Math.floor(i/17)*28));
+      draw(vp,x,1.2,z,.45,2.4,.45,[.43,.31,.22]);
+      for(const a of [-1,0,1])draw(vp,x+a*.9,3.1+Math.abs(a)*.3,z,.95,2,1.9,[.2,.56+(i%3)*.05,.34]);
+    }
+    // Distant cloud mountains and smaller sky villages (visual landmarks).
+    for(let i=0;i<5;i++){const x=22+i*36,z=i%2?85:-85,y=22+(i%3)*8;
+      draw(vp,x,y,z,23,8,19,[.86,.94,.97],.82);
+      draw(vp,x,y+5,z,16,7,14,[.93,.97,1],.75);
+      draw(vp,x,y+10,z,13,2,12,[.43,.62,.54]);
+      for(let j=0;j<4;j++){const bx=x+(j-1.5)*3;draw(vp,bx,y+13,z+(j%2)*3,2.5,5,3,[.89,.83,.67]);draw(vp,bx,y+16,z+(j%2)*3,3,.8,3.4,[.2,.63,.52]);}
+    }
+    // Moving cloud banks, birds and ground animals; deterministic motion shared across clients.
+    for(let i=0;i<12;i++){const cx=((i*37+now*.0008*(i%3+1)+220)%420)-210,cz=(i*59)%170-85,cy=29+(i%4)*7;
+      draw(vp,cx,cy,cz,9,2.5,4,[.99,.99,1],.45);draw(vp,cx+4,cy+1,cz,5,3,4,[.99,.99,1],.4);
+    }
+    for(let i=0;i<15;i++){const bx=20+i*6+Math.sin(now*.0007+i)*5,bz=(i%2?1:-1)*(14+i*2),by=9+(i%4)*3+Math.sin(now*.002+i);
+      draw(vp,bx,by,bz,.55,.15,.35,[.3,.37,.4]);draw(vp,bx-.5,by+Math.sin(now*.012+i)*.3,bz,.8,.1,.25,[.34,.39,.43]);draw(vp,bx+.5,by+Math.sin(now*.012+i)*.3,bz,.8,.1,.25,[.34,.39,.43]);
+    }
+    for(let i=0;i<9;i++){const ax=9+i*9+Math.sin(now*.0006+i)*2,az=(i%2?1:-1)*9;
+      draw(vp,ax,.75,az,1.2,1,.55,[.68,.58,.43]);draw(vp,ax+.65,1.15,az,.55,.55,.48,[.72,.62,.47]);
+      for(const q of [-.35,.35])draw(vp,ax+q,.24,az,.18,.5,.18,[.47,.4,.3]);
+    }
     // Portal: glowing arch with a translucent doorway and depth.
     for(let i=0;i<17;i++){const a=i*Math.PI/16;draw(vp,95,2.8+Math.sin(a)*4.1,Math.cos(a)*4.1,.85,.85,.75,[.19,.79,.66],1,-a)}
     draw(vp,95,2.8,0,.2,6.3,7.1,[.23,.85,.76],.28);
