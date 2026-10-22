@@ -847,7 +847,7 @@ export default function SharedGameLobby(){
         draw(vp,a.x+sn*.31,ay+2.19,a.z+cs*.31,.12,.12,.08,[.96,.84,.53],1,a.yaw);
       }
 
-      for(const side of [-1,1]){const ox=cs*side*.61,oz=-sn*side*.61;const gesture=self&&now<emoteUntil.current?emote:"none";const lift=a.flying?(.45+launch*.35):(gesture==="wave"&&side===1?.65:gesture==="celebrate"?.65:gesture==="pose"&&side===1?.28:0);draw(vp,a.x+ox+sn*lift*.3,ay+1.28+lift,a.z+oz+cs*lift*.3,.26,.94,.3,c,1,a.yaw);draw(vp,a.x+cs*side*.23,ay+.46,a.z-sn*side*.23,.31,.85,.35,c,1,a.yaw)}
+      for(const side of [-1,1]){const ox=cs*side*.61,oz=-sn*side*.61;const stride=!a.flying&&!crouch?Math.sin(now*.010+side*Math.PI)*.22:0;const gesture=self&&now<emoteUntil.current?emote:"none";const lift=a.flying?(.45+launch*.35):(gesture==="wave"&&side===1?.65:gesture==="celebrate"?.65:gesture==="pose"&&side===1?.28:0);draw(vp,a.x+ox+sn*(lift*.3-stride*.45),ay+1.28+lift+(a.flying?0:Math.max(0,-stride)*.2),a.z+oz+cs*(lift*.3-stride*.45),.26,.94,.3,c,1,a.yaw);draw(vp,a.x+cs*side*.23+sn*stride,ay+.46+Math.max(0,stride)*.35,a.z-sn*side*.23+cs*stride,.31,.85,.35,c,1,a.yaw);if(Math.hypot(a.x-p.x,a.z-p.z)<65){draw(vp,a.x+cs*side*.23+sn*stride*1.4,ay+.08+Math.max(0,stride)*.3,a.z-sn*side*.23+cs*stride*1.4,.36,.18,.55,[.13,.2,.23],1,a.yaw);draw(vp,a.x+ox+sn*(lift*.3-stride*.45),ay+.83+lift,a.z+oz+cs*(lift*.3-stride*.45),.29,.14,.32,[.85,.7,.38],1,a.yaw)}}}
       if(a.flying){for(let i=0;i<7;i++){const tail=i*.7+1;draw(vp,a.x-sn*tail,ay+.4-i*.12,a.z-cs*tail,.13+i*.065,.11+i*.04,.13+i*.065,[.66,.92,1],.6-i*.06)}draw(vp,a.x+sn*.6,ay+1.4,a.z+cs*.6,.48,.2,.32,c,1,a.yaw)}};
     avatar(p);
     const labelHost=labels.current;if(labelHost)labelHost.replaceChildren();
