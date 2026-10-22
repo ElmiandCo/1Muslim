@@ -244,6 +244,10 @@ export default function SharedGameLobby(){
     const screenPoint=project(vp,[-125,52,-133.1],w,h);
     const projector=councilProjection.current;
     if(projector){if(screenPoint?.visible&&distance(p,{x:-125,z:-120})<110){const size=clamp(650/(Math.hypot(p.x+125,p.y-52,p.z+133)+1),45,460);projector.style.display="block";projector.style.width=size+"px";projector.style.left=(screenPoint.x-size/2)+"px";projector.style.top=(screenPoint.y-size*9/32)+"px";}else projector.style.display="none";}
+    // Titan: extended Main Street, arterial branches and mountain-edge tunnel corridor.
+    for(let n=0;n<58;n++){const z=-560-n*18;draw(vp,0,-.055,z,22,.12,18,[.19,.23,.27]);draw(vp,0,.015,z,.3,.025,5,[.96,.82,.45]);for(const side of [-1,1]){draw(vp,side*12,.01,z,2,.08,18,[.52,.55,.54]);if(n%3===0)draw(vp,side*17,.2,z,3,.4,3,[.28,.5,.23]);}if(n%9===0){for(let k=-9;k<=9;k++)draw(vp,k*18,-.07,z,18,.12,18,[.2,.24,.27]);}}
+    for(let n=0;n<25;n++){const z=-620-n*34;for(const side of [-1,1]){const x=side*(110+n*6);const height=18+Math.abs(Math.sin(n*2.3))*37;draw(vp,x,height/2-1,z,52,height,48,[.36,.42,.4]);draw(vp,x,height*.77,z,28,height*.45,30,[.65,.68,.65]);}}
+    for(let n=0;n<9;n++){const z=-890-n*12;for(const side of [-1,1])draw(vp,side*15,5,z,7,10,4,[.48,.52,.49]);draw(vp,0,10,z,38,2,6,[.51,.55,.51]);}
     // White reflective ground and long-runway guidance to the Games portal.
     draw(vp,0,-.35,0,420,.65,420,[.89,.96,.95]);
     for(let i=-200;i<=200;i+=10){draw(vp,i,.008,0,.025,.018,420,[.76,.88,.85]);draw(vp,0,.008,i,420,.018,.025,[.76,.88,.85])}
