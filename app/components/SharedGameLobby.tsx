@@ -48,7 +48,7 @@ function makeRenderer(canvas:HTMLCanvasElement){
 }
 export default function SharedGameLobby(){
  const labels=useRef<HTMLDivElement>(null),workerNotice=useRef(false);const canvas=useRef<HTMLCanvasElement>(null),panel=useRef<HTMLDivElement>(null),portalLabel=useRef<HTMLDivElement>(null);
- const keys=useRef<Record<string,boolean>>({}),peerRef=useRef<Map<string,Player>>(new Map()),suitRef=useRef<Suit>("gold");
+ const arrivals=useRef<Map<string,number>>(new Map());const keys=useRef<Record<string,boolean>>({}),peerRef=useRef<Map<string,Player>>(new Map()),suitRef=useRef<Suit>("gold");
  const local=useRef<Player>({id:"",x:0,y:terrain(0,0),z:0,yaw:Math.PI/2,flying:false,boost:false,suit:"gold",seen:0});
  const [suit,setSuit]=useState<Suit>("gold"),[online,setOnline]=useState(false),[peerCount,setPeerCount]=useState(0);
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
@@ -67,10 +67,10 @@ export default function SharedGameLobby(){
   const db=createClient();const id=typeof crypto!=="undefined"&&"randomUUID"in crypto?crypto.randomUUID():String(Date.now())+Math.random();
   local.current.id=id;void db.auth.getUser().then(({data})=>{if(active)local.current.userId=data.user?.id;local.current.name=String(data.user?.user_metadata?.full_name||data.user?.user_metadata?.username||"Explorer").slice(0,30)});let active=true;const channel=db.channel("1muslim-shared-game-lobby-v1",{config:{presence:{key:id},broadcast:{self:false}}});
   const sync=()=>{if(!active)return;const present=new Set<string>();for(const values of Object.values(channel.presenceState()))for(const entry of values as Array<{id?:string;suit?:string}>){if(typeof entry.id==="string"&&entry.id!==id)present.add(entry.id)};for(const k of peerRef.current.keys())if(!present.has(k))peerRef.current.delete(k);setPeerCount(present.size)};
-  channel.on("presence",{event:"sync"},sync).on("broadcast",{event:"move"},({payload})=>{if(!active||!payload||payload.id===id||typeof payload.id!=="string")return;const p=payload as Player;if(![p.x,p.y,p.z,p.yaw].every(v=>typeof v==="number"&&Number.isFinite(v)&&Math.abs(v)<10000))return;peerRef.current.set(p.id,{id:p.id,x:p.x,y:p.y,z:p.z,yaw:p.yaw,flying:!!p.flying,boost:!!p.boost,suit:validSuit(p.suit),userId:typeof p.userId==="string"?p.userId:undefined,name:typeof p.name==="string"?p.name.slice(0,30):"Explorer",seen:performance.now()})});
+  channel.on("presence",{event:"sync"},sync).on("broadcast",{event:"move"},({payload})=>{if(!active||!payload||payload.id===id||typeof payload.id!=="string")return;const p=payload as Player;if(![p.x,p.y,p.z,p.yaw].every(v=>typeof v==="number"&&Number.isFinite(v)&&Math.abs(v)<10000))return;if(!peerRef.current.has(p.id))arrivals.current.set(p.id,performance.now());peerRef.current.set(p.id,{id:p.id,x:p.x,y:p.y,z:p.z,yaw:p.yaw,flying:!!p.flying,boost:!!p.boost,suit:validSuit(p.suit),userId:typeof p.userId==="string"?p.userId:undefined,name:typeof p.name==="string"?p.name.slice(0,30):"Explorer",seen:performance.now()})});
   channel.subscribe(status=>{if(!active)return;setOnline(status==="SUBSCRIBED");if(status==="SUBSCRIBED")void channel.track({id,suit:suitRef.current})});
   const send=setInterval(()=>{if(!active||channel.state!=="joined"||document.visibilityState!=="visible")return;const p=local.current;void channel.send({type:"broadcast",event:"move",payload:{id,x:p.x,y:p.y,z:p.z,yaw:p.yaw,flying:p.flying,boost:p.boost,userId:p.userId,name:p.name,suit:suitRef.current}})},120);
-  return()=>{active=false;clearInterval(send);void db.removeChannel(channel);peerRef.current.clear()};
+  return()=>{active=false;clearInterval(send);void db.removeChannel(channel);peerRef.current.clear();arrivals.current.clear()};
  },[]);
  useEffect(()=>{
   const node=canvas.current;if(!node)return;
@@ -83,7 +83,7 @@ export default function SharedGameLobby(){
    const p=local.current,k=keys.current;
    for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000);const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=feet<=20?1:feet<=30?1-(feet-20)*.05:feet<=40?.5-(feet-30)*.05:0;}
    const moving=Number(!!(k.w||k.ArrowUp))-Number(!!(k.s||k.ArrowDown));
-   const strafing=Number(!!(k.d||k.ArrowRight))-Number(!!(k.a||k.ArrowLeft));
+   const strafing=Number(!!(k.a||k.ArrowLeft))-Number(!!(k.d||k.ArrowRight));
    const mag=Math.hypot(moving,strafing)||1;const speed=p.flying?16.5:(k.Shift?9:5.5);
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
@@ -139,6 +139,12 @@ export default function SharedGameLobby(){
       draw(vp,ax,.75,az,1.2,1,.55,[.68,.58,.43]);draw(vp,ax+.65,1.15,az,.55,.55,.48,[.72,.62,.47]);
       for(const q of [-.35,.35])draw(vp,ax+q,.24,az,.18,.5,.18,[.47,.4,.3]);
     }
+    // Green-bordered arrival zone: luminous perimeter and vertical corner beacons.
+    for(let i=-9;i<=9;i+=1.5){for(const edge of [-9,9]){draw(vp,i,.13,edge,1.4,.13,.22,[.11,.98,.47],.95);draw(vp,edge,.13,i,.22,.13,1.4,[.11,.98,.47],.95);}}
+    for(const x of [-9,9])for(const z of [-9,9])draw(vp,x,1.4,z,.3,2.8,.3,[.16,.96,.48],.5+.3*Math.sin(now*.003));
+    // Distinct destination signage: this town is MuslimVille; the launch district is Moonport.
+    draw(vp,12,3,-10,.5,6,.5,[.77,.65,.3]);draw(vp,12,6.3,-10,10,1.6,.35,[.08,.43,.33]);
+    draw(vp,145,3,-9,.5,6,.5,[.77,.65,.3]);draw(vp,145,6.3,-9,9,1.6,.35,[.13,.33,.48]);
     // Enchanted route: glowing stepping stones and gold/emerald wayfinding to the lunar construction site.
     draw(vp,125,.065,0,62,.09,6,[.14,.29,.31]);
     for(let x=98;x<159;x+=2.4){const pulse=.65+.2*Math.sin(now*.002+x);
@@ -211,7 +217,7 @@ export default function SharedGameLobby(){
       if(a.flying){for(let i=0;i<7;i++){const tail=i*.7+1;draw(vp,a.x-sn*tail,ay+.4-i*.12,a.z-cs*tail,.13+i*.065,.11+i*.04,.13+i*.065,[.66,.92,1],.6-i*.06)}draw(vp,a.x+sn*.6,ay+1.4,a.z+cs*.6,.48,.2,.32,c,1,a.yaw)}};
     avatar(p);
     const labelHost=labels.current;if(labelHost)labelHost.replaceChildren();
-    for(const other of peerRef.current.values())if(now-other.seen<12000){avatar(other);const feet=distance(p,other)*3.28084;if(labelHost&&feet>=5&&feet<=50){const point=project(vp,[other.x,other.y+3,other.z],w,h);if(point?.visible){const tag=document.createElement("span");tag.textContent=other.name||"Explorer";tag.style.cssText="position:absolute;left:"+point.x+"px;top:"+point.y+"px;transform:translate(-50%,-100%);padding:4px 9px;border-radius:12px;background:#052c28df;color:#fff;font-size:12px;font-weight:800;white-space:nowrap;border:1px solid #9bd9bb;pointer-events:none";labelHost.appendChild(tag)}}}
+    for(const other of peerRef.current.values())if(now-other.seen<12000){const age=now-(arrivals.current.get(other.id)??now);if(age<2600){const progress=clamp(age/2600,0,1),drop=(1-progress)*(1-progress)*9;avatar({...other,y:other.y+drop});for(let i=0;i<6;i++){const angle=i*Math.PI/3+now*.002;draw(vp,other.x+Math.cos(angle)*1.4,other.y+2.5+drop,other.z+Math.sin(angle)*1.4,.2,3,.2,[.12,.95,.68],.6)}}else avatar(other);const feet=distance(p,other)*3.28084;if(labelHost&&feet>=5&&feet<=50){const point=project(vp,[other.x,other.y+3,other.z],w,h);if(point?.visible){const tag=document.createElement("span");tag.textContent=other.name||"Explorer";tag.style.cssText="position:absolute;left:"+point.x+"px;top:"+point.y+"px;transform:translate(-50%,-100%);padding:4px 9px;border-radius:12px;background:#052c28df;color:#fff;font-size:12px;font-weight:800;white-space:nowrap;border:1px solid #9bd9bb;pointer-events:none";labelHost.appendChild(tag)}}}
     const projLive=project(vp,[-18.3,4,0],w,h),projPortal=project(vp,[95,9,0],w,h);
     const updateOverlay=(element:HTMLDivElement|null,proj:ReturnType<typeof project>,dist:number,max:number)=>{if(!element)return;const show=!!proj?.visible&&dist<max;element.style.display=show?"block":"none";if(show&&proj){element.style.left=proj.x+"px";element.style.top=proj.y+"px";element.style.transform="translate(-50%,-50%) scale("+clamp(15/(dist+3),.35,1.3)+")"}};
     updateOverlay(panel.current,projLive,distance(p,{x:-18.3,z:0}),75);
@@ -243,6 +249,7 @@ export default function SharedGameLobby(){
  return <section className={styles.root} aria-label="1Muslim shared 3D game lobby">
   <canvas ref={canvas} className={styles.canvas} tabIndex={0} aria-label="Third-person 3D world; click to control. WASD move, mouse drag look, Space jump or ascend, F fly, Shift boost, C descend." onPointerDown={down} onPointerMove={move} onPointerUp={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}} onPointerCancel={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}}/>
   <div className={styles.top}><span>✦ 1Muslim Lobby</span><span className={online?styles.connected:styles.offline}>{online?"● Shared room":"○ Connecting"} · {peerCount+1} visible</span></div>
+  <div aria-hidden="true" style={{position:"absolute",left:12,top:90,zIndex:5,color:"#b9f9cc",fontWeight:900,textShadow:"0 2px 8px #002d25"}}>✦ MUSLIMVILLE · SPAWN ZONE</div>
   <div ref={labels} aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",zIndex:4}}/>
   {workerMessage&&<div role="dialog" aria-label="Construction worker" style={{position:"absolute",left:"12%",right:"12%",bottom:"24%",zIndex:9,background:"#092f2deb",border:"1px solid #e8c56e",borderRadius:18,color:"white",padding:18,textAlign:"center"}}><strong>🚀 Space Station Worker</strong><p>Come back soon… we’re going to the Moon! 🌙</p><button onClick={()=>setWorkerMessage(false)} style={{padding:"8px 18px",borderRadius:12}}>See you soon!</button></div>}
   <div ref={panel} className={styles.liveScreen}><div className={styles.liveHeader}>◉ 1MUSLIM LIVE</div>{live?<><div className={styles.liveVideo}><LiveHomePreview roomName={live.room_name||live.id}/></div><a href={"/streaming/live/"+live.id} className={styles.watch}>Watch {live.title} ↗</a></>:<div className={styles.waiting}><span className={styles.spinner}>◌</span><strong>Loading — waiting for the next 1Muslim Live</strong><small>{liveError?"Live status temporarily unavailable":"Broadcast will appear when someone goes live"}</small></div>}</div>
