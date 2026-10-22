@@ -6,7 +6,7 @@ import LiveHomePreview from "./LiveHomePreview";
 import styles from "./SharedGameLobby.module.css";
 
 type Suit="gold"|"silver"|"cosmic"|"diamond";
-type Player={id:string;x:number;y:number;z:number;yaw:number;flying:boolean;boost:boolean;suit:Suit;seen:number};
+type Player={id:string;userId?:string;x:number;y:number;z:number;yaw:number;flying:boolean;boost:boolean;suit:Suit;seen:number};
 type Live={id:string;room_name:string|null;title:string};
 const SUITS:Suit[]=["gold","silver","cosmic","diamond"];
 const WORLDS=["Dinosaurs","Time of Moses","Time of Jesus","Time of Muhammad ﷺ","Today","Future"];
@@ -53,7 +53,7 @@ export default function SharedGameLobby(){
  const [suit,setSuit]=useState<Suit>("gold"),[online,setOnline]=useState(false),[peerCount,setPeerCount]=useState(0);
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
  const [error,setError]=useState(""),[hint,setHint]=useState("Explore the market road toward the portal; sky villages float beyond the city.");
- const [flying,setFlying]=useState(false); const gesture=useRef({lastTap:0,downAt:0,hold:false}); const [crashed,setCrashed]=useState(false);
+ const [flying,setFlying]=useState(false); const voiceRoom=useRef<import("livekit-client").Room|null>(null); const voiceTracks=useRef<Map<string,HTMLAudioElement>>(new Map()); const [voiceOn,setVoiceOn]=useState(false); const [voiceBusy,setVoiceBusy]=useState(false); const gesture=useRef({lastTap:0,downAt:0,hold:false}); const [crashed,setCrashed]=useState(false);
  const setKey=(k:string,on:boolean)=>{keys.current[k]=on};
  const toggleFly=useCallback(()=>{const p=local.current;p.flying=!p.flying;setFlying(p.flying);if(p.flying)p.y=Math.max(p.y,terrain(p.x,p.z)+1.3)},[]);
  useEffect(()=>{try{const stored=localStorage.getItem("1muslim-game-suit");const s=validSuit(stored);suitRef.current=s;local.current.suit=s;setSuit(s)}catch{}},[]);
@@ -65,11 +65,11 @@ export default function SharedGameLobby(){
  },[]);
  useEffect(()=>{
   const db=createClient();const id=typeof crypto!=="undefined"&&"randomUUID"in crypto?crypto.randomUUID():String(Date.now())+Math.random();
-  local.current.id=id;let active=true;const channel=db.channel("1muslim-shared-game-lobby-v1",{config:{presence:{key:id},broadcast:{self:false}}});
+  local.current.id=id;void db.auth.getUser().then(({data})=>{if(active)local.current.userId=data.user?.id});let active=true;const channel=db.channel("1muslim-shared-game-lobby-v1",{config:{presence:{key:id},broadcast:{self:false}}});
   const sync=()=>{if(!active)return;const present=new Set<string>();for(const values of Object.values(channel.presenceState()))for(const entry of values as Array<{id?:string;suit?:string}>){if(typeof entry.id==="string"&&entry.id!==id)present.add(entry.id)};for(const k of peerRef.current.keys())if(!present.has(k))peerRef.current.delete(k);setPeerCount(present.size)};
-  channel.on("presence",{event:"sync"},sync).on("broadcast",{event:"move"},({payload})=>{if(!active||!payload||payload.id===id||typeof payload.id!=="string")return;const p=payload as Player;if(![p.x,p.y,p.z,p.yaw].every(v=>typeof v==="number"&&Number.isFinite(v)&&Math.abs(v)<10000))return;peerRef.current.set(p.id,{id:p.id,x:p.x,y:p.y,z:p.z,yaw:p.yaw,flying:!!p.flying,boost:!!p.boost,suit:validSuit(p.suit),seen:performance.now()})});
+  channel.on("presence",{event:"sync"},sync).on("broadcast",{event:"move"},({payload})=>{if(!active||!payload||payload.id===id||typeof payload.id!=="string")return;const p=payload as Player;if(![p.x,p.y,p.z,p.yaw].every(v=>typeof v==="number"&&Number.isFinite(v)&&Math.abs(v)<10000))return;peerRef.current.set(p.id,{id:p.id,x:p.x,y:p.y,z:p.z,yaw:p.yaw,flying:!!p.flying,boost:!!p.boost,suit:validSuit(p.suit),userId:typeof p.userId==="string"?p.userId:undefined,seen:performance.now()})});
   channel.subscribe(status=>{if(!active)return;setOnline(status==="SUBSCRIBED");if(status==="SUBSCRIBED")void channel.track({id,suit:suitRef.current})});
-  const send=setInterval(()=>{if(!active||channel.state!=="joined"||document.visibilityState!=="visible")return;const p=local.current;void channel.send({type:"broadcast",event:"move",payload:{id,x:p.x,y:p.y,z:p.z,yaw:p.yaw,flying:p.flying,boost:p.boost,suit:suitRef.current}})},120);
+  const send=setInterval(()=>{if(!active||channel.state!=="joined"||document.visibilityState!=="visible")return;const p=local.current;void channel.send({type:"broadcast",event:"move",payload:{id,x:p.x,y:p.y,z:p.z,yaw:p.yaw,flying:p.flying,boost:p.boost,userId:p.userId,suit:suitRef.current}})},120);
   return()=>{active=false;clearInterval(send);void db.removeChannel(channel);peerRef.current.clear()};
  },[]);
  useEffect(()=>{
@@ -81,6 +81,7 @@ export default function SharedGameLobby(){
   const render=(now:number)=>{
    const dt=clamp((now-prev)/1000,0,.05);prev=now;
    const p=local.current,k=keys.current;
+   for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000);const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=feet<=20?1:feet<=30?1-(feet-20)*.05:feet<=40?.5-(feet-30)*.05:0;}
    const moving=Number(!!(k.w||k.ArrowUp))-Number(!!(k.s||k.ArrowDown));
    const strafing=Number(!!(k.d||k.ArrowRight))-Number(!!(k.a||k.ArrowLeft));
    const mag=Math.hypot(moving,strafing)||1;const speed=p.flying?16.5:(k.Shift?9:5.5);
@@ -166,6 +167,17 @@ export default function SharedGameLobby(){
   const keyUp=(e:KeyboardEvent)=>{const key=e.key.length===1?e.key.toLowerCase():e.key;keys.current[key===" "?"Space":key]=false};
   window.addEventListener("keydown",keyDown);window.addEventListener("keyup",keyUp);return()=>{window.removeEventListener("keydown",keyDown);window.removeEventListener("keyup",keyUp)};
  },[toggleFly]);
+ const stopVoice=useCallback(async()=>{const room=voiceRoom.current;voiceRoom.current=null;setVoiceOn(false);for(const el of voiceTracks.current.values())el.remove();voiceTracks.current.clear();if(room)await room.disconnect()},[]);
+ const startVoice=useCallback(async()=>{if(voiceBusy||voiceRoom.current)return;setVoiceBusy(true);try{
+  const response=await fetch("/api/game-voice/token",{method:"POST"});const info=await response.json();
+  if(!response.ok)throw new Error(info.error||"Voice unavailable");
+  const {Room,RoomEvent,Track}=await import("livekit-client");const room=new Room({adaptiveStream:true,dynacast:true});
+  room.on(RoomEvent.TrackSubscribed,(track,publication,participant)=>{if(track.kind!==Track.Kind.Audio)return;const el=track.attach() as HTMLAudioElement;el.autoplay=true;el.volume=0;el.style.display="none";document.body.appendChild(el);voiceTracks.current.set(participant.identity,el)});
+  room.on(RoomEvent.TrackUnsubscribed,(track,publication,participant)=>{voiceTracks.current.get(participant.identity)?.remove();voiceTracks.current.delete(participant.identity)});
+  room.on(RoomEvent.ParticipantDisconnected,p=>{voiceTracks.current.get(p.identity)?.remove();voiceTracks.current.delete(p.identity)});
+  await room.connect(info.url,info.token);voiceRoom.current=room;await room.localParticipant.setMicrophoneEnabled(true);setVoiceOn(true);
+ }catch(e){setHint(e instanceof Error?e.message:"Microphone could not start");await stopVoice()}finally{setVoiceBusy(false)}},[voiceBusy,stopVoice]);
+ useEffect(()=>()=>{void voiceRoom.current?.disconnect();for(const el of voiceTracks.current.values())el.remove();voiceTracks.current.clear()},[]);
  const drag=useRef<{x:number;id:number}|null>(null);
  const down=(e:React.PointerEvent<HTMLCanvasElement>)=>{canvas.current?.focus();const g=gesture.current;const now=performance.now();if(local.current.flying){g.hold=true;keys.current.ascend=true}else if(local.current.y>terrain(local.current.x,local.current.z)+.3){toggleFly();g.hold=true;keys.current.ascend=true}else if(now-g.lastTap<340){keys.current.Space=true;g.lastTap=0}else g.lastTap=now;g.downAt=now;drag.current={x:e.clientX,id:e.pointerId};e.currentTarget.setPointerCapture(e.pointerId)};
  const move=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(!drag.current||drag.current.id!==e.pointerId)return;const delta=e.clientX-drag.current.x;drag.current.x=e.clientX;local.current.yaw+=delta*.008};
@@ -174,6 +186,7 @@ export default function SharedGameLobby(){
   <div className={styles.top}><span>✦ 1Muslim Lobby</span><span className={online?styles.connected:styles.offline}>{online?"● Shared room":"○ Connecting"} · {peerCount+1} visible</span></div>
   <div ref={panel} className={styles.liveScreen}><div className={styles.liveHeader}>◉ 1MUSLIM LIVE</div>{live?<><div className={styles.liveVideo}><LiveHomePreview roomName={live.room_name||live.id}/></div><a href={"/streaming/live/"+live.id} className={styles.watch}>Watch {live.title} ↗</a></>:<div className={styles.waiting}><span className={styles.spinner}>◌</span><strong>Loading — waiting for the next 1Muslim Live</strong><small>{liveError?"Live status temporarily unavailable":"Broadcast will appear when someone goes live"}</small></div>}</div>
   <div ref={portalLabel} className={styles.portalSign}>✦ JUMP INTO 1MUSLIMGAMES ✦</div>
+  <button type="button" onClick={()=>void (voiceOn?stopVoice():startVoice())} disabled={voiceBusy} style={{position:"absolute",right:12,top:52,zIndex:8,border:"1px solid #a7cfc7",borderRadius:24,padding:"8px 12px",background:"#efffffea",color:"#073b31",fontWeight:800,fontSize:12}}>{voiceBusy?"Connecting…":voiceOn?"🎙️ Proximity voice ON · Turn off":"🎙️ Enable proximity voice"}</button>
   <div className={styles.bottom}><span>{hint}</span><label>SUIT <select aria-label="Preview avatar suit" value={suit} onChange={e=>changeSuit(validSuit(e.target.value))}>{SUITS.map(s=><option key={s} value={s}>{s.toUpperCase()}</option>)}</select></label></div>
   {crashed&&<div className={styles.toast} role="status">💥 Hard landing! Recovering…</div>}
   <div className={styles.controls}><div className={styles.dpad}><button onPointerDown={()=>setKey("w",true)} onPointerUp={()=>setKey("w",false)} onPointerLeave={()=>setKey("w",false)}>▲</button><div><button onPointerDown={()=>setKey("a",true)} onPointerUp={()=>setKey("a",false)} onPointerLeave={()=>setKey("a",false)}>◀</button><button onPointerDown={()=>setKey("s",true)} onPointerUp={()=>setKey("s",false)} onPointerLeave={()=>setKey("s",false)}>▼</button><button onPointerDown={()=>setKey("d",true)} onPointerUp={()=>setKey("d",false)} onPointerLeave={()=>setKey("d",false)}>▶</button></div></div><div className={styles.actions}><span aria-live="polite">{flying?"FLYING · hold world to rise":"Double tap world to jump · tap airborne to fly"}</span></div></div>
