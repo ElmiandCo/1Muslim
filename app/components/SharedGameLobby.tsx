@@ -544,6 +544,21 @@ export default function SharedGameLobby(){
           draw(vp,x+offset,height*.52,facing,.22,height*.76,.13,[.88,.76,.51]);
           draw(vp,x+offset,2.65,facing-side*.16,.46,.64,.3,lantern,darkness>.5?.98:.74);
         }
+        // High-detail market arcade: gold-edged arches and lantern light pools
+        // are purely decorative, distance-culled, and never affect collisions.
+        const marketDistanceSq=(p.x-x)*(p.x-x)+(p.z-z)*(p.z-z);
+        if(marketDistanceSq<72*72){
+          const warmGlow=Math.min(1,Math.max(0,darkness));
+          draw(vp,x,height*.78,facing-side*.1,5.8,.2,.24,[.94,.75,.43],.92);
+          for(const archSide of [-1,1]){
+            draw(vp,x+archSide*2.2,height*.47,facing-side*.12,.19,height*.53,.22,[.86,.74,.48],.95);
+            draw(vp,x+archSide*1.12,height*.76,facing-side*.15,1.12,.16,.2,[.9,.78,.53],.9);
+          }
+          if(warmGlow>.15){
+            draw(vp,x, .13, facing-side*.9,5.5,.025,2.8,[1,.7,.32],.08+.17*warmGlow);
+            draw(vp,x,2.65,facing-side*.32,3.4,.18,.18,[1,.78,.39],.12+.2*warmGlow);
+          }
+        }
       }
     }}
     // Avenues branching toward future neighborhoods.
