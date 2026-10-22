@@ -200,7 +200,7 @@ export default function SharedGameLobby(){
    const proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,travelBounds.minX,travelBounds.maxX),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,travelBounds.minZ,travelBounds.maxZ);
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
-   const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[];
+   const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[]; for(const z of [-49,49])solids.push({x:161,z,hx:29,hz:3,bottom:0,top:17});solids.push({x:189,z:0,hx:3,hz:52,bottom:0,top:17});for(const z of [-35,35])solids.push({x:133,z,hx:3,hz:15,bottom:0,top:17});
    for(let x=5;x<85;x+=14)for(const side of [-1,1]){
      const z=side*15,height=5+(Math.floor(x/14)%3)*2;
      solids.push({x,z,hx:3.7,hz:3.2,bottom:0,top:height+.9});
@@ -307,7 +307,7 @@ export default function SharedGameLobby(){
     if(ship.current.inSpace){const elapsed=(now-ship.current.launchedAt)/1000;const moonDist=Math.max(110,110000-elapsed*5500);const moonX=p.x+Math.sin(ship.current.heading)*moonDist,moonZ=p.z+Math.cos(ship.current.heading)*moonDist;draw(vp,moonX,p.y+420,moonZ,1800,1800,1800,[.73,.76,.8]);draw(vp,moonX-450,p.y+800,moonZ-950,350,70,350,[.52,.56,.62]);const sunDist=Math.max(1800,220000-elapsed*5500);draw(vp,p.x+Math.sin(ship.current.heading)*sunDist,p.y+1800,p.z+Math.cos(ship.current.heading)*sunDist,6200,6200,6200,[1,.78,.19]);if(elapsed<8){for(let i=0;i<14;i++){const off=i*48;draw(vp,p.x+Math.sin(ship.current.heading)*(130+off),p.y-40-off*.2,p.z+Math.cos(ship.current.heading)*(130+off),16,2,16,[1,.78,.22],.8);}}}
     if(eva&&p.y<1000){const fall=clamp((1000-p.y)/1000,0,1);if(fall>.1&&now%500<25)setHint("🌍 Earth gravity increasing. Brace for atmospheric entry.");}
     // Layered atmospheric cloud banks with parallax on ascent.
-    if(atmosphere<.97){const opacity=(1-atmosphere)*.7;for(let i=0;i<56;i++){const cx=155+Math.sin(i*12.9898)*((i%9)*135+140),cz=-27+Math.cos(i*8.321)*((i%11)*150+120),cy=80+Math.sin(i*3.1)*34;for(let j=0;j<3;j++){draw(vp,cx+Math.sin(j*2.3+i)*45,cy+j*9,cz+Math.cos(j*3.7+i)*55,95-j*15,18+j*6,60+j*12,[.94,.97,1],opacity);}}}
+    if(atmosphere<.97){const opacity=(1-atmosphere)*.7;for(let i=0;i<56;i++){const cx=155+Math.sin(i*12.9898)*((i%9)*135+140),cz=-27+Math.cos(i*8.321)*((i%11)*150+120),cy=175+Math.sin(i*3.1)*48;for(let j=0;j<3;j++){draw(vp,cx+Math.sin(j*2.3+i)*45,cy+j*9,cz+Math.cos(j*3.7+i)*55,95-j*15,18+j*6,60+j*12,[.94,.97,1],opacity);}}}
     if(ship.current.active){for(let j=1;j<=6;j++){const d=j*1600;draw(vp,ship.current.x+Math.sin(ship.current.heading)*d,ship.current.y+90,ship.current.z+Math.cos(ship.current.heading)*d,24+j*3,75+j*8,24+j*3,[1,.82,.28],.9);}}
     if(ship.current.inSpace){const elapsed=(now-ship.current.launchedAt)/1000,md=Math.max(110,110000-elapsed*5500),mx=p.x+Math.sin(ship.current.heading)*md,mz=p.z+Math.cos(ship.current.heading)*md;for(let i=0;i<22;i++){const a=i*2.39996,rr=120+((i*71)%1150);draw(vp,mx+Math.cos(a)*rr,p.y+420+Math.sin(a*1.8)*rr,mz-500+Math.sin(a)*120,75+i%5*17,14,75+i%5*17,[.48,.51,.57]);}const sd=Math.max(1800,220000-elapsed*5500),sx=p.x+Math.sin(ship.current.heading)*sd,sz=p.z+Math.cos(ship.current.heading)*sd;for(let i=0;i<16;i++){const a=i*Math.PI/8;draw(vp,sx+Math.cos(a)*5200,p.y+1800+Math.sin(a)*5200,sz,1300,800,1300,[1,.58,.12],.48);}}
     for(const shot of projectiles.current){draw(vp,shot.x,shot.y,shot.z,.35,.35,.35,shot.power===2?[1,.35,.9]:[.18,1,.75]);draw(vp,shot.x-shot.vx*.014,shot.y,shot.z-shot.vz*.014,.17,.17,.17,[.8,1,.7],.55);}
@@ -854,6 +854,16 @@ export default function SharedGameLobby(){
     // Meeting stage at the far end of the corridor.
     draw(vp,-125,46,-144,19,2,5,[.48,.31,.2]);draw(vp,-125,49,-147,18,5,.5,[.13,.56,.48]);
     for(let i=0;i<8;i++){const x=-134+(i%4)*6,z=-129+Math.floor(i/4)*9;draw(vp,x,46,z,2,2,2,[.63,.52,.32]);}
+    // Monumental Masjid an-Nabawi-inspired landmark, facing the portal approach.
+    // Wide forecourt and open central entrance; preserve respectful sacred architecture.
+    const mx=163;
+    draw(vp,mx,.08,0,78,.16,124,[.75,.73,.59]);
+    for(const z of [-51,51]){draw(vp,mx,10,z,62,20,5,[.85,.83,.71]);draw(vp,mx,21,z,65,2,7,[.84,.68,.35]);}
+    draw(vp,mx+29,10,0,6,20,106,[.85,.83,.72]);
+    for(const z of [-51,-39,-27,-15,15,27,39,51]){if(Math.abs(z)<17)continue;draw(vp,mx-29,10,z,5,20,9,[.86,.83,.72]);draw(vp,mx-32,16,z,1,8,5,[.26,.5,.42]);}
+    for(let x=142;x<=182;x+=13)for(let z=-34;z<=34;z+=17){draw(vp,x,18,z,9,2,11,[.88,.84,.69]);for(let level=0;level<4;level++)draw(vp,x,20+level*2,z,9-level*1.8,1.4,11-level*2.1,[.18+level*.045,.44+level*.03,.34+level*.025]);draw(vp,x,28,z,.4,3,.4,[.86,.69,.32]);}
+    for(const x of [126,200])for(const z of [-57,57]){draw(vp,x,27,z,5,54,5,[.87,.85,.75]);for(const y of [13,28,43,55])draw(vp,x,y,z,9,1.4,9,[.82,.69,.36]);draw(vp,x,59,z,3,10,3,[.86,.86,.75]);draw(vp,x,65,z,5,1.5,5,[.82,.67,.32]);draw(vp,x,70,z,.55,10,.55,[.89,.73,.32]);}
+    for(const z of [-44,44])draw(vp,119,.5,z,35,.7,1,[.79,.69,.45]);
     // Portal: glowing arch with a translucent doorway and depth.
     for(let i=0;i<17;i++){const a=i*Math.PI/16;draw(vp,95,2.8+Math.sin(a)*4.1,Math.cos(a)*4.1,.85,.85,.75,[.19,.79,.66],1,-a)}
     draw(vp,95,2.8,0,.2,6.3,7.1,[.23,.85,.76],.28);
