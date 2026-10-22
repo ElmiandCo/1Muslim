@@ -6,6 +6,7 @@ export const FUTURE_TOWERS=Array.from({length:64},(_,i)=>{
  const col=i%8,row=Math.floor(i/8);
  return {x:(col-3.5)*84,z:(row-3.5)*88,height:46+((i*17)%8)*13,width:25+(i%3)*3,depth:26+((i+1)%3)*3,accent:i%3};
 });
+export const FUTURE_WALKWAYS=[-176,176].map(z=>({x:0,z,y:34,width:84,depth:8}));
 export const FUTURE_SKYWAYS=[-220,-132,132,220].map(z=>({x:0,z,y:32,width:85,depth:8}));
 export const futureSkywayFloor=(x:number,y:number,z:number)=>
  FUTURE_SKYWAYS.some(w=>Math.abs(x-w.x)<w.width/2&&Math.abs(z-w.z)<w.depth/2&&y>=w.y-.6&&y<=w.y+2.5)?32:-Infinity;
