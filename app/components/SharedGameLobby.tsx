@@ -12,6 +12,7 @@ const SUITS:Suit[]=["gold","silver","cosmic","diamond"];
 const WORLDS=["Dinosaurs","Time of Moses","Time of Jesus","Time of Muhammad ﷺ","Today","Future"];
 // HudHud wayfinding: match the five districts rendered below; this is an informational map, not teleportation.
 const EXPLORATION_BOUNDS={minX:-1900,maxX:1400,minZ:-1350,maxZ:1850} as const;
+const MOON_BOUNDS={minX:-345,maxX:345,minZ:-345,maxZ:345} as const;
 const CITY_WAYPOINTS=[
  {name:"Nile Quarter",description:"Pyramids",x:-720,z:180,color:"#e7c17c"},
  {name:"Courtyard City",description:"Courtyards",x:-420,z:850,color:"#d4bd78"},
@@ -89,7 +90,7 @@ export default function SharedGameLobby(){
  const [suit,setSuit]=useState<Suit>("gold"),[online,setOnline]=useState(false),[peerCount,setPeerCount]=useState(0);
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
  const [error,setError]=useState(""),[hint,setHint]=useState("Explore the market road toward the portal; sky villages float beyond the city.");
- const plane=useRef({active:false,speed:0}); const ship=useRef({active:false,boostUntil:0,x:155,y:145,z:-27,inSpace:false,launchedAt:0,heading:Math.PI/2}); const [moonLanded,setMoonLanded]=useState(false);const [moonWalk,setMoonWalk]=useState(false);const [moonArrivalPrompt,setMoonArrivalPrompt]=useState(false); const [eva,setEva]=useState(false); const [shipOn,setShipOn]=useState(false); const [flightPhase,setFlightPhase]=useState("EARTH"); const [shipSettings,setShipSettings]=useState(false); const [missionControl,setMissionControl]=useState(false); const [missionMessage,setMissionMessage]=useState(""); const evaFall=useRef({active:false,speed:0}); const [nearVehicle,setNearVehicle]=useState<"plane"|"car"|"helicopter"|"ship"|null>(null); const [shipMedia,setShipMedia]=useState(false); const [shipCamera,setShipCamera]=useState(false); const shipRoom=useRef<import("livekit-client").Room|null>(null); const [shipConnected,setShipConnected]=useState(false); const [shipCaptain,setShipCaptain]=useState(false); const [shipMuted,setShipMuted]=useState(false); const [shipPassengers,setShipPassengers]=useState(0); const [remoteShipMedia,setRemoteShipMedia]=useState(false); const shipRemoteVideo=useRef<HTMLVideoElement>(null); const shipVideo=useRef<HTMLVideoElement>(null); const shipStream=useRef<MediaStream|null>(null); const [piloting,setPiloting]=useState(false); const spaceEdgeSince=useRef<number|null>(null);const [spaceEdgeWarning,setSpaceEdgeWarning]=useState(false); const [flying,setFlying]=useState(false); const [boostActive,setBoostActive]=useState(false); const boostUntil=useRef(0); const boostEnabled=useRef(false); const [workerMessage,setWorkerMessage]=useState(false); const [showFlyTutorial,setShowFlyTutorial]=useState(false); const voiceRoom=useRef<import("livekit-client").Room|null>(null); const voiceTracks=useRef<Map<string,HTMLAudioElement>>(new Map()); const [audioMode,setAudioMode]=useState<"off"|"proximity"|"all">("off"); const [voiceOn,setVoiceOn]=useState(false); const [proximityMicEnabled,setProximityMicEnabled]=useState(false); const [proximitySpeaking,setProximitySpeaking]=useState(false); const [audioRoomLocked,setAudioRoomLocked]=useState(false);
+ const plane=useRef({active:false,speed:0}); const ship=useRef({active:false,boostUntil:0,x:155,y:145,z:-27,inSpace:false,launchedAt:0,heading:Math.PI/2}); const moonModeRef=useRef({landed:false,walking:false});const [moonLanded,setMoonLanded]=useState(false);const [moonWalk,setMoonWalk]=useState(false);const [moonArrivalPrompt,setMoonArrivalPrompt]=useState(false); const [eva,setEva]=useState(false); const [shipOn,setShipOn]=useState(false); const [flightPhase,setFlightPhase]=useState("EARTH"); const [shipSettings,setShipSettings]=useState(false); const [missionControl,setMissionControl]=useState(false); const [missionMessage,setMissionMessage]=useState(""); const evaFall=useRef({active:false,speed:0}); const [nearVehicle,setNearVehicle]=useState<"plane"|"car"|"helicopter"|"ship"|null>(null); const [shipMedia,setShipMedia]=useState(false); const [shipCamera,setShipCamera]=useState(false); const shipRoom=useRef<import("livekit-client").Room|null>(null); const [shipConnected,setShipConnected]=useState(false); const [shipCaptain,setShipCaptain]=useState(false); const [shipMuted,setShipMuted]=useState(false); const [shipPassengers,setShipPassengers]=useState(0); const [remoteShipMedia,setRemoteShipMedia]=useState(false); const shipRemoteVideo=useRef<HTMLVideoElement>(null); const shipVideo=useRef<HTMLVideoElement>(null); const shipStream=useRef<MediaStream|null>(null); const [piloting,setPiloting]=useState(false); const spaceEdgeSince=useRef<number|null>(null);const [spaceEdgeWarning,setSpaceEdgeWarning]=useState(false); const [flying,setFlying]=useState(false); const [boostActive,setBoostActive]=useState(false); const boostUntil=useRef(0); const boostEnabled=useRef(false); const [workerMessage,setWorkerMessage]=useState(false); const [showFlyTutorial,setShowFlyTutorial]=useState(false); const voiceRoom=useRef<import("livekit-client").Room|null>(null); const voiceTracks=useRef<Map<string,HTMLAudioElement>>(new Map()); const [audioMode,setAudioMode]=useState<"off"|"proximity"|"all">("off"); const [voiceOn,setVoiceOn]=useState(false); const [proximityMicEnabled,setProximityMicEnabled]=useState(false); const [proximitySpeaking,setProximitySpeaking]=useState(false); const [audioRoomLocked,setAudioRoomLocked]=useState(false);
  useEffect(()=>{try{localStorage.setItem("1muslim:game-audio-room-active",audioRoomLocked&&voiceOn?"1":"0");window.dispatchEvent(new Event("1muslim:game-audio-room-change"))}catch{}return()=>{try{localStorage.setItem("1muslim:game-audio-room-active","0");window.dispatchEvent(new Event("1muslim:game-audio-room-change"))}catch{}}},[audioRoomLocked,voiceOn]); const [voiceBusy,setVoiceBusy]=useState(false); const gesture=useRef({lastTap:0,downAt:0,hold:false}); const [crashed,setCrashed]=useState(false); const flightPose=useRef({takeoff:0,landing:0}); const [emote,setEmote]=useState<"none"|"wave"|"pose"|"celebrate">("none"); const emoteUntil=useRef(0);
  const [stickPosition,setStickPosition]=useState({x:0,y:0});
  const stickPointer=useRef<number|null>(null);
@@ -116,15 +117,15 @@ export default function SharedGameLobby(){
   if(voiceRoom.current)await stopVoice();
  }catch(e){setHint(e instanceof Error?e.message:"Could not join spaceship audio");}};
  const toggleShipMic=async()=>{if(!shipRoom.current)return;await shipRoom.current.localParticipant.setMicrophoneEnabled(shipMuted);setShipMuted(!shipMuted);};
- const landOnMoon=()=>{ship.current.active=false;ship.current.inSpace=false;setShipOn(false);setMoonArrivalPrompt(false);setMoonLanded(true);setMoonWalk(true);setEva(false);const p=local.current;p.x=0;p.z=0;p.y=3;p.flying=false;setFlying(false);setHint("🌕 Moon landing complete. Explore the settlement and rooftop observatory.");};
+ const landOnMoon=()=>{moonModeRef.current={landed:true,walking:true};ship.current.active=false;ship.current.inSpace=false;setShipOn(false);setMoonArrivalPrompt(false);setMoonLanded(true);setMoonWalk(true);setEva(false);const p=local.current;p.x=0;p.z=15;p.y=0;p.flying=false;setFlying(false);setHint("🌕 Moon landing complete. Explore the settlement and rooftop observatory.");};
  const declineMoonWalk=()=>{setMoonArrivalPrompt(false);setHint("🌕 Remaining aboard. Open the landing invitation when ready.");};
- const exitShip=()=>{setMoonLanded(false);setMoonWalk(false);setMoonArrivalPrompt(false);void leaveShipAudio();setEva(false);ship.current.inSpace=false;ship.current.active=false;setShipOn(false);ship.current.boostUntil=0;setShipMedia(false);shipStream.current?.getTracks().forEach(t=>t.stop());shipStream.current=null;setShipCamera(false);const p=local.current;p.x=155;p.z=-27;p.y=4;p.flying=false;setFlying(false);setHint("Returned to the spaceport.");};
+ const exitShip=()=>{moonModeRef.current={landed:false,walking:false};setMoonLanded(false);setMoonWalk(false);setMoonArrivalPrompt(false);void leaveShipAudio();setEva(false);ship.current.inSpace=false;ship.current.active=false;setShipOn(false);ship.current.boostUntil=0;setShipMedia(false);shipStream.current?.getTracks().forEach(t=>t.stop());shipStream.current=null;setShipCamera(false);const p=local.current;p.x=155;p.z=-27;p.y=4;p.flying=false;setFlying(false);setHint("Returned to the spaceport.");};
  const leaveShipInSpace=()=>{if(!ship.current.active)return;ship.current.inSpace=true;setShipOn(false);setEva(true);evaFall.current={active:false,speed:0};const p=local.current;p.x=ship.current.x;p.y=ship.current.y;p.z=ship.current.z+13;p.flying=true;setFlying(true);setHint("SPACEWALK · WASD drift · SPACE rise · C descend · return within 22m of shuttle to reboard.");};
  const reboardShip=()=>{const p=local.current;if(!eva||Math.hypot(p.x-ship.current.x,p.y-ship.current.y,p.z-ship.current.z)>24)return;ship.current.inSpace=true;setEva(false);setShipOn(true);p.x=ship.current.x;p.y=ship.current.y;p.z=ship.current.z;p.flying=true;setHint("Back aboard. Pilot controls restored.");};
- const boardShip=()=>{void joinShipAudio();const p=local.current;if(Math.hypot(p.x-155,p.z+27)>23||p.y>20){setHint("Approach the spaceport to board the ship.");return;}plane.current.active=false;setPiloting(false);ship.current.inSpace=true;ship.current.x=155;ship.current.y=8;ship.current.z=-27;ship.current.launchedAt=performance.now();ship.current.heading=Math.PI/2;ship.current.active=true;setFlightPhase("LAUNCH");setMissionControl(false);setShipOn(true);p.x=155;p.y=145;p.z=-27;p.yaw=Math.PI/2;p.flying=true;setFlying(true);setHint("Mission launch · Earth to Moon in 20 seconds.");};
+ const boardShip=()=>{moonModeRef.current={landed:false,walking:false};setMoonLanded(false);setMoonWalk(false);setMoonArrivalPrompt(false);void joinShipAudio();const p=local.current;if(Math.hypot(p.x-155,p.z+27)>23||p.y>20){setHint("Approach the spaceport to board the ship.");return;}plane.current.active=false;setPiloting(false);ship.current.inSpace=true;ship.current.x=155;ship.current.y=8;ship.current.z=-27;ship.current.launchedAt=performance.now();ship.current.heading=Math.PI/2;ship.current.active=true;setFlightPhase("LAUNCH");setMissionControl(false);setShipOn(true);p.x=155;p.y=145;p.z=-27;p.yaw=Math.PI/2;p.flying=true;setFlying(true);setHint("Mission launch · Earth to Moon in 20 seconds.");};
  const startShipMedia=async(kind:"camera"|"screen")=>{try{shipStream.current?.getTracks().forEach(t=>t.stop());const stream=kind==="camera"?await navigator.mediaDevices.getUserMedia({video:true,audio:false}):await navigator.mediaDevices.getDisplayMedia({video:true,audio:false});shipStream.current=stream;if(shipRoom.current){if(kind==="camera"){await shipRoom.current.localParticipant.setCameraEnabled(true);}else{await shipRoom.current.localParticipant.setScreenShareEnabled(true);}}setShipMedia(true);setShipCamera(kind==="camera");if(shipVideo.current){shipVideo.current.srcObject=stream;void shipVideo.current.play().catch(()=>{});}stream.getVideoTracks()[0]?.addEventListener("ended",()=>{setShipMedia(false);setShipCamera(false);shipStream.current=null;});}catch{setHint("Camera or screen sharing permission was not granted.");}};
  const togglePlane=()=>{const p=local.current;if(plane.current.active){plane.current.active=false;plane.current.speed=0;setPiloting(false);p.flying=false;setFlying(false);setHint("You exited the aircraft.");return;}if(Math.hypot(p.x-110,p.z+345)>19||p.y>8){setHint("Approach the aircraft at the airport runway to board.");return;}plane.current.active=true;plane.current.speed=0;p.x=110;p.z=-345;p.y=3;p.yaw=Math.PI/2;p.flying=true;setFlying(true);setPiloting(true);setHint("Aircraft boarded! W/▲ accelerate, S/▼ brake, A/D steer, SPACE climb, C descend, E exit.");};
- const toggleFly=useCallback(()=>{const p=local.current;p.flying=!p.flying;setFlying(p.flying);if(p.flying){flightPose.current.takeoff=performance.now();p.y=Math.max(p.y,terrain(p.x,p.z)+1.3)}else flightPose.current.landing=performance.now()},[]);
+ const toggleFly=useCallback(()=>{if(moonModeRef.current.walking){setHint("🌕 Lunar exploration uses walking and low-gravity jumps.");return;}const p=local.current;p.flying=!p.flying;setFlying(p.flying);if(p.flying){flightPose.current.takeoff=performance.now();p.y=Math.max(p.y,terrain(p.x,p.z)+1.3)}else flightPose.current.landing=performance.now()},[]);
  useEffect(()=>{try{const stored=localStorage.getItem("1muslim-game-suit");const s=validSuit(stored);suitRef.current=s;local.current.suit=s;setSuit(s)}catch{}},[]);
  useEffect(()=>{try{if(localStorage.getItem("1muslim-fly-gesture-seen-v1"))return;localStorage.setItem("1muslim-fly-gesture-seen-v1","1")}catch{}setShowFlyTutorial(true);const timer=window.setTimeout(()=>setShowFlyTutorial(false),3600);return()=>window.clearTimeout(timer)},[]);
  const changeSuit=(s:Suit)=>{setSuit(s);suitRef.current=s;local.current.suit=s;try{localStorage.setItem("1muslim-game-suit",s)}catch{}};
@@ -161,8 +162,9 @@ export default function SharedGameLobby(){
    for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000);const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=audioRoomLocked?1:feet<=200?1:feet<=300?1-(feet-200)*.005:feet<=400?.5-(feet-300)*.005:0;}
    const moving=now<knockdownUntil.current?0:Number(!!(k.w||k.ArrowUp))-Number(!!(k.s||k.ArrowDown));
    const strafing=now<knockdownUntil.current?0:Number(!!(k.a||k.ArrowLeft))-Number(!!(k.d||k.ArrowRight));
-   const mag=Math.hypot(moving,strafing)||1;const boosted=boostEnabled.current;const speed=ship.current.active||plane.current.active?0:eva?5.5:p.flying?(boosted?49.5:16.5)*(p.y>85?1.5:1):(boosted?16.5:k.Shift?9:5.5);
-   if(moonWalk){p.flying=false;p.y=3;}
+   const lunar=moonModeRef.current.walking;
+   const mag=Math.hypot(moving,strafing)||1;const boosted=boostEnabled.current;const speed=ship.current.active||plane.current.active?0:eva?5.5:lunar?(boosted?11:4.8):p.flying?(boosted?49.5:16.5)*(p.y>85?1.5:1):(boosted?16.5:k.Shift?9:5.5);
+   if(lunar)p.flying=false;
    if(ship.current.active){
      const elapsed=(performance.now()-ship.current.launchedAt)/1000;
      const flightSpeed=5.5*1000*(performance.now()<ship.current.boostUntil?2:1);
@@ -190,7 +192,8 @@ export default function SharedGameLobby(){
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
    const previousX=p.x,previousZ=p.z;
-   const proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,EXPLORATION_BOUNDS.minX,EXPLORATION_BOUNDS.maxX),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,EXPLORATION_BOUNDS.minZ,EXPLORATION_BOUNDS.maxZ);
+   const travelBounds=lunar?MOON_BOUNDS:EXPLORATION_BOUNDS;
+   const proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,travelBounds.minX,travelBounds.maxX),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,travelBounds.minZ,travelBounds.maxZ);
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
    const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[];
@@ -210,7 +213,7 @@ export default function SharedGameLobby(){
    // Block side penetration and reflect travel away from the struck surface.
    // Roofs remain solid landing surfaces, so players cannot fall through buildings.
    let struck=false,roof=-Infinity;
-   for(const b of plane.current.active||ship.current.active||eva?[]:solids){
+   for(const b of plane.current.active||ship.current.active||eva||lunar?[]:solids){
      const overlapsXZ=Math.abs(proposedX-b.x)<b.hx+.42&&Math.abs(proposedZ-b.z)<b.hz+.42;
      if(!overlapsXZ)continue;
      if(p.y>=b.top-.2&&p.y<=b.top+2.2){roof=Math.max(roof,b.top);continue;}
@@ -227,26 +230,33 @@ export default function SharedGameLobby(){
    }
    if(!struck&&!plane.current.active&&!ship.current.active){p.x=proposedX;p.z=proposedZ}
    else{ // Small, damped rebound rather than teleporting or sticking to a wall.
-     p.x=clamp(p.x-dx*Math.min(.6,speed*dt*.45),EXPLORATION_BOUNDS.minX,EXPLORATION_BOUNDS.maxX);
-     p.z=clamp(p.z-dz*Math.min(.6,speed*dt*.45),EXPLORATION_BOUNDS.minZ,EXPLORATION_BOUNDS.maxZ);
+     p.x=clamp(p.x-dx*Math.min(.6,speed*dt*.45),travelBounds.minX,travelBounds.maxX);
+     p.z=clamp(p.z-dz*Math.min(.6,speed*dt*.45),travelBounds.minZ,travelBounds.maxZ);
      crashUntil=now+260;setCrashed(true);
    }
    p.boost=boosted; 
    const cityRoof=p.z<=-365&&p.z>=-515&&p.x>=-132&&p.x<=75;
    const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=onRoad?bridgeHeight:(p.x>300?-100:terrain(p.x,p.z));const floor=Math.max(skyLanding?45:roadFloor,roof);
-   if(!eva&&!ship.current.inSpace&&p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
+   if(!lunar&&!eva&&!ship.current.inSpace&&p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
    if(eva){p.flying=true;const fall=evaFall.current;const thrust=(k.Space||k.ascend?1:0)-(k.c?1:0);if(p.y<1300)fall.active=true;if(fall.active){fall.speed=clamp(fall.speed+20*dt-thrust*8*dt,0,145);p.y-=fall.speed*dt;if(p.y<=Math.max(terrain(p.x,p.z),0)+2){p.y=Math.max(terrain(p.x,p.z),0)+2;setEva(false);setFlying(false);ship.current.inSpace=false;fall.active=false;setHint("🌍 Atmospheric re-entry complete. You landed back on Earth.");}}else p.y+=thrust*5.5*dt;}else if(ship.current.active){p.flying=true;}else if(plane.current.active){
      const takeoff=plane.current.speed>24;
      const climb=takeoff&&!!(k.Space||k.ascend),descend=!!k.c;
      p.y=clamp(p.y+(climb?12:descend?-10:p.y>4?-.8:0)*dt,3,180);
      p.flying=true;
+   }else if(lunar){
+     // Moon gravity is approximately one sixth of the Earth game gravity.
+     // Keep feet on the lunar terrain and allow a floaty jump without changing Earth physics.
+     if((k.Space||k.ascend)&&p.y<=.07){velocity=4.6;k.Space=false;k.ascend=false;}
+     velocity-=2.83*dt;
+     p.y=Math.max(0,p.y+velocity*dt);
+     if(p.y<=0&&velocity<0)velocity=0;
    }else if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?(p.y>85?19.5:13):descend?-19:-5)*dt,-22,p.y>85?10.5:7);p.y=clamp(p.y+velocity*dt,floor,170);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
    else{if(crashUntil&&now>crashUntil){crashUntil=0;setCrashed(false)}velocity-=17*dt;if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){p.y=floor;velocity=0}}
-   if(!ship.current.active&&!plane.current.active&&!eva&&p.flying&&p.y>=169.8){if(spaceEdgeSince.current===null){spaceEdgeSince.current=now;setSpaceEdgeWarning(true);setHint("⚠️ EDGE OF SPACE — return below the boundary within 2 seconds!");}else if(now-spaceEdgeSince.current>=2000){p.x=0;p.z=0;p.y=Math.max(terrain(0,0),0)+2;p.flying=false;velocity=0;boostUntil.current=0;spaceEdgeSince.current=null;setSpaceEdgeWarning(false);setFlying(false);setHint("🌍 Space boundary reached. Respawned safely.");}}else if(spaceEdgeSince.current!==null){spaceEdgeSince.current=null;setSpaceEdgeWarning(false);}
-   const nearest=ship.current.inSpace||plane.current.active?null:distance(p,{x:155,z:-27})<23?"ship":distance(p,{x:110,z:-345})<19?"plane":distance(p,{x:155,z:-27})<30?"helicopter":distance(p,{x:15,z:7.5})<13?"car":null;
+   if(!lunar&&!ship.current.active&&!plane.current.active&&!eva&&p.flying&&p.y>=169.8){if(spaceEdgeSince.current===null){spaceEdgeSince.current=now;setSpaceEdgeWarning(true);setHint("⚠️ EDGE OF SPACE — return below the boundary within 2 seconds!");}else if(now-spaceEdgeSince.current>=2000){p.x=0;p.z=0;p.y=Math.max(terrain(0,0),0)+2;p.flying=false;velocity=0;boostUntil.current=0;spaceEdgeSince.current=null;setSpaceEdgeWarning(false);setFlying(false);setHint("🌍 Space boundary reached. Respawned safely.");}}else if(spaceEdgeSince.current!==null){spaceEdgeSince.current=null;setSpaceEdgeWarning(false);}
+   const nearest=lunar||ship.current.inSpace||plane.current.active?null:distance(p,{x:155,z:-27})<23?"ship":distance(p,{x:110,z:-345})<19?"plane":distance(p,{x:155,z:-27})<30?"helicopter":distance(p,{x:15,z:7.5})<13?"car":null;
    if(nearVehicle!==nearest)setNearVehicle(nearest);
-   const nearWorker=distance(p,{x:152,z:0})<5;if(nearWorker&&!workerNotice.current){workerNotice.current=true;setWorkerMessage(true)}if(!nearWorker)workerNotice.current=false;
-   const near=distance(p,{x:95,z:0})<5;if(near&&!wasNear)setPicker(true);wasNear=near;
+   const nearWorker=!lunar&&distance(p,{x:152,z:0})<5;if(nearWorker&&!workerNotice.current){workerNotice.current=true;setWorkerMessage(true)}if(!nearWorker)workerNotice.current=false;
+   const near=!lunar&&distance(p,{x:95,z:0})<5;if(near&&!wasNear)setPicker(true);wasNear=near;
    const w=node.clientWidth,h=node.clientHeight,dpr=Math.min(window.devicePixelRatio||1,1.5);
    if(w>0&&h>0){const rw=Math.floor(w*dpr),rh=Math.floor(h*dpr);if(node.width!==rw||node.height!==rh){node.width=rw;node.height=rh;gl.viewport(0,0,rw,rh)}
     // Shared 6-hour world clock: four hours daylight, two hours night.
@@ -254,7 +264,7 @@ export default function SharedGameLobby(){
     const dusk=clamp((cycle-3.75*60*60*1000)/(15*60*1000),0,1);
     const dawn=clamp((cycle-5.75*60*60*1000)/(15*60*1000),0,1);
     const darkness=night?1-dawn:dusk;
-    const atmosphere=moonLanded?1:clamp((p.y-65)/105,0,1);
+    const atmosphere=moonModeRef.current.landed?1:clamp((p.y-65)/105,0,1);
     gl.clearColor(.91-darkness*.87-atmosphere*.9,.96-darkness*.92-atmosphere*.95,.97-darkness*.85-atmosphere*.95,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     // Keep the camera the same distance behind the player on both axes.
     // Smooth normal movement and fullscreen zoom, but snap after teleportation.
@@ -268,7 +278,7 @@ export default function SharedGameLobby(){
     const vp=mul(perspective(Math.PI/3,w/h,.1,200000),lookAt(cam,at));
     // Procedural deep-space starfield: deterministic positions around the camera, no external assets.
     if(atmosphere>.05){for(let i=0;i<270;i++){const theta=(i*2.399963229728653)% (Math.PI*2),phi=Math.acos(1-2*((i*.61803398875)%1));const rr=4200;const sx=p.x+rr*Math.sin(phi)*Math.cos(theta),sy=p.y+rr*Math.cos(phi),sz=p.z+rr*Math.sin(phi)*Math.sin(theta);const twinkle=.6+.4*Math.sin(now*.0008+i*7.1);draw(vp,sx,sy,sz,2+i%3,2+i%3,2+i%3,[.7+twinkle*.25,.78+twinkle*.2,1],atmosphere);}}
-    if(moonLanded){
+    if(moonModeRef.current.landed){
       // Moon terrain, settlement and observatory: one world unit is approximately one meter.
       draw(vp,0,-1,0,720,2,720,[.35,.37,.42]);
       for(let i=0;i<75;i++){const x=Math.sin(i*19.19)*290,z=Math.cos(i*8.71)*290;draw(vp,x,.12,z,3+i%8,.3,3+i%8,[.24+i%3*.045,.26+i%3*.045,.31+i%3*.045]);}
@@ -298,11 +308,12 @@ export default function SharedGameLobby(){
     // Council mural on the opposite wall from the projector, perspective-scaled.
     const muralPoint=project(vp,[-125,52,-106.3],w,h);
     const mural=councilArt.current;
-    if(mural){if(muralPoint?.visible&&distance(p,{x:-125,z:-120})<105){const size=clamp(1150/(Math.hypot(p.x+125,p.y-52,p.z+106)+1),55,370);mural.style.display="block";mural.style.width=size+"px";mural.style.height=size*.36+"px";mural.style.left=(muralPoint.x-size/2)+"px";mural.style.top=(muralPoint.y-size*.18)+"px";mural.style.fontSize=Math.max(8,size/20)+"px";}else mural.style.display="none";}
+    if(mural){if(!lunar&&muralPoint?.visible&&distance(p,{x:-125,z:-120})<105){const size=clamp(1150/(Math.hypot(p.x+125,p.y-52,p.z+106)+1),55,370);mural.style.display="block";mural.style.width=size+"px";mural.style.height=size*.36+"px";mural.style.left=(muralPoint.x-size/2)+"px";mural.style.top=(muralPoint.y-size*.18)+"px";mural.style.fontSize=Math.max(8,size/20)+"px";}else mural.style.display="none";}
     // Anchor the projector UI to the in-world council wall; hide when off-screen.
     const screenPoint=project(vp,[-125,52,-133.1],w,h);
     const projector=councilProjection.current;
-    if(projector){if(screenPoint?.visible&&distance(p,{x:-125,z:-120})<110){const size=clamp(650/(Math.hypot(p.x+125,p.y-52,p.z+133)+1),45,460);projector.style.display="block";projector.style.width=size+"px";projector.style.left=(screenPoint.x-size/2)+"px";projector.style.top=(screenPoint.y-size*9/32)+"px";}else projector.style.display="none";}
+    if(projector){if(!lunar&&screenPoint?.visible&&distance(p,{x:-125,z:-120})<110){const size=clamp(650/(Math.hypot(p.x+125,p.y-52,p.z+133)+1),45,460);projector.style.display="block";projector.style.width=size+"px";projector.style.left=(screenPoint.x-size/2)+"px";projector.style.top=(screenPoint.y-size*9/32)+"px";}else projector.style.display="none";}
+    if(!moonModeRef.current.landed){
     // Titan: extended Main Street, arterial branches and mountain-edge tunnel corridor.
     for(let n=0;n<58;n++){const z=-560-n*18;draw(vp,0,-.055,z,22,.12,18,[.19,.23,.27]);draw(vp,0,.015,z,.3,.025,5,[.96,.82,.45]);for(const side of [-1,1]){draw(vp,side*12,.01,z,2,.08,18,[.52,.55,.54]);if(n%3===0)draw(vp,side*17,.2,z,3,.4,3,[.28,.5,.23]);}if(n%9===0){for(let k=-9;k<=9;k++)draw(vp,k*18,-.07,z,18,.12,18,[.2,.24,.27]);}}
     for(let n=0;n<25;n++){const z=-620-n*34;for(const side of [-1,1]){const x=side*(110+n*6);const height=18+Math.abs(Math.sin(n*2.3))*37;draw(vp,x,height/2-1,z,52,height,48,[.36,.42,.4]);draw(vp,x,height*.77,z,28,height*.45,30,[.65,.68,.65]);}}
@@ -818,6 +829,7 @@ export default function SharedGameLobby(){
     draw(vp,-18.3,4,0,.15,4.7,8.2,[.12,.38,.38],.26);
     for(const z of [-4.6,4.6])draw(vp,-18.3,4,z,.35,5.7,.2,[.65,.94,.83]);
     for(const y of [1.2,6.8])draw(vp,-18.3,y,0,.35,.2,9.4,[.65,.94,.83]);
+    }
     // Avatar primitives: head, torso, arms, legs, glowing flight trails.
     const avatar=(a:Player)=>{const c=SUIT_COLORS[a.suit];const self=a.id===p.id;const launch=self&&a.flying?clamp((now-flightPose.current.takeoff)/900,0,1):1;const land=self&&!a.flying?clamp((now-flightPose.current.landing)/1350,0,1):1;const crouch=self&&now<knockdownUntil.current?1.25:self&&!a.flying&&land<.5?(1-land*2)*.65:0;const lean=a.flying?(.15+.65*launch):0;const ay=a.y-crouch+(a.flying?0:.1*Math.sin(now*.006));draw(vp,a.x,ay+1.35,a.z,.8,1.1,.44,c,1,a.yaw+lean*.12);draw(vp,a.x+Math.sin(a.yaw)*lean*.25,ay+2.16+(!a.flying&&land<.8?.18*(1-land):0),a.z+Math.cos(a.yaw)*lean*.25,.52,.52,.52,c,1,a.yaw);const cs=Math.cos(a.yaw),sn=Math.sin(a.yaw);
       for(const side of [-1,1]){const ox=cs*side*.61,oz=-sn*side*.61;const gesture=self&&now<emoteUntil.current?emote:"none";const lift=a.flying?(.45+launch*.35):(gesture==="wave"&&side===1?.65:gesture==="celebrate"?.65:gesture==="pose"&&side===1?.28:0);draw(vp,a.x+ox+sn*lift*.3,ay+1.28+lift,a.z+oz+cs*lift*.3,.26,.94,.3,c,1,a.yaw);draw(vp,a.x+cs*side*.23,ay+.46,a.z-sn*side*.23,.31,.85,.35,c,1,a.yaw)}
@@ -827,8 +839,8 @@ export default function SharedGameLobby(){
     for(const other of peerRef.current.values())if(now-other.seen<12000){const age=now-(arrivals.current.get(other.id)??now);if(age<2600){const progress=clamp(age/2600,0,1),drop=(1-progress)*(1-progress)*9;avatar({...other,y:other.y+drop});for(let i=0;i<6;i++){const angle=i*Math.PI/3+now*.002;draw(vp,other.x+Math.cos(angle)*1.4,other.y+2.5+drop,other.z+Math.sin(angle)*1.4,.2,3,.2,[.12,.95,.68],.6)}}else avatar(other);const feet=distance(p,other)*3.28084;if(labelHost&&feet>=5&&feet<=50){const point=project(vp,[other.x,other.y+3,other.z],w,h);if(point?.visible){const tag=document.createElement("span");tag.textContent=(other.name||"Explorer")+(voiceTracks.current.has(other.userId||"")?" 🔊":"");tag.style.cssText="position:absolute;left:"+point.x+"px;top:"+point.y+"px;transform:translate(-50%,-100%);padding:4px 9px;border-radius:12px;background:#052c28df;color:#fff;font-size:12px;font-weight:800;white-space:nowrap;border:1px solid #9bd9bb;pointer-events:none";labelHost.appendChild(tag)}}}
     const projLive=project(vp,[-18.3,4,0],w,h),projPortal=project(vp,[95,9,0],w,h);
     const updateOverlay=(element:HTMLDivElement|null,proj:ReturnType<typeof project>,dist:number,max:number)=>{if(!element)return;const show=!!proj?.visible&&dist<max;element.style.display=show?"block":"none";if(show&&proj){element.style.left=proj.x+"px";element.style.top=proj.y+"px";element.style.transform="translate(-50%,-50%) scale("+clamp(15/(dist+3),.35,1.3)+")"}};
-    updateOverlay(panel.current,projLive,distance(p,{x:-18.3,z:0}),75);
-    updateOverlay(portalLabel.current,projPortal,distance(p,{x:95,z:0}),160);
+    if(lunar){if(panel.current)panel.current.style.display="none";if(portalLabel.current)portalLabel.current.style.display="none";}
+    else{updateOverlay(panel.current,projLive,distance(p,{x:-18.3,z:0}),75);updateOverlay(portalLabel.current,projPortal,distance(p,{x:95,z:0}),160);}
    }
    frame=requestAnimationFrame(render);
   };
