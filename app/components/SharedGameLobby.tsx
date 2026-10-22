@@ -190,7 +190,7 @@ export default function SharedGameLobby(){
    if(!futureWorldRef.current&&!propheticWorldRef.current&&!moonModeRef.current.landed&&!ship.current.active&&meetingSeatRef.current===null&&p.y<terrain(p.x,p.z)+3){for(let i=0;i<30;i++){const ax=Math.sin(i*83.17)*650,az=Math.cos(i*41.83)*650;if(Math.hypot(p.x-ax,p.z-az)>2.8||now-(animalContact.current.get(i)??0)<1200)continue;animalContact.current.set(i,now);damage("animal");break;}}
 
    if(downed&&now>=knockdownUntil.current)setDowned(false);
-   for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000);const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=audioRoomLocked?1:feet<=200?1:feet<=300?1-(feet-200)*.005:feet<=400?.5-(feet-300)*.005:0;}
+   for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000&&(other.world||"Today")===(p.world||"Today"));const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=audioRoomLocked?1:feet<=200?1:feet<=300?1-(feet-200)*.005:feet<=400?.5-(feet-300)*.005:0;}
    const moving=now<knockdownUntil.current?0:Number(!!(k.w||k.ArrowUp))-Number(!!(k.s||k.ArrowDown));
    const strafing=now<knockdownUntil.current?0:Number(!!(k.a||k.ArrowLeft))-Number(!!(k.d||k.ArrowRight));
    const lunar=moonModeRef.current.walking;
