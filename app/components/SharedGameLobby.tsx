@@ -90,7 +90,7 @@ export default function SharedGameLobby(){
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
    const previousX=p.x,previousZ=p.z;
-   const proposedX=clamp(p.x+dx*speed*dt,-210,1220),proposedZ=clamp(p.z+dz*speed*dt,-210,210);
+   const proposedX=clamp(p.x+dx*speed*dt,-230,1300),proposedZ=clamp(p.z+dz*speed*dt,-550,270);
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
    const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[];
@@ -102,6 +102,11 @@ export default function SharedGameLobby(){
    for(let x=235;x<=285;x+=12)for(const side of [-1,1])solids.push({x,z:side*5.5,hx:6.1,hz:.48,bottom:0,top:6.1});
    for(let x=1090;x<=1140;x+=12)for(const side of [-1,1])solids.push({x,z:side*5.5,hx:6.1,hz:.48,bottom:25,top:31.1});
    for(const x of [1155,1174,1190])for(const z of [-13,13])solids.push({x,z,hx:3.1,hz:1.8,bottom:25,top:27.6});
+   // Upper city tower volumes are solid above their open walk-through lobbies.
+   for(let row=0;row<4;row++)for(let col=0;col<6;col++){
+     const x=-120+col*37,z=-380-row*38,h=19+((row*7+col*11)%7)*12;
+     solids.push({x,z,hx:11,hz:11.5,bottom:7.1,top:h+.8});
+   }
    // Block side penetration and reflect travel away from the struck surface.
    // Roofs remain solid landing surfaces, so players cannot fall through buildings.
    let struck=false,roof=-Infinity;
@@ -122,11 +127,12 @@ export default function SharedGameLobby(){
    }
    if(!struck){p.x=proposedX;p.z=proposedZ}
    else{ // Small, damped rebound rather than teleporting or sticking to a wall.
-     p.x=clamp(p.x-dx*Math.min(.6,speed*dt*.45),-210,1220);
-     p.z=clamp(p.z-dz*Math.min(.6,speed*dt*.45),-210,210);
+     p.x=clamp(p.x-dx*Math.min(.6,speed*dt*.45),-230,1300);
+     p.z=clamp(p.z-dz*Math.min(.6,speed*dt*.45),-550,270);
      crashUntil=now+260;setCrashed(true);
    }
    p.boost=boosted; if(!boosted&&boostUntil.current){boostUntil.current=0;setBoostActive(false)}
+   const cityRoof=p.z<=-365&&p.z>=-515&&p.x>=-132&&p.x<=75;
    const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=onRoad?bridgeHeight:(p.x>300?-100:terrain(p.x,p.z));const floor=Math.max(skyLanding?45:roadFloor,roof);
    if(p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setBoostActive(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
    if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?13:descend?-19:-5)*dt,-22,7);p.y=clamp(p.y+velocity*dt,floor,85);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
@@ -370,6 +376,91 @@ export default function SharedGameLobby(){
       const h=24+(i%3)*12;
       draw(vp,x,h/2,z,17,h,17,[.58,.6,.55]);
       draw(vp,x,h+.5,z,19,1.1,19,[.72,.68,.52]);
+    }
+    // Open-access new city district: airport, playground, parking, restaurants,
+    // hotels and high-rise downtown. Buildings use open ground-floor lobbies.
+    const cityZ=-175;
+    // Streets and sidewalks connect the district to the original town.
+    draw(vp,95,.05,cityZ,290,.12,13,[.25,.3,.35]);
+    draw(vp,95,.055,-90,13,.12,175,[.25,.3,.35]);
+    for(let i=0;i<19;i++)draw(vp,-42+i*15,.13,cityZ,5,.025,.3,[.95,.81,.43]);
+    // Airport runway, terminal with open arrivals hall and control tower.
+    draw(vp,175,.06,-325,205,.16,32,[.19,.23,.29]);
+    for(let i=0;i<12;i++)draw(vp,90+i*16,.17,-325,8,.04,.55,[.95,.94,.8]);
+    draw(vp,180,.16,-288,102,.3,34,[.74,.77,.78]);
+    for(const x of [132,152,172,192,212,232]){
+      draw(vp,x,6,-305,.9,12,.9,[.5,.67,.71]);
+      draw(vp,x,12.5,-305,1.5,.5,1.5,[.9,.76,.36]);
+    }
+    draw(vp,180,13,-288,100,.8,34,[.42,.54,.59]);
+    draw(vp,243,20,-287,9,40,9,[.69,.72,.71]);
+    draw(vp,243,42,-287,14,5,14,[.3,.53,.62]);
+    // Parked aircraft silhouette and hangar.
+    draw(vp,110,2,-345,23,3,4,[.9,.93,.93]);
+    draw(vp,108,2,-345,7,.5,30,[.83,.88,.91]);
+    draw(vp,99,4,-345,7,5,.8,[.83,.88,.91]);
+    draw(vp,67,10,-295,40,20,30,[.47,.55,.58]);
+    // Public parking with marked bays and low-poly cars.
+    draw(vp,8,.07,-250,92,.14,60,[.23,.27,.29]);
+    for(let row=0;row<3;row++)for(let col=0;col<8;col++){
+      const x=-29+col*10,z=-271+row*19;
+      draw(vp,x,.17,z-4,7,.03,.15,[.95,.92,.72]);
+      draw(vp,x,.17,z+4,7,.03,.15,[.95,.92,.72]);
+      if((col+row)%4!==0){
+        const palette=[[.14,.35,.71],[.75,.2,.22],[.79,.8,.78],[.18,.2,.24]];
+        draw(vp,x,.9,z,4.6,1.3,2.6,palette[(col+row)%4]);
+        draw(vp,x-.3,1.75,z,2.4,.7,2.1,[.29,.45,.52]);
+      }
+    }
+    // Playground with sandbox, climbing frames, swings and slides.
+    draw(vp,-105,.05,-248,75,.15,70,[.35,.54,.32]);
+    draw(vp,-120,.17,-248,25,.18,23,[.83,.69,.42]);
+    for(const x of [-139,-133])draw(vp,x,3,-229,.5,6,.5,[.87,.29,.23]);
+    draw(vp,-136,6,-229,9,.4,.5,[.9,.75,.31]);
+    for(const x of [-139,-133])draw(vp,x,3,-229,.1,5,.1,[.75,.78,.81]);
+    draw(vp,-136,1.3,-229,6,.3,1.5,[.17,.46,.78]);
+    draw(vp,-96,3,-250,9,.7,7,[.88,.41,.26]);
+    draw(vp,-90,1.6,-250,11,.35,3,[.28,.57,.87],1,-.4);
+    for(let i=0;i<9;i++){
+      const x=-130+(i%3)*22,z=-273+Math.floor(i/3)*22;
+      draw(vp,x,1.3,z,.65,2.6,.65,[.43,.32,.21]);
+      draw(vp,x,4.2,z,5,5,5,[.14,.48,.28]);
+    }
+    // Downtown towers: open lobby space below a supported upper structure.
+    // Player can enter the lobby and land on rooftops by flying.
+    const cityTowers:{x:number;z:number;w:number;d:number;h:number;type:number}[]=[];
+    for(let row=0;row<4;row++)for(let col=0;col<6;col++){
+      const x=-120+col*37,z=-380-row*38;
+      const h=19+((row*7+col*11)%7)*12;
+      const type=(row+col)%4;
+      cityTowers.push({x,z,w:22,d:23,h,type});
+      draw(vp,x,.12,z,30,.2,31,[.74,.75,.7]);
+      // Four pillars instead of a solid ground floor: walk-in entrance.
+      for(const ox of [-9,9])for(const oz of [-9.5,9.5])draw(vp,x+ox,3.4,z+oz,.9,6.8,.9,[.48,.55,.59]);
+      draw(vp,x,7.1,z,22,.7,23,[.65,.72,.72]);
+      const facade=type===0?[.26,.44,.54]:type===1?[.7,.59,.43]:type===2?[.39,.52,.47]:[.46,.47,.59];
+      draw(vp,x,7.5+(h-7)/2,z,22,h-7,23,facade);
+      for(let y=12;y<h;y+=6){
+        for(const side of [-1,1])draw(vp,x,y,z+side*11.6,19,.65,.1,[.59,.79,.83],.78);
+      }
+      draw(vp,x,h+.4,z,24,.8,25,[.75,.68,.48]);
+      // Rooftop terrace railings leave an open walkable top.
+      for(const side of [-1,1]){
+        draw(vp,x+side*11,h+1.7,z,.35,2.3,23,[.75,.78,.79],.7);
+        draw(vp,x,h+1.7,z+side*11.5,22,2.3,.35,[.75,.78,.79],.7);
+      }
+      // Hotel blocks receive a gold canopy; restaurants a sidewalk patio.
+      if(type===1)draw(vp,x,h+2.7,z,8,2,8,[.83,.67,.32]);
+      if(type===2)for(let j=-1;j<=1;j++)draw(vp,x+j*5,1.2,z+14,3,.2,3,[.82,.62,.37]);
+    }
+    // Procedural pedestrians walk sidewalks, not player-controlled identities.
+    for(let i=0;i<48;i++){
+      const x=-140+(i%12)*27+Math.sin(now*.00035+i)*4;
+      const z=-183-Math.floor(i/12)*39+Math.cos(now*.00045+i)*4;
+      const shirt=i%3===0?[.15,.57,.47]:i%3===1?[.77,.65,.34]:[.35,.48,.75];
+      draw(vp,x,1.45,z,.75,1.65,.65,shirt);
+      draw(vp,x,2.62,z,.62,.65,.62,[.64,.49,.37]);
+      draw(vp,x,.4,z,.6,.8,.6,[.23,.26,.28]);
     }
     // Distant cloud mountains and smaller sky villages (visual landmarks).
     for(let i=0;i<5;i++){const x=22+i*36,z=i%2?85:-85,y=22+(i%3)*8;
