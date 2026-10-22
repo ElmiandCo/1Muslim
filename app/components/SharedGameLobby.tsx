@@ -54,9 +54,10 @@ export default function SharedGameLobby(){
  const [suit,setSuit]=useState<Suit>("gold"),[online,setOnline]=useState(false),[peerCount,setPeerCount]=useState(0);
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
  const [error,setError]=useState(""),[hint,setHint]=useState("Explore the market road toward the portal; sky villages float beyond the city.");
- const [flying,setFlying]=useState(false); const [boostActive,setBoostActive]=useState(false); const boostUntil=useRef(0); const [workerMessage,setWorkerMessage]=useState(false); const voiceRoom=useRef<import("livekit-client").Room|null>(null); const voiceTracks=useRef<Map<string,HTMLAudioElement>>(new Map()); const [voiceOn,setVoiceOn]=useState(false); const [voiceBusy,setVoiceBusy]=useState(false); const gesture=useRef({lastTap:0,downAt:0,hold:false}); const [crashed,setCrashed]=useState(false); const flightPose=useRef({takeoff:0,landing:0}); const [emote,setEmote]=useState<"none"|"wave"|"pose"|"celebrate">("none"); const emoteUntil=useRef(0);
+ const plane=useRef({active:false,speed:0}); const [piloting,setPiloting]=useState(false); const [flying,setFlying]=useState(false); const [boostActive,setBoostActive]=useState(false); const boostUntil=useRef(0); const [workerMessage,setWorkerMessage]=useState(false); const voiceRoom=useRef<import("livekit-client").Room|null>(null); const voiceTracks=useRef<Map<string,HTMLAudioElement>>(new Map()); const [voiceOn,setVoiceOn]=useState(false); const [voiceBusy,setVoiceBusy]=useState(false); const gesture=useRef({lastTap:0,downAt:0,hold:false}); const [crashed,setCrashed]=useState(false); const flightPose=useRef({takeoff:0,landing:0}); const [emote,setEmote]=useState<"none"|"wave"|"pose"|"celebrate">("none"); const emoteUntil=useRef(0);
  const setKey=(k:string,on:boolean)=>{keys.current[k]=on};
  const activateBoost=()=>{if(!local.current.flying)return;boostUntil.current=performance.now()+5000;setBoostActive(true)};
+ const togglePlane=()=>{const p=local.current;if(plane.current.active){plane.current.active=false;plane.current.speed=0;setPiloting(false);p.flying=false;setFlying(false);setHint("You exited the aircraft.");return;}if(Math.hypot(p.x-110,p.z+345)>19||p.y>8){setHint("Approach the aircraft at the airport runway to board.");return;}plane.current.active=true;plane.current.speed=0;p.x=110;p.z=-345;p.y=3;p.yaw=Math.PI/2;p.flying=true;setFlying(true);setPiloting(true);setHint("Aircraft boarded! W/▲ accelerate, S/▼ brake, A/D steer, SPACE climb, C descend, E exit.");};
  const toggleFly=useCallback(()=>{const p=local.current;p.flying=!p.flying;setFlying(p.flying);if(p.flying){flightPose.current.takeoff=performance.now();p.y=Math.max(p.y,terrain(p.x,p.z)+1.3)}else flightPose.current.landing=performance.now()},[]);
  useEffect(()=>{try{const stored=localStorage.getItem("1muslim-game-suit");const s=validSuit(stored);suitRef.current=s;local.current.suit=s;setSuit(s)}catch{}},[]);
  const changeSuit=(s:Suit)=>{setSuit(s);suitRef.current=s;local.current.suit=s;try{localStorage.setItem("1muslim-game-suit",s)}catch{}};
@@ -86,7 +87,14 @@ export default function SharedGameLobby(){
    for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000);const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=feet<=20?1:feet<=30?1-(feet-20)*.05:feet<=40?.5-(feet-30)*.05:0;}
    const moving=Number(!!(k.w||k.ArrowUp))-Number(!!(k.s||k.ArrowDown));
    const strafing=Number(!!(k.a||k.ArrowLeft))-Number(!!(k.d||k.ArrowRight));
-   const mag=Math.hypot(moving,strafing)||1;const boosted=p.flying&&now<boostUntil.current;const speed=p.flying?(boosted?49.5:16.5):(k.Shift?9:5.5);
+   const mag=Math.hypot(moving,strafing)||1;const boosted=p.flying&&now<boostUntil.current;const speed=plane.current.active?0:p.flying?(boosted?49.5:16.5):(k.Shift?9:5.5);
+   if(plane.current.active){
+     const throttle=Number(!!(k.w||k.ArrowUp)),brake=Number(!!(k.s||k.ArrowDown));
+     plane.current.speed=clamp(plane.current.speed+(throttle*13-brake*22-(throttle?0:3))*dt,0,72);
+     p.yaw+=(Number(!!(k.d||k.ArrowRight))-Number(!!(k.a||k.ArrowLeft)))*dt*(.5+plane.current.speed/95);
+     p.x=clamp(p.x+Math.sin(p.yaw)*plane.current.speed*dt,-230,1300);
+     p.z=clamp(p.z+Math.cos(p.yaw)*plane.current.speed*dt,-550,270);
+   }
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
    const previousX=p.x,previousZ=p.z;
@@ -110,7 +118,7 @@ export default function SharedGameLobby(){
    // Block side penetration and reflect travel away from the struck surface.
    // Roofs remain solid landing surfaces, so players cannot fall through buildings.
    let struck=false,roof=-Infinity;
-   for(const b of solids){
+   for(const b of plane.current.active?[]:solids){
      const overlapsXZ=Math.abs(proposedX-b.x)<b.hx+.42&&Math.abs(proposedZ-b.z)<b.hz+.42;
      if(!overlapsXZ)continue;
      if(p.y>=b.top-.2&&p.y<=b.top+2.2){roof=Math.max(roof,b.top);continue;}
@@ -125,7 +133,7 @@ export default function SharedGameLobby(){
      }
      struck=true;break;
    }
-   if(!struck){p.x=proposedX;p.z=proposedZ}
+   if(!struck&&!plane.current.active){p.x=proposedX;p.z=proposedZ}
    else{ // Small, damped rebound rather than teleporting or sticking to a wall.
      p.x=clamp(p.x-dx*Math.min(.6,speed*dt*.45),-230,1300);
      p.z=clamp(p.z-dz*Math.min(.6,speed*dt*.45),-550,270);
@@ -135,7 +143,12 @@ export default function SharedGameLobby(){
    const cityRoof=p.z<=-365&&p.z>=-515&&p.x>=-132&&p.x<=75;
    const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=onRoad?bridgeHeight:(p.x>300?-100:terrain(p.x,p.z));const floor=Math.max(skyLanding?45:roadFloor,roof);
    if(p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setBoostActive(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
-   if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?13:descend?-19:-5)*dt,-22,7);p.y=clamp(p.y+velocity*dt,floor,85);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
+   if(plane.current.active){
+     const takeoff=plane.current.speed>24;
+     const climb=takeoff&&!!(k.Space||k.ascend),descend=!!k.c;
+     p.y=clamp(p.y+(climb?12:descend?-10:p.y>4?-.8:0)*dt,3,180);
+     p.flying=true;
+   }else if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?13:descend?-19:-5)*dt,-22,7);p.y=clamp(p.y+velocity*dt,floor,85);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
    else{if(crashUntil&&now>crashUntil){crashUntil=0;setCrashed(false)}velocity-=17*dt;if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){p.y=floor;velocity=0}}
    const nearWorker=distance(p,{x:152,z:0})<5;if(nearWorker&&!workerNotice.current){workerNotice.current=true;setWorkerMessage(true)}if(!nearWorker)workerNotice.current=false;
    const near=distance(p,{x:95,z:0})<5;if(near&&!wasNear)setPicker(true);wasNear=near;
@@ -147,7 +160,7 @@ export default function SharedGameLobby(){
     const dawn=clamp((cycle-5.75*60*60*1000)/(15*60*1000),0,1);
     const darkness=night?1-dawn:dusk;
     gl.clearColor(.91-darkness*.87,.96-darkness*.92,.97-darkness*.85,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-    const cam=[p.x-Math.sin(p.yaw)*7,p.y+4.0,p.z-Math.cos(p.yaw)*7],at=[p.x,p.y+1.3,p.z];
+    const cam=[p.x-Math.sin(p.yaw)*(plane.current.active?21:7),p.y+(plane.current.active?10:4),p.z-Math.cos(p.yaw)*(plane.current.active?21:7)],at=[p.x,p.y+1.3,p.z];
     const vp=mul(perspective(Math.PI/3,w/h,.1,600),lookAt(cam,at));
     // Council mural on the opposite wall from the projector, perspective-scaled.
     const muralPoint=project(vp,[-125,52,-106.3],w,h);
@@ -395,6 +408,13 @@ export default function SharedGameLobby(){
     draw(vp,180,13,-288,100,.8,34,[.42,.54,.59]);
     draw(vp,243,20,-287,9,40,9,[.69,.72,.71]);
     draw(vp,243,42,-287,14,5,14,[.3,.53,.62]);
+    // Active aircraft is drawn around the pilot in third-person view.
+    if(plane.current.active){
+      draw(vp,p.x,p.y,p.z,18,2.8,4,[.91,.94,.95],1,-p.yaw);
+      draw(vp,p.x,p.y,p.z,5,.5,23,[.82,.89,.94],1,-p.yaw);
+      draw(vp,p.x-7,p.y+2,p.z,5,4,.65,[.78,.84,.9],1,-p.yaw);
+      draw(vp,p.x+5,p.y+.8,p.z,3,1.8,3,[.22,.45,.59],.9,-p.yaw);
+    }
     // Parked aircraft silhouette and hangar.
     draw(vp,110,2,-345,23,3,4,[.9,.93,.93]);
     draw(vp,108,2,-345,7,.5,30,[.83,.88,.91]);
@@ -596,7 +616,7 @@ export default function SharedGameLobby(){
   frame=requestAnimationFrame(render);return()=>cancelAnimationFrame(frame);
  },[]);
  useEffect(()=>{
-  const keyDown=(e:KeyboardEvent)=>{if(document.activeElement!==canvas.current)return;const key=e.key.length===1?e.key.toLowerCase():e.key;if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();if(key==="f"&&!e.repeat)toggleFly();else if(key===" ")keys.current.Space=true;else keys.current[key]=true};
+  const keyDown=(e:KeyboardEvent)=>{if(document.activeElement!==canvas.current)return;const key=e.key.length===1?e.key.toLowerCase():e.key;if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();if(key==="e"&&!e.repeat)togglePlane();else if(key==="f"&&!e.repeat)toggleFly();else if(key===" ")keys.current.Space=true;else keys.current[key]=true};
   const keyUp=(e:KeyboardEvent)=>{const key=e.key.length===1?e.key.toLowerCase():e.key;keys.current[key===" "?"Space":key]=false};
   window.addEventListener("keydown",keyDown);window.addEventListener("keyup",keyUp);return()=>{window.removeEventListener("keydown",keyDown);window.removeEventListener("keyup",keyUp)};
  },[toggleFly]);
@@ -628,6 +648,8 @@ export default function SharedGameLobby(){
   <div ref={labels} aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",zIndex:4}}/>
   {workerMessage&&<div role="dialog" aria-label="Construction worker" style={{position:"absolute",left:"12%",right:"12%",bottom:"24%",zIndex:9,background:"#092f2deb",border:"1px solid #e8c56e",borderRadius:18,color:"white",padding:18,textAlign:"center"}}><strong>🚀 Space Station Worker</strong><p>Come back soon… we’re going to the Moon! 🌙</p><button onClick={()=>setWorkerMessage(false)} style={{padding:"8px 18px",borderRadius:12}}>See you soon!</button></div>}
   <div ref={panel} className={styles.liveScreen}><div className={styles.liveHeader}>◉ 1MUSLIM LIVE</div>{live?<><div className={styles.liveVideo}><LiveHomePreview roomName={live.room_name||live.id}/></div><a href={"/streaming/live/"+live.id} className={styles.watch}>Watch {live.title} ↗</a></>:<div className={styles.waiting}><span className={styles.spinner}>◌</span><strong>Loading — waiting for the next 1Muslim Live</strong><small>{liveError?"Live status temporarily unavailable":"Broadcast will appear when someone goes live"}</small></div>}</div>
+  {!piloting&&<button type="button" onClick={togglePlane} style={{position:"absolute",right:12,top:95,zIndex:9,padding:"11px 15px",borderRadius:12,background:"#0b5547",color:"white",border:"1px solid #d3ae54"}}>✈️ Board Plane (E)</button>}
+  {piloting&&<div style={{position:"absolute",right:12,top:95,zIndex:9,background:"#102f36e8",color:"white",padding:12,borderRadius:12}}><strong>✈️ PILOT MODE</strong><div>▲ Throttle · ▼ Brake · ◀ ▶ Turn</div><div>SPACE Climb · C Descend</div><button type="button" onClick={togglePlane} style={{padding:9,marginTop:6}}>Exit aircraft (E)</button></div>}
   {crashed&&<div className={styles.toast} role="status">💥 Hard landing! Recovering…</div>}
   <div className={styles.controls}><div className={styles.dpad}><button onPointerDown={()=>setKey("w",true)} onPointerUp={()=>setKey("w",false)} onPointerLeave={()=>setKey("w",false)}>▲</button><div><button onPointerDown={()=>setKey("a",true)} onPointerUp={()=>setKey("a",false)} onPointerLeave={()=>setKey("a",false)}>◀</button><button onPointerDown={()=>setKey("s",true)} onPointerUp={()=>setKey("s",false)} onPointerLeave={()=>setKey("s",false)}>▼</button><button onPointerDown={()=>setKey("d",true)} onPointerUp={()=>setKey("d",false)} onPointerLeave={()=>setKey("d",false)}>▶</button></div></div><button type="button" aria-label={boostActive?"Flight boost active":"Boost flight speed three times for five seconds"} aria-pressed={boostActive} disabled={!flying} onClick={activateBoost} style={{pointerEvents:"auto",alignSelf:"flex-end",minWidth:66,minHeight:48,borderRadius:14,border:"1px solid rgba(255,226,138,.65)",background:boostActive?"linear-gradient(135deg,#ffd36a,#f69e32)":"linear-gradient(135deg,rgba(5,75,58,.92),rgba(13,135,105,.95))",color:boostActive?"#18382b":"#fff",fontWeight:800,fontSize:13,boxShadow:boostActive?"0 0 18px rgba(255,203,75,.55)":"0 4px 14px rgba(0,0,0,.25)",opacity:flying?1:.45}}>⚡ {boostActive?"3×":"BOOST"}</button></div>
   {error&&<div role="alert" className={styles.error}>{error}</div>}
