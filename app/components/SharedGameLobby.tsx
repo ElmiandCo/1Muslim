@@ -306,14 +306,71 @@ export default function SharedGameLobby(){
       draw(vp,x,tall*.5,z,.65,tall,.65,[.35,.25,.17]);
       for(const layer of [0,1,2])draw(vp,x,tall+layer*1.35,z,spread*(2-layer*.38),3.5-layer*.55,spread*(2-layer*.38),[.09+.02*(i%4),.35+.035*(i%5),.18+.015*(i%3)]);
     }
-    // Reverent stylized Kaaba landmark on a light stone courtyard.
-    draw(vp,0,.06,184,47,.18,47,[.89,.87,.81]);
-    draw(vp,0,7,184,14,14,14,[.065,.065,.075]);
-    for(const side of [-1,1]){
-      draw(vp,0,11.2,184+side*7.05,14,.8,.13,[.87,.7,.3]);
-      draw(vp,side*7.05,11.2,184,.13,.8,14,[.87,.7,.3]);
+    // Masjid al-Haram-inspired district, set beyond the forest. This is a
+    // respectful approximate architectural reconstruction, not a surveyed map.
+    const haramZ=184;
+    draw(vp,0,.04,haramZ,118,.12,116,[.88,.86,.81]); // white marble precinct
+    for(let ring=0;ring<3;ring++){
+      const radius=24+ring*13;
+      // Four arcades of colonnades, open toward the center for tawaf.
+      for(let i=-5;i<=5;i++){
+        const t=i*radius/6;
+        for(const side of [-1,1]){
+          draw(vp,t,3,haramZ+side*radius,.8,6,.8,[.91,.9,.83]);
+          draw(vp,side*radius,3,haramZ+t,.8,6,.8,[.91,.9,.83]);
+        }
+      }
+      for(const side of [-1,1]){
+        draw(vp,0,6.3,haramZ+side*radius,radius*2+3,.7,2.5,[.87,.84,.72]);
+        draw(vp,side*radius,6.3,haramZ,2.5,.7,radius*2+3,[.87,.84,.72]);
+      }
     }
-    draw(vp,0,14.1,184,14,.25,14,[.15,.15,.17]);
+    // Kaaba centered in the open courtyard, black kiswah and gold belt.
+    draw(vp,0,7,haramZ,14,14,14,[.045,.046,.055]);
+    for(const side of [-1,1]){
+      draw(vp,0,11.2,haramZ+side*7.05,14,.8,.13,[.87,.7,.3]);
+      draw(vp,side*7.05,11.2,haramZ,.13,.8,14,[.87,.7,.3]);
+    }
+    draw(vp,0,14.1,haramZ,14,.25,14,[.15,.15,.17]);
+    // Safa-Marwah inspired covered gallery to the east (simplified).
+    draw(vp,57,2.5,haramZ,13,.3,91,[.93,.91,.84]);
+    for(let z=haramZ-42;z<=haramZ+42;z+=12){
+      for(const x of [52,62])draw(vp,x,5,z,.8,10,.8,[.9,.88,.79]);
+    }
+    draw(vp,57,10.3,haramZ,15,.8,94,[.82,.79,.68]);
+    // Minarets frame the mosque, with luminous upper lanterns.
+    for(const [x,z] of [[-51,133],[51,133],[-51,235],[51,235]]){
+      draw(vp,x,17,z,3.2,34,3.2,[.87,.85,.75]);
+      draw(vp,x,35,z,5,.8,5,[.8,.68,.42]);
+      draw(vp,x,39,z,2.3,7,2.3,[.92,.9,.8]);
+      draw(vp,x,43,z,3,.7,3,[.82,.68,.38]);
+      draw(vp,x,47,z,.35,8,.35,[.84,.69,.29]);
+    }
+    // Abraj Al Bait / Makkah Clock Royal Tower-inspired skyline, southwest
+    // of the mosque. The clock faces orient toward the sanctuary.
+    const clockX=-90,clockZ=238;
+    draw(vp,clockX,30,clockZ,26,60,22,[.38,.47,.46]);
+    draw(vp,clockX,72,clockZ,19,26,17,[.3,.43,.43]);
+    draw(vp,clockX,95,clockZ,15,20,14,[.31,.48,.46]);
+    draw(vp,clockX,108,clockZ,19,14,17,[.23,.4,.39]);
+    for(const side of [-1,1]){
+      draw(vp,clockX,108,clockZ+side*8.65,12,11,.25,[.84,.77,.53]);
+      draw(vp,clockX+side*9.65,108,clockZ,.25,11,12,[.84,.77,.53]);
+    }
+    // Clock hands and hour marks on the face visible from the courtyard.
+    draw(vp,clockX,108,clockZ-8.83,.4,7,.3,[.13,.19,.2]);
+    draw(vp,clockX+1.5,108,clockZ-8.86,3.2,.35,.3,[.13,.19,.2]);
+    draw(vp,clockX,124,clockZ,9,15,9,[.28,.44,.38]);
+    draw(vp,clockX,136,clockZ,4,10,4,[.73,.66,.38]);
+    draw(vp,clockX,145,clockZ,.7,9,.7,[.92,.77,.34]);
+    // Surrounding hotel blocks to give the clock tower a plausible city context.
+    for(let i=0;i<8;i++){
+      const x=-127+(i%4)*23,z=253+Math.floor(i/4)*23;
+      if(Math.abs(x-clockX)<16&&z<266)continue;
+      const h=24+(i%3)*12;
+      draw(vp,x,h/2,z,17,h,17,[.58,.6,.55]);
+      draw(vp,x,h+.5,z,19,1.1,19,[.72,.68,.52]);
+    }
     // Distant cloud mountains and smaller sky villages (visual landmarks).
     for(let i=0;i<5;i++){const x=22+i*36,z=i%2?85:-85,y=22+(i%3)*8;
       draw(vp,x,y,z,23,8,19,[.86,.94,.97],.82);
