@@ -8,10 +8,10 @@ export async function POST(request:Request){
  if(!user)return NextResponse.json({error:"Sign in to use proximity voice."},{status:401});
  const key=process.env.LIVEKIT_API_KEY,secret=process.env.LIVEKIT_API_SECRET,url=process.env.LIVEKIT_URL;
  if(!key||!secret||!url)return NextResponse.json({error:"Voice service is not configured."},{status:503});
- const body=await request.json().catch(()=>({}));const ship=body?.mode==="ship";
- const roomName=ship?"1muslim-game-spaceship-v1":"1muslim-game-city-proximity-v1";
+ const body=await request.json().catch(()=>({}));const ship=body?.mode==="ship";const audioRoom=body?.mode==="audio-room";
+ const roomName=ship?"1muslim-game-spaceship-v1":audioRoom?"1muslim-game-merged-audio-room-v1":"1muslim-game-city-proximity-v1";
  let captain=false;
- if(ship){
+ if(ship||audioRoom){
    try{
      const service=new RoomServiceClient(url,key,secret);
      const passengers=await service.listParticipants(roomName).catch(()=>[]);
@@ -21,5 +21,5 @@ export async function POST(request:Request){
  }
  const token=new AccessToken(key,secret,{identity:user.id,name:user.user_metadata?.full_name||"Player",ttl:"1h"});
  token.addGrant({roomJoin:true,room:roomName,canPublish:true,canPublishSources:ship?[TrackSource.MICROPHONE,TrackSource.CAMERA,TrackSource.SCREEN_SHARE,TrackSource.SCREEN_SHARE_AUDIO]:[TrackSource.MICROPHONE],canSubscribe:true,canPublishData:false});
- return NextResponse.json({token:await token.toJwt(),url,captain,room:roomName,capacity:ship?12:null});
+ return NextResponse.json({token:await token.toJwt(),url,captain,room:roomName,capacity:ship||audioRoom?12:null});
 }
