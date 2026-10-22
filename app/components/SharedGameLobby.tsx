@@ -72,7 +72,7 @@ export default function SharedGameLobby(){
  const local=useRef<Player>({id:"",x:0,y:terrain(0,0),z:0,yaw:Math.PI/2,flying:false,boost:false,suit:"gold",seen:0});
  const combatChannel=useRef<{send:(args:{type:"broadcast";event:string;payload:unknown})=>Promise<unknown>}|null>(null);
  const projectiles=useRef<Array<{id:string;owner:string;x:number;y:number;z:number;vx:number;vz:number;life:number;power:number}>>([]);
- const knockdownUntil=useRef(0); const lastShot=useRef(0); const [downed,setDowned]=useState(false);
+ const knockdownUntil=useRef(0); const damagedStructures=useRef<Map<string,number>>(new Map()); const BREAK_REPAIR_MS=300000; const lastShot=useRef(0); const [downed,setDowned]=useState(false);
  const [combatShop,setCombatShop]=useState(false);const [combatXp,setCombatXp]=useState(5000);const [weapon,setWeapon]=useState("pulse");const [shield,setShield]=useState(false);const [shieldLevel,setShieldLevel]=useState(1);const [blasterLevel,setBlasterLevel]=useState(1);const [gameSettingsOpen,setGameSettingsOpen]=useState(false); const [chatAutoVisible,setChatAutoVisible]=useState(false); const chatAutoTimer=useRef<ReturnType<typeof setTimeout>|null>(null); const [chatClosing,setChatClosing]=useState(false); const showIncomingChat=useCallback(()=>{setChatClosing(false);setChatAutoVisible(true);if(chatAutoTimer.current)clearTimeout(chatAutoTimer.current);chatAutoTimer.current=setTimeout(()=>{setChatClosing(true);chatAutoTimer.current=setTimeout(()=>{setChatAutoVisible(false);setChatClosing(false)},350)},3000)},[]); useEffect(()=>()=>{if(chatAutoTimer.current)clearTimeout(chatAutoTimer.current)},[]);
  const [ownedWeapons,setOwnedWeapons]=useState<string[]>(["pulse"]);
  const fireShot=()=>{const now=performance.now();if(now-lastShot.current<380||now<knockdownUntil.current)return;lastShot.current=now;const p=local.current;const power=weapon==="nova"||blasterLevel>=2?2:1;const shot={id:p.id+"-"+Math.floor(now),owner:p.id,x:p.x+Math.sin(p.yaw)*2,y:p.y+1.4,z:p.z+Math.cos(p.yaw)*2,vx:Math.sin(p.yaw)*(weapon==="nova"?120:90),vz:Math.cos(p.yaw)*(weapon==="nova"?120:90),life:1.7,power};projectiles.current.push(shot);void combatChannel.current?.send({type:"broadcast",event:"shot",payload:shot});};
@@ -144,7 +144,8 @@ export default function SharedGameLobby(){
   combatChannel.current=channel;
   const sync=()=>{if(!active)return;const present=new Set<string>();for(const values of Object.values(channel.presenceState()))for(const entry of values as Array<{id?:string;suit?:string}>){if(typeof entry.id==="string"&&entry.id!==id)present.add(entry.id)};for(const k of peerRef.current.keys())if(!present.has(k))peerRef.current.delete(k);setPeerCount(present.size)};
   channel.on("broadcast",{event:"lobby-chat"},({payload})=>{if(!active||!payload||typeof payload.id!=="string"||typeof payload.sender!=="string"||typeof payload.text!=="string")return;const msg=payload.text.trim().slice(0,300);if(!msg||msg.length>300||payload.id.length>120)return;const sender=payload.sender.slice(0,30);setLobbyChatMessages(a=>a.some(m=>m.id===payload.id)?a:[...a.filter(m=>m.time>=Date.now()-15*60*1000).slice(-149),{id:payload.id,sender,text:msg,time:Date.now(),mine:false}]);showIncomingChat();});
-  channel.on("broadcast",{event:"shot"},({payload})=>{const s=payload as {id?:string;owner?:string;x?:number;y?:number;z?:number;vx?:number;vz?:number;life?:number;power?:number};if(!s||typeof s.id!=="string"||typeof s.owner!=="string"||![s.x,s.y,s.z,s.vx,s.vz].every(v=>typeof v==="number"&&Number.isFinite(v)&&Math.abs(v)<1000000))return;if(s.owner===local.current.id)return;projectiles.current.push({id:s.id,owner:s.owner,x:s.x!,y:s.y!,z:s.z!,vx:s.vx!,vz:s.vz!,life:1.7,power:s.power===2?2:1});});
+  channel.on("broadcast",{event:"structure-break"},({payload})=>{const data=payload as {id?:string;until?:number};if(!active||!data||typeof data.id!=="string"||!/^prop-([0-9]|[1-7][0-9])$/.test(data.id)||typeof data.until!=="number")return;damagedStructures.current.set(data.id,Math.min(Date.now()+300000,Math.max(Date.now(),data.until)));});
+   channel.on("broadcast",{event:"shot"},({payload})=>{const s=payload as {id?:string;owner?:string;x?:number;y?:number;z?:number;vx?:number;vz?:number;life?:number;power?:number};if(!s||typeof s.id!=="string"||typeof s.owner!=="string"||![s.x,s.y,s.z,s.vx,s.vz].every(v=>typeof v==="number"&&Number.isFinite(v)&&Math.abs(v)<1000000))return;if(s.owner===local.current.id)return;projectiles.current.push({id:s.id,owner:s.owner,x:s.x!,y:s.y!,z:s.z!,vx:s.vx!,vz:s.vz!,life:1.7,power:s.power===2?2:1});});
   channel.on("presence",{event:"sync"},sync).on("broadcast",{event:"move"},({payload})=>{if(!active||!payload||payload.id===id||typeof payload.id!=="string")return;const p=payload as Player;if(![p.x,p.y,p.z,p.yaw].every(v=>typeof v==="number"&&Number.isFinite(v)&&Math.abs(v)<10000))return;if(!peerRef.current.has(p.id))arrivals.current.set(p.id,performance.now());peerRef.current.set(p.id,{id:p.id,x:p.x,y:p.y,z:p.z,yaw:p.yaw,flying:!!p.flying,boost:!!p.boost,suit:validSuit(p.suit),userId:typeof p.userId==="string"?p.userId:undefined,name:typeof p.name==="string"?p.name.slice(0,30):"Explorer",seen:performance.now()})});
   channel.subscribe(status=>{if(!active)return;setOnline(status==="SUBSCRIBED");if(status==="SUBSCRIBED")void channel.track({id,suit:suitRef.current})});
   const send=setInterval(()=>{if(!active||channel.state!=="joined"||document.visibilityState!=="visible")return;const p=local.current;void channel.send({type:"broadcast",event:"move",payload:{id,x:p.x,y:p.y,z:p.z,yaw:p.yaw,flying:p.flying,boost:p.boost,userId:p.userId,name:p.name,suit:suitRef.current}})},120);
@@ -160,6 +161,7 @@ export default function SharedGameLobby(){
   const render=(now:number)=>{
    const dt=clamp((now-prev)/1000,0,.05);prev=now;
    const p=local.current,k=keys.current;
+   for(const [id,until] of damagedStructures.current)if(Date.now()>=until)damagedStructures.current.delete(id);
    for(const shot of projectiles.current){shot.x+=shot.vx*dt;shot.z+=shot.vz*dt;shot.life-=dt;if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shield&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldLevel>=2||shot.power<2);if(!guarded){knockdownUntil.current=now+2300;setDowned(true);setHint("💥 Hit! Get back up in 2 seconds.");}else setHint("🛡️ Shield absorbed the shot.");}}
    projectiles.current=projectiles.current.filter(s=>s.life>0);
    if(downed&&now>=knockdownUntil.current)setDowned(false);
@@ -200,7 +202,11 @@ export default function SharedGameLobby(){
    const proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,travelBounds.minX,travelBounds.maxX),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,travelBounds.minZ,travelBounds.maxZ);
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
-   const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[]; for(const z of [-49,49])solids.push({x:161,z,hx:29,hz:3,bottom:0,top:17});solids.push({x:189,z:0,hx:3,hz:52,bottom:0,top:17});for(const z of [-35,35])solids.push({x:133,z,hx:3,hz:15,bottom:0,top:17});
+   const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[]; 
+   // Destructible plaza props are solid until hit; the same objects restore after five minutes.
+   for(let i=0;i<80;i++){const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;const id="prop-"+i;if(damagedStructures.current.has(id))continue;solids.push({x,z,hx:1.35,hz:1.35,bottom:0,top:2.7});}
+   for(let i=0;i<80;i++){const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;const id="prop-"+i;if(damagedStructures.current.has(id))continue;for(const shot of projectiles.current){if(shot.life<=0||Math.abs(shot.x-x)>1.6||Math.abs(shot.z-z)>1.6||shot.y>3.5)continue;shot.life=0;damagedStructures.current.set(id,Date.now()+BREAK_REPAIR_MS);void combatChannel.current?.send({type:"broadcast",event:"structure-break",payload:{id,until:Date.now()+BREAK_REPAIR_MS}});break;}}
+ for(const z of [-49,49])solids.push({x:161,z,hx:29,hz:3,bottom:0,top:17});solids.push({x:189,z:0,hx:3,hz:52,bottom:0,top:17});for(const z of [-35,35])solids.push({x:133,z,hx:3,hz:15,bottom:0,top:17});
    for(let x=5;x<85;x+=14)for(const side of [-1,1]){
      const z=side*15,height=5+(Math.floor(x/14)%3)*2;
      solids.push({x,z,hx:3.7,hz:3.2,bottom:0,top:height+.9});
@@ -391,6 +397,8 @@ export default function SharedGameLobby(){
         draw(vp,x-1.3,.25+leap,z,.8,1.5,.3,[.36,.57,.7],.9,a);
       }
     }
+    // Rebuildable collision props: each blaster impact removes the solid volume for five minutes.
+    for(let i=0;i<80;i++){const id="prop-"+i;if(damagedStructures.current.has(id))continue;const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;draw(vp,x,1.35,z,2.7,2.7,2.7,[.34+(i%3)*.09,.46,.38]);}
     // Terrain continuity pass: local, camera-culled tiles replace exposed white voids.
      // Deterministic biomes blend grassland, forest, desert, rocky highland and wetlands.
      // Existing roads, landmarks, bridges and portal geometry remain layered above the terrain.
