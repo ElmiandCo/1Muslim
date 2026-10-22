@@ -4,6 +4,7 @@ import {useCallback,useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import LiveHomePreview from "./LiveHomePreview";
 import styles from "./SharedGameLobby.module.css";
+import {drawJurassic,jurassicTerrain,jurassicBlocked,updateJurassicDinos} from "./JurassicScene";
 
 type Suit="gold"|"silver"|"cosmic"|"diamond";
 type Player={id:string;userId?:string;name?:string;x:number;y:number;z:number;yaw:number;flying:boolean;boost:boolean;suit:Suit;seen:number};
@@ -88,7 +89,8 @@ export default function SharedGameLobby(){
  const [nearbyPlayers,setNearbyPlayers]=useState<Array<{id:string;userId?:string;name:string;feet:number}>>([]);const [selectedNearbyPlayer,setSelectedNearbyPlayer]=useState<string|null>(null);
  useEffect(()=>{const sync=()=>{const now=performance.now();const players=Array.from(peerRef.current.values()).filter(p=>now-p.seen<12000).map(p=>({id:p.id,userId:p.userId,name:p.name||"Explorer",feet:distance(local.current,p)*3.28084})).filter(p=>p.feet<=50).sort((a,b)=>a.feet-b.feet).slice(0,5);setNearbyPlayers(players);if(selectedNearbyPlayer&&!players.some(p=>p.id===selectedNearbyPlayer&&p.feet<=5))setSelectedNearbyPlayer(null)};sync();const timer=window.setInterval(sync,700);return()=>window.clearInterval(timer)},[selectedNearbyPlayer]);
  const [suit,setSuit]=useState<Suit>("gold"),[online,setOnline]=useState(false),[peerCount,setPeerCount]=useState(0);
- const propheticWorldRef=useRef(false); const [propheticWorld,setPropheticWorld]=useState(false); const enterPropheticWorld=()=>{propheticWorldRef.current=true;setPropheticWorld(true);setPicker(false);meetingSeatRef.current=null;setMeetingSeat(null);const p=local.current;p.x=0;p.z=115;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;setHint("Makkah circa 610 CE · Interpretive historical reconstruction");}; const exitPropheticWorld=()=>{propheticWorldRef.current=false;setPropheticWorld(false);const p=local.current;p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;setHint("Returned to the main Games lobby.");};
+ const jurassicRef=useRef(false); const [jurassicWorld,setJurassicWorld]=useState(false); const lastJurassicHit=useRef(0); const enterJurassic=()=>{jurassicRef.current=true;setJurassicWorld(true);propheticWorldRef.current=false;setPropheticWorld(false);setPicker(false);const p=local.current;p.x=0;p.z=0;p.y=jurassicTerrain(0,0);p.flying=false;p.boost=false;setHint("Jurassic World · Explore, fly, and avoid hunting dinosaurs.");}; const exitJurassic=()=>{jurassicRef.current=false;setJurassicWorld(false);const p=local.current;p.x=0;p.z=0;p.y=terrain(0,0);p.flying=false;setHint("Returned to Games lobby.");};
+ const propheticWorldRef=useRef(false); const [propheticWorld,setPropheticWorld]=useState(false); const enterPropheticWorld=()=>{jurassicRef.current=false;setJurassicWorld(false);propheticWorldRef.current=true;setPropheticWorld(true);setPicker(false);meetingSeatRef.current=null;setMeetingSeat(null);const p=local.current;p.x=0;p.z=115;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;setHint("Makkah circa 610 CE · Interpretive historical reconstruction");}; const exitPropheticWorld=()=>{propheticWorldRef.current=false;setPropheticWorld(false);const p=local.current;p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;setHint("Returned to the main Games lobby.");};
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
  const [error,setError]=useState(""),[hint,setHint]=useState("Explore the market road toward the portal; sky villages float beyond the city.");
  const [showInfo,setShowInfo]=useState(true);
@@ -204,8 +206,9 @@ export default function SharedGameLobby(){
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
    const previousX=p.x,previousZ=p.z;
-   const travelBounds=lunar?MOON_BOUNDS:propheticWorldRef.current?{minX:-700,maxX:700,minZ:-700,maxZ:700}:EXPLORATION_BOUNDS;
-   const proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,travelBounds.minX,travelBounds.maxX),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,travelBounds.minZ,travelBounds.maxZ);
+   const travelBounds=lunar?MOON_BOUNDS:jurassicRef.current?{minX:-540,maxX:540,minZ:-540,maxZ:540}:propheticWorldRef.current?{minX:-700,maxX:700,minZ:-700,maxZ:700}:EXPLORATION_BOUNDS;
+   let proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,travelBounds.minX,travelBounds.maxX),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,travelBounds.minZ,travelBounds.maxZ);
+   if(jurassicRef.current&&!p.flying&&jurassicBlocked(proposedX,proposedZ)){proposedX=p.x;proposedZ=p.z;}
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
    const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[]; 
@@ -261,7 +264,7 @@ export default function SharedGameLobby(){
    }
    p.boost=boosted; 
    const cityRoof=p.z<=-365&&p.z>=-515&&p.x>=-132&&p.x<=75;
-   const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=propheticWorldRef.current?0:onRoad?bridgeHeight:terrain(p.x,p.z);const floor=Math.max(skyLanding?45:roadFloor,roof);
+   const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=jurassicRef.current?jurassicTerrain(p.x,p.z):propheticWorldRef.current?0:onRoad?bridgeHeight:terrain(p.x,p.z);const floor=Math.max(skyLanding?45:roadFloor,roof);
    if(!lunar&&!eva&&!ship.current.inSpace&&p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
    if(eva){p.flying=true;const fall=evaFall.current;const thrust=(k.Space||k.ascend?1:0)-(k.c?1:0);if(p.y<1300)fall.active=true;if(fall.active){fall.speed=clamp(fall.speed+20*dt-thrust*8*dt,0,145);p.y-=fall.speed*dt;if(p.y<=Math.max(terrain(p.x,p.z),0)+2){p.y=Math.max(terrain(p.x,p.z),0)+2;setEva(false);setFlying(false);ship.current.inSpace=false;fall.active=false;setHint("🌍 Atmospheric re-entry complete. You landed back on Earth.");}}else p.y+=thrust*5.5*dt;}else if(ship.current.active){p.flying=true;}else if(plane.current.active){
      const takeoff=plane.current.speed>24;
@@ -290,7 +293,7 @@ export default function SharedGameLobby(){
     const dawn=clamp((cycle-5.75*60*60*1000)/(15*60*1000),0,1);
     const darkness=night?1-dawn:dusk;
     const atmosphere=moonModeRef.current.landed?1:clamp((p.y-65)/105,0,1);
-    if(propheticWorldRef.current){gl.clearColor(.58,.82,.98,1);}else{gl.clearColor(.91-darkness*.87-atmosphere*.9,.96-darkness*.92-atmosphere*.95,.97-darkness*.85-atmosphere*.95,1);}gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    if(jurassicRef.current){gl.clearColor(.48,.73,.81,1);}else if(propheticWorldRef.current){gl.clearColor(.58,.82,.98,1);}else{gl.clearColor(.91-darkness*.87-atmosphere*.9,.96-darkness*.92-atmosphere*.95,.97-darkness*.85-atmosphere*.95,1);}gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     // Keep the camera the same distance behind the player on both axes.
     // Smooth normal movement and fullscreen zoom, but snap after teleportation.
     const followDistance=ship.current.active?33:plane.current.active?21:fullscreenRef.current?10:7;
@@ -301,7 +304,10 @@ export default function SharedGameLobby(){
     else{const blend=1-Math.exp(-12*dt);for(let axis=0;axis<3;axis++)chaseCamera[axis]+=(targetCam[axis]-chaseCamera[axis])*blend;}
     const meetingView=meetingSeatRef.current!==null; const orbit=meetingCamera.current;const cam=meetingView?[ -125+Math.sin(orbit.angle)*orbit.distance,45+orbit.height,-120+Math.cos(orbit.angle)*orbit.distance ]:(chaseCamera??targetCam),at=meetingView?[-125,47.4,-120]:[p.x,p.y+1.3,p.z];
     const vp=mul(perspective(Math.PI/3,w/h,.1,200000),lookAt(cam,at));
-    if(propheticWorldRef.current){
+    if(jurassicRef.current){
+      drawJurassic((x,y,z,sx,sy,sz,color,alpha,angle)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now);
+      updateJurassicDinos(dt,now,p,()=>{if(now-lastJurassicHit.current<1800)return;lastJurassicHit.current=now;p.x=0;p.z=0;p.y=jurassicTerrain(0,0);p.flying=false;setHint("A predator caught you! Respawned at the Jurassic clearing.");});
+    }else if(propheticWorldRef.current){
       // A separate historically inspired Makkah environment, not the modern city geometry.
       for(let ix=-17;ix<=17;ix++)for(let iz=-17;iz<=17;iz++){const x=ix*46,z=iz*46;draw(vp,x,-.3,z,46,.6,46,[.61+.025*Math.sin(ix*2+iz),.48,.31]);}
       for(let i=0;i<100;i++){const a=i*2.399963,r=320+(i%9)*30,x=Math.cos(a)*r,z=Math.sin(a)*r,h=25+Math.abs(Math.sin(i*1.91))*65;draw(vp,x,h*.5,z,26,h,30,[.48,.38,.29]);draw(vp,x,h*.82,z,15,h*.36,18,[.58,.47,.36]);}
@@ -1049,7 +1055,8 @@ export default function SharedGameLobby(){
   {showInfo&&crashed&&<div className={styles.toast} role="status">💥 Hard landing! Recovering…</div>}
   <div className={styles.controls}><div role="group" aria-label="Analog movement joystick" onTouchStartCapture={e=>e.stopPropagation()} onTouchMoveCapture={e=>{e.stopPropagation();if(e.cancelable)e.preventDefault()}} onPointerDown={e=>{e.preventDefault();e.stopPropagation();stickPointer.current=e.pointerId;e.currentTarget.setPointerCapture(e.pointerId);moveStick(e)}} onPointerMove={e=>{e.stopPropagation();moveStick(e)}} onPointerUp={e=>{e.stopPropagation();releaseStick(e)}} onPointerCancel={releaseStick} onLostPointerCapture={e=>{if(stickPointer.current===e.pointerId)releaseStick(e)}} style={{width:124,height:124,borderRadius:"50%",position:"relative",touchAction:"none",pointerEvents:"auto",background:"radial-gradient(circle,#1a60584d,#092c2a44)",border:"1px solid #b9e6d07a",boxShadow:"inset 0 0 24px #071d1c66",flexShrink:0}}><div style={{position:"absolute",inset:25,borderRadius:"50%",border:"1px solid #c5d6bc44",pointerEvents:"none"}}/>{(["▲", "◀", "▶", "▼"] as const).map((arrow,i)=><span key={arrow} aria-hidden="true" style={{position:"absolute",left:i===1?"14%":i===2?"86%":"50%",top:i===0?"14%":i===3?"86%":"50%",transform:"translate(-50%,-50%)",fontSize:15,fontWeight:800,color:"rgba(230,250,241,.85)",textShadow:"0 1px 4px rgba(0,0,0,.7)",pointerEvents:"none",userSelect:"none"}}>{arrow}</span>)}<div style={{position:"absolute",left:"50%",top:"50%",width:54,height:54,borderRadius:"50%",transform:`translate(calc(-50% + ${stickPosition.x*38}px),calc(-50% + ${stickPosition.y*38}px))`,background:"radial-gradient(circle at 30% 25%,#b7e6d5c9,#176e62dd)",border:"2px solid #d4c28b",boxShadow:"0 4px 15px #0008",pointerEvents:"none",transition:stickPointer.current===null?"transform .14s ease-out":"none"}}/></div><button type="button" aria-label={boostActive?"Disable unlimited boost":"Enable unlimited boost"} aria-pressed={boostActive} onClick={activateBoost} style={{pointerEvents:"auto",alignSelf:"flex-end",minWidth:50,minHeight:34,borderRadius:11,border:"1px solid rgba(255,226,138,.65)",background:boostActive?"linear-gradient(135deg,#ffd36a,#f69e32)":"linear-gradient(135deg,rgba(5,75,58,.92),rgba(13,135,105,.95))",color:boostActive?"#18382b":"#fff",fontWeight:800,fontSize:11,boxShadow:boostActive?"0 0 18px rgba(255,203,75,.55)":"0 4px 14px rgba(0,0,0,.25)",opacity:1}}>⚡ {boostActive?"3× ON":"BOOST"}</button></div>
   {error&&<div role="alert" className={styles.error}>{error}</div>}
-  {picker&&<div className={styles.modal}><div className={styles.picker}><button className={styles.close} onClick={()=>setPicker(false)} aria-label="Close world selector">✕</button><h2>Choose Your Universe</h2><p>Explore the worlds of 1Muslim Games</p><div className={styles.worlds}>{WORLDS.map(w=><button key={w} onClick={()=>{if(w==="Time of Muhammad ﷺ")enterPropheticWorld();else{setWorldMessage(w+" is not yet connected to this lobby build.");setPicker(false)}}}>{w} <small>Preview pending</small></button>)}</div></div></div>}
+  {picker&&<div className={styles.modal}><div className={styles.picker}><button className={styles.close} onClick={()=>setPicker(false)} aria-label="Close world selector">✕</button><h2>Choose Your Universe</h2><p>Explore the worlds of 1Muslim Games</p><div className={styles.worlds}>{WORLDS.map(w=><button key={w} onClick={()=>{if(w==="Time of Muhammad ﷺ")enterPropheticWorld();else if(w==="Dinosaurs")enterJurassic();else{setWorldMessage(w+" is not yet connected to this lobby build.");setPicker(false)}}}>{w} <small>Preview pending</small></button>)}</div></div></div>}
+  {jurassicWorld&&<button type="button" onClick={exitJurassic} style={{position:"absolute",top:66,left:12,zIndex:49,padding:"9px 12px",borderRadius:9,background:"#174e35",color:"white",border:0}}>↩ Main Lobby</button>}
   {propheticWorld&&<div style={{position:"absolute",top:66,left:12,zIndex:48,display:"flex",gap:8,alignItems:"center",padding:"7px 10px",borderRadius:14,background:"rgba(28,29,20,.8)",border:"1px solid #cba75c",color:"#fff2ce",fontSize:12}}><span>🕋 Makkah → Madinah · desert route · 610 CE interpretation</span><button onClick={exitPropheticWorld} style={{background:"#664b26",color:"white",border:0,borderRadius:9,padding:"7px 9px"}}>↩ Main Lobby</button></div>}
   {worldMessage&&<div className={styles.toast} role="status" onClick={()=>setWorldMessage("")}>{worldMessage} · Dismiss ✕</div>}
   <span className={styles.srOnly}>Shared presence is an experimental room and does not establish authenticated player identity. Suits are local preview choices.</span>
