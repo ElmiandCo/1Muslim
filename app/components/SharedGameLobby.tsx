@@ -10,6 +10,17 @@ type Player={id:string;userId?:string;name?:string;x:number;y:number;z:number;ya
 type Live={id:string;room_name:string|null;title:string};
 const SUITS:Suit[]=["gold","silver","cosmic","diamond"];
 const WORLDS=["Dinosaurs","Time of Moses","Time of Jesus","Time of Muhammad ﷺ","Today","Future"];
+// HudHud wayfinding: match the five districts rendered below; this is an informational map, not teleportation.
+const EXPLORATION_BOUNDS={minX:-1900,maxX:1400,minZ:-1350,maxZ:1850} as const;
+const CITY_WAYPOINTS=[
+ {name:"Nile Quarter",description:"Pyramids",x:-720,z:180,color:"#e7c17c"},
+ {name:"Courtyard City",description:"Courtyards",x:-420,z:850,color:"#d4bd78"},
+ {name:"Skyline City",description:"High-rises",x:-1260,z:-170,color:"#8dd2ed"},
+ {name:"Beach City",description:"Beach & boardwalk",x:-110,z:1580,color:"#e8d39c"},
+ {name:"Grand Metro",description:"Metropolitan center",x:-1530,z:760,color:"#c9b4f5"}
+] as const;
+const mapX=(x:number)=>((x-EXPLORATION_BOUNDS.minX)/(EXPLORATION_BOUNDS.maxX-EXPLORATION_BOUNDS.minX))*320;
+const mapY=(z:number)=>((z-EXPLORATION_BOUNDS.minZ)/(EXPLORATION_BOUNDS.maxZ-EXPLORATION_BOUNDS.minZ))*320;
 const SUIT_COLORS:Record<Suit,[number,number,number]>={gold:[.99,.73,.23],silver:[.72,.83,.89],cosmic:[.53,.36,.94],diamond:[.62,.92,1]};
 const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
 const terrain=(x:number,z:number)=>.12*Math.sin(x*.11)*Math.cos(z*.09);
@@ -64,6 +75,10 @@ export default function SharedGameLobby(){
  const [combatShop,setCombatShop]=useState(false);const [combatXp,setCombatXp]=useState(5000);const [weapon,setWeapon]=useState("pulse");const [shield,setShield]=useState(false);
  const [ownedWeapons,setOwnedWeapons]=useState<string[]>(["pulse"]);
  const fireShot=()=>{const now=performance.now();if(now-lastShot.current<380||now<knockdownUntil.current)return;lastShot.current=now;const p=local.current;const power=weapon==="nova"?2:1;const shot={id:p.id+"-"+Math.floor(now),owner:p.id,x:p.x+Math.sin(p.yaw)*2,y:p.y+1.4,z:p.z+Math.cos(p.yaw)*2,vx:Math.sin(p.yaw)*(weapon==="nova"?120:90),vz:Math.cos(p.yaw)*(weapon==="nova"?120:90),life:1.7,power};projectiles.current.push(shot);void combatChannel.current?.send({type:"broadcast",event:"shot",payload:shot});};
+ const [worldMapOpen,setWorldMapOpen]=useState(false);
+ const [mapPlayer,setMapPlayer]=useState({x:0,z:0});
+ useEffect(()=>{if(!worldMapOpen)return;const sync=()=>setMapPlayer({x:local.current.x,z:local.current.z});sync();const timer=window.setInterval(sync,350);return()=>window.clearInterval(timer)},[worldMapOpen]);
+ useEffect(()=>{if(!worldMapOpen)return;const close=(e:KeyboardEvent)=>{if(e.key==="Escape")setWorldMapOpen(false)};window.addEventListener("keydown",close);return()=>window.removeEventListener("keydown",close)},[worldMapOpen]);
  const [lobbyChatOpen,setLobbyChatOpen]=useState(false);
  const [lobbyChatDraft,setLobbyChatDraft]=useState("");
  const [lobbyChatMessages,setLobbyChatMessages]=useState<Array<{id:string;sender:string;text:string;time:number;mine:boolean}>>([]);
@@ -170,7 +185,7 @@ export default function SharedGameLobby(){
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
    const previousX=p.x,previousZ=p.z;
-   const proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,-230,1300),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,-550,270);
+   const proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,EXPLORATION_BOUNDS.minX,EXPLORATION_BOUNDS.maxX),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,EXPLORATION_BOUNDS.minZ,EXPLORATION_BOUNDS.maxZ);
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
    const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[];
@@ -207,8 +222,8 @@ export default function SharedGameLobby(){
    }
    if(!struck&&!plane.current.active&&!ship.current.active){p.x=proposedX;p.z=proposedZ}
    else{ // Small, damped rebound rather than teleporting or sticking to a wall.
-     p.x=clamp(p.x-dx*Math.min(.6,speed*dt*.45),-230,1300);
-     p.z=clamp(p.z-dz*Math.min(.6,speed*dt*.45),-550,270);
+     p.x=clamp(p.x-dx*Math.min(.6,speed*dt*.45),EXPLORATION_BOUNDS.minX,EXPLORATION_BOUNDS.maxX);
+     p.z=clamp(p.z-dz*Math.min(.6,speed*dt*.45),EXPLORATION_BOUNDS.minZ,EXPLORATION_BOUNDS.maxZ);
      crashUntil=now+260;setCrashed(true);
    }
    p.boost=boosted; 
@@ -815,6 +830,28 @@ export default function SharedGameLobby(){
  const move=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(!drag.current||drag.current.id!==e.pointerId)return;const delta=e.clientX-drag.current.x;drag.current.x=e.clientX;local.current.yaw-=delta*.008};
  return <section onPointerDown={wakeHud} ref={gameRoot} className={styles.root} style={gameFullscreen?{position:"fixed",inset:0,width:"100vw",height:"100dvh",zIndex:2147483647,borderRadius:0,margin:0}:undefined} aria-label="1Muslim shared 3D game lobby">
   <button type="button" onClick={()=>void toggleGameFullscreen()} aria-label={gameFullscreen?"Exit game fullscreen":"Enter game fullscreen"} aria-pressed={gameFullscreen} style={{position:"absolute",top:"max(12px,env(safe-area-inset-top))",right:"max(12px,env(safe-area-inset-right))",zIndex:30,width:42,height:42,borderRadius:13,border:"1px solid rgba(226,204,142,.75)",background:"rgba(4,42,37,.7)",backdropFilter:"blur(12px)",color:"white",fontSize:22,cursor:"pointer"}}>{gameFullscreen?"✕":"⛶"}</button>
+
+  <button type="button" aria-controls="game-world-settings-map" aria-expanded={worldMapOpen} aria-label={worldMapOpen?"Close world map":"Open world settings map"} onClick={()=>setWorldMapOpen(v=>!v)} style={{position:"absolute",top:"max(12px,env(safe-area-inset-top))",left:"max(12px,env(safe-area-inset-left))",zIndex:30,width:42,height:42,borderRadius:13,border:"1px solid rgba(191,234,223,.5)",background:"rgba(5,45,43,.55)",backdropFilter:"blur(15px)",color:"#fff",fontSize:22,cursor:"pointer"}}>{worldMapOpen?"✕":"🗺️"}</button>
+  {worldMapOpen&&<aside id="game-world-settings-map" aria-label="World exploration map" style={{position:"absolute",top:"calc(max(12px,env(safe-area-inset-top)) + 50px)",left:"max(12px,env(safe-area-inset-left))",width:"min(340px,calc(100% - 24px))",maxHeight:"min(78dvh,680px)",overflowY:"auto",overscrollBehavior:"contain",zIndex:29,padding:14,borderRadius:20,border:"1px solid rgba(182,230,218,.45)",background:"linear-gradient(150deg,rgba(3,39,42,.68),rgba(8,45,58,.53))",boxShadow:"0 15px 55px rgba(0,0,0,.25)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"#fff",touchAction:"pan-y"}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:8}}><strong style={{letterSpacing:".06em",fontSize:13}}>✦ WORLD EXPLORER</strong><span style={{fontSize:11,opacity:.8}}>Live position · 5 cities</span></div>
+    <svg viewBox="0 0 320 320" role="img" aria-label="Map showing your current position, five cities, roads, lake, skywalk, arena and tunnels" style={{width:"100%",height:"auto",display:"block",borderRadius:14,background:"rgba(2,22,27,.38)",border:"1px solid rgba(193,228,222,.18)"}}>
+      <defs><pattern id="game-world-map-grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M 32 0 L 0 0 0 32" fill="none" stroke="rgba(190,240,230,.12)" strokeWidth="1"/></pattern></defs>
+      <rect width="320" height="320" fill="url(#game-world-map-grid)"/>
+      <ellipse cx={mapX(-790)} cy={mapY(720)} rx={350*320/(EXPLORATION_BOUNDS.maxX-EXPLORATION_BOUNDS.minX)} ry={280*320/(EXPLORATION_BOUNDS.maxZ-EXPLORATION_BOUNDS.minZ)} fill="rgba(41,159,219,.35)" stroke="rgba(119,211,255,.75)" strokeWidth="1.2"/>
+      {CITY_WAYPOINTS.map(city=><line key={"road-"+city.name} x1={mapX(0)} y1={mapY(0)} x2={mapX(city.x)} y2={mapY(city.z)} stroke="rgba(240,216,150,.36)" strokeWidth="2" strokeDasharray="5 4"/>)}
+      <line x1={mapX(-6)} y1={mapY(70)} x2={mapX(-110)} y2={mapY(1580)} stroke="#98ecf2" strokeWidth="3" strokeDasharray="3 3"><title>Glass skywalk to Beach City</title></line>
+      <circle cx={mapX(180)} cy={mapY(-780)} r="5" fill="#e6a96a"><title>Sports arena</title></circle>
+      <circle cx={mapX(0)} cy={mapY(-890)} r="5" fill="#c8c9cc"><title>Mountain tunnels</title></circle>
+      {CITY_WAYPOINTS.map(city=><g key={city.name}><circle cx={mapX(city.x)} cy={mapY(city.z)} r="7" fill={city.color} stroke="#fff" strokeWidth="1.5"><title>{city.name} — {city.description}</title></circle><text x={mapX(city.x)} y={mapY(city.z)-11} fill="#fff" stroke="rgba(0,25,26,.85)" strokeWidth="2.5" paintOrder="stroke" textAnchor="middle" fontSize="10" fontWeight="700">{city.name}</text></g>)}
+      <circle cx={mapX(0)} cy={mapY(0)} r="4" fill="#f8e0a1"><title>Home / spawn</title></circle>
+      <circle cx={mapX(mapPlayer.x)} cy={mapY(mapPlayer.z)} r="10" fill="rgba(76,255,186,.18)" stroke="#63ffc5" strokeWidth="1.5"/>
+      <circle cx={mapX(mapPlayer.x)} cy={mapY(mapPlayer.z)} r="4" fill="#63ffc5"><title>Your current position</title></circle>
+      <text x="302" y="18" textAnchor="end" fill="#c6f3e7" fontSize="11">N ↑</text>
+    </svg>
+    <div style={{display:"flex",justifyContent:"space-between",gap:8,fontSize:11,marginTop:8,color:"#c6f3e7"}}><span>🟢 You · X {Math.round(mapPlayer.x)}, Z {Math.round(mapPlayer.z)}</span><span>Routes are approximate</span></div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 12px",marginTop:10,fontSize:11}}>{CITY_WAYPOINTS.map(city=><div key={city.name} style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}><span aria-hidden="true" style={{background:city.color,width:9,height:9,borderRadius:"50%",flexShrink:0}}/><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{city.name} · {Math.round(Math.hypot(city.x-mapPlayer.x,city.z-mapPlayer.z))}m</span></div>)}</div>
+    <p style={{fontSize:11,margin:"10px 0 0",color:"#d1e9e3",lineHeight:1.5}}>🏟 Arena · ⛰ Mountain tunnels · 🌊 Lake · ✧ Glass skywalk · 🏖 Beach. Explore on foot or fly; this map does not teleport players.</p>
+  </aside>}
   {showFlyTutorial&&<div role="status" aria-live="polite" style={{position:"absolute",top:"18%",left:"50%",transform:"translateX(-50%)",width:"min(330px,calc(100% - 40px))",padding:"18px 22px",borderRadius:22,background:"rgba(5,29,28,.48)",backdropFilter:"blur(15px)",WebkitBackdropFilter:"blur(15px)",border:"1px solid rgba(223,207,138,.32)",boxShadow:"0 12px 35px rgba(0,0,0,.18)",color:"#fff",textAlign:"center",zIndex:28,pointerEvents:"none",animation:"fadeOut .55s ease 3.05s forwards"}}><div style={{fontSize:30,marginBottom:5}}>👆 👆 ✋ ✨</div><div style={{fontSize:22,fontWeight:850,letterSpacing:".02em",textShadow:"0 2px 9px rgba(0,0,0,.7)"}}>TAP · TAP · HOLD</div><div style={{fontSize:16,fontWeight:650,marginTop:6,textShadow:"0 2px 8px rgba(0,0,0,.75)"}}>Take off and fly! 🕊️</div></div>}
   <canvas ref={canvas} className={styles.canvas} tabIndex={0} aria-label="Third-person 3D world; click to control. WASD move, mouse drag look, Space jump or ascend, F fly, Shift boost, C descend." onPointerDown={down} onPointerMove={move} onPointerUp={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}} onPointerCancel={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}}/>
 
