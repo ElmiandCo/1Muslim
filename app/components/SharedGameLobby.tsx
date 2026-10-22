@@ -49,6 +49,9 @@ function makeRenderer(canvas:HTMLCanvasElement){
 export default function SharedGameLobby(){
  const [hudVisible,setHudVisible]=useState(true); const hudTimer=useRef<ReturnType<typeof setTimeout>|null>(null); const wakeHud=useCallback(()=>{setHudVisible(true);if(hudTimer.current)clearTimeout(hudTimer.current);hudTimer.current=setTimeout(()=>setHudVisible(false),5000)},[]); useEffect(()=>{wakeHud();return()=>{if(hudTimer.current)clearTimeout(hudTimer.current)}},[wakeHud]);
  const gameRoot=useRef<HTMLElement>(null); const [gameFullscreen,setGameFullscreen]=useState(false);
+ // The WebGL render loop mounts once, so read fullscreen through a live ref.
+ const fullscreenRef=useRef(false);
+ useEffect(()=>{fullscreenRef.current=gameFullscreen},[gameFullscreen]);
  const toggleGameFullscreen=useCallback(async()=>{const root=gameRoot.current;if(!root)return;if(gameFullscreen){if(document.fullscreenElement)await document.exitFullscreen().catch(()=>{});setGameFullscreen(false);return}setGameFullscreen(true);if(root.requestFullscreen)await root.requestFullscreen().catch(()=>{});},[gameFullscreen]);
  useEffect(()=>{const sync=()=>{if(!document.fullscreenElement)setGameFullscreen(false)};document.addEventListener("fullscreenchange",sync);return()=>document.removeEventListener("fullscreenchange",sync)},[]);
  const councilArt=useRef<HTMLDivElement>(null); const councilProjection=useRef<HTMLDivElement>(null); const [councilScreenUrl,setCouncilScreenUrl]=useState<string|null>(null);
@@ -129,6 +132,7 @@ export default function SharedGameLobby(){
   try{renderer=makeRenderer(node)}catch(e){setError(e instanceof Error?e.message:"WebGL initialization failed");return}
   if(!renderer){setError("WebGL is unavailable on this device.");return}
   const {gl,draw}=renderer;let frame=0,prev=performance.now(),velocity=0,wasNear=false,crashUntil=0;
+  let chaseCamera:[number,number,number]|null=null;
   const render=(now:number)=>{
    const dt=clamp((now-prev)/1000,0,.05);prev=now;
    const p=local.current,k=keys.current;
@@ -231,7 +235,15 @@ export default function SharedGameLobby(){
     const darkness=night?1-dawn:dusk;
     const atmosphere=clamp((p.y-80)/1200,0,1);
     gl.clearColor(.91-darkness*.87-atmosphere*.9,.96-darkness*.92-atmosphere*.95,.97-darkness*.85-atmosphere*.95,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-    const cam=[p.x-Math.sin(p.yaw)*(ship.current.active?33:plane.current.active?21:gameFullscreen?10:7),p.y+(ship.current.active?15:plane.current.active?10:gameFullscreen?5:4),p.z-Math.cos(p.yaw)*(ship.current.active?33:plane.current.active?21:7)],at=[p.x,p.y+1.3,p.z];
+    // Keep the camera the same distance behind the player on both axes.
+    // Smooth normal movement and fullscreen zoom, but snap after teleportation.
+    const followDistance=ship.current.active?33:plane.current.active?21:fullscreenRef.current?10:7;
+    const followHeight=ship.current.active?15:plane.current.active?10:fullscreenRef.current?5:4;
+    const targetCam:[number,number,number]=[p.x-Math.sin(p.yaw)*followDistance,p.y+followHeight,p.z-Math.cos(p.yaw)*followDistance];
+    const cameraGap=chaseCamera?Math.hypot(targetCam[0]-chaseCamera[0],targetCam[1]-chaseCamera[1],targetCam[2]-chaseCamera[2]):Infinity;
+    if(!chaseCamera||cameraGap>80)chaseCamera=targetCam;
+    else{const blend=1-Math.exp(-12*dt);for(let axis=0;axis<3;axis++)chaseCamera[axis]+=(targetCam[axis]-chaseCamera[axis])*blend;}
+    const cam=chaseCamera??targetCam,at=[p.x,p.y+1.3,p.z];
     const vp=mul(perspective(Math.PI/3,w/h,.1,200000),lookAt(cam,at));
     // Procedural deep-space starfield: deterministic positions around the camera, no external assets.
     if(atmosphere>.05){for(let i=0;i<270;i++){const theta=(i*2.399963229728653)% (Math.PI*2),phi=Math.acos(1-2*((i*.61803398875)%1));const rr=4200;const sx=p.x+rr*Math.sin(phi)*Math.cos(theta),sy=p.y+rr*Math.cos(phi),sz=p.z+rr*Math.sin(phi)*Math.sin(theta);const twinkle=.6+.4*Math.sin(now*.0008+i*7.1);draw(vp,sx,sy,sz,2+i%3,2+i%3,2+i%3,[.7+twinkle*.25,.78+twinkle*.2,1],atmosphere);}}
