@@ -534,6 +534,17 @@ export default function SharedGameLobby(){
       for(let level=2;level<height;level+=2.3)for(const off of [-2,0,2])draw(vp,x+off,level,z-side*3.08,.7,.9,.12,[.42,.74,.82],.85);
       draw(vp,x+4,.8,z-side*5,2,1.6,1.4,[.87,.67,.36]); // market stall
       draw(vp,x+4,1.85,z-side*5,2.5,.28,2,[.24,.65,.5]); // awning
+      // HudHud: close-range market detailing, no changes to collision geometry.
+      if((p.x-x)*(p.x-x)+(p.z-z)*(p.z-z)<150*150){
+        const facing=z-side*3.12;
+        const lantern=darkness>.5?[1,.72,.3]:[.84,.66,.35];
+        draw(vp,x,height+.92,z,8.5,.12,7.6,[.95,.78,.43]);
+        draw(vp,x,height+.72,z,7.8,.17,7.1,[.12,.38,.34]);
+        for(const offset of [-2.7,2.7]){
+          draw(vp,x+offset,height*.52,facing,.22,height*.76,.13,[.88,.76,.51]);
+          draw(vp,x+offset,2.65,facing-side*.16,.46,.64,.3,lantern,darkness>.5?.98:.74);
+        }
+      }
     }}
     // Avenues branching toward future neighborhoods.
     for(const x of [16,44,72])draw(vp,x,.055,0,6,.08,88,[.4,.48,.47]);
