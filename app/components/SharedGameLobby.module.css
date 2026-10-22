@@ -24,6 +24,8 @@
 .controls{position:absolute;bottom:52px;left:10px;right:10px;z-index:8;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;touch-action:none}
 .controls button{pointer-events:auto;border:1px solid #fff8;background:#064b40b9;color:#fff;border-radius:10px;min-width:38px;min-height:38px;box-shadow:0 3px 10px #083a352b;font-weight:900;touch-action:none}
 .controls button:active{background:#0ba580}
+/* Prevent long-press callouts and accidental text selection while holding mobile movement buttons. */
+.controls button{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 .dpad{display:flex;flex-direction:column;align-items:center;gap:3px}
 .dpad>div{display:flex;gap:3px}
 .actions{display:grid;grid-template-columns:repeat(2,minmax(38px,1fr));gap:4px}
