@@ -13,3 +13,5 @@ today:["#80b8e8","#c6d9dc","#8cae94","#9dbba0"],
 future:["#303c75","#8593bc","#444f79","#576388"]};
 
 export function heightAt(x: number, z: number, era: Era): number { if (era === "hub") return 0; return Math.sin(x * 0.09) * Math.cos(z * 0.075); }
+
+export function waterAt(x:number,z:number,era:Era):boolean { return x>16 && z>8 && (era==="dinosaurs" || era==="moses" || era==="muhammad"); }
