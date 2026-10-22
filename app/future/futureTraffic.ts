@@ -1,4 +1,5 @@
-import {box,type Camera} from "./futureMath";
+import {type Camera} from "./futureMath";
+import {box} from "./futureBox";
 export function drawTraffic(c:CanvasRenderingContext2D,p:Camera,w:number,h:number,t:number){
  for(let i=0;i<16;i++){
   const z=((t*.012+i*65)%850)-425,x=i%2?25:-25;
