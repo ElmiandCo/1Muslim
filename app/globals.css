@@ -682,3 +682,12 @@ html[data-profile-background] .omQuranPage .omQuranBackgroundOverlay > *{positio
 @media(prefers-reduced-motion:reduce){
  html[data-profile-background] .omQuranPage .omQuranBackgroundOverlay::before{transition:none}
 }
+
+/* Games mode: keep the lobby and mobile controls above legacy Live conversation overlays. */
+.oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveBottom,
+.oneMuslimLiveStage[data-live-format="games"] .homeLiveViewerConversation,
+.oneMuslimLiveStage[data-live-format="games"] .homeLiveCommentForm,
+.oneMuslimLiveStage[data-live-format="games"] .homeLiveDemoComments {display:none!important;pointer-events:none!important;}
+.oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveTop,
+.oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveVideo {position:relative;z-index:2;min-height:0;}
+.oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveVideo {pointer-events:auto;touch-action:pan-x pan-y;}
