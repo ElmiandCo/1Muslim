@@ -54,11 +54,13 @@ export default function SharedGameLobby(){
  const [suit,setSuit]=useState<Suit>("gold"),[online,setOnline]=useState(false),[peerCount,setPeerCount]=useState(0);
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
  const [error,setError]=useState(""),[hint,setHint]=useState("Explore the market road toward the portal; sky villages float beyond the city.");
- const plane=useRef({active:false,speed:0}); const ship=useRef({active:false,boostUntil:0}); const [shipOn,setShipOn]=useState(false); const [nearVehicle,setNearVehicle]=useState<"plane"|"car"|"helicopter"|"ship"|null>(null); const [shipMedia,setShipMedia]=useState(false); const [shipCamera,setShipCamera]=useState(false); const shipVideo=useRef<HTMLVideoElement>(null); const shipStream=useRef<MediaStream|null>(null); const [piloting,setPiloting]=useState(false); const [flying,setFlying]=useState(false); const [boostActive,setBoostActive]=useState(false); const boostUntil=useRef(0); const [workerMessage,setWorkerMessage]=useState(false); const voiceRoom=useRef<import("livekit-client").Room|null>(null); const voiceTracks=useRef<Map<string,HTMLAudioElement>>(new Map()); const [voiceOn,setVoiceOn]=useState(false); const [voiceBusy,setVoiceBusy]=useState(false); const gesture=useRef({lastTap:0,downAt:0,hold:false}); const [crashed,setCrashed]=useState(false); const flightPose=useRef({takeoff:0,landing:0}); const [emote,setEmote]=useState<"none"|"wave"|"pose"|"celebrate">("none"); const emoteUntil=useRef(0);
+ const plane=useRef({active:false,speed:0}); const ship=useRef({active:false,boostUntil:0,x:155,y:145,z:-27,inSpace:false}); const [eva,setEva]=useState(false); const [shipOn,setShipOn]=useState(false); const [nearVehicle,setNearVehicle]=useState<"plane"|"car"|"helicopter"|"ship"|null>(null); const [shipMedia,setShipMedia]=useState(false); const [shipCamera,setShipCamera]=useState(false); const shipVideo=useRef<HTMLVideoElement>(null); const shipStream=useRef<MediaStream|null>(null); const [piloting,setPiloting]=useState(false); const [flying,setFlying]=useState(false); const [boostActive,setBoostActive]=useState(false); const boostUntil=useRef(0); const [workerMessage,setWorkerMessage]=useState(false); const voiceRoom=useRef<import("livekit-client").Room|null>(null); const voiceTracks=useRef<Map<string,HTMLAudioElement>>(new Map()); const [voiceOn,setVoiceOn]=useState(false); const [voiceBusy,setVoiceBusy]=useState(false); const gesture=useRef({lastTap:0,downAt:0,hold:false}); const [crashed,setCrashed]=useState(false); const flightPose=useRef({takeoff:0,landing:0}); const [emote,setEmote]=useState<"none"|"wave"|"pose"|"celebrate">("none"); const emoteUntil=useRef(0);
  const setKey=(k:string,on:boolean)=>{keys.current[k]=on};
  const activateBoost=()=>{if(!local.current.flying)return;boostUntil.current=performance.now()+5000;setBoostActive(true)};
- const exitShip=()=>{ship.current.active=false;setShipOn(false);ship.current.boostUntil=0;setShipMedia(false);shipStream.current?.getTracks().forEach(t=>t.stop());shipStream.current=null;setShipCamera(false);const p=local.current;p.x=155;p.z=-27;p.y=4;p.flying=false;setFlying(false);setHint("Returned to the spaceport.");};
- const boardShip=()=>{const p=local.current;if(Math.hypot(p.x-155,p.z+27)>23||p.y>20){setHint("Approach the spaceport to board the ship.");return;}plane.current.active=false;setPiloting(false);ship.current.active=true;setShipOn(true);p.x=155;p.y=145;p.z=-27;p.yaw=Math.PI/2;p.flying=true;setFlying(true);setHint("Spacecraft cockpit: 450× walking speed · 2 minutes to Moon · BOOST available.");};
+ const exitShip=()=>{setEva(false);ship.current.inSpace=false;ship.current.active=false;setShipOn(false);ship.current.boostUntil=0;setShipMedia(false);shipStream.current?.getTracks().forEach(t=>t.stop());shipStream.current=null;setShipCamera(false);const p=local.current;p.x=155;p.z=-27;p.y=4;p.flying=false;setFlying(false);setHint("Returned to the spaceport.");};
+ const leaveShipInSpace=()=>{if(!ship.current.active)return;ship.current.active=false;ship.current.inSpace=true;setShipOn(false);setEva(true);const p=local.current;p.x=ship.current.x;p.y=ship.current.y;p.z=ship.current.z+13;p.flying=true;setFlying(true);setHint("SPACEWALK · WASD drift · SPACE rise · C descend · return within 22m of shuttle to reboard.");};
+ const reboardShip=()=>{const p=local.current;if(!eva||Math.hypot(p.x-ship.current.x,p.y-ship.current.y,p.z-ship.current.z)>24)return;ship.current.active=true;ship.current.inSpace=true;setEva(false);setShipOn(true);p.x=ship.current.x;p.y=ship.current.y;p.z=ship.current.z;p.flying=true;setHint("Back aboard. Pilot controls restored.");};
+ const boardShip=()=>{const p=local.current;if(Math.hypot(p.x-155,p.z+27)>23||p.y>20){setHint("Approach the spaceport to board the ship.");return;}plane.current.active=false;setPiloting(false);ship.current.inSpace=true;ship.current.x=155;ship.current.y=145;ship.current.z=-27;ship.current.active=true;setShipOn(true);p.x=155;p.y=145;p.z=-27;p.yaw=Math.PI/2;p.flying=true;setFlying(true);setHint("Spacecraft cockpit: 450× walking speed · 2 minutes to Moon · BOOST available.");};
  const startShipMedia=async(kind:"camera"|"screen")=>{try{shipStream.current?.getTracks().forEach(t=>t.stop());const stream=kind==="camera"?await navigator.mediaDevices.getUserMedia({video:true,audio:false}):await navigator.mediaDevices.getDisplayMedia({video:true,audio:false});shipStream.current=stream;setShipMedia(true);setShipCamera(kind==="camera");if(shipVideo.current){shipVideo.current.srcObject=stream;void shipVideo.current.play().catch(()=>{});}stream.getVideoTracks()[0]?.addEventListener("ended",()=>{setShipMedia(false);setShipCamera(false);shipStream.current=null;});}catch{setHint("Camera or screen sharing permission was not granted.");}};
  const togglePlane=()=>{const p=local.current;if(plane.current.active){plane.current.active=false;plane.current.speed=0;setPiloting(false);p.flying=false;setFlying(false);setHint("You exited the aircraft.");return;}if(Math.hypot(p.x-110,p.z+345)>19||p.y>8){setHint("Approach the aircraft at the airport runway to board.");return;}plane.current.active=true;plane.current.speed=0;p.x=110;p.z=-345;p.y=3;p.yaw=Math.PI/2;p.flying=true;setFlying(true);setPiloting(true);setHint("Aircraft boarded! W/▲ accelerate, S/▼ brake, A/D steer, SPACE climb, C descend, E exit.");};
  const toggleFly=useCallback(()=>{const p=local.current;p.flying=!p.flying;setFlying(p.flying);if(p.flying){flightPose.current.takeoff=performance.now();p.y=Math.max(p.y,terrain(p.x,p.z)+1.3)}else flightPose.current.landing=performance.now()},[]);
@@ -90,13 +92,12 @@ export default function SharedGameLobby(){
    for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000);const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=feet<=20?1:feet<=30?1-(feet-20)*.05:feet<=40?.5-(feet-30)*.05:0;}
    const moving=Number(!!(k.w||k.ArrowUp))-Number(!!(k.s||k.ArrowDown));
    const strafing=Number(!!(k.a||k.ArrowLeft))-Number(!!(k.d||k.ArrowRight));
-   const mag=Math.hypot(moving,strafing)||1;const boosted=p.flying&&now<boostUntil.current;const speed=ship.current.active||plane.current.active?0:p.flying?(boosted?49.5:16.5):(k.Shift?9:5.5);
+   const mag=Math.hypot(moving,strafing)||1;const boosted=p.flying&&now<boostUntil.current;const speed=ship.current.active||plane.current.active?0:eva?5.5:p.flying?(boosted?49.5:16.5):(k.Shift?9:5.5);
    if(ship.current.active){
      const flightSpeed=5.5*450*(performance.now()<ship.current.boostUntil?2:1);
-     p.x+=flightSpeed*dt;
-     p.y=145;
-     p.z=-27;
-     if(p.x>=155+5.5*450*120){p.x=155+5.5*450*120;setHint("Moon reached! Exit the spacecraft to return to the spaceport.");}
+     ship.current.x+=flightSpeed*dt;
+     p.x=ship.current.x;p.y=ship.current.y;p.z=ship.current.z;
+     if(p.x>=155+5.5*450*120){ship.current.x=155+5.5*450*120;p.x=ship.current.x;setHint("Moon reached! Exit the spacecraft to return to the spaceport.");}
    }
    if(plane.current.active){
      const throttle=Number(!!(k.w||k.ArrowUp)),brake=Number(!!(k.s||k.ArrowDown));
@@ -108,7 +109,7 @@ export default function SharedGameLobby(){
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
    const previousX=p.x,previousZ=p.z;
-   const proposedX=clamp(p.x+dx*speed*dt,-230,1300),proposedZ=clamp(p.z+dz*speed*dt,-550,270);
+   const proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,-230,1300),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,-550,270);
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
    const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[];
@@ -128,7 +129,7 @@ export default function SharedGameLobby(){
    // Block side penetration and reflect travel away from the struck surface.
    // Roofs remain solid landing surfaces, so players cannot fall through buildings.
    let struck=false,roof=-Infinity;
-   for(const b of plane.current.active||ship.current.active?[]:solids){
+   for(const b of plane.current.active||ship.current.active||eva?[]:solids){
      const overlapsXZ=Math.abs(proposedX-b.x)<b.hx+.42&&Math.abs(proposedZ-b.z)<b.hz+.42;
      if(!overlapsXZ)continue;
      if(p.y>=b.top-.2&&p.y<=b.top+2.2){roof=Math.max(roof,b.top);continue;}
@@ -153,7 +154,7 @@ export default function SharedGameLobby(){
    const cityRoof=p.z<=-365&&p.z>=-515&&p.x>=-132&&p.x<=75;
    const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=onRoad?bridgeHeight:(p.x>300?-100:terrain(p.x,p.z));const floor=Math.max(skyLanding?45:roadFloor,roof);
    if(p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setBoostActive(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
-   if(ship.current.active){p.flying=true;}else if(plane.current.active){
+   if(eva){p.flying=true;p.y+=((k.Space||k.ascend?1:0)-(k.c?1:0))*5.5*dt;}else if(ship.current.active){p.flying=true;}else if(plane.current.active){
      const takeoff=plane.current.speed>24;
      const climb=takeoff&&!!(k.Space||k.ascend),descend=!!k.c;
      p.y=clamp(p.y+(climb?12:descend?-10:p.y>4?-.8:0)*dt,3,180);
@@ -171,7 +172,7 @@ export default function SharedGameLobby(){
     const dusk=clamp((cycle-3.75*60*60*1000)/(15*60*1000),0,1);
     const dawn=clamp((cycle-5.75*60*60*1000)/(15*60*1000),0,1);
     const darkness=night?1-dawn:dusk;
-    gl.clearColor(.91-darkness*.87,.96-darkness*.92,.97-darkness*.85,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    gl.clearColor(eva||ship.current.active?.005:.91-darkness*.87,eva||ship.current.active?.008:.96-darkness*.92,eva||ship.current.active?.02:.97-darkness*.85,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     const cam=[p.x-Math.sin(p.yaw)*(ship.current.active?33:plane.current.active?21:7),p.y+(ship.current.active?15:plane.current.active?10:4),p.z-Math.cos(p.yaw)*(ship.current.active?33:plane.current.active?21:7)],at=[p.x,p.y+1.3,p.z];
     const vp=mul(perspective(Math.PI/3,w/h,.1,600),lookAt(cam,at));
     // Council mural on the opposite wall from the projector, perspective-scaled.
@@ -428,7 +429,7 @@ export default function SharedGameLobby(){
       draw(vp,p.x+5,p.y+.8,p.z,3,1.8,3,[.22,.45,.59],.9,-p.yaw);
     }
     // Futuristic twelve-seat space shuttle, visible at the spaceport and in flight.
-    const shuttleX=ship.current.active?p.x:155,shuttleY=ship.current.active?p.y:10,shuttleZ=ship.current.active?p.z:-27;
+    const shuttleX=ship.current.inSpace?ship.current.x:155,shuttleY=ship.current.inSpace?ship.current.y:10,shuttleZ=ship.current.inSpace?ship.current.z:-27;
     draw(vp,shuttleX,shuttleY,shuttleZ,23,5,11,[.63,.74,.81]);
     draw(vp,shuttleX+7,shuttleY+1,shuttleZ,9,4,8,[.18,.43,.58],.92);
     for(const side of [-1,1]){
@@ -438,7 +439,7 @@ export default function SharedGameLobby(){
     draw(vp,shuttleX-12,shuttleY+3,shuttleZ,4,7,2,[.77,.68,.32]);
     // Moon is 120 seconds of travel at 450x walking speed; Sun at 360 seconds.
     const moonX=155+5.5*450*120,sunX=155+5.5*450*360;
-    if(ship.current.active){
+    if(ship.current.active||eva){
       draw(vp,moonX,150,-27,8500,8500,8500,[.72,.74,.76]);
       draw(vp,sunX,160,-60000,18000,18000,18000,[1,.81,.33]);
     }
@@ -678,7 +679,8 @@ export default function SharedGameLobby(){
   {!piloting&&nearVehicle==="plane"&&<button type="button" onClick={togglePlane} style={{position:"absolute",right:12,top:95,zIndex:9,padding:"11px 15px",borderRadius:12,background:"#0b5547",color:"white",border:"1px solid #d3ae54"}}>✈️ Board Plane (E)</button>}
   {!shipOn&&nearVehicle==="ship"&&<button type="button" onClick={boardShip} style={{position:"absolute",right:12,top:95,zIndex:9,padding:12,borderRadius:12,background:"#134e58",color:"#fff"}}>🚀 Board Spaceship · 12 seats</button>}
   {!shipOn&&nearVehicle==="car"&&<div style={{position:"absolute",right:12,top:95,zIndex:9,color:"#fff",background:"#163e3a",padding:10,borderRadius:10}}>🚗 Car nearby · driving coming soon</div>}
-  {shipOn&&<div style={{position:"absolute",right:12,top:90,zIndex:10,width:240,padding:12,borderRadius:14,color:"#fff",background:"#082631ed",border:"1px solid #d6b46a"}}><strong>🚀 SPACECRAFT · PILOT</strong><div>450× speed · Moon ~2 min · Sun ~6 min</div><button onClick={()=>ship.current.boostUntil=performance.now()+8000}>⚡ BOOST 2× · 8 sec</button><button onClick={()=>void startShipMedia("screen")}>Share screen</button><button onClick={()=>void startShipMedia("camera")}>Camera on</button><button onClick={()=>{shipStream.current?.getTracks().forEach(t=>t.stop());shipStream.current=null;setShipMedia(false);setShipCamera(false)}}>Media off</button><button onClick={exitShip}>Exit ship</button>{shipMedia&&<video ref={shipVideo} autoPlay playsInline muted style={{width:"100%",marginTop:8,borderRadius:8}}/>}<small style={{display:"block"}}>Local media preview only · group room integration pending</small></div>}
+  {eva&&<div style={{position:"absolute",right:12,top:95,zIndex:10,padding:12,borderRadius:12,background:"#071824ed",color:"white"}}><strong>🧑‍🚀 SPACEWALK · ZERO GRAVITY</strong><div>WASD move · SPACE up · C down</div><div>{Math.round(Math.hypot(local.current.x-ship.current.x,local.current.y-ship.current.y,local.current.z-ship.current.z))}m from shuttle</div><button onClick={reboardShip} disabled={Math.hypot(local.current.x-ship.current.x,local.current.y-ship.current.y,local.current.z-ship.current.z)>24}>🚀 Re-enter ship</button></div>}
+  {shipOn&&<div style={{position:"absolute",right:12,top:90,zIndex:10,width:240,padding:12,borderRadius:14,color:"#fff",background:"#082631ed",border:"1px solid #d6b46a"}}><strong>🚀 SPACECRAFT · PILOT</strong><div>450× speed · Moon ~2 min · Sun ~6 min</div><button onClick={()=>ship.current.boostUntil=performance.now()+8000}>⚡ BOOST 2× · 8 sec</button><button onClick={()=>void startShipMedia("screen")}>Share screen</button><button onClick={()=>void startShipMedia("camera")}>Camera on</button><button onClick={()=>{shipStream.current?.getTracks().forEach(t=>t.stop());shipStream.current=null;setShipMedia(false);setShipCamera(false)}}>Media off</button><button onClick={leaveShipInSpace}>🧑‍🚀 Spacewalk · Exit ship</button><button onClick={exitShip}>Return to spaceport</button>{shipMedia&&<video ref={shipVideo} autoPlay playsInline muted style={{width:"100%",marginTop:8,borderRadius:8}}/>}<small style={{display:"block"}}>Local media preview only · group room integration pending</small></div>}
   {piloting&&<div style={{position:"absolute",right:12,top:95,zIndex:9,background:"#102f36e8",color:"white",padding:12,borderRadius:12}}><strong>✈️ PILOT MODE</strong><div>▲ Throttle · ▼ Brake · ◀ ▶ Turn</div><div>SPACE Climb · C Descend</div><button type="button" onClick={togglePlane} style={{padding:9,marginTop:6}}>Exit aircraft (E)</button></div>}
   {crashed&&<div className={styles.toast} role="status">💥 Hard landing! Recovering…</div>}
   <div className={styles.controls}><div className={styles.dpad}><button onPointerDown={()=>setKey("w",true)} onPointerUp={()=>setKey("w",false)} onPointerLeave={()=>setKey("w",false)}>▲</button><div><button onPointerDown={()=>setKey("a",true)} onPointerUp={()=>setKey("a",false)} onPointerLeave={()=>setKey("a",false)}>◀</button><button onPointerDown={()=>setKey("s",true)} onPointerUp={()=>setKey("s",false)} onPointerLeave={()=>setKey("s",false)}>▼</button><button onPointerDown={()=>setKey("d",true)} onPointerUp={()=>setKey("d",false)} onPointerLeave={()=>setKey("d",false)}>▶</button></div></div><button type="button" aria-label={boostActive?"Flight boost active":"Boost flight speed three times for five seconds"} aria-pressed={boostActive} disabled={!flying} onClick={activateBoost} style={{pointerEvents:"auto",alignSelf:"flex-end",minWidth:66,minHeight:48,borderRadius:14,border:"1px solid rgba(255,226,138,.65)",background:boostActive?"linear-gradient(135deg,#ffd36a,#f69e32)":"linear-gradient(135deg,rgba(5,75,58,.92),rgba(13,135,105,.95))",color:boostActive?"#18382b":"#fff",fontWeight:800,fontSize:13,boxShadow:boostActive?"0 0 18px rgba(255,203,75,.55)":"0 4px 14px rgba(0,0,0,.25)",opacity:flying?1:.45}}>⚡ {boostActive?"3×":"BOOST"}</button></div>
