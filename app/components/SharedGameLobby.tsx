@@ -88,7 +88,7 @@ export default function SharedGameLobby(){
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
    p.x=clamp(p.x+dx*speed*dt,-210,210);p.z=clamp(p.z+dz*speed*dt,-210,210);p.boost=!!k.Shift&&p.flying;
-   const floor=terrain(p.x,p.z);
+   const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const floor=skyLanding?45:terrain(p.x,p.z);
    if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?13:descend?-19:-5)*dt,-22,7);p.y=clamp(p.y+velocity*dt,floor,85);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);velocity=0}}
    else{if(crashUntil&&now>crashUntil){crashUntil=0;setCrashed(false)}velocity-=17*dt;if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){p.y=floor;velocity=0}}
    const nearWorker=distance(p,{x:152,z:0})<5;if(nearWorker&&!workerNotice.current){workerNotice.current=true;setWorkerMessage(true)}if(!nearWorker)workerNotice.current=false;
@@ -202,6 +202,27 @@ export default function SharedGameLobby(){
     draw(vp,56,12,29,15,2,10,[.76,.88,.88],.82);
     for(let i=0;i<7;i++){const x=48+i*2.6;draw(vp,x,3,21.8,.65,6,.65,[.91,.86,.69]);}
     for(let level=2;level<9;level+=2)for(let j=0;j<5;j++)draw(vp,48+j*4,level,36.15,2.5,1.2,.13,[.36,.67,.73],.78);
+    // Skyborne city: a distant, fully reachable floating district above the cloud layer.
+    // The central platform sits at y=45, matching the landing collision surface.
+    draw(vp,-125,43,-120,76,4,76,[.24,.45,.44]);
+    draw(vp,-125,45.05,-120,72,.16,72,[.76,.84,.77]);
+    for(const edge of [-161,-89]){draw(vp,edge,46,-120,.5,2,73,[.18,.86,.64],.65);draw(vp,-125,46,edge,73,2,.5,[.18,.86,.64],.65);}
+    // Cloud shelves under the island and luminous sky gardens.
+    for(let i=0;i<18;i++){const a=i*Math.PI/9,r=30+(i%3)*7;draw(vp,-125+Math.cos(a)*r,40+(i%4)*1.5,-120+Math.sin(a)*r,12,3,9,[.91,.96,.98],.52);}
+    for(let i=0;i<12;i++){const x=-155+(i%4)*19,z=-149+Math.floor(i/4)*22;
+      if(x>-142&&x<-105&&z>-143&&z<-104)continue;
+      const ht=10+(i%4)*5;draw(vp,x,45+ht/2,z,10,ht,10,[.38+(i%3)*.08,.67,.73],.84);
+      draw(vp,x,45+ht+.4,z,11,.8,11,[.86,.72,.37]);
+      for(let y=49;y<45+ht-2;y+=4)draw(vp,x, y,z+5.15,7,2,.15,[.91,.95,.72],.8);
+    }
+    // Belt Boyz Meeting hall: an accessible open-front entrance and a long, illuminated interior.
+    draw(vp,-125,45.2,-119,30,.3,52,[.19,.29,.33]);
+    for(const side of [-1,1]){const x=-125+side*15;draw(vp,x,51,-119,1,12,52,[.25,.43,.43]);for(let z=-143;z<=-96;z+=8)draw(vp,x-side*.9,51,z,.65,11,.65,[.86,.72,.4]);}
+    draw(vp,-125,57,-119,32,1,54,[.17,.38,.39],.86);
+    for(let z=-140;z<=-96;z+=6){draw(vp,-125,56.3,z,10,.25,1,[.95,.8,.42],.95);draw(vp,-125,45.4,z,2,.08,1,[.15,.85,.61],.8);}
+    // Meeting stage at the far end of the corridor.
+    draw(vp,-125,46,-144,19,2,5,[.48,.31,.2]);draw(vp,-125,49,-147,18,5,.5,[.13,.56,.48]);
+    for(let i=0;i<8;i++){const x=-134+(i%4)*6,z=-129+Math.floor(i/4)*9;draw(vp,x,46,z,2,2,2,[.63,.52,.32]);}
     // Portal: glowing arch with a translucent doorway and depth.
     for(let i=0;i<17;i++){const a=i*Math.PI/16;draw(vp,95,2.8+Math.sin(a)*4.1,Math.cos(a)*4.1,.85,.85,.75,[.19,.79,.66],1,-a)}
     draw(vp,95,2.8,0,.2,6.3,7.1,[.23,.85,.76],.28);
