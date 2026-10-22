@@ -54,5 +54,8 @@
 @media (pointer:coarse) and (max-height:480px){
  .controls{bottom:calc(8px + env(safe-area-inset-bottom, 0px));left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px))}
  .controls button{min-height:48px}
+ /* Place status and selection above the controls on short landscape phones. */
+ .bottom{bottom:calc(120px + env(safe-area-inset-bottom, 0px));align-items:flex-start}
+ .bottom>span{max-width:48%}
 }
 
