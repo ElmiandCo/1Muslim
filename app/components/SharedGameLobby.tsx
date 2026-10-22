@@ -204,12 +204,13 @@ export default function SharedGameLobby(){
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
    const previousX=p.x,previousZ=p.z;
-   const travelBounds=lunar?MOON_BOUNDS:propheticWorldRef.current?{minX:-390,maxX:390,minZ:-390,maxZ:390}:EXPLORATION_BOUNDS;
+   const travelBounds=lunar?MOON_BOUNDS:propheticWorldRef.current?{minX:-700,maxX:700,minZ:-700,maxZ:700}:EXPLORATION_BOUNDS;
    const proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,travelBounds.minX,travelBounds.maxX),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,travelBounds.minZ,travelBounds.maxZ);
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
    const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[]; 
-   if(propheticWorldRef.current){for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=5+(i%4)*1.6;solids.push({x,z,hx:11,hz:13,bottom:-1,top:h});}}
+   if(propheticWorldRef.current){for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.2+(i%3)*.3;solids.push({x,z,hx:11,hz:13,bottom:-1,top:h});}}
+   if(propheticWorldRef.current){for(let i=0;i<44;i++){const col=i%11,row=Math.floor(i/11),x=(col-5)*36,z=-380-row*40;if(Math.abs(x)<30)continue;solids.push({x,z,hx:11,hz:12,bottom:-1,top:3.5});}}
    // Destructible plaza props are solid until hit; the same objects restore after five minutes.
    for(let i=0;i<80;i++){const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;const id="prop-"+i;if(damagedStructures.current.has(id))continue;solids.push({x,z,hx:1.35,hz:1.35,bottom:0,top:2.7});}
    for(let i=0;i<80;i++){const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;const id="prop-"+i;if(damagedStructures.current.has(id))continue;for(const shot of projectiles.current){if(shot.life<=0||Math.abs(shot.x-x)>1.6||Math.abs(shot.z-z)>1.6||shot.y>3.5)continue;shot.life=0;damagedStructures.current.set(id,Date.now()+BREAK_REPAIR_MS);void combatChannel.current?.send({type:"broadcast",event:"structure-break",payload:{id,until:Date.now()+BREAK_REPAIR_MS}});break;}}
@@ -237,7 +238,7 @@ export default function SharedGameLobby(){
    // Block side penetration and reflect travel away from the struck surface.
    // Roofs remain solid landing surfaces, so players cannot fall through buildings.
    let struck=false,roof=-Infinity;
-   for(const b of plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null?[]:propheticWorldRef.current?solids.slice(0,84):solids){
+   for(const b of plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null?[]:propheticWorldRef.current?solids.slice(0,128):solids){
      const overlapsXZ=Math.abs(proposedX-b.x)<b.hx+.42&&Math.abs(proposedZ-b.z)<b.hz+.42;
      if(!overlapsXZ)continue;
      if(p.y>=b.top-.2&&p.y<=b.top+2.2){roof=Math.max(roof,b.top);continue;}
@@ -302,12 +303,25 @@ export default function SharedGameLobby(){
     const vp=mul(perspective(Math.PI/3,w/h,.1,200000),lookAt(cam,at));
     if(propheticWorldRef.current){
       // A separate historically inspired Makkah environment, not the modern city geometry.
-      for(let ix=-9;ix<=9;ix++)for(let iz=-9;iz<=9;iz++){const x=ix*46,z=iz*46;draw(vp,x,-.3,z,46,.6,46,[.61+.025*Math.sin(ix*2+iz),.48,.31]);}
-      for(let i=0;i<75;i++){const a=i*2.399963,r=180+(i%8)*28,x=Math.cos(a)*r,z=Math.sin(a)*r,h=25+Math.abs(Math.sin(i*1.91))*65;draw(vp,x,h*.5,z,26,h,30,[.48,.38,.29]);draw(vp,x,h*.82,z,15,h*.36,18,[.58,.47,.36]);}
+      for(let ix=-17;ix<=17;ix++)for(let iz=-17;iz<=17;iz++){const x=ix*46,z=iz*46;draw(vp,x,-.3,z,46,.6,46,[.61+.025*Math.sin(ix*2+iz),.48,.31]);}
+      for(let i=0;i<100;i++){const a=i*2.399963,r=320+(i%9)*30,x=Math.cos(a)*r,z=Math.sin(a)*r,h=25+Math.abs(Math.sin(i*1.91))*65;draw(vp,x,h*.5,z,26,h,30,[.48,.38,.29]);draw(vp,x,h*.82,z,15,h*.36,18,[.58,.47,.36]);}
       // Kaaba: simple stone cuboid and dark drapery; no modern mosque expansion.
       draw(vp,0,5,0,13,10,11,[.065,.065,.067]);draw(vp,0,7.5,0,13.1,.65,11.1,[.72,.56,.24]);draw(vp,0,.12,0,58,.22,56,[.73,.64,.47]);
       // Historically interpretive Hijazi buildings with narrow, walkable lanes.
-      for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=5+(i%4)*1.6;draw(vp,x,h/2,z,22,h,26,[.65+(i%3)*.04,.52,.37]);draw(vp,x,h+.2,z,23,.45,27,[.47,.37,.28]);draw(vp,x,2,z+13.04,2.5,3,.18,[.26,.18,.13]);}
+      for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.2+(i%3)*.3;draw(vp,x,h/2,z,22,h,26,[.65+(i%3)*.04,.52,.37]);draw(vp,x,h+.2,z,23,.45,27,[.47,.37,.28]);draw(vp,x,2,z+13.04,2.5,3,.18,[.26,.18,.13]);}
+      // Desert caravan road toward the separate Madinah settlement (scaled game distance).
+      for(let z=-680;z<=-35;z+=20){draw(vp,0,.03,z,13,.06,20,[.69,.54,.34]);for(const side of [-1,1])draw(vp,side*7,.06,z,.35,.12,19,[.44,.34,.22]);}
+      for(let i=0;i<44;i++){const col=i%11,row=Math.floor(i/11),x=(col-5)*36,z=-380-row*40;if(Math.abs(x)<30)continue;draw(vp,x,1.75,z,22,3.5,24,[.66,.54,.4]);draw(vp,x,3.65,z,23,.3,25,[.46,.35,.27]);}
+      // Madinah oasis with palms and low-rise buildings.
+      for(let i=0;i<24;i++){const x=Math.sin(i*2.4)*150,z=-480+Math.cos(i*1.3)*125;draw(vp,x,3,z,.7,6,.7,[.39,.26,.15]);draw(vp,x,7,z,5,3,5,[.18,.4,.21]);}
+      // Camel silhouettes in both settlements.
+      for(let i=0;i<22;i++){const medina=i>=11,idx=i%11,x=(idx-5)*18+45,z=(medina?-475:135)+(idx%3)*13;draw(vp,x,1.65,z,4,2,1.8,[.55,.34,.2]);draw(vp,x-.5,3.1,z,1.4,1.5,1.5,[.57,.36,.21]);draw(vp,x+2,2.7,z,.75,2,.7,[.55,.34,.2]);for(const leg of [-1,1])draw(vp,x+leg*1.25,.55,z,.45,1.1,.5,[.4,.25,.15]);}
+      // Historical-world wayfinding: 20 miles is a geographic label, not the compressed game scale.
+      draw(vp,12,2.7,-195,8,5,.3,[.32,.24,.14]);draw(vp,12,5.6,-195,9,.4,.5,[.8,.65,.36]);
+      // Jerusalem route is intentionally closed; modern trucks are an explicitly anachronistic game barrier.
+      for(let i=0;i<3;i++){const x=290+i*9,z=85;draw(vp,x,1.4,z,6,2.8,3,[.88,.64,.22]);draw(vp,x+3.2,1,z,2.5,2,2.5,[.35,.42,.4]);for(const off of [-1.6,1.6])draw(vp,x+off,.45,z+1.6,1,.9,.5,[.13,.13,.13]);}
+      // Visible moon, with an illustrative ten-second split every three minutes.
+      const split=(Math.floor(now/180000)%2===0)&&now%180000<10000;const moonX=p.x+180,moonY=p.y+165,moonZ=p.z-420;for(let j=-4;j<=4;j++)for(let k=-4;k<=4;k++){if(j*j+k*k>18)continue;const shift=split?(j<0?-6:6):0;draw(vp,moonX+j*3+shift,moonY+k*3,moonZ,3.1,3.1,2,[.89,.88,.79]);}
       for(let i=0;i<18;i++){const x=-200+(i%9)*48,z=190+Math.floor(i/9)*42;draw(vp,x,1.8,z,1.1,3.6,1.1,[.35,.23,.13]);draw(vp,x,3.8,z,4,.35,4,[.72,.58,.34]);}
     }else{
     // Procedural deep-space starfield: deterministic positions around the camera, no external assets.
@@ -1035,7 +1049,7 @@ export default function SharedGameLobby(){
   <div className={styles.controls}><div role="group" aria-label="Analog movement joystick" onTouchStartCapture={e=>e.stopPropagation()} onTouchMoveCapture={e=>{e.stopPropagation();if(e.cancelable)e.preventDefault()}} onPointerDown={e=>{e.preventDefault();e.stopPropagation();stickPointer.current=e.pointerId;e.currentTarget.setPointerCapture(e.pointerId);moveStick(e)}} onPointerMove={e=>{e.stopPropagation();moveStick(e)}} onPointerUp={e=>{e.stopPropagation();releaseStick(e)}} onPointerCancel={releaseStick} onLostPointerCapture={e=>{if(stickPointer.current===e.pointerId)releaseStick(e)}} style={{width:124,height:124,borderRadius:"50%",position:"relative",touchAction:"none",pointerEvents:"auto",background:"radial-gradient(circle,#1a60584d,#092c2a44)",border:"1px solid #b9e6d07a",boxShadow:"inset 0 0 24px #071d1c66",flexShrink:0}}><div style={{position:"absolute",inset:25,borderRadius:"50%",border:"1px solid #c5d6bc44",pointerEvents:"none"}}/>{(["▲", "◀", "▶", "▼"] as const).map((arrow,i)=><span key={arrow} aria-hidden="true" style={{position:"absolute",left:i===1?"14%":i===2?"86%":"50%",top:i===0?"14%":i===3?"86%":"50%",transform:"translate(-50%,-50%)",fontSize:15,fontWeight:800,color:"rgba(230,250,241,.85)",textShadow:"0 1px 4px rgba(0,0,0,.7)",pointerEvents:"none",userSelect:"none"}}>{arrow}</span>)}<div style={{position:"absolute",left:"50%",top:"50%",width:54,height:54,borderRadius:"50%",transform:`translate(calc(-50% + ${stickPosition.x*38}px),calc(-50% + ${stickPosition.y*38}px))`,background:"radial-gradient(circle at 30% 25%,#b7e6d5c9,#176e62dd)",border:"2px solid #d4c28b",boxShadow:"0 4px 15px #0008",pointerEvents:"none",transition:stickPointer.current===null?"transform .14s ease-out":"none"}}/></div><button type="button" aria-label={boostActive?"Disable unlimited boost":"Enable unlimited boost"} aria-pressed={boostActive} onClick={activateBoost} style={{pointerEvents:"auto",alignSelf:"flex-end",minWidth:66,minHeight:48,borderRadius:14,border:"1px solid rgba(255,226,138,.65)",background:boostActive?"linear-gradient(135deg,#ffd36a,#f69e32)":"linear-gradient(135deg,rgba(5,75,58,.92),rgba(13,135,105,.95))",color:boostActive?"#18382b":"#fff",fontWeight:800,fontSize:13,boxShadow:boostActive?"0 0 18px rgba(255,203,75,.55)":"0 4px 14px rgba(0,0,0,.25)",opacity:1}}>⚡ {boostActive?"3× ON":"BOOST"}</button></div>
   {error&&<div role="alert" className={styles.error}>{error}</div>}
   {picker&&<div className={styles.modal}><div className={styles.picker}><button className={styles.close} onClick={()=>setPicker(false)} aria-label="Close world selector">✕</button><h2>Choose Your Universe</h2><p>Explore the worlds of 1Muslim Games</p><div className={styles.worlds}>{WORLDS.map(w=><button key={w} onClick={()=>{if(w==="Time of Muhammad ﷺ")enterPropheticWorld();else{setWorldMessage(w+" is not yet connected to this lobby build.");setPicker(false)}}}>{w} <small>Preview pending</small></button>)}</div></div></div>}
-  {propheticWorld&&<div style={{position:"absolute",top:66,left:12,zIndex:48,display:"flex",gap:8,alignItems:"center",padding:"7px 10px",borderRadius:14,background:"rgba(28,29,20,.8)",border:"1px solid #cba75c",color:"#fff2ce",fontSize:12}}><span>🕋 Makkah · circa 610 CE · historical interpretation</span><button onClick={exitPropheticWorld} style={{background:"#664b26",color:"white",border:0,borderRadius:9,padding:"7px 9px"}}>↩ Main Lobby</button></div>}
+  {propheticWorld&&<div style={{position:"absolute",top:66,left:12,zIndex:48,display:"flex",gap:8,alignItems:"center",padding:"7px 10px",borderRadius:14,background:"rgba(28,29,20,.8)",border:"1px solid #cba75c",color:"#fff2ce",fontSize:12}}><span>🕋 Makkah → Madinah (20 miles marker) · 610 CE interpretation</span><button onClick={exitPropheticWorld} style={{background:"#664b26",color:"white",border:0,borderRadius:9,padding:"7px 9px"}}>↩ Main Lobby</button></div>}
   {worldMessage&&<div className={styles.toast} role="status" onClick={()=>setWorldMessage("")}>{worldMessage} · Dismiss ✕</div>}
   <span className={styles.srOnly}>Shared presence is an experimental room and does not establish authenticated player identity. Suits are local preview choices.</span>
  </section>;
