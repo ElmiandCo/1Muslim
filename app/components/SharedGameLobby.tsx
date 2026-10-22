@@ -101,9 +101,9 @@ export default function SharedGameLobby(){
     for(let i=-200;i<=200;i+=10){draw(vp,i,.008,0,.025,.018,420,[.76,.88,.85]);draw(vp,0,.008,i,420,.018,.025,[.76,.88,.85])}
     for(let i=8;i<95;i+=7)draw(vp,i,.025,0,3,.025,1.2,[.89,.75,.42],.7);
     // Portal: glowing arch with a translucent doorway and depth.
-    for(let i=0;i<17;i++){const a=i*Math.PI/16;draw(vp,95+Math.cos(a)*4.1,2.8+Math.sin(a)*4.1,0,.75,.85,.85,[.19,.79,.66],1,-a)}
-    draw(vp,95,2.8,0,7.1,6.3,.2,[.23,.85,.76],.28);
-    draw(vp,95,7.6,0,9,.18,.4,[.92,.75,.29]);
+    for(let i=0;i<17;i++){const a=i*Math.PI/16;draw(vp,95,2.8+Math.sin(a)*4.1,Math.cos(a)*4.1,.85,.85,.75,[.19,.79,.66],1,-a)}
+    draw(vp,95,2.8,0,.2,6.3,7.1,[.23,.85,.76],.28);
+    draw(vp,95,7.6,0,.4,.18,9,[.92,.75,.29]);
     // Floating Live glass screen and structural frame at 18.3m behind spawn.
     draw(vp,-18.3,4,0,.25,5.5,9,[.3,.8,.69],.5);
     draw(vp,-18.3,4,0,.15,4.7,8.2,[.12,.38,.38],.26);
