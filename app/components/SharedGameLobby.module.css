@@ -46,8 +46,8 @@
 @media (pointer:coarse){
  /* Keep the bottom status and selector row clear of mobile home bars and side notches. */
  .bottom{bottom:calc(12px + env(safe-area-inset-bottom, 0px));left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px))}
- .controls{bottom:calc(52px + env(safe-area-inset-bottom, 0px))}
- .controls button{min-width:44px;min-height:44px}
+ .controls{bottom:calc(52px + env(safe-area-inset-bottom, 0px));left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px))}
+ .controls button{min-width:48px;min-height:48px}
 }
 .controls button:focus-visible{outline:3px solid #9fe8ff;outline-offset:3px}
 /* Keep movement and boost reachable in short landscape viewports. */
