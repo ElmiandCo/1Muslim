@@ -248,6 +248,11 @@ export default function SharedGameLobby(){
     for(let n=0;n<58;n++){const z=-560-n*18;draw(vp,0,-.055,z,22,.12,18,[.19,.23,.27]);draw(vp,0,.015,z,.3,.025,5,[.96,.82,.45]);for(const side of [-1,1]){draw(vp,side*12,.01,z,2,.08,18,[.52,.55,.54]);if(n%3===0)draw(vp,side*17,.2,z,3,.4,3,[.28,.5,.23]);}if(n%9===0){for(let k=-9;k<=9;k++)draw(vp,k*18,-.07,z,18,.12,18,[.2,.24,.27]);}}
     for(let n=0;n<25;n++){const z=-620-n*34;for(const side of [-1,1]){const x=side*(110+n*6);const height=18+Math.abs(Math.sin(n*2.3))*37;draw(vp,x,height/2-1,z,52,height,48,[.36,.42,.4]);draw(vp,x,height*.77,z,28,height*.45,30,[.65,.68,.65]);}}
     for(let n=0;n<9;n++){const z=-890-n*12;for(const side of [-1,1])draw(vp,side*15,5,z,7,10,4,[.48,.52,.49]);draw(vp,0,10,z,38,2,6,[.51,.55,.51]);}
+    // HudHud: populated satellite district, neighborhood park, basketball courts and arena.
+    for(let i=0;i<46;i++){const row=Math.floor(i/8),col=i%8,x=-90+col*27,z=-625-row*42;const h=7+((i*13)%19);draw(vp,x,h/2,z,14,h,16,i%3===0?[.17,.36,.34]:[.57,.59,.53]);draw(vp,x,h+.3,z,15,.5,17,[.82,.7,.36]);for(let floor=2;floor<h;floor+=4)draw(vp,x,h-floor,z+8.1,9,.65,.1,[.92,.78,.42],.8);}
+    for(let i=0;i<75;i++){const x=-180+(i*47)%365,z=-580-(i*31)%380;draw(vp,x,.15,z,2.5,.3,2.5,[.21,.56,.22]);draw(vp,x,2.3,z,.65,4.4,.65,[.35,.27,.17]);draw(vp,x,5.3,z,4.5,5,4.5,[.13,.42,.24]);}
+    for(let court=0;court<2;court++){const x=65+court*43,z=-700;draw(vp,x,.07,z,30,.15,17,[.13,.48,.45]);draw(vp,x,.17,z,28,.025,.22,[.94,.89,.75]);for(const side of [-1,1]){draw(vp,x+side*13,3,z,.3,6,.3,[.84,.84,.83]);draw(vp,x+side*13,6,z,2.8,1.9,.2,[.92,.92,.89]);}}
+    draw(vp,180,5,-780,96,10,78,[.23,.32,.39]);draw(vp,180,12,-780,83,5,66,[.76,.68,.38]);draw(vp,180,16,-780,67,3,48,[.17,.41,.36]);draw(vp,180,19,-780,48,.6,29,[.28,.48,.39]);
     // White reflective ground and long-runway guidance to the Games portal.
     draw(vp,0,-.35,0,420,.65,420,[.89,.96,.95]);
     for(let i=-200;i<=200;i+=10){draw(vp,i,.008,0,.025,.018,420,[.76,.88,.85]);draw(vp,0,.008,i,420,.018,.025,[.76,.88,.85])}
