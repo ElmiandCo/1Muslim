@@ -1,0 +1,38 @@
+/* Audio Room floats above the game, leaving the directional pad clear. */
+.anchor{position:absolute;top:10px;right:10px;z-index:9;pointer-events:none;width:min(264px,calc(100% - 20px));font-family:inherit;color:#f9f5e9}
+.anchor button{pointer-events:auto;cursor:pointer;font-family:inherit}
+.anchor button:focus-visible{outline:3px solid #f7d780;outline-offset:2px}
+.panel{pointer-events:auto;max-height:min(330px,65%);display:flex;flex-direction:column;overflow:hidden;border-radius:19px;border:1px solid rgba(226,202,133,.48);background:linear-gradient(145deg,rgba(3,46,41,.94),rgba(5,27,32,.96));box-shadow:0 8px 25px rgba(0,0,0,.32);backdrop-filter:blur(16px)}
+.header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px 8px;border-bottom:1px solid rgba(220,195,132,.23)}
+.heading{display:flex;align-items:center;gap:8px;min-width:0}
+.heading strong{display:block;font-size:12px;letter-spacing:.02em;line-height:1.2}
+.heading small{display:block;font-size:10px;color:#c3e4d8;margin-top:2px}
+.roomIcon{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:rgba(24,129,96,.28)}
+.iconButton{width:40px;height:40px;border-radius:12px;border:1px solid rgba(230,208,151,.35);background:rgba(255,255,255,.06);color:#fff;font-size:23px;line-height:1}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:9px;overflow-y:auto;overscroll-behavior:contain;min-height:0;scrollbar-width:thin;scrollbar-color:#427968 transparent}
+.tile{min-width:0;min-height:96px;border:1px solid rgba(220,195,132,.19);border-radius:12px;background:rgba(255,255,255,.055);padding:7px 3px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.avatar{position:relative;width:45px;height:45px;flex-shrink:0;border:2px solid rgba(227,207,150,.4);border-radius:50%;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 28% 20%,#81c5b4,#2a5b61 75%);transition:border-color .2s ease}
+.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.silhouette{width:33px;height:33px;fill:rgba(247,241,221,.83)}
+.toneOne{background:radial-gradient(circle at 28% 20%,#91d2b6,#275d5b 78%)}
+.toneTwo{background:radial-gradient(circle at 28% 20%,#c9b5df,#534c79 78%)}
+.toneThree{background:radial-gradient(circle at 28% 20%,#e5caa4,#80694c 78%)}
+.toneFour{background:radial-gradient(circle at 28% 20%,#a7cbe8,#315b79 78%)}
+.speaking{border-color:#7dffbc;box-shadow:0 0 0 2px rgba(125,255,188,.24)}
+.sound{position:absolute;right:0;bottom:0;display:flex;align-items:end;gap:1px;padding:2px 3px;border-radius:8px;background:#09573f}
+.sound i{display:block;width:2px;height:7px;border-radius:2px;background:#caffda;animation:audioRoomPulse .75s ease-in-out infinite alternate}
+.sound i:nth-child(2){animation-delay:.2s;height:10px}.sound i:nth-child(3){animation-delay:.35s;height:5px}
+.memberName{display:block;max-width:100%;font-size:10px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px}
+.memberState{font-size:9px;color:#b2d9c8}
+.footer{display:flex;gap:7px;padding:8px 9px 10px;border-top:1px solid rgba(220,195,132,.23)}
+.footer button{min-height:44px;border-radius:12px;font-size:12px;font-weight:800}
+.micButton{flex:1;background:rgba(20,121,91,.9);border:1px solid rgba(128,221,175,.4);color:#fff}
+.leaveButton{min-width:72px;background:rgba(115,37,39,.78);border:1px solid rgba(239,158,157,.5);color:#fff}
+.footer button:disabled{opacity:.55;cursor:wait}
+.error{font-size:11px;color:#ffdbd3;margin:0 9px 9px}
+.mini{margin-left:auto;display:flex;align-items:center;gap:7px;min-height:44px;padding:8px 12px;border:1px solid rgba(226,202,133,.6);border-radius:24px;background:rgba(3,46,41,.95);color:#fff;font-size:12px;font-weight:800;box-shadow:0 4px 18px #0005;backdrop-filter:blur(12px)}
+.miniDot{height:8px;width:8px;border-radius:50%;background:#75e7ac}
+.count{display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:rgba(224,194,121,.2)}
+@keyframes audioRoomPulse{to{transform:scaleY(.45)}}
+@media(max-width:420px){.anchor{top:8px;right:8px;width:min(228px,calc(100% - 16px))}.panel{max-height:58%}.grid{gap:5px;padding:7px}.tile{min-height:84px}.avatar{width:39px;height:39px}.memberState{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.sound i{animation:none}.avatar{transition:none}}

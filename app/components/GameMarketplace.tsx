@@ -1,0 +1,4 @@
+"use client";
+import {useState} from "react";
+const goods=[["Moon Pioneer",2500],["Jungle Guardian",5000],["River Keeper",1500],["City Pathfinder",7500]] as const;
+export default function GameMarketplace({onClose}:{onClose:()=>void}){const [chosen,setChosen]=useState("");return <section role="dialog" aria-label="Emerald City Bazaar" style={{position:"absolute",inset:"15%",zIndex:30,overflow:"auto",background:"#063a35",color:"white",padding:20,border:"2px solid gold",borderRadius:20}}><button onClick={onClose}>Close ✕</button><h2>Emerald City Bazaar</h2><p>Preview rewards only. No XP deducted.</p>{goods.map(([name,xp])=><div key={name} style={{padding:12,borderBottom:"1px solid #779"}}><strong>{name}</strong> · {xp} XP <button onClick={()=>setChosen(name)}>Preview</button></div>)}{chosen&&<p role="status">✦ {chosen} preview · not unlocked</p>}</section>}

@@ -38,3 +38,10 @@
 .srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 @media(min-width:720px){.controls{bottom:62px}.controls button{min-width:44px;min-height:44px}.bottom>span{font-size:12px}.liveScreen{width:360px;height:220px}.liveVideo{height:155px}.waiting{height:180px}}
 @media(prefers-reduced-motion:reduce){.spinner{animation:none}}
+
+/* Elite mobile-controls pass: keep movement reachable above phone home indicators. */
+@media (pointer:coarse){
+ .controls{bottom:calc(52px + env(safe-area-inset-bottom, 0px))}
+ .controls button{min-width:44px;min-height:44px}
+}
+.controls button:focus-visible{outline:3px solid #9fe8ff;outline-offset:3px}
