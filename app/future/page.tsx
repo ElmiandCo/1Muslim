@@ -1,2 +1,2 @@
-import FutureGame from './FutureGame';
-export default function FuturePage(){return <FutureGame/>}
+import FutureExperience from './FutureExperience';
+export default function FuturePage(){return <FutureExperience/>}
