@@ -47,6 +47,7 @@ function makeRenderer(canvas:HTMLCanvasElement){
  return {gl,draw};
 }
 export default function SharedGameLobby(){
+ const councilProjection=useRef<HTMLDivElement>(null); const [councilScreenUrl,setCouncilScreenUrl]=useState<string|null>(null);
  const labels=useRef<HTMLDivElement>(null),workerNotice=useRef(false);const canvas=useRef<HTMLCanvasElement>(null),panel=useRef<HTMLDivElement>(null),portalLabel=useRef<HTMLDivElement>(null);
  const arrivals=useRef<Map<string,number>>(new Map());const keys=useRef<Record<string,boolean>>({}),peerRef=useRef<Map<string,Player>>(new Map()),suitRef=useRef<Suit>("gold");
  const local=useRef<Player>({id:"",x:0,y:terrain(0,0),z:0,yaw:Math.PI/2,flying:false,boost:false,suit:"gold",seen:0});
@@ -137,6 +138,10 @@ export default function SharedGameLobby(){
     gl.clearColor(.91,.96,.97,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     const cam=[p.x-Math.sin(p.yaw)*7,p.y+4.0,p.z-Math.cos(p.yaw)*7],at=[p.x,p.y+1.3,p.z];
     const vp=mul(perspective(Math.PI/3,w/h,.1,600),lookAt(cam,at));
+    // Anchor the projector UI to the in-world council wall; hide when off-screen.
+    const screenPoint=project(vp,[-125,52,-133.1],w,h);
+    const projector=councilProjection.current;
+    if(projector){if(screenPoint?.visible&&distance(p,{x:-125,z:-120})<110){const size=clamp(650/(Math.hypot(p.x+125,p.y-52,p.z+133)+1),45,460);projector.style.display="block";projector.style.width=size+"px";projector.style.left=(screenPoint.x-size/2)+"px";projector.style.top=(screenPoint.y-size*9/32)+"px";}else projector.style.display="none";}
     // White reflective ground and long-runway guidance to the Games portal.
     draw(vp,0,-.35,0,420,.65,420,[.89,.96,.95]);
     for(let i=-200;i<=200;i+=10){draw(vp,i,.008,0,.025,.018,420,[.76,.88,.85]);draw(vp,0,.008,i,420,.018,.025,[.76,.88,.85])}
@@ -195,6 +200,13 @@ export default function SharedGameLobby(){
       draw(vp,councilX+side*16,councilY+6,councilZ,.3,11,28,[.48,.8,.92],.24);
       draw(vp,councilX,councilY+6,councilZ+side*14,32,11,.3,[.48,.8,.92],.24);
     }
+    // Council projector: wall-mounted 16:9 projection surface and ceiling projector.
+    // The live video is composited as an accessible DOM overlay below, using the
+    // same world-to-screen projection as player labels.
+    draw(vp,councilX,councilY+7,councilZ-13.5,15,8.45,.3,[.035,.055,.075]);
+    draw(vp,councilX,councilY+7,councilZ-13.29,14.4,7.85,.12,[.12,.28,.32],.9);
+    draw(vp,councilX,councilY+11.8,councilZ-7,.9,.6,1.5,[.19,.21,.26]);
+    draw(vp,councilX,councilY+10.9,councilZ-7,.2,1.8,.2,[.76,.69,.4]);
     // Central roundtable approximation with twelve council seats.
     draw(vp,councilX,councilY+1.35,councilZ,10,.55,8,[.69,.5,.2]);
     draw(vp,councilX,councilY+.75,councilZ,2,1.3,2,[.24,.28,.32]);
@@ -425,6 +437,7 @@ export default function SharedGameLobby(){
  return <section className={styles.root} aria-label="1Muslim shared 3D game lobby">
   <canvas ref={canvas} className={styles.canvas} tabIndex={0} aria-label="Third-person 3D world; click to control. WASD move, mouse drag look, Space jump or ascend, F fly, Shift boost, C descend." onPointerDown={down} onPointerMove={move} onPointerUp={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}} onPointerCancel={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}}/>
 
+  <div ref={councilProjection} aria-label="Belt Boyz Council projector" style={{position:"absolute",display:"none",width:260,aspectRatio:"16 / 9",zIndex:3,pointerEvents:"none",border:"3px solid #c8ac60",borderRadius:5,background:"#061b22",overflow:"hidden",boxShadow:"0 0 20px rgba(75,225,217,.35)"}}>{councilScreenUrl?<video src={councilScreenUrl} autoPlay playsInline muted style={{width:"100%",height:"100%",objectFit:"contain"}}/>:<div style={{height:"100%",display:"grid",placeContent:"center",textAlign:"center",color:"#bcefe8",fontSize:13}}><strong>BELT BOYZ COUNCIL</strong><small>PROJECTOR · Awaiting screen share</small></div>}</div>
   <div ref={labels} aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",zIndex:4}}/>
   {workerMessage&&<div role="dialog" aria-label="Construction worker" style={{position:"absolute",left:"12%",right:"12%",bottom:"24%",zIndex:9,background:"#092f2deb",border:"1px solid #e8c56e",borderRadius:18,color:"white",padding:18,textAlign:"center"}}><strong>🚀 Space Station Worker</strong><p>Come back soon… we’re going to the Moon! 🌙</p><button onClick={()=>setWorkerMessage(false)} style={{padding:"8px 18px",borderRadius:12}}>See you soon!</button></div>}
   <div ref={panel} className={styles.liveScreen}><div className={styles.liveHeader}>◉ 1MUSLIM LIVE</div>{live?<><div className={styles.liveVideo}><LiveHomePreview roomName={live.room_name||live.id}/></div><a href={"/streaming/live/"+live.id} className={styles.watch}>Watch {live.title} ↗</a></>:<div className={styles.waiting}><span className={styles.spinner}>◌</span><strong>Loading — waiting for the next 1Muslim Live</strong><small>{liveError?"Live status temporarily unavailable":"Broadcast will appear when someone goes live"}</small></div>}</div>
