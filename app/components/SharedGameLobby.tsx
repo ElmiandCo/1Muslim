@@ -209,7 +209,7 @@ export default function SharedGameLobby(){
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
    const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[]; 
-   if(propheticWorldRef.current){for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.2+(i%3)*.3;solids.push({x,z,hx:11,hz:13,bottom:-1,top:h});}}
+   if(propheticWorldRef.current){for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.1;solids.push({x,z,hx:11,hz:13,bottom:-1,top:h});}}
    if(propheticWorldRef.current){for(let i=0;i<44;i++){const col=i%11,row=Math.floor(i/11),x=(col-5)*36,z=-380-row*40;if(Math.abs(x)<30)continue;solids.push({x,z,hx:11,hz:12,bottom:-1,top:3.5});}}
    // Destructible plaza props are solid until hit; the same objects restore after five minutes.
    for(let i=0;i<80;i++){const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;const id="prop-"+i;if(damagedStructures.current.has(id))continue;solids.push({x,z,hx:1.35,hz:1.35,bottom:0,top:2.7});}
@@ -290,7 +290,7 @@ export default function SharedGameLobby(){
     const dawn=clamp((cycle-5.75*60*60*1000)/(15*60*1000),0,1);
     const darkness=night?1-dawn:dusk;
     const atmosphere=moonModeRef.current.landed?1:clamp((p.y-65)/105,0,1);
-    gl.clearColor(.91-darkness*.87-atmosphere*.9,.96-darkness*.92-atmosphere*.95,.97-darkness*.85-atmosphere*.95,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    if(propheticWorldRef.current){gl.clearColor(.58,.82,.98,1);}else{gl.clearColor(.91-darkness*.87-atmosphere*.9,.96-darkness*.92-atmosphere*.95,.97-darkness*.85-atmosphere*.95,1);}gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     // Keep the camera the same distance behind the player on both axes.
     // Smooth normal movement and fullscreen zoom, but snap after teleportation.
     const followDistance=ship.current.active?33:plane.current.active?21:fullscreenRef.current?10:7;
@@ -308,10 +308,10 @@ export default function SharedGameLobby(){
       // Kaaba: simple stone cuboid and dark drapery; no modern mosque expansion.
       draw(vp,0,5,0,13,10,11,[.065,.065,.067]);draw(vp,0,7.5,0,13.1,.65,11.1,[.72,.56,.24]);draw(vp,0,.12,0,58,.22,56,[.73,.64,.47]);
       // Historically interpretive Hijazi buildings with narrow, walkable lanes.
-      for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.2+(i%3)*.3;draw(vp,x,h/2,z,22,h,26,[.65+(i%3)*.04,.52,.37]);draw(vp,x,h+.2,z,23,.45,27,[.47,.37,.28]);draw(vp,x,2,z+13.04,2.5,3,.18,[.26,.18,.13]);}
+      for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.1;draw(vp,x,h/2,z,22,h,26,[.65+(i%3)*.04,.52,.37]);draw(vp,x,h+.2,z,23,.45,27,[.47,.37,.28]);draw(vp,x,2,z+13.04,2.5,3,.18,[.26,.18,.13]);}
       // Desert caravan road toward the separate Madinah settlement (scaled game distance).
       for(let z=-680;z<=-35;z+=20){draw(vp,0,.03,z,13,.06,20,[.69,.54,.34]);for(const side of [-1,1])draw(vp,side*7,.06,z,.35,.12,19,[.44,.34,.22]);}
-      for(let i=0;i<44;i++){const col=i%11,row=Math.floor(i/11),x=(col-5)*36,z=-380-row*40;if(Math.abs(x)<30)continue;draw(vp,x,1.75,z,22,3.5,24,[.66,.54,.4]);draw(vp,x,3.65,z,23,.3,25,[.46,.35,.27]);}
+      for(let i=0;i<44;i++){const col=i%11,row=Math.floor(i/11),x=(col-5)*36,z=-380-row*40;if(Math.abs(x)<30)continue;draw(vp,x,1.75,z,22,3.5,24,[.66,.54,.4]);draw(vp,x,3.55,z,23,.3,25,[.46,.35,.27]);}
       // Madinah oasis with palms and low-rise buildings.
       for(let i=0;i<24;i++){const x=Math.sin(i*2.4)*150,z=-480+Math.cos(i*1.3)*125;draw(vp,x,3,z,.7,6,.7,[.39,.26,.15]);draw(vp,x,7,z,5,3,5,[.18,.4,.21]);}
       // Camel silhouettes in both settlements.
