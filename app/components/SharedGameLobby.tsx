@@ -862,6 +862,15 @@ export default function SharedGameLobby(){
   const keyUp=(e:KeyboardEvent)=>{const key=e.key.length===1?e.key.toLowerCase():e.key;keys.current[key===" "?"Space":key]=false};
   window.addEventListener("keydown",keyDown);window.addEventListener("keyup",keyUp);return()=>{window.removeEventListener("keydown",keyDown);window.removeEventListener("keyup",keyUp)};
  },[toggleFly,nearVehicle]);
+ // Avoid stuck movement when a mobile browser suspends the game mid-touch or keypress.
+ useEffect(()=>{
+  const clearHeldInputs=()=>{keys.current={};stickPointer.current=null;setStickPosition({x:0,y:0});gesture.current.hold=false};
+  const onVisibilityChange=()=>{if(document.hidden)clearHeldInputs()};
+  window.addEventListener("blur",clearHeldInputs);
+  window.addEventListener("pagehide",clearHeldInputs);
+  document.addEventListener("visibilitychange",onVisibilityChange);
+  return()=>{window.removeEventListener("blur",clearHeldInputs);window.removeEventListener("pagehide",clearHeldInputs);document.removeEventListener("visibilitychange",onVisibilityChange)};
+ },[]);
  const stopVoice=useCallback(async()=>{const room=voiceRoom.current;voiceRoom.current=null;setVoiceOn(false);setAudioMode("off");setProximityMicEnabled(false);setProximitySpeaking(false);setAudioRoomLocked(false);for(const el of voiceTracks.current.values())el.remove();voiceTracks.current.clear();if(room)await room.disconnect()},[]);
  const startVoice=useCallback(async()=>{if(voiceBusy||voiceRoom.current)return;setVoiceBusy(true);try{
   const response=await fetch("/api/game-voice/token",{method:"POST"});const info=await response.json();
