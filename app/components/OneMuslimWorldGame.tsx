@@ -1,7 +1,7 @@
 "use client";
 
 import {useCallback,useEffect,useRef,useState} from "react";
-import CosmicCatchGame from "./CosmicCatchGame";
+import ArabicLetterQuest from "./ArabicLetterQuest";
 import {eras,names,type Era} from "./world-game-data";
 import styles from "./OneMuslimWorldGame.module.css";
 
@@ -192,7 +192,7 @@ export default function OneMuslimWorldGame(){
  const endLook=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(lookPointer.current?.id===e.pointerId)lookPointer.current=null};
  const reset=()=>{player.current={x:0,y:0,z:0,vy:0,yaw:0,flight:false,boost:false};setFlight(false);setMode("lobby")};
  return <section className={styles.root} aria-label="1Muslim Game shared world preview">
-  {mode==="quest"?<><CosmicCatchGame/><button className={styles.questBack} type="button" onClick={()=>setMode("worlds")}>← Worlds</button></>:
+  {mode==="quest"?<><ArabicLetterQuest/><button className={styles.questBack} type="button" onClick={()=>setMode("worlds")}>← Worlds</button></>:
   mode==="worlds"?<div className={styles.worlds}>
    <div className={styles.worldHead}><span className={styles.eyebrow}>✦ THE SIX UNIVERSES</span><h2>Choose your destination</h2><p>Explore the worlds as they become playable.</p></div>
    <div className={styles.worldGrid}>{eras.map((era:Era,i)=><div className={styles.worldCard} key={era}><span>{["🦕","🌊","🏛️","🏜️","🌍","🚀"][i]}</span><strong>{names[era]}</strong><small>World under construction</small></div>)}</div>
