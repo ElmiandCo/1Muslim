@@ -838,6 +838,15 @@ export default function SharedGameLobby(){
     }
     // Avatar primitives: head, torso, arms, legs, glowing flight trails.
     const avatar=(a:Player)=>{const c=SUIT_COLORS[a.suit];const self=a.id===p.id;const launch=self&&a.flying?clamp((now-flightPose.current.takeoff)/900,0,1):1;const land=self&&!a.flying?clamp((now-flightPose.current.landing)/1350,0,1):1;const crouch=self&&now<knockdownUntil.current?1.25:self&&!a.flying&&land<.5?(1-land*2)*.65:0;const lean=a.flying?(.15+.65*launch):0;const ay=a.y-crouch+(a.flying?0:.1*Math.sin(now*.006));draw(vp,a.x,ay+1.35,a.z,.8,1.1,.44,c,1,a.yaw+lean*.12);draw(vp,a.x+Math.sin(a.yaw)*lean*.25,ay+2.16+(!a.flying&&land<.8?.18*(1-land):0),a.z+Math.cos(a.yaw)*lean*.25,.52,.52,.52,c,1,a.yaw);const cs=Math.cos(a.yaw),sn=Math.sin(a.yaw);
+      // Lightweight layered outfit details: readable silhouette without new assets or draw calls for distant players.
+      if(Math.hypot(a.x-p.x,a.z-p.z)<90){
+        const chestX=a.x+sn*.24,chestZ=a.z+cs*.24;
+        draw(vp,chestX,ay+1.52,chestZ,.43,.48,.075,[.9,.77,.4],.88,a.yaw);
+        draw(vp,a.x-sn*.13,ay+1.96,a.z-cs*.13,.66,.12,.5,[.08,.19,.21],1,a.yaw);
+        draw(vp,a.x-sn*.27,ay+1.31,a.z-cs*.27,.39,.78,.2,[.12,.25,.27],.95,a.yaw);
+        draw(vp,a.x+sn*.31,ay+2.19,a.z+cs*.31,.12,.12,.08,[.96,.84,.53],1,a.yaw);
+      }
+
       for(const side of [-1,1]){const ox=cs*side*.61,oz=-sn*side*.61;const gesture=self&&now<emoteUntil.current?emote:"none";const lift=a.flying?(.45+launch*.35):(gesture==="wave"&&side===1?.65:gesture==="celebrate"?.65:gesture==="pose"&&side===1?.28:0);draw(vp,a.x+ox+sn*lift*.3,ay+1.28+lift,a.z+oz+cs*lift*.3,.26,.94,.3,c,1,a.yaw);draw(vp,a.x+cs*side*.23,ay+.46,a.z-sn*side*.23,.31,.85,.35,c,1,a.yaw)}
       if(a.flying){for(let i=0;i<7;i++){const tail=i*.7+1;draw(vp,a.x-sn*tail,ay+.4-i*.12,a.z-cs*tail,.13+i*.065,.11+i*.04,.13+i*.065,[.66,.92,1],.6-i*.06)}draw(vp,a.x+sn*.6,ay+1.4,a.z+cs*.6,.48,.2,.32,c,1,a.yaw)}};
     avatar(p);
