@@ -1,4 +1,5 @@
-import {box,proj,type Camera} from "./futureMath";
+import {proj,type Camera} from "./futureMath";
+import {box} from "./futureBox";
 import {FUTURE_TOWERS} from "../components/FutureCityScene";
 import {drawTraffic} from "./futureTraffic";
 export function renderFuture(c:CanvasRenderingContext2D,p:Camera,w:number,h:number,t:number){
