@@ -391,14 +391,35 @@ export default function SharedGameLobby(){
         draw(vp,x-1.3,.25+leap,z,.8,1.5,.3,[.36,.57,.7],.9,a);
       }
     }
-    // White reflective ground and long-runway guidance to the Games portal.
-    draw(vp,0,-.35,0,420,.65,420,[.89,.96,.95]);
+    // Terrain continuity pass: local, camera-culled tiles replace exposed white voids.
+     // Deterministic biomes blend grassland, forest, desert, rocky highland and wetlands.
+     // Existing roads, landmarks, bridges and portal geometry remain layered above the terrain.
+     const terrainTile=36, terrainRadius=14;
+     const tileX=Math.round(p.x/terrainTile),tileZ=Math.round(p.z/terrainTile);
+     for(let gx=-terrainRadius;gx<=terrainRadius;gx++)for(let gz=-terrainRadius;gz<=terrainRadius;gz++){
+       if(gx*gx+gz*gz>terrainRadius*terrainRadius)continue;
+       const ix=tileX+gx,iz=tileZ+gz,x=ix*terrainTile,z=iz*terrainTile;
+       const moisture=Math.sin(x*.0023)+Math.cos(z*.0027)+.42*Math.sin((x+z)*.005);
+       const elevation=Math.sin(x*.0037)*Math.cos(z*.0041);
+       const desert=moisture<-.65,rock=elevation>.65,wet=moisture>1.35;
+       const shade=.92+.08*Math.sin(ix*17.13+iz*9.71);
+       const tint=desert?[.67*shade,.52*shade,.29*shade]:rock?[.36*shade,.38*shade,.34*shade]:wet?[.18*shade,.37*shade,.29*shade]:[.23*shade,.43*shade,.21*shade];
+       draw(vp,x,-.26,z,terrainTile+.2,.48,terrainTile+.2,tint);
+       if((ix*13+iz*7)%9===0&&!desert&&!rock){
+         const tx=x+Math.sin(ix*5.7+iz)*10,tz=z+Math.cos(iz*3.9+ix)*10;
+         draw(vp,tx,1.5,tz,.8,3,.8,[.32,.24,.15]);
+         draw(vp,tx,4.2,tz,4,3.7,4,wet?[.13,.36,.2]:[.18,.43,.19]);
+       }
+       if(rock&&(ix+iz)%4===0)draw(vp,x,1,z,5,2.3,4,[.43,.44,.4]);
+     }
+     // White reflective ground and long-runway guidance to the Games portal.
+    draw(vp,0,-.35,0,420,.65,420,[.24,.43,.23]);
     for(let i=-200;i<=200;i+=10){draw(vp,i,.008,0,.025,.018,420,[.76,.88,.85]);draw(vp,0,.008,i,420,.018,.025,[.76,.88,.85])}
     for(let i=8;i<95;i+=7)draw(vp,i,.025,0,3,.025,1.2,[.89,.75,.42],.7);
     // Half-mile exploration route: outbound road, first tunnel, rising space bridge, second tunnel, white room.
     for(let x=200;x<=1200;x+=12){const y=x<290?0:x<330?(x-290)*.625:25;const isTunnel=(x>=235&&x<=285)||(x>=1090&&x<=1140);draw(vp,x,y-.22,0,12,.44,11,x>=330?[.46,.51,.64]:[.28,.36,.39]);draw(vp,x,y+.025,0,.25,.035,1.8,[.94,.83,.43]);if(x>=330&&x<1090){for(const side of [-1,1]){draw(vp,x,y+.65,side*5.2,12,.22,.2,[.62,.87,.98],.8);draw(vp,x,y+.7,side*5.2,.2,1.4,.25,[.73,.84,.94]);}draw(vp,x,y-12,0,12,.4,.25,[.22,.25,.4]);}if(isTunnel){for(const side of [-1,1])draw(vp,x,y+3,side*5.5,12,6,.7,[.75,.79,.87]);draw(vp,x,y+6,0,12,.6,12,[.81,.84,.91]);}}
     // Bright white destination chamber after the second tunnel.
-    draw(vp,1170,24.5,0,60,1,48,[.98,.99,1]);draw(vp,1170,34,-24,60,20,1,[.99,.99,1]);draw(vp,1170,34,24,60,20,1,[.99,.99,1]);draw(vp,1200,34,0,1,20,48,[.99,.99,1]);draw(vp,1170,44,0,60,1,48,[1,1,1]);for(let x=1146;x<1195;x+=10)draw(vp,x,25.1,0,.3,.1,40,[.81,.88,.95]);
+    draw(vp,1170,24.5,0,60,1,48,[.34,.38,.35]);draw(vp,1170,34,-24,60,20,1,[.99,.99,1]);draw(vp,1170,34,24,60,20,1,[.99,.99,1]);draw(vp,1200,34,0,1,20,48,[.99,.99,1]);draw(vp,1170,44,0,60,1,48,[1,1,1]);for(let x=1146;x<1195;x+=10)draw(vp,x,25.1,0,.3,.1,40,[.81,.88,.95]);
     // Exotic-car showroom at the far end of the bridge: Lamborghini, Audi R8 Spyder and Ferrari.
     // Stylized low-poly silhouettes are built from the same lightweight WebGL primitives.
     const showroomCars=[
