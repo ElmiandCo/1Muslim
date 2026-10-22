@@ -4,7 +4,7 @@ import {useCallback,useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import LiveHomePreview from "./LiveHomePreview";
 import styles from "./SharedGameLobby.module.css";
-import {drawJurassic,jurassicTerrain,jurassicBlocked,updateJurassicDinos} from "./JurassicScene";
+import {drawJurassic,jurassicTerrain,jurassicBlocked,updateJurassicDinos,JURASSIC_LIMIT} from "./JurassicScene";
 
 type Suit="gold"|"silver"|"cosmic"|"diamond";
 type Player={id:string;userId?:string;name?:string;x:number;y:number;z:number;yaw:number;flying:boolean;boost:boolean;suit:Suit;seen:number};
@@ -206,7 +206,7 @@ export default function SharedGameLobby(){
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
    const previousX=p.x,previousZ=p.z;
-   const travelBounds=lunar?MOON_BOUNDS:jurassicRef.current?{minX:-540,maxX:540,minZ:-540,maxZ:540}:propheticWorldRef.current?{minX:-700,maxX:700,minZ:-700,maxZ:700}:EXPLORATION_BOUNDS;
+   const travelBounds=lunar?MOON_BOUNDS:jurassicRef.current?{minX:-JURASSIC_LIMIT,maxX:JURASSIC_LIMIT,minZ:-JURASSIC_LIMIT,maxZ:JURASSIC_LIMIT}:propheticWorldRef.current?{minX:-700,maxX:700,minZ:-700,maxZ:700}:EXPLORATION_BOUNDS;
    let proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,travelBounds.minX,travelBounds.maxX),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,travelBounds.minZ,travelBounds.maxZ);
    if(jurassicRef.current&&!p.flying&&jurassicBlocked(proposedX,proposedZ)){proposedX=p.x;proposedZ=p.z;}
    // Physical collision volumes mirror the town, tunnels and distant showroom.
@@ -305,8 +305,8 @@ export default function SharedGameLobby(){
     const meetingView=meetingSeatRef.current!==null; const orbit=meetingCamera.current;const cam=meetingView?[ -125+Math.sin(orbit.angle)*orbit.distance,45+orbit.height,-120+Math.cos(orbit.angle)*orbit.distance ]:(chaseCamera??targetCam),at=meetingView?[-125,47.4,-120]:[p.x,p.y+1.3,p.z];
     const vp=mul(perspective(Math.PI/3,w/h,.1,200000),lookAt(cam,at));
     if(jurassicRef.current){
-      drawJurassic((x,y,z,sx,sy,sz,color,alpha,angle)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now);
-      updateJurassicDinos(dt,now,p,()=>{if(now-lastJurassicHit.current<1800)return;lastJurassicHit.current=now;p.x=0;p.z=0;p.y=jurassicTerrain(0,0);p.flying=false;setHint("A predator caught you! Respawned at the Jurassic clearing.");});
+      drawJurassic((x,y,z,sx,sy,sz,color,alpha,angle)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p.x,p.z);
+      updateJurassicDinos(dt,now,p,()=>{if(now-lastJurassicHit.current<1800)return;lastJurassicHit.current=now;p.x=0;p.z=0;p.y=jurassicTerrain(0,0);p.flying=false;setHint("A dinosaur attacked! Respawned at the Jurassic clearing.");});
     }else if(propheticWorldRef.current){
       // A separate historically inspired Makkah environment, not the modern city geometry.
       for(let ix=-17;ix<=17;ix++)for(let iz=-17;iz<=17;iz++){const x=ix*46,z=iz*46;draw(vp,x,-.3,z,46,.6,46,[.61+.025*Math.sin(ix*2+iz),.48,.31]);}
