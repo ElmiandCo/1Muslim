@@ -108,6 +108,42 @@ export default function SharedGameLobby(){
     for(let x=200;x<=1200;x+=12){const y=x<290?0:x<330?(x-290)*.625:25;const isTunnel=(x>=235&&x<=285)||(x>=1090&&x<=1140);draw(vp,x,y-.22,0,12,.44,11,x>=330?[.46,.51,.64]:[.28,.36,.39]);draw(vp,x,y+.025,0,.25,.035,1.8,[.94,.83,.43]);if(x>=330&&x<1090){for(const side of [-1,1]){draw(vp,x,y+.65,side*5.2,12,.22,.2,[.62,.87,.98],.8);draw(vp,x,y+.7,side*5.2,.2,1.4,.25,[.73,.84,.94]);}draw(vp,x,y-12,0,12,.4,.25,[.22,.25,.4]);}if(isTunnel){for(const side of [-1,1])draw(vp,x,y+3,side*5.5,12,6,.7,[.75,.79,.87]);draw(vp,x,y+6,0,12,.6,12,[.81,.84,.91]);}}
     // Bright white destination chamber after the second tunnel.
     draw(vp,1170,24.5,0,60,1,48,[.98,.99,1]);draw(vp,1170,34,-24,60,20,1,[.99,.99,1]);draw(vp,1170,34,24,60,20,1,[.99,.99,1]);draw(vp,1200,34,0,1,20,48,[.99,.99,1]);draw(vp,1170,44,0,60,1,48,[1,1,1]);for(let x=1146;x<1195;x+=10)draw(vp,x,25.1,0,.3,.1,40,[.81,.88,.95]);
+    // Exotic-car showroom at the far end of the bridge: Lamborghini, Audi R8 Spyder and Ferrari.
+    // Stylized low-poly silhouettes are built from the same lightweight WebGL primitives.
+    const showroomCars=[
+      {x:1155,z:-13,body:[.98,.77,.12],type:"lamborghini"},
+      {x:1174,z:-13,body:[.12,.68,.9],type:"audi-r8-spyder"},
+      {x:1190,z:-13,body:[.88,.1,.13],type:"ferrari"},
+      {x:1155,z:13,body:[.21,.9,.46],type:"lamborghini"},
+      {x:1174,z:13,body:[.82,.83,.87],type:"audi-r8-spyder"},
+      {x:1190,z:13,body:[.97,.22,.17],type:"ferrari"}
+    ];
+    for(const car of showroomCars){
+      const {x,z,body,type}=car;
+      draw(vp,x,25.15,z,11,.15,8,[.84,.88,.92]); // display plinth
+      draw(vp,x,26.02,z,5.8,.8,2.65,body); // low sports-car chassis
+      draw(vp,x+1.9,25.85,z,1.3,.3,2.5,[.11,.12,.16]); // nose intake
+      draw(vp,x-2.5,26.15,z,.35,.3,2.55,[.14,.15,.18]); // rear diffuser
+      for(const dx of [-1.8,1.8])for(const dz of [-1.3,1.3]){
+        draw(vp,x+dx,25.57,z+dz,.88,1.05,.32,[.09,.1,.13]); // tires
+        draw(vp,x+dx,25.57,z+dz*1.13,.4,.43,.12,[.7,.73,.77]); // rims
+      }
+      if(type==="lamborghini"){
+        draw(vp,x-.4,26.76,z,2.5,.7,2.15,body);
+        draw(vp,x+.28,27.08,z,1.3,.12,2.05,[.12,.2,.26],.85); // angular windshield
+        draw(vp,x-2.4,26.67,z,1.05,.14,2.8,[.1,.12,.16]); // wing
+      }else if(type==="audi-r8-spyder"){
+        draw(vp,x-.35,26.58,z,2.3,.34,2.2,[.16,.18,.21]); // open cockpit
+        draw(vp,x+.65,26.9,z,.14,.67,2.08,[.47,.75,.85],.72); // windshield
+        draw(vp,x-1.1,26.55,z,1.3,.24,2.3,body); // rear deck
+      }else{
+        draw(vp,x-.5,26.67,z,2.9,.5,2.1,body);
+        draw(vp,x+.25,26.94,z,1.2,.14,1.95,[.14,.21,.27],.85);
+        draw(vp,x-2.1,26.65,z,.65,.15,2.45,[.12,.12,.14]); // rear aero
+      }
+      for(const dz of [-.9,.9])draw(vp,x+2.95,26.07,z+dz,.12,.18,.55,[1,.98,.8]); // headlamps
+      draw(vp,x,25.24,z,7,.025,3.7,[.96,.98,1],.55); // reflective showroom stripe
+    }
     // Procedural town foundations: roads, market arcades, greenery and inhabited blocks.
     draw(vp,37,.035,0,110,.08,8,[.32,.39,.41]);
     for(let x=5;x<85;x+=14){draw(vp,x,.045,0,.28,.09,8,[.93,.76,.39]);for(const side of [-1,1]){
