@@ -1716,3 +1716,8 @@ header[class*="controlHeader"] [class*="headerActions"] a{
  backdrop-filter:none!important;
  box-shadow:none!important;
 }
+
+/* Profile sits to the left of Home; the existing Profile component remains intact. */
+.canvas-vertical-portal[data-profile-side="left"] .canvas-vertical-secondary{transform:translate3d(-100%,0,0)}
+.canvas-vertical-portal[data-profile-side="left"][data-row="1"] .canvas-vertical-main{transform:translate3d(100%,0,0)}
+.canvas-vertical-portal[data-profile-side="left"][data-row="1"] .canvas-vertical-secondary{transform:translate3d(0,0,0)}
