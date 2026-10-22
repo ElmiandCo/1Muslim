@@ -253,6 +253,13 @@ export default function SharedGameLobby(){
     for(let i=0;i<75;i++){const x=-180+(i*47)%365,z=-580-(i*31)%380;draw(vp,x,.15,z,2.5,.3,2.5,[.21,.56,.22]);draw(vp,x,2.3,z,.65,4.4,.65,[.35,.27,.17]);draw(vp,x,5.3,z,4.5,5,4.5,[.13,.42,.24]);}
     for(let court=0;court<2;court++){const x=65+court*43,z=-700;draw(vp,x,.07,z,30,.15,17,[.13,.48,.45]);draw(vp,x,.17,z,28,.025,.22,[.94,.89,.75]);for(const side of [-1,1]){draw(vp,x+side*13,3,z,.3,6,.3,[.84,.84,.83]);draw(vp,x+side*13,6,z,2.8,1.9,.2,[.92,.92,.89]);}}
     draw(vp,180,5,-780,96,10,78,[.23,.32,.39]);draw(vp,180,12,-780,83,5,66,[.76,.68,.38]);draw(vp,180,16,-780,67,3,48,[.17,.41,.36]);draw(vp,180,19,-780,48,.6,29,[.28,.48,.39]);
+    // Elite: low-cost animated traffic, distant aircraft, walking citizens, cats and birds.
+    const t=now*.001;
+    for(let i=0;i<14;i++){const z=-560-((t*(5+i%3)*4+i*93)%1020),lane=i%2===0?-5:5;draw(vp,lane,.75,z,2.4,1.2,4.8,i%3===0?[.14,.65,.53]:[.73,.74,.78]);draw(vp,lane,1.5,z-.3,1.8,.7,2.6,[.19,.3,.36]);for(const sx of [-1,1])draw(vp,lane+sx*1.2,.35,z,.3,.7,2.4,[.08,.1,.13]);}
+    for(let i=0;i<24;i++){const z=-590-(i*47)%780,x=(i%2===0?1:-1)*(17+i%4*3),stride=Math.sin(t*3+i)*.28;draw(vp,x,1.4,z+Math.sin(t*.7+i)*3,.8,2,.65,i%3===0?[.27,.64,.5]:[.67,.58,.42]);draw(vp,x,2.65,z+Math.sin(t*.7+i)*3,.7,.7,.7,[.68,.5,.36]);draw(vp,x-.3,.45+stride,z,.25,.85,.3,[.23,.24,.27]);draw(vp,x+.3,.45-stride,z,.25,.85,.3,[.23,.24,.27]);}
+    for(let i=0;i<18;i++){const x=-115+(i*31)%255,z=-610-(i*53)%740;draw(vp,x+Math.sin(t+i)*1.2,.28,z,.85,.5,1.3,i%2?[.36,.35,.32]:[.81,.75,.63]);draw(vp,x+.4,.65,z-.45,.55,.55,.55,[.64,.6,.52]);}
+    for(let i=0;i<25;i++){const x=-140+(i*37)%340,z=-580-(i*59)%820,y=12+(i%7)*3+Math.sin(t*2+i)*1.8;draw(vp,x+Math.sin(t+i)*8,y,z+Math.cos(t+i)*8,1.3,.12,.35,[.78,.82,.84]);draw(vp,x+Math.sin(t+i)*8,y+.3,z+Math.cos(t+i)*8,.2,.5,.25,[.88,.89,.9]);}
+    for(let i=0;i<3;i++){const z=-700-((t*17+i*360)%1250),x=-180+i*180,y=60+i*17;draw(vp,x,y,z,4,1.5,13,[.84,.87,.91]);draw(vp,x,y,z,24,.2,2,[.68,.79,.85]);draw(vp,x,y+1.6,z+4,2,2,3,[.78,.85,.9]);}
     // White reflective ground and long-runway guidance to the Games portal.
     draw(vp,0,-.35,0,420,.65,420,[.89,.96,.95]);
     for(let i=-200;i<=200;i+=10){draw(vp,i,.008,0,.025,.018,420,[.76,.88,.85]);draw(vp,0,.008,i,420,.018,.025,[.76,.88,.85])}
