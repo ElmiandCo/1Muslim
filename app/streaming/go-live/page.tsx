@@ -7,6 +7,7 @@ import Link from "next/link";
 import { createClient } from "../../../utils/supabase/client";
 import { useEffect, useRef, useState } from "react";
 import { LocalAudioTrack, Room, Track } from "livekit-client";
+import { liveRoomOptions, liveCameraPublishOptions } from "../../../lib/live/live-quality";
 import { createLiveAudioProcessor } from "../../../components/live-audio-effects";
 import LiveChat from "../../../components/LiveChat";
 import SyncedLiveIntro from "../../components/SyncedLiveIntro";
@@ -784,7 +785,7 @@ export default function GoLivePage() {
         throw new Error(tokenData.error || "LiveKit could not be started.");
       }
 
-      const room = new Room({ adaptiveStream: true, dynacast: true });
+      const room = new Room(liveRoomOptions);
       pendingRoom = room;
       // Do not leave a phantom live stream visible if LiveKit signalling fails.
       try {
@@ -805,7 +806,7 @@ export default function GoLivePage() {
       if (!mediaStream) throw new Error("Camera and microphone must be enabled first.");
       const videoTrack = mediaStream.getVideoTracks()[0];
       const audioTrack = mediaStream.getAudioTracks()[0];
-      if (videoTrack) await room.localParticipant.publishTrack(videoTrack, { source: Track.Source.Camera, simulcast: true, videoEncoding: { maxBitrate: 3500000, maxFramerate: 30 } });
+      if (videoTrack) await room.localParticipant.publishTrack(videoTrack, { ...liveCameraPublishOptions, source: Track.Source.Camera });
       if (audioTrack) {
         let localAudioTrack = audioTrackRef.current;
         if (!localAudioTrack || localAudioTrack.mediaStreamTrack !== audioTrack) {

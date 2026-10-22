@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
+import { liveRoomOptions } from "../lib/live/live-quality";
 import { createClient } from "../utils/supabase/client";
 import { useRouter } from "next/navigation";
 import ReconnectTrivia from "../app/components/ReconnectTrivia";
@@ -82,7 +83,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.url || !data.token) throw new Error("Live connection is temporarily unavailable. Please try again.");
 
-        const room = new Room({ adaptiveStream: false, dynacast: true });
+        const room = new Room(liveRoomOptions);
         roomRef.current = room;
         room.on(RoomEvent.TrackSubscribed, (track, publication) => attachTrack(track, publication.source));
         room.on(RoomEvent.TrackUnsubscribed, (track, publication) => {
