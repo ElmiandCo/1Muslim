@@ -11,3 +11,5 @@ jesus:["#9ac9e7","#e7dbb9","#94ab7e","#adbb8f"],
 muhammad:["#a9d5ed","#f0dbb4","#d3b27d","#e2c48e"],
 today:["#80b8e8","#c6d9dc","#8cae94","#9dbba0"],
 future:["#303c75","#8593bc","#444f79","#576388"]};
+
+export function heightAt(x: number, z: number, era: Era): number { if (era === "hub") return 0; return Math.sin(x * 0.09) * Math.cos(z * 0.075); }
