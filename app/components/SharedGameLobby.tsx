@@ -181,6 +181,32 @@ export default function SharedGameLobby(){
       for(const dz of [-.9,.9])draw(vp,x+2.95,26.07,z+dz,.12,.18,.55,[1,.98,.8]); // headlamps
       draw(vp,x,25.24,z,7,.025,3.7,[.96,.98,1],.55); // reflective showroom stripe
     }
+    // Belt Boyz Council: a suspended sky meeting room overlooking the city.
+    // Kept separate from the portal system, with a visible approach deck.
+    const councilX=-125,councilY=45,councilZ=-120;
+    draw(vp,councilX,councilY-.4,councilZ,34,.8,30,[.18,.25,.32]);
+    draw(vp,councilX,councilY-.02,councilZ,31,.12,27,[.77,.65,.3]);
+    for(const sx of [-1,1])for(const sz of [-1,1]){
+      draw(vp,councilX+sx*15,councilY+6,councilZ+sz*13,.65,12,.65,[.7,.85,.93],.72);
+    }
+    draw(vp,councilX,councilY+12,councilZ,34,.55,30,[.18,.25,.34],.85);
+    // Translucent glass walls allow the council to look out over the world.
+    for(const side of [-1,1]){
+      draw(vp,councilX+side*16,councilY+6,councilZ,.3,11,28,[.48,.8,.92],.24);
+      draw(vp,councilX,councilY+6,councilZ+side*14,32,11,.3,[.48,.8,.92],.24);
+    }
+    // Central roundtable approximation with twelve council seats.
+    draw(vp,councilX,councilY+1.35,councilZ,10,.55,8,[.69,.5,.2]);
+    draw(vp,councilX,councilY+.75,councilZ,2,1.3,2,[.24,.28,.32]);
+    for(let seat=0;seat<12;seat++){
+      const a=seat*Math.PI/6;
+      const sx=councilX+Math.cos(a)*7.5,sz=councilZ+Math.sin(a)*6.3;
+      draw(vp,sx,councilY+.6,sz,1.8,1.1,1.8,[.14,.37,.35]);
+      draw(vp,sx+Math.cos(a)*.65,councilY+1.35,sz+Math.sin(a)*.65,.45,1.7,1.7,[.18,.43,.39]);
+    }
+    // Gold landing platform and beacon identify the room from far below.
+    draw(vp,councilX,councilY-.55,councilZ+19,13,.5,13,[.89,.71,.23]);
+    draw(vp,councilX,councilY+15,councilZ,1.1,5,1.1,[.96,.79,.27]);
     // Eight parked four-seat city vehicles; seats and drive controls are a later gameplay phase.
     for(let i=0;i<8;i++){
       const x=10+i*11,z=(i%2===0?1:-1)*7.5;
