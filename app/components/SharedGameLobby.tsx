@@ -88,8 +88,45 @@ export default function SharedGameLobby(){
    const mag=Math.hypot(moving,strafing)||1;const boosted=p.flying&&now<boostUntil.current;const speed=p.flying?(boosted?49.5:16.5):(k.Shift?9:5.5);
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
-   p.x=clamp(p.x+dx*speed*dt,-210,1220);p.z=clamp(p.z+dz*speed*dt,-210,210);p.boost=boosted; if(!boosted&&boostUntil.current){boostUntil.current=0;setBoostActive(false)}
-   const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=onRoad?bridgeHeight:(p.x>300?-100:terrain(p.x,p.z));const floor=skyLanding?45:roadFloor;
+   const previousX=p.x,previousZ=p.z;
+   const proposedX=clamp(p.x+dx*speed*dt,-210,1220),proposedZ=clamp(p.z+dz*speed*dt,-210,210);
+   // Physical collision volumes mirror the town, tunnels and distant showroom.
+   // A player's feet are p.y; their body extends about 1.8 world units upward.
+   const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[];
+   for(let x=5;x<85;x+=14)for(const side of [-1,1]){
+     const z=side*15,height=5+(Math.floor(x/14)%3)*2;
+     solids.push({x,z,hx:3.7,hz:3.2,bottom:0,top:height+.9});
+     solids.push({x:x+4,z:z-side*5,hx:1.35,hz:1.1,bottom:0,top:2});
+   }
+   for(let x=235;x<=285;x+=12)for(const side of [-1,1])solids.push({x,z:side*5.5,hx:6.1,hz:.48,bottom:0,top:6.1});
+   for(let x=1090;x<=1140;x+=12)for(const side of [-1,1])solids.push({x,z:side*5.5,hx:6.1,hz:.48,bottom:25,top:31.1});
+   for(const x of [1155,1174,1190])for(const z of [-13,13])solids.push({x,z,hx:3.1,hz:1.8,bottom:25,top:27.6});
+   // Block side penetration and reflect travel away from the struck surface.
+   // Roofs remain solid landing surfaces, so players cannot fall through buildings.
+   let struck=false,roof=-Infinity;
+   for(const b of solids){
+     const overlapsXZ=Math.abs(proposedX-b.x)<b.hx+.42&&Math.abs(proposedZ-b.z)<b.hz+.42;
+     if(!overlapsXZ)continue;
+     if(p.y>=b.top-.2&&p.y<=b.top+2.2){roof=Math.max(roof,b.top);continue;}
+     if(p.y+1.75<=b.bottom||p.y>=b.top)continue;
+     const overlapX=b.hx+.42-Math.abs(proposedX-b.x),overlapZ=b.hz+.42-Math.abs(proposedZ-b.z);
+     if(overlapX<overlapZ){
+       p.x=b.x+Math.sign(previousX-b.x||-dx||1)*(b.hx+.53);
+       p.z=previousZ;
+     }else{
+       p.z=b.z+Math.sign(previousZ-b.z||-dz||1)*(b.hz+.53);
+       p.x=previousX;
+     }
+     struck=true;break;
+   }
+   if(!struck){p.x=proposedX;p.z=proposedZ}
+   else{ // Small, damped rebound rather than teleporting or sticking to a wall.
+     p.x=clamp(p.x-dx*Math.min(.6,speed*dt*.45),-210,1220);
+     p.z=clamp(p.z-dz*Math.min(.6,speed*dt*.45),-210,210);
+     crashUntil=now+260;setCrashed(true);
+   }
+   p.boost=boosted; if(!boosted&&boostUntil.current){boostUntil.current=0;setBoostActive(false)}
+   const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=onRoad?bridgeHeight:(p.x>300?-100:terrain(p.x,p.z));const floor=Math.max(skyLanding?45:roadFloor,roof);
    if(p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setBoostActive(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
    if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?13:descend?-19:-5)*dt,-22,7);p.y=clamp(p.y+velocity*dt,floor,85);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
    else{if(crashUntil&&now>crashUntil){crashUntil=0;setCrashed(false)}velocity-=17*dt;if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){p.y=floor;velocity=0}}
