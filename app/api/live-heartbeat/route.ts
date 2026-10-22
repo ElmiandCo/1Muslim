@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient as sessionClient } from "../../../../utils/supabase/server";
+import { createClient as sessionClient } from "../../../utils/supabase/server";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
