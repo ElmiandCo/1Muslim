@@ -1719,3 +1719,8 @@
 @media(prefers-reduced-motion:reduce){
  .control .controlHeader,.control .surface,.control .surfaceArtwork{transition:none!important}
 }
+
+/* Theme-aware outer margins: day mode is luminous rather than black. */
+.control{--outer-theme:var(--canvas-control-surface-rgb,8,75,57);--outer-glint:var(--canvas-control-border-rgb,204,176,103);background:radial-gradient(ellipse 75% 55% at 100% 16%,rgba(var(--outer-glint),.16),transparent 75%),linear-gradient(115deg,rgba(var(--outer-theme),.66),#061c19 64%)!important;transition:background-color .8s ease!important}
+:global(html.light) .control,.control.day{background:radial-gradient(ellipse 70% 65% at 100% 14%,rgba(255,251,214,.78),rgba(var(--outer-glint),.32) 35%,transparent 78%),linear-gradient(115deg,rgba(var(--outer-theme),.24),rgba(247,245,230,.90) 48%,rgba(225,236,220,.93))!important}
+:global(html.light) body:has(.control),body:has(.control.day){background:linear-gradient(115deg,rgba(var(--canvas-control-surface-rgb,8,75,57),.22),#e9eee4 58%,#fff1c9)!important}
