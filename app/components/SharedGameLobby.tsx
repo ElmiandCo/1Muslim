@@ -47,7 +47,7 @@ function makeRenderer(canvas:HTMLCanvasElement){
  return {gl,draw};
 }
 export default function SharedGameLobby(){
- const councilProjection=useRef<HTMLDivElement>(null); const [councilScreenUrl,setCouncilScreenUrl]=useState<string|null>(null);
+ const councilArt=useRef<HTMLDivElement>(null); const councilProjection=useRef<HTMLDivElement>(null); const [councilScreenUrl,setCouncilScreenUrl]=useState<string|null>(null);
  const labels=useRef<HTMLDivElement>(null),workerNotice=useRef(false);const canvas=useRef<HTMLCanvasElement>(null),panel=useRef<HTMLDivElement>(null),portalLabel=useRef<HTMLDivElement>(null);
  const arrivals=useRef<Map<string,number>>(new Map());const keys=useRef<Record<string,boolean>>({}),peerRef=useRef<Map<string,Player>>(new Map()),suitRef=useRef<Suit>("gold");
  const local=useRef<Player>({id:"",x:0,y:terrain(0,0),z:0,yaw:Math.PI/2,flying:false,boost:false,suit:"gold",seen:0});
@@ -138,6 +138,10 @@ export default function SharedGameLobby(){
     gl.clearColor(.91,.96,.97,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     const cam=[p.x-Math.sin(p.yaw)*7,p.y+4.0,p.z-Math.cos(p.yaw)*7],at=[p.x,p.y+1.3,p.z];
     const vp=mul(perspective(Math.PI/3,w/h,.1,600),lookAt(cam,at));
+    // Council mural on the opposite wall from the projector, perspective-scaled.
+    const muralPoint=project(vp,[-125,52,-106.3],w,h);
+    const mural=councilArt.current;
+    if(mural){if(muralPoint?.visible&&distance(p,{x:-125,z:-120})<105){const size=clamp(1150/(Math.hypot(p.x+125,p.y-52,p.z+106)+1),55,370);mural.style.display="block";mural.style.width=size+"px";mural.style.height=size*.36+"px";mural.style.left=(muralPoint.x-size/2)+"px";mural.style.top=(muralPoint.y-size*.18)+"px";mural.style.fontSize=Math.max(8,size/20)+"px";}else mural.style.display="none";}
     // Anchor the projector UI to the in-world council wall; hide when off-screen.
     const screenPoint=project(vp,[-125,52,-133.1],w,h);
     const projector=councilProjection.current;
@@ -437,6 +441,13 @@ export default function SharedGameLobby(){
  return <section className={styles.root} aria-label="1Muslim shared 3D game lobby">
   <canvas ref={canvas} className={styles.canvas} tabIndex={0} aria-label="Third-person 3D world; click to control. WASD move, mouse drag look, Space jump or ascend, F fly, Shift boost, C descend." onPointerDown={down} onPointerMove={move} onPointerUp={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}} onPointerCancel={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}}/>
 
+  <div aria-label="Belt Boyz Council graffiti and Islamic calligraphy" style={{position:"absolute",inset:0,zIndex:3,pointerEvents:"none",overflow:"hidden"}}>
+    <div ref={councilArt} style={{display:"none",position:"absolute",width:340,height:120,transformOrigin:"center",borderRadius:14,background:"linear-gradient(125deg,rgba(8,20,26,.94),rgba(9,48,45,.9))",border:"2px solid rgba(224,181,76,.85)",boxShadow:"0 0 30px rgba(15,201,162,.3)",overflow:"hidden",textAlign:"center",color:"#f6d17a",padding:"8px 12px"}}>
+      <div style={{fontWeight:1000,fontSize:29,letterSpacing:3,transform:"rotate(-3deg)",fontStyle:"italic",textShadow:"3px 3px #008b74,-2px -1px #d59c37,0 0 12px #37dcb8"}}>BELT BOYZ</div>
+      <div style={{fontSize:11,letterSpacing:5,color:"#a9f1d7"}}>THE COUNCIL</div>
+      <div lang="ar" dir="rtl" style={{fontFamily:"serif",fontSize:25,lineHeight:1.5,color:"#ffe8a6",textShadow:"0 0 10px rgba(234,196,111,.5)"}}>ﷲ &nbsp; • &nbsp; الإسلام</div>
+    </div>
+  </div>
   <div ref={councilProjection} aria-label="Belt Boyz Council projector" style={{position:"absolute",display:"none",width:260,aspectRatio:"16 / 9",zIndex:3,pointerEvents:"none",border:"3px solid #c8ac60",borderRadius:5,background:"#061b22",overflow:"hidden",boxShadow:"0 0 20px rgba(75,225,217,.35)"}}>{councilScreenUrl?<video src={councilScreenUrl} autoPlay playsInline muted style={{width:"100%",height:"100%",objectFit:"contain"}}/>:<div style={{height:"100%",display:"grid",placeContent:"center",textAlign:"center",color:"#bcefe8",fontSize:13}}><strong>BELT BOYZ COUNCIL</strong><small>PROJECTOR · Awaiting screen share</small></div>}</div>
   <div ref={labels} aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",zIndex:4}}/>
   {workerMessage&&<div role="dialog" aria-label="Construction worker" style={{position:"absolute",left:"12%",right:"12%",bottom:"24%",zIndex:9,background:"#092f2deb",border:"1px solid #e8c56e",borderRadius:18,color:"white",padding:18,textAlign:"center"}}><strong>🚀 Space Station Worker</strong><p>Come back soon… we’re going to the Moon! 🌙</p><button onClick={()=>setWorkerMessage(false)} style={{padding:"8px 18px",borderRadius:12}}>See you soon!</button></div>}
