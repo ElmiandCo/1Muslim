@@ -135,7 +135,12 @@ export default function SharedGameLobby(){
    const near=distance(p,{x:95,z:0})<5;if(near&&!wasNear)setPicker(true);wasNear=near;
    const w=node.clientWidth,h=node.clientHeight,dpr=Math.min(window.devicePixelRatio||1,1.5);
    if(w>0&&h>0){const rw=Math.floor(w*dpr),rh=Math.floor(h*dpr);if(node.width!==rw||node.height!==rh){node.width=rw;node.height=rh;gl.viewport(0,0,rw,rh)}
-    gl.clearColor(.91,.96,.97,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    // Shared 6-hour world clock: four hours daylight, two hours night.
+    const cycle=Date.now()%(6*60*60*1000),night=cycle>=4*60*60*1000;
+    const dusk=clamp((cycle-3.75*60*60*1000)/(15*60*1000),0,1);
+    const dawn=clamp((cycle-5.75*60*60*1000)/(15*60*1000),0,1);
+    const darkness=night?1-dawn:dusk;
+    gl.clearColor(.91-darkness*.87,.96-darkness*.92,.97-darkness*.85,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     const cam=[p.x-Math.sin(p.yaw)*7,p.y+4.0,p.z-Math.cos(p.yaw)*7],at=[p.x,p.y+1.3,p.z];
     const vp=mul(perspective(Math.PI/3,w/h,.1,600),lookAt(cam,at));
     // Council mural on the opposite wall from the projector, perspective-scaled.
@@ -292,6 +297,23 @@ export default function SharedGameLobby(){
       draw(vp,x,1.2,z,.45,2.4,.45,[.43,.31,.22]);
       for(const a of [-1,0,1])draw(vp,x+a*.9,3.1+Math.abs(a)*.3,z,.95,2,1.9,[.2,.56+(i%3)*.05,.34]);
     }
+    // Extended forest: a second broad grove, with varied canopy height and scale.
+    // The Kaaba-inspired landmark is beyond the far side of the woodland.
+    for(let i=0;i<110;i++){
+      const x=-155+(i%22)*13.3,z=45+Math.floor(i/22)*23+(i%3)*3;
+      const tall=3.5+((i*17)%11)*.85;
+      const spread=1.5+(i%5)*.33;
+      draw(vp,x,tall*.5,z,.65,tall,.65,[.35,.25,.17]);
+      for(const layer of [0,1,2])draw(vp,x,tall+layer*1.35,z,spread*(2-layer*.38),3.5-layer*.55,spread*(2-layer*.38),[.09+.02*(i%4),.35+.035*(i%5),.18+.015*(i%3)]);
+    }
+    // Reverent stylized Kaaba landmark on a light stone courtyard.
+    draw(vp,0,.06,184,47,.18,47,[.89,.87,.81]);
+    draw(vp,0,7,184,14,14,14,[.065,.065,.075]);
+    for(const side of [-1,1]){
+      draw(vp,0,11.2,184+side*7.05,14,.8,.13,[.87,.7,.3]);
+      draw(vp,side*7.05,11.2,184,.13,.8,14,[.87,.7,.3]);
+    }
+    draw(vp,0,14.1,184,14,.25,14,[.15,.15,.17]);
     // Distant cloud mountains and smaller sky villages (visual landmarks).
     for(let i=0;i<5;i++){const x=22+i*36,z=i%2?85:-85,y=22+(i%3)*8;
       draw(vp,x,y,z,23,8,19,[.86,.94,.97],.82);
@@ -342,6 +364,12 @@ export default function SharedGameLobby(){
       const height=6+(i%5)*1.4;
       draw(vp,jx,height/2,jz,.8,height,.8,[.29,.22,.14]);
       for(const off of [-2,0,2])draw(vp,jx+off,height,jz,5,4,5,[.07,.22+(i%3)*.03,.13],.96);
+    }
+    // Street lights switch on automatically during the two-hour night.
+    if(darkness>.05)for(let x=8;x<=195;x+=17)for(const side of [-1,1]){
+      const z=side*10;
+      draw(vp,x,5.1,z,1.2,.25,1.2,[1,.91,.52],.45+.5*darkness);
+      draw(vp,x,4.75,z,3.5,.12,3.5,[1,.83,.36],.12+.17*darkness);
     }
     // Street upgrades: walkable sidewalk slabs, curbs, painted crossings and streetlamps.
     for(let i=0;i<22;i++){const x=2+i*4;for(const side of [-1,1]){const z=side*6.8;
