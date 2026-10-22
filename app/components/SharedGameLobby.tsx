@@ -53,7 +53,7 @@ export default function SharedGameLobby(){
  const [suit,setSuit]=useState<Suit>("gold"),[online,setOnline]=useState(false),[peerCount,setPeerCount]=useState(0);
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
  const [error,setError]=useState(""),[hint,setHint]=useState("Run toward the glowing portal, or turn around for 1Muslim Live.");
- const [flying,setFlying]=useState(false);
+ const [flying,setFlying]=useState(false); const gesture=useRef({lastTap:0,downAt:0,hold:false}); const [crashed,setCrashed]=useState(false);
  const setKey=(k:string,on:boolean)=>{keys.current[k]=on};
  const toggleFly=useCallback(()=>{const p=local.current;p.flying=!p.flying;setFlying(p.flying);if(p.flying)p.y=Math.max(p.y,terrain(p.x,p.z)+1.3)},[]);
  useEffect(()=>{try{const stored=localStorage.getItem("1muslim-game-suit");const s=validSuit(stored);suitRef.current=s;local.current.suit=s;setSuit(s)}catch{}},[]);
@@ -77,19 +77,19 @@ export default function SharedGameLobby(){
   let renderer:ReturnType<typeof makeRenderer>;
   try{renderer=makeRenderer(node)}catch(e){setError(e instanceof Error?e.message:"WebGL initialization failed");return}
   if(!renderer){setError("WebGL is unavailable on this device.");return}
-  const {gl,draw}=renderer;let frame=0,prev=performance.now(),velocity=0,wasNear=false;
+  const {gl,draw}=renderer;let frame=0,prev=performance.now(),velocity=0,wasNear=false,crashUntil=0;
   const render=(now:number)=>{
    const dt=clamp((now-prev)/1000,0,.05);prev=now;
    const p=local.current,k=keys.current;
    const moving=Number(!!(k.w||k.ArrowUp))-Number(!!(k.s||k.ArrowDown));
    const strafing=Number(!!(k.d||k.ArrowRight))-Number(!!(k.a||k.ArrowLeft));
-   const mag=Math.hypot(moving,strafing)||1;const speed=p.flying?(k.Shift?24:11):(k.Shift?9:5.5);
+   const mag=Math.hypot(moving,strafing)||1;const speed=p.flying?16.5:(k.Shift?9:5.5);
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
    p.x=clamp(p.x+dx*speed*dt,-210,210);p.z=clamp(p.z+dz*speed*dt,-210,210);p.boost=!!k.Shift&&p.flying;
    const floor=terrain(p.x,p.z);
-   if(p.flying){velocity=0;p.y=clamp(p.y+((k.Space?1:0)-(k.c?1:0))*8*dt,floor+1,85)}
-   else{velocity-=17*dt;if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){p.y=floor;velocity=0}}
+   if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?13:descend?-19:-5)*dt,-22,7);p.y=clamp(p.y+velocity*dt,floor,85);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);velocity=0}}
+   else{if(crashUntil&&now>crashUntil){crashUntil=0;setCrashed(false)}velocity-=17*dt;if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){p.y=floor;velocity=0}}
    const near=distance(p,{x:95,z:0})<5;if(near&&!wasNear)setPicker(true);wasNear=near;
    const w=node.clientWidth,h=node.clientHeight,dpr=Math.min(window.devicePixelRatio||1,1.5);
    if(w>0&&h>0){const rw=Math.floor(w*dpr),rh=Math.floor(h*dpr);if(node.width!==rw||node.height!==rh){node.width=rw;node.height=rh;gl.viewport(0,0,rw,rh)}
@@ -112,7 +112,7 @@ export default function SharedGameLobby(){
     // Avatar primitives: head, torso, arms, legs, glowing flight trails.
     const avatar=(a:Player)=>{const c=SUIT_COLORS[a.suit];const ay=a.y+(a.flying?0:.1*Math.sin(now*.006));draw(vp,a.x,ay+1.35,a.z,.8,1.1,.44,c,1,a.yaw);draw(vp,a.x,ay+2.16,a.z,.52,.52,.52,c,1,a.yaw);const cs=Math.cos(a.yaw),sn=Math.sin(a.yaw);
       for(const side of [-1,1]){const ox=cs*side*.61,oz=-sn*side*.61;draw(vp,a.x+ox,ay+1.28,a.z+oz,.26,.94,.3,c,1,a.yaw);draw(vp,a.x+cs*side*.23,ay+.46,a.z-sn*side*.23,.31,.85,.35,c,1,a.yaw)}
-      if(a.flying){for(let i=0;i<4;i++){const tail=i*.7+1;draw(vp,a.x-sn*tail,ay+.4-i*.12,a.z-cs*tail,.16+i*.08,.14+i*.06,.16+i*.08,c,.55)}}};
+      if(a.flying){for(let i=0;i<7;i++){const tail=i*.7+1;draw(vp,a.x-sn*tail,ay+.4-i*.12,a.z-cs*tail,.13+i*.065,.11+i*.04,.13+i*.065,[.66,.92,1],.6-i*.06)}draw(vp,a.x+sn*.6,ay+1.4,a.z+cs*.6,.48,.2,.32,c,1,a.yaw)}};
     avatar(p);
     for(const other of peerRef.current.values())if(now-other.seen<12000)avatar(other);
     const projLive=project(vp,[-18.3,4,0],w,h),projPortal=project(vp,[95,9,0],w,h);
@@ -130,15 +130,16 @@ export default function SharedGameLobby(){
   window.addEventListener("keydown",keyDown);window.addEventListener("keyup",keyUp);return()=>{window.removeEventListener("keydown",keyDown);window.removeEventListener("keyup",keyUp)};
  },[toggleFly]);
  const drag=useRef<{x:number;id:number}|null>(null);
- const down=(e:React.PointerEvent<HTMLCanvasElement>)=>{canvas.current?.focus();drag.current={x:e.clientX,id:e.pointerId};e.currentTarget.setPointerCapture(e.pointerId)};
+ const down=(e:React.PointerEvent<HTMLCanvasElement>)=>{canvas.current?.focus();const g=gesture.current;const now=performance.now();if(local.current.flying){g.hold=true;keys.current.ascend=true}else if(local.current.y>terrain(local.current.x,local.current.z)+.3){toggleFly();g.hold=true;keys.current.ascend=true}else if(now-g.lastTap<340){keys.current.Space=true;g.lastTap=0}else g.lastTap=now;g.downAt=now;drag.current={x:e.clientX,id:e.pointerId};e.currentTarget.setPointerCapture(e.pointerId)};
  const move=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(!drag.current||drag.current.id!==e.pointerId)return;const delta=e.clientX-drag.current.x;drag.current.x=e.clientX;local.current.yaw+=delta*.008};
  return <section className={styles.root} aria-label="1Muslim shared 3D game lobby">
-  <canvas ref={canvas} className={styles.canvas} tabIndex={0} aria-label="Third-person 3D world; click to control. WASD move, mouse drag look, Space jump or ascend, F fly, Shift boost, C descend." onPointerDown={down} onPointerMove={move} onPointerUp={()=>drag.current=null} onPointerCancel={()=>drag.current=null}/>
+  <canvas ref={canvas} className={styles.canvas} tabIndex={0} aria-label="Third-person 3D world; click to control. WASD move, mouse drag look, Space jump or ascend, F fly, Shift boost, C descend." onPointerDown={down} onPointerMove={move} onPointerUp={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}} onPointerCancel={()=>{drag.current=null;keys.current.ascend=false;gesture.current.hold=false}}/>
   <div className={styles.top}><span>✦ 1Muslim Lobby</span><span className={online?styles.connected:styles.offline}>{online?"● Shared room":"○ Connecting"} · {peerCount+1} visible</span></div>
   <div ref={panel} className={styles.liveScreen}><div className={styles.liveHeader}>◉ 1MUSLIM LIVE</div>{live?<><div className={styles.liveVideo}><LiveHomePreview roomName={live.room_name||live.id}/></div><a href={"/streaming/live/"+live.id} className={styles.watch}>Watch {live.title} ↗</a></>:<div className={styles.waiting}><span className={styles.spinner}>◌</span><strong>Loading — waiting for the next 1Muslim Live</strong><small>{liveError?"Live status temporarily unavailable":"Broadcast will appear when someone goes live"}</small></div>}</div>
   <div ref={portalLabel} className={styles.portalSign}>✦ JUMP INTO 1MUSLIMGAMES ✦</div>
   <div className={styles.bottom}><span>{hint}</span><label>SUIT <select aria-label="Preview avatar suit" value={suit} onChange={e=>changeSuit(validSuit(e.target.value))}>{SUITS.map(s=><option key={s} value={s}>{s.toUpperCase()}</option>)}</select></label></div>
-  <div className={styles.controls}><div className={styles.dpad}><button onPointerDown={()=>setKey("w",true)} onPointerUp={()=>setKey("w",false)} onPointerLeave={()=>setKey("w",false)}>▲</button><div><button onPointerDown={()=>setKey("a",true)} onPointerUp={()=>setKey("a",false)} onPointerLeave={()=>setKey("a",false)}>◀</button><button onPointerDown={()=>setKey("s",true)} onPointerUp={()=>setKey("s",false)} onPointerLeave={()=>setKey("s",false)}>▼</button><button onPointerDown={()=>setKey("d",true)} onPointerUp={()=>setKey("d",false)} onPointerLeave={()=>setKey("d",false)}>▶</button></div></div><div className={styles.actions}><button onClick={toggleFly}>{flying?"LAND":"FLY"}</button><button onPointerDown={()=>setKey("Space",true)} onPointerUp={()=>setKey("Space",false)} onPointerLeave={()=>setKey("Space",false)}>↑</button><button onPointerDown={()=>setKey("c",true)} onPointerUp={()=>setKey("c",false)} onPointerLeave={()=>setKey("c",false)}>↓</button><button onPointerDown={()=>setKey("Shift",true)} onPointerUp={()=>setKey("Shift",false)} onPointerLeave={()=>setKey("Shift",false)}>BOOST</button></div></div>
+  {crashed&&<div className={styles.toast} role="status">💥 Hard landing! Recovering…</div>}
+  <div className={styles.controls}><div className={styles.dpad}><button onPointerDown={()=>setKey("w",true)} onPointerUp={()=>setKey("w",false)} onPointerLeave={()=>setKey("w",false)}>▲</button><div><button onPointerDown={()=>setKey("a",true)} onPointerUp={()=>setKey("a",false)} onPointerLeave={()=>setKey("a",false)}>◀</button><button onPointerDown={()=>setKey("s",true)} onPointerUp={()=>setKey("s",false)} onPointerLeave={()=>setKey("s",false)}>▼</button><button onPointerDown={()=>setKey("d",true)} onPointerUp={()=>setKey("d",false)} onPointerLeave={()=>setKey("d",false)}>▶</button></div></div><div className={styles.actions}><span aria-live="polite">{flying?"FLYING · hold world to rise":"Double tap world to jump · tap airborne to fly"}</span></div></div>
   {error&&<div role="alert" className={styles.error}>{error}</div>}
   {picker&&<div className={styles.modal}><div className={styles.picker}><button className={styles.close} onClick={()=>setPicker(false)} aria-label="Close world selector">✕</button><h2>Choose Your Universe</h2><p>Explore the worlds of 1Muslim Games</p><div className={styles.worlds}>{WORLDS.map(w=><button key={w} onClick={()=>{setWorldMessage(w+" is not yet connected to this lobby build.");setPicker(false)}}>{w} <small>Preview pending</small></button>)}</div></div></div>}
   {worldMessage&&<div className={styles.toast} role="status" onClick={()=>setWorldMessage("")}>{worldMessage} · Dismiss ✕</div>}
