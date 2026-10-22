@@ -137,8 +137,7 @@ export default function Home(){
   if(liveFormat==="games"&&workspacePage===0&&(direction==="up"||direction==="down"))return;
   try{localStorage.setItem("1muslim:canvas-nav-used","1")}catch{}
   setNavigationHintSeen(true);
-  if(direction==="down"){setCanvasRow(row=>Math.max(0,row-1) as 0|1|2);return}
-  if(direction==="up"){setCanvasRow(row=>Math.min(1,row+1) as 0|1|2);return}
+  if(direction==="down"||direction==="up")return;
   const next=Math.max(0,Math.min(HOME_SLIDES.length-1,workspacePage+(direction==="right"?1:-1)));
   moveWorkspace(next);
  };
@@ -427,7 +426,7 @@ const navCollapsedRef=useRef(false);
      timer=setTimeout(()=>{
        if(cancelled||document.visibilityState!=="visible")return;
        try{sessionStorage.setItem(key,"1")}catch{}
-       setCanvasRow(1);
+       setCanvasRow(0);
      },2500);
    };
    timer=setTimeout(settle,350);
@@ -557,7 +556,7 @@ const navCollapsedRef=useRef(false);
     }
    }
    if(start.target.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],[data-live-video-region],.canvas-native-profile,.canvas-umma-vertical-gallery"))return;
-   if((canvasRow===0||canvasRow===1)&&dy< -68&&start.atTop&&!start.target.closest("[data-ranks-scroll],[data-gallery-scroll]")){fired=true;if(e.cancelable)e.preventDefault();setCanvasRow(row=>Math.min(1,row+1) as 0|1|2);}
+   if(workspacePage!==0&&(canvasRow===0||canvasRow===1)&&dy< -68&&start.atTop&&!start.target.closest("[data-ranks-scroll],[data-gallery-scroll]")){fired=true;if(e.cancelable)e.preventDefault();setCanvasRow(row=>Math.min(1,row+1) as 0|1|2);}
    else if((canvasRow===1)&&dy>120&&start.atTop){
     const nested=start.target.closest("[data-ranks-scroll],[data-gallery-scroll]");
     const profile=start.target.closest(".canvas-native-profile") as HTMLElement|null;
@@ -583,7 +582,7 @@ const navCollapsedRef=useRef(false);
   const origin=profileSwipeStart.current?.target;
   const blocked=Boolean(origin?.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],[data-live-video-region],.canvas-native-profile,.canvas-umma-vertical-gallery"));
   if(!blocked&&Math.abs(dy)>Math.abs(dx)*1.35){
-   if((canvasRow===0||canvasRow===1)&&dy< -52&&profileSwipeStart.current?.scrollAtTop&&!origin?.closest("[data-ranks-scroll],[data-gallery-scroll]")){
+   if(workspacePage!==0&&(canvasRow===0||canvasRow===1)&&dy< -52&&profileSwipeStart.current?.scrollAtTop&&!origin?.closest("[data-ranks-scroll],[data-gallery-scroll]")){
     if(e.cancelable)e.preventDefault();
     setCanvasRow(row=>Math.min(1,row+1) as 0|1|2);verticalSwipeStart.current=null;profileSwipeStart.current=null;swipeOrigin.current=null;
     return;
@@ -604,7 +603,7 @@ const navCollapsedRef=useRef(false);
  const interactive=Boolean(origin.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],.canvas-native-profile,.canvas-umma-vertical-gallery"));
  const inVideo=Boolean(origin.closest("[data-live-video-region]"));
  if(!interactive&&!inVideo){
-  if((canvasRow===0||canvasRow===1)&&dy< -60&&profileSwipeStart.current?.scrollAtTop&&!origin.closest("[data-ranks-scroll],[data-gallery-scroll]")){setCanvasRow(row=>Math.min(1,row+1) as 0|1|2);}
+  if(workspacePage!==0&&(canvasRow===0||canvasRow===1)&&dy< -60&&profileSwipeStart.current?.scrollAtTop&&!origin.closest("[data-ranks-scroll],[data-gallery-scroll]")){setCanvasRow(row=>Math.min(1,row+1) as 0|1|2);}
   else if((canvasRow===1)&&dy>95){
    // A new upward gesture at the top of the Profile returns Home.
    // Gestures beginning within a scrolling content region remain local.
