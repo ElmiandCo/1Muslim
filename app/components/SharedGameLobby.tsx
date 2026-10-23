@@ -128,8 +128,9 @@ export default function SharedGameLobby(){
  useEffect(()=>{try{localStorage.setItem("1muslim:game-audio-room-active",audioRoomLocked&&voiceOn?"1":"0");window.dispatchEvent(new Event("1muslim:game-audio-room-change"))}catch{}return()=>{try{localStorage.setItem("1muslim:game-audio-room-active","0");window.dispatchEvent(new Event("1muslim:game-audio-room-change"))}catch{}}},[audioRoomLocked,voiceOn]); const [voiceBusy,setVoiceBusy]=useState(false); const [speakerEnabled,setSpeakerEnabled]=useState(true); const [micPermissionError,setMicPermissionError]=useState(""); const [voicePreference,setVoicePreference]=useState(false); useEffect(()=>{try{setVoicePreference(localStorage.getItem("1muslim:game-voice-opt-in")==="1")}catch{}},[]); const gesture=useRef({lastTap:0,downAt:0,hold:false}); const [crashed,setCrashed]=useState(false); const flightPose=useRef({takeoff:0,landing:0}); const [emote,setEmote]=useState<"none"|"wave"|"pose"|"celebrate"|"hand">("none"); const emoteUntil=useRef(0);
  const [stickPosition,setStickPosition]=useState({x:0,y:0});
  const stickPointer=useRef<number|null>(null);
- const moveStick=(e:React.PointerEvent<HTMLDivElement>)=>{if(stickPointer.current!==e.pointerId)return;const b=e.currentTarget.getBoundingClientRect();const x=Math.max(-1,Math.min(1,(e.clientX-(b.left+b.width/2))/(b.width*.36)));const y=Math.max(-1,Math.min(1,(e.clientY-(b.top+b.height/2))/(b.height*.36)));const length=Math.hypot(x,y);const nx=length>1?x/length:x,ny=length>1?y/length:y;setStickPosition({x:nx,y:ny});keys.current.w=ny<-.22;keys.current.s=ny>.22;keys.current.a=nx<-.22;keys.current.d=nx>.22;};
- const releaseStick=(e:React.PointerEvent<HTMLDivElement>)=>{if(stickPointer.current!==e.pointerId)return;stickPointer.current=null;setStickPosition({x:0,y:0});for(const k of ["w","a","s","d"])keys.current[k]=false;try{e.currentTarget.releasePointerCapture(e.pointerId)}catch{}};
+ const analogMovement=useRef({x:0,y:0});
+ const moveStick=(e:React.PointerEvent<HTMLDivElement>)=>{if(stickPointer.current!==e.pointerId)return;const b=e.currentTarget.getBoundingClientRect();const x=Math.max(-1,Math.min(1,(e.clientX-(b.left+b.width/2))/(b.width*.36)));const y=Math.max(-1,Math.min(1,(e.clientY-(b.top+b.height/2))/(b.height*.36)));const length=Math.hypot(x,y);const nx=length>1?x/length:x,ny=length>1?y/length:y;setStickPosition({x:nx,y:ny});analogMovement.current={x:nx,y:ny};keys.current.w=ny<-.22;keys.current.s=ny>.22;keys.current.a=nx<-.22;keys.current.d=nx>.22;};
+ const releaseStick=(e:React.PointerEvent<HTMLDivElement>)=>{if(stickPointer.current!==e.pointerId)return;stickPointer.current=null;analogMovement.current={x:0,y:0};setStickPosition({x:0,y:0});for(const k of ["w","a","s","d"])keys.current[k]=false;try{e.currentTarget.releasePointerCapture(e.pointerId)}catch{}};
  const setKey=(k:string,on:boolean)=>{keys.current[k]=on};
  const activateBoost=()=>{boostEnabled.current=!boostEnabled.current;setBoostActive(boostEnabled.current)};
  const leaveShipAudio=async()=>{const room=shipRoom.current;shipRoom.current=null;setShipConnected(false);setShipCaptain(false);setShipPassengers(0);setRemoteShipMedia(false);shipStream.current?.getTracks().forEach(t=>t.stop());shipStream.current=null;setShipMedia(false);if(room)await room.disconnect();};
@@ -212,10 +213,11 @@ export default function SharedGameLobby(){
 
    if(downed&&now>=knockdownUntil.current)setDowned(false);
    for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000&&(other.world||"Today")===(p.world||"Today"));const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=audioRoomLocked?1:feet<=200?1:feet<=300?1-(feet-200)*.005:feet<=400?.5-(feet-300)*.005:0;}
-   const moving=now<knockdownUntil.current?0:Number(!!(k.w||k.ArrowUp))-Number(!!(k.s||k.ArrowDown));
-   const strafing=now<knockdownUntil.current?0:Number(!!(k.a||k.ArrowLeft))-Number(!!(k.d||k.ArrowRight));
+   const stick=stickPointer.current!==null?analogMovement.current:null;
+   const moving=now<knockdownUntil.current?0:stick?-stick.y:Number(!!(k.w||k.ArrowUp))-Number(!!(k.s||k.ArrowDown));
+   const strafing=now<knockdownUntil.current?0:stick?-stick.x:Number(!!(k.a||k.ArrowLeft))-Number(!!(k.d||k.ArrowRight));
    const lunar=moonModeRef.current.walking;
-   const mag=Math.hypot(moving,strafing)||1;const boosted=boostEnabled.current;const speed=ship.current.active||plane.current.active?0:eva?5.5:lunar?(boosted?11:4.8):p.flying?(boosted?49.5:16.5)*(p.y>85?1.5:1):(boosted?16.5:k.Shift?9:5.5);
+   const mag=Math.max(1,Math.hypot(moving,strafing));const boosted=boostEnabled.current;const speed=ship.current.active||plane.current.active?0:eva?5.5:lunar?(boosted?11:4.8):p.flying?(boosted?49.5:16.5)*(p.y>85?1.5:1):(boosted?16.5:k.Shift?9:5.5);
    if(lunar)p.flying=false;
    if(ship.current.active){
      const elapsed=(performance.now()-ship.current.launchedAt)/1000;
