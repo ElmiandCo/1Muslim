@@ -286,11 +286,13 @@ export default function SharedGameLobby(){
     // Smooth normal movement and fullscreen zoom, but snap after teleportation.
     const followDistance=ship.current.active?33:plane.current.active?21:fullscreenRef.current?10:7;
     const followHeight=ship.current.active?15:plane.current.active?10:fullscreenRef.current?5:4;
+    // Ease vertical look toward eye level only while travelling, never while dragging the camera.
+    if((Math.abs(moving)+Math.abs(strafing)>.08||plane.current.active||ship.current.active)&&drag.current===null){cameraTilt.current*=Math.exp(-1.9*dt);if(Math.abs(cameraTilt.current)<.001)cameraTilt.current=0;}
     const targetCam:[number,number,number]=[p.x-Math.sin(p.yaw)*followDistance,p.y+followHeight,p.z-Math.cos(p.yaw)*followDistance];
     const cameraGap=chaseCamera?Math.hypot(targetCam[0]-chaseCamera[0],targetCam[1]-chaseCamera[1],targetCam[2]-chaseCamera[2]):Infinity;
     if(!chaseCamera||cameraGap>80)chaseCamera=targetCam;
     else{const blend=1-Math.exp(-12*dt);for(let axis=0;axis<3;axis++)chaseCamera[axis]+=(targetCam[axis]-chaseCamera[axis])*blend;}
-    const cam=chaseCamera??targetCam,at=[p.x,p.y+1.3,p.z];
+    const cam=chaseCamera??targetCam,at=[p.x,p.y+1.3+Math.tan(cameraTilt.current)*followDistance,p.z];
     const vp=mul(perspective(Math.PI/3,w/h,.1,200000),lookAt(cam,at));
     // Procedural deep-space starfield: deterministic positions around the camera, no external assets.
     if(atmosphere>.05){for(let i=0;i<270;i++){const theta=(i*2.399963229728653)% (Math.PI*2),phi=Math.acos(1-2*((i*.61803398875)%1));const rr=4200;const sx=p.x+rr*Math.sin(phi)*Math.cos(theta),sy=p.y+rr*Math.cos(phi),sz=p.z+rr*Math.sin(phi)*Math.sin(theta);const twinkle=.6+.4*Math.sin(now*.0008+i*7.1);draw(vp,sx,sy,sz,2+i%3,2+i%3,2+i%3,[.7+twinkle*.25,.78+twinkle*.2,1],atmosphere);}}
@@ -927,9 +929,10 @@ export default function SharedGameLobby(){
  }catch(e){setHint(e instanceof Error?e.message:"Microphone could not start");await stopVoice()}finally{setVoiceBusy(false)}},[voiceBusy,stopVoice]);
  useEffect(()=>{if(!voiceOn||!proximityMicEnabled)return;let active=true;let previous=false;const tick=()=>{const room=voiceRoom.current;if(!room||!active)return;const now=performance.now();const nearby=Array.from(peerRef.current.values()).some(peer=>now-peer.seen<12000&&(audioMode==="all"||audioRoomLocked||distance(local.current,peer)<=1609.344));if(nearby===previous)return;previous=nearby;setProximitySpeaking(nearby);void room.localParticipant.setMicrophoneEnabled(nearby).catch(()=>{if(active){setProximitySpeaking(false);setHint("Microphone permission needed. Tap Voice to reconnect.");}})};tick();const timer=window.setInterval(tick,650);return()=>{active=false;window.clearInterval(timer);void voiceRoom.current?.localParticipant.setMicrophoneEnabled(false)}},[voiceOn,proximityMicEnabled,audioRoomLocked,audioMode]);
  useEffect(()=>()=>{void shipRoom.current?.disconnect();void voiceRoom.current?.disconnect();for(const el of voiceTracks.current.values())el.remove();voiceTracks.current.clear()},[]);
- const drag=useRef<{x:number;id:number}|null>(null);
- const down=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(drag.current!==null)return;canvas.current?.focus();const g=gesture.current;const now=performance.now();if(local.current.flying){g.hold=true;keys.current.ascend=true}else if(local.current.y>terrain(local.current.x,local.current.z)+.3){toggleFly();g.hold=true;keys.current.ascend=true}else if(now-g.lastTap<340){keys.current.Space=true;g.lastTap=0}else g.lastTap=now;g.downAt=now;drag.current={x:e.clientX,id:e.pointerId};e.currentTarget.setPointerCapture(e.pointerId)};
- const move=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(!drag.current||drag.current.id!==e.pointerId)return;const delta=e.clientX-drag.current.x;drag.current.x=e.clientX;local.current.yaw-=delta*.008};
+ const drag=useRef<{x:number;y:number;id:number}|null>(null);
+ const cameraTilt=useRef(0); // Vertical camera angle in radians; shared by mobile and desktop.
+ const down=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(drag.current!==null)return;canvas.current?.focus();const g=gesture.current;const now=performance.now();if(local.current.flying){g.hold=true;keys.current.ascend=true}else if(local.current.y>terrain(local.current.x,local.current.z)+.3){toggleFly();g.hold=true;keys.current.ascend=true}else if(now-g.lastTap<340){keys.current.Space=true;g.lastTap=0}else g.lastTap=now;g.downAt=now;drag.current={x:e.clientX,y:e.clientY,id:e.pointerId};e.currentTarget.setPointerCapture(e.pointerId)};
+ const move=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(!drag.current||drag.current.id!==e.pointerId)return;const delta=e.clientX-drag.current.x;const vertical=e.clientY-drag.current.y;drag.current.x=e.clientX;drag.current.y=e.clientY;local.current.yaw-=delta*.008;cameraTilt.current=clamp(cameraTilt.current-vertical*.005,-.48,.48)};
   // A second touch must not release the first finger's camera/flight controls.
   const releaseCanvasDrag=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(drag.current?.id!==e.pointerId)return;drag.current=null;keys.current.ascend=false;gesture.current.hold=false;try{if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId)}catch{}};
  return <section onPointerDown={wakeHud} ref={gameRoot} className={styles.root} style={gameFullscreen?{position:"fixed",inset:0,width:"100vw",height:"100dvh",zIndex:2147483647,borderRadius:0,margin:0}:undefined} aria-label="1Muslim shared 3D game lobby">
