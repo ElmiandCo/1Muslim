@@ -5,7 +5,7 @@ export const SEA_WIDTH = 21.34;
 export const SEA_BOUNDS = {minX: -10.1, maxX: 10.1, minZ: -SEA_LENGTH + 3, maxZ: -3} as const;
 export const SEA_SPAWN_Z = -SEA_LENGTH / 2;
 export type SeaActor = {x:number;y:number;z:number;yaw:number};
-export type SeaShot = {x:number;y:number;z:number;life:number};
+export type SeaShot = {x:number;y:number;z:number;life:number;prevX?:number;prevY?:number;prevZ?:number};
 export type SeaImpact = {x:number;y:number;z:number;at:number};
 export type SeaBox = {x:number;z:number;hx:number;hz:number;bottom:number;top:number};
 export type SeaDraw = (vp:number[],x:number,y:number,z:number,sx:number,sy:number,sz:number,col:number[],alpha?:number,angle?:number)=>void;
@@ -53,7 +53,7 @@ export function updatePartedSea(state:SeaState,dt:number,now:number,player:SeaAc
   }else if(target&&"kind" in target&&Math.hypot(target.x-npc.x,target.z-npc.z)<2.5&&now-npc.lastAttack>1600){
    npc.lastAttack=now;const victim=target as SeaNpc;victim.hits++;if(victim.hits>=3){victim.alive=false;victim.fallAt=now;}
   }
-  for(const shot of shots){if(shot.life<=0||Math.abs(shot.y-1.4)>3)continue;if(Math.hypot(shot.x-npc.x,shot.z-npc.z)<3.4){npc.alive=false;npc.fallAt=now;shot.life=0;state.impacts.push({x:npc.x,y:1.5,z:npc.z,at:now});defeated++;break;}}
+  for(const shot of shots){if(shot.life<=0)continue;const ax=shot.prevX??shot.x,az=shot.prevZ??shot.z,ay=shot.prevY??shot.y;const dx=shot.x-ax,dz=shot.z-az;const t=clamp(((npc.x-ax)*dx+(npc.z-az)*dz)/(dx*dx+dz*dz||1),0,1);const hx=ax+dx*t,hz=az+dz*t,hy=ay+(shot.y-ay)*t;if(Math.hypot(hx-npc.x,hz-npc.z)<.75&&hy>.3&&hy<2.55){npc.alive=false;npc.fallAt=now;shot.life=0;state.impacts.push({x:hx,y:hy,z:hz,at:now});defeated++;break;}}
  }
  // Bound history and remove defeated NPCs after fall animation.
  state.npcs=state.npcs.filter(n=>n.alive||now-n.fallAt<1300);
