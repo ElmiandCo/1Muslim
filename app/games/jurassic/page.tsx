@@ -8,7 +8,7 @@ export const metadata:Metadata={
 
 /** Isolated, direct-linkable Jurassic entry; production and other worlds are unchanged. */
 export default function JurassicPreviewPage(){
- return <main aria-label="Jurassic World preview" style={{position:"relative",width:"100%",height:"100dvh",minHeight:480,overflow:"hidden",background:"#06241c"}}>
+ return <main aria-label="Jurassic World preview" style={{position:"relative",width:"100%",height:"100dvh",minHeight:0,overflow:"hidden",background:"#06241c"}}>
   <SharedGameLobby initialWorld="jurassic"/>
  </main>;
 }
