@@ -14,7 +14,7 @@ export default function GameLabProfileHub({active,profile,renderProfileSection}:
     {tabs.map(name=><button key={name} role="tab" type="button" aria-selected={tab===name} onClick={()=>setTab(name)} style={{flex:"0 0 auto",minHeight:38,padding:"6px 10px",fontSize:12,whiteSpace:"nowrap",borderRadius:0,border:"none",borderBottom:tab===name?"2px solid #e8cb83":"2px solid transparent",background:"transparent",color:"#fff3d4",fontWeight:tab===name?700:500}}>{name}</button>)}
    </div>
   </header>
-  <div role="tabpanel" aria-label={tab} style={{position:"relative",flex:1,minHeight:0,minWidth:0,width:"100%",maxWidth:"100%",boxSizing:"border-box",overflow:"auto",overscrollBehavior:"contain",padding:tab==="1Umma"?0:8}}>
+  <div role="tabpanel" aria-label={tab} style={{position:"relative",flex:1,minHeight:0,minWidth:0,width:"100%",maxWidth:"100%",boxSizing:"border-box",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",touchAction:"pan-y",overscrollBehavior:"contain",padding:0}}>
    {tab==="1Umma"?<CanvasUmmaGallery active={active}/>:tab==="My Profile"?profile??<p>Sign in to see your profile.</p>:renderProfileSection?renderProfileSection(tab):<p>Sign in to manage your profile.</p>}
   </div>
  </section>
