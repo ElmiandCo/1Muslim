@@ -717,3 +717,8 @@
 .fillArea .slide .backgrounds{isolation:isolate!important}
 .fillArea .slide .backgrounds::after{content:""!important;display:block!important;position:absolute!important;inset:0!important;z-index:5!important;pointer-events:none!important;background:linear-gradient(90deg,rgba(var(--scene-tint),.60) 0%,rgba(var(--scene-tint),.30) 20%,transparent 54%),radial-gradient(ellipse 55% 38% at 100% 35%,rgba(var(--scene-glint),.32),transparent 80%)!important;mix-blend-mode:screen!important;transition:background 850ms ease,opacity 850ms ease!important}
 :global(html.light) .fillArea .slide .backgrounds::after{background:linear-gradient(90deg,rgba(var(--scene-tint),.48),rgba(var(--scene-tint),.18) 26%,transparent 55%),radial-gradient(ellipse 65% 44% at 100% 29%,rgba(255,247,214,.52),rgba(var(--scene-glint),.20) 35%,transparent 78%)!important}
+
+/* Quran home: previous-verse control belongs inside the glass canvas; lift canvas toward title. */
+.quranVerseWidget{gap:3px!important}
+.quranVerseArticle>.quranHudHudPositionToggle{top:12px;right:12px;z-index:24}
+.quranVerseHeader{margin-bottom:0!important}
