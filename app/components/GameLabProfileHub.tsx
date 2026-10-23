@@ -3,7 +3,7 @@ import {useState,type ReactNode} from "react";
 import Link from "next/link";
 import {CanvasUmmaGallery} from "./CanvasUmmaGallery";
 
-const tabs=["1Umma","My Profile","Settings"] as const;
+const tabs=["1Umma","My Profile"] as const;
 type Tab=typeof tabs[number];
 export default function GameLabProfileHub({active,profile,renderProfileSection}:{active:boolean;profile?:ReactNode;renderProfileSection?:(section:"Avatars"|"Background"|"Badges"|"Settings")=>ReactNode}){
  const [tab,setTab]=useState<Tab>("1Umma");
@@ -15,7 +15,7 @@ export default function GameLabProfileHub({active,profile,renderProfileSection}:
    </div>
   </header>
   <div role="tabpanel" aria-label={tab} style={{position:"relative",flex:1,minHeight:0,minWidth:0,width:"100%",maxWidth:"100%",boxSizing:"border-box",overflow:"auto",overscrollBehavior:"contain",padding:tab==="1Umma"?0:8}}>
-   {tab==="1Umma"?<CanvasUmmaGallery active={active}/>:tab==="My Profile"?profile??<p>Sign in to see your profile.</p>:renderProfileSection?renderProfileSection(tab):<p>Sign in to manage your profile.</p>}
+   {tab==="1Umma"?<CanvasUmmaGallery active={active}/>:tab==="My Profile"?profile??<p>Sign in to see your profile.</p>:renderProfileSection?renderProfileSection("Settings"):<p>Sign in to manage your profile.</p>}
   </div>
  </section>
 }
