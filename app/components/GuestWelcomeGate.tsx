@@ -6,7 +6,7 @@ export default function GuestWelcomeGate(){
  const pathname=usePathname(),router=useRouter();
  const [fade,setFade]=useState(false);
  useEffect(()=>{
-  if(!pathname||pathname.startsWith("/messages")||pathname.startsWith("/messenger-design")||pathname.startsWith("/auth")||pathname.startsWith("/welcome")||pathname.startsWith("/onboarding")||pathname.startsWith("/terms")||pathname.startsWith("/privacy"))return;
+  if(!pathname||pathname.startsWith("/games/jurassic")||pathname.startsWith("/messages")||pathname.startsWith("/messenger-design")||pathname.startsWith("/auth")||pathname.startsWith("/welcome")||pathname.startsWith("/onboarding")||pathname.startsWith("/terms")||pathname.startsWith("/privacy"))return;
   let active=true;let timer:ReturnType<typeof setTimeout>|undefined;
   const db=createClient();
   const check=async()=>{
