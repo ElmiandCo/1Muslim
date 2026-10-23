@@ -761,3 +761,6 @@
 .quranVerseArticle :global(.quranLanguageContent){width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(12px,2vh,20px);animation:quranLanguageSwap .32s ease both}
 @keyframes quranLanguageSwap{from{opacity:.2;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.quranVerseArticle :global(.quranLanguageContent){animation:none}.quranVerseArticle :global(.quranLanguageKnob){transition:none}}
+
+/* Place language-order switch ABOVE the Quran transport/picker row, aligned left. */
+.fillArea .slide[data-workspace-page="1"] .quranVerseArticle :global(.quranLanguageToggle){position:relative!important;top:auto!important;left:auto!important;align-self:flex-start!important;flex:0 0 auto!important;margin:0 0 5px 0!important;z-index:25!important}
