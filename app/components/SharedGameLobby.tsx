@@ -55,7 +55,9 @@ function makeRenderer(canvas:HTMLCanvasElement){
  const ap=gl.getAttribLocation(program,"p"),an=gl.getAttribLocation(program,"n");gl.enableVertexAttribArray(ap);gl.enableVertexAttribArray(an);gl.vertexAttribPointer(ap,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(an,3,gl.FLOAT,false,24,12);
  const vpLoc=gl.getUniformLocation(program,"vp"),modelLoc=gl.getUniformLocation(program,"model"),colorLoc=gl.getUniformLocation(program,"color");
  gl.enable(gl.DEPTH_TEST);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
- const draw=(vp:M,x:number,y:number,z:number,sx:number,sy:number,sz:number,col:number[],alpha=1,angle=0)=>{const model=mul(mul(translate(x,y,z),rotateY(angle)),scale(sx,sy,sz));gl.uniformMatrix4fv(vpLoc,false,new Float32Array(vp));gl.uniformMatrix4fv(modelLoc,false,new Float32Array(model));gl.uniform4f(colorLoc,col[0],col[1],col[2],alpha);gl.drawElements(gl.TRIANGLES,36,gl.UNSIGNED_SHORT,0)};
+ // Each animation frame creates one immutable view-projection matrix; upload it once per frame.
+ let lastVp:M|null=null;
+ const draw=(vp:M,x:number,y:number,z:number,sx:number,sy:number,sz:number,col:number[],alpha=1,angle=0)=>{const model=mul(mul(translate(x,y,z),rotateY(angle)),scale(sx,sy,sz));if(vp!==lastVp){gl.uniformMatrix4fv(vpLoc,false,new Float32Array(vp));lastVp=vp;}gl.uniformMatrix4fv(modelLoc,false,new Float32Array(model));gl.uniform4f(colorLoc,col[0],col[1],col[2],alpha);gl.drawElements(gl.TRIANGLES,36,gl.UNSIGNED_SHORT,0)};
  return {gl,draw};
 }
 export default function SharedGameLobby(){
