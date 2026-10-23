@@ -59,7 +59,7 @@ function makeRenderer(canvas:HTMLCanvasElement){
  const draw=(vp:M,x:number,y:number,z:number,sx:number,sy:number,sz:number,col:number[],alpha=1,angle=0)=>{const model=mul(mul(translate(x,y,z),rotateY(angle)),scale(sx,sy,sz));gl.uniformMatrix4fv(vpLoc,false,new Float32Array(vp));gl.uniformMatrix4fv(modelLoc,false,new Float32Array(model));gl.uniform4f(colorLoc,col[0],col[1],col[2],alpha);gl.drawElements(gl.TRIANGLES,36,gl.UNSIGNED_SHORT,0)};
  return {gl,draw};
 }
-export default function SharedGameLobby(){
+export default function SharedGameLobby({initialWorld}:{initialWorld?:"Future"}={}){
  const [hudVisible,setHudVisible]=useState(true); const hudTimer=useRef<ReturnType<typeof setTimeout>|null>(null); const wakeHud=useCallback(()=>{setHudVisible(true);if(hudTimer.current)clearTimeout(hudTimer.current);hudTimer.current=setTimeout(()=>setHudVisible(false),3000)},[]); useEffect(()=>{wakeHud();return()=>{if(hudTimer.current)clearTimeout(hudTimer.current)}},[wakeHud]);
  const gameRoot=useRef<HTMLElement>(null); const [gameFullscreen,setGameFullscreen]=useState(false);
  // The WebGL render loop mounts once, so read fullscreen through a live ref.
@@ -108,6 +108,10 @@ export default function SharedGameLobby(){
   boostEnabled.current=false;setBoostActive(false);setFlying(false);
   setHint("↩ Returned from Future City to the shared 1Muslim Games lobby.");
  };
+ // Dedicated /future-world previews enter the actual shared game world automatically.
+ // Keep normal homepage game behavior unchanged when initialWorld is omitted.
+ const previewStarted=useRef(false);
+ useEffect(()=>{if(initialWorld==="Future"&&!previewStarted.current){previewStarted.current=true;enterFutureWorld();}},[initialWorld]);
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
  const [error,setError]=useState(""),[hint,setHint]=useState("Explore the market road toward the portal; sky villages float beyond the city.");
  const [showInfo,setShowInfo]=useState(true);
