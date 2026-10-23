@@ -91,6 +91,9 @@ export default function SharedGameLobby(){
  const [nearbyPlayers,setNearbyPlayers]=useState<Array<{id:string;userId?:string;name:string;feet:number}>>([]);const [selectedNearbyPlayer,setSelectedNearbyPlayer]=useState<string|null>(null);
  useEffect(()=>{const sync=()=>{const now=performance.now();const players=Array.from(peerRef.current.values()).filter(p=>now-p.seen<12000).map(p=>({id:p.id,userId:p.userId,name:p.name||"Explorer",feet:distance(local.current,p)*3.28084})).filter(p=>p.feet<=50).sort((a,b)=>a.feet-b.feet).slice(0,5);setNearbyPlayers(players);if(selectedNearbyPlayer&&!players.some(p=>p.id===selectedNearbyPlayer&&p.feet<=5))setSelectedNearbyPlayer(null)};sync();const timer=window.setInterval(sync,700);return()=>window.clearInterval(timer)},[selectedNearbyPlayer]);
  const [suit,setSuit]=useState<Suit>("gold"),[online,setOnline]=useState(false),[peerCount,setPeerCount]=useState(0);
+ // The WebGL loop is mounted once; keep the audio-room lock current without restarting it.
+ const audioRoomLockedRef=useRef(audioRoomLocked);
+ useEffect(()=>{audioRoomLockedRef.current=audioRoomLocked},[audioRoomLocked]);
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
  const [error,setError]=useState(""),[hint,setHint]=useState("Explore the market road toward the portal; sky villages float beyond the city.");
  const [showInfo,setShowInfo]=useState(true);
@@ -162,13 +165,26 @@ export default function SharedGameLobby(){
   if(!renderer){setError("WebGL is unavailable on this device.");return}
   const {gl,draw}=renderer;let frame=0,prev=performance.now(),velocity=0,wasNear=false,crashUntil=0;
   let chaseCamera:[number,number,number]|null=null;
+  let nextVoiceMixAt=0;
   const render=(now:number)=>{
    const dt=clamp((now-prev)/1000,0,.05);prev=now;
    const p=local.current,k=keys.current;
    for(const shot of projectiles.current){shot.x+=shot.vx*dt;shot.z+=shot.vz*dt;shot.life-=dt;if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shieldStateRef.current.active&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldStateRef.current.level>=2||shot.power<2);if(!guarded){knockdownUntil.current=now+2300;setDowned(true);setHint("💥 Hit! Get back up in 2 seconds.");}else setHint("🛡️ Shield absorbed the shot.");}}
    projectiles.current=projectiles.current.filter(s=>s.life>0);
    if(downed&&now>=knockdownUntil.current)setDowned(false);
-   for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000);const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=audioRoomLocked?1:feet<=200?1:feet<=300?1-(feet-200)*.005:feet<=400?.5-(feet-300)*.005:0;}
+   // Audio proximity changes much more slowly than the WebGL frame rate.
+   // Build the peer index once per mix tick rather than allocating an array per audio track per frame.
+   if(now>=nextVoiceMixAt&&voiceTracks.current.size>0){
+    nextVoiceMixAt=now+200;
+    const peersByUserId=new Map<string,Player>();
+    for(const other of peerRef.current.values())if(other.userId&&now-other.seen<12000)peersByUserId.set(other.userId,other);
+    for(const [identity,el] of voiceTracks.current){
+     const peer=peersByUserId.get(identity);
+     const feet=peer?distance(p,peer)*3.28084:Infinity;
+     const volume=audioRoomLockedRef.current?1:feet<=200?1:feet<=300?1-(feet-200)*.005:feet<=400?.5-(feet-300)*.005:0;
+     if(Math.abs(el.volume-volume)>.01)el.volume=volume;
+    }
+   }
    const analog=stickPointer.current!==null?analogMovement.current:null;
    const moving=now<knockdownUntil.current?0:analog?-analog.y:Number(!!(k.w||k.ArrowUp))-Number(!!(k.s||k.ArrowDown));
    const strafing=now<knockdownUntil.current?0:analog?-analog.x:Number(!!(k.a||k.ArrowLeft))-Number(!!(k.d||k.ArrowRight));
