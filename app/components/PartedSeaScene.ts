@@ -6,10 +6,11 @@ export const SEA_BOUNDS = {minX: -10.1, maxX: 10.1, minZ: -SEA_LENGTH + 3, maxZ:
 export const SEA_SPAWN_Z = -SEA_LENGTH / 2;
 export type SeaActor = {x:number;y:number;z:number;yaw:number};
 export type SeaShot = {x:number;y:number;z:number;life:number};
+export type SeaImpact = {x:number;y:number;z:number;at:number};
 export type SeaBox = {x:number;z:number;hx:number;hz:number;bottom:number;top:number};
 export type SeaDraw = (vp:number[],x:number,y:number,z:number,sx:number,sy:number,sz:number,col:number[],alpha?:number,angle?:number)=>void;
 type SeaNpc = {id:number;kind:"refugee"|"soldier";x:number;z:number;speed:number;alive:boolean;hits:number;lastAttack:number;fallAt:number};
-export type SeaState = {npcs:SeaNpc[];nextId:number;lastWave:number;hits:number[];invulnerableUntil:number;lastHintAt:number};
+export type SeaState = {npcs:SeaNpc[];nextId:number;lastWave:number;hits:number[];invulnerableUntil:number;lastHintAt:number;impacts:SeaImpact[];lastDamageAt:number;lastDefeatAt:number};
 const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
 const refugeZ=[-240,-515,-790,-1070,-1340,-1610,-1880,-2140,-2400];
 export function partedSeaColliders():SeaBox[]{
@@ -19,10 +20,11 @@ export function createPartedSeaState():SeaState {
  const npcs:SeaNpc[]=[];
  for(let i=0;i<25;i++)npcs.push({id:i,kind:"refugee",x:(i%5-2)*2.2,z:-SEA_LENGTH*.38-(i*67)%1450,speed:3.5+(i%4)*.6,alive:true,hits:0,lastAttack:0,fallAt:0});
  for(let i=0;i<22;i++)npcs.push({id:100+i,kind:"soldier",x:(i%7-3)*2.2,z:-30-i*65,speed:10.5,alive:true,hits:0,lastAttack:0,fallAt:0});
- return {npcs,nextId:200,lastWave:0,hits:[],invulnerableUntil:performance.now()+3500,lastHintAt:0};
+ return {npcs,nextId:200,lastWave:0,hits:[],invulnerableUntil:performance.now()+3500,lastHintAt:0,impacts:[],lastDamageAt:0,lastDefeatAt:0};
 }
 export function updatePartedSea(state:SeaState,dt:number,now:number,player:SeaActor,shots:SeaShot[]):{hits:number;respawn:boolean;defeated:number;sinai:boolean}{
  let hitCount=0,defeated=0;
+ state.impacts=state.impacts.filter(i=>now-i.at<650);
  // Local preview AI: bounded population; only nearby enemies chase in detail.
  if(now-state.lastWave>5500&&state.npcs.filter(n=>n.kind==="soldier"&&n.alive).length<72){
   state.lastWave=now;
@@ -47,16 +49,16 @@ export function updatePartedSea(state:SeaState,dt:number,now:number,player:SeaAc
   // Soldiers cannot ascend rocky refuges.
   if(refugeZ.some((z,i)=>Math.abs(npc.z-z)<6&&Math.abs(npc.x-(i%2===0?-7:7))<3))npc.x=clamp(npc.x+(npc.x>=0?-1:1)*npc.speed*dt,-8.7,8.7);
   if(nearPlayer&&Math.hypot(player.x-npc.x,player.z-npc.z)<2.8&&player.y<2.8&&now>state.invulnerableUntil&&now-npc.lastAttack>1250){
-   npc.lastAttack=now;state.hits=state.hits.filter(t=>now-t<10000);state.hits.push(now);hitCount=state.hits.length;state.invulnerableUntil=now+1050;
+   npc.lastAttack=now;state.hits=state.hits.filter(t=>now-t<10000);state.hits.push(now);hitCount=state.hits.length;state.lastDamageAt=now;state.invulnerableUntil=now+1050;
   }else if(target&&"kind" in target&&Math.hypot(target.x-npc.x,target.z-npc.z)<2.5&&now-npc.lastAttack>1600){
    npc.lastAttack=now;const victim=target as SeaNpc;victim.hits++;if(victim.hits>=3){victim.alive=false;victim.fallAt=now;}
   }
-  for(const shot of shots){if(shot.life<=0||Math.abs(shot.y-1.4)>3)continue;if(Math.hypot(shot.x-npc.x,shot.z-npc.z)<3.4){npc.alive=false;npc.fallAt=now;shot.life=0;defeated++;break;}}
+  for(const shot of shots){if(shot.life<=0||Math.abs(shot.y-1.4)>3)continue;if(Math.hypot(shot.x-npc.x,shot.z-npc.z)<3.4){npc.alive=false;npc.fallAt=now;shot.life=0;state.impacts.push({x:npc.x,y:1.5,z:npc.z,at:now});defeated++;break;}}
  }
  // Bound history and remove defeated NPCs after fall animation.
  state.npcs=state.npcs.filter(n=>n.alive||now-n.fallAt<1300);
  const respawn=state.hits.length>=3;
- if(respawn){state.hits=[];state.invulnerableUntil=now+3500;}
+ if(respawn){state.lastDefeatAt=now;state.hits=[];state.invulnerableUntil=now+3500;}
  return {hits:hitCount,respawn,defeated,sinai:player.z<-SEA_LENGTH+16};
 }
 export function renderPartedSea(vp:number[],draw:SeaDraw,now:number,p:SeaActor,state:SeaState):void{
@@ -85,6 +87,8 @@ export function renderPartedSea(vp:number[],draw:SeaDraw,now:number,p:SeaActor,s
   draw(vp,n.x,y+1.1,n.z,.75,1.5,.65,c,1);
   draw(vp,n.x,y+2.1,n.z,.55,.6,.55,soldier?[.58,.39,.25]:[.69,.52,.38]);
   for(const s of [-1,1])draw(vp,n.x+s*.25,y+.35,n.z,.24,.75,.3,c);
-  if(soldier){draw(vp,n.x+.55,y+1.1,n.z,.13,2.4,.13,[.56,.52,.43]);draw(vp,n.x+.55,y+2.35,n.z,.38,.65,.3,[.82,.81,.76]);}
+  if(soldier){const striking=now-n.lastAttack<360;const thrust=striking?Math.sin((now-n.lastAttack)/360*Math.PI)*1.9:0;draw(vp,n.x+.55,y+1.1,n.z+thrust,.13,2.4,.13,[.56,.52,.43]);draw(vp,n.x+.55,y+2.35,n.z+thrust,.38,.65,.3,[.82,.81,.76]);}
  }
+ // Short-lived sparks burst outward from every confirmed projectile hit.
+ for(const impact of state.impacts){const age=(now-impact.at)/650;if(age<0||age>1)continue;for(let i=0;i<14;i++){const angle=i*2.39996;const radius=age*(1.8+(i%4)*.45);draw(vp,impact.x+Math.cos(angle)*radius,impact.y+Math.sin(i*1.7)*radius*.7,impact.z+Math.sin(angle)*radius,.16*(1-age)+.035,.16*(1-age)+.035,.16*(1-age)+.035,i%3===0?[1,.38,.15]:[1,.85,.22],1-age);}}
 }
