@@ -764,3 +764,10 @@
 
 /* Place language-order switch ABOVE the Quran transport/picker row, aligned left. */
 .fillArea .slide[data-workspace-page="1"] .quranVerseArticle :global(.quranLanguageToggle){position:relative!important;top:auto!important;left:auto!important;align-self:flex-start!important;flex:0 0 auto!important;margin:0 0 5px 0!important;z-index:25!important}
+
+/* Keep ambient particles fixed across the entire verse glass when Arabic/English swap. */
+.fillArea .slide[data-workspace-page="1"] .quranVerseWidget{isolation:isolate!important}
+.fillArea .slide[data-workspace-page="1"] .quranParticleField{position:absolute!important;inset:0!important;z-index:3!important;pointer-events:none!important;overflow:hidden!important;transform:translateZ(0)!important}
+.fillArea .slide[data-workspace-page="1"] .quranVerseArticle{z-index:2!important;isolation:isolate!important}
+.fillArea .slide[data-workspace-page="1"] .quranVerseArticle :global(.quranLanguageContent){position:relative;z-index:1}
+.fillArea .slide[data-workspace-page="1"] .quranVerseArticle :global(.quranLanguageToggle),.fillArea .slide[data-workspace-page="1"] .quranVerseArticle :global(.quranHomeControlRow){position:relative;z-index:5}
