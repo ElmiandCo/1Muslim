@@ -17,6 +17,7 @@ export const jurassicTerrain=(x:number,z:number)=>1.4*Math.sin(x*.018)*Math.cos(
 export const jurassicDinos:JurassicDino[]=Array.from({length:38},(_,i)=>({x:Math.sin(i*2.41)* (95+i*23),z:Math.cos(i*1.77)*(100+i*22),heading:i*1.7,predator:i%5===0,phase:i*2.3}));
 export const jurassicTrees=Array.from({length:650},(_,i)=>({x:Math.sin(i*2.399963)* (45+Math.sqrt(i/650)*1050),z:Math.cos(i*2.399963)*(45+Math.sqrt(i/650)*1050),height:11+(i%9)*2}));
 export const jurassicRocks=Array.from({length:130},(_,i)=>({x:Math.sin(i*3.71)* (60+i*7),z:Math.cos(i*2.67)*(70+i*7),size:2+i%5}));
+export const jurassicPeaks=[{x:-400,z:340,w:115,h:105},{x:-620,z:-300,w:155,h:130},{x:350,z:-660,w:125,h:110},{x:900,z:870,w:130,h:145}] as const;
 export function updateJurassicDinos(dt:number,now:number,player:{x:number;z:number;y:number},damage:()=>void){
  for(const d of jurassicDinos){
   const dx=player.x-d.x,dz=player.z-d.z,dist=Math.hypot(dx,dz);
@@ -36,7 +37,8 @@ export function updateJurassicDinos(dt:number,now:number,player:{x:number;z:numb
  const aggro=dist<APEX_AGGRO_RADIUS&&player.y<140;
  giant.heading=aggro?Math.atan2(dx,dz):Math.atan2(GIANT_CAVE.x-giant.x,GIANT_CAVE.z-giant.z);
  const speed=aggro?APEX_SPEED:state.returning?16:2.2;
- const step=Math.min(dist,Math.max(0,speed*dt));
+ const targetDist=aggro?dist:Math.hypot(GIANT_CAVE.x-giant.x,GIANT_CAVE.z-giant.z);
+ const step=Math.min(targetDist,Math.max(0,speed*dt));
  giant.x=Math.max(-JURASSIC_LIMIT,Math.min(JURASSIC_LIMIT,giant.x+Math.sin(giant.heading)*step));
  giant.z=Math.max(-JURASSIC_LIMIT,Math.min(JURASSIC_LIMIT,giant.z+Math.cos(giant.heading)*step));
  if(!aggro&&Math.hypot(giant.x-GIANT_CAVE.x,giant.z-GIANT_CAVE.z)<10){giant.x=GIANT_CAVE.x;giant.z=GIANT_CAVE.z;state.returning=false;}
@@ -48,14 +50,22 @@ export function drawJurassic(draw:(x:number,y:number,z:number,sx:number,sy:numbe
   const river=Math.abs(z-48*Math.sin(x*.012))<19;
   draw(x,jurassicTerrain(x,z)-.65,z,25,1.2,25,river?[.08,.38,.56]:[.14+.04*Math.sin(x),.38+.05*Math.cos(z),.16]);
  }
- for(const t of jurassicTrees){if(!near(playerX,playerZ,t.x,t.z,250)||near(t.x,t.z,GIANT_CAVE.x,GIANT_CAVE.z,145))continue;const y=jurassicTerrain(t.x,t.z);draw(t.x,y+t.height*.43,t.z,2,t.height*.86,2,[.29,.19,.10]);draw(t.x,y+t.height*.94,t.z,12,t.height*.65,12,[.06,.29+(t.height%5)*.015,.12]);draw(t.x,y+t.height*1.22,t.z,7,7,7,[.09,.39,.16]);}
+ for(const t of jurassicTrees){if(!near(playerX,playerZ,t.x,t.z,250)||near(t.x,t.z,GIANT_CAVE.x,GIANT_CAVE.z,145)||near(t.x,t.z,JURASSIC_EXIT_PORTAL.x,JURASSIC_EXIT_PORTAL.z,27))continue;const y=jurassicTerrain(t.x,t.z);draw(t.x,y+t.height*.43,t.z,2,t.height*.86,2,[.29,.19,.10]);draw(t.x,y+t.height*.94,t.z,12,t.height*.65,12,[.06,.29+(t.height%5)*.015,.12]);draw(t.x,y+t.height*1.22,t.z,7,7,7,[.09,.39,.16]);}
  for(const r of jurassicRocks.filter(r=>near(playerX,playerZ,r.x,r.z,250)&&!near(r.x,r.z,GIANT_CAVE.x,GIANT_CAVE.z,145)))draw(r.x,jurassicTerrain(r.x,r.z)+r.size*.38,r.z,r.size*1.6,r.size*.8,r.size*1.4,[.33,.36,.31]);
- for(const d of jurassicDinos){if(!near(playerX,playerZ,d.x,d.z,260))continue;const y=jurassicTerrain(d.x,d.z),c=d.predator?[.42,.24,.14]:[.29,.43,.22],a=d.heading;
-  draw(d.x,y+2.5,d.z,3.2,3.2,7.5,c,1,a);
-  draw(d.x+Math.sin(a)*4,y+4,d.z+Math.cos(a)*4,2.3,2.4,3,c,1,a);
+ for(const d of jurassicDinos){if(!near(playerX,playerZ,d.x,d.z,260))continue;const y=jurassicTerrain(d.x,d.z),c=d.predator?[.42,.24,.14]:[.29,.43,.22],a=d.heading,bob=Math.sin(now*.004+d.phase)*.28;
+  draw(d.x,y+2.5+bob,d.z,3.2,3.2,7.5,c,1,a);
+  draw(d.x+Math.sin(a)*4,y+4+bob,d.z+Math.cos(a)*4,2.3,2.4,3,c,1,a);
   draw(d.x-Math.sin(a)*5,y+2,d.z-Math.cos(a)*5,1.2,1.1,6,c,1,a);
-  for(const side of [-1,1])draw(d.x+Math.cos(a)*side*1.1,y+.9,d.z-Math.sin(a)*side*1.1,1,1.8,1.2,c,1,a);
+  for(const side of [-1,1])draw(d.x+Math.cos(a)*side*1.1,y+.9+Math.sin(now*.006+d.phase+side*Math.PI)*.4,d.z-Math.sin(a)*side*1.1,1,1.8,1.2,c,1,a);
   if(d.predator)draw(d.x+Math.sin(a)*5,y+4.4,d.z+Math.cos(a)*5,2,1.2,2.6,[.49,.31,.2],1,a);
+ }
+ // Distant stone mountains with an accessible river-fed waterfall and plunge pool.
+ for(const peak of jurassicPeaks){if(!near(playerX,playerZ,peak.x,peak.z,430))continue;
+  const base=jurassicTerrain(peak.x,peak.z);
+  for(let tier=0;tier<4;tier++){const width=peak.w*(1-tier*.2),height=peak.h/4;
+   draw(peak.x,base+(tier+.5)*height,peak.z,width,height,width,[.24+tier*.02,.29+tier*.02,.27+tier*.025]);}
+  if(peak.x===-400){draw(peak.x+20,base+peak.h*.42,peak.z-peak.w*.5-.7,13,peak.h*.83,1.8,[.16,.59,.78],.78);
+   draw(peak.x+20,base+.4,peak.z-peak.w*.5-15,34,.7,30,[.12,.42,.59],.86);}
  }
  // Rock City: concentric basalt towers, accessible arched cave and an apex dinosaur 15x scale.
  if(near(playerX,playerZ,GIANT_CAVE.x,GIANT_CAVE.z,330)){
@@ -103,6 +113,7 @@ export function drawJurassic(draw:(x:number,y:number,z:number,sx:number,sy:numbe
 export function jurassicBlocked(x:number,z:number){
  const within=(cx:number,cz:number,hx:number,hz:number)=>Math.abs(x-cx)<hx+1&&Math.abs(z-cz)<hz+1;
  // Match the rock-city towers and cave pillars to visible geometry; leave the cave mouth and tunnel open.
+ for(const peak of jurassicPeaks)if(Math.abs(x-peak.x)<peak.w*.46&&Math.abs(z-peak.z)<peak.w*.46)return true;
  if(near(x,z,GIANT_CAVE.x,GIANT_CAVE.z,190)){
   for(let i=0;i<30;i++){const a=i*Math.PI*2/30,r=GIANT_CAVE.radius+(i%3)*12,cx=GIANT_CAVE.x+Math.sin(a)*r,cz=GIANT_CAVE.z+Math.cos(a)*r;
    if(within(cx,cz,8,9))return true;
@@ -111,5 +122,5 @@ export function jurassicBlocked(x:number,z:number){
   if(within(GIANT_CAVE.x-11,GIANT_CAVE.z-92,1.5,65)||within(GIANT_CAVE.x+11,GIANT_CAVE.z-92,1.5,65))return true;
   if(within(GIANT_CAVE.x-43,GIANT_CAVE.z-176,2.5,35)||within(GIANT_CAVE.x+43,GIANT_CAVE.z-176,2.5,35))return true;
  }
- return jurassicRocks.some(r=>!near(r.x,r.z,GIANT_CAVE.x,GIANT_CAVE.z,145)&&Math.hypot(x-r.x,z-r.z)<r.size*1.1)||jurassicTrees.some(t=>!near(t.x,t.z,GIANT_CAVE.x,GIANT_CAVE.z,145)&&Math.hypot(x-t.x,z-t.z)<2.1);
+ return jurassicRocks.some(r=>!near(r.x,r.z,GIANT_CAVE.x,GIANT_CAVE.z,145)&&Math.hypot(x-r.x,z-r.z)<r.size*1.1)||jurassicTrees.some(t=>!near(t.x,t.z,GIANT_CAVE.x,GIANT_CAVE.z,145)&&!near(t.x,t.z,JURASSIC_EXIT_PORTAL.x,JURASSIC_EXIT_PORTAL.z,27)&&Math.hypot(x-t.x,z-t.z)<2.1);
 }
