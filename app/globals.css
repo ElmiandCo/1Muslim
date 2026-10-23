@@ -691,3 +691,34 @@ html[data-profile-background] .omQuranPage .omQuranBackgroundOverlay > *{positio
 .oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveTop,
 .oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveVideo {position:relative;z-index:2;min-height:0;}
 .oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveVideo {pointer-events:auto;touch-action:pan-x pan-y;}
+
+
+/* Premium profile palette: visual-only, scoped to chosen background theme. */
+:root[data-profile-background] .siteNav,
+:root[data-profile-background] .mobileNav,
+:root[data-profile-background] .feedHeader{
+ border-color:var(--profile-theme-accent)!important;
+}
+:root[data-profile-background] .siteNavLinks a:not(.liveNav),
+:root[data-profile-background] .feedTab.active,
+:root[data-profile-background] .mobileNav button,
+:root[data-profile-background] .nav.active{
+ color:var(--profile-theme-accent)!important;
+}
+:root[data-profile-background] .siteNavLinks a:hover,
+:root[data-profile-background] .nav.active{
+ background:var(--profile-theme-surface)!important;
+}
+:root[data-profile-background] .primary,
+:root[data-profile-background] .chatForm button,
+:root[data-profile-background] .themeToggle{
+ background:var(--profile-theme-accent)!important;
+ border-color:var(--profile-theme-highlight)!important;
+ color:var(--profile-theme-foreground)!important;
+}
+:root[data-profile-background] .feedTab.active:after{
+ background:var(--profile-theme-highlight)!important;
+}
+:root[data-profile-background] .reaction.selected{
+ border-color:var(--profile-theme-accent)!important;
+}
