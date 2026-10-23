@@ -33,6 +33,7 @@ export async function inspectCharacterGLB(url:string,signal?:AbortSignal):Promis
   let total=0;
   const header=new Uint8Array(12);
   let headerBytes=0;
+  let headerChecked=false;
   try{
    while(true){
     const {done,value}=await reader.read();
@@ -40,7 +41,8 @@ export async function inspectCharacterGLB(url:string,signal?:AbortSignal):Promis
     total+=value.byteLength;
     const copied=Math.min(12-headerBytes,value.byteLength);
     if(copied>0){header.set(value.subarray(0,copied),headerBytes);headerBytes+=copied;}
-    if(headerBytes===12){
+    if(headerBytes===12&&!headerChecked){
+     headerChecked=true;
      const view=new DataView(header.buffer);
      const declaredLength=view.getUint32(8,true);
      if(view.getUint32(0,true)!==0x46546c67||view.getUint32(4,true)!==2||declaredLength<20||declaredLength>MAX_CHARACTER_BYTES){
