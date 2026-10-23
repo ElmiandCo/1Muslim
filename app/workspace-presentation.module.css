@@ -738,9 +738,9 @@
 /* Quran readability: compact selectors and larger Arabic/translation. */
 .quranVerseArticle .quranHomeControlRow{grid-template-columns:42px 42px minmax(0,112px) minmax(0,112px)!important;justify-content:center!important;gap:clamp(5px,1.8vw,10px)!important}
 .quranVerseArticle .quranHomeControlRow>.quranHomeSelectors>details>summary{min-height:38px!important;padding:7px 5px!important;border-radius:19px!important;font-size:clamp(11px,2.6vw,13px)!important}
-.quranVerseArticle .quranVerseArabic{font-size:clamp(31px,7vw,54px)!important;line-height:1.95!important;max-width:100%!important;overflow-wrap:normal!important}
-.quranVerseArticle .quranVerseTranslation{font-size:clamp(15px,3.6vw,21px)!important;line-height:1.75!important;max-width:100%!important}
-@media(max-width:390px){.quranVerseArticle .quranHomeControlRow{grid-template-columns:40px 40px minmax(0,100px) minmax(0,100px)!important;gap:5px!important}.quranVerseArticle .quranVerseArabic{font-size:clamp(29px,7.5vw,37px)!important}}
+.quranVerseArticle .quranVerseArabic{font-size:clamp(31px,7vw,54px);line-height:1.95!important;max-width:100%!important;overflow-wrap:normal!important}
+.quranVerseArticle .quranVerseTranslation{font-size:clamp(15px,3.6vw,21px);line-height:1.75!important;max-width:100%!important}
+@media(max-width:390px){.quranVerseArticle .quranHomeControlRow{grid-template-columns:40px 40px minmax(0,100px) minmax(0,100px)!important;gap:5px!important}.quranVerseArticle .quranVerseArabic{font-size:clamp(29px,7.5vw,37px)}}
 
 /* Keep Surah/Ayah dropdowns as-is. Reserve a tall, consistent Quran reading canvas even for short verses. */
 .fillArea .slide[data-workspace-page="1"] .quranVerseWidget{justify-content:flex-start!important;min-height:0!important}
