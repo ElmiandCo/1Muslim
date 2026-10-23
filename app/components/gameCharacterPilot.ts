@@ -24,7 +24,32 @@ export async function inspectCharacterGLB(url:string,signal?:AbortSignal):Promis
  if(!response.ok)throw new Error("Character asset unavailable: "+response.status);
  const sizeHeader=Number(response.headers.get("content-length"));
  if(Number.isFinite(sizeHeader)&&sizeHeader>MAX_CHARACTER_BYTES)throw new Error("Character GLB exceeds mobile size budget");
- const bytes=await response.arrayBuffer();
+ // Stream the asset with a hard cap: servers may omit or misreport Content-Length.
+ // This avoids buffering an arbitrarily large GLB on memory-constrained phones.
+ let bytes:ArrayBuffer;
+ if(response.body){
+  const reader=response.body.getReader();
+  const chunks:Uint8Array[]=[];
+  let total=0;
+  try{
+   while(true){
+    const {done,value}=await reader.read();
+    if(done)break;
+    total+=value.byteLength;
+    if(total>MAX_CHARACTER_BYTES){
+     await reader.cancel();
+     throw new Error("Character GLB exceeds mobile size budget");
+    }
+    chunks.push(value);
+   }
+  }finally{reader.releaseLock()}
+  const combined=new Uint8Array(total);
+  let offset=0;
+  for(const chunk of chunks){combined.set(chunk,offset);offset+=chunk.byteLength}
+  bytes=combined.buffer;
+ }else{
+  bytes=await response.arrayBuffer();
+ }
  if(bytes.byteLength<20||bytes.byteLength>MAX_CHARACTER_BYTES)throw new Error("Character GLB size invalid");
  const view=new DataView(bytes);
  if(view.getUint32(0,true)!==0x46546c67||view.getUint32(4,true)!==2||view.getUint32(8,true)!==bytes.byteLength)throw new Error("Invalid GLB 2.0 header");
