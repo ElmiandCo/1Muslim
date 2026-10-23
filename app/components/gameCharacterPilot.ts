@@ -43,10 +43,10 @@ export async function inspectCharacterGLB(url:string,signal?:AbortSignal):Promis
     chunks.push(value);
    }
   }finally{reader.releaseLock()}
-  const combined=new Uint8Array(total);
+  bytes=new ArrayBuffer(total);
+  const combined=new Uint8Array(bytes);
   let offset=0;
   for(const chunk of chunks){combined.set(chunk,offset);offset+=chunk.byteLength}
-  bytes=combined.buffer;
  }else{
   bytes=await response.arrayBuffer();
  }
