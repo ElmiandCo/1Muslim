@@ -745,3 +745,8 @@
 /* Keep Surah/Ayah dropdowns as-is. Reserve a tall, consistent Quran reading canvas even for short verses. */
 .fillArea .slide[data-workspace-page="1"] .quranVerseWidget{justify-content:flex-start!important;min-height:0!important}
 .fillArea .slide[data-workspace-page="1"] .quranVerseArticle{flex:1 1 auto!important;height:72%!important;min-height:62%!important;max-height:calc(100% - 56px)!important;margin-bottom:0!important;justify-content:flex-start!important;padding-top:clamp(20px,4vh,44px)!important;padding-bottom:clamp(35px,7vh,72px)!important;overflow-y:auto!important}
+
+/* Production hotfix: eliminate artificial empty space above Quran Studio while retaining tall reading glass. */
+.fillArea .slide[data-workspace-page="1"] .quranVerseWidget{justify-content:flex-start!important;gap:clamp(6px,1vh,10px)!important}
+.fillArea .slide[data-workspace-page="1"] .quranVerseWidget>.quranVerseHeader{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;min-height:0!important;flex:0 0 auto!important}
+.fillArea .slide[data-workspace-page="1"] .quranVerseWidget>.quranVerseArticle{margin-top:0!important;min-height:0!important;flex:1 1 auto!important;max-height:none!important;height:auto!important}
