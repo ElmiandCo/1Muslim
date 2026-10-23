@@ -10,6 +10,7 @@ type Player={id:string;userId?:string;name?:string;x:number;y:number;z:number;ya
 type Live={id:string;room_name:string|null;title:string};
 const SUITS:Suit[]=["gold","silver","cosmic","diamond"];
 const WORLDS=["Dinosaurs","Time of Moses","Time of Jesus","Time of Muhammad ﷺ","Today","Future"];
+const ROMAN_PORTAL={x:0,z:-90,radius:7} as const;
 // HudHud wayfinding: match the five districts rendered below; this is an informational map, not teleportation.
 const EXPLORATION_BOUNDS={minX:-1900,maxX:1400,minZ:-1350,maxZ:1850} as const;
 const MOON_BOUNDS={minX:-345,maxX:345,minZ:-345,maxZ:345} as const;
@@ -88,8 +89,10 @@ export default function SharedGameLobby(){
  const [nearbyPlayers,setNearbyPlayers]=useState<Array<{id:string;userId?:string;name:string;feet:number}>>([]);const [selectedNearbyPlayer,setSelectedNearbyPlayer]=useState<string|null>(null);
  useEffect(()=>{const sync=()=>{const now=performance.now();const players=Array.from(peerRef.current.values()).filter(p=>now-p.seen<12000).map(p=>({id:p.id,userId:p.userId,name:p.name||"Explorer",feet:distance(local.current,p)*3.28084})).filter(p=>p.feet<=50).sort((a,b)=>a.feet-b.feet).slice(0,5);setNearbyPlayers(players);if(selectedNearbyPlayer&&!players.some(p=>p.id===selectedNearbyPlayer&&p.feet<=5))setSelectedNearbyPlayer(null)};sync();const timer=window.setInterval(sync,700);return()=>window.clearInterval(timer)},[selectedNearbyPlayer]);
  const [suit,setSuit]=useState<Suit>("gold"),[online,setOnline]=useState(false),[peerCount,setPeerCount]=useState(0);
+ const romanPortalCooldown=useRef(0);
  const romanWorldRef=useRef(false); const [romanWorld,setRomanWorld]=useState(false); const [romeCity,setRomeCity]=useState(false); const romeCityRef=useRef(false); const enterRomanWorld=()=>{romanWorldRef.current=true;setRomanWorld(true);romeCityRef.current=false;setRomeCity(false);propheticWorldRef.current=false;setPropheticWorld(false);setPicker(false);const p=local.current;p.x=0;p.z=125;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;setHint("Jerusalem, first-century Roman Judea · Interpretive reconstruction");}; const travelToRome=()=>{romeCityRef.current=!romeCityRef.current;setRomeCity(romeCityRef.current);const p=local.current;p.x=0;p.z=125;p.y=1;p.flying=false;setHint(romeCityRef.current?"Ancient Rome · Interpretive reconstruction":"Jerusalem · Interpretive reconstruction");}; const exitRomanWorld=()=>{romanWorldRef.current=false;setRomanWorld(false);romeCityRef.current=false;setRomeCity(false);const p=local.current;p.x=0;p.z=0;p.y=terrain(0,0);p.flying=false;setHint("Returned to the main Games lobby.");};
  const propheticWorldRef=useRef(false); const [propheticWorld,setPropheticWorld]=useState(false); const enterPropheticWorld=()=>{romanWorldRef.current=false;setRomanWorld(false);propheticWorldRef.current=true;setPropheticWorld(true);setPicker(false);meetingSeatRef.current=null;setMeetingSeat(null);const p=local.current;p.x=0;p.z=115;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;setHint("Makkah circa 610 CE · Interpretive historical reconstruction");}; const exitPropheticWorld=()=>{propheticWorldRef.current=false;setPropheticWorld(false);const p=local.current;p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;setHint("Returned to the main Games lobby.");};
+ useEffect(()=>{if(new URLSearchParams(window.location.search).get("world")==="roman-judea")enterRomanWorld()},[]);
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
  const [error,setError]=useState(""),[hint,setHint]=useState("Explore the market road toward the portal; sky villages float beyond the city.");
  const [showInfo,setShowInfo]=useState(true);
@@ -169,7 +172,7 @@ export default function SharedGameLobby(){
    for(const shot of projectiles.current){shot.x+=shot.vx*dt;shot.z+=shot.vz*dt;shot.life-=dt;if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shield&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldLevel>=2||shot.power<2);if(!guarded){damage("blaster");}else setHint("🛡️ Shield absorbed the shot.");}}
    projectiles.current=projectiles.current.filter(s=>s.life>0);
    // Deterministic dangerous wildlife, shared by all clients without per-frame networking.
-   if(!moonModeRef.current.landed&&!ship.current.active&&meetingSeatRef.current===null&&p.y<terrain(p.x,p.z)+3){for(let i=0;i<30;i++){const ax=Math.sin(i*83.17)*650,az=Math.cos(i*41.83)*650;if(Math.hypot(p.x-ax,p.z-az)>2.8||now-(animalContact.current.get(i)??0)<1200)continue;animalContact.current.set(i,now);damage("animal");break;}}
+   if(!romanWorldRef.current&&!propheticWorldRef.current&&!moonModeRef.current.landed&&!ship.current.active&&meetingSeatRef.current===null&&p.y<terrain(p.x,p.z)+3){for(let i=0;i<30;i++){const ax=Math.sin(i*83.17)*650,az=Math.cos(i*41.83)*650;if(Math.hypot(p.x-ax,p.z-az)>2.8||now-(animalContact.current.get(i)??0)<1200)continue;animalContact.current.set(i,now);damage("animal");break;}}
 
    if(downed&&now>=knockdownUntil.current)setDowned(false);
    for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000);const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=audioRoomLocked?1:feet<=200?1:feet<=300?1-(feet-200)*.005:feet<=400?.5-(feet-300)*.005:0;}
@@ -210,10 +213,17 @@ export default function SharedGameLobby(){
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
    const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[]; 
-   if(romanWorldRef.current){for(let i=0;i<72;i++){const x=(i%9-4)*39,z=(Math.floor(i/9)-3.5)*48;if(Math.abs(x)<24||Math.abs(z)<24)continue;solids.push({x,z,hx:12,hz:13,bottom:-1,top:8+(i%4)*2});}for(const side of [-1,1])solids.push({x:side*235,z:0,hx:7,hz:220,bottom:-1,top:14});}
+   if(romanWorldRef.current){
+      for(let i=0;i<72;i++){const x=(i%9-4)*39,z=(Math.floor(i/9)-3.5)*48;if(Math.abs(x)<24||Math.abs(z)<24)continue;solids.push({x,z,hx:12,hz:13,bottom:-1,top:8+(i%4)*2});}
+      for(const side of [-1,1])solids.push({x:side*235,z:0,hx:7,hz:220,bottom:-1,top:14});
+      for(const z of [-220,220])for(let x=-230;x<=230;x+=14){if(Math.abs(x)<22)continue;solids.push({x,z,hx:6,hz:6,bottom:-1,top:14});}
+      for(let i=0;i<16;i++){const z=-165+i*22,x=(i%2?1:-1)*18;solids.push({x,z,hx:3.5,hz:2,bottom:-1,top:3});}
+      if(romeCityRef.current)solids.push({x:0,z:-165,hx:38,hz:9.5,bottom:-1,top:26});
+    }
    if(propheticWorldRef.current){for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.1;solids.push({x,z,hx:11,hz:13,bottom:-1,top:h});}}
    if(propheticWorldRef.current){for(let i=0;i<44;i++){const col=i%11,row=Math.floor(i/11),x=(col-5)*36,z=-380-row*40;if(Math.abs(x)<30)continue;solids.push({x,z,hx:11,hz:12,bottom:-1,top:3.5});}}
-   // Destructible plaza props are solid until hit; the same objects restore after five minutes.
+   if(!romanWorldRef.current&&!propheticWorldRef.current){
+    // Destructible plaza props are solid until hit; the same objects restore after five minutes.
    for(let i=0;i<80;i++){const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;const id="prop-"+i;if(damagedStructures.current.has(id))continue;solids.push({x,z,hx:1.35,hz:1.35,bottom:0,top:2.7});}
    for(let i=0;i<80;i++){const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;const id="prop-"+i;if(damagedStructures.current.has(id))continue;for(const shot of projectiles.current){if(shot.life<=0||Math.abs(shot.x-x)>1.6||Math.abs(shot.z-z)>1.6||shot.y>3.5)continue;shot.life=0;damagedStructures.current.set(id,Date.now()+BREAK_REPAIR_MS);void combatChannel.current?.send({type:"broadcast",event:"structure-break",payload:{id,until:Date.now()+BREAK_REPAIR_MS}});break;}}
  for(const z of [-49,49])solids.push({x:161,z,hx:29,hz:3,bottom:0,top:17});solids.push({x:189,z:0,hx:3,hz:52,bottom:0,top:17});for(const z of [-35,35])solids.push({x:133,z,hx:3,hz:15,bottom:0,top:17});
@@ -237,10 +247,11 @@ export default function SharedGameLobby(){
      const x=-120+col*37,z=-380-row*38,h=19+((row*7+col*11)%7)*12;
      solids.push({x,z,hx:11,hz:11.5,bottom:0,top:h+.8});
    }
-   // Block side penetration and reflect travel away from the struck surface.
+   }
+    // Block side penetration and reflect travel away from the struck surface.
    // Roofs remain solid landing surfaces, so players cannot fall through buildings.
    let struck=false,roof=-Infinity;
-   for(const b of plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null?[]:(propheticWorldRef.current||romanWorldRef.current)?solids.filter(b=>romanWorldRef.current?b.hx===12||b.hx===7:b.hx===11):solids){
+   for(const b of plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null?[]:solids){
      const overlapsXZ=Math.abs(proposedX-b.x)<b.hx+.42&&Math.abs(proposedZ-b.z)<b.hz+.42;
      if(!overlapsXZ)continue;
      if(p.y>=b.top-.2&&p.y<=b.top+2.2){roof=Math.max(roof,b.top);continue;}
@@ -280,10 +291,15 @@ export default function SharedGameLobby(){
    }else if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?(p.y>85?19.5:13):descend?-19:-5)*dt,-22,p.y>85?10.5:7);p.y=clamp(p.y+velocity*dt,floor,170);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
    else{if(crashUntil&&now>crashUntil){crashUntil=0;setCrashed(false)}velocity-=17*dt;if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){p.y=floor;velocity=0}}
    if(!lunar&&!ship.current.active&&!plane.current.active&&!eva&&p.flying&&p.y>=169.8){if(spaceEdgeSince.current===null){spaceEdgeSince.current=now;setSpaceEdgeWarning(true);setHint("⚠️ EDGE OF SPACE — return below the boundary within 2 seconds!");}else if(now-spaceEdgeSince.current>=2000){p.x=0;p.z=0;p.y=Math.max(terrain(0,0),0)+2;p.flying=false;velocity=0;boostUntil.current=0;spaceEdgeSince.current=null;setSpaceEdgeWarning(false);setFlying(false);setHint("🌍 Space boundary reached. Respawned safely.");}}else if(spaceEdgeSince.current!==null){spaceEdgeSince.current=null;setSpaceEdgeWarning(false);}
-   const nearest=lunar||ship.current.inSpace||plane.current.active?null:distance(p,{x:155,z:-27})<23?"ship":distance(p,{x:110,z:-345})<19?"plane":distance(p,{x:155,z:-27})<30?"helicopter":distance(p,{x:15,z:7.5})<13?"car":null;
+   const nearest=lunar||romanWorldRef.current||propheticWorldRef.current||ship.current.inSpace||plane.current.active?null:distance(p,{x:155,z:-27})<23?"ship":distance(p,{x:110,z:-345})<19?"plane":distance(p,{x:155,z:-27})<30?"helicopter":distance(p,{x:15,z:7.5})<13?"car":null;
    if(nearVehicle!==nearest)setNearVehicle(nearest);
-   const nearWorker=!lunar&&distance(p,{x:152,z:0})<5;if(nearWorker&&!workerNotice.current){workerNotice.current=true;setWorkerMessage(true)}if(!nearWorker)workerNotice.current=false;
-   const near=!lunar&&distance(p,{x:95,z:0})<5;if(near&&!wasNear)setPicker(true);wasNear=near;
+   const nearWorker=!lunar&&!romanWorldRef.current&&!propheticWorldRef.current&&distance(p,{x:152,z:0})<5;if(nearWorker&&!workerNotice.current){workerNotice.current=true;setWorkerMessage(true)}if(!nearWorker)workerNotice.current=false;
+   const near=!lunar&&!romanWorldRef.current&&!propheticWorldRef.current&&distance(p,{x:95,z:0})<5;if(near&&!wasNear)setPicker(true);wasNear=near;
+    if(romanWorldRef.current&&now>romanPortalCooldown.current&&p.y<8&&Math.hypot(p.x-ROMAN_PORTAL.x,p.z-ROMAN_PORTAL.z)<ROMAN_PORTAL.radius){
+      romanPortalCooldown.current=now+2500;romeCityRef.current=!romeCityRef.current;setRomeCity(romeCityRef.current);
+      p.x=0;p.z=125;p.y=1;p.flying=false;p.boost=false;velocity=0;setFlying(false);
+      setHint(romeCityRef.current?"🏛️ Arrived in ancient Rome. Explore the Forum and amphitheater.":"🏛️ Returned to Jerusalem. Explore the stone market and city walls.");
+    }
    const w=node.clientWidth,h=node.clientHeight,dpr=Math.min(window.devicePixelRatio||1,1.5);
    if(w>0&&h>0){const rw=Math.floor(w*dpr),rh=Math.floor(h*dpr);if(node.width!==rw||node.height!==rh){node.width=rw;node.height=rh;gl.viewport(0,0,rw,rh)}
     // Shared 6-hour world clock: four hours daylight, two hours night.
@@ -307,7 +323,7 @@ export default function SharedGameLobby(){
       // Separate selectable Roman-era reality: geometry is an interpretive game reconstruction.
       const inRome=romeCityRef.current;
       const stone=inRome?[.73,.68,.59]:[.69,.63,.52];
-      for(let ix=-13;ix<=13;ix++)for(let iz=-13;iz<=13;iz++){const x=ix*50,z=iz*50;draw(vp,x,-.32,z,50,.64,50,[.55+.025*Math.sin(ix+iz),.49,.37]);}
+      for(let ix=-6;ix<=6;ix++)for(let iz=-6;iz<=6;iz++){const x=ix*100,z=iz*100;draw(vp,x,-.32,z,100,.64,100,[.55+.025*Math.sin(ix+iz),.49,.37]);}
       // Walkable crossroads, walled quarters, stone homes, stalls and gates.
       for(let z=-590;z<=590;z+=20){draw(vp,0,.035,z,20,.07,20,[.66,.61,.52]);}
       for(let x=-590;x<=590;x+=20)draw(vp,x,.04,0,20,.08,20,[.67,.61,.52]);
@@ -316,11 +332,22 @@ export default function SharedGameLobby(){
       for(let x=-230;x<=230;x+=14){if(Math.abs(x)<22)continue;draw(vp,x,7,-220,12,14,12,[.61,.54,.44]);draw(vp,x,7,220,12,14,12,[.61,.54,.44]);}
       // Market awnings and counters along the central road.
       for(let i=0;i<16;i++){const z=-165+i*22,side=i%2?1:-1,x=side*18;draw(vp,x,1.2,z,6,2.4,3,[.44,.31,.2]);draw(vp,x,4,z,7,.35,5,i%3?[.66,.32,.24]:[.34,.47,.38]);}
-      // Stylized travelers and soldiers; simple motion, no prophets depicted.
+      // The gold walk-through portal joins the two historical cities without loading another page.
+       draw(vp,0,.15,ROMAN_PORTAL.z,15,.3,12,[.67,.51,.25]);
+       for(const side of [-1,1]){draw(vp,side*6,5,ROMAN_PORTAL.z,1.7,10,2,[.85,.71,.4]);draw(vp,side*6,10.5,ROMAN_PORTAL.z,2.4,1,2.5,[.95,.79,.48]);}
+       draw(vp,0,11,ROMAN_PORTAL.z,14,2,2.5,[.84,.68,.37]);
+       draw(vp,0,5,ROMAN_PORTAL.z,.35,8,.4,[.4,.8,.72],.75);
+       // Stylized travelers and soldiers; simple motion, no prophets depicted.
       for(let i=0;i<34;i++){const soldier=i%5===0;const phase=now*.00022*(soldier?1.2:.65)+i*2.1;const x=Math.sin(phase+i)*((i%3)*5+5),z=((i*37)%310)-155+Math.cos(phase)*9;draw(vp,x,1.4,z,.95,2.8,.8,soldier?[.63,.19,.15]:[.67,.51,.35]);draw(vp,x,3.15,z,.9,.9,.9,[.58,.39,.28]);if(soldier){draw(vp,x,3.72,z,1.3,.35,1.2,[.54,.51,.48]);draw(vp,x+1.1,2,z,.15,4,.15,[.42,.36,.3]);}}
       if(inRome){ // Distinct Rome destination: forum, columns and civic buildings.
         draw(vp,0,.2,-130,85,.4,72,[.76,.71,.62]);draw(vp,0,13,-165,76,26,19,[.77,.71,.62]);
         for(let x=-30;x<=30;x+=12){draw(vp,x,13,-153,2,24,2,[.89,.83,.72]);draw(vp,x,26,-153,7,2,7,[.83,.76,.66]);}
+         // Colosseum-inspired amphitheater, triumphal arch, and aqueduct (stylized).
+         for(let i=0;i<36;i++){const a=i*Math.PI/18,x=150+Math.cos(a)*46,z=-145+Math.sin(a)*32;draw(vp,x,7,z,6,14,6,[.77,.69,.56]);draw(vp,x,19,z,6,8,6,[.83,.75,.61]);draw(vp,x,24,z,8,2,8,[.66,.56,.44]);}
+         draw(vp,150,.15,-145,78,.3,51,[.59,.46,.32]);
+         for(const side of [-1,1])draw(vp,side*8,8,-300,4,16,5,[.83,.76,.62]);
+         draw(vp,0,17,-300,22,3,6,[.86,.79,.66]);
+         for(let i=0;i<14;i++){const x=-300+i*18;draw(vp,x,11,-330,4,22,5,[.75,.68,.57]);draw(vp,x,23,-330,19,3,6,[.69,.6,.49]);}
       }else{ // Jerusalem: layered stone hills and fortified hilltop precinct, no precise Temple reconstruction.
         for(let i=0;i<28;i++){const x=Math.sin(i*2.4)*310,z=Math.cos(i*1.9)*310;draw(vp,x,15,z,65,30,75,[.51,.46,.34]);}
         draw(vp,100,9,-135,75,18,65,[.72,.66,.55]);for(let i=0;i<7;i++)draw(vp,70+i*10,19,-110,3,10,3,[.8,.75,.64]);
@@ -998,7 +1025,7 @@ export default function SharedGameLobby(){
  return <section onPointerDown={wakeHud} ref={gameRoot} className={styles.root} style={gameFullscreen?{position:"fixed",inset:0,width:"100vw",height:"100dvh",zIndex:2147483647,borderRadius:0,margin:0}:undefined} aria-label="1Muslim shared 3D game lobby">
   <div aria-label="Game lobby and voice toolbar" style={{position:"absolute",top:"max(8px,env(safe-area-inset-top))",left:8,right:8,zIndex:35,display:"flex",alignItems:"center",gap:6,pointerEvents:"none",maxWidth:"calc(100% - 16px)"}}>
     <div style={{pointerEvents:"auto",display:"flex",alignItems:"center",gap:6,padding:"5px 8px",border:"1px solid rgba(228,213,169,.35)",borderRadius:22,background:"rgba(7,30,35,.46)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"#fff",fontSize:11,minWidth:0,flex:"0 1 auto"}}><span aria-hidden="true" style={{fontSize:18}}>👥</span><span style={{whiteSpace:"nowrap",lineHeight:1.2}}><b>{peerCount+1} Online</b><br/><span style={{color:"#3de5a4"}}>1Muslim Games</span></span></div>
-    <div style={{pointerEvents:"auto",display:"flex",alignItems:"center",gap:5,padding:"5px 8px",border:"1px solid rgba(177,211,226,.36)",borderRadius:22,background:"rgba(7,30,44,.44)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"#fff",fontSize:11,minWidth:0,flex:"1 1 90px",maxWidth:220}}><span aria-hidden="true" style={{fontSize:18}}>🌐</span><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>Lobby · Madinah Plaza</span></div>
+    <div style={{pointerEvents:"auto",display:"flex",alignItems:"center",gap:5,padding:"5px 8px",border:"1px solid rgba(177,211,226,.36)",borderRadius:22,background:"rgba(7,30,44,.44)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"#fff",fontSize:11,minWidth:0,flex:"1 1 90px",maxWidth:220}}><span aria-hidden="true" style={{fontSize:18}}>🌐</span><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{romanWorld?(romeCity?"Ancient Rome":"Roman Judea · Jerusalem"):propheticWorld?"Historic Makkah":"Lobby · Madinah Plaza"}</span></div>
     <div style={{display:"flex",gap:5,marginLeft:"auto",pointerEvents:"auto",flexShrink:0}}>
      <button type="button" disabled={voiceBusy} aria-label={voiceOn?"Mute microphone":"Turn on microphone"} aria-pressed={voiceOn} onClick={()=>{if(voiceOn){void stopVoice()}else{setSpeakerEnabled(true);void startVoice()}}} style={{width:39,height:39,borderRadius:"50%",border:"1px solid rgba(255,255,255,.52)",background:voiceOn?"rgba(0,171,98,.88)":"rgba(9,30,40,.5)",backdropFilter:"blur(16px)",color:"#fff",fontSize:19,boxShadow:voiceOn?"0 0 13px rgba(0,220,110,.48)":"none"}}>{voiceBusy?"…":voiceOn?"🎙️":"🎤"}</button>
      <button type="button" aria-label={speakerEnabled?"Mute other players":"Hear other players"} aria-pressed={speakerEnabled} onClick={()=>{setSpeakerEnabled(v=>!v);if(!speakerEnabled){void voiceRoom.current?.startAudio();for(const el of voiceTracks.current.values())void el.play().catch(()=>{})}}} style={{width:39,height:39,borderRadius:"50%",border:"1px solid rgba(255,255,255,.52)",background:speakerEnabled?"rgba(0,111,84,.65)":"rgba(9,30,40,.5)",backdropFilter:"blur(16px)",color:"#fff",fontSize:19}}>{speakerEnabled?"🔊":"🔇"}</button>
@@ -1074,7 +1101,7 @@ export default function SharedGameLobby(){
   <div className={styles.controls}><div role="group" aria-label="Analog movement joystick" onTouchStartCapture={e=>e.stopPropagation()} onTouchMoveCapture={e=>{e.stopPropagation();if(e.cancelable)e.preventDefault()}} onPointerDown={e=>{e.preventDefault();e.stopPropagation();stickPointer.current=e.pointerId;e.currentTarget.setPointerCapture(e.pointerId);moveStick(e)}} onPointerMove={e=>{e.stopPropagation();moveStick(e)}} onPointerUp={e=>{e.stopPropagation();releaseStick(e)}} onPointerCancel={releaseStick} onLostPointerCapture={e=>{if(stickPointer.current===e.pointerId)releaseStick(e)}} style={{width:124,height:124,borderRadius:"50%",position:"relative",touchAction:"none",pointerEvents:"auto",background:"radial-gradient(circle,#1a60584d,#092c2a44)",border:"1px solid #b9e6d07a",boxShadow:"inset 0 0 24px #071d1c66",flexShrink:0}}><div style={{position:"absolute",inset:25,borderRadius:"50%",border:"1px solid #c5d6bc44",pointerEvents:"none"}}/>{(["▲", "◀", "▶", "▼"] as const).map((arrow,i)=><span key={arrow} aria-hidden="true" style={{position:"absolute",left:i===1?"14%":i===2?"86%":"50%",top:i===0?"14%":i===3?"86%":"50%",transform:"translate(-50%,-50%)",fontSize:15,fontWeight:800,color:"rgba(230,250,241,.85)",textShadow:"0 1px 4px rgba(0,0,0,.7)",pointerEvents:"none",userSelect:"none"}}>{arrow}</span>)}<div style={{position:"absolute",left:"50%",top:"50%",width:54,height:54,borderRadius:"50%",transform:`translate(calc(-50% + ${stickPosition.x*38}px),calc(-50% + ${stickPosition.y*38}px))`,background:"radial-gradient(circle at 30% 25%,#b7e6d5c9,#176e62dd)",border:"2px solid #d4c28b",boxShadow:"0 4px 15px #0008",pointerEvents:"none",transition:stickPointer.current===null?"transform .14s ease-out":"none"}}/></div><button type="button" aria-label={boostActive?"Disable unlimited boost":"Enable unlimited boost"} aria-pressed={boostActive} onClick={activateBoost} style={{pointerEvents:"auto",alignSelf:"flex-end",minWidth:50,minHeight:34,borderRadius:11,border:"1px solid rgba(255,226,138,.65)",background:boostActive?"linear-gradient(135deg,#ffd36a,#f69e32)":"linear-gradient(135deg,rgba(5,75,58,.92),rgba(13,135,105,.95))",color:boostActive?"#18382b":"#fff",fontWeight:800,fontSize:11,boxShadow:boostActive?"0 0 18px rgba(255,203,75,.55)":"0 4px 14px rgba(0,0,0,.25)",opacity:1}}>⚡ {boostActive?"3× ON":"BOOST"}</button></div>
   {error&&<div role="alert" className={styles.error}>{error}</div>}
   {picker&&<div className={styles.modal}><div className={styles.picker}><button className={styles.close} onClick={()=>setPicker(false)} aria-label="Close world selector">✕</button><h2>Choose Your Universe</h2><p>Explore the worlds of 1Muslim Games</p><div className={styles.worlds}>{WORLDS.map(w=><button key={w} onClick={()=>{if(w==="Time of Muhammad ﷺ")enterPropheticWorld();else if(w==="Time of Jesus")enterRomanWorld();else{setWorldMessage(w+" is not yet connected to this lobby build.");setPicker(false)}}}>{w} <small>{w==="Time of Jesus"||w==="Time of Muhammad ﷺ"?"Explore":"Preview pending"}</small></button>)}</div></div></div>}
-  {romanWorld&&<div style={{position:"absolute",top:66,left:12,zIndex:48,display:"flex",gap:8,alignItems:"center",padding:"7px 10px",borderRadius:14,background:"rgba(32,28,22,.83)",border:"1px solid #c6a77b",color:"#fff2dc",fontSize:12}}><span>{romeCity?"🏛️ Rome":"🏛️ Jerusalem"} · 1st century CE · interpretive</span><button onClick={travelToRome} style={{background:"#68513a",color:"white",border:0,borderRadius:9,padding:"7px 9px"}}>{romeCity?"Jerusalem":"Travel to Rome"}</button><button onClick={exitRomanWorld} style={{background:"#68513a",color:"white",border:0,borderRadius:9,padding:"7px 9px"}}>↩ Lobby</button></div>}
+  {romanWorld&&<div style={{position:"absolute",top:66,left:12,zIndex:48,display:"flex",gap:8,alignItems:"center",padding:"7px 10px",borderRadius:14,background:"rgba(32,28,22,.83)",border:"1px solid #c6a77b",color:"#fff2dc",fontSize:12}}><span>{romeCity?"🏛️ Rome":"🏛️ Jerusalem"} · 1st century CE · interpretive</span><button onClick={travelToRome} style={{background:"#68513a",color:"white",border:0,borderRadius:9,padding:"7px 9px"}}>{romeCity?"Jerusalem":"Travel to Rome"}</button><span style={{fontSize:10,opacity:.85}}>Walk through the gold arch to travel</span><button onClick={exitRomanWorld} style={{background:"#68513a",color:"white",border:0,borderRadius:9,padding:"7px 9px"}}>↩ Lobby</button></div>}
   {propheticWorld&&<div style={{position:"absolute",top:66,left:12,zIndex:48,display:"flex",gap:8,alignItems:"center",padding:"7px 10px",borderRadius:14,background:"rgba(28,29,20,.8)",border:"1px solid #cba75c",color:"#fff2ce",fontSize:12}}><span>🕋 Makkah → Madinah · desert route · 610 CE interpretation</span><button onClick={exitPropheticWorld} style={{background:"#664b26",color:"white",border:0,borderRadius:9,padding:"7px 9px"}}>↩ Main Lobby</button></div>}
   {worldMessage&&<div className={styles.toast} role="status" onClick={()=>setWorldMessage("")}>{worldMessage} · Dismiss ✕</div>}
   <span className={styles.srOnly}>Shared presence is an experimental room and does not establish authenticated player identity. Suits are local preview choices.</span>
