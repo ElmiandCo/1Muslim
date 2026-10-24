@@ -1,3 +1,4 @@
+import AppChrome from "./components/AppChrome";
 import "./globals.css";
 import "./site-text.css";
 import "./badge-effects.css";
@@ -31,7 +32,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><ProfileThemeSync /><HudHudMotionShell>{children}</HudHudMotionShell><PersistentMessengerCall /><PersistentDailyVideo /><GuestWelcomeGate /><HudHudDimensionDust /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><XPTracker /><PersistentWidgetDock /><PersistentQuranStudio /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
+  return <html lang="en"><body><AppChrome>{children}</AppChrome><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag("js", new Date());
 gtag("config", "G-DSLVB0HSGV");`}</Script></body></html>;
