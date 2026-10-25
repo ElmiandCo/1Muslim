@@ -174,7 +174,7 @@ function DailyPostsApp({active}:{active:boolean}){
  </div>;
 }
 export function CommunityMap({active}:{active:boolean}){
- const [tab,setTab]=useState<"map"|"profile">("map");
+ const [tab,setTab]=useState<"map"|"posts">("posts");
  const [zoom,setZoom]=useState(0);
  const [search,setSearch]=useState("");
  const [selected,setSelected]=useState<string|null>(null);
@@ -192,8 +192,8 @@ export function CommunityMap({active}:{active:boolean}){
  const bbox=bounds[zoom];
  const url="https://www.openstreetmap.org/export/embed.html?bbox="+encodeURIComponent(bbox.join(","))+"&layer=mapnik";
  return <div className="canvas-community-map-shell">
-  <div className="canvas-community-tabs" role="tablist" aria-label="Canvas six views"><button type="button" role="tab" aria-selected={tab==="map"} onClick={()=>setTab("map")}>🌎 Community Map</button><button type="button" role="tab" aria-selected={tab==="profile"} onClick={()=>setTab("profile")}>My Profile</button></div>
-  {tab==="profile"?<ProfileApp active={active}/>:<div className="canvas-community-map-panel">
+  <div className="canvas-community-tabs" role="tablist" aria-label="Community views"><button type="button" role="tab" aria-selected={tab==="posts"} onClick={()=>setTab("posts")}>Community Posts</button><button type="button" role="tab" aria-selected={tab==="map"} onClick={()=>setTab("map")}>🌎 Community Map</button></div>
+  {tab==="posts"?<div className="canvas-community-posts-scroll"><CanvasUmmaGallery active={active}/></div>:<div className="canvas-community-map-panel">
    <div className="canvas-community-map-heading"><strong>Mosque Finder & Local Communities</strong><span>Explore verified local places and community hubs</span></div>
    <form className="canvas-community-map-search" onSubmit={e=>e.preventDefault()}><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search mosque or community" aria-label="Search mosques and communities"/><button type="submit">Search</button></form>
    <div className="canvas-community-map-frame"><iframe title="Interactive map of the United States" loading="lazy" src={url} referrerPolicy="no-referrer-when-downgrade" allowFullScreen={false}/><div className="canvas-community-map-places" aria-label="Mosque and community results">{visible.map(place=><button type="button" key={place.id} onClick={()=>choose(place.id)} className={selected===place.id?"isSelected":""}><span>{place.image}</span><strong>{place.name}</strong><small>{place.kind}</small></button>)}</div>{selected&&(()=>{const place=places.find(item=>item.id===selected)!;return <article className="canvas-community-place-card" aria-label={place.name+" details"}><button type="button" onClick={()=>setSelected(null)} aria-label="Close place details">×</button><div className="canvas-community-place-image" aria-hidden="true">{place.image}</div><span>{place.kind.toUpperCase()}</span><h3>{place.name}</h3><p>{place.detail}</p><dl><div><dt>Phone</dt><dd>{place.phone}</dd></div><div><dt>Schedule</dt><dd>{place.schedule}</dd></div></dl><button type="button" className="canvas-community-follow" onClick={()=>toggleFollow(place.id)}>{following.includes(place.id)?"✓ Following":"Follow"}</button></article>})()}<div className="canvas-community-map-zoom"><button type="button" onClick={()=>setZoom(v=>Math.min(4,v+1))} disabled={zoom===4} aria-label="Zoom in">+</button><button type="button" onClick={()=>setZoom(v=>Math.max(0,v-1))} disabled={zoom===0} aria-label="Zoom out">−</button><button type="button" onClick={()=>setZoom(0)} aria-label="Reset map to United States">⌂</button></div></div>
