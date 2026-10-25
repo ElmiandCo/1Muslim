@@ -194,8 +194,16 @@ export function CommunityMap({active}:{active:boolean}){
   </div>}
  </div>;
 }
+function MessengerAndLives(){
+ const [view,setView]=useState<"messages"|"lives">("messages");
+ return <section className="canvas-real-messenger" aria-label="Messages and live broadcasts">
+ <nav className="canvas-real-messenger-tabs" aria-label="Messages or live directory"><button type="button" aria-pressed={view==="messages"} onClick={()=>setView("messages")}>✉ Messages</button><button type="button" aria-pressed={view==="lives"} onClick={()=>setView("lives")}>◉ All Lives</button></nav>
+ <div className="canvas-real-messenger-frame"><iframe key={view} title={view==="messages"?"1Muslim Messenger":"1Muslim Live Directory"} src={view==="messages"?"/messages":"/streaming"} loading="eager" allow="camera; microphone; autoplay; fullscreen" /></div>
+ <Link className="canvas-real-messenger-open" href={view==="messages"?"/messages":"/streaming"}>Open {view==="messages"?"Messenger":"All Lives"} full screen ↗</Link>
+ </section>
+}
 export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boolean}){
  return <div className={slot===0?"canvas-native-app canvas-profile-mirror":"canvas-native-app"}>{slot!==0&&<header><span>0{slot+6} · 1MUSLIM</span><h2>{titles[slot]}</h2></header>}<div className="canvas-native-body">
- {slot===0?<GameLabProfileHub active={active} profile={<ProfileApp active={active}/>} renderProfileSection={(section)=><ProfileApp active={active} section={section}/>}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:slot===4?<ElmTentAlphabet/>:<div className="canvas-community-map-panel"><strong>Community connections</strong><p>Discover Muslims and mosques through the Community Map above.</p></div>}
+ {slot===0?<GameLabProfileHub active={active} profile={<ProfileApp active={active}/>} renderProfileSection={(section)=><ProfileApp active={active} section={section}/>}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<MessengerAndLives/>:slot===4?<ElmTentAlphabet/>:<div className="canvas-community-map-panel"><strong>Community connections</strong><p>Discover Muslims and mosques through the Community Map above.</p></div>}
  </div>{slot!==0&&<footer><Link href={destinations[slot]}>Open full experience ↗</Link></footer>}</div>
 }
