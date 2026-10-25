@@ -18,6 +18,9 @@ const lessonKey=(lesson:number)=>`${KEY}:lesson-${lesson+1}`;
 const LESSON_COUNT=8;
 export default function ElmTentAlphabet(){
  const [selected,setSelected]=useState(0);
+ const [xpToast,setXpToast]=useState<{id:number;amount:number}|null>(null);
+ const [practiceXp,setPracticeXp]=useState(0);
+ const xpTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const [challenge,setChallenge]=useState(false);
  const [quizIndex,setQuizIndex]=useState(0);
  const [answers,setAnswers]=useState<number[]>([]);
@@ -48,15 +51,21 @@ export default function ElmTentAlphabet(){
     const saved=JSON.parse(raw||"[]");
     next[i]=Array.isArray(saved)?Array.from(new Set(saved.filter((x:unknown)=>typeof x==="number"&&Number.isInteger(x)&&x>=0&&x<LETTERS.length))):[];
    }
-   setLessonProgress(next);setPracticed(next[0]||[]);
+   setLessonProgress(next);setPracticed(next[0]||[]);setPracticeXp(Object.values(next).reduce((total,letters)=>total+letters.length*25,0));
    if((next[0]||[]).length>=3&&(next[0]||[]).length<28)setMilestone(true);
    if(next[1]?.length===LETTERS.length){setLesson(2);setPracticed(next[1])}
    setCompletedLessons(Array.from({length:LESSON_COUNT},(_,i)=>i).filter(i=>(next[i]||[]).length===LETTERS.length));
   }catch{}setReady(true);
-  return()=>{if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()}
+  return()=>{if(xpTimer.current)clearTimeout(xpTimer.current);if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()}
  },[]);
  const mark=()=>{
   if(!ready||lesson>1)return;
+  if(!practiced.includes(selected)){
+   setPracticeXp(v=>v+25);
+   setXpToast({id:Date.now(),amount:25});
+   if(xpTimer.current)clearTimeout(xpTimer.current);
+   xpTimer.current=setTimeout(()=>setXpToast(null),1900);
+  }
   const next=practiced.includes(selected)?practiced:[...practiced,selected];
   setPracticed(next);
   setLessonProgress(current=>({...current,[lesson]:next}));
@@ -82,6 +91,7 @@ export default function ElmTentAlphabet(){
  const submitQuiz=async(nextAnswers:number[])=>{setClaiming(true);try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setBadgeMessage("Sign in to save your badge and claim 5,000 XP.");return}const {data,error}=await db.rpc("claim_arabic_letters_badge",{answers:nextAnswers});if(error)throw error;if(data?.awarded||data?.already_earned){setBadgeEarned(true);setCompletedLessons(current=>current.includes(1)?current:[...current,1]);setBadgeMessage(data.awarded?"🏅 Arabic Letters Certified · +5,000 XP!":"🏅 Arabic Letters Certified · Already earned");chooseLesson(2)}else setBadgeMessage(`Score: ${data?.score??0}% · Reach 90% to earn your badge.`)}catch(e){setBadgeMessage(e instanceof Error?e.message:"Unable to claim badge")}finally{setClaiming(false)}};
  const answerQuestion=(choice:number)=>{if(claiming)return;const next=[...answers,choice];setAnswers(next);if(next.length===28)void submitQuiz(next);else setQuizIndex(next.length)};
  return <div className={styles.root} onTouchStart={e=>{swipeStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(swipeStart.current===null)return;const delta=e.changedTouches[0].clientY-swipeStart.current;swipeStart.current=null;if(Math.abs(delta)>90)chooseLesson(lesson+(delta<0?1:-1))}}>
+  <div className={styles.studioHeader}><div><span className={styles.studioEyebrow}>✦ ELM TENT · LEARNING STUDIO</span><h2>Learn Arabic, one letter at a time</h2><p>Listen, repeat, and collect practice XP.</p></div><div className={styles.xpWallet}><strong>✦ {practiceXp.toLocaleString()}</strong><small>Practice XP · this device</small></div></div>
   <nav className={styles.lessonNav} aria-label="Elm Tent lessons"><button type="button" aria-label="Previous lessons" onClick={()=>setLessonWindow(0)}>‹</button>{Array.from({length:4},(_,i)=>lessonWindow*4+i).filter(i=>i!==0||!completedLessons.includes(1)).map(i=><button type="button" key={i} className={lesson===i?styles.lessonActive:""} aria-current={lesson===i?"step":undefined} onClick={()=>chooseLesson(i)}><span>{i+1}</span><small>{completedLessons.includes(i)?"✓ Done":i<2?"Letters":"Soon"}</small></button>)}<button type="button" aria-label="Next lessons" onClick={()=>setLessonWindow(1)}>›</button></nav>
   {lesson===0&&milestone&&<div className={styles.milestoneToast} role="status"><strong>✦ First three letters learned!</strong><span>Continue exploring or begin Lesson 2.</span><div><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);advanceLetter()}}>Keep learning</button><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);chooseLesson(1)}}>Ready for Lesson 2 →</button></div></div>}
   {lesson===1&&<ElmTentLetterQuiz onPass={answers=>void submitQuiz(answers)} onReady={()=>chooseLesson(2)}/>}
@@ -92,11 +102,12 @@ export default function ElmTentAlphabet(){
   {lesson>1?<p className={styles.soon}>This lesson is not available yet. Choose Lesson 1 or 2 to practice the Arabic alphabet.</p>:null}
   <div className={styles.title}><div><h2>{lesson===0?"Arabic Alphabet":lesson===1?"Arabic Alphabet · Lesson 2":`Lesson ${lesson+1}`}</h2><p>Listen · Repeat · Practice</p></div><div className={styles.counter}><strong>{practiced.length}<span> / 28</span></strong><small>practiced</small></div></div>
   <div className={styles.progress} role="progressbar" aria-label="Letters practiced" aria-valuemin={0} aria-valuemax={28} aria-valuenow={practiced.length}><span style={{width:(practiced.length/28*100)+"%"}}/></div>
-  <div className={styles.stage}>
+  <div className={styles.stage} aria-label="Arabic letter practice card">
    <button className={styles.previous} type="button" onClick={()=>advanceLetter()} aria-label="Previous letter">‹</button>
    <div className={styles.letterFocus} data-mirror-spin={mirrorSpin?"true":"false"} aria-live="polite" data-practice-flash={practiceFlash?"true":"false"}><span className={styles.arabic} lang="ar" dir="rtl">{LETTERS[selected][0]}</span><strong>{LETTERS[selected][1]}</strong><small>{String(selected+1).padStart(2,"0")} / 28</small></div>
    <button className={styles.next} type="button" onClick={()=>advanceLetter()} aria-label="Next letter">›</button>
   </div>
+  {xpToast&&<div key={xpToast.id} className={styles.xpToast} role="status" aria-live="polite">✦ +{xpToast.amount} Practice XP <span>Great work!</span></div>}
   <div className={styles.controls}><button type="button" className={styles.hear} onClick={()=>{hear();setHudhudPlayed(true)}} disabled={lesson>1} aria-label={"Hear "+LETTERS[selected][1]}>{playing?"◖)) Playing":"◖)) Hear letter"}</button><button type="button" className={styles.mark} onClick={()=>{mark();setHudhudPlayed(false)}} disabled={lesson>1||practiced.includes(selected)}>{practiced.includes(selected)?"✓ Practiced":"✓ I practiced"}</button></div>
 
   {lesson===0&&practiced.length===LETTERS.length&&<div className={styles.compactNext}><button type="button" onClick={()=>chooseLesson(1)}>✓ All 28 practiced · Lesson 2 →</button></div>}
@@ -105,6 +116,7 @@ export default function ElmTentAlphabet(){
   {showAll&&<div className={styles.grid} aria-label="Arabic alphabet">{LETTERS.map(([glyph,name],i)=><button type="button" key={glyph} onClick={()=>{select(i);setShowAll(false)}} aria-label={name} aria-pressed={selected===i} className={styles.tile}><span lang="ar">{glyph}</span><small>{name}</small>{practiced.includes(i)&&<b aria-label="Practiced">✓</b>}</button>)}</div>}
   </>}
   {badgeMessage&&lesson!==0&&<p role="status" className={styles.note}>{badgeMessage}</p>}
+  {lesson===0&&<p className={styles.disclaimer}>Practice XP is tracked on this device; it is not added to your account XP yet. </p>}
   {lesson===0&&<p className={styles.disclaimer}>Audio uses your device's speech engine; pronunciation is not verified. Native-speaker recordings will improve future lessons.</p>}
  </div>;
 }
