@@ -435,39 +435,58 @@ export default function SharedGameLobby(){
       for(const dz of [-.9,.9])draw(vp,x+2.95,26.07,z+dz,.12,.18,.55,[1,.98,.8]); // headlamps
       draw(vp,x,25.24,z,7,.025,3.7,[.96,.98,1],.55); // reflective showroom stripe
     }
-    // Belt Boyz Council: a suspended sky meeting room overlooking the city.
-    // Kept separate from the portal system, with a visible approach deck.
+    // Belt Boyz HQ: expanded double-width office with a full indoor court.
     const councilX=-125,councilY=45,councilZ=-120;
-    draw(vp,councilX,councilY-.4,councilZ,34,.8,30,[.18,.25,.32]);
-    draw(vp,councilX,councilY-.02,councilZ,31,.12,27,[.77,.65,.3]);
+    const hqWidth=68,hqDepth=30,hqHeight=24;
+    draw(vp,councilX+17,councilY-.4,councilZ,hqWidth,.8,hqDepth,[.18,.25,.32]);
+    draw(vp,councilX+17,councilY-.02,councilZ,hqWidth-2,.12,hqDepth-3,[.77,.65,.3]);
     for(const sx of [-1,1])for(const sz of [-1,1]){
-      draw(vp,councilX+sx*15,councilY+6,councilZ+sz*13,.65,12,.65,[.7,.85,.93],.72);
+      draw(vp,councilX+17+sx*33,councilY+hqHeight/2,councilZ+sz*13,.65,hqHeight,.65,[.7,.85,.93],.72);
     }
-    draw(vp,councilX,councilY+12,councilZ,34,.55,30,[.18,.25,.34],.85);
-    // Translucent glass walls allow the council to look out over the world.
+    draw(vp,councilX+17,councilY+hqHeight,councilZ,hqWidth,.55,hqDepth,[.18,.25,.34],.85);
     for(const side of [-1,1]){
-      draw(vp,councilX+side*16,councilY+6,councilZ,.3,11,28,[.48,.8,.92],.24);
-      draw(vp,councilX,councilY+6,councilZ+side*14,32,11,.3,[.48,.8,.92],.24);
+      draw(vp,councilX+17+side*33,councilY+hqHeight/2,councilZ,.3,hqHeight-1,28,[.48,.8,.92],.24);
+      draw(vp,councilX+17,councilY+hqHeight/2,councilZ+side*14,hqWidth-2,hqHeight-1,.3,[.48,.8,.92],.24);
     }
-    // Council projector: wall-mounted 16:9 projection surface and ceiling projector.
-    // The live video is composited as an accessible DOM overlay below, using the
-    // same world-to-screen projection as player labels.
-    draw(vp,councilX,councilY+7,councilZ-13.5,15,8.45,.3,[.035,.055,.075]);
-    draw(vp,councilX,councilY+7,councilZ-13.29,14.4,7.85,.12,[.12,.28,.32],.9);
-    draw(vp,councilX,councilY+11.8,councilZ-7,.9,.6,1.5,[.19,.21,.26]);
-    draw(vp,councilX,councilY+10.9,councilZ-7,.2,1.8,.2,[.76,.69,.4]);
-    // Central roundtable approximation with twelve council seats.
-    draw(vp,councilX,councilY+1.35,councilZ,10,.55,8,[.69,.5,.2]);
-    draw(vp,councilX,councilY+.75,councilZ,2,1.3,2,[.24,.28,.32]);
-    for(let seat=0;seat<12;seat++){
-      const a=seat*Math.PI/6;
-      const sx=councilX+Math.cos(a)*7.5,sz=councilZ+Math.sin(a)*6.3;
+    // Larger council meeting zone, projector and 20 seats.
+    draw(vp,councilX,councilY+12,councilZ-13.5,22,12,.3,[.035,.055,.075]);
+    draw(vp,councilX,councilY+12,councilZ-13.29,21.4,11.4,.12,[.12,.28,.32],.9);
+    draw(vp,councilX,councilY+21,councilZ-7,.9,.6,1.5,[.19,.21,.26]);
+    draw(vp,councilX,councilY+1.35,councilZ,17,.55,10,[.69,.5,.2]);
+    draw(vp,councilX,councilY+.75,councilZ,3,1.3,3,[.24,.28,.32]);
+    for(let seat=0;seat<20;seat++){
+      const a=seat*Math.PI/10;
+      const sx=councilX+Math.cos(a)*11,sz=councilZ+Math.sin(a)*8;
       draw(vp,sx,councilY+.6,sz,1.8,1.1,1.8,[.14,.37,.35]);
       draw(vp,sx+Math.cos(a)*.65,councilY+1.35,sz+Math.sin(a)*.65,.45,1.7,1.7,[.18,.43,.39]);
     }
-    // Gold landing platform and beacon identify the room from far below.
+    // Basketball court occupies the new east half of the office.
+    const courtX=councilX+34;
+    draw(vp,courtX,councilY+.12,councilZ,30,.14,24,[.65,.38,.19]);
+    draw(vp,courtX,councilY+.21,councilZ,27,.025,.2,[.96,.92,.77]);
+    draw(vp,courtX,councilY+.21,councilZ-11,27,.025,.2,[.96,.92,.77]);
+    draw(vp,courtX,councilY+.21,councilZ+11,27,.025,.2,[.96,.92,.77]);
+    draw(vp,courtX,councilY+.22,councilZ,.16,.025,22,[.96,.92,.77]);
+    for(const side of [-1,1]){
+      const bx=courtX+side*12;
+      draw(vp,bx,councilY+5,councilZ,.3,9,.3,[.8,.84,.87]);
+      draw(vp,bx-side*.4,councilY+8,councilZ,1.5,2.4,4,[.9,.91,.88],.75);
+      draw(vp,bx-side*1.6,councilY+6.7,councilZ,1.6,.2,1.6,[.95,.42,.14]);
+    }
+    // Elevated approach from the airport side, with escalator-like moving steps.
+    const escalatorStartX=110,escalatorStartZ=-285;
+    const escalatorEndX=councilX+48,escalatorEndZ=councilZ+18;
+    const steps=42;
+    for(let i=0;i<=steps;i++){
+      const t=i/steps;
+      const x=escalatorStartX+(escalatorEndX-escalatorStartX)*t;
+      const z=escalatorStartZ+(escalatorEndZ-escalatorStartZ)*t;
+      const y=1+(councilY-1)*t;
+      draw(vp,x,y,z,5,.35,3,[.54,.61,.65]);
+      if(i%2===0)draw(vp,x,y+.22,z,5,.12,2.9,[.83,.72,.39]);
+    }
     draw(vp,councilX,councilY-.55,councilZ+19,13,.5,13,[.89,.71,.23]);
-    draw(vp,councilX,councilY+15,councilZ,1.1,5,1.1,[.96,.79,.27]);
+    draw(vp,councilX,councilY+hqHeight+3,councilZ,1.1,5,1.1,[.96,.79,.27]);
     // Eight parked four-seat city vehicles; seats and drive controls are a later gameplay phase.
     for(let i=0;i<8;i++){
       const x=10+i*11,z=(i%2===0?1:-1)*7.5;
@@ -862,10 +881,10 @@ export default function SharedGameLobby(){
   const response=await fetch("/api/game-voice/token",{method:"POST"});const info=await response.json();
   if(!response.ok)throw new Error(info.error||"Voice unavailable");
   const {Room,RoomEvent,Track}=await import("livekit-client");const room=new Room({adaptiveStream:true,dynacast:true});
-  room.on(RoomEvent.TrackSubscribed,(track,publication,participant)=>{if(track.kind!==Track.Kind.Audio)return;const el=track.attach() as HTMLAudioElement;el.autoplay=true;el.volume=0;el.style.display="none";document.body.appendChild(el);voiceTracks.current.set(participant.identity,el)});
+  room.on(RoomEvent.TrackSubscribed,(track,publication,participant)=>{if(track.kind!==Track.Kind.Audio)return;const el=track.attach() as HTMLAudioElement;el.autoplay=true;el.volume=1;el.muted=false;el.style.display="none";document.body.appendChild(el);void el.play().catch(()=>setHint("Tap Join Voice again to enable audio playback."));voiceTracks.current.set(participant.identity,el)});
   room.on(RoomEvent.TrackUnsubscribed,(track,publication,participant)=>{voiceTracks.current.get(participant.identity)?.remove();voiceTracks.current.delete(participant.identity)});
   room.on(RoomEvent.ParticipantDisconnected,p=>{voiceTracks.current.get(p.identity)?.remove();voiceTracks.current.delete(p.identity)});
-  await room.connect(info.url,info.token);voiceRoom.current=room;await room.localParticipant.setMicrophoneEnabled(false);setVoiceOn(true);setAudioMode("proximity");setProximityMicEnabled(true);
+  await room.connect(info.url,info.token);voiceRoom.current=room;await room.startAudio().catch(()=>{});await room.localParticipant.setMicrophoneEnabled(false);setVoiceOn(true);setAudioMode("all");setProximityMicEnabled(false);setHint("Voice connected — you can hear everyone. Tap microphone to speak.");
  }catch(e){setHint(e instanceof Error?e.message:"Microphone could not start");await stopVoice()}finally{setVoiceBusy(false)}},[voiceBusy,stopVoice]);
  useEffect(()=>{if(!voiceOn||!proximityMicEnabled)return;let active=true;let previous=false;const tick=()=>{const room=voiceRoom.current;if(!room||!active)return;const now=performance.now();const nearby=Array.from(peerRef.current.values()).some(peer=>now-peer.seen<12000&&(audioMode==="all"||audioRoomLocked||distance(local.current,peer)<=1609.344));if(nearby===previous)return;previous=nearby;setProximitySpeaking(nearby);void room.localParticipant.setMicrophoneEnabled(nearby).catch(()=>{if(active){setProximitySpeaking(false);setHint("Microphone permission needed. Tap Voice to reconnect.");}})};tick();const timer=window.setInterval(tick,650);return()=>{active=false;window.clearInterval(timer);void voiceRoom.current?.localParticipant.setMicrophoneEnabled(false)}},[voiceOn,proximityMicEnabled,audioRoomLocked,audioMode]);
  useEffect(()=>()=>{void shipRoom.current?.disconnect();void voiceRoom.current?.disconnect();for(const el of voiceTracks.current.values())el.remove();voiceTracks.current.clear()},[]);
@@ -874,7 +893,7 @@ export default function SharedGameLobby(){
  const move=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(!drag.current||drag.current.id!==e.pointerId)return;const delta=e.clientX-drag.current.x;drag.current.x=e.clientX;local.current.yaw-=delta*.008};
  return <section onPointerDown={wakeHud} ref={gameRoot} className={styles.root} style={gameFullscreen?{position:"fixed",inset:0,width:"100vw",height:"100dvh",zIndex:2147483647,borderRadius:0,margin:0}:undefined} aria-label="1Muslim shared 3D game lobby">
   <button type="button" onClick={()=>setGameSettingsOpen(v=>!v)} aria-label="Game settings" aria-expanded={gameSettingsOpen} style={{position:"absolute",top:"max(12px,env(safe-area-inset-top))",right:"max(12px,env(safe-area-inset-right))",zIndex:30,width:34,height:34,borderRadius:11,border:"1px solid rgba(226,204,142,.32)",background:"rgba(4,42,37,.32)",backdropFilter:"blur(10px)",color:"white",fontSize:18,cursor:"pointer"}}>⚙️</button>
-  {gameSettingsOpen&&<aside aria-label="Game quick settings and recent comments" style={{position:"absolute",right:10,top:"calc(max(12px,env(safe-area-inset-top)) + 48px)",zIndex:40,width:"min(290px,calc(100% - 20px))",height:"min(360px,58dvh)",padding:10,borderRadius:17,background:"rgba(4,36,40,.43)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",border:"1px solid rgba(145,216,235,.38)",color:"white",boxShadow:"0 8px 24px rgba(0,0,0,.12)",display:"flex",flexDirection:"column",gap:6,pointerEvents:"auto"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:12,fontWeight:750}}><span>💬 Recent Comments</span><button type="button" onClick={()=>setGameSettingsOpen(false)} aria-label="Close quick settings" style={{border:0,background:"transparent",color:"white",fontSize:20}}>×</button></div><div aria-label="Recent game chat" style={{flex:"3 1 0",minHeight:0,overflowY:"auto",display:"flex",flexDirection:"column",gap:5,padding:"4px 2px"}}>{lobbyChatMessages.length?lobbyChatMessages.slice(-15).map(m=><div key={m.id} style={{fontSize:11,padding:"5px 7px",borderRadius:10,background:"rgba(0,31,33,.25)",overflowWrap:"anywhere"}}><strong style={{color:"#e8d7a2"}}>{m.mine?"You":m.sender}: </strong>{m.text}</div>):<span style={{fontSize:11,opacity:.7}}>No comments yet</span>}</div><form onSubmit={e=>{e.preventDefault();sendLobbyChat()}} style={{display:"flex",gap:5,alignItems:"center",padding:"3px 0 6px",borderBottom:"1px solid rgba(191,234,223,.22)"}}><input aria-label="Write public game comment" placeholder={online?"Message everyone…":"Connecting to game chat…"} value={lobbyChatDraft} onChange={e=>setLobbyChatDraft(e.target.value)} maxLength={300} disabled={!online} onKeyDown={e=>e.stopPropagation()} style={{flex:1,minWidth:0,padding:"8px 10px",borderRadius:12,border:"1px solid rgba(145,216,235,.28)",background:"rgba(0,22,27,.3)",color:"white",fontSize:12,outlineOffset:2}}/><button type="submit" disabled={!online||!lobbyChatDraft.trim()} aria-label="Send public game comment" style={{borderRadius:11,padding:"8px 11px",border:"1px solid rgba(218,189,113,.42)",background:"rgba(12,108,85,.52)",color:"white",opacity:online&&lobbyChatDraft.trim()?1:.45}}>➤</button></form><div style={{flex:"1 0 auto",borderTop:"1px solid rgba(191,234,223,.25)",paddingTop:6,display:"grid",gridTemplateColumns:"1fr auto auto",alignItems:"center",gap:5,fontSize:11}}><strong>🔊 Audio</strong><div style={{gridColumn:"2 / 4",display:"flex",gap:3}}>{(["off","all"] as const).map(mode=><button key={mode} type="button" disabled={voiceBusy} aria-pressed={audioMode===mode} onClick={()=>{if(mode==="off"){void stopVoice()}else if(!voiceOn){void startVoice().then(()=>{if(mode==="all")setAudioMode("all")})}else{setAudioMode(mode)}}} style={{flex:1,padding:"5px 3px",background:audioMode===mode?"rgba(28,168,122,.65)":"rgba(10,85,76,.32)",textTransform:"capitalize"}}>{mode==="all"?"All":"Off"}</button>)}</div><strong>🎧 AudioRoom</strong><div style={{gridColumn:"2 / 4",display:"flex",gap:4}}><button type="button" disabled={!voiceOn} aria-pressed={audioRoomLocked} onClick={()=>setAudioRoomLocked(true)} style={{flex:1,background:audioRoomLocked?"rgba(28,168,122,.65)":undefined}}>On</button><button type="button" aria-pressed={!audioRoomLocked} onClick={()=>setAudioRoomLocked(false)} style={{flex:1,background:!audioRoomLocked?"rgba(28,168,122,.65)":undefined}}>Off</button></div><strong>🔴 Stream</strong><button type="button" disabled title="Gameplay streaming is not connected yet">Yes</button><button type="button" disabled aria-pressed title="Gameplay streaming is not connected yet">No</button><button type="button" onClick={()=>void toggleGameFullscreen()} style={{gridColumn:"1 / 4"}}>{gameFullscreen?"⤢ Exit fullscreen":"⛶ Fullscreen"}</button><small style={{gridColumn:"1 / 4",textAlign:"right",opacity:.75}}>🔫 Lv{blasterLevel} · 🛡️ Lv{shieldLevel} · {combatXp} XP</small></div><style>{`aside[aria-label="Game quick settings and recent comments"] button:not([aria-label="Close quick settings"]){padding:5px 8px;border-radius:9px;border:1px solid rgba(174,229,218,.3);background:rgba(10,85,76,.32);color:#fff;font-size:11px}aside[aria-label="Game quick settings and recent comments"] button:disabled{opacity:.45}`}</style></aside>}
+  {gameSettingsOpen&&<aside aria-label="Game quick settings and recent comments" style={{position:"absolute",right:10,top:"calc(max(12px,env(safe-area-inset-top)) + 48px)",zIndex:40,width:"min(290px,calc(100% - 20px))",height:"min(360px,58dvh)",padding:10,borderRadius:17,background:"rgba(4,36,40,.43)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",border:"1px solid rgba(145,216,235,.38)",color:"white",boxShadow:"0 8px 24px rgba(0,0,0,.12)",display:"flex",flexDirection:"column",gap:6,pointerEvents:"auto"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:12,fontWeight:750}}><span>💬 Recent Comments</span><button type="button" onClick={()=>setGameSettingsOpen(false)} aria-label="Close quick settings" style={{border:0,background:"transparent",color:"white",fontSize:20}}>×</button></div><div aria-label="Recent game chat" style={{flex:"3 1 0",minHeight:0,overflowY:"auto",display:"flex",flexDirection:"column",gap:5,padding:"4px 2px"}}>{lobbyChatMessages.length?lobbyChatMessages.slice(-15).map(m=><div key={m.id} style={{fontSize:11,padding:"5px 7px",borderRadius:10,background:"rgba(0,31,33,.25)",overflowWrap:"anywhere"}}><strong style={{color:"#e8d7a2"}}>{m.mine?"You":m.sender}: </strong>{m.text}</div>):<span style={{fontSize:11,opacity:.7}}>No comments yet</span>}</div><form onSubmit={e=>{e.preventDefault();sendLobbyChat()}} style={{display:"flex",gap:5,alignItems:"center",padding:"3px 0 6px",borderBottom:"1px solid rgba(191,234,223,.22)"}}><input aria-label="Write public game comment" placeholder={online?"Message everyone…":"Connecting to game chat…"} value={lobbyChatDraft} onChange={e=>setLobbyChatDraft(e.target.value)} maxLength={300} disabled={!online} onKeyDown={e=>e.stopPropagation()} style={{flex:1,minWidth:0,padding:"8px 10px",borderRadius:12,border:"1px solid rgba(145,216,235,.28)",background:"rgba(0,22,27,.3)",color:"white",fontSize:12,outlineOffset:2}}/><button type="submit" disabled={!online||!lobbyChatDraft.trim()} aria-label="Send public game comment" style={{borderRadius:11,padding:"8px 11px",border:"1px solid rgba(218,189,113,.42)",background:"rgba(12,108,85,.52)",color:"white",opacity:online&&lobbyChatDraft.trim()?1:.45}}>➤</button></form><div style={{flex:"1 0 auto",borderTop:"1px solid rgba(191,234,223,.25)",paddingTop:6,display:"grid",gridTemplateColumns:"1fr auto auto",alignItems:"center",gap:5,fontSize:11}}><strong>🔊 Audio</strong><div style={{gridColumn:"2 / 4",display:"flex",gap:3}}>{(["off","all"] as const).map(mode=><button key={mode} type="button" disabled={voiceBusy} aria-pressed={audioMode===mode} onClick={()=>{if(mode==="off"){void stopVoice()}else if(!voiceOn){void startVoice()}else{setAudioMode(mode);for(const el of voiceTracks.current.values())el.volume=1}} style={{flex:1,padding:"5px 3px",background:audioMode===mode?"rgba(28,168,122,.65)":"rgba(10,85,76,.32)",textTransform:"capitalize"}}>{mode==="all"?(voiceBusy?"Connecting…":voiceOn?"🔊 Connected":"🔊 Join Voice"):"Off"}</button>)}</div><strong>🎧 AudioRoom</strong><div style={{gridColumn:"2 / 4",display:"flex",gap:4}}><button type="button" disabled={!voiceOn} aria-pressed={audioRoomLocked} onClick={()=>setAudioRoomLocked(true)} style={{flex:1,background:audioRoomLocked?"rgba(28,168,122,.65)":undefined}}>On</button><button type="button" aria-pressed={!audioRoomLocked} onClick={()=>setAudioRoomLocked(false)} style={{flex:1,background:!audioRoomLocked?"rgba(28,168,122,.65)":undefined}}>Off</button></div><strong>🔴 Stream</strong><button type="button" disabled title="Gameplay streaming is not connected yet">Yes</button><button type="button" disabled aria-pressed title="Gameplay streaming is not connected yet">No</button><button type="button" onClick={()=>void toggleGameFullscreen()} style={{gridColumn:"1 / 4"}}>{gameFullscreen?"⤢ Exit fullscreen":"⛶ Fullscreen"}</button><small style={{gridColumn:"1 / 4",textAlign:"right",opacity:.75}}>🔫 Lv{blasterLevel} · 🛡️ Lv{shieldLevel} · {combatXp} XP</small></div><style>{`aside[aria-label="Game quick settings and recent comments"] button:not([aria-label="Close quick settings"]){padding:5px 8px;border-radius:9px;border:1px solid rgba(174,229,218,.3);background:rgba(10,85,76,.32);color:#fff;font-size:11px}aside[aria-label="Game quick settings and recent comments"] button:disabled{opacity:.45}`}</style></aside>}
 
   <button type="button" aria-controls="game-world-settings-map" aria-expanded={worldMapOpen} aria-label={worldMapOpen?"Close world map":"Open world settings map"} onClick={()=>setWorldMapOpen(v=>!v)} style={{position:"absolute",top:"max(12px,env(safe-area-inset-top))",left:"max(12px,env(safe-area-inset-left))",zIndex:30,width:42,height:42,borderRadius:13,border:"1px solid rgba(191,234,223,.5)",background:"rgba(5,45,43,.55)",backdropFilter:"blur(15px)",color:"#fff",fontSize:22,cursor:"pointer"}}>{worldMapOpen?"✕":"🗺️"}</button>
   {worldMapOpen&&<aside id="game-world-settings-map" aria-label="World exploration map" style={{position:"absolute",top:"calc(max(12px,env(safe-area-inset-top)) + 50px)",left:"max(12px,env(safe-area-inset-left))",width:"min(340px,calc(100% - 24px))",maxHeight:"min(78dvh,680px)",overflowY:"auto",overscrollBehavior:"contain",zIndex:29,padding:14,borderRadius:20,border:"1px solid rgba(182,230,218,.45)",background:"linear-gradient(150deg,rgba(3,39,42,.68),rgba(8,45,58,.53))",boxShadow:"0 15px 55px rgba(0,0,0,.25)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"#fff",touchAction:"pan-y"}}>
