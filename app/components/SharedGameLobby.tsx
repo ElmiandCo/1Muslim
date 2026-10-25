@@ -571,7 +571,7 @@ export default function SharedGameLobby(){
     for(const sx of [-1,1])for(const sz of [-1,1]){
       draw(vp,councilX+sx*29,councilY+6,councilZ+sz*24,.65,12,.65,[.7,.85,.93],.72);
     }
-    draw(vp,councilX,councilY+12,councilZ,62,.55,52,[.18,.25,.34],.85);
+    // Open-air council: no overhead roof.
     // Translucent glass walls allow the council to look out over the world.
     for(const side of [-1,1]){
       draw(vp,councilX+side*30,councilY+6,councilZ,.3,11,50,[.48,.8,.92],.24);
@@ -956,7 +956,7 @@ export default function SharedGameLobby(){
     // Emerald-and-gold landmark above the sky-city entrance.\n    draw(vp,-125,62,-143,22,3,.65,[.11,.52,.39]);\n    for(const x of [-135,-115])draw(vp,x,61,-143,.5,4,.6,[.94,.77,.32]);\n    // Belt Boyz Meeting hall: an accessible open-front entrance and a long, illuminated interior.
     draw(vp,-125,45.2,-119,30,.3,52,[.19,.29,.33]);
     for(const side of [-1,1]){const x=-125+side*15;draw(vp,x,51,-119,1,12,52,[.25,.43,.43]);for(let z=-143;z<=-96;z+=8)draw(vp,x-side*.9,51,z,.65,11,.65,[.86,.72,.4]);}
-    draw(vp,-125,57,-119,32,1,54,[.17,.38,.39],.86);
+    // Belt Boyz meeting hall remains open to the sky.
     for(let z=-140;z<=-96;z+=6){draw(vp,-125,56.3,z,10,.25,1,[.95,.8,.42],.95);draw(vp,-125,45.4,z,2,.08,1,[.15,.85,.61],.8);}
     // Meeting stage at the far end of the corridor.
     draw(vp,-125,46,-144,19,2,5,[.48,.31,.2]);draw(vp,-125,49,-147,18,5,.5,[.13,.56,.48]);
