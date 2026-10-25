@@ -35,28 +35,16 @@ export default function PostDesignStudio(){
  }catch(e){setError(e instanceof Error?e.message:"Unable to publish")}finally{setBusy(false)}};
  const updateText=(value:string)=>{setText(value);try{sessionStorage.setItem(draftKey,value)}catch{}};
  const title={reflection:"A moment of reflection",reminder:"A gentle reminder",verse:"Qur'an reflection",hadith:"Hadith reflection",question:"A question for the Ummah",announcement:"Community announcement"}[template];
- return <section className={styles.studio} aria-label="Design Post Share studio">
-  <div className={styles.header}><span>✦ POST STUDIO</span><span lang="ar">صمّم · اكتب · شارك</span></div>
-  <div className={styles.steps} role="tablist" aria-label="Post creation steps">{(["design","post","share"] as const).map((step,i)=><button key={step} type="button" role="tab" aria-selected={panel===step} onClick={()=>{setPanel(step);setTool(null)}}><small>0{i+1}</small> {step.toUpperCase()}</button>)}</div>
-  <div className={styles.previewArea}><div className={styles.floating} data-theme={theme} data-motion={motion} data-template={template}>
-   <span className={styles.accent} aria-hidden="true">۞</span><div className={styles.previewTop}><span>✦ 1MUSLIM</span><span>{template.toUpperCase()}</span></div>
-   <span className={styles.previewTitle}>{title}</span>
-   <textarea ref={editorRef} aria-label="Write your post directly on the preview" maxLength={2000} placeholder="What's on your mind? Tap to write…" value={text} onFocus={()=>setPanel("post")} onChange={e=>updateText(e.target.value)} className={styles.editor}/>
-   {media&&(media.type==="image"?<img className={styles.media} src={media.url} alt="Attached preview"/>:<video className={styles.media} src={media.url} controls playsInline/>)}
-   <div className={styles.previewBottom}><span>✧</span><span>{text.length} / 2000</span></div>
-  </div></div>
-  {panel==="design"&&<div className={styles.toolArea}><div className={styles.tools}>{(["background","template","effects","media"] as const).map((name)=><button type="button" key={name} aria-pressed={tool===name} onClick={()=>{setTool(tool===name?null:name);if(name==="media")mediaRef.current?.click()}}>{name==="background"?"◐":name==="template"?"▦":name==="effects"?"✧":"＋"} <span>{name}</span></button>)}</div>
-   {tool==="background"&&<div className={styles.choices}>{themes.map(name=><button type="button" key={name} aria-pressed={theme===name} onClick={()=>setTheme(name)}>{name}</button>)}</div>}
-   {tool==="template"&&<div className={styles.choices}>{templates.map(name=><button type="button" key={name} aria-pressed={template===name} onClick={()=>setTemplate(name)}>{name}</button>)}</div>}
-   {tool==="effects"&&<div className={styles.choices}>{(["none","glow","float"] as const).map(name=><button type="button" key={name} aria-pressed={motion===name} onClick={()=>setMotion(name)}>{name}</button>)}</div>}
-   {media&&<button type="button" className={styles.removeMedia} onClick={()=>setMedia(null)}>Remove attachment · {media.name}</button>}
-   <p className={styles.hint}>Live preview · visual styles are draft-only until feed rendering is enabled.</p>
-  </div>}
-  {panel==="post"&&<div className={styles.toolArea}><div className={styles.quickRow}><span>Tap the floating card to write</span><button type="button" onClick={()=>editorRef.current?.focus()}>✎ Edit text</button></div><div className={styles.choices}>{eligible&&checked&&<button type="button" aria-pressed={daily} onClick={()=>setDaily(true)}>✦ Daily</button>}<button type="button" aria-pressed={!daily} onClick={()=>setDaily(false)}>Regular</button><button type="button" onClick={()=>{setPanel("design");setTool("background")}}>◐ Customize</button></div></div>}
-  {panel==="share"&&<div className={styles.toolArea}><div className={styles.quickRow}><span>{daily&&eligible?"✦ Daily Ummah Post":"Community Post"} · Public</span><span>{text.trim().length?"Ready to share":"Write something first"}</span></div><p className={styles.hint}>Your text will publish to the Ummah feed. Custom styling is preview-only for now.</p></div>}
-  <input ref={mediaRef} type="file" accept="image/*,video/*" className={styles.hidden} onChange={e=>selectMedia(e.target.files?.[0])}/>
-  {error&&<p className={styles.error} role="alert">{error}</p>}{notice&&<p className={styles.notice} role="status">{notice}</p>}
-  <div className={styles.footer}>{panel!=="share"?<button type="button" className={styles.share} onClick={()=>{setPanel("share");setTool(null)}}>Review & Share ↗</button>:<><button type="button" className={styles.back} onClick={()=>setPanel("post")}>← Edit</button><button type="button" className={styles.share} disabled={!text.trim()||busy} onClick={()=>setConfirm(true)}>Share with Ummah ↗</button></>}</div>
+ return <section className={styles.studio} aria-label="Create post">
+ <div className={styles.header}><strong>Create Post</strong><button type="button" className={styles.postButton} disabled={!text.trim()||busy} onClick={()=>setConfirm(true)}>{busy?"Posting…":"Post"}</button></div>
+ <div className={styles.identity}><div className={styles.avatar}>1</div><div><strong>1Muslim</strong><span>◎ Public (Ummah)</span></div></div>
+ <div className={styles.composer}><textarea ref={editorRef} maxLength={2000} aria-label="What's on your mind?" placeholder="What's on your mind?" value={text} onChange={e=>updateText(e.target.value)} /><span className={styles.counter}>{text.length} / 2000</span></div>
+ {media&&<div className={styles.attachment}>{media.type==="image"?<img src={media.url} alt="Attachment preview"/>:<video src={media.url} controls playsInline/>}<button type="button" onClick={()=>setMedia(null)}>Remove {media.name} ×</button></div>}
+ <div className={styles.attachments}><button type="button" onClick={()=>mediaRef.current?.click()}><span>▧</span>Photo</button><button type="button" onClick={()=>mediaRef.current?.click()}><span>▣</span>Video</button><button type="button" onClick={()=>setError("File attachments are not available for publishing yet.")}><span>▤</span>File</button><button type="button" onClick={()=>router.push("/elm-tent/quran")}><span>۞</span>Verse</button></div>
+ <div className={styles.options}><div><span>✦</span>Post type <button type="button" onClick={()=>setDaily(!daily)}>{daily&&eligible?"Daily":"Regular"} ⌄</button></div><div><span>◎</span>Audience <strong>Public (Ummah)</strong></div></div>
+ {eligible&&checked&&<p className={styles.hint}>Daily posts earn XP. Choose Daily under Post type to publish your daily post.</p>}
+ <input ref={mediaRef} type="file" accept="image/*,video/*" className={styles.hidden} onChange={e=>selectMedia(e.target.files?.[0])}/>
+ {error&&<p className={styles.error} role="alert">{error}</p>}{notice&&<p className={styles.notice} role="status">{notice}</p>}
   {confirm&&<div className={styles.confirmBackdrop} role="presentation"><div className={styles.confirmDialog} role="dialog" aria-modal="true" aria-label="Confirm post"><strong>Ready to share?</strong><p>Publish this {daily&&eligible?"Daily":"Regular"} post to the Ummah feed?</p><div><button type="button" onClick={()=>setConfirm(false)}>Keep editing</button><button type="button" disabled={busy} onClick={()=>void publish()}>{busy?"Publishing…":"Publish now ↗"}</button></div></div></div>}
  </section>;
 }
