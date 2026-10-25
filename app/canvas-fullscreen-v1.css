@@ -1727,3 +1727,16 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 .canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-body{flex:1 1 0!important;height:0!important;min-height:0!important;max-height:100%!important;overflow:hidden!important;}
 .canvas-vertical-secondary .canvas-native-app:has(.canvas-native-profile) .canvas-native-profile{position:relative!important;display:block!important;flex:1 1 0!important;height:100%!important;min-height:0!important;max-height:100%!important;overflow-y:scroll!important;overflow-x:hidden!important;overscroll-behavior-y:contain!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:thin;}
 .canvas-native-profile .canvas-profile-settings-corner{position:sticky;top:0;float:right;z-index:12;margin-top:-52px;margin-right:0;border:1px solid rgba(232,199,130,.65);border-radius:99px;padding:9px 14px;background:#10483b;color:#f4d58b;font-weight:700;cursor:pointer;}
+
+/* Simple Community Posts, using existing authenticated post APIs. */
+.canvas-community-map-shell:has(.community-simple-feed){min-height:0!important;overflow:hidden!important;}
+.canvas-community-posts-scroll{flex:1 1 0!important;min-height:0!important;height:0!important;overflow-y:auto!important;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;}
+.community-simple-feed{display:flex;flex-direction:column;gap:12px;padding:8px 3px 26px;color:#f7f1e2;}
+.community-feed-search{display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid #bba36b77;background:#092e27e8;border-radius:14px;min-height:46px;}
+.community-feed-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:white;font-size:15px;}
+.community-feed-search input::placeholder{color:#c4cec7;}.community-feed-search span{font-size:25px;color:#e6ca8f;}
+.community-posts-list{display:flex;flex-direction:column;gap:12px;min-height:0;}
+.community-post-card{border:1px solid #d8c28b66;border-radius:17px;padding:15px;background:linear-gradient(145deg,#113d33ee,#082a26ee);box-shadow:0 5px 20px #0002;}
+.community-post-card header{display:flex;align-items:center;gap:11px;}.community-post-avatar{width:43px;height:43px;flex-shrink:0;display:grid;place-items:center;border:1px solid #c5b17d;border-radius:50%;overflow:hidden;background:#216d54;font-size:20px;}.community-post-avatar img{width:100%;height:100%;object-fit:cover;}.community-post-card header div{display:flex;flex-direction:column;gap:3px;min-width:0;}.community-post-card header strong{font-size:15px;}.community-post-card header small{font-size:11px;color:#c4d3c9;}.community-post-card p{font-size:16px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;margin:15px 0;}.community-post-card footer{display:flex;gap:10px;border-top:1px solid #ffffff26;padding-top:11px;}.community-post-card footer button{flex:1;background:transparent;color:#e9e6dc;border:0;padding:9px;cursor:pointer;font-size:14px;}.community-post-card footer button[aria-pressed=true]{color:#ffadad;}.community-feed-empty{padding:20px;text-align:center;color:#d4e0d8;}
+/* Settings belongs to the outer Profile header, not inside the scroll area. */
+.canvas-native-profile .canvas-profile-settings-corner{display:none!important;}
