@@ -443,7 +443,7 @@ export default function SharedGameLobby(){
     for(const sx of [-1,1])for(const sz of [-1,1]){
       draw(vp,councilX+sx*15,councilY+6,councilZ+sz*13,.65,12,.65,[.7,.85,.93],.72);
     }
-    draw(vp,councilX,councilY+12,councilZ,34,.55,30,[.18,.25,.34],.85);
+    // Open-air Belt Boyz sky meeting office: intentionally no roof.
     // Translucent glass walls allow the council to look out over the world.
     for(const side of [-1,1]){
       draw(vp,councilX+side*16,councilY+6,councilZ,.3,11,28,[.48,.8,.92],.24);
