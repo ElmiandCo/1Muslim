@@ -44,13 +44,13 @@ export default function ImmersiveVideoEntry(){
 
  const close=()=>{setOpen(false);video.current?.pause();try{sessionStorage.setItem("1muslim:video-entry-dismissed","1")}catch{}};
  const step=(n:number)=>{setCommentsOpen(false);setEngagementError("");setIndex(i=>Math.max(0,Math.min(feed.length-1,i+n)))};
- useEffect(()=>{if(!open)return;const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape")close();if(e.key==="ArrowDown")step(1);if(e.key==="ArrowUp")step(-1)};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[open,clips.length]);
+ useEffect(()=>{if(!open)return;const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape")close();if(e.key==="ArrowDown")step(1);if(e.key==="ArrowUp")step(-1)};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[open,feed.length]);
  if(!open||pathname!=="/")return null;
  const clip=feed[index]||DEMO;
  return <div className="imv-root" role="dialog" aria-modal="true" aria-label="1Muslim full-screen video feed"
  onTouchStart={e=>{touch.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}}
  onTouchEnd={e=>{const start=touch.current;if(!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;touch.current=null;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.3){if(soundPreference.current&&video.current?.muted)chooseSound(true);step(dy<0?1:-1)}}}>
-  {clip.liveRoom?<div className="imv-live-player"><LiveHomePreview roomName={clip.liveRoom}/><div className="imv-live-label">● LIVE NOW</div><a href={`/streaming/live/${clip.liveId}`} className="imv-join-live">Join live · Chat & interact →</a></div>:<video key={clip.id} ref={video} src={clip.src} autoPlay muted={muted} playsInline loop preload="auto" onLoadedData={e=>{if(e.currentTarget.paused)void e.currentTarget.play().catch(()=>{})}} onClick={e=>{const v=e.currentTarget;if(v.muted){chooseSound(true);return}if(v.paused)void v.play();else v.pause()}} />
+  {clip.liveRoom?<div className="imv-live-player"><LiveHomePreview roomName={clip.liveRoom}/><div className="imv-live-label">● LIVE NOW</div><a href={`/streaming/live/${clip.liveId}`} className="imv-join-live">Join live · Chat & interact →</a></div>:<video key={clip.id} ref={video} src={clip.src} autoPlay muted={muted} playsInline loop preload="auto" onLoadedData={e=>{if(e.currentTarget.paused)void e.currentTarget.play().catch(()=>{})}} onClick={e=>{const v=e.currentTarget;if(v.muted){chooseSound(true);return}if(v.paused)void v.play();else v.pause()}} />}
   <div className="imv-shade"/>
   <button className="imv-close" type="button" onClick={close} aria-label="Close videos and go home">✕ <span>Home</span></button>
   <div className="imv-brand">☪ <strong>1MUSLIM</strong><span>For You</span></div>
