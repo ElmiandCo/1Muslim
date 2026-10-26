@@ -22,8 +22,7 @@ export async function DELETE(req:NextRequest){
  const session=await serverClient();
  const {data:{user}}=await session.auth.getUser();
  if(!user)return NextResponse.json({error:"Sign in required."},{status:401});
- const {data:admin,error:adminError}=await session.rpc("is_1muslim_admin");
- if(adminError||admin!==true)return NextResponse.json({error:"Admin access required."},{status:403});
+
  const {targetType,targetId,confirmation}=await req.json();
  if(!["post","profile","comment"].includes(targetType)||!uuid.test(targetId)||confirmation!=="DELETE")return NextResponse.json({error:"Invalid deletion request."},{status:400});
  if(targetType==="profile"&&targetId===user.id)return NextResponse.json({error:"You cannot delete your own admin account here."},{status:400});
@@ -32,12 +31,19 @@ export async function DELETE(req:NextRequest){
  if(!url||!key)return NextResponse.json({error:"Server moderation credentials not configured."},{status:503});
  const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
  if(targetType==="post"){
+ const {data:owned}=await db.from("posts").select("user_id").eq("id",targetId).maybeSingle();
+ const {data:admin}=await session.rpc("is_1muslim_admin");
+ if(!owned||(owned.user_id!==user.id&&admin!==true))return NextResponse.json({error:"Only the creator or an admin can delete this post."},{status:403});
+ const {data:attached}=await db.from("post_media").select("storage_path").eq("post_id",targetId);
  const {error}=await db.from("posts").delete().eq("id",targetId).select("id").single();
  if(error)return NextResponse.json({error:error.message},{status:400});
+ if(attached?.length){const paths=attached.map(x=>x.storage_path).filter(Boolean);if(paths.length)await db.storage.from("community-media").remove(paths)}
  }else if(targetType==="comment"){
+ const {data:admin}=await session.rpc("is_1muslim_admin");if(admin!==true)return NextResponse.json({error:"Admin access required."},{status:403});
  const {error}=await db.from("verse_comments").delete().eq("id",targetId).select("id").single();
  if(error)return NextResponse.json({error:error.message},{status:400});
  }else{
+ const {data:admin}=await session.rpc("is_1muslim_admin");if(admin!==true)return NextResponse.json({error:"Admin access required."},{status:403});
  // Auth deletion may fail when owned Storage objects or foreign keys remain.
  // Do not falsely claim media/content cleanup: a separate cleanup job is needed.
  const {error}=await db.auth.admin.deleteUser(targetId);
