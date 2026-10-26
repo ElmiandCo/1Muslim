@@ -24,6 +24,6 @@ export default function PostDetail(){
  return <main style={{minHeight:"100dvh",background:"var(--bg)",color:"var(--text)"}}><SiteNav/>
  <section style={{width:"min(100% - 24px,820px)",margin:"auto",padding:"clamp(20px,4vw,36px) 0 130px"}}>
  <Link href="/community" style={{display:"inline-flex",alignItems:"center",gap:8,color:"var(--accent)",textDecoration:"none",marginBottom:18,fontSize:14}}>← Back to Ummah</Link>
- {loading?<p role="status">Loading post…</p>:error?<p role="status">{error}</p>:post&&<PostViewer post={post} author={author} media={media} share={()=>void share()} actions={<ModerationActions targetType="post" targetId={post.id} onDeleted={()=>{setPost(null);setError("This post was permanently deleted.")}}/>}/>}
+ {loading?<p role="status">Loading post…</p>:error?<p role="status">{error}</p>:post&&<PostViewer post={post} author={author} media={media} share={()=>void share()} actions={<ModerationActions targetType="post" targetId={post.id} ownerId={post.user_id} onDeleted={()=>{setPost(null);setError("This post was permanently deleted.")}}/>}/>}
  </section></main>
 }
