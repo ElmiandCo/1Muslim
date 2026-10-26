@@ -141,7 +141,7 @@ export default function QuranLessons(){
  const [arabicColor,setArabicColor]=useState("#f5f1e7");
  const [verseGlow,setVerseGlow]=useState(35);
  useEffect(()=>{const key=verses[focusIndex]?.verse_key;if(!busy&&key){const timer=setTimeout(()=>void rewardVerse(key,"view"),1200);return()=>clearTimeout(timer)}},[verses,focusIndex,busy]);
- useEffect(()=>{if(continuousRecitation&&verses[focusIndex]?.verse_key)void playSelectedRecitation()},[focusIndex,continuousRecitation]);
+
  const [readingFocus,setReadingFocus]=useState(true);
  const [readerBlur,setReaderBlur]=useState(10);
  const [readerDim,setReaderDim]=useState(12);
@@ -174,6 +174,7 @@ export default function QuranLessons(){
   player.onended=()=>{void rewardVerse(verse,"listen");if(continuousRecitationRef.current)jump(focusIndex+1);};
   void player.play().catch(()=>{});
  };
+ useEffect(()=>{if(continuousRecitation&&verses[focusIndex]?.verse_key)void playSelectedRecitation()},[focusIndex,continuousRecitation]);
 
  const [readerIdle,setReaderIdle]=useState(false);
  const [cinemaPhase,setCinemaPhase]=useState<"off"|"spotlight"|"drift">("off");
