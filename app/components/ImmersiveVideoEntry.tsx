@@ -3,11 +3,12 @@ import {useEffect,useRef,useState} from "react";
 import {usePathname} from "next/navigation";
 import {createClient} from "../../utils/supabase/client";
 
-type Clip={id:string;src:string;caption:string;creator:string};
+type Clip={id:string;postId?:string;src:string;caption:string;creator:string};
 const DEMO:Clip={id:"demo",src:"/videos/prelive-intro.mp4",caption:"Welcome to 1Muslim · Preview video",creator:"1Muslim"};
 export default function ImmersiveVideoEntry(){
  const pathname=usePathname();
  const [open,setOpen]=useState(false),[clips,setClips]=useState<Clip[]>([DEMO]),[index,setIndex]=useState(0),[muted,setMuted]=useState(false),[soundPrompt,setSoundPrompt]=useState(false);
+ const [likes,setLikes]=useState<Record<string,number>>({}),[liked,setLiked]=useState<Record<string,boolean>>({}),[commentCounts,setCommentCounts]=useState<Record<string,number>>({}),[commentsOpen,setCommentsOpen]=useState(false),[comments,setComments]=useState<{id:string;body:string}[]>([]),[draft,setDraft]=useState(""),[sending,setSending]=useState(false),[engagementError,setEngagementError]=useState("");
  const video=useRef<HTMLVideoElement>(null),touch=useRef<{x:number;y:number}|null>(null);
  const soundPreference=useRef(true);
  useEffect(()=>{try{soundPreference.current=localStorage.getItem("1muslim:video-sound")!=="off";setMuted(!soundPreference.current)}catch{}},[]);
@@ -22,14 +23,20 @@ export default function ImmersiveVideoEntry(){
   const valid=media.filter(m=>byId.get(m.post_id)?.user_id===m.user_id);
   if(!valid.length)return;
   const {data:urls}=await db.storage.from("community-media").createSignedUrls(valid.map(m=>m.storage_path),3600);
-  const found=valid.flatMap((m,i)=>urls?.[i]?.signedUrl?[{id:m.id,src:urls[i].signedUrl,caption:byId.get(m.post_id)?.body||"1Muslim community video",creator:"Community"}]:[]);
+  const found=valid.flatMap((m,i)=>urls?.[i]?.signedUrl?[{id:m.id,postId:m.post_id,src:urls[i].signedUrl,caption:byId.get(m.post_id)?.body||"1Muslim community video",creator:"Community"}]:[]);
   if(alive&&found.length)setClips(found);
  }catch{}};void load();return()=>{alive=false}},[]);
  useEffect(()=>{if(!open)return;const old=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.body.style.overflow=old}},[open]);
  useEffect(()=>{if(!open)return;const el=video.current;if(!el)return;let cancelled=false;const start=async()=>{if(cancelled)return;const wantsSound=soundPreference.current;el.muted=!wantsSound;el.defaultMuted=!wantsSound;try{await el.play();if(!cancelled){setMuted(!wantsSound);setSoundPrompt(false)}}catch{if(!wantsSound||cancelled)return;el.muted=true;try{await el.play()}catch{}if(!cancelled){setMuted(true);setSoundPrompt(true)}}};void start();const resume=()=>{if(!document.hidden)void start()};document.addEventListener("visibilitychange",resume);return()=>{cancelled=true;document.removeEventListener("visibilitychange",resume);el.pause()}},[index,open,clips]);
 
+ useEffect(()=>{let live=true;const ids=clips.map(x=>x.postId).filter((x):x is string=>!!x);if(!ids.length)return;const load=async()=>{const db=createClient();const [{data:allLikes},{data:allComments},{data:auth}]=await Promise.all([db.from("post_likes").select("post_id,user_id").in("post_id",ids),db.from("comments").select("post_id").in("post_id",ids),db.auth.getUser()]);if(!live)return;const counts:Record<string,number>={},mine:Record<string,boolean>={},commentTotal:Record<string,number>={};for(const x of allLikes||[]){counts[x.post_id]=(counts[x.post_id]||0)+1;if(auth.user?.id===x.user_id)mine[x.post_id]=true}for(const x of allComments||[])commentTotal[x.post_id]=(commentTotal[x.post_id]||0)+1;setLikes(counts);setLiked(mine);setCommentCounts(commentTotal)};void load();return()=>{live=false}},[clips]);
+ const toggleLike=async()=>{const postId=clips[index]?.postId;if(!postId)return;const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setEngagementError("Sign in to like videos.");return}const was=!!liked[postId];setLiked(p=>({...p,[postId]:!was}));setLikes(p=>({...p,[postId]:Math.max(0,(p[postId]||0)+(was?-1:1))}));const {error}=was?await db.from("post_likes").delete().eq("post_id",postId).eq("user_id",user.id):await db.from("post_likes").insert({post_id:postId,user_id:user.id});if(error){setLiked(p=>({...p,[postId]:was}));setLikes(p=>({...p,[postId]:Math.max(0,(p[postId]||0)+(was?1:-1))}));setEngagementError("Could not update like.")}};
+ const openComments=async()=>{setCommentsOpen(true);setEngagementError("");const postId=clips[index]?.postId;if(!postId){setComments([]);return}const {data}=await createClient().from("comments").select("id,body").eq("post_id",postId).order("created_at",{ascending:false}).limit(80);setComments(data||[])};
+ const sendComment=async()=>{const postId=clips[index]?.postId;if(!postId||!draft.trim()||sending)return;setSending(true);const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setEngagementError("Sign in to comment.");setSending(false);return}const {data,error}=await db.from("comments").insert({post_id:postId,user_id:user.id,body:draft.trim()}).select("id,body").single();if(error){setEngagementError("Comment could not be posted.")}else if(data){setComments(p=>[data,...p]);setCommentCounts(p=>({...p,[postId]:(p[postId]||0)+1}));setDraft("")}setSending(false)};
+ const shareClip=async()=>{const src=clips[index]?.src;if(!src)return;try{if(navigator.share)await navigator.share({title:"1Muslim video",url:src});else{await navigator.clipboard.writeText(src);setEngagementError("Video link copied.")}}catch{}};
+
  const close=()=>{setOpen(false);video.current?.pause();try{sessionStorage.setItem("1muslim:video-entry-dismissed","1")}catch{}};
- const step=(n:number)=>setIndex(i=>Math.max(0,Math.min(clips.length-1,i+n)));
+ const step=(n:number)=>{setCommentsOpen(false);setEngagementError("");setIndex(i=>Math.max(0,Math.min(clips.length-1,i+n)))};
  useEffect(()=>{if(!open)return;const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape")close();if(e.key==="ArrowDown")step(1);if(e.key==="ArrowUp")step(-1)};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[open,clips.length]);
  if(!open||pathname!=="/")return null;
  const clip=clips[index]||DEMO;
@@ -40,9 +47,17 @@ export default function ImmersiveVideoEntry(){
   <div className="imv-shade"/>
   <button className="imv-close" type="button" onClick={close} aria-label="Close videos and go home">✕ <span>Home</span></button>
   <div className="imv-brand">☪ <strong>1MUSLIM</strong><span>For You</span></div>
-  <div className="imv-caption"><strong>@{clip.creator}</strong><p>{clip.caption}</p><small>{index+1} / {clips.length} · Swipe up or down</small></div>
+  <div className="imv-caption"><strong>@{clip.creator}</strong><p>{clip.caption.replace(/\\n/g," ")}</p><small>{index+1} / {clips.length} · Swipe up or down</small></div>
   {soundPrompt&&<button type="button" className="imv-enable-sound" onClick={()=>chooseSound(true)}>🔊 Tap to enable sound</button>}
-  <div className="imv-actions"><button type="button" onClick={()=>chooseSound(muted)} aria-label={muted?"Unmute":"Mute"}>{muted?"🔇":"🔊"}</button><button type="button" onClick={()=>step(-1)} disabled={index===0} aria-label="Previous video">↑</button><button type="button" onClick={()=>step(1)} disabled={index===clips.length-1} aria-label="Next video">↓</button></div>
+  <div className="imv-actions">
+  <button type="button" className="imv-creator" aria-label="Community creator"><span>1M</span><b>+</b></button>
+  <button type="button" onClick={toggleLike} disabled={!clip.postId} aria-label="Like video" aria-pressed={!!(clip.postId&&liked[clip.postId])}><span className={clip.postId&&liked[clip.postId]?"imv-heart active":"imv-heart"}>♥</span><small>{clip.postId?likes[clip.postId]||0:"—"}</small></button>
+  <button type="button" onClick={openComments} aria-label="View comments"><span>▤</span><small>{clip.postId?commentCounts[clip.postId]||0:"—"}</small></button>
+  <button type="button" onClick={shareClip} aria-label="Share video"><span>➤</span><small>Share</small></button>
+  <button type="button" onClick={()=>chooseSound(muted)} aria-label={muted?"Unmute":"Mute"}><span>{muted?"◖̸":"◖))"}</span><small>Sound</small></button>
+ </div>
+ {engagementError&&<div className="imv-notice" role="status" onClick={()=>setEngagementError("")}>{engagementError}</div>}
+ {commentsOpen&&<div className="imv-comments" role="dialog" aria-label="Video comments"><header><span>Comments · {clip.postId?commentCounts[clip.postId]||0:0}</span><button type="button" onClick={()=>setCommentsOpen(false)} aria-label="Close comments">✕</button></header><div className="imv-comment-list">{comments.length?comments.map(x=><p key={x.id}>{x.body}</p>):<p>No comments yet. Start the conversation.</p>}</div><form onSubmit={e=>{e.preventDefault();void sendComment()}}><input aria-label="Write a comment" placeholder="Add a comment…" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={1000}/><button type="submit" disabled={sending||!draft.trim()}>Send</button></form></div>}
   <style jsx>{`
    .imv-root{position:fixed;inset:0;z-index:2147483000;background:#020705;color:white;overflow:hidden;touch-action:pan-y;overscroll-behavior:contain;font-family:inherit}
    video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
@@ -54,8 +69,8 @@ export default function ImmersiveVideoEntry(){
    .imv-caption{position:absolute;left:20px;right:85px;bottom:max(42px,calc(env(safe-area-inset-bottom) + 24px));text-shadow:0 2px 8px #000}
    .imv-caption strong{color:#f5e5b8}.imv-caption p{font-size:16px;line-height:1.35;margin:9px 0}.imv-caption small{color:#e0e9e3}
    .imv-enable-sound{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);z-index:4;border:1px solid #e7c777;border-radius:30px;background:#073d30e8;color:#fff;padding:15px 24px;font-size:16px;font-weight:700;white-space:nowrap;box-shadow:0 8px 30px #0008;cursor:pointer}
-   .imv-actions{position:absolute;right:14px;bottom:max(62px,calc(env(safe-area-inset-bottom) + 50px));display:grid;gap:15px}
-   .imv-actions button{border:1px solid #cda9618c;border-radius:50%;width:48px;height:48px;background:#063a2ac7;color:white;font-size:24px;backdrop-filter:blur(10px);cursor:pointer}
+   .imv-actions{position:absolute;right:12px;bottom:max(120px,calc(env(safe-area-inset-bottom) + 90px));display:flex;flex-direction:column;align-items:center;gap:17px;z-index:3}
+   .imv-actions button{border:0;border-radius:0;width:54px;min-height:52px;background:transparent;color:white;font-size:32px;display:flex;align-items:center;flex-direction:column;justify-content:center;gap:1px;filter:drop-shadow(0 2px 5px #000b);cursor:pointer}.imv-actions button small{font-size:12px;font-weight:700;color:#fff}.imv-actions .imv-creator{position:relative;border-radius:50%;width:49px;height:49px;border:2px solid white;background:linear-gradient(135deg,#063c32,#0f735a);font-size:17px;font-weight:900;margin-bottom:6px}.imv-creator b{position:absolute;bottom:-9px;background:#0fb77b;border-radius:50%;font-size:15px;line-height:18px;width:19px;height:19px}.imv-heart{font-size:39px;line-height:39px}.imv-heart.active{color:#ff4b79}.imv-comments{position:absolute;bottom:0;left:0;right:0;height:min(70vh,620px);background:rgba(8,29,27,.97);border-radius:25px 25px 0 0;z-index:6;display:flex;flex-direction:column;padding:18px 16px max(20px,env(safe-area-inset-bottom));box-shadow:0 -10px 35px #0008;backdrop-filter:blur(18px)}.imv-comments header{display:flex;align-items:center;justify-content:space-between;font-weight:800;padding:0 4px 16px;border-bottom:1px solid #ffffff22}.imv-comments header button{border:0;background:transparent;color:white;font-size:24px}.imv-comment-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 5px}.imv-comment-list p{padding:12px;border-bottom:1px solid #ffffff19;overflow-wrap:anywhere}.imv-comments form{display:flex;gap:8px}.imv-comments input{flex:1;min-width:0;border:1px solid #d8c58c66;border-radius:25px;background:#ffffff12;color:white;padding:12px}.imv-comments form button{border:0;border-radius:22px;background:#0b956d;color:white;padding:0 16px;font-weight:700}.imv-notice{position:absolute;bottom:100px;left:15px;right:75px;z-index:8;background:#073d30e9;padding:12px;border-radius:12px;font-size:14px}
    .imv-actions button:disabled{opacity:.3}
    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   `}</style>
