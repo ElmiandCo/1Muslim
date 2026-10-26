@@ -2,6 +2,7 @@
 import {useState,type ReactNode} from "react";
 import Link from "next/link";
 import {CanvasUmmaGallery} from "./CanvasUmmaGallery";
+import ProfileVideos from "./ProfileVideos";
 
 const tabs=["1Umma","My Profile"] as const;
 type Tab=typeof tabs[number];
@@ -15,7 +16,7 @@ export default function GameLabProfileHub({active,profile,renderProfileSection}:
    </div>
   </header>
   <div role="tabpanel" aria-label={tab} style={{position:"relative",flex:1,minHeight:0,minWidth:0,width:"100%",maxWidth:"100%",boxSizing:"border-box",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",overscrollBehaviorY:"contain",padding:tab==="1Umma"?0:8}}>
-   {tab==="1Umma"?<CanvasUmmaGallery active={active}/>:settingsOpen&&renderProfileSection?renderProfileSection("Settings"):profile??<p>Sign in to see your profile.</p>}
+   {tab==="1Umma"?<CanvasUmmaGallery active={active}/>:settingsOpen&&renderProfileSection?renderProfileSection("Settings"):<>{profile??<p>Sign in to see your profile.</p>}<ProfileVideos/></>}
   </div>
  </section>
 }
