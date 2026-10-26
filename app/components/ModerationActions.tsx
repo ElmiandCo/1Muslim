@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
-export default function ModerationActions({targetType,targetId,onDeleted}:{targetType:"post"|"profile"|"comment"|"live"|"community";targetId:string;onDeleted?:()=>void;ownerId?:string}){
+export default function ModerationActions({targetType,targetId,onDeleted,ownerId}:{targetType:"post"|"profile"|"comment"|"live"|"community";targetId:string;onDeleted?:()=>void;ownerId?:string}){
  const [owner,setOwner]=useState(false);const [admin,setAdmin]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
  useEffect(()=>{let active=true;const db=createClient();void db.rpc("is_1muslim_admin").then(({data})=>{if(active)setAdmin(data===true)});return()=>{active=false}},[]);
  useEffect(()=>{let active=true;if(!ownerId)return;const db=createClient();void db.auth.getUser().then(({data})=>{if(active)setOwner(!!data.user&&data.user.id===ownerId)});return()=>{active=false}},[ownerId]);
