@@ -15,7 +15,9 @@ export async function POST(request:Request){
  if(!user)return NextResponse.json({error:"Sign in to post"},{status:401});
  const body=await request.json().catch(()=>({}));
  const text=typeof body.text==="string"?body.text.trim():"";
- if(text.length<1||text.length>2000)return NextResponse.json({error:"Write a post between 1 and 2,000 characters"},{status:400});
+ const media=body.media&&typeof body.media.storage_path==="string"?body.media:null;
+ if(media&&(!media.storage_path.startsWith(user.id+"/")||!/^((image|video)\/)\S+$/.test(media.mime_type||"")))return NextResponse.json({error:"Invalid media attachment"},{status:400});
+ if((text.length<1&&!media)||text.length>2000)return NextResponse.json({error:"Write a post between 1 and 2,000 characters"},{status:400});
  if(text.startsWith("✦ DAILY UMMAH ✦")){
   const now=new Date();const start=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())).toISOString();
   const {data:today,error:checkError}=await db.from("ummah_feed_posts").select("id,body").eq("author_id",user.id).gte("created_at",start);
@@ -33,6 +35,12 @@ export async function POST(request:Request){
   const {error:flagError}=await db.from("moderation_flags").insert({user_id:user.id,post_id:data.id,reason:"profanity",status:"pending"});
   if(flagError)console.error("Moderation flag could not be persisted",flagError.message);
   return NextResponse.json({post:data,flagged:true,removed:true,flagRecorded:!flagError},{status:201});
+ }
+ if(media){
+  const {data:post,error:postError}=await db.from("posts").insert({user_id:user.id,body:text||"Shared a video"}).select("id").single();
+  if(postError)return NextResponse.json({error:"Media post could not be created; your uploaded file remains saved.",code:postError.code},{status:503});
+  const {error:attachError}=await db.from("post_media").insert({post_id:post.id,user_id:user.id,storage_path:media.storage_path,file_name:String(media.file_name||"upload").slice(0,255),mime_type:media.mime_type});
+  if(attachError){await db.from("posts").delete().eq("id",post.id).eq("user_id",user.id);return NextResponse.json({error:"Media attachment could not be published; your upload remains saved.",code:attachError.code},{status:503})}
  }
  return NextResponse.json({post:data},{status:201});
 }
