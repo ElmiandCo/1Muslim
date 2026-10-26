@@ -7,7 +7,7 @@ type Clip={id:string;src:string;caption:string;creator:string};
 const DEMO:Clip={id:"demo",src:"/videos/prelive-intro.mp4",caption:"Welcome to 1Muslim · Preview video",creator:"1Muslim"};
 export default function ImmersiveVideoEntry(){
  const pathname=usePathname();
- const [open,setOpen]=useState(false),[clips,setClips]=useState<Clip[]>([DEMO]),[index,setIndex]=useState(0),[muted,setMuted]=useState(true);
+ const [open,setOpen]=useState(false),[clips,setClips]=useState<Clip[]>([DEMO]),[index,setIndex]=useState(0),[muted,setMuted]=useState(false);
  const video=useRef<HTMLVideoElement>(null),touch=useRef<{x:number;y:number}|null>(null);
  useEffect(()=>{if(pathname!=="/"){setOpen(false);return}try{setOpen(sessionStorage.getItem("1muslim:video-entry-dismissed")!=="1")}catch{setOpen(true)}},[pathname]);
  useEffect(()=>{let alive=true;const load=async()=>{try{
@@ -23,7 +23,7 @@ export default function ImmersiveVideoEntry(){
   if(alive&&found.length)setClips(found);
  }catch{}};void load();return()=>{alive=false}},[]);
  useEffect(()=>{if(!open)return;const old=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.body.style.overflow=old}},[open]);
- useEffect(()=>{if(!open)return;const el=video.current;if(!el)return;el.muted=muted;el.defaultMuted=true;el.load();const start=()=>{if(el.paused)void el.play().catch(()=>{})};start();document.addEventListener("visibilitychange",start);return()=>{document.removeEventListener("visibilitychange",start);el.pause()}},[index,open,muted,clips]);
+ useEffect(()=>{if(!open)return;const el=video.current;if(!el)return;el.muted=muted;el.defaultMuted=muted;el.load();const start=()=>{if(el.paused)void el.play().catch(()=>{if(!el.muted){el.muted=true;void el.play().catch(()=>{})}})};start();document.addEventListener("visibilitychange",start);return()=>{document.removeEventListener("visibilitychange",start);el.pause()}},[index,open,muted,clips]);
  const close=()=>{setOpen(false);video.current?.pause();try{sessionStorage.setItem("1muslim:video-entry-dismissed","1")}catch{}};
  const step=(n:number)=>setIndex(i=>Math.max(0,Math.min(clips.length-1,i+n)));
  useEffect(()=>{if(!open)return;const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape")close();if(e.key==="ArrowDown")step(1);if(e.key==="ArrowUp")step(-1)};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[open,clips.length]);
@@ -32,12 +32,12 @@ export default function ImmersiveVideoEntry(){
  return <div className="imv-root" role="dialog" aria-modal="true" aria-label="1Muslim full-screen video feed"
  onTouchStart={e=>{touch.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}}
  onTouchEnd={e=>{const start=touch.current;if(!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;touch.current=null;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.3)step(dy<0?1:-1)}}>
-  <video key={clip.id} ref={video} src={clip.src} autoPlay muted={muted} playsInline loop preload="auto" onLoadedData={e=>{void e.currentTarget.play().catch(()=>{})}} onCanPlay={e=>{if(e.currentTarget.paused)void e.currentTarget.play().catch(()=>{})}} onClick={e=>{const v=e.currentTarget;if(v.paused)void v.play();else v.pause()}} />
+  <video key={clip.id} ref={video} src={clip.src} autoPlay muted={muted} playsInline loop preload="auto" onLoadedData={e=>{void e.currentTarget.play().catch(()=>{})}} onCanPlay={e=>{if(e.currentTarget.paused)void e.currentTarget.play().catch(()=>{})}} onClick={e=>{const v=e.currentTarget;if(v.muted){v.muted=false;setMuted(false);void v.play().catch(()=>{});return}if(v.paused)void v.play();else v.pause()}} />
   <div className="imv-shade"/>
   <button className="imv-close" type="button" onClick={close} aria-label="Close videos and go home">✕ <span>Home</span></button>
   <div className="imv-brand">☪ <strong>1MUSLIM</strong><span>For You</span></div>
   <div className="imv-caption"><strong>@{clip.creator}</strong><p>{clip.caption}</p><small>{index+1} / {clips.length} · Swipe up or down</small></div>
-  <div className="imv-actions"><button type="button" onClick={()=>setMuted(v=>!v)} aria-label={muted?"Unmute":"Mute"}>{muted?"🔇":"🔊"}</button><button type="button" onClick={()=>step(-1)} disabled={index===0} aria-label="Previous video">↑</button><button type="button" onClick={()=>step(1)} disabled={index===clips.length-1} aria-label="Next video">↓</button></div>
+  <div className="imv-actions"><button type="button" onClick={()=>{const next=!video.current?.muted;if(video.current){video.current.muted=next;void video.current.play().catch(()=>{})}setMuted(next)}} aria-label={muted?"Unmute":"Mute"}>{muted?"🔇":"🔊"}</button><button type="button" onClick={()=>step(-1)} disabled={index===0} aria-label="Previous video">↑</button><button type="button" onClick={()=>step(1)} disabled={index===clips.length-1} aria-label="Next video">↓</button></div>
   <style jsx>{`
    .imv-root{position:fixed;inset:0;z-index:2147483000;background:#020705;color:white;overflow:hidden;touch-action:pan-y;overscroll-behavior:contain;font-family:inherit}
    video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
