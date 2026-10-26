@@ -17,7 +17,8 @@
     "livekit-client": "2.22.3",
     "livekit-server-sdk": "2.19.1",
     "@livekit/track-processors": "^0.7.0",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "tus-js-client": "^4.3.1"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
