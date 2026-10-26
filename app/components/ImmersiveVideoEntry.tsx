@@ -39,7 +39,7 @@ export default function ImmersiveVideoEntry(){
   const valid=media.filter(m=>byId.get(m.post_id)?.user_id===m.user_id);
   if(!valid.length)return;
   const {data:urls}=await db.storage.from("community-media").createSignedUrls(valid.map(m=>m.storage_path),3600);
-  const {data:authors}=await db.from("profiles").select("id,display_name,username").in("id",[...new Set(valid.map(m=>m.user_id))]);
+  const {data:authors}=await db.from("profiles").select("id,display_name,username,avatar_url").in("id",[...new Set(valid.map(m=>m.user_id))]);
   const authorById=new Map((authors||[]).map(p=>[p.id,p]));
   const found=valid.flatMap((m,i)=>urls?.[i]?.signedUrl?[{id:m.id,postId:m.post_id,src:urls[i].signedUrl,caption:byId.get(m.post_id)?.body||"1Muslim community video",creator:authorById.get(m.user_id)?.username||authorById.get(m.user_id)?.display_name||"Community",creatorId:m.user_id,avatarUrl:authorById.get(m.user_id)?.avatar_url||undefined,createdAt:m.created_at}]:[]);
   if(alive&&found.length){setIndex(0);setClips(found);}
