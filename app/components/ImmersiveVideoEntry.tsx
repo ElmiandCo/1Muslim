@@ -43,7 +43,7 @@ export default function ImmersiveVideoEntry(){
  const shareClip=async()=>{const src=clips[index]?.src;if(!src)return;try{if(navigator.share)await navigator.share({title:"1Muslim video",url:src});else{await navigator.clipboard.writeText(src);setEngagementError("Video link copied.")}}catch{}};
 
  const close=()=>{setOpen(false);video.current?.pause();try{sessionStorage.setItem("1muslim:video-entry-dismissed","1")}catch{}};
- const step=(n:number)=>{setCommentsOpen(false);setEngagementError("");setIndex(i=>Math.max(0,Math.min(feed.length-1,i+n)))};
+ const step=(n:number)=>{setCommentsOpen(false);setEngagementError("");if(n>0&&index===0&&feed.length>1){window.location.reload();return}setIndex(i=>Math.max(0,Math.min(feed.length-1,i+n)))};
  useEffect(()=>{if(!open)return;const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape")close();if(e.key==="ArrowDown")step(1);if(e.key==="ArrowUp")step(-1)};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[open,feed.length]);
  if(!open||pathname!=="/")return null;
  const clip=feed[index]||DEMO;
@@ -54,7 +54,7 @@ export default function ImmersiveVideoEntry(){
   <div className="imv-shade"/>
   <button className="imv-close" type="button" onClick={close} aria-label="Close videos and go home">✕ <span>Home</span></button>
   <div className="imv-brand">☪ <strong>1MUSLIM</strong><span>For You</span></div>
-  <div className="imv-caption"><strong>@{clip.creator}</strong><p>{clip.caption.replace(/\\n/g," ")}</p><small>{index+1} / {feed.length} · Swipe up or down</small></div>
+  <div className="imv-caption"><strong>@{clip.creator}</strong><p>{clip.caption.replace(/\\n/g," ")}</p><small>Swipe up or down</small></div>
   {soundPrompt&&<button type="button" className="imv-enable-sound" onClick={()=>chooseSound(true)}>🔊 Tap to enable sound</button>}
   <div className="imv-actions">
   <button type="button" className="imv-creator" aria-label="Community creator"><span>1M</span><b>+</b></button>
