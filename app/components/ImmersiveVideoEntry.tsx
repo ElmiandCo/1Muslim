@@ -7,7 +7,7 @@ type Clip={id:string;src:string;caption:string;creator:string};
 const DEMO:Clip={id:"demo",src:"/videos/prelive-intro.mp4",caption:"Welcome to 1Muslim · Preview video",creator:"1Muslim"};
 export default function ImmersiveVideoEntry(){
  const pathname=usePathname();
- const [open,setOpen]=useState(false),[clips,setClips]=useState<Clip[]>([DEMO]),[index,setIndex]=useState(0),[muted,setMuted]=useState(false);
+ const [open,setOpen]=useState(false),[clips,setClips]=useState<Clip[]>([DEMO]),[index,setIndex]=useState(0),[muted,setMuted]=useState(false),[soundPrompt,setSoundPrompt]=useState(false);
  const video=useRef<HTMLVideoElement>(null),touch=useRef<{x:number;y:number}|null>(null);
  const soundPreference=useRef(true);
  useEffect(()=>{try{soundPreference.current=localStorage.getItem("1muslim:video-sound")!=="off";setMuted(!soundPreference.current)}catch{}},[]);
