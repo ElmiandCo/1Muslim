@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
+import {guestXP,syncGuestQuranXP} from "../lib/guestQuranXP";
 
 const classify=(el:Element|null)=>{
   const node=el?.closest("button,a,[role='button']");
@@ -28,12 +29,14 @@ export default function XPTracker(){
   const supabase=useMemo(()=>createClient(),[]);
   const [userId,setUserId]=useState<string|null>(null),[xp,setXp]=useState(0),[notice,setNotice]=useState<string|null>(null);
   const [activeSeconds,setActiveSeconds]=useState(0);
+  const [guestMode,setGuestMode]=useState(false);
   const [xpVisible,setXpVisible]=useState(false);
   const levelRef=useRef<number|null>(null);
   const hideTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const showLevelUp=(nextXp:number)=>{const next=levelFor(nextXp);if(levelRef.current===null){levelRef.current=next;return;}if(next>levelRef.current){setXpVisible(true);if(hideTimer.current)clearTimeout(hideTimer.current);hideTimer.current=setTimeout(()=>setXpVisible(false),6000);}levelRef.current=next;};
   useEffect(()=>()=>{if(hideTimer.current)clearTimeout(hideTimer.current)},[]);
 
+  useEffect(()=>{const load=async()=>{const {data:{user}}=await supabase.auth.getUser();if(user){setGuestMode(false);void syncGuestQuranXP()}else{setGuestMode(true);setXp(guestXP())}};void load();const {data:{subscription}}=supabase.auth.onAuthStateChange(()=>{setTimeout(()=>void load(),0)});const onSync=(event:Event)=>{const total=Number((event as CustomEvent<{xp_total:number}>).detail?.xp_total||0);setXp(total);levelRef.current=levelFor(total)};window.addEventListener("1muslim:quran-xp-sync",onSync);return()=>{subscription.unsubscribe();window.removeEventListener("1muslim:quran-xp-sync",onSync)}},[supabase]);
   useEffect(()=>{const onQuranXP=(event:Event)=>{const detail=(event as CustomEvent<{awarded:number;xp_total:number}>).detail;if(!detail||detail.awarded<=0)return;const total=Number(detail.xp_total);setXp(total);showLevelUp(total);if(Math.floor(total/500)>Math.floor((total-detail.awarded)/500)){setXpVisible(true);if(hideTimer.current)clearTimeout(hideTimer.current);hideTimer.current=setTimeout(()=>setXpVisible(false),6000);setNotice("Qur’an milestone · "+total.toLocaleString()+" XP");setTimeout(()=>setNotice(null),3500)}};window.addEventListener("1muslim:quran-xp",onQuranXP);return()=>window.removeEventListener("1muslim:quran-xp",onQuranXP)},[]);
 
   const lastClick=useRef<Record<string,number>>({});
@@ -137,7 +140,7 @@ export default function XPTracker(){
     return()=>window.clearInterval(timer);
   },[supabase,userId]);
 
-  if(!userId||!xpVisible)return null;
+  if((!userId&&!guestMode)||!xpVisible)return null;
   const level=levelFor(xp),start=levelStart(level),end=levelEnd(level),progress=Math.min(100,Math.max(0,((xp-start)/(end-start))*100));
   const timeProgress=Math.min(100,activeSeconds/3);
   return <div ref={trackerRef} className="xpTracker" aria-live="polite" style={position?{left:position.x,top:position.y,right:"auto",bottom:"auto"}:undefined} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} title="Drag to move XP tracker">
