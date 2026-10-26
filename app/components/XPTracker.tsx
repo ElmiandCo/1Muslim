@@ -34,6 +34,8 @@ export default function XPTracker(){
   const showLevelUp=(nextXp:number)=>{const next=levelFor(nextXp);if(levelRef.current===null){levelRef.current=next;return;}if(next>levelRef.current){setXpVisible(true);if(hideTimer.current)clearTimeout(hideTimer.current);hideTimer.current=setTimeout(()=>setXpVisible(false),6000);}levelRef.current=next;};
   useEffect(()=>()=>{if(hideTimer.current)clearTimeout(hideTimer.current)},[]);
 
+  useEffect(()=>{const onQuranXP=(event:Event)=>{const detail=(event as CustomEvent<{awarded:number;xp_total:number}>).detail;if(!detail||detail.awarded<=0)return;const total=Number(detail.xp_total);setXp(total);showLevelUp(total);if(Math.floor(total/500)>Math.floor((total-detail.awarded)/500)){setXpVisible(true);if(hideTimer.current)clearTimeout(hideTimer.current);hideTimer.current=setTimeout(()=>setXpVisible(false),6000);setNotice("Qur’an milestone · "+total.toLocaleString()+" XP");setTimeout(()=>setNotice(null),3500)}};window.addEventListener("1muslim:quran-xp",onQuranXP);return()=>window.removeEventListener("1muslim:quran-xp",onQuranXP)},[]);
+
   const lastClick=useRef<Record<string,number>>({});
   const activeRef=useRef(0);
   const lastActivity=useRef(Date.now());
