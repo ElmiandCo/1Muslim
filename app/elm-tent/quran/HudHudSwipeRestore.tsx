@@ -1,12 +1,11 @@
 "use client";
 import {useEffect} from "react";
 
-/** Restore the reading orb with a background double tap after it is swiped away. */
+/** Restore the reading orb with a single background tap only after it is swiped away. */
 export default function HudHudSwipeRestore(){
  useEffect(()=>{
   const orb=()=>document.querySelector<HTMLElement>(".omQuranPage .omQuranCenterOrb");
   let start:{x:number;y:number;id:number}|null=null;
-  let lastTap=0,lastX=0,lastY=0;
   const interactive="button,a,input,select,textarea,[role='button'],[role='slider'],[contenteditable='true']";
   const down=(e:PointerEvent)=>{
    if(!orb()||!e.target||!(e.target instanceof Element))return;
@@ -17,16 +16,12 @@ export default function HudHudSwipeRestore(){
    if(!el)return;
    if(start?.id===e.pointerId){
     const dx=e.clientX-start.x,dy=e.clientY-start.y;
-    if(Math.hypot(dx,dy)>65){el.classList.add("omHudHudSwipedAway");lastTap=0;e.preventDefault();e.stopPropagation()}
+    if(Math.hypot(dx,dy)>65){el.classList.add("omHudHudSwipedAway");e.preventDefault();e.stopPropagation()}
     start=null;return;
    }
    if(!el.classList.contains("omHudHudSwipedAway"))return;
    if(!(e.target instanceof Element)||e.target.closest(interactive))return;
-   const now=Date.now();
-   if(now-lastTap<360&&Math.hypot(e.clientX-lastX,e.clientY-lastY)<90){
-    el.classList.remove("omHudHudSwipedAway");
-    lastTap=0;
-   }else{lastTap=now;lastX=e.clientX;lastY=e.clientY}
+   el.classList.remove("omHudHudSwipedAway");
   };
   const cancel=()=>{start=null};
   document.addEventListener("pointerdown",down,true);
