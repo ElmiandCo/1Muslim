@@ -73,3 +73,41 @@ export function resolveHorizontalGameMovement(
   }
   return {x,z,roof,blocked};
 }
+
+/** Crossing-aware vertical collision, independent of world rendering/LOD.
+ *
+ * Land on a solid top when descending across it; stop at a raised underside
+ * when ascending into it. Do not clamp arbitrary high-altitude flight and do
+ * not teleport players who started inside existing geometry.
+ */
+export type GameVerticalMovementResult=Readonly<{
+  y:number;landedOnSolid:boolean;hitCeiling:boolean;
+}>;
+
+export function resolveVerticalGameMovement(
+  currentFeetY:number,proposedFeetY:number,x:number,z:number,
+  colliders:readonly GameCollider[]
+):GameVerticalMovementResult{
+  if(currentFeetY===proposedFeetY||!colliders.length)
+    return {y:proposedFeetY,landedOnSolid:false,hitCeiling:false};
+  const descending=proposedFeetY<currentFeetY;
+  let y=proposedFeetY,landedOnSolid=false,hitCeiling=false;
+  for(const b of colliders){
+    if(Math.abs(x-b.x)>=b.hx+PLAYER_RADIUS||
+       Math.abs(z-b.z)>=b.hz+PLAYER_RADIUS)continue;
+    if(descending){
+      // First roof crossed wins, including fast falls from high altitude.
+      if(currentFeetY>=b.top-EPS&&proposedFeetY<b.top&&b.top>y){
+        y=b.top;landedOnSolid=true;
+      }
+    }else{
+      const underside=b.bottom-PLAYER_HEIGHT;
+      // Raised bridges, cave lintels and overhangs block upward flight.
+      // Already-intersecting geometry is left alone so players can escape.
+      if(currentFeetY<=underside+EPS&&proposedFeetY>underside&&underside<y){
+        y=underside;hitCeiling=true;
+      }
+    }
+  }
+  return {y,landedOnSolid,hitCeiling};
+}
