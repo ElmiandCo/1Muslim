@@ -51,6 +51,8 @@ for(let i=0;i<100;i++){
 const lobby=readFileSync(fileURLToPath(new URL("../app/components/SharedGameLobby.tsx",import.meta.url)),"utf8");
 assert.match(lobby,/resolveSweptVerticalGameMovement\(previousFeetY,p\.y,previousX,previousZ,p\.x,p\.z,collisionSolids\)/,
   "shared game must use swept fallback across existing worlds");
-assert.match(lobby,/directVertical\.hitCeiling\|\|directVertical\.landedOnSolid/,
-  "existing endpoint collision must remain the first choice");
+assert.match(lobby,/p\.x!==previousX\|\|p\.z!==previousZ\s*\?resolveSweptVerticalGameMovement/,
+  "moving players must use true interpolated roof crossing instead of endpoint-first ghost landing");
+assert.match(lobby,/:resolveVerticalGameMovement\(previousFeetY,p\.y,p\.x,p\.z,collisionSolids\)/,
+  "stationary players retain endpoint vertical collision");
 console.log("PASS: 10 swept collision cases + 100 index parity cases + 2 shared lobby wiring checks");
