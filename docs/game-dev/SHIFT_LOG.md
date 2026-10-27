@@ -1,5 +1,25 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 16:25–16:35 CDT (America/Chicago) · Bot B / Living Worlds — Ancient Egypt dock cargo and Nile wildlife
+
+**Detailed handoff:** [2026-10-27 Egypt docklife](shifts/2026-10-27-egypt-docklife.md). **Bot A starting handoff:** [Egypt portal and collision](shifts/2026-10-27-egypt-portal-colliders.md).
+
+| Contract | Evidence |
+| --- | --- |
+| Frozen preview ancestor | `fix/profile-scroll-match-umma-20261027` @ `c856491131bb0c8056693652f8e5e58a26836831` |
+| Actual GAME starting point | Bot A `game/world-engine-egypt-portal-colliders-20261027-1600` @ `a40c755e16257559758640e20dcbf58eb6d84f02` |
+| Working branch | `game/living-worlds-egypt-docklife-20261027-1630`; implementation `a5b6576f`, test `a6082993`, TS cleanup `8f6dbf68`, docs `02c82c49` |
+| Main/production read-only | `main` @ `82eddbf7`; `1muslim.live` READY at `dpl_DbtVZbtN1b7x5ccavV9PGxm1dZAY`; no main or production writes |
+| Exact changed paths | `app/components/AncientEgyptRiverScene.ts`, `scripts/game-ancient-egypt-smoke.mjs`, `docs/game-dev/shifts/2026-10-27-egypt-docklife.md`, this log. No site or shared-engine files. |
+| Implemented | Six faceless cargo crews unload limestone at three Nile docks; four fish and eight herons animate with distance LOD. West-bank paths stay clear of the riverbed. No new colliders or portal edits. |
+| Verification | **PASS:** 1,474 actual-scene V8 assertions, bank 240 draws, construction 222, dock 242, distant 0; all near samples below 1,000 draw budget. Committed Node smoke not run in full checkout; device FPS not measured. |
+| Build | Non-production Vercel preview `dpl_FkQ5pkYPDhi3KJj27GcN79VurEFg` created at `8f6dbf68`; confirm final status separately. |
+| Integration / rollback | Cherry-pick only 3 game code/test commits onto then-current site branch, not full branch; restore two game files to revert. Bot A owns portal/physics/LOD; Bot B owns scenery. |
+
+**World matrix:** Ancient Egypt **upgraded**; Moses/Parted Sea, Jurassic, Future/RealMecca, Makkah/Madinah/Nabawi/Hajj, Roman Judea/Jerusalem, Space/Moon/Blessed Chambers, Today/Belt Boyz **preserved**. Earlier Bot B Jurassic, Future and Roman side branches remain separate. **Next:** Bot A test Nile bank/cargo path and portal on device; Bot B next world-specific ecology slice. XP shop, blaster sound/aim, shield, held hand, current speaker and ten mosques remain pending.
+
+---
+
 
 ## 2026-10-27 · 16:02–16:07 CDT (America/Chicago) · Bot A / World Engine — Ancient Egypt portal, Nile terrain and stepped solids
 
