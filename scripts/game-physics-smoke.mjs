@@ -86,7 +86,7 @@ assert.ok(JURASSIC_COLLISION_INDEX.query(-1,1,-1,1).length<JURASSIC_COLLIDERS.le
 const oversized={x:0,z:0,hx:130,hz:90,bottom:20,top:25};
 const multiCell=buildStaticGameCollisionIndex([oversized,wall],32);
 assert.equal(multiCell.query(90,95,70,75).length,1,"wide collider spans cells");
-assert.equal(multiCell.query(-2,2,-2,2).length,1,"overlapping cells deduplicate colliders");
+assert.equal(multiCell.query(-40,40,-40,40).length,2,"overlapping cells deduplicate colliders");
 assert.equal(multiCell.query(500,510,500,510).length,0,"empty cells return no solids");
 assert.throws(()=>buildStaticGameCollisionIndex([wall],0),RangeError);
 let parityCases=0;
