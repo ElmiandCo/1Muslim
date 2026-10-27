@@ -14,6 +14,7 @@ import {TODAY_PROP_COLLIDERS,PROPHETIC_COLLISION_INDEX,createTodayCollisionSourc
 import {ROMAN_PORTAL,ROMAN_BOUNDS,romanJudeaCollisionIndex,renderRomanJudea} from "./RomanJudeaScene";
 import {renderLunarResearchLife} from "./LunarResearchScene";
 import {renderHajjPilgrims,HISTORICAL_HAJJ_LAYOUT,TODAY_HAJJ_LAYOUT} from "./HajjPilgrimScene";
+import {renderNabawiCongregation} from "./NabawiCongregationScene";
 
 // Keep Moses refuge collisions stable across frames; never cull physics with visual LOD.
 const SEA_COLLIDERS=partedSeaColliders();
@@ -439,6 +440,7 @@ export default function SharedGameLobby(){
       // Route stays within the existing historical alley; no collider or player physics changes.
       draw(vp,40,.045,0,5,.08,72,[.71,.59,.44]);
       renderHajjPilgrims((x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p.x,p.z,HISTORICAL_HAJJ_LAYOUT);
+      renderNabawiCongregation((x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p.x,p.z);
       // Historically interpretive Hijazi buildings with narrow, walkable lanes.
       for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.1;draw(vp,x,h/2,z,22,h,26,[.65+(i%3)*.04,.52,.37]);draw(vp,x,h+.2,z,23,.45,27,[.47,.37,.28]);draw(vp,x,2,z+13.04,2.5,3,.18,[.26,.18,.13]);}
       // Desert caravan road toward the separate Madinah settlement (scaled game distance).
