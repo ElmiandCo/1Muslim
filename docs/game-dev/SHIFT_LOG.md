@@ -1,5 +1,25 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 17:26–17:35 CDT (America/Chicago) · Bot B / Living Worlds — Egypt village porters and irrigated crops
+
+**Detailed handoff:** [Egypt village / irrigation](shifts/2026-10-27-egypt-village-1730.md). **Reviewed Bot A:** [fast descent/stars](shifts/2026-10-27-fast-descent-stars.md); [Egypt portal/solids](shifts/2026-10-27-egypt-portal-colliders.md). [Coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+| Contract | Evidence |
+| --- | --- |
+| Frozen preview baseline | `fix/profile-scroll-match-umma-20261027` @ `c856491`; `app/page.tsx` SHA identical to frozen preview |
+| Actual starting game branch | Bot A `game/world-engine-fast-descent-20261027-1700` @ `97df686a402d8a2bdd29ff17c257b06bcae5826b` (contains Bot B Egypt docklife @ `7f03f67`) |
+| Dedicated branch | `game/living-worlds-egypt-village-20261027-1730`; implementation `8bc190fc`, smoke `ed1f3ded`; documentation commits follow |
+| Read-only main | `main` @ `82eddbf7`; current site diverges from protected preview; no site, main or production writes |
+| Changed paths | `app/components/AncientEgyptRiverScene.ts`, `scripts/game-ancient-egypt-smoke.mjs`, `docs/game-dev/shifts/2026-10-27-egypt-village-1730.md`, this log; **no shared engine, portal or non-game changes** |
+| Implemented | Eight faceless, unarmed porters in collision-clear village lane; 24 irrigated grain/flax beds with gentle near-camera sway and three ground-level water rills. Existing boats, pyramids, palms, dock crews, fish, herons and return portal unchanged. |
+| Verification | **PASS:** 14/14 source/preservation checks; committed extended Node smoke **not executed** in checkout; mobile FPS/physics **not measured**. |
+| Preview build | Vercel preview `dpl_GYPdkL1b6QY761GJNCeuiiYx1VqG` at `ed1f3ded`, https://1muslim-j734yalu7-elmiandco.vercel.app ; Next.js compiled in 17.1s; type check **in progress** at initial status read. No production alias. |
+| Integration / rollback | Cherry-pick only the two game code/test commits, or narrowly transplant their additions into current Egypt scene; do **not** merge whole older-site-descended branch. Restore two game files from Bot A `97df686` to roll back. |
+
+**World matrix:** Ancient Egypt **upgraded**; Moses/Parted Sea, Jurassic, Future/RealMecca, Makkah/Madinah/Nabawi/Hajj, Roman Judea/Jerusalem, Moon/Space/Blessed Chambers and Today/Belt Boyz **preserved**. Next: device test Egypt alley/portal, coordinate Bot A physics/LOD; integrate a separate Jurassic/Future/Roman ecology slice later. XP shop, blaster sound/aim, force field, held hand, current speaker and ten mosques remain pending.
+
+---
+
 ## 2026-10-27 · 17:05–17:09 CDT (America/Chicago) · Bot A / World Engine — faster DOWN flight and progressive high-altitude stars
 
 **Detailed handoff:** [2026-10-27 fast descent and star LOD](shifts/2026-10-27-fast-descent-stars.md). **Bot B latest reviewed:** [Egypt docklife](shifts/2026-10-27-egypt-docklife.md). Game coordination: [issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
