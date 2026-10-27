@@ -37,6 +37,25 @@ assert.equal(resolveSweptVerticalGameMovement(9,1,-8,0,8,0,[{...slab,x:6,hx:.5}]
 assert.equal(resolveSweptVerticalGameMovement(9,1,0,0,0,0,[slab]).landedOnSolid,false,
   "stationary X/Z uses existing endpoint vertical resolver");
 
+// A roof/underside contact at frame start must not pin a player to an edge.
+const roofEdge=resolveSweptVerticalGameMovement(5,4,0,0,4,0,[slab]);
+assert.equal(roofEdge.landedOnSolid,false,"walking off a roof edge must release");
+assert.equal(roofEdge.y,4,"departing roof must allow gravity");
+assert.equal(roofEdge.x,4,"departing roof must keep horizontal movement");
+const ceilingEdge=resolveSweptVerticalGameMovement(.25,1,0,0,4,0,[slab]);
+assert.equal(ceilingEdge.hitCeiling,false,"ascending away from a ceiling edge must release");
+assert.equal(ceilingEdge.y,1,"departing ceiling must allow upward motion");
+assert.equal(resolveSweptVerticalGameMovement(5,4,0,0,.5,0,[slab]).landedOnSolid,true,
+  "standing on a roof while moving within its footprint must remain supported");
+assert.equal(resolveSweptVerticalGameMovement(5.01,4,0,0,4,0,[slab]).landedOnSolid,true,
+  "real roof crossing after the frame starts must still land");
+const indexedEdge=buildStaticGameCollisionIndex([slab],2);
+for(const [startY,endY,endX] of [[5,4,4],[.25,1,4],[5,4,.5],[5.01,4,4]]){
+ const direct=resolveSweptVerticalGameMovement(startY,endY,0,0,endX,0,[slab]);
+ const indexed=resolveSweptVerticalGameMovement(startY,endY,0,0,endX,0,indexedEdge);
+ assert.equal(JSON.stringify(indexed),JSON.stringify(direct),"roof/ceiling edge index parity");
+}
+
 const raised={x:0,z:0,hx:2.5,hz:2.5,bottom:1,top:6};
 const first=resolveSweptVerticalGameMovement(10,0,-8,0,8,0,[slab,raised]);
 assert.equal(first.y,6,"highest roof crossed first must win");
@@ -55,4 +74,4 @@ assert.match(lobby,/p\.x!==previousX\|\|p\.z!==previousZ\s*\?resolveSweptVertica
   "moving players must use true interpolated roof crossing instead of endpoint-first ghost landing");
 assert.match(lobby,/:resolveVerticalGameMovement\(previousFeetY,p\.y,p\.x,p\.z,collisionSolids\)/,
   "stationary players retain endpoint vertical collision");
-console.log("PASS: 10 swept collision cases + 100 index parity cases + 2 shared lobby wiring checks");
+console.log("PASS: roof/ceiling edge release + 100 index parity cases + shared lobby wiring");
