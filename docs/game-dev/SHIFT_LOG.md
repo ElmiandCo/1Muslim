@@ -11,7 +11,7 @@
 | Dedicated branch | `game/living-worlds-hyper-shield-aura-20261027-1830`; code/test commits `850d20dc`, `2d548b9a`, `c7b1e91e`. |
 | Game-only changes | New `gameHyperShieldAura.ts` (50/26/8/0 LOD sphere and local WebAudio), five narrowly targeted substitutions in `SharedGameLobby.tsx` (render/activation/impact), new `game-hyper-shield-aura-smoke.mjs`. |
 | Verified | 24 executed V8 source behavior assertions (14 unique), 11/11 game preservation markers, GitHub compare **only 3 game/test paths**. Committed Node smoke not executed in checkout; mobile/WebGL/audio not verified. |
-| Preview | Non-production Vercel build `dpl_7niL12b4mshsUhZD1ufH9hWe7KXm` initiated at `c7b1e91e`; final status requires check. **No production deployment.** |
+| Preview | Non-production Vercel build `dpl_7niL12b4mshsUhZD1ufH9hWe7KXm` **PASS / READY** at `c7b1e91e`; Next.js compiled in 12s and lint/type stage completed. **No production deployment.** |
 | Constraints | Existing exactly 10s local shield and 3s fade unchanged. **NOT server-authoritative**; audio/visual layer never grants damage immunity. No changes to site, physics, portal or world geometry. |
 | Next | Bot A: integrate only game helper/lobby hunks after review, test server-authoritative combat separately. Bot B: Great Pyramid centrality and other world scenery, verify device FPS/audio. |
 
