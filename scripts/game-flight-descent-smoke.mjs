@@ -1,0 +1,25 @@
+/** Run from repository root: node --experimental-strip-types scripts/game-flight-descent-smoke.mjs */
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {nextGameFlightVerticalSpeed,gameFlightStarBudget} from '../app/components/gameFlightVertical.ts';
+let checks=0;
+const check=(condition,message)=>{assert.ok(condition,message);checks++;};
+const base={velocity:0,altitude:40,deltaSeconds:.05,ascend:false,descend:false,boosted:false};
+check(nextGameFlightVerticalSpeed({...base,descend:true})<nextGameFlightVerticalSpeed(base),'Descend accelerates faster than coasting');
+check(nextGameFlightVerticalSpeed({...base,descend:true,ascend:true})===nextGameFlightVerticalSpeed({...base,descend:true}),'Descend wins simultaneous canvas ascend');
+check(nextGameFlightVerticalSpeed({...base,descend:true,boosted:true})<nextGameFlightVerticalSpeed({...base,descend:true}),'Boosted dive accelerates faster');
+check(nextGameFlightVerticalSpeed({...base,ascend:true})>0,'Ascend still climbs');
+check(nextGameFlightVerticalSpeed({...base,altitude:200000,ascend:true})>0,'High altitude flight continues');
+check(nextGameFlightVerticalSpeed({...base,velocity:-500,descend:true})===-55,'Normal dive terminal speed capped');
+check(nextGameFlightVerticalSpeed({...base,velocity:-500,descend:true,boosted:true})===-80,'Boosted dive terminal speed capped');
+check(nextGameFlightVerticalSpeed({...base,velocity:6,deltaSeconds:0})===6,'Zero timestep stable');
+check(nextGameFlightVerticalSpeed({...base,velocity:6,deltaSeconds:1,ascend:true})<=7,'Large timestep clamped');
+check(gameFlightStarBudget(0)===0&&gameFlightStarBudget(.05)===0,'No stars below atmosphere threshold');
+check(gameFlightStarBudget(.25)>0&&gameFlightStarBudget(.25)<gameFlightStarBudget(1),'Stars appear progressively');
+check(gameFlightStarBudget(1)===160&&gameFlightStarBudget(100)===160,'Maximum stars capped at 160');
+check(gameFlightStarBudget(NaN)===0,'Invalid atmosphere yields no draws');
+const lobby=readFileSync(fileURLToPath(new URL('../app/components/SharedGameLobby.tsx',import.meta.url)),'utf8');
+for(const token of ['nextGameFlightVerticalSpeed({','gameFlightStarBudget(atmosphere)','keys.current.descendTouch=true','keys.current.descendTouch=false','k.c||k.descendTouch','onLostPointerCapture','renderAncientEgyptRiverLife','EGYPT_COLLISION_INDEX','renderHajjPilgrims','renderNabawiCongregation','resolveSweptVerticalGameMovement'])check(lobby.includes(token),'Game wiring preserved: '+token);
+check(!lobby.includes('for(let i=0;i<270;i++)'),'270-draw starfield replaced with capped LOD');
+console.log(`PASS: ${checks} flight descent, atmosphere and game preservation assertions`);
