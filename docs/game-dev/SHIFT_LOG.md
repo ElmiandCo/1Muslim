@@ -2,6 +2,77 @@
 
 > **Protected integration rule:** This repository's website evolves independently. Never merge a whole game branch into main or production. Cherry-pick only reviewed game-path commits onto the *then-current* website integration branch. Preserve the newer feed, profile, Quran, navigation, GoLive, and site CSS. No automated production merge/deploy.
 
+## 2026-10-27 · 10:34–10:37 CDT (America/Chicago) · Bot B / Living Worlds — Moses world connected to shared game
+
+### Provenance and strict no-regression gate
+
+| Contract | Verified source / action |
+| --- | --- |
+| Original protected baseline | `fix/profile-scroll-match-umma-20261027` @ **`c856491131bb0c8056693652f8e5e58a26836831`**; unchanged |
+| Direct game-only starting point | Latest Bot A `game/world-engine-jurassic-solids-20261027-1000` @ **`9828f3478f304af86144311a3767fcf232ba0de6`**, descendant of protected baseline; preserves Bot A swept movement, Jurassic/Future solids, vertical landing, LOD, flight |
+| Working branch | **`game/living-worlds-moses-playable-20261027-1100`**, created from A's exact branch tip; not from an old Moses lobby |
+| Last implementation + smoke-test SHA | **`0dedf91acf75c38822b78a82fd5dff6f6376d390`** (documentation commit follows) |
+| Bot B module source | Previous independent Moses recovery `game/living-worlds-moses-shoals-20261027-0930` @ `d43998ea6ccd2aa9678445d5bc585d6926fbb8ab`; earlier original `titan/parted-sea-world` consulted via prior handoff |
+| Other shift's handoff read | Bot A 10:00 shift log on `game/world-engine-jurassic-solids-20261027-1000`, Bot B 09:30 Moses log, Bot B 08:30 Future gardens log, game issue #126 |
+| Current main inspected before edits | `main` @ **`21119c711beda86de3f7766b18bdb0e1c39028d0`**; differs from frozen baseline in six **site-only** paths. No main write |
+| Current production inspected before edits | Vercel `dpl_3KxxhG8pRxuy64rN4D1Jn9jzgPHy` **READY**, `main` @ `21119c7`. No production write |
+| Layout contracts inspected | `app/page.tsx` identical main/frozen (blob `92ca9b5`); `SharedGameLobby.module.css` identical (blob `952bdfc`); `CanvasSecondaryApp.tsx` main blob `ac34d6b` vs frozen `4db1706`. **None edited or copied** |
+| Exact changed paths | **`app/components/PartedSeaScene.ts` (new game module), `app/components/SharedGameLobby.tsx` (game-only minimal wiring atop A), `scripts/game-moses-smoke.mjs` (new test), `docs/game-dev/SHIFT_LOG.md` (this log)** |
+| Forbidden paths | **None touched**: no app pages, site CSS, navigation, feed, profile, Qur'an, GoLive, Supabase, main, production, Belt Boyz geometry, Masjid an-Nabawi or Bot A physics modules |
+
+### Implemented this shift — existing Moses world now selectable and rendered (not merely proposed)
+
+**Before:** The world selector showed **Time of Moses — Preview pending**; the original 2,743m crossing with water walls, NPCs, refuges and portals existed only in isolated `PartedSeaScene.ts` on a different branch, not reachable from the current shared game. Bot A's newest engine had no Moses flag, movement bounds, render switch or NPC updates.
+
+**After:** The existing `Time of Moses` entry now enters a **real playable Parted Sea environment** through the current shared game engine. The same player, avatar, camera, touch/keyboard movement, flight, existing blaster shots, multiplayer presence and return-to-main control are reused. No replacement game engine or stale app UI was imported.
+
+- **`PartedSeaScene.ts`**: preserved `SEA_LENGTH` 2743, 21.34m-wide dry crossing, animated water walls, entrance/far-shore portal arches, nine rocky refuge volumes, 25 generic travelers, 22 initial pursuing soldiers, bounded reinforcements, projectile hits, 26 five-fish shoals with bubbles and near-wall foam. Added **distance culling for hit sparks** so distant fights no longer draw 14 offscreen impact particles. No prophet depiction or invented historical certainty; Sinai is a labeled **future destination**, not a finished map.
+- **`SharedGameLobby.tsx` / world entry**: `partedSeaWorldRef`, `partedSeaState`, `enterPartedSeaWorld`, `exitPartedSeaWorld`, selector label and return button. Entry starts at the corridor midpoint looking toward the far shore; exit returns to Today's spawn. Clears old shots and disables incompatible ship/plane/Moon/Council modes at entry.
+- **`SharedGameLobby.tsx` / movement**: `SEA_BOUNDS` enforces dry passage; static cached `SEA_COLLIDERS` from the original nine refuge boxes is passed into **Bot A's existing** `resolveHorizontalGameMovement` and `resolveVerticalGameMovement`. Sea floor = 0. Today-only city props, wildlife, bridge-fall reset, vehicles, shop prompts, portal overlays and worker interactions are excluded while inside Moses; all other worlds keep their previous branches.
+- **`SharedGameLobby.tsx` / combat + rendering**: projectiles now remember their previous X/Y/Z for segment hits; `updatePartedSea` advances NPCs and consumes confirmed shots; three soldier strikes respawn at the crossing midpoint; multiplayer blaster damage also respawns inside the sea rather than Today's city. `renderPartedSea` draws through the existing WebGL renderer, with a sea-specific sky color and same avatar/peer rendering. Reaching the far shore shows a one-time destination hint.
+- **`scripts/game-moses-smoke.mjs`**: added reproducible source-based checks for bounds, nine solid refuges, 25 travelers, 22 soldiers, traveler movement, swept aimed projectile hit, LOD/offscreen impact culling, world selector, return control, respawn and preservation of A physics + Nabawi/Belt Boyz source markers.
+
+### Verification and honest limitations
+
+| Check | Result |
+| --- | --- |
+| Latest main/production/site contract vs frozen baseline | **PASS, read-only**; identified six site-path differences and preserved A's direct game-only descendant |
+| GitHub diff vs latest A tip | **PASS:** only the three game/test paths listed above before this log; A physics files untouched |
+| Moses smoke test in Vercel sandbox at `0dedf91` | **PASS:** `node scripts/game-moses-smoke.mjs` (bounds, NPCs, swept shot, refuge collision, draw culling, wiring/respawn assertions) |
+| Existing Bot A physics regression suite | **PASS:** `node scripts/game-physics-smoke.mjs` reports **23 assertions passed** |
+| Strict isolated TypeScript type check | **PASS:** `tsc --strict --noEmit --target ES2022 --module commonjs --skipLibCheck --lib ES2022,DOM` for `PartedSeaScene.ts`, `gamePhysics.ts`, `gameWorldColliders.ts`, `JurassicScene.ts`, `FutureCityScene.ts`; exit 0 |
+| Next.js full preview build | **READY** for initial wiring `731a7d3` and foam/impact culling `73ad3c2` in automatic non-production Vercel; latest `0dedf91` preview was still building at log creation. Check final deployment before declaring final full build passed |
+| Real in-browser world selection / iPhone FPS / multiplayer combat | **NOT VERIFIED**; source smoke + build are not a substitute for touch controls, camera, portal interaction or GPU profiling |
+| Persistence and authority | NPC combat and waves remain **client-local**. No server-authoritative combat, XP economy or cross-client soldier synchronization was implemented |
+| Performance | Cached 9 refuge colliders; existing wall/shoal distance culling; sparks now culled outside 190m. Real device FPS and network traffic still unmeasured |
+
+### World-by-world progress checklist and cross-shift coverage
+
+| World | Verified current state in this branch | Next action |
+| --- | --- | --- |
+| **Moses / Parted Sea** | **THIS SHIFT IMPLEMENTED:** existing module connected to world selector, movement, Bot A collision, NPC simulation, combat, renderer, return button. 26 fish shoals + foam retained; impact culling added. | Real iPhone and desktop walkthrough, check near/far arches and 2,743m traversal; add contextual audio and improve Sinai destination without pretending it's historically certain |
+| **Jurassic** | Bot A current branch preserves dinosaur world and adds tree/rock/cave collision. Bot B's earlier 180 ferns + 28 dragonflies remain on **separate** branch, not copied here | Selective integration of B ecology and actual Apex cave/LOD mobile tests |
+| **Future / Futuristic / RealMecca concept** | Bot A current branch preserves towers/skyways and solid collisions; Bot B's six luminous gardens/42 blooms/6 pollinators remain **separate**, not copied here | Cherry-pick only garden scene diff after collider clearance review; mobile lighting/FPS |
+| **Muhammad ﷺ era / Makkah–Madinah** | Existing interpretive Kaaba, Madinah and Masjid an-Nabawi prayer controls **preserved, unchanged** | Seven tawaf circuits then Safa–Marwa and praying congregations, with respectful generic NPCs; no prophets depicted |
+| **Today / Main Street / Belt Boyz / five districts** | Current A physics and **existing** roofless Belt Boyz Council, shop, meeting controls, Nile Quarter, Courtyard City, Skyline City, Beach City, Grand Metro **unchanged** | Richer XP store, stronger aimed blasters/sound, visible force-field, persistent raise-hand pose, speaker indicator |
+| **Jesus / Roman Judea / Jerusalem** | Selector remains **Preview pending**. Older `elite/roman-judea-world` modifies `SharedGameLobby.tsx` and `app/page.tsx` and diverges heavily from frozen baseline; **never merge wholesale** | Inspect old interpretive scene geometry, extract game-only module, connect with minimal current-lobby patch |
+| **Space / Moon / Blessed Chambers** | Existing ship, Moon, EVA and flight behavior preserved. No separately verified Blessed Chambers module | Distinct lunar ambience, flight/vehicle collision testing with A |
+| **Other districts / world portals** | Existing routing unchanged except enabling Moses in the existing picker | Continue world-specific architecture, plants, NPCs, sound and interactive details without replacing existing assets |
+| **Ten enterable high-ceiling mosques** | **Not implemented** in this shift; existing Nabawi landmark preserved | Plan a distinct geometry+collision module with A and deliver one tested mosque at a time |
+
+### Integration, rollback, Bot A coordination and next shift
+
+1. **No production merge/deployment.** This branch inherits the *frozen* site's older snapshot, so it must **not** be merged wholesale into current `main` or production. Automatic Vercel preview builds are non-production only.
+2. **Selective site integration:** At approved integration time, fetch the newest site head and Bot A head again. Apply A's game physics/LOD commits first if absent; then selectively bring the **game-only** changes in `PartedSeaScene.ts` and the minimal Moses-specific hunks in `SharedGameLobby.tsx` (do not replace the entire shared lobby if newer A work exists). Bring the smoke script optionally. Never copy older `app/page.tsx`, `CanvasSecondaryApp.tsx`, profile, feed, GoLive, CSS or other site files.
+3. **Conflict gate:** `git diff --name-only` must show only reviewed game paths. If A added further collision/flight changes to `SharedGameLobby.tsx`, manually apply the Moses import/state/entry/exit, sea bounds/solids, update/render and return-picker hunks onto A's newest file, then rerun both smoke tests and full build.
+4. **Rollback:** On an integration branch, revert the isolated Moses module addition and the Moses-only lobby wiring (or revert code commits `2d48b52`, `731a7d3`, `73ad3c2`, `ab753ac` and smoke-test commits as appropriate). Leave A physics and every unrelated world intact.
+5. **Next Bot B priority:** real preview walk-through and iPhone FPS; then inspect/recover `elite/roman-judea-world` on a **new** game-only branch. Do not alter A's physics files; coordinate A for 2,743m traversal and collision broadphase.
+6. **Longer backlog, not completed:** server-authoritative XP shop, blaster audio/accuracy, shields, persistent hand pose, voice/speaker indicator, Hajj/sa'i/prayer NPCs, ten large enterable mosques and unique life in remaining worlds. Do not claim these are finished.
+
+**Cross references:** [Bot A 10:00 branch](https://github.com/ElmiandCo/1Muslim/tree/game/world-engine-jurassic-solids-20261027-1000) · [Bot B 09:30 Moses source](https://github.com/ElmiandCo/1Muslim/blob/game/living-worlds-moses-shoals-20261027-0930/docs/game-dev/SHIFT_LOG.md) · [Bot B 08:30 Future gardens](https://github.com/ElmiandCo/1Muslim/tree/game/living-worlds-future-gardens-20261027-0830) · [Game master issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+---
+
 ## 2026-10-27 · 09:59–10:06 CDT (America/Chicago) · Bot A / World Engine — Jurassic solids, Future skyways and vertical collision
 
 ### Source of truth, isolation and coordination
