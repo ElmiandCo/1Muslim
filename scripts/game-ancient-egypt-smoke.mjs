@@ -4,8 +4,8 @@
 import assert from "node:assert/strict";
 import {
  EGYPT_BOUNDS,EGYPT_PALMS,EGYPT_WORKERS,EGYPT_BOATS,EGYPT_BIRDS,
- EGYPT_RIVER_WIDTH,EGYPT_PYRAMIDS,EGYPT_DOCKS,
- egyptRiverCenterX,ancientEgyptSolidProps,egyptWorkerPose,egyptBoatPose,
+ EGYPT_RIVER_WIDTH,EGYPT_PYRAMIDS,EGYPT_DOCKS,EGYPT_DOCK_CREWS,EGYPT_RIVER_WILDLIFE,
+ egyptRiverCenterX,ancientEgyptSolidProps,egyptWorkerPose,egyptBoatPose,egyptDockWorkerPose,
  renderAncientEgyptRiverLife
 } from "../app/components/AncientEgyptRiverScene.ts";
 let checks=0;
@@ -57,5 +57,24 @@ ok(bank.count<1000&&construction.count<1000,"Mobile draw budget capped per scene
 const moving=capture(33000,140,120);
 ok(moving.count>0,"Animated scene updates without throwing");
 ok(EGYPT_BOUNDS.minZ<EGYPT_BOUNDS.maxZ,"World bounds sane");
+ok(EGYPT_DOCK_CREWS.length===EGYPT_DOCKS.length*2,"Two unloading workers per dock");
+ok(EGYPT_RIVER_WILDLIFE.length===12,"River wildlife count is bounded");
+for(const now of [0,1000,4500,9000,25000]){
+ for(let i=0;i<EGYPT_DOCK_CREWS.length;i++){
+  const w=egyptDockWorkerPose(now,i);
+  const crew=EGYPT_DOCK_CREWS[i],z=EGYPT_DOCKS[crew.dockIndex]+crew.offset;
+  const dockX=egyptRiverCenterX(z)-EGYPT_RIVER_WIDTH/2-5;
+  ok(Number.isFinite(w.x+w.z+w.heading+w.step),"Dock worker pose is finite");
+  ok(w.x<=dockX&&w.x>=dockX-15,"Unloading remains on west bank");
+  ok(w.z===z,"Unloading path stays at its assigned dock");
+ }
+}
+ok(egyptDockWorkerPose(0,0).carrying&&!egyptDockWorkerPose(4500,0).carrying,
+ "Cargo carried toward shore, empty-handed on return");
+const dock=EGYPT_DOCKS[1],dockX=egyptRiverCenterX(dock)-EGYPT_RIVER_WIDTH/2-5;
+const dockScene=capture(1200,dockX,dock);
+ok(dockScene.count>20&&dockScene.count<1000,"Dock ambience stays within draw budget");
+const wildlife=EGYPT_RIVER_WILDLIFE.map(w=>w.kind);
+ok(wildlife.includes("fish")&&wildlife.includes("heron"),"Two Nile wildlife types present");
 console.log("PASS Ancient Egypt riverlife smoke:",checks,"assertions; bank draws",bank.count,
  "construction draws",construction.count,"far draws",far.count);
