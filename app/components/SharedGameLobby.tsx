@@ -10,6 +10,7 @@ import {SEA_BOUNDS,SEA_SPAWN_Z,createPartedSeaState,partedSeaColliders,updatePar
 import {resolveHorizontalGameMovement,resolveVerticalGameMovement,resolveSweptVerticalGameMovement,resolveSweptSideGameMovement} from "./gamePhysics";
 import {FUTURE_COLLISION_INDEX,JURASSIC_COLLISION_INDEX} from "./gameWorldColliders";
 import {calculateGameFlightPose} from "./gameFlightPose";
+import {nextGameFlightVerticalSpeed,gameFlightStarBudget} from "./gameFlightVertical";
 import {TODAY_PROP_COLLIDERS,PROPHETIC_COLLISION_INDEX,createTodayCollisionSource} from "./gameTodayColliders";
 import {ROMAN_PORTAL,ROMAN_BOUNDS,romanJudeaCollisionIndex,renderRomanJudea} from "./RomanJudeaScene";
 import {renderLunarResearchLife} from "./LunarResearchScene";
@@ -393,10 +394,10 @@ export default function SharedGameLobby(){
    const skyLanding=!egyptWorldRef.current&&p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=jurassicWorldRef.current?jurassicTerrain(p.x,p.z):egyptWorldRef.current?egyptTerrainFloor(p.x,p.z):futureWorldRef.current||propheticWorldRef.current||partedSeaWorldRef.current||romanWorldRef.current?0:onRoad?bridgeHeight:terrain(p.x,p.z);const floor=Math.max(futureWorldRef.current?futureSkywayFloor(p.x,p.y,p.z):skyLanding?45:roadFloor,roof,roadFloor);
    if(!jurassicWorldRef.current&&!futureWorldRef.current&&!propheticWorldRef.current&&!partedSeaWorldRef.current&&!egyptWorldRef.current&&!romanWorldRef.current&&!lunar&&!eva&&!ship.current.inSpace&&p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
    const previousFeetY=p.y;
-   if(eva){p.flying=true;const fall=evaFall.current;const thrust=(k.Space||k.ascend?1:0)-(k.c?1:0);if(p.y<1300)fall.active=true;if(fall.active){fall.speed=clamp(fall.speed+20*dt-thrust*8*dt,0,145);p.y-=fall.speed*dt;if(p.y<=Math.max(terrain(p.x,p.z),0)+2){p.y=Math.max(terrain(p.x,p.z),0)+2;setEva(false);setFlying(false);ship.current.inSpace=false;fall.active=false;setHint("🌍 Atmospheric re-entry complete. You landed back on Earth.");}}else p.y+=thrust*5.5*dt;}else if(ship.current.active){p.flying=true;}else if(plane.current.active){
+   if(eva){p.flying=true;const fall=evaFall.current;const thrust=(k.Space||k.ascend?1:0)-(k.c||k.descendTouch?1:0);if(p.y<1300)fall.active=true;if(fall.active){fall.speed=clamp(fall.speed+20*dt-thrust*(thrust<0?55:8)*dt,0,145);p.y-=fall.speed*dt;if(p.y<=Math.max(terrain(p.x,p.z),0)+2){p.y=Math.max(terrain(p.x,p.z),0)+2;setEva(false);setFlying(false);ship.current.inSpace=false;fall.active=false;setHint("🌍 Atmospheric re-entry complete. You landed back on Earth.");}}else p.y+=thrust*(thrust<0?24:5.5)*dt;}else if(ship.current.active){p.flying=true;}else if(plane.current.active){
      const takeoff=plane.current.speed>24;
-     const climb=takeoff&&!!(k.Space||k.ascend),descend=!!k.c;
-     p.y=clamp(p.y+(climb?12:descend?-10:p.y>4?-.8:0)*dt,3,180);
+     const climb=takeoff&&!!(k.Space||k.ascend),descend=!!(k.c||k.descendTouch);
+     p.y=clamp(p.y+(descend?-22:climb?12:p.y>4?-.8:0)*dt,3,180);
      p.flying=true;
    }else if(lunar){
      // Moon gravity is approximately one sixth of the Earth game gravity.
@@ -405,7 +406,7 @@ export default function SharedGameLobby(){
      velocity-=2.83*dt;
      p.y=Math.max(0,p.y+velocity*dt);
      if(p.y<=0&&velocity<0)velocity=0;
-   }else if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?(p.y>85?19.5:13):descend?-19:-5)*dt,-22,p.y>85?10.5:7);p.y=Math.max(floor,p.y+velocity*dt);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
+   }else if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!(k.c||k.descendTouch);velocity=nextGameFlightVerticalSpeed({velocity,altitude:p.y,deltaSeconds:dt,ascend,descend,boosted});p.y=Math.max(floor,p.y+velocity*dt);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
    else{if(crashUntil&&now>crashUntil){crashUntil=0;setCrashed(false)}velocity=Math.max(-35,velocity-17*dt);if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}flightPose.current.landing=now;p.y=floor;velocity=0}}
    // Horizontal collision ran at the starting height. Catch a sidewall
    // entered later in a diagonal descent/ascent before resolving the roof.
@@ -504,7 +505,7 @@ export default function SharedGameLobby(){
       for(let i=0;i<18;i++){const x=-200+(i%9)*48,z=190+Math.floor(i/9)*42;draw(vp,x,1.8,z,1.1,3.6,1.1,[.35,.23,.13]);draw(vp,x,3.8,z,4,.35,4,[.72,.58,.34]);}
     }else{
     // Procedural deep-space starfield: deterministic positions around the camera, no external assets.
-    if(atmosphere>.05){for(let i=0;i<270;i++){const theta=(i*2.399963229728653)% (Math.PI*2),phi=Math.acos(1-2*((i*.61803398875)%1));const rr=4200;const sx=p.x+rr*Math.sin(phi)*Math.cos(theta),sy=p.y+rr*Math.cos(phi),sz=p.z+rr*Math.sin(phi)*Math.sin(theta);const twinkle=.6+.4*Math.sin(now*.0008+i*7.1);draw(vp,sx,sy,sz,2+i%3,2+i%3,2+i%3,[.7+twinkle*.25,.78+twinkle*.2,1],atmosphere);}}
+    const starCount=gameFlightStarBudget(atmosphere);if(starCount>0){for(let i=0;i<starCount;i++){const theta=(i*2.399963229728653)% (Math.PI*2),phi=Math.acos(1-2*((i*.61803398875)%1));const rr=4200;const sx=p.x+rr*Math.sin(phi)*Math.cos(theta),sy=p.y+rr*Math.cos(phi),sz=p.z+rr*Math.sin(phi)*Math.sin(theta);const twinkle=.6+.4*Math.sin(now*.0008+i*7.1);draw(vp,sx,sy,sz,2+i%3,2+i%3,2+i%3,[.7+twinkle*.25,.78+twinkle*.2,1],atmosphere);}}
     if(moonModeRef.current.landed){
       // Moon terrain, settlement and observatory: one world unit is approximately one meter.
       draw(vp,0,-1,0,720,2,720,[.35,.37,.42]);
@@ -1139,6 +1140,8 @@ export default function SharedGameLobby(){
   const keyUp=(e:KeyboardEvent)=>{const key=e.key.length===1?e.key.toLowerCase():e.key;keys.current[key===" "?"Space":key]=false};
   window.addEventListener("keydown",keyDown);window.addEventListener("keyup",keyUp);return()=>{window.removeEventListener("keydown",keyDown);window.removeEventListener("keyup",keyUp)};
  },[toggleFly,nearVehicle]);
+  // Prevent held touch controls or keyboard descend from sticking after app switch.
+  useEffect(()=>{const release=()=>{keys.current.descendTouch=false;keys.current.ascend=false;keys.current.c=false;keys.current.Space=false};window.addEventListener("blur",release);return()=>window.removeEventListener("blur",release)},[]);
  const stopVoice=useCallback(async()=>{peerVoiceTarget.current=null;const room=voiceRoom.current;voiceRoom.current=null;setVoiceOn(false);setAudioMode("off");setProximityMicEnabled(false);setProximitySpeaking(false);setAudioRoomLocked(false);for(const el of voiceTracks.current.values())el.remove();voiceTracks.current.clear();if(room)await room.disconnect()},[]);
  const startVoice=useCallback(async()=>{if(voiceBusy||voiceRoom.current)return;setVoiceBusy(true);try{
   const response=await fetch("/api/game-voice/token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(peerVoiceTarget.current?{mode:"peer",peerId:peerVoiceTarget.current}:{})});const info=await response.json();
@@ -1211,6 +1214,7 @@ export default function SharedGameLobby(){
   {nearbyPlayers.length>0&&<div aria-label="Nearby players" style={{position:"absolute",top:60,left:"50%",transform:"translateX(-50%)",zIndex:18,display:"flex",flexDirection:"column",gap:3,maxWidth:"min(210px,46vw)",pointerEvents:"auto"}}>{nearbyPlayers.map(p=><div key={p.id} style={{padding:"2px 6px",borderRadius:10,background:"rgba(4,37,40,.22)",border:"1px solid rgba(177,235,220,.14)",backdropFilter:"blur(8px)",color:"#fff",fontSize:11,textAlign:"center"}}><button type="button" onClick={()=>p.feet<=5&&setSelectedNearbyPlayer(v=>v===p.id?null:p.id)} aria-label={p.feet<=5?"Open "+p.name+" profile card":p.name+" is "+Math.round(p.feet)+" feet away"} style={{border:0,background:"transparent",color:"white",fontSize:11,cursor:p.feet<=5?"pointer":"default"}}>👤 {p.name} · {Math.round(p.feet)} ft</button>{p.feet<=5&&selectedNearbyPlayer===p.id&&<div style={{display:"flex",gap:5,justifyContent:"center",paddingTop:4}}><button type="button" disabled title="Follow integration pending">＋ Follow</button><button type="button" disabled title="Persistent direct-message integration pending">✉ DM</button></div>}</div>)}</div>}
   <div style={{position:"absolute",right:12,bottom:82,zIndex:12,display:"flex",flexDirection:"column-reverse",gap:6,alignItems:"flex-end"}}>
     
+    {(flying||eva||piloting)&&!shipOn&&!moonWalk&&<button type="button" aria-label="Hold to descend faster" title="Hold to descend · C on keyboard" onPointerDown={e=>{if(e.button!==0)return;e.preventDefault();e.stopPropagation();keys.current.descendTouch=true;e.currentTarget.setPointerCapture(e.pointerId)}} onPointerUp={()=>{keys.current.descendTouch=false}} onPointerCancel={()=>{keys.current.descendTouch=false}} onLostPointerCapture={()=>{keys.current.descendTouch=false}} onKeyDown={e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();keys.current.descendTouch=true}}} onKeyUp={e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();keys.current.descendTouch=false}}} onBlur={()=>{keys.current.descendTouch=false}} onContextMenu={e=>e.preventDefault()} style={{pointerEvents:"auto",touchAction:"none",width:54,height:54,borderRadius:16,background:"linear-gradient(145deg,rgba(16,82,103,.87),rgba(6,39,61,.94))",border:"1px solid rgba(166,228,249,.72)",boxShadow:"0 3px 15px #0006",color:"#fff",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:0}}><span aria-hidden="true" style={{fontSize:27,lineHeight:1}}>⬇</span><span aria-hidden="true" style={{fontSize:9,fontWeight:800,letterSpacing:".08em"}}>DOWN</span></button>}
     <button type="button" onClick={()=>setShield(v=>!v)} aria-label={shield?"Disable defense shield":"Activate defense shield"} aria-pressed={shield} style={{borderRadius:"50%",width:42,height:42,background:shield?"rgba(36,148,255,.58)":"rgba(12,77,138,.30)",border:"1px solid rgba(141,214,255,.42)",color:"#e5f8ff",fontSize:21,backdropFilter:"blur(12px)"}}>🛡️</button>
     <button type="button" onClick={()=>{setEmote("hand");emoteUntil.current=performance.now()+5000;if(meetingSeatRef.current!==null)setMeetingGesture("hand");}} aria-label="Raise hand gesture" style={{borderRadius:"50%",width:46,height:46,background:"rgba(9,92,76,.30)",color:"#fff",border:"1px solid rgba(231,196,119,.48)",backdropFilter:"blur(12px)",fontSize:23}}>🙋</button>
     {romanWorld&&<button type="button" title={romeCity?"Return to Jerusalem":"Travel to ancient Rome"} aria-label={romeCity?"Travel to Jerusalem":"Travel to ancient Rome"} onClick={travelRomanPortal} style={{width:46,height:46,borderRadius:"50%",background:"rgba(94,69,35,.76)",color:"#ffe7a7",border:"1px solid #d5b77b",fontSize:23,backdropFilter:"blur(10px)"}}>🏛️</button>}
