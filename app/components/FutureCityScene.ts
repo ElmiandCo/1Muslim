@@ -11,6 +11,55 @@ export const FUTURE_SKYWAYS=[-220,-132,132,220].map(z=>({x:0,z,y:32,width:85,dep
 export const futureSkywayFloor=(x:number,y:number,z:number)=>
  FUTURE_SKYWAYS.some(w=>Math.abs(x-w.x)<w.width/2&&Math.abs(z-w.z)<w.depth/2&&y>=w.y-.6&&y<=w.y+2.5)?32:-Infinity;
 type Draw=(vp:number[],x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number[],alpha?:number,angle?:number)=>void;
+
+/**
+ * Decorative, non-solid bioluminescent gardens in the existing Future City.
+ * Static coordinates deliberately avoid tower footprints, skyway decks and
+ * the return portal. Keep them independent of the shared physics engine.
+ */
+const FUTURE_GARDEN_SITES=[
+ {x:-72,z:0,tint:0},{x:72,z:0,tint:1},{x:0,z:72,tint:2},
+ {x:-122,z:0,tint:2},{x:122,z:0,tint:0},{x:0,z:112,tint:1},
+] as const;
+const FUTURE_GARDEN_BLOOMS=Array.from({length:7},(_,i)=>{
+ const angle=i*2.399963229728653, radius=1.8+(i%3)*1.45;
+ return {dx:Math.cos(angle)*radius,dz:Math.sin(angle)*radius,phase:i*1.73};
+});
+export function renderFutureGardens(vp:number[],draw:Draw,playerX:number,playerZ:number,now:number){
+ const palette=[[.15,.93,.89],[.98,.73,.34],[.72,.44,.99]] as const;
+ for(let siteIndex=0;siteIndex<FUTURE_GARDEN_SITES.length;siteIndex++){
+  const site=FUTURE_GARDEN_SITES[siteIndex];
+  const distance=Math.hypot(playerX-site.x,playerZ-site.z);
+  if(distance>150)continue; // Garden-level LOD; no per-frame allocations.
+  const near=distance<84,detail=distance<55;
+  const tint=palette[site.tint];
+  // Ground-level reflective basin: thin enough not to obstruct player movement.
+  draw(vp,site.x,.035,site.z,14,.06,14,[.035,.13,.19],.94);
+  draw(vp,site.x,.074,site.z,12,.025,12,[.13,.53,.64],.35);
+  for(let i=0;i<FUTURE_GARDEN_BLOOMS.length;i++){
+   const bloom=FUTURE_GARDEN_BLOOMS[i],x=site.x+bloom.dx,z=site.z+bloom.dz;
+   const sway=near?Math.sin(now*.00135+bloom.phase+siteIndex)*.18:0;
+   draw(vp,x,.65,z,.14,1.12,.14,[.12,.55,.48],.95);
+   draw(vp,x+sway,1.28,z-sway*.65,.55,.36,.55,tint,.84);
+   if(detail){
+    for(let petal=0;petal<4;petal++){
+     const a=petal*Math.PI/2+now*.0002,px=Math.cos(a)*.43,pz=Math.sin(a)*.43;
+     draw(vp,x+sway+px,1.28,z-sway*.65+pz,.38,.18,.38,petal%2?tint:[.72,.98,.9],.78);
+    }
+   }
+  }
+  // Small hovering pollinators; their loops are visual-only, not combat targets.
+  if(near){
+   const orbit=now*.0008+siteIndex*1.7;
+   const bx=site.x+Math.cos(orbit)*4.2,bz=site.z+Math.sin(orbit)*4.2;
+   const by=2.6+Math.sin(now*.002+siteIndex)*.36;
+   draw(vp,bx,by,bz,.43,.24,.65,[.12,.25,.39],.94,orbit);
+   draw(vp,bx-.44,by,bz,.5,.06,.38,tint,.62,orbit);
+   draw(vp,bx+.44,by,bz,.5,.06,.38,tint,.62,orbit);
+  }
+ }
+}
+
 export function renderFutureWorld(vp:number[],draw:Draw,playerX:number,playerZ:number,now:number){
  const visible=(x:number,z:number,r=390)=>Math.hypot(playerX-x,playerZ-z)<r;
  const cyan=[.13,.9,.99],gold=[1,.71,.28],violet=[.69,.35,.98];
@@ -31,6 +80,8 @@ export function renderFutureWorld(vp:number[],draw:Draw,playerX:number,playerZ:n
   draw(vp,x,.18,z,1.1,.2,4.5,i%2?cyan:gold,.75,-a);
   if(i%4===0){draw(vp,x,3.2,z,.6,6,.6,[.16,.3,.45]);draw(vp,x,6.3,z,2,.35,2,cyan,.9);}
  }
+ // Future plaza's living gardens use distance-based detail without new colliders.
+ renderFutureGardens(vp,draw,playerX,playerZ,now);
  // Tall tower clusters. Geometry, trims, and windows are distance-culled.
  for(const t of FUTURE_TOWERS){
   if(!visible(t.x,t.z))continue;
