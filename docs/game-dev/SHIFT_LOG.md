@@ -36,7 +36,7 @@
 | --- | --- |
 | GitHub compare against direct Bot B parent | **PASS** before log: exactly 3 paths, `SharedGameLobby.tsx`, new `gameTodayColliders.ts`, new smoke script; no non-game paths |
 | Initial non-production preview | **FAILED** at commit `2f5a148`: parser caught `z:-380-row*40` where a local variable declaration needed `z=-380-row*40`. This was corrected in game-only commit **`3970595`**; do not use the failed preview |
-| Corrected non-production preview | **Build in progress at initial log writing**: `dpl_C1Xk3x24anV1MbVq6FW2AKLUZwUB` at `https://1muslim-jfix7mwp4-elmiandco.vercel.app`; check final status below or on Vercel before calling it READY |
+| Corrected non-production preview | **PASS / READY** for corrected code commit `3970595` at non-production deployment `dpl_C1Xk3x24anV1MbVq6FW2AKLUZwUB` ([preview](https://1muslim-jfix7mwp4-elmiandco.vercel.app)). Vercel logged successful Next.js compilation, type/lint checking, build completion and deployment completion. Existing CSS/autoprefixer warnings were nonfatal; this is not a real-device gameplay test |
 | Reproducible smoke script | **Committed but not executed in a full repository checkout**. Run `node scripts/game-today-collision-smoke.mjs` and existing `node scripts/game-physics-smoke.mjs` before integration; do not claim test success without execution |
 | Mobile/browser gameplay | **NOT VERIFIED**: device FPS, prop break/repair multiplayer sync, roof/bridge traversal, historical spawn/portal, office entry and collisions require manual testing |
 | Regression scope | No modifications to existing gamePhysics, flight pose, Jurassic, Future, Moses, Roman, Space, Nabawi scene renderers, or Belt Boyz office geometry |
