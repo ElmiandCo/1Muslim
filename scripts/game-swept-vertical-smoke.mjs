@@ -45,8 +45,14 @@ assert.equal(roofEdge.x,4,"departing roof must keep horizontal movement");
 const ceilingEdge=resolveSweptVerticalGameMovement(.25,1,0,0,4,0,[slab]);
 assert.equal(ceilingEdge.hitCeiling,false,"ascending away from a ceiling edge must release");
 assert.equal(ceilingEdge.y,1,"departing ceiling must allow upward motion");
-assert.equal(resolveSweptVerticalGameMovement(5,4,0,0,.5,0,[slab]).landedOnSolid,true,
+const roofTraverse=resolveSweptVerticalGameMovement(5,4,0,0,.5,0,[slab]);
+assert.equal(roofTraverse.landedOnSolid,true,
   "standing on a roof while moving within its footprint must remain supported");
+assert.equal(roofTraverse.x,.5,"supported rooftop movement must not snap to prior X");
+assert.equal(roofTraverse.z,0,"supported rooftop movement keeps Z");
+const ceilingTraverse=resolveSweptVerticalGameMovement(.25,1,0,0,.5,0,[slab]);
+assert.equal(ceilingTraverse.hitCeiling,true,"ceiling contact remains solid when moving beneath it");
+assert.equal(ceilingTraverse.x,.5,"ceiling contact must preserve lateral movement");
 assert.equal(resolveSweptVerticalGameMovement(5.01,4,0,0,4,0,[slab]).landedOnSolid,true,
   "real roof crossing after the frame starts must still land");
 const indexedEdge=buildStaticGameCollisionIndex([slab],2);
