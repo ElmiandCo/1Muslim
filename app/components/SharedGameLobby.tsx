@@ -12,6 +12,7 @@ import {FUTURE_COLLISION_INDEX,JURASSIC_COLLISION_INDEX} from "./gameWorldCollid
 import {calculateGameFlightPose} from "./gameFlightPose";
 import {TODAY_PROP_COLLIDERS,PROPHETIC_COLLISION_INDEX,createTodayCollisionSource} from "./gameTodayColliders";
 import {ROMAN_PORTAL,ROMAN_BOUNDS,romanJudeaCollisionIndex,renderRomanJudea} from "./RomanJudeaScene";
+import {renderLunarResearchLife} from "./LunarResearchScene";
 
 // Keep Moses refuge collisions stable across frames; never cull physics with visual LOD.
 const SEA_COLLIDERS=partedSeaColliders();
@@ -459,6 +460,7 @@ export default function SharedGameLobby(){
       draw(vp,ox,19,oz,28,1,28,[.16,.27,.38],.85);
       for(let i=0;i<12;i++){const angle=i*Math.PI/6;draw(vp,ox+Math.cos(angle)*9,19.7,oz+Math.sin(angle)*9,1.2,1.4,1.2,[.68,.71,.78]);}
       draw(vp,ox,20,oz,9,1.4,9,[.94,.72,.24]);draw(vp,ox,21,oz,6,.18,6,[1,.88,.48]);
+      // Lunar base ambience is visual-only; the existing lunar movement and ship routes remain authoritative.\n      renderLunarResearchLife((x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p.x,p.z);
       // Constellation-inspired stars and intermittent meteor trails above the moon.
       for(let i=0;i<210;i++){const theta=i*2.399963,phi=Math.acos(1-2*((i*.618034)%1)),radius=180+i%5*65;draw(vp,p.x+radius*Math.sin(phi)*Math.cos(theta),p.y+Math.abs(radius*Math.cos(phi))+55,p.z+radius*Math.sin(phi)*Math.sin(theta),.5+i%3,.5+i%3,.5+i%3,[.7,.84,1],.9);}
       for(let i=0;i<7;i++){const t=(now*.00013+i*.19)%1,angle=i*2.39996,rad=i<3?30:140;const x=p.x+Math.cos(angle)*rad+t*95,z=p.z+Math.sin(angle)*rad-t*70,y=90-t*85;draw(vp,x,Math.max(.6,y),z,1.2,1.2,7,[.74,.86,1],.75,angle);if(y<3)draw(vp,x,.3,z,2,.2,2,[.95,.49,.23],.8);}
