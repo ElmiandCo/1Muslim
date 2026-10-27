@@ -1801,3 +1801,10 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 [data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]>header{flex:0 0 auto!important;position:relative!important;z-index:2!important;visibility:visible!important;opacity:1!important}
 [data-workspace-page="6"] .canvas-profile-mirror [role="tabpanel"]{display:block!important;flex:1 1 0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;overscroll-behavior-y:contain!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;background:transparent!important}
 [data-workspace-page="6"] .canvas-profile-mirror [role="tabpanel"] .canvas-native-profile{display:block!important;height:auto!important;min-height:100%!important;max-height:none!important;overflow:visible!important;transform:none!important;visibility:visible!important;opacity:1!important;padding:12px 10px 110px!important;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important}
+
+/* Community feed media previews and expanded comment media. */
+.community-post-media{width:100%;margin:12px 0;border:1px solid #d8c28b66;border-radius:15px;overflow:hidden;background:#061b19}
+.community-post-media img,.community-post-media video{display:block;width:100%;max-height:390px;object-fit:contain}
+.community-post-media button{display:block;width:100%;border:0;padding:0;background:transparent;cursor:zoom-in}
+.community-expanded-media{width:100%;margin:10px 0}
+.community-expanded-media img,.community-expanded-media video{display:block;width:100%;max-height:45dvh;object-fit:contain;border-radius:12px}
