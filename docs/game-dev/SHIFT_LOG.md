@@ -1,5 +1,23 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 17:05–17:09 CDT (America/Chicago) · Bot A / World Engine — faster DOWN flight and progressive high-altitude stars
+
+**Detailed handoff:** [2026-10-27 fast descent and star LOD](shifts/2026-10-27-fast-descent-stars.md). **Bot B latest reviewed:** [Egypt docklife](shifts/2026-10-27-egypt-docklife.md). Game coordination: [issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+| Contract | Verified evidence |
+| --- | --- |
+| Protected preview ancestor | `fix/profile-scroll-match-umma-20261027` @ `c856491` |
+| Actual game starting point | Bot B `game/living-worlds-egypt-docklife-20261027-1630` @ `7f03f67` |
+| Working branch | `game/world-engine-fast-descent-20261027-1700`; code/test tip `20ac366`, documentation-only commits follow |
+| Main read-only | `main` @ `82eddbf`; newer site/feed files diverge from frozen preview; no site edits |
+| Exact code/test paths | New `gameFlightVertical.ts`, targeted `SharedGameLobby.tsx` (+9/−5), new `game-flight-descent-smoke.mjs`; docs only otherwise |
+| Implemented | Mobile hold DOWN + keyboard C; ordinary dive max −55 (boost −80) vs −22; faster aircraft and EVA descend; safe pointer release; 48–160 altitude stars vs fixed 270; existing swept collision preserved |
+| Tests | PASS: 13 locally executed Node helper assertions, strict helper `tsc`, 12 GitHub source-wiring/preservation checks, game-only diff. Full committed smoke and device physics **not executed** |
+| Build | **PASS / READY**: Vercel non-production preview `dpl_551s2FYDbVKsrT58zYpRm912UYvr` at `20ac366`; Next.js compiled/type-checked, build completed in 40s |
+| World coverage | Ancient Egypt Nile/docklife, Moses portals, Jurassic, Future, Makkah/Nabawi/Hajj, Roman, Moon/ship and Today/Belt Boyz preserved; shared flight available in ordinary worlds |
+| Integration | Cherry-pick **game-only** helper/lobby/test commits or narrowly transplant onto current site integration branch. Never merge full old-site-descended branch. No production deployment |
+
+
 ## 2026-10-27 · 16:25–16:35 CDT (America/Chicago) · Bot B / Living Worlds — Ancient Egypt dock cargo and Nile wildlife
 
 **Detailed handoff:** [2026-10-27 Egypt docklife](shifts/2026-10-27-egypt-docklife.md). **Bot A starting handoff:** [Egypt portal and collision](shifts/2026-10-27-egypt-portal-colliders.md).
