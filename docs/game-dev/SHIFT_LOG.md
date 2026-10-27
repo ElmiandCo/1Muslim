@@ -40,7 +40,7 @@
 | Reproducible repository script | **Added** `node scripts/game-roman-smoke.mjs`; script was **not** executed in a full checkout, so no claim of test-run pass |
 | First non-production preview build | **FAILED**: original extracted renderer was missing one closing Jerusalem branch brace; build log `Expected '}', got '<eof>'` in `RomanJudeaScene.ts` |
 | Correction | **Committed** `548218c`: closed the original Jerusalem branch before the new olive-grove loop; final preview build status recorded below |
-| Full Next.js build | **PENDING** at time of log write for corrected commit `548218c`, Vercel preview `dpl_5vWXQaRSaaMAEAr8CzfJBTxqodTn`; do not treat as passed until READY |
+| Full Next.js build | **PASS / READY** for corrected code commit `548218c` on non-production preview `dpl_5vWXQaRSaaMAEAr8CzfJBTxqodTn` ([open preview](https://1muslim-debdsb3j1-elmiandco.vercel.app)). Next.js compiled in **16.0s**, completed type/lint checking, generated **101/101** pages and logged **Deployment completed**. Existing CSS/autoprefixer and edge-runtime warnings were nonfatal. Documentation-only commits follow this verified code commit |
 | Browser/mobile gameplay and FPS | **NOT VERIFIED**; requires real walkthrough of Jerusalem → arch → Rome → return, collision near market/walls, device GPU/CPU and multiplayer behavior |
 
 ### World-by-world progress and cross-shift checklist
@@ -64,7 +64,7 @@
 4. **Next Bot B shift:** First verify actual preview and iPhone portal traversal; if stable, enrich the historical world with market ambient activity (distance-culled, culturally respectful), then continue world-by-world. Do not confuse artistic reconstruction with documented history.
 5. **Unfinished cross-world backlog:** XP shop, aimed blasters/audio, force field, raised-hand hold, active-speaker UI, Hajj NPCs, prayer congregations and 10 enterable mosques. None claimed done here.
 
-**Cross references:** [Bot A directional-flight shift](../game-dev/SHIFT_LOG.md) (prior section below); [original Roman branch](https://github.com/ElmiandCo/1Muslim/tree/elite/roman-judea-world); [game master issue #126](https://github.com/ElmiandCo/1Muslim/issues/126). **No production merge or deploy.**
+**Cross references:** Bot A directional-flight shift (prior section below); [original Roman branch](https://github.com/ElmiandCo/1Muslim/tree/elite/roman-judea-world); [game master issue #126](https://github.com/ElmiandCo/1Muslim/issues/126). **No production merge or deploy.**
 
 ---
 
