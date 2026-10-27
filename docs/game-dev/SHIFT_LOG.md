@@ -2,6 +2,72 @@
 
 > **Protected integration rule:** This repository's website evolves independently. Never merge a whole game branch into main or production. Cherry-pick only reviewed game-path commits onto the *then-current* website integration branch. Preserve the newer feed, profile, Quran, navigation, GoLive, and site CSS. No automated production merge/deploy.
 
+## 2026-10-27 · 12:10–12:13 CDT (America/Chicago) · Bot B / Living Worlds — Roman Judea and Rome restored
+
+### Provenance, current site contracts, and coordination
+
+| Item | Recorded evidence |
+| --- | --- |
+| Bot | **Game Bot B — Living Worlds**; this shift owns historical Roman/Judea environment only |
+| Protected original baseline | `fix/profile-scroll-match-umma-20261027` @ **`c856491131bb0c8056693652f8e5e58a26836831`**, read-only |
+| Direct game-code starting point | **`game/world-engine-directional-flight-20261027-1200` @ `d85e262925651d9e933bf9d497bb430465d3fae9`**; descendant of Bot B Moses and Bot A physics/LOD work |
+| Working branch | **`game/living-worlds-roman-judea-restored-20261027-1230`**; implementation+fix head **`548218cf9d83d3770b916329ad0ca4a8c38c4d51`** (log commit follows) |
+| Source recovered, not replaced | Original **`elite/roman-judea-world`**, especially its Jerusalem/Rome renderer, world portal and collider coordinates; the old full lobby and `app/page.tsx` were **not** copied |
+| Prior shifts inspected | Bot B 10:34 Moses restoration at `game/living-worlds-moses-playable-20261027-1100`; Bot A 11:58 directional flight handoff and prior swept collision; older Roman branch geometry |
+| Current main / production at audit | `main` @ **`21119c711beda86de3f7766b18bdb0e1c39028d0`**, Vercel production READY at same SHA; read-only, no production writes |
+| Site layout contract | `app/page.tsx` blob **`92ca9b5`** and `SharedGameLobby.module.css` blob **`952bdfc`** match main/frozen; `CanvasSecondaryApp.tsx` site branch differs, **untouched** |
+| Exact changed paths | `app/components/RomanJudeaScene.ts` **new**; `app/components/SharedGameLobby.tsx` **targeted game wiring**; `scripts/game-roman-smoke.mjs` **new**; `docs/game-dev/SHIFT_LOG.md` **this log** |
+| Forbidden paths touched | **None**: no main, production, app page, navigation, feed, profile, Quran, GoLive, site CSS, database, or unrelated assets |
+
+### Implemented, not proposed
+
+**Before:** `Time of Jesus` was present in the world picker but displayed *Preview pending*. An older `elite/roman-judea-world` branch had an independently playable Roman-era Jerusalem and ancient Rome, but its whole `SharedGameLobby` and `app/page.tsx` were stale and incompatible with Bot A's newer physics and Bot B's connected Moses world.
+
+**After:** `Time of Jesus` now enters a **historically interpretive Roman Judea/Jerusalem world** through the current shared renderer, avatar, camera, flight, movement and presence engine. The original gold arch at (0,-90) switches between Jerusalem and ancient Rome, and a small 🏛️ HUD button provides the same switch. Return-to-lobby uses the existing globe control. Original roads, 72 stone-building placements, market stalls, walls, hills, Roman forum, amphitheater, arches, aqueduct, 34 stylized travelers/soldiers and two city identities are preserved as scene geometry, **not** reconstructed from scratch.
+
+- `RomanJudeaScene.ts`: Extracted the older world's exact interpretive environment drawing into `renderRomanJudea`; `paint` limits cube submissions to objects within 250m plus object half-width/depth. Added **36 deterministic, animated olive trees** beyond the original walls, with nearby leaf clusters and understory at 55m, full tree skip beyond 125m. Foliage intentionally decorative/non-solid; no new textures, downloads, audio permissions, React state or dependencies.
+- **Collision**: Recovered original houses, two long walls, northern/southern fortification segments and 16 market counters as stable `GameCollider` geometry; Rome adds the original forum building. `romanJudeaCollisionIndex` builds one static spatial index per city with **Bot A's existing** `buildStaticGameCollisionIndex`; physics remains independent of draw-distance LOD. Central spawn (0,125) and arch (0,-90) were checked for clearance.
+- `SharedGameLobby.tsx`: Added isolated Roman refs/state and enter/exit/portal switch, world-picker wiring, bounds, correct static collision index selection, ground floor, sky, render dispatch, disabled Today-only animals/vehicles/worker/shop/portal prompts while in Rome, and existing globe return. The prior game world's draw/physics branches remain intact.
+- **Historical integrity**: No depictions of Jesus or other prophets. Buildings, hills and Roman-era features are artistic interpretations; **the Colosseum-inspired motif is not a claim that the Colosseum existed during Jesus' lifetime**. Ancient Rome and Jerusalem are connected by a fantasy travel portal, not a claim of geographical proximity.
+- **Explicitly not implemented**: No server-authoritative NPCs, voice upgrades, XP-shop purchases, ten new mosques, tawaf/sa'i, or Roman combat missions. Those remain backlog.
+
+### Verification and limitations
+
+| Check | Result |
+| --- | --- |
+| Game-only diff against direct Bot A starting tip | **PASS**: only `RomanJudeaScene.ts`, `SharedGameLobby.tsx`, and `game-roman-smoke.mjs` before this log; no Bot A physics file or site file edited |
+| 17 equivalent source/geometry assertions | **PASS (connector-side JS checks)**: selector, render, Bot A broadphase, bounds, portal, HUD, existing Moses/Jurassic/Future/Nabawi/Belt Boyz source markers, historical module, olive groves, LOD, and spawn/portal collider clearance |
+| Reproducible repository script | **Added** `node scripts/game-roman-smoke.mjs`; script was **not** executed in a full checkout, so no claim of test-run pass |
+| First non-production preview build | **FAILED**: original extracted renderer was missing one closing Jerusalem branch brace; build log `Expected '}', got '<eof>'` in `RomanJudeaScene.ts` |
+| Correction | **Committed** `548218c`: closed the original Jerusalem branch before the new olive-grove loop; final preview build status recorded below |
+| Full Next.js build | **PENDING** at time of log write for corrected commit `548218c`, Vercel preview `dpl_5vWXQaRSaaMAEAr8CzfJBTxqodTn`; do not treat as passed until READY |
+| Browser/mobile gameplay and FPS | **NOT VERIFIED**; requires real walkthrough of Jerusalem → arch → Rome → return, collision near market/walls, device GPU/CPU and multiplayer behavior |
+
+### World-by-world progress and cross-shift checklist
+
+| World / mode | Evidence-based status in this branch | Next priority |
+| --- | --- | --- |
+| **Jerusalem / Roman Judea / Jesus-era** | **THIS SHIFT:** old scene restored and connected, portal between Jerusalem/Rome, static colliders and olive grove LOD. No prophet depicted; preview/device verification pending | Walk entire scene on iPhone, inspect Roman architecture, collision/arch camera, refine ambient sound and crowd animation |
+| **Moses / Parted Sea** | **Inherited from B 10:34**: 2,743m crossing connected with fish, soldiers, 9 refuges and collision; unchanged | Device test, water wall animation and ambient audio; do not overwrite module |
+| **Jurassic** | **Inherited** dinosaur scene, Apex cave and Bot A collision; B 07:30 ferns/dragonflies remain on a separate branch | Selectively integrate ecology after collision/LOD review |
+| **Future / RealMecca concept** | **Inherited** towers/skyways and Bot A collisions; B 08:30 six gardens/42 flowers/6 pollinators remain separate | Selective garden integration and mobile lighting |
+| **Muhammad ﷺ era / Makkah–Madinah** | **Preserved unchanged** interpretive Makkah, Kaaba, Madinah, Masjid an-Nabawi and prayer controls | Respectful generic Hajj NPC tawaf seven circuits → Safa–Marwa, congregational prayer; historical framing |
+| **Today / Main Street / Belt Boyz** | **Preserved unchanged** Council meeting, roofless office, shop, vehicle and five districts | Shield, hand-pose persistence, speaker UI and XP-shop reliability; coordinate with A |
+| **Space / Moon / Blessed Chambers concept** | **Preserved** ship, moon landing, observatory; separate Blessed Chambers module not verified | Lunar flora-free ambient identity, lights and navigation |
+| **Other districts** | Nile Quarter, Courtyard City, Skyline City, Beach City and Grand Metro unchanged | Each gets distinct life and material accents with measured LOD |
+
+### Integration, rollback, and next-shift contract
+
+1. **Never merge the whole branch.** At integration time fetch the then-current site production/main head; start a fresh integration branch there. Cherry-pick or manually transplant **only** Roman game changes in `RomanJudeaScene.ts` and targeted `SharedGameLobby.tsx` wiring. The older `elite/roman-judea-world` page/lobby must never be copied wholesale.
+2. **Bot A conflict gate:** Bot A owns `gamePhysics.ts`, `gameWorldColliders.ts`, `gameFlightPose.ts`, flight and shared movement. This shift **does not edit those**; use the new Roman static index with A's latest API. If Bot A has changed the lobby, manually patch the Roman imports/flags/dispatch/guards onto A's newer file rather than overwriting it.
+3. **Rollback:** Revert the Roman module, its import, state/portal handlers, bounds/collision/render dispatch and HUD/picker branches only; leave Bot A, Moses, Jurassic, Future and site intact. No database migration or asset rollback.
+4. **Next Bot B shift:** First verify actual preview and iPhone portal traversal; if stable, enrich the historical world with market ambient activity (distance-culled, culturally respectful), then continue world-by-world. Do not confuse artistic reconstruction with documented history.
+5. **Unfinished cross-world backlog:** XP shop, aimed blasters/audio, force field, raised-hand hold, active-speaker UI, Hajj NPCs, prayer congregations and 10 enterable mosques. None claimed done here.
+
+**Cross references:** [Bot A directional-flight shift](../game-dev/SHIFT_LOG.md) (prior section below); [original Roman branch](https://github.com/ElmiandCo/1Muslim/tree/elite/roman-judea-world); [game master issue #126](https://github.com/ElmiandCo/1Muslim/issues/126). **No production merge or deploy.**
+
+---
+
 ## 2026-10-27 · 11:58–12:03 CDT (America/Chicago) · Bot A / World Engine — directional flight, free-fall and landing poses
 
 ### Provenance and no-regression audit
