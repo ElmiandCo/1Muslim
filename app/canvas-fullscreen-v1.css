@@ -1801,20 +1801,3 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 [data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]>header{flex:0 0 auto!important;position:relative!important;z-index:2!important;visibility:visible!important;opacity:1!important}
 [data-workspace-page="6"] .canvas-profile-mirror [role="tabpanel"]{display:block!important;flex:1 1 0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;overscroll-behavior-y:contain!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;background:transparent!important}
 [data-workspace-page="6"] .canvas-profile-mirror [role="tabpanel"] .canvas-native-profile{display:block!important;height:auto!important;min-height:100%!important;max-height:none!important;overflow:visible!important;transform:none!important;visibility:visible!important;opacity:1!important;padding:12px 10px 110px!important;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important}
-
-/* Profile mirror scroll fix (preview): override older page-6 height/paint rules.
-   Only the inner mirror card scrolls; the title/tabs stay outside its scrollport. */
-[data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]{
-  height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;
-}
-[data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"] > div:first-child{
-  flex:1 1 auto!important;height:100%!important;min-height:0!important;max-height:100%!important;
-  display:flex!important;flex-direction:column!important;overflow:hidden!important;
-}
-[data-workspace-page="6"] .canvas-profile-mirror [data-profile-mirror-scroll]{
-  display:block!important;flex:1 1 auto!important;height:100%!important;min-height:0!important;max-height:none!important;
-  overflow-y:auto!important;overflow-x:hidden!important;touch-action:pan-y!important;
-  -webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important;
-  background:rgba(230,255,245,.07)!important;border:1px solid rgba(230,255,245,.18)!important;
-  border-radius:14px!important;padding:8px 8px 30px!important;
-}
