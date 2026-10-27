@@ -2,6 +2,71 @@
 
 > **Protected integration rule:** This repository's website evolves independently. Never merge a whole game branch into main or production. Cherry-pick only reviewed game-path commits onto the *then-current* website integration branch. Preserve the newer feed, profile, Quran, navigation, GoLive, and site CSS. No automated production merge/deploy.
 
+## 2026-10-27 · 09:59–10:06 CDT (America/Chicago) · Bot A / World Engine — Jurassic solids, Future skyways and vertical collision
+
+### Source of truth, isolation and coordination
+
+| Field | Verified value |
+| --- | --- |
+| Bot / responsibility | **Game Bot A — World Engine**, shared physics, collision and rendering; not site development |
+| Frozen original game baseline | `fix/profile-scroll-match-umma-20261027` / **`c856491131bb0c8056693652f8e5e58a26836831`**, unchanged |
+| Direct starting game-only branch | `game/world-engine-swept-collision-20261027-0900` / **`4e3f86835f0df395f9d55b4f478a9f630d0f8067`**; its ancestry is the frozen preview and includes A's previous flight/LOD and swept-collision work |
+| New independent working branch | **`game/world-engine-jurassic-solids-20261027-1000`**; last implementation/test SHA **`e8735ab6861dd62a69fecf75b153c14d09cea49f`**; the documentation update becomes the final tip |
+| Current main checked read-only | **`21119c711beda86de3f7766b18bdb0e1c39028d0`**. Main vs frozen preview is **diverged** (frozen preview 19 commits ahead, 3 behind at comparison); the six changed site paths are community-posts API, full-screen CSS, CanvasSecondaryApp, GameLabProfileHub, ImmersiveVideoEntry and community-media migration |
+| Current production checked read-only | Vercel **READY** `dpl_3KxxhG8pRxuy64rN4D1Jn9jzgPHy`, source `main` at **`21119c7`**; no deployment or merge to this target |
+| Layout contracts read-only | `app/page.tsx` is identical on main and frozen preview (blob `92ca9b5`); `SharedGameLobby.module.css` is identical (blob `952bdfc`); `CanvasSecondaryApp.tsx` checked on both (blob `ac34d6b`). No page, CSS, navigation, profile, feed, Quran, GoLive, or production files edited |
+| Bot B latest handoff reviewed | **09:30 CDT** on `game/living-worlds-moses-shoals-20261027-0930`: recovered `PartedSeaScene.ts` with fish shoals/foam, **not wired** into frozen shared lobby; implementation **`d43998ea6ccd2aa9678445d5bc585d6926fbb8ab`**. Earlier B Future gardens **`afe199c`** and Jurassic river life **`e05ef735`** remain separate. No B-owned scene file overwritten |
+| Exact changed paths this shift | **`app/components/gameWorldColliders.ts` (new); `app/components/gamePhysics.ts` (extended); `app/components/SharedGameLobby.tsx` (targeted wiring); `scripts/game-physics-smoke.mjs` (new tests); `docs/game-dev/SHIFT_LOG.md` (this handoff)** |
+| Forbidden path changes | **None**. Relative to previous A tip, GitHub compare shows only the four implementation/test paths above before this log commit. No database, package, asset, scene module, or site changes |
+
+### Verified implementation (what changed, and what did not)
+
+1. **`gameWorldColliders.ts` — static Jurassic solids built from existing geometry.** Before, `SharedGameLobby.render(now)` passed **no collider array** in Jurassic, even though `JurassicScene.ts` exported deterministic trees/rocks and a separate `jurassicBlocked` function that was not called. Now the shared swept X/Z resolver receives reusable volumes for **650 scene trees (trunks plus elevated canopies, excluding the cave-clearance zone), 130 scene rocks (excluding cave-clearance zone), 30 existing cave-ring basalt towers, and nine visible cave columns/lintels/tunnel walls/roof segments**. Objects are filtered by their existing scene coordinates; no dinosaurs, terrain, geometry, doors, portals or rendered art were replaced. Cave mouth and tunnel center are deliberately left open. These are conservative **axis-aligned box approximations**, not per-triangle collision meshes.
+2. **`gameWorldColliders.ts` — Future geometry cached and expanded.** Before, 64 Future tower boxes were reallocated with `FUTURE_TOWERS.map` every rendered frame; elevated glass skyways and their support posts had no corresponding collider volumes. Now a static `FUTURE_COLLIDERS` array retains the **same 64 tower footprints** and adds **four existing skyway decks and eight visible support posts**. Skyway landing/floor code in `FutureCityScene.ts` remains unchanged; Bot B's gardens stay isolated.
+3. **`gamePhysics.ts` — `resolveVerticalGameMovement`.** Added a pure, crossing-aware helper that lands descending feet on the **first solid top crossed** and stops ascending heads at **raised undersides** (e.g. bridges, cave lintels). Already-intersecting/spawned-inside geometry is not teleported; arbitrary high-altitude travel is not clamped. Horizontal swept sliding remains intact.
+4. **`SharedGameLobby.tsx` — existing `render(now)` only.** The Jurassic world now passes its static scene colliders into the previously built horizontal sweep; Future uses cached colliders. After ordinary player gravity/flight integration, the new vertical helper corrects roof/underside crossings, clears upward velocity on ceiling impact, and uses the **existing** landing/crash pose when a solid top is reached. Dedicated ship, plane, EVA, Moon and seated Council movement paths are exempt. No changes to world selector, player/network packet format, camera, game HUD, blaster economy, prayer UI, Belt Boyz roof, Masjid an-Nabawi, or production layouts.
+5. **`scripts/game-physics-smoke.mjs` — reproducible source-based tests.** Loads the **actual TypeScript source** of the physics and world scene modules using the already-declared TypeScript dev dependency. Checks thin-wall boost tunneling, wall sliding, escape from overlapping geometry, vertical ceilings/roofs, high-altitude freedom, Jurassic tree solids and cave entry, Future bridge underside, and geometry counts. No `package.json` changes.
+
+**Commits in order (game-only):** `4d938c2f00c6930f34028d9601dac2ee4a3b2dde` (Jurassic/Future static geometry), `f5ad48dc0e2d9f19c5a340c444872afca3a579ac` (vertical resolver), `1a734b5b83cb9ef9ae73c3100a0cc8978d7696e8` (Future skyways), `833b7c9a3e5df3383ccb5d2253d9b0c79f27492b` (lobby wiring), `a707365a4bc27d82f93e69b5af0d3c300bfe757c` (smoke tests), `e8735ab6861dd62a69fecf75b153c14d09cea49f` (test output count).
+
+### Verification and honest limits
+
+| Verification | Evidence/result |
+| --- | --- |
+| Frozen baseline and current main comparison | **PASS read-only**: branch ancestry unchanged, main/site layout drift identified; no forbidden files copied |
+| GitHub path gate | **PASS**: against previous A branch, only `SharedGameLobby.tsx`, `gamePhysics.ts`, `gameWorldColliders.ts`, `scripts/game-physics-smoke.mjs`; adding this log is the fifth game-only path |
+| Real source smoke tests | **PASS**: `node scripts/game-physics-smoke.mjs` on a fresh Vercel sandbox cloned at **`e8735ab`**; **23 assertions passed**, exit code 0. Sandbox dependency setup used isolated temporary TypeScript 5.8.3; no repository dependency changes |
+| Strict helper/scene typecheck | **PASS**: `tsc --strict --noEmit --target ES2022 --module commonjs --skipLibCheck --lib ES2022,DOM` on `gamePhysics.ts`, `gameWorldColliders.ts`, `JurassicScene.ts`, `FutureCityScene.ts`; exit code 0 |
+| Non-production Next.js build | **READY**: Vercel preview `dpl_CRhD9hFLv1b45MfZ46RsoB7MiYec` built the **`833b7c9` implementation** in 52s; completed output/deployment with non-fatal existing webpack CSS-cache and other warnings. [Preview](https://1muslim-h1w8xmy3p-elmiandco.vercel.app) · [Build details](https://vercel.com/elmiandco/1muslim/CRhD9hFLv1b45MfZ46RsoB7MiYec). Later smoke-test/documentation commits do not modify runtime code |
+| Browser gameplay, multiplayer and mobile FPS | **NOT VERIFIED**: no real device playtest, frame profiler, or full player-controlled cave traversal |
+| Collision completeness | **PARTIAL**: tree/canopy and cave boxes approximate existing visuals; other decorative plants, water, moving dinosaurs, vehicles, some district and sacred structures still lack audited solids. Do not claim everything is solid |
+| Performance and risk | **Unmeasured on mobile**: static arrays avoid per-frame Future allocation, but shared horizontal broadphase scans all Jurassic colliders once per frame and vertical resolver scans them again; monitor low-end iPhones and consider a spatial index if needed. Tall cave volumes and canopy approximation may overblock edges. No added network calls/assets/dependencies |
+
+### World-by-world status and ownership
+
+| World | This shift's verified effect | Remaining work / regression gate |
+| --- | --- | --- |
+| **Jurassic / Apex cave** | **Changed:** static tree-trunk, canopy, rock, cave ring/entrance and secret-tunnel wall/roof collisions through shared sweep; terrain and dinosaurs preserved | Test tree collision at boost, cave doorway and secret tunnel, aerial canopy, Apex attack, mobile FPS; Bot B river ferns/dragonflies are **not included** in this branch |
+| **Future / futuristic / RealMecca concept** | **Changed:** static 64 tower volumes, four elevated skyway decks and eight supports; overhead flight blocked and top landings supported | Verify 32m skyway traversal and tower rooftops; Bot B's six gardens/42 flowers/pollinators remain on separate branch |
+| **Today / Main Street / five districts** | **Preserved** previous A swept walls, roof/fall, high-altitude flying and LOD; new vertical helper applies to existing raised colliders | Test elevated bridge undersides, office and shops, damage/repair, high-altitude descents; no new city objects |
+| **Muhammad ﷺ era / Makkah–Madinah / Masjid an-Nabawi** | **Preserved** original interpretive geometry, prayer controls and solid-building list; shared vertical crossing helper applies where applicable | Respectful tawaf seven circuits then Safa–Marwa, prayer NPCs and many enterable mosques are **not implemented** |
+| **Moses / Parted Sea** | **No code copied or replaced.** Bot B recovered and enhanced independent `PartedSeaScene.ts` on its own branch | Wire only minimal game-only import/state/render/movement patch into newest A lobby after review; no old lobby replacement |
+| **Jesus / Roman Judea** | **Unchanged** preview-pending selector; no unverified claim of playable world | Inspect independent existing branch before wiring |
+| **Space / Moon / ship / EVA / aircraft** | **Preserved** dedicated physics, atmosphere/ship travel and high-altitude flight | Separate vehicle collisions, EVA re-entry and lunar tests |
+| **Belt Boyz / Council** | **Unchanged** roofless office/meeting geometry, seat mode and UI; no page/style edits | Real preview verification; persistent raised-hand character pose still pending |
+
+### Integration, rollback, handoff to Bot B and next Bot A shift
+
+- **Do not merge this branch wholesale** into main, production or the site integration branch. It contains an **older website snapshot** from the frozen preview. At the moment of approved integration, fetch the latest site main/production/preview head again, compare changed paths, and create a fresh site integration branch. Cherry-pick **game-only implementation commits** from previous A in order (`e37c717` flight/LOD, `7900bcab` helper, `e1641d4` sweep wiring) if not already present, then **this shift's `4d938c2`, `f5ad48d`, `1a734b5`, `833b7c9`**. The smoke test commits are optional; documentation is reference only. Check `git diff --name-only` before and after. If newer game changes exist in `SharedGameLobby.tsx`, apply only the import/collider selection/vertical integration hunks instead of overwriting the whole file.
+- **Bot B coordination:** B owns `JurassicScene.ts`, `FutureCityScene.ts`, and `PartedSeaScene.ts`; A did **not edit** those files. New `gameWorldColliders.ts` references their existing exported geometry, so after B changes, retest that exports/footprints still match. B's independent Jurassic ecology, Future gardens and Moses shoals should be selectively integrated without replacing this A physics. If B adds new solid structures, extend the collider builder with matching boxes; never couple physics to visual LOD culling.
+- **Rollback:** on an approved integration branch, revert **`833b7c9`** (lobby wiring) first, then **`1a734b5`**, **`f5ad48d`**, **`4d938c2`** as needed. Previous A flight/sweep changes can remain independently. No database migration, production changes, or UI rollback required.
+- **Next A priority:** (1) real iPhone/desktop Jurassic cave and Future skyway collision walkthrough, profile frame time and collider broadphase; (2) investigate true directional pitch/roll and smooth takeoff/fall/landing avatar animation without breaking networked players; (3) verify raised structures and open building doors in every world, add conservative spatial indexing if mobile FPS suffers; (4) review B's Moses scene wiring contract and only then implement minimal game-only integration. **Not delivered here:** Hajj NPC routes, ten enterable mosques, XP store authority, sound/force-field, voice indicators, blaster accuracy, persistent hand pose.
+- **Approval gate:** **main, production and the frozen preview branch were not modified or deployed.** Non-production build verification is not production promotion.
+
+**Cross-references:** [Bot B 09:30 Moses handoff](https://github.com/ElmiandCo/1Muslim/blob/game/living-worlds-moses-shoals-20261027-0930/docs/game-dev/SHIFT_LOG.md) · [Bot A 09:00 swept collision](https://github.com/ElmiandCo/1Muslim/tree/game/world-engine-swept-collision-20261027-0900) · [Game master issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+---
+
 ## 2026-10-27 · 09:08 CDT (America/Chicago) · Bot A / World Engine — boosted-movement collision sweep
 
 ### Shift identity, protected baseline, and scope
