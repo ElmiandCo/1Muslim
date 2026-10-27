@@ -385,7 +385,9 @@ export default function SharedGameLobby(){
        Math.abs(previousX-p.x)+Math.abs(previousZ-p.z)<.01
        ?directVertical
        :resolveSweptVerticalGameMovement(previousFeetY,p.y,previousX,previousZ,p.x,p.z,collisionSolids);
-     if("x" in vertical&&(vertical.hitCeiling||vertical.landedOnSolid)){
+     if("x" in vertical&&"z" in vertical&&
+        typeof vertical.x==="number"&&typeof vertical.z==="number"&&
+        (vertical.hitCeiling||vertical.landedOnSolid)){
        p.x=vertical.x;p.z=vertical.z;
      }
      if(vertical.hitCeiling){p.y=vertical.y;velocity=Math.min(velocity,0);}
