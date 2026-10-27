@@ -6,6 +6,7 @@ import LiveHomePreview from "./LiveHomePreview";
 import styles from "./SharedGameLobby.module.css";
 import {drawJurassic,updateJurassicDinos,jurassicBlocked,jurassicTerrain,JURASSIC_LIMIT,hitJurassicApex} from "./JurassicScene";
 import {FUTURE_BOUNDS,FUTURE_PORTAL,FUTURE_TOWERS,futureSkywayFloor,renderFutureWorld} from "./FutureCityScene";
+import {resolveHorizontalGameMovement} from "./gamePhysics";
 
 type Suit="gold"|"silver"|"cosmic"|"diamond";
 type Player={id:string;userId?:string;name?:string;world?:string;x:number;y:number;z:number;yaw:number;flying:boolean;boost:boolean;suit:Suit;seen:number};
@@ -286,29 +287,21 @@ export default function SharedGameLobby(){
      solids.push({x,z,hx:11,hz:11.5,bottom:0,top:h+.8});
    }
    }
-   // Block side penetration and reflect travel away from the struck surface.
-   // Roofs remain solid landing surfaces, so players cannot fall through buildings.
-   let struck=false,roof=-Infinity;
-   for(const b of plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null?[]:futureWorldRef.current?FUTURE_TOWERS.map(t=>({x:t.x,z:t.z,hx:t.width/2,hz:t.depth/2,bottom:-1,top:t.height})):propheticWorldRef.current?solids.slice(0,128):solids){
-     const overlapsXZ=Math.abs(proposedX-b.x)<b.hx+.42&&Math.abs(proposedZ-b.z)<b.hz+.42;
-     if(!overlapsXZ)continue;
-     if(p.y>=b.top-.2&&p.y<=b.top+2.2){roof=Math.max(roof,b.top);continue;}
-     if(p.y+1.75<=b.bottom||p.y>=b.top)continue;
-     const overlapX=b.hx+.42-Math.abs(proposedX-b.x),overlapZ=b.hz+.42-Math.abs(proposedZ-b.z);
-     if(overlapX<overlapZ){
-       p.x=b.x+Math.sign(previousX-b.x||-dx||1)*(b.hx+.53);
-       p.z=previousZ;
-     }else{
-       p.z=b.z+Math.sign(previousZ-b.z||-dz||1)*(b.hz+.53);
-       p.x=previousX;
+   // Sweep the existing world-specific solids in short steps. Unlike an endpoint
+   // overlap test, this cannot tunnel through thin walls during a boosted frame.
+   // X/Z sliding preserves movement parallel to walls; the roof is checked at
+   // the resolved final position, independently of rendering/LOD visibility.
+   const collisionSolids=plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null
+     ?[]:futureWorldRef.current
+     ?FUTURE_TOWERS.map(t=>({x:t.x,z:t.z,hx:t.width/2,hz:t.depth/2,bottom:-1,top:t.height}))
+     :propheticWorldRef.current?solids.slice(0,128):solids;
+   let roof=-Infinity;
+   if(!plane.current.active&&!ship.current.active){
+     const movement=resolveHorizontalGameMovement(previousX,previousZ,proposedX,proposedZ,p.y,collisionSolids);
+     p.x=movement.x;p.z=movement.z;roof=movement.roof;
+     if(movement.blocked){
+       crashUntil=now+260;setCrashed(true);
      }
-     struck=true;break;
-   }
-   if(!struck&&!plane.current.active&&!ship.current.active){p.x=proposedX;p.z=proposedZ}
-   else if(struck){ // Small, damped rebound rather than teleporting or sticking to a wall.
-     p.x=clamp(p.x-dx*Math.min(.6,speed*dt*.45),travelBounds.minX,travelBounds.maxX);
-     p.z=clamp(p.z-dz*Math.min(.6,speed*dt*.45),travelBounds.minZ,travelBounds.maxZ);
-     crashUntil=now+260;setCrashed(true);
    }
    p.boost=boosted; 
    const cityRoof=p.z<=-365&&p.z>=-515&&p.x>=-132&&p.x<=75;
