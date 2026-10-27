@@ -36,6 +36,26 @@ export const EGYPT_DOCK_CREWS=Array.from({length:6},(_,id)=>({
 export const EGYPT_RIVER_WILDLIFE=Array.from({length:12},(_,id)=>({
  id,z:-450+id*79,phase:id*1.83,kind:id%3===0?"fish":"heron"
 }));
+/** Interpretive riverside village: faceless porters stay in the open lane
+ * between the two existing house rows, avoiding Bot A's wall colliders. */
+export const EGYPT_VILLAGE_PORTERS=Array.from({length:8},(_,id)=>({
+ id,x:-352.5+(id%3)*25,z:97+Math.floor(id/3)*3,
+ phase:id*1.37,basket:id%2===0
+}));
+/** Low crops are decoration, not invisible solid obstacles. The fields sit
+ * east of the existing settlement and west of the Nile. */
+export const EGYPT_IRRIGATED_PLOTS=Array.from({length:24},(_,id)=>({
+ id,x:-263+(id%6)*8,z:53+Math.floor(id/6)*13,
+ phase:id*2.399963,kind:id%4===0?"flax":"grain"
+}));
+export function egyptVillagePorterPose(nowMs:number,index:number){
+ const person=EGYPT_VILLAGE_PORTERS[index%EGYPT_VILLAGE_PORTERS.length];
+ const wave=Math.sin(nowMs*.00042+person.phase);
+ const direction=Math.cos(nowMs*.00042+person.phase);
+ return {x:person.x+wave*3,z:person.z+Math.sin(nowMs*.00019+person.phase)*.6,
+  heading:direction>=0?Math.PI/2:-Math.PI/2,
+  step:Math.sin(nowMs*.009+person.phase)*.12,basket:person.basket};
+}
 /** Back-and-forth unloading: limestone is carried inland and the worker
  * returns empty-handed. Physics is intentionally owned by Bot A. */
 export function egyptDockWorkerPose(nowMs:number,index:number){
@@ -165,6 +185,35 @@ export function renderAncientEgyptRiverLife(draw:EgyptDraw,nowMs:number,playerX:
   draw(x-3,3.5,z+5.5,4,7,1,SAND);
   draw(x+3,3.5,z+5.5,4,7,1,SAND);
   draw(x,7.1,z,11,.45,12,STONE);
+ }
+ // Village life: low irrigation beds and gentle crop movement.
+ // These are purely decorative and never replace the existing solid terrain.
+ if(near2(-245,78,playerX,playerZ,150)){
+  for(const plot of EGYPT_IRRIGATED_PLOTS){
+   if(!near2(plot.x,plot.z,playerX,playerZ,95))continue;
+   const crop=plot.kind==="flax"?[.31,.53,.45]:[.49,.57,.23];
+   draw(plot.x,.16,plot.z,5,.3,6,FERTILE,.86);
+   if(near2(plot.x,plot.z,playerX,playerZ,50)){
+    const sway=Math.sin(t*.65+plot.phase)*.13;
+    for(let k=0;k<3;k++)
+     draw(plot.x-1.4+k*1.4+sway,.55+Math.sin(t*.7+plot.phase+k)*.04,
+      plot.z, .22,.85,.23,crop,.93);
+   }
+  }
+  // Narrow visible irrigation rills, kept flush with the ground.
+  for(let i=0;i<3;i++)draw(-267,.02,56+i*16,1,.045,11,[.18,.42,.42],.78);
+ }
+ // Eight unarmed, faceless villagers move along the existing clear lane.
+ // Their visual-only movement never adds a collider or pathfinding burden.
+ for(let i=0;i<EGYPT_VILLAGE_PORTERS.length;i++){
+  const w=egyptVillagePorterPose(nowMs,i);
+  if(!near2(w.x,w.z,playerX,playerZ,105))continue;
+  draw(w.x,1.12,w.z,.72,1.32,.58,LINEN,1,w.heading);
+  draw(w.x,2.03,w.z,.5,.5,.5,[.58,.4,.27]);
+  if(w.basket)draw(w.x,1.55,w.z+.45,.75,.52,.7,[.54,.35,.17],.96,w.heading);
+  if(near2(w.x,w.z,playerX,playerZ,55))
+   for(const side of [-1,1])
+    draw(w.x+side*.21,.4+side*w.step,w.z,.21,.78,.24,LINEN);
  }
  // Limestone transport workers; near-only limbs, faceless and unarmed.
  for(let i=0;i<EGYPT_WORKERS.length;i++){
