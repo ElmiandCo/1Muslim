@@ -15,9 +15,11 @@ import {ROMAN_PORTAL,ROMAN_BOUNDS,romanJudeaCollisionIndex,renderRomanJudea} fro
 import {renderLunarResearchLife} from "./LunarResearchScene";
 import {renderHajjPilgrims,HISTORICAL_HAJJ_LAYOUT,TODAY_HAJJ_LAYOUT} from "./HajjPilgrimScene";
 import {renderNabawiCongregation} from "./NabawiCongregationScene";
+import {EGYPT_BOUNDS,EGYPT_SPAWN,renderAncientEgyptRiverLife} from "./AncientEgyptRiverScene";
+import {MOSES_TO_EGYPT_PORTAL,EGYPT_TO_MOSES_PORTAL,EGYPT_MOSES_RETURN,MOSES_PORTAL_COLLIDERS,EGYPT_COLLISION_INDEX,egyptTerrainFloor,renderAncientEgyptTerrain,renderAncientEgyptReturnPortal} from "./gameEgyptWorld";
 
 // Keep Moses refuge collisions stable across frames; never cull physics with visual LOD.
-const SEA_COLLIDERS=partedSeaColliders();
+const SEA_COLLIDERS=[...partedSeaColliders(),...MOSES_PORTAL_COLLIDERS];
 type Suit="gold"|"silver"|"cosmic"|"diamond";
 type Player={id:string;userId?:string;name?:string;world?:string;x:number;y:number;z:number;yaw:number;flying:boolean;boost:boolean;suit:Suit;seen:number};
 type Live={id:string;room_name:string|null;title:string};
@@ -110,6 +112,7 @@ export default function SharedGameLobby(){
  // The Moses world shares the current player, camera, movement and multiplayer engine.
  const partedSeaWorldRef=useRef(false); const [partedSeaWorld,setPartedSeaWorld]=useState(false);
  const partedSeaState=useRef<SeaState|null>(null); const seaArrivalNotified=useRef(false);
+ const egyptWorldRef=useRef(false);const [egyptWorld,setEgyptWorld]=useState(false);const egyptPortalCooldown=useRef(0);
  const propheticWorldRef=useRef(false); const [propheticWorld,setPropheticWorld]=useState(false); const enterPropheticWorld=()=>{futureWorldRef.current=false;setFutureWorld(false);local.current.world="Time of Muhammad ﷺ";propheticWorldRef.current=true;setPropheticWorld(true);setPicker(false);meetingSeatRef.current=null;setMeetingSeat(null);const p=local.current;p.x=0;p.z=115;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;setHint("Makkah circa 610 CE · Interpretive historical reconstruction");}; const exitPropheticWorld=()=>{propheticWorldRef.current=false;setPropheticWorld(false);local.current.world="Today";const p=local.current;p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;setHint("Returned to the main Games lobby.");};
  // Future is a selectable universe in this shared WebGL lobby, not a separate game.
  const jurassicWorldRef=useRef(false); const [jurassicWorld,setJurassicWorld]=useState(false);
@@ -137,6 +140,7 @@ export default function SharedGameLobby(){
   futureWorldRef.current=false;setFutureWorld(false);
   jurassicWorldRef.current=false;setJurassicWorld(false);
   propheticWorldRef.current=false;setPropheticWorld(false);
+  egyptWorldRef.current=false;setEgyptWorld(false);
   partedSeaWorldRef.current=true;setPartedSeaWorld(true);
   setPicker(false);setWorldMapOpen(false);meetingSeatRef.current=null;setMeetingSeat(null);
   plane.current.active=false;ship.current.active=false;moonModeRef.current={landed:false,walking:false};
@@ -144,7 +148,7 @@ export default function SharedGameLobby(){
   boostEnabled.current=false;setBoostActive(false);setFlying(false);
   projectiles.current=[];partedSeaState.current=createPartedSeaState();seaArrivalNotified.current=false;
   const p=local.current;p.world="Time of Moses";p.x=0;p.z=SEA_SPAWN_Z;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;
-  setHint("🌊 Parted Sea · Cross the dry seabed between the towering walls. Follow the passage toward Sinai.");
+  setHint("🌊 Parted Sea · Toward Sinai is negative Z. The golden arch toward Egypt is behind the fleeing travelers (positive Z).");
  };
  const exitPartedSeaWorld=()=>{
   partedSeaWorldRef.current=false;setPartedSeaWorld(false);partedSeaState.current=null;projectiles.current=[];
@@ -152,12 +156,37 @@ export default function SharedGameLobby(){
   boostEnabled.current=false;setBoostActive(false);setFlying(false);setPicker(false);
   setHint("↩ Returned from the Parted Sea to the main Games lobby.");
  };
+ // The Egyptian end of the Parted Sea is the positive-Z arch.
+ const enterEgyptWorld=()=>{
+  partedSeaWorldRef.current=false;setPartedSeaWorld(false);
+  egyptWorldRef.current=true;setEgyptWorld(true);setPicker(false);setWorldMapOpen(false);
+  projectiles.current=[];boostEnabled.current=false;setBoostActive(false);setFlying(false);
+  const p=local.current;p.world="Ancient Egypt";p.x=EGYPT_SPAWN.x;p.z=EGYPT_SPAWN.z;p.y=EGYPT_SPAWN.y;p.yaw=Math.PI;p.flying=false;p.boost=false;
+  egyptPortalCooldown.current=performance.now()+2500;
+  setHint("🌴 Ancient Egypt · Explore the Nile, palm groves and pyramids under construction. Turquoise arch returns to Moses.");
+ };
+ const returnFromEgyptWorld=()=>{
+  egyptWorldRef.current=false;setEgyptWorld(false);
+  partedSeaWorldRef.current=true;setPartedSeaWorld(true);partedSeaState.current??=createPartedSeaState();
+  projectiles.current=[];boostEnabled.current=false;setBoostActive(false);setFlying(false);
+  const p=local.current;p.world="Time of Moses";p.x=EGYPT_MOSES_RETURN.x;p.z=EGYPT_MOSES_RETURN.z;p.y=EGYPT_MOSES_RETURN.y;p.yaw=Math.PI;p.flying=false;p.boost=false;
+  egyptPortalCooldown.current=performance.now()+2500;
+  setHint("🌊 Back at the Parted Sea · Follow the dry passage toward Sinai.");
+ };
+ const exitEgyptWorld=()=>{
+  egyptWorldRef.current=false;setEgyptWorld(false);
+  partedSeaWorldRef.current=false;setPartedSeaWorld(false);partedSeaState.current=null;projectiles.current=[];
+  const p=local.current;p.world="Today";p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;p.boost=false;
+  boostEnabled.current=false;setBoostActive(false);setFlying(false);setPicker(false);
+  setHint("↩ Returned from Ancient Egypt to the main Games lobby.");
+ };
  // Roman Judea is isolated from the old app layout and other world engines.
  const romanWorldRef=useRef(false),[romanWorld,setRomanWorld]=useState(false);
  const romeCityRef=useRef(false),[romeCity,setRomeCity]=useState(false),romanPortalCooldown=useRef(0);
  const enterRomanWorld=()=>{
   futureWorldRef.current=false;setFutureWorld(false);jurassicWorldRef.current=false;setJurassicWorld(false);
   partedSeaWorldRef.current=false;setPartedSeaWorld(false);partedSeaState.current=null;
+  egyptWorldRef.current=false;setEgyptWorld(false);
   propheticWorldRef.current=false;setPropheticWorld(false);romanWorldRef.current=true;setRomanWorld(true);
   romeCityRef.current=false;setRomeCity(false);setPicker(false);setWorldMapOpen(false);
   meetingSeatRef.current=null;setMeetingSeat(null);plane.current.active=false;ship.current.active=false;
@@ -273,7 +302,7 @@ export default function SharedGameLobby(){
    }
    if(jurassicWorldRef.current){updateJurassicDinos(dt,now,p,()=>{p.x=0;p.z=0;p.y=jurassicTerrain(0,0)+2;p.flying=false;setHint("🦖 Dinosaur attack! Respawned in Jurassic World.");});for(const shot of projectiles.current){if(shot.life>0&&hitJurassicApex(now,shot.x,shot.z,shot.y)){shot.life=0;}}}
    if(meetingSeatRef.current!==null){const a=meetingSeatRef.current*Math.PI/6;p.x=-125+Math.cos(a)*15;p.z=-120+Math.sin(a)*15;p.y=45;p.yaw=a+Math.PI;p.flying=false;p.boost=false;}
-   const damage=(kind:"animal"|"blaster")=>{if(meetingSeatRef.current!==null)return;recentDamage.current=recentDamage.current.filter(hit=>now-hit.at<=10000);recentDamage.current.push({kind,at:now});if(recentDamage.current.filter(hit=>hit.kind===kind).length>=3){recentDamage.current=[];p.x=0;p.z=partedSeaWorldRef.current?SEA_SPAWN_Z:0;p.y=partedSeaWorldRef.current?1:terrain(0,0)+1;p.flying=false;p.boost=false;setDowned(false);knockdownUntil.current=now+2000;setHint(kind==="animal"?"🐾 Three animal attacks — respawned!":"💥 Three blaster hits — respawned!");}else setHint(`${kind==="animal"?"🐾 Animal attack":"💥 Blaster hit"} — ${recentDamage.current.filter(hit=>hit.kind===kind).length}/3 strikes in 10 seconds`);};
+   const damage=(kind:"animal"|"blaster")=>{if(meetingSeatRef.current!==null)return;recentDamage.current=recentDamage.current.filter(hit=>now-hit.at<=10000);recentDamage.current.push({kind,at:now});if(recentDamage.current.filter(hit=>hit.kind===kind).length>=3){recentDamage.current=[];p.x=egyptWorldRef.current?EGYPT_SPAWN.x:0;p.z=partedSeaWorldRef.current?SEA_SPAWN_Z:egyptWorldRef.current?EGYPT_SPAWN.z:0;p.y=partedSeaWorldRef.current?1:egyptWorldRef.current?EGYPT_SPAWN.y:terrain(0,0)+1;p.flying=false;p.boost=false;setDowned(false);knockdownUntil.current=now+2000;setHint(kind==="animal"?"🐾 Three animal attacks — respawned!":"💥 Three blaster hits — respawned!");}else setHint(`${kind==="animal"?"🐾 Animal attack":"💥 Blaster hit"} — ${recentDamage.current.filter(hit=>hit.kind===kind).length}/3 strikes in 10 seconds`);};
    for(const [id,until] of damagedStructures.current)if(Date.now()>=until)damagedStructures.current.delete(id);for(const [id,damage] of structureHits.current)if(Date.now()>=damage.until)structureHits.current.delete(id);
    for(const shot of projectiles.current){shot.prevX=shot.x;shot.prevY=shot.y;shot.prevZ=shot.z;shot.x+=shot.vx*dt;shot.y+=(shot.vy??0)*dt;shot.z+=shot.vz*dt;shot.life-=dt;if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shield&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldLevel>=2||shot.power<2);if(!guarded){damage("blaster");}else setHint("🛡️ Shield absorbed the shot.");}}
    // Advance existing Moses NPCs and hit detection against the same aimed projectiles.
