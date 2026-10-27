@@ -1811,3 +1811,8 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 
 /* My Profile only: leave the proven 1Umma gallery scrolling layout unchanged. */
 [data-workspace-page="6"] .canvas-profile-mirror > .canvas-native-body > section[aria-label="Profile workspace"] > [role="tabpanel"][aria-label="My Profile"]{height:0!important;min-height:0!important;flex:1 1 0!important;overflow-y:auto!important;overflow-x:hidden!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;}
+
+/* The same fixed-height native scrolling shell used by 1Umma now owns My Profile scrolling. */
+[data-workspace-page="6"] .canvas-profile-mirror > .canvas-native-body > section[aria-label="Profile workspace"] > [role="tabpanel"][aria-label="My Profile"]{height:0!important;flex:1 1 0!important;min-height:0!important;overflow:hidden!important;padding:0!important;}
+[data-workspace-page="6"] .canvas-profile-mirror [data-my-profile-scroll="true"]{display:block!important;position:relative!important;height:100%!important;min-height:0!important;max-height:100%!important;width:100%!important;overflow-y:auto!important;overflow-x:hidden!important;touch-action:pan-y!important;overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important;pointer-events:auto!important;}
+[data-workspace-page="6"] .canvas-profile-mirror [data-my-profile-scroll="true"] > .canvas-native-profile{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;}
