@@ -242,7 +242,7 @@ export function resolveSweptSideGameMovement(
     // escape rule, not by snapping the avatar back into an obstacle.
     if(entry<0||entry>1||exit<=entry)continue;
     const feet=startFeetY+(endFeetY-startFeetY)*entry;
-    if(feet>=b.top-ROOF_TOLERANCE||feet+PLAYER_HEIGHT<=b.bottom+EPS)continue;
+    if(feet>=b.top-EPS||feet+PLAYER_HEIGHT<=b.bottom+EPS)continue;
     first=Math.min(first,entry);
   }
   if(!Number.isFinite(first))return none;
