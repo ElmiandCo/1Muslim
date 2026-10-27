@@ -72,7 +72,7 @@
 
 ---
 
-## 2026-10-27 · 07:56–08:15 CDT (America/Chicago) · Bot A / World Engine
+## 2026-10-27 · 07:56–08:04 CDT (America/Chicago) · Bot A / World Engine
 
 ### Starting point and non-regression gate
 
@@ -105,8 +105,8 @@
 | Source assertions | **PASS (static)**: no `spaceEdgeSince`, `spaceEdgeWarning`, 170-unit clamp, or punitive respawn string; terminal fall and landing pose are present; Jurassic/Future/prophetic entry points remain. |
 | Flight numerical smoke simulation | **PASS (model only)**: from altitude 169, 20s of simulated held ascend reaches ~379 with no forced reset; simulated unpowered fall lands with max downward speed 35. This is a calculation of the edited formulas, **not** an in-browser game test. |
 | Rendering count smoke test | **PASS (model only)**: at spawn (0,0), selected distant road/mountain/building/tree sets draw 0 items; at (0,-700) nearby sets remain (34 road, 36 mountain, 46 building, 75 tree objects); far district (-1260,-170) draws none of those Main Street sets. Not a measured GPU draw-call total. |
-| Build / typecheck | **NOT VERIFIED**: no local repository checkout or dependency installation available in this shift; GitHub Actions pull-request workflow lookup returned no runs. Vercel status for implementation SHA was **pending** when checked; do not report a successful build until CI completes. |
-| Device / playtest / FPS | **NOT VERIFIED**: requires real mobile and desktop testing, including terrain silhouettes at draw-distance boundaries, high-altitude return and falls onto roofs. |
+| Build / typecheck | **PASS for automatic non-production Vercel preview build** at branch tip `b8d2c51`: `npm run build` / Next.js 15.5.26 completed and deployment became **READY** with successful GitHub Vercel status. Compiler emitted **warnings** (webpack CSS cache serialization), not a failing build. No separate local `tsc` or device test; build log did not explicitly confirm an independent typecheck phase. [Build details](https://vercel.com/elmiandco/1muslim/6JfnwzauJqaENaMFkvZWCRTgnZLT). |
+| Device / playtest / FPS | **NOT VERIFIED**: requires real mobile and desktop testing, including terrain silhouettes at draw-distance boundaries, high-altitude return and falls onto roofs. Automatic Vercel non-production preview exists at [1muslim-en8ayedtd-elmiandco.vercel.app](https://1muslim-en8ayedtd-elmiandco.vercel.app); this was **not** promoted to production. |
 | Physics completeness | **PARTIAL**: ordinary collision volumes remain as-is; this shift did not add colliders to every rendered building/object or fix tunneling at high horizontal speed. |
 
 ### Per-world handoff matrix
