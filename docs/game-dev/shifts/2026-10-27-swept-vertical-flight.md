@@ -1,4 +1,4 @@
-# Game Bot A — World Engine: diagonal-flight vertical collision (2026-10-27, ~14:01–14:08 CDT)
+# Game Bot A — World Engine: diagonal-flight vertical collision (2026-10-27, 14:01–14:11 CDT)
 
 > **Scope:** Keemy's Adventure World game-only physics, shared avatar movement and regression tests. No site/layout changes, main merge or production deployment. Times are America/Chicago (UTC−05:00).
 
@@ -9,12 +9,12 @@
 | Protected frozen preview origin | `fix/profile-scroll-match-umma-20261027` @ `c856491131bb0c8056693652f8e5e58a26836831` |
 | Actual **game-code** starting point | Bot B `game/living-worlds-lunar-research-20261027-1330` @ `736ddf1f2387e0ee6761dd91341b3cdfc377eb67`; descends from protected preview and includes prior A collision, flight and B lunar work |
 | Dedicated Bot A branch | `game/world-engine-swept-vertical-20261027-1400` |
-| Implementation commits | `a8087899c03d61331b624efd0129d3ef18a516d5` physics helper; `a9e43e44e4276dbc7b1d52775110aa76349dd1a5` targeted lobby wiring; `b0569f90f8fd2995b34d368672ccaef4ec689a4e` regression smoke |
-| Exact runtime/test SHA built | `b0569f90f8fd2995b34d368672ccaef4ec689a4e` (documentation commit follows) |
+| Implementation commits | `a8087899c03d61331b624efd0129d3ef18a516d5` physics helper; `a9e43e44e4276dbc7b1d52775110aa76349dd1a5` targeted lobby wiring; `b0569f90f8fd2995b34d368672ccaef4ec689a4e` regression smoke; `d73606699c0497c70e7aadfd436df81dc6c1fad1` strict TypeScript union narrowing fix |
+| Exact runtime/test SHA built | `d73606699c0497c70e7aadfd436df81dc6c1fad1` (type correction after test commit; documentation commits follow) |
 | Latest site main / production read-only | `main` @ `21119c711beda86de3f7766b18bdb0e1c39028d0`; production deployment `dpl_3KxxhG8pRxuy64rN4D1Jn9jzgPHy` READY at same SHA. No writes to either. |
 | Frozen site layout contract | `app/page.tsx` blob `92ca9b508378fd462ae3cf8a1458d2d4467aeb56` and `app/canvas-fullscreen-v1.css` blob `7dcaf744a7c969d133452933c168806cb62f4361` match preview/game branch; `app/page.tsx` also matches main. Main vs frozen preview has site differences in `CanvasSecondaryApp.tsx` and CSS: do not merge full branch into site. |
 | Other shift handoff read | [Bot B 13:30 lunar research](2026-10-27-lunar-research.md) and inherited [Bot A 13:00 cached Today collision](../SHIFT_LOG.md). Bot B owns scene ambience; Bot A owns shared physics. |
-| Changed paths, runtime | `app/components/gamePhysics.ts` (+48 lines, pure helper); `app/components/SharedGameLobby.tsx` (+11/−2 lines, only import and vertical resolution block) |
+| Changed paths, runtime | `app/components/gamePhysics.ts` (+48 lines, pure helper); `app/components/SharedGameLobby.tsx` (+13/−2 lines, only import and vertical resolution block) |
 | Changed paths, test/docs | `scripts/game-swept-vertical-smoke.mjs` (new), `docs/game-dev/shifts/2026-10-27-swept-vertical-flight.md` (this note), `docs/game-dev/SHIFT_LOG.md` (summary) |
 | Forbidden paths | **No changes** to `app/page.tsx`, CSS, profile, feed, navigation, Quran, GoLive, LiveKit, Supabase, other world modules, site layouts, dependencies, `main` or production. |
 
@@ -33,7 +33,7 @@
 
 | Check | Actual result |
 | --- | --- |
-| Sandbox source checkout | **PASS** at exact SHA `b0569f9`, Vercel sandbox `game-a-swept-vertical-20261027-1400` |
+| Sandbox source checkout | **PASS** at initial SHA `b0569f9`, then rechecked new + legacy physics smoke at corrected SHA `d736066`, Vercel sandbox `game-a-swept-vertical-20261027-1400` |
 | `node scripts/game-swept-vertical-smoke.mjs` | **PASS:** 10 collision cases + 100 indexed parity cases + 2 lobby wiring checks |
 | `node scripts/game-physics-smoke.mjs` | **PASS:** 23 legacy assertions + 288 indexed parity + 4 index edge cases |
 | `node scripts/game-flight-pose-smoke.mjs` | **PASS:** 16 deterministic pose assertions |
@@ -41,7 +41,7 @@
 | `node scripts/game-moses-smoke.mjs`, `game-roman-smoke.mjs`, `game-lunar-research-smoke.mjs` | **PASS:** all three executed, including Roman's 17 static checks and lunar LOD budget |
 | `tsc --strict --noEmit --target es2022 --module commonjs --skipLibCheck app/components/gamePhysics.ts` | **PASS** in sandbox with temporary TypeScript 5.9.3, no repository dependency changes |
 | GitHub diff vs Bot B source | **PASS:** exactly three game-only paths before docs; +115/−2 lines total |
-| Next.js non-production preview | Vercel deployment `dpl_Dm3hvRbQ6jT3TdHF6fD5oUguS3AE` at `b0569f9`, [preview](https://1muslim-7s4y8tdso-elmiandco.vercel.app). **Build state must be checked before claiming READY**. |
+| Next.js non-production preview | First preview `dpl_Dm3hvRbQ6jT3TdHF6fD5oUguS3AE` at `b0569f9` **FAILED** on strict TypeScript: union property `vertical.x` inferred `unknown` in the lobby. Corrected in `d736066` using `typeof` guards. **PASS / READY**: non-production deployment `dpl_HRon4tjWfCsWmha3JW7aoHtajSGp` at `d736066`, [working preview](https://1muslim-81u6xv7mw-elmiandco.vercel.app). |
 | Real iOS/Android gameplay, FPS and networked avatar movement | **NOT TESTED**. No mobile performance claims. |
 
 The helper queries the swept X/Z broadphase only when the cheap destination check found no hit and horizontal movement occurred. In worst cases a very long diagonal flight crosses more spatial-index cells; no measured mobile frame-time data yet. Sandbox installed TypeScript in `/tmp/game-a-ts` and linked it in an untracked sandbox-only `node_modules`; GitHub lockfiles and dependencies unchanged.
