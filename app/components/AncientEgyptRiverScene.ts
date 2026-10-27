@@ -34,7 +34,7 @@ export const EGYPT_DOCK_CREWS=Array.from({length:6},(_,id)=>({
 }));
 /** Tiny wildlife groups are deterministic, never networked or collidable. */
 export const EGYPT_RIVER_WILDLIFE=Array.from({length:12},(_,id)=>({
- id,z:-450+id*79,phase:id*1.83,kind:id%3===0?"fish" as const:"heron" as const
+ id,z:-450+id*79,phase:id*1.83,kind:id%3===0?"fish":"heron"
 }));
 /** Back-and-forth unloading: limestone is carried inland and the worker
  * returns empty-handed. Physics is intentionally owned by Bot A. */
