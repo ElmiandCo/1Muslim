@@ -1,5 +1,5 @@
 "use client";
-import {useState,type ReactNode} from "react";
+import {useRef,useState,type ReactNode} from "react";
 import Link from "next/link";
 import {CanvasUmmaGallery} from "./CanvasUmmaGallery";
 import ProfileVideos from "./ProfileVideos";
@@ -7,6 +7,7 @@ import ProfileVideos from "./ProfileVideos";
 const tabs=["1Umma","My Profile"] as const;
 type Tab=typeof tabs[number];
 export default function GameLabProfileHub({active,profile,renderProfileSection}:{active:boolean;profile?:ReactNode;renderProfileSection?:(section:"Avatars"|"Background"|"Badges"|"Settings")=>ReactNode}){
+ const profileScrollRef=useRef<HTMLDivElement|null>(null);const touchY=useRef<number|null>(null);
  const [tab,setTab]=useState<Tab>("1Umma"); const [settingsOpen,setSettingsOpen]=useState(false);
  return <section aria-label="Profile workspace" style={{height:"100%",maxHeight:"100%",width:"100%",maxWidth:"100%",boxSizing:"border-box",minWidth:0,minHeight:0,display:"flex",flexDirection:"column",color:"#f7f0da",background:"transparent",backdropFilter:"none",borderRadius:0,overflow:"hidden"}}>
   <header style={{padding:"8px 10px 5px",minWidth:0,flexShrink:0,position:"relative"}}>
@@ -15,7 +16,7 @@ export default function GameLabProfileHub({active,profile,renderProfileSection}:
     {tabs.map(name=><button key={name} role="tab" type="button" aria-selected={tab===name} onClick={()=>{setTab(name);setSettingsOpen(false)}} style={{flex:"0 0 auto",minHeight:38,padding:"6px 10px",fontSize:12,whiteSpace:"nowrap",borderRadius:0,border:"none",borderBottom:tab===name?"2px solid #e8cb83":"2px solid transparent",background:"transparent",color:"#fff3d4",fontWeight:tab===name?700:500}}>{name}</button>)}
    </div>
   </header>
-  <div role="tabpanel" aria-label={tab} style={{position:"relative",flex:1,minHeight:0,minWidth:0,width:"100%",maxWidth:"100%",boxSizing:"border-box",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",overscrollBehaviorY:"contain",padding:tab==="1Umma"?0:8}}>
+  <div ref={profileScrollRef} role="tabpanel" aria-label={tab} onTouchStart={e=>{if(tab==="My Profile")touchY.current=e.touches[0]?.clientY??null}} onTouchMove={e=>{if(tab!=="My Profile"||touchY.current===null)return;const y=e.touches[0]?.clientY;if(y===undefined)return;const panel=profileScrollRef.current;if(panel)panel.scrollTop+=touchY.current-y;touchY.current=y}} onTouchEnd={()=>{touchY.current=null}} onTouchCancel={()=>{touchY.current=null}} style={{position:"relative",flex:1,minHeight:0,minWidth:0,width:"100%",maxWidth:"100%",boxSizing:"border-box",overflowY:"auto",overflowX:"hidden",touchAction:tab==="My Profile"?"none":"pan-y",WebkitOverflowScrolling:"touch",overscrollBehaviorY:"contain",padding:tab==="1Umma"?0:8}}>
    {tab==="1Umma"?<CanvasUmmaGallery active={active}/>:settingsOpen&&renderProfileSection?renderProfileSection("Settings"):<>{profile??<p>Sign in to see your profile.</p>}<ProfileVideos/></>}
   </div>
  </section>
