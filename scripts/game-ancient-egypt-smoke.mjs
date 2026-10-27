@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import {
  EGYPT_BOUNDS,EGYPT_PALMS,EGYPT_WORKERS,EGYPT_BOATS,EGYPT_BIRDS,
  EGYPT_RIVER_WIDTH,EGYPT_PYRAMIDS,EGYPT_DOCKS,EGYPT_DOCK_CREWS,EGYPT_RIVER_WILDLIFE,
+ EGYPT_VILLAGE_PORTERS,EGYPT_IRRIGATED_PLOTS,egyptVillagePorterPose,
  egyptRiverCenterX,ancientEgyptSolidProps,egyptWorkerPose,egyptBoatPose,egyptDockWorkerPose,
  renderAncientEgyptRiverLife
 } from "../app/components/AncientEgyptRiverScene.ts";
@@ -76,5 +77,26 @@ const dockScene=capture(1200,dockX,dock);
 ok(dockScene.count>20&&dockScene.count<1000,"Dock ambience stays within draw budget");
 const wildlife=EGYPT_RIVER_WILDLIFE.map(w=>w.kind);
 ok(wildlife.includes("fish")&&wildlife.includes("heron"),"Two Nile wildlife types present");
+ok(EGYPT_VILLAGE_PORTERS.length===8,"Eight bounded village NPCs");
+ok(EGYPT_IRRIGATED_PLOTS.length===24,"Twenty-four deterministic crop plots");
+for(const villager of EGYPT_VILLAGE_PORTERS){
+ ok(villager.z>=97&&villager.z<=103,"Villagers remain in the open gap between house rows");
+ for(const now of [0,1000,6000,24000,60000]){
+  const pose=egyptVillagePorterPose(now,villager.id);
+  ok([pose.x,pose.z,pose.heading,pose.step].every(Number.isFinite),"Village pose finite");
+  ok(Math.abs(pose.x-villager.x)<=3.001&&Math.abs(pose.z-villager.z)<=.601,
+   "Porter movement stays in clear alley");
+ }
+}
+for(const plot of EGYPT_IRRIGATED_PLOTS){
+ ok(plot.x>=-263&&plot.x<=-223&&plot.z>=53&&plot.z<=92,
+  "Crops stay east of huts and away from Moses return arch");
+ ok(plot.kind==="flax"||plot.kind==="grain","Crops have bounded variants");
+}
+const village=capture(12000,-328,100),fields=capture(12000,-245,78);
+ok(village.count>25&&village.count<1000,"Village NPCs and homes render within mobile draw budget");
+ok(fields.count>25&&fields.count<1000,"Irrigated fields render within mobile draw budget");
+ok(EGYPT_IRRIGATED_PLOTS.every(plot=>Math.hypot(plot.x+28,plot.z-170)>30),
+ "Crop beds leave Egypt-to-Moses return portal untouched");
 console.log("PASS Ancient Egypt riverlife smoke:",checks,"assertions; bank draws",bank.count,
  "construction draws",construction.count,"far draws",far.count);
