@@ -78,4 +78,4 @@ const treeHit=resolveHorizontalGameMovement(firstTree.x-5,firstTree.z,firstTree.
 assert.equal(treeHit.blocked,true,"tree trunk must be solid");
 const highTree=resolveHorizontalGameMovement(firstTree.x-8,firstTree.z,firstTree.x+8,firstTree.z,250,JURASSIC_COLLIDERS);
 assert.equal(highTree.blocked,false,"flying well above canopy must remain free");
-console.log("PASS: 16 game physics/world-collider assertions");
+console.log("PASS: 23 game physics/world-collider assertions");
