@@ -6,7 +6,7 @@
 - **Actual game-code starting point:** Bot A `game/world-engine-3d-side-sweep-20261027-1500` @ `f86963e36b3d1d23388d49ea319ebed97c30ddd9`, descendant of the protected baseline. This preserves Bot A's 3D swept collisions, ordinary flight, Hajj/Nabawi, Moses, Roman Judea, lunar research and the Belt Boyz meeting area.
 - **Bot B handoff reviewed first:** `game/living-worlds-ancient-egypt-riverlife-20261027-1530` @ `d9c84d2`; isolated scene implementation `f9e8b78`, test `81df85b`, detailed [Egypt handoff](https://github.com/ElmiandCo/1Muslim/blob/game/living-worlds-ancient-egypt-riverlife-20261027-1530/docs/game-dev/shifts/2026-10-27-ancient-egypt-riverlife.md), [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126). **Only** its two new game files were selectively copied; its older baseline and site files were not merged.
 - **Read-only main/production at shift start:** `main` @ `82eddbf7a5a94fa5968550be2bd335a4aa46f823`. Compared against protected preview: they diverge in newer site/feed/profile and community-post files. No site layout contract was changed; the existing two-nav, posting, profile-scroll, Qur'an, GoLive and app pages must remain untouched.
-- **Dedicated branch:** `game/world-engine-egypt-portal-colliders-20261027-1600`. Initial implementation/test head `d1de8e48ab053078f9a179dd6639ef1721167036`; later log-only commits may advance this branch. No write to `main`, frozen production, or protected preview.
+- **Dedicated branch:** `game/world-engine-egypt-portal-colliders-20261027-1600`. Initial implementation/test head `d1de8e48ab053078f9a179dd6639ef1721167036`; safety follow-ups `f43e0a4` (Moses re-entry grace period) and `55e07d9` (correctly facing return arch). Later log-only commits advance the branch. No write to `main`, frozen production, or protected preview.
 
 ## Exact changed paths and implementation
 | Path | What changed, before → after |
@@ -19,12 +19,12 @@
 | `scripts/game-egypt-integration-smoke.mjs` | **NEW**, Bot A executable Node/TypeScript-transpile smoke: real module logic for portal placement, return distance, palm solidity, stepped pyramid landings, enterable hut doors and roofs, riverbed, bounded terrain draws and preservation markers. |
 | `docs/game-dev/shifts/2026-10-27-egypt-portal-colliders.md` and `docs/game-dev/SHIFT_LOG.md` | **Game-only handoff**, this note and cumulative index. |
 
-**Implementation commits:** `b002c78` / `e5a4179` (selective Bot B scene and test); `ea4a897` (new physics/terrain module); `cdcd087` (portal state); `72bceb6` (movement, render and collision wiring); `2cf04bb` (distinct Moses arch); `d1de8e4` (integration smoke). All on the dedicated game branch.
+**Implementation commits:** `b002c78` / `e5a4179` (selective Bot B scene and test); `ea4a897` (new physics/terrain module); `cdcd087` (portal state); `72bceb6` (movement, render and collision wiring); `2cf04bb` (distinct Moses arch); `d1de8e4` (integration smoke); `f43e0a4` (safe re-entry); `55e07d9` (gateway orientation). All on the dedicated game branch.
 
 ## Exact portal behavior
 1. Choose **Time of Moses** in the existing game universe selector. The Parted Sea remains a separate, 2,743m-long crossing with its own NPCs and physics.
 2. Head **toward positive Z** to the amber arch at `(0,-14)`, the direction travelers are fleeing **from**. Enter within six world units while below eight units altitude to teleport to **Ancient Egypt**, spawning at `(-28,2,120)`.
-3. Egypt is a **separate** scene/world; explore the Nile and pyramid-construction district. The turquoise return arch at `(-28,170)` leads back to the sea at `(0,1,-48)`, safely away from the original arch to avoid instant bounce.
+3. Egypt is a **separate** scene/world; explore the Nile and pyramid-construction district. The turquoise return arch at `(-28,170)` leads back to the sea at `(0,1,-48)`, safely away from the original arch to avoid instant bounce. Returning players receive 3.5 seconds of Moses NPC invulnerability.
 4. The existing main-lobby Earth control exits Egypt directly to Today. The far Parted Sea/Sinai arch is visually preserved but **not** repurposed.
 5. Historical caution: the Egypt construction scene is an **artistic interpretation**, not a claim that pyramids were being built in Moses's lifetime; no prophets depicted.
 
@@ -35,7 +35,7 @@
 | Connector-side source assertions | **PASS:** confirmed actual current branch contains portal triggers, independent Egypt world, terrain, collision index, render, reciprocal return, and preserved Moses, Hajj, Nabawi, Jurassic, Future, Roman, Council/meeting source markers. Static checks only, not playtest. |
 | Bot B original scene assertions | Prior B reported 510 direct V8 assertions; this shift **did not rerun** them. Original source copied byte-for-byte. |
 | New Node smoke scripts | **COMMITTED, NOT YET RUN** in full checkout. Run `node scripts/game-ancient-egypt-smoke.mjs` and `node scripts/game-egypt-integration-smoke.mjs` with project dependencies installed. |
-| Next.js/Vercel preview build | **Pending final verification at initial log creation**. Non-production preview build for implementation/test commit `d1de8e4` was observed compiling successfully and entering typechecking; inspect the final Vercel state before claiming pass. |
+| Next.js/Vercel preview build | **PASS for implementation/test commit `d1de8e4`:** Vercel non-production preview `dpl_9UGKbgBN97R7bff1xYXidMfKzzGS` reached **READY** after Next.js 15.5.26 compilation and build completion (~46s). Build emitted pre-existing CSS autoprefixer/webpack cache warnings. This does **not** execute the two Node smoke scripts or prove in-browser portal traversal. Two later game-only safety fixes are pending their own preview status. |
 | Device/WebGL and multiplayer | **NOT VERIFIED:** no real mobile/desktop portal walkthrough, collision stress, actual FPS, network presence or live boat interactions. |
 | Performance | Scene-local B LOD retained. A terrain uses max 44 Z strips × 3–4 cubes, culled by player Z/altitude; immutable collider index avoids per-frame rebuild. **No GPU/mobile benchmark**. |
 | Known gameplay limits | River is shallow-wading terrain, **not swimming/boat boarding**. Workers/boats/birds are visual NPCs. Pyramid ramps are solid stepped boxes (not smooth slopes); high-speed boosted traversals and seam edges need in-game testing. Portal trigger is proximity + altitude; no touch-to-enter UI. |
