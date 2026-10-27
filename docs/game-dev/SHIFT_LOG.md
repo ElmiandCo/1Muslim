@@ -1,5 +1,72 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 12:55–13:05 CDT (America/Chicago) · Bot A / World Engine — cached Today collision geometry
+
+### Provenance and protected site contract
+
+| Contract | Evidence / decision |
+| --- | --- |
+| Bot | **Game Bot A — World Engine**, collision/physics/performance scope only |
+| Frozen preview origin (read-only) | `fix/profile-scroll-match-umma-20261027` @ **`c856491131bb0c8056693652f8e5e58a26836831`** |
+| Actual GAME starting point | **`game/living-worlds-roman-judea-restored-20261027-1230` @ `42fc1208e664649399cc82106ffbf6c446d1e9a5`**, descendant of the frozen preview and prior A work; retains B's latest Roman/Jerusalem restoration and Moses integration |
+| Working branch | **`game/world-engine-today-collision-cache-20261027-1300`**; game implementation commits `60f1aa2`, `2c87106`, test `2f5a148`, build syntax correction `3970595` (documentation commit follows) |
+| Other shift reviewed | Bot B 12:10–12:13 CDT Roman Judea/Moses handoff at top of inherited log; B's Roman renderer/colliders are left unchanged. Earlier B Jurassic ecology and Future gardens remain separate branches |
+| Current main and production, read-only | `main` @ **`21119c711beda86de3f7766b18bdb0e1c39028d0`**; production deployment `dpl_3KxxhG8pRxuy64rN4D1Jn9jzgPHy` READY on that SHA. Frozen production `release/frozen-production-2026-10-27-perfect-for-you` @ `4e2a6c56bfbc75bd93560f6a02a2799deb885487` |
+| Layout contract compared to frozen | `app/page.tsx` blob `92ca9b5` and `SharedGameLobby.module.css` blob `952bdfc` match main/frozen. `CanvasSecondaryApp.tsx` differs (`ac34d6b` main vs `4db1706` frozen); no site/layout file was touched or copied |
+| Exact changed paths | `app/components/gameTodayColliders.ts` **new**, `app/components/SharedGameLobby.tsx` **targeted collision block only**, `scripts/game-today-collision-smoke.mjs` **new**, `docs/game-dev/SHIFT_LOG.md` **this log** |
+| Forbidden paths modified | **None**: no `main`, production, app page, site CSS, navigation, profile, feed, Quran, GoLive, database, other world modules or dependencies |
+
+### Before → after: implemented behavior (not a proposal)
+
+**Before:** The shared `SharedGameLobby` render loop rebuilt approximately **251 static Today colliders plus 80 destructible prop colliders every animation frame**. In the Muhammad ﷺ historical scene it rebuilt another 122 historical solids and then truncated a combined array to 128 entries, accidentally allowing **six Today plaza props** to appear as invisible historical collision objects. Existing Jurassic/Future collision indices were already cached; Today had not received that optimization.
+
+**After:**
+
+1. New `gameTodayColliders.ts` extracts the **same 251 Today static footprints** (office walls, Main Street shops, bridge rails, satellite district buildings, mountains, trees, arena, city towers) into `createTodayStaticColliders(terrain)`, cached by `createTodayCollisionSource` at **one initialization per mounted game renderer**. The underlying spatial broadphase is Bot A's existing `buildStaticGameCollisionIndex`; all static solids remain active at any draw distance.
+2. **80 existing plaza props** are indexed once in `TODAY_PROP_COLLIDERS`. The composite `query` filters only the nearby props against the **live** `damagedStructures.current` map, so a destroyed prop stops blocking immediately and automatically becomes solid again when its original five-minute repair expiry is removed. No reindexing per shot or frame.
+3. **Muhammad ﷺ era** now uses a separate `PROPHETIC_COLLISION_INDEX` with its original **122 historical building colliders**, without the six phantom Today props. Masjid an-Nabawi, prayer controls, historical scene geometry and no-blaster rule are not changed.
+4. `SharedGameLobby.tsx` keeps the **same** blaster-versus-prop hit count, power scaling, damage broadcast, and repair timer. The Today collision source is allocated once in the existing WebGL effect. Existing `resolveHorizontalGameMovement` and `resolveVerticalGameMovement` remain untouched; aircraft, ship, EVA, lunar, Jurassic, Future, Moses and Roman-specific collision dispatch is unchanged.
+5. Added reproducible `node scripts/game-today-collision-smoke.mjs` for indexed-vs-direct horizontal/vertical parity, collider counts, damaged/repair toggles, and historical isolation. It loads the actual TypeScript helpers through the repository's installed `typescript` package.
+
+**Performance expectation, not a measured FPS claim:** avoids per-frame creation of hundreds of static collision objects and reduces spatial collision candidates to nearby geometry. No mobile profiling or benchmark numbers have been obtained.
+
+### Verification, failures and limitations
+
+| Check | Result |
+| --- | --- |
+| GitHub compare against direct Bot B parent | **PASS** before log: exactly 3 paths, `SharedGameLobby.tsx`, new `gameTodayColliders.ts`, new smoke script; no non-game paths |
+| Initial non-production preview | **FAILED** at commit `2f5a148`: parser caught `z:-380-row*40` where a local variable declaration needed `z=-380-row*40`. This was corrected in game-only commit **`3970595`**; do not use the failed preview |
+| Corrected non-production preview | **Build in progress at initial log writing**: `dpl_C1Xk3x24anV1MbVq6FW2AKLUZwUB` at `https://1muslim-jfix7mwp4-elmiandco.vercel.app`; check final status below or on Vercel before calling it READY |
+| Reproducible smoke script | **Committed but not executed in a full repository checkout**. Run `node scripts/game-today-collision-smoke.mjs` and existing `node scripts/game-physics-smoke.mjs` before integration; do not claim test success without execution |
+| Mobile/browser gameplay | **NOT VERIFIED**: device FPS, prop break/repair multiplayer sync, roof/bridge traversal, historical spawn/portal, office entry and collisions require manual testing |
+| Regression scope | No modifications to existing gamePhysics, flight pose, Jurassic, Future, Moses, Roman, Space, Nabawi scene renderers, or Belt Boyz office geometry |
+
+### World-by-world coordination
+
+| World | This shift | Follow-up |
+| --- | --- | --- |
+| Today / Main Street / Belt Boyz / satellite districts | **Changed** collision source caching and live prop filtering; original 251 static and 80 props retained | Device-test shop/office entrances, roofless Council, boost collisions, damage/repair and FPS |
+| Muhammad ﷺ era / Makkah–Madinah / Masjid an-Nabawi | **Changed** historical collision source isolation; removes 6 unintended invisible Today props | Verify historical spawn and prayer zones; plan respectful seven-circuit tawaf and sa'i separately |
+| Jurassic | **Preserved** A cached tree/cave collision and dinosaurs; B ecology still separate | Coordinate selective fern/dragonfly patch and device collision tests |
+| Future / RealMecca concept | **Preserved** A cached 76 tower/skyway colliders; B gardens remain separate | Test flight/skyway landing and integrate gardens only after review |
+| Moses / Parted Sea | **Preserved** B 2,743m sea crossing, refuges and collision | Device test and ambience |
+| Roman Judea / ancient Rome | **Preserved** latest B scene, portal, olive trees and separate indexed colliders | Bot B owns visual/ambient refinement; don't overwrite scene |
+| Space / Moon | **Preserved** independent EVA, lunar, ship and plane physics | Test high-altitude handoff and no altitude reset |
+| Other districts | **Preserved** map/portals/navigation, game controls and voice code | Continue performance profiling and physics audits |
+
+### Dependencies, integration/rollback, and next shift
+
+- **Dependencies:** none added. Uses existing `gamePhysics.ts` spatial-index API and `typescript` already present in the repository for smoke tests. The new index is in memory only; no Supabase migration or persistent data change.
+- **Cross-shift ownership:** Bot A owns `gameTodayColliders.ts`, `gamePhysics.ts`, shared movement/flight; Bot B owns `RomanJudeaScene.ts`, `PartedSeaScene.ts`, `JurassicScene.ts`, `FutureCityScene.ts` scenery. `SharedGameLobby.tsx` is a shared wiring hotspot: Bot B must apply **targeted hunks** to a newer A lobby rather than replacing the whole file.
+- **Selective integration:** At the future site integration time, fetch fresh production/main and layout contracts; start from the **then-current site integration branch**, not this older full app tree. Add only `gameTodayColliders.ts`, the `SharedGameLobby.tsx` import, one-time `todayCollisionSource` creation and the isolated collision block, plus optional smoke script. If the site/game lobby changed, manually transplant and review these hunks. Never cherry-pick a full branch merge or copy `app/page.tsx` / old navigation / profile / feed / Quran / GoLive / CSS.
+- **Rollback:** Revert the targeted Today collision wiring and new helper (or cherry-pick-revert the game implementation commits on a future integration branch). Restore the previous inline `solids` block only if needed; do not revert unrelated B Roman/Moses changes or site files.
+- **Next Bot A:** Execute smoke scripts in a full checkout, measure mobile FPS, audit broadphase against destructible props and fast-boost movement, then consider dynamic obstacle collision caching and continuous diagonal/vertical landing sweeps. Do not claim all objects are solid.
+- **Unfinished user backlog:** aimed blaster reliability and audio, force field, persistent raised hands, spatial speaking indicators, XP shop, Hajj/prayer NPCs, ten enterable mosques and richer ambient life **not implemented this shift**.
+
+**Cross-reference:** [Bot B Roman shift](https://github.com/ElmiandCo/1Muslim/tree/game/living-worlds-roman-judea-restored-20261027-1230), [Bot A prior flight shift](https://github.com/ElmiandCo/1Muslim/tree/game/world-engine-directional-flight-20261027-1200), [master issue #126](https://github.com/ElmiandCo/1Muslim/issues/126). **No production merge or deployment.**
+
+---
+
 > **Protected integration rule:** This repository's website evolves independently. Never merge a whole game branch into main or production. Cherry-pick only reviewed game-path commits onto the *then-current* website integration branch. Preserve the newer feed, profile, Quran, navigation, GoLive, and site CSS. No automated production merge/deploy.
 
 ## 2026-10-27 · 12:10–12:13 CDT (America/Chicago) · Bot B / Living Worlds — Roman Judea and Rome restored
