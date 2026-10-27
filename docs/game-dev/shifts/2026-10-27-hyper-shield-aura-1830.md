@@ -34,7 +34,7 @@
 - **PASS:** 11/11 GitHub source preservation markers in `SharedGameLobby.tsx`, including Moses, Egypt, Jurassic, Future, meeting, Belt Boyz, shield damage guards and peer movement status.
 - **PASS:** GitHub compare from `9a39503b` to `c7b1e91e` showed **exactly three game/test paths** (5 additions / 4 deletions in shared lobby, plus two new files); no site files or Bot A physics modules touched.
 - **Committed, not executed in full checkout:** `node --experimental-strip-types scripts/game-hyper-shield-aura-smoke.mjs` (Node 22.16+). GitHub access here is connector-only; a local repo checkout is unavailable.
-- **Non-production preview build:** `dpl_7niL12b4mshsUhZD1ufH9hWe7KXm` for `c7b1e91e`, https://1muslim-913pywql7-elmiandco.vercel.app . Status **BUILDING** when this log was first authored; confirm final build state before integration. Preview is not production.
+- **Non-production preview build:** `dpl_7niL12b4mshsUhZD1ufH9hWe7KXm` for `c7b1e91e`, https://1muslim-913pywql7-elmiandco.vercel.app . **PASS / READY** confirmed on deployment status read; Next.js compiled successfully in 12.0s, lint/type phase completed and 101 static pages generated. Existing unrelated CSS/edge warnings were observed. No production alias. Preview is not production.
 - **Not verified:** actual WebGL appearance/transparency ordering, iPhone/Android FPS, browser audio output, multiplayer hit fairness, server enforcement or full mobile gameplay.
 
 ## World-by-world status — no scene regressions in this shift
