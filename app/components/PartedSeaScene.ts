@@ -129,5 +129,5 @@ export function renderPartedSea(vp:number[],draw:SeaDraw,now:number,p:SeaActor,s
   if(soldier){const striking=now-n.lastAttack<360;const thrust=striking?Math.sin((now-n.lastAttack)/360*Math.PI)*1.9:0;draw(vp,n.x+.55,y+1.1,n.z+thrust,.13,2.4,.13,[.56,.52,.43]);draw(vp,n.x+.55,y+2.35,n.z+thrust,.38,.65,.3,[.82,.81,.76]);}
  }
  // Short-lived sparks burst outward from every confirmed projectile hit.
- for(const impact of state.impacts){const age=(now-impact.at)/650;if(age<0||age>1)continue;for(let i=0;i<14;i++){const angle=i*2.39996;const radius=age*(1.8+(i%4)*.45);draw(vp,impact.x+Math.cos(angle)*radius,impact.y+Math.sin(i*1.7)*radius*.7,impact.z+Math.sin(angle)*radius,.16*(1-age)+.035,.16*(1-age)+.035,.16*(1-age)+.035,i%3===0?[1,.38,.15]:[1,.85,.22],1-age);}}
+ for(const impact of state.impacts){if(Math.abs(impact.z-p.z)>190)continue;const age=(now-impact.at)/650;if(age<0||age>1)continue;for(let i=0;i<14;i++){const angle=i*2.39996;const radius=age*(1.8+(i%4)*.45);draw(vp,impact.x+Math.cos(angle)*radius,impact.y+Math.sin(i*1.7)*radius*.7,impact.z+Math.sin(angle)*radius,.16*(1-age)+.035,.16*(1-age)+.035,.16*(1-age)+.035,i%3===0?[1,.38,.15]:[1,.85,.22],1-age);}}
 }
