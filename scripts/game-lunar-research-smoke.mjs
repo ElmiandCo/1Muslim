@@ -25,7 +25,7 @@ for(const args of [...near,...capture(100,50),...capture(-125,-90)]){
   assert(args[6].length===3&&args[6].every(v=>Number.isFinite(v)&&v>=0&&v<=1),"RGB must be valid");
 }
 const solar0=capture(100,50,0),solar1=capture(100,50,9000);
-assert(solar0.length>near.length/2,"Solar field must be populated");
+assert(solar0.length>=14,"Solar field must be populated");
 assert.notDeepEqual(solar0,solar1,"Solar tracking / rover positions must animate");
 const rover0=capture(120,96,0),rover1=capture(120,96,3000);
 assert.notDeepEqual(rover0,rover1,"Survey rover movement must animate");
