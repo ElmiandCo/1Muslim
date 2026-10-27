@@ -8,7 +8,7 @@ import {drawJurassic,updateJurassicDinos,jurassicTerrain,JURASSIC_LIMIT,hitJuras
 import {FUTURE_BOUNDS,FUTURE_PORTAL,futureSkywayFloor,renderFutureWorld} from "./FutureCityScene";
 import {SEA_BOUNDS,SEA_SPAWN_Z,createPartedSeaState,partedSeaColliders,updatePartedSea,renderPartedSea,type SeaState} from "./PartedSeaScene";
 import {resolveHorizontalGameMovement,resolveVerticalGameMovement} from "./gamePhysics";
-import {FUTURE_COLLIDERS,JURASSIC_COLLIDERS} from "./gameWorldColliders";
+import {FUTURE_COLLISION_INDEX,JURASSIC_COLLISION_INDEX} from "./gameWorldColliders";
 
 // Keep Moses refuge collisions stable across frames; never cull physics with visual LOD.
 const SEA_COLLIDERS=partedSeaColliders();
@@ -326,8 +326,8 @@ export default function SharedGameLobby(){
    // X/Z sliding preserves movement parallel to walls; the roof is checked at
    // the resolved final position, independently of rendering/LOD visibility.
    const collisionSolids=plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null
-     ?[]:jurassicWorldRef.current?JURASSIC_COLLIDERS:futureWorldRef.current
-     ?FUTURE_COLLIDERS
+     ?[]:jurassicWorldRef.current?JURASSIC_COLLISION_INDEX:futureWorldRef.current
+     ?FUTURE_COLLISION_INDEX
      :partedSeaWorldRef.current?SEA_COLLIDERS:propheticWorldRef.current?solids.slice(0,128):solids;
    let roof=-Infinity;
    if(!plane.current.active&&!ship.current.active){
