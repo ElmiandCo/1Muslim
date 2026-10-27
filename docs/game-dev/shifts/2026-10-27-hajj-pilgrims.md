@@ -1,4 +1,4 @@
-# Bot B / Living Worlds — Hajj pilgrim route animation (2026-10-27, 14:30–14:40 CDT)
+# Bot B / Living Worlds — Hajj pilgrim route animation (2026-10-27, 14:30–14:36 CDT)
 
 > **Game-only, non-production development.** This is a respectful *interpretive* game scene, not a precise reconstruction of a historical Hajj, a ritual tutorial, or a depiction of any prophet. All NPCs are faceless.
 
@@ -38,8 +38,9 @@
 | --- | --- |
 | GitHub diff vs exact Bot A starting commit | **PASS** before docs: only new Hajj module, targeted `SharedGameLobby.tsx` +7/−0, and new game smoke script |
 | Source inspection / render anchors | **PASS**: historical and Today calls each inserted exactly once; no other world renderer removed |
+| Direct execution of GitHub TypeScript module logic | **PASS: 42 assertions** across both layouts (after stripping type-only syntax in an isolated JS runtime): 7 tawaf lap boundaries, 7 sa'i trip boundaries, Marwa finish, near/far render budget, finite geometry. This is **not** the full Node smoke script |
 | `node scripts/game-hajj-pilgrims-smoke.mjs` | **Committed, not yet executed** in a full repository checkout; checks seven lap boundaries, seven sa'i trip boundaries, finishing at Marwa, historical building clearance, finite geometry, draw budget, animation, LOD and preservation |
-| Next.js/Vercel preview build | **Pending result** for `240ae375` at `dpl_7zGkQSf5jbwZTNPLFHrMiRV5YA6S`; update this record after verification |
+| Next.js/Vercel preview build | **PASS / READY** for exact code SHA `240ae375` at preview `dpl_7zGkQSf5jbwZTNPLFHrMiRV5YA6S` ([preview](https://1muslim-nv4uv6s2c-elmiandco.vercel.app)); Vercel logged Next.js compilation in 13.1s, type/lint phase and 101/101 generated pages; no production promotion |
 | Physical mobile FPS and NPC visual route | **Not measured**. Must play-test on iPhone and desktop near Kaaba, corridor pillars, historical alleys, and world switches |
 
 ## World-by-world progress and coordination
