@@ -152,3 +152,51 @@ export function resolveVerticalGameMovement(
   }
   return {y,landedOnSolid,hitCeiling};
 }
+
+
+/**
+ * Detect a diagonal flight/fall that crosses a solid roof or underside between
+ * frames even when the destination X/Z no longer overlaps that structure.
+ * Unlike a visual draw-distance test, this queries the full immutable collider
+ * source; an indexed source keeps work local to the swept horizontal bounds.
+ *
+ * This is a fallback for resolveVerticalGameMovement: call only if its normal
+ * destination-position check found no landing/ceiling. On impact the returned
+ * X/Z is the crossing position, so we never leave the avatar suspended above
+ * a roof it has already flown past.
+ */
+export type GameSweptVerticalMovementResult=Readonly<{
+  x:number;z:number;y:number;landedOnSolid:boolean;hitCeiling:boolean;
+}>;
+export function resolveSweptVerticalGameMovement(
+  startFeetY:number,endFeetY:number,
+  startX:number,startZ:number,endX:number,endZ:number,
+  colliders:GameCollisionSource
+):GameSweptVerticalMovementResult{
+  const none={x:endX,z:endZ,y:endFeetY,landedOnSolid:false,hitCeiling:false};
+  if(startFeetY===endFeetY||(startX===endX&&startZ===endZ))return none;
+  const descending=endFeetY<startFeetY;
+  const nearby=queryGameColliders(colliders,
+    Math.min(startX,endX)-PLAYER_RADIUS,Math.max(startX,endX)+PLAYER_RADIUS,
+    Math.min(startZ,endZ)-PLAYER_RADIUS,Math.max(startZ,endZ)+PLAYER_RADIUS);
+  let bestY=descending?-Infinity:Infinity;
+  let bestX=endX,bestZ=endZ,hit=false;
+  for(const b of nearby){
+    const crossingY=descending?b.top:b.bottom-PLAYER_HEIGHT;
+    if(descending
+      ?!(startFeetY>=crossingY-EPS&&endFeetY<crossingY)
+      :!(startFeetY<=crossingY+EPS&&endFeetY>crossingY))continue;
+    const t=(crossingY-startFeetY)/(endFeetY-startFeetY);
+    if(t<0||t>1)continue;
+    const x=startX+(endX-startX)*t,z=startZ+(endZ-startZ)*t;
+    if(Math.abs(x-b.x)>=b.hx+PLAYER_RADIUS||
+       Math.abs(z-b.z)>=b.hz+PLAYER_RADIUS)continue;
+    // Descending: first (highest) roof. Ascending: first (lowest) underside.
+    if(!hit||(descending?crossingY>bestY:crossingY<bestY)){
+      bestY=crossingY;bestX=x;bestZ=z;hit=true;
+    }
+  }
+  return hit
+    ?{x:bestX,z:bestZ,y:bestY,landedOnSolid:descending,hitCeiling:!descending}
+    :none;
+}
