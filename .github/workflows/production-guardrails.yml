@@ -1,0 +1,43 @@
+name: Production regression guardrails
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: production-guardrails-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: TypeScript
+        run: npx tsc --noEmit
+      - name: Production build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+  regression-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Guard critical feature files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f app/page.tsx
+          test -f app/components/ElmTentAlphabet.tsx
+          test -f app/components/HomeProfileCustomizer.tsx || { echo "::error::Homepage avatar customizer missing. Restore consolidated feature before release."; exit 1; }
+          for f in public/assets/avatars/gold-avatar-male.PNG public/assets/avatars/gold-avatar-female.PNG public/assets/avatars/water-avatar-male.PNG public/assets/avatars/water-avatar-female.PNG; do
+            test -f "$f" || { echo "::error::Missing avatar asset: $f"; exit 1; }
+          done
