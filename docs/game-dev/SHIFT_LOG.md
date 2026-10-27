@@ -39,7 +39,7 @@
 | Static wiring/source inspection | **PASS**: one call to `renderFutureGardens`; `FUTURE_TOWERS`, `FUTURE_SKYWAYS`, citizen loop, and `FUTURE_PORTAL` still present |
 | Garden spatial clearance calculation | **PASS (model)**: minimum 27.4 units from nearest tower footprint, nearest garden 104.7 units from exit portal, at least 20 units from nearest skyway centerline; max bloom offset about 5 units |
 | Draw budget smoke model | **PASS (model)**: 105 extra cube draw calls at spawn (0,0), 142 at (72,0), max **158** on a sampled 8-unit grid across Future bounds; no per-frame garden list generation. Not actual GPU profiling |
-| TypeScript / Next.js build | **PENDING at log creation**: automatic non-production Vercel preview build for commit `afe199c` in progress. Do not claim pass until READY |
+| TypeScript / Next.js build | **PASS**: automatic non-production Vercel preview for corrected implementation `afe199c` became **READY** at `https://1muslim-7tcku0ivm-elmiandco.vercel.app`; logs show compiled successfully in 9.3s, lint/type-validity phase, 101/101 static pages and completed output deployment. Earlier pre-fix commit `0b4f9bb` failed; corrected mutable palette commit passed. Warnings about webpack cache serialization and edge runtime were non-fatal |
 | Mobile / gameplay / FPS | **NOT VERIFIED**: iPhone and desktop playtest needed, especially lighting and draw-call overhead |
 | Integration scope | Implementation changes **only `FutureCityScene.ts`**; no shared lobby or site layout changes; final diff check below |
 
@@ -58,7 +58,7 @@
 
 ### Known issues, integration and next-shift handoff
 
-1. **No production merge/deploy**. Auto-created Vercel preview is non-production and must be checked for build success; real device FPS not yet measured.
+1. **No production merge/deploy**. Automatic Vercel preview for the corrected code passed, but real device FPS, interactions and lighting are not yet measured.
 2. **Bot A coordination:** A owns shared flight, collision, and Main Street LOD in `SharedGameLobby.tsx`. B only touched `FutureCityScene.ts`; integration should retain A's newer shared-game logic, not copy this branch's older lobby.
 3. **Cherry-pick only the implementation commits** `0b4f9bb` and `afe199c` (or apply their combined targeted diff to `FutureCityScene.ts`) onto a *new* branch from the then-current site integration head. Review `git diff --name-only`: game-only Future scene path; do not merge this branch wholesale. If another bot has edited Future City, manually reconcile the garden constants/helper/one call. Preserve site layout and newer game physics.
 4. **Rollback:** revert the two implementation commits on the integration branch or remove only `FUTURE_GARDEN_*`, `renderFutureGardens`, and the one call; never revert surrounding Future City or site code.
