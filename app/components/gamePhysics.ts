@@ -196,7 +196,10 @@ export function resolveSweptVerticalGameMovement(
       Math.abs(endX-b.x)>=b.hx+PLAYER_RADIUS||
       Math.abs(endZ-b.z)>=b.hz+PLAYER_RADIUS
     ))continue;
-    const x=startX+(endX-startX)*t,z=startZ+(endZ-startZ)*t;
+    // At start-of-frame roof contact, keep X/Z movement across the same
+    // surface instead of snapping back to the previous frame position.
+    const x=t<=EPS?endX:startX+(endX-startX)*t;
+    const z=t<=EPS?endZ:startZ+(endZ-startZ)*t;
     if(Math.abs(x-b.x)>=b.hx+PLAYER_RADIUS||
        Math.abs(z-b.z)>=b.hz+PLAYER_RADIUS)continue;
     // Descending: first (highest) roof. Ascending: first (lowest) underside.
