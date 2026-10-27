@@ -1,5 +1,28 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 13:28–13:32 CDT (America/Chicago) · Bot B / Living Worlds — lunar research ambience
+
+**Full persistent shift record:** [2026-10-27 lunar research](shifts/2026-10-27-lunar-research.md) — exact provenance, paths/functions, before/after, executed tests, per-world checklist, performance limitations, Bot A handoff, selective integration and rollback.
+
+| Contract | Evidence |
+| --- | --- |
+| Protected preview ancestor | `fix/profile-scroll-match-umma-20261027` @ `c856491131bb0c8056693652f8e5e58a26836831` |
+| Actual game-code starting point | Bot A `game/world-engine-today-collision-cache-20261027-1300` @ `b2d00b2e1e0d1a1b7f4f866f86bd11c6f3273b4b` |
+| New dedicated branch | `game/living-worlds-lunar-research-20261027-1330` |
+| Implementation | `41a98e0` (new lunar module), `2496c3b` (only two insertions in shared lobby) |
+| Tests / build source | `3d11009`; Vercel non-production deployment `dpl_BSn45gudks1bx4BANhaos4kEyRBX` **READY** |
+| Current main / production (read-only) | `21119c711beda86de3f7766b18bdb0e1c39028d0`; site layout and frozen preview compared, no non-game edits |
+| Changed files | `app/components/LunarResearchScene.ts`, `app/components/SharedGameLobby.tsx` (+2 lines), `scripts/game-lunar-research-smoke.mjs`, this log and the per-shift Markdown note |
+| Status | **Implemented** four tracking solar arrays, eight pulsing approach beacons, two animated survey rovers with 75–130-unit render-only LOD; no new dependencies, physics or collision edits |
+| Verification | **PASS**: actual lunar smoke, Bot A physics/flight/Today collider smokes, Bot B Moses/Roman smokes in a Vercel sandbox at exact code SHA; Next.js preview **READY**. Physical mobile FPS **not tested** |
+| Cross-shift conflicts | Bot A 13:00 collision work inherited intact; Bot B Roman market `f66c6a7`, Jurassic ecology `e05ef735`, Future gardens `afe199c` remain separate, not silently merged |
+| Production | **Untouched.** Integration only via reviewed game-only cherry-picks/targeted patch against the then-current site branch, with user approval |
+
+**World checklist:** Moon/Space **changed** (research ambience); Today/Belt Boyz, Moses, Roman/Jerusalem, Jurassic, Future, Makkah/Madinah/Nabawi and five districts **preserved**; distinct Blessed Chambers module **unverified**. Roman market-life additions remain on another B branch. **Next:** device test lunar FPS and rover overlaps; then respectful Hajj NPC seven-circuit tawaf→sa'i slice or another isolated world. Ten mosques, XP shop, blaster sound/aim, shield, raised-hand hold, speaker indicators and prayer congregations are **not yet implemented** by this shift.
+
+---
+
+
 ## 2026-10-27 · 12:55–13:05 CDT (America/Chicago) · Bot A / World Engine — cached Today collision geometry
 
 ### Provenance and protected site contract
