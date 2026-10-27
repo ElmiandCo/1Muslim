@@ -13,7 +13,7 @@
 | Main/production read-only | `main` @ `82eddbf7`; **no site or production edits**; newer feed/profile and frozen layout contracts preserved |
 | Exact changed code | New `AncientEgyptRiverScene.ts` (Bot B isolated import) and `gameEgyptWorld.ts`; targeted `SharedGameLobby.tsx` Egypt portal/physics/render and `PartedSeaScene.ts` arch tint; two game smoke scripts |
 | Implemented | Positive-Z Moses Egyptian-origin portal → independent Nile/pyramids world → reciprocal return arch; 2.5s cooldown; persistent Moses NPC state; stepped pyramid/ramp, palm, hut wall/roof and dock solids; continuous desert and lowered Nile riverbed; render LOD |
-| Verified | GitHub path diff **PASS**, connector-side source preservation markers **PASS**; new Node smoke **committed, not executed**; Next.js non-production Vercel preview at code/test commit `d1de8e4` **READY** (build completed; CSS warnings only); two portal safety follow-ups need their own preview check |
+| Verified | GitHub path diff **PASS**, connector-side source preservation markers **PASS**; new Node smoke **committed, not executed**; Next.js non-production Vercel preview at code/test commit `d1de8e4` **READY** (build completed; CSS warnings only); two portal safety follow-ups also **READY** on non-production preview at `55e07d9` |
 | Pending | Actual portal walkthrough, real mobile FPS, river/wading physics, boat boarding, collision edge stress, high-altitude stars, faster descend; Bot B NPC refinements |
 | Integration | **Game-only selective patches/cherry-picks**, never full branch/app replacement. See detailed shift note for rollback and per-world checklist. No production merge/deploy. |
 
