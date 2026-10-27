@@ -2,6 +2,70 @@
 
 > **Protected integration rule:** This repository's website evolves independently. Never merge a whole game branch into main or production. Cherry-pick only reviewed game-path commits onto the *then-current* website integration branch. Preserve the newer feed, profile, Quran, navigation, GoLive, and site CSS. No automated production merge/deploy.
 
+## 2026-10-27 · 11:04–11:09 CDT (America/Chicago) · Bot A / World Engine — cached collision broadphase across Jurassic and Future
+
+### Provenance, contracts, isolation
+
+| Field | Verified source / outcome |
+| --- | --- |
+| Protected source baseline | `fix/profile-scroll-match-umma-20261027` @ `c856491131bb0c8056693652f8e5e58a26836831`; preserved without write |
+| Current main checked read-only | `main` @ `21119c711beda86de3f7766b18bdb0e1c39028d0`; GitHub comparison shows site-only differences in community posts API, CSS, CanvasSecondaryApp, GameLabProfileHub, ImmersiveVideoEntry, Supabase migration |
+| Frozen production branch checked read-only | `release/frozen-production-2026-10-27-perfect-for-you` @ `4e2a6c56bfbc75bd93560f6a02a2799deb885487`; protected baseline is six commits ahead and no site files were copied |
+| Live production inspected read-only | Vercel `dpl_3KxxhG8pRxuy64rN4D1Jn9jzgPHy` READY, `main` @ `21119c7`; **no production write** |
+| Latest Living Worlds handoff reviewed | Bot B `game/living-worlds-moses-playable-20261027-1100` @ `536a9605b626f561bb42007f8698609015e48736`, a descendant of latest Bot A 10:00 work and frozen baseline. Read its detailed 10:34 handoff before changes |
+| Starting game-only branch and SHA | `game/living-worlds-moses-playable-20261027-1100` @ `536a9605b626f561bb42007f8698609015e48736` (retains Moses selection, Parted Sea, Jurassic solids, Future skyways, flight, Belt Boyz office, Nabawi) |
+| New work branch | **`game/world-engine-spatial-broadphase-20261027-1100`**; tested implementation commit **`eb84106a850cd0da8c39fe20b230915d18e4a545`**; log-only commit follows |
+| Site/layout contracts | `app/page.tsx`, `CanvasSecondaryApp.tsx`, `SharedGameLobby.module.css`, site CSS, profile, feed, Quran, GoLive, navigation, database all **untouched**. The entire branch ancestry is game-only relative to protected preview baseline |
+| Exact paths changed in this shift | `app/components/gamePhysics.ts`, `app/components/gameWorldColliders.ts`, `app/components/SharedGameLobby.tsx`, `scripts/game-physics-smoke.mjs`, `docs/game-dev/SHIFT_LOG.md` only |
+
+### Implemented and verified — not just planned
+
+**Before:** Each rendered frame, `resolveHorizontalGameMovement` filtered **every** static Jurassic collider (1,439 volumes) or Future collider (76 volumes) for local movement. `resolveVerticalGameMovement` scanned the entire world collider array for roof/underside crossings, even when most objects were kilometers away. These loops ran in the player physics hot path and scaled with total world size rather than nearby geometry.
+
+**After:** `gamePhysics.ts` exports `buildStaticGameCollisionIndex`, `GameCollisionIndex`, and `GameCollisionSource`. A fixed-size X/Z spatial grid stores references to each static collider in all overlapping cells. `query` returns only AABB-overlapping candidates and deduplicates colliders spanning multiple cells. Both the existing horizontal swept/sliding solver and crossing-aware vertical roof/ceiling solver accept either a plain array or the indexed source; existing dynamic and small-world callers remain compatible. No vertical height cap or visual draw-distance dependency was introduced.
+
+`gameWorldColliders.ts` builds `JURASSIC_COLLISION_INDEX` and `FUTURE_COLLISION_INDEX` **once at module initialization** from existing, unchanged scene geometry. `SharedGameLobby.tsx` now selects those cached indexes for Jurassic/Future; it leaves Today's destructible/dynamic solids, Muhammad ﷺ era solids, Moses's nine refuge colliders, moon/EVA, planes/ships, player pose, network packets and all scene renderers unchanged. Collision still exists for geometry visually culled at distance. No scene module, mosque, or Belt Boyz geometry was edited.
+
+**Regression tests:** `scripts/game-physics-smoke.mjs` now checks 288 exact JSON-result parity cases comparing indexed versus full-scan horizontal and vertical collision across Jurassic, Future and multi-cell synthetic volumes; plus four index edge cases (locality, large cross-cell solids, deduplication, empty cells, invalid size). The original 23 legacy assertions remain. The two intermediate test failures were test-expectation mistakes (a second distinct wall was present in a dedup query; VM RangeError prototypes differ) and were corrected in separate commits; implementation logic was not changed to hide them.
+
+### Verification and performance evidence
+
+| Check | Outcome |
+| --- | --- |
+| Existing game physics smoke | **PASS**: 23 legacy assertions + 288 indexed parity comparisons + 4 index edge cases; sandbox exit 0 |
+| Bot B Moses world smoke | **PASS**: `node scripts/game-moses-smoke.mjs`; exit 0; selector, refuges, NPCs, shots and preservation checks |
+| Strict isolated TypeScript check | **PASS**: `tsc --strict --noEmit --target ES2022 --module commonjs --skipLibCheck --lib ES2022,DOM` over `gamePhysics.ts`, `gameWorldColliders.ts`, `JurassicScene.ts`, `FutureCityScene.ts`, `PartedSeaScene.ts`; exit 0, TS 5.8.3 |
+| Path isolation | **PASS**: GitHub compare versus direct Bot B parent showed exactly four game/test paths before adding this log; no site paths |
+| Node microbenchmark (Vercel sandbox, 1,000 movement+vertical position pairs per world, same sample positions, single pass) | **Jurassic:** 1,439 solids, raw **415.06 ms**, indexed **7.74 ms**; **Future:** 76 solids, raw **34.07 ms**, indexed **7.60 ms**. These are isolated CPU timings, **not** browser FPS or device battery measurements; results are environment/sample dependent |
+| Full Next.js preview build | **Started** for tested commit `eb84106` on non-production Vercel deployment `dpl_DCc5JYRD4MKGPQKHBGVHQeajzqbz` ([preview](https://1muslim-fu6lwfk45-elmiandco.vercel.app)); status pending at time of first log write |
+| Real device gameplay/mobile GPU/FPS | **NOT VERIFIED**; desktop/iPhone actual collision and frame pacing remain next-shift work |
+
+### Per-world status and boundaries
+
+| World | This shift's verified scope | Follow-up |
+| --- | --- | --- |
+| Jurassic | **New** cached spatial broadphase for 1,439 existing tree, rock and cave solids; existing cave route and dinosaur scene preserved | Real-device cave approach, collision edge cases, frame profiling; Bot B fern/dragonfly scene still separate |
+| Future / Futuristic / RealMecca concept | **New** cached broadphase for 76 tower/skyway solids; no changes to skyway geometry, render LOD or travel bounds | Validate skyway ceiling/landing on mobile; integrate B gardens as game-only scene diff after collision review; RealMecca distinct module not asserted |
+| Moses / Parted Sea | **Inherited unchanged** from latest Bot B; nine static refuge colliders continue through the array-compatible physics API | Real-device 2,743m traversal, water wall/cave overlap checks; optional index only if scene grows |
+| Muhammad ﷺ era / Makkah–Madinah / Masjid an-Nabawi | **Inherited unchanged**; no modifications to prayer controls, mosque, Kaaba or NPCs | Respectful tawaf/sa'i and praying NPCs; audit solid enterable architecture |
+| Today / Main Street / Belt Boyz | **Inherited unchanged**; dynamic destructible solids remain on array path, roofless Belt Boyz Council retained | Dynamic broadphase only after careful damage/repair invalidation design; shield, store, blaster, voice and hand pose backlog |
+| Space / Moon / Blessed Chambers | **Inherited unchanged**; dedicated vehicle/EVA/lunar physics bypasses new index | Ship/spaceflight physics and high-altitude real-device testing |
+| Jesus / Roman Judea | Still **preview pending** in current shared selector; no scene claimed | B to extract game-only source without old app layout |
+| Ten enterable high-ceiling mosques | **Not implemented** in this shift | Build verified enterable geometry incrementally; retain Nabawi |
+
+### Integration, rollback, dependencies, next shifts
+
+1. **No merge or production deployment.** This branch is a descendant of an older frozen website snapshot; **never merge the full branch** into today's main or production. Preserve newer site layout, two-nav design, profile scroll, feed, Quran and GoLive.
+2. **Selective integration:** Re-fetch current website integration branch before approval; review and cherry-pick only this shift's game commits or apply reviewed hunks in `gamePhysics.ts`, `gameWorldColliders.ts`, and the two index references/import in `SharedGameLobby.tsx`. Preserve Bot B's Moses additions and A's prior collision helpers. Bring smoke script and handoff optionally; reject any changed app pages, site CSS, site navigation, Supabase or profile/feed files.
+3. **Rollback:** Revert this shift's index wiring/import in `SharedGameLobby.tsx`, index exports in `gameWorldColliders.ts`, and broadphase types/functions in `gamePhysics.ts`; retain prior Jurassic/Future arrays and original swept/vertical solvers. Commits: `8478c4a`, `b8a0e88`, `0e3479f`, `72cc360`, `ee26f6b`, `eb84106` (tests last three). No migration or package change.
+4. **Bot B handoff:** Build future scene/NPC/mosque improvements atop **this new branch** after confirming current tip and no concurrent A changes. Do not replace `SharedGameLobby.tsx` wholesale or edit physics API without coordination. Existing B `PartedSeaScene.ts` and `scripts/game-moses-smoke.mjs` remain unchanged.
+5. **Bot A next:** profile static-grid query allocations/GC on mobile; test flying diagonally into raised bridges, boosted movement, high-altitude descent and landing animations; optimize dynamic Today collision generation separately without breaking destructible prop restoration. Consider collision grids for large Moses extensions only after performance evidence.
+6. **Unfinished feature backlog:** directional takeoff/falling/landing polish, full enterable collision for all visible buildings, world-specific LOD, richer XP store, blaster reliability/sounds, visible shield, persistent raised hand, proximity voice indicators, ambient life, Hajj/prayer NPCs, ten large mosques. No completion claims for these.
+
+**Cross-shift references:** [Bot B 10:34 Moses branch](https://github.com/ElmiandCo/1Muslim/tree/game/living-worlds-moses-playable-20261027-1100) · [Bot A 10:00 solids branch](https://github.com/ElmiandCo/1Muslim/tree/game/world-engine-jurassic-solids-20261027-1000) · [Master game issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+---
+
 ## 2026-10-27 · 10:34–10:37 CDT (America/Chicago) · Bot B / Living Worlds — Moses world connected to shared game
 
 ### Provenance and strict no-regression gate
