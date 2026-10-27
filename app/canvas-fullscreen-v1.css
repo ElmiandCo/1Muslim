@@ -1811,3 +1811,6 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 
 /* My Profile only: enlarge the visible mirror viewport; keep native scrolling intact. */
 [data-workspace-page="6"] .canvas-profile-mirror [data-profile-mirror-scroll][aria-label="My Profile"]{flex:0 0 auto!important;height:calc(200dvh - 600px)!important;min-height:min(110dvh,1120px)!important;max-height:none!important;overflow-y:scroll!important;touch-action:pan-y!important;scroll-snap-type:none!important}
+
+/* My Profile-only flex experiment: requested 1:1:1, valid CSS percentage basis. */
+[data-workspace-page="6"] .canvas-profile-mirror [data-profile-mirror-scroll][aria-label="My Profile"]{flex:1 1 1%!important;overflow-y:scroll!important;touch-action:pan-y!important;scroll-snap-type:none!important}
