@@ -11,7 +11,7 @@
 | Protected game baseline | `fix/profile-scroll-match-umma-20261027` at **`c856491131bb0c8056693652f8e5e58a26836831`** |
 | Working branch | **`game/living-worlds-moses-shoals-20261027-0930`**, created from protected SHA, not from a stale site merge |
 | Game implementation commit | **`d43998ea6ccd2aa9678445d5bc585d6926fbb8ab`** |
-| Final documentation SHA | See latest branch tip; documentation-only commit follows implementation |
+| Working branch documentation checkpoint | **`0c8c522bc149f1b996761712e6d21cddfe3365f1`** (handoff created); this verification update is documentation-only implementation |
 | Current main inspected | **`d9e9cc6052456e308a75a2ee67057ec9f146ca42`**; baseline/main diverged (19 ahead, 1 behind), with six unrelated site paths |
 | Production inspected | Vercel **READY** production deployment `dpl_FeWANe7U6pB6vYdF8122FqJTjBfF`, source `feature/animated-image-text-cards-20261027` at **`e3b38d088fe119a8b03a4d35e64c31ea625b25bf`** |
 | Site layout contract inspected | `CanvasSecondaryApp.tsx` and `SharedGameLobby.module.css` on protected baseline; read-only |
@@ -47,7 +47,7 @@
 | New helper integration | **PASS (static)**: `renderSeaShoals` invoked once from `renderPartedSea`; foam inserted in existing water-wall loop |
 | Placement and LOD | **PASS (calculated)**: 26 deterministic sites, Z -76 through -2626 within 2743m corridor; all fish behind |X| 10.1 movement bounds; <= 4 nearby sites per 190m range, near-only extra details |
 | Protected baseline diff gate | **PASS** before documentation: only `app/components/PartedSeaScene.ts` added (133 lines); no shared-lobby or site changes |
-| Full Next.js / TypeScript preview build | **PENDING at log creation**: Vercel non-production preview `dpl_Ebrh4WZkUGSCMbnXpKyK6PbacDbv` for implementation `d43998e`; inspect build result before claiming pass |
+| Full Next.js / TypeScript preview build | **PASS:** non-production Vercel `dpl_Ebrh4WZkUGSCMbnXpKyK6PbacDbv` reached **READY** for implementation `d43998e`; Next.js compiled in **12.8s**, lint/type-check phase completed, generated **101/101** static pages, build output completed in **60s**. Existing webpack cache, edge-runtime and npm configuration warnings were non-fatal. [Preview build](https://1muslim-a4ymkk75f-elmiandco.vercel.app) is a build verification, **not** a playable Moses world (not wired). |
 | Interactive world selector / portals | **NOT TESTED / NOT CONNECTED** in this branch; source module alone does not make the world playable |
 | Mobile GPU FPS / multiplayer NPC state | **NOT MEASURED**; original soldiers and hits are client-local, not server-authoritative |
 
