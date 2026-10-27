@@ -8,7 +8,22 @@ export async function GET(){
  const ids=[...new Set(posts.map(p=>p.author_id).filter((id):id is string=>typeof id==="string"))];
  const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username").in("id",ids):{data:[]};
  const authors=new Map((profiles||[]).map(p=>[p.id,p]));
- return NextResponse.json({posts:posts.map(p=>({...p,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member"}))});
+ const mediaByPost=new Map();
+ const idsToLink=posts.map(p=>p.id);
+ if(idsToLink.length){
+  const {data:linked}=await db.from("posts").select("id,community_post_id").in("community_post_id",idsToLink);
+  if(linked?.length){
+   const {data:files}=await db.from("post_media").select("post_id,storage_path,mime_type").in("post_id",linked.map(p=>p.id));
+   const supported=(files||[]).filter(f=>/^(image|video)\//.test(f.mime_type||""));
+   if(supported.length){
+    const {data:urls}=await db.storage.from("community-media").createSignedUrls(supported.map(f=>f.storage_path),3600);
+    const linkMap=new Map(linked.map(p=>[p.id,p.community_post_id]));
+    supported.forEach((f,i)=>{const id=linkMap.get(f.post_id),url=urls?.[i]?.signedUrl;if(id&&url&&!mediaByPost.has(id))mediaByPost.set(id,{url,mime_type:f.mime_type})});
+   }
+  }
+ }
+
+ return NextResponse.json({posts:posts.map(p=>({...p,media:mediaByPost.get(p.id)||null,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member"}))});
 }
 export async function POST(request:Request){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();
@@ -37,7 +52,7 @@ export async function POST(request:Request){
   return NextResponse.json({post:data,flagged:true,removed:true,flagRecorded:!flagError},{status:201});
  }
  if(media){
-  const {data:post,error:postError}=await db.from("posts").insert({user_id:user.id,body:text||"Shared a video"}).select("id").single();
+  const {data:post,error:postError}=await db.from("posts").insert({user_id:user.id,body:text||"Shared a video",community_post_id:data.id}).select("id").single();
   if(postError)return NextResponse.json({error:"Media post could not be created; your uploaded file remains saved.",code:postError.code},{status:503});
   const {error:attachError}=await db.from("post_media").insert({post_id:post.id,user_id:user.id,storage_path:media.storage_path,file_name:String(media.file_name||"upload").slice(0,255),mime_type:media.mime_type});
   if(attachError){await db.from("posts").delete().eq("id",post.id).eq("user_id",user.id);return NextResponse.json({error:"Media attachment could not be published; your upload remains saved.",code:attachError.code},{status:503})}
