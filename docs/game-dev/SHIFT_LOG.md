@@ -37,7 +37,7 @@
 | Strict isolated TypeScript check | **PASS**: `tsc --strict --noEmit --target ES2022 --module commonjs --skipLibCheck --lib ES2022,DOM` over `gamePhysics.ts`, `gameWorldColliders.ts`, `JurassicScene.ts`, `FutureCityScene.ts`, `PartedSeaScene.ts`; exit 0, TS 5.8.3 |
 | Path isolation | **PASS**: GitHub compare versus direct Bot B parent showed exactly four game/test paths before adding this log; no site paths |
 | Node microbenchmark (Vercel sandbox, 1,000 movement+vertical position pairs per world, same sample positions, single pass) | **Jurassic:** 1,439 solids, raw **415.06 ms**, indexed **7.74 ms**; **Future:** 76 solids, raw **34.07 ms**, indexed **7.60 ms**. These are isolated CPU timings, **not** browser FPS or device battery measurements; results are environment/sample dependent |
-| Full Next.js preview build | **Started** for tested commit `eb84106` on non-production Vercel deployment `dpl_DCc5JYRD4MKGPQKHBGVHQeajzqbz` ([preview](https://1muslim-fu6lwfk45-elmiandco.vercel.app)); status pending at time of first log write |
+| Full Next.js preview build | **PASS / READY** for tested commit `eb84106` on non-production Vercel deployment `dpl_DCc5JYRD4MKGPQKHBGVHQeajzqbz` ([preview](https://1muslim-fu6lwfk45-elmiandco.vercel.app)); Next.js compiled successfully in 15.9s, type/lint phase completed, 101/101 static pages generated. Existing edge-runtime/CSS warnings non-fatal |
 | Real device gameplay/mobile GPU/FPS | **NOT VERIFIED**; desktop/iPhone actual collision and frame pacing remain next-shift work |
 
 ### Per-world status and boundaries
