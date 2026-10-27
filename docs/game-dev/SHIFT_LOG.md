@@ -37,8 +37,8 @@
 | Deterministic generation | **PASS (calculation)**: 180 ferns and 28 dragonflies; no cave-proximate ferns |
 | Geometry budget | **PASS (calculation)**: 81 extra cube draw calls near spawn (0,0), 86 near (500,0), 0 near Apex cave (650,420); sampled 25×20-unit grid maximum **110 extra calls** along river |
 | Branch diff gate | **PASS** after implementation: only `app/components/JurassicScene.ts` changed relative to protected baseline |
-| TypeScript/full Next.js build | **Not independently executed**; no local repository checkout or dependency installation available in this shift |
-| Preview/CI | GitHub's automatic Vercel **non-production** preview check was **pending/building** at inspection; no production deployment or merge was requested or performed |
+| TypeScript/full Next.js build | **PASS (automatic non-production Vercel CI)** for implementation commit `e05ef735`: Next.js compiled successfully in 13.8s, passed type-check/lint phase, generated routes, and completed build/output deployment; no local checkout was available |
+| Preview/CI | **READY**: automatic non-production preview for implementation commit `e05ef735` at [1muslim-453engdjo-elmiandco.vercel.app](https://1muslim-453engdjo-elmiandco.vercel.app); build log confirms `Deployment completed`. No manual deployment, production promotion, or merge was requested/performed |
 | iPhone FPS and interactions | **Not measured**; requires real mobile preview to confirm smoothness and visual polish |
 
 ### World-by-world progress checklist (this baseline, evidence-based)
