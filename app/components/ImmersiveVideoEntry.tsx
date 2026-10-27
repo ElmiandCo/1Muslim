@@ -7,7 +7,18 @@ import SeamlessEntry from "./SeamlessEntry";
 
 type Clip={id:string;postId?:string;src:string;caption:string;creator:string;creatorId?:string;avatarUrl?:string;createdAt?:string;kind?:"video"|"image"|"text";liveRoom?:string;liveId?:string};
 const shuffleClips=(items:Clip[])=>{const result=[...items];for(let i=result.length-1;i>0;i--){const bytes=new Uint32Array(1);crypto.getRandomValues(bytes);const j=bytes[0]%(i+1);[result[i],result[j]]=[result[j],result[i]]}return result};
-const rankClips=(items:Clip[],likes:Record<string,number>,comments:Record<string,number>)=>{const pool=shuffleClips(items);const output:Clip[]=[];const now=Date.now();while(pool.length){const lastCreators=new Set(output.slice(-2).map(x=>x.creatorId).filter(Boolean));const weighted=pool.map(x=>{const age=x.createdAt?Math.max(0,(now-new Date(x.createdAt).getTime())/86400000):30;const engagement=Math.log1p((likes[x.postId||""]||0)*2+(comments[x.postId||""]||0)*3);const freshness=2.8*Math.exp(-age/7);const diversity=x.creatorId&&lastCreators.has(x.creatorId)?.28:1;const explore=Math.random()<.22?3:0;return Math.max(.1,(1+engagement+freshness+explore)*diversity)});let choice=Math.random()*weighted.reduce((a,b)=>a+b,0);let chosen=0;for(let i=0;i<weighted.length;i++){choice-=weighted[i];if(choice<=0){chosen=i;break}}output.push(pool.splice(chosen,1)[0])}const liveIndex=output.findIndex(x=>!!x.liveRoom);if(liveIndex>0){const [live]=output.splice(liveIndex,1);output.unshift(live)}return output};
+const rankClips=(items:Clip[],likes:Record<string,number>,comments:Record<string,number>)=>{
+ const pools={video:shuffleClips(items.filter(x=>x.kind!=="image"&&x.kind!=="text")),image:shuffleClips(items.filter(x=>x.kind==="image")),text:shuffleClips(items.filter(x=>x.kind==="text"))};
+ const output:Clip[]=[];const now=Date.now();const targets={video:.85,image:.10,text:.05};
+ while(pools.video.length+pools.image.length+pools.text.length){
+  const available=(Object.keys(pools) as (keyof typeof pools)[]).filter(k=>pools[k].length);
+  const kind=available.reduce((best,k)=>((output.filter(x=>(x.kind==="image"?"image":x.kind==="text"?"text":"video")===k).length+1)/targets[k] < (output.filter(x=>(x.kind==="image"?"image":x.kind==="text"?"text":"video")===best).length+1)/targets[best]?k:best),available[0]);
+  const pool=pools[kind];const lastCreators=new Set(output.slice(-2).map(x=>x.creatorId).filter(Boolean));
+  const weighted=pool.map(x=>{const age=x.createdAt?Math.max(0,(now-new Date(x.createdAt).getTime())/86400000):30;const engagement=Math.log1p((likes[x.postId||""]||0)*2+(comments[x.postId||""]||0)*3);const freshness=2.8*Math.exp(-age/7);const diversity=x.creatorId&&lastCreators.has(x.creatorId)?.28:1;const explore=Math.random()<.22?3:0;return Math.max(.1,(1+engagement+freshness+explore)*diversity)});
+  let choice=Math.random()*weighted.reduce((a,b)=>a+b,0);let chosen=0;for(let i=0;i<weighted.length;i++){choice-=weighted[i];if(choice<=0){chosen=i;break}}output.push(pool.splice(chosen,1)[0]);
+ }
+ const liveIndex=output.findIndex(x=>!!x.liveRoom);if(liveIndex>0){const [live]=output.splice(liveIndex,1);output.unshift(live)}return output;
+};
 const DEMO:Clip={id:"demo",src:"/videos/prelive-intro.mp4",caption:"Welcome to 1Muslim · Preview video",creator:"1Muslim"};
 export default function ImmersiveVideoEntry(){
  const pathname=usePathname();
