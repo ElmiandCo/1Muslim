@@ -16,7 +16,7 @@ export default function GameLabProfileHub({active,profile,renderProfileSection}:
    </div>
   </header>
   <div role="tabpanel" aria-label={tab} style={{position:"relative",flex:"1 1 0",height:0,minHeight:0,minWidth:0,width:"100%",maxWidth:"100%",boxSizing:"border-box",overflow:"hidden",padding:0}}>
-   {tab==="1Umma"?<CanvasUmmaGallery active={active}/>:<div className="canvas-umma-vertical-gallery canvas-my-profile-scroll-shell" data-my-profile-scroll="true" style={{height:"100%",minHeight:0,width:"100%",maxWidth:"100%",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",overscrollBehaviorY:"contain",boxSizing:"border-box",padding:8}}>{settingsOpen&&renderProfileSection?renderProfileSection("Settings"):<>{profile??<p>Sign in to see your profile.</p>}<ProfileVideos/></>}</div>}
+   {tab==="1Umma"?<CanvasUmmaGallery active={active}/>:<div className="canvas-my-profile-scroll-shell" data-my-profile-scroll="true" style={{height:"100%",minHeight:0,width:"100%",maxWidth:"100%",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",overscrollBehaviorY:"contain",boxSizing:"border-box",position:"relative",isolation:"isolate",background:"rgba(7,44,38,.28)",backdropFilter:"blur(13px)",border:"1px solid rgba(218,194,134,.25)",borderRadius:18,padding:"12px 10px 30px"}}>{settingsOpen&&renderProfileSection?renderProfileSection("Settings"):<>{profile??<p>Sign in to see your profile.</p>}<ProfileVideos/></>}</div>}
   </div>
  </section>
 }
