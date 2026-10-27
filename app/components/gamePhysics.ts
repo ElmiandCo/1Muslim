@@ -188,6 +188,14 @@ export function resolveSweptVerticalGameMovement(
       :!(startFeetY<=crossingY+EPS&&endFeetY>crossingY))continue;
     const t=(crossingY-startFeetY)/(endFeetY-startFeetY);
     if(t<0||t>1)continue;
+    // A character already standing on a roof (or touching an underside)
+    // must be able to walk/fly OUT over its edge. At t=0 the collision
+    // belongs to the start position, not the departing trajectory.
+    // Preserve actual landings when the destination still overlaps.
+    if(t<=EPS&&(
+      Math.abs(endX-b.x)>=b.hx+PLAYER_RADIUS||
+      Math.abs(endZ-b.z)>=b.hz+PLAYER_RADIUS
+    ))continue;
     const x=startX+(endX-startX)*t,z=startZ+(endZ-startZ)*t;
     if(Math.abs(x-b.x)>=b.hx+PLAYER_RADIUS||
        Math.abs(z-b.z)>=b.hz+PLAYER_RADIUS)continue;
