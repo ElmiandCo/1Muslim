@@ -201,4 +201,4 @@ export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boo
  </div><footer><Link href={destinations[slot]}>Open full experience ↗</Link></footer></div>
 }
 
-export function CanvasUmmaGallery({active}:{active:boolean}){return <div className="canvas-native-app canvas-umma-vertical-gallery" style={{height:"100%",minHeight:0,width:"100%",maxWidth:"100%",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",overscrollBehaviorY:"contain",boxSizing:"border-box",background:"transparent",border:"none",boxShadow:"none",padding:0}}><ProfileApp active={active} galleryOnly/></div>}
+export function CanvasUmmaGallery({active,embedded=false}:{active:boolean;embedded?:boolean}){return embedded?<ProfileApp active={active} galleryOnly/>:<div className="canvas-native-app canvas-umma-vertical-gallery" style={{height:"100%",minHeight:0,width:"100%",maxWidth:"100%",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",overscrollBehaviorY:"contain",boxSizing:"border-box",background:"transparent",border:"none",boxShadow:"none",padding:0}}><ProfileApp active={active} galleryOnly/></div>}
