@@ -1,5 +1,27 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 14:30–14:36 CDT (America/Chicago) · Bot B / Living Worlds — Hajj pilgrim seven-circuit tawaf → seven-trip sa'i
+
+**Full persistent handoff:** [2026-10-27 Hajj pilgrim routes](shifts/2026-10-27-hajj-pilgrims.md) — provenance, exact files/functions, before/after, test evidence, performance, every-world checklist, Bot A coordination, rollback and selective integration.
+
+| Contract | Evidence |
+| --- | --- |
+| Frozen site baseline | `fix/profile-scroll-match-umma-20261027` @ `c856491131bb0c8056693652f8e5e58a26836831` |
+| Actual latest game starting point | Bot A `game/world-engine-swept-vertical-20261027-1400` @ `46210b09ae1ac8ce57081939d105325475c22889`; inherited swept collision and Bot B lunar additions |
+| New game-only branch | `game/living-worlds-hajj-pilgrims-20261027-1430` |
+| Implementation / test commits | `9fdf8f36` new scene module; `06019dfb` targeted shared-game wiring; `240ae375` smoke test |
+| Changed paths | `app/components/HajjPilgrimScene.ts` (new), `app/components/SharedGameLobby.tsx` (+7/−0), `scripts/game-hajj-pilgrims-smoke.mjs` (new), this log and per-shift note; **no site or other game-engine files changed** |
+| Implemented | **12 faceless pilgrim NPCs** follow seven full tawaf circuits, walk to Safa, traverse seven Safa–Marwa legs ending at Marwa, fade before recycling. Historical Makkah uses existing open alley; Today uses existing Safa–Marwa gallery. Deterministic animation, max 84 additional nearby cube draws, 115-unit LOD. |
+| Verification | **PASS** 42 executed assertions on the exact GitHub module logic (type-only syntax removed for isolated JS execution); **PASS / READY** Vercel preview build `dpl_7zGkQSf5jbwZTNPLFHrMiRV5YA6S` at `240ae375`, compiled, type/lint checked and 101/101 pages generated. Full committed Node smoke script **not executed** in a checkout; real mobile FPS **not measured**. |
+| Main / production (read-only) | `main` and latest production `d10a5f91fa83a0a3745118c3ed2183c33be6fa74` (Vercel `dpl_AYFy68LgFmbWSck689TcusAceSNL` READY). Site `app/page.tsx` and game CSS match protected baseline; site `CanvasSecondaryApp.tsx` differs. |
+| Coordination / next | Bot A's swept flight, cached collisions and all world portals preserved. NPCs **visual-only, non-collidable**, approximate historically interpretive paths; next: iPhone corridor/pillar walkthrough, congregation slice or mosque model. Jurassic ecology, Future gardens, Roman market detail remain separate B branches. |
+| Integration | **No main merge, no production deploy.** Cherry-pick only game implementation commits onto then-current site branch after layout conflict gate; transplant just new module + one import/two calls if shared lobby has drifted. Roll back those isolated additions only. |
+
+**World coverage:** Muhammad ﷺ historical Makkah **changed** (pilgrims and ground marker); Today/Haram **changed** (pilgrims inside existing gallery). Madinah/Nabawi, Belt Boyz, Jurassic, Future/RealMecca, Moses/Parted Sea, Roman Judea/Rome, Moon/Space/Blessed Chambers concept, and five Today districts **preserved**. Remaining ten mosques, XP store, blaster sound/aim, force field, held hand, current speaker and congregational prayer **not implemented by this shift**.
+
+---
+
+
 
 ## 2026-10-27 · 14:01–14:11 CDT (America/Chicago) · Bot A / World Engine — diagonal flight roof and underside collision
 
