@@ -114,6 +114,6 @@ export function renderAncientEgyptReturnPortal(draw:EgyptDraw,playerX:number,pla
  if(Math.hypot(playerX-portal.x,playerZ-portal.z)>300)return;
  for(const side of [-1,1])draw(portal.x+side*5.2,5.5,portal.z,1.1,11,1.1,[.78,.63,.31]);
  draw(portal.x,11.4,portal.z,12,1.2,2,[.9,.76,.39]);
- draw(portal.x,5.5,portal.z,.28,10,8,[.14,.8,.74],.3);
+ draw(portal.x,5.5,portal.z,9,10,.28,[.14,.8,.74],.3);
  draw(portal.x,.035,portal.z+7,11,.07,9,[.72,.57,.29],.75);
 }
