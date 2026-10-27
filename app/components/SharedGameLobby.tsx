@@ -4,9 +4,10 @@ import {useCallback,useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import LiveHomePreview from "./LiveHomePreview";
 import styles from "./SharedGameLobby.module.css";
-import {drawJurassic,updateJurassicDinos,jurassicBlocked,jurassicTerrain,JURASSIC_LIMIT,hitJurassicApex} from "./JurassicScene";
-import {FUTURE_BOUNDS,FUTURE_PORTAL,FUTURE_TOWERS,futureSkywayFloor,renderFutureWorld} from "./FutureCityScene";
-import {resolveHorizontalGameMovement} from "./gamePhysics";
+import {drawJurassic,updateJurassicDinos,jurassicTerrain,JURASSIC_LIMIT,hitJurassicApex} from "./JurassicScene";
+import {FUTURE_BOUNDS,FUTURE_PORTAL,futureSkywayFloor,renderFutureWorld} from "./FutureCityScene";
+import {resolveHorizontalGameMovement,resolveVerticalGameMovement} from "./gamePhysics";
+import {FUTURE_COLLIDERS,JURASSIC_COLLIDERS} from "./gameWorldColliders";
 
 type Suit="gold"|"silver"|"cosmic"|"diamond";
 type Player={id:string;userId?:string;name?:string;world?:string;x:number;y:number;z:number;yaw:number;flying:boolean;boost:boolean;suit:Suit;seen:number};
@@ -292,8 +293,8 @@ export default function SharedGameLobby(){
    // X/Z sliding preserves movement parallel to walls; the roof is checked at
    // the resolved final position, independently of rendering/LOD visibility.
    const collisionSolids=plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null
-     ?[]:futureWorldRef.current
-     ?FUTURE_TOWERS.map(t=>({x:t.x,z:t.z,hx:t.width/2,hz:t.depth/2,bottom:-1,top:t.height}))
+     ?[]:jurassicWorldRef.current?JURASSIC_COLLIDERS:futureWorldRef.current
+     ?FUTURE_COLLIDERS
      :propheticWorldRef.current?solids.slice(0,128):solids;
    let roof=-Infinity;
    if(!plane.current.active&&!ship.current.active){
@@ -307,6 +308,7 @@ export default function SharedGameLobby(){
    const cityRoof=p.z<=-365&&p.z>=-515&&p.x>=-132&&p.x<=75;
    const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=jurassicWorldRef.current?jurassicTerrain(p.x,p.z):futureWorldRef.current||propheticWorldRef.current?0:onRoad?bridgeHeight:terrain(p.x,p.z);const floor=Math.max(futureWorldRef.current?futureSkywayFloor(p.x,p.y,p.z):skyLanding?45:roadFloor,roof,roadFloor);
    if(!jurassicWorldRef.current&&!futureWorldRef.current&&!propheticWorldRef.current&&!lunar&&!eva&&!ship.current.inSpace&&p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
+   const previousFeetY=p.y;
    if(eva){p.flying=true;const fall=evaFall.current;const thrust=(k.Space||k.ascend?1:0)-(k.c?1:0);if(p.y<1300)fall.active=true;if(fall.active){fall.speed=clamp(fall.speed+20*dt-thrust*8*dt,0,145);p.y-=fall.speed*dt;if(p.y<=Math.max(terrain(p.x,p.z),0)+2){p.y=Math.max(terrain(p.x,p.z),0)+2;setEva(false);setFlying(false);ship.current.inSpace=false;fall.active=false;setHint("🌍 Atmospheric re-entry complete. You landed back on Earth.");}}else p.y+=thrust*5.5*dt;}else if(ship.current.active){p.flying=true;}else if(plane.current.active){
      const takeoff=plane.current.speed>24;
      const climb=takeoff&&!!(k.Space||k.ascend),descend=!!k.c;
@@ -321,6 +323,17 @@ export default function SharedGameLobby(){
      if(p.y<=0&&velocity<0)velocity=0;
    }else if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?(p.y>85?19.5:13):descend?-19:-5)*dt,-22,p.y>85?10.5:7);p.y=Math.max(floor,p.y+velocity*dt);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
    else{if(crashUntil&&now>crashUntil){crashUntil=0;setCrashed(false)}velocity=Math.max(-35,velocity-17*dt);if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}flightPose.current.landing=now;p.y=floor;velocity=0}}
+   // Solid roofs and overhead decks block vertical crossings. The ship,
+   // aircraft, EVA and lunar modes retain their dedicated movement physics.
+   if(!ship.current.active&&!plane.current.active&&!eva&&!lunar&&meetingSeatRef.current===null){
+     const vertical=resolveVerticalGameMovement(previousFeetY,p.y,p.x,p.z,collisionSolids);
+     if(vertical.hitCeiling){p.y=vertical.y;velocity=Math.min(velocity,0);}
+     else if(vertical.landedOnSolid){
+       if(velocity< -11){crashUntil=now+1300;setCrashed(true)}
+       p.y=vertical.y;velocity=0;flightPose.current.landing=now;
+       if(p.flying){p.flying=false;setFlying(false)}
+     }
+   }
    // Flying above the atmosphere is continuous; no height-triggered teleport or countdown.
    const nearest=futureWorldRef.current||propheticWorldRef.current||lunar||ship.current.inSpace||plane.current.active?null:distance(p,{x:155,z:-27})<23?"ship":distance(p,{x:110,z:-345})<19?"plane":distance(p,{x:155,z:-27})<30?"helicopter":distance(p,{x:15,z:7.5})<13?"car":null;
    if(nearVehicle!==nearest)setNearVehicle(nearest);
