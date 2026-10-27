@@ -25,14 +25,15 @@ const FUTURE_GARDEN_BLOOMS=Array.from({length:7},(_,i)=>{
  const angle=i*2.399963229728653, radius=1.8+(i%3)*1.45;
  return {dx:Math.cos(angle)*radius,dz:Math.sin(angle)*radius,phase:i*1.73};
 });
+const FUTURE_GARDEN_PALETTE:number[][]=[[.15,.93,.89],[.98,.73,.34],[.72,.44,.99]];
+const FUTURE_GARDEN_PETAL:number[]=[.72,.98,.9];
 export function renderFutureGardens(vp:number[],draw:Draw,playerX:number,playerZ:number,now:number){
- const palette=[[.15,.93,.89],[.98,.73,.34],[.72,.44,.99]] as const;
  for(let siteIndex=0;siteIndex<FUTURE_GARDEN_SITES.length;siteIndex++){
   const site=FUTURE_GARDEN_SITES[siteIndex];
   const distance=Math.hypot(playerX-site.x,playerZ-site.z);
   if(distance>150)continue; // Garden-level LOD; no per-frame allocations.
   const near=distance<84,detail=distance<55;
-  const tint=palette[site.tint];
+  const tint=FUTURE_GARDEN_PALETTE[site.tint];
   // Ground-level reflective basin: thin enough not to obstruct player movement.
   draw(vp,site.x,.035,site.z,14,.06,14,[.035,.13,.19],.94);
   draw(vp,site.x,.074,site.z,12,.025,12,[.13,.53,.64],.35);
@@ -44,7 +45,7 @@ export function renderFutureGardens(vp:number[],draw:Draw,playerX:number,playerZ
    if(detail){
     for(let petal=0;petal<4;petal++){
      const a=petal*Math.PI/2+now*.0002,px=Math.cos(a)*.43,pz=Math.sin(a)*.43;
-     draw(vp,x+sway+px,1.28,z-sway*.65+pz,.38,.18,.38,petal%2?tint:[.72,.98,.9],.78);
+     draw(vp,x+sway+px,1.28,z-sway*.65+pz,.38,.18,.38,petal%2?tint:FUTURE_GARDEN_PETAL,.78);
     }
    }
   }
