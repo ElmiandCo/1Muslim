@@ -200,3 +200,52 @@ export function resolveSweptVerticalGameMovement(
     ?{x:bestX,z:bestZ,y:bestY,landedOnSolid:descending,hitCeiling:!descending}
     :none;
 }
+
+
+/**
+ * Continuous side-entry check for diagonal falling / climbing flight.
+ *
+ * The regular horizontal resolver samples the avatar at its STARTING feet
+ * height. A player descending from above a tall wall can therefore move into
+ * the wall later in the same frame, after dropping below the roof. Sweep the
+ * X/Z entry into each radius-expanded collider at the interpolated feet Y.
+ * This only catches NEW side entries; vertical roof/underside crossings and
+ * spawn-inside escape remain owned by the other resolvers.
+ *
+ * Only use for ordinary character movement, never ship/plane/EVA/lunar modes.
+ */
+export type GameSweptSideMovementResult=Readonly<{
+  x:number;z:number;blocked:boolean;
+}>;
+export function resolveSweptSideGameMovement(
+  startX:number,startZ:number,startFeetY:number,
+  endX:number,endZ:number,endFeetY:number,
+  colliders:GameCollisionSource
+):GameSweptSideMovementResult{
+  const none={x:endX,z:endZ,blocked:false};
+  const dx=endX-startX,dz=endZ-startZ;
+  if((dx===0&&dz===0)||startFeetY===endFeetY)return none;
+  const interval=(start:number,delta:number,min:number,max:number):readonly [number,number]|null=>{
+    if(Math.abs(delta)<EPS)return start>min&&start<max?[-Infinity,Infinity]:null;
+    const a=(min-start)/delta,b=(max-start)/delta;
+    return a<b?[a,b]:[b,a];
+  };
+  let first=Infinity;
+  for(const b of queryGameColliders(colliders,
+    Math.min(startX,endX)-PLAYER_RADIUS,Math.max(startX,endX)+PLAYER_RADIUS,
+    Math.min(startZ,endZ)-PLAYER_RADIUS,Math.max(startZ,endZ)+PLAYER_RADIUS)){
+    const ix=interval(startX,dx,b.x-b.hx-PLAYER_RADIUS,b.x+b.hx+PLAYER_RADIUS);
+    const iz=interval(startZ,dz,b.z-b.hz-PLAYER_RADIUS,b.z+b.hz+PLAYER_RADIUS);
+    if(!ix||!iz)continue;
+    const entry=Math.max(ix[0],iz[0]),exit=Math.min(ix[1],iz[1]);
+    // Starting inside the horizontal envelope is handled by the existing
+    // escape rule, not by snapping the avatar back into an obstacle.
+    if(entry<0||entry>1||exit<=entry)continue;
+    const feet=startFeetY+(endFeetY-startFeetY)*entry;
+    if(feet>=b.top-ROOF_TOLERANCE||feet+PLAYER_HEIGHT<=b.bottom+EPS)continue;
+    first=Math.min(first,entry);
+  }
+  if(!Number.isFinite(first))return none;
+  const safe=Math.max(0,first-1e-4);
+  return {x:startX+dx*safe,z:startZ+dz*safe,blocked:true};
+}

@@ -7,7 +7,7 @@ import styles from "./SharedGameLobby.module.css";
 import {drawJurassic,updateJurassicDinos,jurassicTerrain,JURASSIC_LIMIT,hitJurassicApex} from "./JurassicScene";
 import {FUTURE_BOUNDS,FUTURE_PORTAL,futureSkywayFloor,renderFutureWorld} from "./FutureCityScene";
 import {SEA_BOUNDS,SEA_SPAWN_Z,createPartedSeaState,partedSeaColliders,updatePartedSea,renderPartedSea,type SeaState} from "./PartedSeaScene";
-import {resolveHorizontalGameMovement,resolveVerticalGameMovement,resolveSweptVerticalGameMovement} from "./gamePhysics";
+import {resolveHorizontalGameMovement,resolveVerticalGameMovement,resolveSweptVerticalGameMovement,resolveSweptSideGameMovement} from "./gamePhysics";
 import {FUTURE_COLLISION_INDEX,JURASSIC_COLLISION_INDEX} from "./gameWorldColliders";
 import {calculateGameFlightPose} from "./gameFlightPose";
 import {TODAY_PROP_COLLIDERS,PROPHETIC_COLLISION_INDEX,createTodayCollisionSource} from "./gameTodayColliders";
@@ -377,16 +377,24 @@ export default function SharedGameLobby(){
      if(p.y<=0&&velocity<0)velocity=0;
    }else if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?(p.y>85?19.5:13):descend?-19:-5)*dt,-22,p.y>85?10.5:7);p.y=Math.max(floor,p.y+velocity*dt);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
    else{if(crashUntil&&now>crashUntil){crashUntil=0;setCrashed(false)}velocity=Math.max(-35,velocity-17*dt);if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}flightPose.current.landing=now;p.y=floor;velocity=0}}
-   // Solid roofs and overhead decks block vertical crossings. The ship,
-   // aircraft, EVA and lunar modes retain their dedicated movement physics.
+   // Horizontal collision ran at the starting height. Catch a sidewall
+   // entered later in a diagonal descent/ascent before resolving the roof.
+   // Dedicated vehicle, EVA and lunar movement are deliberately unchanged.
+   if(!ship.current.active&&!plane.current.active&&!eva&&!lunar&&meetingSeatRef.current===null&&
+      (p.x!==previousX||p.z!==previousZ)&&p.y!==previousFeetY){
+     const side=resolveSweptSideGameMovement(previousX,previousZ,previousFeetY,p.x,p.z,p.y,collisionSolids);
+     if(side.blocked){
+       p.x=side.x;p.z=side.z;
+       crashUntil=now+260;setCrashed(true);
+     }
+   }
+   // Evaluate roof/underside crossings at the ACTUAL interpolated X/Z for
+   // moving players. Endpoint-first could cause ghost landings on structures
+   // entered only after the avatar had already crossed their roof height.
    if(!ship.current.active&&!plane.current.active&&!eva&&!lunar&&meetingSeatRef.current===null){
-     const directVertical=resolveVerticalGameMovement(previousFeetY,p.y,p.x,p.z,collisionSolids);
-     // Keep the cheap endpoint check first; diagonal flight can also cross
-     // a narrow roof/underside between frames with no endpoint overlap.
-     const vertical=directVertical.hitCeiling||directVertical.landedOnSolid||
-       Math.abs(previousX-p.x)+Math.abs(previousZ-p.z)<.01
-       ?directVertical
-       :resolveSweptVerticalGameMovement(previousFeetY,p.y,previousX,previousZ,p.x,p.z,collisionSolids);
+     const vertical=p.x!==previousX||p.z!==previousZ
+       ?resolveSweptVerticalGameMovement(previousFeetY,p.y,previousX,previousZ,p.x,p.z,collisionSolids)
+       :resolveVerticalGameMovement(previousFeetY,p.y,p.x,p.z,collisionSolids);
      if("x" in vertical&&"z" in vertical&&
         typeof vertical.x==="number"&&typeof vertical.z==="number"&&
         (vertical.hitCeiling||vertical.landedOnSolid)){
