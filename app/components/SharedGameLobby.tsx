@@ -10,6 +10,7 @@ import {SEA_BOUNDS,SEA_SPAWN_Z,createPartedSeaState,partedSeaColliders,updatePar
 import {resolveHorizontalGameMovement,resolveVerticalGameMovement} from "./gamePhysics";
 import {FUTURE_COLLISION_INDEX,JURASSIC_COLLISION_INDEX} from "./gameWorldColliders";
 import {calculateGameFlightPose} from "./gameFlightPose";
+import {TODAY_PROP_COLLIDERS,PROPHETIC_COLLISION_INDEX,createTodayCollisionSource} from "./gameTodayColliders";
 import {ROMAN_PORTAL,ROMAN_BOUNDS,romanJudeaCollisionIndex,renderRomanJudea} from "./RomanJudeaScene";
 
 // Keep Moses refuge collisions stable across frames; never cull physics with visual LOD.
@@ -254,6 +255,7 @@ export default function SharedGameLobby(){
   try{renderer=makeRenderer(node)}catch(e){setError(e instanceof Error?e.message:"WebGL initialization failed");return}
   if(!renderer){setError("WebGL is unavailable on this device.");return}
   const {gl,draw}=renderer;let frame=0,prev=performance.now(),velocity=0,wasNear=false,crashUntil=0;
+  const todayCollisionSource=createTodayCollisionSource(terrain,damagedStructures.current);
   let chaseCamera:[number,number,number]|null=null;
   const render=(now:number)=>{
    const dt=clamp((now-prev)/1000,0,.05);prev=now;
@@ -321,43 +323,30 @@ export default function SharedGameLobby(){
    const proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,travelBounds.minX,travelBounds.maxX),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,travelBounds.minZ,travelBounds.maxZ);
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
-   const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[]; 
-   if(propheticWorldRef.current){for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.1;solids.push({x,z,hx:11,hz:13,bottom:-1,top:h});}}
-   if(propheticWorldRef.current){for(let i=0;i<44;i++){const col=i%11,row=Math.floor(i/11),x=(col-5)*36,z=-380-row*40;if(Math.abs(x)<30)continue;solids.push({x,z,hx:11,hz:12,bottom:-1,top:3.5});}}
-   if(!futureWorldRef.current&&!jurassicWorldRef.current&&!partedSeaWorldRef.current&&!romanWorldRef.current){
-   // Destructible plaza props are solid until hit; the same objects restore after five minutes.
-   for(let i=0;i<80;i++){const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;const id="prop-"+i;if(damagedStructures.current.has(id))continue;solids.push({x,z,hx:1.35,hz:1.35,bottom:0,top:2.7});}
-   for(let i=0;i<80;i++){const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;const id="prop-"+i;if(damagedStructures.current.has(id))continue;for(const shot of projectiles.current){if(shot.life<=0||Math.abs(shot.x-x)>1.6||Math.abs(shot.z-z)>1.6||shot.y>3.5)continue;shot.life=0;const until=Date.now()+BREAK_REPAIR_MS;const hits=Math.min(5,(structureHits.current.get(id)?.count??0)+(shot.power>=4?3:shot.power>=2?2:1));structureHits.current.set(id,{count:hits,until});if(hits>=5)damagedStructures.current.set(id,until);void combatChannel.current?.send({type:"broadcast",event:"structure-break",payload:{id,until,hits}});break;}}
- for(const z of [-49,49])solids.push({x:161,z,hx:29,hz:3,bottom:0,top:17});solids.push({x:189,z:0,hx:3,hz:52,bottom:0,top:17});for(const z of [-35,35])solids.push({x:133,z,hx:3,hz:15,bottom:0,top:17});
-   for(let x=5;x<85;x+=14)for(const side of [-1,1]){
-     const z=side*15,height=5+(Math.floor(x/14)%3)*2;
-     solids.push({x,z,hx:3.7,hz:3.2,bottom:0,top:height+.9});
-     solids.push({x:x+4,z:z-side*5,hx:1.35,hz:1.1,bottom:0,top:2});
+   // Today's plaza props remain destructible and repair on their original timer.
+   // Static Today/Makkah geometry is cached once per mount, not rebuilt per frame.
+   // No visual draw-distance culling is ever applied to physics.
+   if(!futureWorldRef.current&&!jurassicWorldRef.current&&!partedSeaWorldRef.current&&!romanWorldRef.current&&!propheticWorldRef.current){
+    for(const prop of TODAY_PROP_COLLIDERS){
+     if(damagedStructures.current.has(prop.id))continue;
+     for(const shot of projectiles.current){
+      if(shot.life<=0||Math.abs(shot.x-prop.x)>1.6||Math.abs(shot.z-prop.z)>1.6||shot.y>3.5)continue;
+      shot.life=0;
+      const until=Date.now()+BREAK_REPAIR_MS;
+      const hits=Math.min(5,(structureHits.current.get(prop.id)?.count??0)+(shot.power>=4?3:shot.power>=2?2:1));
+      structureHits.current.set(prop.id,{count:hits,until});
+      if(hits>=5)damagedStructures.current.set(prop.id,until);
+      void combatChannel.current?.send({type:"broadcast",event:"structure-break",payload:{id:prop.id,until,hits}});
+      break;
+     }
+    }
    }
-   for(let x=235;x<=285;x+=12)for(const side of [-1,1])solids.push({x,z:side*5.5,hx:6.1,hz:.48,bottom:0,top:6.1});
-   for(let x=1090;x<=1140;x+=12)for(const side of [-1,1])solids.push({x,z:side*5.5,hx:6.1,hz:.48,bottom:25,top:31.1});
-   for(const x of [1155,1174,1190])for(const z of [-13,13])solids.push({x,z,hx:3.1,hz:1.8,bottom:25,top:27.6});
-   // Satellite district buildings: mirror the actual rendered footprints, including ground-floor walls.
-   for(let i=0;i<46;i++){const row=Math.floor(i/8),col=i%8,x=-90+col*27,z=-625-row*42,h=7+((i*13)%19);solids.push({x,z,hx:7,hz:8,bottom:terrain(x,z)-.5,top:h+.55});}
-   // Outer avenue mountain walls and elevated ridges are physical rather than decorative.
-   for(let n=0;n<25;n++){const z=-620-n*34;for(const side of [-1,1]){const x=side*(110+n*6),height=18+Math.abs(Math.sin(n*2.3))*37;solids.push({x,z,hx:26,hz:24,bottom:-1,top:height});}}
-   // Trees, trunks and arena occupy real world volumes.
-   for(let i=0;i<75;i++){const x=-180+(i*47)%365,z=-580-(i*31)%380;solids.push({x,z,hx:.45,hz:.45,bottom:0,top:4.6});}
-   solids.push({x:180,z:-780,hx:48,hz:39,bottom:0,top:15});
-   // Upper city tower volumes are solid above their open walk-through lobbies.
-   for(let row=0;row<4;row++)for(let col=0;col<6;col++){
-     const x=-120+col*37,z=-380-row*38,h=19+((row*7+col*11)%7)*12;
-     solids.push({x,z,hx:11,hz:11.5,bottom:0,top:h+.8});
-   }
-   }
-   // Sweep the existing world-specific solids in short steps. Unlike an endpoint
-   // overlap test, this cannot tunnel through thin walls during a boosted frame.
-   // X/Z sliding preserves movement parallel to walls; the roof is checked at
-   // the resolved final position, independently of rendering/LOD visibility.
+   // World-specific immutable spatial indices share the existing swept
+   // movement/vertical landing code; Today damage filtering remains live.
    const collisionSolids=plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null
      ?[]:jurassicWorldRef.current?JURASSIC_COLLISION_INDEX:futureWorldRef.current
      ?FUTURE_COLLISION_INDEX
-     :partedSeaWorldRef.current?SEA_COLLIDERS:romanWorldRef.current?romanJudeaCollisionIndex(romeCityRef.current?"Rome":"Jerusalem"):propheticWorldRef.current?solids.slice(0,128):solids;
+     :partedSeaWorldRef.current?SEA_COLLIDERS:romanWorldRef.current?romanJudeaCollisionIndex(romeCityRef.current?"Rome":"Jerusalem"):propheticWorldRef.current?PROPHETIC_COLLISION_INDEX:todayCollisionSource;
    let roof=-Infinity;
    if(!plane.current.active&&!ship.current.active){
      const movement=resolveHorizontalGameMovement(previousX,previousZ,proposedX,proposedZ,p.y,collisionSolids);
