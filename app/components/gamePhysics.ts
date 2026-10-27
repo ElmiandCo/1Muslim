@@ -20,6 +20,47 @@ const ROOF_TOLERANCE=.2;
 const ROOF_REACH=2.2;
 const EPS=1e-6;
 
+/** A reusable X/Z broadphase for immutable world geometry. Visual LOD never
+ * removes collision geometry. Build once per scene, not once per frame. */
+export type GameCollisionIndex=Readonly<{
+  query:(minX:number,maxX:number,minZ:number,maxZ:number)=>readonly GameCollider[];
+}>;
+export type GameCollisionSource=readonly GameCollider[]|GameCollisionIndex;
+
+export function buildStaticGameCollisionIndex(
+  colliders:readonly GameCollider[],cellSize=64
+):GameCollisionIndex{
+  if(!Number.isFinite(cellSize)||cellSize<=0)throw new RangeError("Invalid collision cell size");
+  const cells=new Map<string,GameCollider[]>();
+  const key=(x:number,z:number)=>x+":"+z;
+  for(const b of colliders){
+    const x0=Math.floor((b.x-b.hx)/cellSize),x1=Math.floor((b.x+b.hx)/cellSize);
+    const z0=Math.floor((b.z-b.hz)/cellSize),z1=Math.floor((b.z+b.hz)/cellSize);
+    for(let x=x0;x<=x1;x++)for(let z=z0;z<=z1;z++){
+      const k=key(x,z),bucket=cells.get(k);
+      if(bucket)bucket.push(b);else cells.set(k,[b]);
+    }
+  }
+  return {query(minX,maxX,minZ,maxZ){
+    const x0=Math.floor(minX/cellSize),x1=Math.floor(maxX/cellSize);
+    const z0=Math.floor(minZ/cellSize),z1=Math.floor(maxZ/cellSize);
+    const result:GameCollider[]=[],seen=new Set<GameCollider>();
+    for(let x=x0;x<=x1;x++)for(let z=z0;z<=z1;z++){
+      for(const b of cells.get(key(x,z))??[]){
+        if(seen.has(b))continue;
+        seen.add(b);
+        if(b.x+b.hx>=minX&&b.x-b.hx<=maxX&&
+           b.z+b.hz>=minZ&&b.z-b.hz<=maxZ)result.push(b);
+      }
+    }
+    return result;
+  }};
+}
+
+const queryGameColliders=(source:GameCollisionSource,
+  minX:number,maxX:number,minZ:number,maxZ:number):readonly GameCollider[]=>
+  "query" in source?source.query(minX,maxX,minZ,maxZ):source;
+
 /**
  * Uses bounded substeps with axis-separated sliding so fast boosted movement
  * cannot skip narrow existing colliders between two rendered frames.
@@ -27,13 +68,13 @@ const EPS=1e-6;
  */
 export function resolveHorizontalGameMovement(
   currentX:number,currentZ:number,targetX:number,targetZ:number,
-  feetY:number,colliders:readonly GameCollider[]
+  feetY:number,colliders:GameCollisionSource
 ):GameMovementResult{
   const lowX=Math.min(currentX,targetX)-PLAYER_RADIUS;
   const highX=Math.max(currentX,targetX)+PLAYER_RADIUS;
   const lowZ=Math.min(currentZ,targetZ)-PLAYER_RADIUS;
   const highZ=Math.max(currentZ,targetZ)+PLAYER_RADIUS;
-  const nearby=colliders.filter(b=>
+  const nearby=queryGameColliders(colliders,lowX,highX,lowZ,highZ).filter(b=>
     b.x+b.hx>=lowX&&b.x-b.hx<=highX&&
     b.z+b.hz>=lowZ&&b.z-b.hz<=highZ&&
     feetY<=b.top+ROOF_REACH&&feetY+PLAYER_HEIGHT>b.bottom
@@ -86,13 +127,13 @@ export type GameVerticalMovementResult=Readonly<{
 
 export function resolveVerticalGameMovement(
   currentFeetY:number,proposedFeetY:number,x:number,z:number,
-  colliders:readonly GameCollider[]
+  colliders:GameCollisionSource
 ):GameVerticalMovementResult{
-  if(currentFeetY===proposedFeetY||!colliders.length)
+  if(currentFeetY===proposedFeetY)
     return {y:proposedFeetY,landedOnSolid:false,hitCeiling:false};
   const descending=proposedFeetY<currentFeetY;
   let y=proposedFeetY,landedOnSolid=false,hitCeiling=false;
-  for(const b of colliders){
+  for(const b of queryGameColliders(colliders,x-PLAYER_RADIUS,x+PLAYER_RADIUS,z-PLAYER_RADIUS,z+PLAYER_RADIUS)){
     if(Math.abs(x-b.x)>=b.hx+PLAYER_RADIUS||
        Math.abs(z-b.z)>=b.hz+PLAYER_RADIUS)continue;
     if(descending){
