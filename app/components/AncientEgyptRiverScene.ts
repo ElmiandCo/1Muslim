@@ -28,6 +28,26 @@ export const EGYPT_WORKERS=Array.from({length:22},(_,i)=>({
 export const EGYPT_BOATS=Array.from({length:4},(_,i)=>({id:i,z:-345+i*195,phase:i*1.9}));
 export const EGYPT_BIRDS=Array.from({length:12},(_,i)=>({z:-435+i*79,phase:i*2.31}));
 export const EGYPT_DOCKS=[-210,155,375] as const;
+/** Cargo crews stay on the west-bank dock, avoiding the Nile's riverbed. */
+export const EGYPT_DOCK_CREWS=Array.from({length:6},(_,id)=>({
+ id,dockIndex:Math.floor(id/2),phase:id*.43,offset:id%2===0?-3:3
+}));
+/** Tiny wildlife groups are deterministic, never networked or collidable. */
+export const EGYPT_RIVER_WILDLIFE=Array.from({length:12},(_,id)=>({
+ id,z:-450+id*79,phase:id*1.83,kind:id%3===0?"fish" as const:"heron" as const
+}));
+/** Back-and-forth unloading: limestone is carried inland and the worker
+ * returns empty-handed. Physics is intentionally owned by Bot A. */
+export function egyptDockWorkerPose(nowMs:number,index:number){
+ const crew=EGYPT_DOCK_CREWS[index%EGYPT_DOCK_CREWS.length];
+ const z=EGYPT_DOCKS[crew.dockIndex]+crew.offset;
+ const dockX=egyptRiverCenterX(z)-EGYPT_RIVER_WIDTH/2-5;
+ const cycle=((nowMs*.00024+crew.phase)%2+2)%2;
+ const carrying=cycle<1;
+ const progress=carrying?cycle:2-cycle;
+ return {x:dockX-1-progress*14,z,heading:carrying?-Math.PI/2:Math.PI/2,
+  carrying,step:Math.sin(nowMs*.009+crew.phase)*.12};
+}
 export const EGYPT_PYRAMIDS=[
  {x:-145,z:-145,base:88,height:59,stages:9},
  {x:-295,z:-300,base:62,height:44,stages:8},
@@ -172,6 +192,42 @@ export function renderAncientEgyptRiverLife(draw:EgyptDraw,nowMs:number,playerX:
   draw(x,.25,z,12,.6,18,WOOD);
   if(near2(x,z,playerX,playerZ,110))for(let k=0;k<4;k++){
    draw(x-2+k*1.35,1.1,z-2,1.1,1.1,1.1,LIMESTONE);
+  }
+ }
+ // Small dock crews unload limestone in view of the Nile.
+ // All crew geometry is visual-only; never add invisible collision walls.
+ for(let i=0;i<EGYPT_DOCK_CREWS.length;i++){
+  const w=egyptDockWorkerPose(nowMs,i);
+  if(!near2(w.x,w.z,playerX,playerZ,125))continue;
+  draw(w.x,1.15,w.z,.75,1.35,.62,LINEN,1,w.heading);
+  draw(w.x,2.08,w.z,.52,.53,.52,[.55,.36,.22]);
+  if(w.carrying)draw(w.x,2.57,w.z,1.12,.52,.84,LIMESTONE,1,w.heading);
+  if(near2(w.x,w.z,playerX,playerZ,75))
+   for(const side of [-1,1])draw(w.x+side*.23,.4+side*w.step,w.z,.22,.78,.25,LINEN);
+ }
+ // Riverbank herons and fish breaking the surface: no hitboxes or sound spam.
+ // Far silhouettes are a single draw; close details add at most four cubes.
+ for(const life of EGYPT_RIVER_WILDLIFE){
+  const riverX=egyptRiverCenterX(life.z);
+  const x=life.kind==="fish"?riverX+Math.sin(t*.75+life.phase)*9:
+   riverX-EGYPT_RIVER_WIDTH/2-7;
+  const z=life.z+Math.sin(t*.35+life.phase)*2;
+  if(!near2(x,z,playerX,playerZ,105))continue;
+  if(life.kind==="fish"){
+   const leap=Math.max(0,Math.sin(t*1.3+life.phase));
+   draw(x,-.02+leap*.28,z,.7,.14,1.15,[.58,.68,.62],.9,t*.2);
+   if(near2(x,z,playerX,playerZ,55)){
+    draw(x,-.03,z,2.1,.035,1.6,[.48,.7,.7],.48);
+    draw(x,-.02+leap*.32,z-.45,.18,.34,.35,[.45,.6,.56],.85);
+   }
+  }else{
+   const nod=Math.sin(t*.85+life.phase)*.12;
+   draw(x,.92,z,.48,1.15,.48,[.84,.83,.73]);
+   if(near2(x,z,playerX,playerZ,60)){
+    draw(x,1.68+nod,z,.36,.5,.38,[.88,.87,.76]);
+    draw(x+.26,1.56+nod,z,.55,.12,.16,[.72,.59,.32]);
+    for(const side of [-1,1])draw(x+side*.13,.2,z,.09,.55,.1,[.57,.46,.29]);
+   }
   }
  }
  // Distant flock silhouettes use one draw; near flapping wings use three.
