@@ -168,6 +168,7 @@ export default function SharedGameLobby(){
  const returnFromEgyptWorld=()=>{
   egyptWorldRef.current=false;setEgyptWorld(false);
   partedSeaWorldRef.current=true;setPartedSeaWorld(true);partedSeaState.current??=createPartedSeaState();
+  partedSeaState.current.invulnerableUntil=performance.now()+3500;
   projectiles.current=[];boostEnabled.current=false;setBoostActive(false);setFlying(false);
   const p=local.current;p.world="Time of Moses";p.x=EGYPT_MOSES_RETURN.x;p.z=EGYPT_MOSES_RETURN.z;p.y=EGYPT_MOSES_RETURN.y;p.yaw=Math.PI;p.flying=false;p.boost=false;
   egyptPortalCooldown.current=performance.now()+2500;
