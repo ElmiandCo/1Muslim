@@ -53,6 +53,7 @@ export function renderRomanJudea(vp:number[],draw:RomanDraw,now:number,player:{x
         for(let i=0;i<28;i++){const x=Math.sin(i*2.4)*310,z=Math.cos(i*1.9)*310;paint(x,15,z,65,30,75,[.51,.46,.34]);}
         paint(100,9,-135,75,18,65,[.72,.66,.55]);for(let i=0;i<7;i++)paint(70+i*10,19,-110,3,10,3,[.8,.75,.64]);
       
+ }
  // Animated olive groves outside the original city walls. Non-solid decorative life.
  for(let i=0;i<36;i++){
   const x=(i%2?1:-1)*(267+(i%5)*13),z=-185+Math.floor(i/5)*53;
