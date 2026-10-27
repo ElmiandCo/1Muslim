@@ -2,6 +2,74 @@
 
 > **Protected integration rule:** This repository's website evolves independently. Never merge a whole game branch into main or production. Cherry-pick only reviewed game-path commits onto the *then-current* website integration branch. Preserve the newer feed, profile, Quran, navigation, GoLive, and site CSS. No automated production merge/deploy.
 
+## 2026-10-27 · 09:08 CDT (America/Chicago) · Bot A / World Engine — boosted-movement collision sweep
+
+### Shift identity, protected baseline, and scope
+
+| Field | Observed fact |
+| --- | --- |
+| Bot | **Game Bot A — World Engine**, physics/LOD/rendering ownership |
+| Protected original game source | `fix/profile-scroll-match-umma-20261027` at **`c856491131bb0c8056693652f8e5e58a26836831`** |
+| Direct starting base | Prior A game-only branch `game/world-engine-flight-lod-20261027-0800` at **`86009f72699f02e03167203cd995e2b60825c865`**, descendant of the protected original; preserves A's high-altitude flight and Main Street render culling |
+| This shift's branch | **`game/world-engine-swept-collision-20261027-0900`**, created from exact previous A tip; documentation commit advances this branch tip |
+| Implementation commits | **`7900bcab81ca6c9c770d3130ead0b67513b35af2`** (new physics helper), **`e1641d4dc9e419dd6a74966bead2942047530c86`** (shared lobby wiring) |
+| Latest main inspected | `main` at **`d9e9cc6052456e308a75a2ee67057ec9f146ca42`**; read-only; protected baseline differs in **six site files** (profile, community, feed, site CSS, Supabase migration); no copying/merging |
+| Production inspected | Vercel **READY** production deployment `dpl_FeWANe7U6pB6vYdF8122FqJTjBfF` sourced from `feature/animated-image-text-cards-20261027` at **`e3b38d088fe119a8b03a4d35e64c31ea625b25bf`**; read-only |
+| Site layout contract inspected | `CanvasSecondaryApp.tsx` on protected baseline and main; main blob `ac34d6b22f11604389638195a5a29c4fde9fc08b`; game CSS main blob `952bdfc33081d49bc88bbdd3e441fe84f9eace41`; neither edited |
+| Other shift reviewed | Bot B 08:30 Future gardens on `game/living-worlds-future-gardens-20261027-0830` (implementation `0b4f9bb` and passing fix **`afe199c2999d6651df29a6fa335ba9507042bad8`**); prior B Jurassic river-life **`e05ef735086e0e01b84531f802c9117be1cc5f19`**. Both remain on **separate** branches and files |
+| Exact paths changed this shift | **`app/components/gamePhysics.ts`** (added), **`app/components/SharedGameLobby.tsx`** (modified), **`docs/game-dev/SHIFT_LOG.md`** (this handoff) |
+| Forbidden paths changed | **None**: no app page, layout, navigation, profile, feed, Quran, GoLive, site CSS, production, main, or other world modules |
+
+### Actual implementation (not planned features)
+
+**Problem before:** The shared player loop tested collision **only at the final X/Z endpoint** of each rendered frame. A boosted flight frame can travel ~3.7 world units (49.5 × 1.5 high-altitude speed × 0.05s), skipping narrow existing solid geometry entirely. The old resolution pushed the player out of one wall and reset both axes, impeding smooth wall-following. Rendering LOD and physical collision must remain independent.
+
+**After:**
+
+1. **`app/components/gamePhysics.ts` / `resolveHorizontalGameMovement`:** new small, dependency-free, pure TypeScript helper. Subdivides X/Z travel into at most **0.6 world-unit** steps, uses a swept AABB broadphase to limit candidate solids, checks each axis separately for wall sliding, and permits an already-overlapping player to escape outward. Retains the existing **0.42 player radius**, **1.75 body height**, roof tolerance/reach, and returns the final roof candidate separately. The helper changes neither geometry nor world data.
+2. **`SharedGameLobby.tsx` / existing `render(now)` movement block:** imports the helper and replaces the endpoint-only collision loop. The same per-world collider sources remain: **`FUTURE_TOWERS`**, existing interpretive-era solids, and Today/Main Street solids; existing exemptions remain for **ship, plane, EVA, lunar walking, and Council seat**. The resolved X/Z and roof feed the **existing** floor/gravity/landing rules. Existing crash pose on wall contact is preserved; the former backward bounce was replaced with axis sliding.
+3. **Preservation:** No change to A's no-ceiling flight integrator, terminal fall speed, takeoff/landing pose, Main Street distance guards, world selector, Masjid an-Nabawi, Belt Boyz Council geometry, projectiles, NPCs, multiplayer, XP store, or B's Jurassic/Future files. The change is **collision detection for already-defined solids**, **not** a claim that every rendered object is solid.
+
+### Verification, evidence, and limits
+
+| Check | Result |
+| --- | --- |
+| GitHub static source/wiring | **PASS:** helper exported/imported, substeps and roof scan present, old endpoint-only block removed, Jurassic/Future/Nabawi/Space references remain |
+| TypeScript isolated helper | **PASS (local mirror):** `tsc --target es2020 --module commonjs --strict --skipLibCheck` compiled a standalone copy of the new helper; no external dependencies |
+| Physics smoke tests | **PASS (local helper mirror, 7 assertions):** boosted thin-wall crossing blocked, diagonal wall slide succeeds, roof landing allowed, high-altitude travel unblocked, escape from overlapping geometry, empty-world travel, distant 500-collider broadphase. **Not a browser playtest** |
+| GitHub path diff gate | **PASS before handoff:** relative to prior A branch, exactly `SharedGameLobby.tsx` (15 additions / 22 deletions) and `gamePhysics.ts` (75 additions) |
+| Non-production preview build | **Compilation PASS:** Next.js compiled in 11.1s; logs entered lint/type validity and generated 101/101 static pages for implementation commit `e1641d4`. At initial inspection deployment `dpl_DFXXvxjif18e3tAJNcppzYEV4gCU` was still **BUILDING**, so final READY status must be rechecked. Existing autoprefixer, edge-runtime and webpack cache warnings were non-fatal in observed logs |
+| Runtime gameplay / mobile FPS | **NOT VERIFIED:** no device-controlled walkthrough, profiler trace, or multiplayer session in this run |
+| Collision coverage | **PARTIAL:** only pre-existing collider arrays; no audit of all buildings/objects, collision mesh generation, swept vertical fall, or vehicle collisions. Roof behavior depends on pre-existing `floor` logic |
+| Performance | Broadphase is O(all colliders) once per frame; local substeps are O(nearby × movement/0.6). No measured FPS. Existing solids are still reconstructed each frame in lobby; optimize later only after profiling |
+
+**Non-production build:** [Vercel deployment](https://vercel.com/elmiandco/1muslim/DFXXvxjif18e3tAJNcppzYEV4gCU) · [Preview URL](https://1muslim-78o4az1zv-elmiandco.vercel.app) (check READY before testing). No manual production deployment or promotion.
+
+### World-by-world status / cross-shift ownership
+
+| Existing world | This A shift | Required next verification |
+| --- | --- | --- |
+| Today / Main Street / districts | **CHANGED:** shared horizontal swept movement against existing destructible props, avenue walls, towers, trees, road/bridge obstacles. Previous A's distance rendering retained | Test boosted crossing of thin shop/bridge walls, rooftop entry, sliding, collision with damaged props, mobile FPS |
+| Future / futuristic / RealMecca concept | **CHANGED via shared resolver only:** existing `FUTURE_TOWERS` collisions; skyway floor logic unchanged. Bot B's six gardens/42 blooms are **separate**, not in this branch | Verify tower walls, skyways and gardens after selective integration |
+| Jurassic | **PRESERVED:** existing `jurassicBlocked`, terrain, dinosaurs, cave, Apex. Shared collider helper is passed an empty array in Jurassic because its bespoke terrain/blocked logic remains separate; **no claim** this fixes Jurassic collisions | Audit `jurassicBlocked` integration and high-speed motion; incorporate B's river ferns/dragonflies only via targeted game diff |
+| Time of Muhammad ﷺ / Makkah–Madinah | **CHANGED via shared resolver only:** existing interpretive-era building solids; Kaaba/Nabawi and prayer controls unchanged | Confirm enterable passages, no sacred-area firing, floor and wall boundaries |
+| Moses / Parted Sea | **NOT WIRED/CHANGED** in protected baseline; Bot B found older `titan/parted-sea-world` module `PartedSeaScene.ts` | Inspect and selectively port game-only module without copying older shared lobby or website |
+| Time of Jesus / Roman Judea | **UNCHANGED / preview pending** on protected baseline | Locate independent scene code before planning integration |
+| Space / Moon / EVA / ship / aircraft | **UNCHANGED dedicated movement**; resolver intentionally bypasses solids for these modes; A's ordinary high-altitude flying remains | Verify transitions and high-altitude return on device; dedicated vehicle collision is future work |
+| Belt Boyz / Council | **UNCHANGED** office mesh, seating and hand controls; seated mode keeps its prior movement exemption | Verify roofless office in final site integration and persistent raise-hand pose separately |
+
+### Integration, rollback, and handoff
+
+- **Do not merge entire branch.** This branch inherits the older protected website snapshot. At integration time re-fetch main, actual production and site's newest layout baseline. Start a **fresh integration branch from the then-current site head**; cherry-pick only reviewed game commits. To include A's preceding flight/LOD slice, consider `e37c717270eaf707705b62fabea9203ea48c09c7`; this shift adds **`7900bcab81ca6c9c770d3130ead0b67513b35af2`** then **`e1641d4dc9e419dd6a74966bead2942047530c86`** in that order. Verify all changed paths are game-only. If `SharedGameLobby.tsx` has newer site/game changes, manually apply only the import and collision block patch, **not** the entire older file.
+- **Bot B conflict avoidance:** B edits `FutureCityScene.ts` and `JurassicScene.ts`; A edits `SharedGameLobby.tsx` and adds `gamePhysics.ts`. No shared-world files replaced. B's garden/pollinator and Jurassic life commits can be selectively integrated independently after review. Bot B should not replace A's shared lobby.
+- **Rollback:** revert lobby wiring commit `e1641d4` then helper addition `7900bca` on a future integration branch; previous A flight/LOD commit can remain independently. No database or dependency migrations.
+- **Next A TODO:** (1) real-device fast-boost wall and roof tests; (2) inspect whether Jurassic's bespoke blocked check is actually called in movement; (3) add non-allocating collision cache or candidate index if profiler shows overhead; (4) validate high-altitude falling and takeoff/landing poses; (5) directional flight pitch animation; (6) audit solids of all existing enterable structures without changing world modules. **Not yet delivered:** 10 mosques, Hajj NPCs, persistent hand pose, blaster/speaker/shield polish, full solid-object coverage.
+- **Production and main remain untouched; user approval required for merge/deployment.**
+
+**Cross-references:** Previous Bot A entry below · Bot B 08:30 handoff on [Future gardens branch](https://github.com/ElmiandCo/1Muslim/blob/game/living-worlds-future-gardens-20261027-0830/docs/game-dev/SHIFT_LOG.md) · [Game master issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+---
+
 ## 2026-10-27 · 07:26–07:35 CDT (America/Chicago) · Bot B / Living Worlds
 
 ### Identity and provenance
