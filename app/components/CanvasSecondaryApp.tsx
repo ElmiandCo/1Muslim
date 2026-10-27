@@ -114,7 +114,7 @@ function RecorderApp({active}:{active:boolean}){
  };
  return <div className="canvas-native-recorder"><div className={"canvas-recorder-ring"+(recording?" is-recording":"")}>♫</div><p>{recording?"Recording your voice…":"Record an audio message or reflection."}</p><button type="button" onClick={()=>void toggle()}>{recording?"■ Stop recording":"● Start recording"}</button>{clip&&<><audio controls src={clip}/><a href={clip} download="1muslim-recording.webm">Save recording to device ↓</a></>}{error&&<p role="alert">{error}</p>}<small>Recordings stay on this device until you choose to save them.</small></div>
 }
-type UmmahPost={id:string;body:string;created_at:string;author_name:string;author_handle:string;author_id?:string;avatar_url?:string|null};
+type UmmahPost={id:string;body:string;created_at:string;author_name:string;author_handle:string;author_id?:string;avatar_url?:string|null;media?:{url:string;mime_type:string}|null};
 const postThemes=["emerald","gold","makkah","midnight","garden","purple"] as const;
 const backgroundForPost=(id:string)=>{let hash=2166136261;for(let i=0;i<id.length;i++)hash=Math.imul(hash^id.charCodeAt(i),16777619);return `/post-backgrounds/${postThemes[(hash>>>0)%postThemes.length]}.svg`};
 type UmmahComment={id:string;post_id:string;name:string;body:string;created_at:string};
@@ -150,7 +150,11 @@ function DailyPostsApp({active}:{active:boolean}){
   <div className="community-posts-list" aria-label="Community posts">
    {posts.filter(post=>(post.body+" "+post.author_name+" "+post.author_handle).toLowerCase().includes(searchPosts.toLowerCase())).map(post=><article className="community-post-card" key={post.id}>
     <header><span className="community-post-avatar">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span><div><strong>{post.author_name||"Member"}</strong><small>{post.author_handle||"1Muslim member"} · {new Date(post.created_at).toLocaleDateString()}</small></div></header>
-    <p>{post.body}</p><footer><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥ Liked":"♡ Like"}</button><button type="button" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}}>♧ Comment</button></footer>
+    <p>{post.body}</p>
+    {post.media?.url&&<div className="community-post-media">
+      {post.media.mime_type.startsWith("video/")?<video src={post.media.url} controls playsInline preload="metadata" />:<button type="button" aria-label="Expand image and comments" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}}><img src={post.media.url} alt="Post attachment" loading="lazy"/></button>}
+    </div>}
+    <footer><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥ Liked":"♡ Like"}</button><button type="button" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}}>♧ Comment</button></footer>
    </article>)}
    {!posts.length?<p className="community-feed-empty">{status}</p>:!posts.some(post=>(post.body+" "+post.author_name+" "+post.author_handle).toLowerCase().includes(searchPosts.toLowerCase()))?<p className="community-feed-empty">No matching posts.</p>:null}
    {notice&&!selected&&<p role="status">{notice}</p>}
@@ -159,6 +163,7 @@ function DailyPostsApp({active}:{active:boolean}){
    <section className="ummah-comments-sheet" role="dialog" aria-modal="true" aria-label="Post comments" onClick={e=>e.stopPropagation()}>
     <header><strong>✦ Conversation</strong><button type="button" onClick={()=>setSelected(null)} aria-label="Close comments">✕</button></header>
     <p className="ummah-comment-post-preview">{posts.find(p=>p.id===selected)?.body}</p>
+    {posts.find(p=>p.id===selected)?.media?.url&&<div className="community-expanded-media">{posts.find(p=>p.id===selected)?.media?.mime_type.startsWith("video/")?<video src={posts.find(p=>p.id===selected)?.media?.url} controls playsInline preload="metadata"/>:<img src={posts.find(p=>p.id===selected)?.media?.url} alt="Expanded post attachment"/>}</div>}
     <div className="ummah-comments-list">{comments.length?comments.map(c=><article key={c.id}><strong>{c.name}</strong><p>{c.body}</p></article>):<p>Be the first to comment.</p>}</div>
     <form onSubmit={e=>void send(e)}><input aria-label="Write a comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={1500} placeholder="Write a thoughtful comment…"/><button type="submit" disabled={busy||!draft.trim()}>Send ↗</button></form>
     {notice&&<p role="alert">{notice}</p>}
