@@ -119,8 +119,8 @@ export function renderPartedSea(vp:number[],draw:SeaDraw,now:number,p:SeaActor,s
  for(let i=0;i<34;i++){const z=-((i*113+470)%SEA_LENGTH);if(Math.abs(z-p.z)>200)continue;const side=i%2?1:-1,x=side*(14.8+Math.sin(time+i)*.5),y=9+(i*7)%34;draw(vp,x,y,z+Math.sin(time*.9+i)*2,1.4,.65,.35,[.75,.87,.87],.68);draw(vp,x+side*.9,y,z,.55,.55,.5,[.85,.92,.86],.5);}
  // Five-fish shoals and bubble columns move behind the parted walls.
  renderSeaShoals(vp,draw,now,p);
- // Small portal arches; the far exit remains a future Sinai destination.
- for(const z of [-14,-SEA_LENGTH+13]){if(Math.abs(z-p.z)>560)continue;for(const side of [-1,1])draw(vp,side*5.2,6,z,1.1,12,1.1,[.81,.66,.3]);draw(vp,0,12,z,12,1.1,2,[.92,.78,.39]);draw(vp,0,5.8,z,.45,10,9,[.18,.91,.73],.22);}
+ // Golden Egyptian origin arch at positive Z; far Sinai arch stays distinct and reserved.
+ for(const z of [-14,-SEA_LENGTH+13]){if(Math.abs(z-p.z)>560)continue;for(const side of [-1,1])draw(vp,side*5.2,6,z,1.1,12,1.1,[.81,.66,.3]);draw(vp,0,12,z,12,1.1,2,[.92,.78,.39]);draw(vp,0,5.8,z,.45,10,9,z===-14?[.95,.58,.16]:[.18,.91,.73],.27);}
  // Human silhouettes are generic game NPCs; no prophets are represented.
  for(const n of state.npcs){if(Math.abs(n.z-p.z)>190)continue;const soldier=n.kind==="soldier";const c=soldier?[.46,.28,.18]:[.8,.72,.58];const y=n.alive?0:-1.1;
   draw(vp,n.x,y+1.1,n.z,.75,1.5,.65,c,1);
