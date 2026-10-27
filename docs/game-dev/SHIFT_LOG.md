@@ -1,5 +1,26 @@
 # Keemy's Adventure World — Game-only shift log
 
+
+## 2026-10-27 · ~14:01–14:08 CDT (America/Chicago) · Bot A / World Engine — diagonal flight roof and underside collision
+
+**Full persistent shift record:** [2026-10-27 swept vertical flight](shifts/2026-10-27-swept-vertical-flight.md) — provenance, code paths/functions, before/after, executed tests, per-world preservation, rollback, selective integration and next handoff.
+
+| Contract | Evidence |
+| --- | --- |
+| Frozen preview ancestor | `fix/profile-scroll-match-umma-20261027` @ `c856491131bb0c8056693652f8e5e58a26836831` |
+| Actual GAME starting point / other shift reviewed | Bot B `game/living-worlds-lunar-research-20261027-1330` @ `736ddf1f2387e0ee6761dd91341b3cdfc377eb67`; reviewed its lunar handoff and Bot A 13:00 collision handoff |
+| Dedicated working branch | `game/world-engine-swept-vertical-20261027-1400` |
+| Implementation / test commits | `a808789` physics helper; `a9e43e4` minimal shared lobby wiring; `b0569f9` regression tests; `5ff3ee5` detailed note |
+| Current main / production read-only | `main` @ `21119c711beda86de3f7766b18bdb0e1c39028d0`; production `dpl_3KxxhG8pRxuy64rN4D1Jn9jzgPHy` READY, no writes. Frozen preview site layout contract compared. |
+| Exact paths changed | `app/components/gamePhysics.ts`, `app/components/SharedGameLobby.tsx` (targeted import/vertical block), `scripts/game-swept-vertical-smoke.mjs`, this log and `docs/game-dev/shifts/2026-10-27-swept-vertical-flight.md`. No site/profile/feed/Quran/GoLive/layout files. |
+| Implemented | Analytic intermediate X/Z crossing of rooftops/raised undersides on diagonal flight; stops at impact X/Z and Y. Existing endpoint resolver remains first; no high-altitude clamp or new world replacement. |
+| Verification executed | **PASS** new 10-case + 100 index-parity + 2 wiring smoke; legacy physics 23 + 288 parity + 4 index edges; flight 16; Today 192 parity; Moses, Roman (17 static), lunar smoke; strict TypeScript gamePhysics. Non-production Vercel preview `dpl_Dm3hvRbQ6jT3TdHF6fD5oUguS3AE` at `b0569f9` — check deployment state before claiming READY. |
+| Per-world status | Today/Belt Boyz, Jurassic, Future, Moses, Roman, Muhammad ﷺ era/Nabawi **preserved**, shared collision fallback applies. Moon/Space and Bot B lunar research **preserved**, dedicated lunar/ship physics bypassed. Separate Bot B Roman market/Jurassic ecology/Future gardens remain unmerged. |
+| Limitations / next | Real-device FPS and gameplay untested; diagonal sidewall penetration, roof-edge floor snapping and ship/lunar dedicated collision remain open. Next A: audit 3D side-entry and mobile performance; B: scene-only ambience/Hajj NPC slice. |
+| Integration / rollback | **No merge or production deployment.** Only game-only cherry-pick/targeted patch into then-current site branch after rechecking layout; revert small lobby fallback to restore old behavior. |
+
+---
+
 ## 2026-10-27 · 13:28–13:32 CDT (America/Chicago) · Bot B / Living Worlds — lunar research ambience
 
 **Full persistent shift record:** [2026-10-27 lunar research](shifts/2026-10-27-lunar-research.md) — exact provenance, paths/functions, before/after, executed tests, per-world checklist, performance limitations, Bot A handoff, selective integration and rollback.
