@@ -37,7 +37,7 @@
 | Isolated flight-pose numerical test | **PASS:** 16 deterministic assertions for ascent, descent, forward lean, takeoff, high-altitude cruise, falling, ground contact, landing and neutral pose, using a local copy of the actual helper and TypeScript transpilation; exit 0 |
 | Strict isolated TypeScript helper check | **PASS:** `tsc --strict --noEmit --target ES2022 --module commonjs --skipLibCheck gameFlightPose.ts`, TypeScript 5.8.3; exit 0 |
 | Repository smoke script | **Added** `node scripts/game-flight-pose-smoke.mjs` with the same 16 cases; it has not yet been executed in a full repository checkout. Previous A physics and B Moses smoke results are inherited, **not rerun this shift** |
-| Full preview build | **PENDING at log write:** non-production Vercel `dpl_8Dv4q2mwnVCCfwiCx2fNdQZFRQkf`, commit `48ed10a`, [preview](https://1muslim-p1xtdng2m-elmiandco.vercel.app). Check READY and build logs before claiming success |
+| Full preview build | **PASS / READY:** non-production Vercel `dpl_8Dv4q2mwnVCCfwiCx2fNdQZFRQkf`, tested commit `48ed10a`, [preview](https://1muslim-p1xtdng2m-elmiandco.vercel.app). Next.js 15.5.26 compiled in **12.4s**, lint/type validity phase completed, 101/101 static pages generated, build completed in 54s. Existing CSS/autoprefixer/edge warnings non-fatal. The subsequent log commits are documentation-only |
 | Browser/mobile validation | **NOT VERIFIED:** no physical device, visual animation capture, FPS/GC profiling or multiplayer pose sync test |
 | Performance | Pure helper is constant-time per visible avatar; takeoff/landing add one draw call for only the local avatar during the short pulse. No measured FPS claim; seven existing trail segments remain unchanged |
 
