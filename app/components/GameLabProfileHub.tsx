@@ -1,5 +1,5 @@
 "use client";
-import {useRef,useState,type ReactNode} from "react";
+import {useEffect,useRef,useState,type ReactNode} from "react";
 import Link from "next/link";
 import {CanvasUmmaGallery} from "./CanvasUmmaGallery";
 import ProfileVideos from "./ProfileVideos";
@@ -8,8 +8,9 @@ const tabs=["1Umma","My Profile"] as const;
 type Tab=typeof tabs[number];
 export default function GameLabProfileHub({active,profile,renderProfileSection}:{active:boolean;profile?:ReactNode;renderProfileSection?:(section:"Avatars"|"Background"|"Badges"|"Settings")=>ReactNode}){
  const [tab,setTab]=useState<Tab>("1Umma"); const [settingsOpen,setSettingsOpen]=useState(false);
- const [profilePage,setProfilePage]=useState(1); const mirrorRef=useRef<HTMLDivElement>(null); const touchStart=useRef<{x:number;y:number}|null>(null);
- const goProfilePage=(page:number)=>{const el=mirrorRef.current;if(!el)return;const step=el.clientHeight;el.scrollTo({top:Math.min(el.scrollHeight-el.clientHeight,step*(page-1)),behavior:"smooth"});setProfilePage(page)};
+ const [profilePage,setProfilePage]=useState(1); const [mirrorHeight,setMirrorHeight]=useState(440); const mirrorRef=useRef<HTMLDivElement>(null); const sectionRefs=useRef<(HTMLDivElement|null)[]>([]); const touchStart=useRef<{x:number;y:number}|null>(null);
+ useEffect(()=>{const el=mirrorRef.current;if(!el)return;const measure=()=>setMirrorHeight(el.clientHeight);measure();const observer=new ResizeObserver(measure);observer.observe(el);return()=>observer.disconnect()},[tab,settingsOpen]);
+ const goProfilePage=(page:number)=>{const el=mirrorRef.current;if(!el)return;const target=sectionRefs.current[page-1];if(!target)return;const top=target.offsetTop-sectionRefs.current[0]!.offsetTop;el.scrollTo({top,behavior:"smooth"});setProfilePage(page)};
  return <section aria-label="Profile workspace" style={{height:"100%",maxHeight:"100%",minHeight:0,width:"100%",minWidth:0,display:"flex",flexDirection:"column",boxSizing:"border-box",color:"#f7f0da",background:"transparent",overflow:"hidden"}}>
   <div style={{flex:"1 1 auto",height:"100%",minHeight:0,width:"100%",boxSizing:"border-box",display:"flex",flexDirection:"column",overflow:"hidden",background:"rgba(8,48,39,.52)",backdropFilter:"blur(12px)",border:"1px solid rgba(225,194,119,.25)",borderRadius:20,padding:"10px 8px 22px"}}>
    <div style={{position:"relative",flexShrink:0,zIndex:5,background:"rgba(8,48,39,.92)",backdropFilter:"blur(12px)",borderRadius:14,padding:"6px 8px 8px",marginBottom:8}}>
@@ -20,7 +21,7 @@ export default function GameLabProfileHub({active,profile,renderProfileSection}:
     {tab==="My Profile"&&!settingsOpen&&<nav aria-label="Profile section navigation" style={{display:"flex",justifyContent:"center",gap:12,marginTop:6,paddingBottom:4}}>{[1,2,3].map(page=><button key={page} type="button" aria-label={`Go to Profile section ${page}`} aria-pressed={profilePage===page} onClick={()=>goProfilePage(page)} style={{minWidth:58,minHeight:36,borderRadius:20,border:"1px solid rgba(225,194,119,.6)",background:profilePage===page?"rgba(225,194,119,.26)":"rgba(8,48,39,.8)",color:"#f7e4b2",fontSize:13,fontWeight:700}}>{page===1?"↑ 1":`↓ ${page}`}</button>)}</nav>}
    </div>
    <div ref={mirrorRef} onTouchStart={e=>{if(tab==="My Profile")touchStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{if(tab!=="My Profile"||!touchStart.current)return;const t=e.changedTouches[0];if(Math.hypot(t.clientX-touchStart.current.x,t.clientY-touchStart.current.y)>45)goProfilePage(1);touchStart.current=null}} role="tabpanel" aria-label={tab} className="canvas-umma-vertical-gallery" data-profile-mirror-scroll style={{flex:"1 1 auto",height:"calc(100dvh - 300px)",minHeight:"min(55dvh, 560px)",maxHeight:"calc(100dvh - 240px)",width:"100%",boxSizing:"border-box",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",background:"rgba(230,255,245,.07)",border:"1px solid rgba(230,255,245,.18)",borderRadius:14,padding:"8px 8px 30px"}}>
-    {tab==="1Umma"?<CanvasUmmaGallery active={active} embedded/>:settingsOpen&&renderProfileSection?renderProfileSection("Settings"):<div style={{minHeight:"300%",display:"flex",flexDirection:"column"}}><div style={{minHeight:"33.333%",flex:"0 0 auto"}}>{profile??<p>Sign in to see your profile.</p>}<ProfileVideos/></div><div style={{minHeight:"33.333%",flex:"0 0 auto"}}>{renderProfileSection?.("Background")}</div><div style={{minHeight:"33.333%",flex:"0 0 auto"}}>{renderProfileSection?.("Badges")}</div></div>}
+    {tab==="1Umma"?<CanvasUmmaGallery active={active} embedded/>:settingsOpen&&renderProfileSection?renderProfileSection("Settings"):<div style={{display:"flex",flexDirection:"column",gap:0}}><div ref={el=>{sectionRefs.current[0]=el}} style={{minHeight:mirrorHeight,flex:"0 0 auto",position:"relative",transform:"translateZ(0)"}}>{profile??<p>Sign in to see your profile.</p>}<ProfileVideos/></div><div ref={el=>{sectionRefs.current[1]=el}} style={{minHeight:mirrorHeight,flex:"0 0 auto",position:"relative",transform:"translateZ(0)"}}>{renderProfileSection?.("Background")}</div><div ref={el=>{sectionRefs.current[2]=el}} style={{minHeight:mirrorHeight,flex:"0 0 auto",position:"relative",transform:"translateZ(0)"}}>{renderProfileSection?.("Badges")}</div></div>}
    </div>
   </div>
  </section>
