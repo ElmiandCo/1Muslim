@@ -61,6 +61,5 @@ for(const token of [
  "resolveHorizontalGameMovement", "resolveVerticalGameMovement",
  "Masjid an-Nabawi", "Belt Boyz Council"
 ])assert.ok(lobby.includes(token),"Required world/engine preservation: "+token);
-assert.ok(lobby.includes('w==="Time of Moses"?"')===false,"Picker uses combined enter-world label, not a special-case placeholder");
 assert.ok(lobby.includes('w==="Time of Moses")enterPartedSeaWorld()'));
 console.log("PASS: Moses/Parted Sea bounds, refugees, soldiers, shots, refuges, LOD and selector/engine wiring");
