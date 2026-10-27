@@ -8,7 +8,7 @@
  */
 import {FUTURE_SKYWAYS,FUTURE_TOWERS} from "./FutureCityScene";
 import {GIANT_CAVE,jurassicRocks,jurassicTerrain,jurassicTrees} from "./JurassicScene";
-import type {GameCollider} from "./gamePhysics";
+import {buildStaticGameCollisionIndex,type GameCollider} from "./gamePhysics";
 
 const nearCave=(x:number,z:number,radius:number)=>
   Math.hypot(x-GIANT_CAVE.x,z-GIANT_CAVE.z)<radius;
@@ -67,3 +67,8 @@ const caveStructures:GameCollider[]=[
 export const JURASSIC_COLLIDERS:readonly GameCollider[]=[
   ...jurassicTreeSolids,...jurassicRockSolids,...caveRing,...caveStructures
 ];
+
+// Shared immutable broadphases: avoid scanning every Jurassic tree/rock on each
+// physics frame. The full collider arrays remain available for diagnostics.
+export const FUTURE_COLLISION_INDEX=buildStaticGameCollisionIndex(FUTURE_COLLIDERS);
+export const JURASSIC_COLLISION_INDEX=buildStaticGameCollisionIndex(JURASSIC_COLLIDERS);
