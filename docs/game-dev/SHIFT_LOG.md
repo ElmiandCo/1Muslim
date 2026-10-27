@@ -1,5 +1,22 @@
 # Keemy's Adventure World — Game-only shift log
 
+
+## 2026-10-27 · 16:02–16:07 CDT (America/Chicago) · Bot A / World Engine — Ancient Egypt portal, Nile terrain and stepped solids
+
+**Full per-shift handoff:** [Moses ↔ Ancient Egypt portal and collision integration](shifts/2026-10-27-egypt-portal-colliders.md). **Bot B source reviewed:** [Egypt riverlife](https://github.com/ElmiandCo/1Muslim/blob/game/living-worlds-ancient-egypt-riverlife-20261027-1530/docs/game-dev/shifts/2026-10-27-ancient-egypt-riverlife.md); [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+| Contract | Result |
+| --- | --- |
+| Protected baseline | `fix/profile-scroll-match-umma-20261027` @ `c856491` |
+| Game starting point | Bot A `game/world-engine-3d-side-sweep-20261027-1500` @ `f86963e` |
+| Working branch | `game/world-engine-egypt-portal-colliders-20261027-1600`; code/test tip `d1de8e4`, followed by docs-only commits |
+| Main/production read-only | `main` @ `82eddbf7`; **no site or production edits**; newer feed/profile and frozen layout contracts preserved |
+| Exact changed code | New `AncientEgyptRiverScene.ts` (Bot B isolated import) and `gameEgyptWorld.ts`; targeted `SharedGameLobby.tsx` Egypt portal/physics/render and `PartedSeaScene.ts` arch tint; two game smoke scripts |
+| Implemented | Positive-Z Moses Egyptian-origin portal → independent Nile/pyramids world → reciprocal return arch; 2.5s cooldown; persistent Moses NPC state; stepped pyramid/ramp, palm, hut wall/roof and dock solids; continuous desert and lowered Nile riverbed; render LOD |
+| Verified | GitHub path diff **PASS**, connector-side source preservation markers **PASS**; new Node smoke **committed, not executed**; non-production Vercel preview build **pending final status at log creation** |
+| Pending | Actual portal walkthrough, real mobile FPS, river/wading physics, boat boarding, collision edge stress, high-altitude stars, faster descend; Bot B NPC refinements |
+| Integration | **Game-only selective patches/cherry-picks**, never full branch/app replacement. See detailed shift note for rollback and per-world checklist. No production merge/deploy. |
+
 ## 2026-10-27 · 15:05–15:13 CDT (America/Chicago) · Bot A / World Engine — continuous 3D side entry and accurate roof crossing
 
 **Full handoff:** [2026-10-27 swept sidewall flight](shifts/2026-10-27-swept-sidewall-flight.md). Reviewed [Bot B 14:40 Nabawi congregation](shifts/2026-10-27-nabawi-congregation.md) and [Bot A 14:00 vertical collision](shifts/2026-10-27-swept-vertical-flight.md).
