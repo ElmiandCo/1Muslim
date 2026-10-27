@@ -533,6 +533,7 @@ const navCollapsedRef=useRef(false);
   const down=(e:TouchEvent)=>{
    if(e.touches.length!==1||editWidgets){start=null;return}
    const target=e.target as HTMLElement;
+   if(target.closest('[data-profile-mirror-scroll][aria-label="My Profile"]')){start=null;return}
    if(!target.closest("main[data-canvas-fullscreen]")){start=null;return}
    const scroller=target.closest(".canvas-native-profile,[data-ranks-scroll],[data-gallery-scroll]") as HTMLElement|null;
    start={x:e.touches[0].clientX,y:e.touches[0].clientY,target,atTop:!scroller||scroller.scrollTop<=2};
