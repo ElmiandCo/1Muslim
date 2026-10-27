@@ -11,7 +11,7 @@
 ## Exactly what changed
 | Path | Before | After |
 | --- | --- | --- |
-| `app/components/AncientEgyptRiverScene.ts` | Three docks and stone piles existed, but no unloading crew or riverside wildlife except flying birds. | Adds six deterministic faceless cargo NPCs (two per dock), inland limestone delivery/empty return, close-only stepping animation, six-ish riverside herons and four fish with gentle surface ripples. Exact exports: `EGYPT_DOCK_CREWS`, `EGYPT_RIVER_WILDLIFE`, `egyptDockWorkerPose`; adds two cull-bounded rendering loops to `renderAncientEgyptRiverLife`. Existing palms, pyramids, boats, workers, Nile, birds and portal data unchanged. |
+| `app/components/AncientEgyptRiverScene.ts` | Three docks and stone piles existed, but no unloading crew or riverside wildlife except flying birds. | Adds six deterministic faceless cargo NPCs (two per dock), inland limestone delivery/empty return, close-only stepping animation, eight riverside herons and four fish with gentle surface ripples. Exact exports: `EGYPT_DOCK_CREWS`, `EGYPT_RIVER_WILDLIFE`, `egyptDockWorkerPose`; adds two cull-bounded rendering loops to `renderAncientEgyptRiverLife`. Existing palms, pyramids, boats, workers, Nile, birds and portal data unchanged. |
 | `scripts/game-ancient-egypt-smoke.mjs` | Original deterministic scene smoke. | Extends with 6 crew/12 wildlife counts, 30 finite cargo poses, west-bank position bounds, carrying/return phase, two wildlife types, and near-dock draw budget. |
 | `docs/game-dev/shifts/2026-10-27-egypt-docklife.md` | Absent. | This detailed shift record. |
 | `docs/game-dev/SHIFT_LOG.md` | Previous Bot A and Bot B shift index. | Prepended this shift's entry; old history retained. |
