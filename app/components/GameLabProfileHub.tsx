@@ -15,8 +15,8 @@ export default function GameLabProfileHub({active,profile,renderProfileSection}:
     {tabs.map(name=><button key={name} role="tab" type="button" aria-selected={tab===name} onClick={()=>{setTab(name);setSettingsOpen(false)}} style={{flex:"0 0 auto",minHeight:38,padding:"6px 10px",fontSize:12,whiteSpace:"nowrap",borderRadius:0,border:"none",borderBottom:tab===name?"2px solid #e8cb83":"2px solid transparent",background:"transparent",color:"#fff3d4",fontWeight:tab===name?700:500}}>{name}</button>)}
    </div>
   </header>
-  <div role="tabpanel" aria-label={tab} style={{position:"relative",flex:"1 1 0",height:0,minHeight:0,minWidth:0,width:"100%",maxWidth:"100%",boxSizing:"border-box",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",overscrollBehaviorY:"contain",padding:tab==="1Umma"?0:8}}>
-   {tab==="1Umma"?<CanvasUmmaGallery active={active}/>:settingsOpen&&renderProfileSection?renderProfileSection("Settings"):<>{profile??<p>Sign in to see your profile.</p>}<ProfileVideos/></>}
+  <div role="tabpanel" aria-label={tab} style={{position:"relative",flex:"1 1 0",height:0,minHeight:0,minWidth:0,width:"100%",maxWidth:"100%",boxSizing:"border-box",overflow:"hidden",padding:0}}>
+   {tab==="1Umma"?<CanvasUmmaGallery active={active}/>:<div className="canvas-umma-vertical-gallery canvas-my-profile-scroll-shell" data-my-profile-scroll="true" style={{height:"100%",minHeight:0,width:"100%",maxWidth:"100%",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",overscrollBehaviorY:"contain",boxSizing:"border-box",padding:8}}>{settingsOpen&&renderProfileSection?renderProfileSection("Settings"):<>{profile??<p>Sign in to see your profile.</p>}<ProfileVideos/></>}</div>}
   </div>
  </section>
 }
