@@ -58,6 +58,7 @@ for(const token of [
  "updatePartedSea(partedSeaState.current,dt,now,p,projectiles.current)",
  "partedSeaWorldRef.current?SEA_BOUNDS",
  "partedSeaWorldRef.current?SEA_COLLIDERS",
+ "p.z=partedSeaWorldRef.current?SEA_SPAWN_Z:0",
  "resolveHorizontalGameMovement", "resolveVerticalGameMovement",
  "Masjid an-Nabawi", "Belt Boyz Council"
 ])assert.ok(lobby.includes(token),"Required world/engine preservation: "+token);
