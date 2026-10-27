@@ -2,6 +2,66 @@
 
 > **Protected integration rule:** This repository's website evolves independently. Never merge a whole game branch into main or production. Cherry-pick only reviewed game-path commits onto the *then-current* website integration branch. Preserve the newer feed, profile, Quran, navigation, GoLive, and site CSS. No automated production merge/deploy.
 
+## 2026-10-27 · 11:58–12:03 CDT (America/Chicago) · Bot A / World Engine — directional flight, free-fall and landing poses
+
+### Provenance and no-regression audit
+
+| Contract | Verified outcome |
+| --- | --- |
+| Frozen preview source | `fix/profile-scroll-match-umma-20261027` @ **`c856491131bb0c8056693652f8e5e58a26836831`**, read-only |
+| Starting GAME code | **`game/world-engine-spatial-broadphase-20261027-1100` @ `63db7b1ad8c3affff3b5d3b64b213870f54f3f87`**; inherits earlier A collision and B's connected Moses world |
+| Dedicated working branch | **`game/world-engine-directional-flight-20261027-1200`**; last implementation commit **`48ed10a86dee62e92d4c0dd69169244029e20da9`** (this documentation-only commit follows) |
+| Other shift reviewed | Bot B 10:34 CDT `game/living-worlds-moses-playable-20261027-1100` @ `536a9605b626f561bb42007f8698609015e48736`; already in A's parent ancestry. B's Jurassic ferns/dragonflies and Future gardens are **separate branches**, not silently integrated |
+| Latest main read-only | `main` @ `21119c711beda86de3f7766b18bdb0e1c39028d0`; site differs from frozen preview in community API, canvas CSS, CanvasSecondaryApp, profile hub, video entry, Supabase migration. **No site files copied or edited** |
+| Frozen production branch | `release/frozen-production-2026-10-27-perfect-for-you` @ `4e2a6c56bfbc75bd93560f6a02a2799deb885487`; unchanged |
+| Live production read-only | Vercel `dpl_3KxxhG8pRxuy64rN4D1Jn9jzgPHy`, READY, `main` @ `21119c7`; **no production deployment or merge** |
+| Layout contract | `app/page.tsx` blob `92ca9b5` identical main/frozen; `SharedGameLobby.module.css` blob `952bdfc` identical; `CanvasSecondaryApp.tsx` differs (`ac34d6b` main, `4db1706` frozen). All untouched |
+| Changed paths, exactly | **`app/components/gameFlightPose.ts` (new), `app/components/SharedGameLobby.tsx` (targeted avatar rendering), `scripts/game-flight-pose-smoke.mjs` (new), `docs/game-dev/SHIFT_LOG.md` (this handoff)** |
+| Dependency / data changes | **None**; no packages, routes, pages, CSS, schemas, navigation, profile, feed, Quran, GoLive or scene modules changed |
+
+### Implemented (and explicitly not implemented)
+
+**Before:** The existing `SharedGameLobby` avatar renderer used one flying pose regardless of rising, descending or coasting, and a generic walk/bob animation even when falling without flight. Takeoff and landing had timestamps and a crouch but no direction-dependent body language or pulse. Existing high-altitude physics, swept collisions, roof landing, and cached Jurassic/Future broadphase already worked independently.
+
+**After:** A pure, deterministic, world-independent `calculateGameFlightPose` helper in `gameFlightPose.ts` classifies `takeoff`, `ascending`, `descending`, `cruise`, `falling`, `landing`, and `grounded` from the existing flying flag, vertical speed, clearance above the current collision/terrain floor and animation timestamps. It returns lightweight numeric torso lean, head offset, arm lift, leg lift and trail slope; it **does not change physics, gravity, altitude limits, collider geometry or networking**.
+
+`SharedGameLobby.tsx` consumes the helper inside its existing avatar primitive renderer. Rising increases arm lift and tilts blue trails upward; descending lowers the arms, bends the legs and warms trails to amber; ordinary non-flight free-fall tucks the legs and lifts arms; moving forward while flying adds a modest lean. Takeoff and touchdown each have one brief translucent expanding ground pulse, reusing the existing WebGL box draw. Landing crouch and collision-based landing remain intact. This affects the **shared avatar renderer**, so the same local visual behavior applies to Today, Jurassic, Future, Moses and Muhammad ﷺ environments wherever their ordinary player motion path is used; no scene was replaced. Remote peers use a neutral cruise fallback because vertical velocity is **not** currently sent in presence updates; no claim of synchronized remote directional poses.
+
+**Preserved:** No edits to `JurassicScene.ts`, `FutureCityScene.ts`, `PartedSeaScene.ts`, `gamePhysics.ts`, `gameWorldColliders.ts`, Masjid an-Nabawi prayer posture, the roofless Belt Boyz Council, portals, ship/EVA/Moon-specific physics, weapons, shield or XP store. The existing prayer-pose early return still takes precedence in the sacred area. High-altitude flight has no new reset/clamp. The new rendering does **not** create ten mosques, Hajj NPCs or server-authoritative systems.
+
+### Verification and limits
+
+| Check | Result / evidence |
+| --- | --- |
+| GitHub change isolation | **PASS:** compare against direct parent shows exactly 3 implementation/test game paths, no site paths; documentation is fourth |
+| Isolated flight-pose numerical test | **PASS:** 16 deterministic assertions for ascent, descent, forward lean, takeoff, high-altitude cruise, falling, ground contact, landing and neutral pose, using a local copy of the actual helper and TypeScript transpilation; exit 0 |
+| Strict isolated TypeScript helper check | **PASS:** `tsc --strict --noEmit --target ES2022 --module commonjs --skipLibCheck gameFlightPose.ts`, TypeScript 5.8.3; exit 0 |
+| Repository smoke script | **Added** `node scripts/game-flight-pose-smoke.mjs` with the same 16 cases; it has not yet been executed in a full repository checkout. Previous A physics and B Moses smoke results are inherited, **not rerun this shift** |
+| Full preview build | **PENDING at log write:** non-production Vercel `dpl_8Dv4q2mwnVCCfwiCx2fNdQZFRQkf`, commit `48ed10a`, [preview](https://1muslim-p1xtdng2m-elmiandco.vercel.app). Check READY and build logs before claiming success |
+| Browser/mobile validation | **NOT VERIFIED:** no physical device, visual animation capture, FPS/GC profiling or multiplayer pose sync test |
+| Performance | Pure helper is constant-time per visible avatar; takeoff/landing add one draw call for only the local avatar during the short pulse. No measured FPS claim; seven existing trail segments remain unchanged |
+
+### World matrix and next-shift integration
+
+| World | Verified scope / preservation | Next check |
+| --- | --- | --- |
+| Today / Main Street / Belt Boyz | Shared avatar pose updated; existing dynamic collision, store, roofless Council and meeting unchanged | Mobile frame pacing, rooftop landing, boost collisions; cache dynamic solids safely |
+| Jurassic | Shared pose update; existing cached 1,439 solid broadphase, dinosaur/cave rendering untouched | Real-device cave ceilings and falling from trees; B fern/dragonfly module still separate |
+| Future / futuristic / RealMecca concept | Shared pose update; existing 76 tower/skyway colliders untouched. No separately verified RealMecca scene module | Skyway takeoff and descent, distant tower LOD, B garden integration as targeted scene diff |
+| Moses / Parted Sea | Shared pose update; nine refuge solids, NPCs, dry crossing and exit untouched | Long crossing, fall/land at refuge, mobile camera; preserve B's source |
+| Muhammad ﷺ era / Masjid an-Nabawi | Shared pose update outside existing prayer override; Nabawi and prayer actions unchanged | Respectful NPC tawaf/sa'i and prayer additions in B-owned scene work |
+| Space / Moon / EVA / ship / plane | Dedicated vehicle and lunar movement unchanged; no new physics or network pose updates | Verify spacecraft and EVA avatar rendering separately |
+| Jesus / Roman Judea | Existing selector remains preview pending; no old page or scene imported | Extract scene as game-only module, never merge stale page |
+| Ten enterable mosques | **Not implemented this shift** | One tested enterable high-ceiling mosque per game-only scene update |
+
+**Integration / rollback:** Fetch newest site main, production and layout contracts again before any approved integration. On a new integration branch, cherry-pick **only** `d51928e` (helper), `6c31679` (test), and `48ed10a` (minimal avatar renderer) **after** confirming A's prior physics and B's Moses work are already present; otherwise first selectively integrate those game-only prerequisites. If `SharedGameLobby.tsx` has changed, apply just the helper import and avatar lines, not the entire 165 KB file. Check `git diff --name-only` excludes app pages/site CSS/navigation/profile/feed/Quran/GoLive/Supabase. Roll back by reverting `48ed10a` and removing the isolated helper/test if no other consumers. No deployment to production, no merge into main.
+
+**Next Bot A:** verify build status; run all three game smoke scripts on a complete checkout, test animation on iPhone/desktop, profile mobile FPS, and improve dynamic Today collider allocations without altering destruction/repair. **Next Bot B:** use this branch tip for new scene work; leave shared pose/physics helpers alone and add only isolated world modules. Prioritize respectful ambient NPCs, architecture and scenery; preserve the Moses, Jurassic, Future, Space, Nabawi and Belt Boyz baselines. No full-branch site merge.
+
+**Cross-references:** [previous Bot A broadphase](https://github.com/ElmiandCo/1Muslim/tree/game/world-engine-spatial-broadphase-20261027-1100) · [Bot B Moses handoff](https://github.com/ElmiandCo/1Muslim/tree/game/living-worlds-moses-playable-20261027-1100) · [game master issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+---
+
 ## 2026-10-27 · 11:04–11:09 CDT (America/Chicago) · Bot A / World Engine — cached collision broadphase across Jurassic and Future
 
 ### Provenance, contracts, isolation
