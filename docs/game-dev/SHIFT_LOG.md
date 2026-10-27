@@ -1,5 +1,27 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 18:57–19:04 CDT (America/Chicago) · Bot A / World Engine — roof/ceiling edge release
+
+**Full handoff:** [roof-edge release and collision regression](shifts/2026-10-27-roof-edge-release-1900.md) · **Reviewed Bot B:** [Hyper Defense emerald aura](shifts/2026-10-27-hyper-shield-aura-1830.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+| Contract | Evidence |
+| --- | --- |
+| Frozen preview | `fix/profile-scroll-match-umma-20261027` @ `c856491`; `app/page.tsx` blob `92ca9b5` unchanged |
+| Current main (read-only) | `c043219`; newer site page differs, never copied |
+| Actual game starting branch | Bot B `game/living-worlds-hyper-shield-aura-20261027-1830` @ `95d9e7a` |
+| Dedicated branch | `game/world-engine-ledge-release-20261027-1900`; game code/test commits `0248512`, `6235488`, `0ae037e`, `9c02c35` |
+| Exact changed paths | `app/components/gamePhysics.ts` and `scripts/game-swept-vertical-smoke.mjs`; documentation only otherwise |
+| Implemented | Characters can walk/fall off roof edges and ascend away from overhead slabs instead of snapping to start position; movement **along** supported roof/underside preserves destination X/Z; real roof/ceiling crossings still stop |
+| Verification | **PASS:** 8 executed V8 assertions against exact modified helper source with TS annotations erased; GitHub compare game-only; frozen page SHA parity. Full committed smoke suite and real-device test **not run** |
+| Preview | Non-production `dpl_91urCJhNY5CRJvEzvQ97eC7BgwtJ` at `9c02c35`, https://1muslim-96vy3by96-elmiandco.vercel.app; build status pending when recorded |
+| World coverage | Shared ordinary-avatar collision for Egypt/Moses/Jurassic/Future/Today/prophetic/Roman improved; Moon/Space dedicated physics untouched; all scene modules, Hajj/Nabawi, shield, meeting and roofless Belt Boyz office preserved |
+| Integration / rollback | Cherry-pick **only** physics/test hunks onto latest site branch, never merge whole game branch. Revert `0ae037e` + `0248512` to restore Bot B physics blob `9e19e03`. No main/production deployment. |
+
+**Next:** Real-device pyramid/skyway ledge tests, Nile banks, complete smoke suite, server-authoritative combat plan. Bot B owns Great Pyramid visual centering and Meeting UX/Exit Meeting. Shield remains client-authoritative.
+
+---
+
+
 ## 2026-10-27 · 18:30 CDT (America/Chicago) · Bot B / Living Worlds — Emerald Hyper Defense sphere + sound
 
 **Full handoff:** [Shield aura/audio 18:30](shifts/2026-10-27-hyper-shield-aura-1830.md) · **Reviewed:** [Bot A Hyper Defense 18:00](shifts/2026-10-27-hyper-shield-1800.md) and [Bot B Egypt village 17:30](shifts/2026-10-27-egypt-village-1730.md) · [Bot coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
