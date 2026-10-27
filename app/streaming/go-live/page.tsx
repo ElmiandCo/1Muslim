@@ -1053,8 +1053,7 @@ export default function GoLivePage() {
             </div>
             <div className="preliveMobileActions" aria-label="Pre-live creator controls">
               {!live && <>
-                <button type="button" className="preliveGoButton" disabled={saving || connectingLive || !cameraReady} onCltingsOpen(true)}><span aria-hidden="true">♧</span><strong>Allow Guests</strong><small>Settings</small></button>
-                </div>
+                <button type="button" className="preliveGoButton" disabled={saving || connectingLive || !cameraReady} onClick={()=>void startLive(false)}>{connectingLive?"Connecting to LiveKit…":cameraReady?"◉ GO LIVE":"Enable Camera to Go Live"}</button>
               </>}
             </div>
             <div className="controls">
