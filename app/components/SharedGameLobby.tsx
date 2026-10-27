@@ -7,7 +7,7 @@ import styles from "./SharedGameLobby.module.css";
 import {drawJurassic,updateJurassicDinos,jurassicTerrain,JURASSIC_LIMIT,hitJurassicApex} from "./JurassicScene";
 import {FUTURE_BOUNDS,FUTURE_PORTAL,futureSkywayFloor,renderFutureWorld} from "./FutureCityScene";
 import {SEA_BOUNDS,SEA_SPAWN_Z,createPartedSeaState,partedSeaColliders,updatePartedSea,renderPartedSea,type SeaState} from "./PartedSeaScene";
-import {resolveHorizontalGameMovement,resolveVerticalGameMovement} from "./gamePhysics";
+import {resolveHorizontalGameMovement,resolveVerticalGameMovement,resolveSweptVerticalGameMovement} from "./gamePhysics";
 import {FUTURE_COLLISION_INDEX,JURASSIC_COLLISION_INDEX} from "./gameWorldColliders";
 import {calculateGameFlightPose} from "./gameFlightPose";
 import {TODAY_PROP_COLLIDERS,PROPHETIC_COLLISION_INDEX,createTodayCollisionSource} from "./gameTodayColliders";
@@ -378,7 +378,16 @@ export default function SharedGameLobby(){
    // Solid roofs and overhead decks block vertical crossings. The ship,
    // aircraft, EVA and lunar modes retain their dedicated movement physics.
    if(!ship.current.active&&!plane.current.active&&!eva&&!lunar&&meetingSeatRef.current===null){
-     const vertical=resolveVerticalGameMovement(previousFeetY,p.y,p.x,p.z,collisionSolids);
+     const directVertical=resolveVerticalGameMovement(previousFeetY,p.y,p.x,p.z,collisionSolids);
+     // Keep the cheap endpoint check first; diagonal flight can also cross
+     // a narrow roof/underside between frames with no endpoint overlap.
+     const vertical=directVertical.hitCeiling||directVertical.landedOnSolid||
+       Math.abs(previousX-p.x)+Math.abs(previousZ-p.z)<.01
+       ?directVertical
+       :resolveSweptVerticalGameMovement(previousFeetY,p.y,previousX,previousZ,p.x,p.z,collisionSolids);
+     if("x" in vertical&&(vertical.hitCeiling||vertical.landedOnSolid)){
+       p.x=vertical.x;p.z=vertical.z;
+     }
      if(vertical.hitCeiling){p.y=vertical.y;velocity=Math.min(velocity,0);}
      else if(vertical.landedOnSolid){
        if(velocity< -11){crashUntil=now+1300;setCrashed(true)}
