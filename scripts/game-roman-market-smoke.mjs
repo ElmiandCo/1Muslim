@@ -35,7 +35,7 @@ assert.equal(sample("Jerusalem",{x:600,z:600}).length,0,"Far market must be cull
 assert.equal(JSON.stringify(near),JSON.stringify(sample("Jerusalem",{x:0,z:0})),"Animation must be deterministic");
 assert.notEqual(JSON.stringify(near),JSON.stringify(sample("Jerusalem",{x:0,z:0},25000)),"Traders and birds must animate");
 assert.ok(near.some(c=>c[1]>6),"Birds must be visible above the road");
-assert.ok(near.every(c=>c.slice(0,7).every(Number.isFinite)),"No invalid draw geometry");
+assert.ok(near.every(c=>c.slice(0,6).every(Number.isFinite)&&c[6].length===3&&c[6].every(Number.isFinite)),"No invalid draw geometry");
 let max=0;
 for(const x of [-50,0,50])for(let z=-165;z<=165;z+=55)max=Math.max(max,sample("Jerusalem",{x,z}).length);
 assert.ok(max<220,`Too many decorative draw submissions: ${max}`);
