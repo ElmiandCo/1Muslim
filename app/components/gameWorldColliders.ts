@@ -6,16 +6,22 @@
  * The scene modules are owned by Living Worlds (Bot B); this module only
  * references their exported geometry and never changes their render paths.
  */
-import {FUTURE_TOWERS} from "./FutureCityScene";
+import {FUTURE_SKYWAYS,FUTURE_TOWERS} from "./FutureCityScene";
 import {GIANT_CAVE,jurassicRocks,jurassicTerrain,jurassicTrees} from "./JurassicScene";
 import type {GameCollider} from "./gamePhysics";
 
 const nearCave=(x:number,z:number,radius:number)=>
   Math.hypot(x-GIANT_CAVE.x,z-GIANT_CAVE.z)<radius;
 
-export const FUTURE_COLLIDERS:readonly GameCollider[]=FUTURE_TOWERS.map(t=>({
-  x:t.x,z:t.z,hx:t.width/2,hz:t.depth/2,bottom:-1,top:t.height
-}));
+export const FUTURE_COLLIDERS:readonly GameCollider[]=[
+  ...FUTURE_TOWERS.map(t=>({
+    x:t.x,z:t.z,hx:t.width/2,hz:t.depth/2,bottom:-1,top:t.height
+  })),
+  ...FUTURE_SKYWAYS.flatMap(w=>[
+    {x:w.x,z:w.z,hx:w.width/2,hz:w.depth/2,bottom:w.y-.36,top:w.y},
+    ...[-35,35].map(x=>({x,z:w.z,hx:.75,hz:.75,bottom:0,top:w.y}))
+  ])
+];
 
 // Trunks and upper canopies are separate volumes so the walking path stays
 // narrow while airborne players still collide with the visible branches.
