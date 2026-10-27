@@ -9,11 +9,11 @@
 | --- | --- |
 | Protected baseline | `fix/profile-scroll-match-umma-20261027` @ `c856491` |
 | Game starting point | Bot A `game/world-engine-3d-side-sweep-20261027-1500` @ `f86963e` |
-| Working branch | `game/world-engine-egypt-portal-colliders-20261027-1600`; code/test tip `d1de8e4`, followed by docs-only commits |
+| Working branch | `game/world-engine-egypt-portal-colliders-20261027-1600`; initial code/test tip `d1de8e4`, then safe re-entry `f43e0a4` and arch orientation `55e07d9`, followed by docs-only commits |
 | Main/production read-only | `main` @ `82eddbf7`; **no site or production edits**; newer feed/profile and frozen layout contracts preserved |
 | Exact changed code | New `AncientEgyptRiverScene.ts` (Bot B isolated import) and `gameEgyptWorld.ts`; targeted `SharedGameLobby.tsx` Egypt portal/physics/render and `PartedSeaScene.ts` arch tint; two game smoke scripts |
 | Implemented | Positive-Z Moses Egyptian-origin portal → independent Nile/pyramids world → reciprocal return arch; 2.5s cooldown; persistent Moses NPC state; stepped pyramid/ramp, palm, hut wall/roof and dock solids; continuous desert and lowered Nile riverbed; render LOD |
-| Verified | GitHub path diff **PASS**, connector-side source preservation markers **PASS**; new Node smoke **committed, not executed**; non-production Vercel preview build **pending final status at log creation** |
+| Verified | GitHub path diff **PASS**, connector-side source preservation markers **PASS**; new Node smoke **committed, not executed**; Next.js non-production Vercel preview at code/test commit `d1de8e4` **READY** (build completed; CSS warnings only); two portal safety follow-ups need their own preview check |
 | Pending | Actual portal walkthrough, real mobile FPS, river/wading physics, boat boarding, collision edge stress, high-altitude stars, faster descend; Bot B NPC refinements |
 | Integration | **Game-only selective patches/cherry-picks**, never full branch/app replacement. See detailed shift note for rollback and per-world checklist. No production merge/deploy. |
 
