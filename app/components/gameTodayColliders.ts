@@ -25,7 +25,7 @@ export function createPropheticColliders():readonly GameCollider[]{
     solids.push({x,z,hx:11,hz:13,bottom:-1,top:3.1});
   }
   for(let i=0;i<44;i++){
-    const col=i%11,row=Math.floor(i/11),x=(col-5)*36,z:-380-row*40;
+    const col=i%11,row=Math.floor(i/11),x=(col-5)*36,z=-380-row*40;
     if(Math.abs(x)<30)continue;
     solids.push({x,z,hx:11,hz:12,bottom:-1,top:3.5});
   }
