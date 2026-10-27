@@ -17,6 +17,46 @@ function solids(city:RomanCity):GameCollider[]{
 export const ROMAN_JERUSALEM_COLLIDERS=solids("Jerusalem"),ROMAN_ROME_COLLIDERS=solids("Rome");
 const jerusalemIndex=buildStaticGameCollisionIndex(ROMAN_JERUSALEM_COLLIDERS),romeIndex=buildStaticGameCollisionIndex(ROMAN_ROME_COLLIDERS);
 export const romanJudeaCollisionIndex=(city:RomanCity)=>city==="Rome"?romeIndex:jerusalemIndex;
+// Non-solid market life. All placements are deterministic and culled independently of physics.
+type RomanPaint=(x:number,y:number,z:number,sx:number,sy:number,sz:number,col:number[],alpha?:number,angle?:number)=>void;
+const JERUSALEM_MARKET={cloth:[[.59,.31,.23],[.39,.49,.33],[.67,.51,.31]],robes:[[.51,.38,.26],[.57,.46,.35]],goods:[[.35,.43,.2],[.6,.43,.2],[.45,.29,.39]]};
+const ROME_MARKET={cloth:[[.65,.36,.25],[.38,.46,.55],[.7,.58,.32]],robes:[[.62,.48,.35],[.48,.36,.28]],goods:[[.46,.38,.21],[.51,.28,.38],[.35,.45,.24]]};
+export function renderRomanMarketLife(paint:RomanPaint,now:number,player:{x:number;z:number},city:RomanCity){
+ const palette=city==="Rome"?ROME_MARKET:JERUSALEM_MARKET;
+ // Sixteen existing market stalls gain fluttering valances, traders and pottery.
+ for(let i=0;i<16;i++){
+  const side=i%2?1:-1,x=side*18,z=-165+i*22,dx=x-player.x,dz=z-player.z,d2=dx*dx+dz*dz;
+  if(d2>115*115)continue;
+  const cloth=palette.cloth[i%3],flutter=Math.sin(now*.0014+i*1.7)*.26;
+  paint(x-2.5,3.57+flutter,z+2.45,1.5,.7,.18,cloth);
+  paint(x+2.5,3.57-flutter,z+2.45,1.5,.7,.18,cloth);
+  if(d2>65*65)continue;
+  const traderX=side*23.7,robe=palette.robes[i%2],gesture=Math.sin(now*.0018+i*2.1)*.28;
+  paint(traderX,1.48,z,1,2.25,.9,robe);
+  paint(traderX,3.04,z,.84,.84,.84,[.64,.46,.33]);
+  paint(traderX-side*.55,2.4+gesture,z+.2,.32,1.1,.36,robe);
+  // Goods rest on the existing counter, so no new player collision is required.
+  paint(x-1.6,2.86,z-.7,.85,.86,.85,[.62,.39,.24]);
+  paint(x-1.6,3.32,z-.7,.54,.12,.54,[.73,.53,.36]);
+  paint(x+1.55,2.84,z+.7,.8,.82,.8,[.66,.43,.28]);
+  paint(x,2.68,z+.15,2.2,.4,1.25,[.43,.29,.18]);
+  paint(x,3.02,z+.15,1.75,.28,1.05,palette.goods[i%3]);
+  if(d2<32*32)paint(x,3.3,z+.15,1.2,.15,.75,palette.goods[(i+1)%3]);
+ }
+ // Small birds circle over the market street; they never participate in collision or AI.
+ for(let i=0;i<12;i++){
+  const phase=now*.00043+i*1.47,x=Math.sin(phase*1.2+i)*5.5,z=-132+i*24+Math.cos(phase)*6;
+  const dx=x-player.x,dz=z-player.z,d2=dx*dx+dz*dz;
+  if(d2>95*95)continue;
+  const y=7+Math.sin(phase*4+i)*.65,wing=Math.sin(phase*10)*.43;
+  paint(x,y,z,1.05,.4,.65,[.55,.53,.48]);
+  if(d2<55*55){
+   paint(x-.7,y+wing,z,.95,.15,.45,[.67,.65,.6],1,wing*.4);
+   paint(x+.7,y-wing,z,.95,.15,.45,[.67,.65,.6],1,-wing*.4);
+   paint(x,y+.08,z-.47,.24,.2,.45,[.42,.41,.39]);
+  }
+ }
+}
 export function renderRomanJudea(vp:number[],draw:RomanDraw,now:number,player:{x:number;z:number},city:RomanCity){
  const inRome=city==="Rome";
  const paint=(x:number,y:number,z:number,sx:number,sy:number,sz:number,col:number[],alpha=1,angle=0)=>{
@@ -54,6 +94,7 @@ export function renderRomanJudea(vp:number[],draw:RomanDraw,now:number,player:{x
         paint(100,9,-135,75,18,65,[.72,.66,.55]);for(let i=0;i<7;i++)paint(70+i*10,19,-110,3,10,3,[.8,.75,.64]);
       
  }
+ renderRomanMarketLife(paint,now,player,city);
  // Animated olive groves outside the original city walls. Non-solid decorative life.
  for(let i=0;i<36;i++){
   const x=(i%2?1:-1)*(267+(i%5)*13),z=-185+Math.floor(i/5)*53;
