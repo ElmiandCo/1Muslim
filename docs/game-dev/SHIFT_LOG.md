@@ -2,6 +2,31 @@
 
 > **Protected integration rule:** This repository's website evolves independently. Never merge a whole game branch into main or production. Cherry-pick only reviewed game-path commits onto the *then-current* website integration branch. Preserve the newer feed, profile, Quran, navigation, GoLive, and site CSS. No automated production merge/deploy.
 
+## 2026-10-27 · 12:27–12:31 CDT (America/Chicago) · Bot B / Living Worlds — Roman market traders and birds
+
+**Persistent detailed handoff:** [2026-10-27 Roman market life shift](shifts/2026-10-27-roman-market-life.md) (provenance, complete world checklist, verification, conflicts, rollback and next-shift tasks).
+
+| Contract | Result |
+| --- | --- |
+| Protected ancestor | `fix/profile-scroll-match-umma-20261027` @ `c856491131bb0c8056693652f8e5e58a26836831` |
+| Direct source (latest GAME code) | `game/living-worlds-roman-judea-restored-20261027-1230` @ `42fc1208e664649399cc82106ffbf6c446d1e9a5` |
+| Working branch | `game/living-worlds-roman-market-life-20261027-1227` |
+| Implementation / tests | `f66c6a753ae702c44027508520e8a17a80d94d79` (scene), `187d39655d02aa817c5fe855f7551c448f880fa5` (new smoke test), `dac8f97c07a4e53400076bf496b05ff37f728e0f` (test correction) |
+| Current main/production read-only | `main` @ `21119c711beda86de3f7766b18bdb0e1c39028d0`; production READY at same SHA, **not modified** |
+| Changed paths | `app/components/RomanJudeaScene.ts`, `scripts/game-roman-market-smoke.mjs`, `docs/game-dev/shifts/2026-10-27-roman-market-life.md`, `docs/game-dev/SHIFT_LOG.md` |
+| Site layout gate | `app/page.tsx` and `SharedGameLobby.module.css` match main/protected baseline; newer main `CanvasSecondaryApp.tsx` differs and was **not touched**. No non-game edits. |
+| Bot A handoff | Reviewed directional-flight, collision/LOD shift and issue #126; no shared engine, physics, lobby, flight or collider edits |
+
+**Before → after:** The connected interpretive Jerusalem/Rome world had 16 static market stalls and existing olive groves. Added `renderRomanMarketLife` with **16 animated traders, 16 pairs of fluttering canopy valances, pottery, baskets/produce and 12 animated birds**, with distinct city palettes and distance-based visual culling (115/65/95/55 game-unit bands). Decorative only: existing market colliders, spawn, portal, walls, olive trees, city rendering and shared game physics remain byte-for-byte unchanged apart from the helper and one invocation. No audio, new assets, downloads, network state or dependencies. No prophet depiction or claim of precise ancient historical reconstruction.
+
+**Verification:** Exact original scene reconstructed from updated source by removing the helper/call (**PASS**); **9/9 actual extracted helper runtime checks PASS** (both cities, palette, deterministic animation, culling, birds, geometry, render wiring, budget); sampled **93** extra cube submissions near market, max **93** over 3×7 sample positions, **0** far away. Reproducible `node scripts/game-roman-market-smoke.mjs` committed but **not executed in a full checkout**. Non-production Vercel preview **READY** for code/test SHA `187d396`: compiled in 12.6s, type/lint phase, 101/101 pages, deployment completed in 55s. [Open preview](https://1muslim-5obxsgcdp-elmiandco.vercel.app). Documentation and smoke-test correction commits follow the verified build. **No browser/mobile FPS or interaction verification**.
+
+**Per-world status:** Jerusalem/Rome market life **implemented** this shift; Moses crossing, Jurassic dinosaurs/Apex, Future towers, Makkah–Madinah/Nabawi, Today/Belt Boyz, Moon/ship, and five districts **preserved unchanged**. Separate Jurassic ecology (`e05ef735`) and Future gardens (`afe199c`) still require reviewed selective integration. Next distinct world target: Moon/Space environmental identity and mobile LOD, coordinated with Bot A. Backlog: XP shop, aimed blasters/audio, force field, held hand animation, active speaker, respectful seven-circuit tawaf→sa'i, congregations, 10 enterable mosques.
+
+**Integration/rollback:** Do **not** merge the full game branch into the site. First rebase/cherry-pick reviewed Roman scene + minimal lobby wiring onto the then-current website branch if Roman is not already present. Then cherry-pick **only** `f66c6a7` (or transplant its helper and one call), optionally the test commits. Check for conflicts with newer site and Bot A game work. Roll back by reverting `f66c6a7` without removing Roman or other worlds. **No production merge or deployment.**
+
+---
+
 ## 2026-10-27 · 12:10–12:13 CDT (America/Chicago) · Bot B / Living Worlds — Roman Judea and Rome restored
 
 ### Provenance, current site contracts, and coordination
