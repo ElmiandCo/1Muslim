@@ -1,5 +1,25 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 15:05–15:13 CDT (America/Chicago) · Bot A / World Engine — continuous 3D side entry and accurate roof crossing
+
+**Full handoff:** [2026-10-27 swept sidewall flight](shifts/2026-10-27-swept-sidewall-flight.md). Reviewed [Bot B 14:40 Nabawi congregation](shifts/2026-10-27-nabawi-congregation.md) and [Bot A 14:00 vertical collision](shifts/2026-10-27-swept-vertical-flight.md).
+
+| Contract | Verified evidence |
+| --- | --- |
+| Frozen preview baseline | fix/profile-scroll-match-umma-20261027 @ c856491131bb0c8056693652f8e5e58a26836831 |
+| Actual game starting point | Bot B game/living-worlds-nabawi-congregation-20261027-1440 @ 1e4e84faa9439b104dd34a5b64c781e8cdd224fe |
+| Dedicated branch and tested code SHA | game/world-engine-3d-side-sweep-20261027-1500 @ 0a61fabe7cd041a87238eb6b3e5a6d249a8df099 (before docs commit); final tip is branch ref |
+| Current main read-only | main @ 82eddbf7a5a94fa5968550be2bd335a4aa46f823; site diverged from preview in ImmersiveVideoEntry.tsx and PostDesignStudio.tsx; no site, main or production writes |
+| Changed implementation/test paths | app/components/gamePhysics.ts, app/components/SharedGameLobby.tsx, scripts/game-swept-side-smoke.mjs (new), scripts/game-swept-vertical-smoke.mjs |
+| Code commits | 5f3cb9a6 (helper/wiring/tests), 947a1f9a (roof-edge precision), 3e9c2dfa (test endpoint correction), 0a61fabe (legacy smoke assertion) |
+| Implemented | Swept sidewall entry at interpolated feet height for diagonal flight/fall; moving roof/underside crossings use swept X/Z rather than endpoint-first ghost landings; stationary vertical collision retained |
+| Verification | PASS: new 11 cases + 120 index parity + 3 wiring; vertical 10 + 100 parity + 2 wiring; legacy physics 23 + 288 parity; Today 192; flight pose 16; Moses, Roman, lunar, Hajj; strict gamePhysics TypeScript |
+| Build | PASS: Next.js 15.5.26 build, lint/type stage, 101/101 pages in isolated sandbox with dummy Supabase URL and publishable key. Unconfigured build failed on missing Supabase variables, not game code |
+| World coverage | Shared ordinary movement: Today/Belt Boyz, Jurassic, Future, Moses, Roman, Muhammad ﷺ era. Space/ship/plane/EVA/Moon dedicated physics untouched. All scenes, Hajj/Nabawi NPCs and portals preserved |
+| Limitations | No real device gameplay/FPS measurement; not all geometry has precise colliders; city/ground/roads, new mosques and other features remain pending |
+| Integration/rollback | Game-only cherry-pick/targeted patch onto then-current site integration branch; never merge entire game branch or overwrite newer layout/feed/profile. Revert game commits in reverse order if needed. No production deployment |
+
+
 ## 2026-10-27 · 14:30–14:36 CDT (America/Chicago) · Bot B / Living Worlds — Hajj pilgrim seven-circuit tawaf → seven-trip sa'i
 
 **Full persistent handoff:** [2026-10-27 Hajj pilgrim routes](shifts/2026-10-27-hajj-pilgrims.md) — provenance, exact files/functions, before/after, test evidence, performance, every-world checklist, Bot A coordination, rollback and selective integration.
