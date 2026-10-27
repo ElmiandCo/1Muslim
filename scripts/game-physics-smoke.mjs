@@ -27,7 +27,7 @@ function load(file){
   },mod,mod.exports);
   return mod.exports;
 }
-const {resolveHorizontalGameMovement,resolveVerticalGameMovement}=load("gamePhysics.ts");
+const {resolveHorizontalGameMovement,resolveVerticalGameMovement,buildStaticGameCollisionIndex}=load("gamePhysics.ts");
 const {JURASSIC_COLLIDERS,FUTURE_COLLIDERS}=load("gameWorldColliders.ts");
 const {GIANT_CAVE,jurassicTrees,jurassicTerrain}=load("JurassicScene.ts");
 
@@ -78,4 +78,36 @@ const treeHit=resolveHorizontalGameMovement(firstTree.x-5,firstTree.z,firstTree.
 assert.equal(treeHit.blocked,true,"tree trunk must be solid");
 const highTree=resolveHorizontalGameMovement(firstTree.x-8,firstTree.z,firstTree.x+8,firstTree.z,250,JURASSIC_COLLIDERS);
 assert.equal(highTree.blocked,false,"flying well above canopy must remain free");
-console.log("PASS: 23 game physics/world-collider assertions");
+// Verify the spatial broadphase preserves exact collision behavior across
+// cell boundaries, high-altitude flight, and all existing static scene solids.
+const {JURASSIC_COLLISION_INDEX,FUTURE_COLLISION_INDEX}=load("gameWorldColliders.ts");
+assert.ok(JURASSIC_COLLISION_INDEX.query(-1,1,-1,1).length<JURASSIC_COLLIDERS.length/5,
+  "Jurassic index should avoid scanning distant trees and rocks");
+const oversized={x:0,z:0,hx:130,hz:90,bottom:20,top:25};
+const multiCell=buildStaticGameCollisionIndex([oversized,wall],32);
+assert.equal(multiCell.query(90,95,70,75).length,1,"wide collider spans cells");
+assert.equal(multiCell.query(-2,2,-2,2).length,1,"overlapping cells deduplicate colliders");
+assert.equal(multiCell.query(500,510,500,510).length,0,"empty cells return no solids");
+assert.throws(()=>buildStaticGameCollisionIndex([wall],0),RangeError);
+let parityCases=0;
+for(const [world,solids,index] of [
+  ["Jurassic",JURASSIC_COLLIDERS,JURASSIC_COLLISION_INDEX],
+  ["Future",FUTURE_COLLIDERS,FUTURE_COLLISION_INDEX],
+  ["multi-cell",[oversized,wall],multiCell]
+]){
+  for(let i=0;i<48;i++){
+    const sample=solids[(i*13)%solids.length];
+    const x=sample.x+Math.sin(i*2.31)*30,z=sample.z+Math.cos(i*3.17)*30;
+    const y=i%4===0?sample.top+200:i%4===1?sample.bottom+1:sample.top-1;
+    const tx=x+Math.sin(i*1.91)*12,tz=z+Math.cos(i*2.71)*12;
+    const direct=resolveHorizontalGameMovement(x,z,tx,tz,y,solids);
+    const indexed=resolveHorizontalGameMovement(x,z,tx,tz,y,index);
+    assert.equal(JSON.stringify(indexed),JSON.stringify(direct),world+" horizontal parity "+i);
+    const targetY=y+(i%2?13:-13);
+    const directVertical=resolveVerticalGameMovement(y,targetY,x,z,solids);
+    const indexedVertical=resolveVerticalGameMovement(y,targetY,x,z,index);
+    assert.equal(JSON.stringify(indexedVertical),JSON.stringify(directVertical),world+" vertical parity "+i);
+    parityCases+=2;
+  }
+}
+console.log("PASS: 23 legacy assertions + "+parityCases+" indexed collision parity cases + 4 index edge cases");
