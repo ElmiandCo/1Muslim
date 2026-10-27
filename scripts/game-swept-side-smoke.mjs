@@ -32,11 +32,11 @@ assert.equal(resolveSweptSideGameMovement(0,0,0,10,0,1,[elevated]).blocked,false
   "walking under a raised bridge remains free");
 
 const lateRoof={...wall,x:9};
-assert.equal(resolveVerticalGameMovement(20,0,10,0,[lateRoof]).landedOnSolid,true,
+assert.equal(resolveVerticalGameMovement(20,0,9.5,0,[lateRoof]).landedOnSolid,true,
   "legacy endpoint check would create a false roof landing");
-assert.equal(resolveSweptVerticalGameMovement(20,0,0,0,10,0,[lateRoof]).landedOnSolid,false,
+assert.equal(resolveSweptVerticalGameMovement(20,0,0,0,9.5,0,[lateRoof]).landedOnSolid,false,
   "actual roof crossing happened before reaching the structure");
-assert.equal(resolveSweptSideGameMovement(0,0,20,10,0,0,[lateRoof]).blocked,true,
+assert.equal(resolveSweptSideGameMovement(0,0,20,9.5,0,0,[lateRoof]).blocked,true,
   "late side entry must still stop inside-wall fall");
 const wideRoof={...wall,hx:2};
 assert.equal(resolveSweptVerticalGameMovement(20,0,0,0,10,0,[wideRoof]).landedOnSolid,true,
