@@ -45,7 +45,7 @@ export default function PostDesignStudio(){
   uploadedPath=path;
  }
  const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:daily?"✦ DAILY UMMAH ✦\\n"+text.trim():text.trim()||"Shared a video",media:uploadedPath?{storage_path:uploadedPath,file_name:media!.name,mime_type:media!.file.type}:null})});const data=await response.json();if(!response.ok)throw Error(data.error||"Unable to publish");
- if(data.flagged&&data.removed)throw Error("Your post was removed for review.");sessionStorage.removeItem(draftKey);setText("");setMedia(null);setUploadProgress(null);setConfirm(false);setPanel("post");setEligible(false);setDaily(false);setNotice("✦ Shared with the Ummah!");window.dispatchEvent(new Event("1muslim:community-post-published"));
+ if(data.flagged&&data.removed)throw Error("Your post was removed for review.");sessionStorage.removeItem(draftKey);setText("");setMedia(null);setUploadProgress(null);setConfirm(false);setPanel("post");setEligible(false);setDaily(false);setNotice("✓ Post published successfully! Opening Posts…");window.dispatchEvent(new Event("1muslim:community-post-published"));window.setTimeout(()=>router.push("/community"),1100);
  }catch(e){setError(e instanceof Error?e.message:"Unable to publish")}finally{setBusy(false)}};
  const updateText=(value:string)=>{setText(value);try{sessionStorage.setItem(draftKey,value)}catch{}};
  const title={reflection:"A moment of reflection",reminder:"A gentle reminder",verse:"Qur'an reflection",hadith:"Hadith reflection",question:"A question for the Ummah",announcement:"Community announcement"}[template];
