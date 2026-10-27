@@ -1808,3 +1808,14 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 .community-post-media button{display:block;width:100%;border:0;padding:0;background:transparent;cursor:zoom-in}
 .community-expanded-media{width:100%;margin:10px 0}
 .community-expanded-media img,.community-expanded-media video{display:block;width:100%;max-height:45dvh;object-fit:contain;border-radius:12px}
+
+/* CLEAN EXPERIMENT — production profile appearance retained; only My Profile scroll ownership changes. */
+[data-workspace-page="6"] .canvas-profile-mirror > .canvas-native-body > section[aria-label="Profile workspace"] > [role="tabpanel"][aria-label="My Profile"]{
+  flex:1 1 0!important;height:0!important;min-height:0!important;max-height:none!important;
+  overflow-y:scroll!important;overflow-x:hidden!important;overscroll-behavior-y:contain!important;
+  touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;pointer-events:auto!important;
+}
+[data-workspace-page="6"] .canvas-profile-mirror > .canvas-native-body > section[aria-label="Profile workspace"] > [role="tabpanel"][aria-label="My Profile"] > .canvas-native-profile{
+  height:max-content!important;min-height:100%!important;max-height:none!important;overflow:visible!important;
+  touch-action:pan-y!important;transform:none!important;
+}
