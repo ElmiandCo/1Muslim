@@ -1808,3 +1808,6 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 
 /* Profile-only scroll authority: override legacy gallery overflow-hidden and 100% height rules. */
 [data-workspace-page="6"] .canvas-profile-mirror [data-profile-mirror-scroll][aria-label="My Profile"], .canvas-vertical-secondary .canvas-profile-mirror [data-profile-mirror-scroll][aria-label="My Profile"]{display:block!important;flex:1 1 0!important;height:0!important;min-height:0!important;max-height:none!important;overflow-y:scroll!important;overflow-x:hidden!important;touch-action:pan-y!important;overscroll-behavior-y:contain!important;scroll-snap-type:none!important;scroll-behavior:auto!important;-webkit-overflow-scrolling:touch!important}
+
+/* My Profile only: enlarge the visible mirror viewport; keep native scrolling intact. */
+[data-workspace-page="6"] .canvas-profile-mirror [data-profile-mirror-scroll][aria-label="My Profile"]{flex:0 0 auto!important;height:calc(200dvh - 600px)!important;min-height:min(110dvh,1120px)!important;max-height:none!important;overflow-y:scroll!important;touch-action:pan-y!important;scroll-snap-type:none!important}
