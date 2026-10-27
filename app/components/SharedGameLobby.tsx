@@ -4,9 +4,20 @@ import {useCallback,useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import LiveHomePreview from "./LiveHomePreview";
 import styles from "./SharedGameLobby.module.css";
-import {drawJurassic,updateJurassicDinos,jurassicBlocked,jurassicTerrain,JURASSIC_LIMIT,hitJurassicApex} from "./JurassicScene";
-import {FUTURE_BOUNDS,FUTURE_PORTAL,FUTURE_TOWERS,futureSkywayFloor,renderFutureWorld} from "./FutureCityScene";
+import {drawJurassic,updateJurassicDinos,jurassicTerrain,JURASSIC_LIMIT,hitJurassicApex} from "./JurassicScene";
+import {FUTURE_BOUNDS,FUTURE_PORTAL,futureSkywayFloor,renderFutureWorld} from "./FutureCityScene";
+import {SEA_BOUNDS,SEA_SPAWN_Z,createPartedSeaState,partedSeaColliders,updatePartedSea,renderPartedSea,type SeaState} from "./PartedSeaScene";
+import {resolveHorizontalGameMovement,resolveVerticalGameMovement,resolveSweptVerticalGameMovement} from "./gamePhysics";
+import {FUTURE_COLLISION_INDEX,JURASSIC_COLLISION_INDEX} from "./gameWorldColliders";
+import {calculateGameFlightPose} from "./gameFlightPose";
+import {TODAY_PROP_COLLIDERS,PROPHETIC_COLLISION_INDEX,createTodayCollisionSource} from "./gameTodayColliders";
+import {ROMAN_PORTAL,ROMAN_BOUNDS,romanJudeaCollisionIndex,renderRomanJudea} from "./RomanJudeaScene";
+import {renderLunarResearchLife} from "./LunarResearchScene";
+import {renderHajjPilgrims,HISTORICAL_HAJJ_LAYOUT,TODAY_HAJJ_LAYOUT} from "./HajjPilgrimScene";
+import {renderNabawiCongregation} from "./NabawiCongregationScene";
 
+// Keep Moses refuge collisions stable across frames; never cull physics with visual LOD.
+const SEA_COLLIDERS=partedSeaColliders();
 type Suit="gold"|"silver"|"cosmic"|"diamond";
 type Player={id:string;userId?:string;name?:string;world?:string;x:number;y:number;z:number;yaw:number;flying:boolean;boost:boolean;suit:Suit;seen:number};
 type Live={id:string;room_name:string|null;title:string};
@@ -73,9 +84,9 @@ export default function SharedGameLobby(){
  const arrivals=useRef<Map<string,number>>(new Map());const keys=useRef<Record<string,boolean>>({}),peerRef=useRef<Map<string,Player>>(new Map()),suitRef=useRef<Suit>("gold");
  const local=useRef<Player>({id:"",x:0,y:terrain(0,0),z:0,yaw:Math.PI/2,flying:false,boost:false,suit:"gold",seen:0});
  const combatChannel=useRef<{send:(args:{type:"broadcast";event:string;payload:unknown})=>Promise<unknown>}|null>(null);
- const projectiles=useRef<Array<{id:string;owner:string;x:number;y:number;z:number;vx:number;vy?:number;vz:number;life:number;power:number}>>([]); const lookPitch=useRef(0); const shootingPoseUntil=useRef(0);
+ const projectiles=useRef<Array<{id:string;owner:string;x:number;y:number;z:number;vx:number;vy?:number;vz:number;life:number;power:number;prevX?:number;prevY?:number;prevZ?:number}>>([]); const lookPitch=useRef(0); const shootingPoseUntil=useRef(0);
  const recentDamage=useRef<{kind:"animal"|"blaster";at:number}[]>([]); const animalContact=useRef<Map<number,number>>(new Map()); const knockdownUntil=useRef(0); const damagedStructures=useRef<Map<string,number>>(new Map()); const structureHits=useRef<Map<string,{count:number;until:number}>>(new Map()); const BREAK_REPAIR_MS=300000; const lastShot=useRef(0); const autoFireTimer=useRef<ReturnType<typeof setInterval>|null>(null); const autoFirePointer=useRef<number|null>(null); const [downed,setDowned]=useState(false);
- const [meetingSeat,setMeetingSeat]=useState<number|null>(null); const meetingCamera=useRef({angle:0.65,distance:23,height:11}); const [selectedCouncilPlayer,setSelectedCouncilPlayer]=useState<string|null>(null); const meetingSeatRef=useRef<number|null>(null); const [meetingGesture,setMeetingGesture]=useState<"rest"|"hand"|"lean">("rest"); const [councilMembers,setCouncilMembers]=useState<Record<string,{name:string;gesture:string;joined:number}>>({}); const [councilChat,setCouncilChat]=useState<Array<{id:string;sender:string;text:string}>>([]); const [councilDraft,setCouncilDraft]=useState(""); const [councilChatOpen,setCouncilChatOpen]=useState(false); const [councilPanelOpen,setCouncilPanelOpen]=useState(false); const councilJoined=useRef(false); const meetingGestureRef=useRef<"rest"|"hand"|"lean">("rest"); const [combatShop,setCombatShop]=useState(false); const [nearMainStreetShop,setNearMainStreetShop]=useState(false); useEffect(()=>{const timer=setInterval(()=>{const p=local.current;setNearMainStreetShop(!jurassicWorldRef.current&&!futureWorldRef.current&&!propheticWorldRef.current&&Math.hypot(p.x-20,p.z+590)<35)},450);return()=>clearInterval(timer)},[]); const [storeTab,setStoreTab]=useState<"store"|"loadout">("store"); const [boostLevel,setBoostLevel]=useState(1);const [combatXp,setCombatXp]=useState(5000);const [weapon,setWeapon]=useState("pulse");const [shield,setShield]=useState(false);const [shieldLevel,setShieldLevel]=useState(1);const [blasterLevel,setBlasterLevel]=useState(1);const [gameSettingsOpen,setGameSettingsOpen]=useState(false); const [chatAutoVisible,setChatAutoVisible]=useState(false); const chatAutoTimer=useRef<ReturnType<typeof setTimeout>|null>(null); const [chatClosing,setChatClosing]=useState(false); const showIncomingChat=useCallback(()=>{setChatClosing(false);setChatAutoVisible(true);if(chatAutoTimer.current)clearTimeout(chatAutoTimer.current);chatAutoTimer.current=setTimeout(()=>{setChatClosing(true);chatAutoTimer.current=setTimeout(()=>{setChatAutoVisible(false);setChatClosing(false)},350)},3000)},[]); useEffect(()=>()=>{if(chatAutoTimer.current)clearTimeout(chatAutoTimer.current)},[]);
+ const [meetingSeat,setMeetingSeat]=useState<number|null>(null); const meetingCamera=useRef({angle:0.65,distance:23,height:11}); const [selectedCouncilPlayer,setSelectedCouncilPlayer]=useState<string|null>(null); const meetingSeatRef=useRef<number|null>(null); const [meetingGesture,setMeetingGesture]=useState<"rest"|"hand"|"lean">("rest"); const [councilMembers,setCouncilMembers]=useState<Record<string,{name:string;gesture:string;joined:number}>>({}); const [councilChat,setCouncilChat]=useState<Array<{id:string;sender:string;text:string}>>([]); const [councilDraft,setCouncilDraft]=useState(""); const [councilChatOpen,setCouncilChatOpen]=useState(false); const [councilPanelOpen,setCouncilPanelOpen]=useState(false); const councilJoined=useRef(false); const meetingGestureRef=useRef<"rest"|"hand"|"lean">("rest"); const [combatShop,setCombatShop]=useState(false); const [nearMainStreetShop,setNearMainStreetShop]=useState(false); useEffect(()=>{const timer=setInterval(()=>{const p=local.current;setNearMainStreetShop(!jurassicWorldRef.current&&!futureWorldRef.current&&!propheticWorldRef.current&&!partedSeaWorldRef.current&&Math.hypot(p.x-20,p.z+590)<35)},450);return()=>clearInterval(timer)},[]); const [storeTab,setStoreTab]=useState<"store"|"loadout">("store"); const [boostLevel,setBoostLevel]=useState(1);const [combatXp,setCombatXp]=useState(5000);const [weapon,setWeapon]=useState("pulse");const [shield,setShield]=useState(false);const [shieldLevel,setShieldLevel]=useState(1);const [blasterLevel,setBlasterLevel]=useState(1);const [gameSettingsOpen,setGameSettingsOpen]=useState(false); const [chatAutoVisible,setChatAutoVisible]=useState(false); const chatAutoTimer=useRef<ReturnType<typeof setTimeout>|null>(null); const [chatClosing,setChatClosing]=useState(false); const showIncomingChat=useCallback(()=>{setChatClosing(false);setChatAutoVisible(true);if(chatAutoTimer.current)clearTimeout(chatAutoTimer.current);chatAutoTimer.current=setTimeout(()=>{setChatClosing(true);chatAutoTimer.current=setTimeout(()=>{setChatAutoVisible(false);setChatClosing(false)},350)},3000)},[]); useEffect(()=>()=>{if(chatAutoTimer.current)clearTimeout(chatAutoTimer.current)},[]);
  const [prayerMenuOpen,setPrayerMenuOpen]=useState(false);
  const [prayerPosture,setPrayerPosture]=useState<"ruku"|"sujud"|"sitting"|null>(null);
  const nearNabawi=local.current.world==="Time of Muhammad ﷺ"&&Math.hypot(local.current.x,local.current.z+475)<125;
@@ -96,6 +107,9 @@ export default function SharedGameLobby(){
  const [nearbyPlayers,setNearbyPlayers]=useState<Array<{id:string;userId?:string;name:string;feet:number}>>([]);const [selectedNearbyPlayer,setSelectedNearbyPlayer]=useState<string|null>(null);
  useEffect(()=>{const sync=()=>{const now=performance.now();const players=Array.from(peerRef.current.values()).filter(p=>now-p.seen<12000&&(p.world||"Today")===(local.current.world||"Today")).map(p=>({id:p.id,userId:p.userId,name:p.name||"Explorer",feet:distance(local.current,p)*3.28084})).filter(p=>p.feet<=50).sort((a,b)=>a.feet-b.feet).slice(0,5);setNearbyPlayers(players);if(selectedNearbyPlayer&&!players.some(p=>p.id===selectedNearbyPlayer&&p.feet<=5))setSelectedNearbyPlayer(null)};sync();const timer=window.setInterval(sync,700);return()=>window.clearInterval(timer)},[selectedNearbyPlayer]);
  const [suit,setSuit]=useState<Suit>("gold"),[online,setOnline]=useState(false),[peerCount,setPeerCount]=useState(0); const [guestListOpen,setGuestListOpen]=useState(false); const [guestFilter,setGuestFilter]=useState<"here"|"all">("here"); const [lobbyGuests,setLobbyGuests]=useState<Array<{id:string;name:string;world:string;userId?:string}>>([]); const [voiceInvite,setVoiceInvite]=useState<{fromId:string;fromUserId:string;name:string}|null>(null); const [voiceRequestTo,setVoiceRequestTo]=useState<string|null>(null); const peerVoiceTarget=useRef<string|null>(null);
+ // The Moses world shares the current player, camera, movement and multiplayer engine.
+ const partedSeaWorldRef=useRef(false); const [partedSeaWorld,setPartedSeaWorld]=useState(false);
+ const partedSeaState=useRef<SeaState|null>(null); const seaArrivalNotified=useRef(false);
  const propheticWorldRef=useRef(false); const [propheticWorld,setPropheticWorld]=useState(false); const enterPropheticWorld=()=>{futureWorldRef.current=false;setFutureWorld(false);local.current.world="Time of Muhammad ﷺ";propheticWorldRef.current=true;setPropheticWorld(true);setPicker(false);meetingSeatRef.current=null;setMeetingSeat(null);const p=local.current;p.x=0;p.z=115;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;setHint("Makkah circa 610 CE · Interpretive historical reconstruction");}; const exitPropheticWorld=()=>{propheticWorldRef.current=false;setPropheticWorld(false);local.current.world="Today";const p=local.current;p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;setHint("Returned to the main Games lobby.");};
  // Future is a selectable universe in this shared WebGL lobby, not a separate game.
  const jurassicWorldRef=useRef(false); const [jurassicWorld,setJurassicWorld]=useState(false);
@@ -118,13 +132,60 @@ export default function SharedGameLobby(){
   boostEnabled.current=false;setBoostActive(false);setFlying(false);
   setHint("↩ Returned from Future City to the shared 1Muslim Games lobby.");
  };
+ // Restore the original Parted Sea as a playable world without replacing any other portal.
+ const enterPartedSeaWorld=()=>{
+  futureWorldRef.current=false;setFutureWorld(false);
+  jurassicWorldRef.current=false;setJurassicWorld(false);
+  propheticWorldRef.current=false;setPropheticWorld(false);
+  partedSeaWorldRef.current=true;setPartedSeaWorld(true);
+  setPicker(false);setWorldMapOpen(false);meetingSeatRef.current=null;setMeetingSeat(null);
+  plane.current.active=false;ship.current.active=false;moonModeRef.current={landed:false,walking:false};
+  setEva(false);setMoonLanded(false);setMoonWalk(false);setShipOn(false);
+  boostEnabled.current=false;setBoostActive(false);setFlying(false);
+  projectiles.current=[];partedSeaState.current=createPartedSeaState();seaArrivalNotified.current=false;
+  const p=local.current;p.world="Time of Moses";p.x=0;p.z=SEA_SPAWN_Z;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;
+  setHint("🌊 Parted Sea · Cross the dry seabed between the towering walls. Follow the passage toward Sinai.");
+ };
+ const exitPartedSeaWorld=()=>{
+  partedSeaWorldRef.current=false;setPartedSeaWorld(false);partedSeaState.current=null;projectiles.current=[];
+  const p=local.current;p.world="Today";p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;p.boost=false;
+  boostEnabled.current=false;setBoostActive(false);setFlying(false);setPicker(false);
+  setHint("↩ Returned from the Parted Sea to the main Games lobby.");
+ };
+ // Roman Judea is isolated from the old app layout and other world engines.
+ const romanWorldRef=useRef(false),[romanWorld,setRomanWorld]=useState(false);
+ const romeCityRef=useRef(false),[romeCity,setRomeCity]=useState(false),romanPortalCooldown=useRef(0);
+ const enterRomanWorld=()=>{
+  futureWorldRef.current=false;setFutureWorld(false);jurassicWorldRef.current=false;setJurassicWorld(false);
+  partedSeaWorldRef.current=false;setPartedSeaWorld(false);partedSeaState.current=null;
+  propheticWorldRef.current=false;setPropheticWorld(false);romanWorldRef.current=true;setRomanWorld(true);
+  romeCityRef.current=false;setRomeCity(false);setPicker(false);setWorldMapOpen(false);
+  meetingSeatRef.current=null;setMeetingSeat(null);plane.current.active=false;ship.current.active=false;
+  moonModeRef.current={landed:false,walking:false};setEva(false);setMoonLanded(false);setMoonWalk(false);setShipOn(false);
+  projectiles.current=[];boostEnabled.current=false;setBoostActive(false);setFlying(false);
+  const p=local.current;p.world="Time of Jesus";p.x=0;p.z=125;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;
+  romanPortalCooldown.current=performance.now()+2000;
+  setHint("🏛️ Jerusalem · First-century Roman Judea, interpretive reconstruction. Golden arch leads to Rome.");
+ };
+ const exitRomanWorld=()=>{
+  romanWorldRef.current=false;setRomanWorld(false);romeCityRef.current=false;setRomeCity(false);
+  const p=local.current;p.world="Today";p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;p.boost=false;
+  boostEnabled.current=false;setBoostActive(false);setFlying(false);setPicker(false);
+  setHint("↩ Returned from Roman Judea to the main Games lobby.");
+ };
+ const travelRomanPortal=()=>{
+  romeCityRef.current=!romeCityRef.current;setRomeCity(romeCityRef.current);
+  const p=local.current;p.x=0;p.z=125;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;
+  setFlying(false);romanPortalCooldown.current=performance.now()+2500;
+  setHint(romeCityRef.current?"🏛️ Ancient Rome · Forum and amphitheater, interpretive reconstruction.":"🏛️ Jerusalem · Market and olive groves, interpretive reconstruction.");
+ };
  const [live,setLive]=useState<Live|null>(null),[liveError,setLiveError]=useState(false),[picker,setPicker]=useState(false),[worldMessage,setWorldMessage]=useState("");
  const [error,setError]=useState(""),[hint,setHint]=useState("Explore the market road toward the portal; sky villages float beyond the city.");
  const [showInfo,setShowInfo]=useState(true);
 
  const plane=useRef({active:false,speed:0}); const ship=useRef({active:false,boostUntil:0,x:155,y:145,z:-27,inSpace:false,launchedAt:0,heading:Math.PI/2}); const moonModeRef=useRef({landed:false,walking:false});const [moonLanded,setMoonLanded]=useState(false);const [moonWalk,setMoonWalk]=useState(false);const [moonArrivalPrompt,setMoonArrivalPrompt]=useState(false); const [eva,setEva]=useState(false); const [shipOn,setShipOn]=useState(false); const [flightPhase,setFlightPhase]=useState("EARTH"); const [shipSettings,setShipSettings]=useState(false); const [missionControl,setMissionControl]=useState(false); const [missionMessage,setMissionMessage]=useState("");
  // The info timeout must read missionMessage only after its state declaration.
- useEffect(()=>{setShowInfo(true);const t=window.setTimeout(()=>setShowInfo(false),3000);return()=>window.clearTimeout(t)},[hint,missionMessage]); const evaFall=useRef({active:false,speed:0}); const [nearVehicle,setNearVehicle]=useState<"plane"|"car"|"helicopter"|"ship"|null>(null); const [shipMedia,setShipMedia]=useState(false); const [shipCamera,setShipCamera]=useState(false); const shipRoom=useRef<import("livekit-client").Room|null>(null); const [shipConnected,setShipConnected]=useState(false); const [shipCaptain,setShipCaptain]=useState(false); const [shipMuted,setShipMuted]=useState(false); const [shipPassengers,setShipPassengers]=useState(0); const [remoteShipMedia,setRemoteShipMedia]=useState(false); const shipRemoteVideo=useRef<HTMLVideoElement>(null); const shipVideo=useRef<HTMLVideoElement>(null); const shipStream=useRef<MediaStream|null>(null); const [piloting,setPiloting]=useState(false); const spaceEdgeSince=useRef<number|null>(null);const [spaceEdgeWarning,setSpaceEdgeWarning]=useState(false); const [flying,setFlying]=useState(false); const [boostActive,setBoostActive]=useState(false); const boostUntil=useRef(0); const boostEnabled=useRef(false); const [workerMessage,setWorkerMessage]=useState(false); const [showFlyTutorial,setShowFlyTutorial]=useState(false); const voiceRoom=useRef<import("livekit-client").Room|null>(null); const voiceTracks=useRef<Map<string,HTMLAudioElement>>(new Map()); const [audioMode,setAudioMode]=useState<"off"|"proximity"|"all">("off"); const [voiceOn,setVoiceOn]=useState(false); const [proximityMicEnabled,setProximityMicEnabled]=useState(false); const [proximitySpeaking,setProximitySpeaking]=useState(false); const [audioRoomLocked,setAudioRoomLocked]=useState(false);
+ useEffect(()=>{setShowInfo(true);const t=window.setTimeout(()=>setShowInfo(false),3000);return()=>window.clearTimeout(t)},[hint,missionMessage]); const evaFall=useRef({active:false,speed:0}); const [nearVehicle,setNearVehicle]=useState<"plane"|"car"|"helicopter"|"ship"|null>(null); const [shipMedia,setShipMedia]=useState(false); const [shipCamera,setShipCamera]=useState(false); const shipRoom=useRef<import("livekit-client").Room|null>(null); const [shipConnected,setShipConnected]=useState(false); const [shipCaptain,setShipCaptain]=useState(false); const [shipMuted,setShipMuted]=useState(false); const [shipPassengers,setShipPassengers]=useState(0); const [remoteShipMedia,setRemoteShipMedia]=useState(false); const shipRemoteVideo=useRef<HTMLVideoElement>(null); const shipVideo=useRef<HTMLVideoElement>(null); const shipStream=useRef<MediaStream|null>(null); const [piloting,setPiloting]=useState(false); const [flying,setFlying]=useState(false); const [boostActive,setBoostActive]=useState(false); const boostUntil=useRef(0); const boostEnabled=useRef(false); const [workerMessage,setWorkerMessage]=useState(false); const [showFlyTutorial,setShowFlyTutorial]=useState(false); const voiceRoom=useRef<import("livekit-client").Room|null>(null); const voiceTracks=useRef<Map<string,HTMLAudioElement>>(new Map()); const [audioMode,setAudioMode]=useState<"off"|"proximity"|"all">("off"); const [voiceOn,setVoiceOn]=useState(false); const [proximityMicEnabled,setProximityMicEnabled]=useState(false); const [proximitySpeaking,setProximitySpeaking]=useState(false); const [audioRoomLocked,setAudioRoomLocked]=useState(false);
  useEffect(()=>{try{localStorage.setItem("1muslim:game-audio-room-active",audioRoomLocked&&voiceOn?"1":"0");window.dispatchEvent(new Event("1muslim:game-audio-room-change"))}catch{}return()=>{try{localStorage.setItem("1muslim:game-audio-room-active","0");window.dispatchEvent(new Event("1muslim:game-audio-room-change"))}catch{}}},[audioRoomLocked,voiceOn]); const [voiceBusy,setVoiceBusy]=useState(false); const [speakerEnabled,setSpeakerEnabled]=useState(true); const [micPermissionError,setMicPermissionError]=useState(""); const [voicePreference,setVoicePreference]=useState(false); useEffect(()=>{try{setVoicePreference(localStorage.getItem("1muslim:game-voice-opt-in")==="1")}catch{}},[]); const gesture=useRef({lastTap:0,downAt:0,hold:false}); const [crashed,setCrashed]=useState(false); const flightPose=useRef({takeoff:0,landing:0}); const [emote,setEmote]=useState<"none"|"wave"|"pose"|"celebrate"|"hand">("none"); const emoteUntil=useRef(0);
  const [stickPosition,setStickPosition]=useState({x:0,y:0});
  const stickPointer=useRef<number|null>(null);
@@ -197,6 +258,7 @@ export default function SharedGameLobby(){
   try{renderer=makeRenderer(node)}catch(e){setError(e instanceof Error?e.message:"WebGL initialization failed");return}
   if(!renderer){setError("WebGL is unavailable on this device.");return}
   const {gl,draw}=renderer;let frame=0,prev=performance.now(),velocity=0,wasNear=false,crashUntil=0;
+  const todayCollisionSource=createTodayCollisionSource(terrain,damagedStructures.current);
   let chaseCamera:[number,number,number]|null=null;
   const render=(now:number)=>{
    const dt=clamp((now-prev)/1000,0,.05);prev=now;
@@ -211,12 +273,19 @@ export default function SharedGameLobby(){
    }
    if(jurassicWorldRef.current){updateJurassicDinos(dt,now,p,()=>{p.x=0;p.z=0;p.y=jurassicTerrain(0,0)+2;p.flying=false;setHint("🦖 Dinosaur attack! Respawned in Jurassic World.");});for(const shot of projectiles.current){if(shot.life>0&&hitJurassicApex(now,shot.x,shot.z,shot.y)){shot.life=0;}}}
    if(meetingSeatRef.current!==null){const a=meetingSeatRef.current*Math.PI/6;p.x=-125+Math.cos(a)*15;p.z=-120+Math.sin(a)*15;p.y=45;p.yaw=a+Math.PI;p.flying=false;p.boost=false;}
-   const damage=(kind:"animal"|"blaster")=>{if(meetingSeatRef.current!==null)return;recentDamage.current=recentDamage.current.filter(hit=>now-hit.at<=10000);recentDamage.current.push({kind,at:now});if(recentDamage.current.filter(hit=>hit.kind===kind).length>=3){recentDamage.current=[];p.x=0;p.z=0;p.y=terrain(0,0)+1;p.flying=false;p.boost=false;setDowned(false);knockdownUntil.current=now+2000;setHint(kind==="animal"?"🐾 Three animal attacks — respawned!":"💥 Three blaster hits — respawned!");}else setHint(`${kind==="animal"?"🐾 Animal attack":"💥 Blaster hit"} — ${recentDamage.current.filter(hit=>hit.kind===kind).length}/3 strikes in 10 seconds`);};
+   const damage=(kind:"animal"|"blaster")=>{if(meetingSeatRef.current!==null)return;recentDamage.current=recentDamage.current.filter(hit=>now-hit.at<=10000);recentDamage.current.push({kind,at:now});if(recentDamage.current.filter(hit=>hit.kind===kind).length>=3){recentDamage.current=[];p.x=0;p.z=partedSeaWorldRef.current?SEA_SPAWN_Z:0;p.y=partedSeaWorldRef.current?1:terrain(0,0)+1;p.flying=false;p.boost=false;setDowned(false);knockdownUntil.current=now+2000;setHint(kind==="animal"?"🐾 Three animal attacks — respawned!":"💥 Three blaster hits — respawned!");}else setHint(`${kind==="animal"?"🐾 Animal attack":"💥 Blaster hit"} — ${recentDamage.current.filter(hit=>hit.kind===kind).length}/3 strikes in 10 seconds`);};
    for(const [id,until] of damagedStructures.current)if(Date.now()>=until)damagedStructures.current.delete(id);for(const [id,damage] of structureHits.current)if(Date.now()>=damage.until)structureHits.current.delete(id);
-   for(const shot of projectiles.current){shot.x+=shot.vx*dt;shot.y+=(shot.vy??0)*dt;shot.z+=shot.vz*dt;shot.life-=dt;if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shield&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldLevel>=2||shot.power<2);if(!guarded){damage("blaster");}else setHint("🛡️ Shield absorbed the shot.");}}
+   for(const shot of projectiles.current){shot.prevX=shot.x;shot.prevY=shot.y;shot.prevZ=shot.z;shot.x+=shot.vx*dt;shot.y+=(shot.vy??0)*dt;shot.z+=shot.vz*dt;shot.life-=dt;if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shield&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldLevel>=2||shot.power<2);if(!guarded){damage("blaster");}else setHint("🛡️ Shield absorbed the shot.");}}
+   // Advance existing Moses NPCs and hit detection against the same aimed projectiles.
+   if(partedSeaWorldRef.current&&partedSeaState.current){
+     const seaResult=updatePartedSea(partedSeaState.current,dt,now,p,projectiles.current);
+     if(seaResult.respawn){p.x=0;p.z=SEA_SPAWN_Z;p.y=1;p.flying=false;p.boost=false;setFlying(false);setHint("🌊 Three hits · Returned to the crossing midpoint.");}
+     else if(seaResult.defeated>0)setHint("🎯 Pursuer stopped · Keep moving toward the far shore.");
+     if(seaResult.sinai&&!seaArrivalNotified.current){seaArrivalNotified.current=true;setHint("🏜️ Far shore reached · Sinai destination coming in a future world update.");}
+   }
    projectiles.current=projectiles.current.filter(s=>s.life>0);
    // Deterministic dangerous wildlife, shared by all clients without per-frame networking.
-   if(!jurassicWorldRef.current&&!futureWorldRef.current&&!propheticWorldRef.current&&!moonModeRef.current.landed&&!ship.current.active&&meetingSeatRef.current===null&&p.y<terrain(p.x,p.z)+3){for(let i=0;i<30;i++){const ax=Math.sin(i*83.17)*650,az=Math.cos(i*41.83)*650;if(Math.hypot(p.x-ax,p.z-az)>2.8||now-(animalContact.current.get(i)??0)<1200)continue;animalContact.current.set(i,now);damage("animal");break;}}
+   if(!jurassicWorldRef.current&&!futureWorldRef.current&&!propheticWorldRef.current&&!partedSeaWorldRef.current&&!romanWorldRef.current&&!moonModeRef.current.landed&&!ship.current.active&&meetingSeatRef.current===null&&p.y<terrain(p.x,p.z)+3){for(let i=0;i<30;i++){const ax=Math.sin(i*83.17)*650,az=Math.cos(i*41.83)*650;if(Math.hypot(p.x-ax,p.z-az)>2.8||now-(animalContact.current.get(i)??0)<1200)continue;animalContact.current.set(i,now);damage("animal");break;}}
 
    if(downed&&now>=knockdownUntil.current)setDowned(false);
    for(const [identity,el] of voiceTracks.current){const peer=Array.from(peerRef.current.values()).find(other=>other.userId===identity&&now-other.seen<12000&&(other.world||"Today")===(p.world||"Today"));const feet=peer?distance(p,peer)*3.28084:Infinity;el.volume=audioRoomLocked?1:feet<=200?1:feet<=300?1-(feet-200)*.005:feet<=400?.5-(feet-300)*.005:0;}
@@ -253,67 +322,47 @@ export default function SharedGameLobby(){
    const dx=(Math.sin(p.yaw)*moving+Math.cos(p.yaw)*strafing)/mag;
    const dz=(Math.cos(p.yaw)*moving-Math.sin(p.yaw)*strafing)/mag;
    const previousX=p.x,previousZ=p.z;
-   const travelBounds=lunar?MOON_BOUNDS:jurassicWorldRef.current?{minX:-JURASSIC_LIMIT,maxX:JURASSIC_LIMIT,minZ:-JURASSIC_LIMIT,maxZ:JURASSIC_LIMIT}:futureWorldRef.current?FUTURE_BOUNDS:propheticWorldRef.current?{minX:-700,maxX:700,minZ:-700,maxZ:700}:EXPLORATION_BOUNDS;
+   const travelBounds=lunar?MOON_BOUNDS:romanWorldRef.current?ROMAN_BOUNDS:jurassicWorldRef.current?{minX:-JURASSIC_LIMIT,maxX:JURASSIC_LIMIT,minZ:-JURASSIC_LIMIT,maxZ:JURASSIC_LIMIT}:futureWorldRef.current?FUTURE_BOUNDS:partedSeaWorldRef.current?SEA_BOUNDS:propheticWorldRef.current?{minX:-700,maxX:700,minZ:-700,maxZ:700}:EXPLORATION_BOUNDS;
    const proposedX=eva?p.x+dx*speed*dt:clamp(p.x+dx*speed*dt,travelBounds.minX,travelBounds.maxX),proposedZ=eva?p.z+dz*speed*dt:clamp(p.z+dz*speed*dt,travelBounds.minZ,travelBounds.maxZ);
    // Physical collision volumes mirror the town, tunnels and distant showroom.
    // A player's feet are p.y; their body extends about 1.8 world units upward.
-   const solids:{x:number;z:number;hx:number;hz:number;bottom:number;top:number}[]=[]; 
-   if(propheticWorldRef.current){for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.1;solids.push({x,z,hx:11,hz:13,bottom:-1,top:h});}}
-   if(propheticWorldRef.current){for(let i=0;i<44;i++){const col=i%11,row=Math.floor(i/11),x=(col-5)*36,z=-380-row*40;if(Math.abs(x)<30)continue;solids.push({x,z,hx:11,hz:12,bottom:-1,top:3.5});}}
-   if(!futureWorldRef.current&&!jurassicWorldRef.current){
-   // Destructible plaza props are solid until hit; the same objects restore after five minutes.
-   for(let i=0;i<80;i++){const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;const id="prop-"+i;if(damagedStructures.current.has(id))continue;solids.push({x,z,hx:1.35,hz:1.35,bottom:0,top:2.7});}
-   for(let i=0;i<80;i++){const x=12+(i%20)*5,z=(Math.floor(i/20)-1.5)*24;const id="prop-"+i;if(damagedStructures.current.has(id))continue;for(const shot of projectiles.current){if(shot.life<=0||Math.abs(shot.x-x)>1.6||Math.abs(shot.z-z)>1.6||shot.y>3.5)continue;shot.life=0;const until=Date.now()+BREAK_REPAIR_MS;const hits=Math.min(5,(structureHits.current.get(id)?.count??0)+(shot.power>=4?3:shot.power>=2?2:1));structureHits.current.set(id,{count:hits,until});if(hits>=5)damagedStructures.current.set(id,until);void combatChannel.current?.send({type:"broadcast",event:"structure-break",payload:{id,until,hits}});break;}}
- for(const z of [-49,49])solids.push({x:161,z,hx:29,hz:3,bottom:0,top:17});solids.push({x:189,z:0,hx:3,hz:52,bottom:0,top:17});for(const z of [-35,35])solids.push({x:133,z,hx:3,hz:15,bottom:0,top:17});
-   for(let x=5;x<85;x+=14)for(const side of [-1,1]){
-     const z=side*15,height=5+(Math.floor(x/14)%3)*2;
-     solids.push({x,z,hx:3.7,hz:3.2,bottom:0,top:height+.9});
-     solids.push({x:x+4,z:z-side*5,hx:1.35,hz:1.1,bottom:0,top:2});
-   }
-   for(let x=235;x<=285;x+=12)for(const side of [-1,1])solids.push({x,z:side*5.5,hx:6.1,hz:.48,bottom:0,top:6.1});
-   for(let x=1090;x<=1140;x+=12)for(const side of [-1,1])solids.push({x,z:side*5.5,hx:6.1,hz:.48,bottom:25,top:31.1});
-   for(const x of [1155,1174,1190])for(const z of [-13,13])solids.push({x,z,hx:3.1,hz:1.8,bottom:25,top:27.6});
-   // Satellite district buildings: mirror the actual rendered footprints, including ground-floor walls.
-   for(let i=0;i<46;i++){const row=Math.floor(i/8),col=i%8,x=-90+col*27,z=-625-row*42,h=7+((i*13)%19);solids.push({x,z,hx:7,hz:8,bottom:terrain(x,z)-.5,top:h+.55});}
-   // Outer avenue mountain walls and elevated ridges are physical rather than decorative.
-   for(let n=0;n<25;n++){const z=-620-n*34;for(const side of [-1,1]){const x=side*(110+n*6),height=18+Math.abs(Math.sin(n*2.3))*37;solids.push({x,z,hx:26,hz:24,bottom:-1,top:height});}}
-   // Trees, trunks and arena occupy real world volumes.
-   for(let i=0;i<75;i++){const x=-180+(i*47)%365,z=-580-(i*31)%380;solids.push({x,z,hx:.45,hz:.45,bottom:0,top:4.6});}
-   solids.push({x:180,z:-780,hx:48,hz:39,bottom:0,top:15});
-   // Upper city tower volumes are solid above their open walk-through lobbies.
-   for(let row=0;row<4;row++)for(let col=0;col<6;col++){
-     const x=-120+col*37,z=-380-row*38,h=19+((row*7+col*11)%7)*12;
-     solids.push({x,z,hx:11,hz:11.5,bottom:0,top:h+.8});
-   }
-   }
-   // Block side penetration and reflect travel away from the struck surface.
-   // Roofs remain solid landing surfaces, so players cannot fall through buildings.
-   let struck=false,roof=-Infinity;
-   for(const b of plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null?[]:futureWorldRef.current?FUTURE_TOWERS.map(t=>({x:t.x,z:t.z,hx:t.width/2,hz:t.depth/2,bottom:-1,top:t.height})):propheticWorldRef.current?solids.slice(0,128):solids){
-     const overlapsXZ=Math.abs(proposedX-b.x)<b.hx+.42&&Math.abs(proposedZ-b.z)<b.hz+.42;
-     if(!overlapsXZ)continue;
-     if(p.y>=b.top-.2&&p.y<=b.top+2.2){roof=Math.max(roof,b.top);continue;}
-     if(p.y+1.75<=b.bottom||p.y>=b.top)continue;
-     const overlapX=b.hx+.42-Math.abs(proposedX-b.x),overlapZ=b.hz+.42-Math.abs(proposedZ-b.z);
-     if(overlapX<overlapZ){
-       p.x=b.x+Math.sign(previousX-b.x||-dx||1)*(b.hx+.53);
-       p.z=previousZ;
-     }else{
-       p.z=b.z+Math.sign(previousZ-b.z||-dz||1)*(b.hz+.53);
-       p.x=previousX;
+   // Today's plaza props remain destructible and repair on their original timer.
+   // Static Today/Makkah geometry is cached once per mount, not rebuilt per frame.
+   // No visual draw-distance culling is ever applied to physics.
+   if(!futureWorldRef.current&&!jurassicWorldRef.current&&!partedSeaWorldRef.current&&!romanWorldRef.current&&!propheticWorldRef.current){
+    for(const prop of TODAY_PROP_COLLIDERS){
+     if(damagedStructures.current.has(prop.id))continue;
+     for(const shot of projectiles.current){
+      if(shot.life<=0||Math.abs(shot.x-prop.x)>1.6||Math.abs(shot.z-prop.z)>1.6||shot.y>3.5)continue;
+      shot.life=0;
+      const until=Date.now()+BREAK_REPAIR_MS;
+      const hits=Math.min(5,(structureHits.current.get(prop.id)?.count??0)+(shot.power>=4?3:shot.power>=2?2:1));
+      structureHits.current.set(prop.id,{count:hits,until});
+      if(hits>=5)damagedStructures.current.set(prop.id,until);
+      void combatChannel.current?.send({type:"broadcast",event:"structure-break",payload:{id:prop.id,until,hits}});
+      break;
      }
-     struck=true;break;
+    }
    }
-   if(!struck&&!plane.current.active&&!ship.current.active){p.x=proposedX;p.z=proposedZ}
-   else if(struck){ // Small, damped rebound rather than teleporting or sticking to a wall.
-     p.x=clamp(p.x-dx*Math.min(.6,speed*dt*.45),travelBounds.minX,travelBounds.maxX);
-     p.z=clamp(p.z-dz*Math.min(.6,speed*dt*.45),travelBounds.minZ,travelBounds.maxZ);
-     crashUntil=now+260;setCrashed(true);
+   // World-specific immutable spatial indices share the existing swept
+   // movement/vertical landing code; Today damage filtering remains live.
+   const collisionSolids=plane.current.active||ship.current.active||eva||lunar||meetingSeatRef.current!==null
+     ?[]:jurassicWorldRef.current?JURASSIC_COLLISION_INDEX:futureWorldRef.current
+     ?FUTURE_COLLISION_INDEX
+     :partedSeaWorldRef.current?SEA_COLLIDERS:romanWorldRef.current?romanJudeaCollisionIndex(romeCityRef.current?"Rome":"Jerusalem"):propheticWorldRef.current?PROPHETIC_COLLISION_INDEX:todayCollisionSource;
+   let roof=-Infinity;
+   if(!plane.current.active&&!ship.current.active){
+     const movement=resolveHorizontalGameMovement(previousX,previousZ,proposedX,proposedZ,p.y,collisionSolids);
+     p.x=movement.x;p.z=movement.z;roof=movement.roof;
+     if(movement.blocked){
+       crashUntil=now+260;setCrashed(true);
+     }
    }
    p.boost=boosted; 
    const cityRoof=p.z<=-365&&p.z>=-515&&p.x>=-132&&p.x<=75;
-   const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=jurassicWorldRef.current?jurassicTerrain(p.x,p.z):futureWorldRef.current||propheticWorldRef.current?0:onRoad?bridgeHeight:terrain(p.x,p.z);const floor=Math.max(futureWorldRef.current?futureSkywayFloor(p.x,p.y,p.z):skyLanding?45:roadFloor,roof,roadFloor);
-   if(!jurassicWorldRef.current&&!futureWorldRef.current&&!propheticWorldRef.current&&!lunar&&!eva&&!ship.current.inSpace&&p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
+   const skyLanding=p.x>-163&&p.x<-87&&p.z>-158&&p.z<-82&&p.y>=43&&velocity<=0;const onRoad=p.x>=205&&p.x<=1200&&Math.abs(p.z)<7;const bridgeHeight=p.x<290?0:p.x<330?(p.x-290)*.625:25;const roadFloor=jurassicWorldRef.current?jurassicTerrain(p.x,p.z):futureWorldRef.current||propheticWorldRef.current||partedSeaWorldRef.current||romanWorldRef.current?0:onRoad?bridgeHeight:terrain(p.x,p.z);const floor=Math.max(futureWorldRef.current?futureSkywayFloor(p.x,p.y,p.z):skyLanding?45:roadFloor,roof,roadFloor);
+   if(!jurassicWorldRef.current&&!futureWorldRef.current&&!propheticWorldRef.current&&!partedSeaWorldRef.current&&!romanWorldRef.current&&!lunar&&!eva&&!ship.current.inSpace&&p.x>330&&p.y<25-30.48){p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;velocity=0;boostUntil.current=0;setFlying(false);setHint("You fell 100 feet beneath the space bridge and respawned at the beginning.");}
+   const previousFeetY=p.y;
    if(eva){p.flying=true;const fall=evaFall.current;const thrust=(k.Space||k.ascend?1:0)-(k.c?1:0);if(p.y<1300)fall.active=true;if(fall.active){fall.speed=clamp(fall.speed+20*dt-thrust*8*dt,0,145);p.y-=fall.speed*dt;if(p.y<=Math.max(terrain(p.x,p.z),0)+2){p.y=Math.max(terrain(p.x,p.z),0)+2;setEva(false);setFlying(false);ship.current.inSpace=false;fall.active=false;setHint("🌍 Atmospheric re-entry complete. You landed back on Earth.");}}else p.y+=thrust*5.5*dt;}else if(ship.current.active){p.flying=true;}else if(plane.current.active){
      const takeoff=plane.current.speed>24;
      const climb=takeoff&&!!(k.Space||k.ascend),descend=!!k.c;
@@ -326,13 +375,36 @@ export default function SharedGameLobby(){
      velocity-=2.83*dt;
      p.y=Math.max(0,p.y+velocity*dt);
      if(p.y<=0&&velocity<0)velocity=0;
-   }else if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?(p.y>85?19.5:13):descend?-19:-5)*dt,-22,p.y>85?10.5:7);p.y=clamp(p.y+velocity*dt,floor,170);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
-   else{if(crashUntil&&now>crashUntil){crashUntil=0;setCrashed(false)}velocity-=17*dt;if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){p.y=floor;velocity=0}}
-   if(!lunar&&!ship.current.active&&!plane.current.active&&!eva&&p.flying&&p.y>=169.8){if(spaceEdgeSince.current===null){spaceEdgeSince.current=now;setSpaceEdgeWarning(true);setHint("⚠️ EDGE OF SPACE — return below the boundary within 2 seconds!");}else if(now-spaceEdgeSince.current>=2000){p.x=0;p.z=0;p.y=Math.max(terrain(0,0),0)+2;p.flying=false;velocity=0;boostUntil.current=0;spaceEdgeSince.current=null;setSpaceEdgeWarning(false);setFlying(false);setHint("🌍 Space boundary reached. Respawned safely.");}}else if(spaceEdgeSince.current!==null){spaceEdgeSince.current=null;setSpaceEdgeWarning(false);}
-   const nearest=futureWorldRef.current||propheticWorldRef.current||lunar||ship.current.inSpace||plane.current.active?null:distance(p,{x:155,z:-27})<23?"ship":distance(p,{x:110,z:-345})<19?"plane":distance(p,{x:155,z:-27})<30?"helicopter":distance(p,{x:15,z:7.5})<13?"car":null;
+   }else if(p.flying){const ascend=!!(k.Space||k.ascend);const descend=!!k.c;velocity=clamp(velocity+(ascend?(p.y>85?19.5:13):descend?-19:-5)*dt,-22,p.y>85?10.5:7);p.y=Math.max(floor,p.y+velocity*dt);if(p.y<=floor+.03){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}p.y=floor;p.flying=false;setFlying(false);flightPose.current.landing=now;velocity=0}}
+   else{if(crashUntil&&now>crashUntil){crashUntil=0;setCrashed(false)}velocity=Math.max(-35,velocity-17*dt);if(k.Space&&p.y<=floor+.07){velocity=7.2;k.Space=false}p.y+=velocity*dt;if(p.y<floor){if(velocity< -11){crashUntil=now+1300;setCrashed(true)}flightPose.current.landing=now;p.y=floor;velocity=0}}
+   // Solid roofs and overhead decks block vertical crossings. The ship,
+   // aircraft, EVA and lunar modes retain their dedicated movement physics.
+   if(!ship.current.active&&!plane.current.active&&!eva&&!lunar&&meetingSeatRef.current===null){
+     const directVertical=resolveVerticalGameMovement(previousFeetY,p.y,p.x,p.z,collisionSolids);
+     // Keep the cheap endpoint check first; diagonal flight can also cross
+     // a narrow roof/underside between frames with no endpoint overlap.
+     const vertical=directVertical.hitCeiling||directVertical.landedOnSolid||
+       Math.abs(previousX-p.x)+Math.abs(previousZ-p.z)<.01
+       ?directVertical
+       :resolveSweptVerticalGameMovement(previousFeetY,p.y,previousX,previousZ,p.x,p.z,collisionSolids);
+     if("x" in vertical&&"z" in vertical&&
+        typeof vertical.x==="number"&&typeof vertical.z==="number"&&
+        (vertical.hitCeiling||vertical.landedOnSolid)){
+       p.x=vertical.x;p.z=vertical.z;
+     }
+     if(vertical.hitCeiling){p.y=vertical.y;velocity=Math.min(velocity,0);}
+     else if(vertical.landedOnSolid){
+       if(velocity< -11){crashUntil=now+1300;setCrashed(true)}
+       p.y=vertical.y;velocity=0;flightPose.current.landing=now;
+       if(p.flying){p.flying=false;setFlying(false)}
+     }
+   }
+   // Flying above the atmosphere is continuous; no height-triggered teleport or countdown.
+   const nearest=futureWorldRef.current||propheticWorldRef.current||partedSeaWorldRef.current||romanWorldRef.current||lunar||ship.current.inSpace||plane.current.active?null:distance(p,{x:155,z:-27})<23?"ship":distance(p,{x:110,z:-345})<19?"plane":distance(p,{x:155,z:-27})<30?"helicopter":distance(p,{x:15,z:7.5})<13?"car":null;
    if(nearVehicle!==nearest)setNearVehicle(nearest);
-   const nearWorker=!futureWorldRef.current&&!propheticWorldRef.current&&!lunar&&distance(p,{x:152,z:0})<5;if(nearWorker&&!workerNotice.current){workerNotice.current=true;setWorkerMessage(true)}if(!nearWorker)workerNotice.current=false;
-   const near=!futureWorldRef.current&&!propheticWorldRef.current&&!lunar&&distance(p,{x:95,z:0})<5;if(near&&!wasNear)setPicker(true);wasNear=near;
+   const nearWorker=!futureWorldRef.current&&!propheticWorldRef.current&&!partedSeaWorldRef.current&&!romanWorldRef.current&&!lunar&&distance(p,{x:152,z:0})<5;if(nearWorker&&!workerNotice.current){workerNotice.current=true;setWorkerMessage(true)}if(!nearWorker)workerNotice.current=false;
+   const near=!futureWorldRef.current&&!propheticWorldRef.current&&!partedSeaWorldRef.current&&!romanWorldRef.current&&!lunar&&distance(p,{x:95,z:0})<5;if(near&&!wasNear)setPicker(true);wasNear=near;
+   if(romanWorldRef.current&&now>romanPortalCooldown.current&&p.y<8&&Math.hypot(p.x-ROMAN_PORTAL.x,p.z-ROMAN_PORTAL.z)<ROMAN_PORTAL.radius){travelRomanPortal();velocity=0;}
    const w=node.clientWidth,h=node.clientHeight,dpr=Math.min(window.devicePixelRatio||1,1.5);
    if(w>0&&h>0){const rw=Math.floor(w*dpr),rh=Math.floor(h*dpr);if(node.width!==rw||node.height!==rh){node.width=rw;node.height=rh;gl.viewport(0,0,rw,rh)}
     // Shared 6-hour world clock: four hours daylight, two hours night.
@@ -341,7 +413,7 @@ export default function SharedGameLobby(){
     const dawn=clamp((cycle-5.75*60*60*1000)/(15*60*1000),0,1);
     const darkness=night?1-dawn:dusk;
     const atmosphere=moonModeRef.current.landed?1:clamp((p.y-65)/105,0,1);
-    if(jurassicWorldRef.current){gl.clearColor(.65,.82,.85,1);}else if(futureWorldRef.current){gl.clearColor(.014,.024,.09,1);}else if(propheticWorldRef.current){gl.clearColor(.58,.82,.98,1);}else{gl.clearColor(.91-darkness*.87-atmosphere*.9,.96-darkness*.92-atmosphere*.95,.97-darkness*.85-atmosphere*.95,1);}gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    if(romanWorldRef.current){gl.clearColor(.69,.81,.89,1);}else if(jurassicWorldRef.current){gl.clearColor(.65,.82,.85,1);}else if(futureWorldRef.current){gl.clearColor(.014,.024,.09,1);}else if(propheticWorldRef.current){gl.clearColor(.58,.82,.98,1);}else if(partedSeaWorldRef.current){gl.clearColor(.48,.73,.88,1);}else{gl.clearColor(.91-darkness*.87-atmosphere*.9,.96-darkness*.92-atmosphere*.95,.97-darkness*.85-atmosphere*.95,1);}gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     // Keep the camera the same distance behind the player on both axes.
     // Smooth normal movement and fullscreen zoom, but snap after teleportation.
     const followDistance=ship.current.active?33:plane.current.active?21:fullscreenRef.current?10:7;
@@ -354,12 +426,21 @@ export default function SharedGameLobby(){
     const vp=mul(perspective(Math.PI/3,w/h,.1,200000),lookAt(cam,at));
     if(jurassicWorldRef.current){drawJurassic((x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p.x,p.z);}else if(futureWorldRef.current){
       renderFutureWorld(vp,draw,p.x,p.z,now);
+    }else if(partedSeaWorldRef.current&&partedSeaState.current){
+      renderPartedSea(vp,draw,now,p,partedSeaState.current);
+    }else if(romanWorldRef.current){
+      renderRomanJudea(vp,draw,now,p,romeCityRef.current?"Rome":"Jerusalem");
     }else if(propheticWorldRef.current){
       // A separate historically inspired Makkah environment, not the modern city geometry.
       for(let ix=-17;ix<=17;ix++)for(let iz=-17;iz<=17;iz++){const x=ix*46,z=iz*46;draw(vp,x,-.3,z,46,.6,46,[.61+.025*Math.sin(ix*2+iz),.48,.31]);}
       for(let i=0;i<100;i++){const a=i*2.399963,r=320+(i%9)*30,x=Math.cos(a)*r,z=Math.sin(a)*r,h=25+Math.abs(Math.sin(i*1.91))*65;draw(vp,x,h*.5,z,26,h,30,[.48,.38,.29]);draw(vp,x,h*.82,z,15,h*.36,18,[.58,.47,.36]);}
       // Kaaba: simple stone cuboid and dark drapery; no modern mosque expansion.
       draw(vp,0,5,0,13,10,11,[.065,.065,.067]);draw(vp,0,7.5,0,13.1,.65,11.1,[.72,.56,.24]);draw(vp,0,.12,0,58,.22,56,[.73,.64,.47]);
+      // Interpretive, faceless Hajj pilgrims: seven complete tawaf circuits, then seven sa'i traversals.
+      // Route stays within the existing historical alley; no collider or player physics changes.
+      draw(vp,40,.045,0,5,.08,72,[.71,.59,.44]);
+      renderHajjPilgrims((x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p.x,p.z,HISTORICAL_HAJJ_LAYOUT);
+      renderNabawiCongregation((x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p.x,p.z);
       // Historically interpretive Hijazi buildings with narrow, walkable lanes.
       for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.1;draw(vp,x,h/2,z,22,h,26,[.65+(i%3)*.04,.52,.37]);draw(vp,x,h+.2,z,23,.45,27,[.47,.37,.28]);draw(vp,x,2,z+13.04,2.5,3,.18,[.26,.18,.13]);}
       // Desert caravan road toward the separate Madinah settlement (scaled game distance).
@@ -397,6 +478,7 @@ export default function SharedGameLobby(){
       draw(vp,ox,19,oz,28,1,28,[.16,.27,.38],.85);
       for(let i=0;i<12;i++){const angle=i*Math.PI/6;draw(vp,ox+Math.cos(angle)*9,19.7,oz+Math.sin(angle)*9,1.2,1.4,1.2,[.68,.71,.78]);}
       draw(vp,ox,20,oz,9,1.4,9,[.94,.72,.24]);draw(vp,ox,21,oz,6,.18,6,[1,.88,.48]);
+      // Lunar base ambience is visual-only; the existing lunar movement and ship routes remain authoritative.\n      renderLunarResearchLife((x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p.x,p.z);
       // Constellation-inspired stars and intermittent meteor trails above the moon.
       for(let i=0;i<210;i++){const theta=i*2.399963,phi=Math.acos(1-2*((i*.618034)%1)),radius=180+i%5*65;draw(vp,p.x+radius*Math.sin(phi)*Math.cos(theta),p.y+Math.abs(radius*Math.cos(phi))+55,p.z+radius*Math.sin(phi)*Math.sin(theta),.5+i%3,.5+i%3,.5+i%3,[.7,.84,1],.9);}
       for(let i=0;i<7;i++){const t=(now*.00013+i*.19)%1,angle=i*2.39996,rad=i<3?30:140;const x=p.x+Math.cos(angle)*rad+t*95,z=p.z+Math.sin(angle)*rad-t*70,y=90-t*85;draw(vp,x,Math.max(.6,y),z,1.2,1.2,7,[.74,.86,1],.75,angle);if(y<3)draw(vp,x,.3,z,2,.2,2,[.95,.49,.23],.8);}
@@ -424,13 +506,13 @@ export default function SharedGameLobby(){
     if(!moonModeRef.current.landed){
     // Titan: extended Main Street, arterial branches and mountain-edge tunnel corridor.
     // Main Street weapon shop: a physical storefront with a glowing emerald sign.
-    draw(vp,20,4,-590,13,8,11,[.12,.23,.26]);draw(vp,20,8.5,-590,15,1,13,[.78,.61,.22]);draw(vp,20,5,-583.9,10,2,.35,[.1,.95,.62]);draw(vp,20,1.7,-583.7,3,3,.4,[.08,.12,.16]);
-    for(let n=0;n<58;n++){const z=-560-n*18;draw(vp,0,-.055,z,22,.12,18,[.19,.23,.27]);draw(vp,0,.015,z,.3,.025,5,[.96,.82,.45]);for(const side of [-1,1]){draw(vp,side*12,.01,z,2,.08,18,[.52,.55,.54]);if(n%3===0)draw(vp,side*17,.2,z,3,.4,3,[.28,.5,.23]);}if(n%9===0){for(let k=-9;k<=9;k++)draw(vp,k*18,-.07,z,18,.12,18,[.2,.24,.27]);}}
-    for(let n=0;n<25;n++){const z=-620-n*34;for(const side of [-1,1]){const x=side*(110+n*6);const height=18+Math.abs(Math.sin(n*2.3))*37;draw(vp,x,height/2-1,z,52,height,48,[.36,.42,.4]);draw(vp,x,height*.77,z,28,height*.45,30,[.65,.68,.65]);}}
-    for(let n=0;n<9;n++){const z=-890-n*12;for(const side of [-1,1])draw(vp,side*15,5,z,7,10,4,[.48,.52,.49]);draw(vp,0,10,z,38,2,6,[.51,.55,.51]);}
+    if(Math.abs(p.x-20)<480&&Math.abs(p.z+590)<480){draw(vp,20,4,-590,13,8,11,[.12,.23,.26]);draw(vp,20,8.5,-590,15,1,13,[.78,.61,.22]);draw(vp,20,5,-583.9,10,2,.35,[.1,.95,.62]);draw(vp,20,1.7,-583.7,3,3,.4,[.08,.12,.16]);}
+    for(let n=0;n<58;n++){const z=-560-n*18;if(Math.abs(p.z-z)>460||Math.abs(p.x)>360)continue;draw(vp,0,-.055,z,22,.12,18,[.19,.23,.27]);draw(vp,0,.015,z,.3,.025,5,[.96,.82,.45]);for(const side of [-1,1]){draw(vp,side*12,.01,z,2,.08,18,[.52,.55,.54]);if(n%3===0)draw(vp,side*17,.2,z,3,.4,3,[.28,.5,.23]);}if(n%9===0){for(let k=-9;k<=9;k++)draw(vp,k*18,-.07,z,18,.12,18,[.2,.24,.27]);}}
+    for(let n=0;n<25;n++){const z=-620-n*34;for(const side of [-1,1]){const x=side*(110+n*6);if(Math.abs(p.x-x)>500||Math.abs(p.z-z)>500)continue;const height=18+Math.abs(Math.sin(n*2.3))*37;draw(vp,x,height/2-1,z,52,height,48,[.36,.42,.4]);draw(vp,x,height*.77,z,28,height*.45,30,[.65,.68,.65]);}}
+    for(let n=0;n<9;n++){const z=-890-n*12;if(Math.abs(p.z-z)>460||Math.abs(p.x)>360)continue;for(const side of [-1,1])draw(vp,side*15,5,z,7,10,4,[.48,.52,.49]);draw(vp,0,10,z,38,2,6,[.51,.55,.51]);}
     // HudHud: populated satellite district, neighborhood park, basketball courts and arena.
-    for(let i=0;i<46;i++){const row=Math.floor(i/8),col=i%8,x=-90+col*27,z=-625-row*42;const h=7+((i*13)%19);draw(vp,x,h/2,z,14,h,16,i%3===0?[.17,.36,.34]:[.57,.59,.53]);draw(vp,x,h+.3,z,15,.5,17,[.82,.7,.36]);for(let floor=2;floor<h;floor+=4)draw(vp,x,h-floor,z+8.1,9,.65,.1,[.92,.78,.42],.8);}
-    for(let i=0;i<75;i++){const x=-180+(i*47)%365,z=-580-(i*31)%380;draw(vp,x,.15,z,2.5,.3,2.5,[.21,.56,.22]);draw(vp,x,2.3,z,.65,4.4,.65,[.35,.27,.17]);draw(vp,x,5.3,z,4.5,5,4.5,[.13,.42,.24]);}
+    for(let i=0;i<46;i++){const row=Math.floor(i/8),col=i%8,x=-90+col*27,z=-625-row*42;if(Math.abs(p.x-x)>450||Math.abs(p.z-z)>450)continue;const h=7+((i*13)%19);draw(vp,x,h/2,z,14,h,16,i%3===0?[.17,.36,.34]:[.57,.59,.53]);draw(vp,x,h+.3,z,15,.5,17,[.82,.7,.36]);if(Math.abs(p.x-x)<180&&Math.abs(p.z-z)<180)for(let floor=2;floor<h;floor+=4)draw(vp,x,h-floor,z+8.1,9,.65,.1,[.92,.78,.42],.8);}
+    for(let i=0;i<75;i++){const x=-180+(i*47)%365,z=-580-(i*31)%380;if(Math.abs(p.x-x)>320||Math.abs(p.z-z)>320)continue;draw(vp,x,.15,z,2.5,.3,2.5,[.21,.56,.22]);draw(vp,x,2.3,z,.65,4.4,.65,[.35,.27,.17]);draw(vp,x,5.3,z,4.5,5,4.5,[.13,.42,.24]);}
     for(let court=0;court<2;court++){const x=65+court*43,z=-700;draw(vp,x,.07,z,30,.15,17,[.13,.48,.45]);draw(vp,x,.17,z,28,.025,.22,[.94,.89,.75]);for(const side of [-1,1]){draw(vp,x+side*13,3,z,.3,6,.3,[.84,.84,.83]);draw(vp,x+side*13,6,z,2.8,1.9,.2,[.92,.92,.89]);}}
     draw(vp,180,5,-780,96,10,78,[.23,.32,.39]);draw(vp,180,12,-780,83,5,66,[.76,.68,.38]);draw(vp,180,16,-780,67,3,48,[.17,.41,.36]);draw(vp,180,19,-780,48,.6,29,[.28,.48,.39]);
     // Elite: low-cost animated traffic, distant aircraft, walking citizens, cats and birds.
@@ -713,6 +795,8 @@ export default function SharedGameLobby(){
       for(const x of [52,62])draw(vp,x,5,z,.8,10,.8,[.9,.88,.79]);
     }
     draw(vp,57,10.3,haramZ,15,.8,94,[.82,.79,.68]);
+    // Reuse the same Hajj journey in the existing Today sanctuary and Safa–Marwa gallery.
+    renderHajjPilgrims((x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p.x,p.z,TODAY_HAJJ_LAYOUT);
     // Minarets frame the mosque, with luminous upper lanterns.
     for(const [x,z] of [[-51,133],[51,133],[-51,235],[51,235]]){
       draw(vp,x,17,z,3.2,34,3.2,[.87,.85,.75]);
@@ -990,15 +1074,15 @@ export default function SharedGameLobby(){
     }
     }
     // Avatar primitives: head, torso, arms, legs, glowing flight trails.
-    const avatar=(a:Player)=>{const c=SUIT_COLORS[a.suit];const praying=a.id===p.id&&propheticWorldRef.current&&Math.hypot(a.x,a.z+475)<125?prayerPosture:null;if(praying){const cs=Math.cos(a.yaw),sn=Math.sin(a.yaw),forward=(d:number)=>({x:a.x+sn*d,z:a.z+cs*d});const body=praying==="ruku"?{y:1.18,h:.56,forward:.34}:praying==="sujud"?{y:.53,h:.42,forward:.65}:{y:.72,h:.8,forward:0};const at=forward(body.forward);draw(vp,at.x,a.y+body.y,at.z,.83,body.h,.52,c,1,a.yaw);const head=forward(praying==="sujud"?1.1:praying==="ruku"?.83:.04);draw(vp,head.x,a.y+(praying==="sujud"?.27:praying==="ruku"?1.2:1.45),head.z,.5,.5,.5,c,1,a.yaw);for(const side of [-1,1]){const ox=cs*side*.28,oz=-sn*side*.28;const knee=forward(praying==="sujud"?.05:praying==="ruku"?-.05:-.2);draw(vp,knee.x+ox,a.y+.27,knee.z+oz,.3,.54,.38,c,1,a.yaw);const hands=forward(praying==="sujud"?.93:praying==="ruku"?.73:.28);draw(vp,hands.x+cs*side*.47,a.y+(praying==="sujud"?.18:praying==="ruku"?.88:.73),hands.z-sn*side*.47,.23,.35,.26,c,1,a.yaw)}return;}const self=a.id===p.id;const launch=self&&a.flying?clamp((now-flightPose.current.takeoff)/900,0,1):1;const land=self&&!a.flying?clamp((now-flightPose.current.landing)/1350,0,1):1;const crouch=self&&now<knockdownUntil.current?1.25:self&&!a.flying&&land<.5?(1-land*2)*.65:0;const lean=a.flying?(.15+.65*launch):0;const ay=a.y-crouch+(a.flying?0:.1*Math.sin(now*.006));draw(vp,a.x,ay+1.35,a.z,.8,1.1,.44,c,1,a.yaw+lean*.12);draw(vp,a.x+Math.sin(a.yaw)*lean*.25,ay+2.16+(!a.flying&&land<.8?.18*(1-land):0),a.z+Math.cos(a.yaw)*lean*.25,.52,.52,.52,c,1,a.yaw);const cs=Math.cos(a.yaw),sn=Math.sin(a.yaw);
-      for(const side of [-1,1]){const ox=cs*side*.61,oz=-sn*side*.61;const gesture=self&&now<emoteUntil.current?emote:"none";const firing=self&&now<shootingPoseUntil.current&&side===1;const lift=firing?0:a.flying?(.45+launch*.35):((gesture==="wave"||gesture==="hand")&&side===1?(gesture==="hand"?1.12:.65):gesture==="celebrate"?.65:gesture==="pose"&&side===1?.28:0);if(firing){draw(vp,a.x+ox+sn*.42,ay+1.75,a.z+oz+cs*.42,.27,.28,1.05,c,1,a.yaw);draw(vp,a.x+ox+sn*.83,ay+1.75,a.z+oz+cs*.83,.24,.25,.22,[.35,1,.76],1,a.yaw)}else draw(vp,a.x+ox+sn*lift*.3,ay+1.28+lift,a.z+oz+cs*lift*.3,.26,.94,.3,c,1,a.yaw);draw(vp,a.x+cs*side*.23,ay+.46,a.z-sn*side*.23,.31,.85,.35,c,1,a.yaw)}
-      if(a.flying){for(let i=0;i<7;i++){const tail=i*.7+1;draw(vp,a.x-sn*tail,ay+.4-i*.12,a.z-cs*tail,.13+i*.065,.11+i*.04,.13+i*.065,[.66,.92,1],.6-i*.06)}draw(vp,a.x+sn*.6,ay+1.4,a.z+cs*.6,.48,.2,.32,c,1,a.yaw)}};
+    const avatar=(a:Player)=>{const c=SUIT_COLORS[a.suit];const praying=a.id===p.id&&propheticWorldRef.current&&Math.hypot(a.x,a.z+475)<125?prayerPosture:null;if(praying){const cs=Math.cos(a.yaw),sn=Math.sin(a.yaw),forward=(d:number)=>({x:a.x+sn*d,z:a.z+cs*d});const body=praying==="ruku"?{y:1.18,h:.56,forward:.34}:praying==="sujud"?{y:.53,h:.42,forward:.65}:{y:.72,h:.8,forward:0};const at=forward(body.forward);draw(vp,at.x,a.y+body.y,at.z,.83,body.h,.52,c,1,a.yaw);const head=forward(praying==="sujud"?1.1:praying==="ruku"?.83:.04);draw(vp,head.x,a.y+(praying==="sujud"?.27:praying==="ruku"?1.2:1.45),head.z,.5,.5,.5,c,1,a.yaw);for(const side of [-1,1]){const ox=cs*side*.28,oz=-sn*side*.28;const knee=forward(praying==="sujud"?.05:praying==="ruku"?-.05:-.2);draw(vp,knee.x+ox,a.y+.27,knee.z+oz,.3,.54,.38,c,1,a.yaw);const hands=forward(praying==="sujud"?.93:praying==="ruku"?.73:.28);draw(vp,hands.x+cs*side*.47,a.y+(praying==="sujud"?.18:praying==="ruku"?.88:.73),hands.z-sn*side*.47,.23,.35,.26,c,1,a.yaw)}return;}const self=a.id===p.id;const pose=calculateGameFlightPose({flying:a.flying,verticalSpeed:self?velocity:0,groundClearance:self?Math.max(0,a.y-floor):0,takeoffAgeMs:self?now-flightPose.current.takeoff:1000,landingAgeMs:self?now-flightPose.current.landing:1000,forwardInput:self&&Math.hypot(moving,strafing)>.15});const land=self&&!a.flying?clamp((now-flightPose.current.landing)/1350,0,1):1;const crouch=self&&now<knockdownUntil.current?1.25:self&&!a.flying&&land<.5?(1-land*2)*.65:0;const lean=pose.torsoLean;const ay=a.y-crouch+(a.flying||pose.phase==="falling"?0:.1*Math.sin(now*.006));draw(vp,a.x,ay+1.35,a.z,.8,1.1,.44,c,1,a.yaw+lean*.12);draw(vp,a.x+Math.sin(a.yaw)*(lean*.25+pose.headForward),ay+2.16+(!a.flying&&land<.8?.18*(1-land):0),a.z+Math.cos(a.yaw)*(lean*.25+pose.headForward),.52,.52,.52,c,1,a.yaw);const cs=Math.cos(a.yaw),sn=Math.sin(a.yaw);
+      for(const side of [-1,1]){const ox=cs*side*.61,oz=-sn*side*.61;const gesture=self&&now<emoteUntil.current?emote:"none";const firing=self&&now<shootingPoseUntil.current&&side===1;const lift=firing?0:a.flying||pose.phase==="falling"?pose.armLift:((gesture==="wave"||gesture==="hand")&&side===1?(gesture==="hand"?1.12:.65):gesture==="celebrate"?.65:gesture==="pose"&&side===1?.28:0);if(firing){draw(vp,a.x+ox+sn*.42,ay+1.75,a.z+oz+cs*.42,.27,.28,1.05,c,1,a.yaw);draw(vp,a.x+ox+sn*.83,ay+1.75,a.z+oz+cs*.83,.24,.25,.22,[.35,1,.76],1,a.yaw)}else draw(vp,a.x+ox+sn*lift*.3,ay+1.28+lift,a.z+oz+cs*lift*.3,.26,.94,.3,c,1,a.yaw);draw(vp,a.x+cs*side*.23,ay+.46+pose.legLift,a.z-sn*side*.23,.31,.85,.35,c,1,a.yaw)}
+      if(a.flying){const trail=pose.phase==="descending"?[1,.76,.38]:pose.phase==="ascending"?[.42,.86,1]:[.66,.92,1];for(let i=0;i<7;i++){const tail=i*.7+1;draw(vp,a.x-sn*tail,ay+.4+pose.trailSlope-i*.12,a.z-cs*tail,.13+i*.065,.11+i*.04,.13+i*.065,trail,.6-i*.06)}draw(vp,a.x+sn*.6,ay+1.4,a.z+cs*.6,.48,.2,.32,c,1,a.yaw)}if(self&&(pose.phase==="takeoff"||pose.phase==="landing")){const progress=pose.phase==="takeoff"?clamp((now-flightPose.current.takeoff)/500,0,1):clamp((now-flightPose.current.landing)/600,0,1);draw(vp,a.x,a.y+.08,a.z,1.1+progress*1.8,.06,1.1+progress*1.8,pose.phase==="takeoff"?[.3,.94,.85]:[.95,.75,.36],.3*(1-progress))}};
     avatar(p);
     const labelHost=labels.current;if(labelHost)labelHost.replaceChildren();
     for(const other of peerRef.current.values())if(now-other.seen<12000&&(other.world||"Today")===(p.world||"Today")){const age=now-(arrivals.current.get(other.id)??now);if(age<2600){const progress=clamp(age/2600,0,1),drop=(1-progress)*(1-progress)*9;avatar({...other,y:other.y+drop});for(let i=0;i<6;i++){const angle=i*Math.PI/3+now*.002;draw(vp,other.x+Math.cos(angle)*1.4,other.y+2.5+drop,other.z+Math.sin(angle)*1.4,.2,3,.2,[.12,.95,.68],.6)}}else avatar(other);const feet=distance(p,other)*3.28084;if(labelHost&&feet>=5&&feet<=50){const point=project(vp,[other.x,other.y+3,other.z],w,h);if(point?.visible){const tag=document.createElement("span");tag.textContent=(other.name||"Explorer")+(voiceTracks.current.has(other.userId||"")?" 🔊":"");tag.style.cssText="position:absolute;left:"+point.x+"px;top:"+point.y+"px;transform:translate(-50%,-100%);padding:4px 9px;border-radius:12px;background:#052c28df;color:#fff;font-size:12px;font-weight:800;white-space:nowrap;border:1px solid #9bd9bb;pointer-events:none";labelHost.appendChild(tag)}}}
     const projLive=project(vp,[-18.3,4,0],w,h),projPortal=project(vp,[95,9,0],w,h);
     const updateOverlay=(element:HTMLDivElement|null,proj:ReturnType<typeof project>,dist:number,max:number)=>{if(!element)return;const show=!!proj?.visible&&dist<max;element.style.display=show?"block":"none";if(show&&proj){element.style.left=proj.x+"px";element.style.top=proj.y+"px";element.style.transform="translate(-50%,-50%) scale("+clamp(15/(dist+3),.35,1.3)+")"}};
-    if(lunar||futureWorldRef.current||propheticWorldRef.current){if(panel.current)panel.current.style.display="none";if(portalLabel.current)portalLabel.current.style.display="none";}
+    if(lunar||futureWorldRef.current||propheticWorldRef.current||partedSeaWorldRef.current||romanWorldRef.current){if(panel.current)panel.current.style.display="none";if(portalLabel.current)portalLabel.current.style.display="none";}
     else{updateOverlay(panel.current,projLive,distance(p,{x:-18.3,z:0}),75);updateOverlay(portalLabel.current,projPortal,distance(p,{x:95,z:0}),160);}
    }
    frame=requestAnimationFrame(render);
@@ -1078,13 +1162,14 @@ export default function SharedGameLobby(){
   <div ref={councilProjection} aria-label="Belt Boyz Council projector" style={{position:"absolute",display:"none",width:260,aspectRatio:"16 / 9",zIndex:3,pointerEvents:"none",border:"3px solid #c8ac60",borderRadius:5,background:"#061b22",overflow:"hidden",boxShadow:"0 0 20px rgba(75,225,217,.35)"}}><video ref={councilVideo} autoPlay playsInline muted style={{width:"100%",height:"100%",objectFit:"contain",display:councilSharing?"block":"none"}}/>{!councilSharing&&<div style={{height:"100%",display:"grid",placeContent:"center",textAlign:"center",color:"#bcefe8",fontSize:13}}><strong>BELT BOYZ COUNCIL</strong><small>PROJECTOR · Awaiting screen share</small></div>}</div>
   <div ref={labels} aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",zIndex:4}}/>
   <div style={{position:"absolute",left:"50%",top:"48%",transform:"translate(-50%,-50%)",zIndex:6,color:"#f8e6a4",fontSize:26,pointerEvents:"none",textShadow:"0 0 12px #001b19"}}>⊕</div>
-  {spaceEdgeWarning&&<div aria-live="assertive" style={{position:"absolute",inset:0,border:"5px solid rgba(255,43,52,.9)",boxShadow:"inset 0 0 45px rgba(255,0,35,.5)",pointerEvents:"none",zIndex:28,animation:"pulse 0.45s ease-in-out infinite alternate"}}><span style={{position:"absolute",top:60,left:"50%",transform:"translateX(-50%)",background:"rgba(70,0,10,.8)",padding:"8px 12px",borderRadius:10,color:"#fff",fontSize:12,fontWeight:800,whiteSpace:"nowrap"}}>⚠️ SPACE LIMIT · 2 SEC TO DESCEND</span></div>}
+
   {nearbyPlayers.length>0&&<div aria-label="Nearby players" style={{position:"absolute",top:60,left:"50%",transform:"translateX(-50%)",zIndex:18,display:"flex",flexDirection:"column",gap:3,maxWidth:"min(210px,46vw)",pointerEvents:"auto"}}>{nearbyPlayers.map(p=><div key={p.id} style={{padding:"2px 6px",borderRadius:10,background:"rgba(4,37,40,.22)",border:"1px solid rgba(177,235,220,.14)",backdropFilter:"blur(8px)",color:"#fff",fontSize:11,textAlign:"center"}}><button type="button" onClick={()=>p.feet<=5&&setSelectedNearbyPlayer(v=>v===p.id?null:p.id)} aria-label={p.feet<=5?"Open "+p.name+" profile card":p.name+" is "+Math.round(p.feet)+" feet away"} style={{border:0,background:"transparent",color:"white",fontSize:11,cursor:p.feet<=5?"pointer":"default"}}>👤 {p.name} · {Math.round(p.feet)} ft</button>{p.feet<=5&&selectedNearbyPlayer===p.id&&<div style={{display:"flex",gap:5,justifyContent:"center",paddingTop:4}}><button type="button" disabled title="Follow integration pending">＋ Follow</button><button type="button" disabled title="Persistent direct-message integration pending">✉ DM</button></div>}</div>)}</div>}
   <div style={{position:"absolute",right:12,bottom:82,zIndex:12,display:"flex",flexDirection:"column-reverse",gap:6,alignItems:"flex-end"}}>
     
     <button type="button" onClick={()=>setShield(v=>!v)} aria-label={shield?"Disable defense shield":"Activate defense shield"} aria-pressed={shield} style={{borderRadius:"50%",width:42,height:42,background:shield?"rgba(36,148,255,.58)":"rgba(12,77,138,.30)",border:"1px solid rgba(141,214,255,.42)",color:"#e5f8ff",fontSize:21,backdropFilter:"blur(12px)"}}>🛡️</button>
     <button type="button" onClick={()=>{setEmote("hand");emoteUntil.current=performance.now()+5000;if(meetingSeatRef.current!==null)setMeetingGesture("hand");}} aria-label="Raise hand gesture" style={{borderRadius:"50%",width:46,height:46,background:"rgba(9,92,76,.30)",color:"#fff",border:"1px solid rgba(231,196,119,.48)",backdropFilter:"blur(12px)",fontSize:23}}>🙋</button>
-    {(jurassicWorld||futureWorld||propheticWorld)&&<button type="button" title="Return to main lobby" aria-label="Return to main lobby" onClick={()=>{if(jurassicWorld)exitJurassicWorld();else if(futureWorld)exitFutureWorld();else if(propheticWorld)exitPropheticWorld()}} style={{width:46,height:46,borderRadius:"50%",display:"grid",placeItems:"center",background:"radial-gradient(circle at 35% 25%,rgba(66,198,169,.5),rgba(6,39,61,.87))",border:"1px solid rgba(138,236,212,.7)",boxShadow:"0 0 16px rgba(41,194,161,.23),inset 0 1px 5px #ffffff25",backdropFilter:"blur(14px)",cursor:"pointer"}}><span aria-hidden="true" style={{fontSize:25,filter:"drop-shadow(0 1px 3px #021f2b)"}}>🌍</span></button>}
+    {romanWorld&&<button type="button" title={romeCity?"Return to Jerusalem":"Travel to ancient Rome"} aria-label={romeCity?"Travel to Jerusalem":"Travel to ancient Rome"} onClick={travelRomanPortal} style={{width:46,height:46,borderRadius:"50%",background:"rgba(94,69,35,.76)",color:"#ffe7a7",border:"1px solid #d5b77b",fontSize:23,backdropFilter:"blur(10px)"}}>🏛️</button>}
+    {(jurassicWorld||futureWorld||propheticWorld||partedSeaWorld||romanWorld)&&<button type="button" title="Return to main lobby" aria-label="Return to main lobby" onClick={()=>{if(jurassicWorld)exitJurassicWorld();else if(futureWorld)exitFutureWorld();else if(propheticWorld)exitPropheticWorld();else if(partedSeaWorld)exitPartedSeaWorld();else if(romanWorld)exitRomanWorld()}} style={{width:46,height:46,borderRadius:"50%",display:"grid",placeItems:"center",background:"radial-gradient(circle at 35% 25%,rgba(66,198,169,.5),rgba(6,39,61,.87))",border:"1px solid rgba(138,236,212,.7)",boxShadow:"0 0 16px rgba(41,194,161,.23),inset 0 1px 5px #ffffff25",backdropFilter:"blur(14px)",cursor:"pointer"}}><span aria-hidden="true" style={{fontSize:25,filter:"drop-shadow(0 1px 3px #021f2b)"}}>🌍</span></button>}
     <button type="button" onClick={nearNabawi?()=>setPrayerMenuOpen(v=>!v):()=>{if(autoFirePointer.current===null)fireShot()}} onPointerDown={e=>{if(nearNabawi||e.button!==0)return;e.preventDefault();e.stopPropagation();stopAutoFire();autoFirePointer.current=e.pointerId;e.currentTarget.setPointerCapture(e.pointerId);fireShot();autoFireTimer.current=setInterval(fireShot,100)}} onPointerUp={stopAutoFire} onPointerCancel={stopAutoFire} onLostPointerCapture={stopAutoFire} onContextMenu={e=>e.preventDefault()} aria-label={nearNabawi?"Prayer positions":"Shoot; hold for automatic fire"} style={{borderRadius:40,width:46,height:46,background:"rgba(9,92,76,.30)",color:"#fff",fontWeight:900,border:"1px solid rgba(231,196,119,.48)",backdropFilter:"blur(12px)",fontSize:22}}>{nearNabawi?"🤲":<svg aria-hidden="true" width="31" height="31" viewBox="0 0 36 36" fill="none"><path d="M5 13.5 24 9l6 3-1 6-9 2-4 10-6-2 2-10-7-1z" fill="#1de5a3" stroke="#b5ffe1" strokeWidth="1.4" strokeLinejoin="round"/><path d="m7 14 19-3M14 18l7-1" stroke="#064b43" strokeWidth="2.4" strokeLinecap="round"/><path d="m29 14 4-1" stroke="#f8d777" strokeWidth="2.5" strokeLinecap="round"/></svg>}</button>
   </div>
   {nearNabawi&&prayerMenuOpen&&<div role="group" aria-label="Prayer positions" style={{position:"absolute",right:66,bottom:85,zIndex:32,display:"flex",flexDirection:"column",gap:7,padding:9,borderRadius:15,background:"rgba(4,40,30,.88)",border:"1px solid #bfa35d"}}>{([["ruku","Bow (Rukūʿ)"],["sujud","Prostrate (Sujūd)"],["sitting","Sit on knees"]] as const).map(([pose,label])=><button key={pose} type="button" aria-pressed={prayerPosture===pose} onClick={()=>togglePrayerPosture(pose)} style={{padding:"9px 12px",borderRadius:10,color:"#fff",border:"1px solid #bfa35d",background:prayerPosture===pose?"#197654":"rgba(255,255,255,.07)"}}>{label}</button>)}</div>}
@@ -1111,7 +1196,7 @@ export default function SharedGameLobby(){
   {showInfo&&crashed&&<div className={styles.toast} role="status">💥 Hard landing! Recovering…</div>}
   <div className={styles.controls}><div role="group" aria-label="Analog movement joystick" onTouchStartCapture={e=>e.stopPropagation()} onTouchMoveCapture={e=>{e.stopPropagation();if(e.cancelable)e.preventDefault()}} onPointerDown={e=>{e.preventDefault();e.stopPropagation();stickPointer.current=e.pointerId;e.currentTarget.setPointerCapture(e.pointerId);moveStick(e)}} onPointerMove={e=>{e.stopPropagation();moveStick(e)}} onPointerUp={e=>{e.stopPropagation();releaseStick(e)}} onPointerCancel={releaseStick} onLostPointerCapture={e=>{if(stickPointer.current===e.pointerId)releaseStick(e)}} style={{width:124,height:124,borderRadius:"50%",position:"relative",touchAction:"none",pointerEvents:"auto",background:"radial-gradient(circle,#1a60584d,#092c2a44)",border:"1px solid #b9e6d07a",boxShadow:"inset 0 0 24px #071d1c66",flexShrink:0}}><div style={{position:"absolute",inset:25,borderRadius:"50%",border:"1px solid #c5d6bc44",pointerEvents:"none"}}/>{(["▲", "◀", "▶", "▼"] as const).map((arrow,i)=><span key={arrow} aria-hidden="true" style={{position:"absolute",left:i===1?"14%":i===2?"86%":"50%",top:i===0?"14%":i===3?"86%":"50%",transform:"translate(-50%,-50%)",fontSize:15,fontWeight:800,color:"rgba(230,250,241,.85)",textShadow:"0 1px 4px rgba(0,0,0,.7)",pointerEvents:"none",userSelect:"none"}}>{arrow}</span>)}<div style={{position:"absolute",left:"50%",top:"50%",width:54,height:54,borderRadius:"50%",transform:`translate(calc(-50% + ${stickPosition.x*38}px),calc(-50% + ${stickPosition.y*38}px))`,background:"radial-gradient(circle at 30% 25%,#b7e6d5c9,#176e62dd)",border:"2px solid #d4c28b",boxShadow:"0 4px 15px #0008",pointerEvents:"none",transition:stickPointer.current===null?"transform .14s ease-out":"none"}}/></div><button type="button" aria-label={boostActive?"Disable unlimited boost":"Enable unlimited boost"} aria-pressed={boostActive} onClick={activateBoost} style={{pointerEvents:"auto",alignSelf:"flex-end",minWidth:50,minHeight:34,borderRadius:11,border:"1px solid rgba(255,226,138,.65)",background:boostActive?"linear-gradient(135deg,#ffd36a,#f69e32)":"linear-gradient(135deg,rgba(5,75,58,.92),rgba(13,135,105,.95))",color:boostActive?"#18382b":"#fff",fontWeight:800,fontSize:11,boxShadow:boostActive?"0 0 18px rgba(255,203,75,.55)":"0 4px 14px rgba(0,0,0,.25)",opacity:1}}>⚡ {boostActive?"3× ON":"BOOST"}</button></div>
   {error&&<div role="alert" className={styles.error}>{error}</div>}
-  {picker&&<div className={styles.modal}><div className={styles.picker}><button className={styles.close} onClick={()=>setPicker(false)} aria-label="Close world selector">✕</button><h2>Choose Your Universe</h2><p>Explore the worlds of 1Muslim Games</p><div className={styles.worlds}>{WORLDS.map(w=><button key={w} onClick={()=>{if(w==="Jurassic")enterJurassicWorld();else if(w==="Time of Muhammad ﷺ")enterPropheticWorld();else if(w==="Future")enterFutureWorld();else{setWorldMessage(w+" is not yet connected to this lobby build.");setPicker(false)}}}>{w} <small>{w==="Jurassic"||w==="Future"||w==="Time of Muhammad ﷺ"?"Enter world":"Preview pending"}</small></button>)}</div></div></div>}
+  {picker&&<div className={styles.modal}><div className={styles.picker}><button className={styles.close} onClick={()=>setPicker(false)} aria-label="Close world selector">✕</button><h2>Choose Your Universe</h2><p>Explore the worlds of 1Muslim Games</p><div className={styles.worlds}>{WORLDS.map(w=><button key={w} onClick={()=>{if(w==="Jurassic")enterJurassicWorld();else if(w==="Time of Muhammad ﷺ")enterPropheticWorld();else if(w==="Time of Moses")enterPartedSeaWorld();else if(w==="Time of Jesus")enterRomanWorld();else if(w==="Future")enterFutureWorld();else{setWorldMessage(w+" is not yet connected to this lobby build.");setPicker(false)}}}>{w} <small>{w==="Jurassic"||w==="Future"||w==="Time of Muhammad ﷺ"||w==="Time of Moses"||w==="Time of Jesus"?"Enter world":"Preview pending"}</small></button>)}</div></div></div>}
   {worldMessage&&<div className={styles.toast} role="status" onClick={()=>setWorldMessage("")}>{worldMessage} · Dismiss ✕</div>}
   <span className={styles.srOnly}>Shared presence is an experimental room and does not establish authenticated player identity. Suits are local preview choices.</span>
  </section>;
