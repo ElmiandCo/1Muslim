@@ -13,6 +13,7 @@ import {calculateGameFlightPose} from "./gameFlightPose";
 import {TODAY_PROP_COLLIDERS,PROPHETIC_COLLISION_INDEX,createTodayCollisionSource} from "./gameTodayColliders";
 import {ROMAN_PORTAL,ROMAN_BOUNDS,romanJudeaCollisionIndex,renderRomanJudea} from "./RomanJudeaScene";
 import {renderLunarResearchLife} from "./LunarResearchScene";
+import {renderHajjPilgrims,HISTORICAL_HAJJ_LAYOUT,TODAY_HAJJ_LAYOUT} from "./HajjPilgrimScene";
 
 // Keep Moses refuge collisions stable across frames; never cull physics with visual LOD.
 const SEA_COLLIDERS=partedSeaColliders();
@@ -434,6 +435,10 @@ export default function SharedGameLobby(){
       for(let i=0;i<100;i++){const a=i*2.399963,r=320+(i%9)*30,x=Math.cos(a)*r,z=Math.sin(a)*r,h=25+Math.abs(Math.sin(i*1.91))*65;draw(vp,x,h*.5,z,26,h,30,[.48,.38,.29]);draw(vp,x,h*.82,z,15,h*.36,18,[.58,.47,.36]);}
       // Kaaba: simple stone cuboid and dark drapery; no modern mosque expansion.
       draw(vp,0,5,0,13,10,11,[.065,.065,.067]);draw(vp,0,7.5,0,13.1,.65,11.1,[.72,.56,.24]);draw(vp,0,.12,0,58,.22,56,[.73,.64,.47]);
+      // Interpretive, faceless Hajj pilgrims: seven complete tawaf circuits, then seven sa'i traversals.
+      // Route stays within the existing historical alley; no collider or player physics changes.
+      draw(vp,40,.045,0,5,.08,72,[.71,.59,.44]);
+      renderHajjPilgrims((x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p.x,p.z,HISTORICAL_HAJJ_LAYOUT);
       // Historically interpretive Hijazi buildings with narrow, walkable lanes.
       for(let i=0;i<84;i++){const col=i%12,row=Math.floor(i/12),x=(col-5.5)*42,z=(row-3)*53;if(Math.abs(x)<44&&Math.abs(z)<44)continue;const h=3.1;draw(vp,x,h/2,z,22,h,26,[.65+(i%3)*.04,.52,.37]);draw(vp,x,h+.2,z,23,.45,27,[.47,.37,.28]);draw(vp,x,2,z+13.04,2.5,3,.18,[.26,.18,.13]);}
       // Desert caravan road toward the separate Madinah settlement (scaled game distance).
@@ -788,6 +793,8 @@ export default function SharedGameLobby(){
       for(const x of [52,62])draw(vp,x,5,z,.8,10,.8,[.9,.88,.79]);
     }
     draw(vp,57,10.3,haramZ,15,.8,94,[.82,.79,.68]);
+    // Reuse the same Hajj journey in the existing Today sanctuary and Safa–Marwa gallery.
+    renderHajjPilgrims((x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p.x,p.z,TODAY_HAJJ_LAYOUT);
     // Minarets frame the mosque, with luminous upper lanterns.
     for(const [x,z] of [[-51,133],[51,133],[-51,235],[51,235]]){
       draw(vp,x,17,z,3.2,34,3.2,[.87,.85,.75]);
