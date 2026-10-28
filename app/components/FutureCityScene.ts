@@ -1,3 +1,4 @@
+import {renderFutureSkyCouriers} from "./FutureSkyCourierScene";
 // Shared WebGL world geometry. The Future universe uses the same renderer, camera,
 // avatar, multiplayer presence and movement loop as the main 1Muslim game.
 export const FUTURE_BOUNDS={minX:-380,maxX:380,minZ:-380,maxZ:380} as const;
@@ -94,6 +95,8 @@ export function renderFutureWorld(vp:number[],draw:Draw,playerX:number,playerZ:n
  }
  // Future plaza's luminous gardens and holographic koi are purely decorative, distance-culled.
  renderFutureGardens(vp,draw,playerX,playerZ,now);
+ // Decorative high-altitude traffic: no changes to city solids or shared flight.
+ renderFutureSkyCouriers(vp,draw,now,playerX,playerZ);
  // Tall tower clusters. Geometry, trims, and windows are distance-culled.
  for(const t of FUTURE_TOWERS){
   if(!visible(t.x,t.z))continue;
