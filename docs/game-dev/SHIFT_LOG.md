@@ -1,5 +1,16 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 21:32 CDT (America/Chicago) · Bot B / Living Worlds — Rome grand arena and cats
+
+**Full handoff:** [Rome arena, cats, lion visual adapter](shifts/2026-10-27-rome-grand-arena-cats-2130.md) · [Bot A dock collision](shifts/2026-10-27-egypt-dock-cargo-solids-2059.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Protected site:** `fix/profile-scroll-match-umma-20261027` @ `c856491`; read-only main `c043219`; latest production site `d219f7e` (profile scroll fixes), all untouched. **Game base:** Bot A `game/world-engine-egypt-dock-cargo-solids-20261027-2100` @ `7740a22b`; working branch `game/living-worlds-rome-grand-arena-cats-20261027-2130`.
+- **Game-only implementation:** new `RomanArenaScene.ts` adds a 180×136-unit open-gated, tiered Roman-inspired arena outside the city, LOD 32/16/0, animated roaming market/arena cats and a **visual-only** lion pose adapter. `RomanJudeaScene.ts` has only two new render calls and one import; all existing Roman/Jerusalem collision/portal/world logic preserved. New `scripts/game-rome-arena-smoke.mjs` committed.
+- **Executed verification:** 818 actual-source V8 assertions passed, near 306 / medium 67 / far 0 arena draw callbacks, 56 cat calls near market / 0 far, open southern entry, original Roman renderer source preserved. Native Node smoke, real mobile gameplay and FPS still pending. Preview `dpl_vXCcoaD8bZuWRxkL8PLYb54DEqbE` building at first handoff.
+- **No misleading claims:** lion **not** wired to hostile AI, 4× speed, 5-hit combat or respawn. Arena geometry is **visual**, not yet collider-parity/physically verified enterable. Bot A owns physics, lion AI and long Nile terrain; Bot B owns scenery/animals. Egypt, Moses, Jurassic, Future, Jerusalem, historical Makkah/Madinah, Moon and other worlds preserved.
+- **Integration:** cherry-pick only `fe798f67`, `e3518e45`, `fedfef5b`, `f80991b8` or transplant targeted scene + import/call into the then-current site branch. Never merge entire game branch or overwrite site pages/nav/profile/feed/Quran/GoLive. Rollback new render calls/import and scene file. No production deployment/merge.
+
+
 ## 2026-10-27 · 20:59 CDT (America/Chicago) · Bot A / World Engine — Nile dock cargo solids parity
 
 **Full handoff:** [Egypt dock cargo collision shift](shifts/2026-10-27-egypt-dock-cargo-solids-2059.md) · [Bot B 20:30 Future koi](shifts/2026-10-27-future-koi-gardens-2030.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
