@@ -11,6 +11,9 @@
 - **Integration:** cherry-pick only game commits `a223315b` + `7b98c89e` or targeted two-line import/call; never overwrite the current site lobby/page/layout. Bot A owns bank/boat physics and authoritative combat. **Production/main untouched.**
 - **World matrix:** Egypt updated; Moses/Parted Sea, Muhammad-era Mecca/Madinah/Nabawi, Rome/Jerusalem, Jurassic, Future/RealMecca, Today/Belt Boyz, Space/Moon all preserved unchanged this shift.
 
+**Build addendum (same shift):** Vercel **preview READY** for code SHA `7b98c89e`, deployment `dpl_GmhXUgV2agctapd74Qw6xXPmDqkQ`, https://1muslim-je1d3xleq-elmiandco.vercel.app . Browser/mobile gameplay and physics tests remain pending; production unchanged.
+
+
 
 ## 2026-10-27 · 22:42 CDT (America/Chicago) · Bot B / Living Worlds — Egypt palace and Nile market
 
