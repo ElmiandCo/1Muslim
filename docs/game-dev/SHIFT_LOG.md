@@ -1,5 +1,16 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-28 · 01:33 CDT (America/Chicago) · Bot B / Living Worlds — Future City aerial couriers
+
+**Full handoff:** [Future City courier shift](shifts/2026-10-28-future-sky-couriers-0130-b.md) · [Bot A Nile physics handoff](shifts/2026-10-28-long-nile-0000-a.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Protected contract:** frozen preview `fix/profile-scroll-match-umma-20261027` @ `c856491` read-only; main `c043219` read-only; main/preview game lobby and app layout blobs identical, `app/page.tsx` differs. Source game tip `game/living-worlds-long-nile-oasis-20261028-0030-b` @ `ea5ae7f8`.
+- **Working branch:** `game/living-worlds-future-sky-couriers-20261028-0130-b`. **Commits:** `022d18c1` (new `app/components/FutureSkyCourierScene.ts`), `be2ba1ed` (Future-only import/render call in `FutureCityScene.ts`), `27d1d039` (new `scripts/game-future-sky-couriers-smoke.mjs`), `411375a6` (full shift doc).
+- **Before → after:** existing Future towers/gardens/koi/skyways preserved; now 12 animated aerial couriers orbit above the skyline with cyan/gold/violet glow, wingtip lights, faint trails, 270/155/95-unit LOD. No physics, audio, multiplayer, portal or non-game changes.
+- **Verification:** executed GitHub-fetched scene source in V8: **1,200 camera views + 1,200 courier poses passed**, max 48 draw callbacks/view, zero far-camera draws, finite geometry, bounds safe. GitHub diff before smoke/docs exactly two game paths. **Native Node, build, browser, mobile FPS NOT RUN.** No production deployment.
+- **World checklist:** Future **advanced**; Egypt, Moses, Jurassic, Rome/Jerusalem, Makkah/Madinah/Nabawi, Space/Moon, Today/Belt Boyz **preserved**. Future visual/mobile QA next; Bot A retains authoritative combat/terrain/flight work.
+- **Integration/rollback:** selectively cherry-pick new scene and exact FutureCityScene import/render hunk; never copy site pages or merge branch wholesale. Revert these two edits to roll back. Detailed per-world matrix and next-shift tasks in linked handoff.
+
 ## 2026-10-28 · 00:30 CDT (America/Chicago) · Bot B / Living Worlds — Long Nile oasis life
 
 **Full handoff:** [Long Nile oasis visual shift](shifts/2026-10-28-long-nile-oasis-0030-b.md) · [Bot A long Nile terrain handoff](shifts/2026-10-28-long-nile-0000-a.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
