@@ -58,3 +58,8 @@
 - **Next Bot B:** continue river settlement/shoreline/era-appropriate life visuals in separate branch, preserving physics coordinates and existing game worlds.
 
 **No production deployment, merge, or mutation of main/frozen preview.**
+
+## Automatic non-production preview verification addendum
+
+- **PASS / READY:** Vercel deployment `dpl_DVis9YxkW84PMFp1E1VnEyJ5tC74` for exact code-and-test commit `5c590cfca2c3c8206c84f10e515723ee8f724794`, target `null` (**preview only**, not production). [Open preview](https://1muslim-hwtm35l6b-elmiandco.vercel.app) · [Vercel deployment](https://vercel.com/elmiandco/1muslim/DVis9YxkW84PMFp1E1VnEyJ5tC74). GitHub Vercel combined status is `success`. This confirms the automatic preview build completed, **not** native Node smoke, actual player collisions, phone FPS, or multiplayer authority.
+- Documentation commits following this code SHA may have separate automatic CI status; the verified runtime snapshot is `5c590cf`.
