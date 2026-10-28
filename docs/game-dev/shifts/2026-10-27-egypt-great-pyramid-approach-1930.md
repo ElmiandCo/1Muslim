@@ -1,6 +1,6 @@
 # Bot B — Ancient Egypt Great Pyramid approach and construction atmosphere
 
-**2026-10-27 · 19:26–19:36 CDT (America/Chicago)** · Game Bot B / Living Worlds · **game-only development** · **NO production, main, or frozen-preview merge**.
+**2026-10-27 · 19:26–19:30 CDT (America/Chicago)** · Game Bot B / Living Worlds · **game-only development** · **NO production, main, or frozen-preview merge**.
 
 ## Baseline / no-regression audit
 
