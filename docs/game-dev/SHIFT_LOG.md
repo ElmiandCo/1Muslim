@@ -1,5 +1,16 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 20:30 CDT (America/Chicago) · Bot B / Living Worlds — Future City luminous gardens and holographic koi
+
+**Full handoff:** [Future City koi gardens shift](shifts/2026-10-27-future-koi-gardens-2030.md) · [Bot A 20:00 Egypt banks/arrival](shifts/2026-10-27-egypt-banks-arrival-2000.md) · [coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Baseline:** frozen preview `fix/profile-scroll-match-umma-20261027` @ `c856491`, current main `c043219` read-only (main layout diverged), started from latest Bot A game branch `game/world-engine-egypt-banks-arrival-20261027-2000` @ `f0dec211`. Working branch `game/living-worlds-future-koi-gardens-20261027-2030`.
+- **Exact game/test paths:** `app/components/FutureCityScene.ts` (+63 lines, no deletions) and `scripts/game-future-koi-smoke.mjs` (new, +41 lines); implementation `10fe2747`, test `df86dba5`. No shared engine, collision, Egypt, profile, feed, navigation, Quran, GoLive or app page changes.
+- **Before/after:** Existing Future City towers/skyways/traffic/citizens/portal preserved. Restored six animated bioluminescent garden sites from prior Bot B Future Gardens branch, plus **two holographic koi per near-detail basin**. Garden draw LOD at 55/84/150 world units; decorative non-solid geometry only.
+- **Verified:** 30,619 direct V8 finite/alpha assertions against GitHub-fetched actual source across 140 camera samples; far garden draw 0, near sample 150, max sampled 166 callback draws; 8 preservation anchors and GitHub two-file game-only diff pass. Code commit `10fe2747` Vercel **preview READY**, https://1muslim-r3wacb7e7-elmiandco.vercel.app; test commit `df86dba5` previews still BUILDING at log-writing. Native Node smoke, physical device FPS and actual gameplay pending.
+- **World matrix:** Future **updated this shift**; Egypt/Nile/Great Pyramid, Moses, Jurassic, Hajj/Nabawi, Roman Judea, Space/Moon, Today/roofless Belt Boyz, shield all preserved. Earlier Jurassic river-life scene is on a separate Bot B branch and must be selectively integrated later. Meeting/Exit Meeting, server-authoritative shield, blaster/XP/voice improvements remain pending.
+- **Integration:** cherry-pick **only** `10fe2747` (and optional `df86dba5` smoke) into the latest site/game integration branch after layout comparison; do not merge historical full branch. Rollback those commits independently. No production or main merge/deploy. Bot A retains physics/LOD/portal and multiplayer authority; Bot B owns scene visuals/audio.
+
 ## 2026-10-27 · 20:04–20:07 CDT (America/Chicago) · Bot A / World Engine — Nile bank floor match + Great Pyramid arrival
 
 **Full handoff:** [Nile bank and pyramid arrival shift](shifts/2026-10-27-egypt-banks-arrival-2000.md) · [Bot B's Great Pyramid visual approach](shifts/2026-10-27-egypt-great-pyramid-approach-1930.md) · [coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
