@@ -1,5 +1,17 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-28 · 02:30 CDT (America/Chicago) · Bot B / Living Worlds — Jurassic aerial wildlife
+
+**Full handoff:** [Jurassic pterosaurs shift](shifts/2026-10-28-jurassic-pterosaurs-0230-b.md) · [Bot A Rome lion handoff](shifts/2026-10-28-rome-lion-0200-a.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Protected references:** `fix/profile-scroll-match-umma-20261027` @ `c856491` read-only; current main/frozen `SharedGameLobby.tsx` blob `dc1ac60b`, layout blob `106fb71f` identical. Main/frozen/newer protected site page, canvas app and fullscreen CSS differ; no site edits.
+- **Starting GAME source:** `game/living-worlds-future-sky-couriers-20261028-0130-b` @ `a5e62e51`. **Working branch:** `game/living-worlds-jurassic-pterosaurs-20261028-0230-b`. **Commits:** `6f4a7f03` new `JurassicPterosaurScene.ts`; `ffdd462d` minimal Jurassic-only `JurassicScene.ts` import/render; `a7c5703b` Node smoke; `e74cef4a` detailed handoff.
+- **Before → after:** Jurassic river, 38 dinosaurs, giant cave, forest, rock-city preserved; 14 deterministic animated pterosaurs added overhead with near/far detail and 315-unit culling. No combat, physics, audio, portals or non-game changes.
+- **Verification:** actual GitHub-fetched TS scene executed in V8 with type annotations removed: **12,565 assertions passed**, 1,200 poses + 1,200 camera views, maximum 36 draw callbacks, zero far-camera draws. GitHub comparison before docs: exactly two game files + one smoke script, three commits ahead/zero behind. **Native Node smoke, Next build, Vercel, browser/mobile FPS NOT RUN.**
+- **World matrix:** Jurassic **advanced**; Egypt/Nile, Moses, Rome/Jerusalem, Makkah/Madinah/Nabawi, Future, Space/Moon, Today/Belt Boyz **preserved**. Bot A's new Rome lion on separate branch **not yet integrated**.
+- **Integration:** selectively cherry-pick new pterosaur module and exact Jurassic-only call; never merge wholesale into protected site. Rollback by removing new module/call. Next: native build/mobile visual QA, another world slice, coordinate Bot A Rome lion.
+
+
 ## 2026-10-28 · 01:33 CDT (America/Chicago) · Bot B / Living Worlds — Future City aerial couriers
 
 **Full handoff:** [Future City courier shift](shifts/2026-10-28-future-sky-couriers-0130-b.md) · [Bot A Nile physics handoff](shifts/2026-10-28-long-nile-0000-a.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
