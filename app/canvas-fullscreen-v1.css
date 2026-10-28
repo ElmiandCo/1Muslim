@@ -1870,3 +1870,11 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 @media(max-width:700px){
 [data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]>div:first-child>div:first-child{transform:none!important;margin-bottom:4px!important;}
 }
+
+/* Keep the real profile navigation clickable in the open PROFILE header band. */
+@media(max-width:700px){
+[data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]{overflow:visible!important;position:relative!important}
+[data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]>div:first-child{overflow:visible!important;position:relative!important}
+[data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]>div:first-child>div:first-child{position:absolute!important;top:-100px!important;left:10px!important;right:10px!important;transform:none!important;margin-bottom:0!important;z-index:40!important}
+[data-workspace-page="6"] .canvas-profile-mirror>.canvas-native-body{overflow:visible!important}
+}
