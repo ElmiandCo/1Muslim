@@ -120,7 +120,7 @@ export default function SharedGameLobby(){
  const partedSeaWorldRef=useRef(false); const [partedSeaWorld,setPartedSeaWorld]=useState(false);
  const partedSeaState=useRef<SeaState|null>(null); const seaArrivalNotified=useRef(false);
  const egyptWorldRef=useRef(false);const [egyptWorld,setEgyptWorld]=useState(false);const egyptPortalCooldown=useRef(0);
- const propheticWorldRef=useRef(false); const [propheticWorld,setPropheticWorld]=useState(false); const enterPropheticWorld=()=>{futureWorldRef.current=false;setFutureWorld(false);local.current.world="Time of Muhammad ﷺ";propheticWorldRef.current=true;setPropheticWorld(true);setPicker(false);meetingSeatRef.current=null;setMeetingSeat(null);const p=local.current;p.x=0;p.z=115;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;setHint("Makkah circa 610 CE · Interpretive historical reconstruction");}; const exitPropheticWorld=()=>{propheticWorldRef.current=false;setPropheticWorld(false);local.current.world="Today";const p=local.current;p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;setHint("Returned to the main Games lobby.");};
+ const propheticWorldRef=useRef(false); const [propheticWorld,setPropheticWorld]=useState(false); const enterPropheticWorld=()=>{futureWorldRef.current=false;setFutureWorld(false);local.current.world="Time of Muhammad ﷺ";propheticWorldRef.current=true;setPropheticWorld(true);setPicker(false);meetingSeatRef.current=null;setMeetingSeat(null);const p=local.current;p.x=0;p.z=-195;p.y=1;p.yaw=Math.PI;p.flying=false;p.boost=false;setHint("Makkah circa 610 CE · Interpretive historical reconstruction");}; const exitPropheticWorld=()=>{propheticWorldRef.current=false;setPropheticWorld(false);local.current.world="Today";const p=local.current;p.x=0;p.z=0;p.y=terrain(0,0);p.yaw=Math.PI/2;p.flying=false;setHint("Returned to the main Games lobby.");};
  // Future is a selectable universe in this shared WebGL lobby, not a separate game.
  const jurassicWorldRef=useRef(false); const [jurassicWorld,setJurassicWorld]=useState(false);
  const enterJurassicWorld=()=>{futureWorldRef.current=false;setFutureWorld(false);propheticWorldRef.current=false;setPropheticWorld(false);jurassicWorldRef.current=true;setJurassicWorld(true);local.current.world="Jurassic";setPicker(false);setWorldMapOpen(false);const p=local.current;p.x=0;p.z=0;p.y=jurassicTerrain(0,0)+2;p.flying=false;p.boost=false;setHint("Jurassic World · Explore the prehistoric wilderness");};
@@ -504,6 +504,12 @@ export default function SharedGameLobby(){
       for(let i=0;i<24;i++){const x=Math.sin(i*2.4)*150,z=-480+Math.cos(i*1.3)*125;draw(vp,x,3,z,.7,6,.7,[.39,.26,.15]);draw(vp,x,7,z,5,3,5,[.18,.4,.21]);}
       // Camel silhouettes in both settlements.
       for(let i=0;i<22;i++){const medina=i>=11,idx=i%11,x=(idx-5)*18+45,z=(medina?-475:135)+(idx%3)*13;draw(vp,x,1.65,z,4,2,1.8,[.55,.34,.2]);draw(vp,x-.5,3.1,z,1.4,1.5,1.5,[.57,.36,.21]);draw(vp,x+2,2.7,z,.75,2,.7,[.55,.34,.2]);for(const leg of [-1,1])draw(vp,x+leg*1.25,.55,z,.45,1.1,.5,[.4,.25,.15]);}
+      // Spawn crossroads: north toward Madinah (-Z), south toward Makkah (+Z).
+      // The digital sign uses emissive-looking layered panels; readable labels are in the nearby HUD.
+      draw(vp,0,3,-195,.85,6,.85,[.25,.28,.3]);
+      draw(vp,0,6.1,-195,18,3.2,.7,[.04,.16,.14]);
+      draw(vp,0,6.1,-194.58,17.2,2.6,.12,[.12,.62,.43]);
+      for(const side of [-1,1])draw(vp,side*8.1,6.1,-194.4,.65,2.8,.18,[.75,.69,.33]);
       // Historical-world wayfinding: The game uses a compressed travel scale; actual Makkah–Madinah distance is much greater than 20 miles.
       draw(vp,12,2.7,-195,8,5,.3,[.32,.24,.14]);draw(vp,12,5.6,-195,9,.4,.5,[.8,.65,.36]);
       // Jerusalem route is intentionally closed; modern trucks are an explicitly anachronistic game barrier.
