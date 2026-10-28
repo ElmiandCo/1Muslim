@@ -10,6 +10,7 @@ import {
 } from "./AncientEgyptRiverScene";
 import {buildStaticGameCollisionIndex,type GameCollider} from "./gamePhysics";
 import {createEgyptDistrictColliders} from "./gameEgyptDistrictPhysics";
+import {createLongNilePalmColliders} from "./gameEgyptLongNilePhysics";
 import {renderExtendedEgyptNileTerrain} from "./gameEgyptNileExtension";
 export {EGYPT_NAV_BOUNDS} from "./gameEgyptNileExtension";
 
@@ -84,6 +85,8 @@ export function createAncientEgyptColliders():readonly GameCollider[]{
    x:x-2+k*1.35,z:z-2,hx:.55,hz:.55,bottom:.55,top:1.65
   });
  }
+ // Oasis palms stay solid even when their visuals are outside the LOD radius.
+ solids.push(...createLongNilePalmColliders());
  // Palace and market visuals have matching immutable solids.
  // The southern palace gate and central market lane remain open.
  solids.push(...createEgyptDistrictColliders());
