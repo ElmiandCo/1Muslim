@@ -15,6 +15,8 @@ import {GAME_SHIELD_DURATION_MS,gameShieldRemainingMs,gameShieldFade} from "./ga
 import {renderGameShieldAura,playGameShieldAudio} from "./gameHyperShieldAura";
 import {TODAY_PROP_COLLIDERS,PROPHETIC_COLLISION_INDEX,createTodayCollisionSource} from "./gameTodayColliders";
 import {ROMAN_PORTAL,ROMAN_BOUNDS,romanJudeaCollisionIndex,renderRomanJudea} from "./RomanJudeaScene";
+import {renderRomanArenaLion} from "./RomanArenaScene";
+import {createRomanLionState,updateRomanLion,romanLionLungeProgress} from "./gameRomanLionCombat";
 import {renderLunarResearchLife} from "./LunarResearchScene";
 import {renderHajjPilgrims,HISTORICAL_HAJJ_LAYOUT,TODAY_HAJJ_LAYOUT} from "./HajjPilgrimScene";
 import {renderNabawiCongregation} from "./NabawiCongregationScene";
@@ -92,7 +94,7 @@ export default function SharedGameLobby(){
  const arrivals=useRef<Map<string,number>>(new Map());const keys=useRef<Record<string,boolean>>({}),peerRef=useRef<Map<string,Player>>(new Map()),suitRef=useRef<Suit>("gold");
  const local=useRef<Player>({id:"",x:0,y:terrain(0,0),z:0,yaw:Math.PI/2,flying:false,boost:false,suit:"gold",seen:0});
  const combatChannel=useRef<{send:(args:{type:"broadcast";event:string;payload:unknown})=>Promise<unknown>}|null>(null);
- const projectiles=useRef<Array<{id:string;owner:string;x:number;y:number;z:number;vx:number;vy?:number;vz:number;life:number;power:number;prevX?:number;prevY?:number;prevZ?:number}>>([]); const lookPitch=useRef(0); const shootingPoseUntil=useRef(0);
+ const projectiles=useRef<Array<{id:string;owner:string;x:number;y:number;z:number;vx:number;vy?:number;vz:number;life:number;power:number;prevX?:number;prevY?:number;prevZ?:number}>>([]); const romanLion=useRef(createRomanLionState()); const lookPitch=useRef(0); const shootingPoseUntil=useRef(0);
  const recentDamage=useRef<{kind:"animal"|"blaster";at:number}[]>([]); const animalContact=useRef<Map<number,number>>(new Map()); const knockdownUntil=useRef(0); const damagedStructures=useRef<Map<string,number>>(new Map()); const structureHits=useRef<Map<string,{count:number;until:number}>>(new Map()); const BREAK_REPAIR_MS=300000; const lastShot=useRef(0); const autoFireTimer=useRef<ReturnType<typeof setInterval>|null>(null); const autoFirePointer=useRef<number|null>(null); const [downed,setDowned]=useState(false);
  const [meetingSeat,setMeetingSeat]=useState<number|null>(null); const meetingCamera=useRef({angle:0.65,distance:23,height:11}); const [selectedCouncilPlayer,setSelectedCouncilPlayer]=useState<string|null>(null); const meetingSeatRef=useRef<number|null>(null); const [meetingGesture,setMeetingGesture]=useState<"rest"|"hand"|"lean">("rest"); const [councilMembers,setCouncilMembers]=useState<Record<string,{name:string;gesture:string;joined:number}>>({}); const [councilChat,setCouncilChat]=useState<Array<{id:string;sender:string;text:string}>>([]); const [councilDraft,setCouncilDraft]=useState(""); const [councilChatOpen,setCouncilChatOpen]=useState(false); const [councilPanelOpen,setCouncilPanelOpen]=useState(false); const councilJoined=useRef(false); const meetingGestureRef=useRef<"rest"|"hand"|"lean">("rest"); const [combatShop,setCombatShop]=useState(false); const [nearMainStreetShop,setNearMainStreetShop]=useState(false); useEffect(()=>{const timer=setInterval(()=>{const p=local.current;setNearMainStreetShop(!jurassicWorldRef.current&&!futureWorldRef.current&&!propheticWorldRef.current&&!partedSeaWorldRef.current&&!egyptWorldRef.current&&Math.hypot(p.x-20,p.z+590)<35)},450);return()=>clearInterval(timer)},[]); const [storeTab,setStoreTab]=useState<"store"|"loadout">("store"); const [boostLevel,setBoostLevel]=useState(1);const [combatXp,setCombatXp]=useState(5000);const [weapon,setWeapon]=useState("pulse");const [shield,setShield]=useState(false);const [shieldLevel,setShieldLevel]=useState(1);const shieldUntil=useRef(0);const shieldImpactAt=useRef(-Infinity);const shieldReadyAt=useRef(0);const shieldTimer=useRef<ReturnType<typeof setTimeout>|null>(null);const [blasterLevel,setBlasterLevel]=useState(1);const [gameSettingsOpen,setGameSettingsOpen]=useState(false); const [chatAutoVisible,setChatAutoVisible]=useState(false); const chatAutoTimer=useRef<ReturnType<typeof setTimeout>|null>(null); const [chatClosing,setChatClosing]=useState(false); const showIncomingChat=useCallback(()=>{setChatClosing(false);setChatAutoVisible(true);if(chatAutoTimer.current)clearTimeout(chatAutoTimer.current);chatAutoTimer.current=setTimeout(()=>{setChatClosing(true);chatAutoTimer.current=setTimeout(()=>{setChatAutoVisible(false);setChatClosing(false)},350)},3000)},[]); useEffect(()=>()=>{if(chatAutoTimer.current)clearTimeout(chatAutoTimer.current)},[]);
  const [prayerMenuOpen,setPrayerMenuOpen]=useState(false);
@@ -316,6 +318,15 @@ export default function SharedGameLobby(){
    const damage=(kind:"animal"|"blaster")=>{if(meetingSeatRef.current!==null||gameShieldRemainingMs(now,shieldUntil.current)>0)return;recentDamage.current=recentDamage.current.filter(hit=>now-hit.at<=10000);recentDamage.current.push({kind,at:now});if(recentDamage.current.filter(hit=>hit.kind===kind).length>=3){recentDamage.current=[];p.x=egyptWorldRef.current?EGYPT_SPAWN.x:0;p.z=partedSeaWorldRef.current?SEA_SPAWN_Z:egyptWorldRef.current?EGYPT_SPAWN.z:0;p.y=partedSeaWorldRef.current?1:egyptWorldRef.current?EGYPT_SPAWN.y:terrain(0,0)+1;p.flying=false;p.boost=false;setDowned(false);knockdownUntil.current=now+2000;setHint(kind==="animal"?"🐾 Three animal attacks — respawned!":"💥 Three blaster hits — respawned!");}else setHint(`${kind==="animal"?"🐾 Animal attack":"💥 Blaster hit"} — ${recentDamage.current.filter(hit=>hit.kind===kind).length}/3 strikes in 10 seconds`);};
    for(const [id,until] of damagedStructures.current)if(Date.now()>=until)damagedStructures.current.delete(id);for(const [id,damage] of structureHits.current)if(Date.now()>=damage.until)structureHits.current.delete(id);
    for(const shot of projectiles.current){shot.prevX=shot.x;shot.prevY=shot.y;shot.prevZ=shot.z;shot.x+=shot.vx*dt;shot.y+=(shot.vy??0)*dt;shot.z+=shot.vz*dt;shot.life-=dt;if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const guarded=gameShieldRemainingMs(now,shieldUntil.current)>0;if(!guarded){damage("blaster");}else {shieldImpactAt.current=now;playGameShieldAudio("impact");setHint("🛡️ Shield absorbed the shot.");}}}
+   // Local Rome lion preview: one hit per real projectile, five hits to defeat,
+   // grounded 4x chase, 5-minute respawn. Server authority is NOT implemented.
+   if(romanWorldRef.current&&romeCityRef.current){
+     const lionEvent=updateRomanLion(romanLion.current,now,dt,p,projectiles.current);
+     if(lionEvent.attacked)damage("animal");
+     if(lionEvent.defeated)setHint("🦁 Arena lion defeated · Respawns in 5 minutes.");
+     else if(lionEvent.hits)setHint(`🦁 Lion hit ${romanLion.current.hits}/5 · Keep your distance!`);
+     else if(lionEvent.respawned)setHint("🦁 The arena lion has returned.");
+   }
    // Advance existing Moses NPCs and hit detection against the same aimed projectiles.
    if(partedSeaWorldRef.current&&partedSeaState.current){
      // Existing Moses soldier AI keeps moving, but cannot land hits during Hyper Defense.
@@ -490,6 +501,7 @@ export default function SharedGameLobby(){
       renderAncientEgyptReturnPortal(egyptDraw,p.x,p.z);
     }else if(romanWorldRef.current){
       renderRomanJudea(vp,draw,now,p,romeCityRef.current?"Rome":"Jerusalem");
+      if(romeCityRef.current){const lion=romanLion.current;renderRomanArenaLion((x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle),now,p,{x:lion.x,z:lion.z,heading:lion.heading,attackProgress:romanLionLungeProgress(lion,now),active:lion.alive});}
     }else if(propheticWorldRef.current){
       // A separate historically inspired Makkah environment, not the modern city geometry.
       for(let ix=-17;ix<=17;ix++)for(let iz=-17;iz<=17;iz++){const x=ix*46,z=iz*46;draw(vp,x,-.3,z,46,.6,46,[.61+.025*Math.sin(ix*2+iz),.48,.31]);}
