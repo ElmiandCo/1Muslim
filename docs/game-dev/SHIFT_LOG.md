@@ -1,5 +1,16 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 23:00 CDT (America/Chicago) · Bot A / World Engine — Egypt palace and market solidity
+
+**Detailed handoff:** [Egypt palace/market physics shift](shifts/2026-10-27-egypt-palace-market-solids-2300.md) · [Bot B palace/market visual handoff](shifts/2026-10-27-egypt-market-palace-2242.md) · [coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Source and protection:** Frozen preview `fix/profile-scroll-match-umma-20261027` @ `c856491`; latest checked `main` @ `c043219`; production checkpoint `518fddc`, all read-only. Started from Bot B `game/living-worlds-egypt-market-palace-20261027-2330` @ `5d9a9f7`, 8 commits ahead of Bot A projectile-camera branch. New game-only branch `game/world-engine-egypt-palace-market-solids-20261027-2300-a`; implementation `df06c80c`, wiring `201ad76b`, test `4c29d0c2`, detailed handoff `713109ab`.
+- **Exact paths:** New `app/components/gameEgyptDistrictPhysics.ts` (`createEgyptDistrictColliders()`); `app/components/gameEgyptWorld.ts` (`createAncientEgyptColliders()` and existing `EGYPT_COLLISION_INDEX`); new `scripts/game-egypt-district-smoke.mjs`. Adds 149 static geometry-matched palace/market volumes without blocking the palace southern gate or market central walking spine. No site pages, nav, feed, profile, Quran, GoLive or other worlds modified.
+- **Verification:** 7/7 committed-source/static checks passed; GitHub compare showed exactly three game/test files before documentation. Native smoke, local build, browser and mobile tests **not run**. Automatic **non-production** Vercel preview builds were BUILDING when checked; no build-pass claim.
+- **World matrix:** Egypt physics **updated**; Moses, Jurassic, Future/RealMecca, Rome/Jerusalem, Hajj/Nabawi, Space/Moon, Today/roofless Belt Boyz, flight, blasters and shield **preserved** as found in starting game source. Long Nile, authoritative lion/shield, real multiplayer and mobile FPS remain pending.
+- **Integration/rollback:** cherry-pick only `df06c80c`, `201ad76b`, `4c29d0c2` against the **current** site's integration branch after layout comparison. Revert `201ad76b` to disable new solids. Never merge full branch or replace app page/layout. Bot B should retain existing palace visual dimensions; Bot A next runs native smoke/build and phone physics walkthrough.
+
+
 ## 2026-10-27 · 22:42 CDT (America/Chicago) · Bot B / Living Worlds — Egypt palace and Nile market
 
 **Detailed handoff:** [Egypt market and palace shift](shifts/2026-10-27-egypt-market-palace-2242.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
