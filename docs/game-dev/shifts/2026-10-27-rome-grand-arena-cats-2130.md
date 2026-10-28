@@ -2,7 +2,7 @@
 
 **Shift:** 2026-10-27, 21:32 CDT (America/Chicago)  
 **Scope:** Game-only, non-production; Rome-specific visuals and a reusable lion *visual* adapter.  
-**Status:** Implemented and source-executed in V8; preview build pending as of first handoff. No native phone playtest.
+**Status:** Implemented and source-executed in V8; non-production preview **READY**. No native phone playtest.
 
 ## Provenance and no-regression gate
 
@@ -37,7 +37,7 @@
 - **Additional executed integrated-render test:** transpiled and ran both original and updated `renderRomanJudea()` function bodies in V8 with a stubbed static collision-index builder. Jerusalem draws **699 before and 699 after**, with exact primitive-by-primitive equality. At the new Rome arena center, **161 original draws versus 467 updated draws** (exactly 306 new arena draws), all transforms finite. This checks actual renderer wiring without claiming device gameplay.
 - **GitHub diff check:** only `app/components/RomanArenaScene.ts`, `app/components/RomanJudeaScene.ts`, `scripts/game-rome-arena-smoke.mjs` before docs.
 - **Node smoke:** committed, but **not executed natively** in a checked-out Node runtime. Run `node scripts/game-rome-arena-smoke.mjs`.
-- **Next.js preview:** non-production deployment `dpl_vXCcoaD8bZuWRxkL8PLYb54DEqbE` (`https://1muslim-lqpsiawb1-elmiandco.vercel.app`) **BUILDING** at first log; confirm status before reporting success.
+- **Next.js preview:** non-production deployment `dpl_vXCcoaD8bZuWRxkL8PLYb54DEqbE` is **READY** at https://1muslim-lqpsiawb1-elmiandco.vercel.app. Vercel logs recorded successful compilation in 16.3 seconds, type-check phase, static-page generation and final `Build Completed in /vercel/output [1m]`; existing autoprefixer CSS warnings are unrelated to this game-only diff. This is a build check, not physical gameplay validation.
 - **Not verified:** physical mobile FPS, navigation/entry with solid colliders, AI lion combat, collision parity, and arena sightlines from city gate. No invented performance numbers.
 - **Collision ownership:** New arena walls/seating are visual only; **Bot A must create solid ring/stands with clear gate openings, accessible routes and tested camera/terrain physics** before declaring the arena fully enterable. Existing Roman house/wall solids remain untouched. Cat models are non-solid decorative life.
 
