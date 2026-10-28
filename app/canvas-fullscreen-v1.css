@@ -1819,3 +1819,30 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 @media (min-width:701px){
  [data-workspace-page="6"] .canvas-vertical-portal{top:-56px!important;height:calc(100% + 56px)!important;min-height:0!important}
 }
+
+/* Mobile profile space recovery — two screenshot-highlighted dead zones.
+   Preserve the existing scrolling viewport and all profile/Umma controls. */
+@media (max-width:700px){
+ [data-workspace-page="6"] .canvas-vertical-portal{
+   top:-38px!important;
+   height:calc(100% + 38px)!important;
+   min-height:0!important;
+ }
+ [data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]>header{
+   margin-bottom:0!important;
+   padding-top:0!important;
+   padding-bottom:0!important;
+ }
+ [data-workspace-page="6"] .canvas-profile-mirror [role="tabpanel"] .canvas-native-profile{
+   padding-top:4px!important;
+   gap:6px!important;
+ }
+ [data-workspace-page="6"] .canvas-profile-mirror .canvas-native-profile [role="tablist"]{
+   margin-top:2px!important;
+   margin-bottom:2px!important;
+ }
+ [data-workspace-page="6"] .canvas-profile-mirror .canvas-native-profile h3{
+   margin-top:2px!important;
+   margin-bottom:2px!important;
+ }
+}
