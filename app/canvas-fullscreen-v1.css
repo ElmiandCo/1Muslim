@@ -1846,3 +1846,12 @@ header[class*="controlHeader"] [class*="headerActions"] a{
    margin-bottom:2px!important;
  }
 }
+
+/* Profile header: fit Everyone / My Profile controls into the previously unused
+   strip under PROFILE, while preserving the gallery viewport and scroll. */
+@media(max-width:700px){
+ [data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]{overflow:visible!important}
+ [data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]>div:first-child{overflow:visible!important}
+ [data-workspace-page="6"] .canvas-profile-mirror [role="tablist"][aria-label="Profile sections"]{justify-content:space-evenly!important}
+ [data-workspace-page="6"] .canvas-profile-mirror [role="tablist"][aria-label="Profile sections"]>button{flex:1 1 0!important;white-space:nowrap!important;font-weight:700!important}
+}
