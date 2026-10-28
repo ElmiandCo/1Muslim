@@ -74,6 +74,28 @@ export const EGYPT_PYRAMIDS=[
  {x:-275,z:235,base:43,height:32,stages:7}
 ] as const;
 
+/**
+ * Visual-only approach lanes focus the Nile docks, village and construction
+ * activity toward the existing Great Pyramid without relocating terrain,
+ * changing portal routes or inventing invisible collision geometry.
+ * The Egyptian construction tableau is interpretive, not a historical date.
+ */
+export const EGYPT_GREAT_PYRAMID=EGYPT_PYRAMIDS[0];
+export const EGYPT_GREAT_APPROACH_ROUTES=[
+ {id:"nile-limestone-route",from:{x:123,z:-210},to:{x:-91,z:-191},steps:27,width:6.2},
+ {id:"southern-visitor-route",from:{x:-28,z:112},to:{x:-112,z:-80},steps:26,width:5.2},
+ {id:"western-yard-route",from:{x:-250,z:-72},to:{x:-200,z:-113},steps:12,width:4.5}
+] as const;
+export const EGYPT_GREAT_APPROACH_TILES=EGYPT_GREAT_APPROACH_ROUTES.flatMap(route=>{
+ const dx=route.to.x-route.from.x,dz=route.to.z-route.from.z;
+ const length=Math.hypot(dx,dz)/route.steps;
+ return Array.from({length:route.steps},(_,i)=>{
+  const f=(i+.5)/route.steps;
+  return {route:route.id,x:route.from.x+dx*f,z:route.from.z+dz*f,
+   width:route.width,length:length*.84,angle:Math.atan2(dx,dz)};
+ });
+});
+
 /** Fixed geometry footprints only. Bot A must integrate with its physics
  * broadphase and terrain/riverbank colliders; visual boxes alone are NOT solid. */
 export function ancientEgyptSolidProps():EgyptSolid[]{
@@ -143,12 +165,40 @@ export function renderAncientEgyptRiverLife(draw:EgyptDraw,nowMs:number,playerX:
    draw(pyramid.x,level*h+h/2,pyramid.z,pyramid.base*scale,h,pyramid.base*scale,
     level%2?STONE:LIMESTONE);
   }
+  // Close-range stepped limestone coursing stays INSIDE the existing pyramid
+  // footprint. No new physical structure is implied by these shallow accents.
+  if(pyramid===EGYPT_GREAT_PYRAMID&&near2(pyramid.x,pyramid.z,playerX,playerZ,175)){
+   const h=pyramid.height/pyramid.stages;
+   for(let level=0;level<pyramid.stages;level++){
+    const size=pyramid.base*(1-level/pyramid.stages),half=size*.5;
+    const y=level*h+h*.76;
+    draw(pyramid.x,y,pyramid.z-half+.09,size*.9,.13,.12,STONE,.82);
+    draw(pyramid.x+half-.09,y,pyramid.z,.12,.13,size*.9,STONE,.82);
+   }
+  }
   // Diagonal interpretive ramp, its solid collision is not yet integrated.
   if(near2(pyramid.x,pyramid.z,playerX,playerZ,240)){
    for(let k=0;k<8;k++)draw(pyramid.x+pyramid.base*.56+k*3,k*.7+.3,
     pyramid.z+pyramid.base*.24,5,1.3,12,SAND);
   }
  }
+ // Low-profile stone/sand wayfinding lanes converge on the Great Pyramid.
+ // They are ground decals (height .03), not colliders, stairs or solid roads.
+ // Each segment is distance-culled independently for mobile draw budgets.
+ for(const tile of EGYPT_GREAT_APPROACH_TILES){
+  if(!near2(tile.x,tile.z,playerX,playerZ,105))continue;
+  draw(tile.x,.008,tile.z,tile.width,.025,tile.length,SAND,.68,tile.angle);
+  if(near2(tile.x,tile.z,playerX,playerZ,48))
+   draw(tile.x,.026,tile.z,tile.width*.56,.026,tile.length*.75,STONE,.21,tile.angle);
+ }
+ // Sparse windblown construction dust, not particles or physics objects.
+ if(near2(EGYPT_GREAT_PYRAMID.x,EGYPT_GREAT_PYRAMID.z,playerX,playerZ,110))
+  for(let i=0;i<8;i++){
+   const phase=t*.56+i*2.399963;
+   const x=-89+(i%4)*4+Math.sin(phase)*2.2;
+   const z=-178+Math.floor(i/4)*9+Math.cos(phase)*1.7;
+   draw(x,.35+(Math.sin(phase)+1)*.22,z,.55,.15,.58,SAND,.16);
+  }
  // Timber construction scaffolds, crossbeams and staged limestone.
  if(near2(-150,-190,playerX,playerZ,210)){
   for(let i=0;i<6;i++){
