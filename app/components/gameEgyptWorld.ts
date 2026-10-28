@@ -9,6 +9,7 @@ import {
  egyptRiverCenterX,type EgyptDraw
 } from "./AncientEgyptRiverScene";
 import {buildStaticGameCollisionIndex,type GameCollider} from "./gamePhysics";
+import {createEgyptDistrictColliders} from "./gameEgyptDistrictPhysics";
 
 export const MOSES_TO_EGYPT_PORTAL={x:0,z:-14,radius:6} as const;
 export const EGYPT_TO_MOSES_PORTAL={x:-28,z:170,radius:6} as const;
@@ -81,6 +82,9 @@ export function createAncientEgyptColliders():readonly GameCollider[]{
    x:x-2+k*1.35,z:z-2,hx:.55,hz:.55,bottom:.55,top:1.65
   });
  }
+ // Palace and market visuals have matching immutable solids.
+ // The southern palace gate and central market lane remain open.
+ solids.push(...createEgyptDistrictColliders());
  const portal=EGYPT_TO_MOSES_PORTAL;
  for(const side of [-1,1])solids.push({
   x:portal.x+side*5.2,z:portal.z,hx:.55,hz:.55,bottom:0,top:11
