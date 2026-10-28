@@ -74,6 +74,32 @@ const wall=physics.resolveHorizontalGameMovement(hutX-5,hutZ+8,hutX-5,hutZ+3,0,w
 ok(wall.blocked,"Hut wall stays solid");
 const roof=physics.resolveVerticalGameMovement(9,5,hutX,hutZ,world.EGYPT_COLLISION_INDEX);
 ok(roof.landedOnSolid&&Math.abs(roof.y-7.325)<.001,"Hut roof supports player feet");
+// All four limestone blocks rendered on EACH Nile dock must be solid.
+// This guards against a prior fourth-block collision hole while retaining
+// a walkable plank and the existing separate boat/worker visual animations.
+for(const dockZ of egypt.EGYPT_DOCKS){
+ const dockX=egypt.egyptRiverCenterX(dockZ)-egypt.EGYPT_RIVER_WIDTH/2-5;
+ const visible=[];
+ egypt.renderAncientEgyptRiverLife((x,y,z,sx,sy,sz)=>{
+  if(Math.abs(y-1.1)<1e-9&&Math.abs(sx-1.1)<1e-9&&
+     Math.abs(sy-1.1)<1e-9&&Math.abs(sz-1.1)<1e-9)visible.push({x,z});
+ },0,dockX,dockZ);
+ for(let k=0;k<4;k++){
+  const cargoX=dockX-2+k*1.35,cargoZ=dockZ-2;
+  ok(visible.some(v=>Math.abs(v.x-cargoX)<1e-8&&Math.abs(v.z-cargoZ)<1e-8),
+   "Limestone cargo block is actually visible on dock "+dockZ+" index "+k);
+  ok(world.EGYPT_COLLIDERS.some(b=>Math.abs(b.x-cargoX)<1e-8&&
+     Math.abs(b.z-cargoZ)<1e-8&&Math.abs(b.bottom-.55)<1e-8&&
+     Math.abs(b.top-1.65)<1e-8&&Math.abs(b.hx-.55)<1e-8),
+   "Every visible dock cargo block has matching solid geometry");
+  const walking=physics.resolveHorizontalGameMovement(cargoX,cargoZ-2.5,cargoX,cargoZ,.55,world.EGYPT_COLLISION_INDEX);
+  ok(walking.blocked&&walking.z<cargoZ-0.5,
+   "Cargo blocks walking entry even at boosted horizontal speed");
+  const landing=physics.resolveVerticalGameMovement(3,.8,cargoX,cargoZ,world.EGYPT_COLLISION_INDEX);
+  ok(landing.landedOnSolid&&Math.abs(landing.y-1.65)<1e-8,
+   "Cargo top supports descending players");
+ }
+}
 let draws=0;
 const bankSamples=[];
 const draw=(x,y,z,sx,sy,sz,color,alpha=1,angle=0)=>{
