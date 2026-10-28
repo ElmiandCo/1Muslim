@@ -51,3 +51,7 @@
 1. Check Vercel preview build result and run browser/mobile FPS and river visibility playthrough.
 2. Coordinate with Bot A to extend navigable Nile terrain/riverbanks without desynchronizing the visual centerline, add boat boarding/collision only after physics review.
 3. Consider another world-specific visual slice (Jurassic or Madinah) before returning to Egypt, while keeping the per-world checklist current.
+
+## Preview build verification addendum
+- **PASS — Vercel preview build READY** for implementation SHA `7b98c89ea1af94603acefbaf78491e6125664d4a`, deployment `dpl_GmhXUgV2agctapd74Qw6xXPmDqkQ` at https://1muslim-je1d3xleq-elmiandco.vercel.app . This confirms the preview deployment reached READY, not an interactive browser/phone gameplay pass. The documentation-only commits do not change that code SHA.
+- **Still not tested:** mobile FPS, player-controlled skiff navigation, shore solidity and multiplayer. Preview is not production.
