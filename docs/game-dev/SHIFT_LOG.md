@@ -1,5 +1,18 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-28 · 02:01 CDT (America/Chicago) · Bot A / World Engine — Rome grand arena solids + grounded lion combat prototype
+
+**Detailed handoff:** [02:00 Rome lion and arena physics](shifts/2026-10-28-rome-lion-0200-a.md) · [Bot B Future couriers handoff](shifts/2026-10-28-future-sky-couriers-0130-b.md) · [coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Protection:** frozen preview `fix/profile-scroll-match-umma-20261027` @ `c8564911`, user-locked site `8fa597b1`, main `c043219f` all inspected read-only. `app/page.tsx`, CanvasSecondaryApp and CSS differ across site refs: no app page/style copies. Starting GAME base `game/world-engine-long-nile-palm-solids-20261028-0100-a` @ `b47a208c`. Working branch `game/world-engine-rome-lion-20261028-0200-a`.
+- **Bot B coordination:** reviewed latest `game/living-worlds-future-sky-couriers-20261028-0130-b` @ `a5e62e51`; Future sky couriers remain a separate unmerged game-only change, **not lost** or falsely claimed integrated.
+- **Exact runtime paths:** restored `app/components/RomanArenaScene.ts` (grand arena/cats/lion renderer), `app/components/gameRomanArenaColliders.ts` (**117** static arena solids, open south gate), narrowly updated `app/components/RomanJudeaScene.ts` (Rome-only colliders and render calls), added `app/components/gameRomanLionCombat.ts` (ground-only 4× chase, short lunge, five consumed swept projectile hits, 5-minute respawn), and patched **four anchors only** in `app/components/SharedGameLobby.tsx` to reuse existing projectile and shield-aware damage logic. Added `scripts/game-roman-lion-smoke.mjs` and this game-only documentation. Code commits: `280d5ad9`, `8721ea52`, `0da0e08e`, `ed0a8947`, `bdf85507`, `d1ef7e4d`.
+- **Verified:** GitHub compare six game/test paths, no site files; **26 source-executed V8 assertions PASS**, including 117 finite arena colliders and clear southern entrance, 5-hit death, 300,000ms respawn, speed, swept hit, flying safety and game wiring. **Non-production Vercel preview READY** at `d1ef7e4d`: https://1muslim-b3vuwfdsv-elmiandco.vercel.app . Committed Node smoke **not executed**; native browser gameplay, phone FPS and multiplayer tests not done.
+- **Known limitations:** lion combat and Hyper Defense are **client-only**, not server-authoritative; no validated cross-player hit state, lion audio or navigation around all obstacles. This is a playable-code preview, not a proven gameplay playtest.
+- **World matrix:** Rome **advanced**; Jerusalem, Egypt/long Nile/palms, Moses, Jurassic, Future/RealMecca, Madinah/Nabawi/Hajj, Space/Moon and roofless Belt Boyz/Meeting **preserved**, not modified this shift.
+- **Integration/rollback:** never merge whole A branch into the protected site. Review and cherry-pick only new Rome modules and exact game-only hunks against then-current site layout; revert the Rome-only imports/calls and remove new files to roll back. **No production/main/frozen site mutation or promotion.** Next: native smoke, actual phone walkthrough, authoritative lion/shield design, and selective Bot B Future courier integration.
+
+
 ## 2026-10-28 · 00:55 CDT (America/Chicago) · Bot A / World Engine — Solid long-Nile oasis palms
 
 **Full handoff:** [Bot A oasis palm collision shift](shifts/2026-10-28-long-nile-palm-solids-0100-a.md) · [Bot B long-Nile scenery](shifts/2026-10-28-long-nile-oasis-0030-b.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
