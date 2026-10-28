@@ -305,8 +305,8 @@ export default function SharedGameLobby(){
    const walking=k.w||k.a||k.s||k.d;
    if(walking&&!drag.current&&Math.abs(lookPitch.current)>0.0005){
     const ease=1-Math.exp(-1.35*dt);
-    lookPitch.current*=1-ease;
-    if(Math.abs(lookPitch.current)<0.0005)lookPitch.current=0;
+    lookPitch.current+=(0.085-lookPitch.current)*ease;
+    if(Math.abs(lookPitch.current-0.085)<0.0005)lookPitch.current=0.085;
    }
    if(jurassicWorldRef.current){updateJurassicDinos(dt,now,p,()=>{if(gameShieldRemainingMs(now,shieldUntil.current)>0)return;p.x=0;p.z=0;p.y=jurassicTerrain(0,0)+2;p.flying=false;setHint("🦖 Dinosaur attack! Respawned in Jurassic World.");});for(const shot of projectiles.current){if(shot.life>0&&hitJurassicApex(now,shot.x,shot.z,shot.y)){shot.life=0;}}}
    if(meetingSeatRef.current!==null){const a=meetingSeatRef.current*Math.PI/6;p.x=-125+Math.cos(a)*15;p.z=-120+Math.sin(a)*15;p.y=45;p.yaw=a+Math.PI;p.flying=false;p.boost=false;}
@@ -543,7 +543,7 @@ export default function SharedGameLobby(){
     if(atmosphere<.97){const opacity=(1-atmosphere)*.7;for(let i=0;i<56;i++){const cx=155+Math.sin(i*12.9898)*((i%9)*135+140),cz=-27+Math.cos(i*8.321)*((i%11)*150+120),cy=175+Math.sin(i*3.1)*48;for(let j=0;j<3;j++){draw(vp,cx+Math.sin(j*2.3+i)*45,cy+j*9,cz+Math.cos(j*3.7+i)*55,95-j*15,18+j*6,60+j*12,[.94,.97,1],opacity);}}}
     if(ship.current.active){for(let j=1;j<=6;j++){const d=j*1600;draw(vp,ship.current.x+Math.sin(ship.current.heading)*d,ship.current.y+90,ship.current.z+Math.cos(ship.current.heading)*d,24+j*3,75+j*8,24+j*3,[1,.82,.28],.9);}}
     if(ship.current.inSpace){const elapsed=(now-ship.current.launchedAt)/1000,md=Math.max(110,110000-elapsed*5500),mx=p.x+Math.sin(ship.current.heading)*md,mz=p.z+Math.cos(ship.current.heading)*md;for(let i=0;i<22;i++){const a=i*2.39996,rr=120+((i*71)%1150);draw(vp,mx+Math.cos(a)*rr,p.y+420+Math.sin(a*1.8)*rr,mz-500+Math.sin(a)*120,75+i%5*17,14,75+i%5*17,[.48,.51,.57]);}const sd=Math.max(1800,220000-elapsed*5500),sx=p.x+Math.sin(ship.current.heading)*sd,sz=p.z+Math.cos(ship.current.heading)*sd;for(let i=0;i<16;i++){const a=i*Math.PI/8;draw(vp,sx+Math.cos(a)*5200,p.y+1800+Math.sin(a)*5200,sz,1300,800,1300,[1,.58,.12],.48);}}
-    for(const shot of projectiles.current){draw(vp,shot.x,shot.y,shot.z,.35,.35,.35,shot.power===2?[1,.35,.9]:[.18,1,.75]);draw(vp,shot.x-shot.vx*.014,shot.y,shot.z-shot.vz*.014,.17,.17,.17,[.8,1,.7],.55);}
+    for(const shot of projectiles.current){draw(vp,shot.x,shot.y,shot.z,.55,.55,.55,shot.power>=2?[1,.35,.9]:[.18,1,.75]);draw(vp,shot.x-shot.vx*.014,shot.y-(shot.vy??0)*.014,shot.z-shot.vz*.014,.3,.3,.3,[.8,1,.7],.75);}
     // Project the permanent BeltBoyz photo onto the table center in council view.
     const centerpiece=councilCenterpiece.current;
     if(centerpiece){const point=project(vp,[-125,46.3,-120],w,h);const nearCouncil=Math.hypot(p.x+125,p.y-46,p.z+120)<150;
