@@ -1,4 +1,5 @@
 // Jurassic scene for the existing SharedGameLobby WebGL engine. No external assets.
+import {renderJurassicPterosaurs} from "./JurassicPterosaurScene";
 export type JurassicDino={x:number;z:number;heading:number;predator:boolean;phase:number};
 export const JURASSIC_LIMIT=1080; // Double width and depth = four times the explorable area.
 export const GIANT_CAVE={x:650,z:420,radius:105};
@@ -82,5 +83,7 @@ export function drawJurassic(draw:(x:number,y:number,z:number,sx:number,sy:numbe
   draw(cx,7,cz-192,18,10,18,[.51,.37,.12]);
   draw(cx,14,cz-192,10,4,10,[.79,.64,.27]);
  }
+ // Render-only aerial wildlife; dinosaur AI, terrain, cave and collisions remain untouched.
+ renderJurassicPterosaurs(draw,now,playerX,playerZ);
 }
 export function jurassicBlocked(x:number,z:number){return (near(x,z,GIANT_CAVE.x,GIANT_CAVE.z,140)?false:jurassicRocks.some(r=>Math.hypot(x-r.x,z-r.z)<r.size*1.1))||jurassicTrees.some(t=>!near(t.x,t.z,GIANT_CAVE.x,GIANT_CAVE.z,145)&&Math.hypot(x-t.x,z-t.z)<2.1);}
