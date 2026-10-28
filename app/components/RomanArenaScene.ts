@@ -16,7 +16,7 @@ export function renderRomanGrandArena(paint:RomanArenaDraw,now:number,player:{x:
  const d=dist(ROMAN_GRAND_ARENA.x,ROMAN_GRAND_ARENA.z,player.x,player.z);
  if(d>315)return;
  const {x:cx,z:cz,outerX,outerZ}=ROMAN_GRAND_ARENA;
- const close=d<155,segments=close?48:24;
+ const close=d<155,segments=close?32:16;
  // Broad, open arena floor and accessible-looking southern gateway. Collision
  // remains Bot A's separate task: the visuals do not define walkable physics.
  paint(cx,.09,cz,130,.18,94,SAND);
