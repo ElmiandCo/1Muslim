@@ -4,7 +4,8 @@
 import assert from "node:assert/strict";
 import {
  EGYPT_BOUNDS,EGYPT_PALMS,EGYPT_WORKERS,EGYPT_BOATS,EGYPT_BIRDS,
- EGYPT_RIVER_WIDTH,EGYPT_PYRAMIDS,EGYPT_DOCKS,EGYPT_DOCK_CREWS,EGYPT_RIVER_WILDLIFE,
+ EGYPT_RIVER_WIDTH,EGYPT_PYRAMIDS,EGYPT_GREAT_PYRAMID,EGYPT_GREAT_APPROACH_ROUTES,
+ EGYPT_GREAT_APPROACH_TILES,EGYPT_DOCKS,EGYPT_DOCK_CREWS,EGYPT_RIVER_WILDLIFE,
  EGYPT_VILLAGE_PORTERS,EGYPT_IRRIGATED_PLOTS,egyptVillagePorterPose,
  egyptRiverCenterX,ancientEgyptSolidProps,egyptWorkerPose,egyptBoatPose,egyptDockWorkerPose,
  renderAncientEgyptRiverLife
@@ -98,5 +99,27 @@ ok(village.count>25&&village.count<1000,"Village NPCs and homes render within mo
 ok(fields.count>25&&fields.count<1000,"Irrigated fields render within mobile draw budget");
 ok(EGYPT_IRRIGATED_PLOTS.every(plot=>Math.hypot(plot.x+28,plot.z-170)>30),
  "Crop beds leave Egypt-to-Moses return portal untouched");
+// Great Pyramid focal paths are thin render-only wayfinding details.
+// They must never overlap the existing pyramid's physics footprint or Nile.
+ok(EGYPT_GREAT_PYRAMID===EGYPT_PYRAMIDS[0],"Original Great Pyramid remains the landmark");
+ok(EGYPT_GREAT_APPROACH_ROUTES.length===3,"Three distinct visual approaches");
+ok(EGYPT_GREAT_APPROACH_TILES.length===65,"Bounded 65-segment scenic tile budget");
+for(const tile of EGYPT_GREAT_APPROACH_TILES){
+ ok([tile.x,tile.z,tile.width,tile.length,tile.angle].every(Number.isFinite),"Approach tiles finite");
+ ok(tile.width>0&&tile.length>0&&tile.length<12,"Approach tile size bounded");
+ ok(tile.x>EGYPT_BOUNDS.minX&&tile.x<EGYPT_BOUNDS.maxX&&tile.z>EGYPT_BOUNDS.minZ&&tile.z<EGYPT_BOUNDS.maxZ,
+  "Approach tiles remain within existing world bounds");
+ ok(Math.abs(tile.x-EGYPT_GREAT_PYRAMID.x)>EGYPT_GREAT_PYRAMID.base*.5||
+    Math.abs(tile.z-EGYPT_GREAT_PYRAMID.z)>EGYPT_GREAT_PYRAMID.base*.5,
+  "Ground lanes do not cross the Great Pyramid collider");
+ if(tile.route==="nile-limestone-route")
+  ok(tile.x<egyptRiverCenterX(tile.z)-EGYPT_RIVER_WIDTH/2-8,"Nile approach stays on dry western bank");
+}
+for(const [x,z] of [[-145,-145],[-55,-196],[-75,-5],[-225,-90],[125,-210]]){
+ const scene=capture(10000,x,z);
+ ok(scene.count>15&&scene.count<1000,"Great Pyramid approach draw budget remains mobile bounded");
+}
+ok(ancientEgyptSolidProps().length===props.length,
+ "Scenery does not add phantom colliders or alter existing solid count");
 console.log("PASS Ancient Egypt riverlife smoke:",checks,"assertions; bank draws",bank.count,
  "construction draws",construction.count,"far draws",far.count);
