@@ -1,5 +1,16 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-28 · 00:30 CDT (America/Chicago) · Bot B / Living Worlds — Long Nile oasis life
+
+**Full handoff:** [Long Nile oasis visual shift](shifts/2026-10-28-long-nile-oasis-0030-b.md) · [Bot A long Nile terrain handoff](shifts/2026-10-28-long-nile-0000-a.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Source/contract:** protected `fix/profile-scroll-match-umma-20261027` read-only; current main and frozen lobby/layout blobs match, but `app/page.tsx` differs. Started from latest Bot A long Nile game branch `game/world-engine-nile-long-banks-20261028-0000-a` @ `7a5b8caf`. Working branch `game/living-worlds-long-nile-oasis-20261028-0030-b`.
+- **Exact game paths:** new `app/components/AncientEgyptLongNileLifeScene.ts` (`1835ed27`); `app/components/SharedGameLobby.tsx` (+2 Egypt-only import/render lines, `09b6674c`); new `scripts/game-egypt-long-nile-life-smoke.mjs` (`881be0e3`). No site files, other world code or Bot A physics changed.
+- **Before → after:** the extended Z ±1700 Egypt terrain now gets 64 distant-bank palms with swaying fronds, 24 reed beds, 8 bobbing skiffs and 16 herons. All are deterministic visual-only LOD props outside central Z ±520; old pyramids, docks, palace, markets, portals and fisheries remain.
+- **Verification:** actual committed source executed in V8; **600 camera checks, 900 boat-pose checks PASS**, 0 invalid draws, 0 central-region draws, 0 out-of-range instances, max 99 draw callbacks in synthetic sampled views. GitHub diff before tests/docs exactly 2 game files. **Native Node, build, browser, mobile FPS, boat controls and physical collisions NOT RUN.**
+- **World matrix:** Egypt **advanced**; Moses, Jurassic, Rome/Jerusalem, Makkah/Madinah/Nabawi, Future/RealMecca, Space/Moon/Blessed Chambers, Today/roofless Belt Boyz **preserved**.
+- **Integration/rollback:** selectively cherry-pick `1835ed27` and only the two Egypt render/import lines of `09b6674c`, optionally `881be0e3` test, against current game integration branch. Never replace the full site lobby/page/layout. Remove import/call/helper to roll back. Bot A owns river/palm solidity and physics; Bot B next targets collision-aligned settlement scenery and another world.
+
 ## 2026-10-27 · 23:00 CDT (America/Chicago) · Bot A / World Engine — Egypt palace and market solidity
 
 **Detailed handoff:** [Egypt palace/market physics shift](shifts/2026-10-27-egypt-palace-market-solids-2300.md) · [Bot B palace/market visual handoff](shifts/2026-10-27-egypt-market-palace-2242.md) · [coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
