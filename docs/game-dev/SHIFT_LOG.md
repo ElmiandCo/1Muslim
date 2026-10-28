@@ -1,5 +1,17 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-28 · 00:55 CDT (America/Chicago) · Bot A / World Engine — Solid long-Nile oasis palms
+
+**Full handoff:** [Bot A oasis palm collision shift](shifts/2026-10-28-long-nile-palm-solids-0100-a.md) · [Bot B long-Nile scenery](shifts/2026-10-28-long-nile-oasis-0030-b.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Source/contract:** protected preview `c856491`, current main `c043219`, frozen production `518fddc` inspected read-only. Main's `app/page.tsx` diverges; layout unchanged. Started from latest Bot B `game/living-worlds-long-nile-oasis-20261028-0030-b` @ `ea5ae7f`; new dedicated `game/world-engine-long-nile-palm-solids-20261028-0100-a`.
+- **Exact changed game paths:** new `app/components/gameEgyptLongNilePhysics.ts` (`b50c95f`); `app/components/gameEgyptWorld.ts` (`8275b9b`); new `scripts/game-egypt-long-nile-palm-solids-smoke.mjs` (`5c590cf`). Plus only game-dev documentation. No site/UI/lobby edits.
+- **Before → after:** Bot B's 64 extended-Nile palms were visual-only; now all 64 have static, render-matched solid trunks, indexed independent of LOD. Walking/low flight cannot cross trunks; high flight and downward landing still work. Fronds, birds, reeds, boats remain decorative.
+- **Verification:** **394 PASS** source-executed V8 checks on fetched actual palm, collider and movement helper bodies; GitHub compare confirmed exactly 3 game/test paths before docs. **PENDING** automatic preview build at test commit when checked; native Node smoke, Next.js build, browser/mobile playtest and multiplayer authority **NOT RUN**. See detailed log for exact coverage and limitations.
+- **World matrix:** Ancient Egypt **updated**; Moses, Jurassic, Rome/Jerusalem, RealMecca/Madinah/Nabawi, Future, Space/Moon, Today/roofless Belt Boyz **preserved**. Lion authority, server shield, mobile movement and meeting Exit remain pending.
+- **Integration/rollback:** cherry-pick only `b50c95f` + `8275b9b` (optional `5c590cf`) onto a newly audited site integration branch already containing B's visual scene. Revert wiring `8275b9b` to roll back; never merge whole branch or deploy to production. Bot B should keep palm coordinates/heights in sync; Bot A next runs native smoke and phone gameplay tests.
+
+
 ## 2026-10-28 · 00:30 CDT (America/Chicago) · Bot B / Living Worlds — Long Nile oasis life
 
 **Full handoff:** [Long Nile oasis visual shift](shifts/2026-10-28-long-nile-oasis-0030-b.md) · [Bot A long Nile terrain handoff](shifts/2026-10-28-long-nile-0000-a.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
