@@ -5,7 +5,7 @@
  * No site components, global physics, or other world scenes are changed.
  */
 import {
- EGYPT_BOUNDS,EGYPT_DOCKS,EGYPT_PALMS,EGYPT_PYRAMIDS,EGYPT_RIVER_WIDTH,
+ EGYPT_BOUNDS,EGYPT_DOCKS,EGYPT_PALMS,EGYPT_PYRAMIDS,EGYPT_RIVER_WIDTH,EGYPT_SPAWN,
  egyptRiverCenterX,type EgyptDraw
 } from "./AncientEgyptRiverScene";
 import {buildStaticGameCollisionIndex,type GameCollider} from "./gamePhysics";
@@ -13,6 +13,10 @@ import {buildStaticGameCollisionIndex,type GameCollider} from "./gamePhysics";
 export const MOSES_TO_EGYPT_PORTAL={x:0,z:-14,radius:6} as const;
 export const EGYPT_TO_MOSES_PORTAL={x:-28,z:170,radius:6} as const;
 export const EGYPT_MOSES_RETURN={x:0,y:1,z:-48} as const;
+/** Face the existing Great Pyramid immediately on arrival from Moses's world. */
+export const EGYPT_GREAT_PYRAMID_ARRIVAL_YAW=Math.atan2(
+ EGYPT_PYRAMIDS[0].x-EGYPT_SPAWN.x,EGYPT_PYRAMIDS[0].z-EGYPT_SPAWN.z
+);
 
 /** Physical arch supports and lintels; the middle remains open for travel. */
 export const MOSES_PORTAL_COLLIDERS:readonly GameCollider[]=[-14,-2743+13].flatMap(z=>[
@@ -94,12 +98,25 @@ export function renderAncientEgyptTerrain(draw:EgyptDraw,playerX:number,playerY:
   const z=EGYPT_BOUNDS.minZ+(i+.5)*segmentDepth;
   if(Math.abs(z-playerZ)>radius+segmentDepth)continue;
   const riverX=egyptRiverCenterX(z);
-  const westEnd=riverX-EGYPT_RIVER_WIDTH/2;
-  const eastStart=riverX+EGYPT_RIVER_WIDTH/2;
+  // Match the visible banks to egyptTerrainFloor's six-metre transition:
+  // the old flat sand slabs covered half the slope, hiding players' feet.
+  const outerBank=EGYPT_RIVER_WIDTH/2+3;
+  const westEnd=riverX-outerBank,eastStart=riverX+outerBank;
   const westWidth=westEnd-EGYPT_BOUNDS.minX;
   const eastWidth=EGYPT_BOUNDS.maxX-eastStart;
   draw(EGYPT_BOUNDS.minX+westWidth/2,-.25,z,westWidth,.5,segmentDepth+.05,[.78,.61,.37]);
   draw(eastStart+eastWidth/2,-.25,z,eastWidth,.5,segmentDepth+.05,[.81,.65,.4]);
+  // Near the Nile, use three low terraces per bank (maximum surface-height
+  // error ~0.17m); far away, one strip keeps the silhouette at lower draw cost.
+  // These are visuals only: the continuous terrain-floor function owns physics.
+  const bands=Math.abs(z-playerZ)<155&&Math.abs(riverX-playerX)<200?3:1;
+  const bandWidth=6/bands;
+  for(const side of [-1,1])for(let band=0;band<bands;band++){
+   const distance=outerBank-(band+.5)*bandWidth;
+   const x=riverX+side*distance;
+   const top=egyptTerrainFloor(x,z);
+   draw(x,top-.12,z,bandWidth+.02,.24,segmentDepth+.05,[.69,.55,.33]);
+  }
   draw(riverX,-1.17,z,EGYPT_RIVER_WIDTH,.34,segmentDepth+.05,[.53,.45,.31]);
   // Bot B draws animated water within 230m; maintain the Nile silhouette
   // beyond that range for players viewing the landscape from altitude.
