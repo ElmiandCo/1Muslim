@@ -37,7 +37,7 @@
 | Render draw budget (garden only) | **PASS:** 0 garden draw calls at far coordinates (1200,1200); 150 at sample (-72,0); **max 166** garden calls across sampled camera positions. These are *renderer callback counts*, not measured WebGL GPU draw calls or FPS. |
 | Koi | **PASS:** 4 visible koi at (-72,0) because two basins are within the 55-unit detail radius (2 per basin). No collision, damage, server, or audio behavior introduced. |
 | Preservation | **PASS:** 8 original Future City source anchors intact (bounds, portal, towers, skyways, floor helper, traffic, citizens, exit). GitHub compare from Bot A base: **only two game/test paths** changed before documentation. |
-| Preview build | The code-only commit `10fe2747` auto-generated a **READY non-production Vercel preview**: https://1muslim-r3wacb7e7-elmiandco.vercel.app . The later smoke-test commit `df86dba5` had previews **BUILDING** at last status check. This does not prove mobile visuals/FPS. |
+| Preview build | The code-only commit `10fe2747` auto-generated a **READY non-production Vercel preview**: https://1muslim-r3wacb7e7-elmiandco.vercel.app . The later smoke-test commit `df86dba5` also reached **READY** at https://1muslim-1yszgsegu-elmiandco.vercel.app (non-production target null; build completed with existing CSS/webpack warnings). This does not prove mobile visuals/FPS. |
 | Native checkout smoke and physical device | **NOT VERIFIED:** V8 source test ran, but the checked-out Node smoke file and real iPhone/Android walkthrough were not executed here. |
 | Multiplayer / shield authority | **NOT ADDRESSED:** server-authoritative Hyper Defense remains unverified; this shift changes only Future City visuals. |
 
