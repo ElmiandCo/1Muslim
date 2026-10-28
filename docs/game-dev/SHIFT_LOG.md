@@ -1,5 +1,17 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 23:31 CDT (America/Chicago) · Bot B / Living Worlds — Nile fishing landings and skiffs
+
+**Full handoff:** [Nile fisheries shift](shifts/2026-10-27-egypt-nile-fisheries-2331.md) · [Bot A coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Baseline and source:** protected `fix/profile-scroll-match-umma-20261027` @ `c856491` unchanged; main read-only checked and divergent from frozen site page; starting game branch `game/living-worlds-egypt-market-palace-20261027-2330` @ `5d9a9f79`.
+- **Game-only working branch:** `game/living-worlds-egypt-nile-fisheries-20261027-2350`. **Code commits:** `a223315b` new `AncientEgyptNileJourneyScene.ts`, `7b98c89e` two-line Egypt-only renderer integration; handoff `e1ce93f6`.
+- **Before/after:** existing Nile scenery now gains six fishing/mooring stations, reedbeds, faceless fishermen and nets, three small animated skiffs and current glints; retains existing boats, palace, market, Great Pyramid and return portal. The **longer navigable river and boat physics are NOT done**; no physics/portal changes.
+- **Verification:** 600 actual-source-executed V8 camera samples, 900 skiff pose checks, max 51 draw callbacks, no invalid geometry/alpha, no central-channel intrusion, zero far draws. GitHub diff **only two game files**, new helper and two import/call lines. Vercel preview build observed BUILDING at shift log time; no browser/mobile gameplay test yet.
+- **Integration:** cherry-pick only game commits `a223315b` + `7b98c89e` or targeted two-line import/call; never overwrite the current site lobby/page/layout. Bot A owns bank/boat physics and authoritative combat. **Production/main untouched.**
+- **World matrix:** Egypt updated; Moses/Parted Sea, Muhammad-era Mecca/Madinah/Nabawi, Rome/Jerusalem, Jurassic, Future/RealMecca, Today/Belt Boyz, Space/Moon all preserved unchanged this shift.
+
+
 ## 2026-10-27 · 22:42 CDT (America/Chicago) · Bot B / Living Worlds — Egypt palace and Nile market
 
 **Detailed handoff:** [Egypt market and palace shift](shifts/2026-10-27-egypt-market-palace-2242.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
