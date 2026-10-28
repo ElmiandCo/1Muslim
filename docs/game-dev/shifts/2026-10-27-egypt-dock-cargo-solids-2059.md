@@ -31,7 +31,7 @@
 | Direct V8 evaluation of GitHub-fetched `resolveHorizontalGameMovement` and `resolveVerticalGameMovement` with only TS type annotations removed | **PASS:** 24/24 walking-block and landing-height checks across all cargo cubes |
 | Scene visual source parity | **PASS:** verified four visible cargo blocks per dock, matching all twelve static volumes |
 | Full native Node smoke script | **Not run** (no repository checkout/dependencies in this tool environment) |
-| Vercel non-production preview | [Preview deployment](https://1muslim-kiqqct5wh-elmiandco.vercel.app), `dpl_3w8gvUFcKqnDWxC8YmHScAkUMS4H`; **BUILDING when recorded**, verify READY separately |
+| Vercel non-production preview | [Preview deployment](https://1muslim-kiqqct5wh-elmiandco.vercel.app), `dpl_3w8gvUFcKqnDWxC8YmHScAkUMS4H`; **READY verified at 21:00 CDT** (Next.js compiled, type checks completed, 101/101 static pages generated; existing CSS warnings) |
 | Physical mobile FPS and player walk/landing | **Pending** |
 | Shield server authority and meeting exit UX | **Still pending**; no claim of implementation |
 
