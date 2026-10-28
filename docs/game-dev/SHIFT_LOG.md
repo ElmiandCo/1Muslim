@@ -865,3 +865,14 @@
 5. Coordinate with Bot B on Future City garden details and Jurassic river-life integration; preserve independent modules. Remaining requested mosques, Hajj NPCs, hand persistence, shield, blaster reliability, voice indicators and XP store are **not implemented by this shift**.
 
 **Cross-reference:** Bot B handoff above; [Game master brief #126](https://github.com/ElmiandCo/1Muslim/issues/126); [implementation diff](https://github.com/ElmiandCo/1Muslim/commit/e37c717270eaf707705b62fabea9203ea48c09c7).
+
+
+---
+
+## 2026-10-27 · 22:01–22:05 CDT · Game Bot A — Rome arena solid physics
+
+**Protected source:** `fix/profile-scroll-match-umma-20261027` @ `c856491131bb0c8056693652f8e5e58a26836831`; **read-only current main:** `c043219f7a3eeb8e1529538013e97f311a3b938a`; **game parent:** `game/world-engine-projectiles-camera-20261027-2240` @ `8dc8b2f59b8474323b78ea886b3720dc5207b4ba`; **Bot B reviewed:** `game/living-worlds-rome-egypt-build-20261027-2205` @ `e1f9fd077303a7b850dbfe747fbf8accd5105674`.
+
+**Working branch:** `game/world-engine-rome-arena-solids-20261027-2200-a`. **Code/test SHA:** `69c14cfd2f8ded24bfd958345233b35296e9c213`. **Game-only changes:** new `RomanArenaScene.ts` and `romanLionCombatRules.ts` selectively ported from Bot B, new `gameRomanArenaColliders.ts` (117 indexed Rome-only solid arena pillars/seats/gate markers), targeted `RomanJudeaScene.ts` wiring, and two game-only Node smoke scripts. Existing shared lobby and all non-game paths untouched. **Source-executed V8 tests:** south entrance open, east wall solid, Jerusalem isolated, original portal retained, five-hit/5-minute lion rule behavior. **Vercel preview build:** READY at `dpl_DkeaNcMEHbdMtAtdNxwkZphG2SWR`, TypeScript and Next.js build passed; native Node smoke, mobile gameplay, authoritative lion combat and multiplayer **not verified**. **No production deployment.**
+
+**Detailed mandatory handoff, per-world status, exact commits, dependency/performance notes, rollback and next-shift instructions:** [2026-10-27 Rome arena solids](shifts/2026-10-27-rome-arena-solids-2200-a.md). Bot B owns arena visuals and NPCs; Bot A owns colliders, lion authoritative combat and Nile terrain. Do not merge the old app snapshot; selectively apply only game-only paths to the then-current site branch.
