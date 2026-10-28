@@ -1,5 +1,16 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 20:04–20:07 CDT (America/Chicago) · Bot A / World Engine — Nile bank floor match + Great Pyramid arrival
+
+**Full handoff:** [Nile bank and pyramid arrival shift](shifts/2026-10-27-egypt-banks-arrival-2000.md) · [Bot B's Great Pyramid visual approach](shifts/2026-10-27-egypt-great-pyramid-approach-1930.md) · [coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Baseline:** frozen `fix/profile-scroll-match-umma-20261027` @ `c856491`, main @ `c043219` read-only; started from latest Bot B game branch @ `b5809dd`. Branch `game/world-engine-egypt-banks-arrival-20261027-2000`.
+- **Exact game/test paths:** `app/components/gameEgyptWorld.ts` (Nile banks now render with near/far terrace LOD sampled from the existing physical floor, plus calculated Great Pyramid arrival yaw); `app/components/SharedGameLobby.tsx` (two narrow portal-heading substitutions); `scripts/game-egypt-integration-smoke.mjs` (floor/render/LOD/heading regressions). Code commits `d832435f`, `d2f020e8`, `8152a545`.
+- **Before/after:** flat sand used to cover half of the 6m bank slope; nearby player feet could appear buried. Now dry sand stops at slope boundary and height-sampled banks follow collision floor; the Moses→Egypt arrival camera faces the existing Great Pyramid instead of defaulting north. No portal/physics index, scenery NPCs, shield, meeting, or site UI changes.
+- **Verified:** 1,613 V8 assertions against actual fetched source function bodies (TypeScript parameter types removed only), draw budgets spawn 130 / bank 182 / high-altitude 300 / out-of-bounds 0; GitHub compare confirms **only three game/test paths**. Preview build `dpl_G5LxNcXCxPZSjz4zvZGneNrqi9yg` created and awaiting verification. Native full Node smoke, mobile visual/FPS and authoritative multiplayer shield remain unverified.
+- **Integration:** cherry-pick game-only commits into the then-current site/game branch after checking layout contract; never merge the old app page. Rollback these three commits if needed. **No production/main/frozen-preview changes.**
+- **World coverage:** Ancient Egypt updated; Moses, Jurassic, Future, Makkah/Madinah/Nabawi, Roman Judea, Space/Moon, Today/Belt Boyz, Hyper Defense preserved. Bot B owns Egypt visual scene and meeting UX; Bot A owns portal/terrain/physics and authoritative multiplayer design.
+
 ## 2026-10-27 · 19:26–19:30 CDT (America/Chicago) · Bot B / Living Worlds — Great Pyramid focal approaches
 
 **Full handoff:** [Egypt Great Pyramid approach shift](shifts/2026-10-27-egypt-great-pyramid-approach-1930.md) · [Bot A roof-edge handoff](shifts/2026-10-27-roof-edge-release-1900.md) · [coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
