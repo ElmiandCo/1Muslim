@@ -30,7 +30,8 @@
 - **PASS:** GitHub compare to Bot B starting branch shows **only two game/test files** changed in implementation; no site or scene files changed.
 - **PASS:** `app/page.tsx` blob on this branch matches frozen site preview exactly and differs from newer `main` as expected.
 - **Committed but not executed in full checkout:** extended `node scripts/game-swept-vertical-smoke.mjs` with departure/traversal and indexed-parity cases. The existing script includes 100 deterministic indexed/array comparisons. The environment has connector GitHub access but no network checkout, so do not claim full suite success.
-- **Preview build:** Vercel non-production deployment `dpl_91urCJhNY5CRJvEzvQ97eC7BgwtJ`, https://1muslim-96vy3by96-elmiandco.vercel.app, created at implementation/test SHA `9c02c355`. At documentation time build was **BUILDING**; verify status before claiming READY.
+- **Preview build:** Vercel non-production deployment `dpl_91urCJhNY5CRJvEzvQ97eC7BgwtJ`, https://1muslim-96vy3by96-elmiandco.vercel.app, created at implementation/test SHA `9c02c355`. **PASS / READY**, verified by Vercel deployment status. Build logs show successful Next.js compilation (10.8s), TypeScript/lint stage completed and 101/101 static pages generated; existing unrelated CSS autoprefixer and edge runtime warnings remain. No production alias.
+- **Read-only production check:** newest three production-targeted deployments for current main were reported ERROR; no production deployment was modified or triggered by this shift. Their causes were not investigated because site code is out of game scope.
 - **Unverified:** real mobile/desktop ledge walk, rooftop physics during low FPS, WebGL rendering, authoritative multiplayer shield, physical device FPS, full TypeScript/build status until deployment completes.
 
 ## Per-world preservation and next work
