@@ -1,5 +1,16 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 22:42 CDT (America/Chicago) · Bot B / Living Worlds — Egypt palace and Nile market
+
+**Detailed handoff:** [Egypt market and palace shift](shifts/2026-10-27-egypt-market-palace-2242.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Base:** `game/muhammad-madinah-midway-sign-20261027-2300` @ `6c915ddc`; protected `fix/profile-scroll-match-umma-20261027` unchanged; main `app/page.tsx` differs from baseline and was **not** touched.
+- **Branch:** `game/living-worlds-egypt-market-palace-20261027-2330`. **Code commits:** `2289a216`, `40de5306`, `e699726c`; handoff `4c4a00db`.
+- **Changed:** new `app/components/AncientEgyptMarketPalaceScene.ts` with open-gate mudbrick palace, columned courtyard, water garden, 5×3 Nile market with walking lane, faceless traders, animated cats and bounded LOD. Exactly two lines added to `SharedGameLobby.tsx` to import and render only in Ancient Egypt. No other game worlds, site UI, main or production touched.
+- **Verification:** 11 static source/geometric checks passed; GitHub compare showed only two game files changed before documentation. **Build, browser, physics and mobile FPS NOT run**. All new structures visual-only; Bot A must integrate solids while preserving gate, market lane and riverbanks.
+- **Integration:** cherry-pick only the three game implementation commits or targeted new helper + two-line call; never merge full lobby or page into site. Preserve every world and portal. Long navigable Nile remains pending.
+
+
 ## 2026-10-27 · 20:59 CDT (America/Chicago) · Bot A / World Engine — Nile dock cargo solids parity
 
 **Full handoff:** [Egypt dock cargo collision shift](shifts/2026-10-27-egypt-dock-cargo-solids-2059.md) · [Bot B 20:30 Future koi](shifts/2026-10-27-future-koi-gardens-2030.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
