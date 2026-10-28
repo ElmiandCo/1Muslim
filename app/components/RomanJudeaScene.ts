@@ -1,6 +1,7 @@
 // Original Roman Judea geometry recovered from elite/roman-judea-world.
 // Interpretive architecture; no depictions of prophets. LOD does not affect collision.
 import {buildStaticGameCollisionIndex,type GameCollider} from "./gamePhysics";
+import {renderRomanGrandArena,renderRomanCats} from "./RomanArenaScene";
 export const ROMAN_PORTAL={x:0,z:-90,radius:7} as const;
 export const ROMAN_BOUNDS={minX:-650,maxX:650,minZ:-650,maxZ:650} as const;
 export type RomanCity="Jerusalem"|"Rome";
@@ -63,4 +64,5 @@ export function renderRomanJudea(vp:number[],draw:RomanDraw,now:number,player:{x
   if(dist<55){paint(x-1.8+sway,6.6,z,2.5,2.5,3,[.32,.46,.24]);paint(x+1.6+sway,6.5,z,2.6,2.7,3,[.28,.42,.22]);
    for(let j=0;j<3;j++)paint(x+(j-1)*1.7,.35,z+3,1,.65,1,[.36,.43,.21]);}
  }
+ if(inRome){renderRomanGrandArena(paint,now,player);renderRomanCats(paint,now,player);}
 }
