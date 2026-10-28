@@ -488,8 +488,8 @@ export default function SharedGameLobby(){
       // A separate historically inspired Makkah environment, not the modern city geometry.
       for(let ix=-17;ix<=17;ix++)for(let iz=-17;iz<=17;iz++){const x=ix*46,z=iz*46;draw(vp,x,-.3,z,46,.6,46,[.61+.025*Math.sin(ix*2+iz),.48,.31]);}
       for(let i=0;i<100;i++){const a=i*2.399963,r=320+(i%9)*30,x=Math.cos(a)*r,z=Math.sin(a)*r,h=25+Math.abs(Math.sin(i*1.91))*65;draw(vp,x,h*.5,z,26,h,30,[.48,.38,.29]);draw(vp,x,h*.82,z,15,h*.36,18,[.58,.47,.36]);}
-      // Kaaba: simple stone cuboid and dark drapery; no modern mosque expansion.
-      draw(vp,0,5,0,13,10,11,[.065,.065,.067]);draw(vp,0,7.5,0,13.1,.65,11.1,[.72,.56,.24]);draw(vp,0,.12,0,58,.22,56,[.73,.64,.47]);
+      // Interpretive early Kaaba: exposed warm reddish-brown masonry rather than today's black kiswah; historical appearance is uncertain.
+      draw(vp,0,5,0,13,10,11,[.55,.31,.22]);draw(vp,0,7.5,0,13.1,.65,11.1,[.66,.39,.26]);draw(vp,0,.12,0,58,.22,56,[.73,.64,.47]);
       // Interpretive, faceless Hajj pilgrims: seven complete tawaf circuits, then seven sa'i traversals.
       // Route stays within the existing historical alley; no collider or player physics changes.
       draw(vp,40,.045,0,5,.08,72,[.71,.59,.44]);
