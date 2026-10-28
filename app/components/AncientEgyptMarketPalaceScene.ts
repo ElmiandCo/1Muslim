@@ -33,12 +33,11 @@ export function renderEgyptMarketPalace(draw:EgyptDraw,nowMs:number,playerX:numb
   draw(x,.035,z,hw*2,.07,hd*2,[.67,.53,.34]);
   for(const side of [-1,1]){
    draw(x+side*hw,4.8,z,3.4,9.6,hd*2,MUD);
-   draw(x,4.8,z-side*hd,hw*2,9.6,3.4,MUD);
+   if(side===-1)draw(x,4.8,z-hd,hw*2,9.6,3.4,MUD);
+   else for(const flank of [-1,1])draw(x+flank*(gw/2+(hw-gw/2)/2),4.8,z+hd,hw-gw/2,9.6,3.4,MUD);
   }
-  // Southern gate: cover the full wall with an OPEN center, not a solid box.
-  // Replace the south wall's center visually with a gateway arch impression.
-  draw(x,5,z+hd,gw+2,10,3.7,STONE);
-  draw(x,3.9,z+hd+2,gw,7.8,4.2,[.68,.53,.34]);
+  // Southern gate: genuinely open gap in the wall for an enterable courtyard.
+  // No invisible doorway collider; Bot A must supply matching side-wall solids.
   // Monumental pylons, carved lintel and painted entry.
   for(const side of [-1,1]){
    draw(x+side*(gw/2+6),8.2,z+hd+3,11,16.4,7,STONE);
