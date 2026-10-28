@@ -13,7 +13,7 @@
 | Exact changed paths | `app/components/gamePhysics.ts` and `scripts/game-swept-vertical-smoke.mjs`; documentation only otherwise |
 | Implemented | Characters can walk/fall off roof edges and ascend away from overhead slabs instead of snapping to start position; movement **along** supported roof/underside preserves destination X/Z; real roof/ceiling crossings still stop |
 | Verification | **PASS:** 8 executed V8 assertions against exact modified helper source with TS annotations erased; GitHub compare game-only; frozen page SHA parity. Full committed smoke suite and real-device test **not run** |
-| Preview | Non-production `dpl_91urCJhNY5CRJvEzvQ97eC7BgwtJ` at `9c02c35`, https://1muslim-96vy3by96-elmiandco.vercel.app; build status pending when recorded |
+| Preview | Non-production `dpl_91urCJhNY5CRJvEzvQ97eC7BgwtJ` at `9c02c35`, https://1muslim-96vy3by96-elmiandco.vercel.app; **PASS / READY**; Next.js compile, type/lint and 101/101 static pages succeeded |
 | World coverage | Shared ordinary-avatar collision for Egypt/Moses/Jurassic/Future/Today/prophetic/Roman improved; Moon/Space dedicated physics untouched; all scene modules, Hajj/Nabawi, shield, meeting and roofless Belt Boyz office preserved |
 | Integration / rollback | Cherry-pick **only** physics/test hunks onto latest site branch, never merge whole game branch. Revert `0ae037e` + `0248512` to restore Bot B physics blob `9e19e03`. No main/production deployment. |
 
