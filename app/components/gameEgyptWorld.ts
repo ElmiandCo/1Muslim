@@ -10,6 +10,8 @@ import {
 } from "./AncientEgyptRiverScene";
 import {buildStaticGameCollisionIndex,type GameCollider} from "./gamePhysics";
 import {createEgyptDistrictColliders} from "./gameEgyptDistrictPhysics";
+import {renderExtendedEgyptNileTerrain} from "./gameEgyptNileExtension";
+export {EGYPT_NAV_BOUNDS} from "./gameEgyptNileExtension";
 
 export const MOSES_TO_EGYPT_PORTAL={x:0,z:-14,radius:6} as const;
 export const EGYPT_TO_MOSES_PORTAL={x:-28,z:170,radius:6} as const;
@@ -129,6 +131,7 @@ export function renderAncientEgyptTerrain(draw:EgyptDraw,playerX:number,playerY:
   if(Math.abs(z-playerZ)>228)
    draw(riverX,-.15,z,EGYPT_RIVER_WIDTH,.18,segmentDepth+.05,[.13,.43,.58],.88);
  }
+ renderExtendedEgyptNileTerrain(draw,playerX,playerY,playerZ,egyptTerrainFloor);
 }
 
 /** Return portal is safely away from the spawn; no immediate bounce. */
