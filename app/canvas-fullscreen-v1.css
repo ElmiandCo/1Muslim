@@ -1878,3 +1878,9 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 [data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]>div:first-child>div:first-child{position:absolute!important;top:-100px!important;left:10px!important;right:10px!important;transform:none!important;margin-bottom:0!important;z-index:40!important}
 [data-workspace-page="6"] .canvas-profile-mirror>.canvas-native-body{overflow:visible!important}
 }
+
+@media(max-width:700px){
+[data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]>div:first-child>div:first-child{position:absolute!important;top:48px!important;left:0!important;right:auto!important;transform:none!important;margin-bottom:0!important;z-index:80!important}
+[data-workspace-page="6"] .canvas-profile-mirror [role="tablist"][aria-label="Profile sections"]{flex-direction:column!important;align-items:stretch!important}
+[data-workspace-page="6"] .canvas-profile-mirror [role="tablist"][aria-label="Profile sections"]>button{width:29px!important;min-height:76px!important;flex:none!important;writing-mode:vertical-rl!important;font-size:10px!important}
+}
