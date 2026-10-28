@@ -1,5 +1,16 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 19:26–19:36 CDT (America/Chicago) · Bot B / Living Worlds — Great Pyramid focal approaches
+
+**Full handoff:** [Egypt Great Pyramid approach shift](shifts/2026-10-27-egypt-great-pyramid-approach-1930.md) · [Bot A roof-edge handoff](shifts/2026-10-27-roof-edge-release-1900.md) · [coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Protected baseline:** `fix/profile-scroll-match-umma-20261027` @ `c856491`; latest `main` @ `c043219` read-only; game starting source Bot A `game/world-engine-ledge-release-20261027-1900` @ `e488164b`. Current site page differs from frozen; never copy it.
+- **Dedicated branch:** `game/living-worlds-egypt-pyramid-approach-20261027-1930` from Bot A SHA. Implementation `77124efe`; test `31c583d3`; docs follow.
+- **Exact implementation paths:** `app/components/AncientEgyptRiverScene.ts` (three deterministic, culled, visual-only sandstone routes to existing Great Pyramid, limestone course accents, eight windblown dust puffs); `scripts/game-ancient-egypt-smoke.mjs` (footprint, dry Nile bank, finite geometry, culling/draw budget checks). **Before:** isolated pyramid scene. **After:** readable Nile/arrival/yard approach network, with no collider/portal/terrain change.
+- **Verified:** 6,158 full smoke assertions executed against GitHub-fetched helper in V8 with TS erased; focused 2,552 assertions, max representative scene draws 269, far 0, 74 unchanged solid descriptors. GitHub compare confirms only two game/test implementation paths. Native checkout/mobile FPS unverified. Non-production preview `dpl_PP2EZAmq7FbirVtFWTsfp6eskpWf` at `31c583d3` pending build check.
+- **World progress:** Ancient Egypt improved this shift; Moses/Parted Sea, Jurassic, Future/RealMecca, Makkah/Madinah/Nabawi/Hajj, Roman Judea/Jerusalem, Moon/Space/Blessed Chambers, Today/Belt Boyz and existing portals **unchanged**. Next: mobile camera/LOD review, Bot A terrain integration, then one verified Jurassic or Roman scenery slice. Hyper Shield remains client-side, not server-authoritative.
+- **Integration:** cherry-pick only `77124efe` (plus optional `31c583d3`) onto a freshly audited site integration branch; never merge the old-layout full branch. Rollback by reverting `77124efe`. No production deployment or main/frozen-site merge.
+
 ## 2026-10-27 · 18:57–19:04 CDT (America/Chicago) · Bot A / World Engine — roof/ceiling edge release
 
 **Full handoff:** [roof-edge release and collision regression](shifts/2026-10-27-roof-edge-release-1900.md) · **Reviewed Bot B:** [Hyper Defense emerald aura](shifts/2026-10-27-hyper-shield-aura-1830.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
