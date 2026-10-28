@@ -75,7 +75,9 @@ export function createAncientEgyptColliders():readonly GameCollider[]{
  for(const z of EGYPT_DOCKS){
   const x=egyptRiverCenterX(z)-EGYPT_RIVER_WIDTH/2-5;
   solids.push({x,z,hx:6,hz:9,bottom:-.05,top:.55});
-  for(let k=0;k<3;k++)solids.push({
+  // All four visible limestone cargo blocks are solid (the fourth used to
+  // render without a collider). Match AncientEgyptRiverScene dock geometry.
+  for(let k=0;k<4;k++)solids.push({
    x:x-2+k*1.35,z:z-2,hx:.55,hz:.55,bottom:.55,top:1.65
   });
  }
