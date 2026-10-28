@@ -887,3 +887,16 @@
 5. Coordinate with Bot B on Future City garden details and Jurassic river-life integration; preserve independent modules. Remaining requested mosques, Hajj NPCs, hand persistence, shield, blaster reliability, voice indicators and XP store are **not implemented by this shift**.
 
 **Cross-reference:** Bot B handoff above; [Game master brief #126](https://github.com/ElmiandCo/1Muslim/issues/126); [implementation diff](https://github.com/ElmiandCo/1Muslim/commit/e37c717270eaf707705b62fabea9203ea48c09c7).
+
+
+---
+
+## 2026-10-28 00:00 CDT — Bot A / World Engine: extended Nile banks and Bot B fisheries integration
+
+**Starting protected preview:** `fix/profile-scroll-match-umma-20261027` @ `c8564911`. **Main inspected:** `c043219f` (site drift; unchanged). **Starting GAME base:** `game/world-engine-egypt-palace-market-solids-20261027-2300-a` @ `bd49ed85`. **Working game-only branch:** `game/world-engine-nile-long-banks-20261028-0000-a`; implementation/test tip `61a87757`; detailed docs tip `45fe5b23`. **Bot B source reviewed:** `game/living-worlds-egypt-nile-fisheries-20261027-2350` @ `1b23e9f7` and its per-shift log. **Timestamp:** America/Chicago CDT, UTC 2026-10-28 05:00+.
+
+**Exact game-only paths:** added `app/components/gameEgyptNileExtension.ts` (`b6002e3`), selectively copied B's `app/components/AncientEgyptNileJourneyScene.ts` (`7aa8473`), changed `app/components/gameEgyptWorld.ts` (`9322ade`) and only three Egypt integration anchors in `app/components/SharedGameLobby.tsx` (`b190e18`), added `scripts/game-egypt-long-nile-smoke.mjs` (`61a8775`). New `renderExtendedEgyptNileTerrain()` draws progressive 12m-near/24m-far bank/bed/water strips outside the original ±520 Nile. `EGYPT_NAV_BOUNDS` extends movement Z to ±1700 (3,400 total), while `egyptTerrainFloor()` remains the physics authority. The original center world, Great Pyramid, palace's 149 colliders, Moses return portal, Rome arena, Jurassic, Future, Madinah, Masjid an-Nabawi, Space, Belt Boyz roofless office, meeting, blasters, shield and site contracts are **not replaced**. The B skiffs are **visual-only** and not pilotable.
+
+**Checks:** GitHub compare PASS, only five game paths; 45 V8 assertions executed against GitHub-fetched new renderer and existing terrain-floor function PASS; max sampled extension 378 draw callbacks (not GPU FPS). Native Node smoke is committed but **not run**; mobile/browser/boat physics not tested; preview build status initially **pending**. Outer corridor scenery/NPCs are Bot B's next task. Source-level tests do not prove full gameplay or authoritative multiplayer.
+
+**Integration:** never merge full game branch into site. Freshly compare site head/frozen baseline, cherry-pick only `b6002e3`, `7aa8473`, `9322ade`, `b190e18` or carefully transplant three Egypt lobby hunks. Revert those commits or targeted changes to roll back without touching site code. **No production/main/frozen branch mutation or promotion.** Detailed world-by-world matrix, dependency/rollback notes and next-shift tasks: [2026-10-28-long-nile-0000-a.md](shifts/2026-10-28-long-nile-0000-a.md). Coordinate in [issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
