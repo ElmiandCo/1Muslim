@@ -34,6 +34,7 @@
 
 - **Executed in JavaScript V8 on actual GitHub-fetched module body:** **818 assertions PASS**, 0 failures; near 306 arena draw calls, medium 67, far 0; 56 cat calls near market, 0 far; open south entrance has 0 blocking high wall draw calls; inactive lion draws 0; active lion adapter draws 8 primitives.
 - **Source preservation:** comparison against exact Bot A starting `RomanJudeaScene.ts` matches after stripping the new import and new `if(inRome)` call. Rome/Jerusalem colliders, portal, and original renderer are unchanged.
+- **Additional executed integrated-render test:** transpiled and ran both original and updated `renderRomanJudea()` function bodies in V8 with a stubbed static collision-index builder. Jerusalem draws **699 before and 699 after**, with exact primitive-by-primitive equality. At the new Rome arena center, **161 original draws versus 467 updated draws** (exactly 306 new arena draws), all transforms finite. This checks actual renderer wiring without claiming device gameplay.
 - **GitHub diff check:** only `app/components/RomanArenaScene.ts`, `app/components/RomanJudeaScene.ts`, `scripts/game-rome-arena-smoke.mjs` before docs.
 - **Node smoke:** committed, but **not executed natively** in a checked-out Node runtime. Run `node scripts/game-rome-arena-smoke.mjs`.
 - **Next.js preview:** non-production deployment `dpl_vXCcoaD8bZuWRxkL8PLYb54DEqbE` (`https://1muslim-lqpsiawb1-elmiandco.vercel.app`) **BUILDING** at first log; confirm status before reporting success.
