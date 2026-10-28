@@ -20,6 +20,7 @@ import {renderHajjPilgrims,HISTORICAL_HAJJ_LAYOUT,TODAY_HAJJ_LAYOUT} from "./Haj
 import {renderNabawiCongregation} from "./NabawiCongregationScene";
 import {EGYPT_BOUNDS,EGYPT_SPAWN,renderAncientEgyptRiverLife} from "./AncientEgyptRiverScene";
 import {renderEgyptMarketPalace} from "./AncientEgyptMarketPalaceScene";
+import {renderAncientEgyptNileJourney} from "./AncientEgyptNileJourneyScene";
 import {MOSES_TO_EGYPT_PORTAL,EGYPT_TO_MOSES_PORTAL,EGYPT_MOSES_RETURN,MOSES_PORTAL_COLLIDERS,EGYPT_COLLISION_INDEX,EGYPT_GREAT_PYRAMID_ARRIVAL_YAW,egyptTerrainFloor,renderAncientEgyptTerrain,renderAncientEgyptReturnPortal} from "./gameEgyptWorld";
 
 // Keep Moses refuge collisions stable across frames; never cull physics with visual LOD.
@@ -482,6 +483,7 @@ export default function SharedGameLobby(){
       const egyptDraw=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:number[],alpha=1,angle=0)=>draw(vp,x,y,z,sx,sy,sz,color,alpha,angle);
       renderAncientEgyptTerrain(egyptDraw,p.x,p.y,p.z);
       renderAncientEgyptRiverLife(egyptDraw,now,p.x,p.z);
+      renderAncientEgyptNileJourney(egyptDraw,now,p.x,p.z);
       renderEgyptMarketPalace(egyptDraw,now,p.x,p.z);
       renderAncientEgyptReturnPortal(egyptDraw,p.x,p.z);
     }else if(romanWorldRef.current){
