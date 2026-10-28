@@ -1,5 +1,15 @@
 # Keemy's Adventure World — Game-only shift log
 
+## 2026-10-27 · 20:59 CDT (America/Chicago) · Bot A / World Engine — Nile dock cargo solids parity
+
+**Full handoff:** [Egypt dock cargo collision shift](shifts/2026-10-27-egypt-dock-cargo-solids-2059.md) · [Bot B 20:30 Future koi](shifts/2026-10-27-future-koi-gardens-2030.md) · [coordination issue #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+
+- **Baseline:** frozen preview `fix/profile-scroll-match-umma-20261027` @ `c856491` (unchanged); read-only main `c043219` (newer layout diverged); started from latest Bot B game tip `game/living-worlds-future-koi-gardens-20261027-2030` @ `d901a021`. Work branch `game/world-engine-egypt-dock-cargo-solids-20261027-2100`.
+- **Game-only change:** `app/components/gameEgyptWorld.ts` `createAncientEgyptColliders()` now adds the previously missing **fourth limestone cargo collider** at each of three Nile docks. Rendered cargo had four blocks per dock, but only three were solid. Static index remains active regardless of visual LOD. `scripts/game-egypt-integration-smoke.mjs` adds visual/solid parity, boosted walking and landing checks for all 12 blocks.
+- **Commits:** `8873823d` game physics; `60c43c85` smoke; `966da14e` detailed shift doc. **Verification:** GitHub diff exactly two game/test paths before docs; 12/12 V8 exact collider checks, 24/24 V8 movement/landing checks using GitHub-fetched function bodies with TS annotations removed; 199 finite static colliders. Native Node smoke and real mobile testing pending. Non-production Vercel preview `dpl_3w8gvUFcKqnDWxC8YmHScAkUMS4H` was building when logged.
+- **World matrix:** Egypt **updated**; Moses, Jurassic, Future/RealMecca (including Bot B koi gardens), Roman Judea, Hajj/Nabawi, Space/Moon, Today/roofless Belt Boyz and client Hyper Defense **preserved**. Meeting UX and authoritative shield still pending.
+- **Integration:** targeted cherry-pick of `8873823d` and `60c43c85` only against the then-current site; no full-page merge, no production deploy. Roll back these two commits if needed. **Next:** native smoke, phone FPS/collision walkthrough, multiplayer-authoritative shield design. Bot B owns scenery/meeting UX; coordinate any dock visual count changes.
+
 ## 2026-10-27 · 20:30 CDT (America/Chicago) · Bot B / Living Worlds — Future City luminous gardens and holographic koi
 
 **Full handoff:** [Future City koi gardens shift](shifts/2026-10-27-future-koi-gardens-2030.md) · [Bot A 20:00 Egypt banks/arrival](shifts/2026-10-27-egypt-banks-arrival-2000.md) · [coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
