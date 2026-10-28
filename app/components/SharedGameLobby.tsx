@@ -20,6 +20,7 @@ import {renderHajjPilgrims,HISTORICAL_HAJJ_LAYOUT,TODAY_HAJJ_LAYOUT} from "./Haj
 import {renderNabawiCongregation} from "./NabawiCongregationScene";
 import {EGYPT_SPAWN,renderAncientEgyptRiverLife} from "./AncientEgyptRiverScene";
 import {renderAncientEgyptNileJourney} from "./AncientEgyptNileJourneyScene";
+import {renderExtendedEgyptNileLife} from "./AncientEgyptLongNileLifeScene";
 import {renderEgyptMarketPalace} from "./AncientEgyptMarketPalaceScene";
 import {MOSES_TO_EGYPT_PORTAL,EGYPT_TO_MOSES_PORTAL,EGYPT_MOSES_RETURN,MOSES_PORTAL_COLLIDERS,EGYPT_COLLISION_INDEX,EGYPT_NAV_BOUNDS as EGYPT_BOUNDS,EGYPT_GREAT_PYRAMID_ARRIVAL_YAW,egyptTerrainFloor,renderAncientEgyptTerrain,renderAncientEgyptReturnPortal} from "./gameEgyptWorld";
 
@@ -484,6 +485,7 @@ export default function SharedGameLobby(){
       renderAncientEgyptTerrain(egyptDraw,p.x,p.y,p.z);
       renderAncientEgyptRiverLife(egyptDraw,now,p.x,p.z);
       renderAncientEgyptNileJourney(egyptDraw,now,p.x,p.z);
+      renderExtendedEgyptNileLife(egyptDraw,now,p.x,p.z);
       renderEgyptMarketPalace(egyptDraw,now,p.x,p.z);
       renderAncientEgyptReturnPortal(egyptDraw,p.x,p.z);
     }else if(romanWorldRef.current){
