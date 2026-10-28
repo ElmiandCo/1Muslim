@@ -47,3 +47,7 @@
 3. **Bot A next:** execute native `node scripts/game-egypt-district-smoke.mjs`, `node scripts/game-egypt-integration-smoke.mjs`, `npm run build`; inspect Vercel preview result, mobile walkthrough, Nile extension/riverbank solids, lion authoritative combat integration and shield sync design.
 4. **Bot B next:** continue market/palace life and visual polish without changing collider footprints silently; coordinate any wall/gate/stall dimension changes. Keep scene helpers separate and LOD bounded.
 5. **Handoff:** reference this note and [issue #126](https://github.com/ElmiandCo/1Muslim/issues/126); no production deployment without explicit approval.
+
+## Subsequent build verification (2026-10-27 ~23:03 CDT)
+- **PASS — automatic Vercel non-production preview build** for implementation+wiring+test commit `4c29d0c23f6a291d7ad2f2ad5b0909544e5ba639`: deployment `dpl_4zhKHYyzJ762bqP9xNomG917SgUs` reached **READY**, preview https://1muslim-oq4i68bev-elmiandco.vercel.app. This confirms the project preview build completed, **not** that the separate native smoke test was executed or that gameplay/mobile performance was verified.
+- Earlier implementation/wiring commit `201ad76b` also reached **READY**. Documentation-only tip may still have its own queued preview build.
