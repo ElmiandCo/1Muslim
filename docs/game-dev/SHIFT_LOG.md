@@ -2,7 +2,7 @@
 
 ## 2026-10-28 · 02:01 CDT (America/Chicago) · Bot A / World Engine — Rome grand arena solids + grounded lion combat prototype
 
-**Detailed handoff:** [02:00 Rome lion and arena physics](shifts/2026-10-28-rome-lion-0200-a.md) · [Bot B Future couriers handoff](shifts/2026-10-28-future-sky-couriers-0130-b.md) · [coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
+**Detailed handoff:** [02:00 Rome lion and arena physics](shifts/2026-10-28-rome-lion-0200-a.md) · [Bot B Future couriers handoff](https://github.com/ElmiandCo/1Muslim/blob/game/living-worlds-future-sky-couriers-20261028-0130-b/docs/game-dev/shifts/2026-10-28-future-sky-couriers-0130-b.md) · [coordination #126](https://github.com/ElmiandCo/1Muslim/issues/126).
 
 - **Protection:** frozen preview `fix/profile-scroll-match-umma-20261027` @ `c8564911`, user-locked site `8fa597b1`, main `c043219f` all inspected read-only. `app/page.tsx`, CanvasSecondaryApp and CSS differ across site refs: no app page/style copies. Starting GAME base `game/world-engine-long-nile-palm-solids-20261028-0100-a` @ `b47a208c`. Working branch `game/world-engine-rome-lion-20261028-0200-a`.
 - **Bot B coordination:** reviewed latest `game/living-worlds-future-sky-couriers-20261028-0130-b` @ `a5e62e51`; Future sky couriers remain a separate unmerged game-only change, **not lost** or falsely claimed integrated.
