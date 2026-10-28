@@ -1866,3 +1866,7 @@ header[class*="controlHeader"] [class*="headerActions"] a{
    background:rgba(8,48,39,.78)!important;
  }
 }
+
+@media(max-width:700px){
+[data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"]>div:first-child>div:first-child{transform:none!important;margin-bottom:4px!important;}
+}
