@@ -19,7 +19,7 @@ import {renderLunarResearchLife} from "./LunarResearchScene";
 import {renderHajjPilgrims,HISTORICAL_HAJJ_LAYOUT,TODAY_HAJJ_LAYOUT} from "./HajjPilgrimScene";
 import {renderNabawiCongregation} from "./NabawiCongregationScene";
 import {EGYPT_BOUNDS,EGYPT_SPAWN,renderAncientEgyptRiverLife} from "./AncientEgyptRiverScene";
-import {MOSES_TO_EGYPT_PORTAL,EGYPT_TO_MOSES_PORTAL,EGYPT_MOSES_RETURN,MOSES_PORTAL_COLLIDERS,EGYPT_COLLISION_INDEX,egyptTerrainFloor,renderAncientEgyptTerrain,renderAncientEgyptReturnPortal} from "./gameEgyptWorld";
+import {MOSES_TO_EGYPT_PORTAL,EGYPT_TO_MOSES_PORTAL,EGYPT_MOSES_RETURN,MOSES_PORTAL_COLLIDERS,EGYPT_COLLISION_INDEX,EGYPT_GREAT_PYRAMID_ARRIVAL_YAW,egyptTerrainFloor,renderAncientEgyptTerrain,renderAncientEgyptReturnPortal} from "./gameEgyptWorld";
 
 // Keep Moses refuge collisions stable across frames; never cull physics with visual LOD.
 const SEA_COLLIDERS=[...partedSeaColliders(),...MOSES_PORTAL_COLLIDERS];
@@ -168,7 +168,7 @@ export default function SharedGameLobby(){
   partedSeaWorldRef.current=false;setPartedSeaWorld(false);
   egyptWorldRef.current=true;setEgyptWorld(true);setPicker(false);setWorldMapOpen(false);
   projectiles.current=[];boostEnabled.current=false;setBoostActive(false);setFlying(false);
-  const p=local.current;p.world="Ancient Egypt";p.x=EGYPT_SPAWN.x;p.z=EGYPT_SPAWN.z;p.y=EGYPT_SPAWN.y;p.yaw=Math.PI;p.flying=false;p.boost=false;
+  const p=local.current;p.world="Ancient Egypt";p.x=EGYPT_SPAWN.x;p.z=EGYPT_SPAWN.z;p.y=EGYPT_SPAWN.y;p.yaw=EGYPT_GREAT_PYRAMID_ARRIVAL_YAW;p.flying=false;p.boost=false;
   egyptPortalCooldown.current=performance.now()+2500;
   setHint("🌴 Ancient Egypt · Explore the Nile, palm groves and pyramids under construction. Turquoise arch returns to Moses.");
  };
