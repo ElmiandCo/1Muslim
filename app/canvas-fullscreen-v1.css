@@ -1814,3 +1814,8 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 
 /* My Profile-only flex experiment: requested 1:1:1, valid CSS percentage basis. */
 [data-workspace-page="6"] .canvas-profile-mirror [data-profile-mirror-scroll][aria-label="My Profile"]{flex:1 1 1%!important;overflow-y:scroll!important;touch-action:pan-y!important;scroll-snap-type:none!important}
+
+/* Profile-only: reclaim unused space beneath the workspace heading on desktop. */
+@media (min-width:701px){
+ [data-workspace-page="6"] .canvas-vertical-portal{top:-56px!important;height:calc(100% + 56px)!important;min-height:0!important}
+}
