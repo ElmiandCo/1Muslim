@@ -10,7 +10,7 @@ export default function CommunityMediaGallery({userId}:{userId?:string}){
  const {data:media}=await request;if(!media?.length){if(alive)setItems([]);return}
  const ids=[...new Set(media.map(x=>x.post_id))];const [{data:posts},{data:urls},{data:views}]=await Promise.all([db.from("posts").select("id,user_id,body").in("id",ids),db.storage.from("community-media").createSignedUrls(media.map(x=>x.storage_path),3600),db.from("video_views").select("post_id").in("post_id",ids)]);
  const byId=new Map((posts||[]).map(x=>[x.id,x]));const counts:Record<string,number>={};for(const v of views||[])counts[v.post_id]=(counts[v.post_id]||0)+1;
- const found=media.flatMap((m,i)=>{const post=byId.get(m.post_id),url=urls?.[i]?.signedUrl;return post?.user_id===m.user_id&&url?[{...m,url,title:post.body||"Video",views:counts[m.post_id]||0}]:[]});
+ const found=media.flatMap((m,i)=>{const post=byId.get(m.post_id),url=urls?.[i]?.signedUrl;if(!post||post.user_id!==m.user_id||!url)return [];return [{...m,url,title:post.body||"Video",views:counts[m.post_id]||0}]});
  if(alive)setItems(found)
  }catch{if(alive)setItems([])}finally{if(alive)setLoading(false)}})();return()=>{alive=false}},[userId]);
  const filtered=items.filter(x=>x.title.toLowerCase().includes(query.toLowerCase()));
