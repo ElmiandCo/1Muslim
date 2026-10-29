@@ -7,10 +7,10 @@ type Clip={id:string;postId:string;userId:string;body:string;src:string;created:
 export default function HudHudVideos(){
  const [clips,setClips]=useState<Clip[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState("");
  const [active,setActive]=useState(0),[muted,setMuted]=useState(true);
- const [guest,setGuest]=useState(false);
+ const [guest,setGuest]=useState(true);
  useEffect(()=>{const db=createClient();let alive=true;void db.auth.getUser().then(({data})=>{if(alive)setGuest(!data.user)});const {data:{subscription}}=db.auth.onAuthStateChange((_event,session)=>{if(alive)setGuest(!session?.user)});return()=>{alive=false;subscription.unsubscribe()}},[]);
  const container=useRef<HTMLDivElement>(null),videos=useRef<Record<string,HTMLVideoElement|null>>({});
- useEffect(()=>{let alive=true;const load=async()=>{const db=createClient();try{
+ useEffect(()=>{if(guest)return;let alive=true;const load=async()=>{const db=createClient();try{
   const {data:media,error:me}=await db.from("post_media").select("id,post_id,user_id,storage_path,created_at").ilike("mime_type","video/%").order("created_at",{ascending:false}).limit(100);
   if(me)throw me;
   const rows=media||[];const ids=[...new Set(rows.map(m=>m.post_id))];
@@ -24,12 +24,13 @@ export default function HudHudVideos(){
   const result=valid.flatMap((m,i)=>{const post=byId.get(m.post_id);const url=signed?.[i]?.signedUrl;return post&&url?[{id:m.id,postId:m.post_id,userId:m.user_id,body:post.body||"",src:url,created:m.created_at}]:[]});
   if(alive){setClips(result);setActive(0);if(container.current)container.current.scrollTop=0;}
  }catch(e){if(alive)setError(e instanceof Error?e.message:"Video feed is unavailable.")}finally{if(alive)setLoading(false)}};
- void load();return()=>{alive=false}},[]);
+ void load();return()=>{alive=false}},[guest]);
  useEffect(()=>{const root=container.current;if(!root||!clips.length)return;const observer=new IntersectionObserver(entries=>{for(const e of entries){if(e.isIntersecting&&e.intersectionRatio>=.65){const i=Number((e.target as HTMLElement).dataset.index);setActive(i)}}},{root,threshold:[.65]});root.querySelectorAll("[data-index]").forEach(el=>observer.observe(el));return()=>observer.disconnect()},[clips]);
- useEffect(()=>{for(const [id,video] of Object.entries(videos.current)){if(!video)continue;const selected=clips[active]?.id===id;if(selected){video.muted=muted;void video.play().catch(()=>{})}else{video.pause();video.currentTime=0}}},[active,clips,muted]);
- useEffect(()=>{const onVisibility=()=>{const video=videos.current[clips[active]?.id];if(!video)return;if(document.hidden)video.pause();else void video.play().catch(()=>{})};document.addEventListener("visibilitychange",onVisibility);return()=>document.removeEventListener("visibilitychange",onVisibility)},[active,clips]);
+ useEffect(()=>{for(const [id,video] of Object.entries(videos.current)){if(!video)continue;const selected=!guest&&clips[active]?.id===id;if(selected){video.muted=muted;void video.play().catch(()=>{})}else{video.pause();video.currentTime=0}}},[active,clips,muted,guest]);
+ useEffect(()=>{const onVisibility=()=>{const video=videos.current[clips[active]?.id];if(!video)return;if(document.hidden)video.pause();else if(!guest)void video.play().catch(()=>{})};document.addEventListener("visibilitychange",onVisibility);return()=>document.removeEventListener("visibilitychange",onVisibility)},[active,clips,guest]);
  const jump=(direction:number)=>{const next=Math.max(0,Math.min(clips.length-1,active+direction));container.current?.querySelectorAll<HTMLElement>("[data-index]")[next]?.scrollIntoView({behavior:"smooth",block:"start"})};
- return <main className="hh-reels"><SiteNav/>{guest&&<Link href="/login" className="hh-guest-signin">Sign in</Link>}
+ if(guest)return <main className="hh-reels"><SiteNav/><section style={{minHeight:"75dvh",display:"grid",placeContent:"center",textAlign:"center",gap:14,padding:24,color:"#fff4d4"}}><h1>Welcome to 1Muslim</h1><p>Sign in to watch community videos.</p><Link href="/login" style={{background:"#116a53",border:"1px solid #d6b778",padding:"14px 24px",borderRadius:24,color:"#fff",textDecoration:"none"}}>Sign In / Sign Up</Link></section></main>;
+ return <main className="hh-reels"><SiteNav/>
  <div className="hh-reels-track" ref={container} aria-label="User video posts">{loading?<div className="hh-reels-empty">Loading community videos…</div>:error?<div className="hh-reels-empty" role="alert">{error}</div>:!clips.length?<div className="hh-reels-empty"><h2>No video posts yet</h2><p>Videos uploaded by members will appear here.</p><Link href="/streaming/library">Upload a video →</Link></div>:clips.map((clip,i)=><section className="hh-reel" data-index={i} key={clip.id} aria-label={`Video ${i+1} of ${clips.length}`}>
   <video ref={el=>{videos.current[clip.id]=el}} src={clip.src} playsInline loop muted={muted} preload={Math.abs(i-active)<=1?"metadata":"none"} onClick={e=>{const v=e.currentTarget;if(v.paused)void v.play();else v.pause()}} />
   <div className="hh-reel-shade"/>
