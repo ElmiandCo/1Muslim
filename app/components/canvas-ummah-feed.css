@@ -49,3 +49,37 @@
 .ummah-comments-sheet form{flex-shrink:0;margin-top:8px}
 @keyframes ummahSheetCentered{from{opacity:.4;transform:translateY(20px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.ummah-comments-sheet{animation:none}}
+
+
+/* Step 1: 1Umma community post discovery, scoped to Posts only */
+.ummah-posts-redesign{display:flex;flex-direction:column;min-height:0;height:100%;color:#f6ebc9;background:radial-gradient(circle at 80% 0%,rgba(183,139,62,.13),transparent 34%),linear-gradient(155deg,#051c18,#0a312a 58%,#071e1c)}
+.ummah-discovery-head{flex:none;padding:15px 12px 10px;border-bottom:1px solid rgba(231,199,126,.24)}
+.ummah-discovery-title{display:flex;align-items:center;gap:12px;margin-bottom:15px}
+.ummah-discovery-title strong{display:block;font-size:clamp(17px,3.8vw,23px);letter-spacing:.01em;color:#fff4d6}
+.ummah-discovery-title small{display:block;color:#dfcfa8;font-size:12px;margin-top:4px}
+.ummah-discovery-icon{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:13px;background:linear-gradient(145deg,#7537a6,#2b1649);color:#fff;font-size:25px}
+.ummah-category-rail{display:flex;gap:9px;overflow-x:auto;overscroll-behavior-x:contain;padding:3px 2px 13px;scrollbar-width:none}
+.ummah-category-rail::-webkit-scrollbar{display:none}
+.ummah-category-rail button{display:flex;flex:0 0 83px;flex-direction:column;align-items:center;gap:5px;min-height:96px;justify-content:center;border:1px solid rgba(228,195,122,.43);border-radius:17px;background:linear-gradient(145deg,rgba(9,64,53,.85),rgba(3,24,22,.92));color:#f7e8c2;cursor:pointer}
+.ummah-category-rail button.is-active{border-color:#ffe1a0;background:linear-gradient(140deg,#1c8169,#0a483d);box-shadow:inset 0 0 14px #e5c46d33,0 0 10px #e9ca7140}
+.ummah-category-rail button>span{font-size:23px}.ummah-category-rail button b{font-size:12px}.ummah-category-rail button small{font-size:11px;color:#d5c69f}
+.ummah-discovery-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ummah-discovery-search{display:flex;align-items:center;gap:7px;flex:1 1 190px;min-width:0;padding:0 12px;border:1px solid rgba(228,195,122,.5);border-radius:23px;background:#03241f;color:#f4d99b}
+.ummah-discovery-search span{font-size:26px}.ummah-discovery-search input{width:100%;min-width:0;min-height:44px;background:transparent;border:0;outline:none;color:white;font-size:16px}
+.ummah-discovery-search input::placeholder{color:#c5c6b5}
+.ummah-discovery-sort{display:flex;gap:5px}.ummah-discovery-sort button{min-height:42px;border:1px solid #c9ad7959;border-radius:23px;padding:0 11px;background:#082c27;color:#f3e6c6;font-size:12px}
+.ummah-discovery-sort button[aria-pressed=true]{background:#1c795f;border-color:#f1d28e}
+.ummah-posts-redesign .ummah-floating-feed{flex:1;min-height:0;height:auto;padding:13px 12px 40px;scroll-snap-type:none;touch-action:pan-y;overflow-y:auto;overscroll-behavior-y:contain}
+.ummah-feed-card{margin-bottom:12px;padding:13px;border:1px solid rgba(230,199,127,.64);border-radius:22px;background:linear-gradient(135deg,rgba(15,72,57,.93),rgba(4,37,34,.95));box-shadow:inset 0 1px #ffffff18,0 5px 18px #0003}
+.ummah-feed-card-author{display:flex;gap:10px;align-items:center;margin-bottom:11px;min-width:0}
+.ummah-feed-card-avatar{width:43px;height:43px;flex:none;border-radius:50%;border:2px solid #e5c477;background:#215f50;display:grid;place-items:center;font-weight:700;overflow:hidden}
+.ummah-feed-card-avatar img{width:100%;height:100%;object-fit:cover}
+.ummah-feed-card-byline{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}.ummah-feed-card-byline strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.ummah-feed-card-byline small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#b7d2c7}
+.ummah-feed-card-tag{flex:none;max-width:95px;padding:6px 9px;border:1px solid #e1c78166;border-radius:20px;background:#0d5446;color:#f7df9d;font-size:11px;text-overflow:ellipsis;overflow:hidden}
+.ummah-feed-card-content{border-radius:15px;min-height:76px;padding:16px;background-size:cover;background-position:center;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.55;font-size:clamp(14px,3.4vw,17px);color:#fff9e9}
+.ummah-feed-card-actions{display:flex;justify-content:space-around;gap:8px;margin-top:10px;border-top:1px solid #ffffff25;padding-top:8px}
+.ummah-feed-card-actions button{flex:1;min-height:43px;border:0;border-radius:12px;background:transparent;color:#e9dec4;font-size:20px;cursor:pointer}
+.ummah-feed-card-actions button span{font-size:12px}.ummah-feed-card-actions button[aria-pressed=true]{color:#ff9fb3}
+.ummah-discovery-notice{position:absolute;bottom:10px;left:12px;right:12px;z-index:2;border:1px solid #d7bc82;border-radius:12px;padding:10px;background:#093f35;color:#fff2d0;text-align:center}
+.ummah-posts-redesign button:focus-visible,.ummah-posts-redesign input:focus-visible{outline:2px solid #ffe09a;outline-offset:2px}
+@media(max-width:380px){.ummah-discovery-controls{align-items:stretch}.ummah-discovery-sort{width:100%}.ummah-discovery-sort button{flex:1}.ummah-category-rail button{flex-basis:76px}}
