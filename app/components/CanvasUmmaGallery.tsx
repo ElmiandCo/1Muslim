@@ -124,6 +124,12 @@ function DailyPostsApp({active}:{active:boolean}){
  const [notice,setNotice]=useState("");
  const [likes,setLikes]=useState<Record<string,boolean>>({});
  const [paused,setPaused]=useState(false);
+ const [query,setQuery]=useState("");
+ const [category,setCategory]=useState("All");
+ const [sort,setSort]=useState<"Latest"|"Oldest">("Latest");
+ const categories=["All","Qur’an","Dawah","Life","Questions","Reminders","Stories"];
+ const classify=(body:string)=>{const t=body.toLowerCase();if(/qur.an|surah|ayah|verse|recit/.test(t))return "Qur’an";if(/dawah|islam|shahada|muslim|debate/.test(t))return "Dawah";if(/question|\?|why |how /.test(t))return "Questions";if(/remind|dhikr|dua|allah|sabr/.test(t))return "Reminders";if(/story|journey|experience/.test(t))return "Stories";return "Life"};
+ const visiblePosts=posts.filter(post=>(category==="All"||classify(post.body)===category)&&[post.body,post.author_name,post.author_handle].join(" ").toLowerCase().includes(query.trim().toLowerCase())).sort((a,b)=>sort==="Latest"?Date.parse(b.created_at)-Date.parse(a.created_at):Date.parse(a.created_at)-Date.parse(b.created_at));
  const lastTouch=useRef(0);
  const feedRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{if(!active)return;let alive=true;
@@ -143,21 +149,20 @@ function DailyPostsApp({active}:{active:boolean}){
   const d=await r.json();if(!r.ok)throw Error(d.error||"Unable to comment");
   setComments(previous=>[...previous,d.comment]);setDraft("");
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
- return <div className="ummah-canvas-shell">
-  <div className="ummah-floating-feed" ref={feedRef} aria-label="Community posts" onTouchStart={()=>{lastTouch.current=Date.now();setPaused(true)}} onTouchEnd={()=>{lastTouch.current=Date.now();setPaused(false)}} onPointerDown={()=>{lastTouch.current=Date.now();setPaused(true)}} onPointerUp={()=>{lastTouch.current=Date.now();setPaused(false)}} onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}>
-   {posts.length?posts.map((post,i)=><div className="ummah-floating-pair" key={post.id} style={{["--ummah-tilt" as string]:(i%2===0?"-3deg":"3deg")}}>
-    <button type="button" className="ummah-floating-post" style={{backgroundImage:`linear-gradient(180deg,rgba(1,18,16,.22),rgba(1,18,16,.78)),url("${backgroundForPost(post.id)}")`,backgroundSize:"cover",backgroundPosition:"center"}} onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}} aria-label={"Open comments on post by "+post.author_name}>
-     <span className="ummah-post-glow" aria-hidden="true"/>
-     <span className="ummah-post-body">{post.body}</span>
-     <span className="ummah-post-bottom"><span>✦ Ummah</span><span>{new Date(post.created_at).toLocaleDateString()}</span><span>Comments ↗</span></span>
-    </button>
-    <button type="button" className="ummah-like-button" aria-label={likes[post.id]?"Unlike post":"Like post"} aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥":"♡"}</button>
-    <div className="ummah-floating-author" aria-label={"Posted by "+post.author_name}>
-     <span className="ummah-floating-avatar" aria-hidden="true">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span>
-     <span className="ummah-floating-author-name">{post.author_name}</span>
-    </div>
-   </div>):<p className="ummah-feed-status" role="status">{status}</p>}
+ return <div className="ummah-canvas-shell ummah-posts-redesign">
+  <div className="ummah-discovery-head">
+   <div className="ummah-discovery-title"><span className="ummah-discovery-icon">☪</span><div><strong>1Umma · Community Posts</strong><small>Share · Learn · Inspire · Build the Ummah</small></div></div>
+   <div className="ummah-category-rail" role="group" aria-label="Post categories">{categories.map(c=><button type="button" key={c} className={category===c?"is-active":""} aria-pressed={category===c} onClick={()=>setCategory(c)}><span>{c==="All"?"▦":c==="Qur’an"?"📖":c==="Dawah"?"🕌":c==="Life"?"✦":c==="Questions"?"❔":c==="Reminders"?"🏮":"✧"}</span><b>{c}</b><small>{c==="All"?posts.length:posts.filter(post=>classify(post.body)===c).length}</small></button>)}</div>
+   <div className="ummah-discovery-controls"><label className="ummah-discovery-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="Search posts or creators…" aria-label="Search community posts" value={query} onChange={e=>setQuery(e.target.value)}/></label><div className="ummah-discovery-sort" aria-label="Post order"><button type="button" aria-pressed={sort==="Latest"} onClick={()=>setSort("Latest")}>Latest</button><button type="button" aria-pressed={sort==="Oldest"} onClick={()=>setSort("Oldest")}>Oldest</button></div></div>
   </div>
+  <div className="ummah-floating-feed" ref={feedRef} aria-label="Community posts" onTouchStart={()=>{lastTouch.current=Date.now();setPaused(true)}} onTouchEnd={()=>{lastTouch.current=Date.now();setPaused(false)}} onPointerDown={()=>{lastTouch.current=Date.now();setPaused(true)}} onPointerUp={()=>{lastTouch.current=Date.now();setPaused(false)}} onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}>
+   {visiblePosts.length?visiblePosts.map(post=><article className="ummah-feed-card" key={post.id}>
+     <header className="ummah-feed-card-author"><span className="ummah-feed-card-avatar">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span><span className="ummah-feed-card-byline"><strong>{post.author_name}</strong><small>{post.author_handle?"@"+post.author_handle+" · ":""}{new Date(post.created_at).toLocaleDateString()}</small></span><span className="ummah-feed-card-tag">{classify(post.body)}</span></header>
+     <div className="ummah-feed-card-content" style={{backgroundImage:`linear-gradient(120deg,rgba(3,37,32,.9),rgba(5,49,41,.78)),url("${backgroundForPost(post.id)}")`}}>{post.body}</div>
+     <footer className="ummah-feed-card-actions"><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥":"♡"} <span>Like</span></button><button type="button" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}}>♧ <span>Comment</span></button><button type="button" onClick={()=>{const url=new URL(window.location.href);url.searchParams.set("post",post.id);if(navigator.share){void navigator.share({title:"1Umma Post",text:post.body.slice(0,120),url:url.toString()}).catch(()=>{});}else{void navigator.clipboard?.writeText(url.toString()).then(()=>setNotice("Post link copied.")).catch(()=>setNotice("Unable to copy link."));}}}>↗ <span>Share</span></button></footer>
+   </article>):<div className="ummah-feed-status" role="status">{posts.length?"No matching posts. Try another category or search.":status}</div>}
+  </div>
+  {notice&&!selected&&<p className="ummah-discovery-notice" role="status">{notice}</p>}
   {selected&&<div className="ummah-comments-backdrop" role="presentation" onClick={()=>setSelected(null)}>
    <section className="ummah-comments-sheet" role="dialog" aria-modal="true" aria-label="Post comments" onClick={e=>e.stopPropagation()}>
     <header><strong>✦ Conversation</strong><button type="button" onClick={()=>setSelected(null)} aria-label="Close comments">✕</button></header>
