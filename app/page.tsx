@@ -128,7 +128,7 @@ export default function Home(){
   return()=>window.removeEventListener("1muslim:profile-background-changed",changed);
  },[]);
 
- useEffect(()=>{try{setNavigationHintSeen(localStorage.getItem("1muslim:canvas-nav-used")==="1")}catch{}},[]);
+ useEffect(()=>{try{document.documentElement.dataset.accentTheme=localStorage.getItem("1muslim-accent-theme")||"emerald"}catch{}},[]);useEffect(()=>{try{setNavigationHintSeen(localStorage.getItem("1muslim:canvas-nav-used")==="1")}catch{}},[]);
  const navigateCanvas=(direction:"left"|"right"|"up"|"down")=>{
   try{localStorage.setItem("1muslim:canvas-nav-used","1")}catch{}
   setNavigationHintSeen(true);
