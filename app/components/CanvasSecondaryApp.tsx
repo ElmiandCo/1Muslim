@@ -122,6 +122,10 @@ const backgroundForPost=(id:string)=>{let hash=2166136261;for(let i=0;i<id.lengt
 type UmmahComment={id:string;post_id:string;name:string;body:string;created_at:string};
 function DailyPostsApp({active}:{active:boolean}){
  const [posts,setPosts]=useState<UmmahPost[]>([]); const [searchPosts,setSearchPosts]=useState("");
+ const [category,setCategory]=useState("All");const [order,setOrder]=useState<"Latest"|"Oldest">("Latest");
+ const categories=["All","Qur’an","Dawah","Life","Questions","Reminders","Stories"];
+ const classify=(body:string)=>{const t=body.toLowerCase();if(/qur.an|surah|ayah|verse/.test(t))return "Qur’an";if(/dawah|islam|muslim|shahada/.test(t))return "Dawah";if(/question|\\?|why |how /.test(t))return "Questions";if(/remind|allah|dua|dhikr|sabr/.test(t))return "Reminders";if(/story|journey|experience/.test(t))return "Stories";return "Life"};
+ const filtered=posts.filter(post=>(category==="All"||classify(post.body)===category)&&(post.body+" "+post.author_name+" "+post.author_handle).toLowerCase().includes(searchPosts.toLowerCase())).sort((a,b)=>order==="Latest"?Date.parse(b.created_at)-Date.parse(a.created_at):Date.parse(a.created_at)-Date.parse(b.created_at));
  const [status,setStatus]=useState("Loading Ummah posts…");
  const [selected,setSelected]=useState<string|null>(null);
  const [comments,setComments]=useState<UmmahComment[]>([]);
@@ -129,6 +133,7 @@ function DailyPostsApp({active}:{active:boolean}){
  const [busy,setBusy]=useState(false);
  const [notice,setNotice]=useState("");
  const [likes,setLikes]=useState<Record<string,boolean>>({});
+ const [bookmarks,setBookmarks]=useState<Record<string,boolean>>({});
  const [paused,setPaused]=useState(false);
  const lastTouch=useRef(0);
  const feedRef=useRef<HTMLDivElement|null>(null);
@@ -148,15 +153,16 @@ function DailyPostsApp({active}:{active:boolean}){
   const d=await r.json();if(!r.ok)throw Error(d.error||"Unable to comment");
   setComments(previous=>[...previous,d.comment]);setDraft("");
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
- return <div className="community-simple-feed"><div className="community-feed-search"><input aria-label="Search community posts" placeholder="Search posts or members…" value={searchPosts} onChange={e=>setSearchPosts(e.target.value)}/><span>⌕</span></div>
-  <div className="community-posts-list" aria-label="Community posts">
-   {posts.filter(post=>(post.body+" "+post.author_name+" "+post.author_handle).toLowerCase().includes(searchPosts.toLowerCase())).map(post=><article className="community-post-card" key={post.id}>
-    <header><span className="community-post-avatar">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span><div><strong>{post.author_name||"Member"}</strong><small>{post.author_handle||"1Muslim member"} · {new Date(post.created_at).toLocaleDateString()}</small></div></header>
-    <p>{post.body}</p><footer><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥ Liked":"♡ Like"}</button><button type="button" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}}>♧ Comment</button></footer>
-   </article>)}
-   {!posts.length?<p className="community-feed-empty">{status}</p>:!posts.some(post=>(post.body+" "+post.author_name+" "+post.author_handle).toLowerCase().includes(searchPosts.toLowerCase()))?<p className="community-feed-empty">No matching posts.</p>:null}
-   {notice&&!selected&&<p role="status">{notice}</p>}
-  </div>
+ return <div className="community-simple-feed ummah-posts-redesign">
+ <div className="ummah-discovery-head"><div className="ummah-discovery-title"><span className="ummah-discovery-icon">☪</span><div><strong>1Umma · Community Posts</strong><small>Share · Learn · Inspire · Build the Ummah</small></div></div>
+ <div className="ummah-category-rail" role="group" aria-label="Post categories">{categories.map(c=><button type="button" key={c} aria-pressed={category===c} className={category===c?"is-active":""} onClick={()=>setCategory(c)}><span>{c==="All"?"▦":c==="Qur’an"?"📖":c==="Dawah"?"🕌":c==="Life"?"✦":c==="Questions"?"❔":c==="Reminders"?"🏮":"✧"}</span><b>{c}</b><small>{c==="All"?posts.length:posts.filter(p=>classify(p.body)===c).length}</small></button>)}</div>
+ <div className="ummah-posts-mode" aria-label="Community posts section"><span className="is-current">▣ &nbsp; Community Posts</span><Link href="/community">✦ &nbsp; Explore Ummah</Link></div>
+ <div className="ummah-discovery-controls"><label className="ummah-discovery-search"><span>⌕</span><input type="search" aria-label="Search community posts" placeholder="Search posts or creators…" value={searchPosts} onChange={e=>setSearchPosts(e.target.value)}/></label><div className="ummah-discovery-sort"><button type="button" aria-pressed={order==="Latest"} onClick={()=>setOrder("Latest")}>Latest</button><button type="button" aria-pressed={order==="Oldest"} onClick={()=>setOrder("Oldest")}>Oldest</button></div></div></div>
+ <div className="community-posts-list ummah-actual-post-list" aria-label="Community posts">
+ {filtered.map(post=><article className="ummah-feed-card" key={post.id}><header className="ummah-feed-card-author"><span className="ummah-feed-card-avatar">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span><span className="ummah-feed-card-byline"><strong>{post.author_name||"Member"}</strong><small>{post.author_handle||"1Muslim member"} · {new Date(post.created_at).toLocaleDateString()}</small></span><span className="ummah-feed-card-tag">{classify(post.body)}</span></header>{(() => {const m=post.body.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/);return m?<div className="ummah-youtube-embed"><iframe loading="lazy" title="YouTube video preview" src={"https://www.youtube-nocookie.com/embed/"+m[1]} allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/></div>:null})()}<div className="ummah-feed-card-content" style={{backgroundImage:`linear-gradient(90deg,rgba(3,29,25,.84),rgba(3,29,25,.61)),url("${backgroundForPost(post.id)}")`}}><p>{post.body}</p></div><footer className="ummah-feed-card-actions"><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥":"♡"} <span>Like</span></button><button type="button" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}}>♧ <span>Comment</span></button><button type="button" onClick={()=>{const url=new URL(window.location.href);url.searchParams.set("post",post.id);if(navigator.share){void navigator.share({title:"1Umma Post",text:post.body.slice(0,100),url:url.toString()}).catch(()=>{})}else{void navigator.clipboard?.writeText(url.toString()).then(()=>setNotice("Post link copied")).catch(()=>setNotice("Unable to copy link"))}}}>↗ <span>Share</span></button><button type="button" aria-label={bookmarks[post.id]?"Remove saved post":"Save post"} aria-pressed={!!bookmarks[post.id]} onClick={()=>setBookmarks(v=>({...v,[post.id]:!v[post.id]}))}>{bookmarks[post.id]?"▣":"▢"} <span>Save</span></button></footer></article>)}
+ {!posts.length?<p className="community-feed-empty">{status}</p>:!filtered.length?<p className="community-feed-empty">No matching posts.</p>:null}
+ {notice&&!selected&&<p role="status">{notice}</p>}
+ </div>
   {selected&&<div className="ummah-comments-backdrop" role="presentation" onClick={()=>setSelected(null)}>
    <section className="ummah-comments-sheet" role="dialog" aria-modal="true" aria-label="Post comments" onClick={e=>e.stopPropagation()}>
     <header><strong>✦ Conversation</strong><button type="button" onClick={()=>setSelected(null)} aria-label="Close comments">✕</button></header>
