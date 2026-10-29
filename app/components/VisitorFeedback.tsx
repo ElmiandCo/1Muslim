@@ -13,7 +13,7 @@ export default function VisitorFeedback(){
    const now=Date.now();const delta=Math.min(now-last,1500);last=now;
    if(document.visibilityState!=="visible"||!document.hasFocus())return;
    elapsed+=delta;sessionStorage.setItem(KEY+":elapsed",String(elapsed));
-   if(elapsed>=300000){clearInterval(timer);setOpen(true)}
+   if(elapsed>=60000){clearInterval(timer);setOpen(true)}
   },1000);
   return()=>clearInterval(timer);
  },[]);
