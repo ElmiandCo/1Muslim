@@ -103,3 +103,16 @@
 .ummah-category-rail button[aria-pressed=true]{box-shadow:0 0 14px rgba(237,211,123,.6),inset 0 0 13px #d8d07e36}
 @media(max-width:420px){.ummah-feed-card{padding:10px}.ummah-feed-card-content{min-height:92px;padding:13px}.ummah-feed-card-actions button span{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.ummah-category-rail button{transition:none}}
+
+
+/* iPhone screenshot fixes: prevent inherited canvas footer rules from stacking post actions */
+.ummah-posts-redesign .ummah-actual-post-list{display:block;flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding:8px 9px 32px}
+.ummah-posts-redesign .ummah-feed-card{display:block;height:auto;min-height:0;margin:0 0 10px;padding:10px}
+.ummah-posts-redesign .ummah-feed-card>footer.ummah-feed-card-actions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-auto-flow:row!important;align-items:center!important;justify-content:space-between!important;gap:3px!important;width:100%!important;min-height:0!important;height:auto!important;margin:8px 0 0!important;padding:7px 0 0!important;position:static!important;background:transparent!important;border:0!important;border-top:1px solid #ffffff26!important;box-shadow:none!important;transform:none!important}
+.ummah-posts-redesign .ummah-feed-card>footer.ummah-feed-card-actions>button{display:flex!important;flex-direction:row!important;justify-content:center!important;align-items:center!important;gap:3px!important;min-width:0!important;min-height:36px!important;height:36px!important;width:100%!important;margin:0!important;padding:0 2px!important;font-size:19px!important;line-height:1!important;white-space:nowrap!important}
+.ummah-posts-redesign .ummah-feed-card>footer.ummah-feed-card-actions>button span{font-size:11px!important}
+.ummah-posts-redesign .ummah-comments-backdrop{position:fixed!important;inset:0!important;z-index:9999!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:18px!important;background:rgba(0,10,9,.72)!important}
+.ummah-posts-redesign .ummah-comments-sheet{display:flex!important;flex-direction:column!important;min-height:0!important;height:auto!important;max-height:min(75dvh,650px)!important;width:min(100%,540px)!important;padding:16px!important;border-radius:20px!important;overflow:hidden!important}
+.ummah-posts-redesign .ummah-comments-sheet form{display:flex!important;align-items:center!important;flex-direction:row!important;gap:8px!important;width:100%!important}
+.ummah-posts-redesign .ummah-comments-sheet form input{flex:1 1 auto!important;width:0!important;min-width:0!important}
+.ummah-posts-redesign .ummah-comments-sheet form button{flex:none!important;white-space:nowrap!important}
