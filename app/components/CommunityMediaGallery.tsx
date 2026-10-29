@@ -5,16 +5,19 @@ type Media={id:string;post_id:string;user_id:string;storage_path:string;created_
 const categories=["All","Qur'an","Dawah","History","Stories","Games","Shorts","Other"];
 function categoryFor(s:string){const t=s.toLowerCase();if(/qur.?an|surah|ayah|recit|tilawah/.test(t))return "Qur'an";if(/dawah|islam|muslim|shahada|debate/.test(t))return "Dawah";if(/history|prophet|musa|egypt|rome|seerah/.test(t))return "History";if(/game|keemy|adventure/.test(t))return "Games";if(/story|journey/.test(t))return "Stories";if(/short|reminder/.test(t))return "Shorts";return "Other"}
 export default function CommunityMediaGallery({userId}:{userId?:string}){
+ const [authorized,setAuthorized]=useState(false);
+ useEffect(()=>{const db=createClient();let alive=true;void db.auth.getUser().then(({data})=>{if(alive)setAuthorized(!!data.user)});const {data:{subscription}}=db.auth.onAuthStateChange((_event,session)=>{if(alive)setAuthorized(!!session?.user)});return()=>{alive=false;subscription.unsubscribe()}},[]);
  const [items,setItems]=useState<Media[]>([]),[loading,setLoading]=useState(true),[query,setQuery]=useState(""),[category,setCategory]=useState("All"),[sort,setSort]=useState("newest"),[playing,setPlaying]=useState<string|null>(null),[limit,setLimit]=useState(18);
- useEffect(()=>{let alive=true;setLoading(true);void(async()=>{try{
+ useEffect(()=>{if(!authorized){setItems([]);return}let alive=true;setLoading(true);void(async()=>{try{
  const db=createClient();let req=db.from("post_media").select("id,post_id,user_id,storage_path,created_at").ilike("mime_type","video/%").order("created_at",{ascending:false}).limit(100);if(userId)req=req.eq("user_id",userId);
  const {data:media,error}=await req;if(error)throw error;if(!media?.length){if(alive)setItems([]);return}
  const ids=[...new Set(media.map(m=>m.post_id))];
  const [{data:posts},{data:urls},{data:views}]=await Promise.all([db.from("posts").select("id,user_id,body").in("id",ids),db.storage.from("community-media").createSignedUrls(media.map(m=>m.storage_path),3600),db.from("video_views").select("post_id").in("post_id",ids)]);
  const postMap=new Map((posts||[]).map(p=>[p.id,p]));const counts:Record<string,number>={};for(const v of views||[])counts[v.post_id]=(counts[v.post_id]||0)+1;
  const found=media.flatMap((m,i)=>{const p=postMap.get(m.post_id),url=urls?.[i]?.signedUrl;if(!p||p.user_id!==m.user_id||!url)return [];const title=p.body||"Community video";return [{...m,url,title,views:counts[m.post_id]||0,category:categoryFor(title)}]});if(alive)setItems(found);
- }catch{if(alive)setItems([])}finally{if(alive)setLoading(false)}})();return()=>{alive=false}},[userId]);
+ }catch{if(alive)setItems([])}finally{if(alive)setLoading(false)}})();return()=>{alive=false}},[userId,authorized]);
  const filtered=useMemo(()=>items.filter(v=>(category==="All"||v.category===category)&&query.trim().toLowerCase().split(/\\s+/).every(term=>v.title.toLowerCase().includes(term))).sort((a,b)=>sort==="popular"?b.views-a.views:new Date(b.created_at).getTime()-new Date(a.created_at).getTime()),[items,category,query,sort]);
+ if(!authorized)return <section style={{padding:24,textAlign:"center",color:"#f6e5bd",background:"#062f27",borderRadius:20}}><h2>1Umma Videos</h2><p>Sign in to watch community videos.</p><a href="/login" style={{color:"#ffe2a1"}}>Sign In / Sign Up ↗</a></section>;
  return <section data-gallery-scroll="true" className="umma-videos" aria-label={userId?"Member videos":"All community videos"}>
  <style>{`
  .umma-videos{overflow-y:auto!important;overscroll-behavior-y:contain;touch-action:pan-y; -webkit-overflow-scrolling:touch;max-height:min(72dvh,760px);position:relative;isolation:isolate;min-width:0;width:100%;box-sizing:border-box;padding:9px 3px 28px;color:#f8f0dc;background:linear-gradient(140deg,rgba(3,34,28,.72),rgba(2,20,19,.6));border:1px solid #c9ad6744;border-radius:18px;}
