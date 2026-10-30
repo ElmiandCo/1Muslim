@@ -120,7 +120,7 @@ type UmmahPost={id:string;body:string;created_at:string;author_name:string;autho
 const postThemes=["emerald","gold","makkah","midnight","garden","purple"] as const;
 const backgroundForPost=(id:string)=>{let hash=2166136261;for(let i=0;i<id.length;i++)hash=Math.imul(hash^id.charCodeAt(i),16777619);return `/post-backgrounds/${postThemes[(hash>>>0)%postThemes.length]}.svg`};
 type UmmahComment={id:string;post_id:string;name:string;body:string;created_at:string};
-function DailyPostsApp({active}:{active:boolean}){
+export function DailyPostsApp({active}:{active:boolean}){
  const [posts,setPosts]=useState<UmmahPost[]>([]); const [searchPosts,setSearchPosts]=useState("");
  const [status,setStatus]=useState("Loading Ummah posts…");
  const [selected,setSelected]=useState<string|null>(null);
