@@ -691,3 +691,42 @@ html[data-profile-background] .omQuranPage .omQuranBackgroundOverlay > *{positio
 .oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveTop,
 .oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveVideo {position:relative;z-index:2;min-height:0;}
 .oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveVideo {pointer-events:auto;touch-action:pan-x pan-y;}
+
+
+/* Six global visual themes. Scoped to UI chrome, never videos, images or game worlds. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]){
+ --bg:var(--theme-base);--panel:var(--theme-surface);--panel2:var(--theme-surface);
+ --line:var(--theme-edge);--accent:var(--theme-secondary);--green:var(--theme-accent);
+ --gold:var(--theme-secondary);--blue:var(--theme-accent);
+ color-scheme:dark;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) body{
+ background:radial-gradient(ellipse at 50% -20%,color-mix(in srgb,var(--theme-accent) 18%,transparent),transparent 55%),var(--theme-base)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(.app,.sidebar,.canvas-native-profile,.canvas-umma-gallery,.omQuranPage,.homeLiveStage,.oneMuslimLiveStage,.communityPage){
+ --green:var(--theme-accent);--gold:var(--theme-secondary);
+ accent-color:var(--theme-accent);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(.canvas-native-profile,.canvas-umma-gallery,.sidebar,.communityPage,.omQuranPage) :is(button,input,select,textarea,[role="tab"],[role="tabpanel"]){
+ accent-color:var(--theme-accent);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(.canvas-native-profile,.canvas-umma-gallery,.sidebar,.communityPage) button:not([aria-label*="avatar" i]):not([aria-label*="video" i]){
+ border-color:color-mix(in srgb,var(--theme-edge) 60%,transparent)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(.canvas-native-profile,.canvas-umma-gallery) :is(input,select,textarea){
+ background-color:var(--theme-surface)!important;
+ border-color:var(--theme-edge)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .canvas-native-profile{
+ background:linear-gradient(145deg,color-mix(in srgb,var(--theme-base) 85%,transparent),color-mix(in srgb,var(--theme-surface) 90%,transparent))!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .canvas-native-profile button[aria-label*="Save" i]{
+ background:var(--theme-surface)!important;color:var(--theme-secondary)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .omQuranPage .omQuranBackgroundOverlay::before{
+ background-image:linear-gradient(180deg,var(--profile-scene-tint),var(--theme-base)),var(--profile-scene-image);
+}
+html[data-muslim-theme] :is(button,[role="tab"],.sidebar,.canvas-native-profile){
+ transition:background-color 3s ease,border-color 3s ease,color 3s ease,box-shadow 3s ease;
+}
+@media(prefers-reduced-motion:reduce){html[data-muslim-theme] :is(button,[role="tab"],.sidebar,.canvas-native-profile){transition:none}}
