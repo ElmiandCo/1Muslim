@@ -1,3 +1,4 @@
+import {levelForXp,levelStartXp,levelEndXp} from "../lib/xpLevels";
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
@@ -20,9 +21,9 @@ const classify=(el:Element|null)=>{
   if(href.includes("/profile")) return "open_profile";
   return "general";
 };
-const levelFor=(xp:number)=>Math.max(1,Math.floor(Math.sqrt(Math.max(0,xp)/100))+1);
-const levelStart=(level:number)=>(level-1)*(level-1)*100;
-const levelEnd=(level:number)=>level*level*100;
+const levelFor=levelForXp;
+const levelStart=levelStartXp;
+const levelEnd=levelEndXp;
 
 export default function XPTracker(){
   const supabase=useMemo(()=>createClient(),[]);
