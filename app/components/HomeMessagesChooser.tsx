@@ -61,7 +61,7 @@ export default function HomeMessagesChooser(){
  useEffect(()=>{if(!newChat)return;const t=setTimeout(()=>void findPeople(),250);return()=>clearTimeout(t)},[newChat,search,uid]);
  const start=async(id:string)=>{setBusy(true);const {data,error:err}=await db.rpc("dm_start_conversation",{other_user:id});if(err)setError(err.message);else if(typeof data==="string"){await loadThreads();open(data)}setBusy(false)};
  const name=(id:string)=>profiles[id]?.display_name||profiles[id]?.username||"Member";
- const snippet=(value:string)=>{const Segmenter=(Intl as unknown as {Segmenter?:new (locale:string,options:{granularity:"grapheme"})=>{segment:(s:string)=>Iterable<{segment:string}>}}).Segmenter;return Segmenter?Array.from(new Segmenter("en",{granularity:"grapheme"}).segment(value),x=>x.segment).slice(0,8).join(""):Array.from(value).slice(0,8).join("")};
+ const snippet=(value:string)=>{const Segmenter=(Intl as unknown as {Segmenter?:new (locale:string,options:{granularity:"grapheme"})=>{segment:(s:string)=>Iterable<{segment:string}>}}).Segmenter;const chars=Segmenter?Array.from(new Segmenter("en",{granularity:"grapheme"}).segment(value),x=>x.segment):Array.from(value);return chars.slice(0,40).join("")+(chars.length>40?"…":"")};
  const current=threads.find(t=>t.conversation_id===selected);
  const shown=threads.filter(t=>(filter!=="unread"||unread[t.conversation_id]>0)&& (filter!=="groups")&&name(t.user_id).toLowerCase().includes(search.toLowerCase()));
  return <div className={styles.root}><header className={styles.heading}><strong>CONNECT WITH THE UMMAH</strong><span lang="ar" dir="rtl">رسائل</span></header>
