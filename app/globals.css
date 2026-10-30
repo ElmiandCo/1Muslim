@@ -691,3 +691,34 @@ html[data-profile-background] .omQuranPage .omQuranBackgroundOverlay > *{positio
 .oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveTop,
 .oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveVideo {position:relative;z-index:2;min-height:0;}
 .oneMuslimLiveStage[data-live-format="games"] .oneMuslimLiveVideo {pointer-events:auto;touch-action:pan-x pan-y;}
+
+
+/* 1Muslim global finish preview: one three-second palette transition, no layout changes. */
+html[data-site-theme]{
+ --finish-primary:#075b42;--finish-secondary:#e6c77e;
+ --finish-surface:#102e27;--finish-rgb:7,91,66;
+ --gold:var(--finish-secondary);--green:var(--finish-primary);
+ --accent:var(--finish-secondary);
+}
+html[data-site-theme="sapphire"]{--finish-primary:#164d9b;--finish-secondary:#d3e8ff;--finish-surface:#122b50;--finish-rgb:22,77,155;--blue:#78b5ff}
+html[data-site-theme="ruby"]{--finish-primary:#a32336;--finish-secondary:#eac17b;--finish-surface:#421b26;--finish-rgb:163,35,54}
+html[data-site-theme="amethyst"]{--finish-primary:#7739a9;--finish-secondary:#e35db8;--finish-surface:#361c51;--finish-rgb:119,57,169}
+html[data-site-theme="titanium"]{--finish-primary:#242b35;--finish-secondary:#a9bbc9;--finish-surface:#171b22;--finish-rgb:36,43,53}
+html[data-site-theme="obsidian"]{--finish-primary:#151515;--finish-secondary:#d5ac56;--finish-surface:#211c13;--finish-rgb:21,21,21}
+html[data-site-theme] body{transition:background-color 3s ease,color 3s ease}
+html[data-site-theme] :is(.canvas-native-profile,.canvas-native-profile button,.canvas-native-profile input,.canvas-native-profile section,.sidebar,.nav,.primary,.app button,.app input){
+ transition:background-color 3s ease,border-color 3s ease,color 3s ease,box-shadow 3s ease,filter 3s ease;
+}
+html[data-site-theme]:not([data-site-theme="emerald"]) .canvas-native-profile{
+ background-color:rgba(var(--finish-rgb),.14)!important;
+ border-color:var(--finish-secondary)!important;
+}
+html[data-site-theme]:not([data-site-theme="emerald"]) .canvas-native-profile button[aria-pressed="true"]{
+ border-color:var(--finish-secondary)!important;
+ box-shadow:0 0 18px rgba(var(--finish-rgb),.3);
+}
+html[data-site-theme]:not([data-site-theme="emerald"]) .primary{background:var(--finish-secondary)}
+html[data-site-theme]:not([data-site-theme="emerald"]) .nav.active{background:var(--finish-surface)}
+@media(prefers-reduced-motion:reduce){
+ html[data-site-theme] body,html[data-site-theme] :is(.canvas-native-profile,.canvas-native-profile button,.canvas-native-profile input,.canvas-native-profile section,.sidebar,.nav,.primary,.app button,.app input){transition:none!important}
+}
