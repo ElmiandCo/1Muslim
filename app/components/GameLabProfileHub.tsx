@@ -18,7 +18,7 @@ export default function GameLabProfileHub({active,profile,renderProfileSection}:
    </div>
    <div style={{position:"relative",flex:"1 1 auto",minHeight:0,display:"flex"}}>
    <div ref={mirrorRef} role="tabpanel" aria-label={tab} className="canvas-umma-vertical-gallery" data-profile-mirror-scroll style={{flex:"1 1 auto",height:"100%",minHeight:0,maxHeight:"100%",width:"100%",boxSizing:"border-box",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",background:"rgba(230,255,245,.07)",border:"1px solid rgba(230,255,245,.18)",borderRadius:14,padding:"24px 8px 30px 35px",overscrollBehaviorY:"contain"}}>
-    {tab==="The Umma"?<CanvasUmmaGallery active={active} embedded/>:settingsOpen&&renderProfileSection?renderProfileSection("Settings"):<div className="profile-scroll-content-expanded" style={{display:"flex",flexDirection:"column",gap:0}}><div style={{flex:"0 0 auto",position:"relative"}}>{profile??<p>Sign in to see your profile.</p>}</div></div>}
+    {tab==="The Umma"?<CanvasUmmaGallery active={active} embedded/>:settingsOpen&&renderProfileSection?renderProfileSection("Settings"):<div className="profile-scroll-content-expanded" style={{display:"flex",flexDirection:"column",gap:0}}><div style={{flex:"0 0 auto",position:"relative"}}>{profile??<p>Sign in to see your profile.</p>}</div><footer aria-label="End of Profile section" style={{flexShrink:0,marginTop:30,padding:"0 0 16px",textAlign:"center",fontSize:12,letterSpacing:".12em",opacity:.75,pointerEvents:"none"}}>— 1Muslim —</footer></div>}
    </div>
 
    </div>
