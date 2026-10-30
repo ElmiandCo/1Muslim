@@ -28,3 +28,9 @@
 .quizChoices button:disabled{opacity:.7;cursor:default}.quizFeedback{text-align:center;color:#f7dfa2;font-size:19px;font-weight:800}.quizFinish{display:grid;gap:15px;place-items:center;min-height:370px;text-align:center}.quizFinish h3{font-size:32px;color:#ffe9a4}.quizFinish p{font-size:19px}.quizFinish button{min-height:55px;padding:12px 22px;border:1px solid #e8d49a;border-radius:14px;background:#1e6250;color:white;font-size:16px;font-weight:750;cursor:pointer}
 @media(max-width:600px){.lessonNav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.lessonNav button{min-width:0;padding:7px 4px;min-height:48px;flex-direction:column;gap:0}.lessonNav button small{font-size:10px}.lessonQuiz{min-height:610px;padding:14px;gap:17px;border-radius:18px}.quizChoices{gap:12px;min-height:360px}.quizChoices button{min-height:170px;font-size:clamp(68px,17vw,100px);border-radius:18px}.quizSpeaker{min-height:62px}}
 @media(prefers-reduced-motion:reduce){.quizChoices button{transition:none}}
+
+/* Mobile lesson selector: one horizontal swipeable strip, never a second row. */
+.lessonNav{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:100%;min-width:0;width:100%;gap:7px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;touch-action:pan-x;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.lessonNav::-webkit-scrollbar{display:none}
+.lessonNav button{flex:0 0 auto;white-space:nowrap;scroll-snap-align:start}
+@media(max-width:600px){.lessonNav{gap:6px}.lessonNav button{padding:7px 9px;min-width:42px;min-height:43px}.lessonNav button small{font-size:10px}}
