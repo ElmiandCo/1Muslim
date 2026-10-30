@@ -1884,3 +1884,18 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 [data-workspace-page="6"] .canvas-profile-mirror [role="tablist"][aria-label="Profile sections"]{flex-direction:column!important;align-items:stretch!important}
 [data-workspace-page="6"] .canvas-profile-mirror [role="tablist"][aria-label="Profile sections"]>button{width:29px!important;min-height:76px!important;flex:none!important;writing-mode:vertical-rl!important;font-size:10px!important}
 }
+
+/* Remove the oversized decorative PNG from the Live canvas only.
+   Keep the smaller header/navigation ornament and all player controls. */
+.canvas-vertical-main:has(> .canvas-live-independent-stage)::before,
+.canvas-vertical-main:has(> .canvas-live-independent-stage)::after{
+ background-image:none!important;
+}
+.canvas-vertical-main > .canvas-live-independent-stage::before,
+.canvas-vertical-main > .canvas-live-independent-stage::after,
+.canvas-vertical-main > .canvas-live-independent-stage .surfaceArtwork{
+ background-image:none!important;
+}
+.canvas-vertical-main > .canvas-live-independent-stage{
+ background-image:none!important;
+}
