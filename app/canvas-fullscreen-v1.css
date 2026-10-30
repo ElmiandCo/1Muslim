@@ -1928,3 +1928,37 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   min-height:150dvh!important;
   height:auto!important;
 }
+
+
+/* iPhone Profile scroll repair: keep a bounded native scrollport; content determines scroll range.
+   Remove prior artificial 150/200dvh minimums that expanded flex ancestors and hid the bottom. */
+@media (max-width:700px){
+ [data-workspace-page="6"] .canvas-profile-mirror,
+ [data-workspace-page="6"] .canvas-profile-mirror > .canvas-native-body,
+ [data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"],
+ [data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"] > div:first-child,
+ [data-workspace-page="6"] .canvas-profile-mirror section[aria-label="Profile workspace"] > div:first-child > div:nth-child(2){
+   min-height:0!important;
+   max-height:100%!important;
+ }
+ [data-workspace-page="6"] .canvas-profile-mirror [data-profile-mirror-scroll][aria-label="My Profile"]{
+   flex:1 1 0%!important;
+   height:0!important;
+   min-height:0!important;
+   max-height:100%!important;
+   overflow-y:auto!important;
+   overflow-x:hidden!important;
+   -webkit-overflow-scrolling:touch!important;
+   touch-action:pan-y!important;
+   scroll-snap-type:none!important;
+ }
+ [data-workspace-page="6"] .canvas-profile-mirror .profile-scroll-content-expanded,
+ [data-workspace-page="6"] .canvas-profile-mirror .profile-scroll-content-expanded > div{
+   min-height:0!important;
+   height:auto!important;
+   max-height:none!important;
+ }
+ [data-workspace-page="6"] .canvas-profile-mirror .profile-scroll-content-expanded{
+   padding-bottom:0!important;
+ }
+}
