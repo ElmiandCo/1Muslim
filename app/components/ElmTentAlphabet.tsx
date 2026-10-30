@@ -57,6 +57,12 @@ export default function ElmTentAlphabet(){
  },[]);
  const mark=()=>{
   if(!ready||lesson>1)return;
+  if(!practiced.includes(selected)){
+   void createClient().rpc("claim_arabic_letter_practice_xp",{p_lesson:lesson+1,p_letter_index:selected}).then(({data,error})=>{
+    if(!error&&Number((Array.isArray(data)?data[0]:data)?.awarded)>0)
+     window.dispatchEvent(new Event("1muslim-xp-updated"));
+   });
+  }
   const next=practiced.includes(selected)?practiced:[...practiced,selected];
   setPracticed(next);
   setLessonProgress(current=>({...current,[lesson]:next}));
