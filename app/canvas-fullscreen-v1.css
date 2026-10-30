@@ -1913,3 +1913,25 @@ main[class*="control"]:has(.canvas-vertical-main > .canvas-live-independent-stag
  opacity:0!important;
  visibility:hidden!important;
 }
+
+/* Portrait story presentation for Phone/vertical live streams (9:16).
+   Keep Desktop live unchanged; mask the video within the rounded frame. */
+.canvas-vertical-main > .canvas-live-independent-stage:has(.homeLiveActualPlayer) > .homeLiveActualPlayer{
+ border-radius:22px!important;
+ overflow:hidden!important;
+ isolation:isolate!important;
+ -webkit-mask-image:-webkit-radial-gradient(white,black);
+ box-shadow:0 12px 36px rgba(0,0,0,.28),0 0 22px color-mix(in srgb,var(--theme-accent,#22bd83) 12%,transparent)!important;
+ animation:oneMuslimStoryFloat 7s ease-in-out infinite;
+}
+.canvas-vertical-main > .canvas-live-independent-stage > .homeLiveActualPlayer :is(video,iframe){
+ display:block;max-width:100%;max-height:100%;
+ border-radius:inherit;object-fit:cover;
+}
+@keyframes oneMuslimStoryFloat{
+ 0%,100%{translate:0 0}
+ 50%{translate:0 -3px}
+}
+@media(prefers-reduced-motion:reduce){
+ .canvas-vertical-main > .canvas-live-independent-stage > .homeLiveActualPlayer{animation:none}
+}
