@@ -17,6 +17,7 @@ const exploreGroups = [
   ]},
   { title: "Community", items: [
     { label: "Community", ar: "المجتمع", href: "/community" },
+    { label: "Maps", ar: "خرائط", href: "/maps" },
     { label: "Ashab", ar: "أصحاب", href: "/ashab" },
     { label: "Find People", ar: "بحث", href: "/find" },
   ]},

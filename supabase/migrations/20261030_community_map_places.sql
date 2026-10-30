@@ -1,0 +1,6 @@
+create table if not exists public.community_map_places (id uuid primary key default gen_random_uuid(),name text not null,address text not null,category text not null check(category in ('Food','Fashion','Education','Mosques')),description text,latitude double precision not null check(latitude between -90 and 90),longitude double precision not null check(longitude between -180 and 180),image_url text,video_url text,published boolean not null default false,created_at timestamptz not null default now());
+alter table public.community_map_places enable row level security;
+create policy "Public can read published places" on public.community_map_places for select using (published=true);
+create policy "Only map admin can insert" on public.community_map_places for insert to authenticated with check (lower(coalesce(auth.jwt()->>'email',''))='hudhudbyelmi@gmail.com');
+create policy "Only map admin can update" on public.community_map_places for update to authenticated using (lower(coalesce(auth.jwt()->>'email',''))='hudhudbyelmi@gmail.com') with check (lower(coalesce(auth.jwt()->>'email',''))='hudhudbyelmi@gmail.com');
+create policy "Only map admin can delete" on public.community_map_places for delete to authenticated using (lower(coalesce(auth.jwt()->>'email',''))='hudhudbyelmi@gmail.com');
