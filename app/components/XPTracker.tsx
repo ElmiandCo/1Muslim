@@ -35,6 +35,15 @@ export default function XPTracker(){
   const showLevelUp=(nextXp:number)=>{const next=levelFor(nextXp);if(levelRef.current===null){levelRef.current=next;return;}if(next>levelRef.current){setXpVisible(true);if(hideTimer.current)clearTimeout(hideTimer.current);hideTimer.current=setTimeout(()=>setXpVisible(false),6000);}levelRef.current=next;};
   useEffect(()=>()=>{if(hideTimer.current)clearTimeout(hideTimer.current)},[]);
 
+  useEffect(()=>{
+    if(!userId)return;
+    const refresh=async()=>{
+      const {data}=await supabase.from("profiles").select("xp_total").eq("id",userId).maybeSingle();
+      if(data){const total=Number(data.xp_total||0);showLevelUp(total);setXp(total)}
+    };
+    window.addEventListener("1muslim-xp-updated",refresh);
+    return()=>window.removeEventListener("1muslim-xp-updated",refresh);
+  },[supabase,userId]);
   const lastClick=useRef<Record<string,number>>({});
   const activeRef=useRef(0);
   const lastActivity=useRef(Date.now());
