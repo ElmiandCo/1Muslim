@@ -16,9 +16,8 @@ function applyTheme(value:unknown){
  const requested=typeof value==="string"?value:fallback;
  const theme=themes[aliases[requested]||requested]?aliases[requested]||requested:fallback;
  const t=themes[theme];const root=document.documentElement;
- root.dataset.profileBackground=theme;root.dataset.muslimTheme=theme;
+ root.dataset.muslimTheme=theme;
  root.style.setProperty("--theme-base",t.base);root.style.setProperty("--theme-accent",t.accent);root.style.setProperty("--theme-secondary",t.secondary);root.style.setProperty("--theme-surface",t.surface);root.style.setProperty("--theme-edge",t.edge);
- root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[theme]||theme}.PNG")`);
  root.style.setProperty("--profile-scene-tint",t.tint);
  try{localStorage.setItem("1muslim:profile-background",theme)}catch{}
  if(theme==="obsidian"||theme==="titanium"){try{localStorage.setItem("1muslim-theme-mode","night");localStorage.setItem("1muslim-theme","dark")}catch{};root.classList.remove("light")}
@@ -33,13 +32,13 @@ export default function ProfileThemeSync(){
    if(!active)return;
    if(!user){return}
    const {data}=await db.from("profiles").select("avatar_config").eq("id",user.id).maybeSingle();
-   if(active)applyTheme((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||fallback);
+   if(active)applyTheme((data?.avatar_config as {profileColorTheme?:string}|null)?.profileColorTheme||fallback);
   };
   void refresh();
   const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void refresh()});
   const onChange=(event:Event)=>{const theme=(event as CustomEvent<string>).detail;if(typeof theme==="string")applyTheme(theme);else void refresh()};
-  window.addEventListener("1muslim:profile-background-changed",onChange);
-  return()=>{active=false;subscription.unsubscribe();window.removeEventListener("1muslim:profile-background-changed",onChange)};
+  window.addEventListener("1muslim:profile-theme-changed",onChange);
+  return()=>{active=false;subscription.unsubscribe();window.removeEventListener("1muslim:profile-theme-changed",onChange)};
  },[]);
  return null;
 }
