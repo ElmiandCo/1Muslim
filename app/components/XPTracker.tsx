@@ -150,5 +150,5 @@ export default function XPTracker(){
     <div className="bar"><div className="fill" style={{width:progress+"%"}}/></div>
     <div className="time"><div className="fill" style={{width:timeProgress+"%"}}/></div>
     <div className="meta"><span>{level===10?"Maximum level":Math.max(0,end-xp).toLocaleString()+" to next level"}</span><span>+500 / 5 min active</span></div>
-  </div>
+  </div></>
 }
