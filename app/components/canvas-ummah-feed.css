@@ -49,3 +49,9 @@
 .ummah-comments-sheet form{flex-shrink:0;margin-top:8px}
 @keyframes ummahSheetCentered{from{opacity:.4;transform:translateY(20px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.ummah-comments-sheet{animation:none}}
+
+/* Guest profile carousels: 3 cards across on phones, 5 on desktop. */
+.guest-profile-carousel{width:100%;max-width:100%;min-width:0;overscroll-behavior-x:contain;}
+.guest-profile-carousel .guest-profile-carousel-card{box-sizing:border-box;flex:0 0 calc((100% - 16px)/3);min-width:0;scroll-snap-align:start;overflow:hidden;}
+.guest-profile-carousel .guest-profile-carousel-card img{max-width:100%;}
+@media(min-width:768px){.guest-profile-carousel .guest-profile-carousel-card{flex-basis:calc((100% - 32px)/5);}}
