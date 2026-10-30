@@ -755,3 +755,34 @@ html[data-muslim-theme] :is(body,main,header,footer,nav,aside,section,[role="dia
  transition:background-color 2.5s ease,border-color 2.5s ease,box-shadow 2.5s ease;
 }
 @media(prefers-reduced-motion:reduce){html[data-muslim-theme] :is(body,main,header,footer,nav,aside,section,[role="dialog"],[role="tabpanel"],.app,.sidebar,.canvas-umma-gallery,.communityPage,.homeLiveStage,.oneMuslimLiveStage){transition:none}}
+
+/* Unified app chrome palette. Media, canvases and artwork retain their own colors. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) {
+ --app-theme-gradient:linear-gradient(145deg,var(--theme-base),var(--theme-surface));
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
+ .canvas-native-profile,.canvas-umma-gallery,.communityPage,.homeLiveStage,
+ .oneMuslimLiveStage,.omQuranPage,.sidebar,.app
+) :is(
+ [class*="card" i],[class*="panel" i],[class*="toolbar" i],
+ [class*="navbar" i],[class*="navigation" i],[class*="header" i],
+ [class*="footer" i],[class*="menu" i],[class*="modal" i]
+):not(img):not(video):not(canvas) {
+ border-color:color-mix(in srgb,var(--theme-edge) 45%,transparent)!important;
+ box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--theme-accent) 8%,transparent);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
+ .canvas-native-profile,.canvas-umma-gallery,.communityPage,.homeLiveStage,
+ .oneMuslimLiveStage,.omQuranPage,.sidebar,.app
+) :is(
+ [class*="card" i],[class*="panel" i],[class*="toolbar" i],
+ [class*="navbar" i],[class*="navigation" i],[class*="menu" i]
+):not(img):not(video):not(canvas):not([style*="background-image"]) {
+ background-color:color-mix(in srgb,var(--theme-surface) 82%,transparent)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
+ .canvas-native-profile,.canvas-umma-gallery,.communityPage,.homeLiveStage,
+ .oneMuslimLiveStage,.omQuranPage,.sidebar,.app
+) :is(button,[role="button"],[role="tab"]):not([aria-label*="video" i]):not([aria-label*="avatar" i]) {
+ accent-color:var(--theme-accent);
+}
