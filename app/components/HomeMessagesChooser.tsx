@@ -1,9 +1,9 @@
 "use client";
-import {useCallback,useEffect,useMemo,useState} from "react";
+import {useCallback,useEffect,useMemo,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import styles from "./home-messenger.module.css";
 type Participant={conversation_id:string;user_id:string};
-type Msg={id:string;conversation_id:string;sender_id:string;body:string;created_at:string};
+type Msg={id:string;conversation_id:string;sender_id:string;body:string;created_at:string;attachment_path:string|null;attachment_type:string|null};
 type Profile={id:string;display_name:string|null;username:string|null;avatar_url:string|null;profile_image_url:string|null};
 export default function HomeMessagesChooser(){
  const db=useMemo(()=>createClient(),[]);
@@ -16,6 +16,8 @@ export default function HomeMessagesChooser(){
  const [search,setSearch]=useState("");
  const [draft,setDraft]=useState("");
  const [busy,setBusy]=useState(false);
+ const photoInput=useRef<HTMLInputElement>(null);
+ const [photoUrls,setPhotoUrls]=useState<Record<string,string>>({});
  const [error,setError]=useState("");
  const [newChat,setNewChat]=useState(false);
  const [candidates,setCandidates]=useState<Profile[]>([]);
@@ -37,10 +39,21 @@ export default function HomeMessagesChooser(){
    setUnread(counts)}
  },[db,uid]);
  useEffect(()=>{void loadThreads();const t=setInterval(()=>void loadThreads(),12000);return()=>clearInterval(t)},[loadThreads]);
- const loadMessages=useCallback(async()=>{if(!selected)return;const {data,error:err}=await db.from("dm_messages").select("id,conversation_id,sender_id,body,created_at").eq("conversation_id",selected).order("created_at",{ascending:true}).limit(200);if(err)setError(err.message);else setMessages((data||[]) as Msg[])},[db,selected]);
+ const loadMessages=useCallback(async()=>{if(!selected)return;const {data,error:err}=await db.from("dm_messages").select("id,conversation_id,sender_id,body,created_at,attachment_path,attachment_type").eq("conversation_id",selected).order("created_at",{ascending:true}).limit(200);if(err)setError(err.message);else setMessages((data||[]) as Msg[])},[db,selected]);
+ useEffect(()=>{let alive=true;const paths=[...new Set(messages.filter(m=>m.attachment_type==="image"&&m.attachment_path).map(m=>m.attachment_path!))].filter(p=>!photoUrls[p]);if(paths.length)void Promise.all(paths.map(async p=>{const {data}=await db.storage.from("dm-attachments").createSignedUrl(p,3600);return [p,data?.signedUrl] as const})).then(rows=>{if(alive)setPhotoUrls(v=>({...v,...Object.fromEntries(rows.filter(x=>!!x[1]))}))});return()=>{alive=false}},[db,messages,photoUrls]);
  useEffect(()=>{void loadMessages();const t=setInterval(()=>void loadMessages(),5000);return()=>clearInterval(t)},[loadMessages]);
  const open=(id:string)=>{setSelected(id);setMobileThread(true);setNewChat(false);setError("");if(uid)void db.from("dm_participants").update({last_read_at:new Date().toISOString()}).eq("conversation_id",id).eq("user_id",uid)};
  const send=async()=>{if(!uid||!selected||!draft.trim()||busy)return;setBusy(true);setError("");const {error:err}=await db.from("dm_messages").insert({conversation_id:selected,sender_id:uid,body:draft.trim()});if(err)setError(err.message);else{setDraft("");await loadMessages()}setBusy(false)};
+ const sendPhoto=async(file:File)=>{if(!uid||!selected||busy)return;
+  if(!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)){setError("Choose a JPG, PNG, WebP, or GIF image.");return}
+  if(file.size>25*1024*1024){setError("Images must be 25 MB or smaller.");return}
+  setBusy(true);setError("");const extension=file.type.split("/")[1]==="jpeg"?"jpg":file.type.split("/")[1];
+  const path=selected+"/"+uid+"/"+crypto.randomUUID()+"."+extension;
+  const {error:upError}=await db.storage.from("dm-attachments").upload(path,file,{contentType:file.type,upsert:false});
+  if(upError){setError(upError.message);setBusy(false);return}
+  const {error:msgError}=await db.from("dm_messages").insert({conversation_id:selected,sender_id:uid,body:"📷 "+file.name.slice(0,200),attachment_path:path,attachment_type:"image"});
+  if(msgError)setError(msgError.message);else await loadMessages();setBusy(false);
+ };
  const findPeople=async()=>{if(!uid)return;const q=search.trim().replace(/[%_,]/g,"");let request=db.from("profiles").select("id,display_name,username,avatar_url,profile_image_url").neq("id",uid).limit(25);if(q.length>=2)request=request.or(`display_name.ilike.%${q}%,username.ilike.%${q}%`);const {data}=await request;setCandidates((data||[]) as Profile[])};
  useEffect(()=>{if(!newChat)return;const t=setTimeout(()=>void findPeople(),250);return()=>clearTimeout(t)},[newChat,search,uid]);
  const start=async(id:string)=>{setBusy(true);const {data,error:err}=await db.rpc("dm_start_conversation",{other_user:id});if(err)setError(err.message);else if(typeof data==="string"){await loadThreads();open(data)}setBusy(false)};
@@ -57,7 +70,7 @@ export default function HomeMessagesChooser(){
  </aside>
  <section className={`${styles.thread} ${!mobileThread?styles.mobileHiddenThread:""}`}>
  <div className={styles.threadHeader}>{mobileThread&&<button className={styles.back} onClick={()=>setMobileThread(false)} aria-label="Back to conversations">‹</button>}<span className={styles.avatar}>💬</span><span><strong>{current?name(current.user_id):"Your messages"}</strong><small>{current?"Private conversation":"Select a conversation to begin"}</small></span></div>
- <div className={styles.messages}>{selected?messages.map(m=><div key={m.id} className={`${styles.bubble} ${m.sender_id===uid?styles.mine:""}`}><small>{m.sender_id===uid?"You":current?name(current.user_id):"Member"} · {new Date(m.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</small><span>{m.body}</span></div>):<div className={styles.empty}>Select a conversation from the left, or start a new message. 💚</div>}</div>
- <form className={styles.composer} onSubmit={e=>{e.preventDefault();void send()}}><input aria-label="Write a message" placeholder="Write a message..." value={draft} onChange={e=>setDraft(e.target.value)} disabled={!selected||!uid}/><button type="submit" disabled={!selected||!draft.trim()||busy} aria-label="Send message">➤</button></form>
+ <div className={styles.messages}>{selected?messages.map(m=><div key={m.id} className={`${styles.bubble} ${m.sender_id===uid?styles.mine:""}`}><small>{m.sender_id===uid?"You":current?name(current.user_id):"Member"} · {new Date(m.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</small><span>{m.body}</span>{m.attachment_type==="image"&&m.attachment_path&&(photoUrls[m.attachment_path]?<a href={photoUrls[m.attachment_path]} target="_blank" rel="noopener noreferrer" aria-label="View full image"><img src={photoUrls[m.attachment_path]} alt="Shared photo" loading="lazy" style={{display:"block",maxWidth:"100%",maxHeight:260,borderRadius:12,objectFit:"contain",marginTop:6}}/></a>:<small>Loading photo…</small>)}</div>):<div className={styles.empty}>Select a conversation from the left, or start a new message. 💚</div>}</div>
+ <form className={styles.composer} onSubmit={e=>{e.preventDefault();void send()}}><input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={e=>{const file=e.target.files?.[0];if(file)void sendPhoto(file);e.target.value=""}}/><button type="button" disabled={!selected||!uid||busy} onClick={()=>photoInput.current?.click()} title="Attach photo" aria-label="Attach photo" style={{background:"rgba(1,95,71,.55)",border:"1px solid rgba(227,216,175,.4)",fontSize:19}}>📷</button><input aria-label="Write a message" placeholder="Write a message..." value={draft} onChange={e=>setDraft(e.target.value)} disabled={!selected||!uid}/><button type="submit" disabled={!selected||!draft.trim()||busy} aria-label="Send message">➤</button></form>
  </section></div>{error&&<p role="alert" className={styles.error}>{error}</p>}</div>
 }
