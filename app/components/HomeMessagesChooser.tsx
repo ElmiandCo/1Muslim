@@ -1,72 +1,63 @@
 "use client";
-import {useEffect,useRef,useState} from "react";
-import Image from "next/image";
-import {useRouter} from "next/navigation";
+import {useCallback,useEffect,useMemo,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
-import styles from "./home-messages-chooser.module.css";
-type Mode="audio"|"video"|"chat";
-type Person={id:string;display_name:string|null;username:string|null;avatar_url:string|null;profile_image_url:string|null;avatar_path:string|null};
-const actions:{mode:Mode;label:string;asset:string}[]=[
- {mode:"chat",label:"Message",asset:"/assets/hudhud-messages.PNG"}
-];
+import styles from "./home-messenger.module.css";
+type Participant={conversation_id:string;user_id:string};
+type Msg={id:string;conversation_id:string;sender_id:string;body:string;created_at:string};
+type Profile={id:string;display_name:string|null;username:string|null;avatar_url:string|null;profile_image_url:string|null};
 export default function HomeMessagesChooser(){
- const router=useRouter();
- const [mode,setMode]=useState<Mode|null>(null);
+ const db=useMemo(()=>createClient(),[]);
+ const [uid,setUid]=useState<string|null>(null);
+ const [threads,setThreads]=useState<Participant[]>([]);
+ const [profiles,setProfiles]=useState<Record<string,Profile>>({});
+ const [messages,setMessages]=useState<Msg[]>([]);
+ const [selected,setSelected]=useState<string|null>(null);
+ const [filter,setFilter]=useState<"all"|"unread"|"groups">("all");
  const [search,setSearch]=useState("");
- const [people,setPeople]=useState<Person[]>([]);
- const [selected,setSelected]=useState<Person|null>(null);
  const [draft,setDraft]=useState("");
- const [loading,setLoading]=useState(false);
+ const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
- const [cameraOn,setCameraOn]=useState(false);
- const [muted,setMuted]=useState(false);
- const [cameraError,setCameraError]=useState("");
- const [callBusy,setCallBusy]=useState(false);
- const [expanded,setExpanded]=useState(false);
- const [callActive,setCallActive]=useState(false);
- const [callError,setCallError]=useState("");
- const [facing,setFacing]=useState<"user"|"environment">("user");
- const videoRef=useRef<HTMLVideoElement>(null);
- const mediaRef=useRef<MediaStream|null>(null);
- useEffect(()=>{if(mode==="video")return;setCameraOn(false)},[mode]);
- useEffect(()=>{if(mode!=="video"||!cameraOn)return;let cancelled=false;
-  (async()=>{try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing},audio:false});if(cancelled){stream.getTracks().forEach(t=>t.stop());return}mediaRef.current=stream;if(videoRef.current){videoRef.current.srcObject=stream;await videoRef.current.play().catch(()=>{})}}catch{if(!cancelled){setCameraError("Camera permission unavailable. You can still select a member.");setCameraOn(false)}}})();
-  return()=>{cancelled=true;mediaRef.current?.getTracks().forEach(t=>t.stop());mediaRef.current=null;if(videoRef.current)videoRef.current.srcObject=null};
- },[mode,cameraOn,facing]);
- useEffect(()=>{if(!mode)return;let active=true;const timer=setTimeout(async()=>{
-  setLoading(true);setError("");
-  try{const client=createClient();const {data:{user}}=await client.auth.getUser();if(!user){if(active)setError("Sign in to contact members.");return}
-   const q=search.trim().replace(/[%_,]/g,"");
-   let request=client.from("profiles").select("id,display_name,username,avatar_url,profile_image_url,avatar_path").neq("id",user.id).limit(30);
-   if(q.length>=2)request=request.or(`display_name.ilike.%${q}%,username.ilike.%${q}%`);
-   const {data,error:dbError}=await request;if(dbError)throw dbError;
-   if(active)setPeople((data||[]) as Person[]);
-  }catch{if(active)setError("Unable to load members right now.")}finally{if(active)setLoading(false)}
- },search?300:0);return()=>{active=false;clearTimeout(timer)}},[mode,search]);
- const chooseMode=(next:Mode)=>{setMode(next);setSearch("");setSelected(null);setDraft("");setCameraOn(false);setCameraError("");setCallError("")};
- const startCanvasCall=async(person:Person,call:"audio"|"video")=>{if(callBusy)return;setCallBusy(true);setCallError("");try{const client=createClient();const {data,error}=await client.rpc("dm_start_conversation",{other_user:person.id});if(error)throw error;if(!data||typeof data!=="string")throw Error("Could not open conversation");/* Recipient accepts or declines the incoming call; no prior message approval required. */const {data:{user}}=await client.auth.getUser();if(!user)throw Error("Sign in to call");window.dispatchEvent(new CustomEvent("1muslim:call-context",{detail:{conversationId:data,userId:user.id,peerName:displayName(person),peerAvatar:person.avatar_url||person.profile_image_url||null,autoStartMode:call}}));setCallActive(true);setMode(call);if(call==="video")setCameraOn(true)}catch(e){setCallError(e instanceof Error?e.message:"Could not start call")}finally{setCallBusy(false)}};
- const openConversation=(person:Person,call?:Mode)=>{const params=new URLSearchParams({to:person.id});if(call&&call!=="chat")params.set("call",call);if(!call&&draft.trim())params.set("draft",draft.trim());router.push("/messages?"+params.toString())};
- const displayName=(p:Person)=>p.display_name||p.username||"Member";
- const avatar=(p:Person)=>{const url=p.avatar_url||p.profile_image_url||p.avatar_path;return url&&(/^(https?:|\/)/.test(url))?<img src={url} alt="" loading="lazy" referrerPolicy="no-referrer"/>:<span>{displayName(p).slice(0,1).toUpperCase()}</span>};
- return <div className={`${styles.root} ${expanded?styles.expanded:""}`} data-mode={mode||"choose"}>
-  <header className={styles.heading}><strong>CONNECT WITH THE UMMAH</strong><span lang="ar" dir="rtl">تواصل</span></header>
-  <nav className={styles.actions} aria-label="Communication mode">{actions.map(action=><button type="button" key={action.mode} className={styles.action} aria-pressed={mode===action.mode} onClick={()=>chooseMode(action.mode)}><Image src={action.asset} width={44} height={44} alt="" unoptimized/><span>{action.label}</span></button>)}</nav>
-  <section key={mode||"choose"} className={styles.stage} aria-label="Communication workspace">
-   {mode===null?<div className={styles.welcome}><span className={styles.welcomeOrb}>✧</span><strong>Choose someone to connect with</strong><small>Voice · Video · Messages</small><button type="button" onClick={()=>chooseMode("chat")}>Explore members ↗</button></div>:<>
-    <div className={styles.stageBar}><span>{callActive?"● Call started · "+(selected?displayName(selected):"Member"):mode==="video"?"◉ Camera & video":mode==="audio"?"☎ Voice calling":"✉ Your messages"}</span><div className={styles.stageControls}><button type="button" className={styles.iconButton} onClick={()=>setExpanded(v=>!v)} aria-label={expanded?"Minimize calling workspace":"Expand calling workspace"} title={expanded?"Minimize":"Expand"}>{expanded?"↙":"⛶"}</button><button type="button" className={styles.iconButton} onClick={()=>{setExpanded(false);setMode(null);setCallActive(false)}} aria-label="Close workspace">×</button></div></div>
-    {mode==="video"&&<div className={styles.videoStage}>
-      <div className={styles.videoFrame}>{cameraOn?<video ref={videoRef} autoPlay playsInline muted aria-label="Local camera preview"/>:<div className={styles.cameraPlaceholder}><span>◉</span><small>Camera preview</small></div>}
-      <div className={styles.videoTools}><button type="button" onClick={()=>{setCameraError("");setCameraOn(v=>!v)}} aria-label={cameraOn?"Turn camera off":"Turn camera on"} title="Camera">{cameraOn?"◼":"◉"}</button><button type="button" onClick={()=>setFacing(v=>v==="user"?"environment":"user")} aria-label="Flip camera" title="Flip camera">⇄</button><button type="button" onClick={()=>setMuted(v=>!v)} aria-pressed={muted} aria-label={muted?"Unmute microphone":"Mute microphone"} title="Microphone">{muted?"◌":"♩"}</button></div></div>
-      {cameraError&&<small role="status" className={styles.status}>{cameraError}</small>}
-     </div>}
-    {mode==="audio"&&<div className={styles.voiceStage}><span className={styles.voiceOrb} aria-hidden="true">☎</span><span>{selected?displayName(selected):"Select a member below"}</span><button type="button" className={styles.iconButton} onClick={()=>setMuted(v=>!v)} aria-pressed={muted} aria-label={muted?"Unmute microphone":"Mute microphone"}>{muted?"◌":"♩"}</button></div>}
-    {callError&&<small role="alert" className={styles.status}>{callError}</small>}
-    <div className={styles.memberArea}>
-     <label className={styles.searchLabel}><span className={styles.srOnly}>Search members</span><input aria-label="Search members" placeholder="⌕  Search members" value={search} onChange={e=>setSearch(e.target.value)}/></label>
-     <div className={styles.people} aria-live="polite">{loading?<p>Finding members…</p>:error?<p>{error}</p>:people.length?<div className={styles.peopleGrid}>{people.map(person=><button type="button" key={person.id} className={styles.personCard} aria-pressed={selected?.id===person.id} onClick={()=>setSelected(person)}><span className={styles.avatar}>{avatar(person)}</span><strong>{displayName(person)}</strong></button>)}</div>:<p>No members to show yet.</p>}</div>
-    </div>
-    {mode==="chat"?<div className={styles.composer}><span>{selected?"✦ "+displayName(selected):"Choose an avatar to start"}</span><div className={styles.composerRow}><input aria-label="Your message" placeholder="As-salāmu ʿalaykum…" value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&selected)openConversation(selected)}}/><button type="button" disabled={!selected} onClick={()=>selected&&openConversation(selected)} aria-label="Open conversation">➤</button></div></div>:<div className={styles.callBar}><button type="button" className={styles.hangup} onClick={()=>{setExpanded(false);setMode(null);setCallActive(false)}} aria-label="Close call studio">✕</button><button type="button" className={styles.callNow} disabled={!selected||callBusy} onClick={()=>selected&&void startCanvasCall(selected,mode)}>{callBusy?"Connecting…":mode==="video"?"◉ Video call":"☎ Call"}</button></div>}
-   </>}
-  </section>
- </div>;
+ const [newChat,setNewChat]=useState(false);
+ const [candidates,setCandidates]=useState<Profile[]>([]);
+ const [unread,setUnread]=useState<Record<string,number>>({});
+ const [mobileThread,setMobileThread]=useState(false);
+ useEffect(()=>{let active=true;db.auth.getUser().then(({data})=>{if(active)setUid(data.user?.id||null)});return()=>{active=false}},[db]);
+ const loadThreads=useCallback(async()=>{if(!uid)return;
+  const {data,error:err}=await db.from("dm_participants").select("conversation_id,user_id").order("joined_at",{ascending:false});
+  if(err){setError(err.message);return}
+  const rows=(data||[]) as Participant[];const own=new Set(rows.filter(x=>x.user_id===uid).map(x=>x.conversation_id));
+  const peers=rows.filter(x=>own.has(x.conversation_id)&&x.user_id!==uid);
+  setThreads(peers);
+  const ids=[...new Set(peers.map(x=>x.user_id))];
+  if(ids.length){const {data:p}=await db.from("profiles").select("id,display_name,username,avatar_url,profile_image_url").in("id",ids);setProfiles(Object.fromEntries(((p||[]) as Profile[]).map(x=>[x.id,x])))}
+  if(own.size){const {data:reads}=await db.from("dm_participants").select("conversation_id,last_read_at").eq("user_id",uid).in("conversation_id",[...own]);
+   const {data:recent}=await db.from("dm_messages").select("conversation_id,sender_id,created_at").in("conversation_id",[...own]).order("created_at",{ascending:false}).limit(500);
+   const last=new Map((reads||[]).map(x=>[x.conversation_id,x.last_read_at]));const counts:Record<string,number>={};
+   for(const m of recent||[]){if(m.sender_id!==uid&&(!last.get(m.conversation_id)||new Date(m.created_at)>new Date(last.get(m.conversation_id)!)))counts[m.conversation_id]=(counts[m.conversation_id]||0)+1}
+   setUnread(counts)}
+ },[db,uid]);
+ useEffect(()=>{void loadThreads();const t=setInterval(()=>void loadThreads(),12000);return()=>clearInterval(t)},[loadThreads]);
+ const loadMessages=useCallback(async()=>{if(!selected)return;const {data,error:err}=await db.from("dm_messages").select("id,conversation_id,sender_id,body,created_at").eq("conversation_id",selected).order("created_at",{ascending:true}).limit(200);if(err)setError(err.message);else setMessages((data||[]) as Msg[])},[db,selected]);
+ useEffect(()=>{void loadMessages();const t=setInterval(()=>void loadMessages(),5000);return()=>clearInterval(t)},[loadMessages]);
+ const open=(id:string)=>{setSelected(id);setMobileThread(true);setNewChat(false);setError("");if(uid)void db.from("dm_participants").update({last_read_at:new Date().toISOString()}).eq("conversation_id",id).eq("user_id",uid)};
+ const send=async()=>{if(!uid||!selected||!draft.trim()||busy)return;setBusy(true);setError("");const {error:err}=await db.from("dm_messages").insert({conversation_id:selected,sender_id:uid,body:draft.trim()});if(err)setError(err.message);else{setDraft("");await loadMessages()}setBusy(false)};
+ const findPeople=async()=>{if(!uid)return;const q=search.trim().replace(/[%_,]/g,"");let request=db.from("profiles").select("id,display_name,username,avatar_url,profile_image_url").neq("id",uid).limit(25);if(q.length>=2)request=request.or(`display_name.ilike.%${q}%,username.ilike.%${q}%`);const {data}=await request;setCandidates((data||[]) as Profile[])};
+ useEffect(()=>{if(!newChat)return;const t=setTimeout(()=>void findPeople(),250);return()=>clearTimeout(t)},[newChat,search,uid]);
+ const start=async(id:string)=>{setBusy(true);const {data,error:err}=await db.rpc("dm_start_conversation",{other_user:id});if(err)setError(err.message);else if(typeof data==="string"){await loadThreads();open(data)}setBusy(false)};
+ const name=(id:string)=>profiles[id]?.display_name||profiles[id]?.username||"Member";
+ const current=threads.find(t=>t.conversation_id===selected);
+ const shown=threads.filter(t=>(filter!=="unread"||unread[t.conversation_id]>0)&& (filter!=="groups")&&name(t.user_id).toLowerCase().includes(search.toLowerCase()));
+ return <div className={styles.root}><header className={styles.heading}><strong>CONNECT WITH THE UMMAH</strong><span lang="ar" dir="rtl">رسائل</span></header>
+ <div className={styles.panel}>
+ <aside className={`${styles.sidebar} ${mobileThread?styles.mobileHidden:""}`}>
+ <div className={styles.title}><span>💬 Messages</span><button onClick={()=>{setNewChat(true);setMobileThread(false)}} title="New message" aria-label="New message">✎</button></div>
+ <input className={styles.search} placeholder="⌕  Search messages..." aria-label="Search messages" value={search} onChange={e=>setSearch(e.target.value)}/>
+ <div className={styles.tabs}>{(["all","unread","groups"] as const).map(x=><button key={x} className={filter===x?styles.active:""} onClick={()=>setFilter(x)}>{x==="all"?"All":x==="unread"?"Unread":"Groups"}</button>)}</div>
+ {!uid?<p className={styles.empty}>Sign in to view and send messages.</p>:newChat?<div className={styles.list}><button onClick={()=>setNewChat(false)}>← Conversations</button>{candidates.map(p=><button key={p.id} className={styles.row} disabled={busy} onClick={()=>void start(p.id)}><span className={styles.avatar}>{(p.display_name||p.username||"M")[0]}</span><span>{p.display_name||p.username||"Member"}</span></button>)}</div>:<div className={styles.list}>{shown.map(t=><button key={t.conversation_id} className={`${styles.row} ${selected===t.conversation_id?styles.selected:""}`} onClick={()=>open(t.conversation_id)}><span className={styles.avatar}>{name(t.user_id)[0]}</span><span className={styles.rowText}><strong>{name(t.user_id)}</strong><small>Open conversation</small></span>{unread[t.conversation_id]>0&&<b className={styles.badge}>{unread[t.conversation_id]}</b>}</button>)}{filter==="groups"&&<p className={styles.empty}>Open group chats from the full Messenger.</p>}{!shown.length&&filter!=="groups"&&<p className={styles.empty}>No conversations yet. Tap ✎ to start one.</p>}</div>}
+ </aside>
+ <section className={`${styles.thread} ${!mobileThread?styles.mobileHiddenThread:""}`}>
+ <div className={styles.threadHeader}>{mobileThread&&<button className={styles.back} onClick={()=>setMobileThread(false)} aria-label="Back to conversations">‹</button>}<span className={styles.avatar}>💬</span><span><strong>{current?name(current.user_id):"Your messages"}</strong><small>{current?"Private conversation":"Select a conversation to begin"}</small></span></div>
+ <div className={styles.messages}>{selected?messages.map(m=><div key={m.id} className={`${styles.bubble} ${m.sender_id===uid?styles.mine:""}`}><small>{m.sender_id===uid?"You":current?name(current.user_id):"Member"} · {new Date(m.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</small><span>{m.body}</span></div>):<div className={styles.empty}>Select a conversation from the left, or start a new message. 💚</div>}</div>
+ <form className={styles.composer} onSubmit={e=>{e.preventDefault();void send()}}><input aria-label="Write a message" placeholder="Write a message..." value={draft} onChange={e=>setDraft(e.target.value)} disabled={!selected||!uid}/><button type="submit" disabled={!selected||!draft.trim()||busy} aria-label="Send message">➤</button></form>
+ </section></div>{error&&<p role="alert" className={styles.error}>{error}</p>}</div>
 }
