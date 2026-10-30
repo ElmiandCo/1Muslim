@@ -139,9 +139,9 @@ export default function XPTracker(){
   if(!userId||!xpVisible)return null;
   const level=levelFor(xp),start=levelStart(level),end=levelEnd(level),progress=Math.min(100,Math.max(0,((xp-start)/(end-start))*100));
   const timeProgress=Math.min(100,activeSeconds/3);
-  return <div ref={trackerRef} className="xpTracker" aria-live="polite" style={position?{left:position.x,top:position.y,right:"auto",bottom:"auto"}:undefined} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} title="Drag to move XP tracker">
+  return <><div className="xpSpotlight" aria-hidden="true"/><div ref={trackerRef} className="xpTracker" aria-live="polite" style={position?{left:position.x,top:position.y,right:"auto",bottom:"auto"}:undefined} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} title="Drag to move XP tracker">
     <style jsx>{`
-      .xpTracker{position:fixed;right:18px;bottom:82px;z-index:90;width:220px;padding:10px 11px;border:1px solid rgba(151,187,158,.25);border-radius:16px;background:rgba(8,13,10,.88);backdrop-filter:blur(16px);box-shadow:0 14px 38px rgba(0,0,0,.28);pointer-events:auto;cursor:grab;touch-action:none;user-select:none;color:#eef5ef}
+      .xpSpotlight{position:fixed;inset:0;z-index:89;pointer-events:none;background:rgba(0,0,0,.28);animation:xpDimIn .5s ease-out both}\n      @keyframes xpDimIn{from{opacity:0}to{opacity:1}}\n      @keyframes xpReveal{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}\n      .xpTracker{animation:xpReveal .55s cubic-bezier(.2,.8,.2,1) both;box-shadow:0 0 0 1px rgba(190,240,206,.18),0 0 32px rgba(137,230,173,.25),0 14px 38px rgba(0,0,0,.28)!important}\n      @media(prefers-reduced-motion:reduce){.xpSpotlight,.xpTracker{animation:none!important}}\n      .xpTracker{position:fixed;right:18px;bottom:82px;z-index:90;width:220px;padding:10px 11px;border:1px solid rgba(151,187,158,.25);border-radius:16px;background:rgba(8,13,10,.88);backdrop-filter:blur(16px);box-shadow:0 14px 38px rgba(0,0,0,.28);pointer-events:auto;cursor:grab;touch-action:none;user-select:none;color:#eef5ef}
       .xpTracker:active{cursor:grabbing}.top{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:850}.xp{color:#b7e0bd}.bar,.time{height:4px;border-radius:99px;background:#202b23;overflow:hidden;margin-top:7px}.fill{height:100%;background:linear-gradient(90deg,#8bbd94,#d8e9da);transition:width .5s ease}.time{height:2px;margin-top:5px}.time .fill{opacity:.55}.meta{display:flex;justify-content:space-between;margin-top:5px;color:#7e8c82;font-size:8px}.notice{position:absolute;right:10px;bottom:calc(100% + 7px);background:#dfeee1;color:#0b150d;border-radius:10px;padding:6px 8px;font-weight:900;font-size:10px;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.25)}
       @media(max-width:600px){.xpTracker{right:10px;bottom:72px;width:190px}.top{font-size:9px}}
     `}</style>
@@ -149,6 +149,6 @@ export default function XPTracker(){
     <div className="top"><span>Level {level}</span><span className="xp">{xp.toLocaleString()} XP</span></div>
     <div className="bar"><div className="fill" style={{width:progress+"%"}}/></div>
     <div className="time"><div className="fill" style={{width:timeProgress+"%"}}/></div>
-    <div className="meta"><span>{Math.max(0,end-xp).toLocaleString()} to next level</span><span>+500 / 5 min active</span></div>
+    <div className="meta"><span>{level===10?"Maximum level":Math.max(0,end-xp).toLocaleString()+" to next level"}</span><span>+500 / 5 min active</span></div>
   </div>
 }
