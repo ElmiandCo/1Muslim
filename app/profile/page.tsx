@@ -44,7 +44,8 @@ const AVATAR_CHOICES=[
   {url:"/assets/avatars/cosmic-avatar-male.PNG",label:"Cosmic Male",xp:10000},
   {url:"/assets/avatars/cosmic-avatar-female.PNG",label:"Cosmic Female",xp:10000},
   {url:"/assets/avatars/emerald-royalty-female.PNG",label:"Emerald Royalty Female",xp:10000},
-  {url:"/assets/avatars/violet-sentinel-female.PNG",label:"Violet Sentinel Female",xp:10000}
+  {url:"/assets/avatars/violet-sentinel-female.PNG",label:"Violet Sentinel Female",xp:10000},
+  {url:"/assets/avatars/tina-the-salafi-female.PNG",label:"Tina The Salafi Female",xp:20000}
 ] as const;
 const BACKGROUND_CHOICES=[
   {id:"emerald-night",accent:"emerald",label:"Emerald Night"},
