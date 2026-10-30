@@ -34,3 +34,12 @@
 .lessonQuiz{flex-shrink:0;background:linear-gradient(155deg,rgba(9,45,41,.32),rgba(8,37,34,.22));box-shadow:inset 0 1px rgba(229,219,173,.13)}
 .quizChoices button{background:linear-gradient(145deg,rgba(25,79,68,.47),rgba(16,58,52,.38));backdrop-filter:blur(5px)}
 @media(max-width:600px){.root{overflow-y:auto!important;max-height:100%;padding-bottom:30px}.lessonQuiz{min-height:610px}}
+
+/* One-line lesson carousel: reclaim vertical space for the learning panel. */
+.lessonNav{display:flex!important;flex-wrap:nowrap!important;align-items:stretch;gap:6px;width:100%;min-width:0;flex:0 0 auto}
+.lessonCarousel{display:flex;flex:1;min-width:0;gap:6px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.lessonCarousel::-webkit-scrollbar{display:none}
+.lessonCarousel button{flex:0 0 calc((100% - 18px)/4);min-width:0;scroll-snap-align:start}
+.lessonNav .lessonArrow{flex:0 0 36px;min-width:36px;min-height:48px;padding:4px;font-size:25px}
+.lessonNav button:disabled{opacity:.58;cursor:not-allowed}
+@media(max-width:600px){.lessonNav{display:flex!important;flex-wrap:nowrap!important}.lessonCarousel{display:flex!important;grid-template-columns:none!important}.lessonCarousel button{flex-basis:calc((100% - 12px)/3);min-height:52px;padding:5px 2px}.lessonNav .lessonArrow{flex-basis:30px;min-width:30px}}
