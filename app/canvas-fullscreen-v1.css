@@ -1884,3 +1884,47 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 [data-workspace-page="6"] .canvas-profile-mirror [role="tablist"][aria-label="Profile sections"]{flex-direction:column!important;align-items:stretch!important}
 [data-workspace-page="6"] .canvas-profile-mirror [role="tablist"][aria-label="Profile sections"]>button{width:29px!important;min-height:76px!important;flex:none!important;writing-mode:vertical-rl!important;font-size:10px!important}
 }
+
+
+/* Preview scroll release (2026-10-30): profile tabs share one vertical scroll owner.
+   Do not trap vertical gestures inside background, badge or avatar sections. */
+[data-workspace-page="6"] .canvas-profile-mirror [data-profile-mirror-scroll][aria-label="My Profile"]{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  touch-action:pan-y!important;
+  -webkit-overflow-scrolling:touch!important;
+  scroll-snap-type:none!important;
+  overscroll-behavior-y:auto!important;
+}
+[data-workspace-page="6"] .canvas-profile-mirror [data-profile-mirror-scroll][aria-label="My Profile"] .canvas-native-profile,
+[data-workspace-page="6"] .canvas-profile-mirror [data-profile-mirror-scroll][aria-label="My Profile"] .canvas-native-body{
+  height:auto!important;
+  max-height:none!important;
+  overflow-y:visible!important;
+  touch-action:pan-y!important;
+  scroll-snap-type:none!important;
+}
+
+/* Preview step 2: double scrollable CONTENT, not the viewport. A single
+   bounded scroll owner prevents iOS nested-scroll dead zones. */
+[data-workspace-page="6"] .canvas-profile-mirror [data-profile-mirror-scroll][aria-label="My Profile"]{
+  height:100%!important;
+  max-height:100%!important;
+  min-height:0!important;
+  flex:1 1 0%!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  touch-action:pan-y!important;
+  overscroll-behavior-y:auto!important;
+  scroll-snap-type:none!important;
+}
+[data-workspace-page="6"] .canvas-profile-mirror .profile-scroll-content-expanded{
+  min-height:200dvh!important;
+  height:auto!important;
+  padding-bottom:50dvh!important;
+  box-sizing:border-box!important;
+}
+[data-workspace-page="6"] .canvas-profile-mirror .profile-scroll-content-expanded > div{
+  min-height:150dvh!important;
+  height:auto!important;
+}
