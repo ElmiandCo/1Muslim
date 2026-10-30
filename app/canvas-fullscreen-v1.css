@@ -1884,3 +1884,9 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 [data-workspace-page="6"] .canvas-profile-mirror [role="tablist"][aria-label="Profile sections"]{flex-direction:column!important;align-items:stretch!important}
 [data-workspace-page="6"] .canvas-profile-mirror [role="tablist"][aria-label="Profile sections"]>button{width:29px!important;min-height:76px!important;flex:none!important;writing-mode:vertical-rl!important;font-size:10px!important}
 }
+
+/* Community posts: reclaim removed tabs' height without altering the fixed bottom edge. */
+.canvas-community-map-shell[data-community-view="posts"]{gap:0!important;}
+.canvas-community-map-shell[data-community-view="posts"]>.canvas-community-posts-scroll{flex:1 1 0!important;min-height:0!important;}
+.canvas-community-map-shell[data-community-view="posts"] .community-simple-feed{padding-top:0!important;}
+.canvas-community-map-shell[data-community-view="posts"] .community-feed-search{min-height:38px!important;}

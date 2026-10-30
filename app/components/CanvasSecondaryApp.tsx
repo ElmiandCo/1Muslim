@@ -187,7 +187,7 @@ export function CommunityMap({active}:{active:boolean}){
  const bbox=bounds[zoom];
  const url="https://www.openstreetmap.org/export/embed.html?bbox="+encodeURIComponent(bbox.join(","))+"&layer=mapnik";
  return <div className="canvas-community-map-shell" data-community-view={tab}>
-  <div className="canvas-community-tabs" role="tablist" aria-label="Community views"><button type="button" role="tab" aria-selected={tab==="posts"} onClick={()=>setTab("posts")}>Community Posts</button><button type="button" role="tab" aria-selected={tab==="map"} onClick={()=>setTab("map")}>🌎 Community Map</button></div>
+  
   {tab==="posts"?<div className="canvas-community-posts-scroll"><DailyPostsApp active={active}/></div>:<div className="canvas-community-map-panel">
    <div className="canvas-community-map-heading"><strong>Mosque Finder & Local Communities</strong><span>Explore verified local places and community hubs</span></div>
    <form className="canvas-community-map-search" onSubmit={e=>e.preventDefault()}><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search mosque or community" aria-label="Search mosques and communities"/><button type="submit">Search</button></form>
