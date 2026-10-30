@@ -36,13 +36,13 @@ export default function HomeMessagesChooser(){
    const {data:recent}=await db.from("dm_messages").select("conversation_id,sender_id,created_at").in("conversation_id",[...own]).order("created_at",{ascending:false}).limit(500);
    const last=new Map((reads||[]).map(x=>[x.conversation_id,x.last_read_at]));const counts:Record<string,number>={};
    for(const m of recent||[]){if(m.sender_id!==uid&&(!last.get(m.conversation_id)||new Date(m.created_at)>new Date(last.get(m.conversation_id)!)))counts[m.conversation_id]=(counts[m.conversation_id]||0)+1}
-   setUnread(counts)}
- },[db,uid]);
+   if(selected)counts[selected]=0;setUnread(counts)}
+ },[db,uid,selected]);
  useEffect(()=>{void loadThreads();const t=setInterval(()=>void loadThreads(),12000);return()=>clearInterval(t)},[loadThreads]);
- const loadMessages=useCallback(async()=>{if(!selected)return;const {data,error:err}=await db.from("dm_messages").select("id,conversation_id,sender_id,body,created_at,attachment_path,attachment_type").eq("conversation_id",selected).order("created_at",{ascending:true}).limit(200);if(err)setError(err.message);else setMessages((data||[]) as Msg[])},[db,selected]);
+ const loadMessages=useCallback(async()=>{if(!selected)return;const {data,error:err}=await db.from("dm_messages").select("id,conversation_id,sender_id,body,created_at,attachment_path,attachment_type").eq("conversation_id",selected).order("created_at",{ascending:true}).limit(200);if(err)setError(err.message);else {setMessages((data||[]) as Msg[]);if(uid){const {error:readError}=await db.from("dm_participants").update({last_read_at:new Date().toISOString()}).eq("conversation_id",selected).eq("user_id",uid);if(!readError)setUnread(prev=>({...prev,[selected]:0}));}}},[db,selected,uid]);
  useEffect(()=>{let alive=true;const paths=[...new Set(messages.filter(m=>m.attachment_type==="image"&&m.attachment_path).map(m=>m.attachment_path!))].filter(p=>!photoUrls[p]);if(paths.length)void Promise.all(paths.map(async p=>{const {data}=await db.storage.from("dm-attachments").createSignedUrl(p,3600);return [p,data?.signedUrl] as const})).then(rows=>{if(alive)setPhotoUrls(v=>({...v,...Object.fromEntries(rows.filter((x): x is readonly [string,string]=>typeof x[1]==="string"))}))});return()=>{alive=false}},[db,messages,photoUrls]);
  useEffect(()=>{void loadMessages();const t=setInterval(()=>void loadMessages(),5000);return()=>clearInterval(t)},[loadMessages]);
- const open=(id:string)=>{setSelected(id);setMobileThread(true);setNewChat(false);setError("");if(uid)void db.from("dm_participants").update({last_read_at:new Date().toISOString()}).eq("conversation_id",id).eq("user_id",uid)};
+ const open=(id:string)=>{setSelected(id);setMobileThread(true);setNewChat(false);setError("");setUnread(prev=>({...prev,[id]:0}));if(uid)void db.from("dm_participants").update({last_read_at:new Date().toISOString()}).eq("conversation_id",id).eq("user_id",uid).then(({error:readError})=>{if(readError){setError(readError.message);void loadThreads()}})};
  const send=async()=>{if(!uid||!selected||!draft.trim()||busy)return;setBusy(true);setError("");const {error:err}=await db.from("dm_messages").insert({conversation_id:selected,sender_id:uid,body:draft.trim()});if(err)setError(err.message);else{setDraft("");await loadMessages()}setBusy(false)};
  const sendPhoto=async(file:File)=>{if(!uid||!selected||busy)return;
   if(!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)){setError("Choose a JPG, PNG, WebP, or GIF image.");return}
