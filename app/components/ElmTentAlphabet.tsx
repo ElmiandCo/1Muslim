@@ -41,6 +41,8 @@ export default function ElmTentAlphabet(){
  const [mirrorSpin,setMirrorSpin]=useState(false);
  const [milestone,setMilestone]=useState(false);
  const [milestoneDismissed,setMilestoneDismissed]=useState(false);
+ const [celebrating,setCelebrating]=useState(false);
+ const [courseFinished,setCourseFinished]=useState(false);
  useEffect(()=>{try{
    const next:Record<number,number[]>={};
    for(let i=0;i<LESSON_COUNT;i++){
@@ -50,7 +52,7 @@ export default function ElmTentAlphabet(){
    }
    setLessonProgress(next);setPracticed(next[0]||[]);
    if((next[0]||[]).length>=3&&(next[0]||[]).length<28)setMilestone(true);
-   if(next[1]?.length===LETTERS.length){setLesson(2);setPracticed(next[1])}
+   if(localStorage.getItem("1muslim:elm-tent:alphabet-certified")==="yes"){setCourseFinished(true);setLesson(2)}else if(next[0]?.length===LETTERS.length){setLesson(1);setPracticed(next[1]||[])}
    setCompletedLessons(Array.from({length:LESSON_COUNT},(_,i)=>i).filter(i=>(next[i]||[]).length===LETTERS.length));
   }catch{}setReady(true);
   return()=>{if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()}
@@ -67,8 +69,8 @@ export default function ElmTentAlphabet(){
   setPracticed(next);
   setLessonProgress(current=>({...current,[lesson]:next}));
   try{localStorage.setItem(lessonKey(lesson),JSON.stringify(next))}catch{}
-  if(lesson===0&&next.length>=3&&!milestoneDismissed)setMilestone(true);
-  if(next.length===LETTERS.length){setCompletedLessons(current=>current.includes(lesson)?current:[...current,lesson]);if(lesson===1)setChallenge(true)}
+  
+  if(next.length===LETTERS.length){setCompletedLessons(current=>current.includes(lesson)?current:[...current,lesson]);if(lesson===0)window.setTimeout(()=>chooseLesson(1),700)}
  };
 
  const hear=()=>{
@@ -80,18 +82,28 @@ export default function ElmTentAlphabet(){
   speech.current=utterance;setAudioMessage(arabic?"":"Device pronunciation preview; an Arabic voice may not be installed.");window.speechSynthesis.speak(utterance);
  };
  useEffect(()=>{if(!autoPlayNext||lesson>1)return;setAutoPlayNext(false);const timer=setTimeout(()=>{hear();setHudhudPlayed(true)},280);return()=>clearTimeout(timer)},[autoPlayNext,selected,lesson]);
- const chooseLesson=(index:number)=>{const next=Math.max(0,Math.min(LESSON_COUNT-1,index));setLesson(next);setLessonWindow(Math.floor(next/4));setPracticed(lessonProgress[next]||[]);setSelected(0);setHudhudPlayed(false);setAudioMessage("");if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()};
+ const chooseLesson=(index:number)=>{const next=Math.max(courseFinished?2:0,Math.min(LESSON_COUNT-1,index));if(next===1&&lessonProgress[0]?.length!==LETTERS.length)return;setLesson(next);setLessonWindow(Math.floor(next/4));setPracticed(lessonProgress[next]||[]);setSelected(0);setHudhudPlayed(false);setAudioMessage("");if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()};
  const nextUnpracticed=()=>selected<LETTERS.length-1?selected+1:-1;
- const advanceLetter=()=>{const next=nextUnpracticed();if(next<0){setMilestone(true);return}setMirrorSpin(true);setTimeout(()=>{select(next);setAutoPlayNext(true)},270);setTimeout(()=>setMirrorSpin(false),700)};
+ const advanceLetter=()=>{const next=nextUnpracticed();if(next<0){if(practiced.length===LETTERS.length)chooseLesson(1);return}setMirrorSpin(true);setTimeout(()=>{select(next);setAutoPlayNext(true)},270);setTimeout(()=>setMirrorSpin(false),700)};
  const doneLetter=()=>{if(!practiced.includes(selected))mark();setPracticeFlash(true);setTimeout(()=>setPracticeFlash(false),420);advanceLetter()};
  const select=(index:number)=>{setHudhudPlayed(false);if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel();setPlaying(false);setSelected(index);setAudioMessage("")};
  useEffect(()=>{const onHudHud=()=>{if(lesson!==0)return;if(milestone){setMilestone(false);setMilestoneDismissed(true);chooseLesson(1);return}if(!hudhudPlayed){hear();setHudhudPlayed(true)}else{doneLetter();setHudhudPlayed(false)}};window.addEventListener("1muslim:elm-tent-hudhud",onHudHud);return()=>window.removeEventListener("1muslim:elm-tent-hudhud",onHudHud)});
- const submitQuiz=async(nextAnswers:number[])=>{setClaiming(true);try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setBadgeMessage("Sign in to save your badge and claim 5,000 XP.");return}const {data,error}=await db.rpc("claim_arabic_letters_badge",{answers:nextAnswers});if(error)throw error;if(data?.awarded||data?.already_earned){setBadgeEarned(true);setCompletedLessons(current=>current.includes(1)?current:[...current,1]);setBadgeMessage(data.awarded?"🏅 Arabic Letters Certified · +5,000 XP!":"🏅 Arabic Letters Certified · Already earned");chooseLesson(2)}else setBadgeMessage(`Score: ${data?.score??0}% · Reach 90% to earn your badge.`)}catch(e){setBadgeMessage(e instanceof Error?e.message:"Unable to claim badge")}finally{setClaiming(false)}};
+ const submitQuiz=async(nextAnswers:number[])=>{setClaiming(true);try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setBadgeMessage("Sign in to save your badge and claim 5,000 XP.");return}const {data,error}=await db.rpc("claim_arabic_letters_badge",{answers:nextAnswers});if(error)throw error;if(data?.awarded||data?.already_earned){setBadgeEarned(true);setCompletedLessons(current=>current.includes(1)?current:[...current,1]);setBadgeMessage(data.awarded?"🏅 Arabic Letters Certified · +5,000 XP!":"🏅 Arabic Letters Certified · Already earned");try{localStorage.setItem("1muslim:elm-tent:alphabet-certified","yes")}catch{}setCourseFinished(true);setCelebrating(true);window.setTimeout(()=>{setCelebrating(false);chooseLesson(2)},6500)}else setBadgeMessage(`Score: ${data?.score??0}% · Reach 90% to earn your badge.`)}catch(e){setBadgeMessage(e instanceof Error?e.message:"Unable to claim badge")}finally{setClaiming(false)}};
  const answerQuestion=(choice:number)=>{if(claiming)return;const next=[...answers,choice];setAnswers(next);if(next.length===28)void submitQuiz(next);else setQuizIndex(next.length)};
  return <div className={styles.root} onTouchStart={e=>{swipeStart.current=e.touches[0].clientY}} onTouchEnd={e=>{if(swipeStart.current===null)return;const delta=e.changedTouches[0].clientY-swipeStart.current;swipeStart.current=null;if(Math.abs(delta)>90)chooseLesson(lesson+(delta<0?1:-1))}}>
-  <nav className={styles.lessonNav} aria-label="Elm Tent lessons"><button type="button" aria-label="Previous lessons" onClick={()=>setLessonWindow(0)}>‹</button>{Array.from({length:4},(_,i)=>lessonWindow*4+i).filter(i=>i!==0||!completedLessons.includes(1)).map(i=><button type="button" key={i} className={lesson===i?styles.lessonActive:""} aria-current={lesson===i?"step":undefined} onClick={()=>chooseLesson(i)}><span>{i+1}</span><small>{completedLessons.includes(i)?"✓ Done":i<2?"Letters":"Soon"}</small></button>)}<button type="button" aria-label="Next lessons" onClick={()=>setLessonWindow(1)}>›</button></nav>
-  {lesson===0&&milestone&&<div className={styles.milestoneToast} role="status"><strong>✦ First three letters learned!</strong><span>Continue exploring or begin Lesson 2.</span><div><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);advanceLetter()}}>Keep learning</button><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);chooseLesson(1)}}>Ready for Lesson 2 →</button></div></div>}
-  {lesson===1&&<ElmTentLetterQuiz onPass={answers=>void submitQuiz(answers)} onReady={()=>chooseLesson(2)}/>}
+  <nav className={styles.lessonNav} aria-label="Elm Tent lessons"><button type="button" aria-label="Previous lessons" onClick={()=>setLessonWindow(0)}>‹</button>{Array.from({length:4},(_,i)=>lessonWindow*4+i).filter(i=>i>=2||(!courseFinished&&(i===0||completedLessons.includes(0)))).map(i=><button type="button" key={i} className={lesson===i?styles.lessonActive:""} aria-current={lesson===i?"step":undefined} onClick={()=>chooseLesson(i)} disabled={i===1&&!completedLessons.includes(0)}><span>{i+1}</span><small>{completedLessons.includes(i)?"✓ Done":i<2?"Letters":"Soon"}</small></button>)}<button type="button" aria-label="Next lessons" onClick={()=>setLessonWindow(1)}>›</button></nav>
+  {false&&lesson===0&&milestone&&<div className={styles.milestoneToast} role="status"><strong>✦ First three letters learned!</strong><span>Continue exploring or begin Lesson 2.</span><div><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);advanceLetter()}}>Keep learning</button><button onClick={()=>{setMilestone(false);setMilestoneDismissed(true);chooseLesson(1)}}>Ready for Lesson 2 →</button></div></div>}
+  {lesson===1&&!courseFinished&&<ElmTentLetterQuiz onPass={answers=>void submitQuiz(answers)} onReady={()=>chooseLesson(2)}/>}
+  {celebrating&&<div role="status" aria-live="assertive" style={{position:"fixed",inset:0,zIndex:9999,display:"grid",placeItems:"center",background:"radial-gradient(circle,#174b37ee,#03140ef5)",color:"#fff",textAlign:"center",padding:24,animation:"fadeIn .5s ease"}}>
+   <div style={{padding:32,border:"2px solid #e4ca7b",borderRadius:28,boxShadow:"0 0 90px #d6b75a77",background:"#08291de8"}}>
+    <div style={{fontSize:76,animation:"bounce 1.2s ease-in-out infinite alternate"}}>🏆✨</div>
+    <h2 style={{fontSize:"clamp(26px,7vw,48px)",margin:"12px 0"}}>Masha'Allah! Congratulations!</h2>
+    <p style={{fontSize:20}}>Arabic Lessons 1 &amp; 2 completed!</p>
+    <p>🏅 Arabic Letters Certified · Your next journey awaits.</p>
+    <button type="button" onClick={()=>{setCelebrating(false);chooseLesson(2)}} style={{padding:"12px 26px",borderRadius:24,background:"#d9bd73",color:"#08291d",fontWeight:800}}>Continue →</button>
+   </div>
+   <style>{`@keyframes bounce{from{transform:translateY(7px) scale(.97)}to{transform:translateY(-12px) scale(1.07)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
+  </div>}
   {lesson===2&&<ElmTentVowels/>}
   {lesson===0&&<div className={styles.lessonStage} key={lesson}><strong>LESSON {lesson+1} / 8</strong>{lesson>1?<div className={styles.soon}>✦ Lesson {lesson+1} · Coming Soon</div>:completedLessons.includes(lesson)?<span>✓ Completed</span>:null}</div>
   }
