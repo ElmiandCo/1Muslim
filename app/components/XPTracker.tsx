@@ -1,5 +1,5 @@
-import {levelForXp,levelStartXp,levelEndXp} from "../lib/xpLevels";
 "use client";
+import {levelForXp,levelStartXp,levelEndXp} from "../lib/xpLevels";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 
