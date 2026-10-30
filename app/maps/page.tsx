@@ -4,7 +4,7 @@ import { createClient } from "../../utils/supabase/client";
 import "./maps.css";
 
 type Place={id:string;name:string;address:string;category:string;latitude:number;longitude:number;description:string|null;image_url:string|null;video_url:string|null};
-type MapInstance={flyTo:(o:unknown)=>void;on:(e:string,fn:()=>void)=>void;addControl:(c:unknown,p?:string)=>void;remove:()=>void;getCanvas:()=>HTMLCanvasElement;getSource:(id:string)=>{setData:(d:unknown)=>void}|undefined;addSource:(id:string,s:unknown)=>void;addLayer:(l:unknown)=>void;setStyle:(s:unknown)=>void};
+type MapInstance={flyTo:(o:unknown)=>void;on:(e:string,fn:()=>void)=>void;addControl:(c:unknown,p?:string)=>void;remove:()=>void;getCanvas:()=>HTMLCanvasElement;getSource:(id:string)=>{setData:(d:unknown)=>void}|undefined;addSource:(id:string,s:unknown)=>void;addLayer:(l:unknown)=>void;setStyle:(s:unknown)=>void;resize:()=>void;setProjection:(p:unknown)=>void;isStyleLoaded:()=>boolean};
 declare global {interface Window {maplibregl?:{Map:new(o:unknown)=>MapInstance;NavigationControl:new()=>unknown}}}
 const CATEGORIES=["All","Food","Fashion","Education","Mosques"];
 const DIGITAL={version:8 as const,sources:{osm:{type:"raster",tiles:["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],tileSize:256,attribution:"© OpenStreetMap contributors"}},layers:[{id:"osm",type:"raster",source:"osm"}]};
@@ -13,16 +13,66 @@ export default function MapsPage(){
  const host=useRef<HTMLDivElement>(null),map=useRef<MapInstance|null>(null);
  const [places,setPlaces]=useState<Place[]>([]),[category,setCategory]=useState("All"),[search,setSearch]=useState(""),[selected,setSelected]=useState<Place|null>(null),[admin,setAdmin]=useState(false),[formOpen,setFormOpen]=useState(false),[status,setStatus]=useState(""),[satellite,setSatellite]=useState(false);
  const [mapReady,setMapReady]=useState(false);
+ const [mapError,setMapError]=useState("");
  const [form,setForm]=useState({name:"",address:"",category:"Education",description:"",latitude:"",longitude:"",image_url:"",video_url:""});
  const filtered=places.filter(p=>(category==="All"||p.category===category)&&(!search||[p.name,p.address,p.category].some(s=>s.toLowerCase().includes(search.toLowerCase()))));
  useEffect(()=>{const s=createClient();s.auth.getUser().then(({data})=>setAdmin(data.user?.email?.toLowerCase()===ADMIN_EMAIL));s.from("community_map_places").select("*").eq("published",true).then(({data,error})=>{if(data)setPlaces(data as Place[]);if(error)setStatus("Map listings are not available yet. Apply the database migration.")})},[]);
- useEffect(()=>{if(!host.current)return;let disposed=false;const id="maplibre-gl-css";if(!document.getElementById(id)){const l=document.createElement("link");l.id=id;l.rel="stylesheet";l.href="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css";document.head.appendChild(l)}
- const start=()=>{if(disposed||!host.current||!window.maplibregl)return;const m=new window.maplibregl.Map({container:host.current,style:DIGITAL,center:[0,18],zoom:1.25,pitch:0,attributionControl:true});map.current=m;m.on("error",()=>setStatus("Map tiles could not load. Check network or tile provider."));m.on("load",()=>{setMapReady(true);if(disposed)return;try{(m as unknown as {setProjection:(p:unknown)=>void}).setProjection({type:"globe"})}catch{};m.addSource("places",{type:"geojson",data:{type:"FeatureCollection",features:[]}});m.addLayer({id:"locations",type:"circle",source:"places",paint:{"circle-radius":9,"circle-color":"#21d998","circle-stroke-color":"#ffffff","circle-stroke-width":2}});m.getCanvas().addEventListener("click",()=>{});});m.addControl(new window.maplibregl.NavigationControl(),"bottom-right")};
- if(window.maplibregl)start();else{const script=document.createElement("script");script.src="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js";script.onload=start;script.onerror=()=>setStatus("Map library failed to load.");document.body.appendChild(script)}
- return()=>{disposed=true;map.current?.remove();map.current=null}},[]);
- useEffect(()=>{const source=map.current?.getSource("places");source?.setData({type:"FeatureCollection",features:filtered.map(p=>({type:"Feature",geometry:{type:"Point",coordinates:[p.longitude,p.latitude]},properties:{id:p.id}}))})},[places,category,search]);
+ useEffect(()=>{
+  if(!host.current)return;
+  let disposed=false;
+  let observer:ResizeObserver|undefined;
+  let resizeTimer:ReturnType<typeof setTimeout>|undefined;
+  const node=host.current;
+  const updateMarkers=()=>{
+   const source=map.current?.getSource("places");
+   source?.setData({type:"FeatureCollection",features:filteredRef.current.map(p=>({type:"Feature",geometry:{type:"Point",coordinates:[p.longitude,p.latitude]},properties:{id:p.id}}))});
+  };
+  const installMarkers=(m:MapInstance)=>{
+   if(!m.getSource("places"))m.addSource("places",{type:"geojson",data:{type:"FeatureCollection",features:[]}});
+   try{m.addLayer({id:"locations",type:"circle",source:"places",paint:{"circle-radius":9,"circle-color":"#21d998","circle-stroke-color":"#ffffff","circle-stroke-width":2}})}catch{}
+   updateMarkers();
+  };
+  const start=()=>{
+   if(disposed||!window.maplibregl||map.current)return;
+   try{
+    const m=new window.maplibregl.Map({container:node,style:DIGITAL,center:[0,18],zoom:1.25,pitch:0,attributionControl:true});
+    map.current=m;
+    m.on("load",()=>{
+     if(disposed)return;
+     try{m.setProjection({type:"globe"})}catch(e){setMapError("Globe projection unavailable on this device.")}
+     installMarkers(m);
+     m.resize();
+     setMapReady(true);
+    });
+    m.on("error",()=>{if(!disposed)setMapError("Map tiles could not load. Please check your connection.")});
+    m.addControl(new window.maplibregl.NavigationControl(),"bottom-right");
+    observer=new ResizeObserver(()=>m.resize());
+    observer.observe(node);
+    resizeTimer=setTimeout(()=>m.resize(),350);
+   }catch(e){setMapError("Unable to initialize the interactive globe.");}
+  };
+  const id="maplibre-gl-css";
+  if(!document.getElementById(id)){
+   const link=document.createElement("link");link.id=id;link.rel="stylesheet";link.href="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.css";document.head.appendChild(link);
+  }
+  if(window.maplibregl)start();
+  else{
+   let script=document.querySelector<HTMLScriptElement>('script[data-1muslim-maplibre]');
+   if(!script){script=document.createElement("script");script.dataset["1muslimMaplibre"]="true";script.src="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js";document.body.appendChild(script)}
+   script.addEventListener("load",start);
+   script.addEventListener("error",()=>{if(!disposed)setMapError("Map engine could not download.")});
+   if(window.maplibregl)start();
+  }
+  return()=>{disposed=true;observer?.disconnect();if(resizeTimer)clearTimeout(resizeTimer);map.current?.remove();map.current=null};
+ },[]);
+ const filteredRef=useRef<Place[]>([]);
+ useEffect(()=>{
+  filteredRef.current=filtered;
+  const source=map.current?.getSource("places");
+  source?.setData({type:"FeatureCollection",features:filtered.map(p=>({type:"Feature",geometry:{type:"Point",coordinates:[p.longitude,p.latitude]},properties:{id:p.id}}))});
+ },[places,category,search]);
  const fly=(p:Place)=>{setSelected(p);map.current?.flyTo({center:[p.longitude,p.latitude],zoom:13,speed:0.7,curve:1.6,essential:true})};
- const setView=(sat:boolean)=>{setSatellite(sat);if(sat&&!process.env.NEXT_PUBLIC_MAPTILER_KEY){setStatus("Satellite imagery needs a MapTiler API key.");return}const style=sat?`https://api.maptiler.com/maps/hybrid/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_KEY}`:DIGITAL;map.current?.setStyle(style)};
+ const setView=(sat:boolean)=>{if(sat&&!process.env.NEXT_PUBLIC_MAPTILER_KEY){setStatus("Satellite imagery needs a MapTiler API key.");return}setSatellite(sat);const style=sat?`https://api.maptiler.com/maps/hybrid/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_KEY}`:DIGITAL;map.current?.setStyle(style)};
  const submit=async(e:React.FormEvent)=>{e.preventDefault();const lat=Number(form.latitude),lng=Number(form.longitude);if(!Number.isFinite(lat)||lat < -90||lat > 90||!Number.isFinite(lng)||lng < -180||lng > 180){setStatus("Enter valid latitude and longitude.");return}const s=createClient();const {error}=await s.from("community_map_places").insert({name:form.name,address:form.address,category:form.category,description:form.description,latitude:lat,longitude:lng,image_url:form.image_url||null,video_url:form.video_url||null,published:true});if(error){setStatus(error.message);return}setStatus("Location added.");setFormOpen(false);const {data}=await s.from("community_map_places").select("*").eq("published",true);setPlaces((data||[]) as Place[])};
- return <main className="muslimMap"><div className="mapTop"><strong>🌍 1Muslim Maps</strong>{admin&&<button onClick={()=>setFormOpen(true)}>＋ Add</button>}</div><div className="mapCanvas" ref={host} aria-label="Interactive world map"/>{!mapReady&&<div className="mapLoading" role="status">🌍 Loading interactive globe…</div>}<div className="mapTools"><div className="mapSearch"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search schools, mosques, cities…" aria-label="Search map locations"/>{search&&<div className="mapResults">{filtered.slice(0,8).map(p=><button key={p.id} onClick={()=>{fly(p);setSearch("")}}>{p.name}<small>{p.address}</small></button>)}</div>}</div><div className="mapFilters">{CATEGORIES.map(c=><button key={c} className={category===c?"active":""} onClick={()=>setCategory(c)}>{c}</button>)}</div><div className="mapViews"><button className={!satellite?"active":""} onClick={()=>setView(false)}>Digital</button><button className={satellite?"active":""} onClick={()=>setView(true)}>Satellite</button></div></div>{selected&&<article className="mapPlace"><button onClick={()=>setSelected(null)} aria-label="Close">✕</button><h2>{selected.name}</h2><p>{selected.category} · {selected.address}</p>{selected.image_url&&<img src={selected.image_url} alt={selected.name}/>} {selected.video_url&&<video controls playsInline src={selected.video_url}/>}<p>{selected.description}</p></article>}{status&&<div className="mapStatus" role="status" onClick={()=>setStatus("")}>{status} ✕</div>}{admin&&formOpen&&<div className="mapDialog"><form onSubmit={submit}><h2>Add a map location</h2>{(["name","address","description","latitude","longitude","image_url","video_url"] as const).map(k=><label key={k}>{k.replace("_"," ")}<input required={["name","address","latitude","longitude"].includes(k)} value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})}/></label>)}<label>Category<select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>{CATEGORIES.slice(1).map(c=><option key={c}>{c}</option>)}</select></label><p>Use public image/video URLs. Video uploads and address geocoding will follow in the next integration.</p><button type="submit">Publish location</button><button type="button" onClick={()=>setFormOpen(false)}>Cancel</button></form></div>}</main>
+ return <main className="muslimMap"><div className="mapTop"><strong>🌍 1Muslim Maps</strong>{admin&&<button onClick={()=>setFormOpen(true)}>＋ Add</button>}</div><div className="mapCanvas" ref={host} aria-label="Interactive world map"/>{!mapReady&&<div className="mapLoading" role="status">{mapError||"🌍 Loading interactive globe…"}</div>}<div className="mapTools"><div className="mapSearch"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search schools, mosques, cities…" aria-label="Search map locations"/>{search&&<div className="mapResults">{filtered.slice(0,8).map(p=><button key={p.id} onClick={()=>{fly(p);setSearch("")}}>{p.name}<small>{p.address}</small></button>)}</div>}</div><div className="mapFilters">{CATEGORIES.map(c=><button key={c} className={category===c?"active":""} onClick={()=>setCategory(c)}>{c}</button>)}</div><div className="mapViews"><button className={!satellite?"active":""} onClick={()=>setView(false)}>Digital</button><button className={satellite?"active":""} onClick={()=>setView(true)}>Satellite</button></div></div>{selected&&<article className="mapPlace"><button onClick={()=>setSelected(null)} aria-label="Close">✕</button><h2>{selected.name}</h2><p>{selected.category} · {selected.address}</p>{selected.image_url&&<img src={selected.image_url} alt={selected.name}/>} {selected.video_url&&<video controls playsInline src={selected.video_url}/>}<p>{selected.description}</p></article>}{status&&<div className="mapStatus" role="status" onClick={()=>setStatus("")}>{status} ✕</div>}{admin&&formOpen&&<div className="mapDialog"><form onSubmit={submit}><h2>Add a map location</h2>{(["name","address","description","latitude","longitude","image_url","video_url"] as const).map(k=><label key={k}>{k.replace("_"," ")}<input required={["name","address","latitude","longitude"].includes(k)} value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})}/></label>)}<label>Category<select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>{CATEGORIES.slice(1).map(c=><option key={c}>{c}</option>)}</select></label><p>Use public image/video URLs. Video uploads and address geocoding will follow in the next integration.</p><button type="submit">Publish location</button><button type="button" onClick={()=>setFormOpen(false)}>Cancel</button></form></div>}</main>
 }
