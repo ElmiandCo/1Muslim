@@ -1,4 +1,5 @@
 "use client";
+import {levelForXp} from "../../lib/xpLevels";
 import {useEffect,useRef,useState} from "react";
 import {createClient} from "../../../utils/supabase/client";
 import Link from "next/link";
@@ -54,8 +55,8 @@ export default function ElmiVerseMoment(){
   if(error){setReward("Could not award XP yet: "+error.message)}
   else if(Number(result?.awarded)===10000){
    const next=Number(result.xp_total||0);
-   const oldLevel=Math.floor(Math.sqrt(Math.max(0,previous)/100))+1;
-   const newLevel=Math.floor(Math.sqrt(Math.max(0,next)/100))+1;
+   const oldLevel=levelForXp(previous);
+   const newLevel=levelForXp(next);
    setReward(newLevel>oldLevel?"🏆 Level up! +10,000 XP · Level "+newLevel:"🎉 +10,000 XP earned! Continue in Qur'an Studio with HudHud 🦅");
    window.dispatchEvent(new Event("1muslim-xp-updated"));
   }else setReward("You've already earned this verse bonus. Continue in Qur'an Studio with HudHud 🦅");

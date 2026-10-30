@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
+import {createClient} from "../../../utils/supabase/client";
 import SiteNav from "../../components/SiteNav";
 import VerseStudio from "./VerseStudio";
 import VerseRecorder from "./VerseRecorder";
@@ -190,6 +191,27 @@ export default function QuranLessons(){
  const [markerSize,setMarkerSize]=useState(42);
  const markerDrag=useRef<{id:number;x:number;y:number;startX:number;startY:number;key:string}|null>(null);
  const activeVerseKey=verses[focusIndex]?.verse_key||chapter+":"+(focusIndex+1);
+ // A verse must remain active and visible for two seconds before claiming XP.
+ useEffect(()=>{
+  const key=verses[focusIndex]?.verse_key;
+  if(!key||busy||document.visibilityState!=="visible")return;
+  let cancelled=false;
+  const db=createClient();
+  void db.rpc("begin_quran_verse_view",{p_verse_key:key}).then(({error})=>{
+   if(error||cancelled)return;
+   const timer=window.setTimeout(async()=>{
+    if(cancelled||document.visibilityState!=="visible")return;
+    const {data,error:claimError}=await db.rpc("claim_quran_verse_view_xp",{p_verse_key:key});
+    if(!claimError&&Number((Array.isArray(data)?data[0]:data)?.awarded)>0)
+     window.dispatchEvent(new Event("1muslim-xp-updated"));
+   },2100);
+   if(cancelled)clearTimeout(timer);
+   else verseXpTimer.current=timer;
+  });
+  return()=>{cancelled=true;if(verseXpTimer.current!==null)clearTimeout(verseXpTimer.current);verseXpTimer.current=null};
+ },[verses,focusIndex,busy]);
+ const verseXpTimer=useRef<number|null>(null);
+
  const addVerseMarker=()=>setVerseMarkers(prev=>({...prev,[activeVerseKey]:[...(prev[activeVerseKey]||[]),{id:Date.now(),x:50,y:50,size:markerSize}]}));
  const undoVerseMarker=()=>setVerseMarkers(prev=>({...prev,[activeVerseKey]:(prev[activeVerseKey]||[]).slice(0,-1)}));
  const moveVerseMarker=(id:number,x:number,y:number,key:string)=>setVerseMarkers(prev=>({...prev,[key]:(prev[key]||[]).map(m=>m.id===id?{...m,x:Math.max(4,Math.min(96,x)),y:Math.max(4,Math.min(96,y))}:m)}));
