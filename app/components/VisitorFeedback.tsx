@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
+import {createClient} from "../../utils/supabase/client";
 const KEY="1muslim:feedback-v1";
 export default function VisitorFeedback(){
  const [open,setOpen]=useState(false),[stars,setStars]=useState(0),[message,setMessage]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState("");
@@ -19,8 +20,16 @@ export default function VisitorFeedback(){
  },[]);
  const later=()=>{localStorage.setItem(KEY+":later",String(Date.now()));setOpen(false)};
  const submit=async()=>{if(!stars)return;setBusy(true);setError("");try{
-  const res=await fetch("/api/visitor-feedback",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({rating:stars,feedback:message.trim(),page:location.pathname})});
-  if(!res.ok)throw Error("Feedback could not be delivered. Please try again.");
+  const db=createClient();
+  const {data:{user},error:authError}=await db.auth.getUser();
+  if(authError||!user)throw Error("Please sign in to send feedback through 1Muslim Messages.");
+  const adminId="56373a95-38dc-4457-b6eb-0070af1630f8";
+  if(user.id===adminId)throw Error("This feedback account cannot message itself.");
+  const {data:conversationId,error:conversationError}=await db.rpc("dm_start_conversation",{other_user:adminId});
+  if(conversationError||!conversationId)throw Error("Could not open the feedback conversation. Please try again.");
+  const body="⭐ 1Muslim Feedback: "+stars+"/5\\nPage: "+location.pathname+"\\n"+(message.trim()||"(No written feedback)");
+  const {error:sendError}=await db.from("dm_messages").insert({conversation_id:conversationId,sender_id:user.id,body});
+  if(sendError)throw Error("Could not send your message. Please try again.");
   localStorage.setItem(KEY,"submitted");setOpen(false);
  }catch(e){setError(e instanceof Error?e.message:"Try again")}finally{setBusy(false)}};
  if(!open)return null;
