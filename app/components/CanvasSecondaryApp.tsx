@@ -84,7 +84,8 @@ function ProfileApp({active,section="My Profile"}:{active:boolean;section?:"My P
 {name:"Lunar",url:"/assets/avatars/lunar-avatar-female.PNG",xp:5000,gender:"female",category:"Elite"},
 {name:"Ice",url:"/assets/avatars/ice-avatar-female.PNG",xp:5000,gender:"female",category:"Elite"},
 {name:"Emerald Royalty",url:"/assets/avatars/emerald-royalty-female.PNG",xp:10000,gender:"female",category:"Elite"},
-{name:"Violet Sentinel",url:"/assets/avatars/violet-sentinel-female.PNG",xp:10000,gender:"female",category:"Elite"}
+{name:"Violet Sentinel",url:"/assets/avatars/violet-sentinel-female.PNG",xp:10000,gender:"female",category:"Elite"},
+  {name:"Tina The Salafi",url:"/assets/avatars/tina-the-salafi-female.PNG",xp:20000,gender:"female",category:"Elite"}
 ];
 const avatarGender=(profile?.avatar_gender||profile?.gender||"").toLowerCase();const visibleAvatars=avatars.filter(a=>avatarGender==="male"||avatarGender==="female"?a.gender===avatarGender:true);
 const badgeOptions=[{key:"shahada",name:"Shahadah Certified",image:"/assets/badges/shahada-badge.png"},{key:"dua",name:"Dua Badge",image:"/assets/badges/dua-badge.PNG"},{key:"tiktok",name:"TikTok Connected",image:"/assets/badges/1Muslim-TikTok-badge.PNG"}];
