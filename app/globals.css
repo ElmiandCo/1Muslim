@@ -730,3 +730,28 @@ html[data-muslim-theme] :is(button,[role="tab"],.sidebar,.canvas-native-profile)
  transition:background-color 3s ease,border-color 3s ease,color 3s ease,box-shadow 3s ease;
 }
 @media(prefers-reduced-motion:reduce){html[data-muslim-theme] :is(button,[role="tab"],.sidebar,.canvas-native-profile){transition:none}}
+
+/* Global palette skin: preserve content imagery and functional layouts while
+   recoloring all application surfaces, overlays, panels and navigation. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]){
+ --background:var(--theme-base);--foreground:#f5f7fb;
+ --card:var(--theme-surface);--popover:var(--theme-surface);
+ --primary:var(--theme-accent);--ring:var(--theme-edge);
+ --muted:var(--theme-surface);--border:var(--theme-edge);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(body,main,header,footer,nav,aside,section,[role="dialog"],[role="tabpanel"],[role="navigation"],.app,.sidebar,.canvas-native-profile,.canvas-umma-gallery,.omQuranPage,.homeLiveStage,.oneMuslimLiveStage,.communityPage){
+ --green:var(--theme-accent);--gold:var(--theme-secondary);--bg:var(--theme-base);--panel:var(--theme-surface);--panel2:var(--theme-surface);--accent:var(--theme-accent);--line:var(--theme-edge);
+ accent-color:var(--theme-accent);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(.app,.sidebar,.canvas-umma-gallery,.communityPage,.homeLiveStage,.oneMuslimLiveStage,header,footer,nav,aside,[role="dialog"]){
+ background-color:var(--theme-base);
+ border-color:color-mix(in srgb,var(--theme-edge) 48%,transparent);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(.app,.sidebar,.canvas-umma-gallery,.communityPage,.homeLiveStage,.oneMuslimLiveStage,header,footer,nav,aside,[role="dialog"]) :is(button,[role="tab"],input,textarea,select){
+ accent-color:var(--theme-accent);
+ border-color:color-mix(in srgb,var(--theme-edge) 50%,transparent);
+}
+html[data-muslim-theme] :is(body,main,header,footer,nav,aside,section,[role="dialog"],[role="tabpanel"],.app,.sidebar,.canvas-umma-gallery,.communityPage,.homeLiveStage,.oneMuslimLiveStage){
+ transition:background-color 2.5s ease,border-color 2.5s ease,box-shadow 2.5s ease;
+}
+@media(prefers-reduced-motion:reduce){html[data-muslim-theme] :is(body,main,header,footer,nav,aside,section,[role="dialog"],[role="tabpanel"],.app,.sidebar,.canvas-umma-gallery,.communityPage,.homeLiveStage,.oneMuslimLiveStage){transition:none}}
