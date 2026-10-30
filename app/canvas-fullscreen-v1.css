@@ -1899,3 +1899,17 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 .canvas-vertical-main > .canvas-live-independent-stage{
  background-image:none!important;
 }
+
+/* Correct root cause: oversized ornament belongs to the parent decorated
+   surface, not the nested Live stage. Hide only while Live stage is active.
+   The separate top/header islamicDecoration remains untouched. */
+main[class*="control"]:has(.canvas-vertical-main > .canvas-live-independent-stage)
+ [class*="decoratedSurface"] > [class*="surfaceArtwork"],
+main[class*="control"]:has(.canvas-vertical-main > .canvas-live-independent-stage)
+ [class*="surface"] > [class*="surfaceArtwork"],
+main[class*="control"]:has(.canvas-vertical-main > .canvas-live-independent-stage)
+ .canvas-vertical-main [class*="surfaceArtwork"] {
+ background-image:none!important;
+ opacity:0!important;
+ visibility:hidden!important;
+}
