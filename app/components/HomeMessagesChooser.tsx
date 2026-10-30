@@ -7,8 +7,6 @@ import styles from "./home-messages-chooser.module.css";
 type Mode="audio"|"video"|"chat";
 type Person={id:string;display_name:string|null;username:string|null;avatar_url:string|null;profile_image_url:string|null;avatar_path:string|null};
 const actions:{mode:Mode;label:string;asset:string}[]=[
- {mode:"audio",label:"Voice call",asset:"/assets/control-center/1calls.PNG"},
- {mode:"video",label:"Video call",asset:"/assets/control-center/1video-calling.PNG"},
  {mode:"chat",label:"Message",asset:"/assets/hudhud-messages.PNG"}
 ];
 export default function HomeMessagesChooser(){
