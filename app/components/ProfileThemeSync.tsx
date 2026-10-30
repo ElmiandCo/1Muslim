@@ -2,15 +2,26 @@
 import {useEffect} from "react";
 import {createClient} from "../../utils/supabase/client";
 
-const allowed=new Set(["emerald","rose-gold","silver-dust","carbon-fiber"]);
+const aliases:Record<string,string>={"rose-gold":"ruby","silver-dust":"titanium","carbon-fiber":"obsidian"};
+const themes:Record<string,{base:string;accent:string;secondary:string;surface:string;edge:string;tint:string}>={
+ emerald:{base:"#052b22",accent:"#22bd83",secondary:"#d9bd70",surface:"#073c30",edge:"#54d5a3",tint:"rgba(3,27,21,.3)"},
+ sapphire:{base:"#06182f",accent:"#398fff",secondary:"#cbdcff",surface:"#10294b",edge:"#73b6ff",tint:"rgba(2,14,39,.45)"},
+ ruby:{base:"#310b15",accent:"#ed3652",secondary:"#f7bd75",surface:"#4a1422",edge:"#ff6983",tint:"rgba(42,5,14,.46)"},
+ amethyst:{base:"#270b39",accent:"#c85cf5",secondary:"#ff9ed9",surface:"#39134e",edge:"#e9a0ff",tint:"rgba(30,5,48,.43)"},
+ titanium:{base:"#111419",accent:"#b6c3d1",secondary:"#e1e7ef",surface:"#222932",edge:"#cbd5e1",tint:"rgba(5,8,14,.52)"},
+ obsidian:{base:"#0b0b0c",accent:"#e2b75e",secondary:"#ffdb8b",surface:"#1c1914",edge:"#e6bc65",tint:"rgba(0,0,0,.62)"}
+};
 const fallback="emerald";
 function applyTheme(value:unknown){
- const theme=typeof value==="string"&&allowed.has(value)?value:fallback;
- document.documentElement.dataset.profileBackground=theme;
- document.documentElement.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${theme}.PNG")`);
- document.documentElement.style.setProperty("--profile-scene-tint",theme==="carbon-fiber"?"rgba(2,5,9,.44)":theme==="silver-dust"?"rgba(21,28,35,.26)":theme==="rose-gold"?"rgba(40,13,28,.29)":"rgba(3,27,21,.3)");
+ const requested=typeof value==="string"?value:fallback;
+ const theme=themes[aliases[requested]||requested]?aliases[requested]||requested:fallback;
+ const t=themes[theme];const root=document.documentElement;
+ root.dataset.profileBackground=theme;root.dataset.muslimTheme=theme;
+ root.style.setProperty("--theme-base",t.base);root.style.setProperty("--theme-accent",t.accent);root.style.setProperty("--theme-secondary",t.secondary);root.style.setProperty("--theme-surface",t.surface);root.style.setProperty("--theme-edge",t.edge);
+ root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[theme]||theme}.PNG")`);
+ root.style.setProperty("--profile-scene-tint",t.tint);
  try{localStorage.setItem("1muslim:profile-background",theme)}catch{}
- if(theme==="carbon-fiber"){try{localStorage.setItem("1muslim-theme-mode","night");localStorage.setItem("1muslim-theme","dark")}catch{};document.documentElement.classList.remove("light")}
+ if(theme==="obsidian"||theme==="titanium"){try{localStorage.setItem("1muslim-theme-mode","night");localStorage.setItem("1muslim-theme","dark")}catch{};root.classList.remove("light")}
 }
 export default function ProfileThemeSync(){
  useEffect(()=>{
@@ -20,7 +31,7 @@ export default function ProfileThemeSync(){
   const refresh=async()=>{
    const {data:{user}}=await db.auth.getUser();
    if(!active)return;
-   if(!user){applyTheme(fallback);return}
+   if(!user){return}
    const {data}=await db.from("profiles").select("avatar_config").eq("id",user.id).maybeSingle();
    if(active)applyTheme((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||fallback);
   };
