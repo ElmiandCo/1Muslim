@@ -15,6 +15,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
   setFailure("");
   let active=true;
   const room=new Room({adaptiveStream:false});
+  let waitingTimer:ReturnType<typeof setTimeout>|undefined;
   let retryTimer:ReturnType<typeof setTimeout>|undefined;
   const attach=(track:any)=>{
    if(!active||track.kind!==Track.Kind.Video||!video.current)return;
@@ -23,6 +24,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
    void video.current.play().then(()=>{if(active)setReady(true)}).catch(()=>{});
   };
   room.on(RoomEvent.TrackSubscribed,attach);
+  room.on(RoomEvent.TrackPublished,publication=>{if(publication.kind===Track.Kind.Video)publication.setSubscribed(true)});
   room.on(RoomEvent.TrackSubscriptionFailed,()=>{if(active)setFailure("Video subscription interrupted");});
   room.on(RoomEvent.ParticipantConnected,participant=>{for(const publication of participant.trackPublications.values())if(publication.kind===Track.Kind.Video){publication.setSubscribed(true);publication.setVideoQuality(VideoQuality.HIGH)}});
   room.on(RoomEvent.TrackPublished,publication=>{if(publication.kind===Track.Kind.Video){publication.setSubscribed(true);publication.setVideoQuality(VideoQuality.HIGH)}});
@@ -44,12 +46,13 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
      }
    }catch(error){if(active){setReady(false);setFailure(error instanceof Error?error.message:"Connection failed");retryTimer=setTimeout(()=>{if(active)setAttempt(n=>n+1)},5000)}}
   })();
-  return()=>{active=false;if(retryTimer)clearTimeout(retryTimer);room.removeAllListeners();void room.disconnect();if(video.current)video.current.srcObject=null};
+  waitingTimer=setTimeout(()=>{if(active&&!video.current?.srcObject)setAttempt(n=>n+1)},4000);
+  return()=>{active=false;if(waitingTimer)clearTimeout(waitingTimer);if(retryTimer)clearTimeout(retryTimer);room.removeAllListeners();void room.disconnect();if(video.current)video.current.srcObject=null};
  },[roomName,attempt]);
  useEffect(()=>{const refresh=()=>{if(document.visibilityState==="visible"){setAttempt(n=>n+1)}};document.addEventListener("visibilitychange",refresh);window.addEventListener("focus",refresh);return()=>{document.removeEventListener("visibilitychange",refresh);window.removeEventListener("focus",refresh)}},[]);
  // Do not tear down a healthy LiveKit room just because the host has not published video.
  return <span style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:0,overflow:"hidden",borderRadius:12}}>
-  <video ref={video} autoPlay muted playsInline aria-label="Live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:0,objectFit:"cover",objectPosition:"center center",background:"transparent",opacity:ready?1:0}}/>
+  <video ref={video} autoPlay muted playsInline aria-label="Live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:0,objectFit:"contain",objectPosition:"center center",background:"transparent",opacity:ready?1:0}}/>
   {!ready&&<span style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{failure?"Video unavailable · Open live to retry":"Waiting for host video…"}</span>}
  </span>;
 }
