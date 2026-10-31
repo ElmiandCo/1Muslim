@@ -16,6 +16,8 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
+      - name: Live Cinema regression tests
+        run: node --experimental-strip-types --test scripts/live-cinema.test.mjs
       - name: TypeScript validation
         run: npx tsc --noEmit
       - name: Production build
