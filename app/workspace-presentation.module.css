@@ -864,3 +864,22 @@
   animation:none!important;will-change:auto!important;
  }
 }
+
+/* Crossfade the outgoing guest artwork over the incoming image for exactly 2s.
+   Background-image itself cannot interpolate, so a separate outgoing layer fades. */
+:global(html[data-guest-image-fade]) .slide .night::after,
+:global(html[data-guest-image-fade]) .slide .day::after{
+ content:"";position:absolute;inset:0;pointer-events:none;
+ background-image:linear-gradient(var(--guest-previous-scene-tint,transparent),var(--guest-previous-scene-tint,transparent)),var(--guest-previous-scene-image);
+ background-position:center;background-size:cover;
+ animation:guestSceneImageCrossfade 2s ease-in-out both;
+}
+@keyframes guestSceneImageCrossfade{0%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){
+ :global(html[data-guest-image-fade]) .slide .night::after,
+ :global(html[data-guest-image-fade]) .slide .day::after{animation:none;opacity:0}
+}
+
+:global(html[data-guest-image-fade="even"]) .slide .night::after,
+:global(html[data-guest-image-fade="even"]) .slide .day::after{animation-name:guestSceneImageCrossfadeEven}
+@keyframes guestSceneImageCrossfadeEven{0%{opacity:1}100%{opacity:0}}

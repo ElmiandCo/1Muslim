@@ -34,3 +34,46 @@
 .lessonNav::-webkit-scrollbar{display:none}
 .lessonNav button{flex:0 0 auto;white-space:nowrap;scroll-snap-align:start}
 @media(max-width:600px){.lessonNav{gap:6px}.lessonNav button{padding:7px 9px;min-width:42px;min-height:43px}.lessonNav button small{font-size:10px}}
+
+/* Theme-synced lessons: glass inherits the active profile palette instead of fixed emerald. */
+:global(html[data-muslim-theme]) .root{
+ --lesson-glass:var(--theme-base,#0b0b0c);
+ --lesson-highlight:var(--theme-accent,#8cc9ff);
+ --lesson-edge:var(--theme-edge,#cbdcff);
+ background:color-mix(in srgb,var(--lesson-glass) 70%,transparent);
+ border-color:color-mix(in srgb,var(--lesson-edge) 48%,transparent);
+ transition:background-color 2s ease,border-color 2s ease,box-shadow 2s ease;
+}
+:global(html[data-muslim-theme]) .stage,
+:global(html[data-muslim-theme]) .lessonQuiz{
+ background:color-mix(in srgb,var(--theme-base,#0b0b0c) 56%,transparent);
+ border-color:color-mix(in srgb,var(--theme-edge,#cbdcff) 36%,transparent);
+ transition:background-color 2s ease,border-color 2s ease;
+}
+:global(html[data-muslim-theme]) .lessonNav button,
+:global(html[data-muslim-theme]) .hear,
+:global(html[data-muslim-theme]) .tile,
+:global(html[data-muslim-theme]) .quizSpeaker,
+:global(html[data-muslim-theme]) .quizChoices button{
+ background:color-mix(in srgb,var(--theme-base,#0b0b0c) 78%,var(--theme-accent,#8cc9ff) 22%);
+ border-color:color-mix(in srgb,var(--theme-edge,#cbdcff) 45%,transparent);
+ transition:background-color 2s ease,border-color 2s ease;
+}
+:global(html[data-muslim-theme]) .lessonActive,
+:global(html[data-muslim-theme]) .tile[aria-pressed="true"]{
+ background:color-mix(in srgb,var(--theme-base,#0b0b0c) 55%,var(--theme-accent,#8cc9ff) 45%)!important;
+ border-color:var(--theme-accent,#8cc9ff)!important;
+}
+:global(html[data-muslim-theme]) .mark,
+:global(html[data-muslim-theme]) .quizFinish button{
+ background:var(--theme-accent,#8cc9ff);
+ color:var(--theme-base,#0b0b0c);
+ transition:background-color 2s ease,color 2s ease;
+}
+:global(html[data-muslim-theme]) .progress span{background:linear-gradient(90deg,var(--theme-accent,#8cc9ff),var(--theme-secondary,#cbdcff))}
+:global(html[data-muslim-theme]) .previous,
+:global(html[data-muslim-theme]) .next,
+:global(html[data-muslim-theme]) .bottom a,
+:global(html[data-muslim-theme]) .browseToggle,
+:global(html[data-muslim-theme]) .counter strong,
+:global(html[data-muslim-theme]) .top{color:var(--theme-secondary,#cbdcff)}
