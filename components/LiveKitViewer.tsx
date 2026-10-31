@@ -67,10 +67,61 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
     return()=>{cancelled=true};
   },[streamId]);
 
-  useEffect(()=>{if(!streamId)return;let alive=true;const db=createClient();const end=()=>{if(!alive||endedOnce.current)return;endedOnce.current=true;setHostEnded(true);roomRef.current?.disconnect();window.setTimeout(()=>{if(embedded){window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));setHostEnded(false)}else router.replace("/")},3800)};const check=async()=>{const {data}=await db.from("live_streams").select("status,ended_at").eq("id",streamId).maybeSingle();if(data&&(data.status==="ended"||data.status==="cancelled"||data.ended_at))end()};void check();const channel=db.channel("live-end:"+streamId).on("postgres_changes",{event:"UPDATE",schema:"public",table:"live_streams",filter:"id=eq."+streamId},payload=>{const next=payload.new as {status?:string;ended_at?:string|null};if(next.status==="ended"||next.status==="cancelled"||next.ended_at)end()}).subscribe();hostEndSignalRef.current=end;const timer=window.setInterval(()=>void check(),2000);return()=>{alive=false;hostEndSignalRef.current=()=>{};window.clearInterval(timer);void db.removeChannel(channel)}},[streamId,embedded,router]);
+  // Realtime and authenticated host packets notify quickly. Poll every 2s
+  // even while connected so missed events cannot leave viewers in a dead Live.
+  useEffect(()=>{
+    if(!streamId)return;
+    let alive=true,checking=false;
+    const db=createClient();
+    const end=()=>{
+      if(!alive||endedOnce.current)return;
+      endedOnce.current=true;
+      setHostEnded(true);setHostConnecting(false);setError("");
+      roomRef.current?.disconnect();
+      window.setTimeout(()=>{
+        if(!alive)return;
+        if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));
+        else router.replace("/");
+      },3800);
+    };
+    hostEndSignalRef.current=end;
+    const check=async()=>{
+      if(!alive||checking||endedOnce.current)return;
+      checking=true;
+      try{
+        const {data}=await db.from("live_streams")
+          .select("status,ended_at,last_heartbeat_at,aspect_ratio").eq("id",streamId).maybeSingle();
+        if(!alive||!data)return;
+        if(data.status==="ended"||data.status==="cancelled"||data.ended_at){end();return;}
+        setIsAudioBroadcast(data.aspect_ratio==="1:1");
+        const last=Date.parse(data.last_heartbeat_at||"");
+        if(data.status==="live"&&Number.isFinite(last)&&Date.now()-last>35000){
+          setHostConnecting(true);
+        }else if(hostIdRef.current&&roomRef.current?.remoteParticipants.has(hostIdRef.current)){
+          setHostConnecting(false);
+        }
+      }catch{/* A transient database failure must never end a live broadcast. */}
+      finally{checking=false;}
+    };
+    void check();
+    const channel=db.channel("live-end:"+streamId)
+      .on("postgres_changes",{event:"UPDATE",schema:"public",table:"live_streams",filter:"id=eq."+streamId},payload=>{
+        const next=payload.new as {status?:string;ended_at?:string|null;aspect_ratio?:string;last_heartbeat_at?:string|null};
+        if(next.status==="ended"||next.status==="cancelled"||next.ended_at){end();return;}
+        if(next.aspect_ratio)setIsAudioBroadcast(next.aspect_ratio==="1:1");
+      }).subscribe();
+    const timer=window.setInterval(()=>void check(),2000);
+    return()=>{alive=false;hostEndSignalRef.current=()=>{};window.clearInterval(timer);void db.removeChannel(channel);};
+  },[streamId,embedded,router]);
 
   useEffect(() => {
     let mounted = true;
+    const retryTimers:number[]=[];
+    const queueRetry=(delay:number)=>{
+      retryTimers.push(window.setTimeout(()=>{
+        if(mounted&&!endedOnce.current){setError("");setRetryAttempt(n=>n+1);}
+      },delay));
+    };
 
     const attachTrack = (track: any, source?: string, participantIdentity?: string) => {
       if (!mounted) return;
@@ -182,8 +233,13 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           try{const message=JSON.parse(new TextDecoder().decode(payload));if(message.type==="live-ended")hostEndSignalRef.current()}catch{}
         });
         room.on(RoomEvent.Reconnecting, () => {if(mounted){setConnectionActive(false);setStatus("Reconnecting…");setReconnecting(true);setReconnectKey(String(Date.now()));}});
-        room.on(RoomEvent.Reconnected, () => {if(mounted){setConnectionActive(true);setReconnecting(false);setStatus("Waiting for host…");}});
-        room.on(RoomEvent.Disconnected, () => {if(mounted){setConnectionActive(false);setStatus("Live connection ended.");setReconnecting(false);setError("The live connection ended. Please retry.");}});
+        room.on(RoomEvent.Reconnected, () => {if(mounted){setConnectionActive(true);setReconnecting(false);setError("");setStatus("Waiting for host…");}});
+        room.on(RoomEvent.Disconnected, () => {
+          if(!mounted||endedOnce.current)return;
+          setConnectionActive(false);setStatus("Reconnecting to Live…");setReconnecting(true);
+          setReconnectKey(String(Date.now()));
+          queueRetry(1500);
+        });
 
         await room.connect(data.url, data.token, { autoSubscribe: true });
         if (!mounted) { await room.disconnect(); return; }
@@ -204,7 +260,11 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           }
         }
       } catch (err) {
-        if (mounted) { setConnectionActive(false); setReconnecting(false); setStatus("Connection unavailable"); setError("The live connection could not be established. Please retry or return to Streaming."); }
+        if(mounted&&!endedOnce.current){
+          setConnectionActive(false);setReconnecting(true);setStatus("Reconnecting to Live…");
+          setReconnectKey(String(Date.now()));
+          queueRetry(Math.min(12000,1200*Math.pow(2,Math.min(retryAttempt,3))));
+        }
       }
     };
 
@@ -224,6 +284,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
 
     return () => {
       window.clearInterval(countTimer);
+      retryTimers.forEach(timer=>window.clearTimeout(timer));
       mounted = false;
       const oldRoom = roomRef.current;
       roomRef.current = null;
@@ -265,7 +326,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         <video ref={videoRef} className="omCameraVideo" autoPlay muted playsInline controls={!embedded} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block"}} />
         <video ref={screenVideoRef} className="omScreenVideo" autoPlay muted playsInline aria-label="Shared screen" style={{display:hasScreenVideo?"block":"none"}} />
       </div>
-      {(isAudioBroadcast&&!hasCameraVideo&&!hasScreenVideo)&&<div className="omVoiceViewerStage" aria-label="Live audio avatar">
+      {((isAudioBroadcast||hasRemoteAudio)&&!hasCameraVideo&&!hasScreenVideo)&&<div className="omVoiceViewerStage" aria-label="Live audio avatar">
         <div className="omVoiceViewerAura" style={{transform:"scale("+(1+voiceEnergy*.28)+")"}}/>
         <div className="omVoiceViewerPortrait" style={{transform:"scale("+(1+voiceEnergy*.1)+")"}}>{voiceAvatar?<img src={voiceAvatar} alt="" referrerPolicy="no-referrer"/>:<span aria-hidden="true">✧</span>}</div>
         <strong>{voiceName}</strong><small>{hasRemoteAudio?"● Audio Live":"Connecting to host audio…"}</small>
