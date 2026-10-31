@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - bot-b/liveguests-landing-visual-qa-20261031
   pull_request:
     branches:
       - main
