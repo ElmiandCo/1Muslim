@@ -2,10 +2,8 @@ import Link from "next/link";
 import FirstVisitGuide from "../../../components/FirstVisitGuide";
 import { createClient } from "../../../../utils/supabase/server";
 import SiteNav from "../../../components/SiteNav";
-import LiveKitViewer from "../../../../components/LiveKitViewer";
-import LiveGuestStudio from "../../../../components/LiveGuestStudio";
-import LiveChat from "../../../../components/LiveChat";
 import RecordingComments from "../../../../components/RecordingComments";
+import LiveCinemaTheater from "../../../../components/LiveCinemaTheater";
 import SaveRecording from "../../../components/SaveRecording";
 import DeleteRecordingButton from "../../../components/DeleteRecordingButton";
 
@@ -76,19 +74,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
 
         <div style={isLive?{border:0,borderRadius:0,background:"#000"}:{border:"1px solid #1b241f",borderRadius:22,overflow:"hidden",background:"#080d09"}}>
           {isLive ? (
-            <section className="omLiveTheater" aria-label="Immersive live broadcast">
-              <LiveKitViewer roomName={stream.room_name} streamId={stream.id} />
-              <div className="omLiveTheaterInfo">
-                {hostAvatar && <img src={hostAvatar} alt="" className="omLiveTheaterAvatar" />}
-                <div className="omLiveTheaterIdentity"><strong>{hostName}</strong><small>{stream.title}</small></div>
-                <span className="omLiveTheaterBadge">● LIVE</span>
-              </div>
-              <div className="omLiveTheaterChat"><LiveChat streamId={stream.id} hostId={stream.host_id} overlay /></div>
-              <details className="omLiveTheaterGuests">
-                <summary aria-label="Open guest controls">♧ Guests</summary>
-                <div className="omLiveTheaterGuestPanel"><LiveGuestStudio streamId={stream.id} roomName={stream.room_name} hostId={stream.host_id}/></div>
-              </details>
-            </section>
+            <LiveCinemaTheater streamId={stream.id} roomName={stream.room_name} hostId={stream.host_id} hostName={hostName} title={stream.title} hostAvatar={hostAvatar} />
           ) : !mayViewRecording ? (
             <section style={{padding:40,textAlign:"center"}}><h2>🔒 Recording restricted</h2><p style={{color:"#a6b3a9"}}>Only 1Muslim administrators can access past livestream recordings. Live broadcasts remain available while they are on air.</p><Link href="/streaming" style={{color:"#d6e7b8"}}>Back to Streaming →</Link></section>
           ) : recording && videoUrl ? (
