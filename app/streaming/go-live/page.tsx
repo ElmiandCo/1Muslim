@@ -1313,63 +1313,59 @@ export default function GoLivePage() {
         @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 
-        /* Device selection morphs the actual CAMERA stage, never the control canvas.
-           Keep bottom controls anchored while the image changes between 16:9, 9:16 and 1:1. */
+        /* Single authoritative layout for the three camera modes. Never translate media by 50%. */
         .goLive .layout>.panel:first-child>.preview{
+          position:relative!important;display:block!important;overflow:hidden!important;
           width:100%!important;max-width:none!important;max-height:none!important;
           height:calc(100dvh - 74px - env(safe-area-inset-top,0px))!important;
-          min-height:520px!important;aspect-ratio:auto!important;
-          position:relative!important;overflow:hidden!important;display:block!important;
+          min-height:500px!important;aspect-ratio:auto!important;
         }
         .goLive .layout>.panel:first-child>.preview>video,
         .goLive .layout>.panel:first-child>.preview>.placeholder{
-          position:absolute!important;display:block!important;left:50%!important;top:0!important;
-          margin:0!important;max-width:none!important;max-height:none!important;
-          transform:translateX(-50%)!important;transform-origin:top center!important;
-          border-radius:0!important;overflow:hidden!important;object-fit:cover!important;
-          transition:width 1.15s cubic-bezier(.22,1,.36,1),height 1.15s cubic-bezier(.22,1,.36,1),
-            border-radius 1.15s cubic-bezier(.22,1,.36,1),opacity .55s ease,filter .75s ease!important;
+          position:absolute!important;inset:auto!important;top:12px!important;left:0!important;right:auto!important;
+          width:100%!important;height:auto!important;max-width:none!important;max-height:none!important;
+          aspect-ratio:16/9!important;object-fit:cover!important;
+          margin:0!important;border-radius:12px!important;
+          transform:none!important;transform-origin:center center!important;
+          transition:top 2s cubic-bezier(.22,1,.36,1),width 2s cubic-bezier(.22,1,.36,1),
+            height 2s cubic-bezier(.22,1,.36,1),aspect-ratio 2s ease,
+            border-radius 2s ease,opacity .6s ease!important;
         }
-        .goLive .preview[data-studio-mode="phone"]>video,
-        .goLive .preview[data-studio-mode="phone"]>.placeholder{
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"]>video,
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"]>.placeholder{
+          top:0!important;left:0!important;right:0!important;bottom:0!important;
           width:100%!important;height:100%!important;aspect-ratio:auto!important;
+          border-radius:0!important;object-fit:cover!important;animation:none!important;
         }
-        .goLive .preview[data-studio-mode="desktop"]>video,
-        .goLive .preview[data-studio-mode="desktop"]>.placeholder{
-          width:100%!important;height:auto!important;aspect-ratio:16/9!important;
-          max-height:calc(100% - 170px)!important;
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"]>video,
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"]>.placeholder{
+          top:12px!important;left:0!important;width:100%!important;
+          height:auto!important;aspect-ratio:16/9!important;
+          animation:studioDesktopHover 5s ease-in-out infinite!important;
         }
-        .goLive .preview[data-studio-mode="voice"]>video{opacity:0!important;pointer-events:none!important}
-        .goLive .preview[data-studio-mode="voice"]>.placeholder{opacity:0!important;pointer-events:none!important}
-        .goLive .preview .voiceAvatarStage{
-          inset:auto!important;top:16px!important;left:50%!important;
-          width:min(76vw,330px,38dvh)!important;height:auto!important;aspect-ratio:1/1!important;
-          border:1px solid #b5ffe555!important;border-radius:25px!important;
-          transform:translateX(-50%) scale(.88)!important;
-          transition:opacity .75s ease,visibility .75s ease,transform 1.15s cubic-bezier(.22,1,.36,1)!important;
+        @keyframes studioDesktopHover{0%,100%{translate:0 0}50%{translate:0 5px}}
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="voice"]>video,
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="voice"]>.placeholder{
+          opacity:0!important;pointer-events:none!important;animation:none!important;
         }
-        .goLive .preview .voiceAvatarStageActive{transform:translateX(-50%) scale(1)!important}
+        .goLive .layout>.panel:first-child>.preview .voiceAvatarStage{
+          position:absolute!important;inset:auto!important;top:14px!important;left:50%!important;right:auto!important;
+          width:min(76vw,340px,40dvh)!important;height:auto!important;aspect-ratio:1/1!important;
+          border-radius:24px!important;border:1px solid #b5ffe555!important;
+          transform:translateX(-50%) scale(.92)!important;
+          transition:opacity .65s ease,visibility .65s ease,transform 2s cubic-bezier(.22,1,.36,1)!important;
+        }
+        .goLive .layout>.panel:first-child>.preview .voiceAvatarStageActive{
+          transform:translateX(-50%) scale(1)!important;
+        }
         .goLive .preview.studioMorphing::before{z-index:18!important}
-        @media(max-width:850px){
-          .goLive .layout>.panel:first-child>.preview>video,
-          .goLive .layout>.panel:first-child>.preview>.placeholder{
-            bottom:auto!important;right:auto!important;
-          }
-          .goLive .preview[data-studio-mode="phone"]>video,
-          .goLive .preview[data-studio-mode="phone"]>.placeholder{
-            width:100%!important;height:100%!important;max-height:none!important;
-          }
-          .goLive .preview[data-studio-mode="desktop"]>video,
-          .goLive .preview[data-studio-mode="desktop"]>.placeholder{
-            width:100%!important;height:auto!important;aspect-ratio:16/9!important;
-          }
-        }
         @media(prefers-reduced-motion:reduce){
           .goLive .layout>.panel:first-child>.preview>video,
           .goLive .layout>.panel:first-child>.preview>.placeholder,
-          .goLive .preview .voiceAvatarStage{transition:none!important}
+          .goLive .layout>.panel:first-child>.preview .voiceAvatarStage{
+            transition:none!important;animation:none!important;
+          }
         }
-
 
       `}</style>
 
