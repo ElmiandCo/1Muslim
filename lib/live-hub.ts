@@ -103,6 +103,7 @@ export function buildLiveHub(
     durationSeconds: row.duration_seconds,
     recordedAt: row.created_at,
     thumbnailPath: row.thumbnail_path,
+    videoPath: row.video_path,
     mediaType: row.mime_type?.startsWith("audio/") ? "audio" as const : "video" as const,
     href: `/streaming/replay/${row.id}`,
   }));
