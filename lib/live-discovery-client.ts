@@ -155,9 +155,9 @@ async function refresh() {
 function connectRealtime() {
   if (!running || channel) return;
   const currentGeneration = generation;
-  channel = getSupabase().channel("1muslim-live2-discovery")
+  const activeChannel = getSupabase().channel("1muslim-live2-discovery")
     .on("postgres_changes", { event: "*", schema: "public", table: "live_presence" }, payload => {
-      if (!running || generation !== currentGeneration) return;
+      if (!running || generation !== currentGeneration || channel !== activeChannel) return;
       if (payload.eventType === "DELETE") {
         const id = (payload.old as { stream_id?: string }).stream_id;
         if (id) { publish({ ...snapshot, lives: snapshot.lives.filter(row => row.id !== id) }); scheduleRefresh(1100); }
@@ -173,9 +173,10 @@ function connectRealtime() {
         }, 1200);
         delayedRefreshes.add(timer);
       }
-    })
-    .subscribe(status => {
-      if (!running || generation !== currentGeneration) return;
+    });
+  channel = activeChannel;
+  activeChannel.subscribe(status => {
+      if (!running || generation !== currentGeneration || channel !== activeChannel) return;
       if (status === "SUBSCRIBED") {
         connected = true;
         retryCount = 0;
