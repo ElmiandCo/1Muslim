@@ -66,7 +66,7 @@ export default function GoLivePage() {
     requestAnimationFrame(()=>setStudioMorphing(true));
     studioMorphTimer.current=setTimeout(()=>setStudioMorphing(false),1150);
     setStudioMode(mode);
-    if(mode!=="voice")setAspectRatio(mode==="desktop"?"16:9":"9:16");
+    setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
     if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
     else{setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
   };
