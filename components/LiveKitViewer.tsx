@@ -138,6 +138,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         if (isScreen) setHasScreenVideo(true);
         else setHasCameraVideo(true);
         setStatus("LIVE");
+        setError("");
         setReconnecting(false);
       } else if (track.kind === Track.Kind.Audio && audioContainerRef.current) {
         // Avoid duplicating playback elements when a remote track is re-subscribed.
@@ -152,6 +153,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         setHasRemoteAudio(true);
         setHostConnecting(false);
         setStatus("LIVE · Audio");
+        setError("");
         setReconnecting(false);
         // Analyze the host's remote microphone to drive the avatar's aura.
         if (!voiceAnalyzerCleanupRef.current && (!hostIdRef.current || participantIdentity===hostIdRef.current)) {
