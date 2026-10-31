@@ -81,7 +81,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,liveMode}:{str
     setBusy(true);setError("");
     try{
       const {error:requestError}=await createClient().rpc("request_live_guest",{
-        p_stream:streamId,p_mode:mode,
+        p_stream:streamId,p_mode:liveMode==="audio"?"pfp":liveMode==="video"?"camera":mode,
       });
       if(requestError)throw new Error(requestError.code==="PGRST202"
         ?"Guest requests are initializing. Please try again shortly."
