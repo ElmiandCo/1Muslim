@@ -72,7 +72,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   useEffect(() => {
     let mounted = true;
 
-    const attachTrack = (track: any, source?: string) => {
+    const attachTrack = (track: any, source?: string, participantIdentity?: string) => {
       if (!mounted) return;
       if (track.kind === Track.Kind.Video) {
         const isScreen = source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShare;
@@ -95,7 +95,38 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         audio.setAttribute("playsinline", "true");
         audioContainerRef.current.appendChild(audio);
         void audio.play().catch(() => {});
-        // Audio alone does not establish video playback.
+        setHasRemoteAudio(true);
+        setHostConnecting(false);
+        setStatus("LIVE · Audio");
+        setReconnecting(false);
+        // Analyze the host's remote microphone to drive the avatar's aura.
+        if (!voiceAnalyzerCleanupRef.current && (!hostIdRef.current || participantIdentity===hostIdRef.current)) {
+          try {
+            const context=new AudioContext();
+            const sourceNode=context.createMediaStreamSource(new MediaStream([track.mediaStreamTrack]));
+            const analyser=context.createAnalyser();
+            analyser.fftSize=512;analyser.smoothingTimeConstant=.82;
+            sourceNode.connect(analyser);
+            const samples=new Uint8Array(analyser.fftSize);
+            let frame=0,active=true,last=0,smoothed=0;
+            const tick=(now:number)=>{
+              if(!active)return;
+              analyser.getByteTimeDomainData(samples);
+              let sum=0;for(const sample of samples){const v=(sample-128)/128;sum+=v*v}
+              const rms=Math.sqrt(sum/samples.length);
+              smoothed=smoothed*.72+Math.min(1,Math.max(0,(rms-.012)*8))*.28;
+              if(now-last>70){setVoiceEnergy(smoothed);last=now}
+              frame=requestAnimationFrame(tick);
+            };
+            frame=requestAnimationFrame(tick);
+            voiceAudioContextRef.current=context;
+            voiceAnalyzerCleanupRef.current=()=>{
+              active=false;cancelAnimationFrame(frame);sourceNode.disconnect();
+              void context.close().catch(()=>{});
+              voiceAudioContextRef.current=null;
+            };
+          }catch{/* The static avatar remains available if Web Audio is unavailable. */}
+        }
       }
     };
 
@@ -129,6 +160,10 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           } else if (track.kind === Track.Kind.Audio) {
             track.detach().forEach(el => { if (el.parentNode === audioContainerRef.current) el.remove(); });
             if (track.sid) attachedAudioRef.current.delete(track.sid);
+            setHasRemoteAudio(attachedAudioRef.current.size>0);
+            if(attachedAudioRef.current.size===0){
+              voiceAnalyzerCleanupRef.current?.();voiceAnalyzerCleanupRef.current=null;setVoiceEnergy(0);
+            }
           }
         });
         room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live media could not be subscribed to. Please reconnect."));
@@ -194,6 +229,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       roomRef.current = null;
       if (oldRoom) void oldRoom.disconnect();
       attachedAudioRef.current.clear();
+      voiceAnalyzerCleanupRef.current?.();voiceAnalyzerCleanupRef.current=null;
       if (videoRef.current) videoRef.current.srcObject = null;
       if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
       audioContainerRef.current?.replaceChildren();
@@ -204,6 +240,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
     const next = !muted;
     setMuted(next);
     mutedRef.current = next;
+    if(!next)void voiceAudioContextRef.current?.resume().catch(()=>{});
     if (audioContainerRef.current) {
       audioContainerRef.current.querySelectorAll("audio").forEach((audio) => {
         audio.muted = next;
@@ -228,6 +265,12 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         <video ref={videoRef} className="omCameraVideo" autoPlay muted playsInline controls={!embedded} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block"}} />
         <video ref={screenVideoRef} className="omScreenVideo" autoPlay muted playsInline aria-label="Shared screen" style={{display:hasScreenVideo?"block":"none"}} />
       </div>
+      {(isAudioBroadcast&&!hasCameraVideo&&!hasScreenVideo)&&<div className="omVoiceViewerStage" aria-label="Live audio avatar">
+        <div className="omVoiceViewerAura" style={{transform:"scale("+(1+voiceEnergy*.28)+")"}}/>
+        <div className="omVoiceViewerPortrait" style={{transform:"scale("+(1+voiceEnergy*.1)+")"}}>{voiceAvatar?<img src={voiceAvatar} alt="" referrerPolicy="no-referrer"/>:<span aria-hidden="true">✧</span>}</div>
+        <strong>{voiceName}</strong><small>{hasRemoteAudio?"● Audio Live":"Connecting to host audio…"}</small>
+      </div>}
+      {hostConnecting&&!hostEnded&&<div className="omHostReconnecting" role="status" aria-live="polite">Host connection interrupted · Reconnecting…</div>}
       <div ref={audioContainerRef} />
       {streamId&&<LiveLightOverlay streamId={streamId}/>}
       {!embedded&&<><div className="omViewerTapCounter" aria-label={`${tapCount} screen taps`}>✨ {tapCount.toLocaleString()} taps</div>{tapBursts.map(t=><span key={t.id} className="omViewerTapBurst" style={{left:t.x,top:t.y}}>💜</span>)}<a className="omViewerExit" href="/streaming" aria-label="Exit live viewer">✕</a></>}
@@ -257,6 +300,14 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         </div>
       ) : error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
       <style jsx>{`
+      .omVoiceViewerStage{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#164938,#081b18 60%,#020706 100%);color:#e5f9f0}
+      .omVoiceViewerAura{position:absolute;width:min(66vw,260px);aspect-ratio:1;border-radius:50%;border:2px solid #87f8ce80;box-shadow:0 0 45px #34e5a555;animation:omVoiceViewerBreathe 3.6s ease-in-out infinite;pointer-events:none}
+      .omVoiceViewerPortrait{position:relative;width:min(56vw,220px);aspect-ratio:1;display:grid;place-items:center;border-radius:50%;border:3px solid #c8fce6;overflow:hidden;background:radial-gradient(circle at 35% 25%,#28755f,#07261c 75%);box-shadow:0 0 35px #20c78c55;transition:transform .12s linear}
+      .omVoiceViewerPortrait img{width:100%;height:100%;object-fit:cover}.omVoiceViewerPortrait span{font-size:80px}
+      .omVoiceViewerStage strong,.omVoiceViewerStage small{position:relative;z-index:2;text-shadow:0 2px 8px #000b}
+      .omVoiceViewerStage strong{font-size:17px}.omVoiceViewerStage small{font-size:11px;color:#a5ead0}
+      .omHostReconnecting{position:absolute;top:48px;left:50%;transform:translateX(-50%);z-index:15;max-width:90%;padding:9px 13px;border-radius:16px;background:#4b2c16e8;color:#fff2da;font-size:12px;text-align:center}
+      @keyframes omVoiceViewerBreathe{0%,100%{opacity:.65}50%{opacity:1}}
       .omLiveVideoStage{position:relative;width:100%;height:100%;overflow:hidden;background:#000}
       .omLiveVideoStage video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
       .omLiveTheater .omLiveVideoStage{background:#050b0b}
@@ -280,7 +331,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       @keyframes omViewerHeartFloat{from{opacity:1;transform:translate(-50%,-50%) scale(.6)}to{opacity:0;transform:translate(-50%,-155%) scale(1.6)}}
       @keyframes omViewerCountGlow{0%,100%{box-shadow:0 0 0 transparent;color:#fff}30%{box-shadow:0 0 24px #bd8dff,0 0 38px #6ee7e3;color:#e5c4ff}60%{box-shadow:0 0 22px #85e9ff;color:#c7fff8}}
       @media(max-width:700px){.omLiveImmersiveViewer{height:100dvh!important;min-height:100dvh!important;aspect-ratio:auto!important}.omLiveImmersiveViewer video{width:100%!important;height:100%!important;object-fit:contain!important}.omLiveTheater .omLiveImmersiveViewer video:not(.omScreenVideo){object-fit:cover!important}.omLiveVideoStage[data-screen="yes"][data-layout="split"]{grid-template-columns:1fr;grid-template-rows:minmax(0,3fr) minmax(100px,1fr)}.omLiveVideoStage[data-screen="yes"][data-layout="split"] .omScreenVideo{grid-column:1;grid-row:1}.omLiveVideoStage[data-screen="yes"][data-layout="split"] .omCameraVideo{grid-column:1;grid-row:2}.omLiveImmersiveViewer .omViewerExit{top:calc(env(safe-area-inset-top) + 12px)}}
-      @media(prefers-reduced-motion:reduce){.omViewerTapBurst,.omViewerCountPulse{animation:none!important}}
+      @media(prefers-reduced-motion:reduce){.omViewerTapBurst,.omViewerCountPulse,.omVoiceViewerAura{animation:none!important}}
       .omHostEndedNotice{position:absolute;z-index:50;top:15%;left:50%;transform:translateX(-50%);width:min(88%,380px);padding:20px 18px;text-align:center;color:#f6f4e9;background:#0a2925ed;border:1px solid #edcf8a9c;border-radius:23px;box-shadow:0 16px 60px #0009;backdrop-filter:blur(16px);display:grid;gap:10px;animation:omHostEndIn .45s ease-out both}.omHostEndedNotice span{font-size:10px;letter-spacing:.2em;color:#ecd19a}.omHostEndedNotice strong{font-size:19px}.omHostEndedNotice small{color:#bbd0c6}.omHostEndedNotice button{padding:10px;border-radius:99px;background:#edd39e;color:#103126;border:0;font-weight:800;cursor:pointer}@keyframes omHostEndIn{from{opacity:0;transform:translate(-50%,28px)}to{opacity:1;transform:translate(-50%,0)}}@media(prefers-reduced-motion:reduce){.omHostEndedNotice{animation:none}}
       `}</style>
     </div>
