@@ -139,3 +139,11 @@ The repository reference README names seven intended semantic cases: video host+
 | Six GitHub PNG image-by-image visual mapping | Binary source unavailable through connector | **BLOCKED** |
 
 **Release decision:** Not production-ready. No database mutation, no production deployment, no real-user data changes. Preserve latest main and camera crossfade; reconcile Bot A updates and run a real isolated two-device session before merge.
+
+
+### Bot A completion received and integrated into Bot B second pass
+
+- Bot A's new draft [PR #218](https://github.com/ElmiandCo/1Muslim/pull/218) identified a **real LiveKit permission defect**: host-muted Audio/PFP guests with zero permitted media sources could receive `canPublish:true` and an empty source list. Bot B incorporated the exact `guestCanPublishMedia` policy helper, subscribe-only token grant for those guests, and regression test into this isolated follow-up [PR #219](https://github.com/ElmiandCo/1Muslim/pull/219). **Do not merge #218 separately without reconciling duplicate code.**
+- Bot A completed read-only SecureApp schema/permissions verification; zero active streams and no disposable test accounts meant positive LiveKit end-to-end guest flow could not be run.
+- Isolated Node 22.16 policy test reproduction with type stripping: **5/5 passed** (seat cap, camera restriction, mic mute, identity, subscribe-only muted guest). Bot B checked seven landing/stage static contract groups directly against fetched GitHub source: **7/7 matched**. These are **source-level**, not browser/media end-to-end tests.
+- Vercel preview build for prior UI head `0254e0f` reported **READY**; current combined branch head must independently pass. The final main/production merge also needs separate integration of Live Cinema's frozen-frame 400 ms crossfade.
