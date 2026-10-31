@@ -117,7 +117,10 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   useEffect(() => {
     let mounted = true;
     const retryTimers:number[]=[];
+    let retryQueued=false;
     const queueRetry=(delay:number)=>{
+      if(retryQueued)return;
+      retryQueued=true;
       retryTimers.push(window.setTimeout(()=>{
         if(mounted&&!endedOnce.current){setError("");setRetryAttempt(n=>n+1);}
       },delay));
