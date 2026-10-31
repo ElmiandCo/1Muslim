@@ -34,8 +34,10 @@ export function useLiveGuestRoster(roomRef:RefObject<Room|null>,connected:boolea
         participants.sort((a,b)=>(order.get(a.identity)??Number.MAX_SAFE_INTEGER)-(order.get(b.identity)??Number.MAX_SAFE_INTEGER));
         return participants.slice(0,limit).map((p,index)=>{
           const publications=[...p.trackPublications.values()];
-          const camera=publications.find(pub=>pub.source===Track.Source.Camera&&pub.kind===Track.Kind.Video);
-          const mic=publications.find(pub=>pub.source===Track.Source.Microphone&&pub.kind===Track.Kind.Audio);
+          // Existing Guest Studio publishes raw MediaStreamTracks without source hints.
+          // Accept Unknown as a fallback while excluding screen-share tracks.
+          const camera=publications.find(pub=>pub.kind===Track.Kind.Video&&pub.source!==Track.Source.ScreenShare);
+          const mic=publications.find(pub=>pub.kind===Track.Kind.Audio&&pub.source!==Track.Source.ScreenShareAudio);
           return {
             id:p.identity,
             name:previous.find(g=>g.id===p.identity)?.name||`Guest ${index+1}`,
