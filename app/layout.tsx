@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./realtheme2-bot-a.css";
 import "./site-text.css";
 import "./badge-effects.css";
 import "./hudhud-translate.css";
