@@ -25,3 +25,8 @@ CSS-only changes; no JSX logic, Arabic glyph typography, media assets, layout, t
 2. Test all six themes on seven requested screens; ensure non-Emerald green remnants are absent and contrast is legible.
 3. If any CSS selector misses the actual DOM, patch precisely; do not broadly recolor Qur'an Arabic, profile background images or user media.
 4. Coordinate with Bot A on any remaining shared CSS and verify branch head before committing.
+
+## Additional verification and contrast patch
+- After Bot A's handoff became available, read `docs/realtheme2-bot-a-handoff.md`; the file scopes do not conflict.
+- `4517c6e0a7d9019237a475dbfeac5a51f9280988`: Ruby lesson Done button uses darker ink `#1c070d` because `#310b15` on `#ed3652` was only ~4.41:1. The new pair measures ~4.84:1. Other non-Emerald accent/base pair ratios calculated: Sapphire ~5.55:1, Amethyst ~5.28:1, Titanium ~10.30:1, Obsidian ~10.46:1.
+- Vercel preview build `dpl_BnFtc5KkRkwAbrLFRQ7FK2NTxkFy` (commit `1b3161c2`) logged **Compiled successfully in 17.8s**, then entered lint/type-check; it was still BUILDING at the last check. This is not a final READY confirmation.
