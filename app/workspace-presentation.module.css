@@ -771,3 +771,26 @@
 .fillArea .slide[data-workspace-page="1"] .quranVerseArticle{z-index:2!important;isolation:isolate!important}
 .fillArea .slide[data-workspace-page="1"] .quranVerseArticle :global(.quranLanguageContent){position:relative;z-index:1}
 .fillArea .slide[data-workspace-page="1"] .quranVerseArticle :global(.quranLanguageToggle),.fillArea .slide[data-workspace-page="1"] .quranVerseArticle :global(.quranHomeControlRow){position:relative;z-index:5}
+
+/* Neutral day/night frame: keep existing crossed-line ornament and geometry. */
+.fillArea{background-color:#000!important;transition:background-color 2s ease!important}
+:global(html.light) .fillArea{background-color:#fff!important}
+.fillArea::before{
+ background:repeating-linear-gradient(45deg,transparent 0 23px,rgba(255,255,255,.055) 23px 24px),repeating-linear-gradient(-45deg,transparent 0 23px,rgba(255,255,255,.055) 23px 24px)!important;
+ border-color:rgba(255,255,255,.18)!important;
+ box-shadow:inset 0 0 0 6px rgba(255,255,255,.025)!important;
+}
+:global(html.light) .fillArea::before{
+ background:repeating-linear-gradient(45deg,transparent 0 23px,rgba(0,0,0,.065) 23px 24px),repeating-linear-gradient(-45deg,transparent 0 23px,rgba(0,0,0,.065) 23px 24px)!important;
+ border-color:rgba(0,0,0,.16)!important;
+ box-shadow:inset 0 0 0 6px rgba(0,0,0,.025)!important;
+}
+/* Quran mirror: 50% opaque glass, 50% artwork visible; no HudHud changes. */
+.fillArea .slide[data-workspace-page="1"] .quranVerseArticle{
+ background:rgba(0,0,0,.5)!important;background-color:rgba(0,0,0,.5)!important;
+ backdrop-filter:blur(2px)!important;-webkit-backdrop-filter:blur(2px)!important;
+}
+:global(html.light) .fillArea .slide[data-workspace-page="1"] .quranVerseArticle{
+ background:rgba(255,255,255,.5)!important;background-color:rgba(255,255,255,.5)!important;
+}
+@media(prefers-reduced-motion:reduce){.fillArea{transition:none!important}}
