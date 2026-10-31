@@ -124,3 +124,13 @@
 .profile-shared-avatar-portal{position:fixed!important;transform:translateX(-50%);z-index:45;isolation:isolate;pointer-events:none;}
 .profile-shared-avatar-portal .profile-shared-avatar-hero{pointer-events:auto;}
 .profile-shared-avatar-portal .profileAvatar,.profile-shared-avatar-portal .profileAvatar::before,.profile-shared-avatar-portal .profileAvatar::after{border-color:transparent!important;outline:0!important;}
+
+/* Compact, translucent Profile navigation: icons float instead of solid tiles. */
+.profile-glass-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(7px,2.5vw,16px);align-items:center;width:min(100%,480px);margin:12px auto 16px;padding:5px 8px;border:0;background:transparent;box-shadow:none;}
+.profile-glass-tabs .profile-icon-tab{position:relative;display:grid;place-items:center;width:clamp(44px,12vw,62px);height:clamp(44px,12vw,62px);max-width:100%;margin:auto;padding:0;border:1px solid color-mix(in srgb,var(--theme-secondary,#d8c38e) 22%,transparent);border-radius:50%;background:color-mix(in srgb,var(--theme-base,#101114) 12%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--theme-foreground,#f5e9cb);font-size:clamp(23px,6vw,29px);line-height:1;cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1),background .35s ease,box-shadow .35s ease,border-color .35s ease;animation:profileIconIdle 5.8s ease-in-out infinite;}
+.profile-glass-tabs .profile-icon-tab:nth-child(2){animation-delay:-1.1s}.profile-glass-tabs .profile-icon-tab:nth-child(3){animation-delay:-2.3s}.profile-glass-tabs .profile-icon-tab:nth-child(4){animation-delay:-3.4s}
+.profile-glass-tabs .profile-icon-tab[aria-selected="true"]{border-color:color-mix(in srgb,var(--theme-secondary,#d8c38e) 68%,transparent);background:color-mix(in srgb,var(--theme-secondary,#d8c38e) 12%,transparent);box-shadow:0 0 20px color-mix(in srgb,var(--theme-secondary,#d8c38e) 18%,transparent),inset 0 0 14px rgba(255,255,255,.05);transform:translateY(-3px) scale(1.06);animation:profileIconSelected 3.5s ease-in-out infinite;}
+.profile-glass-tabs .profile-icon-tab:focus-visible{outline:2px solid var(--theme-secondary,#d8c38e);outline-offset:4px}
+@keyframes profileIconIdle{0%,100%{translate:0 0}50%{translate:0 -3px}}
+@keyframes profileIconSelected{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+@media(prefers-reduced-motion:reduce){.profile-glass-tabs .profile-icon-tab{animation:none;transition:none}}
