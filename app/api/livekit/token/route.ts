@@ -44,12 +44,13 @@ export async function POST(request: Request) {
 
     const audioOnly = liveStream.aspect_ratio === "1:1";
     let guestMode: "pfp" | "camera" | null = null;
+    let guestMuted = false;
     if (role === "guest") {
       // The database RPC is the only authority for stage approval. Do not
       // accept seat count, mode, identity or permission from the request body.
       const { data: seat, error: seatError } = await supabase
         .from("live_guest_requests")
-        .select("id, mode")
+        .select("id, mode, host_muted")
         .eq("stream_id", liveStream.id)
         .eq("user_id", user!.id)
         .eq("status", "approved")
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "The host must approve your guest request first." }, { status: 403 });
       }
       guestMode = seat.mode === "camera" ? "camera" : "pfp";
+      guestMuted = seat.host_muted === true;
     }
 
     const apiKey = process.env.LIVEKIT_API_KEY;
@@ -85,9 +87,11 @@ export async function POST(request: Request) {
     const publishSources = role === "companion"
       ? [TrackSource.SCREEN_SHARE]
       : role === "guest"
-        ? audioOnly || guestMode === "pfp"
-          ? [TrackSource.MICROPHONE]
-          : [TrackSource.MICROPHONE, TrackSource.CAMERA]
+        ? guestMuted
+          ? audioOnly || guestMode === "pfp" ? [] : [TrackSource.CAMERA]
+          : audioOnly || guestMode === "pfp"
+            ? [TrackSource.MICROPHONE]
+            : [TrackSource.MICROPHONE, TrackSource.CAMERA]
         : undefined;
 
     const token = new AccessToken(apiKey, apiSecret, {
