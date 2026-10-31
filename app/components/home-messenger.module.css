@@ -85,3 +85,6 @@
 :global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .empty{
  color:var(--rt-text-secondary,#eee);
 }
+
+/* Ruby's bright red accent needs deeper ink for 4.5:1+ normal-size button text. */
+:global(html[data-muslim-theme="ruby"]) .composer button{color:#190408}
