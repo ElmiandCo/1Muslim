@@ -50,7 +50,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const [voiceEnergy,setVoiceEnergy] = useState(0);
   const hostIdRef=useRef<string|null>(null);
   const [hostIdentity,setHostIdentity]=useState<string|null>(null);
-  const guestRoster=useLiveGuestRoster(roomRef,connectionActive,hostIdentity,isAudioBroadcast?11:3);
+  const guestStageMode=hasCameraVideo||hasScreenVideo?"video":isAudioBroadcast||hasRemoteAudio?"audio":"video";
+  const guestRoster=useLiveGuestRoster(roomRef,connectionActive,hostIdentity,guestStageMode==="audio"?11:3);
   const hostEndSignalRef=useRef<()=>void>(()=>{});
   const voiceAnalyzerCleanupRef=useRef<(()=>void)|null>(null);
   const voiceAudioContextRef=useRef<AudioContext|null>(null);
@@ -393,9 +394,9 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   };
 
   return (
-    <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:isAudioBroadcast?"4/5":"16/9",overflow:"hidden"}}>
+    <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:guestStageMode==="audio"?"4/5":"16/9",overflow:"hidden"}}>
       {hostEnded&&<div role="status" aria-live="assertive" className="omHostEndedNotice"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>{embedded?"Closing your floating player…":"Taking you Home…"}</small><button type="button" onClick={()=>{if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));else router.replace("/")}}>Go Home now →</button></div>}
-      <LiveGuestsStage mode={isAudioBroadcast?"audio":"video"} guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostSpeaking={voiceEnergy>.12}>
+      <LiveGuestsStage mode={guestStageMode} guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostSpeaking={voiceEnergy>.12}>
         <div className="omLiveVideoStage" data-screen={hasScreenVideo?"yes":"no"} data-layout={hasScreenVideo&&hasCameraVideo?shareLayout:"solo"}>
           <video ref={videoRef} className="omCameraVideo" autoPlay muted playsInline controls={!embedded} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block"}} />
           <video ref={screenVideoRef} className="omScreenVideo" autoPlay muted playsInline aria-label="Shared screen" style={{display:hasScreenVideo?"block":"none"}} />
