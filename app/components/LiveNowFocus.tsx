@@ -48,6 +48,8 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const introRef=useRef<HTMLVideoElement|null>(null);
   const introSeenRef=useRef<Set<string>>(new Set());
   const previousLiveRef=useRef<string|null>(null);
+  const selectedQueueRef=useRef<string|null>(null);
+  const playingLiveRef=useRef<LiveRow|null>(null);
   const playerRef=useRef<HTMLDivElement|null>(null);
   const [theaterMode,setTheaterMode]=useState(false);
   const [isFullscreen,setIsFullscreen]=useState(false);
@@ -58,12 +60,11 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   useEffect(()=>{
     const load=async()=>{
       const rows=[...discovery.lives].sort((a,b)=>(b.viewer_count||0)-(a.viewer_count||0)).slice(0,20) as (LiveRow & {host_id:string})[];
+      // Keep the active viewer connected during temporary host turbulence.
+      const playing=playingLiveRef.current;
+      if(playing && discovery.presence[playing.id]?.state==="RECONNECTING" && !rows.some(row=>row.id===playing.id)) rows.push(playing as LiveRow & {host_id:string});
       // Show newly verified Lives immediately; scheduling queries cannot delay discovery.
-      setLives(previous=>{
-        const current=previous[activeIndex];
-        if(current && discovery.presence[current.id]?.state==="RECONNECTING" && !rows.some(row=>row.id===current.id)) return [...rows,current];
-        return rows;
-      });
+      setLives(rows);
       setLive((rows[0]??null) as LiveRow|null);
       const [{data:slots},{data:curated}]=await Promise.all([
         supabase.from("live_schedule_slots").select("id,host_id,title,category,starts_at,ends_at,status,thumbnail_path").in("status",["scheduled","waiting","live"]).order("starts_at",{ascending:true}).limit(8),
@@ -81,9 +82,10 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
         }
       }
       previousLiveRef.current=leadId;
-      // New broadcasts take priority over recorded programming as soon as detected.
-      if(rows.length && previousLiveRef.current!==null && previousLiveRef.current!==leadId) setActiveIndex(0);
-      else setActiveIndex(current=>Math.min(current,Math.max(0,rows.length+(curated??[]).length-1)));
+      // Preserve the currently playing item when a new Live enters discovery.
+      const keys=[...rows.map(row=>"live:"+row.id),...(curated??[]).map(video=>"video:"+video.id)];
+      const selected=selectedQueueRef.current;
+      setActiveIndex(current=>selected&&keys.includes(selected)?keys.indexOf(selected):Math.min(current,Math.max(0,keys.length-1)));
       const hostIds=Array.from(new Set(rows.map(row=>row.host_id).filter(Boolean)));
       if(hostIds.length){
         const {data:profiles}=await supabase.from("profiles").select("id,display_name,username,avatar_url,gender").in("id",hostIds);
@@ -110,6 +112,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   ];
   const safeIndex = queue.length ? Math.min(activeIndex, queue.length - 1) : 0;
   const active = queue[safeIndex];
+  useEffect(()=>{selectedQueueRef.current=active?active.kind+":"+active.item.id:null;playingLiveRef.current=active?.kind==="live"?active.item:null},[active]);
   const primary = active?.kind === "live" ? active.item : null;
   const activeCurated = active?.kind === "video" ? active.item : null;
   const activeHost = primary ? hostMap[(primary as LiveRow & {host_id:string}).host_id] : null;
