@@ -95,7 +95,7 @@ export default function GoLivePage() {
   };
   const desiredStudioModeRef=useRef<"desktop"|"phone"|"voice">("phone");
   const modeSyncQueueRef=useRef<Promise<void>>(Promise.resolve());
-  const syncPublishedCameraForMode=async(mode:"desktop"|"phone"|"voice")=>{
+  const syncPublishedCameraForMode=async(mode:"desktop"|"phone"|"voice",allowCamera:boolean)=>{
     const room=roomRef.current;
     if(!room||!liveStreamIdRef.current||endRequestedRef.current||desiredStudioModeRef.current!==mode)return;
     const cameraPublications=()=>[...room.localParticipant.videoTrackPublications.values()]
@@ -109,6 +109,7 @@ export default function GoLivePage() {
     }
     const stream=streamRef.current;
     if(!stream)return;
+    if(!allowCamera){stream.getVideoTracks().forEach(track=>{track.enabled=false;});return;}
     let videoTrack=stream.getVideoTracks().find(track=>track.readyState==="live");
     if(!videoTrack){
       // Voice may have started with microphone-only permission. Add camera
@@ -143,6 +144,7 @@ export default function GoLivePage() {
     const previousMode=desiredStudioModeRef.current;
     if(mode===previousMode)return;
     desiredStudioModeRef.current=mode;
+    const allowCamera=previousMode==="voice"||cameraOn;
     if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current);
     setStudioMorphing(false);
     requestAnimationFrame(()=>setStudioMorphing(true));
@@ -159,7 +161,7 @@ export default function GoLivePage() {
       // never overwrite the mode selected by a newer tap.
       modeSyncQueueRef.current=modeSyncQueueRef.current.catch(()=>{}).then(async()=>{
         if(desiredStudioModeRef.current!==mode)return;
-        await syncPublishedCameraForMode(mode);
+        await syncPublishedCameraForMode(mode,allowCamera);
         if(desiredStudioModeRef.current!==mode||endRequestedRef.current)return;
         const response=await fetch("/api/live-mode",{
           method:"POST",headers:{"Content-Type":"application/json"},
