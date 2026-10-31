@@ -823,3 +823,44 @@
  background-image:url("/assets/profile-backgrounds/quran-sapphire-background.PNG")!important;
  background-position:center!important;background-size:cover!important;background-repeat:no-repeat!important;
 }
+
+/* Sapphire landing only: continuous, low-amplitude cinematic breathing and blue motes.
+   Background layers move independently of controls, text and scrollable content. */
+:global(html[data-muslim-theme="sapphire"]) .fillArea .slide[data-workspace-page="0"] .night,
+:global(html[data-muslim-theme="sapphire"]) .fillArea .slide[data-workspace-page="0"] .day{
+ transform-origin:50% 52%;
+ animation:sapphireLandingBreath 34s ease-in-out infinite!important;
+ will-change:transform;
+}
+:global(html[data-muslim-theme="sapphire"]) .fillArea .slide[data-workspace-page="0"] .scene::before{
+ content:"";display:block;position:absolute;inset:-5%;z-index:2;pointer-events:none;
+ background-image:
+ radial-gradient(circle,rgba(163,221,255,.48) 0 1px,transparent 2px),
+ radial-gradient(circle,rgba(94,180,255,.38) 0 1.4px,transparent 2.5px),
+ radial-gradient(circle,rgba(203,237,255,.32) 0 .8px,transparent 2px);
+ background-size:137px 179px,211px 227px,173px 149px;
+ background-position:11px 17px,89px 47px,37px 103px;
+ opacity:.45;filter:blur(.35px);
+ animation:sapphireLandingMotes 46s linear infinite,sapphireLandingGlow 11s ease-in-out infinite;
+}
+@keyframes sapphireLandingBreath{
+ 0%,100%{transform:scale(1.045) rotate(0deg) translate3d(0,0,0)}
+ 25%{transform:scale(1.09) rotate(.32deg) translate3d(-.45%,.3%,0)}
+ 50%{transform:scale(1.065) rotate(-.22deg) translate3d(.35%,-.35%,0)}
+ 75%{transform:scale(1.095) rotate(.18deg) translate3d(-.25%,-.2%,0)}
+}
+@keyframes sapphireLandingMotes{
+ 0%{background-position:11px 17px,89px 47px,37px 103px}
+ 100%{background-position:285px -341px,-333px -407px,383px -195px}
+}
+@keyframes sapphireLandingGlow{
+ 0%,100%{opacity:.28}
+ 50%{opacity:.52}
+}
+@media(prefers-reduced-motion:reduce){
+ :global(html[data-muslim-theme="sapphire"]) .fillArea .slide[data-workspace-page="0"] .night,
+ :global(html[data-muslim-theme="sapphire"]) .fillArea .slide[data-workspace-page="0"] .day,
+ :global(html[data-muslim-theme="sapphire"]) .fillArea .slide[data-workspace-page="0"] .scene::before{
+  animation:none!important;will-change:auto!important;
+ }
+}
