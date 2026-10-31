@@ -149,3 +149,11 @@ The repository reference README names seven intended semantic cases: video host+
 - Vercel preview build for prior UI head `0254e0f` reported **READY**; current combined branch head must independently pass. The final main/production merge also needs separate integration of Live Cinema's frozen-frame 400 ms crossfade.
 
 **Audio reference follow-up:** `LiveGuestsStage.tsx` now renders authentic seat numbers 1–11 (based on actual connected guest order), styled by `.audioSeatNumber` in `LiveGuestsStage.module.css`. Orbit radii were reduced at higher occupancy to keep numbered avatars within narrow 320px stages. This is a source-level layout adjustment; pixel screenshots and real-device clipping tests remain outstanding.
+
+
+### Guest-stage continuity and reference accuracy refinements
+
+- Landing guest panel is **lazy-mounted once and retained while collapsed**; closing the panel does not disconnect an approved guest's publishing room. Explicit Leave or switching the active stream still disconnects/cleans tracks.
+- Video landing preview audio is opt-in. Guest LiveKit room attaches remote host/guest audio and offers a manual autoplay recovery button; duplicate viewer audio is muted during guest publication and restored afterward. Full-screen `LiveKitViewer` follows the same monitor-suppression rule.
+- Audio host microphone badge now reflects the actual host LiveKit audio publication, not an always-on default; host speaking glow uses the host's audio level. Guest mic badges reflect their own track publications.
+- Seven source-level QA groups rechecked after these refinements: **7/7 matched actual branch source**. Real media/browser acceptance still pending; no fake device screenshot or success claim.
