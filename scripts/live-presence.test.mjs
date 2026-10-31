@@ -17,3 +17,13 @@ test("camera/screen track takes precedence over audio", () => {
 test("video-only host is discoverable", () => {
   assert.equal(classifyLivePresence(summarizeHostTracks({ tracks: [{ type: 1 }] })), "READY_VIDEO");
 });
+
+test("muted camera alone must not be advertised as playable", () => {
+  assert.equal(classifyLivePresence(summarizeHostTracks({ tracks: [{ type: 1, muted: true }] })), "STARTING");
+});
+test("muted camera with active mic is READY_AUDIO, not READY_VIDEO", () => {
+  assert.equal(classifyLivePresence(summarizeHostTracks({ tracks: [{ type: 1, muted: true }, { type: 0, muted: false }] })), "READY_AUDIO");
+});
+test("muted microphone alone must not be advertised as playable", () => {
+  assert.equal(classifyLivePresence(summarizeHostTracks({ tracks: [{ type: 0, muted: true }] })), "STARTING");
+});
