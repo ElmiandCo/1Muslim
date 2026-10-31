@@ -12,6 +12,9 @@ test("video and audio have separate, enforced seat capacities",()=>{
   const sql=source("supabase/migrations/20261031071703_liveguests1_capacity_and_roles.sql");
   assert.match(sql,/v_limit\s*:=\s*case\s+when\s+v_ratio\s*=\s*'1:1'\s+then\s+11\s+else\s+3/);
   assert.match(sql,/Remove audio guests until only three remain before switching to video/);
+  const modeRoute=source("app/api/live-mode/route.ts");
+  assert.match(modeRoute,/mode === "voice"/);
+  assert.match(modeRoute,/mutePublishedTrack\(/);
 });
 test("audio-only rooms cannot request or publish camera",()=>{
   assert.equal(guestMayPublishCamera("1:1","camera"),false);
