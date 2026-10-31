@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
+import { useLiveDiscovery } from "../../lib/live-discovery-client";
 import LiveKitViewer from "../../components/LiveKitViewer";
 import LiveChat from "../../components/LiveChat";
 import AshabButton from "./AshabButton";
@@ -29,6 +30,7 @@ function countdown(ms:number){
 
 export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carousel" }){
   const supabase=useMemo(()=>createClient(),[]);
+  const discovery=useLiveDiscovery();
   const [lives,setLives]=useState<LiveRow[]>([]);
   const [hostMap,setHostMap]=useState<Record<string,{display_name:string|null;username:string|null;avatar_url:string|null;gender:string|null}>>({});
   const [live,setLive]=useState<LiveRow|null>(null);
@@ -55,15 +57,19 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
 
   useEffect(()=>{
     const load=async()=>{
-      const [{data:lives},{data:slots},{data:curated}]=await Promise.all([
-        supabase.from("live_streams").select("id,title,category,viewer_count,started_at,scheduled_end_at,thumbnail_path,host_id,aspect_ratio,room_name").eq("status","live").gte("last_heartbeat_at",new Date(Date.now()-60_000).toISOString()).order("viewer_count",{ascending:false}).order("started_at",{ascending:false}).limit(20),
+      const rows=[...discovery.lives].sort((a,b)=>(b.viewer_count||0)-(a.viewer_count||0)).slice(0,20) as (LiveRow & {host_id:string})[];
+      // Show newly verified Lives immediately; scheduling queries cannot delay discovery.
+      setLives(previous=>{
+        const current=previous[activeIndex];
+        if(current && discovery.presence[current.id]?.state==="RECONNECTING" && !rows.some(row=>row.id===current.id)) return [...rows,current];
+        return rows;
+      });
+      setLive((rows[0]??null) as LiveRow|null);
+      const [{data:slots},{data:curated}]=await Promise.all([
         supabase.from("live_schedule_slots").select("id,host_id,title,category,starts_at,ends_at,status,thumbnail_path").in("status",["scheduled","waiting","live"]).order("starts_at",{ascending:true}).limit(8),
         supabase.from("admin_videos").select("id,title,description,category,storage_path,mime_type,position,is_active").eq("is_active",true).order("position",{ascending:true}).limit(30)
       ]);
-      const rows=(lives??[]) as (LiveRow & {host_id:string})[];
-      setLives(rows);
       setCuratedVideos((curated??[]) as CuratedVideo[]);
-      setLive((rows[0]??null) as LiveRow|null);
       // Refreshes and scrolling must not replay the introduction.
       const leadId=rows[0]?.id ?? null;
       if(leadId && previousLiveRef.current!==leadId && !introSeenRef.current.has(leadId)) {
@@ -95,7 +101,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
     const refresh=window.setInterval(load,10000);
     const clock=window.setInterval(()=>setNow(Date.now()),1000);
     return()=>{window.clearInterval(refresh);window.clearInterval(clock)};
-  },[supabase]);
+  },[supabase,discovery.lives,discovery.presence]);
 
   const rankedLives = lives.slice(0,5);
   const queue = [
