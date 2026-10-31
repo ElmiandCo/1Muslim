@@ -79,8 +79,8 @@ export default function GoLivePage() {
       const {data:profile}=await db.from("profiles").select("*").eq("id",user.id).maybeSingle();
       if(cancelled)return;
       setVoiceName(String(profile?.display_name||profile?.username||user.user_metadata?.full_name||"1Muslim Creator"));
-      const avatar=profile?.avatar_url||profile?.profile_picture_url||profile?.avatar||user.user_metadata?.avatar_url;
-      if(typeof avatar==="string"&&avatar.startsWith("https://"))setVoiceAvatar(avatar);
+      const avatar=profile?.avatar_url||profile?.profile_picture_url||profile?.avatar;
+      if(typeof avatar==="string"&&avatar.startsWith("https://"))setVoiceAvatar(avatar);else setVoiceAvatar(null);
     };
     void load();return()=>{cancelled=true};
   },[]);
@@ -135,6 +135,23 @@ export default function GoLivePage() {
       osc.start();osc.stop(context.currentTime+.6);
       osc.onended=()=>{void context.close().catch(()=>{});if(launchAudioRef.current===context)launchAudioRef.current=null};
     }catch{/* WebAudio may be unavailable or blocked. Broadcast remains functional. */}
+  };
+  const playLiveConnectedPop=()=>{
+    try{
+      const context=launchAudioRef.current&&launchAudioRef.current.state!=="closed"?launchAudioRef.current:new AudioContext();
+      launchAudioRef.current=context;
+      void context.resume().then(()=>{
+        const now=context.currentTime,osc=context.createOscillator(),gain=context.createGain();
+        osc.type="sine";
+        osc.frequency.setValueAtTime(610,now);
+        osc.frequency.exponentialRampToValueAtTime(330,now+.14);
+        gain.gain.setValueAtTime(.0001,now);
+        gain.gain.linearRampToValueAtTime(.16,now+.012);
+        gain.gain.exponentialRampToValueAtTime(.0001,now+.18);
+        osc.connect(gain);gain.connect(context.destination);osc.start(now);osc.stop(now+.19);
+        osc.onended=()=>{if(launchAudioRef.current===context)launchAudioRef.current=null;void context.close().catch(()=>{})};
+      }).catch(()=>{});
+    }catch{/* Audio cue must never interrupt broadcast. */}
   };
   const launchBroadcast=()=>{
     if(launchPendingRef.current||live||connectingLive||saving)return;
@@ -928,8 +945,10 @@ export default function GoLivePage() {
       if (!mediaStream) throw new Error("Camera and microphone must be enabled first.");
       const videoTrack = mediaStream.getVideoTracks()[0];
       const audioTrack = mediaStream.getAudioTracks()[0];
-      if (videoTrack) await room.localParticipant.publishTrack(videoTrack, { source: Track.Source.Camera, simulcast: true, videoEncoding: { maxBitrate: 3500000, maxFramerate: 30 } });
+      if (videoTrack && studioMode !== "voice" && cameraOn) await room.localParticipant.publishTrack(videoTrack, { source: Track.Source.Camera, simulcast: true, videoEncoding: { maxBitrate: 3500000, maxFramerate: 30 } });
       if (audioTrack) {
+        // Voice-only broadcasts must publish a live microphone track, never camera video.
+        audioTrack.enabled=micOn;
         let localAudioTrack = audioTrackRef.current;
         if (!localAudioTrack || localAudioTrack.mediaStreamTrack !== audioTrack) {
           const audioContext = await ensureAudioContext();
@@ -947,6 +966,8 @@ export default function GoLivePage() {
 
       startRecording();
       setLive(true);
+      // Cue the host only after LiveKit confirms the broadcast is connected.
+      playLiveConnectedPop();
       pendingStreamId = null;
       pendingRoom = null;
       setShowHostIntro(true);
