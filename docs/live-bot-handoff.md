@@ -162,3 +162,28 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 - Test six pairwise mode directions while live, especially Desktop ↔ Phone front/back camera, rapid taps and no black/mirrored frames. Verify viewer audio remains uninterrupted, End Live terminal notice arrives, and reconnect/refresh reuses the room.
 - Test anonymous viewers, host avatar public RLS, recording MIME playback, heartbeat behavior and polling load. None of these are claimed verified by a READY build.
 - Do **not** merge, promote or deploy to production automatically.
+
+
+## 2026-10-31 — Bot A cinematic stage correction (handoff to Bot B)
+
+- **Starting point:** production `main` merge `21667cab863693b1ab02963c7b3d6423bf35b956`.
+- **Branch:** `bot-a/live-cinematic-zoom-tilt-fullbleed-20261031`.
+- **Pull request:** [#195](https://github.com/ElmiandCo/1Muslim/pull/195) (draft, against `main`; Bot B should branch from this head and open a dependent PR).
+- **Implementation commit:** `d8741320ec034dd57381f23607ba239d9a3d3e04`.
+- **File:** `app/streaming/go-live/page.tsx` only for runtime changes.
+- Replaced direct child video geometry with an always-mounted `.studioCameraFrame` clip wrapper. The frame animates position, width, height, border radius, and slight rotation over 2 seconds. The existing `<video ref={videoRef}>` remains a single persistent DOM node, with independent `scale` and `rotate` CSS longhands for image zoom/tilt while preserving the `frontCamera` CSS mirror transform. No media track or LiveKit changes.
+- Desktop stage now sits lower in the canvas, with a visible 16px peak-to-peak, 5.5-second float; Phone uses a full-height zero-radius stage behind overlay controls. Mobile layout/preview/panel are explicitly `100dvh`; camera frame covers `100dvh` without subtracting the footer or safe area.
+- Voice stage retains its existing avatar and hides the camera wrapper; existing voice camera unpublish logic remains untouched. Reduced-motion mode disables camera/frame animation.
+- **Bot B:** Continue on this exact branch (or create a child branch based on its latest SHA), check CSS precedence and iPhone Safari runtime; test Desktop↔Phone during an active LiveKit broadcast, including no blackout, no mirroring change, no track republish; test Voice↔Phone, audio, End Live, reconnect, landscape and short viewport. Adjust the cinematic zoom/tilt strength and desktop vertical placement if needed. Build and provide preview. **Do not merge/deploy to production automatically.**
+- **Testing still required:** real iPhone Safari with two devices, exact viewport under bottom controls, camera-track identity, continuous audio, and mode transition appearance. GitHub code changes alone are not evidence of device pass.
+
+## 2026-10-31 — Bot B viewport cascade / cinema placement polish
+
+- **Dependency:** Bot A PR #195, branch `bot-a/live-cinematic-zoom-tilt-fullbleed-20261031`, final head `25d352952630ead1e218dcb3beb7535c8ed9e1b6` (including Bot A's PR #195 documentation). Bot B branched from that exact final head, preserving the persistent camera-frame wrapper and media-track continuity.
+- **Bot B branch:** `bot-b/live-cinema-viewport-final-20261031`.
+- **Code commit:** `e7f263c367e41e24dd586c2651ca21b600423cba`.
+- **Root-cause fix:** Earlier CSS still declares `.preview.studioTransform` at `height:calc(100dvh - 74px - safe-area)` with `!important` and a more specific selector than Bot A's later generic `.preview` rule. That legacy declaration can still win in Safari and truncate the Phone stage. Bot B overrides the **exact** `.preview.studioTransform` and per-mode selectors after the legacy blocks: on mobile, preview is exactly `100dvh` (no footer/safe-area subtraction); on desktop, it fills 100% of its stage panel. The Phone camera frame remains edge-to-edge behind bottom overlay controls.
+- **Placement polish:** Desktop frame top offset increased to `clamp(150px,21dvh,230px)` on phones and `clamp(110px,15dvh,190px)` on wider displays after reviewing the user-provided 4.17s iPhone recording (`flipped.mp4`), which shows Desktop video reaching up under the header and Phone mode collapsing into a top strip with empty space below. The new frame-wrapper + viewport fix directly targets those failures. The 2-second frame + independent lens zoom/tilt and 5.5-second 16px floating motion from Bot A are preserved.
+- **Follow-up placement commit:** `52efa28e69c104e4a62f3c4f4637670c5de0fa2a`.
+- **Static safety review:** No React tree remount, `srcObject` reassignment, media acquisition, `getUserMedia`, `publishTrack`, `unpublishTrack`, End Live API, recording or viewer changes in Bot B commit. Existing `frontCamera` `scaleX(-1)` transform remains separate from the new image `scale`/`rotate` longhands.
+- **Verification required before merge:** Confirm newest Bot B Vercel preview is READY; test on real iPhone Safari (including notch/safe area, portrait/landscape, short screen), desktop stage placement, continuous track identity and audio during Desktop↔Phone↔Voice, rapid mode switching, End Live terminal notice, reconnect and refresh. A green build alone does **not** establish those runtime results. Do not merge or promote to production automatically.
