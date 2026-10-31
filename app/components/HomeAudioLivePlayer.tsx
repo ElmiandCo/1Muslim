@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from "react";
 import {Room,RoomEvent,Track} from "livekit-client";
 import {createClient} from "../../utils/supabase/client";
+import LiveGuestsStage,{useLiveGuestRoster} from "../../components/LiveGuestsStage";
 
 /** Audio tab has its own LiveKit audio stage, independent of the camera preview. */
 export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;hostId?:string|null}){
@@ -9,8 +10,17 @@ export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;h
  const [energy,setEnergy]=useState(0);
  const [state,setState]=useState("Connecting to voice live…");
  const [needsTap,setNeedsTap]=useState(false);
+ const [connected,setConnected]=useState(false);
+ const [guestOnStage,setGuestOnStage]=useState(false);
  const roomRef=useRef<Room|null>(null);
  const audioRef=useRef<HTMLDivElement>(null);
+ const guests=useLiveGuestRoster(roomRef,connected,hostId??null,11);
+ useEffect(()=>{
+  const onGuest=(event:Event)=>{const detail=(event as CustomEvent<{roomName:string;active:boolean}>).detail;if(detail?.roomName===roomName)setGuestOnStage(detail.active)};
+  window.addEventListener("1muslim:guest-stage",onGuest);
+  return()=>window.removeEventListener("1muslim:guest-stage",onGuest);
+ },[roomName]);
+ useEffect(()=>{audioRef.current?.querySelectorAll("audio").forEach(node=>{node.muted=guestOnStage})},[guestOnStage,connected]);
  useEffect(()=>{
   if(!hostId)return;
   let active=true;const db=createClient();
@@ -25,15 +35,16 @@ export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;h
   const audioNodes=new Map<string,HTMLMediaElement>();
   const attach=(track:any)=>{
    if(!active||track.kind!==Track.Kind.Audio||!audioRef.current)return;
+   const key=track.sid||"";if(audioNodes.has(key))return;
    const element=track.attach() as HTMLMediaElement;
-   element.autoplay=true;element.style.display="none";
+   element.autoplay=true;element.muted=guestOnStage;element.style.display="none";
    audioRef.current.appendChild(element);
    audioNodes.set(track.sid||"",element);
    void element.play().then(()=>{if(active){setNeedsTap(false);setState("Voice Live · Connected")}}).catch(()=>{if(active){setNeedsTap(true);setState("Tap to enable live audio")}});
   };
   room.on(RoomEvent.TrackSubscribed,attach);
   room.on(RoomEvent.TrackUnsubscribed,(track)=>{const node=audioNodes.get(track.sid||"");if(node){track.detach(node);node.remove();audioNodes.delete(track.sid||"")}});
-  room.on(RoomEvent.Disconnected,()=>{if(active)setState("Voice Live disconnected")});
+  room.on(RoomEvent.Disconnected,()=>{if(active){setConnected(false);setState("Voice Live disconnected")}});
   const poll=window.setInterval(()=>{
    if(!active)return;
    const levels=[...room.remoteParticipants.values()].map(p=>p.audioLevel||0);
@@ -50,10 +61,10 @@ export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;h
     for(const participant of room.remoteParticipants.values())for(const pub of participant.trackPublications.values()){
      if(pub.kind===Track.Kind.Audio){if(!pub.isSubscribed)pub.setSubscribed(true);if(pub.track)attach(pub.track)}
     }
-    setState("Voice Live · Connected");
+    setConnected(true);setState("Voice Live · Connected");
    }catch{if(active)setState("Unable to connect to Voice Live")}
   })();
-  return()=>{active=false;window.clearInterval(poll);for(const node of audioNodes.values())node.remove();audioNodes.clear();room.removeAllListeners();void room.disconnect();roomRef.current=null};
+  return()=>{active=false;setConnected(false);window.clearInterval(poll);for(const node of audioNodes.values())node.remove();audioNodes.clear();room.removeAllListeners();void room.disconnect();roomRef.current=null};
  },[roomName]);
  const enableAudio=()=>{void Promise.all([...audioRef.current?.querySelectorAll("audio")||[]].map(a=>a.play())).then(()=>{setNeedsTap(false);setState("Voice Live · Connected")}).catch(()=>setNeedsTap(true))};
  return <div className="homeVoiceStage" aria-label="Audio-only Live player">
@@ -68,11 +79,10 @@ export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;h
    .homeVoiceTap{z-index:3;border:1px solid #baffdd;background:#0b5d48;color:#fff;border-radius:18px;padding:8px 12px}
    @media(prefers-reduced-motion:reduce){.homeVoiceHalo,.homeVoiceBars i{transition:none}}
   `}</style>
-  <div className="homeVoiceSquare" style={{["--voice-energy" as string]:energy}}>
-   <div className="homeVoiceHalo"/><div className="homeVoicePortrait">{host.avatar?<img src={host.avatar} alt="Host avatar"/>:"✧"}</div>
-   <div className="homeVoiceBars" aria-hidden="true">{Array.from({length:11},(_,i)=><i key={i} style={{height:Math.min(27,5+(i%5)*2+energy*(9+(i%4)*5))}}/>)}</div>
-   <strong>{host.name}</strong><small>{state}</small>
-   {needsTap&&<button type="button" className="homeVoiceTap" onClick={enableAudio}>🔊 Enable audio</button>}
+  <div className="homeVoiceSquare" style={{["--voice-energy" as string]:energy,width:"min(100%,min(76vw,460px,55dvh))",maxWidth:460}}>
+   <LiveGuestsStage mode="audio" guests={guests} hostName={host.name} hostAvatar={host.avatar} hostSpeaking={energy>.12}/>
+   <span style={{position:"absolute",bottom:5,left:0,right:0,textAlign:"center",fontSize:10,color:"#d5f7e7",zIndex:5,pointerEvents:"none"}}>{state}</span>
+   {needsTap&&<button type="button" className="homeVoiceTap" style={{position:"absolute",bottom:28}} onClick={enableAudio}>🔊 Enable audio</button>}
   </div><div ref={audioRef} style={{display:"none"}}/>
  </div>;
 }
