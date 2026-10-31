@@ -2,7 +2,7 @@ import { randomUUID, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { RoomServiceClient } from "livekit-server-sdk";
-import { summarizeHostTracks } from "../../../../../lib/live-presence";
+import { summarizeHostTracks } from "../../../../lib/live-presence";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
