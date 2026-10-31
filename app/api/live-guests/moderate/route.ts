@@ -41,7 +41,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Active host access required" }, { status: 403 });
   }
 
-  const needsLiveKit = action === "removed" || action === "mute" || action === "unmute";
+  // Unmute only lifts the host restriction; the guest must opt in to audio.
+  const needsLiveKit = action === "removed" || action === "mute";
   const url = process.env.LIVEKIT_URL;
   const key = process.env.LIVEKIT_API_KEY;
   const secret = process.env.LIVEKIT_API_SECRET;
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
           for (const track of guest.tracks ?? []) {
             if (track.type === 0 || String(track.type) === "AUDIO") {
               await rooms.mutePublishedTrack(
-                stream.room_name, seat.user_id, track.sid, action === "mute",
+                stream.room_name, seat.user_id, track.sid, true,
               );
             }
           }
