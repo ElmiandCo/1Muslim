@@ -58,6 +58,10 @@ test("signed-out viewer can watch but only authenticated guests request",()=>{
   const landing=source("app/page.tsx");
   assert.match(landing,/homeLiveGuestRequest/);
   assert.match(landing,/LiveGuestStudio streamId=\{activeLive\.id\}/);
+  const forYou=source("app/components/ImmersiveVideoEntry.tsx");
+  assert.match(forYou,/imv-guest-request/);
+  assert.match(forYou,/liveHostId:x\.host_id/);
+  assert.match(forYou,/LiveGuestStudio streamId=\{clip\.liveId\}/);
 });
 test("guest cameras cannot steal host video or screen share",()=>{
   const viewer=source("components/LiveKitViewer.tsx");
