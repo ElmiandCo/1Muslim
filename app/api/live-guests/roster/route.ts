@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     const username = profile?.username || profile?.display_name || "1Muslim guest";
     const avatar = profile?.avatar_url || profile?.profile_picture_url || profile?.avatar;
     return {
-      requestId: seat.id,
+      ...(host ? { requestId: seat.id } : {}),
       userId: seat.user_id,
       username: typeof username === "string" ? username : "1Muslim guest",
       avatarUrl: typeof avatar === "string" ? avatar : null,
