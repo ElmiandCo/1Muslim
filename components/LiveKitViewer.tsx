@@ -8,7 +8,7 @@ import ReconnectTrivia from "../app/components/ReconnectTrivia";
 import ShareLiveButton from "../app/components/ShareLiveButton";
 import LiveLightOverlay from "./LiveLightOverlay";
 
-export default function LiveKitViewer({ roomName, streamId, embedded = false }: { roomName: string; streamId?: string; embedded?: boolean }) {
+export default function LiveKitViewer({ roomName, streamId, embedded = false, hostAvatar, hostName }: { roomName: string; streamId?: string; embedded?: boolean; hostAvatar?: string | null; hostName?: string }) {
   const router=useRouter();
   const [hostEnded,setHostEnded]=useState(false);
   const endedOnce=useRef(false);
@@ -16,6 +16,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const screenVideoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraVideo,setHasCameraVideo] = useState(false);
   const [hasScreenVideo,setHasScreenVideo] = useState(false);
+  const [hasRemoteAudio,setHasRemoteAudio] = useState(false);
+  const [voiceEnergy,setVoiceEnergy] = useState(0);
   const [shareLayout,setShareLayout] = useState<"pip"|"split">("pip");
   const audioContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
@@ -65,6 +67,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         audio.muted = mutedRef.current;
         audio.setAttribute("playsinline", "true");
         audioContainerRef.current.appendChild(audio);
+        setHasRemoteAudio(true);
         void audio.play().catch(() => {});
         // Audio alone does not establish video playback.
       }
@@ -137,10 +140,17 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       } catch { /* Preserve the last known count during temporary network failures. */ }
     };
     const countTimer = window.setInterval(() => void refreshViewers(), 5000);
+    const voiceTimer = window.setInterval(() => {
+      const participants = roomRef.current?.remoteParticipants;
+      if (!participants) return;
+      const levels = [...participants.values()].filter(p => [...p.trackPublications.values()].some(pub => pub.kind === Track.Kind.Audio && pub.isSubscribed)).map(p => p.audioLevel || 0);
+      setVoiceEnergy(levels.length ? Math.min(1,Math.max(...levels) * 3.5) : 0);
+    }, 90);
     void refreshViewers();
 
     return () => {
       window.clearInterval(countTimer);
+      window.clearInterval(voiceTimer);
       mounted = false;
       const oldRoom = roomRef.current;
       roomRef.current = null;
@@ -180,6 +190,15 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         <video ref={videoRef} className="omCameraVideo" autoPlay muted playsInline controls={!embedded} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block"}} />
         <video ref={screenVideoRef} className="omScreenVideo" autoPlay muted playsInline aria-label="Shared screen" style={{display:hasScreenVideo?"block":"none"}} />
       </div>
+      {hasRemoteAudio && !hasCameraVideo && !hasScreenVideo && <div className="omVoiceOnlyStage" aria-label="Voice-only live broadcast">
+        <div className="omVoiceSquare" style={{["--voice-energy" as string]:voiceEnergy}}>
+          <div className="omVoiceAura" />
+          <div className="omVoiceRing" />
+          <div className="omVoiceAvatar">{hostAvatar ? <img src={hostAvatar} alt={hostName || "Host avatar"} /> : <span aria-hidden="true">☪</span>}</div>
+          <div className="omVoiceBars" aria-hidden="true">{Array.from({length:11},(_,i)=><i key={i} style={{height:`${12 + Math.round((.16+voiceEnergy)*(10+(i%5)*17))}px`}} />)}</div>
+          <strong>{hostName || "1Muslim Voice Live"}</strong><small>🎙 Voice Live · {voiceEnergy > .08 ? "Speaking" : "Listening"}</small>
+        </div>
+      </div>}
       <div ref={audioContainerRef} />
       {streamId&&<LiveLightOverlay streamId={streamId}/>}
       {!embedded&&<><div className="omViewerTapCounter" aria-label={`${tapCount} screen taps`}>✨ {tapCount.toLocaleString()} taps</div>{tapBursts.map(t=><span key={t.id} className="omViewerTapBurst" style={{left:t.x,top:t.y}}>💜</span>)}<a className="omViewerExit" href="/streaming" aria-label="Exit live viewer">✕</a></>}
@@ -209,6 +228,14 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         </div>
       ) : error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
       <style jsx>{`
+      .omVoiceOnlyStage{position:absolute;inset:0;z-index:3;display:flex;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 78px) 12px 0;background:radial-gradient(ellipse at 50% 18%,#153b32 0%,#080f16 55%,#030609 100%);pointer-events:none}
+      .omVoiceSquare{position:relative;width:min(74vw,340px,39dvh);aspect-ratio:1;max-height:39dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;isolation:isolate;border:1px solid #ffffff35;border-radius:28px;background:linear-gradient(145deg,#ffffff10,#071b1d55);backdrop-filter:blur(12px);box-shadow:0 16px 60px #0007;color:#fff;text-align:center;overflow:hidden}
+      .omVoiceSquare strong{font-size:14px;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.omVoiceSquare small{font-size:10px;color:#b4d9d0}
+      .omVoiceAvatar{position:relative;z-index:2;width:33%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#163d34;border:2px solid #91ffe1;font-size:42px;box-shadow:0 0 calc(12px + var(--voice-energy)*45px) #67e9c866}
+      .omVoiceAvatar img{width:100%;height:100%;object-fit:cover}.omVoiceAura,.omVoiceRing{position:absolute;left:50%;top:43%;width:48%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%) scale(calc(1 + var(--voice-energy)*.32));background:#5ef3c620;box-shadow:0 0 calc(25px + var(--voice-energy)*85px) #49efbc66;transition:transform .09s,box-shadow .09s}.omVoiceRing{width:60%;border:2px solid #7df8cf88;background:transparent}
+      .omVoiceBars{display:flex;align-items:center;justify-content:center;gap:4px;height:34px}.omVoiceBars i{display:block;width:4px;max-height:32px;border-radius:5px;background:#8fffe0;transition:height .09s}
+      @media(min-width:701px){.omVoiceOnlyStage{padding-top:80px}.omVoiceSquare{width:min(330px,36dvh);max-height:36dvh}}
+      @media(prefers-reduced-motion:reduce){.omVoiceAura,.omVoiceRing,.omVoiceBars i{transition:none}}
       .omLiveVideoStage{position:relative;width:100%;height:100%;overflow:hidden;background:#000}
       .omLiveVideoStage video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
       .omLiveTheater .omLiveVideoStage{background:#050b0b}
