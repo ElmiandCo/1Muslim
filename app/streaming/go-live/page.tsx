@@ -14,6 +14,7 @@ import LiveLightOverlay from "../../../components/LiveLightOverlay";
 import ShareLiveButton from "../../components/ShareLiveButton";
 import LiveVisualEffects, {type LiveEffect} from "../../components/LiveVisualEffects";
 import LiveGuestsStage, {GuestVideoTiles,useLiveGuestRoster} from "../../../components/LiveGuestsStage";
+import LiveGuestStudio from "../../../components/LiveGuestStudio";
 
 const StudioGlyph=({kind}:{kind:"camera"|"mic"|"guests"|"settings"|"desktop"|"phone"|"voice"})=>{const paths:Record<string,React.ReactNode>={camera:<><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7l2-3h4l2 3"/><circle cx="12" cy="14" r="4"/></>,mic:<><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></>,guests:<><circle cx="9" cy="8" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M17 4a4 4 0 0 1 0 8M18 15a6 6 0 0 1 4 6"/></>,settings:<><circle cx="12" cy="12" r="3"/><path d="M10 2h4l1 3 3 1 3-1 2 4-2 2v3l2 2-2 4-3-1-3 1-1 3h-4l-1-3-3-1-3 1-2-4 2-2v-3L1 9l2-4 3 1 3-1z"/></>,desktop:<><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M12 18v4M7 22h10"/></>,phone:<><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></>,voice:<><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></>};return <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[kind]}</svg>};
 const categories = ["Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
@@ -1619,6 +1620,10 @@ export default function GoLivePage() {
         }
         /* Keep the SAME camera node visible throughout morph; no opacity blackout. */
         .goLive .preview.studioMorphing::before{display:none!important}
+        .goLive .preview .hostLiveGuestControls{position:absolute;z-index:30;top:calc(env(safe-area-inset-top) + 72px);right:12px;max-width:min(88vw,370px);color:#fff}
+        .goLive .preview .hostLiveGuestControls summary{list-style:none;cursor:pointer;border:1px solid #b1d9b080;border-radius:999px;background:#06261ddd;backdrop-filter:blur(12px);padding:9px 12px;font-size:12px;font-weight:750}
+        .goLive .preview .hostLiveGuestControls summary::-webkit-details-marker{display:none}
+        .goLive .preview .hostLiveGuestSheet{max-height:50dvh;overflow-y:auto;overscroll-behavior:contain;background:#031a14f2;border:1px solid #b1d9b055;border-radius:16px;padding:8px}
         /* Guest layout: only the stage changes; never remount the host's camera. */
         .goLive .preview[data-guest-count="1"] .studioCameraFrame,
         .goLive .preview[data-guest-count="2"] .studioCameraFrame,
@@ -1683,6 +1688,7 @@ export default function GoLivePage() {
               <div className={`studioLaunchFlash ${launchVisual?"studioLaunchFlashOn":""}`} aria-hidden="true" />
               <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
               {live&&liveStreamIdRef.current&&<LiveLightOverlay streamId={liveStreamIdRef.current} host />}
+              {live&&liveStreamIdRef.current&&currentUserId&&<details className="hostLiveGuestControls"><summary>👥 Guests · {guestRoster.length}</summary><div className="hostLiveGuestSheet"><LiveGuestStudio streamId={liveStreamIdRef.current} roomName={`1muslim-live-${liveStreamIdRef.current}`} hostId={currentUserId}/></div></details>}
 
               {!live && <div className="preliveIdentity"><button type="button" className="preliveTitleButton" onClick={()=>setSettingsOpen(true)} aria-label="Edit live title"><span className="preliveIdentityIcon" aria-hidden="true">✧</span><span><small>LIVE TITLE · TAP TO EDIT</small><strong>{title || defaultLiveTitle}</strong></span></button><button type="button" className="preliveVisibility" onClick={()=>setSettingsOpen(true)} aria-label="Change live audience">◎ {visibility==="public"?"Public":"Ashab"} ⌄</button></div>}
               {viewerRosterOpen && <div className="liveRosterBackdrop" onPointerDown={e=>{if(e.target===e.currentTarget)setViewerRosterOpen(false)}}><section className="liveRosterSheet" role="dialog" aria-modal="true" aria-label="Live viewers"><header><div><strong>👁 Watching now</strong><small>{viewers.toLocaleString()} live viewers</small></div><button type="button" onClick={()=>setViewerRosterOpen(false)} aria-label="Close viewers">✕</button></header><div className="liveRosterList">{viewerRosterLoading&&viewerRoster.length===0?<p>Loading viewers…</p>:viewerRoster.length===0?<p>No viewers yet.</p>:viewerRoster.map(viewer=><div className="liveRosterPerson" key={viewer.id}><span className="liveRosterAvatar">{viewer.avatar?<img src={viewer.avatar} alt="" referrerPolicy="no-referrer"/>:<span>◉</span>}</span><span className="liveRosterName">{viewer.username}</span><span className="liveRosterXp">{viewer.xp===null?"XP unavailable":`${viewer.xp.toLocaleString()} XP`}</span></div>)}</div><button type="button" className="liveRosterRefresh" onClick={()=>void loadViewerRoster()}>↻ Refresh</button></section></div>}
