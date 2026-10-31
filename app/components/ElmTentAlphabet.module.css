@@ -34,3 +34,77 @@
 .lessonNav::-webkit-scrollbar{display:none}
 .lessonNav button{flex:0 0 auto;white-space:nowrap;scroll-snap-align:start}
 @media(max-width:600px){.lessonNav{gap:6px}.lessonNav button{padding:7px 9px;min-width:42px;min-height:43px}.lessonNav button small{font-size:10px}}
+
+
+/* RealTheme2.0 / Bot B — Lesson 1 and 2 visual chrome only.
+   Keep lesson carousel, swipe, quiz interactions, Arabic glyph typography and
+   all layout rules intact. Emerald intentionally keeps its existing palette. */
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .root{
+ color:var(--rt-text-primary,#f8f8f6);
+ border-color:color-mix(in srgb,var(--theme-secondary,#e8d6a0) 48%,transparent);
+ background:linear-gradient(145deg,color-mix(in srgb,var(--theme-surface,#162b2c) 94%,transparent),color-mix(in srgb,var(--theme-base,#0b171a) 88%,transparent));
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .top,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .counter strong,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .bottom a,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .browseToggle{
+ color:var(--rt-text-highlight,#f4dfa9);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .title h2,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .quizHeader,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .quizHint{
+ color:var(--rt-text-primary,#f8f8f6);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .title p,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .counter small,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .counter strong span,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .note,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .disclaimer{
+ color:var(--rt-text-secondary,#d9e1df);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .stage{
+ border-color:color-mix(in srgb,var(--theme-edge,#8c9a99) 75%,transparent);
+ background:radial-gradient(ellipse at 50% 45%,color-mix(in srgb,var(--theme-accent,#627c8b) 28%,var(--theme-surface,#162b2c)),color-mix(in srgb,var(--theme-base,#0b171a) 83%,transparent) 72%);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .lessonNav button,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .hear,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .tile,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .quizSpeaker,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .quizChoices button,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .quizFinish button{
+ border-color:color-mix(in srgb,var(--theme-edge,#9aa3a9) 78%,transparent);
+ background:color-mix(in srgb,var(--theme-accent,#667b89) 22%,var(--theme-surface,#162b2c));
+ color:var(--rt-text-primary,#f8f8f6);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .lessonNav button[aria-current="step"],
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .tile[aria-pressed="true"]{
+ border-color:var(--theme-secondary,#e9d7a5)!important;
+ background:color-mix(in srgb,var(--theme-accent,#667b89) 42%,var(--theme-surface,#162b2c));
+ box-shadow:0 0 16px color-mix(in srgb,var(--theme-accent,#667b89) 30%,transparent);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .lessonQuiz{
+ border-color:color-mix(in srgb,var(--theme-edge,#9aa3a9) 78%,transparent);
+ background:linear-gradient(155deg,var(--theme-surface,#162b2c),var(--theme-base,#0b171a));
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .mark{
+ border-color:var(--theme-accent,#8fa3af);
+ background:var(--theme-accent,#8fa3af);
+ color:var(--theme-base,#101719);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .mark:disabled{
+ background:var(--theme-surface,#162b2c);
+ color:var(--rt-text-muted,#bfc9c8);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .previous,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .next,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .letterFocus strong,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .quizHeader span,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .quizFeedback{
+ color:var(--rt-text-highlight,#f4dfa9);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .progress span{
+ background:linear-gradient(90deg,var(--theme-accent,#8fa3af),var(--theme-secondary,#e9d7a5));
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .tile b{
+ color:var(--rt-text-highlight,#f4dfa9);
+}
