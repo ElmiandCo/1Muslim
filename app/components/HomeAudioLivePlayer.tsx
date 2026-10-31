@@ -12,11 +12,12 @@ export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;h
  const [needsTap,setNeedsTap]=useState(false);
  const [connected,setConnected]=useState(false);
  const [guestOnStage,setGuestOnStage]=useState(false);
+ const guestOnStageRef=useRef(false);
  const roomRef=useRef<Room|null>(null);
  const audioRef=useRef<HTMLDivElement>(null);
  const guests=useLiveGuestRoster(roomRef,connected,hostId??null,11);
  useEffect(()=>{
-  const onGuest=(event:Event)=>{const detail=(event as CustomEvent<{roomName:string;active:boolean}>).detail;if(detail?.roomName===roomName)setGuestOnStage(detail.active)};
+  const onGuest=(event:Event)=>{const detail=(event as CustomEvent<{roomName:string;active:boolean}>).detail;if(detail?.roomName===roomName){guestOnStageRef.current=detail.active;setGuestOnStage(detail.active)}};
   window.addEventListener("1muslim:guest-stage",onGuest);
   return()=>window.removeEventListener("1muslim:guest-stage",onGuest);
  },[roomName]);
@@ -37,7 +38,7 @@ export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;h
    if(!active||track.kind!==Track.Kind.Audio||!audioRef.current)return;
    const key=track.sid||"";if(audioNodes.has(key))return;
    const element=track.attach() as HTMLMediaElement;
-   element.autoplay=true;element.muted=guestOnStage;element.style.display="none";
+   element.autoplay=true;element.muted=guestOnStageRef.current;element.style.display="none";
    audioRef.current.appendChild(element);
    audioNodes.set(track.sid||"",element);
    void element.play().then(()=>{if(active){setNeedsTap(false);setState("Voice Live · Connected")}}).catch(()=>{if(active){setNeedsTap(true);setState("Tap to enable live audio")}});
