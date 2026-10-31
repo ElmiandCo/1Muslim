@@ -1129,21 +1129,32 @@ export default function GoLivePage() {
     const liveStreamId = liveStreamIdRef.current;
     const activeRoom=roomRef.current;
     roomRef.current = null;
-    // Send a terminal signal before leaving LiveKit, and persist the terminal
-    // status immediately instead of waiting for the recording upload.
-    if (liveStreamId) {
-      const terminalUpdate=Promise.resolve(supabase.from("live_streams").update({
-        status:"ended",ended_at:new Date().toISOString()
-      }).eq("id",liveStreamId)).then(({error})=>{
-        if(error)console.warn("Could not persist Live end status",error);
-      });
+    // Send the host-authenticated terminal packet first; then commit terminal
+    // status server-side. The server also closes the room after updating DB.
+    // Neither action waits for local MediaRecorder or recording upload.
+    if(liveStreamId){
       const terminalSignal=activeRoom?activeRoom.localParticipant.publishData(
         new TextEncoder().encode(JSON.stringify({type:"live-ended",streamId:liveStreamId})),
         {reliable:true,topic:"live-status"}
-      ).catch(error=>console.warn("Could not send Live end signal",error)):Promise.resolve();
-      void Promise.allSettled([terminalUpdate,terminalSignal]).then(()=>void activeRoom?.disconnect());
-      window.setTimeout(()=>void activeRoom?.disconnect(),700);
-    } else {
+      ).catch(error=>console.warn("Live end packet unavailable",error)):Promise.resolve();
+      void (async()=>{
+        try{
+          await Promise.race([terminalSignal,new Promise<void>(resolve=>window.setTimeout(resolve,250))]);
+          const response=await fetch("/api/live-end",{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({streamId:liveStreamId}),cache:"no-store",keepalive:true
+          });
+          if(!response.ok)throw new Error("Server End Live returned "+response.status);
+        }catch(error){
+          console.warn("Server End Live failed; attempting direct terminal update",error);
+          const {error:dbError}=await supabase.from("live_streams").update({
+            status:"ended",ended_at:new Date().toISOString()
+          }).eq("id",liveStreamId);
+          if(dbError)console.error("End Live could not be confirmed",dbError);
+        }finally{void activeRoom?.disconnect();}
+      })();
+      window.setTimeout(()=>void activeRoom?.disconnect(),2500);
+    }else{
       void activeRoom?.disconnect();
     }
     const recorder = recorderRef.current;
