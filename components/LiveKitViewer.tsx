@@ -39,6 +39,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ho
   const [connectionActive, setConnectionActive] = useState(false);
   const [hostOffline,setHostOffline] = useState(false);
   const [hasAudioTrack,setHasAudioTrack] = useState(false);
+  const hostAudioSidRef=useRef<string|null>(null);
   const [voiceEnergy,setVoiceEnergy] = useState(0);
   const voiceMeterFrameRef = useRef<number|null>(null);
   const voiceMeterContextRef = useRef<AudioContext|null>(null);
@@ -128,7 +129,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ho
       }catch{/* Audio playback still works if the meter is unavailable. */}
     };
 
-    const attachTrack = (track: any, source?: string) => {
+    const attachTrack = (track: any, source?: string, participantIdentity?: string) => {
       if (!mounted) return;
       if (track.kind === Track.Kind.Video) {
         const isScreen = source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShare;
@@ -151,11 +152,14 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ho
         audio.setAttribute("playsinline", "true");
         audioContainerRef.current.appendChild(audio);
         void audio.play().catch(() => {});
-        setHasAudioTrack(true);
-        setStatus("LIVE");
-        setReconnecting(false);
-        setHostOffline(false);
-        if(audioOnly)startVoiceMeter(track);
+        if(!hostId||participantIdentity===hostId){
+          hostAudioSidRef.current=track.sid||null;
+          setHasAudioTrack(true);
+          setStatus("LIVE");
+          setReconnecting(false);
+          setHostOffline(false);
+          if(audioOnly)startVoiceMeter(track);
+        }
       }
     };
 
@@ -173,7 +177,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ho
 
         const room = new Room({ adaptiveStream: false, dynacast: true });
         roomRef.current = room;
-        room.on(RoomEvent.TrackSubscribed, (track, publication) => attachTrack(track, publication.source));
+        room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => attachTrack(track, publication.source, participant.identity));
         room.on(RoomEvent.TrackUnsubscribed, (track, publication) => {
           if (track.kind === Track.Kind.Video) {
             const isScreen = publication.source === Track.Source.ScreenShare;
@@ -189,10 +193,10 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ho
           } else if (track.kind === Track.Kind.Audio) {
             track.detach().forEach(el => { if (el.parentNode === audioContainerRef.current) el.remove(); });
             if (track.sid) attachedAudioRef.current.delete(track.sid);
-            if(attachedAudioRef.current.size===0){setHasAudioTrack(false);stopVoiceMeter();if(audioOnly)setStatus("Waiting for host audio…");}
+            if(track.sid===hostAudioSidRef.current){hostAudioSidRef.current=null;setHasAudioTrack(false);stopVoiceMeter();if(audioOnly)setStatus("Waiting for host audio…");}
           }
         });
-        room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live video could not be subscribed to. Please reconnect."));
+        room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live media could not be subscribed to. Please reconnect."));
         room.on(RoomEvent.ParticipantConnected, participant=>{
           if(!mounted)return;
           if(hostId&&participant.identity===hostId){setHostOffline(false);setStatus(audioOnly?"Waiting for host audio…":"Waiting for host video…");}
@@ -226,7 +230,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ho
         for (const participant of room.remoteParticipants.values()) {
           for (const publication of participant.trackPublications.values()) {
             if (!publication.isSubscribed) await publication.setSubscribed(true);
-            if (publication.track) attachTrack(publication.track, publication.source);
+            if (publication.track) attachTrack(publication.track, publication.source, participant.identity);
           }
         }
 
@@ -261,6 +265,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ho
       retryTimers.forEach(timer=>window.clearTimeout(timer));
       mounted = false;
       stopVoiceMeter();
+      hostAudioSidRef.current=null;
       const oldRoom = roomRef.current;
       roomRef.current = null;
       if (oldRoom) void oldRoom.disconnect();
