@@ -1780,3 +1780,27 @@
 .topParticleBurst i{position:absolute;top:-15px;display:block;width:3px;height:3px;border-radius:50%;background:color-mix(in srgb,var(--theme-secondary,var(--theme-primary,var(--accent-color,var(--edge,#c2a16b)))) 72%,white);box-shadow:0 0 8px 2px color-mix(in srgb,var(--theme-secondary,var(--theme-primary,var(--accent-color,var(--edge,#c2a16b)))) 40%,transparent);opacity:0;animation:omTopFallOnce 3.6s ease-in forwards;will-change:transform,opacity}
 @keyframes omTopFallOnce{0%{transform:translate3d(0,-8px,0);opacity:0}15%{opacity:.55}52%{opacity:.36}100%{transform:translate3d(9px,410px,0);opacity:0}}
 @media(prefers-reduced-motion:reduce){.topParticleBurst{display:none}}
+
+/* Soft breathing edge mask: 20px resting fade, normally 35px, with an
+   occasional 40px swell. Rounded corners remain at 20px throughout.
+   Apply to the decorative backdrop, never to scrollable content or controls. */
+.control .islamicDecoration{
+ --edge-fade:20px;
+ border-radius:20px;
+ -webkit-mask-image:
+  linear-gradient(to right,transparent 0,#000 var(--edge-fade),#000 calc(100% - var(--edge-fade)),transparent 100%),
+  linear-gradient(to bottom,transparent 0,#000 var(--edge-fade),#000 calc(100% - var(--edge-fade)),transparent 100%);
+ mask-image:
+  linear-gradient(to right,transparent 0,#000 var(--edge-fade),#000 calc(100% - var(--edge-fade)),transparent 100%),
+  linear-gradient(to bottom,transparent 0,#000 var(--edge-fade),#000 calc(100% - var(--edge-fade)),transparent 100%);
+ -webkit-mask-composite:source-in;mask-composite:intersect;
+ animation:omEdgeMaskBreathe 18s ease-in-out infinite;
+}
+@property --edge-fade{syntax:"<length>";inherits:false;initial-value:20px}
+@keyframes omEdgeMaskBreathe{
+ 0%,100%{--edge-fade:20px}
+ 16.67%,33.33%{--edge-fade:35px}
+ 50%{--edge-fade:20px}
+ 66.67%,83.33%{--edge-fade:40px}
+}
+@media(prefers-reduced-motion:reduce){.control .islamicDecoration{animation:none;--edge-fade:20px}}
