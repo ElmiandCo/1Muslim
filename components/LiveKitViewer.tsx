@@ -11,14 +11,14 @@ import LiveLightOverlay from "./LiveLightOverlay";
 import { cinemaAudioActive, type CinemaMode } from "../lib/live-cinema";
 import { playLiveCinemaMorphSound } from "../lib/live-cinema-sound";
 
-export default function LiveKitViewer({ roomName, streamId, embedded = false, onViewModeChange }: { roomName: string; streamId?: string; embedded?: boolean; onViewModeChange?: (mode: CinemaMode) => void }) {
+export default function LiveKitViewer({ roomName, streamId, embedded = false, onViewModeChange, initialViewMode = "phone" }: { roomName: string; streamId?: string; embedded?: boolean; onViewModeChange?: (mode: CinemaMode) => void; initialViewMode?: CinemaMode }) {
   const router=useRouter();
   const [hostEnded,setHostEnded]=useState(false);
   const endedOnce=useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const screenVideoRef = useRef<HTMLVideoElement>(null);
   const reflectionRef = useRef<HTMLCanvasElement>(null);
-  const [viewMode,setViewMode] = useState<CinemaMode>("phone");
+  const [viewMode,setViewMode] = useState<CinemaMode>(initialViewMode);
   const [hasCameraVideo,setHasCameraVideo] = useState(false);
   const [hasScreenVideo,setHasScreenVideo] = useState(false);
   const [shareLayout,setShareLayout] = useState<"pip"|"split">("pip");
