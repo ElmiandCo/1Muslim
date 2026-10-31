@@ -1466,7 +1466,7 @@ export default function GoLivePage() {
         .goLive .layout>.panel:first-child>.preview{
           position:relative!important;display:block!important;overflow:hidden!important;
           width:100%!important;max-width:none!important;max-height:none!important;
-          height:calc(100dvh - 74px - env(safe-area-inset-top,0px))!important;
+          height:100%!important; /* Full panel height: the header and bottom controls overlay Phone video. */
           min-height:0!important;aspect-ratio:auto!important;container-type:inline-size;
         }
         .goLive .layout>.panel:first-child>.preview>video,
@@ -1563,7 +1563,7 @@ export default function GoLivePage() {
                 <button type="button" aria-pressed={studioMode==="phone"} className={studioMode==="phone"?"selected":""} onClick={()=>selectStudioMode("phone")}><StudioGlyph kind="phone"/>Phone</button>
                 <button type="button" aria-pressed={studioMode==="voice"} className={studioMode==="voice"?"selected":""} onClick={()=>selectStudioMode("voice")}><StudioGlyph kind="voice"/>Voice</button>
               </div>
-              {!live && <button type="button" data-go-live-start className={`newStudioGo ${launchPressed?"launchPressed":""}`} disabled={saving||connectingLive||launchCountdown!==null} onPointerDown={()=>setLaunchPressed(true)} onPointerUp={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onPointerCancel={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onClick={launchBroadcast}>{launchCountdown!==null?`Going live in ${launchCountdown}…`:connectingLive?"Connecting…":cameraReady?"● Go Live":"Enable Camera"}</button>}
+              {!live && <button type="button" data-go-live-start className={`newStudioGo ${launchPressed?"launchPressed":""}`} disabled={saving||connectingLive||launchCountdown!==null} onPointerDown={()=>setLaunchPressed(true)} onPointerUp={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onPointerCancel={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onClick={launchBroadcast}>{launchCountdown!==null?`Going live in ${launchCountdown}…`:connectingLive?"Connecting…":cameraReady?"● Go Live":studioMode==="voice"?"● Go Live":"Enable Camera"}</button>}
               <div className="newStudioHint">Double-tap camera to flip · Effects on the preview</div>
             </div>
             </div>
