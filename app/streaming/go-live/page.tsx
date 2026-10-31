@@ -136,6 +136,23 @@ export default function GoLivePage() {
       osc.onended=()=>{void context.close().catch(()=>{});if(launchAudioRef.current===context)launchAudioRef.current=null};
     }catch{/* WebAudio may be unavailable or blocked. Broadcast remains functional. */}
   };
+  const playLiveConnectedPop=()=>{
+    try{
+      const context=launchAudioRef.current&&launchAudioRef.current.state!=="closed"?launchAudioRef.current:new AudioContext();
+      launchAudioRef.current=context;
+      void context.resume().then(()=>{
+        const now=context.currentTime,osc=context.createOscillator(),gain=context.createGain();
+        osc.type="sine";
+        osc.frequency.setValueAtTime(610,now);
+        osc.frequency.exponentialRampToValueAtTime(330,now+.14);
+        gain.gain.setValueAtTime(.0001,now);
+        gain.gain.linearRampToValueAtTime(.16,now+.012);
+        gain.gain.exponentialRampToValueAtTime(.0001,now+.18);
+        osc.connect(gain);gain.connect(context.destination);osc.start(now);osc.stop(now+.19);
+        osc.onended=()=>{if(launchAudioRef.current===context)launchAudioRef.current=null;void context.close().catch(()=>{})};
+      }).catch(()=>{});
+    }catch{/* Audio cue must never interrupt broadcast. */}
+  };
   const launchBroadcast=()=>{
     if(launchPendingRef.current||live||connectingLive||saving)return;
     if(!cameraReady){void startPreview();return;}
@@ -949,6 +966,8 @@ export default function GoLivePage() {
 
       startRecording();
       setLive(true);
+      // Cue the host only after LiveKit confirms the broadcast is connected.
+      playLiveConnectedPop();
       pendingStreamId = null;
       pendingRoom = null;
       setShowHostIntro(true);
