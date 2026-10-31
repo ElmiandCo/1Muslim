@@ -132,10 +132,11 @@ export default function GoLivePage() {
     }
   };
   const selectStudioMode=(mode:"desktop"|"phone"|"voice")=>{
-    const previousMode=desiredStudioModeRef.current;
-    if(mode===previousMode)return;
+    // Apply the visual/media change only AFTER the authoritative server
+    // accepts it. Audio -> video with >3 approved seats must not publish a
+    // camera, disconnect the mic, or even temporarily show video UI.
+    const applyMode=(previousMode:"desktop"|"phone"|"voice")=>{
     desiredStudioModeRef.current=mode;
-    const allowCamera=previousMode==="voice"||cameraOn;
     if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current);
     setStudioMorphing(false);
     requestAnimationFrame(()=>setStudioMorphing(true));
@@ -184,23 +185,29 @@ export default function GoLivePage() {
         }).finally(()=>{previewCameraAcquiringRef.current=false;});
       }
     }
-    if(roomRef.current&&liveStreamIdRef.current){
-      const streamId=liveStreamIdRef.current;
-      // Serialize camera and metadata updates; a slower older request must
-      // never overwrite the mode selected by a newer tap.
-      modeSyncQueueRef.current=modeSyncQueueRef.current.catch(()=>{}).then(async()=>{
-        if(desiredStudioModeRef.current!==mode)return;
-        await syncPublishedCameraForMode(mode,allowCamera);
-        if(desiredStudioModeRef.current!==mode||endRequestedRef.current)return;
-        const response=await fetch("/api/live-mode",{
-          method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({streamId,mode}),cache:"no-store"
-        });
-        if(!response.ok)console.warn("Live mode metadata sync failed",response.status);
-      }).catch(error=>{
-        if(desiredStudioModeRef.current===mode)setError(error instanceof Error?error.message:"Could not switch camera mode.");
-      });
+    };
+    if(!roomRef.current||!liveStreamIdRef.current){
+      const previousMode=desiredStudioModeRef.current;
+      if(mode!==previousMode)applyMode(previousMode);
+      return;
     }
+    const streamId=liveStreamIdRef.current;
+    modeSyncQueueRef.current=modeSyncQueueRef.current.catch(()=>{}).then(async()=>{
+      if(endRequestedRef.current||!roomRef.current)return;
+      const previousMode=desiredStudioModeRef.current;
+      if(mode===previousMode)return;
+      const response=await fetch("/api/live-mode",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({streamId,mode}),cache:"no-store"
+      });
+      if(!response.ok){
+        const payload=await response.json().catch(()=>({}));
+        throw new Error(payload.error||"Could not switch Live mode.");
+      }
+      const allowCamera=previousMode==="voice"||cameraOn;
+      applyMode(previousMode);
+      await syncPublishedCameraForMode(mode,allowCamera);
+    }).catch(error=>setError(error instanceof Error?error.message:"Could not switch Live mode."));
   };
   useEffect(()=>{
     let cancelled=false;
