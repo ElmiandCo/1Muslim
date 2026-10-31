@@ -105,6 +105,7 @@ export default function Home(){
   const later=(fn:()=>void,ms:number)=>{timers.push(setTimeout(()=>{if(!cancelled)fn()},ms))};
   const apply=(index:number)=>{
    const p=palette[index];
+   if(index>0){const previous=palette[index-1];root.style.setProperty("--guest-previous-scene-image",'url("/assets/profile-backgrounds/'+previous.image+'.PNG")');root.style.setProperty("--guest-previous-scene-tint",previous.tint);root.dataset.guestImageFade=index%2===0?"even":"odd";}
    root.dataset.profileBackground=p.name;
    root.dataset.muslimTheme=p.name;
    root.dataset.guestThemeTour="true";
@@ -129,8 +130,8 @@ export default function Home(){
   later(()=>{delete root.dataset.guestThemeTour},17000);
   return()=>{
    cancelled=true;timers.forEach(clearTimeout);
-   delete root.dataset.guestThemeTour;
-   ["--canvas-control-surface-rgb","--canvas-control-border-rgb","--canvas-control-accent-rgb","--guest-reveal-halo-rgb","--theme-base","--theme-accent","--theme-secondary","--theme-edge","--profile-scene-image","--profile-scene-tint"].forEach(key=>root.style.removeProperty(key));
+   delete root.dataset.guestThemeTour;delete root.dataset.guestImageFade;
+   ["--guest-previous-scene-image","--guest-previous-scene-tint","--canvas-control-surface-rgb","--canvas-control-border-rgb","--canvas-control-accent-rgb","--guest-reveal-halo-rgb","--theme-base","--theme-accent","--theme-secondary","--theme-edge","--profile-scene-image","--profile-scene-tint"].forEach(key=>root.style.removeProperty(key));
    delete root.dataset.profileBackground;delete root.dataset.muslimTheme;
    const key=localStorage.getItem("1muslim:profile-background")||"emerald";
    window.dispatchEvent(new CustomEvent("1muslim:profile-background-changed",{detail:key}));
