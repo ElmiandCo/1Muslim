@@ -29,3 +29,8 @@ test("different sessions and invalid versions are rejected", () => {
   assert.equal(shouldApplyPresenceEvent(undefined, { ...readyVideo, version: 0 }), false);
   assert.equal(shouldApplyPresenceEvent(undefined, { ...readyVideo, version: Number.NaN }), false);
 });
+
+test("malformed realtime state is ignored rather than affecting discovery", () => {
+  assert.equal(shouldApplyPresenceEvent(undefined, { ...readyVideo, state: "INVALID" }), false);
+  assert.equal(shouldApplyPresenceEvent(readyVideo, { ...readyVideo, state: "UNKNOWN", version: 9 }), false);
+});
