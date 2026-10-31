@@ -9,11 +9,13 @@ type GuestRequest={
 };
 type ModerationAction="approved"|"rejected"|"removed"|"mute"|"unmute";
 
-export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:string;roomName:string;hostId:string}){
+export default function LiveGuestStudio({streamId,roomName,hostId,liveMode}:{streamId:string;roomName:string;hostId:string;liveMode?:"audio"|"video"}){
   const [uid,setUid]=useState<string|null>(null);
   const [requests,setRequests]=useState<GuestRequest[]>([]);
   const [loaded,setLoaded]=useState(false);
-  const [mode,setMode]=useState<"pfp"|"camera">("pfp");
+  const [mode,setMode]=useState<"pfp"|"camera">(liveMode==="audio"?"pfp":"camera");
+  useEffect(()=>{setMode(liveMode==="audio"?"pfp":"camera")},[liveMode]);
+  const signalStage=(active:boolean)=>window.dispatchEvent(new CustomEvent("1muslim:guest-stage",{detail:{roomName,active}}));
   const [joined,setJoined]=useState(false);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
@@ -51,9 +53,10 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
       refreshRef.current=()=>{};
     };
   },[streamId]);
-  useEffect(()=>()=>{void room.current?.disconnect();stream.current?.getTracks().forEach(t=>t.stop())},[]);
+  useEffect(()=>()=>{signalStage(false);void room.current?.disconnect();stream.current?.getTracks().forEach(t=>t.stop())},[roomName]);
 
   function leave(){
+    signalStage(false);
     void room.current?.disconnect();room.current=null;
     stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;
     if(preview.current)preview.current.srcObject=null;
@@ -68,6 +71,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
     for(const track of stream.current?.getAudioTracks()??[]){
       void room.current?.localParticipant.unpublishTrack(track);
       track.stop();
+      stream.current?.removeTrack(track);
     }
     setMic(false);
   },[joined,me?.host_muted]);
@@ -120,7 +124,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
         if(room.current!==r)return;
         stream.current?.getTracks().forEach(t=>t.stop());
         stream.current=null;room.current=null;
-        setJoined(false);setMic(false);
+        signalStage(false);setJoined(false);setMic(false);
       });
       await r.connect(data.url,data.token);
       const wantsCamera=me.mode==="camera"&&data.mode==="video";
@@ -138,8 +142,9 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
         preview.current.srcObject=media;
         void preview.current.play().catch(()=>{});
       }
-      setMic(wantsMic);setCamera(wantsCamera);setJoined(true);
+      setMic(wantsMic);setCamera(wantsCamera);setJoined(true);signalStage(true);
     }catch(e){
+      signalStage(false);
       setError(e instanceof Error?e.message:"Unable to join stage.");
       void room.current?.disconnect();room.current=null;
       stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;
@@ -183,20 +188,18 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
       {loaded&&!requests.some(r=>r.status==="pending"||r.status==="approved")&&<p>No guest requests yet.</p>}
     </div>:<div>
       {!joined&&me?.status!=="approved"&&<>
-        <select aria-label="Guest mode" value={mode} disabled={busy} onChange={e=>setMode(e.target.value as "pfp"|"camera")}>
-          <option value="pfp">🎙️ Audio + profile picture</option><option value="camera">📹 Camera + audio</option>
-        </select>{" "}
+        <span style={{fontSize:12,marginRight:8}}>{liveMode==="audio"?"🎙️ Audio guest seat · microphone only":"📹 Video guest seat · camera and microphone"}</span>{" "}
         <button type="button" disabled={busy||me?.status==="pending"} onClick={()=>void request()}>Request to join</button>
       </>}
       {me?.status==="pending"&&<p role="status">⏳ Waiting for host approval…</p>}
       {me?.status==="approved"&&!joined&&<button type="button" disabled={busy} onClick={()=>void join()}>Join stage</button>}
       {joined&&<div><p role="status">🔴 You're on stage</p>
-        {me?.mode==="camera"&&<div style={{position:"relative",maxWidth:250}}>
+        {me?.mode==="camera"&&liveMode!=="audio"&&<div style={{position:"relative",maxWidth:250}}>
           <video ref={preview} muted autoPlay playsInline style={{width:"100%",borderRadius:12,filter:background==="blur"?"blur(4px)":"none"}}/>
           <span style={{fontSize:11}}>Preview effects (local only)</span>
         </div>}
         <button type="button" disabled={busy||!!me?.host_muted} onClick={()=>void toggleMic()}>{mic?"Mute mic":"Unmute mic"}</button>{" "}
-        {me?.mode==="camera"&&<button type="button" disabled={busy} onClick={toggleCamera}>{camera?"Camera off":"Camera on"}</button>}{" "}
+        {me?.mode==="camera"&&liveMode!=="audio"&&<button type="button" disabled={busy} onClick={toggleCamera}>{camera?"Camera off":"Camera on"}</button>}{" "}
         <button type="button" onClick={leave}>Leave stage</button>
         <label style={{display:"block",marginTop:8}}>Background preview{" "}
           <select value={background} onChange={e=>setBackground(e.target.value)}>
