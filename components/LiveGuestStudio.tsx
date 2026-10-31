@@ -11,6 +11,7 @@ type ModerationAction="approved"|"rejected"|"removed"|"mute"|"unmute";
 
 export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:string;roomName:string;hostId:string}){
   const [uid,setUid]=useState<string|null>(null);
+  const [panelOpen,setPanelOpen]=useState(false);
   const [requests,setRequests]=useState<GuestRequest[]>([]);
   const [loaded,setLoaded]=useState(false);
   const [mode,setMode]=useState<"pfp"|"camera">("pfp");
@@ -185,8 +186,11 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
     setCamera(next);
   }
 
-  if(!uid)return <p style={{padding:12,fontSize:12}}>Sign in to request a guest seat.</p>;
-  return <section style={{padding:12,border:"1px solid var(--theme-border,#48624b)",borderRadius:16,background:"var(--theme-panel,#101a13)",color:"var(--theme-text,#e7f5e6)"}}>
+  if(!uid)return null;
+  const pendingCount=requests.filter(r=>r.status==="pending").length;
+  return <div style={{position:"relative",zIndex:30,width:"fit-content",maxWidth:"100%"}}>
+    <button type="button" aria-expanded={panelOpen} aria-controls="live-guest-controls-panel" onClick={()=>setPanelOpen(open=>!open)} style={{border:"1px solid var(--theme-border,#8aa398)",borderRadius:999,padding:"9px 14px",background:"color-mix(in srgb,var(--theme-panel,#101a13) 76%,transparent)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"var(--theme-text,#e7f5e6)",fontWeight:600,cursor:"pointer",boxShadow:"0 8px 24px #0005"}}>👥 Guests{host&&pendingCount>0?` · ${pendingCount}`:""} {panelOpen?"⌃":"⌄"}</button>
+    {panelOpen&&<section id="live-guest-controls-panel" aria-label="Live guest controls" style={{position:"absolute",right:0,bottom:"calc(100% + 10px)",width:"min(340px,calc(100vw - 32px))",maxHeight:"min(55dvh,430px)",overflowY:"auto",overscrollBehavior:"contain",padding:14,border:"1px solid var(--theme-border,#48624b)",borderRadius:20,background:"color-mix(in srgb,var(--theme-panel,#101a13) 90%,transparent)",backdropFilter:"blur(22px)",WebkitBackdropFilter:"blur(22px)",boxShadow:"0 16px 44px #0009",color:"var(--theme-text,#e7f5e6)"}}>
     <h3 style={{margin:"0 0 8px"}}>🎙️ 1Muslim Guest Studio</h3>
     <p style={{fontSize:12,opacity:.8}}>Video: host + 3 guests. Audio: host + 11 guests.</p>
     {host?<div><strong>👑 Guest requests</strong>
@@ -232,5 +236,6 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
       </div>}
     </div>}
     {error&&<p role="alert" style={{color:"#ffb5b5"}}>{error}</p>}
-  </section>;
+    </section>}
+  </div>;
 }
