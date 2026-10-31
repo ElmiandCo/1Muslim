@@ -289,3 +289,28 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 - Node v22.16.0, `node --experimental-strip-types --test scripts/live-presence.test.mjs scripts/live2-discovery-state.test.mjs` — **12/12 passed** using local copies of the committed helpers and equivalent tests (8 readiness + 4 monotonic-state cases).
 - Vercel preview for core integration commit `fdcfc1d4036d` reached **READY**. Recheck the final docs/test head before claiming it is READY. No end-to-end LiveKit or device runtime QA.
 - Diff from Bot A `1MuslimLive2.0` to Bot B: **no CSS files and no host Go Live studio file modified**. Draft PR #200 remains the review boundary.
+
+---
+
+## Bot B continuation — stalled Realtime recovery and cross-session safety (2026-10-31)
+
+**Review boundary:** draft PR #200 (branch `bot-b/live2-discovery-integration-20261031`, based on `1MuslimLive2.0`). Read Bot A's backend commits and spec, current `main`, PR #193, and the previous Bot B handoff before editing. At inspection, `1MuslimLive2.0` was **2 commits behind main**; reconcile before final merge. No changes to host studio, CSS, JSX presentation, animations, navigation, or production.
+
+### New commits, in order
+1. `57827bb2c93d110aa0df13cadad699d019f1ad3b` — reject malformed `live_presence.state` payloads before updating shared discovery.
+2. `63d956f437c9c9394eab5f3d477b7e61300de3e8` — viewer now uses the shared version/session/terminal guard instead of accepting a higher-version event from an unrelated session.
+3. `6aebe6cdfbe9f38f12bb2458144a1f0f5e9eff19` — one-shot 8-second watchdog for a shared discovery Realtime channel that never acknowledges `SUBSCRIBED`; detach the stalled channel and enter existing bounded jittered snapshot/reconnect recovery. On visibility resume, ensure disconnected subscriptions enter fallback. **No steady-state polling while subscribed.**
+4. `a90bb4968b53e3e9c332af2dbddaacd93f939bd2` — regression test for malformed state events.
+5. `dab280b1562fae3758a2e3a600d39a017129144f` — one-shot 8-second watchdog for a LiveKitViewer terminal/presence subscription that hangs without a status callback. Only while subscription is incomplete, start existing capped recovery checks; clear watchdog after both subscriptions succeed or component unmounts.
+
+### Checks actually performed
+- Node v22.16.0, `node --experimental-strip-types --test scripts/live2-discovery-state.test.mjs`: **5/5 passed**, on a local copy matching the committed pure state helper and equivalent test assertions. This is **not** a full repository test run.
+- GitHub Vercel commit status for `dab280b1`: **success**; Vercel deployment `dpl_3uuddx9aVVBzKZ7iyCjnRcNa4z6z` explicitly reports **READY** and references that exact commit. This verifies a preview build, not a real Live session.
+- All changes were restricted to `lib/live-discovery-state.ts`, `lib/live-discovery-client.ts`, `components/LiveKitViewer.tsx`, `scripts/live2-discovery-state.test.mjs`, and this handoff. No visual or production changes requested or performed.
+
+### Still blocked / next Bot A and Bot B priorities
+- Apply SQL migration only to a separately authorized **preview** Supabase environment, then configure and verify signed LiveKit webhook delivery there; otherwise the new discovery route fails closed. No migration or webhook configuration was changed in this run.
+- Add a server-side reconciliation/watchdog for missed webhook events, stale READY state, and retention/pruning of dedupe events; preserve explicit ENDED terminal semantics and temporary reconnect grace.
+- Confirm anonymous RLS/Realtime access and test real host/viewer sessions: video, audio-only, screen share, signed-out For You, viewer refresh, explicit End Live, host crash, recovery, room recreation, rapid mode changes, and Safari autoplay.
+- Measure p50/p95/p99 start/end/disconnect delivery and 1k/10k viewer load; none measured here. Live chat 2s polling, viewer count 5s polling, and scheduled-content 10s polling remain separate from Live discovery.
+- **PR #200 remains draft and NOT merge-ready**. Do not merge, deploy, or modify the UI without explicit approval.
