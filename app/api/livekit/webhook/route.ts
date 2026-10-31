@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data: stream, error: lookupError } = await db.from("live_streams")
-    .select("id,host_id,status,room_name")
+    .select("id,host_id,status,room_name,aspect_ratio")
     .eq("room_name", roomName).maybeSingle();
   if (lookupError) {
     console.error("Live presence lookup failed", { code: lookupError.code });
@@ -60,8 +60,52 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  // Guest and viewer track events cannot make a stream READY.
-  if (event.participant?.identity && event.participant.identity !== stream.host_id) {
+  // Guest and viewer tracks must never change host readiness. A signed
+  // LiveKit event is also our backstop against a recently revoked guest JWT.
+  const identity = event.participant?.identity ?? "";
+  if (identity && identity !== stream.host_id) {
+    if (/^[0-9a-f-]{36}$/i.test(identity) &&
+        (event.event === "participant_joined" || event.event === "track_published")) {
+      const { data: seat, error: seatError } = await db.from("live_guest_requests")
+        .select("status,mode,host_muted")
+        .eq("stream_id", stream.id).eq("user_id", identity).maybeSingle();
+      if (seatError) {
+        return NextResponse.json({ error: "Guest authorization unavailable" }, { status: 503 });
+      }
+      const rooms = new RoomServiceClient(
+        livekitUrl.replace(/^wss:/, "https:").replace(/^ws:/, "http:"),
+        apiKey, apiSecret,
+      );
+      try {
+        if (seat?.status !== "approved") {
+          await rooms.removeParticipant(roomName, identity);
+          return NextResponse.json({ ok: true, revoked: true });
+        }
+        if (event.event === "track_published") {
+          // Check the actual current room snapshot, not the possibly stale
+          // webhook track. Prevent camera publication in audio/PFP seats.
+          const participants = await rooms.listParticipants(roomName);
+          const guest = participants.find(p => p.identity === identity);
+          for (const track of guest?.tracks ?? []) {
+            const isAudio = track.type === 0 || String(track.type) === "AUDIO";
+            const isVideo = track.type === 1 || String(track.type) === "VIDEO";
+            if (isVideo && (stream.aspect_ratio === "1:1" || seat.mode !== "camera")) {
+              await rooms.removeParticipant(roomName, identity);
+              return NextResponse.json({ ok: true, invalidTrack: true });
+            }
+            if (isAudio && seat.host_muted) {
+              await rooms.mutePublishedTrack(roomName, identity, track.sid, true);
+            }
+          }
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (!/404|not found|does not exist|participant.*not.*found/i.test(message)) {
+          console.error("Guest authorization reconciliation failed", { roomName, message });
+          return NextResponse.json({ error: "Guest reconciliation unavailable" }, { status: 503 });
+        }
+      }
+    }
     return NextResponse.json({ ok: true, ignored: true });
   }
 
