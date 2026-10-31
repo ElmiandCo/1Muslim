@@ -162,3 +162,16 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 - Test six pairwise mode directions while live, especially Desktop ↔ Phone front/back camera, rapid taps and no black/mirrored frames. Verify viewer audio remains uninterrupted, End Live terminal notice arrives, and reconnect/refresh reuses the room.
 - Test anonymous viewers, host avatar public RLS, recording MIME playback, heartbeat behavior and polling load. None of these are claimed verified by a READY build.
 - Do **not** merge, promote or deploy to production automatically.
+
+
+## 2026-10-31 — Bot A cinematic stage correction (handoff to Bot B)
+
+- **Starting point:** production `main` merge `21667cab863693b1ab02963c7b3d6423bf35b956`.
+- **Branch:** `bot-a/live-cinematic-zoom-tilt-fullbleed-20261031`.
+- **Implementation commit:** `d8741320ec034dd57381f23607ba239d9a3d3e04`.
+- **File:** `app/streaming/go-live/page.tsx` only for runtime changes.
+- Replaced direct child video geometry with an always-mounted `.studioCameraFrame` clip wrapper. The frame animates position, width, height, border radius, and slight rotation over 2 seconds. The existing `<video ref={videoRef}>` remains a single persistent DOM node, with independent `scale` and `rotate` CSS longhands for image zoom/tilt while preserving the `frontCamera` CSS mirror transform. No media track or LiveKit changes.
+- Desktop stage now sits lower in the canvas, with a visible 16px peak-to-peak, 5.5-second float; Phone uses a full-height zero-radius stage behind overlay controls. Mobile layout/preview/panel are explicitly `100dvh`; camera frame covers `100dvh` without subtracting the footer or safe area.
+- Voice stage retains its existing avatar and hides the camera wrapper; existing voice camera unpublish logic remains untouched. Reduced-motion mode disables camera/frame animation.
+- **Bot B:** Continue on this exact branch (or create a child branch based on its latest SHA), check CSS precedence and iPhone Safari runtime; test Desktop↔Phone during an active LiveKit broadcast, including no blackout, no mirroring change, no track republish; test Voice↔Phone, audio, End Live, reconnect, landscape and short viewport. Adjust the cinematic zoom/tilt strength and desktop vertical placement if needed. Build and provide preview. **Do not merge/deploy to production automatically.**
+- **Testing still required:** real iPhone Safari with two devices, exact viewport under bottom controls, camera-track identity, continuous audio, and mode transition appearance. GitHub code changes alone are not evidence of device pass.
