@@ -76,7 +76,18 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
 
         <div style={isLive?{border:0,borderRadius:0,background:"#000"}:{border:"1px solid #1b241f",borderRadius:22,overflow:"hidden",background:"#080d09"}}>
           {isLive ? (
-            <section className="omLiveTheater" aria-label="Immersive live broadcast">
+            <section className="omLiveTheater omLiveGuestsTheaterV1" aria-label="Immersive live broadcast">
+              <style>{`
+                .omLiveGuestsTheaterV1{position:fixed!important;inset:0!important;z-index:1000;display:grid!important;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,65dvh) minmax(0,35dvh);background:#03120e;overflow:hidden;isolation:isolate}
+                .omLiveGuestsTheaterV1>.omLiveImmersiveViewer{position:relative!important;grid-row:1;grid-column:1;height:100%!important;min-height:0!important;aspect-ratio:auto!important}
+                .omLiveGuestsTheaterV1 .omLiveTheaterChat{position:relative!important;grid-row:2;grid-column:1;inset:auto!important;width:100%!important;height:100%!important;max-height:none!important;mask-image:none!important;-webkit-mask-image:none!important;border-top:1px solid #e1c47b55;background:linear-gradient(180deg,#0a241b,#03120e);padding:2px 8px max(6px,env(safe-area-inset-bottom));z-index:23;overflow:hidden}
+                .omLiveGuestsTheaterV1 .omLiveTheaterChat .liveChat{height:100%;min-height:0}
+                .omLiveGuestsTheaterV1 .omLiveTheaterInfo{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:58px;right:110px;z-index:30}
+                .omLiveGuestsTheaterV1 .omLiveTheaterGuests{position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 54px);bottom:auto;z-index:32}
+                .omLiveGuestsTheaterV1 .omLiveTheaterGuestPanel{top:46px;bottom:auto;max-height:45dvh}
+                @media(min-width:900px){.omLiveGuestsTheaterV1{grid-template-rows:minmax(0,70dvh) minmax(0,30dvh)}.omLiveGuestsTheaterV1 .omLiveTheaterChat{padding-inline:max(20px,calc((100vw - 1000px)/2))}}
+                @media(max-width:600px){.omLiveGuestsTheaterV1{grid-template-rows:minmax(0,62dvh) minmax(0,38dvh)}.omLiveGuestsTheaterV1 .omLiveTheaterInfo{right:90px}}
+              `}</style>
               <LiveKitViewer roomName={stream.room_name} streamId={stream.id} />
               <div className="omLiveTheaterInfo">
                 {hostAvatar && <img src={hostAvatar} alt="" className="omLiveTheaterAvatar" />}
