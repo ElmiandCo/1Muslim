@@ -30,7 +30,7 @@ export async function GET() {
   }
   return NextResponse.json({ lives: data ?? [], serverTime: new Date().toISOString() }, {
     headers: {
-      "Cache-Control": "public, s-maxage=1, stale-while-revalidate=2",
+      "Cache-Control": "public, max-age=0, s-maxage=1",
       "Vary": "Accept-Encoding",
     },
   });
