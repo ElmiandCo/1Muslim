@@ -256,3 +256,40 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 - Vercel preview for `6cef9835` was **READY**; preview for `369c6ef` was **READY**. The intermediate `d706d35` preview **ERROR** was traced to the import path, fixed in `128f0d36`; **check newest head** before calling the final build READY.
 - **NOT verified:** SQL migrations executed, cron route invoked, signed webhook delivery, host/viewer LiveKit runtime, iPhone Safari, 1k/10k subscriber load, or actual p50/p95/p99 latency. No SLA claimed.
 - PR #200 stays **draft/not merge-ready** pending preview SQL + LiveKit configuration, real-device tests, webhook/watchdog race testing, and measured latency. No production changes.
+
+
+---
+
+## Live 2.0 — Bot A: All Streams backend contracts (2026-10-31)
+
+**User-approved scope:** Extend the existing `/streaming` **More Streams / All Streams** experience; do not introduce a competing discovery route. The only permitted UI addition is the expanded All Streams page and minimal entry navigation. No changes were made to any UI/CSS/layout/navigation in this Bot A run.
+
+### Commits (on `1MuslimLive2.0`)
+1. `e5bbcaa594dcd6d9af55e69984915a5b929c9521` — `lib/live-hub.ts`: typed, pure public hub contract and fail-closed categorization.
+2. `5527a003eec7931b8765c9cd32f4b1eef623f7a0` — `app/api/live-hub/route.ts`: public read-only initial snapshot for verified Current Lives, Audio Rooms, real Games streams, actual public Past Live recordings and Scheduled Lives.
+3. `9e45d7858cb1dc1cc26211d1250d0b81dfcf4d6f` — `scripts/live-hub.test.mjs`: six deterministic contract tests.
+
+### Bot B interface contract
+- `GET /api/live-hub` returns `{ currentLives, audioRooms, gameStreams, pastLives, scheduledLives, paths, serverTime }`.
+- `currentLives` only contains `status=live`, `visibility=public`, nonexpired and server-verified `live_presence.state=READY_VIDEO|READY_AUDIO`. Each has `id, hostId, title, category, roomName, viewerCount, startedAt, thumbnailPath, aspectRatio, mediaType, sessionId, version, href`. The `href` is the existing immersive `/streaming/live/{id}` route.
+- `audioRooms` and `gameStreams` are subsets of verified `currentLives` (do not double count as independent broadcasts). Audio uses `live_presence.media_type=audio`; Games uses actual `category` values such as Games/Gaming/Gameplay/eSports. **Never fabricate game broadcasts or treat the games launcher as a Live.**
+- `pastLives` contains only public `live_recordings` with nonempty uploaded `video_path` and positive duration, with `href=/streaming/replay/{recordingId}`. Audio MIME is labeled audio. No fake replay for ended streams without a recording; no direct storage path or private recording in response.
+- `scheduledLives` contains only scheduled/waiting slots whose end time is in the future, with `id, hostId, title, category, startsAt, endsAt, status, thumbnailPath, hostReady, href`. Host readiness permits mic-only check-in; the existing scheduler page currently also checks camera, so reconcile UI messaging for audio-only. Existing scheduling action is `/streaming/go-live?schedule=1`; existing reminder records are `live_watch_reminders`.
+- `paths` supplies `allStreams=/streaming`, `goLive=/streaming/go-live`, and `scheduleLive=/streaming/go-live?schedule=1`.
+- Initial snapshot is CDN cached 1s; subsequent live changes **must** come from the versioned `live_presence` Realtime subscription already in Bot B's branch. Do not add short-interval viewer polling. On connection loss use bounded snapshot recovery.
+- The full-screen viewer already exists at `/streaming/live/{id}`; Bot B should preserve its existing styling and implement tile → viewer → browser back to same scroll position, without touching the host `/streaming/go-live` page.
+- **Existing GoLive category selector does not offer Games** (currently Qur'an, New Muslim, Prayer, Seerah, Tawhid, Community). The backend can classify real Games-tagged streams, but host game tagging needs a separately approved minimal way to set that category; do not silently redesign GoLive.
+- Existing `/streaming` currently uses 5s DB polling and displays recordings only to admins; Bot B should replace this discovery logic in the approved hub scope and show *public* replay cards to viewers using the new contract. Existing `/streaming/replay/{id}` handles public playback.
+
+### Test evidence and remaining blockers
+- Local Node v22.16.0: `node --experimental-strip-types --test scripts/live-hub.test.mjs` — **6/6 passed**: verified public-only READY, audio-only, stale/invalid exclusion, genuine public archive, schedule expiry and Games classification.
+- Local strict TypeScript: `tsc --noEmit --target es2022 --module esnext --strict --skipLibCheck lib/live-hub.ts` — **passed**.
+- **Not yet verified:** new API's Next.js/Vercel head build, preview Supabase migrations and schema/RLS, real response from live-hub endpoint, real LiveKit/webhook delivery, storage accessibility, iPhone Safari full-screen/back navigation, real Games host category input, and p50/p95/p99 latency/load. Do not infer end-to-end success from unit tests.
+- Route fails closed with 503 if service credentials, live_presence migration or any required query is unavailable. Only public stream/recording rows are returned; schedule slots use existing public schedule statuses. Review production permissions before enabling.
+- No migration executed; no LiveKit configuration changed; no merge or production deployment.
+
+### Handoff / integration order for Bot B
+1. Fetch latest `1MuslimLive2.0` head and read this section; PR #200's branch `bot-b/live2-discovery-integration-20261031` is stacked on the base and must incorporate these three commits without overwriting its existing realtime changes.
+2. Integrate `/api/live-hub` into the **existing** All Streams page only; keep LiveKit player, For You, Profile, Stream host studio, animations and other UI untouched. Build the approved categories (Current, Audio, Games, Scheduled, Past) using the existing emerald/gold/mirror design system.
+3. Keep version/session ordering and READY-only discovery, avoid redundant subscriptions and fixed polling; ensure explicit End Live disappears and reconnecting hosts are not offered to new viewers.
+4. Test preview schema/API, public replay permissions, actual Games tagging, audio-only, signed-out playback, and return-to-scroll behavior. Document results and PR #200 readiness. No merge/deploy without approval.
