@@ -883,3 +883,13 @@
 :global(html[data-guest-image-fade="even"]) .slide .night::after,
 :global(html[data-guest-image-fade="even"]) .slide .day::after{animation-name:guestSceneImageCrossfadeEven}
 @keyframes guestSceneImageCrossfadeEven{0%{opacity:1}100%{opacity:0}}
+
+/* Guest invitation floats in the lower third, above content but below dialogs. */
+.guestBannerSlot{position:fixed!important;left:50%!important;top:auto!important;bottom:clamp(100px,32dvh,350px)!important;transform:translateX(-50%);width:min(90vw,620px)!important;max-width:calc(100vw - 28px)!important;z-index:45!important;display:block!important;pointer-events:none!important;opacity:0;visibility:hidden;transition:opacity .8s ease,visibility .8s ease!important}
+.guestBannerOpen{opacity:1;visibility:visible}
+.guestBannerSlot > :global(aside){pointer-events:auto!important;overflow:visible!important;position:relative!important;margin:0!important;padding:14px 46px 14px 16px!important;background:linear-gradient(120deg,color-mix(in srgb,var(--theme-base,#091c22) 70%,transparent),rgba(7,16,24,.7))!important;backdrop-filter:blur(22px) saturate(145%)!important;-webkit-backdrop-filter:blur(22px) saturate(145%)!important;border:1px solid color-mix(in srgb,var(--theme-secondary,#d8bf7c) 65%,transparent)!important;box-shadow:0 0 24px color-mix(in srgb,var(--theme-accent,#e2b75e) 30%,transparent),0 16px 38px #0005!important;animation:guestInvitationFloat 5s ease-in-out infinite!important}
+.guestBannerSlot > :global(aside) small{color:var(--theme-secondary,#e4c989)!important}
+.guestBannerSlot > :global(aside) button{border-color:color-mix(in srgb,var(--theme-secondary,#e4c989) 55%,transparent)!important}
+@keyframes guestInvitationFloat{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-13px,0)}}
+@media(max-width:600px){.guestBannerSlot{bottom:clamp(110px,32dvh,260px)!important;width:calc(100vw - 38px)!important}}
+@media(prefers-reduced-motion:reduce){.guestBannerSlot > :global(aside){animation:none!important}}
