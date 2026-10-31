@@ -93,8 +93,55 @@ export default function GoLivePage() {
       }).catch(()=>void context.close().catch(()=>{}));
     }catch{/* Audio effects are optional; never block mode switching. */}
   };
+  const desiredStudioModeRef=useRef<"desktop"|"phone"|"voice">("phone");
+  const modeSyncQueueRef=useRef<Promise<void>>(Promise.resolve());
+  const syncPublishedCameraForMode=async(mode:"desktop"|"phone"|"voice")=>{
+    const room=roomRef.current;
+    if(!room||!liveStreamIdRef.current||endRequestedRef.current||desiredStudioModeRef.current!==mode)return;
+    const cameraPublications=()=>[...room.localParticipant.videoTrackPublications.values()]
+      .filter(publication=>publication.source===Track.Source.Camera&&publication.track);
+    if(mode==="voice"){
+      for(const publication of cameraPublications()){
+        if(publication.track)await room.localParticipant.unpublishTrack(publication.track,false);
+      }
+      if(desiredStudioModeRef.current==="voice")streamRef.current?.getVideoTracks().forEach(track=>{track.enabled=false;});
+      return;
+    }
+    const stream=streamRef.current;
+    if(!stream)return;
+    let videoTrack=stream.getVideoTracks().find(track=>track.readyState==="live");
+    if(!videoTrack){
+      // Voice may have started with microphone-only permission. Add camera
+      // without replacing the active audio track or reconnecting the room.
+      const cameraStream=await navigator.mediaDevices.getUserMedia({
+        audio:false,
+        video:{facingMode:{ideal:facingMode},width:{ideal:mode==="desktop"?1280:720},height:{ideal:mode==="desktop"?720:1280}}
+      });
+      const acquired=cameraStream.getVideoTracks()[0];
+      if(!acquired)throw new Error("No camera track was returned.");
+      if(desiredStudioModeRef.current!==mode||roomRef.current!==room||endRequestedRef.current){acquired.stop();return;}
+      stream.addTrack(acquired);
+      rawCameraRef.current=acquired;
+      videoTrack=acquired;
+      refreshCameraCapabilities(acquired);
+      if(videoRef.current){
+        videoRef.current.srcObject=stream;
+        videoRef.current.muted=true;
+        videoRef.current.playsInline=true;
+        void videoRef.current.play().catch(()=>{});
+      }
+    }
+    if(desiredStudioModeRef.current!==mode||roomRef.current!==room||endRequestedRef.current)return;
+    videoTrack.enabled=true;
+    if(cameraPublications().length===0){
+      await room.localParticipant.publishTrack(videoTrack,{
+        source:Track.Source.Camera,simulcast:true,videoEncoding:{maxBitrate:3500000,maxFramerate:30}
+      });
+    }
+  };
   const selectStudioMode=(mode:"desktop"|"phone"|"voice")=>{
-    if(mode===studioMode)return;
+    if(mode===desiredStudioModeRef.current)return;
+    desiredStudioModeRef.current=mode;
     if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current);
     setStudioMorphing(false);
     requestAnimationFrame(()=>setStudioMorphing(true));
@@ -104,6 +151,23 @@ export default function GoLivePage() {
     setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
     if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
     else{setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
+    if(roomRef.current&&liveStreamIdRef.current){
+      const streamId=liveStreamIdRef.current;
+      // Serialize camera and metadata updates; a slower older request must
+      // never overwrite the mode selected by a newer tap.
+      modeSyncQueueRef.current=modeSyncQueueRef.current.catch(()=>{}).then(async()=>{
+        if(desiredStudioModeRef.current!==mode)return;
+        await syncPublishedCameraForMode(mode);
+        if(desiredStudioModeRef.current!==mode||endRequestedRef.current)return;
+        const response=await fetch("/api/live-mode",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({streamId,mode}),cache:"no-store"
+        });
+        if(!response.ok)console.warn("Live mode metadata sync failed",response.status);
+      }).catch(error=>{
+        if(desiredStudioModeRef.current===mode)setError(error instanceof Error?error.message:"Could not switch camera mode.");
+      });
+    }
   };
   useEffect(()=>{
     let cancelled=false;
@@ -146,6 +210,7 @@ export default function GoLivePage() {
     }catch{setVoiceEnergy(0)}
     return()=>{stopped=true;cancelAnimationFrame(frame);source?.disconnect();if(context)void context.close().catch(()=>{})};
   },[studioMode,micOn,cameraReady]);
+  const [error, setError] = useState("");
   const [live, setLive] = useState(false);
   const [connectingLive,setConnectingLive] = useState(false);
   const [liveSeconds,setLiveSeconds] = useState(0);
@@ -155,6 +220,7 @@ export default function GoLivePage() {
   const launchTimerRef=useRef<ReturnType<typeof setInterval>|null>(null);
   const launchAudioRef=useRef<AudioContext|null>(null);
   const launchPendingRef=useRef(false);
+  const pendingVoiceLaunchRef=useRef(false);
   useEffect(()=>()=>{if(launchTimerRef.current)clearInterval(launchTimerRef.current);void launchAudioRef.current?.close().catch(()=>{})},[]);
   const playLaunchZoom=()=>{
     try{
@@ -190,7 +256,17 @@ export default function GoLivePage() {
   };
   const launchBroadcast=()=>{
     if(launchPendingRef.current||live||connectingLive||saving)return;
-    if(!cameraReady){void startPreview();return;}
+    if(!cameraReady){
+      if(studioMode==="voice"){
+        // A single Go Live tap requests microphone permission and launches
+        // as soon as audio-only preview becomes ready.
+        pendingVoiceLaunchRef.current=true;
+        launchPendingRef.current=true;
+        setLaunchVisual(true);playLaunchZoom();
+      }
+      void startPreview();
+      return;
+    }
     launchPendingRef.current=true;
     if(studioMode==="voice"){
       setLaunchVisual(true);playLaunchZoom();
@@ -210,8 +286,17 @@ export default function GoLivePage() {
     },1000);
   };
   useEffect(()=>{
+    if(!pendingVoiceLaunchRef.current)return;
+    if(error||studioMode!=="voice"){
+      pendingVoiceLaunchRef.current=false;launchPendingRef.current=false;setLaunchVisual(false);return;
+    }
+    if(!cameraReady||live||connectingLive)return;
+    pendingVoiceLaunchRef.current=false;
+    void startLive(false).finally(()=>{launchPendingRef.current=false;setLaunchVisual(false)});
+  },[cameraReady,studioMode,error,live,connectingLive]);
+  useEffect(()=>{
     if(live){launchPendingRef.current=false;setLaunchVisual(false);}
-    else if(!connectingLive&&launchPendingRef.current&&launchCountdown===null){launchPendingRef.current=false;setLaunchVisual(false);}
+    else if(!connectingLive&&launchPendingRef.current&&launchCountdown===null&&!pendingVoiceLaunchRef.current){launchPendingRef.current=false;setLaunchVisual(false);}
   },[live,connectingLive,launchCountdown]);
   useEffect(()=>{
     if(!live||!broadcastStartedAt){setLiveSeconds(0);return;}
@@ -302,7 +387,6 @@ export default function GoLivePage() {
     };
     void loadScheduled();
   }, []);
-  const [error, setError] = useState("");
   const [viewers, setViewers] = useState(0);
   const [viewerRosterOpen,setViewerRosterOpen]=useState(false);
   const [viewerRoster,setViewerRoster]=useState<Array<{id:string;username:string;avatar:string|null;xp:number|null}>>([]);
@@ -1075,21 +1159,32 @@ export default function GoLivePage() {
     const liveStreamId = liveStreamIdRef.current;
     const activeRoom=roomRef.current;
     roomRef.current = null;
-    // Send a terminal signal before leaving LiveKit, and persist the terminal
-    // status immediately instead of waiting for the recording upload.
-    if (liveStreamId) {
-      const terminalUpdate=Promise.resolve(supabase.from("live_streams").update({
-        status:"ended",ended_at:new Date().toISOString()
-      }).eq("id",liveStreamId)).then(({error})=>{
-        if(error)console.warn("Could not persist Live end status",error);
-      });
+    // Send the host-authenticated terminal packet first; then commit terminal
+    // status server-side. The server also closes the room after updating DB.
+    // Neither action waits for local MediaRecorder or recording upload.
+    if(liveStreamId){
       const terminalSignal=activeRoom?activeRoom.localParticipant.publishData(
         new TextEncoder().encode(JSON.stringify({type:"live-ended",streamId:liveStreamId})),
         {reliable:true,topic:"live-status"}
-      ).catch(error=>console.warn("Could not send Live end signal",error)):Promise.resolve();
-      void Promise.allSettled([terminalUpdate,terminalSignal]).then(()=>void activeRoom?.disconnect());
-      window.setTimeout(()=>void activeRoom?.disconnect(),700);
-    } else {
+      ).catch(error=>console.warn("Live end packet unavailable",error)):Promise.resolve();
+      void (async()=>{
+        try{
+          await Promise.race([terminalSignal,new Promise<void>(resolve=>window.setTimeout(resolve,250))]);
+          const response=await fetch("/api/live-end",{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({streamId:liveStreamId}),cache:"no-store",keepalive:true
+          });
+          if(!response.ok)throw new Error("Server End Live returned "+response.status);
+        }catch(error){
+          console.warn("Server End Live failed; attempting direct terminal update",error);
+          const {error:dbError}=await supabase.from("live_streams").update({
+            status:"ended",ended_at:new Date().toISOString()
+          }).eq("id",liveStreamId);
+          if(dbError)console.error("End Live could not be confirmed",dbError);
+        }finally{void activeRoom?.disconnect();}
+      })();
+      window.setTimeout(()=>void activeRoom?.disconnect(),2500);
+    }else{
       void activeRoom?.disconnect();
     }
     const recorder = recorderRef.current;
