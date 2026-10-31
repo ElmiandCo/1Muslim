@@ -8,6 +8,7 @@ export default function SeamlessEntry({onClose}:{onClose:()=>void}){
  const [closing,setClosing]=useState(false),[entering,setEntering]=useState(false);
  const card=useRef<HTMLDivElement>(null);
  useEffect(()=>{const t=requestAnimationFrame(()=>setEntering(true));return()=>cancelAnimationFrame(t)},[]);
+ useEffect(()=>{if(stage!=="welcome"||closing)return;const timer=window.setTimeout(()=>change("signin"),30000);return()=>window.clearTimeout(timer)},[stage,closing]);
  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key==="Escape")close()};document.addEventListener("keydown",key);return()=>document.removeEventListener("keydown",key)},[]);
  function close(){setClosing(true);setTimeout(onClose,240)}
  function change(next:Stage){setMessage("");setStage(next)}
@@ -32,7 +33,7 @@ export default function SeamlessEntry({onClose}:{onClose:()=>void}){
  if(!redirect||new URL(redirect).origin!==window.location.origin||new URL(redirect).pathname!=="/auth/callback")throw Error("This Preview callback must be allowed in Supabase before Google sign-in.");
  window.location.assign(data.url);
  }catch(err){setMessage(err instanceof Error?err.message:"Google sign-in unavailable.")}finally{setBusy(false)}}
- return <div className={styles.backdrop} data-closing={closing} onMouseDown={e=>{if(e.target===e.currentTarget)close()}} role="presentation"><section ref={card} className={styles.card} data-entering={entering} data-closing={closing} role="dialog" aria-modal="true" aria-label="1Muslim seamless entry">
+ return <div className={styles.backdrop} data-closing={closing} onMouseDown={e=>{if(e.target===e.currentTarget)close()}} role="presentation"><section ref={card} className={`${styles.card} ${stage==="welcome"?styles.wandering:""}`} data-entering={entering} data-closing={closing} role="dialog" aria-modal="true" aria-label="1Muslim seamless entry">
  <button className={styles.close} type="button" aria-label="Close and return home" onClick={close}>✕</button><span className={styles.kicker}>✦ 1MUSLIM · THE UMMAH</span><span className={styles.emblem} aria-hidden="true">۞</span>
  <div key={stage} className={styles.content}>
  {stage==="welcome"&&<><h2>Welcome home.</h2><p>Connect. Learn. Reflect. Together.</p><div className={styles.actions}><button onClick={()=>change("signin")}>Sign In →</button><button onClick={()=>change("membership")}>Not a Member ✦</button></div></>}
