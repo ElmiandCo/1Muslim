@@ -3,6 +3,7 @@
 .stage[data-mode="video"]:not([data-count="0"]){grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
 .stage[data-mode="video"][data-count="1"]{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .hostVideo{position:relative;min-width:0;min-height:0;overflow:hidden;background:#020807}
+.stage[data-mode="audio"] .hostVideo{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;visibility:hidden!important;pointer-events:none!important}
 .hostVideo>div{width:100%!important;height:100%!important}
 .hostLabel{position:absolute;left:10px;top:10px;z-index:5;padding:6px 10px;border:1px solid #e2c06e;border-radius:999px;background:#061a14dd;color:#f4d98f;font-size:clamp(10px,1.5vw,13px);font-weight:750;pointer-events:none}
 .guestColumn{display:grid;grid-template-rows:repeat(var(--rows,1),minmax(0,1fr));gap:4px;min-width:0;min-height:0}
