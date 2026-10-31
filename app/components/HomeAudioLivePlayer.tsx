@@ -28,11 +28,11 @@ export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;h
    const element=track.attach() as HTMLMediaElement;
    element.autoplay=true;element.style.display="none";
    audioRef.current.appendChild(element);
-   audioNodes.set(track.sid,element);
+   audioNodes.set(track.sid||"",element);
    void element.play().then(()=>{if(active){setNeedsTap(false);setState("Voice Live · Connected")}}).catch(()=>{if(active){setNeedsTap(true);setState("Tap to enable live audio")}});
   };
   room.on(RoomEvent.TrackSubscribed,attach);
-  room.on(RoomEvent.TrackUnsubscribed,(track)=>{const node=audioNodes.get(track.sid);if(node){track.detach(node);node.remove();audioNodes.delete(track.sid)}});
+  room.on(RoomEvent.TrackUnsubscribed,(track)=>{const node=audioNodes.get(track.sid||"");if(node){track.detach(node);node.remove();audioNodes.delete(track.sid||"")}});
   room.on(RoomEvent.Disconnected,()=>{if(active)setState("Voice Live disconnected")});
   const poll=window.setInterval(()=>{
    if(!active)return;
