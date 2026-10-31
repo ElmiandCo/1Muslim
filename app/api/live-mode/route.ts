@@ -4,11 +4,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
-const modes = {
-  phone: { aspect_ratio: "9:16", video_width: 720, video_height: 1280 },
-  desktop: { aspect_ratio: "16:9", video_width: 1280, video_height: 720 },
-  voice: { aspect_ratio: "1:1", video_width: 720, video_height: 720 },
-} as const;
+const modes = new Set(["phone", "desktop", "voice"]);
 
 export async function POST(request: Request) {
   const session = await sessionClient();
@@ -19,7 +15,7 @@ export async function POST(request: Request) {
   const mode = body.mode;
   if (typeof streamId !== "string" || !/^[0-9a-f-]{36}$/i.test(streamId))
     return NextResponse.json({ error: "Invalid stream ID" }, { status: 400 });
-  if (typeof mode !== "string" || !Object.prototype.hasOwnProperty.call(modes, mode))
+  if (typeof mode !== "string" || !modes.has(mode))
     return NextResponse.json({ error: "Invalid studio mode" }, { status: 400 });
 
   const { data: stream, error: lookupError } = await session.from("live_streams")
@@ -32,10 +28,16 @@ export async function POST(request: Request) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return NextResponse.json({ error: "Live mode service not configured" }, { status: 503 });
   const db = createServiceClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data, error } = await db.from("live_streams")
-    .update(modes[mode as keyof typeof modes])
-    .eq("id", streamId).eq("host_id", user.id).eq("status", "live").select("id").maybeSingle();
-  if (error) return NextResponse.json({ error: "Unable to update Live mode" }, { status: 503 });
-  if (!data) return NextResponse.json({ error: "Stream is no longer live" }, { status: 409 });
+  // Serializes with guest approvals to prevent an over-capacity video stage.
+  const { error } = await db.rpc("set_live_guest_stream_mode", {
+    p_stream: streamId, p_mode: mode,
+  });
+  if (error) {
+    if (error.code === "23514") return NextResponse.json({
+      error: "Video supports three guests. Remove extra audio guests before switching.",
+    }, { status: 409 });
+    console.error("Live mode transition failed", { code: error.code });
+    return NextResponse.json({ error: "Unable to update Live mode" }, { status: 503 });
+  }
   return NextResponse.json({ ok: true, mode }, { headers: { "Cache-Control": "no-store" } });
 }
