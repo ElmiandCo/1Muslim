@@ -35,7 +35,8 @@ type DiscoverySnapshot = {
 const EMPTY: DiscoverySnapshot = { lives: [], presence: {}, ready: false, connected: false };
 let snapshot: DiscoverySnapshot = EMPTY;
 const listeners = new Set<() => void>();
-const supabase = createClient();
+let supabase: ReturnType<typeof createClient> | null = null;
+function getSupabase() { return supabase ?? (supabase = createClient()); }
 let channel: ReturnType<typeof supabase.channel> | null = null;
 let running = false;
 let connected = false;
@@ -46,6 +47,8 @@ let retryCount = 0;
 let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
 let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 let lastRefresh = 0;
+const delayedRefreshes = new Set<ReturnType<typeof setTimeout>>();
+let snapshotFailures = 0;
 
 function publish(next: DiscoverySnapshot) {
   snapshot = next;
@@ -136,10 +139,14 @@ async function refresh() {
     if (!running || generation !== currentGeneration) return;
     mergeSnapshot(Array.isArray(payload.lives) ? payload.lives : []);
     lastRefresh = Date.now();
+    snapshotFailures = 0;
     if (connected) { retryCount = 0; clearTimer("fallback"); }
   } catch {
     // Never substitute status=live unverified rows when discovery fails.
-    if (running && generation === currentGeneration && !connected) scheduleFallback();
+    if (running && generation === currentGeneration) {
+      if (!connected) scheduleFallback();
+      else if (++snapshotFailures <= 5) scheduleRefresh(Math.min(30000, 2000 * 2 ** (snapshotFailures - 1)));
+    }
   } finally {
     inFlight = false;
     if (refreshQueued && running && generation === currentGeneration) {
@@ -152,7 +159,7 @@ async function refresh() {
 function connectRealtime() {
   if (!running || channel) return;
   const currentGeneration = generation;
-  channel = supabase.channel("1muslim-live2-discovery")
+  channel = getSupabase().channel("1muslim-live2-discovery")
     .on("postgres_changes", { event: "*", schema: "public", table: "live_presence" }, payload => {
       if (!running || generation !== currentGeneration) return;
       if (payload.eventType === "DELETE") {
@@ -164,7 +171,11 @@ function connectRealtime() {
       if (acceptEvent(event) && isReady(event.state)) {
         // The initial CDN snapshot can briefly precede the database commit.
         scheduleRefresh(80);
-        setTimeout(() => { if (running && generation === currentGeneration) scheduleRefresh(80); }, 1200);
+        const timer = setTimeout(() => {
+          delayedRefreshes.delete(timer);
+          if (running && generation === currentGeneration) scheduleRefresh(80);
+        }, 1200);
+        delayedRefreshes.add(timer);
       }
     })
     .subscribe(status => {
@@ -179,7 +190,11 @@ function connectRealtime() {
       } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
         connected = false;
         publish({ ...snapshot, connected: false });
-        if (status === "CLOSED") channel = null;
+        if (channel) {
+          const stale = channel;
+          channel = null;
+          if (status !== "CLOSED") void getSupabase().removeChannel(stale);
+        }
         scheduleFallback();
       }
     });
@@ -210,7 +225,9 @@ function stop() {
   clearTimer("refresh");
   document.removeEventListener("visibilitychange", onResume);
   window.removeEventListener("focus", onResume);
-  if (channel) { void supabase.removeChannel(channel); channel = null; }
+  delayedRefreshes.forEach(timer => clearTimeout(timer));
+  delayedRefreshes.clear();
+  if (channel) { void getSupabase().removeChannel(channel); channel = null; }
   snapshot = EMPTY;
 }
 
