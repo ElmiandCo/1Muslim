@@ -208,7 +208,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ho
           if(!mounted||!hostId||participant?.identity!==hostId||endedOnce.current)return;
           try{
             const message=JSON.parse(new TextDecoder().decode(payload));
-            if(message?.type==="1muslim:live-ended"&&message?.streamId===streamId)endSignalRef.current();
+            if((message?.type==="live-ended"||message?.type==="1muslim:live-ended")&&message?.streamId===streamId)endSignalRef.current();
           }catch{/* Ignore unrelated data packets. */}
         });
         room.on(RoomEvent.Reconnecting, () => {if(mounted){setConnectionActive(false);setStatus("Reconnecting…");setReconnecting(true);setReconnectKey(String(Date.now()));}});
