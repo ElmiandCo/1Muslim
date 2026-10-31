@@ -43,3 +43,17 @@
 .insertVerse{min-height:45px;border-color:var(--theme-secondary,#dfc99b);background:color-mix(in srgb,var(--theme-secondary,#dfc99b) 25%,transparent);backdrop-filter:blur(14px);color:inherit;cursor:pointer}
 @keyframes verseBackdropIn{from{opacity:0}to{opacity:1}}@keyframes verseCardIn{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes verseReveal{from{opacity:0;transform:translateY(12px) scale(.97);filter:blur(7px)}to{opacity:1;transform:none;filter:blur(0)}}
 @media(prefers-reduced-motion:reduce){.verseBackdrop,.verseDialog,.versePreview{animation:none}}
+
+/* Magnetic media upload: particles are confined to the upload button only. */
+.dropZone{--upload-glow:var(--theme-secondary,var(--theme-primary,#9ce6d6));position:relative;isolation:isolate;overflow:hidden;transition:border-color .3s,box-shadow .3s,transform .25s;border-color:color-mix(in srgb,var(--upload-glow) 45%,transparent)}
+.dropZone:hover,.dropZone:focus-visible{border-color:var(--upload-glow);box-shadow:inset 0 1px #ffffff40,0 0 22px color-mix(in srgb,var(--upload-glow) 25%,transparent)}
+.dropZone:active{transform:scale(.975)}
+.dropZone .addIcon{position:relative;z-index:2;color:var(--upload-glow);background:color-mix(in srgb,var(--upload-glow) 13%,transparent);border-color:color-mix(in srgb,var(--upload-glow) 55%,transparent);animation:uploadBreath 6s ease-in-out infinite}
+.dropZone strong,.dropZone small{position:relative;z-index:2}
+.mobileUploadLabel{display:none}
+.magneticParticles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+.magneticParticles i{--angle:calc(var(--spark-index) * 36deg);position:absolute;left:calc(50% + cos(var(--angle)) * 43%);top:calc(50% + sin(var(--angle)) * 44%);width:3px;height:3px;border-radius:50%;background:var(--upload-glow);box-shadow:0 0 7px 1px var(--upload-glow);opacity:0;animation:uploadConverge 6.5s ease-in-out infinite;animation-delay:calc(var(--spark-index) * -.46s)}
+@keyframes uploadConverge{0%{opacity:0;transform:translate(0,0) scale(.6)}25%{opacity:.75}75%{opacity:.4}100%{opacity:0;transform:translate(calc(cos(var(--angle) + 180deg) * 38px),calc(sin(var(--angle) + 180deg) * 38px)) scale(.3)}}
+@keyframes uploadBreath{0%,100%{box-shadow:0 0 8px color-mix(in srgb,var(--upload-glow) 10%,transparent)}50%{box-shadow:0 0 24px color-mix(in srgb,var(--upload-glow) 38%,transparent)}}
+@media(max-width:700px),(pointer:coarse){.mobileUploadLabel{display:inline}.desktopUploadLabel{display:none}}
+@media(prefers-reduced-motion:reduce){.magneticParticles i,.dropZone .addIcon{animation:none!important}.magneticParticles{display:none}}
