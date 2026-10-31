@@ -245,3 +245,8 @@
 @media(prefers-reduced-motion:reduce){
  .profile-shared-avatar-portal,.profile-shared-avatar-portal .profile-avatar-portrait{transition:none!important;}
 }
+
+/* Lower resting position for the gold avatar, with XP hidden until redesigned. */
+.profile-shared-avatar-portal .profile-avatar-xp{display:none!important;}
+.profile-shared-avatar-portal .profile-glass-avatar>strong{display:none!important;}
+.profile-with-shared-avatar{padding-top:clamp(325px,43vw,370px)!important;}
