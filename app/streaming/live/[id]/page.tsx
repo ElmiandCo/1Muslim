@@ -76,7 +76,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
         <div style={isLive?{border:0,borderRadius:0,background:"#000"}:{border:"1px solid #1b241f",borderRadius:22,overflow:"hidden",background:"#080d09"}}>
           {isLive ? (
             <section className="omLiveTheater" aria-label="Immersive live broadcast">
-              <LiveKitViewer roomName={stream.room_name} streamId={stream.id} />
+              <LiveKitViewer roomName={stream.room_name} streamId={stream.id} hostId={stream.host_id} audioOnly={stream.aspect_ratio==="1:1"} hostName={hostName} hostAvatarUrl={hostAvatar} />
               <div className="omLiveTheaterInfo">
                 {hostAvatar && <img src={hostAvatar} alt="" className="omLiveTheaterAvatar" />}
                 <div className="omLiveTheaterIdentity"><strong>{hostName}</strong><small>{stream.title}</small></div>
