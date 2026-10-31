@@ -387,3 +387,10 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 - **Unverified and blocking merge:** real iPhone Safari front↔rear flipping during active Live; two-device host/viewer microphone continuity and video; repeat flips under poor Wi-Fi; recording behavior after capture restart; browser keyboard and Send-button usability; actual audible sound effects; green/red indicator and autoplay permission; p50/p95 switch and viewer morph latency. Static/CI success does not prove runtime acceptance.
 - **Safety:** no production merge/deployment, Supabase migration, LiveKit webhook/config or secret changes.
 
+
+### Verified preview/CI evidence (2026-10-31 UTC)
+- GitHub Actions run https://github.com/ElmiandCo/1Muslim/actions/runs/41184213151 completed **success** on code head `07d11fa52ef15b0ecb6ea8ee4310c85cbfed77d3`: **12/12 focused unit/static integration tests passed**, TypeScript validation passed, and `npm run build` passed. The test count comprises 6 pure behavior tests and 6 static integration assertions. These are not real-device tests.
+- Vercel deployment `dpl_9vbFBrrjxttPBSnoPEX7N8KCgFAy` reached **READY** for exact code head `07d11fa52ef15b0ecb6ea8ee4310c85cbfed77d3`: https://1muslim-e2baoupfu-elmiandco.vercel.app. Open a genuine live stream via `/streaming` to exercise the full-screen viewer.
+- Additional concurrent branch commit `1f530c63cc8c87dfe220a5e692eec76c818226c0` added a 400ms frozen-frame camera crossfade to the host flip; it was inspected and preserved, not overwritten.
+- Viewer initial mode follows the host stream's `aspect_ratio`: Desktop for `16:9`, Phone otherwise, so tapping Phone on a landscape stream performs the requested visible zoom/crop.
+- **Final release gate remains blocked** pending real iPhone Safari and two-device host/viewer runtime checks, actual recording continuity, browser audio/keyboard and measured latency. No merge or production changes.
