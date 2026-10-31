@@ -55,7 +55,15 @@ export default function GoLivePage() {
   const [voiceName,setVoiceName]=useState("1Muslim Creator");
   const [voiceEnergy,setVoiceEnergy]=useState(0);
   const voiceEnergyRef=useRef(0);
+  const [studioMorphing,setStudioMorphing]=useState(false);
+  const studioMorphTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+  useEffect(()=>()=>{if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current)},[]);
   const selectStudioMode=(mode:"desktop"|"phone"|"voice")=>{
+    if(mode===studioMode)return;
+    if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current);
+    setStudioMorphing(false);
+    requestAnimationFrame(()=>setStudioMorphing(true));
+    studioMorphTimer.current=setTimeout(()=>setStudioMorphing(false),1150);
     setStudioMode(mode);
     if(mode!=="voice")setAspectRatio(mode==="desktop"?"16:9":"9:16");
     if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
@@ -1036,6 +1044,46 @@ export default function GoLivePage() {
           .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioActions{position:absolute!important;bottom:14px!important;left:14px!important;right:14px!important}
         }
         @media(prefers-reduced-motion:reduce){.goLive .layout>.panel:first-child>.preview.studioTransform,.goLive .layout>.panel:first-child>.preview.studioTransform>video{transition:none!important}}
+
+        /* Fluid camera frame morph and premium border sweep. */
+        .goLive .layout>.panel:first-child>.preview.studioTransform{
+          border:1px solid #c6a971!important;
+          box-shadow:0 0 0 1px #f7e7b61f,0 14px 54px #0009,inset 0 0 18px #9afcce0b!important;
+          transition:height 1.05s cubic-bezier(.19,1,.22,1),width 1.05s cubic-bezier(.19,1,.22,1),border-radius .95s cubic-bezier(.19,1,.22,1),box-shadow .9s ease!important;
+        }
+        .goLive .layout>.panel:first-child>.preview.studioTransform::after{
+          content:"";position:absolute;inset:0;z-index:38;pointer-events:none;border-radius:inherit;padding:2px;
+          background:conic-gradient(from 0deg,transparent 0deg,#80e9c53d 70deg,#f5e3a8 112deg,#fffbe7 133deg,#76fbd2 154deg,transparent 225deg);
+          -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+          -webkit-mask-composite:xor;
+          mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+          mask-composite:exclude;opacity:.28;transition:opacity .5s ease,padding .5s ease;
+        }
+        .goLive .layout>.panel:first-child>.preview.studioTransform.studioMorphing{
+          box-shadow:0 0 0 1px #d6fbe9aa,0 0 26px #5df0c25c,0 20px 65px #0009!important;
+        }
+        .goLive .layout>.panel:first-child>.preview.studioTransform.studioMorphing::after{
+          opacity:1;padding:3px;animation:studioBorderSweep 1.05s cubic-bezier(.19,1,.22,1) both;
+        }
+        .goLive .layout>.panel:first-child>.preview.studioTransform.studioMorphing>video{
+          animation:studioCameraSettle 1.05s cubic-bezier(.19,1,.22,1) both;
+        }
+        @keyframes studioBorderSweep{
+          0%{filter:brightness(1.7);opacity:0;clip-path:inset(0 100% 0 0)}
+          25%{opacity:1;clip-path:inset(0 50% 0 0)}
+          65%{opacity:1;clip-path:inset(0 0 0 0)}
+          100%{opacity:.4;clip-path:inset(0 0 0 0)}
+        }
+        @keyframes studioCameraSettle{
+          0%{filter:brightness(.82);transform:scale(1.045)}
+          45%{filter:brightness(1.04)}
+          100%{filter:brightness(1);transform:scale(1)}
+        }
+        @media(prefers-reduced-motion:reduce){
+          .goLive .layout>.panel:first-child>.preview.studioTransform,
+          .goLive .layout>.panel:first-child>.preview.studioTransform::after,
+          .goLive .layout>.panel:first-child>.preview.studioTransform>video{transition:none!important;animation:none!important}
+        }
         .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
         .brand{display:flex;gap:9px;align-items:center;font-weight:850}.mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#101811;border:1px solid #354237;color:#d6e7b8}.back{color:#98a49d;text-decoration:none;font-size:12px}
         .shell{max-width:1120px;margin:auto;padding:30px 18px 70px}.heading{margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#829b87;font-weight:850}.heading h1{font-size:42px;letter-spacing:-.06em;margin:8px 0}.heading p{color:#849087;font-size:13px;margin:0}
@@ -1163,7 +1211,7 @@ export default function GoLivePage() {
 
         <div className="layout">
           <section className="panel">
-            <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} data-studio-mode={studioMode} className={`preview studioTransform format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"} ${studioMode==="voice"?"studioVoiceMode":""}`}>
+            <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} data-studio-mode={studioMode} className={`preview studioTransform ${studioMorphing?"studioMorphing":""} format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"} ${studioMode==="voice"?"studioVoiceMode":""}`}>
               {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               <div className={`voiceAvatarStage ${studioMode==="voice"?"voiceAvatarStageActive":""}`} aria-hidden={studioMode!=="voice"}>
                 <div className="voiceBackdropOrbs"><i/><i/><i/></div>
