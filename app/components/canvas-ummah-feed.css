@@ -134,3 +134,9 @@
 @keyframes profileIconIdle{0%,100%{translate:0 0}50%{translate:0 -3px}}
 @keyframes profileIconSelected{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
 @media(prefers-reduced-motion:reduce){.profile-glass-tabs .profile-icon-tab{animation:none;transition:none}}
+
+/* Gold Profile hero is centered above the action row and decorative header. */
+.profile-shared-avatar-portal{z-index:2147483000!important;width:min(240px,55vw)!important;top:auto;}
+.profile-shared-avatar-portal .profile-shared-avatar-hero{width:100%;}
+.profile-shared-avatar-portal .profile-glass-avatar{max-width:100%!important;min-height:205px!important;overflow:visible!important;}
+.profile-shared-avatar-portal .profileAvatar{overflow:visible!important;}
