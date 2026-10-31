@@ -1511,6 +1511,14 @@ export default function GoLivePage() {
         }
         @media(min-width:851px){.preliveInspire,.preliveIdentity,.preliveMobileActions{display:none!important}}
 
+        /* Gentle pre-live breathing motion; never move the active broadcast controls. */
+        @keyframes preliveFloat {0%,100%{translate:0 0}50%{translate:0 -5px}}
+        @media(max-width:850px) and (prefers-reduced-motion:no-preference){
+          .goLive .preliveIdentity{animation:preliveFloat 4.8s ease-in-out infinite;transition:translate .65s cubic-bezier(.22,1,.36,1)}
+          .goLive .preliveQuickOptions{animation:preliveFloat 5.4s ease-in-out -1.2s infinite}
+          .goLive .preliveGoButton{animation:preliveFloat 5.1s ease-in-out -2.4s infinite}
+          .goLive .preliveMobileActions:has(.preliveGoButton:disabled) .preliveGoButton{animation-play-state:paused;translate:0 0;transition:translate .65s ease}
+        }
         @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 
