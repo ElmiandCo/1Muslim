@@ -3,8 +3,17 @@ import {useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 const KEY="1muslim:feedback-v1";
 export default function VisitorFeedback(){
- const [open,setOpen]=useState(false),[stars,setStars]=useState(0),[message,setMessage]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ const [eligible,setEligible]=useState(false);\n const [open,setOpen]=useState(false),[stars,setStars]=useState(0),[message,setMessage]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState("");
  useEffect(()=>{
+  let active=true;
+  const db=createClient();
+  const verify=async()=>{const {data:{user}}=await db.auth.getUser();if(!active)return;setEligible(Boolean(user));if(!user)setOpen(false)};
+  void verify();
+  const {data:{subscription}}=db.auth.onAuthStateChange((_event,session)=>{if(!active)return;setEligible(Boolean(session?.user));if(!session?.user)setOpen(false)});
+  return()=>{active=false;subscription.unsubscribe()};
+ },[]);
+ useEffect(()=>{
+  if(!eligible)return;
   if(localStorage.getItem(KEY)==="submitted")return;
   const dismissed=Number(localStorage.getItem(KEY+":later")||0);
   if(dismissed&&Date.now()-dismissed<7*86400000)return;
@@ -32,7 +41,7 @@ export default function VisitorFeedback(){
   if(sendError)throw Error("Could not send your message. Please try again.");
   localStorage.setItem(KEY,"submitted");setOpen(false);
  }catch(e){setError(e instanceof Error?e.message:"Try again")}finally{setBusy(false)}};
- if(!open)return null;
+ if(!open||!eligible)return null;
  return <div role="presentation" style={{position:"fixed",inset:0,zIndex:2147483000,display:"grid",placeItems:"center",background:"rgba(0,12,10,.68)",padding:20}}>
  <section role="dialog" aria-modal="true" aria-label="Rate 1Muslim" style={{width:"min(100%,420px)",padding:28,borderRadius:24,border:"1px solid rgba(129,255,202,.35)",background:"linear-gradient(145deg,rgba(13,65,50,.97),rgba(4,22,19,.98))",color:"#fff",boxShadow:"0 20px 80px #0009",textAlign:"center"}}>
  <h2 style={{fontSize:25,margin:"0 0 10px"}}>How is your 1Muslim experience?</h2><p style={{opacity:.8}}>Your feedback helps us improve the Ummah experience.</p>
