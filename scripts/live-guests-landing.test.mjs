@@ -65,10 +65,13 @@ test("approved guest hears remote LiveKit audio without duplicate viewer monitor
  const studio=read("components/LiveGuestStudio.tsx");
  const video=read("app/components/LiveHomePreview.tsx");
  const audio=read("app/components/HomeAudioLivePlayer.tsx");
+ const viewer=read("components/LiveKitViewer.tsx");
  assert.match(studio,/attachRemoteAudio/);
  assert.match(studio,/RoomEvent\.TrackSubscribed/);
  assert.match(studio,/needsAudioTap/);
  assert.match(studio,/signalStage\(true\)/);
  assert.match(video,/guestOnStageRef\.current/);
  assert.match(audio,/guestOnStageRef\.current/);
+ assert.match(viewer,/priorGuestMuteRef/);
+ assert.match(viewer,/disabled=\{guestOnStage\}/);
 });
