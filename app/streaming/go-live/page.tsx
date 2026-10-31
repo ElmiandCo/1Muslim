@@ -97,7 +97,7 @@ export default function GoLivePage() {
   const modeSyncQueueRef=useRef<Promise<void>>(Promise.resolve());
   const syncPublishedCameraForMode=async(mode:"desktop"|"phone"|"voice")=>{
     const room=roomRef.current;
-    if(!live||!room||endRequestedRef.current||desiredStudioModeRef.current!==mode)return;
+    if(!room||!liveStreamIdRef.current||endRequestedRef.current||desiredStudioModeRef.current!==mode)return;
     const cameraPublications=()=>[...room.localParticipant.videoTrackPublications.values()]
       .filter(publication=>publication.source===Track.Source.Camera&&publication.track);
     if(mode==="voice"){
@@ -151,7 +151,7 @@ export default function GoLivePage() {
     setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
     if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
     else{setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
-    if(live&&liveStreamIdRef.current){
+    if(roomRef.current&&liveStreamIdRef.current){
       const streamId=liveStreamIdRef.current;
       // Serialize camera and metadata updates; a slower older request must
       // never overwrite the mode selected by a newer tap.
