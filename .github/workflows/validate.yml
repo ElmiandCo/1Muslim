@@ -18,6 +18,8 @@ jobs:
       - run: npm install --no-audit --no-fund
       - name: TypeScript validation
         run: npx tsc --noEmit
+      - name: Live guest policy regression tests
+        run: node --experimental-strip-types --test scripts/live-guests.test.mjs
       - name: Production build
         run: npm run build
         env:

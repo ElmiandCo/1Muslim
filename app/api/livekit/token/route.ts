@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { AccessToken, TrackSource } from "livekit-server-sdk";
 import { createClient } from "../../../../utils/supabase/server";
-import { guestLimitForAspectRatio, guestMayPublishCamera, guestMayPublishMicrophone } from "../../../../lib/live-guest-policy";
+import { guestCanPublishMedia, guestLimitForAspectRatio, guestMayPublishCamera, guestMayPublishMicrophone } from "../../../../lib/live-guest-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -84,7 +84,10 @@ export async function POST(request: Request) {
           ? `${user.id}:screen:${crypto.randomUUID()}`
           : user.id;
 
-    const canPublish = role === "host" || role === "guest" || role === "companion";
+    // A guest with no allowed media sources must be subscribe-only. LiveKit
+    // treats an empty/missing source allowlist as unrestricted in some paths.
+    const canPublish = role === "host" || role === "companion" ||
+      (role === "guest" && guestCanPublishMedia(liveStream.aspect_ratio, guestMode ?? "pfp", guestMuted));
     const publishSources = role === "companion"
       ? [TrackSource.SCREEN_SHARE]
       : role === "guest"
@@ -105,7 +108,7 @@ export async function POST(request: Request) {
       roomJoin: true,
       room,
       canPublish,
-      canPublishSources: publishSources,
+      canPublishSources: publishSources?.length ? publishSources : undefined,
       canSubscribe: true,
       // Only the host sends authoritative terminal data packets.
       canPublishData: role === "host",
