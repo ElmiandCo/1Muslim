@@ -8,6 +8,8 @@ export function isDiscoverableLive(state: Live2State) {
 
 export function shouldApplyPresenceEvent(previous: PresenceVersion | undefined, next: PresenceVersion) {
   if (!next.session_id || !Number.isSafeInteger(next.version) || next.version < 1) return false;
+  // Realtime payloads are external data: reject malformed states before changing discovery.
+  if (!["STARTING", "READY_AUDIO", "READY_VIDEO", "RECONNECTING", "ENDED"].includes(next.state)) return false;
   // ENDED is terminal even if a delayed READY or a reused room arrives.
   if (previous?.state === "ENDED") return false;
   if (!previous) return true;
