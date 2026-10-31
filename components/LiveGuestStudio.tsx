@@ -14,7 +14,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
   const [requests,setRequests]=useState<GuestRequest[]>([]);
   const [loaded,setLoaded]=useState(false);
   const [mode,setMode]=useState<"pfp"|"camera">("pfp");
-  const [audioOnly,setAudioOnly]=useState<boolean|null>(null);
+  const [audioOnly,setAudioOnly]=useState(true);
   const [mediaConsent,setMediaConsent]=useState(false);
   const [joined,setJoined]=useState(false);
   const [busy,setBusy]=useState(false);
@@ -60,6 +60,17 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
     };
   },[streamId]);
   useEffect(()=>()=>{void room.current?.disconnect();stream.current?.getTracks().forEach(t=>t.stop())},[]);
+  useEffect(()=>{
+    if(!audioOnly||!joined)return;
+    // Switching a video room to Audio must retire any existing guest camera.
+    for(const track of stream.current?.getVideoTracks()??[]){
+      void room.current?.localParticipant.unpublishTrack(track);
+      track.stop();
+      stream.current?.removeTrack(track);
+    }
+    if(preview.current)preview.current.srcObject=null;
+    setCamera(false);
+  },[audioOnly,joined]);
 
   function leave(){
     void room.current?.disconnect();room.current=null;
@@ -206,12 +217,12 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
         <button type="button" disabled={busy||!mediaConsent} onClick={()=>void join()}>Join stage</button>
       </div>}
       {joined&&<div><p role="status">🔴 You're on stage</p>
-        {me?.mode==="camera"&&<div style={{position:"relative",maxWidth:250}}>
+        {me?.mode==="camera"&&!audioOnly&&<div style={{position:"relative",maxWidth:250}}>
           <video ref={preview} muted autoPlay playsInline style={{width:"100%",borderRadius:12,filter:background==="blur"?"blur(4px)":"none"}}/>
           <span style={{fontSize:11}}>Preview effects (local only)</span>
         </div>}
         <button type="button" disabled={busy||!!me?.host_muted} onClick={()=>void toggleMic()}>{mic?"Mute mic":"Unmute mic"}</button>{" "}
-        {me?.mode==="camera"&&<button type="button" disabled={busy} onClick={toggleCamera}>{camera?"Camera off":"Camera on"}</button>}{" "}
+        {me?.mode==="camera"&&!audioOnly&&<button type="button" disabled={busy} onClick={toggleCamera}>{camera?"Camera off":"Camera on"}</button>}{" "}
         <button type="button" onClick={leave}>Leave stage</button>
         <label style={{display:"block",marginTop:8}}>Background preview{" "}
           <select value={background} onChange={e=>setBackground(e.target.value)}>
