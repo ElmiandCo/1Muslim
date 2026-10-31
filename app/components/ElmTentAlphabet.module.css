@@ -77,3 +77,9 @@
 :global(html[data-muslim-theme]) .browseToggle,
 :global(html[data-muslim-theme]) .counter strong,
 :global(html[data-muslim-theme]) .top{color:var(--theme-secondary,#cbdcff)}
+
+/* Lesson 2: minimal transparent pronunciation control and smaller letterforms. */
+.quizSpeaker{width:70px!important;height:70px!important;min-height:70px!important;min-width:70px!important;justify-self:center;display:grid!important;place-items:center!important;border-radius:50%!important;background:color-mix(in srgb,var(--theme-base,#171323) 30%,transparent)!important;border:1px solid color-mix(in srgb,var(--theme-secondary,#c9a2d9) 45%,transparent)!important;backdrop-filter:blur(12px);color:#ef4949!important;font-size:28px!important;font-weight:600!important;box-shadow:0 4px 18px #0002;transition:color .25s,background .25s,box-shadow .25s}
+.quizSpeaker span{margin-left:4px}
+.quizSpeakerPlaying{color:var(--theme-secondary,var(--theme-accent,#b578db))!important;box-shadow:0 0 19px color-mix(in srgb,var(--theme-secondary,#b578db) 45%,transparent)!important}
+.quizChoices button{font-size:clamp(46px,9.1vw,77px)!important;background:color-mix(in srgb,var(--theme-base,#21142b) 30%,transparent)!important;backdrop-filter:blur(8px);border-color:color-mix(in srgb,var(--theme-secondary,#b578db) 48%,transparent)!important}
