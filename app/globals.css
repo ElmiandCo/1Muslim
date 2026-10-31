@@ -728,3 +728,39 @@ html[data-muslim-theme] :is(button,[role="tab"],.sidebar,.canvas-native-profile)
  transition:background-color 3s ease,border-color 3s ease,color 3s ease,box-shadow 3s ease;
 }
 @media(prefers-reduced-motion:reduce){html[data-muslim-theme] :is(button,[role="tab"],.sidebar,.canvas-native-profile){transition:none}}
+
+/* Home header and Live format navigation: inherit the user's six-theme palette.
+   Keep the Emerald baseline untouched; preserve existing layout and click behavior. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) main[class*="control"] header[class*="controlHeader"] {
+  background:linear-gradient(120deg,color-mix(in srgb,var(--theme-surface) 90%,transparent),color-mix(in srgb,var(--theme-base) 90%,transparent))!important;
+  border-color:color-mix(in srgb,var(--theme-edge) 72%,transparent)!important;
+  box-shadow:0 14px 32px color-mix(in srgb,var(--theme-base) 55%,transparent),inset 0 1px color-mix(in srgb,var(--theme-secondary) 22%,transparent)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) main[class*="control"] header[class*="controlHeader"] [class*="searchDock"] {
+  background:color-mix(in srgb,var(--theme-base) 76%,transparent)!important;
+  border-color:color-mix(in srgb,var(--theme-edge) 70%,transparent)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) main[class*="control"] header[class*="controlHeader"] :is(strong,input,button,a) {
+  color:var(--theme-secondary)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) main[class*="control"] header[class*="controlHeader"] input::placeholder {
+  color:color-mix(in srgb,var(--theme-secondary) 60%,#fff)!important;
+  opacity:.75;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Live format"] button,
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Main carousel navigation"] button {
+  background:color-mix(in srgb,var(--theme-surface) 72%,transparent)!important;
+  border-color:color-mix(in srgb,var(--theme-edge) 58%,transparent)!important;
+  color:#f8f6f1!important;
+  transition:background-color .3s ease,border-color .3s ease,box-shadow .3s ease,color .3s ease!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Live format"] button[aria-pressed="true"],
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Main carousel navigation"] button[aria-current="page"] {
+  background:color-mix(in srgb,var(--theme-accent) 42%,var(--theme-surface))!important;
+  border-color:var(--theme-secondary)!important;
+  box-shadow:inset 0 1px color-mix(in srgb,var(--theme-secondary) 25%,transparent),0 0 15px color-mix(in srgb,var(--theme-accent) 25%,transparent)!important;
+}
+@media(prefers-reduced-motion:reduce){
+  html[data-muslim-theme] nav[aria-label="Live format"] button,
+  html[data-muslim-theme] nav[aria-label="Main carousel navigation"] button{transition:none!important}
+}
