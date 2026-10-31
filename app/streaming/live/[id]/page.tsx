@@ -74,7 +74,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
 
         <div style={isLive?{border:0,borderRadius:0,background:"#000"}:{border:"1px solid #1b241f",borderRadius:22,overflow:"hidden",background:"#080d09"}}>
           {isLive ? (
-            <LiveCinemaTheater streamId={stream.id} roomName={stream.room_name} hostId={stream.host_id} hostName={hostName} title={stream.title} hostAvatar={hostAvatar} />
+            <LiveCinemaTheater streamId={stream.id} roomName={stream.room_name} hostId={stream.host_id} hostName={hostName} title={stream.title} hostAvatar={hostAvatar} initialMode={stream.aspect_ratio === "16:9" ? "desktop" : "phone"} />
           ) : !mayViewRecording ? (
             <section style={{padding:40,textAlign:"center"}}><h2>🔒 Recording restricted</h2><p style={{color:"#a6b3a9"}}>Only 1Muslim administrators can access past livestream recordings. Live broadcasts remain available while they are on air.</p><Link href="/streaming" style={{color:"#d6e7b8"}}>Back to Streaming →</Link></section>
           ) : recording && videoUrl ? (
