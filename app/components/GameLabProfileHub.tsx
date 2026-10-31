@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useRef,useState,type ReactNode} from "react";
+import {useEffect,useRef,useState,type ReactNode,type PointerEvent} from "react";
 import {createPortal} from "react-dom";
 import Link from "next/link";
 import {CanvasUmmaGallery} from "./CanvasUmmaGallery";
@@ -14,16 +14,16 @@ export default function GameLabProfileHub({active,profile,avatarHero,renderProfi
  const [heroPosition,setHeroPosition]=useState<{top:number;left:number}|null>(null);
  const [dragOffset,setDragOffset]=useState({x:0,y:0});
  const dragRef=useRef<{pointerId:number,startX:number,startY:number,originX:number,originY:number}|null>(null);
- const onAvatarPointerDown=(event:React.PointerEvent<HTMLDivElement>)=>{
+ const onAvatarPointerDown=(event:PointerEvent<HTMLDivElement>)=>{
   if(event.button!==0||!(event.target as HTMLElement).closest(".profile-avatar-portrait"))return;
   dragRef.current={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,originX:dragOffset.x,originY:dragOffset.y};
   event.currentTarget.setPointerCapture(event.pointerId);
  };
- const onAvatarPointerMove=(event:React.PointerEvent<HTMLDivElement>)=>{
+ const onAvatarPointerMove=(event:PointerEvent<HTMLDivElement>)=>{
   const drag=dragRef.current;if(!drag||drag.pointerId!==event.pointerId)return;
   setDragOffset({x:drag.originX+event.clientX-drag.startX,y:drag.originY+event.clientY-drag.startY});
  };
- const onAvatarPointerEnd=(event:React.PointerEvent<HTMLDivElement>)=>{
+ const onAvatarPointerEnd=(event:PointerEvent<HTMLDivElement>)=>{
   if(dragRef.current?.pointerId!==event.pointerId)return;
   dragRef.current=null;
   if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
