@@ -94,3 +94,8 @@
 :global(html[data-muslim-theme="ruby"]) .postButton,
 :global(html[data-muslim-theme="ruby"]) .confirmDialog button,
 :global(html[data-muslim-theme="ruby"]) .insertVerse{color:#190408}
+
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .notice,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .attachment button{
+ color:var(--rt-text-highlight,#fff);
+}
