@@ -762,3 +762,44 @@ html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
  background-color:color-mix(in srgb,var(--theme-accent) 38%,var(--theme-surface));
  border-color:var(--theme-accent);
 }
+
+
+/* RealTheme2.0 accessibility pass — text is always readable against dark UI.
+   Theme accents decorate labels; body copy stays high contrast. */
+html[data-muslim-theme]{
+ --rt-text-primary:#f7f7f5;
+ --rt-text-secondary:#d8dedb;
+ --rt-text-muted:#b7c1bb;
+ --rt-text-highlight:var(--theme-secondary,#e5cf95);
+}
+html[data-muslim-theme="emerald"]{--rt-text-primary:#f6f7ed;--rt-text-secondary:#d9e7d8;--rt-text-muted:#bfcec0;--rt-text-highlight:#e6d49e}
+html[data-muslim-theme="sapphire"]{--rt-text-primary:#f5f9ff;--rt-text-secondary:#d7e8fa;--rt-text-muted:#b9cde2;--rt-text-highlight:#b9ddff}
+html[data-muslim-theme="ruby"]{--rt-text-primary:#fff8f2;--rt-text-secondary:#f4dfd9;--rt-text-muted:#dfc0b8;--rt-text-highlight:#ffe0a3}
+html[data-muslim-theme="amethyst"]{--rt-text-primary:#fff7ff;--rt-text-secondary:#f0dcf6;--rt-text-muted:#d5bedf;--rt-text-highlight:#f3c4ff}
+html[data-muslim-theme="titanium"]{--rt-text-primary:#fafbfc;--rt-text-secondary:#e0e5eb;--rt-text-muted:#c1cbd5;--rt-text-highlight:#e2ebf5}
+html[data-muslim-theme="obsidian"]{--rt-text-primary:#fff9eb;--rt-text-secondary:#e9dfc9;--rt-text-muted:#d0c4ad;--rt-text-highlight:#f3d28c}
+html[data-muslim-theme] :is(.app,.sidebar,.canvas-native-profile,.canvas-umma-gallery,.omQuranPage,.communityPage,.oneMuslimLiveStage,.homeLiveStage){
+ --text:var(--rt-text-primary);
+ --muted:var(--rt-text-muted);
+}
+html[data-muslim-theme] :is(.canvas-native-profile,.canvas-umma-gallery,.communityPage,.omQuranPage,.oneMuslimLiveStage,.homeLiveStage)
+ :is(input,textarea,select){
+ color:var(--rt-text-primary);
+ caret-color:var(--rt-text-highlight);
+}
+html[data-muslim-theme] :is(.canvas-native-profile,.canvas-umma-gallery,.communityPage,.omQuranPage,.oneMuslimLiveStage,.homeLiveStage)
+ :is(input,textarea)::placeholder{color:var(--rt-text-muted);opacity:1}
+html[data-muslim-theme] :is(.canvas-native-profile,.canvas-umma-gallery,.communityPage,.omQuranPage,.oneMuslimLiveStage,.homeLiveStage)
+ :is(button,[role="tab"]):not([data-preserve-color]){
+ text-shadow:0 1px 2px rgba(0,0,0,.35);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(.community-feed-search,.community-post-card,.canvas-community-map-shell){
+ color:var(--rt-text-primary);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-feed-search input{
+ color:var(--rt-text-primary);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-feed-search input::placeholder{
+ color:var(--rt-text-muted);opacity:1;
+}
+/* Do not recolor Quran Arabic, video captions, or game visuals. */
