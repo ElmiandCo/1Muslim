@@ -32,3 +32,8 @@
 
 ## Additional contrast follow-up
 - Ruby accent `#ed3652` on base `#310b15` measured **4.41:1**, slightly under 4.5:1. Added `#190408` text for Ruby accent buttons in Post composer and Messenger, achieving **4.94:1**. Commits `ef4cfb1f27c1741660bd83ee8aaf23ff7d746a24` and `7407f61ef16d9ff6bc425c4422d7531bb3203e77`.
+
+## Final targeted cleanup
+- `app/realtheme2-bot-a.css` commit `54f905ef457513b85cc6dcb5f1819494d94a48cf`: Live comment backgrounds, full Quran Studio orbit chapter/verse select/input/close/dot, recitation card gradient, and Post outer widget card.
+- `app/components/PostDesignStudio.module.css` commit `2e3e7fdbe9ec69d96f2ca478ad0d466fb7855806`: Post success notice and attachment action text follow theme accent.
+- Vercel preview of `3598bf6` reached READY: https://1muslim-g9cjk4dkj-elmiandco.vercel.app . This predates the later cleanup commits; verify a newer READY preview before final acceptance.
