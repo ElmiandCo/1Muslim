@@ -1,5 +1,5 @@
 "use client";
-import {useState} from "react";
+import {useEffect,useRef,useState} from "react";
 
 export type LiveEffect="off"|"dust"|"stars"|"waves"|"fireflies"|"rain";
 const options:{id:LiveEffect;label:string;icon:string}[]=[
@@ -12,10 +12,12 @@ const options:{id:LiveEffect;label:string;icon:string}[]=[
 ];
 export default function LiveVisualEffects({effect,onChange}:{effect:LiveEffect;onChange:(value:LiveEffect)=>void}){
  const [open,setOpen]=useState(false);
+ const rootRef=useRef<HTMLDivElement>(null);
+ useEffect(()=>{if(!open)return;const dismiss=(event:PointerEvent)=>{if(rootRef.current&&!rootRef.current.contains(event.target as Node))setOpen(false)};const escape=(event:KeyboardEvent)=>{if(event.key==="Escape")setOpen(false)};document.addEventListener("pointerdown",dismiss);document.addEventListener("keydown",escape);return()=>{document.removeEventListener("pointerdown",dismiss);document.removeEventListener("keydown",escape)}},[open]);
  const [tab,setTab]=useState<"filters"|"backgrounds"|"themes"|"ar"|"general">("filters");
  const [intensity,setIntensity]=useState(70);
  const [everOpened,setEverOpened]=useState(false);
- return <div className="lve-root">
+ return <div className="lve-root" ref={rootRef}>
   {effect!=="off"&&<div className={`lve-layer lve-${effect}`} style={{opacity:intensity/100}} aria-hidden="true">
    {Array.from({length:effect==="waves"?5:26},(_,i)=><i key={i} style={{"--i":i,"--x":((i*47+13)%97)+"%","--delay":((i*7)%19)/-3+"s","--dur":(4+(i%7))+"s"} as React.CSSProperties}/>)}
   </div>}
