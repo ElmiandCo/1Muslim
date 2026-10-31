@@ -1589,7 +1589,7 @@ export default function GoLivePage() {
             height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;
           }
           .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"] .studioCameraFrame{
-            top:clamp(86px,13dvh,148px);
+            top:clamp(150px,21dvh,230px);
           }
         }
         @media(min-width:851px){
@@ -1600,7 +1600,7 @@ export default function GoLivePage() {
             height:100%!important;min-height:0!important;max-height:none!important;
           }
           .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"] .studioCameraFrame{
-            top:clamp(90px,12dvh,160px);
+            top:clamp(110px,15dvh,190px);
           }
         }
         .goLive .layout>.panel:first-child>.preview .voiceAvatarStage{
