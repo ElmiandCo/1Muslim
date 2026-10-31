@@ -113,6 +113,48 @@ export default function GoLivePage() {
   const [live, setLive] = useState(false);
   const [connectingLive,setConnectingLive] = useState(false);
   const [liveSeconds,setLiveSeconds] = useState(0);
+  const [launchCountdown,setLaunchCountdown]=useState<number|null>(null);
+  const [launchVisual,setLaunchVisual]=useState(false);
+  const [launchPressed,setLaunchPressed]=useState(false);
+  const launchTimerRef=useRef<ReturnType<typeof setInterval>|null>(null);
+  const launchAudioRef=useRef<AudioContext|null>(null);
+  const launchPendingRef=useRef(false);
+  useEffect(()=>()=>{if(launchTimerRef.current)clearInterval(launchTimerRef.current);void launchAudioRef.current?.close().catch(()=>{})},[]);
+  const playLaunchZoom=()=>{
+    try{
+      const context=new AudioContext();launchAudioRef.current=context;
+      const osc=context.createOscillator(),gain=context.createGain(),filter=context.createBiquadFilter();
+      osc.type="sine";filter.type="lowpass";filter.frequency.setValueAtTime(1400,context.currentTime);
+      osc.frequency.setValueAtTime(190,context.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(780,context.currentTime+.42);
+      gain.gain.setValueAtTime(.0001,context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.11,context.currentTime+.08);
+      gain.gain.exponentialRampToValueAtTime(.0001,context.currentTime+.58);
+      osc.connect(filter);filter.connect(gain);gain.connect(context.destination);
+      osc.start();osc.stop(context.currentTime+.6);
+      osc.onended=()=>{void context.close().catch(()=>{});if(launchAudioRef.current===context)launchAudioRef.current=null};
+    }catch{/* WebAudio may be unavailable or blocked. Broadcast remains functional. */}
+  };
+  const launchBroadcast=()=>{
+    if(launchPendingRef.current||live||connectingLive||saving)return;
+    if(!cameraReady){void startPreview();return;}
+    launchPendingRef.current=true;
+    setLaunchPressed(true);setLaunchVisual(true);playLaunchZoom();
+    setLaunchCountdown(3);
+    let remaining=3;
+    launchTimerRef.current=setInterval(()=>{
+      remaining-=1;
+      if(remaining>0){setLaunchCountdown(remaining);return;}
+      if(launchTimerRef.current){clearInterval(launchTimerRef.current);launchTimerRef.current=null;}
+      setLaunchCountdown(null);
+      setLaunchPressed(false);
+      void startLive(false);
+    },1000);
+  };
+  useEffect(()=>{
+    if(live){launchPendingRef.current=false;setLaunchVisual(false);}
+    else if(!connectingLive&&launchPendingRef.current&&launchCountdown===null){launchPendingRef.current=false;setLaunchVisual(false);}
+  },[live,connectingLive,launchCountdown]);
   useEffect(()=>{
     if(!live||!broadcastStartedAt){setLiveSeconds(0);return;}
     const tick=()=>setLiveSeconds(Math.max(0,Math.floor((Date.now()-new Date(broadcastStartedAt).getTime())/1000)));
@@ -1084,6 +1126,21 @@ export default function GoLivePage() {
           .goLive .layout>.panel:first-child>.preview.studioTransform::after,
           .goLive .layout>.panel:first-child>.preview.studioTransform>video{transition:none!important;animation:none!important}
         }
+
+        /* Launch choreography: centered translucent button, disappearing selector, soft stage-wide light. */
+        .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioActions{pointer-events:none!important;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:10px!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioActions>*{pointer-events:auto}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioModes{width:min(100%,540px)!important;transition:opacity .85s ease,transform .85s cubic-bezier(.22,1,.36,1),filter .85s ease,visibility .85s ease!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .studioLaunchActive .newStudioModes{opacity:0!important;transform:translateY(25px) scale(.95)!important;filter:blur(7px)!important;visibility:hidden!important;pointer-events:none!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioGo{position:relative!important;align-self:center!important;width:min(48%,240px)!important;min-width:155px!important;min-height:46px!important;opacity:.3!important;border:1px solid #baffdd!important;background:linear-gradient(100deg,#07815d,#14bc86)!important;box-shadow:0 0 18px #3cfdab20!important;transition:opacity .35s ease,transform .45s cubic-bezier(.22,1,.36,1),box-shadow .5s ease,filter .5s ease!important;pointer-events:auto!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioGo:hover,.goLive .layout>.panel:first-child>.preview.studioTransform .newStudioGo:focus-visible,.goLive .layout>.panel:first-child>.preview.studioTransform .newStudioGo:active,.goLive .layout>.panel:first-child>.preview.studioTransform .newStudioGo.launchPressed{opacity:1!important;transform:scale(1.055)!important;box-shadow:0 0 28px #4affb5bb,0 0 80px #7cfdd34d!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .studioLaunchActive .newStudioGo{opacity:1!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .studioLaunchComplete .newStudioGo{opacity:0!important;transform:scale(1.18)!important;pointer-events:none!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .studioLaunchActive .newStudioHint{opacity:0!important;pointer-events:none!important}
+        .studioLaunchFlash{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 72%,#a6ffe269,#4effa51a 38%,transparent 80%);mix-blend-mode:screen;transition:opacity .8s ease}
+        .studioLaunchFlashOn{animation:studioLaunchIllumination 1.5s cubic-bezier(.22,1,.36,1) both}
+        @keyframes studioLaunchIllumination{0%{opacity:0;transform:scale(.6)}22%{opacity:.9;transform:scale(1.02)}70%{opacity:.35;transform:scale(1.1)}100%{opacity:0;transform:scale(1.2)}}
+        @media(prefers-reduced-motion:reduce){.studioLaunchFlashOn{animation:none}.goLive .layout>.panel:first-child>.preview.studioTransform .newStudioActions *{transition:none!important}}
         .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
         .brand{display:flex;gap:9px;align-items:center;font-weight:850}.mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#101811;border:1px solid #354237;color:#d6e7b8}.back{color:#98a49d;text-decoration:none;font-size:12px}
         .shell{max-width:1120px;margin:auto;padding:30px 18px 70px}.heading{margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#829b87;font-weight:850}.heading h1{font-size:42px;letter-spacing:-.06em;margin:8px 0}.heading p{color:#849087;font-size:13px;margin:0}
@@ -1221,6 +1278,7 @@ export default function GoLivePage() {
                 </div>
                 <div className="voiceAvatarLabel"><strong>{voiceName}</strong><span>{micOn?"● Microphone active":"○ Microphone muted"}</span></div>
               </div>
+              <div className={`studioLaunchFlash ${launchVisual?"studioLaunchFlashOn":""}`} aria-hidden="true" />
               <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
               {live&&liveStreamIdRef.current&&<LiveLightOverlay streamId={liveStreamIdRef.current} host />}
 
@@ -1230,13 +1288,13 @@ export default function GoLivePage() {
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
               {live && <span className="live" aria-label="You are live">● YOU’RE LIVE · {liveClock} · {roomRef.current?.state==="connected"?"Connected":"Reconnecting"} · {micOn?"🎙 Mic on":"🔇 Muted"}</span>}{live && <button type="button" onClick={()=>setViewerRosterOpen(true)} aria-label="Show live viewers" title="View audience" style={{position:"absolute",left:12,bottom:64,zIndex:13,padding:"12px 16px",borderRadius:18,background:"rgba(5,10,20,.80)",border:viewerIncrease?"2px solid #39ee8d":"1px solid rgba(255,255,255,.35)",boxShadow:viewerIncrease?"0 0 24px rgba(57,238,141,.48)":"0 8px 25px #0008",color:viewerIncrease?"#4cff9c":"white",transition:"color .3s,border .3s,box-shadow .3s",cursor:"pointer",textAlign:"center"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1.5}}>👁 LIVE VIEWERS · TAP TO SEE</div><div style={{fontSize:"clamp(26px,5vw,40px)",fontWeight:900,lineHeight:1.15,fontVariantNumeric:"tabular-nums"}}>{viewers.toLocaleString()}</div><div style={{fontSize:11,opacity:.85}}>WATCHING NOW {viewerIncrease?"↑":""}</div></button>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && false && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
-            <div className="newStudioActions" aria-label="Broadcast controls">
+            <div className={`newStudioActions ${launchVisual||live?"studioLaunchActive":""} ${live?"studioLaunchComplete":""}`} aria-label="Broadcast controls">
               <div className="newStudioModes" role="group" aria-label="Live format">
                 <button type="button" aria-pressed={studioMode==="desktop"} className={studioMode==="desktop"?"selected":""} onClick={()=>selectStudioMode("desktop")}><StudioGlyph kind="desktop"/>Desktop</button>
                 <button type="button" aria-pressed={studioMode==="phone"} className={studioMode==="phone"?"selected":""} onClick={()=>selectStudioMode("phone")}><StudioGlyph kind="phone"/>Phone</button>
                 <button type="button" aria-pressed={studioMode==="voice"} className={studioMode==="voice"?"selected":""} onClick={()=>selectStudioMode("voice")}><StudioGlyph kind="voice"/>Voice</button>
               </div>
-              {!live && <button type="button" data-go-live-start className="newStudioGo" disabled={saving||connectingLive} onClick={()=>cameraReady?void startLive(false):void startPreview()}>{connectingLive?"Connecting…":cameraReady?"● Go Live":"Enable Camera"}</button>}
+              {!live && <button type="button" data-go-live-start className={`newStudioGo ${launchPressed?"launchPressed":""}`} disabled={saving||connectingLive||launchCountdown!==null} onPointerDown={()=>setLaunchPressed(true)} onPointerUp={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onPointerCancel={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onClick={launchBroadcast}>{launchCountdown!==null?`Going live in ${launchCountdown}…`:connectingLive?"Connecting…":cameraReady?"● Go Live":"Enable Camera"}</button>}
               <div className="newStudioHint">Double-tap camera to flip · Effects on the preview</div>
             </div>
             </div>
