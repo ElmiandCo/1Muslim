@@ -356,3 +356,34 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 4. Run real iPhone Safari and desktop host/viewer/signed-out flows; measure end-to-end latency and 1k/10k fanout, verify audio autoplay fallback and full-screen viewer return scroll.
 5. GoLive category selector currently lacks Games; only actual Games-tagged Lives can appear. A separately approved minimal host category control is needed for first-class game stream creation.
 6. Reconcile branch divergence against latest `main` and Bot A base before merge, preserving all existing UI freezes. **Do not merge/deploy without user approval.**
+
+
+---
+
+## Live Cinema camera/viewer polish — 2026-10-31 (isolated draft PR #214)
+
+- **Base:** GitHub `main` commit `6b3fd144d1ac5981b36dbbd67e72c39115629b66` (checked before editing).
+- **Isolated branch:** `bot/live-cinema-viewer-polish-20261031`.
+- **Draft PR:** https://github.com/ElmiandCo/1Muslim/pull/214 (base `main`); not merged or promoted.
+- **Reviewed before editing:** existing GoLive host track switch and two-second lens sound, `LiveKitViewer`, `LiveChat`, full-screen route, PR #193 and #200, this handoff and Live 2.0 specification. Changes are isolated to Live-related components, helpers, tests and CI.
+
+### Host camera flip
+- Previously `flipCamera` acquired a new browser video track, stopped the old video track and replaced it in the preview MediaStream, but **never replaced the already-published LiveKit sender**. The published video could stop while the room/mic remained connected. This is the concrete source-level cause of camera-flip broadcast loss.
+- New `flipLiveCamera` helper uses the existing `LocalVideoTrack.restartTrack({facingMode,resolution})` for an already-published camera, preserving the same room, camera publication, RTCRtpSender and microphone track. On failure, it best-effort restarts the original facing camera and surfaces an error without disconnecting the room.
+- Pre-live preview has a Safari release-first retry if the second camera cannot be acquired while the first is active, and best-effort preview restoration. Rapid repeated flips are guarded against overlapping requests.
+- Desktop ↔ Phone **host studio** remains geometry-only; no camera restart. The GoLive sound implementation is shared with viewer transitions without changing its envelope.
+
+### Viewer cinematic layout and audio
+- Full-screen live viewer has Desktop/Phone mode buttons. Mode is local display state only: Phone stage fills viewport with `object-fit:cover` (cropped sides); Desktop stage animates to 16:9 with `object-fit:contain`. Two-second width/height/position/border-radius morph; GoLive lens motor sound on the user's mode tap. No new LiveKit room or subscription and no change to transmitted stream.
+- Desktop unused area uses a 160×90 canvas refreshed at most four times/second from the **existing subscribed video element**, enlarged and blurred. It is not a second video/player or network stream; disabled outside Desktop mode and while page hidden.
+- Transparent side audio button is red when playback is unavailable/blocked/muted and green only with connected remote audio and unmuted, successfully playing HTMLMediaElement. Explicit user mute preference persists locally; iOS autoplay failure exposes tap-to-hear. A green indicator cannot prove the host is speaking or device speakers are physically audible.
+- Full-screen chat remains rendered and scrollable with Send/composer and iOS 16px input. `visualViewport` resize/scroll updates a bottom keyboard offset, safe-area inset remains honored, and guest controls hide while typing to free space. Viewer video stays full-bleed in Phone mode.
+- Embedded/For You player is not given the full-screen mode controls. Existing other site pages and host layout are unchanged.
+
+### Verification and release gates
+- Focused unit tests: `scripts/live-cinema.test.mjs` (view mode, keyboard offset, playback state, published camera track continuity, Safari preview retry and failure restoration).
+- Static integration assertions: `scripts/live-cinema-integration.test.mjs` (host flip never disconnects/unpublishes, viewer mode does not recreate room, single canvas, mobile comment composer, accessibility and audio state).
+- PR CI runs both suites, TypeScript validation and Next.js build; Vercel preview builds automatically. **Final results must be recorded below only after the latest commit completes.**
+- **Unverified and blocking merge:** real iPhone Safari front↔rear flipping during active Live; two-device host/viewer microphone continuity and video; repeat flips under poor Wi-Fi; recording behavior after capture restart; browser keyboard and Send-button usability; actual audible sound effects; green/red indicator and autoplay permission; p50/p95 switch and viewer morph latency. Static/CI success does not prove runtime acceptance.
+- **Safety:** no production merge/deployment, Supabase migration, LiveKit webhook/config or secret changes.
+
