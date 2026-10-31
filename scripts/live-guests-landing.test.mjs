@@ -20,6 +20,7 @@ test("landing audio player shows the actual guest orbit and subscribes to audio"
  assert.match(source,/<LiveGuestsStage mode="audio"/);
  assert.match(source,/RoomEvent\.TrackSubscribed/);
  assert.match(source,/guestOnStageRef\.current/);
+ assert.match(source,/hostMicActive=\{hostMicActive\}/);
 });
 
 test("landing video preview keeps host camera separate from guest camera tiles",()=>{
@@ -73,5 +74,6 @@ test("approved guest hears remote LiveKit audio without duplicate viewer monitor
  assert.match(video,/guestOnStageRef\.current/);
  assert.match(audio,/guestOnStageRef\.current/);
  assert.match(viewer,/priorGuestMuteRef/);
+ assert.match(viewer,/hostMicActive=\{hostMicActive\}/);
  assert.match(viewer,/disabled=\{guestOnStage\}/);
 });
