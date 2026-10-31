@@ -4,7 +4,7 @@ import {Room,RoomEvent,Track,VideoQuality} from "livekit-client";
 import {createClient} from "../../utils/supabase/client";
 import LiveGuestsStage,{useLiveGuestRoster} from "../../components/LiveGuestsStage";
 
-/** Silent, noninteractive thumbnail player: safe to render inside homepage links. */
+/** Host+guest landing preview; playback audio is opt-in and guest controls stay outside the video node. */
 export default function LiveHomePreview({roomName,hostId}:{roomName:string;hostId?:string|null}){
  const video=useRef<HTMLVideoElement>(null);
  const roomRef=useRef<Room|null>(null);
@@ -101,12 +101,12 @@ export default function LiveHomePreview({roomName,hostId}:{roomName:string;hostI
   audioRef.current?.querySelectorAll("audio").forEach(node=>{node.muted=!next||guestOnStageRef.current;if(next&&!guestOnStageRef.current)void node.play().catch(()=>{})});
  };
  // Do not tear down a healthy LiveKit room just because the host has not published video.
- return <span style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:0,overflow:"hidden",borderRadius:12}}>
+ return <div style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:0,overflow:"hidden",borderRadius:12}}>
   <LiveGuestsStage mode="video" guests={guests} hostName={host.name} hostAvatar={host.avatar}>
    <video ref={video} autoPlay muted playsInline aria-label="Host live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:0,objectFit:"cover",objectPosition:"center center",background:"transparent",opacity:ready?1:0}}/>
    {!ready&&<span style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{failure?"Video unavailable · Open live to retry":"Waiting for host video…"}</span>}
   </LiveGuestsStage>
   <div ref={audioRef} style={{display:"none"}}/>
   <button type="button" onClick={toggleAudio} aria-label={audioEnabled?"Mute live preview":"Hear live preview"} style={{position:"absolute",bottom:8,left:8,zIndex:8,padding:"6px 10px",borderRadius:18,border:"1px solid #ffffff55",background:"#061b16dd",color:"#fff",fontSize:11,cursor:"pointer"}}>{guestOnStage?"🎙️ On stage · monitoring muted":audioEnabled?"🔇 Mute preview":"🔊 Hear Live"}</button>
- </span>;
+ </div>;
 }
