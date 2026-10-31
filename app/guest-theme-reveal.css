@@ -1,8 +1,23 @@
 /* Guest-only reveal: dim covers palette swap; halo blooms as the new palette becomes visible. */
 .guestThemeReveal{position:fixed;inset:0;z-index:9999;pointer-events:none;isolation:isolate;overflow:hidden}
-.guestThemeRevealDim{position:absolute;inset:0;background:#020408;animation:guestRevealDim 2.5s cubic-bezier(.42,0,.2,1) both}
-.guestThemeRevealHalo{position:absolute;inset:-18%;opacity:0;background:radial-gradient(ellipse 58% 46% at 50% 48%,rgba(var(--guest-reveal-halo-rgb,91,192,255),.28),rgba(var(--guest-reveal-halo-rgb,91,192,255),.10) 40%,transparent 75%);mix-blend-mode:screen;filter:blur(24px);animation:guestRevealHalo 2.5s cubic-bezier(.2,.7,.2,1) both;will-change:opacity,transform}
-@keyframes guestRevealDim{0%{opacity:0}42%{opacity:.95}55%{opacity:.95}100%{opacity:0}}
-@keyframes guestRevealHalo{0%,45%{opacity:0;transform:scale(.94)}77%{opacity:1;transform:scale(1.025)}100%{opacity:0;transform:scale(1.08)}}
-html[data-guest-theme-tour="true"]{--guest-theme-transition:background-color 1.2s cubic-bezier(.22,1,.36,1),border-color 1.2s cubic-bezier(.22,1,.36,1),color 1.2s cubic-bezier(.22,1,.36,1),box-shadow 1.2s cubic-bezier(.22,1,.36,1)}
+.guestThemeRevealDim{position:absolute;inset:0;background:#020408;animation:guestRevealDim 4.8s cubic-bezier(.42,0,.2,1) both}
+.guestThemeRevealHalo{position:absolute;inset:-18%;opacity:0;background:radial-gradient(ellipse 58% 46% at 50% 48%,rgba(var(--guest-reveal-halo-rgb,91,192,255),.28),rgba(var(--guest-reveal-halo-rgb,91,192,255),.10) 40%,transparent 75%);mix-blend-mode:screen;filter:blur(24px);animation:guestRevealHalo 4.8s cubic-bezier(.2,.7,.2,1) both;will-change:opacity,transform}
+@keyframes guestRevealDim{0%{opacity:0}43%{opacity:.68}54%{opacity:.68}100%{opacity:0}}
+@keyframes guestRevealHalo{0%,45%{opacity:0;transform:scale(.94)}76%{opacity:.8;transform:scale(1.025)}100%{opacity:0;transform:scale(1.08)}}
+html[data-guest-theme-tour="true"]{--guest-theme-transition:background-color 4.6s cubic-bezier(.22,1,.36,1),border-color 1.2s cubic-bezier(.22,1,.36,1),color 1.2s cubic-bezier(.22,1,.36,1),box-shadow 1.2s cubic-bezier(.22,1,.36,1)}
 @media(prefers-reduced-motion:reduce){.guestThemeReveal{display:none!important}.guestThemeRevealDim,.guestThemeRevealHalo{animation:none!important}}
+
+/* The guest tour morphs the underlying controls as a crossfade, not a snap.
+   Native nav geometry and interactions remain untouched. */
+html[data-guest-theme-tour="true"] .control,
+html[data-guest-theme-tour="true"] .control button,
+html[data-guest-theme-tour="true"] .control a,
+html[data-guest-theme-tour="true"] .control [class*="nav"],
+html[data-guest-theme-tour="true"] .control [class*="Nav"],
+html[data-guest-theme-tour="true"] .control [class*="surface"],
+html[data-guest-theme-tour="true"] .control [class*="widget"]{
+ transition-property:background,background-color,border-color,color,box-shadow,filter!important;
+ transition-duration:4.6s!important;
+ transition-timing-function:cubic-bezier(.45,0,.2,1)!important;
+}
+@media(prefers-reduced-motion:reduce){html[data-guest-theme-tour="true"] .control,html[data-guest-theme-tour="true"] .control button{transition:none!important}}
