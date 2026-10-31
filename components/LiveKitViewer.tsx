@@ -37,6 +37,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   // If autoplay is blocked, expose a clear one-tap recovery control.
   const [muted, setMuted] = useState(false);
   const mutedRef = useRef(false);
+  const [audioNeedsGesture, setAudioNeedsGesture] = useState(false);
   const [guestOnStage,setGuestOnStage]=useState(false);
   const priorGuestMuteRef=useRef<boolean|null>(null);
   useEffect(()=>{
@@ -59,7 +60,6 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
     window.addEventListener("1muslim:guest-stage",onStage);
     return()=>window.removeEventListener("1muslim:guest-stage",onStage);
   },[roomName]);
-  const [audioNeedsGesture, setAudioNeedsGesture] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
