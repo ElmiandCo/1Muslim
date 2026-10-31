@@ -1,7 +1,8 @@
 -- LiveGuests1.0: atomic host approval and separate video/audio seat caps.
 -- Additive migration. Apply in staging before enabling guest API routes.
 alter table public.live_guest_requests
-  add column if not exists approved_at timestamptz;
+  add column if not exists approved_at timestamptz,
+  add column if not exists host_muted boolean not null default false;
 create index if not exists live_guest_requests_roster_idx
   on public.live_guest_requests(stream_id, status, approved_at, created_at);
 
@@ -36,7 +37,7 @@ begin
     values (p_stream, v_user, p_mode, 'pending')
   on conflict (stream_id, user_id) do update
     set mode = excluded.mode, status = 'pending',
-        approved_at = null, created_at = now()
+        approved_at = null, host_muted = false, created_at = now()
     where public.live_guest_requests.status <> 'approved';
 end;
 $$;
@@ -88,7 +89,7 @@ begin
       raise exception 'Guest stage is full (% seats)', v_limit using errcode = '23514';
     end if;
     update public.live_guest_requests
-      set status = 'approved', approved_at = now() where id = p_request;
+      set status = 'approved', approved_at = now(), host_muted = false where id = p_request;
   elsif p_status = 'rejected' then
     if v_current_status <> 'pending' then
       raise exception 'Only pending requests can be declined' using errcode = '22023';
@@ -99,7 +100,7 @@ begin
     if v_current_status not in ('approved','pending') then
       raise exception 'Guest is not on stage or waiting' using errcode = '22023';
     end if;
-    update public.live_guest_requests set status = 'removed', approved_at = null
+    update public.live_guest_requests set status = 'removed', approved_at = null, host_muted = false
       where id = p_request;
   end if;
 end;
@@ -150,3 +151,36 @@ revoke all on function public.set_live_guest_stream_mode(uuid,text) from public,
 grant execute on function public.request_live_guest(uuid,text) to authenticated;
 grant execute on function public.moderate_live_guest(uuid,text) to authenticated;
 grant execute on function public.set_live_guest_stream_mode(uuid,text) to service_role;
+
+-- Host microphone moderation is persisted and checked during token issuance.
+create or replace function public.set_live_guest_host_mute(
+  p_request uuid, p_muted boolean
+) returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_stream uuid;
+  v_host uuid;
+  v_status text;
+  v_request_status text;
+begin
+  if auth.uid() is null or p_muted is null then
+    raise exception 'Invalid mute request' using errcode = '42501';
+  end if;
+  select stream_id into v_stream from public.live_guest_requests where id = p_request;
+  if v_stream is null then
+    raise exception 'Guest request unavailable' using errcode = '42501';
+  end if;
+  select host_id, status into v_host, v_status
+    from public.live_streams where id = v_stream for update;
+  if v_host is distinct from auth.uid() or v_status <> 'live' then
+    raise exception 'Host access required' using errcode = '42501';
+  end if;
+  select status into v_request_status from public.live_guest_requests
+    where id = p_request and stream_id = v_stream for update;
+  if v_request_status is distinct from 'approved' then
+    raise exception 'Guest is not on stage' using errcode = '22023';
+  end if;
+  update public.live_guest_requests set host_muted = p_muted where id = p_request;
+end;
+$$;
+revoke all on function public.set_live_guest_host_mute(uuid,boolean) from public,anon;
+grant execute on function public.set_live_guest_host_mute(uuid,boolean) to authenticated;
