@@ -1502,42 +1502,80 @@ export default function GoLivePage() {
         @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 
-        /* Single authoritative layout for the three camera modes. Never translate media by 50%. */
+        /* Cinema stage: one persistent <video> and MediaStreamTrack. The FRAME
+           morphs while the IMAGE independently zooms/tilts inside its clip.
+           Never remount the video or animate its opacity on mode changes. */
         .goLive .layout>.panel:first-child>.preview{
           position:relative!important;display:block!important;overflow:hidden!important;
           width:100%!important;max-width:none!important;max-height:none!important;
-          height:100%!important; /* Full panel height: the header and bottom controls overlay Phone video. */
-          min-height:0!important;aspect-ratio:auto!important;container-type:inline-size;
+          height:100%!important;min-height:0!important;aspect-ratio:auto!important;
+          container-type:inline-size;
         }
-        .goLive .layout>.panel:first-child>.preview>video,
-        .goLive .layout>.panel:first-child>.preview>.placeholder{
-          position:absolute!important;inset:auto!important;top:12px!important;left:0!important;right:auto!important;
-          width:100%!important;height:min(56.25cqw,calc(100% - 170px))!important;
-          max-width:none!important;max-height:none!important;aspect-ratio:auto!important;object-fit:cover!important;
-          margin:0!important;border-radius:12px!important;
-          transform:none!important;transform-origin:center center!important;
-          transition:top 2s cubic-bezier(.22,1,.36,1),left 2s cubic-bezier(.22,1,.36,1),
-            width 2s cubic-bezier(.22,1,.36,1),height 2s cubic-bezier(.22,1,.36,1),
-            border-radius 2s ease,opacity .65s ease!important;
+        .goLive .layout>.panel:first-child>.preview .studioCameraFrame{
+          position:absolute;z-index:1;top:clamp(56px,8dvh,105px);left:0;
+          width:100%;height:min(56.25cqw,calc(100% - 165px));
+          overflow:hidden;border-radius:16px;opacity:1;pointer-events:none;
+          background:#07100c;rotate:-.55deg;translate:0 0;
+          box-shadow:0 22px 65px #0008,0 0 0 1px #d2b77c50;
+          transition:top 2s cubic-bezier(.22,1,.36,1),
+            left 2s cubic-bezier(.22,1,.36,1),
+            width 2s cubic-bezier(.22,1,.36,1),
+            height 2s cubic-bezier(.22,1,.36,1),
+            border-radius 2s cubic-bezier(.22,1,.36,1),
+            rotate 2s cubic-bezier(.22,1,.36,1),
+            opacity .4s ease,box-shadow 2s ease!important;
+          will-change:top,width,height,rotate;
         }
-        .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"]>video,
-        .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"]>.placeholder{
-          top:0!important;left:0!important;right:0!important;bottom:0!important;
-          width:100%!important;height:100%!important;aspect-ratio:auto!important;
-          border-radius:0!important;object-fit:cover!important;animation:none!important;
+        .goLive .layout>.panel:first-child>.preview .studioCameraFrame>video,
+        .goLive .layout>.panel:first-child>.preview .studioCameraFrame>.placeholder{
+          position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+          max-width:none!important;max-height:none!important;object-fit:cover!important;
+          object-position:center center!important;border-radius:0!important;margin:0!important;
+          /* Independent longhands preserve frontCamera's existing scaleX(-1) mirror. */
+          scale:1.025;rotate:.55deg;
+          transition:scale 2s cubic-bezier(.19,1,.22,1),
+            rotate 2s cubic-bezier(.22,1,.36,1),
+            object-position 2s ease!important;
+          animation:none!important;filter:none!important;
+          backface-visibility:hidden;
         }
-        .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"]>video,
-        .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"]>.placeholder{
-          top:12px!important;left:0!important;width:100%!important;
-          height:min(56.25cqw,calc(100% - 170px))!important;aspect-ratio:auto!important;
-          animation:studioDesktopHover 5s ease-in-out infinite!important;
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"] .studioCameraFrame{
+          top:clamp(56px,8dvh,105px);left:0;width:100%;
+          height:min(56.25cqw,calc(100% - 165px));border-radius:16px;
+          rotate:-.55deg;animation:studioDesktopCinemaFloat 5.5s ease-in-out infinite;
         }
-        @keyframes studioDesktopHover{0%,100%{translate:0 0}50%{translate:0 5px}}
-        .goLive .layout>.panel:first-child>.preview[data-studio-mode="voice"]>video,
-        .goLive .layout>.panel:first-child>.preview[data-studio-mode="voice"]>.placeholder{
-          top:14px!important;left:calc(50% - min(76vw,340px,40dvh)/2)!important;
-          width:min(76vw,340px,40dvh)!important;height:min(76vw,340px,40dvh)!important;
-          border-radius:24px!important;opacity:0!important;pointer-events:none!important;animation:none!important;
+        @keyframes studioDesktopCinemaFloat{
+          0%,100%{translate:0 -6px}
+          50%{translate:0 10px}
+        }
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"] .studioCameraFrame{
+          top:0;left:0;width:100%;height:100%;border-radius:0;
+          rotate:0deg;box-shadow:none;animation:none;
+        }
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"] .studioCameraFrame>video,
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"] .studioCameraFrame>.placeholder{
+          scale:1.13;rotate:0deg;object-position:50% 48%;
+        }
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="voice"] .studioCameraFrame{
+          top:14px;left:calc(50% - min(76vw,340px,40dvh)/2);
+          width:min(76vw,340px,40dvh);height:min(76vw,340px,40dvh);
+          border-radius:24px;opacity:0;rotate:0deg;animation:none;
+        }
+        /* On actual phones the camera must cover the ENTIRE viewport, including
+           under the fixed footer/buttons and the safe-area inset. */
+        @media(max-width:850px){
+          .goLive .shell,.goLive .layout,.goLive .layout>.panel:first-child,
+          .goLive .layout>.panel:first-child>.preview{
+            height:100dvh!important;min-height:100dvh!important;
+          }
+          .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"] .studioCameraFrame{
+            top:0!important;left:0!important;width:100%!important;height:100dvh!important;
+            bottom:auto!important;border-radius:0!important;
+          }
+          .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"] .studioCameraFrame{
+            top:clamp(72px,11dvh,130px);
+            height:min(56.25cqw,calc(100% - 180px));
+          }
         }
         .goLive .layout>.panel:first-child>.preview .voiceAvatarStage{
           position:absolute!important;inset:auto!important;top:14px!important;left:50%!important;right:auto!important;
@@ -1549,12 +1587,12 @@ export default function GoLivePage() {
         .goLive .layout>.panel:first-child>.preview .voiceAvatarStageActive{
           transform:translateX(-50%) scale(1)!important;
         }
-        /* Avoid overlay-induced black frames and mirror flips on iPhone. */
+        /* Keep the SAME camera node visible throughout morph; no opacity blackout. */
         .goLive .preview.studioMorphing::before{display:none!important}
-        .goLive .layout>.panel:first-child>.preview.studioMorphing>video{animation:none!important;filter:none!important}
         @media(prefers-reduced-motion:reduce){
-          .goLive .layout>.panel:first-child>.preview>video,
-          .goLive .layout>.panel:first-child>.preview>.placeholder,
+          .goLive .layout>.panel:first-child>.preview .studioCameraFrame,
+          .goLive .layout>.panel:first-child>.preview .studioCameraFrame>video,
+          .goLive .layout>.panel:first-child>.preview .studioCameraFrame>.placeholder,
           .goLive .layout>.panel:first-child>.preview .voiceAvatarStage{
             transition:none!important;animation:none!important;
           }
@@ -1578,7 +1616,9 @@ export default function GoLivePage() {
         <div className="layout">
           <section className="panel">
             <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} data-studio-mode={studioMode} className={`preview studioTransform ${studioMorphing?"studioMorphing":""} format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"} ${studioMode==="voice"?"studioVoiceMode":""}`}>
-              {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
+              <div className="studioCameraFrame" aria-hidden={studioMode==="voice"}>
+                {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
+              </div>
               <div className={`voiceAvatarStage ${studioMode==="voice"?"voiceAvatarStageActive":""}`} aria-hidden={studioMode!=="voice"}>
                 <div className="voiceBackdropOrbs"><i/><i/><i/></div>
                 <div className="voiceAvatarMotion" style={{["--voice-energy" as string]:voiceEnergy} as React.CSSProperties}>
