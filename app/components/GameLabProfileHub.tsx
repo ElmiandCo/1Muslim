@@ -5,7 +5,7 @@ import {CanvasUmmaGallery} from "./CanvasUmmaGallery";
 
 const tabs=["The Umma","My Profile"] as const;
 type Tab=typeof tabs[number];
-export default function GameLabProfileHub({active,profile,renderProfileSection}:{active:boolean;profile?:ReactNode;renderProfileSection?:(section:"Avatars"|"Background"|"Badges"|"Settings")=>ReactNode}){
+export default function GameLabProfileHub({active,profile,avatarHero,renderProfileSection}:{active:boolean;profile?:ReactNode;avatarHero?:ReactNode;renderProfileSection?:(section:"Avatars"|"Background"|"Badges"|"Settings")=>ReactNode}){
  const [tab,setTab]=useState<Tab>("The Umma"); const [settingsOpen,setSettingsOpen]=useState(false);
  const mirrorRef=useRef<HTMLDivElement>(null);
  return <section aria-label="Profile workspace" style={{height:"100%",maxHeight:"100%",minHeight:0,width:"100%",minWidth:0,display:"flex",flexDirection:"column",boxSizing:"border-box",color:"#f7f0da",background:"transparent",overflow:"visible",position:"relative"}}>
@@ -16,8 +16,9 @@ export default function GameLabProfileHub({active,profile,renderProfileSection}:
      {tabs.map(name=><button key={name} role="tab" type="button" aria-selected={tab===name&&!settingsOpen} onClick={()=>{setTab(name);setSettingsOpen(false);}} style={{minHeight:76,width:29,padding:"7px 3px",fontSize:10,writingMode:"vertical-rl",textOrientation:"mixed",border:0,borderLeft:tab===name&&!settingsOpen?"3px solid var(--theme-secondary,#e8cb83)":"3px solid transparent",background:"transparent",color:"var(--theme-foreground,#fff3d4)",fontWeight:tab===name&&!settingsOpen?700:500,cursor:"pointer"}}>{name}</button>)}
     </div>
    </div>
-   <div style={{position:"relative",flex:"1 1 auto",minHeight:0,display:"flex"}}>
-   <div ref={mirrorRef} role="tabpanel" aria-label={tab} className="canvas-umma-vertical-gallery" data-profile-mirror-scroll style={{flex:"1 1 auto",height:"100%",minHeight:0,maxHeight:"100%",width:"100%",boxSizing:"border-box",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",background:"color-mix(in srgb,var(--theme-base,#101114) 7%,transparent)",border:"1px solid color-mix(in srgb,var(--theme-secondary,#d8c38e) 20%,transparent)",borderRadius:14,padding:"16px 0 30px 34px",overscrollBehaviorY:"contain"}}>
+   <div className="profile-shared-stage" style={{position:"relative",flex:"1 1 auto",minHeight:0,display:"flex"}}>
+   <div className="profile-shared-avatar-overlay">{avatarHero}</div>
+   <div ref={mirrorRef} role="tabpanel" aria-label={tab} className="canvas-umma-vertical-gallery profile-with-shared-avatar" data-profile-mirror-scroll style={{flex:"1 1 auto",height:"100%",minHeight:0,maxHeight:"100%",width:"100%",boxSizing:"border-box",overflowY:"auto",overflowX:"hidden",touchAction:"pan-y",WebkitOverflowScrolling:"touch",background:"color-mix(in srgb,var(--theme-base,#101114) 7%,transparent)",border:"1px solid color-mix(in srgb,var(--theme-secondary,#d8c38e) 20%,transparent)",borderRadius:14,padding:"16px 0 30px 34px",overscrollBehaviorY:"contain"}}>
     {tab==="The Umma"?<CanvasUmmaGallery active={active} embedded/>:settingsOpen&&renderProfileSection?renderProfileSection("Settings"):<div className="profile-scroll-content-expanded" style={{display:"flex",flexDirection:"column",gap:0}}><div style={{flex:"0 0 auto",position:"relative"}}>{profile??<p>Sign in to see your profile.</p>}</div><footer aria-label="End of Profile section" style={{flexShrink:0,marginTop:30,padding:"0 0 16px",textAlign:"center",fontSize:12,letterSpacing:".12em",opacity:.75,pointerEvents:"none"}}>— 1Muslim —</footer></div>}
    </div>
 
