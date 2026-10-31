@@ -299,7 +299,8 @@ export default function GoLivePage() {
   const playCountdownTick=(beat:2|1)=>{
     try{
       const context=launchAudioRef.current;
-      if(!context||context.state==="closed")return;\n      if(context.state==="suspended")void context.resume().catch(()=>{});
+      if(!context||context.state==="closed")return;
+      if(context.state==="suspended")void context.resume().catch(()=>{});
       const now=context.currentTime;
       const osc=context.createOscillator(),gain=context.createGain();
       osc.type="sine";
