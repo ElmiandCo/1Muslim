@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { AccessToken, TrackSource } from "livekit-server-sdk";
 import { createClient } from "../../../../utils/supabase/server";
+import { guestLimitForAspectRatio, guestMayPublishCamera, guestMayPublishMicrophone } from "../../../../lib/live-guest-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -87,11 +88,10 @@ export async function POST(request: Request) {
     const publishSources = role === "companion"
       ? [TrackSource.SCREEN_SHARE]
       : role === "guest"
-        ? guestMuted
-          ? audioOnly || guestMode === "pfp" ? [] : [TrackSource.CAMERA]
-          : audioOnly || guestMode === "pfp"
-            ? [TrackSource.MICROPHONE]
-            : [TrackSource.MICROPHONE, TrackSource.CAMERA]
+        ? [
+          ...(guestMayPublishMicrophone(guestMuted) ? [TrackSource.MICROPHONE] : []),
+          ...(guestMayPublishCamera(liveStream.aspect_ratio, guestMode ?? "pfp") ? [TrackSource.CAMERA] : []),
+        ]
         : undefined;
 
     const token = new AccessToken(apiKey, apiSecret, {
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
       url: livekitUrl,
       role,
       mode: audioOnly ? "audio" : "video",
-      maxGuests: audioOnly ? 11 : 3,
+      maxGuests: guestLimitForAspectRatio(liveStream.aspect_ratio),
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("LiveKit token error", error);
