@@ -51,6 +51,7 @@ export default function GoLivePage() {
   const [visualEffect,setVisualEffect] = useState<LiveEffect>("off");
   const lastPreviewTapRef=useRef(0);
   const [studioMode,setStudioMode]=useState<"desktop"|"phone"|"voice">("phone");
+  const [micOn, setMicOn] = useState(true);
   const [voiceAvatar,setVoiceAvatar]=useState<string|null>(null);
   const [voiceName,setVoiceName]=useState("1Muslim Creator");
   const [voiceEnergy,setVoiceEnergy]=useState(0);
@@ -166,7 +167,6 @@ export default function GoLivePage() {
   const [recording, setRecording] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
-  const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [autoCameraPreview, setAutoCameraPreview] = useState(true);
   const autoPreviewAttempted = useRef(false);
