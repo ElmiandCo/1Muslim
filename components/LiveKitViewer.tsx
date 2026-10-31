@@ -111,7 +111,9 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         if(next.aspect_ratio)setIsAudioBroadcast(next.aspect_ratio==="1:1");
       }).subscribe();
     const timer=window.setInterval(()=>void check(),2000);
-    return()=>{alive=false;hostEndSignalRef.current=()=>{};window.clearInterval(timer);void db.removeChannel(channel);};
+    const onResume=()=>{if(document.visibilityState==="visible")void check();};
+    document.addEventListener("visibilitychange",onResume);
+    return()=>{alive=false;hostEndSignalRef.current=()=>{};window.clearInterval(timer);document.removeEventListener("visibilitychange",onResume);void db.removeChannel(channel);};
   },[streamId,embedded,router]);
 
   useEffect(() => {
