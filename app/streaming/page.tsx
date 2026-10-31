@@ -109,6 +109,8 @@ export default function StreamingPage() {
   const liveTouchStart=useRef<{x:number;y:number}|null>(null);
   const rankedLives=useMemo(()=>[...liveStreams].sort((a,b)=>(b.viewer_count||0)-(a.viewer_count||0)),[liveStreams]);
   const currentLive=rankedLives[Math.min(activeLiveIndex,Math.max(0,rankedLives.length-1))];
+  const playingLiveRef=useRef<LiveStream|null>(null);
+  useEffect(()=>{playingLiveRef.current=currentLive??null},[currentLive]);
   const stepLive=(direction:number)=>setActiveLiveIndex(index=>rankedLives.length?(index+direction+rankedLives.length)%rankedLives.length:0);
   const [admin, setAdmin] = useState(false);
   const [adminVideos, setAdminVideos] = useState<Video[]>([]);
@@ -133,23 +135,25 @@ export default function StreamingPage() {
         profileMap = Object.fromEntries((profiles ?? []).map(profile => [profile.id, profile]));
       }
       if (!active) return;
-      setLiveStreams(previous => {
-        const next = rows.map(row => ({
-          ...row,
-          host_gender: profileMap[row.host_id]?.gender ?? null,
-          host_avatar_url: profileMap[row.host_id]?.avatar_url ?? null
-        }));
-        // Keep a currently playing stream through a temporary host disconnect.
-        const selected = [...previous].sort((a,b)=>(b.viewer_count||0)-(a.viewer_count||0))[activeLiveIndex];
-        if (selected && discovery.presence[selected.id]?.state === "RECONNECTING" && !next.some(row=>row.id===selected.id)) {
-          next.push(selected);
-        }
-        return next;
+      const next = rows.map(row => ({
+        ...row,
+        host_gender: profileMap[row.host_id]?.gender ?? null,
+        host_avatar_url: profileMap[row.host_id]?.avatar_url ?? null
+      }));
+      const selected = playingLiveRef.current;
+      if (selected && discovery.presence[selected.id]?.state === "RECONNECTING" && !next.some(row=>row.id===selected.id)) {
+        next.push(selected);
+      }
+      setLiveStreams(next);
+      const ranked = [...next].sort((a,b)=>(b.viewer_count||0)-(a.viewer_count||0));
+      setActiveLiveIndex(current => {
+        const index = selected ? ranked.findIndex(row=>row.id===selected.id) : -1;
+        return index>=0 ? index : Math.min(current,Math.max(0,ranked.length-1));
       });
     };
     void loadProfiles();
     return () => { active = false; };
-  }, [supabase, discovery.lives, discovery.presence, activeLiveIndex]);
+  }, [supabase, discovery.lives, discovery.presence]);
 
   useEffect(() => {
     const loadRecordedLives = async () => {
