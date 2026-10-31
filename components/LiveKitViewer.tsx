@@ -211,6 +211,13 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       <style jsx>{`
       .omLiveVideoStage{position:relative;width:100%;height:100%;overflow:hidden;background:#000}
       .omLiveVideoStage video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+      .omLiveTheater .omLiveVideoStage{background:#050b0b}
+      .omLiveTheater .omLiveVideoStage video{object-fit:cover!important;background:transparent}
+      .omLiveTheater .omLiveVideoStage[data-screen="yes"] .omScreenVideo{object-fit:contain!important;background:#030707}
+      .omLiveTheater .omLiveImmersiveViewer{height:100%!important;min-height:100%!important;aspect-ratio:auto!important}
+      .omLiveTheater .omViewerExit{z-index:30}
+      .omLiveTheater .omViewerTapCounter{top:calc(env(safe-area-inset-top) + 65px)}
+      .omLiveTheater .omViewerExit{top:calc(env(safe-area-inset-top) + 14px)}
       .omLiveVideoStage[data-screen="yes"] .omScreenVideo{z-index:1}
       .omLiveVideoStage[data-screen="yes"] .omCameraVideo{position:absolute;inset:auto 12px 70px auto;width:27%;height:30%;max-height:210px;border:2px solid #d6e7b8;border-radius:14px;z-index:2;box-shadow:0 8px 28px #000b;background:#0b1510}
       .omLiveVideoStage[data-screen="yes"][data-layout="split"]{display:grid;grid-template-columns:minmax(0,3fr) minmax(145px,1fr);gap:5px}
@@ -224,7 +231,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       .omViewerCountPulse{animation:omViewerCountGlow 1.7s ease-out!important}
       @keyframes omViewerHeartFloat{from{opacity:1;transform:translate(-50%,-50%) scale(.6)}to{opacity:0;transform:translate(-50%,-155%) scale(1.6)}}
       @keyframes omViewerCountGlow{0%,100%{box-shadow:0 0 0 transparent;color:#fff}30%{box-shadow:0 0 24px #bd8dff,0 0 38px #6ee7e3;color:#e5c4ff}60%{box-shadow:0 0 22px #85e9ff;color:#c7fff8}}
-      @media(max-width:700px){.omLiveImmersiveViewer{height:100dvh!important;min-height:100dvh!important;aspect-ratio:auto!important}.omLiveImmersiveViewer video{width:100%!important;height:100%!important;object-fit:contain!important}.omLiveVideoStage[data-screen="yes"][data-layout="split"]{grid-template-columns:1fr;grid-template-rows:minmax(0,3fr) minmax(100px,1fr)}.omLiveVideoStage[data-screen="yes"][data-layout="split"] .omScreenVideo{grid-column:1;grid-row:1}.omLiveVideoStage[data-screen="yes"][data-layout="split"] .omCameraVideo{grid-column:1;grid-row:2}.omLiveImmersiveViewer .omViewerExit{top:calc(env(safe-area-inset-top) + 12px)}}
+      @media(max-width:700px){.omLiveImmersiveViewer{height:100dvh!important;min-height:100dvh!important;aspect-ratio:auto!important}.omLiveImmersiveViewer video{width:100%!important;height:100%!important;object-fit:contain!important}.omLiveTheater .omLiveImmersiveViewer video:not(.omScreenVideo){object-fit:cover!important}.omLiveVideoStage[data-screen="yes"][data-layout="split"]{grid-template-columns:1fr;grid-template-rows:minmax(0,3fr) minmax(100px,1fr)}.omLiveVideoStage[data-screen="yes"][data-layout="split"] .omScreenVideo{grid-column:1;grid-row:1}.omLiveVideoStage[data-screen="yes"][data-layout="split"] .omCameraVideo{grid-column:1;grid-row:2}.omLiveImmersiveViewer .omViewerExit{top:calc(env(safe-area-inset-top) + 12px)}}
       @media(prefers-reduced-motion:reduce){.omViewerTapBurst,.omViewerCountPulse{animation:none!important}}
       .omHostEndedNotice{position:absolute;z-index:50;top:15%;left:50%;transform:translateX(-50%);width:min(88%,380px);padding:20px 18px;text-align:center;color:#f6f4e9;background:#0a2925ed;border:1px solid #edcf8a9c;border-radius:23px;box-shadow:0 16px 60px #0009;backdrop-filter:blur(16px);display:grid;gap:10px;animation:omHostEndIn .45s ease-out both}.omHostEndedNotice span{font-size:10px;letter-spacing:.2em;color:#ecd19a}.omHostEndedNotice strong{font-size:19px}.omHostEndedNotice small{color:#bbd0c6}.omHostEndedNotice button{padding:10px;border-radius:99px;background:#edd39e;color:#103126;border:0;font-weight:800;cursor:pointer}@keyframes omHostEndIn{from{opacity:0;transform:translate(-50%,28px)}to{opacity:1;transform:translate(-50%,0)}}@media(prefers-reduced-motion:reduce){.omHostEndedNotice{animation:none}}
       `}</style>

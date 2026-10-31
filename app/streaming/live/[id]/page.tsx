@@ -20,8 +20,15 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
 
   if (!stream) return (
     <main style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}>
-      {!isLive && <><SiteNav /><FirstVisitGuide area="watch-live"/></>}
-      <style>{`\n        .omLiveTheater{position:fixed;inset:0;width:100vw;height:100dvh;background:#000;overflow:hidden;z-index:1000;isolation:isolate}\n        .omLiveTheater>.omLiveImmersiveViewer{height:100%!important;aspect-ratio:auto!important}\n        .omLiveTheater video{height:100%!important;width:100%!important;object-fit:cover!important}\n        .omLiveTheaterInfo{position:absolute;top:calc(env(safe-area-inset-top) + 16px);left:70px;right:110px;display:flex;align-items:center;gap:8px;color:#fff;font-size:12px;text-shadow:0 1px 8px #000;pointer-events:none;z-index:20;white-space:nowrap;overflow:hidden}\n        .omLiveTheaterInfo strong{overflow:hidden;text-overflow:ellipsis}\n        .omLiveTheaterBadge{font-size:10px;font-weight:900;padding:6px 9px;border-radius:999px;background:#aa2039;flex:none}\n        .omLiveTheaterChat{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 12px);left:12px;width:min(78vw,390px);height:min(36dvh,300px);z-index:21;pointer-events:auto}\n        .omLiveTheaterChat .liveChat{height:100%;background:transparent}\n        .omLiveTheaterGuests{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom) + 38px);z-index:22;color:#fff}\n        .omLiveTheaterGuests summary{list-style:none;cursor:pointer;padding:10px 12px;border-radius:999px;background:#09221dbb;border:1px solid #a4e7d16b;backdrop-filter:blur(16px);font-size:12px}\n        .omLiveTheaterGuests summary::-webkit-details-marker{display:none}\n        .omLiveTheaterGuestPanel{position:absolute;bottom:48px;right:0;width:min(90vw,390px);max-height:45dvh;overflow:auto;border-radius:18px;background:#081a17ef;border:1px solid #a4e7d14d;padding:10px;backdrop-filter:blur(20px)}\n        @media(min-width:701px){.omLiveTheaterChat{height:280px;width:370px}.omLiveTheaterGuests{bottom:32px}}\n      `}</style>
+      <SiteNav /><FirstVisitGuide area="watch-live"/>
+      <style>{`\n        .omLiveTheater{position:fixed;inset:0;width:100vw;height:100dvh;background:#000;overflow:hidden;z-index:1000;isolation:isolate}\n        .omLiveTheater>.omLiveImmersiveViewer{height:100%!important;aspect-ratio:auto!important}\n        .omLiveTheater video{height:100%!important;width:100%!important;object-fit:cover!important}
+        .omLiveTheater .omLiveImmersiveViewer{height:100%!important;min-height:100%!important;aspect-ratio:auto!important}
+        .omLiveTheater .omLiveVideoStage video{object-fit:cover!important}
+        .omLiveTheater .omLiveVideoStage .omScreenVideo{object-fit:contain!important}
+        .omLiveTheater .omViewerExit{top:calc(env(safe-area-inset-top) + 12px);z-index:30}\n        .omLiveTheaterInfo{position:absolute;top:calc(env(safe-area-inset-top) + 16px);left:70px;right:110px;display:flex;align-items:center;gap:8px;color:#fff;font-size:12px;text-shadow:0 1px 8px #000;pointer-events:none;z-index:20;white-space:nowrap;overflow:hidden}\n        .omLiveTheaterInfo strong{overflow:hidden;text-overflow:ellipsis}
+        .omLiveTheaterAvatar{width:35px;height:35px;object-fit:cover;border-radius:50%;border:1px solid #91ffe2;flex:none}
+        .omLiveTheaterIdentity{display:flex;flex-direction:column;gap:2px;min-width:0}.omLiveTheaterIdentity small{opacity:.8;overflow:hidden;text-overflow:ellipsis}
+        .omLiveTheaterChat{mask-image:linear-gradient(to bottom,transparent 0%,black 18%);-webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 18%)}\n        .omLiveTheaterBadge{font-size:10px;font-weight:900;padding:6px 9px;border-radius:999px;background:#aa2039;flex:none}\n        .omLiveTheaterChat{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 12px);left:12px;width:min(78vw,390px);height:min(36dvh,300px);z-index:21;pointer-events:auto}\n        .omLiveTheaterChat .liveChat{height:100%;background:transparent}\n        .omLiveTheaterGuests{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom) + 38px);z-index:22;color:#fff}\n        .omLiveTheaterGuests summary{list-style:none;cursor:pointer;padding:10px 12px;border-radius:999px;background:#09221dbb;border:1px solid #a4e7d16b;backdrop-filter:blur(16px);font-size:12px}\n        .omLiveTheaterGuests summary::-webkit-details-marker{display:none}\n        .omLiveTheaterGuestPanel{position:absolute;bottom:48px;right:0;width:min(90vw,390px);max-height:45dvh;overflow:auto;border-radius:18px;background:#081a17ef;border:1px solid #a4e7d14d;padding:10px;backdrop-filter:blur(20px)}\n        @media(min-width:701px){.omLiveTheaterChat{height:280px;width:370px}.omLiveTheaterGuests{bottom:32px}}\n      `}</style>
       <style>{`
         @media(max-width:700px){
           .omLiveViewerFullscreen{width:100%!important;max-width:none!important;margin:0!important;padding:0 0 85px!important}
@@ -50,12 +57,15 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
   const { data: recording } = !isLive && mayViewRecording && stream.recording_id
     ? await supabase.from("live_recordings").select("id,title,category,video_path,mime_type,duration_seconds,views,likes,comments_count,created_at,thumbnail_path,visibility").eq("id", stream.recording_id).maybeSingle()
     : { data: null };
+  const { data: hostProfile } = isLive ? await supabase.from("profiles").select("username,display_name,avatar_url").eq("id",stream.host_id).maybeSingle() : { data: null };
+  const hostName = hostProfile?.display_name || hostProfile?.username || "1Muslim Creator";
+  const hostAvatar = hostProfile?.avatar_url;
   const videoUrl = recording ? supabase.storage.from("live-recordings").getPublicUrl(recording.video_path).data.publicUrl : null;
   const posterUrl = recording?.thumbnail_path ? supabase.storage.from("live-recordings").getPublicUrl(recording.thumbnail_path).data.publicUrl : null;
 
   return (
     <main style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}>
-      <SiteNav /><FirstVisitGuide area="watch-live"/>
+      {!isLive && <><SiteNav /><FirstVisitGuide area="watch-live"/></>}
       <div className="omLiveViewerFullscreen" style={isLive?{maxWidth:"none",margin:0,padding:0}:{maxWidth:1100,margin:"0 auto",padding:"30px 18px 70px"}}>
         {!isLive && <div style={{marginBottom:16}}>
           <span style={{fontSize:10,letterSpacing:".15em",color:"#829b87",fontWeight:850}}>{isLive ? "1MUSLIM LIVE" : "1MUSLIM REPLAY"}</span>
@@ -68,8 +78,9 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
             <section className="omLiveTheater" aria-label="Immersive live broadcast">
               <LiveKitViewer roomName={stream.room_name} streamId={stream.id} />
               <div className="omLiveTheaterInfo">
+                {hostAvatar && <img src={hostAvatar} alt="" className="omLiveTheaterAvatar" />}
+                <div className="omLiveTheaterIdentity"><strong>{hostName}</strong><small>{stream.title}</small></div>
                 <span className="omLiveTheaterBadge">● LIVE</span>
-                <strong>{stream.title}</strong>
               </div>
               <div className="omLiveTheaterChat"><LiveChat streamId={stream.id} hostId={stream.host_id} overlay /></div>
               <details className="omLiveTheaterGuests">
