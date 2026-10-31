@@ -1664,6 +1664,20 @@ export default function GoLivePage() {
           padding:4px 7px;border:1px solid #ffffff35;border-radius:999px;
           color:#e8f6ec;background:#09180f99;pointer-events:none;
         }
+        /* Counter arrives on the same Live-connected frame as playLiveConnectedPop(). */
+        @keyframes liveHeaderCounterPop{
+          0%{opacity:0;scale:.72}
+          55%{opacity:1;scale:1.13}
+          78%{scale:.96}
+          100%{opacity:1;scale:1}
+        }
+        .goLive .immersiveHeader .liveHeaderViewers{
+          transform-origin:center;
+          animation:liveHeaderCounterPop .42s cubic-bezier(.2,.8,.2,1) both;
+        }
+        @media(prefers-reduced-motion:reduce){
+          .goLive .immersiveHeader .liveHeaderViewers{animation:none}
+        }
         .goLive .immersiveHeader .liveHeaderViewers>span{font-size:9px;opacity:.8}
         @media(max-width:420px){.goLive .immersiveHeader .liveHeaderViewers>span{display:none}}
         /* CSS-only: center Voice avatar within the full stage, not a top-aligned box. */
