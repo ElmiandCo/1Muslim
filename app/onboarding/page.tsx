@@ -252,8 +252,13 @@ export default function OnboardingPage() {
           if (attempt !== attemptRef.current) return;
           setVoiceStatus("recognized");
           setAudioBlob(trimmed);
-          setAudioPreview(URL.createObjectURL(trimmed));
-          setMessage("Shahada recognized. Review your trimmed recording before continuing.");
+          const playbackUrl=URL.createObjectURL(trimmed);
+           setAudioPreview(playbackUrl);
+           // Play the recognized Shahada only after successful verification.
+           const confirmationAudio=new Audio(playbackUrl);
+           confirmationAudio.volume=0.85;
+           void confirmationAudio.play().catch(()=>{});
+          setMessage("Shahada recognized. Your recording is ready; tap HudHud to start over or continue.");
         }).catch((error: Error) => {
           if (attempt !== attemptRef.current) return;
           setVerified(false);
@@ -331,7 +336,7 @@ export default function OnboardingPage() {
     recognizedRef.current = false;
     stopMedia();
     setAudioBlob(null); setAudioPreview(null); setTranscript(""); setVerified(false); setProcessingAudio(false); setMessage("Ready again.");
-    if (consentRef.current && verificationMode === "audio") window.setTimeout(() => void startShahada(), 300);
+    if (consentRef.current && verificationMode === "audio") window.setTimeout(() => void startShahada(), 450);
   };
 
   const finish = async () => {
@@ -411,7 +416,7 @@ export default function OnboardingPage() {
       <p className="lead">Begin with HudHud recording, or choose Arabic, English, or the written declaration below.</p>
       <div className={`voiceCard securityGuardianStage studioVoiceCompact ${listening || recording ? "securityGuardianActive studioVoiceLive" : ""}`}><div className="securityGuardianArt" aria-hidden="true"/><RisingEnergyOrbs tone="blue"/><GuardianParticles active={listening || recording} stream={streamRef.current} /><GuardianParticles active={listening || recording} stream={streamRef.current} foreground /><div className="securityGuardianHeader"><span>HUDHUD / SECURE VOICE</span><span className="securityGuardianStatus">{listening || recording ? "● LISTENING" : "● STANDBY"}</span></div>
         <span className="eyebrow">SECURE · VOICE VERIFICATION</span>
-        <button type="button" className={`hudhudRecord ${listening ? "isListening" : ""} ${verified ? "isVerified" : ""}`} aria-label={listening ? "Restart Shahada recording" : "Enable microphone and begin Shahada"} onClick={() => listening || recording ? resetShahada() : void startShahada()}>
+        <button type="button" className={`hudhudRecord ${listening ? "isListening" : ""} ${verified ? "isVerified" : ""}`} aria-label={listening || recording || verified || processingAudio || voiceStatus==="retry" ? "Start Shahada recording over" : "Enable microphone and begin Shahada"} onClick={() => listening || recording || verified || processingAudio || voiceStatus==="retry" ? resetShahada() : void startShahada()}>
           <span className="hudhudHalo" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{transform:`rotate(${i*30}deg) translateY(-58px)`,animationDelay:`${i*-.18}s`}}/>)}</span>
           <span className="hudhudCore" aria-hidden="true"><img src="/assets/hudhud-logo.PNG" alt="" /></span>
         </button>
