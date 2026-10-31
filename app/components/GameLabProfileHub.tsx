@@ -13,6 +13,7 @@ export default function GameLabProfileHub({active,profile,avatarHero,renderProfi
  const workspaceRef=useRef<HTMLElement>(null);
  const [heroPosition,setHeroPosition]=useState<{top:number;left:number}|null>(null);
  const [dragOffset,setDragOffset]=useState({x:0,y:0});
+ useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem("1muslim:profile-avatar-position")||"null");if(saved&&Number.isFinite(saved.x)&&Number.isFinite(saved.y))setDragOffset({x:saved.x,y:saved.y})}catch{}},[]);
  const dragRef=useRef<{pointerId:number,startX:number,startY:number,originX:number,originY:number}|null>(null);
  const onAvatarPointerDown=(event:PointerEvent<HTMLDivElement>)=>{
   if(event.button!==0||!(event.target as HTMLElement).closest(".profile-avatar-portrait"))return;
@@ -26,6 +27,7 @@ export default function GameLabProfileHub({active,profile,avatarHero,renderProfi
  const onAvatarPointerEnd=(event:PointerEvent<HTMLDivElement>)=>{
   if(dragRef.current?.pointerId!==event.pointerId)return;
   dragRef.current=null;
+  try{localStorage.setItem("1muslim:profile-avatar-position",JSON.stringify(dragOffset))}catch{}
   if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
  };
  useEffect(()=>{
