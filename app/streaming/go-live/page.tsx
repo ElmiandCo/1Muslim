@@ -95,6 +95,7 @@ export default function GoLivePage() {
   };
   const desiredStudioModeRef=useRef<"desktop"|"phone"|"voice">("phone");
   const modeSyncQueueRef=useRef<Promise<void>>(Promise.resolve());
+  const previewCameraAcquiringRef=useRef(false);
   const syncPublishedCameraForMode=async(mode:"desktop"|"phone"|"voice",allowCamera:boolean)=>{
     const room=roomRef.current;
     if(!room||!liveStreamIdRef.current||endRequestedRef.current||desiredStudioModeRef.current!==mode)return;
@@ -152,9 +153,47 @@ export default function GoLivePage() {
     playCameraAdjustSound(mode);
     setStudioMode(mode);
     setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
-    if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
-    // Desktop ↔ Phone is geometry-only: keep the same camera track running.
-    else if(previousMode==="voice"){setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
+    if(mode==="voice"){
+      setCameraOn(false);
+      streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);
+      // A microphone-only preview is still ready when returning to Voice.
+      if(!roomRef.current&&streamRef.current?.getAudioTracks().some(t=>t.readyState==="live"))setCameraReady(true);
+    }
+    // Desktop ↔ Phone is geometry-only: keep the exact camera track and video
+    // element. Only a Voice-only preview needs its FIRST camera acquisition.
+    else if(previousMode==="voice"){
+      setCameraOn(true);
+      const preview=streamRef.current;
+      preview?.getVideoTracks().forEach(t=>t.enabled=true);
+      if(preview&&!roomRef.current&&!preview.getVideoTracks().some(t=>t.readyState==="live")&&!previewCameraAcquiringRef.current){
+        previewCameraAcquiringRef.current=true;
+        setCameraReady(false);
+        void navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facingMode}}}).then(cameraStream=>{
+          const track=cameraStream.getVideoTracks()[0];
+          const current=streamRef.current;
+          if(!track||!current||roomRef.current||desiredStudioModeRef.current==="voice"){
+            cameraStream.getTracks().forEach(t=>t.stop());
+            if(current&&desiredStudioModeRef.current==="voice")setCameraReady(true);
+            return;
+          }
+          current.addTrack(track);
+          rawCameraRef.current=track;
+          refreshCameraCapabilities(track);
+          if(videoRef.current){
+            videoRef.current.srcObject=current;
+            videoRef.current.muted=true;
+            videoRef.current.playsInline=true;
+            void videoRef.current.play().catch(()=>{});
+          }
+          setCameraReady(true);
+        }).catch(err=>{
+          if(desiredStudioModeRef.current!=="voice"){
+            setCameraOn(false);
+            setError(err instanceof Error?err.message:"Could not enable the camera.");
+          }
+        }).finally(()=>{previewCameraAcquiringRef.current=false;});
+      }
+    }
     if(roomRef.current&&liveStreamIdRef.current){
       const streamId=liveStreamIdRef.current;
       // Serialize camera and metadata updates; a slower older request must
@@ -261,6 +300,7 @@ export default function GoLivePage() {
   const launchBroadcast=()=>{
     if(launchPendingRef.current||live||connectingLive||saving)return;
     if(!cameraReady){
+      if(previewCameraAcquiringRef.current){setError("Camera is starting. Please try Go Live in a moment.");return;}
       if(studioMode==="voice"){
         // A single Go Live tap requests microphone permission and launches
         // as soon as audio-only preview becomes ready.
