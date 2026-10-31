@@ -52,7 +52,7 @@ Target: `LiveGuests1.0`. Source: `bot-b/liveguests-responsive-stage-20261031`. P
 **Bot B frontend changes on isolated PR [#209](https://github.com/ElmiandCo/1Muslim/pull/209):**
 - `components/LiveGuestStudio.tsx`: host moderation now calls server endpoint (not direct RPC); removed insecure direct-insert fallback; authenticated requests call `request_live_guest` and show retryable errors; explicit microphone/camera LiveKit track sources; no automatic unmute after host mute; new token on explicit mic rejoin; disconnect/cleanup and host controls. Visible-only 5-second status refresh instead of 2.5-second polling. Host stage copy reflects correct 3-video / 11-audio limits.
 - `components/LiveGuestsStage.tsx`: preserve guest seat order across reconnects; avoid unnecessary rerenders when LiveKit events do not change visible guest state; deduplicate/cancel profile lookups; reuse attached track nodes.
-- `components/LiveGuestsStage.module.css`, `components/LiveKitViewer.tsx`, `app/streaming/go-live/page.tsx`, `app/streaming/live/[id]/page.tsx`: previous responsive host/viewer stages and independent comments. Backend routes from Bot A PR #210 **are not yet merged into Bot B preview**; moderation endpoint will 404 until integration. Keep PR draft.
+- `components/LiveGuestsStage.module.css`, `components/LiveKitViewer.tsx`, `app/streaming/go-live/page.tsx`, `app/streaming/live/[id]/page.tsx`: previous responsive host/viewer stages and independent comments. Bot A backend files have now been **copied into the isolated Bot B branch** for integrated preview testing: moderation/roster routes, token/webhook/mode routes, guest policy, policy tests and bootstrap migration. This is NOT a merge of PR #210 into main or LiveGuests1.0; PRs #209 and #210 overlap, so reconcile/avoid double-merge during review. Keep PR draft until build and real end-to-end tests.
 
 ### Visual reference traceability — no fabricated image mapping
 
@@ -76,9 +76,9 @@ The seven semantic layouts in the README remain the design specification: host s
 | SecureApp guest table/RPC migration and hardened privileges | **PASS** (SQL introspection) |
 | Guest seat constraints, indexes, RLS, function grants | **PASS** (SQL introspection) |
 | Positive authenticated guest-request flow | **PENDING** (no safe active test stream) |
-| Bot B + Bot A API integration | **PENDING** (two unmerged draft PRs) |
+| Bot B + Bot A API integration | **CODE INTEGRATED IN BOT B BRANCH**; Vercel build and live tests pending |
 | LiveKit 0/1/2/3 video and 0/1/6/11 audio real sessions | **PENDING** |
 | iPhone Safari and desktop visual reference comparisons | **PENDING** |
 | Production UI deployment | **NOT AUTHORIZED / NOT DONE** |
 
-**Next handoff:** Integrate PR #210 backend and PR #209 frontend on a non-main branch, confirm migrations already applied to SecureApp (do not blindly reapply), run build/typecheck and multi-device guest request/moderation tests on a safe dedicated stream with real authorized test users, and only then consider preview approval.
+**Next handoff:** Verify the integrated Bot B preview build (backend code copied from Bot A), confirm migrations already applied to SecureApp (do not blindly reapply), run build/typecheck and multi-device guest request/moderation tests on a safe dedicated stream with real authorized test users, reconcile overlapping PRs #209/#210, and only then consider preview approval.
