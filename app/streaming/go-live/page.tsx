@@ -194,7 +194,7 @@ export default function GoLivePage() {
     launchPendingRef.current=true;
     if(studioMode==="voice"){
       setLaunchVisual(true);playLaunchZoom();
-      void startLive(false);
+      void startLive(false).finally(()=>{launchPendingRef.current=false;setLaunchVisual(false)});
       return;
     }
     setLaunchPressed(true);setLaunchVisual(true);playLaunchZoom();
