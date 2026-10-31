@@ -89,3 +89,8 @@
 :global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .verseDialog header button{
  color:var(--rt-text-highlight,#fff);
 }
+
+/* Ruby's bright red accent needs deeper ink for 4.5:1+ normal-size button text. */
+:global(html[data-muslim-theme="ruby"]) .postButton,
+:global(html[data-muslim-theme="ruby"]) .confirmDialog button,
+:global(html[data-muslim-theme="ruby"]) .insertVerse{color:#190408}
