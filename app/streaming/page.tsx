@@ -12,7 +12,11 @@ import LiveKitViewer from "../../components/LiveKitViewer";
 
 type LiveStream = { id: string; title: string; category: string; room_name: string; viewer_count: number; started_at: string; scheduled_end_at: string | null; thumbnail_path: string | null; aspect_ratio: "9:16" | "1:1" | "16:9"; host_id: string; host_gender: string | null; host_avatar_url: string | null };
 
-type RecordedLive = { id:string; title:string; category:string; duration_seconds:number; created_at:string; thumbnail_path:string|null; stream_id:string|null; stream_started_at:string|null; stream_ended_at:string|null; user_id:string; host_name:string; host_avatar_url:string|null; host_gender:string|null; };
+type HubReplay = { id: string; title: string; category: string; durationSeconds: number; recordedAt: string; mediaType: "audio" | "video"; href: string };
+type HubSchedule = { id: string; title: string; category: string; startsAt: string; endsAt: string; hostReady: boolean; href: string };
+type HubSnapshot = { currentLives: Array<{id:string}>; audioRooms: Array<{id:string}>; gameStreams: Array<{id:string}>; pastLives: HubReplay[]; scheduledLives: HubSchedule[] };
+const ALL_STREAMS_SCROLL_KEY = "1muslim:all-streams:scroll";
+
 type Video = {
   id: string;
   title: string;
@@ -101,7 +105,10 @@ export default function StreamingPage() {
   const supabase = useMemo(() => createClient(), []);
   const discovery = useLiveDiscovery();
   const [category, setCategory] = useState("All");
-  const [recordedLives, setRecordedLives] = useState<RecordedLive[]>([]);
+  const [hub, setHub] = useState<HubSnapshot | null>(null);
+  const [hubLoaded, setHubLoaded] = useState(false);
+  const [hubError, setHubError] = useState(false);
+  const [hubRefresh, setHubRefresh] = useState(0);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Video | null>(null);
   const [liveStreams, setLiveStreams] = useState<LiveStream[]>([]);
@@ -155,36 +162,65 @@ export default function StreamingPage() {
     return () => { active = false; };
   }, [supabase, discovery.lives, discovery.presence]);
 
+  // Read the server-verified All Streams hub only on mount, presence changes,
+  // or return to the tab. No fixed short-interval DB polling.
   useEffect(() => {
-    const loadRecordedLives = async () => {
-      const {data:{user}}=await supabase.auth.getUser();
-      if(!user){setRecordedLives([]);return;}
-      const {data:adminRow}=await supabase.from("admin_users").select("user_id").eq("user_id",user.id).maybeSingle();
-      if(!adminRow){setRecordedLives([]);return;}
-      const { data } = await supabase.from("live_recordings").select("id,title,category,duration_seconds,created_at,thumbnail_path,user_id").eq("visibility","public").order("created_at",{ascending:false}).limit(12);
-      const rows = (data ?? []) as Omit<RecordedLive,"stream_id"|"stream_started_at"|"stream_ended_at"|"host_name"|"host_avatar_url"|"host_gender">[];
-      const ids = rows.map(row => row.id);
-      const hostIds = Array.from(new Set(rows.map(row => row.user_id).filter(Boolean)));
-      let profileMap:Record<string,{display_name:string|null;username:string|null;avatar_url:string|null;gender:string|null}>={};
-      if(hostIds.length){
-        const {data:profiles}=await supabase.from("profiles").select("id,display_name,username,avatar_url,gender").in("id",hostIds);
-        profileMap=Object.fromEntries((profiles??[]).map(profile=>[profile.id,profile]));
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch("/api/live-hub", { signal: controller.signal });
+        if (!response.ok) throw new Error("All Streams snapshot unavailable");
+        const data = await response.json() as HubSnapshot;
+        if (controller.signal.aborted) return;
+        setHub(data);
+        setHubError(false);
+      } catch {
+        if (!controller.signal.aborted) setHubError(true);
+      } finally {
+        if (!controller.signal.aborted) setHubLoaded(true);
       }
-      let streamMap:Record<string,string> = {};
-      let streamRows:Array<{id:string;recording_id:string|null;started_at:string|null;ended_at:string|null}> = [];
-      if (ids.length) {
-        const { data: streamData } = await supabase.from("live_streams").select("id,recording_id,started_at,ended_at").in("recording_id",ids);
-        streamRows = (streamData ?? []) as Array<{id:string;recording_id:string|null;started_at:string|null;ended_at:string|null}>;
-        streamMap = Object.fromEntries(streamRows.filter(stream => stream.recording_id).map(stream => [stream.recording_id as string,stream.id]));
-      }
-      setRecordedLives(rows.map(row => {
-        const profile=profileMap[row.user_id];
-        const linked=streamRows.find(stream=>stream.recording_id===row.id);
-        return {...row,stream_id:streamMap[row.id] ?? null,stream_started_at:linked?.started_at??null,stream_ended_at:linked?.ended_at??null,host_name:profile?.display_name||profile?.username||"1Muslim Host",host_avatar_url:profile?.avatar_url??null,host_gender:profile?.gender??null};
-      }));
+    }, 150);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [discovery.lives, discovery.presence, hubRefresh]);
+
+  useEffect(() => {
+    const resume = () => {
+      if (document.visibilityState === "visible") setHubRefresh(value => value + 1);
     };
-    void loadRecordedLives();
-  }, [supabase]);
+    document.addEventListener("visibilitychange", resume);
+    return () => document.removeEventListener("visibilitychange", resume);
+  }, []);
+
+  // Restore the precise All Streams position after exiting the full-screen
+  // viewer; wait for the asynchronous sections to be rendered first.
+  useEffect(() => {
+    if (!hubLoaded || !discovery.ready) return;
+    let saved: string | null = null;
+    try { saved = sessionStorage.getItem(ALL_STREAMS_SCROLL_KEY); } catch { /* unavailable */ }
+    if (!saved) return;
+    const offset = Number(saved);
+    if (!Number.isFinite(offset) || offset < 0) return;
+    const timer = window.setTimeout(() => {
+      window.scrollTo({ top: offset, behavior: "instant" });
+      try { sessionStorage.removeItem(ALL_STREAMS_SCROLL_KEY); } catch { /* unavailable */ }
+    }, 160);
+    return () => window.clearTimeout(timer);
+  }, [hubLoaded, discovery.ready]);
+
+  const rememberHubPosition = () => {
+    try { sessionStorage.setItem(ALL_STREAMS_SCROLL_KEY, String(window.scrollY)); } catch { /* unavailable */ }
+  };
+  const audioRooms = liveStreams.filter(stream => discovery.presence[stream.id]?.state === "READY_AUDIO");
+  const gameStreams = liveStreams.filter(stream => /(?:^|[\\s/_,-])(?:games?|gaming|gameplay|e-?sports?)(?:$|[\\s/_,-])/i.test(stream.category || ""));
+  const renderHubLiveCard = (stream: LiveStream, label: string) => (
+    <Link key={stream.id} href={`/streaming/live/${stream.id}`} onClick={rememberHubPosition} className="liveCard">
+      <div className="liveThumb">
+        <img src={stream.thumbnail_path ? supabase.storage.from("live-recordings").getPublicUrl(stream.thumbnail_path).data.publicUrl : stream.host_avatar_url || "/assets/avatars/default-male.jpg"} alt="" />
+        <span className="liveNow">{label}</span>
+      </div>
+      <div className="liveCardBody"><h3>{stream.title}</h3><p>{stream.category || "Community"}<span className="liveViewer">👥 {stream.viewer_count || 0}</span></p></div>
+    </Link>
+  );
 
   useEffect(() => {
     const loadAdminLibrary = async () => {
@@ -294,23 +330,24 @@ const openAdminEditor = (video?: Video) => {
             {currentLive?<div className="liveOrbitActive" key={currentLive.id}>
               <div className="orbitPlayerMeta"><span className="orbitLiveBadge">● LIVE</span><span>◉ {currentLive.viewer_count||0} watching</span><span className="orbitCount">{activeLiveIndex+1} / {rankedLives.length}</span></div>
               <div className="orbitVideo"><LiveKitViewer key={currentLive.id} roomName={currentLive.room_name} streamId={currentLive.id} embedded /></div>
-              <div className="orbitPlayerFoot"><div><strong>{currentLive.title}</strong><small>{currentLive.category||"Community"} · Live now</small></div><Link href={"/streaming/live/"+currentLive.id}>Join conversation ↗</Link></div>
+              <div className="orbitPlayerFoot"><div><strong>{currentLive.title}</strong><small>{currentLive.category||"Community"} · Live now</small></div><Link href={"/streaming/live/"+currentLive.id} onClick={rememberHubPosition}>Join conversation ↗</Link></div>
             </div>:<div className="liveOrbitStandby"><span className="orbitStandbyIcon" aria-hidden="true">✦</span><small>1MUSLIM LIVE · STANDBY</small><h2>We'll be live soon.</h2><p>Discover upcoming broadcasts or start a gathering.</p><div><Link href="/streaming/scheduled">See upcoming Lives ↗</Link><Link href="/streaming/go-live">Go Live ●</Link></div></div>}
           </div>
           <div className="orbitNavigation"><button type="button" onClick={()=>stepLive(-1)} disabled={rankedLives.length<2} aria-label="Previous live">‹</button><div className="orbitDots">{rankedLives.length>1?rankedLives.map((stream,index)=><button type="button" key={stream.id} className={index===activeLiveIndex?"active":""} onClick={()=>setActiveLiveIndex(index)} aria-label={"Watch live "+(index+1)} aria-current={index===activeLiveIndex?"true":undefined}/>):<span>{rankedLives.length?"You're watching the only live stream":"No streams currently live"}</span>}</div><button type="button" onClick={()=>stepLive(1)} disabled={rankedLives.length<2} aria-label="Next live">›</button></div>
           <div className="orbitShortcuts"><Link href="/streaming/scheduled">◷ Up Next</Link><Link href="/streaming/library">▣ Library</Link><Link href="/videos">▶ Videos</Link><Link href="/streaming/go-live">＋ Create Live</Link></div>
         </section>
-        <div style={{display:"flex",gap:8,margin:"20px 0 4px",flexWrap:"wrap"}}>
-          <Link href="/streaming" className="chip active" style={{textDecoration:"none"}}>● Live Now</Link>
-          <Link href="/streaming/scheduled" className="chip" style={{textDecoration:"none"}}>Scheduled Lives</Link>
-        </div>
+        <nav className="chips" aria-label="All Streams sections" style={{margin:"20px 0 8px",paddingBottom:5}}>
+          <a className="chip active" href="#live-now" style={{textDecoration:"none"}}>● Live Now</a>
+          <a className="chip" href="#audio-rooms" style={{textDecoration:"none"}}>🎙 Audio Rooms</a>
+          <a className="chip" href="#game-streams" style={{textDecoration:"none"}}>🎮 Games</a>
+          <a className="chip" href="#scheduled-lives" style={{textDecoration:"none"}}>◷ Scheduled</a>
+          <a className="chip" href="#past-lives" style={{textDecoration:"none"}}>▶ Past Lives</a>
+        </nav>
+        {hubError && <p role="status" style={{color:"#e8c89c",fontSize:11}}>Some All Streams sections are temporarily unavailable. Live discovery remains active.</p>}
 
-        <section className="liveSection">
-          <div className="liveSectionHead"><div><span className="eyebrow">RECORDED LIVES</span><h2>Previous Lives</h2></div><span className="count">{recordedLives.length} available</span></div>
-          {recordedLives.length ? <div className="liveGrid">{recordedLives.map((recording) => recording.stream_id ? <Link href={`/streaming/live/${recording.stream_id}`} className="liveCard" key={recording.id}><div className="liveThumb"><RecordingThumbnail compact title={recording.title} hostName={recording.host_name} date={new Date(recording.stream_started_at ?? recording.created_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})} durationSeconds={recording.duration_seconds} photoUrl={recording.host_avatar_url} gender={recording.host_gender} customThumbnailUrl={recording.thumbnail_path ? supabase.storage.from("live-recordings").getPublicUrl(recording.thumbnail_path).data.publicUrl : null} /><span className="liveNow" style={{background:"#172119",color:"#d6e7b8"}}>REPLAY</span></div><div className="liveCardBody"><h3>{recording.title}</h3><p>{recording.host_name} · {recording.category}<span className="liveViewer">{formatDuration(recording.duration_seconds)}</span></p>{recording.stream_ended_at&&<p style={{marginTop:6,color:"#9eaa9f"}}>Ended {new Date(recording.stream_ended_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</p>}</div></Link> : null)}</div> : <div className="empty"><strong>No recorded Lives yet.</strong>Finished public Lives will appear here.</div>}
-        </section>
 
-        <section className="liveSection">
+
+        <section className="liveSection" id="live-now">
           <div className="liveSectionHead"><div><span className="eyebrow">LIVE NOW</span><h2>Watch Muslims who are live</h2></div><span className="count">{liveStreams.length} live</span></div>
           {liveStreams.length ? <div className="topicLiveList">
             {Array.from(new Set(liveStreams.map((stream) => stream.category || "Community"))).map((topic) => {
@@ -337,7 +374,7 @@ const openAdminEditor = (video?: Video) => {
                           ? "/assets/avatars/default-female.jpg"
                           : "/assets/avatars/default-male.jpg");
                       return (
-                        <Link href={`/streaming/live/${stream.id}`} className="liveCard" key={stream.id}>
+                        <Link href={`/streaming/live/${stream.id}`} onClick={rememberHubPosition} className="liveCard" key={stream.id}>
                           <div className="liveThumb">
                             <img src={thumbnail} alt="" />
                             <span className="liveNow">● LIVE</span>
@@ -373,6 +410,36 @@ const openAdminEditor = (video?: Video) => {
   </div>
   <ReconnectTrivia mode="waiting" eventKey={`waiting-${liveStreams.length}`} />
 </div>}
+        </section>
+
+        <section className="liveSection" id="audio-rooms">
+          <div className="liveSectionHead"><div><span className="eyebrow">VOICE BROADCASTS</span><h2>Audio Rooms</h2></div><span className="count">{audioRooms.length} live</span></div>
+          {audioRooms.length ? <div className="liveGrid">{audioRooms.map(stream => renderHubLiveCard(stream, "● AUDIO LIVE"))}</div> : <div className="empty"><strong>No Audio Rooms live right now.</strong>Voice-only broadcasts will appear when a host is connected.</div>}
+        </section>
+
+        <section className="liveSection" id="game-streams">
+          <div className="liveSectionHead"><div><span className="eyebrow">LIVE GAMEPLAY</span><h2>Games</h2></div><span className="count">{gameStreams.length} live</span></div>
+          {gameStreams.length ? <div className="liveGrid">{gameStreams.map(stream => renderHubLiveCard(stream, "● GAME LIVE"))}</div> : <div className="empty"><strong>No Games streams live right now.</strong>Only verified gameplay broadcasts appear here.</div>}
+        </section>
+
+        <section className="liveSection" id="scheduled-lives">
+          <div className="liveSectionHead"><div><span className="eyebrow">UP NEXT</span><h2>Scheduled Lives</h2></div><Link className="topicGoLive" href="/streaming/go-live?schedule=1">＋ Schedule Live</Link></div>
+          {hub?.scheduledLives.length ? <div className="liveGrid">{hub.scheduledLives.map(slot => (
+            <Link key={slot.id} href={slot.href} onClick={rememberHubPosition} className="liveCard">
+              <div className="liveThumb"><span className="liveThumbMark">◷</span><span className="liveNow">{slot.hostReady ? "HOST READY" : "UPCOMING"}</span></div>
+              <div className="liveCardBody"><h3>{slot.title}</h3><p>{slot.category} · {new Date(slot.startsAt).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</p></div>
+            </Link>
+          ))}</div> : <div className="empty"><strong>No scheduled Lives to show.</strong><Link href="/streaming/scheduled" className="topLink">Browse upcoming broadcasts →</Link></div>}
+        </section>
+
+        <section className="liveSection" id="past-lives">
+          <div className="liveSectionHead"><div><span className="eyebrow">PUBLIC LIVE ARCHIVE</span><h2>Past Lives</h2></div><span className="count">{hub?.pastLives.length ?? 0} replays</span></div>
+          {hub?.pastLives.length ? <div className="liveGrid">{hub.pastLives.map(recording => (
+            <Link href={recording.href} onClick={rememberHubPosition} className="liveCard" key={recording.id}>
+              <div className="liveThumb"><span className="liveThumbMark">{recording.mediaType === "audio" ? "♫" : "▶"}</span><span className="liveNow">REPLAY</span></div>
+              <div className="liveCardBody"><h3>{recording.title}</h3><p>{recording.category} · {new Date(recording.recordedAt).toLocaleDateString()}<span className="liveViewer">{formatDuration(recording.durationSeconds)}</span></p></div>
+            </Link>
+          ))}</div> : <div className="empty"><strong>No public replays available.</strong>Completed recordings will appear after successful upload.</div>}
         </section>
 
         <div className="controls">
