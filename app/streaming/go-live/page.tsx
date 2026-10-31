@@ -760,11 +760,17 @@ export default function GoLivePage() {
   const startRecording = () => {
     const stream = streamRef.current;
     if (!stream) throw new Error("Camera and microphone must be enabled first.");
-    const mimeType = ["video/mp4","video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"].find((type) => MediaRecorder.isTypeSupported(type));
-    if (!mimeType) throw new Error("This browser cannot record video in a supported format.");
-    chunksRef.current = [];
     const recordingAudio = processedAudioTrackRef.current ?? stream.getAudioTracks()[0];
-    const recordingStream = new MediaStream([stream.getVideoTracks()[0], ...(recordingAudio ? [recordingAudio] : [])]);
+    const videoTrack = studioMode==="voice"?null:stream.getVideoTracks()[0];
+    const tracks=[...(videoTrack?[videoTrack]:[]),...(recordingAudio?[recordingAudio]:[])];
+    if(!tracks.length)throw new Error("No media track available for recording.");
+    const mimeTypes=videoTrack?
+      ["video/mp4","video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"]:
+      ["audio/mp4","audio/webm;codecs=opus","audio/webm"];
+    const mimeType=mimeTypes.find(type=>MediaRecorder.isTypeSupported(type));
+    if(!mimeType)throw new Error("This browser cannot record this Live format.");
+    chunksRef.current = [];
+    const recordingStream = new MediaStream(tracks);
     const recorder = new MediaRecorder(recordingStream, { mimeType });
     recorder.ondataavailable = (event) => { if (event.data.size > 0) chunksRef.current.push(event.data); };
     recorderRef.current = recorder;
