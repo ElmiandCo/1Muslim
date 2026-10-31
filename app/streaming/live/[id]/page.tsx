@@ -20,7 +20,8 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
 
   if (!stream) return (
     <main style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}>
-      <SiteNav /><FirstVisitGuide area="watch-live"/>
+      {!isLive && <><SiteNav /><FirstVisitGuide area="watch-live"/></>}
+      <style>{`\n        .omLiveTheater{position:fixed;inset:0;width:100vw;height:100dvh;background:#000;overflow:hidden;z-index:1000;isolation:isolate}\n        .omLiveTheater>.omLiveImmersiveViewer{height:100%!important;aspect-ratio:auto!important}\n        .omLiveTheater video{height:100%!important;width:100%!important;object-fit:cover!important}\n        .omLiveTheaterInfo{position:absolute;top:calc(env(safe-area-inset-top) + 16px);left:70px;right:110px;display:flex;align-items:center;gap:8px;color:#fff;font-size:12px;text-shadow:0 1px 8px #000;pointer-events:none;z-index:20;white-space:nowrap;overflow:hidden}\n        .omLiveTheaterInfo strong{overflow:hidden;text-overflow:ellipsis}\n        .omLiveTheaterBadge{font-size:10px;font-weight:900;padding:6px 9px;border-radius:999px;background:#aa2039;flex:none}\n        .omLiveTheaterChat{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 12px);left:12px;width:min(78vw,390px);height:min(36dvh,300px);z-index:21;pointer-events:auto}\n        .omLiveTheaterChat .liveChat{height:100%;background:transparent}\n        .omLiveTheaterGuests{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom) + 38px);z-index:22;color:#fff}\n        .omLiveTheaterGuests summary{list-style:none;cursor:pointer;padding:10px 12px;border-radius:999px;background:#09221dbb;border:1px solid #a4e7d16b;backdrop-filter:blur(16px);font-size:12px}\n        .omLiveTheaterGuests summary::-webkit-details-marker{display:none}\n        .omLiveTheaterGuestPanel{position:absolute;bottom:48px;right:0;width:min(90vw,390px);max-height:45dvh;overflow:auto;border-radius:18px;background:#081a17ef;border:1px solid #a4e7d14d;padding:10px;backdrop-filter:blur(20px)}\n        @media(min-width:701px){.omLiveTheaterChat{height:280px;width:370px}.omLiveTheaterGuests{bottom:32px}}\n      `}</style>
       <style>{`
         @media(max-width:700px){
           .omLiveViewerFullscreen{width:100%!important;max-width:none!important;margin:0!important;padding:0 0 85px!important}
@@ -55,23 +56,27 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
   return (
     <main style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}>
       <SiteNav /><FirstVisitGuide area="watch-live"/>
-      <div className="omLiveViewerFullscreen" style={{maxWidth:1100,margin:"0 auto",padding:"30px 18px 70px"}}>
-        <div style={{marginBottom:16}}>
+      <div className="omLiveViewerFullscreen" style={isLive?{maxWidth:"none",margin:0,padding:0}:{maxWidth:1100,margin:"0 auto",padding:"30px 18px 70px"}}>
+        {!isLive && <div style={{marginBottom:16}}>
           <span style={{fontSize:10,letterSpacing:".15em",color:"#829b87",fontWeight:850}}>{isLive ? "1MUSLIM LIVE" : "1MUSLIM REPLAY"}</span>
           <h1 style={{fontSize:"clamp(30px,5vw,52px)",letterSpacing:"-.06em",margin:"8px 0"}}>{stream.title}</h1>
           <p style={{color:"#849087",margin:0}}>{stream.category} · {isLive ? "Started " + new Date(stream.started_at).toLocaleString() : "Ended " + new Date(effectiveEndedAt ?? recording?.created_at ?? stream.started_at).toLocaleString()}</p>{isLive && <div style={{marginTop:10,fontSize:11,color:"#b9c9bc"}}>{stream.visibility === "ashab" ? "🔒 Ashab Live · Companions only" : "🌐 Public Live · All 1Muslim users"}</div>}
-        </div>
+        </div>}
 
-        <div style={{border:"1px solid #1b241f",borderRadius:22,overflow:"hidden",background:"#080d09"}}>
+        <div style={isLive?{border:0,borderRadius:0,background:"#000"}:{border:"1px solid #1b241f",borderRadius:22,overflow:"hidden",background:"#080d09"}}>
           {isLive ? (
-            <>
+            <section className="omLiveTheater" aria-label="Immersive live broadcast">
               <LiveKitViewer roomName={stream.room_name} streamId={stream.id} />
-              <div style={{padding:"0 18px 18px"}}><LiveGuestStudio streamId={stream.id} roomName={stream.room_name} hostId={stream.host_id}/></div>
-              <div style={{padding:18,display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(320px,.65fr)",gap:16}}>
-                <div><strong>🔴 Live now</strong><div style={{fontSize:11,color:"#7e8982",marginTop:5}}>Watch and participate in the conversation.</div><div style={{display:"flex",gap:14,flexWrap:"wrap",marginTop:12}}><Link href="/streaming" style={{color:"#cbd8ce",fontSize:12}}>← All streaming</Link><Link href={"/profile/"+stream.host_id} style={{color:"#d6e7b8",fontSize:12}}>Host profile</Link><Link href={"/messages?to="+stream.host_id} style={{color:"#d6e7b8",fontSize:12}}>💬 Message host</Link></div></div>
-                <LiveChat streamId={stream.id} hostId={stream.host_id} />
+              <div className="omLiveTheaterInfo">
+                <span className="omLiveTheaterBadge">● LIVE</span>
+                <strong>{stream.title}</strong>
               </div>
-            </>
+              <div className="omLiveTheaterChat"><LiveChat streamId={stream.id} hostId={stream.host_id} overlay /></div>
+              <details className="omLiveTheaterGuests">
+                <summary aria-label="Open guest controls">♧ Guests</summary>
+                <div className="omLiveTheaterGuestPanel"><LiveGuestStudio streamId={stream.id} roomName={stream.room_name} hostId={stream.host_id}/></div>
+              </details>
+            </section>
           ) : !mayViewRecording ? (
             <section style={{padding:40,textAlign:"center"}}><h2>🔒 Recording restricted</h2><p style={{color:"#a6b3a9"}}>Only 1Muslim administrators can access past livestream recordings. Live broadcasts remain available while they are on air.</p><Link href="/streaming" style={{color:"#d6e7b8"}}>Back to Streaming →</Link></section>
           ) : recording && videoUrl ? (
