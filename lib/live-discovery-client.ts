@@ -133,7 +133,7 @@ async function refresh() {
   inFlight = true;
   const currentGeneration = generation;
   try {
-    const response = await fetch("/api/live-discovery", { cache: "no-store" });
+    const response = await fetch("/api/live-discovery");
     if (!response.ok) throw new Error("Verified Live snapshot unavailable");
     const payload: { lives?: VerifiedLive[] } = await response.json();
     if (!running || generation !== currentGeneration) return;
