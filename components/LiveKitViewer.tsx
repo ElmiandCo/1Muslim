@@ -239,8 +239,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
         audio.muted = mutedRef.current;
         audio.setAttribute("playsinline", "true");
         audioContainerRef.current.appendChild(audio);
-        void audio.play().then(() => { if (mounted) setAudioNeedsGesture(false); })
-          .catch(() => { if (mounted && !mutedRef.current) setAudioNeedsGesture(true); });
+        void audio.play().then(() => { if (mounted) { setAudioNeedsGesture(false); setAudioPlaying(!mutedRef.current); } })
+          .catch(() => { if (mounted) { setAudioPlaying(false); if (!mutedRef.current) setAudioNeedsGesture(true); } });
         setHasRemoteAudio(true);
         setHostConnecting(false);
         setStatus("LIVE · Audio");
@@ -309,6 +309,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
             if (track.sid) attachedAudioRef.current.delete(track.sid);
             setHasRemoteAudio(attachedAudioRef.current.size>0);
             if(attachedAudioRef.current.size===0){
+              setAudioPlaying(false);
               setAudioNeedsGesture(false);
               voiceAnalyzerCleanupRef.current?.();voiceAnalyzerCleanupRef.current=null;setVoiceEnergy(0);
             }
@@ -329,11 +330,11 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
           if(!mounted||topic!=="live-status"||!hostIdRef.current||participant?.identity!==hostIdRef.current)return;
           try{const message=JSON.parse(new TextDecoder().decode(payload));if(message.type==="live-ended")hostEndSignalRef.current()}catch{}
         });
-        room.on(RoomEvent.Reconnecting, () => {if(mounted){setConnectionActive(false);setStatus("Reconnecting…");setReconnecting(true);setReconnectKey(String(Date.now()));}});
-        room.on(RoomEvent.Reconnected, () => {if(mounted){setConnectionActive(true);setReconnecting(false);setError("");setStatus("Waiting for host…");}});
+        room.on(RoomEvent.Reconnecting, () => {if(mounted){setConnectionActive(false);setAudioPlaying(false);setStatus("Reconnecting…");setReconnecting(true);setReconnectKey(String(Date.now()));}});
+        room.on(RoomEvent.Reconnected, () => {if(mounted){setConnectionActive(true);setAudioPlaying([...attachedAudioRef.current.values()].some(audio=>!audio.muted&&!audio.paused));setReconnecting(false);setError("");setStatus("Waiting for host…");}});
         room.on(RoomEvent.Disconnected, () => {
           if(!mounted||endedOnce.current)return;
-          setConnectionActive(false);setStatus("Reconnecting to Live…");setReconnecting(true);
+          setConnectionActive(false);setAudioPlaying(false);setStatus("Reconnecting to Live…");setReconnecting(true);
           setReconnectKey(String(Date.now()));
           queueRetry(1500);
         });
@@ -387,6 +388,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       roomRef.current = null;
       if (oldRoom) void oldRoom.disconnect();
       attachedAudioRef.current.clear();
+      setAudioPlaying(false);
       voiceAnalyzerCleanupRef.current?.();voiceAnalyzerCleanupRef.current=null;
       if (videoRef.current) videoRef.current.srcObject = null;
       if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
@@ -400,14 +402,16 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
     const next = audioNeedsGesture ? false : !muted;
     setMuted(next);
     mutedRef.current = next;
+    if(next)setAudioPlaying(false);
+    try { window.localStorage.setItem("1muslim:live-audio-enabled",next?"off":"on"); } catch {}
     if(next)setAudioNeedsGesture(false);
     if(!next)void voiceAudioContextRef.current?.resume().catch(()=>{});
     if (audioContainerRef.current) {
       audioContainerRef.current.querySelectorAll("audio").forEach((audio) => {
         audio.muted = next;
         if (!next) void audio.play()
-          .then(() => setAudioNeedsGesture(false))
-          .catch(() => setAudioNeedsGesture(true));
+          .then(() => {setAudioNeedsGesture(false);setAudioPlaying(true);})
+          .catch(() => {setAudioNeedsGesture(true);setAudioPlaying(false);});
       });
     }
   };
