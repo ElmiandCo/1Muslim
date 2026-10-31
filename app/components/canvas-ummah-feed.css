@@ -140,3 +140,30 @@
 .profile-shared-avatar-portal .profile-shared-avatar-hero{width:100%;}
 .profile-shared-avatar-portal .profile-glass-avatar{max-width:100%!important;min-height:205px!important;overflow:visible!important;}
 .profile-shared-avatar-portal .profileAvatar{overflow:visible!important;}
+
+/* Profile hero: centered at 50% of the actual canvas while HudHud morphs the layout. */
+.profile-shared-avatar-portal{
+ width:min(188px,44vw)!important;
+ z-index:2147483000!important;
+ transition:top .12s linear,left .12s linear;
+}
+.profile-shared-avatar-portal .profile-glass-avatar{
+ width:100%!important;
+ max-width:188px!important;
+ min-height:204px!important;
+ padding:12px 9px 20px!important;
+ border:2px solid color-mix(in srgb,var(--theme-secondary,#d8c38e) 85%,white)!important;
+ border-radius:48% 48% 44% 44% / 40% 40% 54% 54%!important;
+ background:color-mix(in srgb,var(--theme-base,#101114) 25%,transparent)!important;
+ box-shadow:0 0 15px color-mix(in srgb,var(--theme-secondary,#d8c38e) 55%,transparent),0 0 38px color-mix(in srgb,var(--theme-secondary,#d8c38e) 22%,transparent),inset 0 0 16px color-mix(in srgb,var(--theme-secondary,#d8c38e) 15%,transparent)!important;
+ animation:profileThemeHalo 5s ease-in-out infinite;
+}
+.profile-shared-avatar-portal .profile-avatar-name-wrap{top:auto!important;bottom:-31px!important;}
+.profile-shared-avatar-portal .profile-glass-avatar>strong{bottom:-49px!important;}
+@keyframes profileThemeHalo{
+ 0%,100%{filter:brightness(1);box-shadow:0 0 13px color-mix(in srgb,var(--theme-secondary,#d8c38e) 45%,transparent),0 0 28px color-mix(in srgb,var(--theme-secondary,#d8c38e) 18%,transparent)}
+ 50%{filter:brightness(1.09);box-shadow:0 0 24px color-mix(in srgb,var(--theme-secondary,#d8c38e) 75%,transparent),0 0 48px color-mix(in srgb,var(--theme-secondary,#d8c38e) 34%,transparent)}
+}
+@media(prefers-reduced-motion:reduce){
+ .profile-shared-avatar-portal,.profile-shared-avatar-portal .profile-glass-avatar{transition:none!important;animation:none!important}
+}
