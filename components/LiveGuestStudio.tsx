@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
-import {Room,Track} from "livekit-client";
+import {Room,RoomEvent,Track} from "livekit-client";
 import {createClient} from "../utils/supabase/client";
 
 type GuestRequest={
@@ -96,7 +96,10 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
         body:JSON.stringify({requestId:id,action}),
       });
       const data=await response.json().catch(()=>({}));
-      if(!response.ok)throw new Error(data.error||"Guest moderation is unavailable.");
+      if(!response.ok){
+        if(data.applied===true)refreshRef.current();
+        throw new Error(data.error||"Guest moderation is unavailable.");
+      }
       refreshRef.current();
     }catch(e){setError(e instanceof Error?e.message:"Guest moderation failed.")}
     finally{setBusy(false)}
@@ -113,6 +116,12 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
       if(!response.ok)throw new Error(data.error||"Guest connection failed.");
       if(data.role!=="guest")throw new Error("Guest permission was not granted.");
       const r=new Room();room.current=r;
+      r.on(RoomEvent.Disconnected,()=>{
+        if(room.current!==r)return;
+        stream.current?.getTracks().forEach(t=>t.stop());
+        stream.current=null;room.current=null;
+        setJoined(false);setMic(false);
+      });
       await r.connect(data.url,data.token);
       const wantsCamera=me.mode==="camera"&&data.mode==="video";
       const wantsMic=!me.host_muted;
