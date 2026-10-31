@@ -226,3 +226,33 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 7. Assess security: service-role-only RPC, public/private visibility, anon subscriptions, database table growth and webhook event retention. Add pruning for webhook event dedupe rows and load tests.
 8. Measure actual p50/p95/p99 event latency. Targets (<1s start, <500ms End Live, 1–2s disconnect notice) are **not guarantees**; silent network loss may exceed 2s.
 9. No merge, no production deployment, no UI changes without explicit approval.
+
+
+---
+
+## Live 2.0 — Bot A continuation / server-side hardening (2026-10-31)
+
+**Scope:** Only webhook backend, SQL migrations, optional server-side cron route, and this handoff. **ZERO UI/CSS/animation/navigation changes.** Work remains isolated on `1MuslimLive2.0`; no merge, production deploy, Supabase migration execution, or LiveKit webhook configuration.
+
+### New Bot A commits (chronological)
+1. `6cef9835b79f8b968b2a17d1d35ba86d81d85175` — stamp LiveKit observation time **before** `listParticipants` remote lookup, so an older slow snapshot cannot overwrite a later snapshot simply because its RPC completes last. Cross-instance clock skew still needs runtime validation.
+2. `369c6ef8442034d1fb0045970daa8859542116b4` — pending initial migration now distinguishes initial `STARTING` (no host/media yet) from genuine `RECONNECTING` after a stream was previously READY; temporary loss of all media after READY is also `RECONNECTING`, never discoverable.
+3. `ba107cd5304c482a14eee0768f644be910559065` — added `20261031055000_live_2_reconciliation_helpers.sql`: service-role-only least-recently-observed candidate RPC (up to 100), plus bounded 7-day webhook dedupe pruning RPC. Requires initial `20261031052500` migration first.
+4. `d706d35ce1dda33d6f5a3e9fb17d3b94636042c1` — optional authenticated shared watchdog endpoint `GET /api/cron/live-presence-reconcile`. It inspects up to 50 active rooms with max 5 concurrent LiveKit queries, applies idempotent state snapshots, and prunes old event IDs. Not scheduled automatically; requires `CRON_SECRET` and explicit scheduling/preview authorization.
+5. `128f0d36c4f52a171dbf089bc886fbb473db86c5` — corrected watchdog helper import from five `../` levels to four. The preceding preview build for `d706d35` failed on that import; the corrected head must be checked independently.
+
+### Bot B coordination / PR #200
+- Bot B's draft PR #200 (`bot-b/live2-discovery-integration-20261031`) is **stacked on `1MuslimLive2.0`**, not merged. At inspection it was 24 commits ahead of the earlier Bot A base. Bot B already changed `lib/live-presence.ts` to ignore muted tracks, and wired client discovery; do **not** overwrite those changes with the older Bot A helper.
+- **Bot B: rebase/merge the updated Bot A base carefully**, reconcile this handoff's append with your own appended PR #200 notes, and verify the new cron route uses the muted-track-aware `summarizeHostTracks` from your branch. Preserve strict NO UI CHANGES.
+- New migrations must run in order on a **nonproduction preview** only after approval; both webhook and watchdog require real environment configuration. Without those, discovery correctly fails closed.
+- The shared watchdog is a **fallback** for missed webhooks, not a <2s detection mechanism. Its 50-room batch and cadence must be load-tested/tuned; no cron schedule has been registered.
+- The existing Supabase stale-stream finalizer runs each minute and may mark a stream ENDED after 75 seconds without host heartbeat; validate its interaction with LiveKit reconnect and watchdog before claiming no false endings.
+- Current `session_id` in the SQL presence table equals stream ID, **not a distinct LiveKit room-generation ID**. Real room recreation/session isolation remains an explicit blocker. Avoid claiming full session-generation protection.
+- Verify `CRON_SECRET` bearer authorization rejects unauthenticated requests and does not log credentials. No provider/database runtime verification was performed.
+
+### Verification and blockers
+- Inspected main's token route: the host LiveKit identity is the Supabase user UUID; viewers/companions have distinct suffixes, matching the webhook host-identity filter.
+- Inspected existing `finalize_stale_live_streams` Supabase cron (once/minute, 75-second stale heartbeat).
+- Vercel preview for `6cef9835` was **READY**; preview for `369c6ef` was **READY**. The intermediate `d706d35` preview **ERROR** was traced to the import path, fixed in `128f0d36`; **check newest head** before calling the final build READY.
+- **NOT verified:** SQL migrations executed, cron route invoked, signed webhook delivery, host/viewer LiveKit runtime, iPhone Safari, 1k/10k subscriber load, or actual p50/p95/p99 latency. No SLA claimed.
+- PR #200 stays **draft/not merge-ready** pending preview SQL + LiveKit configuration, real-device tests, webhook/watchdog race testing, and measured latency. No production changes.
