@@ -42,6 +42,7 @@ let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = nul
 let running = false;
 let connected = false;
 let inFlight = false;
+let inFlightGeneration = -1;
 let refreshQueued = false;
 let generation = 0;
 let retryCount = 0;
@@ -125,9 +126,10 @@ function scheduleFallback() {
 
 async function refresh() {
   if (!running) return;
-  if (inFlight) { refreshQueued = true; return; }
-  inFlight = true;
   const currentGeneration = generation;
+  if (inFlight && inFlightGeneration === currentGeneration) { refreshQueued = true; return; }
+  inFlight = true;
+  inFlightGeneration = currentGeneration;
   try {
     const response = await fetch("/api/live-discovery");
     if (!response.ok) throw new Error("Verified Live snapshot unavailable");
@@ -144,10 +146,12 @@ async function refresh() {
       else if (++snapshotFailures <= 5) scheduleRefresh(Math.min(30000, 2000 * 2 ** (snapshotFailures - 1)));
     }
   } finally {
-    inFlight = false;
-    if (refreshQueued && running && generation === currentGeneration) {
-      refreshQueued = false;
-      scheduleRefresh(100);
+    if (inFlightGeneration === currentGeneration) {
+      inFlight = false;
+      if (refreshQueued && running && generation === currentGeneration) {
+        refreshQueued = false;
+        scheduleRefresh(100);
+      }
     }
   }
 }
@@ -206,6 +210,9 @@ function start() {
   running = true;
   generation += 1;
   retryCount = 0;
+  snapshotFailures = 0;
+  refreshQueued = false;
+  lastRefresh = 0;
   connected = false;
   connectRealtime();
   // Initial request is useful even if Realtime cannot subscribe.
