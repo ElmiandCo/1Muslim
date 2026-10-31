@@ -1,0 +1,12 @@
+/* Live navigation: temporary overhead illumination; selection remains native. */
+.liveSpotlightNav{--spotlight-rgb:235,197,119;font-family:Manrope,ui-sans-serif,system-ui,sans-serif}
+.liveSpotlightNav button{position:relative;isolation:isolate;font-family:inherit;font-weight:500;letter-spacing:-.018em;transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .3s,background-color .3s;overflow:hidden;transform:translateZ(0)}
+.liveSpotlightNav button[aria-pressed="true"],.liveSpotlightNav button[aria-current="page"]{font-weight:600}
+.liveSpotlightNav button:focus-visible{outline:2px solid rgba(var(--spotlight-rgb),.95);outline-offset:2px}
+.liveSpotlightNav button.liveSpotlightPulse{animation:liveSpotlightPress .42s cubic-bezier(.18,.8,.2,1)}
+.liveSpotlightNav button.liveSpotlightPulse::after{content:"";position:absolute;inset:-12% -10%;z-index:1;pointer-events:none;border-radius:inherit;background:radial-gradient(ellipse 48% 75% at 50% -5%,rgba(var(--spotlight-rgb),.65),rgba(var(--spotlight-rgb),.22) 55%,transparent 100%);mix-blend-mode:screen;animation:liveSpotlightBeam 3.5s ease-in-out both}
+.liveSpotlightFormats{min-width:0;overflow:hidden;border-radius:14px;mask-image:linear-gradient(to right,transparent,#000 2%,#000 98%,transparent);-webkit-mask-image:linear-gradient(to right,transparent,#000 2%,#000 98%,transparent)}
+.liveSpotlightFormats button{min-width:0;overflow:hidden;border-radius:12px!important;text-overflow:ellipsis}
+@keyframes liveSpotlightPress{0%{transform:scale(1)}32%{transform:scale(.97)}100%{transform:scale(1)}}
+@keyframes liveSpotlightBeam{0%{opacity:0}17%{opacity:1}72%{opacity:.85}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.liveSpotlightNav button,.liveSpotlightNav button.liveSpotlightPulse{animation:none!important;transition:none!important}.liveSpotlightNav button.liveSpotlightPulse::after{animation:none!important;opacity:0}}
