@@ -73,7 +73,7 @@ export function useLiveGuestRoster(roomRef:RefObject<Room|null>,connected:boolea
     void (async()=>{
       const {data,error}=await createClient().from("profiles").select("id,display_name,username,avatar_url").in("id",missing);
       if(error){for(const id of missing)attemptedProfiles.current.delete(id);return;}
-      if(!active)return;
+      if(!active){for(const id of missing)attemptedProfiles.current.delete(id);return;}
       const next:Record<string,{name:string;avatar:string|null}>={};
       for(const profile of data??[]){
         const avatar=typeof profile.avatar_url==="string"&&profile.avatar_url.startsWith("https://")?profile.avatar_url:null;
