@@ -70,6 +70,7 @@ export default function UnifiedAvatarCarousel({
       </h4>
       <div
         ref={railRef}
+        data-profile-horizontal-gallery="true"
         onScroll={onScroll}
         role="region"
         aria-label="All avatars, swipe horizontally to browse categories"
@@ -77,9 +78,9 @@ export default function UnifiedAvatarCarousel({
         style={{
           display: "flex", alignItems: "stretch", gap: 12,
           width: "100%", minWidth: 0, overflowX: "auto", overflowY: "hidden",
-          scrollSnapType: "x proximity", scrollPaddingInline: 4,
+          scrollSnapType: "none", scrollPaddingInline: 12,
           touchAction: "auto", overscrollBehaviorX: "contain",
-          WebkitOverflowScrolling: "touch", padding: "8px 4px 18px",
+          WebkitOverflowScrolling: "touch", padding: "8px 12px 18px",
           boxSizing: "border-box",
         }}
       >
@@ -106,7 +107,7 @@ export default function UnifiedAvatarCarousel({
                   minHeight: 135, border: "1px solid rgba(226,192,113,.4)",
                   borderRadius: 16, display: "grid", placeContent: "center",
                   background: "rgba(0,25,22,.5)", color: "#d6c08a",
-                  scrollSnapAlign: "start", textAlign: "center",
+                  scrollSnapAlign: "none", textAlign: "center",
                 }}
               >
                 <span style={{ fontSize: 30 }}>✦</span>
@@ -128,9 +129,9 @@ export default function UnifiedAvatarCarousel({
                     minWidth: 0, border: selected ? "2px solid #f5d47a" : "1px solid rgba(221,190,116,.6)",
                     borderRadius: 16, padding: 8,
                     background: "linear-gradient(145deg,rgba(20,70,59,.26),rgba(0,21,20,.2))",
-                    backdropFilter: "blur(8px)", scrollSnapAlign: "start",
+                    backdropFilter: "blur(8px)", scrollSnapAlign: "none",
                     color: "#f5e8c8", display: "grid", justifyItems: "center", gap: 5,
-                    opacity: locked ? .6 : 1,
+                    opacity: 1,
                     transform: selected ? "perspective(450px) rotateY(-5deg) scale(1.03)" : "none",
                     transition: "transform .25s ease",
                   }}
