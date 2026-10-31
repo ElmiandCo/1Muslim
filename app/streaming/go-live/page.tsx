@@ -790,6 +790,15 @@ export default function GoLivePage() {
     }
   };
 
+  // Use available browser network hints as a conservative starting point.
+  // LiveKit adaptiveStream/dynacast continue handling stream adaptation.
+  const chooseNetworkQuality = (): "480p" | "720p" | "1080p" => {
+    const connection = (navigator as Navigator & {connection?: {effectiveType?: string; downlink?: number; saveData?: boolean}}).connection;
+    if (connection?.saveData || connection?.effectiveType === "slow-2g" || connection?.effectiveType === "2g" || connection?.effectiveType === "3g" || (connection?.downlink && connection.downlink < 2)) return "480p";
+    if (connection?.downlink && connection.downlink >= 8 && connection?.effectiveType === "4g") return "1080p";
+    return "720p";
+  };
+
   const setQuality = async (quality: "480p" | "720p" | "1080p") => {
     setVideoQuality(quality);
     const size = qualityMap[quality];
@@ -1099,6 +1108,9 @@ export default function GoLivePage() {
         throw new Error(tokenData.error || "LiveKit could not be started.");
       }
 
+      if (studioMode !== "voice") {
+        try { await setQuality(chooseNetworkQuality()); } catch { /* Keep existing capture if unsupported. */ }
+      }
       const room = new Room({ adaptiveStream: true, dynacast: true });
       pendingRoom = room;
       // Do not leave a phantom live stream visible if LiveKit signalling fails.
@@ -1628,7 +1640,7 @@ export default function GoLivePage() {
 
       `}</style>
 
-      <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong>{!live&&<button type="button" aria-expanded={settingsOpen} aria-controls="prelive-settings" onClick={()=>setSettingsOpen(v=>!v)}><StudioGlyph kind="settings"/><span>{settingsOpen?"Close":"Settings"}</span></button>}</header>
+      <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong></header>
       <div className={settingsOpen?"shell settingsOpen":"shell"}>
         <div className="studioTools">
               {scheduledSlot && <div className="upcomingPrep"><div><span className="eyebrow">UPCOMING LIVE</span><strong>{scheduledSlot.title}</strong><span>{scheduledSlot.category} · {new Date(scheduledSlot.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div><button type="button" className="prepButton" onClick={()=>{setTitle(scheduledSlot.title);setCategory(scheduledSlot.category);setShowScheduler(false);setSaveMessage("Prep mode loaded. Check your title, topic, format, thumbnail, camera and microphone before going live.");}}>{hostCheckedIn ? "✓ Host Checked In" : "Prep for upcoming Live →"}</button></div>}
