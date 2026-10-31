@@ -35,7 +35,7 @@ export default function ProfileThemeSync(){
   applyTheme(palette[0],false);
   const initial=(()=>{try{return localStorage.getItem("1muslim:profile-background")||fallback}catch{return fallback}})();
   const start=performance.now();
-  const settle=(theme:string)=>{if(!active)return;settled=true;window.clearInterval(cycle);applyTheme(theme);setPreview(aliases[theme]||theme);if(settled){window.setTimeout(()=>{if(active){setVisible(false);window.setTimeout(()=>{if(active)setRecognizing(false)},1400)}},Math.max(0,1100-(performance.now()-start)))}};
+  const settle=(theme:string)=>{if(!active)return;const first=!settled;settled=true;window.clearInterval(cycle);applyTheme(theme);setPreview(aliases[theme]||theme);if(first){window.setTimeout(()=>{if(active){setVisible(false);window.setTimeout(()=>{if(active)setRecognizing(false)},1400)}},Math.max(0,1100-(performance.now()-start)))}};
   const db=createClient();
   const refresh=async()=>{
    try{
