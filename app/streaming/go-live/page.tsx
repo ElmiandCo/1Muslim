@@ -210,6 +210,7 @@ export default function GoLivePage() {
     }catch{setVoiceEnergy(0)}
     return()=>{stopped=true;cancelAnimationFrame(frame);source?.disconnect();if(context)void context.close().catch(()=>{})};
   },[studioMode,micOn,cameraReady]);
+  const [error, setError] = useState("");
   const [live, setLive] = useState(false);
   const [connectingLive,setConnectingLive] = useState(false);
   const [liveSeconds,setLiveSeconds] = useState(0);
@@ -386,7 +387,6 @@ export default function GoLivePage() {
     };
     void loadScheduled();
   }, []);
-  const [error, setError] = useState("");
   const [viewers, setViewers] = useState(0);
   const [viewerRosterOpen,setViewerRosterOpen]=useState(false);
   const [viewerRoster,setViewerRoster]=useState<Array<{id:string;username:string;avatar:string|null;xp:number|null}>>([]);
