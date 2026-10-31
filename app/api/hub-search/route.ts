@@ -7,7 +7,7 @@ export async function GET(request:Request){
  const safe=q.replace(/[%,()]/g," ").trim();
  if(!safe)return NextResponse.json({results:[]});
  const pattern="%"+safe+"%";
- const [posts,lessons,lives,people,quran]=await Promise.all([
+ const [posts,lessons,lives,people,quran,messages]=await Promise.all([
  db.from("ummah_feed_posts").select("id,body,created_at").ilike("body",pattern).order("created_at",{ascending:false}).limit(8),
  db.from("lessons").select("id,slug,title,description").eq("active",true).or("title.ilike."+pattern+",description.ilike."+pattern).limit(8),
  db.from("live_streams").select("id,title,category,status,viewer_count,created_at").eq("visibility","public").or("title.ilike."+pattern+",category.ilike."+pattern).order("created_at",{ascending:false}).limit(8),
@@ -16,6 +16,7 @@ export async function GET(request:Request){
  ]);
  const results=[
  ...(people.data||[]).map(x=>({id:String(x.id),kind:"Person",title:x.display_name||x.username||"1Muslim member",subtitle:x.username?"@"+x.username:"1Muslim member",href:"/messages?to="+encodeURIComponent(x.id)})),
+ ...(messages.data||[]).map(x=>({id:String(x.id),kind:"Message",title:x.body?.slice(0,140)||"Message",subtitle:"Matching conversation",href:"/messages?conversation="+encodeURIComponent(x.conversation_id)+"&message="+encodeURIComponent(x.id)})),
  ...quran.items.map((x:{verse_key?:string;text?:string;highlighted?:string})=>({id:String(x.verse_key||""),kind:"Qur’an",title:String(x.text||x.highlighted||"Qur’an verse").replace(/<[^>]*>/g,"").slice(0,200),subtitle:"Surah : Ayah "+String(x.verse_key||""),href:"/elm-tent/quran?verse="+encodeURIComponent(x.verse_key||"")})).filter(x=>x.id),
  ...(lives.data||[]).map(x=>({id:String(x.id),kind:"Live",title:x.title||"Live stream",subtitle:(x.status==="live"?"🔴 LIVE · ":"")+String(x.category||"Live"),href:"/streaming/watch/"+encodeURIComponent(x.id)})),
  ...(lessons.data||[]).map(x=>({id:String(x.id),kind:"Lesson",title:x.title||"Lesson",subtitle:x.description||"Learn",href:"/elm-tent/lessons"})),
