@@ -927,6 +927,23 @@ export default function GoLivePage() {
           .goLive .preview .liveEndCorner{z-index:60!important}
         }
         @media(max-width:850px) and (max-height:690px){.goLive .preliveIdentity{bottom:162px!important}.goLive .newStudioActions{gap:6px!important;padding:8px!important}.goLive .newStudioHint{display:none!important}}
+
+        /* Studio polish: lighter chrome, coherent proportions, uncluttered live state. */
+        .goLive .newStudioActions{transition:opacity .3s ease,transform .4s cubic-bezier(.16,1,.3,1)}
+        .goLive .newStudioModes{border-radius:999px!important;background:rgba(2,20,16,.56)!important;border:1px solid #ffffff24!important}
+        .goLive .newStudioModes button.selected{background:#1c8463a8!important;border-bottom-color:#a3ffcf!important;color:#fff!important;box-shadow:inset 0 1px 8px #ffffff19}
+        .goLive .newStudioGo{background:linear-gradient(115deg,#047d57,#05a475)!important;border:1px solid #7be8b8!important;box-shadow:0 4px 18px #0005!important}
+        .goLive .previewOverlayTools button{border-radius:50%!important;backdrop-filter:blur(16px)!important}
+        .goLive .preliveIdentity{box-shadow:0 6px 20px #0006!important}
+        @media(min-width:851px){
+          .goLive .layout>.panel:first-child>.preview{overflow:hidden!important}
+          .goLive .layout>.panel:first-child>.preview .newStudioActions{position:absolute!important;bottom:12px!important;left:12px!important;right:12px!important;z-index:29!important;display:flex!important;flex-direction:column!important;gap:8px!important;padding:10px!important;border-radius:18px!important;background:#051d16c9!important;backdrop-filter:blur(18px)!important;border:1px solid #86e7b355!important}
+          .goLive .layout>.panel:first-child>.preview .newStudioModes{display:flex!important;width:100%!important;justify-content:space-around!important}
+          .goLive .layout>.panel:first-child>.preview .newStudioModes button{flex:1!important;padding:8px 3px!important;font-size:12px!important}
+          .goLive .layout>.panel:first-child>.preview .newStudioGo{min-height:38px!important;width:65%!important;font-size:13px!important}
+          .goLive .layout>.panel:first-child>.preview .newStudioHint{display:none!important}
+        }
+        @media(max-width:850px){.goLive .newStudioHint{display:none!important}.goLive .newStudioActions{gap:7px!important;padding:9px 10px!important}.goLive .preliveIdentity{bottom:144px!important}.goLive .previewOverlayTools{top:24%!important}.goLive .previewOverlayTools button{width:38px!important;height:38px!important}}
         .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
         .brand{display:flex;gap:9px;align-items:center;font-weight:850}.mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#101811;border:1px solid #354237;color:#d6e7b8}.back{color:#98a49d;text-decoration:none;font-size:12px}
         .shell{max-width:1120px;margin:auto;padding:30px 18px 70px}.heading{margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#829b87;font-weight:850}.heading h1{font-size:42px;letter-spacing:-.06em;margin:8px 0}.heading p{color:#849087;font-size:13px;margin:0}

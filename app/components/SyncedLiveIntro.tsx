@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 type Phase = "intro" | "welcome" | "ready";
 export default function SyncedLiveIntro({ startedAt, onFinish, host = false }: { startedAt: string; onFinish: () => void; host?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  // Host confirmation is a silent, short-lived toast. Viewer intro behavior remains unchanged.
+  useEffect(()=>{if(!host)return;const timer=window.setTimeout(onFinish,2000);return()=>window.clearTimeout(timer)},[host,onFinish]);
   const welcomeRef = useRef<HTMLAudioElement>(null);
   const finished = useRef(false);
   const [duration, setDuration] = useState<number | null>(null);
@@ -48,6 +50,7 @@ export default function SyncedLiveIntro({ startedAt, onFinish, host = false }: {
     const timeout=window.setTimeout(finish,1400);
     return()=>window.clearTimeout(timeout);
   },[phase,finish]);
+  if(host)return <div role="status" aria-live="polite" style={{position:"absolute",top:16,left:"50%",transform:"translateX(-50%)",zIndex:40,padding:"9px 17px",border:"1px solid #78e6b78a",borderRadius:999,background:"rgba(4,31,23,.88)",backdropFilter:"blur(18px)",color:"#eafff3",fontSize:13,fontWeight:750,whiteSpace:"nowrap",boxShadow:"0 8px 28px #0007",animation:"liveToastFade 2s ease-in-out both"}}>🔴 You’re live <style jsx>{`@keyframes liveToastFade{0%{opacity:0;transform:translateY(-8px)}15%,70%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-8px)}}@media(prefers-reduced-motion:reduce){div{animation:none}}`}</style></div>;
   return <div className="oneMuslimCinematicIntro" role="status" aria-live="polite" style={{position:"absolute",inset:0,zIndex:18,background:"rgba(0,24,19,.92)",display:"grid",placeItems:"center",overflow:"hidden",color:"#fff"}}>
     {phase==="intro" && <div className="oneMuslimIntroAtmosphere" aria-hidden="true"><i/><i/><i/><span>1MUSLIM <em>LIVE</em></span><small>CONNECTING THE UMMAH</small></div>}
     {phase==="intro" && <video ref={videoRef} src="/videos/prelive-intro.mp4" playsInline preload="auto" onLoadedMetadata={e=>setDuration(e.currentTarget.duration)} onError={introComplete} onEnded={introComplete} style={{width:"100%",height:"100%",objectFit:"contain"}} />}
