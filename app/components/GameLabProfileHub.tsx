@@ -14,7 +14,7 @@ export default function GameLabProfileHub({active,profile,avatarHero,renderProfi
  useEffect(()=>{
   if(!active){setHeroPosition(null);return;}
   let frame=0;
-  const measure=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{const rect=stageRef.current?.getBoundingClientRect();if(!rect)return;setHeroPosition({top:Math.max(92,rect.top-126),left:rect.left+rect.width/2});});};
+  const measure=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{const rect=stageRef.current?.getBoundingClientRect();if(!rect)return;setHeroPosition({top:Math.max(150,rect.top-170),left:rect.left+rect.width/2});});};
   measure();window.addEventListener("resize",measure);window.addEventListener("scroll",measure,true);
   const observer=new ResizeObserver(measure);if(stageRef.current)observer.observe(stageRef.current);
   return ()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener("resize",measure);window.removeEventListener("scroll",measure,true)};
