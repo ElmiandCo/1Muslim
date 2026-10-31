@@ -37,6 +37,28 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   // If autoplay is blocked, expose a clear one-tap recovery control.
   const [muted, setMuted] = useState(false);
   const mutedRef = useRef(false);
+  const [guestOnStage,setGuestOnStage]=useState(false);
+  const priorGuestMuteRef=useRef<boolean|null>(null);
+  useEffect(()=>{
+    const onStage=(event:Event)=>{
+      const detail=(event as CustomEvent<{roomName:string;active:boolean}>).detail;
+      if(detail?.roomName!==roomName)return;
+      setGuestOnStage(detail.active);
+      if(detail.active){
+        if(priorGuestMuteRef.current===null)priorGuestMuteRef.current=mutedRef.current;
+        mutedRef.current=true;setMuted(true);
+      }else if(priorGuestMuteRef.current!==null){
+        mutedRef.current=priorGuestMuteRef.current;setMuted(priorGuestMuteRef.current);
+        priorGuestMuteRef.current=null;
+      }
+      audioContainerRef.current?.querySelectorAll("audio").forEach(node=>{
+        node.muted=mutedRef.current;
+        if(!node.muted)void node.play().catch(()=>setAudioNeedsGesture(true));
+      });
+    };
+    window.addEventListener("1muslim:guest-stage",onStage);
+    return()=>window.removeEventListener("1muslim:guest-stage",onStage);
+  },[roomName]);
   const [audioNeedsGesture, setAudioNeedsGesture] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectKey, setReconnectKey] = useState("initial");
@@ -367,6 +389,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   }, [roomName, retryAttempt]);
 
   const toggleMute = () => {
+    if(guestOnStage)return; // Monitor the guest room, not a second viewer connection.
     // An autoplay rejection is not an intentional mute: the first tap should
     // unlock playback rather than mute the host again.
     const next = audioNeedsGesture ? false : !muted;
@@ -409,8 +432,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       {!embedded&&<><div className="omViewerTapCounter" aria-label={`${tapCount} screen taps`}>✨ {tapCount.toLocaleString()} taps</div>{tapBursts.map(t=><span key={t.id} className="omViewerTapBurst" style={{left:t.x,top:t.y}}>💜</span>)}<a className="omViewerExit" href="/streaming" aria-label="Exit live viewer">✕</a></>}
       {viewerCount !== null && !error && <div role="status" aria-label={`${viewerCount.toLocaleString()} watching live`} className={viewerPulse?"omViewerCountPulse":""} style={{position:"absolute",top:12,right:12,zIndex:6,display:"flex",alignItems:"center",gap:6,padding:"7px 11px",borderRadius:999,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.22)",color:"#fff",fontSize:12,fontWeight:800,backdropFilter:"blur(10px)",pointerEvents:"none"}}>👁 {viewerCount.toLocaleString()} <span style={{fontSize:10,opacity:.8}}>watching</span>{totalViews!==null&&<span style={{fontSize:10,opacity:.9,borderLeft:"1px solid #ffffff55",paddingLeft:8,marginLeft:2}}>↗ {totalViews.toLocaleString()} total</span>}</div>}
       <div style={{position:"absolute",left:12,bottom:12,display:"flex",gap:7,alignItems:"center",flexWrap:"wrap",zIndex:5}}>
-        <button type="button" onClick={toggleMute} aria-label={audioNeedsGesture ? "Hear live audio" : muted ? "Unmute live audio" : "Mute live audio"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
-          {audioNeedsGesture ? "🔊 Hear Live" : muted ? "🔇 Unmute" : "🔊 Mute"}
+        <button type="button" onClick={toggleMute} disabled={guestOnStage} aria-label={guestOnStage?"Guest stage monitoring active":audioNeedsGesture ? "Hear live audio" : muted ? "Unmute live audio" : "Mute live audio"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
+          {guestOnStage?"🎙️ On stage":audioNeedsGesture ? "🔊 Hear Live" : muted ? "🔇 Unmute" : "🔊 Mute"}
         </button>
         {hasScreenVideo&&hasCameraVideo&&<button type="button" onClick={()=>setShareLayout(v=>v==="pip"?"split":"pip")} aria-label={shareLayout==="pip"?"Switch to split screen":"Switch to picture in picture"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>{shareLayout==="pip"?"▣ Split":"▧ Picture-in-picture"}</button>}
         {streamId && <ShareLiveButton streamId={streamId} compact={embedded} />}
