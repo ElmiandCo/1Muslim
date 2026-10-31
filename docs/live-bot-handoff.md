@@ -187,3 +187,42 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 - **Follow-up placement commit:** `52efa28e69c104e4a62f3c4f4637670c5de0fa2a`.
 - **Static safety review:** No React tree remount, `srcObject` reassignment, media acquisition, `getUserMedia`, `publishTrack`, `unpublishTrack`, End Live API, recording or viewer changes in Bot B commit. Existing `frontCamera` `scaleX(-1)` transform remains separate from the new image `scale`/`rotate` longhands.
 - **Verification required before merge:** Confirm newest Bot B Vercel preview is READY; test on real iPhone Safari (including notch/safe area, portrait/landscape, short screen), desktop stage placement, continuous track identity and audio during Desktop↔Phone↔Voice, rapid mode switching, End Live terminal notice, reconnect and refresh. A green build alone does **not** establish those runtime results. Do not merge or promote to production automatically.
+
+
+---
+
+## 1MuslimLive2.0 — Bot A backend implementation (2026-10-31)
+
+**Strict scope:** No UI/CSS/layout/animation/navigation changes. Isolated branch \`1MuslimLive2.0\` (base: main at initial spec commit \`e258315dc2f857f5ef8a8fc99278fbbfa3bc2ba2\`). No merge or production promotion.
+
+### Bot A commits, in order
+1. \`43df59322af333bb1d0944fd131760f47de02201\` — \`supabase/migrations/20261031052500_live_2_event_presence.sql\`: RLS-protected live_presence, private observation and webhook dedupe tables, service-role-only transactional snapshot RPC, monotonic version on state changes, terminal-status trigger, Supabase Realtime publication.
+2. \`dff029f08a4d52b82f2d1f4dfe8863ebad2eba0a\` — \`lib/live-presence.ts\`: server-side host track classification.
+3. \`4b43571cb5cd3dee82a1679d49b864c25cee12e8\` — \`scripts/live-presence.test.mjs\`: five readiness classification tests.
+4. \`4f5dc133d9cf78bfdf0002319d20fd72eb3164b6\` — \`app/api/livekit/webhook/route.ts\`: raw-body signature verification with LiveKit WebhookReceiver, host identity check, current LiveKit room participant/track snapshot, idempotent ordered DB RPC. Viewer/guest events cannot promote a Live.
+5. \`315c54230aa72eeda9feedac4389ea126d3feda1\` — \`app/api/live-discovery/route.ts\`: public, 1-second CDN-cacheable snapshot of verified READY_AUDIO/READY_VIDEO broadcasts; fails closed if DB/migration unavailable.
+
+### Design and safety
+- READY only after LiveKit reports a connected host and at least one published audio/video track. Guest and viewer media do not qualify. Audio-only streams are first-class.
+- Webhook is verified against LIVEKIT_API_KEY/SECRET, not a browser-supplied isLive flag. Event IDs are deduplicated. Snapshot observations are ordered and state transitions serialized with live_streams row locks; ENDED is terminal and wins over late webhook observations.
+- Existing \`POST /api/live-end\` and host fallback update live_streams.status; the new SQL trigger atomically changes presence to ENDED. The room close remains best-effort.
+- Public realtime RLS restricts presence to public streams (or stream host). Observations and webhook events are not exposed to viewers. Discovery returns only public streams.
+- No extra per-viewer polling was added. Existing 2-second polling in \`components/LiveKitViewer.tsx\` and 5-second polling in \`app/streaming/page.tsx\` remain until Bot B replaces them.
+- Do not enable this endpoint in production until migration and LiveKit webhook URL are configured. New webhook URL: \`https://<deployment-host>/api/livekit/webhook\`. LiveKit must be configured to POST signed webhooks to it.
+
+### Verification
+- Inspected production main's live-end, live-heartbeat, live-mode, livekit/token, live-alert, streaming discovery and LiveKitViewer code before changes.
+- Node v22.16.0: \`node --experimental-strip-types --test scripts/live-presence.test.mjs\` — 5/5 passed on a local copy of the committed helper and tests.
+- **NOT verified:** SQL migration execution on Supabase, Next.js TypeScript build, Vercel preview READY, webhook delivery/signature end-to-end, LiveKit real rooms, browser/iPhone latency, performance at 1k viewers. Do not claim the target latencies as measured.
+- Database migration is not applied by a GitHub commit alone. No live data was modified.
+
+### Bot B integration priorities
+1. Check branch HEAD and this handoff before modifying. Preserve Bot A files. Run Next build and inspect Vercel preview; fix any type/schema errors.
+2. Wire eligible Live-capable surfaces to \`GET /api/live-discovery\` initial snapshot + Supabase \`live_presence\` Realtime changes. Use version/session_id to ignore stale updates, and one multiplexed subscription rather than repeated per-viewer queries. Preserve ALL existing UI and styling.
+3. Replace 2-second \`LiveKitViewer\` terminal polling and 5-second streaming discovery polling with realtime events; use bounded exponential backoff/jitter only when disconnected. Keep host LiveKit packet for fastest explicit End Live.
+4. Verify signed-out discovery, host audio-only, screen share, viewer refresh, mode switching, host disconnect/reconnect, explicit End Live, out-of-order events, and room recreation. Test that reconnecting streams are removed from new discovery but existing viewers remain in their room.
+5. Configure and test the LiveKit webhook on preview only when authorized. The webhook endpoint cannot work without its URL configured at LiveKit and the migration applied to the relevant Supabase environment.
+6. Add a server-side periodic reconciliation/watchdog for missed webhooks and stale READY entries; current existing 75-second stale-stream cron remains an emergency terminal fallback. Do not confuse 15-second heartbeat with viewer latency.
+7. Assess security: service-role-only RPC, public/private visibility, anon subscriptions, database table growth and webhook event retention. Add pruning for webhook event dedupe rows and load tests.
+8. Measure actual p50/p95/p99 event latency. Targets (<1s start, <500ms End Live, 1–2s disconnect notice) are **not guarantees**; silent network loss may exceed 2s.
+9. No merge, no production deployment, no UI changes without explicit approval.
