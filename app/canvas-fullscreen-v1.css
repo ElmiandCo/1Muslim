@@ -1928,3 +1928,12 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   min-height:150dvh!important;
   height:auto!important;
 }
+
+/* Mobile Live dock: pin composer to bottom, allow comments to grow upward. */
+[data-workspace-page="0"] .oneMuslimLiveBottom{display:flex!important;flex-direction:column!important;justify-content:flex-end!important;min-height:0!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom>.homeLiveViewerConversation{margin-top:auto!important;justify-content:flex-end!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{margin-top:auto!important;flex-shrink:1!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{margin-top:auto!important;position:relative!important;bottom:0!important}
+/* iOS Safari: 16px prevents focus auto-zoom; blur after send restores visual viewport. */
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input{font-size:16px!important;line-height:1.35!important;touch-action:manipulation}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button{font-size:16px!important}
