@@ -810,3 +810,16 @@
  background-size:cover!important;
  background-repeat:no-repeat!important;
 }
+
+/* Sapphire artwork routing: original labeled image on the first/Home slide;
+   text-free Quran artwork on every remaining workspace slide. */
+:global(html[data-muslim-theme="sapphire"]) .fillArea .slide[data-workspace-page="0"] .night,
+:global(html[data-muslim-theme="sapphire"]) .fillArea .slide[data-workspace-page="0"] .day{
+ background-image:url("/assets/profile-backgrounds/sapphire.PNG")!important;
+ background-position:center!important;background-size:cover!important;background-repeat:no-repeat!important;
+}
+:global(html[data-muslim-theme="sapphire"]) .fillArea .slide:not([data-workspace-page="0"]) .night,
+:global(html[data-muslim-theme="sapphire"]) .fillArea .slide:not([data-workspace-page="0"]) .day{
+ background-image:url("/assets/profile-backgrounds/quran-sapphire-background.PNG")!important;
+ background-position:center!important;background-size:cover!important;background-repeat:no-repeat!important;
+}
