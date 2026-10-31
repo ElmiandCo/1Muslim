@@ -1,77 +1,119 @@
 import { NextResponse } from "next/server";
-import { AccessToken } from "livekit-server-sdk";
-import { TrackSource } from "livekit-server-sdk";
+import { AccessToken, TrackSource } from "livekit-server-sdk";
 import { createClient } from "../../../../utils/supabase/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+type LiveRole = "host" | "guest" | "companion" | "viewer";
+const roomPattern = /^1muslim-live-[0-9a-f-]{36}$/i;
 
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const room = typeof body?.room === "string" ? body.room.trim() : "";
-    const role = body?.role === "host" ? "host" : body?.role === "guest" ? "guest" : body?.role === "companion" ? "companion" : "viewer";
+    const role: LiveRole =
+      body?.role === "host" || body?.role === "guest" || body?.role === "companion"
+        ? body.role : "viewer";
 
-    if (!room || !/^1muslim-live-[a-zA-Z0-9-]+$/.test(room)) {
+    if (!roomPattern.test(room)) {
       return NextResponse.json({ error: "Invalid live room." }, { status: 400 });
     }
-
-    const { data: liveStream } = await supabase
+    const { data: liveStream, error: streamError } = await supabase
       .from("live_streams")
-      .select("id, host_id, status, visibility")
-      .eq("room_name", room)
-      .maybeSingle();
-
+      .select("id, host_id, status, visibility, aspect_ratio")
+      .eq("room_name", room).maybeSingle();
+    if (streamError) {
+      return NextResponse.json({ error: "Could not verify the live stream." }, { status: 503 });
+    }
     if (!liveStream || liveStream.status !== "live") {
       return NextResponse.json({ error: "This live stream is no longer active." }, { status: 404 });
     }
 
     if (!user && (role !== "viewer" || liveStream.visibility !== "public")) {
-      return NextResponse.json({error:"Sign in is required."},{status:401});
+      return NextResponse.json({ error: "Sign in is required." }, { status: 401 });
     }
-
     if ((role === "host" || role === "companion") && liveStream.host_id !== user?.id) {
-      return NextResponse.json({ error: "You are not the host of this live." }, { status: 403 });
+      return NextResponse.json({ error: "Only the host may use this role." }, { status: 403 });
     }
-
     if (role === "viewer" && liveStream.visibility !== "public" && liveStream.host_id !== user?.id) {
-      return NextResponse.json({error:"This stream is private."},{status:403});
+      return NextResponse.json({ error: "This stream is private." }, { status: 403 });
     }
 
+    const audioOnly = liveStream.aspect_ratio === "1:1";
+    let guestMode: "pfp" | "camera" | null = null;
     if (role === "guest") {
-      const {data:seat}=await supabase.from("live_guest_requests").select("id").eq("stream_id",liveStream.id).eq("user_id",user!.id).eq("status","approved").maybeSingle();
-      if (!seat) return NextResponse.json({error:"The host must approve your guest request first."},{status:403});
+      // The database RPC is the only authority for stage approval. Do not
+      // accept seat count, mode, identity or permission from the request body.
+      const { data: seat, error: seatError } = await supabase
+        .from("live_guest_requests")
+        .select("id, mode")
+        .eq("stream_id", liveStream.id)
+        .eq("user_id", user!.id)
+        .eq("status", "approved")
+        .maybeSingle();
+      if (seatError) {
+        return NextResponse.json({ error: "Unable to verify guest approval." }, { status: 503 });
+      }
+      if (!seat) {
+        return NextResponse.json({ error: "The host must approve your guest request first." }, { status: 403 });
+      }
+      guestMode = seat.mode === "camera" ? "camera" : "pfp";
     }
 
     const apiKey = process.env.LIVEKIT_API_KEY;
     const apiSecret = process.env.LIVEKIT_API_SECRET;
     const livekitUrl = process.env.LIVEKIT_URL;
-
     if (!apiKey || !apiSecret || !livekitUrl) {
       return NextResponse.json({
-        error: "LiveKit is not configured yet. Add LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET in Vercel.",
+        error: "LiveKit is not configured.",
         code: "LIVEKIT_NOT_CONFIGURED",
       }, { status: 503 });
     }
 
-    const token = new AccessToken(apiKey, apiSecret, {
-      identity: !user ? `anonymous-viewer:${crypto.randomUUID()}` : role === "viewer" ? `${user.id}:viewer:${crypto.randomUUID()}` : role === "companion" ? `${user.id}:screen:${crypto.randomUUID()}` : user.id,
-      name: user?.user_metadata?.full_name || user?.email || "1Muslim viewer",
-      ttl: "2h",
-    });
+    const identity = !user
+      ? `anonymous-viewer:${crypto.randomUUID()}`
+      : role === "viewer"
+        ? `${user.id}:viewer:${crypto.randomUUID()}`
+        : role === "companion"
+          ? `${user.id}:screen:${crypto.randomUUID()}`
+          : user.id;
 
+    const canPublish = role === "host" || role === "guest" || role === "companion";
+    const publishSources = role === "companion"
+      ? [TrackSource.SCREEN_SHARE]
+      : role === "guest"
+        ? audioOnly || guestMode === "pfp"
+          ? [TrackSource.MICROPHONE]
+          : [TrackSource.MICROPHONE, TrackSource.CAMERA]
+        : undefined;
+
+    const token = new AccessToken(apiKey, apiSecret, {
+      identity,
+      name: user?.user_metadata?.full_name || user?.email || "1Muslim viewer",
+      // Short-lived guest tickets narrow the window for reusing a revoked
+      // token. An established LiveKit connection is not ended by JWT expiry.
+      ttl: role === "guest" ? "2m" : "2h",
+    });
     token.addGrant({
       roomJoin: true,
       room,
-      canPublish: role === "host" || role === "guest" || role === "companion",
-      canPublishSources: role === "companion" ? [TrackSource.SCREEN_SHARE] : undefined,
+      canPublish,
+      canPublishSources: publishSources,
       canSubscribe: true,
-      canPublishData: true,
+      // Only the host sends authoritative terminal data packets.
+      canPublishData: role === "host",
     });
 
-    return NextResponse.json({ token: await token.toJwt(), url: livekitUrl });
+    return NextResponse.json({
+      token: await token.toJwt(),
+      url: livekitUrl,
+      role,
+      mode: audioOnly ? "audio" : "video",
+      maxGuests: audioOnly ? 11 : 3,
+    }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("LiveKit token error", error);
     return NextResponse.json({ error: "Could not create the live connection." }, { status: 500 });
