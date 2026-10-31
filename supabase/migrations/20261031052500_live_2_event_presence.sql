@@ -104,10 +104,15 @@ begin
     return;
   end if;
 
+  -- Initial room creation without a host/track is STARTING, not a
+  -- false host-disconnect notification. After a stream has been READY,
+  -- loss of all published media or host presence means RECONNECTING.
+  select p.state into v_current_state from public.live_presence p
+    where p.stream_id = p_stream_id;
   v_state := case
-    when not coalesce(p_host_connected, false) then 'RECONNECTING'
-    when coalesce(p_has_video, false) then 'READY_VIDEO'
-    when coalesce(p_has_audio, false) then 'READY_AUDIO'
+    when coalesce(p_host_connected, false) and coalesce(p_has_video, false) then 'READY_VIDEO'
+    when coalesce(p_host_connected, false) and coalesce(p_has_audio, false) then 'READY_AUDIO'
+    when v_current_state in ('READY_AUDIO','READY_VIDEO','RECONNECTING') then 'RECONNECTING'
     else 'STARTING' end;
   v_media := case when v_state = 'READY_VIDEO' then 'video'
     when v_state = 'READY_AUDIO' then 'audio' else 'none' end;
