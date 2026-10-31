@@ -21,3 +21,11 @@ html[data-guest-theme-tour="true"] .control [class*="widget"]{
  transition-timing-function:cubic-bezier(.45,0,.2,1)!important;
 }
 @media(prefers-reduced-motion:reduce){html[data-guest-theme-tour="true"] .control,html[data-guest-theme-tour="true"] .control button{transition:none!important}}
+
+/* Guest intro: hold black for 1 second, then fade first scene in over 2 seconds. */
+html[data-guest-intro-first-reveal="true"] .control{animation:guestFirstSceneFade 3s ease both}
+@keyframes guestFirstSceneFade{0%,33.333%{opacity:0}100%{opacity:1}}
+/* Sapphire scene intentionally keeps black navigation rather than emerald tint. */
+html[data-guest-theme-tour="true"][data-muslim-theme="sapphire"] .control [class*="nav"],
+html[data-guest-theme-tour="true"][data-muslim-theme="sapphire"] .control [class*="Nav"]{background-color:rgba(4,6,10,.85)!important}
+@media(prefers-reduced-motion:reduce){html[data-guest-intro-first-reveal="true"] .control{animation:none!important}}
