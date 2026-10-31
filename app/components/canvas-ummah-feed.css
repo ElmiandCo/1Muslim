@@ -167,3 +167,69 @@
 @media(prefers-reduced-motion:reduce){
  .profile-shared-avatar-portal,.profile-shared-avatar-portal .profile-glass-avatar{transition:none!important;animation:none!important}
 }
+
+/* HudHud synced profile portrait: circular theme halo; labels stay BELOW the ring. */
+.profile-shared-avatar-portal{
+ width:min(216px,48vw)!important;
+ transition:top .22s cubic-bezier(.2,.8,.2,1),left .22s cubic-bezier(.2,.8,.2,1)!important;
+}
+.profile-shared-avatar-portal .profile-shared-avatar-hero{animation:none!important;}
+.profile-shared-avatar-portal .profile-glass-avatar{
+ display:flex!important;
+ flex-direction:column!important;
+ justify-content:flex-start!important;
+ gap:9px!important;
+ width:100%!important;
+ max-width:none!important;
+ min-height:0!important;
+ padding:0!important;
+ border:0!important;
+ border-radius:0!important;
+ background:transparent!important;
+ box-shadow:none!important;
+ animation:none!important;
+ overflow:visible!important;
+}
+.profile-shared-avatar-portal .profile-avatar-portrait{
+ width:100%;
+ aspect-ratio:1;
+ border:3px solid var(--theme-secondary,#d8c38e);
+ border-radius:50%;
+ display:grid;
+ place-items:center;
+ position:relative;
+ isolation:isolate;
+ background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--theme-secondary,#d8c38e) 15%,transparent),rgba(3,13,27,.42) 72%);
+ box-shadow:0 0 0 4px color-mix(in srgb,var(--theme-secondary,#d8c38e) 12%,transparent),0 0 24px color-mix(in srgb,var(--theme-secondary,#d8c38e) 50%,transparent),0 0 52px color-mix(in srgb,var(--theme-secondary,#d8c38e) 22%,transparent),inset 0 0 24px color-mix(in srgb,var(--theme-secondary,#d8c38e) 16%,transparent);
+ animation:profileThemeHalo 5s ease-in-out infinite;
+}
+.profile-shared-avatar-portal .profile-avatar-portrait .profileAvatar{
+ width:90%!important;height:90%!important;max-width:90%!important;
+ border-radius:50%!important;overflow:hidden!important;
+}
+.profile-shared-avatar-portal .profile-avatar-portrait img{
+ max-width:100%;max-height:100%;object-fit:contain;
+ mix-blend-mode:screen;
+}
+.profile-shared-avatar-portal .profile-avatar-name-wrap{
+ position:relative!important;top:auto!important;bottom:auto!important;
+ left:auto!important;right:auto!important;transform:none!important;
+ width:max-content;max-width:100%;margin:0 auto!important;
+ pointer-events:auto;
+}
+.profile-shared-avatar-portal .profile-avatar-xp{
+ position:relative!important;top:auto!important;bottom:auto!important;
+ left:auto!important;right:auto!important;display:block!important;
+ margin:0 auto!important;width:max-content;
+ max-width:100%;font-size:14px!important;
+ padding:4px 14px;border-radius:999px;
+ background:color-mix(in srgb,var(--theme-base,#101114) 65%,transparent);
+}
+.profile-with-shared-avatar{padding-top:clamp(315px,42vw,355px)!important;}
+@media(max-width:480px){
+ .profile-shared-avatar-portal{width:min(190px,47vw)!important;}
+ .profile-with-shared-avatar{padding-top:315px!important;}
+}
+@media(prefers-reduced-motion:reduce){
+ .profile-shared-avatar-portal,.profile-shared-avatar-portal .profile-avatar-portrait{transition:none!important;animation:none!important}
+}
