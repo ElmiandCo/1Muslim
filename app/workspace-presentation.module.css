@@ -879,3 +879,7 @@
  :global(html[data-guest-image-fade]) .slide .night::after,
  :global(html[data-guest-image-fade]) .slide .day::after{animation:none;opacity:0}
 }
+
+:global(html[data-guest-image-fade="even"]) .slide .night::after,
+:global(html[data-guest-image-fade="even"]) .slide .day::after{animation-name:guestSceneImageCrossfadeEven}
+@keyframes guestSceneImageCrossfadeEven{0%{opacity:1}100%{opacity:0}}
