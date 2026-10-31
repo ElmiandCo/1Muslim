@@ -137,3 +137,28 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 - Code commit: `1a151a0a9c1e7eb94c866a6614108e0443775d03` — `Fix Phone full-viewport camera stage and Voice one-tap launch label` on PR #193.
 - Vercel preview build for this new code commit was **INITIALIZING** at initial check (deployment `dpl_GFVUg1gUtn5TJpi7dpUtsREuZ9fZ`). Earlier PR #193 head `c6f4989b` was **READY**, but that result does not validate this new commit. Check newest deployment before claiming build success.
 - **Still unverified:** real iPhone Safari computed styles/frames, host-viewer two-device LiveKit audio, remote avatar reaction, rapid live camera switches, permission-denied recovery, measured End Live latency, reconnect/disconnect latency and audio-only recording playback. No production changes. 
+
+
+---
+
+## Bot A continuation after Bot B PR #193 — 2026-10-31
+
+### Verified starting point
+- Inspected GitHub `main` at `81e7f39235e7`, PR #188 (layout), PR #190 (Bot A), and Bot B's final PR #193, commits, diff and handoff.
+- Bot B's final branch `bot-b/live-track-switch-final-20261031` is stacked on PR #190, which is stacked on PR #188. The branch was 25 commits ahead of `main` and zero behind at inspection.
+- Verified through Vercel that Bot B's final handoff commit `84189159c212` and Phone viewport fix `1a151a0a9c1e` both have READY preview deployments. This validates compilation/deployment, **not** live camera or microphone behavior.
+- Earlier Bot B PRs #189/#191/#192 were superseded and should not be merged.
+
+### New isolated Bot A branch
+- Branch: `bot-a/live-audio-autoplay-preview-recovery-20261031`, based directly on Bot B final PR #193 branch; review stack **#188 → #190 → #193 → new Bot A PR**.
+- `4f969eab280eb174f65ee16b0bdc3282a8a7ab31`: viewers now attempt audible host audio immediately instead of deliberately starting muted. When browser autoplay blocks it, show a prominent “Hear Live” button and explanation; one tap resumes playback and the audio analyser. Browsers requiring a user gesture cannot be bypassed.
+- `a50aa6c52d9869ac0d5f34ba336ce70f829dd992`: repair pre-live Voice → Phone/Desktop when the initial preview was microphone-only. Request only the camera track, keep the existing microphone and stream, attach video to the same preview element, and prevent Go Live while the camera permission request is pending. Desktop ↔ Phone remains geometry-only, with no camera stop/restart/flip.
+- No change to room ID, active video-to-video track identity, LiveKit audio publishing, recording, auth or End Live APIs.
+
+### Verification and remaining acceptance work
+- Source reviewed for targeted changes. GitHub commits succeeded; **new branch Vercel head build must be confirmed READY** before review. No local build, browser UI, real iPhone Safari test, or two-device LiveKit session was run.
+- Test a viewer on desktop with autoplay permitted: sound should start automatically. On iPhone Safari with blocked autoplay, tap “Hear Live” once and verify host audio and reactive avatar. Test Mute/Unmute and reconnect.
+- Test pre-live Voice-only microphone permission → Phone/Desktop camera permission; verify microphone track identity remains unchanged, preview shows video, and Go Live publishes camera + microphone. Deny camera permission and verify audio stream is not destroyed.
+- Test six pairwise mode directions while live, especially Desktop ↔ Phone front/back camera, rapid taps and no black/mirrored frames. Verify viewer audio remains uninterrupted, End Live terminal notice arrives, and reconnect/refresh reuses the room.
+- Test anonymous viewers, host avatar public RLS, recording MIME playback, heartbeat behavior and polling load. None of these are claimed verified by a READY build.
+- Do **not** merge, promote or deploy to production automatically.
