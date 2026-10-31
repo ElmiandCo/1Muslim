@@ -216,6 +216,8 @@ export default function GoLivePage() {
   },[cameraReady,cameraOn,effectiveLiveTitle,live,saving]);
 
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreviewUrl,setThumbnailPreviewUrl]=useState<string|null>(null);
+  useEffect(()=>{if(!thumbnailFile){setThumbnailPreviewUrl(null);return;}const url=URL.createObjectURL(thumbnailFile);setThumbnailPreviewUrl(url);return()=>URL.revokeObjectURL(url)},[thumbnailFile]);
   const [category, setCategory] = useState(categories[0]);
   const [visibility, setVisibility] = useState<"public" | "ashab">("public");
   const [scheduledSlot, setScheduledSlot] = useState<any | null>(null);
@@ -1141,6 +1143,24 @@ export default function GoLivePage() {
         .studioLaunchFlashOn{animation:studioLaunchIllumination 1.5s cubic-bezier(.22,1,.36,1) both}
         @keyframes studioLaunchIllumination{0%{opacity:0;transform:scale(.6)}22%{opacity:.9;transform:scale(1.02)}70%{opacity:.35;transform:scale(1.1)}100%{opacity:0;transform:scale(1.2)}}
         @media(prefers-reduced-motion:reduce){.studioLaunchFlashOn{animation:none}.goLive .layout>.panel:first-child>.preview.studioTransform .newStudioActions *{transition:none!important}}
+
+        /* Compact glass settings: single source of format selection is the studio mode switcher. */
+        .goLive .compactLiveSettings{background:rgba(7,23,18,.68)!important;backdrop-filter:blur(24px) saturate(1.25)!important;-webkit-backdrop-filter:blur(24px) saturate(1.25)!important;border:1px solid rgba(201,255,227,.22)!important;box-shadow:0 20px 65px #0008!important;padding:16px!important;border-radius:20px!important;max-height:min(72dvh,550px)!important;height:auto!important}
+        .compactLiveSettingsHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+        .compactLiveSettingsHeader h2{margin:0!important;font-size:16px!important}
+        .compactLiveSettingsClose{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:50%;border:1px solid #d4ffda55;background:#ffffff13;color:#fff;font-size:16px;cursor:pointer}
+        .compactLiveSettings .field{margin-bottom:12px!important}
+        .compactLiveSettings .field label:not(.compactCoverPicker){font-size:10px!important}
+        .compactTitleRow{display:flex;gap:10px;align-items:stretch}
+        .compactTitleRow .input{flex:1;min-width:0}
+        .compactCoverPicker{display:flex!important;flex:0 0 66px;width:66px;height:58px;position:relative;align-items:center;justify-content:center;overflow:hidden;border:1px dashed #b5e7d080;border-radius:13px;background:#ffffff14;cursor:pointer}
+        .compactCoverPicker img{width:100%;height:100%;object-fit:cover;display:block}
+        .compactCoverPicker>span:first-child{font-size:23px;color:#e2ffef}
+        .compactCoverCaption{position:absolute;bottom:0;left:0;right:0;text-align:center;background:#07140cb8;color:white;font-size:9px;padding:2px}
+        .compactCoverInput{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+        .liveSettingsScrim{position:fixed;inset:0;z-index:39;background:#0004;border:0;cursor:default}
+        .goLive .settingsOpen .layout>.form.compactLiveSettings{position:fixed!important;top:calc(90px + env(safe-area-inset-top))!important;bottom:auto!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;width:min(calc(100vw - 24px),420px)!important;max-height:min(68dvh,480px)!important;z-index:60!important;overflow:auto!important;overscroll-behavior:contain}
+        @media(min-width:851px){.goLive .layout>.form.compactLiveSettings{position:relative!important;max-width:420px!important;min-height:0!important}}
         .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
         .brand{display:flex;gap:9px;align-items:center;font-weight:850}.mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#101811;border:1px solid #354237;color:#d6e7b8}.back{color:#98a49d;text-decoration:none;font-size:12px}
         .shell{max-width:1120px;margin:auto;padding:30px 18px 70px}.heading{margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#829b87;font-weight:850}.heading h1{font-size:42px;letter-spacing:-.06em;margin:8px 0}.heading p{color:#849087;font-size:13px;margin:0}
@@ -1349,17 +1369,13 @@ export default function GoLivePage() {
             </div>}
           </section>
 
-          <aside id="prelive-settings" className="panel form" aria-label="Live stream settings">
-            <h2>Live details</h2>
+          {settingsOpen && <button type="button" className="liveSettingsScrim" aria-label="Close live settings" onClick={()=>setSettingsOpen(false)} />}
+          <aside id="prelive-settings" className="panel form compactLiveSettings" aria-label="Live stream settings">
+            <div className="compactLiveSettingsHeader"><h2>Live details</h2><button type="button" className="compactLiveSettingsClose" aria-label="Close live settings" onClick={()=>setSettingsOpen(false)}>✕</button></div>
             {error && <div className="error">{error}</div>}
             {scheduledSlot && !live && <div className={hostCheckedIn ? "ready checkedIn" : "ready"}>{hostCheckedIn ? "✓ HOST CHECKED IN — Viewers can see that you are ready. The broadcast stays locked until the scheduled time." : "Scheduled Live: camera and microphone can be prepared now. Check in when you are fully ready."}</div>}{connectingLive&&!live&&<div className="ready" role="status">Connecting to LiveKit… broadcast will begin only after camera and microphone are published.</div>}{live && <div className="ready" role="status">🔴 YOU’RE LIVE · {liveClock} · {roomRef.current?.state==="connected"?"Connected":"Reconnecting"} · {micOn?"Mic on":"Mic muted"} · Recording</div>}{saveMessage && <div className="ready">{saveMessage}</div>}
-            <div className="field"><label htmlFor="title">Title</label><input id="title" className="input" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder={defaultLiveTitle} disabled={live}/></div>
-            <div className="field"><label>Screen format</label><div className="formatGrid">{formats.map((format)=><button type="button" key={format.key} className={aspectRatio===format.key?"formatButton active":"formatButton"} onClick={()=>setAspectRatio(format.key)} disabled={live}><strong>{format.label} · {format.key}</strong><small>{format.hint}</small></button>)}</div><p className="help">Pick this before going live. Once the Live starts, the frame is locked for the whole broadcast.</p></div>
-            <div className="field"><label htmlFor="thumbnail">Thumbnail image</label><input id="thumbnail" className="input" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>setThumbnailFile(e.target.files?.[0]??null)} disabled={live}/><p className="help">Choose a cover image so your saved Live recording does not appear as a black thumbnail.</p></div>
+            <div className="field compactTitleField"><label htmlFor="title">Title &amp; cover</label><div className="compactTitleRow"><input id="title" className="input" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder={defaultLiveTitle} disabled={live}/><label className={`compactCoverPicker ${thumbnailPreviewUrl?"hasCover":""}`} htmlFor="thumbnail" title={thumbnailPreviewUrl?"Change cover image":"Add cover image"}>{thumbnailPreviewUrl?<img src={thumbnailPreviewUrl} alt="Selected Live cover preview" />:<span aria-hidden="true">＋</span>}<span className="compactCoverCaption">{thumbnailPreviewUrl?"Edit":"Cover"}</span></label><input id="thumbnail" className="compactCoverInput" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>setThumbnailFile(e.target.files?.[0]??null)} disabled={live}/></div></div>
             <div className="field"><label htmlFor="category">Topic</label><select id="category" className="select" value={category} onChange={(e)=>setCategory(e.target.value)} disabled={live}>{categories.map((item)=><option key={item}>{item}</option>)}</select></div>
-            <div className="field"><label htmlFor="visibility">Who can watch?</label><select id="visibility" className="select" value={visibility} onChange={(e)=>setVisibility(e.target.value as "public" | "ashab")} disabled={live}><option value="public">Public — all 1Muslim users</option><option value="ashab">Ashab — only your Companions</option></select><p className="help">{visibility === "public" ? "Anyone signed in to 1Muslim can watch this Live." : "Only people who are accepted as your Ashab (Companions) can watch this Live."}</p></div>
-            <p className="help">Starting Live publishes your camera and microphone through the OneMuslim WebRTC media backend. When you end, the finished video is also uploaded to your 1Muslim Live Recordings page.</p>
-            <div className="notice"><strong>Broadcast connection</strong>Live video is transported through LiveKit WebRTC. Your finished recording is being transitioned to external video storage; Supabase will keep the recording metadata.</div>
           </aside>
         </div>
 
