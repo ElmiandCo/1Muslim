@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 import { useLiveDiscovery } from "../../lib/live-discovery-client";
-import RecordingThumbnail from "../../components/RecordingThumbnail";
 import ReconnectTrivia from "../components/ReconnectTrivia";
 import LiveKitViewer from "../../components/LiveKitViewer";
 
@@ -194,7 +193,7 @@ export default function StreamingPage() {
   // Restore the precise All Streams position after exiting the full-screen
   // viewer; wait for the asynchronous sections to be rendered first.
   useEffect(() => {
-    if (!hubLoaded || !discovery.ready) return;
+    if (!hubLoaded) return;
     let saved: string | null = null;
     try { saved = sessionStorage.getItem(ALL_STREAMS_SCROLL_KEY); } catch { /* unavailable */ }
     if (!saved) return;
@@ -205,7 +204,7 @@ export default function StreamingPage() {
       try { sessionStorage.removeItem(ALL_STREAMS_SCROLL_KEY); } catch { /* unavailable */ }
     }, 160);
     return () => window.clearTimeout(timer);
-  }, [hubLoaded, discovery.ready]);
+  }, [hubLoaded]);
 
   const rememberHubPosition = () => {
     try { sessionStorage.setItem(ALL_STREAMS_SCROLL_KEY, String(window.scrollY)); } catch { /* unavailable */ }
@@ -325,7 +324,7 @@ const openAdminEditor = (video?: Video) => {
 
       <div className="shell">
         <section className="liveOrbit" aria-label="Swipeable live broadcasts">
-          <div className="liveOrbitHeading"><div><span className="eyebrow">1MUSLIM · LIVE ORBIT</span><h1>Watch Live<span className="liveOrbitPeriod">.</span></h1></div><Link href="/streaming/go-live" className="orbitGoLive">● Go Live ↗</Link></div>
+          <div className="liveOrbitHeading"><div><span className="eyebrow">1MUSLIM · LIVE ORBIT</span><h1>All Streams<span className="liveOrbitPeriod">.</span></h1></div><Link href="/streaming/go-live" className="orbitGoLive">● Go Live ↗</Link></div>
           <div className="liveOrbitStage" onTouchStart={e=>{liveTouchStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const start=liveTouchStart.current;if(!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.2)stepLive(dy<0?1:-1);liveTouchStart.current=null}}>
             {currentLive?<div className="liveOrbitActive" key={currentLive.id}>
               <div className="orbitPlayerMeta"><span className="orbitLiveBadge">● LIVE</span><span>◉ {currentLive.viewer_count||0} watching</span><span className="orbitCount">{activeLiveIndex+1} / {rankedLives.length}</span></div>
