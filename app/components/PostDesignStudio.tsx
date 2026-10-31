@@ -60,7 +60,7 @@ export default function PostDesignStudio(){
  <div className={styles.composerRow}>
   <div className={styles.composer}><textarea ref={editorRef} maxLength={2000} aria-label="What's on your mind?" placeholder="What's on your mind?" value={text} onChange={e=>updateText(e.target.value)} /><span className={styles.counter}>{text.length} / 2000</span></div>
   <div className={styles.mediaColumn}>
-   <button type="button" className={styles.dropZone} onClick={()=>mediaRef.current?.click()} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();const file=e.dataTransfer.files?.[0];if(file)selectMedia(file)}} aria-label="Add photo or video"><span className={styles.addIcon}>＋</span><strong>Drop or tap</strong><small>Photo / Video</small></button>
+   <button type="button" className={styles.dropZone} onClick={()=>mediaRef.current?.click()} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();const file=e.dataTransfer.files?.[0];if(file)selectMedia(file)}} aria-label="Add photo or video"><span className={styles.magneticParticles} aria-hidden="true">{Array.from({length:10},(_,i)=><i key={i} style={{"--spark-index":i} as React.CSSProperties}/>)}</span><span className={styles.addIcon}>＋</span><strong><span className={styles.desktopUploadLabel}>Drop or tap</span><span className={styles.mobileUploadLabel}>Add Media</span></strong><small>Photo / Video</small></button>
    <button type="button" className={styles.verseAction} onClick={()=>{setVerseError("");setVerseSelected(false);setVersePreview(null);setVerseOpen(true)}}>۞ <span>Verse</span></button>
   </div>
  </div>
