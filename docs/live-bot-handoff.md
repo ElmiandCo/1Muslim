@@ -57,12 +57,21 @@ Date: 2026-10-30 (America/Chicago)
 11. **UX:** Host End Live should not wait for recording upload; confirm viewers see "Live complete" rather than reconnect error. Make host Audio Live avatar visible immediately on Go Live.
 12. Keep PR #188 and #190 unmerged until reviewed; hand off a new PR or add commits only to Bot B's isolated branch.
 
+
+## Bot A follow-up — camera "mirror" flash regression (2026-10-30 23:36 CT)
+- Commit `2a14b0b3eb06655414c4956384198ee1be39c53b`: removed the legacy 2-second opaque camera curtain and `studioCameraReturn` video fade (which deliberately hid live frames for the first ~46% of each switch). Removed the `studioCameraSettle` transform animation that could override front-camera orientation and look like a horizontal mirror flip. The frame's width/height/position transition and subtle border effect remain.
+- Desktop ↔ Phone now changes layout only: **do not stop, disable, restart, replace, re-acquire, or re-publish the camera track** for this pair. Preserve the exact video element and stream. Voice remains intentionally camera-off; Bot B must implement LiveKit publish/unpublish for Voice transitions, with a single room ID.
+- User explicitly does **not** want the mirror/flip/blackout effect when moving between Desktop and Phone. Check iPhone Safari, live and pre-live, with the front camera, back camera, and rapid repeated switches. Verify orientation stays constant and no blank frame appears; verify broadcast recipients see uninterrupted video.
+- **PR dependency is mandatory:** PR #190 is stacked on PR #188's branch (`fix/studio-three-mode-morph-and-voice-1030`), not on `main`. Bot B should build on the correct base and avoid cherry-picking #190 onto `main` without #188. Merge neither without review, and do not deploy.
+- Static source review only for this follow-up; the newest preview build and real-device behavior are **not yet verified**.
+
 ## Acceptance checklist
 - [ ] Vercel preview build READY with no TS errors
 - [ ] Phone camera fills the entire screen including bottom controls
 - [ ] Desktop 16:9 high with 10–15px margin and continuous subtle float
 - [ ] Voice square centered, host and viewer see same avatar
 - [ ] Every pairwise mode switch animates smoothly for ~2s with audible zoom cues
+- [ ] Desktop ↔ Phone never blanks, flips, mirrors, or restarts camera; live viewers see continuous frames
 - [ ] Audio Live begins promptly, viewer sees avatar before/when audio arrives
 - [ ] End Live signals viewers immediately without waiting for host reconnect
 - [ ] Network interruption shows reconnecting promptly, not a false "ended"
