@@ -89,7 +89,7 @@ export default function Home(){
  useEffect(()=>{let active=true;const db=createClient();const check=async()=>{const {data:{user}}=await db.auth.getUser();if(active){setHomeSignedIn(!!user);setAdminHudHud(user?.email?.toLowerCase()==="hudhudbyelmi@gmail.com");if(!user){setHomeNames(null);setHudHudPanel(null)}else{const meta=user.user_metadata||{};const english=String(meta.display_name||meta.full_name||meta.name||user.email?.split("@")[0]||"Member").trim();const arabic=String(meta.arabic_name||meta.name_ar||"").trim();setHomeNames({english,arabic:arabic||"اسمك بالعربية"})}}};void check();const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void check()});return()=>{active=false;subscription.unsubscribe()}},[]);
  const [upgradeVisible,setUpgradeVisible]=useState(false);
  const [guestFadeKey,setGuestFadeKey]=useState(0);
- // Guest-only intro: three visible theme changes, then settle on Sapphire Blue.
+ // Guest-only intro: black/gold -> purple -> emerald -> black -> blue.
  // No profile preference is written for visitors; signing in restores their own theme.
  useEffect(()=>{
   if(homeSignedIn!==false)return;
@@ -98,6 +98,7 @@ export default function Home(){
    {name:"obsidian",surface:"22,25,32",stroke:"204,164,98",accent:"75,68,54",halo:"204,164,98",base:"#0b0b0c",primary:"#e2b75e",secondary:"#ffdb8b",tint:"rgba(0,0,0,.62)",image:"carbon-fiber"},
    {name:"amethyst",surface:"86,39,82",stroke:"231,165,207",accent:"145,65,127",halo:"255,123,211",base:"#270b39",primary:"#c85cf5",secondary:"#ff9ed9",tint:"rgba(30,5,48,.43)",image:"amethyst"},
    {name:"emerald",surface:"8,75,57",stroke:"204,176,103",accent:"19,92,67",halo:"73,245,180",base:"#052b22",primary:"#22bd83",secondary:"#d9bd70",tint:"rgba(3,27,21,.3)",image:"emerald"},
+   {name:"obsidian",surface:"22,25,32",stroke:"204,164,98",accent:"75,68,54",halo:"204,164,98",base:"#0b0b0c",primary:"#e2b75e",secondary:"#ffdb8b",tint:"rgba(0,0,0,.62)",image:"carbon-fiber"},
    {name:"sapphire",surface:"29,64,112",stroke:"175,209,244",accent:"38,102,164",halo:"91,192,255",base:"#06182f",primary:"#398fff",secondary:"#cbdcff",tint:"rgba(2,14,39,.45)",image:"sapphire"}
   ];
   let cancelled=false;
@@ -123,14 +124,16 @@ export default function Home(){
   // Each palette change happens under the darkest point of a 4.8s crossfade.
   // Sequence: Obsidian → Amethyst → Emerald → Sapphire (final default).
   apply(0);
-  [800,6200,11600].forEach((at,index)=>{
+  root.dataset.guestIntroFirstReveal="true";
+  later(()=>{delete root.dataset.guestIntroFirstReveal},3100);
+  [3900,9300,14700,20100].forEach((at,index)=>{
    later(()=>setGuestFadeKey(v=>v+1),at);
    later(()=>apply(index+1),at+2250);
   });
-  later(()=>{delete root.dataset.guestThemeTour},17000);
+  later(()=>{delete root.dataset.guestThemeTour},25800);
   return()=>{
    cancelled=true;timers.forEach(clearTimeout);
-   delete root.dataset.guestThemeTour;delete root.dataset.guestImageFade;
+   delete root.dataset.guestThemeTour;delete root.dataset.guestImageFade;delete root.dataset.guestIntroFirstReveal;
    ["--guest-previous-scene-image","--guest-previous-scene-tint","--canvas-control-surface-rgb","--canvas-control-border-rgb","--canvas-control-accent-rgb","--guest-reveal-halo-rgb","--theme-base","--theme-accent","--theme-secondary","--theme-edge","--profile-scene-image","--profile-scene-tint"].forEach(key=>root.style.removeProperty(key));
    delete root.dataset.profileBackground;delete root.dataset.muslimTheme;
    const key=localStorage.getItem("1muslim:profile-background")||"emerald";
