@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect,useMemo,useState,type ReactNode,type RefObject,type CSSProperties} from "react";
+import {useEffect,useMemo,useRef,useState,type ReactNode,type RefObject,type CSSProperties} from "react";
 import {Room,RoomEvent,Track,type RemoteVideoTrack} from "livekit-client";
 import {createClient} from "../utils/supabase/client";
 import styles from "./LiveGuestsStage.module.css";
@@ -22,6 +22,8 @@ const isGuestIdentity=(identity:string,hostId:string|null)=>
 export function useLiveGuestRoster(roomRef:RefObject<Room|null>,connected:boolean,hostId:string|null,limit=11){
   const [guests,setGuests]=useState<LiveStageGuest[]>([]);
   const [profiles,setProfiles]=useState<Record<string,{name:string;avatar:string|null}>>({});
+  const seenOrder=useRef(new Map<string,number>());
+  const attemptedProfiles=useRef(new Set<string>());
   useEffect(()=>{
     if(!connected||!roomRef.current){setGuests([]);return;}
     const room=roomRef.current;
@@ -30,9 +32,10 @@ export function useLiveGuestRoster(roomRef:RefObject<Room|null>,connected:boolea
       if(!active)return;
       const participants=[...room.remoteParticipants.values()].filter(p=>isGuestIdentity(p.identity,hostId));
       setGuests(previous=>{
-        const order=new Map(previous.map((p,i)=>[p.id,i]));
-        participants.sort((a,b)=>(order.get(a.identity)??Number.MAX_SAFE_INTEGER)-(order.get(b.identity)??Number.MAX_SAFE_INTEGER));
-        return participants.slice(0,limit).map((p,index)=>{
+        // Stable seat order survives temporary network disconnects and track churn.
+        for(const p of participants)if(!seenOrder.current.has(p.identity))seenOrder.current.set(p.identity,seenOrder.current.size);
+        participants.sort((a,b)=>(seenOrder.current.get(a.identity)??0)-(seenOrder.current.get(b.identity)??0));
+        const next=participants.slice(0,limit).map((p,index)=>{
           const publications=[...p.trackPublications.values()];
           // Existing Guest Studio publishes raw MediaStreamTracks without source hints.
           // Accept Unknown as a fallback while excluding screen-share tracks.
@@ -47,6 +50,11 @@ export function useLiveGuestRoster(roomRef:RefObject<Room|null>,connected:boolea
             speaking:p.isSpeaking,
           };
         });
+        // Ignore LiveKit events that do not change what the viewer sees.
+        if(previous.length===next.length&&previous.every((g,i)=>{
+          const n=next[i];return g.id===n.id&&g.videoTrack===n.videoTrack&&g.micActive===n.micActive&&g.speaking===n.speaking;
+        }))return previous;
+        return next;
       });
     };
     const events=[RoomEvent.ParticipantConnected,RoomEvent.ParticipantDisconnected,RoomEvent.TrackSubscribed,RoomEvent.TrackUnsubscribed,RoomEvent.TrackPublished,RoomEvent.TrackUnpublished,RoomEvent.TrackMuted,RoomEvent.TrackUnmuted,RoomEvent.ActiveSpeakersChanged];
@@ -59,10 +67,12 @@ export function useLiveGuestRoster(roomRef:RefObject<Room|null>,connected:boolea
   useEffect(()=>{
     if(!ids)return;
     let active=true;
-    const missing=ids.split(",").filter(id=>!profiles[id]);
+    const missing=ids.split(",").filter(id=>!profiles[id]&&!attemptedProfiles.current.has(id));
     if(!missing.length)return;
+    for(const id of missing)attemptedProfiles.current.add(id);
     void (async()=>{
-      const {data}=await createClient().from("profiles").select("id,display_name,username,avatar_url").in("id",missing);
+      const {data,error}=await createClient().from("profiles").select("id,display_name,username,avatar_url").in("id",missing);
+      if(error){for(const id of missing)attemptedProfiles.current.delete(id);return;}
       if(!active)return;
       const next:Record<string,{name:string;avatar:string|null}>={};
       for(const profile of data??[]){
