@@ -75,3 +75,12 @@
 .profile-name-popover button{align-self:center;border:1px solid color-mix(in srgb,var(--theme-secondary,#d8c38e) 60%,transparent);border-radius:99px;padding:8px 22px;background:color-mix(in srgb,var(--theme-base,#111) 55%,transparent);color:var(--theme-secondary,#d8c38e);animation:profileDoneFloat 4s ease-in-out infinite;cursor:pointer}
 @keyframes profileDoneFloat{50%{transform:translateY(-3px)}}
 @media(prefers-reduced-motion:reduce){.profile-name-popover button{animation:none}}
+
+/* Profile mobile: edge-to-edge carousel and no emerald side bleed. */
+.profile-glass-gallery{width:100%!important;max-width:none!important;margin-inline:0!important;padding-inline:0!important;box-sizing:border-box!important}
+.profile-glass-gallery .profile-glass-theme-card{background:color-mix(in srgb,var(--theme-base,#101114) 38%,transparent)!important;border-color:color-mix(in srgb,var(--theme-secondary,#c7b783) 40%,transparent)!important}
+.profile-glass-identity,.profile-glass-tabs{width:100%!important;margin-left:0!important;margin-right:0!important}
+.profile-glass-avatar{margin-bottom:3px!important}
+.profile-avatar-name-wrap{top:-21px!important;left:50%!important;right:auto!important;transform:translateX(-50%);width:max-content;max-width:min(280px,90vw)}
+.profile-avatar-name-button{padding:5px 12px!important;box-shadow:0 5px 16px #0005}
+.profile-name-popover{top:calc(100% + 8px)}
