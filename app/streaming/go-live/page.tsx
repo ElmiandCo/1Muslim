@@ -1623,6 +1623,39 @@ export default function GoLivePage() {
             top:clamp(110px,15dvh,190px);
           }
         }
+        /* Live studio geometry correction: mode controls the VIDEO SURFACE, not just its border.
+           Keep the existing <video> and LiveKit tracks mounted across desktop/phone morphs. */
+        .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="phone"] .studioCameraFrame{
+          inset:0!important;top:0!important;left:0!important;right:0!important;bottom:0!important;
+          width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+          border:0!important;border-radius:0!important;box-shadow:none!important;
+          rotate:0deg!important;translate:0 0!important;animation:none!important;
+        }
+        .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="desktop"] .studioCameraFrame{
+          top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;
+          width:100%!important;height:auto!important;aspect-ratio:16/9!important;
+          max-width:none!important;max-height:100%!important;
+          translate:-50% -50%!important;rotate:0deg!important;animation:none!important;
+          border-radius:clamp(8px,2vw,18px)!important;
+        }
+        .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="phone"] .studioCameraFrame>video,
+        .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="desktop"] .studioCameraFrame>video{
+          inset:0!important;width:100%!important;height:100%!important;
+          object-fit:cover!important;object-position:center center!important;
+          scale:1!important;rotate:0deg!important;background:transparent!important;
+        }
+        .goLive .layout>.panel:first-child>.preview.studioTransform .studioCameraFrame{
+          transition:top 1.05s cubic-bezier(.19,1,.22,1),left 1.05s cubic-bezier(.19,1,.22,1),
+          width 1.05s cubic-bezier(.19,1,.22,1),height 1.05s cubic-bezier(.19,1,.22,1),
+          aspect-ratio 1.05s cubic-bezier(.19,1,.22,1),
+          border-radius 1.05s cubic-bezier(.19,1,.22,1),
+          translate 1.05s cubic-bezier(.19,1,.22,1)!important;
+        }
+        @media(max-width:850px){
+          .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="phone"] .studioCameraFrame{
+            width:100vw!important;height:100dvh!important;
+          }
+        }
         /* CSS-only: center Voice avatar within the full stage, not a top-aligned box. */
         .goLive .layout>.panel:first-child>.preview .voiceAvatarStage{
           position:absolute!important;inset:0!important;top:0!important;left:0!important;right:0!important;bottom:0!important;
