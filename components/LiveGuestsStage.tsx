@@ -124,8 +124,11 @@ export default function LiveGuestsStage({mode,guests,hostName,hostAvatar,hostMic
   const visible=guests.slice(0,mode==="video"?3:11);
   const count=visible.length;
   return <section className={styles.stage} data-mode={mode} data-count={count} aria-label={mode==="audio"?"Live audio room":"Live video guests"}>
+    <div className={styles.hostVideo} data-speaking={hostSpeaking?"yes":"no"} aria-hidden={mode==="audio"}>
+      {children}
+      {mode==="video"&&<span className={styles.hostLabel}>👑 {hostName} · Host</span>}
+    </div>
     {mode==="video"?<>
-      <div className={styles.hostVideo} data-speaking={hostSpeaking?"yes":"no"}>{children}<span className={styles.hostLabel}>👑 {hostName} · Host</span></div>
       <GuestVideoTiles guests={visible}/>
     </>:<>
       <div className={styles.audioOrbit} aria-label={`${count} audio guests`}>
