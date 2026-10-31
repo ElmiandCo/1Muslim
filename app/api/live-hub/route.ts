@@ -63,7 +63,13 @@ export async function GET() {
     (scheduleResult.data ?? []) as HubScheduleRow[],
     now.getTime(),
   );
-  return NextResponse.json({ ...hub, serverTime: now.toISOString() }, {
+  const publicReplays=hub.pastLives.map(({videoPath,...recording})=>({
+    ...recording,
+    previewUrl: recording.mediaType==="video" && videoPath
+      ? db.storage.from("live-recordings").getPublicUrl(videoPath).data.publicUrl
+      : null,
+  }));
+  return NextResponse.json({ ...hub, pastLives:publicReplays, serverTime: now.toISOString() }, {
     headers: {
       "Cache-Control": "public, s-maxage=1, stale-while-revalidate=2",
       "Vary": "Accept-Encoding",
