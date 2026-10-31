@@ -37,7 +37,7 @@ let snapshot: DiscoverySnapshot = EMPTY;
 const listeners = new Set<() => void>();
 let supabase: ReturnType<typeof createClient> | null = null;
 function getSupabase() { return supabase ?? (supabase = createClient()); }
-let channel: ReturnType<typeof supabase.channel> | null = null;
+let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
 let running = false;
 let connected = false;
 let inFlight = false;
