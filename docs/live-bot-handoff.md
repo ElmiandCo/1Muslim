@@ -86,7 +86,7 @@ Date: 2026-10-30 (America/Chicago)
 ### Branches / PR order
 1. **PR #188** `fix/studio-three-mode-morph-and-voice-1030` — camera layout foundation.
 2. **PR #190** `bot-a/live-audio-lifecycle-morph-20261030` — Bot A, stacked on #188.
-3. **PR #193** `bot-b/live-track-switch-end-recovery-20261031` — Bot B, stacked on Bot A #190.
+3. **PR #193** `bot-b/live-track-switch-final-20261031` — Bot B, stacked on Bot A #190.
 
 Review and merge **in that order only**, retargeting each downstream PR to `main` after its prerequisite merges. Never merge or deploy automatically. Earlier Bot B drafts **PR #189**, **PR #191**, and **PR #192** were superseded without merge: #189 overlapped Bot A's viewer code; #191 and #192 diverged while Bot A was still updating its branch. PR #193 starts from Bot A's completed head and supersedes them.
 
