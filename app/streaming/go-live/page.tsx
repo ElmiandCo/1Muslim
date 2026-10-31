@@ -66,6 +66,24 @@ export default function GoLivePage() {
   const modeSyncQueueRef=useRef<Promise<void>>(Promise.resolve());
   const previewCameraAcquiringRef=useRef(false);
   const cameraFlipInFlightRef=useRef(false);
+  const [cameraFreezeFrame,setCameraFreezeFrame]=useState<string|null>(null);
+  const [cameraFreezeFading,setCameraFreezeFading]=useState(false);
+  const cameraFreezeTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
+  useEffect(()=>()=>{if(cameraFreezeTimerRef.current)clearTimeout(cameraFreezeTimerRef.current)},[]);
+  const clearCameraFreeze=()=>{if(cameraFreezeTimerRef.current)clearTimeout(cameraFreezeTimerRef.current);cameraFreezeTimerRef.current=null;setCameraFreezeFading(false);setCameraFreezeFrame(null)};
+  const captureCameraFreeze=()=>{
+    const video=videoRef.current;
+    if(!video||!video.videoWidth||!video.videoHeight)return null;
+    try{
+      const canvas=document.createElement("canvas");
+      const scale=Math.min(1,960/video.videoWidth);
+      canvas.width=Math.max(1,Math.round(video.videoWidth*scale));
+      canvas.height=Math.max(1,Math.round(video.videoHeight*scale));
+      const ctx=canvas.getContext("2d");if(!ctx)return null;
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      return canvas.toDataURL("image/jpeg",0.8);
+    }catch{return null}
+  };
   const syncPublishedCameraForMode=async(mode:"desktop"|"phone"|"voice",allowCamera:boolean)=>{
     const room=roomRef.current;
     if(!room||!liveStreamIdRef.current||endRequestedRef.current||desiredStudioModeRef.current!==mode)return;
@@ -723,6 +741,9 @@ export default function GoLivePage() {
     if (cameraFlipInFlightRef.current || !cameraOn || studioMode === "voice" ||
         !streamRef.current || !navigator.mediaDevices?.getUserMedia) return;
     cameraFlipInFlightRef.current = true;
+    clearCameraFreeze();
+    const frozen=captureCameraFreeze();
+    if(frozen)setCameraFreezeFrame(frozen);
     setError("");
     const previousFacing = facingMode;
     const nextFacing = facingMode === "user" ? "environment" : "user";
@@ -755,7 +776,13 @@ export default function GoLivePage() {
         videoRef.current.playsInline = true;
         void videoRef.current.play().catch(() => {});
       }
+      if(frozen){
+        await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
+        setCameraFreezeFading(true);
+        cameraFreezeTimerRef.current=setTimeout(()=>{setCameraFreezeFrame(null);setCameraFreezeFading(false);cameraFreezeTimerRef.current=null},400);
+      }
     } catch (err) {
+      clearCameraFreeze();
       // Camera fallback can fail without interrupting a still-live microphone.
       setError(err instanceof DOMException && (err.name === "OverconstrainedError" || err.name === "NotFoundError")
         ? "This device does not expose a switchable front/back camera."
@@ -1288,6 +1315,8 @@ export default function GoLivePage() {
         @media(max-width:850px){.goLive .newStudioHint{display:none!important}.goLive .newStudioActions{gap:7px!important;padding:9px 10px!important}.goLive .preliveIdentity{bottom:144px!important}.goLive .previewOverlayTools{top:24%!important}.goLive .previewOverlayTools button{width:38px!important;height:38px!important}}
         .goLive .previewOverlayTools button{display:flex!important;align-items:center!important;justify-content:center!important;border-radius:50%!important;transition:transform .24s ease!important}.goLive .previewOverlayTools button:active{transform:scale(.92)}.goLive .newStudioModes button{display:flex!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;gap:3px!important}.goLive .newStudioModes button svg{width:19px;height:19px}.goLive .immersiveHeader>button{display:flex;align-items:center;gap:6px}.goLive .immersiveHeader>button svg{width:18px;height:18px}\n        .studioTransform{transition:width .75s cubic-bezier(.22,1,.36,1),height .75s cubic-bezier(.22,1,.36,1),max-width .75s cubic-bezier(.22,1,.36,1),aspect-ratio .75s cubic-bezier(.22,1,.36,1),border-radius .65s ease,background .65s ease!important;overflow:hidden;will-change:width,height,aspect-ratio}.studioTransform>video{transition:opacity .5s ease,transform .65s cubic-bezier(.2,.8,.2,1)}.studioVoiceMode>video{opacity:0!important;transform:scale(1.12);pointer-events:none}.voiceAvatarStage{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;opacity:0;visibility:hidden;transform:scale(.92);transition:opacity .6s ease,transform .65s cubic-bezier(.2,.8,.2,1),visibility .6s;background:radial-gradient(ellipse at 50% 43%,#184a3b 0%,#091e1b 52%,#020807 100%);pointer-events:none;overflow:hidden}.voiceAvatarStageActive{opacity:1;visibility:visible;transform:scale(1)}.voiceAvatarMotion{position:relative;width:clamp(150px,40%,260px);aspect-ratio:1;display:grid;place-items:center;animation:voiceFloat 5s ease-in-out infinite;filter:drop-shadow(0 12px 28px #0008)}.voiceAvatarAura{position:absolute;inset:-10%;border-radius:50%;border:2px solid #87f8ce9c;box-shadow:0 0 calc(18px + var(--voice-energy,0)*65px) #34e5a5, inset 0 0 35px #36d9a557;background:radial-gradient(circle,#3ff3a322 25%,transparent 72%);animation:voiceBreathe 3.6s ease-in-out infinite;transform:scale(calc(1 + var(--voice-energy,0)*.28))}.voiceAvatarPortrait{width:100%;height:100%;overflow:hidden;border-radius:50%;display:grid;place-items:center;border:3px solid #c8fce6;background:radial-gradient(circle at 35% 25%,#28755f,#07261c 75%);box-shadow:0 0 35px #20c78c55;transform:scale(calc(1 + var(--voice-energy,0)*.11)) rotate(calc(var(--voice-energy,0)*3deg));transition:transform .1s linear}.voiceAvatarPortrait img{width:100%;height:100%;object-fit:cover}.voiceAvatarPortrait>span{font-size:clamp(60px,14vw,110px);color:#e5f9f0}.voiceAvatarLabel{z-index:2;display:grid;gap:5px;text-align:center;text-shadow:0 2px 9px #000}.voiceAvatarLabel strong{font-size:clamp(17px,4vw,24px);color:#fff}.voiceAvatarLabel span{font-size:12px;color:#a5f3d1}.voiceBackdropOrbs{position:absolute;inset:0}.voiceBackdropOrbs i{position:absolute;width:45%;aspect-ratio:1;border:1px solid #5fe1b333;border-radius:50%;left:27%;top:20%;animation:voiceRing 7s ease-in-out infinite}.voiceBackdropOrbs i:nth-child(2){animation-delay:-2.3s}.voiceBackdropOrbs i:nth-child(3){animation-delay:-4.6s}@keyframes voiceFloat{0%,100%{translate:-4px 5px}25%{translate:6px -7px}50%{translate:4px 4px}75%{translate:-7px -3px}}@keyframes voiceBreathe{0%,100%{scale:.96}50%{scale:1.05}}@keyframes voiceRing{0%{transform:scale(.7);opacity:0}35%{opacity:.7}100%{transform:scale(2.1);opacity:0}}@media(prefers-reduced-motion:reduce){.voiceAvatarMotion,.voiceAvatarAura,.voiceBackdropOrbs i{animation:none}.studioTransform,.studioTransform>video,.voiceAvatarStage{transition:none}}
 
+         .cameraFreezeCrossfade{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:25}
+         @media(prefers-reduced-motion:reduce){.cameraFreezeCrossfade{transition:none!important}}
         /* Full-canvas immersive stage: mobile and desktop. Keep controls overlayed, never consume video height. */
         .goLive .layout>.panel:first-child>.preview.studioTransform{isolation:isolate;transition:height .7s cubic-bezier(.22,1,.36,1),aspect-ratio .7s cubic-bezier(.22,1,.36,1),border-radius .5s ease!important}
         .goLive .layout>.panel:first-child>.preview.studioTransform>video{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center center!important;transition:transform .7s cubic-bezier(.22,1,.36,1),opacity .5s ease!important}
@@ -1642,6 +1671,7 @@ export default function GoLivePage() {
               <div className="studioCameraFrame" aria-hidden={studioMode==="voice"}>
                 {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               </div>
+               {cameraFreezeFrame && <img src={cameraFreezeFrame} alt="" aria-hidden="true" className="cameraFreezeCrossfade" style={{opacity:cameraFreezeFading?0:1,transition:cameraFreezeFading?"opacity 400ms ease-in-out":"none"}} />}
               <div className={`voiceAvatarStage ${studioMode==="voice"?"voiceAvatarStageActive":""}`} aria-hidden={studioMode!=="voice"}>
                 <div className="voiceBackdropOrbs"><i/><i/><i/></div>
                 <div className="voiceAvatarMotion" style={{["--voice-energy" as string]:voiceEnergy} as React.CSSProperties}>
