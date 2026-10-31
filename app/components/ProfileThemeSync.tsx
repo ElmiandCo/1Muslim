@@ -1,5 +1,5 @@
 "use client";
-import {useEffect} from "react";
+import {useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 
 const aliases:Record<string,string>={"rose-gold":"ruby","silver-dust":"titanium","carbon-fiber":"obsidian"};
@@ -24,22 +24,40 @@ function applyTheme(value:unknown){
  if(theme==="obsidian"||theme==="titanium"){try{localStorage.setItem("1muslim-theme-mode","night");localStorage.setItem("1muslim-theme","dark")}catch{};root.classList.remove("light")}
 }
 export default function ProfileThemeSync(){
+ const [recognizing,setRecognizing]=useState(true);
  useEffect(()=>{
-  let active=true;
-  try{applyTheme(localStorage.getItem("1muslim:profile-background")||fallback)}catch{applyTheme(fallback)}
+  let active=true;let settled=false;
+  const initial=(()=>{try{return localStorage.getItem("1muslim:profile-background")||fallback}catch{return fallback}})();
+  const start=performance.now();
+  const settle=(theme:string)=>{if(!active)return;applyTheme(theme);if(!settled){settled=true;window.setTimeout(()=>{if(active)setRecognizing(false)},Math.max(0,1100-(performance.now()-start)))}};
   const db=createClient();
   const refresh=async()=>{
-   const {data:{user}}=await db.auth.getUser();
-   if(!active)return;
-   if(!user){return}
-   const {data}=await db.from("profiles").select("avatar_config").eq("id",user.id).maybeSingle();
-   if(active)applyTheme((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||fallback);
+   try{
+    const {data:{user}}=await db.auth.getUser();
+    if(!active)return;
+    if(!user){settle(initial);return}
+    const {data}=await db.from("profiles").select("avatar_config").eq("id",user.id).maybeSingle();
+    settle((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||initial);
+   }catch{settle(initial)}
   };
   void refresh();
   const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void refresh()});
-  const onChange=(event:Event)=>{const theme=(event as CustomEvent<string>).detail;if(typeof theme==="string")applyTheme(theme);else void refresh()};
+  const onChange=(event:Event)=>{const theme=(event as CustomEvent<string>).detail;if(typeof theme==="string")settle(theme);else void refresh()};
   window.addEventListener("1muslim:profile-background-changed",onChange);
   return()=>{active=false;subscription.unsubscribe();window.removeEventListener("1muslim:profile-background-changed",onChange)};
  },[]);
- return null;
+ return <>
+  {recognizing&&<div className="themeRecognitionIntro" aria-hidden="true"><div className="themeRecognitionGlow"/><div className="themeRecognitionButtons"><i/><i/><i/><i/><i/><i/></div></div>}
+  <style>{`
+   .themeRecognitionIntro{position:fixed;inset:0;z-index:15;pointer-events:none;overflow:hidden;opacity:.78;transition:opacity 1.4s ease;background:linear-gradient(125deg,rgba(9,74,61,.18),rgba(30,83,159,.2),rgba(104,42,129,.17),rgba(127,81,35,.16));background-size:400% 400%;animation:themeIntroShift 9s ease-in-out infinite}
+   .themeRecognitionGlow{position:absolute;inset:-20%;background:radial-gradient(circle at 25% 35%,rgba(42,167,222,.16),transparent 55%),radial-gradient(circle at 80% 70%,rgba(209,115,215,.12),transparent 55%);animation:themeIntroFloat 7s ease-in-out infinite alternate}
+   .themeRecognitionButtons{position:absolute;bottom:13%;left:50%;transform:translateX(-50%);display:flex;gap:12px;opacity:.55}
+   .themeRecognitionButtons i{width:8px;height:8px;border-radius:50%;background:#4ec8a5;box-shadow:0 0 12px currentColor;animation:themeIntroButton 6s ease-in-out infinite}
+   .themeRecognitionButtons i:nth-child(2){animation-delay:-1s}.themeRecognitionButtons i:nth-child(3){animation-delay:-2s}.themeRecognitionButtons i:nth-child(4){animation-delay:-3s}.themeRecognitionButtons i:nth-child(5){animation-delay:-4s}.themeRecognitionButtons i:nth-child(6){animation-delay:-5s}
+   @keyframes themeIntroShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+   @keyframes themeIntroFloat{from{transform:translate3d(-1%,1%,0) scale(1)}to{transform:translate3d(1%,-1%,0) scale(1.05)}}
+   @keyframes themeIntroButton{0%,100%{background:#37bb8b;opacity:.4;transform:scale(.8)}33%{background:#4f9eff;opacity:1;transform:scale(1.3)}66%{background:#cf7de7;opacity:.7;transform:scale(1)}}
+   @media(prefers-reduced-motion:reduce){.themeRecognitionIntro,.themeRecognitionGlow,.themeRecognitionButtons i{animation:none!important}}
+  `}</style>
+ </>;
 }
