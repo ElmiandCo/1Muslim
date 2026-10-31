@@ -93,17 +93,76 @@ export default function GoLivePage() {
       }).catch(()=>void context.close().catch(()=>{}));
     }catch{/* Audio effects are optional; never block mode switching. */}
   };
+  const desiredStudioModeRef=useRef<"desktop"|"phone"|"voice">("phone");
+  const modeSyncQueueRef=useRef<Promise<void>>(Promise.resolve());
+  const syncPublishedCameraForMode=async(mode:"desktop"|"phone"|"voice")=>{
+    const room=roomRef.current;
+    if(!live||!room||endRequestedRef.current||desiredStudioModeRef.current!==mode)return;
+    const cameraPublications=()=>[...room.localParticipant.videoTrackPublications.values()]
+      .filter(publication=>publication.source===Track.Source.Camera&&publication.track);
+    if(mode==="voice"){
+      for(const publication of cameraPublications()){
+        if(publication.track)await room.localParticipant.unpublishTrack(publication.track,false);
+      }
+      if(desiredStudioModeRef.current==="voice")streamRef.current?.getVideoTracks().forEach(track=>{track.enabled=false;});
+      return;
+    }
+    const stream=streamRef.current;
+    if(!stream)return;
+    let videoTrack=stream.getVideoTracks().find(track=>track.readyState==="live");
+    if(!videoTrack){
+      // Voice may have started with microphone-only permission. Add camera
+      // without replacing the active audio track or reconnecting the room.
+      const cameraStream=await navigator.mediaDevices.getUserMedia({
+        audio:false,
+        video:{facingMode:{ideal:facingMode},width:{ideal:mode==="desktop"?1280:720},height:{ideal:mode==="desktop"?720:1280}}
+      });
+      const acquired=cameraStream.getVideoTracks()[0];
+      if(!acquired)throw new Error("No camera track was returned.");
+      if(desiredStudioModeRef.current!==mode||roomRef.current!==room||endRequestedRef.current){acquired.stop();return;}
+      stream.addTrack(acquired);
+      rawCameraRef.current=acquired;
+      videoTrack=acquired;
+      refreshCameraCapabilities(acquired);
+      if(videoRef.current){
+        videoRef.current.srcObject=stream;
+        videoRef.current.muted=true;
+        videoRef.current.playsInline=true;
+        void videoRef.current.play().catch(()=>{});
+      }
+    }
+    if(desiredStudioModeRef.current!==mode||roomRef.current!==room||endRequestedRef.current)return;
+    videoTrack.enabled=true;
+    if(cameraPublications().length===0){
+      await room.localParticipant.publishTrack(videoTrack,{
+        source:Track.Source.Camera,simulcast:true,videoEncoding:{maxBitrate:3500000,maxFramerate:30}
+      });
+    }
+  };
   const selectStudioMode=(mode:"desktop"|"phone"|"voice")=>{
     if(mode===studioMode)return;
+    desiredStudioModeRef.current=mode;
     if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current);
     setStudioMorphing(false);
     requestAnimationFrame(()=>setStudioMorphing(true));
     studioMorphTimer.current=setTimeout(()=>setStudioMorphing(false),2000);
-    playCameraAdjustSound(mode);
+    playCameraAdjustSound();
     setStudioMode(mode);
     setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
     if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
     else{setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
+    if(live&&liveStreamIdRef.current){
+      const streamId=liveStreamIdRef.current;
+      void fetch("/api/live-mode",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({streamId,mode}),cache:"no-store"
+      }).then(response=>{if(!response.ok)console.warn("Live mode metadata sync failed",response.status)})
+        .catch(error=>console.warn("Live mode metadata sync failed",error));
+      // Serial queue prevents rapid Phone ↔ Voice taps from racing publish
+      // against unpublish and leaving the host with no camera track.
+      modeSyncQueueRef.current=modeSyncQueueRef.current.catch(()=>{}).then(()=>syncPublishedCameraForMode(mode))
+        .catch(error=>{if(desiredStudioModeRef.current===mode)setError(error instanceof Error?error.message:"Could not switch camera mode.");});
+    }
   };
   useEffect(()=>{
     let cancelled=false;
