@@ -63,7 +63,20 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
         <div className="omLiveTheaterGuestPanel"><LiveGuestStudio streamId={streamId} roomName={roomName} hostId={hostId} /></div>
       </details>
       <style jsx global>{`
-        .omLiveCinema{--cinema-ease:cubic-bezier(.22,.72,.19,1);overflow:hidden}
+        .omLiveCinema{position:fixed;inset:0;width:100vw;height:100dvh;background:#000;overflow:hidden;z-index:1000;isolation:isolate;--cinema-ease:cubic-bezier(.22,.72,.19,1)}
+        .omLiveCinema>.omLiveImmersiveViewer{height:100%!important;min-height:100%!important;aspect-ratio:auto!important}
+        .omLiveCinema .omLiveTheaterInfo{position:absolute;top:calc(env(safe-area-inset-top) + 16px);left:70px;right:110px;display:flex;align-items:center;gap:8px;color:#fff;font-size:12px;text-shadow:0 1px 8px #000;pointer-events:none;z-index:20;white-space:nowrap;overflow:hidden}
+        .omLiveCinema .omLiveTheaterInfo strong{overflow:hidden;text-overflow:ellipsis}
+        .omLiveCinema .omLiveTheaterAvatar{width:35px;height:35px;object-fit:cover;border-radius:50%;border:1px solid #91ffe2;flex:none}
+        .omLiveCinema .omLiveTheaterIdentity{display:flex;flex-direction:column;gap:2px;min-width:0}
+        .omLiveCinema .omLiveTheaterIdentity small{opacity:.8;overflow:hidden;text-overflow:ellipsis}
+        .omLiveCinema .omLiveTheaterBadge{font-size:10px;font-weight:900;padding:6px 9px;border-radius:999px;background:#aa2039;flex:none}
+        .omLiveCinema .omLiveTheaterChat{position:absolute;mask-image:linear-gradient(to bottom,transparent 0%,black 18%);-webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 18%);pointer-events:auto}
+        .omLiveCinema .omLiveTheaterGuests{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom) + 38px);color:#fff}
+        .omLiveCinema .omLiveTheaterGuests summary{list-style:none;cursor:pointer;padding:10px 12px;border-radius:999px;background:#09221dbb;border:1px solid #a4e7d16b;backdrop-filter:blur(16px);font-size:12px}
+        .omLiveCinema .omLiveTheaterGuests summary::-webkit-details-marker{display:none}
+        .omLiveCinema .omLiveTheaterGuestPanel{position:absolute;bottom:48px;right:0;width:min(90vw,390px);max-height:45dvh;overflow:auto;border-radius:18px;background:#081a17ef;border:1px solid #a4e7d14d;padding:10px;backdrop-filter:blur(20px)}
+
         .omLiveCinema .omLiveCinemaBackdrop{position:absolute;inset:-12%;width:124%;height:124%;object-fit:cover;filter:blur(55px) brightness(.42) saturate(1.2);transform:scale(1.08);pointer-events:none;z-index:0;opacity:.95}
         .omLiveCinema .omLiveVideoStage{position:absolute!important;z-index:1;overflow:hidden!important;transition:top 2s var(--cinema-ease),left 2s var(--cinema-ease),width 2s var(--cinema-ease),height 2s var(--cinema-ease),border-radius 2s var(--cinema-ease),transform 2s var(--cinema-ease);will-change:width,height,top,left}
         .omLiveCinema[data-cinema-mode="phone"] .omLiveVideoStage{top:0!important;left:0!important;width:100%!important;height:100%!important;transform:none!important;border-radius:0!important}
