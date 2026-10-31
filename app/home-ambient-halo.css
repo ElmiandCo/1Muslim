@@ -1,0 +1,5 @@
+/* HudHud-inspired ambient glow: purely decorative, behind workspace content. */
+.homeAmbientHalo{position:absolute;inset:0;pointer-events:none;z-index:0;opacity:0;background:radial-gradient(ellipse 65% 48% at 50% 35%,rgba(87,214,223,.19) 0%,rgba(87,214,223,.065) 45%,transparent 78%);mix-blend-mode:screen;will-change:opacity}
+.homeAmbientHaloPulse{animation:homeAmbientHaloBreath 2.3s ease-in-out both}
+@keyframes homeAmbientHaloBreath{0%,100%{opacity:0}43%{opacity:1}68%{opacity:.8}}
+@media(prefers-reduced-motion:reduce){.homeAmbientHalo,.homeAmbientHaloPulse{animation:none!important;opacity:0!important}}
