@@ -314,3 +314,44 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 - Confirm anonymous RLS/Realtime access and test real host/viewer sessions: video, audio-only, screen share, signed-out For You, viewer refresh, explicit End Live, host crash, recovery, room recreation, rapid mode changes, and Safari autoplay.
 - Measure p50/p95/p99 start/end/disconnect delivery and 1k/10k viewer load; none measured here. Live chat 2s polling, viewer count 5s polling, and scheduled-content 10s polling remain separate from Live discovery.
 - **PR #200 remains draft and NOT merge-ready**. Do not merge, deploy, or modify the UI without explicit approval.
+
+---
+
+## Bot B — All Streams integration and preview safety review (2026-10-31)
+
+### Scope and branch
+- Worked exclusively on `bot-b/live2-discovery-integration-20261031` / draft PR #200; base is `1MuslimLive2.0`. No production merge, deployment, database migration, or secret mutation.
+- Read Bot A's current base handoff and Live 2.0 specification, PR #200 and legacy PR #193. Preserved existing event-driven discovery, LiveKit viewer and host studio behavior.
+- Integrated Bot A's verified hub backend **without overwriting Bot B's newer realtime changes**:
+  - `b4d519fe`: `lib/live-hub.ts`
+  - `f0d03f1f`: `app/api/live-hub/route.ts`
+  - `06c7ae3e`: `scripts/live-hub.test.mjs`
+- Integrated missing Bot A hardening from the newer base:
+  - `046f2625`: signed LiveKit webhook route with observation timestamps captured before provider snapshots
+  - `d348be01`: monotonic SQL snapshot ordering and STARTING/RECONNECTING handling
+  - `3403c631`: optional authenticated server reconciliation watchdog route
+  - `45d74706`: reconciliation candidate and bounded webhook-dedupe cleanup SQL helpers
+- All above were copied from Bot A's current base file contents. Bot B's existing `lib/live-presence.ts` muted-track readiness and realtime client logic were **not replaced**.
+
+### Approved legacy All Streams page
+- `7d457859` and `23f9b129`: enhanced the **existing** `/streaming` page (no competing new route) with a legacy emerald/gold design, section navigation, Current Lives, verified Audio Rooms, real Games-tagged Lives, upcoming Scheduled Lives, and genuine public Past Live replays.
+- The page consumes `GET /api/live-hub` for public schedule/replay discovery; active Lives, Audio and Games use the existing shared `useLiveDiscovery` READY-only realtime store. The hub snapshot is refreshed on state changes/visibility return, **not fixed-interval browser polling**.
+- Current Live and audio/game cards link to existing `/streaming/live/{id}`; replays link to `/streaming/replay/{id}`. Before navigating, the page records scroll position in session storage and restores it on return.
+- Replaced admin-only Past Lives listing with public-only uploaded replay contract; no synthetic archive from an ended stream without an actual recording. No fake Games broadcasts. Schedule creation reuses `/streaming/go-live?schedule=1`.
+- No changes to For You presentation, Profile, Qur'an, host `/streaming/go-live`, LiveKit player, or camera animations. **The only UI code touched is the approved `app/streaming/page.tsx`.**
+
+### Actual verification
+- Local Node 22.16.0: `node --experimental-strip-types --test scripts/live-hub.test.mjs` — **6/6 passed** (public READY, audio-only, stale/invalid, actual archive, schedule expiry, Games classification). Pure unit tests; not LiveKit end-to-end.
+- Vercel preview for UI commit `7d457859` reported **READY**, validating Next.js build and type checks for that page. Newer head status must be checked before declaring the *entire* integrated branch READY.
+- Verified Vercel Preview environment has names `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`; **did not retrieve/decrypt or expose values**. `CRON_SECRET` is **not configured**, so the optional reconciliation endpoint deliberately returns 503.
+- Supabase connection exposed only project `SecureApp` and **zero development branches**. No confirmed isolated preview database exists. To avoid touching what may be production data, **no SQL migration or live webhook test was run** against that project. Preview environment variables existing does not prove they point to an isolated database.
+- LiveKit Cloud webhook registration/delivery could not be inspected with available connected tools. Source statically verifies raw-body signed webhook receiver and host identity check, but a real signed webhook was **not delivered/tested**.
+- No two-device host/viewer LiveKit session, iPhone Safari, signed-out runtime playback, or p50/p95/p99 latency/load test was performed. **Do not claim sub-second targets met.**
+
+### Blocking acceptance checklist
+1. Provision or identify an isolated Supabase preview branch/project, then apply `20261031052500_live_2_event_presence.sql` and `20261031055000_live_2_reconciliation_helpers.sql` **only there**; validate schema/RLS, RPC authorization and Realtime publication.
+2. Confirm LiveKit Cloud's preview webhook destination points to the preview deployment, send authentic signed events, test duplicate/out-of-order, host track READY_AUDIO/READY_VIDEO, host End Live, disconnect/reconnect, and room recreation.
+3. Set a preview-only `CRON_SECRET` and schedule reconciliation **only after** isolated preview DB/LiveKit room are verified. Test watchdog and dedupe retention without touching production.
+4. Run real iPhone Safari and desktop host/viewer/signed-out flows; measure end-to-end latency and 1k/10k fanout, verify audio autoplay fallback and full-screen viewer return scroll.
+5. GoLive category selector currently lacks Games; only actual Games-tagged Lives can appear. A separately approved minimal host category control is needed for first-class game stream creation.
+6. Reconcile branch divergence against latest `main` and Bot A base before merge, preserving all existing UI freezes. **Do not merge/deploy without user approval.**
