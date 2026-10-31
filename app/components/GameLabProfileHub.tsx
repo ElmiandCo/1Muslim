@@ -21,7 +21,7 @@ export default function GameLabProfileHub({active,profile,avatarHero,renderProfi
   const track=()=>{
    const rect=workspaceRef.current?.getBoundingClientRect();
    if(rect&&rect.width>0&&rect.height>0){
-    const top=Math.round(rect.top+12);
+    const top=Math.round(rect.top+Math.min(104,Math.max(72,rect.width*0.12)));
     const left=Math.round(rect.left+rect.width/2);
     if(top!==lastTop||left!==lastLeft){
      lastTop=top;lastLeft=left;setHeroPosition({top,left});
