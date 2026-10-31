@@ -3,6 +3,7 @@ import workspaceStyles from "./workspace-presentation.module.css";
 import "./canvas-fullscreen-v1.css";
 import "./home-ambient-halo.css";
 import "./guest-theme-reveal.css";
+import {enableGuestIntroSound,playGuestIntroSound} from "./guest-intro-sound";
 import CanvasSecondaryApp, {CommunityMap} from "./components/CanvasSecondaryApp";
 import PostDesignStudio from "./components/PostDesignStudio";
 import HomeMessagesChooser from "./components/HomeMessagesChooser";
@@ -102,6 +103,11 @@ export default function Home(){
    {name:"sapphire",surface:"29,64,112",stroke:"175,209,244",accent:"38,102,164",halo:"91,192,255",base:"#06182f",primary:"#398fff",secondary:"#cbdcff",tint:"rgba(2,14,39,.45)",image:"sapphire"}
   ];
   let cancelled=false;
+  // Audio is enabled only after an explicit user gesture; silent autoplay fallback.
+  const unlockSound=()=>{enableGuestIntroSound();if(performance.now()-startedAt<3100)playGuestIntroSound("reveal")};
+  const startedAt=performance.now();
+  window.addEventListener("pointerdown",unlockSound,{once:true});
+  window.addEventListener("keydown",unlockSound,{once:true});
   const timers:Array<ReturnType<typeof setTimeout>>=[];
   const later=(fn:()=>void,ms:number)=>{timers.push(setTimeout(()=>{if(!cancelled)fn()},ms))};
   const apply=(index:number)=>{
@@ -127,12 +133,13 @@ export default function Home(){
   root.dataset.guestIntroFirstReveal="true";
   later(()=>{delete root.dataset.guestIntroFirstReveal},3100);
   [3900,9300,14700,20100].forEach((at,index)=>{
-   later(()=>setGuestFadeKey(v=>v+1),at);
+   later(()=>{setGuestFadeKey(v=>v+1);playGuestIntroSound("transition")},at);
    later(()=>apply(index+1),at+2250);
   });
   later(()=>{delete root.dataset.guestThemeTour},25800);
   return()=>{
    cancelled=true;timers.forEach(clearTimeout);
+   window.removeEventListener("pointerdown",unlockSound);window.removeEventListener("keydown",unlockSound);
    delete root.dataset.guestThemeTour;delete root.dataset.guestImageFade;delete root.dataset.guestIntroFirstReveal;
    ["--guest-previous-scene-image","--guest-previous-scene-tint","--canvas-control-surface-rgb","--canvas-control-border-rgb","--canvas-control-accent-rgb","--guest-reveal-halo-rgb","--theme-base","--theme-accent","--theme-secondary","--theme-edge","--profile-scene-image","--profile-scene-tint"].forEach(key=>root.style.removeProperty(key));
    delete root.dataset.profileBackground;delete root.dataset.muslimTheme;
