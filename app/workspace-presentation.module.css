@@ -800,3 +800,13 @@
  background-color:#0b2e67!important;
  background-image:linear-gradient(155deg,#123d83 0%,#0b2e67 55%,#071b43 100%)!important;
 }
+
+/* Sapphire only: replace the previous Quran scene with the uploaded artwork.
+   Other slides and all other themes retain their existing backgrounds. */
+:global(html[data-muslim-theme="sapphire"]) .fillArea .slide[data-workspace-page="1"] .night,
+:global(html[data-muslim-theme="sapphire"]) .fillArea .slide[data-workspace-page="1"] .day{
+ background-image:url("/assets/profile-backgrounds/quran-sapphire-background.PNG")!important;
+ background-position:center center!important;
+ background-size:cover!important;
+ background-repeat:no-repeat!important;
+}
