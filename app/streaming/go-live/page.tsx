@@ -274,7 +274,7 @@ export default function GoLivePage() {
       gain.gain.exponentialRampToValueAtTime(.0001,context.currentTime+.58);
       osc.connect(filter);filter.connect(gain);gain.connect(context.destination);
       osc.start();osc.stop(context.currentTime+.6);
-      osc.onended=()=>{void context.close().catch(()=>{});if(launchAudioRef.current===context)launchAudioRef.current=null};
+      // Keep the user-gesture-unlocked context alive through the 3-2-1 countdown.\n      // Closing it at 0.6s previously silenced the ticks at 2 and 1.\n      osc.onended=()=>{};
     }catch{/* WebAudio may be unavailable or blocked. Broadcast remains functional. */}
   };
   const playLiveConnectedPop=()=>{
@@ -299,7 +299,7 @@ export default function GoLivePage() {
   const playCountdownTick=(beat:2|1)=>{
     try{
       const context=launchAudioRef.current;
-      if(!context||context.state==="closed")return;
+      if(!context||context.state==="closed")return;\n      if(context.state==="suspended")void context.resume().catch(()=>{});
       const now=context.currentTime;
       const osc=context.createOscillator(),gain=context.createGain();
       osc.type="sine";
@@ -1656,7 +1656,7 @@ export default function GoLivePage() {
           }
         }
         /* Viewer count belongs in the existing header; don't resize navigation. */
-        .goLive .immersiveHeader{position:relative!important}
+        .goLive .immersiveHeader{position:absolute!important;top:0!important;left:0!important;right:0!important}
         .goLive .immersiveHeader .liveHeaderViewers{
           position:absolute;left:50%;top:50%;translate:-50% -50%;z-index:2;
           display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
