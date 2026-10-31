@@ -1146,7 +1146,7 @@ export default function GoLivePage() {
               {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               <div className={`voiceAvatarStage ${studioMode==="voice"?"voiceAvatarStageActive":""}`} aria-hidden={studioMode!=="voice"}>
                 <div className="voiceBackdropOrbs"><i/><i/><i/></div>
-                <div className="voiceAvatarMotion" style={{transform:`translate3d(${Math.sin(Date.now()/1000)*0}px,0,0)`,["--voice-energy" as string]:voiceEnergy} as React.CSSProperties}>
+                <div className="voiceAvatarMotion" style={{["--voice-energy" as string]:voiceEnergy} as React.CSSProperties}>
                   <div className="voiceAvatarAura"/>
                   <div className="voiceAvatarPortrait">{voiceAvatar?<img src={voiceAvatar} alt="" referrerPolicy="no-referrer"/>:<span aria-hidden="true">✧</span>}</div>
                 </div>
