@@ -18,14 +18,17 @@ export async function POST(request:Request){
  const media=body.media&&typeof body.media.storage_path==="string"?body.media:null;
  if(media&&(!media.storage_path.startsWith(user.id+"/")||!/^((image|video)\/)\S+$/.test(media.mime_type||"")))return NextResponse.json({error:"Invalid media attachment"},{status:400});
  if((text.length<1&&!media)||text.length>2000)return NextResponse.json({error:"Write a post between 1 and 2,000 characters"},{status:400});
- if(text.startsWith("✦ DAILY UMMAH ✦")){
-  const now=new Date();const start=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())).toISOString();
-  const {data:today,error:checkError}=await db.from("ummah_feed_posts").select("id,body").eq("author_id",user.id).gte("created_at",start);
-  if(checkError){console.error("daily-post-check",checkError.code,checkError.message);return NextResponse.json({error:"Daily Post check failed. Please try again shortly.",code:"DAILY_CHECK_FAILED"},{status:503})}
-  if((today||[]).some(p=>p.body?.startsWith("✦ DAILY UMMAH ✦")))return NextResponse.json({error:"You already shared your Daily Ummah Post today. Come back tomorrow for your next daily post.",code:"DAILY_ALREADY_POSTED"},{status:409});
- }
+ // The first post of each UTC day is automatically the Daily Ummah post.
+ // Further posts are always allowed; there is no daily posting quota.
+ const start=new Date();start.setUTCHours(0,0,0,0);
+ const {data:firstToday,error:dailyLookupError}=await db.from("ummah_feed_posts")
+  .select("id").eq("author_id",user.id).gte("created_at",start.toISOString()).limit(1);
+ // If the lookup is unavailable, allow posting normally rather than block users.
+ if(dailyLookupError)console.warn("daily-post-lookup",dailyLookupError.code);
+ const isDaily=!dailyLookupError&&(firstToday?.length??0)===0;
+ const storedText=isDaily?"✦ DAILY UMMAH ✦\\n"+text:text;
  const profanity=/(^|[^a-z])f[\\W_]*u[\\W_]*c[\\W_]*k(?:[\\W_]*(?:s|e[\\W_]*d|i[\\W_]*n[\\W_]*g))?(?=$|[^a-z])/i.test(text.normalize("NFKC"));
- const {data,error}=await db.from("ummah_feed_posts").insert({author_id:user.id,body:text}).select("id,author_id,body,created_at").single();
+ const {data,error}=await db.from("ummah_feed_posts").insert({author_id:user.id,body:storedText}).select("id,author_id,body,created_at").single();
  if(error){console.error("community-post-insert",error.code,error.message);const permission=error.code==="42501";return NextResponse.json({error:permission?"Posting is blocked by database permissions. Please contact 1Muslim support.":"Publishing failed on the server. Your draft is safe; please try again.",code:error.code||"POST_INSERT_FAILED"},{status:permission?403:503})}
  if(profanity){
   // A submitted post is briefly accepted, then immediately removed server-side.
