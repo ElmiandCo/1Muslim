@@ -49,7 +49,7 @@ export default function ProfileAvatar({
   const selectedGender = String(config.gender ?? avatarGender ?? gender ?? "male").toLowerCase();
   const packageKey = String(config.package ?? avatarPackage ?? "starter");
   const accessoryIds = Array.isArray(config.accessories) ? config.accessories.map(String) : [];
-  const accessories = ACCESSORIES.filter((item) => accessoryIds.includes(item.id));
+  const accessories = ACCESSORIES.filter((item) => accessoryIds.includes(item.id) && !["◆", "✦", "✧"].includes(item.icon));
   const isFemale = selectedGender === "female";
   const selectedAvatar = typeof config.selectedAvatarUrl === "string" && (/^https:\/\//.test(config.selectedAvatarUrl) || /^\/assets\/avatars\/[a-zA-Z0-9._-]+$/.test(config.selectedAvatarUrl)) ? config.selectedAvatarUrl : null;
   const customAvatar = typeof config.adminAvatarUrl === "string" && /^https:\/\//.test(config.adminAvatarUrl) ? config.adminAvatarUrl : null;
@@ -57,7 +57,6 @@ export default function ProfileAvatar({
 
   const avatarContent = (
     <div className={`profileAvatar avatar-${size} accent-${accent} package-${packageKey}${isLive ? " isLive" : ""}`} aria-label={`${name ?? "Member"} avatar${isLive ? " · Live now" : ""}`}>
-      <div className="avatarGlow" />
       <img className="avatarDefaultImage" src={avatarSrc} alt="" aria-hidden="true" draggable={false} />
       {isLive && <span className="liveAvatarRing" aria-hidden="true"><span>LIVE</span></span>}
       {accessories.map((item) => (
