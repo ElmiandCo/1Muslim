@@ -17,6 +17,7 @@ test("camera flip uses published track replacement without disconnect or unpubli
 });
 test("viewer mode morph does not restart room or re-subscribe", () => {
   assert.match(viewer, /onViewModeChange\?\.\(mode\)/);
+  assert.match(theater, /initialViewMode=\{initialMode\}/);
   assert.match(viewer, /\}, \[roomName, retryAttempt\]\)/);
   assert.match(theater, /transition:top 2s/);
   assert.match(theater, /data-cinema-mode="phone"/);
