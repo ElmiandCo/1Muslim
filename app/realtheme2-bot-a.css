@@ -126,3 +126,30 @@ html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .omQuranPage :is(
 html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .omQuranPage :is(
  .omQuranPreferences select,.omQuranSidebar select
 ):focus-visible{outline-color:var(--theme-secondary)}
+
+/* Additional exact control coverage found in the rendered component markup. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeLiveDemoComments p{
+ background:color-mix(in srgb,var(--theme-base) 52%,transparent)!important;
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .omQuranPage .omQuranOrbitPickers :is(select,input){
+ background:var(--theme-surface)!important;
+ border-color:var(--theme-edge)!important;
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .omQuranPage .omQuranOrbitPickers select option{
+ background:var(--theme-base)!important;
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .omQuranPage :is(.omQuranOrbitHandle button,.omQuranOrbitDot){
+ background:var(--theme-surface)!important;
+ border-color:var(--theme-edge)!important;
+ color:var(--rt-text-highlight,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .omQuranPage .omQuranStudioDataPlay{
+ background:linear-gradient(145deg,color-mix(in srgb,var(--theme-accent) 35%,var(--theme-surface)),var(--theme-base))!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-workspace-page="2"] [class*="postStudioCard"]{
+ background:color-mix(in srgb,var(--theme-base) 75%,transparent)!important;
+ border-color:color-mix(in srgb,var(--theme-edge) 45%,transparent)!important;
+}
