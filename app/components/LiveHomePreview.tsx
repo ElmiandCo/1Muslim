@@ -8,6 +8,20 @@ import LiveGuestsStage,{useLiveGuestRoster} from "../../components/LiveGuestsSta
 export default function LiveHomePreview({roomName,hostId}:{roomName:string;hostId?:string|null}){
  const video=useRef<HTMLVideoElement>(null);
  const roomRef=useRef<Room|null>(null);
+ const audioRef=useRef<HTMLDivElement>(null);
+ const audioEnabledRef=useRef(false);
+ const guestOnStageRef=useRef(false);
+ const [audioEnabled,setAudioEnabled]=useState(false);
+ const [guestOnStage,setGuestOnStage]=useState(false);
+ useEffect(()=>{
+  const onStage=(event:Event)=>{const detail=(event as CustomEvent<{roomName:string;active:boolean}>).detail;
+   if(detail?.roomName!==roomName)return;
+   guestOnStageRef.current=detail.active;setGuestOnStage(detail.active);
+   audioRef.current?.querySelectorAll("audio").forEach(a=>{a.muted=detail.active||!audioEnabledRef.current});
+  };
+  window.addEventListener("1muslim:guest-stage",onStage);
+  return()=>window.removeEventListener("1muslim:guest-stage",onStage);
+ },[roomName]);
  const [connected,setConnected]=useState(false);
  const [host,setHost]=useState<{name:string;avatar:string|null}>({name:"Host",avatar:null});
  const guests=useLiveGuestRoster(roomRef,connected,hostId??null,3);
@@ -31,6 +45,15 @@ export default function LiveHomePreview({roomName,hostId}:{roomName:string;hostI
   const room=new Room({adaptiveStream:false});roomRef.current=room;
   let waitingTimer:ReturnType<typeof setTimeout>|undefined;
   let retryTimer:ReturnType<typeof setTimeout>|undefined;
+  const audioNodes=new Map<string,HTMLMediaElement>();
+  const attachAudio=(track:any)=>{
+   if(!active||track.kind!==Track.Kind.Audio||!audioRef.current)return;
+   const sid=track.sid||"";if(audioNodes.has(sid))return;
+   const element=track.attach() as HTMLMediaElement;
+   element.autoplay=true;element.muted=!audioEnabledRef.current||guestOnStageRef.current;element.style.display="none";
+   audioRef.current.appendChild(element);audioNodes.set(sid,element);
+   if(audioEnabledRef.current&&!guestOnStageRef.current)void element.play().catch(()=>{});
+  };
   const attach=(track:any,participantIdentity?:string)=>{
    // Never attach a guest camera to the host preview: guests own separate tiles.
    if(!active||track.kind!==Track.Kind.Video||!video.current||(hostId&&participantIdentity!==hostId))return;
@@ -38,12 +61,18 @@ export default function LiveHomePreview({roomName,hostId}:{roomName:string;hostI
    video.current.muted=true;
    void video.current.play().then(()=>{if(active)setReady(true)}).catch(()=>{});
   };
-  room.on(RoomEvent.TrackSubscribed,(track,_publication,participant)=>attach(track,participant.identity));
+  room.on(RoomEvent.TrackSubscribed,(track,_publication,participant)=>{
+   if(track.kind===Track.Kind.Audio)attachAudio(track);
+   else attach(track,participant.identity);
+  });
   room.on(RoomEvent.TrackPublished,publication=>{if(publication.kind===Track.Kind.Video)publication.setSubscribed(true)});
   room.on(RoomEvent.TrackSubscriptionFailed,()=>{if(active)setFailure("Video subscription interrupted");});
   room.on(RoomEvent.ParticipantConnected,participant=>{for(const publication of participant.trackPublications.values())if(publication.kind===Track.Kind.Video){publication.setSubscribed(true);publication.setVideoQuality(VideoQuality.HIGH)}});
   room.on(RoomEvent.TrackPublished,publication=>{if(publication.kind===Track.Kind.Video){publication.setSubscribed(true);publication.setVideoQuality(VideoQuality.HIGH)}});
-  room.on(RoomEvent.TrackUnsubscribed,(_track,_publication,participant)=>{if(active&&(!hostId||participant.identity===hostId))setReady(false)});
+  room.on(RoomEvent.TrackUnsubscribed,(track,_publication,participant)=>{
+   if(track.kind===Track.Kind.Audio){const node=audioNodes.get(track.sid||"");if(node){track.detach(node);node.remove();audioNodes.delete(track.sid||"")}}
+   else if(active&&(!hostId||participant.identity===hostId))setReady(false);
+  });
   void (async()=>{
    try{
     const res=await fetch("/api/livekit/token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName,role:"viewer"})});
@@ -58,19 +87,26 @@ export default function LiveHomePreview({roomName,hostId}:{roomName:string;hostI
      for(const publication of participant.trackPublications.values()){
       if(!publication.isSubscribed)publication.setSubscribed(true);
       if(publication.kind===Track.Kind.Video)publication.setVideoQuality(VideoQuality.HIGH);
-      if(publication.track)attach(publication.track,participant.identity);
+      if(publication.track){if(publication.kind===Track.Kind.Audio)attachAudio(publication.track);else attach(publication.track,participant.identity)}
      }
    }catch(error){if(active){setReady(false);setFailure(error instanceof Error?error.message:"Connection failed");retryTimer=setTimeout(()=>{if(active)setAttempt(n=>n+1)},5000)}}
   })();
   waitingTimer=setTimeout(()=>{if(active&&!video.current?.srcObject)setAttempt(n=>n+1)},4000);
-  return()=>{active=false;setConnected(false);roomRef.current=null;if(waitingTimer)clearTimeout(waitingTimer);if(retryTimer)clearTimeout(retryTimer);room.removeAllListeners();void room.disconnect();if(video.current)video.current.srcObject=null};
+  return()=>{active=false;setConnected(false);roomRef.current=null;for(const node of audioNodes.values())node.remove();audioNodes.clear();if(waitingTimer)clearTimeout(waitingTimer);if(retryTimer)clearTimeout(retryTimer);room.removeAllListeners();void room.disconnect();if(video.current)video.current.srcObject=null};
  },[roomName,hostId,attempt]);
  useEffect(()=>{const refresh=()=>{if(document.visibilityState==="visible"){setAttempt(n=>n+1)}};document.addEventListener("visibilitychange",refresh);window.addEventListener("focus",refresh);return()=>{document.removeEventListener("visibilitychange",refresh);window.removeEventListener("focus",refresh)}},[]);
+ const toggleAudio=()=>{
+  const next=!audioEnabledRef.current;
+  audioEnabledRef.current=next;setAudioEnabled(next);
+  audioRef.current?.querySelectorAll("audio").forEach(node=>{node.muted=!next||guestOnStageRef.current;if(next&&!guestOnStageRef.current)void node.play().catch(()=>{})});
+ };
  // Do not tear down a healthy LiveKit room just because the host has not published video.
  return <span style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:0,overflow:"hidden",borderRadius:12}}>
   <LiveGuestsStage mode="video" guests={guests} hostName={host.name} hostAvatar={host.avatar}>
    <video ref={video} autoPlay muted playsInline aria-label="Host live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:0,objectFit:"cover",objectPosition:"center center",background:"transparent",opacity:ready?1:0}}/>
    {!ready&&<span style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{failure?"Video unavailable · Open live to retry":"Waiting for host video…"}</span>}
   </LiveGuestsStage>
+  <div ref={audioRef} style={{display:"none"}}/>
+  <button type="button" onClick={toggleAudio} aria-label={audioEnabled?"Mute live preview":"Hear live preview"} style={{position:"absolute",bottom:8,left:8,zIndex:8,padding:"6px 10px",borderRadius:18,border:"1px solid #ffffff55",background:"#061b16dd",color:"#fff",fontSize:11,cursor:"pointer"}}>{guestOnStage?"🎙️ On stage · monitoring muted":audioEnabled?"🔇 Mute preview":"🔊 Hear Live"}</button>
  </span>;
 }
