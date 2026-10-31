@@ -31,8 +31,11 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const registerTap=(e:React.MouseEvent<HTMLDivElement>)=>{if(embedded||!streamId||!(e.target instanceof HTMLElement)||e.target.closest("button,a,input"))return;const bounds=e.currentTarget.getBoundingClientRect();const id=++tapSequence.current;setTapCount(v=>v+1);setTapBursts(v=>[...v.slice(-8),{id,x:e.clientX-bounds.left,y:e.clientY-bounds.top}]);window.setTimeout(()=>setTapBursts(v=>v.filter(t=>t.id!==id)),900)};
   const [totalViews, setTotalViews] = useState<number | null>(null);
   const [error, setError] = useState("");
-  const [muted, setMuted] = useState(true);
-  const mutedRef = useRef(true);
+  // Attempt audible playback immediately where browsers permit it.
+  // If autoplay is blocked, expose a clear one-tap recovery control.
+  const [muted, setMuted] = useState(false);
+  const mutedRef = useRef(false);
+  const [audioNeedsGesture, setAudioNeedsGesture] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
@@ -151,7 +154,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         audio.muted = mutedRef.current;
         audio.setAttribute("playsinline", "true");
         audioContainerRef.current.appendChild(audio);
-        void audio.play().catch(() => {});
+        void audio.play().then(() => { if (mounted) setAudioNeedsGesture(false); })
+          .catch(() => { if (mounted && !mutedRef.current) setAudioNeedsGesture(true); });
         setHasRemoteAudio(true);
         setHostConnecting(false);
         setStatus("LIVE · Audio");
@@ -220,6 +224,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
             if (track.sid) attachedAudioRef.current.delete(track.sid);
             setHasRemoteAudio(attachedAudioRef.current.size>0);
             if(attachedAudioRef.current.size===0){
+              setAudioNeedsGesture(false);
               voiceAnalyzerCleanupRef.current?.();voiceAnalyzerCleanupRef.current=null;setVoiceEnergy(0);
             }
           }
@@ -305,14 +310,19 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   }, [roomName, retryAttempt]);
 
   const toggleMute = () => {
-    const next = !muted;
+    // An autoplay rejection is not an intentional mute: the first tap should
+    // unlock playback rather than mute the host again.
+    const next = audioNeedsGesture ? false : !muted;
     setMuted(next);
     mutedRef.current = next;
+    if(next)setAudioNeedsGesture(false);
     if(!next)void voiceAudioContextRef.current?.resume().catch(()=>{});
     if (audioContainerRef.current) {
       audioContainerRef.current.querySelectorAll("audio").forEach((audio) => {
         audio.muted = next;
-        if (!next) void audio.play().catch(() => {});
+        if (!next) void audio.play()
+          .then(() => setAudioNeedsGesture(false))
+          .catch(() => setAudioNeedsGesture(true));
       });
     }
   };
@@ -339,13 +349,14 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         <strong>{voiceName}</strong><small>{hasRemoteAudio?"● Audio Live":"Connecting to host audio…"}</small>
       </div>}
       {hostConnecting&&!hostEnded&&<div className="omHostReconnecting" role="status" aria-live="polite">Host connection interrupted · Reconnecting…</div>}
+      {audioNeedsGesture&&hasRemoteAudio&&!hostEnded&&<div role="status" aria-live="polite" style={{position:"absolute",bottom:65,left:12,zIndex:9,color:"#fff",background:"#0c2923e8",border:"1px solid #9ce9c2",borderRadius:12,padding:"8px 12px",fontSize:12,pointerEvents:"none"}}>🔊 Tap “Hear Live” below to enable host audio</div>}
       <div ref={audioContainerRef} />
       {streamId&&<LiveLightOverlay streamId={streamId}/>}
       {!embedded&&<><div className="omViewerTapCounter" aria-label={`${tapCount} screen taps`}>✨ {tapCount.toLocaleString()} taps</div>{tapBursts.map(t=><span key={t.id} className="omViewerTapBurst" style={{left:t.x,top:t.y}}>💜</span>)}<a className="omViewerExit" href="/streaming" aria-label="Exit live viewer">✕</a></>}
       {viewerCount !== null && !error && <div role="status" aria-label={`${viewerCount.toLocaleString()} watching live`} className={viewerPulse?"omViewerCountPulse":""} style={{position:"absolute",top:12,right:12,zIndex:6,display:"flex",alignItems:"center",gap:6,padding:"7px 11px",borderRadius:999,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.22)",color:"#fff",fontSize:12,fontWeight:800,backdropFilter:"blur(10px)",pointerEvents:"none"}}>👁 {viewerCount.toLocaleString()} <span style={{fontSize:10,opacity:.8}}>watching</span>{totalViews!==null&&<span style={{fontSize:10,opacity:.9,borderLeft:"1px solid #ffffff55",paddingLeft:8,marginLeft:2}}>↗ {totalViews.toLocaleString()} total</span>}</div>}
       <div style={{position:"absolute",left:12,bottom:12,display:"flex",gap:7,alignItems:"center",flexWrap:"wrap",zIndex:5}}>
-        <button type="button" onClick={toggleMute} aria-label={muted ? "Unmute live audio" : "Mute live audio"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
-          {muted ? "🔇 Unmute" : "🔊 Mute"}
+        <button type="button" onClick={toggleMute} aria-label={audioNeedsGesture ? "Hear live audio" : muted ? "Unmute live audio" : "Mute live audio"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
+          {audioNeedsGesture ? "🔊 Hear Live" : muted ? "🔇 Unmute" : "🔊 Mute"}
         </button>
         {hasScreenVideo&&hasCameraVideo&&<button type="button" onClick={()=>setShareLayout(v=>v==="pip"?"split":"pip")} aria-label={shareLayout==="pip"?"Switch to split screen":"Switch to picture in picture"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>{shareLayout==="pip"?"▣ Split":"▧ Picture-in-picture"}</button>}
         {streamId && <ShareLiveButton streamId={streamId} compact={embedded} />}
