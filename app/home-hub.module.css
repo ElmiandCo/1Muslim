@@ -1769,7 +1769,14 @@
  animation:omEdgeTopSparks 42s linear infinite;
 }
 .control .workspaceScroller::before{opacity:.24}
-.control .workspaceScroller::after{opacity:.19}
+.control .workspaceScroller::after{opacity:0;animation:none}
 @keyframes omEdgeSideSparks{0%{background-position:0 45px,100% 123px}100%{background-position:0 345px,100% 423px}}
 @keyframes omEdgeTopSparks{0%{background-position:29px -397px,173px -461px}100%{background-position:29px 397px,173px 461px}}
 @media(prefers-reduced-motion:reduce){.control .workspaceScroller::before,.control .workspaceScroller::after{animation:none;opacity:.08}}
+
+/* Event-triggered top fall: one short burst after workspace changes, every
+   minute on an unchanged screen, with rare additional bursts. */
+.topParticleBurst{position:absolute;inset:0 0 auto;z-index:8;height:min(65vh,650px);pointer-events:none;overflow:hidden;isolation:isolate;mask-image:linear-gradient(180deg,#000 0%,#000 55%,transparent 100%);-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 55%,transparent 100%)}
+.topParticleBurst i{position:absolute;top:-15px;display:block;width:3px;height:3px;border-radius:50%;background:color-mix(in srgb,var(--theme-secondary,var(--theme-primary,var(--accent-color,var(--edge,#c2a16b)))) 72%,white);box-shadow:0 0 8px 2px color-mix(in srgb,var(--theme-secondary,var(--theme-primary,var(--accent-color,var(--edge,#c2a16b)))) 40%,transparent);opacity:0;animation:omTopFallOnce 3.6s ease-in forwards;will-change:transform,opacity}
+@keyframes omTopFallOnce{0%{transform:translate3d(0,-8px,0);opacity:0}15%{opacity:.55}52%{opacity:.36}100%{transform:translate3d(9px,410px,0);opacity:0}}
+@media(prefers-reduced-motion:reduce){.topParticleBurst{display:none}}
