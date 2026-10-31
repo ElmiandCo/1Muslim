@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { createClient } from "../utils/supabase/client";
+import { isDiscoverableLive, shouldApplyPresenceEvent } from "./live-discovery-state";
 
 export type LivePresenceState = "STARTING" | "READY_AUDIO" | "READY_VIDEO" | "RECONNECTING" | "ENDED";
 export type Presence = {
@@ -55,9 +56,6 @@ function publish(next: DiscoverySnapshot) {
   listeners.forEach(listener => listener());
 }
 
-function isReady(state: LivePresenceState) {
-  return state === "READY_AUDIO" || state === "READY_VIDEO";
-}
 
 function normalizePresence(row: VerifiedLive): Presence | null {
   const embedded = Array.isArray(row.live_presence) ? row.live_presence[0] : row.live_presence;
@@ -70,9 +68,9 @@ function acceptEvent(incoming: Presence) {
   const event = { ...incoming, version: Number(incoming.version) };
   const previous = snapshot.presence[event.stream_id];
   // Monotonic versions prevent delayed READY messages resurrecting ENDED streams.
-  if (previous && (previous.session_id !== event.session_id || previous.version >= event.version)) return false;
+  if (!shouldApplyPresenceEvent(previous, event)) return false;
   const presence = { ...snapshot.presence, [event.stream_id]: event };
-  const lives = isReady(event.state) ? snapshot.lives : snapshot.lives.filter(row => row.id !== event.stream_id);
+  const lives = isDiscoverableLive(event.state) ? snapshot.lives : snapshot.lives.filter(row => row.id !== event.stream_id);
   publish({ ...snapshot, presence, lives });
   return true;
 }
@@ -84,14 +82,12 @@ function mergeSnapshot(rows: VerifiedLive[]) {
   for (const row of rows) {
     if (!row.id || !row.room_name || ids.has(row.id)) continue;
     const embedded = normalizePresence(row);
-    if (!embedded || !isReady(embedded.state)) continue;
+    if (!embedded || !isDiscoverableLive(embedded.state)) continue;
     const previous = presence[row.id];
-    if (previous && previous.session_id === embedded.session_id && previous.version > embedded.version) {
-      if (!isReady(previous.state)) continue;
-    } else if (!previous || previous.session_id === embedded.session_id) {
-      presence[row.id] = embedded;
+    if (previous?.state === "ENDED" || (previous && previous.session_id !== embedded.session_id)) continue;
+    if (previous && previous.version > embedded.version) {
+      if (!isDiscoverableLive(previous.state)) continue;
     } else {
-      // A different session must never inherit the prior session's state.
       presence[row.id] = embedded;
     }
     ids.add(row.id);
@@ -168,7 +164,7 @@ function connectRealtime() {
         return;
       }
       const event = payload.new as Presence;
-      if (acceptEvent(event) && isReady(event.state)) {
+      if (acceptEvent(event) && isDiscoverableLive(event.state)) {
         // The initial CDN snapshot can briefly precede the database commit.
         scheduleRefresh(80);
         const timer = setTimeout(() => {
