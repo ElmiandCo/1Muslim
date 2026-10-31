@@ -107,6 +107,24 @@ export default function Home(){
  useEffect(()=>{let active=true;for(const widget of spaces){if(!widget.image||widget.name==="Qur’an"){setCleanArtwork(prev=>({...prev,[widget.name]:widget.image}));continue}const img=new window.Image();img.onload=()=>{try{const canvas=document.createElement("canvas");canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;const ctx=canvas.getContext("2d",{willReadFrequently:true});if(!ctx)return;ctx.drawImage(img,0,0);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height);const d=pixels.data;for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];const brightness=Math.max(r,g,b);const saturation=brightness-Math.min(r,g,b);const matte=Math.max(0,Math.min(1,(brightness-10)/44));const colored=Math.max(0,Math.min(1,(saturation-5)/22));const opacity=Math.max(matte,colored*.96);d[i+3]=Math.round(d[i+3]*opacity)}ctx.putImageData(pixels,0,0);const url=canvas.toDataURL("image/png");if(active)setCleanArtwork(prev=>({...prev,[widget.name]:url}))}catch{if(active)setCleanArtwork(prev=>({...prev,[widget.name]:widget.image}))}};img.onerror=()=>{if(active)setCleanArtwork(prev=>({...prev,[widget.name]:widget.image}))};img.src=widget.image}return()=>{active=false}},[]);
  const [livePreviews,setLivePreviews]=useState<Array<{id:string;title:string;thumbnail_path:string|null;viewer_count?:number|null;host_id?:string|null;room_name?:string|null;aspect_ratio?:string|null}>>([]);
  const [liveFormat,setLiveFormat]=useState<HomeLiveFormat>("desktop");
+ useEffect(()=>{
+  let timeout:number|undefined;
+  let stopped=false;
+  const pulse=()=>{
+   if(stopped)return;
+   if(document.visibilityState==="visible"){
+    document.querySelectorAll<HTMLElement>(".homeAmbientHalo").forEach(el=>{
+     el.classList.remove("homeAmbientHaloPulse");
+     void el.offsetWidth;
+     el.classList.add("homeAmbientHaloPulse");
+    });
+   }
+   timeout=window.setTimeout(pulse,6000+Math.random()*4000);
+  };
+  timeout=window.setTimeout(pulse,6000+Math.random()*4000);
+  return()=>{stopped=true;if(timeout!==undefined)window.clearTimeout(timeout)};
+ },[]);
+
  const navigateHomeLive=(direction:number)=>{if(livePreviews.length>1){setLiveCarouselIndex(i=>{const next=(i+direction+livePreviews.length)%livePreviews.length;setSelectedLiveId(livePreviews[next].id);return next});return}const formats:HomeLiveFormat[]=["desktop","phone","audio","games","qibla"];setLiveFormat(current=>formats[(formats.indexOf(current)+direction+formats.length)%formats.length]);setLiveCarouselIndex(0)};
  const [liveCarouselIndex,setLiveCarouselIndex]=useState(0);const [selectedLiveId,setSelectedLiveId]=useState<string|null>(null);const [recentlyEndedLive,setRecentlyEndedLive]=useState(false);const liveSeenRef=useRef(false);
  useEffect(()=>{setLiveCarouselIndex(i=>livePreviews.length?Math.min(i,livePreviews.length-1):0)},[livePreviews.length]);
