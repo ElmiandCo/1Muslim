@@ -6,7 +6,7 @@ import {CanvasUmmaGallery} from "./CanvasUmmaGallery";
 const tabs=["The Umma","My Profile"] as const;
 type Tab=typeof tabs[number];
 export default function GameLabProfileHub({active,profile,avatarHero,renderProfileSection}:{active:boolean;profile?:ReactNode;avatarHero?:ReactNode;renderProfileSection?:(section:"Avatars"|"Background"|"Badges"|"Settings")=>ReactNode}){
- const [tab,setTab]=useState<Tab>("The Umma"); const [settingsOpen,setSettingsOpen]=useState(false);
+ const [tab,setTab]=useState<Tab>("My Profile"); const [settingsOpen,setSettingsOpen]=useState(false);
  const mirrorRef=useRef<HTMLDivElement>(null);
  return <section aria-label="Profile workspace" style={{height:"100%",maxHeight:"100%",minHeight:0,width:"100%",minWidth:0,display:"flex",flexDirection:"column",boxSizing:"border-box",color:"#f7f0da",background:"transparent",overflow:"visible",position:"relative"}}>
   <div style={{flex:"1 1 auto",height:"100%",minHeight:0,width:"100%",boxSizing:"border-box",display:"flex",flexDirection:"column",overflow:"visible",background:"color-mix(in srgb,var(--theme-base,#101114) 16%,transparent)",backdropFilter:"blur(12px)",border:"1px solid color-mix(in srgb,var(--theme-secondary,#d8c38e) 25%,transparent)",borderRadius:20,padding:"10px 8px 12px"}}>
