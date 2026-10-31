@@ -140,7 +140,7 @@ export default function GoLivePage() {
     }
   };
   const selectStudioMode=(mode:"desktop"|"phone"|"voice")=>{
-    if(mode===studioMode)return;
+    if(mode===desiredStudioModeRef.current)return;
     desiredStudioModeRef.current=mode;
     if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current);
     setStudioMorphing(false);
