@@ -8,6 +8,7 @@ import { createClient } from "../../../utils/supabase/client";
 import { useEffect, useRef, useState } from "react";
 import { LocalAudioTrack, LocalVideoTrack, Room, RoomEvent, Track } from "livekit-client";
 import { flipLiveCamera } from "../../../lib/live-cinema-camera";
+import { cameraCrossfadeDuration, captureCameraFreezeFrame, dissolveCameraFreezeFrame, waitForIncomingCameraFrame } from "../../../lib/live-camera-crossfade";
 import { playLiveCinemaMorphSound } from "../../../lib/live-cinema-sound";
 import { createLiveAudioProcessor } from "../../../components/live-audio-effects";
 import LiveChat from "../../../components/LiveChat";
@@ -28,6 +29,7 @@ const formats: Array<{ key: AspectRatio; label: string; width: number; height: n
 
 export default function GoLivePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cameraFreezeRef = useRef<HTMLCanvasElement>(null);
   const greenVideoRef = useRef<HTMLVideoElement | null>(null);
   const greenCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const greenFrameRef = useRef<number | null>(null);
@@ -718,49 +720,80 @@ export default function GoLivePage() {
   };
 
   const flipCamera = async () => {
-    // Camera capture may be temporarily unavailable on iPhone Safari. Never
-    // disconnect the room, unpublish its sender or replace the microphone.
+    // A local frozen still covers the SAME preview while LiveKit replaces the
+    // published camera capture track. Room, sender and microphone stay alive.
     if (cameraFlipInFlightRef.current || !cameraOn || studioMode === "voice" ||
         !streamRef.current || !navigator.mediaDevices?.getUserMedia) return;
     cameraFlipInFlightRef.current = true;
     setError("");
     const previousFacing = facingMode;
     const nextFacing = facingMode === "user" ? "environment" : "user";
+    const freezeCanvas = cameraFreezeRef.current;
+    let stream: MediaStream | null = null;
+    let published: LocalVideoTrack | undefined;
+    let switched = false;
+    let frozen = false;
     try {
       if (greenCanvasRef.current) throw new Error("Turn off Green Screen before flipping the camera.");
-      const stream = streamRef.current;
+      stream = streamRef.current;
       const room = roomRef.current;
       const publication = room?.localParticipant.getTrackPublication(Track.Source.Camera);
       if (room && !publication?.videoTrack) throw new Error("Camera publication is not ready to switch.");
+      published = publication?.videoTrack as LocalVideoTrack | undefined;
+
+      if (freezeCanvas) {
+        // Preserve the OLD camera's mirror orientation after React updates
+        // facingMode; the still is never published or uploaded.
+        freezeCanvas.classList.toggle("frontCamera", previousFacing === "user");
+        frozen = captureCameraFreezeFrame(videoRef.current, freezeCanvas);
+      }
       const nextTrack = await flipLiveCamera(
-        stream,
-        publication?.videoTrack as LocalVideoTrack | undefined,
-        previousFacing,
-        nextFacing,
-        getCaptureSize(),
+        stream, published, previousFacing, nextFacing, getCaptureSize(),
         navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices),
       );
+      switched = true;
       if (streamRef.current !== stream || endRequestedRef.current) return;
       rawCameraRef.current = nextTrack;
-      setFacingMode(nextFacing);
-      setCameraOn(true);
-      setZoom(1);
-      setFocusMode("auto");
       refreshCameraCapabilities(nextTrack);
-      // Reuse the exact preview element; LiveKit's sender has already switched
-      // its video source without a new publication or room reconnect.
+      // Reuse the existing preview element and published LiveKit sender.
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
         videoRef.current.playsInline = true;
-        void videoRef.current.play().catch(() => {});
+        await videoRef.current.play().catch(() => {});
+        if (frozen && !await waitForIncomingCameraFrame(videoRef.current)) {
+          throw new Error("The new camera did not deliver a video frame. Restoring the previous camera.");
+        }
       }
+      setFacingMode(nextFacing);
+      setCameraOn(true);
+      setZoom(1);
+      setFocusMode("auto");
     } catch (err) {
-      // Camera fallback can fail without interrupting a still-live microphone.
+      // A camera may fail after track replacement (e.g. Safari has no frames).
+      // Best-effort restore the old facing mode without touching LiveKit audio.
+      if (switched && stream && streamRef.current === stream && !endRequestedRef.current) {
+        try {
+          const restored = await flipLiveCamera(
+            stream, published, nextFacing, previousFacing, getCaptureSize(),
+            navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices),
+          );
+          rawCameraRef.current = restored;
+          refreshCameraCapabilities(restored);
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            await videoRef.current.play().catch(() => {});
+            if (frozen) await waitForIncomingCameraFrame(videoRef.current);
+          }
+        } catch { /* Keep the room and microphone connected even if restore fails. */ }
+      }
       setError(err instanceof DOMException && (err.name === "OverconstrainedError" || err.name === "NotFoundError")
         ? "This device does not expose a switchable front/back camera."
         : err instanceof Error ? err.message : "We could not switch cameras.");
     } finally {
+      const reduceMotion = typeof window !== "undefined" &&
+        window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+      await dissolveCameraFreezeFrame(freezeCanvas, cameraCrossfadeDuration(reduceMotion));
       cameraFlipInFlightRef.current = false;
     }
   };
@@ -1610,6 +1643,20 @@ export default function GoLivePage() {
         .goLive .layout>.panel:first-child>.preview .voiceAvatarStageActive{
           transform:scale(1)!important;
         }
+        /* Frozen outgoing frame overlays the existing preview only during a
+           front/rear camera flip; same crop, mirror and motion as the video. */
+        .goLive .layout>.panel:first-child>.preview .studioCameraFrame>.studioCameraFreeze{
+          position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+          object-fit:cover!important;object-position:center center!important;
+          border-radius:0!important;margin:0!important;z-index:3;pointer-events:none;
+          scale:1.025;rotate:.55deg;opacity:0;will-change:opacity;
+        }
+        .goLive .layout>.panel:first-child>.preview .studioCameraFrame>.studioCameraFreeze.frontCamera{
+          transform:scaleX(-1);
+        }
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"] .studioCameraFrame>.studioCameraFreeze{
+          scale:1.13;rotate:0deg;object-position:50% 48%;
+        }
         /* Keep the SAME camera node visible throughout morph; no opacity blackout. */
         .goLive .preview.studioMorphing::before{display:none!important}
         @media(prefers-reduced-motion:reduce){
@@ -1641,6 +1688,7 @@ export default function GoLivePage() {
             <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} data-studio-mode={studioMode} className={`preview studioTransform ${studioMorphing?"studioMorphing":""} format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"} ${studioMode==="voice"?"studioVoiceMode":""}`}>
               <div className="studioCameraFrame" aria-hidden={studioMode==="voice"}>
                 {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
+                <canvas ref={cameraFreezeRef} className="studioCameraFreeze" aria-hidden="true" />
               </div>
               <div className={`voiceAvatarStage ${studioMode==="voice"?"voiceAvatarStageActive":""}`} aria-hidden={studioMode!=="voice"}>
                 <div className="voiceBackdropOrbs"><i/><i/><i/></div>
