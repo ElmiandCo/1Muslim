@@ -316,6 +316,12 @@ export default function Home(){
  const router=useRouter();
  const [singleWidget,setSingleWidget]=useState<string|null>(null);
  const [guestWelcomeDismissed,setGuestWelcomeDismissed]=useState(false);
+ // Invitation is ephemeral; no persistent banner occupying navigation space.
+ useEffect(()=>{if(homeSignedIn!==false||guestWelcomeDismissed)return;
+  const timeout=window.setTimeout(()=>setGuestWelcomeDismissed(true),5000);
+  return()=>window.clearTimeout(timeout);
+ },[homeSignedIn,guestWelcomeDismissed]);
+
  const [guestTitleIndex,setGuestTitleIndex]=useState(0);
  const [guestTitleTick,setGuestTitleTick]=useState(0);
  const [guestTitleZoom,setGuestTitleZoom]=useState(false);
