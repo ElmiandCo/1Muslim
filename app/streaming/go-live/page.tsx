@@ -256,6 +256,11 @@ export default function GoLivePage() {
     if(launchPendingRef.current||live||connectingLive||saving)return;
     if(!cameraReady){void startPreview();return;}
     launchPendingRef.current=true;
+    if(studioMode==="voice"){
+      setLaunchVisual(true);playLaunchZoom();
+      void startLive(false).finally(()=>{launchPendingRef.current=false;setLaunchVisual(false)});
+      return;
+    }
     setLaunchPressed(true);setLaunchVisual(true);playLaunchZoom();
     setLaunchCountdown(3);
     let remaining=3;
@@ -326,10 +331,10 @@ export default function GoLivePage() {
 
   // Inform the mobile dock only when the host has a working camera and a title.
   useEffect(()=>{
-    const ready=cameraReady&&cameraOn&&Boolean(effectiveLiveTitle.trim())&&!live&&!saving;
+    const ready=cameraReady&&(studioMode==="voice"||cameraOn)&&Boolean(effectiveLiveTitle.trim())&&!live&&!saving;
     window.dispatchEvent(new CustomEvent("1muslim:go-live-ready",{detail:{ready}}));
     return()=>{window.dispatchEvent(new CustomEvent("1muslim:go-live-ready",{detail:{ready:false}}));};
-  },[cameraReady,cameraOn,effectiveLiveTitle,live,saving]);
+  },[cameraReady,cameraOn,studioMode,effectiveLiveTitle,live,saving]);
 
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreviewUrl,setThumbnailPreviewUrl]=useState<string|null>(null);
