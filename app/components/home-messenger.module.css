@@ -5,3 +5,15 @@
 .list,.messages{min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .threadHeader,.composer{flex-shrink:0}
 @media(max-width:600px){.panel{height:min(74dvh,720px);min-height:0}.thread{height:100%}.messages{flex:1 1 0;min-height:0}}
+
+/* Compact Messenger actions and actual member portraits. */
+.titleLink{color:inherit;text-decoration:none;white-space:nowrap}
+.titleLink:hover,.titleLink:focus-visible{color:#f7d998;text-decoration:underline}
+.titleActions{display:flex;align-items:center;gap:7px}
+.titleActions .expand{display:inline-flex;align-items:center;justify-content:center;min-height:35px;padding:0 10px;border:1px solid rgba(239,214,157,.5);border-radius:20px;background:rgba(0,75,58,.28);color:#f6e8bd;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap}
+.titleActions .expand:hover,.titleActions .expand:focus-visible{background:rgba(0,120,90,.5);outline-offset:2px}
+.avatar{overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.composeHint{font-size:12px;line-height:1.5;padding:6px 12px;color:#f5e5bf}
+.newChatBack{margin:6px 10px;padding:10px;border-radius:12px;border:1px solid rgba(239,214,157,.35);background:rgba(0,75,58,.28);color:#fff;text-align:left;cursor:pointer}
+@media(max-width:390px){.title{font-size:15px;padding:12px 8px}.titleActions{gap:4px}.titleActions .expand{padding:0 7px;font-size:10px}}
