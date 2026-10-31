@@ -97,9 +97,9 @@ export async function POST(request: Request) {
     const token = new AccessToken(apiKey, apiSecret, {
       identity,
       name: user?.user_metadata?.full_name || user?.email || "1Muslim viewer",
-      // Short-lived guest tickets narrow the window for reusing a revoked
-      // token. An established LiveKit connection is not ended by JWT expiry.
-      ttl: role === "guest" ? "2m" : "2h",
+      // Preserve the existing two-hour reconnection window. Revocation is
+      // enforced by host eviction and the signed LiveKit webhook on rejoin.
+      ttl: "2h",
     });
     token.addGrant({
       roomJoin: true,
