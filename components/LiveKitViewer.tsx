@@ -58,7 +58,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       if(cancelled||!stream)return;
       hostIdRef.current=stream.host_id;
       setIsAudioBroadcast(stream.aspect_ratio==="1:1");
-      const {data:profile}=await db.from("profiles").select("display_name,username,avatar_url,profile_picture_url,avatar").eq("id",stream.host_id).maybeSingle();
+      const {data:profile}=await db.from("profiles").select("*").eq("id",stream.host_id).maybeSingle();
       if(cancelled||!profile)return;
       setVoiceName(String(profile.display_name||profile.username||"1Muslim Creator"));
       const avatar=profile.avatar_url||profile.profile_picture_url||profile.avatar;
