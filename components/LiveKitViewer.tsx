@@ -37,8 +37,37 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [connectionActive, setConnectionActive] = useState(false);
+  const [isAudioBroadcast,setIsAudioBroadcast] = useState(false);
+  const [hasRemoteAudio,setHasRemoteAudio] = useState(false);
+  const [hostConnecting,setHostConnecting] = useState(false);
+  const [voiceAvatar,setVoiceAvatar] = useState<string|null>(null);
+  const [voiceName,setVoiceName] = useState("1Muslim Creator");
+  const [voiceEnergy,setVoiceEnergy] = useState(0);
+  const hostIdRef=useRef<string|null>(null);
+  const hostEndSignalRef=useRef<()=>void>(()=>{});
+  const voiceAnalyzerCleanupRef=useRef<(()=>void)|null>(null);
+  const voiceAudioContextRef=useRef<AudioContext|null>(null);
 
-  useEffect(()=>{if(!streamId)return;let alive=true;const db=createClient();const end=()=>{if(!alive||endedOnce.current)return;endedOnce.current=true;setHostEnded(true);roomRef.current?.disconnect();window.setTimeout(()=>{if(embedded){window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));setHostEnded(false)}else router.replace("/")},3800)};const check=async()=>{const {data}=await db.from("live_streams").select("status,ended_at").eq("id",streamId).maybeSingle();if(data&&(data.status==="ended"||data.status==="cancelled"||data.ended_at))end()};void check();const channel=db.channel("live-end:"+streamId).on("postgres_changes",{event:"UPDATE",schema:"public",table:"live_streams",filter:"id=eq."+streamId},payload=>{const next=payload.new as {status?:string;ended_at?:string|null};if(next.status==="ended"||next.status==="cancelled"||next.ended_at)end()}).subscribe();const timer=connectionActive?undefined:window.setInterval(()=>void check(),1000);return()=>{alive=false;if(timer)window.clearInterval(timer);void db.removeChannel(channel)}},[streamId,embedded,router,connectionActive]);
+  // Render the voice stage before the first remote audio packet arrives.
+  useEffect(()=>{
+    if(!streamId)return;
+    let cancelled=false;
+    const db=createClient();
+    void (async()=>{
+      const {data:stream}=await db.from("live_streams").select("host_id,aspect_ratio").eq("id",streamId).maybeSingle();
+      if(cancelled||!stream)return;
+      hostIdRef.current=stream.host_id;
+      setIsAudioBroadcast(stream.aspect_ratio==="1:1");
+      const {data:profile}=await db.from("profiles").select("display_name,username,avatar_url,profile_picture_url,avatar").eq("id",stream.host_id).maybeSingle();
+      if(cancelled||!profile)return;
+      setVoiceName(String(profile.display_name||profile.username||"1Muslim Creator"));
+      const avatar=profile.avatar_url||profile.profile_picture_url||profile.avatar;
+      setVoiceAvatar(typeof avatar==="string"&&avatar.startsWith("https://")?avatar:null);
+    })();
+    return()=>{cancelled=true};
+  },[streamId]);
+
+  useEffect(()=>{if(!streamId)return;let alive=true;const db=createClient();const end=()=>{if(!alive||endedOnce.current)return;endedOnce.current=true;setHostEnded(true);roomRef.current?.disconnect();window.setTimeout(()=>{if(embedded){window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));setHostEnded(false)}else router.replace("/")},3800)};const check=async()=>{const {data}=await db.from("live_streams").select("status,ended_at").eq("id",streamId).maybeSingle();if(data&&(data.status==="ended"||data.status==="cancelled"||data.ended_at))end()};void check();const channel=db.channel("live-end:"+streamId).on("postgres_changes",{event:"UPDATE",schema:"public",table:"live_streams",filter:"id=eq."+streamId},payload=>{const next=payload.new as {status?:string;ended_at?:string|null};if(next.status==="ended"||next.status==="cancelled"||next.ended_at)end()}).subscribe();hostEndSignalRef.current=end;const timer=window.setInterval(()=>void check(),2000);return()=>{alive=false;hostEndSignalRef.current=()=>{};window.clearInterval(timer);void db.removeChannel(channel)}},[streamId,embedded,router]);
 
   useEffect(() => {
     let mounted = true;
@@ -84,7 +113,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
 
         const room = new Room({ adaptiveStream: false, dynacast: true });
         roomRef.current = room;
-        room.on(RoomEvent.TrackSubscribed, (track, publication) => attachTrack(track, publication.source));
+        room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => attachTrack(track, publication.source, participant.identity));
         room.on(RoomEvent.TrackUnsubscribed, (track, publication) => {
           if (track.kind === Track.Kind.Video) {
             const isScreen = publication.source === Track.Source.ScreenShare;
@@ -102,10 +131,23 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
             if (track.sid) attachedAudioRef.current.delete(track.sid);
           }
         });
-        room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live video could not be subscribed to. Please reconnect."));
-        room.on(RoomEvent.ParticipantConnected, () => mounted && setStatus("Waiting for host video…"));
+        room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live media could not be subscribed to. Please reconnect."));
+        room.on(RoomEvent.ParticipantConnected, (participant) => {
+          if(!mounted)return;
+          if(participant.identity===hostIdRef.current){setHostConnecting(false);setStatus("Host connected…")}
+        });
+        room.on(RoomEvent.ParticipantDisconnected, (participant) => {
+          if(!mounted)return;
+          if(hostIdRef.current && participant.identity===hostIdRef.current){
+            setHostConnecting(true);setStatus("Host reconnecting…");
+          }
+        });
+        room.on(RoomEvent.DataReceived, (payload, participant, _kind, topic) => {
+          if(!mounted||topic!=="live-status"||!hostIdRef.current||participant?.identity!==hostIdRef.current)return;
+          try{const message=JSON.parse(new TextDecoder().decode(payload));if(message.type==="live-ended")hostEndSignalRef.current()}catch{}
+        });
         room.on(RoomEvent.Reconnecting, () => {if(mounted){setConnectionActive(false);setStatus("Reconnecting…");setReconnecting(true);setReconnectKey(String(Date.now()));}});
-        room.on(RoomEvent.Reconnected, () => {if(mounted){setConnectionActive(true);setReconnecting(false);setStatus("Waiting for host video…");}});
+        room.on(RoomEvent.Reconnected, () => {if(mounted){setConnectionActive(true);setReconnecting(false);setStatus("Waiting for host…");}});
         room.on(RoomEvent.Disconnected, () => {if(mounted){setConnectionActive(false);setStatus("Live connection ended.");setReconnecting(false);setError("The live connection ended. Please retry.");}});
 
         await room.connect(data.url, data.token, { autoSubscribe: true });
@@ -115,11 +157,17 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         for (const participant of room.remoteParticipants.values()) {
           for (const publication of participant.trackPublications.values()) {
             if (!publication.isSubscribed) await publication.setSubscribed(true);
-            if (publication.track) attachTrack(publication.track, publication.source);
+            if (publication.track) attachTrack(publication.track, publication.source, participant.identity);
           }
         }
 
-        if (mounted && ![...room.remoteParticipants.values()].some(p=>[...p.trackPublications.values()].some(pub=>pub.kind===Track.Kind.Video && pub.track))) { setStatus("Waiting for host video…"); setReconnecting(false); }
+        if (mounted) {
+          const publications=[...room.remoteParticipants.values()].flatMap(p=>[...p.trackPublications.values()]);
+          if(!publications.some(pub=>pub.kind===Track.Kind.Video && pub.track)){
+            setStatus(publications.some(pub=>pub.kind===Track.Kind.Audio && pub.track)?"LIVE · Audio":"Waiting for host…");
+            setReconnecting(false);
+          }
+        }
       } catch (err) {
         if (mounted) { setConnectionActive(false); setReconnecting(false); setStatus("Connection unavailable"); setError("The live connection could not be established. Please retry or return to Streaming."); }
       }
