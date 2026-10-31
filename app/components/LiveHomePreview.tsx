@@ -52,7 +52,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
  useEffect(()=>{const refresh=()=>{if(document.visibilityState==="visible"){setAttempt(n=>n+1)}};document.addEventListener("visibilitychange",refresh);window.addEventListener("focus",refresh);return()=>{document.removeEventListener("visibilitychange",refresh);window.removeEventListener("focus",refresh)}},[]);
  // Do not tear down a healthy LiveKit room just because the host has not published video.
  return <span style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:0,overflow:"hidden",borderRadius:12}}>
-  <video ref={video} autoPlay muted playsInline aria-label="Live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:0,objectFit:"cover",objectPosition:"center center",background:"transparent",opacity:ready?1:0}}/>
+  <video ref={video} autoPlay muted playsInline aria-label="Live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:0,objectFit:"contain",objectPosition:"center center",background:"transparent",opacity:ready?1:0}}/>
   {!ready&&<span style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{failure?"Video unavailable · Open live to retry":"Waiting for host video…"}</span>}
  </span>;
 }
