@@ -537,18 +537,18 @@ export default function GoLivePage() {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       const size = getCaptureSize();
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: size.width }, height: { ideal: size.height }, frameRate: { ideal: 30, max: 30 } },
+        video: studioMode==="voice"?false:{ facingMode, width: { ideal: size.width }, height: { ideal: size.height }, frameRate: { ideal: 30, max: 30 } },
         audio: true,
       });
       rawCameraRef.current=stream.getVideoTracks()[0];
-      if(greenEnabled&&backgroundRef.current){
+      if(greenEnabled&&backgroundRef.current&&rawCameraRef.current){
         const output=await startGreen(rawCameraRef.current);
         stream.removeTrack(rawCameraRef.current);
         stream.addTrack(output);
       }
       streamRef.current = stream;
       setCameraReady(true);
-      setCameraOn(true);
+      setCameraOn(studioMode!=="voice");
       setMicOn(true);
       setZoom(1);
       setFocusMode("auto");
@@ -574,7 +574,7 @@ export default function GoLivePage() {
   useEffect(() => {
     const video = videoRef.current;
     const stream = streamRef.current;
-    if (!cameraReady || !video || !stream) return;
+    if (!cameraReady || !video || !stream || !stream.getVideoTracks().length) return;
 
     video.srcObject = stream;
     video.muted = true;
@@ -953,9 +953,7 @@ export default function GoLivePage() {
       try {
         // Pre-warm the LiveKit Cloud region route before opening the signal socket.
         // LiveKit's SDK can then choose an available region if the initial edge fails.
-        try { await room.prepareConnection(tokenData.url, tokenData.token); } catch (warmupError) {
-          console.warn("LiveKit region warmup failed; attempting direct connection", warmupError);
-        }
+        // Connect directly on Go Live; serial region warmup delayed first audio packets.
         await room.connect(tokenData.url, tokenData.token, {autoSubscribe:true, maxRetries:5, websocketTimeout:20000});
       } catch (connectionError) {
         room.disconnect();
@@ -996,7 +994,10 @@ export default function GoLivePage() {
         if(!endRequestedRef.current)setError("Broadcast connection lost. Viewers will see that the host is reconnecting.");
       });
 
-      startRecording();
+      try { startRecording(); } catch (recordingError) {
+        console.warn("Broadcast started without local recording",recordingError);
+        setSaveMessage("Live is running. Recording is unavailable on this device.");
+      }
       setLive(true);
       // Cue the host only after LiveKit confirms the broadcast is connected.
       playLiveConnectedPop();
