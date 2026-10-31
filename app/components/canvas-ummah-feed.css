@@ -233,3 +233,15 @@
 @media(prefers-reduced-motion:reduce){
  .profile-shared-avatar-portal,.profile-shared-avatar-portal .profile-avatar-portrait{transition:none!important;animation:none!important}
 }
+
+/* HudHud-style gentle settle when the navigation expands/collapses. */
+.profile-shared-avatar-portal{
+ transition:top .68s cubic-bezier(.22,1,.36,1),left .68s cubic-bezier(.22,1,.36,1),opacity .48s ease!important;
+ will-change:top,left;
+}
+.profile-shared-avatar-portal .profile-avatar-portrait{
+ transition:transform .68s cubic-bezier(.22,1,.36,1),filter .68s ease;
+}
+@media(prefers-reduced-motion:reduce){
+ .profile-shared-avatar-portal,.profile-shared-avatar-portal .profile-avatar-portrait{transition:none!important;}
+}
