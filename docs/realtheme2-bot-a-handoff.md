@@ -29,3 +29,6 @@
 - Review the branch head for concurrent commits; avoid resetting or overwriting Bot A changes.
 - Check latest Vercel preview build status, report any errors, and keep production unchanged.
 - Verify Emerald remains visually unchanged and test Obsidian/Amethyst/Sapphire/Ruby/Titanium when a browser preview is available.
+
+## Additional contrast follow-up
+- Ruby accent `#ed3652` on base `#310b15` measured **4.41:1**, slightly under 4.5:1. Added `#190408` text for Ruby accent buttons in Post composer and Messenger, achieving **4.94:1**. Commits `ef4cfb1f27c1741660bd83ee8aaf23ff7d746a24` and `7407f61ef16d9ff6bc425c4422d7531bb3203e77`.
