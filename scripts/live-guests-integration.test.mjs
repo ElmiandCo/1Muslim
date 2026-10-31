@@ -64,6 +64,8 @@ test("cinema camera freeze and fullscreen comments survive integration",()=>{
   assert.match(host,/setTimeout\(\(\)=>\{setCameraFreezeFrame\(null\)/);
   assert.match(host,/\},400\)/);
   assert.match(host,/guestRoster=useLiveGuestRoster/);
+  const modeHandler=host.slice(host.indexOf("const selectStudioMode="),host.indexOf("useEffect(()=>{",host.indexOf("const selectStudioMode=")));
+  assert.ok(modeHandler.indexOf('fetch("/api/live-mode"')<modeHandler.indexOf("await syncPublishedCameraForMode("),"mode authorization must precede camera publication");
   const cinema=source("components/LiveCinemaTheater.tsx");
   assert.match(cinema,/cinemaKeyboardOffset/);
   assert.match(cinema,/className="omLiveTheaterChat"/);
