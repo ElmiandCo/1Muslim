@@ -168,6 +168,7 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 
 - **Starting point:** production `main` merge `21667cab863693b1ab02963c7b3d6423bf35b956`.
 - **Branch:** `bot-a/live-cinematic-zoom-tilt-fullbleed-20261031`.
+- **Pull request:** [#195](https://github.com/ElmiandCo/1Muslim/pull/195) (draft, against `main`; Bot B should branch from this head and open a dependent PR).
 - **Implementation commit:** `d8741320ec034dd57381f23607ba239d9a3d3e04`.
 - **File:** `app/streaming/go-live/page.tsx` only for runtime changes.
 - Replaced direct child video geometry with an always-mounted `.studioCameraFrame` clip wrapper. The frame animates position, width, height, border radius, and slight rotation over 2 seconds. The existing `<video ref={videoRef}>` remains a single persistent DOM node, with independent `scale` and `rotate` CSS longhands for image zoom/tilt while preserving the `frontCamera` CSS mirror transform. No media track or LiveKit changes.
