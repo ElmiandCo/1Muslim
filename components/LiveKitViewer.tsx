@@ -102,7 +102,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, ho
     const stopVoiceMeter=()=>{
       if(voiceMeterFrameRef.current!==null){cancelAnimationFrame(voiceMeterFrameRef.current);voiceMeterFrameRef.current=null;}
       if(voiceMeterContextRef.current){void voiceMeterContextRef.current.close().catch(()=>{});voiceMeterContextRef.current=null;}
-      setVoiceEnergy(0);
+      if(mounted)setVoiceEnergy(0);
     };
     const startVoiceMeter=(track:any)=>{
       if(!audioOnly||!track.mediaStreamTrack)return;
