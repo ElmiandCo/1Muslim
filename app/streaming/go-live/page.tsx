@@ -6,7 +6,7 @@ import GoLiveHudHudTip from "../../components/GoLiveHudHudTip";
 import Link from "next/link";
 import { createClient } from "../../../utils/supabase/client";
 import { useEffect, useRef, useState } from "react";
-import { LocalAudioTrack, Room, Track } from "livekit-client";
+import { LocalAudioTrack, Room, RoomEvent, Track } from "livekit-client";
 import { createLiveAudioProcessor } from "../../../components/live-audio-effects";
 import LiveChat from "../../../components/LiveChat";
 import SyncedLiveIntro from "../../components/SyncedLiveIntro";
@@ -57,6 +57,7 @@ export default function GoLivePage() {
   const [voiceEnergy,setVoiceEnergy]=useState(0);
   const voiceEnergyRef=useRef(0);
   const [studioMorphing,setStudioMorphing]=useState(false);
+  const endRequestedRef=useRef(false);
   const studioMorphTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   useEffect(()=>()=>{if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current)},[]);
   const playCameraAdjustSound=()=>{
@@ -888,6 +889,7 @@ export default function GoLivePage() {
       if (scheduledSlot.ends_at && Date.now() > new Date(scheduledSlot.ends_at).getTime()) return setError("This scheduled Live has ended. Schedule another Live to continue.");
     }
     if(connectingLive||live)return;
+    endRequestedRef.current=false;
     setConnectingLive(true);
     setError(""); setSaveMessage("");
     let pendingStreamId: string | null = null;
@@ -984,6 +986,15 @@ export default function GoLivePage() {
       }
       roomRef.current = room;
       liveStreamIdRef.current = liveStreamId;
+      room.on(RoomEvent.Reconnecting,()=>{
+        if(!endRequestedRef.current)setSaveMessage("Connection interrupted — viewers are being notified while LiveKit reconnects.");
+      });
+      room.on(RoomEvent.Reconnected,()=>{
+        if(!endRequestedRef.current){setSaveMessage("");setError("")}
+      });
+      room.on(RoomEvent.Disconnected,()=>{
+        if(!endRequestedRef.current)setError("Broadcast connection lost. Viewers will see that the host is reconnecting.");
+      });
 
       startRecording();
       setLive(true);
@@ -1032,13 +1043,29 @@ export default function GoLivePage() {
   const [liveRating,setLiveRating]=useState(0);
   const finishToProfile=()=>window.location.assign("/profile");
   const endLive = () => {
+    if(endRequestedRef.current)return;
+    endRequestedRef.current=true;
     setLive(false); setViewers(0); setShowHostIntro(false);setLiveEndedSurvey(true);
     const supabase = createClient();
     const liveStreamId = liveStreamIdRef.current;
-    roomRef.current?.disconnect();
+    const activeRoom=roomRef.current;
     roomRef.current = null;
+    // Send a terminal signal before leaving LiveKit, and persist the terminal
+    // status immediately instead of waiting for the recording upload.
     if (liveStreamId) {
-      void supabase.from("live_streams").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", liveStreamId);
+      const terminalUpdate=Promise.resolve(supabase.from("live_streams").update({
+        status:"ended",ended_at:new Date().toISOString()
+      }).eq("id",liveStreamId)).then(({error})=>{
+        if(error)console.warn("Could not persist Live end status",error);
+      });
+      const terminalSignal=activeRoom?activeRoom.localParticipant.publishData(
+        new TextEncoder().encode(JSON.stringify({type:"live-ended",streamId:liveStreamId})),
+        {reliable:true,topic:"live-status"}
+      ).catch(error=>console.warn("Could not send Live end signal",error)):Promise.resolve();
+      void Promise.allSettled([terminalUpdate,terminalSignal]).then(()=>void activeRoom?.disconnect());
+      window.setTimeout(()=>void activeRoom?.disconnect(),700);
+    } else {
+      void activeRoom?.disconnect();
     }
     const recorder = recorderRef.current;
     if (recorder && recorder.state !== "inactive") {
