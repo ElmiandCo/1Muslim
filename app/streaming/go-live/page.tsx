@@ -6,7 +6,7 @@ import GoLiveHudHudTip from "../../components/GoLiveHudHudTip";
 import Link from "next/link";
 import { createClient } from "../../../utils/supabase/client";
 import { useEffect, useRef, useState } from "react";
-import { LocalAudioTrack, Room, Track } from "livekit-client";
+import { LocalAudioTrack, Room, RoomEvent, Track } from "livekit-client";
 import { createLiveAudioProcessor } from "../../../components/live-audio-effects";
 import LiveChat from "../../../components/LiveChat";
 import SyncedLiveIntro from "../../components/SyncedLiveIntro";
@@ -57,9 +57,10 @@ export default function GoLivePage() {
   const [voiceEnergy,setVoiceEnergy]=useState(0);
   const voiceEnergyRef=useRef(0);
   const [studioMorphing,setStudioMorphing]=useState(false);
+  const endRequestedRef=useRef(false);
   const studioMorphTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   useEffect(()=>()=>{if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current)},[]);
-  const playCameraAdjustSound=()=>{
+  const playCameraAdjustSound=(mode:"desktop"|"phone"|"voice")=>{
     try{
       const context=new AudioContext();
       void context.resume().then(()=>{
@@ -75,21 +76,141 @@ export default function GoLivePage() {
           oscillator.connect(gain);gain.connect(context.destination);
           oscillator.start(start+offset);oscillator.stop(start+offset+.15);
         });
-        window.setTimeout(()=>void context.close().catch(()=>{}),1000);
+        // A gentle two-second lens motor sweep follows the canvas resize.
+        const motor=context.createOscillator(),motorGain=context.createGain();
+        motor.type="sine";
+        const from=mode==="voice"?440:mode==="phone"?170:280;
+        const to=mode==="voice"?180:mode==="phone"?530:370;
+        motor.frequency.setValueAtTime(from,start);
+        motor.frequency.exponentialRampToValueAtTime(to,start+1.85);
+        motorGain.gain.setValueAtTime(.0001,start);
+        motorGain.gain.exponentialRampToValueAtTime(.025,start+.2);
+        motorGain.gain.setValueAtTime(.025,start+1.2);
+        motorGain.gain.exponentialRampToValueAtTime(.0001,start+1.9);
+        motor.connect(motorGain);motorGain.connect(context.destination);
+        motor.start(start);motor.stop(start+1.92);
+        window.setTimeout(()=>void context.close().catch(()=>{}),2300);
       }).catch(()=>void context.close().catch(()=>{}));
     }catch{/* Audio effects are optional; never block mode switching. */}
   };
+  const desiredStudioModeRef=useRef<"desktop"|"phone"|"voice">("phone");
+  const modeSyncQueueRef=useRef<Promise<void>>(Promise.resolve());
+  const previewCameraAcquiringRef=useRef(false);
+  const syncPublishedCameraForMode=async(mode:"desktop"|"phone"|"voice",allowCamera:boolean)=>{
+    const room=roomRef.current;
+    if(!room||!liveStreamIdRef.current||endRequestedRef.current||desiredStudioModeRef.current!==mode)return;
+    const cameraPublications=()=>[...room.localParticipant.videoTrackPublications.values()]
+      .filter(publication=>publication.source===Track.Source.Camera&&publication.track);
+    if(mode==="voice"){
+      for(const publication of cameraPublications()){
+        if(publication.track)await room.localParticipant.unpublishTrack(publication.track,false);
+      }
+      if(desiredStudioModeRef.current==="voice")streamRef.current?.getVideoTracks().forEach(track=>{track.enabled=false;});
+      return;
+    }
+    const stream=streamRef.current;
+    if(!stream)return;
+    if(!allowCamera){stream.getVideoTracks().forEach(track=>{track.enabled=false;});return;}
+    let videoTrack=stream.getVideoTracks().find(track=>track.readyState==="live");
+    if(!videoTrack){
+      // Voice may have started with microphone-only permission. Add camera
+      // without replacing the active audio track or reconnecting the room.
+      const cameraStream=await navigator.mediaDevices.getUserMedia({
+        audio:false,
+        video:{facingMode:{ideal:facingMode},width:{ideal:mode==="desktop"?1280:720},height:{ideal:mode==="desktop"?720:1280}}
+      });
+      const acquired=cameraStream.getVideoTracks()[0];
+      if(!acquired)throw new Error("No camera track was returned.");
+      if(desiredStudioModeRef.current!==mode||roomRef.current!==room||endRequestedRef.current){acquired.stop();return;}
+      stream.addTrack(acquired);
+      rawCameraRef.current=acquired;
+      videoTrack=acquired;
+      refreshCameraCapabilities(acquired);
+      if(videoRef.current){
+        videoRef.current.srcObject=stream;
+        videoRef.current.muted=true;
+        videoRef.current.playsInline=true;
+        void videoRef.current.play().catch(()=>{});
+      }
+    }
+    if(desiredStudioModeRef.current!==mode||roomRef.current!==room||endRequestedRef.current)return;
+    videoTrack.enabled=true;
+    if(cameraPublications().length===0){
+      await room.localParticipant.publishTrack(videoTrack,{
+        source:Track.Source.Camera,simulcast:true,videoEncoding:{maxBitrate:3500000,maxFramerate:30}
+      });
+    }
+  };
   const selectStudioMode=(mode:"desktop"|"phone"|"voice")=>{
-    if(mode===studioMode)return;
+    const previousMode=desiredStudioModeRef.current;
+    if(mode===previousMode)return;
+    desiredStudioModeRef.current=mode;
+    const allowCamera=previousMode==="voice"||cameraOn;
     if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current);
     setStudioMorphing(false);
     requestAnimationFrame(()=>setStudioMorphing(true));
     studioMorphTimer.current=setTimeout(()=>setStudioMorphing(false),2000);
-    playCameraAdjustSound();
+    playCameraAdjustSound(mode);
     setStudioMode(mode);
     setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
-    if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
-    else{setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
+    if(mode==="voice"){
+      setCameraOn(false);
+      streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);
+      // A microphone-only preview is still ready when returning to Voice.
+      if(!roomRef.current&&streamRef.current?.getAudioTracks().some(t=>t.readyState==="live"))setCameraReady(true);
+    }
+    // Desktop ↔ Phone is geometry-only: keep the exact camera track and video
+    // element. Only a Voice-only preview needs its FIRST camera acquisition.
+    else if(previousMode==="voice"){
+      setCameraOn(true);
+      const preview=streamRef.current;
+      preview?.getVideoTracks().forEach(t=>t.enabled=true);
+      if(preview&&!roomRef.current&&!preview.getVideoTracks().some(t=>t.readyState==="live")&&!previewCameraAcquiringRef.current){
+        previewCameraAcquiringRef.current=true;
+        setCameraReady(false);
+        void navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facingMode}}}).then(cameraStream=>{
+          const track=cameraStream.getVideoTracks()[0];
+          const current=streamRef.current;
+          if(!track||!current||roomRef.current||desiredStudioModeRef.current==="voice"){
+            cameraStream.getTracks().forEach(t=>t.stop());
+            if(current&&desiredStudioModeRef.current==="voice")setCameraReady(true);
+            return;
+          }
+          current.addTrack(track);
+          rawCameraRef.current=track;
+          refreshCameraCapabilities(track);
+          if(videoRef.current){
+            videoRef.current.srcObject=current;
+            videoRef.current.muted=true;
+            videoRef.current.playsInline=true;
+            void videoRef.current.play().catch(()=>{});
+          }
+          setCameraReady(true);
+        }).catch(err=>{
+          if(desiredStudioModeRef.current!=="voice"){
+            setCameraOn(false);
+            setError(err instanceof Error?err.message:"Could not enable the camera.");
+          }
+        }).finally(()=>{previewCameraAcquiringRef.current=false;});
+      }
+    }
+    if(roomRef.current&&liveStreamIdRef.current){
+      const streamId=liveStreamIdRef.current;
+      // Serialize camera and metadata updates; a slower older request must
+      // never overwrite the mode selected by a newer tap.
+      modeSyncQueueRef.current=modeSyncQueueRef.current.catch(()=>{}).then(async()=>{
+        if(desiredStudioModeRef.current!==mode)return;
+        await syncPublishedCameraForMode(mode,allowCamera);
+        if(desiredStudioModeRef.current!==mode||endRequestedRef.current)return;
+        const response=await fetch("/api/live-mode",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({streamId,mode}),cache:"no-store"
+        });
+        if(!response.ok)console.warn("Live mode metadata sync failed",response.status);
+      }).catch(error=>{
+        if(desiredStudioModeRef.current===mode)setError(error instanceof Error?error.message:"Could not switch camera mode.");
+      });
+    }
   };
   useEffect(()=>{
     let cancelled=false;
@@ -132,6 +253,7 @@ export default function GoLivePage() {
     }catch{setVoiceEnergy(0)}
     return()=>{stopped=true;cancelAnimationFrame(frame);source?.disconnect();if(context)void context.close().catch(()=>{})};
   },[studioMode,micOn,cameraReady]);
+  const [error, setError] = useState("");
   const [live, setLive] = useState(false);
   const [connectingLive,setConnectingLive] = useState(false);
   const [liveSeconds,setLiveSeconds] = useState(0);
@@ -141,6 +263,7 @@ export default function GoLivePage() {
   const launchTimerRef=useRef<ReturnType<typeof setInterval>|null>(null);
   const launchAudioRef=useRef<AudioContext|null>(null);
   const launchPendingRef=useRef(false);
+  const pendingVoiceLaunchRef=useRef(false);
   useEffect(()=>()=>{if(launchTimerRef.current)clearInterval(launchTimerRef.current);void launchAudioRef.current?.close().catch(()=>{})},[]);
   const playLaunchZoom=()=>{
     try{
@@ -176,8 +299,24 @@ export default function GoLivePage() {
   };
   const launchBroadcast=()=>{
     if(launchPendingRef.current||live||connectingLive||saving)return;
-    if(!cameraReady){void startPreview();return;}
+    if(!cameraReady){
+      if(previewCameraAcquiringRef.current){setError("Camera is starting. Please try Go Live in a moment.");return;}
+      if(studioMode==="voice"){
+        // A single Go Live tap requests microphone permission and launches
+        // as soon as audio-only preview becomes ready.
+        pendingVoiceLaunchRef.current=true;
+        launchPendingRef.current=true;
+        setLaunchVisual(true);playLaunchZoom();
+      }
+      void startPreview();
+      return;
+    }
     launchPendingRef.current=true;
+    if(studioMode==="voice"){
+      setLaunchVisual(true);playLaunchZoom();
+      void startLive(false).finally(()=>{launchPendingRef.current=false;setLaunchVisual(false)});
+      return;
+    }
     setLaunchPressed(true);setLaunchVisual(true);playLaunchZoom();
     setLaunchCountdown(3);
     let remaining=3;
@@ -191,8 +330,17 @@ export default function GoLivePage() {
     },1000);
   };
   useEffect(()=>{
+    if(!pendingVoiceLaunchRef.current)return;
+    if(error||studioMode!=="voice"){
+      pendingVoiceLaunchRef.current=false;launchPendingRef.current=false;setLaunchVisual(false);return;
+    }
+    if(!cameraReady||live||connectingLive)return;
+    pendingVoiceLaunchRef.current=false;
+    void startLive(false).finally(()=>{launchPendingRef.current=false;setLaunchVisual(false)});
+  },[cameraReady,studioMode,error,live,connectingLive]);
+  useEffect(()=>{
     if(live){launchPendingRef.current=false;setLaunchVisual(false);}
-    else if(!connectingLive&&launchPendingRef.current&&launchCountdown===null){launchPendingRef.current=false;setLaunchVisual(false);}
+    else if(!connectingLive&&launchPendingRef.current&&launchCountdown===null&&!pendingVoiceLaunchRef.current){launchPendingRef.current=false;setLaunchVisual(false);}
   },[live,connectingLive,launchCountdown]);
   useEffect(()=>{
     if(!live||!broadcastStartedAt){setLiveSeconds(0);return;}
@@ -248,10 +396,10 @@ export default function GoLivePage() {
 
   // Inform the mobile dock only when the host has a working camera and a title.
   useEffect(()=>{
-    const ready=cameraReady&&cameraOn&&Boolean(effectiveLiveTitle.trim())&&!live&&!saving;
+    const ready=cameraReady&&(studioMode==="voice"||cameraOn)&&Boolean(effectiveLiveTitle.trim())&&!live&&!saving;
     window.dispatchEvent(new CustomEvent("1muslim:go-live-ready",{detail:{ready}}));
     return()=>{window.dispatchEvent(new CustomEvent("1muslim:go-live-ready",{detail:{ready:false}}));};
-  },[cameraReady,cameraOn,effectiveLiveTitle,live,saving]);
+  },[cameraReady,cameraOn,studioMode,effectiveLiveTitle,live,saving]);
 
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreviewUrl,setThumbnailPreviewUrl]=useState<string|null>(null);
@@ -283,7 +431,6 @@ export default function GoLivePage() {
     };
     void loadScheduled();
   }, []);
-  const [error, setError] = useState("");
   const [viewers, setViewers] = useState(0);
   const [viewerRosterOpen,setViewerRosterOpen]=useState(false);
   const [viewerRoster,setViewerRoster]=useState<Array<{id:string;username:string;avatar:string|null;xp:number|null}>>([]);
@@ -536,18 +683,18 @@ export default function GoLivePage() {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       const size = getCaptureSize();
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: size.width }, height: { ideal: size.height }, frameRate: { ideal: 30, max: 30 } },
+        video: studioMode==="voice"?false:{ facingMode, width: { ideal: size.width }, height: { ideal: size.height }, frameRate: { ideal: 30, max: 30 } },
         audio: true,
       });
       rawCameraRef.current=stream.getVideoTracks()[0];
-      if(greenEnabled&&backgroundRef.current){
+      if(greenEnabled&&backgroundRef.current&&rawCameraRef.current){
         const output=await startGreen(rawCameraRef.current);
         stream.removeTrack(rawCameraRef.current);
         stream.addTrack(output);
       }
       streamRef.current = stream;
       setCameraReady(true);
-      setCameraOn(true);
+      setCameraOn(studioMode!=="voice");
       setMicOn(true);
       setZoom(1);
       setFocusMode("auto");
@@ -573,7 +720,7 @@ export default function GoLivePage() {
   useEffect(() => {
     const video = videoRef.current;
     const stream = streamRef.current;
-    if (!cameraReady || !video || !stream) return;
+    if (!cameraReady || !video || !stream || !stream.getVideoTracks().length) return;
 
     video.srcObject = stream;
     video.muted = true;
@@ -759,11 +906,17 @@ export default function GoLivePage() {
   const startRecording = () => {
     const stream = streamRef.current;
     if (!stream) throw new Error("Camera and microphone must be enabled first.");
-    const mimeType = ["video/mp4","video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"].find((type) => MediaRecorder.isTypeSupported(type));
-    if (!mimeType) throw new Error("This browser cannot record video in a supported format.");
-    chunksRef.current = [];
     const recordingAudio = processedAudioTrackRef.current ?? stream.getAudioTracks()[0];
-    const recordingStream = new MediaStream([stream.getVideoTracks()[0], ...(recordingAudio ? [recordingAudio] : [])]);
+    const videoTrack = studioMode==="voice"?null:stream.getVideoTracks()[0];
+    const tracks=[...(videoTrack?[videoTrack]:[]),...(recordingAudio?[recordingAudio]:[])];
+    if(!tracks.length)throw new Error("No media track available for recording.");
+    const mimeTypes=videoTrack?
+      ["video/mp4","video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"]:
+      ["audio/mp4","audio/webm;codecs=opus","audio/webm"];
+    const mimeType=mimeTypes.find(type=>MediaRecorder.isTypeSupported(type));
+    if(!mimeType)throw new Error("This browser cannot record this Live format.");
+    chunksRef.current = [];
+    const recordingStream = new MediaStream(tracks);
     const recorder = new MediaRecorder(recordingStream, { mimeType });
     recorder.ondataavailable = (event) => { if (event.data.size > 0) chunksRef.current.push(event.data); };
     recorderRef.current = recorder;
@@ -888,6 +1041,7 @@ export default function GoLivePage() {
       if (scheduledSlot.ends_at && Date.now() > new Date(scheduledSlot.ends_at).getTime()) return setError("This scheduled Live has ended. Schedule another Live to continue.");
     }
     if(connectingLive||live)return;
+    endRequestedRef.current=false;
     setConnectingLive(true);
     setError(""); setSaveMessage("");
     let pendingStreamId: string | null = null;
@@ -951,9 +1105,7 @@ export default function GoLivePage() {
       try {
         // Pre-warm the LiveKit Cloud region route before opening the signal socket.
         // LiveKit's SDK can then choose an available region if the initial edge fails.
-        try { await room.prepareConnection(tokenData.url, tokenData.token); } catch (warmupError) {
-          console.warn("LiveKit region warmup failed; attempting direct connection", warmupError);
-        }
+        // Connect directly on Go Live; serial region warmup delayed first audio packets.
         await room.connect(tokenData.url, tokenData.token, {autoSubscribe:true, maxRetries:5, websocketTimeout:20000});
       } catch (connectionError) {
         room.disconnect();
@@ -984,8 +1136,20 @@ export default function GoLivePage() {
       }
       roomRef.current = room;
       liveStreamIdRef.current = liveStreamId;
+      room.on(RoomEvent.Reconnecting,()=>{
+        if(!endRequestedRef.current)setSaveMessage("Connection interrupted — viewers are being notified while LiveKit reconnects.");
+      });
+      room.on(RoomEvent.Reconnected,()=>{
+        if(!endRequestedRef.current){setSaveMessage("");setError("")}
+      });
+      room.on(RoomEvent.Disconnected,()=>{
+        if(!endRequestedRef.current)setError("Broadcast connection lost. Viewers will see that the host is reconnecting.");
+      });
 
-      startRecording();
+      try { startRecording(); } catch (recordingError) {
+        console.warn("Broadcast started without local recording",recordingError);
+        setSaveMessage("Live is running. Recording is unavailable on this device.");
+      }
       setLive(true);
       // Cue the host only after LiveKit confirms the broadcast is connected.
       playLiveConnectedPop();
@@ -1032,13 +1196,40 @@ export default function GoLivePage() {
   const [liveRating,setLiveRating]=useState(0);
   const finishToProfile=()=>window.location.assign("/profile");
   const endLive = () => {
+    if(endRequestedRef.current)return;
+    endRequestedRef.current=true;
     setLive(false); setViewers(0); setShowHostIntro(false);setLiveEndedSurvey(true);
     const supabase = createClient();
     const liveStreamId = liveStreamIdRef.current;
-    roomRef.current?.disconnect();
+    const activeRoom=roomRef.current;
     roomRef.current = null;
-    if (liveStreamId) {
-      void supabase.from("live_streams").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", liveStreamId);
+    // Send the host-authenticated terminal packet first; then commit terminal
+    // status server-side. The server also closes the room after updating DB.
+    // Neither action waits for local MediaRecorder or recording upload.
+    if(liveStreamId){
+      const terminalSignal=activeRoom?activeRoom.localParticipant.publishData(
+        new TextEncoder().encode(JSON.stringify({type:"live-ended",streamId:liveStreamId})),
+        {reliable:true,topic:"live-status"}
+      ).catch(error=>console.warn("Live end packet unavailable",error)):Promise.resolve();
+      void (async()=>{
+        try{
+          await Promise.race([terminalSignal,new Promise<void>(resolve=>window.setTimeout(resolve,250))]);
+          const response=await fetch("/api/live-end",{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({streamId:liveStreamId}),cache:"no-store",keepalive:true
+          });
+          if(!response.ok)throw new Error("Server End Live returned "+response.status);
+        }catch(error){
+          console.warn("Server End Live failed; attempting direct terminal update",error);
+          const {error:dbError}=await supabase.from("live_streams").update({
+            status:"ended",ended_at:new Date().toISOString()
+          }).eq("id",liveStreamId);
+          if(dbError)console.error("End Live could not be confirmed",dbError);
+        }finally{void activeRoom?.disconnect();}
+      })();
+      window.setTimeout(()=>void activeRoom?.disconnect(),2500);
+    }else{
+      void activeRoom?.disconnect();
     }
     const recorder = recorderRef.current;
     if (recorder && recorder.state !== "inactive") {
@@ -1151,9 +1342,7 @@ export default function GoLivePage() {
         .goLive .layout>.panel:first-child>.preview.studioTransform.studioMorphing::after{
           opacity:1;padding:3px;animation:studioBorderSweep 1.05s cubic-bezier(.19,1,.22,1) both;
         }
-        .goLive .layout>.panel:first-child>.preview.studioTransform.studioMorphing>video{
-          animation:studioCameraSettle 1.05s cubic-bezier(.19,1,.22,1) both;
-        }
+        /* Preserve uninterrupted video pixels while frame geometry morphs. */
         @keyframes studioBorderSweep{
           0%{filter:brightness(1.7);opacity:0;clip-path:inset(0 100% 0 0)}
           25%{opacity:1;clip-path:inset(0 50% 0 0)}
@@ -1206,7 +1395,7 @@ export default function GoLivePage() {
         .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
         .brand{display:flex;gap:9px;align-items:center;font-weight:850}.mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#101811;border:1px solid #354237;color:#d6e7b8}.back{color:#98a49d;text-decoration:none;font-size:12px}
         .shell{max-width:1120px;margin:auto;padding:30px 18px 70px}.heading{margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#829b87;font-weight:850}.heading h1{font-size:42px;letter-spacing:-.06em;margin:8px 0}.heading p{color:#849087;font-size:13px;margin:0}
-        .layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:16px}.panel{border:1px solid #1b241f;border-radius:22px;background:#0a100c;overflow:hidden}.preview{width:min(100%,420px);margin-inline:auto;max-height:min(76dvh,720px);aspect-ratio:9/16;background:radial-gradient(circle at 50% 40%,#18231b,#050806 65%);position:relative;display:grid;place-items:center}.preview video{width:100%;height:100%;object-fit:cover;display:block}.preview.format-portrait{width:min(100%,calc(76dvh * 9 / 16),420px)}.preview.format-square{width:min(100%,min(76dvh,520px))}.preview.format-landscape{width:min(100%,640px)}.preview.studioMorphing::before{content:"";position:absolute;inset:-1px;z-index:19;pointer-events:none;background:radial-gradient(ellipse at center,#8cefd624 0%,#0a181de8 65%,#020509 100%);animation:studioDeviceZoomCurtain 2s cubic-bezier(.22,1,.36,1) both}.preview.studioMorphing>video{animation:studioCameraReturn 2s cubic-bezier(.22,1,.36,1) both}.preview.studioMorphing .voiceAvatarStageActive{animation:studioVoiceReturn 2s cubic-bezier(.22,1,.36,1) both}@keyframes studioDeviceZoomCurtain{0%{opacity:0;transform:scale(.45)}22%{opacity:1;transform:scale(1.7)}65%{opacity:.95;transform:scale(2)}100%{opacity:0;transform:scale(2.3)}}@keyframes studioCameraReturn{0%,46%{opacity:0;filter:blur(12px)}72%{opacity:.5;filter:blur(4px)}100%{opacity:1;filter:blur(0)}}@keyframes studioVoiceReturn{0%,35%{opacity:0;filter:blur(10px)}100%{opacity:1;filter:blur(0)}}.preview.studioVoiceMode{width:min(72vw,330px,38dvh)!important;aspect-ratio:1/1!important;max-height:38dvh;border-radius:26px!important}.preview.studioTransform{transition:width .75s cubic-bezier(.22,1,.36,1),height .75s cubic-bezier(.22,1,.36,1),aspect-ratio .75s cubic-bezier(.22,1,.36,1),border-radius .65s ease,box-shadow .65s ease!important}@media(prefers-reduced-motion:reduce){.preview.studioTransform,.studioTransform>video,.voiceAvatarStage,.preview.studioMorphing::before,.preview.studioMorphing>video,.preview.studioMorphing .voiceAvatarStageActive{transition:none!important;animation:none!important}}.previewOverlayTools{position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:14;display:flex;flex-direction:column;gap:9px}.previewOverlayTools button{width:45px;height:45px;border-radius:50%;border:1px solid #ffffff66;background:#0a1026bb;backdrop-filter:blur(12px);color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 14px #0007}.previewOverlayTools button:focus-visible{outline:2px solid #84f4ff}.preview video.frontCamera{transform:scaleX(-1)}.preview video.backCamera{transform:none}.preview.format-square{aspect-ratio:1/1}.preview.format-landscape{aspect-ratio:16/9}.placeholder{text-align:center;color:#6f7d74}.cameraIcon{font-size:44px;margin-bottom:8px}.recording{position:absolute;top:14px;right:14px;padding:7px 10px;border-radius:999px;background:#261313;color:#ffd9d9;font-size:10px;font-weight:900}.live{position:absolute;top:14px;left:14px;padding:7px 10px;border-radius:999px;background:#e9f3db;color:#081007;font-size:10px;font-weight:900}.status{position:absolute;bottom:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}.status span{font-size:10px;color:#d9e2dc;background:rgba(0,0,0,.62);padding:7px 10px;border-radius:999px}.controls{display:flex;justify-content:center;gap:10px;padding:16px;border-top:1px solid #1b241f}.circle{width:46px;height:46px;border-radius:50%;border:1px solid #334038;background:#121913;color:#fff;cursor:pointer}.circle.off{opacity:.5}.cameraStudio{border-top:1px solid #1b241f;padding:14px 16px;background:#0b110d}.studioHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.studioHeader strong{font-size:11px}.studioHeader span{font-size:9px;color:#738078}.studioGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.studioControl{border:1px solid #263029;border-radius:13px;background:#0e1510;padding:10px}.studioControl label{display:flex;justify-content:space-between;font-size:9px;color:#aeb9b1;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}.studioControl select,.studioControl input[type=range]{width:100%}.studioControl select{border:1px solid #263029;background:#0a100c;color:#e8eee9;border-radius:8px;padding:8px;font-size:10px}.studioValue{color:#d6e7b8;font-weight:800}.studioHint{font-size:8px;color:#657269;margin-top:6px;line-height:1.4}.unsupported{opacity:.45}.qualityPills{display:flex;gap:5px}.qualityPill{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px 4px;font-size:9px;cursor:pointer}.qualityPill.active{border-color:#718c69;background:#132016;color:#d6e7b8}.qualityPill:disabled{cursor:not-allowed}.focusRow{display:flex;gap:5px}.focusRow button{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px;font-size:9px}.focusRow button.active{border-color:#718c69;background:#132016;color:#d6e7b8}.audioPills{display:flex;gap:5px;flex-wrap:wrap}.audioPill{flex:1;min-width:82px;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:8px 6px;font-size:9px;cursor:pointer}.audioPill.active{border-color:#718c69;background:#132016;color:#d6e7b8}.audioVolume{width:100%;margin-top:7px}.audioNote{font-size:8px;color:#657269;margin-top:6px;line-height:1.4}.start{padding:12px 22px;border:0;border-radius:999px;background:#d6e7b8;color:#071008;font-weight:850;cursor:pointer}.end{padding:12px 22px;border:0;border-radius:999px;background:#251313;color:#ffd6d6;font-weight:850;cursor:pointer}
+        .layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:16px}.panel{border:1px solid #1b241f;border-radius:22px;background:#0a100c;overflow:hidden}.preview{width:min(100%,420px);margin-inline:auto;max-height:min(76dvh,720px);aspect-ratio:9/16;background:radial-gradient(circle at 50% 40%,#18231b,#050806 65%);position:relative;display:grid;place-items:center}.preview video{width:100%;height:100%;object-fit:cover;display:block}.preview.format-portrait{width:min(100%,calc(76dvh * 9 / 16),420px)}.preview.format-square{width:min(100%,min(76dvh,520px))}.preview.format-landscape{width:min(100%,640px)}.preview.studioMorphing .voiceAvatarStageActive{animation:studioVoiceReturn 2s cubic-bezier(.22,1,.36,1) both}@keyframes studioDeviceZoomCurtain{0%{opacity:0;transform:scale(.45)}22%{opacity:1;transform:scale(1.7)}65%{opacity:.95;transform:scale(2)}100%{opacity:0;transform:scale(2.3)}}@keyframes studioCameraReturn{0%,46%{opacity:0;filter:blur(12px)}72%{opacity:.5;filter:blur(4px)}100%{opacity:1;filter:blur(0)}}@keyframes studioVoiceReturn{0%,35%{opacity:0;filter:blur(10px)}100%{opacity:1;filter:blur(0)}}.preview.studioVoiceMode{width:min(72vw,330px,38dvh)!important;aspect-ratio:1/1!important;max-height:38dvh;border-radius:26px!important}.preview.studioTransform{transition:width .75s cubic-bezier(.22,1,.36,1),height .75s cubic-bezier(.22,1,.36,1),aspect-ratio .75s cubic-bezier(.22,1,.36,1),border-radius .65s ease,box-shadow .65s ease!important}@media(prefers-reduced-motion:reduce){.preview.studioTransform,.studioTransform>video,.voiceAvatarStage,.preview.studioMorphing::before,.preview.studioMorphing>video,.preview.studioMorphing .voiceAvatarStageActive{transition:none!important;animation:none!important}}.previewOverlayTools{position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:14;display:flex;flex-direction:column;gap:9px}.previewOverlayTools button{width:45px;height:45px;border-radius:50%;border:1px solid #ffffff66;background:#0a1026bb;backdrop-filter:blur(12px);color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 14px #0007}.previewOverlayTools button:focus-visible{outline:2px solid #84f4ff}.preview video.frontCamera{transform:scaleX(-1)}.preview video.backCamera{transform:none}.preview.format-square{aspect-ratio:1/1}.preview.format-landscape{aspect-ratio:16/9}.placeholder{text-align:center;color:#6f7d74}.cameraIcon{font-size:44px;margin-bottom:8px}.recording{position:absolute;top:14px;right:14px;padding:7px 10px;border-radius:999px;background:#261313;color:#ffd9d9;font-size:10px;font-weight:900}.live{position:absolute;top:14px;left:14px;padding:7px 10px;border-radius:999px;background:#e9f3db;color:#081007;font-size:10px;font-weight:900}.status{position:absolute;bottom:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}.status span{font-size:10px;color:#d9e2dc;background:rgba(0,0,0,.62);padding:7px 10px;border-radius:999px}.controls{display:flex;justify-content:center;gap:10px;padding:16px;border-top:1px solid #1b241f}.circle{width:46px;height:46px;border-radius:50%;border:1px solid #334038;background:#121913;color:#fff;cursor:pointer}.circle.off{opacity:.5}.cameraStudio{border-top:1px solid #1b241f;padding:14px 16px;background:#0b110d}.studioHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.studioHeader strong{font-size:11px}.studioHeader span{font-size:9px;color:#738078}.studioGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.studioControl{border:1px solid #263029;border-radius:13px;background:#0e1510;padding:10px}.studioControl label{display:flex;justify-content:space-between;font-size:9px;color:#aeb9b1;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}.studioControl select,.studioControl input[type=range]{width:100%}.studioControl select{border:1px solid #263029;background:#0a100c;color:#e8eee9;border-radius:8px;padding:8px;font-size:10px}.studioValue{color:#d6e7b8;font-weight:800}.studioHint{font-size:8px;color:#657269;margin-top:6px;line-height:1.4}.unsupported{opacity:.45}.qualityPills{display:flex;gap:5px}.qualityPill{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px 4px;font-size:9px;cursor:pointer}.qualityPill.active{border-color:#718c69;background:#132016;color:#d6e7b8}.qualityPill:disabled{cursor:not-allowed}.focusRow{display:flex;gap:5px}.focusRow button{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px;font-size:9px}.focusRow button.active{border-color:#718c69;background:#132016;color:#d6e7b8}.audioPills{display:flex;gap:5px;flex-wrap:wrap}.audioPill{flex:1;min-width:82px;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:8px 6px;font-size:9px;cursor:pointer}.audioPill.active{border-color:#718c69;background:#132016;color:#d6e7b8}.audioVolume{width:100%;margin-top:7px}.audioNote{font-size:8px;color:#657269;margin-top:6px;line-height:1.4}.start{padding:12px 22px;border:0;border-radius:999px;background:#d6e7b8;color:#071008;font-weight:850;cursor:pointer}.end{padding:12px 22px;border:0;border-radius:999px;background:#251313;color:#ffd6d6;font-weight:850;cursor:pointer}
         .form{padding:20px}.form h2{font-size:17px;margin:0 0 15px}.field{margin-bottom:15px}.field label{display:block;font-size:10px;color:#748178;margin-bottom:7px;text-transform:uppercase;letter-spacing:.1em}.input,.select{width:100%;border:1px solid #263029;background:#0d140f;color:#f3f6f3;border-radius:11px;padding:12px;outline:none}.input:focus,.select:focus{border-color:#61785a}.help{font-size:10px;color:#66736b;line-height:1.6;margin-top:14px}.error{border:1px solid #533536;background:#1b0f10;color:#ffcaca;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}.ready{border:1px solid #334333;background:#101810;color:#b8d2ae;padding:10px 12px;border-radius:10px;font-size:10px;margin-bottom:12px}.checkedIn{border-color:#6b815e;background:#111c12;color:#d6e7b8}
         .formatGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.formatButton{border:1px solid #263029;background:#0d140f;color:#aeb8b1;border-radius:13px;padding:11px;text-align:left;cursor:pointer}.formatButton strong{display:block;color:#e8eee9;font-size:11px}.formatButton small{display:block;color:#69766e;font-size:9px;margin-top:4px}.formatButton.active{border-color:#718c69;background:#132016;box-shadow:inset 0 0 0 1px #718c69}.formatButton:disabled{cursor:not-allowed;opacity:.55}.recordingsLink{display:inline-flex;margin-top:12px;color:#cbd8ce;text-decoration:none;font-size:11px}.notice{margin-top:16px;border:1px solid #273129;border-radius:16px;padding:15px;color:#7d8981;font-size:10px;line-height:1.6}.notice strong{color:#c7d2ca;display:block;margin-bottom:4px}
         @media(max-width:780px){.layout{grid-template-columns:1fr}.heading h1{font-size:36px}.shell{padding:24px 12px 50px}}
@@ -1313,63 +1502,63 @@ export default function GoLivePage() {
         @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 
-        /* Device selection morphs the actual CAMERA stage, never the control canvas.
-           Keep bottom controls anchored while the image changes between 16:9, 9:16 and 1:1. */
+        /* Single authoritative layout for the three camera modes. Never translate media by 50%. */
         .goLive .layout>.panel:first-child>.preview{
+          position:relative!important;display:block!important;overflow:hidden!important;
           width:100%!important;max-width:none!important;max-height:none!important;
-          height:calc(100dvh - 74px - env(safe-area-inset-top,0px))!important;
-          min-height:520px!important;aspect-ratio:auto!important;
-          position:relative!important;overflow:hidden!important;display:block!important;
+          height:100%!important; /* Full panel height: the header and bottom controls overlay Phone video. */
+          min-height:0!important;aspect-ratio:auto!important;container-type:inline-size;
         }
         .goLive .layout>.panel:first-child>.preview>video,
         .goLive .layout>.panel:first-child>.preview>.placeholder{
-          position:absolute!important;display:block!important;left:50%!important;top:0!important;
-          margin:0!important;max-width:none!important;max-height:none!important;
-          transform:translateX(-50%)!important;transform-origin:top center!important;
-          border-radius:0!important;overflow:hidden!important;object-fit:cover!important;
-          transition:width 1.15s cubic-bezier(.22,1,.36,1),height 1.15s cubic-bezier(.22,1,.36,1),
-            border-radius 1.15s cubic-bezier(.22,1,.36,1),opacity .55s ease,filter .75s ease!important;
+          position:absolute!important;inset:auto!important;top:12px!important;left:0!important;right:auto!important;
+          width:100%!important;height:min(56.25cqw,calc(100% - 170px))!important;
+          max-width:none!important;max-height:none!important;aspect-ratio:auto!important;object-fit:cover!important;
+          margin:0!important;border-radius:12px!important;
+          transform:none!important;transform-origin:center center!important;
+          transition:top 2s cubic-bezier(.22,1,.36,1),left 2s cubic-bezier(.22,1,.36,1),
+            width 2s cubic-bezier(.22,1,.36,1),height 2s cubic-bezier(.22,1,.36,1),
+            border-radius 2s ease,opacity .65s ease!important;
         }
-        .goLive .preview[data-studio-mode="phone"]>video,
-        .goLive .preview[data-studio-mode="phone"]>.placeholder{
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"]>video,
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"]>.placeholder{
+          top:0!important;left:0!important;right:0!important;bottom:0!important;
           width:100%!important;height:100%!important;aspect-ratio:auto!important;
+          border-radius:0!important;object-fit:cover!important;animation:none!important;
         }
-        .goLive .preview[data-studio-mode="desktop"]>video,
-        .goLive .preview[data-studio-mode="desktop"]>.placeholder{
-          width:100%!important;height:auto!important;aspect-ratio:16/9!important;
-          max-height:calc(100% - 170px)!important;
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"]>video,
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"]>.placeholder{
+          top:12px!important;left:0!important;width:100%!important;
+          height:min(56.25cqw,calc(100% - 170px))!important;aspect-ratio:auto!important;
+          animation:studioDesktopHover 5s ease-in-out infinite!important;
         }
-        .goLive .preview[data-studio-mode="voice"]>video{opacity:0!important;pointer-events:none!important}
-        .goLive .preview[data-studio-mode="voice"]>.placeholder{opacity:0!important;pointer-events:none!important}
-        .goLive .preview .voiceAvatarStage{
-          inset:auto!important;top:16px!important;left:50%!important;
-          width:min(76vw,330px,38dvh)!important;height:auto!important;aspect-ratio:1/1!important;
-          border:1px solid #b5ffe555!important;border-radius:25px!important;
-          transform:translateX(-50%) scale(.88)!important;
-          transition:opacity .75s ease,visibility .75s ease,transform 1.15s cubic-bezier(.22,1,.36,1)!important;
+        @keyframes studioDesktopHover{0%,100%{translate:0 0}50%{translate:0 5px}}
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="voice"]>video,
+        .goLive .layout>.panel:first-child>.preview[data-studio-mode="voice"]>.placeholder{
+          top:14px!important;left:calc(50% - min(76vw,340px,40dvh)/2)!important;
+          width:min(76vw,340px,40dvh)!important;height:min(76vw,340px,40dvh)!important;
+          border-radius:24px!important;opacity:0!important;pointer-events:none!important;animation:none!important;
         }
-        .goLive .preview .voiceAvatarStageActive{transform:translateX(-50%) scale(1)!important}
-        .goLive .preview.studioMorphing::before{z-index:18!important}
-        @media(max-width:850px){
-          .goLive .layout>.panel:first-child>.preview>video,
-          .goLive .layout>.panel:first-child>.preview>.placeholder{
-            bottom:auto!important;right:auto!important;
-          }
-          .goLive .preview[data-studio-mode="phone"]>video,
-          .goLive .preview[data-studio-mode="phone"]>.placeholder{
-            width:100%!important;height:100%!important;max-height:none!important;
-          }
-          .goLive .preview[data-studio-mode="desktop"]>video,
-          .goLive .preview[data-studio-mode="desktop"]>.placeholder{
-            width:100%!important;height:auto!important;aspect-ratio:16/9!important;
-          }
+        .goLive .layout>.panel:first-child>.preview .voiceAvatarStage{
+          position:absolute!important;inset:auto!important;top:14px!important;left:50%!important;right:auto!important;
+          width:min(76vw,340px,40dvh)!important;height:auto!important;aspect-ratio:1/1!important;
+          border-radius:24px!important;border:1px solid #b5ffe555!important;
+          transform:translateX(-50%) scale(.92)!important;
+          transition:opacity .65s ease,visibility .65s ease,transform 2s cubic-bezier(.22,1,.36,1)!important;
         }
+        .goLive .layout>.panel:first-child>.preview .voiceAvatarStageActive{
+          transform:translateX(-50%) scale(1)!important;
+        }
+        /* Avoid overlay-induced black frames and mirror flips on iPhone. */
+        .goLive .preview.studioMorphing::before{display:none!important}
+        .goLive .layout>.panel:first-child>.preview.studioMorphing>video{animation:none!important;filter:none!important}
         @media(prefers-reduced-motion:reduce){
           .goLive .layout>.panel:first-child>.preview>video,
           .goLive .layout>.panel:first-child>.preview>.placeholder,
-          .goLive .preview .voiceAvatarStage{transition:none!important}
+          .goLive .layout>.panel:first-child>.preview .voiceAvatarStage{
+            transition:none!important;animation:none!important;
+          }
         }
-
 
       `}</style>
 
@@ -1414,7 +1603,7 @@ export default function GoLivePage() {
                 <button type="button" aria-pressed={studioMode==="phone"} className={studioMode==="phone"?"selected":""} onClick={()=>selectStudioMode("phone")}><StudioGlyph kind="phone"/>Phone</button>
                 <button type="button" aria-pressed={studioMode==="voice"} className={studioMode==="voice"?"selected":""} onClick={()=>selectStudioMode("voice")}><StudioGlyph kind="voice"/>Voice</button>
               </div>
-              {!live && <button type="button" data-go-live-start className={`newStudioGo ${launchPressed?"launchPressed":""}`} disabled={saving||connectingLive||launchCountdown!==null} onPointerDown={()=>setLaunchPressed(true)} onPointerUp={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onPointerCancel={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onClick={launchBroadcast}>{launchCountdown!==null?`Going live in ${launchCountdown}…`:connectingLive?"Connecting…":cameraReady?"● Go Live":"Enable Camera"}</button>}
+              {!live && <button type="button" data-go-live-start className={`newStudioGo ${launchPressed?"launchPressed":""}`} disabled={saving||connectingLive||launchCountdown!==null} onPointerDown={()=>setLaunchPressed(true)} onPointerUp={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onPointerCancel={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onClick={launchBroadcast}>{launchCountdown!==null?`Going live in ${launchCountdown}…`:connectingLive?"Connecting…":cameraReady?"● Go Live":studioMode==="voice"?"● Go Live":"Enable Camera"}</button>}
               <div className="newStudioHint">Double-tap camera to flip · Effects on the preview</div>
             </div>
             </div>
