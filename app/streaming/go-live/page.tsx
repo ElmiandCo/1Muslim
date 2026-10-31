@@ -13,6 +13,7 @@ import SyncedLiveIntro from "../../components/SyncedLiveIntro";
 import LiveLightOverlay from "../../../components/LiveLightOverlay";
 import ShareLiveButton from "../../components/ShareLiveButton";
 import LiveVisualEffects, {type LiveEffect} from "../../components/LiveVisualEffects";
+import LiveGuestsStage, {GuestVideoTiles,useLiveGuestRoster} from "../../../components/LiveGuestsStage";
 
 const StudioGlyph=({kind}:{kind:"camera"|"mic"|"guests"|"settings"|"desktop"|"phone"|"voice"})=>{const paths:Record<string,React.ReactNode>={camera:<><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7l2-3h4l2 3"/><circle cx="12" cy="14" r="4"/></>,mic:<><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></>,guests:<><circle cx="9" cy="8" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M17 4a4 4 0 0 1 0 8M18 15a6 6 0 0 1 4 6"/></>,settings:<><circle cx="12" cy="12" r="3"/><path d="M10 2h4l1 3 3 1 3-1 2 4-2 2v3l2 2-2 4-3-1-3 1-1 3h-4l-1-3-3-1-3 1-2-4 2-2v-3L1 9l2-4 3 1 3-1z"/></>,desktop:<><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M12 18v4M7 22h10"/></>,phone:<><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></>,voice:<><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></>};return <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[kind]}</svg>};
 const categories = ["Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
@@ -525,6 +526,7 @@ export default function GoLivePage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const roomRef = useRef<Room | null>(null);
+  const guestRoster=useLiveGuestRoster(roomRef,live,currentUserId,studioMode==="voice"?11:3);
   const qualityMap = { "480p": { width: 854, height: 480 }, "720p": { width: 1280, height: 720 }, "1080p": { width: 1920, height: 1080 } } as const;
   const getCaptureSize = () => qualityMap[videoQuality];
   const refreshCameraCapabilities = (track?: MediaStreamTrack) => {
@@ -1617,6 +1619,27 @@ export default function GoLivePage() {
         }
         /* Keep the SAME camera node visible throughout morph; no opacity blackout. */
         .goLive .preview.studioMorphing::before{display:none!important}
+        /* Guest layout: only the stage changes; never remount the host's camera. */
+        .goLive .preview[data-guest-count="1"] .studioCameraFrame,
+        .goLive .preview[data-guest-count="2"] .studioCameraFrame,
+        .goLive .preview[data-guest-count="3"] .studioCameraFrame{
+          top:0!important;left:0!important;width:60%!important;height:100%!important;
+          border-radius:0!important;rotate:0deg!important;animation:none!important;
+          box-shadow:none!important;translate:0 0!important;
+        }
+        .goLive .preview[data-guest-count="1"] .studioCameraFrame{width:50%!important}
+        .goLive .preview[data-guest-count="1"] .studioCameraFrame>video,
+        .goLive .preview[data-guest-count="2"] .studioCameraFrame>video,
+        .goLive .preview[data-guest-count="3"] .studioCameraFrame>video{
+          rotate:0deg!important;scale:1!important;object-fit:cover!important;
+        }
+        .goLive .preview .hostLiveGuestColumn{
+          position:absolute;z-index:3;right:0;top:0;bottom:0;width:40%;
+          pointer-events:none;transition:width .85s cubic-bezier(.22,1,.36,1);
+        }
+        .goLive .preview[data-guest-count="1"] .hostLiveGuestColumn{width:50%}
+        .goLive .preview .hostLiveGuestColumn>div{width:100%;height:100%}
+        .goLive .preview .hostLiveGuestColumn video{max-width:none}
         @media(prefers-reduced-motion:reduce){
           .goLive .layout>.panel:first-child>.preview .studioCameraFrame,
           .goLive .layout>.panel:first-child>.preview .studioCameraFrame>video,
@@ -1643,10 +1666,11 @@ export default function GoLivePage() {
 
         <div className="layout">
           <section className="panel">
-            <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} data-studio-mode={studioMode} className={`preview studioTransform ${studioMorphing?"studioMorphing":""} format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"} ${studioMode==="voice"?"studioVoiceMode":""}`}>
+            <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} data-studio-mode={studioMode} data-guest-count={live&&studioMode!=="voice"?Math.min(3,guestRoster.length):0} className={`preview studioTransform ${studioMorphing?"studioMorphing":""} format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"} ${studioMode==="voice"?"studioVoiceMode":""}`}>
               <div className="studioCameraFrame" aria-hidden={studioMode==="voice"}>
                 {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               </div>
+              {live&&studioMode!=="voice"&&guestRoster.length>0&&<div className="hostLiveGuestColumn"><GuestVideoTiles guests={guestRoster}/></div>}
               <div className={`voiceAvatarStage ${studioMode==="voice"?"voiceAvatarStageActive":""}`} aria-hidden={studioMode!=="voice"}>
                 <div className="voiceBackdropOrbs"><i/><i/><i/></div>
                 <div className="voiceAvatarMotion" style={{["--voice-energy" as string]:voiceEnergy} as React.CSSProperties}>
@@ -1655,6 +1679,7 @@ export default function GoLivePage() {
                 </div>
                 <div className="voiceAvatarLabel"><strong>{voiceName}</strong><span>{micOn?"● Microphone active":"○ Microphone muted"}</span></div>
               </div>
+              {live&&studioMode==="voice"&&guestRoster.length>0&&<LiveGuestsStage mode="audio" guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostMicActive={micOn} hostSpeaking={voiceEnergy>.12}/>}
               <div className={`studioLaunchFlash ${launchVisual?"studioLaunchFlashOn":""}`} aria-hidden="true" />
               <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
               {live&&liveStreamIdRef.current&&<LiveLightOverlay streamId={liveStreamIdRef.current} host />}
