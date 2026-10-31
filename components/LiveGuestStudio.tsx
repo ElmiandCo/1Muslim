@@ -14,6 +14,8 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
   const [requests,setRequests]=useState<GuestRequest[]>([]);
   const [loaded,setLoaded]=useState(false);
   const [mode,setMode]=useState<"pfp"|"camera">("pfp");
+  const [audioOnly,setAudioOnly]=useState<boolean|null>(null);
+  const [mediaConsent,setMediaConsent]=useState(false);
   const [joined,setJoined]=useState(false);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
@@ -31,6 +33,12 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
     void db.auth.getUser().then(({data})=>{if(active)setUid(data.user?.id??null)});
     const load=async()=>{
       if(!active||document.visibilityState==="hidden")return;
+      const {data:liveMeta}=await db.from("live_streams").select("aspect_ratio").eq("id",streamId).maybeSingle();
+      if(active&&liveMeta){
+        const audio=liveMeta.aspect_ratio==="1:1";
+        setAudioOnly(audio);
+        if(audio)setMode("pfp");
+      }
       const {data,error:loadError}=await db.from("live_guest_requests")
         .select("id,user_id,status,mode,host_muted").eq("stream_id",streamId);
       if(!active)return;
@@ -77,7 +85,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
     setBusy(true);setError("");
     try{
       const {error:requestError}=await createClient().rpc("request_live_guest",{
-        p_stream:streamId,p_mode:mode,
+        p_stream:streamId,p_mode:audioOnly?"pfp":mode,
       });
       if(requestError)throw new Error(requestError.code==="PGRST202"
         ?"Guest requests are initializing. Please try again shortly."
@@ -106,6 +114,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
   }
   async function join(reconnecting=false){
     if((busy||joined)&&!reconnecting||me?.status!=="approved")return;
+    if(!mediaConsent){setError("Confirm microphone and camera sharing before joining.");return;}
     setBusy(true);setError("");
     try{
       const response=await fetch("/api/livekit/token",{
@@ -183,13 +192,19 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
       {loaded&&!requests.some(r=>r.status==="pending"||r.status==="approved")&&<p>No guest requests yet.</p>}
     </div>:<div>
       {!joined&&me?.status!=="approved"&&<>
-        <select aria-label="Guest mode" value={mode} disabled={busy} onChange={e=>setMode(e.target.value as "pfp"|"camera")}>
-          <option value="pfp">🎙️ Audio + profile picture</option><option value="camera">📹 Camera + audio</option>
+        <select aria-label="Guest mode" value={audioOnly?"pfp":mode} disabled={busy||audioOnly===true} onChange={e=>setMode(e.target.value as "pfp"|"camera")}>
+          <option value="pfp">🎙️ Audio + profile picture</option>{audioOnly!==true&&<option value="camera">📹 Camera + audio</option>}
         </select>{" "}
         <button type="button" disabled={busy||me?.status==="pending"} onClick={()=>void request()}>Request to join</button>
       </>}
       {me?.status==="pending"&&<p role="status">⏳ Waiting for host approval…</p>}
-      {me?.status==="approved"&&!joined&&<button type="button" disabled={busy} onClick={()=>void join()}>Join stage</button>}
+      {me?.status==="approved"&&!joined&&<div>
+        <label style={{display:"flex",alignItems:"flex-start",gap:8,fontSize:12,margin:"8px 0"}}>
+          <input type="checkbox" checked={mediaConsent} onChange={e=>setMediaConsent(e.target.checked)} />
+          I agree to share my microphone{me.mode==="camera"&&!audioOnly?" and camera":""} with this Live.
+        </label>
+        <button type="button" disabled={busy||!mediaConsent} onClick={()=>void join()}>Join stage</button>
+      </div>}
       {joined&&<div><p role="status">🔴 You're on stage</p>
         {me?.mode==="camera"&&<div style={{position:"relative",maxWidth:250}}>
           <video ref={preview} muted autoPlay playsInline style={{width:"100%",borderRadius:12,filter:background==="blur"?"blur(4px)":"none"}}/>
