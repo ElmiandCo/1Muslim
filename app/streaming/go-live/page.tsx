@@ -60,7 +60,7 @@ export default function GoLivePage() {
   const endRequestedRef=useRef(false);
   const studioMorphTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   useEffect(()=>()=>{if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current)},[]);
-  const playCameraAdjustSound=()=>{
+  const playCameraAdjustSound=(mode:"desktop"|"phone"|"voice")=>{
     try{
       const context=new AudioContext();
       void context.resume().then(()=>{
@@ -76,7 +76,20 @@ export default function GoLivePage() {
           oscillator.connect(gain);gain.connect(context.destination);
           oscillator.start(start+offset);oscillator.stop(start+offset+.15);
         });
-        window.setTimeout(()=>void context.close().catch(()=>{}),1000);
+        // A gentle two-second lens motor sweep follows the canvas resize.
+        const motor=context.createOscillator(),motorGain=context.createGain();
+        motor.type="sine";
+        const from=mode==="voice"?440:mode==="phone"?170:280;
+        const to=mode==="voice"?180:mode==="phone"?530:370;
+        motor.frequency.setValueAtTime(from,start);
+        motor.frequency.exponentialRampToValueAtTime(to,start+1.85);
+        motorGain.gain.setValueAtTime(.0001,start);
+        motorGain.gain.exponentialRampToValueAtTime(.025,start+.2);
+        motorGain.gain.setValueAtTime(.025,start+1.2);
+        motorGain.gain.exponentialRampToValueAtTime(.0001,start+1.9);
+        motor.connect(motorGain);motorGain.connect(context.destination);
+        motor.start(start);motor.stop(start+1.92);
+        window.setTimeout(()=>void context.close().catch(()=>{}),2300);
       }).catch(()=>void context.close().catch(()=>{}));
     }catch{/* Audio effects are optional; never block mode switching. */}
   };
@@ -86,7 +99,7 @@ export default function GoLivePage() {
     setStudioMorphing(false);
     requestAnimationFrame(()=>setStudioMorphing(true));
     studioMorphTimer.current=setTimeout(()=>setStudioMorphing(false),2000);
-    playCameraAdjustSound();
+    playCameraAdjustSound(mode);
     setStudioMode(mode);
     setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
     if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
@@ -1352,18 +1365,18 @@ export default function GoLivePage() {
           position:relative!important;display:block!important;overflow:hidden!important;
           width:100%!important;max-width:none!important;max-height:none!important;
           height:calc(100dvh - 74px - env(safe-area-inset-top,0px))!important;
-          min-height:500px!important;aspect-ratio:auto!important;
+          min-height:0!important;aspect-ratio:auto!important;container-type:inline-size;
         }
         .goLive .layout>.panel:first-child>.preview>video,
         .goLive .layout>.panel:first-child>.preview>.placeholder{
           position:absolute!important;inset:auto!important;top:12px!important;left:0!important;right:auto!important;
-          width:100%!important;height:auto!important;max-width:none!important;max-height:none!important;
-          aspect-ratio:16/9!important;object-fit:cover!important;
+          width:100%!important;height:min(56.25cqw,calc(100% - 170px))!important;
+          max-width:none!important;max-height:none!important;aspect-ratio:auto!important;object-fit:cover!important;
           margin:0!important;border-radius:12px!important;
           transform:none!important;transform-origin:center center!important;
-          transition:top 2s cubic-bezier(.22,1,.36,1),width 2s cubic-bezier(.22,1,.36,1),
-            height 2s cubic-bezier(.22,1,.36,1),aspect-ratio 2s ease,
-            border-radius 2s ease,opacity .6s ease!important;
+          transition:top 2s cubic-bezier(.22,1,.36,1),left 2s cubic-bezier(.22,1,.36,1),
+            width 2s cubic-bezier(.22,1,.36,1),height 2s cubic-bezier(.22,1,.36,1),
+            border-radius 2s ease,opacity .65s ease!important;
         }
         .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"]>video,
         .goLive .layout>.panel:first-child>.preview[data-studio-mode="phone"]>.placeholder{
@@ -1374,13 +1387,15 @@ export default function GoLivePage() {
         .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"]>video,
         .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"]>.placeholder{
           top:12px!important;left:0!important;width:100%!important;
-          height:auto!important;aspect-ratio:16/9!important;
+          height:min(56.25cqw,calc(100% - 170px))!important;aspect-ratio:auto!important;
           animation:studioDesktopHover 5s ease-in-out infinite!important;
         }
         @keyframes studioDesktopHover{0%,100%{translate:0 0}50%{translate:0 5px}}
         .goLive .layout>.panel:first-child>.preview[data-studio-mode="voice"]>video,
         .goLive .layout>.panel:first-child>.preview[data-studio-mode="voice"]>.placeholder{
-          opacity:0!important;pointer-events:none!important;animation:none!important;
+          top:14px!important;left:calc(50% - min(76vw,340px,40dvh)/2)!important;
+          width:min(76vw,340px,40dvh)!important;height:min(76vw,340px,40dvh)!important;
+          border-radius:24px!important;opacity:0!important;pointer-events:none!important;animation:none!important;
         }
         .goLive .layout>.panel:first-child>.preview .voiceAvatarStage{
           position:absolute!important;inset:auto!important;top:14px!important;left:50%!important;right:auto!important;
