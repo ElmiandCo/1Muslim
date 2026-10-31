@@ -117,7 +117,12 @@ export default function Home(){
     "rose-gold":["83,42,45","224,157,126","113,62,70"],
     "silver-dust":["38,48,66","195,207,223","76,91,111"],
     silver:["38,48,66","195,207,223","76,91,111"],
-    "carbon-fiber":["22,25,32","164,175,187","55,64,78"]
+    "carbon-fiber":["22,25,32","164,175,187","55,64,78"],
+    sapphire:["16,41,75","115,182,255","57,143,255"],
+    ruby:["74,20,34","255,105,131","237,54,82"],
+    amethyst:["57,19,78","233,160,255","200,92,245"],
+    titanium:["34,41,50","203,213,225","182,195,209"],
+    obsidian:["28,25,20","230,188,101","226,183,94"]
    };
    const [surface,stroke,accent]=palette[chosen]||palette.emerald;
    document.documentElement.style.setProperty("--canvas-control-surface-rgb",surface);
