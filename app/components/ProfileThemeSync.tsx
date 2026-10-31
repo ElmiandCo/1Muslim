@@ -25,11 +25,12 @@ function applyTheme(value:unknown){
 }
 export default function ProfileThemeSync(){
  const [recognizing,setRecognizing]=useState(true);
+ const [visible,setVisible]=useState(true);
  useEffect(()=>{
   let active=true;let settled=false;
   const initial=(()=>{try{return localStorage.getItem("1muslim:profile-background")||fallback}catch{return fallback}})();
   const start=performance.now();
-  const settle=(theme:string)=>{if(!active)return;applyTheme(theme);if(!settled){settled=true;window.setTimeout(()=>{if(active)setRecognizing(false)},Math.max(0,1100-(performance.now()-start)))}};
+  const settle=(theme:string)=>{if(!active)return;applyTheme(theme);if(!settled){settled=true;window.setTimeout(()=>{if(active){setVisible(false);window.setTimeout(()=>{if(active)setRecognizing(false)},1400)}},Math.max(0,1100-(performance.now()-start)))}};
   const db=createClient();
   const refresh=async()=>{
    try{
@@ -47,10 +48,10 @@ export default function ProfileThemeSync(){
   return()=>{active=false;subscription.unsubscribe();window.removeEventListener("1muslim:profile-background-changed",onChange)};
  },[]);
  return <>
-  {recognizing&&<div className="themeRecognitionIntro" aria-hidden="true"><div className="themeRecognitionGlow"/><div className="themeRecognitionButtons"><i/><i/><i/><i/><i/><i/></div></div>}
+  {recognizing&&<div className={visible?"themeRecognitionIntro":"themeRecognitionIntro themeRecognitionDone"} aria-hidden="true"><div className="themeRecognitionGlow"/><div className="themeRecognitionButtons"><i/><i/><i/><i/><i/><i/></div></div>}
   <style>{`
    .themeRecognitionIntro{position:fixed;inset:0;z-index:15;pointer-events:none;overflow:hidden;opacity:.78;transition:opacity 1.4s ease;background:linear-gradient(125deg,rgba(9,74,61,.18),rgba(30,83,159,.2),rgba(104,42,129,.17),rgba(127,81,35,.16));background-size:400% 400%;animation:themeIntroShift 9s ease-in-out infinite}
-   .themeRecognitionGlow{position:absolute;inset:-20%;background:radial-gradient(circle at 25% 35%,rgba(42,167,222,.16),transparent 55%),radial-gradient(circle at 80% 70%,rgba(209,115,215,.12),transparent 55%);animation:themeIntroFloat 7s ease-in-out infinite alternate}
+   .themeRecognitionDone{opacity:0!important}\n   .themeRecognitionGlow{position:absolute;inset:-20%;background:radial-gradient(circle at 25% 35%,rgba(42,167,222,.16),transparent 55%),radial-gradient(circle at 80% 70%,rgba(209,115,215,.12),transparent 55%);animation:themeIntroFloat 7s ease-in-out infinite alternate}
    .themeRecognitionButtons{position:absolute;bottom:13%;left:50%;transform:translateX(-50%);display:flex;gap:12px;opacity:.55}
    .themeRecognitionButtons i{width:8px;height:8px;border-radius:50%;background:#4ec8a5;box-shadow:0 0 12px currentColor;animation:themeIntroButton 6s ease-in-out infinite}
    .themeRecognitionButtons i:nth-child(2){animation-delay:-1s}.themeRecognitionButtons i:nth-child(3){animation-delay:-2s}.themeRecognitionButtons i:nth-child(4){animation-delay:-3s}.themeRecognitionButtons i:nth-child(5){animation-delay:-4s}.themeRecognitionButtons i:nth-child(6){animation-delay:-5s}
