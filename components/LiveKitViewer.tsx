@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
 import { createClient } from "../utils/supabase/client";
+import { shouldApplyPresenceEvent, type PresenceVersion } from "../lib/live-discovery-state";
 import { useRouter } from "next/navigation";
 import ReconnectTrivia from "../app/components/ReconnectTrivia";
 import ShareLiveButton from "../app/components/ShareLiveButton";
@@ -77,8 +78,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
     let recoveryTimer:number|null=null;
     let retry=0;
     let terminalSubscribed=false, presenceSubscribed=false;
-    let seenVersion=-1;
-    let seenSession="";
+    let seenPresence: PresenceVersion | undefined;
     const db=createClient();
     const end=()=>{
       if(!alive||endedOnce.current)return;
@@ -136,11 +136,11 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       }).subscribe(status=>subscriptionStatus("terminal",status));
     const presenceChannel=db.channel("live2-presence:"+streamId)
       .on("postgres_changes",{event:"*",schema:"public",table:"live_presence",filter:"stream_id=eq."+streamId},payload=>{
-        const next=payload.new as {state?:string;version?:number;session_id?:string;stream_id?:string};
-        if(!alive||next.stream_id!==streamId||!Number.isFinite(Number(next.version)))return;
-        const version=Number(next.version);
-        if(seenSession===next.session_id&&version<=seenVersion)return;
-        seenSession=next.session_id||"";seenVersion=version;
+        const row=payload.new as {state?:string;version?:number;session_id?:string;stream_id?:string};
+        if(!alive||row.stream_id!==streamId)return;
+        const next={...row,version:Number(row.version)} as PresenceVersion;
+        if(!shouldApplyPresenceEvent(seenPresence,next))return;
+        seenPresence=next;
         if(next.state==="ENDED"){end();return;}
         if(next.state==="RECONNECTING"||next.state==="STARTING")setHostConnecting(true);
         else if(next.state==="READY_AUDIO"||next.state==="READY_VIDEO"){
