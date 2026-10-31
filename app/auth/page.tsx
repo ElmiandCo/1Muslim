@@ -31,7 +31,7 @@ export default function AuthPage() {
   const [emailLogin,setEmailLogin]=useState(false);
   const [visionVisible,setVisionVisible]=useState(true);
   const [entryStage,setEntryStage]=useState<"welcome"|"membership"|"guest"|"auth">("welcome");
-  const [entryReady,setEntryReady]=useState(false);
+  const [entryReady,setEntryReady]=useState(false);\n  const [entryPalette,setEntryPalette]=useState("emerald");\n  useEffect(()=>{const sync=()=>{try{const v=(localStorage.getItem("1muslim-theme-color")||localStorage.getItem("1muslim-theme-palette")||localStorage.getItem("1muslim-theme-name")||"emerald").toLowerCase();setEntryPalette(["emerald","sapphire","ruby","amethyst","titanium","obsidian"].includes(v)?v:"emerald")}catch{}};sync();window.addEventListener("storage",sync);window.addEventListener("1muslim:theme-changed",sync);return()=>{window.removeEventListener("storage",sync);window.removeEventListener("1muslim:theme-changed",sync)}},[]);
   useEffect(()=>{setEntryReady(true)},[]);
 
 
@@ -115,12 +115,12 @@ export default function AuthPage() {
   };
 
   const embedded=typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("embedded");
-  if(entryStage!=="auth")return <main className={"authPreview "+(day?"authPreviewDay":"")+" authEntryShell"+(embedded?" authEntryEmbedded":"")}>
+  if(entryStage!=="auth")return <main className={"authPreview "+(day?"authPreviewDay":"")+" authEntryShell authEntryPalette-"+entryPalette+(embedded?" authEntryEmbedded":"")}>
     <div className="authHomeBackdrop" aria-hidden="true"><div className="authHomeNight"/><div className="authHomeDay"/><div className="authHomeShade"/></div>
     <section className={"authEntryCard "+(entryReady?"authEntryReady":"")} aria-label="1Muslim welcome">
       <span className="authEntryEyebrow">✦ 1MUSLIM · WELCOME</span>
       <div className="authEntryMark" aria-hidden="true">۞</div>
-      {entryStage==="welcome"?<><h1>As-salāmu ʿalaykum</h1><p>Your place to connect, learn, and reflect.</p><div className="authEntryActions"><button type="button" onClick={()=>{setIsShahadaSignup(false);setEntryStage("auth")}}>Sign In →</button><button type="button" onClick={()=>setEntryStage("membership")}>Not a Member ✦</button></div></>:
+      {entryStage==="welcome"?<><h1>As-salāmu ʿalaykum</h1><p>Your place to connect, learn, and reflect.</p><div className="authEntryActions"><button type="button" onClick={()=>{setIsShahadaSignup(false);setEntryStage("auth")}}>Sign In →</button><button type="button" onClick={()=>setEntryStage("membership")}>Create Account →</button></div></>:
        entryStage==="membership"?<><h1>Are you Muslim?</h1><p>Choose the path that fits you.</p><div className="authEntryActions"><button type="button" onClick={()=>{setIsShahadaSignup(true);setEntryStage("auth")}}>Yes · Sign Up →</button><button type="button" onClick={()=>setEntryStage("guest")}>No · Explore as Guest</button></div></>:
        <><h1>You're welcome here.</h1><p>Explore public Qur'an, lessons, and livestreams. Posting, comments, and messaging are for members.</p><div className="authEntryActions"><button type="button" onClick={()=>window.location.assign("/")}>Explore 1Muslim →</button><button type="button" onClick={()=>setEntryStage("membership")}>← Back</button></div><small>One-day guest access and the dedicated introduction to Islam are coming soon. Public browsing is available now.</small></>}
       {entryStage!=="welcome"&&entryStage!=="guest"&&<button className="authEntryBack" type="button" onClick={()=>setEntryStage("welcome")}>← Back</button>}
@@ -141,6 +141,33 @@ export default function AuthPage() {
       .authEntryHome{position:absolute;top:13px;right:13px;border:1px solid #d8c78e77;border-radius:50%;width:38px;height:38px;background:#12493e;color:#f6dfb0;cursor:pointer}
       .authEntryCard small{font-size:11px;line-height:1.5;color:#c7d7cb}
       @media(prefers-reduced-motion:reduce){.authEntryCard{transition:none;transform:none}}
+    
+      .authEntryShell{--ac:#b8e9c8;--gold:#e9cf95;--tint:6,58,46}
+      .authEntryPalette-sapphire{--ac:#9dcaff;--gold:#c7d8f0;--tint:12,38,77}
+      .authEntryPalette-ruby{--ac:#f5a4b0;--gold:#f1c783;--tint:78,21,34}
+      .authEntryPalette-amethyst{--ac:#e7b2f9;--gold:#f2c5e8;--tint:64,28,78}
+      .authEntryPalette-titanium{--ac:#d6dde5;--gold:#b9c3d0;--tint:37,43,49}
+      .authEntryPalette-obsidian{--ac:#e7cb8b;--gold:#f4d99a;--tint:21,20,19}
+      .authEntryShell:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 55% 36% at 50% 53%,rgba(var(--tint),.5),transparent 75%);animation:authAmbient 12s ease-in-out infinite alternate}
+      .authEntryShell .authEntryCard{width:min(100%,450px);min-height:0;padding:clamp(24px,4vw,34px);gap:10px;border-color:var(--gold);border-radius:28px;background:linear-gradient(145deg,rgba(var(--tint),.86),rgba(var(--tint),.66));box-shadow:0 25px 75px #001b1580,inset 0 1px #ffffff24,0 0 38px var(--ac);animation:authEntryReveal .75s cubic-bezier(.2,.8,.2,1) both}
+      .authEntryShell .authEntryEyebrow{font-size:10px;color:var(--gold)}
+      .authEntryShell .authEntryMark{font-size:55px;color:var(--gold);animation:authMarkSettle .8s ease-out both}
+      .authEntryShell .authEntryCard h1{font-size:clamp(25px,5vw,35px)}
+      .authEntryShell .authEntryCard p{font-size:13px}
+      .authEntryShell .authEntryActions{gap:9px;margin-top:12px}
+      .authEntryShell .authEntryActions button{min-height:46px;border-color:var(--gold);border-radius:15px;background:linear-gradient(115deg,rgba(var(--tint),.5),rgba(var(--tint),.32));color:#fff5df;font-size:14px;box-shadow:inset 0 1px #ffffff25;animation:authButtonEnter .65s .2s both;transition:transform .22s,box-shadow .22s}
+      .authEntryShell .authEntryActions button+button{background:rgba(var(--tint),.32);animation-delay:.3s}
+      .authEntryShell .authEntryActions button:active{transform:scale(.975);box-shadow:0 0 20px var(--ac)}
+      .authEntryShell .authEntryHome{top:12px;right:12px;display:grid;place-items:center;width:34px;height:34px;padding:0;background:rgba(var(--tint),.5);color:#fff5df;font-size:16px;line-height:1}
+      .authEntryShell .authEntryActions button:focus-visible,.authEntryShell .authEntryHome:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
+      .authPreviewDay.authEntryShell{background:#f7f8f7!important}
+      .authPreviewDay .authEntryCard{color:#19352c;background:linear-gradient(145deg,#ffffffed,rgba(var(--tint),.1))}
+      .authPreviewDay .authEntryCard p,.authPreviewDay .authEntryActions button,.authPreviewDay .authEntryHome{color:#19352c}
+      @keyframes authEntryReveal{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes authMarkSettle{from{transform:rotate(-10deg);opacity:.5}to{transform:rotate(0);opacity:1}}
+      @keyframes authButtonEnter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes authAmbient{from{opacity:.5;transform:scale(.95)}to{opacity:.85;transform:scale(1.08)}}
+      @media(prefers-reduced-motion:reduce){.authEntryShell:before,.authEntryShell .authEntryCard,.authEntryShell .authEntryMark,.authEntryShell .authEntryActions button{animation:none!important;opacity:1;transform:none}}
     `}</style>
     <style>{`
       .authEntryEmbedded{background:transparent!important;min-height:100%!important;height:100dvh!important;padding:8px!important}
