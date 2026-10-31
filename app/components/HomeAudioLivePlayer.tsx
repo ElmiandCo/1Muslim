@@ -11,6 +11,7 @@ export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;h
  const [state,setState]=useState("Connecting to voice live…");
  const [needsTap,setNeedsTap]=useState(false);
  const [connected,setConnected]=useState(false);
+ const [hostMicActive,setHostMicActive]=useState(false);
  const [guestOnStage,setGuestOnStage]=useState(false);
  const guestOnStageRef=useRef(false);
  const roomRef=useRef<Room|null>(null);
@@ -45,11 +46,17 @@ export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;h
   };
   room.on(RoomEvent.TrackSubscribed,attach);
   room.on(RoomEvent.TrackUnsubscribed,(track)=>{const node=audioNodes.get(track.sid||"");if(node){track.detach(node);node.remove();audioNodes.delete(track.sid||"")}});
-  room.on(RoomEvent.Disconnected,()=>{if(active){setConnected(false);setState("Voice Live disconnected")}});
+  room.on(RoomEvent.Disconnected,()=>{if(active){setConnected(false);setHostMicActive(false);setState("Voice Live disconnected")}});
+  const updateHostMic=()=>{
+   const participant=hostId?room.remoteParticipants.get(hostId):null;
+   const mic=[...(participant?.trackPublications.values()??[])].find(p=>p.kind===Track.Kind.Audio&&p.source!==Track.Source.ScreenShareAudio);
+   if(active)setHostMicActive(!!mic&&!mic.isMuted);
+  };
+  for(const event of [RoomEvent.ParticipantConnected,RoomEvent.ParticipantDisconnected,RoomEvent.TrackPublished,RoomEvent.TrackUnpublished,RoomEvent.TrackMuted,RoomEvent.TrackUnmuted])room.on(event,updateHostMic);
   const poll=window.setInterval(()=>{
    if(!active)return;
-   const levels=[...room.remoteParticipants.values()].map(p=>p.audioLevel||0);
-   setEnergy(Math.min(1,Math.max(0,...levels)*4));
+   const hostLevel=hostId?room.remoteParticipants.get(hostId)?.audioLevel||0:Math.max(0,...[...room.remoteParticipants.values()].map(p=>p.audioLevel||0));
+   setEnergy(Math.min(1,hostLevel*4));
   },80);
   void (async()=>{
    try{
@@ -62,11 +69,11 @@ export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;h
     for(const participant of room.remoteParticipants.values())for(const pub of participant.trackPublications.values()){
      if(pub.kind===Track.Kind.Audio){if(!pub.isSubscribed)pub.setSubscribed(true);if(pub.track)attach(pub.track)}
     }
-    setConnected(true);setState("Voice Live · Connected");
+    updateHostMic();setConnected(true);setState("Voice Live · Connected");
    }catch{if(active)setState("Unable to connect to Voice Live")}
   })();
   return()=>{active=false;setConnected(false);window.clearInterval(poll);for(const node of audioNodes.values())node.remove();audioNodes.clear();room.removeAllListeners();void room.disconnect();roomRef.current=null};
- },[roomName]);
+ },[roomName,hostId]);
  const enableAudio=()=>{void Promise.all([...audioRef.current?.querySelectorAll("audio")||[]].map(a=>a.play())).then(()=>{setNeedsTap(false);setState("Voice Live · Connected")}).catch(()=>setNeedsTap(true))};
  return <div className="homeVoiceStage" aria-label="Audio-only Live player">
   <style>{`
@@ -81,7 +88,7 @@ export default function HomeAudioLivePlayer({roomName,hostId}:{roomName:string;h
    @media(prefers-reduced-motion:reduce){.homeVoiceHalo,.homeVoiceBars i{transition:none}}
   `}</style>
   <div className="homeVoiceSquare" style={{["--voice-energy" as string]:energy,width:"min(100%,min(76vw,460px,55dvh))",maxWidth:460}}>
-   <LiveGuestsStage mode="audio" guests={guests} hostName={host.name} hostAvatar={host.avatar} hostSpeaking={energy>.12}/>
+   <LiveGuestsStage mode="audio" guests={guests} hostName={host.name} hostAvatar={host.avatar} hostMicActive={hostMicActive} hostSpeaking={energy>.12}/>
    <span style={{position:"absolute",bottom:5,left:0,right:0,textAlign:"center",fontSize:10,color:"#d5f7e7",zIndex:5,pointerEvents:"none"}}>{state}</span>
    {needsTap&&<button type="button" className="homeVoiceTap" style={{position:"absolute",bottom:28}} onClick={enableAudio}>🔊 Enable audio</button>}
   </div><div ref={audioRef} style={{display:"none"}}/>
