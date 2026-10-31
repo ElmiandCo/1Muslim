@@ -10,16 +10,29 @@ export default function GameLabProfileHub({active,profile,avatarHero,renderProfi
  const [tab,setTab]=useState<Tab>("My Profile"); const [settingsOpen,setSettingsOpen]=useState(false);
  const mirrorRef=useRef<HTMLDivElement>(null);
  const stageRef=useRef<HTMLDivElement>(null);
+ const workspaceRef=useRef<HTMLElement>(null);
  const [heroPosition,setHeroPosition]=useState<{top:number;left:number}|null>(null);
  useEffect(()=>{
   if(!active){setHeroPosition(null);return;}
   let frame=0;
-  const measure=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{const rect=stageRef.current?.getBoundingClientRect();if(!rect)return;setHeroPosition({top:Math.max(150,rect.top-170),left:rect.left+rect.width/2});});};
-  measure();window.addEventListener("resize",measure);window.addEventListener("scroll",measure,true);
-  const observer=new ResizeObserver(measure);if(stageRef.current)observer.observe(stageRef.current);
-  return ()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener("resize",measure);window.removeEventListener("scroll",measure,true)};
+  let lastTop=Number.NaN,lastLeft=Number.NaN;
+  // HudHud moves the navigation using transforms, which ResizeObserver cannot detect.
+  // Follow the actual rendered workspace rect each frame, including during fullscreen morphs.
+  const track=()=>{
+   const rect=workspaceRef.current?.getBoundingClientRect();
+   if(rect&&rect.width>0&&rect.height>0){
+    const top=Math.round(rect.top+Math.min(104,Math.max(72,rect.width*0.12)));
+    const left=Math.round(rect.left+rect.width/2);
+    if(top!==lastTop||left!==lastLeft){
+     lastTop=top;lastLeft=left;setHeroPosition({top,left});
+    }
+   }
+   frame=requestAnimationFrame(track);
+  };
+  frame=requestAnimationFrame(track);
+  return ()=>cancelAnimationFrame(frame);
  },[active]);
- return <>{active&&heroPosition&&typeof document!=="undefined"&&createPortal(<div className="profile-shared-avatar-overlay profile-shared-avatar-portal" style={{top:heroPosition.top,left:heroPosition.left}}>{avatarHero}</div>,document.body)}<section aria-label="Profile workspace" style={{height:"100%",maxHeight:"100%",minHeight:0,width:"100%",minWidth:0,display:"flex",flexDirection:"column",boxSizing:"border-box",color:"#f7f0da",background:"transparent",overflow:"visible",position:"relative"}}>
+ return <>{active&&heroPosition&&typeof document!=="undefined"&&createPortal(<div className="profile-shared-avatar-overlay profile-shared-avatar-portal" style={{top:heroPosition.top,left:heroPosition.left}}>{avatarHero}</div>,document.body)}<section ref={workspaceRef} aria-label="Profile workspace" style={{height:"100%",maxHeight:"100%",minHeight:0,width:"100%",minWidth:0,display:"flex",flexDirection:"column",boxSizing:"border-box",color:"#f7f0da",background:"transparent",overflow:"visible",position:"relative"}}>
   <div style={{flex:"1 1 auto",height:"100%",minHeight:0,width:"100%",boxSizing:"border-box",display:"flex",flexDirection:"column",overflow:"visible",background:"color-mix(in srgb,var(--theme-base,#101114) 16%,transparent)",backdropFilter:"blur(12px)",border:"1px solid color-mix(in srgb,var(--theme-secondary,#d8c38e) 25%,transparent)",borderRadius:20,padding:"10px 8px 12px"}}>
    <div style={{position:"absolute",top:48,left:0,right:"auto",flexShrink:0,zIndex:30,display:"flex",alignItems:"center",flexDirection:"column",gap:6,background:"color-mix(in srgb,var(--theme-base,#101114) 70%,transparent)",backdropFilter:"blur(12px)",borderRadius:"0 12px 12px 0",padding:"6px 3px",marginBottom:0,border:"1px solid color-mix(in srgb,var(--theme-secondary,#d8c38e) 55%,transparent)"}}>
     <button type="button" aria-label="Profile settings" title="Settings" aria-pressed={settingsOpen} onClick={()=>{setTab("My Profile");setSettingsOpen(v=>!v)}} style={{border:0,borderRadius:8,background:"transparent",color:"#f5df9c",padding:"5px 7px",fontSize:16,lineHeight:1,cursor:"pointer"}}>⚙</button>
