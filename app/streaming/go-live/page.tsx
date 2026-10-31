@@ -6,13 +6,17 @@ import GoLiveHudHudTip from "../../components/GoLiveHudHudTip";
 import Link from "next/link";
 import { createClient } from "../../../utils/supabase/client";
 import { useEffect, useRef, useState } from "react";
-import { LocalAudioTrack, Room, RoomEvent, Track } from "livekit-client";
+import { LocalAudioTrack, LocalVideoTrack, Room, RoomEvent, Track } from "livekit-client";
+import { flipLiveCamera } from "../../../lib/live-cinema-camera";
+import { playLiveCinemaMorphSound } from "../../../lib/live-cinema-sound";
 import { createLiveAudioProcessor } from "../../../components/live-audio-effects";
 import LiveChat from "../../../components/LiveChat";
 import SyncedLiveIntro from "../../components/SyncedLiveIntro";
 import LiveLightOverlay from "../../../components/LiveLightOverlay";
 import ShareLiveButton from "../../components/ShareLiveButton";
 import LiveVisualEffects, {type LiveEffect} from "../../components/LiveVisualEffects";
+import LiveGuestsStage, {GuestVideoTiles,useLiveGuestRoster} from "../../../components/LiveGuestsStage";
+import LiveGuestStudio from "../../../components/LiveGuestStudio";
 
 const StudioGlyph=({kind}:{kind:"camera"|"mic"|"guests"|"settings"|"desktop"|"phone"|"voice"})=>{const paths:Record<string,React.ReactNode>={camera:<><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7l2-3h4l2 3"/><circle cx="12" cy="14" r="4"/></>,mic:<><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></>,guests:<><circle cx="9" cy="8" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M17 4a4 4 0 0 1 0 8M18 15a6 6 0 0 1 4 6"/></>,settings:<><circle cx="12" cy="12" r="3"/><path d="M10 2h4l1 3 3 1 3-1 2 4-2 2v3l2 2-2 4-3-1-3 1-1 3h-4l-1-3-3-1-3 1-2-4 2-2v-3L1 9l2-4 3 1 3-1z"/></>,desktop:<><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M12 18v4M7 22h10"/></>,phone:<><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></>,voice:<><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></>};return <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[kind]}</svg>};
 const categories = ["Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid", "Community"];
@@ -60,42 +64,28 @@ export default function GoLivePage() {
   const endRequestedRef=useRef(false);
   const studioMorphTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   useEffect(()=>()=>{if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current)},[]);
-  const playCameraAdjustSound=(mode:"desktop"|"phone"|"voice")=>{
-    try{
-      const context=new AudioContext();
-      void context.resume().then(()=>{
-        const start=context.currentTime;
-        [0,.16,.34].forEach((offset,i)=>{
-          const oscillator=context.createOscillator(),gain=context.createGain();
-          oscillator.type=i===1?"triangle":"sine";
-          oscillator.frequency.setValueAtTime([420,570,740][i],start+offset);
-          oscillator.frequency.exponentialRampToValueAtTime([510,660,920][i],start+offset+.12);
-          gain.gain.setValueAtTime(.0001,start+offset);
-          gain.gain.exponentialRampToValueAtTime(.055,start+offset+.015);
-          gain.gain.exponentialRampToValueAtTime(.0001,start+offset+.14);
-          oscillator.connect(gain);gain.connect(context.destination);
-          oscillator.start(start+offset);oscillator.stop(start+offset+.15);
-        });
-        // A gentle two-second lens motor sweep follows the canvas resize.
-        const motor=context.createOscillator(),motorGain=context.createGain();
-        motor.type="sine";
-        const from=mode==="voice"?440:mode==="phone"?170:280;
-        const to=mode==="voice"?180:mode==="phone"?530:370;
-        motor.frequency.setValueAtTime(from,start);
-        motor.frequency.exponentialRampToValueAtTime(to,start+1.85);
-        motorGain.gain.setValueAtTime(.0001,start);
-        motorGain.gain.exponentialRampToValueAtTime(.025,start+.2);
-        motorGain.gain.setValueAtTime(.025,start+1.2);
-        motorGain.gain.exponentialRampToValueAtTime(.0001,start+1.9);
-        motor.connect(motorGain);motorGain.connect(context.destination);
-        motor.start(start);motor.stop(start+1.92);
-        window.setTimeout(()=>void context.close().catch(()=>{}),2300);
-      }).catch(()=>void context.close().catch(()=>{}));
-    }catch{/* Audio effects are optional; never block mode switching. */}
-  };
   const desiredStudioModeRef=useRef<"desktop"|"phone"|"voice">("phone");
   const modeSyncQueueRef=useRef<Promise<void>>(Promise.resolve());
   const previewCameraAcquiringRef=useRef(false);
+  const cameraFlipInFlightRef=useRef(false);
+  const [cameraFreezeFrame,setCameraFreezeFrame]=useState<string|null>(null);
+  const [cameraFreezeFading,setCameraFreezeFading]=useState(false);
+  const cameraFreezeTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
+  useEffect(()=>()=>{if(cameraFreezeTimerRef.current)clearTimeout(cameraFreezeTimerRef.current)},[]);
+  const clearCameraFreeze=()=>{if(cameraFreezeTimerRef.current)clearTimeout(cameraFreezeTimerRef.current);cameraFreezeTimerRef.current=null;setCameraFreezeFading(false);setCameraFreezeFrame(null)};
+  const captureCameraFreeze=()=>{
+    const video=videoRef.current;
+    if(!video||!video.videoWidth||!video.videoHeight)return null;
+    try{
+      const canvas=document.createElement("canvas");
+      const scale=Math.min(1,960/video.videoWidth);
+      canvas.width=Math.max(1,Math.round(video.videoWidth*scale));
+      canvas.height=Math.max(1,Math.round(video.videoHeight*scale));
+      const ctx=canvas.getContext("2d");if(!ctx)return null;
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      return canvas.toDataURL("image/jpeg",0.8);
+    }catch{return null}
+  };
   const syncPublishedCameraForMode=async(mode:"desktop"|"phone"|"voice",allowCamera:boolean)=>{
     const room=roomRef.current;
     if(!room||!liveStreamIdRef.current||endRequestedRef.current||desiredStudioModeRef.current!==mode)return;
@@ -142,15 +132,16 @@ export default function GoLivePage() {
     }
   };
   const selectStudioMode=(mode:"desktop"|"phone"|"voice")=>{
-    const previousMode=desiredStudioModeRef.current;
-    if(mode===previousMode)return;
+    // Apply the visual/media change only AFTER the authoritative server
+    // accepts it. Audio -> video with >3 approved seats must not publish a
+    // camera, disconnect the mic, or even temporarily show video UI.
+    const applyMode=(previousMode:"desktop"|"phone"|"voice")=>{
     desiredStudioModeRef.current=mode;
-    const allowCamera=previousMode==="voice"||cameraOn;
     if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current);
     setStudioMorphing(false);
     requestAnimationFrame(()=>setStudioMorphing(true));
     studioMorphTimer.current=setTimeout(()=>setStudioMorphing(false),2000);
-    playCameraAdjustSound(mode);
+    playLiveCinemaMorphSound(mode);
     setStudioMode(mode);
     setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
     if(mode==="voice"){
@@ -194,23 +185,29 @@ export default function GoLivePage() {
         }).finally(()=>{previewCameraAcquiringRef.current=false;});
       }
     }
-    if(roomRef.current&&liveStreamIdRef.current){
-      const streamId=liveStreamIdRef.current;
-      // Serialize camera and metadata updates; a slower older request must
-      // never overwrite the mode selected by a newer tap.
-      modeSyncQueueRef.current=modeSyncQueueRef.current.catch(()=>{}).then(async()=>{
-        if(desiredStudioModeRef.current!==mode)return;
-        await syncPublishedCameraForMode(mode,allowCamera);
-        if(desiredStudioModeRef.current!==mode||endRequestedRef.current)return;
-        const response=await fetch("/api/live-mode",{
-          method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({streamId,mode}),cache:"no-store"
-        });
-        if(!response.ok)console.warn("Live mode metadata sync failed",response.status);
-      }).catch(error=>{
-        if(desiredStudioModeRef.current===mode)setError(error instanceof Error?error.message:"Could not switch camera mode.");
-      });
+    };
+    if(!roomRef.current||!liveStreamIdRef.current){
+      const previousMode=desiredStudioModeRef.current;
+      if(mode!==previousMode)applyMode(previousMode);
+      return;
     }
+    const streamId=liveStreamIdRef.current;
+    modeSyncQueueRef.current=modeSyncQueueRef.current.catch(()=>{}).then(async()=>{
+      if(endRequestedRef.current||!roomRef.current)return;
+      const previousMode=desiredStudioModeRef.current;
+      if(mode===previousMode)return;
+      const response=await fetch("/api/live-mode",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({streamId,mode}),cache:"no-store"
+      });
+      if(!response.ok){
+        const payload=await response.json().catch(()=>({}));
+        throw new Error(payload.error||"Could not switch Live mode.");
+      }
+      const allowCamera=previousMode==="voice"||cameraOn;
+      applyMode(previousMode);
+      await syncPublishedCameraForMode(mode,allowCamera);
+    }).catch(error=>setError(error instanceof Error?error.message:"Could not switch Live mode."));
   };
   useEffect(()=>{
     let cancelled=false;
@@ -525,6 +522,7 @@ export default function GoLivePage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const roomRef = useRef<Room | null>(null);
+  const guestRoster=useLiveGuestRoster(roomRef,live,currentUserId,studioMode==="voice"?11:3);
   const qualityMap = { "480p": { width: 854, height: 480 }, "720p": { width: 1280, height: 720 }, "1080p": { width: 1920, height: 1080 } } as const;
   const getCaptureSize = () => qualityMap[videoQuality];
   const refreshCameraCapabilities = (track?: MediaStreamTrack) => {
@@ -748,45 +746,59 @@ export default function GoLivePage() {
   };
 
   const flipCamera = async () => {
-    if (!streamRef.current || !navigator.mediaDevices?.getUserMedia) return;
+    // Camera capture may be temporarily unavailable on iPhone Safari. Never
+    // disconnect the room, unpublish its sender or replace the microphone.
+    if (cameraFlipInFlightRef.current || !cameraOn || studioMode === "voice" ||
+        !streamRef.current || !navigator.mediaDevices?.getUserMedia) return;
+    cameraFlipInFlightRef.current = true;
+    clearCameraFreeze();
+    const frozen=captureCameraFreeze();
+    if(frozen)setCameraFreezeFrame(frozen);
     setError("");
-    const nextFacingMode = facingMode === "user" ? "environment" : "user";
+    const previousFacing = facingMode;
+    const nextFacing = facingMode === "user" ? "environment" : "user";
     try {
-      if(greenCanvasRef.current) throw new Error("Turn off Green Screen and restart camera preview before flipping the camera.");
-      const currentStream = streamRef.current;
-      const oldVideoTracks = currentStream.getVideoTracks();
-      const newVideoStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { exact: nextFacingMode },
-          width: { ideal: getCaptureSize().width },
-          height: { ideal: getCaptureSize().height },
-        },
-        audio: false,
-      });
-      const newVideoTrack = newVideoStream.getVideoTracks()[0];
-      if (!newVideoTrack) throw new Error("The other camera could not be opened.");
-      oldVideoTracks.forEach((track) => {
-        currentStream.removeTrack(track);
-        track.stop();
-      });
-      currentStream.addTrack(newVideoTrack);
-      streamRef.current = currentStream;
-      rawCameraRef.current=newVideoTrack;
-      setFacingMode(nextFacingMode);
+      if (greenCanvasRef.current) throw new Error("Turn off Green Screen before flipping the camera.");
+      const stream = streamRef.current;
+      const room = roomRef.current;
+      const publication = room?.localParticipant.getTrackPublication(Track.Source.Camera);
+      if (room && !publication?.videoTrack) throw new Error("Camera publication is not ready to switch.");
+      const nextTrack = await flipLiveCamera(
+        stream,
+        publication?.videoTrack as LocalVideoTrack | undefined,
+        previousFacing,
+        nextFacing,
+        getCaptureSize(),
+        navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices),
+      );
+      if (streamRef.current !== stream || endRequestedRef.current) return;
+      rawCameraRef.current = nextTrack;
+      setFacingMode(nextFacing);
       setCameraOn(true);
       setZoom(1);
       setFocusMode("auto");
-      refreshCameraCapabilities(newVideoTrack);
+      refreshCameraCapabilities(nextTrack);
+      // Reuse the exact preview element; LiveKit's sender has already switched
+      // its video source without a new publication or room reconnect.
       if (videoRef.current) {
-        videoRef.current.srcObject = currentStream;
+        videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
         videoRef.current.playsInline = true;
-        await videoRef.current.play().catch(() => undefined);
+        void videoRef.current.play().catch(() => {});
+      }
+      if(frozen){
+        await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
+        setCameraFreezeFading(true);
+        cameraFreezeTimerRef.current=setTimeout(()=>{setCameraFreezeFrame(null);setCameraFreezeFading(false);cameraFreezeTimerRef.current=null},400);
       }
     } catch (err) {
+      clearCameraFreeze();
+      // Camera fallback can fail without interrupting a still-live microphone.
       setError(err instanceof DOMException && (err.name === "OverconstrainedError" || err.name === "NotFoundError")
         ? "This device does not expose a switchable front/back camera."
         : err instanceof Error ? err.message : "We could not switch cameras.");
+    } finally {
+      cameraFlipInFlightRef.current = false;
     }
   };
 
@@ -1313,6 +1325,8 @@ export default function GoLivePage() {
         @media(max-width:850px){.goLive .newStudioHint{display:none!important}.goLive .newStudioActions{gap:7px!important;padding:9px 10px!important}.goLive .preliveIdentity{bottom:144px!important}.goLive .previewOverlayTools{top:24%!important}.goLive .previewOverlayTools button{width:38px!important;height:38px!important}}
         .goLive .previewOverlayTools button{display:flex!important;align-items:center!important;justify-content:center!important;border-radius:50%!important;transition:transform .24s ease!important}.goLive .previewOverlayTools button:active{transform:scale(.92)}.goLive .newStudioModes button{display:flex!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;gap:3px!important}.goLive .newStudioModes button svg{width:19px;height:19px}.goLive .immersiveHeader>button{display:flex;align-items:center;gap:6px}.goLive .immersiveHeader>button svg{width:18px;height:18px}\n        .studioTransform{transition:width .75s cubic-bezier(.22,1,.36,1),height .75s cubic-bezier(.22,1,.36,1),max-width .75s cubic-bezier(.22,1,.36,1),aspect-ratio .75s cubic-bezier(.22,1,.36,1),border-radius .65s ease,background .65s ease!important;overflow:hidden;will-change:width,height,aspect-ratio}.studioTransform>video{transition:opacity .5s ease,transform .65s cubic-bezier(.2,.8,.2,1)}.studioVoiceMode>video{opacity:0!important;transform:scale(1.12);pointer-events:none}.voiceAvatarStage{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;opacity:0;visibility:hidden;transform:scale(.92);transition:opacity .6s ease,transform .65s cubic-bezier(.2,.8,.2,1),visibility .6s;background:radial-gradient(ellipse at 50% 43%,#184a3b 0%,#091e1b 52%,#020807 100%);pointer-events:none;overflow:hidden}.voiceAvatarStageActive{opacity:1;visibility:visible;transform:scale(1)}.voiceAvatarMotion{position:relative;width:clamp(150px,40%,260px);aspect-ratio:1;display:grid;place-items:center;animation:voiceFloat 5s ease-in-out infinite;filter:drop-shadow(0 12px 28px #0008)}.voiceAvatarAura{position:absolute;inset:-10%;border-radius:50%;border:2px solid #87f8ce9c;box-shadow:0 0 calc(18px + var(--voice-energy,0)*65px) #34e5a5, inset 0 0 35px #36d9a557;background:radial-gradient(circle,#3ff3a322 25%,transparent 72%);animation:voiceBreathe 3.6s ease-in-out infinite;transform:scale(calc(1 + var(--voice-energy,0)*.28))}.voiceAvatarPortrait{width:100%;height:100%;overflow:hidden;border-radius:50%;display:grid;place-items:center;border:3px solid #c8fce6;background:radial-gradient(circle at 35% 25%,#28755f,#07261c 75%);box-shadow:0 0 35px #20c78c55;transform:scale(calc(1 + var(--voice-energy,0)*.11)) rotate(calc(var(--voice-energy,0)*3deg));transition:transform .1s linear}.voiceAvatarPortrait img{width:100%;height:100%;object-fit:cover}.voiceAvatarPortrait>span{font-size:clamp(60px,14vw,110px);color:#e5f9f0}.voiceAvatarLabel{z-index:2;display:grid;gap:5px;text-align:center;text-shadow:0 2px 9px #000}.voiceAvatarLabel strong{font-size:clamp(17px,4vw,24px);color:#fff}.voiceAvatarLabel span{font-size:12px;color:#a5f3d1}.voiceBackdropOrbs{position:absolute;inset:0}.voiceBackdropOrbs i{position:absolute;width:45%;aspect-ratio:1;border:1px solid #5fe1b333;border-radius:50%;left:27%;top:20%;animation:voiceRing 7s ease-in-out infinite}.voiceBackdropOrbs i:nth-child(2){animation-delay:-2.3s}.voiceBackdropOrbs i:nth-child(3){animation-delay:-4.6s}@keyframes voiceFloat{0%,100%{translate:-4px 5px}25%{translate:6px -7px}50%{translate:4px 4px}75%{translate:-7px -3px}}@keyframes voiceBreathe{0%,100%{scale:.96}50%{scale:1.05}}@keyframes voiceRing{0%{transform:scale(.7);opacity:0}35%{opacity:.7}100%{transform:scale(2.1);opacity:0}}@media(prefers-reduced-motion:reduce){.voiceAvatarMotion,.voiceAvatarAura,.voiceBackdropOrbs i{animation:none}.studioTransform,.studioTransform>video,.voiceAvatarStage{transition:none}}
 
+         .cameraFreezeCrossfade{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:25}
+         @media(prefers-reduced-motion:reduce){.cameraFreezeCrossfade{transition:none!important}}
         /* Full-canvas immersive stage: mobile and desktop. Keep controls overlayed, never consume video height. */
         .goLive .layout>.panel:first-child>.preview.studioTransform{isolation:isolate;transition:height .7s cubic-bezier(.22,1,.36,1),aspect-ratio .7s cubic-bezier(.22,1,.36,1),border-radius .5s ease!important}
         .goLive .layout>.panel:first-child>.preview.studioTransform>video{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center center!important;transition:transform .7s cubic-bezier(.22,1,.36,1),opacity .5s ease!important}
@@ -1637,6 +1651,21 @@ export default function GoLivePage() {
         }
         /* Keep the SAME camera node visible throughout morph; no opacity blackout. */
         .goLive .preview.studioMorphing::before{display:none!important}
+        .goLive .preview .hostLiveGuestControls{position:absolute;z-index:30;top:calc(env(safe-area-inset-top) + 72px);right:12px;max-width:min(88vw,370px);color:#fff}
+        .goLive .preview .hostLiveGuestControls summary{list-style:none;cursor:pointer;border:1px solid #b1d9b080;border-radius:999px;background:#06261ddd;backdrop-filter:blur(12px);padding:9px 12px;font-size:12px;font-weight:750}
+        .goLive .preview .hostLiveGuestControls summary::-webkit-details-marker{display:none}
+        .goLive .preview .hostLiveGuestSheet{max-height:50dvh;overflow-y:auto;overscroll-behavior:contain;background:#031a14f2;border:1px solid #b1d9b055;border-radius:16px;padding:8px}
+        .goLive .preview[data-guest-count="1"] .studioCameraFrame,
+        .goLive .preview[data-guest-count="2"] .studioCameraFrame,
+        .goLive .preview[data-guest-count="3"] .studioCameraFrame{top:0!important;left:0!important;width:60%!important;height:100%!important;border-radius:0!important;rotate:0deg!important;animation:none!important;box-shadow:none!important;translate:0 0!important}
+        .goLive .preview[data-guest-count="1"] .studioCameraFrame{width:50%!important}
+        .goLive .preview[data-guest-count="1"] .studioCameraFrame>video,
+        .goLive .preview[data-guest-count="2"] .studioCameraFrame>video,
+        .goLive .preview[data-guest-count="3"] .studioCameraFrame>video{rotate:0deg!important;scale:1!important;object-fit:cover!important}
+        .goLive .preview .hostLiveGuestColumn{position:absolute;z-index:3;right:0;top:0;bottom:0;width:40%;pointer-events:none;transition:width .85s cubic-bezier(.22,1,.36,1)}
+        .goLive .preview[data-guest-count="1"] .hostLiveGuestColumn{width:50%}
+        .goLive .preview .hostLiveGuestColumn>div{width:100%;height:100%}
+        .goLive .preview .hostLiveGuestColumn video{max-width:none}
         @media(prefers-reduced-motion:reduce){
           .goLive .layout>.panel:first-child>.preview .studioCameraFrame,
           .goLive .layout>.panel:first-child>.preview .studioCameraFrame>video,
@@ -1663,10 +1692,12 @@ export default function GoLivePage() {
 
         <div className="layout">
           <section className="panel">
-            <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} data-studio-mode={studioMode} className={`preview studioTransform ${studioMorphing?"studioMorphing":""} format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"} ${studioMode==="voice"?"studioVoiceMode":""}`}>
+            <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} data-studio-mode={studioMode} data-guest-count={live&&studioMode!=="voice"?Math.min(3,guestRoster.length):0} className={`preview studioTransform ${studioMorphing?"studioMorphing":""} format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"} ${studioMode==="voice"?"studioVoiceMode":""}`}>
               <div className="studioCameraFrame" aria-hidden={studioMode==="voice"}>
                 {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               </div>
+               {cameraFreezeFrame && <img src={cameraFreezeFrame} alt="" aria-hidden="true" className="cameraFreezeCrossfade" style={{opacity:cameraFreezeFading?0:1,transition:cameraFreezeFading?"opacity 400ms ease-in-out":"none"}} />}
+              {live&&studioMode!=="voice"&&guestRoster.length>0&&<div className="hostLiveGuestColumn"><GuestVideoTiles guests={guestRoster}/></div>}
               <div className={`voiceAvatarStage ${studioMode==="voice"?"voiceAvatarStageActive":""}`} aria-hidden={studioMode!=="voice"}>
                 <div className="voiceBackdropOrbs"><i/><i/><i/></div>
                 <div className="voiceAvatarMotion" style={{["--voice-energy" as string]:voiceEnergy} as React.CSSProperties}>
@@ -1675,9 +1706,11 @@ export default function GoLivePage() {
                 </div>
                 <div className="voiceAvatarLabel"><strong>{voiceName}</strong><span>{micOn?"● Microphone active":"○ Microphone muted"}</span></div>
               </div>
+              {live&&studioMode==="voice"&&guestRoster.length>0&&<LiveGuestsStage mode="audio" guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostMicActive={micOn} hostSpeaking={voiceEnergy>.12}/>}
               <div className={`studioLaunchFlash ${launchVisual?"studioLaunchFlashOn":""}`} aria-hidden="true" />
               <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
               {live&&liveStreamIdRef.current&&<LiveLightOverlay streamId={liveStreamIdRef.current} host />}
+              {live&&liveStreamIdRef.current&&currentUserId&&<details className="hostLiveGuestControls"><summary>👥 Guests · {guestRoster.length}</summary><div className="hostLiveGuestSheet"><LiveGuestStudio streamId={liveStreamIdRef.current} roomName={`1muslim-live-${liveStreamIdRef.current}`} hostId={currentUserId}/></div></details>}
 
               {!live && <div className="preliveIdentity"><button type="button" className="preliveTitleButton" onClick={()=>setSettingsOpen(true)} aria-label="Edit live title"><span className="preliveIdentityIcon" aria-hidden="true">✧</span><span><small>LIVE TITLE · TAP TO EDIT</small><strong>{title || defaultLiveTitle}</strong></span></button><button type="button" className="preliveVisibility" onClick={()=>setSettingsOpen(true)} aria-label="Change live audience">◎ {visibility==="public"?"Public":"Ashab"} ⌄</button></div>}
               {viewerRosterOpen && <div className="liveRosterBackdrop" onPointerDown={e=>{if(e.target===e.currentTarget)setViewerRosterOpen(false)}}><section className="liveRosterSheet" role="dialog" aria-modal="true" aria-label="Live viewers"><header><div><strong>👁 Watching now</strong><small>{viewers.toLocaleString()} live viewers</small></div><button type="button" onClick={()=>setViewerRosterOpen(false)} aria-label="Close viewers">✕</button></header><div className="liveRosterList">{viewerRosterLoading&&viewerRoster.length===0?<p>Loading viewers…</p>:viewerRoster.length===0?<p>No viewers yet.</p>:viewerRoster.map(viewer=><div className="liveRosterPerson" key={viewer.id}><span className="liveRosterAvatar">{viewer.avatar?<img src={viewer.avatar} alt="" referrerPolicy="no-referrer"/>:<span>◉</span>}</span><span className="liveRosterName">{viewer.username}</span><span className="liveRosterXp">{viewer.xp===null?"XP unavailable":`${viewer.xp.toLocaleString()} XP`}</span></div>)}</div><button type="button" className="liveRosterRefresh" onClick={()=>void loadViewerRoster()}>↻ Refresh</button></section></div>}
