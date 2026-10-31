@@ -728,3 +728,37 @@ html[data-muslim-theme] :is(button,[role="tab"],.sidebar,.canvas-native-profile)
  transition:background-color 3s ease,border-color 3s ease,color 3s ease,box-shadow 3s ease;
 }
 @media(prefers-reduced-motion:reduce){html[data-muslim-theme] :is(button,[role="tab"],.sidebar,.canvas-native-profile){transition:none}}
+
+
+/* RealTheme2.0 — theme-aware controls across the legacy canvas.
+   Keep layout, imagery, video, and gameplay untouched. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
+ .omQuranPage,.communityPage,.canvas-umma-gallery,.canvas-native-profile,
+ .oneMuslimLiveStage,.homeLiveStage
+) :is(button,select,input,textarea,[role="tab"]){
+ accent-color:var(--theme-accent);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
+ .omQuranPage,.communityPage,.canvas-umma-gallery,.canvas-native-profile,
+ .oneMuslimLiveStage,.homeLiveStage
+) :is(button,select,[role="tab"]):not(:disabled):not([data-preserve-color]){
+ border-color:color-mix(in srgb,var(--theme-accent) 38%,transparent);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
+ .omQuranPage,.communityPage,.canvas-umma-gallery,.canvas-native-profile
+) :is(input,textarea,select):not([data-preserve-color]){
+ background-color:color-mix(in srgb,var(--theme-surface) 82%,transparent);
+ border-color:color-mix(in srgb,var(--theme-edge) 80%,transparent);
+ caret-color:var(--theme-accent);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
+ .omQuranPage,.communityPage,.canvas-umma-gallery,.canvas-native-profile,
+ .oneMuslimLiveStage,.homeLiveStage
+) :is(button,[role="tab"])[aria-selected="true"],
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
+ .omQuranPage,.communityPage,.canvas-umma-gallery,.canvas-native-profile,
+ .oneMuslimLiveStage,.homeLiveStage
+) :is(button,[role="tab"])[aria-pressed="true"]{
+ background-color:color-mix(in srgb,var(--theme-accent) 38%,var(--theme-surface));
+ border-color:var(--theme-accent);
+}
