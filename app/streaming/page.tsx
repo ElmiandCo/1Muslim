@@ -5,6 +5,7 @@ import SiteNav from "../components/SiteNav";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../utils/supabase/client";
+import { useLiveDiscovery } from "../../lib/live-discovery-client";
 import RecordingThumbnail from "../../components/RecordingThumbnail";
 import ReconnectTrivia from "../components/ReconnectTrivia";
 import LiveKitViewer from "../../components/LiveKitViewer";
@@ -98,6 +99,7 @@ const categories = ["All", "Qur'an", "New Muslim", "Prayer", "Seerah", "Tawhid",
 
 export default function StreamingPage() {
   const supabase = useMemo(() => createClient(), []);
+  const discovery = useLiveDiscovery();
   const [category, setCategory] = useState("All");
   const [recordedLives, setRecordedLives] = useState<RecordedLive[]>([]);
   const [query, setQuery] = useState("");
@@ -121,27 +123,33 @@ export default function StreamingPage() {
 
 
   useEffect(() => {
-    const loadLives = async () => {
-      const { data, error: liveDiscoveryError } = await supabase.from("live_streams").select("id,title,category,room_name,viewer_count,started_at,scheduled_end_at,thumbnail_path,aspect_ratio,host_id").eq("status","live").gte("last_heartbeat_at", new Date(Date.now() - 45_000).toISOString()).order("started_at",{ascending:false});
-      if (liveDiscoveryError) console.error("Live discovery failed:", liveDiscoveryError.message);
-      const rows = (data ?? []) as Omit<LiveStream,"host_gender"|"host_avatar_url">[];
-      const hostIds = Array.from(new Set(rows.map(row => row.host_id).filter(Boolean)));
+    let active = true;
+    const rows = discovery.lives as Omit<LiveStream,"host_gender"|"host_avatar_url">[];
+    const hostIds = Array.from(new Set(rows.map(row => row.host_id).filter(Boolean)));
+    const loadProfiles = async () => {
       let profileMap:Record<string,{gender:string|null;avatar_url:string|null}>={};
       if (hostIds.length) {
         const { data: profiles } = await supabase.from("profiles").select("id,gender,avatar_url").in("id",hostIds);
         profileMap = Object.fromEntries((profiles ?? []).map(profile => [profile.id, profile]));
       }
-      setLiveStreams(rows.map(row => ({
-        ...row,
-        host_gender: profileMap[row.host_id]?.gender ?? null,
-        host_avatar_url: profileMap[row.host_id]?.avatar_url ?? null
-      })));
+      if (!active) return;
+      setLiveStreams(previous => {
+        const next = rows.map(row => ({
+          ...row,
+          host_gender: profileMap[row.host_id]?.gender ?? null,
+          host_avatar_url: profileMap[row.host_id]?.avatar_url ?? null
+        }));
+        // Keep a currently playing stream through a temporary host disconnect.
+        const selected = [...previous].sort((a,b)=>(b.viewer_count||0)-(a.viewer_count||0))[activeLiveIndex];
+        if (selected && discovery.presence[selected.id]?.state === "RECONNECTING" && !next.some(row=>row.id===selected.id)) {
+          next.push(selected);
+        }
+        return next;
+      });
     };
-    void loadLives();
-    const channel = supabase.channel("1muslim-live-discovery").on("postgres_changes",{event:"*",schema:"public",table:"live_streams"},() => void loadLives()).subscribe();
-    const timer = window.setInterval(loadLives, 5000);
-    return () => { window.clearInterval(timer); void supabase.removeChannel(channel); };
-  }, []);
+    void loadProfiles();
+    return () => { active = false; };
+  }, [supabase, discovery.lives, discovery.presence, activeLiveIndex]);
 
   useEffect(() => {
     const loadRecordedLives = async () => {
