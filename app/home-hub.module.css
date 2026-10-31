@@ -1804,3 +1804,23 @@
  66.67%,83.33%{--edge-fade:40px}
 }
 @media(prefers-reduced-motion:reduce){.control .islamicDecoration{animation:none;--edge-fade:20px}}
+
+/* Theme surface tokens: the transparent Profile canvas must not expose
+   Emerald gutters after a non-Emerald theme is selected. */
+.control{
+ --workspace-surface:var(--theme-base,#061c19);
+ --workspace-glint:var(--theme-secondary,var(--theme-accent,#d4bb83));
+ --workspace-shade:color-mix(in srgb,var(--workspace-surface) 82%,#000);
+}
+.control .workspaceScroller{
+ background:var(--workspace-shade)!important;
+ transition:background-color 1100ms ease,background 1100ms ease!important;
+}
+.control .workspaceScroller::before{
+ background-image:linear-gradient(135deg,color-mix(in srgb,var(--workspace-surface) 52%,transparent),color-mix(in srgb,var(--workspace-shade) 66%,transparent)),url("/assets/control-center/backgrounds/workspace-night.PNG")!important;
+}
+.control{
+ background:radial-gradient(ellipse at 0% 30%,color-mix(in srgb,var(--workspace-glint) 15%,transparent),transparent 68%),radial-gradient(ellipse at 100% 70%,color-mix(in srgb,var(--workspace-glint) 15%,transparent),transparent 70%),linear-gradient(115deg,var(--workspace-shade),var(--workspace-surface))!important;
+}
+:global(html.light) .control .workspaceScroller,.control.day .workspaceScroller{background:#f7f7f6!important}
+:global(html.light) .control,.control.day{background:linear-gradient(115deg,#fff,color-mix(in srgb,var(--workspace-glint) 7%,#fff))!important}
