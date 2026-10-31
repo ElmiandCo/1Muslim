@@ -25,7 +25,7 @@ export function useLiveGuestRoster(roomRef:RefObject<Room|null>,connected:boolea
   const seenOrder=useRef(new Map<string,number>());
   const attemptedProfiles=useRef(new Set<string>());
   useEffect(()=>{
-    if(!connected||!roomRef.current){setGuests([]);return;}
+    if(!connected||!roomRef.current||!hostId){setGuests([]);return;}
     const room=roomRef.current;
     let active=true;
     const sync=()=>{
