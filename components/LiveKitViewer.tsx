@@ -76,6 +76,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
     if(!streamId)return;
     let alive=true,checking=false;
     let recoveryTimer:number|null=null;
+    let subscribeWatchdog:number|null=null;
     let retry=0;
     let terminalSubscribed=false, presenceSubscribed=false;
     let seenPresence: PresenceVersion | undefined;
@@ -123,6 +124,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       if(which==="terminal")terminalSubscribed=ready;
       else presenceSubscribed=ready;
       if(terminalSubscribed&&presenceSubscribed){
+        if(subscribeWatchdog!==null){clearTimeout(subscribeWatchdog);subscribeWatchdog=null;}
         retry=0;
         if(recoveryTimer!==null){clearTimeout(recoveryTimer);recoveryTimer=null;}
         void check();
@@ -148,12 +150,19 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           setIsAudioBroadcast(next.state==="READY_AUDIO");
         }
       }).subscribe(status=>subscriptionStatus("presence",status));
+    // If one channel never reaches SUBSCRIBED, retain bounded recovery checks.
+    // This is one-shot connection detection, not a steady-state poll.
+    subscribeWatchdog=window.setTimeout(()=>{
+      subscribeWatchdog=null;
+      if(alive&&!endedOnce.current&&!(terminalSubscribed&&presenceSubscribed))scheduleRecovery();
+    },8000);
     void check();
     const onResume=()=>{if(document.visibilityState==="visible")void check();};
     document.addEventListener("visibilitychange",onResume);
     return()=>{
       alive=false;hostEndSignalRef.current=()=>{};
       if(recoveryTimer!==null)clearTimeout(recoveryTimer);
+      if(subscribeWatchdog!==null)clearTimeout(subscribeWatchdog);
       document.removeEventListener("visibilitychange",onResume);
       void db.removeChannel(terminalChannel);void db.removeChannel(presenceChannel);
     };
