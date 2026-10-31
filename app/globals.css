@@ -764,3 +764,15 @@ html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Main 
   html[data-muslim-theme] nav[aria-label="Live format"] button,
   html[data-muslim-theme] nav[aria-label="Main carousel navigation"] button{transition:none!important}
 }
+
+/* Theme artwork softly enters the profile canvas over two seconds. */
+.canvas-native-profile .profile-theme-scene{
+ position:absolute;inset:0;z-index:0;pointer-events:none;
+ background-size:cover;background-position:center center;background-repeat:no-repeat;
+ opacity:.24;border-radius:inherit;
+ animation:profileThemeArtworkReveal 2s ease-in-out both;
+}
+.canvas-native-profile > :not(.profile-theme-scene){position:relative;z-index:1}
+.canvas-native-profile .profile-theme-thumbnail img{transition:opacity 2s ease-in-out}
+@keyframes profileThemeArtworkReveal{from{opacity:0}to{opacity:.24}}
+@media(prefers-reduced-motion:reduce){.canvas-native-profile .profile-theme-scene{animation:none}.canvas-native-profile .profile-theme-thumbnail img{transition:none}}
