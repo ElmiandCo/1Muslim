@@ -51,9 +51,110 @@ export default function GoLivePage() {
   const [visualEffect,setVisualEffect] = useState<LiveEffect>("off");
   const lastPreviewTapRef=useRef(0);
   const [studioMode,setStudioMode]=useState<"desktop"|"phone"|"voice">("phone");
+  const [voiceAvatar,setVoiceAvatar]=useState<string|null>(null);
+  const [voiceName,setVoiceName]=useState("1Muslim Creator");
+  const [voiceEnergy,setVoiceEnergy]=useState(0);
+  const voiceEnergyRef=useRef(0);
+  const [studioMorphing,setStudioMorphing]=useState(false);
+  const studioMorphTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+  useEffect(()=>()=>{if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current)},[]);
+  const selectStudioMode=(mode:"desktop"|"phone"|"voice")=>{
+    if(mode===studioMode)return;
+    if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current);
+    setStudioMorphing(false);
+    requestAnimationFrame(()=>setStudioMorphing(true));
+    studioMorphTimer.current=setTimeout(()=>setStudioMorphing(false),1150);
+    setStudioMode(mode);
+    if(mode!=="voice")setAspectRatio(mode==="desktop"?"16:9":"9:16");
+    if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
+    else{setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
+  };
+  useEffect(()=>{
+    let cancelled=false;
+    const load=async()=>{
+      const db=createClient();
+      const {data:{user}}=await db.auth.getUser();
+      if(!user||cancelled)return;
+      const {data:profile}=await db.from("profiles").select("*").eq("id",user.id).maybeSingle();
+      if(cancelled)return;
+      setVoiceName(String(profile?.display_name||profile?.username||user.user_metadata?.full_name||"1Muslim Creator"));
+      const avatar=profile?.avatar_url||profile?.profile_picture_url||profile?.avatar||user.user_metadata?.avatar_url;
+      if(typeof avatar==="string"&&avatar.startsWith("https://"))setVoiceAvatar(avatar);
+    };
+    void load();return()=>{cancelled=true};
+  },[]);
+  useEffect(()=>{
+    if(studioMode!=="voice"||!micOn||!cameraReady){voiceEnergyRef.current=0;setVoiceEnergy(0);return;}
+    const stream=streamRef.current;
+    const track=stream?.getAudioTracks().find(t=>t.enabled);
+    if(!track)return;
+    let context:AudioContext|null=null,source:MediaStreamAudioSourceNode|null=null,analyser:AnalyserNode|null=null,frame=0,stopped=false;
+    try{
+      context=new AudioContext();
+      source=context.createMediaStreamSource(new MediaStream([track]));
+      analyser=context.createAnalyser();analyser.fftSize=512;analyser.smoothingTimeConstant=.82;
+      source.connect(analyser);
+      const data=new Uint8Array(analyser.fftSize);
+      let last=0;
+      const tick=(now:number)=>{
+        if(stopped||!analyser)return;
+        analyser.getByteTimeDomainData(data);
+        let sum=0;for(const sample of data){const v=(sample-128)/128;sum+=v*v}
+        const rms=Math.sqrt(sum/data.length);
+        const target=Math.min(1,Math.max(0,(rms-.012)*8));
+        voiceEnergyRef.current=voiceEnergyRef.current*.72+target*.28;
+        if(now-last>70){setVoiceEnergy(voiceEnergyRef.current);last=now}
+        frame=requestAnimationFrame(tick);
+      };
+      frame=requestAnimationFrame(tick);
+    }catch{setVoiceEnergy(0)}
+    return()=>{stopped=true;cancelAnimationFrame(frame);source?.disconnect();if(context)void context.close().catch(()=>{})};
+  },[studioMode,micOn,cameraReady]);
   const [live, setLive] = useState(false);
   const [connectingLive,setConnectingLive] = useState(false);
   const [liveSeconds,setLiveSeconds] = useState(0);
+  const [launchCountdown,setLaunchCountdown]=useState<number|null>(null);
+  const [launchVisual,setLaunchVisual]=useState(false);
+  const [launchPressed,setLaunchPressed]=useState(false);
+  const launchTimerRef=useRef<ReturnType<typeof setInterval>|null>(null);
+  const launchAudioRef=useRef<AudioContext|null>(null);
+  const launchPendingRef=useRef(false);
+  useEffect(()=>()=>{if(launchTimerRef.current)clearInterval(launchTimerRef.current);void launchAudioRef.current?.close().catch(()=>{})},[]);
+  const playLaunchZoom=()=>{
+    try{
+      const context=new AudioContext();launchAudioRef.current=context;
+      const osc=context.createOscillator(),gain=context.createGain(),filter=context.createBiquadFilter();
+      osc.type="sine";filter.type="lowpass";filter.frequency.setValueAtTime(1400,context.currentTime);
+      osc.frequency.setValueAtTime(190,context.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(780,context.currentTime+.42);
+      gain.gain.setValueAtTime(.0001,context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.11,context.currentTime+.08);
+      gain.gain.exponentialRampToValueAtTime(.0001,context.currentTime+.58);
+      osc.connect(filter);filter.connect(gain);gain.connect(context.destination);
+      osc.start();osc.stop(context.currentTime+.6);
+      osc.onended=()=>{void context.close().catch(()=>{});if(launchAudioRef.current===context)launchAudioRef.current=null};
+    }catch{/* WebAudio may be unavailable or blocked. Broadcast remains functional. */}
+  };
+  const launchBroadcast=()=>{
+    if(launchPendingRef.current||live||connectingLive||saving)return;
+    if(!cameraReady){void startPreview();return;}
+    launchPendingRef.current=true;
+    setLaunchPressed(true);setLaunchVisual(true);playLaunchZoom();
+    setLaunchCountdown(3);
+    let remaining=3;
+    launchTimerRef.current=setInterval(()=>{
+      remaining-=1;
+      if(remaining>0){setLaunchCountdown(remaining);return;}
+      if(launchTimerRef.current){clearInterval(launchTimerRef.current);launchTimerRef.current=null;}
+      setLaunchCountdown(null);
+      setLaunchPressed(false);
+      void startLive(false);
+    },1000);
+  };
+  useEffect(()=>{
+    if(live){launchPendingRef.current=false;setLaunchVisual(false);}
+    else if(!connectingLive&&launchPendingRef.current&&launchCountdown===null){launchPendingRef.current=false;setLaunchVisual(false);}
+  },[live,connectingLive,launchCountdown]);
   useEffect(()=>{
     if(!live||!broadcastStartedAt){setLiveSeconds(0);return;}
     const tick=()=>setLiveSeconds(Math.max(0,Math.floor((Date.now()-new Date(broadcastStartedAt).getTime())/1000)));
@@ -963,7 +1064,84 @@ export default function GoLivePage() {
           .goLive .layout>.panel:first-child>.preview .newStudioHint{display:none!important}
         }
         @media(max-width:850px){.goLive .newStudioHint{display:none!important}.goLive .newStudioActions{gap:7px!important;padding:9px 10px!important}.goLive .preliveIdentity{bottom:144px!important}.goLive .previewOverlayTools{top:24%!important}.goLive .previewOverlayTools button{width:38px!important;height:38px!important}}
-        .goLive .previewOverlayTools button{display:flex!important;align-items:center!important;justify-content:center!important;border-radius:50%!important;transition:transform .24s ease!important}.goLive .previewOverlayTools button:active{transform:scale(.92)}.goLive .newStudioModes button{display:flex!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;gap:3px!important}.goLive .newStudioModes button svg{width:19px;height:19px}.goLive .immersiveHeader>button{display:flex;align-items:center;gap:6px}.goLive .immersiveHeader>button svg{width:18px;height:18px}\n        .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
+        .goLive .previewOverlayTools button{display:flex!important;align-items:center!important;justify-content:center!important;border-radius:50%!important;transition:transform .24s ease!important}.goLive .previewOverlayTools button:active{transform:scale(.92)}.goLive .newStudioModes button{display:flex!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;gap:3px!important}.goLive .newStudioModes button svg{width:19px;height:19px}.goLive .immersiveHeader>button{display:flex;align-items:center;gap:6px}.goLive .immersiveHeader>button svg{width:18px;height:18px}\n        .studioTransform{transition:aspect-ratio .65s cubic-bezier(.2,.8,.2,1),border-radius .5s ease,background .6s ease!important;overflow:hidden}.studioTransform>video{transition:opacity .5s ease,transform .65s cubic-bezier(.2,.8,.2,1)}.studioVoiceMode>video{opacity:0!important;transform:scale(1.12);pointer-events:none}.voiceAvatarStage{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;opacity:0;visibility:hidden;transform:scale(.92);transition:opacity .6s ease,transform .65s cubic-bezier(.2,.8,.2,1),visibility .6s;background:radial-gradient(ellipse at 50% 43%,#184a3b 0%,#091e1b 52%,#020807 100%);pointer-events:none;overflow:hidden}.voiceAvatarStageActive{opacity:1;visibility:visible;transform:scale(1)}.voiceAvatarMotion{position:relative;width:clamp(150px,40%,260px);aspect-ratio:1;display:grid;place-items:center;animation:voiceFloat 5s ease-in-out infinite;filter:drop-shadow(0 12px 28px #0008)}.voiceAvatarAura{position:absolute;inset:-10%;border-radius:50%;border:2px solid #87f8ce9c;box-shadow:0 0 calc(18px + var(--voice-energy,0)*65px) #34e5a5, inset 0 0 35px #36d9a557;background:radial-gradient(circle,#3ff3a322 25%,transparent 72%);animation:voiceBreathe 3.6s ease-in-out infinite;transform:scale(calc(1 + var(--voice-energy,0)*.28))}.voiceAvatarPortrait{width:100%;height:100%;overflow:hidden;border-radius:50%;display:grid;place-items:center;border:3px solid #c8fce6;background:radial-gradient(circle at 35% 25%,#28755f,#07261c 75%);box-shadow:0 0 35px #20c78c55;transform:scale(calc(1 + var(--voice-energy,0)*.11)) rotate(calc(var(--voice-energy,0)*3deg));transition:transform .1s linear}.voiceAvatarPortrait img{width:100%;height:100%;object-fit:cover}.voiceAvatarPortrait>span{font-size:clamp(60px,14vw,110px);color:#e5f9f0}.voiceAvatarLabel{z-index:2;display:grid;gap:5px;text-align:center;text-shadow:0 2px 9px #000}.voiceAvatarLabel strong{font-size:clamp(17px,4vw,24px);color:#fff}.voiceAvatarLabel span{font-size:12px;color:#a5f3d1}.voiceBackdropOrbs{position:absolute;inset:0}.voiceBackdropOrbs i{position:absolute;width:45%;aspect-ratio:1;border:1px solid #5fe1b333;border-radius:50%;left:27%;top:20%;animation:voiceRing 7s ease-in-out infinite}.voiceBackdropOrbs i:nth-child(2){animation-delay:-2.3s}.voiceBackdropOrbs i:nth-child(3){animation-delay:-4.6s}@keyframes voiceFloat{0%,100%{translate:-4px 5px}25%{translate:6px -7px}50%{translate:4px 4px}75%{translate:-7px -3px}}@keyframes voiceBreathe{0%,100%{scale:.96}50%{scale:1.05}}@keyframes voiceRing{0%{transform:scale(.7);opacity:0}35%{opacity:.7}100%{transform:scale(2.1);opacity:0}}@media(prefers-reduced-motion:reduce){.voiceAvatarMotion,.voiceAvatarAura,.voiceBackdropOrbs i{animation:none}.studioTransform,.studioTransform>video,.voiceAvatarStage{transition:none}}
+
+        /* Full-canvas immersive stage: mobile and desktop. Keep controls overlayed, never consume video height. */
+        .goLive .layout>.panel:first-child>.preview.studioTransform{isolation:isolate;transition:height .7s cubic-bezier(.22,1,.36,1),aspect-ratio .7s cubic-bezier(.22,1,.36,1),border-radius .5s ease!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform>video{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center center!important;transition:transform .7s cubic-bezier(.22,1,.36,1),opacity .5s ease!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="phone"]>video{object-fit:cover!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="desktop"]>video{object-fit:cover!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="voice"]>video{opacity:0!important}
+        @media(max-width:850px){
+          .goLive .shell{padding-bottom:0!important}
+          .goLive .layout>.panel:first-child>.preview.studioTransform{height:calc(100dvh - 74px - env(safe-area-inset-top,0px))!important;min-height:540px!important;max-height:none!important;aspect-ratio:auto!important;width:100%!important;max-width:none!important;margin:0!important;border-radius:0!important}
+          .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="desktop"]>video{object-fit:cover!important}
+          .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioActions{bottom:calc(10px + env(safe-area-inset-bottom,0px))!important}
+          .goLive .layout>.panel:first-child>.preview.studioTransform .voiceAvatarStage{inset:0!important}
+        }
+        @media(min-width:851px){
+          .goLive .layout>.panel:first-child>.preview.studioTransform{width:100%!important;max-width:none!important;height:min(88dvh,960px)!important;min-height:580px!important;aspect-ratio:auto!important;margin:0 auto!important;overflow:hidden!important}
+          .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="desktop"]{height:min(82dvh,900px)!important}
+          .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="phone"]{height:min(90dvh,1000px)!important}
+          .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioActions{position:absolute!important;bottom:14px!important;left:14px!important;right:14px!important}
+        }
+        @media(prefers-reduced-motion:reduce){.goLive .layout>.panel:first-child>.preview.studioTransform,.goLive .layout>.panel:first-child>.preview.studioTransform>video{transition:none!important}}
+
+        /* Fluid camera frame morph and premium border sweep. */
+        .goLive .layout>.panel:first-child>.preview.studioTransform{
+          border:1px solid #c6a971!important;
+          box-shadow:0 0 0 1px #f7e7b61f,0 14px 54px #0009,inset 0 0 18px #9afcce0b!important;
+          transition:height 1.05s cubic-bezier(.19,1,.22,1),width 1.05s cubic-bezier(.19,1,.22,1),border-radius .95s cubic-bezier(.19,1,.22,1),box-shadow .9s ease!important;
+        }
+        .goLive .layout>.panel:first-child>.preview.studioTransform::after{
+          content:"";position:absolute;inset:0;z-index:38;pointer-events:none;border-radius:inherit;padding:2px;
+          background:conic-gradient(from 0deg,transparent 0deg,#80e9c53d 70deg,#f5e3a8 112deg,#fffbe7 133deg,#76fbd2 154deg,transparent 225deg);
+          -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+          -webkit-mask-composite:xor;
+          mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+          mask-composite:exclude;opacity:.28;transition:opacity .5s ease,padding .5s ease;
+        }
+        .goLive .layout>.panel:first-child>.preview.studioTransform.studioMorphing{
+          box-shadow:0 0 0 1px #d6fbe9aa,0 0 26px #5df0c25c,0 20px 65px #0009!important;
+        }
+        .goLive .layout>.panel:first-child>.preview.studioTransform.studioMorphing::after{
+          opacity:1;padding:3px;animation:studioBorderSweep 1.05s cubic-bezier(.19,1,.22,1) both;
+        }
+        .goLive .layout>.panel:first-child>.preview.studioTransform.studioMorphing>video{
+          animation:studioCameraSettle 1.05s cubic-bezier(.19,1,.22,1) both;
+        }
+        @keyframes studioBorderSweep{
+          0%{filter:brightness(1.7);opacity:0;clip-path:inset(0 100% 0 0)}
+          25%{opacity:1;clip-path:inset(0 50% 0 0)}
+          65%{opacity:1;clip-path:inset(0 0 0 0)}
+          100%{opacity:.4;clip-path:inset(0 0 0 0)}
+        }
+        @keyframes studioCameraSettle{
+          0%{filter:brightness(.82);transform:scale(1.045)}
+          45%{filter:brightness(1.04)}
+          100%{filter:brightness(1);transform:scale(1)}
+        }
+        @media(prefers-reduced-motion:reduce){
+          .goLive .layout>.panel:first-child>.preview.studioTransform,
+          .goLive .layout>.panel:first-child>.preview.studioTransform::after,
+          .goLive .layout>.panel:first-child>.preview.studioTransform>video{transition:none!important;animation:none!important}
+        }
+
+        /* Launch choreography: centered translucent button, disappearing selector, soft stage-wide light. */
+        .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioActions{pointer-events:none!important;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:10px!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioActions>*{pointer-events:auto}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioModes{width:min(100%,540px)!important;transition:opacity .85s ease,transform .85s cubic-bezier(.22,1,.36,1),filter .85s ease,visibility .85s ease!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .studioLaunchActive .newStudioModes{opacity:0!important;transform:translateY(25px) scale(.95)!important;filter:blur(7px)!important;visibility:hidden!important;pointer-events:none!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioGo{position:relative!important;align-self:center!important;width:min(48%,240px)!important;min-width:155px!important;min-height:46px!important;opacity:.3!important;border:1px solid #baffdd!important;background:linear-gradient(100deg,#07815d,#14bc86)!important;box-shadow:0 0 18px #3cfdab20!important;transition:opacity .35s ease,transform .45s cubic-bezier(.22,1,.36,1),box-shadow .5s ease,filter .5s ease!important;pointer-events:auto!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .newStudioGo:hover,.goLive .layout>.panel:first-child>.preview.studioTransform .newStudioGo:focus-visible,.goLive .layout>.panel:first-child>.preview.studioTransform .newStudioGo:active,.goLive .layout>.panel:first-child>.preview.studioTransform .newStudioGo.launchPressed{opacity:1!important;transform:scale(1.055)!important;box-shadow:0 0 28px #4affb5bb,0 0 80px #7cfdd34d!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .studioLaunchActive .newStudioGo{opacity:1!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .studioLaunchComplete .newStudioGo{opacity:0!important;transform:scale(1.18)!important;pointer-events:none!important}
+        .goLive .layout>.panel:first-child>.preview.studioTransform .studioLaunchActive .newStudioHint{opacity:0!important;pointer-events:none!important}
+        .studioLaunchFlash{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 72%,#a6ffe269,#4effa51a 38%,transparent 80%);mix-blend-mode:screen;transition:opacity .8s ease}
+        .studioLaunchFlashOn{animation:studioLaunchIllumination 1.5s cubic-bezier(.22,1,.36,1) both}
+        @keyframes studioLaunchIllumination{0%{opacity:0;transform:scale(.6)}22%{opacity:.9;transform:scale(1.02)}70%{opacity:.35;transform:scale(1.1)}100%{opacity:0;transform:scale(1.2)}}
+        @media(prefers-reduced-motion:reduce){.studioLaunchFlashOn{animation:none}.goLive .layout>.panel:first-child>.preview.studioTransform .newStudioActions *{transition:none!important}}
+        .bar{height:62px;border-bottom:1px solid #1b241f;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1120px)/2));background:rgba(5,8,6,.9);backdrop-filter:blur(16px);position:sticky;top:0;z-index:5}
         .brand{display:flex;gap:9px;align-items:center;font-weight:850}.mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#101811;border:1px solid #354237;color:#d6e7b8}.back{color:#98a49d;text-decoration:none;font-size:12px}
         .shell{max-width:1120px;margin:auto;padding:30px 18px 70px}.heading{margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.16em;color:#829b87;font-weight:850}.heading h1{font-size:42px;letter-spacing:-.06em;margin:8px 0}.heading p{color:#849087;font-size:13px;margin:0}
         .layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:16px}.panel{border:1px solid #1b241f;border-radius:22px;background:#0a100c;overflow:hidden}.preview{width:min(100%,420px);margin-inline:auto;max-height:min(76dvh,720px);aspect-ratio:9/16;background:radial-gradient(circle at 50% 40%,#18231b,#050806 65%);position:relative;display:grid;place-items:center}.preview video{width:100%;height:100%;object-fit:cover;display:block}.preview.format-portrait{width:min(100%,calc(76dvh * 9 / 16),420px)}.preview.format-square{width:min(100%,min(76dvh,520px))}.preview.format-landscape{width:min(100%,640px)}.previewOverlayTools{position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:14;display:flex;flex-direction:column;gap:9px}.previewOverlayTools button{width:45px;height:45px;border-radius:50%;border:1px solid #ffffff66;background:#0a1026bb;backdrop-filter:blur(12px);color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 14px #0007}.previewOverlayTools button:focus-visible{outline:2px solid #84f4ff}.preview video.frontCamera{transform:scaleX(-1)}.preview video.backCamera{transform:none}.preview.format-square{aspect-ratio:1/1}.preview.format-landscape{aspect-ratio:16/9}.placeholder{text-align:center;color:#6f7d74}.cameraIcon{font-size:44px;margin-bottom:8px}.recording{position:absolute;top:14px;right:14px;padding:7px 10px;border-radius:999px;background:#261313;color:#ffd9d9;font-size:10px;font-weight:900}.live{position:absolute;top:14px;left:14px;padding:7px 10px;border-radius:999px;background:#e9f3db;color:#081007;font-size:10px;font-weight:900}.status{position:absolute;bottom:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}.status span{font-size:10px;color:#d9e2dc;background:rgba(0,0,0,.62);padding:7px 10px;border-radius:999px}.controls{display:flex;justify-content:center;gap:10px;padding:16px;border-top:1px solid #1b241f}.circle{width:46px;height:46px;border-radius:50%;border:1px solid #334038;background:#121913;color:#fff;cursor:pointer}.circle.off{opacity:.5}.cameraStudio{border-top:1px solid #1b241f;padding:14px 16px;background:#0b110d}.studioHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.studioHeader strong{font-size:11px}.studioHeader span{font-size:9px;color:#738078}.studioGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.studioControl{border:1px solid #263029;border-radius:13px;background:#0e1510;padding:10px}.studioControl label{display:flex;justify-content:space-between;font-size:9px;color:#aeb9b1;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}.studioControl select,.studioControl input[type=range]{width:100%}.studioControl select{border:1px solid #263029;background:#0a100c;color:#e8eee9;border-radius:8px;padding:8px;font-size:10px}.studioValue{color:#d6e7b8;font-weight:800}.studioHint{font-size:8px;color:#657269;margin-top:6px;line-height:1.4}.unsupported{opacity:.45}.qualityPills{display:flex;gap:5px}.qualityPill{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px 4px;font-size:9px;cursor:pointer}.qualityPill.active{border-color:#718c69;background:#132016;color:#d6e7b8}.qualityPill:disabled{cursor:not-allowed}.focusRow{display:flex;gap:5px}.focusRow button{flex:1;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:7px;font-size:9px}.focusRow button.active{border-color:#718c69;background:#132016;color:#d6e7b8}.audioPills{display:flex;gap:5px;flex-wrap:wrap}.audioPill{flex:1;min-width:82px;border:1px solid #263029;background:#0a100c;color:#9aa69e;border-radius:8px;padding:8px 6px;font-size:9px;cursor:pointer}.audioPill.active{border-color:#718c69;background:#132016;color:#d6e7b8}.audioVolume{width:100%;margin-top:7px}.audioNote{font-size:8px;color:#657269;margin-top:6px;line-height:1.4}.start{padding:12px 22px;border:0;border-radius:999px;background:#d6e7b8;color:#071008;font-weight:850;cursor:pointer}.end{padding:12px 22px;border:0;border-radius:999px;background:#251313;color:#ffd6d6;font-weight:850;cursor:pointer}
@@ -1090,8 +1268,17 @@ export default function GoLivePage() {
 
         <div className="layout">
           <section className="panel">
-            <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} className={`preview format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"}`}>
+            <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} data-studio-mode={studioMode} className={`preview studioTransform ${studioMorphing?"studioMorphing":""} format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"} ${studioMode==="voice"?"studioVoiceMode":""}`}>
               {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
+              <div className={`voiceAvatarStage ${studioMode==="voice"?"voiceAvatarStageActive":""}`} aria-hidden={studioMode!=="voice"}>
+                <div className="voiceBackdropOrbs"><i/><i/><i/></div>
+                <div className="voiceAvatarMotion" style={{["--voice-energy" as string]:voiceEnergy} as React.CSSProperties}>
+                  <div className="voiceAvatarAura"/>
+                  <div className="voiceAvatarPortrait">{voiceAvatar?<img src={voiceAvatar} alt="" referrerPolicy="no-referrer"/>:<span aria-hidden="true">✧</span>}</div>
+                </div>
+                <div className="voiceAvatarLabel"><strong>{voiceName}</strong><span>{micOn?"● Microphone active":"○ Microphone muted"}</span></div>
+              </div>
+              <div className={`studioLaunchFlash ${launchVisual?"studioLaunchFlashOn":""}`} aria-hidden="true" />
               <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
               {live&&liveStreamIdRef.current&&<LiveLightOverlay streamId={liveStreamIdRef.current} host />}
 
@@ -1101,13 +1288,13 @@ export default function GoLivePage() {
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
               {live && <span className="live" aria-label="You are live">● YOU’RE LIVE · {liveClock} · {roomRef.current?.state==="connected"?"Connected":"Reconnecting"} · {micOn?"🎙 Mic on":"🔇 Muted"}</span>}{live && <button type="button" onClick={()=>setViewerRosterOpen(true)} aria-label="Show live viewers" title="View audience" style={{position:"absolute",left:12,bottom:64,zIndex:13,padding:"12px 16px",borderRadius:18,background:"rgba(5,10,20,.80)",border:viewerIncrease?"2px solid #39ee8d":"1px solid rgba(255,255,255,.35)",boxShadow:viewerIncrease?"0 0 24px rgba(57,238,141,.48)":"0 8px 25px #0008",color:viewerIncrease?"#4cff9c":"white",transition:"color .3s,border .3s,box-shadow .3s",cursor:"pointer",textAlign:"center"}}><div style={{fontSize:11,fontWeight:800,letterSpacing:1.5}}>👁 LIVE VIEWERS · TAP TO SEE</div><div style={{fontSize:"clamp(26px,5vw,40px)",fontWeight:900,lineHeight:1.15,fontVariantNumeric:"tabular-nums"}}>{viewers.toLocaleString()}</div><div style={{fontSize:11,opacity:.85}}>WATCHING NOW {viewerIncrease?"↑":""}</div></button>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
               {cameraReady && false && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
-            <div className="newStudioActions" aria-label="Broadcast controls">
+            <div className={`newStudioActions ${launchVisual||live?"studioLaunchActive":""} ${live?"studioLaunchComplete":""}`} aria-label="Broadcast controls">
               <div className="newStudioModes" role="group" aria-label="Live format">
-                <button type="button" aria-pressed={studioMode==="desktop"} className={studioMode==="desktop"?"selected":""} onClick={()=>{setStudioMode("desktop");setAspectRatio("16:9")}}><StudioGlyph kind="desktop"/>Desktop</button>
-                <button type="button" aria-pressed={studioMode==="phone"} className={studioMode==="phone"?"selected":""} onClick={()=>{setStudioMode("phone");setAspectRatio("9:16")}}><StudioGlyph kind="phone"/>Phone</button>
-                <button type="button" aria-pressed={studioMode==="voice"} className={studioMode==="voice"?"selected":""} onClick={()=>{setStudioMode("voice");setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false)}}><StudioGlyph kind="voice"/>Voice</button>
+                <button type="button" aria-pressed={studioMode==="desktop"} className={studioMode==="desktop"?"selected":""} onClick={()=>selectStudioMode("desktop")}><StudioGlyph kind="desktop"/>Desktop</button>
+                <button type="button" aria-pressed={studioMode==="phone"} className={studioMode==="phone"?"selected":""} onClick={()=>selectStudioMode("phone")}><StudioGlyph kind="phone"/>Phone</button>
+                <button type="button" aria-pressed={studioMode==="voice"} className={studioMode==="voice"?"selected":""} onClick={()=>selectStudioMode("voice")}><StudioGlyph kind="voice"/>Voice</button>
               </div>
-              {!live && <button type="button" data-go-live-start className="newStudioGo" disabled={saving||connectingLive} onClick={()=>cameraReady?void startLive(false):void startPreview()}>{connectingLive?"Connecting…":cameraReady?"● Go Live":"Enable Camera"}</button>}
+              {!live && <button type="button" data-go-live-start className={`newStudioGo ${launchPressed?"launchPressed":""}`} disabled={saving||connectingLive||launchCountdown!==null} onPointerDown={()=>setLaunchPressed(true)} onPointerUp={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onPointerCancel={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onClick={launchBroadcast}>{launchCountdown!==null?`Going live in ${launchCountdown}…`:connectingLive?"Connecting…":cameraReady?"● Go Live":"Enable Camera"}</button>}
               <div className="newStudioHint">Double-tap camera to flip · Effects on the preview</div>
             </div>
             </div>
