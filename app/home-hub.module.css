@@ -1804,3 +1804,11 @@
  66.67%,83.33%{--edge-fade:40px}
 }
 @media(prefers-reduced-motion:reduce){.control .islamicDecoration{animation:none;--edge-fade:20px}}
+
+/* Canvas perimeter: static theme-colored ambient side light, no particle layers. */
+.control{--canvas-edge-accent:var(--theme-secondary,var(--theme-primary,var(--accent-color,#c4a86f)));background:radial-gradient(ellipse 42% 68% at 0% 46%,color-mix(in srgb,var(--canvas-edge-accent) 17%,transparent),transparent 78%),radial-gradient(ellipse 33% 62% at 100% 72%,color-mix(in srgb,var(--canvas-edge-accent) 11%,transparent),transparent 82%),#080b0d!important}
+.control::before{background:radial-gradient(ellipse 34% 50% at 0% 35%,color-mix(in srgb,var(--canvas-edge-accent) 12%,transparent),transparent 85%)!important;pointer-events:none}
+.control .workspaceScroller::before,.control .workspaceScroller::after{content:none!important;display:none!important;animation:none!important}
+.control .topParticleBurst{display:none!important}
+:global(html.light) .control,.control.day{background:radial-gradient(ellipse 38% 64% at 0% 40%,color-mix(in srgb,var(--canvas-edge-accent) 13%,transparent),transparent 78%),#f8f8f6!important}
+@media(prefers-reduced-motion:reduce){.control::before{animation:none!important}}
