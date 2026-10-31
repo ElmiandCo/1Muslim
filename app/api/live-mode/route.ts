@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient as sessionClient } from "../../../utils/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { RoomServiceClient } from "livekit-server-sdk";
 
 export const runtime = "nodejs";
 
@@ -38,6 +39,39 @@ export async function POST(request: Request) {
     }, { status: 409 });
     console.error("Live mode transition failed", { code: error.code });
     return NextResponse.json({ error: "Unable to update Live mode" }, { status: 503 });
+  }
+  // A video guest may still hold an older camera-publishing JWT when the
+  // host switches to Audio. Server-mute those existing camera publications
+  // immediately; the signed webhook rejects any newly published camera.
+  if (mode === "voice") {
+    const livekitUrl = process.env.LIVEKIT_URL;
+    const livekitKey = process.env.LIVEKIT_API_KEY;
+    const livekitSecret = process.env.LIVEKIT_API_SECRET;
+    if (livekitUrl && livekitKey && livekitSecret) {
+      const rooms = new RoomServiceClient(
+        livekitUrl.replace(/^wss:/, "https:").replace(/^ws:/, "http:"),
+        livekitKey, livekitSecret,
+      );
+      try {
+        const participants = await rooms.listParticipants(`1muslim-live-${streamId}`);
+        for (const participant of participants) {
+          if (!/^[0-9a-f-]{36}$/i.test(participant.identity) || participant.identity === user.id) continue;
+          for (const track of participant.tracks ?? []) {
+            if (track.type === 1 || String(track.type) === "VIDEO") {
+              try {
+                await rooms.mutePublishedTrack(`1muslim-live-${streamId}`, participant.identity, track.sid, true);
+              } catch {
+                // Fallback: a camera must not remain published in Audio Live.
+                await rooms.removeParticipant(`1muslim-live-${streamId}`, participant.identity);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Guest camera reconciliation after audio switch failed", error);
+        // Database mode is already voice; client must still stop host video.
+      }
+    }
   }
   return NextResponse.json({ ok: true, mode }, { headers: { "Cache-Control": "no-store" } });
 }
