@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const mode = body.mode;
   if (typeof streamId !== "string" || !/^[0-9a-f-]{36}$/i.test(streamId))
     return NextResponse.json({ error: "Invalid stream ID" }, { status: 400 });
-  if (typeof mode !== "string" || !(mode in modes))
+  if (typeof mode !== "string" || !Object.prototype.hasOwnProperty.call(modes, mode))
     return NextResponse.json({ error: "Invalid studio mode" }, { status: 400 });
 
   const { data: stream, error: lookupError } = await session.from("live_streams")
