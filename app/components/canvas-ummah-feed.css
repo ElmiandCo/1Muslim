@@ -250,3 +250,15 @@
 .profile-shared-avatar-portal .profile-avatar-xp{display:none!important;}
 .profile-shared-avatar-portal .profile-glass-avatar>strong{display:none!important;}
 .profile-with-shared-avatar{padding-top:clamp(325px,43vw,370px)!important;}
+
+/* Dragging is only captured by the portrait; the portal never blocks canvas scrolling. */
+.profile-shared-avatar-portal{pointer-events:none!important;}
+.profile-shared-avatar-portal .profile-glass-avatar{pointer-events:none!important;}
+.profile-shared-avatar-portal .profile-avatar-portrait{pointer-events:auto!important;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;}
+.profile-shared-avatar-portal .profile-avatar-portrait:active{cursor:grabbing;}
+.profile-shared-avatar-portal .profile-avatar-name-wrap{pointer-events:auto!important;}
+
+/* Avatar floats above the canvas; do not reserve a second tall blank hero region.
+   Restore the Bio, category icons, and avatar carousel to their original flow. */
+.profile-with-shared-avatar{padding-top:140px!important;}
+@media(max-width:480px){.profile-with-shared-avatar{padding-top:135px!important;}}
