@@ -219,6 +219,7 @@ export default function GoLivePage() {
   const launchTimerRef=useRef<ReturnType<typeof setInterval>|null>(null);
   const launchAudioRef=useRef<AudioContext|null>(null);
   const launchPendingRef=useRef(false);
+  const pendingVoiceLaunchRef=useRef(false);
   useEffect(()=>()=>{if(launchTimerRef.current)clearInterval(launchTimerRef.current);void launchAudioRef.current?.close().catch(()=>{})},[]);
   const playLaunchZoom=()=>{
     try{
@@ -254,7 +255,17 @@ export default function GoLivePage() {
   };
   const launchBroadcast=()=>{
     if(launchPendingRef.current||live||connectingLive||saving)return;
-    if(!cameraReady){void startPreview();return;}
+    if(!cameraReady){
+      if(studioMode==="voice"){
+        // A single Go Live tap requests microphone permission and launches
+        // as soon as audio-only preview becomes ready.
+        pendingVoiceLaunchRef.current=true;
+        launchPendingRef.current=true;
+        setLaunchVisual(true);playLaunchZoom();
+      }
+      void startPreview();
+      return;
+    }
     launchPendingRef.current=true;
     if(studioMode==="voice"){
       setLaunchVisual(true);playLaunchZoom();
@@ -274,8 +285,17 @@ export default function GoLivePage() {
     },1000);
   };
   useEffect(()=>{
+    if(!pendingVoiceLaunchRef.current)return;
+    if(error||studioMode!=="voice"){
+      pendingVoiceLaunchRef.current=false;launchPendingRef.current=false;setLaunchVisual(false);return;
+    }
+    if(!cameraReady||live||connectingLive)return;
+    pendingVoiceLaunchRef.current=false;
+    void startLive(false).finally(()=>{launchPendingRef.current=false;setLaunchVisual(false)});
+  },[cameraReady,studioMode,error,live,connectingLive]);
+  useEffect(()=>{
     if(live){launchPendingRef.current=false;setLaunchVisual(false);}
-    else if(!connectingLive&&launchPendingRef.current&&launchCountdown===null){launchPendingRef.current=false;setLaunchVisual(false);}
+    else if(!connectingLive&&launchPendingRef.current&&launchCountdown===null&&!pendingVoiceLaunchRef.current){launchPendingRef.current=false;setLaunchVisual(false);}
   },[live,connectingLive,launchCountdown]);
   useEffect(()=>{
     if(!live||!broadcastStartedAt){setLiveSeconds(0);return;}
