@@ -239,7 +239,9 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
         audio.muted = mutedRef.current;
         audio.setAttribute("playsinline", "true");
         audioContainerRef.current.appendChild(audio);
-        void audio.play().then(() => { if (mounted) { setAudioNeedsGesture(false); setAudioPlaying(!mutedRef.current); } })
+        const refreshAudioState=()=>{if(mounted)setAudioPlaying([...attachedAudioRef.current.values()].some(element=>!element.muted&&!element.paused&&element.readyState>=2));};
+        for(const event of ["playing","pause","waiting","ended","volumechange"])audio.addEventListener(event,refreshAudioState);
+        void audio.play().then(() => { if (mounted) { setAudioNeedsGesture(false); setAudioPlaying(!mutedRef.current&&!audio.paused); } })
           .catch(() => { if (mounted) { setAudioPlaying(false); if (!mutedRef.current) setAudioNeedsGesture(true); } });
         setHasRemoteAudio(true);
         setHostConnecting(false);
@@ -410,7 +412,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       audioContainerRef.current.querySelectorAll("audio").forEach((audio) => {
         audio.muted = next;
         if (!next) void audio.play()
-          .then(() => {setAudioNeedsGesture(false);setAudioPlaying(true);})
+          .then(() => {setAudioNeedsGesture(false);setAudioPlaying(!audio.paused);})
           .catch(() => {setAudioNeedsGesture(true);setAudioPlaying(false);});
       });
     }
