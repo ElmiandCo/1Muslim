@@ -225,9 +225,10 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
     const attachTrack = (track: any, source?: string, participantIdentity?: string) => {
       if (!mounted) return;
       if (track.kind === Track.Kind.Video) {
-        // Guest video is rendered in its own tile; never overwrite the host camera.
-        if(participantIdentity&&hostIdRef.current&&participantIdentity!==hostIdRef.current)return;
         const isScreen = source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShare;
+        // Guest cameras never replace the host; preserve authorized companion screen share.
+        const host=hostIdRef.current;
+        if(participantIdentity&&host&&participantIdentity!==host&&!(isScreen&&participantIdentity.startsWith(host+":screen:")))return;
         const element = isScreen ? screenVideoRef.current : videoRef.current;
         if (!element) return;
         track.attach(element);
@@ -304,8 +305,9 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
         room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => attachTrack(track, publication.source, participant.identity));
         room.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
           if (track.kind === Track.Kind.Video) {
-            if(participant?.identity&&hostIdRef.current&&participant.identity!==hostIdRef.current)return;
             const isScreen = publication.source === Track.Source.ScreenShare;
+            const host=hostIdRef.current;
+            if(participant?.identity&&host&&participant.identity!==host&&!(isScreen&&participant.identity.startsWith(host+":screen:")))return;
             const element = isScreen ? screenVideoRef.current : videoRef.current;
             // Never remove React-owned video elements on LiveKit unsubscribe.
             const stream = element?.srcObject;
