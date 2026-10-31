@@ -292,6 +292,13 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       try {
         setStatus("Connecting to live…");
         setError("");
+        // Resolve the host before LiveKit track subscriptions, so a guest
+        // camera can never be mistaken for the host's video on first paint.
+        if(streamId&&!hostIdRef.current){
+          const {data:meta}=await createClient().from("live_streams")
+            .select("host_id,aspect_ratio").eq("id",streamId).maybeSingle();
+          if(meta?.host_id){hostIdRef.current=meta.host_id;setHostIdentity(meta.host_id);setIsAudioBroadcast(meta.aspect_ratio==="1:1");}
+        }
         const response = await fetch("/api/livekit/token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
