@@ -1313,6 +1313,64 @@ export default function GoLivePage() {
         @media(prefers-reduced-motion:reduce){.goLive *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 
+        /* Device selection morphs the actual CAMERA stage, never the control canvas.
+           Keep bottom controls anchored while the image changes between 16:9, 9:16 and 1:1. */
+        .goLive .layout>.panel:first-child>.preview{
+          width:100%!important;max-width:none!important;max-height:none!important;
+          height:calc(100dvh - 74px - env(safe-area-inset-top,0px))!important;
+          min-height:520px!important;aspect-ratio:auto!important;
+          position:relative!important;overflow:hidden!important;display:block!important;
+        }
+        .goLive .layout>.panel:first-child>.preview>video,
+        .goLive .layout>.panel:first-child>.preview>.placeholder{
+          position:absolute!important;display:block!important;left:50%!important;top:0!important;
+          margin:0!important;max-width:none!important;max-height:none!important;
+          transform:translateX(-50%)!important;transform-origin:top center!important;
+          border-radius:0!important;overflow:hidden!important;object-fit:cover!important;
+          transition:width 1.15s cubic-bezier(.22,1,.36,1),height 1.15s cubic-bezier(.22,1,.36,1),
+            border-radius 1.15s cubic-bezier(.22,1,.36,1),opacity .55s ease,filter .75s ease!important;
+        }
+        .goLive .preview[data-studio-mode="phone"]>video,
+        .goLive .preview[data-studio-mode="phone"]>.placeholder{
+          width:100%!important;height:100%!important;aspect-ratio:auto!important;
+        }
+        .goLive .preview[data-studio-mode="desktop"]>video,
+        .goLive .preview[data-studio-mode="desktop"]>.placeholder{
+          width:100%!important;height:auto!important;aspect-ratio:16/9!important;
+          max-height:calc(100% - 170px)!important;
+        }
+        .goLive .preview[data-studio-mode="voice"]>video{opacity:0!important;pointer-events:none!important}
+        .goLive .preview[data-studio-mode="voice"]>.placeholder{opacity:0!important;pointer-events:none!important}
+        .goLive .preview .voiceAvatarStage{
+          inset:auto!important;top:16px!important;left:50%!important;
+          width:min(76vw,330px,38dvh)!important;height:auto!important;aspect-ratio:1/1!important;
+          border:1px solid #b5ffe555!important;border-radius:25px!important;
+          transform:translateX(-50%) scale(.88)!important;
+          transition:opacity .75s ease,visibility .75s ease,transform 1.15s cubic-bezier(.22,1,.36,1)!important;
+        }
+        .goLive .preview .voiceAvatarStageActive{transform:translateX(-50%) scale(1)!important}
+        .goLive .preview.studioMorphing::before{z-index:18!important}
+        @media(max-width:850px){
+          .goLive .layout>.panel:first-child>.preview>video,
+          .goLive .layout>.panel:first-child>.preview>.placeholder{
+            bottom:auto!important;right:auto!important;
+          }
+          .goLive .preview[data-studio-mode="phone"]>video,
+          .goLive .preview[data-studio-mode="phone"]>.placeholder{
+            width:100%!important;height:100%!important;max-height:none!important;
+          }
+          .goLive .preview[data-studio-mode="desktop"]>video,
+          .goLive .preview[data-studio-mode="desktop"]>.placeholder{
+            width:100%!important;height:auto!important;aspect-ratio:16/9!important;
+          }
+        }
+        @media(prefers-reduced-motion:reduce){
+          .goLive .layout>.panel:first-child>.preview>video,
+          .goLive .layout>.panel:first-child>.preview>.placeholder,
+          .goLive .preview .voiceAvatarStage{transition:none!important}
+        }
+
+
       `}</style>
 
       <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong>{!live&&<button type="button" aria-expanded={settingsOpen} aria-controls="prelive-settings" onClick={()=>setSettingsOpen(v=>!v)}><StudioGlyph kind="settings"/><span>{settingsOpen?"Close":"Settings"}</span></button>}</header>
