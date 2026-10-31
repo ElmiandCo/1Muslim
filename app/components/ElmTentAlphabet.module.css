@@ -124,3 +124,9 @@
 :global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .quizFinish h3{
  color:var(--rt-text-highlight,#e5d6b3);
 }
+
+/* Ruby accent is slightly too bright for its default base-ink token (4.41:1);
+   darker ink clears normal-text AA on the Lesson Done button (~4.84:1). */
+:global(html[data-muslim-theme="ruby"]) .mark:not(:disabled){
+ color:#1c070d;
+}
