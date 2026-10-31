@@ -1,0 +1,128 @@
+/* RealTheme2.0 Bot A: themed home carousel, Quran and Live UI chrome.
+   All rules are visual only; no layout, scrolling, motion or media changes.
+   Emerald retains its existing visual baseline. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Main carousel navigation"] button{
+ color:var(--rt-text-primary,#fff)!important;
+ background:color-mix(in srgb,var(--theme-surface) 75%,transparent)!important;
+ border-color:color-mix(in srgb,var(--theme-edge) 38%,transparent)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Main carousel navigation"] button[aria-current="page"]{
+ color:var(--rt-text-primary,#fff)!important;
+ background:color-mix(in srgb,var(--theme-accent) 36%,var(--theme-surface))!important;
+ border-color:var(--theme-edge)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .oneMuslimLiveTop nav[aria-label="Live format"] button{
+ color:var(--rt-text-primary,#fff)!important;
+ background:color-mix(in srgb,var(--theme-surface) 75%,transparent)!important;
+ border-color:color-mix(in srgb,var(--theme-edge) 46%,transparent)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .oneMuslimLiveTop nav[aria-label="Live format"] button[aria-pressed="true"]{
+ color:var(--rt-text-primary,#fff)!important;
+ background:color-mix(in srgb,var(--theme-accent) 35%,var(--theme-surface))!important;
+ border-color:var(--theme-edge)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeLiveViewerConversation{
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeLiveViewerConversation header,
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeLiveDemoComments{
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeLiveCommentForm input{
+ background:color-mix(in srgb,var(--theme-base) 74%,transparent)!important;
+ border-color:color-mix(in srgb,var(--theme-edge) 52%,transparent)!important;
+ color:var(--rt-text-primary,#fff)!important;
+ caret-color:var(--theme-secondary)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeLiveCommentForm input::placeholder{
+ color:var(--rt-text-muted,#bbb)!important;opacity:1;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeLiveCommentForm button{
+ background:color-mix(in srgb,var(--theme-accent) 75%,var(--theme-surface))!important;
+ border-color:var(--theme-edge)!important;
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeLiveCommentAvatar{
+ background:var(--theme-surface)!important;
+ border-color:var(--theme-edge)!important;
+ color:var(--rt-text-highlight,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeVoiceSquare{
+ background:radial-gradient(circle at 50% 38%,var(--theme-surface),var(--theme-base) 75%)!important;
+ border-color:color-mix(in srgb,var(--theme-edge) 52%,transparent)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeVoiceHalo{
+ border-color:var(--theme-edge)!important;
+ box-shadow:0 0 calc(16px + var(--voice-energy)*65px) color-mix(in srgb,var(--theme-accent) 50%,transparent)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeVoicePortrait{
+ border-color:var(--theme-edge)!important;background:var(--theme-surface)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeVoiceBars i{
+ background:var(--theme-secondary)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .oneMuslimLiveStage .homeVoiceTap{
+ background:var(--theme-surface)!important;border-color:var(--theme-edge)!important;
+ color:var(--rt-text-primary,#fff)!important;
+}
+/* Home Quran Studio: target actual controls, not Arabic verse text. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-workspace-page="1"] .quranLanguageToggle{
+ background:color-mix(in srgb,var(--theme-surface) 85%,transparent)!important;
+ border-color:color-mix(in srgb,var(--theme-edge) 62%,transparent)!important;
+ color:var(--rt-text-secondary,#eee)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-workspace-page="1"] .quranLanguageToggle .active{
+ color:var(--rt-text-highlight,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-workspace-page="1"] .quranLanguageToggle button{
+ background:color-mix(in srgb,var(--theme-accent) 36%,var(--theme-surface))!important;
+ border-color:var(--theme-edge)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-workspace-page="1"] .quranLanguageKnob{
+ background:var(--theme-secondary)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-workspace-page="1"] .quranControlCell>button{
+ background:linear-gradient(145deg,color-mix(in srgb,var(--theme-accent) 38%,var(--theme-surface)),var(--theme-base))!important;
+ border-color:var(--theme-edge)!important;
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-workspace-page="1"] .quranHomeSelectors summary{
+ background:color-mix(in srgb,var(--theme-surface) 84%,transparent)!important;
+ border-color:color-mix(in srgb,var(--theme-edge) 66%,transparent)!important;
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-workspace-page="1"] .quranHomeOptions{
+ background:color-mix(in srgb,var(--theme-base) 94%,transparent)!important;
+ border-color:var(--theme-edge)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-workspace-page="1"] .quranHomeOptions button{
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-workspace-page="1"] .quranHomeOptions button:is(:hover,:focus-visible){
+ background:color-mix(in srgb,var(--theme-accent) 32%,var(--theme-surface))!important;
+}
+/* Full Quran Studio: preserve the Arabic font, verse ink, and artwork. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .omQuranPage :is(
+ .omQuranStudioExit,.omQuranStudioSettings,.omQuranEnableFloat,
+ .omQuranStudioDataPlay,.omQuranQuickControls button,.omQuranOrbitPickers button,
+ .omQuranGlassArrow,.omQuranFlipAction,.omQuranRouletteButton,
+ .omQuranChapterActions button,.omQuranPreferences button
+){
+ background-color:color-mix(in srgb,var(--theme-accent) 28%,var(--theme-surface))!important;
+ border-color:color-mix(in srgb,var(--theme-edge) 68%,transparent)!important;
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .omQuranPage :is(
+ .omQuranPreferences select,.omQuranPreferences input,.omQuranProjectLabel textarea,
+ .omQuranSidebar select,.omQuranSidebar input
+){
+ background:var(--theme-surface)!important;
+ border-color:var(--theme-edge)!important;
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .omQuranPage :is(
+ .omQuranPreferences select,.omQuranSidebar select
+) option{background:var(--theme-base);color:var(--rt-text-primary,#fff)}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .omQuranPage :is(
+ .omQuranPreferences select,.omQuranSidebar select
+):focus-visible{outline-color:var(--theme-secondary)}
