@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { RoomServiceClient, WebhookReceiver } from "livekit-server-sdk";
 import { summarizeHostTracks } from "../../../../lib/live-presence";
+import { isGuestIdentity, guestMayPublishCamera, guestMayPublishMicrophone } from "../../../../lib/live-guest-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
   // LiveKit event is also our backstop against a recently revoked guest JWT.
   const identity = event.participant?.identity ?? "";
   if (identity && identity !== stream.host_id) {
-    if (/^[0-9a-f-]{36}$/i.test(identity) &&
+    if (isGuestIdentity(identity, stream.host_id) &&
         (event.event === "participant_joined" || event.event === "track_published")) {
       const { data: seat, error: seatError } = await db.from("live_guest_requests")
         .select("status,mode,host_muted")
@@ -89,11 +90,11 @@ export async function POST(request: Request) {
           for (const track of guest?.tracks ?? []) {
             const isAudio = track.type === 0 || String(track.type) === "AUDIO";
             const isVideo = track.type === 1 || String(track.type) === "VIDEO";
-            if (isVideo && (stream.aspect_ratio === "1:1" || seat.mode !== "camera")) {
+            if (isVideo && !guestMayPublishCamera(stream.aspect_ratio, seat.mode === "camera" ? "camera" : "pfp")) {
               await rooms.removeParticipant(roomName, identity);
               return NextResponse.json({ ok: true, invalidTrack: true });
             }
-            if (isAudio && seat.host_muted) {
+            if (isAudio && !guestMayPublishMicrophone(seat.host_muted === true)) {
               await rooms.mutePublishedTrack(roomName, identity, track.sid, true);
             }
           }
