@@ -84,7 +84,7 @@ export async function POST(request: Request) {
           ? `${user.id}:screen:${crypto.randomUUID()}`
           : user.id;
 
-    const canPublish = role === "host" || role === "guest" || role === "companion";
+    const canPublish = role === "host" || role === "companion" || (role === "guest" && (!guestMuted || guestMayPublishCamera(liveStream.aspect_ratio, guestMode ?? "pfp")));
     const publishSources = role === "companion"
       ? [TrackSource.SCREEN_SHARE]
       : role === "guest"
