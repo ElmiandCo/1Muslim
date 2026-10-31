@@ -834,3 +834,9 @@ html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Main 
 .canvas-native-profile .profile-glass-theme-card small{color:var(--profile-glass-ink)!important}
 @media(max-width:420px){.canvas-native-profile .profile-glass-identity{padding:10px!important}.canvas-native-profile .profile-glass-identity button{padding:6px 9px!important}.canvas-native-profile .profile-glass-gallery{padding-inline:4px!important}}
 @media(prefers-reduced-motion:reduce){.canvas-native-profile .profile-glass-tabs button,.canvas-native-profile .profile-glass-identity button{transition:none!important}}
+
+/* Profile 2 artwork: image behind existing controls, never intercept touch/scroll. */
+.canvas-native-profile{position:relative;isolation:isolate}
+.canvas-native-profile .profile-theme-scene{position:absolute;inset:0;z-index:-1;pointer-events:none;background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:inherit;animation:profileArtworkFadeIn 2s ease-in-out both}
+@keyframes profileArtworkFadeIn{from{opacity:0}to{opacity:.52}}
+@media(prefers-reduced-motion:reduce){.canvas-native-profile .profile-theme-scene{animation:none;opacity:.52}}
