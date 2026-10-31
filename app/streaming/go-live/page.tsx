@@ -146,7 +146,7 @@ export default function GoLivePage() {
     setStudioMorphing(false);
     requestAnimationFrame(()=>setStudioMorphing(true));
     studioMorphTimer.current=setTimeout(()=>setStudioMorphing(false),2000);
-    playCameraAdjustSound();
+    playCameraAdjustSound(mode);
     setStudioMode(mode);
     setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
     if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
