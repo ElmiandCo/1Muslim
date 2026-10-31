@@ -82,3 +82,20 @@ The seven semantic layouts in the README remain the design specification: host s
 | Production UI deployment | **NOT AUTHORIZED / NOT DONE** |
 
 **Next handoff:** Verify the integrated Bot B preview build (backend code copied from Bot A), confirm migrations already applied to SecureApp (do not blindly reapply), run build/typecheck and multi-device guest request/moderation tests on a safe dedicated stream with real authorized test users, reconcile overlapping PRs #209/#210, and only then consider preview approval.
+
+
+## Integrated LiveGuests + Live Cinema handoff — 2026-10-31
+
+**Integration PR:** [#217](https://github.com/ElmiandCo/1Muslim/pull/217) (draft, isolated). Branch: `integration/liveguests-cinema-20261031`, created from Live Cinema head `045360a46` which already descends the latest main `6b3fd144`. Integration comparison must remain **0 behind main** before review. No production merge or Vercel promotion has been requested.
+
+**PR reconciliation:** Bot B [#209](https://github.com/ElmiandCo/1Muslim/pull/209) already contains Bot A backend [#210](https://github.com/ElmiandCo/1Muslim/pull/210). #217 incorporates those files once, with the exact two already-applied migration filenames. Do **not** merge #209 and #210 separately into main or alongside #217; doing so would duplicate overlapping changes.
+
+**UI and media integration:** The Live Cinema host preview retains its original video node and 400 ms frozen-frame camera flip, adds host moderation and guest tiles without replacing the preview. The viewer retains the Live Cinema fullscreen comments and keyboard-offset composer, morphing controls, audio fallback, host screen-share companion and LiveKit connection. The shared guest stage renders host + up to 3 camera guest tiles in Video, or host + up to 11 avatar/mic tiles in Audio; its host media element remains mounted across mode changes. Embedded For You player exposes Request to Join without navigation; signed-out public viewers still receive viewer-only LiveKit tokens.
+
+**Safety fixes beyond Bot B:** Explicit media-sharing consent before guest publication; Audio-only UI hides camera request; guest JWT cannot publish when audio-only and host-muted; viewer prevents guest video overwriting host video while retaining host companion screen share; host resolves identity before subscribing. The host now calls `/api/live-mode` **before** camera publication or visual morph. A server 409 on Audio→Video with >3 approved seats leaves the Audio Live and microphone intact.
+
+**Database (read-only verification):** SecureApp `njilnqgdfrvpvgbkodwl` has `public.live_guest_requests`, 4 guest RPCs, RLS enabled, and no TRUNCATE grants for `anon` or `authenticated`. Migration history includes `20261031071703_liveguests1_capacity_and_roles` and `20261031071739_liveguests1_lockdown_client_table_grants`. No database write or migration was executed by this integration run.
+
+**Validation:** GitHub workflow now runs both Live Cinema tests and guest policy/source-contract tests, followed by TypeScript and Next.js build. Vercel preview and CI results must be checked at the final #217 head. These tests are source-level checks and cannot prove real microphone/video publication.
+
+**Outstanding release gates:** Run actual two-device host/guest/viewer LiveKit tests (0/1/2/3 video seats, 0/1/6/11 audio seats), simultaneous approvals, Audio→Video 409, host mute/remove and token rejoin, iPhone Safari front/back crossfade and microphone continuity, screen share, signed-out embedded viewing, comments input with keyboard, disconnect/reconnect and mobile responsive layout. Production stays unchanged until explicit approval.
