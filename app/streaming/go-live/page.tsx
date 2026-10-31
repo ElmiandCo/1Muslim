@@ -1577,6 +1577,32 @@ export default function GoLivePage() {
             height:min(56.25cqw,calc(100% - 180px));
           }
         }
+        /* Bot B: the legacy .preview.studioTransform media rules above have a
+           higher specificity than Bot A's generic .preview 100dvh declaration.
+           Override those exact selectors AFTER the old rules so the camera
+           really reaches behind the footer on iPhone and fills the panel on desktop. */
+        @media(max-width:850px){
+          .goLive .layout>.panel:first-child>.preview.studioTransform,
+          .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="phone"],
+          .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="desktop"],
+          .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="voice"]{
+            height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;
+          }
+          .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"] .studioCameraFrame{
+            top:clamp(86px,13dvh,148px);
+          }
+        }
+        @media(min-width:851px){
+          .goLive .layout>.panel:first-child>.preview.studioTransform,
+          .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="phone"],
+          .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="desktop"],
+          .goLive .layout>.panel:first-child>.preview.studioTransform[data-studio-mode="voice"]{
+            height:100%!important;min-height:0!important;max-height:none!important;
+          }
+          .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"] .studioCameraFrame{
+            top:clamp(90px,12dvh,160px);
+          }
+        }
         .goLive .layout>.panel:first-child>.preview .voiceAvatarStage{
           position:absolute!important;inset:auto!important;top:14px!important;left:50%!important;right:auto!important;
           width:min(76vw,340px,40dvh)!important;height:auto!important;aspect-ratio:1/1!important;
