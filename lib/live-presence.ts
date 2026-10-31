@@ -1,11 +1,11 @@
 // Server-only LiveKit participant snapshot classification.
 // LiveKit protobuf TrackType: AUDIO=0, VIDEO=1.
 export type LivePresenceState = "STARTING" | "READY_AUDIO" | "READY_VIDEO" | "RECONNECTING" | "ENDED";
-export type HostTrack = { type?: number | string };
+export type HostTrack = { type?: number | string; muted?: boolean };
 export type HostSnapshot = { tracks?: readonly HostTrack[] } | null | undefined;
 
 export function summarizeHostTracks(host: HostSnapshot) {
-  const tracks = host?.tracks ?? [];
+  const tracks = (host?.tracks ?? []).filter(track => track.muted !== true);
   return {
     hostConnected: Boolean(host),
     hasAudio: tracks.some(track => track.type === 0 || track.type === "AUDIO"),

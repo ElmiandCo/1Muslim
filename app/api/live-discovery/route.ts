@@ -17,7 +17,7 @@ export async function GET() {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data, error } = await db.from("live_streams")
-    .select("id,title,category,room_name,viewer_count,started_at,thumbnail_path,aspect_ratio,host_id,live_presence!inner(session_id,state,media_type,version,changed_at)")
+    .select("id,title,category,room_name,viewer_count,started_at,scheduled_end_at,thumbnail_path,aspect_ratio,host_id,live_presence!inner(session_id,state,media_type,version,changed_at)")
     .eq("status", "live")
     .eq("visibility", "public")
     .in("live_presence.state", ["READY_VIDEO", "READY_AUDIO"])
@@ -30,7 +30,7 @@ export async function GET() {
   }
   return NextResponse.json({ lives: data ?? [], serverTime: new Date().toISOString() }, {
     headers: {
-      "Cache-Control": "public, s-maxage=1, stale-while-revalidate=2",
+      "Cache-Control": "public, max-age=0, s-maxage=1",
       "Vary": "Accept-Encoding",
     },
   });
