@@ -83,3 +83,31 @@
 .quizSpeaker span{margin-left:4px}
 .quizSpeakerPlaying{color:var(--theme-secondary,var(--theme-accent,#b578db))!important;box-shadow:0 0 19px color-mix(in srgb,var(--theme-secondary,#b578db) 45%,transparent)!important}
 .quizChoices button{font-size:clamp(46px,9.1vw,77px)!important;background:color-mix(in srgb,var(--theme-base,#21142b) 30%,transparent)!important;backdrop-filter:blur(8px);border-color:color-mix(in srgb,var(--theme-secondary,#b578db) 48%,transparent)!important}
+
+/* Lesson 3: responsive vowel learning studio, matched to Lesson 2 glass. */
+.vowelLesson{display:flex;flex-direction:column;gap:16px;min-width:0;width:100%;box-sizing:border-box;padding:clamp(14px,3vw,24px);border:1px solid color-mix(in srgb,var(--theme-secondary,#d8b4ed) 44%,transparent);border-radius:22px;background:color-mix(in srgb,var(--theme-base,#23132d) 30%,transparent);backdrop-filter:blur(16px);color:var(--theme-foreground,#fff7ff)}
+.vowelHeader{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 14px;min-width:0}
+.vowelHeader strong{font-size:clamp(15px,3.2vw,21px);letter-spacing:.025em;line-height:1.3}
+.vowelHeader span{flex-shrink:0;font-size:clamp(14px,3vw,19px);font-weight:800;color:var(--theme-secondary,#eac5f7);font-variant-numeric:tabular-nums}
+.vowelTabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;min-width:0}
+.vowelTabs button{min-width:0;min-height:48px;padding:9px 7px;border-radius:15px;border:1px solid color-mix(in srgb,var(--theme-secondary,#c69cde) 40%,transparent);background:color-mix(in srgb,var(--theme-base,#291735) 30%,transparent);color:inherit;font-size:clamp(13px,2.7vw,16px);font-weight:650;cursor:pointer;transition:background .25s,transform .2s,border-color .25s}
+.vowelTabs button[aria-pressed="true"]{background:color-mix(in srgb,var(--theme-accent,#a65cc9) 36%,transparent);border-color:var(--theme-secondary,#d7afea);box-shadow:0 0 16px color-mix(in srgb,var(--theme-accent,#a65cc9) 23%,transparent)}
+.vowelTabs button:active,.vowelCard:active,.vowelActions button:active{transform:scale(.97)}
+.vowelStage{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0;padding:clamp(12px,3vw,22px);border:1px solid color-mix(in srgb,var(--theme-secondary,#c69cde) 34%,transparent);border-radius:22px;background:color-mix(in srgb,var(--theme-base,#271634) 30%,transparent);backdrop-filter:blur(10px)}
+.vowelPrompt{font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.vowelCard{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:clamp(190px,33vh,290px);width:100%;padding:14px;min-width:0;border:1px solid color-mix(in srgb,var(--theme-secondary,#d7afea) 45%,transparent);border-radius:20px;background:color-mix(in srgb,var(--theme-base,#291735) 30%,transparent);color:inherit;cursor:pointer;transition:transform .2s,border-color .3s}
+.vowelCard>span{font-family:"Noto Naskh Arabic","Amiri",serif;font-size:clamp(76px,18vw,132px);line-height:1.45;display:block}
+.vowelCard strong{font-size:clamp(14px,3vw,18px);font-weight:650;color:var(--theme-secondary,#f0d4ff);text-align:center}
+.vowelActions{display:flex;align-items:center;justify-content:center;gap:16px;width:100%;min-width:0}
+.vowelActions button{cursor:pointer;transition:transform .2s,background .3s,color .3s}
+.vowelPlay{flex:0 0 64px;width:64px;height:64px;border-radius:50%;border:1px solid color-mix(in srgb,var(--theme-secondary,#d7afea) 50%,transparent);background:color-mix(in srgb,var(--theme-base,#291735) 30%,transparent);color:#ef4949;font-size:27px}
+.vowelPlay[aria-pressed="true"]{color:var(--theme-secondary,#d7afea);box-shadow:0 0 18px color-mix(in srgb,var(--theme-accent,#a65cc9) 35%,transparent)}
+.vowelPlay span{margin-left:4px}
+.vowelDone{min-height:54px;padding:12px 23px;border-radius:99px;border:1px solid color-mix(in srgb,var(--theme-secondary,#d7afea) 60%,transparent);background:color-mix(in srgb,var(--theme-base,#291735) 30%,transparent);color:var(--theme-foreground,#fff);font-size:16px;font-weight:750;backdrop-filter:blur(12px)}
+.vowelDone span{margin-left:10px}
+.vowelToast{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:16px;border:1px solid var(--theme-secondary,#d7afea);border-radius:17px;background:color-mix(in srgb,var(--theme-base,#291735) 72%,transparent)}
+.vowelToast>div{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.vowelToast button{padding:10px 15px;border-radius:12px;border:1px solid var(--theme-secondary,#d7afea);background:transparent;color:inherit;cursor:pointer}
+@media(min-width:540px){.vowelTabs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:360px){.vowelLesson{padding:11px;gap:12px}.vowelStage{padding:10px}.vowelCard{min-height:175px}.vowelCard>span{font-size:72px}}
+@media(prefers-reduced-motion:reduce){.vowelTabs button,.vowelCard,.vowelActions button{transition:none}}
