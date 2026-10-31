@@ -140,7 +140,8 @@ export default function GoLivePage() {
     }
   };
   const selectStudioMode=(mode:"desktop"|"phone"|"voice")=>{
-    if(mode===desiredStudioModeRef.current)return;
+    const previousMode=desiredStudioModeRef.current;
+    if(mode===previousMode)return;
     desiredStudioModeRef.current=mode;
     if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current);
     setStudioMorphing(false);
@@ -151,7 +152,7 @@ export default function GoLivePage() {
     setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
     if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
     // Desktop ↔ Phone is geometry-only: keep the same camera track running.
-    else if(studioMode==="voice"){setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
+    else if(previousMode==="voice"){setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
     if(roomRef.current&&liveStreamIdRef.current){
       const streamId=liveStreamIdRef.current;
       // Serialize camera and metadata updates; a slower older request must
