@@ -9,6 +9,8 @@ test("audio and video stage use separate capacity and geometry rules",()=>{
  const css=read("components/LiveGuestsStage.module.css");
  assert.match(stage,/mode==="video"\?3:11/);
  assert.match(stage,/className=\{styles\.audioOrbit\}/);
+ assert.match(stage,/className=\{styles\.audioSeatNumber\}/);
+ assert.match(css,/\.audioSeatNumber\{/);
  assert.match(stage,/className=\{styles\.hostVideo\}/);
  assert.match(css,/grid-template-columns:minmax\(0,3fr\) minmax\(0,2fr\)/);
  assert.match(css,/\[data-count="1"\]\{grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
