@@ -49,3 +49,118 @@
 .ummah-comments-sheet form{flex-shrink:0;margin-top:8px}
 @keyframes ummahSheetCentered{from{opacity:.4;transform:translateY(20px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.ummah-comments-sheet{animation:none}}
+
+
+/* RealTheme2.0 / Bot B — Community and Profile UI chrome.
+   Scope to non-Emerald themes. Do not touch media, avatar artwork, profile
+   background swatches, scrolling, dimensions, or animation rules. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .canvas-community-tabs button,
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [aria-label="Community search type"] button{
+ background:color-mix(in srgb,var(--theme-accent,#788b9b) 18%,var(--theme-surface,#1b292d))!important;
+ color:var(--rt-text-primary,#f8f8f6)!important;
+ border-color:var(--theme-edge,#8b969d)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .canvas-community-tabs button[aria-selected="true"],
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [aria-label="Community search type"] button[aria-selected="true"]{
+ background:color-mix(in srgb,var(--theme-accent,#788b9b) 48%,var(--theme-surface,#1b292d))!important;
+ border-color:var(--theme-secondary,#e2d6ae)!important;
+ color:var(--rt-text-primary,#fff)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-simple-feed,
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-post-card{
+ color:var(--rt-text-primary,#f8f8f6);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-feed-search,
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-post-card{
+ background:linear-gradient(145deg,var(--theme-surface,#1b292d),var(--theme-base,#0d181d))!important;
+ border-color:color-mix(in srgb,var(--theme-edge,#8b969d) 76%,transparent)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-feed-search input{
+ background:transparent!important;
+ color:var(--rt-text-primary,#f8f8f6)!important;
+ caret-color:var(--rt-text-highlight,#e5d6b3);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-feed-search input::placeholder{
+ color:var(--rt-text-muted,#c1c8ce)!important;
+ opacity:1;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-feed-search span,
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-post-card header small{
+ color:var(--rt-text-secondary,#e0e4e7);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-post-avatar{
+ background:color-mix(in srgb,var(--theme-accent,#788b9b) 40%,var(--theme-surface,#1b292d))!important;
+ border-color:var(--theme-secondary,#e2d6ae)!important;
+ color:var(--rt-text-primary,#fff);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-post-card footer button{
+ color:var(--rt-text-primary,#f8f8f6)!important;
+ border-color:color-mix(in srgb,var(--theme-edge,#8b969d) 50%,transparent);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-post-card footer button[aria-pressed="true"]{
+ color:var(--rt-text-highlight,#e5d6b3)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .canvas-community-map-search :is(input,button),
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .canvas-community-map-zoom button{
+ background:var(--theme-surface,#1b292d)!important;
+ color:var(--rt-text-primary,#f8f8f6)!important;
+ border-color:var(--theme-edge,#8b969d)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .canvas-community-map-heading strong{
+ color:var(--rt-text-highlight,#e5d6b3);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .canvas-community-map-caption{
+ color:var(--rt-text-secondary,#e0e4e7);
+}
+/* The Profile mirror is deliberately still scrollable; only paint changes. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) section[aria-label="Profile workspace"]{
+ color:var(--rt-text-primary,#f8f8f6)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) section[aria-label="Profile workspace"] > div:first-child{
+ background:color-mix(in srgb,var(--theme-surface,#1b292d) 84%,transparent)!important;
+ border-color:color-mix(in srgb,var(--theme-edge,#8b969d) 50%,transparent)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) section[aria-label="Profile workspace"] > div:first-child > div:has(> button[aria-label="Profile settings"]){
+ background:color-mix(in srgb,var(--theme-surface,#1b292d) 96%,transparent)!important;
+ border-color:var(--theme-edge,#8b969d)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [aria-label="Profile settings"],
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [aria-label="Profile sections"] button{
+ color:var(--rt-text-primary,#f8f8f6)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [aria-label="Profile sections"] button[aria-selected="true"]{
+ border-left-color:var(--theme-secondary,#e2d6ae)!important;
+ color:var(--rt-text-highlight,#e5d6b3)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-profile-mirror-scroll]{
+ background:color-mix(in srgb,var(--theme-surface,#1b292d) 32%,transparent)!important;
+ border-color:color-mix(in srgb,var(--theme-edge,#8b969d) 50%,transparent)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [aria-label="1Umma public member gallery"] h3{
+ color:var(--rt-text-highlight,#e5d6b3)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [aria-label="1Umma public member gallery"] :is(input,select){
+ background:var(--theme-surface,#1b292d)!important;
+ border-color:var(--theme-edge,#8b969d)!important;
+ color:var(--rt-text-primary,#f8f8f6)!important;
+ caret-color:var(--rt-text-highlight,#e5d6b3);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [aria-label="1Umma public member gallery"] input::placeholder{
+ color:var(--rt-text-muted,#c1c8ce)!important;
+ opacity:1;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-gallery-scroll] > button{
+ background:color-mix(in srgb,var(--theme-surface,#1b292d) 50%,transparent)!important;
+ border-bottom-color:color-mix(in srgb,var(--theme-edge,#8b969d) 50%,transparent)!important;
+ color:var(--rt-text-primary,#f8f8f6)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) [data-gallery-scroll] > button small{
+ color:var(--rt-text-highlight,#e5d6b3)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Profile slides"] button{
+ color:var(--rt-text-secondary,#e0e4e7)!important;
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Profile slides"] button[aria-current="page"]{
+ color:var(--rt-text-highlight,#e5d6b3)!important;
+ border-bottom-color:var(--theme-secondary,#e2d6ae)!important;
+}
