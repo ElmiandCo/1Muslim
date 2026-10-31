@@ -70,11 +70,15 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
     return()=>{cancelled=true};
   },[streamId]);
 
-  // Realtime and authenticated host packets notify quickly. Poll every 2s
-  // even while connected so missed events cannot leave viewers in a dead Live.
+  // Server-authoritative Live 2.0 presence and terminal updates; no steady-state polling.
   useEffect(()=>{
     if(!streamId)return;
     let alive=true,checking=false;
+    let recoveryTimer:number|null=null;
+    let retry=0;
+    let terminalSubscribed=false, presenceSubscribed=false;
+    let seenVersion=-1;
+    let seenSession="";
     const db=createClient();
     const end=()=>{
       if(!alive||endedOnce.current)return;
@@ -98,25 +102,61 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         if(data.status==="ended"||data.status==="cancelled"||data.ended_at){end();return;}
         setIsAudioBroadcast(data.aspect_ratio==="1:1");
         const last=Date.parse(data.last_heartbeat_at||"");
-        if(data.status==="live"&&Number.isFinite(last)&&Date.now()-last>35000){
-          setHostConnecting(true);
-        }else if(hostIdRef.current&&roomRef.current?.remoteParticipants.has(hostIdRef.current)){
-          setHostConnecting(false);
-        }
-      }catch{/* A transient database failure must never end a live broadcast. */}
+        if(data.status==="live"&&Number.isFinite(last)&&Date.now()-last>35000)setHostConnecting(true);
+        else if(hostIdRef.current&&roomRef.current?.remoteParticipants.has(hostIdRef.current))setHostConnecting(false);
+      }catch{/* A transient database failure must not end the broadcast. */}
       finally{checking=false;}
     };
-    void check();
-    const channel=db.channel("live-end:"+streamId)
+    const scheduleRecovery=()=>{
+      if(!alive||endedOnce.current||recoveryTimer!==null||terminalSubscribed&&presenceSubscribed)return;
+      const ceiling=Math.min(30000,2000*2**Math.min(retry,4));
+      retry=Math.min(retry+1,5);
+      recoveryTimer=window.setTimeout(()=>{
+        recoveryTimer=null;
+        if(!alive||endedOnce.current)return;
+        void check();
+        scheduleRecovery();
+      },Math.max(500,Math.floor(Math.random()*ceiling)));
+    };
+    const subscriptionStatus=(which:"terminal"|"presence",status:string)=>{
+      const ready=status==="SUBSCRIBED";
+      if(which==="terminal")terminalSubscribed=ready;
+      else presenceSubscribed=ready;
+      if(terminalSubscribed&&presenceSubscribed){
+        retry=0;
+        if(recoveryTimer!==null){clearTimeout(recoveryTimer);recoveryTimer=null;}
+        void check();
+      }else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED")scheduleRecovery();
+    };
+    const terminalChannel=db.channel("live-end:"+streamId)
       .on("postgres_changes",{event:"UPDATE",schema:"public",table:"live_streams",filter:"id=eq."+streamId},payload=>{
-        const next=payload.new as {status?:string;ended_at?:string|null;aspect_ratio?:string;last_heartbeat_at?:string|null};
+        const next=payload.new as {status?:string;ended_at?:string|null;aspect_ratio?:string};
         if(next.status==="ended"||next.status==="cancelled"||next.ended_at){end();return;}
         if(next.aspect_ratio)setIsAudioBroadcast(next.aspect_ratio==="1:1");
-      }).subscribe();
-    const timer=window.setInterval(()=>void check(),2000);
+      }).subscribe(status=>subscriptionStatus("terminal",status));
+    const presenceChannel=db.channel("live2-presence:"+streamId)
+      .on("postgres_changes",{event:"*",schema:"public",table:"live_presence",filter:"stream_id=eq."+streamId},payload=>{
+        const next=payload.new as {state?:string;version?:number;session_id?:string;stream_id?:string};
+        if(!alive||next.stream_id!==streamId||!Number.isFinite(Number(next.version)))return;
+        const version=Number(next.version);
+        if(seenSession===next.session_id&&version<=seenVersion)return;
+        seenSession=next.session_id||"";seenVersion=version;
+        if(next.state==="ENDED"){end();return;}
+        if(next.state==="RECONNECTING"||next.state==="STARTING")setHostConnecting(true);
+        else if(next.state==="READY_AUDIO"||next.state==="READY_VIDEO"){
+          setHostConnecting(false);
+          setIsAudioBroadcast(next.state==="READY_AUDIO");
+        }
+      }).subscribe(status=>subscriptionStatus("presence",status));
+    void check();
     const onResume=()=>{if(document.visibilityState==="visible")void check();};
     document.addEventListener("visibilitychange",onResume);
-    return()=>{alive=false;hostEndSignalRef.current=()=>{};window.clearInterval(timer);document.removeEventListener("visibilitychange",onResume);void db.removeChannel(channel);};
+    return()=>{
+      alive=false;hostEndSignalRef.current=()=>{};
+      if(recoveryTimer!==null)clearTimeout(recoveryTimer);
+      document.removeEventListener("visibilitychange",onResume);
+      void db.removeChannel(terminalChannel);void db.removeChannel(presenceChannel);
+    };
   },[streamId,embedded,router]);
 
   useEffect(() => {
