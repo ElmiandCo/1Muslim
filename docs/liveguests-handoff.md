@@ -82,3 +82,22 @@ The seven semantic layouts in the README remain the design specification: host s
 | Production UI deployment | **NOT AUTHORIZED / NOT DONE** |
 
 **Next handoff:** Verify the integrated Bot B preview build (backend code copied from Bot A), confirm migrations already applied to SecureApp (do not blindly reapply), run build/typecheck and multi-device guest request/moderation tests on a safe dedicated stream with real authorized test users, reconcile overlapping PRs #209/#210, and only then consider preview approval.
+
+
+## Bot A QA — verified conversation screenshot-to-code mapping (2026-10-31)
+
+The following **two user-uploaded JPEG screenshots were visually inspected**, not inferred from filenames. These are the authoritative design references supplied in the conversation; the six repository PNGs remain **unmapped** until independently inspected. Mapping is to current code, **not** evidence that the final runtime layout passed device tests.
+
+| Exact user image | Visible reference detail | Current implementation location | Deviation / test status |
+| --- | --- | --- | --- |
+| `7B675B22-DD9B-4230-850B-A53776ACD47A.jpeg` — Audio Live portrait | Large central host avatar with gold glow; six orbiting avatar guests in screenshot; mute badges; host crown; comments below; seat numbers above avatars; vertical host actions on right | `components/LiveGuestsStage.tsx` `LiveGuestsStage` audio branch, `audioOrbit`/`hostAudio`/`audioGuest`; `components/LiveGuestsStage.module.css` `.audioOrbit`, `.hostPortrait`, `.audioGuest`, `.guestPortrait` | Center/orbit/mute badges and glow are represented in source. **Not yet matched:** numbered seat badges; exact screenshot spacing and vertical host controls. Chat is owned by viewer page, not stage. 320px/iPhone Safari and actual LiveKit audio are **not tested**. |
+| `AEEAD944-715D-4A66-A5DE-D5103664EC81.jpeg` — Video Live landscape | Host dominant left (~60%); three equal-height video guests stacked right; gold panel borders; name/guest/mic overlays; comments below | `components/LiveGuestsStage.tsx` `LiveGuestsStage` video branch, `GuestVideoTiles`/`GuestVideoTile`; `components/LiveGuestsStage.module.css` `.stage[data-mode="video"]` (3fr/2fr), `.guestColumn[data-count="3"]`, `.guestLabel`, `.hostLabel`, `.tile` | Host-left + 3-right proportions and mic/name overlays are represented in source. **Not yet matched:** full guest role pills and verification badges, exact screenshot chrome. Reference includes a Go Live button beneath an apparently active room; **do not reproduce that contradiction**. Real guest video and responsive device behavior **not tested**. |
+
+**Source-level vs runtime verification:** The above is an image-to-component mapping based on direct visual inspection of the user's two JPEGs and actual component/CSS source. It is **not** a passed visual comparison of a running preview. The original six PNG files in `LiveGuests1.0/docs/liveguests/references/` still need individual visual inspection and exact filename mappings by Bot B.
+
+## Bot A QA — backend security and first-round verification
+
+- **Read-only SecureApp inspection (2026-10-31):** `public.live_guest_requests` exists, RLS enabled; anon and authenticated cannot TRUNCATE, authenticated cannot UPDATE, authenticated can INSERT. Four guest RPCs have expected execution privileges: `request_live_guest`, `moderate_live_guest`, `set_live_guest_host_mute` authenticated; `set_live_guest_stream_mode` service-role only. Migrations `20261031071703` and `20261031071739` already applied. No migrations reapplied.
+- **Live test blocker:** `public.live_streams` returned **0 active live streams**. No authorized disposable test host/guest accounts or isolated staging room were available. Therefore request→approve→publish→mute/remove→rejoin, concurrent approvals, device audio/video and host camera crossfade are **NOT PASSED / NOT EXECUTED**.
+- **Security fix in draft PR #218:** a host-muted audio/PFP guest with zero permitted sources must have `canPublish: false` in LiveKit JWT, not `canPublish: true` with empty allowlist. Added pure policy regression cases and a CI step to run `node --experimental-strip-types --test scripts/live-guests.test.mjs`. These tests do not substitute for real LiveKit sessions.
+- **Integration:** PR #218 targets Bot B's integrated branch; Bot B must incorporate it before final PR #209 review. PR #210 overlaps and must not be independently merged. Latest production and the Live Cinema 400 ms camera crossfade are untouched by this QA branch.
