@@ -8,7 +8,7 @@ import ReconnectTrivia from "../app/components/ReconnectTrivia";
 import ShareLiveButton from "../app/components/ShareLiveButton";
 import LiveLightOverlay from "./LiveLightOverlay";
 
-export default function LiveKitViewer({ roomName, streamId, embedded = false }: { roomName: string; streamId?: string; embedded?: boolean }) {
+export default function LiveKitViewer({ roomName, streamId, embedded = false, hostId, audioOnly = false, hostName = "1Muslim Creator", hostAvatarUrl }: { roomName: string; streamId?: string; embedded?: boolean; hostId?: string; audioOnly?: boolean; hostName?: string; hostAvatarUrl?: string | null }) {
   const router=useRouter();
   const [hostEnded,setHostEnded]=useState(false);
   const endedOnce=useRef(false);
@@ -37,11 +37,96 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [connectionActive, setConnectionActive] = useState(false);
+  const [hostOffline,setHostOffline] = useState(false);
+  const [hasAudioTrack,setHasAudioTrack] = useState(false);
+  const [voiceEnergy,setVoiceEnergy] = useState(0);
+  const voiceMeterFrameRef = useRef<number|null>(null);
+  const voiceMeterContextRef = useRef<AudioContext|null>(null);
+  const endSignalRef = useRef<()=>void>(()=>{});
 
-  useEffect(()=>{if(!streamId)return;let alive=true;const db=createClient();const end=()=>{if(!alive||endedOnce.current)return;endedOnce.current=true;setHostEnded(true);roomRef.current?.disconnect();window.setTimeout(()=>{if(embedded){window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));setHostEnded(false)}else router.replace("/")},3800)};const check=async()=>{const {data}=await db.from("live_streams").select("status,ended_at").eq("id",streamId).maybeSingle();if(data&&(data.status==="ended"||data.status==="cancelled"||data.ended_at))end()};void check();const channel=db.channel("live-end:"+streamId).on("postgres_changes",{event:"UPDATE",schema:"public",table:"live_streams",filter:"id=eq."+streamId},payload=>{const next=payload.new as {status?:string;ended_at?:string|null};if(next.status==="ended"||next.status==="cancelled"||next.ended_at)end()}).subscribe();const timer=connectionActive?undefined:window.setInterval(()=>void check(),1000);return()=>{alive=false;if(timer)window.clearInterval(timer);void db.removeChannel(channel)}},[streamId,embedded,router,connectionActive]);
+  // Realtime and LiveKit data are the fast paths. Two-second DB checks are the
+  // fallback even when connected: realtime delivery can be interrupted or missed.
+  useEffect(()=>{
+    if(!streamId)return;
+    let alive=true,checking=false;
+    const db=createClient();
+    const end=()=>{
+      if(!alive||endedOnce.current)return;
+      endedOnce.current=true;
+      setHostEnded(true);
+      setHostOffline(false);
+      setError("");
+      roomRef.current?.disconnect();
+      window.setTimeout(()=>{
+        if(!alive)return;
+        if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));
+        else router.replace("/");
+      },3800);
+    };
+    endSignalRef.current=end;
+    const check=async()=>{
+      if(!alive||checking||endedOnce.current)return;
+      checking=true;
+      try{
+        const {data}=await db.from("live_streams").select("status,ended_at,last_heartbeat_at").eq("id",streamId).maybeSingle();
+        if(!alive||!data)return;
+        if(data.status==="ended"||data.status==="cancelled"||data.ended_at){end();return;}
+        if(data.status==="live"){
+          const last=Date.parse(data.last_heartbeat_at||"");
+          if(Number.isFinite(last)&&Date.now()-last>35000)setHostOffline(true);
+          else if(!hostId||roomRef.current?.remoteParticipants.has(hostId))setHostOffline(false);
+        }
+      }catch{/* Network failure is not evidence that a host ended the Live. */}
+      finally{checking=false;}
+    };
+    void check();
+    const channel=db.channel("live-end:"+streamId)
+      .on("postgres_changes",{event:"UPDATE",schema:"public",table:"live_streams",filter:"id=eq."+streamId},payload=>{
+        const next=payload.new as {status?:string;ended_at?:string|null;last_heartbeat_at?:string|null};
+        if(next.status==="ended"||next.status==="cancelled"||next.ended_at)end();
+        else if(next.last_heartbeat_at&&Date.now()-Date.parse(next.last_heartbeat_at)<35000&&(!hostId||roomRef.current?.remoteParticipants.has(hostId)))setHostOffline(false);
+      }).subscribe();
+    const timer=window.setInterval(()=>void check(),2000);
+    return()=>{alive=false;endSignalRef.current=()=>{};window.clearInterval(timer);void db.removeChannel(channel);};
+  },[streamId,embedded,router,hostId]);
 
   useEffect(() => {
     let mounted = true;
+    const retryTimers:ReturnType<typeof setTimeout>[]=[];
+    const queueRetry=(delay:number)=>{
+      retryTimers.push(window.setTimeout(()=>{
+        if(mounted&&!endedOnce.current){setError("");setRetryAttempt(n=>n+1);}
+      },delay));
+    };
+    const stopVoiceMeter=()=>{
+      if(voiceMeterFrameRef.current!==null){cancelAnimationFrame(voiceMeterFrameRef.current);voiceMeterFrameRef.current=null;}
+      if(voiceMeterContextRef.current){void voiceMeterContextRef.current.close().catch(()=>{});voiceMeterContextRef.current=null;}
+      setVoiceEnergy(0);
+    };
+    const startVoiceMeter=(track:any)=>{
+      if(!audioOnly||!track.mediaStreamTrack)return;
+      try{
+        stopVoiceMeter();
+        const context=new AudioContext();
+        const source=context.createMediaStreamSource(new MediaStream([track.mediaStreamTrack as MediaStreamTrack]));
+        const analyser=context.createAnalyser();
+        analyser.fftSize=256;
+        source.connect(analyser); // Never connect to destination: audio element owns playback.
+        voiceMeterContextRef.current=context;
+        const values=new Uint8Array(analyser.fftSize);
+        let lastUpdate=0;
+        const sample=(now:number)=>{
+          if(!mounted)return;
+          analyser.getByteTimeDomainData(values);
+          let power=0;
+          for(const value of values){const centered=(value-128)/128;power+=centered*centered;}
+          if(now-lastUpdate>75){setVoiceEnergy(Math.min(1,Math.sqrt(power/values.length)*6));lastUpdate=now;}
+          voiceMeterFrameRef.current=requestAnimationFrame(sample);
+        };
+        void context.resume().catch(()=>{});
+        voiceMeterFrameRef.current=requestAnimationFrame(sample);
+      }catch{/* Audio playback still works if the meter is unavailable. */}
+    };
 
     const attachTrack = (track: any, source?: string) => {
       if (!mounted) return;
@@ -66,7 +151,11 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         audio.setAttribute("playsinline", "true");
         audioContainerRef.current.appendChild(audio);
         void audio.play().catch(() => {});
-        // Audio alone does not establish video playback.
+        setHasAudioTrack(true);
+        setStatus("LIVE");
+        setReconnecting(false);
+        setHostOffline(false);
+        if(audioOnly)startVoiceMeter(track);
       }
     };
 
@@ -100,13 +189,35 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           } else if (track.kind === Track.Kind.Audio) {
             track.detach().forEach(el => { if (el.parentNode === audioContainerRef.current) el.remove(); });
             if (track.sid) attachedAudioRef.current.delete(track.sid);
+            if(attachedAudioRef.current.size===0){setHasAudioTrack(false);stopVoiceMeter();if(audioOnly)setStatus("Waiting for host audio…");}
           }
         });
         room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live video could not be subscribed to. Please reconnect."));
-        room.on(RoomEvent.ParticipantConnected, () => mounted && setStatus("Waiting for host video…"));
+        room.on(RoomEvent.ParticipantConnected, participant=>{
+          if(!mounted)return;
+          if(hostId&&participant.identity===hostId){setHostOffline(false);setStatus(audioOnly?"Waiting for host audio…":"Waiting for host video…");}
+        });
+        room.on(RoomEvent.ParticipantDisconnected, participant=>{
+          if(!mounted||!hostId||participant.identity!==hostId||endedOnce.current)return;
+          setHostOffline(true);
+          setStatus("Host disconnected — waiting for reconnection…");
+          // A LiveKit participant disconnect is not an authoritative End Live.
+          // Wait for terminal DB status (or a signed host data signal).
+        });
+        room.on(RoomEvent.DataReceived,(payload,participant)=>{
+          if(!mounted||!hostId||participant?.identity!==hostId||endedOnce.current)return;
+          try{
+            const message=JSON.parse(new TextDecoder().decode(payload));
+            if(message?.type==="1muslim:live-ended"&&message?.streamId===streamId)endSignalRef.current();
+          }catch{/* Ignore unrelated data packets. */}
+        });
         room.on(RoomEvent.Reconnecting, () => {if(mounted){setConnectionActive(false);setStatus("Reconnecting…");setReconnecting(true);setReconnectKey(String(Date.now()));}});
-        room.on(RoomEvent.Reconnected, () => {if(mounted){setConnectionActive(true);setReconnecting(false);setStatus("Waiting for host video…");}});
-        room.on(RoomEvent.Disconnected, () => {if(mounted){setConnectionActive(false);setStatus("Live connection ended.");setReconnecting(false);setError("The live connection ended. Please retry.");}});
+        room.on(RoomEvent.Reconnected, () => {if(mounted){setConnectionActive(true);setReconnecting(false);setError("");setStatus(audioOnly?"Waiting for host audio…":"Waiting for host video…");}});
+        room.on(RoomEvent.Disconnected, () => {
+          if(!mounted||endedOnce.current)return;
+          setConnectionActive(false);setStatus("Reconnecting to Live…");setReconnecting(true);
+          queueRetry(1500);
+        });
 
         await room.connect(data.url, data.token, { autoSubscribe: true });
         if (!mounted) { await room.disconnect(); return; }
@@ -119,9 +230,15 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
           }
         }
 
-        if (mounted && ![...room.remoteParticipants.values()].some(p=>[...p.trackPublications.values()].some(pub=>pub.kind===Track.Kind.Video && pub.track))) { setStatus("Waiting for host video…"); setReconnecting(false); }
+        if(mounted&&![...room.remoteParticipants.values()].some(p=>[...p.trackPublications.values()].some(pub=>pub.track&&(pub.kind===Track.Kind.Video||pub.kind===Track.Kind.Audio)))){
+          setStatus(audioOnly?"Waiting for host audio…":"Waiting for host video…");setReconnecting(false);
+        }
       } catch (err) {
-        if (mounted) { setConnectionActive(false); setReconnecting(false); setStatus("Connection unavailable"); setError("The live connection could not be established. Please retry or return to Streaming."); }
+        if(mounted&&!endedOnce.current){
+          setConnectionActive(false);setReconnecting(true);setStatus("Reconnecting to Live…");
+          // Retrying the same stream/room never creates another broadcast.
+          queueRetry(Math.min(12000,1200*Math.pow(2,Math.min(retryAttempt,3))));
+        }
       }
     };
 
@@ -141,7 +258,9 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
 
     return () => {
       window.clearInterval(countTimer);
+      retryTimers.forEach(timer=>window.clearTimeout(timer));
       mounted = false;
+      stopVoiceMeter();
       const oldRoom = roomRef.current;
       roomRef.current = null;
       if (oldRoom) void oldRoom.disconnect();
@@ -150,12 +269,13 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
       audioContainerRef.current?.replaceChildren();
     };
-  }, [roomName, retryAttempt]);
+  }, [roomName, retryAttempt, hostId, audioOnly, streamId]);
 
   const toggleMute = () => {
     const next = !muted;
     setMuted(next);
     mutedRef.current = next;
+    if(!next&&voiceMeterContextRef.current?.state==="suspended")void voiceMeterContextRef.current.resume().catch(()=>{});
     if (audioContainerRef.current) {
       audioContainerRef.current.querySelectorAll("audio").forEach((audio) => {
         audio.muted = next;
@@ -176,10 +296,16 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   return (
     <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:"16/9",overflow:"hidden"}}>
       {hostEnded&&<div role="status" aria-live="assertive" className="omHostEndedNotice"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>{embedded?"Closing your floating player…":"Taking you Home…"}</small><button type="button" onClick={()=>{if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));else router.replace("/")}}>Go Home now →</button></div>}
-      <div className="omLiveVideoStage" data-screen={hasScreenVideo?"yes":"no"} data-layout={hasScreenVideo&&hasCameraVideo?shareLayout:"solo"}>
+      <div className="omLiveVideoStage" data-screen={hasScreenVideo?"yes":"no"} data-layout={hasScreenVideo&&hasCameraVideo?shareLayout:"solo"} style={audioOnly?{visibility:"hidden"}:undefined}>
         <video ref={videoRef} className="omCameraVideo" autoPlay muted playsInline controls={!embedded} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block"}} />
         <video ref={screenVideoRef} className="omScreenVideo" autoPlay muted playsInline aria-label="Shared screen" style={{display:hasScreenVideo?"block":"none"}} />
       </div>
+      {audioOnly&&<div className="omVoiceLiveStage" style={{["--voice-energy" as string]:voiceEnergy} as React.CSSProperties} aria-label={hasAudioTrack?"Audio Live is broadcasting":"Waiting for Audio Live"}>
+        <div className="omVoiceLiveHalo" aria-hidden="true"><span/><span/><span/></div>
+        <div className="omVoiceLivePortrait">{hostAvatarUrl?<img src={hostAvatarUrl} alt="" referrerPolicy="no-referrer"/>:<span aria-hidden="true">✧</span>}</div>
+        <div className="omVoiceLiveName"><strong>{hostName}</strong><span>{hasAudioTrack?"● AUDIO LIVE":"○ Connecting to host audio…"}</span></div>
+      </div>}
+      {hostOffline&&!hostEnded&&<div className="omHostReconnectBanner" role="status">⚡ Host connection interrupted — reconnecting…</div>}
       <div ref={audioContainerRef} />
       {streamId&&<LiveLightOverlay streamId={streamId}/>}
       {!embedded&&<><div className="omViewerTapCounter" aria-label={`${tapCount} screen taps`}>✨ {tapCount.toLocaleString()} taps</div>{tapBursts.map(t=><span key={t.id} className="omViewerTapBurst" style={{left:t.x,top:t.y}}>💜</span>)}<a className="omViewerExit" href="/streaming" aria-label="Exit live viewer">✕</a></>}
@@ -210,6 +336,19 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       ) : error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
       <style jsx>{`
       .omLiveVideoStage{position:relative;width:100%;height:100%;overflow:hidden;background:#000}
+      .omVoiceLiveStage{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;overflow:hidden;color:#eafdf5;background:radial-gradient(ellipse at 50% 42%,#1c5949 0%,#08241f 48%,#020a09 100%)}
+      .omVoiceLiveHalo{position:absolute;top:50%;left:50%;width:min(64%,320px);aspect-ratio:1;transform:translate(-50%,-57%);pointer-events:none}
+      .omVoiceLiveHalo span{position:absolute;inset:0;border:2px solid #5be5b788;border-radius:50%;box-shadow:0 0 45px #2bda9c33;animation:omVoiceHalo 3.5s ease-in-out infinite}
+      .omVoiceLiveHalo span:nth-child(2){inset:-13%;animation-delay:-1.2s;opacity:.6}
+      .omVoiceLiveHalo span:nth-child(3){inset:-26%;animation-delay:-2.4s;opacity:.35}
+      .omVoiceLivePortrait{position:relative;z-index:2;width:min(44%,210px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;overflow:hidden;border:3px solid #c2fce6;background:radial-gradient(circle at 35% 30%,#337f68,#0b3126 75%);box-shadow:0 0 calc(25px + var(--voice-energy,0)*70px) #4be3ab77;transform:scale(calc(1 + var(--voice-energy,0)*.10));transition:transform .1s linear}
+      .omVoiceLivePortrait img{width:100%;height:100%;object-fit:cover}
+      .omVoiceLivePortrait>span{font-size:clamp(50px,10vw,110px)}
+      .omVoiceLiveName{position:relative;z-index:2;display:grid;gap:5px;text-align:center;text-shadow:0 2px 12px #000a}
+      .omVoiceLiveName strong{font-size:clamp(16px,2.7vw,23px)}
+      .omVoiceLiveName span{font-size:11px;letter-spacing:.14em;color:#a6f6d6;font-weight:850}
+      .omHostReconnectBanner{position:absolute;z-index:20;left:50%;top:14%;transform:translateX(-50%);width:max-content;max-width:90%;padding:9px 15px;border-radius:999px;background:#16382ef0;color:#f0fff7;border:1px solid #a7edcf99;font-size:12px;font-weight:800;text-align:center}
+      @keyframes omVoiceHalo{0%,100%{transform:scale(.94);opacity:.35}50%{transform:scale(calc(1.05 + var(--voice-energy,0)*.14));opacity:.8}}
       .omLiveVideoStage video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
       .omLiveTheater .omLiveVideoStage{background:#050b0b}
       .omLiveTheater .omLiveVideoStage video{object-fit:cover!important;background:transparent}
@@ -232,7 +371,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       @keyframes omViewerHeartFloat{from{opacity:1;transform:translate(-50%,-50%) scale(.6)}to{opacity:0;transform:translate(-50%,-155%) scale(1.6)}}
       @keyframes omViewerCountGlow{0%,100%{box-shadow:0 0 0 transparent;color:#fff}30%{box-shadow:0 0 24px #bd8dff,0 0 38px #6ee7e3;color:#e5c4ff}60%{box-shadow:0 0 22px #85e9ff;color:#c7fff8}}
       @media(max-width:700px){.omLiveImmersiveViewer{height:100dvh!important;min-height:100dvh!important;aspect-ratio:auto!important}.omLiveImmersiveViewer video{width:100%!important;height:100%!important;object-fit:contain!important}.omLiveTheater .omLiveImmersiveViewer video:not(.omScreenVideo){object-fit:cover!important}.omLiveVideoStage[data-screen="yes"][data-layout="split"]{grid-template-columns:1fr;grid-template-rows:minmax(0,3fr) minmax(100px,1fr)}.omLiveVideoStage[data-screen="yes"][data-layout="split"] .omScreenVideo{grid-column:1;grid-row:1}.omLiveVideoStage[data-screen="yes"][data-layout="split"] .omCameraVideo{grid-column:1;grid-row:2}.omLiveImmersiveViewer .omViewerExit{top:calc(env(safe-area-inset-top) + 12px)}}
-      @media(prefers-reduced-motion:reduce){.omViewerTapBurst,.omViewerCountPulse{animation:none!important}}
+      @media(prefers-reduced-motion:reduce){.omViewerTapBurst,.omViewerCountPulse,.omVoiceLiveHalo span{animation:none!important}.omVoiceLivePortrait{transition:none!important}}
       .omHostEndedNotice{position:absolute;z-index:50;top:15%;left:50%;transform:translateX(-50%);width:min(88%,380px);padding:20px 18px;text-align:center;color:#f6f4e9;background:#0a2925ed;border:1px solid #edcf8a9c;border-radius:23px;box-shadow:0 16px 60px #0009;backdrop-filter:blur(16px);display:grid;gap:10px;animation:omHostEndIn .45s ease-out both}.omHostEndedNotice span{font-size:10px;letter-spacing:.2em;color:#ecd19a}.omHostEndedNotice strong{font-size:19px}.omHostEndedNotice small{color:#bbd0c6}.omHostEndedNotice button{padding:10px;border-radius:99px;background:#edd39e;color:#103126;border:0;font-weight:800;cursor:pointer}@keyframes omHostEndIn{from{opacity:0;transform:translate(-50%,28px)}to{opacity:1;transform:translate(-50%,0)}}@media(prefers-reduced-motion:reduce){.omHostEndedNotice{animation:none}}
       `}</style>
     </div>
