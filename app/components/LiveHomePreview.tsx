@@ -46,7 +46,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
      }
    }catch(error){if(active){setReady(false);setFailure(error instanceof Error?error.message:"Connection failed");retryTimer=setTimeout(()=>{if(active)setAttempt(n=>n+1)},5000)}}
   })();
-  waitingTimer=setTimeout(()=>{if(active&&!video.current?.srcObject)setAttempt(n=>n+1)},12000);
+  waitingTimer=setTimeout(()=>{if(active&&!video.current?.srcObject)setAttempt(n=>n+1)},4000);
   return()=>{active=false;if(waitingTimer)clearTimeout(waitingTimer);if(retryTimer)clearTimeout(retryTimer);room.removeAllListeners();void room.disconnect();if(video.current)video.current.srcObject=null};
  },[roomName,attempt]);
  useEffect(()=>{const refresh=()=>{if(document.visibilityState==="visible"){setAttempt(n=>n+1)}};document.addEventListener("visibilitychange",refresh);window.addEventListener("focus",refresh);return()=>{document.removeEventListener("visibilitychange",refresh);window.removeEventListener("focus",refresh)}},[]);
