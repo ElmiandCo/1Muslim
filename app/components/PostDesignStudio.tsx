@@ -55,9 +55,15 @@ export default function PostDesignStudio(){
  return <section className={styles.studio} aria-label="Create post">
  <div className={styles.header}><strong>Create Post</strong><button type="button" className={styles.postButton} disabled={(!text.trim()&&!media)||busy} onClick={()=>setConfirm(true)}>{busy?"Posting…":"Post"}</button></div>
  <div className={styles.identity}><div className={styles.avatar}>1</div><div><strong>1Muslim</strong><span>◎ Public (Ummah)</span></div></div>
- <div className={styles.composer}><textarea ref={editorRef} maxLength={2000} aria-label="What's on your mind?" placeholder="What's on your mind?" value={text} onChange={e=>updateText(e.target.value)} /><span className={styles.counter}>{text.length} / 2000</span></div>
+
+ <div className={styles.composerRow}>
+  <div className={styles.composer}><textarea ref={editorRef} maxLength={2000} aria-label="What's on your mind?" placeholder="What's on your mind?" value={text} onChange={e=>updateText(e.target.value)} /><span className={styles.counter}>{text.length} / 2000</span></div>
+  <div className={styles.mediaColumn}>
+   <button type="button" className={styles.dropZone} onClick={()=>mediaRef.current?.click()} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();const file=e.dataTransfer.files?.[0];if(file)selectMedia(file)}} aria-label="Add photo or video"><span className={styles.addIcon}>＋</span><strong>Drop or tap</strong><small>Photo / Video</small></button>
+   <button type="button" className={styles.verseAction} onClick={()=>{setVerseError("");setVerseOpen(true)}}>۞ <span>Verse</span></button>
+  </div>
+ </div>
  {media&&<div className={styles.attachment}>{media.type==="image"?<img src={media.url} alt="Attachment preview"/>:<video src={media.url} controls playsInline/>}<button type="button" onClick={()=>setMedia(null)}>Remove {media.name} ×</button></div>}
- <div className={styles.attachments}><button type="button" onClick={()=>mediaRef.current?.click()}><span>▧</span>Photo</button><button type="button" onClick={()=>mediaRef.current?.click()}><span>▣</span>Video</button><button type="button" onClick={()=>setError("File attachments are not available for publishing yet.")}><span>▤</span>File</button><button type="button" onClick={()=>{setVerseError("");setVerseOpen(true)}}><span>۞</span>Verse</button></div>
  <div className={styles.options}><div><span>✦</span>Post type <button type="button" onClick={()=>setDaily(!daily)}>{daily&&eligible?"Daily":"Regular"} ⌄</button></div><div><span>◎</span>Audience <strong>Public (Ummah)</strong></div></div>
  {eligible&&checked&&<p className={styles.hint}>Daily posts earn XP. Choose Daily under Post type to publish your daily post.</p>}
  <input ref={mediaRef} type="file" accept="image/*,video/*" className={styles.hidden} onChange={e=>selectMedia(e.target.files?.[0])}/>
