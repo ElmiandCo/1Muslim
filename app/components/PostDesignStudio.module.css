@@ -43,3 +43,22 @@
 .insertVerse{min-height:45px;border-color:var(--theme-secondary,#dfc99b);background:color-mix(in srgb,var(--theme-secondary,#dfc99b) 25%,transparent);backdrop-filter:blur(14px);color:inherit;cursor:pointer}
 @keyframes verseBackdropIn{from{opacity:0}to{opacity:1}}@keyframes verseCardIn{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes verseReveal{from{opacity:0;transform:translateY(12px) scale(.97);filter:blur(7px)}to{opacity:1;transform:none;filter:blur(0)}}
 @media(prefers-reduced-motion:reduce){.verseBackdrop,.verseDialog,.versePreview{animation:none}}
+
+/* In-composer feed preview replaces the bulky Post type / Audience panel. */
+.livePostPreview{position:relative;z-index:1;display:flex;flex-direction:column;gap:12px;padding:15px;border:1px solid color-mix(in srgb,var(--theme-secondary,#dfc99b) 38%,transparent);border-radius:20px;background:linear-gradient(155deg,rgba(7,22,31,.76),rgba(18,39,44,.53));backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:inset 0 1px rgba(255,255,255,.15);min-width:0}
+.previewHeading{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;letter-spacing:.14em;color:var(--theme-secondary,#e9d4a2);font-weight:750}
+.previewHeading button{font:inherit;letter-spacing:0;border:1px solid color-mix(in srgb,var(--theme-secondary,#dfc99b) 45%,transparent);background:rgba(255,255,255,.08);color:var(--theme-text,#f4eee0);border-radius:99px;padding:7px 11px;cursor:pointer}
+.previewHeading button:disabled{opacity:.6;cursor:default}
+.previewAuthor{display:flex;align-items:center;gap:10px;min-width:0}
+.previewAvatar{width:39px;height:39px;flex:none;display:grid;place-items:center;border-radius:50%;border:1px solid var(--theme-secondary,#dfc99b);background:rgba(18,88,69,.5);font-weight:800;color:#fff}
+.previewAuthor>div:nth-child(2){display:flex;flex-direction:column;gap:3px;min-width:0}
+.previewAuthor strong{font-size:14px;color:var(--theme-text,#fff)}
+.previewAuthor small{font-size:11px;color:#d0d9d7}
+.previewMore{margin-left:auto;font-size:23px;opacity:.65}
+.previewBody{font-size:14px;line-height:1.55;color:var(--theme-text,#f6f3ea);white-space:pre-wrap;overflow-wrap:anywhere;margin:0;max-height:190px;overflow:auto}
+.previewDaily{color:var(--theme-secondary,#e9d4a2);font-size:11px;letter-spacing:.06em;font-weight:750}
+.previewEmpty{font-size:13px;color:#b8c9c8;font-style:italic;margin:2px 0 5px}
+.previewMedia{overflow:hidden;border-radius:13px;border:1px solid #ffffff35;max-height:220px;background:#07121c}
+.previewMedia img,.previewMedia video{display:block;width:100%;max-height:220px;object-fit:contain}
+.previewActions{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #ffffff2b;padding-top:11px;color:#c6d4d2;font-size:12px}
+@media(max-width:600px){.livePostPreview{padding:12px;gap:10px}.previewBody{max-height:150px}.previewMedia,.previewMedia img,.previewMedia video{max-height:165px}}
