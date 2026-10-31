@@ -2,13 +2,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { createClient } from "../../utils/supabase/client";
+import { useLiveDiscovery } from "../../lib/live-discovery-client";
 import LiveKitViewer from "../../components/LiveKitViewer";
 
 type Stream={id:string;title:string;room_name:string;visibility:string|null;started_at:string};
 const DISMISSED="1muslim-live-mini-dismissed";
 export default function HudHudLiveMiniPlayer(){
  const pathname=usePathname();
+ const discovery=useLiveDiscovery();
  const isBroadcastScreen=pathname==="/"||pathname.startsWith("/streaming")||pathname.startsWith("/live");
  const [position,setPosition]=useState({x:0,y:0});
  const drag=useRef<{x:number;y:number;ox:number;oy:number}|null>(null);
@@ -24,33 +25,29 @@ export default function HudHudLiveMiniPlayer(){
  const [loading,setLoading]=useState(true);
  const hadLive=useRef<boolean|null>(null);
  const dismissed=useRef(false);
- const supabase=useRef(createClient());
+
  useEffect(()=>{
   dismissed.current=sessionStorage.getItem(DISMISSED)==="yes";
-  let active=true;
-  const load=async()=>{
-   const {data,error}=await supabase.current.from("live_streams")
-    .select("id,title,room_name,visibility,started_at")
-    .eq("status","live").eq("visibility","public")
-    .gte("last_heartbeat_at",new Date(Date.now()-60_000).toISOString())
-    .order("started_at",{ascending:false}).limit(1);
-   if(!active||error)return;
-   const current=(data?.[0]??null) as Stream|null;
-   const isLive=!!current;
-   // Dismissal applies to the entire current live period, not just one host.
-   if(!isLive && hadLive.current===true){dismissed.current=false;sessionStorage.removeItem(DISMISSED);dismissWithMotion(true)}
-   if(isLive && hadLive.current===false && !dismissed.current){setOpen(true);setMinimized(false)}
-   if(hadLive.current===null && isLive && !dismissed.current){setOpen(true)}
-   hadLive.current=isLive;
-   if(isLive){setStream(old=>old?.id===current?.id?old:current)}
-   else setStream(null);
-   setInitialized(true);setLoading(false);
-  };
-  void load();
-  const timer=window.setInterval(()=>void load(),10000);
-  const channel=supabase.current.channel("hudhud-global-live-alert").on("postgres_changes",{event:"*",schema:"public",table:"live_streams"},()=>void load()).subscribe();
-  return()=>{active=false;window.clearInterval(timer);void supabase.current.removeChannel(channel)};
- },[]);
+  const previous=stream;
+  const previousState=previous?.id?discovery.presence[previous.id]?.state:undefined;
+  // An existing viewer stays connected during temporary host turbulence.
+  if(previous && previousState==="RECONNECTING"){
+   setInitialized(true);setLoading(false);return;
+  }
+  const ready=discovery.lives.find(x=>x.id===previous?.id)??discovery.lives[0];
+  const current=ready?{id:ready.id,title:ready.title,room_name:ready.room_name,visibility:"public",started_at:ready.started_at}:null;
+  const isLive=!!current;
+  if(!isLive && hadLive.current===true && discovery.ready){
+   dismissed.current=false;sessionStorage.removeItem(DISMISSED);dismissWithMotion(true);
+  }
+  if(isLive && hadLive.current===false && !dismissed.current){setOpen(true);setMinimized(false)}
+  if(hadLive.current===null && isLive && !dismissed.current)setOpen(true);
+  if(discovery.ready)hadLive.current=isLive;
+  if(isLive)setStream(old=>old?.id===current.id?old:current);
+  else if(discovery.ready)setStream(null);
+  setInitialized(discovery.ready);setLoading(!discovery.ready);
+ },[discovery.lives,discovery.presence,discovery.ready]);
+
  const close=()=>{dismissed.current=true;sessionStorage.setItem(DISMISSED,"yes");dismissWithMotion()};
  if(isBroadcastScreen||!initialized||loading||!open||!stream)return null;
  return <aside className={"hudhud-live-mini"+(minimized?" is-minimized":"")+(exiting?" is-exiting":"")+(endedNotice?" is-live-ended":"")} aria-label="Live stream notification" data-no-translate="true" style={{transform:`translate3d(${position.x}px,${position.y}px,0)`,touchAction:"pan-y"}}>

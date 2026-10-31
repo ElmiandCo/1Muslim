@@ -187,3 +187,172 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 - **Follow-up placement commit:** `52efa28e69c104e4a62f3c4f4637670c5de0fa2a`.
 - **Static safety review:** No React tree remount, `srcObject` reassignment, media acquisition, `getUserMedia`, `publishTrack`, `unpublishTrack`, End Live API, recording or viewer changes in Bot B commit. Existing `frontCamera` `scaleX(-1)` transform remains separate from the new image `scale`/`rotate` longhands.
 - **Verification required before merge:** Confirm newest Bot B Vercel preview is READY; test on real iPhone Safari (including notch/safe area, portrait/landscape, short screen), desktop stage placement, continuous track identity and audio during Desktop↔Phone↔Voice, rapid mode switching, End Live terminal notice, reconnect and refresh. A green build alone does **not** establish those runtime results. Do not merge or promote to production automatically.
+
+
+---
+
+## 1MuslimLive2.0 — Bot A backend implementation (2026-10-31)
+
+**Strict scope:** No UI/CSS/layout/animation/navigation changes. Isolated branch `1MuslimLive2.0` (base: main at initial spec commit `e258315dc2f857f5ef8a8fc99278fbbfa3bc2ba2`). No merge or production promotion.
+
+### Bot A commits, in order
+1. `43df59322af333bb1d0944fd131760f47de02201` — `supabase/migrations/20261031052500_live_2_event_presence.sql`: RLS-protected live_presence, private observation and webhook dedupe tables, service-role-only transactional snapshot RPC, monotonic version on state changes, terminal-status trigger, Supabase Realtime publication.
+2. `dff029f08a4d52b82f2d1f4dfe8863ebad2eba0a` — `lib/live-presence.ts`: server-side host track classification.
+3. `4b43571cb5cd3dee82a1679d49b864c25cee12e8` — `scripts/live-presence.test.mjs`: five readiness classification tests.
+4. `4f5dc133d9cf78bfdf0002319d20fd72eb3164b6` — `app/api/livekit/webhook/route.ts`: raw-body signature verification with LiveKit WebhookReceiver, host identity check, current LiveKit room participant/track snapshot, idempotent ordered DB RPC. Viewer/guest events cannot promote a Live.
+5. `315c54230aa72eeda9feedac4389ea126d3feda1` — `app/api/live-discovery/route.ts`: public, 1-second CDN-cacheable snapshot of verified READY_AUDIO/READY_VIDEO broadcasts; fails closed if DB/migration unavailable.
+
+### Design and safety
+- READY only after LiveKit reports a connected host and at least one published audio/video track. Guest and viewer media do not qualify. Audio-only streams are first-class.
+- Webhook is verified against LIVEKIT_API_KEY/SECRET, not a browser-supplied isLive flag. Event IDs are deduplicated. Snapshot observations are ordered and state transitions serialized with live_streams row locks; ENDED is terminal and wins over late webhook observations.
+- Existing `POST /api/live-end` and host fallback update live_streams.status; the new SQL trigger atomically changes presence to ENDED. The room close remains best-effort.
+- Public realtime RLS restricts presence to public streams (or stream host). Observations and webhook events are not exposed to viewers. Discovery returns only public streams.
+- No extra per-viewer polling was added. Existing 2-second polling in `components/LiveKitViewer.tsx` and 5-second polling in `app/streaming/page.tsx` remain until Bot B replaces them.
+- Do not enable this endpoint in production until migration and LiveKit webhook URL are configured. New webhook URL: `https://<deployment-host>/api/livekit/webhook`. LiveKit must be configured to POST signed webhooks to it.
+
+### Verification
+- Inspected production main's live-end, live-heartbeat, live-mode, livekit/token, live-alert, streaming discovery and LiveKitViewer code before changes.
+- Node v22.16.0: `node --experimental-strip-types --test scripts/live-presence.test.mjs` — 5/5 passed on a local copy of the committed helper and tests.
+- **NOT verified:** SQL migration execution on Supabase, Next.js TypeScript build, Vercel preview READY, webhook delivery/signature end-to-end, LiveKit real rooms, browser/iPhone latency, performance at 1k viewers. Do not claim the target latencies as measured.
+- Database migration is not applied by a GitHub commit alone. No live data was modified.
+
+### Bot B integration priorities
+1. Check branch HEAD and this handoff before modifying. Preserve Bot A files. Run Next build and inspect Vercel preview; fix any type/schema errors.
+2. Wire eligible Live-capable surfaces to `GET /api/live-discovery` initial snapshot + Supabase `live_presence` Realtime changes. Use version/session_id to ignore stale updates, and one multiplexed subscription rather than repeated per-viewer queries. Preserve ALL existing UI and styling.
+3. Replace 2-second `LiveKitViewer` terminal polling and 5-second streaming discovery polling with realtime events; use bounded exponential backoff/jitter only when disconnected. Keep host LiveKit packet for fastest explicit End Live.
+4. Verify signed-out discovery, host audio-only, screen share, viewer refresh, mode switching, host disconnect/reconnect, explicit End Live, out-of-order events, and room recreation. Test that reconnecting streams are removed from new discovery but existing viewers remain in their room.
+5. Configure and test the LiveKit webhook on preview only when authorized. The webhook endpoint cannot work without its URL configured at LiveKit and the migration applied to the relevant Supabase environment.
+6. Add a server-side periodic reconciliation/watchdog for missed webhooks and stale READY entries; current existing 75-second stale-stream cron remains an emergency terminal fallback. Do not confuse 15-second heartbeat with viewer latency.
+7. Assess security: service-role-only RPC, public/private visibility, anon subscriptions, database table growth and webhook event retention. Add pruning for webhook event dedupe rows and load tests.
+8. Measure actual p50/p95/p99 event latency. Targets (<1s start, <500ms End Live, 1–2s disconnect notice) are **not guarantees**; silent network loss may exceed 2s.
+9. No merge, no production deployment, no UI changes without explicit approval.
+
+
+---
+
+## 1MuslimLive2.0 — Bot B verified discovery integration (2026-10-31)
+
+### Isolation, review, and production safety
+- Bot A starting head: `24a17649bfb486a02d0a92bc5acc58ca727c93ac` on `1MuslimLive2.0`.
+- Bot B isolated follow-up branch: `bot-b/live2-discovery-integration-20261031`.
+- **Draft stacked PR #200:** https://github.com/ElmiandCo/1Muslim/pull/200 — base is `1MuslimLive2.0`, **not** `main`. Do not merge/deploy without approval.
+- Bot A backend commits/migration/webhook were preserved. Bot B did not edit CSS, JSX presentation, layout, visual effects, buttons, navigation, or animations. The only changes are TS data/control logic, verified snapshot API metadata/cache, tests, and this handoff.
+- `main` had advanced since the original Bot A base; review/reconcile main changes before any future merge. No production changes performed.
+
+### Implementation
+1. `lib/live-discovery-client.ts` — one browser-wide `useSyncExternalStore` subscription to `live_presence` Realtime, shared by eligible screens. Subscribe-before-snapshot recovery, version/session guards, terminal event handling, CDN-backed initial snapshot, short retry after READY to account for cache staleness, visibility/focus refresh, cleanup, bounded jittered 2→4→8→16→30s recovery **only while realtime is unavailable**. A small capped retry also handles transient snapshot failures.
+2. `lib/live-discovery-state.ts` — pure `isDiscoverableLive` and monotonic terminal-state guards. READY_AUDIO and READY_VIDEO qualify; STARTING, RECONNECTING, ENDED do not.
+3. `app/components/ImmersiveVideoEntry.tsx` — signed-out/signed-in For You discovery now consumes verified READY streams, not raw `status=live`; removes its previous 3s discovery polling and preserves the currently playing stream during RECONNECTING (not for new viewers).
+4. `app/streaming/page.tsx` — verified discovery replaces 5s `live_streams` polling; retains profile lookups and selected stream across list reorder/temporary reconnect.
+5. `app/components/LiveNowFocus.tsx` — Live focus and carousel consume verified READY streams immediately; existing 10s refresh of **non-Live scheduling/curated content** remains. Keep the selected item stable as new Lives arrive.
+6. `app/components/HudHudLiveMiniPlayer.tsx` — shared verified discovery replaces 10s Live polling; existing mini-player stays attached during host RECONNECTING.
+7. `components/LiveKitViewer.tsx` — replace per-viewer 2s terminal-state polling with `live_presence` INSERT/UPDATE + existing `live_streams` UPDATE and LiveKit host terminal packet. Initial/visibility checks remain; capped jittered status recovery occurs only when subscriptions fail. Explicit ENDED is terminal.
+8. `app/api/live-discovery/route.ts` — add `scheduled_end_at` required by existing streaming UI; public CDN cache `s-maxage=1`, no stale-while-revalidate beyond that.
+
+### Bot B code commits
+- `7ef887ebb668` — shared realtime discovery store.
+- `4cbc85f92e54` — scheduled-end snapshot field.
+- `1106fb07f10d` — For You integration and reconnect retention.
+- `79273b16bd16` — streaming page integration.
+- `959227030831` — HudHud mini-player integration.
+- `b09c7b004fa3` — LiveNowFocus integration.
+- `118288184908` — LiveKitViewer terminal/reconnect polling replacement.
+- `1be458f5e63b` — lazy browser client and recovery cleanup.
+- `9a504f1c6c43` — preserve carousel active item.
+- `a1e2e833b4a1` — preserve selected stream on streaming page.
+- `2b9e7669a25d`, `b393c71ed253` — CDN cache request and response semantics.
+- `9ec3b174c2dd` — fix strict TypeScript nullable channel declaration after Vercel exposed compile error.
+- `61b9d41e3a15`, `289d9ce8df80`, `a3d886346fbb` — pure event guards and four state tests.
+- `d5449fc881bd` — ignore stale subscription callbacks.
+- `fdcfc1d4036d` — prevent stale in-flight snapshot requests blocking a new subscription generation.
+
+### Checks actually performed
+- Node v22.16.0, `node --experimental-strip-types --test scripts/live2-discovery-state.test.mjs`: **4/4 passed** on a local copy of the committed pure state module and equivalent test assertions (READY_AUDIO/VIDEO, duplicates, delayed events, terminal resurrection, session mismatch, invalid versions).
+- Source-level integration assertions: **10/10 passed** (verified feed, streaming, focus, mini-player, viewer presence events, no 2s/3s/5s/10s discovery polling, shared subscription and bounded jitter).
+- Vercel preview for commit `9ec3b174c2dd` was **READY**. Intermediate commits `1be458f5` through `b393c71e` were **ERROR** because the nullable Supabase channel type was invalid; fixed in `9ec3b174`. Later preview builds must be checked by exact SHA; **do not infer final head READY from an earlier commit**.
+- No real device, real LiveKit host/viewer session, signed-out runtime, SQL migration execution, webhook delivery, or measured latency/load test was performed. Source checks are not runtime validation.
+
+### Blocking operational prerequisites and risks
+1. **Apply migration to isolated Supabase preview only after approval**: `supabase/migrations/20261031052500_live_2_event_presence.sql`. Register the **signed** LiveKit webhook URL for that environment. Without both, the verified discovery endpoint deliberately fails closed (no unverified Lives). No migration/webhook was applied by Bot B.
+2. **Add server-side missed-webhook reconciliation/watchdog and dedupe retention cleanup** before claiming robust lifecycle recovery; an orphaned READY presence record can remain until existing stream-status cron terminates it.
+3. **Test public RLS + Supabase Realtime** for anonymous and signed-in subscribers; confirm event INSERT/UPDATE payloads include stream_id/version/session_id and delivery latency under load. Realtime Postgres Changes fanout can have per-subscriber RLS costs even without database polling.
+4. **Test real devices**: iPhone Safari/desktop, audio-only, video, screen share, host End Live, host crash/airplane mode, reconnect, viewer refresh, rapid mode changes, browser autoplay and signed-out For You. No sub-second or 1–2s claims are proven.
+5. **Measure p50/p95/p99 and load** with 1k/10k subscribers, cache hit rates, DB reads, fanout costs and reconnect storms. Snapshot caching is one second, so first discovery may require a retry if the first cached snapshot predates READY.
+6. **Remaining independent polling:** For You live-chat messages still refresh every 2s while displayed; viewer count refreshes every 5s; Live focus scheduling/curated data refreshes every 10s. These are **not** Live status polling and should be evaluated separately for scale.
+7. Keep PR #200 **draft/not merge-ready** until migration/webhook are verified in preview, newest Vercel build is READY, and host/viewer runtime QA passes. No production deployment.
+
+
+
+### Final Bot B readiness refinement
+- `4f0225db5b3e` — LiveKit track classification now ignores `muted: true` tracks. A published-but-muted camera is **not** READY_VIDEO; if microphone remains active, the stream is READY_AUDIO. This prevents advertising known-unplayable video as a healthy Live. No visual/host-studio changes.
+- `ad21721b4ccb` — three regression tests for muted camera, active audio with muted camera, and muted microphone.
+- Node v22.16.0, `node --experimental-strip-types --test scripts/live-presence.test.mjs scripts/live2-discovery-state.test.mjs` — **12/12 passed** using local copies of the committed helpers and equivalent tests (8 readiness + 4 monotonic-state cases).
+- Vercel preview for core integration commit `fdcfc1d4036d` reached **READY**. Recheck the final docs/test head before claiming it is READY. No end-to-end LiveKit or device runtime QA.
+- Diff from Bot A `1MuslimLive2.0` to Bot B: **no CSS files and no host Go Live studio file modified**. Draft PR #200 remains the review boundary.
+
+---
+
+## Bot B continuation — stalled Realtime recovery and cross-session safety (2026-10-31)
+
+**Review boundary:** draft PR #200 (branch `bot-b/live2-discovery-integration-20261031`, based on `1MuslimLive2.0`). Read Bot A's backend commits and spec, current `main`, PR #193, and the previous Bot B handoff before editing. At inspection, `1MuslimLive2.0` was **2 commits behind main**; reconcile before final merge. No changes to host studio, CSS, JSX presentation, animations, navigation, or production.
+
+### New commits, in order
+1. `57827bb2c93d110aa0df13cadad699d019f1ad3b` — reject malformed `live_presence.state` payloads before updating shared discovery.
+2. `63d956f437c9c9394eab5f3d477b7e61300de3e8` — viewer now uses the shared version/session/terminal guard instead of accepting a higher-version event from an unrelated session.
+3. `6aebe6cdfbe9f38f12bb2458144a1f0f5e9eff19` — one-shot 8-second watchdog for a shared discovery Realtime channel that never acknowledges `SUBSCRIBED`; detach the stalled channel and enter existing bounded jittered snapshot/reconnect recovery. On visibility resume, ensure disconnected subscriptions enter fallback. **No steady-state polling while subscribed.**
+4. `a90bb4968b53e3e9c332af2dbddaacd93f939bd2` — regression test for malformed state events.
+5. `dab280b1562fae3758a2e3a600d39a017129144f` — one-shot 8-second watchdog for a LiveKitViewer terminal/presence subscription that hangs without a status callback. Only while subscription is incomplete, start existing capped recovery checks; clear watchdog after both subscriptions succeed or component unmounts.
+
+### Checks actually performed
+- Node v22.16.0, `node --experimental-strip-types --test scripts/live2-discovery-state.test.mjs`: **5/5 passed**, on a local copy matching the committed pure state helper and equivalent test assertions. This is **not** a full repository test run.
+- GitHub Vercel commit status for `dab280b1`: **success**; Vercel deployment `dpl_3uuddx9aVVBzKZ7iyCjnRcNa4z6z` explicitly reports **READY** and references that exact commit. This verifies a preview build, not a real Live session.
+- All changes were restricted to `lib/live-discovery-state.ts`, `lib/live-discovery-client.ts`, `components/LiveKitViewer.tsx`, `scripts/live2-discovery-state.test.mjs`, and this handoff. No visual or production changes requested or performed.
+
+### Still blocked / next Bot A and Bot B priorities
+- Apply SQL migration only to a separately authorized **preview** Supabase environment, then configure and verify signed LiveKit webhook delivery there; otherwise the new discovery route fails closed. No migration or webhook configuration was changed in this run.
+- Add a server-side reconciliation/watchdog for missed webhook events, stale READY state, and retention/pruning of dedupe events; preserve explicit ENDED terminal semantics and temporary reconnect grace.
+- Confirm anonymous RLS/Realtime access and test real host/viewer sessions: video, audio-only, screen share, signed-out For You, viewer refresh, explicit End Live, host crash, recovery, room recreation, rapid mode changes, and Safari autoplay.
+- Measure p50/p95/p99 start/end/disconnect delivery and 1k/10k viewer load; none measured here. Live chat 2s polling, viewer count 5s polling, and scheduled-content 10s polling remain separate from Live discovery.
+- **PR #200 remains draft and NOT merge-ready**. Do not merge, deploy, or modify the UI without explicit approval.
+
+---
+
+## Bot B — All Streams integration and preview safety review (2026-10-31)
+
+### Scope and branch
+- Worked exclusively on `bot-b/live2-discovery-integration-20261031` / draft PR #200; base is `1MuslimLive2.0`. No production merge, deployment, database migration, or secret mutation.
+- Read Bot A's current base handoff and Live 2.0 specification, PR #200 and legacy PR #193. Preserved existing event-driven discovery, LiveKit viewer and host studio behavior.
+- Integrated Bot A's verified hub backend **without overwriting Bot B's newer realtime changes**:
+  - `b4d519fe`: `lib/live-hub.ts`
+  - `f0d03f1f`: `app/api/live-hub/route.ts`
+  - `06c7ae3e`: `scripts/live-hub.test.mjs`
+- Integrated missing Bot A hardening from the newer base:
+  - `046f2625`: signed LiveKit webhook route with observation timestamps captured before provider snapshots
+  - `d348be01`: monotonic SQL snapshot ordering and STARTING/RECONNECTING handling
+  - `3403c631`: optional authenticated server reconciliation watchdog route
+  - `45d74706`: reconciliation candidate and bounded webhook-dedupe cleanup SQL helpers
+- All above were copied from Bot A's current base file contents. Bot B's existing `lib/live-presence.ts` muted-track readiness and realtime client logic were **not replaced**.
+
+### Approved legacy All Streams page
+- `7d457859` and `23f9b129`: enhanced the **existing** `/streaming` page (no competing new route) with a legacy emerald/gold design, section navigation, Current Lives, verified Audio Rooms, real Games-tagged Lives, upcoming Scheduled Lives, and genuine public Past Live replays.
+- The page consumes `GET /api/live-hub` for public schedule/replay discovery; active Lives, Audio and Games use the existing shared `useLiveDiscovery` READY-only realtime store. The hub snapshot is refreshed on state changes/visibility return, **not fixed-interval browser polling**.
+- Current Live and audio/game cards link to existing `/streaming/live/{id}`; replays link to `/streaming/replay/{id}`. Before navigating, the page records scroll position in session storage and restores it on return.
+- Replaced admin-only Past Lives listing with public-only uploaded replay contract; no synthetic archive from an ended stream without an actual recording. No fake Games broadcasts. Schedule creation reuses `/streaming/go-live?schedule=1`.
+- No changes to For You presentation, Profile, Qur'an, host `/streaming/go-live`, LiveKit player, or camera animations. **The only UI code touched is the approved `app/streaming/page.tsx`.**
+
+### Actual verification
+- Local Node 22.16.0: `node --experimental-strip-types --test scripts/live-hub.test.mjs` — **6/6 passed** (public READY, audio-only, stale/invalid, actual archive, schedule expiry, Games classification). Pure unit tests; not LiveKit end-to-end.
+- Also ran the combined local Node 22.16.0 suite: `node --experimental-strip-types --test scripts/live-hub.test.mjs scripts/live-presence.test.mjs scripts/live2-discovery-state.test.mjs` — **19/19 passed**, covering hub classification, muted media readiness, monotonic event ordering, session isolation and terminal-state protection. Tests execute pure source logic; no real provider session.
+- Vercel preview for UI commit `7d457859` reported **READY**, validating Next.js build and type checks for that page. Newer head status must be checked before declaring the *entire* integrated branch READY.
+- Verified Vercel Preview environment has names `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`; **did not retrieve/decrypt or expose values**. `CRON_SECRET` is **not configured**, so the optional reconciliation endpoint deliberately returns 503.
+- Supabase connection exposed only project `SecureApp` and **zero development branches**. No confirmed isolated preview database exists. To avoid touching what may be production data, **no SQL migration or live webhook test was run** against that project. Preview environment variables existing does not prove they point to an isolated database.
+- LiveKit Cloud webhook registration/delivery could not be inspected with available connected tools. Source statically verifies raw-body signed webhook receiver and host identity check, but a real signed webhook was **not delivered/tested**.
+- No two-device host/viewer LiveKit session, iPhone Safari, signed-out runtime playback, or p50/p95/p99 latency/load test was performed. **Do not claim sub-second targets met.**
+
+### Blocking acceptance checklist
+1. Provision or identify an isolated Supabase preview branch/project, then apply `20261031052500_live_2_event_presence.sql` and `20261031055000_live_2_reconciliation_helpers.sql` **only there**; validate schema/RLS, RPC authorization and Realtime publication.
+2. Confirm LiveKit Cloud's preview webhook destination points to the preview deployment, send authentic signed events, test duplicate/out-of-order, host track READY_AUDIO/READY_VIDEO, host End Live, disconnect/reconnect, and room recreation.
+3. Set a preview-only `CRON_SECRET` and schedule reconciliation **only after** isolated preview DB/LiveKit room are verified. Test watchdog and dedupe retention without touching production.
+4. Run real iPhone Safari and desktop host/viewer/signed-out flows; measure end-to-end latency and 1k/10k fanout, verify audio autoplay fallback and full-screen viewer return scroll.
+5. GoLive category selector currently lacks Games; only actual Games-tagged Lives can appear. A separately approved minimal host category control is needed for first-class game stream creation.
+6. Reconcile branch divergence against latest `main` and Bot A base before merge, preserving all existing UI freezes. **Do not merge/deploy without user approval.**
