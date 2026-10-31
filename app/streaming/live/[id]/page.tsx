@@ -47,9 +47,10 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
     </main>
   );
 
-  const heartbeatFresh = !stream.last_heartbeat_at || (Date.now() - new Date(stream.last_heartbeat_at).getTime() < 75_000);
+  // A stale heartbeat is a reconnecting host, not proof that the broadcast ended.
+  // Preserve the same room for viewers refreshing while the host reconnects.
   const scheduleStillActive = !stream.scheduled_end_at || new Date(stream.scheduled_end_at).getTime() > Date.now();
-  const isLive = stream.status === "live" && heartbeatFresh && scheduleStillActive;
+  const isLive = stream.status === "live" && scheduleStillActive;
   const effectiveEndedAt = stream.ended_at ?? (stream.scheduled_end_at && new Date(stream.scheduled_end_at).getTime() <= Date.now() ? stream.scheduled_end_at : stream.last_heartbeat_at);
   const { data: { user } } = await supabase.auth.getUser();
   const { data: adminRow } = user ? await supabase.from("admin_users").select("user_id").eq("user_id",user.id).maybeSingle() : { data: null };
