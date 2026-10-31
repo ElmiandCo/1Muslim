@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import ReconnectTrivia from "../app/components/ReconnectTrivia";
 import ShareLiveButton from "../app/components/ShareLiveButton";
 import LiveLightOverlay from "./LiveLightOverlay";
+import LiveGuestsStage, {useLiveGuestRoster} from "./LiveGuestsStage";
 
 export default function LiveKitViewer({ roomName, streamId, embedded = false }: { roomName: string; streamId?: string; embedded?: boolean }) {
   const router=useRouter();
@@ -48,6 +49,9 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const [voiceName,setVoiceName] = useState("1Muslim Creator");
   const [voiceEnergy,setVoiceEnergy] = useState(0);
   const hostIdRef=useRef<string|null>(null);
+  const [hostIdentity,setHostIdentity]=useState<string|null>(null);
+  const guestStageMode=hasCameraVideo||hasScreenVideo?"video":isAudioBroadcast||hasRemoteAudio?"audio":"video";
+  const guestRoster=useLiveGuestRoster(roomRef,connectionActive,hostIdentity,guestStageMode==="audio"?11:3);
   const hostEndSignalRef=useRef<()=>void>(()=>{});
   const voiceAnalyzerCleanupRef=useRef<(()=>void)|null>(null);
   const voiceAudioContextRef=useRef<AudioContext|null>(null);
@@ -61,6 +65,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       const {data:stream}=await db.from("live_streams").select("host_id,aspect_ratio").eq("id",streamId).maybeSingle();
       if(cancelled||!stream)return;
       hostIdRef.current=stream.host_id;
+      setHostIdentity(stream.host_id);
       setIsAudioBroadcast(stream.aspect_ratio==="1:1");
       const {data:profile}=await db.from("profiles").select("*").eq("id",stream.host_id).maybeSingle();
       if(cancelled||!profile)return;
@@ -183,6 +188,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
     const attachTrack = (track: any, source?: string, participantIdentity?: string) => {
       if (!mounted) return;
       if (track.kind === Track.Kind.Video) {
+        // Guest cameras belong in independent tiles, never overwrite the host camera.
+        if(participantIdentity&&hostIdRef.current&&participantIdentity!==hostIdRef.current)return;
         const isScreen = source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShare;
         const element = isScreen ? screenVideoRef.current : videoRef.current;
         if (!element) return;
@@ -256,8 +263,9 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
         const room = new Room({ adaptiveStream: false, dynacast: true });
         roomRef.current = room;
         room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => attachTrack(track, publication.source, participant.identity));
-        room.on(RoomEvent.TrackUnsubscribed, (track, publication) => {
+        room.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
           if (track.kind === Track.Kind.Video) {
+            if(participant?.identity&&hostIdRef.current&&participant.identity!==hostIdRef.current)return;
             const isScreen = publication.source === Track.Source.ScreenShare;
             const element = isScreen ? screenVideoRef.current : videoRef.current;
             // Never remove React-owned video elements on LiveKit unsubscribe.
@@ -386,17 +394,14 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   };
 
   return (
-    <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:"16/9",overflow:"hidden"}}>
+    <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:guestStageMode==="audio"?"4/5":"16/9",overflow:"hidden"}}>
       {hostEnded&&<div role="status" aria-live="assertive" className="omHostEndedNotice"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>{embedded?"Closing your floating player…":"Taking you Home…"}</small><button type="button" onClick={()=>{if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));else router.replace("/")}}>Go Home now →</button></div>}
-      <div className="omLiveVideoStage" data-screen={hasScreenVideo?"yes":"no"} data-layout={hasScreenVideo&&hasCameraVideo?shareLayout:"solo"}>
-        <video ref={videoRef} className="omCameraVideo" autoPlay muted playsInline controls={!embedded} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block"}} />
-        <video ref={screenVideoRef} className="omScreenVideo" autoPlay muted playsInline aria-label="Shared screen" style={{display:hasScreenVideo?"block":"none"}} />
-      </div>
-      {((isAudioBroadcast||hasRemoteAudio)&&!hasCameraVideo&&!hasScreenVideo)&&<div className="omVoiceViewerStage" aria-label="Live audio avatar">
-        <div className="omVoiceViewerAura" style={{transform:"scale("+(1+voiceEnergy*.28)+")"}}/>
-        <div className="omVoiceViewerPortrait" style={{transform:"scale("+(1+voiceEnergy*.1)+")"}}>{voiceAvatar?<img src={voiceAvatar} alt="" referrerPolicy="no-referrer"/>:<span aria-hidden="true">✧</span>}</div>
-        <strong>{voiceName}</strong><small>{hasRemoteAudio?"● Audio Live":"Connecting to host audio…"}</small>
-      </div>}
+      <LiveGuestsStage mode={guestStageMode} guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostSpeaking={voiceEnergy>.12}>
+        <div className="omLiveVideoStage" data-screen={hasScreenVideo?"yes":"no"} data-layout={hasScreenVideo&&hasCameraVideo?shareLayout:"solo"}>
+          <video ref={videoRef} className="omCameraVideo" autoPlay muted playsInline controls={!embedded} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block"}} />
+          <video ref={screenVideoRef} className="omScreenVideo" autoPlay muted playsInline aria-label="Shared screen" style={{display:hasScreenVideo?"block":"none"}} />
+        </div>
+      </LiveGuestsStage>
       {hostConnecting&&!hostEnded&&<div className="omHostReconnecting" role="status" aria-live="polite">Host connection interrupted · Reconnecting…</div>}
       {audioNeedsGesture&&hasRemoteAudio&&!hostEnded&&<div role="status" aria-live="polite" style={{position:"absolute",bottom:65,left:12,zIndex:9,color:"#fff",background:"#0c2923e8",border:"1px solid #9ce9c2",borderRadius:12,padding:"8px 12px",fontSize:12,pointerEvents:"none"}}>🔊 Tap “Hear Live” below to enable host audio</div>}
       <div ref={audioContainerRef} />
