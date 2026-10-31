@@ -168,6 +168,7 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 
 - **Starting point:** production `main` merge `21667cab863693b1ab02963c7b3d6423bf35b956`.
 - **Branch:** `bot-a/live-cinematic-zoom-tilt-fullbleed-20261031`.
+- **Pull request:** [#195](https://github.com/ElmiandCo/1Muslim/pull/195) (draft, against `main`; Bot B should branch from this head and open a dependent PR).
 - **Implementation commit:** `d8741320ec034dd57381f23607ba239d9a3d3e04`.
 - **File:** `app/streaming/go-live/page.tsx` only for runtime changes.
 - Replaced direct child video geometry with an always-mounted `.studioCameraFrame` clip wrapper. The frame animates position, width, height, border radius, and slight rotation over 2 seconds. The existing `<video ref={videoRef}>` remains a single persistent DOM node, with independent `scale` and `rotate` CSS longhands for image zoom/tilt while preserving the `frontCamera` CSS mirror transform. No media track or LiveKit changes.
@@ -179,7 +180,7 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 
 ## 2026-10-31 — Bot B viewport cascade / cinema placement polish
 
-- **Dependency:** Bot A PR #195, branch `bot-a/live-cinematic-zoom-tilt-fullbleed-20261031`, head `877229a25b1a9cf955e4b96ec37634bfe86d7f8f`. Bot B branched from that exact head, preserving the persistent camera-frame wrapper and media-track continuity.
+- **Dependency:** Bot A PR #195, branch `bot-a/live-cinematic-zoom-tilt-fullbleed-20261031`, initial head `877229a25b1a9cf955e4b96ec37634bfe86d7f8f` (Bot A subsequently added documentation commit `25d352952630ead1e218dcb3beb7535c8ed9e1b6`; its PR #195 link was also copied into this handoff). Bot B branched from that exact implementation head, preserving the persistent camera-frame wrapper and media-track continuity.
 - **Bot B branch:** `bot-b/live-cinema-viewport-polish-20261031`.
 - **Code commit:** `c21d84028f6a0e7546974ef46ba87fe33f9eb923`.
 - **Root-cause fix:** Earlier CSS still declares `.preview.studioTransform` at `height:calc(100dvh - 74px - safe-area)` with `!important` and a more specific selector than Bot A's later generic `.preview` rule. That legacy declaration can still win in Safari and truncate the Phone stage. Bot B overrides the **exact** `.preview.studioTransform` and per-mode selectors after the legacy blocks: on mobile, preview is exactly `100dvh` (no footer/safe-area subtraction); on desktop, it fills 100% of its stage panel. The Phone camera frame remains edge-to-edge behind bottom overlay controls.
