@@ -281,3 +281,11 @@ Review and merge **in that order only**, retargeting each downstream PR to `main
 6. **Remaining independent polling:** For You live-chat messages still refresh every 2s while displayed; viewer count refreshes every 5s; Live focus scheduling/curated data refreshes every 10s. These are **not** Live status polling and should be evaluated separately for scale.
 7. Keep PR #200 **draft/not merge-ready** until migration/webhook are verified in preview, newest Vercel build is READY, and host/viewer runtime QA passes. No production deployment.
 
+
+
+### Final Bot B readiness refinement
+- `4f0225db5b3e` — LiveKit track classification now ignores `muted: true` tracks. A published-but-muted camera is **not** READY_VIDEO; if microphone remains active, the stream is READY_AUDIO. This prevents advertising known-unplayable video as a healthy Live. No visual/host-studio changes.
+- `ad21721b4ccb` — three regression tests for muted camera, active audio with muted camera, and muted microphone.
+- Node v22.16.0, `node --experimental-strip-types --test scripts/live-presence.test.mjs scripts/live2-discovery-state.test.mjs` — **12/12 passed** using local copies of the committed helpers and equivalent tests (8 readiness + 4 monotonic-state cases).
+- Vercel preview for core integration commit `fdcfc1d4036d` reached **READY**. Recheck the final docs/test head before claiming it is READY. No end-to-end LiveKit or device runtime QA.
+- Diff from Bot A `1MuslimLive2.0` to Bot B: **no CSS files and no host Go Live studio file modified**. Draft PR #200 remains the review boundary.
