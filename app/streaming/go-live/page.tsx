@@ -93,8 +93,58 @@ export default function GoLivePage() {
       }).catch(()=>void context.close().catch(()=>{}));
     }catch{/* Audio effects are optional; never block mode switching. */}
   };
+  const desiredStudioModeRef=useRef<"desktop"|"phone"|"voice">("phone");
+  const modeSyncQueueRef=useRef<Promise<void>>(Promise.resolve());
+  const syncPublishedCameraForMode=async(mode:"desktop"|"phone"|"voice",allowCamera:boolean)=>{
+    const room=roomRef.current;
+    if(!room||!liveStreamIdRef.current||endRequestedRef.current||desiredStudioModeRef.current!==mode)return;
+    const cameraPublications=()=>[...room.localParticipant.videoTrackPublications.values()]
+      .filter(publication=>publication.source===Track.Source.Camera&&publication.track);
+    if(mode==="voice"){
+      for(const publication of cameraPublications()){
+        if(publication.track)await room.localParticipant.unpublishTrack(publication.track,false);
+      }
+      if(desiredStudioModeRef.current==="voice")streamRef.current?.getVideoTracks().forEach(track=>{track.enabled=false;});
+      return;
+    }
+    const stream=streamRef.current;
+    if(!stream)return;
+    if(!allowCamera){stream.getVideoTracks().forEach(track=>{track.enabled=false;});return;}
+    let videoTrack=stream.getVideoTracks().find(track=>track.readyState==="live");
+    if(!videoTrack){
+      // Voice may have started with microphone-only permission. Add camera
+      // without replacing the active audio track or reconnecting the room.
+      const cameraStream=await navigator.mediaDevices.getUserMedia({
+        audio:false,
+        video:{facingMode:{ideal:facingMode},width:{ideal:mode==="desktop"?1280:720},height:{ideal:mode==="desktop"?720:1280}}
+      });
+      const acquired=cameraStream.getVideoTracks()[0];
+      if(!acquired)throw new Error("No camera track was returned.");
+      if(desiredStudioModeRef.current!==mode||roomRef.current!==room||endRequestedRef.current){acquired.stop();return;}
+      stream.addTrack(acquired);
+      rawCameraRef.current=acquired;
+      videoTrack=acquired;
+      refreshCameraCapabilities(acquired);
+      if(videoRef.current){
+        videoRef.current.srcObject=stream;
+        videoRef.current.muted=true;
+        videoRef.current.playsInline=true;
+        void videoRef.current.play().catch(()=>{});
+      }
+    }
+    if(desiredStudioModeRef.current!==mode||roomRef.current!==room||endRequestedRef.current)return;
+    videoTrack.enabled=true;
+    if(cameraPublications().length===0){
+      await room.localParticipant.publishTrack(videoTrack,{
+        source:Track.Source.Camera,simulcast:true,videoEncoding:{maxBitrate:3500000,maxFramerate:30}
+      });
+    }
+  };
   const selectStudioMode=(mode:"desktop"|"phone"|"voice")=>{
-    if(mode===studioMode)return;
+    const previousMode=desiredStudioModeRef.current;
+    if(mode===previousMode)return;
+    desiredStudioModeRef.current=mode;
+    const allowCamera=previousMode==="voice"||cameraOn;
     if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current);
     setStudioMorphing(false);
     requestAnimationFrame(()=>setStudioMorphing(true));
@@ -102,11 +152,26 @@ export default function GoLivePage() {
     playCameraAdjustSound(mode);
     setStudioMode(mode);
     setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
-    // Desktop <-> Phone is a pure geometry morph: keep the SAME camera track
-    // and video element running, with no black frame or reinitialization.
-    // Only Voice mode intentionally suppresses video transmission.
     if(mode==="voice"){setCameraOn(false);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=false);}
-    else if(studioMode==="voice"){setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
+    // Desktop ↔ Phone is geometry-only: keep the same camera track running.
+    else if(previousMode==="voice"){setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
+    if(roomRef.current&&liveStreamIdRef.current){
+      const streamId=liveStreamIdRef.current;
+      // Serialize camera and metadata updates; a slower older request must
+      // never overwrite the mode selected by a newer tap.
+      modeSyncQueueRef.current=modeSyncQueueRef.current.catch(()=>{}).then(async()=>{
+        if(desiredStudioModeRef.current!==mode)return;
+        await syncPublishedCameraForMode(mode,allowCamera);
+        if(desiredStudioModeRef.current!==mode||endRequestedRef.current)return;
+        const response=await fetch("/api/live-mode",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({streamId,mode}),cache:"no-store"
+        });
+        if(!response.ok)console.warn("Live mode metadata sync failed",response.status);
+      }).catch(error=>{
+        if(desiredStudioModeRef.current===mode)setError(error instanceof Error?error.message:"Could not switch camera mode.");
+      });
+    }
   };
   useEffect(()=>{
     let cancelled=false;
@@ -149,6 +214,7 @@ export default function GoLivePage() {
     }catch{setVoiceEnergy(0)}
     return()=>{stopped=true;cancelAnimationFrame(frame);source?.disconnect();if(context)void context.close().catch(()=>{})};
   },[studioMode,micOn,cameraReady]);
+  const [error, setError] = useState("");
   const [live, setLive] = useState(false);
   const [connectingLive,setConnectingLive] = useState(false);
   const [liveSeconds,setLiveSeconds] = useState(0);
@@ -158,6 +224,7 @@ export default function GoLivePage() {
   const launchTimerRef=useRef<ReturnType<typeof setInterval>|null>(null);
   const launchAudioRef=useRef<AudioContext|null>(null);
   const launchPendingRef=useRef(false);
+  const pendingVoiceLaunchRef=useRef(false);
   useEffect(()=>()=>{if(launchTimerRef.current)clearInterval(launchTimerRef.current);void launchAudioRef.current?.close().catch(()=>{})},[]);
   const playLaunchZoom=()=>{
     try{
@@ -193,7 +260,17 @@ export default function GoLivePage() {
   };
   const launchBroadcast=()=>{
     if(launchPendingRef.current||live||connectingLive||saving)return;
-    if(!cameraReady){void startPreview();return;}
+    if(!cameraReady){
+      if(studioMode==="voice"){
+        // A single Go Live tap requests microphone permission and launches
+        // as soon as audio-only preview becomes ready.
+        pendingVoiceLaunchRef.current=true;
+        launchPendingRef.current=true;
+        setLaunchVisual(true);playLaunchZoom();
+      }
+      void startPreview();
+      return;
+    }
     launchPendingRef.current=true;
     if(studioMode==="voice"){
       setLaunchVisual(true);playLaunchZoom();
@@ -213,8 +290,17 @@ export default function GoLivePage() {
     },1000);
   };
   useEffect(()=>{
+    if(!pendingVoiceLaunchRef.current)return;
+    if(error||studioMode!=="voice"){
+      pendingVoiceLaunchRef.current=false;launchPendingRef.current=false;setLaunchVisual(false);return;
+    }
+    if(!cameraReady||live||connectingLive)return;
+    pendingVoiceLaunchRef.current=false;
+    void startLive(false).finally(()=>{launchPendingRef.current=false;setLaunchVisual(false)});
+  },[cameraReady,studioMode,error,live,connectingLive]);
+  useEffect(()=>{
     if(live){launchPendingRef.current=false;setLaunchVisual(false);}
-    else if(!connectingLive&&launchPendingRef.current&&launchCountdown===null){launchPendingRef.current=false;setLaunchVisual(false);}
+    else if(!connectingLive&&launchPendingRef.current&&launchCountdown===null&&!pendingVoiceLaunchRef.current){launchPendingRef.current=false;setLaunchVisual(false);}
   },[live,connectingLive,launchCountdown]);
   useEffect(()=>{
     if(!live||!broadcastStartedAt){setLiveSeconds(0);return;}
@@ -305,7 +391,6 @@ export default function GoLivePage() {
     };
     void loadScheduled();
   }, []);
-  const [error, setError] = useState("");
   const [viewers, setViewers] = useState(0);
   const [viewerRosterOpen,setViewerRosterOpen]=useState(false);
   const [viewerRoster,setViewerRoster]=useState<Array<{id:string;username:string;avatar:string|null;xp:number|null}>>([]);
@@ -1078,21 +1163,32 @@ export default function GoLivePage() {
     const liveStreamId = liveStreamIdRef.current;
     const activeRoom=roomRef.current;
     roomRef.current = null;
-    // Send a terminal signal before leaving LiveKit, and persist the terminal
-    // status immediately instead of waiting for the recording upload.
-    if (liveStreamId) {
-      const terminalUpdate=Promise.resolve(supabase.from("live_streams").update({
-        status:"ended",ended_at:new Date().toISOString()
-      }).eq("id",liveStreamId)).then(({error})=>{
-        if(error)console.warn("Could not persist Live end status",error);
-      });
+    // Send the host-authenticated terminal packet first; then commit terminal
+    // status server-side. The server also closes the room after updating DB.
+    // Neither action waits for local MediaRecorder or recording upload.
+    if(liveStreamId){
       const terminalSignal=activeRoom?activeRoom.localParticipant.publishData(
         new TextEncoder().encode(JSON.stringify({type:"live-ended",streamId:liveStreamId})),
         {reliable:true,topic:"live-status"}
-      ).catch(error=>console.warn("Could not send Live end signal",error)):Promise.resolve();
-      void Promise.allSettled([terminalUpdate,terminalSignal]).then(()=>void activeRoom?.disconnect());
-      window.setTimeout(()=>void activeRoom?.disconnect(),700);
-    } else {
+      ).catch(error=>console.warn("Live end packet unavailable",error)):Promise.resolve();
+      void (async()=>{
+        try{
+          await Promise.race([terminalSignal,new Promise<void>(resolve=>window.setTimeout(resolve,250))]);
+          const response=await fetch("/api/live-end",{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({streamId:liveStreamId}),cache:"no-store",keepalive:true
+          });
+          if(!response.ok)throw new Error("Server End Live returned "+response.status);
+        }catch(error){
+          console.warn("Server End Live failed; attempting direct terminal update",error);
+          const {error:dbError}=await supabase.from("live_streams").update({
+            status:"ended",ended_at:new Date().toISOString()
+          }).eq("id",liveStreamId);
+          if(dbError)console.error("End Live could not be confirmed",dbError);
+        }finally{void activeRoom?.disconnect();}
+      })();
+      window.setTimeout(()=>void activeRoom?.disconnect(),2500);
+    }else{
       void activeRoom?.disconnect();
     }
     const recorder = recorderRef.current;
@@ -1206,9 +1302,7 @@ export default function GoLivePage() {
         .goLive .layout>.panel:first-child>.preview.studioTransform.studioMorphing::after{
           opacity:1;padding:3px;animation:studioBorderSweep 1.05s cubic-bezier(.19,1,.22,1) both;
         }
-        /* Never animate the video itself: a transform animation overrides
-           front-camera orientation and produces an apparent mirror flip.
-           Keep the live pixels continuous while only the frame geometry morphs. */
+        /* Preserve uninterrupted video pixels while frame geometry morphs. */
         @keyframes studioBorderSweep{
           0%{filter:brightness(1.7);opacity:0;clip-path:inset(0 100% 0 0)}
           25%{opacity:1;clip-path:inset(0 50% 0 0)}
@@ -1372,7 +1466,7 @@ export default function GoLivePage() {
         .goLive .layout>.panel:first-child>.preview{
           position:relative!important;display:block!important;overflow:hidden!important;
           width:100%!important;max-width:none!important;max-height:none!important;
-          height:calc(100dvh - 74px - env(safe-area-inset-top,0px))!important;
+          height:100%!important; /* Full panel height: the header and bottom controls overlay Phone video. */
           min-height:0!important;aspect-ratio:auto!important;container-type:inline-size;
         }
         .goLive .layout>.panel:first-child>.preview>video,
@@ -1415,10 +1509,9 @@ export default function GoLivePage() {
         .goLive .layout>.panel:first-child>.preview .voiceAvatarStageActive{
           transform:translateX(-50%) scale(1)!important;
         }
+        /* Avoid overlay-induced black frames and mirror flips on iPhone. */
         .goLive .preview.studioMorphing::before{display:none!important}
-        .goLive .layout>.panel:first-child>.preview.studioMorphing>video{
-          animation:none!important;filter:none!important;
-        }
+        .goLive .layout>.panel:first-child>.preview.studioMorphing>video{animation:none!important;filter:none!important}
         @media(prefers-reduced-motion:reduce){
           .goLive .layout>.panel:first-child>.preview>video,
           .goLive .layout>.panel:first-child>.preview>.placeholder,
@@ -1470,7 +1563,7 @@ export default function GoLivePage() {
                 <button type="button" aria-pressed={studioMode==="phone"} className={studioMode==="phone"?"selected":""} onClick={()=>selectStudioMode("phone")}><StudioGlyph kind="phone"/>Phone</button>
                 <button type="button" aria-pressed={studioMode==="voice"} className={studioMode==="voice"?"selected":""} onClick={()=>selectStudioMode("voice")}><StudioGlyph kind="voice"/>Voice</button>
               </div>
-              {!live && <button type="button" data-go-live-start className={`newStudioGo ${launchPressed?"launchPressed":""}`} disabled={saving||connectingLive||launchCountdown!==null} onPointerDown={()=>setLaunchPressed(true)} onPointerUp={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onPointerCancel={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onClick={launchBroadcast}>{launchCountdown!==null?`Going live in ${launchCountdown}…`:connectingLive?"Connecting…":cameraReady?"● Go Live":"Enable Camera"}</button>}
+              {!live && <button type="button" data-go-live-start className={`newStudioGo ${launchPressed?"launchPressed":""}`} disabled={saving||connectingLive||launchCountdown!==null} onPointerDown={()=>setLaunchPressed(true)} onPointerUp={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onPointerCancel={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onClick={launchBroadcast}>{launchCountdown!==null?`Going live in ${launchCountdown}…`:connectingLive?"Connecting…":cameraReady?"● Go Live":studioMode==="voice"?"● Go Live":"Enable Camera"}</button>}
               <div className="newStudioHint">Double-tap camera to flip · Effects on the preview</div>
             </div>
             </div>
