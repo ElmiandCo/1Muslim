@@ -78,7 +78,7 @@ export default function UnifiedAvatarCarousel({
           display: "flex", alignItems: "stretch", gap: 12,
           width: "100%", minWidth: 0, overflowX: "auto", overflowY: "hidden",
           scrollSnapType: "x proximity", scrollPaddingInline: 4,
-          touchAction: "pan-x", overscrollBehaviorX: "contain",
+          touchAction: "auto", overscrollBehaviorX: "contain",
           WebkitOverflowScrolling: "touch", padding: "8px 4px 18px",
           boxSizing: "border-box",
         }}
