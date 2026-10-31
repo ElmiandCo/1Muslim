@@ -106,3 +106,16 @@
 @media(max-width:480px){
  .canvas-native-profile .profile-glass-avatar{transform:translateY(-34px);margin-bottom:-30px!important}
 }
+
+/* Shared avatar lives above the scroll viewport, not inside its clipping box. */
+.profile-shared-stage{isolation:isolate;overflow:visible!important}
+.profile-shared-avatar-overlay{position:absolute;top:-62px;left:50%;transform:translateX(-50%);z-index:45;width:min(190px,42%);pointer-events:none;animation:profileHeroEntrance .65s cubic-bezier(.2,.8,.2,1) both}
+.profile-shared-avatar-overlay .profile-shared-avatar-hero{pointer-events:auto;animation:profileHeroHover 5.5s ease-in-out infinite}
+.profile-shared-avatar-overlay .profile-glass-avatar{transform:none!important;margin:0 auto!important;max-width:100%!important;min-height:174px!important;overflow:visible!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;padding:14px 0 8px!important;background:transparent!important}
+.profile-shared-avatar-overlay .profile-avatar-name-wrap{top:-6px!important}
+.profile-with-shared-avatar{padding-top:140px!important}
+.profile-with-shared-avatar .profile-scroll-content-expanded{min-height:100%}
+@keyframes profileHeroEntrance{from{opacity:0;translate:0 30px}to{opacity:1;translate:0 0}}
+@keyframes profileHeroHover{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media(max-width:480px){.profile-shared-avatar-overlay{top:-57px;width:min(180px,43%)}.profile-with-shared-avatar{padding-top:135px!important}}
+@media(prefers-reduced-motion:reduce){.profile-shared-avatar-overlay,.profile-shared-avatar-overlay .profile-shared-avatar-hero{animation:none}}
