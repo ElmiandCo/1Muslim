@@ -13,11 +13,12 @@ type Props = {
   hostName: string;
   title: string;
   hostAvatar?: string | null;
+  initialMode?: CinemaMode;
 };
 
 /** Only the full-screen viewer uses these controls; the host studio is unchanged. */
-export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName, title, hostAvatar }: Props) {
-  const [mode, setMode] = useState<CinemaMode>("phone");
+export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName, title, hostAvatar, initialMode = "phone" }: Props) {
+  const [mode, setMode] = useState<CinemaMode>(initialMode);
   const [commentFocused, setCommentFocused] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
   const chatRef = useRef<HTMLDivElement>(null);
@@ -42,7 +43,7 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
 
   return (
     <section className="omLiveTheater omLiveCinema" data-cinema-mode={mode} data-comment-focus={commentFocused ? "yes" : "no"} style={style} aria-label="Immersive live broadcast">
-      <LiveKitViewer roomName={roomName} streamId={streamId} onViewModeChange={setMode} />
+      <LiveKitViewer roomName={roomName} streamId={streamId} initialViewMode={initialMode} onViewModeChange={setMode} />
       <div className="omLiveTheaterInfo">
         {hostAvatar && <img src={hostAvatar} alt="" className="omLiveTheaterAvatar" />}
         <div className="omLiveTheaterIdentity"><strong>{hostName}</strong><small>{title}</small></div>
