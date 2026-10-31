@@ -1724,3 +1724,83 @@
 .control{--outer-theme:var(--canvas-control-surface-rgb,8,75,57);--outer-glint:var(--canvas-control-border-rgb,204,176,103);background:radial-gradient(ellipse 75% 55% at 100% 16%,rgba(var(--outer-glint),.16),transparent 75%),linear-gradient(115deg,rgba(var(--outer-theme),.66),#061c19 64%)!important;transition:background-color .8s ease!important}
 :global(html.light) .control,.control.day{background:radial-gradient(ellipse 70% 65% at 100% 14%,rgba(255,251,214,.78),rgba(var(--outer-glint),.32) 35%,transparent 78%),linear-gradient(115deg,rgba(var(--outer-theme),.24),rgba(247,245,230,.90) 48%,rgba(225,236,220,.93))!important}
 :global(html.light) body:has(.control),body:has(.control.day){background:linear-gradient(115deg,rgba(var(--canvas-control-surface-rgb,8,75,57),.22),#e9eee4 58%,#fff1c9)!important}
+
+/* Theme-aware canvas edge glow. The previous green radial gutters are replaced
+   with accents inherited from the selected theme, never a hardcoded green. */
+.control{
+ --canvas-edge-accent:var(--theme-secondary,var(--theme-primary,var(--accent-color,var(--edge,#b99a60))));
+ background:
+  radial-gradient(ellipse at 0% 12%,color-mix(in srgb,var(--canvas-edge-accent) 26%,transparent),transparent 45%),
+  radial-gradient(ellipse at 100% 86%,color-mix(in srgb,var(--canvas-edge-accent) 19%,transparent),transparent 48%),
+  #080b0d;
+}
+/* Side and corner glints live behind the primary cards. */
+.control::before{
+ background:
+  radial-gradient(ellipse at 0% 8%,color-mix(in srgb,var(--canvas-edge-accent) 23%,transparent),transparent 38%),
+  radial-gradient(ellipse at 100% 58%,color-mix(in srgb,var(--canvas-edge-accent) 17%,transparent),transparent 36%),
+  radial-gradient(ellipse at 0% 96%,color-mix(in srgb,var(--canvas-edge-accent) 12%,transparent),transparent 35%);
+}
+/* Two very low-density layers: side-origin glimmers behind the cards and
+   top-origin falling sparks above the card, never upward from the bottom. */
+.control .workspaceScroller{position:relative;isolation:isolate}
+.control .workspaceScroller::before,.control .workspaceScroller::after{
+ content:"";position:absolute;inset:0;pointer-events:none;overflow:hidden;
+ background-repeat:repeat;opacity:0;transition:opacity 1200ms ease;
+}
+.control .workspaceScroller::before{
+ z-index:0;
+ background-image:
+  radial-gradient(circle,color-mix(in srgb,var(--canvas-edge-accent) 75%,white) 0 1px,transparent 3px),
+  radial-gradient(circle,color-mix(in srgb,var(--canvas-edge-accent) 62%,white) 0 1.5px,transparent 4px);
+ background-size:237px 331px,313px 397px;background-position:0 45px,100% 123px;
+ mask-image:linear-gradient(90deg,#000,transparent 24%,transparent 76%,#000);
+ -webkit-mask-image:linear-gradient(90deg,#000,transparent 24%,transparent 76%,#000);
+ animation:omEdgeSideSparks 34s linear infinite;
+}
+.control .workspaceScroller::after{
+ z-index:3;
+ background-image:
+  radial-gradient(circle,color-mix(in srgb,var(--canvas-edge-accent) 66%,white) 0 1px,transparent 3px),
+  radial-gradient(circle,color-mix(in srgb,var(--canvas-edge-accent) 50%,white) 0 1px,transparent 3px);
+ background-size:283px 397px,367px 461px;background-position:29px 0,173px -90px;
+ mask-image:linear-gradient(180deg,#000 0%,#000 12%,transparent 78%);
+ -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 12%,transparent 78%);
+ animation:omEdgeTopSparks 42s linear infinite;
+}
+.control .workspaceScroller::before{opacity:.24}
+.control .workspaceScroller::after{opacity:0;animation:none}
+@keyframes omEdgeSideSparks{0%{background-position:0 45px,100% 123px}100%{background-position:0 345px,100% 423px}}
+@keyframes omEdgeTopSparks{0%{background-position:29px -397px,173px -461px}100%{background-position:29px 397px,173px 461px}}
+@media(prefers-reduced-motion:reduce){.control .workspaceScroller::before,.control .workspaceScroller::after{animation:none;opacity:.08}}
+
+/* Event-triggered top fall: one short burst after workspace changes, every
+   minute on an unchanged screen, with rare additional bursts. */
+.topParticleBurst{position:absolute;inset:0 0 auto;z-index:8;height:min(65vh,650px);pointer-events:none;overflow:hidden;isolation:isolate;mask-image:linear-gradient(180deg,#000 0%,#000 55%,transparent 100%);-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 55%,transparent 100%)}
+.topParticleBurst i{position:absolute;top:-15px;display:block;width:3px;height:3px;border-radius:50%;background:color-mix(in srgb,var(--theme-secondary,var(--theme-primary,var(--accent-color,var(--edge,#c2a16b)))) 72%,white);box-shadow:0 0 8px 2px color-mix(in srgb,var(--theme-secondary,var(--theme-primary,var(--accent-color,var(--edge,#c2a16b)))) 40%,transparent);opacity:0;animation:omTopFallOnce 3.6s ease-in forwards;will-change:transform,opacity}
+@keyframes omTopFallOnce{0%{transform:translate3d(0,-8px,0);opacity:0}15%{opacity:.55}52%{opacity:.36}100%{transform:translate3d(9px,410px,0);opacity:0}}
+@media(prefers-reduced-motion:reduce){.topParticleBurst{display:none}}
+
+/* Soft breathing edge mask: 20px resting fade, normally 35px, with an
+   occasional 40px swell. Rounded corners remain at 20px throughout.
+   Apply to the decorative backdrop, never to scrollable content or controls. */
+.control .islamicDecoration{
+ --edge-fade:20px;
+ border-radius:20px;
+ -webkit-mask-image:
+  linear-gradient(to right,transparent 0,#000 var(--edge-fade),#000 calc(100% - var(--edge-fade)),transparent 100%),
+  linear-gradient(to bottom,transparent 0,#000 var(--edge-fade),#000 calc(100% - var(--edge-fade)),transparent 100%);
+ mask-image:
+  linear-gradient(to right,transparent 0,#000 var(--edge-fade),#000 calc(100% - var(--edge-fade)),transparent 100%),
+  linear-gradient(to bottom,transparent 0,#000 var(--edge-fade),#000 calc(100% - var(--edge-fade)),transparent 100%);
+ -webkit-mask-composite:source-in;mask-composite:intersect;
+ animation:omEdgeMaskBreathe 18s ease-in-out infinite;
+}
+@property --edge-fade{syntax:"<length>";inherits:false;initial-value:20px}
+@keyframes omEdgeMaskBreathe{
+ 0%,100%{--edge-fade:20px}
+ 16.67%,33.33%{--edge-fade:35px}
+ 50%{--edge-fade:20px}
+ 66.67%,83.33%{--edge-fade:40px}
+}
+@media(prefers-reduced-motion:reduce){.control .islamicDecoration{animation:none;--edge-fade:20px}}
