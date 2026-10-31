@@ -119,3 +119,8 @@
 @keyframes profileHeroHover{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @media(max-width:480px){.profile-shared-avatar-overlay{top:-57px;width:min(180px,43%)}.profile-with-shared-avatar{padding-top:135px!important}}
 @media(prefers-reduced-motion:reduce){.profile-shared-avatar-overlay,.profile-shared-avatar-overlay .profile-shared-avatar-hero{animation:none}}
+
+/* The avatar is portaled to the document layer: no canvas clipping or backdrop stacking. */
+.profile-shared-avatar-portal{position:fixed!important;transform:translateX(-50%);z-index:45;isolation:isolate;pointer-events:none;}
+.profile-shared-avatar-portal .profile-shared-avatar-hero{pointer-events:auto;}
+.profile-shared-avatar-portal .profileAvatar,.profile-shared-avatar-portal .profileAvatar::before,.profile-shared-avatar-portal .profileAvatar::after{border-color:transparent!important;outline:0!important;}
