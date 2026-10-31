@@ -5,3 +5,83 @@
 .list,.messages{min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .threadHeader,.composer{flex-shrink:0}
 @media(max-width:600px){.panel{height:min(74dvh,720px);min-height:0}.thread{height:100%}.messages{flex:1 1 0;min-height:0}}
+
+/* RealTheme2.0 — messenger palette only; scrolling and conversation sizing unchanged. */
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .root{
+ color:var(--rt-text-primary,#fff);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .heading{
+ color:var(--rt-text-highlight,#fff);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .panel{
+ background:color-mix(in srgb,var(--theme-base) 62%,transparent);
+ border-color:color-mix(in srgb,var(--theme-edge) 48%,transparent);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .sidebar{
+ background:color-mix(in srgb,var(--theme-surface) 48%,transparent);
+ border-right-color:color-mix(in srgb,var(--theme-edge) 40%,transparent);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .title button,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .back{
+ background:var(--theme-surface);border-color:var(--theme-edge);
+ color:var(--rt-text-highlight,#fff);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .search,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .composer input{
+ background:color-mix(in srgb,var(--theme-base) 76%,transparent);
+ border-color:color-mix(in srgb,var(--theme-edge) 55%,transparent);
+ color:var(--rt-text-primary,#fff);caret-color:var(--theme-secondary);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .search::placeholder,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .composer input::placeholder{
+ color:var(--rt-text-muted,#bbb);opacity:1;
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .tabs button{
+ background:var(--theme-surface);
+ border-color:color-mix(in srgb,var(--theme-edge) 38%,transparent);
+ color:var(--rt-text-secondary,#eee);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .tabs .active{
+ background:color-mix(in srgb,var(--theme-accent) 35%,var(--theme-surface));
+ border-color:var(--theme-edge);color:var(--rt-text-primary,#fff);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .row{
+ color:var(--rt-text-primary,#fff);
+ border-bottom-color:color-mix(in srgb,var(--theme-edge) 24%,transparent);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .row.selected{
+ background:color-mix(in srgb,var(--theme-accent) 22%,transparent);
+ box-shadow:inset 0 0 0 1px var(--theme-edge);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .avatar{
+ background:var(--theme-surface);border-color:var(--theme-edge);
+ color:var(--rt-text-highlight,#fff);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .badge{
+ background:var(--theme-secondary);color:var(--theme-base);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .thread{
+ background:color-mix(in srgb,var(--theme-base) 25%,transparent);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .threadHeader,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .composer{
+ background:color-mix(in srgb,var(--theme-surface) 42%,transparent);
+ border-color:color-mix(in srgb,var(--theme-edge) 35%,transparent);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .bubble{
+ color:var(--rt-text-primary,#fff);
+ background:color-mix(in srgb,var(--theme-surface) 66%,#555);
+ border-color:color-mix(in srgb,var(--theme-edge) 28%,transparent);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .bubble.mine{
+ background:color-mix(in srgb,var(--theme-accent) 30%,var(--theme-surface));
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .bubble small{
+ color:var(--rt-text-muted,#bbb);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .composer button{
+ background:var(--theme-accent);color:var(--theme-base);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .empty{
+ color:var(--rt-text-secondary,#eee);
+}
