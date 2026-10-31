@@ -86,7 +86,8 @@ export async function POST(request: Request) {
 
     // A guest with no allowed media sources must be subscribe-only. LiveKit
     // treats an empty/missing source allowlist as unrestricted in some paths.
-    const canPublish = role === "host" || role === "companion" ||\n      (role === "guest" && guestCanPublishMedia(liveStream.aspect_ratio, guestMode ?? "pfp", guestMuted));
+    const canPublish = role === "host" || role === "companion" ||
+      (role === "guest" && guestCanPublishMedia(liveStream.aspect_ratio, guestMode ?? "pfp", guestMuted));
     const publishSources = role === "companion"
       ? [TrackSource.SCREEN_SHARE]
       : role === "guest"
