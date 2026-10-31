@@ -108,3 +108,19 @@
 :global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .tile b{
  color:var(--rt-text-highlight,#f4dfa9);
 }
+
+/* Override the lesson checklist's inline green completion marks only in
+   alternate themes; leave the Arabic letter itself and lesson logic alone. */
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .note[aria-label="Letter practice checklist"] span{
+ color:var(--rt-text-secondary,#dce4e8)!important;
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .note[aria-label="Letter practice checklist"] span[title*="practiced"]{
+ color:var(--rt-text-highlight,#e5d6b3)!important;
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .letterFocus small,
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .tile small{
+ color:var(--rt-text-secondary,#dce4e8);
+}
+:global(html[data-muslim-theme]:not([data-muslim-theme="emerald"])) .quizFinish h3{
+ color:var(--rt-text-highlight,#e5d6b3);
+}
