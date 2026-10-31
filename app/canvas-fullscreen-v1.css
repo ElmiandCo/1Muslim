@@ -1928,3 +1928,44 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   min-height:150dvh!important;
   height:auto!important;
 }
+
+
+/* RealTheme2.0 round 2: explicitly replace legacy emerald canvas surfaces.
+   Scope is paint only; no sizing, scrolling, positioning, or interaction changes. */
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .canvas-community-tabs button{
+ background:color-mix(in srgb,var(--theme-surface) 88%,transparent);
+ border-color:var(--theme-edge);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .canvas-community-tabs button[aria-selected="true"]{
+ background:color-mix(in srgb,var(--theme-accent) 56%,var(--theme-surface));
+ border-color:var(--theme-accent);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-feed-search{
+ background:color-mix(in srgb,var(--theme-surface) 90%,transparent);
+ border-color:var(--theme-edge);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-post-card{
+ background:linear-gradient(145deg,color-mix(in srgb,var(--theme-surface) 92%,transparent),color-mix(in srgb,var(--theme-base) 90%,transparent));
+ border-color:var(--theme-edge);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) .community-post-avatar{
+ background-color:var(--theme-surface);
+ border-color:var(--theme-accent);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
+ .community-simple-feed,.canvas-community-map-shell,.canvas-community-posts-scroll
+) button:not(:disabled){
+ background-color:color-mix(in srgb,var(--theme-surface) 85%,transparent);
+ border-color:var(--theme-edge);
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
+ .community-simple-feed,.canvas-community-map-shell,.canvas-community-posts-scroll
+) button[aria-selected="true"]{
+ background-color:color-mix(in srgb,var(--theme-accent) 56%,var(--theme-surface));
+}
+html[data-muslim-theme]:not([data-muslim-theme="emerald"]) :is(
+ .oneMuslimLiveStage,.homeLiveStudio,.homeLiveUnifiedStage
+) :is(button,input):not([data-preserve-color]){
+ accent-color:var(--theme-accent);
+ border-color:color-mix(in srgb,var(--theme-edge) 75%,transparent);
+}
