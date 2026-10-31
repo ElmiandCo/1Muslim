@@ -1,5 +1,35 @@
 -- LiveGuests1.0: atomic host approval and separate video/audio seat caps.
 -- Additive migration. Apply in staging before enabling guest API routes.
+-- Backfill the original guest table if earlier migrations were not applied.
+-- This is intentionally idempotent for projects that already have the table.
+create table if not exists public.live_guest_requests (
+  id uuid primary key default gen_random_uuid(),
+  stream_id uuid not null references public.live_streams(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  status text not null default 'pending'
+    check (status in ('pending','approved','rejected','removed')),
+  mode text not null default 'pfp' check (mode in ('pfp','camera')),
+  created_at timestamptz not null default now(),
+  unique (stream_id,user_id)
+);
+alter table public.live_guest_requests enable row level security;
+drop policy if exists "Guest and host read requests" on public.live_guest_requests;
+create policy "Guest and host read requests" on public.live_guest_requests
+  for select to authenticated using (
+    user_id = (select auth.uid()) or exists (
+      select 1 from public.live_streams s
+      where s.id = stream_id and s.host_id = (select auth.uid())
+    )
+  );
+drop policy if exists "Guest requests own seat" on public.live_guest_requests;
+create policy "Guest requests own seat" on public.live_guest_requests
+  for insert to authenticated with check (
+    user_id = (select auth.uid()) and status = 'pending'
+    and exists (select 1 from public.live_streams s
+      where s.id = stream_id and s.status = 'live')
+  );
+grant select, insert on public.live_guest_requests to authenticated;
+
 alter table public.live_guest_requests
   add column if not exists approved_at timestamptz,
   add column if not exists host_muted boolean not null default false;
