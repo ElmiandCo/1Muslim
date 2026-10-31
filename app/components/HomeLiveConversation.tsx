@@ -2,10 +2,14 @@
 import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
+import LiveGuestStudio from "../../components/LiveGuestStudio";
 type Comment={id:string;name:string;text:string;at:number};
-export default function HomeLiveConversation({live,streamId,onFormatChange}:{live:boolean;streamId?:string|null;onFormatChange?:(format:"desktop"|"phone"|"audio")=>void}){
+export default function HomeLiveConversation({live,streamId,roomName,hostId,liveMode,onFormatChange}:{live:boolean;streamId?:string|null;roomName?:string|null;hostId?:string|null;liveMode?:"audio"|"video";onFormatChange?:(format:"desktop"|"phone"|"audio")=>void}){
  const [comments,setComments]=useState<Comment[]>([]);
  const [draft,setDraft]=useState("");
+ const [guestOpen,setGuestOpen]=useState(false);
+ const [guestEverOpened,setGuestEverOpened]=useState(false);
+ useEffect(()=>{setGuestOpen(false);setGuestEverOpened(false)},[streamId]);
  const [user,setUser]=useState<{id:string;name:string}|null>(null);
  const [status,setStatus]=useState("");
  const dbRef=useRef<ReturnType<typeof createClient>|null>(null);
@@ -28,8 +32,10 @@ export default function HomeLiveConversation({live,streamId,onFormatChange}:{liv
   catch{setStatus("Could not send comment. Try again.")}};
  return <section className="homeLiveViewerConversation" aria-label="Live conversation">
   <header><strong>💬 LIVE CONVERSATION</strong><small>1Muslim · {live?"Live room":"Waiting for a stream"}</small></header>
+  {live&&streamId&&roomName&&hostId&&<button type="button" aria-expanded={guestOpen} aria-controls="home-live-guest-controls" onClick={()=>{setGuestEverOpened(true);setGuestOpen(v=>!v)}} style={{alignSelf:"flex-start",margin:"6px 0",padding:"8px 14px",minHeight:40,borderRadius:20,border:"1px solid var(--theme-border,#4cb891)",background:"var(--theme-panel,#08382c)",color:"var(--theme-text,#e9fff5)",cursor:"pointer"}}>{guestOpen?"Close guest controls":liveMode==="audio"?"🎙️ Request audio seat":"📹 Request to join Live"}</button>}
   <div className="homeLiveDemoComments" aria-live="polite">{comments.length?comments.map(c=><p key={c.id}><span className="homeLiveCommentAvatar">{c.name.slice(0,1).toUpperCase()}</span><span><strong>{c.name}</strong><small>{c.text}</small></span></p>):<p>{live?"Be the first to comment in this live room." :"Comments appear when a real stream is active."}</p>}</div>
   <form className="homeLiveCommentForm" onSubmit={send}><input aria-label="Write a live comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={500} placeholder={live?"Comment on this livestream…" :"Waiting for an active stream…"}/><button type="submit" disabled={!live||!streamId||!user||!draft.trim()}>Send</button></form>
+  {guestEverOpened&&live&&streamId&&roomName&&hostId&&<div id="home-live-guest-controls" aria-hidden={!guestOpen} style={{display:guestOpen?"block":"none",maxHeight:"min(48dvh,480px)",overflowY:"auto",overscrollBehavior:"contain",borderRadius:14}}><LiveGuestStudio key={streamId} streamId={streamId} roomName={roomName} hostId={hostId} liveMode={liveMode}/></div>}
   {status&&<small role="status" className="homeLiveCommentDisclaimer">{status}</small>}
   <small className="homeLiveCommentDisclaimer">Persistent live chat · visible to signed-in viewers of this stream</small>
   {live&&streamId?<Link className="homeLiveStudioEntry" href={`/streaming/live/${streamId}`}>Open Live Studio ↗</Link>:<Link className="homeLiveStudioEntry" href="/streaming/go-live">Start your own Live ↗</Link>}

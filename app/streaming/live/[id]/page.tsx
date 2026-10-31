@@ -97,7 +97,7 @@ export default async function LiveViewerPage({ params }: { params: Promise<{ id:
               <div className="omLiveTheaterChat"><LiveChat streamId={stream.id} hostId={stream.host_id} overlay /></div>
               <details className="omLiveTheaterGuests">
                 <summary aria-label="Open guest controls">♧ Guests</summary>
-                <div className="omLiveTheaterGuestPanel"><LiveGuestStudio streamId={stream.id} roomName={stream.room_name} hostId={stream.host_id}/></div>
+                <div className="omLiveTheaterGuestPanel"><LiveGuestStudio streamId={stream.id} roomName={stream.room_name} hostId={stream.host_id} liveMode={stream.aspect_ratio==="1:1"?"audio":"video"}/></div>
               </details>
             </section>
           ) : !mayViewRecording ? (

@@ -9,17 +9,23 @@ type GuestRequest={
 };
 type ModerationAction="approved"|"rejected"|"removed"|"mute"|"unmute";
 
-export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:string;roomName:string;hostId:string}){
+export default function LiveGuestStudio({streamId,roomName,hostId,liveMode}:{streamId:string;roomName:string;hostId:string;liveMode?:"audio"|"video"}){
   const [uid,setUid]=useState<string|null>(null);
   const [requests,setRequests]=useState<GuestRequest[]>([]);
   const [loaded,setLoaded]=useState(false);
-  const [mode,setMode]=useState<"pfp"|"camera">("pfp");
+  const [mode,setMode]=useState<"pfp"|"camera">(liveMode==="audio"?"pfp":"camera");
+  useEffect(()=>{setMode(liveMode==="audio"?"pfp":"camera")},[liveMode]);
+  const signalStage=(active:boolean)=>window.dispatchEvent(new CustomEvent("1muslim:guest-stage",{detail:{roomName,active}}));
   const [joined,setJoined]=useState(false);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
   const [mic,setMic]=useState(true),[camera,setCamera]=useState(true);
   const [background,setBackground]=useState("none");
   const room=useRef<Room|null>(null),preview=useRef<HTMLVideoElement>(null);
+  const guestAudioRef=useRef<HTMLDivElement>(null);
+  const guestAudioNodes=useRef(new Map<string,HTMLMediaElement>());
+  const [needsAudioTap,setNeedsAudioTap]=useState(false);
+  const clearGuestAudio=()=>{for(const node of guestAudioNodes.current.values())node.remove();guestAudioNodes.current.clear();setNeedsAudioTap(false)};
   const stream=useRef<MediaStream|null>(null);
   const refreshRef=useRef<()=>void>(()=>{});
   const me=requests.find(r=>r.user_id===uid);
@@ -51,9 +57,10 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
       refreshRef.current=()=>{};
     };
   },[streamId]);
-  useEffect(()=>()=>{void room.current?.disconnect();stream.current?.getTracks().forEach(t=>t.stop())},[]);
+  useEffect(()=>()=>{signalStage(false);void room.current?.disconnect();stream.current?.getTracks().forEach(t=>t.stop());for(const node of guestAudioNodes.current.values())node.remove();guestAudioNodes.current.clear()},[roomName]);
 
   function leave(){
+    signalStage(false);clearGuestAudio();
     void room.current?.disconnect();room.current=null;
     stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;
     if(preview.current)preview.current.srcObject=null;
@@ -68,6 +75,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
     for(const track of stream.current?.getAudioTracks()??[]){
       void room.current?.localParticipant.unpublishTrack(track);
       track.stop();
+      stream.current?.removeTrack(track);
     }
     setMic(false);
   },[joined,me?.host_muted]);
@@ -77,7 +85,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
     setBusy(true);setError("");
     try{
       const {error:requestError}=await createClient().rpc("request_live_guest",{
-        p_stream:streamId,p_mode:mode,
+        p_stream:streamId,p_mode:liveMode==="audio"?"pfp":liveMode==="video"?"camera":mode,
       });
       if(requestError)throw new Error(requestError.code==="PGRST202"
         ?"Guest requests are initializing. Please try again shortly."
@@ -116,13 +124,29 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
       if(!response.ok)throw new Error(data.error||"Guest connection failed.");
       if(data.role!=="guest")throw new Error("Guest permission was not granted.");
       const r=new Room();room.current=r;
+      const attachRemoteAudio=(track:any)=>{
+        if(track.kind!==Track.Kind.Audio||!guestAudioRef.current)return;
+        const key=track.sid||"";if(guestAudioNodes.current.has(key))return;
+        const element=track.attach() as HTMLMediaElement;
+        element.autoplay=true;element.muted=false;element.style.display="none";
+        guestAudioRef.current.appendChild(element);guestAudioNodes.current.set(key,element);
+        void element.play().then(()=>setNeedsAudioTap(false)).catch(()=>setNeedsAudioTap(true));
+      };
+      r.on(RoomEvent.TrackSubscribed,track=>attachRemoteAudio(track));
+      r.on(RoomEvent.TrackUnsubscribed,track=>{
+        const node=guestAudioNodes.current.get(track.sid||"");
+        if(node){track.detach(node);node.remove();guestAudioNodes.current.delete(track.sid||"")}
+      });
       r.on(RoomEvent.Disconnected,()=>{
         if(room.current!==r)return;
         stream.current?.getTracks().forEach(t=>t.stop());
         stream.current=null;room.current=null;
-        setJoined(false);setMic(false);
+        clearGuestAudio();signalStage(false);setJoined(false);setMic(false);
       });
       await r.connect(data.url,data.token);
+      for(const participant of r.remoteParticipants.values())for(const publication of participant.trackPublications.values()){
+        if(publication.kind===Track.Kind.Audio&&publication.track)attachRemoteAudio(publication.track);
+      }
       const wantsCamera=me.mode==="camera"&&data.mode==="video";
       const wantsMic=!me.host_muted;
       const media=wantsCamera||wantsMic
@@ -138,8 +162,9 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
         preview.current.srcObject=media;
         void preview.current.play().catch(()=>{});
       }
-      setMic(wantsMic);setCamera(wantsCamera);setJoined(true);
+      setMic(wantsMic);setCamera(wantsCamera);setJoined(true);signalStage(true);
     }catch(e){
+      signalStage(false);clearGuestAudio();
       setError(e instanceof Error?e.message:"Unable to join stage.");
       void room.current?.disconnect();room.current=null;
       stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;
@@ -183,20 +208,19 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
       {loaded&&!requests.some(r=>r.status==="pending"||r.status==="approved")&&<p>No guest requests yet.</p>}
     </div>:<div>
       {!joined&&me?.status!=="approved"&&<>
-        <select aria-label="Guest mode" value={mode} disabled={busy} onChange={e=>setMode(e.target.value as "pfp"|"camera")}>
-          <option value="pfp">🎙️ Audio + profile picture</option><option value="camera">📹 Camera + audio</option>
-        </select>{" "}
+        <span style={{fontSize:12,marginRight:8}}>{liveMode==="audio"?"🎙️ Audio guest seat · microphone only":"📹 Video guest seat · camera and microphone"}</span>{" "}
         <button type="button" disabled={busy||me?.status==="pending"} onClick={()=>void request()}>Request to join</button>
       </>}
       {me?.status==="pending"&&<p role="status">⏳ Waiting for host approval…</p>}
       {me?.status==="approved"&&!joined&&<button type="button" disabled={busy} onClick={()=>void join()}>Join stage</button>}
       {joined&&<div><p role="status">🔴 You're on stage</p>
-        {me?.mode==="camera"&&<div style={{position:"relative",maxWidth:250}}>
+        {needsAudioTap&&<button type="button" onClick={()=>{void Promise.all([...guestAudioNodes.current.values()].map(node=>node.play())).then(()=>setNeedsAudioTap(false)).catch(()=>setNeedsAudioTap(true))}}>🔊 Hear the Live</button>}
+        {me?.mode==="camera"&&liveMode!=="audio"&&<div style={{position:"relative",maxWidth:250}}>
           <video ref={preview} muted autoPlay playsInline style={{width:"100%",borderRadius:12,filter:background==="blur"?"blur(4px)":"none"}}/>
           <span style={{fontSize:11}}>Preview effects (local only)</span>
         </div>}
         <button type="button" disabled={busy||!!me?.host_muted} onClick={()=>void toggleMic()}>{mic?"Mute mic":"Unmute mic"}</button>{" "}
-        {me?.mode==="camera"&&<button type="button" disabled={busy} onClick={toggleCamera}>{camera?"Camera off":"Camera on"}</button>}{" "}
+        {me?.mode==="camera"&&liveMode!=="audio"&&<button type="button" disabled={busy} onClick={toggleCamera}>{camera?"Camera off":"Camera on"}</button>}{" "}
         <button type="button" onClick={leave}>Leave stage</button>
         <label style={{display:"block",marginTop:8}}>Background preview{" "}
           <select value={background} onChange={e=>setBackground(e.target.value)}>
@@ -205,6 +229,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
         </label>
       </div>}
     </div>}
+    <div ref={guestAudioRef} style={{display:"none"}} aria-hidden="true"/>
     {error&&<p role="alert" style={{color:"#ffb5b5"}}>{error}</p>}
   </section>;
 }

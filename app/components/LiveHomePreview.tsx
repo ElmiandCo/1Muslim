@@ -1,10 +1,38 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {Room,RoomEvent,Track,VideoQuality} from "livekit-client";
+import {createClient} from "../../utils/supabase/client";
+import LiveGuestsStage,{useLiveGuestRoster} from "../../components/LiveGuestsStage";
 
-/** Silent, noninteractive thumbnail player: safe to render inside homepage links. */
-export default function LiveHomePreview({roomName}:{roomName:string}){
+/** Host+guest landing preview; playback audio is opt-in and guest controls stay outside the video node. */
+export default function LiveHomePreview({roomName,hostId}:{roomName:string;hostId?:string|null}){
  const video=useRef<HTMLVideoElement>(null);
+ const roomRef=useRef<Room|null>(null);
+ const audioRef=useRef<HTMLDivElement>(null);
+ const audioEnabledRef=useRef(false);
+ const guestOnStageRef=useRef(false);
+ const [audioEnabled,setAudioEnabled]=useState(false);
+ const [guestOnStage,setGuestOnStage]=useState(false);
+ useEffect(()=>{
+  const onStage=(event:Event)=>{const detail=(event as CustomEvent<{roomName:string;active:boolean}>).detail;
+   if(detail?.roomName!==roomName)return;
+   guestOnStageRef.current=detail.active;setGuestOnStage(detail.active);
+   audioRef.current?.querySelectorAll("audio").forEach(a=>{a.muted=detail.active||!audioEnabledRef.current});
+  };
+  window.addEventListener("1muslim:guest-stage",onStage);
+  return()=>window.removeEventListener("1muslim:guest-stage",onStage);
+ },[roomName]);
+ const [connected,setConnected]=useState(false);
+ const [host,setHost]=useState<{name:string;avatar:string|null}>({name:"Host",avatar:null});
+ const guests=useLiveGuestRoster(roomRef,connected,hostId??null,3);
+ useEffect(()=>{
+  if(!hostId)return;
+  let active=true;
+  void createClient().from("profiles").select("username,display_name,avatar_url").eq("id",hostId).maybeSingle().then(({data})=>{
+   if(active&&data)setHost({name:data.display_name||data.username||"Host",avatar:data.avatar_url||null});
+  });
+  return()=>{active=false};
+ },[hostId]);
  const [ready,setReady]=useState(false);
  const [failure,setFailure]=useState("");
  const [attempt,setAttempt]=useState(0);
@@ -14,21 +42,37 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
   setReady(false);
   setFailure("");
   let active=true;
-  const room=new Room({adaptiveStream:false});
+  const room=new Room({adaptiveStream:false});roomRef.current=room;
   let waitingTimer:ReturnType<typeof setTimeout>|undefined;
   let retryTimer:ReturnType<typeof setTimeout>|undefined;
-  const attach=(track:any)=>{
-   if(!active||track.kind!==Track.Kind.Video||!video.current)return;
+  const audioNodes=new Map<string,HTMLMediaElement>();
+  const attachAudio=(track:any)=>{
+   if(!active||track.kind!==Track.Kind.Audio||!audioRef.current)return;
+   const sid=track.sid||"";if(audioNodes.has(sid))return;
+   const element=track.attach() as HTMLMediaElement;
+   element.autoplay=true;element.muted=!audioEnabledRef.current||guestOnStageRef.current;element.style.display="none";
+   audioRef.current.appendChild(element);audioNodes.set(sid,element);
+   if(audioEnabledRef.current&&!guestOnStageRef.current)void element.play().catch(()=>{});
+  };
+  const attach=(track:any,participantIdentity?:string)=>{
+   // Never attach a guest camera to the host preview: guests own separate tiles.
+   if(!active||track.kind!==Track.Kind.Video||!video.current||(hostId&&participantIdentity!==hostId))return;
    track.attach(video.current);
    video.current.muted=true;
    void video.current.play().then(()=>{if(active)setReady(true)}).catch(()=>{});
   };
-  room.on(RoomEvent.TrackSubscribed,attach);
+  room.on(RoomEvent.TrackSubscribed,(track,_publication,participant)=>{
+   if(track.kind===Track.Kind.Audio)attachAudio(track);
+   else attach(track,participant.identity);
+  });
   room.on(RoomEvent.TrackPublished,publication=>{if(publication.kind===Track.Kind.Video)publication.setSubscribed(true)});
   room.on(RoomEvent.TrackSubscriptionFailed,()=>{if(active)setFailure("Video subscription interrupted");});
   room.on(RoomEvent.ParticipantConnected,participant=>{for(const publication of participant.trackPublications.values())if(publication.kind===Track.Kind.Video){publication.setSubscribed(true);publication.setVideoQuality(VideoQuality.HIGH)}});
   room.on(RoomEvent.TrackPublished,publication=>{if(publication.kind===Track.Kind.Video){publication.setSubscribed(true);publication.setVideoQuality(VideoQuality.HIGH)}});
-  room.on(RoomEvent.TrackUnsubscribed,()=>{if(active)setReady(false)});
+  room.on(RoomEvent.TrackUnsubscribed,(track,_publication,participant)=>{
+   if(track.kind===Track.Kind.Audio){const node=audioNodes.get(track.sid||"");if(node){track.detach(node);node.remove();audioNodes.delete(track.sid||"")}}
+   else if(active&&(!hostId||participant.identity===hostId))setReady(false);
+  });
   void (async()=>{
    try{
     const res=await fetch("/api/livekit/token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName,role:"viewer"})});
@@ -38,21 +82,31 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
     if(!data.url||!data.token)throw new Error("Missing token");
     await room.connect(data.url,data.token,{autoSubscribe:true,maxRetries:5,websocketTimeout:20000});
     if(!active)return;
+    setConnected(true);
     for(const participant of room.remoteParticipants.values())
      for(const publication of participant.trackPublications.values()){
       if(!publication.isSubscribed)publication.setSubscribed(true);
       if(publication.kind===Track.Kind.Video)publication.setVideoQuality(VideoQuality.HIGH);
-      if(publication.track)attach(publication.track);
+      if(publication.track){if(publication.kind===Track.Kind.Audio)attachAudio(publication.track);else attach(publication.track,participant.identity)}
      }
    }catch(error){if(active){setReady(false);setFailure(error instanceof Error?error.message:"Connection failed");retryTimer=setTimeout(()=>{if(active)setAttempt(n=>n+1)},5000)}}
   })();
   waitingTimer=setTimeout(()=>{if(active&&!video.current?.srcObject)setAttempt(n=>n+1)},4000);
-  return()=>{active=false;if(waitingTimer)clearTimeout(waitingTimer);if(retryTimer)clearTimeout(retryTimer);room.removeAllListeners();void room.disconnect();if(video.current)video.current.srcObject=null};
- },[roomName,attempt]);
+  return()=>{active=false;setConnected(false);roomRef.current=null;for(const node of audioNodes.values())node.remove();audioNodes.clear();if(waitingTimer)clearTimeout(waitingTimer);if(retryTimer)clearTimeout(retryTimer);room.removeAllListeners();void room.disconnect();if(video.current)video.current.srcObject=null};
+ },[roomName,hostId,attempt]);
  useEffect(()=>{const refresh=()=>{if(document.visibilityState==="visible"){setAttempt(n=>n+1)}};document.addEventListener("visibilitychange",refresh);window.addEventListener("focus",refresh);return()=>{document.removeEventListener("visibilitychange",refresh);window.removeEventListener("focus",refresh)}},[]);
+ const toggleAudio=()=>{
+  const next=!audioEnabledRef.current;
+  audioEnabledRef.current=next;setAudioEnabled(next);
+  audioRef.current?.querySelectorAll("audio").forEach(node=>{node.muted=!next||guestOnStageRef.current;if(next&&!guestOnStageRef.current)void node.play().catch(()=>{})});
+ };
  // Do not tear down a healthy LiveKit room just because the host has not published video.
- return <span style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:0,overflow:"hidden",borderRadius:12}}>
-  <video ref={video} autoPlay muted playsInline aria-label="Live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:0,objectFit:"contain",objectPosition:"center center",background:"transparent",opacity:ready?1:0}}/>
-  {!ready&&<span style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{failure?"Video unavailable · Open live to retry":"Waiting for host video…"}</span>}
- </span>;
+ return <div style={{display:"block",position:"relative",width:"100%",height:"100%",minHeight:0,overflow:"hidden",borderRadius:12}}>
+  <LiveGuestsStage mode="video" guests={guests} hostName={host.name} hostAvatar={host.avatar}>
+   <video ref={video} autoPlay muted playsInline aria-label="Host live stream preview" style={{display:"block",width:"100%",height:"100%",minHeight:0,objectFit:"cover",objectPosition:"center center",background:"transparent",opacity:ready?1:0}}/>
+   {!ready&&<span style={{position:"absolute",inset:0,display:"grid",placeItems:"center",color:"#e9d9a3",background:"rgba(5,23,17,.65)",fontSize:12}}>{failure?"Video unavailable · Open live to retry":"Waiting for host video…"}</span>}
+  </LiveGuestsStage>
+  <div ref={audioRef} style={{display:"none"}}/>
+  <button type="button" onClick={toggleAudio} aria-label={audioEnabled?"Mute live preview":"Hear live preview"} style={{position:"absolute",bottom:8,left:8,zIndex:8,padding:"6px 10px",borderRadius:18,border:"1px solid #ffffff55",background:"#061b16dd",color:"#fff",fontSize:11,cursor:"pointer"}}>{guestOnStage?"🎙️ On stage · monitoring muted":audioEnabled?"🔇 Mute preview":"🔊 Hear Live"}</button>
+ </div>;
 }

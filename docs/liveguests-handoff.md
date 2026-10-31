@@ -82,3 +82,78 @@ The seven semantic layouts in the README remain the design specification: host s
 | Production UI deployment | **NOT AUTHORIZED / NOT DONE** |
 
 **Next handoff:** Verify the integrated Bot B preview build (backend code copied from Bot A), confirm migrations already applied to SecureApp (do not blindly reapply), run build/typecheck and multi-device guest request/moderation tests on a safe dedicated stream with real authorized test users, reconcile overlapping PRs #209/#210, and only then consider preview approval.
+
+
+## Bot B second-pass implementation — landing guest join + exact image provenance (2026-10-31)
+
+**Branch:** `bot-b/liveguests-landing-visual-qa-20261031` (isolated child of integrated Bot B PR #209). **Do not merge PR #209 and #210 independently**: the integrated Bot B branch already contains Bot A's backend. Bot A's later changes must be inspected and reconciled before any main/production merge. The 400 ms Live Cinema crossfade is on a separate branch and **is not integrated or validated by this UI-only follow-up**.
+
+### Actually inspected reference images supplied in the current user conversation
+
+These two JPEG images were visibly supplied and inspected in conversation. They are **not** the six repository PNGs; do not substitute one filename for another.
+
+| Exact source image | Observed reference details | Implemented code / CSS | Deliberate differences and verification |
+| --- | --- | --- | --- |
+| `7B675B22-DD9B-4230-850B-A53776ACD47A.jpeg` (707 × 1536, **Audio Live**, user chat attachment) | Large centered host portrait with crown/mic; six glowing numbered avatars distributed in orbit; individual mic/mute indicators; scrolling comments below; bottom raise-hand/mute/leave/share controls | `components/LiveGuestsStage.tsx` `mode="audio"`, `audioOrbit`, `hostAudio`, `audioGuest`; `components/LiveGuestsStage.module.css` `.audioOrbit`, `.hostPortrait`, `.audioGuest`; landing `app/components/HomeAudioLivePlayer.tsx` uses real LiveKit guest roster (11 max); `app/components/HomeLiveConversation.tsx` keeps comments below | Host-centered orbit, numbered seats and mic badges implemented. No invented attendee photos, listener count or gold-only theme; participant labels reflect real identities. Screenshot bottom controls are not copied into the landing page (moderation remains in host controls). **No iPhone screenshot/device comparison yet.** |
+| `AEEAD944-715D-4A66-A5DE-D5103664EC81.jpeg` (1024 × 1536, **Video Live**, user chat attachment) | Dominant left host video (~60%), three stacked right guest camera tiles; host/guest labels and mic icons; comments and reactions beneath | `components/LiveGuestsStage.tsx` `mode="video"`, `hostVideo`, `GuestVideoTiles`; `components/LiveGuestsStage.module.css` `.stage[data-mode="video"]`, `.guestColumn`, `.tile`; landing `app/components/LiveHomePreview.tsx` attaches only the host camera to host tile, renders three guest cameras; `app/components/HomeLiveConversation.tsx` keeps comments below | 3:2 host-to-guest ratio for 2/3 guests, 50/50 for one guest. No duplicate pre-live Go Live control in active Live. Header/theme and existing navigation preserved. Preview audio requires an explicit user tap and is muted while guest publishes to avoid echo. **No desktop/mobile screenshot comparison yet.** |
+
+### Six original GitHub PNGs — explicit unmapped status
+
+GitHub text connector returned empty content for binary `fetch_file(encoding=base64)`; `fetch_blob` failed with Unicode decoding; the runtime could not fetch raw GitHub bytes. Therefore **none of the six files was visually inspected**, and no filename-to-layout attribution is justified. The correct first-round result is **UNVERIFIED**, not a guessed mapping.
+
+| Repository PNG | Visual inspection | Assigned UI layout |
+| --- | --- | --- |
+| `5A7A4B70-1908-4C58-A168-131BBEE746FA.png` | BLOCKED: binary inaccessible | UNMAPPED |
+| `708DE5AB-0EA6-4D43-89BF-31E9AB49587E.png` | BLOCKED: binary inaccessible | UNMAPPED |
+| `9E6B95D4-25B1-42C1-8501-27B9EA0004D3.png` | BLOCKED: binary inaccessible | UNMAPPED |
+| `A4A34CCB-CAA3-4B1B-9498-60FA65F682F7.png` | BLOCKED: binary inaccessible | UNMAPPED |
+| `B0C8D2D9-584A-402A-9220-70565A4E6D9D.png` | BLOCKED: binary inaccessible | UNMAPPED |
+| `F39B020F-676F-4C34-95A8-7BAB2C90D32E.png` | BLOCKED: binary inaccessible | UNMAPPED |
+
+The repository reference README names seven intended semantic cases: video host+1, host+2, alternate host+2, host+3; audio host+1, host+6, host+11. These are **design contracts**, not verified filename assignments. Image-capable reviewer must inspect each PNG before marking the mapping complete. No seventh binary was confirmed.
+
+### First-round landing and mode-specific implementation
+
+- `app/page.tsx` now passes actual active stream ID, LiveKit room and host ID into landing preview and guest conversation. The landing player does not navigate away when requesting a guest seat.
+- `app/components/HomeLiveConversation.tsx` exposes **Request audio seat** in Audio Live or **Request to join Live** in Video Live; in-place `LiveGuestStudio` preserves the existing comment feed and input. Anonymous viewers keep watching; they cannot request a seat without signing in.
+- `components/LiveGuestStudio.tsx` uses broadcast-specific seat mode: `pfp` in Audio Live, `camera` in Video Live. Guest publication remains gated by approved status and explicit `Join stage` action. On host mute, the stopped mic track is removed from the MediaStream, so a later explicit rejoin can reacquire permission rather than falsely toggling a dead track.
+- `app/components/HomeAudioLivePlayer.tsx` now shows the **real** guest orbit from LiveKit participant tracks and profile avatars. Guest-publisher event mutes the local viewer monitoring audio to avoid echo. The guest LiveKit room independently attaches remote audio tracks and offers a tap-to-hear fallback.
+- `app/components/LiveHomePreview.tsx` now shows real guest camera tiles alongside the host video, without overwriting the host video node with guest tracks. Audio monitoring is opt-in via **Hear Live**, and temporarily muted while the local user publishes as guest.
+- `app/streaming/live/[id]/page.tsx` passes the actual audio/video mode into the guest controls. Viewer comments remain independent of the stage.
+- `scripts/live-guests-landing.test.mjs` contains seven repeatable **static contract tests** for stage geometry, real LiveKit roster wiring, host/guest camera separation, landing guest request, mode-specific media rules, independent comments and guest remote-audio monitoring. `.github/workflows/validate.yml` runs these plus the Bot A guest policy tests before TypeScript/build on a main-targeted PR.
+
+### First-round QA evidence and blockers
+
+| Test / acceptance case | Evidence | Status |
+| --- | --- | --- |
+| Reference audio orbit geometry and 11-seat cap | `LiveGuestsStage`, `HomeAudioLivePlayer` source; static test added | SOURCE INSPECTED; CI pending |
+| Reference video 60/40 and 3-camera cap | `LiveGuestsStage.module.css`, `LiveHomePreview`; static test added | SOURCE INSPECTED; CI pending |
+| In-place landing guest request without navigation | `HomeLiveConversation` renders `LiveGuestStudio` for active stream; static test added | SOURCE INSPECTED; live auth/stream test pending |
+| Host camera remains separate from guest cameras | Host-identity filter in `LiveHomePreview` and distinct guest video tiles | SOURCE INSPECTED; real track test pending |
+| Audio/video permissions and host mute | Mode-specific request + existing backend policy; stopped track removal | SOURCE INSPECTED; positive server/media test pending |
+| Signed-out watch, signed-in request | Existing viewer tokens + guest studio sign-in gate | SOURCE INSPECTED; browser session test pending |
+| Comments stay visible while stage changes | Separate `HomeLiveConversation` and full-screen `omLiveTheaterChat` | SOURCE INSPECTED; 320px/desktop visual test pending |
+| CI `node --test`, TypeScript, Next build | Workflow updated on this branch | **PENDING** until GitHub run completes |
+| Request → approve → publish → mute → remove → rejoin | Requires disposable authorized host+guest accounts and active isolated LiveKit stream | **NOT RUN** |
+| iPhone Safari / desktop first-round screenshots, audio autoplay, camera crossfade | No browser/device session or isolated preview media room available to this task | **NOT RUN** |
+| Six GitHub PNG image-by-image visual mapping | Binary source unavailable through connector | **BLOCKED** |
+
+**Release decision:** Not production-ready. No database mutation, no production deployment, no real-user data changes. Preserve latest main and camera crossfade; reconcile Bot A updates and run a real isolated two-device session before merge.
+
+
+### Bot A completion received and integrated into Bot B second pass
+
+- Bot A's new draft [PR #218](https://github.com/ElmiandCo/1Muslim/pull/218) identified a **real LiveKit permission defect**: host-muted Audio/PFP guests with zero permitted media sources could receive `canPublish:true` and an empty source list. Bot B incorporated the exact `guestCanPublishMedia` policy helper, subscribe-only token grant for those guests, and regression test into this isolated follow-up [PR #219](https://github.com/ElmiandCo/1Muslim/pull/219). **Do not merge #218 separately without reconciling duplicate code.**
+- Bot A completed read-only SecureApp schema/permissions verification; zero active streams and no disposable test accounts meant positive LiveKit end-to-end guest flow could not be run.
+- Isolated Node 22.16 policy test reproduction with type stripping: **5/5 passed** (seat cap, camera restriction, mic mute, identity, subscribe-only muted guest). Bot B checked seven landing/stage static contract groups directly against fetched GitHub source: **7/7 matched**. These are **source-level**, not browser/media end-to-end tests.
+- Vercel preview build for prior UI head `0254e0f` reported **READY**; current combined branch head must independently pass. The final main/production merge also needs separate integration of Live Cinema's frozen-frame 400 ms crossfade.
+
+**Audio reference follow-up:** `LiveGuestsStage.tsx` now renders authentic seat numbers 1–11 (based on actual connected guest order), styled by `.audioSeatNumber` in `LiveGuestsStage.module.css`. Orbit radii were reduced at higher occupancy to keep numbered avatars within narrow 320px stages. This is a source-level layout adjustment; pixel screenshots and real-device clipping tests remain outstanding.
+
+
+### Guest-stage continuity and reference accuracy refinements
+
+- Landing guest panel is **lazy-mounted once and retained while collapsed**; closing the panel does not disconnect an approved guest's publishing room. Explicit Leave or switching the active stream still disconnects/cleans tracks.
+- Video landing preview audio is opt-in. Guest LiveKit room attaches remote host/guest audio and offers a manual autoplay recovery button; duplicate viewer audio is muted during guest publication and restored afterward. Full-screen `LiveKitViewer` follows the same monitor-suppression rule.
+- Audio host microphone badge now reflects the actual host LiveKit audio publication, not an always-on default; host speaking glow uses the host's audio level. Guest mic badges reflect their own track publications.
+- Seven source-level QA groups rechecked after these refinements: **7/7 matched actual branch source**. Real media/browser acceptance still pending; no fake device screenshot or success claim.

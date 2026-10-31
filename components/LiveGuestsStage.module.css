@@ -26,10 +26,11 @@
 .hostAudio strong{font-size:clamp(12px,2.5vw,18px);max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .hostAudio small{font-size:clamp(8px,1.7vw,12px);color:#91eac4}
 .audioGuest{position:absolute;left:var(--guest-x);top:var(--guest-y);transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;width:clamp(40px,14%,95px);z-index:3;transition:left .75s cubic-bezier(.22,1,.36,1),top .75s cubic-bezier(.22,1,.36,1),width .75s ease}
+.audioSeatNumber{position:absolute;top:-11px;left:50%;transform:translateX(-50%);display:grid;place-items:center;min-width:21px;height:21px;padding:0 4px;border-radius:999px;border:1px solid #d5b775aa;background:#061812ee;color:#f9e1a4;font-size:11px;font-weight:800;line-height:1;box-shadow:0 2px 9px #0008;z-index:4;pointer-events:none}
 .guestPortrait{width:100%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;overflow:hidden;border:2px solid #88e9c1;box-shadow:0 0 12px #1bc68e70;background:#103f31}
 .audioGuest strong{font-size:clamp(9px,1.6vw,12px);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 5px #000}
 .audioGuest small{position:absolute;bottom:22px;right:-4px;padding:2px;border-radius:50%;background:#031c14;font-size:clamp(10px,1.5vw,14px)}
 .stage[data-count="9"] .audioGuest,.stage[data-count="10"] .audioGuest,.stage[data-count="11"] .audioGuest{width:clamp(34px,11%,68px)}
 .stage[data-count="9"] .hostPortrait,.stage[data-count="10"] .hostPortrait,.stage[data-count="11"] .hostPortrait{width:clamp(60px,15vw,145px)}
-@media(max-width:600px){.tile{border-radius:6px}.hostLabel{left:5px;top:5px;padding:4px 7px}.guestLabel{left:3px;right:3px;bottom:3px;padding:4px}.audioOrbit{width:100%;height:auto;aspect-ratio:1}.audioGuest{width:clamp(36px,13%,62px)}.stage[data-count="9"] .audioGuest,.stage[data-count="10"] .audioGuest,.stage[data-count="11"] .audioGuest{width:clamp(30px,10%,45px)}.audioGuest small{bottom:16px}}
+@media(max-width:600px){.tile{border-radius:6px}.hostLabel{left:5px;top:5px;padding:4px 7px}.guestLabel{left:3px;right:3px;bottom:3px;padding:4px}.audioOrbit{width:100%;height:auto;aspect-ratio:1}.audioGuest{width:clamp(36px,13%,62px)}.stage[data-count="9"] .audioGuest,.stage[data-count="10"] .audioGuest,.stage[data-count="11"] .audioGuest{width:clamp(30px,10%,45px)}.audioGuest small{bottom:16px}.audioSeatNumber{top:-8px;min-width:17px;height:17px;font-size:9px}}
 @media(prefers-reduced-motion:reduce){.audioGuest{transition:none}.tile,.guestPortrait{animation:none}}

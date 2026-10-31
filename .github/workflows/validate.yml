@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - bot-b/liveguests-landing-visual-qa-20261031
   pull_request:
     branches:
       - main
@@ -16,6 +17,8 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
+      - name: Live guest policy and landing contracts
+        run: node --experimental-strip-types --test scripts/live-guests.test.mjs scripts/live-guests-landing.test.mjs
       - name: TypeScript validation
         run: npx tsc --noEmit
       - name: Production build

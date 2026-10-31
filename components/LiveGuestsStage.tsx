@@ -139,9 +139,11 @@ export default function LiveGuestsStage({mode,guests,hostName,hostAvatar,hostMic
           // align with the corresponding clock markers. Below capacity spread evenly.
           const angle=count===11?-60+index*30:count===1?90:-90+index*360/count;
           const radians=angle*Math.PI/180;
-          const radius=count>=9?42:count>=6?40:count>=3?38:33;
+          // Keep numbered seats within a 320px mobile stage without clipping the ring.
+          const radius=count>=9?33:count>=6?35:count>=3?36:32;
           const position={"--guest-x":`${50+Math.cos(radians)*radius}%`,"--guest-y":`${50+Math.sin(radians)*radius}%`} as CSSProperties;
           return <div key={guest.id} className={styles.audioGuest} data-speaking={guest.speaking?"yes":"no"} style={position}>
+            <span className={styles.audioSeatNumber} aria-label={`Guest seat ${index+1}`}>{index+1}</span>
             <span className={styles.guestPortrait}>{guest.avatar?<img src={guest.avatar} alt="" referrerPolicy="no-referrer"/>:<span aria-hidden="true">✧</span>}</span>
             <strong title={guest.name}>{guest.name}</strong>
             <small aria-label={guest.micActive?"Microphone active":"Microphone muted"}>{guest.micActive?"🎙":"🔇"}</small>

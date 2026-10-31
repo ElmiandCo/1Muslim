@@ -38,6 +38,28 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const [muted, setMuted] = useState(false);
   const mutedRef = useRef(false);
   const [audioNeedsGesture, setAudioNeedsGesture] = useState(false);
+  const [guestOnStage,setGuestOnStage]=useState(false);
+  const priorGuestMuteRef=useRef<boolean|null>(null);
+  useEffect(()=>{
+    const onStage=(event:Event)=>{
+      const detail=(event as CustomEvent<{roomName:string;active:boolean}>).detail;
+      if(detail?.roomName!==roomName)return;
+      setGuestOnStage(detail.active);
+      if(detail.active){
+        if(priorGuestMuteRef.current===null)priorGuestMuteRef.current=mutedRef.current;
+        mutedRef.current=true;setMuted(true);
+      }else if(priorGuestMuteRef.current!==null){
+        mutedRef.current=priorGuestMuteRef.current;setMuted(priorGuestMuteRef.current);
+        priorGuestMuteRef.current=null;
+      }
+      audioContainerRef.current?.querySelectorAll("audio").forEach(node=>{
+        node.muted=mutedRef.current;
+        if(!node.muted)void node.play().catch(()=>setAudioNeedsGesture(true));
+      });
+    };
+    window.addEventListener("1muslim:guest-stage",onStage);
+    return()=>window.removeEventListener("1muslim:guest-stage",onStage);
+  },[roomName]);
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
@@ -50,6 +72,19 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const [voiceEnergy,setVoiceEnergy] = useState(0);
   const hostIdRef=useRef<string|null>(null);
   const [hostIdentity,setHostIdentity]=useState<string|null>(null);
+  const [hostMicActive,setHostMicActive]=useState(false);
+  useEffect(()=>{
+    const room=roomRef.current;
+    if(!connectionActive||!room||!hostIdentity){setHostMicActive(false);return}
+    const update=()=>{
+      const host=room.remoteParticipants.get(hostIdentity);
+      const mic=[...(host?.trackPublications.values()??[])].find(p=>p.kind===Track.Kind.Audio&&p.source!==Track.Source.ScreenShareAudio);
+      setHostMicActive(!!mic&&!mic.isMuted);
+    };
+    const events=[RoomEvent.TrackPublished,RoomEvent.TrackUnpublished,RoomEvent.TrackMuted,RoomEvent.TrackUnmuted,RoomEvent.ParticipantConnected,RoomEvent.ParticipantDisconnected];
+    for(const event of events)room.on(event,update);
+    update();return()=>{for(const event of events)room.off(event,update)};
+  },[connectionActive,hostIdentity]);
   const guestStageMode=hasCameraVideo||hasScreenVideo?"video":isAudioBroadcast||hasRemoteAudio?"audio":"video";
   const guestRoster=useLiveGuestRoster(roomRef,connectionActive,hostIdentity,guestStageMode==="audio"?11:3);
   const hostEndSignalRef=useRef<()=>void>(()=>{});
@@ -367,6 +402,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   }, [roomName, retryAttempt]);
 
   const toggleMute = () => {
+    if(guestOnStage)return; // Monitor the guest room, not a second viewer connection.
     // An autoplay rejection is not an intentional mute: the first tap should
     // unlock playback rather than mute the host again.
     const next = audioNeedsGesture ? false : !muted;
@@ -396,7 +432,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   return (
     <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:guestStageMode==="audio"?"4/5":"16/9",overflow:"hidden"}}>
       {hostEnded&&<div role="status" aria-live="assertive" className="omHostEndedNotice"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>{embedded?"Closing your floating player…":"Taking you Home…"}</small><button type="button" onClick={()=>{if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));else router.replace("/")}}>Go Home now →</button></div>}
-      <LiveGuestsStage mode={guestStageMode} guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostSpeaking={voiceEnergy>.12}>
+      <LiveGuestsStage mode={guestStageMode} guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostMicActive={hostMicActive} hostSpeaking={voiceEnergy>.12}>
         <div className="omLiveVideoStage" data-screen={hasScreenVideo?"yes":"no"} data-layout={hasScreenVideo&&hasCameraVideo?shareLayout:"solo"}>
           <video ref={videoRef} className="omCameraVideo" autoPlay muted playsInline controls={!embedded} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block"}} />
           <video ref={screenVideoRef} className="omScreenVideo" autoPlay muted playsInline aria-label="Shared screen" style={{display:hasScreenVideo?"block":"none"}} />
@@ -409,8 +445,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
       {!embedded&&<><div className="omViewerTapCounter" aria-label={`${tapCount} screen taps`}>✨ {tapCount.toLocaleString()} taps</div>{tapBursts.map(t=><span key={t.id} className="omViewerTapBurst" style={{left:t.x,top:t.y}}>💜</span>)}<a className="omViewerExit" href="/streaming" aria-label="Exit live viewer">✕</a></>}
       {viewerCount !== null && !error && <div role="status" aria-label={`${viewerCount.toLocaleString()} watching live`} className={viewerPulse?"omViewerCountPulse":""} style={{position:"absolute",top:12,right:12,zIndex:6,display:"flex",alignItems:"center",gap:6,padding:"7px 11px",borderRadius:999,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.22)",color:"#fff",fontSize:12,fontWeight:800,backdropFilter:"blur(10px)",pointerEvents:"none"}}>👁 {viewerCount.toLocaleString()} <span style={{fontSize:10,opacity:.8}}>watching</span>{totalViews!==null&&<span style={{fontSize:10,opacity:.9,borderLeft:"1px solid #ffffff55",paddingLeft:8,marginLeft:2}}>↗ {totalViews.toLocaleString()} total</span>}</div>}
       <div style={{position:"absolute",left:12,bottom:12,display:"flex",gap:7,alignItems:"center",flexWrap:"wrap",zIndex:5}}>
-        <button type="button" onClick={toggleMute} aria-label={audioNeedsGesture ? "Hear live audio" : muted ? "Unmute live audio" : "Mute live audio"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
-          {audioNeedsGesture ? "🔊 Hear Live" : muted ? "🔇 Unmute" : "🔊 Mute"}
+        <button type="button" onClick={toggleMute} disabled={guestOnStage} aria-label={guestOnStage?"Guest stage monitoring active":audioNeedsGesture ? "Hear live audio" : muted ? "Unmute live audio" : "Mute live audio"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
+          {guestOnStage?"🎙️ On stage":audioNeedsGesture ? "🔊 Hear Live" : muted ? "🔇 Unmute" : "🔊 Mute"}
         </button>
         {hasScreenVideo&&hasCameraVideo&&<button type="button" onClick={()=>setShareLayout(v=>v==="pip"?"split":"pip")} aria-label={shareLayout==="pip"?"Switch to split screen":"Switch to picture in picture"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>{shareLayout==="pip"?"▣ Split":"▧ Picture-in-picture"}</button>}
         {streamId && <ShareLiveButton streamId={streamId} compact={embedded} />}

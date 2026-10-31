@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   guestLimitForAspectRatio, guestMayPublishCamera,
-  guestMayPublishMicrophone, isGuestIdentity,
+  guestMayPublishMicrophone, guestCanPublishMedia, isGuestIdentity,
 } from "../lib/live-guest-policy.ts";
 
 test("video seats cap at 3; audio seats cap at 11", () => {
@@ -26,4 +26,14 @@ test("host and viewer identities cannot be treated as guest seats", () => {
   assert.equal(isGuestIdentity(guest, host), true);
   assert.equal(isGuestIdentity(guest + ":viewer:abcd", host), false);
   assert.equal(isGuestIdentity("anonymous-viewer:123", host), false);
+});
+
+
+test("host-muted audio/PFP guest receives subscribe-only permissions", () => {
+  assert.equal(guestCanPublishMedia("1:1", "pfp", true), false);
+  assert.equal(guestCanPublishMedia("9:16", "pfp", true), false);
+  assert.equal(guestCanPublishMedia("1:1", "camera", true), false);
+  assert.equal(guestCanPublishMedia("1:1", "pfp", false), true);
+  assert.equal(guestCanPublishMedia("9:16", "pfp", false), true);
+  assert.equal(guestCanPublishMedia("9:16", "camera", true), true);
 });
