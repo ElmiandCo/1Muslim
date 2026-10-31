@@ -1603,15 +1603,17 @@ export default function GoLivePage() {
             top:clamp(110px,15dvh,190px);
           }
         }
+        /* CSS-only: center Voice avatar within the full stage, not a top-aligned box. */
         .goLive .layout>.panel:first-child>.preview .voiceAvatarStage{
-          position:absolute!important;inset:auto!important;top:14px!important;left:50%!important;right:auto!important;
-          width:min(76vw,340px,40dvh)!important;height:auto!important;aspect-ratio:1/1!important;
-          border-radius:24px!important;border:1px solid #b5ffe555!important;
-          transform:translateX(-50%) scale(.92)!important;
+          position:absolute!important;inset:0!important;top:0!important;left:0!important;right:0!important;bottom:0!important;
+          width:100%!important;height:100%!important;aspect-ratio:auto!important;
+          display:flex!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;
+          border:0!important;border-radius:0!important;
+          transform:scale(.92)!important;
           transition:opacity .65s ease,visibility .65s ease,transform 2s cubic-bezier(.22,1,.36,1)!important;
         }
         .goLive .layout>.panel:first-child>.preview .voiceAvatarStageActive{
-          transform:translateX(-50%) scale(1)!important;
+          transform:scale(1)!important;
         }
         /* Keep the SAME camera node visible throughout morph; no opacity blackout. */
         .goLive .preview.studioMorphing::before{display:none!important}
