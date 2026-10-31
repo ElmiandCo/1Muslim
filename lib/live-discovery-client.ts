@@ -47,6 +47,7 @@ let refreshQueued = false;
 let generation = 0;
 let retryCount = 0;
 let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+let subscribeTimer: ReturnType<typeof setTimeout> | null = null;
 let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 let lastRefresh = 0;
 const delayedRefreshes = new Set<ReturnType<typeof setTimeout>>();
@@ -95,6 +96,10 @@ function mergeSnapshot(rows: VerifiedLive[]) {
     lives.push(row);
   }
   publish({ lives, presence, ready: true, connected });
+}
+
+function clearSubscribeTimer() {
+  if (subscribeTimer) { clearTimeout(subscribeTimer); subscribeTimer = null; }
 }
 
 function clearTimer(which: "fallback" | "refresh") {
@@ -179,9 +184,20 @@ function connectRealtime() {
       }
     });
   channel = activeChannel;
+  // A channel that never acknowledges subscription must not freeze discovery.
+  // This is a one-shot connection watchdog, not steady-state viewer polling.
+  clearSubscribeTimer();
+  subscribeTimer = setTimeout(() => {
+    subscribeTimer = null;
+    if (!running || generation !== currentGeneration || channel !== activeChannel || connected) return;
+    channel = null;
+    void getSupabase().removeChannel(activeChannel);
+    scheduleFallback();
+  }, 8000);
   activeChannel.subscribe(status => {
       if (!running || generation !== currentGeneration || channel !== activeChannel) return;
       if (status === "SUBSCRIBED") {
+        clearSubscribeTimer();
         connected = true;
         retryCount = 0;
         clearTimer("fallback");
@@ -189,6 +205,7 @@ function connectRealtime() {
         // Subscribe before snapshot to avoid missing a new Live during initialization.
         scheduleRefresh(0);
       } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+        clearSubscribeTimer();
         connected = false;
         publish({ ...snapshot, connected: false });
         if (channel) {
@@ -202,7 +219,9 @@ function connectRealtime() {
 }
 
 function onResume() {
-  if (document.visibilityState === "visible" && Date.now() - lastRefresh > 3000) scheduleRefresh(0);
+  if (document.visibilityState !== "visible") return;
+  if (Date.now() - lastRefresh > 3000) scheduleRefresh(0);
+  if (!connected) scheduleFallback();
 }
 
 function start() {
@@ -227,6 +246,7 @@ function stop() {
   connected = false;
   clearTimer("fallback");
   clearTimer("refresh");
+  clearSubscribeTimer();
   document.removeEventListener("visibilitychange", onResume);
   window.removeEventListener("focus", onResume);
   delayedRefreshes.forEach(timer => clearTimeout(timer));
