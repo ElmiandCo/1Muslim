@@ -1,0 +1,22 @@
+name: Live Camera Crossfade Safety
+on:
+  push:
+    branches:
+      - integration/live-cinema-camera-crossfade-20261031
+  pull_request:
+    branches:
+      - bot/live-cinema-viewer-polish-20261031
+  workflow_dispatch:
+jobs:
+  camera-crossfade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Camera and Live Cinema regression tests
+        run: node --experimental-strip-types --test scripts/live-cinema.test.mjs
+      - name: TypeScript validation
+        run: npx tsc --noEmit
