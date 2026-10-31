@@ -153,15 +153,20 @@ export default function GoLivePage() {
     else{setCameraOn(true);streamRef.current?.getVideoTracks().forEach(t=>t.enabled=true);}
     if(live&&liveStreamIdRef.current){
       const streamId=liveStreamIdRef.current;
-      void fetch("/api/live-mode",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({streamId,mode}),cache:"no-store"
-      }).then(response=>{if(!response.ok)console.warn("Live mode metadata sync failed",response.status)})
-        .catch(error=>console.warn("Live mode metadata sync failed",error));
-      // Serial queue prevents rapid Phone ↔ Voice taps from racing publish
-      // against unpublish and leaving the host with no camera track.
-      modeSyncQueueRef.current=modeSyncQueueRef.current.catch(()=>{}).then(()=>syncPublishedCameraForMode(mode))
-        .catch(error=>{if(desiredStudioModeRef.current===mode)setError(error instanceof Error?error.message:"Could not switch camera mode.");});
+      // Serialize camera and metadata updates; a slower older request must
+      // never overwrite the mode selected by a newer tap.
+      modeSyncQueueRef.current=modeSyncQueueRef.current.catch(()=>{}).then(async()=>{
+        if(desiredStudioModeRef.current!==mode)return;
+        await syncPublishedCameraForMode(mode);
+        if(desiredStudioModeRef.current!==mode||endRequestedRef.current)return;
+        const response=await fetch("/api/live-mode",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({streamId,mode}),cache:"no-store"
+        });
+        if(!response.ok)console.warn("Live mode metadata sync failed",response.status);
+      }).catch(error=>{
+        if(desiredStudioModeRef.current===mode)setError(error instanceof Error?error.message:"Could not switch camera mode.");
+      });
     }
   };
   useEffect(()=>{
