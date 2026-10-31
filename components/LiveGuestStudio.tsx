@@ -101,8 +101,8 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
     }catch(e){setError(e instanceof Error?e.message:"Guest moderation failed.")}
     finally{setBusy(false)}
   }
-  async function join(){
-    if(busy||joined||me?.status!=="approved")return;
+  async function join(reconnecting=false){
+    if((busy||joined)&&!reconnecting||me?.status!=="approved")return;
     setBusy(true);setError("");
     try{
       const response=await fetch("/api/livekit/token",{
@@ -136,12 +136,17 @@ export default function LiveGuestStudio({streamId,roomName,hostId}:{streamId:str
       stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;
     }finally{setBusy(false)}
   }
+  useEffect(()=>{
+    if(!joined||!preview.current||!stream.current?.getVideoTracks().length)return;
+    preview.current.srcObject=stream.current;
+    void preview.current.play().catch(()=>{});
+  },[joined,me?.mode]);
   async function toggleMic(){
     if(me?.host_muted){setError("The host muted your microphone. Wait until the host unmutes you.");return}
     const audio=stream.current?.getAudioTracks()??[];
     if(!audio.length){
       // A host-muted JWT has no mic grant. Explicit user action gets a fresh token.
-      leave();await join();return;
+      leave();await join(true);return;
     }
     const next=!mic;audio.forEach(t=>t.enabled=next);setMic(next);
   }
