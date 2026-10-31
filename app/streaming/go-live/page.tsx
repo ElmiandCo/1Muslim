@@ -6,7 +6,9 @@ import GoLiveHudHudTip from "../../components/GoLiveHudHudTip";
 import Link from "next/link";
 import { createClient } from "../../../utils/supabase/client";
 import { useEffect, useRef, useState } from "react";
-import { LocalAudioTrack, Room, RoomEvent, Track } from "livekit-client";
+import { LocalAudioTrack, LocalVideoTrack, Room, RoomEvent, Track } from "livekit-client";
+import { flipLiveCamera } from "../../../lib/live-cinema-camera";
+import { playLiveCinemaMorphSound } from "../../../lib/live-cinema-sound";
 import { createLiveAudioProcessor } from "../../../components/live-audio-effects";
 import LiveChat from "../../../components/LiveChat";
 import SyncedLiveIntro from "../../components/SyncedLiveIntro";
@@ -60,42 +62,10 @@ export default function GoLivePage() {
   const endRequestedRef=useRef(false);
   const studioMorphTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   useEffect(()=>()=>{if(studioMorphTimer.current)clearTimeout(studioMorphTimer.current)},[]);
-  const playCameraAdjustSound=(mode:"desktop"|"phone"|"voice")=>{
-    try{
-      const context=new AudioContext();
-      void context.resume().then(()=>{
-        const start=context.currentTime;
-        [0,.16,.34].forEach((offset,i)=>{
-          const oscillator=context.createOscillator(),gain=context.createGain();
-          oscillator.type=i===1?"triangle":"sine";
-          oscillator.frequency.setValueAtTime([420,570,740][i],start+offset);
-          oscillator.frequency.exponentialRampToValueAtTime([510,660,920][i],start+offset+.12);
-          gain.gain.setValueAtTime(.0001,start+offset);
-          gain.gain.exponentialRampToValueAtTime(.055,start+offset+.015);
-          gain.gain.exponentialRampToValueAtTime(.0001,start+offset+.14);
-          oscillator.connect(gain);gain.connect(context.destination);
-          oscillator.start(start+offset);oscillator.stop(start+offset+.15);
-        });
-        // A gentle two-second lens motor sweep follows the canvas resize.
-        const motor=context.createOscillator(),motorGain=context.createGain();
-        motor.type="sine";
-        const from=mode==="voice"?440:mode==="phone"?170:280;
-        const to=mode==="voice"?180:mode==="phone"?530:370;
-        motor.frequency.setValueAtTime(from,start);
-        motor.frequency.exponentialRampToValueAtTime(to,start+1.85);
-        motorGain.gain.setValueAtTime(.0001,start);
-        motorGain.gain.exponentialRampToValueAtTime(.025,start+.2);
-        motorGain.gain.setValueAtTime(.025,start+1.2);
-        motorGain.gain.exponentialRampToValueAtTime(.0001,start+1.9);
-        motor.connect(motorGain);motorGain.connect(context.destination);
-        motor.start(start);motor.stop(start+1.92);
-        window.setTimeout(()=>void context.close().catch(()=>{}),2300);
-      }).catch(()=>void context.close().catch(()=>{}));
-    }catch{/* Audio effects are optional; never block mode switching. */}
-  };
   const desiredStudioModeRef=useRef<"desktop"|"phone"|"voice">("phone");
   const modeSyncQueueRef=useRef<Promise<void>>(Promise.resolve());
   const previewCameraAcquiringRef=useRef(false);
+  const cameraFlipInFlightRef=useRef(false);
   const syncPublishedCameraForMode=async(mode:"desktop"|"phone"|"voice",allowCamera:boolean)=>{
     const room=roomRef.current;
     if(!room||!liveStreamIdRef.current||endRequestedRef.current||desiredStudioModeRef.current!==mode)return;
@@ -150,7 +120,7 @@ export default function GoLivePage() {
     setStudioMorphing(false);
     requestAnimationFrame(()=>setStudioMorphing(true));
     studioMorphTimer.current=setTimeout(()=>setStudioMorphing(false),2000);
-    playCameraAdjustSound(mode);
+    playLiveCinemaMorphSound(mode);
     setStudioMode(mode);
     setAspectRatio(mode==="voice"?"1:1":mode==="desktop"?"16:9":"9:16");
     if(mode==="voice"){
@@ -748,45 +718,50 @@ export default function GoLivePage() {
   };
 
   const flipCamera = async () => {
-    if (!streamRef.current || !navigator.mediaDevices?.getUserMedia) return;
+    // Camera capture may be temporarily unavailable on iPhone Safari. Never
+    // disconnect the room, unpublish its sender or replace the microphone.
+    if (cameraFlipInFlightRef.current || !cameraOn || studioMode === "voice" ||
+        !streamRef.current || !navigator.mediaDevices?.getUserMedia) return;
+    cameraFlipInFlightRef.current = true;
     setError("");
-    const nextFacingMode = facingMode === "user" ? "environment" : "user";
+    const previousFacing = facingMode;
+    const nextFacing = facingMode === "user" ? "environment" : "user";
     try {
-      if(greenCanvasRef.current) throw new Error("Turn off Green Screen and restart camera preview before flipping the camera.");
-      const currentStream = streamRef.current;
-      const oldVideoTracks = currentStream.getVideoTracks();
-      const newVideoStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { exact: nextFacingMode },
-          width: { ideal: getCaptureSize().width },
-          height: { ideal: getCaptureSize().height },
-        },
-        audio: false,
-      });
-      const newVideoTrack = newVideoStream.getVideoTracks()[0];
-      if (!newVideoTrack) throw new Error("The other camera could not be opened.");
-      oldVideoTracks.forEach((track) => {
-        currentStream.removeTrack(track);
-        track.stop();
-      });
-      currentStream.addTrack(newVideoTrack);
-      streamRef.current = currentStream;
-      rawCameraRef.current=newVideoTrack;
-      setFacingMode(nextFacingMode);
+      if (greenCanvasRef.current) throw new Error("Turn off Green Screen before flipping the camera.");
+      const stream = streamRef.current;
+      const room = roomRef.current;
+      const publication = room?.localParticipant.getTrackPublication(Track.Source.Camera);
+      if (room && !publication?.videoTrack) throw new Error("Camera publication is not ready to switch.");
+      const nextTrack = await flipLiveCamera(
+        stream,
+        publication?.videoTrack as LocalVideoTrack | undefined,
+        previousFacing,
+        nextFacing,
+        getCaptureSize(),
+        navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices),
+      );
+      if (streamRef.current !== stream || endRequestedRef.current) return;
+      rawCameraRef.current = nextTrack;
+      setFacingMode(nextFacing);
       setCameraOn(true);
       setZoom(1);
       setFocusMode("auto");
-      refreshCameraCapabilities(newVideoTrack);
+      refreshCameraCapabilities(nextTrack);
+      // Reuse the exact preview element; LiveKit's sender has already switched
+      // its video source without a new publication or room reconnect.
       if (videoRef.current) {
-        videoRef.current.srcObject = currentStream;
+        videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
         videoRef.current.playsInline = true;
-        await videoRef.current.play().catch(() => undefined);
+        void videoRef.current.play().catch(() => {});
       }
     } catch (err) {
+      // Camera fallback can fail without interrupting a still-live microphone.
       setError(err instanceof DOMException && (err.name === "OverconstrainedError" || err.name === "NotFoundError")
         ? "This device does not expose a switchable front/back camera."
         : err instanceof Error ? err.message : "We could not switch cameras.");
+    } finally {
+      cameraFlipInFlightRef.current = false;
     }
   };
 
