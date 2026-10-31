@@ -294,6 +294,24 @@ export default function GoLivePage() {
       }).catch(()=>{});
     }catch{/* Audio cue must never interrupt broadcast. */}
   };
+  // Two precise, quiet clock ticks: 2 and 1 only. Zero stays silent.
+  // Reuse the audio context unlocked by the Go Live tap; never touch media tracks.
+  const playCountdownTick=(beat:2|1)=>{
+    try{
+      const context=launchAudioRef.current;
+      if(!context||context.state==="closed")return;
+      const now=context.currentTime;
+      const osc=context.createOscillator(),gain=context.createGain();
+      osc.type="sine";
+      osc.frequency.setValueAtTime(beat===2?880:660,now);
+      osc.frequency.exponentialRampToValueAtTime(beat===2?560:440,now+.065);
+      gain.gain.setValueAtTime(.0001,now);
+      gain.gain.linearRampToValueAtTime(.085,now+.006);
+      gain.gain.exponentialRampToValueAtTime(.0001,now+.095);
+      osc.connect(gain);gain.connect(context.destination);
+      osc.start(now);osc.stop(now+.1);
+    }catch{/* A blocked sound must never delay Go Live. */}
+  };
   const launchBroadcast=()=>{
     if(launchPendingRef.current||live||connectingLive||saving)return;
     if(!cameraReady){
@@ -319,7 +337,7 @@ export default function GoLivePage() {
     let remaining=3;
     launchTimerRef.current=setInterval(()=>{
       remaining-=1;
-      if(remaining>0){setLaunchCountdown(remaining);return;}
+      if(remaining>0){setLaunchCountdown(remaining);playCountdownTick(remaining as 2|1);return;}
       if(launchTimerRef.current){clearInterval(launchTimerRef.current);launchTimerRef.current=null;}
       setLaunchCountdown(null);
       setLaunchPressed(false);
