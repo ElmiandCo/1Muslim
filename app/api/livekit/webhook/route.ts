@@ -65,6 +65,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: true });
   }
 
+  // Stamp the start of the remote observation, NOT the end of the query.
+  // A slow older LiveKit snapshot must not overwrite a newer observation
+  // merely because its database RPC finished last.
+  const observationStartedAt = new Date().toISOString();
   // Query LiveKit's current room state rather than trusting webhook arrival
   // order or a track-published event that may already be obsolete.
   let host = null;
@@ -86,7 +90,7 @@ export async function POST(request: Request) {
   const { data, error } = await db.rpc("apply_livekit_presence_snapshot", {
     p_stream_id: stream.id,
     p_event_id: eventId,
-    p_observed_at: new Date().toISOString(),
+    p_observed_at: observationStartedAt,
     p_host_connected: snapshot.hostConnected,
     p_has_audio: snapshot.hasAudio,
     p_has_video: snapshot.hasVideo,
