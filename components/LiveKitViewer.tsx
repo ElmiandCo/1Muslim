@@ -8,13 +8,17 @@ import { useRouter } from "next/navigation";
 import ReconnectTrivia from "../app/components/ReconnectTrivia";
 import ShareLiveButton from "../app/components/ShareLiveButton";
 import LiveLightOverlay from "./LiveLightOverlay";
+import { cinemaAudioActive, type CinemaMode } from "../lib/live-cinema";
+import { playLiveCinemaMorphSound } from "../lib/live-cinema-sound";
 
-export default function LiveKitViewer({ roomName, streamId, embedded = false }: { roomName: string; streamId?: string; embedded?: boolean }) {
+export default function LiveKitViewer({ roomName, streamId, embedded = false, onViewModeChange }: { roomName: string; streamId?: string; embedded?: boolean; onViewModeChange?: (mode: CinemaMode) => void }) {
   const router=useRouter();
   const [hostEnded,setHostEnded]=useState(false);
   const endedOnce=useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const screenVideoRef = useRef<HTMLVideoElement>(null);
+  const reflectionRef = useRef<HTMLCanvasElement>(null);
+  const [viewMode,setViewMode] = useState<CinemaMode>("phone");
   const [hasCameraVideo,setHasCameraVideo] = useState(false);
   const [hasScreenVideo,setHasScreenVideo] = useState(false);
   const [shareLayout,setShareLayout] = useState<"pip"|"split">("pip");
@@ -37,6 +41,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const [muted, setMuted] = useState(false);
   const mutedRef = useRef(false);
   const [audioNeedsGesture, setAudioNeedsGesture] = useState(false);
+  const [audioPlaying,setAudioPlaying] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
@@ -52,6 +57,37 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false }: 
   const voiceAnalyzerCleanupRef=useRef<(()=>void)|null>(null);
   const voiceAudioContextRef=useRef<AudioContext|null>(null);
 
+  // Remember explicit audio preference; autoplay permission remains browser-controlled.
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("1muslim:live-audio-enabled") === "off") {
+        mutedRef.current = true; setMuted(true);
+      }
+    } catch { /* Storage may be disabled. */ }
+  }, []);
+
+  // Throttled low-resolution mirror of the subscribed video, NOT another player.
+  useEffect(() => {
+    if (embedded || viewMode !== "desktop") return;
+    const canvas = reflectionRef.current;
+    const ctx = canvas?.getContext("2d", { alpha: false });
+    if (!ctx) return;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      const source = hasScreenVideo ? screenVideoRef.current : videoRef.current;
+      if (!source || source.readyState < 2 || !source.videoWidth) return;
+      try { ctx.drawImage(source, 0, 0, canvas!.width, canvas!.height); } catch {}
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [embedded, viewMode, hasScreenVideo, hasCameraVideo]);
+
+  const selectViewMode = (mode: CinemaMode) => {
+    if (embedded || mode === viewMode) return;
+    setViewMode(mode);
+    onViewModeChange?.(mode);
+    playLiveCinemaMorphSound(mode);
+  };
+  const audible = cinemaAudioActive(connectionActive, hasRemoteAudio, muted, audioNeedsGesture, audioPlaying);
   // Render the voice stage before the first remote audio packet arrives.
   useEffect(()=>{
     if(!streamId)return;
