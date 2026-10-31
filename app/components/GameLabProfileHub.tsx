@@ -18,17 +18,22 @@ export default function GameLabProfileHub({active,profile,avatarHero,renderProfi
  const onAvatarPointerDown=(event:PointerEvent<HTMLDivElement>)=>{
   if(event.button!==0||!(event.target as HTMLElement).closest(".profile-avatar-portrait"))return;
   dragRef.current={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,originX:dragOffset.x,originY:dragOffset.y};
-  event.currentTarget.setPointerCapture(event.pointerId);
+  event.preventDefault();
+  event.stopPropagation();
+  const portrait=(event.target as HTMLElement).closest(".profile-avatar-portrait") as HTMLElement;
+  portrait.setPointerCapture(event.pointerId);
  };
  const onAvatarPointerMove=(event:PointerEvent<HTMLDivElement>)=>{
   const drag=dragRef.current;if(!drag||drag.pointerId!==event.pointerId)return;
+  event.preventDefault();event.stopPropagation();
   setDragOffset({x:drag.originX+event.clientX-drag.startX,y:drag.originY+event.clientY-drag.startY});
  };
  const onAvatarPointerEnd=(event:PointerEvent<HTMLDivElement>)=>{
   if(dragRef.current?.pointerId!==event.pointerId)return;
   dragRef.current=null;
   try{localStorage.setItem("1muslim:profile-avatar-position",JSON.stringify(dragOffset))}catch{}
-  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+  const portrait=(event.target as HTMLElement).closest(".profile-avatar-portrait") as HTMLElement|null;
+  if(portrait?.hasPointerCapture(event.pointerId))portrait.releasePointerCapture(event.pointerId);
  };
  useEffect(()=>{
   if(!active){setHeroPosition(null);return;}
