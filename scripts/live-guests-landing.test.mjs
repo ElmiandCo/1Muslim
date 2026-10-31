@@ -60,3 +60,15 @@ test("full-screen player retains independent comments and broadcast-specific sea
  assert.match(page,/omLiveTheaterChat/);
  assert.match(page,/omLiveTheaterGuestPanel/);
 });
+
+test("approved guest hears remote LiveKit audio without duplicate viewer monitoring",()=>{
+ const studio=read("components/LiveGuestStudio.tsx");
+ const video=read("app/components/LiveHomePreview.tsx");
+ const audio=read("app/components/HomeAudioLivePlayer.tsx");
+ assert.match(studio,/attachRemoteAudio/);
+ assert.match(studio,/RoomEvent\.TrackSubscribed/);
+ assert.match(studio,/needsAudioTap/);
+ assert.match(studio,/signalStage\(true\)/);
+ assert.match(video,/guestOnStageRef\.current/);
+ assert.match(audio,/guestOnStageRef\.current/);
+});
