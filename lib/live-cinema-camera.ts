@@ -75,5 +75,5 @@ function syncVideoTrack(stream: MediaStream, replacement: MediaStreamTrack) {
       track.stop();
     }
   }
-  if (!stream.getVideoTracks().includes(replacement)) stream.addTrack(replacement);
+  if (!stream.getVideoTracks().some(track => track.id === replacement.id)) stream.addTrack(replacement);
 }
