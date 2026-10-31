@@ -66,3 +66,54 @@ Date: 2026-10-30 (America/Chicago)
 - [ ] Network interruption shows reconnecting promptly, not a false "ended"
 - [ ] Viewer refresh reconnects to same broadcast, host stays live
 - [ ] No regression in non-Live pages; no production merge
+
+
+---
+
+## Bot B continuation — 2026-10-30/31
+
+### Branches / PR order
+1. **PR #188** `fix/studio-three-mode-morph-and-voice-1030` — camera layout foundation.
+2. **PR #190** `bot-a/live-audio-lifecycle-morph-20261030` — Bot A, stacked on #188.
+3. **PR #191** `bot-b/live-track-switch-end-recovery-20261031` — Bot B, stacked on Bot A #190.
+
+Review and merge **in that order only**, retargeting each downstream PR to `main` after its prerequisite merges. Never merge or deploy automatically. The earlier Bot B draft **PR #189** was closed without merge because it independently overlapped Bot A's viewer edits; PR #191 supersedes it.
+
+### What Bot A finished (verified in branch and handoff)
+- Actual ~2-second three-mode camera canvas morph with lens motor/zoom sound; Phone full bleed, Desktop 16:9 with subtle hover, Voice centered square.
+- Audio-only capture, local audio recording support, removal of serial LiveKit region prewarm.
+- Host LiveKit reconnect status and reliable `live-status` packet (`type:live-ended`) on explicit End Live.
+- Viewer voice avatar and remote microphone amplitude animation; authenticated host disconnect banner; 2-second terminal-state polling even while connected.
+- One-tap immediate Voice launch when microphone preview is already ready (later Bot A commits).
+
+### What Bot B added in PR #191
+- **Live mode switching after broadcast starts:** serial camera `publishTrack` / `unpublishTrack`, without disconnecting LiveKit or replacing the microphone; requests video permission when switching from an audio-only Voice stream to Phone/Desktop. The mode queue and desired-mode ref prevent stale rapid-tap operations from winning.
+- **Host-authorized mode metadata:** `POST /api/live-mode` verifies stream ownership and updates `aspect_ratio`, `video_width`, and `video_height`. Existing viewers follow Supabase Realtime / polling, and the viewer avatar also falls back to remote audio presence when no video is subscribed.
+- **Host-authorized terminal endpoint:** `POST /api/live-end` verifies host ownership, idempotently persists `status=ended` / `ended_at` with service credentials, then best-effort closes the LiveKit room. The host sends its reliable terminal data packet first, calls this endpoint, falls back to a direct DB update if the endpoint fails, and does not wait for recording upload.
+- **Viewer resilience:** automatic capped-backoff retry after initial connect failure or unexpected disconnect; deduplicated retry timers; clear stale errors when audio/video arrives; 2-second DB terminal checks with concurrency guard; stale host heartbeat is displayed as reconnecting, **never treated as terminal**; refresh status immediately when tab returns to foreground.
+- **Refresh preserves room:** the server-rendered Live viewer page no longer treats stale heartbeat as a completed stream while the database status is still `live`. This allows a waiting viewer to refresh and rejoin the same room.
+- **Voice one-tap permission flow:** when the first Voice Go Live tap must request microphone permission, the broadcast begins automatically when audio-only preview is ready; no second tap required.
+
+### Build and test evidence
+- GitHub file edits and PR creation succeeded.
+- Vercel preview for Bot A commit `28c153c299` was **READY**.
+- Bot B intermediate preview `5b7487d142` was **READY** after fixing a TypeScript argument mismatch for Bot A's `playCameraAdjustSound(mode)`.
+- Later Bot B commits include the Voice permission-flow state initialization fix; check the newest PR #191 head deployment for final **READY**. Earlier preview errors are superseded and must not be treated as final status.
+- **No real host/viewer LiveKit session, iPhone Safari camera test, browser UI screenshot, or runtime latency measurement was performed.** Static build success does not prove these interactions.
+
+### Remaining risks / required acceptance testing
+1. Open the **newest** PR #191 preview, test Phone, Desktop, Voice and all six mode-switch directions on iPhone portrait/landscape and desktop. Confirm full-bleed Phone camera through the bottom edge, Desktop 12px top margin and subtle floating, Voice centered, no left-half clipping.
+2. While actively live, switch Voice → Phone → Desktop → Voice. Verify camera publications appear/disappear and microphone remains uninterrupted. Try very rapid taps and camera-permission denial.
+3. With two devices, start Audio Live, refresh the viewer repeatedly, confirm the same room ID and avatar/remote audio; tap Unmute if browser autoplay blocks sound.
+4. Explicit End Live must show the viewer completion notice via host packet, Supabase Realtime, or <=2s polling when online. Verify server route returns success and LiveKit room is deleted after terminal status.
+5. Simulate Wi-Fi loss and recovery for host and viewer. Display reconnecting promptly but do not mark ended unless authoritative terminal status arrives. Actual LiveKit disconnect detection latency depends on server/network.
+6. Confirm public-profile RLS permits viewer avatar reads; fallback avatar exists when it does not. Verify recorded audio MIME playback and post-live recording UI.
+7. Monitor 2-second per-viewer DB polling load under audience scale; consider a server-side status fan-out or longer fallback interval if necessary.
+8. Review auth and service-role environment variables for the new `/api/live-mode` and `/api/live-end` endpoints.
+9. Do not claim these changes are production/live until explicitly merged and Vercel production is READY.
+
+### Bot B implementation notes
+- Host switches use `room.localParticipant.videoTrackPublications`, `unpublishTrack(track,false)` and `publishTrack(mediaStreamTrack,{source:Track.Source.Camera})`. Camera-only permission requests never replace the active microphone.
+- A failed camera permission leaves the audio broadcast connected and displays an error. No room or stream ID is regenerated by mode switching.
+- A stale heartbeat is evidence of a possible disconnect, **not** evidence of End Live; only terminal DB status or an authenticated host LiveKit packet closes the viewer.
+- If host closes the browser without pressing End Live, a separate server-side cleanup policy is still needed to eventually mark abandoned streams ended. This PR intentionally does not falsely end a recoverable stream.
