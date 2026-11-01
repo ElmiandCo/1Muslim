@@ -25,6 +25,8 @@ export default function PostDesignStudio(){
  useEffect(()=>{if(!busy)return;setVerseIndex(Math.floor(Math.random()*uploadVerses.length));const timer=window.setInterval(()=>setVerseIndex(i=>(i+1)%uploadVerses.length),8500);return()=>window.clearInterval(timer)},[busy]);
  const [media,setMedia]=useState<{url:string;type:"image"|"video";name:string;file:File}|null>(null);
  const mediaRef=useRef<HTMLInputElement>(null);const editorRef=useRef<HTMLTextAreaElement>(null);
+ // Keep the same canonical post ID and upload path across network retries.
+ const publishAttemptRef=useRef<{userId:string;file:File;body:string;postId:string;uploadPath:string;uploaded:boolean}|null>(null);
  useEffect(()=>{try{setText(sessionStorage.getItem(draftKey)||"");const raw=localStorage.getItem("1muslim:post-design:v1");if(raw){const saved=JSON.parse(raw);if(themes.includes(saved.theme))setTheme(saved.theme);if(templates.includes(saved.template))setTemplate(saved.template);if(["none","glow","float"].includes(saved.motion))setMotion(saved.motion)}}catch{}},[]);
  useEffect(()=>{try{localStorage.setItem("1muslim:post-design:v1",JSON.stringify({theme,template,motion}))}catch{}},[theme,template,motion]);
  useEffect(()=>{let active=true;const check=async()=>{try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!active)return;if(!user){setEligible(true);setDaily(true);setChecked(true);return}
@@ -40,18 +42,28 @@ export default function PostDesignStudio(){
  const insertVerse=async()=>{setVerseBusy(true);setVerseError("");try{const count=surahs.find(x=>x.number===chapter)?.numberOfAyahs;if(!Number.isInteger(verseNumber)||verseNumber<1||(count&&verseNumber>count))throw Error("Select a valid verse number.");const r=await fetch(`https://api.alquran.cloud/v1/ayah/${chapter}:${verseNumber}/editions/quran-uthmani,en.sahih`);if(!r.ok)throw Error("Could not load the verse.");const d=await r.json();const items=d.data;if(!Array.isArray(items)||items.length<2)throw Error("Verse translation unavailable.");const arabic=items.find((x:{edition?:{identifier?:string}})=>x.edition?.identifier==="quran-uthmani")?.text;const english=items.find((x:{edition?:{identifier?:string}})=>x.edition?.identifier==="en.sahih")?.text;if((verseLanguage!=="english"&&!arabic)||(verseLanguage!=="arabic"&&!english))throw Error("Verse text unavailable.");const label=`Qur’an ${chapter}:${verseNumber}`;const passage=[label,verseLanguage!=="english"?arabic:null,verseLanguage!=="arabic"?english:null].filter(Boolean).join("\n\n");const next=[text.trim(),passage].filter(Boolean).join("\n\n");if(next.length>2000)throw Error("The verse exceeds the 2,000-character post limit.");updateText(next);setVerseOpen(false);requestAnimationFrame(()=>editorRef.current?.focus())}catch(e){setVerseError(e instanceof Error?e.message:"Unable to load verse")}finally{setVerseBusy(false)}};
  const selectMedia=(file?:File)=>{if(!file)return;if(file.size>500*1024*1024){setError("Choose a file smaller than 500 MB.");return}if(!file.type.startsWith("image/")&&!file.type.startsWith("video/")){setError("Choose an image or video.");return}setError("");setMedia({url:URL.createObjectURL(file),type:file.type.startsWith("image/")?"image":"video",name:file.name,file});setTool(null)};
  const publish=async()=>{if((!text.trim()&&!media)||busy)return;if(badLanguage(text)){setError("Please revise the language before sharing.");setPanel("post");return}
+ const publishText=daily?"✦ DAILY UMMAH ✦\\n"+text.trim():text.trim()||"Shared a video";
+ if(media&&publishText.length>1000){setError("Photo and video captions must be 1,000 characters or fewer.");setPanel("post");return}
  setBusy(true);setError("");try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){sessionStorage.setItem(draftKey,text);router.push("/auth?next="+encodeURIComponent("/?compose=1"));return}
  let uploadedPath:string|null=null;
+ let attempt=publishAttemptRef.current;
  if(media){
-  const path=`${user.id}/${crypto.randomUUID()}-${media.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`;
-  const {data:sessionData}=await db.auth.getSession();const token=sessionData.session?.access_token;
-  const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if(!token||!url)throw Error("Your upload session expired. Please sign in again.");
-  await new Promise<void>((resolve,reject)=>{const upload=new tus.Upload(media.file,{endpoint:`${(url.endsWith("/")?url.slice(0,-1):url)}/storage/v1/upload/resumable`,retryDelays:[0,1000,3000,5000,10000],chunkSize:6*1024*1024,headers:{authorization:`Bearer ${token}`,"x-upsert":"false"},uploadDataDuringCreation:true,removeFingerprintOnSuccess:true,metadata:{bucketName:"community-media",objectName:path,contentType:media.file.type||"application/octet-stream",cacheControl:"3600"},onError:reject,onSuccess:()=>resolve(),onProgress:(sent,total)=>setUploadProgress(Math.round(sent/total*100))});upload.findPreviousUploads().then(previous=>{if(previous.length)upload.resumeFromPreviousUpload(previous[0]);upload.start()}).catch(reject)});
+  if(!attempt||attempt.userId!==user.id||attempt.file!==media.file||attempt.body!==publishText){
+   attempt={userId:user.id,file:media.file,body:publishText,postId:crypto.randomUUID(),uploadPath:`${user.id}/${crypto.randomUUID()}-${media.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`,uploaded:false};
+   publishAttemptRef.current=attempt;
+  }
+  const path=attempt.uploadPath;
+  if(!attempt.uploaded){
+   const {data:sessionData}=await db.auth.getSession();const token=sessionData.session?.access_token;
+   const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
+   if(!token||!url)throw Error("Your upload session expired. Please sign in again.");
+   await new Promise<void>((resolve,reject)=>{const upload=new tus.Upload(media.file,{endpoint:`${(url.endsWith("/")?url.slice(0,-1):url)}/storage/v1/upload/resumable`,retryDelays:[0,1000,3000,5000,10000],chunkSize:6*1024*1024,headers:{authorization:`Bearer ${token}`,"x-upsert":"false"},uploadDataDuringCreation:true,removeFingerprintOnSuccess:true,metadata:{bucketName:"community-media",objectName:path,contentType:media.file.type||"application/octet-stream",cacheControl:"3600"},onError:reject,onSuccess:()=>resolve(),onProgress:(sent,total)=>setUploadProgress(Math.round(sent/total*100))});upload.findPreviousUploads().then(previous=>{if(previous.length)upload.resumeFromPreviousUpload(previous[0]);upload.start()}).catch(reject)});
+   attempt.uploaded=true;
+  }
   uploadedPath=path;
- }
- const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:daily?"✦ DAILY UMMAH ✦\\n"+text.trim():text.trim()||"Shared a video",media:uploadedPath?{storage_path:uploadedPath,file_name:media!.name,mime_type:media!.file.type}:null})});const data=await response.json();if(!response.ok)throw Error(data.error||"Unable to publish");
- if(data.flagged&&data.removed)throw Error("Your post was removed for review.");sessionStorage.removeItem(draftKey);setText("");setMedia(null);setUploadProgress(null);setConfirm(false);setPanel("post");setEligible(false);setDaily(false);setNotice("✓ Post published successfully! Opening Posts…");window.dispatchEvent(new Event("1muslim:community-post-published"));window.setTimeout(()=>router.push("/community"),1100);
+ }else publishAttemptRef.current=null;
+ const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:publishText,postId:media?attempt?.postId:undefined,media:uploadedPath?{storage_path:uploadedPath,file_name:media!.name,mime_type:media!.file.type}:null})});const data=await response.json();if(!response.ok)throw Error(data.error||"Unable to publish");
+ if(data.flagged&&data.removed)throw Error("Your post was removed for review.");sessionStorage.removeItem(draftKey);publishAttemptRef.current=null;setText("");setMedia(null);setUploadProgress(null);setConfirm(false);setPanel("post");setEligible(false);setDaily(false);setNotice("✓ Post published successfully! Opening Posts…");window.dispatchEvent(new Event("1muslim:community-post-published"));window.setTimeout(()=>router.push("/community"),1100);
  }catch(e){setError(e instanceof Error?e.message:"Unable to publish")}finally{setBusy(false)}};
  const updateText=(value:string)=>{setText(value);try{sessionStorage.setItem(draftKey,value)}catch{}};
  const title={reflection:"A moment of reflection",reminder:"A gentle reminder",verse:"Qur'an reflection",hadith:"Hadith reflection",question:"A question for the Ummah",announcement:"Community announcement"}[template];

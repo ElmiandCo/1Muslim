@@ -8,9 +8,10 @@ import {extractVerse} from "../../lib/community-post-content";
 import styles from "./CommunityMediaFeed.module.css";
 
 type MediaRow={id:string;post_id:string;user_id:string;storage_path:string;file_name:string|null;mime_type:string;created_at:string};
-type MediaPost={id:string;userId:string;body:string;created:string;author:string;handle:string;media:CommunityPostMedia[];avatarGender:string|null;avatarPackage:string|null;avatarConfig:Record<string,unknown>|null;gender:string|null;accent:string|null};
+export type CanonicalMediaConversationPost={id:string;author_id:string;body:string;created_at:string;source:"posts";author_name:string;author_handle:string};
+type MediaPost={id:string;source:"posts";userId:string;body:string;created:string;author:string;handle:string;media:CommunityPostMedia[];avatarGender:string|null;avatarPackage:string|null;avatarConfig:Record<string,unknown>|null;gender:string|null;accent:string|null};
 
-export default function CommunityMediaFeed(){
+export default function CommunityMediaFeed({onOpenConversation}:{onOpenConversation?:(post:CanonicalMediaConversationPost)=>void}={}){
  const [posts,setPosts]=useState<MediaPost[]>([]);
  const [visible,setVisible]=useState(6);
  const [loading,setLoading]=useState(true);
@@ -50,7 +51,7 @@ export default function CommunityMediaFeed(){
      let post=grouped.get(parent.id);
      if(!post){
       const author=authorById.get(parent.user_id);
-      post={id:parent.id,userId:parent.user_id,body:parent.body||"",created:parent.created_at||item.created_at,author:author?.display_name||author?.username||"Community member",handle:author?.username?"@"+author.username:"@member",media:[],avatarGender:author?.avatar_gender||null,avatarPackage:author?.avatar_package||null,avatarConfig:author?.avatar_config&&typeof author.avatar_config==="object"&&!Array.isArray(author.avatar_config)?author.avatar_config as Record<string,unknown>:null,gender:author?.gender||null,accent:author?.profile_accent||null};
+      post={id:parent.id,source:"posts",userId:parent.user_id,body:parent.body||"",created:parent.created_at||item.created_at,author:author?.display_name||author?.username||"Community member",handle:author?.username?"@"+author.username:"@member",media:[],avatarGender:author?.avatar_gender||null,avatarPackage:author?.avatar_package||null,avatarConfig:author?.avatar_config&&typeof author.avatar_config==="object"&&!Array.isArray(author.avatar_config)?author.avatar_config as Record<string,unknown>:null,gender:author?.gender||null,accent:author?.profile_accent||null};
       grouped.set(parent.id,post);
      }
      post.media.push({id:item.id,url,mime_type:item.mime_type,file_name:item.file_name});
@@ -74,10 +75,10 @@ export default function CommunityMediaFeed(){
  return <section className={styles.feed} aria-label="Community photo and video posts">
   <header className={styles.heading}><strong>✦ Photo & video moments</strong><span>{posts.length} posts</span></header>
   {error&&<p role="status" className={styles.error}>{error}</p>}
-  {posts.slice(0,visible).map(post=><article className={styles.card} key={post.id}>
+  {posts.slice(0,visible).map(post=><article className={styles.card} key={post.id} data-post-source={post.source} data-canonical-post-id={post.id}>
    <header className={styles.author}><span className={styles.avatar}><ProfileAvatar name={post.author} gender={post.gender} avatarGender={post.avatarGender} avatarPackage={post.avatarPackage} avatarConfig={post.avatarConfig} accent={post.accent||"emerald"} size="sm" profileId={post.userId}/></span><span className={styles.authorName}><strong>{post.author}</strong><small>{post.handle} · {new Date(post.created).toLocaleDateString()}</small></span><span className={styles.kindBadge}>{extractVerse(post.body)?"۞ Qur’an":post.media.some(m=>m.mime_type.startsWith("video/"))?"▶ Video":"▧ Photos"}</span></header>
    <CommunityPostPresentation body={post.body} media={post.media} compact/>
-   <footer className={styles.actions}><Link href={"/posts/"+encodeURIComponent(post.id)}>◯ Open post</Link><button type="button" onClick={()=>void share(post.id)}>↗ Share</button></footer>
+   <footer className={styles.actions}><Link href={"/posts/"+encodeURIComponent(post.id)}>◯ Open post</Link>{onOpenConversation&&<button type="button" onClick={()=>onOpenConversation({id:post.id,author_id:post.userId,body:post.body,created_at:post.created,source:"posts",author_name:post.author,author_handle:post.handle})}>◯ Comments</button>}<button type="button" onClick={()=>void share(post.id)}>↗ Share</button></footer>
   </article>)}
   {visible<posts.length&&<button type="button" className={styles.more} onClick={()=>setVisible(n=>n+6)}>Show more photo & video posts ↓</button>}
  </section>;

@@ -8,7 +8,7 @@
 .authorName{display:flex;flex-direction:column;gap:3px;min-width:0}
 .authorName strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .authorName small{font-size:11px;color:#d1ddd4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.actions{display:flex;gap:8px;align-items:center;justify-content:space-between;border-top:1px solid color-mix(in srgb,var(--cp-edge) 28%,transparent);padding-top:11px}
+.actions{display:flex;flex-wrap:wrap;min-width:0;gap:8px;align-items:center;justify-content:space-between;border-top:1px solid color-mix(in srgb,var(--cp-edge) 28%,transparent);padding-top:11px}
 .actions a,.actions button{min-height:38px;padding:8px 13px;border-radius:999px;border:1px solid color-mix(in srgb,var(--cp-edge) 45%,transparent);background:color-mix(in srgb,var(--cp-surface) 75%,transparent);color:#f5f8f6;font:inherit;font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;transition:background .2s ease,transform .2s ease}
 .actions a:hover,.actions button:hover{background:color-mix(in srgb,var(--cp-accent) 25%,var(--cp-surface))}
 .actions a:active,.actions button:active{transform:scale(.97)}
