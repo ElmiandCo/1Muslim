@@ -13,7 +13,7 @@ alter table public.ummah_post_comments
   add constraint ummah_post_comments_content_check
   check (
     char_length(body) <= 1500
-    and (char_length(btrim(body)) > 0 or image_path is not null)
+    and (char_length(body) > 0 or image_path is not null)
     and (
       image_path is null
       or (
