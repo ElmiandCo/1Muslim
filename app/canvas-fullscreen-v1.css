@@ -1984,3 +1984,15 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 .ummah-image-lightbox{position:fixed;inset:0;z-index:2147483100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.94)}.ummah-image-lightbox img{max-width:100%;max-height:90dvh;object-fit:contain}.ummah-image-lightbox>button{position:absolute;top:calc(env(safe-area-inset-top) + 15px);right:16px;z-index:1;border:1px solid #fff6;border-radius:50%;padding:10px;color:white;background:#2229}
 @keyframes ummahPanelEnter{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.ummah-comments-sheet{animation:none!important}.community-post-card.ummah-template>footer button{transition:none!important}}
+
+/* Posts 3.2 — transparent glass and viewport-centered border glow */
+.canvas-community-posts-only .canvas-community-tabs,.community-direct-surface .canvas-community-tabs{display:none!important}
+.canvas-community-posts-only,.canvas-community-posts-only .canvas-community-posts-scroll,.community-direct-surface .canvas-community-posts-scroll{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important}
+.canvas-community-posts-only .canvas-community-posts-scroll{overflow-y:auto!important;overflow-x:hidden!important;min-height:0!important;flex:1!important;-webkit-overflow-scrolling:touch!important}
+.canvas-community-posts-only .community-simple-feed{padding:0 8px 28px!important}
+.canvas-community-posts-only .community-feed-search{position:sticky!important;top:0!important;z-index:12!important;margin:0 0 8px!important;padding:4px 0!important;background:transparent!important}
+.canvas-community-posts-only .community-feed-search input{height:38px!important;min-height:38px!important;padding:5px 35px 5px 14px!important;background:rgba(6,20,26,.22)!important;border:1px solid rgba(218,198,151,.24)!important;border-radius:15px!important;backdrop-filter:blur(10px)!important}
+.canvas-community-posts-only .community-posts-list .community-post-card.ummah-template{background:linear-gradient(145deg,rgba(15,35,41,.25),rgba(8,24,34,.14))!important;border:1px solid rgba(232,205,148,.28)!important;box-shadow:0 6px 24px rgba(0,0,0,.15)!important;backdrop-filter:blur(16px)!important;transition:border-color .6s,box-shadow .6s!important}
+.canvas-community-posts-only .community-posts-list .community-post-card.ummah-template.ummah-center-glow{border-color:var(--post-accent,#a6dfc8)!important;box-shadow:0 0 12px color-mix(in srgb,var(--post-accent,#a6dfc8) 45%,transparent),0 0 26px color-mix(in srgb,var(--post-accent,#a6dfc8) 25%,transparent)!important;animation:ummahBorderBreath 3.6s ease-in-out infinite alternate!important}
+@keyframes ummahBorderBreath{from{filter:brightness(.97)}to{filter:brightness(1.12)}}
+@media(prefers-reduced-motion:reduce){.ummah-center-glow{animation:none!important}}
