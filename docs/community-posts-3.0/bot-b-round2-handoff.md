@@ -13,14 +13,14 @@
 | Reference detail | Component / Round Two treatment |
 | --- | --- |
 | Ref 1: emerald/gold Qur'an reflection with fine ornament, reference badge and Arabic | `CommunityPostPresentation.module.css`: theme-aware gold trim, compact eyebrow badge, luminous verse surface and pill-shaped reference; actual verse content only |
-| Ref 1: landscape video with center Play and duration | `CommunityPostPresentation.tsx`: actual uploaded video frame requested near viewport, natural video aspect ratio, real metadata duration badge, click-to-play only |
+| Ref 1: landscape video with center Play and duration | `CommunityPostPresentation.tsx`: actual uploaded video frame requested near viewport, orientation-aware video fitting inside stable reserved tile geometry, real metadata duration badge, click-to-play only |
 | Ref 1: one large landscape plus two stacked image thumbnails | `CommunityPostPresentation.tsx` + CSS: two-to-four-image responsive mosaic; single/large galleries preserve horizontal scrolling |
 | Ref 1: real author portraits, compact type label and glowing avatar | `CommunityMediaFeed.tsx` + CSS: existing saved `ProfileAvatar` config, profile deep link, small Qur'an/Video/Photos badge; no invented usernames or metrics |
 | Ref 2: second uploaded image | **Visual inspection blocked**; preserve its source link and require human screenshot comparison before approval |
 
 ## Implemented in Round Two
 1. **No eager video fetch for offscreen posts:** native poster video metadata is requested only when within 320px of the viewport using IntersectionObserver. Existing tap-to-play behavior stays intact. The video file is never duplicated.
-2. **Responsive video poster:** use native width/height metadata (clamped to practical feed ratios) and duration. iOS may decline preloading a frame; a theme-aware placeholder with a real Play button remains visible, never a fabricated image.
+2. **Responsive video poster:** use native width/height metadata to choose crop/contain within a fixed-ratio feed tile (avoiding scroll layout shifts), and display real duration. iOS may decline preloading a frame; a theme-aware placeholder with a real Play button remains visible, never a fabricated image.
 3. **Photo mosaic:** 2 images side-by-side, 3 images large+two stacked, 4 images 2x2. Other galleries remain scrollable. No new media assets or altered storage paths.
 4. **Real member avatar:** use the saved profile avatar configuration and deep-link to the member profile; small theme-aware content-type badge.
 5. **Qur'an card polish:** layered gold trim, subtle light and theme-aware borders; no fabricated mosque art or audio waveform.
