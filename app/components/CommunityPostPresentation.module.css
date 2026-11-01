@@ -84,3 +84,99 @@
  to{opacity:1;transform:translateY(0)}
 }
 @media(prefers-reduced-motion:reduce){.verse{animation:none}.videoPoster .playCircle,.youtubePoster .playCircle{transition:none}}
+
+/* Round 2 — visual reference 91972156: compact Qur'an gold trim, video duration
+   and the large-image/two-thumbnail gallery. No fake media or engagement metrics. */
+.verseEyebrow{
+ justify-self:end;
+ border:1px solid color-mix(in srgb,var(--cp-secondary) 58%,transparent);
+ border-radius:999px;
+ padding:4px 10px;
+ background:color-mix(in srgb,var(--cp-surface) 72%,transparent);
+ box-shadow:0 0 10px color-mix(in srgb,var(--cp-secondary) 10%,transparent);
+}
+.verse{
+ background:
+  radial-gradient(ellipse at 52% 0%,color-mix(in srgb,var(--cp-accent) 17%,transparent),transparent 72%),
+  linear-gradient(145deg,color-mix(in srgb,var(--cp-surface) 84%,transparent),rgba(5,12,17,.76));
+ box-shadow:inset 0 1px rgba(255,255,255,.13),0 8px 28px rgba(0,0,0,.17),
+  0 0 14px color-mix(in srgb,var(--cp-secondary) 11%,transparent);
+}
+.reference{
+ justify-self:center;
+ width:fit-content;
+ padding:5px 12px;
+ border-radius:999px;
+ border:1px solid color-mix(in srgb,var(--cp-secondary) 55%,transparent);
+ background:color-mix(in srgb,var(--cp-surface) 75%,transparent);
+}
+.mediaMosaic{
+ display:grid;
+ grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);
+ grid-template-rows:repeat(2,minmax(0,1fr));
+ gap:6px;
+ width:100%;
+ height:clamp(190px,43vw,390px);
+ padding:0;
+ overflow:hidden;
+ border-radius:15px;
+ scroll-snap-type:none;
+ touch-action:pan-y;
+ border:1px solid color-mix(in srgb,var(--cp-edge) 38%,transparent);
+ background:rgba(0,0,0,.2);
+}
+.mediaMosaic .image{
+ width:100%;
+ height:100%;
+ min-width:0;
+ min-height:0;
+ max-height:none;
+ object-fit:cover;
+ border:0;
+ border-radius:0;
+ scroll-snap-align:none;
+}
+.mediaMosaic[data-count="2"]{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ grid-template-rows:minmax(0,1fr);
+ height:clamp(170px,38vw,330px);
+}
+.mediaMosaic[data-count="3"] .image:first-child{grid-row:span 2}
+.mediaMosaic[data-count="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.videoTile{
+ min-height:0;
+ background:
+  radial-gradient(ellipse at 50% 32%,color-mix(in srgb,var(--cp-accent) 19%,#0c1718),#070c10 83%);
+}
+.videoPoster video{object-fit:cover}
+.videoDuration{
+ position:absolute;
+ z-index:2;
+ right:11px;
+ bottom:11px;
+ font-size:11px;
+ font-weight:700;
+ font-variant-numeric:tabular-nums;
+ padding:4px 7px;
+ border-radius:7px;
+ background:rgba(2,7,9,.84);
+ color:#fff;
+}
+.videoPoster .playHint{left:12px;transform:none;bottom:11px}
+.youtubePoster .playHint{left:50%;transform:translateX(-50%)}
+.mediaGallery:not(.mediaMosaic) .image{object-fit:contain}
+@media(max-width:520px){
+ .mediaMosaic{height:clamp(175px,55vw,290px);gap:4px;border-radius:12px}
+ .mediaMosaic[data-count="2"]{height:clamp(165px,48vw,260px)}
+ .verseEyebrow{font-size:9px;letter-spacing:.11em}
+ .videoDuration{bottom:9px;right:9px}
+ .videoPoster .playHint{bottom:9px;left:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .mediaMosaic .image,.verseEyebrow,.reference{animation:none;transition:none}
+}
+
+/* Reserve stable tile dimensions while native metadata loads: no feed scroll jumps. */
+.compact .videoTile{aspect-ratio:16/9}
+.videoTile[data-orientation="portrait"] .videoPoster video,
+.videoTile[data-orientation="unknown"] .videoPoster video{object-fit:contain}
