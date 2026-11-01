@@ -6,7 +6,7 @@
 .names{display:flex;flex-direction:column;gap:5px;min-width:0}.names strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(15px,2.5vw,19px)}.names small{color:#b8c6b9;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .profileLink{color:#dfd3a2;border:1px solid #c6b47b40;border-radius:50%;width:35px;height:35px;display:grid;place-items:center;text-decoration:none}
 .content{min-height:clamp(180px,35dvh,430px);display:flex;align-items:center;justify-content:center;padding:clamp(22px,5vw,48px);background:radial-gradient(ellipse at 50% 50%,#28533a40,transparent 72%)}
-.content p{font-size:clamp(19px,3vw,30px);line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;max-width:60ch;margin:0;text-align:left;width:100%}
+.content>p{font-size:clamp(19px,3vw,30px);line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;max-width:60ch;margin:0;text-align:left;width:100%}
 .actions{display:flex;align-items:center;gap:12px;padding:15px clamp(15px,3vw,24px);border-top:1px solid #b7a56b25;flex-wrap:wrap}.actions button{border:1px solid #c6b47b5e;background:#1b3d2d;color:#f0e8c9;border-radius:999px;padding:10px 17px;cursor:pointer;font:inherit}
 @media(max-width:600px){.viewer{border-radius:20px}.content{min-height:32dvh}.author{padding:15px}.avatar{width:44px;height:44px}.actions{padding:12px 15px}}
 
@@ -28,3 +28,7 @@ video.media{aspect-ratio:auto}
 .actions button:active{transform:scale(.95)}
 @media(max-width:600px){.mediaGallery>.media{max-height:57dvh}.content:has(.mediaGallery)>p{padding:0 15px}}
 @media(prefers-reduced-motion:reduce){.mediaGallery{scroll-behavior:auto}.actions button{transition:none}}
+
+/* Posts 3.0 shared media renderer; do not override its nested verse typography. */
+.content:has(.presentationSlot){display:block;min-height:0;padding:clamp(14px,3vw,28px);background:transparent}
+.presentationSlot{width:100%;min-width:0}
