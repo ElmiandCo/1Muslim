@@ -47,3 +47,16 @@ test("Round Two gallery and author visuals use real post assets and profile avat
  assert.match(feed,/post_media/);
  assert.match(css,/prefers-reduced-motion:reduce/);
 });
+
+// Round Three: overlapping visibility/publish refreshes must never replace newer
+// signed media URLs or resurrect stale posts after a newer request completes.
+test("Round Three media refresh discards stale asynchronous results",()=>{
+ const feed=readFileSync(new URL("../app/components/CommunityMediaFeed.tsx",import.meta.url),"utf8");
+ assert.match(feed,/let loadVersion=0/);
+ assert.match(feed,/const requestId=\+\+loadVersion/);
+ assert.match(feed,/const isCurrent=\(\)=>alive&&requestId===loadVersion/);
+ assert.match(feed,/if\(isCurrent\(\)\)\{setPosts\(\[\.\.\.grouped\.values\(\)\]/);
+ assert.match(feed,/catch\{if\(isCurrent\(\)\)setError/);
+ assert.match(feed,/finally\{if\(isCurrent\(\)\)setLoading\(false\)\}/);
+ assert.match(feed,/createSignedUrls\(valid\.map\(m=>m\.storage_path\),3600\)/);
+});
