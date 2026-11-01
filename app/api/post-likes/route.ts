@@ -14,6 +14,11 @@ async function state(postId:string){
 export async function GET(request:Request){
  const postId=new URL(request.url).searchParams.get("postId");
  if(!postId||!uuid.test(postId))return NextResponse.json({error:"Invalid post"},{status:400,headers});
+ // Match /api/post-comments: canonical posts remain authenticated-only by RLS.
+ const db=await createClient();
+ const {data:post,error:postError}=await db.from("posts").select("id").eq("id",postId).maybeSingle();
+ if(postError)return NextResponse.json({error:"Posts unavailable"},{status:503,headers});
+ if(!post)return NextResponse.json({error:"Post not found"},{status:404,headers});
  try{return NextResponse.json(await state(postId),{headers})}
  catch{return NextResponse.json({error:"Likes unavailable"},{status:503,headers})}
 }
@@ -29,10 +34,12 @@ export async function POST(request:Request){
  if(!post)return NextResponse.json({error:"Post not found"},{status:404,headers});
  const {data:existing,error:readError}=await db.from("post_likes").select("post_id").eq("post_id",postId).eq("user_id",user.id).maybeSingle();
  if(readError)return NextResponse.json({error:"Likes unavailable"},{status:503,headers});
+ // INSERT, not UPSERT: existing RLS grants INSERT/DELETE but not UPDATE.
+ // A concurrent duplicate insert is already a like; read back the actual state.
  const {error}=existing
   ?await db.from("post_likes").delete().eq("post_id",postId).eq("user_id",user.id)
-  :await db.from("post_likes").upsert({post_id:postId,user_id:user.id},{onConflict:"post_id,user_id"});
- if(error)return NextResponse.json({error:"Unable to update like"},{status:503,headers});
+  :await db.from("post_likes").insert({post_id:postId,user_id:user.id});
+ if(error&&error.code!=="23505")return NextResponse.json({error:"Unable to update like"},{status:503,headers});
  try{return NextResponse.json(await state(postId),{headers})}
  catch{return NextResponse.json({liked:!existing,count:null},{headers})}
 }
