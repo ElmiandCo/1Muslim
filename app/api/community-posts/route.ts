@@ -8,7 +8,18 @@ export async function GET(){
  const ids=[...new Set(posts.map(p=>p.author_id).filter((id):id is string=>typeof id==="string"))];
  const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username,avatar_url").in("id",ids):{data:[]};
  const authors=new Map((profiles||[]).map(p=>[p.id,p]));
- return NextResponse.json({posts:posts.map(p=>({...p,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",avatar_url:authors.get(p.author_id)?.avatar_url||null,author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member"}))});
+ const postIds=posts.map(p=>p.id);
+ const [{data:aggregates},{data:{user}}]=await Promise.all([
+  postIds.length?db.from("ummah_post_like_counts").select("post_id,like_count").in("post_id",postIds):Promise.resolve({data:[]}),
+  db.auth.getUser()
+ ]);
+ const {data:myLikes}=user&&postIds.length
+  ?await db.from("ummah_post_likes").select("post_id").eq("user_id",user.id).in("post_id",postIds)
+  :{data:[]};
+ const likeCounts=new Map((aggregates||[]).map(x=>[x.post_id,x.like_count]));
+ const liked=new Set((myLikes||[]).map(x=>x.post_id));
+
+ return NextResponse.json({posts:posts.map(p=>({...p,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",avatar_url:authors.get(p.author_id)?.avatar_url||null,author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member",like_count:likeCounts.get(p.id)||0,liked:liked.has(p.id)}))});
 }
 export async function POST(request:Request){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();
