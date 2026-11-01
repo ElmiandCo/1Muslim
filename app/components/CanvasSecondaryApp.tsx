@@ -13,6 +13,7 @@ import PostDesignStudio from "./PostDesignStudio";
 import CommunityMediaFeed from "./CommunityMediaFeed";
 import CommunityPostPresentation from "./CommunityPostPresentation";
 import "./canvas-ummah-feed.css";
+import "./community-posts3-theme.css";
 
 type Profile={display_name?:string|null;username?:string|null;xp_total?:number|null;bio?:string|null;shahada_verified_at?:string|null;id?:string;gender?:string|null;avatar_gender?:string|null;avatar_package?:string|null;avatar_config?:Record<string,unknown>|null;profile_accent?:string|null};
 type DailyPost={id:string;content?:string|null;body?:string|null;text?:string|null;created_at?:string|null};
