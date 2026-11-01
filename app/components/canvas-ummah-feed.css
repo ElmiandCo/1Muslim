@@ -262,3 +262,25 @@
    Restore the Bio, category icons, and avatar carousel to their original flow. */
 .profile-with-shared-avatar{padding-top:140px!important;}
 @media(max-width:480px){.profile-with-shared-avatar{padding-top:135px!important;}}
+
+/* iOS Safari: portrait owns the pointer stream while the rest of the overlay
+   remains transparent to scroll and taps. No entrance animation steals transform. */
+.profile-shared-avatar-portal{animation:none!important;}
+.profile-shared-avatar-portal .profile-shared-avatar-hero,
+.profile-shared-avatar-portal .profile-glass-avatar{pointer-events:none!important;}
+.profile-shared-avatar-portal .profile-avatar-portrait,
+.profile-shared-avatar-portal .profile-avatar-portrait *{
+ pointer-events:auto!important;touch-action:none!important;
+ -webkit-user-select:none!important;user-select:none!important;
+ -webkit-touch-callout:none!important;
+}
+.profile-shared-avatar-portal .profile-avatar-portrait img{-webkit-user-drag:none;}
+
+/* Fixed portrait: no drag affordance, and no pointer interception over the Profile. */
+.profile-shared-avatar-portal,
+.profile-shared-avatar-portal .profile-shared-avatar-hero,
+.profile-shared-avatar-portal .profile-glass-avatar,
+.profile-shared-avatar-portal .profile-avatar-portrait,
+.profile-shared-avatar-portal .profile-avatar-portrait *{
+ pointer-events:none!important;cursor:default!important;
+}
