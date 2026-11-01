@@ -18,7 +18,7 @@ async function signCommentImages(db:Awaited<ReturnType<typeof createClient>>,com
  const paths=[...new Set(valid.map(c=>c.image_path!))];
  const {data,error}=await storage.storage.from("community-media").createSignedUrls(paths,1800);
  if(error)return new Map<string,string>();
- return new Map(paths.flatMap((p,i)=>data?.[i]?.signedUrl?[[p,data[i].signedUrl] as const]:[]));
+ return new Map(paths.flatMap((p,i)=>{const signed=data?.[i]?.signedUrl;return signed?[[p,signed] as const]:[]}));
 }
 
 export async function GET(request:Request){
