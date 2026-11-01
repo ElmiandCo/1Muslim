@@ -36,7 +36,7 @@ export async function GET(request:Request){
   authorIds.length?db.from("profiles").select("id,display_name,username,avatar_url").in("id",authorIds):Promise.resolve({data:[]}),
   commentIds.length?db.from("ummah_comment_likes").select("comment_id,user_id").in("comment_id",commentIds):Promise.resolve({data:[]}),
   db.auth.getUser(),
-  signCommentImages(db,comments)
+  postId?signCommentImages(db,comments):Promise.resolve(new Map<string,string>())
  ]);
  const names=new Map((profiles||[]).map(p=>[p.id,p]));
  const counts=new Map<string,number>(),mine=new Set<string>();
