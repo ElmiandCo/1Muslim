@@ -1804,3 +1804,16 @@
  66.67%,83.33%{--edge-fade:40px}
 }
 @media(prefers-reduced-motion:reduce){.control .islamicDecoration{animation:none;--edge-fade:20px}}
+
+/* Gently float the mosque ornament behind the navigation; never move the controls. */
+.control .decorationNight,.control .decorationDay{
+ animation:mosqueOrnamentFloat 22s ease-in-out infinite;
+ transform-origin:50% 22%;
+}
+@keyframes mosqueOrnamentFloat{
+ 0%,100%{transform:translate3d(-50%,0,0) rotate(-.35deg) scale(1)}
+ 25%{transform:translate3d(calc(-50% + 4px),-7px,0) rotate(.25deg) scale(1.012)}
+ 50%{transform:translate3d(calc(-50% - 3px),-11px,0) rotate(.45deg) scale(1.018)}
+ 75%{transform:translate3d(calc(-50% - 5px),-4px,0) rotate(-.15deg) scale(1.008)}
+}
+@media(prefers-reduced-motion:reduce){.control .decorationNight,.control .decorationDay{animation:none!important;transform:translateX(-50%)!important}}
