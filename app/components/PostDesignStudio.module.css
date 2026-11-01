@@ -62,3 +62,7 @@
 .previewMedia img,.previewMedia video{display:block;width:100%;max-height:220px;object-fit:contain}
 .previewActions{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #ffffff2b;padding-top:11px;color:#c6d4d2;font-size:12px}
 @media(max-width:600px){.livePostPreview{padding:12px;gap:10px}.previewBody{max-height:150px}.previewMedia,.previewMedia img,.previewMedia video{max-height:165px}}
+
+/* Center verse picker in the actual device viewport, not the scrolling post canvas. */
+.verseBackdrop{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;padding:clamp(12px,3vw,24px)!important;overflow:hidden!important;z-index:2147483000!important}
+.verseDialog{position:relative!important;flex:0 1 440px!important;width:min(100%,440px)!important;max-height:calc(100dvh - 32px)!important;overflow-y:auto!important;overscroll-behavior:contain!important;margin:auto!important;box-sizing:border-box!important;-webkit-overflow-scrolling:touch}
