@@ -70,6 +70,48 @@ create trigger ummah_comment_thread_guard
   before insert or update on public.ummah_post_comments
   for each row execute function public.ummah_validate_comment_thread();
 
+-- Public like aggregates avoid exposing who liked a post to anonymous visitors.
+create table if not exists public.ummah_post_like_counts (
+  post_id uuid primary key references public.ummah_feed_posts(id) on delete cascade,
+  like_count integer not null default 0 check (like_count >= 0),
+  updated_at timestamptz not null default now()
+);
+alter table public.ummah_post_like_counts enable row level security;
+drop policy if exists "Read Ummah like aggregates" on public.ummah_post_like_counts;
+create policy "Read Ummah like aggregates" on public.ummah_post_like_counts
+  for select to anon, authenticated using (true);
+revoke all on table public.ummah_post_like_counts from public, anon, authenticated;
+grant select on table public.ummah_post_like_counts to anon, authenticated;
+
+create or replace function public.ummah_sync_post_like_count()
+returns trigger
+language plpgsql security definer
+set search_path = public, pg_temp
+as $
+begin
+  if tg_op = 'INSERT' then
+    insert into public.ummah_post_like_counts(post_id,like_count,updated_at)
+    values(new.post_id,1,now())
+    on conflict (post_id) do update
+      set like_count = public.ummah_post_like_counts.like_count + 1, updated_at = now();
+  elsif tg_op = 'DELETE' then
+    update public.ummah_post_like_counts
+      set like_count = greatest(0,like_count - 1), updated_at = now()
+      where post_id = old.post_id;
+  end if;
+  return null;
+end;
+$;
+revoke all on function public.ummah_sync_post_like_count() from public, anon, authenticated;
+drop trigger if exists ummah_post_like_count_trigger on public.ummah_post_likes;
+create trigger ummah_post_like_count_trigger
+  after insert or delete on public.ummah_post_likes
+  for each row execute function public.ummah_sync_post_like_count();
+
+insert into public.ummah_post_like_counts(post_id,like_count)
+select post_id,count(*)::integer from public.ummah_post_likes group by post_id
+on conflict (post_id) do update set like_count = excluded.like_count,updated_at = now();
+
 -- An authenticated share event is one row, not a duplicate of the post or media.
 create table if not exists public.ummah_post_shares (
   id uuid primary key default gen_random_uuid(),
@@ -141,7 +183,7 @@ declare
 begin
   foreach target in array array[
     'ummah_feed_posts', 'ummah_post_comments', 'ummah_comment_likes',
-    'ummah_post_likes', 'ummah_post_share_counts'
+    'ummah_post_like_counts', 'ummah_post_share_counts'
   ] loop
     if not exists (
       select 1 from pg_publication_tables
