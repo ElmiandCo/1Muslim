@@ -25,3 +25,27 @@
 .more{justify-self:center;min-height:39px;padding:9px 15px;border:1px solid var(--cp-edge);border-radius:999px;background:color-mix(in srgb,var(--cp-surface) 82%,transparent);color:#f4f8f6;font:inherit;font-size:12px;cursor:pointer}
 .more:focus-visible{outline:2px solid var(--cp-edge);outline-offset:3px}
 :global(html.light) .more{background:#fff;color:#15251e}
+
+
+/* Reference-image polish: luminous edge, gold accent and responsive tactile feedback.
+   Pseudo-elements do not intercept taps, alter scroll, or change card dimensions. */
+.card{position:relative;isolation:isolate;transition:border-color .24s ease,box-shadow .24s ease}
+.card::before{
+ content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+ background:linear-gradient(90deg,transparent 5%,color-mix(in srgb,var(--cp-edge) 72%,transparent) 50%,transparent 95%) center top/94% 1px no-repeat;
+ opacity:.85;
+}
+.card::after{
+ content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+ background:radial-gradient(ellipse at 95% 0%,color-mix(in srgb,var(--cp-accent) 12%,transparent),transparent 42%);
+}
+@media(hover:hover){
+ .card:hover{border-color:color-mix(in srgb,var(--cp-edge) 74%,transparent);box-shadow:0 14px 36px #0005,0 0 18px color-mix(in srgb,var(--cp-accent) 12%,transparent),inset 0 1px #ffffff24}
+ .actions a:hover,.actions button:hover{border-color:var(--cp-edge)}
+}
+@media(prefers-reduced-motion:no-preference){
+ .card:nth-of-type(2){animation-delay:55ms}
+ .card:nth-of-type(3){animation-delay:105ms}
+ .card:nth-of-type(4){animation-delay:155ms}
+}
+@media(prefers-reduced-motion:reduce){.card{animation:none;transition:none}}
