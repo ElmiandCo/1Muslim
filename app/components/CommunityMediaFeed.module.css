@@ -1,0 +1,23 @@
+.feed{--cp-accent:var(--theme-accent,#22bd83);--cp-edge:var(--theme-edge,#54d5a3);--cp-surface:var(--theme-surface,#073c30);display:grid;gap:12px;min-width:0;padding:12px 0 30px;color:#f5f8f6}
+.heading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:3px 8px;font-size:13px}
+.heading strong{color:var(--theme-secondary,#d9bd70);font-weight:800;letter-spacing:.035em}
+.heading span{color:#c9d8cf;font-size:11px}
+.card{display:grid;gap:12px;min-width:0;padding:clamp(13px,3vw,21px);border-radius:22px;border:1px solid color-mix(in srgb,var(--cp-edge) 47%,transparent);background:linear-gradient(155deg,color-mix(in srgb,var(--cp-surface) 83%,transparent),rgba(5,12,15,.77));box-shadow:0 12px 34px #0004,inset 0 1px #ffffff1c;backdrop-filter:blur(18px);animation:postMediaReveal .5s ease both}
+.author{display:flex;align-items:center;gap:10px;min-width:0}
+.avatar{width:39px;height:39px;flex:none;display:grid;place-items:center;border-radius:50%;border:1px solid var(--cp-edge);background:color-mix(in srgb,var(--cp-accent) 35%,#111);color:#fff;font-weight:800}
+.authorName{display:flex;flex-direction:column;gap:3px;min-width:0}
+.authorName strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.authorName small{font-size:11px;color:#d1ddd4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.actions{display:flex;gap:8px;align-items:center;justify-content:space-between;border-top:1px solid color-mix(in srgb,var(--cp-edge) 28%,transparent);padding-top:11px}
+.actions a,.actions button{min-height:38px;padding:8px 13px;border-radius:999px;border:1px solid color-mix(in srgb,var(--cp-edge) 45%,transparent);background:color-mix(in srgb,var(--cp-surface) 75%,transparent);color:#f5f8f6;font:inherit;font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;transition:background .2s ease,transform .2s ease}
+.actions a:hover,.actions button:hover{background:color-mix(in srgb,var(--cp-accent) 25%,var(--cp-surface))}
+.actions a:active,.actions button:active{transform:scale(.97)}
+.actions a:focus-visible,.actions button:focus-visible{outline:2px solid var(--cp-edge);outline-offset:3px}
+.loading,.error{padding:14px;text-align:center;color:var(--theme-secondary,#d9bd70);font-size:12px}
+:global(html.light) .feed{color:#15251e}
+:global(html.light) .card{background:linear-gradient(155deg,#fffffff0,color-mix(in srgb,var(--cp-accent) 7%,#fff))}
+:global(html.light) .authorName small,:global(html.light) .heading span{color:#48554f}
+:global(html.light) .actions a,:global(html.light) .actions button{color:#13261c;background:#ffffffc9}
+@keyframes postMediaReveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:520px){.card{border-radius:17px;padding:12px}.feed{gap:10px}.actions a,.actions button{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.card{animation:none}.actions a,.actions button{transition:none}}
