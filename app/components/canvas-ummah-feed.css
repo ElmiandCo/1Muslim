@@ -431,3 +431,16 @@
 .profile-scroll-viewport{padding-left:0!important;}
 .profile-scroll-viewport .profile-glass-gallery,
 .profile-scroll-viewport [data-profile-horizontal-gallery="true"]{width:100%!important;max-width:none!important;box-sizing:border-box!important;margin-left:0!important;margin-right:0!important;}
+
+/* Posts 3.0: theme-aware, non-sliding conversation overlay. */
+.community-simple-feed > .community-feed-search{display:none!important;}
+.ummah-comments-backdrop{position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;touch-action:pan-y!important;}
+.ummah-comments-theme-responsive{position:relative!important;inset:auto!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;animation:none!important;box-sizing:border-box!important;width:calc(100% - 20px)!important;max-width:560px!important;height:min(80%,720px)!important;max-height:calc(100% - 20px)!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;overscroll-behavior:contain!important;background:var(--theme-surface,rgba(9,22,30,.92))!important;color:var(--theme-text,#f7f8fc)!important;border:1px solid var(--theme-border,rgba(220,230,245,.3))!important;}
+.ummah-comments-theme-responsive header,.ummah-comments-theme-responsive .ummah-comment-post-preview,.ummah-comments-theme-responsive form{flex-shrink:0!important;}
+.ummah-comments-theme-responsive .ummah-comments-list{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;}
+.ummah-comments-theme-responsive button,.ummah-comments-theme-responsive input{color:inherit!important;border-color:var(--theme-border,rgba(220,230,245,.25))!important;}
+.ummah-comments-theme-responsive input{font-size:16px!important;min-width:0!important;}
+.ummah-comments-theme-responsive form{display:flex!important;gap:8px!important;align-items:center!important;padding-bottom:max(12px,env(safe-area-inset-bottom))!important;}
+.ummah-comments-theme-responsive form input{flex:1 1 0!important;}
+.ummah-comments-theme-responsive form button{flex:0 0 auto!important;}
+@media(prefers-reduced-motion:reduce){.ummah-comments-theme-responsive{transition:none!important;}}
