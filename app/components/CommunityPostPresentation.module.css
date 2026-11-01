@@ -175,3 +175,8 @@
 @media(prefers-reduced-motion:reduce){
  .mediaMosaic .image,.verseEyebrow,.reference{animation:none;transition:none}
 }
+
+/* Reserve stable tile dimensions while native metadata loads: no feed scroll jumps. */
+.compact .videoTile{aspect-ratio:16/9}
+.videoTile[data-orientation="portrait"] .videoPoster video,
+.videoTile[data-orientation="unknown"] .videoPoster video{object-fit:contain}
