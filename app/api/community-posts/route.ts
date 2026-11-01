@@ -27,7 +27,10 @@ export async function POST(request:Request){
   const now=new Date();const start=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())).toISOString();
   const {data:today,error:checkError}=await db.from("ummah_feed_posts").select("id,body").eq("author_id",user.id).gte("created_at",start);
   if(checkError){console.error("daily-post-check",checkError.code,checkError.message);return NextResponse.json({error:"Daily Post check failed. Please try again shortly.",code:"DAILY_CHECK_FAILED"},{status:503})}
-  const {data:mediaDaily,error:mediaDailyError}=await db.from("posts").select("id").eq("user_id",user.id).gte("created_at",start).like("body","✦ DAILY UMMAH ✦%").limit(1);
+  // A retried successful media request must not count itself as a second Daily Post.
+  let mediaDailyQuery=db.from("posts").select("id").eq("user_id",user.id).gte("created_at",start).like("body","✦ DAILY UMMAH ✦%");
+  if(media&&requestedId)mediaDailyQuery=mediaDailyQuery.neq("id",requestedId);
+  const {data:mediaDaily,error:mediaDailyError}=await mediaDailyQuery.limit(1);
   if(mediaDailyError)return NextResponse.json({error:"Daily Post check failed. Please try again shortly.",code:"DAILY_CHECK_FAILED"},{status:503});
   if((today||[]).some(p=>p.body?.startsWith("✦ DAILY UMMAH ✦"))||(mediaDaily||[]).length>0)return NextResponse.json({error:"You already shared your Daily Ummah Post today. Come back tomorrow for your next daily post.",code:"DAILY_ALREADY_POSTED"},{status:409});
  }
