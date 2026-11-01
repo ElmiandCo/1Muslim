@@ -54,3 +54,19 @@ test("cross-origin writes and authenticated likes are enforced",()=>{
  assert.match(likes,/Sign in to like/);
  assert.match(commentLikes,/Comment not found/);
 });
+
+test("canonical like endpoints use INSERT under existing RLS and return actual state",()=>{
+ assert.doesNotMatch(likes,/\.upsert\(/);
+ assert.doesNotMatch(commentLikes,/\.upsert\(/);
+ assert.match(likes,/\.insert\(\{post_id:postId,user_id:user\.id\}\)/);
+ assert.match(commentLikes,/\.insert\(\{comment_id:commentId,user_id:user\.id\}\)/);
+ assert.match(likes,/error\.code!=="23505"/);
+ assert.match(commentLikes,/error\.code!=="23505"/);
+ assert.match(commentLikes,/liked:!!current/);
+});
+test("canonical post like GET respects authenticated post RLS",()=>{
+ const get=likes.slice(likes.indexOf("export async function GET"),likes.indexOf("export async function POST"));
+ assert.match(get,/db\.from\("posts"\)\.select\("id"\)/);
+ assert.match(get,/Post not found/);
+ assert.match(get,/status:404/);
+});
