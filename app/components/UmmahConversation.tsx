@@ -46,6 +46,8 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
  const profileDialogRef=useRef<HTMLElement>(null);
  const profileCloseRef=useRef<HTMLButtonElement>(null);
  const scrollHistory=useRef<number[]>([]);
+ const pendingCommentLikes=useRef(new Set<string>());
+ const postLikePending=useRef(false);
 
  const refresh=useCallback(async()=>{
   try{
@@ -129,20 +131,25 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
   }finally{setBusy(false)}
  };
  const toggleCommentLike=async(id:string)=>{
-  const current=byId.get(id);if(!current)return;
+  const current=byId.get(id);if(!current||pendingCommentLikes.current.has(id))return;
+  pendingCommentLikes.current.add(id);
   setComments(rows=>rows.map(c=>c.id===id?{...c,liked:!c.liked,likes:Math.max(0,c.likes+(c.liked?-1:1))}:c));
   try{
    const response=await fetch("/api/ummah-comment-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({commentId:id})});
    if(!response.ok)throw Error("Sign in to like comments.");
   }catch{setComments(rows=>rows.map(c=>c.id===id?{...c,liked:current.liked,likes:current.likes}:c));setNotice("Could not save comment like.")}
+  finally{pendingCommentLikes.current.delete(id)}
  };
  const togglePostLike=async()=>{
+  if(postLikePending.current)return;
+  postLikePending.current=true;
   const was=likes;setLikes({liked:!was.liked,count:Math.max(0,was.count+(was.liked?-1:1))});
   try{
    const response=await fetch("/api/ummah-post-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:post.id})});
    if(!response.ok)throw Error("Sign in to like posts.");
    const result=await response.json();if(typeof result.count==="number")setLikes({count:result.count,liked:result.liked});
   }catch{setLikes(was);setNotice("Could not save post like.")}
+  finally{postLikePending.current=false}
  };
  const share=async()=>{
   const url=location.origin+"/community#post-"+post.id;
