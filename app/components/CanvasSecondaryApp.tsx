@@ -192,33 +192,9 @@ function DailyPostsApp({active}:{active:boolean}){
   </div>}
  </div>;
 }
+/** Posts-only canvas: the Community Map is a separate destination, not a Posts tab. */
 export function CommunityMap({active}:{active:boolean}){
- const [tab,setTab]=useState<"map"|"posts">("posts");
- const [zoom,setZoom]=useState(0);
- const [search,setSearch]=useState("");
- const [selected,setSelected]=useState<string|null>(null);
- const [following,setFollowing]=useState<string[]>([]);
- const places=[
-  {id:"mosque",kind:"Mosque",name:"Mosque Finder",city:"Search your city",phone:"Add a verified listing",schedule:"Prayer schedules are set by each mosque",image:"🕌",detail:"Find a local masjid or prayer space once its verified listing is available."},
-  {id:"community",kind:"Community",name:"Local Communities",city:"Your area",phone:"Community contact shown on verified listings",schedule:"Events and circles appear here",image:"✦",detail:"Follow local circles for events, study groups, and announcements."}
- ];
- useEffect(()=>{try{setFollowing(JSON.parse(localStorage.getItem("1muslim:community-follows")||"[]"))}catch{}},[]);
- const visible=places.filter(place=>(place.name+place.kind+place.city).toLowerCase().includes(search.trim().toLowerCase()));
- const choose=(id:string)=>setSelected(id);
- const toggleFollow=(id:string)=>setFollowing(current=>{const next=current.includes(id)?current.filter(x=>x!==id):[...current,id];try{localStorage.setItem("1muslim:community-follows",JSON.stringify(next))}catch{}return next});
- 
- const bounds=[[-125,24,-66,50],[-111,29,-79,47],[-104,32,-85,45],[-99,35,-90,43],[-96,37,-92,41]] as const;
- const bbox=bounds[zoom];
- const url="https://www.openstreetmap.org/export/embed.html?bbox="+encodeURIComponent(bbox.join(","))+"&layer=mapnik";
- return <div className="canvas-community-map-shell" data-community-view={tab}>
-  <div className="canvas-community-tabs" role="tablist" aria-label="Community views"><button type="button" role="tab" aria-selected={tab==="posts"} onClick={()=>setTab("posts")}>Community Posts</button><button type="button" role="tab" aria-selected={tab==="map"} onClick={()=>setTab("map")}>🌎 Community Map</button></div>
-  {tab==="posts"?<div className="canvas-community-posts-scroll"><DailyPostsApp active={active}/></div>:<div className="canvas-community-map-panel">
-   <div className="canvas-community-map-heading"><strong>Mosque Finder & Local Communities</strong><span>Explore verified local places and community hubs</span></div>
-   <form className="canvas-community-map-search" onSubmit={e=>e.preventDefault()}><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search mosque or community" aria-label="Search mosques and communities"/><button type="submit">Search</button></form>
-   <div className="canvas-community-map-frame"><iframe title="Interactive map of the United States" loading="lazy" src={url} referrerPolicy="no-referrer-when-downgrade" allowFullScreen={false}/><div className="canvas-community-map-places" aria-label="Mosque and community results">{visible.map(place=><button type="button" key={place.id} onClick={()=>choose(place.id)} className={selected===place.id?"isSelected":""}><span>{place.image}</span><strong>{place.name}</strong><small>{place.kind}</small></button>)}</div>{selected&&(()=>{const place=places.find(item=>item.id===selected)!;return <article className="canvas-community-place-card" aria-label={place.name+" details"}><button type="button" onClick={()=>setSelected(null)} aria-label="Close place details">×</button><div className="canvas-community-place-image" aria-hidden="true">{place.image}</div><span>{place.kind.toUpperCase()}</span><h3>{place.name}</h3><p>{place.detail}</p><dl><div><dt>Phone</dt><dd>{place.phone}</dd></div><div><dt>Schedule</dt><dd>{place.schedule}</dd></div></dl><button type="button" className="canvas-community-follow" onClick={()=>toggleFollow(place.id)}>{following.includes(place.id)?"✓ Following":"Follow"}</button></article>})()}<div className="canvas-community-map-zoom"><button type="button" onClick={()=>setZoom(v=>Math.min(4,v+1))} disabled={zoom===4} aria-label="Zoom in">+</button><button type="button" onClick={()=>setZoom(v=>Math.max(0,v-1))} disabled={zoom===0} aria-label="Zoom out">−</button><button type="button" onClick={()=>setZoom(0)} aria-label="Reset map to United States">⌂</button></div></div>
-   <p className="canvas-community-map-caption">Tap a Mosque or Community card for its image, phone, schedule, and Follow action. Verified local listings will replace these directory placeholders as they are added.</p>
-  </div>}
- </div>;
+ return <div className="canvas-community-map-shell canvas-community-posts-only"><div className="canvas-community-posts-scroll"><DailyPostsApp active={active}/></div></div>;
 }
 export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boolean}){
  return <div className={slot===0?"canvas-native-app canvas-profile-mirror":"canvas-native-app"}>{slot!==0&&<header><span>0{slot+6} · 1MUSLIM</span><h2>{titles[slot]}</h2></header>}<div className="canvas-native-body">
