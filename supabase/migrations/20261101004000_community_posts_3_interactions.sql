@@ -18,7 +18,7 @@ alter table public.ummah_post_comments
       image_path is null
       or (
         image_path like author_id::text || '/ummah-comments/%'
-        and image_path ~ '^[0-9a-f-]{36}/ummah-comments/[A-Za-z0-9._-]+\\.(png|jpg|jpeg|webp)$'
+        and image_path ~ '^[0-9a-f-]{36}/ummah-comments/[A-Za-z0-9._-]+\.(png|jpg|jpeg|webp)$'
         and char_length(image_path) <= 300
       )
     )
