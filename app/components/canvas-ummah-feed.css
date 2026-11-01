@@ -467,3 +467,8 @@
 .community-simple-feed .community-post-card footer{margin-top:5px!important;padding-top:6px!important;gap:5px!important;}
 .community-simple-feed .community-post-card footer button{padding:6px!important;min-height:36px!important;}
 .community-simple-feed .community-post-card .ummah-video-frame{margin:0!important;}
+
+/* Profile avatar: reuse the existing 3D card-turn vocabulary with a slow final revolution. */
+@keyframes profileAvatarSpinReveal {0%{transform:perspective(900px) rotateY(0deg) scale(1)}35%{transform:perspective(900px) rotateY(540deg) scale(.94)}70%{transform:perspective(900px) rotateY(900deg) scale(.97)}100%{transform:perspective(900px) rotateY(1080deg) scale(1)}}
+.profile-avatar-spin-reveal{animation:profileAvatarSpinReveal 1.65s cubic-bezier(.22,.65,.15,1) both;backface-visibility:visible;will-change:transform}
+@media(prefers-reduced-motion:reduce){.profile-avatar-spin-reveal{animation:none}}
