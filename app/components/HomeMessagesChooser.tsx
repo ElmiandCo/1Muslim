@@ -5,7 +5,7 @@ import Link from "next/link";
 import styles from "./home-messenger.module.css";
 type Participant={conversation_id:string;user_id:string};
 type Msg={id:string;conversation_id:string;sender_id:string;body:string;created_at:string;attachment_path:string|null;attachment_type:string|null};
-type Profile={id:string;display_name:string|null;username:string|null;avatar_url:string|null;profile_image_url:string|null;avatar_path?:string|null};
+type Profile={id:string;display_name:string|null;username:string|null;gender?:string|null;avatar_gender?:string|null;avatar_config?:Record<string,unknown>|null};
 export default function HomeMessagesChooser(){
  const db=useMemo(()=>createClient(),[]);
  const [uid,setUid]=useState<string|null>(null);
@@ -34,7 +34,7 @@ export default function HomeMessagesChooser(){
   const peers=rows.filter(x=>own.has(x.conversation_id)&&x.user_id!==uid);
   setThreads(peers);
   const ids=[...new Set(peers.map(x=>x.user_id))];
-  if(ids.length){const {data:p,error:profileError}=await db.from("profiles").select("id,display_name,username,avatar_url,profile_image_url,avatar_path").in("id",ids);if(profileError){setError("Unable to load member profiles: "+profileError.message)}else setProfiles(Object.fromEntries(((p||[]) as Profile[]).map(x=>[x.id,x])))}
+  if(ids.length){const {data:p,error:profileError}=await db.from("profiles").select("id,display_name,username,gender,avatar_gender,avatar_config").in("id",ids);if(profileError){setError("Unable to load member profiles: "+profileError.message)}else setProfiles(Object.fromEntries(((p||[]) as Profile[]).map(x=>[x.id,x])))}
   if(own.size){const {data:reads}=await db.from("dm_participants").select("conversation_id,last_read_at").eq("user_id",uid).in("conversation_id",[...own]);
    const {data:recent}=await db.from("dm_messages").select("conversation_id,sender_id,created_at,body").in("conversation_id",[...own]).order("created_at",{ascending:false}).limit(500);
    const last=new Map((reads||[]).map(x=>[x.conversation_id,x.last_read_at]));const counts:Record<string,number>={};
@@ -59,12 +59,12 @@ export default function HomeMessagesChooser(){
   const {error:msgError}=await db.from("dm_messages").insert({conversation_id:selected,sender_id:uid,body:"📷 Photo",attachment_path:path,attachment_type:"image"});
   if(msgError)setError(msgError.message);else await loadMessages();setBusy(false);
  };
- const findPeople=async()=>{if(!uid)return;setPeopleLoading(true);const q=search.trim().replace(/[%_,]/g,"");let request=db.from("profiles").select("id,display_name,username,avatar_url,profile_image_url,avatar_path").neq("id",uid).limit(25);if(q.length>=2)request=request.or(`display_name.ilike.%${q}%,username.ilike.%${q}%`);const {data,error:lookupError}=await request;if(lookupError)setError("Unable to search members: "+lookupError.message);else setCandidates((data||[]) as Profile[]);setPeopleLoading(false)};
+ const findPeople=async()=>{if(!uid)return;setPeopleLoading(true);const q=search.trim().replace(/[%_,]/g,"");let request=db.from("profiles").select("id,display_name,username,gender,avatar_gender,avatar_config").neq("id",uid).limit(25);if(q.length>=2)request=request.or(`display_name.ilike.%${q}%,username.ilike.%${q}%`);const {data,error:lookupError}=await request;if(lookupError)setError("Unable to search members: "+lookupError.message);else setCandidates((data||[]) as Profile[]);setPeopleLoading(false)};
  useEffect(()=>{if(!newChat)return;const t=setTimeout(()=>void findPeople(),250);return()=>clearTimeout(t)},[newChat,search,uid]);
  const start=async(id:string)=>{setBusy(true);const {data,error:err}=await db.rpc("dm_start_conversation",{other_user:id});if(err)setError(err.message);else if(typeof data==="string"){await loadThreads();open(data)}setBusy(false)};
  const name=(id:string)=>profiles[id]?.display_name?.trim()||profiles[id]?.username?.trim()||"Member";
- const avatar=(p?:Profile)=>p?.avatar_url||p?.profile_image_url||p?.avatar_path||"";
- const portrait=(p?:Profile)=> <span className={styles.avatar}>{avatar(p)?<img src={avatar(p)} alt="" loading="lazy" onError={e=>{e.currentTarget.style.display="none"}}/>:(p?.display_name||p?.username||"M").charAt(0).toUpperCase()}</span>;
+ const avatar=(p?:Profile)=>{const c=p?.avatar_config;const selected=c?.selectedAvatarUrl;const custom=c?.adminAvatarUrl;const safe=(v:unknown)=>typeof v==="string"&&(/^(https:\/\/)/.test(v)||/^\/assets\/avatars\/[a-zA-Z0-9._-]+$/.test(v))?v:null;return safe(selected)||safe(custom)||(String(c?.gender||p?.avatar_gender||p?.gender||"male").toLowerCase()==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg")};
+ const portrait=(p?:Profile)=> <span className={styles.avatar}>{avatar(p)?<img src={avatar(p)} alt="" loading="lazy" onError={e=>{if(!e.currentTarget.src.endsWith("/assets/avatars/default-male.jpg"))e.currentTarget.src="/assets/avatars/default-male.jpg"}}/>:(p?.display_name||p?.username||"M").charAt(0).toUpperCase()}</span>;
  const snippet=(value:string)=>{const Segmenter=(Intl as unknown as {Segmenter?:new (locale:string,options:{granularity:"grapheme"})=>{segment:(s:string)=>Iterable<{segment:string}>}}).Segmenter;const chars=Segmenter?Array.from(new Segmenter("en",{granularity:"grapheme"}).segment(value),x=>x.segment):Array.from(value);return chars.slice(0,40).join("")+(chars.length>40?"…":"")};
  const current=threads.find(t=>t.conversation_id===selected);
  const shown=threads.filter(t=>(filter!=="unread"||unread[t.conversation_id]>0)&& (filter!=="groups")&&name(t.user_id).toLowerCase().includes(search.toLowerCase()));
