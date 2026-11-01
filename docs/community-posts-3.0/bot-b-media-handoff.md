@@ -32,3 +32,15 @@ Base: main at c62d6f112b3d64fa0879e443c892c08140ad2611. Branch: bot-b/community-
 - Older media posts created by the previous dual-record flow may still have a corresponding historical text post; this patch prevents new duplicates but does not retroactively migrate them.
 - Photo/video cards currently open canonical \`/posts/[id]\` for discussion; Bot A must wire the full three-level comment interaction across both post families.
 - Build, visual QA and device verification must be confirmed by GitHub CI/Vercel before approval. No claim of production readiness without those checks.
+
+
+## User's two visual references — fidelity target (2026-10-31)
+Both reference files are committed on **`docs/community-posts-3-reference-folder`**, not on main:
+- [Community Posts feed reference — 91972156](https://github.com/ElmiandCo/1Muslim/blob/docs/community-posts-3-reference-folder/docs/community-posts-3.0/references/91972156-9A1F-41A8-BF17-8CB8484984AE.png)
+- [Second reference — EFB1C829](https://github.com/ElmiandCo/1Muslim/blob/docs/community-posts-3-reference-folder/docs/community-posts-3.0/references/EFB1C829-EAE6-42DA-8AEF-8C681871E2B7.png)
+
+**Visual instruction:** Aim to match the two images faithfully, or exceed them in quality, rather than use them as loose inspiration. The visible first reference shows emerald-glass cards with a luminous edge, gold accent ornamentation, a Qur'an reflection with Arabic/translation/reference, a play-overlaid video thumbnail, author identity and compact actions. Preserve the existing app's actual component hierarchy and scroll behavior instead of hardcoding a screenshot or inventing engagement metrics.
+
+**New CSS-only refinement in this branch:** `CommunityPostPresentation.module.css` adds theme-aware gold corner filigree for Qur'an cards, media vignette, tactile play feedback, and one-time verse entrance; `CommunityMediaFeed.module.css` adds thin luminous card edge, subtle corner bloom and hover feedback with short staggered entrances; `community-posts3-theme.css` adds restrained hover and one-time entrance to text cards. All effects use transform/opacity or paint-only styling, avoid perpetual animation, and honor `prefers-reduced-motion`. No scroll-container dimensions, feed algorithms, uploads, or database schema were modified.
+
+**Visual QA required before approval:** Compare actual mobile and desktop screenshots side-by-side with **both** GitHub reference PNGs. Check card spacing and proportions, emerald/gold balance, avatar/header, Qur'an typography and ornament, video thumbnails, action rows, light mode, all six themes, iOS touch, and reduced motion. Record screenshot diffs in PR. The two reference PNGs have not been embedded as app assets; image-specific mosque/landscape artwork must come from authorized post content rather than fabricated placeholder media. **Do not claim pixel-perfect parity without that device comparison.**
