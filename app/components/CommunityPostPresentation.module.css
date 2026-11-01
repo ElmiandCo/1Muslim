@@ -43,3 +43,10 @@
 :global(html.light) .verseEyebrow,:global(html.light) .reference,:global(html.light) .daily{color:color-mix(in srgb,var(--cp-accent) 75%,#121212)}
 @media(max-width:520px){.presentation{gap:9px}.verse{padding:13px}.videoTile{min-height:150px}.youtubeTile{min-height:160px}.playCircle{width:50px;height:50px}}
 @media(prefers-reduced-motion:reduce){.videoPoster video,.playCircle{transition:none}}
+
+/* Beat legacy .community-post-card p rules without touching production-wide CSS. */
+.presentation .body{margin:0;font-size:clamp(14px,2vw,18px);line-height:1.65;white-space:pre-wrap}
+.presentation .arabic{margin:3px 0 0;font-size:clamp(22px,4vw,35px);line-height:2;text-align:center}
+.presentation .translation{margin:0;font-size:clamp(14px,2.2vw,18px);line-height:1.65;text-align:center}
+.compact .body{font-size:clamp(13px,2vw,16px);line-height:1.5}
+.compact .arabic{font-size:clamp(19px,3vw,25px)}
