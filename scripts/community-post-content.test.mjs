@@ -102,3 +102,9 @@ test("Round Four media feed uses canonical IDs and source-aware Bot A callback",
  assert.match(theme,/Never change scroll containers or layout heights here/);
  assert.doesNotMatch(feed,/autoPlay/);
 });
+
+test("Round Four Daily Post retries exclude their own canonical post ID",()=>{
+ const api=readFileSync(new URL("../app/api/community-posts/route.ts",import.meta.url),"utf8");
+ assert.match(api,/if\(media&&requestedId\)mediaDailyQuery=mediaDailyQuery\.neq\("id",requestedId\)/);
+ assert.match(api,/DAILY_ALREADY_POSTED/);
+});
