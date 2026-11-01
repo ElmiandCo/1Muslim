@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useRef,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import GameLabProfileHub from "./GameLabProfileHub";
 import ProfileVideos from "./ProfileVideos";
