@@ -8,6 +8,7 @@ import styles from "./UmmahConversation.module.css";
 
 export type UmmahConversationPost={
  id:string;author_id:string;body:string;created_at:string;
+ source?:"ummah"|"posts"; // Explicit source: never guess UUID family.
  author_name?:string;author_handle?:string;avatar_url?:string|null;
 };
 type Comment={
@@ -24,6 +25,7 @@ function avatar(name:string,url:string|null|undefined){
 }
 
 export default function UmmahConversation({post,onClose}:{post:UmmahConversationPost;onClose:()=>void}){
+ const canonical=post.source==="posts";
  const [comments,setComments]=useState<Comment[]>([]);
  const [loading,setLoading]=useState(true);
  const [notice,setNotice]=useState("");
@@ -51,21 +53,21 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
 
  const refresh=useCallback(async()=>{
   try{
-   const response=await fetch("/api/ummah-comments?postId="+encodeURIComponent(post.id),{cache:"no-store"});
+   const response=await fetch((canonical?"/api/post-comments":"/api/ummah-comments")+"?postId="+encodeURIComponent(post.id),{cache:"no-store"});
    if(!response.ok)throw Error("Comments unavailable");
    const data=await response.json();
    setComments(data.comments||[]);
   }catch{setNotice("Comments could not be refreshed. Try again shortly.")}
   finally{setLoading(false)}
- },[post.id]);
+ },[post.id,canonical]);
  const refreshCounts=useCallback(async()=>{
   const [likeResult,shareResult]=await Promise.allSettled([
-   fetch("/api/ummah-post-likes?postId="+encodeURIComponent(post.id),{cache:"no-store"}).then(r=>r.ok?r.json():null),
-   fetch("/api/ummah-post-shares?postId="+encodeURIComponent(post.id),{cache:"no-store"}).then(r=>r.ok?r.json():null)
+   fetch((canonical?"/api/post-likes":"/api/ummah-post-likes")+"?postId="+encodeURIComponent(post.id),{cache:"no-store"}).then(r=>r.ok?r.json():null),
+   canonical?Promise.resolve(null):fetch("/api/ummah-post-shares?postId="+encodeURIComponent(post.id),{cache:"no-store"}).then(r=>r.ok?r.json():null)
   ]);
   if(likeResult.status==="fulfilled"&&likeResult.value)setLikes({count:likeResult.value.count||0,liked:!!likeResult.value.liked});
   if(shareResult.status==="fulfilled"&&shareResult.value)setShares(shareResult.value.count||0);
- },[post.id]);
+ },[post.id,canonical]);
 
  useEffect(()=>{
   void refresh();void refreshCounts();
@@ -74,15 +76,15 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
   firstButton.current?.focus();
   const db=createClient();
   const queue=()=>{if(refreshTimer.current)clearTimeout(refreshTimer.current);refreshTimer.current=setTimeout(()=>{void refresh();void refreshCounts()},300)};
-  const channel=db.channel("ummah-posts3-"+post.id)
-   .on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_comments",filter:"post_id=eq."+post.id},queue)
-   .on("postgres_changes",{event:"*",schema:"public",table:"ummah_comment_likes"},queue)
-   .on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_like_counts",filter:"post_id=eq."+post.id},queue)
-   .on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_share_counts",filter:"post_id=eq."+post.id},queue)
-   .subscribe();
+  let channel=db.channel((canonical?"canonical-posts3-":"ummah-posts3-")+post.id)
+   .on("postgres_changes",{event:"*",schema:"public",table:canonical?"comments":"ummah_post_comments",filter:"post_id=eq."+post.id},queue)
+   .on("postgres_changes",{event:"*",schema:"public",table:canonical?"comment_like_counts":"ummah_comment_likes"},queue)
+   .on("postgres_changes",{event:"*",schema:"public",table:canonical?"post_like_counts":"ummah_post_like_counts",filter:"post_id=eq."+post.id},queue);
+  if(!canonical)channel=channel.on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_share_counts",filter:"post_id=eq."+post.id},queue);
+  channel.subscribe();
   const fallback=setInterval(queue,30000);
   return()=>{document.body.style.overflow=previous;clearInterval(fallback);if(refreshTimer.current)clearTimeout(refreshTimer.current);void db.removeChannel(channel)};
- },[post.id,refresh,refreshCounts]);
+ },[post.id,canonical,refresh,refreshCounts]);
 
  useEffect(()=>{if(!file){setPreview("");return}const url=URL.createObjectURL(file);setPreview(url);return()=>URL.revokeObjectURL(url)},[file]);
  useEffect(()=>{if(!profileId){setProfile(null);return}let live=true;const db=createClient();void db.from("profiles").select("id,display_name,username,avatar_url,bio,xp_total").eq("id",profileId).maybeSingle().then(({data})=>{if(live)setProfile(data)});return()=>{live=false}},[profileId]);
@@ -116,7 +118,7 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
     const {error}=await db.storage.from("community-media").upload(path,file,{contentType:file.type,upsert:false});
     if(error)throw Error("Image upload failed.");
    }
-   const response=await fetch("/api/ummah-comments",{
+   const response=await fetch(canonical?"/api/post-comments":"/api/ummah-comments",{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({postId:post.id,parentId:replyTo,body:draft.trim(),imagePath:path})
    });
@@ -135,7 +137,7 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
   pendingCommentLikes.current.add(id);
   setComments(rows=>rows.map(c=>c.id===id?{...c,liked:!c.liked,likes:Math.max(0,c.likes+(c.liked?-1:1))}:c));
   try{
-   const response=await fetch("/api/ummah-comment-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({commentId:id})});
+   const response=await fetch(canonical?"/api/post-comment-likes":"/api/ummah-comment-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({commentId:id})});
    if(!response.ok)throw Error("Sign in to like comments.");
   }catch{setComments(rows=>rows.map(c=>c.id===id?{...c,liked:current.liked,likes:current.likes}:c));setNotice("Could not save comment like.")}
   finally{pendingCommentLikes.current.delete(id)}
@@ -145,7 +147,7 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
   postLikePending.current=true;
   const was=likes;setLikes({liked:!was.liked,count:Math.max(0,was.count+(was.liked?-1:1))});
   try{
-   const response=await fetch("/api/ummah-post-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:post.id})});
+   const response=await fetch(canonical?"/api/post-likes":"/api/ummah-post-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:post.id})});
    if(!response.ok)throw Error("Sign in to like posts.");
    const result=await response.json();if(typeof result.count==="number")setLikes({count:result.count,liked:result.liked});
   }catch{setLikes(was);setNotice("Could not save post like.")}
@@ -158,7 +160,7 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
    else{await navigator.clipboard.writeText(url);setNotice("Post link copied.");}
    // Anonymous sharing remains possible; only authenticated events are counted.
    const db=createClient();const {data:{user}}=await db.auth.getUser();
-   if(user){const response=await fetch("/api/ummah-post-shares",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:post.id})});if(response.ok){const result=await response.json();if(typeof result.count==="number")setShares(result.count)}}
+   if(user&&!canonical){const response=await fetch("/api/ummah-post-shares",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:post.id})});if(response.ok){const result=await response.json();if(typeof result.count==="number")setShares(result.count)}}
   }catch{/* Native share cancellation must not create a share event. */}
  };
  const openThread=(id:string)=>{
@@ -233,7 +235,7 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
      <div className={styles.engagement}>
       <button type="button" aria-pressed={likes.liked} onClick={()=>void togglePostLike()}>{likes.liked?"♥":"♡"} {likes.count} Likes</button>
       <span>💬 {comments.length}</span>
-      <button type="button" onClick={()=>void share()}>↗ {shares} Shares</button>
+      <button type="button" onClick={()=>void share()}>↗ {canonical?"Share":shares+" Shares"}</button>
      </div>
     </article>}
     {focus&&<div className={styles.breadcrumb}><button type="button" onClick={()=>setStack([])}>All comments</button><span> / </span><span>Thread by {focus.name}</span></div>}
