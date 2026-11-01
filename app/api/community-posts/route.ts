@@ -22,10 +22,12 @@ export async function GET(){
   if(options.length===1){links.set(p.id,options[0].id);claimed.add(options[0].id)}
  }
  const mediaIds=[...links.values()];
- const {data:attachments}=mediaIds.length?await db.from("post_media").select("post_id,storage_path,mime_type").in("post_id",mediaIds):{data:[]};
+ const {data:attachments}=mediaIds.length?await db.from("post_media").select("post_id,storage_path,mime_type,community_post_id").in("post_id",mediaIds):{data:[]};
+ const {data:directAttachments}=posts.length?await db.from("post_media").select("post_id,storage_path,mime_type,community_post_id").in("community_post_id",posts.map(p=>p.id)):{data:[]};
+ const directByFeed=new Map((directAttachments||[]).map(a=>[a.community_post_id,a]));
  const attachmentByPost=new Map((attachments||[]).map(a=>[a.post_id,a]));
  const output=await Promise.all(posts.map(async p=>{
-  const attachment=attachmentByPost.get(links.get(p.id)||"");
+  const attachment=directByFeed.get(p.id)||attachmentByPost.get(links.get(p.id)||"");
   let media_url:string|null=null;
   if(attachment?.storage_path){
    const {data:signed,error:signError}=await db.storage.from("community-media").createSignedUrl(attachment.storage_path,3600);
@@ -63,9 +65,9 @@ export async function POST(request:Request){
  }
  if(media){
   const {data:post,error:postError}=await db.from("posts").insert({user_id:user.id,body:text||"Shared a video"}).select("id").single();
-  if(postError)return NextResponse.json({error:"Media post could not be created; your uploaded file remains saved.",code:postError.code},{status:503});
-  const {error:attachError}=await db.from("post_media").insert({post_id:post.id,user_id:user.id,storage_path:media.storage_path,file_name:String(media.file_name||"upload").slice(0,255),mime_type:media.mime_type});
-  if(attachError){await db.from("posts").delete().eq("id",post.id).eq("user_id",user.id);return NextResponse.json({error:"Media attachment could not be published; your upload remains saved.",code:attachError.code},{status:503})}
+  if(postError){await db.from("ummah_feed_posts").delete().eq("id",data.id).eq("author_id",user.id);return NextResponse.json({error:"Media post could not be created; your uploaded file remains saved.",code:postError.code},{status:503})}
+  const {error:attachError}=await db.from("post_media").insert({post_id:post.id,community_post_id:data.id,user_id:user.id,storage_path:media.storage_path,file_name:String(media.file_name||"upload").slice(0,255),mime_type:media.mime_type});
+  if(attachError){await db.from("posts").delete().eq("id",post.id).eq("user_id",user.id);await db.from("ummah_feed_posts").delete().eq("id",data.id).eq("author_id",user.id);return NextResponse.json({error:"Media attachment could not be published; your upload remains saved.",code:attachError.code},{status:503})}
  }
  return NextResponse.json({post:data},{status:201});
 }
