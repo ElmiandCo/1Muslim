@@ -426,3 +426,8 @@
 /* The portrait is part of the Profile tab transition, not a stationary overlay. */
 .profile-avatar-tab-motion{width:100%;animation:profileUnifiedSlide .38s cubic-bezier(.22,1,.36,1) both;}
 @media(prefers-reduced-motion:reduce){.profile-avatar-tab-motion{animation:none!important;}}
+
+/* Full-bleed avatar rail: sidebar overlays the canvas instead of reserving a left gutter. */
+.profile-scroll-viewport{padding-left:0!important;}
+.profile-scroll-viewport .profile-glass-gallery,
+.profile-scroll-viewport [data-profile-horizontal-gallery="true"]{width:100%!important;max-width:none!important;box-sizing:border-box!important;margin-left:0!important;margin-right:0!important;}
