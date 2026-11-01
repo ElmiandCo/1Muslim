@@ -139,7 +139,7 @@ grant select,insert,delete on public.comment_likes to authenticated;
 -- legacy and canonical post UUIDs cannot safely be matched by text/time.
 create table if not exists public.community_post_links (
   ummah_post_id uuid primary key references public.ummah_feed_posts(id) on delete cascade,
-  canonical_post_id uuid not null unique references public.posts(id) on delete restrict,
+  canonical_post_id uuid not null unique references public.posts(id) on delete cascade,
   linked_at timestamptz not null default now()
 );
 create index if not exists community_post_links_canonical_idx
