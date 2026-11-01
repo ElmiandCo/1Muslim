@@ -3,10 +3,12 @@ import {useEffect,useState} from "react";
 import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
 import CommunityPostPresentation,{type CommunityPostMedia} from "./CommunityPostPresentation";
+import ProfileAvatar from "./ProfileAvatar";
+import {extractVerse} from "../../lib/community-post-content";
 import styles from "./CommunityMediaFeed.module.css";
 
 type MediaRow={id:string;post_id:string;user_id:string;storage_path:string;file_name:string|null;mime_type:string;created_at:string};
-type MediaPost={id:string;userId:string;body:string;created:string;author:string;handle:string;media:CommunityPostMedia[]};
+type MediaPost={id:string;userId:string;body:string;created:string;author:string;handle:string;media:CommunityPostMedia[];avatarGender:string|null;avatarPackage:string|null;avatarConfig:Record<string,unknown>|null;gender:string|null;accent:string|null};
 
 export default function CommunityMediaFeed(){
  const [posts,setPosts]=useState<MediaPost[]>([]);
@@ -31,7 +33,7 @@ export default function CommunityMediaFeed(){
     const authorIds=[...new Set(valid.map(m=>m.user_id))];
     const [{data:signed,error:signError},{data:authors}]=await Promise.all([
      db.storage.from("community-media").createSignedUrls(valid.map(m=>m.storage_path),3600),
-     db.from("profiles").select("id,display_name,username").in("id",authorIds)
+     db.from("profiles").select("id,display_name,username,avatar_gender,avatar_package,avatar_config,gender,profile_accent").in("id",authorIds)
     ]);
     if(signError)throw signError;
     const authorById=new Map((authors||[]).map(p=>[p.id,p]));
@@ -43,7 +45,7 @@ export default function CommunityMediaFeed(){
      let post=grouped.get(parent.id);
      if(!post){
       const author=authorById.get(parent.user_id);
-      post={id:parent.id,userId:parent.user_id,body:parent.body||"",created:parent.created_at||item.created_at,author:author?.display_name||author?.username||"Community member",handle:author?.username?"@"+author.username:"@member",media:[]};
+      post={id:parent.id,userId:parent.user_id,body:parent.body||"",created:parent.created_at||item.created_at,author:author?.display_name||author?.username||"Community member",handle:author?.username?"@"+author.username:"@member",media:[],avatarGender:author?.avatar_gender||null,avatarPackage:author?.avatar_package||null,avatarConfig:author?.avatar_config||null,gender:author?.gender||null,accent:author?.profile_accent||null};
       grouped.set(parent.id,post);
      }
      post.media.push({id:item.id,url,mime_type:item.mime_type,file_name:item.file_name});
@@ -68,7 +70,7 @@ export default function CommunityMediaFeed(){
   <header className={styles.heading}><strong>✦ Photo & video moments</strong><span>{posts.length} posts</span></header>
   {error&&<p role="status" className={styles.error}>{error}</p>}
   {posts.slice(0,visible).map(post=><article className={styles.card} key={post.id}>
-   <header className={styles.author}><span className={styles.avatar} aria-hidden="true">{post.author.charAt(0).toUpperCase()}</span><span className={styles.authorName}><strong>{post.author}</strong><small>{post.handle} · {new Date(post.created).toLocaleDateString()}</small></span></header>
+   <header className={styles.author}><span className={styles.avatar}><ProfileAvatar name={post.author} gender={post.gender} avatarGender={post.avatarGender} avatarPackage={post.avatarPackage} avatarConfig={post.avatarConfig} accent={post.accent} size="sm" profileId={post.userId}/></span><span className={styles.authorName}><strong>{post.author}</strong><small>{post.handle} · {new Date(post.created).toLocaleDateString()}</small></span><span className={styles.kindBadge}>{extractVerse(post.body)?"۞ Qur’an":post.media.some(m=>m.mime_type.startsWith("video/"))?"▶ Video":"▧ Photos"}</span></header>
    <CommunityPostPresentation body={post.body} media={post.media} compact/>
    <footer className={styles.actions}><Link href={"/posts/"+encodeURIComponent(post.id)}>◯ Open post</Link><button type="button" onClick={()=>void share(post.id)}>↗ Share</button></footer>
   </article>)}
