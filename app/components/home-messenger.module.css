@@ -17,3 +17,11 @@
 .composeHint{font-size:12px;line-height:1.5;padding:6px 12px;color:#f5e5bf}
 .newChatBack{margin:6px 10px;padding:10px;border-radius:12px;border:1px solid rgba(239,214,157,.35);background:rgba(0,75,58,.28);color:#fff;text-align:left;cursor:pointer}
 @media(max-width:390px){.title{font-size:15px;padding:12px 8px}.titleActions{gap:4px}.titleActions .expand{padding:0 7px;font-size:10px}}
+
+/* Theme-aware translucent Messenger tint; retain artwork, blur and layout. */
+.panel{background:color-mix(in srgb,var(--accent,#39cda0) 13%,rgba(2,12,20,.39))}
+.sidebar{background:color-mix(in srgb,var(--accent,#39cda0) 7%,rgba(1,12,20,.22))}
+.search{background:color-mix(in srgb,var(--accent,#39cda0) 7%,rgba(0,15,24,.35))}
+.tabs button{background:color-mix(in srgb,var(--accent,#39cda0) 9%,rgba(0,19,29,.5))}
+.tabs .active{border-color:var(--accent,#39cda0);background:color-mix(in srgb,var(--accent,#39cda0) 42%,transparent)}
+.row.selected{background:color-mix(in srgb,var(--accent,#39cda0) 23%,transparent);box-shadow:inset 0 0 0 1px var(--accent,#39cda0)}
