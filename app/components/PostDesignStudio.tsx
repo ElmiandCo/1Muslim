@@ -55,7 +55,7 @@ export default function PostDesignStudio(){
  const updateText=(value:string)=>{setText(value);try{sessionStorage.setItem(draftKey,value)}catch{}};
  const title={reflection:"A moment of reflection",reminder:"A gentle reminder",verse:"Qur'an reflection",hadith:"Hadith reflection",question:"A question for the Ummah",announcement:"Community announcement"}[template];
  return <section className={styles.studio} aria-label="Create post">
- <div className={styles.header}><strong>Create Post</strong><div className={styles.previewHeaderActions}><button type="button" className={styles.previewToggle} onClick={()=>setPostPreviewOpen(true)} aria-label="Open post preview" title="Preview post">◉ <span>Preview</span></button><button type="button" className={styles.postButton} disabled={(!text.trim()&&!media)||busy} onClick={()=>setConfirm(true)}>{busy?"Posting…":"Post"}</button></div></div>
+ <div className={styles.header}><strong>Create Post</strong><div className={styles.previewHeaderActions}><button type="button" className={styles.previewToggle} onClick={()=>setPostPreviewOpen(true)} aria-label="Open post preview" title="Preview post"><span aria-hidden="true">◉</span></button><button type="button" className={styles.postButton} disabled={(!text.trim()&&!media)||busy} onClick={()=>setConfirm(true)}>{busy?"Posting…":"Post"}</button></div></div>
  <div className={styles.identity}><div className={styles.avatar}>1</div><div><strong>1Muslim</strong><span>◎ Public (Ummah)</span></div></div>
 
  <div className={styles.composerRow}>
