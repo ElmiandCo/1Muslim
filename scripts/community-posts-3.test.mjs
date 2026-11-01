@@ -32,7 +32,9 @@ test("thread and engagement realtime subscriptions have a polling fallback",()=>
 });
 test("share tracking is RLS-restricted and separate from media",()=>{
  assert.match(sql,/create table if not exists public\.ummah_post_shares/);
- assert.match(sql,/user_id = \(select auth\.uid\(\)\)/);\n assert.match(sql,/Read your own Ummah share events/);\n assert.match(sql,/ummah_post_share_counts/);
+ assert.match(sql,/user_id = \(select auth\.uid\(\)\)/);
+ assert.match(sql,/Read your own Ummah share events/);
+ assert.match(sql,/ummah_post_share_counts/);
  assert.match(sql,/revoke all on table public\.ummah_post_shares/);
  assert.match(viewer,/if\(user\)\{const response=await fetch\("\/api\/ummah-post-shares"/);
 });
