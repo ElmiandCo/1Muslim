@@ -110,6 +110,16 @@ export default function Community() {
     finally{setPublishing(false)}
   };
 
+  const sharePost=async(post:Post)=>{
+    const url=location.origin+"/community#post-"+post.id;
+    try{
+      if(navigator.share)await navigator.share({title:"1Muslim",text:post.text.slice(0,140),url});
+      else{await navigator.clipboard.writeText(url);setNotice("🔗 Post link copied.");}
+      chime();
+      // The share itself is available to guests; authenticated share events are counted.
+      void fetch("/api/ummah-post-shares",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:post.id})}).catch(()=>{});
+    }catch{/* Cancelled native share: no tracking. */}
+  };
   const like=async(id:string)=>{
     const response=await fetch("/api/ummah-post-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:id})});
     if(!response.ok){setNotice("Sign in to like posts.");return}
@@ -162,7 +172,7 @@ export default function Community() {
               <div className="postActions">
                 <button onClick={()=>setSelectedConversation(post.id)}>💬 {(sharedComments[post.id]||[]).length}</button>
                 <button className={post.liked?"liked":""} onClick={()=>like(post.id)}>❤️ {post.likes}</button>
-                <button onClick={()=>{animate(post.id,"✨","share");const url=location.origin+"/community";if(navigator.share)void navigator.share({title:"1Muslim",text:post.text,url}).then(chime).catch(()=>{});else void navigator.clipboard.writeText(post.text+"\n"+url).then(()=>{setNotice("🔗 Copied post and community link!");chime()})}}>↗ Share</button>
+                <button onClick={()=>{animate(post.id,"✨","share");void sharePost(post)}}>↗ Share</button>
               </div>
               <button type="button" className="commentBox" onClick={()=>setSelectedConversation(post.id)} aria-label={"Open conversation for post by "+post.name}>💬 Open conversation · Reply, images & threads ↗</button>
             </div>
