@@ -76,3 +76,14 @@ It adds nullable `comments.parent_id` FK to `comments.id`, nullable `comments.im
 - Existing Round Three source-contract checks: 12/12 connector assertions reported; Node, TypeScript, Next build, SQL replay, device/browser QA **not yet verified in Round Four**.
 - **Critical risk:** `posts.body` has a live 1,000-character limit; current Community editor accepts 2,000. Bot B must handle explicitly. **Critical risk:** current Community media dual-write is non-atomic and leaves no identity mapping. **Critical risk:** legacy anon-readable posts differ from canonical authenticated-only posts.
 - No live database writes, no merge and no production deployment. Do not mark integrated until both branches are combined and staged tests pass.
+
+## Round Four implemented interaction hardening (on this branch)
+
+- `app/api/post-likes/route.ts`: GET now first resolves `posts.id` under the caller's existing RLS, returning 404 when unavailable instead of disclosing like counts for a non-readable canonical post. The POST toggle uses `INSERT` rather than `UPSERT`, because live `post_likes` RLS grants INSERT/DELETE but no UPDATE; unique-violation `23505` is handled as an already-existing like and actual state is read back.
+- `app/api/post-comment-likes/route.ts`: same `INSERT` vs `UPSERT` correction under existing `comment_likes` RLS; handles `23505`, reads back actual `liked` state rather than assuming `!existing`.
+- `scripts/community-posts3-canonical.test.mjs`: adds two regression cases covering INSERT-only policies, actual-state response and post-visibility gating.
+- **Connector-side verification:** 16/16 targeted source readback assertions passed after the edits. This is *static verification only*, not a successful Node/TypeScript/Next build or staged SQL test. Full CI, device, concurrent-toggle and RLS tests remain required.
+- **Privacy audit note:** live `comment_likes` has a pre-existing public SELECT policy on raw `user_id` rows. New aggregate counters are privacy-preserving, but this older raw policy is not; tightening it requires a separate compatibility audit because other site components may read the table. Do not claim the whole platform's liker IDs are hidden.
+- The changes above do **not** alter legacy Ummah routes/tables, `post_media`, publishing, or the migration SQL. No database writes occurred.
+
+**Round Four draft:** [PR #310](https://github.com/ElmiandCo/1Muslim/pull/310). Bot B handoff comment posted on [PR #308](https://github.com/ElmiandCo/1Muslim/pull/308). Final branch SHA must be read from PR #310 after the last documentation update.
