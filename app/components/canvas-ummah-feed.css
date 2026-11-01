@@ -422,3 +422,7 @@
 .profile-slide-synced-content{animation:profileUnifiedSlide .38s cubic-bezier(.22,1,.36,1) both;}
 @keyframes profileUnifiedSlide{from{opacity:.78;transform:translate3d(14px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @media(prefers-reduced-motion:reduce){.profile-slide-synced-content{animation:none!important;}}
+
+/* The portrait is part of the Profile tab transition, not a stationary overlay. */
+.profile-avatar-tab-motion{width:100%;animation:profileUnifiedSlide .38s cubic-bezier(.22,1,.36,1) both;}
+@media(prefers-reduced-motion:reduce){.profile-avatar-tab-motion{animation:none!important;}}
