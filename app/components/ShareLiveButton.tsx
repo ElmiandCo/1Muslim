@@ -29,9 +29,9 @@ export default function ShareLiveButton({ streamId, title, compact = false }: { 
     await copyLink();
   };
   return (
-    <span style={{display:"inline-flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+    <span style={{display:"inline-flex",alignItems:"center",gap:6,flexWrap:"wrap",position:"relative"}}>
       <button type="button" onClick={() => void share()} aria-label="Share live using device apps" style={{border:"1px solid rgba(255,255,255,.24)",background:"rgba(0,0,0,.74)",color:"#fff",borderRadius:999,padding:compact?"7px 10px":"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>↗ Share</button>
-      <button type="button" onClick={() => void copyLink()} aria-label="Copy live link" style={{border:"1px solid rgba(255,255,255,.24)",background:"rgba(0,0,0,.74)",color:"#fff",borderRadius:999,padding:compact?"7px 10px":"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>🔗 Copy Link</button>
+      <button type="button" onClick={() => void copyLink()} className="omShareCopyLink" aria-label="Copy live link" style={{border:"1px solid rgba(255,255,255,.24)",background:"rgba(0,0,0,.74)",color:"#fff",borderRadius:999,padding:compact?"7px 10px":"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>🔗 Copy Link</button>
       {message && <span role="status" style={{fontSize:11,color:"#d6e7b8",background:"rgba(0,0,0,.7)",borderRadius:8,padding:"5px 7px"}}>{message}</span>}
     </span>
   );
