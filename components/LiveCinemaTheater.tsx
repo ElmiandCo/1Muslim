@@ -102,6 +102,24 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
         .omLiveCinema .omLiveTheaterGuests{z-index:32}
         .omLiveCinema .omViewerExit{z-index:40}
         @media(max-width:700px){.omLiveCinema .omLiveVideoStage video{width:100%!important;height:100%!important}.omLiveCinema .omLiveTheaterChat{width:min(78vw,330px)}.omLiveCinema[data-comment-focus="yes"] .omLiveTheaterChat{width:min(94vw,390px)}}
+
+        /* Compact mobile cinema controls: reserve independent touch zones. */
+        .omLiveCinema .omCinemaModeSwitch{top:calc(env(safe-area-inset-top) + 100px);right:12px;display:block}
+        .omLiveCinema .omCinemaModeSwitch summary{list-style:none;display:grid;place-items:center;min-width:70px;min-height:44px;padding:0 10px;border:1px solid #d8c18a88;border-radius:14px;background:#071711d9;color:#fff;font-size:12px;font-weight:800;backdrop-filter:blur(14px);cursor:pointer}
+        .omLiveCinema .omCinemaModeSwitch summary::-webkit-details-marker{display:none}
+        .omLiveCinema .omCinemaModeChoices{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+        .omLiveCinema .omCinemaModeChoices button{min-height:44px}
+        .omLiveCinema .omLiveViewerToolbar{bottom:calc(env(safe-area-inset-bottom) + 135px)!important;max-width:110px;gap:7px!important}
+        .omLiveCinema .omLiveViewerToolbar>button[aria-label="Expand live player"]{display:none!important}
+        .omLiveCinema .omLiveViewerToolbar .omShareCopyLink{display:none}
+        .omLiveCinema .omLiveTheaterGuests{bottom:calc(env(safe-area-inset-bottom) + 70px);right:12px}
+        .omLiveCinema .omLiveTheaterChat{width:calc(100% - 132px);max-width:390px}
+        @media(max-width:700px){
+          .omLiveCinema .omLiveViewerToolbar{bottom:calc(env(safe-area-inset-bottom) + 132px)!important}
+          .omLiveCinema .omLiveTheaterChat{width:calc(100% - 122px)!important;max-width:none}
+          .omLiveCinema .omLiveTheaterChat .emoteTray{max-width:100%}
+          .omLiveCinema .omViewerTapCounter{top:calc(env(safe-area-inset-top) + 55px)!important;right:12px!important}
+        }
         @media(prefers-reduced-motion:reduce){.omLiveCinema .omLiveVideoStage,.omLiveCinema .omLiveTheaterChat{transition:none!important}}
       `}</style>
     </section>
