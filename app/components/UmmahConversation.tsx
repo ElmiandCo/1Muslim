@@ -1,6 +1,6 @@
 "use client";
 
-import {useCallback,useEffect,useMemo,useRef,useState,type FormEvent} from "react";
+import {useCallback,useEffect,useMemo,useRef,useState,type FormEvent,type ReactNode} from "react";
 import {createPortal} from "react-dom";
 import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
@@ -154,7 +154,7 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
   const key=(event:KeyboardEvent)=>{if(event.key==="Escape"){event.preventDefault();back()}};
   document.addEventListener("keydown",key);return()=>document.removeEventListener("keydown",key);
  });
- const renderComment=(c:Comment,level:number):React.ReactNode=>{
+ const renderComment=(c:Comment,level:number):ReactNode=>{
   const replies=children.get(c.id)||[];
   const closed=collapsed[c.id]??level>1;
   return <div key={c.id} className={styles.commentWrap} style={{["--depth" as string]:Math.min(level-1,2)}}>
@@ -171,7 +171,7 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
      </div>
     </div>
    </article>
-   {!closed&&replies.map(child=>renderComment(child,level+1))}
+   {!closed&&level<3&&replies.map(child=>renderComment(child,level+1))}
   </div>;
  };
  const content=focus?[focus]:children.get("root")||[];
