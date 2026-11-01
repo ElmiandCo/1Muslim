@@ -23,7 +23,7 @@ test("comments accept only owner-scoped image paths and bounded image formats",(
  assert.doesNotMatch(viewer,/accept="video/);
 });
 test("thread and engagement realtime subscriptions have a polling fallback",()=>{
- for(const table of ["ummah_post_comments","ummah_comment_likes","ummah_post_likes","ummah_post_share_counts"]){
+ for(const table of ["ummah_post_comments","ummah_comment_likes","ummah_post_like_counts","ummah_post_share_counts"]){
   assert.ok(sql.includes("'"+table+"'"));
   assert.ok(viewer.includes('table:"'+table+'"'));
  }
