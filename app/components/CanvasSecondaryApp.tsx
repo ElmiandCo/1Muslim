@@ -161,6 +161,27 @@ function DailyPostsApp({active}:{active:boolean}){
 
  const lastTouch=useRef(0);
  const feedRef=useRef<HTMLDivElement|null>(null);
+ const autoPause=useRef(0);
+ useEffect(()=>{
+  if(!active||selected||expandedImage||searchPosts.trim())return;
+  const feed=feedRef.current;if(!feed)return;
+  const interrupt=()=>{autoPause.current=Date.now()+10000};
+  const events=["touchstart","pointerdown","wheel","keydown"] as const;
+  events.forEach(e=>window.addEventListener(e,interrupt,{passive:true}));
+  const timer=window.setInterval(()=>{
+   if(document.hidden||Date.now()<autoPause.current||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+   let scroll:HTMLElement|null=feed;
+   while(scroll&&!(scroll.scrollHeight>scroll.clientHeight+40&&/auto|scroll/.test(getComputedStyle(scroll).overflowY)))scroll=scroll.parentElement;
+   if(!scroll)return;
+   const cards=Array.from(feed.querySelectorAll<HTMLElement>(".community-post-card"));if(cards.length<2)return;
+   const top=scroll.getBoundingClientRect().top;
+   const next=cards.find(card=>card.getBoundingClientRect().top>top+70)||cards[0];
+   const target=scroll.scrollTop+next.getBoundingClientRect().top-top-8;
+   scroll.scrollTo({top:target,behavior:"smooth"});
+  },5000);
+  return()=>{clearInterval(timer);events.forEach(e=>window.removeEventListener(e,interrupt))};
+ },[active,selected,expandedImage,searchPosts,posts.length]);
+
  useEffect(()=>{if(!active)return;let alive=true;
   const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)throw Error();const data=await r.json();if(alive){setPosts(data.posts||[]);setLikeCounts(Object.fromEntries((data.posts||[]).map((p:UmmahPost)=>[p.id,Number((p as UmmahPost & {like_count?:number}).like_count||0)])));setCommentCounts(Object.fromEntries((data.posts||[]).map((p:UmmahPost)=>[p.id,Number((p as UmmahPost & {comment_count?:number}).comment_count||0)])));setStatus(data.posts?.length?"":"No posts yet. Be the first to share.");}}catch{if(alive)setStatus("Unable to load the Ummah feed.");}};
   void load();const timer=setInterval(()=>void load(),5000);const refresh=()=>void load();window.addEventListener("1muslim:community-post-published",refresh);return()=>{alive=false;clearInterval(timer);window.removeEventListener("1muslim:community-post-published",refresh)};
@@ -169,7 +190,7 @@ function DailyPostsApp({active}:{active:boolean}){
  useEffect(()=>{if(!active)return;const root=feedRef.current;if(!root)return;
   const observer=new IntersectionObserver(entries=>{for(const entry of entries)entry.target.classList.toggle("ummah-in-view",entry.isIntersecting)},{root,threshold:.12,rootMargin:"0px 0px -8% 0px"});
   root.querySelectorAll(".ummah-floating-pair").forEach(el=>observer.observe(el));
-  return()=>observer.disconnect();
+  const glow=new IntersectionObserver(entries=>entries.forEach(entry=>entry.target.classList.toggle("ummah-center-glow",entry.isIntersecting)),{root:root.closest(".canvas-community-posts-scroll"),rootMargin:"-35% 0px -35% 0px",threshold:0});root.querySelectorAll(".community-post-card").forEach(el=>glow.observe(el));return()=>{observer.disconnect();glow.disconnect()};
  },[active,posts]);
  useEffect(()=>{if(!selected)return;let alive=true;const load=async()=>{try{const r=await fetch("/api/ummah-comments?postId="+encodeURIComponent(selected),{cache:"no-store"});const d=await r.json();if(alive)setComments(d.comments||[])}catch{if(alive)setNotice("Comments unavailable.")}};void load();return()=>{alive=false}},[selected]);
  const send=async(e:React.FormEvent)=>{e.preventDefault();if(!selected||!draft.trim()||busy)return;setBusy(true);setNotice("");try{
@@ -178,7 +199,7 @@ function DailyPostsApp({active}:{active:boolean}){
   setComments(previous=>[...previous,d.comment]);setCommentCounts(previous=>({...previous,[selected]:(previous[selected]||0)+1}));setDraft("");
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
  return <div className="community-simple-feed"><div className="community-feed-search"><input aria-label="Search community posts" placeholder="Search posts or members…" value={searchPosts} onChange={e=>setSearchPosts(e.target.value)}/><span>⌕</span></div>
-  <div className="community-posts-list" aria-label="Community posts">
+  <div className="community-posts-list" ref={feedRef} aria-label="Community posts">
    {posts.filter(post=>(post.body+" "+post.author_name+" "+post.author_handle).toLowerCase().includes(searchPosts.toLowerCase())).map(post=><article className={`community-post-card ummah-template ummah-template-${postKind(post)} ummah-variant-${(post.id.charCodeAt(0)+layoutSeed)%3}`} key={post.id}>
     <header><span className="community-post-avatar">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span><div><strong>{post.author_name||"Member"}</strong>{post.shahada_verified&&<span className="ummah-verified-badge" title="Shahada verified" aria-label="Shahada verified">✓</span>}<small>{new Date(post.created_at).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})} · {post.author_handle||"1Muslim"}</small></div><div className="ummah-post-menu-wrap"><button type="button" className="ummah-post-more" aria-label="Post options" onClick={()=>setPostMenu(postMenu===post.id?null:post.id)}>•••</button>{postMenu===post.id&&<div className="ummah-post-menu"><button type="button" onClick={()=>{void sharePost(post.id);setPostMenu(null)}}>↗ Share post</button><button type="button" onClick={()=>{toggleBookmark(post.id);setPostMenu(null)}}>▢ {bookmarks[post.id]?"Remove saved":"Save post"}</button></div>}</div></header>
     <div className="ummah-post-package">{postKind(post)==="verse"&&<div className="ummah-verse-ornament" aria-hidden="true">۞</div>}<span className="ummah-package-label">{postKind(post)==="verse"?"✦ QUR’AN & REFLECTION":postKind(post)==="video"?"▶ VIDEO":postKind(post)==="image"?"✧ PHOTO":"✎ REFLECTION"}</span>{mediaFor(post)&&(postKind(post)==="video"?<video src={mediaFor(post)} controls playsInline preload="metadata" className="ummah-package-media"/>:<button type="button" className="ummah-media-expand" onClick={()=>setExpandedImage(mediaFor(post))} onDoubleClick={e=>{e.preventDefault();void likePost(post.id)}} aria-label="Expand post image"><img src={mediaFor(post)} alt="Post attachment" loading="lazy" className="ummah-package-media"/></button>)}<p>{post.body}</p>{!mediaFor(post)&&youtubePreview(post.body)&&<a className="ummah-youtube-preview" href={youtubePreview(post.body)!.url} target="_blank" rel="noopener noreferrer" aria-label="Watch YouTube video"><img src={youtubePreview(post.body)!.thumbnail} alt="YouTube video thumbnail" loading="lazy"/><span>▶ Watch on YouTube</span></a>}</div><footer><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥":"♡"} {likeCounts[post.id]||""}</button><button type="button" onClick={()=>{setSelected(post.id);setThreadPath([]);setComments([]);setNotice("")}}>♧ {commentCounts[post.id]||""}</button><button type="button" aria-pressed={!!bookmarks[post.id]} onClick={()=>toggleBookmark(post.id)} aria-label={bookmarks[post.id]?"Remove bookmark":"Bookmark post"}>{bookmarks[post.id]?"▣ Saved":"▢ Save"}</button><button type="button" onClick={()=>void sharePost(post.id)} aria-label="Share post">↗ Share</button></footer>
