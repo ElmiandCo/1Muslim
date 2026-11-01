@@ -2029,3 +2029,9 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 .community-direct-surface .canvas-community-posts-only .community-post-card.ummah-template .ummah-post-package>p,.community-direct-surface .canvas-community-posts-only .community-post-card.ummah-template .ummah-post-package>div{margin-top:4px!important;margin-bottom:5px!important}
 .community-direct-surface .canvas-community-posts-only .community-post-card.ummah-template>footer.ummah-social-actions{padding:5px 7px!important;min-height:39px!important}
 @media(max-width:480px){.community-direct-surface .canvas-community-posts-only .community-feed-search{width:min(58%,290px)!important;top:13px!important}.community-direct-surface .canvas-community-posts-only{--posts-header-height:76px!important}}
+
+/* Secondary workspace arrows: transparent theme-aware glass, without changing Home navigation. */
+.omWorkspaceArrowNav .omWorkspaceArrowButton{background:rgba(0,0,0,.10)!important;color:var(--theme-accent,#e9cf8a)!important;border:1.5px solid var(--theme-accent,#e9cf8a)!important;box-shadow:0 0 12px color-mix(in srgb,var(--theme-accent,#e9cf8a) 44%,transparent),inset 0 0 12px color-mix(in srgb,var(--theme-accent,#e9cf8a) 14%,transparent)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:box-shadow .3s ease,background-color .3s ease,transform .3s ease,color .3s ease!important}
+.omWorkspaceArrowNav .omWorkspaceArrowButton:hover:not(:disabled),.omWorkspaceArrowNav .omWorkspaceArrowButton:focus-visible{background:color-mix(in srgb,var(--theme-accent,#e9cf8a) 13%,transparent)!important;box-shadow:0 0 22px color-mix(in srgb,var(--theme-accent,#e9cf8a) 60%,transparent)!important;transform:scale(1.04)}
+.omWorkspaceArrowNav .omWorkspaceArrowButton:disabled{opacity:.3;box-shadow:none!important;cursor:default}
+@media(prefers-reduced-motion:reduce){.omWorkspaceArrowNav .omWorkspaceArrowButton{transition:none!important}}
