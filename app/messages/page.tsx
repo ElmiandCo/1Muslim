@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import ExpressionKeyboard from "../components/ExpressionKeyboard";
 import HomeMessagesChooser from "../components/HomeMessagesChooser";
+import HudHudCollapsibleNav from "../components/HudHudCollapsibleNav";
 import MessengerDesignDemo from "../messenger-design/MessengerDesignClient";
 import ExpressiveText from "../components/ExpressiveText";
 import { ExpressionCelebration, ExpressionSettings, playExpressionSound } from "../components/ExpressionEffects";
@@ -233,7 +234,7 @@ export default function MessagesPage(){
 .omMessengerTopNav a[aria-current="page"]{background:#087e5a;color:white}
 @media(max-width:700px){.omImessagePage.omMessengerUnified .omMessengerTop{height:auto!important;min-height:96px!important}.omMessengerTopNav a span{font-size:9px}.omImessagePage.omMessengerUnified .omMessengerShell--chat{height:calc(100dvh - 215px)!important;min-height:300px!important}.omImessagePage.omMessengerUnified .omMessageComposer{position:relative;z-index:3}}
 `}</style><div className="omMessengerPattern" aria-hidden="true"/><div className="omMessengerOrnaments" aria-hidden="true"><span className="omMessengerOrnamentNight"/><span className="omMessengerOrnamentDay"/></div>
- <div className="omMessengerTop"><div><Link href="/" className="omMessengerHome">← Home</Link><h1 className="omMessengerHeading">☾ 1Muslim <span className="omMessengerBrandSub">MESSENGER</span></h1></div><button className="omMessengerNewButton" type="button" onClick={()=>setNewChatOpen(v=>!v)} aria-label="Create message, group, or call" aria-expanded={newChatOpen}>＋</button></div><nav className="omMessengerTopNav" aria-label="Messenger navigation"><Link href="/">⌂ <span>Home</span></Link><Link href="/live">◉ <span>Live</span></Link><Link href="/explore">◇ <span>Explore</span></Link><Link href="/messages" aria-current="page">● <span>Messages</span></Link><Link href="/alerts">♧ <span>Alerts</span></Link><Link href="/profile">◯ <span>Profile</span></Link></nav>
+ <HudHudCollapsibleNav/><button className="omMessengerNewButton" type="button" onClick={()=>setNewChatOpen(v=>!v)} aria-label="Create message or group" aria-expanded={newChatOpen}>＋</button>
  {selected&&<nav className="omMobileThreadStrip" aria-label="Switch conversations">{Array.from(new Set(threads.map(t=>t.conversation_id))).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return <button key={cid} type="button" className={"omMobileThread "+(selected===cid?"isActive":"")} onClick={()=>setSelected(cid)}><span className="omMobileThreadAvatar">{avatars[peer]?<img src={avatars[peer]} alt=""/>:"☪"}</span><strong>{names[peer]||"Member"}</strong><small>{threadPreviews[cid]||"Start chatting"}</small></button>})}</nav>}
  <div className={"omMessengerShell "+(selected?"omMessengerShell--chat":"omMessengerShell--list")} style={{display:"grid",gridTemplateColumns:"minmax(220px,1fr) minmax(0,2fr)",minHeight:560,border:"1px solid #64748b55",borderRadius:28,overflow:"hidden"}}>
  <aside className="omConversationList" style={{padding:18,borderRight:"1px solid #64748b55"}}><section className="omMessengerDiscovery" aria-label="Explore Ummah members"><div className="omMessengerDiscoveryTitle"><strong>✦ Connect with the Ummah</strong><small>Discover members</small></div><HomeMessagesChooser/></section>
@@ -638,6 +639,7 @@ export default function MessagesPage(){
 .muslimMessengerFrame .omMessengerNight .omMessengerListHead>input{background:#19211c!important;color:white!important;border-color:#35463d!important}
 .muslimMessengerFrame .omMessengerShell--chat{display:grid!important;max-width:850px!important;min-height:65dvh!important;height:calc(100dvh - 220px)!important;overflow:hidden!important;margin:auto!important}
 @media(max-width:700px){.muslimMessengerFrame>.omImessagePage.omMessengerUnified{padding:0 15px 105px!important}.muslimMessengerFrame .omMessengerTop{height:20dvh!important}.muslimMessengerFrame .omMessengerShell--chat{height:calc(100dvh - 185px)!important}.muslimMessengerFrame .omMessengerThreadList>button{min-height:78px!important}}
+body:has(.omImessagePage) .muslimMobileDock{display:none!important}
 /* Mobile thread viewport: keep the composer ABOVE the site's bottom navigation
    and Safari toolbar. Avoid the old 100dvh/overflow-hidden trap. */
 @media(max-width:700px){
