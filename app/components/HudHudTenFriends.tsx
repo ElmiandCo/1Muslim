@@ -3,6 +3,10 @@ import Link from "next/link";
 import {useEffect,useState} from "react";
 
 export default function HudHudTenFriends({userId,connectionCount}:{userId:string;connectionCount:number}){
+ // HudHud Ashab promotion disabled globally at user request.
+ void userId;void connectionCount;return null;
+}
+/*
  const [open,setOpen]=useState(false);
  const [disabled,setDisabled]=useState(false);
  const [draft,setDraft]=useState("As-salamu alaykum! I'd love to connect, learn, and share beneficial knowledge with the 1Muslim community.");
@@ -28,3 +32,5 @@ export default function HudHudTenFriends({userId,connectionCount}:{userId:string
   <small style={{display:"block",marginTop:10}}>HudHud never follows anyone or posts to another member's page without your approval. Ashab connections are not the same as followers.</small>
  </aside>;
 }
+
+*/

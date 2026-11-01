@@ -6,6 +6,10 @@ import {createClient} from "../../utils/supabase/client";
 type Item={id:string;body:string;created_at:string};
 const KEY="1muslim-ashab-encouragement";
 export default function AshabEncouragement(){
+ // Disable Ashab recommendation prompts globally.
+ return null;
+}
+/*
  const [enabled,setEnabled]=useState(false),[items,setItems]=useState<Item[]>([]),[loading,setLoading]=useState(false),[message,setMessage]=useState("");
  useEffect(()=>{try{setEnabled(localStorage.getItem(KEY)==="on")}catch{}},[]);
  useEffect(()=>{if(!enabled)return;let active=true;const load=async()=>{setLoading(true);const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){if(active){setMessage("Sign in to discover your Ashab.");setLoading(false)}return}
@@ -25,3 +29,5 @@ export default function AshabEncouragement(){
  <p style={{marginTop:12}}><Link href="/find" style={{color:"#a7f9d2"}}>Find more Ashab →</Link></p>
  </section>;
 }
+
+*/
