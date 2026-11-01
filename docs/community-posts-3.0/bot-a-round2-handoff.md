@@ -24,7 +24,7 @@
 - Files with conflicts between round-one PRs: `app/community/page.tsx`, `app/components/CanvasSecondaryApp.tsx`, `app/api/community-posts/route.ts`. Round-two Bot A intentionally did not touch these.
 
 ## Verification and release gates
-- Static test command: `node --test scripts/community-posts-3.test.mjs`; TypeScript: `npx tsc --noEmit`; build: `npm run build`. **Not run locally in this connector-only environment; GitHub/Vercel CI must validate the PR head.**
+- Static test command: `node --test scripts/community-posts-3.test.mjs`; TypeScript: `npx tsc --noEmit`; build: `npm run build`. **7/7 source-level contract tests passed in an isolated JavaScript harness against exact branch contents. The Node CLI was not available locally. Vercel preview for head `802b8d8` passed to READY (Next.js build/TypeScript), at https://1muslim-git-bot-a-community-posts-3-round2-20261031-elmiandco.vercel.app. GitHub Actions were not triggered by this stacked PR.**
 - The connected Supabase SecureApp database was queried **read-only**: confirmed original `ummah_post_comments_body_check`, post FK, and public comment read policies. **No migration was applied to any database.**
 - Stage-only DB tests: three reply levels; reject fourth, cross-post and forged image path; image-only comment; RLS on shares; two-device realtime updates; authenticated and guest flows.
 - Browser visual QA outstanding: compare actual iPhone and desktop screenshots with both PNG references, six themes, Day/Night, keyboard open/close, full-height scrolling, reduced-motion and media playback.
