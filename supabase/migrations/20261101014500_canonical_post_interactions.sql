@@ -128,17 +128,29 @@ insert into public.comment_like_counts(comment_id,like_count)
 select comment_id,count(*)::integer from public.comment_likes group by comment_id
 on conflict(comment_id) do update set like_count=excluded.like_count,updated_at=now();
 
--- Guest comments and posts are readable; posting and liking remain authenticated.
--- Do not expose individual like rows to guests.
-drop policy if exists "Public canonical posts read" on public.posts;
-create policy "Public canonical posts read" on public.posts for select to anon,authenticated using (true);
-drop policy if exists "Public canonical comments read" on public.comments;
-create policy "Public canonical comments read" on public.comments for select to anon,authenticated using (true);
-grant select on public.posts to anon,authenticated;
-grant select on public.comments to anon,authenticated;
-grant insert on public.comments to authenticated;
+-- Preserve existing authenticated-only post/comment RLS; do not expose
+-- non-live For You videos or member posts to anonymous visitors.
+-- Existing posts/comments/post_likes/comment_likes policies remain authoritative.
+grant select,insert on public.comments to authenticated;
 grant select,insert,delete on public.post_likes to authenticated;
 grant select,insert,delete on public.comment_likes to authenticated;
+
+-- Explicit, proven-only identity mapping for Bot B. No automatic backfill:
+-- legacy and canonical post UUIDs cannot safely be matched by text/time.
+create table if not exists public.community_post_links (
+  ummah_post_id uuid primary key references public.ummah_feed_posts(id) on delete cascade,
+  canonical_post_id uuid not null unique references public.posts(id) on delete restrict,
+  linked_at timestamptz not null default now()
+);
+create index if not exists community_post_links_canonical_idx
+  on public.community_post_links(canonical_post_id);
+alter table public.community_post_links enable row level security;
+drop policy if exists "Members read verified post links" on public.community_post_links;
+create policy "Members read verified post links" on public.community_post_links
+  for select to authenticated using (true);
+revoke all on public.community_post_links from public,anon,authenticated;
+grant select on public.community_post_links to authenticated;
+-- Inserts/updates/deletes are reserved for trusted reviewed migrations/RPCs.
 
 -- Realtime for post/comment changes and aggregate counts, without exposing liker identities.
 do $realtime$
