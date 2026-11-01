@@ -8,9 +8,10 @@ import Link from "next/link";
 import SiteNav from "../components/SiteNav";
 import StoriesRail from "../components/StoriesRail";
 import PostCamera from "./PostCamera";
+import UmmahConversation from "../components/UmmahConversation";
 
 type Comment = { id: string; name: string; text: string; created: number };
-type Post = { media?:string; mediaType?:string; overlay?:string; filter?:string; link?:string; id: string; name: string; handle: string; text: string; created: number; likes: number; liked: boolean; comments: Comment[] };
+type Post = { authorId?:string;avatarUrl?:string|null;media?:string; mediaType?:string; overlay?:string; filter?:string; link?:string; id: string; name: string; handle: string; text: string; created: number; likes: number; liked: boolean; comments: Comment[] };
 
 
 
@@ -20,6 +21,7 @@ export default function Community() {
   useEffect(()=>{try{const saved=sessionStorage.getItem("1muslim-verse-share-draft");if(saved){setDraft(saved);sessionStorage.removeItem("1muslim-verse-share-draft")}}catch{}},[]);
   useEffect(()=>{const verse=new URLSearchParams(window.location.search).get("verse");if(verse&&/^(?:[1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(verse)){setDraft("Reflecting on Qur’an "+verse+" 📖\\nhttps://quran.com/"+verse+"\\n");setLink("https://quran.com/"+verse)}},[]);
   const [serverPosts,setServerPosts]=useState<Post[]>([]);
+  const [selectedConversation,setSelectedConversation]=useState<string|null>(null);
   const feedRef=useRef<HTMLElement>(null);
   useEffect(()=>{const root=feedRef.current;if(!root||typeof IntersectionObserver==="undefined")return;const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("omPostVisible");observer.unobserve(entry.target)}})},{threshold:.12,rootMargin:"0px 0px -30px 0px"});root.querySelectorAll(".socialPost").forEach(node=>observer.observe(node));return()=>observer.disconnect()},[serverPosts]);
   const [videoIndex,setVideoIndex]=useState<number|null>(null);
@@ -78,7 +80,7 @@ export default function Community() {
 
 
   const [feedError,setFeedError]=useState("");
-  useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok){if(active)setFeedError("Unable to load the shared Ummah feed.");return}const d=await r.json();if(active)setFeedError("");const rows=d.posts||[];if(active)setServerPosts(previous=>{const existing=new Map(previous.map(p=>[p.id,p]));const next=rows.map((p:{id:string;body:string;created_at:string;author_name?:string;author_handle?:string})=>{const old=existing.get(p.id);return old&&old.text===p.body&&old.name===(p.author_name||"Community member")?old:{id:p.id,name:p.author_name||"Community member",handle:p.author_handle||"@member",text:p.body,link:(p.body.match(/https?:\/\/[^\s]+/g)||[]).find((candidate:string)=>{try{const url=new URL(candidate);return ["tiktok.com","www.tiktok.com","m.tiktok.com","youtube.com","www.youtube.com","youtu.be"].includes(url.hostname)||url.pathname.startsWith("/streaming/")}catch{return false}})||"",created:new Date(p.created_at).getTime(),likes:old?.likes||0,liked:old?.liked||false,comments:old?.comments||[]}});return next.length===previous.length&&next.every((p:Post,i:number)=>p===previous[i])?previous:next})}catch{if(active)setFeedError("Could not load community posts. Please refresh to try again.");}};void load();const t=setInterval(()=>void load(),20000);return()=>{active=false;clearInterval(t)}},[]);
+  useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok){if(active)setFeedError("Unable to load the shared Ummah feed.");return}const d=await r.json();if(active)setFeedError("");const rows=d.posts||[];if(active)setServerPosts(previous=>{const existing=new Map(previous.map(p=>[p.id,p]));const next=rows.map((p:{id:string;body:string;created_at:string;author_name?:string;author_handle?:string;like_count?:number;liked?:boolean})=>{const old=existing.get(p.id);return old&&old.text===p.body&&old.name===(p.author_name||"Community member")?old:{id:p.id,authorId:(p as {author_id?:string}).author_id,avatarUrl:(p as {avatar_url?:string|null}).avatar_url,name:p.author_name||"Community member",handle:p.author_handle||"@member",text:p.body,link:(p.body.match(/https?:\/\/[^\s]+/g)||[]).find((candidate:string)=>{try{const url=new URL(candidate);return ["tiktok.com","www.tiktok.com","m.tiktok.com","youtube.com","www.youtube.com","youtu.be"].includes(url.hostname)||url.pathname.startsWith("/streaming/")}catch{return false}})||"",created:new Date(p.created_at).getTime(),likes:p.like_count??old?.likes??0,liked:p.liked??old?.liked??false,comments:old?.comments||[]}});return next.length===previous.length&&next.every((p:Post,i:number)=>p===previous[i])?previous:next})}catch{if(active)setFeedError("Could not load community posts. Please refresh to try again.");}};void load();const t=setInterval(()=>void load(),20000);return()=>{active=false;clearInterval(t)}},[]);
   const [verseSeed,setVerseSeed]=useState(0);
   useEffect(()=>{setVerseSeed(Math.floor(Math.random()*10000))},[]);
   const verseCards=[
@@ -108,7 +110,23 @@ export default function Community() {
     finally{setPublishing(false)}
   };
 
-  const like=(id:string)=>{animate(id,"❤️","like");setNotice("Shared likes are not available yet; nothing was saved.")};
+  const sharePost=async(post:Post)=>{
+    const url=location.origin+"/community#post-"+post.id;
+    try{
+      if(navigator.share)await navigator.share({title:"1Muslim",text:post.text.slice(0,140),url});
+      else{await navigator.clipboard.writeText(url);setNotice("🔗 Post link copied.");}
+      chime();
+      // The share itself is available to guests; authenticated share events are counted.
+      void fetch("/api/ummah-post-shares",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:post.id})}).catch(()=>{});
+    }catch{/* Cancelled native share: no tracking. */}
+  };
+  const like=async(id:string)=>{
+    const response=await fetch("/api/ummah-post-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:id})});
+    if(!response.ok){setNotice("Sign in to like posts.");return}
+    const result=await response.json();
+    setServerPosts(rows=>rows.map(p=>p.id===id?{...p,liked:!!result.liked,likes:typeof result.count==="number"?result.count:p.likes}:p));
+    animate(id,"❤️","like");
+  };
 
   const addComment=async(id:string)=>{
     const text=(commentDraft[id]||"").trim();if(!text||commentBusy)return;
@@ -152,15 +170,17 @@ export default function Community() {
               <div className="postHeader"><strong>{post.name}</strong><span>{post.handle} · {new Date(post.created).toLocaleDateString()}</span><button>•••</button></div>
               <p className="omPostTextReveal">{post.text.replace(/\\r\\n|\\n|\\r/g, "\n")}</p>{preview(post)}
               <div className="postActions">
-                <button onClick={()=>setCommentDraft(c=>({...c,[post.id]:c[post.id]===undefined?"":c[post.id]}))}>💬 {(sharedComments[post.id]||[]).length}</button>
+                <button onClick={()=>setSelectedConversation(post.id)}>💬 {(sharedComments[post.id]||[]).length}</button>
                 <button className={post.liked?"liked":""} onClick={()=>like(post.id)}>❤️ {post.likes}</button>
-                <button onClick={()=>{animate(post.id,"✨","share");const url=location.origin+"/community";if(navigator.share)void navigator.share({title:"1Muslim",text:post.text,url}).then(chime).catch(()=>{});else void navigator.clipboard.writeText(post.text+"\n"+url).then(()=>{setNotice("🔗 Copied post and community link!");chime()})}}>↗ Share</button>
+                <button onClick={()=>{animate(post.id,"✨","share");void sharePost(post)}}>↗ Share</button>
               </div>
-              <div className="commentBox"><input value={commentDraft[post.id]||""} onChange={e=>setCommentDraft(c=>({...c,[post.id]:e.target.value}))} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();addComment(post.id)}}} placeholder={replyTo[post.id]?"Write a reply…":"Reply to this post…"}/><button disabled={commentBusy} onClick={()=>addComment(post.id)}>Reply</button>{replyTo[post.id]&&<button onClick={()=>setReplyTo(v=>({...v,[post.id]:null}))}>Cancel</button>}</div>
-              {(sharedComments[post.id]||[]).map(c=><div className="comment" key={c.id} style={{marginLeft:c.parent_id?24:0}}><div className="smallAvatar">1M</div><div><strong>{c.name}</strong><p>{c.body}</p><button type="button" onClick={()=>setReplyTo(v=>({...v,[post.id]:c.id}))}>↩ Reply</button><button type="button" aria-pressed={c.liked} onClick={()=>toggleCommentLike(c.id)}>{c.liked?"❤️":"♡"} {c.likes}</button></div></div>)}
+              <button type="button" className="commentBox" onClick={()=>setSelectedConversation(post.id)} aria-label={"Open conversation for post by "+post.name}>💬 Open conversation · Reply, images & threads ↗</button>
             </div>
           </article>{(index+1)%5===0&&<aside className="omVerseGlass" aria-label="Quran reflection"><span className="omVerseMark">۞</span><p className="omVerseArabic" lang="ar" dir="rtl">{verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].arabic}</p><p>{verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].text}</p><small>{verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].ref}</small><Link href={"/quran-studio?verse="+encodeURIComponent(verseCards[(verseSeed+Math.floor(index/5))%verseCards.length].verse)} aria-label="Open verse in Quran Studio">↗</Link></aside>}</div>)}
         </section>
+        {selectedConversation&&serverPosts.find(p=>p.id===selectedConversation)&&<UmmahConversation
+          post={{id:selectedConversation,author_id:serverPosts.find(p=>p.id===selectedConversation)?.authorId||"",body:serverPosts.find(p=>p.id===selectedConversation)?.text||"",created_at:new Date(serverPosts.find(p=>p.id===selectedConversation)?.created||Date.now()).toISOString(),author_name:serverPosts.find(p=>p.id===selectedConversation)?.name,author_handle:serverPosts.find(p=>p.id===selectedConversation)?.handle,avatar_url:serverPosts.find(p=>p.id===selectedConversation)?.avatarUrl}}
+          onClose={()=>setSelectedConversation(null)}/>}
         <aside className="communityRail">
           <div className="railBox"><span className="eyebrow">YOUR COMMUNITY</span><h3>Build your circle.</h3><p>Follow creators and turn on notifications for the people and topics you want to keep up with.</p>
             <button onClick={()=>setFollowing(f=>({...f,teachers:!f.teachers}))}>{following.teachers?"✓ Following":"＋ Follow teachers"}</button>

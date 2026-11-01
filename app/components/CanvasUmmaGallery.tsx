@@ -9,6 +9,7 @@ import UnifiedAvatarCarousel from "./UnifiedAvatarCarousel";
 import PublicBadgeSelector from "./PublicBadgeSelector";
 import ElmTentAlphabet from "./ElmTentAlphabet";
 import PostDesignStudio from "./PostDesignStudio";
+import UmmahConversation from "./UmmahConversation";
 import CommunityMediaGallery from "./CommunityMediaGallery";
 import PublicMemberDetails from "./PublicMemberDetails";
 import "./canvas-ummah-feed.css";
@@ -161,15 +162,14 @@ function DailyPostsApp({active}:{active:boolean}){
     </div>
    </div>):<p className="ummah-feed-status" role="status">{status}</p>}
   </div>
-  {selected&&<div className="ummah-comments-backdrop" role="presentation" onClick={()=>setSelected(null)}>
-   <section className="ummah-comments-sheet" role="dialog" aria-modal="true" aria-label="Post comments" onClick={e=>e.stopPropagation()}>
-    <header><strong>✦ Conversation</strong><button type="button" onClick={()=>setSelected(null)} aria-label="Close comments">✕</button></header>
-    <p className="ummah-comment-post-preview">{posts.find(p=>p.id===selected)?.body}</p>
-    <div className="ummah-comments-list">{comments.length?comments.map(c=><article key={c.id}><strong>{c.name}</strong><p>{c.body}</p></article>):<p>Be the first to comment.</p>}</div>
-    <form onSubmit={e=>void send(e)}><input aria-label="Write a comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={1500} placeholder="Write a thoughtful comment…"/><button type="submit" disabled={busy||!draft.trim()}>Send ↗</button></form>
-    {notice&&<p role="alert">{notice}</p>}
-   </section>
-  </div>}
+  {selected&&posts.find(p=>p.id===selected)&&<UmmahConversation post={{
+    id:selected,author_id:posts.find(p=>p.id===selected)?.author_id||"",
+    body:posts.find(p=>p.id===selected)?.body||"",
+    created_at:posts.find(p=>p.id===selected)?.created_at||new Date().toISOString(),
+    author_name:posts.find(p=>p.id===selected)?.author_name,
+    author_handle:posts.find(p=>p.id===selected)?.author_handle,
+    avatar_url:posts.find(p=>p.id===selected)?.avatar_url
+   }} onClose={()=>setSelected(null)}/>} 
  </div>;
 }
 export function CommunityMap({active}:{active:boolean}){
