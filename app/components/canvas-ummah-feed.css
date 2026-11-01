@@ -275,3 +275,12 @@
  -webkit-touch-callout:none!important;
 }
 .profile-shared-avatar-portal .profile-avatar-portrait img{-webkit-user-drag:none;}
+
+/* Fixed portrait: no drag affordance, and no pointer interception over the Profile. */
+.profile-shared-avatar-portal,
+.profile-shared-avatar-portal .profile-shared-avatar-hero,
+.profile-shared-avatar-portal .profile-glass-avatar,
+.profile-shared-avatar-portal .profile-avatar-portrait,
+.profile-shared-avatar-portal .profile-avatar-portrait *{
+ pointer-events:none!important;cursor:default!important;
+}
