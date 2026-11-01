@@ -15,7 +15,7 @@ function VideoTile({item}:{item:CommunityPostMedia}){
  const [ready,setReady]=useState(false);
  return <div className={styles.videoTile}>
   {playing?<video key={item.id+"-player"} src={item.url} controls autoPlay playsInline preload="metadata" aria-label={item.file_name||"Community video"} onEnded={()=>setPlaying(false)}/>:<button type="button" className={styles.videoPoster} aria-label={"Play "+(item.file_name||"community video")} onClick={()=>setPlaying(true)}>
-   <video src={item.url+"#t=0.5"} muted playsInline preload="metadata" aria-hidden="true" tabIndex={-1} onLoadedData={()=>setReady(true)} className={ready?styles.posterReady:""}/>
+   <video src={item.url+"#t=0.5"} muted playsInline preload="metadata" aria-hidden="true" tabIndex={-1} onLoadedMetadata={e=>{const video=e.currentTarget;if(Number.isFinite(video.duration)&&video.duration>0.6)video.currentTime=0.5}} onLoadedData={()=>setReady(true)} onSeeked={()=>setReady(true)} className={ready?styles.posterReady:""}/>
    <span className={styles.playCircle} aria-hidden="true">▶</span><span className={styles.playHint}>Tap to play</span>
   </button>}
  </div>;
