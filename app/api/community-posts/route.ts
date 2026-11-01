@@ -8,7 +8,32 @@ export async function GET(){
  const ids=[...new Set(posts.map(p=>p.author_id).filter((id):id is string=>typeof id==="string"))];
  const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username").in("id",ids):{data:[]};
  const authors=new Map((profiles||[]).map(p=>[p.id,p]));
- return NextResponse.json({posts:posts.map(p=>({...p,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member"}))});
+ // Historical uploads were saved in posts/post_media separately from the feed row.
+ // Match only the same author, identical body and a tight creation-time window.
+ // Ambiguous matches are intentionally omitted rather than attaching someone else's media.
+ const authorIds=ids;
+ const {data:mediaPosts}=authorIds.length?await db.from("posts").select("id,user_id,body,created_at").in("user_id",authorIds).order("created_at",{ascending:false}).limit(500):{data:[]};
+ const candidates=new Map<string,typeof mediaPosts>();
+ for(const p of mediaPosts||[]){const key=p.user_id+"|"+p.body;const arr=candidates.get(key)||[];arr.push(p);candidates.set(key,arr)}
+ const links=new Map<string,string>();
+ const claimed=new Set<string>();
+ for(const p of posts){
+  const options=(candidates.get(p.author_id+"|"+p.body)||[]).filter(m=>Math.abs(new Date(m.created_at).getTime()-new Date(p.created_at).getTime())<=5000&&!claimed.has(m.id));
+  if(options.length===1){links.set(p.id,options[0].id);claimed.add(options[0].id)}
+ }
+ const mediaIds=[...links.values()];
+ const {data:attachments}=mediaIds.length?await db.from("post_media").select("post_id,storage_path,mime_type").in("post_id",mediaIds):{data:[]};
+ const attachmentByPost=new Map((attachments||[]).map(a=>[a.post_id,a]));
+ const output=await Promise.all(posts.map(async p=>{
+  const attachment=attachmentByPost.get(links.get(p.id)||"");
+  let media_url:string|null=null;
+  if(attachment?.storage_path){
+   const {data:signed,error:signError}=await db.storage.from("community-media").createSignedUrl(attachment.storage_path,3600);
+   if(!signError)media_url=signed?.signedUrl||null;
+  }
+  return {...p,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member",media_url,media_type:attachment?.mime_type||null};
+ }));
+ return NextResponse.json({posts:output});
 }
 export async function POST(request:Request){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();
