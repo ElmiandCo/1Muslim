@@ -6,9 +6,9 @@ export async function GET(){
  if(error)return NextResponse.json({error:"Community feed unavailable"},{status:503});
  const posts=data||[];
  const ids=[...new Set(posts.map(p=>p.author_id).filter((id):id is string=>typeof id==="string"))];
- const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username").in("id",ids):{data:[]};
+ const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username,avatar_url").in("id",ids):{data:[]};
  const authors=new Map((profiles||[]).map(p=>[p.id,p]));
- return NextResponse.json({posts:posts.map(p=>({...p,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member"}))});
+ return NextResponse.json({posts:posts.map(p=>({...p,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",avatar_url:authors.get(p.author_id)?.avatar_url||null,author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member"}))});
 }
 export async function POST(request:Request){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();
