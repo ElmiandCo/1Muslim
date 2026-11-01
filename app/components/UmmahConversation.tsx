@@ -71,7 +71,7 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
    .on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_comments",filter:"post_id=eq."+post.id},queue)
    .on("postgres_changes",{event:"*",schema:"public",table:"ummah_comment_likes"},queue)
    .on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_likes",filter:"post_id=eq."+post.id},queue)
-   .on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_shares",filter:"post_id=eq."+post.id},queue)
+   .on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_share_counts",filter:"post_id=eq."+post.id},queue)
    .subscribe();
   const fallback=setInterval(queue,30000);
   return()=>{document.body.style.overflow=previous;clearInterval(fallback);if(refreshTimer.current)clearTimeout(refreshTimer.current);void db.removeChannel(channel)};
