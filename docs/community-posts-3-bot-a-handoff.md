@@ -5,9 +5,9 @@
 ## Delivered
 - Reused production schema: `ummah_feed_posts`, `ummah_post_comments`, `ummah_post_likes`, `ummah_comment_likes`, `profiles` and existing `community-media` storage bucket. No per-user database.
 - Added `UmmahConversation` full-screen, responsive glass viewer: comment/reply trees with collapse/expand, max 3 levels, tap comment to drill in/back, author avatar/name opens profile modal, post/comment likes, native/copy sharing, 5MB PNG/JPEG/WebP comment image uploads, accessible controls and 16px iOS composer.
-- Added `/api/ummah-post-likes` and `/api/ummah-post-shares` engagement endpoints. Existing `/api/ummah-comments` now enriches comment authors, signs approved comment images and validates ancestry/attachments. Shares are counted only for successful authenticated share actions; anonymous users can still share.
+- Added `/api/ummah-post-likes` and `/api/ummah-post-shares` engagement endpoints. Existing `/api/ummah-comments` now enriches comment authors, signs approved comment images and validates ancestry/attachments. Shares are counted only for successful authenticated share actions; aggregate realtime events contain no sharer IDs; anonymous users can still share.
 - Integrated the viewer into `app/community/page.tsx`, `CanvasSecondaryApp.tsx` and `CanvasUmmaGallery.tsx`; replaced Community page's nonpersistent like stub.
-- Added migration `20261101004000_community_posts_3_interactions.sql`: nullable image path, relaxed image-only comment constraint, DB-enforced ancestry validation trigger, RLS-protected share-event table and Supabase Realtime publication. Existing RLS on comments and likes was inspected read-only in connected SecureApp project. **Migration NOT applied to any database.**
+- Added migration `20261101004000_community_posts_3_interactions.sql`: nullable image path, relaxed image-only comment constraint, DB-enforced ancestry validation trigger, RLS-protected private share-event table, public aggregate counts and Supabase Realtime publication. Existing RLS on comments and likes was inspected read-only in connected SecureApp project. **Migration NOT applied to any database.**
 - Realtime listens to comment inserts/deletes, comment likes, post likes and shares; a 30-second fallback refresh remains for reconnection resilience.
 
 ## Bot B coordination / no conflict
