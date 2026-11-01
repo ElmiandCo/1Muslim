@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from "react";
 import {useRouter} from "next/navigation";
 import {createClient} from "../../utils/supabase/client";
 import styles from "./PostDesignStudio.module.css";
+import CommunityPostPresentation from "./CommunityPostPresentation";
 import * as tus from "tus-js-client";
 
 type Theme="emerald"|"gold"|"midnight"|"ivory";
@@ -29,7 +30,8 @@ export default function PostDesignStudio(){
  useEffect(()=>{let active=true;const check=async()=>{try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!active)return;if(!user){setEligible(true);setDaily(true);setChecked(true);return}
  const now=new Date();const midnight=new Date(now);midnight.setHours(0,0,0,0);
  const {data,error}=await db.from("ummah_feed_posts").select("id,created_at").eq("author_id",user.id).gte("created_at",new Date(now.getTime()-86400000).toISOString()).order("created_at",{ascending:false}).limit(100);
- if(error)throw error;const allowed=!(data||[]).some(p=>new Date(p.created_at)>=midnight)&&(data||[]).length<2;setEligible(allowed);setDaily(allowed);setChecked(true);
+ if(error)throw error;const {data:mediaPosts,error:mediaError}=await db.from("posts").select("id,body,created_at").eq("user_id",user.id).gte("created_at",new Date(now.getTime()-86400000).toISOString()).limit(100);
+ if(mediaError)throw mediaError;const usedMediaDaily=(mediaPosts||[]).some(p=>new Date(p.created_at)>=midnight&&p.body?.startsWith("✦ DAILY UMMAH ✦"));const allowed=!usedMediaDaily&&!(data||[]).some(p=>new Date(p.created_at)>=midnight)&&(data||[]).length<2;setEligible(allowed);setDaily(allowed);setChecked(true);
  }catch{if(active){setEligible(false);setDaily(false);setChecked(true)}}};void check();const refresh=()=>void check();window.addEventListener("1muslim:community-post-published",refresh);const interval=setInterval(refresh,60000);return()=>{active=false;clearInterval(interval);window.removeEventListener("1muslim:community-post-published",refresh)}},[]);
  useEffect(()=>{const handle=(event:Event)=>{const mode=(event as CustomEvent<{mode:string}>).detail?.mode;if(mode==="daily"&&eligible)setDaily(true);if(mode==="regular")setDaily(false);setPanel("post");editorRef.current?.focus()};window.addEventListener("hudhud-compose",handle);return()=>window.removeEventListener("hudhud-compose",handle)},[eligible]);
  useEffect(()=>()=>{if(media)URL.revokeObjectURL(media.url)},[media]);
@@ -68,8 +70,7 @@ export default function PostDesignStudio(){
  <section className={styles.livePostPreview} aria-label="Live preview of your post" aria-live="polite">
   <div className={styles.previewHeading}><span>✧ POST PREVIEW</span><button type="button" aria-label="Switch between Daily and Regular post" onClick={()=>setDaily(current=>!current)} disabled={!eligible}>{daily&&eligible?"✦ Daily":"Regular"} ▾</button></div>
   <div className={styles.previewAuthor}><div className={styles.previewAvatar}>1</div><div><strong>1Muslim</strong><small>◎ Public (Ummah) · {daily&&eligible?"Daily post":"Regular post"}</small></div><span className={styles.previewMore} aria-hidden="true">···</span></div>
-  {text.trim()?<p className={styles.previewBody}>{daily&&eligible&&<span className={styles.previewDaily}>✦ DAILY UMMAH ✦<br/></span>}{text}</p>:<p className={styles.previewEmpty}>Your post will appear here as you write…</p>}
-  {media&&<div className={styles.previewMedia}>{media.type==="image"?<img src={media.url} alt="Preview of attached photo"/>:<video src={media.url} controls playsInline preload="metadata" aria-label="Preview of attached video"/>}</div>}
+  {(text.trim()||media)?<CommunityPostPresentation body={(daily&&eligible?"✦ DAILY UMMAH ✦\n":"")+text} media={media?[{id:"draft",url:media.url,mime_type:media.file.type,file_name:media.name}]:[]} compact/>:<p className={styles.previewEmpty}>Your post will appear here as you write…</p>}
   <div className={styles.previewActions} aria-hidden="true"><span>♡ Like</span><span>◯ Comment</span><span>↗ Share</span></div>
  </section>
  {eligible&&checked&&<p className={styles.hint}>Daily posts earn XP. Choose Daily under Post type to publish your daily post.</p>}

@@ -10,7 +10,10 @@ import UnifiedAvatarCarousel from "./UnifiedAvatarCarousel";
 import PublicBadgeSelector from "./PublicBadgeSelector";
 import ElmTentAlphabet from "./ElmTentAlphabet";
 import PostDesignStudio from "./PostDesignStudio";
+import CommunityMediaFeed from "./CommunityMediaFeed";
+import CommunityPostPresentation from "./CommunityPostPresentation";
 import "./canvas-ummah-feed.css";
+import "./community-posts3-theme.css";
 
 type Profile={display_name?:string|null;username?:string|null;xp_total?:number|null;bio?:string|null;shahada_verified_at?:string|null;id?:string;gender?:string|null;avatar_gender?:string|null;avatar_package?:string|null;avatar_config?:Record<string,unknown>|null;profile_accent?:string|null};
 type DailyPost={id:string;content?:string|null;body?:string|null;text?:string|null;created_at?:string|null};
@@ -163,10 +166,11 @@ function DailyPostsApp({active}:{active:boolean}){
   setComments(previous=>[...previous,d.comment]);setDraft("");
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
  return <div className="community-simple-feed"><div className="community-feed-search"><input aria-label="Search community posts" placeholder="Search posts or members…" value={searchPosts} onChange={e=>setSearchPosts(e.target.value)}/><span>⌕</span></div>
+  <CommunityMediaFeed/>
   <div className="community-posts-list" aria-label="Community posts">
    {posts.filter(post=>(post.body+" "+post.author_name+" "+post.author_handle).toLowerCase().includes(searchPosts.toLowerCase())).map(post=><article className="community-post-card" key={post.id}>
     <header><span className="community-post-avatar">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span><div><strong>{post.author_name||"Member"}</strong><small>{post.author_handle||"1Muslim member"} · {new Date(post.created_at).toLocaleDateString()}</small></div></header>
-    <p>{post.body}</p><footer><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥ Liked":"♡ Like"}</button><button type="button" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}}>♧ Comment</button></footer>
+    <CommunityPostPresentation body={post.body} compact/><footer><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥ Liked":"♡ Like"}</button><button type="button" onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}}>♧ Comment</button></footer>
    </article>)}
    {!posts.length?<p className="community-feed-empty">{status}</p>:!posts.some(post=>(post.body+" "+post.author_name+" "+post.author_handle).toLowerCase().includes(searchPosts.toLowerCase()))?<p className="community-feed-empty">No matching posts.</p>:null}
    {notice&&!selected&&<p role="status">{notice}</p>}

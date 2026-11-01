@@ -1,0 +1,55 @@
+"use client";
+import {useState} from "react";
+import styles from "./CommunityPostPresentation.module.css";
+import {extractVerse,getYouTubeId} from "../../lib/community-post-content";
+
+export type CommunityPostMedia = {
+ id:string;
+ url:string;
+ mime_type:string;
+ file_name?:string|null;
+};
+
+function VideoTile({item}:{item:CommunityPostMedia}){
+ const [playing,setPlaying]=useState(false);
+ const [ready,setReady]=useState(false);
+ return <div className={styles.videoTile}>
+  {playing?<video key={item.id+"-player"} src={item.url} controls autoPlay playsInline preload="metadata" aria-label={item.file_name||"Community video"} onEnded={()=>setPlaying(false)}/>:<button type="button" className={styles.videoPoster} aria-label={"Play "+(item.file_name||"community video")} onClick={()=>setPlaying(true)}>
+   <video src={item.url+"#t=0.5"} muted playsInline preload="metadata" aria-hidden="true" tabIndex={-1} onLoadedMetadata={e=>{const video=e.currentTarget;if(Number.isFinite(video.duration)&&video.duration>0.6)video.currentTime=0.5}} onLoadedData={()=>setReady(true)} onSeeked={()=>setReady(true)} className={ready?styles.posterReady:""}/>
+   <span className={styles.playCircle} aria-hidden="true">▶</span><span className={styles.playHint}>Tap to play</span>
+  </button>}
+ </div>;
+}
+
+function YouTubeTile({id}:{id:string}){
+ const [playing,setPlaying]=useState(false);
+ return <div className={styles.youtubeTile}>
+  {playing?<iframe title="YouTube video" src={"https://www.youtube-nocookie.com/embed/"+id} loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>:<button type="button" className={styles.youtubePoster} onClick={()=>setPlaying(true)} aria-label="Load YouTube video player">
+   <img src={"https://i.ytimg.com/vi/"+id+"/hqdefault.jpg"} loading="lazy" alt="YouTube video preview" />
+   <span className={styles.playCircle} aria-hidden="true">▶</span><span className={styles.playHint}>Watch on YouTube</span>
+  </button>}
+ </div>;
+}
+
+export default function CommunityPostPresentation({body,media=[],compact=false}:{body:string;media?:CommunityPostMedia[];compact?:boolean}){
+ const verse=extractVerse(body||"");
+ const youtubeId=getYouTubeId(body||"");
+ const cleanText=(verse?verse.remaining:body||"").replace(/^✦ DAILY UMMAH ✦\s*/,"").replace(/https?:\/\/[^\s<>"']+/g,url=>getYouTubeId(url)?"":url).trim();
+ const hasVideo=media.some(m=>m.mime_type.startsWith("video/"))||!!youtubeId;
+ const hasImage=media.some(m=>m.mime_type.startsWith("image/"));
+ const kind=verse?(hasVideo?"verse-video":hasImage?"verse-image":"verse"):hasVideo?"video":hasImage?"image":"text";
+ const daily=(body||"").startsWith("✦ DAILY UMMAH ✦");
+ return <div className={[styles.presentation,compact?styles.compact:""].filter(Boolean).join(" ")} data-post-kind={kind}>
+  {daily&&<span className={styles.daily}>✦ DAILY UMMAH</span>}
+  {verse&&<section className={styles.verse} aria-label={verse.reference}>
+   <span className={styles.verseEyebrow}>۞ QUR’AN REFLECTION</span>
+   {verse.arabic&&<p lang="ar" dir="rtl" className={styles.arabic}>{verse.arabic}</p>}
+   {verse.english&&<p className={styles.translation}>{verse.english}</p>}
+   <span className={styles.reference}>{verse.reference}</span>
+  </section>}
+  {cleanText&&<p className={styles.body}>{cleanText}</p>}
+  {!!media.length&&<div className={styles.mediaGallery} aria-label="Post attachments">{media.map(item=>item.mime_type.startsWith("video/")?<VideoTile key={item.id} item={item}/>:item.mime_type.startsWith("image/")?<img key={item.id} className={styles.image} src={item.url} loading="lazy" alt={item.file_name||"Community post image"}/>:null)}</div>}
+  {youtubeId&&<YouTubeTile id={youtubeId}/>}
+  {!cleanText&&!verse&&!media.length&&!youtubeId&&<p className={styles.body}>Shared with the Ummah</p>}
+ </div>;
+}

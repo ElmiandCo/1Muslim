@@ -1,6 +1,7 @@
 "use client";
 
 import "./community.css";
+import "../components/community-posts3-theme.css";
 import "./daily-post-particles.css";
 
 import { FormEvent, useEffect, useMemo, useState, useRef } from "react";
@@ -8,6 +9,8 @@ import Link from "next/link";
 import SiteNav from "../components/SiteNav";
 import StoriesRail from "../components/StoriesRail";
 import PostCamera from "./PostCamera";
+import CommunityMediaFeed from "../components/CommunityMediaFeed";
+import CommunityPostPresentation from "../components/CommunityPostPresentation";
 
 type Comment = { id: string; name: string; text: string; created: number };
 type Post = { media?:string; mediaType?:string; overlay?:string; filter?:string; link?:string; id: string; name: string; handle: string; text: string; created: number; likes: number; liked: boolean; comments: Comment[] };
@@ -61,7 +64,7 @@ export default function Community() {
   const chime=()=>{if(!sounds)return;try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.frequency.value=740;g.gain.setValueAtTime(.04,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.2);setTimeout(()=>void c.close(),350)}catch{}};
   const pick=(file:File)=>{setSelectedFileName(file.name);if(!file.type.startsWith("image/")&&!file.type.startsWith("video/"))return setNotice("Choose a photo or video");if(file.size>2500000)return setNotice("Preview uploads must be under 2.5MB until cloud storage is connected.");const reader=new FileReader();reader.onload=()=>{setMedia(String(reader.result||""));setMediaType(file.type.startsWith("video/")?"video":"image");setEdit(true)};reader.readAsDataURL(file)};
   useEffect(()=>{if(!effects)return;const t=setInterval(()=>setFloating(p=>p?null:serverPosts[Math.floor(Math.random()*serverPosts.length)]?.id||null),45000);return()=>clearInterval(t)},[effects,serverPosts]);
-  const preview=(p:Post)=><>{p.media&&<div className="omPostMedia" style={{filter:p.filter||"none"}}>{p.mediaType==="video"?<div className="omLaminatedVideo"><video src={p.media} autoPlay loop muted={inlineMuted} playsInline preload="metadata" style={{width:"100%",maxHeight:420,objectFit:"cover"}}/><button type="button" onClick={()=>setInlineMuted(v=>!v)} aria-label={inlineMuted?"Unmute video":"Mute video"}>{inlineMuted?"🔇 Tap to unmute":"🔊 Tap to mute"}</button>{p.id&&<button type="button" onClick={()=>openVideo(p.id)}>⛶ Expand</button>}</div>:<img src={p.media} alt="Attached post media"/>}{p.overlay&&<strong className="omPostOverlay">{p.overlay}</strong>}</div>}{p.link&&youtube(p.link)&&<div className="omExternalVideo"><iframe title="YouTube shared video" src={"https://www.youtube-nocookie.com/embed/"+youtube(p.link)} loading="lazy" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerPolicy="strict-origin-when-cross-origin"/><a href={p.link} target="_blank" rel="noopener noreferrer">View original on YouTube ↗</a></div>}{p.link&&tiktok(p.link)&&<div className="omExternalVideo"><iframe title="TikTok shared video" src={"https://www.tiktok.com/embed/v2/"+tiktok(p.link)} loading="lazy" allow="fullscreen" referrerPolicy="strict-origin-when-cross-origin"/><a href={p.link} target="_blank" rel="noopener noreferrer">View original on TikTok ↗</a></div>}{p.link&&liveUrl(p.link)&&<a className="omLivePostCard" href={liveUrl(p.link)}>🔴 Open 1Muslim Live · Watch in real time ↗</a>}{p.link&&<a className="omLinkPreview" href={p.link} target="_blank" rel="noopener noreferrer">{youtube(p.link)?<img src={"https://img.youtube.com/vi/"+youtube(p.link)+"/hqdefault.jpg"} alt="Video thumbnail"/>:<span>🔗</span>}<span> {youtube(p.link)?"▶ Watch video":"↗ Open website"}<small>{new URL(p.link).hostname}</small></span></a>}</>;
+  const preview=(p:Post)=><><div className={p.media?"omPostMedia":""} style={p.media?{filter:p.filter||"none"}:undefined}><CommunityPostPresentation body={(p.text||"").replace(/\\r\\n|\\n|\\r/g,"\n")+(p.link?"\n"+p.link:"")} media={p.media?[{id:p.id||"draft",url:p.media,mime_type:p.mediaType==="video"?"video/mp4":"image/jpeg"}]:[]} compact/>{p.media&&p.overlay&&<strong className="omPostOverlay">{p.overlay}</strong>}</div>{p.link&&tiktok(p.link)&&<div className="omExternalVideo"><iframe title="TikTok shared video" src={"https://www.tiktok.com/embed/v2/"+tiktok(p.link)} loading="lazy" allow="fullscreen" referrerPolicy="strict-origin-when-cross-origin"/><a href={p.link} target="_blank" rel="noopener noreferrer">View original on TikTok ↗</a></div>}{p.link&&liveUrl(p.link)&&<a className="omLivePostCard" href={liveUrl(p.link)}>🔴 Open 1Muslim Live · Watch in real time ↗</a>}{p.link&&!youtube(p.link)&&!tiktok(p.link)&&!liveUrl(p.link)&&safe(p.link)&&<a className="omLinkPreview" href={safe(p.link)} target="_blank" rel="noopener noreferrer">↗ Open shared link</a>}</>;
 
   const [commentDraft,setCommentDraft]=useState<Record<string,string>>({});
   type SharedComment={id:string;post_id:string;parent_id:string|null;name:string;body:string;likes:number;liked:boolean};
@@ -146,11 +149,12 @@ export default function Community() {
 <div className="composerBottom"><span>{draft.length}/500</span><button className="postButton" disabled={publishing||(!draft.trim()&&!safe(link))}>{publishing?"Publishing…":"✨ Post it"}</button></div></div>
           </form>
           {notice&&<p role="status" className="omPostNotice">{notice}</p>}
+          <CommunityMediaFeed/>
           {sorted.map((post,index)=><div key={post.id} className="omFeedSequence"><article className={"socialPost "+(post.text?.startsWith("✦ DAILY UMMAH ✦")?"dailyPostLit ":"")+(burst?.id===post.id?"omPostCelebrating":"")} id={"post-"+post.id} key={post.id}>{post.text?.startsWith("✦ DAILY UMMAH ✦")&&<span className="dailyPostParticles" aria-hidden="true">{Array.from({length:16},(_,i)=><i key={i} style={{["--p" as string]:i} as React.CSSProperties}/>)}</span>}{burst?.id===post.id&&<span className="omPostBurst" aria-hidden="true">{Array.from({length:9},(_,i)=><i key={i} style={{["--i" as string]:i} as React.CSSProperties}>{burst.emoji}</i>)}</span>}
             <div className="avatar">{post.name==="You"?"YOU":"1M"}</div>
             <div className="postBody">
               <div className="postHeader"><strong>{post.name}</strong><span>{post.handle} · {new Date(post.created).toLocaleDateString()}</span><button>•••</button></div>
-              <p className="omPostTextReveal">{post.text.replace(/\\r\\n|\\n|\\r/g, "\n")}</p>{preview(post)}
+              {preview(post)}
               <div className="postActions">
                 <button onClick={()=>setCommentDraft(c=>({...c,[post.id]:c[post.id]===undefined?"":c[post.id]}))}>💬 {(sharedComments[post.id]||[]).length}</button>
                 <button className={post.liked?"liked":""} onClick={()=>like(post.id)}>❤️ {post.likes}</button>
