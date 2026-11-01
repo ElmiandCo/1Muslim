@@ -6,7 +6,7 @@ export async function GET(){
  if(error)return NextResponse.json({error:"Community feed unavailable"},{status:503});
  const posts=data||[];
  const ids=[...new Set(posts.map(p=>p.author_id).filter((id):id is string=>typeof id==="string"))];
- const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username").in("id",ids):{data:[]};
+ const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username,shahada_verified_at").in("id",ids):{data:[]};
  const authors=new Map((profiles||[]).map(p=>[p.id,p]));
  // Historical uploads were saved in posts/post_media separately from the feed row.
  // Match only the same author, identical body and a tight creation-time window.
@@ -33,7 +33,7 @@ export async function GET(){
    const {data:signed,error:signError}=await db.storage.from("community-media").createSignedUrl(attachment.storage_path,3600);
    if(!signError)media_url=signed?.signedUrl||null;
   }
-  return {...p,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member",media_url,media_type:attachment?.mime_type||null};
+  return {...p,shahada_verified:!!authors.get(p.author_id)?.shahada_verified_at,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member",media_url,media_type:attachment?.mime_type||null};
  }));
  return NextResponse.json({posts:output});
 }
