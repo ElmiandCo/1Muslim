@@ -408,3 +408,17 @@
 .profile-scroll-viewport [data-profile-horizontal-gallery="true"]{
  touch-action:pan-x pan-y!important;
 }
+
+/* Profile: the portrait follows the tab/workspace on the same frame, never easing behind it. */
+.profile-shared-avatar-portal{
+ width:min(165.6px,36vw)!important; /* 10% smaller than 184px / 40vw */
+ transition:opacity .24s ease!important;
+ will-change:auto!important;
+}
+@media(max-width:480px){.profile-shared-avatar-portal{width:min(157.5px,36.9vw)!important;}}
+@media(prefers-reduced-motion:reduce){.profile-shared-avatar-portal{transition:none!important;}}
+
+/* Identity, bio, category tabs and avatar carousel enter together with the Profile tab. */
+.profile-slide-synced-content{animation:profileUnifiedSlide .38s cubic-bezier(.22,1,.36,1) both;}
+@keyframes profileUnifiedSlide{from{opacity:.78;transform:translate3d(14px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@media(prefers-reduced-motion:reduce){.profile-slide-synced-content{animation:none!important;}}
