@@ -17,19 +17,24 @@ export default function CommunityMediaFeed(){
  const [error,setError]=useState("");
  useEffect(()=>{
   let alive=true;
+  // Visibility, publish and periodic refreshes may overlap. Only the latest
+  // request can replace the feed, preventing stale signed URLs or old rows.
+  let loadVersion=0;
   const load=async()=>{
+   const requestId=++loadVersion;
+   const isCurrent=()=>alive&&requestId===loadVersion;
    try{
     const db=createClient();
     const {data:rows,error:mediaError}=await db.from("post_media").select("id,post_id,user_id,storage_path,file_name,mime_type,created_at").order("created_at",{ascending:false}).limit(100);
     if(mediaError)throw mediaError;
     const media=((rows||[]) as MediaRow[]).filter(m=>m.mime_type?.startsWith("video/")||m.mime_type?.startsWith("image/"));
-    if(!media.length){if(alive){setPosts([]);setError("")}return}
+    if(!media.length){if(isCurrent()){setPosts([]);setError("")}return}
     const ids=[...new Set(media.map(m=>m.post_id))];
     const {data:parents,error:parentError}=await db.from("posts").select("id,user_id,body,created_at").in("id",ids);
     if(parentError)throw parentError;
     const byId=new Map((parents||[]).map(p=>[p.id,p]));
     const valid=media.filter(m=>byId.get(m.post_id)?.user_id===m.user_id);
-    if(!valid.length){if(alive){setPosts([]);setError("")}return}
+    if(!valid.length){if(isCurrent()){setPosts([]);setError("")}return}
     const authorIds=[...new Set(valid.map(m=>m.user_id))];
     const [{data:signed,error:signError},{data:authors}]=await Promise.all([
      db.storage.from("community-media").createSignedUrls(valid.map(m=>m.storage_path),3600),
@@ -50,9 +55,9 @@ export default function CommunityMediaFeed(){
      }
      post.media.push({id:item.id,url,mime_type:item.mime_type,file_name:item.file_name});
     });
-    if(alive){setPosts([...grouped.values()].sort((a,b)=>Date.parse(b.created)-Date.parse(a.created)));setError("")}
-   }catch{if(alive)setError("Media posts could not be loaded right now.")}
-   finally{if(alive)setLoading(false)}
+    if(isCurrent()){setPosts([...grouped.values()].sort((a,b)=>Date.parse(b.created)-Date.parse(a.created)));setError("")}
+   }catch{if(isCurrent())setError("Media posts could not be loaded right now.")}
+   finally{if(isCurrent())setLoading(false)}
   };
   void load();
   const refresh=()=>{if(document.visibilityState==="visible")void load()};
