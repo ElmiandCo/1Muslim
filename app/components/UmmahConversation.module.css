@@ -27,7 +27,7 @@
 .engagement button,.engagement span{font:inherit;font-size:12px;color:inherit;border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);background:color-mix(in srgb,var(--accent) 7%,transparent);border-radius:999px;padding:9px 14px}
 .engagement button{cursor:pointer}.engagement button[aria-pressed=true]{color:#ff829e}
 .thread{margin-top:14px;display:grid;gap:7px;min-height:70px}.empty{padding:30px 12px;text-align:center;color:var(--muted);font-size:13px}
-.commentWrap{padding-left:calc(var(--depth,0) * clamp(11px,2.7vw,26px));border-left:calc(var(--depth,0) * 1px) solid color-mix(in srgb,var(--accent) 25%,transparent)}
+.commentWrap{padding-left:0}.commentWrap[data-depth="1"],.commentWrap[data-depth="2"]{padding-left:clamp(11px,2.4vw,20px);border-left:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
 .comment{display:flex;gap:11px;padding:11px 8px;border-bottom:1px solid color-mix(in srgb,var(--accent) 11%,transparent)}
 .avatarButton{padding:0;align-self:flex-start;background:transparent;border:0;cursor:pointer}.comment .avatar{width:34px;height:34px;font-size:12px}
 .commentBody{min-width:0;flex:1}.commentHeader{display:flex;align-items:center;gap:10px}.commentHeader button{font-size:13px;font-weight:750;padding:0;text-align:left}.commentHeader time{color:var(--muted);font-size:10px}
