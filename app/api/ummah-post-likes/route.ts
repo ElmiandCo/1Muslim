@@ -1,19 +1,15 @@
 import {NextResponse} from "next/server";
-import {createClient as createServiceClient} from "@supabase/supabase-js";
 import {createClient} from "../../../utils/supabase/server";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const headers={"Cache-Control":"private, no-store"};
 async function state(postId:string){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();
- const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
- // The service key reads aggregate state only; user IDs never leave this endpoint.
- const reader=url&&key?createServiceClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}}):db;
- const [{count,error},{data:mine,error:mineError}]=await Promise.all([
-  reader.from("ummah_post_likes").select("post_id",{head:true,count:"exact"}).eq("post_id",postId),
+ const [{data:aggregate,error},{data:mine,error:mineError}]=await Promise.all([
+  db.from("ummah_post_like_counts").select("like_count").eq("post_id",postId).maybeSingle(),
   user?db.from("ummah_post_likes").select("post_id").eq("post_id",postId).eq("user_id",user.id).maybeSingle():Promise.resolve({data:null,error:null})
  ]);
  if(error||mineError)throw Error("Likes unavailable");
- return {count:count||0,liked:!!mine};
+ return {count:aggregate?.like_count||0,liked:!!mine};
 }
 export async function GET(request:Request){
  const postId=new URL(request.url).searchParams.get("postId");
