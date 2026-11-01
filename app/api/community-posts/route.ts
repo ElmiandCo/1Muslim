@@ -25,6 +25,15 @@ export async function POST(request:Request){
   if((today||[]).some(p=>p.body?.startsWith("✦ DAILY UMMAH ✦")))return NextResponse.json({error:"You already shared your Daily Ummah Post today. Come back tomorrow for your next daily post.",code:"DAILY_ALREADY_POSTED"},{status:409});
  }
  const profanity=/(^|[^a-z])f[\\W_]*u[\\W_]*c[\\W_]*k(?:[\\W_]*(?:s|e[\\W_]*d|i[\\W_]*n[\\W_]*g))?(?=$|[^a-z])/i.test(text.normalize("NFKC"));
+ // Uploaded media uses one canonical posts row, shared by Community, For You and All Videos.
+ // The post_media row is attachment metadata, not a second content post.
+ if(media&&!profanity){
+  const {data:post,error:postError}=await db.from("posts").insert({user_id:user.id,body:text||"Shared a video"}).select("id").single();
+  if(postError)return NextResponse.json({error:"Media post could not be created; your uploaded file remains saved.",code:postError.code},{status:503});
+  const {error:attachError}=await db.from("post_media").insert({post_id:post.id,user_id:user.id,storage_path:media.storage_path,file_name:String(media.file_name||"upload").slice(0,255),mime_type:media.mime_type});
+  if(attachError){await db.from("posts").delete().eq("id",post.id).eq("user_id",user.id);return NextResponse.json({error:"Media attachment could not be published; your upload remains saved.",code:attachError.code},{status:503})}
+  return NextResponse.json({post,source:"posts"},{status:201});
+ }
  const {data,error}=await db.from("ummah_feed_posts").insert({author_id:user.id,body:text}).select("id,author_id,body,created_at").single();
  if(error){console.error("community-post-insert",error.code,error.message);const permission=error.code==="42501";return NextResponse.json({error:permission?"Posting is blocked by database permissions. Please contact 1Muslim support.":"Publishing failed on the server. Your draft is safe; please try again.",code:error.code||"POST_INSERT_FAILED"},{status:permission?403:503})}
  if(profanity){
@@ -35,12 +44,6 @@ export async function POST(request:Request){
   const {error:flagError}=await db.from("moderation_flags").insert({user_id:user.id,post_id:data.id,reason:"profanity",status:"pending"});
   if(flagError)console.error("Moderation flag could not be persisted",flagError.message);
   return NextResponse.json({post:data,flagged:true,removed:true,flagRecorded:!flagError},{status:201});
- }
- if(media){
-  const {data:post,error:postError}=await db.from("posts").insert({user_id:user.id,body:text||"Shared a video"}).select("id").single();
-  if(postError)return NextResponse.json({error:"Media post could not be created; your uploaded file remains saved.",code:postError.code},{status:503});
-  const {error:attachError}=await db.from("post_media").insert({post_id:post.id,user_id:user.id,storage_path:media.storage_path,file_name:String(media.file_name||"upload").slice(0,255),mime_type:media.mime_type});
-  if(attachError){await db.from("posts").delete().eq("id",post.id).eq("user_id",user.id);return NextResponse.json({error:"Media attachment could not be published; your upload remains saved.",code:attachError.code},{status:503})}
  }
  return NextResponse.json({post:data},{status:201});
 }
