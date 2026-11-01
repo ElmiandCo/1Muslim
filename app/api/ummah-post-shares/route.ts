@@ -23,6 +23,10 @@ export async function POST(request:Request){
  if(typeof postId!=="string"||!uuid.test(postId))return NextResponse.json({error:"Invalid post"},{status:400});
  const {data:post}=await db.from("ummah_feed_posts").select("id").eq("id",postId).maybeSingle();
  if(!post)return NextResponse.json({error:"Post not found"},{status:404});
+ // Bound accidental retries and trivial share-counter spam per member/post.
+ const since=new Date(Date.now()-30000).toISOString();
+ const {data:recent}=await db.from("ummah_post_shares").select("id").eq("post_id",postId).eq("user_id",user.id).gte("created_at",since).limit(1).maybeSingle();
+ if(recent)return NextResponse.json({count:await count(postId).catch(()=>null),deduplicated:true},{headers});
  const {error}=await db.from("ummah_post_shares").insert({post_id:postId,user_id:user.id});
  if(error)return NextResponse.json({error:"Share count unavailable"},{status:503});
  return NextResponse.json({count:await count(postId).catch(()=>null)},{headers});
