@@ -40,7 +40,7 @@ function VideoTile({item}:{item:CommunityPostMedia}){
   }
  };
  const timeLabel=duration==null?"":Math.floor(duration/60)+":"+String(Math.floor(duration%60)).padStart(2,"0");
- return <div className={styles.videoTile} style={ratio?{aspectRatio:String(ratio)}:undefined}>
+ return <div className={styles.videoTile} data-orientation={ratio==null?"unknown":ratio>=1?"landscape":"portrait"}>
   {playing?<video key={item.id+"-player"} src={item.url} controls autoPlay playsInline preload="metadata" aria-label={item.file_name||"Community video"} onEnded={()=>setPlaying(false)}/>:<button ref={posterRef} type="button" className={styles.videoPoster} aria-label={"Play "+(item.file_name||"community video")} onClick={()=>setPlaying(true)}>
    {nearViewport&&<video src={item.url+"#t=0.8"} muted playsInline preload="metadata" aria-hidden="true" tabIndex={-1} onLoadedMetadata={e=>onMetadata(e.currentTarget)} onLoadedData={()=>setReady(true)} onSeeked={()=>setReady(true)} className={ready?styles.posterReady:""}/>}
    <span className={styles.playCircle} aria-hidden="true">▶</span>
