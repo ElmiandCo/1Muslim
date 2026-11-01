@@ -111,3 +111,30 @@
 @media(min-width:540px){.vowelTabs{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:360px){.vowelLesson{padding:11px;gap:12px}.vowelStage{padding:10px}.vowelCard{min-height:175px}.vowelCard>span{font-size:72px}}
 @media(prefers-reduced-motion:reduce){.vowelTabs button,.vowelCard,.vowelActions button{transition:none}}
+
+/* Lesson 2: answer tiles are 20% shorter, without clipping Arabic glyphs. */
+.quizChoices{
+ flex:0 0 auto!important;
+ min-height:0!important;
+ grid-auto-rows:minmax(0,auto);
+}
+.quizChoices button{
+ min-height:120px!important;
+ height:clamp(120px,26vw,168px)!important;
+ padding:10px!important;
+ line-height:1.2!important;
+}
+@media(max-width:600px){
+ .lessonQuiz{min-height:0!important;}
+ .quizChoices{min-height:0!important;gap:12px;}
+ .quizChoices button{
+  min-height:136px!important;
+  height:136px!important;
+  padding:9px!important;
+ }
+}
+.lessonNav button:disabled{
+ opacity:.42!important;
+ cursor:not-allowed!important;
+ filter:saturate(.5);
+}
