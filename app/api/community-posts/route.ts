@@ -22,7 +22,9 @@ export async function POST(request:Request){
   const now=new Date();const start=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())).toISOString();
   const {data:today,error:checkError}=await db.from("ummah_feed_posts").select("id,body").eq("author_id",user.id).gte("created_at",start);
   if(checkError){console.error("daily-post-check",checkError.code,checkError.message);return NextResponse.json({error:"Daily Post check failed. Please try again shortly.",code:"DAILY_CHECK_FAILED"},{status:503})}
-  if((today||[]).some(p=>p.body?.startsWith("✦ DAILY UMMAH ✦")))return NextResponse.json({error:"You already shared your Daily Ummah Post today. Come back tomorrow for your next daily post.",code:"DAILY_ALREADY_POSTED"},{status:409});
+  const {data:mediaDaily,error:mediaDailyError}=await db.from("posts").select("id").eq("user_id",user.id).gte("created_at",start).like("body","✦ DAILY UMMAH ✦%").limit(1);
+  if(mediaDailyError)return NextResponse.json({error:"Daily Post check failed. Please try again shortly.",code:"DAILY_CHECK_FAILED"},{status:503});
+  if((today||[]).some(p=>p.body?.startsWith("✦ DAILY UMMAH ✦"))||(mediaDaily||[]).length>0)return NextResponse.json({error:"You already shared your Daily Ummah Post today. Come back tomorrow for your next daily post.",code:"DAILY_ALREADY_POSTED"},{status:409});
  }
  const profanity=/(^|[^a-z])f[\\W_]*u[\\W_]*c[\\W_]*k(?:[\\W_]*(?:s|e[\\W_]*d|i[\\W_]*n[\\W_]*g))?(?=$|[^a-z])/i.test(text.normalize("NFKC"));
  // Uploaded media uses one canonical posts row, shared by Community, For You and All Videos.
