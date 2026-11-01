@@ -99,6 +99,7 @@ test("Round Four media feed uses canonical IDs and source-aware Bot A callback",
  assert.match(feed,/href=\{"\/posts\/"\+encodeURIComponent\(post\.id\)\}/);
  assert.match(feed,/createSignedUrls\(valid\.map\(m=>m\.storage_path\),3600\)/);
  assert.match(css,/var\(--theme-accent/);
+ assert.match(css,/\.actions\{display:flex;flex-wrap:wrap/);
  assert.match(theme,/Never change scroll containers or layout heights here/);
  assert.doesNotMatch(feed,/autoPlay/);
 });
