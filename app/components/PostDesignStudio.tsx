@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {useRouter} from "next/navigation";
+import {createPortal} from "react-dom";
 import {createClient} from "../../utils/supabase/client";
 import styles from "./PostDesignStudio.module.css";
 import * as tus from "tus-js-client";
@@ -15,7 +16,7 @@ const uploadVerses=[{"ar":"إِنَّ مَعَ الْعُسْرِ يُسْرًا
 const badLanguage=(value:string)=>/(^|[^a-z])f[\\W_]*u[\\W_]*c[\\W_]*k(?:[\\W_]*(?:s|e[\\W_]*d|i[\\W_]*n[\\W_]*g))?(?=$|[^a-z])/i.test(value.normalize("NFKC"));
 export default function PostDesignStudio(){
  const router=useRouter();
- const [verseOpen,setVerseOpen]=useState(false); const [surahs,setSurahs]=useState<{number:number;englishName:string;numberOfAyahs:number}[]>([]); const [chapter,setChapter]=useState(2);const [verseNumber,setVerseNumber]=useState(94);const [verseLanguage,setVerseLanguage]=useState<"both"|"arabic"|"english">("both");const [verseBusy,setVerseBusy]=useState(false);const [verseError,setVerseError]=useState("");
+ const [verseOpen,setVerseOpen]=useState(false);const [postPreviewOpen,setPostPreviewOpen]=useState(false); const [surahs,setSurahs]=useState<{number:number;englishName:string;numberOfAyahs:number}[]>([]); const [chapter,setChapter]=useState(2);const [verseNumber,setVerseNumber]=useState(94);const [verseLanguage,setVerseLanguage]=useState<"both"|"arabic"|"english">("both");const [verseBusy,setVerseBusy]=useState(false);const [verseError,setVerseError]=useState("");
  const [text,setText]=useState("");const [theme,setTheme]=useState<Theme>("emerald");const [template,setTemplate]=useState<Template>("reflection");const [motion,setMotion]=useState<Motion>("none");
  const [panel,setPanel]=useState<"design"|"post"|"share">("post");const [tool,setTool]=useState<"background"|"template"|"effects"|"media"|null>(null);
  const [daily,setDaily]=useState(false);const [eligible,setEligible]=useState(false);const [checked,setChecked]=useState(false);const [busy,setBusy]=useState(false);const [notice,setNotice]=useState("");const [error,setError]=useState("");const [confirm,setConfirm]=useState(false);
@@ -54,7 +55,7 @@ export default function PostDesignStudio(){
  const updateText=(value:string)=>{setText(value);try{sessionStorage.setItem(draftKey,value)}catch{}};
  const title={reflection:"A moment of reflection",reminder:"A gentle reminder",verse:"Qur'an reflection",hadith:"Hadith reflection",question:"A question for the Ummah",announcement:"Community announcement"}[template];
  return <section className={styles.studio} aria-label="Create post">
- <div className={styles.header}><strong>Create Post</strong><button type="button" className={styles.postButton} disabled={(!text.trim()&&!media)||busy} onClick={()=>setConfirm(true)}>{busy?"Posting…":"Post"}</button></div>
+ <div className={styles.header}><strong>Create Post</strong><div className={styles.previewHeaderActions}><button type="button" className={styles.previewToggle} onClick={()=>setPostPreviewOpen(true)} aria-label="Open post preview" title="Preview post">◉ <span>Preview</span></button><button type="button" className={styles.postButton} disabled={(!text.trim()&&!media)||busy} onClick={()=>setConfirm(true)}>{busy?"Posting…":"Post"}</button></div></div>
  <div className={styles.identity}><div className={styles.avatar}>1</div><div><strong>1Muslim</strong><span>◎ Public (Ummah)</span></div></div>
 
  <div className={styles.composerRow}>
@@ -65,13 +66,13 @@ export default function PostDesignStudio(){
   </div>
  </div>
  {media&&<div className={styles.attachment}>{media.type==="image"?<img src={media.url} alt="Attachment preview"/>:<video src={media.url} controls playsInline/>}<button type="button" onClick={()=>setMedia(null)}>Remove {media.name} ×</button></div>}
- <section className={styles.livePostPreview} aria-label="Live preview of your post" aria-live="polite">
-  <div className={styles.previewHeading}><span>✧ POST PREVIEW</span><button type="button" aria-label="Switch between Daily and Regular post" onClick={()=>setDaily(current=>!current)} disabled={!eligible}>{daily&&eligible?"✦ Daily":"Regular"} ▾</button></div>
+ {postPreviewOpen&&typeof document!=="undefined"&&createPortal(<div className={styles.previewModalBackdrop} role="presentation" onClick={()=>setPostPreviewOpen(false)}><section className={`${styles.livePostPreview} ${styles.previewModalCard}`} role="dialog" aria-modal="true" aria-label="Post preview" onClick={e=>e.stopPropagation()}>
+  <div className={styles.previewHeading}><span>✧ POST PREVIEW</span><div className={styles.previewModalTools}><button type="button" aria-label="Switch between Daily and Regular post" onClick={()=>setDaily(current=>!current)} disabled={!eligible}>{daily&&eligible?"✦ Daily":"Regular"} ▾</button><button type="button" className={styles.previewClose} onClick={()=>setPostPreviewOpen(false)} aria-label="Close post preview">×</button></div></div>
   <div className={styles.previewAuthor}><div className={styles.previewAvatar}>1</div><div><strong>1Muslim</strong><small>◎ Public (Ummah) · {daily&&eligible?"Daily post":"Regular post"}</small></div><span className={styles.previewMore} aria-hidden="true">···</span></div>
   {text.trim()?<p className={styles.previewBody}>{daily&&eligible&&<span className={styles.previewDaily}>✦ DAILY UMMAH ✦<br/></span>}{text}</p>:<p className={styles.previewEmpty}>Your post will appear here as you write…</p>}
   {media&&<div className={styles.previewMedia}>{media.type==="image"?<img src={media.url} alt="Preview of attached photo"/>:<video src={media.url} controls playsInline preload="metadata" aria-label="Preview of attached video"/>}</div>}
   <div className={styles.previewActions} aria-hidden="true"><span>♡ Like</span><span>◯ Comment</span><span>↗ Share</span></div>
- </section>
+ </section></div>,document.body)}
  {eligible&&checked&&<p className={styles.hint}>Daily posts earn XP. Choose Daily under Post type to publish your daily post.</p>}
  <input ref={mediaRef} type="file" accept="image/*,video/*" className={styles.hidden} onChange={e=>selectMedia(e.target.files?.[0])}/>
  {busy&&<div role="status" aria-live="polite" style={{position:"fixed",inset:0,zIndex:100001,display:"grid",placeItems:"center",padding:20,background:"rgba(0,19,13,.86)",backdropFilter:"blur(12px)"}}><div style={{width:"min(100%,420px)",padding:"34px 25px",textAlign:"center",borderRadius:28,border:"1px solid rgba(186,240,177,.45)",background:"linear-gradient(145deg,#0b503b,#06281e)",boxShadow:"0 24px 85px #0009",color:"#effff0"}}><div style={{fontSize:33,color:"#d7eaa5"}}>☪</div><p style={{fontSize:11,letterSpacing:3,color:"#b5e7b7"}}>A MOMENT OF REMEMBRANCE</p><p key={verseIndex} lang="ar" dir="rtl" style={{fontSize:27,lineHeight:1.9,margin:"24px 0 12px"}}>{uploadVerses[verseIndex].ar}</p><p style={{fontSize:16,lineHeight:1.6}}>{uploadVerses[verseIndex].en}</p><p style={{color:"#c8dcaa",fontSize:13}}>{uploadVerses[verseIndex].ref}</p><div style={{height:8,borderRadius:20,overflow:"hidden",background:"#ffffff30",marginTop:30}}><div style={{width:`${uploadProgress??0}%`,height:"100%",background:"linear-gradient(90deg,#4ad99b,#d6edaa)",transition:"width .25s ease"}}/></div><p style={{fontWeight:700,marginBottom:4}}>{uploadProgress===null?"Preparing your post…":uploadProgress<100?`Uploading video · ${uploadProgress}%`:"Finishing publication…"}</p><small style={{color:"#c1d8c8"}}>Keep this page open. Your post will appear after publishing succeeds.</small></div></div>}
