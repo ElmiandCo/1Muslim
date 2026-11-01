@@ -10,6 +10,7 @@ type MediaPost={id:string;userId:string;body:string;created:string;author:string
 
 export default function CommunityMediaFeed(){
  const [posts,setPosts]=useState<MediaPost[]>([]);
+ const [visible,setVisible]=useState(6);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
  useEffect(()=>{
@@ -66,10 +67,11 @@ export default function CommunityMediaFeed(){
  return <section className={styles.feed} aria-label="Community photo and video posts">
   <header className={styles.heading}><strong>✦ Photo & video moments</strong><span>{posts.length} posts</span></header>
   {error&&<p role="status" className={styles.error}>{error}</p>}
-  {posts.map(post=><article className={styles.card} key={post.id}>
+  {posts.slice(0,visible).map(post=><article className={styles.card} key={post.id}>
    <header className={styles.author}><span className={styles.avatar} aria-hidden="true">{post.author.charAt(0).toUpperCase()}</span><span className={styles.authorName}><strong>{post.author}</strong><small>{post.handle} · {new Date(post.created).toLocaleDateString()}</small></span></header>
    <CommunityPostPresentation body={post.body} media={post.media} compact/>
    <footer className={styles.actions}><Link href={"/posts/"+encodeURIComponent(post.id)}>◯ Open post</Link><button type="button" onClick={()=>void share(post.id)}>↗ Share</button></footer>
   </article>)}
+  {visible<posts.length&&<button type="button" className={styles.more} onClick={()=>setVisible(n=>n+6)}>Show more photo & video posts ↓</button>}
  </section>;
 }
