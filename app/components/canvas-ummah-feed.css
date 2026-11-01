@@ -375,3 +375,36 @@
  animation:none!important;
  }
 }
+
+/* Single Profile vertical scroll owner: the glass canvas viewport.
+   Header, side navigation, and portal avatar remain outside the scroll flow. */
+.profile-scroll-stage{
+ flex:1 1 0!important;min-height:0!important;
+ height:100%;max-height:100%;overflow:hidden!important;
+}
+.profile-scroll-viewport{
+ flex:1 1 0!important;min-height:0!important;
+ height:100%!important;max-height:100%!important;
+ overflow-y:auto!important;overflow-x:hidden!important;
+ touch-action:pan-y!important;
+ overscroll-behavior-y:contain!important;
+ -webkit-overflow-scrolling:touch!important;
+ scrollbar-width:thin;
+ scroll-padding-bottom:26px;
+}
+.profile-scroll-viewport .profile-scroll-content-expanded{
+ min-height:100%!important;
+ height:auto!important;
+ display:flex!important;flex-direction:column!important;
+ overflow:visible!important;
+}
+.profile-scroll-viewport .profile-inner-scroll-content{
+ height:auto!important;min-height:0!important;max-height:none!important;
+ overflow:visible!important;
+ overscroll-behavior:initial!important;
+ touch-action:pan-y!important;
+}
+.profile-scroll-viewport .profile-glass-gallery,
+.profile-scroll-viewport [data-profile-horizontal-gallery="true"]{
+ touch-action:pan-x pan-y!important;
+}
