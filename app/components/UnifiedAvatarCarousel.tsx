@@ -76,7 +76,7 @@ export default function UnifiedAvatarCarousel({
         aria-label="All avatars, swipe horizontally to browse categories"
         tabIndex={0}
         style={{
-          display: "flex", alignItems: "stretch", gap: 12,
+          display: "flex", alignItems: "stretch", gap: 9,
           width: "100%", minWidth: 0, overflowX: "auto", overflowY: "hidden",
           scrollSnapType: "none", scrollPaddingInline: 12,
           touchAction: "auto", overscrollBehaviorX: "contain",
@@ -90,7 +90,7 @@ export default function UnifiedAvatarCarousel({
             data-avatar-category={category}
             role="group"
             aria-label={category + " avatars"}
-            style={{ display: "flex", flex: "0 0 auto", gap: 12, alignItems: "stretch" }}
+            style={{ display: "flex", flex: "0 0 auto", gap: 9, alignItems: "stretch" }}
           >
             {groupIndex > 0 && (
               <span aria-hidden="true" style={{
@@ -103,8 +103,8 @@ export default function UnifiedAvatarCarousel({
                 key={index}
                 aria-label="Hidden Mumin avatar slot"
                 style={{
-                  flex: "0 0 clamp(104px, 36vw, 142px)", width: "clamp(104px, 36vw, 142px)",
-                  minHeight: 135, border: "1px solid rgba(226,192,113,.4)",
+                  flex: "0 0 clamp(94px, 29vw, 118px)", width: "clamp(94px, 29vw, 118px)",
+                  minHeight: 112, border: "1px solid rgba(226,192,113,.4)",
                   borderRadius: 16, display: "grid", placeContent: "center",
                   background: "rgba(0,25,22,.5)", color: "#d6c08a",
                   scrollSnapAlign: "none", textAlign: "center",
@@ -124,15 +124,15 @@ export default function UnifiedAvatarCarousel({
                   onClick={() => onSelect(avatar.url)}
                   aria-pressed={selected}
                   style={{
-                    flex: "0 0 clamp(104px, 36vw, 142px)",
-                    width: "clamp(104px, 36vw, 142px)",
-                    minWidth: 0, border: selected ? "2px solid #f5d47a" : "1px solid rgba(221,190,116,.6)",
-                    borderRadius: 16, padding: 8,
+                    flex: "0 0 clamp(94px, 29vw, 118px)",
+                    width: "clamp(94px, 29vw, 118px)",
+                    minWidth: 0, border: selected ? "1px solid rgba(245,212,122,.95)" : "1px solid rgba(221,190,116,.32)",
+                    borderRadius: 14, padding: 6,
                     background: "linear-gradient(145deg,rgba(20,70,59,.26),rgba(0,21,20,.2))",
                     backdropFilter: "blur(8px)", scrollSnapAlign: "none",
                     color: "#f5e8c8", display: "grid", justifyItems: "center", gap: 5,
                     opacity: 1,
-                    transform: selected ? "perspective(450px) rotateY(-5deg) scale(1.03)" : "none",
+                    boxShadow: selected ? "0 0 0 1px rgba(245,212,122,.38),0 0 18px rgba(245,212,122,.18)" : "none",
                     transition: "transform .25s ease",
                   }}
                 >
@@ -141,12 +141,12 @@ export default function UnifiedAvatarCarousel({
                     alt={avatar.name + " avatar"}
                     loading="lazy"
                     style={{
-                      width: "100%", maxWidth: 96, height: 104,
+                      width: "100%", maxWidth: 88, height: 82,
                       objectFit: "contain", objectPosition: "center bottom",
-                      borderRadius: 12, background: "transparent",
+                      borderRadius: 10, background: "transparent",
                     }}
                   />
-                  <small>{avatar.name}{locked ? ` · 🔒 ${avatar.xp.toLocaleString()} XP` : ""}</small>
+                  <small style={{fontSize:10,lineHeight:1.2,textAlign:"center"}}>{avatar.name}{locked ? ` · 🔒 ${avatar.xp.toLocaleString()} XP` : ""}</small>
                 </button>
               );
             })}
