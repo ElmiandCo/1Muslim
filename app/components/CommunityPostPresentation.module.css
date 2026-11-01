@@ -50,3 +50,37 @@
 .presentation .translation{margin:0;font-size:clamp(14px,2.2vw,18px);line-height:1.65;text-align:center}
 .compact .body{font-size:clamp(13px,2vw,16px);line-height:1.5}
 .compact .arabic{font-size:clamp(19px,3vw,25px)}
+
+
+/* Reference-image polish: a restrained gold filigree frame around Qur'an reflections.
+   All decoration is paint-only and inherits the active site theme. */
+.verse::after{
+ content:"";position:absolute;inset:7px;z-index:1;pointer-events:none;border-radius:12px;opacity:.65;
+ background:
+  linear-gradient(90deg,var(--cp-secondary),transparent) left top/45px 1px no-repeat,
+  linear-gradient(180deg,var(--cp-secondary),transparent) left top/1px 34px no-repeat,
+  linear-gradient(270deg,var(--cp-secondary),transparent) right top/45px 1px no-repeat,
+  linear-gradient(180deg,var(--cp-secondary),transparent) right top/1px 34px no-repeat,
+  linear-gradient(90deg,var(--cp-secondary),transparent) left bottom/45px 1px no-repeat,
+  linear-gradient(0deg,var(--cp-secondary),transparent) left bottom/1px 34px no-repeat,
+  linear-gradient(270deg,var(--cp-secondary),transparent) right bottom/45px 1px no-repeat,
+  linear-gradient(0deg,var(--cp-secondary),transparent) right bottom/1px 34px no-repeat;
+}
+.videoPoster::before,.youtubePoster::before{
+ content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+ background:linear-gradient(180deg,transparent 48%,rgba(0,0,0,.38));
+}
+.playCircle,.playHint{z-index:2}
+.videoPoster:active .playCircle,.youtubePoster:active .playCircle{transform:translate(-50%,-50%) scale(.94)}
+@media (prefers-reduced-motion:no-preference){
+ .verse{animation:communityVerseReveal .48s cubic-bezier(.2,.8,.2,1) both}
+ .videoPoster .playCircle,.youtubePoster .playCircle{transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease}
+ .videoPoster:hover .playCircle,.youtubePoster:hover .playCircle{
+  box-shadow:0 10px 30px #0009,0 0 28px color-mix(in srgb,var(--cp-accent) 40%,transparent);
+ }
+}
+@keyframes communityVerseReveal{
+ from{opacity:.55;transform:translateY(6px)}
+ to{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){.verse{animation:none}.videoPoster .playCircle,.youtubePoster .playCircle{transition:none}}
