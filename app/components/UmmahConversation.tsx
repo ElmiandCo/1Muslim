@@ -70,7 +70,7 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
   const channel=db.channel("ummah-posts3-"+post.id)
    .on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_comments",filter:"post_id=eq."+post.id},queue)
    .on("postgres_changes",{event:"*",schema:"public",table:"ummah_comment_likes"},queue)
-   .on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_likes",filter:"post_id=eq."+post.id},queue)
+   .on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_like_counts",filter:"post_id=eq."+post.id},queue)
    .on("postgres_changes",{event:"*",schema:"public",table:"ummah_post_share_counts",filter:"post_id=eq."+post.id},queue)
    .subscribe();
   const fallback=setInterval(queue,30000);
