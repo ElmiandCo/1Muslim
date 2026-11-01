@@ -45,7 +45,7 @@ export default function CommunityMediaFeed(){
      let post=grouped.get(parent.id);
      if(!post){
       const author=authorById.get(parent.user_id);
-      post={id:parent.id,userId:parent.user_id,body:parent.body||"",created:parent.created_at||item.created_at,author:author?.display_name||author?.username||"Community member",handle:author?.username?"@"+author.username:"@member",media:[],avatarGender:author?.avatar_gender||null,avatarPackage:author?.avatar_package||null,avatarConfig:author?.avatar_config||null,gender:author?.gender||null,accent:author?.profile_accent||null};
+      post={id:parent.id,userId:parent.user_id,body:parent.body||"",created:parent.created_at||item.created_at,author:author?.display_name||author?.username||"Community member",handle:author?.username?"@"+author.username:"@member",media:[],avatarGender:author?.avatar_gender||null,avatarPackage:author?.avatar_package||null,avatarConfig:author?.avatar_config&&typeof author.avatar_config==="object"&&!Array.isArray(author.avatar_config)?author.avatar_config as Record<string,unknown>:null,gender:author?.gender||null,accent:author?.profile_accent||null};
       grouped.set(parent.id,post);
      }
      post.media.push({id:item.id,url,mime_type:item.mime_type,file_name:item.file_name});
