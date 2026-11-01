@@ -638,6 +638,53 @@ export default function MessagesPage(){
 .muslimMessengerFrame .omMessengerNight .omMessengerListHead>input{background:#19211c!important;color:white!important;border-color:#35463d!important}
 .muslimMessengerFrame .omMessengerShell--chat{display:grid!important;max-width:850px!important;min-height:65dvh!important;height:calc(100dvh - 220px)!important;overflow:hidden!important;margin:auto!important}
 @media(max-width:700px){.muslimMessengerFrame>.omImessagePage.omMessengerUnified{padding:0 15px 105px!important}.muslimMessengerFrame .omMessengerTop{height:20dvh!important}.muslimMessengerFrame .omMessengerShell--chat{height:calc(100dvh - 185px)!important}.muslimMessengerFrame .omMessengerThreadList>button{min-height:78px!important}}
+/* Mobile thread viewport: keep the composer ABOVE the site's bottom navigation
+   and Safari toolbar. Avoid the old 100dvh/overflow-hidden trap. */
+@media(max-width:700px){
+ body:has(.muslimMessengerFrame .omMessengerShell--chat){overflow:auto!important}
+ .muslimMessengerFrame>.omImessagePage.omMessengerUnified:has(.omMessengerShell--chat){
+  height:auto!important;min-height:0!important;max-height:none!important;
+  overflow:visible!important;padding:0 12px 24px!important;
+ }
+ .muslimMessengerFrame .omImessagePage:has(.omMessengerShell--chat) .omMessengerTop{
+  height:auto!important;min-height:0!important;margin:4px 0 10px!important;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat{
+  display:flex!important;flex-direction:column!important;
+  height:min(68dvh,610px)!important;min-height:360px!important;
+  max-height:calc(100dvh - 160px)!important;overflow:hidden!important;
+  margin:0 auto 18px!important;border-radius:22px!important;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat>.omChatPane{
+  display:flex!important;flex-direction:column!important;
+  flex:1 1 auto!important;height:100%!important;min-height:0!important;
+  max-height:100%!important;overflow:hidden!important;
+  background:linear-gradient(165deg,#f9fdfb,#edf8f3)!important;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat .omChatHeader{
+  flex:0 0 auto!important;padding:12px 14px!important;
+  border-bottom:1px solid #bdd7c8!important;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat .omDmModeControl{
+  display:none!important;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat .omMessagesFeed{
+  flex:1 1 0!important;min-height:0!important;max-height:none!important;
+  overflow-y:auto!important;overscroll-behavior:contain!important;
+  padding:14px!important;background:transparent!important;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat .omMessageComposer{
+  flex:0 0 auto!important;position:relative!important;z-index:10!important;
+  padding:10px 10px 12px!important;min-height:66px!important;
+  background:rgba(247,253,250,.98)!important;
+  border-top:1px solid #c8ded1!important;box-shadow:0 -8px 24px #1c6c4520!important;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat .omMessageComposer input[aria-label="Message"]{
+  font-size:16px!important;min-height:43px!important;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat .omComposerTools,
+ .muslimMessengerFrame .omMessengerShell--chat .omComposerSettings{flex-shrink:0!important}
+}
 `}</style>
  </main>
 }
