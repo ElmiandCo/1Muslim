@@ -41,6 +41,13 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
  const fileInput=useRef<HTMLInputElement>(null);
  const refreshTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const firstButton=useRef<HTMLButtonElement>(null);
+ const viewerRef=useRef<HTMLElement>(null);
+ const scrollerRef=useRef<HTMLDivElement>(null);
+ const profileDialogRef=useRef<HTMLElement>(null);
+ const profileCloseRef=useRef<HTMLButtonElement>(null);
+ const scrollHistory=useRef<number[]>([]);
+ const pendingCommentLikes=useRef(new Set<string>());
+ const postLikePending=useRef(false);
 
  const refresh=useCallback(async()=>{
   try{
@@ -124,20 +131,25 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
   }finally{setBusy(false)}
  };
  const toggleCommentLike=async(id:string)=>{
-  const current=byId.get(id);if(!current)return;
+  const current=byId.get(id);if(!current||pendingCommentLikes.current.has(id))return;
+  pendingCommentLikes.current.add(id);
   setComments(rows=>rows.map(c=>c.id===id?{...c,liked:!c.liked,likes:Math.max(0,c.likes+(c.liked?-1:1))}:c));
   try{
    const response=await fetch("/api/ummah-comment-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({commentId:id})});
    if(!response.ok)throw Error("Sign in to like comments.");
   }catch{setComments(rows=>rows.map(c=>c.id===id?{...c,liked:current.liked,likes:current.likes}:c));setNotice("Could not save comment like.")}
+  finally{pendingCommentLikes.current.delete(id)}
  };
  const togglePostLike=async()=>{
+  if(postLikePending.current)return;
+  postLikePending.current=true;
   const was=likes;setLikes({liked:!was.liked,count:Math.max(0,was.count+(was.liked?-1:1))});
   try{
    const response=await fetch("/api/ummah-post-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:post.id})});
    if(!response.ok)throw Error("Sign in to like posts.");
    const result=await response.json();if(typeof result.count==="number")setLikes({count:result.count,liked:result.liked});
   }catch{setLikes(was);setNotice("Could not save post like.")}
+  finally{postLikePending.current=false}
  };
  const share=async()=>{
   const url=location.origin+"/community#post-"+post.id;
@@ -149,9 +161,35 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
    if(user){const response=await fetch("/api/ummah-post-shares",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:post.id})});if(response.ok){const result=await response.json();if(typeof result.count==="number")setShares(result.count)}}
   }catch{/* Native share cancellation must not create a share event. */}
  };
- const back=()=>{if(profileId){setProfileId(null);return}if(stack.length){setStack(old=>old.slice(0,-1));return}onClose()};
+ const openThread=(id:string)=>{
+  scrollHistory.current.push(scrollerRef.current?.scrollTop||0);
+  setStack(old=>[...old,id]);
+  requestAnimationFrame(()=>{if(scrollerRef.current)scrollerRef.current.scrollTop=0});
+ };
+ const back=()=>{
+  if(profileId){setProfileId(null);return}
+  if(stack.length){
+   const previousScroll=scrollHistory.current.pop()||0;
+   setStack(old=>old.slice(0,-1));
+   requestAnimationFrame(()=>{if(scrollerRef.current)scrollerRef.current.scrollTop=previousScroll});
+   return;
+  }
+  onClose();
+ };
+ useEffect(()=>{if(profileId)profileCloseRef.current?.focus();else firstButton.current?.focus()},[profileId]);
  useEffect(()=>{
-  const key=(event:KeyboardEvent)=>{if(event.key==="Escape"){event.preventDefault();back()}};
+  const key=(event:KeyboardEvent)=>{
+   if(event.key==="Escape"){event.preventDefault();back();return}
+   if(event.key!=="Tab")return;
+   const dialog=profileId?profileDialogRef.current:viewerRef.current;
+   if(!dialog)return;
+   const candidates=Array.from(dialog.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])'));
+   const focusable=candidates.filter(element=>element.getClientRects().length>0);
+   if(!focusable.length)return;
+   const first=focusable[0],last=focusable[focusable.length-1];
+   if(event.shiftKey&&(document.activeElement===first||!dialog.contains(document.activeElement))){event.preventDefault();last.focus()}
+   else if(!event.shiftKey&&(document.activeElement===last||!dialog.contains(document.activeElement))){event.preventDefault();first.focus()}
+  };
   document.addEventListener("keydown",key);return()=>document.removeEventListener("keydown",key);
  });
  const renderComment=(c:Comment,level:number):ReactNode=>{
@@ -162,8 +200,8 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
     <button type="button" className={styles.avatarButton} aria-label={"View "+c.name+"'s profile"} onClick={()=>setProfileId(c.author_id)}>{avatar(c.name,c.avatar_url)}</button>
     <div className={styles.commentBody}>
      <div className={styles.commentHeader}><button type="button" onClick={()=>setProfileId(c.author_id)}>{c.name}</button><time>{new Date(c.created_at).toLocaleDateString()}</time></div>
-     <button type="button" className={styles.commentText} onClick={()=>setStack(old=>[...old,c.id])} aria-label={"Open thread by "+c.name}>{c.body||"View image and replies"}</button>
-     {c.image_url&&<button type="button" className={styles.imageButton} onClick={()=>setStack(old=>[...old,c.id])} aria-label="Open image comment"><img src={c.image_url} alt={"Image shared by "+c.name} loading="lazy"/></button>}
+     <button type="button" className={styles.commentText} onClick={()=>openThread(c.id)} aria-label={"Open thread by "+c.name}>{c.body||"View image and replies"}</button>
+     {c.image_url&&<button type="button" className={styles.imageButton} onClick={()=>openThread(c.id)} aria-label="Open image comment"><img src={c.image_url} alt={"Image shared by "+c.name} loading="lazy"/></button>}
      <div className={styles.commentActions}>
       {level<3&&<button type="button" onClick={()=>setReplyTo(c.id)}>↩ Reply</button>}
       <button type="button" aria-pressed={c.liked} onClick={()=>void toggleCommentLike(c.id)}>{c.liked?"♥":"♡"} {c.likes}</button>
@@ -180,12 +218,12 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
 
  if(typeof document==="undefined")return null;
  return createPortal(<div className={styles.backdrop} role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}>
-  <section className={styles.viewer} role="dialog" aria-modal="true" aria-label={"Post "+title.toLowerCase()}>
+  <section ref={viewerRef} className={styles.viewer} role="dialog" aria-modal="true" aria-label={"Post "+title.toLowerCase()}>
    <header className={styles.topbar}>
     <button ref={firstButton} type="button" className={styles.back} onClick={back} aria-label={stack.length?"Back to previous thread":"Close post"}>{stack.length?"←":"✕"}</button>
     <strong>{title}</strong><span className={styles.topCounter}>{comments.length} comments</span>
    </header>
-   <div className={styles.scroller}>
+   <div ref={scrollerRef} className={styles.scroller}>
     {!focus&&<article className={styles.post}>
      <div className={styles.postIdentity}>
       <button type="button" onClick={()=>setProfileId(post.author_id)}>{avatar(post.author_name||"Member",post.avatar_url)}</button>
@@ -216,8 +254,8 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
    </form>
   </section>
   {profileId&&<div className={styles.profileOverlay} role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setProfileId(null)}}>
-   <section role="dialog" aria-modal="true" aria-label="Member profile" className={styles.profileModal}>
-    <button type="button" className={styles.profileClose} onClick={()=>setProfileId(null)} aria-label="Close profile">✕</button>
+   <section ref={profileDialogRef} role="dialog" aria-modal="true" aria-label="Member profile" className={styles.profileModal}>
+    <button ref={profileCloseRef} type="button" className={styles.profileClose} onClick={()=>setProfileId(null)} aria-label="Close profile">✕</button>
     {avatar(profile?.display_name||profile?.username||"Member",profile?.avatar_url)}
     <strong>{profile?.display_name||profile?.username||"Community member"}</strong>
     <small>{profile?.username?"@"+profile.username:"1Muslim member"}</small>

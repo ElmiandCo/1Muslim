@@ -87,7 +87,7 @@ create or replace function public.ummah_sync_post_like_count()
 returns trigger
 language plpgsql security definer
 set search_path = public, pg_temp
-as $
+as $$
 begin
   if tg_op = 'INSERT' then
     insert into public.ummah_post_like_counts(post_id,like_count,updated_at)
@@ -101,7 +101,7 @@ begin
   end if;
   return null;
 end;
-$;
+$$;
 revoke all on function public.ummah_sync_post_like_count() from public, anon, authenticated;
 drop trigger if exists ummah_post_like_count_trigger on public.ummah_post_likes;
 create trigger ummah_post_like_count_trigger
