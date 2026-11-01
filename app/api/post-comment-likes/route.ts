@@ -14,10 +14,14 @@ export async function POST(request:Request){
  if(!comment)return NextResponse.json({error:"Comment not found"},{status:404,headers});
  const {data:existing,error:readError}=await db.from("comment_likes").select("comment_id").eq("comment_id",commentId).eq("user_id",user.id).maybeSingle();
  if(readError)return NextResponse.json({error:"Likes unavailable"},{status:503,headers});
+ // INSERT, not UPSERT: current RLS allows INSERT/DELETE but not UPDATE.
+ // Duplicate insert (23505) means the like already exists; return real state.
  const {error}=existing
   ?await db.from("comment_likes").delete().eq("comment_id",commentId).eq("user_id",user.id)
-  :await db.from("comment_likes").upsert({comment_id:commentId,user_id:user.id},{onConflict:"comment_id,user_id"});
- if(error)return NextResponse.json({error:"Unable to update like"},{status:503,headers});
+  :await db.from("comment_likes").insert({comment_id:commentId,user_id:user.id});
+ if(error&&error.code!=="23505")return NextResponse.json({error:"Unable to update like"},{status:503,headers});
+ const {data:current,error:currentError}=await db.from("comment_likes").select("comment_id").eq("comment_id",commentId).eq("user_id",user.id).maybeSingle();
+ if(currentError)return NextResponse.json({error:"Likes unavailable"},{status:503,headers});
  const {data:aggregate}=await db.from("comment_like_counts").select("like_count").eq("comment_id",commentId).maybeSingle();
- return NextResponse.json({liked:!existing,count:aggregate?.like_count??null},{headers});
+ return NextResponse.json({liked:!!current,count:aggregate?.like_count??null},{headers});
 }
