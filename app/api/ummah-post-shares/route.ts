@@ -4,9 +4,9 @@ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]
 const headers={"Cache-Control":"private, no-store"};
 async function count(postId:string){
  const db=await createClient();
- const {count,error}=await db.from("ummah_post_shares").select("id",{count:"exact",head:true}).eq("post_id",postId);
+ const {data,error}=await db.from("ummah_post_share_counts").select("share_count").eq("post_id",postId).maybeSingle();
  if(error)throw Error("Shares unavailable");
- return count||0;
+ return data?.share_count||0;
 }
 export async function GET(request:Request){
  const postId=new URL(request.url).searchParams.get("postId");
