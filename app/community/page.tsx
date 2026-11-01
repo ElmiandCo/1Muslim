@@ -1,6 +1,7 @@
 "use client";
 
 import "./community.css";
+import "../components/community-posts3-theme.css";
 import "./daily-post-particles.css";
 
 import { FormEvent, useEffect, useMemo, useState, useRef } from "react";
