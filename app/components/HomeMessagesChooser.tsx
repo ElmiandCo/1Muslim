@@ -59,7 +59,27 @@ export default function HomeMessagesChooser(){
   const {error:msgError}=await db.from("dm_messages").insert({conversation_id:selected,sender_id:uid,body:"📷 Photo",attachment_path:path,attachment_type:"image"});
   if(msgError)setError(msgError.message);else await loadMessages();setBusy(false);
  };
- const findPeople=async()=>{if(!uid)return;setPeopleLoading(true);const q=search.trim().replace(/[%_,]/g,"");let request=db.from("profiles").select("id,display_name,username,gender,avatar_gender,avatar_config").neq("id",uid).limit(25);if(q.length>=2)request=request.or(`display_name.ilike.%${q}%,username.ilike.%${q}%`);const {data,error:lookupError}=await request;if(lookupError)setError("Unable to search members: "+lookupError.message);else setCandidates((data||[]) as Profile[]);setPeopleLoading(false)};
+ const findPeople=async()=>{if(!uid)return;setPeopleLoading(true);setError("");
+  // Search only guaranteed public identity columns first. Avatar metadata is
+  // fetched separately so a schema mismatch cannot break member discovery.
+  const q=search.trim().replace(/[%_,().]/g,"").slice(0,80);
+  let request=db.from("profiles").select("id,display_name,username").neq("id",uid).limit(50);
+  if(q.length>=2)request=request.or(`display_name.ilike.%${q}%,username.ilike.%${q}%`);
+  let {data,error:lookupError}=await request;
+  if(lookupError){
+   // A plain member list is a safe fallback when PostgREST search syntax fails.
+   const fallback=await db.from("profiles").select("id,display_name,username").neq("id",uid).limit(200);
+   if(fallback.error){setError("Unable to search members: "+fallback.error.message);setCandidates([]);setPeopleLoading(false);return}
+   const term=q.toLocaleLowerCase();data=(fallback.data||[]).filter(p=>!term||[p.display_name,p.username].some(v=>String(v||"").toLocaleLowerCase().includes(term))).slice(0,50);lookupError=null;
+  }
+  const rows=(data||[]) as Profile[];
+  if(rows.length){
+   const extra=await db.from("profiles").select("id,gender,avatar_gender,avatar_config").in("id",rows.map(p=>p.id));
+   const avatarInfo=new Map((extra.data||[]).map(p=>[p.id,p]));
+   setCandidates(rows.map(p=>({...p,...(avatarInfo.get(p.id)||{})})));
+  }else setCandidates([]);
+  setPeopleLoading(false);
+ };
  useEffect(()=>{if(!newChat)return;const t=setTimeout(()=>void findPeople(),250);return()=>clearTimeout(t)},[newChat,search,uid]);
  const start=async(id:string)=>{setBusy(true);const {data,error:err}=await db.rpc("dm_start_conversation",{other_user:id});if(err)setError(err.message);else if(typeof data==="string"){await loadThreads();open(data)}setBusy(false)};
  const name=(id:string)=>profiles[id]?.display_name?.trim()||profiles[id]?.username?.trim()||"Member";
