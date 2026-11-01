@@ -157,7 +157,7 @@ export default function UmmahConversation({post,onClose}:{post:UmmahConversation
  const renderComment=(c:Comment,level:number):ReactNode=>{
   const replies=children.get(c.id)||[];
   const closed=collapsed[c.id]??level>1;
-  return <div key={c.id} className={styles.commentWrap} style={{["--depth" as string]:Math.min(level-1,2)}}>
+  return <div key={c.id} className={styles.commentWrap} data-depth={Math.min(level-1,2)}>
    <article className={styles.comment}>
     <button type="button" className={styles.avatarButton} aria-label={"View "+c.name+"'s profile"} onClick={()=>setProfileId(c.author_id)}>{avatar(c.name,c.avatar_url)}</button>
     <div className={styles.commentBody}>
