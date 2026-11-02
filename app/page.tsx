@@ -1,5 +1,6 @@
 "use client";
 import AdminParallaxDashboard from "./components/AdminParallaxDashboard";
+import AvatarEntryLoader from "./components/AvatarEntryLoader";
 import {currentPostTheme} from "./lib/post-theme";
 
 import workspaceStyles from "./workspace-presentation.module.css";
@@ -79,8 +80,8 @@ export default function Home(){
  useEffect(()=>{try{sessionStorage.setItem("1muslim:homepage-visited-v1","yes")}catch{}},[]);
  const [homeSignedIn,setHomeSignedIn]=useState<boolean|null>(null);
  const [entryLoading,setEntryLoading]=useState(true);
- const entryStarted=useRef(Date.now());
- useEffect(()=>{if(homeSignedIn===null)return;const delay=homeSignedIn?Math.max(0,1650-(Date.now()-entryStarted.current)):0;const timer=setTimeout(()=>setEntryLoading(false),delay);return()=>clearTimeout(timer)},[homeSignedIn]);
+ const [entryReady,setEntryReady]=useState(false);
+ useEffect(()=>{if(homeSignedIn!==null)setEntryReady(true)},[homeSignedIn]);
  const [adminHudHud,setAdminHudHud]=useState(false);
  const [hudHudPanel,setHudHudPanel]=useState<"admin"|null>(null);
  const [hudHudDraft,setHudHudDraft]=useState("");
@@ -684,7 +685,7 @@ const navCollapsedRef=useRef(false);
   return()=>{document.removeEventListener("touchstart",down,true);document.removeEventListener("touchmove",move,true);document.removeEventListener("touchend",end,true);document.removeEventListener("touchcancel",end,true)};
  },[canvasRow,workspacePage,editWidgets]);
 
- return <main data-canvas-fullscreen={canvasFullscreen?"true":"false"} data-widget-motion={motionMode} className={[styles.control,light?styles.day:"",navMotionStarted?(navCollapsed?styles.navMotionCollapsed:styles.navMotionExpanded):""].join(" ")}>{entryLoading&&<div className="signedEntryLoading" role="status" aria-label="Preparing your 1Muslim experience"><div className="signedEntryAura" aria-hidden="true"/><div className="signedEntryLogo"><img src="/assets/hudhud-logo.PNG" alt=""/></div><strong>1Muslim</strong><span>Preparing your space</span><div className="signedEntryProgress" aria-hidden="true"><i/></div></div>}<style jsx global>{`
+ return <main data-canvas-fullscreen={canvasFullscreen?"true":"false"} data-widget-motion={motionMode} className={[styles.control,light?styles.day:"",navMotionStarted?(navCollapsed?styles.navMotionCollapsed:styles.navMotionExpanded):""].join(" ")}>{entryLoading&&<AvatarEntryLoader ready={entryReady} onComplete={()=>setEntryLoading(false)}/>}<style jsx global>{`
 .signedEntryLoading{position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#123e37 0%,#071b22 46%,#020a12 100%);color:#f7e8c5;animation:signedEntryIn .45s ease both}
 .signedEntryAura{position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,#43d9c52a,transparent 70%);filter:blur(18px);animation:signedEntryBreathe 3.4s ease-in-out infinite;pointer-events:none}
 .signedEntryLogo{width:112px;height:112px;display:grid;place-items:center;border-radius:50%;border:1px solid #91e5c877;background:#08282c88;box-shadow:0 0 38px #28d5bd38;animation:signedEntryFloat 3.6s ease-in-out infinite}

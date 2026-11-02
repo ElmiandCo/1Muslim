@@ -1,0 +1,14 @@
+.avatarEntry{position:fixed;inset:0;z-index:2147483000;background:#000;color:#f4e7c6;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;gap:17px;isolation:isolate}
+.avatarEntryStage{position:relative;width:min(92vw,520px);height:245px;display:flex;align-items:center;justify-content:center;perspective:700px;transform-style:preserve-3d}
+.avatarEntryOrbitRing{position:absolute;width:100%;height:118px;border-radius:50%;border:1px solid #d7b56a65;box-shadow:0 0 28px #d9b46440,inset 0 0 25px #d9b46420;transform:rotateX(67deg);animation:avatarEntryRing 8.45s linear infinite}
+.avatarEntryPortrait{position:absolute;width:118px;height:118px;border:2px solid #dfbd79;border-radius:50%;background:#0b0b0b;box-shadow:0 0 19px #d9b46470;overflow:hidden;transition:transform 650ms cubic-bezier(.22,.65,.2,1),opacity 650ms ease;will-change:transform,opacity}
+.avatarEntryPortrait img{width:100%;height:100%;object-fit:cover}
+.avatarEntryBrand{font:normal clamp(42px,9vw,58px) Georgia,serif;letter-spacing:.02em;text-shadow:0 0 25px #d9b46455}
+.avatarEntryCaption{font:400 12px system-ui,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:#e5d6b4}
+.avatarEntryProgress{width:min(56vw,230px);height:3px;background:#c6a76a3b;overflow:hidden;border-radius:10px;margin-top:11px}
+.avatarEntryProgress i{display:block;width:35%;height:100%;background:linear-gradient(90deg,transparent,#ffe3a2,#d8ac53);box-shadow:0 0 13px #ffdb8b;animation:avatarEntrySweep 2.6s ease-in-out infinite}
+.avatarEntry--black .avatarEntryStage,.avatarEntry--black .avatarEntryBrand,.avatarEntry--black .avatarEntryCaption,.avatarEntry--black .avatarEntryProgress{opacity:0;transition:opacity .45s ease}
+.avatarEntry--reveal{opacity:0;transition:opacity 1.2s ease}
+@keyframes avatarEntryRing{to{transform:rotateX(67deg) rotate(360deg)}}
+@keyframes avatarEntrySweep{0%{transform:translateX(-110%)}100%{transform:translateX(330%)}}
+@media(prefers-reduced-motion:reduce){.avatarEntry *{animation:none!important;transition:none!important}}
