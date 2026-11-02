@@ -2035,3 +2035,73 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 .omWorkspaceArrowNav .omWorkspaceArrowButton:hover:not(:disabled),.omWorkspaceArrowNav .omWorkspaceArrowButton:focus-visible{background:color-mix(in srgb,var(--theme-accent,#e9cf8a) 13%,transparent)!important;box-shadow:0 0 22px color-mix(in srgb,var(--theme-accent,#e9cf8a) 60%,transparent)!important;transform:scale(1.04)}
 .omWorkspaceArrowNav .omWorkspaceArrowButton:disabled{opacity:.3;box-shadow:none!important;cursor:default}
 @media(prefers-reduced-motion:reduce){.omWorkspaceArrowNav .omWorkspaceArrowButton{transition:none!important}}
+
+/* Full-width desktop Live canvas visibility repair (desktop only).
+   Keep narrow windows, mobile and all non-Live slides unchanged. */
+@media (min-width: 1200px) and (min-height: 560px) {
+  .liveWidgetRootClean {
+    display: flex !important;
+    flex-direction: column !important;
+    visibility: visible !important;
+    min-height: 0 !important;
+    width: 100% !important;
+  }
+  .liveWidgetRootClean > .homeMakkahLive {
+    display: flex !important;
+    flex-direction: column !important;
+    visibility: visible !important;
+    min-height: 0 !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+  .liveWidgetRootClean .homeLiveChannelPlayer {
+    display: grid !important;
+    visibility: visible !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: min(56vh, 680px) !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+  .liveWidgetRootClean .homeLiveCommentDock {
+    visibility: visible !important;
+    min-height: 0 !important;
+  }
+}
+
+/* Desktop counterpart to the existing mobile collapsed-parent repair.
+   The absolute Live stage needs a real containing-block height. */
+@media (min-width: 1200px) and (min-height: 560px) {
+  [data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage) {
+    position: relative !important;
+    height: clamp(420px, calc(100dvh - 240px), 900px) !important;
+    min-height: 420px !important;
+    overflow: visible !important;
+  }
+  [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage {
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 420px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Full-width desktop Live: 75% theater + 25% vertical Messages widget.
+   All other viewport sizes and workspace pages keep their existing layout. */
+.oneMuslimDesktopMessagesRail { display:none; }
+@media (min-width:1200px) and (min-height:560px) {
+  [data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage) > .oneMuslimLiveStage {
+    left:0!important;right:auto!important;width:75%!important;
+  }
+  [data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage) > .oneMuslimDesktopMessagesRail {
+    display:flex!important;position:absolute!important;top:0;right:0;bottom:0;
+    width:25%;min-width:0;box-sizing:border-box;flex-direction:column;
+    overflow-y:auto;overscroll-behavior:contain;z-index:21;
+    padding:12px;gap:12px;border-left:1px solid rgba(220,190,105,.28);
+    background:rgba(8,13,19,.25);backdrop-filter:blur(14px);
+    color:var(--theme-text,#f8f0dd);
+  }
+  .oneMuslimDesktopMessagesRailTitle {font-size:15px;font-weight:700;letter-spacing:.04em;}
+  .oneMuslimDesktopMessagesRail > :not(.oneMuslimDesktopMessagesRailTitle) {min-width:0;width:100%;}
+}
