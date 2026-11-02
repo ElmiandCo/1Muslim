@@ -172,7 +172,7 @@ function DailyPostsApp({active}:{active:boolean}){
     <form onSubmit={e=>void send(e)}><input aria-label="Write a comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={1500} placeholder="Write a thoughtful comment…"/><button type="submit" disabled={busy||!draft.trim()}>Send ↗</button></form>
     {notice&&<p role="alert">{notice}</p>}
    </section>
-  </div>}
+  </div>,document.body)}
  </div>;
 }
 export function CommunityMap({active}:{active:boolean}){
