@@ -1850,3 +1850,11 @@
 /* Keep horizontal finger swipes available across the carousel and its slide surfaces. */
 .control .workspaceScroller{touch-action:pan-x pan-y!important;-webkit-overflow-scrolling:touch!important;scroll-snap-type:x mandatory!important}
 .control .workspaceTrack,.control .workspacePage{touch-action:pan-x pan-y}
+
+/* Fix #3: keep the outer canvas geometry stable across Home and secondary slides.
+   Earlier :has(.livePreviewStrip) rules changed the container's height and
+   overflow based on slide content, producing a visible resize/jump. */
+.control .decoratedSurface{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow:hidden!important}
+.control .widgetArea,.control .widgetArea:has(.livePreviewStrip){flex:1 1 0!important;height:auto!important;min-height:0!important;max-height:100%!important;overflow:hidden!important}
+.control .widgetArea .workspaceScroller,.control .widgetArea:has(.livePreviewStrip) .workspaceScroller{flex:1 1 0!important;height:auto!important;min-height:0!important;max-height:100%!important;overflow-x:auto!important;overflow-y:hidden!important}
+.control .widgetArea .workspacePage,.control .widgetArea:has(.livePreviewStrip) .workspacePage{height:100%!important;min-height:0!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important}
