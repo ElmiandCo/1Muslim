@@ -178,8 +178,12 @@ function DailyPostsApp({active}:{active:boolean}){
  const [finishedVideo,setFinishedVideo]=useState<string|null>(null);
  const [fypStart,setFypStart]=useState<string|null>(null);
  const [viewerPost,setViewerPost]=useState<string|null>(null);
- const openPostViewer=(post:UmmahPost)=>{setViewerPost(post.id);setFypStart(null);setExpandedImage(null);setSelected(null)};
+ const [viewerActionsVisible,setViewerActionsVisible]=useState(true);
+ const viewerVideoRef=useRef<HTMLVideoElement|null>(null);
+ const videoStartAt=useRef(0);
+ const openPostViewer=(post:UmmahPost)=>{videoStartAt.current=videoRefs.current.get(post.id)?.currentTime||0;setViewerActionsVisible(true);setViewerPost(post.id);setFypStart(null);setExpandedImage(null);setSelected(null)};
  const openViewerComments=(id:string)=>{setSelected(id);setThreadPath([]);setComments([]);setNotice("")};
+ useEffect(()=>{if(!viewerPost)return;const t=window.setTimeout(()=>setViewerActionsVisible(false),3000);return()=>clearTimeout(t)},[viewerPost,viewerActionsVisible]);
  const videoPosts=posts.filter(p=>postKind(p)==="video");
  const fypOrder=useMemo(()=>{if(!fypStart)return [];const start=videoPosts.find(p=>p.id===fypStart);const others=videoPosts.filter(p=>p.id!==fypStart);return start?[start,...others.sort((x,y)=>x.id.localeCompare(y.id))]:[]},[posts,fypStart]);
  useEffect(()=>{if(!active||selected||fypStart||viewerPost){videoRefs.current.forEach(v=>v.pause());return}let raf=0;const update=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const scroll=feedRef.current?.closest(".canvas-community-posts-scroll")||feedRef.current;if(!scroll)return;const bounds=scroll.getBoundingClientRect();const mid=(bounds.top+bounds.bottom)/2;let candidate:string|null=null;let distance=Infinity;videoRefs.current.forEach((video,id)=>{const rect=video.getBoundingClientRect();const center=(rect.top+rect.bottom)/2;const d=Math.abs(center-mid);if(rect.bottom>bounds.top&&rect.top<bounds.bottom&&d<distance){distance=d;candidate=id}});setPlayingVideo(candidate)})};const scroll=feedRef.current?.closest(".canvas-community-posts-scroll")||feedRef.current;scroll?.addEventListener("scroll",update,{passive:true});window.addEventListener("resize",update);update();return()=>{cancelAnimationFrame(raf);scroll?.removeEventListener("scroll",update);window.removeEventListener("resize",update)}},[active,posts,selected,fypStart,viewerPost]);
@@ -195,7 +199,7 @@ function DailyPostsApp({active}:{active:boolean}){
   if(!scroll)return;
   const viewport=scroll;
   const cards=()=>Array.from(feed.querySelectorAll<HTMLElement>(".community-post-card"));
-  const clearMotion=()=>cards().forEach(card=>{card.classList.remove("ummah-reading-main","ummah-reading-before","ummah-reading-after");card.style.removeProperty("--ummah-neighbor-drift");card.style.removeProperty("--ummah-neighbor-scale")});
+  const clearMotion=()=>cards().forEach(card=>{card.style.removeProperty("--ummah-reading-progress");card.classList.remove("ummah-reading-main","ummah-reading-before","ummah-reading-after");card.style.removeProperty("--ummah-neighbor-drift");card.style.removeProperty("--ummah-neighbor-scale")});
   const interrupt=()=>{autoPause.current=performance.now()+10000;elapsed=0;activeIndex=-1;clearMotion()};
   const events=["touchstart","pointerdown","wheel","keydown"] as const;
   events.forEach(event=>window.addEventListener(event,interrupt,{passive:true}));
@@ -210,10 +214,11 @@ function DailyPostsApp({active}:{active:boolean}){
    const body=card.querySelector(".ummah-post-package p")?.textContent||"";
    const isVideo=Boolean(card.querySelector("video"));
    // Four seconds for short posts, up to eight for long posts.
-   const duration=Math.max(4000,Math.min(8000,4000+Math.max(0,body.length-35)*16));
+   const duration=isVideo?8000:card.querySelector("img.ummah-package-media")?6000:Math.max(4000,Math.min(8000,4000+Math.max(0,body.length-35)*16));
    if(isVideo&&playingVideo&&finishedVideo!==playingVideo){frame=requestAnimationFrame(tick);return}
    elapsed+=dt;
    const progress=Math.min(1,elapsed/duration);
+   card.style.setProperty("--ummah-reading-progress",String(progress));
    clearMotion();
    card.classList.add("ummah-reading-main");
    // Neighbors drift outward throughout the reading window, then float home
@@ -262,7 +267,7 @@ function DailyPostsApp({active}:{active:boolean}){
    {!posts.length?<p className="community-feed-empty">{status}</p>:null}
    {notice&&!selected&&<p role="status">{notice}</p>}
   </div>
-  {viewerPost&&posts.some(p=>p.id===viewerPost)&&typeof document!=="undefined"&&createPortal(<div className="ummah-unified-viewer" role="dialog" aria-modal="true" aria-label="Open post" onClick={()=>setViewerPost(null)}><div className="ummah-unified-stage" data-post-theme={postThemeClass(posts.find(p=>p.id===viewerPost)?.post_theme)} onClick={e=>e.stopPropagation()}><button type="button" className="ummah-unified-close" onClick={()=>setViewerPost(null)} aria-label="Close post">✕</button>{(()=>{const p=posts.find(item=>item.id===viewerPost)!;return <><div className="ummah-unified-media">{postKind(p)==="video"?<video key={p.id} src={mediaFor(p)} controls playsInline autoPlay preload="auto"/>:postKind(p)==="image"?<img src={mediaFor(p)} alt="Post photo"/>:<div className="ummah-unified-text">{p.body}</div>}</div><div className="ummah-unified-caption"><strong>{p.author_name}</strong><p>{p.body}</p><div className="ummah-unified-actions"><button type="button" onClick={()=>void likePost(p.id)}>♡ {likeCounts[p.id]||0}</button><button type="button" onClick={()=>openViewerComments(p.id)}>💬 {commentCounts[p.id]||0}</button><button type="button" onClick={()=>void sharePost(p.id)}>↗ Share</button></div></div></>})()}</div></div>,document.body)}
+  {viewerPost&&posts.some(p=>p.id===viewerPost)&&typeof document!=="undefined"&&createPortal(<div className="ummah-unified-viewer" role="dialog" aria-modal="true" aria-label="Open post" onClick={()=>setViewerPost(null)}><div className="ummah-unified-stage" onPointerDown={()=>setViewerActionsVisible(true)} data-post-theme={postThemeClass(posts.find(p=>p.id===viewerPost)?.post_theme)} onClick={e=>e.stopPropagation()}><button type="button" className="ummah-unified-close" onClick={()=>setViewerPost(null)} aria-label="Close post">✕</button>{(()=>{const p=posts.find(item=>item.id===viewerPost)!;return <><div className="ummah-unified-media"><span className="ummah-themed-particles" aria-hidden="true"/>{postKind(p)==="video"?<video key={p.id} ref={viewerVideoRef} onLoadedMetadata={e=>{e.currentTarget.currentTime=Math.min(videoStartAt.current,Math.max(0,e.currentTarget.duration-.1))}} src={mediaFor(p)} controls playsInline autoPlay preload="auto"/>:postKind(p)==="image"?<img src={mediaFor(p)} alt="Post photo"/>:<div className="ummah-unified-text">{p.body}</div>}</div><div className="ummah-unified-caption"><strong>{p.author_name}</strong><p>{p.body}</p><div className={`ummah-unified-actions ${viewerActionsVisible?"is-visible":"is-idle"}`}><button type="button" onClick={()=>void likePost(p.id)}>♡ {likeCounts[p.id]||0}</button><button type="button" onClick={()=>openViewerComments(p.id)}>💬 {commentCounts[p.id]||0}</button><button type="button" onClick={()=>void sharePost(p.id)}>↗ Share</button><button type="button" onClick={()=>toggleBookmark(p.id)}>{bookmarks[p.id]?"▣ Saved":"▢ Save"}</button></div></div></>})()}</div></div>,document.body)}
   {fypStart&&<div className="ummah-fyp-overlay" role="dialog" aria-modal="true" aria-label="For You videos"><button type="button" className="ummah-fyp-close" onClick={()=>setFypStart(null)}>✕ Close</button><div className="ummah-fyp-reel">{fypOrder.map((p,i)=><section key={p.id}><video src={mediaFor(p)} controls playsInline autoPlay={i===0} muted={i!==0} preload={i===0?"auto":"metadata"}/><p>{p.body}</p></section>)}</div></div>}
   {expandedImage&&<div className="ummah-image-lightbox" role="presentation" onClick={()=>setExpandedImage(null)}><button type="button" aria-label="Close expanded image" onClick={()=>setExpandedImage(null)}>✕</button><img src={expandedImage} alt="Expanded post image" onClick={e=>e.stopPropagation()}/></div>}
   {selected&&typeof document!=="undefined"&&createPortal(<div className="ummah-comments-backdrop ummah-comments-viewport" style={{top:commentViewport.top,height:commentViewport.height||"100dvh"}} role="presentation" onClick={()=>setSelected(null)}>
