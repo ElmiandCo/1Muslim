@@ -32,7 +32,7 @@ function ProfileApp({active,section="My Profile",heroOnly=false}:{active:boolean
  const chooseAvatar=async(url:string)=>{
   if(!profile?.id||savingAvatar)return;
   const silver=url.includes("silver-avatar");
-  if(silver&&(profile.xp_total??0)<5000){setEditNotice("Silver unlocks at 5,000 XP.");return;}
+  if(silver&&(profile.xp_total??0)<2000){setEditNotice("Silver unlocks at 2,000 XP.");return;}
   setSavingAvatar(true);setEditNotice("");
   const db=createClient();const {data:{user}}=await db.auth.getUser();
   if(!user||user.id!==profile.id){setEditNotice("Sign in to customize your profile.");setSavingAvatar(false);return;}
@@ -85,7 +85,7 @@ function ProfileApp({active,section="My Profile",heroOnly=false}:{active:boolean
  const avatars=[
 {name:"Default",url:"/assets/avatars/default-male.jpg",xp:0,gender:"male",category:"Basic"},
 {name:"Default",url:"/assets/avatars/Default-women.png",xp:0,gender:"female",category:"Basic"},
-...(["Silver","Gold","Water","Cosmic"] as const).flatMap(name=>(["male","female"] as const).map(gender=>({name,url:`/assets/avatars/${name.toLowerCase()}-avatar-${gender}.${name==="Silver"?"jpg":"PNG"}`,xp:5000,gender,category:["Silver","Gold","Water"].includes(name)?"Elemental":"Elite"}))),
+...(["Silver","Gold","Water","Cosmic"] as const).flatMap(name=>(["male","female"] as const).map(gender=>({name,url:`/assets/avatars/${name.toLowerCase()}-avatar-${gender}.${name==="Silver"?"jpg":"PNG"}`,xp:["Silver","Gold","Water"].includes(name)?2000:5000,gender,category:["Silver","Gold","Water"].includes(name)?"Elemental":"Elite"}))),
 {name:"Floral",url:"/assets/avatars/floral-avatar-female.PNG",xp:5000,gender:"female",category:"Elite"},
 {name:"Diamond",url:"/assets/avatars/diamond-avatar-female.PNG",xp:5000,gender:"female",category:"Elite"},
 {name:"Silk",url:"/assets/avatars/silk-avatar-female.PNG",xp:5000,gender:"female",category:"Elite"},
