@@ -1846,3 +1846,7 @@
 @media(prefers-reduced-motion:reduce){
  .control,.control .decoratedSurface,.control .decoratedSurface>.surfaceArtwork{transition:none!important}
 }
+
+/* Keep horizontal finger swipes available across the carousel and its slide surfaces. */
+.control .workspaceScroller{touch-action:pan-x pan-y!important;-webkit-overflow-scrolling:touch!important;scroll-snap-type:x mandatory!important}
+.control .workspaceTrack,.control .workspacePage{touch-action:pan-x pan-y}
