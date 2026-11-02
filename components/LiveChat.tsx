@@ -31,6 +31,8 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
   const [userId, setUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [pinned, setPinned] = useState<Message | null>(null);
+  const [guestNotice,setGuestNotice] = useState("");
+  const pendingGuestIds=useRef<Set<string>|null>(null);
   const pinnedRef = useRef<Message | null>(null);
   const pinChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
@@ -108,6 +110,22 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
     pinnedRef.current = next; setPinned(next);
     void pinChannelRef.current?.send({ type: "broadcast", event: "pin", payload: { hostId, comment: next } });
   };
+  useEffect(()=>{
+    if(userId!==hostId)return;
+    let active=true;
+    const poll=async()=>{
+      const {data}=await supabase.from("live_guest_requests").select("id,user_id,status").eq("stream_id",streamId).eq("status","pending");
+      if(!active||!data)return;
+      const ids=new Set(data.map(row=>row.id as string));
+      if(pendingGuestIds.current){
+        const fresh=data.filter(row=>!pendingGuestIds.current?.has(row.id));
+        if(fresh.length){setGuestNotice(fresh.length===1?"Someone requested to join your Live":fresh.length+" new guest requests");window.setTimeout(()=>setGuestNotice(""),6500)}
+      }
+      pendingGuestIds.current=ids;
+    };
+    void poll();const timer=window.setInterval(()=>void poll(),2500);
+    return()=>{active=false;window.clearInterval(timer);pendingGuestIds.current=null};
+  },[userId,hostId,streamId,supabase]);
   const send = async (event: FormEvent) => {
     event.preventDefault();
     const body = limit35(draft.trim());
@@ -156,6 +174,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
         .emoteTray{display:flex;gap:7px;padding:9px 12px 2px;flex-wrap:wrap}.emoteTray button{background:linear-gradient(135deg,#12342c,#172d40);border:1px solid #80c9b277;border-radius:12px;padding:7px 10px;font-size:19px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}.emoteTray button:hover{transform:translateY(-3px);box-shadow:0 0 16px #75e5b955}.emoteTray button:disabled{opacity:.35;cursor:not-allowed}.composer{display:flex;gap:7px;padding:12px;border-top:1px solid #1b241f}.composer input{flex:1;min-width:0;border:1px solid #263029;background:#0d140f;color:#fff;border-radius:999px;padding:10px 12px;outline:none;font-size:11px}.composer button{border:0;border-radius:999px;padding:0 14px;background:#d6e9b8;color:#071008;font-weight:850;font-size:10px;cursor:pointer}.composer button:disabled{opacity:.45;cursor:not-allowed}.mutedNotice,.notice{margin:10px 12px;padding:9px 11px;border-radius:10px;font-size:9px}.mutedNotice{background:#1b1510;border:1px solid #4a3927;color:#d7bd9c}.notice{background:#1b0f10;border:1px solid #533536;color:#ffcaca}
       `}</style>
       {!overlay && <div className="chatHead"><strong>💬 Live chat</strong><span>{messages.length} messages</span></div>}
+      {guestNotice && <div className="liveGuestSystemNotice" role="status">👥 {guestNotice} · Open Guests to review</div>}
       {pinned && <div className="livePinnedComment" aria-label="Pinned live comment"><span>📌 Pinned · {displayName(pinned)}</span><strong>{pinned.body}</strong>{userId===hostId&&<button type="button" onClick={()=>togglePin(pinned)}>Unpin</button>}</div>}
       <div className="messages">
         {messages.length ? messages.map((message) => {
