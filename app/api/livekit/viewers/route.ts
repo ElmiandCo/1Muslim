@@ -11,12 +11,12 @@ export async function POST(request:Request){
   const {room}=await request.json();
   if(typeof room!=="string"||!/^1muslim-live-[a-zA-Z0-9-]+$/.test(room))return NextResponse.json({error:"Invalid room"},{status:400});
   const {data:stream}=await supabase.from("live_streams").select("id,host_id,status").eq("room_name",room).maybeSingle();
-  if(!stream||stream.host_id!==user.id)return NextResponse.json({error:"Host access only"},{status:403});
+  if(!stream)return NextResponse.json({error:"Live not found"},{status:404});
   if(stream.status!=="live")return NextResponse.json({viewerCount:0,viewers:[]});
   const url=process.env.LIVEKIT_URL,key=process.env.LIVEKIT_API_KEY,secret=process.env.LIVEKIT_API_SECRET;
   if(!url||!key||!secret)return NextResponse.json({error:"Live service unavailable"},{status:503});
   const participants=await new RoomServiceClient(url,key,secret).listParticipants(room);
-  const viewers=participants.filter(p=>p.identity!==stream.host_id);
+  const viewers=participants.filter(p=>p.identity!==stream.host_id && !p.identity.includes(":screen:"));
   const ids=[...new Set(viewers.map(p=>p.identity).filter(id=>/^[0-9a-f-]{36}$/i.test(id)))];
   const profiles=new Map<string,Record<string,unknown>>();
   const serviceKey=process.env.SUPABASE_SERVICE_ROLE_KEY,serviceUrl=process.env.NEXT_PUBLIC_SUPABASE_URL;
