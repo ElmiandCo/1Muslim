@@ -13,7 +13,7 @@ import LiveGuestStudio from "./LiveGuestStudio";
 import { cinemaAudioActive, type CinemaMode } from "../lib/live-cinema";
 import { playLiveCinemaMorphSound } from "../lib/live-cinema-sound";
 
-export default function LiveKitViewer({ roomName, streamId, embedded = false, onViewModeChange, initialViewMode = "phone" }: { roomName: string; streamId?: string; embedded?: boolean; onViewModeChange?: (mode: CinemaMode) => void; initialViewMode?: CinemaMode }) {
+export default function LiveKitViewer({ roomName, streamId, embedded = false, onViewModeChange, initialViewMode = "phone", reconnectSignal = 0 }: { roomName: string; streamId?: string; embedded?: boolean; onViewModeChange?: (mode: CinemaMode) => void; initialViewMode?: CinemaMode; reconnectSignal?: number }) {
   const router=useRouter();
   const [hostEnded,setHostEnded]=useState(false);
   const endedOnce=useRef(false);
@@ -67,6 +67,20 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
   const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [connectionActive, setConnectionActive] = useState(false);
+  const lastManualRetry=useRef(0);
+  useEffect(()=>{
+    if(!embedded||reconnectSignal===0||endedOnce.current)return;
+    const now=Date.now();
+    if(now-lastManualRetry.current<1500)return;
+    // A format toggle or swipe is a recovery gesture only when the Home
+    // player has not received video; never interrupt healthy playback.
+    if((roomRef.current?.state!=="connected"||(!hasCameraVideo&&!hasScreenVideo))){
+      lastManualRetry.current=now;
+      setError("");
+      setRetryAttempt(n=>n+1);
+    }
+  },[reconnectSignal,embedded,hasCameraVideo,hasScreenVideo]);
+
   const [isAudioBroadcast,setIsAudioBroadcast] = useState(false);
   const [hasRemoteAudio,setHasRemoteAudio] = useState(false);
   const [hostConnecting,setHostConnecting] = useState(false);
