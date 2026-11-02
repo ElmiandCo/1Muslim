@@ -44,13 +44,13 @@ export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,sh
   setPhase(current=>current==="orbit"?"black":current);
  },[ready]);
  useEffect(()=>{
-  if(phase!=="orbit")return;
+  if(phase==="waiting")return;
   let raf=0;
   let previous=0;
   const tick=(now:number)=>{
    if(!previous)previous=now;
    elapsed.current+=Math.min(48,now-previous);
-   if(readyRef.current&&!signedInRef.current&&elapsed.current>=CYCLE){setPhase("black");return;}
+   if(phase==="orbit"&&readyRef.current&&!signedInRef.current&&elapsed.current>=CYCLE){setPhase("black");}
    previous=now;
    const progress=elapsed.current/FRAME;
    const width=Math.max(300,Math.min(520,window.innerWidth*.95));
