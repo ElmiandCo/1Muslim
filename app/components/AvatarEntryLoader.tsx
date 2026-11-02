@@ -21,7 +21,7 @@ const avatars=[
 ] as const;
 const FRAME=650;
 const CYCLE=avatars.length*FRAME;
-export default function AvatarEntryLoader({ready,onComplete}:{ready:boolean;onComplete:()=>void}){
+export default function AvatarEntryLoader({ready,onComplete,onSignUp,showSignUp}:{ready:boolean;onComplete:()=>void;onSignUp:()=>void;showSignUp:boolean}){
  const [phase,setPhase]=useState<"orbit"|"black"|"reveal">("orbit");
  const [frame,setFrame]=useState(0);
  const exitArmed=useRef(false);
@@ -67,6 +67,7 @@ export default function AvatarEntryLoader({ready,onComplete}:{ready:boolean;onCo
   <strong className="avatarEntryBrand">1Muslim</strong>
   <span className="avatarEntryCaption">Preparing your space</span>
   <div className="avatarEntryProgress" aria-hidden="true"><i/></div>
+  {showSignUp&&<div className="avatarEntrySignup">New Here and Muslim? <button type="button" onClick={onSignUp}>Sign Up →</button></div>}
  </div>;
 }
 function windowWidth(){return typeof window==="undefined"?130:Math.min(130,window.innerWidth*.25)}
