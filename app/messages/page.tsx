@@ -226,7 +226,7 @@ export default function MessagesPage(){
  if(loadingAuth)return <main style={{padding:32}}>Loading messages…</main>;
  if(!uid)return <MessengerDesignDemo/>;
  if(uid&&!selected)return <MessengerDesignDemo liveThreads={Array.from(new Set(threads.map(t=>t.conversation_id))).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return {id:cid,name:names[peer]||"Member",avatar:avatars[peer]||"",preview:threadPreviews[cid]||"Start chatting",unread:unreadThreads[cid]||0}})} onOpenThread={setSelected}/>;
- return <main className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"20px auto",padding:"0 12px",color:"var(--text,#f4f4f5)"}}><style>{`
+ return <main onClickCapture={e=>{if((e.target as HTMLElement).closest("[data-messenger-new-group]"))setNewChatOpen(true)}} className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"20px auto",padding:"0 12px",color:"var(--text,#f4f4f5)"}}><style>{`
 .omMessengerTopNav{display:flex;gap:4px;padding:5px;margin:0 0 12px;border-radius:17px;background:rgba(4,52,41,.92);border:1px solid #d7bb7966;overflow-x:auto;scrollbar-width:none}
 .omMessengerTopNav a{flex:1;min-width:45px;padding:8px 3px;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:12px;text-decoration:none;color:#f3e7c8;font-size:19px}
 .omMessengerTopNav a span{font-size:10px}
@@ -743,6 +743,20 @@ body:has(.omImessagePage) .muslimMobileDock{display:none!important}
  .muslimMessengerFrame .omMessengerUnified.omMessengerNight .omMessengerShell--chat>.omChatPane{background:var(--dm-glass)!important}
  .muslimMessengerFrame .omMessengerUnified.omMessengerNight .omMessengerShell--chat .omMessageComposer{background:color-mix(in srgb,var(--dm-accent) 10%,#0c1b1a)!important;border-top-color:color-mix(in srgb,var(--dm-accent) 30%,transparent)!important}
  .muslimMessengerFrame .omMessengerUnified.omMessengerDay .omMessengerShell--chat>.omChatPane{background:linear-gradient(165deg,#f9fdfb,#edf8f3)!important}
+}
+
+/* Full-screen app viewport: only the message feed scrolls, never the document. */
+body:has(.muslimMessengerFrame){overflow:hidden!important}
+.muslimMessengerFrame{height:100dvh!important;max-height:100dvh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+.muslimMessengerFrame>.omImessagePage.omMessengerUnified{height:calc(100dvh - 74px - env(safe-area-inset-bottom,0px))!important;max-height:none!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;margin:0 auto!important;padding:8px 10px!important;width:100%!important}
+.muslimMessengerFrame .omMessengerShell--chat{flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;margin:0 auto!important;width:100%!important}
+.muslimMessengerFrame .omMessengerShell--chat>.omChatPane{min-height:0!important;max-height:100%!important;overflow:hidden!important}
+.muslimMessengerFrame .omMessengerShell--chat .omMessagesFeed{min-height:0!important;flex:1 1 0!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+@media(max-width:700px){
+ .muslimMessengerFrame>.omImessagePage.omMessengerUnified:has(.omMessengerShell--chat){height:calc(100dvh - 74px - env(safe-area-inset-bottom,0px))!important;overflow:hidden!important;padding:4px 8px!important}
+ .muslimMessengerFrame .omImessagePage:has(.omMessengerShell--chat) .omMessengerTop{height:auto!important;min-height:0!important;flex-shrink:0!important}
+ .muslimMessengerFrame .omMessengerShell--chat{flex:1 1 0!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important}
+ .muslimMessengerFrame .omMessengerShell--chat>.omChatPane{flex:1 1 0!important;height:auto!important;min-height:0!important;max-height:100%!important}
 }
 `}</style>
  </main>
