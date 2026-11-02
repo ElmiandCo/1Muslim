@@ -19,7 +19,7 @@ import HomeAudioLivePlayer from "./components/HomeAudioLivePlayer";
 import HomeLiveConversation from "./components/HomeLiveConversation";
 import LiveGuestStudio from "../components/LiveGuestStudio";
 
-import {useEffect,useRef,useState} from "react";
+import {useEffect,useLayoutEffect,useRef,useState} from "react";
 import {flushSync,createPortal} from "react-dom";
 import Image from "next/image";
 import {createClient} from "../utils/supabase/client";
