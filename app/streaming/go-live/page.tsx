@@ -62,8 +62,9 @@ export default function GoLivePage() {
     const supabase = createClient();
     const channel = supabase.channel("live-effects-" + liveStreamIdRef.current);
     liveEffectChannelRef.current = channel;
-    channel.on("broadcast",{event:"request-effect"},()=>{void channel.send({type:"broadcast",event:"effect",payload:{effect:currentLiveEffectRef.current}})}).subscribe(status=>{if(status==="SUBSCRIBED")void channel.send({type:"broadcast",event:"effect",payload:{effect:currentLiveEffectRef.current}})});
-    return () => {if(liveEffectChannelRef.current===channel)liveEffectChannelRef.current=null;void supabase.removeChannel(channel)};
+    channel.subscribe(status=>{if(status==="SUBSCRIBED")void channel.send({type:"broadcast",event:"effect",payload:{effect:currentLiveEffectRef.current}})});
+    const effectSyncTimer=window.setInterval(()=>{void channel.send({type:"broadcast",event:"effect",payload:{effect:currentLiveEffectRef.current}})},5000);
+    return () => {window.clearInterval(effectSyncTimer);if(liveEffectChannelRef.current===channel)liveEffectChannelRef.current=null;void supabase.removeChannel(channel)};
   }, [live]);
   const lastPreviewTapRef=useRef(0);
   const [studioMode,setStudioMode]=useState<"desktop"|"phone"|"voice">("phone");
