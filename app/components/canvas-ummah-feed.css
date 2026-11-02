@@ -527,3 +527,10 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 .ummah-unified-caption p{margin:7px 0;white-space:pre-wrap}
 .ummah-unified-actions{display:flex;gap:8px;flex-wrap:wrap}
 .ummah-unified-actions button{border:1px solid #ffffff44;border-radius:18px;background:#ffffff16;color:white;padding:9px 15px}
+
+/* Adjacent posts separate in opposite directions, almost drifting offscreen,
+   then return to their resting positions before the next reading transition. */
+.community-post-card.ummah-reading-before{transform:translate3d(0,calc(-1 * var(--ummah-neighbor-drift,0px)),0) scale(var(--ummah-neighbor-scale,1));filter:brightness(.94)}
+.community-post-card.ummah-reading-after{transform:translate3d(0,var(--ummah-neighbor-drift,0px),0) scale(var(--ummah-neighbor-scale,1));filter:brightness(.94)}
+.community-post-card.ummah-reading-before,.community-post-card.ummah-reading-after{will-change:transform;transition:filter 900ms ease,transform 100ms linear}
+@media(prefers-reduced-motion:reduce){.community-post-card.ummah-reading-before,.community-post-card.ummah-reading-after{transform:none!important;transition:none!important}}
