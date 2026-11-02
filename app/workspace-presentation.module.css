@@ -916,7 +916,7 @@
  .quranVerseArticle :global(.quranHomeControlRow .quranHomeSelectors details summary){font-size:10px!important}
 }
 
-/* Day mode only: Quran Arabic follows the selected theme in a deeper, readable shade.
+/* Day mode only: Quran Arabic follows --theme-accent / data-muslim-theme, never profile background.\n   Sapphire and Nur Blue (sapphire-mosaic) both resolve to sapphire via ProfileThemeSync.\n   Quran Arabic follows the selected theme in a deeper, readable shade.
    Night mode retains the original warm Arabic lettering. */
 :global(html.light) .quranVerseArabic{
  color:color-mix(in srgb,var(--theme-accent,#22bd83) 52%,#07141b 48%)!important;
