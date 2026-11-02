@@ -577,3 +577,17 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 .ummah-author-words{display:block;color:inherit;white-space:pre-wrap}
 .ummah-unified-text .ummah-verse-block,.ummah-unified-caption .ummah-verse-block{max-width:100%}
 @media(prefers-reduced-motion:reduce){.ummah-verse-block{transition:none}}
+
+
+.profile-neutral-controls{--profile-avatar-neutral:linear-gradient(145deg,#333b44,#181d23);--profile-avatar-stroke:#747b85;--profile-neutral-edge:#747b85;--profile-neutral-glass:rgba(80,86,95,.16)}
+html.light .profile-neutral-controls{--profile-avatar-neutral:linear-gradient(145deg,#f0f2f5,#b5bdc6);--profile-avatar-stroke:#b7c0c9;--profile-neutral-edge:#c2cad4;--profile-neutral-glass:rgba(210,217,225,.22)}
+.profile-neutral-controls .profile-compact-fields{display:grid;gap:0;max-width:460px;margin:12px auto;border:1px solid var(--profile-neutral-edge);border-radius:12px;background:var(--profile-neutral-glass);backdrop-filter:blur(14px);overflow:hidden}
+.profile-neutral-controls .profile-compact-row{display:flex;align-items:center;gap:8px;min-height:44px;padding:3px 10px;border-bottom:1px solid rgba(180,190,200,.22)}
+.profile-neutral-controls .profile-compact-row:last-child{border-bottom:0}
+.profile-neutral-controls .profile-compact-row>span{flex:0 0 80px;font-size:12px;opacity:.75}
+.profile-neutral-controls .profile-compact-row input{flex:1;min-width:0;border:0!important;outline:none;background:transparent!important;color:inherit!important;font:inherit;font-size:14px;padding:5px 0;box-shadow:none!important}
+.profile-neutral-controls .profile-compact-row input[readonly]{cursor:pointer}
+.profile-neutral-controls .profile-compact-row.editing{background:rgba(170,180,190,.12)}
+.profile-neutral-controls .profile-compact-row button{border:0;background:transparent;color:inherit;font-size:22px;width:34px;height:34px;cursor:pointer;transition:transform .2s ease}
+.profile-neutral-controls .profile-compact-row.editing button{transform:rotate(-10deg)}
+.profile-neutral-controls .profile-compact-tab{border:1px solid var(--profile-neutral-edge);border-radius:12px;padding:5px 10px;color:inherit;cursor:pointer;text-transform:capitalize;font-size:12px}
