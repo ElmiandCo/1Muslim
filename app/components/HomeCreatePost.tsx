@@ -1,5 +1,6 @@
-import {currentPostTheme} from "../lib/post-theme";
 "use client";
+import {currentPostTheme} from "../lib/post-theme";
+
 import {useEffect,useState} from "react";
 import {useRouter} from "next/navigation";
 import {createClient} from "../../utils/supabase/client";
