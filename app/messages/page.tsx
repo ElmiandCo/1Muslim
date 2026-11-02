@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import ExpressionKeyboard from "../components/ExpressionKeyboard";
 import HomeMessagesChooser from "../components/HomeMessagesChooser";
-import HudHudCollapsibleNav from "../components/HudHudCollapsibleNav";
 import MessengerDesignDemo from "../messenger-design/MessengerDesignClient";
 import ExpressiveText from "../components/ExpressiveText";
 import { ExpressionCelebration, ExpressionSettings, playExpressionSound } from "../components/ExpressionEffects";
@@ -104,7 +103,7 @@ export default function MessagesPage(){
  void client.rpc("hudhud_my_free_eligibility").then(({data})=>{if(active)setReward(data?.[0]??null)});
  return()=>{active=false}},[client,uid]);
  useEffect(()=>{if(!uid)return;let active=true;
- const load=async()=>{const {data,error}=await client.from("dm_participants").select("conversation_id,user_id").order("joined_at",{ascending:false});if(active){if(error)setError(error.message);else {const peers=(data??[]).filter(p=>p.user_id!==uid);setThreads(peers);const cids=[...new Set(peers.map(p=>p.conversation_id))];if(cids.length){void client.from("dm_messages").select("conversation_id,body,created_at").in("conversation_id",cids).order("created_at",{ascending:false}).limit(300).then(({data})=>{if(active){const previews:Record<string,string>={};for(const m of data??[]){if(!(m.conversation_id in previews))previews[m.conversation_id]=m.body||"Media message"}setThreadPreviews(previews)}})}const ids=[...new Set(peers.map(p=>p.user_id))];if(ids.length){const {data:profiles,error:profileError}=await client.from("profiles").select("id,display_name,username,gender,avatar_gender,avatar_config").in("id",ids);if(active){if(profileError){setError("Unable to load member names: "+profileError.message)}else{setNames(Object.fromEntries((profiles??[]).map(p=>[p.id,p.display_name?.trim()||p.username?.trim()||"Member"])));setAvatars(Object.fromEntries((profiles??[]).map(p=>{const config=p.avatar_config as {selectedAvatarUrl?:string;adminAvatarUrl?:string;gender?:string}|null;const safe=(url?:string)=>url&&(/^(https:\/\/)/.test(url)||/^\/assets\/avatars\/[a-zA-Z0-9._-]+$/.test(url))?url:"";return [p.id,safe(config?.selectedAvatarUrl)||safe(config?.adminAvatarUrl)||(String(config?.gender||p.avatar_gender||p.gender||"male").toLowerCase()==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg")]})))}}}}}};
+ const load=async()=>{const {data,error}=await client.from("dm_participants").select("conversation_id,user_id").order("joined_at",{ascending:false});if(active){if(error)setError(error.message);else {const peers=(data??[]).filter(p=>p.user_id!==uid);setThreads(peers);const cids=[...new Set(peers.map(p=>p.conversation_id))];if(cids.length){void client.from("dm_messages").select("conversation_id,body,created_at").in("conversation_id",cids).order("created_at",{ascending:false}).limit(300).then(({data})=>{if(active){const previews:Record<string,string>={};for(const m of data??[]){if(!(m.conversation_id in previews))previews[m.conversation_id]=m.body||"Media message"}setThreadPreviews(previews)}})}const ids=[...new Set(peers.map(p=>p.user_id))];if(ids.length){const {data:profiles,error:profileError}=await client.from("profiles").select("id,display_name,username,gender,avatar_gender,avatar_config").in("id",ids);if(active){if(profileError){const {data:basicProfiles,error:basicError}=await client.from("profiles").select("id,display_name,username").in("id",ids);if(active){if(basicError)setError("Unable to load member names: "+basicError.message);else setNames(prev=>({...prev,...Object.fromEntries((basicProfiles??[]).map(p=>[p.id,p.display_name?.trim()||p.username?.trim()||"Member"]))}))}}else{setNames(prev=>({...prev,...Object.fromEntries((profiles??[]).map(p=>[p.id,p.display_name?.trim()||p.username?.trim()||"Member"]))}));setAvatars(Object.fromEntries((profiles??[]).map(p=>{const config=p.avatar_config as {selectedAvatarUrl?:string;adminAvatarUrl?:string;gender?:string}|null;const safe=(url?:string)=>url&&(/^(https:\/\/)/.test(url)||/^\/assets\/avatars\/[a-zA-Z0-9._-]+$/.test(url))?url:"";return [p.id,safe(config?.selectedAvatarUrl)||safe(config?.adminAvatarUrl)||(String(config?.gender||p.avatar_gender||p.gender||"male").toLowerCase()==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg")]})))}}}}}};
  load();const timer=window.setInterval(()=>{void load()},5000);return()=>{active=false;window.clearInterval(timer)};
  },[client,uid]);
  useEffect(()=>{if(!selected)return;let active=true;setMessages([]);setReactions([]);setMediaUrls({});setReplyTo(null);setStatus(null);
@@ -227,14 +226,14 @@ export default function MessagesPage(){
  if(loadingAuth)return <main style={{padding:32}}>Loading messages…</main>;
  if(!uid)return <MessengerDesignDemo/>;
  if(uid&&!selected)return <MessengerDesignDemo liveThreads={Array.from(new Set(threads.map(t=>t.conversation_id))).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return {id:cid,name:names[peer]||"Member",avatar:avatars[peer]||"",preview:threadPreviews[cid]||"Start chatting",unread:unreadThreads[cid]||0}})} onOpenThread={setSelected}/>;
- return <main className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"20px auto",padding:"0 12px",color:"var(--text,#f4f4f5)"}}><style>{`
+ return <main onClickCapture={e=>{if((e.target as HTMLElement).closest("[data-messenger-new-group]"))setNewChatOpen(true)}} className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"20px auto",padding:"0 12px",color:"var(--text,#f4f4f5)"}}><style>{`
 .omMessengerTopNav{display:flex;gap:4px;padding:5px;margin:0 0 12px;border-radius:17px;background:rgba(4,52,41,.92);border:1px solid #d7bb7966;overflow-x:auto;scrollbar-width:none}
 .omMessengerTopNav a{flex:1;min-width:45px;padding:8px 3px;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:12px;text-decoration:none;color:#f3e7c8;font-size:19px}
 .omMessengerTopNav a span{font-size:10px}
 .omMessengerTopNav a[aria-current="page"]{background:#087e5a;color:white}
 @media(max-width:700px){.omImessagePage.omMessengerUnified .omMessengerTop{height:auto!important;min-height:96px!important}.omMessengerTopNav a span{font-size:9px}.omImessagePage.omMessengerUnified .omMessengerShell--chat{height:calc(100dvh - 215px)!important;min-height:300px!important}.omImessagePage.omMessengerUnified .omMessageComposer{position:relative;z-index:3}}
 `}</style><div className="omMessengerPattern" aria-hidden="true"/><div className="omMessengerOrnaments" aria-hidden="true"><span className="omMessengerOrnamentNight"/><span className="omMessengerOrnamentDay"/></div>
- <HudHudCollapsibleNav/><button className="omMessengerNewButton" type="button" onClick={()=>setNewChatOpen(v=>!v)} aria-label="Create message or group" aria-expanded={newChatOpen}>＋</button>
+ <button className="omMessengerNewButton" type="button" onClick={()=>setNewChatOpen(v=>!v)} aria-label="Create message or group" aria-expanded={newChatOpen}>＋</button>
 
  <div className={"omMessengerShell "+(selected?"omMessengerShell--chat":"omMessengerShell--list")} style={{display:"grid",gridTemplateColumns:"minmax(220px,1fr) minmax(0,2fr)",minHeight:560,border:"1px solid #64748b55",borderRadius:28,overflow:"hidden"}}> {selected&&<nav className="omMobileThreadStrip" aria-label="Switch conversations">{Array.from(new Set(threads.map(t=>t.conversation_id))).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return <button key={cid} type="button" className={"omMobileThread "+(selected===cid?"isActive":"")} onClick={()=>setSelected(cid)}><span className="omMobileThreadAvatar">{avatars[peer]?<img src={avatars[peer]} alt=""/>:"☪"}</span><strong>{names[peer]||"Member"}</strong><small>{threadPreviews[cid]||"Start chatting"}</small></button>})}</nav>}
  <aside className="omConversationList" style={{padding:18,borderRight:"1px solid #64748b55"}}><section className="omMessengerDiscovery" aria-label="Explore Ummah members"><div className="omMessengerDiscoveryTitle"><strong>✦ Connect with the Ummah</strong><small>Discover members</small></div><HomeMessagesChooser/></section>
@@ -728,6 +727,36 @@ body:has(.omImessagePage) .muslimMobileDock{display:none!important}
  }
  .muslimMessengerFrame .omMessengerShell--chat .omComposerTools,
  .muslimMessengerFrame .omMessengerShell--chat .omComposerSettings{flex-shrink:0!important}
+}
+
+/* Back-page Messenger: respect global theme tokens, and never force a white mobile chat. */
+.muslimMessengerFrame .omMessengerUnified{--dm-accent:var(--theme-primary,var(--canvas-control-accent,#38d6a0));--dm-night:#091613;--dm-glass:color-mix(in srgb,var(--dm-accent) 9%,#0b1518 91%)}
+.muslimMessengerFrame .omMessengerUnified.omMessengerNight .omMessengerShell,
+.muslimMessengerFrame .omMessengerUnified.omMessengerNight .omChatPane{background:var(--dm-glass)!important;border-color:color-mix(in srgb,var(--dm-accent) 30%,transparent)!important;color:#f3faf7!important}
+.muslimMessengerFrame .omMessengerUnified.omMessengerNight .omMessagesFeed{background:linear-gradient(155deg,color-mix(in srgb,var(--dm-accent) 7%,#0b1518),#0b1518)!important;color:#f3faf7!important}
+.muslimMessengerFrame .omMessengerUnified.omMessengerNight .omChatHeader,
+.muslimMessengerFrame .omMessengerUnified.omMessengerNight .omMessageComposer{background:color-mix(in srgb,var(--dm-accent) 10%,#0c1b1a)!important;border-color:color-mix(in srgb,var(--dm-accent) 30%,transparent)!important}
+.muslimMessengerFrame .omMessengerUnified.omMessengerNight .omMessageComposer input[aria-label="Message"]{background:#071715!important;color:#fff!important;border-color:color-mix(in srgb,var(--dm-accent) 45%,transparent)!important}
+.muslimMessengerFrame .omMessengerUnified .omComposerSend,
+.muslimMessengerFrame .omMessengerUnified .omMessengerFilters button.active{background:var(--dm-accent)!important;border-color:var(--dm-accent)!important;color:#061510!important}
+@media(max-width:700px){
+ .muslimMessengerFrame .omMessengerUnified.omMessengerNight .omMessengerShell--chat>.omChatPane{background:var(--dm-glass)!important}
+ .muslimMessengerFrame .omMessengerUnified.omMessengerNight .omMessengerShell--chat .omMessageComposer{background:color-mix(in srgb,var(--dm-accent) 10%,#0c1b1a)!important;border-top-color:color-mix(in srgb,var(--dm-accent) 30%,transparent)!important}
+ .muslimMessengerFrame .omMessengerUnified.omMessengerDay .omMessengerShell--chat>.omChatPane{background:linear-gradient(165deg,#f9fdfb,#edf8f3)!important}
+}
+
+/* Full-screen app viewport: only the message feed scrolls, never the document. */
+body:has(.muslimMessengerFrame){overflow:hidden!important}
+.muslimMessengerFrame{height:100dvh!important;max-height:100dvh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+.muslimMessengerFrame>.omImessagePage.omMessengerUnified{height:calc(100dvh - 74px - env(safe-area-inset-bottom,0px))!important;max-height:none!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;margin:0 auto!important;padding:8px 10px!important;width:100%!important}
+.muslimMessengerFrame .omMessengerShell--chat{flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;margin:0 auto!important;width:100%!important}
+.muslimMessengerFrame .omMessengerShell--chat>.omChatPane{min-height:0!important;max-height:100%!important;overflow:hidden!important}
+.muslimMessengerFrame .omMessengerShell--chat .omMessagesFeed{min-height:0!important;flex:1 1 0!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+@media(max-width:700px){
+ .muslimMessengerFrame>.omImessagePage.omMessengerUnified:has(.omMessengerShell--chat){height:calc(100dvh - 74px - env(safe-area-inset-bottom,0px))!important;overflow:hidden!important;padding:4px 8px!important}
+ .muslimMessengerFrame .omImessagePage:has(.omMessengerShell--chat) .omMessengerTop{height:auto!important;min-height:0!important;flex-shrink:0!important}
+ .muslimMessengerFrame .omMessengerShell--chat{flex:1 1 0!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important}
+ .muslimMessengerFrame .omMessengerShell--chat>.omChatPane{flex:1 1 0!important;height:auto!important;min-height:0!important;max-height:100%!important}
 }
 `}</style>
  </main>
