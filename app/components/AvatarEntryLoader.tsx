@@ -25,7 +25,7 @@ export default function AvatarEntryLoader({ready,onComplete}:{ready:boolean;onCo
  const [phase,setPhase]=useState<"orbit"|"black"|"reveal">("orbit");
  const [frame,setFrame]=useState(0);
  const exitArmed=useRef(false);
- const exitTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const exitTimer=useRef<number|null>(null);
  useEffect(()=>()=>{if(exitTimer.current)clearTimeout(exitTimer.current)},[]);
  useEffect(()=>{
   if(phase!=="orbit")return;
