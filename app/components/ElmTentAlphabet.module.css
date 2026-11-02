@@ -138,3 +138,9 @@
  cursor:not-allowed!important;
  filter:saturate(.5);
 }
+
+/* Lesson 2 phonetic calligraphy: borderless, centered like the reference lettering. */
+.quizPronunciation{display:flex;align-items:center;justify-content:center;gap:clamp(18px,5vw,40px);min-height:88px;width:100%;padding:0 6px}
+.quizPronunciation .quizSpeaker{flex:0 0 70px!important;margin:0!important}
+.quizPhonetic{display:block;flex:1 1 auto;min-width:0;max-width:380px;text-align:center;font-family:"URW Chancery L","Apple Chancery","Segoe Script","Brush Script MT",cursive;font-style:italic;font-weight:500;font-size:clamp(46px,10vw,76px);line-height:1.12;letter-spacing:.015em;color:#fffaf5;text-shadow:0 2px 10px rgba(0,0,0,.24);background:none!important;border:0!important;box-shadow:none!important;overflow-wrap:normal;white-space:nowrap}
+@media(max-width:420px){.quizPronunciation{gap:12px}.quizPhonetic{font-size:clamp(38px,10vw,58px)}}
