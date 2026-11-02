@@ -183,32 +183,49 @@ function DailyPostsApp({active}:{active:boolean}){
  useEffect(()=>{videoRefs.current.forEach((v,id)=>{if(id===playingVideo&&active&&!selected&&!fypStart&&!document.hidden){v.muted=true;void v.play().catch(()=>{});}else v.pause()})},[playingVideo,active,selected,fypStart,posts]);
  useEffect(()=>{const onVisibility=()=>{if(document.hidden)videoRefs.current.forEach(v=>v.pause());else if(playingVideo&&!fypStart){const v=videoRefs.current.get(playingVideo);if(v)void v.play().catch(()=>{})}};document.addEventListener("visibilitychange",onVisibility);return()=>document.removeEventListener("visibilitychange",onVisibility)},[playingVideo,fypStart]);
  const autoPause=useRef(0);
- const autoNextAt=useRef(0);
  useEffect(()=>{
   if(!active||selected||expandedImage||fypStart)return;
   const feed=feedRef.current;if(!feed)return;
-  const interrupt=()=>{autoPause.current=Date.now()+10000;autoNextAt.current=Date.now()+10000};
+  let frame=0,last=0,elapsed=0,activeIndex=-1;
+  let scroll:HTMLElement|null=feed;
+  while(scroll&&!(scroll.scrollHeight>scroll.clientHeight+40&&/auto|scroll/.test(getComputedStyle(scroll).overflowY)))scroll=scroll.parentElement;
+  if(!scroll)return;
+  const viewport=scroll;
+  const cards=()=>Array.from(feed.querySelectorAll<HTMLElement>(".community-post-card"));
+  const clearMotion=()=>cards().forEach(card=>card.classList.remove("ummah-reading-main","ummah-reading-before","ummah-reading-after"));
+  const interrupt=()=>{autoPause.current=performance.now()+10000;elapsed=0;activeIndex=-1;clearMotion()};
   const events=["touchstart","pointerdown","wheel","keydown"] as const;
-  events.forEach(e=>window.addEventListener(e,interrupt,{passive:true}));
-  const timer=window.setInterval(()=>{
-   if(playingVideo&&finishedVideo!==playingVideo)return;
-   if(document.hidden||Date.now()<autoPause.current||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
-   let scroll:HTMLElement|null=feed;
-   while(scroll&&!(scroll.scrollHeight>scroll.clientHeight+40&&/auto|scroll/.test(getComputedStyle(scroll).overflowY)))scroll=scroll.parentElement;
-   if(!scroll)return;
-   const cards=Array.from(feed.querySelectorAll<HTMLElement>(".community-post-card"));if(cards.length<2)return;
-   const top=scroll.getBoundingClientRect().top;
-   const current=cards.reduce((best,card)=>Math.abs(card.getBoundingClientRect().top-top)<Math.abs(best.getBoundingClientRect().top-top)?card:best,cards[0]);
-   const text=current.querySelector(".ummah-post-package p")?.textContent||"";
-   const readingMs=Math.max(6500,Math.min(22000,4500+text.length*52));
-   if(Date.now()<autoNextAt.current)return;
-   autoNextAt.current=Date.now()+readingMs;
-   current.classList.add("ummah-reading-transition");window.setTimeout(()=>current.classList.remove("ummah-reading-transition"),1100);
-   const next=cards.find(card=>card.getBoundingClientRect().top>top+70)||cards[0];
-   const target=scroll.scrollTop+next.getBoundingClientRect().top-top-8;
-   scroll.scrollTo({top:target,behavior:"smooth"});
-  },1000);
-  return()=>{clearInterval(timer);events.forEach(e=>window.removeEventListener(e,interrupt))};
+  events.forEach(event=>window.addEventListener(event,interrupt,{passive:true}));
+  const tick=(now:number)=>{
+   const dt=last?Math.min(64,now-last):0;last=now;
+   if(document.hidden||window.matchMedia("(prefers-reduced-motion: reduce)").matches||now<autoPause.current){frame=requestAnimationFrame(tick);return}
+   const all=cards();if(all.length<2){frame=requestAnimationFrame(tick);return}
+   const top=viewport.getBoundingClientRect().top;
+   const closest=all.reduce((best,card,index)=>Math.abs(card.getBoundingClientRect().top-top)<Math.abs(all[best].getBoundingClientRect().top-top)?index:best,0);
+   if(activeIndex<0){activeIndex=closest;elapsed=0}
+   const card=all[activeIndex]||all[closest];
+   const body=card.querySelector(".ummah-post-package p")?.textContent||"";
+   const isVideo=Boolean(card.querySelector("video"));
+   // Four seconds for short posts, up to eight for long posts.
+   const duration=Math.max(4000,Math.min(8000,4000+Math.max(0,body.length-35)*16));
+   if(isVideo&&playingVideo&&finishedVideo!==playingVideo){frame=requestAnimationFrame(tick);return}
+   elapsed+=dt;
+   const progress=Math.min(1,elapsed/duration);
+   clearMotion();
+   card.classList.add("ummah-reading-main");
+   if(all[activeIndex-1])all[activeIndex-1].classList.add("ummah-reading-before");
+   if(all[activeIndex+1])all[activeIndex+1].classList.add("ummah-reading-after");
+   // Continuous cinematic drift, with a gentle ease into the next post.
+   const next=all[activeIndex+1]||all[0];
+   const distance=next.getBoundingClientRect().top-card.getBoundingClientRect().top;
+   const drift=distance*(.12*progress+.88*Math.pow(Math.max(0,(progress-.68)/.32),2));
+   const target=viewport.scrollTop+card.getBoundingClientRect().top-top+drift;
+   viewport.scrollTop+=(target-viewport.scrollTop)*Math.min(1,dt/130);
+   if(progress>=1){activeIndex=(activeIndex+1)%all.length;elapsed=0;clearMotion()}
+   frame=requestAnimationFrame(tick);
+  };
+  frame=requestAnimationFrame(tick);
+  return()=>{cancelAnimationFrame(frame);clearMotion();events.forEach(event=>window.removeEventListener(event,interrupt))};
  },[active,selected,expandedImage,posts.length,playingVideo,finishedVideo,fypStart]);
 
  useEffect(()=>{if(!active)return;let alive=true;
