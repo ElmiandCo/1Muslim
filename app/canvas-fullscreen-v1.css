@@ -2092,11 +2092,11 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 .oneMuslimDesktopMessagesRail { display:none; }
 @media (min-width:1200px) and (min-height:560px) {
   [data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage) > .oneMuslimLiveStage {
-    left:0!important;right:auto!important;width:60%!important;
+    left:0!important;right:auto!important;width:55%!important;
   }
   [data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage) > .oneMuslimDesktopMessagesRail {
     display:flex!important;position:absolute!important;top:0;right:0;bottom:0;
-    width:40%;min-width:0;box-sizing:border-box;flex-direction:column;
+    width:45%;min-width:0;box-sizing:border-box;flex-direction:column;
     overflow-y:auto;overscroll-behavior:contain;z-index:21;
     padding:12px;gap:12px;border-left:1px solid rgba(220,190,105,.28);
     background:rgba(8,13,19,.25);backdrop-filter:blur(14px);
@@ -2104,4 +2104,21 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   }
   .oneMuslimDesktopMessagesRailTitle {font-size:15px;font-weight:700;letter-spacing:.04em;}
   .oneMuslimDesktopMessagesRail > :not(.oneMuslimDesktopMessagesRailTitle) {min-width:0;width:100%;}
+}
+
+/* Compact desktop Live Messages rail; no global Messenger changes. */
+@media (min-width:1200px) and (min-height:560px) {
+ .oneMuslimDesktopMessagesRail{padding:8px!important;gap:4px!important;border-radius:18px!important;overflow:hidden!important;}
+ .oneMuslimDesktopMessagesRailTitle{font-size:13px!important;margin:0 4px 2px!important;}
+ .oneMuslimDesktopMessagesRail [class*="heading"]{display:none!important;}
+ .oneMuslimDesktopMessagesRail [class*="root"]{min-height:0!important;height:100%!important;display:flex!important;flex-direction:column!important;}
+ .oneMuslimDesktopMessagesRail [class*="panel"]{flex:1 1 auto!important;height:auto!important;min-height:0!important;margin:0!important;width:100%!important;border-radius:18px!important;overflow:hidden!important;}
+ .oneMuslimDesktopMessagesRail [class*="expand"]{display:none!important;}
+ .oneMuslimDesktopMessagesRail [class*="composeHint"]{display:none!important;}
+ .oneMuslimDesktopMessagesRail [class*="newChatBack"]{font-size:0!important;min-height:30px!important;}
+ .oneMuslimDesktopMessagesRail [class*="newChatBack"]::before{content:"←";font-size:19px!important;}
+ .oneMuslimDesktopMessagesRail [class*="title"]{padding-top:7px!important;padding-bottom:7px!important;}
+ .oneMuslimDesktopMessagesRail [class*="search"]{padding-top:8px!important;padding-bottom:8px!important;margin-bottom:6px!important;}
+ .oneMuslimDesktopMessagesRail [class*="tabs"]{padding-bottom:6px!important;}
+ .oneMuslimDesktopMessagesRail [class*="threadHeader"]{min-height:50px!important;padding:7px!important;}
 }
