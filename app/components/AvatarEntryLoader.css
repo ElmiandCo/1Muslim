@@ -12,7 +12,9 @@
 .avatarEntryProgress i{display:block;width:35%;height:100%;background:linear-gradient(90deg,transparent,#ffe3a2,#d8ac53);box-shadow:0 0 13px #ffdb8b;animation:avatarEntrySweep 2.6s ease-in-out infinite}
 .avatarEntry--black .avatarEntryStage,.avatarEntry--black .avatarEntryBrand,.avatarEntry--black .avatarEntryCaption,.avatarEntry--black .avatarEntryProgress{opacity:0;transition:opacity .45s ease}
 .avatarEntry--reveal{opacity:0;transition:opacity 1.2s ease}
-@keyframes avatarEntryGoldPulse{50%{filter:drop-shadow(0 0 16px #f6c774aa);opacity:.78}}\n@keyframes avatarEntrySpark{to{offset-distance:100%}}
+@keyframes avatarEntryGoldPulse{50%{filter:drop-shadow(0 0 16px #f6c774aa);opacity:.78}}
+@keyframes avatarEntrySpark{to{offset-distance:100%}}
 @keyframes avatarEntrySweep{0%{transform:translateX(-110%)}100%{transform:translateX(330%)}}
 @media(prefers-reduced-motion:reduce){.avatarEntry *{animation:none!important;transition:none!important}.avatarEntryOrbitSpark{display:none}}
-\n.avatarEntrySignup{position:absolute;bottom:max(34px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:500 14px system-ui,sans-serif;color:#d9d0bb;letter-spacing:.02em}.avatarEntrySignup button{border:0;background:transparent;color:#f7d994;font:700 14px system-ui,sans-serif;text-decoration:underline;text-underline-offset:4px;padding:9px;cursor:pointer}.avatarEntry--black .avatarEntrySignup{opacity:0;transition:opacity .45s ease}\n
+
+.avatarEntrySignup{position:absolute;bottom:max(34px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:500 14px system-ui,sans-serif;color:#d9d0bb;letter-spacing:.02em}.avatarEntrySignup button{border:0;background:transparent;color:#f7d994;font:700 14px system-ui,sans-serif;text-decoration:underline;text-underline-offset:4px;padding:9px;cursor:pointer}.avatarEntry--black .avatarEntrySignup{opacity:0;transition:opacity .45s ease}
