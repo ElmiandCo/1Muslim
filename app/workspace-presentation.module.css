@@ -894,26 +894,53 @@
 @media(max-width:600px){.guestBannerSlot{bottom:clamp(110px,32dvh,260px)!important;width:calc(100vw - 38px)!important}}
 @media(prefers-reduced-motion:reduce){.guestBannerSlot > :global(aside){animation:none!important}}
 
-/* Qur'an Studio: language and four controls share the upper toolbar.
-   Keep the verse reading canvas tall; reclaim only half of the displaced row. */
-.quranVerseArticle:has(:global(.quranLanguageToggle)):has(:global(.quranHomeControlRow)){padding-top:0!important}
-.quranVerseArticle :global(.quranLanguageToggle){top:clamp(16px,2.5vh,28px)!important;left:clamp(8px,1.4vw,16px)!important;transform:scale(.95);transform-origin:left center;z-index:27!important}
-.quranVerseArticle :global(.quranHomeControlRow){
- width:calc(100% - clamp(145px,27%,205px))!important;
- max-width:none!important;
- margin:clamp(16px,2.5vh,28px) 8px clamp(24px,3.8vh,40px) auto!important;
- grid-template-columns:minmax(32px,.6fr) minmax(32px,.6fr) minmax(0,1.3fr) minmax(0,1.3fr)!important;
- gap:clamp(3px,.65vw,8px)!important;
- transform:scale(.95);
- transform-origin:right top;
+/* Qur'an Studio: one toolbar, one baseline. Remove legacy separate-row offsets. */
+.quranVerseArticle:has(:global(.quranStudioToolbar)){justify-content:center!important}
+.quranVerseArticle :global(.quranStudioToolbar){
+ display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;
+ align-items:center!important;column-gap:6px!important;width:100%!important;
+ min-width:0!important;max-width:100%!important;align-self:stretch!important;
+ flex:0 0 auto!important;margin:0 0 10px!important;padding:0!important;
 }
-.quranVerseArticle :global(.quranHomeControlRow .quranControlCell){min-width:0!important;display:flex!important;justify-content:center!important}
-.quranVerseArticle :global(.quranHomeControlRow .quranControlCell button){width:clamp(32px,4.2vw,42px)!important;height:clamp(32px,4.2vw,42px)!important;min-width:0!important;min-height:0!important}
-.quranVerseArticle :global(.quranHomeControlRow .quranHomeSelectors details summary){font-size:clamp(10px,1.6vw,15px)!important;min-height:36px!important;padding:7px 2px!important}
+.quranVerseArticle :global(.quranStudioToolbar>.quranLanguageToggle){
+ position:relative!important;inset:auto!important;top:auto!important;left:auto!important;
+ transform:none!important;grid-column:1!important;grid-row:1!important;
+ align-self:center!important;justify-self:start!important;margin:0!important;
+ padding:4px 6px!important;white-space:nowrap!important;
+}
+.quranVerseArticle :global(.quranStudioToolbar>.quranHomeControlRow){
+ position:relative!important;inset:auto!important;top:auto!important;left:auto!important;
+ transform:none!important;grid-column:2!important;grid-row:1!important;
+ display:grid!important;grid-template-columns:34px 34px minmax(0,1fr) minmax(0,1fr)!important;
+ align-items:center!important;justify-content:stretch!important;gap:4px!important;
+ width:100%!important;max-width:none!important;min-width:0!important;
+ margin:0!important;padding:0!important;
+}
+.quranVerseArticle :global(.quranStudioToolbar .quranControlCell){
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ min-width:0!important;grid-row:1!important;
+}
+.quranVerseArticle :global(.quranStudioToolbar .quranControlCell>button){
+ position:relative!important;inset:auto!important;transform:none!important;
+ width:34px!important;min-width:34px!important;height:36px!important;min-height:36px!important;
+ margin:0!important;
+}
+.quranVerseArticle :global(.quranStudioToolbar .quranHomeSelectors){display:contents!important}
+.quranVerseArticle :global(.quranStudioToolbar .quranHomeSelectors>details){
+ grid-row:1!important;min-width:0!important;max-width:100%!important;width:100%!important;
+}
+.quranVerseArticle :global(.quranStudioToolbar .quranHomeSelectors>details>summary){
+ min-height:36px!important;padding:6px 2px!important;font-size:clamp(10px,2.4vw,13px)!important;
+}
 @media(max-width:440px){
- .quranVerseArticle :global(.quranLanguageToggle){left:5px!important;transform:scale(.88)}
- .quranVerseArticle :global(.quranHomeControlRow){width:calc(100% - 126px)!important;gap:2px!important;grid-template-columns:30px 30px minmax(0,1fr) minmax(0,1fr)!important;transform:scale(.95)}
- .quranVerseArticle :global(.quranHomeControlRow .quranHomeSelectors details summary){font-size:10px!important}
+ .quranVerseArticle :global(.quranStudioToolbar){column-gap:4px!important}
+ .quranVerseArticle :global(.quranStudioToolbar>.quranLanguageToggle){padding:3px 4px!important;font-size:9px!important}
+ .quranVerseArticle :global(.quranStudioToolbar>.quranHomeControlRow){
+ grid-template-columns:30px 30px minmax(0,1fr) minmax(0,1fr)!important;gap:3px!important;
+ }
+ .quranVerseArticle :global(.quranStudioToolbar .quranControlCell>button){
+ width:30px!important;min-width:30px!important;height:34px!important;min-height:34px!important;
+ }
 }
 
 /* Day mode only: Quran Arabic follows --theme-accent / data-muslim-theme, never profile background.\n   Sapphire and Nur Blue (sapphire-mosaic) both resolve to sapphire via ProfileThemeSync.\n   Quran Arabic follows the selected theme in a deeper, readable shade.
