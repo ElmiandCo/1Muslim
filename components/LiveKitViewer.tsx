@@ -79,7 +79,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       setError("");
       setRetryAttempt(n=>n+1);
     }
-  },[reconnectSignal,embedded,hasCameraVideo,hasScreenVideo]);
+  },[reconnectSignal]);
 
   const [isAudioBroadcast,setIsAudioBroadcast] = useState(false);
   const [hasRemoteAudio,setHasRemoteAudio] = useState(false);
