@@ -79,7 +79,8 @@ export default function Home(){
  useEffect(()=>()=>{if(shopTimer.current)clearTimeout(shopTimer.current)},[]);
  useEffect(()=>{try{sessionStorage.setItem("1muslim:homepage-visited-v1","yes")}catch{}},[]);
  const [homeSignedIn,setHomeSignedIn]=useState<boolean|null>(null);
- const [entryLoading,setEntryLoading]=useState(()=>{if(typeof window==="undefined")return true;try{return sessionStorage.getItem("1muslim:homepage-visited-v1")!=="yes"}catch{return true}});
+ const [entryLoading,setEntryLoading]=useState(true);
+ useLayoutEffect(()=>{try{if(sessionStorage.getItem("1muslim:homepage-visited-v1")==="yes")setEntryLoading(false)}catch{}},[]);
  const [entryReady,setEntryReady]=useState(false);
  useEffect(()=>{if(homeSignedIn!==null)setEntryReady(true)},[homeSignedIn]);
  const [adminHudHud,setAdminHudHud]=useState(false);
