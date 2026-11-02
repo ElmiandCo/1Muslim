@@ -140,14 +140,14 @@ type UmmahComment={id:string;post_id:string;parent_id:string|null;name:string;bo
   const renderPostBody=(body:string)=>{
    // The Add Verse selector inserts a reference, Arabic, and translation as separate paragraphs.
    // Highlight only the selected verse segment; preserve the author's own words separately.
-   const match=/Qur[’']an\\s+\\d{1,3}:\\d{1,3}/i.exec(body);
+   const match=/Qur[’']an\s+\d{1,3}:\d{1,3}/i.exec(body);
    if(!match)return body;
    const before=body.slice(0,match.index);
-   const after=body.slice(match.index+match[0].length).replace(/^\\s*\\n+/,"");
-   const parts=after.split(/\\n\\s*\\n/);
-   const arabic=parts[0]&&/[\\u0600-\\u06ff]/.test(parts[0])?parts.shift():"";
+   const after=body.slice(match.index+match[0].length).replace(/^\s*\n+/,"");
+   const parts=after.split(/\n\s*\n/);
+   const arabic=parts[0]&&/[\u0600-\u06ff]/.test(parts[0])?parts.shift():"";
    const translation=parts.length?parts.shift():"";
-   const rest=parts.join("\\n\\n");
+   const rest=parts.join("\n\n");
    return <>{before&&<span className="ummah-author-words">{before}</span>}<span className="ummah-verse-block" lang="ar"><span className="ummah-verse-label">۞ {match[0]} · Qur’an</span>{arabic&&<span className="ummah-verse-arabic" dir="rtl">{arabic}</span>}{translation&&<span className="ummah-verse-translation" lang="en">{translation}</span>}</span>{rest&&<span className="ummah-author-words">{rest}</span>}</>;
   };
 
