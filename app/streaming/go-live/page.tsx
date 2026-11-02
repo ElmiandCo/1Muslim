@@ -1246,9 +1246,17 @@ export default function GoLivePage() {
     if(!liveFeedback.trim()||feedbackBusy||feedbackSent)return;
     setFeedbackBusy(true);setFeedbackNotice("");
     try{
-      const response=await fetch("/api/live-feedback",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({feedback:liveFeedback.trim(),rating:liveRating})});
-      const result=await response.json();
-      if(!response.ok)throw new Error(result.error||"Could not send feedback");
+      // Use the same proven admin DM path as VisitorFeedback.
+      const db=createClient();
+      const {data:{user},error:authError}=await db.auth.getUser();
+      if(authError||!user)throw new Error("Please sign in to send feedback.");
+      const adminId="56373a95-38dc-4457-b6eb-0070af1630f8";
+      if(user.id===adminId)throw new Error("The admin account cannot message itself.");
+      const {data:conversationId,error:conversationError}=await db.rpc("dm_start_conversation",{other_user:adminId});
+      if(conversationError||!conversationId)throw new Error("Could not open the feedback conversation. Please try again.");
+      const body="[1Muslim Live feedback"+(liveRating?" · "+liveRating+"/5 stars":"")+"]\\n"+liveFeedback.trim();
+      const {error:sendError}=await db.from("dm_messages").insert({conversation_id:conversationId,sender_id:user.id,body});
+      if(sendError)throw new Error("Could not send your feedback. Please try again.");
       setFeedbackSent(true);setFeedbackNotice("Sent privately to HudHud admin.");
     }catch(error){setFeedbackNotice(error instanceof Error?error.message:"Feedback could not be sent.");}
     finally{setFeedbackBusy(false);}

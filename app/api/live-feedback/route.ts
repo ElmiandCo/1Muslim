@@ -15,14 +15,7 @@ export async function POST(request:Request){
  const key=process.env.SUPABASE_SERVICE_ROLE_KEY;
  if(!url||!key)return NextResponse.json({error:"Feedback service unavailable"},{status:503});
  const admin=createServiceClient(url,key,{auth:{persistSession:false}});
- let adminId:string|undefined;
- for(let page=1;page<=20&&!adminId;page++){
-  const {data,error}=await admin.auth.admin.listUsers({page,perPage:100});
-  if(error)return NextResponse.json({error:"Admin lookup failed"},{status:503});
-  adminId=data.users.find(u=>u.email?.toLowerCase()==="hudhudbyelmi@gmail.com")?.id;
-  if(data.users.length<100)break;
- }
- if(!adminId)return NextResponse.json({error:"Admin recipient unavailable"},{status:503});
+ const adminId="56373a95-38dc-4457-b6eb-0070af1630f8";
  if(adminId===user.id)return NextResponse.json({error:"Cannot DM yourself"},{status:400});
  const {data:existing}=await admin.from("dm_participants").select("conversation_id").eq("user_id",user.id).limit(200);
  let conversationId:string|undefined;
