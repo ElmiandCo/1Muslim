@@ -21,6 +21,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
   const screenVideoRef = useRef<HTMLVideoElement>(null);
   const reflectionRef = useRef<HTMLCanvasElement>(null);
   const [viewMode,setViewMode] = useState<CinemaMode>(initialViewMode);
+  useEffect(()=>{if(embedded)setViewMode(initialViewMode)},[embedded,initialViewMode]);
   const [hasCameraVideo,setHasCameraVideo] = useState(false);
   const [hasScreenVideo,setHasScreenVideo] = useState(false);
   const [shareLayout,setShareLayout] = useState<"pip"|"split">("pip");
