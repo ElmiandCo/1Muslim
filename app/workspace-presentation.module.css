@@ -915,3 +915,17 @@
  .quranVerseArticle :global(.quranHomeControlRow){width:calc(100% - 126px)!important;gap:2px!important;grid-template-columns:30px 30px minmax(0,1fr) minmax(0,1fr)!important;transform:scale(.95)}
  .quranVerseArticle :global(.quranHomeControlRow .quranHomeSelectors details summary){font-size:10px!important}
 }
+
+/* Day mode only: Quran Arabic follows the selected theme in a deeper, readable shade.
+   Night mode retains the original warm Arabic lettering. */
+:global(html.light) .quranVerseArabic{
+ color:color-mix(in srgb,var(--theme-accent,#22bd83) 52%,#07141b 48%)!important;
+ text-shadow:0 1px 0 rgba(255,255,255,.35)!important;
+ transition:color .45s ease!important;
+}
+:global(html.light[data-muslim-theme="titanium"]) .quranVerseArabic{
+ color:#344354!important;
+}
+:global(html.light[data-muslim-theme="obsidian"]) .quranVerseArabic{
+ color:#71501d!important;
+}
