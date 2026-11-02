@@ -1,5 +1,6 @@
-import {currentPostTheme} from "../../../lib/post-theme";
 "use client";
+import {currentPostTheme} from "../../lib/post-theme";
+
 import {useCallback,useEffect,useRef,useState} from "react";
 import {createClient} from "../../../utils/supabase/client";
 type Take={id:string;blob:Blob;url:string};
