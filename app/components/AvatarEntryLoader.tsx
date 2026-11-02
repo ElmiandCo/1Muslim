@@ -19,7 +19,7 @@ const avatars=[
  ["Default Male","/assets/avatars/default-male.jpg"],
  ["Default Female","/assets/avatars/Default-women.png"],
 ] as const;
-const FRAME=800;
+const FRAME=520;
 const CYCLE=avatars.length*FRAME;
 export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,showSignUp}:{ready:boolean;signedIn:boolean;onComplete:()=>void;onSignUp:()=>void;showSignUp:boolean}){
  const [phase,setPhase]=useState<"waiting"|"orbit"|"black"|"reveal">("waiting");
@@ -49,19 +49,20 @@ export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,sh
   let previous=0;
   const tick=(now:number)=>{
    if(!previous)previous=now;
-   elapsed.current+=Math.min(48,now-previous);\n   if(readyRef.current&&!signedInRef.current&&elapsed.current>=CYCLE){setPhase("black");return;}
+   elapsed.current+=Math.min(48,now-previous);
+   if(readyRef.current&&!signedInRef.current&&elapsed.current>=CYCLE){setPhase("black");return;}
    previous=now;
    const progress=elapsed.current/FRAME;
-   const width=Math.min(175,window.innerWidth*.33);
+   const width=Math.max(300,Math.min(520,window.innerWidth*.95));
    portraits.current.forEach((node,i)=>{
     if(!node)return;
     const angle=(i-progress)*Math.PI*2/avatars.length;
     const depth=Math.cos(angle);
     const x=Math.sin(angle)*width;
-    const y=(1-depth)*21;
-    const scale=.57+.43*(depth+1)/2;
+    const y=(1-depth)*70;
+    const scale=.78+.22*(depth+1)/2;
     node.style.transform=`translate3d(${x}px,${y}px,0) scale(${scale})`;
-    node.style.opacity=String(.32+.68*(depth+1)/2);
+    node.style.opacity=String(Math.max(0,Math.min(1,(depth-.02)*2.5)));
     node.style.zIndex=String(Math.round(50+depth*20));
    });
    raf=requestAnimationFrame(tick);
