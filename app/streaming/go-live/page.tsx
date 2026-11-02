@@ -59,11 +59,12 @@ export default function GoLivePage() {
   useEffect(() => { currentLiveEffectRef.current = visualEffect; const channel = liveEffectChannelRef.current; if (channel) void channel.send({type:"broadcast",event:"effect",payload:{effect:visualEffect}}); }, [visualEffect]);
   useEffect(() => {
     if (!live || !liveStreamIdRef.current) return;
+    const supabase = createClient();
     const channel = supabase.channel("live-effects-" + liveStreamIdRef.current);
     liveEffectChannelRef.current = channel;
     channel.on("broadcast",{event:"request-effect"},()=>{void channel.send({type:"broadcast",event:"effect",payload:{effect:currentLiveEffectRef.current}})}).subscribe(status=>{if(status==="SUBSCRIBED")void channel.send({type:"broadcast",event:"effect",payload:{effect:currentLiveEffectRef.current}})});
     return () => {if(liveEffectChannelRef.current===channel)liveEffectChannelRef.current=null;void supabase.removeChannel(channel)};
-  }, [live, supabase]);
+  }, [live]);
   const lastPreviewTapRef=useRef(0);
   const [studioMode,setStudioMode]=useState<"desktop"|"phone"|"voice">("phone");
   const [micOn, setMicOn] = useState(true);
