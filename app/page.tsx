@@ -19,7 +19,7 @@ import HomeAudioLivePlayer from "./components/HomeAudioLivePlayer";
 import HomeLiveConversation from "./components/HomeLiveConversation";
 import LiveGuestStudio from "../components/LiveGuestStudio";
 
-import {useEffect,useRef,useState} from "react";
+import {useEffect,useLayoutEffect,useRef,useState} from "react";
 import {flushSync,createPortal} from "react-dom";
 import Image from "next/image";
 import {createClient} from "../utils/supabase/client";
@@ -80,6 +80,7 @@ export default function Home(){
  useEffect(()=>{try{sessionStorage.setItem("1muslim:homepage-visited-v1","yes")}catch{}},[]);
  const [homeSignedIn,setHomeSignedIn]=useState<boolean|null>(null);
  const [entryLoading,setEntryLoading]=useState(true);
+ useLayoutEffect(()=>{try{if(sessionStorage.getItem("1muslim:homepage-visited-v1")==="yes")setEntryLoading(false)}catch{}},[]);
  const [entryReady,setEntryReady]=useState(false);
  useEffect(()=>{if(homeSignedIn!==null)setEntryReady(true)},[homeSignedIn]);
  const [adminHudHud,setAdminHudHud]=useState(false);
@@ -685,7 +686,7 @@ const navCollapsedRef=useRef(false);
   return()=>{document.removeEventListener("touchstart",down,true);document.removeEventListener("touchmove",move,true);document.removeEventListener("touchend",end,true);document.removeEventListener("touchcancel",end,true)};
  },[canvasRow,workspacePage,editWidgets]);
 
- return <main data-canvas-fullscreen={canvasFullscreen?"true":"false"} data-widget-motion={motionMode} className={[styles.control,light?styles.day:"",navMotionStarted?(navCollapsed?styles.navMotionCollapsed:styles.navMotionExpanded):""].join(" ")}>{entryLoading&&<AvatarEntryLoader ready={entryReady} showSignUp={homeSignedIn!==true} onSignUp={()=>{setEntryLoading(false);setShahadaOverlay(true)}} onComplete={()=>setEntryLoading(false)}/>}<style jsx global>{`
+ return <main data-canvas-fullscreen={canvasFullscreen?"true":"false"} data-widget-motion={motionMode} className={[styles.control,light?styles.day:"",navMotionStarted?(navCollapsed?styles.navMotionCollapsed:styles.navMotionExpanded):""].join(" ")}>{entryLoading&&<AvatarEntryLoader ready={entryReady} signedIn={homeSignedIn===true} showSignUp={homeSignedIn!==true} onSignUp={()=>{setEntryLoading(false);setShahadaOverlay(true)}} onComplete={()=>setEntryLoading(false)}/>}<style jsx global>{`
 .signedEntryLoading{position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#123e37 0%,#071b22 46%,#020a12 100%);color:#f7e8c5;animation:signedEntryIn .45s ease both}
 .signedEntryAura{position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,#43d9c52a,transparent 70%);filter:blur(18px);animation:signedEntryBreathe 3.4s ease-in-out infinite;pointer-events:none}
 .signedEntryLogo{width:112px;height:112px;display:grid;place-items:center;border-radius:50%;border:1px solid #91e5c877;background:#08282c88;box-shadow:0 0 38px #28d5bd38;animation:signedEntryFloat 3.6s ease-in-out infinite}
