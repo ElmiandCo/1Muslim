@@ -48,7 +48,7 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
     channel.on("broadcast",{event:"effect"},({payload})=>{
       const allowed:LiveEffect[]=["off","dust","stars","waves","fireflies","rain"];
       if(allowed.includes(payload?.effect))setHostEffect(payload.effect);
-    }).subscribe(status=>{if(status==="SUBSCRIBED")void channel.send({type:"broadcast",event:"request-effect",payload:{}})});
+    }).subscribe();
     return()=>{void supabase.removeChannel(channel)};
   },[streamId]);
   const style = { "--cinema-keyboard-offset": keyboardOffset + "px" } as CSSProperties;
