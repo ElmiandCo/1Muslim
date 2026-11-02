@@ -2086,3 +2086,22 @@ header[class*="controlHeader"] [class*="headerActions"] a{
     opacity: 1 !important;
   }
 }
+
+/* Full-width desktop Live: 75% theater + 25% vertical Messages widget.
+   All other viewport sizes and workspace pages keep their existing layout. */
+.oneMuslimDesktopMessagesRail { display:none; }
+@media (min-width:1200px) and (min-height:560px) {
+  [data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage) > .oneMuslimLiveStage {
+    left:0!important;right:auto!important;width:75%!important;
+  }
+  [data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage) > .oneMuslimDesktopMessagesRail {
+    display:flex!important;position:absolute!important;top:0;right:0;bottom:0;
+    width:25%;min-width:0;box-sizing:border-box;flex-direction:column;
+    overflow-y:auto;overscroll-behavior:contain;z-index:21;
+    padding:12px;gap:12px;border-left:1px solid rgba(220,190,105,.28);
+    background:rgba(8,13,19,.25);backdrop-filter:blur(14px);
+    color:var(--theme-text,#f8f0dd);
+  }
+  .oneMuslimDesktopMessagesRailTitle {font-size:15px;font-weight:700;letter-spacing:.04em;}
+  .oneMuslimDesktopMessagesRail > :not(.oneMuslimDesktopMessagesRailTitle) {min-width:0;width:100%;}
+}
