@@ -1722,7 +1722,7 @@ export default function GoLivePage() {
 
       `}</style>
 
-      <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong>{live&&<span className="liveHeaderViewers" aria-label={`${viewers} live viewers`}>● {viewers} <span>viewers</span></span>}</header>
+      <header className="immersiveHeader"><Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link><strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong>{live&&<button type="button" className="liveHeaderViewers" aria-label={`${viewers} live viewers; show viewer list`} aria-expanded={viewerRosterOpen} onClick={()=>setViewerRosterOpen(v=>!v)}>● {viewers} <span>viewers</span></button>}</header>
       <div className={settingsOpen?"shell settingsOpen":"shell"}>
         <div className="studioTools">
               {scheduledSlot && <div className="upcomingPrep"><div><span className="eyebrow">UPCOMING LIVE</span><strong>{scheduledSlot.title}</strong><span>{scheduledSlot.category} · {new Date(scheduledSlot.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div><button type="button" className="prepButton" onClick={()=>{setTitle(scheduledSlot.title);setCategory(scheduledSlot.category);setShowScheduler(false);setSaveMessage("Prep mode loaded. Check your title, topic, format, thumbnail, camera and microphone before going live.");}}>{hostCheckedIn ? "✓ Host Checked In" : "Prep for upcoming Live →"}</button></div>}
