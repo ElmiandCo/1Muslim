@@ -16,6 +16,7 @@ export async function POST(request:Request){
   const url=process.env.LIVEKIT_URL,key=process.env.LIVEKIT_API_KEY,secret=process.env.LIVEKIT_API_SECRET;
   if(!url||!key||!secret)return NextResponse.json({error:"Live service unavailable"},{status:503});
   const participants=await new RoomServiceClient(url,key,secret).listParticipants(room);
+  if(stream.host_id!==user.id&&!participants.some(p=>p.identity===user.id))return NextResponse.json({error:"Join live to see viewers"},{status:403});
   const viewers=participants.filter(p=>p.identity!==stream.host_id && !p.identity.includes(":screen:"));
   const ids=[...new Set(viewers.map(p=>p.identity).filter(id=>/^[0-9a-f-]{36}$/i.test(id)))];
   const profiles=new Map<string,Record<string,unknown>>();
