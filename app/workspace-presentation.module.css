@@ -943,6 +943,16 @@
  }
 }
 
+/* Reclaim half the removed controls row for the verse; retain the full-height reading canvas. */
+.quranVerseArticle:has(:global(.quranStudioToolbar)) :global(.quranLanguageContent){
+ position:relative;
+ transform:translateY(-clamp(12px,2vh,20px));
+ margin-bottom:calc(-1 * clamp(12px,2vh,20px));
+}
+@media(prefers-reduced-motion:reduce){
+ .quranVerseArticle:has(:global(.quranStudioToolbar)) :global(.quranLanguageContent){transition:none}
+}
+
 /* Day mode only: Quran Arabic follows --theme-accent / data-muslim-theme, never profile background.\n   Sapphire and Nur Blue (sapphire-mosaic) both resolve to sapphire via ProfileThemeSync.\n   Quran Arabic follows the selected theme in a deeper, readable shade.
    Night mode retains the original warm Arabic lettering. */
 :global(html.light) .quranVerseArabic{
