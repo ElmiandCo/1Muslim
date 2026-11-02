@@ -6,12 +6,13 @@ export async function GET(request:Request){
  if(postId)query=query.eq("post_id",postId);
  const {data,error}=await query;if(error)return NextResponse.json({error:"Comments unavailable"},{status:503});
  const ids=[...new Set((data||[]).map(x=>x.author_id))];
- const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username").in("id",ids):{data:[]};
+ const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username,avatar_config").in("id",ids):{data:[]};
  const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||p.username||"Member"]));
+ const avatarMap=new Map((profiles||[]).map(p=>{const c=p.avatar_config as {selectedAvatarUrl?:string;adminAvatarUrl?:string}|null;const url=c?.selectedAvatarUrl||c?.adminAvatarUrl||"";return [p.id,/^(https:\/\/|\/assets\/avatars\/)/.test(url)?url:null]}));
  const commentIds=(data||[]).map(x=>x.id);
  const {data:likes}=commentIds.length?await db.from("ummah_comment_likes").select("comment_id,user_id").in("comment_id",commentIds):{data:[]};
  const {data:{user}}=await db.auth.getUser();
- return NextResponse.json({comments:(data||[]).map(c=>({...c,name:names.get(c.author_id)||"Community member",likes:(likes||[]).filter(l=>l.comment_id===c.id).length,liked:(likes||[]).some(l=>l.comment_id===c.id&&l.user_id===user?.id)}))});
+ return NextResponse.json({comments:(data||[]).map(c=>({...c,name:names.get(c.author_id)||"Community member",avatar_url:avatarMap.get(c.author_id)||null,likes:(likes||[]).filter(l=>l.comment_id===c.id).length,liked:(likes||[]).some(l=>l.comment_id===c.id&&l.user_id===user?.id)}))});
 }
 export async function POST(request:Request){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)return NextResponse.json({error:"Sign in to comment"},{status:401});
