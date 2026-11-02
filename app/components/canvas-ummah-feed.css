@@ -508,3 +508,10 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 .day .community-simple-feed .community-posts-list{background-color:rgba(255,255,255,.12)}
 .ummah-post-package{cursor:pointer}
 @media(prefers-reduced-motion:reduce){.community-post-card{transition:none!important}.community-post-card.ummah-reading-transition{transform:none;filter:none}}
+
+/* #6 Cinematic feed: central card breathes; neighbors retreat then return. */
+.community-post-card.ummah-reading-main{transform:scale(1.015);filter:brightness(1.045);z-index:2;position:relative}
+.community-post-card.ummah-reading-before{transform:translateY(-13px) scale(.965);filter:brightness(.94)}
+.community-post-card.ummah-reading-after{transform:translateY(13px) scale(.965);filter:brightness(.94)}
+.community-post-card.ummah-reading-main,.community-post-card.ummah-reading-before,.community-post-card.ummah-reading-after{transition:transform 1100ms cubic-bezier(.25,.7,.25,1),filter 1100ms ease}
+@media(prefers-reduced-motion:reduce){.community-post-card.ummah-reading-main,.community-post-card.ummah-reading-before,.community-post-card.ummah-reading-after{transform:none!important;filter:none!important}}
