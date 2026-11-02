@@ -472,3 +472,17 @@
 @keyframes profileAvatarSpinReveal {0%{transform:perspective(900px) rotateY(0deg) scale(1)}35%{transform:perspective(900px) rotateY(540deg) scale(.94)}70%{transform:perspective(900px) rotateY(900deg) scale(.97)}100%{transform:perspective(900px) rotateY(1080deg) scale(1)}}
 .profile-avatar-spin-reveal{animation:profileAvatarSpinReveal 1.65s cubic-bezier(.22,.65,.15,1) both;backface-visibility:visible;will-change:transform}
 @media(prefers-reduced-motion:reduce){.profile-avatar-spin-reveal{animation:none}}
+
+/* Poster-owned theme scope: isolated from viewer's global theme. */
+[data-post-theme="emerald"]{--post-glow:#69d7a2;--post-secondary:#c6dba4;--post-glass:rgba(26,87,66,.32)}
+[data-post-theme="sapphire"]{--post-glow:#64baff;--post-secondary:#c4d9f2;--post-glass:rgba(31,65,117,.32)}
+[data-post-theme="ruby"]{--post-glow:#f47489;--post-secondary:#f3c67e;--post-glass:rgba(118,29,52,.32)}
+[data-post-theme="amethyst"]{--post-glow:#c695ff;--post-secondary:#ff9ad6;--post-glass:rgba(86,40,124,.32)}
+[data-post-theme="titanium"]{--post-glow:#b5c5d4;--post-secondary:#e0e6eb;--post-glass:rgba(64,75,85,.32)}
+[data-post-theme="obsidian"]{--post-glow:#d7b56d;--post-secondary:#f3d89a;--post-glass:rgba(19,20,25,.58)}
+.community-post-card[data-post-theme]{--post-accent:var(--post-secondary)!important;border-color:color-mix(in srgb,var(--post-secondary) 48%,transparent)!important;background:linear-gradient(145deg,var(--post-glass),rgba(8,10,16,.70))!important;box-shadow:0 6px 22px rgba(0,0,0,.2),0 0 18px color-mix(in srgb,var(--post-glow) 12%,transparent)!important;transition:border-color .45s ease,box-shadow .45s ease}
+.ummah-comments-sheet[data-post-theme]{--theme-border:color-mix(in srgb,var(--post-secondary) 50%,transparent);border-color:var(--theme-border)!important;background:linear-gradient(150deg,var(--post-glass),rgba(9,11,18,.93))!important;color:#fff!important}
+.ummah-comments-sheet[data-post-theme] .ummah-comment-glass{position:relative;margin:10px 3px 15px;padding:13px 15px;border:1px solid color-mix(in srgb,var(--post-glow) 52%,transparent)!important;border-radius:22px 22px 22px 7px;background:linear-gradient(125deg,color-mix(in srgb,var(--post-glass) 85%,transparent),rgba(255,255,255,.055));box-shadow:0 3px 16px color-mix(in srgb,var(--post-glow) 12%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);overflow-wrap:anywhere}
+.ummah-comment-glass time{float:right;font-size:11px;opacity:.65}
+.ummah-comments-sheet[data-post-theme] form{position:sticky;bottom:0;z-index:3;background:rgba(9,11,18,.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+@media(prefers-reduced-motion:reduce){.community-post-card[data-post-theme]{transition:none!important}}
