@@ -1,3 +1,4 @@
+import {currentPostTheme} from "../lib/post-theme";
 "use client";
 import {useEffect,useState} from "react";
 import {useRouter} from "next/navigation";
@@ -55,7 +56,7 @@ export default function HomeCreatePost(){
   try{
    const db=createClient();const {data:{user}}=await db.auth.getUser();
    if(!user){sessionStorage.setItem(draftKey,text);router.push("/auth?next="+encodeURIComponent("/?compose=1"));return}
-   const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:daily?"✦ DAILY UMMAH ✦\\n"+text:text,post_theme:localStorage.getItem("1muslim-theme")||undefined})});
+   const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:daily?"✦ DAILY UMMAH ✦\\n"+text:text,post_theme:currentPostTheme()})});
    const data=await response.json();if(!response.ok)throw Error(data.error||"Could not publish post");
    if(data.flagged&&data.removed){setBadEgg(true);setWarning(false);setNotice("🥚 We tried to include your content with ours, but it didn’t fit. Thanks for trying! Your post was removed and flagged for review.");setTimeout(()=>{setCollapsed(true);setDraft("");setConfirmed(false)},1750);setTimeout(()=>{setBadEgg(false);setCollapsed(false)},2450);return}
    sessionStorage.removeItem(draftKey);if(daily){setDailyEligible(false);setDailyUsed(true);window.dispatchEvent(new CustomEvent("hudhud-daily-status",{detail:{used:true}}))}setPosted(true);setDailyEligible(false);setNotice("✨ Your post was successfully shared with the community!");setDraft("");setExpanded(false);window.dispatchEvent(new Event("1muslim:community-post-published"));window.dispatchEvent(new Event("1muslim:post-published-swipe-home"));
