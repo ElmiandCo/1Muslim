@@ -1817,3 +1817,15 @@
  75%{transform:translate3d(calc(-50% - 5px),-4px,0) rotate(-.15deg) scale(1.008)}
 }
 @media(prefers-reduced-motion:reduce){.control .decorationNight,.control .decorationDay{animation:none!important;transform:translateX(-50%)!important}}
+
+/* Theme-aware canvas underlay: eliminate fixed emerald bleed through all six themes. */
+.control .decoratedSurface{
+  background:linear-gradient(160deg,color-mix(in srgb,var(--theme-primary,var(--accent-color,#0d7751)) 24%,transparent),color-mix(in srgb,var(--theme-secondary,var(--theme-primary,var(--accent-color,#0d7751))) 15%,transparent) 60%,rgba(0,0,0,.22))!important;
+  border-color:color-mix(in srgb,var(--theme-secondary,var(--theme-primary,#d8c48c)) 38%,transparent)!important;
+}
+.control .decoratedSurface>.surfaceArtwork{
+  background-image:linear-gradient(180deg,color-mix(in srgb,var(--theme-primary,var(--accent-color,#0d7751)) 7%,transparent),color-mix(in srgb,var(--theme-secondary,var(--theme-primary,#0d7751)) 26%,transparent) 85%),url('/assets/decorations/islamic-white-ornament.PNG')!important;
+  filter:drop-shadow(0 0 24px color-mix(in srgb,var(--theme-primary,#d8c48c) 14%,transparent))!important;
+}
+.control.day .decoratedSurface{background:linear-gradient(160deg,color-mix(in srgb,var(--theme-primary,#e9e6d9) 9%,white),color-mix(in srgb,var(--theme-secondary,var(--theme-primary,#e9e6d9)) 12%,white))!important}
+.control.day .decoratedSurface>.surfaceArtwork{background-image:linear-gradient(180deg,rgba(255,255,255,.30),color-mix(in srgb,var(--theme-primary,#e9e6d9) 12%,transparent) 85%),url('/assets/decorations/islamic-gold-ornament.PNG')!important}
