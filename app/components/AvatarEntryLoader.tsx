@@ -21,23 +21,25 @@ const avatars=[
 ] as const;
 const FRAME=800;
 const CYCLE=avatars.length*FRAME;
-export default function AvatarEntryLoader({ready,onComplete,onSignUp,showSignUp}:{ready:boolean;onComplete:()=>void;onSignUp:()=>void;showSignUp:boolean}){
+export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,showSignUp}:{ready:boolean;signedIn:boolean;onComplete:()=>void;onSignUp:()=>void;showSignUp:boolean}){
  const [phase,setPhase]=useState<"waiting"|"orbit"|"black"|"reveal">("waiting");
  const started=useRef(false);
  const readyRef=useRef(ready);
+ const signedInRef=useRef(signedIn);
  readyRef.current=ready;
+ signedInRef.current=signedIn;
  const portraits=useRef<(HTMLDivElement|null)[]>([]);
  const elapsed=useRef(0);
  useEffect(()=>{
   const timer=window.setTimeout(()=>{
-   if(readyRef.current){setPhase("reveal");return;}
+   if(readyRef.current&&signedInRef.current){setPhase("reveal");return;}
    started.current=true;
    setPhase("orbit");
   },1000);
   return()=>clearTimeout(timer);
  },[]);
  useEffect(()=>{
-  if(!ready||!started.current)return;
+  if(!ready||!signedIn||!started.current)return;
   // Never force an authenticated visitor to watch a full carousel.
   setPhase(current=>current==="orbit"?"black":current);
  },[ready]);
@@ -47,7 +49,7 @@ export default function AvatarEntryLoader({ready,onComplete,onSignUp,showSignUp}
   let previous=0;
   const tick=(now:number)=>{
    if(!previous)previous=now;
-   elapsed.current+=Math.min(48,now-previous);
+   elapsed.current+=Math.min(48,now-previous);\n   if(readyRef.current&&!signedInRef.current&&elapsed.current>=CYCLE){setPhase("black");return;}
    previous=now;
    const progress=elapsed.current/FRAME;
    const width=Math.min(175,window.innerWidth*.33);
