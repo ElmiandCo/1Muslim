@@ -239,7 +239,7 @@ function DailyPostsApp({active}:{active:boolean}){
   };
 
   const clearMotion=()=>cards().forEach(card=>{card.style.removeProperty("--ummah-reading-progress");card.classList.remove("ummah-reading-main","ummah-reading-before","ummah-reading-after");card.style.removeProperty("--ummah-neighbor-drift");card.style.removeProperty("--ummah-neighbor-scale")});
-  const interrupt=()=>{stopVerse();autoPause.current=performance.now()+10000;elapsed=0;activeIndex=-1;transitioning=false;clearMotion()};
+  const interrupt=(event:Event)=>{const target=event.target;if(target instanceof Element&&target.closest(".hudhudSharedNav,.hudhudSharedCollapse,.hudhudSharedHudhud,.hudhud-orb,[data-hudhud],.celestial-orb,[class*=HudHud],[class*=hudhud],[id*=hudhud]"))return;stopVerse();autoPause.current=performance.now()+3000;elapsed=0;activeIndex=-1;transitioning=false;clearMotion()};
   const events=["touchstart","pointerdown","wheel","keydown"] as const;
   events.forEach(event=>window.addEventListener(event,interrupt,{passive:true}));
   const tick=(now:number)=>{
@@ -268,7 +268,7 @@ function DailyPostsApp({active}:{active:boolean}){
    if(elapsed>=duration&&!transitioning){
     stopVerse();
     const next=all[activeIndex+1];
-    if(!next){activeIndex=-1;elapsed=0;clearMotion();autoPause.current=now+10000;frame=requestAnimationFrame(tick);return}
+    if(!next){activeIndex=-1;elapsed=0;clearMotion();autoPause.current=now+3000;frame=requestAnimationFrame(tick);return}
     transitioning=true;fromScroll=viewport.scrollTop;
     toScroll=Math.max(0,Math.min(viewport.scrollHeight-viewport.clientHeight,fromScroll+next.getBoundingClientRect().top-top));
    }
