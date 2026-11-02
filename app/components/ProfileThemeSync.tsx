@@ -14,14 +14,15 @@ const themes:Record<string,{base:string;accent:string;secondary:string;surface:s
 const fallback="emerald";
 function applyTheme(value:unknown,persist=true){
  const requested=typeof value==="string"?value:fallback;
- const theme=themes[aliases[requested]||requested]?aliases[requested]||requested:fallback;
+ const wallpaper=aliases[requested]||requested;
+ const colorFamily:Record<string,string>={"emerald-mosaic":"emerald","sapphire-mosaic":"sapphire","golden-geometry":"ruby","silver-eclipse":"titanium","amethyst-mirage":"amethyst","ruby-red":"ruby","ruby-gold":"ruby"};
+ const theme=colorFamily[wallpaper]|| (themes[wallpaper]?wallpaper:fallback);
  const t=themes[theme];const root=document.documentElement;
- root.dataset.profileBackground=theme;root.dataset.muslimTheme=theme;
+ root.dataset.profileBackground=wallpaper;root.dataset.muslimTheme=theme;
  root.style.setProperty("--theme-base",t.base);root.style.setProperty("--theme-accent",t.accent);root.style.setProperty("--theme-secondary",t.secondary);root.style.setProperty("--theme-surface",t.surface);root.style.setProperty("--theme-edge",t.edge);
- root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[theme]||theme}.PNG")`);
+ root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[wallpaper]||wallpaper}.PNG")`);
  root.style.setProperty("--profile-scene-tint",t.tint);
- if(persist){try{localStorage.setItem("1muslim:profile-background",theme)}catch{}}
- if(persist&&(theme==="obsidian"||theme==="titanium")){try{localStorage.setItem("1muslim-theme-mode","night");localStorage.setItem("1muslim-theme","dark")}catch{};root.classList.remove("light")}
+ if(persist){try{localStorage.setItem("1muslim:profile-background",wallpaper)}catch{}}
 }
 export default function ProfileThemeSync(){
  const [recognizing,setRecognizing]=useState(true);
