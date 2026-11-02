@@ -152,6 +152,8 @@ type UmmahComment={id:string;post_id:string;parent_id:string|null;name:string;av
   };
 
 function DailyPostsApp({active}:{active:boolean}){
+ const [wideFeed,setWideFeed]=useState(false);
+ useEffect(()=>{const media=window.matchMedia("(min-width: 768px)");const sync=()=>setWideFeed(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync)},[]);
  const [posts,setPosts]=useState<UmmahPost[]>([]); const mediaUrlCache=useRef(new Map<string,{url:string,at:number}>()); 
  const [status,setStatus]=useState("Loading Ummah posts…");
  const [selected,setSelected]=useState<string|null>(null);
@@ -208,7 +210,7 @@ function DailyPostsApp({active}:{active:boolean}){
  useEffect(()=>{const onVisibility=()=>{if(document.hidden)videoRefs.current.forEach(v=>v.pause());else if(playingVideo&&!fypStart){const v=videoRefs.current.get(playingVideo);if(v)void v.play().catch(()=>{})}};document.addEventListener("visibilitychange",onVisibility);return()=>document.removeEventListener("visibilitychange",onVisibility)},[playingVideo,fypStart]);
  const autoPause=useRef(0);
  useEffect(()=>{
-  if(!active||selected||expandedImage||fypStart||viewerPost||window.matchMedia("(min-width: 768px)").matches)return;
+  if(!active||selected||expandedImage||fypStart||viewerPost||wideFeed)return;
   const feed=feedRef.current;if(!feed)return;
   let frame=0,last=0,elapsed=0,activeIndex=-1,fromScroll=0,toScroll=0,transitioning=false;
   let scroll:HTMLElement|null=feed;
@@ -282,7 +284,7 @@ function DailyPostsApp({active}:{active:boolean}){
   };
   frame=requestAnimationFrame(tick);
   return()=>{cancelAnimationFrame(frame);stopVerse();clearMotion();events.forEach(event=>window.removeEventListener(event,interrupt))};
- },[active,selected,expandedImage,posts.length,playingVideo,finishedVideo,fypStart,viewerPost]);
+ },[active,selected,expandedImage,posts.length,playingVideo,finishedVideo,fypStart,viewerPost,wideFeed]);
 
  useEffect(()=>{if(!active)return;let alive=true;
   const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)throw Error();const data=await r.json();if(alive){setPosts((data.posts||[]).map((p:UmmahPost)=>{if(!p.media_url)return p;const cached=mediaUrlCache.current.get(p.id);if(cached&&Date.now()-cached.at<25*60*1000)return {...p,media_url:cached.url};mediaUrlCache.current.set(p.id,{url:p.media_url,at:Date.now()});return p}));setLikeCounts(Object.fromEntries((data.posts||[]).map((p:UmmahPost)=>[p.id,Number((p as UmmahPost & {like_count?:number}).like_count||0)])));setCommentCounts(Object.fromEntries((data.posts||[]).map((p:UmmahPost)=>[p.id,Number((p as UmmahPost & {comment_count?:number}).comment_count||0)])));setStatus(data.posts?.length?"":"No posts yet. Be the first to share.");}}catch{if(alive)setStatus("Unable to load the Ummah feed.");}};
@@ -307,11 +309,11 @@ function DailyPostsApp({active}:{active:boolean}){
    </article>;
   return <div className="community-simple-feed">
   <div className="community-posts-list" ref={feedRef} aria-label="Community posts">
-   <div className="ummah-feed-single">{posts.map(renderFeedPost)}</div>
-   <div className="ummah-dual-lanes" aria-label="Two independent post lanes">
+   {!wideFeed&&<div className="ummah-feed-single">{posts.map(renderFeedPost)}</div>}
+   {wideFeed&&<div className="ummah-dual-lanes" aria-label="Two independent post lanes">
     <div className="ummah-dual-lane" data-lane="left" aria-label="Left posts lane">{posts.filter((_,i)=>i%2===0).map(renderFeedPost)}</div>
     <div className="ummah-dual-lane" data-lane="right" aria-label="Right posts lane">{posts.filter((_,i)=>i%2===1).map(renderFeedPost)}</div>
-   </div>
+   </div>}
    {!posts.length?<p className="community-feed-empty">{status}</p>:null}
    {notice&&!selected&&<p role="status">{notice}</p>}
   </div>
@@ -339,7 +341,7 @@ export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boo
  {slot===0?<GameLabProfileHub active={active} avatarHero={<ProfileApp active={active} heroOnly/>} profile={<ProfileApp active={active}/>} renderProfileSection={(section)=><ProfileApp active={active} section={section}/>}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:slot===4?<ElmTentAlphabet/>:<div className="canvas-community-map-panel"><strong>Community connections</strong><p>Discover Muslims and mosques through the Community Map above.</p></div>}
  </div>{slot!==0&&<footer><Link href={destinations[slot]}>Open full experience ↗</Link></footer>}</div>
 } useEffect(()=>{
-  if(!active||selected||expandedImage||fypStart||viewerPost)return;
+  if(!active||!wideFeed||selected||expandedImage||fypStart||viewerPost)return;
   const root=feedRef.current;
   if(!root)return;
   const lanes=Array.from(root.querySelectorAll<HTMLElement>(".ummah-dual-lane"));
@@ -382,5 +384,5 @@ export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boo
     timers.push(timer);
   }
   return()=>{timers.forEach(clearInterval);cleanups.forEach(fn=>fn())};
- },[active,posts.length,selected,expandedImage,fypStart,viewerPost]);
+ },[active,posts.length,selected,expandedImage,fypStart,viewerPost,wideFeed]);
 
