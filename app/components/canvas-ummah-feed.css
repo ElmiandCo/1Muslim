@@ -552,3 +552,10 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 /* Keep media controls above the noninteractive particle layer. */
 .ummah-unified-media video,.ummah-unified-media img{position:relative;z-index:2}
 .ummah-unified-actions button:focus-visible,.ummah-unified-close:focus-visible{outline:2px solid var(--post-glow,#fff);outline-offset:3px}
+
+/* Per-post particles: each card uses its own author's saved post theme,
+   never the viewer's selected theme or a global feed particle color. */
+.community-post-card[data-post-theme]{position:relative;isolation:isolate}
+.community-post-card .ummah-post-theme-particles{position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;overflow:hidden;opacity:.32;background-image:radial-gradient(circle at 14% 28%,var(--post-glow) 0 1.2px,transparent 3px),radial-gradient(circle at 73% 63%,var(--post-glow) 0 1px,transparent 3px),radial-gradient(circle at 48% 85%,var(--post-glow) 0 1.4px,transparent 4px);background-size:140px 190px,230px 270px,300px 320px;animation:ummahThemeParticleFloat 18s linear infinite}
+.community-post-card>.ummah-post-theme-particles~*{position:relative;z-index:1}
+@media(prefers-reduced-motion:reduce){.community-post-card .ummah-post-theme-particles{animation:none}}
