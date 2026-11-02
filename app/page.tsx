@@ -41,7 +41,7 @@ type Result={id:string;kind:string;title:string;subtitle:string;href:string};
 type HomeLiveFormat="desktop"|"phone"|"audio"|"games"|"qibla";
 const spaces=[
  {name:"Live",arabic:"مباشر",symbol:"◉",image:"/assets/control-center/1live.PNG",href:"/streaming",cls:"live"},
- {name:"Qur’an",arabic:"القرآن",symbol:"۞",image:"/assets/HudHud-Quran.png",href:"/elm-tent/quran",cls:"quran"},
+ {name:"Qur’an",arabic:"القرآن",symbol:"۞",image:"",href:"/elm-tent/quran",cls:"quran"},
  {name:"Videos",arabic:"فيديو",symbol:"▶",image:"/assets/control-center/1videos.PNG",href:"/videos",cls:"video"},
  {name:"Ummah",arabic:"الأمة",symbol:"✧",image:"/assets/control-center/1ummah.PNG",href:"/community",cls:"ummah"},
  {name:"Post",arabic:"منشور اليوم",symbol:"✎",image:"/assets/control-center/1ummah.PNG",href:"/community",cls:"ummah"},
