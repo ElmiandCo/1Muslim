@@ -1,4 +1,6 @@
 "use client";
+import {currentPostTheme} from "../lib/post-theme";
+
 
 import "./community.css";
 import "./daily-post-particles.css";
@@ -97,7 +99,7 @@ export default function Community() {
     setPublishing(true);
     try{
       const text=[draft.trim(),safe(link)].filter(Boolean).join("\n");
-      const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
+      const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,post_theme:currentPostTheme()})});
       const data=await response.json().catch(()=>({error:"The posting service returned an unexpected response. Please retry."}));
       if(!response.ok)throw Error(data.error||("Posting failed (HTTP "+response.status+"). Please try again."));
       if(data.removed){setNotice("🥚 This post did not meet community language standards and was removed.");return}

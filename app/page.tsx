@@ -1,4 +1,6 @@
 "use client";
+import {currentPostTheme} from "./lib/post-theme";
+
 import workspaceStyles from "./workspace-presentation.module.css";
 import "./canvas-fullscreen-v1.css";
 import "./home-ambient-halo.css";
@@ -67,7 +69,7 @@ export default function Home(){
  const [quickBusy,setQuickBusy]=useState(false);
  const [quickError,setQuickError]=useState("");
  const openQuick=()=>{setQuickType("post");setQuickFormat("text");setQuickStep(0);setQuickError("");setQuickOpen(true)};
- const quickGo=async()=>{if(quickType==="live"){window.location.assign("/streaming/go-live");return}if(quickType==="message"){window.location.assign("/messages");return}if(quickFormat!=="text"){window.location.assign("/community#ummah-compose");return}if(!quickText.trim()){setQuickError("Write something before posting.");return}setQuickBusy(true);setQuickError("");try{const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:quickText.trim()})});const data=await response.json();if(!response.ok||data.removed)throw Error(data.error||"Post was not published.");try{localStorage.setItem("1muslim:quick-post-notice",JSON.stringify({id:data.post?.id||"",text:quickText.trim().slice(0,180),at:Date.now()}))}catch{}setQuickOpen(false);window.location.assign("/")}catch(e){setQuickError(e instanceof Error?e.message:"Could not publish. Try again.")}finally{setQuickBusy(false)}};
+ const quickGo=async()=>{if(quickType==="live"){window.location.assign("/streaming/go-live");return}if(quickType==="message"){window.location.assign("/messages");return}if(quickFormat!=="text"){window.location.assign("/community#ummah-compose");return}if(!quickText.trim()){setQuickError("Write something before posting.");return}setQuickBusy(true);setQuickError("");try{const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:quickText.trim(),post_theme:currentPostTheme()})});const data=await response.json();if(!response.ok||data.removed)throw Error(data.error||"Post was not published.");try{localStorage.setItem("1muslim:quick-post-notice",JSON.stringify({id:data.post?.id||"",text:quickText.trim().slice(0,180),at:Date.now()}))}catch{}setQuickOpen(false);window.location.assign("/")}catch(e){setQuickError(e instanceof Error?e.message:"Could not publish. Try again.")}finally{setQuickBusy(false)}};
  const [dhikrOpen,setDhikrOpen]=useState(false);
  const [shopTease,setShopTease]=useState(false);
  const shopTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
