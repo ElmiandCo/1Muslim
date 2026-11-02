@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useMemo,useRef,useState} from "react";
+import {createPortal} from "react-dom";
 import Link from "next/link";
 import GameLabProfileHub from "./GameLabProfileHub";
 import ProfileVideos from "./ProfileVideos";
@@ -140,6 +141,16 @@ function DailyPostsApp({active}:{active:boolean}){
  const [posts,setPosts]=useState<UmmahPost[]>([]); const mediaUrlCache=useRef(new Map<string,{url:string,at:number}>()); 
  const [status,setStatus]=useState("Loading Ummah posts…");
  const [selected,setSelected]=useState<string|null>(null);
+ const [commentViewport,setCommentViewport]=useState({top:0,height:0});
+ useEffect(()=>{
+  if(!selected)return;
+  const vv=window.visualViewport;
+  const sync=()=>setCommentViewport({top:vv?.offsetTop||0,height:vv?.height||window.innerHeight});
+  sync();vv?.addEventListener("resize",sync);vv?.addEventListener("scroll",sync);window.addEventListener("resize",sync);
+  const previous=document.body.style.overflow;document.body.style.overflow="hidden";
+  return()=>{vv?.removeEventListener("resize",sync);vv?.removeEventListener("scroll",sync);window.removeEventListener("resize",sync);document.body.style.overflow=previous};
+ },[selected]);
+
  const [comments,setComments]=useState<UmmahComment[]>([]); const [threadPath,setThreadPath]=useState<string[]>([]);
  const [draft,setDraft]=useState("");
  const [busy,setBusy]=useState(false);
@@ -220,7 +231,7 @@ function DailyPostsApp({active}:{active:boolean}){
   </div>
   {fypStart&&<div className="ummah-fyp-overlay" role="dialog" aria-modal="true" aria-label="For You videos"><button type="button" className="ummah-fyp-close" onClick={()=>setFypStart(null)}>✕ Close</button><div className="ummah-fyp-reel">{fypOrder.map((p,i)=><section key={p.id}><video src={mediaFor(p)} controls playsInline autoPlay={i===0} muted={i!==0} preload={i===0?"auto":"metadata"}/><p>{p.body}</p></section>)}</div></div>}
   {expandedImage&&<div className="ummah-image-lightbox" role="presentation" onClick={()=>setExpandedImage(null)}><button type="button" aria-label="Close expanded image" onClick={()=>setExpandedImage(null)}>✕</button><img src={expandedImage} alt="Expanded post image" onClick={e=>e.stopPropagation()}/></div>}
-  {selected&&<div className="ummah-comments-backdrop" role="presentation" onClick={()=>setSelected(null)}>
+  {selected&&typeof document!=="undefined"&&createPortal(<div className="ummah-comments-backdrop ummah-comments-viewport" style={{top:commentViewport.top,height:commentViewport.height||"100dvh"}} role="presentation" onClick={()=>setSelected(null)}>
    <section data-post-theme={postThemeClass(posts.find(p=>p.id===selected)?.post_theme)} className="ummah-comments-sheet ummah-comments-theme-responsive" role="dialog" aria-modal="true" aria-label="Post comments" onClick={e=>e.stopPropagation()}>
     <header><button type="button" onClick={()=>threadPath.length?setThreadPath(p=>p.slice(0,-1)):setSelected(null)} aria-label="Back one conversation level">← Back</button><strong>✦ {threadPath.length?"Replies · Level "+(threadPath.length+1):"Conversation"}</strong><button type="button" onClick={()=>setSelected(null)} aria-label="Close comments">✕</button></header>
     <p className="ummah-comment-post-preview">{posts.find(p=>p.id===selected)?.author_name||"Member"} · {(posts.find(p=>p.id===selected)?.body||"").slice(0,140)}</p>
@@ -228,7 +239,7 @@ function DailyPostsApp({active}:{active:boolean}){
     <form onSubmit={e=>void send(e)}><input aria-label="Write a comment" inputMode="text" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={1500} placeholder={threadPath.length?"Write a reply…":"Write a thoughtful comment…"}/><button type="submit" disabled={busy||!draft.trim()}>Send ↗</button></form>
     {notice&&<p role="alert">{notice}</p>}
    </section>
-  </div>}
+  </div>,document.body)}
  </div>;
 }
 /** Posts-only canvas: the Community Map is a separate destination, not a Posts tab. */
