@@ -1,7 +1,10 @@
 .avatarEntry{position:fixed;inset:0;z-index:2147483000;background:#000;color:#f4e7c6;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;gap:17px;isolation:isolate}
 .avatarEntryStage{position:relative;width:min(92vw,520px);height:245px;display:flex;align-items:center;justify-content:center;perspective:700px;transform-style:preserve-3d}
-.avatarEntryOrbitRing{position:absolute;width:100%;height:118px;border-radius:50%;border:1px solid #d7b56a65;box-shadow:0 0 28px #d9b46440,inset 0 0 25px #d9b46420;transform:rotateX(67deg);animation:avatarEntryRing 8.45s linear infinite}
-.avatarEntryPortrait{position:absolute;width:118px;height:118px;border:2px solid #dfbd79;border-radius:50%;background:#0b0b0b;box-shadow:0 0 19px #d9b46470;overflow:hidden;transition:transform 650ms cubic-bezier(.22,.65,.2,1),opacity 650ms ease;will-change:transform,opacity}
+.avatarEntryOrbitRing{position:absolute;width:min(86vw,430px);height:170px;border-radius:50%;pointer-events:none;transform:rotateX(67deg);filter:drop-shadow(0 0 9px #e3bb6b66)}
+.avatarEntryOrbitRing--outer{border:2px solid transparent;background:linear-gradient(#000,#000) padding-box,conic-gradient(from 10deg,#7c4b1b,#fff0b5,#b77a31,#513310,#f6d48c,#a46822,#7c4b1b) border-box;box-shadow:0 0 25px #f0bf6533,inset 0 0 20px #c8934233;animation:avatarEntryGoldPulse 5s ease-in-out infinite}
+.avatarEntryOrbitRing--inner{width:min(74vw,365px);height:132px;border:1px solid #f3c87855;box-shadow:0 0 20px #f6c56a22;animation:avatarEntryGoldPulse 5s ease-in-out infinite reverse}
+.avatarEntryOrbitSpark{position:absolute;width:7px;height:7px;border-radius:50%;background:#fff4c9;box-shadow:0 0 12px 5px #e5b85b99;offset-path:ellipse(42% 24% at 50% 50%);animation:avatarEntrySpark 9s linear infinite;pointer-events:none}
+.avatarEntryPortrait{position:absolute;width:118px;height:118px;border:2px solid #dfbd79;border-radius:50%;background:#0b0b0b;box-shadow:0 0 19px #d9b46470;overflow:hidden;will-change:transform,opacity}
 .avatarEntryPortrait img{width:100%;height:100%;object-fit:cover}
 .avatarEntryBrand{font:normal clamp(42px,9vw,58px) Georgia,serif;letter-spacing:.02em;text-shadow:0 0 25px #d9b46455}
 .avatarEntryCaption{font:400 12px system-ui,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:#e5d6b4}
@@ -9,6 +12,9 @@
 .avatarEntryProgress i{display:block;width:35%;height:100%;background:linear-gradient(90deg,transparent,#ffe3a2,#d8ac53);box-shadow:0 0 13px #ffdb8b;animation:avatarEntrySweep 2.6s ease-in-out infinite}
 .avatarEntry--black .avatarEntryStage,.avatarEntry--black .avatarEntryBrand,.avatarEntry--black .avatarEntryCaption,.avatarEntry--black .avatarEntryProgress{opacity:0;transition:opacity .45s ease}
 .avatarEntry--reveal{opacity:0;transition:opacity 1.2s ease}
-@keyframes avatarEntryRing{to{transform:rotateX(67deg) rotate(360deg)}}
+@keyframes avatarEntryGoldPulse{50%{filter:drop-shadow(0 0 16px #f6c774aa);opacity:.78}}
+@keyframes avatarEntrySpark{to{offset-distance:100%}}
 @keyframes avatarEntrySweep{0%{transform:translateX(-110%)}100%{transform:translateX(330%)}}
-@media(prefers-reduced-motion:reduce){.avatarEntry *{animation:none!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){.avatarEntry *{animation:none!important;transition:none!important}.avatarEntryOrbitSpark{display:none}}
+
+.avatarEntrySignup{position:absolute;bottom:max(34px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:500 14px system-ui,sans-serif;color:#d9d0bb;letter-spacing:.02em}.avatarEntrySignup button{border:0;background:transparent;color:#f7d994;font:700 14px system-ui,sans-serif;text-decoration:underline;text-underline-offset:4px;padding:9px;cursor:pointer}.avatarEntry--black .avatarEntrySignup{opacity:0;transition:opacity .45s ease}
