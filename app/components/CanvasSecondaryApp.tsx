@@ -176,6 +176,7 @@ function DailyPostsApp({active}:{active:boolean}){
  const videoRefs=useRef(new Map<string,HTMLVideoElement>());
  const verseAudioRef=useRef<HTMLAudioElement|null>(null);
  const verseAudioPostRef=useRef<string|null>(null);
+ const versePlayedRef=useRef(new Set<string>());
  const [playingVideo,setPlayingVideo]=useState<string|null>(null);
  const [finishedVideo,setFinishedVideo]=useState<string|null>(null);
  const [fypStart,setFypStart]=useState<string|null>(null);
@@ -203,21 +204,24 @@ function DailyPostsApp({active}:{active:boolean}){
   const cards=()=>Array.from(feed.querySelectorAll<HTMLElement>(".community-post-card"));
   // A verse reference must be explicit; never infer a recitation from unrelated text.
   const verseAudioUrl=(body:string)=>{
-   const match=body.match(/(?:surah|sura|سورة)\\s*(\\d{1,3})\\s*[:：,\\/-]\\s*(\\d{1,3})|(?:qur.?an|القرآن)\\s*(\\d{1,3})\\s*[:：]\\s*(\\d{1,3})/i);
+   // The Add Verse tool inserts the authoritative "Qur’an 2:255" label.
+   // Read that exact reference from the published post, not from a guessed verse.
+   const match=body.match(/Qur[’'\u0027]?an\\s+(\\d{1,3}):(\\d{1,3})/i);
    if(!match)return null;
-   const surah=Number(match[1]||match[3]),ayah=Number(match[2]||match[4]);
+   const surah=Number(match[1]),ayah=Number(match[2]);
    if(surah<1||surah>114||ayah<1||ayah>286)return null;
    return `https://everyayah.com/data/Alafasy_128kbps/${String(surah).padStart(3,"0")}${String(ayah).padStart(3,"0")}.mp3`;
   };
   const stopVerse=()=>{verseAudioRef.current?.pause();verseAudioRef.current=null;verseAudioPostRef.current=null};
   const playVerse=(postId:string)=>{
-   if(verseAudioPostRef.current===postId)return;
+   if(verseAudioPostRef.current===postId||versePlayedRef.current.has(postId))return;
    stopVerse();
    const post=posts.find(p=>p.id===postId);
-   if(!post||postKind(post)!=="verse"||Array.from(videoRefs.current.values()).some(v=>!v.paused&&!v.muted))return;
+   if(!post||Array.from(videoRefs.current.values()).some(v=>!v.paused&&!v.muted))return;
    const url=verseAudioUrl(post.body);if(!url)return;
    const audio=new Audio(url);audio.volume=.7;audio.loop=false;verseAudioRef.current=audio;verseAudioPostRef.current=postId;
-   void audio.play().catch(()=>{if(verseAudioRef.current===audio)stopVerse()});
+   audio.onended=()=>{if(verseAudioRef.current===audio){verseAudioRef.current=null;verseAudioPostRef.current=null}};
+   void audio.play().then(()=>versePlayedRef.current.add(postId)).catch(()=>{if(verseAudioRef.current===audio)stopVerse()});
   };
 
   const clearMotion=()=>cards().forEach(card=>{card.style.removeProperty("--ummah-reading-progress");card.classList.remove("ummah-reading-main","ummah-reading-before","ummah-reading-after");card.style.removeProperty("--ummah-neighbor-drift");card.style.removeProperty("--ummah-neighbor-scale")});
@@ -239,6 +243,7 @@ function DailyPostsApp({active}:{active:boolean}){
    const duration=isVideo?8000:card.querySelector("img.ummah-package-media")?6000:Math.max(4000,Math.min(8000,4000+Math.max(0,body.length-35)*16));
    if(isVideo&&playingVideo&&finishedVideo!==playingVideo){frame=requestAnimationFrame(tick);return}
    elapsed+=dt;
+   if(verseAudioRef.current&&!verseAudioRef.current.paused&&verseAudioPostRef.current===card.dataset.postId){elapsed=Math.min(elapsed,duration-1)}
    const readingProgress=Math.min(1,elapsed/duration);
    card.style.setProperty("--ummah-reading-progress",String(readingProgress));
    const neighborDrift=Math.round(16*Math.sin(Math.PI*readingProgress));
