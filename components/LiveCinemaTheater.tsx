@@ -120,6 +120,39 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
           .omLiveCinema .omLiveTheaterChat .emoteTray{max-width:100%}
           .omLiveCinema .omViewerTapCounter{top:calc(env(safe-area-inset-top) + 55px)!important;right:12px!important}
         }
+
+        /* Live Cinema 2.0: immersive, restrained controls; only applies to the full viewer. */
+        body:has(.omLiveCinema) .hh-chat-orb,
+        body:has(.omLiveCinema) .hh-orb-glow,
+        body:has(.omLiveCinema) .hh-launcher,
+        body:has(.omLiveCinema) .hh-fullscreen,
+        body:has(.omLiveCinema) .hh-panel{display:none!important}
+        .omLiveCinema{background:#030605!important}
+        .omLiveCinema[data-cinema-mode="phone"] .omLiveVideoStage,
+        .omLiveCinema[data-cinema-mode="phone"] .omLiveVideoStage .omCameraVideo{width:100%!important;height:100%!important;object-fit:cover!important}
+        .omLiveCinema .omLiveTheaterInfo{left:16px!important;right:128px!important;top:calc(env(safe-area-inset-top) + 18px)!important;gap:7px!important;z-index:36!important}
+        .omLiveCinema .omLiveTheaterAvatar{width:34px;height:34px;border:1px solid #ffffff85}
+        .omLiveCinema .omLiveTheaterBadge{background:#8d2539b8;padding:5px 8px}
+        .omLiveCinema .omViewerExit{top:calc(env(safe-area-inset-top) + 16px)!important;right:12px!important}
+        .omLiveCinema .omViewerCountPulse,
+        .omLiveCinema button[aria-label*="watching live"]{top:calc(env(safe-area-inset-top) + 68px)!important;right:12px!important;padding:6px 10px!important;font-size:11px!important;background:#080d0bc7!important;border-color:#ffffff4d!important;z-index:36!important}
+        .omLiveCinema .omViewerTapCounter{display:none!important}
+        .omLiveCinema .omCinemaModeSwitch{top:calc(env(safe-area-inset-top) + 112px)!important;right:12px!important;z-index:26!important}
+        .omLiveCinema .omCinemaModeSwitch summary{min-width:42px!important;min-height:38px!important;border-radius:999px!important;background:#08100d9c!important;border-color:#ffffff52!important;font-size:0!important}
+        .omLiveCinema .omCinemaModeSwitch summary::after{content:"▣";font-size:16px}
+        .omLiveCinema .omLiveViewerToolbar{right:12px!important;bottom:calc(env(safe-area-inset-bottom) + 90px)!important;gap:8px!important;max-width:90px!important}
+        .omLiveCinema .omLiveViewerToolbar button,.omLiveCinema .omLiveViewerToolbar a{background:#08100dc4!important;border:1px solid #ffffff52!important;color:#fff!important;box-shadow:none!important}
+        .omLiveCinema .omCinemaAudioButton{min-width:42px!important;min-height:42px!important;border-radius:999px!important;font-size:0!important;padding:0!important}
+        .omLiveCinema .omCinemaAudioButton::after{content:"🔊";font-size:17px}
+        .omLiveCinema .omCinemaAudioButton[aria-pressed="false"]::after{content:"🔇"}
+        .omLiveCinema .omLiveTheaterGuests{right:12px!important;bottom:calc(env(safe-area-inset-bottom) + 36px)!important}
+        .omLiveCinema .omLiveTheaterGuests summary{padding:10px 12px!important;background:#08100dc4!important;border:1px solid #ffffff52!important}
+        .omLiveCinema .omLiveTheaterChat{left:12px!important;bottom:calc(env(safe-area-inset-bottom) + 12px + var(--cinema-keyboard-offset,0px))!important;width:calc(100% - 118px)!important;max-width:420px!important;height:clamp(190px,33dvh,300px)!important}
+        .omLiveCinema .omLiveTheaterChat .liveChat{background:transparent!important;border:0!important;box-shadow:none!important}
+        .omLiveCinema .omLiveTheaterChat .messages{background:transparent!important}
+        .omLiveCinema .omLiveTheaterChat .composer{background:#07100dbb!important;border-radius:999px!important;backdrop-filter:blur(14px)}
+        .omLiveCinema .omLiveTheaterChat .emoteTray{opacity:.82;max-height:46px;overflow:hidden}
+        @media(max-width:700px){.omLiveCinema .omLiveTheaterInfo{right:120px!important}.omLiveCinema .omLiveTheaterChat{width:calc(100% - 112px)!important}.omLiveCinema .omLiveTheaterGuests{bottom:calc(env(safe-area-inset-bottom) + 22px)!important}}
         @media(prefers-reduced-motion:reduce){.omLiveCinema .omLiveVideoStage,.omLiveCinema .omLiveTheaterChat{transition:none!important}}
       `}</style>
     </section>
