@@ -1829,3 +1829,20 @@
 }
 .control.day .decoratedSurface{background:linear-gradient(160deg,color-mix(in srgb,var(--theme-primary,#e9e6d9) 9%,white),color-mix(in srgb,var(--theme-secondary,var(--theme-primary,#e9e6d9)) 12%,white))!important}
 .control.day .decoratedSurface>.surfaceArtwork{background-image:linear-gradient(180deg,rgba(255,255,255,.30),color-mix(in srgb,var(--theme-primary,#e9e6d9) 12%,transparent) 85%),url('/assets/decorations/islamic-gold-ornament.PNG')!important}
+
+/* Secondary-theme perimeter: keep both suspected edge sources in sync. */
+.control{
+  --canvas-edge-accent:var(--theme-secondary,var(--theme-primary,#b99a60));
+  transition:background 1.1s ease,background-color 1.1s ease!important;
+}
+.control .decoratedSurface{
+  border-color:color-mix(in srgb,var(--theme-secondary,var(--theme-primary,#b99a60)) 52%,transparent)!important;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--theme-secondary,var(--theme-primary,#b99a60)) 16%,transparent),0 0 22px color-mix(in srgb,var(--theme-secondary,var(--theme-primary,#b99a60)) 12%,transparent)!important;
+  transition:border-color 1.1s ease,box-shadow 1.1s ease,background 1.1s ease!important;
+}
+.control .decoratedSurface>.surfaceArtwork{
+  transition:opacity 1.1s ease,filter 1.1s ease!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .control,.control .decoratedSurface,.control .decoratedSurface>.surfaceArtwork{transition:none!important}
+}
