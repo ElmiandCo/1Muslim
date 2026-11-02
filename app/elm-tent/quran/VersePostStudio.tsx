@@ -1,5 +1,6 @@
-import {currentPostTheme} from "../../../lib/post-theme";
 "use client";
+import {currentPostTheme} from "../../lib/post-theme";
+
 import {useEffect,useRef,useState} from "react";
 import "./verse-post-studio.css";
 type Language="arabic"|"english"|"both";
