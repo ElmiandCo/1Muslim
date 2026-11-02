@@ -19,27 +19,51 @@ const avatars=[
  ["Default Male","/assets/avatars/default-male.jpg"],
  ["Default Female","/assets/avatars/Default-women.png"],
 ] as const;
-const FRAME=650;
+const FRAME=800;
 const CYCLE=avatars.length*FRAME;
 export default function AvatarEntryLoader({ready,onComplete,onSignUp,showSignUp}:{ready:boolean;onComplete:()=>void;onSignUp:()=>void;showSignUp:boolean}){
  const [phase,setPhase]=useState<"orbit"|"black"|"reveal">("orbit");
- const [frame,setFrame]=useState(0);
+ const portraits=useRef<(HTMLDivElement|null)[]>([]);
+ const elapsed=useRef(0);
+ const finishAt=useRef<number|null>(null);
  const exitArmed=useRef(false);
- const exitTimer=useRef<number|null>(null);
- useEffect(()=>()=>{if(exitTimer.current)clearTimeout(exitTimer.current)},[]);
  useEffect(()=>{
   if(phase!=="orbit")return;
-  const id=window.setInterval(()=>setFrame(v=>(v+1)%avatars.length),FRAME);
-  return()=>clearInterval(id);
+  let raf=0;
+  let previous=0;
+  const tick=(now:number)=>{
+   if(!previous)previous=now;
+   elapsed.current+=Math.min(48,now-previous);
+   previous=now;
+   const progress=(elapsed.current/CYCLE)*avatars.length;
+   const width=Math.min(175,window.innerWidth*.33);
+   portraits.current.forEach((node,i)=>{
+    if(!node)return;
+    const position=((i-progress)%avatars.length+avatars.length)%avatars.length;
+    const angle=position*Math.PI*2/avatars.length;
+    const depth=Math.cos(angle);
+    const x=Math.sin(angle)*width;
+    const y=(1-depth)*21;
+    const scale=.57+.43*(depth+1)/2;
+    node.style.transform=`translate3d(${x}px,${y}px,0) scale(${scale})`;
+    node.style.opacity=String(Math.max(.22,(depth+1)/2));
+    node.style.zIndex=String(Math.round(50+depth*20));
+   });
+   if(finishAt.current!==null&&elapsed.current>=finishAt.current){
+    setPhase("black");return;
+   }
+   raf=requestAnimationFrame(tick);
+  };
+  raf=requestAnimationFrame(tick);
+  return()=>cancelAnimationFrame(raf);
  },[phase]);
  useEffect(()=>{
   if(!ready||exitArmed.current)return;
   exitArmed.current=true;
-  // Never cut the carousel off mid-sequence: complete its current lap,
-  // ending on both default avatars before transitioning.
-  const remaining=((avatars.length-1-frame+avatars.length)%avatars.length)*FRAME+FRAME;
-  exitTimer.current=window.setTimeout(()=>setPhase("black"),remaining);
- },[ready,frame]);
+  // Finish the current uninterrupted orbit with the default male/female pair.
+  const lap=Math.ceil((elapsed.current+1)/CYCLE);
+  finishAt.current=lap*CYCLE;
+ },[ready]);
  useEffect(()=>{
   if(phase!=="black")return;
   const fade=window.setTimeout(()=>setPhase("reveal"),500);
@@ -53,16 +77,12 @@ export default function AvatarEntryLoader({ready,onComplete,onSignUp,showSignUp}
  return <div className={`avatarEntry avatarEntry--${phase}`} role="status" aria-label="Preparing your 1Muslim experience">
   <div className="avatarEntryStage" aria-hidden="true">
    <div className="avatarEntryOrbitRing"/>
-   {avatars.map(([label,src],i)=>{
-    const offset=(i-frame+avatars.length)%avatars.length;
-    const signed=offset>avatars.length/2?offset-avatars.length:offset;
-    const x=Math.sin(signed*.46)*Math.min(270,windowWidth());
-    const y=(1-Math.cos(signed*.46))*35;
-    const scale=Math.max(.42,1-Math.abs(signed)*.12);
-    return <div key={src} className="avatarEntryPortrait" style={{transform:`translate3d(${x}px,${y}px,0) scale(${scale})`,opacity:Math.abs(signed)>5?0:1,zIndex:20-Math.abs(signed)}} title={label}>
+   <div className="avatarEntryOrbitRing avatarEntryOrbitRing--outer"/>
+   <div className="avatarEntryOrbitRing avatarEntryOrbitRing--inner"/>
+   <div className="avatarEntryOrbitSpark" />
+   {avatars.map(([label,src],i)=><div key={src} ref={node=>{portraits.current[i]=node}} className="avatarEntryPortrait" title={label}>
      <img src={src} alt="" loading={i<6?"eager":"lazy"} onError={e=>{e.currentTarget.style.opacity="0"}}/>
-    </div>;
-   })}
+   </div>)}
   </div>
   <strong className="avatarEntryBrand">1Muslim</strong>
   <span className="avatarEntryCaption">Preparing your space</span>
@@ -70,4 +90,4 @@ export default function AvatarEntryLoader({ready,onComplete,onSignUp,showSignUp}
   {showSignUp&&<div className="avatarEntrySignup">New Here and Muslim? <button type="button" onClick={onSignUp}>Sign Up →</button></div>}
  </div>;
 }
-function windowWidth(){return typeof window==="undefined"?130:Math.min(130,window.innerWidth*.25)}
+
