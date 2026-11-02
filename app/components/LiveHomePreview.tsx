@@ -13,7 +13,9 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
   if(!roomName)return;
   let active=true;
   let retryTimer:ReturnType<typeof setTimeout>|undefined;
-  const room=new Room({adaptiveStream:true});
+  // The homepage is a full-quality Live surface, not a bandwidth-capped thumbnail.
+  // Disable element-size-based downshifting; LiveKit can still adapt to network capacity.
+  const room=new Room({adaptiveStream:false});
   setReady(false);
   setFailure("");
   const scheduleRetry=()=>{
@@ -32,7 +34,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
    for(const participant of room.remoteParticipants.values()){
     for(const publication of participant.trackPublications.values()){
      if(publication.kind!==Track.Kind.Video)continue;
-     publication.setVideoQuality(VideoQuality.MEDIUM);
+     publication.setVideoQuality(VideoQuality.HIGH);
      if(!publication.isSubscribed)publication.setSubscribed(true);
      if(publication.track)attach(publication.track);
     }
@@ -41,7 +43,7 @@ export default function LiveHomePreview({roomName}:{roomName:string}){
   room.on(RoomEvent.TrackSubscribed,attach);
   room.on(RoomEvent.TrackPublished,publication=>{
    if(publication.kind===Track.Kind.Video){
-    publication.setVideoQuality(VideoQuality.MEDIUM);
+    publication.setVideoQuality(VideoQuality.HIGH);
     publication.setSubscribed(true);
    }
   });
