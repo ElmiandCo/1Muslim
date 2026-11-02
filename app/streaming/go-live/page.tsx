@@ -54,18 +54,6 @@ export default function GoLivePage() {
   const [cameraReady, setCameraReady] = useState(false);
   const [settingsOpen,setSettingsOpen] = useState(false);
   const [visualEffect,setVisualEffect] = useState<LiveEffect>("off");
-  const liveEffectChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const currentLiveEffectRef = useRef<LiveEffect>("off");
-  useEffect(() => { currentLiveEffectRef.current = visualEffect; const channel = liveEffectChannelRef.current; if (channel) void channel.send({type:"broadcast",event:"effect",payload:{effect:visualEffect}}); }, [visualEffect]);
-  useEffect(() => {
-    if (!live || !liveStreamIdRef.current) return;
-    const supabase = createClient();
-    const channel = supabase.channel("live-effects-" + liveStreamIdRef.current);
-    liveEffectChannelRef.current = channel;
-    channel.subscribe(status=>{if(status==="SUBSCRIBED")void channel.send({type:"broadcast",event:"effect",payload:{effect:currentLiveEffectRef.current}})});
-    const effectSyncTimer=window.setInterval(()=>{void channel.send({type:"broadcast",event:"effect",payload:{effect:currentLiveEffectRef.current}})},5000);
-    return () => {window.clearInterval(effectSyncTimer);if(liveEffectChannelRef.current===channel)liveEffectChannelRef.current=null;void supabase.removeChannel(channel)};
-  }, [live]);
   const lastPreviewTapRef=useRef(0);
   const [studioMode,setStudioMode]=useState<"desktop"|"phone"|"voice">("phone");
   const [micOn, setMicOn] = useState(true);
@@ -581,6 +569,19 @@ export default function GoLivePage() {
     }
   };
   const liveStreamIdRef = useRef<string | null>(null);
+  const liveEffectChannelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null);
+  const currentLiveEffectRef = useRef<LiveEffect>("off");
+  useEffect(() => { currentLiveEffectRef.current = visualEffect; const channel = liveEffectChannelRef.current; if (channel) void channel.send({type:"broadcast",event:"effect",payload:{effect:visualEffect}}); }, [visualEffect]);
+  useEffect(() => {
+    if (!live || !liveStreamIdRef.current) return;
+    const supabase = createClient();
+    const channel = supabase.channel("live-effects-" + liveStreamIdRef.current);
+    liveEffectChannelRef.current = channel;
+    channel.subscribe(status=>{if(status==="SUBSCRIBED")void channel.send({type:"broadcast",event:"effect",payload:{effect:currentLiveEffectRef.current}})});
+    const effectSyncTimer=window.setInterval(()=>{void channel.send({type:"broadcast",event:"effect",payload:{effect:currentLiveEffectRef.current}})},5000);
+    return () => {window.clearInterval(effectSyncTimer);if(liveEffectChannelRef.current===channel)liveEffectChannelRef.current=null;void supabase.removeChannel(channel)};
+  }, [live]);
+
 
   const scheduleLive = async () => {
     setScheduleMessage("");
