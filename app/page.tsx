@@ -156,7 +156,7 @@ export default function Home(){
    window.dispatchEvent(new CustomEvent("1muslim:profile-background-changed",{detail:key}));
   };
  },[homeSignedIn]);
- useEffect(()=>{if(typeof window==="undefined")return;const params=new URLSearchParams(window.location.search);if(params.get("profile")!=="background")return;const id=window.setTimeout(()=>{moveWorkspace(6);window.dispatchEvent(new Event("1muslim:open-profile-background"));},300);return()=>clearTimeout(id)},[]);
+ useEffect(()=>{if(typeof window==="undefined")return;const params=new URLSearchParams(window.location.search);if(params.get("profile")!=="background"&&params.get("profile")!=="1")return;const id=window.setTimeout(()=>{moveWorkspace(6);if(params.get("profile")==="background")window.dispatchEvent(new Event("1muslim:open-profile-background"));},300);return()=>clearTimeout(id)},[]);
 
  useEffect(()=>{let show=true;try{show=localStorage.getItem("1muslim:new-themes-upgrade-dismissed-v1")!=="yes";if(show)localStorage.setItem("1muslim:new-themes-upgrade-dismissed-v1","yes")}catch{}if(!show)return;setUpgradeVisible(true);const timer=window.setTimeout(()=>setUpgradeVisible(false),8000);return()=>window.clearTimeout(timer)},[]);
  const dismissUpgrade=()=>{setUpgradeVisible(false);try{localStorage.setItem("1muslim:new-themes-upgrade-dismissed-v1","yes")}catch{}};
