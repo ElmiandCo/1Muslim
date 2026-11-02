@@ -498,3 +498,13 @@
 @media(max-width:480px){.ummah-comments-viewport{padding:0!important}.ummah-comments-viewport .ummah-comments-theme-responsive{height:92%!important;border-radius:22px 22px 0 0!important}}
 
 .ummah-floating-post[data-post-theme]{border-color:color-mix(in srgb,var(--post-secondary) 55%,transparent)!important;box-shadow:0 0 22px color-mix(in srgb,var(--post-glow) 20%,transparent)!important}
+
+/* Post reading: slight pre-swipe breathing, with motion accessibility. */
+.community-post-card{transition:transform 950ms cubic-bezier(.22,.8,.3,1),filter 950ms ease;transform-origin:center center}
+.community-post-card.ummah-reading-transition{transform:scale(.982);filter:brightness(1.045)}
+/* Darken night feed's translucent canvas, brighten the same surface in day mode. */
+html:not([data-day-mode="true"]) .community-simple-feed .community-posts-list{background-color:rgba(0,0,0,.14)}
+html[data-day-mode="true"] .community-simple-feed .community-posts-list,
+.day .community-simple-feed .community-posts-list{background-color:rgba(255,255,255,.12)}
+.ummah-post-package{cursor:pointer}
+@media(prefers-reduced-motion:reduce){.community-post-card{transition:none!important}.community-post-card.ummah-reading-transition{transform:none;filter:none}}
