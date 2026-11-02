@@ -154,7 +154,7 @@ function DailyPostsApp({active}:{active:boolean}){
    {posts.length?posts.map((post,i)=><div className="ummah-floating-pair" key={post.id} style={{["--ummah-tilt" as string]:(i%2===0?"-3deg":"3deg")}}>
     <button type="button" data-post-theme={posts[i].post_theme||"emerald"} className="ummah-floating-post" style={{backgroundImage:`linear-gradient(180deg,rgba(1,18,16,.22),rgba(1,18,16,.78)),url("${backgroundForPost(post.id)}")`,backgroundSize:"cover",backgroundPosition:"center"}} onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}} aria-label={"Open comments on post by "+post.author_name}>
      <span className="ummah-post-glow" aria-hidden="true"/>
-     <span className="ummah-post-body">{post.body}</span>
+     <span className="ummah-post-body">{post.body.replace(/^✦ DAILY UMMAH ✦(?:\\n|\r?\n)?\s*/,"")}</span>
      <span className="ummah-post-bottom"><span>✦ Ummah</span><span>{new Date(post.created_at).toLocaleDateString()}</span><span>Comments ↗</span></span>
     </button>
     <button type="button" className="ummah-like-button" aria-label={likes[post.id]?"Unlike post":"Like post"} aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥":"♡"}</button>
