@@ -31,6 +31,25 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
   const [status, setStatus] = useState("Connecting to live…");
   const [viewerCount, setViewerCount] = useState<number | null>(null);
   const [viewerPulse,setViewerPulse]=useState(false);
+  const [viewerRosterOpen,setViewerRosterOpen]=useState(false);
+  const [viewerRosterLoading,setViewerRosterLoading]=useState(false);
+  const [viewerRoster,setViewerRoster]=useState<Array<{id:string;username:string;avatar:string|null;xp:number|null}>>([]);
+  useEffect(()=>{
+    if(!viewerRosterOpen||!roomName)return;
+    let active=true;
+    const load=async()=>{
+      try{
+        if(active)setViewerRosterLoading(true);
+        const res=await fetch("/api/livekit/viewers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName}),cache:"no-store"});
+        if(!res.ok)throw new Error("Viewer list unavailable");
+        const data=await res.json();
+        if(active)setViewerRoster(Array.isArray(data.viewers)?data.viewers:[]);
+      }catch{if(active)setViewerRoster([])}finally{if(active)setViewerRosterLoading(false)}
+    };
+    void load();
+    const timer=window.setInterval(()=>void load(),10000);
+    return()=>{active=false;window.clearInterval(timer)};
+  },[viewerRosterOpen,roomName]);
   const previousViewerCount=useRef<number|null>(null);
   const [tapCount,setTapCount]=useState(0);
   const [tapBursts,setTapBursts]=useState<{id:number,x:number,y:number}[]>([]);
@@ -462,7 +481,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       {embedded&&streamId&&hostIdentity&&!hostEnded&&<details className="omEmbeddedGuestRequest" style={{position:"absolute",right:12,bottom:76,zIndex:35,color:"#fff",maxWidth:"min(92vw,370px)"}}><summary style={{cursor:"pointer",padding:"9px 12px",borderRadius:999,background:"#09251cdd",border:"1px solid #c6dfc477",fontSize:12,fontWeight:800}}>🎙️ Request to Join</summary><div style={{marginTop:8,maxHeight:"55dvh",overflowY:"auto",background:"#081a17f2",borderRadius:16,padding:6}}><LiveGuestStudio streamId={streamId} roomName={roomName} hostId={hostIdentity}/></div></details>}
       {!embedded && <details className="omCinemaModeSwitch" aria-label="Live viewing format"><summary aria-label="Change live viewing format">▣ View</summary><div className="omCinemaModeChoices" role="group" aria-label="Live viewing format"><button type="button" aria-pressed={viewMode==="desktop"} onClick={e=>{selectViewMode("desktop");e.currentTarget.closest("details")?.removeAttribute("open")}}>▣ Desktop</button><button type="button" aria-pressed={viewMode==="phone"} onClick={e=>{selectViewMode("phone");e.currentTarget.closest("details")?.removeAttribute("open")}}>▯ Phone</button></div></details>}
       {!embedded&&<><div className="omViewerTapCounter" aria-label={`${tapCount} screen taps`}>✨ {tapCount.toLocaleString()} taps</div>{tapBursts.map(t=><span key={t.id} className="omViewerTapBurst" style={{left:t.x,top:t.y}}>💜</span>)}<a className="omViewerExit" href="/streaming" aria-label="Exit live viewer">✕</a></>}
-      {viewerCount !== null && !error && <div role="status" aria-label={`${viewerCount.toLocaleString()} watching live`} className={viewerPulse?"omViewerCountPulse":""} style={{position:"absolute",top:12,right:12,zIndex:6,display:"flex",alignItems:"center",gap:6,padding:"7px 11px",borderRadius:999,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.22)",color:"#fff",fontSize:12,fontWeight:800,backdropFilter:"blur(10px)",pointerEvents:"none"}}>👁 {viewerCount.toLocaleString()} <span style={{fontSize:10,opacity:.8}}>watching</span>{totalViews!==null&&<span style={{fontSize:10,opacity:.9,borderLeft:"1px solid #ffffff55",paddingLeft:8,marginLeft:2}}>↗ {totalViews.toLocaleString()} total</span>}</div>}
+      {viewerCount !== null && !error && <button type="button" onClick={e=>{e.stopPropagation();setViewerRosterOpen(v=>!v)}} aria-expanded={viewerRosterOpen} aria-label={`${viewerCount.toLocaleString()} watching live; show viewer list`} className={viewerPulse?"omViewerCountPulse":""} style={{position:"absolute",top:12,right:12,zIndex:6,display:"flex",alignItems:"center",gap:6,padding:"7px 11px",borderRadius:999,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.22)",color:"#fff",fontSize:12,fontWeight:800,backdropFilter:"blur(10px)",cursor:"pointer"}}>👁 {viewerCount.toLocaleString()} <span style={{fontSize:10,opacity:.8}}>watching</span>{totalViews!==null&&<span style={{fontSize:10,opacity:.9,borderLeft:"1px solid #ffffff55",paddingLeft:8,marginLeft:2}}>↗ {totalViews.toLocaleString()} total</span>}</button>}
+      {viewerRosterOpen&&<div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:58,right:12,zIndex:30,width:"min(320px,calc(100vw - 24px))",maxHeight:"min(55dvh,420px)",overflow:"hidden",display:"flex",flexDirection:"column",borderRadius:18,background:"rgba(8,22,20,.94)",border:"1px solid rgba(255,255,255,.24)",backdropFilter:"blur(18px)",color:"#fff",boxShadow:"0 12px 42px #0009"}}><header style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",borderBottom:"1px solid #ffffff26"}}><strong>👁 Watching now · {viewerCount??0}</strong><button type="button" onClick={()=>setViewerRosterOpen(false)} aria-label="Close viewer list" style={{background:"none",border:0,color:"#fff",fontSize:18,cursor:"pointer"}}>✕</button></header><div style={{overflowY:"auto",padding:"6px 12px"}}>{viewerRosterLoading&&viewerRoster.length===0?<p>Loading viewers…</p>:viewerRoster.length===0?<p>No viewers to display.</p>:viewerRoster.map(person=><div key={person.id} style={{display:"flex",gap:10,alignItems:"center",padding:"9px 2px",borderBottom:"1px solid #ffffff12"}}><span style={{width:36,height:36,borderRadius:"50%",overflow:"hidden",background:"#254b42",display:"grid",placeItems:"center",flexShrink:0}}>{person.avatar?<img src={person.avatar} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:"◉"}</span><strong style={{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:12}}>{person.username}</strong><small style={{whiteSpace:"nowrap",opacity:.8}}>{person.xp===null?"XP unavailable":person.xp.toLocaleString()+" XP"}</small></div>)}</div></div>}
       <div className="omLiveViewerToolbar" style={{position:"absolute",left:12,bottom:12,display:"flex",gap:7,alignItems:"center",flexWrap:"wrap",zIndex:5}}>
         <button type="button" onClick={toggleMute} className="omCinemaAudioButton" data-audible={audible?"yes":"no"} aria-label={audioNeedsGesture ? "Hear live audio" : muted ? "Unmute live audio" : audible ? "Mute live audio" : "Try live audio"} aria-pressed={audible} title={audible?"Live audio playing":audioNeedsGesture?"Tap to enable live audio":"Audio muted or unavailable"} style={{border:"1px solid rgba(255,255,255,.22)",background:"rgba(0,0,0,.72)",color:"#fff",borderRadius:999,padding:"8px 11px",fontSize:11,fontWeight:800,cursor:"pointer"}}>
           {audible ? "🔊 Audio on" : audioNeedsGesture ? "🔊 Hear Live" : muted ? "🔇 Unmute" : "🔇 Audio off"}
