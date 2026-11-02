@@ -1,5 +1,5 @@
-import AdminParallaxDashboard from "./components/AdminParallaxDashboard";
 "use client";
+import AdminParallaxDashboard from "./components/AdminParallaxDashboard";
 import {currentPostTheme} from "./lib/post-theme";
 
 import workspaceStyles from "./workspace-presentation.module.css";
