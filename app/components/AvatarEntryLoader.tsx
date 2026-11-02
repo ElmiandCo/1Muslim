@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useState} from "react";
+import {useEffect,useRef,useState} from "react";
 import "./AvatarEntryLoader.css";
 
 // All assets come from the existing 1Muslim avatar collection.
@@ -24,13 +24,15 @@ const CYCLE=avatars.length*FRAME;
 export default function AvatarEntryLoader({ready,onComplete}:{ready:boolean;onComplete:()=>void}){
  const [phase,setPhase]=useState<"orbit"|"black"|"reveal">("orbit");
  const [frame,setFrame]=useState(0);
+ const exitArmed=useRef(false);
  useEffect(()=>{
   if(phase!=="orbit")return;
   const id=window.setInterval(()=>setFrame(v=>(v+1)%avatars.length),FRAME);
   return()=>clearInterval(id);
  },[phase]);
  useEffect(()=>{
-  if(!ready)return;
+  if(!ready||exitArmed.current)return;
+  exitArmed.current=true;
   // Never cut the carousel off mid-sequence: complete its current lap,
   // ending on both default avatars before transitioning.
   const remaining=((avatars.length-1-frame+avatars.length)%avatars.length)*FRAME+FRAME;
