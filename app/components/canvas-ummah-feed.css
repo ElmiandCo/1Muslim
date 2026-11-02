@@ -559,3 +559,11 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 .community-post-card .ummah-post-theme-particles{position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;overflow:hidden;opacity:.32;background-image:radial-gradient(circle at 14% 28%,var(--post-glow) 0 1.2px,transparent 3px),radial-gradient(circle at 73% 63%,var(--post-glow) 0 1px,transparent 3px),radial-gradient(circle at 48% 85%,var(--post-glow) 0 1.4px,transparent 4px);background-size:140px 190px,230px 270px,300px 320px;animation:ummahThemeParticleFloat 18s linear infinite}
 .community-post-card>.ummah-post-theme-particles~*{position:relative;z-index:1}
 @media(prefers-reduced-motion:reduce){.community-post-card .ummah-post-theme-particles{animation:none}}
+
+/* Cinematic reading polish: keep the active text rock-steady, reduce competing motion. */
+.community-post-card.ummah-reading-main{transform:none!important;filter:none!important;box-shadow:0 0 18px color-mix(in srgb,var(--post-glow,#d7b969) 12%,transparent),0 8px 24px #0002;transition:box-shadow 1.2s ease}
+.community-post-card.ummah-reading-before{transform:translate3d(0,calc(-1 * var(--ummah-neighbor-drift,0px)),0)!important;filter:none!important;transition:transform 120ms linear!important}
+.community-post-card.ummah-reading-after{transform:translate3d(0,var(--ummah-neighbor-drift,0px),0)!important;filter:none!important;transition:transform 120ms linear!important}
+.community-post-card .ummah-post-theme-particles{opacity:.16}
+.ummah-unified-media .ummah-themed-particles{opacity:.2}
+@media(prefers-reduced-motion:reduce){.community-post-card.ummah-reading-before,.community-post-card.ummah-reading-after{transform:none!important;transition:none!important}}
