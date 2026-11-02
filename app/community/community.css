@@ -228,8 +228,10 @@
 .ummahPage :where(.postCard,.ummahCard),.omUmmahPage :where(.postCard,.ummahCard){padding:clamp(8px,1.5vw,14px)}
 
 /* Community posts: tablet and desktop only. Each lane scrolls independently. */
+.omDualLaneFeed{display:none}.omMobileFeedOnly{display:block}
 .omDualLaneFeed{display:block}
 @media(min-width:768px){
+ .omMobileFeedOnly{display:none}
  .omDualLaneFeed{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start;height:min(75dvh,820px);min-height:420px;overflow:hidden}
  .omPostLane{min-width:0;min-height:0;height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:8px 5px 30px;scroll-behavior:smooth}
  .omPostLane .omFeedSequence{margin:0 0 14px;animation:omLaneFloat 9s ease-in-out infinite alternate}
@@ -238,5 +240,5 @@
  .omPostLane .socialPost:hover,.omPostLane .socialPost:focus-within{animation-play-state:paused}
  @keyframes omLaneFloat{from{transform:translateY(0)}to{transform:translateY(-5px)}}
 }
-@media(max-width:767px){.omPostLane{display:contents}.omDualLaneFeed{display:flex;flex-direction:column}.omPostLane .omFeedSequence{display:contents}}
+@media(max-width:767px){.omDualLaneFeed{display:none}.omMobileFeedOnly{display:block}}
 @media(prefers-reduced-motion:reduce){.omPostLane .omFeedSequence{animation:none!important}}
