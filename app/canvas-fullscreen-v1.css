@@ -2122,3 +2122,20 @@ header[class*="controlHeader"] [class*="headerActions"] a{
  .oneMuslimDesktopMessagesRail [class*="tabs"]{padding-bottom:6px!important;}
  .oneMuslimDesktopMessagesRail [class*="threadHeader"]{min-height:50px!important;padding:7px!important;}
 }
+
+
+/* Dual feed: two independently scrolling lanes only on tablet/desktop. */
+.ummah-dual-lanes{display:none}
+.ummah-feed-single{display:contents}
+.ummah-media-expand{display:flex;align-items:center;justify-content:center;width:100%;max-width:100%;overflow:hidden}
+.ummah-media-expand img.ummah-package-media{display:block;width:auto!important;max-width:100%!important;max-height:clamp(160px,32vh,340px)!important;height:auto!important;object-fit:contain!important;margin-inline:auto}
+.ummah-template-image .ummah-post-package{min-height:0!important}
+@media(min-width:768px){
+ .community-posts-list{min-height:0;display:flex;flex-direction:column}
+ .ummah-feed-single{display:none}
+ .ummah-dual-lanes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(12px,2vw,26px);width:100%;flex:1;min-height:0;overflow:hidden}
+ .ummah-dual-lane{min-width:0;min-height:0;height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:8px 5px 30px;will-change:scroll-position}
+ .ummah-dual-lane .community-post-card{width:100%;max-width:100%;box-sizing:border-box;margin:0 0 18px!important;transform:none;transition:box-shadow 500ms ease,opacity 500ms ease}
+ .ummah-dual-lane .ummah-package-media{max-height:clamp(140px,27vh,280px)!important}
+}
+@media(prefers-reduced-motion:reduce){.ummah-dual-lane .community-post-card{transition:none!important}}
