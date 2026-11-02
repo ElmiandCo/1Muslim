@@ -195,7 +195,7 @@ function DailyPostsApp({active}:{active:boolean}){
   if(!scroll)return;
   const viewport=scroll;
   const cards=()=>Array.from(feed.querySelectorAll<HTMLElement>(".community-post-card"));
-  const clearMotion=()=>cards().forEach(card=>card.classList.remove("ummah-reading-main","ummah-reading-before","ummah-reading-after"));
+  const clearMotion=()=>cards().forEach(card=>{card.classList.remove("ummah-reading-main","ummah-reading-before","ummah-reading-after");card.style.removeProperty("--ummah-neighbor-drift");card.style.removeProperty("--ummah-neighbor-scale")});
   const interrupt=()=>{autoPause.current=performance.now()+10000;elapsed=0;activeIndex=-1;clearMotion()};
   const events=["touchstart","pointerdown","wheel","keydown"] as const;
   events.forEach(event=>window.addEventListener(event,interrupt,{passive:true}));
@@ -216,8 +216,14 @@ function DailyPostsApp({active}:{active:boolean}){
    const progress=Math.min(1,elapsed/duration);
    clearMotion();
    card.classList.add("ummah-reading-main");
-   if(all[activeIndex-1])all[activeIndex-1].classList.add("ummah-reading-before");
-   if(all[activeIndex+1])all[activeIndex+1].classList.add("ummah-reading-after");
+   // Neighbors drift outward throughout the reading window, then float home
+   // before the next advance; CSS custom properties avoid per-frame class churn.
+   const driftPhase=Math.sin(Math.PI*progress);
+   const driftAmount=Math.round(driftPhase*44);
+   const neighborScale=(1-driftPhase*.055).toFixed(3);
+   const previous=all[activeIndex-1],following=all[activeIndex+1];
+   if(previous){previous.classList.add("ummah-reading-before");previous.style.setProperty("--ummah-neighbor-drift",driftAmount+"px");previous.style.setProperty("--ummah-neighbor-scale",neighborScale)}
+   if(following){following.classList.add("ummah-reading-after");following.style.setProperty("--ummah-neighbor-drift",driftAmount+"px");following.style.setProperty("--ummah-neighbor-scale",neighborScale)}
    // Continuous cinematic drift, with a gentle ease into the next post.
    const next=all[activeIndex+1]||all[0];
    const distance=next.getBoundingClientRect().top-card.getBoundingClientRect().top;
