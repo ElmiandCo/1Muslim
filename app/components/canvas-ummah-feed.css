@@ -567,3 +567,13 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 .community-post-card .ummah-post-theme-particles{opacity:.16}
 .ummah-unified-media .ummah-themed-particles{opacity:.2}
 @media(prefers-reduced-motion:reduce){.community-post-card.ummah-reading-before,.community-post-card.ummah-reading-after{transform:none!important;transition:none!important}}
+
+/* Qur'an passages selected through Add Verse are distinct from member commentary. */
+.ummah-post-body{white-space:pre-wrap}
+.ummah-verse-block{display:block;margin:16px 0;padding:17px 18px;border-radius:16px;border-inline-start:3px solid #d7b66b;background:linear-gradient(135deg,rgba(209,170,91,.14),rgba(23,48,45,.14));box-shadow:inset 0 1px rgba(255,255,255,.12)}
+.ummah-verse-label{display:block;font:600 11px/1.6 system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:#d7b66b;margin-bottom:10px}
+.ummah-verse-arabic{display:block;font-family:"Amiri","Noto Naskh Arabic","Traditional Arabic",serif;font-size:clamp(23px,5vw,32px);font-weight:500;line-height:2.1;text-align:center;color:#f1dba4;white-space:pre-wrap}
+.ummah-verse-translation{display:block;margin-top:10px;font-family:Georgia,"Times New Roman",serif;font-size:clamp(15px,3.7vw,18px);font-style:italic;line-height:1.75;color:#ead9ad;white-space:pre-wrap}
+.ummah-author-words{display:block;color:inherit;white-space:pre-wrap}
+.ummah-unified-text .ummah-verse-block,.ummah-unified-caption .ummah-verse-block{max-width:100%}
+@media(prefers-reduced-motion:reduce){.ummah-verse-block{transition:none}}
