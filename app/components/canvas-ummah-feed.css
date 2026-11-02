@@ -591,3 +591,57 @@ html.light .profile-neutral-controls{--profile-avatar-neutral:linear-gradient(14
 .profile-neutral-controls .profile-compact-row button{border:0;background:transparent;color:inherit;font-size:22px;width:34px;height:34px;cursor:pointer;transition:transform .2s ease}
 .profile-neutral-controls .profile-compact-row.editing button{transform:rotate(-10deg)}
 .profile-neutral-controls .profile-compact-tab{border:1px solid var(--profile-neutral-edge);border-radius:12px;padding:5px 10px;color:inherit;cursor:pointer;text-transform:capitalize;font-size:12px}
+
+
+/* Profile chrome is intentionally neutral across Emerald, Sapphire, Ruby,
+   Amethyst, Titanium and Obsidian; theme-specific page backgrounds remain intact. */
+.profile-neutral-workspace,
+.profile-neutral-avatar-portal{
+ --profile-chrome:#818992;
+ --profile-chrome-fill:#292f36;
+ --profile-chrome-glow:rgba(129,137,146,.24);
+ --profile-chrome-text:#e1e4e8;
+}
+html.light .profile-neutral-workspace,
+html.light .profile-neutral-avatar-portal{
+ --profile-chrome:#c0c8d0;
+ --profile-chrome-fill:#e1e6eb;
+ --profile-chrome-glow:rgba(192,200,208,.32);
+ --profile-chrome-text:#29333e;
+}
+.profile-neutral-workspace .profile-neutral-side-nav{
+ background:color-mix(in srgb,var(--profile-chrome-fill) 78%,transparent)!important;
+ border-color:var(--profile-chrome)!important;
+ box-shadow:0 4px 18px var(--profile-chrome-glow)!important;
+}
+.profile-neutral-workspace .profile-neutral-side-settings,
+.profile-neutral-workspace .profile-neutral-side-tab{
+ color:var(--profile-chrome-text)!important;
+}
+.profile-neutral-workspace .profile-neutral-side-tab[aria-selected="true"]{
+ border-left-color:var(--profile-chrome)!important;
+ background:color-mix(in srgb,var(--profile-chrome) 16%,transparent)!important;
+}
+.profile-neutral-workspace .profile-neutral-side-tab:focus-visible,
+.profile-neutral-workspace .profile-neutral-side-settings:focus-visible{
+ outline:2px solid var(--profile-chrome)!important;
+ outline-offset:2px;
+}
+.profile-neutral-avatar-portal .profile-avatar-portrait{
+ border-color:var(--profile-chrome)!important;
+ background:radial-gradient(circle at 50% 35%,var(--profile-chrome-fill),#11161c 80%)!important;
+ box-shadow:0 0 0 3px var(--profile-chrome-glow),0 0 24px var(--profile-chrome-glow),inset 0 0 15px var(--profile-chrome-glow)!important;
+ animation:profileNeutralHalo 5s ease-in-out infinite!important;
+}
+html.light .profile-neutral-avatar-portal .profile-avatar-portrait{
+ background:radial-gradient(circle at 50% 35%,#f1f3f5,var(--profile-chrome-fill) 80%)!important;
+}
+.profile-neutral-avatar-portal .profile-avatar-portrait::before,
+.profile-neutral-avatar-portal .profile-avatar-portrait::after{
+ border-color:var(--profile-chrome)!important;
+}
+@keyframes profileNeutralHalo{
+ 0%,100%{filter:brightness(1)}
+ 50%{filter:brightness(1.08)}
+}
+@media(prefers-reduced-motion:reduce){.profile-neutral-avatar-portal .profile-avatar-portrait{animation:none!important}}
