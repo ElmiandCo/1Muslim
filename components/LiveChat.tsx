@@ -30,6 +30,9 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
   const supabase = useMemo(() => createClient(), []);
   const [userId, setUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [pinned, setPinned] = useState<Message | null>(null);
+  const pinnedRef = useRef<Message | null>(null);
+  const pinChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -88,6 +91,24 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
     return () => { void supabase.removeChannel(channel); };
   }, [streamId, supabase]);
 
+  useEffect(() => {
+    const channel = supabase.channel("live-pin-" + streamId, { config: { broadcast: { self: true } } });
+    pinChannelRef.current = channel;
+    channel.on("broadcast", { event: "pin" }, ({ payload }) => {
+      if (payload?.hostId !== hostId) return;
+      const next = payload.comment as Message | null;
+      pinnedRef.current = next; setPinned(next);
+    }).on("broadcast", { event: "request-pin" }, () => {
+      if (userId === hostId) void channel.send({ type: "broadcast", event: "pin", payload: { hostId, comment: pinnedRef.current } });
+    }).subscribe(status => { if (status === "SUBSCRIBED") void channel.send({ type: "broadcast", event: "request-pin", payload: {} }); });
+    return () => { if (pinChannelRef.current === channel) pinChannelRef.current = null; void supabase.removeChannel(channel); };
+  }, [streamId, hostId, userId, supabase]);
+  const togglePin = (message: Message) => {
+    if (userId !== hostId) return;
+    const next = pinnedRef.current?.id === message.id ? null : message;
+    pinnedRef.current = next; setPinned(next);
+    void pinChannelRef.current?.send({ type: "broadcast", event: "pin", payload: { hostId, comment: next } });
+  };
   const send = async (event: FormEvent) => {
     event.preventDefault();
     const body = limit35(draft.trim());
@@ -136,6 +157,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
         .emoteTray{display:flex;gap:7px;padding:9px 12px 2px;flex-wrap:wrap}.emoteTray button{background:linear-gradient(135deg,#12342c,#172d40);border:1px solid #80c9b277;border-radius:12px;padding:7px 10px;font-size:19px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}.emoteTray button:hover{transform:translateY(-3px);box-shadow:0 0 16px #75e5b955}.emoteTray button:disabled{opacity:.35;cursor:not-allowed}.composer{display:flex;gap:7px;padding:12px;border-top:1px solid #1b241f}.composer input{flex:1;min-width:0;border:1px solid #263029;background:#0d140f;color:#fff;border-radius:999px;padding:10px 12px;outline:none;font-size:11px}.composer button{border:0;border-radius:999px;padding:0 14px;background:#d6e9b8;color:#071008;font-weight:850;font-size:10px;cursor:pointer}.composer button:disabled{opacity:.45;cursor:not-allowed}.mutedNotice,.notice{margin:10px 12px;padding:9px 11px;border-radius:10px;font-size:9px}.mutedNotice{background:#1b1510;border:1px solid #4a3927;color:#d7bd9c}.notice{background:#1b0f10;border:1px solid #533536;color:#ffcaca}
       `}</style>
       {!overlay && <div className="chatHead"><strong>💬 Live chat</strong><span>{messages.length} messages</span></div>}
+      {pinned && <div className="livePinnedComment" aria-label="Pinned live comment"><span>📌 Pinned · {displayName(pinned)}</span><strong>{pinned.body}</strong>{userId===hostId&&<button type="button" onClick={()=>togglePin(pinned)}>Unpin</button>}</div>}
       <div className="messages">
         {messages.length ? messages.map((message) => {
           const isHost = message.sender_id === hostId;
@@ -152,6 +174,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
               <div className="name">{displayName(message)}{isHost && <span className="host">HOST</span>}{isMuted && !isHost && <span className="muted">muted</span>}</div>
               <div className="body">{message.body}</div>
             </div>
+            {userId === hostId && <button className="muteBtn" type="button" onClick={e=>{e.stopPropagation();togglePin(message)}}>{pinned?.id===message.id?"Unpin":"Pin"}</button>}
             {userId === hostId && !isHost && <button className="muteBtn" onClick={() => void toggleMute(message.sender_id)}>{isMuted ? "Unmute" : "Mute"}</button>}
           </div>;
         }) : <div style={{color:"#66736b",fontSize:10,padding:10}}>Be the first to say something.</div>}
