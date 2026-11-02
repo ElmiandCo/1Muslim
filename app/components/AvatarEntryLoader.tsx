@@ -22,11 +22,25 @@ const avatars=[
 const FRAME=800;
 const CYCLE=avatars.length*FRAME;
 export default function AvatarEntryLoader({ready,onComplete,onSignUp,showSignUp}:{ready:boolean;onComplete:()=>void;onSignUp:()=>void;showSignUp:boolean}){
- const [phase,setPhase]=useState<"orbit"|"black"|"reveal">("orbit");
+ const [phase,setPhase]=useState<"waiting"|"orbit"|"black"|"reveal">("waiting");
+ const started=useRef(false);
+ const readyRef=useRef(ready);
+ readyRef.current=ready;
  const portraits=useRef<(HTMLDivElement|null)[]>([]);
  const elapsed=useRef(0);
- const finishAt=useRef<number|null>(null);
- const exitArmed=useRef(false);
+ useEffect(()=>{
+  const timer=window.setTimeout(()=>{
+   if(readyRef.current){setPhase("reveal");return;}
+   started.current=true;
+   setPhase("orbit");
+  },1000);
+  return()=>clearTimeout(timer);
+ },[]);
+ useEffect(()=>{
+  if(!ready||!started.current)return;
+  // Never force an authenticated visitor to watch a full carousel.
+  setPhase(current=>current==="orbit"?"black":current);
+ },[ready]);
  useEffect(()=>{
   if(phase!=="orbit")return;
   let raf=0;
@@ -35,35 +49,24 @@ export default function AvatarEntryLoader({ready,onComplete,onSignUp,showSignUp}
    if(!previous)previous=now;
    elapsed.current+=Math.min(48,now-previous);
    previous=now;
-   const progress=(elapsed.current/CYCLE)*avatars.length;
+   const progress=elapsed.current/FRAME;
    const width=Math.min(175,window.innerWidth*.33);
    portraits.current.forEach((node,i)=>{
     if(!node)return;
-    const position=((i-progress)%avatars.length+avatars.length)%avatars.length;
-    const angle=position*Math.PI*2/avatars.length;
+    const angle=(i-progress)*Math.PI*2/avatars.length;
     const depth=Math.cos(angle);
     const x=Math.sin(angle)*width;
     const y=(1-depth)*21;
     const scale=.57+.43*(depth+1)/2;
     node.style.transform=`translate3d(${x}px,${y}px,0) scale(${scale})`;
-    node.style.opacity=String(Math.max(.22,(depth+1)/2));
+    node.style.opacity=String(.32+.68*(depth+1)/2);
     node.style.zIndex=String(Math.round(50+depth*20));
    });
-   if(finishAt.current!==null&&elapsed.current>=finishAt.current){
-    setPhase("black");return;
-   }
    raf=requestAnimationFrame(tick);
   };
   raf=requestAnimationFrame(tick);
   return()=>cancelAnimationFrame(raf);
  },[phase]);
- useEffect(()=>{
-  if(!ready||exitArmed.current)return;
-  exitArmed.current=true;
-  // Finish the current uninterrupted orbit with the default male/female pair.
-  const lap=Math.ceil((elapsed.current+1)/CYCLE);
-  finishAt.current=lap*CYCLE;
- },[ready]);
  useEffect(()=>{
   if(phase!=="black")return;
   const fade=window.setTimeout(()=>setPhase("reveal"),500);
@@ -87,7 +90,7 @@ export default function AvatarEntryLoader({ready,onComplete,onSignUp,showSignUp}
   <strong className="avatarEntryBrand">1Muslim</strong>
   <span className="avatarEntryCaption">Preparing your space</span>
   <div className="avatarEntryProgress" aria-hidden="true"><i/></div>
-  {showSignUp&&<div className="avatarEntrySignup">New Here and Muslim? <button type="button" onClick={onSignUp}>Sign Up →</button></div>}
+  {showSignUp&&phase==="orbit"&&<div className="avatarEntrySignup">New Here and Muslim? <button type="button" onClick={onSignUp}>Sign Up →</button></div>}
  </div>;
 }
 
