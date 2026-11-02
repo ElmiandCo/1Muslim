@@ -182,7 +182,7 @@ function DailyPostsApp({active}:{active:boolean}){
  const viewerVideoRef=useRef<HTMLVideoElement|null>(null);
  const videoStartAt=useRef(0);
  const openPostViewer=(post:UmmahPost)=>{videoStartAt.current=videoRefs.current.get(post.id)?.currentTime||0;setViewerActionsVisible(true);setViewerPost(post.id);setFypStart(null);setExpandedImage(null);setSelected(null)};
- const openViewerComments=(id:string)=>{setSelected(id);setThreadPath([]);setComments([]);setNotice("")};
+ const openViewerComments=(id:string)=>{setViewerPost(null);setSelected(id);setThreadPath([]);setComments([]);setNotice("")};
  useEffect(()=>{if(!viewerPost)return;const t=window.setTimeout(()=>setViewerActionsVisible(false),3000);return()=>clearTimeout(t)},[viewerPost,viewerActionsVisible]);
  const videoPosts=posts.filter(p=>postKind(p)==="video");
  const fypOrder=useMemo(()=>{if(!fypStart)return [];const start=videoPosts.find(p=>p.id===fypStart);const others=videoPosts.filter(p=>p.id!==fypStart);return start?[start,...others.sort((x,y)=>x.id.localeCompare(y.id))]:[]},[posts,fypStart]);
@@ -219,8 +219,8 @@ function DailyPostsApp({active}:{active:boolean}){
    elapsed+=dt;
    const progress=Math.min(1,elapsed/duration);
    card.style.setProperty("--ummah-reading-progress",String(progress));
-   clearMotion();
-   card.classList.add("ummah-reading-main");
+   // Keep animation classes stable across frames; reset only when focus changes.
+   if(!card.classList.contains("ummah-reading-main")){clearMotion();card.classList.add("ummah-reading-main")}
    // Neighbors drift outward throughout the reading window, then float home
    // before the next advance; CSS custom properties avoid per-frame class churn.
    const driftPhase=Math.sin(Math.PI*progress);
