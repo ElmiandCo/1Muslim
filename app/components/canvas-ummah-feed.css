@@ -496,3 +496,5 @@
 .ummah-comments-viewport input,.ummah-comments-viewport textarea{font-size:16px!important;line-height:1.3!important;min-width:0!important}
 .ummah-comments-viewport button{touch-action:manipulation}
 @media(max-width:480px){.ummah-comments-viewport{padding:0!important}.ummah-comments-viewport .ummah-comments-theme-responsive{height:92%!important;border-radius:22px 22px 0 0!important}}
+
+.ummah-floating-post[data-post-theme]{border-color:color-mix(in srgb,var(--post-secondary) 55%,transparent)!important;box-shadow:0 0 22px color-mix(in srgb,var(--post-glow) 20%,transparent)!important}
