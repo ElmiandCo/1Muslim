@@ -174,6 +174,8 @@ function DailyPostsApp({active}:{active:boolean}){
  const lastTouch=useRef(0);
  const feedRef=useRef<HTMLDivElement|null>(null);
  const videoRefs=useRef(new Map<string,HTMLVideoElement>());
+ const verseAudioRef=useRef<HTMLAudioElement|null>(null);
+ const verseAudioPostRef=useRef<string|null>(null);
  const [playingVideo,setPlayingVideo]=useState<string|null>(null);
  const [finishedVideo,setFinishedVideo]=useState<string|null>(null);
  const [fypStart,setFypStart]=useState<string|null>(null);
@@ -199,8 +201,27 @@ function DailyPostsApp({active}:{active:boolean}){
   if(!scroll)return;
   const viewport=scroll;
   const cards=()=>Array.from(feed.querySelectorAll<HTMLElement>(".community-post-card"));
+  // A verse reference must be explicit; never infer a recitation from unrelated text.
+  const verseAudioUrl=(body:string)=>{
+   const match=body.match(/(?:surah|sura|سورة)\\s*(\\d{1,3})\\s*[:：,\\/-]\\s*(\\d{1,3})|(?:qur.?an|القرآن)\\s*(\\d{1,3})\\s*[:：]\\s*(\\d{1,3})/i);
+   if(!match)return null;
+   const surah=Number(match[1]||match[3]),ayah=Number(match[2]||match[4]);
+   if(surah<1||surah>114||ayah<1||ayah>286)return null;
+   return `https://everyayah.com/data/Alafasy_128kbps/${String(surah).padStart(3,"0")}${String(ayah).padStart(3,"0")}.mp3`;
+  };
+  const stopVerse=()=>{verseAudioRef.current?.pause();verseAudioRef.current=null;verseAudioPostRef.current=null};
+  const playVerse=(postId:string)=>{
+   if(verseAudioPostRef.current===postId)return;
+   stopVerse();
+   const post=posts.find(p=>p.id===postId);
+   if(!post||postKind(post)!=="verse"||videoRefs.current.size&&Array.from(videoRefs.current.values()).some(v=>!v.paused&&!v.muted))return;
+   const url=verseAudioUrl(post.body);if(!url)return;
+   const audio=new Audio(url);audio.volume=.7;audio.loop=false;verseAudioRef.current=audio;verseAudioPostRef.current=postId;
+   void audio.play().catch(()=>{if(verseAudioRef.current===audio)stopVerse()});
+  };
+
   const clearMotion=()=>cards().forEach(card=>{card.style.removeProperty("--ummah-reading-progress");card.classList.remove("ummah-reading-main","ummah-reading-before","ummah-reading-after");card.style.removeProperty("--ummah-neighbor-drift");card.style.removeProperty("--ummah-neighbor-scale")});
-  const interrupt=()=>{autoPause.current=performance.now()+10000;elapsed=0;activeIndex=-1;transitioning=false;clearMotion()};
+  const interrupt=()=>{stopVerse();autoPause.current=performance.now()+10000;elapsed=0;activeIndex=-1;transitioning=false;clearMotion()};
   const events=["touchstart","pointerdown","wheel","keydown"] as const;
   events.forEach(event=>window.addEventListener(event,interrupt,{passive:true}));
   const tick=(now:number)=>{
@@ -210,7 +231,7 @@ function DailyPostsApp({active}:{active:boolean}){
    const top=viewport.getBoundingClientRect().top;
    if(activeIndex<0){
     activeIndex=all.reduce((best,card,index)=>Math.abs(card.getBoundingClientRect().top-top)<Math.abs(all[best].getBoundingClientRect().top-top)?index:best,0);
-    elapsed=0;transitioning=false;clearMotion();all[activeIndex]?.classList.add("ummah-reading-main");
+    elapsed=0;transitioning=false;clearMotion();all[activeIndex]?.classList.add("ummah-reading-main");if(all[activeIndex])playVerse(all[activeIndex].dataset.postId||"");
    }
    const card=all[activeIndex];if(!card){activeIndex=-1;frame=requestAnimationFrame(tick);return}
    const body=card.querySelector(".ummah-post-package p")?.textContent||"";
@@ -226,6 +247,7 @@ function DailyPostsApp({active}:{active:boolean}){
    if(after){after.classList.add("ummah-reading-after");after.style.setProperty("--ummah-neighbor-drift",neighborDrift+"px")}
    // Hold the text still for the entire reading window. Only then move to the next post.
    if(elapsed>=duration&&!transitioning){
+    stopVerse();
     const next=all[activeIndex+1];
     if(!next){activeIndex=-1;elapsed=0;clearMotion();autoPause.current=now+10000;frame=requestAnimationFrame(tick);return}
     transitioning=true;fromScroll=viewport.scrollTop;
@@ -240,7 +262,7 @@ function DailyPostsApp({active}:{active:boolean}){
    frame=requestAnimationFrame(tick);
   };
   frame=requestAnimationFrame(tick);
-  return()=>{cancelAnimationFrame(frame);clearMotion();events.forEach(event=>window.removeEventListener(event,interrupt))};
+  return()=>{cancelAnimationFrame(frame);stopVerse();clearMotion();events.forEach(event=>window.removeEventListener(event,interrupt))};
  },[active,selected,expandedImage,posts.length,playingVideo,finishedVideo,fypStart,viewerPost]);
 
  useEffect(()=>{if(!active)return;let alive=true;
