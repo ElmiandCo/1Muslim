@@ -177,32 +177,70 @@ function DailyPostsApp({active}:{active:boolean}){
  const [playingVideo,setPlayingVideo]=useState<string|null>(null);
  const [finishedVideo,setFinishedVideo]=useState<string|null>(null);
  const [fypStart,setFypStart]=useState<string|null>(null);
+ const [viewerPost,setViewerPost]=useState<string|null>(null);
+ const [viewerActionsVisible,setViewerActionsVisible]=useState(true);
+ const viewerVideoRef=useRef<HTMLVideoElement|null>(null);
+ const videoStartAt=useRef(0);
+ const openPostViewer=(post:UmmahPost)=>{videoStartAt.current=videoRefs.current.get(post.id)?.currentTime||0;setViewerActionsVisible(true);setViewerPost(post.id);setFypStart(null);setExpandedImage(null);setSelected(null)};
+ const openViewerComments=(id:string)=>{setViewerPost(null);setSelected(id);setThreadPath([]);setComments([]);setNotice("")};
+ useEffect(()=>{if(!viewerPost)return;const t=window.setTimeout(()=>setViewerActionsVisible(false),3000);return()=>clearTimeout(t)},[viewerPost,viewerActionsVisible]);
  const videoPosts=posts.filter(p=>postKind(p)==="video");
  const fypOrder=useMemo(()=>{if(!fypStart)return [];const start=videoPosts.find(p=>p.id===fypStart);const others=videoPosts.filter(p=>p.id!==fypStart);return start?[start,...others.sort((x,y)=>x.id.localeCompare(y.id))]:[]},[posts,fypStart]);
- useEffect(()=>{if(!active||selected||fypStart){videoRefs.current.forEach(v=>v.pause());return}let raf=0;const update=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const scroll=feedRef.current?.closest(".canvas-community-posts-scroll")||feedRef.current;if(!scroll)return;const bounds=scroll.getBoundingClientRect();const mid=(bounds.top+bounds.bottom)/2;let candidate:string|null=null;let distance=Infinity;videoRefs.current.forEach((video,id)=>{const rect=video.getBoundingClientRect();const center=(rect.top+rect.bottom)/2;const d=Math.abs(center-mid);if(rect.bottom>bounds.top&&rect.top<bounds.bottom&&d<distance){distance=d;candidate=id}});setPlayingVideo(candidate)})};const scroll=feedRef.current?.closest(".canvas-community-posts-scroll")||feedRef.current;scroll?.addEventListener("scroll",update,{passive:true});window.addEventListener("resize",update);update();return()=>{cancelAnimationFrame(raf);scroll?.removeEventListener("scroll",update);window.removeEventListener("resize",update)}},[active,posts,selected,fypStart]);
- useEffect(()=>{videoRefs.current.forEach((v,id)=>{if(id===playingVideo&&active&&!selected&&!fypStart&&!document.hidden){v.muted=true;void v.play().catch(()=>{});}else v.pause()})},[playingVideo,active,selected,fypStart,posts]);
+ useEffect(()=>{if(!active||selected||fypStart||viewerPost){videoRefs.current.forEach(v=>v.pause());return}let raf=0;const update=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const scroll=feedRef.current?.closest(".canvas-community-posts-scroll")||feedRef.current;if(!scroll)return;const bounds=scroll.getBoundingClientRect();const mid=(bounds.top+bounds.bottom)/2;let candidate:string|null=null;let distance=Infinity;videoRefs.current.forEach((video,id)=>{const rect=video.getBoundingClientRect();const center=(rect.top+rect.bottom)/2;const d=Math.abs(center-mid);if(rect.bottom>bounds.top&&rect.top<bounds.bottom&&d<distance){distance=d;candidate=id}});setPlayingVideo(candidate)})};const scroll=feedRef.current?.closest(".canvas-community-posts-scroll")||feedRef.current;scroll?.addEventListener("scroll",update,{passive:true});window.addEventListener("resize",update);update();return()=>{cancelAnimationFrame(raf);scroll?.removeEventListener("scroll",update);window.removeEventListener("resize",update)}},[active,posts,selected,fypStart,viewerPost]);
+ useEffect(()=>{videoRefs.current.forEach((v,id)=>{if(id===playingVideo&&active&&!selected&&!fypStart&&!viewerPost&&!document.hidden){v.muted=true;void v.play().catch(()=>{});}else v.pause()})},[playingVideo,active,selected,fypStart,viewerPost,posts]);
  useEffect(()=>{const onVisibility=()=>{if(document.hidden)videoRefs.current.forEach(v=>v.pause());else if(playingVideo&&!fypStart){const v=videoRefs.current.get(playingVideo);if(v)void v.play().catch(()=>{})}};document.addEventListener("visibilitychange",onVisibility);return()=>document.removeEventListener("visibilitychange",onVisibility)},[playingVideo,fypStart]);
  const autoPause=useRef(0);
  useEffect(()=>{
-  if(!active||selected||expandedImage||fypStart)return;
+  if(!active||selected||expandedImage||fypStart||viewerPost)return;
   const feed=feedRef.current;if(!feed)return;
-  const interrupt=()=>{autoPause.current=Date.now()+10000};
+  let frame=0,last=0,elapsed=0,activeIndex=-1;
+  let scroll:HTMLElement|null=feed;
+  while(scroll&&!(scroll.scrollHeight>scroll.clientHeight+40&&/auto|scroll/.test(getComputedStyle(scroll).overflowY)))scroll=scroll.parentElement;
+  if(!scroll)return;
+  const viewport=scroll;
+  const cards=()=>Array.from(feed.querySelectorAll<HTMLElement>(".community-post-card"));
+  const clearMotion=()=>cards().forEach(card=>{card.style.removeProperty("--ummah-reading-progress");card.classList.remove("ummah-reading-main","ummah-reading-before","ummah-reading-after");card.style.removeProperty("--ummah-neighbor-drift");card.style.removeProperty("--ummah-neighbor-scale")});
+  const interrupt=()=>{autoPause.current=performance.now()+10000;elapsed=0;activeIndex=-1;clearMotion()};
   const events=["touchstart","pointerdown","wheel","keydown"] as const;
-  events.forEach(e=>window.addEventListener(e,interrupt,{passive:true}));
-  const timer=window.setInterval(()=>{
-   if(playingVideo&&finishedVideo!==playingVideo)return;
-   if(document.hidden||Date.now()<autoPause.current||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
-   let scroll:HTMLElement|null=feed;
-   while(scroll&&!(scroll.scrollHeight>scroll.clientHeight+40&&/auto|scroll/.test(getComputedStyle(scroll).overflowY)))scroll=scroll.parentElement;
-   if(!scroll)return;
-   const cards=Array.from(feed.querySelectorAll<HTMLElement>(".community-post-card"));if(cards.length<2)return;
-   const top=scroll.getBoundingClientRect().top;
-   const next=cards.find(card=>card.getBoundingClientRect().top>top+70)||cards[0];
-   const target=scroll.scrollTop+next.getBoundingClientRect().top-top-8;
-   scroll.scrollTo({top:target,behavior:"smooth"});
-  },5000);
-  return()=>{clearInterval(timer);events.forEach(e=>window.removeEventListener(e,interrupt))};
- },[active,selected,expandedImage,posts.length,playingVideo,finishedVideo,fypStart]);
+  events.forEach(event=>window.addEventListener(event,interrupt,{passive:true}));
+  const tick=(now:number)=>{
+   const dt=last?Math.min(64,now-last):0;last=now;
+   if(document.hidden||window.matchMedia("(prefers-reduced-motion: reduce)").matches||now<autoPause.current){frame=requestAnimationFrame(tick);return}
+   const all=cards();if(all.length<2){frame=requestAnimationFrame(tick);return}
+   const top=viewport.getBoundingClientRect().top;
+   const closest=all.reduce((best,card,index)=>Math.abs(card.getBoundingClientRect().top-top)<Math.abs(all[best].getBoundingClientRect().top-top)?index:best,0);
+   if(activeIndex<0){activeIndex=closest;elapsed=0}
+   const card=all[activeIndex]||all[closest];
+   const body=card.querySelector(".ummah-post-package p")?.textContent||"";
+   const isVideo=Boolean(card.querySelector("video"));
+   // Four seconds for short posts, up to eight for long posts.
+   const duration=isVideo?8000:card.querySelector("img.ummah-package-media")?6000:Math.max(4000,Math.min(8000,4000+Math.max(0,body.length-35)*16));
+   if(isVideo&&playingVideo&&finishedVideo!==playingVideo){frame=requestAnimationFrame(tick);return}
+   elapsed+=dt;
+   const progress=Math.min(1,elapsed/duration);
+   card.style.setProperty("--ummah-reading-progress",String(progress));
+   // Keep animation classes stable across frames; reset only when focus changes.
+   if(!card.classList.contains("ummah-reading-main")){clearMotion();card.classList.add("ummah-reading-main")}
+   // Neighbors drift outward throughout the reading window, then float home
+   // before the next advance; CSS custom properties avoid per-frame class churn.
+   const driftPhase=Math.sin(Math.PI*progress);
+   const driftAmount=Math.round(driftPhase*44);
+   const neighborScale=(1-driftPhase*.055).toFixed(3);
+   const previous=all[activeIndex-1],following=all[activeIndex+1];
+   if(previous){previous.classList.add("ummah-reading-before");previous.style.setProperty("--ummah-neighbor-drift",driftAmount+"px");previous.style.setProperty("--ummah-neighbor-scale",neighborScale)}
+   if(following){following.classList.add("ummah-reading-after");following.style.setProperty("--ummah-neighbor-drift",driftAmount+"px");following.style.setProperty("--ummah-neighbor-scale",neighborScale)}
+   // Continuous cinematic drift, with a gentle ease into the next post.
+   const next=all[activeIndex+1]||all[0];
+   const distance=next.getBoundingClientRect().top-card.getBoundingClientRect().top;
+   const drift=distance*(.12*progress+.88*Math.pow(Math.max(0,(progress-.68)/.32),2));
+   const target=viewport.scrollTop+card.getBoundingClientRect().top-top+drift;
+   viewport.scrollTop+=(target-viewport.scrollTop)*Math.min(1,dt/130);
+   if(progress>=1){activeIndex=(activeIndex+1)%all.length;elapsed=0;clearMotion()}
+   frame=requestAnimationFrame(tick);
+  };
+  frame=requestAnimationFrame(tick);
+  return()=>{cancelAnimationFrame(frame);clearMotion();events.forEach(event=>window.removeEventListener(event,interrupt))};
+ },[active,selected,expandedImage,posts.length,playingVideo,finishedVideo,fypStart,viewerPost]);
 
  useEffect(()=>{if(!active)return;let alive=true;
   const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)throw Error();const data=await r.json();if(alive){setPosts((data.posts||[]).map((p:UmmahPost)=>{if(!p.media_url)return p;const cached=mediaUrlCache.current.get(p.id);if(cached&&Date.now()-cached.at<25*60*1000)return {...p,media_url:cached.url};mediaUrlCache.current.set(p.id,{url:p.media_url,at:Date.now()});return p}));setLikeCounts(Object.fromEntries((data.posts||[]).map((p:UmmahPost)=>[p.id,Number((p as UmmahPost & {like_count?:number}).like_count||0)])));setCommentCounts(Object.fromEntries((data.posts||[]).map((p:UmmahPost)=>[p.id,Number((p as UmmahPost & {comment_count?:number}).comment_count||0)])));setStatus(data.posts?.length?"":"No posts yet. Be the first to share.");}}catch{if(alive)setStatus("Unable to load the Ummah feed.");}};
@@ -223,12 +261,14 @@ function DailyPostsApp({active}:{active:boolean}){
  return <div className="community-simple-feed">
   <div className="community-posts-list" ref={feedRef} aria-label="Community posts">
    {posts.map(post=><article data-post-theme={postThemeClass(post.post_theme)} className={`community-post-card ummah-template ummah-template-${postKind(post)} ummah-variant-${(post.id.charCodeAt(0)+layoutSeed)%3}`} key={post.id}>
+    <span className="ummah-post-theme-particles" aria-hidden="true"/>
     <header><span className="community-post-avatar">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span><div><strong>{post.author_name||"Member"}</strong>{post.shahada_verified&&<span className="ummah-verified-badge" title="Shahada verified" aria-label="Shahada verified">✓</span>}<small>{new Date(post.created_at).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})} · {post.author_handle||"1Muslim"}</small></div><div className="ummah-post-menu-wrap"><button type="button" className="ummah-post-more" aria-label="Post options" onClick={()=>setPostMenu(postMenu===post.id?null:post.id)}>•••</button>{postMenu===post.id&&<div className="ummah-post-menu"><button type="button" onClick={()=>{void sharePost(post.id);setPostMenu(null)}}>↗ Share post</button><button type="button" onClick={()=>{toggleBookmark(post.id);setPostMenu(null)}}>▢ {bookmarks[post.id]?"Remove saved":"Save post"}</button></div>}</div></header>
-    <div className="ummah-post-package">{postKind(post)==="verse"&&<div className="ummah-verse-ornament" aria-hidden="true">۞</div>}<span className="ummah-package-label">{postKind(post)==="verse"?"✦ QUR’AN & REFLECTION":postKind(post)==="video"?"▶ VIDEO":postKind(post)==="image"?"✧ PHOTO":"✎ REFLECTION"}</span>{mediaFor(post)&&(postKind(post)==="video"?<div className="ummah-video-frame"><video ref={el=>{if(el)videoRefs.current.set(post.id,el);else videoRefs.current.delete(post.id)}} key={post.id} src={mediaFor(post)} muted playsInline preload="metadata" onPlay={()=>setFinishedVideo(null)} onEnded={()=>{setFinishedVideo(post.id);autoPause.current=0}} className="ummah-package-media ummah-video-preview" aria-label="Post video"/><button type="button" className="ummah-video-fyp-open" aria-label="Open video in For You player" onClick={()=>setFypStart(post.id)}><span>▶</span></button></div>:<button type="button" className="ummah-media-expand" onClick={()=>setExpandedImage(mediaFor(post))} onDoubleClick={e=>{e.preventDefault();void likePost(post.id)}} aria-label="Expand post image"><img src={mediaFor(post)} alt="Post attachment" loading="lazy" className="ummah-package-media"/></button>)}<p>{post.body}</p>{!mediaFor(post)&&youtubePreview(post.body)&&<a className="ummah-youtube-preview" href={youtubePreview(post.body)!.url} target="_blank" rel="noopener noreferrer" aria-label="Watch YouTube video"><img src={youtubePreview(post.body)!.thumbnail} alt="YouTube video thumbnail" loading="lazy"/><span>▶ Watch on YouTube</span></a>}</div><footer className="ummah-social-actions"><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥":"♡"} {likeCounts[post.id]||""}</button><button type="button" onClick={()=>{setSelected(post.id);setThreadPath([]);setComments([]);setNotice("")}}>♧ {commentCounts[post.id]||""}</button><button type="button" aria-pressed={!!bookmarks[post.id]} onClick={()=>toggleBookmark(post.id)} aria-label={bookmarks[post.id]?"Remove bookmark":"Bookmark post"}>{bookmarks[post.id]?"▣ Saved":"▢ Save"}</button><button type="button" onClick={()=>void sharePost(post.id)} aria-label="Share post">↗ Share</button></footer>
+    <div className="ummah-post-package" onClick={e=>{if((e.target as HTMLElement).closest("button,a,video"))return;openPostViewer(post)}}>{postKind(post)==="verse"&&<div className="ummah-verse-ornament" aria-hidden="true">۞</div>}<span className="ummah-package-label">{postKind(post)==="verse"?"✦ QUR’AN & REFLECTION":postKind(post)==="video"?"▶ VIDEO":postKind(post)==="image"?"✧ PHOTO":"✎ REFLECTION"}</span>{mediaFor(post)&&(postKind(post)==="video"?<div className="ummah-video-frame"><video ref={el=>{if(el)videoRefs.current.set(post.id,el);else videoRefs.current.delete(post.id)}} key={post.id} src={mediaFor(post)} muted playsInline preload="auto" onClick={()=>openPostViewer(post)} onPlay={()=>setFinishedVideo(null)} onEnded={()=>{setFinishedVideo(post.id);autoPause.current=0}} className="ummah-package-media ummah-video-preview" aria-label="Post video"/><button type="button" className="ummah-video-fyp-open" aria-label="Open video in For You player" onClick={()=>setFypStart(post.id)}><span>▶</span></button></div>:<button type="button" className="ummah-media-expand" onClick={()=>openPostViewer(post)} onDoubleClick={e=>{e.preventDefault();void likePost(post.id)}} aria-label="Expand post image"><img src={mediaFor(post)} alt="Post attachment" loading="lazy" className="ummah-package-media"/></button>)}<p>{post.body}</p>{!mediaFor(post)&&youtubePreview(post.body)&&<a className="ummah-youtube-preview" href={youtubePreview(post.body)!.url} target="_blank" rel="noopener noreferrer" aria-label="Watch YouTube video"><img src={youtubePreview(post.body)!.thumbnail} alt="YouTube video thumbnail" loading="lazy"/><span>▶ Watch on YouTube</span></a>}</div><footer className="ummah-social-actions"><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥":"♡"} {likeCounts[post.id]||""}</button><button type="button" onClick={()=>{setSelected(post.id);setThreadPath([]);setComments([]);setNotice("")}}>♧ {commentCounts[post.id]||""}</button><button type="button" aria-pressed={!!bookmarks[post.id]} onClick={()=>toggleBookmark(post.id)} aria-label={bookmarks[post.id]?"Remove bookmark":"Bookmark post"}>{bookmarks[post.id]?"▣ Saved":"▢ Save"}</button><button type="button" onClick={()=>void sharePost(post.id)} aria-label="Share post">↗ Share</button></footer>
    </article>)}
    {!posts.length?<p className="community-feed-empty">{status}</p>:null}
    {notice&&!selected&&<p role="status">{notice}</p>}
   </div>
+  {viewerPost&&posts.some(p=>p.id===viewerPost)&&typeof document!=="undefined"&&createPortal(<div className="ummah-unified-viewer" role="dialog" aria-modal="true" aria-label="Open post" onClick={()=>setViewerPost(null)}><div className="ummah-unified-stage" onPointerDown={()=>setViewerActionsVisible(true)} data-post-theme={postThemeClass(posts.find(p=>p.id===viewerPost)?.post_theme)} onClick={e=>e.stopPropagation()}><button type="button" className="ummah-unified-close" onClick={()=>setViewerPost(null)} aria-label="Close post">✕</button>{(()=>{const p=posts.find(item=>item.id===viewerPost)!;return <><div className="ummah-unified-media"><span className="ummah-themed-particles" aria-hidden="true"/>{postKind(p)==="video"?<video key={p.id} ref={viewerVideoRef} onLoadedMetadata={e=>{e.currentTarget.currentTime=Math.min(videoStartAt.current,Math.max(0,e.currentTarget.duration-.1))}} src={mediaFor(p)} controls playsInline autoPlay preload="auto"/>:postKind(p)==="image"?<img src={mediaFor(p)} alt="Post photo"/>:<div className="ummah-unified-text">{p.body}</div>}</div><div className="ummah-unified-caption"><strong>{p.author_name}</strong><p>{p.body}</p><div className={`ummah-unified-actions ${viewerActionsVisible?"is-visible":"is-idle"}`}><button type="button" onClick={()=>void likePost(p.id)}>♡ {likeCounts[p.id]||0}</button><button type="button" onClick={()=>openViewerComments(p.id)}>💬 {commentCounts[p.id]||0}</button><button type="button" onClick={()=>void sharePost(p.id)}>↗ Share</button><button type="button" onClick={()=>toggleBookmark(p.id)}>{bookmarks[p.id]?"▣ Saved":"▢ Save"}</button></div></div></>})()}</div></div>,document.body)}
   {fypStart&&<div className="ummah-fyp-overlay" role="dialog" aria-modal="true" aria-label="For You videos"><button type="button" className="ummah-fyp-close" onClick={()=>setFypStart(null)}>✕ Close</button><div className="ummah-fyp-reel">{fypOrder.map((p,i)=><section key={p.id}><video src={mediaFor(p)} controls playsInline autoPlay={i===0} muted={i!==0} preload={i===0?"auto":"metadata"}/><p>{p.body}</p></section>)}</div></div>}
   {expandedImage&&<div className="ummah-image-lightbox" role="presentation" onClick={()=>setExpandedImage(null)}><button type="button" aria-label="Close expanded image" onClick={()=>setExpandedImage(null)}>✕</button><img src={expandedImage} alt="Expanded post image" onClick={e=>e.stopPropagation()}/></div>}
   {selected&&typeof document!=="undefined"&&createPortal(<div className="ummah-comments-backdrop ummah-comments-viewport" style={{top:commentViewport.top,height:commentViewport.height||"100dvh"}} role="presentation" onClick={()=>setSelected(null)}>
