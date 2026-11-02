@@ -534,3 +534,14 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 .community-post-card.ummah-reading-after{transform:translate3d(0,var(--ummah-neighbor-drift,0px),0) scale(var(--ummah-neighbor-scale,1));filter:brightness(.94)}
 .community-post-card.ummah-reading-before,.community-post-card.ummah-reading-after{will-change:transform;transition:filter 900ms ease,transform 100ms linear}
 @media(prefers-reduced-motion:reduce){.community-post-card.ummah-reading-before,.community-post-card.ummah-reading-after{transform:none!important;transition:none!important}}
+
+/* Focused card is softly spotlighted; progress travels with reading time. */
+.community-post-card.ummah-reading-main{box-shadow:0 0 35px color-mix(in srgb,var(--post-accent,var(--theme-accent,#4acda5)) 24%,transparent),0 14px 36px #0003}
+.community-post-card.ummah-reading-main::after{content:"";position:absolute;left:8%;right:8%;bottom:0;height:2px;pointer-events:none;transform:scaleX(var(--ummah-reading-progress,0));transform-origin:left;background:var(--post-accent,var(--theme-accent,#4acda5));opacity:.6}
+.ummah-unified-actions{position:relative;transition:opacity .7s ease}
+.ummah-unified-actions.is-idle{opacity:.3}
+.ummah-unified-actions.is-visible,.ummah-unified-actions:hover,.ummah-unified-actions:focus-within{opacity:1}
+.ummah-unified-media{position:relative}
+.ummah-themed-particles{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.45;background-image:radial-gradient(circle at 20% 80%,var(--post-accent,var(--theme-accent,#4acda5)) 0 1px,transparent 3px),radial-gradient(circle at 75% 25%,var(--post-accent,var(--theme-accent,#4acda5)) 0 1.5px,transparent 4px),radial-gradient(circle at 60% 65%,var(--post-accent,var(--theme-accent,#4acda5)) 0 1px,transparent 3px);background-size:180px 260px,230px 330px,280px 240px;animation:ummahThemeParticleFloat 16s linear infinite}
+@keyframes ummahThemeParticleFloat{from{background-position:0 0,0 0,0 0}to{background-position:24px -110px,-18px -140px,12px -90px}}
+@media(prefers-reduced-motion:reduce){.ummah-themed-particles{animation:none}.ummah-unified-actions{transition:none}}
