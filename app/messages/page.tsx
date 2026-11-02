@@ -232,7 +232,7 @@ export default function MessagesPage(){
 .omMessengerTopNav a span{font-size:10px}
 .omMessengerTopNav a[aria-current="page"]{background:#087e5a;color:white}
 @media(max-width:700px){.omImessagePage.omMessengerUnified .omMessengerTop{height:auto!important;min-height:96px!important}.omMessengerTopNav a span{font-size:9px}.omImessagePage.omMessengerUnified .omMessengerShell--chat{height:calc(100dvh - 215px)!important;min-height:300px!important}.omImessagePage.omMessengerUnified .omMessageComposer{position:relative;z-index:3}}
-`}</style><div className="omMessengerPattern" aria-hidden="true"/><div className="omMessengerOrnaments" aria-hidden="true"><span className="omMessengerOrnamentNight"/><span className="omMessengerOrnamentDay"/></div>
+ /* Mobile Messenger: conversation fills available screen instead of floating mid-canvas. */ @media(max-width:700px){  .omImessagePage.omMessengerUnified{width:100%!important;max-width:100%!important;margin:0!important;padding:0!important;min-height:0!important}  .omImessagePage.omMessengerUnified .omMessengerShell--chat{height:calc(100dvh - 175px)!important;min-height:420px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}  .omImessagePage.omMessengerUnified .omChatPane{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-height:0!important;overflow:hidden!important}  .omImessagePage.omMessengerUnified .omMessagesFeed{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}  .omImessagePage.omMessengerUnified .omMessageComposer{flex:0 0 auto!important;position:relative!important;bottom:auto!important;margin-top:auto!important} } \n`}</style><div className="omMessengerPattern" aria-hidden="true"/><div className="omMessengerOrnaments" aria-hidden="true"><span className="omMessengerOrnamentNight"/><span className="omMessengerOrnamentDay"/></div>
  <button className="omMessengerNewButton" type="button" onClick={()=>setNewChatOpen(v=>!v)} aria-label="Create message or group" aria-expanded={newChatOpen}>＋</button>
 
  <div className={"omMessengerShell "+(selected?"omMessengerShell--chat":"omMessengerShell--list")} style={{display:"grid",gridTemplateColumns:"minmax(220px,1fr) minmax(0,2fr)",minHeight:560,border:"1px solid #64748b55",borderRadius:28,overflow:"hidden"}}> {selected&&<nav className="omMobileThreadStrip" aria-label="Switch conversations">{Array.from(new Set(threads.map(t=>t.conversation_id))).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return <button key={cid} type="button" className={"omMobileThread "+(selected===cid?"isActive":"")} onClick={()=>setSelected(cid)}><span className="omMobileThreadAvatar">{avatars[peer]?<img src={avatars[peer]} alt=""/>:"☪"}</span><strong>{names[peer]||"User"}</strong><small>{threadPreviews[cid]||"Start chatting"}</small></button>})}</nav>}
@@ -760,13 +760,4 @@ body:has(.muslimMessengerFrame){overflow:hidden!important}
 }
 `}</style>
  </main>
-}
-
-/* Mobile Messenger: conversation fills available screen instead of floating mid-canvas. */
-@media(max-width:700px){
- .omImessagePage.omMessengerUnified{width:100%!important;max-width:100%!important;margin:0!important;padding:0!important;min-height:0!important}
- .omImessagePage.omMessengerUnified .omMessengerShell--chat{height:calc(100dvh - 175px)!important;min-height:420px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
- .omImessagePage.omMessengerUnified .omChatPane{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-height:0!important;overflow:hidden!important}
- .omImessagePage.omMessengerUnified .omMessagesFeed{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
- .omImessagePage.omMessengerUnified .omMessageComposer{flex:0 0 auto!important;position:relative!important;bottom:auto!important;margin-top:auto!important}
 }
