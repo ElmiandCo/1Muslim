@@ -1,5 +1,6 @@
-import {currentPostTheme} from "../lib/post-theme";
 "use client";
+import {currentPostTheme} from "../lib/post-theme";
+
 
 import "./community.css";
 import "./daily-post-particles.css";
