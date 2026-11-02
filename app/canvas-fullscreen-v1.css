@@ -2035,3 +2035,35 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 .omWorkspaceArrowNav .omWorkspaceArrowButton:hover:not(:disabled),.omWorkspaceArrowNav .omWorkspaceArrowButton:focus-visible{background:color-mix(in srgb,var(--theme-accent,#e9cf8a) 13%,transparent)!important;box-shadow:0 0 22px color-mix(in srgb,var(--theme-accent,#e9cf8a) 60%,transparent)!important;transform:scale(1.04)}
 .omWorkspaceArrowNav .omWorkspaceArrowButton:disabled{opacity:.3;box-shadow:none!important;cursor:default}
 @media(prefers-reduced-motion:reduce){.omWorkspaceArrowNav .omWorkspaceArrowButton{transition:none!important}}
+
+/* Full-width desktop Live canvas visibility repair (desktop only).
+   Keep narrow windows, mobile and all non-Live slides unchanged. */
+@media (min-width: 1200px) and (min-height: 560px) {
+  .liveWidgetRootClean {
+    display: flex !important;
+    flex-direction: column !important;
+    visibility: visible !important;
+    min-height: 0 !important;
+    width: 100% !important;
+  }
+  .liveWidgetRootClean > .homeMakkahLive {
+    display: flex !important;
+    flex-direction: column !important;
+    visibility: visible !important;
+    min-height: 0 !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+  .liveWidgetRootClean .homeLiveChannelPlayer {
+    display: grid !important;
+    visibility: visible !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: min(56vh, 680px) !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+  .liveWidgetRootClean .homeLiveCommentDock {
+    visibility: visible !important;
+    min-height: 0 !important;
+  }
+}
