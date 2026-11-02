@@ -208,7 +208,7 @@ function DailyPostsApp({active}:{active:boolean}){
  useEffect(()=>{const onVisibility=()=>{if(document.hidden)videoRefs.current.forEach(v=>v.pause());else if(playingVideo&&!fypStart){const v=videoRefs.current.get(playingVideo);if(v)void v.play().catch(()=>{})}};document.addEventListener("visibilitychange",onVisibility);return()=>document.removeEventListener("visibilitychange",onVisibility)},[playingVideo,fypStart]);
  const autoPause=useRef(0);
  useEffect(()=>{
-  if(!active||selected||expandedImage||fypStart||viewerPost)return;
+  if(!active||selected||expandedImage||fypStart||viewerPost||window.matchMedia("(min-width: 768px)").matches)return;
   const feed=feedRef.current;if(!feed)return;
   let frame=0,last=0,elapsed=0,activeIndex=-1,fromScroll=0,toScroll=0,transitioning=false;
   let scroll:HTMLElement|null=feed;
@@ -260,7 +260,7 @@ function DailyPostsApp({active}:{active:boolean}){
    if(verseAudioRef.current&&!verseAudioRef.current.paused&&verseAudioPostRef.current===card.dataset.postId){elapsed=Math.min(elapsed,duration-1)}
    const readingProgress=Math.min(1,elapsed/duration);
    card.style.setProperty("--ummah-reading-progress",String(readingProgress));
-   const neighborDrift=Math.round(16*Math.sin(Math.PI*readingProgress));
+   const neighborDrift=8*Math.sin(Math.PI*readingProgress);
    const before=all[activeIndex-1],after=all[activeIndex+1];
    if(before){before.classList.add("ummah-reading-before");before.style.setProperty("--ummah-neighbor-drift",neighborDrift+"px")}
    if(after){after.classList.add("ummah-reading-after");after.style.setProperty("--ummah-neighbor-drift",neighborDrift+"px")}
@@ -274,7 +274,7 @@ function DailyPostsApp({active}:{active:boolean}){
    }
    if(transitioning){
     const t=Math.min(1,(elapsed-duration)/1200);
-    const eased=t*t*(3-2*t);
+    const eased=t*t*t*(t*(t*6-15)+10);
     viewport.scrollTop=fromScroll+(toScroll-fromScroll)*eased;
     if(t>=1){activeIndex++;elapsed=0;transitioning=false;clearMotion();all[activeIndex]?.classList.add("ummah-reading-main")}
    }
@@ -300,13 +300,18 @@ function DailyPostsApp({active}:{active:boolean}){
   const d=await r.json();if(!r.ok)throw Error(d.error||"Unable to comment");
   setComments(previous=>[...previous,d.comment]);setCommentCounts(previous=>({...previous,[selected]:(previous[selected]||0)+1}));setDraft("");
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
- return <div className="community-simple-feed">
-  <div className="community-posts-list" ref={feedRef} aria-label="Community posts">
-   {posts.map(post=><article data-post-id={post.id} data-post-theme={postThemeClass(post.post_theme)} className={`community-post-card ummah-template ummah-template-${postKind(post)} ummah-variant-${(post.id.charCodeAt(0)+layoutSeed)%3}`} key={post.id}>
+ const renderFeedPost=(post:UmmahPost)=><article data-post-id={post.id} data-post-theme={postThemeClass(post.post_theme)} className={`community-post-card ummah-template ummah-template-${postKind(post)} ummah-variant-${(post.id.charCodeAt(0)+layoutSeed)%3}`} key={post.id}>
     <span className="ummah-post-theme-particles" aria-hidden="true"/>
     <header><span className="community-post-avatar">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span><div><strong>{post.author_name||"Member"}</strong>{post.shahada_verified&&<span className="ummah-verified-badge" title="Shahada verified" aria-label="Shahada verified">✓</span>}<small>{new Date(post.created_at).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})} · {post.author_handle||"1Muslim"}</small></div><div className="ummah-post-menu-wrap"><button type="button" className="ummah-post-more" aria-label="Post options" onClick={()=>setPostMenu(postMenu===post.id?null:post.id)}>•••</button>{postMenu===post.id&&<div className="ummah-post-menu"><button type="button" onClick={()=>{void sharePost(post.id);setPostMenu(null)}}>↗ Share post</button><button type="button" onClick={()=>{toggleBookmark(post.id);setPostMenu(null)}}>▢ {bookmarks[post.id]?"Remove saved":"Save post"}</button></div>}</div></header>
     <div className="ummah-post-package" onClick={e=>{if((e.target as HTMLElement).closest("button,a,video"))return;openPostViewer(post)}}>{postKind(post)==="verse"&&<div className="ummah-verse-ornament" aria-hidden="true">۞</div>}<span className="ummah-package-label">{postKind(post)==="verse"?"✦ QUR’AN & REFLECTION":postKind(post)==="video"?"▶ VIDEO":postKind(post)==="image"?"✧ PHOTO":"✎ REFLECTION"}</span>{mediaFor(post)&&(postKind(post)==="video"?<div className="ummah-video-frame"><video ref={el=>{if(el)videoRefs.current.set(post.id,el);else videoRefs.current.delete(post.id)}} key={post.id} src={mediaFor(post)} muted playsInline preload="auto" onClick={()=>openPostViewer(post)} onPlay={()=>setFinishedVideo(null)} onEnded={()=>{setFinishedVideo(post.id);autoPause.current=0}} className="ummah-package-media ummah-video-preview" aria-label="Post video"/><button type="button" className="ummah-video-fyp-open" aria-label="Open video in For You player" onClick={()=>setFypStart(post.id)}><span>▶</span></button></div>:<button type="button" className="ummah-media-expand" onClick={()=>openPostViewer(post)} onDoubleClick={e=>{e.preventDefault();void likePost(post.id)}} aria-label="Expand post image"><img src={mediaFor(post)} alt="Post attachment" loading="lazy" className="ummah-package-media"/></button>)}<p className="ummah-post-body">{renderPostBody(post.body.replace(/^✦ DAILY UMMAH ✦(?:\\n|\r?\n)?\s*/,""))}</p>{!mediaFor(post)&&youtubePreview(post.body)&&<a className="ummah-youtube-preview" href={youtubePreview(post.body)!.url} target="_blank" rel="noopener noreferrer" aria-label="Watch YouTube video"><img src={youtubePreview(post.body)!.thumbnail} alt="YouTube video thumbnail" loading="lazy"/><span>▶ Watch on YouTube</span></a>}</div><footer className="ummah-social-actions"><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥":"♡"} {likeCounts[post.id]||""}</button><button type="button" onClick={()=>{setSelected(post.id);setThreadPath([]);setComments([]);setNotice("")}}>♧ {commentCounts[post.id]||""}</button><button type="button" aria-pressed={!!bookmarks[post.id]} onClick={()=>toggleBookmark(post.id)} aria-label={bookmarks[post.id]?"Remove bookmark":"Bookmark post"}>{bookmarks[post.id]?"▣ Saved":"▢ Save"}</button><button type="button" onClick={()=>void sharePost(post.id)} aria-label="Share post">↗ Share</button></footer>
-   </article>)}
+   </article>)};
+  return <div className="community-simple-feed">
+  <div className="community-posts-list" ref={feedRef} aria-label="Community posts">
+   <div className="ummah-feed-single">{posts.map(renderFeedPost)}</div>
+   <div className="ummah-dual-lanes" aria-label="Two independent post lanes">
+    <div className="ummah-dual-lane" data-lane="left" aria-label="Left posts lane">{posts.filter((_,i)=>i%2===0).map(renderFeedPost)}</div>
+    <div className="ummah-dual-lane" data-lane="right" aria-label="Right posts lane">{posts.filter((_,i)=>i%2===1).map(renderFeedPost)}</div>
+   </div>
    {!posts.length?<p className="community-feed-empty">{status}</p>:null}
    {notice&&!selected&&<p role="status">{notice}</p>}
   </div>
@@ -333,4 +338,49 @@ export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boo
  return <div className={slot===0?"canvas-native-app canvas-profile-mirror":"canvas-native-app"}>{slot!==0&&<header><span>0{slot+6} · 1MUSLIM</span><h2>{titles[slot]}</h2></header>}<div className="canvas-native-body">
  {slot===0?<GameLabProfileHub active={active} avatarHero={<ProfileApp active={active} heroOnly/>} profile={<ProfileApp active={active}/>} renderProfileSection={(section)=><ProfileApp active={active} section={section}/>}/>:slot===1?<RecorderApp active={active}/>:slot===2?<DailyPostsApp active={active}/>:slot===3?<HomeMessagesChooser/>:slot===4?<ElmTentAlphabet/>:<div className="canvas-community-map-panel"><strong>Community connections</strong><p>Discover Muslims and mosques through the Community Map above.</p></div>}
  </div>{slot!==0&&<footer><Link href={destinations[slot]}>Open full experience ↗</Link></footer>}</div>
-}
+} useEffect(()=>{
+  if(!active||selected||expandedImage||fypStart||viewerPost)return;
+  const root=feedRef.current;
+  if(!root)return;
+  const lanes=Array.from(root.querySelectorAll<HTMLElement>(".ummah-dual-lane"));
+  const motion=window.matchMedia("(prefers-reduced-motion: reduce)");
+  if(motion.matches)return;
+  const timers:ReturnType<typeof setTimeout>[]=[];
+  const cleanups:Array<()=>void>=[];
+  for(const lane of lanes){
+    let pausedUntil=performance.now()+10000;
+    let index=0;
+    let moving=false;
+    const cards=()=>Array.from(lane.querySelectorAll<HTMLElement>(".community-post-card"));
+    const interrupt=()=>{pausedUntil=performance.now()+10000;moving=false};
+    for(const name of ["wheel","touchstart","pointerdown","keydown"]){
+      lane.addEventListener(name,interrupt,{passive:true});
+      cleanups.push(()=>lane.removeEventListener(name,interrupt));
+    }
+    const advance=()=>{
+      if(document.hidden||performance.now()<pausedUntil||moving)return;
+      const all=cards();
+      if(all.length<2)return;
+      const nearest=all.reduce((best,card,i)=>Math.abs(card.offsetTop-lane.scrollTop)<Math.abs(all[best].offsetTop-lane.scrollTop)?i:best,0);
+      index=(nearest+1)%all.length;
+      moving=true;
+      const target=index===0?0:all[index].offsetTop-all[0].offsetTop;
+      const start=lane.scrollTop, distance=target-start;
+      const duration=2200,begin=performance.now();
+      let raf=0;
+      const step=(now:number)=>{
+        if(performance.now()<pausedUntil||document.hidden){moving=false;return}
+        const t=Math.min(1,(now-begin)/duration);
+        const ease=t*t*t*(t*(t*6-15)+10);
+        lane.scrollTop=start+distance*ease;
+        if(t<1)raf=requestAnimationFrame(step);else moving=false;
+      };
+      raf=requestAnimationFrame(step);
+      cleanups.push(()=>cancelAnimationFrame(raf));
+    };
+    const timer=setInterval(advance,6000);
+    timers.push(timer);
+  }
+  return()=>{timers.forEach(clearInterval);cleanups.forEach(fn=>fn())};
+ },[active,posts.length,selected,expandedImage,fypStart,viewerPost]);
+
