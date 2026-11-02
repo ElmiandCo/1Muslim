@@ -2067,3 +2067,22 @@ header[class*="controlHeader"] [class*="headerActions"] a{
     min-height: 0 !important;
   }
 }
+
+/* Desktop counterpart to the existing mobile collapsed-parent repair.
+   The absolute Live stage needs a real containing-block height. */
+@media (min-width: 1200px) and (min-height: 560px) {
+  [data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage) {
+    position: relative !important;
+    height: clamp(420px, calc(100dvh - 240px), 900px) !important;
+    min-height: 420px !important;
+    overflow: visible !important;
+  }
+  [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage {
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 420px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
