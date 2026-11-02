@@ -137,6 +137,20 @@ const youtubePreview=(body:string)=>{const match=body.match(/(?:youtube\.com\/wa
 const postThemes=["emerald","gold","makkah","midnight","garden","purple"] as const;
 const backgroundForPost=(id:string)=>{let hash=2166136261;for(let i=0;i<id.length;i++)hash=Math.imul(hash^id.charCodeAt(i),16777619);return `/post-backgrounds/${postThemes[(hash>>>0)%postThemes.length]}.svg`};
 type UmmahComment={id:string;post_id:string;parent_id:string|null;name:string;body:string;created_at:string;likes:number;liked:boolean};
+  const renderPostBody=(body:string)=>{
+   // The Add Verse selector inserts a reference, Arabic, and translation as separate paragraphs.
+   // Highlight only the selected verse segment; preserve the author's own words separately.
+   const match=/Qur[’']an\\s+\\d{1,3}:\\d{1,3}/i.exec(body);
+   if(!match)return body;
+   const before=body.slice(0,match.index);
+   const after=body.slice(match.index+match[0].length).replace(/^\\s*\\n+/,"");
+   const parts=after.split(/\\n\\s*\\n/);
+   const arabic=parts[0]&&/[\\u0600-\\u06ff]/.test(parts[0])?parts.shift():"";
+   const translation=parts.length?parts.shift():"";
+   const rest=parts.join("\\n\\n");
+   return <>{before&&<span className="ummah-author-words">{before}</span>}<span className="ummah-verse-block" lang="ar"><span className="ummah-verse-label">۞ {match[0]} · Qur’an</span>{arabic&&<span className="ummah-verse-arabic" dir="rtl">{arabic}</span>}{translation&&<span className="ummah-verse-translation" lang="en">{translation}</span>}</span>{rest&&<span className="ummah-author-words">{rest}</span>}</>;
+  };
+
 function DailyPostsApp({active}:{active:boolean}){
  const [posts,setPosts]=useState<UmmahPost[]>([]); const mediaUrlCache=useRef(new Map<string,{url:string,at:number}>()); 
  const [status,setStatus]=useState("Loading Ummah posts…");
@@ -203,19 +217,6 @@ function DailyPostsApp({active}:{active:boolean}){
   const viewport=scroll;
   const cards=()=>Array.from(feed.querySelectorAll<HTMLElement>(".community-post-card"));
   // A verse reference must be explicit; never infer a recitation from unrelated text.
-  const renderPostBody=(body:string)=>{
-   // The Add Verse selector inserts a reference, Arabic, and translation as separate paragraphs.
-   // Highlight only the selected verse segment; preserve the author's own words separately.
-   const match=/Qur[’']an\\s+\\d{1,3}:\\d{1,3}/i.exec(body);
-   if(!match)return body;
-   const before=body.slice(0,match.index);
-   const after=body.slice(match.index+match[0].length).replace(/^\\s*\\n+/,"");
-   const parts=after.split(/\\n\\s*\\n/);
-   const arabic=parts[0]&&/[\\u0600-\\u06ff]/.test(parts[0])?parts.shift():"";
-   const translation=parts.length?parts.shift():"";
-   const rest=parts.join("\\n\\n");
-   return <>{before&&<span className="ummah-author-words">{before}</span>}<span className="ummah-verse-block" lang="ar"><span className="ummah-verse-label">۞ {match[0]} · Qur’an</span>{arabic&&<span className="ummah-verse-arabic" dir="rtl">{arabic}</span>}{translation&&<span className="ummah-verse-translation" lang="en">{translation}</span>}</span>{rest&&<span className="ummah-author-words">{rest}</span>}</>;
-  };
   const verseAudioUrl=(body:string)=>{
    // The Add Verse tool inserts the authoritative "Qur’an 2:255" label.
    // Read that exact reference from the published post, not from a guessed verse.
