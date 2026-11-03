@@ -758,6 +758,19 @@ body:has(.muslimMessengerFrame){overflow:hidden!important}
  .muslimMessengerFrame .omMessengerShell--chat{flex:1 1 0!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important}
  .muslimMessengerFrame .omMessengerShell--chat>.omChatPane{flex:1 1 0!important;height:auto!important;min-height:0!important;max-height:100%!important}
 }
+
+/* Messenger glass conversation: no document scrolling or mid-screen composer. */
+.omImessagePage.omMessengerUnified{--p2-msg-accent:var(--theme-primary,#28c795);height:100dvh!important;max-height:100dvh!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:10px!important;box-sizing:border-box!important;background:linear-gradient(150deg,color-mix(in srgb,var(--p2-msg-accent) 12%,#07151a),#0b141b)!important}
+.omImessagePage.omMessengerUnified>.omMessengerShell{flex:1 1 0!important;min-height:0!important;max-height:100%!important;height:auto!important;margin:0!important;overflow:hidden!important;border:1px solid color-mix(in srgb,var(--p2-msg-accent) 50%,transparent)!important;border-radius:24px!important;background:color-mix(in srgb,var(--p2-msg-accent) 9%,#101b22)!important;box-shadow:inset 0 1px 0 #ffffff30,0 16px 40px #0005!important}
+.omImessagePage.omMessengerUnified .omChatPane{display:flex!important;flex-direction:column!important;min-height:0!important;overflow:hidden!important}
+.omImessagePage.omMessengerUnified .omMessagesFeed{flex:1 1 0!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch}
+.omImessagePage.omMessengerUnified .omChatHeader,.omImessagePage.omMessengerUnified .omMessageComposer{flex:0 0 auto!important;position:relative!important;background:color-mix(in srgb,var(--p2-msg-accent) 11%,#17252b)!important;border-color:color-mix(in srgb,var(--p2-msg-accent) 36%,transparent)!important;backdrop-filter:blur(16px)}
+.omImessagePage.omMessengerUnified .omMobileThreadStrip{overflow-y:auto!important;overscroll-behavior:contain!important;scrollbar-width:none}
+.omImessagePage.omMessengerUnified .omMessagesFeed::-webkit-scrollbar,.omImessagePage.omMessengerUnified .omMobileThreadStrip::-webkit-scrollbar{display:none}
+.omImessagePage.omMessengerUnified .omChatPane{animation:omGlassChatEnter .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes omGlassChatEnter{from{opacity:.4;transform:translateX(12px) scale(.99)}to{opacity:1;transform:none}}
+@media(max-width:700px){.omImessagePage.omMessengerUnified{padding:4px!important}.omImessagePage.omMessengerUnified>.omMessengerShell{height:auto!important;min-height:0!important;max-height:100%!important}.omImessagePage.omMessengerUnified .omChatPane{height:100%!important;max-height:100%!important}.omImessagePage.omMessengerUnified .omMessageComposer{margin-top:0!important}}
+@media(prefers-reduced-motion:reduce){.omImessagePage.omMessengerUnified .omChatPane{animation:none}}
 `}</style>
  </main>
 }

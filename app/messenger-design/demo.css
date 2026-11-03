@@ -34,3 +34,18 @@ body:has(.mmDemo) .mmDemo{position:relative;z-index:2}
 .mmRowText{gap:3px}
 .mmSearch{height:48px}
 @media(max-width:700px){.mmPage{padding-left:14px;padding-right:14px}.mmTopNav a{min-width:44px}.mmTopNav a span{font-size:9px}.mmHero{height:116px}.mmBrand strong{font-size:35px}.mmStories .mmPortrait{width:52px;height:52px;flex-basis:52px}.mmStory{flex-basis:60px}.mmFilters{margin-top:10px;margin-bottom:10px}}
+
+
+/* Profile glass Messenger: fixed viewport, independent inbox scrolling. */
+.mmDemo.hudhudUnifiedMessenger{--mm-accent:var(--theme-primary,#21c995);height:100dvh;max-height:100dvh;min-height:0;overflow:hidden;background:#091519;color:#f3f8f7}
+.mmDemo.hudhudUnifiedMessenger .mmPage{height:100%;min-height:0;max-height:100%;display:flex;flex-direction:column;overflow:hidden;padding-bottom:max(12px,env(safe-area-inset-bottom,0px));background:transparent!important}
+.mmDemo.hudhudUnifiedMessenger .mmHero,.mmDemo.hudhudUnifiedMessenger .mmSearch,.mmDemo.hudhudUnifiedMessenger .mmFilters{flex-shrink:0}
+.mmDemo.hudhudUnifiedMessenger .mmSearch,.mmDemo.hudhudUnifiedMessenger .mmRow,.mmDemo.hudhudUnifiedMessenger .mmChat{background:color-mix(in srgb,var(--mm-accent) 10%,#15232a)!important;border:1px solid color-mix(in srgb,var(--mm-accent) 45%,transparent)!important;border-radius:20px;backdrop-filter:blur(20px);color:#f3f8f7!important}
+.mmDemo.hudhudUnifiedMessenger .mmSearch input,.mmDemo.hudhudUnifiedMessenger .mmRowText strong{color:#f3f8f7!important}
+.mmDemo.hudhudUnifiedMessenger .mmStories,.mmDemo.hudhudUnifiedMessenger .mmFilters{overflow-x:auto;scrollbar-width:none}
+.mmDemo.hudhudUnifiedMessenger .mmThreads{flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch;background:transparent!important}
+.mmDemo.hudhudUnifiedMessenger .mmRow{margin:8px 2px!important;padding:10px 12px!important}
+.mmDemo.hudhudUnifiedMessenger .mmChat{flex:1 1 0;min-height:0;overflow-y:auto;animation:mmGlassEnter .48s ease both}
+.mmDemo.hudhudUnifiedMessenger .mmComposer{position:sticky;bottom:0}
+@keyframes mmGlassEnter{from{opacity:.5;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.mmDemo.hudhudUnifiedMessenger .mmChat{animation:none}}
