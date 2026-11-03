@@ -59,7 +59,7 @@ export default function XPTracker(){
     const sync=(total:number,animate:boolean)=>{
       if(!alive||!Number.isFinite(total))return;
       const previous=currentXp.current;
-      if(animate&&previous!==null&&total>previous)showReward(total-previous);
+      if(animate&&previous!==null&&total>previous&&total-previous!==50)showReward(total-previous);
       currentXp.current=total;
       showLevelUp(total);setXp(total);
       window.dispatchEvent(new CustomEvent("1muslim:xp-balance",{detail:{xp_total:total}}));
@@ -68,7 +68,7 @@ export default function XPTracker(){
       const detail=(event as CustomEvent<{xp_total:number;xp_awarded:number}>).detail;
       if(!detail||!Number.isFinite(Number(detail.xp_total)))return;
       const total=Number(detail.xp_total),previous=currentXp.current;
-      if(previous===null||total>previous){showReward(Number(detail.xp_awarded)||Math.max(0,total-(previous??total)));sync(total,false)}
+      if(previous===null||total>previous){const amount=Number(detail.xp_awarded)||Math.max(0,total-(previous??total));if(amount!==50)showReward(amount);sync(total,false)}
     };
     const channel=supabase.channel("xp-profile-"+userId)
       .on("postgres_changes",{event:"UPDATE",schema:"public",table:"profiles",filter:"id=eq."+userId},payload=>{
@@ -153,37 +153,51 @@ export default function XPTracker(){
 
   useEffect(()=>{
     if(!userId)return;
-    const mediaIsPlaying=()=>Array.from(document.querySelectorAll<HTMLMediaElement>("video,audio")).some((media)=>!media.paused&&!media.ended&&media.readyState>=2);
+    let alive=true;
+    const award=(total:number,amount:number,silent:boolean)=>{
+      if(!alive||amount<=0)return;
+      const previous=currentXp.current;
+      currentXp.current=total;
+      showLevelUp(total);setXp(total);
+      if(!silent)showReward(amount);
+      window.dispatchEvent(new CustomEvent("1muslim:xp-balance",{detail:{xp_total:total}}));
+    };
+    // Claim daily reward on reconnect and when the app returns to the foreground.
+    const daily=async()=>{
+      if(document.visibilityState!=="visible")return;
+      const {data,error}=await supabase.rpc("claim_daily_presence_xp");
+      if(error)return;
+      const row=Array.isArray(data)?data[0]:data;
+      if(row?.awarded)award(Number(row.xp_total),Number(row.awarded),false);
+    };
+    void daily();
+    const mediaIsPlaying=()=>Array.from(document.querySelectorAll<HTMLMediaElement>("video,audio")).some(media=>!media.paused&&!media.ended&&media.readyState>=2);
+    let pending=false;
     const timer=window.setInterval(async()=>{
-      const visible=document.visibilityState==="visible";
-      const activelyWatching=mediaIsPlaying();
-      const recentlyActive=Date.now()-lastActivity.current<idleTimeout;
-      const isActive=visible&&(activelyWatching||recentlyActive);
-      if(!isActive)return;
-
-      activeRef.current=Math.min(300,activeRef.current+15);
-      sessionStorage.setItem(storageKey.current,String(activeRef.current));
+      const active=document.visibilityState==="visible"&&(mediaIsPlaying()||Date.now()-lastActivity.current<60_000);
+      if(!active||pending)return;
+      activeRef.current=Math.min(60,activeRef.current+15);
       setActiveSeconds(activeRef.current);
-
-      if(activeRef.current>=300){
-        const {data}=await supabase.rpc("claim_time_xp");
-        const awarded=Number(data?.awarded||0);
-        if(awarded){
-          showLevelUp(Number(data.xp_total||0));setXp(Number(data.xp_total||0));
-          setNotice("+500 XP · 5 minutes active");
-          window.setTimeout(()=>setNotice(null),2200);
-          activeRef.current=0;
-          sessionStorage.setItem(storageKey.current,"0");
-          setActiveSeconds(0);
+      if(activeRef.current<60)return;
+      pending=true;
+      try{
+        const {data,error}=await supabase.rpc("claim_active_minute_xp");
+        if(!error){
+          const row=Array.isArray(data)?data[0]:data;
+          if(row?.awarded)award(Number(row.xp_total),Number(row.awarded),true);
         }
+      }finally{
+        activeRef.current=0;setActiveSeconds(0);pending=false;
       }
     },15000);
-    return()=>window.clearInterval(timer);
+    const onVisible=()=>{if(document.visibilityState==="visible"){lastActivity.current=Date.now();activeRef.current=0;setActiveSeconds(0);void daily()}else{activeRef.current=0;setActiveSeconds(0)}};
+    document.addEventListener("visibilitychange",onVisible);
+    return()=>{alive=false;window.clearInterval(timer);document.removeEventListener("visibilitychange",onVisible)};
   },[supabase,userId]);
 
   if(!userId)return null;
   const level=levelFor(xp),start=levelStart(level),end=levelEnd(level),progress=Math.min(100,Math.max(0,((xp-start)/(end-start))*100));
-  const timeProgress=Math.min(100,activeSeconds/3);
+  const timeProgress=Math.min(100,activeSeconds/0.6);
   return <>{rewardToast&&<div key={rewardToast.id} role="status" aria-live="polite" style={{position:"fixed",top:"18%",left:"50%",transform:"translateX(-50%)",zIndex:9999,padding:"12px 24px",borderRadius:24,background:"var(--theme-primary, #147c5b)",color:"#fff",fontWeight:900,fontSize:20,boxShadow:"0 10px 35px #0005",pointerEvents:"none",animation:"xpRewardPop .4s ease-out"}}>✨ +{rewardToast.amount.toLocaleString()} XP<style>{`@keyframes xpRewardPop{from{opacity:0;translate:0 14px;scale:.8}to{opacity:1;translate:0 0;scale:1}}@media(prefers-reduced-motion:reduce){.xpRewardPop{animation:none}}`}</style></div>}{xpVisible&&<><div className="xpSpotlight" aria-hidden="true"/><div ref={trackerRef} className="xpTracker" aria-live="polite" style={position?{left:position.x,top:position.y,right:"auto",bottom:"auto"}:undefined} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} title="Drag to move XP tracker">
     <style jsx>{`
       .xpSpotlight{position:fixed;inset:0;z-index:89;pointer-events:none;background:rgba(0,0,0,.28);animation:xpDimIn .5s ease-out both}\n      @keyframes xpDimIn{from{opacity:0}to{opacity:1}}\n      @keyframes xpReveal{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}\n      .xpTracker{animation:xpReveal .55s cubic-bezier(.2,.8,.2,1) both;box-shadow:0 0 0 1px rgba(190,240,206,.18),0 0 32px rgba(137,230,173,.25),0 14px 38px rgba(0,0,0,.28)!important}\n      @media(prefers-reduced-motion:reduce){.xpSpotlight,.xpTracker{animation:none!important}}\n      .xpTracker{position:fixed;right:18px;bottom:82px;z-index:90;width:220px;padding:10px 11px;border:1px solid rgba(151,187,158,.25);border-radius:16px;background:rgba(8,13,10,.88);backdrop-filter:blur(16px);box-shadow:0 14px 38px rgba(0,0,0,.28);pointer-events:auto;cursor:grab;touch-action:none;user-select:none;color:#eef5ef}
@@ -194,6 +208,6 @@ export default function XPTracker(){
     <div className="top"><span>Level {level}</span><span className="xp">{xp.toLocaleString()} XP</span></div>
     <div className="bar"><div className="fill" style={{width:progress+"%"}}/></div>
     <div className="time"><div className="fill" style={{width:timeProgress+"%"}}/></div>
-    <div className="meta"><span>{level===10?"Maximum level":Math.max(0,end-xp).toLocaleString()+" to next level"}</span><span>+500 / 5 min active</span></div>
+    <div className="meta"><span>{level===10?"Maximum level":Math.max(0,end-xp).toLocaleString()+" to next level"}</span><span>+50 / active minute</span></div>
   </div></>}</>
 }

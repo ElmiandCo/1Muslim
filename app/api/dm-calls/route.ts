@@ -27,6 +27,9 @@ async function handler(request:Request,method:"GET"|"POST"){
  if(members.length!==2)return NextResponse.json({error:"Only one-to-one calls are supported"},{status:400});
  const peer=members.find(m=>m.user_id!==user.id)?.user_id;
  if(!peer)return NextResponse.json({error:"Invalid participants"},{status:400});
+ // The official 1MuslimAi Bot is messaging-only; neither side can call it.
+ const {data:botProfiles}=await db.from("profiles").select("id").in("id",[user.id,peer]).in("username",["1muslimaibot","1muslimai_bot"]);
+ if(botProfiles?.length)return NextResponse.json({error:"Calling the 1MuslimAi Bot is disabled"},{status:403});
  const {data:conversation}=await db.from("dm_conversations").select("request_status").eq("id",conversationId).maybeSingle();
  if(conversation?.request_status!=="accepted")return NextResponse.json({error:"Messaging request must be accepted first"},{status:403});
  const {data:blocks}=await db.from("dm_blocks").select("blocker_id").in("blocker_id",[user.id,peer]).in("blocked_id",[user.id,peer]);
