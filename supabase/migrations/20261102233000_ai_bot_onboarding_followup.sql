@@ -37,7 +37,7 @@ begin
    insert into public.dm_participants(conversation_id,user_id) values(v_cid,v_bot),(v_cid,r.user_id);
   end if;
   insert into public.dm_messages(conversation_id,sender_id,body) values(v_cid,v_bot,
-  '🌟 Here are a few ways to get started on 1Muslim! 📖 Explore Qur’an Studio and read or listen to verses. 🔤 Practice Arabic in Lessons. 🎬 Discover posts and videos made by Muslims, for Muslims. 💬 Connect with the Ummah through Community and Messages. ✨ Earn XP as you learn, post, and spend active time here. Start with a Qur’an verse today, then try an Arabic lesson! Need anything? Reply here to reach 1Muslim Admin. Alhamdulillah! 💚');
+  '🌟 Here are a few ways to get started on 1Muslim! 📖 Explore Qur’an Studio: +250 XP for viewing a verse (where eligible). 🔤 Practice Arabic in Lessons and earn available lesson rewards. 🎬 Share a post: +500 XP, or +1,000 XP for a post with Qur’an content. 💬 Discover Muslim-made posts and connect through Community and Messages. ✨ Earn +50 XP per active minute and +250 daily XP every 18 hours. Start with a Qur’an verse today, then try an Arabic lesson! Need anything? Reply here to reach 1Muslim Admin. Alhamdulillah! 💚');
   update public.ai_bot_onboarding_followups set delivered_at=clock_timestamp() where user_id=r.user_id;
   v_count:=v_count+1;
  end loop;
