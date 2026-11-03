@@ -9,6 +9,7 @@ import "./home-ambient-halo.css";
 import "./guest-theme-reveal.css";
 import {enableGuestIntroSound,playGuestIntroSound} from "./guest-intro-sound";
 import CanvasSecondaryApp, {CommunityMap} from "./components/CanvasSecondaryApp";
+import {useLiveDiscovery} from "../lib/live-discovery-client";
 import PostDesignStudio from "./components/PostDesignStudio";
 import HomeMessagesChooser from "./components/HomeMessagesChooser";
 import ElmTentAlphabet from "./components/ElmTentAlphabet";
@@ -191,7 +192,22 @@ export default function Home(){
  const activeLive=livePreviews.find(stream=>stream.id===selectedLiveId)||livePreviews[liveCarouselIndex%Math.max(livePreviews.length,1)];
  const [ummahSlides,setUmmahSlides]=useState<Array<{id:string;body:string}>>([]);
  const [slideIndex,setSlideIndex]=useState(0);
- useEffect(()=>{let active=true;const db=createClient();const load=async()=>{let liveQuery=db.from("live_streams").select("id,title,thumbnail_path,viewer_count,host_id,room_name,aspect_ratio").eq("status","live").eq("visibility","public");const [live,posts]=await Promise.all([(liveFormat==="games")?Promise.resolve({data:[],error:null}):liveQuery.order("viewer_count",{ascending:false}).limit(12),db.from("ummah_feed_posts").select("id,body").order("created_at",{ascending:false}).limit(8)]);if(!active)return;if(!live.error){const next=(live.data||[]).filter((stream:any)=>liveFormat==="audio"?stream.aspect_ratio==="1:1":stream.aspect_ratio!=="1:1").slice(0,3);setLivePreviews(previous=>{if(previous.length&&next.length===0&&liveSeenRef.current)setRecentlyEndedLive(true);else if(next.length)setRecentlyEndedLive(false);if(next.length)liveSeenRef.current=true;return next;});}if(!posts.error)setUmmahSlides(posts.data||[])};void load();const channel=db.channel("homepage-live-discovery").on("postgres_changes",{event:"*",schema:"public",table:"live_streams"},()=>void load()).subscribe();const refresh=window.setInterval(()=>{if(document.visibilityState==="visible")void load()},3000);const resume=()=>{if(document.visibilityState==="visible")void load()};document.addEventListener("visibilitychange",resume);window.addEventListener("focus",resume);return()=>{active=false;window.clearInterval(refresh);document.removeEventListener("visibilitychange",resume);window.removeEventListener("focus",resume);void db.removeChannel(channel)}},[liveFormat]);
+ const liveDiscovery=useLiveDiscovery();
+ useEffect(()=>{
+  // Share the same verified presence snapshot as Open Live; retain Home's
+  // format-specific carousel, recently-ended state and three-item limit.
+  if(!liveDiscovery.ready)return;
+  const next=(liveFormat==="games"?[]:liveDiscovery.lives)
+   .filter(stream=>liveFormat==="audio"?stream.aspect_ratio==="1:1":stream.aspect_ratio!=="1:1")
+   .slice(0,3);
+  setLivePreviews(previous=>{
+   if(previous.length&&next.length===0&&liveSeenRef.current)setRecentlyEndedLive(true);
+   else if(next.length)setRecentlyEndedLive(false);
+   if(next.length)liveSeenRef.current=true;
+   return next.map(stream=>({id:stream.id,title:stream.title,thumbnail_path:stream.thumbnail_path,viewer_count:stream.viewer_count,host_id:stream.host_id,room_name:stream.room_name,aspect_ratio:stream.aspect_ratio}));
+  });
+ },[liveDiscovery,liveFormat]);
+ useEffect(()=>{let active=true;const db=createClient();const load=async()=>{const {data,error}=await db.from("ummah_feed_posts").select("id,body").order("created_at",{ascending:false}).limit(8);if(active&&!error)setUmmahSlides(data||[])};void load();const refresh=window.setInterval(()=>{if(document.visibilityState==="visible")void load()},30000);return()=>{active=false;clearInterval(refresh)}},[]);
  useEffect(()=>{if(ummahSlides.length<2)return;const timer=setInterval(()=>setSlideIndex(i=>(i+1)%ummahSlides.length),8500);return()=>clearInterval(timer)},[ummahSlides.length]);
  const [inbox,setInbox]=useState<Array<{id:string;content:string;created_at:string}>>([]);
  const [callHistory,setCallHistory]=useState<Array<{id:string;created_at:string}>>([]);
