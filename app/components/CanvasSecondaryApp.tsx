@@ -337,7 +337,7 @@ function DailyPostsApp({active}:{active:boolean}){
       moving=true;
       const target=index===0?0:all[index].offsetTop-all[0].offsetTop;
       const start=lane.scrollTop, distance=target-start;
-      const duration=2200,begin=performance.now();
+      const duration=900,begin=performance.now();
       let raf=0;
       const step=(now:number)=>{
         if(performance.now()<pausedUntil||document.hidden){moving=false;return}
@@ -349,7 +349,7 @@ function DailyPostsApp({active}:{active:boolean}){
       raf=requestAnimationFrame(step);
       cleanups.push(()=>cancelAnimationFrame(raf));
     };
-    const timer=setInterval(advance,6000);
+    const timer=setInterval(advance,3000);
     timers.push(timer);
   }
   return()=>{timers.forEach(clearInterval);cleanups.forEach(fn=>fn())};
