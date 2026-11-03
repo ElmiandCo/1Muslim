@@ -9,7 +9,7 @@ type GuestRequest={
 };
 type ModerationAction="approved"|"rejected"|"removed"|"mute"|"unmute";
 
-export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=false}:{streamId:string;roomName:string;hostId:string;compactJoin?:boolean}){
+export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=false,hostInline=false}:{streamId:string;roomName:string;hostId:string;compactJoin?:boolean;hostInline?:boolean}){
   const [uid,setUid]=useState<string|null>(null);
   const [panelOpen,setPanelOpen]=useState(false);
   const [requests,setRequests]=useState<GuestRequest[]>([]);
@@ -189,10 +189,10 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   if(!uid)return null;
   const pendingCount=requests.filter(r=>r.status==="pending").length;
   return <div style={{position:"relative",zIndex:30,width:"fit-content",maxWidth:"100%"}}>
-    <button type="button" aria-expanded={panelOpen} aria-controls="live-guest-controls-panel" onClick={()=>setPanelOpen(open=>!open)} style={{border:"1px solid var(--theme-border,#8aa398)",borderRadius:999,padding:compactJoin?"8px 12px":"9px 14px",minHeight:compactJoin?36:undefined,fontSize:compactJoin?12:undefined,boxSizing:"border-box",background:"color-mix(in srgb,var(--theme-panel,#101a13) 76%,transparent)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"var(--theme-text,#e7f5e6)",fontWeight:600,cursor:"pointer",boxShadow:"0 8px 24px #0005"}}>{compactJoin?"Join":`👥 Guests${host&&pendingCount>0?` · ${pendingCount}`:""} ${panelOpen?"⌃":"⌄"}`}</button>
-    {panelOpen&&<section id="live-guest-controls-panel" aria-label="Live guest controls" style={{position:"absolute",right:0,bottom:"calc(100% + 10px)",width:"min(340px,calc(100vw - 32px))",maxHeight:"min(55dvh,430px)",overflowY:"auto",overscrollBehavior:"contain",padding:14,border:"1px solid var(--theme-border,#48624b)",borderRadius:20,background:"color-mix(in srgb,var(--theme-panel,#101a13) 90%,transparent)",backdropFilter:"blur(22px)",WebkitBackdropFilter:"blur(22px)",boxShadow:"0 16px 44px #0009",color:"var(--theme-text,#e7f5e6)"}}>
-    <h3 style={{margin:"0 0 8px"}}>🎙️ 1Muslim Guest Studio</h3>
-    <p style={{fontSize:12,opacity:.8}}>Video: host + 3 guests. Audio: host + 11 guests.</p>
+    {!hostInline&&<button type="button" aria-expanded={panelOpen} aria-controls="live-guest-controls-panel" onClick={()=>setPanelOpen(open=>!open)} style={{border:"1px solid var(--theme-border,#8aa398)",borderRadius:999,padding:compactJoin?"8px 12px":"9px 14px",minHeight:compactJoin?36:undefined,fontSize:compactJoin?12:undefined,boxSizing:"border-box",background:"color-mix(in srgb,var(--theme-panel,#101a13) 76%,transparent)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"var(--theme-text,#e7f5e6)",fontWeight:600,cursor:"pointer",boxShadow:"0 8px 24px #0005"}}>{compactJoin?"Join":`👥 Guests${host&&pendingCount>0?` · ${pendingCount}`:""} ${panelOpen?"⌃":"⌄"}`}</button>}
+    {(panelOpen||hostInline)&&<section id="live-guest-controls-panel" aria-label="Live guest controls" style={{position:hostInline?"relative":"absolute",right:hostInline?undefined:0,bottom:hostInline?undefined:"calc(100% + 10px)",width:hostInline?"100%":"min(340px,calc(100vw - 32px))",maxHeight:"min(55dvh,430px)",overflowY:"auto",overscrollBehavior:"contain",padding:14,border:"1px solid var(--theme-border,#48624b)",borderRadius:20,background:"color-mix(in srgb,var(--theme-panel,#101a13) 90%,transparent)",backdropFilter:"blur(22px)",WebkitBackdropFilter:"blur(22px)",boxShadow:"0 16px 44px #0009",color:"var(--theme-text,#e7f5e6)"}}>
+    <h3 style={{margin:"0 0 8px"}}>{hostInline?"Join requests":"🎙️ 1Muslim Guest Studio"}</h3>
+    {!hostInline&&<p style={{fontSize:12,opacity:.8}}>Video: host + 3 guests. Audio: host + 11 guests.</p>}
     {host?<div><strong>👑 Guest requests</strong>
       {requests.filter(r=>r.status==="pending").map(r=><div key={r.id} style={{display:"flex",gap:8,alignItems:"center",marginTop:8,flexWrap:"wrap"}}>
         <span>{r.user_id.slice(0,8)} · {r.mode}</span>
