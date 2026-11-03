@@ -23,3 +23,21 @@
  .backdrop{inset:clamp(190px,28dvh,310px) 12px clamp(65px,10dvh,130px);display:flex;align-items:center;justify-content:center;padding:12px;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;pointer-events:none}
  .card{pointer-events:auto;width:min(440px,calc(100vw - 40px));max-height:100%;margin:0;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-secondary,#d9c48c) 23%,transparent),rgba(13,20,24,.24) 75%);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
 }
+
+/* 1Muslim guest auth: theme-sensitive floating glass; visual only, no OAuth changes. */
+.backdrop{--entry-accent:#57e4a2;--entry-soft:rgba(17,104,70,.32);--entry-edge:rgba(111,245,175,.42)}
+.backdrop[data-entry-theme="nur"]{--entry-accent:#8ac9ff;--entry-soft:rgba(30,87,166,.31);--entry-edge:rgba(138,201,255,.46)}
+.backdrop[data-entry-theme="najma"]{--entry-accent:#f3d38b;--entry-soft:rgba(143,103,26,.28);--entry-edge:rgba(243,211,139,.45)}
+.backdrop[data-entry-theme="mulk"]{--entry-accent:#e2e4ed;--entry-soft:rgba(57,61,77,.42);--entry-edge:rgba(208,211,228,.37)}
+.backdrop[data-entry-theme="hoor"]{--entry-accent:#ffb7dd;--entry-soft:rgba(148,52,110,.28);--entry-edge:rgba(255,183,221,.46)}
+.backdrop[data-entry-theme="ruby"]{--entry-accent:#ff9c9c;--entry-soft:rgba(145,38,51,.31);--entry-edge:rgba(255,156,156,.45)}
+.backdrop .card{isolation:isolate;background:linear-gradient(145deg,var(--entry-soft),rgba(6,14,19,.68) 65%,rgba(3,12,15,.82));border-color:var(--entry-edge);box-shadow:0 25px 80px rgba(0,0,0,.52),inset 0 1px rgba(255,255,255,.18);backdrop-filter:blur(30px) saturate(145%);-webkit-backdrop-filter:blur(30px) saturate(145%)}
+.backdrop .kicker{position:relative;z-index:1;color:var(--entry-accent);letter-spacing:.16em}
+.backdrop .google{position:relative;z-index:1;border-color:var(--entry-edge);background:rgba(255,255,255,.95);color:#182522;min-height:48px}
+.backdrop .google:focus-visible,.backdrop button:focus-visible,.backdrop input:focus-visible{outline:2px solid var(--entry-accent);outline-offset:3px}
+.backdrop .form input{background:rgba(0,0,0,.34);border-color:var(--entry-edge)}
+.backdrop .particles{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;z-index:0}
+.backdrop .particles i{position:absolute;left:calc(7% + var(--p,0)*7%);bottom:-8px;width:3px;height:3px;border-radius:50%;background:var(--entry-accent);opacity:0;box-shadow:0 0 9px var(--entry-accent);animation:entryParticle 7s linear infinite;animation-delay:calc(var(--p)*-.65s)}
+.backdrop .particles i:nth-child(1){--p:1}.backdrop .particles i:nth-child(2){--p:2}.backdrop .particles i:nth-child(3){--p:3}.backdrop .particles i:nth-child(4){--p:4}.backdrop .particles i:nth-child(5){--p:5}.backdrop .particles i:nth-child(6){--p:6}.backdrop .particles i:nth-child(7){--p:7}.backdrop .particles i:nth-child(8){--p:8}.backdrop .particles i:nth-child(9){--p:9}.backdrop .particles i:nth-child(10){--p:10}.backdrop .particles i:nth-child(11){--p:11}.backdrop .particles i:nth-child(12){--p:12}
+@keyframes entryParticle{0%{transform:translateY(0);opacity:0}18%{opacity:.55}80%{opacity:.3}100%{transform:translateY(-380px);opacity:0}}
+@media(prefers-reduced-motion:reduce){.backdrop .particles i{animation:none;opacity:0}}
