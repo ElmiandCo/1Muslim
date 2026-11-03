@@ -3,7 +3,7 @@ import {Fragment,useEffect,useMemo,useRef,useState} from "react";
 import {createPortal} from "react-dom";
 import Link from "next/link";
 import GameLabProfileHub from "./GameLabProfileHub";
-import ProfileVideos from "./ProfileVideos";
+import ProfileContentGallery from "./ProfileContentGallery";
 import {createClient} from "../../utils/supabase/client";
 import HomeMessagesChooser from "./HomeMessagesChooser";
 import ProfileAvatar from "./ProfileAvatar";
