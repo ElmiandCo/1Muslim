@@ -19,7 +19,7 @@ export default function ProfileContentGallery(){
    ids.length?db.from("post_likes").select("post_id").in("post_id",ids):Promise.resolve({data:[]})
   ]);
   const byPost=new Map((posts||[]).map(p=>[p.id,p]));const counts=new Map<string,number>();for(const l of likes||[])counts.set(l.post_id,(counts.get(l.post_id)||0)+1);
-  const result:Item[]=(media||[]).map((m,i)=>{const post=byPost.get(m.post_id);const body=post?.body||"";const kind=/video\//.test(m.mime_type)?"video":/Qur[’']?an\s+\d+:\d+/i.test(body)?"verse":"image";return {id:m.id,post_id:m.post_id,url:urls?.[i]?.signedUrl||"",mime_type:m.mime_type,created_at:m.created_at,body,kind,likes:counts.get(m.post_id)||0}}).filter(m=>m.url);
+  const result:Item[]=(media||[]).map((m,i)=>{const post=byPost.get(m.post_id);const body=post?.body||"";const kind:Item["kind"]=/video\//.test(m.mime_type)?"video":/Qur[’']?an\s+\d+:\d+/i.test(body)?"verse":"image";return {id:m.id,post_id:m.post_id,url:urls?.[i]?.signedUrl||"",mime_type:m.mime_type,created_at:m.created_at,body,kind,likes:counts.get(m.post_id)||0}}).filter(m=>m.url);
   // Verse-only posts are included even when they contain no uploaded media.
   const {data:versePosts}=await db.from("posts").select("id,body,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(500);
   for(const p of versePosts||[]){if(/Qur[’']?an\s+\d+:\d+/i.test(p.body||"")&&!result.some(m=>m.post_id===p.id&&m.kind==="verse"))result.push({id:"verse-"+p.id,post_id:p.id,url:"",mime_type:"text/plain",created_at:p.created_at,body:p.body||"",kind:"verse",likes:counts.get(p.id)||0})}
