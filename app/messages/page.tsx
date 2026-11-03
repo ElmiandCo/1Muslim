@@ -771,6 +771,43 @@ body:has(.muslimMessengerFrame){overflow:hidden!important}
 @keyframes omGlassChatEnter{from{opacity:.4;transform:translateX(12px) scale(.99)}to{opacity:1;transform:none}}
 @media(max-width:700px){.omImessagePage.omMessengerUnified{padding:4px!important}.omImessagePage.omMessengerUnified>.omMessengerShell{height:auto!important;min-height:0!important;max-height:100%!important}.omImessagePage.omMessengerUnified .omChatPane{height:100%!important;max-height:100%!important}.omImessagePage.omMessengerUnified .omMessageComposer{margin-top:0!important}}
 @media(prefers-reduced-motion:reduce){.omImessagePage.omMessengerUnified .omChatPane{animation:none}}
+
+/* Mobile chat regression fix: previous flex override stacked the avatar rail above the chat. */
+@media(max-width:700px){
+ .omImessagePage.omMessengerUnified>.omMessengerShell.omMessengerShell--chat,
+ .muslimMessengerFrame .omImessagePage.omMessengerUnified>.omMessengerShell.omMessengerShell--chat{
+  display:grid!important;grid-template-columns:56px minmax(0,1fr)!important;
+  grid-template-rows:minmax(0,1fr)!important;flex-direction:unset!important;
+  align-items:stretch!important;min-height:0!important;height:auto!important;
+  max-height:100%!important;overflow:hidden!important;
+ }
+ .omImessagePage.omMessengerUnified .omMessengerShell--chat>.omMobileThreadStrip{
+  display:flex!important;grid-column:1!important;grid-row:1!important;
+  flex-direction:column!important;align-items:center!important;
+  width:56px!important;min-width:0!important;min-height:0!important;
+  height:100%!important;max-height:100%!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  padding:6px 3px!important;gap:7px!important;
+  background:rgba(9,27,29,.75)!important;
+ }
+ .omImessagePage.omMessengerUnified .omMessengerShell--chat>.omMobileThreadStrip .omMobileThread{
+  width:48px!important;min-width:48px!important;max-width:48px!important;
+  height:52px!important;min-height:52px!important;flex:0 0 52px!important;
+  padding:3px!important;background:rgba(17,48,45,.7)!important;
+ }
+ .omImessagePage.omMessengerUnified .omMessengerShell--chat>.omChatPane{
+  display:flex!important;grid-column:2!important;grid-row:1!important;
+  flex-direction:column!important;min-width:0!important;min-height:0!important;
+  width:100%!important;height:100%!important;max-height:100%!important;
+  overflow:hidden!important;
+ }
+ .omImessagePage.omMessengerUnified .omMessengerShell--chat .omMessagesFeed{
+  flex:1 1 0!important;min-height:0!important;overflow-y:auto!important;
+ }
+ .omImessagePage.omMessengerUnified .omMessengerShell--chat .omMessageComposer{
+  flex:0 0 auto!important;min-width:0!important;position:relative!important;
+ }
+}
 `}</style>
  </main>
 }
