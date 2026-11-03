@@ -21,7 +21,8 @@ export default function Profile2AppearanceEditor({onSaved}:{onSaved?:()=>void}){
  if(Object.keys(patch).length){const {error}=await db.from("profiles").update(patch).eq("id",user.id);if(error)throw Error(error.message)}
  if(values.email.trim()!==original.email){const {error}=await db.auth.updateUser({email:values.email.trim()});if(error)throw Error(error.message)}
  if(values.password){const {error}=await db.auth.updateUser({password:values.password});if(error)throw Error(error.message)}
- const next={...values,username,password:""};setOriginal(next);setValues(next);setOpen(null);setMessage("Saved successfully. Email changes may require confirmation. Appearance XP is credited when the database reward is enabled.");onSaved?.();
+ const next={...values,username,password:""};
+ if(values.avatar_package!==original.avatar_package)window.dispatchEvent(new CustomEvent("1muslim:avatar-changed",{detail:{userId:user.id,avatarPackage:values.avatar_package}}));setOriginal(next);setValues(next);setOpen(null);setMessage("Saved successfully. Email changes may require confirmation. Appearance XP is credited when the database reward is enabled.");onSaved?.();
  const scroll=root.current?.closest('[style*="overflow"]') as HTMLElement|null;scroll?.scrollTo({top:0,behavior:"smooth"});root.current?.scrollIntoView({behavior:"smooth",block:"nearest"});
  window.dispatchEvent(new Event("1muslim:appearance-updated"));window.dispatchEvent(new Event("1muslim:theme-changed"));window.dispatchEvent(new Event("1muslim-settings-updated"));
  }catch(e){setMessage(e instanceof Error?e.message:"Unable to save changes.")}finally{setBusy(false)}};
