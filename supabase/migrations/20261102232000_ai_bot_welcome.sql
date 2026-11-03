@@ -18,7 +18,7 @@ begin
  insert into public.dm_conversations(requested_by,request_status) values(v_bot,'accepted') returning id into v_cid;
  insert into public.dm_participants(conversation_id,user_id) values(v_cid,v_bot),(v_cid,new.id);
  insert into public.dm_messages(conversation_id,sender_id,body)
- values(v_cid,v_bot,'Assalamu alaikum! 👋 Welcome to 1Muslim. Need help? Message us right here—1Muslim Admin is available and usually responds quickly.');
+ values(v_cid,v_bot,'Assalamu alaikum! 👋 Welcome to 1Muslim—a growing community built by Muslims, for Muslims. Our community is growing, and the worldwide Muslim Ummah is nearly 2 billion strong! 🌍 Read the Qur’an, learn Arabic, and enjoy content made by Muslims, for Muslims. Invite your friends and family to join us! Need help? Reply here to reach 1Muslim Admin for a quick response, inshaAllah. Alhamdulillah! 💚');
  return new;
 end $$;
 revoke all on function public.send_new_member_welcome() from public,anon,authenticated;
