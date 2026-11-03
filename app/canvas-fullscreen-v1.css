@@ -2139,3 +2139,39 @@ header[class*="controlHeader"] [class*="headerActions"] a{
  .ummah-dual-lane .ummah-package-media{max-height:clamp(140px,27vh,280px)!important}
 }
 @media(prefers-reduced-motion:reduce){.ummah-dual-lane .community-post-card{transition:none!important}}
+
+
+/* 1Muslim Go Live — metallic, theme-sensitive pill. Visual-only; retain existing hit target. */
+html[data-muslim-theme] main[class*="control"] a.homeGoLiveSignedIn,
+html[data-muslim-theme] main[class*="control"] a[class*="introLiveButton"].homeGoLiveSignedIn {
+ --live-edge:#22f67c;--live-dot:#20ff76;--live-base:#090b0c;--live-mid:#202429;--live-text:#f4f7fa;
+ position:relative!important;isolation:isolate;overflow:hidden;
+ border:2px solid var(--live-edge)!important;border-radius:999px!important;
+ background:linear-gradient(155deg,transparent 23%,rgba(255,255,255,.13) 26%,transparent 29%,transparent 68%,rgba(255,255,255,.12) 71%,transparent 74%),linear-gradient(120deg,var(--live-base),var(--live-mid) 52%,var(--live-base))!important;
+ color:var(--live-text)!important;
+ text-shadow:0 1px 0 #fff8,0 2px 3px #000a,0 0 9px #fff5!important;
+ box-shadow:inset 0 1px 1px #ffffff75,0 0 12px color-mix(in srgb,var(--live-edge) 45%,transparent)!important;
+ transition:background .45s ease,border-color .45s ease,box-shadow .45s ease!important;
+}
+html[data-muslim-theme] main[class*="control"] a.homeGoLiveSignedIn [class*="liveDockDot"] {
+ background:var(--live-dot)!important;box-shadow:0 0 9px var(--live-dot),0 0 17px var(--live-dot)!important;
+}
+html[data-muslim-theme="sapphire"] main[class*="control"] a.homeGoLiveSignedIn,
+html[data-muslim-theme="sapphire"] main[class*="control"] a[class*="introLiveButton"].homeGoLiveSignedIn {
+ --live-edge:#25d7ff;--live-dot:#fff;--live-base:#041432;--live-mid:#0755ab;
+}
+html[data-muslim-theme="ruby"] main[class*="control"] a.homeGoLiveSignedIn,
+html[data-muslim-theme="ruby"] main[class*="control"] a[class*="introLiveButton"].homeGoLiveSignedIn {
+ --live-edge:#ffd46b;--live-base:#390008;--live-mid:#a20926;--live-text:#ffe3a1;
+}
+html[data-muslim-theme="amethyst"] main[class*="control"] a.homeGoLiveSignedIn,
+html[data-muslim-theme="amethyst"] main[class*="control"] a[class*="introLiveButton"].homeGoLiveSignedIn {
+ --live-edge:#f340ed;--live-base:#b70072;--live-mid:#4c05b5;
+}
+html[data-muslim-theme="titanium"] main[class*="control"] a.homeGoLiveSignedIn,
+html[data-muslim-theme="titanium"] main[class*="control"] a[class*="introLiveButton"].homeGoLiveSignedIn {
+ --live-edge:#dbe5ef;--live-dot:#fff;--live-base:#131820;--live-mid:#8793a3;
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-muslim-theme] main[class*="control"] a.homeGoLiveSignedIn {animation:none!important}
+}
