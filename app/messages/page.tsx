@@ -847,6 +847,39 @@ body:has(.muslimMessengerFrame){overflow:hidden!important}
   display:flex!important;flex-direction:column!important;min-height:0!important;height:auto!important
  }
 }
+
+/* Final thread geometry: one full-width chat pane, no competing grid columns. */
+.omImessagePage.omMessengerUnified>.omMessengerShell.omMessengerShell--chat{
+ position:relative!important;display:block!important;grid-template-columns:none!important;
+ grid-template-rows:none!important;width:100%!important;min-width:0!important;
+ height:100%!important;min-height:0!important;overflow:hidden!important;
+}
+.omImessagePage.omMessengerUnified>.omMessengerShell.omMessengerShell--chat>.omChatPane{
+ position:absolute!important;inset:0!important;display:flex!important;
+ flex-direction:column!important;grid-column:unset!important;grid-row:unset!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ height:100%!important;min-height:0!important;max-height:100%!important;
+ margin:0!important;overflow:hidden!important;box-sizing:border-box!important;
+}
+.omImessagePage.omMessengerUnified .omMessengerShell--chat .omChatPane>*{max-width:100%;box-sizing:border-box}
+.omImessagePage.omMessengerUnified .omMessengerShell--chat .omMessagesFeed{
+ display:flex!important;flex-direction:column!important;flex:1 1 0!important;
+ width:100%!important;min-width:0!important;min-height:0!important;
+ overflow-y:auto!important;overflow-x:hidden!important;overflow-wrap:anywhere!important;
+}
+.omImessagePage.omMessengerUnified .omMessengerShell--chat .omMessagesFeed>*{
+ max-width:100%!important;overflow-wrap:anywhere!important;word-break:normal!important;
+}
+.omImessagePage.omMessengerUnified .omMessengerShell--chat .omMessageComposer{
+ width:100%!important;min-width:0!important;max-width:100%!important;flex:0 0 auto!important;
+}
+@media(max-width:700px){
+ .omImessagePage.omMessengerUnified>.omMessengerShell.omMessengerShell--chat{display:block!important}
+ .omImessagePage.omMessengerUnified>.omMessengerShell.omMessengerShell--chat>.omChatPane{
+  position:absolute!important;inset:0!important;grid-column:unset!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+ }
+}
 `}</style>
  </main>}</>
 }
