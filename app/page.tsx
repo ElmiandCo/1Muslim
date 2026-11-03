@@ -198,6 +198,28 @@ export default function Home(){
  const [lessonPreview,setLessonPreview]=useState<Array<{id:string;title:string}>>([]);
  const [workspacePage,setWorkspacePage]=useState(0);
  const workspaceNavRef=useRef<HTMLElement>(null);
+ const [profileOverlayBounds,setProfileOverlayBounds]=useState<{top:number;bottom:number;left:number;width:number}|null>(null);
+ useEffect(()=>{
+  if(workspacePage!==6||homeSignedIn!==true){setProfileOverlayBounds(null);return;}
+  let raf=0;let previous="";
+  const sync=()=>{
+   const avatar=document.querySelector<HTMLElement>(".profile-shared-avatar-portal");
+   const stage=document.querySelector<HTMLElement>(".profile-scroll-stage");
+   if(avatar&&stage){
+    const ar=avatar.getBoundingClientRect(),sr=stage.getBoundingClientRect();
+    const top=Math.max(90,Math.round(ar.bottom-6));
+    const bottom=Math.max(12,Math.round(window.innerHeight-sr.bottom+12));
+    const left=Math.round(sr.left+Math.min(18,sr.width*.025));
+    const width=Math.round(sr.width-Math.min(36,sr.width*.05));
+    const next={top,bottom,left,width};const key=JSON.stringify(next);
+    if(key!==previous){previous=key;setProfileOverlayBounds(next);}
+   }
+   raf=requestAnimationFrame(sync);
+  };
+  raf=requestAnimationFrame(sync);
+  return()=>cancelAnimationFrame(raf);
+ },[workspacePage,homeSignedIn]);
+
  useEffect(()=>{
   const nav=workspaceNavRef.current;
   if(!nav||!window.matchMedia("(max-width: 1024px)").matches)return;
@@ -700,7 +722,7 @@ const navCollapsedRef=useRef(false);
   return()=>{document.removeEventListener("touchstart",down,true);document.removeEventListener("touchmove",move,true);document.removeEventListener("touchend",end,true);document.removeEventListener("touchcancel",end,true)};
  },[canvasRow,workspacePage,editWidgets]);
 
- return <main data-canvas-fullscreen={canvasFullscreen?"true":"false"} data-widget-motion={motionMode} className={[styles.control,light?styles.day:"",navMotionStarted?(navCollapsed?styles.navMotionCollapsed:styles.navMotionExpanded):""].join(" ")}>{workspacePage===6&&homeSignedIn===true&&typeof document!=="undefined"&&createPortal(<div aria-label="Profile 2.0 coming soon" role="status" style={{position:"fixed",zIndex:2147483000,top:"clamp(290px,37vh,420px)",bottom:"clamp(28px,7vh,90px)",left:"50%",transform:"translateX(-50%)",width:"min(88vw,1100px)",maxWidth:"calc(100vw - 36px)",minHeight:0,boxSizing:"border-box",padding:"clamp(28px,5vw,60px) clamp(20px,4vw,60px)",justifyContent:"center",borderRadius:26,border:"1px solid color-mix(in srgb,var(--theme-secondary,#e8cb83) 55%,transparent)",background:"linear-gradient(145deg,rgba(32,41,47,.80),rgba(8,17,23,.68))",backdropFilter:"blur(24px) saturate(150%)",WebkitBackdropFilter:"blur(24px) saturate(150%)",boxShadow:"0 24px 70px #0008,inset 0 1px 0 #ffffff45",display:"flex",flexDirection:"column",alignItems:"center",gap:15,textAlign:"center",pointerEvents:"none",color:"#fff",animation:"profileGlassArrival .55s ease-out both"}}><span aria-hidden="true" style={{fontSize:28,color:"var(--theme-secondary,#e8cb83)"}}>✧</span><strong style={{fontSize:"clamp(22px,5vw,30px)",lineHeight:1.2}}>Under Construction</strong><span style={{fontSize:17}}><b style={{color:"var(--theme-secondary,#e8cb83)"}}>Profile 2.0</b> Coming Soon.</span><span style={{fontSize:17,marginTop:4}}>Come Back 👋🏼</span></div>,document.body)}{entryLoading&&<AvatarEntryLoader ready={entryReady} signedIn={homeSignedIn===true} showSignUp={homeSignedIn!==true} onSignUp={()=>{setEntryLoading(false);setShahadaOverlay(true)}} onComplete={()=>setEntryLoading(false)}/>}<style jsx global>{`
+ return <main data-canvas-fullscreen={canvasFullscreen?"true":"false"} data-widget-motion={motionMode} className={[styles.control,light?styles.day:"",navMotionStarted?(navCollapsed?styles.navMotionCollapsed:styles.navMotionExpanded):""].join(" ")}>{workspacePage===6&&homeSignedIn===true&&profileOverlayBounds&&typeof document!=="undefined"&&createPortal(<section aria-label="Profile 2.0 coming soon" style={{position:"fixed",zIndex:2147483000,top:profileOverlayBounds.top,bottom:profileOverlayBounds.bottom,left:profileOverlayBounds.left,width:profileOverlayBounds.width,minHeight:0,boxSizing:"border-box",padding:"clamp(20px,4vw,42px)",borderRadius:26,border:"1px solid color-mix(in srgb,var(--theme-secondary,#e8cb83) 55%,transparent)",background:"linear-gradient(145deg,rgba(32,41,47,.80),rgba(8,17,23,.68))",backdropFilter:"blur(24px) saturate(150%)",WebkitBackdropFilter:"blur(24px) saturate(150%)",boxShadow:"0 24px 70px #0008,inset 0 1px 0 #ffffff45",display:"flex",flexDirection:"column",alignItems:"stretch",overflowY:"auto",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",touchAction:"pan-y",pointerEvents:"auto",color:"#fff",animation:"profileGlassArrival .55s ease-out both"}}><div style={{minHeight:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:24,textAlign:"center",padding:"clamp(25px,6vh,70px) 0",boxSizing:"border-box",lineHeight:1.8}}><span aria-hidden="true" style={{fontSize:30,color:"var(--theme-secondary,#e8cb83)"}}>✧</span><h2 style={{fontSize:"clamp(24px,4vw,36px)",margin:0}}>Under Construction</h2><p style={{fontSize:19,margin:0}}><b style={{color:"var(--theme-secondary,#e8cb83)"}}>Profile 2.0</b> Coming Soon.</p><p style={{fontSize:18,margin:0}}>Come Back 👋🏼</p><p style={{fontSize:18,margin:0}}>We're building a more personal space for every member of the Ummah.</p><p style={{fontSize:18,margin:0}}>Your next Profile will bring a refreshed appearance studio, improved avatar customization, and more ways to express yourself.</p><p style={{fontSize:18,margin:0}}>We're refining the experience across phones, tablets, and desktop so it feels smooth wherever you visit.</p><p style={{fontSize:18,margin:0}}>Preview design update: targeting approximately two hours. This is an estimate, not a guaranteed launch time.</p><p style={{fontSize:18,margin:0}}>Thank you for helping us build 1Muslim, one improvement at a time.</p><p style={{fontSize:18,margin:0}}>Scroll to explore this preview message. More Profile 2.0 details are on the way.</p></div></section>,document.body)}{entryLoading&&<AvatarEntryLoader ready={entryReady} signedIn={homeSignedIn===true} showSignUp={homeSignedIn!==true} onSignUp={()=>{setEntryLoading(false);setShahadaOverlay(true)}} onComplete={()=>setEntryLoading(false)}/>}<style jsx global>{`
 .signedEntryLoading{position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#123e37 0%,#071b22 46%,#020a12 100%);color:#f7e8c5;animation:signedEntryIn .45s ease both}
 .signedEntryAura{position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,#43d9c52a,transparent 70%);filter:blur(18px);animation:signedEntryBreathe 3.4s ease-in-out infinite;pointer-events:none}
 .signedEntryLogo{width:112px;height:112px;display:grid;place-items:center;border-radius:50%;border:1px solid #91e5c877;background:#08282c88;box-shadow:0 0 38px #28d5bd38;animation:signedEntryFloat 3.6s ease-in-out infinite}
