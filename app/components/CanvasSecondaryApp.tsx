@@ -29,6 +29,7 @@ function ProfileApp({active,section="My Profile",heroOnly=false}:{active:boolean
   if(!alive)return;if(error){setStatus("Profile is unavailable right now.");return}
   setProfile(data);setUsernameDraft(data?.username||"");setBioDraft((data?.bio||"").slice(0,35));setStatus(data?"":"Complete your profile to begin.");const badges=await db.from("member_badges").select("badge_key").eq("user_id",user.id);if(alive)setEarnedBadges((badges.data??[]).map(row=>row.badge_key));
  })();return()=>{alive=false}},[active]);
+ useEffect(()=>{const onChange=(event:Event)=>{const detail=(event as CustomEvent<{userId:string;avatarConfig?:Record<string,unknown>;avatarPackage?:string}>).detail;if(!detail?.userId)return;setProfile(p=>p?.id===detail.userId?{...p,avatar_config:detail.avatarConfig??p.avatar_config,avatar_package:detail.avatarPackage??p.avatar_package}:p);setAvatarMotion(true);window.setTimeout(()=>setAvatarMotion(false),1200)};window.addEventListener("1muslim:avatar-changed",onChange);return()=>window.removeEventListener("1muslim:avatar-changed",onChange)},[]);
  const chooseAvatar=async(url:string)=>{
   if(!profile?.id||savingAvatar)return;
   const silver=url.includes("silver-avatar");
