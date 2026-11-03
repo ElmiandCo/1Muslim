@@ -72,5 +72,10 @@ export async function POST(request:Request){
   const {error:attachError}=await db.from("post_media").insert({post_id:post.id,community_post_id:data.id,user_id:user.id,storage_path:media.storage_path,file_name:String(media.file_name||"upload").slice(0,255),mime_type:media.mime_type});
   if(attachError){await db.from("posts").delete().eq("id",post.id).eq("user_id",user.id);await db.from("ummah_feed_posts").delete().eq("id",data.id).eq("author_id",user.id);return NextResponse.json({error:"Media attachment could not be published; your upload remains saved.",code:attachError.code},{status:503})}
  }
- return NextResponse.json({post:data},{status:201});
+ // The server awards XP only after the complete post (including media) is published.
+ // RPC is idempotent by post ID and updates profiles.xp_total atomically.
+ const {data:xpRows,error:xpError}=await db.rpc("claim_community_post_xp",{p_post_id:data.id});
+ if(xpError)console.error("community-post-xp",xpError.code,xpError.message);
+ const xp=Array.isArray(xpRows)?xpRows[0]:xpRows;
+ return NextResponse.json({post:data,xp_awarded:xp?.awarded??0,xp_total:xp?.xp_total??null},{status:201});
 }
