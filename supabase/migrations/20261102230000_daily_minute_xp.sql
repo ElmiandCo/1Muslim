@@ -12,7 +12,7 @@ language plpgsql security definer set search_path='' as $$
 declare v_user uuid := (select auth.uid()); v_last timestamptz; v_total integer;
 begin
  if v_user is null then raise exception 'Authentication required'; end if;
- insert into public.xp_presence_rewards(user_id) values(v_user) on conflict do nothing;
+ insert into public.xp_presence_rewards(user_id,last_minute_at) values(v_user,clock_timestamp()) on conflict (user_id) do update set last_minute_at=coalesce(public.xp_presence_rewards.last_minute_at,excluded.last_minute_at);
  select last_daily_at into v_last from public.xp_presence_rewards where user_id=v_user for update;
  awarded:=0;
  if v_last is null or clock_timestamp()-v_last>=interval '18 hours' then
