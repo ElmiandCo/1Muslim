@@ -60,6 +60,7 @@ export default function HomeCreatePost(){
    const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:daily?"✦ DAILY UMMAH ✦\\n"+text:text,post_theme:currentPostTheme()})});
    const data=await response.json();if(!response.ok)throw Error(data.error||"Could not publish post");
    if(data.flagged&&data.removed){setBadEgg(true);setWarning(false);setNotice("🥚 We tried to include your content with ours, but it didn’t fit. Thanks for trying! Your post was removed and flagged for review.");setTimeout(()=>{setCollapsed(true);setDraft("");setConfirmed(false)},1750);setTimeout(()=>{setBadEgg(false);setCollapsed(false)},2450);return}
+   if(Number(data.xp_awarded)>0)window.dispatchEvent(new CustomEvent("1muslim:xp-awarded",{detail:{xp_awarded:Number(data.xp_awarded),xp_total:Number(data.xp_total)}}));
    sessionStorage.removeItem(draftKey);if(daily){setDailyEligible(false);setDailyUsed(true);window.dispatchEvent(new CustomEvent("hudhud-daily-status",{detail:{used:true}}))}setPosted(true);setDailyEligible(false);setNotice("✨ Your post was successfully shared with the community!");setDraft("");setExpanded(false);window.dispatchEvent(new Event("1muslim:community-post-published"));window.dispatchEvent(new Event("1muslim:post-published-swipe-home"));
   }catch(err){setError(err instanceof Error?err.message:"Could not publish your post")}finally{setBusy(false)}
  }
