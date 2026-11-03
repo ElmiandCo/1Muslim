@@ -577,3 +577,16 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 .ummah-author-words{display:block;color:inherit;white-space:pre-wrap}
 .ummah-unified-text .ummah-verse-block,.ummah-unified-caption .ummah-verse-block{max-width:100%}
 @media(prefers-reduced-motion:reduce){.ummah-verse-block{transition:none}}
+
+/* Posts 3.1: adaptive full-post viewer. Reserve space for verse and pinned actions. */
+.ummah-unified-stage--adaptive{height:min(90dvh,850px);max-height:calc(100dvh - 24px);display:flex;flex-direction:column;overflow:hidden}
+.ummah-unified-stage--adaptive .ummah-unified-media{flex:1 1 58%;min-height:100px;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:8px 12px 0;background:transparent}
+.ummah-unified-stage--adaptive .ummah-unified-media>img,.ummah-unified-stage--adaptive .ummah-unified-media>video{width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;border-radius:14px}
+.ummah-unified-stage--adaptive .ummah-unified-caption{flex:0 1 auto;min-height:0;max-height:44%;overflow-y:auto;overscroll-behavior:contain;padding:12px 18px 6px;scrollbar-width:thin}
+.ummah-unified-stage--adaptive .ummah-unified-caption .ummah-verse-block{margin:8px 0;padding:12px 14px}
+.ummah-unified-stage--adaptive .ummah-unified-caption .ummah-verse-arabic{font-size:clamp(19px,2.7vw,27px);line-height:1.7}
+.ummah-unified-stage--adaptive>.ummah-unified-actions{flex:0 0 auto;position:relative;z-index:3;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:10px 12px max(12px,env(safe-area-inset-bottom));border-top:1px solid color-mix(in srgb,var(--post-glow,#d7b66b) 22%,transparent);background:color-mix(in srgb,var(--post-glass,#101218) 85%,#000);opacity:1!important}
+.ummah-unified-stage--adaptive>.ummah-unified-actions button{min-width:0;padding:11px 4px;min-height:44px;font-size:clamp(11px,2.5vw,14px);white-space:nowrap}
+.ummah-unified-stage--adaptive:has(.ummah-verse-block) .ummah-unified-media{flex-basis:48%}
+@media(max-height:700px){.ummah-unified-stage--adaptive{height:94dvh}.ummah-unified-stage--adaptive .ummah-unified-caption{max-height:52%}.ummah-unified-stage--adaptive .ummah-unified-media{min-height:80px}}
+@media(max-width:480px){.ummah-unified-stage--adaptive{width:100%;height:calc(100dvh - 20px)}.ummah-unified-stage--adaptive .ummah-unified-caption{padding-inline:12px}.ummah-unified-stage--adaptive .ummah-unified-media{padding-inline:6px}}
