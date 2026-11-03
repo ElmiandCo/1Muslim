@@ -15,6 +15,7 @@ export default function Profile2AppearanceEditor({onSaved}:{onSaved?:()=>void}){
  const save=async()=>{if(busy)return;setBusy(true);setMessage("");const db=createClient();try{
  const {data:{user},error:authError}=await db.auth.getUser();if(authError||!user)throw Error("Please sign in again.");
  const username=values.username.trim().replace(/^@/,"").toLowerCase();if(username&&!/^[a-z0-9_.]{3,30}$/.test(username))throw Error("Username must be 3–30 letters, numbers, dots or underscores.");
+ if(values.selectedAvatarUrl!==original.selectedAvatarUrl){const choice=avatars.find(a=>a[0]===values.selectedAvatarUrl);if(choice&&values.xp_total<Number(choice[2]))throw Error("Avatar is locked until "+choice[2]+" XP.");}
  if(values.password&&values.password.length<8)throw Error("Password must be at least 8 characters.");
  const patch:Record<string,unknown>={};for(const key of ["profile_accent","profile_background","avatar_package","bio"] as const)if(values[key]!==original[key])patch[key]=values[key];
  if(username!==original.username)patch.username=username||null;
@@ -22,7 +23,7 @@ export default function Profile2AppearanceEditor({onSaved}:{onSaved?:()=>void}){
  if(Object.keys(patch).length){const {error}=await db.from("profiles").update(patch).eq("id",user.id);if(error)throw Error(error.message)}
  if(values.email.trim()!==original.email){const {error}=await db.auth.updateUser({email:values.email.trim()});if(error)throw Error(error.message)}
  if(values.password){const {error}=await db.auth.updateUser({password:values.password});if(error)throw Error(error.message)}
- const next={...values,username,password:""};
+ const next={...values,username,password:"",avatar_config:{...values.avatar_config,selectedAvatarUrl:values.selectedAvatarUrl}};
  if(values.avatar_package!==original.avatar_package||values.selectedAvatarUrl!==original.selectedAvatarUrl)window.dispatchEvent(new CustomEvent("1muslim:avatar-changed",{detail:{userId:user.id,avatarPackage:values.avatar_package,avatarConfig:{...values.avatar_config,selectedAvatarUrl:values.selectedAvatarUrl}}}));setOriginal(next);setValues(next);setOpen(null);setMessage("Saved successfully. Email changes may require confirmation. Appearance XP is credited when the database reward is enabled.");onSaved?.();
  const scroll=root.current?.closest('[style*="overflow"]') as HTMLElement|null;scroll?.scrollTo({top:0,behavior:"smooth"});root.current?.scrollIntoView({behavior:"smooth",block:"nearest"});
  window.dispatchEvent(new Event("1muslim:appearance-updated"));window.dispatchEvent(new Event("1muslim:theme-changed"));window.dispatchEvent(new Event("1muslim-settings-updated"));
