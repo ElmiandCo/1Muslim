@@ -15,6 +15,22 @@ export default function MessagesPage(){
  const [client] = useState(()=>createClient());
  const [uid,setUid]=useState<string|null>(null);
  const [threads,setThreads]=useState<Thread[]>([]);
+ const threadSwipeStart=useRef<{x:number;y:number;time:number}|null>(null);
+ const onThreadTouchStart=(event:React.TouchEvent<HTMLElement>)=>{
+  if(event.touches.length!==1){threadSwipeStart.current=null;return;}
+  const target=event.target as HTMLElement;
+  if(target.closest("input,textarea,select,[contenteditable='true'],[role='slider']")){threadSwipeStart.current=null;return;}
+  const touch=event.touches[0];
+  threadSwipeStart.current={x:touch.clientX,y:touch.clientY,time:Date.now()};
+ };
+ const onThreadTouchEnd=(event:React.TouchEvent<HTMLElement>)=>{
+  const start=threadSwipeStart.current;threadSwipeStart.current=null;
+  if(!start||event.changedTouches.length!==1)return;
+  const touch=event.changedTouches[0];
+  const dx=touch.clientX-start.x,dy=touch.clientY-start.y;
+  if(dx>90&&Math.abs(dy)<Math.max(45,dx*.45)&&Date.now()-start.time<900)setSelected(null);
+ };
+
  const [threadPreviews,setThreadPreviews]=useState<Record<string,string>>({});
  const [unreadThreads,setUnreadThreads]=useState<Record<string,number>>({});
  useEffect(()=>{if(!uid||!threads.length)return;let alive=true;const refresh=async()=>{const ids=[...new Set(threads.map(t=>t.conversation_id))];const {data:reads}=await client.from("dm_participants").select("conversation_id,last_read_at").eq("user_id",uid).in("conversation_id",ids);const {data:recent}=await client.from("dm_messages").select("conversation_id,created_at,sender_id").in("conversation_id",ids).order("created_at",{ascending:false}).limit(500);if(!alive)return;const readMap=new Map((reads??[]).map(x=>[x.conversation_id,x.last_read_at]));const counts:Record<string,number>={};for(const msg of recent??[]){if(msg.sender_id===uid)continue;const read=readMap.get(msg.conversation_id);if(!read||new Date(msg.created_at).getTime()>new Date(read).getTime())counts[msg.conversation_id]=(counts[msg.conversation_id]||0)+1}setUnreadThreads(counts)};void refresh();const timer=setInterval(()=>void refresh(),12000);return()=>{alive=false;clearInterval(timer)}},[client,uid,threads]);
@@ -225,7 +241,7 @@ export default function MessagesPage(){
  useEffect(()=>{if(!selected||!uid||!peerId||!(status?.request_status==="accepted"||status?.request_status==="pending")||blocked.includes(peerId))return;window.dispatchEvent(new CustomEvent("1muslim:call-context",{detail:{conversationId:selected,userId:uid,peerName:names[peerId]||"User",peerAvatar:avatars[peerId]||null}}));},[selected,uid,peerId,status?.request_status,blocked,names,avatars]);
  if(loadingAuth)return <main style={{padding:32}}>Loading messages…</main>;
  if(!uid)return <MessengerDesignDemo/>;
- return <><div className="omInlineInbox" style={{display:selected?"none":"block"}}><MessengerDesignDemo liveThreads={Array.from(new Set(threads.map(t=>t.conversation_id))).filter(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return Boolean(names[peer]?.trim())}).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return {id:cid,name:names[peer],avatar:avatars[peer]||"",preview:threadPreviews[cid]||"Start chatting",unread:unreadThreads[cid]||0}})} onOpenThread={setSelected}/></div>{selected&&<main onClickCapture={e=>{if((e.target as HTMLElement).closest("[data-messenger-new-group]"))setNewChatOpen(true)}} className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"0 auto",padding:"0",color:"var(--text,#f4f4f5)"}}><style>{`
+ return <><div className="omInlineInbox" style={{display:selected?"none":"block"}}><MessengerDesignDemo liveThreads={Array.from(new Set(threads.map(t=>t.conversation_id))).filter(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return Boolean(names[peer]?.trim())}).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return {id:cid,name:names[peer],avatar:avatars[peer]||"",preview:threadPreviews[cid]||"Start chatting",unread:unreadThreads[cid]||0}})} onOpenThread={setSelected}/></div>{selected&&<main onTouchStart={onThreadTouchStart} onTouchEnd={onThreadTouchEnd} onTouchCancel={()=>{threadSwipeStart.current=null}} onClickCapture={e=>{if((e.target as HTMLElement).closest("[data-messenger-new-group]"))setNewChatOpen(true)}} className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"0 auto",padding:"0",color:"var(--text,#f4f4f5)"}}><style>{`
 .omMessengerTopNav{display:flex;gap:4px;padding:5px;margin:0 0 12px;border-radius:17px;background:rgba(4,52,41,.92);border:1px solid #d7bb7966;overflow-x:auto;scrollbar-width:none}
 .omMessengerTopNav a{flex:1;min-width:45px;padding:8px 3px;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:12px;text-decoration:none;color:#f3e7c8;font-size:19px}
 .omMessengerTopNav a span{font-size:10px}
