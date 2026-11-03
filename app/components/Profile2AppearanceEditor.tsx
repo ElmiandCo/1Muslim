@@ -36,6 +36,7 @@ export default function Profile2AppearanceEditor({onSaved}:{onSaved?:()=>void}){
    setValues(prev=>({...prev,profile_accent:id,profile_background:background}));
    void persistSelection({profile_accent:id,profile_background:background}).catch(()=>{});
   }else if(key==="profile_background"){
+   if(themeBackground[values.profile_accent]!==id){setPremiumPrompt(true);return;}
    setValues(prev=>({...prev,profile_background:id}));
    void persistSelection({profile_background:id}).catch(()=>{});
   }else if(key==="selectedAvatarUrl"){
