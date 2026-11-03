@@ -2139,3 +2139,22 @@ header[class*="controlHeader"] [class*="headerActions"] a{
  .ummah-dual-lane .ummah-package-media{max-height:clamp(140px,27vh,280px)!important}
 }
 @media(prefers-reduced-motion:reduce){.ummah-dual-lane .community-post-card{transition:none!important}}
+
+/* Home secondary widget: tablet/desktop only; no changes to mobile. */
+.omSecondaryWidget{height:100%;min-height:0;display:flex;flex-direction:column;position:relative;width:100%;overflow:hidden}
+.omSecondaryHeader{height:45px;flex:0 0 45px;display:flex;align-items:center;justify-content:space-between;padding:0 13px;background:linear-gradient(110deg,rgba(13,83,172,.48),rgba(9,35,79,.32));border-bottom:1px solid rgba(142,203,255,.22);z-index:6}
+.omSecondaryPicker{position:relative;min-width:0}
+.omSecondaryTitle{border:0;background:none;color:var(--theme-text,#eaf5ff);font-size:16px;font-weight:750;cursor:pointer;padding:8px 12px 8px 0}
+.omSecondaryTitle span{margin-left:8px;opacity:.8}
+.omSecondaryMenu{position:absolute;top:100%;left:0;min-width:180px;padding:6px;border-radius:14px;background:rgba(7,28,62,.96);border:1px solid rgba(137,200,255,.4);box-shadow:0 12px 30px #0008;display:grid;gap:3px;z-index:20}
+.omSecondaryMenu button{border:0;text-align:left;color:#edf7ff;background:transparent;padding:10px;border-radius:9px;cursor:pointer}
+.omSecondaryMenu button:hover,.omSecondaryMenu button[aria-selected="true"]{background:rgba(72,152,255,.35)}
+.omSecondaryExpand{color:#eaf5ff;text-decoration:none;padding:8px;font-size:20px}
+.omSecondaryBody{flex:1;min-height:0;overflow:hidden;position:relative;will-change:transform,opacity}
+.omSecondaryBody.omSecondary-exit{animation:omSecondaryExit .9s cubic-bezier(.45,0,.8,.4) both;pointer-events:none}
+.omSecondaryBody.omSecondary-enter{animation:omSecondaryEnter 1.05s cubic-bezier(.18,.75,.2,1) both;pointer-events:none}
+.omSecondaryFrame{width:100%;height:100%;border:0;background:transparent}
+@keyframes omSecondaryExit{from{transform:translateY(0);opacity:1}to{transform:translateY(-110%);opacity:0}}
+@keyframes omSecondaryEnter{from{transform:translateY(-105%);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){.omSecondaryBody.omSecondary-exit,.omSecondaryBody.omSecondary-enter{animation:none}}
+@media(min-width:768px) and (max-width:1199px){[data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage) > .oneMuslimLiveStage{left:0!important;right:auto!important;width:55%!important}[data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage) > .oneMuslimDesktopMessagesRail{display:flex!important;position:absolute!important;top:0;right:0;bottom:0;width:45%;min-height:0;overflow:hidden;flex-direction:column;z-index:6}}
