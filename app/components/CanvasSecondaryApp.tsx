@@ -248,7 +248,7 @@ function DailyPostsApp({active}:{active:boolean}){
   };
 
   const clearMotion=()=>cards().forEach(card=>{card.style.removeProperty("--ummah-reading-progress");card.classList.remove("ummah-reading-main","ummah-reading-before","ummah-reading-after");card.style.removeProperty("--ummah-neighbor-drift");card.style.removeProperty("--ummah-neighbor-scale")});
-  const interrupt=(event:Event)=>{const target=event.target;if(target instanceof Element&&target.closest(".hudhudSharedNav,.hudhudSharedCollapse,.hudhudSharedHudhud,.hudhud-orb,[data-hudhud],.celestial-orb,[class*=HudHud],[class*=hudhud],[id*=hudhud]"))return;stopVerse();autoPause.current=performance.now()+3000;elapsed=0;activeIndex=-1;transitioning=false;clearMotion()};
+  const interrupt=(event:Event)=>{const target=event.target;if(target instanceof Element&&target.closest(".hudhudSharedNav,.hudhudSharedCollapse,.hudhudSharedHudhud,.hudhud-orb,[data-hudhud],.celestial-orb,[class*=HudHud],[class*=hudhud],[id*=hudhud]"))return;stopVerse();autoPause.current=performance.now()+2000;elapsed=0;activeIndex=-1;transitioning=false;clearMotion()};
   const events=["touchstart","pointerdown","wheel","keydown"] as const;
   events.forEach(event=>window.addEventListener(event,interrupt,{passive:true}));
   const tick=(now:number)=>{
@@ -263,7 +263,7 @@ function DailyPostsApp({active}:{active:boolean}){
    const card=all[activeIndex];if(!card){activeIndex=-1;frame=requestAnimationFrame(tick);return}
    const body=card.querySelector(".ummah-post-package p")?.textContent||"";
    const isVideo=Boolean(card.querySelector("video"));
-   const duration=isVideo?8000:card.querySelector("img.ummah-package-media")?6000:Math.max(4000,Math.min(8000,4000+Math.max(0,body.length-35)*16));
+   const duration=3000;
    if(isVideo&&playingVideo&&finishedVideo!==playingVideo){frame=requestAnimationFrame(tick);return}
    elapsed+=dt;
    if(verseAudioRef.current&&!verseAudioRef.current.paused&&verseAudioPostRef.current===card.dataset.postId){elapsed=Math.min(elapsed,duration-1)}
@@ -277,7 +277,7 @@ function DailyPostsApp({active}:{active:boolean}){
    if(elapsed>=duration&&!transitioning){
     stopVerse();
     const next=all[activeIndex+1];
-    if(!next){activeIndex=-1;elapsed=0;clearMotion();autoPause.current=now+3000;frame=requestAnimationFrame(tick);return}
+    if(!next){activeIndex=-1;elapsed=0;clearMotion();autoPause.current=now+2000;frame=requestAnimationFrame(tick);return}
     transitioning=true;fromScroll=viewport.scrollTop;
     toScroll=Math.max(0,Math.min(viewport.scrollHeight-viewport.clientHeight,fromScroll+next.getBoundingClientRect().top-top));
    }
@@ -319,11 +319,11 @@ function DailyPostsApp({active}:{active:boolean}){
   const timers:ReturnType<typeof setTimeout>[]=[];
   const cleanups:Array<()=>void>=[];
   for(const lane of lanes){
-    let pausedUntil=performance.now()+10000;
+    let pausedUntil=performance.now()+3000;
     let index=0;
     let moving=false;
     const cards=()=>Array.from(lane.querySelectorAll<HTMLElement>(".community-post-card"));
-    const interrupt=()=>{pausedUntil=performance.now()+10000;moving=false};
+    const interrupt=()=>{pausedUntil=performance.now()+2000;moving=false};
     for(const name of ["wheel","touchstart","pointerdown","keydown"]){
       lane.addEventListener(name,interrupt,{passive:true});
       cleanups.push(()=>lane.removeEventListener(name,interrupt));
