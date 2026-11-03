@@ -2143,9 +2143,9 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 
 
 /* 1Muslim Go Live: theme-aware metallic CTA. Keep navigation and dimensions intact.
-   Specificity intentionally exceeds legacy .introActionDock !important rules. */
-main[class*="control"] .introActionDock a.homeGoLiveSignedIn,
-main[class*="control"] .introActionDock a[class*="introLiveButton"].homeGoLiveSignedIn {
+   Specificity intentionally exceeds legacy [class*="introActionDock"] !important rules. */
+main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn,
+main[class*="control"] [class*="introActionDock"] a[class*="introLiveButton"].homeGoLiveSignedIn {
  --live-edge:#22f67c;--live-dot:#20ff76;--live-base:#090b0c;--live-mid:#202429;--live-text:#f4f7fa;
  position:relative!important;isolation:isolate;overflow:hidden!important;
  border:2px solid var(--live-edge)!important;border-radius:999px!important;
@@ -2155,22 +2155,22 @@ main[class*="control"] .introActionDock a[class*="introLiveButton"].homeGoLiveSi
  box-shadow:inset 0 1px 1px #ffffff75,0 0 12px color-mix(in srgb,var(--live-edge) 45%,transparent)!important;
  transition:background .45s ease,border-color .45s ease,box-shadow .45s ease!important;
 }
-main[class*="control"] .introActionDock a.homeGoLiveSignedIn [class*="liveDockDot"]{
+main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn [class*="liveDockDot"]{
  background:var(--live-dot)!important;box-shadow:0 0 9px var(--live-dot),0 0 17px var(--live-dot)!important;
 }
-html[data-muslim-theme="sapphire"] main[class*="control"] .introActionDock a.homeGoLiveSignedIn{--live-edge:#25d7ff;--live-dot:#fff;--live-base:#041432;--live-mid:#0755ab}
-html[data-muslim-theme="ruby"] main[class*="control"] .introActionDock a.homeGoLiveSignedIn{--live-edge:#ffd46b;--live-base:#390008;--live-mid:#a20926;--live-text:#ffe3a1}
-html[data-muslim-theme="amethyst"] main[class*="control"] .introActionDock a.homeGoLiveSignedIn{--live-edge:#f340ed;--live-base:#b70072;--live-mid:#4c05b5}
-html[data-muslim-theme="titanium"] main[class*="control"] .introActionDock a.homeGoLiveSignedIn{--live-edge:#dbe5ef;--live-dot:#fff;--live-base:#131820;--live-mid:#8793a3}
-html[data-muslim-theme="obsidian"] main[class*="control"] .introActionDock a.homeGoLiveSignedIn{--live-edge:#8996a6;--live-base:#020305;--live-mid:#1a1e26}
-html[data-muslim-theme="ruby-gold"] main[class*="control"] .introActionDock a.homeGoLiveSignedIn{--live-edge:#ffd46b;--live-base:#390008;--live-mid:#a20926;--live-text:#ffe3a1}
-html[data-muslim-theme="silver-dust"] main[class*="control"] .introActionDock a.homeGoLiveSignedIn{--live-edge:#dbe5ef;--live-dot:#fff;--live-base:#131820;--live-mid:#8793a3}
-html[data-muslim-theme="nur-blue"] main[class*="control"] .introActionDock a.homeGoLiveSignedIn{--live-edge:#25d7ff;--live-dot:#fff;--live-base:#041432;--live-mid:#0755ab}
-html[data-muslim-theme="hoor-pink"] main[class*="control"] .introActionDock a.homeGoLiveSignedIn{--live-edge:#f340ed;--live-base:#b70072;--live-mid:#4c05b5}
-html[data-muslim-theme="mulk-black"] main[class*="control"] .introActionDock a.homeGoLiveSignedIn{--live-edge:#8996a6;--live-base:#020305;--live-mid:#1a1e26}
-main[class*="control"] .introActionDock a.homeGoLiveSignedIn::after{border-color:var(--live-edge)!important}
+html[data-muslim-theme="sapphire"] main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn{--live-edge:#25d7ff;--live-dot:#fff;--live-base:#041432;--live-mid:#0755ab}
+html[data-muslim-theme="ruby"] main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn{--live-edge:#ffd46b;--live-base:#390008;--live-mid:#a20926;--live-text:#ffe3a1}
+html[data-muslim-theme="amethyst"] main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn{--live-edge:#f340ed;--live-base:#b70072;--live-mid:#4c05b5}
+html[data-muslim-theme="titanium"] main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn{--live-edge:#dbe5ef;--live-dot:#fff;--live-base:#131820;--live-mid:#8793a3}
+html[data-muslim-theme="obsidian"] main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn{--live-edge:#8996a6;--live-base:#020305;--live-mid:#1a1e26}
+html[data-muslim-theme="ruby-gold"] main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn{--live-edge:#ffd46b;--live-base:#390008;--live-mid:#a20926;--live-text:#ffe3a1}
+html[data-muslim-theme="silver-dust"] main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn{--live-edge:#dbe5ef;--live-dot:#fff;--live-base:#131820;--live-mid:#8793a3}
+html[data-muslim-theme="nur-blue"] main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn{--live-edge:#25d7ff;--live-dot:#fff;--live-base:#041432;--live-mid:#0755ab}
+html[data-muslim-theme="hoor-pink"] main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn{--live-edge:#f340ed;--live-base:#b70072;--live-mid:#4c05b5}
+html[data-muslim-theme="mulk-black"] main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn{--live-edge:#8996a6;--live-base:#020305;--live-mid:#1a1e26}
+main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn::after{border-color:var(--live-edge)!important}
 @media(prefers-reduced-motion:reduce){
- main[class*="control"] .introActionDock a.homeGoLiveSignedIn,
- main[class*="control"] .introActionDock a.homeGoLiveSignedIn::after,
- main[class*="control"] .introActionDock a.homeGoLiveSignedIn [class*="liveDockDot"]{animation:none!important;transition:none!important}
+ main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn,
+ main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn::after,
+ main[class*="control"] [class*="introActionDock"] a.homeGoLiveSignedIn [class*="liveDockDot"]{animation:none!important;transition:none!important}
 }
