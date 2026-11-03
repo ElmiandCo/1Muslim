@@ -21,12 +21,12 @@ begin
  select case when coalesce(old.xp_total,0)<=1500 then 1 when old.xp_total<=5000 then 2 when old.xp_total<=10000 then 3 when old.xp_total<=20000 then 4 when old.xp_total<=50000 then 5 when old.xp_total<=100000 then 6 when old.xp_total<=200000 then 7 when old.xp_total<=500000 then 8 when old.xp_total<=750000 then 9 else 10 end into v_old_level;
  select case when new.xp_total<=1500 then 1 when new.xp_total<=5000 then 2 when new.xp_total<=10000 then 3 when new.xp_total<=20000 then 4 when new.xp_total<=50000 then 5 when new.xp_total<=100000 then 6 when new.xp_total<=200000 then 7 when new.xp_total<=500000 then 8 when new.xp_total<=750000 then 9 else 10 end into v_new_level;
  if v_new_level<=v_old_level then return new; end if;
- -- The verified HudHud by Elmi account is the sender, never an arbitrary member.
- select id into v_sender from auth.users where lower(email)='hudhudbyelmi@gmail.com' limit 1;
+ -- The official 1MuslimAi Bot account is the sender, never an arbitrary member.
+ select id into v_sender from auth.users where lower(email)='1muslimaibot@gmail.com' limit 1;
  for v_level in v_old_level+1..v_new_level loop
   insert into public.xp_level_deliveries(user_id,level) values(new.id,v_level) on conflict do nothing;
   if not found then continue; end if;
-  v_message:='🌟 Congratulations on reaching Level '||v_level||'! Your journey in 1Muslim continues to grow. Keep learning, connecting with the Ummah, and earning XP. May Allah bless your efforts! — HudHud by Elmi';
+  v_message:='🌟 Congratulations on reaching Level '||v_level||'! Your journey in 1Muslim continues to grow. Keep learning, connecting with the Ummah, and earning XP. May Allah bless your efforts! — 1MuslimAi Bot';
   if not exists(select 1 from public.notification_preferences where user_id=new.id and in_app_enabled=false) then
    insert into public.notifications(recipient_id,actor_id,type,title,body,entity_type,entity_id)
    values(new.id,v_sender,'xp_level_up','🏆 Level '||v_level||' unlocked!','Congratulations! You reached Level '||v_level||'.','xp_level',v_level::text);
