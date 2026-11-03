@@ -30,6 +30,11 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
   const supabase = useMemo(() => createClient(), []);
   const [userId, setUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [pinned, setPinned] = useState<Message | null>(null);
+  const [guestNotice,setGuestNotice] = useState("");
+  const pendingGuestIds=useRef<Set<string>|null>(null);
+  const pinnedRef = useRef<Message | null>(null);
+  const pinChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -88,6 +93,39 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
     return () => { void supabase.removeChannel(channel); };
   }, [streamId, supabase]);
 
+  useEffect(() => {
+    const channel = supabase.channel("live-pin-" + streamId, { config: { broadcast: { self: true } } });
+    pinChannelRef.current = channel;
+    channel.on("broadcast", { event: "pin" }, ({ payload }) => {
+      if (payload?.hostId !== hostId) return;
+      const next = payload.comment as Message | null;
+      pinnedRef.current = next; setPinned(next);
+    }).subscribe();
+    const timer = userId === hostId ? window.setInterval(() => { void channel.send({ type: "broadcast", event: "pin", payload: { hostId, comment: pinnedRef.current } }); }, 5000) : null;
+    return () => { if(timer!==null)window.clearInterval(timer); if (pinChannelRef.current === channel) pinChannelRef.current = null; void supabase.removeChannel(channel); };
+  }, [streamId, hostId, userId, supabase]);
+  const togglePin = (message: Message) => {
+    if (userId !== hostId) return;
+    const next = pinnedRef.current?.id === message.id ? null : message;
+    pinnedRef.current = next; setPinned(next);
+    void pinChannelRef.current?.send({ type: "broadcast", event: "pin", payload: { hostId, comment: next } });
+  };
+  useEffect(()=>{
+    if(userId!==hostId)return;
+    let active=true;
+    const poll=async()=>{
+      const {data}=await supabase.from("live_guest_requests").select("id,user_id,status").eq("stream_id",streamId).eq("status","pending");
+      if(!active||!data)return;
+      const ids=new Set(data.map(row=>row.id as string));
+      if(pendingGuestIds.current){
+        const fresh=data.filter(row=>!pendingGuestIds.current?.has(row.id));
+        if(fresh.length){setGuestNotice(fresh.length===1?"Someone requested to join your Live":fresh.length+" new guest requests");window.setTimeout(()=>setGuestNotice(""),6500)}
+      }
+      pendingGuestIds.current=ids;
+    };
+    void poll();const timer=window.setInterval(()=>void poll(),2500);
+    return()=>{active=false;window.clearInterval(timer);pendingGuestIds.current=null};
+  },[userId,hostId,streamId,supabase]);
   const send = async (event: FormEvent) => {
     event.preventDefault();
     const body = limit35(draft.trim());
@@ -123,7 +161,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
   return (
     <div className={`liveChat${overlay ? " chatOverlay" : ""}`}>
       <style jsx>{`
-        .liveChat{display:flex;flex-direction:column;min-height:300px;background:#080d09}.chatOverlay{min-height:0;height:100%;background:transparent;color:white}.chatOverlay .chatHead{background:rgba(0,0,0,.35);border:0;border-radius:12px;padding:8px 12px}.chatOverlay .messages{min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;mask-image:linear-gradient(to bottom,transparent,black 18%);padding:20px 8px 8px}.chatOverlay .message{background:rgba(0,0,0,.66);border-radius:12px;padding:7px 9px;backdrop-filter:blur(8px);align-items:center}.chatOverlay .message{background:rgba(3,9,12,.55);border:1px solid rgba(255,255,255,.09);border-radius:16px;animation:liveCommentEnter .26s ease-out both}.chatOverlay .messages{scrollbar-width:none}.chatOverlay .messages::-webkit-scrollbar{display:none}.chatOverlay .composer{background:rgba(0,0,0,.22);border-radius:28px;backdrop-filter:blur(14px)}.chatOverlay .composer input{font-size:13px;min-height:42px;background:rgba(12,22,25,.75);border:1px solid rgba(255,255,255,.22)}@keyframes liveCommentEnter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.chatOverlay .message{animation:none}}.chatOverlay .name{color:#fff}.chatOverlay .body{color:#f1f1f1}.chatOverlay .composer{border:0;padding:8px 0}.chatOverlay .composer input{background:rgba(0,0,0,.78)}
+        .liveChat{display:flex;flex-direction:column;min-height:300px;background:#080d09}.chatOverlay{min-height:0;height:100%;background:transparent;color:white}.chatOverlay .chatHead{background:rgba(0,0,0,.35);border:0;border-radius:12px;padding:8px 12px}.chatOverlay .messages{min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;mask-image:linear-gradient(to bottom,transparent,black 18%);padding:20px 8px 8px}.chatOverlay .message{background:rgba(0,0,0,.66);border-radius:12px;padding:7px 9px;backdrop-filter:blur(8px);align-items:center}.chatOverlay .message{background:rgba(3,9,12,.55);border:1px solid rgba(255,255,255,.09);border-radius:16px;animation:liveCommentEnter var(--live-comment-enter,.30s) ease-out both}.chatOverlay .messages{scrollbar-width:none}.chatOverlay .messages::-webkit-scrollbar{display:none}.chatOverlay .composer{background:rgba(0,0,0,.22);border-radius:28px;backdrop-filter:blur(14px)}.chatOverlay .composer input{font-size:13px;min-height:42px;background:rgba(12,22,25,.75);border:1px solid rgba(255,255,255,.22)}@keyframes liveCommentEnter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.chatOverlay .message{animation:none}}.chatOverlay .name{color:#fff}.chatOverlay .body{color:#f1f1f1}.chatOverlay .composer{border:0;padding:8px 0}.chatOverlay .composer input{background:rgba(0,0,0,.78)}
         .chatHead{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #1b241f}.chatHead strong{font-size:13px}.chatHead span{font-size:9px;color:#66736b}
         .messages{flex:1;max-height:360px;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px}.message{display:flex;gap:7px;align-items:flex-start}.avatar{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;overflow:hidden;border-radius:50%}.avatar :global(.profileAvatar){width:30px!important;height:30px!important;max-width:30px;max-height:30px;transform:none!important}.avatar :global(.profileAvatar img){width:100%;height:100%;object-fit:cover}.bubble{min-width:0;flex:1;overflow-wrap:anywhere}.bubble{min-width:0;flex:1}.name{font-size:10px;font-weight:800;color:#dce7de}.host{margin-left:5px;padding:2px 5px;border-radius:999px;background:#d6e7b8;color:#071008;font-size:7px;vertical-align:middle}.muted{margin-left:5px;color:#7c8780;font-size:8px}.body{font-size:11px;color:#aeb9b1;line-height:1.45;word-break:break-word}.muteBtn{margin-left:auto;border:1px solid #29352d;background:#0f1511;color:#8d9b91;border-radius:999px;padding:4px 7px;font-size:8px;cursor:pointer}.muteBtn:hover{color:#fff;border-color:#50624f}
         .message{touch-action:pan-y;-webkit-user-select:none;user-select:none}
@@ -136,12 +174,14 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
         .emoteTray{display:flex;gap:7px;padding:9px 12px 2px;flex-wrap:wrap}.emoteTray button{background:linear-gradient(135deg,#12342c,#172d40);border:1px solid #80c9b277;border-radius:12px;padding:7px 10px;font-size:19px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}.emoteTray button:hover{transform:translateY(-3px);box-shadow:0 0 16px #75e5b955}.emoteTray button:disabled{opacity:.35;cursor:not-allowed}.composer{display:flex;gap:7px;padding:12px;border-top:1px solid #1b241f}.composer input{flex:1;min-width:0;border:1px solid #263029;background:#0d140f;color:#fff;border-radius:999px;padding:10px 12px;outline:none;font-size:11px}.composer button{border:0;border-radius:999px;padding:0 14px;background:#d6e9b8;color:#071008;font-weight:850;font-size:10px;cursor:pointer}.composer button:disabled{opacity:.45;cursor:not-allowed}.mutedNotice,.notice{margin:10px 12px;padding:9px 11px;border-radius:10px;font-size:9px}.mutedNotice{background:#1b1510;border:1px solid #4a3927;color:#d7bd9c}.notice{background:#1b0f10;border:1px solid #533536;color:#ffcaca}
       `}</style>
       {!overlay && <div className="chatHead"><strong>💬 Live chat</strong><span>{messages.length} messages</span></div>}
+      {guestNotice && <div className="liveGuestSystemNotice" role="status">👥 {guestNotice} · Open Guests to review</div>}
+      {pinned && <div className="livePinnedComment" aria-label="Pinned live comment"><span>📌 Pinned · {displayName(pinned)}</span><strong>{pinned.body}</strong>{userId===hostId&&<button type="button" onClick={()=>togglePin(pinned)}>Unpin</button>}</div>}
       <div className="messages">
         {messages.length ? messages.map((message) => {
           const isHost = message.sender_id === hostId;
           const isMuted = mutedUsers.has(message.sender_id);
           const avatar = <ProfileAvatar name={displayName(message)} gender={message.profile?.gender} avatarGender={message.profile?.avatar_gender} avatarPackage={message.profile?.avatar_package} avatarConfig={message.profile?.avatar_config} accent={message.profile?.profile_accent ?? "emerald"} size="sm" profileId={message.sender_id} />;
-          return <div className="message" key={message.id} role="button" tabIndex={0} aria-label="Hold comment for report options"
+          return <div className="message" style={{"--live-comment-enter":`${(0.30+(message.id.charCodeAt(0)%4)*0.008).toFixed(3)}s`} as React.CSSProperties} key={message.id} role="button" tabIndex={0} aria-label="Hold comment for report options"
             onPointerDown={e=>{if(e.pointerType==="mouse"&&e.button!==0)return;cancelHold();start.current={x:e.clientX,y:e.clientY};timer.current=setTimeout(()=>{setSelected(message);navigator.vibrate?.(15)},1000)}}
             onPointerMove={e=>{if(start.current&&Math.hypot(e.clientX-start.current.x,e.clientY-start.current.y)>12)cancelHold()}}
             onPointerUp={cancelHold} onPointerCancel={cancelHold} onPointerLeave={cancelHold}
@@ -152,6 +192,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
               <div className="name">{displayName(message)}{isHost && <span className="host">HOST</span>}{isMuted && !isHost && <span className="muted">muted</span>}</div>
               <div className="body">{message.body}</div>
             </div>
+            {userId === hostId && <button className="muteBtn" type="button" onClick={e=>{e.stopPropagation();togglePin(message)}}>{pinned?.id===message.id?"Unpin":"Pin"}</button>}
             {userId === hostId && !isHost && <button className="muteBtn" onClick={() => void toggleMute(message.sender_id)}>{isMuted ? "Unmute" : "Mute"}</button>}
           </div>;
         }) : <div style={{color:"#66736b",fontSize:10,padding:10}}>Be the first to say something.</div>}

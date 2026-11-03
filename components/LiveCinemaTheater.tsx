@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import LiveKitViewer from "./LiveKitViewer";
 import LiveChat from "./LiveChat";
+import LiveVisualEffects, {type LiveEffect} from "../app/components/LiveVisualEffects";
+import {createClient} from "../utils/supabase/client";
 import LiveGuestStudio from "./LiveGuestStudio";
 import { cinemaKeyboardOffset, type CinemaMode } from "../lib/live-cinema";
 
@@ -39,11 +41,22 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
     };
   }, []);
 
+  const [hostEffect,setHostEffect] = useState<LiveEffect>("off");
+  useEffect(()=>{
+    const supabase=createClient();
+    const channel=supabase.channel("live-effects-"+streamId);
+    channel.on("broadcast",{event:"effect"},({payload})=>{
+      const allowed:LiveEffect[]=["off","dust","stars","waves","fireflies","rain"];
+      if(allowed.includes(payload?.effect))setHostEffect(payload.effect);
+    }).subscribe();
+    return()=>{void supabase.removeChannel(channel)};
+  },[streamId]);
   const style = { "--cinema-keyboard-offset": keyboardOffset + "px" } as CSSProperties;
 
   return (
     <section className="omLiveTheater omLiveCinema" data-cinema-mode={mode} data-comment-focus={commentFocused ? "yes" : "no"} style={style} aria-label="Immersive live broadcast">
       <LiveKitViewer roomName={roomName} streamId={streamId} initialViewMode={initialMode} onViewModeChange={setMode} />
+      <div className="omLiveSharedEffects" aria-hidden="true"><LiveVisualEffects effect={hostEffect} onChange={()=>{}} viewerOnly /></div>
       <div className="omLiveTheaterInfo">
         {hostAvatar && <img src={hostAvatar} alt="" className="omLiveTheaterAvatar" />}
         <div className="omLiveTheaterIdentity"><strong>{hostName}</strong><small>{title}</small></div>
@@ -64,6 +77,7 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
         <div className="omLiveTheaterGuestPanel"><LiveGuestStudio streamId={streamId} roomName={roomName} hostId={hostId} /></div>
       </details>
       <style jsx global>{`
+        .omLiveCinema .omLiveSharedEffects{position:absolute;inset:0;z-index:8;pointer-events:none}
         .omLiveCinema{position:fixed;inset:0;width:100vw;height:100dvh;background:#000;overflow:hidden;z-index:1000;isolation:isolate;--cinema-ease:cubic-bezier(.22,.72,.19,1)}
         .omLiveCinema>.omLiveImmersiveViewer{height:100%!important;min-height:100%!important;aspect-ratio:auto!important}
         .omLiveCinema .omLiveTheaterInfo{position:absolute;top:calc(env(safe-area-inset-top) + 16px);left:70px;right:110px;display:flex;align-items:center;gap:8px;color:#fff;font-size:12px;text-shadow:0 1px 8px #000;pointer-events:none;z-index:20;white-space:nowrap;overflow:hidden}
