@@ -225,8 +225,7 @@ export default function MessagesPage(){
  useEffect(()=>{if(!selected||!uid||!peerId||!(status?.request_status==="accepted"||status?.request_status==="pending")||blocked.includes(peerId))return;window.dispatchEvent(new CustomEvent("1muslim:call-context",{detail:{conversationId:selected,userId:uid,peerName:names[peerId]||"User",peerAvatar:avatars[peerId]||null}}));},[selected,uid,peerId,status?.request_status,blocked,names,avatars]);
  if(loadingAuth)return <main style={{padding:32}}>Loading messages…</main>;
  if(!uid)return <MessengerDesignDemo/>;
- if(uid&&!selected)return <MessengerDesignDemo liveThreads={Array.from(new Set(threads.map(t=>t.conversation_id))).filter(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return Boolean(names[peer]?.trim())}).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return {id:cid,name:names[peer],avatar:avatars[peer]||"",preview:threadPreviews[cid]||"Start chatting",unread:unreadThreads[cid]||0}})} onOpenThread={setSelected}/>;
- return <main onClickCapture={e=>{if((e.target as HTMLElement).closest("[data-messenger-new-group]"))setNewChatOpen(true)}} className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"0 auto",padding:"0",color:"var(--text,#f4f4f5)"}}><style>{`
+ return <><div className="omInlineInbox" style={{display:selected?"none":"block"}}><MessengerDesignDemo liveThreads={Array.from(new Set(threads.map(t=>t.conversation_id))).filter(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return Boolean(names[peer]?.trim())}).map(cid=>{const peer=threads.find(t=>t.conversation_id===cid)?.user_id??"";return {id:cid,name:names[peer],avatar:avatars[peer]||"",preview:threadPreviews[cid]||"Start chatting",unread:unreadThreads[cid]||0}})} onOpenThread={setSelected}/></div>{selected&&<main onClickCapture={e=>{if((e.target as HTMLElement).closest("[data-messenger-new-group]"))setNewChatOpen(true)}} className={"omImessagePage omMessengerUnified "+(messengerTheme==="day"?"omMessengerDay":"omMessengerNight")} style={{maxWidth:1150,margin:"0 auto",padding:"0",color:"var(--text,#f4f4f5)"}}><style>{`
 .omMessengerTopNav{display:flex;gap:4px;padding:5px;margin:0 0 12px;border-radius:17px;background:rgba(4,52,41,.92);border:1px solid #d7bb7966;overflow-x:auto;scrollbar-width:none}
 .omMessengerTopNav a{flex:1;min-width:45px;padding:8px 3px;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:12px;text-decoration:none;color:#f3e7c8;font-size:19px}
 .omMessengerTopNav a span{font-size:10px}
@@ -808,6 +807,46 @@ body:has(.muslimMessengerFrame){overflow:hidden!important}
   flex:0 0 auto!important;min-width:0!important;position:relative!important;
  }
 }
+
+/* Inline thread: open actual Supabase conversation inside the existing Messenger view. */
+.omImessagePage.omMessengerUnified:has(.omMessengerShell--chat){
+ position:fixed!important;inset:0!important;z-index:1000!important;
+ width:100vw!important;max-width:100vw!important;height:100dvh!important;
+ max-height:100dvh!important;margin:0!important;padding:12px!important;
+ background:linear-gradient(150deg,#091719,#102820)!important;
+}
+.omImessagePage.omMessengerUnified:has(.omMessengerShell--chat) .omMessengerNewButton,
+.omImessagePage.omMessengerUnified:has(.omMessengerShell--chat) .omMobileThreadStrip,
+.omImessagePage.omMessengerUnified:has(.omMessengerShell--chat) .omConversationList{display:none!important}
+.omImessagePage.omMessengerUnified>.omMessengerShell.omMessengerShell--chat{
+ display:flex!important;flex-direction:column!important;
+ grid-template-columns:none!important;grid-template-rows:none!important;
+ flex:1 1 0!important;min-height:0!important;max-height:100%!important;
+ width:100%!important;height:auto!important;
+}
+.omImessagePage.omMessengerUnified .omMessengerShell--chat>.omChatPane{
+ display:flex!important;flex-direction:column!important;flex:1 1 0!important;
+ min-width:0!important;min-height:0!important;width:100%!important;
+ height:100%!important;max-height:100%!important;
+ grid-column:auto!important;grid-row:auto!important;overflow:hidden!important;
+}
+.omImessagePage.omMessengerUnified .omMessengerShell--chat .omChatHeader{
+ flex:0 0 auto!important;min-height:58px!important;padding:10px!important;
+}
+.omImessagePage.omMessengerUnified .omMessengerShell--chat .omMessagesFeed{
+ flex:1 1 0!important;min-height:0!important;max-height:none!important;
+ overflow-y:auto!important;overscroll-behavior:contain!important;
+}
+.omImessagePage.omMessengerUnified .omMessengerShell--chat .omMessageComposer{
+ flex:0 0 auto!important;position:relative!important;bottom:auto!important;
+ margin-top:0!important;padding-bottom:max(10px,env(safe-area-inset-bottom,0px))!important;
+}
+@media(max-width:700px){
+ .omImessagePage.omMessengerUnified:has(.omMessengerShell--chat){padding:4px!important}
+ .omImessagePage.omMessengerUnified>.omMessengerShell.omMessengerShell--chat{
+  display:flex!important;flex-direction:column!important;min-height:0!important;height:auto!important
+ }
+}
 `}</style>
- </main>
+ </main>}</>
 }
