@@ -42,7 +42,8 @@ export default function ProfileThemeSync(){
    try{
     const {data:{user}}=await db.auth.getUser();
     if(!active)return;
-    if(!user){settle(initial);return}
+    if(!user){document.documentElement.dataset.guestHome="true";settle("sapphire");return}
+    delete document.documentElement.dataset.guestHome;
     const {data}=await db.from("profiles").select("avatar_config").eq("id",user.id).maybeSingle();
     settle((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||initial);
    }catch{settle(initial)}
