@@ -12,7 +12,7 @@ type YTApi={Player:new(element:HTMLElement,options:{
   videoId:string;playerVars:Record<string,number>;
   events:{onReady:(event:{target:YTPlayer})=>void;onStateChange:(event:{data:number})=>void}
 })=>YTPlayer};
-declare global {interface Window {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined}}
+
 
 const playlist=[
   {videoId:"gF7RjyK8gQ0",startSeconds:28,endSeconds:null},
@@ -22,6 +22,7 @@ const playlist=[
 export default function IdleYoutubePlaylist(){
   const mountRef=useRef<HTMLDivElement>(null);
   useEffect(()=>{
+    const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
     let player:YTPlayer|undefined;
     const storageKey="oneMuslimIdleYoutubePlaylistPosition";
@@ -39,8 +40,8 @@ export default function IdleYoutubePlaylist(){
       try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:video.startSeconds}));}catch{}
     };
     const create=()=>{
-      if(disposed||!mountRef.current||!window.YT?.Player||player)return;
-      player=new window.YT.Player(mountRef.current,{
+      if(disposed||!mountRef.current||!ytWindow.YT?.Player||player)return;
+      player=new ytWindow.YT.Player(mountRef.current,{
         videoId:playlist[index].videoId,
         playerVars:{autoplay:1,mute:1,controls:1,playsinline:1,rel:0,start:Math.floor(initialSeconds),enablejsapi:1},
         events:{
@@ -60,10 +61,10 @@ export default function IdleYoutubePlaylist(){
         }
       });
     };
-    const previousReady=window.onYouTubeIframeAPIReady;
-    if(window.YT?.Player)create();
+    const previousReady=ytWindow.onYouTubeIframeAPIReady;
+    if(ytWindow.YT?.Player)create();
     else{
-      window.onYouTubeIframeAPIReady=()=>{previousReady?.();create();};
+      ytWindow.onYouTubeIframeAPIReady=()=>{previousReady?.();create();};
       if(!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')){
         const script=document.createElement("script");
         script.src="https://www.youtube.com/iframe_api";
@@ -74,7 +75,7 @@ export default function IdleYoutubePlaylist(){
     return ()=>{
       disposed=true;
       if(timer)clearInterval(timer);
-      if(window.onYouTubeIframeAPIReady!==previousReady)window.onYouTubeIframeAPIReady=previousReady;
+      if(ytWindow.onYouTubeIframeAPIReady!==previousReady)ytWindow.onYouTubeIframeAPIReady=previousReady;
       if(player){try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:player.getCurrentTime()}));}catch{};player.destroy();}
     };
   },[]);
