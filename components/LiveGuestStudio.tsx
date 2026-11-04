@@ -14,6 +14,8 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   const [panelOpen,setPanelOpen]=useState(false);
   const [requests,setRequests]=useState<GuestRequest[]>([]);
   const [loaded,setLoaded]=useState(false);
+  const [hostAlert,setHostAlert]=useState(false);
+  const seenPending=useRef<Set<string>|null>(null);
   const [mode,setMode]=useState<"pfp"|"camera">("pfp");
   const [audioOnly,setAudioOnly]=useState(true);
   const [mediaConsent,setMediaConsent]=useState(false);
@@ -43,7 +45,15 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
       const {data,error:loadError}=await db.from("live_guest_requests")
         .select("id,user_id,status,mode,host_muted").eq("stream_id",streamId);
       if(!active)return;
-      if(!loadError)setRequests((data??[]) as GuestRequest[]);
+      if(!loadError){
+        const next=(data??[]) as GuestRequest[];
+        if(uid===hostId){
+          const current=new Set(next.filter(r=>r.status==="pending").map(r=>r.id));
+          if(seenPending.current!==null&&[...current].some(id=>!seenPending.current!.has(id)))setHostAlert(true);
+          seenPending.current=current;
+        }
+        setRequests(next);
+      }
       else setError(previous=>previous||"Guest requests are temporarily unavailable. Please retry.");
       setLoaded(true);
     };
@@ -59,7 +69,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
       window.removeEventListener("focus",load);
       refreshRef.current=()=>{};
     };
-  },[streamId]);
+  },[streamId,uid,hostId]);
   useEffect(()=>()=>{void room.current?.disconnect();stream.current?.getTracks().forEach(t=>t.stop())},[]);
   useEffect(()=>{
     if(!audioOnly||!joined)return;
@@ -188,8 +198,10 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
 
   if(!uid)return null;
   const pendingCount=requests.filter(r=>r.status==="pending").length;
+  useEffect(()=>{if(!hostAlert)return;const t=window.setTimeout(()=>setHostAlert(false),8000);return()=>window.clearTimeout(t)},[hostAlert]);
   return <div style={{position:"relative",zIndex:30,width:"fit-content",maxWidth:"100%"}}>
     <button type="button" aria-expanded={panelOpen} aria-controls="live-guest-controls-panel" onClick={()=>setPanelOpen(open=>!open)} style={{border:"1px solid var(--theme-border,#8aa398)",borderRadius:999,padding:compactJoin?"8px 12px":"9px 14px",minHeight:compactJoin?36:undefined,fontSize:compactJoin?12:undefined,boxSizing:"border-box",background:"color-mix(in srgb,var(--theme-panel,#101a13) 76%,transparent)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"var(--theme-text,#e7f5e6)",fontWeight:600,cursor:"pointer",boxShadow:"0 8px 24px #0005"}}>{compactJoin?"Join":`👥 Guests${host&&pendingCount>0?` · ${pendingCount}`:""} ${panelOpen?"⌃":"⌄"}`}</button>
+    {host&&hostAlert&&<button type="button" role="alert" onClick={()=>{setPanelOpen(true);setHostAlert(false)}} style={{position:"absolute",right:0,bottom:"calc(100% + 12px)",width:240,padding:14,borderRadius:14,background:"rgba(8,30,25,.94)",color:"#fff",border:"1px solid var(--theme-border,#8aa398)",zIndex:50,boxShadow:"0 12px 30px #0008"}}>New request to join · Tap to review</button>}
     {panelOpen&&<section id="live-guest-controls-panel" aria-label="Live guest controls" style={{position:"absolute",right:0,bottom:"calc(100% + 10px)",width:"min(340px,calc(100vw - 32px))",maxHeight:"min(55dvh,430px)",overflowY:"auto",overscrollBehavior:"contain",padding:14,border:"1px solid var(--theme-border,#48624b)",borderRadius:20,background:"color-mix(in srgb,var(--theme-panel,#101a13) 90%,transparent)",backdropFilter:"blur(22px)",WebkitBackdropFilter:"blur(22px)",boxShadow:"0 16px 44px #0009",color:"var(--theme-text,#e7f5e6)"}}>
     <h3 style={{margin:"0 0 8px"}}>🎙️ 1Muslim Guest Studio</h3>
     <p style={{fontSize:12,opacity:.8}}>Video: host + 3 guests. Audio: host + 11 guests.</p>
