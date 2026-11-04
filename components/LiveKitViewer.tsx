@@ -480,7 +480,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
   };
 
   return (
-    <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} data-view-mode={viewMode} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:guestStageMode==="audio"?"4/5":"16/9",overflow:"hidden"}}>
+    <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} data-view-mode={viewMode} data-audible={audible?"yes":"no"} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:guestStageMode==="audio"?"4/5":"16/9",overflow:"hidden"}}>
       {hostEnded&&<div role="status" aria-live="assertive" className="omHostEndedNotice"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>{embedded?"Closing your floating player…":"Taking you Home…"}</small><button type="button" onClick={()=>{if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));else router.replace("/")}}>Go Home now →</button></div>}
       {!embedded && <canvas ref={reflectionRef} width={160} height={90} className="omLiveCinemaBackdrop" aria-hidden="true" />}
       <LiveGuestsStage mode={guestStageMode} guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostSpeaking={voiceEnergy>.12}>
@@ -490,10 +490,10 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
         </div>
       </LiveGuestsStage>
       {hostConnecting&&!hostEnded&&<div className="omHostReconnecting" role="status" aria-live="polite">Host connection interrupted · Reconnecting…</div>}
-      {audioNeedsGesture&&hasRemoteAudio&&!hostEnded&&<div role="status" aria-live="polite" style={{position:"absolute",bottom:65,left:12,zIndex:9,color:"#fff",background:"#0c2923e8",border:"1px solid #9ce9c2",borderRadius:12,padding:"8px 12px",fontSize:12,pointerEvents:"none"}}>🔊 Tap “Hear Live” below to enable host audio</div>}
+      
       <div ref={audioContainerRef} />
       {streamId&&<LiveLightOverlay streamId={streamId}/>}
-      {streamId&&hostIdentity&&!hostEnded&&<div className="omViewerJoinOnly" style={{position:"absolute",right:12,bottom:16,zIndex:45}}><LiveGuestStudio streamId={streamId} roomName={roomName} hostId={hostIdentity} compactJoin/></div>}
+      {streamId&&hostIdentity&&!hostEnded&&<div className="omViewerJoinOnly" style={{position:"absolute",right:12,top:embedded?"auto":12,bottom:embedded?16:"auto",zIndex:45}}><LiveGuestStudio streamId={streamId} roomName={roomName} hostId={hostIdentity} compactJoin/></div>}
       {error ? <div role="alert" style={{position:"absolute",inset:0,zIndex:12,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",gap:14,padding:24,color:"#e6f2e7",background:"#0b1510",fontSize:14,textAlign:"center"}}><strong style={{fontSize:19}}>Live connection unavailable</strong><span>{error}</span><div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}><button type="button" onClick={() => { setError(""); setReconnecting(false); setRetryAttempt(n => n + 1); }} style={{border:"1px solid #76ae83",background:"#173d27",color:"#fff",borderRadius:12,padding:"10px 18px",cursor:"pointer"}}>↻ Retry connection</button><a href="/streaming" style={{border:"1px solid #566b5b",color:"#fff",borderRadius:12,padding:"10px 18px",textDecoration:"none"}}>← All streaming</a></div></div> : reconnecting ? (
         <div style={{position:"absolute",inset:0,zIndex:10,background:"radial-gradient(circle at 50% 35%,rgba(72,103,68,.2),rgba(3,7,4,.96) 72%)",display:"grid",placeItems:"center",overflow:"hidden"}}>
           <div style={{position:"absolute",width:190,height:190,borderRadius:"50%",border:"1px solid rgba(214,231,184,.08)",boxShadow:"0 0 80px rgba(126,170,106,.08)",animation:"oneMuslimPulse 3.5s ease-in-out infinite"}} />
