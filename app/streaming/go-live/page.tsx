@@ -1473,6 +1473,12 @@ export default function GoLivePage() {
         .compactCoverPicker>span:first-child{font-size:23px;color:#e2ffef}
         .compactCoverCaption{position:absolute;bottom:0;left:0;right:0;text-align:center;background:#07140cb8;color:white;font-size:9px;padding:2px}
         .compactCoverInput{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+        /* Desktop fullscreen: obsolete Camera/Audio Studio controls must never sit on the live stage. */
+        .goLive .cameraStudio{display:none!important}
+        /* Keep the current compact Live Details dialog closed until the host explicitly opens it. */
+        .goLive .shell:not(.settingsOpen) .layout>.form.compactLiveSettings{display:none!important}
+        .goLive .shell.settingsOpen .layout>.form.compactLiveSettings{display:block!important;position:fixed!important;top:calc(72px + env(safe-area-inset-top))!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translateX(-50%)!important;width:min(420px,calc(100vw - 24px))!important;max-height:min(70dvh,520px)!important;overflow-y:auto!important;z-index:70!important;pointer-events:auto!important}
+        .goLive .shell.settingsOpen .compactLiveSettingsClose{display:grid!important;position:relative!important;z-index:72!important;pointer-events:auto!important}
         .liveSettingsScrim{position:fixed;inset:0;z-index:39;background:#0004;border:0;cursor:default}
         .goLive .settingsOpen .layout>.form.compactLiveSettings{position:fixed!important;top:calc(90px + env(safe-area-inset-top))!important;bottom:auto!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;width:min(calc(100vw - 24px),420px)!important;max-height:min(68dvh,480px)!important;z-index:60!important;overflow:auto!important;overscroll-behavior:contain}
         @media(min-width:851px){.goLive .layout>.form.compactLiveSettings{position:relative!important;max-width:420px!important;min-height:0!important}}
