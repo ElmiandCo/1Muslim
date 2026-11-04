@@ -1169,13 +1169,21 @@ export default function GoLivePage() {
         audioTrack.enabled=micOn;
         let localAudioTrack = audioTrackRef.current;
         if (!localAudioTrack || localAudioTrack.mediaStreamTrack !== audioTrack) {
-          const audioContext = await ensureAudioContext();
-          localAudioTrack = new LocalAudioTrack(audioTrack, undefined, true, audioContext);
-          const processor = createLiveAudioProcessor(audioEffect, nasheedOn, soundVolume);
-          await localAudioTrack.setProcessor(processor as any);
+          // Audio effects are optional. A processor failure must not end an
+          // otherwise healthy LiveKit broadcast on Safari or other browsers.
+          localAudioTrack = new LocalAudioTrack(audioTrack, undefined, true);
+          try {
+            const processor = createLiveAudioProcessor(audioEffect, nasheedOn, soundVolume);
+            await localAudioTrack.setProcessor(processor as any);
+            audioProcessorRef.current = processor;
+            processedAudioTrackRef.current = processor.processedTrack ?? localAudioTrack.mediaStreamTrack;
+          } catch (processorError) {
+            console.warn("Live audio effects unavailable; broadcasting raw microphone", processorError);
+            audioProcessorRef.current = null;
+            processedAudioTrackRef.current = audioTrack;
+            setSaveMessage("Audio effects unavailable. Broadcasting your microphone normally.");
+          }
           audioTrackRef.current = localAudioTrack;
-          audioProcessorRef.current = processor;
-          processedAudioTrackRef.current = processor.processedTrack ?? localAudioTrack.mediaStreamTrack;
         }
         await room.localParticipant.publishTrack(localAudioTrack, { source: Track.Source.Microphone });
       }
@@ -1187,8 +1195,11 @@ export default function GoLivePage() {
       room.on(RoomEvent.Reconnected,()=>{
         if(!endRequestedRef.current){setSaveMessage("");setError("")}
       });
-      room.on(RoomEvent.Disconnected,()=>{
-        if(!endRequestedRef.current)setError("Broadcast connection lost. Viewers will see that the host is reconnecting.");
+      room.on(RoomEvent.Disconnected,(reason)=>{
+        if(!endRequestedRef.current){
+          console.error("LiveKit host disconnected", {reason, streamId:liveStreamId});
+          setError("Broadcast connection lost (LiveKit reason: "+String(reason ?? "unknown")+"). Reconnect before ending the session.");
+        }
       });
 
       try { startRecording(); } catch (recordingError) {
