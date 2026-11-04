@@ -24,7 +24,11 @@ export default function IdleYoutubePlaylist(){
   useEffect(()=>{
     let disposed=false;
     let player:YTPlayer|undefined;
-    let index=0;
+    const storageKey="oneMuslimIdleYoutubePlaylistPosition";
+    let saved:{index:number;seconds:number}|null=null;
+    try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
+    let index=saved?.index??0;
+    const initialSeconds=saved?Math.max(playlist[index].startSeconds,Math.min(saved.seconds,playlist[index].endSeconds??Number.MAX_SAFE_INTEGER)):playlist[0].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
     const next=()=>{
       if(disposed||!player)return;
@@ -32,12 +36,13 @@ export default function IdleYoutubePlaylist(){
       const video=playlist[index];
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
       player.mute();
+      try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:video.startSeconds}));}catch{}
     };
     const create=()=>{
       if(disposed||!mountRef.current||!window.YT?.Player||player)return;
       player=new window.YT.Player(mountRef.current,{
-        videoId:playlist[0].videoId,
-        playerVars:{autoplay:1,mute:1,controls:1,playsinline:1,rel:0,start:28,enablejsapi:1},
+        videoId:playlist[index].videoId,
+        playerVars:{autoplay:1,mute:1,controls:1,playsinline:1,rel:0,start:Math.floor(initialSeconds),enablejsapi:1},
         events:{
           onReady:({target})=>{
             if(disposed)return;
@@ -46,7 +51,9 @@ export default function IdleYoutubePlaylist(){
             timer=setInterval(()=>{
               if(disposed||!player)return;
               const segment=playlist[index];
-              if(segment.endSeconds!==null&&player.getCurrentTime()>=segment.endSeconds)next();
+              const seconds=player.getCurrentTime();
+              if(segment.endSeconds!==null&&seconds>=segment.endSeconds){next();return;}
+              try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
             },250);
           },
           onStateChange:({data})=>{if(data===0)next();}
@@ -68,7 +75,7 @@ export default function IdleYoutubePlaylist(){
       disposed=true;
       if(timer)clearInterval(timer);
       if(window.onYouTubeIframeAPIReady!==previousReady)window.onYouTubeIframeAPIReady=previousReady;
-      player?.destroy();
+      if(player){try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:player.getCurrentTime()}));}catch{};player.destroy();}
     };
   },[]);
   return <div className="oneMuslimIdleYoutubePlayer" aria-label="Featured video playlist while no broadcasts are live" style={{width:"100%",maxWidth:"1400px",aspectRatio:"16 / 9",maxHeight:"100%",alignSelf:"start",justifySelf:"center",position:"relative",overflow:"hidden",borderRadius:14,background:"#020b1d",boxShadow:"0 8px 24px rgba(0,0,0,.24)"}}>
