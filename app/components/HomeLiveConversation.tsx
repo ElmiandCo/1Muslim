@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
-type Format="desktop"|"phone"|"audio"|"games"|"qibla";
+type Format="desktop"|"phone"|"audio";
 type Row={id:string;body:string;sender_id:string;created_at:string;stream_id:string|null};
 type ChatMessage=Row&{name:string};
 const SIX_HOURS=6*60*60*1000;
