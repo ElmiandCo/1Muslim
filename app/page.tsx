@@ -2,6 +2,7 @@
 import AdminParallaxDashboard from "./components/AdminParallaxDashboard";
 import Profile2AppearanceEditor from "./components/Profile2AppearanceEditor";
 import ProfileNotificationsGallery from "./components/ProfileNotificationsGallery";
+import ProfilePersonalVideos from "./components/ProfilePersonalVideos";
 import AvatarEntryLoader from "./components/AvatarEntryLoader";
 import {currentPostTheme} from "./lib/post-theme";
 
@@ -744,7 +745,7 @@ const navCollapsedRef=useRef(false);
 </div>
 <div role="tabpanel" aria-label={profilePreviewTab} className="p2Card" style={{padding:"clamp(12px,2vw,22px)",flex:"1 0 auto"}}>
 <h3 style={{margin:"0 0 14px",fontSize:20}}>{profilePreviewTab}</h3>
-{profilePreviewTab==="Settings"?<Profile2AppearanceEditor onSaved={()=>window.dispatchEvent(new Event("1muslim:profile-updated"))}/>:profilePreviewTab==="Notifications"?<ProfileNotificationsGallery/>:<>
+{profilePreviewTab==="Settings"?<Profile2AppearanceEditor onSaved={()=>window.dispatchEvent(new Event("1muslim:profile-updated"))}/>:profilePreviewTab==="Notifications"?<ProfileNotificationsGallery/>:profilePreviewTab==="Videos"?<ProfilePersonalVideos/>:<>
 <div style={{fontSize:14,opacity:.8,marginBottom:12}}>{profilePreviewTab==="Posts"?`${profile2Data?.posts??"—"} posts`:profilePreviewTab==="Videos"?`${profile2Data?.videos??"—"} uploaded videos`:profilePreviewTab==="Verses"?`${profile2Data?.verses??"—"} liked verses`:profilePreviewTab==="Likes"?`${profile2Data?.likes??"—"} post and verse likes`:profilePreviewTab==="Notifications"?`${profile2Data?.notifications??"—"} notifications`:"Manage your account settings"}</div>
 <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:14}}>{(profilePreviewTab==="Settings"?[["Open Settings","/settings"],["Appearance","/settings"]]:profilePreviewTab==="Notifications"?[["View Notifications","/notifications"]]:profilePreviewTab==="Likes"?[["View Activity","/profile"]]:profilePreviewTab==="Verses"?[["Open Qur’an","/elm-tent/quran"]]:profilePreviewTab==="Videos"?[]:[["My Posts","/profile"],["Community","/community"]]).map(([label,href])=><Link key={label} href={href} className="p2Tab" style={{textDecoration:"none",display:"inline-flex",alignItems:"center",padding:"9px 14px"}}>{label} ↗</Link>)}</div>
 <div className="p2Gallery" style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:12}}>
