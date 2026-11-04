@@ -3,6 +3,7 @@ import {useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 
 const aliases:Record<string,string>={"rose-gold":"ruby","silver-dust":"titanium","carbon-fiber":"obsidian"};
+const accentFamilies:Record<string,string>={blue:"sapphire",gold:"obsidian",slate:"obsidian",rose:"amethyst",violet:"amethyst"};
 const themes:Record<string,{base:string;accent:string;secondary:string;surface:string;edge:string;tint:string}>={
  emerald:{base:"#052b22",accent:"#22bd83",secondary:"#d9bd70",surface:"#073c30",edge:"#54d5a3",tint:"rgba(3,27,21,.3)"},
  sapphire:{base:"#06182f",accent:"#398fff",secondary:"#cbdcff",surface:"#10294b",edge:"#73b6ff",tint:"rgba(2,14,39,.45)"},
@@ -12,15 +13,16 @@ const themes:Record<string,{base:string;accent:string;secondary:string;surface:s
  obsidian:{base:"#0b0b0c",accent:"#e2b75e",secondary:"#ffdb8b",surface:"#1c1914",edge:"#e6bc65",tint:"rgba(0,0,0,.62)"}
 };
 const fallback="emerald";
-function applyTheme(value:unknown,persist=true){
+function applyTheme(value:unknown,persist=true,accentValue?:unknown){
  const requested=typeof value==="string"?value:fallback;
  const wallpaper=aliases[requested]||requested;
  const colorFamily:Record<string,string>={"emerald-mosaic":"emerald","sapphire-mosaic":"sapphire","golden-geometry":"ruby","silver-eclipse":"titanium","amethyst-mirage":"amethyst","ruby-red":"ruby","ruby-gold":"ruby"};
- const theme=colorFamily[wallpaper]|| (themes[wallpaper]?wallpaper:fallback);
+ const selectedAccent=typeof accentValue==="string"?accentValue:"";
+ const theme=accentFamilies[selectedAccent]||(themes[selectedAccent]?selectedAccent:"")||colorFamily[wallpaper]|| (themes[wallpaper]?wallpaper:fallback);
  const t=themes[theme];const root=document.documentElement;
  root.dataset.profileBackground=wallpaper;root.dataset.muslimTheme=theme;
  root.style.setProperty("--theme-base",t.base);root.style.setProperty("--theme-accent",t.accent);root.style.setProperty("--theme-secondary",t.secondary);root.style.setProperty("--theme-surface",t.surface);root.style.setProperty("--theme-edge",t.edge);
- root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[wallpaper]||wallpaper}.PNG")`);
+ root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust"} as Record<string,string>)[wallpaper]||wallpaper}.PNG")`);
  root.style.setProperty("--profile-scene-tint",t.tint);
  if(persist){try{localStorage.setItem("1muslim:profile-background",wallpaper)}catch{}}
 }
@@ -36,22 +38,24 @@ export default function ProfileThemeSync(){
   applyTheme(palette[0],false);
   const initial=(()=>{try{return localStorage.getItem("1muslim:profile-background")||fallback}catch{return fallback}})();
   const start=performance.now();
-  const settle=(theme:string)=>{if(!active)return;const first=!settled;settled=true;window.clearInterval(cycle);applyTheme(theme);setPreview(aliases[theme]||theme);if(first){window.setTimeout(()=>{if(active){setVisible(false);window.setTimeout(()=>{if(active)setRecognizing(false)},1400)}},Math.max(0,1100-(performance.now()-start)))}};
+  const settle=(theme:string,accent?:string)=>{if(!active)return;const first=!settled;settled=true;window.clearInterval(cycle);applyTheme(theme,true,accent);setPreview(aliases[theme]||theme);if(first){window.setTimeout(()=>{if(active){setVisible(false);window.setTimeout(()=>{if(active)setRecognizing(false)},1400)}},Math.max(0,1100-(performance.now()-start)))}};
   const db=createClient();
   const refresh=async()=>{
    try{
     const {data:{user}}=await db.auth.getUser();
     if(!active)return;
     if(!user){settle(initial);return}
-    const {data}=await db.from("profiles").select("avatar_config").eq("id",user.id).maybeSingle();
-    settle((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||initial);
+    const {data}=await db.from("profiles").select("avatar_config,profile_background,profile_accent").eq("id",user.id).maybeSingle();
+    settle(data?.profile_background||(data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||initial,data?.profile_accent);
    }catch{settle(initial)}
   };
   void refresh();
   const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void refresh()});
-  const onChange=(event:Event)=>{const theme=(event as CustomEvent<string>).detail;if(typeof theme==="string")settle(theme);else void refresh()};
+  const onChange=(event:Event)=>{const theme=(event as CustomEvent<string>).detail;if(typeof theme==="string")void refresh();else void refresh()};
+  const onAccentChange=()=>{void refresh()};
   window.addEventListener("1muslim:profile-background-changed",onChange);
-  return()=>{active=false;window.clearInterval(cycle);subscription.unsubscribe();window.removeEventListener("1muslim:profile-background-changed",onChange)};
+  window.addEventListener("1muslim:theme-changed",onAccentChange);
+  return()=>{active=false;window.clearInterval(cycle);subscription.unsubscribe();window.removeEventListener("1muslim:profile-background-changed",onChange);window.removeEventListener("1muslim:theme-changed",onAccentChange)};
  },[]);
  return <>
   {recognizing&&<div className={visible?"themeRecognitionIntro":"themeRecognitionIntro themeRecognitionDone"} aria-hidden="true"><div className="themeRecognitionWallpaper" style={{backgroundImage:`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[preview]||preview}.PNG")`}}/><div className="themeRecognitionGlow"/><div className="themeRecognitionButtons"><i/><i/><i/><i/><i/><i/></div></div>}
