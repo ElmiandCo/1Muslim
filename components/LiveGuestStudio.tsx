@@ -116,6 +116,17 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
     }catch(e){setError(e instanceof Error?e.message:"Could not request to join.")}
     finally{setBusy(false)}
   }
+  async function cancelRequest(){
+    if(busy||me?.status!=="pending")return;
+    setBusy(true);setError("");
+    try{
+      const {error:cancelError}=await createClient().rpc("cancel_live_guest_request",{p_stream:streamId});
+      if(cancelError)throw new Error(cancelError.message);
+      setRequests(previous=>previous.filter(item=>item.id!==me.id));
+      refreshRef.current();
+    }catch(e){setError(e instanceof Error?e.message:"Could not cancel request.")}
+    finally{setBusy(false)}
+  }
   async function moderate(id:string,action:ModerationAction){
     if(busy)return;
     setBusy(true);setError("");
@@ -198,6 +209,17 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
 
   if(!uid)return null;
   const pendingCount=requests.filter(r=>r.status==="pending").length;
+  if(compactJoin&&!host){
+    const waiting=me?.status==="pending";
+    return <div style={{position:"relative",zIndex:55}}>
+      <button type="button" disabled={busy||!uid} aria-pressed={waiting} aria-label={waiting?"Cancel request to join Live":"Request to join Live"} onClick={()=>void (waiting?cancelRequest():request())}
+        style={{border:"1px solid var(--theme-border,rgba(255,255,255,.65))",borderRadius:999,padding:"8px 15px",minHeight:38,color:"var(--theme-text,#fff)",fontWeight:700,background:waiting?"rgba(15,133,107,.24)":"rgba(255,255,255,.08)",backdropFilter:"blur(9px)",WebkitBackdropFilter:"blur(9px)",boxShadow:waiting?"0 0 16px var(--theme-primary,#4fffd0),inset 0 0 12px rgba(90,255,209,.24)":"none",animation:waiting?"liveJoinRequestGlow 1.6s ease-in-out infinite":undefined,cursor:"pointer",opacity:busy?.65:1}}>
+        {waiting?"Requested ✓":"Join"}
+      </button>
+      {error&&<span role="alert" style={{position:"absolute",right:0,top:"calc(100% + 5px)",width:230,fontSize:11,background:"#142522",padding:8,borderRadius:10,color:"#fff"}}>{error}</span>}
+      <style>{`@keyframes liveJoinRequestGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.55)}}@media(prefers-reduced-motion:reduce){button[aria-pressed="true"]{animation:none!important}}`}</style>
+    </div>;
+  }
   return <div style={{position:"relative",zIndex:30,width:"fit-content",maxWidth:"100%"}}>
     <button type="button" aria-expanded={panelOpen} aria-controls="live-guest-controls-panel" onClick={()=>setPanelOpen(open=>!open)} style={{border:"1px solid var(--theme-border,#8aa398)",borderRadius:999,padding:compactJoin?"8px 12px":"9px 14px",minHeight:compactJoin?36:undefined,fontSize:compactJoin?12:undefined,boxSizing:"border-box",background:"color-mix(in srgb,var(--theme-panel,#101a13) 76%,transparent)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"var(--theme-text,#e7f5e6)",fontWeight:600,cursor:"pointer",boxShadow:"0 8px 24px #0005"}}>{compactJoin?"Join":`👥 Guests${host&&pendingCount>0?` · ${pendingCount}`:""} ${panelOpen?"⌃":"⌄"}`}</button>
     {panelOpen&&<section id="live-guest-controls-panel" aria-label="Live guest controls" style={{position:"absolute",right:0,bottom:"calc(100% + 10px)",width:"min(340px,calc(100vw - 32px))",maxHeight:"min(55dvh,430px)",overflowY:"auto",overscrollBehavior:"contain",padding:14,border:"1px solid var(--theme-border,#48624b)",borderRadius:20,background:"color-mix(in srgb,var(--theme-panel,#101a13) 90%,transparent)",backdropFilter:"blur(22px)",WebkitBackdropFilter:"blur(22px)",boxShadow:"0 16px 44px #0009",color:"var(--theme-text,#e7f5e6)"}}>
