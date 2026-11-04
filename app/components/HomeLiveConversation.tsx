@@ -1,39 +1,47 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
-import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
-type Comment={id:string;name:string;text:string;at:number};
-export default function HomeLiveConversation({live,streamId,onFormatChange}:{live:boolean;streamId?:string|null;onFormatChange?:(format:"desktop"|"phone"|"audio")=>void}){
- const [comments,setComments]=useState<Comment[]>([]);
+type Room="desktop"|"phone"|"audio";
+type Message={id:string;sender_id:string;body:string;created_at:string};
+const TTL=3*60*60*1000;
+export default function HomeLiveConversation({room}:{room:Room}){
+ const [messages,setMessages]=useState<Message[]>([]);
  const [draft,setDraft]=useState("");
- const [user,setUser]=useState<{id:string;name:string}|null>(null);
+ const [user,setUser]=useState<string|null>(null);
+ const [names,setNames]=useState<Record<string,string>>({});
  const [status,setStatus]=useState("");
- const dbRef=useRef<ReturnType<typeof createClient>|null>(null);
  const inputRef=useRef<HTMLInputElement>(null);
- const restoreViewport=()=>{inputRef.current?.blur();window.scrollTo({top:0,behavior:"instant"});};
- useEffect(()=>{const db=createClient();dbRef.current=db;let active=true;
- db.auth.getUser().then(async({data:{user:u}})=>{if(!active||!u)return;const {data}=await db.from("profiles").select("display_name,username").eq("id",u.id).maybeSingle();if(active)setUser({id:u.id,name:data?.display_name||data?.username||"Member"})}).catch(()=>{});
- return()=>{active=false}},[]);
+ const dbRef=useRef(createClient());
+ useEffect(()=>{let active=true;void dbRef.current.auth.getUser().then(({data})=>{if(active)setUser(data.user?.id||null)});return()=>{active=false}},[]);
  useEffect(()=>{
-  setComments([]);setStatus("");
-  if(!live||!streamId)return;
-  const db=dbRef.current||createClient();
-  let active=true;
-  void db.from("live_chat_messages").select("id,body,sender_id,created_at").eq("stream_id",streamId).order("created_at",{ascending:true}).limit(60).then(({data,error})=>{if(!active)return;if(error){setStatus("Live comments are unavailable until chat setup is complete.");return}setComments((data||[]).map(message=>({id:message.id,name:message.sender_id===user?.id?user?.name||"Member":"Member",text:message.body,at:new Date(message.created_at).getTime()})))});
-  const channel=db.channel("live-chat:"+streamId).on("postgres_changes",{event:"INSERT",schema:"public",table:"live_chat_messages",filter:"stream_id=eq."+streamId},payload=>{const message=payload.new as {id?:string;body?:string;sender_id?:string;created_at?:string};if(typeof message.id!=="string"||typeof message.body!=="string")return;const id=message.id,body=message.body;setComments(previous=>previous.some(comment=>comment.id===id)?previous:[...previous,{id,name:message.sender_id===user?.id?user?.name||"Member":"Member",text:body,at:message.created_at?new Date(message.created_at).getTime():Date.now()}].slice(-60))}).subscribe(state=>{if(state==="CHANNEL_ERROR"||state==="TIMED_OUT")setStatus("Live comments temporarily unavailable")});
-  return()=>{active=false;void db.removeChannel(channel)};
- },[live,streamId,user]);
- const send=async(e:React.FormEvent)=>{e.preventDefault();const text=draft.trim();restoreViewport();if(!text)return;
-  if(!live||!streamId){setStatus("Comments are available only during an active stream.");return}
-  if(!user){setStatus("Sign in to comment on an active livestream.");return}
-  try{const {error}=await (dbRef.current||createClient()).from("live_chat_messages").insert({stream_id:streamId,sender_id:user.id,body:text});if(error)throw error;setDraft("");setStatus("")}
-  catch{setStatus("Could not send comment. Try again.")}};
- return <section className="homeLiveViewerConversation" aria-label="Live conversation">
-  <header><strong>💬 LIVE CONVERSATION</strong><small>1Muslim · {live?"Live room":"Waiting for a stream"}</small></header>
-  <div className="homeLiveDemoComments" aria-live="polite">{comments.length?comments.map(c=><p key={c.id}><span className="homeLiveCommentAvatar">{c.name.slice(0,1).toUpperCase()}</span><span><strong>{c.name}</strong><small>{c.text}</small></span></p>):<p>{live?"Be the first to comment in this live room." :"Comments appear when a real stream is active."}</p>}</div>
-  <form className="homeLiveCommentForm" onSubmit={send}><input ref={inputRef} enterKeyHint="send" aria-label="Write a live comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={500} placeholder={live?"Comment on this livestream…" :"Waiting for an active stream…"}/><button type="submit" disabled={!live||!streamId||!user||!draft.trim()}>Send</button></form>
+  const db=dbRef.current;let active=true;
+  setMessages([]);setStatus("");
+  const load=async()=>{
+   const {data,error}=await db.from("home_room_chat_messages").select("id,sender_id,body,created_at").eq("room",room).gt("created_at",new Date(Date.now()-TTL).toISOString()).order("created_at",{ascending:true}).limit(100);
+   if(!active)return;
+   if(error){setStatus("Chat is temporarily unavailable.");return}
+   setMessages(data||[]);
+  };
+  void load();
+  const channel=db.channel("home-room-chat:"+room).on("postgres_changes",{event:"INSERT",schema:"public",table:"home_room_chat_messages",filter:"room=eq."+room},payload=>{
+   const msg=payload.new as Message;
+   if(!msg?.id||!msg.created_at||Date.now()-new Date(msg.created_at).getTime()>=TTL)return;
+   setMessages(old=>old.some(m=>m.id===msg.id)?old:[...old,msg].slice(-100));
+  }).subscribe();
+  const refresh=window.setInterval(()=>{setMessages(old=>old.filter(m=>Date.now()-new Date(m.created_at).getTime()<TTL));void load()},30000);
+  return()=>{active=false;clearInterval(refresh);void db.removeChannel(channel)};
+ },[room]);
+ useEffect(()=>{let active=true;const ids=[...new Set(messages.map(m=>m.sender_id))].filter(id=>!names[id]);if(!ids.length)return;
+ void dbRef.current.from("profiles").select("id,display_name,username").in("id",ids).then(({data})=>{if(active&&data)setNames(old=>({...old,...Object.fromEntries(data.map(p=>[p.id,p.display_name||p.username||"Member"]))}))});
+ return()=>{active=false};
+ },[messages,names]);
+ const send=async(e:React.FormEvent)=>{e.preventDefault();const body=draft.trim();inputRef.current?.blur();if(!body)return;if(!user){setStatus("Sign in to chat.");return}
+  const {error}=await dbRef.current.from("home_room_chat_messages").insert({room,sender_id:user,body});
+  if(error){setStatus("Could not send message.");return}setDraft("");setStatus("");};
+ return <section className="homeLiveViewerConversation" aria-label={room+" Chat"}>
+  <header><strong>💬 Chat</strong><small>{room==="phone"?"Mobile":room[0].toUpperCase()+room.slice(1)} · Messages expire after 3 hours</small></header>
+  <div className="homeLiveDemoComments" aria-live="polite">{messages.length?messages.map(m=><p key={m.id}><span className="homeLiveCommentAvatar">{(names[m.sender_id]||"M")[0].toUpperCase()}</span><span><strong>{names[m.sender_id]||"Member"}</strong><small>{m.body}</small></span></p>):<p>Start the conversation in this room.</p>}</div>
+  <form className="homeLiveCommentForm" onSubmit={send}><input ref={inputRef} enterKeyHint="send" aria-label="Write a chat message" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={500} placeholder={user?"Message this room…":"Sign in to chat"}/><button type="submit" disabled={!user||!draft.trim()}>Send</button></form>
   {status&&<small role="status" className="homeLiveCommentDisclaimer">{status}</small>}
-  <small className="homeLiveCommentDisclaimer">Persistent live chat · visible to signed-in viewers of this stream</small>
-  {live&&streamId?<Link className="homeLiveStudioEntry" href={`/streaming/live/${streamId}`}>Open Live Studio ↗</Link>:<Link className="homeLiveStudioEntry" href="/streaming/go-live">Start your own Live ↗</Link>}
  </section>;
 }
