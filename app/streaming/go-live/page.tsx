@@ -7,7 +7,6 @@ import GoLiveHudHudTip from "../../components/GoLiveHudHudTip";
 import Link from "next/link";
 import { createClient } from "../../../utils/supabase/client";
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { LocalAudioTrack, LocalVideoTrack, Room, RoomEvent, Track } from "livekit-client";
 import { flipLiveCamera } from "../../../lib/live-cinema-camera";
 import { playLiveCinemaMorphSound } from "../../../lib/live-cinema-sound";
@@ -1169,21 +1168,13 @@ export default function GoLivePage() {
         audioTrack.enabled=micOn;
         let localAudioTrack = audioTrackRef.current;
         if (!localAudioTrack || localAudioTrack.mediaStreamTrack !== audioTrack) {
-          // Audio effects are optional. A processor failure must not end an
-          // otherwise healthy LiveKit broadcast on Safari or other browsers.
-          localAudioTrack = new LocalAudioTrack(audioTrack, undefined, true);
-          try {
-            const processor = createLiveAudioProcessor(audioEffect, nasheedOn, soundVolume);
-            await localAudioTrack.setProcessor(processor as any);
-            audioProcessorRef.current = processor;
-            processedAudioTrackRef.current = processor.processedTrack ?? localAudioTrack.mediaStreamTrack;
-          } catch (processorError) {
-            console.warn("Live audio effects unavailable; broadcasting raw microphone", processorError);
-            audioProcessorRef.current = null;
-            processedAudioTrackRef.current = audioTrack;
-            setSaveMessage("Audio effects unavailable. Broadcasting your microphone normally.");
-          }
+          const audioContext = await ensureAudioContext();
+          localAudioTrack = new LocalAudioTrack(audioTrack, undefined, true, audioContext);
+          const processor = createLiveAudioProcessor(audioEffect, nasheedOn, soundVolume);
+          await localAudioTrack.setProcessor(processor as any);
           audioTrackRef.current = localAudioTrack;
+          audioProcessorRef.current = processor;
+          processedAudioTrackRef.current = processor.processedTrack ?? localAudioTrack.mediaStreamTrack;
         }
         await room.localParticipant.publishTrack(localAudioTrack, { source: Track.Source.Microphone });
       }
@@ -1195,11 +1186,8 @@ export default function GoLivePage() {
       room.on(RoomEvent.Reconnected,()=>{
         if(!endRequestedRef.current){setSaveMessage("");setError("")}
       });
-      room.on(RoomEvent.Disconnected,(reason)=>{
-        if(!endRequestedRef.current){
-          console.error("LiveKit host disconnected", {reason, streamId:liveStreamId});
-          setError("Broadcast connection lost (LiveKit reason: "+String(reason ?? "unknown")+"). Reconnect before ending the session.");
-        }
+      room.on(RoomEvent.Disconnected,()=>{
+        if(!endRequestedRef.current)setError("Broadcast connection lost. Viewers will see that the host is reconnecting.");
       });
 
       try { startRecording(); } catch (recordingError) {
@@ -1798,7 +1786,7 @@ export default function GoLivePage() {
               {live&&liveStreamIdRef.current&&currentUserId&&<details className="hostLiveGuestControls"><summary>👥 Guests · {guestRoster.length}</summary><div className="hostLiveGuestSheet"><LiveGuestStudio streamId={liveStreamIdRef.current} roomName={`1muslim-live-${liveStreamIdRef.current}`} hostId={currentUserId}/></div></details>}
 
               {!live && <div className="preliveIdentity"><button type="button" className="preliveTitleButton" onClick={()=>setSettingsOpen(true)} aria-label="Edit live title"><span className="preliveIdentityIcon" aria-hidden="true">✧</span><span><small>LIVE TITLE · TAP TO EDIT</small><strong>{title || defaultLiveTitle}</strong></span></button><button type="button" className="preliveVisibility" onClick={()=>setSettingsOpen(true)} aria-label="Change live audience">◎ {visibility==="public"?"Public":"Ashab"} ⌄</button></div>}
-              {viewerRosterOpen && typeof document!=="undefined" && createPortal(<div className="liveRosterBackdrop" style={{position:"fixed",inset:0,zIndex:2147483000}} onPointerDown={e=>{if(e.target===e.currentTarget)setViewerRosterOpen(false)}}><section className="liveRosterSheet" role="dialog" aria-modal="true" aria-label="Live viewers"><header><div><strong>👁 Watching now</strong><small>{viewers.toLocaleString()} live viewers</small></div><button type="button" onClick={()=>setViewerRosterOpen(false)} aria-label="Close viewers">✕</button></header><div className="liveRosterList">{viewerRosterLoading&&viewerRoster.length===0?<p>Loading viewers…</p>:viewerRoster.length===0?<p>No viewers yet.</p>:viewerRoster.map(viewer=><div className="liveRosterPerson" key={viewer.id}><span className="liveRosterAvatar">{viewer.avatar?<img src={viewer.avatar} alt="" referrerPolicy="no-referrer"/>:<span>◉</span>}</span><span className="liveRosterName">{viewer.username}</span><span className="liveRosterXp">{viewer.xp===null?"XP unavailable":`${viewer.xp.toLocaleString()} XP`}</span></div>)}</div><button type="button" className="liveRosterRefresh" onClick={()=>void loadViewerRoster()}>↻ Refresh</button></section></div>,document.body)}
+              {viewerRosterOpen && <div className="liveRosterBackdrop" onPointerDown={e=>{if(e.target===e.currentTarget)setViewerRosterOpen(false)}}><section className="liveRosterSheet" role="dialog" aria-modal="true" aria-label="Live viewers"><header><div><strong>👁 Watching now</strong><small>{viewers.toLocaleString()} live viewers</small></div><button type="button" onClick={()=>setViewerRosterOpen(false)} aria-label="Close viewers">✕</button></header><div className="liveRosterList">{viewerRosterLoading&&viewerRoster.length===0?<p>Loading viewers…</p>:viewerRoster.length===0?<p>No viewers yet.</p>:viewerRoster.map(viewer=><div className="liveRosterPerson" key={viewer.id}><span className="liveRosterAvatar">{viewer.avatar?<img src={viewer.avatar} alt="" referrerPolicy="no-referrer"/>:<span>◉</span>}</span><span className="liveRosterName">{viewer.username}</span><span className="liveRosterXp">{viewer.xp===null?"XP unavailable":`${viewer.xp.toLocaleString()} XP`}</span></div>)}</div><button type="button" className="liveRosterRefresh" onClick={()=>void loadViewerRoster()}>↻ Refresh</button></section></div>}
               {cameraReady && <div className="previewOverlayTools" aria-label="Camera and microphone controls"><button type="button" className={cameraOn?"studioToggleOn":"studioToggleOff"} onClick={toggleCamera} aria-label={cameraOn?"Turn camera off":"Turn camera on"}><StudioGlyph kind="camera"/></button><button type="button" className={micOn?"studioToggleOn":"studioToggleOff"} onClick={toggleMic} aria-label={micOn?"Mute microphone":"Unmute microphone"}><StudioGlyph kind="mic"/></button>{live&&<button type="button" className="liveInlineSettings" onClick={()=>setSettingsOpen(v=>!v)} aria-expanded={settingsOpen} aria-controls="prelive-settings" aria-label="Live settings" title="Live settings"><StudioGlyph kind="settings"/></button>}</div>}
               {showHostIntro && live && broadcastStartedAt && <SyncedLiveIntro startedAt={broadcastStartedAt} host onFinish={()=>setShowHostIntro(false)} />}
               {live && <span className="live" aria-label="You are live">● YOU’RE LIVE · {liveClock} · {roomRef.current?.state==="connected"?"Connected":"Reconnecting"} · {micOn?"🎙 Mic on":"🔇 Muted"}</span>}{live && liveStreamIdRef.current && <div style={{position:"absolute",top:12,right:12,zIndex:12}}><ShareLiveButton streamId={liveStreamIdRef.current} title={title} compact /></div>}{recording && <span className="recording">● RECORDING</span>}
