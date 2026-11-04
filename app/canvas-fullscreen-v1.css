@@ -2310,3 +2310,44 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   flex:0 0 auto!important;
   margin-top:6px!important;
 }
+
+
+/* Community media: reveal the page artwork instead of black letterbox panels.
+   Mask only the video; controls remain fully clickable and unmasked. */
+.community-simple-feed .ummah-video-frame{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:50px!important;
+  overflow:hidden!important;
+  isolation:isolate;
+}
+.community-simple-feed .ummah-video-frame .ummah-video-preview{
+  background:transparent!important;
+  border:0!important;
+  border-radius:50px!important;
+  object-fit:cover!important;
+  -webkit-mask-image:radial-gradient(ellipse 85% 85% at center,#000 74%,transparent 100%);
+  mask-image:radial-gradient(ellipse 85% 85% at center,#000 74%,transparent 100%);
+}
+.community-simple-feed .ummah-video-fyp-open{background:transparent!important;border:0!important;box-shadow:none!important}
+.community-simple-feed .community-post-card:has(.ummah-video-frame){background-color:transparent!important}
+
+/* Desktop / landscape: the wheel or swipe belongs to the lane it starts on.
+   The outer posts viewport must not steal vertical scrolling from either lane. */
+@media (min-width:768px){
+ .canvas-community-posts-only .canvas-community-posts-scroll:has(.ummah-dual-lanes),
+ .community-direct-surface .canvas-community-posts-scroll:has(.ummah-dual-lanes){
+   overflow:hidden!important;display:flex!important;flex-direction:column!important;
+ }
+ .community-simple-feed:has(.ummah-dual-lanes){display:flex!important;flex-direction:column!important;flex:1 1 auto!important;height:100%!important;min-height:0!important;overflow:hidden!important}
+ .community-simple-feed .community-posts-list:has(.ummah-dual-lanes){display:flex!important;flex-direction:column!important;flex:1 1 auto!important;height:100%!important;min-height:0!important;overflow:hidden!important}
+ .community-simple-feed .ummah-dual-lanes{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:0!important;flex:1 1 auto!important;height:100%!important;min-height:0!important;overflow:hidden!important}
+ .community-simple-feed .ummah-dual-lane{height:100%!important;min-height:0!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior-y:contain!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch;padding:8px clamp(5px,1vw,12px) 36px!important;scrollbar-width:none}
+ .community-simple-feed .ummah-dual-lane::-webkit-scrollbar{display:none}
+}
+@media (orientation:landscape) and (max-width:767px){
+ .community-simple-feed .ummah-feed-single{display:none!important}
+ .community-simple-feed .ummah-dual-lanes{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:0!important;height:100%!important;min-height:0!important;overflow:hidden!important}
+ .community-simple-feed .ummah-dual-lane{min-width:0!important;height:100%!important;overflow-y:auto!important;overscroll-behavior:contain!important;touch-action:pan-y!important}
+}

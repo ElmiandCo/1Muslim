@@ -162,7 +162,7 @@ type UmmahComment={id:string;post_id:string;parent_id:string|null;name:string;av
 
 function DailyPostsApp({active}:{active:boolean}){
  const [wideFeed,setWideFeed]=useState(false);
- useEffect(()=>{const media=window.matchMedia("(min-width: 768px)");const sync=()=>setWideFeed(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync)},[]);
+ useEffect(()=>{const media=window.matchMedia("(min-width: 768px), (orientation: landscape)");const sync=()=>setWideFeed(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync)},[]);
  const [posts,setPosts]=useState<UmmahPost[]>([]); const mediaUrlCache=useRef(new Map<string,{url:string,at:number}>()); 
  const [status,setStatus]=useState("Loading Ummah posts…");
  const [selected,setSelected]=useState<string|null>(null);
