@@ -1,6 +1,36 @@
 "use client";
-import {useState} from "react";
+import {useEffect,useRef,useState} from "react";
 export default function AdminParallaxDashboard({draft,onDraftChange}:{draft:string;onDraftChange:(value:string)=>void}){
+const [accountTotal,setAccountTotal]=useState<number|null>(null);
+const [accountError,setAccountError]=useState(false);
+const [accountGrowing,setAccountGrowing]=useState(false);
+const previousTotal=useRef<number|null>(null);
+useEffect(()=>{
+ let active=true;
+ let glowTimer:ReturnType<typeof setTimeout>|undefined;
+ const refresh=async()=>{
+  if(document.visibilityState==="hidden")return;
+  try{
+   const response=await fetch("/api/admin/account-count",{cache:"no-store"});
+   if(!response.ok)throw Error("Count unavailable");
+   const result=await response.json() as {total?:number};
+   if(!Number.isInteger(result.total)||result.total!<0)throw Error("Invalid count");
+   if(!active)return;
+   if(previousTotal.current!==null&&result.total!>previousTotal.current){
+    setAccountGrowing(true);
+    if(glowTimer)clearTimeout(glowTimer);
+    glowTimer=setTimeout(()=>{if(active)setAccountGrowing(false)},4500);
+   }
+   previousTotal.current=result.total!;
+   setAccountTotal(result.total!);
+   setAccountError(false);
+  }catch{if(active)setAccountError(true)}
+ };
+ void refresh();
+ const timer=setInterval(()=>void refresh(),5000);
+ document.addEventListener("visibilitychange",refresh);
+ return()=>{active=false;clearInterval(timer);if(glowTimer)clearTimeout(glowTimer);document.removeEventListener("visibilitychange",refresh)};
+},[]);
 const [offset,setOffset]=useState(0);const [reply,setReply]=useState("");const [busy,setBusy]=useState(false);const [error,setError]=useState("");
 async function send(e:React.FormEvent){e.preventDefault();if(busy||!draft.trim())return;setBusy(true);setError("");try{const r=await fetch("/api/admin/hudhud",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:draft})});const data=await r.json();if(!r.ok)throw Error(data.error||"HudHud unavailable");setReply(data.answer);onDraftChange("")}catch(e){setError(e instanceof Error?e.message:"HudHud unavailable")}finally{setBusy(false)}}
 const tiles=[["Online Now","—"],["Active Today","—"],["Posts","—"],["Likes","—"]];
@@ -10,9 +40,9 @@ return <div className="secret-admin"><style>{`
 .secret-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#bda26b transparent;padding:8px 4px 24px;perspective:900px}
 .secret-layer{border:1px solid #d7b96955;border-radius:22px;padding:16px;margin:8px 0 20px;background:linear-gradient(130deg,#13232de8,#111221e8,#28182cdb);box-shadow:0 18px 40px #0009,0 0 20px #9c81eb25;transition:transform .15s linear;will-change:transform}
 .secret-layer:nth-child(2){background:linear-gradient(125deg,#102d37e8,#171524ed,#26132ce6)}.secret-layer:nth-child(3){background:linear-gradient(130deg,#26162fe8,#101b2be8,#12291fe8)}.secret-layer:nth-child(4){background:linear-gradient(130deg,#102b25e8,#14192be8,#302018e8)}
-.secret-layer h3{font-size:16px;color:#e6ca80;margin:0 0 14px}.secret-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.secret-tile{padding:13px;border-radius:15px;border:1px solid #ffffff26;background:#ffffff0d}.secret-tile strong{display:block;font-size:29px;color:#f6e9b7}.secret-tile small{color:#aec1c8}
+.secret-layer h3{font-size:16px;color:#e6ca80;margin:0 0 14px}.secret-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.secret-tile{padding:13px;border-radius:15px;border:1px solid #ffffff26;background:#ffffff0d}.secret-tile strong{display:block;font-size:29px;color:#f6e9b7}.secret-tile small{color:#aec1c8}.secret-account-tile{grid-column:1/-1;transition:border-color .35s,box-shadow .35s,background .35s}.secret-account-tile strong{transition:color .35s}.secret-account-tile.is-growing{border-color:#42e88b;background:rgba(24,114,62,.24);box-shadow:0 0 22px rgba(66,232,139,.28)}.secret-account-tile.is-growing strong{color:#52ff9d}
 .secret-row{display:flex;justify-content:space-between;gap:8px;padding:11px 0;border-bottom:1px solid #ffffff20;font-size:13px}.secret-row span:last-child{color:#98c9bb;text-align:right}
 .secret-composer{flex:none;display:flex;gap:9px;align-items:end;padding:12px 0 max(8px,env(safe-area-inset-bottom));border-top:1px solid #d7b96950;background:#080b0c}.secret-composer textarea{min-width:0;flex:1;resize:none;max-height:120px;padding:13px;border-radius:18px;background:#123b35;color:white;border:1px solid #d7b96980;font:inherit;font-size:16px}.secret-composer button{padding:14px;border:0;border-radius:15px;background:#d7b969;color:#17332d}
 @media(prefers-reduced-motion:reduce){.secret-layer{transition:none!important;transform:none!important}}
-`}</style><header><small>🔒 SECRET · 1MUSLIM</small><h2>HudHud Command Center</h2></header><div className="secret-scroll" onScroll={e=>setOffset(e.currentTarget.scrollTop)}><section className="secret-layer" style={{transform:`translateY(${Math.min(offset*.045,20)}px)`}}><h3>◈ Overview · Today</h3><div className="secret-grid">{tiles.map(([label,value])=><div className="secret-tile" key={label}><small>{label}</small><strong>{value}</strong><small>Awaiting analytics</small></div>)}</div></section><section className="secret-layer" style={{transform:`translateY(${Math.min(offset*.025,14)}px)`}}><h3>◉ Live Operations</h3>{[["🔴 Live streams","Not connected"],["🎙 Audio rooms","Not connected"],["🎮 Games","Not connected"]].map(([a,b])=><div className="secret-row" key={a}><span>{a}</span><span>{b}</span></div>)}</section><section className="secret-layer" style={{transform:`translateY(${Math.min(offset*.012,9)}px)`}}><h3>⚡ Online Users & Activity</h3>{[["Who's online","Presence pending"],["Current page","Tracking pending"],["Last action","Events pending"]].map(([a,b])=><div className="secret-row" key={a}><span>{a}</span><span>{b}</span></div>)}<p style={{fontSize:12,opacity:.7}}>Example: Sent message to Bin Farhan. Message contents remain private.</p></section><section className="secret-layer"><h3>▥ Traffic Calendar & Engagement</h3><div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:6}}>{Array.from({length:35},(_,i)=><span key={i} style={{height:25,borderRadius:5,background:`rgba(159,117,230,${.12+i%5*.08})`}}/>)}</div><p style={{fontSize:12,opacity:.7}}>Calendar preview · Not live data</p><div className="secret-row"><span>Traffic trends</span><span>Awaiting data</span></div><div className="secret-row"><span>Posts · Likes · Shares</span><span>Awaiting data</span></div></section>{(reply||error)&&<div role="status" style={{padding:14,border:"1px solid #d7b96955",borderRadius:15,whiteSpace:"pre-wrap",background:"#11241e"}}>{error||reply}</div>}</div><form className="secret-composer" onSubmit={send}><textarea rows={1} placeholder="Message HudHud…" aria-label="Message HudHud" value={draft} onChange={e=>onDraftChange(e.target.value)}/><button disabled={busy||!draft.trim()} title="Send to HudHud" style={{opacity:busy?.5:1}}>{busy?"…":"↑"}</button></form></div>
+`}</style><header><small>🔒 SECRET · 1MUSLIM</small><h2>HudHud Command Center</h2></header><div className="secret-scroll" onScroll={e=>setOffset(e.currentTarget.scrollTop)}><section className="secret-layer" style={{transform:`translateY(${Math.min(offset*.045,20)}px)`}}><h3>◈ Overview · Today</h3><div className="secret-grid"><div className={`secret-tile secret-account-tile${accountGrowing?" is-growing":""}`} aria-live="polite"><small>Registered Accounts</small><strong>{accountTotal===null?"—":accountTotal.toLocaleString()}</strong><small>{accountError?"Last available count · reconnecting":accountGrowing?"↑ New account registered":"Live total · refreshes every 5 seconds"}</small></div>{tiles.map(([label,value])=><div className="secret-tile" key={label}><small>{label}</small><strong>{value}</strong><small>Awaiting analytics</small></div>)}</div></section><section className="secret-layer" style={{transform:`translateY(${Math.min(offset*.025,14)}px)`}}><h3>◉ Live Operations</h3>{[["🔴 Live streams","Not connected"],["🎙 Audio rooms","Not connected"],["🎮 Games","Not connected"]].map(([a,b])=><div className="secret-row" key={a}><span>{a}</span><span>{b}</span></div>)}</section><section className="secret-layer" style={{transform:`translateY(${Math.min(offset*.012,9)}px)`}}><h3>⚡ Online Users & Activity</h3>{[["Who's online","Presence pending"],["Current page","Tracking pending"],["Last action","Events pending"]].map(([a,b])=><div className="secret-row" key={a}><span>{a}</span><span>{b}</span></div>)}<p style={{fontSize:12,opacity:.7}}>Example: Sent message to Bin Farhan. Message contents remain private.</p></section><section className="secret-layer"><h3>▥ Traffic Calendar & Engagement</h3><div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:6}}>{Array.from({length:35},(_,i)=><span key={i} style={{height:25,borderRadius:5,background:`rgba(159,117,230,${.12+i%5*.08})`}}/>)}</div><p style={{fontSize:12,opacity:.7}}>Calendar preview · Not live data</p><div className="secret-row"><span>Traffic trends</span><span>Awaiting data</span></div><div className="secret-row"><span>Posts · Likes · Shares</span><span>Awaiting data</span></div></section>{(reply||error)&&<div role="status" style={{padding:14,border:"1px solid #d7b96955",borderRadius:15,whiteSpace:"pre-wrap",background:"#11241e"}}>{error||reply}</div>}</div><form className="secret-composer" onSubmit={send}><textarea rows={1} placeholder="Message HudHud…" aria-label="Message HudHud" value={draft} onChange={e=>onDraftChange(e.target.value)}/><button disabled={busy||!draft.trim()} title="Send to HudHud" style={{opacity:busy?.5:1}}>{busy?"…":"↑"}</button></form></div>
 }
