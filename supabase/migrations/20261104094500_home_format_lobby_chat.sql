@@ -9,7 +9,7 @@ create table if not exists public.home_format_chat_messages (
 create index if not exists home_format_chat_messages_recent on public.home_format_chat_messages(format,created_at desc);
 alter table public.home_format_chat_messages enable row level security;
 drop policy if exists "Read public format lobby" on public.home_format_chat_messages;
-create policy "Read public format lobby" on public.home_format_chat_messages for select to authenticated using(created_at>now()-interval '6 hours');
+create policy "Read public format lobby" on public.home_format_chat_messages for select to anon,authenticated using(created_at>now()-interval '6 hours');
 drop policy if exists "Post to format lobby" on public.home_format_chat_messages;
 create policy "Post to format lobby" on public.home_format_chat_messages for insert to authenticated with check(sender_id=(select auth.uid()) and created_at>now()-interval '6 hours');
 do $$ begin alter publication supabase_realtime add table public.home_format_chat_messages; exception when duplicate_object then null; end $$;
