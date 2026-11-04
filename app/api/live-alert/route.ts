@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     if(error){console.error("Live audience profile lookup failed",error.message);failures++;break;}
     if(!members?.length)break;
     for(let i=0;i<members.length;i+=200){
-      const rows=members.slice(i,i+200).map(member=>({user_id:member.id,type:"live_started",title:"🔴 Live Now: "+stream.title.slice(0,120),body:host+" just went live on 1Muslim. Tap to watch.",entity_type:"live_stream",entity_id:stream.id}));
+      const rows=members.slice(i,i+200).map(member=>({recipient_id:member.id,actor_id:user.id,type:"live_started",title:"🔴 Live Now: "+stream.title.slice(0,120),body:host+" just went live on 1Muslim. Tap to watch.",entity_type:"live_stream",entity_id:stream.id}));
       const {error:insertError}=await admin.from("notifications").insert(rows);
       if(insertError){console.error("Live audience alert batch failed",insertError.message);failures++;}else count+=rows.length;
     }
