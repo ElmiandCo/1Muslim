@@ -82,9 +82,9 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
         .omLiveCinema .omLiveVideoStage{position:absolute!important;z-index:1;overflow:hidden!important;transition:top 2s var(--cinema-ease),left 2s var(--cinema-ease),width 2s var(--cinema-ease),height 2s var(--cinema-ease),border-radius 2s var(--cinema-ease),transform 2s var(--cinema-ease);will-change:width,height,top,left}
         .omLiveCinema[data-cinema-mode="phone"] .omLiveVideoStage{top:0!important;left:0!important;width:100%!important;height:100%!important;transform:none!important;border-radius:0!important}
         .omLiveCinema[data-cinema-mode="desktop"] .omLiveVideoStage{top:clamp(125px,18dvh,220px)!important;left:50%!important;width:calc(100% - 24px)!important;max-width:1200px!important;height:min(56.25vw,675px)!important;transform:translateX(-50%)!important;border-radius:18px!important;box-shadow:0 12px 45px #0009;border:1px solid #ffffff44}
-        .omLiveCinema[data-cinema-mode="desktop"] .omLiveVideoStage .omCameraVideo{object-fit:cover!important}
+        .omLiveCinema[data-cinema-mode="desktop"] .omLiveVideoStage .omCameraVideo{object-fit:contain!important}
         .omLiveCinema[data-cinema-mode="phone"] .omLiveVideoStage .omCameraVideo{object-fit:cover!important}
-        .omLiveCinema .omLiveVideoStage .omScreenVideo{object-fit:cover!important}
+        .omLiveCinema .omLiveVideoStage .omScreenVideo{object-fit:contain!important}
         .omLiveCinema .omCinemaModeSwitch{position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 96px);z-index:27;display:flex;flex-direction:column;gap:8px}
         .omLiveCinema .omCinemaModeSwitch button{min-width:94px;min-height:44px;border:1px solid #ffffff66;border-radius:14px;background:#071711bd;color:#fff;font-size:12px;font-weight:800;backdrop-filter:blur(14px);cursor:pointer}
         .omLiveCinema .omCinemaModeSwitch button[aria-pressed="true"]{border-color:#d8c18a;background:#183d32e8;box-shadow:0 0 16px #c8a65e44}
