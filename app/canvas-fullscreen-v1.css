@@ -2428,3 +2428,36 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
 .oneMuslimLiveInterruptionNotice strong{font-weight:700}
 @keyframes oneMuslimLiveNoticeFade{0%{opacity:0;transform:translate(-50%,-6px)}14%,78%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-4px)}}
 @media(prefers-reduced-motion:reduce){.oneMuslimLiveInterruptionNotice{animation:none}}
+
+
+/* Home Chat: reserve space for 4–5 visible messages without covering the video. */
+@media (max-width:767px){
+ [data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom{
+  height:clamp(285px,34%,390px)!important;
+  max-height:48%!important;
+  bottom:clamp(12px,4%,30px)!important;
+  overflow:hidden!important;
+  pointer-events:auto!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveBottom > .homeLiveViewerConversation{
+  height:100%!important;
+  max-height:100%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-end!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  height:auto!important;
+  overflow-y:auto!important;
+  justify-content:flex-start!important;
+  margin-top:0!important;
+  -webkit-overflow-scrolling:touch;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{
+  flex:0 0 auto!important;
+  margin-top:8px!important;
+ }
+}
