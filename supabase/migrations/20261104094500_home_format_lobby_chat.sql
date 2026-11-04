@@ -1,6 +1,6 @@
 create table if not exists public.home_format_chat_messages (
  id uuid primary key default gen_random_uuid(),
- format text not null check(format in ('desktop','phone','audio','games','qibla')),
+ format text not null check(format in ('desktop','phone','audio')),
  sender_id uuid not null references auth.users(id) on delete cascade,
  stream_id uuid references public.live_streams(id) on delete set null,
  body text not null check(char_length(trim(body)) between 1 and 500),
