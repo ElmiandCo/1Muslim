@@ -2480,3 +2480,42 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
   margin-top:8px!important;
  }
 }
+
+
+/* Home Live: Chat fills the space directly below the video, not a short bottom dock.
+   The top of Chat meets the 16:9 player and the composer stays pinned at the bottom. */
+[data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom{
+ left:4%!important;
+ right:4%!important;
+ bottom:2%!important;
+ height:56%!important;
+ max-height:62%!important;
+ min-height:0!important;
+ padding:0!important;
+ overflow:hidden!important;
+ pointer-events:auto!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom > .homeLiveViewerConversation{
+ height:100%!important;
+ max-height:100%!important;
+ min-height:0!important;
+ display:flex!important;
+ flex-direction:column!important;
+ justify-content:flex-end!important;
+ overflow:hidden!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{
+ flex:1 1 auto!important;
+ height:auto!important;
+ max-height:none!important;
+ min-height:0!important;
+ margin-top:0!important;
+ overflow-y:auto!important;
+ justify-content:flex-start!important;
+ overscroll-behavior:contain;
+ -webkit-overflow-scrolling:touch;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{
+ flex:0 0 auto!important;
+ margin-top:8px!important;
+}
