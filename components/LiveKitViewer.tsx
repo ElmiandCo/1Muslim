@@ -546,3 +546,67 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
     </div>
   );
 }
+      {!embedded && <canvas ref={reflectionRef} width={160} height={90} className="omLiveCinemaBackdrop" aria-hidden="true" />}
+      <LiveGuestsStage mode={guestStageMode} guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostSpeaking={voiceEnergy>.12}>
+        <div className="omLiveVideoStage" data-screen={hasScreenVideo?"yes":"no"} data-layout={hasScreenVideo&&hasCameraVideo?shareLayout:"solo"}>
+          <video ref={videoRef} className="omCameraVideo" autoPlay muted playsInline controls={false} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block"}} />
+          <video ref={screenVideoRef} className="omScreenVideo" autoPlay muted playsInline aria-label="Shared screen" style={{display:hasScreenVideo?"block":"none"}} />
+        </div>
+      </LiveGuestsStage>
+      {hostConnecting&&!hostEnded&&<div className="omHostReconnecting" role="status" aria-live="polite">Host connection interrupted · Reconnecting…</div>}
+      {audioNeedsGesture&&hasRemoteAudio&&!hostEnded&&<div role="status" aria-live="polite" style={{position:"absolute",bottom:65,left:12,zIndex:9,color:"#fff",background:"#0c2923e8",border:"1px solid #9ce9c2",borderRadius:12,padding:"8px 12px",fontSize:12,pointerEvents:"none"}}>🔊 Tap “Hear Live” below to enable host audio</div>}
+      <div ref={audioContainerRef} />
+      {streamId&&<LiveLightOverlay streamId={streamId}/>}
+      {streamId&&hostIdentity&&!hostEnded&&<div className="omViewerJoinOnly" style={{position:"absolute",right:12,top:12,bottom:"auto",zIndex:45}}><LiveGuestStudio streamId={streamId} roomName={roomName} hostId={hostIdentity} compactJoin/></div>}
+      {error ? <div role="alert" style={{position:"absolute",inset:0,zIndex:12,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",gap:14,padding:24,color:"#e6f2e7",background:"#0b1510",fontSize:14,textAlign:"center"}}><strong style={{fontSize:19}}>Live connection unavailable</strong><span>{error}</span><div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}><button type="button" onClick={() => { setError(""); setReconnecting(false); setRetryAttempt(n => n + 1); }} style={{border:"1px solid #76ae83",background:"#173d27",color:"#fff",borderRadius:12,padding:"10px 18px",cursor:"pointer"}}>↻ Retry connection</button><a href="/streaming" style={{border:"1px solid #566b5b",color:"#fff",borderRadius:12,padding:"10px 18px",textDecoration:"none"}}>← All streaming</a></div></div> : reconnecting ? (
+        <div style={{position:"absolute",inset:0,zIndex:10,background:"radial-gradient(circle at 50% 35%,rgba(72,103,68,.2),rgba(3,7,4,.96) 72%)",display:"grid",placeItems:"center",overflow:"hidden"}}>
+          <div style={{position:"absolute",width:190,height:190,borderRadius:"50%",border:"1px solid rgba(214,231,184,.08)",boxShadow:"0 0 80px rgba(126,170,106,.08)",animation:"oneMuslimPulse 3.5s ease-in-out infinite"}} />
+          <div style={{position:"relative",width:180,height:130,display:"grid",placeItems:"center",animation:"oneMuslimButterfly 3.2s ease-in-out infinite"}}>
+            <span style={{fontSize:74,filter:"drop-shadow(0 10px 35px rgba(174,214,143,.18))"}}>🦋</span>
+          </div>
+          <div style={{position:"absolute",top:16,left:16,right:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{padding:"6px 9px",borderRadius:999,background:"rgba(214,231,184,.12)",border:"1px solid rgba(214,231,184,.2)",color:"#d6e7b8",fontSize:9,fontWeight:900}}>1MUSLIM</span>
+            <span style={{padding:"6px 9px",borderRadius:999,background:"rgba(0,0,0,.4)",color:"#d7e0d8",fontSize:9,fontWeight:850}}>● RECONNECTING</span>
+          </div>
+          <ReconnectTrivia mode="reconnect" eventKey={reconnectKey} />
+          
+        </div>
+      ) : error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
+      <style jsx>{`
+      .omVoiceViewerStage{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#164938,#081b18 60%,#020706 100%);color:#e5f9f0}
+      .omVoiceViewerAura{position:absolute;width:min(66vw,260px);aspect-ratio:1;border-radius:50%;border:2px solid #87f8ce80;box-shadow:0 0 45px #34e5a555;animation:omVoiceViewerBreathe 3.6s ease-in-out infinite;pointer-events:none}
+      .omVoiceViewerPortrait{position:relative;width:min(56vw,220px);aspect-ratio:1;display:grid;place-items:center;border-radius:50%;border:3px solid #c8fce6;overflow:hidden;background:radial-gradient(circle at 35% 25%,#28755f,#07261c 75%);box-shadow:0 0 35px #20c78c55;transition:transform .12s linear}
+      .omVoiceViewerPortrait img{width:100%;height:100%;object-fit:cover}.omVoiceViewerPortrait span{font-size:80px}
+      .omVoiceViewerStage strong,.omVoiceViewerStage small{position:relative;z-index:2;text-shadow:0 2px 8px #000b}
+      .omVoiceViewerStage strong{font-size:17px}.omVoiceViewerStage small{font-size:11px;color:#a5ead0}
+      .omHostReconnecting{position:absolute;top:48px;left:50%;transform:translateX(-50%);z-index:15;max-width:90%;padding:9px 13px;border-radius:16px;background:#4b2c16e8;color:#fff2da;font-size:12px;text-align:center}
+      @keyframes omVoiceViewerBreathe{0%,100%{opacity:.65}50%{opacity:1}}
+      .omLiveVideoStage{position:relative;width:100%;height:100%;overflow:hidden;background:#000}
+      .omLiveVideoStage video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+      .omLiveTheater .omLiveVideoStage{background:#050b0b}
+      .omLiveTheater .omLiveVideoStage video{object-fit:cover!important;background:transparent}
+      .omLiveTheater .omLiveVideoStage[data-screen="yes"] .omScreenVideo{object-fit:contain!important;background:#030707}
+      .omLiveTheater .omLiveImmersiveViewer{height:100%!important;min-height:100%!important;aspect-ratio:auto!important}
+      .omLiveTheater .omViewerExit{z-index:30}
+      .omLiveTheater .omViewerTapCounter{top:calc(env(safe-area-inset-top) + 65px)}
+      .omLiveTheater .omViewerExit{top:calc(env(safe-area-inset-top) + 14px)}
+      .omLiveVideoStage[data-screen="yes"] .omScreenVideo{z-index:1}
+      .omLiveVideoStage[data-screen="yes"] .omCameraVideo{position:absolute;inset:auto 12px 70px auto;width:27%;height:30%;max-height:210px;border:2px solid #d6e7b8;border-radius:14px;z-index:2;box-shadow:0 8px 28px #000b;background:#0b1510}
+      .omLiveVideoStage[data-screen="yes"][data-layout="split"]{display:grid;grid-template-columns:minmax(0,3fr) minmax(145px,1fr);gap:5px}
+      .omLiveVideoStage[data-screen="yes"][data-layout="split"] .omScreenVideo{position:relative;grid-column:1;grid-row:1;min-width:0}
+      .omLiveVideoStage[data-screen="yes"][data-layout="split"] .omCameraVideo{position:relative;inset:auto;grid-column:2;grid-row:1;width:100%;height:100%;max-height:none;border-radius:0;border:0}
+      @keyframes oneMuslimButterfly{0%,100%{transform:translateY(5px) scale(1)}50%{transform:translateY(-8px) scale(1.035)}}
+      @keyframes oneMuslimPulse{0%,100%{transform:scale(.94);opacity:.5}50%{opacity:1;transform:scale(1.08)}}
+      .omViewerTapCounter{position:absolute;top:54px;right:12px;z-index:8;border-radius:99px;padding:7px 11px;background:#0a0a16a8;border:1px solid #cfb4ff55;color:#eadbff;font-size:11px;font-weight:800;pointer-events:none}
+      .omViewerTapBurst{position:absolute;z-index:9;pointer-events:none;font-size:30px;transform:translate(-50%,-50%);animation:omViewerHeartFloat .9s ease-out forwards}
+      .omViewerExit{position:absolute;top:12px;left:12px;z-index:11;border:1px solid #ffffff66;background:#080811a8;border-radius:99px;color:#fff;text-decoration:none;padding:8px 13px;font-size:16px}
+      .omViewerCountPulse{animation:omViewerCountGlow 1.7s ease-out!important}
+      @keyframes omViewerHeartFloat{from{opacity:1;transform:translate(-50%,-50%) scale(.6)}to{opacity:0;transform:translate(-50%,-155%) scale(1.6)}}
+      @keyframes omViewerCountGlow{0%,100%{box-shadow:0 0 0 transparent;color:#fff}30%{box-shadow:0 0 24px #bd8dff,0 0 38px #6ee7e3;color:#e5c4ff}60%{box-shadow:0 0 22px #85e9ff;color:#c7fff8}}
+      @media(max-width:700px){.omLiveImmersiveViewer{height:100dvh!important;min-height:100dvh!important;aspect-ratio:auto!important}.omLiveImmersiveViewer video{width:100%!important;height:100%!important;object-fit:contain!important}.omLiveTheater .omLiveImmersiveViewer video:not(.omScreenVideo){object-fit:cover!important}.omLiveVideoStage[data-screen="yes"][data-layout="split"]{grid-template-columns:1fr;grid-template-rows:minmax(0,3fr) minmax(100px,1fr)}.omLiveVideoStage[data-screen="yes"][data-layout="split"] .omScreenVideo{grid-column:1;grid-row:1}.omLiveVideoStage[data-screen="yes"][data-layout="split"] .omCameraVideo{grid-column:1;grid-row:2}.omLiveImmersiveViewer .omViewerExit{top:calc(env(safe-area-inset-top) + 12px)}}
+      @media(prefers-reduced-motion:reduce){.omViewerTapBurst,.omViewerCountPulse,.omVoiceViewerAura{animation:none!important}}
+      .omHostEndedNotice{position:absolute;z-index:50;top:15%;left:50%;transform:translateX(-50%);width:min(88%,380px);padding:20px 18px;text-align:center;color:#f6f4e9;background:#0a2925ed;border:1px solid #edcf8a9c;border-radius:23px;box-shadow:0 16px 60px #0009;backdrop-filter:blur(16px);display:grid;gap:10px;animation:omHostEndIn .45s ease-out both}.omHostEndedNotice span{font-size:10px;letter-spacing:.2em;color:#ecd19a}.omHostEndedNotice strong{font-size:19px}.omHostEndedNotice small{color:#bbd0c6}.omHostEndedNotice button{padding:10px;border-radius:99px;background:#edd39e;color:#103126;border:0;font-weight:800;cursor:pointer}@keyframes omHostEndIn{from{opacity:0;transform:translate(-50%,28px)}to{opacity:1;transform:translate(-50%,0)}}@media(prefers-reduced-motion:reduce){.omHostEndedNotice{animation:none}}
+      `}</style>
+    </div>
+  );
+}
