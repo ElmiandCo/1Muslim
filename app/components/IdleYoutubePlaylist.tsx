@@ -1,9 +1,10 @@
 "use client";
-import {useEffect,useRef} from "react";
+import {useEffect,useRef,useState} from "react";
 
 type YTPlayer={
   loadVideoById:(video:{videoId:string;startSeconds:number})=>void;
   mute:()=>void;
+  unMute:()=>void;
   playVideo:()=>void;
   getCurrentTime:()=>number;
   destroy:()=>void;
@@ -21,6 +22,9 @@ const playlist=[
 
 export default function IdleYoutubePlaylist(){
   const mountRef=useRef<HTMLDivElement>(null);
+  const playerRef=useRef<YTPlayer|null>(null);
+  const [soundEnabled,setSoundEnabled]=useState(false);
+  const enableSound=()=>{setSoundEnabled(true);playerRef.current?.unMute();playerRef.current?.playVideo();};
   useEffect(()=>{
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
@@ -36,7 +40,7 @@ export default function IdleYoutubePlaylist(){
       index=(index+1)%playlist.length;
       const video=playlist[index];
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
-      player.mute();
+      if(!soundEnabled)player.mute();
       try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:video.startSeconds}));}catch{}
     };
     const create=()=>{
@@ -47,7 +51,8 @@ export default function IdleYoutubePlaylist(){
         events:{
           onReady:({target})=>{
             if(disposed)return;
-            target.mute();
+            playerRef.current=target;
+            if(!soundEnabled)target.mute();
             target.playVideo();
             timer=setInterval(()=>{
               if(disposed||!player)return;
@@ -76,10 +81,25 @@ export default function IdleYoutubePlaylist(){
       disposed=true;
       if(timer)clearInterval(timer);
       if(ytWindow.onYouTubeIframeAPIReady!==previousReady)ytWindow.onYouTubeIframeAPIReady=previousReady;
+      playerRef.current=null;
       if(player){try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:player.getCurrentTime()}));}catch{};player.destroy();}
     };
   },[]);
-  return <div className="oneMuslimIdleYoutubePlayer" aria-label="Featured video playlist while no broadcasts are live" style={{width:"100%",maxWidth:"1400px",aspectRatio:"16 / 9",maxHeight:"100%",alignSelf:"start",justifySelf:"center",position:"relative",overflow:"hidden",borderRadius:14,background:"#020b1d",boxShadow:"0 8px 24px rgba(0,0,0,.24)"}}>
-    <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
+  return <div className="oneMuslimFloatingPlayerRig" aria-label="Floating featured video player">
+    <div className="oneMuslimFloatingPlayerShadow" aria-hidden="true"/>
+    <div className="oneMuslimIdleYoutubePlayer" aria-label="Featured video playlist while no broadcasts are live">
+      <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
+      {!soundEnabled&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Turn on video audio" title="Tap to enable audio"/>}
+    </div>
+    <style>{`
+      .oneMuslimFloatingPlayerRig{width:100%;max-width:1400px;aspect-ratio:16/9;max-height:100%;align-self:start;justify-self:center;position:relative;isolation:isolate;margin:0 auto 24px;animation:oneMuslimRigDrift 11s ease-in-out infinite}
+      .oneMuslimIdleYoutubePlayer{width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:oneMuslimRigLift 7.5s ease-in-out infinite}
+      .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:oneMuslimRigShadow 7.5s ease-in-out infinite;pointer-events:none}
+      .oneMuslimPlayerSoundActivator{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;border:0;background:transparent;cursor:pointer;touch-action:manipulation}
+      @keyframes oneMuslimRigLift{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-7px,0)}}
+      @keyframes oneMuslimRigShadow{0%,100%{transform:translate3d(0,0,0) scale(.96);opacity:.5;filter:blur(17px)}50%{transform:translate3d(0,2px,0) scale(1.04);opacity:.34;filter:blur(23px)}}
+      @keyframes oneMuslimRigDrift{0%,100%{transform:translate3d(0,0,0)}25%{transform:translate3d(2px,-1px,0)}50%{transform:translate3d(-2px,1px,0)}75%{transform:translate3d(1px,2px,0)}}
+      @media(prefers-reduced-motion:reduce){.oneMuslimFloatingPlayerRig,.oneMuslimIdleYoutubePlayer,.oneMuslimFloatingPlayerShadow{animation:none!important}}
+    `}</style>
   </div>;
 }
