@@ -2355,7 +2355,7 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 /* Empty Live stage: show the selected profile wallpaper behind glass controls.
    Active broadcasts are intentionally excluded; video playback is untouched. */
 [data-workspace-page="0"] .oneMuslimLiveStage:has(.oneMuslimLiveTop [role="status"]):not(:has(video, iframe)) {
-  background-image:var(--profile-scene-image, url("/assets/profile-backgrounds/sapphire.PNG"))!important;
+  background-image:var(--profile-scene-image, url("/assets/profile-backgrounds/sapphire-home.PNG"))!important;
   background-size:cover!important;
   background-position:center center!important;
   background-repeat:no-repeat!important;
@@ -2368,13 +2368,13 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 /* Signed-out Home: Sapphire is the default canvas, including an empty Live stage.
    Keep actual broadcasts and signed-in members' saved wallpapers untouched. */
 html[data-guest-home="true"] [data-workspace-page="0"] .canvas-vertical-main {
-  background-image:url("/assets/profile-backgrounds/sapphire.PNG")!important;
+  background-image:url("/assets/profile-backgrounds/sapphire-home.PNG")!important;
   background-size:cover!important;
   background-position:center center!important;
   background-repeat:no-repeat!important;
 }
 html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:has(video,iframe)) {
-  background-image:url("/assets/profile-backgrounds/sapphire.PNG")!important;
+  background-image:url("/assets/profile-backgrounds/sapphire-home.PNG")!important;
   background-size:cover!important;
   background-position:center center!important;
   background-repeat:no-repeat!important;

@@ -20,7 +20,7 @@ function applyTheme(value:unknown,persist=true){
  const t=themes[theme];const root=document.documentElement;
  root.dataset.profileBackground=wallpaper;root.dataset.muslimTheme=theme;
  root.style.setProperty("--theme-base",t.base);root.style.setProperty("--theme-accent",t.accent);root.style.setProperty("--theme-secondary",t.secondary);root.style.setProperty("--theme-surface",t.surface);root.style.setProperty("--theme-edge",t.edge);
- root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[wallpaper]||wallpaper}.PNG")`);
+ root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${root.dataset.guestHome==="true"&&wallpaper==="sapphire"?"sapphire-home":({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[wallpaper]||wallpaper}.PNG")`);
  root.style.setProperty("--profile-scene-tint",t.tint);
  if(persist){try{localStorage.setItem("1muslim:profile-background",wallpaper)}catch{}}
 }
