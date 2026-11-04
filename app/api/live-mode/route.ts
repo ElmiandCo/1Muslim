@@ -40,6 +40,15 @@ export async function POST(request: Request) {
     console.error("Live mode transition failed", { code: error.code });
     return NextResponse.json({ error: "Unable to update Live mode" }, { status: 503 });
   }
+  // Discovery follows the host's current mode, including mid-stream changes.
+  // Keep the existing aspect_ratio field in sync with the authorized mode.
+  const aspectRatio = mode === "desktop" ? "16:9" : mode === "phone" ? "9:16" : "1:1";
+  const { error: aspectError } = await db.from("live_streams")
+    .update({ aspect_ratio: aspectRatio }).eq("id", streamId).eq("host_id", user.id);
+  if (aspectError) {
+    console.error("Live channel geometry update failed", { code: aspectError.code });
+    return NextResponse.json({ error: "Unable to update Live discovery channel" }, { status: 503 });
+  }
   // A video guest may still hold an older camera-publishing JWT when the
   // host switches to Audio. Server-mute those existing camera publications
   // immediately; the signed webhook rejects any newly published camera.
