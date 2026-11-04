@@ -2393,7 +2393,7 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
   display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;
   min-height:42px;padding:7px 3px;border:1px solid transparent;border-radius:13px;
   background:transparent;color:rgba(235,243,255,.86);
-  font:500 clamp(10px,2.5vw,13px)/1.2 inherit;white-space:nowrap;
+  font-family:inherit;font-size:clamp(10px,2.5vw,13px);font-weight:500;line-height:1.2;white-space:nowrap;
   cursor:pointer;touch-action:manipulation;
   transition:background .25s ease,border-color .25s ease,box-shadow .25s ease,color .25s ease,transform .25s ease;
 }
