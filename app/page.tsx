@@ -12,6 +12,7 @@ import {enableGuestIntroSound,playGuestIntroSound} from "./guest-intro-sound";
 import CanvasSecondaryApp, {CommunityMap} from "./components/CanvasSecondaryApp";
 import PostDesignStudio from "./components/PostDesignStudio";
 import HomeSecondaryWidget from "./components/HomeSecondaryWidget";
+import HomeMessagesChooser from "./components/HomeMessagesChooser";
 import ElmTentAlphabet from "./components/ElmTentAlphabet";
 import HomeVideoPreview from "./components/HomeVideoPreview";
 import CosmicCatchGame from "./components/CosmicCatchGame";
