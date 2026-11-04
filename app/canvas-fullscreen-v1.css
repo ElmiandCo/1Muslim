@@ -2364,3 +2364,18 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   background:transparent!important;
   text-shadow:0 2px 12px rgba(0,0,0,.7);
 }
+
+/* Signed-out Home: Sapphire is the default canvas, including an empty Live stage.
+   Keep actual broadcasts and signed-in members' saved wallpapers untouched. */
+html[data-guest-home="true"] [data-workspace-page="0"] .canvas-vertical-main {
+  background-image:url("/assets/profile-backgrounds/sapphire.PNG")!important;
+  background-size:cover!important;
+  background-position:center center!important;
+  background-repeat:no-repeat!important;
+}
+html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:has(video,iframe)) {
+  background-image:url("/assets/profile-backgrounds/sapphire.PNG")!important;
+  background-size:cover!important;
+  background-position:center center!important;
+  background-repeat:no-repeat!important;
+}
