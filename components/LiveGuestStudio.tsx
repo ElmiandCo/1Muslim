@@ -25,6 +25,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   const room=useRef<Room|null>(null),preview=useRef<HTMLVideoElement>(null);
   const stream=useRef<MediaStream|null>(null);
   const refreshRef=useRef<()=>void>(()=>{});
+  const pendingSeen=useRef<Set<string>|null>(null);
   const me=requests.find(r=>r.user_id===uid);
   const host=uid===hostId;
 
@@ -43,7 +44,16 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
       const {data,error:loadError}=await db.from("live_guest_requests")
         .select("id,user_id,status,mode,host_muted").eq("stream_id",streamId);
       if(!active)return;
-      if(!loadError)setRequests((data??[]) as GuestRequest[]);
+      if(!loadError){const incoming=(data??[]) as GuestRequest[];setRequests(incoming);
+        const pending=incoming.filter(item=>item.status==="pending");
+        if(uid===hostId){
+          window.dispatchEvent(new CustomEvent("1muslim:live-guest-pending",{detail:{streamId,count:pending.length}}));
+          if(pendingSeen.current!==null&&pending.some(item=>!pendingSeen.current!.has(item.id))){
+            window.dispatchEvent(new CustomEvent("1muslim:live-guest-notification",{detail:{streamId,count:pending.length}}));
+          }
+          pendingSeen.current=new Set(pending.map(item=>item.id));
+        }
+      }
       else setError(previous=>previous||"Guest requests are temporarily unavailable. Please retry.");
       setLoaded(true);
     };
@@ -59,7 +69,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
       window.removeEventListener("focus",load);
       refreshRef.current=()=>{};
     };
-  },[streamId]);
+  },[streamId,uid,hostId]);
   useEffect(()=>()=>{void room.current?.disconnect();stream.current?.getTracks().forEach(t=>t.stop())},[]);
   useEffect(()=>{
     if(!audioOnly||!joined)return;
