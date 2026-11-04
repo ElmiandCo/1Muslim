@@ -2275,13 +2275,14 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   white-space:nowrap!important;
 }
 
-/* Live home: use the available canvas height, with a modest 18px extension.
+/* Live home: fit the available canvas height with 18px bottom clearance.
    Keep the comment dock inside the stage, pinned to its bottom edge. */
 @media (max-width:767px){
   [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]){
-    height:calc(100% + 18px)!important;
+    top:0!important;
+    bottom:18px!important;
+    height:calc(100% - 18px)!important;
     min-height:0!important;
-    bottom:auto!important;
     overflow:hidden!important;
   }
 }
