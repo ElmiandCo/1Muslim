@@ -2222,3 +2222,55 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   background:rgba(14,71,137,.55)!important;
   color:#fff!important;
 }
+
+
+/* Homepage Live: keep the comment composer anchored to the actual stage bottom.
+   The older 10% inset and percentage bottom floated the dock above the artwork,
+   while the send button overflowed the narrow iPhone layout. */
+[data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) {
+  position:relative!important;
+  grid-template-rows:minmax(0,1fr)!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom {
+  position:absolute!important;
+  inset:auto 2% clamp(8px,1.5%,18px) 2%!important;
+  width:96%!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:min(36%,220px)!important;
+  margin:0!important;
+  padding:8px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  z-index:35!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom > .homeLiveViewerConversation {
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm {
+  display:flex!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  gap:clamp(5px,1.5vw,9px)!important;
+  box-sizing:border-box!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input {
+  flex:1 1 0!important;
+  width:0!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button {
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:35%!important;
+  padding:9px clamp(9px,2vw,14px)!important;
+  box-sizing:border-box!important;
+  white-space:nowrap!important;
+}
