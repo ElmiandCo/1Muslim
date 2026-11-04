@@ -2351,3 +2351,16 @@ header[class*="controlHeader"] [class*="headerActions"] a{
  .community-simple-feed .ummah-dual-lanes{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:0!important;height:100%!important;min-height:0!important;overflow:hidden!important}
  .community-simple-feed .ummah-dual-lane{min-width:0!important;height:100%!important;overflow-y:auto!important;overscroll-behavior:contain!important;touch-action:pan-y!important}
 }
+
+/* Empty Live stage: show the selected profile wallpaper behind glass controls.
+   Active broadcasts are intentionally excluded; video playback is untouched. */
+[data-workspace-page="0"] .oneMuslimLiveStage:has(.oneMuslimLiveTop [role="status"]):not(:has(video, iframe)) {
+  background-image:var(--profile-scene-image, url("/assets/profile-backgrounds/sapphire.PNG"))!important;
+  background-size:cover!important;
+  background-position:center center!important;
+  background-repeat:no-repeat!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage:has(.oneMuslimLiveTop [role="status"]):not(:has(video, iframe)) .oneMuslimLiveTop > div[role="status"] {
+  background:transparent!important;
+  text-shadow:0 2px 12px rgba(0,0,0,.7);
+}
