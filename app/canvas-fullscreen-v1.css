@@ -2413,3 +2413,18 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
 @media(prefers-reduced-motion:reduce){
   .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab{transition:none}
 }
+
+/* Two-second unobtrusive notice when a live broadcast interrupts the idle video playlist. */
+.oneMuslimLiveInterruptionNotice{
+ position:fixed;left:50%;top:18%;z-index:100;transform:translateX(-50%);
+ width:max-content;max-width:min(92vw,580px);padding:9px 16px;
+ border:1px solid color-mix(in srgb,var(--theme-primary,#7fbaff) 42%,transparent);
+ border-radius:14px;background:color-mix(in srgb,var(--theme-primary,#163c78) 14%,rgba(5,13,28,.76));
+ color:#f5f9ff;font-size:clamp(11px,2.8vw,13px);line-height:1.4;text-align:center;
+ box-shadow:0 8px 28px rgba(0,0,0,.2);
+ -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+ pointer-events:none;animation:oneMuslimLiveNoticeFade 2s ease-in-out both;
+}
+.oneMuslimLiveInterruptionNotice strong{font-weight:700}
+@keyframes oneMuslimLiveNoticeFade{0%{opacity:0;transform:translate(-50%,-6px)}14%,78%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-4px)}}
+@media(prefers-reduced-motion:reduce){.oneMuslimLiveInterruptionNotice{animation:none}}
