@@ -12,12 +12,15 @@ import "./home-ambient-halo.css";
 import "./guest-theme-reveal.css";
 import {enableGuestIntroSound,playGuestIntroSound} from "./guest-intro-sound";
 import CanvasSecondaryApp, {CommunityMap} from "./components/CanvasSecondaryApp";
-import PostDesignStudio from "./components/PostDesignStudio";
+const PostDesignStudio=dynamic(()=>import("./components/PostDesignStudio"));
+
 import HomeSecondaryWidget from "./components/HomeSecondaryWidget";
 import HomeMessagesChooser from "./components/HomeMessagesChooser";
 import ElmTentAlphabet from "./components/ElmTentAlphabet";
 import HomeVideoPreview from "./components/HomeVideoPreview";
-import CosmicCatchGame from "./components/CosmicCatchGame";
+import dynamic from "next/dynamic";
+const CosmicCatchGame=dynamic(()=>import("./components/CosmicCatchGame"));
+
 import LiveKitViewer from "../components/LiveKitViewer";
 import HomeAudioLivePlayer from "./components/HomeAudioLivePlayer";
 import HomeLiveConversation from "./components/HomeLiveConversation";
@@ -30,9 +33,12 @@ import {createClient} from "../utils/supabase/client";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import PersonSearchCard from "./components/PersonSearchCard";
-import IslamTriviaWidget from "./components/IslamTriviaWidget";
-import DhikrStudio from "./widget-tools/[tool]/DhikrStudio";
-import DhikrBigWidget from "./widget-tools/[tool]/DhikrBigWidget";
+const IslamTriviaWidget=dynamic(()=>import("./components/IslamTriviaWidget"));
+
+const DhikrStudio=dynamic(()=>import("./widget-tools/[tool]/DhikrStudio"));
+
+const DhikrBigWidget=dynamic(()=>import("./widget-tools/[tool]/DhikrBigWidget"));
+
 import CelestialOrb from "./components/CelestialOrb";
 import RisingEnergyOrbs from "./components/RisingEnergyOrbs";
 import ShahadaWelcomeToast from "./components/ShahadaWelcomeToast";
