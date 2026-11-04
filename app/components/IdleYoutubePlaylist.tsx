@@ -24,7 +24,8 @@ export default function IdleYoutubePlaylist(){
   const mountRef=useRef<HTMLDivElement>(null);
   const playerRef=useRef<YTPlayer|null>(null);
   const [soundEnabled,setSoundEnabled]=useState(false);
-  const enableSound=()=>{setSoundEnabled(true);playerRef.current?.unMute();playerRef.current?.playVideo();};
+  const soundEnabledRef=useRef(false);
+  const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);playerRef.current?.unMute();playerRef.current?.playVideo();};
   useEffect(()=>{
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
@@ -40,7 +41,7 @@ export default function IdleYoutubePlaylist(){
       index=(index+1)%playlist.length;
       const video=playlist[index];
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
-      if(!soundEnabled)player.mute();
+      if(!soundEnabledRef.current)player.mute();
       try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:video.startSeconds}));}catch{}
     };
     const create=()=>{
@@ -52,7 +53,7 @@ export default function IdleYoutubePlaylist(){
           onReady:({target})=>{
             if(disposed)return;
             playerRef.current=target;
-            if(!soundEnabled)target.mute();
+            if(!soundEnabledRef.current)target.mute();
             target.playVideo();
             timer=setInterval(()=>{
               if(disposed||!player)return;
