@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import ReconnectTrivia from "../app/components/ReconnectTrivia";
 import ShareLiveButton from "../app/components/ShareLiveButton";
 import LiveLightOverlay from "./LiveLightOverlay";
+import {playLiveSound,type LiveSound} from "../lib/live-soundboard";
 import LiveGuestsStage, {useLiveGuestRoster} from "./LiveGuestsStage";
 import LiveGuestStudio from "./LiveGuestStudio";
 import { cinemaAudioActive, type CinemaMode } from "../lib/live-cinema";
@@ -383,7 +384,9 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
           }
         });
         room.on(RoomEvent.DataReceived, (payload, participant, _kind, topic) => {
-          if(!mounted||topic!=="live-status"||!hostIdRef.current||participant?.identity!==hostIdRef.current)return;
+          if(!mounted||!hostIdRef.current||participant?.identity!==hostIdRef.current)return;
+          if(topic==="live-soundboard"){try{const message=JSON.parse(new TextDecoder().decode(payload));if(["boom","crickets","laughter"].includes(message.sound))playLiveSound(message.sound as LiveSound)}catch{}return;}
+          if(topic!=="live-status")return;
           try{const message=JSON.parse(new TextDecoder().decode(payload));if(message.type==="live-ended")hostEndSignalRef.current()}catch{}
         });
         room.on(RoomEvent.Reconnecting, () => {if(mounted){setConnectionActive(false);setAudioPlaying(false);setStatus("Reconnecting…");setReconnecting(true);setReconnectKey(String(Date.now()));}});
