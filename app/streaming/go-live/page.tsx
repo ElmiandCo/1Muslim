@@ -421,7 +421,8 @@ export default function GoLivePage() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreviewUrl,setThumbnailPreviewUrl]=useState<string|null>(null);
   useEffect(()=>{if(!thumbnailFile){setThumbnailPreviewUrl(null);return;}const url=URL.createObjectURL(thumbnailFile);setThumbnailPreviewUrl(url);return()=>URL.revokeObjectURL(url)},[thumbnailFile]);
-  const [category, setCategory] = useState(categories[0]);
+  const [category, setCategory] = useState("");
+  const [topicExpanded, setTopicExpanded] = useState(false);
   const [visibility, setVisibility] = useState<"public" | "ashab">("public");
   const [scheduledSlot, setScheduledSlot] = useState<any | null>(null);
   const [hostCheckedIn, setHostCheckedIn] = useState(false);
@@ -434,7 +435,7 @@ export default function GoLivePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const topic = params.get("topic");
-    if (topic && categories.includes(topic)) setCategory(topic);
+    if (topic) { setCategory(topic); setTopicExpanded(true); }
     if (params.get("schedule") === "1") setShowScheduler(true);
   }, []);
   useEffect(() => {
@@ -581,7 +582,7 @@ export default function GoLivePage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return setScheduleMessage("Sign in is required to schedule a Live.");
-    const { data, error } = await supabase.from("live_schedule_slots").insert({host_id:user.id,title:effectiveLiveTitle,category,starts_at:starts.toISOString(),ends_at:ends.toISOString(),status:"scheduled"}).select("id,title,category,starts_at,ends_at,status").single();
+    const { data, error } = await supabase.from("live_schedule_slots").insert({host_id:user.id,title:effectiveLiveTitle,category:category.trim()||"Community",starts_at:starts.toISOString(),ends_at:ends.toISOString(),status:"scheduled"}).select("id,title,category,starts_at,ends_at,status").single();
     if (error) return setScheduleMessage(error.message);
     setScheduledSlot(data); setHostCheckedIn(false); setScheduleMessage("Scheduled. You can schedule another Live too. Return before this start time to check in and confirm your camera + microphone.");
     setShowScheduler(false);
@@ -1044,7 +1045,7 @@ export default function GoLivePage() {
         throw uploadError;
       }
       const { error: rowError } = await supabase.from("live_recordings").insert({
-        id: recordingId, user_id: user.id, title: title.trim(), category,
+        id: recordingId, user_id: user.id, title: title.trim(), category:category.trim()||"Community",
         video_path: path, mime_type: mimeType, file_size: blob.size,
         duration_seconds: durationSeconds, visibility: "public", thumbnail_path: thumbnailPath,
       });
@@ -1113,7 +1114,7 @@ export default function GoLivePage() {
         id: liveStreamId,
         host_id: user.id,
         title: effectiveLiveTitle,
-        category,
+        category:category.trim()||"Community",
         visibility,
         room_name: roomName,
         status: "live",
@@ -1765,7 +1766,7 @@ export default function GoLivePage() {
         <div className="studioTools">
               {scheduledSlot && <div className="upcomingPrep"><div><span className="eyebrow">UPCOMING LIVE</span><strong>{scheduledSlot.title}</strong><span>{scheduledSlot.category} · {new Date(scheduledSlot.starts_at).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div><button type="button" className="prepButton" onClick={()=>{setTitle(scheduledSlot.title);setCategory(scheduledSlot.category);setShowScheduler(false);setSaveMessage("Prep mode loaded. Check your title, topic, format, thumbnail, camera and microphone before going live.");}}>{hostCheckedIn ? "✓ Host Checked In" : "Prep for upcoming Live →"}</button></div>}
               {!live && <button type="button" className="scheduleButton" onClick={()=>setShowScheduler(!showScheduler)}>{showScheduler ? "Close scheduler" : "Schedule a Live"}</button>}
-              {showScheduler && <ScheduleMirror title={effectiveLiveTitle} category={category} onClose={()=>setShowScheduler(false)} />}
+              {showScheduler && <ScheduleMirror title={effectiveLiveTitle} category={category.trim()||"Community"} onClose={()=>setShowScheduler(false)} />}
             </div>
         <div className="heading">
           <span className="eyebrow">CREATOR STUDIO</span>
@@ -1868,7 +1869,7 @@ export default function GoLivePage() {
             {error && <div className="error">{error}</div>}
             {scheduledSlot && !live && <div className={hostCheckedIn ? "ready checkedIn" : "ready"}>{hostCheckedIn ? "✓ HOST CHECKED IN — Viewers can see that you are ready. The broadcast stays locked until the scheduled time." : "Scheduled Live: camera and microphone can be prepared now. Check in when you are fully ready."}</div>}{connectingLive&&!live&&<div className="ready" role="status">Connecting to LiveKit… broadcast will begin only after camera and microphone are published.</div>}{live && <div className="ready" role="status">🔴 YOU’RE LIVE · {liveClock} · {roomRef.current?.state==="connected"?"Connected":"Reconnecting"} · {micOn?"Mic on":"Mic muted"} · Recording</div>}{saveMessage && <div className="ready">{saveMessage}</div>}
             <div className="field compactTitleField"><label htmlFor="title">Title &amp; cover</label><div className="compactTitleRow"><input id="title" className="input" value={title} onChange={(e)=>setTitle(e.target.value)} placeholder={defaultLiveTitle} disabled={live}/><label className={`compactCoverPicker ${thumbnailPreviewUrl?"hasCover":""}`} htmlFor="thumbnail" title={thumbnailPreviewUrl?"Change cover image":"Add cover image"}>{thumbnailPreviewUrl?<img src={thumbnailPreviewUrl} alt="Selected Live cover preview" />:<span aria-hidden="true">＋</span>}<span className="compactCoverCaption">{thumbnailPreviewUrl?"Edit":"Cover"}</span></label><input id="thumbnail" className="compactCoverInput" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>setThumbnailFile(e.target.files?.[0]??null)} disabled={live}/></div></div>
-            <div className="field"><label htmlFor="category">Topic</label><select id="category" className="select" value={category} onChange={(e)=>setCategory(e.target.value)} disabled={live}>{categories.map((item)=><option key={item}>{item}</option>)}</select></div>
+            <div className="field"><button type="button" aria-expanded={topicExpanded} aria-controls="live-topic-input" onClick={()=>setTopicExpanded(open=>!open)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"8px 0",border:0,background:"transparent",color:"inherit",cursor:"pointer",textAlign:"left",letterSpacing:".12em",fontSize:12,textTransform:"uppercase"}}><span>Topic <small style={{letterSpacing:0,textTransform:"none",opacity:.6}}>(optional)</small></span><span aria-hidden="true" style={{transition:"transform .2s",transform:topicExpanded?"rotate(180deg)":"none"}}>⌄</span></button>{topicExpanded&&<input id="live-topic-input" className="select" type="text" maxLength={80} value={category} onChange={e=>setCategory(e.target.value)} placeholder="Enter a topic…" disabled={live} aria-label="Optional live topic"/>}</div>
           </aside>
         </div>
 
