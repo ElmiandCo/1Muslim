@@ -18,6 +18,8 @@ export default function QiblaStudio() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState("all");
+  const [queueSearch, setQueueSearch] = useState("");
+  const [sort, setSort] = useState<"newest" | "oldest" | "title">("newest");
   const [template, setTemplate] = useState<"classic" | "feature">("classic");
   const [dirty, setDirty] = useState(false);
   const [preview, setPreview] = useState(false);
@@ -47,7 +49,7 @@ export default function QiblaStudio() {
   useEffect(() => {
     if (active) { setForm({ title: active.title, subtitle: active.subtitle, body: active.body }); setTemplate(active.template === "feature" ? "feature" : "classic"); setDirty(false); }
   }, [active?.id, active?.revision]);
-  const visible = articles.filter((a) => filter === "all" || a.status === filter);
+  const visible = articles.filter((a) => (filter === "all" || a.status === filter) && [a.title, a.subtitle, a.status].some(value => (value || "").toLowerCase().includes(queueSearch.trim().toLowerCase()))).sort((a,b) => sort === "title" ? a.title.localeCompare(b.title) : sort === "oldest" ? a.updated_at.localeCompare(b.updated_at) : b.updated_at.localeCompare(a.updated_at));
   const queueCounts = statuses.map(status => ({ status, count: articles.filter(article => article.status === status).length }));
   const canEdit = !!active && ((role === "writer" && active.status === "draft") || ((role === "editor" || role === "approver") && ["submitted", "editing", "awaiting_approval"].includes(active.status)));
   const canPublish = !!active && role === "approver" && active.status === "awaiting_approval";
@@ -90,6 +92,7 @@ export default function QiblaStudio() {
     <div className={styles.layout}>
       <section className={styles.queue} aria-label="Editorial queue">
         <div className={styles.queueHead}><h2>Articles</h2>{role === "writer" && <button type="button" disabled={busy} onClick={() => void createDraft()}>+ New draft</button>}<label>Filter <select value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">All statuses ({articles.length})</option>{queueCounts.map(({ status, count }) => <option key={status} value={status}>{status.replaceAll("_", " ")} ({count})</option>)}</select></label></div>
+        <div className={styles.queueTools}><label>Find article<input type="search" value={queueSearch} onChange={e => setQueueSearch(e.target.value)} placeholder="Search title, deck or status" /></label><label>Sort<select value={sort} onChange={e => setSort(e.target.value as "newest" | "oldest" | "title")}><option value="newest">Recently updated</option><option value="oldest">Oldest updated</option><option value="title">Title A–Z</option></select></label></div>
         <p role="status" aria-live="polite">{visible.length} {visible.length === 1 ? "article" : "articles"} shown</p>
         {visible.length === 0 ? <p>No articles in this queue.</p> : visible.map(a =>
           <button type="button" key={a.id} className={selected === a.id ? styles.active : styles.queueItem} onClick={() => { if (dirty && !window.confirm("Discard unsaved changes?")) return; setSelected(a.id); setPreview(false); }} aria-pressed={selected === a.id}>
