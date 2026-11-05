@@ -2781,3 +2781,19 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
 .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassIcon{font-size:14px!important;line-height:1!important;opacity:1}
 @media(max-width:420px){.oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab{flex-direction:row!important;gap:3px!important;font-size:10px!important;min-height:34px!important}}
 @media(prefers-reduced-motion:reduce){.oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab{transition:none!important}}
+
+/* Desktop landing only: compact the format carousel by 15px and raise the
+   desktop video stage by 5px without touching phone, comments or other slides. */
+@media(min-width:768px){
+ [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveFormatGlassNav{
+  height:19px!important;min-height:19px!important;
+  padding-block:0!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab{
+  min-height:19px!important;height:19px!important;
+  padding-block:0!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="desktop"] .oneMuslimLiveTop > .oneMuslimLiveVideo{
+  margin-top:113px!important;
+ }
+}
