@@ -87,7 +87,7 @@ export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,sh
    <div className="avatarEntryOrbitRing avatarEntryOrbitRing--inner"/>
    <div className="avatarEntryOrbitSpark" />
    {avatars.map(([label,src],i)=><div key={src} ref={node=>{portraits.current[i]=node}} className="avatarEntryPortrait" title={label}>
-     <img src={src} alt="" loading={i<6?"eager":"lazy"} onError={e=>{e.currentTarget.style.opacity="0"}}/>
+     <img src={src} alt="" loading={i<2?"eager":"lazy"} fetchPriority={i===0?"high":"auto"} decoding="async" onError={e=>{e.currentTarget.style.opacity="0"}}/>
    </div>)}
   </div>
   <strong className="avatarEntryBrand">1Muslim</strong>
