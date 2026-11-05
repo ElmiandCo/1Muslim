@@ -2781,3 +2781,38 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
 .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassIcon{font-size:14px!important;line-height:1!important;opacity:1}
 @media(max-width:420px){.oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab{flex-direction:row!important;gap:3px!important;font-size:10px!important;min-height:34px!important}}
 @media(prefers-reduced-motion:reduce){.oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab{transition:none!important}}
+
+
+/* Home Live only: slimmer composer, preserve bottom-pinned comments. */
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm>div>input{
+ height:32px!important;min-height:32px!important;
+ padding:5px 10px!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm>button[type="submit"]{
+ height:32px!important;min-height:32px!important;
+ padding:4px 10px!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm>button[disabled]:not([type="submit"]){
+ height:32px!important;min-height:32px!important;
+ padding:4px 10px!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom{
+ bottom:8px!important;
+}
+/* Only when the main navigation is collapsed, use the freed vertical space.
+   Grow the stage rather than the video alone so the chat dock remains at its bottom. */
+@media(max-width:767px){
+ main[class*="navMotionCollapsed"] [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]){
+  height:calc(100% + 50px)!important;
+  max-height:none!important;
+ }
+}
+
+/* Trim 20px from Home Live stage with navigation visible as well.
+   Collapsed navigation retains its separately tuned +50px extension. */
+@media(max-width:767px){
+ main:not([class*="navMotionCollapsed"]) [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]){
+  height:calc(100% - 20px)!important;
+  max-height:none!important;
+ }
+}
