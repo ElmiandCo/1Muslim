@@ -29,6 +29,8 @@ type Message = {
 export default function LiveChat({ streamId, hostId, overlay = false }: { streamId: string; hostId: string; overlay?: boolean }) {
   const supabase = useMemo(() => createClient(), []);
   const [userId, setUserId] = useState<string | null>(null);
+  const [myUsername, setMyUsername] = useState<string | null>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
   const [draft, setDraft] = useState("");
@@ -61,6 +63,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUserId(user?.id ?? null);
+    if (user?.id) { const { data: me } = await supabase.from("profiles").select("username").eq("id", user.id).maybeSingle(); setMyUsername(me?.username ?? null); }
 
     const [{ data: rows }, { data: mutes }] = await Promise.all([
       supabase.from("live_chat_messages").select("id,stream_id,sender_id,body,created_at").eq("stream_id", streamId).order("created_at", { ascending: true }).limit(200),
@@ -91,7 +94,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
     return () => { void supabase.removeChannel(channel); };
   }, [streamId, supabase]);
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ block: "end", behavior: "smooth" }); }, [messages.length]);
+  useEffect(() => { const el = messageListRef.current; if (el) el.scrollTo({top:el.scrollHeight,behavior:"smooth"}); }, [messages.length]);
 
   const reply = (message: Message) => {
     if (!userId || message.sender_id === userId) return;
@@ -148,12 +151,12 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
         .emoteTray{display:flex;gap:7px;padding:9px 12px 2px;flex-wrap:wrap}.emoteTray button{background:linear-gradient(135deg,#12342c,#172d40);border:1px solid #80c9b277;border-radius:12px;padding:7px 10px;font-size:19px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}.emoteTray button:hover{transform:translateY(-3px);box-shadow:0 0 16px #75e5b955}.emoteTray button:disabled{opacity:.35;cursor:not-allowed}.composer{display:flex;gap:7px;padding:12px;border-top:1px solid #1b241f}.composer input{flex:1;min-width:0;border:1px solid #263029;background:#0d140f;color:#fff;border-radius:999px;padding:10px 12px;outline:none;font-size:11px}.composer button{border:0;border-radius:999px;padding:0 14px;background:#d6e9b8;color:#071008;font-weight:850;font-size:10px;cursor:pointer}.composer button:disabled{opacity:.45;cursor:not-allowed}.mutedNotice,.notice{margin:10px 12px;padding:9px 11px;border-radius:10px;font-size:9px}.mutedNotice{background:#1b1510;border:1px solid #4a3927;color:#d7bd9c}.notice{background:#1b0f10;border:1px solid #533536;color:#ffcaca}
       `}</style>
       {!overlay && <div className="chatHead"><strong>💬 Live chat</strong><span>{messages.length} messages</span></div>}
-      <div className="messages">
+      <div className="messages" ref={messageListRef}>
         {messages.length ? messages.map((message) => {
           const isHost = message.sender_id === hostId;
           const isMuted = mutedUsers.has(message.sender_id);
           const avatar = <ProfileAvatar name={displayName(message)} gender={message.profile?.gender} avatarGender={message.profile?.avatar_gender} avatarPackage={message.profile?.avatar_package} avatarConfig={message.profile?.avatar_config} accent={message.profile?.profile_accent ?? "emerald"} size="sm" profileId={message.sender_id} />;
-          const mentioned = !!userId && !!messages.find(m => m.sender_id === userId)?.profile?.username && message.body.toLowerCase().includes("@"+(messages.find(m => m.sender_id === userId)?.profile?.username || "").toLowerCase());
+          const mentioned = !!myUsername && new RegExp(`(^|\\s)@${myUsername.replace(/[.*+?^${}()|[\\]\\]/g, "\\const mentioned = !!userId && !!messages.find(m => m.sender_id === userId)?.profile?.username && message.body.toLowerCase().includes("@"+(messages.find(m => m.sender_id === userId)?.profile?.username || "").toLowerCase());")}(?=\\s|$|[.,!?])`, "i").test(message.body);
           return <div className={`message${replyTo?.id === message.id ? " replySelected" : ""}${mentioned ? " mentioned" : ""}`} key={message.id} role="button" tabIndex={0} aria-label="Tap to reply; hold for report options" onClick={()=>reply(message)}
             onPointerDown={e=>{if(e.pointerType==="mouse"&&e.button!==0)return;cancelHold();start.current={x:e.clientX,y:e.clientY};timer.current=setTimeout(()=>{setSelected(message);navigator.vibrate?.(15)},1000)}}
             onPointerMove={e=>{if(start.current&&Math.hypot(e.clientX-start.current.x,e.clientY-start.current.y)>12)cancelHold()}}
