@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
-import {getRegistryVideos} from "./videoRegistry";
+import {useFeaturedVideos} from "./videoRegistry";
 
 type YTPlayer={
   loadVideoById:(video:{videoId:string;startSeconds:number})=>void;
@@ -17,7 +17,10 @@ type YTApi={Player:new(element:HTMLElement,options:{
 
 
 export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop"|"phone"}){
-  const playlist=getRegistryVideos(format);
+  const videos=useFeaturedVideos();
+  const playlist=videos.filter(v=>v.format===format);
+  const playlistRef=useRef(playlist);
+  playlistRef.current=playlist;
   const mountRef=useRef<HTMLDivElement>(null);
   const swipeStart=useRef<{x:number;y:number}|null>(null);
   const playerRef=useRef<YTPlayer|null>(null);
@@ -44,9 +47,11 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     let timer:ReturnType<typeof setInterval>|undefined;
     const next=(step=1)=>{
       if(disposed||!player)return;
-      index=((selectedIndexRef.current??index)+step+playlist.length)%playlist.length;
+      const currentPlaylist=playlistRef.current;
+      if(!currentPlaylist.length)return;
+      index=((selectedIndexRef.current??index)+step+currentPlaylist.length)%currentPlaylist.length;
       selectedIndexRef.current=index;
-      const video=playlist[index];
+      const video=currentPlaylist[index];
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
       setTapHint(true);setIsPaused(false);
       if(!soundEnabledRef.current)player.mute();
@@ -54,10 +59,11 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     };
     const selectVideo=(event:Event)=>{
       const videoId=(event as CustomEvent<{videoId:string}>).detail?.videoId;
-      const nextIndex=playlist.findIndex(v=>v.videoId===videoId);
+      const currentPlaylist=playlistRef.current;
+      const nextIndex=currentPlaylist.findIndex(v=>v.videoId===videoId);
       if(nextIndex<0||!player)return;
       index=nextIndex;selectedIndexRef.current=index;
-      const selected=playlist[index];
+      const selected=currentPlaylist[index];
       player.loadVideoById({videoId:selected.videoId,startSeconds:selected.startSeconds});
       setIsPaused(false);setTapHint(false);
     };
@@ -84,7 +90,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
             target.playVideo();
             timer=setInterval(()=>{
               if(disposed||!player)return;
-              const segment=playlist[index];
+              const segment=playlistRef.current[index]||playlist[0];
               const seconds=player.getCurrentTime();
               if(segment.endSeconds!==null&&seconds>=segment.endSeconds){next();return;}
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
