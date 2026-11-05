@@ -26,7 +26,7 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
     const player=video.querySelector(".oneMuslimIdleYoutubePlayer, .oneMuslimFloatingPlayerRig .oneMuslimIdleYoutubePlayer") || video.firstElementChild || video;
     const vr=player.getBoundingClientRect(),cr=chat.getBoundingClientRect();
     // Pixel-only positioning: 10px lower than the last known-good 28px offset.
-    const top=Math.max(0,vr.bottom-sr.top+38);
+    const top=Math.max(0,vr.bottom-sr.top+34);
     const bottom=Math.min(sr.height,cr.top-sr.top-8);
     const available=Math.max(0,bottom-top);
     const safeHeight=Math.max(72,Math.min(138,available));
