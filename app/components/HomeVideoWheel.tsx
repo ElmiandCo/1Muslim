@@ -29,8 +29,8 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
     const vr=player.getBoundingClientRect(),cr=chat.getBoundingClientRect();
     // Carousel sits in the reserved space immediately below format navigation, above video.
     const navBottom=nav?.getBoundingClientRect().bottom??sr.top;
-    const top=Math.max(0,navBottom-sr.top+8);
-    const available=Math.max(0,vr.top-sr.top-top-8);
+    const top=Math.max(0,navBottom-sr.top+3);
+    const available=Math.max(0,vr.top-sr.top-top-3);
     const safeHeight=Math.max(0,Math.min(130,available));
     slot.style.setProperty("top",top+"px","important");
     slot.style.setProperty("height",safeHeight+"px","important");
