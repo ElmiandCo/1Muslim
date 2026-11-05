@@ -2803,7 +2803,16 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
    Grow the stage rather than the video alone so the chat dock remains at its bottom. */
 @media(max-width:767px){
  main[class*="navMotionCollapsed"] [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]){
-  height:calc(100% + 70px)!important;
+  height:calc(100% + 50px)!important;
+  max-height:none!important;
+ }
+}
+
+/* Trim 20px from Home Live stage with navigation visible as well.
+   Collapsed navigation retains its separately tuned +50px extension. */
+@media(max-width:767px){
+ main:not([class*="navMotionCollapsed"]) [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]){
+  height:calc(100% - 20px)!important;
   max-height:none!important;
  }
 }
