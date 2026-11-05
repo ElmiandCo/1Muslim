@@ -48,6 +48,7 @@ export default function QiblaStudio() {
     if (active) { setForm({ title: active.title, subtitle: active.subtitle, body: active.body }); setTemplate(active.template === "feature" ? "feature" : "classic"); setDirty(false); }
   }, [active?.id, active?.revision]);
   const visible = articles.filter((a) => filter === "all" || a.status === filter);
+  const queueCounts = statuses.map(status => ({ status, count: articles.filter(article => article.status === status).length }));
   const canEdit = !!active && ((role === "writer" && active.status === "draft") || ((role === "editor" || role === "approver") && ["submitted", "editing", "awaiting_approval"].includes(active.status)));
   const canPublish = !!active && role === "approver" && active.status === "awaiting_approval";
   const createDraft = async () => {
@@ -88,9 +89,10 @@ export default function QiblaStudio() {
     {loading ? <p className={styles.notice}>Loading workspace…</p> : !role ? null :
     <div className={styles.layout}>
       <section className={styles.queue} aria-label="Editorial queue">
-        <div className={styles.queueHead}><h2>Articles</h2>{role === "writer" && <button type="button" disabled={busy} onClick={() => void createDraft()}>+ New draft</button>}<label>Filter <select value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">All statuses</option>{statuses.map(s => <option key={s} value={s}>{s.replaceAll("_", " ")}</option>)}</select></label></div>
+        <div className={styles.queueHead}><h2>Articles</h2>{role === "writer" && <button type="button" disabled={busy} onClick={() => void createDraft()}>+ New draft</button>}<label>Filter <select value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">All statuses ({articles.length})</option>{queueCounts.map(({ status, count }) => <option key={status} value={status}>{status.replaceAll("_", " ")} ({count})</option>)}</select></label></div>
+        <p role="status" aria-live="polite">{visible.length} {visible.length === 1 ? "article" : "articles"} shown</p>
         {visible.length === 0 ? <p>No articles in this queue.</p> : visible.map(a =>
-          <button type="button" key={a.id} className={selected === a.id ? styles.active : styles.queueItem} onClick={() => { if (dirty && !window.confirm("Discard unsaved changes?")) return; setSelected(a.id); }} aria-pressed={selected === a.id}>
+          <button type="button" key={a.id} className={selected === a.id ? styles.active : styles.queueItem} onClick={() => { if (dirty && !window.confirm("Discard unsaved changes?")) return; setSelected(a.id); setPreview(false); }} aria-pressed={selected === a.id}>
             <strong>{a.title || "Untitled draft"}</strong><span>{a.status.replaceAll("_", " ")} · revision {a.revision}</span>
           </button>)}
       </section>
