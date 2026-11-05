@@ -25,12 +25,14 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
     const sr=stage.getBoundingClientRect();
     const player=video.querySelector(".oneMuslimIdleYoutubePlayer, .oneMuslimFloatingPlayerRig .oneMuslimIdleYoutubePlayer") || video.firstElementChild || video;
     const vr=player.getBoundingClientRect(),cr=chat.getBoundingClientRect();
-    const top=Math.max(0,vr.bottom-sr.top+28+sr.height*.02);
+    const gap=Math.max(0,cr.top-vr.bottom);
+    const top=Math.max(0,vr.bottom-sr.top+28+gap*.02);
     const bottom=Math.min(sr.height,cr.top-sr.top-8);
     const available=Math.max(0,bottom-top);
+    const safeHeight=Math.max(72,available);
     slot.style.setProperty("top",top+"px","important");
-    slot.style.setProperty("height",available+"px","important");
-    slot.style.visibility=available>=48?"visible":"hidden";
+    slot.style.setProperty("height",safeHeight+"px","important");
+    slot.style.setProperty("visibility","visible","important");
    });
   };
   const observer=new ResizeObserver(place);
