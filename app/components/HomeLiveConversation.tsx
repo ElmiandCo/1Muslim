@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useRef,useState} from "react";
+import {useEffect,useLayoutEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 type Room="desktop"|"phone"|"audio";
 type Message={id:string;sender_id:string;body:string;image_path?:string|null;created_at:string};
@@ -17,6 +17,22 @@ export default function HomeLiveConversation({room}:{room:Room}){
  const inputRef=useRef<HTMLInputElement>(null);
  const pickerRef=useRef<HTMLInputElement>(null);
  const dbRef=useRef(createClient());
+ const commentsRef=useRef<HTMLDivElement>(null);
+ const followLatestRef=useRef(true);
+ const lastMessageIdRef=useRef<string|null>(null);
+ const onCommentsScroll=()=>{
+  const el=commentsRef.current;if(!el)return;
+  followLatestRef.current=el.scrollHeight-el.scrollTop-el.clientHeight<=48;
+ };
+ useEffect(()=>{followLatestRef.current=true;lastMessageIdRef.current=null},[room]);
+ useLayoutEffect(()=>{
+  const el=commentsRef.current;if(!el)return;
+  const lastId=messages[messages.length-1]?.id||null;
+  if(lastId!==lastMessageIdRef.current){
+   lastMessageIdRef.current=lastId;
+   if(followLatestRef.current)el.scrollTo({top:el.scrollHeight,behavior:"smooth"});
+  }
+ },[messages]);
  useEffect(()=>{
   const db=dbRef.current;let active=true;
   const sync=async()=>{const {data}=await db.auth.getUser();if(active)setUser(data.user?.id||null)};
@@ -74,7 +90,7 @@ export default function HomeLiveConversation({room}:{room:Room}){
  };
  return <section className="homeLiveViewerConversation" aria-label={room+" Chat"}>
   <header><strong>💬 Chat</strong><small>{room==="phone"?"Mobile":room[0].toUpperCase()+room.slice(1)} · Messages expire after 3 hours</small></header>
-  <div className="homeLiveDemoComments" aria-live="polite">{messages.length?messages.map(m=><p key={m.id}><span className="homeLiveCommentAvatar">{(names[m.sender_id]||"M")[0].toUpperCase()}</span><span><strong>{names[m.sender_id]||"Member"}</strong>{m.body&&<small>{m.body}</small>}{m.image_path&&<a href={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} target="_blank" rel="noopener noreferrer" aria-label="Open chat image"><img src={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} alt="Image shared in chat" loading="lazy" style={{display:"block",maxWidth:"min(220px,65vw)",maxHeight:180,objectFit:"contain",borderRadius:12,marginTop:6}}/></a>}</span></p>):<p>Start the conversation in this room.</p>}</div>
+  <div ref={commentsRef} onScroll={onCommentsScroll} className="homeLiveDemoComments" aria-live="polite">{messages.length?messages.map(m=><p key={m.id}><span className="homeLiveCommentAvatar">{(names[m.sender_id]||"M")[0].toUpperCase()}</span><span><strong>{names[m.sender_id]||"Member"}</strong>{m.body&&<small>{m.body}</small>}{m.image_path&&<a href={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} target="_blank" rel="noopener noreferrer" aria-label="Open chat image"><img src={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} alt="Image shared in chat" loading="lazy" style={{display:"block",maxWidth:"min(220px,65vw)",maxHeight:180,objectFit:"contain",borderRadius:12,marginTop:6}}/></a>}</span></p>):<p>Start the conversation in this room.</p>}</div>
   {user?<form className="homeLiveCommentForm" onSubmit={send}>
    <input ref={pickerRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{display:"none"}} onChange={e=>chooseImage(e.target.files?.[0])} aria-label="Choose chat image"/>
    <button type="button" aria-label="Add image" title="Add image" onClick={()=>pickerRef.current?.click()} disabled={sending} style={{flex:"0 0 36px",borderRadius:"50%",fontSize:24,background:"transparent",color:"inherit",border:"1px solid currentColor",opacity:.85}}>+</button>
