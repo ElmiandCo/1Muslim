@@ -30,7 +30,7 @@ export default function HomeVideoWheel(){
    cancelAnimationFrame(frame);
    frame=requestAnimationFrame(()=>{
     const sr=stage.getBoundingClientRect();
-    const player=video.querySelector("iframe,video") || video;
+    const player=video.querySelector(".oneMuslimIdleYoutubePlayer, .oneMuslimFloatingPlayerRig .oneMuslimIdleYoutubePlayer") || video.firstElementChild || video;
     const vr=player.getBoundingClientRect(),cr=chat.getBoundingClientRect();
     const top=Math.max(0,vr.bottom-sr.top+8);
     const bottom=Math.min(sr.height,cr.top-sr.top-8);
