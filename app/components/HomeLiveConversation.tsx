@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useLayoutEffect,useRef,useState} from "react";
+import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
 type Room="desktop"|"phone"|"audio";
 type Message={id:string;sender_id:string;body:string;image_path?:string|null;created_at:string};
@@ -12,6 +13,11 @@ export default function HomeLiveConversation({room}:{room:Room}){
  const [names,setNames]=useState<Record<string,string>>({});
  const [avatars,setAvatars]=useState<Record<string,string|null>>({});
  const [failedAvatars,setFailedAvatars]=useState<Record<string,boolean>>({});
+ const [selectedProfile,setSelectedProfile]=useState<string|null>(null);
+ const [profileDetails,setProfileDetails]=useState<{id:string;username:string;bio:string;xp_total:number;avatar_url:string|null}|null>(null);
+ const [following,setFollowing]=useState(false);
+ const [followBusy,setFollowBusy]=useState(false);
+ const [profileError,setProfileError]=useState("");
  const [status,setStatus]=useState("");
  const [image,setImage]=useState<File|null>(null);
  const [preview,setPreview]=useState<string|null>(null);
@@ -103,6 +109,33 @@ export default function HomeLiveConversation({room}:{room:Room}){
  return()=>{active=false};
  },[messages,names]);
  useEffect(()=>{if(!image){setPreview(null);return}const url=URL.createObjectURL(image);setPreview(url);return()=>URL.revokeObjectURL(url)},[image]);
+ useEffect(()=>{
+  if(!selectedProfile){setProfileDetails(null);setProfileError("");return;}
+  let active=true;setProfileDetails(null);setProfileError("");
+  void (async()=>{
+   const db=dbRef.current;
+   const {data,error}=await db.from("profiles").select("id,username,display_name,bio,xp_total,avatar_url").eq("id",selectedProfile).maybeSingle();
+   if(!active)return;
+   if(error||!data){setProfileError("Profile unavailable.");return;}
+   setProfileDetails({id:data.id,username:data.username||data.display_name||"Member",bio:data.bio||"",xp_total:Number(data.xp_total)||0,avatar_url:data.avatar_url||null});
+   if(user&&user!==selectedProfile){
+    const {data:relation}=await db.from("profile_follows").select("follower_id").eq("follower_id",user).eq("following_id",selectedProfile).maybeSingle();
+    if(active)setFollowing(!!relation);
+   }else setFollowing(false);
+  })();
+  return()=>{active=false};
+ },[selectedProfile,user]);
+ const toggleFollow=async()=>{
+  if(!selectedProfile||!user||selectedProfile===user||followBusy)return;
+  setFollowBusy(true);setProfileError("");
+  const db=dbRef.current;
+  const {error}=following
+   ?await db.from("profile_follows").delete().eq("follower_id",user).eq("following_id",selectedProfile)
+   :await db.from("profile_follows").insert({follower_id:user,following_id:selectedProfile});
+  if(error)setProfileError("Could not update follow. Please try again.");
+  else setFollowing(!following);
+  setFollowBusy(false);
+ };
  const chooseImage=(file?:File)=>{
   if(!file)return;
   if(!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)||file.size>5*1024*1024){setStatus("Choose a JPG, PNG, WebP or GIF under 5 MB.");return}
@@ -130,13 +163,22 @@ export default function HomeLiveConversation({room}:{room:Room}){
  };
  return <section className="homeLiveViewerConversation" aria-label={room+" Chat"}>
   <header><strong>💬 Chat</strong><small>{room==="phone"?"Mobile":room[0].toUpperCase()+room.slice(1)} · Messages expire after 3 hours</small></header>
-  <div ref={commentsRef} onScroll={onCommentsScroll} onTouchStart={scheduleIdleReturn} onTouchMove={scheduleIdleReturn} onWheel={scheduleIdleReturn} className="homeLiveDemoComments" aria-live="polite">{messages.length?messages.map(m=><p key={m.id}><span className="homeLiveCommentAvatar">{avatars[m.sender_id]&&!failedAvatars[m.sender_id]?<img src={avatars[m.sender_id]!} alt="" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFailedAvatars(old=>({...old,[m.sender_id]:true}))} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit",display:"block"}}/>:(names[m.sender_id]||"M")[0].toUpperCase()}</span><span><strong>{names[m.sender_id]||"Member"}</strong>{m.body&&<small>{m.body}</small>}{m.image_path&&<a href={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} target="_blank" rel="noopener noreferrer" aria-label="Open chat image"><img src={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} alt="Image shared in chat" loading="lazy" style={{display:"block",maxWidth:"min(220px,65vw)",maxHeight:180,objectFit:"contain",borderRadius:12,marginTop:6}}/></a>}</span></p>):<p>Start the conversation in this room.</p>}</div>
+  <div ref={commentsRef} onScroll={onCommentsScroll} onTouchStart={scheduleIdleReturn} onTouchMove={scheduleIdleReturn} onWheel={scheduleIdleReturn} className="homeLiveDemoComments" aria-live="polite">{messages.length?messages.map(m=><p key={m.id}><button type="button" className="homeLiveCommentAvatar homeLiveAvatarTrigger" aria-label={"View "+(names[m.sender_id]||"member")+" profile"} onClick={()=>setSelectedProfile(m.sender_id)}>{avatars[m.sender_id]&&!failedAvatars[m.sender_id]?<img src={avatars[m.sender_id]!} alt="" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFailedAvatars(old=>({...old,[m.sender_id]:true}))} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit",display:"block"}}/>:(names[m.sender_id]||"M")[0].toUpperCase()}</button><span><strong>{names[m.sender_id]||"Member"}</strong>{m.body&&<small>{m.body}</small>}{m.image_path&&<a href={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} target="_blank" rel="noopener noreferrer" aria-label="Open chat image"><img src={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} alt="Image shared in chat" loading="lazy" style={{display:"block",maxWidth:"min(220px,65vw)",maxHeight:180,objectFit:"contain",borderRadius:12,marginTop:6}}/></a>}</span></p>):<p>Start the conversation in this room.</p>}</div>
   {user?<form className="homeLiveCommentForm" onSubmit={send}>
    <input ref={pickerRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{display:"none"}} onChange={e=>chooseImage(e.target.files?.[0])} aria-label="Choose chat image"/>
    <button type="button" aria-label="Add image" title="Add image" onClick={()=>pickerRef.current?.click()} disabled={sending} style={{flex:"0 0 36px",borderRadius:"50%",fontSize:24,background:"transparent",color:"inherit",border:"1px solid currentColor",opacity:.85}}>+</button>
    <div style={{flex:1,minWidth:0}}>{preview&&<div style={{display:"flex",alignItems:"center",gap:8,padding:5}}><img src={preview} alt="Selected image" style={{height:48,width:48,objectFit:"cover",borderRadius:8}}/><button type="button" aria-label="Remove selected image" onClick={()=>setImage(null)}>×</button></div>}<input ref={inputRef} enterKeyHint="send" aria-label="Write a chat message" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={500} placeholder="Message this room…"/></div>
    <button type="submit" disabled={sending||(!draft.trim()&&!image)}>{sending?"Sending…":"Send"}</button>
   </form>:<div className="homeLiveCommentForm" aria-label="Chat is read only until sign in"><div role="note" aria-disabled="true" style={{flex:1,padding:"12px 16px",opacity:.7,userSelect:"none",pointerEvents:"none"}}>Sign in to chat</div><button type="button" disabled>Send</button></div>}
+  {selectedProfile&&<div className="homeLiveProfileBackdrop" onClick={()=>setSelectedProfile(null)}>
+   <section className="homeLiveProfileCard" role="dialog" aria-modal="true" aria-label="Member profile" onClick={e=>e.stopPropagation()}>
+    <button className="homeLiveProfileClose" type="button" aria-label="Close profile" onClick={()=>setSelectedProfile(null)}>×</button>
+    {profileDetails?<><div className="homeLiveProfileIdentity"><span className="homeLiveProfileAvatar">{profileDetails.avatar_url?<img src={profileDetails.avatar_url} alt="" />:(profileDetails.username[0]||"M").toUpperCase()}</span><div><strong>{profileDetails.username}</strong><small>{profileDetails.xp_total.toLocaleString()} XP</small></div></div>
+    {profileDetails.bio&&<p className="homeLiveProfileBio">{profileDetails.bio}</p>}
+    <div className="homeLiveProfileActions"><Link href={"/profile/"+encodeURIComponent(profileDetails.id)}>View Full</Link>{user&&user!==profileDetails.id&&<><button type="button" disabled={followBusy} onClick={()=>void toggleFollow()}>{following?"Following":"Follow"}</button><Link href={"/messages?to="+encodeURIComponent(profileDetails.id)}>Message</Link></>}</div></>:<p>{profileError||"Loading profile…"}</p>}
+    {profileDetails&&profileError&&<small role="alert">{profileError}</small>}
+   </section>
+  </div>}
   {status&&<small role="status" className="homeLiveCommentDisclaimer">{status}</small>}
  </section>;
 }
