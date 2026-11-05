@@ -110,9 +110,9 @@ export default function IdleYoutubePlaylist(){
       <button type="button" className="oneMuslimPlaylistArrow is-right" aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
     </div>
     <style>{`
-      .oneMuslimFloatingPlayerRig{width:100%;max-width:1400px;aspect-ratio:16/9;max-height:100%;align-self:start;justify-self:center;position:relative;isolation:isolate;margin:0 auto 24px;animation:oneMuslimRigDrift 11s ease-in-out infinite}
-      .oneMuslimIdleYoutubePlayer{width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:oneMuslimRigLift 7.5s ease-in-out infinite}
-      .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:oneMuslimRigShadow 7.5s ease-in-out infinite;pointer-events:none}
+      .oneMuslimFloatingPlayerRig{width:100%;max-width:1400px;aspect-ratio:16/9;max-height:100%;align-self:start;justify-self:center;position:relative;isolation:isolate;margin:0 auto 24px}
+      .oneMuslimIdleYoutubePlayer{width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:none}
+      .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:none;pointer-events:none}
       .oneMuslimPlayerSoundActivator{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;border:0;background:transparent;cursor:pointer;touch-action:manipulation}
       .oneMuslimPlaylistArrow{position:absolute;z-index:4;top:50%;transform:translateY(-50%);width:25px;height:44px;padding:0;border:1px solid rgba(255,255,255,.22);border-radius:18px;background:rgba(5,15,28,.23);color:rgba(255,255,255,.83);font:300 27px/1 sans-serif;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);transition:background .25s ease,opacity .25s ease}
       .oneMuslimPlaylistArrow.is-left{left:5px}.oneMuslimPlaylistArrow.is-right{right:5px}
