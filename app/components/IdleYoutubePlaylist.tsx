@@ -17,6 +17,7 @@ type YTApi={Player:new(element:HTMLElement,options:{
 
 const playlist=[
   {videoId:"gF7RjyK8gQ0",startSeconds:28,endSeconds:null},
+  {videoId:"Isi6CwpmTX8",startSeconds:1,endSeconds:null},
   {videoId:"eZVppeK0BMk",startSeconds:15,endSeconds:120}
 ] as const;
 
@@ -34,7 +35,7 @@ export default function IdleYoutubePlaylist(){
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
     let player:YTPlayer|undefined;
-    const storageKey="oneMuslimIdleYoutubePlaylistPosition";
+    const storageKey="oneMuslimIdleYoutubePlaylistPositionV2";
     let saved:{index:number;seconds:number}|null=null;
     try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
     let index=saved?.index??0;
