@@ -1,0 +1,59 @@
+-- 1Qibla editorial staging contract checks. Run AFTER all qibla migrations
+-- against an isolated database; never against production.
+-- Read-only assertions: raises an exception on a missing security invariant.
+DO $$
+DECLARE t text; n integer;
+BEGIN
+ FOREACH t IN ARRAY ARRAY['qibla_staff','qibla_articles','qibla_article_revisions',
+  'qibla_editorial_events','qibla_xp_awards','qibla_applications'] LOOP
+  IF NOT EXISTS (
+   SELECT 1 FROM pg_class c JOIN pg_namespace s ON s.oid=c.relnamespace
+   WHERE s.nspname='public' AND c.relname=t AND c.relkind IN ('r','p')
+     AND c.relrowsecurity
+  ) THEN RAISE EXCEPTION 'Missing RLS: %',t; END IF;
+ END LOOP;
+ IF EXISTS (
+  SELECT 1 FROM pg_policies
+  WHERE schemaname='public'
+   AND tablename IN ('qibla_staff','qibla_article_revisions','qibla_editorial_events',
+                    'qibla_xp_awards','qibla_applications')
+   AND (roles @> ARRAY['anon']::name[] OR roles @> ARRAY['public']::name[])
+ ) THEN RAISE EXCEPTION 'Unexpected public policy on private editorial table'; END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_policies WHERE schemaname='public'
+   AND tablename='qibla_articles' AND policyname='qibla_articles_published_anon'
+   AND cmd='SELECT' AND roles @> ARRAY['anon']::name[]
+   AND qual LIKE '%published_at%' AND qual LIKE '%published%'
+ ) THEN RAISE EXCEPTION 'Published-only anon policy absent or changed'; END IF;
+ IF EXISTS (
+  SELECT 1 FROM pg_policies WHERE schemaname='public'
+   AND tablename='qibla_staff' AND cmd IN ('INSERT','UPDATE','DELETE','ALL')
+ ) THEN RAISE EXCEPTION 'Unexpected staff mutation policy'; END IF;
+ IF EXISTS (
+  SELECT 1 FROM (VALUES
+   ('qibla_staff'),('qibla_articles'),('qibla_article_revisions'),
+   ('qibla_editorial_events'),('qibla_xp_awards'),('qibla_applications')
+  ) AS x(table_name)
+  WHERE has_table_privilege('anon',format('public.%I',x.table_name),'INSERT,UPDATE,DELETE')
+     OR has_table_privilege('authenticated',format('public.%I',x.table_name),'INSERT,UPDATE,DELETE')
+ ) THEN RAISE EXCEPTION 'Direct client editorial table write grant exists'; END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM storage.buckets WHERE id='qibla-resumes'
+   AND public=false AND file_size_limit=10485760
+ ) THEN RAISE EXCEPTION 'Private resume bucket or size limit missing'; END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_constraint c JOIN pg_class t ON t.oid=c.conrelid
+  JOIN pg_namespace n ON n.oid=t.relnamespace
+  WHERE n.nspname='public' AND t.relname='qibla_xp_awards'
+   AND c.contype='p'
+ ) THEN RAISE EXCEPTION 'XP award primary key missing'; END IF;
+ RAISE NOTICE 'Qibla static schema/RLS/grant contract checks passed (not role/concurrency tests)';
+END $$;
+
+-- Additional REQUIRED isolated integration tests (not covered by this script):
+-- 1. anon published SELECT succeeds; draft/queued/rejected reads fail.
+-- 2. writer cannot edit/approve; approver cannot perform first editor save.
+-- 3. editor first valid save generates exactly one approver notification.
+-- 4. repeat and concurrent publish award exactly 2000 XP once.
+-- 5. applicant A cannot read applicant B resume; approver can.
+-- 6. direct role/XP mutation attempts fail; normal Posts/comments unaffected.
