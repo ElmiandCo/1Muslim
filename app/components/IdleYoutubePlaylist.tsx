@@ -22,7 +22,10 @@ const desktopPlaylist=[
 ] as const;
 
 const phonePlaylist=[
-  {videoId:"QEyx1467R4I",startSeconds:0,endSeconds:null},
+  {videoId:"KKg-TM8MGlM",startSeconds:0,endSeconds:null},
+  {videoId:"w6iV6gZIYkY",startSeconds:0,endSeconds:null},
+  {videoId:"Mf7EK7EIEXM",startSeconds:0,endSeconds:null},
+  {videoId:"4Kcf3ha_du8",startSeconds:0,endSeconds:null},
   {videoId:"9iJ5eESSycM",startSeconds:0,endSeconds:null},
   {videoId:"R7JlVfBbGRQ",startSeconds:0,endSeconds:null},
   {videoId:"_DrLkl2doyw",startSeconds:0,endSeconds:null},
@@ -33,6 +36,7 @@ const phonePlaylist=[
 export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop"|"phone"}){
   const playlist=format==="phone"?phonePlaylist:desktopPlaylist;
   const mountRef=useRef<HTMLDivElement>(null);
+  const swipeStart=useRef<{x:number;y:number}|null>(null);
   const playerRef=useRef<YTPlayer|null>(null);
   const [soundEnabled,setSoundEnabled]=useState(false);
   const [isPaused,setIsPaused]=useState(false);
@@ -48,7 +52,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
     let player:YTPlayer|undefined;
-    const storageKey=format==="phone"?"oneMuslimPhoneShortsPlaylistPositionV2":"oneMuslimIdleYoutubePlaylistPositionV2";
+    const storageKey=format==="phone"?"oneMuslimPhoneShortsPlaylistPositionV6":"oneMuslimIdleYoutubePlaylistPositionV2";
     let saved:{index:number;seconds:number}|null=null;
     try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
     let index=saved?.index??0;
@@ -116,7 +120,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       if(player){try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:player.getCurrentTime()}));}catch{};player.destroy();}
     };
   },[format]);
-  return <div className={"oneMuslimFloatingPlayerRig"+(format==="phone"?" is-phone":"")} aria-label="Floating featured video player">
+  return <div className={"oneMuslimFloatingPlayerRig"+(format==="phone"?" is-phone":"")} aria-label="Floating featured video player" onTouchStart={e=>{if(format==="phone")swipeStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const start=swipeStart.current;swipeStart.current=null;if(format!=="phone"||!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.2)navigate(dy<0?1:-1)}}>
     <div className="oneMuslimFloatingPlayerShadow" aria-hidden="true"/>
     <div className={"oneMuslimIdleYoutubePlayer"+(slideDirection?" is-switching "+(slideDirection>0?"is-next":"is-previous"):"")} aria-label="Featured video playlist while no broadcasts are live">
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
@@ -126,7 +130,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       <button type="button" className="oneMuslimPlaylistArrow is-right" aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
     </div>
     <style>{`
-      .oneMuslimFloatingPlayerRig.is-phone{max-width:420px;aspect-ratio:9/16;max-height:100%;margin:0 auto 12px}
+      .oneMuslimFloatingPlayerRig.is-phone{touch-action:pan-y;max-width:420px;aspect-ratio:9/16;max-height:100%;margin:0 auto 12px}
       .oneMuslimFloatingPlayerRig.is-phone .oneMuslimIdleYoutubePlayer{border-radius:22px}
       .oneMuslimFloatingPlayerRig{width:100%;max-width:1400px;aspect-ratio:16/9;max-height:100%;align-self:start;justify-self:center;position:relative;isolation:isolate;margin:0 auto 24px;animation:oneMuslimRigDrift 11s ease-in-out infinite}
       .oneMuslimIdleYoutubePlayer{width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:oneMuslimRigLift 7.5s ease-in-out infinite}
