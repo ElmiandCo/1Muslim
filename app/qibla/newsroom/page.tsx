@@ -15,7 +15,7 @@ type Page = {
   created_at: string;
   published: boolean;
 };
-const categories = ["All stories", "Reflection", "Community", "Travel", "Learning"] as const;
+const categories = ["All stories"] as const;
 
 export default function QiblaNewsroom() {
   const [pages, setPages] = useState<Page[]>([]);
@@ -45,8 +45,7 @@ export default function QiblaNewsroom() {
 
   const filtered = useMemo(() => pages.filter((page) => {
     const query = search.trim().toLowerCase();
-    // Category tagging is not present in the legacy qibla_pages schema.
-    // Do not pretend to categorize articles by guessing from their titles.
+    // Legacy qibla_pages has no category field. Do not offer filters that cannot work.
     return (!query || [page.title, page.section_one?.text ?? "", page.section_two?.text ?? ""]
       .some((text) => text.toLowerCase().includes(query))) && category === "All stories";
   }), [pages, search, category]);
@@ -61,6 +60,7 @@ export default function QiblaNewsroom() {
             <Link href="/">Home</Link>
             <Link href="/qibla/newsroom" aria-current="page">Magazine</Link>
             <Link href="/qibla">Qibla archive</Link>
+            <Link href="/qibla/newsroom/studio">Editorial Studio</Link>
             <Link href="/community">Community posts</Link>
           </nav>
           <div className={styles.sidebarNote}>Stories, reflection, and perspective from the Ummah.</div>
@@ -88,7 +88,6 @@ export default function QiblaNewsroom() {
           </div>
           {loading ? <p className={styles.status} role="status">Loading stories…</p> :
             error ? <p className={styles.status} role="alert">{error}</p> :
-            category !== "All stories" ? <p className={styles.status}>Category collections are coming soon. Select All stories to browse published articles.</p> :
             !featured ? <p className={styles.status}>No published stories match your search yet.</p> :
             <section aria-label="Published stories">
               <article className={styles.hero}>
