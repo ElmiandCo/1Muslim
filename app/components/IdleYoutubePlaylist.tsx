@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
+import {createClient} from "../../utils/supabase/client";
 
 type YTPlayer={
   loadVideoById:(video:{videoId:string;startSeconds:number})=>void;
@@ -34,11 +35,11 @@ export default function IdleYoutubePlaylist(){
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
     let player:YTPlayer|undefined;
-    const storageKey="oneMuslimIdleYoutubePlaylistPosition";
+    let storageKey="oneMuslimIdleYoutubePlaylistPosition:signed-in";
     let saved:{index:number;seconds:number}|null=null;
     try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
     let index=saved?.index??0;
-    const initialSeconds=saved?Math.max(playlist[index].startSeconds,Math.min(saved.seconds,playlist[index].endSeconds??Number.MAX_SAFE_INTEGER)):playlist[0].startSeconds;
+    let initialSeconds=saved?Math.max(playlist[index].startSeconds,Math.min(saved.seconds,playlist[index].endSeconds??Number.MAX_SAFE_INTEGER)):playlist[0].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
     const next=(step=1)=>{
       if(disposed||!player)return;
@@ -81,16 +82,27 @@ export default function IdleYoutubePlaylist(){
       });
     };
     const previousReady=ytWindow.onYouTubeIframeAPIReady;
-    if(ytWindow.YT?.Player)create();
-    else{
-      ytWindow.onYouTubeIframeAPIReady=()=>{previousReady?.();create();};
-      if(!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')){
-        const script=document.createElement("script");
-        script.src="https://www.youtube.com/iframe_api";
-        script.async=true;
-        document.head.appendChild(script);
+    const initialize=async()=>{
+      const {data:{user}}=await createClient().auth.getUser();
+      if(disposed)return;
+      const signedIn=!!user;
+      storageKey="oneMuslimIdleYoutubePlaylistPosition:"+(signedIn?"signed-in":"guest");
+      saved=null;
+      try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
+      index=saved?.index??(signedIn?0:1);
+      initialSeconds=saved?Math.max(playlist[index].startSeconds,Math.min(saved.seconds,playlist[index].endSeconds??Number.MAX_SAFE_INTEGER)):playlist[index].startSeconds;
+      if(ytWindow.YT?.Player)create();
+      else{
+        ytWindow.onYouTubeIframeAPIReady=()=>{previousReady?.();create();};
+        if(!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')){
+          const script=document.createElement("script");
+          script.src="https://www.youtube.com/iframe_api";
+          script.async=true;
+          document.head.appendChild(script);
+        }
       }
-    }
+    };
+    void initialize();
     return ()=>{
       disposed=true;
       navigateRef.current=()=>{};
@@ -110,9 +122,9 @@ export default function IdleYoutubePlaylist(){
       <button type="button" className="oneMuslimPlaylistArrow is-right" aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
     </div>
     <style>{`
-      .oneMuslimFloatingPlayerRig{width:100%;max-width:1400px;aspect-ratio:16/9;max-height:100%;align-self:start;justify-self:center;position:relative;isolation:isolate;margin:0 auto 24px;animation:oneMuslimRigDrift 11s ease-in-out infinite}
-      .oneMuslimIdleYoutubePlayer{width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:oneMuslimRigLift 7.5s ease-in-out infinite}
-      .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:oneMuslimRigShadow 7.5s ease-in-out infinite;pointer-events:none}
+      .oneMuslimFloatingPlayerRig{width:100%;max-width:1400px;aspect-ratio:16/9;max-height:100%;align-self:start;justify-self:center;position:relative;isolation:isolate;margin:0 auto 24px}
+      .oneMuslimIdleYoutubePlayer{width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:none}
+      .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:none;pointer-events:none}
       .oneMuslimPlayerSoundActivator{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;border:0;background:transparent;cursor:pointer;touch-action:manipulation}
       .oneMuslimPlaylistArrow{position:absolute;z-index:4;top:50%;transform:translateY(-50%);width:25px;height:44px;padding:0;border:1px solid rgba(255,255,255,.22);border-radius:18px;background:rgba(5,15,28,.23);color:rgba(255,255,255,.83);font:300 27px/1 sans-serif;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);transition:background .25s ease,opacity .25s ease}
       .oneMuslimPlaylistArrow.is-left{left:5px}.oneMuslimPlaylistArrow.is-right{right:5px}
