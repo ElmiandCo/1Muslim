@@ -25,11 +25,11 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
     const sr=stage.getBoundingClientRect();
     const player=video.querySelector(".oneMuslimIdleYoutubePlayer, .oneMuslimFloatingPlayerRig .oneMuslimIdleYoutubePlayer") || video.firstElementChild || video;
     const vr=player.getBoundingClientRect(),cr=chat.getBoundingClientRect();
-    const top=Math.max(0,vr.bottom-sr.top+28);
+    const top=Math.max(0,vr.bottom-sr.top+28+sr.height*.02);
     const bottom=Math.min(sr.height,cr.top-sr.top-8);
     const available=Math.max(0,bottom-top);
     slot.style.setProperty("top",top+"px","important");
-    slot.style.setProperty("height",Math.min(115,available)+"px","important");
+    slot.style.setProperty("height",available+"px","important");
     slot.style.visibility=available>=48?"visible":"hidden";
    });
   };
@@ -57,7 +57,7 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
  .homeVideoWheelCategories button[aria-pressed="true"]{background:rgba(255,255,255,.22);border-color:currentColor}
  .homeVideoWheelTrack{position:relative;height:100%;overflow:hidden;touch-action:none;overscroll-behavior:contain;user-select:none;cursor:grab;mask-image:linear-gradient(90deg,transparent,#000 13%,#000 87%,transparent)}
  .homeVideoWheelTrack:active{cursor:grabbing}
- .homeVideoWheelCard{position:absolute;top:5px;left:50%;height:calc(100% - 12px);width:clamp(140px,34%,235px);border:1px solid rgba(255,255,255,.35);border-radius:15px;box-shadow:0 12px 25px rgba(0,0,0,.25);display:flex;flex-direction:column;justify-content:end;padding:12px;box-sizing:border-box;overflow:hidden;will-change:transform,opacity;pointer-events:none}
+ .homeVideoWheelCard{position:absolute;top:0;left:50%;height:100%;width:clamp(140px,34%,235px);border:1px solid rgba(255,255,255,.35);border-radius:15px;box-shadow:0 12px 25px rgba(0,0,0,.25);display:flex;flex-direction:column;justify-content:end;padding:12px;box-sizing:border-box;overflow:hidden;will-change:transform,opacity;pointer-events:none}
  .homeVideoWheelCard small{font-size:12px;opacity:.8}.homeVideoWheelCard strong{font-size:17px;line-height:1.18;text-shadow:0 2px 5px #000}
  @media(max-width:767px){.homeVideoWheel[data-expanded="true"] .homeVideoWheelBody{height:100%}.homeVideoWheelCard{width:38%}}
  @media(prefers-reduced-motion:reduce){.homeVideoWheelBody{transition:none}}
