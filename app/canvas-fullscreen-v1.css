@@ -2930,3 +2930,33 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
   height:clamp(80px,9%,115px)!important;
  }
 }
+
+
+/* Layer-isolation experiment: keep the video underneath, chat and carousel above.
+   Do not change the video geometry or message component. */
+[data-workspace-page="0"] .oneMuslimLiveStage{
+ position:relative!important;
+ isolation:isolate!important;
+ overflow:visible!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveTop{
+ z-index:1!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimHomeWheelSlot{
+ z-index:20!important;
+ isolation:isolate!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom{
+ z-index:30!important;
+ visibility:visible!important;
+ opacity:1!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveViewerConversation,
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveDemoComments,
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveCommentForm{
+ visibility:visible!important;
+ opacity:1!important;
+}
+[data-workspace-page="0"] .oneMuslimHomeWheelSlot .homeVideoWheelCard{
+ max-height:105px!important;
+}
