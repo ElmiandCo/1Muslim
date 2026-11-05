@@ -63,6 +63,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
   const [muted, setMuted] = useState(false);
   const mutedRef = useRef(false);
   const [audioNeedsGesture, setAudioNeedsGesture] = useState(false);
+  const [showTapHint,setShowTapHint]=useState(false);
+  useEffect(()=>{if(!audioNeedsGesture&&!muted){setShowTapHint(false);return}setShowTapHint(true);const timer=window.setTimeout(()=>setShowTapHint(false),2000);return()=>window.clearTimeout(timer)},[audioNeedsGesture,muted]);
   const [audioPlaying,setAudioPlaying] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [reconnectKey, setReconnectKey] = useState("initial");
@@ -490,6 +492,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
         </div>
       </LiveGuestsStage>
       {hostConnecting&&!hostEnded&&<div className="omHostReconnecting" role="status" aria-live="polite">Host connection interrupted · Reconnecting…</div>}
+      {showTapHint&&hasRemoteAudio&&!hostEnded&&<div aria-hidden="true" className="omThemeTapHint">Tap</div>}
       {audioNeedsGesture&&hasRemoteAudio&&!hostEnded&&<div role="status" aria-live="polite" style={{position:"absolute",bottom:65,left:12,zIndex:9,color:"#fff",background:"#0c2923e8",border:"1px solid #9ce9c2",borderRadius:12,padding:"8px 12px",fontSize:12,pointerEvents:"none"}}>🔊 Tap “Hear Live” below to enable host audio</div>}
       <div ref={audioContainerRef} />
       {streamId&&<LiveLightOverlay streamId={streamId}/>}
@@ -509,6 +512,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
         </div>
       ) : error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
       <style jsx>{`
+      .omThemeTapHint{position:absolute;z-index:10;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;border:1px solid color-mix(in srgb,var(--theme-primary,#26b985) 45%,transparent);border-radius:20px;background:color-mix(in srgb,var(--theme-primary,#26b985) 14%,transparent);backdrop-filter:blur(10px);color:white;font-size:clamp(24px,5vw,42px);font-weight:900;padding:10px 28px;text-shadow:0 3px 14px #000b;animation:omThemeTapFade 2s ease-out forwards}@keyframes omThemeTapFade{0%,65%{opacity:1}100%{opacity:0}}
       .omVoiceViewerStage{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#164938,#081b18 60%,#020706 100%);color:#e5f9f0}
       .omVoiceViewerAura{position:absolute;width:min(66vw,260px);aspect-ratio:1;border-radius:50%;border:2px solid #87f8ce80;box-shadow:0 0 45px #34e5a555;animation:omVoiceViewerBreathe 3.6s ease-in-out infinite;pointer-events:none}
       .omVoiceViewerPortrait{position:relative;width:min(56vw,220px);aspect-ratio:1;display:grid;place-items:center;border-radius:50%;border:3px solid #c8fce6;overflow:hidden;background:radial-gradient(circle at 35% 25%,#28755f,#07261c 75%);box-shadow:0 0 35px #20c78c55;transition:transform .12s linear}
