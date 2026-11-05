@@ -14,6 +14,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   const [panelOpen,setPanelOpen]=useState(false);
   const [requests,setRequests]=useState<GuestRequest[]>([]);
   const [loaded,setLoaded]=useState(false);
+  const [requesterNames,setRequesterNames]=useState<Record<string,string>>({});
   const [mode,setMode]=useState<"pfp"|"camera">("pfp");
   const [audioOnly,setAudioOnly]=useState(true);
   const [mediaConsent,setMediaConsent]=useState(false);
@@ -28,6 +29,9 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   const pendingSeen=useRef<Set<string>|null>(null);
   const me=requests.find(r=>r.user_id===uid);
   const host=uid===hostId;
+  const pendingRequests=host?requests.filter(r=>r.status==="pending"):[];
+  const nextRequest=pendingRequests[0];
+  useEffect(()=>{if(!host||!pendingRequests.length)return;const missing=[...new Set(pendingRequests.map(r=>r.user_id))].filter(id=>!requesterNames[id]);if(!missing.length)return;let active=true;void createClient().from("profiles").select("id,username,display_name").in("id",missing).then(({data})=>{if(active&&data)setRequesterNames(old=>({...old,...Object.fromEntries(data.map(p=>[p.id,p.display_name||p.username||"Viewer"]))}))});return()=>{active=false}},[host,requests,requesterNames]);
 
   useEffect(()=>{
     let active=true;
@@ -199,6 +203,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   if(!uid)return null;
   const pendingCount=requests.filter(r=>r.status==="pending").length;
   return <div style={{position:"relative",zIndex:30,width:"fit-content",maxWidth:"100%"}}>
+    {host&&nextRequest&&<div role="alertdialog" aria-label="Guest join request" style={{position:"fixed",left:"50%",top:"28%",transform:"translateX(-50%)",width:"min(340px,calc(100vw - 32px))",zIndex:9999,padding:18,borderRadius:20,border:"1px solid var(--theme-border,#ffffff66)",background:"color-mix(in srgb,var(--theme-panel,#101a13) 88%,transparent)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",boxShadow:"0 18px 60px #0009",color:"var(--theme-text,#fff)",textAlign:"center"}}><strong style={{display:"block",fontSize:16,marginBottom:14}}>{requesterNames[nextRequest.user_id]||"A viewer"} is requesting to join.</strong><div style={{display:"flex",gap:10,justifyContent:"center"}}><button type="button" disabled={busy} onClick={()=>void moderate(nextRequest.id,"approved")} style={{padding:"10px 24px",borderRadius:12,border:"1px solid var(--theme-border,#88e4b5)",background:"var(--theme-primary,#187b58)",color:"white",fontWeight:700}}>Yes</button><button type="button" disabled={busy} onClick={()=>void moderate(nextRequest.id,"rejected")} style={{padding:"10px 24px",borderRadius:12,border:"1px solid #ffffff55",background:"#ffffff18",color:"inherit",fontWeight:700}}>No</button></div>{pendingRequests.length>1&&<small style={{display:"block",marginTop:9}}>{pendingRequests.length-1} more waiting</small>}</div>}
     <button type="button" aria-expanded={panelOpen} aria-controls="live-guest-controls-panel" onClick={()=>setPanelOpen(open=>!open)} style={{border:"1px solid var(--theme-border,#8aa398)",borderRadius:999,padding:compactJoin?"8px 12px":"9px 14px",minHeight:compactJoin?36:undefined,fontSize:compactJoin?12:undefined,boxSizing:"border-box",background:"color-mix(in srgb,var(--theme-panel,#101a13) 76%,transparent)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"var(--theme-text,#e7f5e6)",fontWeight:600,cursor:"pointer",boxShadow:"0 8px 24px #0005"}}>{compactJoin?"Join":`👥 Guests${host&&pendingCount>0?` · ${pendingCount}`:""} ${panelOpen?"⌃":"⌄"}`}</button>
     {panelOpen&&<section id="live-guest-controls-panel" aria-label="Live guest controls" style={{position:"absolute",right:0,bottom:"calc(100% + 10px)",width:host?"min(340px,calc(100vw - 32px))":"min(230px,calc(100vw - 32px))",maxHeight:"min(55dvh,430px)",overflowY:"auto",overscrollBehavior:"contain",padding:host?14:8,border:"1px solid color-mix(in srgb,var(--theme-border,#48624b) 38%,transparent)",borderRadius:18,background:"color-mix(in srgb,var(--theme-panel,#101a13) 14%,transparent)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",boxShadow:"0 8px 24px #0003",color:"var(--theme-text,#e7f5e6)"}}>
     {host?<div><strong>👑 Guest requests</strong>
