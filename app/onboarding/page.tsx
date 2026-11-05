@@ -248,22 +248,30 @@ export default function OnboardingPage() {
         if (resetRef.current || attempt !== attemptRef.current || !recognizedRef.current) return;
         setVoiceStatus("processing");
         setProcessingAudio(true);
-        void trimShahadaAudio(new Blob(chunks, { type: recorder.mimeType })).then(trimmed => {
-          if (attempt !== attemptRef.current) return;
+        const recorded = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+        if (!recorded.size) {
+          setVerified(false);
+          setVoiceStatus("retry");
+          setMessage("No audio was saved. Please record your Shahada again.");
+          setProcessingAudio(false);
+          return;
+        }
+        // Trimming is best-effort: a browser codec failure must not discard a recognized Shahada.
+        void trimShahadaAudio(recorded).catch(() => recorded).then(clip => {
+          if (attempt !== attemptRef.current || resetRef.current) return;
           setVoiceStatus("recognized");
-          setAudioBlob(trimmed);
-          const playbackUrl=URL.createObjectURL(trimmed);
-           setAudioPreview(playbackUrl);
-           // Play the recognized Shahada only after successful verification.
-           const confirmationAudio=new Audio(playbackUrl);
-           confirmationAudio.volume=0.85;
-           void confirmationAudio.play().catch(()=>{});
-          setMessage("Shahada recognized. Your recording is ready; tap HudHud to start over or continue.");
-        }).catch((error: Error) => {
+          setAudioBlob(clip);
+          const playbackUrl = URL.createObjectURL(clip);
+          setAudioPreview(playbackUrl);
+          const confirmationAudio = new Audio(playbackUrl);
+          confirmationAudio.volume = 0.85;
+          void confirmationAudio.play().catch(() => {});
+          setMessage("Shahada recognized. You can continue to your profile.");
+        }).catch(() => {
           if (attempt !== attemptRef.current) return;
           setVerified(false);
           setVoiceStatus("retry");
-          setMessage(error.message || "Audio processing failed. Please try again.");
+          setMessage("Unable to prepare the recording. Please try again.");
         }).finally(() => { if (attempt === attemptRef.current) setProcessingAudio(false); });
       };
       recorderRef.current = recorder;
@@ -433,7 +441,7 @@ export default function OnboardingPage() {
       </div>
       <div className="phraseCard" dir={language === "ar" ? "rtl" : "ltr"}>{SHAHADA[language]}</div>
       {alternativeHint && !listening && !verified && <button type="button" className="shahadaVisionHint" onClick={chooseDeclaration} aria-label="Select the self-attested checkbox option"><span>✦ HUDHUD VISION · 4-SECOND TIP</span><strong>Recording is optional.</strong><small>Tap here to select the checkbox route. You will still need to personally affirm the Shahada and accept the terms.</small></button>}
-      <div className="declarationFallback" id="shahada-self-attest"><strong>Prefer a checkbox?</strong><p>Choose either voice recognition or a written Shahada declaration. Both allow you to complete onboarding.</p><label><input type="checkbox" checked={writtenDeclaration} onChange={e => { resetRef.current = true; attemptRef.current++; stopMedia(); setAudioBlob(null); setAudioPreview(null); setVerified(false); setWrittenDeclaration(e.target.checked); setVerificationMode(e.target.checked ? "declaration" : "audio"); setMessage(""); }} /><span>I sincerely affirm the Shahada displayed above and wish to join the 1Muslim community.</span></label>{writtenDeclaration && <small>✓ Written declaration selected. No microphone recording will be required.</small>}</div>
+      <div className="declarationFallback" id="shahada-self-attest"><strong>Prefer a checkbox?</strong><p>This is an optional alternative to voice recognition. If your Shahada was recognized, no declaration checkbox is needed.</p><label><input type="checkbox" checked={writtenDeclaration} onChange={e => { resetRef.current = true; attemptRef.current++; stopMedia(); setAudioBlob(null); setAudioPreview(null); setVerified(false); setWrittenDeclaration(e.target.checked); setVerificationMode(e.target.checked ? "declaration" : "audio"); setMessage(""); }} /><span>I sincerely affirm the Shahada displayed above and wish to join the 1Muslim community.</span></label>{writtenDeclaration && <small>✓ Written declaration selected. No microphone recording will be required.</small>}</div>
       {message && <div className={verified || writtenDeclaration ? "success" : "error"}>{message}</div>}
       <div className="badgePreview"><div className="badgeSeal" aria-hidden="true"></div><div><span className="badgeKicker">YOUR FIRST 1MUSLIM BADGE</span><strong>Shahada Verified</strong><p>Earn this badge after completing your Shahada verification and profile setup. It will appear on your public profile.</p></div><span className="badgeStatus">{verified || writtenDeclaration ? "✓ Declared" : "🔒 Unlock"}</span></div>
       <div className="legalScroll" role="region" aria-label="Terms and conditions" tabIndex={0}><strong>1Muslim · Terms &amp; Conditions</strong><p>1Muslim is a faith-centered platform supporting Muslim communities, Islamic education, and connections consistent with Islamic principles.</p><p>Our commitment to Islam does not constitute hostility toward any other religion, belief system, or individual. We respect the dignity of people of all religious backgrounds, including those with no religion.</p><strong>Protection of Islamic Values</strong><p>1Muslim may establish and enforce standards for content, conduct, programming, and participation consistent with applicable law. We may prioritize Islamic education, worship, and community development, and are not required to endorse every religious or philosophical viewpoint.</p><strong>Religious Discussions and Differences</strong><p>Respectful theological discussions, comparative religion, scholarly disagreements, and criticism of religious ideas may be permitted. Harassment, threats, targeted abuse, incitement to violence, and dehumanizing treatment are prohibited. Disagreement with a religious belief is not, by itself, harassment or discrimination.</p><strong>Content Moderation</strong><p>1Muslim may review, restrict, remove, or decline to feature content conflicting with published community standards, subject to applicable law. Decisions should follow documented standards rather than hostility toward a person's religious identity.</p><strong>Our Guiding Principle</strong><p>1Muslim exists to preserve, celebrate, and strengthen Muslim identity—not to attack or diminish the dignity of others.</p></div><label className="termsConsent"><input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} required /><span>I have read and agree to the Terms &amp; Conditions above.</span></label>
