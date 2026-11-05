@@ -97,3 +97,23 @@ BEGIN
  END IF;
  RAISE NOTICE 'Resume privacy negative grants/policies checked';
 END $$;
+
+-- Private editorial metadata must not be readable with anonymous table grants,
+-- even if RLS policies currently appear restrictive. Keep public magazine reads
+-- scoped to qibla_articles' published-only policy.
+DO $$
+DECLARE t text;
+BEGIN
+ FOREACH t IN ARRAY ARRAY[
+  'qibla_staff','qibla_article_revisions','qibla_editorial_events','qibla_xp_awards'
+ ] LOOP
+  IF has_table_privilege('anon',format('public.%I',t),'SELECT') THEN
+   RAISE EXCEPTION 'Anonymous SELECT grant on private editorial table: %',t;
+  END IF;
+ END LOOP;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+  WHERE n.nspname='storage' AND c.relname='objects' AND c.relrowsecurity
+ ) THEN RAISE EXCEPTION 'Storage objects RLS must remain enabled'; END IF;
+ RAISE NOTICE 'Private editorial metadata grants and Storage RLS checked';
+END $$;
