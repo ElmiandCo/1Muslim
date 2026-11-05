@@ -2587,3 +2587,19 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
 @media(prefers-reduced-motion:reduce){
  [data-workspace-page="0"] .oneMuslimLiveBottom{transition:none!important}
 }
+
+/* Minimal theme-sensitive member card for Home Live chat avatar taps. */
+.homeLiveAvatarTrigger{padding:0!important;border:0!important;cursor:pointer;flex:none!important;overflow:hidden}
+.homeLiveProfileBackdrop{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.38);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.homeLiveProfileCard{position:relative;width:min(340px,calc(100vw - 36px));max-height:calc(100dvh - 48px);overflow:auto;padding:24px 20px 18px;border-radius:24px;color:var(--theme-text,#fff);background:color-mix(in srgb,var(--theme-base,#102a26) 62%,transparent);border:1px solid color-mix(in srgb,var(--theme-accent,#e0c87c) 52%,transparent);box-shadow:0 22px 70px rgba(0,0,0,.3);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px)}
+.homeLiveProfileClose{position:absolute;right:12px;top:9px;border:0;background:transparent;color:inherit;font-size:26px;cursor:pointer}
+.homeLiveProfileIdentity{display:flex;align-items:center;gap:13px;padding-right:20px}
+.homeLiveProfileIdentity>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.homeLiveProfileIdentity strong{font-size:17px;overflow-wrap:anywhere}
+.homeLiveProfileIdentity small{opacity:.76;font-size:12px}
+.homeLiveProfileAvatar{width:64px;height:64px;flex:0 0 64px;border-radius:50%;display:grid;place-items:center;overflow:hidden;border:1px solid var(--theme-accent,#e0c87c);background:rgba(255,255,255,.1);font-size:24px}
+.homeLiveProfileAvatar img{width:100%;height:100%;object-fit:cover}
+.homeLiveProfileBio{font-size:13px;line-height:1.55;opacity:.88;overflow-wrap:anywhere;margin:14px 0}
+.homeLiveProfileActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:17px}
+.homeLiveProfileActions a,.homeLiveProfileActions button{flex:1 1 auto;text-align:center;white-space:nowrap;text-decoration:none;border-radius:999px;padding:9px 11px;font-size:12px;font-weight:700;color:inherit;background:color-mix(in srgb,var(--theme-accent,#e0c87c) 19%,transparent);border:1px solid color-mix(in srgb,var(--theme-accent,#e0c87c) 55%,transparent);cursor:pointer}
+.homeLiveProfileActions button:disabled{opacity:.5;cursor:wait}
