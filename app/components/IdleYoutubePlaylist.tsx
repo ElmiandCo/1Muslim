@@ -34,7 +34,7 @@ const phonePlaylist=[
 ] as const;
 
 export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop"|"phone"}){
-  const playlist=format==="phone"?phonePlaylist:desktopPlaylist;
+  // Playlist order is selected once per player mount, on the client.
   const mountRef=useRef<HTMLDivElement>(null);
   const swipeStart=useRef<{x:number;y:number}|null>(null);
   const playerRef=useRef<YTPlayer|null>(null);
@@ -52,11 +52,15 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
     let player:YTPlayer|undefined;
-    const storageKey=format==="phone"?"oneMuslimPhoneShortsPlaylistPositionV6":"oneMuslimIdleYoutubePlaylistPositionV2";
-    let saved:{index:number;seconds:number}|null=null;
-    try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
-    let index=saved?.index??0;
-    const initialSeconds=saved?Math.max(playlist[index].startSeconds,Math.min(saved.seconds,playlist[index].endSeconds??Number.MAX_SAFE_INTEGER)):playlist[0].startSeconds;
+    // Fresh Fisher-Yates shuffle on each landing mount/refresh. No saved index
+    // can point into a different shuffled order.
+    const playlist=[...(format==="phone"?phonePlaylist:desktopPlaylist)];
+    for(let i=playlist.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [playlist[i],playlist[j]]=[playlist[j],playlist[i]];
+    }
+    let index=0;
+    const initialSeconds=playlist[0].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
     const next=(step=1)=>{
       if(disposed||!player)return;
@@ -65,7 +69,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
       setTapHint(true);setIsPaused(false);
       if(!soundEnabledRef.current)player.mute();
-      try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:video.startSeconds}));}catch{}
+
     };
     navigateRef.current=(step)=>{
       if(disposed||!player||transitionTimerRef.current)return;
@@ -92,7 +96,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               const segment=playlist[index];
               const seconds=player.getCurrentTime();
               if(segment.endSeconds!==null&&seconds>=segment.endSeconds){next();return;}
-              try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
+
             },250);
           },
           onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPaused(true);setTapHint(true)}else if(data===1){setIsPaused(false)}}
@@ -117,7 +121,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       if(timer)clearInterval(timer);
       if(ytWindow.onYouTubeIframeAPIReady!==previousReady)ytWindow.onYouTubeIframeAPIReady=previousReady;
       playerRef.current=null;
-      if(player){try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:player.getCurrentTime()}));}catch{};player.destroy();}
+      if(player)player.destroy();
     };
   },[format]);
   return <div className={"oneMuslimFloatingPlayerRig"+(format==="phone"?" is-phone":"")} aria-label="Floating featured video player" onTouchStart={e=>{if(format==="phone")swipeStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const start=swipeStart.current;swipeStart.current=null;if(format!=="phone"||!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.2)navigate(dy<0?1:-1)}}>
