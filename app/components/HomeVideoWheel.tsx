@@ -33,7 +33,7 @@ export default function HomeVideoWheel(){
  .homeVideoWheelCategories{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding:5px 8px;justify-content:safe center}
  .homeVideoWheelCategories button{white-space:nowrap;border:1px solid rgba(255,255,255,.27);border-radius:15px;padding:5px 10px;background:rgba(8,18,25,.25);color:inherit;font-size:11px}
  .homeVideoWheelCategories button[aria-pressed="true"]{background:rgba(255,255,255,.22);border-color:currentColor}
- .homeVideoWheelTrack{position:relative;height:calc(100% - 42px);overflow:hidden;touch-action:pan-y;user-select:none;cursor:grab;mask-image:linear-gradient(90deg,transparent,#000 13%,#000 87%,transparent)}
+ .homeVideoWheelTrack{position:relative;height:100%;overflow:hidden;touch-action:pan-y;user-select:none;cursor:grab;mask-image:linear-gradient(90deg,transparent,#000 13%,#000 87%,transparent)}
  .homeVideoWheelTrack:active{cursor:grabbing}
  .homeVideoWheelCard{position:absolute;top:5px;left:50%;height:calc(100% - 12px);width:clamp(95px,24%,175px);border:1px solid rgba(255,255,255,.35);border-radius:15px;box-shadow:0 12px 25px rgba(0,0,0,.25);display:flex;flex-direction:column;justify-content:end;padding:10px;box-sizing:border-box;overflow:hidden;will-change:transform,opacity;pointer-events:none}
  .homeVideoWheelCard small{font-size:10px;opacity:.8}.homeVideoWheelCard strong{font-size:12px;text-shadow:0 2px 5px #000}
@@ -42,8 +42,7 @@ export default function HomeVideoWheel(){
  `}</style>
  
  <div className="homeVideoWheelBody" aria-hidden={!expanded}>
- {expanded&&<><div className="homeVideoWheelCategories" aria-label="Clip categories">{categories.map(c=><button key={c} type="button" aria-pressed={category===c} onClick={()=>{setCategory(c);positionRef.current=0;setPosition(0)}}>{c}</button>)}</div>
- <div className="homeVideoWheelTrack" aria-label="Preview carousel placeholders" onPointerDown={e=>{paused.current=true;pointer.current={x:e.clientX,position:positionRef.current};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>onMove(e.clientX)} onPointerUp={e=>{onMove(e.clientX);pointer.current=null;paused.current=false}} onPointerCancel={()=>{pointer.current=null;paused.current=false}}>
+ {expanded&&<><div className="homeVideoWheelTrack" aria-label="Preview carousel placeholders" onPointerDown={e=>{paused.current=true;pointer.current={x:e.clientX,position:positionRef.current};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>onMove(e.clientX)} onPointerUp={e=>{onMove(e.clientX);pointer.current=null;paused.current=false}} onPointerCancel={()=>{pointer.current=null;paused.current=false}}>
  {items.map((item,i)=>{let offset=((i-position)%count+count)%count;if(offset>count/2)offset-=count;const distance=Math.abs(offset);const scale=Math.max(.24,1-.25*distance*distance);return <div key={item.name} className="homeVideoWheelCard" style={{transform:`translateX(calc(-50% + ${offset*110}%)) perspective(550px) rotateY(${-offset*13}deg) scale(${scale})`,opacity:Math.max(.12,1-distance*.28),zIndex:Math.round(20-distance),background:`linear-gradient(145deg,hsla(${190+item.tone*27},65%,35%,.58),rgba(4,12,25,.8))`}}><small>{item.category} · Preview soon</small><strong>{item.name}</strong></div>})}
  </div></>}
  </div></div>;
