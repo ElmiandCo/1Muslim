@@ -200,9 +200,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   const pendingCount=requests.filter(r=>r.status==="pending").length;
   return <div style={{position:"relative",zIndex:30,width:"fit-content",maxWidth:"100%"}}>
     <button type="button" aria-expanded={panelOpen} aria-controls="live-guest-controls-panel" onClick={()=>setPanelOpen(open=>!open)} style={{border:"1px solid var(--theme-border,#8aa398)",borderRadius:999,padding:compactJoin?"8px 12px":"9px 14px",minHeight:compactJoin?36:undefined,fontSize:compactJoin?12:undefined,boxSizing:"border-box",background:"color-mix(in srgb,var(--theme-panel,#101a13) 76%,transparent)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"var(--theme-text,#e7f5e6)",fontWeight:600,cursor:"pointer",boxShadow:"0 8px 24px #0005"}}>{compactJoin?"Join":`👥 Guests${host&&pendingCount>0?` · ${pendingCount}`:""} ${panelOpen?"⌃":"⌄"}`}</button>
-    {panelOpen&&<section id="live-guest-controls-panel" aria-label="Live guest controls" style={{position:"absolute",right:0,bottom:"calc(100% + 10px)",width:"min(340px,calc(100vw - 32px))",maxHeight:"min(55dvh,430px)",overflowY:"auto",overscrollBehavior:"contain",padding:14,border:"1px solid var(--theme-border,#48624b)",borderRadius:20,background:"color-mix(in srgb,var(--theme-panel,#101a13) 90%,transparent)",backdropFilter:"blur(22px)",WebkitBackdropFilter:"blur(22px)",boxShadow:"0 16px 44px #0009",color:"var(--theme-text,#e7f5e6)"}}>
-    <h3 style={{margin:"0 0 8px"}}>🎙️ 1Muslim Guest Studio</h3>
-    <p style={{fontSize:12,opacity:.8}}>Video: host + 3 guests. Audio: host + 11 guests.</p>
+    {panelOpen&&<section id="live-guest-controls-panel" aria-label="Live guest controls" style={{position:"absolute",right:0,bottom:"calc(100% + 10px)",width:host?"min(340px,calc(100vw - 32px))":"min(230px,calc(100vw - 32px))",maxHeight:"min(55dvh,430px)",overflowY:"auto",overscrollBehavior:"contain",padding:host?14:8,border:"1px solid color-mix(in srgb,var(--theme-border,#48624b) 38%,transparent)",borderRadius:18,background:"color-mix(in srgb,var(--theme-panel,#101a13) 14%,transparent)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",boxShadow:"0 8px 24px #0003",color:"var(--theme-text,#e7f5e6)"}}>
     {host?<div><strong>👑 Guest requests</strong>
       {requests.filter(r=>r.status==="pending").map(r=><div key={r.id} style={{display:"flex",gap:8,alignItems:"center",marginTop:8,flexWrap:"wrap"}}>
         <span>{r.user_id.slice(0,8)} · {r.mode}</span>
@@ -216,12 +214,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
       </div>)}
       {loaded&&!requests.some(r=>r.status==="pending"||r.status==="approved")&&<p>No guest requests yet.</p>}
     </div>:<div>
-      {!joined&&me?.status!=="approved"&&<>
-        <select aria-label="Guest mode" value={audioOnly?"pfp":mode} disabled={busy||audioOnly===true} onChange={e=>setMode(e.target.value as "pfp"|"camera")}>
-          <option value="pfp">🎙️ Audio + profile picture</option>{audioOnly!==true&&<option value="camera">📹 Camera + audio</option>}
-        </select>{" "}
-        <button type="button" disabled={busy||me?.status==="pending"} onClick={()=>void request()}>Request to join</button>
-      </>}
+      {!joined&&me?.status!=="approved"&&me?.status!=="pending"&&<button type="button" disabled={busy} onClick={()=>void request()} style={{width:"100%",padding:"11px 18px",border:"1px solid var(--theme-border,#ffffff55)",borderRadius:999,background:"color-mix(in srgb,var(--theme-panel,#101a13) 12%,transparent)",color:"var(--theme-text,#fff)",fontSize:14,fontWeight:600,backdropFilter:"blur(8px)",cursor:"pointer"}}>{busy?"Requesting…":"Request"}</button>}
       {me?.status==="pending"&&<p role="status">⏳ Waiting for host approval…</p>}
       {me?.status==="approved"&&!joined&&<div>
         <label style={{display:"flex",alignItems:"flex-start",gap:8,fontSize:12,margin:"8px 0"}}>
