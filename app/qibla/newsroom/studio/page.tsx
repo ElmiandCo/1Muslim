@@ -53,6 +53,11 @@ export default function QiblaStudio() {
   const queueCounts = statuses.map(status => ({ status, count: articles.filter(article => article.status === status).length }));
   const canEdit = !!active && ((role === "writer" && active.status === "draft") || ((role === "editor" || role === "approver") && ["submitted", "editing", "awaiting_approval"].includes(active.status)));
   const canPublish = !!active && role === "approver" && active.status === "awaiting_approval";
+  // Live editorial metrics are derived from the current form, not stale saved data.
+  const wordCount = form.body.trim() ? form.body.trim().split(/\\s+/u).length : 0;
+  const readingMinutes = Math.max(1, Math.ceil(wordCount / 220));
+  const titleLength = form.title.trim().length;
+  const deckLength = form.subtitle.trim().length;
   const createDraft = async () => {
     if (role !== "writer" || busy) return;
     setBusy(true); setMessage("");
@@ -105,6 +110,12 @@ export default function QiblaStudio() {
           <label>Title<input value={form.title} onChange={e => { setDirty(true); setForm(f => ({...f, title:e.target.value})); }} maxLength={250} readOnly={!canEdit}/></label>
           <label>Subtitle<input value={form.subtitle} onChange={e => { setDirty(true); setForm(f => ({...f, subtitle:e.target.value})); }} maxLength={500} readOnly={!canEdit}/></label>
           <label>Article body<textarea rows={14} value={form.body} onChange={e => { setDirty(true); setForm(f => ({...f, body:e.target.value})); }} readOnly={!canEdit}/></label>
+          <div className={styles.editorMetrics} role="status" aria-live="off" aria-label="Article writing statistics">
+            <span>{wordCount.toLocaleString()} words</span>
+            <span>{readingMinutes} min read</span>
+            <span>Headline {titleLength}/250</span>
+            <span>Deck {deckLength}/500</span>
+          </div>
           {role === "writer" && active.status === "draft" && <label>Layout template <select value={template} onChange={e => { setTemplate(e.target.value as "classic" | "feature"); setDirty(true); }}><option value="classic">Classic</option><option value="feature">Feature</option></select></label>}
           {dirty && <p role="status">Unsaved changes — save before submitting, publishing or leaving.</p>}
           <button type="button" className={styles.previewToggle} aria-expanded={preview} onClick={() => setPreview(value => !value)}>{preview ? "Hide reading preview" : "Preview article"}</button>
