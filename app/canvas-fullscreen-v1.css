@@ -2781,3 +2781,7 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
 .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassIcon{font-size:14px!important;line-height:1!important;opacity:1}
 @media(max-width:420px){.oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab{flex-direction:row!important;gap:3px!important;font-size:10px!important;min-height:34px!important}}
 @media(prefers-reduced-motion:reduce){.oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab{transition:none!important}}
+
+/* Only the selected live mode has a filled surface; all other segments and the rail are transparent. */
+.oneMuslimLiveFormatGlassNav{background:transparent!important;box-shadow:none!important}
+.oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab:not([aria-pressed="true"]){background:transparent!important;box-shadow:none!important;border-color:transparent!important}
