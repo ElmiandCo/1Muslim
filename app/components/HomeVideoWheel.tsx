@@ -29,7 +29,7 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
     const top=Math.max(0,vr.bottom-sr.top+38);
     const bottom=Math.min(sr.height,cr.top-sr.top-8);
     const available=Math.max(0,bottom-top);
-    const safeHeight=Math.max(72,Math.min(130,available));
+    const safeHeight=Math.max(72,Math.min(138,available));
     slot.style.setProperty("top",top+"px","important");
     slot.style.setProperty("height",safeHeight+"px","important");
     slot.style.setProperty("visibility","visible","important");
