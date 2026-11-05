@@ -14,6 +14,7 @@ type Article = {
   section_one: { text?: string } | null;
   section_two: { text?: string } | null;
   created_at: string;
+  subtitle?: string;
 };
 
 export default function QiblaArticlePage() {
@@ -38,9 +39,25 @@ export default function QiblaArticlePage() {
         .eq("published", true)
         .maybeSingle();
       if (!active) return;
-      if (queryError) setError("Unable to load this article.");
-      else if (!data) setError("This article is unavailable.");
-      else setArticle(data as Article);
+      if (data && !queryError) setArticle(data as Article);
+      else {
+        // Only published editorial articles may resolve on public article URLs.
+        // Backend RLS remains the authority for access to unpublished content.
+        const { data: approved, error: editorialError } = await createClient()
+          .from("qibla_articles")
+          .select("id,title,subtitle,body,template,published_at")
+          .eq("id", articleId)
+          .eq("status", "published")
+          .maybeSingle();
+        if (approved && !editorialError) setArticle({
+          id: approved.id, title: approved.title, subtitle: approved.subtitle,
+          template_type: approved.template, hero_media_path: null,
+          section_one: { text: approved.body }, section_two: null,
+          created_at: approved.published_at ?? "",
+        });
+        else if (queryError && editorialError) setError("Unable to load this article.");
+        else setError("This article is unavailable.");
+      }
       setLoading(false);
     };
     void load();
@@ -59,6 +76,7 @@ export default function QiblaArticlePage() {
           <header className={styles.header}>
             <p className={styles.kicker}>1QIBLA · {article.template_type === "video" ? "VIDEO" : "ARTICLE"}</p>
             <h1>{article.title}</h1>
+            {article.subtitle && <p>{article.subtitle}</p>}
             <time dateTime={article.created_at}>{new Date(article.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</time>
           </header>
           {article.hero_media_path && article.template_type === "image" ?
