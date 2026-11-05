@@ -39,8 +39,11 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     const storageKey=format==="phone"?"oneMuslimPhoneShortsPlaylistPositionV6":"oneMuslimIdleYoutubePlaylistPositionV2";
     let saved:{index:number;seconds:number}|null=null;
     try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
-    let index=selectedIndexRef.current??saved?.index??0;
-    const initialSeconds=saved?Math.max(playlist[index].startSeconds,Math.min(saved.seconds,playlist[index].endSeconds??Number.MAX_SAFE_INTEGER)):playlist[0].startSeconds;
+    // Pick a fresh featured video on page load instead of resuming the last one.
+    // Keep the selection stable for this mounted player until the viewer navigates.
+    let index=selectedIndexRef.current??Math.floor(Math.random()*playlist.length);
+    selectedIndexRef.current=index;
+    const initialSeconds=playlist[index].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
     const next=(step=1)=>{
       if(disposed||!player)return;
