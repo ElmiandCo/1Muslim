@@ -99,7 +99,7 @@ export default function QiblaNewsroom() {
                   <span className={styles.eyebrow}>FEATURED STORY</span>
                   <h2>{featured.title}</h2>
                   <p>{featured.section_one?.text?.slice(0, 220)}</p>
-                  <Link href="/qibla">Read in Qibla →</Link>
+                  <Link href={`/qibla/newsroom/${encodeURIComponent(featured.id)}`}>Read article →</Link>
                 </div>
               </article>
               <div className={styles.sectionHead}><h2>Latest stories</h2><span>{remaining.length} more</span></div>
@@ -110,7 +110,7 @@ export default function QiblaNewsroom() {
                     <span className={styles.eyebrow}>{page.template_type === "video" ? "VIDEO STORY" : "ARTICLE"}</span>
                     <h3>{page.title}</h3>
                     <p>{page.section_one?.text?.slice(0, 150)}</p>
-                    <Link href="/qibla">View in archive →</Link>
+                    <Link href={`/qibla/newsroom/${encodeURIComponent(page.id)}`}>Read article →</Link>
                   </div>
                 </article>)}</div>
             </section>}
