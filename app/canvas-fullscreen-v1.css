@@ -587,13 +587,6 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
 .canvas-workspace-indicators nav[aria-label="Dashboard workspaces"]>button{width:10px!important;height:10px!important;min-width:10px!important;min-height:10px!important;flex:0 0 10px!important}
 .homeMakkahEmpty{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:10px;min-height:135px;padding:12px}
 .homeMakkahEmpty>strong{text-align:center}
-.homeLiveCommentForm{display:grid;gap:7px;width:100%;max-width:520px;margin:0 auto}
-.homeLiveCommentForm label{font-size:12px;color:#d9e9dd}
-.homeLiveCommentForm>div{display:flex;gap:8px}
-.homeLiveCommentForm input{flex:1;min-width:0;padding:9px 11px;border:1px solid #d4bb8366;border-radius:12px;background:#072b25b8;color:#fff}
-.homeLiveCommentForm button{padding:8px 12px;border:1px solid #e5cb8c77;border-radius:12px;background:#174d3b;color:#fff}
-.homeLiveCommentForm button:disabled{opacity:.45}
-.homeLiveCommentForm small{color:#f2dca8}
 @media(min-width:760px){
  .canvas-workspace-indicators{margin-bottom:3px}
  main:not([data-canvas-fullscreen="true"]) > section[aria-label="1Muslim Control Center"]{min-height:calc(100dvh - 230px)!important}
@@ -625,25 +618,15 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
 .homeMakkahEmpty>strong{display:none!important}
 @keyframes liveWaitingPulse{0%,100%{transform:scale(.97);box-shadow:0 0 0 6px #9d44402a}50%{transform:scale(1.04);box-shadow:0 0 0 13px #9d444012}}
 @media(prefers-reduced-motion:reduce){.homeLiveWaitingPulse{animation:none}}
-
-
-/* Preview: Live-first workspace, clean desktop and mobile comments. */
-.homeLiveCommentDock{display:flex;flex-direction:column;gap:10px;width:100%;padding:12px;border:1px solid #cfb56c55;border-radius:18px;background:linear-gradient(135deg,#0b3029d9,#103a32bb);backdrop-filter:blur(18px)}
-.homeLiveCommentTitle{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#f2dda3;font-size:11px;letter-spacing:.06em}
-.homeLiveCommentTitle small{font-size:10px;color:#b9d3c9;letter-spacing:0}
 .homeLiveDemoThread{display:flex;flex-direction:column;gap:8px;min-height:132px;overflow:hidden}
 .homeLiveDemoComment{display:flex;gap:9px;align-items:center;animation:liveCommentFloat 12s ease-in-out infinite both;max-width:100%}
 .homeLiveDemoAvatar{flex:none;width:31px;height:31px;display:grid;place-items:center;border-radius:50%;border:1px solid #c4a85b;background:#256d59;color:#f7e9bd;font-size:12px}
 .homeLiveDemoComment>span:last-child{display:flex;flex-direction:column;gap:2px;min-width:0}
 .homeLiveDemoComment strong{color:#e9d49e;font-size:11px}
 .homeLiveDemoComment small{color:#f1f7f1;font-size:12px;white-space:normal;line-height:1.35}
-.homeLiveCommentComposer{display:flex;gap:8px;align-items:center;border:1px solid #c3ae7070;background:#071f1bd9;border-radius:99px;padding:5px 6px 5px 14px}
-.homeLiveCommentComposer input{flex:1;min-width:0;background:transparent;border:0;outline:none;color:white;font-size:13px}
-.homeLiveCommentComposer button{flex:none;width:35px;height:35px;border-radius:50%;border:1px solid #d5bc74;background:#276f57;color:#f9e6aa}
-.homeLiveCommentComposer button:disabled{opacity:.5}
 @keyframes liveCommentFloat{0%,10%{opacity:0;transform:translateY(9px)}20%,73%{opacity:1;transform:translateY(0)}90%,100%{opacity:0;transform:translateY(-9px)}}
 @media(min-width:900px){.homeLiveChannelPlayer{min-height:440px!important;aspect-ratio:auto!important;height:min(58vh,690px)!important}.homeLiveDemoThread{min-height:180px}.homeMakkahLive{min-height:680px!important}}
-@media(max-width:600px){.homeLiveChannelPlayer{min-height:220px;aspect-ratio:4/3}.homeLiveCommentDock{padding:10px}.homeLiveDemoThread{min-height:125px}}
+@media(max-width:600px){.homeLiveChannelPlayer{min-height:220px;aspect-ratio:4/3}.homeLiveDemoThread{min-height:125px}}
 @media(prefers-reduced-motion:reduce){.homeLiveDemoComment{animation:none;opacity:1}}
 
 
@@ -668,7 +651,7 @@ main[data-canvas-fullscreen="true"][data-fullscreen-orbit="enter"] > section[ari
 @media(max-width:759px){main[data-canvas-fullscreen] > [class*="intro"]{padding-bottom:0!important;margin-bottom:0!important}main[data-canvas-fullscreen] > .canvas-workspace-indicators{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}main[data-canvas-fullscreen] > .canvas-workspace-indicators nav{margin-top:0!important;margin-bottom:0!important}}
 
 /* Desktop Live Theater: player is the primary canvas; no suggestions card. */
-@media(min-width:900px){.liveWidgetRootClean{width:100%!important;max-width:none!important;min-width:0!important;flex:1 1 auto!important}.liveWidgetRootClean>.homeMakkahLive{width:100%!important;max-width:none!important;min-height:720px!important}.liveWidgetRootClean .homeLiveChannelPlayer{width:100%!important;height:clamp(480px,68vh,900px)!important;min-height:480px!important;aspect-ratio:auto!important}.liveWidgetRootClean .homeLiveCommentDock{width:100%!important;max-width:none!important}.liveWidgetRootClean .homeLiveCarouselArrows{align-self:stretch!important}}
+@media(min-width:900px){.liveWidgetRootClean{width:100%!important;max-width:none!important;min-width:0!important;flex:1 1 auto!important}.liveWidgetRootClean>.homeMakkahLive{width:100%!important;max-width:none!important;min-height:720px!important}.liveWidgetRootClean .homeLiveChannelPlayer{width:100%!important;height:clamp(480px,68vh,900px)!important;min-height:480px!important;aspect-ratio:auto!important}.liveWidgetRootClean .homeLiveCarouselArrows{align-self:stretch!important}}
 
 /* Movable orb system: preserve existing tap actions and allow fast corner flick to hide. */
 [data-orb-gesture]{touch-action:none!important;user-select:none;-webkit-user-select:none;cursor:grab}
@@ -1102,14 +1085,6 @@ main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button{
   box-sizing:border-box!important;
   overflow:visible!important;
  }
- main[class*="control"] [data-widget="Live"] > .homeLiveViewerConversation{
-  grid-row:2!important;grid-column:1!important;
-  width:100%!important;height:100%!important;
-  min-height:0!important;max-width:100%!important;
-  margin:0 auto!important;box-sizing:border-box!important;
-  overflow-y:auto!important;
-  justify-self:center!important;align-self:stretch!important;
- }
  main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls{
   inset:0!important;overflow:visible!important;
  }
@@ -1118,9 +1093,6 @@ main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button{
  }
  main[class*="control"] [data-widget="Live"] .homeLivePlayerSideControls button:last-child{
   transform:translateX(100%)!important;
- }
- main[class*="control"] [data-widget="Live"] > :not(.homeLiveActualPlayer):not(.homeLiveViewerConversation){
-  display:none!important;
  }
 }
 
@@ -1142,19 +1114,6 @@ main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveAct
  overflow:hidden!important;box-sizing:border-box!important;
  border-radius:20px!important;
 }
-main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
- position:absolute!important;left:3%!important;right:3%!important;
- bottom:2%!important;top:auto!important;z-index:35!important;
- display:block!important;width:94%!important;
- height:auto!important;max-height:45%!important;min-height:0!important;
- margin:0 auto!important;overflow-y:auto!important;
- border-radius:20px!important;
- background:linear-gradient(180deg,rgba(2,24,20,.56),rgba(2,28,22,.86))!important;
- border:1px solid rgba(216,188,109,.4)!important;
- backdrop-filter:blur(14px)!important;
- -webkit-backdrop-filter:blur(14px)!important;
- box-sizing:border-box!important;
-}
 main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage .homeLivePlayerSideControls{
  z-index:32!important;
 }
@@ -1169,9 +1128,6 @@ main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage .homeLivePlaye
   min-height:0!important;height:100%!important;
   width:100%!important;max-width:100%!important;
  }
- main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
-  max-height:44%!important;
- }
 }
 
 /* Live stage: direct class targeting works regardless of nested widget wrappers. */
@@ -1185,16 +1141,6 @@ main[class*="control"] .homeLiveUnifiedStage > .homeLiveActualPlayer{
  position:absolute!important;inset:0!important;width:100%!important;
  height:100%!important;min-height:0!important;max-width:none!important;
  aspect-ratio:auto!important;margin:0!important;overflow:hidden!important;
-}
-main[class*="control"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
- position:absolute!important;bottom:12px!important;left:3%!important;right:3%!important;
- top:auto!important;width:94%!important;height:auto!important;
- max-height:42%!important;min-height:0!important;z-index:50!important;
- overflow-y:auto!important;margin:0 auto!important;
- background:rgba(1,26,21,.38)!important;
- border:1px solid rgba(221,193,120,.28)!important;
- border-radius:18px!important;
- backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;
 }
 main[class*="control"] .homeLiveStreamCarousel{
  position:absolute!important;top:42px!important;left:4%!important;right:4%!important;
@@ -1232,9 +1178,6 @@ main[class*="control"] .introActionDock button.homeAuthSignIn .liveDockDot{
  background:#35ff8f!important;box-shadow:0 0 9px #35ff8f!important;
 }
 @media(max-width:759px){
- main[class*="control"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
-  bottom:8px!important;max-height:44%!important;
- }
  main[class*="control"] .homeLiveStreamCarousel{top:20px!important}
 }
 
@@ -1262,16 +1205,6 @@ main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage .homeLiveActua
  justify-content:center!important;gap:12px!important;
  visibility:visible!important;opacity:1!important;z-index:3!important;
  background:rgba(0,24,20,.48)!important;
-}
-main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
- display:block!important;position:absolute!important;
- bottom:9px!important;left:3%!important;right:3%!important;
- width:94%!important;height:auto!important;max-height:39%!important;
- z-index:40!important;visibility:visible!important;opacity:1!important;
- pointer-events:auto!important;
- background:rgba(2,36,28,.48)!important;
- border:1px solid rgba(226,198,125,.38)!important;
- backdrop-filter:blur(11px)!important;-webkit-backdrop-filter:blur(11px)!important;
 }
 main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveStreamCarousel{
  z-index:45!important;visibility:visible!important;opacity:1!important;
@@ -1333,15 +1266,6 @@ border:1px solid rgba(227,192,111,.5)!important;border-radius:20px!important;
 background:rgba(0,44,35,.45)!important;backdrop-filter:blur(13px)!important;
 -webkit-backdrop-filter:blur(13px)!important;box-sizing:border-box!important;
 }
-main[class*="control"] .homeLiveConversationDock > .homeLiveViewerConversation{
-position:relative!important;inset:auto!important;display:flex!important;flex-direction:column!important;
-gap:7px!important;width:100%!important;height:100%!important;max-height:none!important;
-padding:10px 13px!important;margin:0!important;overflow:auto!important;box-sizing:border-box!important;
-background:transparent!important;border:0!important;box-shadow:none!important;
-backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-main[class*="control"] .homeLiveConversationDock .homeLiveDemoComments{flex:1 1 auto!important;min-height:0!important;overflow:auto!important}
-main[class*="control"] .homeLiveConversationDock .homeLiveCommentForm{flex:none!important}
-main[class*="control"] .homeLiveConversationDock .homeLiveCommentDisclaimer{display:none!important}
 main[class*="control"] .homeLiveConversationDock .homeLiveStudioEntry{display:none!important}
 main[class*="control"] .introActionDock button.homeAuthSignIn{
 background:linear-gradient(135deg,#078b45,#014b2d)!important;border:1px solid #36f27b!important;
@@ -1398,10 +1322,6 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage > 
  background:rgba(0,40,33,.38)!important;backdrop-filter:blur(12px)!important;
  -webkit-backdrop-filter:blur(12px)!important;box-sizing:border-box!important;
 }
-main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .homeLiveViewerConversation{
- display:flex!important;flex-direction:column!important;width:100%!important;height:100%!important;
- max-height:none!important;overflow:auto!important;background:transparent!important;
-}
 main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .homeLivePlayerSideControls{
  position:absolute!important;left:0!important;right:0!important;top:45%!important;
  width:100%!important;z-index:10!important;display:flex!important;
@@ -1448,10 +1368,6 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
  justify-content:center!important;flex-direction:column!important;gap:15px!important;
  visibility:visible!important;opacity:1!important;color:white!important;
 }
-.canvas-vertical-main > .canvas-live-independent-stage .homeLiveViewerConversation{
- display:flex!important;width:100%!important;height:100%!important;max-height:none!important;
- flex-direction:column!important;overflow:auto!important;background:transparent!important;
-}
 
 
 /* Rebuilt Live Canvas: one stage, two equal halves. Legacy widget CSS does not apply. */
@@ -1475,14 +1391,11 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
 .oneMuslimLiveArrows{position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;pointer-events:none!important;padding:0 6px!important}
 .oneMuslimLiveArrows button{pointer-events:auto!important;width:42px!important;height:42px!important;border-radius:50%!important;border:1px solid #c4aa6b!important;background:rgba(0,60,49,.65)!important;color:white!important;font-size:28px!important}
 .oneMuslimLiveWatch{position:absolute!important;bottom:8px!important;left:12px!important;color:white!important;background:rgba(0,45,35,.8)!important;padding:7px 12px!important;border-radius:10px!important}
-.oneMuslimLiveBottom{min-width:0!important;min-height:0!important;display:flex!important;overflow:hidden!important;padding:6px 0 0!important}
-.oneMuslimLiveBottom > *{display:flex!important;flex:1 1 auto!important;min-height:0!important;min-width:0!important;overflow:auto!important;background:rgba(0,45,35,.4)!important;backdrop-filter:blur(12px)!important;border:1px solid rgba(222,187,103,.55)!important;border-radius:20px!important}
 
 /* Live stage visibility lock: render above the decorative scene and legacy widget layers. */
 [data-workspace-page="0"] .canvas-vertical-portal{position:relative!important;z-index:100!important;isolation:isolate!important;overflow:hidden!important}
 [data-workspace-page="0"] .canvas-vertical-main{z-index:101!important;overflow:visible!important}
 [data-workspace-page="0"] .canvas-vertical-main > [data-live-stage-version="top-layer-v2"]{z-index:2147483000!important;position:absolute!important;inset:0!important;display:grid!important;grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;transform:none!important;filter:none!important}
-[data-workspace-page="0"] .oneMuslimLiveTop,[data-workspace-page="0"] .oneMuslimLiveBottom{position:relative!important;z-index:2!important;visibility:visible!important;opacity:1!important}
 [data-workspace-page="0"] .oneMuslimLiveVideo{z-index:3!important}
 
 /* Diagnostic v2 showed stage 398x16, player 382x2: parent collapsed.
@@ -1585,16 +1498,6 @@ main[data-canvas-fullscreen="true"] > section[aria-label="1Muslim Control Center
  grid-template-rows:minmax(0,1fr)!important;
 }
 [data-workspace-page="0"] .oneMuslimLiveTop{grid-row:1!important;grid-column:1!important;height:100%!important;min-height:0!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom{position:absolute!important;z-index:35!important;left:10%!important;right:10%!important;bottom:clamp(12px,4%,30px)!important;height:auto!important;max-height:42%!important;min-height:0!important;overflow:visible!important;padding:0!important;pointer-events:none!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom > .homeLiveViewerConversation{pointer-events:auto!important;display:flex!important;flex-direction:column!important;gap:6px!important;width:100%!important;height:auto!important;min-height:0!important;max-height:100%!important;padding:8px 10px!important;border:0!important;border-radius:14px!important;background:linear-gradient(0deg,rgba(0,16,15,.38),rgba(0,16,15,.04))!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;overflow:hidden!important;color:#fff!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveViewerConversation header{display:none!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{flex:0 1 auto!important;max-height:155px!important;min-height:36px!important;overflow:auto!important;display:flex!important;flex-direction:column!important;justify-content:flex-end!important;gap:5px!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments p{margin:0!important;padding:3px 6px!important;border:0!important;background:rgba(0,17,15,.18)!important;border-radius:12px!important;color:white!important;text-shadow:0 1px 4px #000!important;font-size:13px!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{display:flex!important;flex-direction:row!important;align-items:center!important;gap:7px!important;flex:0 0 auto!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input{flex:1!important;min-width:0!important;width:0!important;border-radius:24px!important;background:rgba(0,20,18,.3)!important;border:1px solid rgba(255,255,255,.28)!important;color:white!important;padding:10px 12px!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button{width:auto!important;min-width:60px!important;flex:none!important;border-radius:22px!important;padding:10px!important;background:rgba(3,94,65,.6)!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentDisclaimer,
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveStudioEntry{display:none!important}
 
 /* Profile is a scrollable document, not a swipe-to-leave surface. */
 .canvas-vertical-secondary{overflow-y:auto!important;overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important}
@@ -1637,15 +1540,7 @@ header[class*="controlHeader"] [class*="headerActions"] a{
  border-color:rgba(var(--canvas-control-border-rgb),.56)!important;
  transition:background-color .55s ease,border-color .55s ease,box-shadow .55s ease!important;
 }
-[class*="introActionDock"] [class*="introLiveButton"],.canvas-edge-chevron,
-.oneMuslimLiveBottom .homeLiveCommentForm button,
-.oneMuslimLiveTop button:not([class*="play"]){
- background-color:rgba(var(--canvas-control-accent-rgb),.76)!important;
- border-color:rgba(var(--canvas-control-border-rgb),.72)!important;
- transition:background-color .55s ease,border-color .55s ease,opacity .38s ease,transform .38s ease!important;
-}
 .canvas-edge-chevron.is-visible{background:rgba(var(--canvas-control-surface-rgb),.65)!important}
-.oneMuslimLiveBottom .homeLiveCommentForm button:disabled{opacity:.5!important}
 
 /* Remove legacy floating green sparkle orb; preserve four-way navigation. */
 .canvas-orb-floating-dock{display:none!important;visibility:hidden!important;pointer-events:none!important}
@@ -1707,11 +1602,6 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 /* Keep the LIVE player functional while revealing the single background mirror. */
 [data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveVideo,
 [data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveVideo:not(:has(video)){
- background:transparent!important;
- backdrop-filter:none!important;
- box-shadow:none!important;
-}
-[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveBottom > *{
  background:transparent!important;
  backdrop-filter:none!important;
  box-shadow:none!important;
@@ -1929,15 +1819,6 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   height:auto!important;
 }
 
-/* Mobile Live dock: pin composer to bottom, allow comments to grow upward. */
-[data-workspace-page="0"] .oneMuslimLiveBottom{display:flex!important;flex-direction:column!important;justify-content:flex-end!important;min-height:0!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom>.homeLiveViewerConversation{margin-top:auto!important;justify-content:flex-end!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{margin-top:auto!important;flex-shrink:1!important}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{margin-top:auto!important;position:relative!important;bottom:0!important}
-/* iOS Safari: 16px prevents focus auto-zoom; blur after send restores visual viewport. */
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input{font-size:16px!important;line-height:1.35!important;touch-action:manipulation}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button{font-size:16px!important}
-
 /* Ummah Feed 3.0 — theme-responsive, media-first cards */
 .community-posts-list .ummah-template{--post-accent:var(--theme-primary,var(--accent-color,#d6b875));position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--post-accent) 55%,transparent);background:linear-gradient(145deg,color-mix(in srgb,var(--post-accent) 12%,rgba(9,15,23,.76)),rgba(7,16,25,.68));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
 .community-posts-list .ummah-template-verse{background:radial-gradient(ellipse at 80% 0%,color-mix(in srgb,var(--post-accent) 26%,transparent),transparent 70%),rgba(8,16,22,.72)}
@@ -2062,10 +1943,6 @@ header[class*="controlHeader"] [class*="headerActions"] a{
     height: min(56vh, 680px) !important;
     aspect-ratio: 16 / 9 !important;
   }
-  .liveWidgetRootClean .homeLiveCommentDock {
-    visibility: visible !important;
-    min-height: 0 !important;
-  }
 }
 
 /* Desktop counterpart to the existing mobile collapsed-parent repair.
@@ -2165,63 +2042,6 @@ header[class*="controlHeader"] [class*="headerActions"] a{
   grid-template-rows:minmax(0,1fr) auto!important;
   gap:0!important;
 }
-[data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom{
-  position:relative!important;
-  align-self:end!important;
-  width:100%!important;
-  height:auto!important;
-  max-height:180px!important;
-  min-height:116px!important;
-  padding:14px 10px 10px!important;
-  overflow:visible!important;
-  isolation:isolate;
-  background:transparent!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:-1;
-  border-radius:18px;
-  pointer-events:none;
-  background:linear-gradient(to bottom,rgba(4,14,30,0),rgba(3,12,28,.32) 35%,rgba(2,9,22,.62) 100%);
-  -webkit-backdrop-filter:blur(12px);
-  backdrop-filter:blur(12px);
-  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 24%);
-  mask-image:linear-gradient(to bottom,transparent,#000 24%);
-}
-[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom > .homeLiveViewerConversation{
-  background:transparent!important;
-  border:0!important;
-  box-shadow:none!important;
-  backdrop-filter:none!important;
-  -webkit-backdrop-filter:none!important;
-  padding:0!important;
-  margin:0!important;
-  width:100%!important;
-  max-height:100%!important;
-  overflow:hidden!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{
-  overflow-y:auto!important;
-  min-height:0!important;
-  max-height:90px!important;
-  color:#fff!important;
-  text-shadow:0 1px 3px rgba(0,0,0,.85);
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{
-  flex-shrink:0!important;
-  margin-top:6px!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input{
-  background:rgba(5,15,34,.38)!important;
-  color:#fff!important;
-  border-color:rgba(218,237,255,.38)!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button{
-  background:rgba(14,71,137,.55)!important;
-  color:#fff!important;
-}
 
 
 /* Homepage Live: keep the comment composer anchored to the actual stage bottom.
@@ -2230,49 +2050,6 @@ header[class*="controlHeader"] [class*="headerActions"] a{
 [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) {
   position:relative!important;
   grid-template-rows:minmax(0,1fr)!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom {
-  position:absolute!important;
-  inset:auto 2% clamp(8px,1.5%,18px) 2%!important;
-  width:96%!important;
-  height:auto!important;
-  min-height:0!important;
-  max-height:min(36%,220px)!important;
-  margin:0!important;
-  padding:8px!important;
-  box-sizing:border-box!important;
-  overflow:hidden!important;
-  z-index:35!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom > .homeLiveViewerConversation {
-  width:100%!important;
-  max-width:100%!important;
-  min-width:0!important;
-  box-sizing:border-box!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm {
-  display:flex!important;
-  width:100%!important;
-  max-width:100%!important;
-  min-width:0!important;
-  gap:clamp(5px,1.5vw,9px)!important;
-  box-sizing:border-box!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input {
-  flex:1 1 0!important;
-  width:0!important;
-  min-width:0!important;
-  max-width:100%!important;
-  box-sizing:border-box!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button {
-  flex:0 0 auto!important;
-  width:auto!important;
-  min-width:0!important;
-  max-width:35%!important;
-  padding:9px clamp(9px,2vw,14px)!important;
-  box-sizing:border-box!important;
-  white-space:nowrap!important;
 }
 
 /* Live home: fit the available canvas height with 18px bottom clearance.
@@ -2285,30 +2062,6 @@ header[class*="controlHeader"] [class*="headerActions"] a{
     min-height:0!important;
     overflow:hidden!important;
   }
-}
-[data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom{
-  bottom:8px!important;
-  max-height:min(36%,220px)!important;
-  overflow:hidden!important;
-  display:flex!important;
-  flex-direction:column!important;
-  justify-content:flex-end!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom > .homeLiveViewerConversation{
-  min-height:0!important;
-  display:flex!important;
-  flex-direction:column!important;
-  justify-content:flex-end!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{
-  min-height:0!important;
-  flex:0 1 auto!important;
-  overflow-y:auto!important;
-  overscroll-behavior:contain;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{
-  flex:0 0 auto!important;
-  margin-top:6px!important;
 }
 
 
@@ -2428,6 +2181,466 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
 .oneMuslimLiveInterruptionNotice strong{font-weight:700}
 @keyframes oneMuslimLiveNoticeFade{0%{opacity:0;transform:translate(-50%,-6px)}14%,78%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-4px)}}
 @media(prefers-reduced-motion:reduce){.oneMuslimLiveInterruptionNotice{animation:none}}
+@media (max-width:767px){
+}
+@media(prefers-reduced-motion:reduce){
+}
+
+
+/* Mobile hotfix: show the existing live comments OVER the player.
+   Scoped to home stage only; leave desktop and other modes untouched. */
+@media (max-width:767px){
+}
+
+
+/* Responsive live chat dock: keep the composer on the bottom edge of the
+   actual stage at every viewport size. Expansion consumes space upward. */
+[data-workspace-page="0"] .oneMuslimLiveStage:is([data-live-format="desktop"],[data-live-format="phone"],[data-live-format="audio"]){
+ position:relative!important;
+ min-width:0!important;
+ min-height:0!important;
+ overflow:hidden!important;
+}
+@media(max-width:767px){
+}
+
+/* Verified production Home comments rules from 35f8bff; replaced conflicting main selectors. */
+
+@media(prefers-reduced-motion:reduce){}
+@media(prefers-reduced-motion:reduce){}
+@media(prefers-reduced-motion:reduce){}
+@media(prefers-reduced-motion:reduce){}
+@media(max-width:370px){}
+@media(hover:hover) and (pointer:fine){
+}
+@media(prefers-reduced-motion:reduce){
+}
+@media(prefers-reduced-motion:reduce){
+}
+@media(prefers-reduced-motion:reduce){}
+@media(max-width:600px){
+}
+@media(max-width:380px){}
+@media(max-width:600px){
+}
+@media(prefers-reduced-motion:reduce){
+}
+@media(prefers-reduced-motion:no-preference){
+}
+@media(max-width:600px){}
+
+/* Vertical gesture: finger-linked lift and semicircular orbital roll.
+   Horizontal workspace motion remains independent. */
+@media (pointer:coarse) and (prefers-reduced-motion:no-preference){
+}
+@media(prefers-reduced-motion:reduce){}
+@media(max-width:430px){
+}
+/* Give the Canvas the vertical room formerly lost to oversized intro spacing. */
+@media(min-width:760px){
+}
+@media(prefers-reduced-motion:reduce){
+}
+.homeLiveCommentForm{display:grid;gap:7px;width:100%;max-width:520px;margin:0 auto}
+.homeLiveCommentForm label{font-size:12px;color:#d9e9dd}
+.homeLiveCommentForm>div{display:flex;gap:8px}
+.homeLiveCommentForm input{flex:1;min-width:0;padding:9px 11px;border:1px solid #d4bb8366;border-radius:12px;background:#072b25b8;color:#fff}
+.homeLiveCommentForm button{padding:8px 12px;border:1px solid #e5cb8c77;border-radius:12px;background:#174d3b;color:#fff}
+.homeLiveCommentForm button:disabled{opacity:.45}
+.homeLiveCommentForm small{color:#f2dca8}
+@media(min-width:760px){
+}
+@media(prefers-reduced-motion:reduce){}
+@media(prefers-reduced-motion:reduce){}
+
+
+/* Preview: Live-first workspace, clean desktop and mobile comments. */
+.homeLiveCommentDock{display:flex;flex-direction:column;gap:10px;width:100%;padding:12px;border:1px solid #cfb56c55;border-radius:18px;background:linear-gradient(135deg,#0b3029d9,#103a32bb);backdrop-filter:blur(18px)}
+.homeLiveCommentTitle{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#f2dda3;font-size:11px;letter-spacing:.06em}
+.homeLiveCommentTitle small{font-size:10px;color:#b9d3c9;letter-spacing:0}
+.homeLiveCommentComposer{display:flex;gap:8px;align-items:center;border:1px solid #c3ae7070;background:#071f1bd9;border-radius:99px;padding:5px 6px 5px 14px}
+.homeLiveCommentComposer input{flex:1;min-width:0;background:transparent;border:0;outline:none;color:white;font-size:13px}
+.homeLiveCommentComposer button{flex:none;width:35px;height:35px;border-radius:50%;border:1px solid #d5bc74;background:#276f57;color:#f9e6aa}
+.homeLiveCommentComposer button:disabled{opacity:.5}
+@media(min-width:900px){}
+@media(max-width:600px){.homeLiveCommentDock{padding:10px}}
+@media(prefers-reduced-motion:reduce){}
+@media(prefers-reduced-motion:reduce){}
+
+/* Tighten empty strip between greeting and workspace dots on mobile. */
+@media(max-width:759px){}
+
+/* Desktop Live Theater: player is the primary canvas; no suggestions card. */
+@media(min-width:900px){.liveWidgetRootClean .homeLiveCommentDock{width:100%!important;max-width:none!important}}
+@media(prefers-reduced-motion:reduce){}
+@media(prefers-reduced-motion:reduce){}
+
+/* Desktop-only workspace polish: preserve the mobile layout completely.
+   Keep the main header available in expanded mode and use the whole viewport. */
+@media(min-width:900px) and (min-height:560px){
+}
+@media(min-width:900px) and (max-height:700px){
+}
+
+/* Desktop compact theater: remove the large dead band above the workspace.
+   Charcoal/black surrounds; emerald remains an accent inside glass cards. */
+@media(min-width:900px){
+}
+
+/* Desktop night finish: nearly-black backdrop with restrained emerald highlights.
+   Background-only pass: leave the mobile theme and widget content untouched. */
+@media(min-width:900px){
+}
+@media(max-width:899px){
+}
+@media(max-width:899px){
+}
+@media(min-width:900px){
+}
+@media(prefers-reduced-motion:reduce){}
+@media(max-width:700px){}
+
+/* HUDHUD NAV ISOLATION — 2026-10-18
+   Anchor the six workspace dots and Canvas independently of header/nav flow.
+   Both nav states share identical coordinates; never translate the Canvas. */
+@media(max-width:759px){
+}
+@media(prefers-reduced-motion:reduce){
+}
+@media(max-width:759px){
+}
+@media(prefers-reduced-motion:reduce){
+}
+@media(max-width:759px){
+}
+
+/* Mobile Live: centered outer region (blue), portrait video (green).
+   Maintain centering in both expanded and collapsed navigation modes. */
+@media(max-width:759px){
+}
+
+/* Production mobile Live: exact 50/50 vertical allocation, centered in every Canvas state.
+   Grid rows = player region and conversation region. */
+@media(max-width:759px){
+ main[class*="control"] [data-widget="Live"] > .homeLiveViewerConversation{
+  grid-row:2!important;grid-column:1!important;
+  width:100%!important;height:100%!important;
+  min-height:0!important;max-width:100%!important;
+  margin:0 auto!important;box-sizing:border-box!important;
+  overflow-y:auto!important;
+  justify-self:center!important;align-self:stretch!important;
+ }
+ main[class*="control"] [data-widget="Live"] > :not(.homeLiveActualPlayer):not(.homeLiveViewerConversation){
+  display:none!important;
+ }
+}
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
+ position:absolute!important;left:3%!important;right:3%!important;
+ bottom:2%!important;top:auto!important;z-index:35!important;
+ display:block!important;width:94%!important;
+ height:auto!important;max-height:45%!important;min-height:0!important;
+ margin:0 auto!important;overflow-y:auto!important;
+ border-radius:20px!important;
+ background:linear-gradient(180deg,rgba(2,24,20,.56),rgba(2,28,22,.86))!important;
+ border:1px solid rgba(216,188,109,.4)!important;
+ backdrop-filter:blur(14px)!important;
+ -webkit-backdrop-filter:blur(14px)!important;
+ box-sizing:border-box!important;
+}
+@media(max-width:759px){
+ main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
+  max-height:44%!important;
+ }
+}
+main[class*="control"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
+ position:absolute!important;bottom:12px!important;left:3%!important;right:3%!important;
+ top:auto!important;width:94%!important;height:auto!important;
+ max-height:42%!important;min-height:0!important;z-index:50!important;
+ overflow-y:auto!important;margin:0 auto!important;
+ background:rgba(1,26,21,.38)!important;
+ border:1px solid rgba(221,193,120,.28)!important;
+ border-radius:18px!important;
+ backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;
+}
+@media(max-width:759px){
+ main[class*="control"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
+  bottom:8px!important;max-height:44%!important;
+ }
+}
+main[class*="control"] [data-widget="Live"] .homeLiveUnifiedStage > .homeLiveViewerConversation{
+ display:block!important;position:absolute!important;
+ bottom:9px!important;left:3%!important;right:3%!important;
+ width:94%!important;height:auto!important;max-height:39%!important;
+ z-index:40!important;visibility:visible!important;opacity:1!important;
+ pointer-events:auto!important;
+ background:rgba(2,36,28,.48)!important;
+ border:1px solid rgba(226,198,125,.38)!important;
+ backdrop-filter:blur(11px)!important;-webkit-backdrop-filter:blur(11px)!important;
+}
+main[class*="control"] .homeLiveConversationDock > .homeLiveViewerConversation{
+position:relative!important;inset:auto!important;display:flex!important;flex-direction:column!important;
+gap:7px!important;width:100%!important;height:100%!important;max-height:none!important;
+padding:10px 13px!important;margin:0!important;overflow:auto!important;box-sizing:border-box!important;
+background:transparent!important;border:0!important;box-shadow:none!important;
+backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+main[class*="control"] .homeLiveConversationDock .homeLiveDemoComments{flex:1 1 auto!important;min-height:0!important;overflow:auto!important}
+main[class*="control"] .homeLiveConversationDock .homeLiveCommentForm{flex:none!important}
+main[class*="control"] .homeLiveConversationDock .homeLiveCommentDisclaimer{display:none!important}
+@media(max-width:600px){
+}
+main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .homeLiveViewerConversation{
+ display:flex!important;flex-direction:column!important;width:100%!important;height:100%!important;
+ max-height:none!important;overflow:auto!important;background:transparent!important;
+}
+@media(max-width:759px){
+}
+.canvas-vertical-main > .canvas-live-independent-stage .homeLiveViewerConversation{
+ display:flex!important;width:100%!important;height:100%!important;max-height:none!important;
+ flex-direction:column!important;overflow:auto!important;background:transparent!important;
+}
+.oneMuslimLiveBottom{min-width:0!important;min-height:0!important;display:flex!important;overflow:hidden!important;padding:6px 0 0!important}
+.oneMuslimLiveBottom > *{display:flex!important;flex:1 1 auto!important;min-height:0!important;min-width:0!important;overflow:auto!important;background:rgba(0,45,35,.4)!important;backdrop-filter:blur(12px)!important;border:1px solid rgba(222,187,103,.55)!important;border-radius:20px!important}
+[data-workspace-page="0"] .oneMuslimLiveTop,[data-workspace-page="0"] .oneMuslimLiveBottom{position:relative!important;z-index:2!important;visibility:visible!important;opacity:1!important}
+
+/* Diagnostic v2 showed stage 398x16, player 382x2: parent collapsed.
+   Give the independent Live stage a viewport-sized layout box instead of inheriting 16px. */
+@media (max-width: 767px){
+}
+@media(prefers-reduced-motion:reduce){
+}
+
+/* Native vertical touch scrolling cancels touchend on iOS; reserve Home surface for Canvas vertical gestures. */
+@media (pointer:coarse){}
+[data-workspace-page="0"] .oneMuslimLiveBottom{position:absolute!important;z-index:35!important;left:10%!important;right:10%!important;bottom:clamp(12px,4%,30px)!important;height:auto!important;max-height:42%!important;min-height:0!important;overflow:visible!important;padding:0!important;pointer-events:none!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom > .homeLiveViewerConversation{pointer-events:auto!important;display:flex!important;flex-direction:column!important;gap:6px!important;width:100%!important;height:auto!important;min-height:0!important;max-height:100%!important;padding:8px 10px!important;border:0!important;border-radius:14px!important;background:linear-gradient(0deg,rgba(0,16,15,.38),rgba(0,16,15,.04))!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;overflow:hidden!important;color:#fff!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveViewerConversation header{display:none!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{flex:0 1 auto!important;max-height:155px!important;min-height:36px!important;overflow:auto!important;display:flex!important;flex-direction:column!important;justify-content:flex-end!important;gap:5px!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments p{margin:0!important;padding:3px 6px!important;border:0!important;background:rgba(0,17,15,.18)!important;border-radius:12px!important;color:white!important;text-shadow:0 1px 4px #000!important;font-size:13px!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{display:flex!important;flex-direction:row!important;align-items:center!important;gap:7px!important;flex:0 0 auto!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input{flex:1!important;min-width:0!important;width:0!important;border-radius:24px!important;background:rgba(0,20,18,.3)!important;border:1px solid rgba(255,255,255,.28)!important;color:white!important;padding:10px 12px!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button{width:auto!important;min-width:60px!important;flex:none!important;border-radius:22px!important;padding:10px!important;background:rgba(3,94,65,.6)!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentDisclaimer,
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveStudioEntry{display:none!important}
+@media(prefers-reduced-motion:reduce){}
+[class*="introActionDock"] [class*="introLiveButton"],.canvas-edge-chevron,
+.oneMuslimLiveBottom .homeLiveCommentForm button,
+.oneMuslimLiveTop button:not([class*="play"]){
+ background-color:rgba(var(--canvas-control-accent-rgb),.76)!important;
+ border-color:rgba(var(--canvas-control-border-rgb),.72)!important;
+ transition:background-color .55s ease,border-color .55s ease,opacity .38s ease,transform .38s ease!important;
+}
+.oneMuslimLiveBottom .homeLiveCommentForm button:disabled{opacity:.5!important}
+[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveBottom > *{
+ background:transparent!important;
+ backdrop-filter:none!important;
+ box-shadow:none!important;
+}
+
+/* Profile-only: reclaim unused space beneath the workspace heading on desktop. */
+@media (min-width:701px){
+}
+
+/* Mobile profile space recovery — two screenshot-highlighted dead zones.
+   Preserve the existing scrolling viewport and all profile/Umma controls. */
+@media (max-width:700px){
+}
+
+/* Profile header: fit Everyone / My Profile controls into the previously unused
+   strip under PROFILE, while preserving the gallery viewport and scroll. */
+@media(max-width:700px){
+}
+
+@media(max-width:700px){
+}
+
+@media(max-width:700px){
+}
+
+/* Keep the real profile navigation clickable in the open PROFILE header band. */
+@media(max-width:700px){
+}
+
+@media(max-width:700px){
+}
+
+/* Mobile Live dock: pin composer to bottom, allow comments to grow upward. */
+[data-workspace-page="0"] .oneMuslimLiveBottom{display:flex!important;flex-direction:column!important;justify-content:flex-end!important;min-height:0!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom>.homeLiveViewerConversation{margin-top:auto!important;justify-content:flex-end!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{margin-top:auto!important;flex-shrink:1!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{margin-top:auto!important;position:relative!important;bottom:0!important}
+/* iOS Safari: 16px prevents focus auto-zoom; blur after send restores visual viewport. */
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input{font-size:16px!important;line-height:1.35!important;touch-action:manipulation}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button{font-size:16px!important}
+@media(prefers-reduced-motion:reduce){}
+@media(prefers-reduced-motion:reduce){}
+@media(max-width:480px){}
+@media(prefers-reduced-motion:reduce){}
+
+/* Full-width desktop Live canvas visibility repair (desktop only).
+   Keep narrow windows, mobile and all non-Live slides unchanged. */
+@media (min-width: 1200px) and (min-height: 560px) {
+  .liveWidgetRootClean .homeLiveCommentDock {
+    visibility: visible !important;
+    min-height: 0 !important;
+  }
+}
+
+/* Desktop counterpart to the existing mobile collapsed-parent repair.
+   The absolute Live stage needs a real containing-block height. */
+@media (min-width: 1200px) and (min-height: 560px) {
+}
+@media (min-width:1200px) and (min-height:560px) {
+}
+
+/* Compact desktop Live Messages rail; no global Messenger changes. */
+@media (min-width:1200px) and (min-height:560px) {
+}
+@media(min-width:768px){
+}
+@media(prefers-reduced-motion:reduce){}
+@media(prefers-reduced-motion:reduce){}
+@media(min-width:768px) and (max-width:1199px){}
+[data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom{
+  position:relative!important;
+  align-self:end!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:180px!important;
+  min-height:116px!important;
+  padding:14px 10px 10px!important;
+  overflow:visible!important;
+  isolation:isolate;
+  background:transparent!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  border-radius:18px;
+  pointer-events:none;
+  background:linear-gradient(to bottom,rgba(4,14,30,0),rgba(3,12,28,.32) 35%,rgba(2,9,22,.62) 100%);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 24%);
+  mask-image:linear-gradient(to bottom,transparent,#000 24%);
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom > .homeLiveViewerConversation{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  padding:0!important;
+  margin:0!important;
+  width:100%!important;
+  max-height:100%!important;
+  overflow:hidden!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{
+  overflow-y:auto!important;
+  min-height:0!important;
+  max-height:90px!important;
+  color:#fff!important;
+  text-shadow:0 1px 3px rgba(0,0,0,.85);
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{
+  flex-shrink:0!important;
+  margin-top:6px!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input{
+  background:rgba(5,15,34,.38)!important;
+  color:#fff!important;
+  border-color:rgba(218,237,255,.38)!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button{
+  background:rgba(14,71,137,.55)!important;
+  color:#fff!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom {
+  position:absolute!important;
+  inset:auto 2% clamp(8px,1.5%,18px) 2%!important;
+  width:96%!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:min(36%,220px)!important;
+  margin:0!important;
+  padding:8px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  z-index:35!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom > .homeLiveViewerConversation {
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm {
+  display:flex!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  gap:clamp(5px,1.5vw,9px)!important;
+  box-sizing:border-box!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input {
+  flex:1 1 0!important;
+  width:0!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button {
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:35%!important;
+  padding:9px clamp(9px,2vw,14px)!important;
+  box-sizing:border-box!important;
+  white-space:nowrap!important;
+}
+
+/* Live home: fit the available canvas height with 18px bottom clearance.
+   Keep the comment dock inside the stage, pinned to its bottom edge. */
+@media (max-width:767px){
+}
+[data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom{
+  bottom:8px!important;
+  max-height:min(36%,220px)!important;
+  overflow:hidden!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-end!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom > .homeLiveViewerConversation{
+  min-height:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-end!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{
+  min-height:0!important;
+  flex:0 1 auto!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{
+  flex:0 0 auto!important;
+  margin-top:6px!important;
+}
+
+/* Desktop / landscape: the wheel or swipe belongs to the lane it starts on.
+   The outer posts viewport must not steal vertical scrolling from either lane. */
+@media (min-width:768px){
+}
+@media (orientation:landscape) and (max-width:767px){
+}
+@media(max-width:420px){
+}
+@media(prefers-reduced-motion:reduce){
+}
+@media(prefers-reduced-motion:reduce){}
 
 
 /* Home Chat: all three channels share a taller scrollable message viewport. */
@@ -2482,366 +2695,53 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
 }
 
 
-/* Home Live: Chat fills the space directly below the video, not a short bottom dock.
-   The top of Chat meets the 16:9 player and the composer stays pinned at the bottom. */
-[data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom{
- left:4%!important;
- right:4%!important;
- bottom:2%!important;
- height:56%!important;
- max-height:62%!important;
- min-height:0!important;
- padding:0!important;
- overflow:hidden!important;
- pointer-events:auto!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom > .homeLiveViewerConversation{
- height:100%!important;
- max-height:100%!important;
- min-height:0!important;
- display:flex!important;
- flex-direction:column!important;
- justify-content:flex-end!important;
- overflow:hidden!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{
- flex:1 1 auto!important;
- height:auto!important;
- max-height:none!important;
- min-height:0!important;
- margin-top:0!important;
- overflow-y:auto!important;
- justify-content:flex-start!important;
- overscroll-behavior:contain;
- -webkit-overflow-scrolling:touch;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{
- flex:0 0 auto!important;
- margin-top:8px!important;
-}
-
-
-/* Home Live chat: one aligned, full-height scroll lane with a bottom-fixed composer.
-   Override the legacy 155px comment cap and auto-height dock. */
-[data-workspace-page="0"] .oneMuslimLiveBottom{
- left:6%!important;
- right:6%!important;
- bottom:clamp(8px,2%,16px)!important;
- top:38%!important;
- height:auto!important;
- max-height:none!important;
- min-height:0!important;
- display:flex!important;
- flex-direction:column!important;
- overflow:hidden!important;
- transition:top 560ms cubic-bezier(.22,.7,.2,1),bottom 560ms cubic-bezier(.22,.7,.2,1),left 560ms cubic-bezier(.22,.7,.2,1),right 560ms cubic-bezier(.22,.7,.2,1)!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom>.homeLiveViewerConversation{
- flex:1 1 auto!important;
- margin:0!important;
- height:100%!important;
- min-height:0!important;
- max-height:none!important;
- padding:0!important;
- gap:0!important;
- justify-content:stretch!important;
- background:transparent!important;
- overflow:hidden!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{
- flex:1 1 0%!important;
- min-height:0!important;
- max-height:none!important;
- height:auto!important;
- width:100%!important;
- margin:0!important;
- padding:12px 8px 14px!important;
- box-sizing:border-box!important;
- display:flex!important;
- flex-direction:column!important;
- justify-content:flex-start!important;
- overflow-y:auto!important;
- overflow-x:hidden!important;
- overscroll-behavior-y:contain;
- -webkit-overflow-scrolling:touch;
- touch-action:pan-y;
- scrollbar-width:none;
- -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 22px,#000 100%);
- mask-image:linear-gradient(to bottom,transparent 0,#000 22px,#000 100%);
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments::-webkit-scrollbar{display:none}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{
- flex:0 0 auto!important;
- margin:0!important;
- width:100%!important;
- max-width:none!important;
- align-self:stretch!important;
- padding:6px 0 0!important;
- box-sizing:border-box!important;
- bottom:auto!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments p{
- flex:0 0 auto!important;
- max-width:100%!important;
-}
-@media(prefers-reduced-motion:reduce){
- [data-workspace-page="0"] .oneMuslimLiveBottom{transition:none!important}
-}
-
-
-/* FIX: the stage-child selector previously won over the generic dock rules,
-   leaving the composer floating and clamping comments to 48%/390px.
-   Match that specificity, reset shorthand inset, and allocate all free height. */
-[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom{
- position:absolute!important;
- inset:38% 2% 0 2%!important;
- left:2%!important;
- right:2%!important;
- top:38%!important;
- bottom:0!important;
- width:auto!important;
- height:auto!important;
- min-height:0!important;
- max-height:none!important;
- margin:0!important;
- padding:0!important;
- display:flex!important;
- flex-direction:column!important;
- justify-content:flex-end!important;
- overflow:hidden!important;
- pointer-events:auto!important;
- transition:top 560ms cubic-bezier(.22,.7,.2,1),bottom 560ms cubic-bezier(.22,.7,.2,1)!important;
-}
-[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveStage > .oneMuslimLiveBottom > .homeLiveViewerConversation{
- display:flex!important;
- flex:1 1 0%!important;
- flex-direction:column!important;
- justify-content:stretch!important;
- height:100%!important;
- min-height:0!important;
- max-height:none!important;
- margin:0!important;
- padding:0!important;
- overflow:hidden!important;
-}
-[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveBottom .homeLiveDemoComments{
- flex:1 1 0%!important;
- height:0!important;
- min-height:0!important;
- max-height:none!important;
- margin:0!important;
- padding:10px 6px 8px!important;
- overflow-y:auto!important;
-}
-[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveBottom .homeLiveCommentForm{
- position:relative!important;
- display:flex!important;
- align-items:center!important;
- flex:0 0 auto!important;
- width:100%!important;
- height:auto!important;
- min-height:0!important;
- margin:0!important;
- padding:4px 0 max(8px,env(safe-area-inset-bottom))!important;
- gap:7px!important;
- box-sizing:border-box!important;
-}
-[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveBottom .homeLiveCommentForm>button[aria-label="Add image"]{
- display:grid!important;
- place-items:center!important;
- flex:0 0 38px!important;
- width:38px!important;
- min-width:38px!important;
- max-width:38px!important;
- height:38px!important;
- min-height:38px!important;
- max-height:38px!important;
- aspect-ratio:1!important;
- padding:0!important;
- margin:0!important;
- border-radius:50%!important;
- font-size:23px!important;
- line-height:1!important;
- align-self:center!important;
- transform:none!important;
-}
-[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveBottom .homeLiveCommentForm>div{
- flex:1 1 0%!important;
- min-width:0!important;
-}
-[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveBottom .homeLiveCommentForm>div>input{
- width:100%!important;
- min-width:0!important;
- height:42px!important;
- box-sizing:border-box!important;
-}
-[data-workspace-page="0"] .canvas-vertical-main .oneMuslimLiveBottom .homeLiveCommentForm>button[type="submit"]{
- height:42px!important;
- min-height:42px!important;
- align-self:center!important;
- padding:0 12px!important;
-}
-
-
-/* Restore the home chat after the stage geometry regression.
-   This selector intentionally matches the direct child in both signed-in
-   and signed-out views; do not depend on .canvas-vertical-main ancestry. */
+/* Home Live layout contract. Single source of truth for the stage chat.
+   Desktop retains the current layout; mobile overlays the lower video area.
+   Do not add more competing .oneMuslimLiveBottom overrides below this block. */
 [data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="desktop"] > .oneMuslimLiveBottom,
 [data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="phone"] > .oneMuslimLiveBottom,
 [data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="audio"] > .oneMuslimLiveBottom{
- position:absolute!important;
- inset:auto 8px 8px 8px!important;
- top:38%!important;
- bottom:8px!important;
- left:8px!important;
- right:8px!important;
- width:auto!important;
- height:auto!important;
- max-height:none!important;
- min-height:0!important;
- padding:0!important;
- margin:0!important;
- display:flex!important;
- flex-direction:column!important;
- overflow:visible!important;
- visibility:visible!important;
- opacity:1!important;
- z-index:2147483001!important;
- pointer-events:auto!important;
+ position:absolute!important;inset:38% 8px 8px 8px!important;
+ width:auto!important;height:auto!important;max-height:none!important;min-height:0!important;
+ margin:0!important;padding:0!important;display:flex!important;flex-direction:column!important;
+ overflow:hidden!important;visibility:visible!important;opacity:1!important;
+ z-index:2147483005!important;pointer-events:auto!important;
 }
 [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom > .homeLiveViewerConversation{
- display:flex!important;
- flex:1 1 0%!important;
- flex-direction:column!important;
- justify-content:stretch!important;
- width:100%!important;
- height:100%!important;
- max-height:none!important;
- min-height:0!important;
- overflow:hidden!important;
- visibility:visible!important;
- opacity:1!important;
- pointer-events:auto!important;
+ display:flex!important;flex:1 1 0%!important;flex-direction:column!important;
+ justify-content:stretch!important;width:100%!important;height:100%!important;
+ min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;
+ overflow:hidden!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
 }
 [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveDemoComments{
- display:flex!important;
- flex:1 1 0%!important;
- height:0!important;
- max-height:none!important;
- min-height:0!important;
- overflow-y:auto!important;
- visibility:visible!important;
- opacity:1!important;
+ display:flex!important;flex:1 1 0%!important;flex-direction:column!important;
+ width:100%!important;height:0!important;min-height:0!important;max-height:none!important;
+ overflow-y:auto!important;overflow-x:hidden!important;visibility:visible!important;opacity:1!important;
+ overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;
 }
 [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveCommentForm{
- display:flex!important;
- flex:0 0 auto!important;
- visibility:visible!important;
- opacity:1!important;
- pointer-events:auto!important;
+ display:flex!important;position:relative!important;flex:0 0 auto!important;
+ width:100%!important;min-height:0!important;margin:0!important;
+ padding:4px 0 max(8px,env(safe-area-inset-bottom))!important;
+ align-items:center!important;gap:7px!important;visibility:visible!important;opacity:1!important;
 }
-
-
-/* Mobile hotfix: show the existing live comments OVER the player.
-   Scoped to home stage only; leave desktop and other modes untouched. */
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm>button[aria-label="Add image"]{
+ display:grid!important;place-items:center!important;flex:0 0 38px!important;
+ width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;
+ padding:0!important;margin:0!important;border-radius:50%!important;transform:none!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm>div{flex:1 1 0%!important;min-width:0!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm>div>input{width:100%!important;min-width:0!important;height:42px!important;box-sizing:border-box!important}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm>button[type="submit"]{height:42px!important;min-height:42px!important;align-self:center!important}
 @media (max-width:767px){
  [data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="desktop"] > .oneMuslimLiveBottom,
  [data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="phone"] > .oneMuslimLiveBottom,
  [data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="audio"] > .oneMuslimLiveBottom{
-  position:absolute!important;inset:auto 8px 8px 8px!important;
-  top:38%!important;bottom:8px!important;left:8px!important;right:8px!important;
-  width:auto!important;height:auto!important;max-height:none!important;min-height:0!important;
-  display:flex!important;flex-direction:column!important;
-  overflow:visible!important;visibility:visible!important;opacity:1!important;
-  z-index:2147483005!important;pointer-events:auto!important;
- }
- [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom > .homeLiveViewerConversation{
-  display:flex!important;flex:1 1 0%!important;flex-direction:column!important;
-  width:100%!important;height:100%!important;min-height:0!important;max-height:none!important;
-  overflow:hidden!important;visibility:visible!important;opacity:1!important;
-  pointer-events:auto!important;
- }
- [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveDemoComments{
-  display:flex!important;flex:1 1 0%!important;height:0!important;min-height:0!important;
-  max-height:none!important;overflow-y:auto!important;visibility:visible!important;opacity:1!important;
- }
- [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveCommentForm{
-  display:flex!important;flex:0 0 auto!important;visibility:visible!important;opacity:1!important;
+  inset:46% 8px 8px 8px!important;
+  z-index:2147483005!important;
  }
 }
-
-
-/* Responsive live chat dock: keep the composer on the bottom edge of the
-   actual stage at every viewport size. Expansion consumes space upward. */
-[data-workspace-page="0"] .oneMuslimLiveStage:is([data-live-format="desktop"],[data-live-format="phone"],[data-live-format="audio"]){
- position:relative!important;
- min-width:0!important;
- min-height:0!important;
- overflow:hidden!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveStage:is([data-live-format="desktop"],[data-live-format="phone"],[data-live-format="audio"]) > .oneMuslimLiveBottom{
- position:absolute!important;
- inset:38% 8px 8px!important;
- width:auto!important;
- height:auto!important;
- min-width:0!important;
- min-height:0!important;
- max-height:none!important;
- display:flex!important;
- flex-direction:column!important;
- justify-content:flex-end!important;
- overflow:hidden!important;
- box-sizing:border-box!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom > .homeLiveViewerConversation{
- display:flex!important;
- flex:1 1 0%!important;
- flex-direction:column!important;
- min-width:0!important;
- min-height:0!important;
- height:100%!important;
- max-height:100%!important;
- overflow:hidden!important;
- box-sizing:border-box!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveDemoComments{
- flex:1 1 0%!important;
- min-height:0!important;
- height:0!important;
- max-height:none!important;
- overflow-x:hidden!important;
- overflow-y:auto!important;
- overscroll-behavior:contain;
-}
-[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveCommentForm{
- position:relative!important;
- inset:auto!important;
- flex:0 0 auto!important;
- margin-top:auto!important;
- min-width:0!important;
- max-width:100%!important;
- box-sizing:border-box!important;
-}
-@media(max-width:767px){
- [data-workspace-page="0"] .oneMuslimLiveStage:is([data-live-format="desktop"],[data-live-format="phone"],[data-live-format="audio"]) > .oneMuslimLiveBottom{
-  inset:38% 8px max(8px,env(safe-area-inset-bottom,0px))!important;
- }
- [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveCommentForm input{
-  font-size:16px!important;
- }
-}
-
-/* Signed-in Home Live: keep comments over the video without blurring/dimming
-   the underlying playback. Guests retain the existing frosted overlay.
-   The authenticated composer is a form; the guest composer is a div. */
-[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom:has(> .homeLiveViewerConversation > form.homeLiveCommentForm)::before{
- background:transparent!important;
- backdrop-filter:none!important;
- -webkit-backdrop-filter:none!important;
- box-shadow:none!important;
-}
-[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom:has(> .homeLiveViewerConversation > form.homeLiveCommentForm){
- background:transparent!important;
- backdrop-filter:none!important;
- -webkit-backdrop-filter:none!important;
+@media (min-width:768px){
+ /* Preserve existing desktop player/chat placement. */
+ [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom{z-index:2147483001!important}
 }
