@@ -2745,3 +2745,15 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
  /* Preserve existing desktop player/chat placement. */
  [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom{z-index:2147483001!important}
 }
+
+
+/* Video discovery only: independent of the verified PR #540 comments layout. */
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimHomeWheelSlot{
+ position:absolute!important;left:8px!important;right:8px!important;
+ top:0;height:auto;max-height:none!important;min-height:0!important;
+ z-index:2147483000!important;overflow:hidden!important;pointer-events:auto!important;
+ border-radius:16px;background:transparent!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom{
+ z-index:2147483005!important;
+}

@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
+import {getRegistryVideos} from "./videoRegistry";
 
 type YTPlayer={
   loadVideoById:(video:{videoId:string;startSeconds:number})=>void;
@@ -15,26 +16,8 @@ type YTApi={Player:new(element:HTMLElement,options:{
 })=>YTPlayer};
 
 
-const desktopPlaylist=[
-  {videoId:"gF7RjyK8gQ0",startSeconds:28,endSeconds:null},
-  {videoId:"Isi6CwpmTX8",startSeconds:1,endSeconds:null},
-  {videoId:"eZVppeK0BMk",startSeconds:15,endSeconds:120}
-] as const;
-
-const phonePlaylist=[
-  {videoId:"KKg-TM8MGlM",startSeconds:0,endSeconds:null},
-  {videoId:"w6iV6gZIYkY",startSeconds:0,endSeconds:null},
-  {videoId:"Mf7EK7EIEXM",startSeconds:0,endSeconds:null},
-  {videoId:"4Kcf3ha_du8",startSeconds:0,endSeconds:null},
-  {videoId:"9iJ5eESSycM",startSeconds:0,endSeconds:null},
-  {videoId:"R7JlVfBbGRQ",startSeconds:0,endSeconds:null},
-  {videoId:"_DrLkl2doyw",startSeconds:0,endSeconds:null},
-  {videoId:"rA5lPeUCHzU",startSeconds:0,endSeconds:null},
-  {videoId:"9Zl_dVkWDes",startSeconds:0,endSeconds:null},
-] as const;
-
 export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop"|"phone"}){
-  const playlist=format==="phone"?phonePlaylist:desktopPlaylist;
+  const playlist=getRegistryVideos(format);
   const mountRef=useRef<HTMLDivElement>(null);
   const swipeStart=useRef<{x:number;y:number}|null>(null);
   const playerRef=useRef<YTPlayer|null>(null);
@@ -48,6 +31,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const [slideDirection,setSlideDirection]=useState<0|1|-1>(0);
   const navigate=(step:number)=>navigateRef.current(step);
   const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);setIsPaused(false);setTapHint(false);playerRef.current?.unMute();playerRef.current?.playVideo();};
+  const selectedIndexRef=useRef<number|null>(null);
   useEffect(()=>{
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
@@ -55,18 +39,29 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     const storageKey=format==="phone"?"oneMuslimPhoneShortsPlaylistPositionV6":"oneMuslimIdleYoutubePlaylistPositionV2";
     let saved:{index:number;seconds:number}|null=null;
     try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
-    let index=saved?.index??0;
+    let index=selectedIndexRef.current??saved?.index??0;
     const initialSeconds=saved?Math.max(playlist[index].startSeconds,Math.min(saved.seconds,playlist[index].endSeconds??Number.MAX_SAFE_INTEGER)):playlist[0].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
     const next=(step=1)=>{
       if(disposed||!player)return;
-      index=(index+step+playlist.length)%playlist.length;
+      index=((selectedIndexRef.current??index)+step+playlist.length)%playlist.length;
+      selectedIndexRef.current=index;
       const video=playlist[index];
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
       setTapHint(true);setIsPaused(false);
       if(!soundEnabledRef.current)player.mute();
       try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:video.startSeconds}));}catch{}
     };
+    const selectVideo=(event:Event)=>{
+      const videoId=(event as CustomEvent<{videoId:string}>).detail?.videoId;
+      const nextIndex=playlist.findIndex(v=>v.videoId===videoId);
+      if(nextIndex<0||!player)return;
+      index=nextIndex;selectedIndexRef.current=index;
+      const selected=playlist[index];
+      player.loadVideoById({videoId:selected.videoId,startSeconds:selected.startSeconds});
+      setIsPaused(false);setTapHint(false);
+    };
+    window.addEventListener("oneMuslimSelectCarouselVideo",selectVideo);
     navigateRef.current=(step)=>{
       if(disposed||!player||transitionTimerRef.current)return;
       setSlideDirection(step>0?1:-1);
@@ -112,6 +107,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     }
     return ()=>{
       disposed=true;
+      window.removeEventListener("oneMuslimSelectCarouselVideo",selectVideo);
       navigateRef.current=()=>{};
       if(transitionTimerRef.current){clearTimeout(transitionTimerRef.current);transitionTimerRef.current=null;}
       if(timer)clearInterval(timer);
