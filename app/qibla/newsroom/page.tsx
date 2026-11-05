@@ -116,7 +116,7 @@ export default function QiblaNewsroom() {
         </div>
         <aside className={styles.rightRail} aria-label="Editorial information">
           <div className={styles.railCard}><span className={styles.eyebrow}>OUR PURPOSE</span><h2>Stories that connect us.</h2><p>Discover thoughtful writing from across the 1Muslim community.</p></div>
-          <div className={styles.railCard}><span className={styles.eyebrow}>JOIN THE CONVERSATION</span><h2>Your voice matters.</h2><p>Share with the community while the editorial application station is being prepared.</p><Link href="/community">Community posts →</Link></div>
+          <div className={styles.railCard}><span className={styles.eyebrow}>JOIN THE CONVERSATION</span><h2>Your voice matters.</h2><p>Apply to join the 1Qibla editorial team as a Writer, Editor, or Approver.</p><Link href="/qibla/newsroom/apply">Apply to join →</Link></div>
         </aside>
       </div>
     </main>
