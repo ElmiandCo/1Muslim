@@ -16,6 +16,7 @@ import SyncedLiveIntro from "../../components/SyncedLiveIntro";
 import LiveLightOverlay from "../../../components/LiveLightOverlay";
 import ShareLiveButton from "../../components/ShareLiveButton";
 import LiveVisualEffects, {type LiveEffect} from "../../components/LiveVisualEffects";
+import {playLiveSound,type LiveSound} from "../../../lib/live-soundboard";
 import LiveGuestsStage, {GuestVideoTiles,useLiveGuestRoster} from "../../../components/LiveGuestsStage";
 import LiveGuestStudio from "../../../components/LiveGuestStudio";
 
@@ -1792,7 +1793,7 @@ export default function GoLivePage() {
               </div>
               {live&&studioMode==="voice"&&guestRoster.length>0&&<LiveGuestsStage mode="audio" guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostMicActive={micOn} hostSpeaking={voiceEnergy>.12}/>}
               <div className={`studioLaunchFlash ${launchVisual?"studioLaunchFlashOn":""}`} aria-hidden="true" />
-              <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} />
+              <LiveVisualEffects effect={visualEffect} onChange={setVisualEffect} live={live} onSound={(sound:LiveSound)=>{if(!live||!roomRef.current)return;playLiveSound(sound);void roomRef.current.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({sound})),{reliable:true,topic:"live-soundboard"}).catch(console.warn)}} />
               {live&&liveStreamIdRef.current&&<LiveLightOverlay streamId={liveStreamIdRef.current} host />}
               {live&&liveStreamIdRef.current&&currentUserId&&<details className="hostLiveGuestControls"><summary aria-label={`Guest requests, ${pendingGuestCount} pending`}>👥 Guests{pendingGuestCount>0?` · ${pendingGuestCount} new`:""} </summary><div className="hostLiveGuestSheet"><LiveGuestStudio streamId={liveStreamIdRef.current} roomName={`1muslim-live-${liveStreamIdRef.current}`} hostId={currentUserId}/></div></details>}
 
