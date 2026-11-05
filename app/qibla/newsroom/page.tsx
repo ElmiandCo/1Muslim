@@ -14,6 +14,7 @@ type Page = {
   section_two: { text?: string } | null;
   created_at: string;
   published: boolean;
+  source: "editorial" | "legacy";
 };
 const categories = ["All stories"] as const;
 
@@ -35,8 +36,26 @@ export default function QiblaNewsroom() {
         .order("created_at", { ascending: false })
         .limit(60);
       if (!alive) return;
-      if (readError) setError("Stories could not be loaded. Please try again.");
-      else setPages((data ?? []) as Page[]);
+      // Editorial articles are a separate, permission-gated backend contract (#549).
+      // Never query or display draft/submitted articles in this public magazine.
+      const { data: editorial, error: editorialError } = await supabase
+        .from("qibla_articles")
+        .select("id,title,subtitle,body,template,published_at")
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(60);
+      if (readError && editorialError) setError("Stories could not be loaded. Please try again.");
+      else {
+        const legacy = (data ?? []).map((page) => ({ ...page, source: "legacy" as const }));
+        const approved = (editorial ?? []).map((article) => ({
+          id: article.id, title: article.title, template_type: article.template,
+          hero_media_path: null, section_one: { text: article.subtitle || article.body },
+          section_two: { text: article.body }, created_at: article.published_at ?? "",
+          published: true, source: "editorial" as const,
+        }));
+        setPages([...approved, ...legacy].sort((a, b) =>
+          (b.created_at || "").localeCompare(a.created_at || "")));
+      }
       setLoading(false);
     };
     void load();
