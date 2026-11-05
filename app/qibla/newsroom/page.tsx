@@ -92,7 +92,7 @@ export default function QiblaNewsroom() {
               <h1>1Qibla</h1>
               <p className={styles.subhead}>One community. Many stories. One direction.</p>
             </div>
-            <Link className={styles.homeLink} href="/">← Home</Link>
+            <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:12}}><Link className={styles.homeLink} href="/qibla/newsroom/studio">Write for 1Qibla</Link><Link className={styles.homeLink} href="/">← Home</Link></div>
           </header>
           <div className={styles.toolbar}>
             <div className={styles.categories} aria-label="Article categories">
