@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useRef,useState} from "react";
+import {useEffect,useRef,useState,useLayoutEffect} from "react";
 
 const categories=["All","Qur'an","Dawah","Lessons","Community","Shorts"];
 const demos=[
@@ -17,6 +17,35 @@ export default function HomeVideoWheel(){
  const direction=useRef(1);
  const pointer=useRef<{x:number;position:number}|null>(null);
  const paused=useRef(false);
+ const slotRef=useRef<HTMLDivElement>(null);
+ useLayoutEffect(()=>{
+  const wheel=slotRef.current;
+  const slot=wheel?.parentElement;
+  const stage=slot?.closest(".oneMuslimLiveStage");
+  const video=stage?.querySelector(".oneMuslimLiveVideo");
+  const chat=stage?.querySelector(".oneMuslimLiveBottom");
+  if(!slot||!stage||!video||!chat)return;
+  let frame=0;
+  const place=()=>{
+   cancelAnimationFrame(frame);
+   frame=requestAnimationFrame(()=>{
+    const sr=stage.getBoundingClientRect();
+    const player=video.querySelector("iframe,video") || video;
+    const vr=player.getBoundingClientRect(),cr=chat.getBoundingClientRect();
+    const top=Math.max(0,vr.bottom-sr.top+8);
+    const bottom=Math.min(sr.height,cr.top-sr.top-8);
+    const available=Math.max(0,bottom-top);
+    slot.style.setProperty("top",top+"px","important");
+    slot.style.setProperty("height",available+"px","important");
+    slot.style.visibility=available>=48?"visible":"hidden";
+   });
+  };
+  const observer=new ResizeObserver(place);
+  [stage,video,chat].forEach(el=>observer.observe(el));
+  window.addEventListener("resize",place);
+  place();
+  return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener("resize",place)};
+ },[]);
  const [reduce,setReduce]=useState(false);
  const positionRef=useRef(0);
  useEffect(()=>{const media=window.matchMedia("(prefers-reduced-motion: reduce)");const update=()=>setReduce(media.matches);update();media.addEventListener("change",update);return()=>media.removeEventListener("change",update)},[]);
@@ -24,7 +53,7 @@ export default function HomeVideoWheel(){
  const items=category==="All"?demos:demos.filter(item=>item.category===category);
  const count=items.length;
  const onMove=(x:number)=>{if(!pointer.current)return;const delta=(pointer.current.x-x)/145;positionRef.current=pointer.current.position+delta;setPosition(positionRef.current);if(Math.abs(delta)>.03)direction.current=delta>0?1:-1};
- return <div className="homeVideoWheel" data-expanded={expanded}>
+ return <div ref={slotRef} className="homeVideoWheel" data-expanded={expanded}>
  <style>{`
  .homeVideoWheel{position:relative;flex:0 0 auto;height:100%;min-height:0;width:100%;z-index:5;color:white;pointer-events:auto}
 
