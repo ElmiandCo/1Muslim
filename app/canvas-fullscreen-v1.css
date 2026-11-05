@@ -2750,7 +2750,7 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
 /* Video discovery only: independent of the verified PR #540 comments layout. */
 [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimHomeWheelSlot{
  position:absolute!important;left:8px!important;right:8px!important;
- top:0;height:115px;max-height:115px!important;min-height:0!important;
+ top:0;height:auto;max-height:none!important;min-height:0!important;
  z-index:2147483000!important;overflow:hidden!important;pointer-events:auto!important;
  border-radius:16px;background:transparent!important;
 }
