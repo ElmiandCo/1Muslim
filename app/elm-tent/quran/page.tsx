@@ -951,5 +951,8 @@ body:has(.omQuranPage) header:has(nav),body:has(.omQuranPage) [class*="bottomNav
 .quranStudioEntryCurtain span{color:#f3dfad;font-size:clamp(34px,6vw,68px);text-shadow:0 0 24px rgba(229,196,132,.4)}
 @keyframes quranStudioEntryOut{0%,22%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.quranStudioEntryCurtain{animation:none;display:none}}
+
+/* Arabic-only adjustment: preserve English translations and surrounding controls. */
+.omQuranPage .omQuranGlassArabic,.omQuranPage .omQuranSimpleVerse>p[lang="ar"]{font-size:clamp(22px,calc(6vw - 4px),calc(var(--studio-arabic-size,40px) - 4px))!important}
 `}</style></>;
 }
