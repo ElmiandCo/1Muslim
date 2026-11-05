@@ -2544,3 +2544,20 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
  /* Preserve existing desktop player/chat placement. */
  [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom{z-index:2147483001!important}
 }
+
+/* Discovery strip is a sibling of the existing chat, never its child.
+   The production chat geometry and pointer interactions remain untouched. */
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimHomeWheelSlot{
+ position:absolute!important;top:37.5%!important;left:8px!important;right:8px!important;
+ height:clamp(105px,13%,165px)!important;min-height:0!important;
+ z-index:2147483000!important;overflow:hidden!important;pointer-events:auto!important;
+ border-radius:16px;background:transparent!important;
+}
+[data-workspace-page="0"] .oneMuslimHomeWheelSlot .homeVideoWheelCategories{
+ justify-content:flex-start!important;
+}
+@media(max-width:767px){
+ [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimHomeWheelSlot{
+  top:37.5%!important;height:clamp(105px,12%,155px)!important;
+ }
+}
