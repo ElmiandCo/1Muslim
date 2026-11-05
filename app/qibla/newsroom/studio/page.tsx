@@ -6,7 +6,7 @@ import { createClient } from "../../../../utils/supabase/client";
 import styles from "./studio.module.css";
 
 type Role = "writer" | "editor" | "approver";
-type Article = { id: string; author_id: string; title: string; subtitle: string; body: string; status: string; revision: number; updated_at: string };
+type Article = { id: string; author_id: string; title: string; subtitle: string; body: string; status: string; template: string; revision: number; updated_at: string };
 const statuses = ["draft", "submitted", "editing", "awaiting_approval", "published", "rejected"];
 
 export default function QiblaStudio() {
@@ -18,6 +18,8 @@ export default function QiblaStudio() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState("all");
+  const [template, setTemplate] = useState<"classic" | "feature">("classic");
+  const [dirty, setDirty] = useState(false);
   const load = useCallback(async () => {
     const db = createClient();
     const { data: auth, error: authError } = await db.auth.getUser();
@@ -28,7 +30,7 @@ export default function QiblaStudio() {
     }
     setRole(staff.role as Role);
     const { data, error } = await db.from("qibla_articles")
-      .select("id,author_id,title,subtitle,body,status,revision,updated_at")
+      .select("id,author_id,title,subtitle,body,status,template,revision,updated_at")
       .order("updated_at", { ascending: false }).limit(100);
     if (error) setMessage("Could not load the editorial queue.");
     else setArticles((data ?? []) as Article[]);
@@ -37,28 +39,41 @@ export default function QiblaStudio() {
   useEffect(() => { void load(); }, [load]);
   const active = articles.find((a) => a.id === selected);
   useEffect(() => {
-    if (active) setForm({ title: active.title, subtitle: active.subtitle, body: active.body });
+    if (active) { setForm({ title: active.title, subtitle: active.subtitle, body: active.body }); setTemplate(active.template === "feature" ? "feature" : "classic"); setDirty(false); }
   }, [active?.id, active?.revision]);
   const visible = articles.filter((a) => filter === "all" || a.status === filter);
-  const canEdit = !!active && (role === "editor" || role === "approver") && ["submitted", "editing", "awaiting_approval"].includes(active.status);
+  const canEdit = !!active && ((role === "writer" && active.status === "draft") || ((role === "editor" || role === "approver") && ["submitted", "editing", "awaiting_approval"].includes(active.status)));
   const canPublish = !!active && role === "approver" && active.status === "awaiting_approval";
+  const createDraft = async () => {
+    if (role !== "writer" || busy) return;
+    setBusy(true); setMessage("");
+    const { data, error } = await createClient().rpc("qibla_create_draft", { p_title: "", p_subtitle: "", p_body: "", p_template: "classic" });
+    if (error) setMessage(error.message);
+    else { await load(); setSelected(String(data)); setMessage("Draft created. Add a headline and story."); }
+    setBusy(false);
+  };
   const perform = async (action: "save" | "publish" | "submit") => {
     if (!active || busy) return;
     setBusy(true); setMessage("");
     const db = createClient();
     let error: { message: string } | null = null;
     if (action === "save") {
-      if (!canEdit || !form.title.trim() || !form.body.trim()) { setMessage("A title and article body are required."); setBusy(false); return; }
-      ({ error } = await db.rpc("qibla_save_editor_revision", { p_article_id: active.id, p_title: form.title.trim(), p_subtitle: form.subtitle.trim(), p_body: form.body.trim() }));
+      if (!canEdit) { setBusy(false); return; }
+      if (role === "writer") {
+        ({ error } = await db.rpc("qibla_update_draft", { p_article_id: active.id, p_title: form.title.trim(), p_subtitle: form.subtitle.trim(), p_body: form.body.trim(), p_template: template }));
+      } else {
+        if (!form.title.trim() || !form.body.trim()) { setMessage("A title and article body are required."); setBusy(false); return; }
+        ({ error } = await db.rpc("qibla_save_editor_revision", { p_article_id: active.id, p_title: form.title.trim(), p_subtitle: form.subtitle.trim(), p_body: form.body.trim() }));
+      }
     } else if (action === "publish") {
       if (!canPublish) { setBusy(false); return; }
       ({ error } = await db.rpc("qibla_publish_article", { p_article_id: active.id }));
     } else {
-      if (role !== "writer" || active.status !== "draft") { setBusy(false); return; }
+      if (role !== "writer" || active.status !== "draft" || dirty) { setBusy(false); return; }
       ({ error } = await db.rpc("qibla_submit_article", { p_article_id: active.id }));
     }
     if (error) setMessage(error.message);
-    else { setMessage(action === "save" ? "Revision saved for approval." : action === "publish" ? "Article published." : "Draft submitted for review."); await load(); }
+    else { setMessage(action === "save" ? (role === "writer" ? "Draft saved." : "Revision saved for approval.") : action === "publish" ? "Article published." : "Draft submitted for review."); await load(); }
     setBusy(false);
   };
   return <main className={styles.root}>
@@ -67,22 +82,24 @@ export default function QiblaStudio() {
     {loading ? <p className={styles.notice}>Loading workspace…</p> : !role ? null :
     <div className={styles.layout}>
       <section className={styles.queue} aria-label="Editorial queue">
-        <div className={styles.queueHead}><h2>Articles</h2><label>Filter <select value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">All statuses</option>{statuses.map(s => <option key={s} value={s}>{s.replaceAll("_", " ")}</option>)}</select></label></div>
+        <div className={styles.queueHead}><h2>Articles</h2>{role === "writer" && <button type="button" disabled={busy} onClick={() => void createDraft()}>+ New draft</button>}<label>Filter <select value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">All statuses</option>{statuses.map(s => <option key={s} value={s}>{s.replaceAll("_", " ")}</option>)}</select></label></div>
         {visible.length === 0 ? <p>No articles in this queue.</p> : visible.map(a =>
-          <button type="button" key={a.id} className={selected === a.id ? styles.active : styles.queueItem} onClick={() => setSelected(a.id)} aria-pressed={selected === a.id}>
+          <button type="button" key={a.id} className={selected === a.id ? styles.active : styles.queueItem} onClick={() => { if (dirty && !window.confirm("Discard unsaved changes?")) return; setSelected(a.id); }} aria-pressed={selected === a.id}>
             <strong>{a.title || "Untitled draft"}</strong><span>{a.status.replaceAll("_", " ")} · revision {a.revision}</span>
           </button>)}
       </section>
       <section className={styles.editor} aria-label="Article workspace">
         {!active ? <p>Select an article to review its contents.</p> : <>
           <div className={styles.editorHead}><h2>{active.title || "Untitled draft"}</h2><span>{active.status.replaceAll("_", " ")}</span></div>
-          <label>Title<input value={form.title} onChange={e => setForm(f => ({...f, title:e.target.value}))} maxLength={250} readOnly={!canEdit}/></label>
-          <label>Subtitle<input value={form.subtitle} onChange={e => setForm(f => ({...f, subtitle:e.target.value}))} maxLength={500} readOnly={!canEdit}/></label>
-          <label>Article body<textarea rows={14} value={form.body} onChange={e => setForm(f => ({...f, body:e.target.value}))} readOnly={!canEdit}/></label>
+          <label>Title<input value={form.title} onChange={e => { setDirty(true); setForm(f => ({...f, title:e.target.value})); }} maxLength={250} readOnly={!canEdit}/></label>
+          <label>Subtitle<input value={form.subtitle} onChange={e => { setDirty(true); setForm(f => ({...f, subtitle:e.target.value})); }} maxLength={500} readOnly={!canEdit}/></label>
+          <label>Article body<textarea rows={14} value={form.body} onChange={e => { setDirty(true); setForm(f => ({...f, body:e.target.value})); }} readOnly={!canEdit}/></label>
+          {role === "writer" && active.status === "draft" && <label>Layout template <select value={template} onChange={e => { setTemplate(e.target.value as "classic" | "feature"); setDirty(true); }}><option value="classic">Classic</option><option value="feature">Feature</option></select></label>}
+          {dirty && <p role="status">Unsaved changes — save your draft before submitting or switching articles.</p>}
           <div className={styles.actions}>
-            {canEdit && <button type="button" disabled={busy} onClick={() => void perform("save")}>Save revision</button>}
+            {canEdit && <button type="button" disabled={busy} onClick={() => void perform("save")}>{role === "writer" ? "Save draft" : "Save revision"}</button>}
             {canPublish && <button type="button" disabled={busy} onClick={() => void perform("publish")}>Approve & publish</button>}
-            {role === "writer" && active.status === "draft" && <button type="button" disabled={busy} onClick={() => void perform("submit")}>Submit for review</button>}
+            {role === "writer" && active.status === "draft" && <button type="button" disabled={busy || dirty || !form.title.trim() || !form.body.trim()} onClick={() => void perform("submit")}>Submit for review</button>}
             {!canEdit && <span>Read-only preview</span>}
           </div>
         </>}
