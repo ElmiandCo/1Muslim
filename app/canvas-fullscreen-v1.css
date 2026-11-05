@@ -2559,7 +2559,7 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
 @media(max-width:767px){
  [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimHomeWheelSlot{
   /* Move the wheel below the video, within the existing gap above chat. */
-  top:calc(37.5% + clamp(100px, 12vh, 130px))!important;
-  height:clamp(105px,12%,155px)!important;
+  top:calc(37.5% + clamp(48px, 6vh, 66px))!important;
+  height:clamp(80px,9%,115px)!important;
  }
 }
