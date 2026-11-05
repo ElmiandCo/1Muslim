@@ -2769,3 +2769,64 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
   display:flex!important;flex:0 0 auto!important;visibility:visible!important;opacity:1!important;
  }
 }
+
+
+/* Responsive live chat dock: keep the composer on the bottom edge of the
+   actual stage at every viewport size. Expansion consumes space upward. */
+[data-workspace-page="0"] .oneMuslimLiveStage:is([data-live-format="desktop"],[data-live-format="phone"],[data-live-format="audio"]){
+ position:relative!important;
+ min-width:0!important;
+ min-height:0!important;
+ overflow:hidden!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage:is([data-live-format="desktop"],[data-live-format="phone"],[data-live-format="audio"]) > .oneMuslimLiveBottom{
+ position:absolute!important;
+ inset:38% 8px 8px!important;
+ width:auto!important;
+ height:auto!important;
+ min-width:0!important;
+ min-height:0!important;
+ max-height:none!important;
+ display:flex!important;
+ flex-direction:column!important;
+ justify-content:flex-end!important;
+ overflow:hidden!important;
+ box-sizing:border-box!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom > .homeLiveViewerConversation{
+ display:flex!important;
+ flex:1 1 0%!important;
+ flex-direction:column!important;
+ min-width:0!important;
+ min-height:0!important;
+ height:100%!important;
+ max-height:100%!important;
+ overflow:hidden!important;
+ box-sizing:border-box!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveDemoComments{
+ flex:1 1 0%!important;
+ min-height:0!important;
+ height:0!important;
+ max-height:none!important;
+ overflow-x:hidden!important;
+ overflow-y:auto!important;
+ overscroll-behavior:contain;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveCommentForm{
+ position:relative!important;
+ inset:auto!important;
+ flex:0 0 auto!important;
+ margin-top:auto!important;
+ min-width:0!important;
+ max-width:100%!important;
+ box-sizing:border-box!important;
+}
+@media(max-width:767px){
+ [data-workspace-page="0"] .oneMuslimLiveStage:is([data-live-format="desktop"],[data-live-format="phone"],[data-live-format="audio"]) > .oneMuslimLiveBottom{
+  inset:38% 8px max(8px,env(safe-area-inset-bottom,0px))!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveCommentForm input{
+  font-size:16px!important;
+ }
+}
