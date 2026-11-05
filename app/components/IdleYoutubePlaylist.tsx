@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
+import {createClient} from "../../utils/supabase/client";
 
 type YTPlayer={
   loadVideoById:(video:{videoId:string;startSeconds:number})=>void;
@@ -34,11 +35,11 @@ export default function IdleYoutubePlaylist(){
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
     let player:YTPlayer|undefined;
-    const storageKey="oneMuslimIdleYoutubePlaylistPosition";
+    let storageKey="oneMuslimIdleYoutubePlaylistPosition:signed-in";
     let saved:{index:number;seconds:number}|null=null;
     try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
     let index=saved?.index??0;
-    const initialSeconds=saved?Math.max(playlist[index].startSeconds,Math.min(saved.seconds,playlist[index].endSeconds??Number.MAX_SAFE_INTEGER)):playlist[0].startSeconds;
+    let initialSeconds=saved?Math.max(playlist[index].startSeconds,Math.min(saved.seconds,playlist[index].endSeconds??Number.MAX_SAFE_INTEGER)):playlist[0].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
     const next=(step=1)=>{
       if(disposed||!player)return;
@@ -81,16 +82,27 @@ export default function IdleYoutubePlaylist(){
       });
     };
     const previousReady=ytWindow.onYouTubeIframeAPIReady;
-    if(ytWindow.YT?.Player)create();
-    else{
-      ytWindow.onYouTubeIframeAPIReady=()=>{previousReady?.();create();};
-      if(!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')){
-        const script=document.createElement("script");
-        script.src="https://www.youtube.com/iframe_api";
-        script.async=true;
-        document.head.appendChild(script);
+    const initialize=async()=>{
+      const {data:{user}}=await createClient().auth.getUser();
+      if(disposed)return;
+      const signedIn=!!user;
+      storageKey="oneMuslimIdleYoutubePlaylistPosition:"+(signedIn?"signed-in":"guest");
+      saved=null;
+      try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
+      index=saved?.index??(signedIn?0:1);
+      initialSeconds=saved?Math.max(playlist[index].startSeconds,Math.min(saved.seconds,playlist[index].endSeconds??Number.MAX_SAFE_INTEGER)):playlist[index].startSeconds;
+      if(ytWindow.YT?.Player)create();
+      else{
+        ytWindow.onYouTubeIframeAPIReady=()=>{previousReady?.();create();};
+        if(!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')){
+          const script=document.createElement("script");
+          script.src="https://www.youtube.com/iframe_api";
+          script.async=true;
+          document.head.appendChild(script);
+        }
       }
-    }
+    };
+    void initialize();
     return ()=>{
       disposed=true;
       navigateRef.current=()=>{};
