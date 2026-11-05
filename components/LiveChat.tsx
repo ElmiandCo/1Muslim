@@ -22,6 +22,7 @@ type Message = {
   stream_id: string;
   sender_id: string;
   body: string;
+  image_path?: string | null;
   created_at: string;
   profile?: Profile | null;
 };
@@ -33,6 +34,17 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
   const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [imageFile,setImageFile]=useState<File|null>(null);
+  const [imagePreview,setImagePreview]=useState<string|null>(null);
+  const [imageUrls,setImageUrls]=useState<Record<string,string>>({});
+  const [expanded,setExpanded]=useState<Message|null>(null);
+  const fileInput=useRef<HTMLInputElement|null>(null);
+  const messagesEnd=useRef<HTMLDivElement|null>(null);
+  const scrollRef=useRef<HTMLDivElement|null>(null);
+  const resolveImage=async (path:string)=>{const {data,error}=await supabase.storage.from("live-chat-images").createSignedUrl(path,3600);if(!error&&data?.signedUrl)setImageUrls(v=>({...v,[path]:data.signedUrl}));};
+  useEffect(()=>{if(!imageFile){setImagePreview(null);return}const url=URL.createObjectURL(imageFile);setImagePreview(url);return()=>URL.revokeObjectURL(url)},[imageFile]);
+  useEffect(()=>{for(const message of messages)if(message.image_path&&!imageUrls[message.image_path])void resolveImage(message.image_path)},[messages,supabase]);
+  useEffect(()=>{messagesEnd.current?.scrollIntoView({block:"end",behavior:"smooth"})},[messages.length]);
   const [notice, setNotice] = useState("");
   const [selected, setSelected] = useState<Message | null>(null);
   const [reporting, setReporting] = useState(false);
@@ -60,7 +72,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
     setUserId(user?.id ?? null);
 
     const [{ data: rows }, { data: mutes }] = await Promise.all([
-      supabase.from("live_chat_messages").select("id,stream_id,sender_id,body,created_at").eq("stream_id", streamId).order("created_at", { ascending: true }).limit(200),
+      supabase.from("live_chat_messages").select("id,stream_id,sender_id,body,image_path,created_at").eq("stream_id", streamId).order("created_at", { ascending: true }).limit(200),
       supabase.from("live_chat_mutes").select("user_id").eq("stream_id", streamId),
     ]);
 
@@ -91,12 +103,21 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
   const send = async (event: FormEvent) => {
     event.preventDefault();
     const body = limit35(draft.trim());
-    if (!body || !userId || sending || userId !== hostId && mutedUsers.has(userId)) return;
+    if ((!body && !imageFile) || !userId || sending || userId !== hostId && mutedUsers.has(userId)) return;
     setSending(true); setNotice("");
-    const { error } = await supabase.from("live_chat_messages").insert({ stream_id: streamId, sender_id: userId, body });
-    if (error) setNotice(error.message.includes("live_chat_messages") ? "You cannot comment in this Live right now." : error.message);
-    else setDraft("");
-    setSending(false);
+    let image_path:string|null=null;
+    try{
+      if(imageFile){
+        if(!["image/jpeg","image/png","image/webp","image/gif"].includes(imageFile.type)||imageFile.size>12*1024*1024)throw new Error("Choose a JPG, PNG, WebP or GIF under 12 MB.");
+        const image=await new Promise<Blob>((resolve,reject)=>{const img=new Image();const url=URL.createObjectURL(imageFile);img.onload=()=>{const scale=Math.min(1,1600/Math.max(img.width,img.height));const canvas=document.createElement("canvas");canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);const ctx=canvas.getContext("2d");if(!ctx){URL.revokeObjectURL(url);reject(new Error("Image processing failed"));return}ctx.drawImage(img,0,0,canvas.width,canvas.height);canvas.toBlob(blob=>{URL.revokeObjectURL(url);blob?resolve(blob):reject(new Error("Image compression failed"))},"image/webp",.82)};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Unable to read image"))};img.src=url});
+        image_path=`${streamId}/${userId}/${crypto.randomUUID()}.webp`;
+        const {error:uploadError}=await supabase.storage.from("live-chat-images").upload(image_path,image,{contentType:"image/webp",upsert:false});if(uploadError)throw uploadError;
+      }
+      const {error}=await supabase.from("live_chat_messages").insert({stream_id:streamId,sender_id:userId,body:body||" ",image_path});
+      if(error)throw error;
+      setDraft("");setImageFile(null);
+    }catch(e){setNotice(e instanceof Error?e.message:"Unable to send image");if(image_path)void supabase.storage.from("live-chat-images").remove([image_path]);}
+    finally{setSending(false)}
   };
 
   const sendEmote = async (emote:string) => {if(!userId||sending||(userId!==hostId&&mutedUsers.has(userId)))return;setSending(true);setNotice("");const {error}=await supabase.from("live_chat_messages").insert({stream_id:streamId,sender_id:userId,body:emote});if(error)setNotice(error.message);setSending(false)};
@@ -134,9 +155,10 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
         @keyframes reportFade{from{opacity:0}to{opacity:1}}@keyframes reportPop{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
         @media(prefers-reduced-motion:reduce){.reportBackdrop,.reportSheet{animation:none}}
         .emoteTray{display:flex;gap:7px;padding:9px 12px 2px;flex-wrap:wrap}.emoteTray button{background:linear-gradient(135deg,#12342c,#172d40);border:1px solid #80c9b277;border-radius:12px;padding:7px 10px;font-size:19px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}.emoteTray button:hover{transform:translateY(-3px);box-shadow:0 0 16px #75e5b955}.emoteTray button:disabled{opacity:.35;cursor:not-allowed}.composer{display:flex;gap:7px;padding:12px;border-top:1px solid #1b241f}.composer input{flex:1;min-width:0;border:1px solid #263029;background:#0d140f;color:#fff;border-radius:999px;padding:10px 12px;outline:none;font-size:11px}.composer button{border:0;border-radius:999px;padding:0 14px;background:#d6e9b8;color:#071008;font-weight:850;font-size:10px;cursor:pointer}.composer button:disabled{opacity:.45;cursor:not-allowed}.mutedNotice,.notice{margin:10px 12px;padding:9px 11px;border-radius:10px;font-size:9px}.mutedNotice{background:#1b1510;border:1px solid #4a3927;color:#d7bd9c}.notice{background:#1b0f10;border:1px solid #533536;color:#ffcaca}
+        .imageAttach{flex:0 0 34px!important;padding:0!important;font-size:22px!important;background:transparent!important;color:inherit!important;border:1px solid #ffffff55!important}.imagePending{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:10px}.imagePending img{width:48px;height:48px;object-fit:cover;border-radius:9px}.imagePending span{flex:1}.imagePending button{background:transparent;color:inherit;border:1px solid #ffffff55;border-radius:8px;padding:5px}.imageThumb{display:block;margin-top:5px;padding:0;background:transparent;border:0;cursor:zoom-in}.imageThumb img{display:block;max-width:160px;max-height:160px;width:auto;height:auto;border-radius:12px;object-fit:contain}.imageViewer{position:fixed;inset:0;z-index:11000;background:#000c;backdrop-filter:blur(18px);display:grid;place-items:center;padding:20px}.imageCard{position:relative;max-width:min(92vw,900px);max-height:88vh;overflow:hidden;border-radius:20px;box-shadow:0 25px 100px #000c}.imageCard>img{display:block;max-width:92vw;max-height:88vh;object-fit:contain}.imageCaption{position:absolute;bottom:0;left:0;right:0;padding:26px 20px 18px;background:linear-gradient(transparent,#000c);color:white;overflow-wrap:anywhere}.imageCaption p{margin:5px 0 0}.imageClose{position:fixed;top:20px;right:24px;color:white;background:#0008;border:1px solid #fff5;border-radius:50%;width:42px;height:42px;font-size:28px;cursor:pointer}
       `}</style>
       {!overlay && <div className="chatHead"><strong>💬 Live chat</strong><span>{messages.length} messages</span></div>}
-      <div className="messages">
+      <div className="messages" ref={scrollRef}>
         {messages.length ? messages.map((message) => {
           const isHost = message.sender_id === hostId;
           const isMuted = mutedUsers.has(message.sender_id);
@@ -150,12 +172,15 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
             <div className="avatar">{avatar}</div>
             <div className="bubble">
               <div className="name">{displayName(message)}{isHost && <span className="host">HOST</span>}{isMuted && !isHost && <span className="muted">muted</span>}</div>
-              <div className="body">{message.body}</div>
+              {message.body.trim()&&<div className="body">{message.body}</div>}
+              {message.image_path&&imageUrls[message.image_path]&&<button type="button" className="imageThumb" aria-label="Expand shared image" onClick={e=>{e.stopPropagation();setExpanded(message)}}><img src={imageUrls[message.image_path]} alt="Shared live chat image" /></button>}
             </div>
             {userId === hostId && !isHost && <button className="muteBtn" onClick={() => void toggleMute(message.sender_id)}>{isMuted ? "Unmute" : "Mute"}</button>}
           </div>;
         }) : <div style={{color:"#66736b",fontSize:10,padding:10}}>Be the first to say something.</div>}
+        <div ref={messagesEnd}/>
       </div>
+      {expanded?.image_path&&imageUrls[expanded.image_path]&&<div className="imageViewer" role="dialog" aria-modal="true" aria-label="Shared image" onClick={()=>setExpanded(null)}><button className="imageClose" type="button" onClick={()=>setExpanded(null)} aria-label="Close image">×</button><div className="imageCard" onClick={e=>e.stopPropagation()}><img src={imageUrls[expanded.image_path]} alt="Expanded shared image"/><div className="imageCaption"><strong>{displayName(expanded)}</strong>{expanded.body.trim()&&<p>{expanded.body}</p>}</div></div></div>}
       {selected && <div className="reportBackdrop" onClick={()=>!reporting&&setSelected(null)}>
         <div className="reportSheet" role="dialog" aria-modal="true" aria-label="Comment options" onClick={e=>e.stopPropagation()}>
           <strong>Comment options</strong>
@@ -169,9 +194,11 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
       {notice && <div className="notice">{notice}</div>}
       {selfMuted && <div className="mutedNotice">The host has muted you. You can still watch the Live.</div>}
       <div className="emoteTray" aria-label="1Muslim emotes">{EMOTES.map(emote=><button type="button" key={emote} title={"Send "+emote} disabled={!userId||selfMuted||sending} onClick={()=>void sendEmote(emote)}>{emote}</button>)}</div>
-      <form className="composer" onSubmit={send}>
+      {imagePreview&&<div className="imagePending"><img src={imagePreview} alt="Image ready to send"/><span>Image attached · add a caption, then Send</span><button type="button" onClick={()=>setImageFile(null)}>Remove</button></div>}
+      <form className="composer" onSubmit={send} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f?.type.startsWith("image/"))setImageFile(f)}}>
+        <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={e=>{setImageFile(e.target.files?.[0]||null);e.target.value=""}}/><button type="button" className="imageAttach" aria-label="Attach image" disabled={!userId||selfMuted||sending} onClick={()=>fileInput.current?.click()}>▧</button>
         <input value={draft} onChange={(event) => setDraft(limit35(event.target.value))} maxLength={35} placeholder={selfMuted ? "You are muted" : userId ? (userId === hostId ? "Comment as host…" : "Say something…") : "Sign in to comment"} disabled={!userId || selfMuted || sending} />
-        <small style={{alignSelf:"center",fontSize:9,opacity:.7}}>{Array.from(draft).length}/35</small><button type="submit" disabled={!userId || selfMuted || !draft.trim() || sending}>{sending ? "…" : "Send"}</button>
+        <small style={{alignSelf:"center",fontSize:9,opacity:.7}}>{Array.from(draft).length}/35</small><button type="submit" disabled={!userId || selfMuted || (!draft.trim()&&!imageFile) || sending}>{sending ? "…" : "Send"}</button>
       </form>
     </div>
   );
