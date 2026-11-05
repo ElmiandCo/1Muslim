@@ -2740,3 +2740,91 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
  opacity:1!important;
  pointer-events:auto!important;
 }
+
+
+/* Home stage regression repair: use the existing stage GRID for the chat.
+   The previous absolute chat (top:38%, bottom:8px) was clipped/stacked
+   unpredictably by the stage and competing mobile overrides. A real grid
+   row cannot float outside the canvas and reserves space for its composer. */
+@media(max-width:767px){
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="desktop"],
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="phone"],
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="audio"]{
+  display:grid!important;
+  grid-template-rows:minmax(0,43%) minmax(0,57%)!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  align-content:stretch!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  padding:8px!important;
+  box-sizing:border-box!important;
+ }
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="desktop"] > .oneMuslimLiveTop,
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="phone"] > .oneMuslimLiveTop,
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="audio"] > .oneMuslimLiveTop{
+  grid-row:1!important;
+  min-height:0!important;
+  overflow:hidden!important;
+ }
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="desktop"] > .oneMuslimLiveBottom,
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="phone"] > .oneMuslimLiveBottom,
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="audio"] > .oneMuslimLiveBottom{
+  grid-row:2!important;
+  grid-column:1!important;
+  position:relative!important;
+  inset:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  left:auto!important;
+  right:auto!important;
+  align-self:stretch!important;
+  justify-self:stretch!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:hidden!important;
+  display:flex!important;
+  flex-direction:column!important;
+  z-index:4!important;
+  padding:0!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+ }
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage > .oneMuslimLiveBottom > .homeLiveViewerConversation{
+  flex:1 1 0%!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  padding:0!important;
+  margin:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:stretch!important;
+  overflow:hidden!important;
+  visibility:visible!important;
+ }
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveDemoComments{
+  display:flex!important;
+  flex:1 1 0%!important;
+  min-height:0!important;
+  height:0!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+ }
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveCommentForm{
+  display:flex!important;
+  flex:0 0 auto!important;
+  min-height:48px!important;
+  width:100%!important;
+  margin:0!important;
+  align-self:stretch!important;
+  visibility:visible!important;
+  opacity:1!important;
+ }
+}
