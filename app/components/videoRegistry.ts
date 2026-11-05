@@ -100,5 +100,5 @@ const seed:RegisteredVideo[]=[
   }
 ];
 export const videoRegistry=seed.slice(0,100);
-export function getRegistryVideos(format:"desktop"|"phone"){return videoRegistry.filter(v=>v.format===format)}
+export function getRegistryVideos(format:"desktop"|"phone"){return format==="desktop"?videoRegistry:videoRegistry.filter(v=>v.format==="phone")}
 export const VIDEO_REGISTRY_CAPACITY=100;
