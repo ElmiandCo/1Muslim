@@ -27,6 +27,7 @@ export default function EditorialApplication() {
       setMessage("Upload a PDF, DOC, or DOCX résumé no larger than 10 MB."); return;
     }
     setBusy(true); setMessage("");
+    let uploadedPath: string | null = null;
     try {
       const db = createClient();
       const { data: auth, error: authError } = await db.auth.getUser();
@@ -34,6 +35,7 @@ export default function EditorialApplication() {
       const path = `${auth.user.id}/${crypto.randomUUID()}.${extension}`;
       const { error: uploadError } = await db.storage.from("qibla-resumes").upload(path, resume, { contentType: resume.type, upsert: false });
       if (uploadError) throw uploadError;
+      uploadedPath = path;
       const { error: applicationError } = await db.rpc("qibla_apply_to_editorial", {
         p_desired_role: role,
         p_experience: experience.trim(),
@@ -42,10 +44,18 @@ export default function EditorialApplication() {
         p_resume_path: path
       });
       if (applicationError) throw applicationError;
+      uploadedPath = null;
       setDone(true);
       setResume(null);
       setMessage("Application received. The editorial team can review it privately.");
     } catch (error) {
+      // A failed application must not leave an unattached private résumé in storage.
+      // Removal is best-effort: storage RLS may restrict deletes, so the server should
+      // also periodically clean up orphaned applicant-owned uploads.
+      if (uploadedPath) {
+        try { await createClient().storage.from("qibla-resumes").remove([uploadedPath]); }
+        catch { /* Preserve the original submission error. */ }
+      }
       setMessage(error instanceof Error ? error.message : "Application failed. Please try again.");
     } finally { setBusy(false); }
   };
