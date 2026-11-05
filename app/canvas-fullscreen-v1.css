@@ -2830,3 +2830,18 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
   font-size:16px!important;
  }
 }
+
+/* Signed-in Home Live: keep comments over the video without blurring/dimming
+   the underlying playback. Guests retain the existing frosted overlay.
+   The authenticated composer is a form; the guest composer is a div. */
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom:has(> .homeLiveViewerConversation > form.homeLiveCommentForm)::before{
+ background:transparent!important;
+ backdrop-filter:none!important;
+ -webkit-backdrop-filter:none!important;
+ box-shadow:none!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom:has(> .homeLiveViewerConversation > form.homeLiveCommentForm){
+ background:transparent!important;
+ backdrop-filter:none!important;
+ -webkit-backdrop-filter:none!important;
+}
