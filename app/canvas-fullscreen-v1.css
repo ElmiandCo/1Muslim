@@ -2740,3 +2740,42 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
  opacity:1!important;
  pointer-events:auto!important;
 }
+
+
+/* Desktop homepage: use the SAME mounted comments instance, never mount a
+   second HomeLiveConversation (which can duplicate subscriptions).
+   Video stays left, comments fill the right rail. Mobile remains stacked. */
+@media (min-width:768px){
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="desktop"],
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="phone"],
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage[data-live-format="audio"]{
+  left:0!important;right:0!important;width:100%!important;
+  grid-template-rows:minmax(0,1fr)!important;
+ }
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveTop{
+  position:absolute!important;left:0!important;top:0!important;
+  width:55%!important;height:100%!important;box-sizing:border-box!important;
+  z-index:2147483003!important;
+ }
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom{
+  position:absolute!important;inset:0 0 0 55%!important;
+  top:0!important;bottom:0!important;left:55%!important;right:0!important;
+  width:45%!important;height:100%!important;max-height:none!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:hidden!important;z-index:2147483001!important;
+  padding:8px!important;box-sizing:border-box!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom > .homeLiveViewerConversation{
+  display:flex!important;flex:1 1 0%!important;min-height:0!important;
+  max-height:none!important;height:100%!important;width:100%!important;
+  flex-direction:column!important;overflow:hidden!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) .homeLiveDemoComments{
+  flex:1 1 0%!important;height:0!important;min-height:0!important;
+  max-height:none!important;overflow-y:auto!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) .homeLiveCommentForm{
+  flex:0 0 auto!important;display:flex!important;position:relative!important;
+ }
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimDesktopMessagesRail{display:none!important}
+}
