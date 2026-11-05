@@ -20,6 +20,12 @@ export default function QiblaStudio() {
   const [filter, setFilter] = useState("all");
   const [template, setTemplate] = useState<"classic" | "feature">("classic");
   const [dirty, setDirty] = useState(false);
+  const [preview, setPreview] = useState(false);
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => { if (dirty) { event.preventDefault(); event.returnValue = ""; } };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
   const load = useCallback(async () => {
     const db = createClient();
     const { data: auth, error: authError } = await db.auth.getUser();
@@ -66,7 +72,7 @@ export default function QiblaStudio() {
         ({ error } = await db.rpc("qibla_save_editor_revision", { p_article_id: active.id, p_title: form.title.trim(), p_subtitle: form.subtitle.trim(), p_body: form.body.trim() }));
       }
     } else if (action === "publish") {
-      if (!canPublish) { setBusy(false); return; }
+      if (!canPublish || dirty) { setMessage("Save your changes before publishing."); setBusy(false); return; }
       ({ error } = await db.rpc("qibla_publish_article", { p_article_id: active.id }));
     } else {
       if (role !== "writer" || active.status !== "draft" || dirty) { setBusy(false); return; }
@@ -77,7 +83,7 @@ export default function QiblaStudio() {
     setBusy(false);
   };
   return <main className={styles.root}>
-    <header className={styles.header}><div><Link href="/qibla/newsroom">← 1Qibla Magazine</Link><h1>Editorial Studio</h1><p>{role ? `${role.charAt(0).toUpperCase() + role.slice(1)} workspace` : "Your newsroom workspace"}</p></div><Link href="/">1Muslim Home</Link></header>
+    <header className={styles.header}><div><Link href="/qibla/newsroom" onClick={e => { if (dirty && !window.confirm("Leave without saving your changes?")) e.preventDefault(); }}>← 1Qibla Magazine</Link><h1>Editorial Studio</h1><p>{role ? `${role.charAt(0).toUpperCase() + role.slice(1)} workspace` : "Your newsroom workspace"}</p></div><Link href="/" onClick={e => { if (dirty && !window.confirm("Leave without saving your changes?")) e.preventDefault(); }}>1Muslim Home</Link></header>
     {message && <p className={styles.notice} role="status">{message}</p>}
     {loading ? <p className={styles.notice}>Loading workspace…</p> : !role ? null :
     <div className={styles.layout}>
@@ -95,10 +101,12 @@ export default function QiblaStudio() {
           <label>Subtitle<input value={form.subtitle} onChange={e => { setDirty(true); setForm(f => ({...f, subtitle:e.target.value})); }} maxLength={500} readOnly={!canEdit}/></label>
           <label>Article body<textarea rows={14} value={form.body} onChange={e => { setDirty(true); setForm(f => ({...f, body:e.target.value})); }} readOnly={!canEdit}/></label>
           {role === "writer" && active.status === "draft" && <label>Layout template <select value={template} onChange={e => { setTemplate(e.target.value as "classic" | "feature"); setDirty(true); }}><option value="classic">Classic</option><option value="feature">Feature</option></select></label>}
-          {dirty && <p role="status">Unsaved changes — save your draft before submitting or switching articles.</p>}
+          {dirty && <p role="status">Unsaved changes — save before submitting, publishing or leaving.</p>}
+          <button type="button" className={styles.previewToggle} aria-expanded={preview} onClick={() => setPreview(value => !value)}>{preview ? "Hide reading preview" : "Preview article"}</button>
+          {preview && <article className={styles.preview} aria-label="Article reading preview"><p className={styles.previewKicker}>1Qibla · {template === "feature" ? "Feature" : "Classic"} preview</p><h2>{form.title || "Untitled article"}</h2>{form.subtitle && <p className={styles.previewDeck}>{form.subtitle}</p>}<div className={styles.previewBody}>{form.body || "Your article will appear here as you write."}</div><p className={styles.previewFoot}>Draft preview only · Not published</p></article>}
           <div className={styles.actions}>
             {canEdit && <button type="button" disabled={busy} onClick={() => void perform("save")}>{role === "writer" ? "Save draft" : "Save revision"}</button>}
-            {canPublish && <button type="button" disabled={busy} onClick={() => void perform("publish")}>Approve & publish</button>}
+            {canPublish && <button type="button" disabled={busy || dirty} onClick={() => void perform("publish")}>Approve & publish</button>}
             {role === "writer" && active.status === "draft" && <button type="button" disabled={busy || dirty || !form.title.trim() || !form.body.trim()} onClick={() => void perform("submit")}>Submit for review</button>}
             {!canEdit && <span>Read-only preview</span>}
           </div>
