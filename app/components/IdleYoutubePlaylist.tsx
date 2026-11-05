@@ -15,13 +15,22 @@ type YTApi={Player:new(element:HTMLElement,options:{
 })=>YTPlayer};
 
 
-const playlist=[
+const desktopPlaylist=[
   {videoId:"gF7RjyK8gQ0",startSeconds:28,endSeconds:null},
   {videoId:"Isi6CwpmTX8",startSeconds:1,endSeconds:null},
   {videoId:"eZVppeK0BMk",startSeconds:15,endSeconds:120}
 ] as const;
 
-export default function IdleYoutubePlaylist(){
+const phonePlaylist=[
+  {videoId:"9iJ5eESSycM",startSeconds:0,endSeconds:null},
+  {videoId:"R7JlVfBbGRQ",startSeconds:0,endSeconds:null},
+  {videoId:"_DrLkl2doyw",startSeconds:0,endSeconds:null},
+  {videoId:"rA5lPeUCHzU",startSeconds:0,endSeconds:null},
+  {videoId:"9Zl_dVkWDes",startSeconds:0,endSeconds:null},
+] as const;
+
+export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop"|"phone"}){
+  const playlist=format==="phone"?phonePlaylist:desktopPlaylist;
   const mountRef=useRef<HTMLDivElement>(null);
   const playerRef=useRef<YTPlayer|null>(null);
   const [soundEnabled,setSoundEnabled]=useState(false);
@@ -38,7 +47,7 @@ export default function IdleYoutubePlaylist(){
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
     let player:YTPlayer|undefined;
-    const storageKey="oneMuslimIdleYoutubePlaylistPositionV2";
+    const storageKey=format==="phone"?"oneMuslimPhoneShortsPlaylistPositionV1":"oneMuslimIdleYoutubePlaylistPositionV2";
     let saved:{index:number;seconds:number}|null=null;
     try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
     let index=saved?.index??0;
@@ -105,8 +114,8 @@ export default function IdleYoutubePlaylist(){
       playerRef.current=null;
       if(player){try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:player.getCurrentTime()}));}catch{};player.destroy();}
     };
-  },[]);
-  return <div className="oneMuslimFloatingPlayerRig" aria-label="Floating featured video player">
+  },[format]);
+  return <div className={"oneMuslimFloatingPlayerRig"+(format==="phone"?" is-phone":"")} aria-label="Floating featured video player">
     <div className="oneMuslimFloatingPlayerShadow" aria-hidden="true"/>
     <div className={"oneMuslimIdleYoutubePlayer"+(slideDirection?" is-switching "+(slideDirection>0?"is-next":"is-previous"):"")} aria-label="Featured video playlist while no broadcasts are live">
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
@@ -116,6 +125,8 @@ export default function IdleYoutubePlaylist(){
       <button type="button" className="oneMuslimPlaylistArrow is-right" aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
     </div>
     <style>{`
+      .oneMuslimFloatingPlayerRig.is-phone{max-width:420px;aspect-ratio:9/16;max-height:100%;margin:0 auto 12px}
+      .oneMuslimFloatingPlayerRig.is-phone .oneMuslimIdleYoutubePlayer{border-radius:22px}
       .oneMuslimFloatingPlayerRig{width:100%;max-width:1400px;aspect-ratio:16/9;max-height:100%;align-self:start;justify-self:center;position:relative;isolation:isolate;margin:0 auto 24px;animation:oneMuslimRigDrift 11s ease-in-out infinite}
       .oneMuslimIdleYoutubePlayer{width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:oneMuslimRigLift 7.5s ease-in-out infinite}
       .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:oneMuslimRigShadow 7.5s ease-in-out infinite;pointer-events:none}
