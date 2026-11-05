@@ -78,3 +78,22 @@ END $$;
 -- 4. repeat and concurrent publish award exactly 2000 XP once.
 -- 5. applicant A cannot read applicant B resume; approver can.
 -- 6. direct role/XP mutation attempts fail; normal Posts/comments unaffected.
+
+-- Explicitly reject publicly readable resume objects even if bucket remains private.
+-- A permissive object SELECT policy would bypass the intended applicant/staff boundary.
+DO $$
+BEGIN
+ IF EXISTS (
+  SELECT 1 FROM pg_policies
+  WHERE schemaname='storage' AND tablename='objects'
+    AND cmd IN ('SELECT','ALL')
+    AND (roles @> ARRAY['anon']::name[] OR roles @> ARRAY['public']::name[])
+    AND (qual IS NULL OR qual ILIKE '%qibla-resumes%')
+ ) THEN
+  RAISE EXCEPTION 'Potential anonymous resume object SELECT policy: review Storage RLS';
+ END IF;
+ IF has_table_privilege('anon','public.qibla_applications','SELECT') THEN
+  RAISE EXCEPTION 'Anonymous applications table SELECT grant must be revoked';
+ END IF;
+ RAISE NOTICE 'Resume privacy negative grants/policies checked';
+END $$;
