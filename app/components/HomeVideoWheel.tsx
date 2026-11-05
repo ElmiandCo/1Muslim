@@ -25,11 +25,11 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
     const sr=stage.getBoundingClientRect();
     const player=video.querySelector(".oneMuslimIdleYoutubePlayer, .oneMuslimFloatingPlayerRig .oneMuslimIdleYoutubePlayer") || video.firstElementChild || video;
     const vr=player.getBoundingClientRect(),cr=chat.getBoundingClientRect();
-    const gap=Math.max(0,cr.top-vr.bottom);
-    const top=Math.max(0,vr.bottom-sr.top+28+gap*.02);
+    // Pixel-only positioning: 10px lower than the last known-good 28px offset.
+    const top=Math.max(0,vr.bottom-sr.top+38);
     const bottom=Math.min(sr.height,cr.top-sr.top-8);
     const available=Math.max(0,bottom-top);
-    const safeHeight=Math.max(72,available);
+    const safeHeight=Math.max(72,Math.min(130,available));
     slot.style.setProperty("top",top+"px","important");
     slot.style.setProperty("height",safeHeight+"px","important");
     slot.style.setProperty("visibility","visible","important");
