@@ -10,6 +10,8 @@ export default function HomeLiveConversation({room}:{room:Room}){
  const [draft,setDraft]=useState("");
  const [user,setUser]=useState<string|null>(null);
  const [names,setNames]=useState<Record<string,string>>({});
+ const [avatars,setAvatars]=useState<Record<string,string|null>>({});
+ const [failedAvatars,setFailedAvatars]=useState<Record<string,boolean>>({});
  const [status,setStatus]=useState("");
  const [image,setImage]=useState<File|null>(null);
  const [preview,setPreview]=useState<string|null>(null);
@@ -59,7 +61,7 @@ export default function HomeLiveConversation({room}:{room:Room}){
   return()=>{active=false;clearInterval(refresh);void db.removeChannel(channel)};
  },[room]);
  useEffect(()=>{let active=true;const ids=[...new Set(messages.map(m=>m.sender_id))].filter(id=>!names[id]);if(!ids.length)return;
- void dbRef.current.from("profiles").select("id,display_name,username").in("id",ids).then(({data})=>{if(active&&data)setNames(old=>({...old,...Object.fromEntries(data.map(p=>[p.id,p.display_name||p.username||"Member"]))}))});
+ void dbRef.current.from("profiles").select("id,display_name,username,avatar_url").in("id",ids).then(({data})=>{if(active&&data){setNames(old=>({...old,...Object.fromEntries(data.map(p=>[p.id,p.display_name||p.username||"Member"]))}));setAvatars(old=>({...old,...Object.fromEntries(data.map(p=>[p.id,p.avatar_url||null]))}));}});
  return()=>{active=false};
  },[messages,names]);
  useEffect(()=>{if(!image){setPreview(null);return}const url=URL.createObjectURL(image);setPreview(url);return()=>URL.revokeObjectURL(url)},[image]);
@@ -90,7 +92,7 @@ export default function HomeLiveConversation({room}:{room:Room}){
  };
  return <section className="homeLiveViewerConversation" aria-label={room+" Chat"}>
   <header><strong>💬 Chat</strong><small>{room==="phone"?"Mobile":room[0].toUpperCase()+room.slice(1)} · Messages expire after 3 hours</small></header>
-  <div ref={commentsRef} onScroll={onCommentsScroll} className="homeLiveDemoComments" aria-live="polite">{messages.length?messages.map(m=><p key={m.id}><span className="homeLiveCommentAvatar">{(names[m.sender_id]||"M")[0].toUpperCase()}</span><span><strong>{names[m.sender_id]||"Member"}</strong>{m.body&&<small>{m.body}</small>}{m.image_path&&<a href={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} target="_blank" rel="noopener noreferrer" aria-label="Open chat image"><img src={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} alt="Image shared in chat" loading="lazy" style={{display:"block",maxWidth:"min(220px,65vw)",maxHeight:180,objectFit:"contain",borderRadius:12,marginTop:6}}/></a>}</span></p>):<p>Start the conversation in this room.</p>}</div>
+  <div ref={commentsRef} onScroll={onCommentsScroll} className="homeLiveDemoComments" aria-live="polite">{messages.length?messages.map(m=><p key={m.id}><span className="homeLiveCommentAvatar">{avatars[m.sender_id]&&!failedAvatars[m.sender_id]?<img src={avatars[m.sender_id]!} alt="" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFailedAvatars(old=>({...old,[m.sender_id]:true}))} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit",display:"block"}}/>:(names[m.sender_id]||"M")[0].toUpperCase()}</span><span><strong>{names[m.sender_id]||"Member"}</strong>{m.body&&<small>{m.body}</small>}{m.image_path&&<a href={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} target="_blank" rel="noopener noreferrer" aria-label="Open chat image"><img src={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} alt="Image shared in chat" loading="lazy" style={{display:"block",maxWidth:"min(220px,65vw)",maxHeight:180,objectFit:"contain",borderRadius:12,marginTop:6}}/></a>}</span></p>):<p>Start the conversation in this room.</p>}</div>
   {user?<form className="homeLiveCommentForm" onSubmit={send}>
    <input ref={pickerRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{display:"none"}} onChange={e=>chooseImage(e.target.files?.[0])} aria-label="Choose chat image"/>
    <button type="button" aria-label="Add image" title="Add image" onClick={()=>pickerRef.current?.click()} disabled={sending} style={{flex:"0 0 36px",borderRadius:"50%",fontSize:24,background:"transparent",color:"inherit",border:"1px solid currentColor",opacity:.85}}>+</button>
