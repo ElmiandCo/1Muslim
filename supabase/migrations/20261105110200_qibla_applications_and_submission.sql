@@ -37,7 +37,33 @@ begin
  if length(coalesce(p_experience,''))>10000 or length(coalesce(p_motivation,''))>10000
  or length(coalesce(p_portfolio_url,''))>2000 then raise exception 'Input too long'; end if;
  if p_resume_path is null
- or p_resume_path !~ ('^'||v_actor::text||'/[0-9a-fA-F-]{36}\\.(pdf|doc|docx)$')
+ or p_resume_path !~ ('^'||v_actor::text||'/[0-9a-fA-F-]{36}[.](pdf|doc|docx))
+ or not exists(select 1 from storage.objects where bucket_id='qibla-resumes' and name=p_resume_path)
+ then raise exception 'Valid uploaded resume required'; end if;
+ insert into public.qibla_applications(applicant_id,desired_role,experience,motivation,portfolio_url,resume_path)
+ values(v_actor,p_desired_role,coalesce(p_experience,''),coalesce(p_motivation,''),nullif(p_portfolio_url,''),p_resume_path)
+ returning id into v_id;
+ return v_id;
+end $$;
+
+create or replace function public.qibla_submit_article(p_article_id uuid)
+returns boolean language plpgsql security definer set search_path='' as $$
+declare v_actor uuid:=auth.uid();
+begin
+ if v_actor is null or not exists(select 1 from public.qibla_staff
+ where user_id=v_actor and role='writer') then raise exception 'Writer role required'; end if;
+ update public.qibla_articles set status='submitted',updated_at=now()
+ where id=p_article_id and author_id=v_actor and status='draft'
+ and length(trim(title))>0 and length(trim(body))>0;
+ if not found then raise exception 'Draft missing, incomplete, or already submitted'; end if;
+ return true;
+end $$;
+
+revoke all on function public.qibla_apply_to_editorial(text,text,text,text,text) from public,anon;
+revoke all on function public.qibla_submit_article(uuid) from public,anon;
+grant execute on function public.qibla_apply_to_editorial(text,text,text,text,text) to authenticated;
+grant execute on function public.qibla_submit_article(uuid) to authenticated;
+)
  or not exists(select 1 from storage.objects where bucket_id='qibla-resumes' and name=p_resume_path)
  then raise exception 'Valid uploaded resume required'; end if;
  insert into public.qibla_applications(applicant_id,desired_role,experience,motivation,portfolio_url,resume_path)
