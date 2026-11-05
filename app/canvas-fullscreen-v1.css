@@ -2803,7 +2803,7 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
    Grow the stage rather than the video alone so the chat dock remains at its bottom. */
 @media(max-width:767px){
  main[class*="navMotionCollapsed"] [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]){
-  height:calc(100% + 100px)!important;
+  height:calc(100% + 70px)!important;
   max-height:none!important;
  }
 }
