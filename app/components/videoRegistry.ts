@@ -1,6 +1,11 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {"videoId":"0OSDr4LGwEI","title":"Is New-age Spirituality Harming Us? — Omar Suleiman","category":"Faith & Spirituality","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"DwzG2GO53IY","title":"Friends That Affirm You On Truth — Omar Suleiman","category":"Community & Character","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"8-OU0BIhIEY","title":"The Quran’s Purpose & Beauty — Nouman Ali Khan","category":"Quran Studies","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"LOjDlcA3DkA","title":"Will Every Non-Muslim Enter Hell? — Towards Eternity","category":"Aqeedah & Questions","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"7YD276KV-ZE","title":"Christian & Muslim Discuss Salvation & Jesus — Muslim Lantern","category":"Dawah & Dialogue","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {videoId:"gTDm-1JpGkw",title:"Featured Video — New",category:"Featured",startSeconds:0,endSeconds:null,format:"desktop"},
   {
     "videoId": "gF7RjyK8gQ0",
@@ -100,5 +105,5 @@ const seed:RegisteredVideo[]=[
   }
 ];
 export const videoRegistry=seed.slice(0,100);
-export function getRegistryVideos(format:"desktop"|"phone"){return format==="desktop"?videoRegistry:videoRegistry.filter(v=>v.format==="phone")}
+export function getRegistryVideos(format:"desktop"|"phone"){return videoRegistry.filter(v=>v.format===format)}
 export const VIDEO_REGISTRY_CAPACITY=100;
