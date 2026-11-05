@@ -79,8 +79,8 @@ export default function QiblaNewsroom() {
           <nav className={styles.nav}>
             <Link href="/">Home</Link>
             <Link href="/qibla/newsroom" aria-current="page">Magazine</Link>
-            <Link href="/qibla">Qibla archive</Link>
-            <Link href="/qibla">Qibla archive</Link>
+            <Link href="/qibla/newsletters">Newsletters</Link>
+            <Link href="/qibla/newsroom/about">About</Link>
             <Link href="/community">Community posts</Link>
           </nav>
           <div className={styles.sidebarNote}>Stories, reflection, and perspective from the Ummah.</div>
@@ -136,7 +136,7 @@ export default function QiblaNewsroom() {
         </div>
         <aside className={styles.rightRail} aria-label="Editorial information">
           <div className={styles.railCard}><span className={styles.eyebrow}>OUR PURPOSE</span><h2>Stories that connect us.</h2><p>Discover thoughtful writing from across the 1Muslim community.</p></div>
-          <div className={styles.railCard}><span className={styles.eyebrow}>JOIN THE CONVERSATION</span><h2>Your voice matters.</h2><p>Apply to join the 1Qibla editorial team as a Writer, Editor, or Approver.</p><Link href="/qibla/newsroom/apply">Apply to join →</Link></div>
+          <div className={styles.railCard}><span className={styles.eyebrow}>JOIN THE CONVERSATION</span><h2>Your voice matters.</h2><p>Apply to join the 1Qibla editorial team as a Writer, Editor, or Approver.</p><Link href="/qibla/newsroom/about">Learn about 1Qibla →</Link></div>
         </aside>
       </div>
     </main>
