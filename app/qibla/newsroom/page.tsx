@@ -17,6 +17,7 @@ type Page = {
   source: "editorial" | "legacy";
 };
 const categories = ["All stories"] as const;
+// Editorial and legacy records have distinct publication sources; never infer approval from template alone.
 
 export default function QiblaNewsroom() {
   const [pages, setPages] = useState<Page[]>([]);
@@ -114,7 +115,7 @@ export default function QiblaNewsroom() {
                   <div className={styles.heroVisual} style={{ backgroundImage: `url("${encodeURI(featured.hero_media_path)}")` }} aria-hidden="true" /> :
                   <div className={styles.heroVisual} aria-hidden="true"><span>۞</span></div>}
                 <div className={styles.heroCopy}>
-                  <span className={styles.eyebrow}>FEATURED STORY</span>
+                  <span className={styles.eyebrow}>{featured.source === "editorial" ? "1QIBLA EDITORIAL · FEATURED" : "FEATURED STORY"}</span>
                   <h2>{featured.title}</h2>
                   <p>{featured.section_one?.text?.slice(0, 220)}</p>
                   <Link href={`/qibla/newsroom/${encodeURIComponent(featured.id)}`}>Read article →</Link>
@@ -125,7 +126,7 @@ export default function QiblaNewsroom() {
                 <article key={page.id} className={styles.card}>
                   <div className={styles.cardVisual} aria-hidden="true">۞</div>
                   <div className={styles.cardBody}>
-                    <span className={styles.eyebrow}>{page.template_type === "video" ? "VIDEO STORY" : "ARTICLE"}</span>
+                    <span className={styles.eyebrow}>{page.source === "editorial" ? "1QIBLA EDITORIAL" : page.template_type === "video" ? "VIDEO STORY" : "ARTICLE"}</span>
                     <h3>{page.title}</h3>
                     <p>{page.section_one?.text?.slice(0, 150)}</p>
                     <Link href={`/qibla/newsroom/${encodeURIComponent(page.id)}`}>Read article →</Link>
