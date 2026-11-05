@@ -22,6 +22,7 @@ const desktopPlaylist=[
 ] as const;
 
 const phonePlaylist=[
+  {videoId:"Mf7EK7EIEXM",startSeconds:0,endSeconds:null},
   {videoId:"4Kcf3ha_du8",startSeconds:0,endSeconds:null},
   {videoId:"9iJ5eESSycM",startSeconds:0,endSeconds:null},
   {videoId:"R7JlVfBbGRQ",startSeconds:0,endSeconds:null},
@@ -49,7 +50,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
     let player:YTPlayer|undefined;
-    const storageKey=format==="phone"?"oneMuslimPhoneShortsPlaylistPositionV3":"oneMuslimIdleYoutubePlaylistPositionV2";
+    const storageKey=format==="phone"?"oneMuslimPhoneShortsPlaylistPositionV4":"oneMuslimIdleYoutubePlaylistPositionV2";
     let saved:{index:number;seconds:number}|null=null;
     try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
     let index=saved?.index??0;
