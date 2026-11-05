@@ -9,3 +9,8 @@
 .queueTools select option{color:var(--foreground,#f4f7ff);background:var(--background,#071326)}
 .queueTools :is(input,select):focus-visible,.queueItem:focus-visible,.active:focus-visible{outline:2px solid var(--theme-primary,currentColor);outline-offset:2px}
 @media(max-width:420px){.queueTools{grid-template-columns:minmax(0,1fr)}}
+
+/* Editorial metrics remain compact on mobile and inherit the active 1Muslim theme. */
+.editorMetrics{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 14px;color:var(--muted,#aeb6c0);font-size:12px}
+.editorMetrics span{display:inline-flex;align-items:center;min-height:30px;padding:4px 10px;border:1px solid var(--line,rgba(255,255,255,.14));border-radius:999px;background:var(--panel2,rgba(255,255,255,.04));font-variant-numeric:tabular-nums}
+@media(max-width:600px){.editorMetrics{gap:6px}.editorMetrics span{font-size:11px}}
