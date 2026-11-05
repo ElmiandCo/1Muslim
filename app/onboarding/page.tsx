@@ -217,7 +217,8 @@ export default function OnboardingPage() {
   };
 
   const startShahada = async () => {
-    if (recorderRef.current?.state === "recording" || listening) return;
+    if (recorderRef.current?.state === "recording" || listening || voiceStatus === "processing") return;
+    resetRef.current = false;
     setVerificationMode("audio");
     setWrittenDeclaration(false);
     setMessage(""); setTranscript(""); setVerified(false); setAudioBlob(null);
@@ -232,11 +233,11 @@ export default function OnboardingPage() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (attempt !== attemptRef.current || resetRef.current) { stream.getTracks().forEach(track => track.stop()); return; }
       streamRef.current = stream;
       startVoiceMeter(stream);
       try { const key="1muslim:shahada-voice-attempts"; const count=Math.max(0,Number(localStorage.getItem(key))||0);localStorage.setItem(key,String(Math.min(count+1,999999))); } catch {}
       consentRef.current = true;
-      resetRef.current = false;
       const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "";
       const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
       const chunks: BlobPart[] = [];
@@ -309,7 +310,7 @@ export default function OnboardingPage() {
         silenceTimerRef.current=setTimeout(()=>finishSpeech(finalTranscriptRef.current||text),2200);
       };
       rec.onerror = (event: any) => {
-        if (resetRef.current) return;
+        if (resetRef.current || attempt !== attemptRef.current) return;
         clearSilenceTimer();setVoiceStatus("retry");
         setListening(false); setRecording(false);
         stopVoiceMeter();
@@ -317,7 +318,7 @@ export default function OnboardingPage() {
         setMessage("We couldn't capture the Shahada. Check microphone permission and try again.");
       };
       rec.onend = () => {
-        if (resetRef.current) return;
+        if (resetRef.current || attempt !== attemptRef.current) return;
         clearSilenceTimer();
         if(!recognizedRef.current){setVoiceStatus("retry");setMessage(speechStartedRef.current?"Speech ended before the full Shahada was confirmed. Tap to try again.":"No speech detected. Tap to record again.");}
         setListening(false);
@@ -331,6 +332,7 @@ export default function OnboardingPage() {
       setListening(true);
       rec.start();
     } catch {
+      if (attempt !== attemptRef.current || resetRef.current) return;
       stopMedia();
       setVoiceStatus("retry");
       setMessage("Microphone permission is required for Shahada verification.");
@@ -344,7 +346,7 @@ export default function OnboardingPage() {
     recognizedRef.current = false;
     stopMedia();
     setAudioBlob(null); setAudioPreview(null); setTranscript(""); setVerified(false); setProcessingAudio(false); setMessage("Ready again.");
-    if (consentRef.current && verificationMode === "audio") window.setTimeout(() => void startShahada(), 450);
+    // Never auto-restart: the user explicitly chooses when a fresh attempt begins.
   };
 
   const finish = async () => {
@@ -428,9 +430,13 @@ export default function OnboardingPage() {
           <span className="hudhudHalo" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{transform:`rotate(${i*30}deg) translateY(-58px)`,animationDelay:`${i*-.18}s`}}/>)}</span>
           <span className="hudhudCore" aria-hidden="true"><img src="/assets/hudhud-logo.PNG" alt="" /></span>
         </button>
+        <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap",margin:"12px 0"}}>
+          {(listening || recording || processingAudio || verified || voiceStatus==="retry") && <button type="button" onClick={resetShahada} style={{border:"1px solid #ffffff55",borderRadius:18,padding:"10px 18px",background:"#ffffff12",color:"inherit",cursor:"pointer"}}>↻ Start over</button>}
+          {!listening && !recording && !processingAudio && !verified && <button type="button" onClick={()=>void startShahada()} style={{border:"1px solid #ffffff55",borderRadius:18,padding:"10px 18px",background:"#ffffff12",color:"inherit",cursor:"pointer"}}>🎙 Start recording</button>}
+        </div>
         <div className="studioVoiceWave" aria-hidden="true">{Array.from({length:25},(_,i)=><i key={i} style={{height:`${12+Math.abs(Math.sin(i*1.3))*32}px`,transform:`scaleY(${(listening || recording) ? Math.max(.2,Math.min(1.8,.2+voiceLevel*2.3*(.35+.65*Math.abs(Math.sin(i*1.3))))) : .25})`,opacity:(listening || recording) ? .55+voiceLevel*.45 : .35}} />)}</div>
         <strong role="status" aria-live="polite">{{ready:"Ready to record",recording:"Recording · waiting for speech",speaking:"Recording · hearing your voice",analyzing:"Analyzing your Shahada…",resetting:"Resetting recorder…",recognized:"Shahada recognized",retry:"Ready to try again",processing:"Preparing your recording…"}[voiceStatus]}</strong>
-        <p>{listening ? "Speak in "+(language==="en"?"English":"Arabic")+". A short pause finishes your attempt. Tap HudHud to start over." : "Choose Arabic or English below, then tap HudHud to record."}</p>
+        <p>{listening ? "Speak in "+(language==="en"?"English":"Arabic")+". A short pause finishes your attempt. Use Start over to discard this attempt." : "Choose Arabic or English below, then tap HudHud to record."}</p>
         {processingAudio && <p role="status">Preparing your private Shahada clip…</p>}
         {audioPreview && verified && <div className="transcript"><small>Review your trimmed Shahada</small><audio controls src={audioPreview} style={{width:"100%",marginTop:8}} /></div>}
         {transcript && <div className="transcript" dir={language === "ar" ? "rtl" : "ltr"}><small>Speech recognition heard</small><span>{transcript}</span></div>}
