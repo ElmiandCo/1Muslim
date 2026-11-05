@@ -1,6 +1,10 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {"videoId":"z29aqNIbfvI","title":"How to Listen to the Quran with Your Heart — Omar Suleiman","category":"Quran Reflection","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"feOHJHoLCIw","title":"Surah Al-Kahf and the Trials of Dajjal — Nouman Ali Khan","category":"Tafsir & End Times","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"Q_hbU_CF_us","title":"Life Lessons from Surah Al-Kahf — Nouman Ali Khan","category":"Faith & Quran","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"VUdSVx3mJqU","title":"Complete Quran Recitation — Mishary Alafasy","category":"Arabic Quran Recitation","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"0OSDr4LGwEI","title":"Is New-age Spirituality Harming Us? — Omar Suleiman","category":"Faith & Spirituality","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"DwzG2GO53IY","title":"Friends That Affirm You On Truth — Omar Suleiman","category":"Community & Character","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"8-OU0BIhIEY","title":"The Quran’s Purpose & Beauty — Nouman Ali Khan","category":"Quran Studies","startSeconds":0,"endSeconds":null,"format":"desktop"},
