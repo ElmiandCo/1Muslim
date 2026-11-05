@@ -25,12 +25,15 @@ export default function IdleYoutubePlaylist(){
   const mountRef=useRef<HTMLDivElement>(null);
   const playerRef=useRef<YTPlayer|null>(null);
   const [soundEnabled,setSoundEnabled]=useState(false);
+  const [isPaused,setIsPaused]=useState(false);
+  const [tapHint,setTapHint]=useState(true);
+  useEffect(()=>{if(!tapHint)return;const timer=setTimeout(()=>setTapHint(false),2000);return()=>clearTimeout(timer)},[tapHint]);
   const soundEnabledRef=useRef(false);
   const navigateRef=useRef<(step:number)=>void>(()=>{});
   const transitionTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
   const [slideDirection,setSlideDirection]=useState<0|1|-1>(0);
   const navigate=(step:number)=>navigateRef.current(step);
-  const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);playerRef.current?.unMute();playerRef.current?.playVideo();};
+  const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);setIsPaused(false);setTapHint(false);playerRef.current?.unMute();playerRef.current?.playVideo();};
   useEffect(()=>{
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
     let disposed=false;
@@ -46,6 +49,7 @@ export default function IdleYoutubePlaylist(){
       index=(index+step+playlist.length)%playlist.length;
       const video=playlist[index];
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
+      setTapHint(true);setIsPaused(false);
       if(!soundEnabledRef.current)player.mute();
       try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:video.startSeconds}));}catch{}
     };
@@ -77,7 +81,7 @@ export default function IdleYoutubePlaylist(){
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
             },250);
           },
-          onStateChange:({data})=>{if(data===0)next();}
+          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPaused(true);setTapHint(true)}else if(data===1){setIsPaused(false)}}
         }
       });
     };
@@ -106,7 +110,8 @@ export default function IdleYoutubePlaylist(){
     <div className="oneMuslimFloatingPlayerShadow" aria-hidden="true"/>
     <div className={"oneMuslimIdleYoutubePlayer"+(slideDirection?" is-switching "+(slideDirection>0?"is-next":"is-previous"):"")} aria-label="Featured video playlist while no broadcasts are live">
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
-      {!soundEnabled&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Turn on video audio" title="Tap to enable audio"/>}
+      {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
+      {(!soundEnabled||isPaused)&&tapHint&&<span className="oneMuslimTapHint" aria-hidden="true">Tap</span>}
       <button type="button" className="oneMuslimPlaylistArrow is-left" aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
       <button type="button" className="oneMuslimPlaylistArrow is-right" aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
     </div>
@@ -114,6 +119,7 @@ export default function IdleYoutubePlaylist(){
       .oneMuslimFloatingPlayerRig{width:100%;max-width:1400px;aspect-ratio:16/9;max-height:100%;align-self:start;justify-self:center;position:relative;isolation:isolate;margin:0 auto 24px;animation:oneMuslimRigDrift 11s ease-in-out infinite}
       .oneMuslimIdleYoutubePlayer{width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:oneMuslimRigLift 7.5s ease-in-out infinite}
       .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:oneMuslimRigShadow 7.5s ease-in-out infinite;pointer-events:none}
+      .oneMuslimTapHint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;pointer-events:none;color:#fff;font-size:clamp(23px,5vw,42px);font-weight:900;letter-spacing:.03em;text-shadow:0 3px 15px #000b;background:color-mix(in srgb,var(--theme-primary,#26b985) 14%,transparent);border:1px solid color-mix(in srgb,var(--theme-primary,#26b985) 45%,transparent);border-radius:22px;padding:10px 28px;backdrop-filter:blur(9px);animation:oneMuslimTapFade 2s ease-out forwards}@keyframes oneMuslimTapFade{0%,65%{opacity:1}100%{opacity:0}}
       .oneMuslimPlayerSoundActivator{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;border:0;background:transparent;cursor:pointer;touch-action:manipulation}
       .oneMuslimPlaylistArrow{position:absolute;z-index:4;top:50%;transform:translateY(-50%);width:25px;height:44px;padding:0;border:1px solid rgba(255,255,255,.22);border-radius:18px;background:rgba(5,15,28,.23);color:rgba(255,255,255,.83);font:300 27px/1 sans-serif;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);transition:background .25s ease,opacity .25s ease}
       .oneMuslimPlaylistArrow.is-left{left:5px}.oneMuslimPlaylistArrow.is-right{right:5px}
