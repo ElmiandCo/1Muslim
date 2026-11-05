@@ -2519,3 +2519,71 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
  flex:0 0 auto!important;
  margin-top:8px!important;
 }
+
+
+/* Home Live chat: one aligned, full-height scroll lane with a bottom-fixed composer.
+   Override the legacy 155px comment cap and auto-height dock. */
+[data-workspace-page="0"] .oneMuslimLiveBottom{
+ left:6%!important;
+ right:6%!important;
+ bottom:clamp(8px,2%,16px)!important;
+ top:38%!important;
+ height:auto!important;
+ max-height:none!important;
+ min-height:0!important;
+ display:flex!important;
+ flex-direction:column!important;
+ overflow:hidden!important;
+ transition:top 560ms cubic-bezier(.22,.7,.2,1),bottom 560ms cubic-bezier(.22,.7,.2,1),left 560ms cubic-bezier(.22,.7,.2,1),right 560ms cubic-bezier(.22,.7,.2,1)!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom>.homeLiveViewerConversation{
+ flex:1 1 auto!important;
+ margin:0!important;
+ height:100%!important;
+ min-height:0!important;
+ max-height:none!important;
+ padding:0!important;
+ gap:0!important;
+ justify-content:stretch!important;
+ background:transparent!important;
+ overflow:hidden!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments{
+ flex:1 1 0%!important;
+ min-height:0!important;
+ max-height:none!important;
+ height:auto!important;
+ width:100%!important;
+ margin:0!important;
+ padding:12px 8px 14px!important;
+ box-sizing:border-box!important;
+ display:flex!important;
+ flex-direction:column!important;
+ justify-content:flex-start!important;
+ overflow-y:auto!important;
+ overflow-x:hidden!important;
+ overscroll-behavior-y:contain;
+ -webkit-overflow-scrolling:touch;
+ touch-action:pan-y;
+ scrollbar-width:none;
+ -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 22px,#000 100%);
+ mask-image:linear-gradient(to bottom,transparent 0,#000 22px,#000 100%);
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments::-webkit-scrollbar{display:none}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{
+ flex:0 0 auto!important;
+ margin:0!important;
+ width:100%!important;
+ max-width:none!important;
+ align-self:stretch!important;
+ padding:6px 0 0!important;
+ box-sizing:border-box!important;
+ bottom:auto!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveDemoComments p{
+ flex:0 0 auto!important;
+ max-width:100%!important;
+}
+@media(prefers-reduced-motion:reduce){
+ [data-workspace-page="0"] .oneMuslimLiveBottom{transition:none!important}
+}
