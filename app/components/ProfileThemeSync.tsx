@@ -20,7 +20,7 @@ function applyTheme(value:unknown,persist=true){
  const t=themes[theme];const root=document.documentElement;
  root.dataset.profileBackground=wallpaper;root.dataset.muslimTheme=theme;
  root.style.setProperty("--theme-base",t.base);root.style.setProperty("--theme-accent",t.accent);root.style.setProperty("--theme-secondary",t.secondary);root.style.setProperty("--theme-surface",t.surface);root.style.setProperty("--theme-edge",t.edge);
- root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${root.dataset.guestHome==="true"&&wallpaper==="sapphire"?"sapphire-home":({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[wallpaper]||wallpaper}.PNG")`);
+ root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[wallpaper]||wallpaper}.PNG")`);
  root.style.setProperty("--profile-scene-tint",t.tint);
  if(persist){try{localStorage.setItem("1muslim:profile-background",wallpaper)}catch{}}
 }
@@ -30,19 +30,15 @@ export default function ProfileThemeSync(){
  const [preview,setPreview]=useState("emerald");
  useEffect(()=>{
   let active=true;let settled=false;
-  const palette=["emerald","sapphire","ruby","amethyst","titanium","obsidian"];
-  let index=0;
-  const cycle=window.setInterval(()=>{if(!active||settled)return;index=(index+1)%palette.length;const next=palette[index];applyTheme(next,false);setPreview(next)},1250);
-  applyTheme(palette[0],false);
-  const initial=(()=>{try{return localStorage.getItem("1muslim:profile-background")||fallback}catch{return fallback}})();
+  // A single static Emerald landing theme: no rotating wallpaper preview.\n  applyTheme("emerald",false);\n  const initial=(()=>{try{return localStorage.getItem("1muslim:profile-background")||fallback}catch{return fallback}})();
   const start=performance.now();
-  const settle=(theme:string)=>{if(!active)return;const first=!settled;settled=true;window.clearInterval(cycle);applyTheme(theme);setPreview(aliases[theme]||theme);if(first){window.setTimeout(()=>{if(active){setVisible(false);window.setTimeout(()=>{if(active)setRecognizing(false)},1400)}},Math.max(0,1100-(performance.now()-start)))}};
+  const settle=(theme:string)=>{if(!active)return;const first=!settled;settled=true;applyTheme(theme);setPreview(aliases[theme]||theme);if(first){window.setTimeout(()=>{if(active){setVisible(false);window.setTimeout(()=>{if(active)setRecognizing(false)},1400)}},Math.max(0,1100-(performance.now()-start)))}};
   const db=createClient();
   const refresh=async()=>{
    try{
     const {data:{user}}=await db.auth.getUser();
     if(!active)return;
-    if(!user){document.documentElement.dataset.guestHome="true";settle("sapphire");return}
+    if(!user){document.documentElement.dataset.guestHome="true";settle("emerald");setVisible(false);setRecognizing(false);return}
     delete document.documentElement.dataset.guestHome;
     const {data}=await db.from("profiles").select("avatar_config").eq("id",user.id).maybeSingle();
     settle((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||initial);
@@ -52,7 +48,7 @@ export default function ProfileThemeSync(){
   const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void refresh()});
   const onChange=(event:Event)=>{const theme=(event as CustomEvent<string>).detail;if(typeof theme==="string")settle(theme);else void refresh()};
   window.addEventListener("1muslim:profile-background-changed",onChange);
-  return()=>{active=false;window.clearInterval(cycle);subscription.unsubscribe();window.removeEventListener("1muslim:profile-background-changed",onChange)};
+  return()=>{active=false;subscription.unsubscribe();window.removeEventListener("1muslim:profile-background-changed",onChange)};
  },[]);
  return <>
   {recognizing&&<div className={visible?"themeRecognitionIntro":"themeRecognitionIntro themeRecognitionDone"} aria-hidden="true"><div className="themeRecognitionWallpaper" style={{backgroundImage:`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[preview]||preview}.PNG")`}}/><div className="themeRecognitionGlow"/><div className="themeRecognitionButtons"><i/><i/><i/><i/><i/><i/></div></div>}
