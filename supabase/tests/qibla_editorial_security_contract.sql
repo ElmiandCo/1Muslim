@@ -47,6 +47,27 @@ BEGIN
   WHERE n.nspname='public' AND t.relname='qibla_xp_awards'
    AND c.contype='p'
  ) THEN RAISE EXCEPTION 'XP award primary key missing'; END IF;
+ -- Resume cleanup is allowed only for the uploader's unclaimed object.
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_policies WHERE schemaname='storage' AND tablename='objects'
+   AND policyname='qibla_resume_delete_orphan_self' AND cmd='DELETE'
+   AND roles @> ARRAY['authenticated']::name[]
+   AND qual LIKE '%qibla-resumes%' AND qual LIKE '%auth.uid%'
+   AND qual LIKE '%qibla_applications%' AND qual LIKE '%resume_path%'
+ ) THEN RAISE EXCEPTION 'Orphan-only resume cleanup policy missing'; END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_index i JOIN pg_class t ON t.oid=i.indrelid
+  JOIN pg_namespace n ON n.oid=t.relnamespace
+  JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=ANY(i.indkey)
+  WHERE n.nspname='public' AND t.relname='qibla_applications'
+   AND i.indisunique AND i.indisvalid AND a.attname='resume_path'
+   AND i.indnatts=1
+ ) THEN RAISE EXCEPTION 'Unique application resume claim missing'; END IF;
+ IF EXISTS (
+  SELECT 1 FROM pg_policies WHERE schemaname='storage' AND tablename='objects'
+   AND cmd='DELETE' AND policyname LIKE 'qibla_resume%'
+   AND policyname <> 'qibla_resume_delete_orphan_self'
+ ) THEN RAISE EXCEPTION 'Unexpected additional Qibla resume deletion policy'; END IF;
  RAISE NOTICE 'Qibla static schema/RLS/grant contract checks passed (not role/concurrency tests)';
 END $$;
 
