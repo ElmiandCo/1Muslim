@@ -20,21 +20,59 @@ export default function HomeLiveConversation({room}:{room:Room}){
  const pickerRef=useRef<HTMLInputElement>(null);
  const dbRef=useRef(createClient());
  const commentsRef=useRef<HTMLDivElement>(null);
- const followLatestRef=useRef(true);
  const lastMessageIdRef=useRef<string|null>(null);
- const onCommentsScroll=()=>{
+ const idleTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const programmaticScrollRef=useRef(false);
+ const scrollFrameRef=useRef<number|null>(null);
+ const scrollToLatest=(animated:boolean)=>{
   const el=commentsRef.current;if(!el)return;
-  followLatestRef.current=el.scrollHeight-el.scrollTop-el.clientHeight<=48;
+  if(scrollFrameRef.current!==null)cancelAnimationFrame(scrollFrameRef.current);
+  const target=Math.max(0,el.scrollHeight-el.clientHeight);
+  const distance=Math.abs(target-el.scrollTop);
+  if(distance<2)return;
+  const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!animated||reduce){el.scrollTop=target;return;}
+  const from=el.scrollTop,start=performance.now();
+  const duration=Math.min(500,Math.max(160,distance*.35));
+  programmaticScrollRef.current=true;
+  const tick=(now:number)=>{
+   const progress=Math.min(1,(now-start)/duration);
+   const ease=1-Math.pow(1-progress,3);
+   el.scrollTop=from+(target-from)*ease;
+   if(progress<1)scrollFrameRef.current=requestAnimationFrame(tick);
+   else{scrollFrameRef.current=null;programmaticScrollRef.current=false;}
+  };
+  scrollFrameRef.current=requestAnimationFrame(tick);
  };
- useEffect(()=>{followLatestRef.current=true;lastMessageIdRef.current=null},[room]);
+ const scheduleIdleReturn=()=>{
+  if(idleTimerRef.current)clearTimeout(idleTimerRef.current);
+  idleTimerRef.current=setTimeout(()=>scrollToLatest(true),3000);
+ };
+ const onCommentsScroll=()=>{
+  if(!programmaticScrollRef.current)scheduleIdleReturn();
+ };
+ useEffect(()=>{
+  lastMessageIdRef.current=null;
+  scrollToLatest(false);
+  return()=>{
+   if(idleTimerRef.current)clearTimeout(idleTimerRef.current);
+   if(scrollFrameRef.current!==null)cancelAnimationFrame(scrollFrameRef.current);
+   programmaticScrollRef.current=false;
+  };
+ },[room]);
  useLayoutEffect(()=>{
-  const el=commentsRef.current;if(!el)return;
   const lastId=messages[messages.length-1]?.id||null;
   if(lastId!==lastMessageIdRef.current){
    lastMessageIdRef.current=lastId;
-   if(followLatestRef.current)el.scrollTo({top:el.scrollHeight,behavior:"smooth"});
+   scrollToLatest(true);
   }
  },[messages]);
+ useEffect(()=>{
+  const el=commentsRef.current;if(!el)return;
+  const observer=new ResizeObserver(()=>{if(!idleTimerRef.current)scrollToLatest(false)});
+  observer.observe(el);
+  return()=>observer.disconnect();
+ },[room]);
  useEffect(()=>{
   const db=dbRef.current;let active=true;
   const sync=async()=>{const {data}=await db.auth.getUser();if(active)setUser(data.user?.id||null)};
@@ -92,7 +130,7 @@ export default function HomeLiveConversation({room}:{room:Room}){
  };
  return <section className="homeLiveViewerConversation" aria-label={room+" Chat"}>
   <header><strong>💬 Chat</strong><small>{room==="phone"?"Mobile":room[0].toUpperCase()+room.slice(1)} · Messages expire after 3 hours</small></header>
-  <div ref={commentsRef} onScroll={onCommentsScroll} className="homeLiveDemoComments" aria-live="polite">{messages.length?messages.map(m=><p key={m.id}><span className="homeLiveCommentAvatar">{avatars[m.sender_id]&&!failedAvatars[m.sender_id]?<img src={avatars[m.sender_id]!} alt="" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFailedAvatars(old=>({...old,[m.sender_id]:true}))} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit",display:"block"}}/>:(names[m.sender_id]||"M")[0].toUpperCase()}</span><span><strong>{names[m.sender_id]||"Member"}</strong>{m.body&&<small>{m.body}</small>}{m.image_path&&<a href={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} target="_blank" rel="noopener noreferrer" aria-label="Open chat image"><img src={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} alt="Image shared in chat" loading="lazy" style={{display:"block",maxWidth:"min(220px,65vw)",maxHeight:180,objectFit:"contain",borderRadius:12,marginTop:6}}/></a>}</span></p>):<p>Start the conversation in this room.</p>}</div>
+  <div ref={commentsRef} onScroll={onCommentsScroll} onTouchStart={scheduleIdleReturn} onTouchMove={scheduleIdleReturn} onWheel={scheduleIdleReturn} className="homeLiveDemoComments" aria-live="polite">{messages.length?messages.map(m=><p key={m.id}><span className="homeLiveCommentAvatar">{avatars[m.sender_id]&&!failedAvatars[m.sender_id]?<img src={avatars[m.sender_id]!} alt="" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFailedAvatars(old=>({...old,[m.sender_id]:true}))} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit",display:"block"}}/>:(names[m.sender_id]||"M")[0].toUpperCase()}</span><span><strong>{names[m.sender_id]||"Member"}</strong>{m.body&&<small>{m.body}</small>}{m.image_path&&<a href={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} target="_blank" rel="noopener noreferrer" aria-label="Open chat image"><img src={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} alt="Image shared in chat" loading="lazy" style={{display:"block",maxWidth:"min(220px,65vw)",maxHeight:180,objectFit:"contain",borderRadius:12,marginTop:6}}/></a>}</span></p>):<p>Start the conversation in this room.</p>}</div>
   {user?<form className="homeLiveCommentForm" onSubmit={send}>
    <input ref={pickerRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{display:"none"}} onChange={e=>chooseImage(e.target.files?.[0])} aria-label="Choose chat image"/>
    <button type="button" aria-label="Add image" title="Add image" onClick={()=>pickerRef.current?.click()} disabled={sending} style={{flex:"0 0 36px",borderRadius:"50%",fontSize:24,background:"transparent",color:"inherit",border:"1px solid currentColor",opacity:.85}}>+</button>
