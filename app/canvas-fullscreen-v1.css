@@ -2681,3 +2681,62 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:
  align-self:center!important;
  padding:0 12px!important;
 }
+
+
+/* Restore the home chat after the stage geometry regression.
+   This selector intentionally matches the direct child in both signed-in
+   and signed-out views; do not depend on .canvas-vertical-main ancestry. */
+[data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="desktop"] > .oneMuslimLiveBottom,
+[data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="phone"] > .oneMuslimLiveBottom,
+[data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="audio"] > .oneMuslimLiveBottom{
+ position:absolute!important;
+ inset:auto 8px 8px 8px!important;
+ top:38%!important;
+ bottom:8px!important;
+ left:8px!important;
+ right:8px!important;
+ width:auto!important;
+ height:auto!important;
+ max-height:none!important;
+ min-height:0!important;
+ padding:0!important;
+ margin:0!important;
+ display:flex!important;
+ flex-direction:column!important;
+ overflow:visible!important;
+ visibility:visible!important;
+ opacity:1!important;
+ z-index:2147483001!important;
+ pointer-events:auto!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom > .homeLiveViewerConversation{
+ display:flex!important;
+ flex:1 1 0%!important;
+ flex-direction:column!important;
+ justify-content:stretch!important;
+ width:100%!important;
+ height:100%!important;
+ max-height:none!important;
+ min-height:0!important;
+ overflow:hidden!important;
+ visibility:visible!important;
+ opacity:1!important;
+ pointer-events:auto!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveDemoComments{
+ display:flex!important;
+ flex:1 1 0%!important;
+ height:0!important;
+ max-height:none!important;
+ min-height:0!important;
+ overflow-y:auto!important;
+ visibility:visible!important;
+ opacity:1!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom .homeLiveCommentForm{
+ display:flex!important;
+ flex:0 0 auto!important;
+ visibility:visible!important;
+ opacity:1!important;
+ pointer-events:auto!important;
+}
