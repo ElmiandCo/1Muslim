@@ -8,6 +8,16 @@ begin
  if v_actor is null or not exists (
   select 1 from public.qibla_staff where user_id=v_actor and role in ('editor','approver')
  ) then raise exception 'Editorial role required' using errcode='42501'; end if;
+ -- An approver may refine an article after editorial review, but cannot
+ -- impersonate the editor's first successful save or trigger its notification.
+ if not exists (
+  select 1 from public.qibla_articles a
+  where a.id=p_article_id and (
+   a.first_editor_save_at is not null
+   or exists (select 1 from public.qibla_staff st
+              where st.user_id=v_actor and st.role='editor')
+  )
+ ) then raise exception 'First save must be performed by an editor' using errcode='42501'; end if;
  if p_title is null or length(trim(p_title))=0 or length(p_title)>250
   or p_subtitle is null or length(p_subtitle)>500
   or p_body is null or length(trim(p_body))=0 or length(p_body)>1000000
