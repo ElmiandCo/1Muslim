@@ -12,6 +12,29 @@ const themes:Record<string,{base:string;accent:string;secondary:string;surface:s
  obsidian:{base:"#0b0b0c",accent:"#e2b75e",secondary:"#ffdb8b",surface:"#1c1914",edge:"#e6bc65",tint:"rgba(0,0,0,.62)"}
 };
 const fallback="emerald";
+
+/** Accent is independent from the profile wallpaper. Never derive one from the other. */
+const accentPalettes:Record<string,[string,string,string]>={
+ emerald:["#22bd83","#54d5a3","#073c30"],blue:["#398fff","#73b6ff","#10294b"],
+ gold:["#e4b94f","#ffe19a","#493715"],slate:["#c0c7d1","#e0e5ed","#242832"],
+ rose:["#f27ac1","#ffc1e6","#4a1839"],ruby:["#ed3652","#ff6983","#4a1422"],
+ violet:["#c85cf5","#e9a0ff","#39134e"]
+};
+const accentAliases:Record<string,string>={sapphire:"blue",najma:"gold",obsidian:"slate",amethyst:"violet",pink:"rose"};
+function applyAccent(value:unknown){
+ const raw=typeof value==="string"?value.toLowerCase():"emerald";
+ const name=accentPalettes[raw]?raw:accentAliases[raw]||"emerald";
+ const [accent,edge,surface]=accentPalettes[name]||accentPalettes.emerald;
+ const root=document.documentElement;
+ root.dataset.profileAccent=name;
+ for(const [key,val] of Object.entries({
+  "--theme-accent":accent,"--theme-primary":accent,"--theme-border":edge,
+  "--theme-edge":edge,"--theme-surface":surface,"--p2-accent":accent,
+  "--p2-line":edge,"--accent":accent,"--primary":accent
+ }))root.style.setProperty(key,val);
+ try{localStorage.setItem("1muslim:profile-accent",name)}catch{}
+}
+
 function applyTheme(value:unknown,persist=true){
  const requested=typeof value==="string"?value:fallback;
  const wallpaper=aliases[requested]||requested;
@@ -19,12 +42,36 @@ function applyTheme(value:unknown,persist=true){
  const theme=colorFamily[wallpaper]|| (themes[wallpaper]?wallpaper:fallback);
  const t=themes[theme];const root=document.documentElement;
  root.dataset.profileBackground=wallpaper;root.dataset.muslimTheme=theme;
- root.style.setProperty("--theme-base",t.base);root.style.setProperty("--theme-accent",t.accent);root.style.setProperty("--theme-secondary",t.secondary);root.style.setProperty("--theme-surface",t.surface);root.style.setProperty("--theme-edge",t.edge);
+ root.style.setProperty("--theme-base",t.base);root.style.setProperty("--theme-secondary",t.secondary);
  root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${root.dataset.guestHome==="true"&&wallpaper==="sapphire"?"sapphire-home":({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[wallpaper]||wallpaper}.PNG")`);
  root.style.setProperty("--profile-scene-tint",t.tint);
  if(persist){try{localStorage.setItem("1muslim:profile-background",wallpaper)}catch{}}
 }
 export default function ProfileThemeSync(){
+ useEffect(()=>{
+  let active=true;
+  const db=createClient();
+  const refresh=async()=>{
+   const local=(()=>{try{return localStorage.getItem("1muslim:profile-accent")||"emerald"}catch{return "emerald"}})();
+   applyAccent(local);
+   try{
+    const {data:{user}}=await db.auth.getUser();
+    if(!active)return;
+    if(!user){applyAccent("emerald");return}
+    const {data,error}=await db.from("profiles").select("profile_accent").eq("id",user.id).maybeSingle();
+    if(active&&!error)applyAccent(data?.profile_accent||"emerald");
+   }catch{}
+  };
+  void refresh();
+  const onTheme=(event:Event)=>{
+   const detail=(event as CustomEvent<string>).detail;
+   if(typeof detail==="string")applyAccent(detail);
+   else void refresh();
+  };
+  const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void refresh()});
+  window.addEventListener("1muslim:theme-changed",onTheme);
+  return()=>{active=false;subscription.unsubscribe();window.removeEventListener("1muslim:theme-changed",onTheme)};
+ },[]);
  const [recognizing,setRecognizing]=useState(true);
  const [visible,setVisible]=useState(true);
  const [preview,setPreview]=useState("emerald");
@@ -57,6 +104,9 @@ export default function ProfileThemeSync(){
  return <>
   {recognizing&&<div className={visible?"themeRecognitionIntro":"themeRecognitionIntro themeRecognitionDone"} aria-hidden="true"><div className="themeRecognitionWallpaper" style={{backgroundImage:`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[preview]||preview}.PNG")`}}/><div className="themeRecognitionGlow"/><div className="themeRecognitionButtons"><i/><i/><i/><i/><i/><i/></div></div>}
   <style>{`
+   html[data-profile-accent] :is(button,[role="button"],input,textarea,select,a){transition:background-color .8s ease,border-color .8s ease,color .8s ease,box-shadow .8s ease}
+   html[data-profile-accent] :is(.p2EditChoice[aria-pressed="true"],.p2EditSave){border-color:var(--theme-accent)!important}
+
    .themeRecognitionIntro{position:fixed;inset:0;z-index:15;pointer-events:none;overflow:hidden;opacity:.78;transition:opacity 1.4s ease;background:linear-gradient(125deg,rgba(9,74,61,.18),rgba(30,83,159,.2),rgba(104,42,129,.17),rgba(127,81,35,.16));background-size:400% 400%;animation:themeIntroShift 9s ease-in-out infinite}
    .themeRecognitionDone{opacity:0!important}\n   .themeRecognitionWallpaper{position:absolute;inset:0;opacity:.16;background-size:cover;background-position:center;filter:blur(9px);animation:themeIntroFloat 7s ease-in-out infinite alternate}\n   html:has(.themeRecognitionIntro) button{transition:background-color 1.1s ease,border-color 1.1s ease,color 1.1s ease,box-shadow 1.1s ease!important}\n   .themeRecognitionGlow{position:absolute;inset:-20%;background:radial-gradient(circle at 25% 35%,rgba(42,167,222,.16),transparent 55%),radial-gradient(circle at 80% 70%,rgba(209,115,215,.12),transparent 55%);animation:themeIntroFloat 7s ease-in-out infinite alternate}
    .themeRecognitionButtons{position:absolute;bottom:13%;left:50%;transform:translateX(-50%);display:flex;gap:12px;opacity:.55}
