@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {getRegistryVideos} from "./videoRegistry";
+import {shouldOfferContinue,remainingContinueSeconds} from "./editorialCutoff.mjs";
 
 type YTPlayer={
   loadVideoById:(video:{videoId:string;startSeconds:number})=>void;
@@ -78,10 +79,11 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     let timer:ReturnType<typeof setInterval>|undefined;
     
     let promptStartedAt:number|null=null;
+    let pausedAt:number|null=null;
     let autoSkipHandled=false;
     const continuedIds=new Set<string>();
     try{const ids=JSON.parse(localStorage.getItem("oneMuslimContinueVideoIdsV1")||"[]");if(Array.isArray(ids))ids.forEach((id:unknown)=>{if(typeof id==="string")continuedIds.add(id)})}catch{}
-    const clearPrompt=()=>{promptStartedAt=null;autoSkipHandled=false;setSkipPrompt(false);setSkipCountdown(3)};
+    const clearPrompt=()=>{promptStartedAt=null;pausedAt=null;autoSkipHandled=false;setSkipPrompt(false);setSkipCountdown(3)};
     const next=(step=1)=>{
       if(disposed||!player)return;
       index=((selectedIndexRef.current??index)+step+playlist.length)%playlist.length;
@@ -132,18 +134,18 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               const seconds=player.getCurrentTime();
               if(!Number.isFinite(seconds))return;
               if(isPausedRef.current)return;
-              if(segment.endSeconds!==null&&!continuedIds.has(segment.videoId)&&seconds>=segment.endSeconds){
+              if(shouldOfferContinue(seconds,segment.endSeconds,continuedIds.has(segment.videoId))){
                 if(promptStartedAt===null){promptStartedAt=performance.now();setSkipPrompt(true);setSkipCountdown(3)}
                 const elapsed=(performance.now()-promptStartedAt)/1000;
                 const remaining=3-elapsed;
-                setSkipCountdown(Math.max(1,3-Math.floor(elapsed)));
+                setSkipCountdown(remainingContinueSeconds(elapsed*1000));
                 if(remaining<=0&&!autoSkipHandled){autoSkipHandled=true;next();return;}
               }
               // Only a configured editorial cutoff prompts; Continue allows the natural ending.
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
             },250);
           },
-          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPlaying(false);setIsPaused(true);isPausedRef.current=true;setTapHint(true)}else if(data===1){setIsPlaying(true);setIsPaused(false);isPausedRef.current=false}else if(data===3){setIsPlaying(false)}}
+          onStateChange:({data})=>{if(data===0)next();else if(data===2){if(promptStartedAt!==null)pausedAt=performance.now();setIsPlaying(false);setIsPaused(true);isPausedRef.current=true;setTapHint(true)}else if(data===1){if(pausedAt!==null&&promptStartedAt!==null)promptStartedAt+=performance.now()-pausedAt;pausedAt=null;setIsPlaying(true);setIsPaused(false);isPausedRef.current=false}else if(data===3){setIsPlaying(false)}}
         }
       });
     };
