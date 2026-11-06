@@ -77,6 +77,17 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     observer.observe(document.body,{childList:true,subtree:true});
     return()=>{observer.disconnect();reflection?.remove();chat?.classList.remove("oneMuslimReflectiveChat")};
   },[format,timedVideoKey]);
+  // The decorative iframe is muted and follows the primary player. It never drives navigation.
+  useEffect(()=>{
+    const stage=mountRef.current?.closest(".oneMuslimLiveStage");
+    const mirror=stage?.querySelector<HTMLIFrameElement>(".oneMuslimVideoWaterReflectionMirror");
+    if(!mirror?.contentWindow)return;
+    const command=(func:string,args:unknown[]=[])=>mirror.contentWindow?.postMessage(JSON.stringify({event:"command",func,args}),"https://www.youtube-nocookie.com");
+    command("mute");
+    command(isPlaying&&!isPaused?"playVideo":"pauseVideo");
+    // Correct drift only when a real playback position is available.
+    if(isPlaying&&!isPaused&&Number.isFinite(timedSeconds)&&timedSeconds>0&&timedSeconds%8===0)command("seekTo",[timedSeconds,true]);
+  },[timedSeconds,isPlaying,isPaused,format]);
   useEffect(()=>{
     const stage=mountRef.current?.closest(".oneMuslimLiveStage");
     const image=stage?.querySelector<HTMLElement>(".oneMuslimVideoWaterReflectionImage");
@@ -262,7 +273,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   </div><style>{`
     .oneMuslimReflectiveChat{position:relative;isolation:isolate;overflow:hidden}
     .oneMuslimReflectiveChat>.oneMuslimVideoWaterReflection{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;opacity:.24;mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,.48) 42%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,.48) 42%,transparent 100%)}
-    .oneMuslimVideoWaterReflectionImage{position:absolute;inset:-15% -4%;background-size:cover;background-position:center top;transform:scaleY(-1) scale(1.06);filter:blur(16px) saturate(.65);animation:oneMuslimReflectionRipple 12s ease-in-out infinite alternate}
+    .oneMuslimVideoWaterReflectionMirror{position:absolute;inset:-25% -25%;width:150%;height:150%;border:0;pointer-events:none;transform:scaleY(-1) scale(1.12);filter:blur(32px) saturate(.65);opacity:.8}\n    .oneMuslimVideoWaterReflectionImage{position:absolute;inset:-15% -4%;background-size:cover;background-position:center top;transform:scaleY(-1) scale(1.06);filter:blur(16px) saturate(.65);animation:oneMuslimReflectionRipple 12s ease-in-out infinite alternate}
     .oneMuslimReflectiveChat>:not(.oneMuslimVideoWaterReflection){position:relative;z-index:1}
     @keyframes oneMuslimReflectionRipple{from{transform:scaleY(-1) scale(1.06) translateX(-.5%)}to{transform:scaleY(-1) scale(1.075) translateX(.5%)}}
     @media(prefers-reduced-motion:reduce){.oneMuslimVideoWaterReflectionImage{animation:none}}
