@@ -240,7 +240,7 @@ function DailyPostsApp({active}:{active:boolean}){
  const fypSearchResults=useMemo(()=>{const q=fypSearchQuery.trim().toLocaleLowerCase();if(!q)return [];return fypOrder.map((post,index)=>({post,index})).filter(({post})=>[post.body,post.author_name].some(value=>String(value||"").toLocaleLowerCase().includes(q))).slice(0,12)},[fypOrder,fypSearchQuery]);
 
  const [fypWarmingUp,setFypWarmingUp]=useState(false);
- useEffect(()=>{if(!fypStart){setFypWarmingUp(false);return;}setFypWarmingUp(true);const timer=window.setTimeout(()=>setFypWarmingUp(false),1000);return()=>window.clearTimeout(timer)},[fypStart]);
+ useEffect(()=>{setFypWarmingUp(false)},[fypStart]);
  useEffect(()=>{if(!fypStart){fypVideoRefs.current.forEach(video=>video.pause());setFypActiveIndex(0);return}
    const reel=fypReelRef.current;if(!reel)return;
    const sections=Array.from(reel.querySelectorAll<HTMLElement>("section[data-fyp-index]"));
