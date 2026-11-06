@@ -87,7 +87,7 @@ export default function QiblaStudio() {
       ({ error } = await db.rpc("qibla_submit_article", { p_article_id: active.id }));
     }
     if (error) setMessage(error.message);
-    else { setMessage(action === "save" ? (role === "writer" ? "Draft saved." : "Revision saved for approval.") : action === "publish" ? "Article published." : "Draft submitted for review."); await load(); }
+    else { setMessage(action === "save" ? (role === "writer" ? "Draft saved." : "Revision saved for approval.") : action === "publish" ? "Article published." : "Draft submitted for review."); if (action === "save") setDirty(false); await load(); }
     setBusy(false);
   };
   return <main className={styles.root}>
