@@ -23,6 +23,8 @@ export default function QiblaArticlePage() {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const wordCount = article ? [article.section_one?.text, article.section_two?.text].filter(Boolean).join(" ").trim().split(/\s+/u).filter(Boolean).length : 0;
+  const readingMinutes = Math.max(1, Math.ceil(wordCount / 220));
 
   useEffect(() => {
     let active = true;
@@ -77,7 +79,7 @@ export default function QiblaArticlePage() {
             <p className={styles.kicker}>1QIBLA · {article.template_type === "video" ? "VIDEO" : "ARTICLE"}</p>
             <h1>{article.title}</h1>
             {article.subtitle && <p>{article.subtitle}</p>}
-            <time dateTime={article.created_at}>{new Date(article.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</time>
+            <div className={styles.metadata}>{article.created_at && !Number.isNaN(Date.parse(article.created_at)) && <time dateTime={article.created_at}>{new Date(article.created_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</time>}<span aria-label={`Estimated reading time ${readingMinutes} minute${readingMinutes === 1 ? "" : "s"}`}>{readingMinutes} min read</span></div>
           </header>
           {article.hero_media_path && article.template_type === "image" ?
             <div className={styles.cover} style={{ backgroundImage: `url("${encodeURI(article.hero_media_path)}")` }} role="img" aria-label="Article cover" /> : null}
