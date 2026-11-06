@@ -188,6 +188,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
       {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay is-clear" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
+      {(!soundEnabled||isPaused)&&tapHint&&<a className="oneMuslimRegistryShortcut" href="/video-registry" aria-label="Open Top 100 video registry" title="Top 100 Videos">▦</a>}
       {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Next video countdown"><button type="button" aria-label="Tap to stay on this video" onClick={()=>continueVideoRef.current()}><span className="oneMuslimSkipLabel">{skipCountdown===5?"Next Video":"Tap To Stay"}</span><span className="oneMuslimSkipNumber">{skipCountdown}</span></button></div>}
       <span className="oneMuslimThemeBrand" aria-hidden="true">1Muslim</span>
       <button type="button" className={"oneMuslimPlaylistArrow is-left"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
@@ -208,7 +209,9 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       .oneMuslimSkipNumber{font-size:clamp(38px,7vw,62px);font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
       @keyframes oneMuslimSkipAppear{from{opacity:0;transform:translate(-50%,7px)}to{opacity:1;transform:translate(-50%,0)}}
       .oneMuslimThemeBrand{position:absolute;z-index:5;bottom:clamp(10px,1.8vw,19px);right:clamp(12px,2vw,23px);pointer-events:none;user-select:none;font-family:"Palatino Linotype","Book Antiqua",Palatino,"URW Palladio L",Georgia,serif;font-size:clamp(12px,1.35vw,17px);font-style:italic;font-weight:600;letter-spacing:-.055em;text-transform:none;color:color-mix(in srgb,var(--theme-primary,#b9d8ff) 24%,#fff);text-shadow:0 1px 4px rgba(0,0,0,.85),0 0 12px color-mix(in srgb,var(--theme-primary,#b9d8ff) 24%,transparent);opacity:.88;white-space:nowrap;animation:none!important;transition:none!important}
-      .oneMuslimThemeTap{font-size:clamp(25px,5vw,48px);font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:color-mix(in srgb,var(--theme-text,#fff) 38%,transparent);-webkit-text-stroke:1px color-mix(in srgb,var(--theme-primary,#a9a9cf) 55%,transparent);text-shadow:0 0 22px color-mix(in srgb,var(--theme-primary,#a9a9cf) 25%,transparent)}
+      .oneMuslimThemeTap{font-size:clamp(25px,5vw,48px);font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.56);-webkit-text-stroke:0;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+      .oneMuslimRegistryShortcut{position:absolute;z-index:7;left:clamp(12px,2vw,22px);bottom:clamp(12px,2vw,22px);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;text-decoration:none;font-size:17px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);box-shadow:0 2px 10px rgba(0,0,0,.15)}
+      .oneMuslimRegistryShortcut:hover,.oneMuslimRegistryShortcut:focus-visible{background:rgba(0,0,0,.45);outline:2px solid rgba(255,255,255,.65);outline-offset:2px}
       @keyframes oneMuslimOverlayBreath{0%,100%{opacity:1}50%{opacity:0}}
       
       .oneMuslimPlayerSoundActivator{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;border:0;background:transparent;cursor:pointer;touch-action:manipulation}
