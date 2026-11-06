@@ -3,23 +3,25 @@ import {useEffect,useRef,useState} from "react";
 import {createPortal} from "react-dom";
 import {createClient} from "../../utils/supabase/client";
 
-type Comment={id:string;body:string;at_seconds:number};
+type Comment={id:string;body:string;at_seconds:number;user_id:string};
 type Floating=Comment&{born:number;until:number;lane:"screen"|"canvas";pinned:boolean;pausedUntil:number;popping?:boolean};
 type Bounds={x:number;y:number;w:number;h:number};
 export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}:{videoKey:string;seconds:number;playing:boolean;bounds:Bounds}){
  const [entries,setEntries]=useState<Comment[]>([]);
+ const [avatars,setAvatars]=useState<Record<string,string|null>>({});
+ useEffect(()=>{const ids=[...new Set(entries.map(c=>c.user_id))].filter(id=>id&&!Object.prototype.hasOwnProperty.call(avatars,id));if(!ids.length)return;let active=true;void createClient().from("profiles").select("id,avatar_url").in("id",ids).then(({data})=>{if(active)setAvatars(old=>({...old,...Object.fromEntries(ids.map(id=>[id,data?.find(p=>p.id===id)?.avatar_url||null]))}))});return()=>{active=false}},[entries,avatars]);
  const [floating,setFloating]=useState<Floating[]>([]);
  const seen=useRef(new Set<string>());
  const previous=useRef(-1);
  const [ready,setReady]=useState(false);
- const [spotlight,setSpotlight]=useState<{body:string;atSeconds:number;started:number}|null>(null);
+ const [spotlight,setSpotlight]=useState<{body:string;atSeconds:number;started:number;userId:string}|null>(null);
  useEffect(()=>{
    let timer:ReturnType<typeof setTimeout>|undefined;
    const onPosted=(event:Event)=>{
-     const detail=(event as CustomEvent<{body:string;atSeconds:number;videoKey:string}>).detail;
+     const detail=(event as CustomEvent<{body:string;atSeconds:number;videoKey:string;userId:string}>).detail;
      if(!detail||detail.videoKey!==videoKey)return;
      if(timer)clearTimeout(timer);
-     setSpotlight({body:detail.body,atSeconds:detail.atSeconds,started:Date.now()});
+     setSpotlight({body:detail.body,atSeconds:detail.atSeconds,started:Date.now(),userId:detail.userId});
      timer=setTimeout(()=>setSpotlight(null),3000);
    };
    window.addEventListener("elmi-layer-x-comment-posted",onPosted);
@@ -30,7 +32,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
    let live=true;seen.current.clear();previous.current=-1;setEntries([]);setFloating([]);
    if(!videoKey)return;
    const db=createClient();
-   const load=async()=>{const {data,error}=await db.from("featured_video_timed_comments").select("id,body,at_seconds").eq("video_key",videoKey).order("at_seconds",{ascending:true}).limit(500);if(live&&!error)setEntries((data||[]) as Comment[])};
+   const load=async()=>{const {data,error}=await db.from("featured_video_timed_comments").select("id,body,at_seconds,user_id").eq("video_key",videoKey).order("at_seconds",{ascending:true}).limit(500);if(live&&!error)setEntries((data||[]) as Comment[])};
    void load();const timer=window.setInterval(()=>void load(),15000);
    return()=>{live=false;window.clearInterval(timer)};
  },[videoKey]);
@@ -75,7 +77,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
  // One DOM node and one continuous animation per comment. No reparenting or remounting at crossover.
  // Canvas-to-screen depth is represented by a single viewport portal; its path crosses
  // the carousel boundary without any position or opacity discontinuity.
- return createPortal(<div className="elmi-timed-layers" aria-label="Timed video comments">\n   {spotlight&&<div className="elmi-post-spotlight" aria-hidden="true" style={{"--elmi-focus-x":`${bounds.x+bounds.w/2}px`,"--elmi-focus-y":`${bounds.y+bounds.h/2}px` } as React.CSSProperties}><div className="elmi-post-spotlight-video"/></div>}\n   {spotlight&&<div key={spotlight.started} className="elmi-post-spotlight-comment" role="status"><small>{Math.floor(spotlight.atSeconds/60)}:{String(spotlight.atSeconds%60).padStart(2,"0")}</small><span>{spotlight.body}</span></div>}
+ return createPortal(<div className="elmi-timed-layers" aria-label="Timed video comments">\n   {spotlight&&<div className="elmi-post-spotlight" aria-hidden="true" style={{"--elmi-focus-x":`${bounds.x+bounds.w/2}px`,"--elmi-focus-y":`${bounds.y+bounds.h/2}px` } as React.CSSProperties}><div className="elmi-post-spotlight-video"/></div>}\n   {spotlight&&<div key={spotlight.started} className="elmi-post-spotlight-comment" role="status">{avatars[spotlight.userId]&&<img src={avatars[spotlight.userId]!} alt="" className="elmi-post-avatar"/>}<span>{spotlight.body}</span></div>}
    {floating.map((comment,i)=>{
      const canvasStart=comment.lane==="canvas";
      const startX=canvasStart?bounds.x+bounds.w*(.2+(i%3)*.09):Math.max(16,window.innerWidth*.17+(i%3)*28);
@@ -87,7 +89,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
        className={"elmi-timed-comment"+(canvasStart?" is-handoff":" is-screen")+(comment.pinned?" is-pinned":"")+(comment.popping?" is-popping":"")}
        style={{left:startX,top:startY,"--elmi-travel":-distance+"px",animationPlayState:paused?"paused":"running",animationDelay:(i%3)*160+"ms"} as React.CSSProperties}
        aria-label="Floating video comment">
-       <span className="elmi-timed-time">{Math.floor(comment.at_seconds/60)}:{String(comment.at_seconds%60).padStart(2,"0")}</span><span>{comment.body}</span>
+       {avatars[comment.user_id]&&<img src={avatars[comment.user_id]!} alt="" className="elmi-post-avatar"/>}<span>{comment.body}</span>
      </button>
    })}
    <style>{`
@@ -97,7 +99,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
     .elmi-timed-comment.is-popping{animation:elmi-comment-pop .24s ease-out forwards!important;pointer-events:none}
     @keyframes elmi-comment-pop{0%{opacity:1;scale:1}55%{opacity:.95;scale:1.24}100%{opacity:0;scale:.25}}
     .elmi-timed-comment.is-pinned{border-color:color-mix(in srgb,var(--theme-primary,#a6dce0) 65%,transparent)}
-    .elmi-timed-time{font-size:10px;font-weight:700;opacity:.85}
+    .elmi-post-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0}
     @keyframes elmi-layer-handoff{
       0%{opacity:0;transform:translate3d(0,25px,0) scale(.88) rotate(-.8deg)}
       12%{opacity:.92;transform:translate3d(0,calc(var(--elmi-travel)*.10),0) scale(.94) rotate(.3deg)}
