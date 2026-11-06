@@ -10,6 +10,7 @@ type YTPlayer={
   unMute:()=>void;
   playVideo:()=>void;
   getCurrentTime:()=>number;
+  seekTo:(seconds:number,allowSeekAhead?:boolean)=>void;
   destroy:()=>void;
 };
 type YTApi={Player:new(element:HTMLElement,options:{
@@ -94,6 +95,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   useEffect(()=>()=>{if(arrowTimer.current)clearTimeout(arrowTimer.current);},[]);
   const navigate=(step:number)=>navigateRef.current(step);
   const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);setIsPaused(false);setTapHint(false);setIsPlaying(false);setImmersive(false);setCinemaEngaged(false);setCinemaSettled(false);playerRef.current?.unMute();playerRef.current?.playVideo();};
+  const rewindTen=()=>{const player=playerRef.current;if(!player)return;player.seekTo(Math.max(0,player.getCurrentTime()-10),true);};
   const selectedIndexRef=useRef<number|null>(null);
   useEffect(()=>{
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
@@ -212,7 +214,8 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     <div className={"oneMuslimIdleYoutubePlayer"+(slideDirection?" is-switching "+(slideDirection>0?"is-next":"is-previous"):"")} aria-label="Featured video playlist while no broadcasts are live">
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
-      {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay is-clear" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
+      {format==="phone"&&<div className={"oneMuslimShortsBlackControls"+(!soundEnabled||isPaused?" is-prompting":"")}><button type="button" className="oneMuslimShortsTap" onClick={enableSound} aria-label="Tap to play Shorts with sound">Tap</button><button type="button" className="oneMuslimShortsRewind" onClick={rewindTen} aria-label="Rewind 10 seconds">↶ <span>10s</span></button></div>}
+      {format!=="phone"&&(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay is-clear" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
       {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Next video countdown"><button type="button" aria-label="Tap to stay on this video" onClick={()=>continueVideoRef.current()}><span className="oneMuslimSkipLabel">{skipCountdown===5?"Next Video":"Tap To Stay"}</span><span className="oneMuslimSkipNumber">{skipCountdown}</span></button></div>}
       <span className="oneMuslimThemeBrand" aria-hidden="true">1Muslim</span>
       <button type="button" className={"oneMuslimPlaylistArrow is-left"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
@@ -222,6 +225,15 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       .oneMuslimCarouselCategoryBar{width:100%;max-width:1400px;display:flex;gap:12px;align-items:center;overflow-x:auto;scrollbar-width:none;white-space:nowrap;padding:0 4px 5px;margin:0 auto 3px;min-height:21px}.oneMuslimCarouselCategoryBar::-webkit-scrollbar{display:none}.oneMuslimCarouselCategoryBar button{flex:none;border:0;background:transparent;color:color-mix(in srgb,var(--theme-text,#fff) 65%,transparent);font-size:11px;font-weight:400;line-height:18px;letter-spacing:.01em;padding:1px 3px;cursor:pointer}.oneMuslimCarouselCategoryBar button.is-selected{color:var(--theme-primary,#a9e7d5);font-weight:650;border-bottom:1px solid currentColor}.oneMuslimCarouselCategoryBar button:focus-visible{outline:2px solid var(--theme-primary,#a9e7d5);outline-offset:2px}
       .oneMuslimFloatingPlayerRig.is-phone{touch-action:pan-y;max-width:420px;aspect-ratio:9/16;max-height:100%;margin:0 auto 12px}
       .oneMuslimFloatingPlayerRig.is-phone .oneMuslimIdleYoutubePlayer{border-radius:22px}
+      .oneMuslimShortsBlackControls{position:absolute;z-index:7;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;gap:14px;background:rgba(0,0,0,0);opacity:0;transition:background 650ms ease,opacity 650ms ease}
+      .oneMuslimShortsBlackControls.is-prompting{background:rgba(0,0,0,.38);opacity:1}
+      .oneMuslimShortsBlackControls button{pointer-events:auto;appearance:none;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.42);color:#fff;border-radius:28px;padding:10px 18px;font-size:15px;font-weight:650;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);transition:background 300ms ease,transform 300ms ease}
+      .oneMuslimShortsBlackControls button:active{transform:scale(.95)}
+      .oneMuslimShortsBlackControls:not(.is-prompting) .oneMuslimShortsTap{opacity:0;pointer-events:none}
+      .oneMuslimShortsBlackControls:not(.is-prompting) .oneMuslimShortsRewind{position:absolute;bottom:16%;right:14px;opacity:.65}
+      .oneMuslimShortsBlackControls:not(.is-prompting):hover{opacity:1}
+      @media(prefers-reduced-motion:reduce){.oneMuslimShortsBlackControls,.oneMuslimShortsBlackControls button{transition:none!important}}
+
       /* Shorts-only editorial crop: remove the upper 10% without changing player bounds. */
       .oneMuslimFloatingPlayerRig.is-phone .oneMuslimIdleYoutubePlayer>div:first-child{transform:translateY(-10%) scaleY(1.11112);transform-origin:top center;transition:transform 650ms cubic-bezier(.2,.7,.2,1);will-change:transform}
       /* Shorts-only: 25% less glass blur on the comment surface (12px -> 9px). */
