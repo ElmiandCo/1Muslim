@@ -251,3 +251,35 @@ BEGIN
  ) THEN RAISE EXCEPTION 'Fixed 2000 XP amount constraint missing'; END IF;
  RAISE NOTICE 'Once-only reward and first-save event schema keys verified';
 END $$;
+
+
+-- Verify existing shared systems have the exact integration columns required by
+-- Qibla before any staging rollout. This is read-only and deliberately fails
+-- closed instead of silently creating replacement notifications or XP tables.
+DO $$
+DECLARE missing text;
+BEGIN
+ SELECT string_agg(format('%I.%I', x.table_name, x.column_name), ', ' ORDER BY x.table_name,x.column_name)
+ INTO missing
+ FROM (VALUES
+  ('profiles','id'),('profiles','xp_total'),
+  ('notifications','recipient_id'),('notifications','actor_id'),
+  ('notifications','type'),('notifications','title'),
+  ('notifications','body'),('notifications','entity_type'),
+  ('notifications','entity_id')
+ ) AS x(table_name,column_name)
+ WHERE NOT EXISTS (
+  SELECT 1 FROM information_schema.columns c
+  WHERE c.table_schema='public' AND c.table_name=x.table_name
+   AND c.column_name=x.column_name
+ );
+ IF missing IS NOT NULL THEN
+  RAISE EXCEPTION 'Qibla shared-system integration columns missing: %',missing;
+ END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+  WHERE n.nspname='public' AND p.proname='qibla_notify_first_editor_save'
+   AND p.prosecdef AND 'search_path='=ANY(p.proconfig)
+ ) THEN RAISE EXCEPTION 'First-save notification trigger function must be definer-owned and search-path pinned'; END IF;
+ RAISE NOTICE 'Qibla shared notifications/XP column compatibility checked (not runtime delivery)';
+END $$;
