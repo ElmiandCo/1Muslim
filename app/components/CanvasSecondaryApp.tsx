@@ -213,6 +213,8 @@ function DailyPostsApp({active}:{active:boolean}){
  const [fypSearchOpen,setFypSearchOpen]=useState(false);
  const [fypSearchQuery,setFypSearchQuery]=useState("");
  const [fypSpeed,setFypSpeed]=useState(1);
+ const [fypSoundUnlocked,setFypSoundUnlocked]=useState(false);
+ const [fypNeedsTapForSound,setFypNeedsTapForSound]=useState(false);
  const fypSpeedRef=useRef({timer:0,startY:0,startX:0,holding:false,video:null as HTMLVideoElement|null});
  const fypReelRef=useRef<HTMLDivElement|null>(null);
  const fypVideoRefs=useRef(new Map<string,HTMLVideoElement>());
