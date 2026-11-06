@@ -57,6 +57,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     const chat=stage?.querySelector<HTMLElement>(".oneMuslimLiveBottom");
     if(!chat)return;
     chat.classList.add("oneMuslimReflectiveChat");
+    stage?.classList.toggle("oneMuslimShortsViewing",format==="phone");
     const reflection=document.createElement("div");
     reflection.className="oneMuslimVideoWaterReflection";
     reflection.setAttribute("aria-hidden","true");
@@ -64,7 +65,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     image.className="oneMuslimVideoWaterReflectionImage";
     reflection.appendChild(image);
     chat.prepend(reflection);
-    return()=>{reflection.remove();chat.classList.remove("oneMuslimReflectiveChat")};
+    return()=>{reflection.remove();chat.classList.remove("oneMuslimReflectiveChat");stage?.classList.remove("oneMuslimShortsViewing")};
   },[format]);
   useEffect(()=>{
     const stage=mountRef.current?.closest(".oneMuslimLiveStage");
@@ -221,6 +222,11 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       .oneMuslimCarouselCategoryBar{width:100%;max-width:1400px;display:flex;gap:12px;align-items:center;overflow-x:auto;scrollbar-width:none;white-space:nowrap;padding:0 4px 5px;margin:0 auto 3px;min-height:21px}.oneMuslimCarouselCategoryBar::-webkit-scrollbar{display:none}.oneMuslimCarouselCategoryBar button{flex:none;border:0;background:transparent;color:color-mix(in srgb,var(--theme-text,#fff) 65%,transparent);font-size:11px;font-weight:400;line-height:18px;letter-spacing:.01em;padding:1px 3px;cursor:pointer}.oneMuslimCarouselCategoryBar button.is-selected{color:var(--theme-primary,#a9e7d5);font-weight:650;border-bottom:1px solid currentColor}.oneMuslimCarouselCategoryBar button:focus-visible{outline:2px solid var(--theme-primary,#a9e7d5);outline-offset:2px}
       .oneMuslimFloatingPlayerRig.is-phone{touch-action:pan-y;max-width:420px;aspect-ratio:9/16;max-height:100%;margin:0 auto 12px}
       .oneMuslimFloatingPlayerRig.is-phone .oneMuslimIdleYoutubePlayer{border-radius:22px}
+      /* Shorts-only editorial crop: remove the upper 10% without changing player bounds. */
+      .oneMuslimFloatingPlayerRig.is-phone .oneMuslimIdleYoutubePlayer>div:first-child{transform:translateY(-10%) scaleY(1.11112);transform-origin:top center;transition:transform 650ms cubic-bezier(.2,.7,.2,1);will-change:transform}
+      /* Shorts-only: 25% less glass blur on the comment surface (12px -> 9px). */
+      .oneMuslimShortsViewing .oneMuslimLiveBottom>.homeLiveViewerConversation{backdrop-filter:blur(9px)!important;-webkit-backdrop-filter:blur(9px)!important;transition:backdrop-filter 650ms ease,-webkit-backdrop-filter 650ms ease!important}
+
       .oneMuslimFloatingPlayerRig{width:100%;max-width:1400px;aspect-ratio:16/8.75;max-height:100%;align-self:start;justify-self:center;position:relative;isolation:isolate;margin:0 auto 24px;animation:none}
       .oneMuslimIdleYoutubePlayer{mask-image:linear-gradient(90deg,transparent 0%,#000 5%,#000 95%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 5%,#000 95%,transparent 100%);width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:none}
       .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:none;pointer-events:none}
