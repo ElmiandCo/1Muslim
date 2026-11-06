@@ -107,9 +107,9 @@ export default function QiblaStudio() {
       <section className={styles.editor} aria-label="Article workspace">
         {!active ? <p>Select an article to review its contents.</p> : <>
           <div className={styles.editorHead}><h2>{active.title || "Untitled draft"}</h2><span>{active.status.replaceAll("_", " ")}</span></div>
-          <label>Title<input value={form.title} onChange={e => { setDirty(true); setForm(f => ({...f, title:e.target.value})); }} maxLength={250} readOnly={!canEdit}/></label>
-          <label>Subtitle<input value={form.subtitle} onChange={e => { setDirty(true); setForm(f => ({...f, subtitle:e.target.value})); }} maxLength={500} readOnly={!canEdit}/></label>
-          <label>Article body<textarea rows={14} value={form.body} onChange={e => { setDirty(true); setForm(f => ({...f, body:e.target.value})); }} readOnly={!canEdit}/></label>
+          <label>Title<input value={form.title} onChange={e => { if (!canEdit) return; setDirty(true); setForm(f => ({...f, title:e.target.value})); }} maxLength={250} readOnly={!canEdit}/></label>
+          <label>Subtitle<input value={form.subtitle} onChange={e => { if (!canEdit) return; setDirty(true); setForm(f => ({...f, subtitle:e.target.value})); }} maxLength={500} readOnly={!canEdit}/></label>
+          <label>Article body<textarea rows={14} value={form.body} onChange={e => { if (!canEdit) return; setDirty(true); setForm(f => ({...f, body:e.target.value})); }} readOnly={!canEdit}/></label>
           <div className={styles.editorMetrics} role="status" aria-live="off" aria-label="Article writing statistics">
             <span>{wordCount.toLocaleString()} words</span>
             <span>{readingMinutes} min read</span>
