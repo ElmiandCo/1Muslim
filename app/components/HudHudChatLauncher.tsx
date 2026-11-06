@@ -57,8 +57,10 @@ export default function HudHudChatLauncher(){
   const config=p.avatar_config||{};
   const selected=config.selectedAvatarUrl;
   const admin=config.adminAvatarUrl;
-  if(typeof selected==="string"&&(/^https:\\/\\//.test(selected)||/^\\/assets\\/avatars\\/[a-zA-Z0-9._-]+$/.test(selected)))return selected;
-  if(typeof admin==="string"&&/^https:\\/\\//.test(admin))return admin;
+  const isHttps=(value:unknown):value is string=>typeof value==="string"&&value.startsWith("https://");
+  const isLocalAvatar=(value:unknown):value is string=>typeof value==="string"&&value.startsWith("/assets/avatars/")&&!value.includes("..")&&!value.includes("?")&&!value.includes("#");
+  if(isHttps(selected)||isLocalAvatar(selected))return selected;
+  if(isHttps(admin))return admin;
   const gender=String(config.gender||p.avatar_gender||p.gender||"male").toLowerCase();
   return gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
  };
