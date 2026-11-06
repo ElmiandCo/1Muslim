@@ -31,14 +31,18 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const [isPlaying,setIsPlaying]=useState(false);
   const [showArrows,setShowArrows]=useState(true);
   const [immersive,setImmersive]=useState(false);
+  const [cinemaSettled,setCinemaSettled]=useState(false);
+  const [cinemaEngaged,setCinemaEngaged]=useState(false);
   const [playerBounds,setPlayerBounds]=useState({x:0,y:0,w:0,h:0});
   const arrowTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+  const engageCinema=()=>{setCinemaEngaged(true);setImmersive(false);setCinemaSettled(false);};
   const revealArrows=()=>{setShowArrows(true);if(arrowTimer.current)clearTimeout(arrowTimer.current);arrowTimer.current=setTimeout(()=>setShowArrows(false),1800);};
   useEffect(()=>{
-    if(!isPlaying||!soundEnabled||isPaused){setImmersive(false);return;}
+    if(!isPlaying||!soundEnabled||isPaused||cinemaEngaged){setImmersive(false);setCinemaSettled(false);return;}
     const timer=setTimeout(()=>setImmersive(true),5000);
     return()=>clearTimeout(timer);
-  },[isPlaying,soundEnabled,isPaused,format]);
+  },[isPlaying,soundEnabled,isPaused,format,cinemaEngaged]);
+  useEffect(()=>{if(!immersive)return;const timer=setTimeout(()=>setCinemaSettled(true),23000);return()=>clearTimeout(timer);},[immersive]);
   useEffect(()=>{
     if(!immersive)return;
     const update=()=>{const rect=mountRef.current?.parentElement?.getBoundingClientRect();if(rect)setPlayerBounds({x:rect.left,y:rect.top,w:rect.width,h:rect.height});};
@@ -47,7 +51,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   },[immersive]);
   useEffect(()=>()=>{if(arrowTimer.current)clearTimeout(arrowTimer.current);},[]);
   const navigate=(step:number)=>navigateRef.current(step);
-  const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);setIsPaused(false);setTapHint(false);setIsPlaying(false);setImmersive(false);playerRef.current?.unMute();playerRef.current?.playVideo();};
+  const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);setIsPaused(false);setTapHint(false);setIsPlaying(false);setImmersive(false);setCinemaEngaged(false);setCinemaSettled(false);playerRef.current?.unMute();playerRef.current?.playVideo();};
   const selectedIndexRef=useRef<number|null>(null);
   useEffect(()=>{
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
@@ -136,7 +140,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       if(player){try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:player.getCurrentTime()}));}catch{};player.destroy();}
     };
   },[format]);
-  return <><div className={"oneMuslimFloatingPlayerRig"+(format==="phone"?" is-phone":"")} aria-label="Floating featured video player" onPointerMove={revealArrows} onPointerDown={revealArrows} onTouchStart={e=>{if(format==="phone")swipeStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const start=swipeStart.current;swipeStart.current=null;if(format!=="phone"||!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.2)navigate(dy<0?1:-1)}}>
+  return <><div className={"oneMuslimFloatingPlayerRig"+(format==="phone"?" is-phone":"")} aria-label="Floating featured video player" onPointerMove={revealArrows} onPointerDown={()=>{revealArrows();engageCinema();}} onTouchStart={e=>{if(format==="phone")swipeStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const start=swipeStart.current;swipeStart.current=null;if(format!=="phone"||!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.2)navigate(dy<0?1:-1)}}>
     <div className="oneMuslimFloatingPlayerShadow" aria-hidden="true"/>
     <div className={"oneMuslimIdleYoutubePlayer"+(slideDirection?" is-switching "+(slideDirection>0?"is-next":"is-previous"):"")} aria-label="Featured video playlist while no broadcasts are live">
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
@@ -169,12 +173,12 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       @keyframes oneMuslimRigDrift{0%,100%{transform:translate3d(0,0,0)}25%{transform:translate3d(2px,-1px,0)}50%{transform:translate3d(-2px,1px,0)}75%{transform:translate3d(1px,2px,0)}}
       @media(prefers-reduced-motion:reduce){.oneMuslimFloatingPlayerRig,.oneMuslimIdleYoutubePlayer,.oneMuslimFloatingPlayerShadow,.oneMuslimThemeTapOverlay{animation:none!important}.oneMuslimIdleYoutubePlayer>div:first-child{transition:none!important}}
     `}</style>
-  </div><div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")} style={{"--cinema-left":Math.max(0,playerBounds.x)+"px","--cinema-top":Math.max(0,playerBounds.y)+"px","--cinema-right":Math.max(0,window.innerWidth-playerBounds.x-playerBounds.w)+"px","--cinema-bottom":Math.max(0,window.innerHeight-playerBounds.y-playerBounds.h)+"px"} as React.CSSProperties}>
+  </div><div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")} style={{"--cinema-left":Math.max(0,playerBounds.x)+"px","--cinema-top":Math.max(0,playerBounds.y)+"px","--cinema-right":Math.max(0,window.innerWidth-playerBounds.x-playerBounds.w)+"px","--cinema-bottom":Math.max(0,window.innerHeight-playerBounds.y-playerBounds.h)+"px"} as React.CSSProperties}>
     <span className="cinema-edge is-top"/><span className="cinema-edge is-bottom"/><span className="cinema-edge is-left"/><span className="cinema-edge is-right"/>
   </div><style>{`
     .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease}
     .oneMuslimCinemaDimmer.is-active{opacity:1;transition:opacity 13s ease}
-    .oneMuslimCinemaDimmer .cinema-edge{position:absolute;display:block;pointer-events:none}
+    .oneMuslimCinemaDimmer.is-settled{opacity:.75;transition:opacity 5s ease}\n    .oneMuslimCinemaDimmer .cinema-edge{position:absolute;display:block;pointer-events:none}
     .oneMuslimCinemaDimmer .cinema-edge.is-top{top:0;left:0;right:0;height:var(--cinema-top);background:linear-gradient(to bottom,rgba(0,0,0,.62),rgba(0,0,0,.48))}
     .oneMuslimCinemaDimmer .cinema-edge.is-bottom{bottom:0;left:0;right:0;height:var(--cinema-bottom);background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.48))}
     .oneMuslimCinemaDimmer .cinema-edge.is-left{top:var(--cinema-top);bottom:var(--cinema-bottom);left:0;width:var(--cinema-left);background:linear-gradient(to right,rgba(0,0,0,.62),rgba(0,0,0,.48))}
