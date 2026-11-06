@@ -22,6 +22,7 @@ const categories = ["All stories"] as const;
 export default function QiblaNewsroom() {
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
   const [error, setError] = useState("");
   const [category, setCategory] = useState<string>("All stories");
   const [search, setSearch] = useState("");
@@ -29,6 +30,8 @@ export default function QiblaNewsroom() {
   useEffect(() => {
     let alive = true;
     const load = async () => {
+      setLoading(true);
+      setError("");
       const supabase = createClient();
       const { data, error: readError } = await supabase
         .from("qibla_pages")
@@ -61,7 +64,7 @@ export default function QiblaNewsroom() {
     };
     void load();
     return () => { alive = false; };
-  }, []);
+  }, [reloadKey]);
 
   const filtered = useMemo(() => pages.filter((page) => {
     const query = search.trim().toLowerCase();
@@ -107,7 +110,7 @@ export default function QiblaNewsroom() {
             </label>
           </div>
           {loading ? <p className={styles.status} role="status">Loading stories…</p> :
-            error ? <p className={styles.status} role="alert">{error}</p> :
+            error ? <div className={styles.status} role="alert"><p>{error}</p><button type="button" onClick={() => setReloadKey((value) => value + 1)}>Retry loading stories</button></div> :
             !featured ? <p className={styles.status}>No published stories match your search yet.</p> :
             <section aria-label="Published stories">
               <article className={styles.hero}>
