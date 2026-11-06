@@ -9,7 +9,8 @@ type YTPlayer={
   mute:()=>void;
   unMute:()=>void;
   playVideo:()=>void;
-  getCurrentTime:()=>number;\n  pauseVideo:()=>void;
+  getCurrentTime:()=>number;
+  pauseVideo:()=>void;
   destroy:()=>void;
 };
 type YTApi={Player:new(element:HTMLElement,options:{
