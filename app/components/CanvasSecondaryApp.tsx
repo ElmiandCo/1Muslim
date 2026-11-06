@@ -240,16 +240,22 @@ function DailyPostsApp({active}:{active:boolean}){
  const fypSearchResults=useMemo(()=>{const q=fypSearchQuery.trim().toLocaleLowerCase();if(!q)return [];return fypOrder.map((post,index)=>({post,index})).filter(({post})=>[post.body,post.author_name].some(value=>String(value||"").toLocaleLowerCase().includes(q))).slice(0,12)},[fypOrder,fypSearchQuery]);
 
  const [fypWarmingUp,setFypWarmingUp]=useState(false);
- useEffect(()=>{if(!fypStart){setFypWarmingUp(false);return;}setFypWarmingUp(true);const timer=window.setTimeout(()=>setFypWarmingUp(false),1000);return()=>window.clearTimeout(timer)},[fypStart]);
+ useEffect(()=>{setFypWarmingUp(false)},[fypStart]);
  useEffect(()=>{if(!fypStart){fypVideoRefs.current.forEach(video=>video.pause());setFypActiveIndex(0);return}
    const reel=fypReelRef.current;if(!reel)return;
-   const sections=Array.from(reel.querySelectorAll<HTMLElement>("section[data-fyp-index]"));
-   const observer=new IntersectionObserver(entries=>{
-     const visible=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
-     if(visible)setFypActiveIndex(Number((visible.target as HTMLElement).dataset.fypIndex||0));
-   },{root:reel,threshold:[.45,.6,.75]});
-   sections.forEach(section=>observer.observe(section));
-   return()=>observer.disconnect();
+   let frame=0;
+   let lastIndex=-1;
+   const updateActive=()=>{
+     frame=0;
+     const height=reel.clientHeight;
+     if(!height)return;
+     const index=Math.max(0,Math.min(fypOrder.length-1,Math.round(reel.scrollTop/height)));
+     if(index!==lastIndex){lastIndex=index;setFypActiveIndex(index);}
+   };
+   const onScroll=()=>{if(!frame)frame=window.requestAnimationFrame(updateActive)};
+   reel.addEventListener("scroll",onScroll,{passive:true});
+   updateActive();
+   return()=>{reel.removeEventListener("scroll",onScroll);if(frame)window.cancelAnimationFrame(frame)};
  },[fypStart,fypOrder.length]);
  useEffect(()=>{if(!fypStart)return;
    fypVideoRefs.current.forEach((video,id)=>{
