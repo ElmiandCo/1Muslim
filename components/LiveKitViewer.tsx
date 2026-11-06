@@ -526,6 +526,10 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       @keyframes omVoiceViewerBreathe{0%,100%{opacity:.65}50%{opacity:1}}
       .omLiveVideoStage{position:relative;width:100%;height:100%;overflow:hidden;background:#000}
       .omLiveVideoStage video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+      /* Embedded Phone broadcasts must crop the camera to the portrait stage; never letterbox it. */
+      .omLiveEmbeddedPlayer[data-view-mode="phone"] .omLiveVideoStage .omCameraVideo{object-fit:cover!important;object-position:center center!important;background:transparent!important}
+      .omLiveEmbeddedPlayer[data-view-mode="desktop"] .omLiveVideoStage .omCameraVideo{object-fit:cover!important;object-position:center center!important;background:transparent!important}
+      .omLiveEmbeddedPlayer .omLiveVideoStage[data-screen="yes"] .omScreenVideo{object-fit:contain!important}
       .omLiveTheater .omLiveVideoStage{background:#050b0b}
       .omLiveTheater .omLiveVideoStage video{object-fit:cover!important;background:transparent}
       .omLiveTheater .omLiveVideoStage[data-screen="yes"] .omScreenVideo{object-fit:contain!important;background:#030707}
