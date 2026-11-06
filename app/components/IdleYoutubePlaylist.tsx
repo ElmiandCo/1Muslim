@@ -30,7 +30,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const [slideDirection,setSlideDirection]=useState<0|1|-1>(0);
   const [isPlaying,setIsPlaying]=useState(false);
   const [skipPrompt,setSkipPrompt]=useState(false);
-  const [skipCountdown,setSkipCountdown]=useState(3);
+  const [skipCountdown,setSkipCountdown]=useState(5);
   const continueVideoRef=useRef<()=>void>(()=>{});
   const nextVideoRef=useRef<()=>void>(()=>{});
   const [showArrows,setShowArrows]=useState(true);
@@ -40,7 +40,8 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const [playerBounds,setPlayerBounds]=useState({x:0,y:0,w:0,h:0});
   const arrowTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const engageCinema=()=>{setCinemaEngaged(true);setImmersive(false);setCinemaSettled(false);};
-  const revealArrows=()=>{setShowArrows(true);if(arrowTimer.current)clearTimeout(arrowTimer.current);arrowTimer.current=setTimeout(()=>setShowArrows(false),1800);};
+  const revealArrows=()=>{setShowArrows(true);if(arrowTimer.current)clearTimeout(arrowTimer.current);arrowTimer.current=setTimeout(()=>setShowArrows(false),5000);};
+  useEffect(()=>{if(!isPlaying){setShowArrows(true);return;}setShowArrows(false);const show=window.setTimeout(()=>{setShowArrows(true);arrowTimer.current=window.setTimeout(()=>setShowArrows(false),5000)},3000);return()=>{window.clearTimeout(show);if(arrowTimer.current)window.clearTimeout(arrowTimer.current)};},[isPlaying,format]);
   useEffect(()=>{
     if(!isPlaying||!soundEnabled||isPaused||cinemaEngaged){setImmersive(false);setCinemaSettled(false);return;}
     const timer=setTimeout(()=>setImmersive(true),5000);
@@ -75,7 +76,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     let autoSkipHandled=false;
     const continuedIds=new Set<string>();
     try{const ids=JSON.parse(localStorage.getItem("oneMuslimContinueVideoIdsV1")||"[]");if(Array.isArray(ids))ids.forEach((id:unknown)=>{if(typeof id==="string")continuedIds.add(id)})}catch{}
-    const clearPrompt=()=>{promptStartedAt=null;autoSkipHandled=false;setSkipPrompt(false);setSkipCountdown(3)};
+    const clearPrompt=()=>{promptStartedAt=null;autoSkipHandled=false;setSkipPrompt(false);setSkipCountdown(5)};
     const next=(step=1)=>{
       if(disposed||!player)return;
       index=((selectedIndexRef.current??index)+step+playlist.length)%playlist.length;
@@ -126,10 +127,10 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               const seconds=player.getCurrentTime();
               if(!Number.isFinite(seconds))return;
               if(!continuedIds.has(segment.videoId)&&seconds>=segmentStart+15){
-                if(promptStartedAt===null){promptStartedAt=performance.now();setSkipPrompt(true);setSkipCountdown(3)}
+                if(promptStartedAt===null){promptStartedAt=performance.now();setSkipPrompt(true);setSkipCountdown(5)}
                 const elapsed=(performance.now()-promptStartedAt)/1000;
-                const remaining=4-elapsed;
-                setSkipCountdown(elapsed<3?Math.max(1,3-Math.floor(elapsed)) : 0);
+                const remaining=5-elapsed;
+                setSkipCountdown(Math.max(1,5-Math.floor(elapsed)));
                 if(remaining<=0&&!autoSkipHandled){autoSkipHandled=true;next();return;}
               }
               // Homepage player rules override editorial endSeconds: always offer the 15s choice.
@@ -170,7 +171,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
       {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
-      {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Video auto advance"><button type="button" aria-label="Cancel auto skip and finish watching this video" onClick={()=>continueVideoRef.current()}>{skipCountdown>0?skipCountdown:"Next"}</button></div>}
+      {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Next video countdown"><button type="button" aria-label="Tap to stay on this video" onClick={()=>continueVideoRef.current()}><span className="oneMuslimSkipLabel">{skipCountdown===5?"Next Video":"Tap To Stay"}</span><span className="oneMuslimSkipNumber">{skipCountdown}</span></button></div>}
       <span className="oneMuslimThemeBrand" aria-hidden="true">1Muslim</span>
       <button type="button" className={"oneMuslimPlaylistArrow is-left"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
       <button type="button" className={"oneMuslimPlaylistArrow is-right"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
@@ -182,16 +183,17 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       .oneMuslimIdleYoutubePlayer{width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:none}
       .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:none;pointer-events:none}
       .oneMuslimThemeTapOverlay{position:absolute;inset:0;z-index:3;pointer-events:none;background:color-mix(in srgb,var(--theme-primary,var(--theme-accent,#7e7e9c)) 18%,transparent);border:1px solid color-mix(in srgb,var(--theme-primary,var(--theme-accent,#7e7e9c)) 25%,transparent);border-radius:inherit;animation:oneMuslimOverlayBreath 3s ease-in-out infinite;display:grid;place-items:center;box-sizing:border-box}
-      .oneMuslimAutoSkipCard{position:absolute;z-index:9;left:50%;bottom:15%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;max-width:calc(100% - 20px);padding:6px;border:1px solid color-mix(in srgb,var(--theme-primary,#c6d9db) 35%,transparent);border-radius:999px;background:rgba(7,18,28,.48);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 5px 24px rgba(0,0,0,.18);white-space:nowrap;animation:oneMuslimSkipAppear .2s ease-out}
-      .oneMuslimAutoSkipCard button{border:0;border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.12);color:#fff;font-size:clamp(11px,2.5vw,13px);font-weight:600;cursor:pointer}
-      .oneMuslimAutoSkipCard button:first-child{background:color-mix(in srgb,var(--theme-primary,#57cbb0) 36%,rgba(12,25,29,.75))}
+      .oneMuslimAutoSkipCard{position:absolute;z-index:9;left:50%;bottom:15%;transform:translateX(-50%);width:min(190px,50%);display:grid;place-items:center;border:0;border-radius:24px;background:color-mix(in srgb,var(--theme-primary,#65bcb9) 13%,rgba(7,18,28,.22));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:oneMuslimSkipAppear .2s ease-out,oneMuslimOverlayBreath 3s ease-in-out infinite;box-shadow:0 0 24px color-mix(in srgb,var(--theme-primary,#65bcb9) 16%,transparent)}
+      .oneMuslimAutoSkipCard button{appearance:none;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 24px;cursor:pointer;width:100%;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+      .oneMuslimSkipLabel{font-size:clamp(11px,2vw,15px);font-weight:600;letter-spacing:.04em}
+      .oneMuslimSkipNumber{font-size:clamp(38px,7vw,62px);font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
       @keyframes oneMuslimSkipAppear{from{opacity:0;transform:translate(-50%,7px)}to{opacity:1;transform:translate(-50%,0)}}
       .oneMuslimThemeBrand{position:absolute;z-index:5;bottom:clamp(10px,1.8vw,19px);right:clamp(12px,2vw,23px);pointer-events:none;user-select:none;font-family:"Palatino Linotype","Book Antiqua",Palatino,"URW Palladio L",Georgia,serif;font-size:clamp(12px,1.35vw,17px);font-style:italic;font-weight:600;letter-spacing:-.055em;text-transform:none;color:color-mix(in srgb,var(--theme-primary,#b9d8ff) 24%,#fff);text-shadow:0 1px 4px rgba(0,0,0,.85),0 0 12px color-mix(in srgb,var(--theme-primary,#b9d8ff) 24%,transparent);opacity:.88;white-space:nowrap;animation:none!important;transition:none!important}
       .oneMuslimThemeTap{font-size:clamp(25px,5vw,48px);font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:color-mix(in srgb,var(--theme-text,#fff) 38%,transparent);-webkit-text-stroke:1px color-mix(in srgb,var(--theme-primary,#a9a9cf) 55%,transparent);text-shadow:0 0 22px color-mix(in srgb,var(--theme-primary,#a9a9cf) 25%,transparent)}
       @keyframes oneMuslimOverlayBreath{0%,100%{opacity:1}50%{opacity:0}}
       
       .oneMuslimPlayerSoundActivator{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;border:0;background:transparent;cursor:pointer;touch-action:manipulation}
-      .oneMuslimPlaylistArrow{position:absolute;z-index:4;top:10px;transform:none;width:24px;height:24px;min-width:24px;min-height:24px;padding:0;border:1px solid color-mix(in srgb,var(--theme-primary,#75bfff) 19%,transparent);border-radius:50%;background:color-mix(in srgb,var(--theme-primary,#75bfff) 3%,transparent);color:color-mix(in srgb,var(--theme-primary,#75bfff) 25%,white);font:300 19px/1 sans-serif;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 0 7px color-mix(in srgb,var(--theme-primary,#75bfff) 11%,transparent);transition:background .25s ease,box-shadow .25s ease,color .25s ease}
+      .oneMuslimPlaylistArrow{position:absolute;z-index:4;top:10px;transform:none;width:24px;height:24px;min-width:24px;min-height:24px;padding:0;border:1px solid color-mix(in srgb,var(--theme-primary,#75bfff) 12%,transparent);border-radius:50%;background:color-mix(in srgb,var(--theme-primary,#75bfff) 1%,transparent);color:color-mix(in srgb,var(--theme-primary,#75bfff) 25%,white);font:300 19px/1 sans-serif;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 0 7px color-mix(in srgb,var(--theme-primary,#75bfff) 5%,transparent);transition:background .25s ease,box-shadow .25s ease,color .25s ease}
       .oneMuslimPlaylistArrow.is-idle{opacity:0;pointer-events:none;transition:opacity 1s ease,background .25s ease,box-shadow .25s ease,color .25s ease}\n      .oneMuslimPlaylistArrow:not(.is-idle){opacity:1;transition:opacity .3s ease,background .25s ease,box-shadow .25s ease,color .25s ease}\n      .oneMuslimPlaylistArrow.is-left{left:10px}.oneMuslimPlaylistArrow.is-right{right:10px}
       .oneMuslimPlaylistArrow:hover,.oneMuslimPlaylistArrow:focus-visible{background:color-mix(in srgb,var(--theme-primary,#75bfff) 9%,transparent);box-shadow:0 0 10px color-mix(in srgb,var(--theme-primary,#75bfff) 18%,transparent);outline-offset:2px}
       .oneMuslimIdleYoutubePlayer>div:first-child{transition:transform .24s cubic-bezier(.2,.7,.2,1),opacity .24s ease}
