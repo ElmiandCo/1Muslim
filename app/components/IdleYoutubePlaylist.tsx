@@ -116,7 +116,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
         // carousel is hidden. Keep the expanded position untouched.
         // Ease the offset to avoid a jump during carousel transitions.
         const collapsed=!!video?.closest(".home-carousel-collapsed");
-        const targetYOffset=collapsed?-160:0;
+        const targetYOffset=collapsed?-320:0;
         focusYOffset+=(targetYOffset-focusYOffset)*0.16;
         if(Math.abs(targetYOffset-focusYOffset)<0.15)focusYOffset=targetYOffset;
         const key=[x,y,width,height,focusYOffset].map(n=>n.toFixed(1)).join(",");
