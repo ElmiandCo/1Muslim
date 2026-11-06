@@ -24,7 +24,8 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   useEffect(()=>{const onCategory=(event:Event)=>{const selection=(event as CustomEvent<{category:string;format:string}>).detail;if(selection?.format===format&&categories.includes(selection.category)){selectedIndexRef.current=null;setCategory(selection.category)}};window.addEventListener("oneMuslimCarouselCategory",onCategory);return()=>window.removeEventListener("oneMuslimCarouselCategory",onCategory)},[format]);
   const mountRef=useRef<HTMLDivElement>(null);
   const swipeStart=useRef<{x:number;y:number}|null>(null);
-  const playerRef=useRef<YTPlayer|null>(null);\n  const isPausedRef=useRef(false);
+  const playerRef=useRef<YTPlayer|null>(null);
+  const isPausedRef=useRef(false);
   const [soundEnabled,setSoundEnabled]=useState(false);
   const [isPaused,setIsPaused]=useState(false);
   const [tapHint,setTapHint]=useState(true);
@@ -88,7 +89,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       const video=playlist[index];
       clearPrompt();
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
-      setTapHint(true);setIsPaused(false);setIsPlaying(false);setImmersive(false);
+      setTapHint(true);setIsPaused(false);isPausedRef.current=false;setIsPlaying(false);setImmersive(false);
       if(!soundEnabledRef.current)player.mute();
       try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:video.startSeconds}));}catch{}
     };
@@ -100,7 +101,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       const selected=playlist[index];
       clearPrompt();
       player.loadVideoById({videoId:selected.videoId,startSeconds:selected.startSeconds});
-      setIsPaused(false);setTapHint(false);
+      setIsPaused(false);isPausedRef.current=false;setTapHint(false);
     };
     window.addEventListener("oneMuslimSelectCarouselVideo",selectVideo);
     continueVideoRef.current=()=>{const id=playlist[index].videoId;void (async()=>{try{const {createClient}=await import("../../utils/supabase/client");const client=createClient();const {data:{user}}=await client.auth.getUser();if(user)await client.from("app_engagement_events").insert({user_id:user.id,section:"Home Video",event_type:"finish_watching_tap",video_id:id})}catch{}})();continuedIds.add(id);try{localStorage.setItem("oneMuslimContinueVideoIdsV1",JSON.stringify([...continuedIds]))}catch{}clearPrompt();};
@@ -129,7 +130,8 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               if(disposed||!player)return;
               const segment=playlist[index];
               const seconds=player.getCurrentTime();
-              if(!Number.isFinite(seconds))return;\n              if(isPausedRef.current)return;
+              if(!Number.isFinite(seconds))return;
+              if(isPausedRef.current)return;
               if(segment.endSeconds!==null&&!continuedIds.has(segment.videoId)&&seconds>=segment.endSeconds){
                 if(promptStartedAt===null){promptStartedAt=performance.now();setSkipPrompt(true);setSkipCountdown(3)}
                 const elapsed=(performance.now()-promptStartedAt)/1000;
@@ -137,13 +139,11 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
                 setSkipCountdown(Math.max(1,3-Math.floor(elapsed)));
                 if(remaining<=0&&!autoSkipHandled){autoSkipHandled=true;next();return;}
               }
-              // Homepage player rules override editorial endSeconds: always offer the 15s choice.
-              // A remembered Finish Watching selection plays through the natural YouTube ending.
-              // Registry endSeconds remains available for other player contexts.
+              // Only a configured editorial cutoff prompts; Continue allows the natural ending.
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
             },250);
           },
-          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPlaying(false);setIsPaused(true);isPausedRef.current=true;setTapHint(true)}else if(data===1){setIsPlaying(true);setIsPaused(false)}else if(data===3){setIsPlaying(false)}}
+          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPlaying(false);setIsPaused(true);isPausedRef.current=true;setTapHint(true)}else if(data===1){setIsPlaying(true);setIsPaused(false);isPausedRef.current=false}else if(data===3){setIsPlaying(false)}}
         }
       });
     };
