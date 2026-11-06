@@ -84,12 +84,12 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     const timer=setTimeout(()=>setImmersive(true),10000);
     return()=>clearTimeout(timer);
   },[isPlaying,soundEnabled,isPaused,format,cinemaEngaged]);
-  useEffect(()=>{if(!immersive)return;const timer=setTimeout(()=>setCinemaSettled(true),23000);return()=>clearTimeout(timer);},[immersive]);
+  useEffect(()=>{if(!immersive)return;const timer=setTimeout(()=>setCinemaSettled(true),20000);return()=>clearTimeout(timer);},[immersive]);
   useEffect(()=>{setSpotlightsGathered(false);if(!immersive||!isPlaying||isPaused)return;const timer=window.setTimeout(()=>setSpotlightsGathered(true),6000);return()=>window.clearTimeout(timer)},[immersive,isPlaying,isPaused,timedVideoKey,format]);
   useEffect(()=>{
     const update=()=>{const rect=mountRef.current?.closest(".oneMuslimIdleYoutubePlayer")?.getBoundingClientRect();if(rect)setPlayerBounds({x:rect.left,y:rect.top,w:rect.width,h:rect.height});};
-    update();window.addEventListener("resize",update);window.addEventListener("scroll",update,true);
-    return()=>{window.removeEventListener("resize",update);window.removeEventListener("scroll",update,true);};
+    update();const target=mountRef.current?.closest(".oneMuslimIdleYoutubePlayer");const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(update):null;if(target)observer?.observe(target);window.addEventListener("resize",update);window.addEventListener("scroll",update,true);
+    return()=>{observer?.disconnect();window.removeEventListener("resize",update);window.removeEventListener("scroll",update,true);};
   },[format]);
   useEffect(()=>()=>{if(arrowTimer.current)clearTimeout(arrowTimer.current);},[]);
   const navigate=(step:number)=>navigateRef.current(step);
@@ -114,6 +114,9 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     let segmentStart=resumeAfterLive&&saved?initialSeconds:playlist[index].startSeconds;
     let promptStartedAt:number|null=null;
     let autoSkipHandled=false;
+    let shortsSeen=0;
+    let sessionStay=false;
+    try{sessionStay=sessionStorage.getItem("oneMuslimShortsStaySessionV1")==="true";shortsSeen=Number(sessionStorage.getItem("oneMuslimShortsSeenSessionV1")||0)||0}catch{}
     const continuedIds=new Set<string>();
     try{const ids=JSON.parse(localStorage.getItem("oneMuslimContinueVideoIdsV1")||"[]");if(Array.isArray(ids))ids.forEach((id:unknown)=>{if(typeof id==="string")continuedIds.add(id)})}catch{}
     const clearPrompt=()=>{promptStartedAt=null;autoSkipHandled=false;setSkipPrompt(false);setSkipCountdown(5)};
@@ -124,6 +127,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       setTimedVideoKey(playlist[index].videoId);
       const video=playlist[index];
       segmentStart=video.startSeconds;clearPrompt();
+      if(format==="phone"){shortsSeen++;try{sessionStorage.setItem("oneMuslimShortsSeenSessionV1",String(shortsSeen))}catch{}}
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
       setTapHint(true);setIsPaused(false);setIsPlaying(false);setImmersive(false);
       if(!soundEnabledRef.current)player.mute();
@@ -140,7 +144,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       setIsPaused(false);setTapHint(false);
     };
     window.addEventListener("oneMuslimSelectCarouselVideo",selectVideo);
-    continueVideoRef.current=()=>{const id=playlist[index].videoId;void (async()=>{try{const {createClient}=await import("../../utils/supabase/client");const client=createClient();const {data:{user}}=await client.auth.getUser();if(user)await client.from("app_engagement_events").insert({user_id:user.id,section:"Home Video",event_type:"finish_watching_tap",video_id:id})}catch{}})();continuedIds.add(id);try{localStorage.setItem("oneMuslimContinueVideoIdsV1",JSON.stringify([...continuedIds]))}catch{}clearPrompt();};
+    continueVideoRef.current=()=>{const id=playlist[index].videoId;void (async()=>{try{const {createClient}=await import("../../utils/supabase/client");const client=createClient();const {data:{user}}=await client.auth.getUser();if(user)await client.from("app_engagement_events").insert({user_id:user.id,section:"Home Video",event_type:"finish_watching_tap",video_id:id})}catch{}})();continuedIds.add(id);if(format==="phone"){sessionStay=true;try{sessionStorage.setItem("oneMuslimShortsStaySessionV1","true")}catch{}}else{try{localStorage.setItem("oneMuslimContinueVideoIdsV1",JSON.stringify([...continuedIds]))}catch{}}clearPrompt();};
     nextVideoRef.current=()=>next();
     navigateRef.current=(step)=>{
       if(disposed||!player||transitionTimerRef.current)return;
@@ -168,7 +172,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               const seconds=player.getCurrentTime();
               if(!Number.isFinite(seconds))return;
               setTimedSeconds(Math.floor(seconds));
-              if(!continuedIds.has(segment.videoId)&&seconds>=segmentStart+15){
+              if(!(format==="phone"&&(sessionStay||shortsSeen%6>=2))&&!continuedIds.has(segment.videoId)&&seconds>=segmentStart+15){
                 if(promptStartedAt===null){promptStartedAt=performance.now();setSkipPrompt(true);setSkipCountdown(5)}
                 const elapsed=(performance.now()-promptStartedAt)/1000;
                 const remaining=5-elapsed;
@@ -240,7 +244,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       .oneMuslimSkipLabel{font-size:clamp(11px,2vw,15px);font-weight:600;letter-spacing:.04em}
       .oneMuslimSkipNumber{font-size:clamp(38px,7vw,62px);font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
       @keyframes oneMuslimSkipAppear{from{opacity:0;transform:translate(-50%,7px)}to{opacity:1;transform:translate(-50%,0)}}
-      .oneMuslimThemeBrand{position:absolute;z-index:5;bottom:clamp(10px,1.8vw,19px);right:clamp(12px,2vw,23px);pointer-events:none;user-select:none;font-family:"Palatino Linotype","Book Antiqua",Palatino,"URW Palladio L",Georgia,serif;font-size:clamp(12px,1.35vw,17px);font-style:italic;font-weight:600;letter-spacing:-.055em;text-transform:none;color:color-mix(in srgb,var(--theme-primary,#b9d8ff) 24%,#fff);text-shadow:0 1px 4px rgba(0,0,0,.85),0 0 12px color-mix(in srgb,var(--theme-primary,#b9d8ff) 24%,transparent);opacity:.88;white-space:nowrap;animation:none!important;transition:none!important}
+      .oneMuslimThemeBrand{position:absolute;z-index:12;bottom:clamp(10px,1.8vw,19px);right:clamp(12px,2vw,23px);pointer-events:none;user-select:none;font-family:"Palatino Linotype","Book Antiqua",Palatino,"URW Palladio L",Georgia,serif;font-size:clamp(12px,1.35vw,17px);font-style:italic;font-weight:600;letter-spacing:-.055em;text-transform:none;color:color-mix(in srgb,var(--theme-primary,#b9d8ff) 24%,#fff);text-shadow:0 1px 4px rgba(0,0,0,.85),0 0 12px color-mix(in srgb,var(--theme-primary,#b9d8ff) 24%,transparent);opacity:.88;white-space:nowrap;animation:none!important;transition:none!important}
       .oneMuslimThemeTap{font-size:clamp(25px,5vw,48px);font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:color-mix(in srgb,var(--theme-text,#fff) 38%,transparent);-webkit-text-stroke:1px color-mix(in srgb,var(--theme-primary,#a9a9cf) 55%,transparent);text-shadow:0 0 22px color-mix(in srgb,var(--theme-primary,#a9a9cf) 25%,transparent)}
       @keyframes oneMuslimOverlayBreath{0%,100%{opacity:1}50%{opacity:0}}
       
@@ -267,10 +271,10 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     @media(prefers-reduced-motion:reduce){.oneMuslimVideoWaterReflectionImage{animation:none}}
     .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease}
     .oneMuslimCinemaDimmer.is-active{opacity:1;transition:opacity 2.6s ease}
-    .oneMuslimCinemaDimmer.is-settled{opacity:.85;transition:opacity 2.6s ease}\n    .oneMuslimCinemaDimmer .cinema-edge{position:absolute;display:block;pointer-events:none}
-    .oneMuslimCinemaDimmer .cinema-edge.is-top{top:0;left:0;right:0;height:var(--cinema-top);background:linear-gradient(to bottom,rgba(0,0,0,.76) 0%,rgba(0,0,0,.62) 76%,rgba(0,0,0,.10) 100%)}
+    .oneMuslimCinemaDimmer.is-settled{opacity:1;transition:opacity 2.6s ease}\n    .oneMuslimCinemaDimmer .cinema-edge{position:absolute;display:block;pointer-events:none}
+    .oneMuslimCinemaDimmer .cinema-edge.is-top{top:0;left:0;right:0;height:var(--cinema-top);background:linear-gradient(to bottom,rgba(0,0,0,.92) 0%,rgba(0,0,0,.76) 76%,rgba(0,0,0,.10) 100%)}
     .oneMuslimCinemaDimmer .cinema-edge.is-bottom{bottom:0;left:0;right:0;height:var(--cinema-bottom);background:linear-gradient(to top,rgba(0,0,0,.76) 0%,rgba(0,0,0,.62) 76%,rgba(0,0,0,.10) 100%)}
-    .oneMuslimCinemaDimmer .cinema-edge.is-left{top:var(--cinema-top);bottom:var(--cinema-bottom);left:0;width:var(--cinema-left);background:linear-gradient(to right,rgba(0,0,0,.62),rgba(0,0,0,.48))}
+    .oneMuslimCinemaDimmer .cinema-edge.is-left{top:var(--cinema-top);bottom:var(--cinema-bottom);left:0;width:var(--cinema-left);background:linear-gradient(to right,rgba(0,0,0,.85),rgba(0,0,0,.60))}
     .oneMuslimCinemaDimmer .cinema-edge.is-right{top:var(--cinema-top);bottom:var(--cinema-bottom);right:0;width:var(--cinema-right);background:linear-gradient(to left,rgba(0,0,0,.62),rgba(0,0,0,.48))}
     /* Three restrained beams converge on the player after six seconds of playback. */
     .oneMuslimCinemaDimmer .cinema-spotlight{position:absolute;pointer-events:none;opacity:0;mix-blend-mode:screen;transition:opacity 2.8s ease,transform 4.5s cubic-bezier(.2,.75,.25,1);filter:blur(24px);border-radius:50%;background:radial-gradient(ellipse at center,rgba(232,248,255,.20) 0%,rgba(180,219,255,.10) 40%,transparent 75%)}
@@ -278,6 +282,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     .oneMuslimCinemaDimmer .cinema-spotlight-right{right:var(--cinema-right);top:var(--cinema-top);width:32vw;height:52vh;transform:translate(75%,-15%)}
     .oneMuslimCinemaDimmer .cinema-spotlight-top{left:calc(50% - 22vw);top:var(--cinema-top);width:44vw;height:35vh;transform:translateY(-80%)}
     .oneMuslimCinemaDimmer.is-gathered.is-active .cinema-spotlight{opacity:.8;transform:translate(0,0)}
+    .oneMuslimCinemaDimmer.is-settled.is-active .cinema-spotlight{opacity:1;filter:blur(32px);background:radial-gradient(ellipse at center,rgba(242,250,255,.30) 0%,rgba(204,231,255,.16) 48%,transparent 82%)}
     .oneMuslimCinemaDimmer.is-gathered.is-active .cinema-edge{filter:blur(18px)}
         /* Feather the cutout so the bright player and its floating shadow remain the focal point. */\n    .oneMuslimCinemaDimmer .cinema-edge{filter:blur(9px)}\n    @media(prefers-reduced-motion:reduce){.oneMuslimCinemaDimmer,.oneMuslimCinemaDimmer.is-active,.oneMuslimCinemaDimmer .cinema-spotlight{transition:none!important}.oneMuslimCinemaDimmer .cinema-spotlight{display:none}}
   `}</style></>;
