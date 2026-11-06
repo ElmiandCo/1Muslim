@@ -12,6 +12,19 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
  const seen=useRef(new Set<string>());
  const previous=useRef(-1);
  const [ready,setReady]=useState(false);
+ const [spotlight,setSpotlight]=useState<{body:string;atSeconds:number;started:number}|null>(null);
+ useEffect(()=>{
+   let timer:ReturnType<typeof setTimeout>|undefined;
+   const onPosted=(event:Event)=>{
+     const detail=(event as CustomEvent<{body:string;atSeconds:number;videoKey:string}>).detail;
+     if(!detail||detail.videoKey!==videoKey)return;
+     if(timer)clearTimeout(timer);
+     setSpotlight({body:detail.body,atSeconds:detail.atSeconds,started:Date.now()});
+     timer=setTimeout(()=>setSpotlight(null),3000);
+   };
+   window.addEventListener("elmi-layer-x-comment-posted",onPosted);
+   return()=>{window.removeEventListener("elmi-layer-x-comment-posted",onPosted);if(timer)clearTimeout(timer)};
+ },[videoKey]);
  useEffect(()=>setReady(true),[]);
  useEffect(()=>{
    let live=true;seen.current.clear();previous.current=-1;setEntries([]);setFloating([]);
@@ -62,7 +75,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
  // One DOM node and one continuous animation per comment. No reparenting or remounting at crossover.
  // Canvas-to-screen depth is represented by a single viewport portal; its path crosses
  // the carousel boundary without any position or opacity discontinuity.
- return createPortal(<div className="elmi-timed-layers" aria-label="Timed video comments">
+ return createPortal(<div className="elmi-timed-layers" aria-label="Timed video comments">\n   {spotlight&&<div className="elmi-post-spotlight" aria-hidden="true" style={{"--elmi-focus-x":`${bounds.x+bounds.w/2}px`,"--elmi-focus-y":`${bounds.y+bounds.h/2}px` } as React.CSSProperties}><div className="elmi-post-spotlight-video"/></div>}\n   {spotlight&&<div key={spotlight.started} className="elmi-post-spotlight-comment" role="status"><small>{Math.floor(spotlight.atSeconds/60)}:{String(spotlight.atSeconds%60).padStart(2,"0")}</small><span>{spotlight.body}</span></div>}
    {floating.map((comment,i)=>{
      const canvasStart=comment.lane==="canvas";
      const startX=canvasStart?bounds.x+bounds.w*(.2+(i%3)*.09):Math.max(16,window.innerWidth*.17+(i%3)*28);
@@ -78,7 +91,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
      </button>
    })}
    <style>{`
-    .elmi-timed-layers{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;isolation:isolate}
+    .elmi-timed-layers{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;isolation:isolate}\n    .elmi-post-spotlight{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse min(48vw,420px) min(30vh,260px) at var(--elmi-focus-x) var(--elmi-focus-y),rgba(255,255,255,.20),rgba(255,255,255,.055) 55%,transparent 80%);animation:elmi-post-light 3s ease-in-out both;z-index:1}\n    .elmi-post-spotlight-comment{position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);max-width:min(340px,78vw);display:flex;flex-direction:column;gap:4px;padding:12px 18px;border-radius:16px;border:1px solid rgba(255,255,255,.42);background:rgba(8,18,30,.48);backdrop-filter:blur(12px);color:white;text-shadow:0 1px 8px #000;box-shadow:0 0 32px 9px rgba(255,255,255,.18);font:600 14px/1.35 sans-serif;animation:elmi-post-float 3s ease-in-out both;z-index:6;pointer-events:none}\n    .elmi-post-spotlight-comment small{font-size:11px;opacity:.8}\n    @keyframes elmi-post-light{0%,100%{opacity:0}16%,72%{opacity:1}}\n    @keyframes elmi-post-float{0%{opacity:0;transform:translate(-50%,65vh) scale(.8)}30%{opacity:1;transform:translate(-50%,-50%) scale(1)}72%{opacity:1;transform:translate(-50%,-55%) scale(1.04)}100%{opacity:0;transform:translate(-50%,-105%) scale(.95)}}\n    @media(prefers-reduced-motion:reduce){.elmi-post-spotlight,.elmi-post-spotlight-comment{animation:none;opacity:1}}
     .elmi-timed-comment{position:absolute;display:flex;flex-direction:column;gap:3px;max-width:min(340px,65vw);padding:7px 12px;text-align:left;color:white;font-size:clamp(12px,1.3vw,14px);font-weight:600;line-height:1.35;border:1px solid color-mix(in srgb,var(--theme-primary,#a6dce0) 32%,transparent);border-radius:13px;background:rgba(10,18,26,.24);backdrop-filter:blur(5px);text-shadow:0 1px 5px #000;box-shadow:0 5px 18px #0003;pointer-events:auto;cursor:pointer;animation:elmi-layer-handoff 8s cubic-bezier(.38,.12,.4,.94) both;will-change:transform,opacity;z-index:2}
     .elmi-timed-comment.is-handoff{z-index:2}.elmi-timed-comment.is-screen{z-index:3}
     .elmi-timed-comment.is-popping{animation:elmi-comment-pop .24s ease-out forwards!important;pointer-events:none}
