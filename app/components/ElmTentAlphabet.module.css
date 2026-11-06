@@ -93,10 +93,10 @@
 .vowelTabs button{min-width:0;min-height:48px;padding:9px 7px;border-radius:15px;border:1px solid color-mix(in srgb,var(--theme-secondary,#c69cde) 40%,transparent);background:color-mix(in srgb,var(--theme-base,#291735) 30%,transparent);color:inherit;font-size:clamp(13px,2.7vw,16px);font-weight:650;cursor:pointer;transition:background .25s,transform .2s,border-color .25s}
 .vowelTabs button[aria-pressed="true"]{background:color-mix(in srgb,var(--theme-accent,#a65cc9) 36%,transparent);border-color:var(--theme-secondary,#d7afea);box-shadow:0 0 16px color-mix(in srgb,var(--theme-accent,#a65cc9) 23%,transparent)}
 .vowelTabs button:active,.vowelCard:active,.vowelActions button:active{transform:scale(.97)}
-.vowelStage{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0;padding:clamp(12px,3vw,22px);border:1px solid color-mix(in srgb,var(--theme-secondary,#c69cde) 34%,transparent);border-radius:22px;background:color-mix(in srgb,var(--theme-base,#271634) 30%,transparent);backdrop-filter:blur(10px)}
+.vowelStage{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:0;padding:clamp(12px,3vw,22px);border:1px solid color-mix(in srgb,var(--theme-secondary,#c69cde) 34%,transparent);border-radius:22px;background:color-mix(in srgb,var(--theme-base,#271634) 30%,transparent);backdrop-filter:blur(10px)}
 .vowelPrompt{font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
-.vowelCard{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:clamp(190px,33vh,290px);width:100%;padding:14px;min-width:0;border:1px solid color-mix(in srgb,var(--theme-secondary,#d7afea) 45%,transparent);border-radius:20px;background:color-mix(in srgb,var(--theme-base,#291735) 30%,transparent);color:inherit;cursor:pointer;transition:transform .2s,border-color .3s}
-.vowelCard>span{font-family:"Noto Naskh Arabic","Amiri",serif;font-size:clamp(76px,18vw,132px);line-height:1.45;display:block}
+.vowelCard{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:clamp(140px,21vh,190px);width:100%;padding:14px;min-width:0;border:1px solid color-mix(in srgb,var(--theme-secondary,#d7afea) 45%,transparent);border-radius:20px;background:color-mix(in srgb,var(--theme-base,#291735) 30%,transparent);color:inherit;cursor:pointer;transition:transform .2s,border-color .3s}
+.vowelCard>span{font-family:"Noto Naskh Arabic","Amiri",serif;font-size:clamp(66px,15vw,108px);line-height:1.35;display:block}
 .vowelCard strong{font-size:clamp(14px,3vw,18px);font-weight:650;color:var(--theme-secondary,#f0d4ff);text-align:center}
 .vowelActions{display:flex;align-items:center;justify-content:center;gap:16px;width:100%;min-width:0}
 .vowelActions button{cursor:pointer;transition:transform .2s,background .3s,color .3s}
@@ -109,7 +109,7 @@
 .vowelToast>div{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
 .vowelToast button{padding:10px 15px;border-radius:12px;border:1px solid var(--theme-secondary,#d7afea);background:transparent;color:inherit;cursor:pointer}
 @media(min-width:540px){.vowelTabs{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media(max-width:360px){.vowelLesson{padding:11px;gap:12px}.vowelStage{padding:10px}.vowelCard{min-height:175px}.vowelCard>span{font-size:72px}}
+@media(max-width:360px){.vowelLesson{padding:11px;gap:12px}.vowelStage{padding:10px}.vowelCard{min-height:135px}.vowelCard>span{font-size:64px}}
 @media(prefers-reduced-motion:reduce){.vowelTabs button,.vowelCard,.vowelActions button{transition:none}}
 
 /* Lesson 2: answer tiles are 20% shorter, without clipping Arabic glyphs. */
