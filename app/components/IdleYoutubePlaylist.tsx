@@ -69,13 +69,15 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     const storageKey=format==="phone"?"oneMuslimPhoneShortsPlaylistPositionV6":"oneMuslimIdleYoutubePlaylistPositionV2";
     let saved:{index:number;seconds:number}|null=null;
     try{const raw=sessionStorage.getItem(storageKey);if(raw){const value=JSON.parse(raw);if(Number.isInteger(value.index)&&value.index>=0&&value.index<playlist.length&&Number.isFinite(value.seconds))saved=value;}}catch{}
-    // Pick a fresh featured video on page load instead of resuming the last one.
-    // Keep the selection stable for this mounted player until the viewer navigates.
-    let index=selectedIndexRef.current!==null&&selectedIndexRef.current<playlist.length?selectedIndexRef.current:Math.floor(Math.random()*playlist.length);
+    // Resume the exact previously playing video only after escaping a broken Live.
+    // Ordinary homepage visits retain the existing fresh-video selection behavior.
+    let resumeAfterLive=false;
+    try{const marker=Number(sessionStorage.getItem("oneMuslimResumeAfterLiveError"));resumeAfterLive=marker>0&&Date.now()-marker<120000;if(resumeAfterLive)sessionStorage.removeItem("oneMuslimResumeAfterLiveError");}catch{}
+    let index=resumeAfterLive&&saved?saved.index:selectedIndexRef.current!==null&&selectedIndexRef.current<playlist.length?selectedIndexRef.current:Math.floor(Math.random()*playlist.length);
     selectedIndexRef.current=index;
-    const initialSeconds=playlist[index].startSeconds;
+    const initialSeconds=resumeAfterLive&&saved?Math.max(playlist[index].startSeconds,saved.seconds):playlist[index].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
-    let segmentStart=playlist[index].startSeconds;
+    let segmentStart=resumeAfterLive&&saved?initialSeconds:playlist[index].startSeconds;
     let promptStartedAt:number|null=null;
     let autoSkipHandled=false;
     const continuedIds=new Set<string>();
