@@ -90,14 +90,28 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   // Track the visible video every animation frame: ResizeObserver alone misses CSS transforms,
   // carousel motion, the floating player's drift, and scroll-driven position changes.
   useEffect(()=>{
-    let frame=0;let last="";
+    let frame=0;let last="";let lastComments="";let lastCommentsAt=0;
     const track=()=>{
       const video=mountRef.current?.closest<HTMLElement>(".oneMuslimIdleYoutubePlayer");
       const rect=video?.getBoundingClientRect();
+      // Timed comment flight animations depend on these bounds. PR #661 stopped
+      // updating them, leaving the comments layer at its initial zero rectangle.
+      if(rect){
+        const now=performance.now();
+        const commentKey=[rect.left,rect.top,rect.width,rect.height].map(n=>Math.round(n/3)).join(",");
+        if(commentKey!==lastComments&&now-lastCommentsAt>100){
+          lastComments=commentKey;lastCommentsAt=now;
+          setPlayerBounds({x:rect.left,y:rect.top,w:rect.width,h:rect.height});
+        }
+      }
       const cutout=document.querySelector<HTMLElement>(".oneMuslimCinemaDimmer .cinema-video-cutout");
       if(rect&&cutout){
-        const x=Math.max(0,rect.left-4),y=Math.max(0,rect.top-4);
-        const right=Math.min(window.innerWidth,rect.right+4),bottom=Math.min(window.innerHeight,rect.bottom+8);
+        // Keep the spotlight on the visible iframe, not the surrounding player/chat card.
+        const iframe=video?.querySelector("iframe");
+        const iframeRect=iframe?.getBoundingClientRect();
+        const focus=iframeRect&&iframeRect.width>0&&iframeRect.height>0?iframeRect:rect;
+        const x=Math.max(0,focus.left-4),y=Math.max(0,focus.top-4);
+        const right=Math.min(window.innerWidth,focus.right+4),bottom=Math.min(window.innerHeight,focus.bottom+8);
         const bounds=[x,y,Math.max(0,right-x),Math.max(0,bottom-y)];
         const key=bounds.map(n=>n.toFixed(1)).join(",");
         if(key!==last){last=key;cutout.style.left=bounds[0]+"px";cutout.style.top=bounds[1]+"px";cutout.style.width=bounds[2]+"px";cutout.style.height=bounds[3]+"px";}
