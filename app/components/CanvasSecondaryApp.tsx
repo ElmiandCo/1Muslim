@@ -205,6 +205,21 @@ function DailyPostsApp({active}:{active:boolean}){
  const [playingVideo,setPlayingVideo]=useState<string|null>(null);
  const [finishedVideo,setFinishedVideo]=useState<string|null>(null);
  const [fypStart,setFypStart]=useState<string|null>(null);
+ const [fypActiveIndex,setFypActiveIndex]=useState(0);
+ const [fypSearchOpen,setFypSearchOpen]=useState(false);
+ const [fypSearchQuery,setFypSearchQuery]=useState("");
+ const [fypSpeed,setFypSpeed]=useState(1);
+ const fypSpeedRef=useRef({timer:0,startY:0,startX:0,holding:false,video:null as HTMLVideoElement|null});
+ useEffect(()=>{if(!fypStart){setFypSpeed(1);return;}const reel=fypReelRef.current;if(!reel)return;
+   const reset=()=>{const gesture=fypSpeedRef.current;window.clearTimeout(gesture.timer);if(gesture.video)gesture.video.playbackRate=1;gesture.holding=false;gesture.video=null;setFypSpeed(1)};
+   const start=(event:TouchEvent)=>{if(event.touches.length!==1)return;reset();const video=event.target instanceof HTMLVideoElement?event.target:null;if(!video||video.paused||video!==fypVideoRefs.current.get(fypOrder[fypActiveIndex]?.id))return;const touch=event.touches[0];const gesture=fypSpeedRef.current;gesture.startY=touch.clientY;gesture.startX=touch.clientX;gesture.video=video;gesture.timer=window.setTimeout(()=>{if(gesture.video!==video)return;gesture.holding=true;video.playbackRate=2;setFypSpeed(2)},350)};
+   const move=(event:TouchEvent)=>{const gesture=fypSpeedRef.current;if(!gesture.video||event.touches.length!==1)return;const touch=event.touches[0];if(!gesture.holding){if(Math.abs(touch.clientY-gesture.startY)>12||Math.abs(touch.clientX-gesture.startX)>12)reset();return;}if(event.cancelable)event.preventDefault();const distance=Math.max(0,gesture.startY-touch.clientY);const speed=distance>=160?5:distance>=75?3:2;if(gesture.video.playbackRate!==speed){gesture.video.playbackRate=speed;setFypSpeed(speed)}};
+   reel.addEventListener("touchstart",start,{passive:true});reel.addEventListener("touchmove",move,{passive:false});reel.addEventListener("touchend",reset);reel.addEventListener("touchcancel",reset);
+   return()=>{reset();reel.removeEventListener("touchstart",start);reel.removeEventListener("touchmove",move);reel.removeEventListener("touchend",reset);reel.removeEventListener("touchcancel",reset)};
+ },[fypStart,fypActiveIndex,fypOrder]);
+
+ const fypReelRef=useRef<HTMLDivElement|null>(null);
+ const fypVideoRefs=useRef(new Map<string,HTMLVideoElement>());
  const [viewerPost,setViewerPost]=useState<string|null>(null);
  const [viewerActionsVisible,setViewerActionsVisible]=useState(true);
  const viewerVideoRef=useRef<HTMLVideoElement|null>(null);
@@ -214,6 +229,31 @@ function DailyPostsApp({active}:{active:boolean}){
  useEffect(()=>{if(!viewerPost)return;const t=window.setTimeout(()=>setViewerActionsVisible(false),3000);return()=>clearTimeout(t)},[viewerPost,viewerActionsVisible]);
  const videoPosts=posts.filter(p=>postKind(p)==="video");
  const fypOrder=useMemo(()=>{if(!fypStart)return [];const start=videoPosts.find(p=>p.id===fypStart);const others=videoPosts.filter(p=>p.id!==fypStart);return start?[start,...others.sort((x,y)=>x.id.localeCompare(y.id))]:[]},[posts,fypStart]);
+ const fypSearchResults=useMemo(()=>{const q=fypSearchQuery.trim().toLocaleLowerCase();if(!q)return [];return fypOrder.map((post,index)=>({post,index})).filter(({post})=>[post.body,post.author_name].some(value=>String(value||"").toLocaleLowerCase().includes(q))).slice(0,12)},[fypOrder,fypSearchQuery]);
+
+ const [fypWarmingUp,setFypWarmingUp]=useState(false);
+ useEffect(()=>{if(!fypStart){setFypWarmingUp(false);return;}setFypWarmingUp(true);const timer=window.setTimeout(()=>setFypWarmingUp(false),1000);return()=>window.clearTimeout(timer)},[fypStart]);
+ useEffect(()=>{if(!fypStart){fypVideoRefs.current.forEach(video=>video.pause());setFypActiveIndex(0);return}
+   const reel=fypReelRef.current;if(!reel)return;
+   const sections=Array.from(reel.querySelectorAll<HTMLElement>("section[data-fyp-index]"));
+   const observer=new IntersectionObserver(entries=>{
+     const visible=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+     if(visible)setFypActiveIndex(Number((visible.target as HTMLElement).dataset.fypIndex||0));
+   },{root:reel,threshold:[.45,.6,.75]});
+   sections.forEach(section=>observer.observe(section));
+   return()=>observer.disconnect();
+ },[fypStart,fypOrder.length]);
+ useEffect(()=>{if(!fypStart)return;
+   fypVideoRefs.current.forEach((video,id)=>{
+     const index=fypOrder.findIndex(post=>post.id===id);
+     const nearby=index>=fypActiveIndex-1&&index<=fypActiveIndex+3;
+     video.preload=nearby?"auto":"none";
+     if(index===fypActiveIndex&&!fypWarmingUp&&!document.hidden){video.muted=!fypSoundUnlocked;void video.play().catch(()=>{video.muted=true;setFypNeedsTapForSound(true);void video.play().catch(()=>{});});}
+     else{video.pause();video.muted=true;}
+   });
+ },[fypStart,fypActiveIndex,fypOrder,fypWarmingUp,fypSoundUnlocked]);
+ useEffect(()=>{if(!fypStart)return;const onVisibility=()=>{const activeVideo=fypVideoRefs.current.get(fypOrder[fypActiveIndex]?.id);if(document.hidden)fypVideoRefs.current.forEach(video=>video.pause());else if(activeVideo&&!fypWarmingUp)void activeVideo.play().catch(()=>{});};document.addEventListener("visibilitychange",onVisibility);return()=>document.removeEventListener("visibilitychange",onVisibility)},[fypStart,fypOrder,fypActiveIndex,fypWarmingUp]);
+
  useEffect(()=>{if(!active||selected||fypStart||viewerPost){videoRefs.current.forEach(v=>v.pause());return}let raf=0;const update=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const scroll=feedRef.current?.closest(".canvas-community-posts-scroll")||feedRef.current;if(!scroll)return;const bounds=scroll.getBoundingClientRect();const mid=(bounds.top+bounds.bottom)/2;let candidate:string|null=null;let distance=Infinity;videoRefs.current.forEach((video,id)=>{const rect=video.getBoundingClientRect();const center=(rect.top+rect.bottom)/2;const d=Math.abs(center-mid);if(rect.bottom>bounds.top&&rect.top<bounds.bottom&&d<distance){distance=d;candidate=id}});setPlayingVideo(candidate)})};const scroll=feedRef.current?.closest(".canvas-community-posts-scroll")||feedRef.current;scroll?.addEventListener("scroll",update,{passive:true});window.addEventListener("resize",update);update();return()=>{cancelAnimationFrame(raf);scroll?.removeEventListener("scroll",update);window.removeEventListener("resize",update)}},[active,posts,selected,fypStart,viewerPost]);
  useEffect(()=>{videoRefs.current.forEach((v,id)=>{if(id===playingVideo&&active&&!selected&&!fypStart&&!viewerPost&&!document.hidden){v.muted=true;void v.play().catch(()=>{});}else v.pause()})},[playingVideo,active,selected,fypStart,viewerPost,posts]);
  useEffect(()=>{const onVisibility=()=>{if(document.hidden)videoRefs.current.forEach(v=>v.pause());else if(playingVideo&&!fypStart){const v=videoRefs.current.get(playingVideo);if(v)void v.play().catch(()=>{})}};document.addEventListener("visibilitychange",onVisibility);return()=>document.removeEventListener("visibilitychange",onVisibility)},[playingVideo,fypStart]);
@@ -374,7 +414,28 @@ function DailyPostsApp({active}:{active:boolean}){
    {notice&&!selected&&<p role="status">{notice}</p>}
   </div>
   {viewerPost&&posts.some(p=>p.id===viewerPost)&&typeof document!=="undefined"&&createPortal(<div className="ummah-unified-viewer" role="dialog" aria-modal="true" aria-label="Open post" onClick={()=>setViewerPost(null)}><div className="ummah-unified-stage" onPointerDown={()=>setViewerActionsVisible(true)} data-post-theme={postThemeClass(posts.find(p=>p.id===viewerPost)?.post_theme)} onClick={e=>e.stopPropagation()}><button type="button" className="ummah-unified-close" onClick={()=>setViewerPost(null)} aria-label="Close post">✕</button>{(()=>{const p=posts.find(item=>item.id===viewerPost)!;return <><div className="ummah-unified-media"><span className="ummah-themed-particles" aria-hidden="true"/>{postKind(p)==="video"?<video key={p.id} ref={viewerVideoRef} onLoadedMetadata={e=>{e.currentTarget.currentTime=Math.min(videoStartAt.current,Math.max(0,e.currentTarget.duration-.1))}} src={mediaFor(p)} controls playsInline autoPlay preload="auto"/>:postKind(p)==="image"?<img src={mediaFor(p)} alt="Post photo"/>:<div className="ummah-unified-text">{renderPostBody(p.body)}</div>}</div><div className="ummah-unified-caption"><strong>{p.author_name}</strong><p className="ummah-post-body">{renderPostBody(p.body)}</p><div className={`ummah-unified-actions ${viewerActionsVisible?"is-visible":"is-idle"}`}><button type="button" onClick={()=>void likePost(p.id)}>♡ {likeCounts[p.id]||0}</button><button type="button" onClick={()=>openViewerComments(p.id)}>💬 {commentCounts[p.id]||0}</button><button type="button" onClick={()=>void sharePost(p.id)}>↗ Share</button><button type="button" onClick={()=>toggleBookmark(p.id)}>{bookmarks[p.id]?"▣ Saved":"▢ Save"}</button></div></div></>})()}</div></div>,document.body)}
-  {fypStart&&<div className="ummah-fyp-overlay" role="dialog" aria-modal="true" aria-label="For You videos"><button type="button" className="ummah-fyp-close" onClick={()=>setFypStart(null)}>✕ Close</button><div className="ummah-fyp-reel">{fypOrder.map((p,i)=><section key={p.id}><video src={mediaFor(p)} controls playsInline autoPlay={i===0} muted={i!==0} preload={i===0?"auto":"metadata"}/><p>{p.body}</p></section>)}</div></div>}
+  <style jsx>{`
+ .fyp-speed-indicator{position:absolute;z-index:11;top:15%;left:50%;transform:translateX(-50%);padding:7px 17px;border-radius:24px;background:#071d1bcc;backdrop-filter:blur(12px);color:white;font-weight:800;font-size:22px;pointer-events:none;border:1px solid #ffffff50}
+ .fyp-search-shell{position:absolute;z-index:12;top:12px;left:50%;transform:translateX(-50%);width:min(340px,60vw);pointer-events:none}
+ .fyp-search-toggle{display:flex;align-items:center;justify-content:center;gap:8px;margin:auto;padding:7px 18px;border:1px solid #ffffff45;border-radius:24px;background:#101b1b66;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:#fff;font-size:13px;cursor:pointer;pointer-events:auto}
+ .fyp-search-panel{margin-top:8px;padding:8px;border:1px solid #ffffff45;border-radius:16px;background:#081a19d9;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);pointer-events:auto}
+ .fyp-search-panel input{box-sizing:border-box;width:100%;padding:10px 12px;border-radius:10px;border:1px solid #ffffff50;background:#ffffff17;color:#fff;outline:none}
+ .fyp-search-panel input::placeholder{color:#ffffffac}
+ .fyp-search-results{max-height:35dvh;overflow:auto}
+ .fyp-search-results button{display:flex;flex-direction:column;gap:3px;width:100%;padding:9px 8px;text-align:left;background:transparent;color:white;border:0;border-bottom:1px solid #ffffff25;cursor:pointer}
+ .fyp-search-results button span{font-size:12px;opacity:.8;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:100%}
+ .fyp-search-results p{padding:8px;color:#fff;font-size:13px}
+ .fyp-preparing-transition{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;background:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.35)),url("/assets/decoration-day.png") center/cover no-repeat,#081a15;color:#fff;opacity:0;visibility:hidden;transform:scale(1.045);transition:opacity .32s ease,transform .4s ease,visibility 0s linear .4s;pointer-events:none}
+ .fyp-preparing-transition.is-preparing{opacity:1;visibility:visible;transform:scale(1);transition:opacity .16s ease,transform .3s ease}
+ 
+ .fyp-preparing-title{font-size:clamp(28px,7vw,46px);font-weight:800;letter-spacing:.035em;text-shadow:0 3px 20px #000b;animation:fypOrbBreathe 1s ease-in-out infinite}
+ .fyp-preparing-progress{width:min(170px,45vw);height:2px;background:#ffffff30;overflow:hidden;border-radius:99px}
+ .fyp-preparing-progress>span{display:block;width:100%;height:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,#42cf9c,#d8bd76);animation:fypBufferProgress 1s linear forwards}
+ @keyframes fypBufferProgress{to{transform:scaleX(1)}}
+ @keyframes fypOrbBreathe{50%{transform:scale(1.16);opacity:.75}}
+ @media(prefers-reduced-motion:reduce){.fyp-preparing-transition,.fyp-preparing-orb,.fyp-preparing-progress>span{animation:none;transition:none}.fyp-preparing-progress>span{transform:scaleX(1)}}
+ `}</style>
+  {fypStart&&<div className="ummah-fyp-overlay" role="dialog" aria-modal="true" aria-label="For You videos"><button type="button" className="ummah-fyp-close" onClick={()=>setFypStart(null)}>✕ Close</button><div className="fyp-search-shell"><button type="button" className="fyp-search-toggle" aria-label="Search For You videos" aria-expanded={fypSearchOpen} onClick={()=>setFypSearchOpen(open=>!open)}>⌕ <span>Search</span></button>{fypSearchOpen&&<div className="fyp-search-panel"><input autoFocus type="search" aria-label="Search FYP videos" placeholder="Search videos or creators…" value={fypSearchQuery} onChange={e=>setFypSearchQuery(e.target.value)}/>{fypSearchQuery.trim()&&<div className="fyp-search-results">{fypSearchResults.length?fypSearchResults.map(({post,index})=><button type="button" key={post.id} onClick={()=>{setFypSearchOpen(false);setFypSearchQuery("");setFypActiveIndex(index);fypReelRef.current?.querySelector<HTMLElement>(`section[data-fyp-index="${index}"]`)?.scrollIntoView({block:"start",behavior:"smooth"})}}><strong>{post.author_name||"1Muslim"}</strong><span>{post.body?.slice(0,75)||"Video"}</span></button>):<p>No matching videos</p>}</div>}</div>}</div>{fypNeedsTapForSound&&!fypWarmingUp&&<button type="button" onClick={()=>{setFypSoundUnlocked(true);setFypNeedsTapForSound(false);const video=fypVideoRefs.current.get(fypOrder[fypActiveIndex]?.id);if(video){video.muted=false;void video.play().catch(()=>{video.muted=true;setFypNeedsTapForSound(true)})}}} style={{position:"absolute",zIndex:7,top:60,left:"50%",transform:"translateX(-50%)",borderRadius:20,padding:"9px 18px",background:"rgba(0,0,0,.65)",color:"#fff",border:"1px solid currentColor"}}>Tap to enable sound</button>}<div aria-hidden={!fypWarmingUp} role="status" aria-live="polite" className={`fyp-preparing-transition ${fypWarmingUp?"is-preparing":""}`}><span className="fyp-preparing-title">1Muslim</span><span className="fyp-preparing-progress"><span /></span></div>{fypSpeed>1&&<div className="fyp-speed-indicator" aria-live="off">{fypSpeed}×</div>}<div className="ummah-fyp-reel" ref={fypReelRef}>{fypOrder.map((p,i)=><section key={p.id} data-fyp-index={i}><video ref={node=>{if(node)fypVideoRefs.current.set(p.id,node);else fypVideoRefs.current.delete(p.id)}} src={i>=fypActiveIndex-1&&i<=fypActiveIndex+3?mediaFor(p):undefined} controls playsInline muted={i!==fypActiveIndex||!fypSoundUnlocked} preload={i>=fypActiveIndex-1&&i<=fypActiveIndex+3?"auto":"none"} onEnded={()=>{const next=fypReelRef.current?.querySelector<HTMLElement>(`section[data-fyp-index="${i+1}"]`);next?.scrollIntoView({behavior:"smooth",block:"start"})}}/><p>{p.body}</p></section>)}</div></div>}
   {expandedImage&&<div className="ummah-image-lightbox" role="presentation" onClick={()=>setExpandedImage(null)}><button type="button" aria-label="Close expanded image" onClick={()=>setExpandedImage(null)}>✕</button><img src={expandedImage} alt="Expanded post image" onClick={e=>e.stopPropagation()}/></div>}
   {selected&&typeof document!=="undefined"&&createPortal(<div className="ummah-comments-backdrop ummah-comments-viewport" style={{top:commentViewport.top,height:commentViewport.height||"100dvh"}} role="presentation" onClick={()=>setSelected(null)}>
    <section data-post-theme={typeof document!=="undefined"?(document.documentElement.dataset.muslimTheme||"emerald"):"emerald"} className="ummah-comments-sheet ummah-comments-theme-responsive" role="dialog" aria-modal="true" aria-label="Post comments" onClick={e=>e.stopPropagation()}>
