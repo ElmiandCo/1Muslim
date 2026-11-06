@@ -69,13 +69,14 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       const image=document.createElement("div");
       image.className="oneMuslimVideoWaterReflectionImage";
       reflection.appendChild(image);
+      image.style.backgroundImage=/^[a-zA-Z0-9_-]{11}$/.test(timedVideoKey)\n        ?`url("https://i.ytimg.com/vi/${timedVideoKey}/hqdefault.jpg")`:"none";
       chat.prepend(reflection);
     };
     attach();
     const observer=new MutationObserver(attach);
     observer.observe(document.body,{childList:true,subtree:true});
     return()=>{observer.disconnect();reflection?.remove();chat?.classList.remove("oneMuslimReflectiveChat")};
-  },[format]);
+  },[format,timedVideoKey]);
   useEffect(()=>{
     const stage=mountRef.current?.closest(".oneMuslimLiveStage");
     const image=stage?.querySelector<HTMLElement>(".oneMuslimVideoWaterReflectionImage");
