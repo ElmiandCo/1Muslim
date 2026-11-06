@@ -2838,3 +2838,16 @@ html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimHomeWheelSlot{
  [data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassLabel,
  [data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab{transition:none!important}
 }
+
+
+/* Landing canvas skeleton for authenticated members too. Do not alter saved
+   profile backgrounds, other workspace pages, or their persistence. */
+html:not([data-guest-home="true"]) [data-workspace-page="0"] .canvas-vertical-main,
+html:not([data-guest-home="true"]) [data-workspace-page="0"] .oneMuslimLiveStage:not(:has(video,iframe)),
+html:not([data-guest-home="true"]) [data-workspace-page="0"] .oneMuslimLiveStage:has(.oneMuslimLiveTop [role="status"]):not(:has(video,iframe)){
+ background-image:none!important;
+}
+html:not([data-guest-home="true"]) [data-workspace-page="0"] .canvas-vertical-main::before,
+html:not([data-guest-home="true"]) [data-workspace-page="0"] .canvas-vertical-main::after{
+ background-image:none!important;
+}
