@@ -85,12 +85,12 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
      const endY=Math.max(-85,bounds.y-115);
      const distance=Math.max(120,startY-endY);
      const paused=comment.pausedUntil>Date.now();
-     return <button key={comment.id} type="button" onClick={()=>interact(comment.id)}
+     return <div key={comment.id} role="button" tabIndex={0} onClick={()=>interact(comment.id)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();interact(comment.id)}}}
        className={"elmi-timed-comment"+(canvasStart?" is-handoff":" is-screen")+(comment.pinned?" is-pinned":"")+(comment.popping?" is-popping":"")}
        style={{left:startX,top:startY,"--elmi-travel":-distance+"px",animationPlayState:paused?"paused":"running",animationDelay:(i%3)*160+"ms"} as React.CSSProperties}
        aria-label="Floating video comment">
        <span className="elmi-timed-content"><a className="elmi-timed-avatar" href={"/profile/"+encodeURIComponent(comment.user_id)} aria-label="View commenter profile and follow" onClick={e=>e.stopPropagation()}>{avatars[comment.user_id]?<img src={avatars[comment.user_id]!} alt="" loading="lazy"/>:<span aria-hidden="true">◉</span>}</a><span>{comment.body}</span></span>
-     </button>
+     </div>
    })}
    <style>{`
     .elmi-timed-layers{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;isolation:isolate}\n    .elmi-post-spotlight{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse min(48vw,420px) min(30vh,260px) at var(--elmi-focus-x) var(--elmi-focus-y),rgba(255,255,255,.20),rgba(255,255,255,.055) 55%,transparent 80%);animation:elmi-post-light 3s ease-in-out both;z-index:1}\n    .elmi-post-spotlight-comment{position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);max-width:min(340px,78vw);display:flex;flex-direction:column;gap:4px;padding:12px 18px;border-radius:16px;border:1px solid rgba(255,255,255,.42);background:rgba(8,18,30,.48);backdrop-filter:blur(12px);color:white;text-shadow:0 1px 8px #000;box-shadow:0 0 32px 9px rgba(255,255,255,.18);font:600 14px/1.35 sans-serif;animation:elmi-post-float 3s ease-in-out both;z-index:6;pointer-events:none}\n    .elmi-post-spotlight-comment small{font-size:11px;opacity:.8}\n    @keyframes elmi-post-light{0%,100%{opacity:0}16%,72%{opacity:1}}\n    @keyframes elmi-post-float{0%{opacity:0;transform:translate(-50%,65vh) scale(.8)}30%{opacity:1;transform:translate(-50%,-50%) scale(1)}72%{opacity:1;transform:translate(-50%,-55%) scale(1.04)}100%{opacity:0;transform:translate(-50%,-105%) scale(.95)}}\n    @media(prefers-reduced-motion:reduce){.elmi-post-spotlight,.elmi-post-spotlight-comment{animation:none;opacity:1}}
