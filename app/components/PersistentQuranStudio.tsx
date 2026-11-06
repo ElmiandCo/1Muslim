@@ -34,7 +34,7 @@ export default function PersistentQuranStudio(){
   const key=verse.key;const reciter=verse.reciter;
   let url="https://cdn.islamic.network/quran/audio/128/"+encodeURIComponent(reciter)+"/"+key.replace(":","/")+".mp3";
   try{const [chapter,ayah]=key.split(":");const response=await fetch("/api/quran-audio?reciter="+encodeURIComponent(reciter)+"&chapter="+chapter+"&verse="+ayah);if(response.ok){const result=await response.json();if(result.available&&result.url)url=result.url}}catch{}
-  const next=new Audio(url);audio.current=next;next.onended=()=>{if(audio.current===next){audio.current=null;setPlaying(false)}};next.onerror=()=>{if(audio.current===next){audio.current=null;setPlaying(false)}};try{await next.play();setPlaying(true)}catch{setPlaying(false)}
+  const next=new Audio(url);audio.current=next;next.onended=()=>{if(audio.current===next){audio.current=null;setPlaying(false)}};next.onerror=()=>{if(audio.current===next){audio.current=null;setPlaying(false)}};try{window.dispatchEvent(new Event("1muslim:pause-home-video"));await next.play();setPlaying(true)}catch{setPlaying(false)}
  };
  useEffect(()=>{return()=>{audio.current?.pause();audio.current=null}},[]);
  if(!verse||studio)return null;
