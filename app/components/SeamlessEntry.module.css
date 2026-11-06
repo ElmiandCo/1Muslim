@@ -80,3 +80,9 @@
 .backdrop{pointer-events:none!important}
 .backdrop .card{pointer-events:auto!important}
 .backdrop .wandering{animation:none!important;will-change:auto!important}
+
+/* Entry is interactive from the first rendered frame; no animation may delay taps. */
+.backdrop .card,.backdrop .card button,.backdrop .card input{pointer-events:auto!important;touch-action:manipulation}
+.backdrop .card{animation:none!important;will-change:auto!important}
+.backdrop .content{animation:none!important}
+.backdrop .particles{pointer-events:none!important}

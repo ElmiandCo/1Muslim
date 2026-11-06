@@ -2851,3 +2851,7 @@ html:not([data-guest-home="true"]) [data-workspace-page="0"] .canvas-vertical-ma
 html:not([data-guest-home="true"]) [data-workspace-page="0"] .canvas-vertical-main::after{
  background-image:none!important;
 }
+
+/* Home profile: one avatar only. The floating HudHud avatar is the profile hero. */
+main:has([data-workspace-page="6"]) .profile-shared-avatar-portal,
+main:has([data-workspace-page="6"]) .profile-shared-avatar-hero{display:none!important}
