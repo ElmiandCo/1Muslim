@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {getRegistryVideos} from "./videoRegistry";
+import {createClient} from "../../utils/supabase/client";
 
 type YTPlayer={
   loadVideoById:(video:{videoId:string;startSeconds:number})=>void;
@@ -28,6 +29,9 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const [soundEnabled,setSoundEnabled]=useState(false);
   const [isPaused,setIsPaused]=useState(false);
   const [tapHint,setTapHint]=useState(true);
+  const [signedIn,setSignedIn]=useState(false);
+  useEffect(()=>{const db=createClient();let alive=true;void db.auth.getUser().then(({data})=>{if(alive)setSignedIn(Boolean(data.user))});const {data:{subscription}}=db.auth.onAuthStateChange((_event,session)=>{if(alive)setSignedIn(Boolean(session?.user))});return()=>{alive=false;subscription.unsubscribe()}},[]);
+
   const soundEnabledRef=useRef(false);
   const navigateRef=useRef<(step:number)=>void>(()=>{});
   const transitionTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -176,7 +180,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     <div className={"oneMuslimIdleYoutubePlayer"+(slideDirection?" is-switching "+(slideDirection>0?"is-next":"is-previous"):"")} aria-label="Featured video playlist while no broadcasts are live">
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
-      {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
+      {(!soundEnabled||isPaused)&&tapHint&&<div className={"oneMuslimThemeTapOverlay"+(signedIn?" is-clear":"")} aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
       {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Next video countdown"><button type="button" aria-label="Tap to stay on this video" onClick={()=>continueVideoRef.current()}><span className="oneMuslimSkipLabel">{skipCountdown===5?"Next Video":"Tap To Stay"}</span><span className="oneMuslimSkipNumber">{skipCountdown}</span></button></div>}
       <span className="oneMuslimThemeBrand" aria-hidden="true">1Muslim</span>
       <button type="button" className={"oneMuslimPlaylistArrow is-left"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
@@ -190,6 +194,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       .oneMuslimIdleYoutubePlayer{mask-image:linear-gradient(90deg,transparent 0%,#000 5%,#000 95%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 5%,#000 95%,transparent 100%);width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:none}
       .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:none;pointer-events:none}
       .oneMuslimThemeTapOverlay{position:absolute;inset:0;z-index:3;pointer-events:none;background:color-mix(in srgb,var(--theme-primary,var(--theme-accent,#7e7e9c)) 18%,transparent);border:1px solid color-mix(in srgb,var(--theme-primary,var(--theme-accent,#7e7e9c)) 25%,transparent);border-radius:inherit;animation:oneMuslimOverlayBreath 3s ease-in-out infinite;display:grid;place-items:center;box-sizing:border-box}
+      .oneMuslimThemeTapOverlay.is-clear{background:transparent;border-color:transparent;box-shadow:none}
       .oneMuslimAutoSkipCard{position:absolute;z-index:9;left:50%;bottom:15%;transform:translateX(-50%);width:min(190px,50%);display:grid;place-items:center;border:0;border-radius:24px;background:color-mix(in srgb,var(--theme-primary,#65bcb9) 13%,rgba(7,18,28,.22));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:oneMuslimSkipAppear .2s ease-out,oneMuslimOverlayBreath 3s ease-in-out infinite;box-shadow:0 0 24px color-mix(in srgb,var(--theme-primary,#65bcb9) 16%,transparent)}
       .oneMuslimAutoSkipCard button{appearance:none;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 24px;cursor:pointer;width:100%;text-shadow:0 2px 10px rgba(0,0,0,.7)}
       .oneMuslimSkipLabel{font-size:clamp(11px,2vw,15px);font-weight:600;letter-spacing:.04em}
