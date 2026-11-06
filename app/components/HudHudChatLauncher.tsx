@@ -50,6 +50,29 @@ export default function HudHudChatLauncher(){
  useEffect(()=>{try{setVoiceOn(localStorage.getItem("1muslim-hudhud-voice")==="on")}catch{}},[]);
  const toggleVoice=()=>setVoiceOn(v=>{const next=!v;try{localStorage.setItem("1muslim-hudhud-voice",next?"on":"off")}catch{}window.dispatchEvent(new CustomEvent("1muslim:hudhud-voice",{detail:{enabled:next}}));if(!next&&typeof window!=="undefined")window.speechSynthesis?.cancel();return next});
  const [quickOpen,setQuickOpen]=useState(false),[open,setOpen]=useState(false),[uid,setUid]=useState<string|null>(null),[profile,setProfile]=useState<Profile|null>(null);
+ const [orbAvatar,setOrbAvatar]=useState<string|null>(null);
+ const [orbAvatarReady,setOrbAvatarReady]=useState(false);
+ const avatarFor=(p:Profile|null)=>{
+  if(!p)return null;
+  const config=p.avatar_config||{};
+  const selected=config.selectedAvatarUrl;
+  const admin=config.adminAvatarUrl;
+  if(typeof selected==="string"&&(/^https:\\/\\//.test(selected)||/^\\/assets\\/avatars\\/[a-zA-Z0-9._-]+$/.test(selected)))return selected;
+  if(typeof admin==="string"&&/^https:\\/\\//.test(admin))return admin;
+  const gender=String(config.gender||p.avatar_gender||p.gender||"male").toLowerCase();
+  return gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
+ };
+ useEffect(()=>{
+  const src=avatarFor(profile);
+  setOrbAvatarReady(false);
+  if(!uid||!src){setOrbAvatar(null);return}
+  let active=true;
+  const img=new Image();
+  img.onload=()=>{if(active){setOrbAvatar(src);setOrbAvatarReady(true)}};
+  img.onerror=()=>{if(active){setOrbAvatar(null);setOrbAvatarReady(false)}};
+  img.src=src;
+  return()=>{active=false};
+ },[uid,profile]);
  const [observation,setObservation]=useState("");
  const observations=pathname.startsWith("/ashab")?["أصحاب means companions. Your mutual followers form your circle.","Discover the Prophet's Companions on the As-Sahabah learning page."]:pathname.startsWith("/as-sahaba")?["الصحابة means the Companions of the Prophet ﷺ. Open a card to learn more.","Search by name and consult the linked hadith sources."]:pathname.startsWith("/streaming")?["Before going live, check your camera, microphone and title.","Make space for respectful conversations during live sessions."]:pathname.startsWith("/messages")?["Keep conversations respectful and check who can contact you.","Group conversations work best with a clear purpose."]:pathname.startsWith("/learn")?["One lesson at a time. Reflect on what you learn.","Check the source and grading of narrations you encounter."]:pathname.startsWith("/profile")?["Your profile helps other members recognize you.","A thoughtful bio can help others connect with you."]:["أصحاب means companions. Discover الصحابة on our learning page.","HudHud carried news to Prophet Sulayman. See Qur'an 27:20–28."];
  useEffect(()=>{let count=0;const show=()=>{if(document.visibilityState!=="visible"||open||quickOpen||tourStep>=0)return;setObservation(observations[count%observations.length]);count++;window.setTimeout(()=>setObservation(""),9500)};const timer=window.setInterval(show,90000);return()=>window.clearInterval(timer)},[open,quickOpen,tourStep,pathname]);
@@ -97,6 +120,24 @@ export default function HudHudChatLauncher(){
  },[pathname]);
 
  useEffect(()=>{let live=true;const logo=new Image();logo.onload=()=>{if(live)setOrbReady(true)};logo.onerror=()=>{if(live)setOrbReady(true)};logo.src="/assets/hudhud-logo.PNG";if(logo.complete)setOrbReady(true);return()=>{live=false}},[]);
+ const introPlayed=useRef(false);
+ useEffect(()=>{
+  if(!orbReady||introPlayed.current)return;
+  const button=orbButtonRef.current;
+  if(!button)return;
+  introPlayed.current=true;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const rect=button.getBoundingClientRect();
+  const fromX=window.innerWidth*.68-(rect.left+rect.width/2);
+  const fromY=window.innerHeight*.53-(rect.top+rect.height/2);
+  // Animate only the first reveal; keep existing floating, drag and docking animations.
+  const flight=button.animate([
+   {transform:`translate(${fromX}px,${fromY}px) scale(.72)`,opacity:0,offset:0},
+   {transform:`translate(${fromX*.45}px,${fromY*.38}px) scale(.92)`,opacity:1,offset:.55},
+   {transform:"translate(0px,0px) scale(1)",opacity:1,offset:1}
+  ],{duration:1050,easing:"cubic-bezier(.18,.76,.18,1)",fill:"none"});
+  return()=>flight.cancel();
+ },[orbReady]);
  useEffect(()=>{const s=createClient();let active=true;const load=async()=>{const {data:{user}}=await s.auth.getUser();if(!active)return;setUid(user?.id||null);setAdmin((user?.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");if(!user){setProfile(null);return}const {data}=await s.from("profiles").select("display_name,gender,avatar_gender,avatar_package,avatar_config,profile_accent").eq("id",user.id).maybeSingle();if(active)setProfile(data||null)};void load();const {data:sub}=s.auth.onAuthStateChange(()=>{void load()});return()=>{active=false;sub.subscription.unsubscribe()}},[]);
  useEffect(()=>{if(open)bottom.current?.scrollIntoView({block:"end",behavior:"smooth"})},[open,messages]);
  useEffect(()=>{if(!open)return;const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setOpen(false)};document.addEventListener("keydown",key);return()=>document.removeEventListener("keydown",key)},[open]);
@@ -125,8 +166,9 @@ export default function HudHudChatLauncher(){
  {dragged&&!dismissed&&<div className={"hh-dismiss-target "+(overDismiss?"active":"")} aria-hidden="true">✕</div>}
  {poof&&<div className="hh-dismiss-poof" aria-hidden="true">✧ ✦ ✧</div>}
  {dismissed?(pathname==="/messages"?null:<button type="button" className="hh-restore-tab" onClick={()=>{setDismissed(false);setPosition({x:20,y:170});setDragged(false)}} aria-label="Restore HudHud">✦ HudHud</button>):
- <button ref={orbButtonRef} className={"hh-chat-orb hh-chat-orb-small hh-orb-route-nav "+(landingOrb?"hh-orb-landing ":"hh-orb-header ")+(overDismiss?"hh-over-dismiss":"")+(orbInMotion&&!dragged?" hh-orb-docking":"")+(dragged?" hh-orb-dragging":"")} style={{left:position.x,top:position.y,zIndex:2147483002,visibility:orbReady?"visible":"hidden"}} aria-label="HudHud: tap to toggle navigation, hold for settings, drag to move" aria-pressed={sightOn} onPointerDown={e=>{held.current=false;endHold();velocity.current={x:0,y:0};lastPointer.current=null;holdTimer.current=setTimeout(()=>{if(!dragged){held.current=true;drag.current=null;openLanguage()}},950);drag.current={x:e.clientX,y:e.clientY,px:position.x,py:position.y};setDragged(false);e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={move} onPointerUp={finishDrag} onPointerCancel={finishDrag} onClick={()=>{if(held.current){held.current=false;return}if(dragged){setDragged(false);return}if(quranTapScoped.current){window.dispatchEvent(new Event("1muslim:quran-next-verse"));setQuickOpen(false);return}if(landingOrb){window.dispatchEvent(new Event("1muslim:hudhud-nav-toggle"));setQuickOpen(false);return}switchOrbSlot()}}><img src="/assets/hudhud-logo.PNG" alt="" width={53} height={53} decoding="async"/><span className="hh-avatar-swipe" aria-hidden="true"/></button>}
+ <button ref={orbButtonRef} className={"hh-chat-orb hh-chat-orb-small hh-orb-route-nav "+(landingOrb?"hh-orb-landing ":"hh-orb-header ")+(overDismiss?"hh-over-dismiss":"")+(orbInMotion&&!dragged?" hh-orb-docking":"")+(dragged?" hh-orb-dragging":"")} style={{left:position.x,top:position.y,zIndex:2147483002,visibility:orbReady?"visible":"hidden"}} aria-label="HudHud: tap to toggle navigation, hold for settings, drag to move" aria-pressed={sightOn} onPointerDown={e=>{held.current=false;endHold();velocity.current={x:0,y:0};lastPointer.current=null;holdTimer.current=setTimeout(()=>{if(!dragged){held.current=true;drag.current=null;openLanguage()}},950);drag.current={x:e.clientX,y:e.clientY,px:position.x,py:position.y};setDragged(false);e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={move} onPointerUp={finishDrag} onPointerCancel={finishDrag} onClick={()=>{if(held.current){held.current=false;return}if(dragged){setDragged(false);return}if(quranTapScoped.current){window.dispatchEvent(new Event("1muslim:quran-next-verse"));setQuickOpen(false);return}if(landingOrb){window.dispatchEvent(new Event("1muslim:hudhud-nav-toggle"));setQuickOpen(false);return}switchOrbSlot()}}><img src="/assets/hudhud-logo.PNG" alt="" width={53} height={53} decoding="async"/>{orbAvatar&&<img className={"hh-orb-signed-avatar"+(orbAvatarReady?" hh-orb-signed-avatar-ready":"")} src={orbAvatar} alt="" aria-hidden="true" draggable={false}/>}<span className="hh-avatar-swipe" aria-hidden="true"/></button>}
 
+ <style jsx>{` .hh-orb-signed-avatar{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);object-fit:cover;border-radius:50%;opacity:0;transform:scale(.85);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.8,.2,1);pointer-events:none;z-index:1}.hh-orb-signed-avatar-ready{opacity:1;transform:scale(1)}@media(prefers-reduced-motion:reduce){.hh-orb-signed-avatar{transition:none}} `}</style>
  {quickOpen&&!open&&<div className="hh-quick-menu" style={{left:Math.min(position.x+4,Math.max(8,typeof window!=="undefined"?window.innerWidth-240:200)),top:Math.max(10,Math.min(position.y-190,typeof window!=="undefined"?window.innerHeight-195:300))}} role="group" aria-label="HudHud quick actions">
  <button type="button" onClick={()=>{setQuickOpen(false);setOpen(true)}}><span>✦</span><strong>Chat with HudHud</strong><small>Ask about 1Muslim</small></button>
  <button type="button" aria-pressed={voiceOn} onClick={toggleVoice}><span>{voiceOn?"◉":"◎"}</span><strong>HudHud Voice: {voiceOn?"ON":"OFF"}</strong><small>Toggle spoken guidance</small></button>
