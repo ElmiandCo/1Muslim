@@ -162,3 +162,28 @@ BEGIN
  ) THEN RAISE EXCEPTION 'Resume object mutation policy must not allow UPDATE'; END IF;
  RAISE NOTICE 'Editorial RPC/notification trigger static contract verified';
 END $$;
+
+-- Anonymous magazine access must have exactly one narrowly scoped SELECT
+-- policy; additional permissive policies can OR around published-only RLS.
+DO $$
+DECLARE policy_count integer;
+BEGIN
+ SELECT count(*) INTO policy_count
+ FROM pg_policies
+ WHERE schemaname='public' AND tablename='qibla_articles'
+   AND cmd IN ('SELECT','ALL')
+   AND (roles @> ARRAY['anon']::name[] OR roles @> ARRAY['public']::name[]);
+ IF policy_count <> 1 THEN
+  RAISE EXCEPTION 'Expected exactly one anonymous Qibla article read policy, found %',policy_count;
+ END IF;
+ IF NOT has_table_privilege('anon','public.qibla_articles','SELECT') THEN
+  RAISE EXCEPTION 'Anonymous published magazine SELECT grant missing';
+ END IF;
+ IF EXISTS (
+  SELECT 1 FROM pg_policies
+  WHERE schemaname='public' AND tablename='qibla_articles'
+    AND cmd IN ('INSERT','UPDATE','DELETE','ALL')
+    AND (roles @> ARRAY['anon']::name[] OR roles @> ARRAY['public']::name[])
+ ) THEN RAISE EXCEPTION 'Anonymous article write policy present'; END IF;
+ RAISE NOTICE 'Anonymous magazine policy uniqueness checked; direct-ID role tests still required';
+END $$;
