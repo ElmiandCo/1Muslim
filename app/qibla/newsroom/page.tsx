@@ -22,6 +22,7 @@ const categories = ["All stories"] as const;
 export default function QiblaNewsroom() {
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
   const [error, setError] = useState("");
   const [category, setCategory] = useState<string>("All stories");
   const [search, setSearch] = useState("");
@@ -29,6 +30,8 @@ export default function QiblaNewsroom() {
   useEffect(() => {
     let alive = true;
     const load = async () => {
+      setLoading(true);
+      setError("");
       const supabase = createClient();
       const { data, error: readError } = await supabase
         .from("qibla_pages")
@@ -45,13 +48,16 @@ export default function QiblaNewsroom() {
         .eq("status", "published")
         .order("published_at", { ascending: false })
         .limit(60);
+      // A retry or route change can finish while this second request is in flight.
+      // Ignore the obsolete response rather than overwriting the active magazine state.
+      if (!alive) return;
       if (readError && editorialError) setError("Stories could not be loaded. Please try again.");
       else {
         const legacy = (data ?? []).map((page) => ({ ...page, source: "legacy" as const }));
         const approved = (editorial ?? []).map((article) => ({
           id: article.id, title: article.title, template_type: article.template,
           hero_media_path: null, section_one: { text: article.subtitle || article.body },
-          section_two: { text: article.body }, created_at: article.published_at ?? "",
+          section_two: article.subtitle ? { text: article.body } : null, created_at: article.published_at ?? "",
           published: true, source: "editorial" as const,
         }));
         setPages([...approved, ...legacy].sort((a, b) =>
@@ -61,7 +67,7 @@ export default function QiblaNewsroom() {
     };
     void load();
     return () => { alive = false; };
-  }, []);
+  }, [reloadKey]);
 
   const filtered = useMemo(() => pages.filter((page) => {
     const query = search.trim().toLowerCase();
@@ -79,8 +85,8 @@ export default function QiblaNewsroom() {
           <nav className={styles.nav}>
             <Link href="/">Home</Link>
             <Link href="/qibla/newsroom" aria-current="page">Magazine</Link>
-            <Link href="/qibla/newsletters">Newsletters</Link>
-            <Link href="/qibla/newsroom/about">About</Link>
+            <Link href="/qibla">Qibla archive</Link>
+            <Link href="/qibla/newsroom/studio">Editorial Studio</Link>
             <Link href="/community">Community posts</Link>
           </nav>
           <div className={styles.sidebarNote}>Stories, reflection, and perspective from the Ummah.</div>
@@ -92,7 +98,7 @@ export default function QiblaNewsroom() {
               <h1>1Qibla</h1>
               <p className={styles.subhead}>One community. Many stories. One direction.</p>
             </div>
-            <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:12}}><Link className={styles.homeLink} href="/qibla">Explore Qibla</Link><Link className={styles.homeLink} href="/">← Home</Link></div>
+            <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:12}}><Link className={styles.homeLink} href="/qibla/newsroom/studio">Write for 1Qibla</Link><Link className={styles.homeLink} href="/">← Home</Link></div>
           </header>
           <div className={styles.toolbar}>
             <div className={styles.categories} aria-label="Article categories">
@@ -107,7 +113,7 @@ export default function QiblaNewsroom() {
             </label>
           </div>
           {loading ? <p className={styles.status} role="status">Loading stories…</p> :
-            error ? <p className={styles.status} role="alert">{error}</p> :
+            error ? <div className={styles.status} role="alert"><p>{error}</p><button type="button" onClick={() => setReloadKey((value) => value + 1)}>Retry loading stories</button></div> :
             !featured ? <p className={styles.status}>No published stories match your search yet.</p> :
             <section aria-label="Published stories">
               <article className={styles.hero}>
@@ -136,7 +142,7 @@ export default function QiblaNewsroom() {
         </div>
         <aside className={styles.rightRail} aria-label="Editorial information">
           <div className={styles.railCard}><span className={styles.eyebrow}>OUR PURPOSE</span><h2>Stories that connect us.</h2><p>Discover thoughtful writing from across the 1Muslim community.</p></div>
-          <div className={styles.railCard}><span className={styles.eyebrow}>JOIN THE CONVERSATION</span><h2>Your voice matters.</h2><p>L1 Member · L2 Writer · L3 Editor · L4 Approver. Discover how to contribute.</p><Link href="/qibla/newsroom/apply">Explore editorial levels →</Link></div>
+          <div className={styles.railCard}><span className={styles.eyebrow}>JOIN THE CONVERSATION</span><h2>Your voice matters.</h2><p>Apply to join the 1Qibla editorial team as a Writer or Editor. Approver access is assigned separately.</p><Link href="/qibla/newsroom/apply">Apply to join →</Link></div>
         </aside>
       </div>
     </main>
