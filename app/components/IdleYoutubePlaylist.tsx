@@ -37,6 +37,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const [cinemaSettled,setCinemaSettled]=useState(false);
   const [cinemaEngaged,setCinemaEngaged]=useState(false);
   const [playerBounds,setPlayerBounds]=useState({x:0,y:0,w:0,h:0});
+  const [viewport,setViewport]=useState({w:0,h:0});
   const arrowTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const engageCinema=()=>{setCinemaEngaged(true);setImmersive(false);setCinemaSettled(false);};
   const revealArrows=()=>{setShowArrows(true);if(arrowTimer.current)clearTimeout(arrowTimer.current);arrowTimer.current=setTimeout(()=>setShowArrows(false),1800);};
@@ -49,8 +50,12 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   useEffect(()=>{
     if(!immersive)return;
     const update=()=>{const rect=mountRef.current?.parentElement?.getBoundingClientRect();if(rect)setPlayerBounds({x:rect.left,y:rect.top,w:rect.width,h:rect.height});};
-    update();window.addEventListener("resize",update);window.addEventListener("scroll",update,true);
-    return()=>{window.removeEventListener("resize",update);window.removeEventListener("scroll",update,true);};
+    const sync=()=>{setViewport({w:window.innerWidth,h:window.innerHeight});update();};
+    sync();
+    const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(sync):null;
+    if(mountRef.current?.parentElement)observer?.observe(mountRef.current.parentElement);
+    window.addEventListener("resize",sync);window.addEventListener("scroll",update,true);
+    return()=>{observer?.disconnect();window.removeEventListener("resize",sync);window.removeEventListener("scroll",update,true);};
   },[immersive]);
   useEffect(()=>()=>{if(arrowTimer.current)clearTimeout(arrowTimer.current);},[]);
   const navigate=(step:number)=>navigateRef.current(step);
@@ -69,6 +74,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     selectedIndexRef.current=index;
     const initialSeconds=playlist[index].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
+    let lastSavedAt=0;
     const homepage=window.location.pathname==="/";
     let videoStartedAt:number|null=null;
     let homepageContinued=false;
@@ -134,8 +140,8 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
                   if(!cutoffPaused){const remaining=duration-(performance.now()-cutoffStartedAt)/1000;setEditorialCountdown(Math.max(0,Math.ceil(remaining)));if(remaining<=0){next();return}}
                 }
               }
-              try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
-            },250);
+              if(performance.now()-lastSavedAt>=2000){lastSavedAt=performance.now();try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}}
+            },500);
           },
           onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPlaying(false);setIsPaused(true);setTapHint(true);if(cutoffStartedAt!==null&&!cutoffPaused){cutoffPaused=true;pausedAt=performance.now()}}else if(data===1){setIsPlaying(true);setIsPaused(false);if(cutoffPaused){if(pausedAt!==null&&cutoffStartedAt!==null)cutoffStartedAt+=performance.now()-pausedAt;pausedAt=null;cutoffPaused=false}}else if(data===3){setIsPlaying(false)}}
         }
@@ -198,7 +204,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       @keyframes oneMuslimRigDrift{0%,100%{transform:translate3d(0,0,0)}25%{transform:translate3d(2px,-1px,0)}50%{transform:translate3d(-2px,1px,0)}75%{transform:translate3d(1px,2px,0)}}
       @media(prefers-reduced-motion:reduce){.oneMuslimFloatingPlayerRig,.oneMuslimIdleYoutubePlayer,.oneMuslimFloatingPlayerShadow,.oneMuslimThemeTapOverlay{animation:none!important}.oneMuslimIdleYoutubePlayer>div:first-child{transition:none!important}}
     `}</style>
-  </div><div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")} style={{"--cinema-left":Math.max(0,playerBounds.x)+"px","--cinema-top":Math.max(0,playerBounds.y)+"px","--cinema-right":Math.max(0,(typeof window==="undefined"?0:window.innerWidth)-playerBounds.x-playerBounds.w)+"px","--cinema-bottom":Math.max(0,(typeof window==="undefined"?0:window.innerHeight)-playerBounds.y-playerBounds.h)+"px"} as React.CSSProperties}>
+  </div><div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")} style={{"--cinema-left":Math.max(0,playerBounds.x)+"px","--cinema-top":Math.max(0,playerBounds.y)+"px","--cinema-right":Math.max(0,viewport.w-playerBounds.x-playerBounds.w)+"px","--cinema-bottom":Math.max(0,viewport.h-playerBounds.y-playerBounds.h)+"px"} as React.CSSProperties}>
     <span className="cinema-edge is-top"/><span className="cinema-edge is-bottom"/><span className="cinema-edge is-left"/><span className="cinema-edge is-right"/>
   </div><style>{`
     .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease}
