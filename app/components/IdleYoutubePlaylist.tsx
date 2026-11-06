@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {getRegistryVideos} from "./videoRegistry";
+import {shouldOfferContinue,countdownRemaining} from "./editorialCutoff";
 
 type YTPlayer={
   loadVideoById:(video:{videoId:string;startSeconds:number})=>void;
@@ -34,7 +35,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const [slideDirection,setSlideDirection]=useState<0|1|-1>(0);
   const [isPlaying,setIsPlaying]=useState(false);
   const [skipPrompt,setSkipPrompt]=useState(false);
-  const [skipCountdown,setSkipCountdown]=useState(5);
+  const [skipCountdown,setSkipCountdown]=useState(3);
   const continueVideoRef=useRef<()=>void>(()=>{});
   const nextVideoRef=useRef<()=>void>(()=>{});
   const [showArrows,setShowArrows]=useState(true);
@@ -45,7 +46,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const arrowTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const engageCinema=()=>{setCinemaEngaged(true);setImmersive(false);setCinemaSettled(false);};
   const revealArrows=()=>{setShowArrows(true);if(arrowTimer.current)clearTimeout(arrowTimer.current);arrowTimer.current=setTimeout(()=>setShowArrows(false),5000);};
-  useEffect(()=>{if(!isPlaying){setShowArrows(true);return;}setShowArrows(false);const show=window.setTimeout(()=>{setShowArrows(true);arrowTimer.current=window.setTimeout(()=>setShowArrows(false),5000)},3000);return()=>{window.clearTimeout(show);if(arrowTimer.current)window.clearTimeout(arrowTimer.current)};},[isPlaying,format]);
+  useEffect(()=>{if(!isPlaying){setShowArrows(true);return;}setShowArrows(false);const show=window.setTimeout(()=>{setShowArrows(true);arrowTimer.current=setTimeout(()=>setShowArrows(false),5000)},3000);return()=>{window.clearTimeout(show);if(arrowTimer.current)window.clearTimeout(arrowTimer.current)};},[isPlaying,format]);
   useEffect(()=>{
     if(!isPlaying||!soundEnabled||isPaused||cinemaEngaged){setImmersive(false);setCinemaSettled(false);return;}
     const timer=setTimeout(()=>setImmersive(true),5000);
@@ -75,18 +76,17 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     selectedIndexRef.current=index;
     const initialSeconds=playlist[index].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
-    let segmentStart=playlist[index].startSeconds;
     let promptStartedAt:number|null=null;
     let autoSkipHandled=false;
     const continuedIds=new Set<string>();
     try{const ids=JSON.parse(localStorage.getItem("oneMuslimContinueVideoIdsV1")||"[]");if(Array.isArray(ids))ids.forEach((id:unknown)=>{if(typeof id==="string")continuedIds.add(id)})}catch{}
-    const clearPrompt=()=>{promptStartedAt=null;autoSkipHandled=false;setSkipPrompt(false);setSkipCountdown(5)};
+    const clearPrompt=()=>{promptStartedAt=null;autoSkipHandled=false;setSkipPrompt(false);setSkipCountdown(3)};
     const next=(step=1)=>{
       if(disposed||!player)return;
       index=((selectedIndexRef.current??index)+step+playlist.length)%playlist.length;
       selectedIndexRef.current=index;
       const video=playlist[index];
-      segmentStart=video.startSeconds;clearPrompt();
+      clearPrompt();
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
       setTapHint(true);setIsPaused(false);setIsPlaying(false);setImmersive(false);
       if(!soundEnabledRef.current)player.mute();
@@ -98,7 +98,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       if(nextIndex<0||!player)return;
       index=nextIndex;selectedIndexRef.current=index;
       const selected=playlist[index];
-      segmentStart=selected.startSeconds;clearPrompt();
+      clearPrompt();
       player.loadVideoById({videoId:selected.videoId,startSeconds:selected.startSeconds});
       setIsPaused(false);setTapHint(false);
     };
@@ -130,16 +130,14 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               const segment=playlist[index];
               const seconds=player.getCurrentTime();
               if(!Number.isFinite(seconds))return;
-              if(!continuedIds.has(segment.videoId)&&seconds>=segmentStart+15){
-                if(promptStartedAt===null){promptStartedAt=performance.now();setSkipPrompt(true);setSkipCountdown(5)}
+              // Only editorially configured cutoffs may trigger an advance.
+              // User-selected Continue is remembered and bypasses the cutoff forever.
+              if(shouldOfferContinue(segment,seconds,continuedIds)){
+                if(promptStartedAt===null){promptStartedAt=performance.now();setSkipPrompt(true);setSkipCountdown(3)}
                 const elapsed=(performance.now()-promptStartedAt)/1000;
-                const remaining=5-elapsed;
-                setSkipCountdown(Math.max(1,5-Math.floor(elapsed)));
-                if(remaining<=0&&!autoSkipHandled){autoSkipHandled=true;next();return;}
-              }
-              // Homepage player rules override editorial endSeconds: always offer the 15s choice.
-              // A remembered Finish Watching selection plays through the natural YouTube ending.
-              // Registry endSeconds remains available for other player contexts.
+                setSkipCountdown(countdownRemaining(elapsed));
+                if(elapsed>=3&&!autoSkipHandled){autoSkipHandled=true;next();return;}
+              }else if(promptStartedAt!==null){clearPrompt();}
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
             },250);
           },
@@ -175,7 +173,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
       {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
-      {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Next video countdown"><button type="button" aria-label="Tap to stay on this video" onClick={()=>continueVideoRef.current()}><span className="oneMuslimSkipLabel">{skipCountdown===5?"Next Video":"Tap To Stay"}</span><span className="oneMuslimSkipNumber">{skipCountdown}</span></button></div>}
+      {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Editorial video ending"><button type="button" aria-label="Continue Video to the natural end" onClick={()=>continueVideoRef.current()}><span className="oneMuslimSkipLabel">{"Continue Video"}</span><span className="oneMuslimSkipNumber">{skipCountdown}</span></button></div>}
       <span className="oneMuslimThemeBrand" aria-hidden="true">1Muslim</span>
       <button type="button" className={"oneMuslimPlaylistArrow is-left"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
       <button type="button" className={"oneMuslimPlaylistArrow is-right"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
