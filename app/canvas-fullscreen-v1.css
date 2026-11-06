@@ -2888,6 +2888,7 @@ main:has([data-workspace-page="6"]) .profile-shared-avatar-hero{display:none!imp
 @media(prefers-reduced-motion:reduce){[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm::after{animation:none!important}}
 
 /* Home carousel collapse: reclaim its reserved vertical space for the player. */
-[data-workspace-page="0"] .oneMuslimLiveStage.home-carousel-collapsed .oneMuslimLiveTop > .oneMuslimLiveVideo{margin-top:0!important;transition:margin-top 550ms cubic-bezier(.2,.75,.2,1),height 550ms ease!important}
+[data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop > .oneMuslimLiveVideo{transition:margin-top 550ms cubic-bezier(.2,.75,.2,1),height 550ms cubic-bezier(.2,.75,.2,1)!important}
+[data-workspace-page="0"] .oneMuslimLiveStage.home-carousel-collapsed .oneMuslimLiveTop > .oneMuslimLiveVideo{margin-top:0!important}
 [data-workspace-page="0"] .oneMuslimLiveStage.home-carousel-collapsed .homeVideoWheel{height:0!important;opacity:0!important;pointer-events:none!important}
-@media(prefers-reduced-motion:reduce){[data-workspace-page="0"] .oneMuslimLiveStage.home-carousel-collapsed .oneMuslimLiveTop > .oneMuslimLiveVideo{transition:none!important}}
+@media(prefers-reduced-motion:reduce){[data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop > .oneMuslimLiveVideo{transition:none!important}}
