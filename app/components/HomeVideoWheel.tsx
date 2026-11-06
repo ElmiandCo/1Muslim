@@ -31,7 +31,8 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
     const navBottom=nav?.getBoundingClientRect().bottom??sr.top;
     const top=Math.max(0,navBottom-sr.top-2);
     const available=Math.max(0,vr.top-sr.top-top-3);
-    const safeHeight=Math.max(0,Math.min(130,available));
+    const guestHome=document.documentElement.dataset.guestHome==="true";
+    const safeHeight=Math.max(0,Math.min(guestHome?104:130,available));
     slot.style.setProperty("top",top+"px","important");
     slot.style.setProperty("height",safeHeight+"px","important");
     slot.style.setProperty("visibility","visible","important");
