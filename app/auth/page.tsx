@@ -664,5 +664,43 @@ export default function AuthPage() {
 }
 @media(prefers-reduced-motion:reduce){.authPreview .authGlass{scroll-behavior:auto!important}}
 
- .authPreview.authShahada .authGlass{margin-top:0!important;max-height:calc(100dvh - 28px)!important} .authPreview.authShahada{padding-top:12px!important} body:has(.authPreview) .muslimMobileDock{display:none!important}body:has(.authPreview){overflow:hidden!important;overscroll-behavior:none!important}`}</style></main>;
+ .authPreview.authShahada .authGlass{margin-top:0!important;max-height:calc(100dvh - 28px)!important} .authPreview.authShahada{padding-top:12px!important} body:has(.authPreview) .muslimMobileDock{display:none!important}body:has(.authPreview){overflow:hidden!important;overscroll-behavior:none!important}
+/* Shahada signup: dark neutral glass, crisp text, no emerald wash. */
+.authPreview.authShahada .authGlass,
+.authPreview.authShahada .authPanel{
+ background:linear-gradient(155deg,rgba(15,17,27,.96),rgba(7,9,17,.97))!important;
+ border-color:rgba(207,181,133,.42)!important;
+ color:#f5f0e8!important;
+ backdrop-filter:blur(12px) saturate(105%)!important;
+ -webkit-backdrop-filter:blur(12px) saturate(105%)!important;
+}
+.authPreview.authShahada .shahadaUnified,
+.authPreview.authShahada .shahadaStudioCopy,
+.authPreview.authShahada .authMethods button{
+ background:linear-gradient(145deg,rgba(28,29,42,.96),rgba(12,14,24,.96))!important;
+ color:#f5f0e8!important;
+ border-color:rgba(213,186,138,.48)!important;
+}
+.authPreview.authShahada .authMethods button.selected{
+ background:linear-gradient(145deg,rgba(42,35,48,.98),rgba(22,21,35,.98))!important;
+ border-color:#e6c68b!important;
+ box-shadow:0 0 0 1px rgba(230,198,139,.28),0 0 18px rgba(183,142,228,.15)!important;
+}
+.authPreview.authShahada .authMethodIcon,
+.authPreview.authShahada .shahadaMicRing{
+ background:rgba(25,26,40,.98)!important;
+ color:#e6c68b!important;
+}
+.authPreview.authShahada .authForm input{
+ background:#10131e!important;
+ color:#fffaf1!important;
+ border-color:rgba(218,199,169,.5)!important;
+}
+.authPreview.authShahada .authForm input::placeholder{color:#b9bac7!important;opacity:1!important}
+.authPreview.authShahada .authForm label,
+.authPreview.authShahada .shahadaStudioCopy p,
+.authPreview.authShahada .signupPrivacy{color:#d6d5df!important}
+.authPreview.authShahada .authForm input:focus-visible,
+.authPreview.authShahada .authMethods button:focus-visible{outline:2px solid #e6c68b!important;outline-offset:2px!important}
+`}</style></main>;
 }
