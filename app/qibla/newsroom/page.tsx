@@ -54,7 +54,7 @@ export default function QiblaNewsroom() {
         const approved = (editorial ?? []).map((article) => ({
           id: article.id, title: article.title, template_type: article.template,
           hero_media_path: null, section_one: { text: article.subtitle || article.body },
-          section_two: { text: article.body }, created_at: article.published_at ?? "",
+          section_two: article.subtitle ? { text: article.body } : null, created_at: article.published_at ?? "",
           published: true, source: "editorial" as const,
         }));
         setPages([...approved, ...legacy].sort((a, b) =>
@@ -139,7 +139,7 @@ export default function QiblaNewsroom() {
         </div>
         <aside className={styles.rightRail} aria-label="Editorial information">
           <div className={styles.railCard}><span className={styles.eyebrow}>OUR PURPOSE</span><h2>Stories that connect us.</h2><p>Discover thoughtful writing from across the 1Muslim community.</p></div>
-          <div className={styles.railCard}><span className={styles.eyebrow}>JOIN THE CONVERSATION</span><h2>Your voice matters.</h2><p>Apply to join the 1Qibla editorial team as a Writer, Editor, or Approver.</p><Link href="/qibla/newsroom/apply">Apply to join →</Link></div>
+          <div className={styles.railCard}><span className={styles.eyebrow}>JOIN THE CONVERSATION</span><h2>Your voice matters.</h2><p>Apply to join the 1Qibla editorial team as a Writer or Editor. Approver access is assigned separately.</p><Link href="/qibla/newsroom/apply">Apply to join →</Link></div>
         </aside>
       </div>
     </main>
