@@ -87,7 +87,7 @@ export default function Home(){
  const [homeSignedIn,setHomeSignedIn]=useState<boolean|null>(null);
  const [hudhudGuestLocked,setHudhudGuestLocked]=useState(false);
  const [entryLoading,setEntryLoading]=useState(true);
- useEffect(()=>{if(workspacePage!==6||homeSignedIn!==false)return;try{setHudhudGuestLocked(sessionStorage.getItem("1muslim-hudhud-offscreen")==="1")}catch{setHudhudGuestLocked(false)}},[workspacePage,homeSignedIn]);
+
  useLayoutEffect(()=>{try{if(sessionStorage.getItem("1muslim:homepage-visited-v1")==="yes")setEntryLoading(false)}catch{}},[]);
  const [entryReady,setEntryReady]=useState(false);
  useEffect(()=>{if(homeSignedIn!==null)setEntryReady(true)},[homeSignedIn]);
@@ -222,6 +222,7 @@ export default function Home(){
  const [workspacePage,setWorkspacePage]=useState(0);
  const workspaceNavRef=useRef<HTMLElement>(null);
  const [profileOverlayBounds,setProfileOverlayBounds]=useState<{top:number;bottom:number;left:number;width:number}|null>(null);
+ useEffect(()=>{if(workspacePage!==6||homeSignedIn!==false)return;try{setHudhudGuestLocked(sessionStorage.getItem("1muslim-hudhud-offscreen")==="1")}catch{setHudhudGuestLocked(false)}},[workspacePage,homeSignedIn]);
  useEffect(()=>{
   if(workspacePage!==6||homeSignedIn!==true){setProfileOverlayBounds(null);return;}
   let raf=0;let previous="";
