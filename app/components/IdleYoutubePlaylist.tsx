@@ -21,6 +21,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const categories=["All",...Array.from(new Set(allVideos.map(video=>video.category)))];
   const [category,setCategory]=useState("All");
   const playlist=category==="All"?allVideos:allVideos.filter(video=>video.category===category);
+  useEffect(()=>{const onCategory=(event:Event)=>{const selection=(event as CustomEvent<{category:string;format:string}>).detail;if(selection?.format===format&&categories.includes(selection.category)){selectedIndexRef.current=null;setCategory(selection.category)}};window.addEventListener("oneMuslimCarouselCategory",onCategory);return()=>window.removeEventListener("oneMuslimCarouselCategory",onCategory)},[format]);
   const mountRef=useRef<HTMLDivElement>(null);
   const swipeStart=useRef<{x:number;y:number}|null>(null);
   const playerRef=useRef<YTPlayer|null>(null);
