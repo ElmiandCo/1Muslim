@@ -1,6 +1,17 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
-export type RegisteredVideo={videoId:string;title:string;category:string;startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
+export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"dAZPkwAo0lE",title:"O Messenger | Ep. 3",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"eOYW4vKaKpc",title:"O Messenger | Ep. 5",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"uSUxDtp-U0Q",title:"O Messenger | Ep. 10",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"pR65Sfhp-AY",title:"O Messenger | Final Episode",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"DW-00ckCAPI",title:"O Messenger | Ep. 1 — Life of Prophet Muhammad ﷺ",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"Qnzam5KcopM",title:"O Messenger | Ep. 2 — The Hardest Days of Islam",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"jx9syOUU1Ms",title:"O Messenger | Ep. 4 — No Food, No Mercy to Prophet’s Family",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"zNpV3UqwyDU",title:"O Messenger | Ep. 6 — Battle of Badr: Last Words of Abu Jahl",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"CPWL76pGaBI",title:"O Messenger | Ep. 7 — Uhud Was Shaken by a Cry",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"QbV9WR28GCg",title:"O Messenger | Ep. 8 — Battle of the Trench",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"ebeAyx_E7pc",title:"O Messenger | Ep. 9 — Epic Conquest of Khaybar",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
   {"videoId":"LlvFLGAqb5A","title":"Prophet Adam (AS) — Creation | Mufti Menk","category":"Prophet Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"d2D6WuKlymM","title":"Prophet Nuh (AS) — The Ark | Quran Stories","category":"Prophet Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"lZu173pTldI","title":"Prophet Ibrahim (AS) — His Story | Quran Stories","category":"Prophet Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},

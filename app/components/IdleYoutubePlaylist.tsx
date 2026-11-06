@@ -21,9 +21,9 @@ type YTApi={Player:new(element:HTMLElement,options:{
 
 export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop"|"phone"}){
   const allVideos=getRegistryVideos(format);
-  const categories=["All","Kids",...Array.from(new Set(allVideos.map(video=>video.category)))];
+  const categories=["All","Kids",...Array.from(new Set(allVideos.flatMap(video=>video.categories??[video.category])))];
   const [category,setCategory]=useState("All");
-  const playlist=category==="All"?allVideos:allVideos.filter(video=>category==="Kids"?isKidsVideo(video):video.category===category);
+  const playlist=category==="All"?allVideos:allVideos.filter(video=>category==="Kids"?isKidsVideo(video):(video.categories??[video.category]).includes(category));
   useEffect(()=>{const onCategory=(event:Event)=>{const selection=(event as CustomEvent<{category:string;format:string}>).detail;if(selection?.format===format&&categories.includes(selection.category)){selectedIndexRef.current=null;setCategory(selection.category)}};window.addEventListener("oneMuslimCarouselCategory",onCategory);return()=>window.removeEventListener("oneMuslimCarouselCategory",onCategory)},[format]);
   const mountRef=useRef<HTMLDivElement>(null);
   const swipeStart=useRef<{x:number;y:number}|null>(null);
