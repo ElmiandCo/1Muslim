@@ -131,7 +131,9 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
                 setSkipCountdown(Math.max(0,Math.ceil(remaining)));
                 if(remaining<=0&&!autoSkipHandled){autoSkipHandled=true;next();return;}
               }
-              if(segment.endSeconds!==null&&seconds>=segment.endSeconds&&!continuedIds.has(segment.videoId)){next();return;}
+              // Homepage player rules override editorial endSeconds: always offer the 15s choice.
+              // A remembered Finish Watching selection plays through the natural YouTube ending.
+              // Registry endSeconds remains available for other player contexts.
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
             },250);
           },
