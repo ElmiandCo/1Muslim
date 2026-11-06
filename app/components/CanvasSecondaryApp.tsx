@@ -207,6 +207,8 @@ function DailyPostsApp({active}:{active:boolean}){
  const [finishedVideo,setFinishedVideo]=useState<string|null>(null);
  const [fypStart,setFypStart]=useState<string|null>(null);
  const [fypActiveIndex,setFypActiveIndex]=useState(0);
+ const [fypSoundUnlocked,setFypSoundUnlocked]=useState(false);
+ const [,setFypNeedsTapForSound]=useState(false);
  const videoPosts=posts.filter(p=>postKind(p)==="video");
  const fypOrder=useMemo(()=>{if(!fypStart)return [];const start=videoPosts.find(p=>p.id===fypStart);const others=videoPosts.filter(p=>p.id!==fypStart);return start?[start,...others.sort((x,y)=>x.id.localeCompare(y.id))]:[]},[posts,fypStart]);
  const [fypTimedSeconds,setFypTimedSeconds]=useState(0);
