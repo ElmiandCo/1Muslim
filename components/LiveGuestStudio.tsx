@@ -63,12 +63,16 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
     };
     refreshRef.current=()=>{void load()};
     void load();
+    // Subscribe to database changes for immediate host prompts; polling remains a fallback.
+    const channel=db.channel("live-guest-requests-"+streamId)
+      .on("postgres_changes",{event:"*",schema:"public",table:"live_guest_requests",filter:"stream_id=eq."+streamId},()=>{void load()})
+      .subscribe();
     // Poll only while visible; refresh immediately on focus or after an action.
     const timer=window.setInterval(()=>void load(),5000);
     document.addEventListener("visibilitychange",load);
     window.addEventListener("focus",load);
     return()=>{
-      active=false;window.clearInterval(timer);
+      active=false;void db.removeChannel(channel);window.clearInterval(timer);
       document.removeEventListener("visibilitychange",load);
       window.removeEventListener("focus",load);
       refreshRef.current=()=>{};
@@ -203,7 +207,26 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   if(!uid)return null;
   const pendingCount=requests.filter(r=>r.status==="pending").length;
   return <div style={{position:"relative",zIndex:30,width:"fit-content",maxWidth:"100%"}}>
-    {host&&nextRequest&&<div role="alertdialog" aria-label="Guest join request" style={{position:"fixed",left:"50%",top:"28%",transform:"translateX(-50%)",width:"min(340px,calc(100vw - 32px))",zIndex:9999,padding:18,borderRadius:20,border:"1px solid var(--theme-border,#ffffff66)",background:"color-mix(in srgb,var(--theme-panel,#101a13) 88%,transparent)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",boxShadow:"0 18px 60px #0009",color:"var(--theme-text,#fff)",textAlign:"center"}}><strong style={{display:"block",fontSize:16,marginBottom:14}}>{requesterNames[nextRequest.user_id]||"A viewer"} is requesting to join.</strong><div style={{display:"flex",gap:10,justifyContent:"center"}}><button type="button" disabled={busy} onClick={()=>void moderate(nextRequest.id,"approved")} style={{padding:"10px 24px",borderRadius:12,border:"1px solid var(--theme-border,#88e4b5)",background:"var(--theme-primary,#187b58)",color:"white",fontWeight:700}}>Yes</button><button type="button" disabled={busy} onClick={()=>void moderate(nextRequest.id,"rejected")} style={{padding:"10px 24px",borderRadius:12,border:"1px solid #ffffff55",background:"#ffffff18",color:"inherit",fontWeight:700}}>No</button></div>{pendingRequests.length>1&&<small style={{display:"block",marginTop:9}}>{pendingRequests.length-1} more waiting</small>}</div>}
+    {host&&nextRequest&&<div role="alertdialog" aria-label="Guest join request" aria-live="assertive" className="oneMuslimGuestJoinPrompt">
+      <span className="oneMuslimGuestJoinPromptName">{requesterNames[nextRequest.user_id]||"A viewer"} wants to join</span>
+      <div className="oneMuslimGuestJoinPromptActions">
+        <button type="button" disabled={busy} onClick={()=>void moderate(nextRequest.id,"approved")}>Yes</button>
+        <button type="button" disabled={busy} onClick={()=>void moderate(nextRequest.id,"rejected")}>No</button>
+      </div>
+      {pendingRequests.length>1&&<small>{pendingRequests.length-1} more waiting</small>}
+    </div>}
+    <style jsx>{`
+      .oneMuslimGuestJoinPrompt{position:fixed;left:50%;top:clamp(90px,22dvh,240px);transform:translateX(-50%);z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;width:min(420px,calc(100vw - 28px));box-sizing:border-box;padding:10px 12px;border-radius:16px;border:1px solid color-mix(in srgb,var(--theme-border,var(--theme-primary,#c5c5d5)) 50%,transparent);background:color-mix(in srgb,var(--theme-panel,#141522) 28%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 10px 34px #0005;color:var(--theme-text,#fff);animation:guestPromptEnter .24s ease-out both}
+      .oneMuslimGuestJoinPromptName{font-size:13px;font-weight:600;flex:1 1 140px;min-width:0;overflow-wrap:anywhere}
+      .oneMuslimGuestJoinPromptActions{display:flex;gap:7px;flex:0 0 auto}
+      .oneMuslimGuestJoinPromptActions button{border:1px solid color-mix(in srgb,var(--theme-border,var(--theme-primary,#ddd)) 60%,transparent);border-radius:10px;background:color-mix(in srgb,var(--theme-primary,#c5b4f3) 18%,transparent);color:inherit;padding:7px 14px;min-height:34px;font-size:13px;font-weight:700;cursor:pointer;transition:background .2s ease,border-color .2s ease}
+      .oneMuslimGuestJoinPromptActions button:last-child{background:transparent}
+      .oneMuslimGuestJoinPromptActions button:hover{background:color-mix(in srgb,var(--theme-primary,#c5b4f3) 34%,transparent)}
+      .oneMuslimGuestJoinPromptActions button:disabled{opacity:.5;cursor:wait}
+      .oneMuslimGuestJoinPrompt small{width:100%;font-size:10px;opacity:.7}
+      @keyframes guestPromptEnter{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+      @media(prefers-reduced-motion:reduce){.oneMuslimGuestJoinPrompt{animation:none}}
+    `}</style>
     <button type="button" aria-expanded={panelOpen} aria-controls="live-guest-controls-panel" onClick={()=>setPanelOpen(open=>!open)} style={{border:"1px solid var(--theme-border,#8aa398)",borderRadius:999,padding:compactJoin?"8px 12px":"9px 14px",minHeight:compactJoin?36:undefined,fontSize:compactJoin?12:undefined,boxSizing:"border-box",background:"color-mix(in srgb,var(--theme-panel,#101a13) 76%,transparent)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"var(--theme-text,#e7f5e6)",fontWeight:600,cursor:"pointer",boxShadow:"0 8px 24px #0005"}}>{compactJoin?"Join":`👥 Guests${host&&pendingCount>0?` · ${pendingCount}`:""} ${panelOpen?"⌃":"⌄"}`}</button>
     {panelOpen&&<section id="live-guest-controls-panel" aria-label="Live guest controls" style={{position:"absolute",right:0,bottom:"calc(100% + 10px)",width:host?"min(340px,calc(100vw - 32px))":"min(230px,calc(100vw - 32px))",maxHeight:"min(55dvh,430px)",overflowY:"auto",overscrollBehavior:"contain",padding:host?14:8,border:"1px solid color-mix(in srgb,var(--theme-border,#48624b) 38%,transparent)",borderRadius:18,background:"color-mix(in srgb,var(--theme-panel,#101a13) 14%,transparent)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",boxShadow:"0 8px 24px #0003",color:"var(--theme-text,#e7f5e6)"}}>
     {host?<div><strong>👑 Guest requests</strong>
