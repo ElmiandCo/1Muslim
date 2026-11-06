@@ -220,6 +220,8 @@ export default function Home(){
  const [callHistory,setCallHistory]=useState<Array<{id:string;created_at:string}>>([]);
  const [lessonPreview,setLessonPreview]=useState<Array<{id:string;title:string}>>([]);
  const [workspacePage,setWorkspacePage]=useState(0);
+ // Video audio survives Qur'an navigation but stops on Posts.
+ useEffect(()=>{if(workspacePage===2)window.dispatchEvent(new Event("1muslim:pause-home-video"));},[workspacePage]);
  useEffect(()=>{
    const sections=["Live","Quran","Post","Messages","Elm Tent","Community","Profile"] as const;
    let last=Date.now();let pending=0;let running=true;
@@ -333,12 +335,12 @@ export default function Home(){
  const quranContinuousVerseCount=useRef(0);
  const [quranParticleBurst,setQuranParticleBurst]=useState(0);
  const [quranParticleBurstVisible,setQuranParticleBurstVisible]=useState(false);
- const playQuranAudio=async()=>{if(!quranPreview)return;const audio=quranAudioRef.current;if(!audio)return;if(!audio.paused){quranContinuous.current=false;audio.pause();setQuranAudioPlaying(false);return;}quranAudioFinished.current=false;quranContinuous.current=true;quranAutoPlayNext.current=false;setQuranAudioLoading(true);try{await audio.play();setQuranAudioPlaying(true)}catch{setQuranAudioPlaying(false)}finally{setQuranAudioLoading(false)}};
+ const playQuranAudio=async()=>{if(!quranPreview)return;const audio=quranAudioRef.current;if(!audio)return;if(!audio.paused){quranContinuous.current=false;audio.pause();setQuranAudioPlaying(false);return;}quranAudioFinished.current=false;quranContinuous.current=true;quranAutoPlayNext.current=false;setQuranAudioLoading(true);window.dispatchEvent(new Event("1muslim:pause-home-video"));try{await audio.play();setQuranAudioPlaying(true)}catch{setQuranAudioPlaying(false)}finally{setQuranAudioLoading(false)}};
  useEffect(()=>{
   quranAudioRef.current?.pause();setQuranAudioPlaying(false);
   if(!quranAutoPlayNext.current||!quranPreview)return;
   quranAutoPlayNext.current=false;
-  const timer=window.setTimeout(()=>{const audio=quranAudioRef.current;if(!audio)return;audio.load();void audio.play().then(()=>{quranAudioFinished.current=false;setQuranAudioPlaying(true)}).catch(()=>{quranContinuous.current=false;setQuranAudioPlaying(false)})},40);
+  const timer=window.setTimeout(()=>{const audio=quranAudioRef.current;if(!audio)return;audio.load();window.dispatchEvent(new Event("1muslim:pause-home-video"));void audio.play().then(()=>{quranAudioFinished.current=false;setQuranAudioPlaying(true)}).catch(()=>{quranContinuous.current=false;setQuranAudioPlaying(false)})},40);
   return()=>window.clearTimeout(timer);
  },[quranPreview?.globalAyah]);
  useEffect(()=>{if(!quranParticleBurstVisible)return;const timer=window.setTimeout(()=>setQuranParticleBurstVisible(false),2600);return()=>window.clearTimeout(timer)},[quranParticleBurst,quranParticleBurstVisible]);

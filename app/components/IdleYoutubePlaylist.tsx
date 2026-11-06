@@ -10,6 +10,7 @@ type YTPlayer={
   unMute:()=>void;
   playVideo:()=>void;
   getCurrentTime:()=>number;
+  pauseVideo:()=>void;
   destroy:()=>void;
 };
 type YTApi={Player:new(element:HTMLElement,options:{
@@ -69,6 +70,12 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   useEffect(()=>()=>{if(arrowTimer.current)clearTimeout(arrowTimer.current);},[]);
   const navigate=(step:number)=>navigateRef.current(step);
   const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);setIsPaused(false);setTapHint(false);setIsPlaying(false);setImmersive(false);setCinemaEngaged(false);setCinemaSettled(false);playerRef.current?.unMute();playerRef.current?.playVideo();};
+  // Do not pause on Qur'an navigation; pause only when Posts or Qur'an audio takes focus.
+  useEffect(()=>{
+    const pause=()=>{playerRef.current?.pauseVideo();setIsPaused(true);setIsPlaying(false);};
+    window.addEventListener("1muslim:pause-home-video",pause);
+    return()=>window.removeEventListener("1muslim:pause-home-video",pause);
+  },[]);
   const selectedIndexRef=useRef<number|null>(null);
   useEffect(()=>{
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
@@ -223,16 +230,16 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       @keyframes oneMuslimRigDrift{0%,100%{transform:translate3d(0,0,0)}25%{transform:translate3d(2px,-1px,0)}50%{transform:translate3d(-2px,1px,0)}75%{transform:translate3d(1px,2px,0)}}
       @media(prefers-reduced-motion:reduce){.oneMuslimFloatingPlayerRig,.oneMuslimIdleYoutubePlayer,.oneMuslimFloatingPlayerShadow,.oneMuslimThemeTapOverlay{animation:none!important}.oneMuslimIdleYoutubePlayer>div:first-child{transition:none!important}}
     `}</style>
-  </div><ElmiTimedCommentsLayer videoKey={timedVideoKey} seconds={timedSeconds} playing={isPlaying&&!isPaused} bounds={playerBounds}/><div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")} style={{"--cinema-left":Math.max(0,playerBounds.x)+"px","--cinema-top":Math.max(0,playerBounds.y+playerBounds.h*.12)+"px","--cinema-right":Math.max(0,(typeof window!=="undefined"?window.innerWidth:0)-playerBounds.x-playerBounds.w)+"px","--cinema-bottom":Math.max(0,(typeof window!=="undefined"?window.innerHeight:0)-playerBounds.y-playerBounds.h*.88)+"px"} as React.CSSProperties}>
+  </div><ElmiTimedCommentsLayer videoKey={timedVideoKey} seconds={timedSeconds} playing={isPlaying&&!isPaused} bounds={playerBounds}/><div aria-hidden="true" className={"ElmiLayerX"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")} style={{"--cinema-left":Math.max(0,playerBounds.x)+"px","--cinema-top":Math.max(0,playerBounds.y+playerBounds.h*.12)+"px","--cinema-right":Math.max(0,(typeof window!=="undefined"?window.innerWidth:0)-playerBounds.x-playerBounds.w)+"px","--cinema-bottom":Math.max(0,(typeof window!=="undefined"?window.innerHeight:0)-playerBounds.y-playerBounds.h*.88)+"px"} as React.CSSProperties}>
     <span className="cinema-edge is-top"/><span className="cinema-edge is-bottom"/><span className="cinema-edge is-left"/><span className="cinema-edge is-right"/>
   </div><style>{`
-    .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease}
-    .oneMuslimCinemaDimmer.is-active{opacity:1;transition:opacity 2.6s ease}
-    .oneMuslimCinemaDimmer.is-settled{opacity:.85;transition:opacity 2.6s ease}\n    .oneMuslimCinemaDimmer .cinema-edge{position:absolute;display:block;pointer-events:none}
-    .oneMuslimCinemaDimmer .cinema-edge.is-top{top:0;left:0;right:0;height:var(--cinema-top);background:linear-gradient(to bottom,rgba(0,0,0,.76) 0%,rgba(0,0,0,.62) 76%,rgba(0,0,0,.10) 100%)}
-    .oneMuslimCinemaDimmer .cinema-edge.is-bottom{bottom:0;left:0;right:0;height:var(--cinema-bottom);background:linear-gradient(to top,rgba(0,0,0,.76) 0%,rgba(0,0,0,.62) 76%,rgba(0,0,0,.10) 100%)}
-    .oneMuslimCinemaDimmer .cinema-edge.is-left{top:var(--cinema-top);bottom:var(--cinema-bottom);left:0;width:var(--cinema-left);background:linear-gradient(to right,rgba(0,0,0,.62),rgba(0,0,0,.48))}
-    .oneMuslimCinemaDimmer .cinema-edge.is-right{top:var(--cinema-top);bottom:var(--cinema-bottom);right:0;width:var(--cinema-right);background:linear-gradient(to left,rgba(0,0,0,.62),rgba(0,0,0,.48))}
-    /* Feather the cutout so the bright player and its floating shadow remain the focal point. */\n    .oneMuslimCinemaDimmer .cinema-edge{filter:blur(9px)}\n    @media(prefers-reduced-motion:reduce){.oneMuslimCinemaDimmer,.oneMuslimCinemaDimmer.is-active{transition:none}}
+    .ElmiLayerX{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease}
+    .ElmiLayerX.is-active{opacity:1;transition:opacity 2.6s ease}
+    .ElmiLayerX.is-settled{opacity:.85;transition:opacity 2.6s ease}\n    .ElmiLayerX .cinema-edge{position:absolute;display:block;pointer-events:none}
+    .ElmiLayerX .cinema-edge.is-top{top:0;left:0;right:0;height:var(--cinema-top);background:linear-gradient(to bottom,rgba(0,0,0,.76) 0%,rgba(0,0,0,.62) 76%,rgba(0,0,0,.10) 100%)}
+    .ElmiLayerX .cinema-edge.is-bottom{bottom:0;left:0;right:0;height:var(--cinema-bottom);background:linear-gradient(to top,rgba(0,0,0,.76) 0%,rgba(0,0,0,.62) 76%,rgba(0,0,0,.10) 100%)}
+    .ElmiLayerX .cinema-edge.is-left{top:var(--cinema-top);bottom:var(--cinema-bottom);left:0;width:var(--cinema-left);background:linear-gradient(to right,rgba(0,0,0,.62),rgba(0,0,0,.48))}
+    .ElmiLayerX .cinema-edge.is-right{top:var(--cinema-top);bottom:var(--cinema-bottom);right:0;width:var(--cinema-right);background:linear-gradient(to left,rgba(0,0,0,.62),rgba(0,0,0,.48))}
+    /* Feather the cutout so the bright player and its floating shadow remain the focal point. */\n    .ElmiLayerX .cinema-edge{filter:blur(9px)}\n    @media(prefers-reduced-motion:reduce){.ElmiLayerX,.ElmiLayerX.is-active{transition:none}}
   `}</style></>;
 }

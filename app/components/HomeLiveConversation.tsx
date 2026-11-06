@@ -132,12 +132,16 @@ export default function HomeLiveConversation({room}:{room:Room}){
   if(videoTimeline.videoKey&&body&&!image){
     setSending(true);setStatus("");
     const started=draftStartedAt.current??videoTimeline.seconds;
-    const {error}=await dbRef.current.rpc("add_featured_video_timed_comment",{p_video_key:videoTimeline.videoKey,p_body:body.slice(0,180),p_started_at_seconds:started});
+    // Let the player settle its current timestamp before assigning the permanent slot.
+    window.dispatchEvent(new Event("1muslim:elmilayerx-fullscreen"));
+    await new Promise(resolve=>window.setTimeout(resolve,300));
+    const {data:assigned,error}=await dbRef.current.rpc("add_featured_video_timed_comment",{p_video_key:videoTimeline.videoKey,p_body:body.slice(0,180),p_started_at_seconds:started});
     setSending(false);
-    if(error){setStatus("Timed comment could not be sent.");return}
+    if(error||!assigned?.id){setStatus("Timed comment could not be sent. Please retry.");return}
     setDraft("");draftStartedAt.current=null;
-    const {data}=await dbRef.current.from("featured_video_timed_comments").select("id,body,at_seconds").eq("video_key",videoTimeline.videoKey).order("at_seconds",{ascending:true}).limit(500);
-    if(data)setTimedEntries(data);
+    // Use the exact row returned by the atomic RPC, never guess by matching comment text.
+    setTimedEntries(current=>[...current.filter(row=>row.id!==assigned.id),assigned].sort((a,b)=>a.at_seconds-b.at_seconds));
+    window.dispatchEvent(new CustomEvent("1muslim:elmilayerx-comment-sent",{detail:{id:assigned.id,body:assigned.body,seconds:assigned.at_seconds,videoKey:videoTimeline.videoKey}}));
     return;
   }
   inputRef.current?.blur();setSending(true);setStatus("");
