@@ -49,6 +49,28 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const [playerBounds,setPlayerBounds]=useState({x:0,y:0,w:0,h:0});
   const [timedVideoKey,setTimedVideoKey]=useState("");
   const [timedSeconds,setTimedSeconds]=useState(0);
+  // Cross-origin YouTube iframes cannot be mirrored as live pixels. Use a soft,
+  // vertically flipped video thumbnail beneath the existing comments instead.
+  useEffect(()=>{
+    const stage=mountRef.current?.closest(".oneMuslimLiveStage");
+    const chat=stage?.querySelector<HTMLElement>(".oneMuslimLiveBottom");
+    if(!chat)return;
+    chat.classList.add("oneMuslimReflectiveChat");
+    const reflection=document.createElement("div");
+    reflection.className="oneMuslimVideoWaterReflection";
+    reflection.setAttribute("aria-hidden","true");
+    const image=document.createElement("div");
+    image.className="oneMuslimVideoWaterReflectionImage";
+    reflection.appendChild(image);
+    chat.prepend(reflection);
+    return()=>{reflection.remove();chat.classList.remove("oneMuslimReflectiveChat")};
+  },[format]);
+  useEffect(()=>{
+    const stage=mountRef.current?.closest(".oneMuslimLiveStage");
+    const image=stage?.querySelector<HTMLElement>(".oneMuslimVideoWaterReflectionImage");
+    if(image&&/^[a-zA-Z0-9_-]{11}$/.test(timedVideoKey))
+      image.style.backgroundImage=`url("https://i.ytimg.com/vi/${timedVideoKey}/hqdefault.jpg")`;
+  },[timedVideoKey,format]);
   useEffect(()=>{window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:timedVideoKey,seconds:timedSeconds,format}}))},[timedVideoKey,timedSeconds,format]);
   useEffect(()=>{return ()=>{window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:"",seconds:0,format}}));};},[format]);
   const arrowTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -226,6 +248,12 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   </div><ElmiTimedCommentsLayer videoKey={timedVideoKey} seconds={timedSeconds} playing={isPlaying&&!isPaused} bounds={playerBounds}/><div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")} style={{"--cinema-left":Math.max(0,playerBounds.x)+"px","--cinema-top":Math.max(0,playerBounds.y+playerBounds.h*.12)+"px","--cinema-right":Math.max(0,(typeof window!=="undefined"?window.innerWidth:0)-playerBounds.x-playerBounds.w)+"px","--cinema-bottom":Math.max(0,(typeof window!=="undefined"?window.innerHeight:0)-playerBounds.y-playerBounds.h*.88)+"px"} as React.CSSProperties}>
     <span className="cinema-edge is-top"/><span className="cinema-edge is-bottom"/><span className="cinema-edge is-left"/><span className="cinema-edge is-right"/>
   </div><style>{`
+    .oneMuslimReflectiveChat{position:relative;isolation:isolate;overflow:hidden}
+    .oneMuslimReflectiveChat>.oneMuslimVideoWaterReflection{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;opacity:.065;mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.45) 40%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.45) 40%,transparent 100%)}
+    .oneMuslimVideoWaterReflectionImage{position:absolute;inset:-15% -4%;background-size:cover;background-position:center top;transform:scaleY(-1) scale(1.06);filter:blur(24px) saturate(.55);animation:oneMuslimReflectionRipple 12s ease-in-out infinite alternate}
+    .oneMuslimReflectiveChat>:not(.oneMuslimVideoWaterReflection){position:relative;z-index:1}
+    @keyframes oneMuslimReflectionRipple{from{transform:scaleY(-1) scale(1.06) translateX(-.5%)}to{transform:scaleY(-1) scale(1.075) translateX(.5%)}}
+    @media(prefers-reduced-motion:reduce){.oneMuslimVideoWaterReflectionImage{animation:none}}
     .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease}
     .oneMuslimCinemaDimmer.is-active{opacity:1;transition:opacity 2.6s ease}
     .oneMuslimCinemaDimmer.is-settled{opacity:.85;transition:opacity 2.6s ease}\n    .oneMuslimCinemaDimmer .cinema-edge{position:absolute;display:block;pointer-events:none}
