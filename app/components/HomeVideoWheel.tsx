@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useRef,useState,useLayoutEffect} from "react";
 import {createPortal} from "react-dom";
-import {videoRegistry} from "./videoRegistry";
+import {videoRegistry,isKidsVideo} from "./videoRegistry";
 
 export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"phone"}){
  const [expanded,setExpanded]=useState(true);
@@ -53,7 +53,7 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
  const positionRef=useRef(0);
  useEffect(()=>{const media=window.matchMedia("(prefers-reduced-motion: reduce)");const update=()=>setReduce(media.matches);update();media.addEventListener("change",update);return()=>media.removeEventListener("change",update)},[]);
  useEffect(()=>{if(!expanded||reduce)return;let frame=0,last=0;const tick=(time:number)=>{if(last&&!paused.current){positionRef.current+=direction.current*Math.min(time-last,50)*.00015;setPosition(positionRef.current)}last=time;frame=requestAnimationFrame(tick)};frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame)},[expanded,reduce]);
- const items=videoRegistry.filter(v=>v.format===format&&(category==="All"||v.category===category));
+ const items=videoRegistry.filter(v=>v.format===format&&(category==="All"||(category==="Kids"?isKidsVideo(v):v.category===category)));
  const count=items.length;
  const onMove=(x:number)=>{if(!pointer.current)return;const delta=(pointer.current.x-x)/145;if(Math.abs(pointer.current.x-x)>8)dragged.current=true;if(!dragged.current)return;positionRef.current=pointer.current.position+delta;setPosition(positionRef.current);if(Math.abs(delta)>.03)direction.current=delta>0?1:-1};
  const settle=()=>{pointer.current=null;if(resumeTimer.current)clearTimeout(resumeTimer.current);resumeTimer.current=setTimeout(()=>{paused.current=false;dragged.current=false},500)};
