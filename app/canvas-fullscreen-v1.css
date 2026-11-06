@@ -2855,3 +2855,34 @@ html:not([data-guest-home="true"]) [data-workspace-page="0"] .canvas-vertical-ma
 /* Home profile: one avatar only. The floating HudHud avatar is the profile hero. */
 main:has([data-workspace-page="6"]) .profile-shared-avatar-portal,
 main:has([data-workspace-page="6"]) .profile-shared-avatar-hero{display:none!important}
+
+/* Elmi timed-comment composer: slimmer glass, restrained traveling highlight. */
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{
+  gap:6px!important;padding:2px 4px max(5px,env(safe-area-inset-bottom))!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input{
+  box-sizing:border-box!important;height:38px!important;min-height:38px!important;
+  padding:6px 12px!important;border-radius:22px!important;font-size:16px!important;
+  background:rgba(6,15,28,.27)!important;border:1px solid rgba(215,230,255,.26)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 2px 9px rgba(0,0,0,.1)!important;
+  transition:border-color .35s ease,box-shadow .35s ease!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm input:focus{
+  outline:none!important;border-color:color-mix(in srgb,var(--theme-primary,#c5e3ff) 55%,transparent)!important;
+  box-shadow:0 0 13px color-mix(in srgb,var(--theme-primary,#c5e3ff) 18%,transparent)!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm button{
+  min-height:38px!important;height:38px!important;padding:4px 11px!important;border-radius:20px!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm::after{
+  content:"";position:absolute;left:10%;right:10%;bottom:0;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--theme-primary,#e0efff) 65%,transparent),transparent);
+  background-size:200% 100%;animation:elmi-composer-light-swipe 5s ease-in-out infinite;opacity:.5;
+}
+@keyframes elmi-composer-light-swipe{0%,100%{background-position:100% 0;opacity:.16}50%{background-position:0 0;opacity:.55}}
+@media(max-width:767px){
+ [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom{
+   inset-block-start:calc(46% + 10px)!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm::after{animation:none!important}}

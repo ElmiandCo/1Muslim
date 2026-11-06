@@ -1,6 +1,8 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {getRegistryVideos} from "./videoRegistry";
+import ElmiTimedCommentsLayer from "./ElmiTimedCommentsLayer";
+import {createClient} from "../../utils/supabase/client";
 
 type YTPlayer={
   loadVideoById:(video:{videoId:string;startSeconds:number})=>void;
@@ -28,6 +30,9 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const [soundEnabled,setSoundEnabled]=useState(false);
   const [isPaused,setIsPaused]=useState(false);
   const [tapHint,setTapHint]=useState(true);
+  const [signedIn,setSignedIn]=useState(false);
+  useEffect(()=>{const db=createClient();let alive=true;void db.auth.getUser().then(({data})=>{if(alive)setSignedIn(Boolean(data.user))});const {data:{subscription}}=db.auth.onAuthStateChange((_event,session)=>{if(alive)setSignedIn(Boolean(session?.user))});return()=>{alive=false;subscription.unsubscribe()}},[]);
+
   const soundEnabledRef=useRef(false);
   const navigateRef=useRef<(step:number)=>void>(()=>{});
   const transitionTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -42,22 +47,25 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const [cinemaSettled,setCinemaSettled]=useState(false);
   const [cinemaEngaged,setCinemaEngaged]=useState(false);
   const [playerBounds,setPlayerBounds]=useState({x:0,y:0,w:0,h:0});
+  const [timedVideoKey,setTimedVideoKey]=useState("");
+  const [timedSeconds,setTimedSeconds]=useState(0);
+  useEffect(()=>{window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:timedVideoKey,seconds:timedSeconds,format}}))},[timedVideoKey,timedSeconds,format]);
+  useEffect(()=>{return ()=>{window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:"",seconds:0,format}}));};},[format]);
   const arrowTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
-  const engageCinema=()=>{setCinemaEngaged(true);setImmersive(false);setCinemaSettled(false);};
+  const engageCinema=()=>{setCinemaEngaged(true);setImmersive(false);setCinemaSettled(false);window.setTimeout(()=>setCinemaEngaged(false),150);};
   const revealArrows=()=>{setShowArrows(true);if(arrowTimer.current)clearTimeout(arrowTimer.current);arrowTimer.current=setTimeout(()=>setShowArrows(false),5000);};
   useEffect(()=>{if(!isPlaying){setShowArrows(true);return;}setShowArrows(false);const show=window.setTimeout(()=>{setShowArrows(true);arrowTimer.current=setTimeout(()=>setShowArrows(false),5000)},3000);return()=>{window.clearTimeout(show);if(arrowTimer.current)window.clearTimeout(arrowTimer.current)};},[isPlaying,format]);
   useEffect(()=>{
-    if(!isPlaying||isPaused||cinemaEngaged){setImmersive(false);setCinemaSettled(false);return;}
-    const timer=setTimeout(()=>setImmersive(true),5000);
+    if(!isPlaying||isPaused){setImmersive(false);setCinemaSettled(false);return;}
+    const timer=setTimeout(()=>setImmersive(true),10000);
     return()=>clearTimeout(timer);
   },[isPlaying,soundEnabled,isPaused,format,cinemaEngaged]);
   useEffect(()=>{if(!immersive)return;const timer=setTimeout(()=>setCinemaSettled(true),23000);return()=>clearTimeout(timer);},[immersive]);
   useEffect(()=>{
-    if(!immersive)return;
     const update=()=>{const rect=mountRef.current?.closest(".oneMuslimIdleYoutubePlayer")?.getBoundingClientRect();if(rect)setPlayerBounds({x:rect.left,y:rect.top,w:rect.width,h:rect.height});};
     update();window.addEventListener("resize",update);window.addEventListener("scroll",update,true);
     return()=>{window.removeEventListener("resize",update);window.removeEventListener("scroll",update,true);};
-  },[immersive]);
+  },[format]);
   useEffect(()=>()=>{if(arrowTimer.current)clearTimeout(arrowTimer.current);},[]);
   const navigate=(step:number)=>navigateRef.current(step);
   const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);setIsPaused(false);setTapHint(false);setIsPlaying(false);setImmersive(false);setCinemaEngaged(false);setCinemaSettled(false);playerRef.current?.unMute();playerRef.current?.playVideo();};
@@ -75,6 +83,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     try{const marker=Number(sessionStorage.getItem("oneMuslimResumeAfterLiveError"));resumeAfterLive=marker>0&&Date.now()-marker<120000;if(resumeAfterLive)sessionStorage.removeItem("oneMuslimResumeAfterLiveError");}catch{}
     let index=resumeAfterLive&&saved?saved.index:selectedIndexRef.current!==null&&selectedIndexRef.current<playlist.length?selectedIndexRef.current:Math.floor(Math.random()*playlist.length);
     selectedIndexRef.current=index;
+    setTimedVideoKey(playlist[index].videoId);
     const initialSeconds=resumeAfterLive&&saved?Math.max(playlist[index].startSeconds,saved.seconds):playlist[index].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
     let segmentStart=resumeAfterLive&&saved?initialSeconds:playlist[index].startSeconds;
@@ -87,6 +96,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       if(disposed||!player)return;
       index=((selectedIndexRef.current??index)+step+playlist.length)%playlist.length;
       selectedIndexRef.current=index;
+      setTimedVideoKey(playlist[index].videoId);
       const video=playlist[index];
       segmentStart=video.startSeconds;clearPrompt();
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
@@ -98,7 +108,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       const videoId=(event as CustomEvent<{videoId:string}>).detail?.videoId;
       const nextIndex=playlist.findIndex(v=>v.videoId===videoId);
       if(nextIndex<0||!player)return;
-      index=nextIndex;selectedIndexRef.current=index;
+      index=nextIndex;selectedIndexRef.current=index;setTimedVideoKey(playlist[index].videoId);
       const selected=playlist[index];
       segmentStart=selected.startSeconds;clearPrompt();
       player.loadVideoById({videoId:selected.videoId,startSeconds:selected.startSeconds});
@@ -132,6 +142,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               const segment=playlist[index];
               const seconds=player.getCurrentTime();
               if(!Number.isFinite(seconds))return;
+              setTimedSeconds(Math.floor(seconds));
               if(!continuedIds.has(segment.videoId)&&seconds>=segmentStart+15){
                 if(promptStartedAt===null){promptStartedAt=performance.now();setSkipPrompt(true);setSkipCountdown(5)}
                 const elapsed=(performance.now()-promptStartedAt)/1000;
@@ -176,7 +187,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     <div className={"oneMuslimIdleYoutubePlayer"+(slideDirection?" is-switching "+(slideDirection>0?"is-next":"is-previous"):"")} aria-label="Featured video playlist while no broadcasts are live">
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
-      {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
+      {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay is-clear" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
       {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Next video countdown"><button type="button" aria-label="Tap to stay on this video" onClick={()=>continueVideoRef.current()}><span className="oneMuslimSkipLabel">{skipCountdown===5?"Next Video":"Tap To Stay"}</span><span className="oneMuslimSkipNumber">{skipCountdown}</span></button></div>}
       <span className="oneMuslimThemeBrand" aria-hidden="true">1Muslim</span>
       <button type="button" className={"oneMuslimPlaylistArrow is-left"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
@@ -189,7 +200,8 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       .oneMuslimFloatingPlayerRig{width:100%;max-width:1400px;aspect-ratio:16/8.75;max-height:100%;align-self:start;justify-self:center;position:relative;isolation:isolate;margin:0 auto 24px;animation:none}
       .oneMuslimIdleYoutubePlayer{mask-image:linear-gradient(90deg,transparent 0%,#000 5%,#000 95%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 5%,#000 95%,transparent 100%);width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:none}
       .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:none;pointer-events:none}
-      .oneMuslimThemeTapOverlay{position:absolute;inset:0;z-index:3;pointer-events:none;background:color-mix(in srgb,var(--theme-primary,var(--theme-accent,#7e7e9c)) 18%,transparent);border:1px solid color-mix(in srgb,var(--theme-primary,var(--theme-accent,#7e7e9c)) 25%,transparent);border-radius:inherit;animation:oneMuslimOverlayBreath 3s ease-in-out infinite;display:grid;place-items:center;box-sizing:border-box}
+      .oneMuslimThemeTapOverlay{position:absolute;inset:0;z-index:3;pointer-events:none;background:transparent;border:1px solid transparent;border-radius:inherit;animation:oneMuslimOverlayBreath 3s ease-in-out infinite;display:grid;place-items:center;box-sizing:border-box}
+      .oneMuslimThemeTapOverlay.is-clear{background:transparent!important;border-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
       .oneMuslimAutoSkipCard{position:absolute;z-index:9;left:50%;bottom:15%;transform:translateX(-50%);width:min(190px,50%);display:grid;place-items:center;border:0;border-radius:24px;background:color-mix(in srgb,var(--theme-primary,#65bcb9) 13%,rgba(7,18,28,.22));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:oneMuslimSkipAppear .2s ease-out,oneMuslimOverlayBreath 3s ease-in-out infinite;box-shadow:0 0 24px color-mix(in srgb,var(--theme-primary,#65bcb9) 16%,transparent)}
       .oneMuslimAutoSkipCard button{appearance:none;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 24px;cursor:pointer;width:100%;text-shadow:0 2px 10px rgba(0,0,0,.7)}
       .oneMuslimSkipLabel{font-size:clamp(11px,2vw,15px);font-weight:600;letter-spacing:.04em}
@@ -211,14 +223,14 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       @keyframes oneMuslimRigDrift{0%,100%{transform:translate3d(0,0,0)}25%{transform:translate3d(2px,-1px,0)}50%{transform:translate3d(-2px,1px,0)}75%{transform:translate3d(1px,2px,0)}}
       @media(prefers-reduced-motion:reduce){.oneMuslimFloatingPlayerRig,.oneMuslimIdleYoutubePlayer,.oneMuslimFloatingPlayerShadow,.oneMuslimThemeTapOverlay{animation:none!important}.oneMuslimIdleYoutubePlayer>div:first-child{transition:none!important}}
     `}</style>
-  </div><div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")} style={{"--cinema-left":Math.max(0,playerBounds.x)+"px","--cinema-top":Math.max(0,playerBounds.y)+"px","--cinema-right":Math.max(0,(typeof window!=="undefined"?window.innerWidth:0)-playerBounds.x-playerBounds.w)+"px","--cinema-bottom":Math.max(0,(typeof window!=="undefined"?window.innerHeight:0)-playerBounds.y-playerBounds.h-28)+"px"} as React.CSSProperties}>
+  </div><ElmiTimedCommentsLayer videoKey={timedVideoKey} seconds={timedSeconds} playing={isPlaying&&!isPaused} bounds={playerBounds}/><div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")} style={{"--cinema-left":Math.max(0,playerBounds.x)+"px","--cinema-top":Math.max(0,playerBounds.y+playerBounds.h*.12)+"px","--cinema-right":Math.max(0,(typeof window!=="undefined"?window.innerWidth:0)-playerBounds.x-playerBounds.w)+"px","--cinema-bottom":Math.max(0,(typeof window!=="undefined"?window.innerHeight:0)-playerBounds.y-playerBounds.h*.88)+"px"} as React.CSSProperties}>
     <span className="cinema-edge is-top"/><span className="cinema-edge is-bottom"/><span className="cinema-edge is-left"/><span className="cinema-edge is-right"/>
   </div><style>{`
     .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease}
-    .oneMuslimCinemaDimmer.is-active{opacity:1;transition:opacity 13s ease}
-    .oneMuslimCinemaDimmer.is-settled{opacity:.85;transition:opacity 5s ease}\n    .oneMuslimCinemaDimmer .cinema-edge{position:absolute;display:block;pointer-events:none}
-    .oneMuslimCinemaDimmer .cinema-edge.is-top{top:0;left:0;right:0;height:var(--cinema-top);background:linear-gradient(to bottom,rgba(0,0,0,.68),rgba(0,0,0,.54))}
-    .oneMuslimCinemaDimmer .cinema-edge.is-bottom{bottom:0;left:0;right:0;height:var(--cinema-bottom);background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.48))}
+    .oneMuslimCinemaDimmer.is-active{opacity:1;transition:opacity 2.6s ease}
+    .oneMuslimCinemaDimmer.is-settled{opacity:.85;transition:opacity 2.6s ease}\n    .oneMuslimCinemaDimmer .cinema-edge{position:absolute;display:block;pointer-events:none}
+    .oneMuslimCinemaDimmer .cinema-edge.is-top{top:0;left:0;right:0;height:var(--cinema-top);background:linear-gradient(to bottom,rgba(0,0,0,.76) 0%,rgba(0,0,0,.62) 76%,rgba(0,0,0,.10) 100%)}
+    .oneMuslimCinemaDimmer .cinema-edge.is-bottom{bottom:0;left:0;right:0;height:var(--cinema-bottom);background:linear-gradient(to top,rgba(0,0,0,.76) 0%,rgba(0,0,0,.62) 76%,rgba(0,0,0,.10) 100%)}
     .oneMuslimCinemaDimmer .cinema-edge.is-left{top:var(--cinema-top);bottom:var(--cinema-bottom);left:0;width:var(--cinema-left);background:linear-gradient(to right,rgba(0,0,0,.62),rgba(0,0,0,.48))}
     .oneMuslimCinemaDimmer .cinema-edge.is-right{top:var(--cinema-top);bottom:var(--cinema-bottom);right:0;width:var(--cinema-right);background:linear-gradient(to left,rgba(0,0,0,.62),rgba(0,0,0,.48))}
     /* Feather the cutout so the bright player and its floating shadow remain the focal point. */\n    .oneMuslimCinemaDimmer .cinema-edge{filter:blur(9px)}\n    @media(prefers-reduced-motion:reduce){.oneMuslimCinemaDimmer,.oneMuslimCinemaDimmer.is-active{transition:none}}
