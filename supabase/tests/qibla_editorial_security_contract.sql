@@ -187,3 +187,22 @@ BEGIN
  ) THEN RAISE EXCEPTION 'Anonymous article write policy present'; END IF;
  RAISE NOTICE 'Anonymous magazine policy uniqueness checked; direct-ID role tests still required';
 END $$;
+
+-- Detect newly introduced mutation RPCs that accidentally retain PostgreSQL's
+-- default EXECUTE-to-PUBLIC privilege. Enumerating only the original seven
+-- RPCs would miss a later helper added during #548/#549 integration.
+DO $$
+DECLARE exposed text;
+BEGIN
+ SELECT string_agg(p.oid::regprocedure::text, ', ' ORDER BY p.oid::regprocedure::text)
+ INTO exposed
+ FROM pg_proc p
+ JOIN pg_namespace n ON n.oid=p.pronamespace
+ WHERE n.nspname='public'
+   AND p.proname ~ '^qibla_(create|update|submit|save|publish|apply|review|award|grant|assign|notify|reject|return|delete|approve|edit)_'
+   AND has_function_privilege('anon',p.oid,'EXECUTE');
+ IF exposed IS NOT NULL THEN
+  RAISE EXCEPTION 'Anonymous EXECUTE on editorial mutation RPC(s): %',exposed;
+ END IF;
+ RAISE NOTICE 'No anonymous EXECUTE on discovered editorial mutation RPCs';
+END $$;
