@@ -29,6 +29,9 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const transitionTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
   const [slideDirection,setSlideDirection]=useState<0|1|-1>(0);
   const [isPlaying,setIsPlaying]=useState(false);
+  const [editorialPrompt,setEditorialPrompt]=useState(false);
+  const [editorialCountdown,setEditorialCountdown]=useState(3);
+  const continueEditorialRef=useRef<()=>void>(()=>{});
   const [showArrows,setShowArrows]=useState(true);
   const [immersive,setImmersive]=useState(false);
   const [cinemaSettled,setCinemaSettled]=useState(false);
@@ -66,11 +69,17 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     selectedIndexRef.current=index;
     const initialSeconds=playlist[index].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
+    let cutoffStartedAt:number|null=null;
+    let cutoffPaused=false;
+    const continued=new Set<string>();
+    try{const raw=JSON.parse(localStorage.getItem("oneMuslimEditorialContinuesV1")||"[]");if(Array.isArray(raw))raw.forEach((id:unknown)=>{if(typeof id==="string")continued.add(id)})}catch{}
+    const resetCutoff=()=>{cutoffStartedAt=null;cutoffPaused=false;setEditorialPrompt(false);setEditorialCountdown(3)};
+    continueEditorialRef.current=()=>{const id=playlist[index]?.videoId;if(!id)return;continued.add(id);try{localStorage.setItem("oneMuslimEditorialContinuesV1",JSON.stringify([...continued]))}catch{}resetCutoff()};
     const next=(step=1)=>{
       if(disposed||!player)return;
       index=((selectedIndexRef.current??index)+step+playlist.length)%playlist.length;
       selectedIndexRef.current=index;
-      const video=playlist[index];
+      const video=playlist[index];resetCutoff();
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
       setTapHint(true);setIsPaused(false);setIsPlaying(false);setImmersive(false);
       if(!soundEnabledRef.current)player.mute();
@@ -81,7 +90,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       const nextIndex=playlist.findIndex(v=>v.videoId===videoId);
       if(nextIndex<0||!player)return;
       index=nextIndex;selectedIndexRef.current=index;
-      const selected=playlist[index];
+      const selected=playlist[index];resetCutoff();
       player.loadVideoById({videoId:selected.videoId,startSeconds:selected.startSeconds});
       setIsPaused(false);setTapHint(false);
     };
@@ -110,11 +119,14 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               if(disposed||!player)return;
               const segment=playlist[index];
               const seconds=player.getCurrentTime();
-              if(segment.endSeconds!==null&&seconds>=segment.endSeconds){next();return;}
+              if(segment.endSeconds!==null&&!continued.has(segment.videoId)&&Number.isFinite(seconds)&&seconds>=segment.endSeconds){
+                if(cutoffStartedAt===null){cutoffStartedAt=performance.now();setEditorialPrompt(true);setEditorialCountdown(3)}
+                if(!cutoffPaused){const remaining=3-(performance.now()-cutoffStartedAt)/1000;setEditorialCountdown(Math.max(0,Math.ceil(remaining)));if(remaining<=0){next();return}}
+              }
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
             },250);
           },
-          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPlaying(false);setIsPaused(true);setTapHint(true)}else if(data===1){setIsPlaying(true);setIsPaused(false)}else if(data===3){setIsPlaying(false)}}
+          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPlaying(false);setIsPaused(true);setTapHint(true);if(cutoffStartedAt!==null)cutoffPaused=true}else if(data===1){setIsPlaying(true);setIsPaused(false);if(cutoffPaused){cutoffPaused=false;cutoffStartedAt=performance.now()-(3-editorialCountdown)*1000}}else if(data===3){setIsPlaying(false)}}
         }
       });
     };
@@ -132,7 +144,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     return ()=>{
       disposed=true;
       window.removeEventListener("oneMuslimSelectCarouselVideo",selectVideo);
-      navigateRef.current=()=>{};
+      navigateRef.current=()=>{};continueEditorialRef.current=()=>{};
       if(transitionTimerRef.current){clearTimeout(transitionTimerRef.current);transitionTimerRef.current=null;}
       if(timer)clearInterval(timer);
       if(ytWindow.onYouTubeIframeAPIReady!==previousReady)ytWindow.onYouTubeIframeAPIReady=previousReady;
@@ -146,6 +158,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
       {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
+      {editorialPrompt&&<div className="oneMuslimEditorialPrompt"><button type="button" onClick={()=>continueEditorialRef.current()}>Continue Video</button><span>Next in {editorialCountdown}s</span></div>}
       <span className="oneMuslimThemeBrand" aria-hidden="true">1Muslim</span>
       <button type="button" className={"oneMuslimPlaylistArrow is-left"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
       <button type="button" className={"oneMuslimPlaylistArrow is-right"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
@@ -157,6 +170,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       .oneMuslimIdleYoutubePlayer{width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:none}
       .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:none;pointer-events:none}
       .oneMuslimThemeTapOverlay{position:absolute;inset:0;z-index:3;pointer-events:none;background:color-mix(in srgb,var(--theme-primary,var(--theme-accent,#7e7e9c)) 18%,transparent);border:1px solid color-mix(in srgb,var(--theme-primary,var(--theme-accent,#7e7e9c)) 25%,transparent);border-radius:inherit;animation:oneMuslimOverlayBreath 3s ease-in-out infinite;display:grid;place-items:center;box-sizing:border-box}
+      .oneMuslimEditorialPrompt{position:absolute;z-index:9;left:50%;bottom:16%;transform:translateX(-50%);display:flex;gap:9px;align-items:center;padding:7px 10px;border:1px solid color-mix(in srgb,var(--theme-primary,#a4d7c9) 38%,transparent);border-radius:999px;background:rgba(8,21,27,.5);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:#fff;font-size:12px;white-space:nowrap}.oneMuslimEditorialPrompt button{border:0;border-radius:999px;padding:8px 12px;background:color-mix(in srgb,var(--theme-primary,#53bd9c) 42%,#16332d);color:white;font-weight:600;cursor:pointer}
       .oneMuslimThemeBrand{position:absolute;z-index:5;bottom:clamp(10px,1.8vw,19px);right:clamp(12px,2vw,23px);pointer-events:none;user-select:none;font-family:"Palatino Linotype","Book Antiqua",Palatino,"URW Palladio L",Georgia,serif;font-size:clamp(12px,1.35vw,17px);font-style:italic;font-weight:600;letter-spacing:-.055em;text-transform:none;color:color-mix(in srgb,var(--theme-primary,#b9d8ff) 24%,#fff);text-shadow:0 1px 4px rgba(0,0,0,.85),0 0 12px color-mix(in srgb,var(--theme-primary,#b9d8ff) 24%,transparent);opacity:.88;white-space:nowrap;animation:none!important;transition:none!important}
       .oneMuslimThemeTap{font-size:clamp(25px,5vw,48px);font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:color-mix(in srgb,var(--theme-text,#fff) 38%,transparent);-webkit-text-stroke:1px color-mix(in srgb,var(--theme-primary,#a9a9cf) 55%,transparent);text-shadow:0 0 22px color-mix(in srgb,var(--theme-primary,#a9a9cf) 25%,transparent)}
       @keyframes oneMuslimOverlayBreath{0%,100%{opacity:1}50%{opacity:0}}
