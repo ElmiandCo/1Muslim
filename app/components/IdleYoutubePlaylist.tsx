@@ -98,7 +98,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       setIsPaused(false);setTapHint(false);
     };
     window.addEventListener("oneMuslimSelectCarouselVideo",selectVideo);
-    continueVideoRef.current=()=>{const id=playlist[index].videoId;void (async()=>{try{const {createClient}=await import("@/utils/supabase/client");const client=createClient();const {data:{user}}=await client.auth.getUser();if(user)await client.from("app_engagement_events").insert({user_id:user.id,section:"Home Video",event_type:"finish_watching_tap",video_id:id})}catch{}})();continuedIds.add(id);try{localStorage.setItem("oneMuslimContinueVideoIdsV1",JSON.stringify([...continuedIds]))}catch{}clearPrompt();};
+    continueVideoRef.current=()=>{const id=playlist[index].videoId;void (async()=>{try{const {createClient}=await import("../../utils/supabase/client");const client=createClient();const {data:{user}}=await client.auth.getUser();if(user)await client.from("app_engagement_events").insert({user_id:user.id,section:"Home Video",event_type:"finish_watching_tap",video_id:id})}catch{}})();continuedIds.add(id);try{localStorage.setItem("oneMuslimContinueVideoIdsV1",JSON.stringify([...continuedIds]))}catch{}clearPrompt();};
     nextVideoRef.current=()=>next();
     navigateRef.current=(step)=>{
       if(disposed||!player||transitionTimerRef.current)return;
