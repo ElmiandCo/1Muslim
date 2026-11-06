@@ -87,10 +87,25 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   },[isPlaying,soundEnabled,isPaused,format,cinemaEngaged]);
   useEffect(()=>{if(!immersive)return;const timer=setTimeout(()=>setCinemaSettled(true),20000);return()=>clearTimeout(timer);},[immersive]);
   useEffect(()=>{setSpotlightsGathered(false);if(!immersive||!isPlaying||isPaused)return;const timer=window.setTimeout(()=>setSpotlightsGathered(true),6000);return()=>window.clearTimeout(timer)},[immersive,isPlaying,isPaused,timedVideoKey,format]);
+  // Track the visible video every animation frame: ResizeObserver alone misses CSS transforms,
+  // carousel motion, the floating player's drift, and scroll-driven position changes.
   useEffect(()=>{
-    const update=()=>{const rect=mountRef.current?.closest(".oneMuslimIdleYoutubePlayer")?.getBoundingClientRect();if(rect)setPlayerBounds({x:rect.left,y:rect.top,w:rect.width,h:rect.height});};
-    update();const target=mountRef.current?.closest(".oneMuslimIdleYoutubePlayer");const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(update):null;if(target)observer?.observe(target);window.addEventListener("resize",update);window.addEventListener("scroll",update,true);
-    return()=>{observer?.disconnect();window.removeEventListener("resize",update);window.removeEventListener("scroll",update,true);};
+    let frame=0;let last="";
+    const track=()=>{
+      const video=mountRef.current?.closest<HTMLElement>(".oneMuslimIdleYoutubePlayer");
+      const rect=video?.getBoundingClientRect();
+      const cutout=document.querySelector<HTMLElement>(".oneMuslimCinemaDimmer .cinema-video-cutout");
+      if(rect&&cutout){
+        const x=Math.max(0,rect.left-4),y=Math.max(0,rect.top-4);
+        const right=Math.min(window.innerWidth,rect.right+4),bottom=Math.min(window.innerHeight,rect.bottom+8);
+        const bounds=[x,y,Math.max(0,right-x),Math.max(0,bottom-y)];
+        const key=bounds.map(n=>n.toFixed(1)).join(",");
+        if(key!==last){last=key;cutout.style.left=bounds[0]+"px";cutout.style.top=bounds[1]+"px";cutout.style.width=bounds[2]+"px";cutout.style.height=bounds[3]+"px";}
+      }
+      frame=window.requestAnimationFrame(track);
+    };
+    frame=window.requestAnimationFrame(track);
+    return()=>window.cancelAnimationFrame(frame);
   },[format]);
   useEffect(()=>()=>{if(arrowTimer.current)clearTimeout(arrowTimer.current);},[]);
   const navigate=(step:number)=>navigateRef.current(step);
@@ -262,7 +277,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       @media(prefers-reduced-motion:reduce){.oneMuslimFloatingPlayerRig,.oneMuslimIdleYoutubePlayer,.oneMuslimFloatingPlayerShadow,.oneMuslimThemeTapOverlay{animation:none!important}.oneMuslimIdleYoutubePlayer>div:first-child{transition:none!important}}
     `}</style>
   </div><ElmiTimedCommentsLayer videoKey={timedVideoKey} seconds={timedSeconds} playing={isPlaying&&!isPaused} bounds={playerBounds}/>{typeof document!=="undefined"&&createPortal(<div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")}>
-    <span className="cinema-video-cutout" style={{left:Math.max(0,playerBounds.x-7)+"px",top:Math.max(0,playerBounds.y-7)+"px",width:Math.max(0,playerBounds.w+14)+"px",height:Math.max(0,playerBounds.h+24)+"px"}}/>
+    <span className="cinema-video-cutout" style={{left:0,top:0,width:0,height:0}}/>
   </div>,document.body)}<style>{`
     .oneMuslimReflectiveChat{position:relative;isolation:isolate;overflow:hidden}
     .oneMuslimReflectiveChat>.oneMuslimVideoWaterReflection{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;opacity:.065;mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.45) 40%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.45) 40%,transparent 100%)}
@@ -273,7 +288,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     /* Transparent tracked cutout: darken everything OUTSIDE the video, never the iframe. */
     .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease;overflow:hidden;isolation:isolate}
     .oneMuslimCinemaDimmer.is-active{opacity:1}
-    .oneMuslimCinemaDimmer .cinema-video-cutout{position:fixed;display:block;box-sizing:border-box;border-radius:24px;box-shadow:0 0 0 200vmax rgba(0,0,0,.68),0 0 18px 8px rgba(0,0,0,.12);transition:left 240ms ease,top 240ms ease,width 240ms ease,height 240ms ease;pointer-events:none;background:transparent}
+    .oneMuslimCinemaDimmer .cinema-video-cutout{position:fixed;display:block;box-sizing:border-box;border-radius:24px;box-shadow:0 0 0 200vmax rgba(0,0,0,.68),0 0 18px 8px rgba(0,0,0,.12);pointer-events:none;background:transparent}
     .oneMuslimCinemaDimmer.is-settled .cinema-video-cutout{box-shadow:0 0 0 200vmax rgba(0,0,0,.88),0 0 24px 9px rgba(0,0,0,.16)}
     @media(prefers-reduced-motion:reduce){.oneMuslimCinemaDimmer,.oneMuslimCinemaDimmer .cinema-video-cutout{transition:none!important}}
   `}</style></>;
