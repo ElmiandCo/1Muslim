@@ -25,7 +25,7 @@ export default class LiveViewerBoundary extends Component<Props,State>{
   return <div role="alert" style={{position:"relative",zIndex:5,padding:16,color:"#fff",background:"#08130f",borderRadius:12}}>
    <strong>1Muslim Live needs a moment</strong>
    <p style={{fontSize:12,opacity:.8}}>{friendlyErrorMessage(this.props.section)}</p>
-   {this.props.section==="player"&&<a href="/" style={{display:"inline-block",padding:"9px 16px",marginRight:8,borderRadius:10,border:"1px solid #ffffff55",color:"#fff",textDecoration:"none"}}>Watch other videos →</a>}
+   {this.props.section==="player"&&<a onClick={()=>{try{sessionStorage.setItem("oneMuslimResumeAfterLiveError",String(Date.now()))}catch{}}} href="/" style={{display:"inline-block",padding:"9px 16px",marginRight:8,borderRadius:10,border:"1px solid #ffffff55",color:"#fff",textDecoration:"none"}}>Watch other videos →</a>}
    <button type="button" onClick={()=>this.setState({failed:false})} style={{padding:"9px 16px",borderRadius:10,border:"1px solid #ffffff55",background:"#164532",color:"#fff"}}>Retry</button>
    <p style={{fontSize:11,opacity:.65,marginTop:14}}>1Muslim Error Reference # {this.state.reference||"Generating…"}</p>
   </div>;
