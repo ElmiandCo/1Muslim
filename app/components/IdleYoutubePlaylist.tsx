@@ -69,13 +69,16 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     selectedIndexRef.current=index;
     const initialSeconds=playlist[index].startSeconds;
     let timer:ReturnType<typeof setInterval>|undefined;
+    const homepage=window.location.pathname==="/";
+    let videoStartedAt:number|null=null;
+    let homepageContinued=false;
     let cutoffStartedAt:number|null=null;
     let cutoffPaused=false;
     let pausedAt:number|null=null;
     const continued=new Set<string>();
     try{const raw=JSON.parse(localStorage.getItem("oneMuslimEditorialContinuesV1")||"[]");if(Array.isArray(raw))raw.forEach((id:unknown)=>{if(typeof id==="string")continued.add(id)})}catch{}
-    const resetCutoff=()=>{cutoffStartedAt=null;cutoffPaused=false;pausedAt=null;setEditorialPrompt(false);setEditorialCountdown(3)};
-    continueEditorialRef.current=()=>{const id=playlist[index]?.videoId;if(!id)return;continued.add(id);try{localStorage.setItem("oneMuslimEditorialContinuesV1",JSON.stringify([...continued]))}catch{}resetCutoff()};
+    const resetCutoff=()=>{videoStartedAt=null;homepageContinued=false;cutoffStartedAt=null;cutoffPaused=false;pausedAt=null;setEditorialPrompt(false);setEditorialCountdown(homepage?2:3)};
+    continueEditorialRef.current=()=>{const id=playlist[index]?.videoId;if(!id)return;if(homepage){homepageContinued=true;}else{continued.add(id);try{localStorage.setItem("oneMuslimEditorialContinuesV1",JSON.stringify([...continued]))}catch{}}cutoffStartedAt=null;cutoffPaused=false;pausedAt=null;setEditorialPrompt(false)};
     const next=(step=1)=>{
       if(disposed||!player)return;
       index=((selectedIndexRef.current??index)+step+playlist.length)%playlist.length;
@@ -120,9 +123,16 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               if(disposed||!player)return;
               const segment=playlist[index];
               const seconds=player.getCurrentTime();
-              if(segment.endSeconds!==null&&!continued.has(segment.videoId)&&Number.isFinite(seconds)&&seconds>=segment.endSeconds){
-                if(cutoffStartedAt===null){cutoffStartedAt=performance.now();setEditorialPrompt(true);setEditorialCountdown(3)}
-                if(!cutoffPaused){const remaining=3-(performance.now()-cutoffStartedAt)/1000;setEditorialCountdown(Math.max(0,Math.ceil(remaining)));if(remaining<=0){next();return}}
+              if(Number.isFinite(seconds)){
+                if(videoStartedAt===null)videoStartedAt=seconds;
+                // Homepage preview rule takes precedence over editorial endSeconds.
+                const homepageDue=homepage&&!homepageContinued&&seconds-videoStartedAt>=15;
+                const editorialDue=!homepage&&segment.endSeconds!==null&&!continued.has(segment.videoId)&&seconds>=segment.endSeconds;
+                if(homepageDue||editorialDue){
+                  const duration=homepage?2:3;
+                  if(cutoffStartedAt===null){cutoffStartedAt=performance.now();setEditorialPrompt(true);setEditorialCountdown(duration)}
+                  if(!cutoffPaused){const remaining=duration-(performance.now()-cutoffStartedAt)/1000;setEditorialCountdown(Math.max(0,Math.ceil(remaining)));if(remaining<=0){next();return}}
+                }
               }
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
             },250);
@@ -159,7 +169,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
       {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
-      {editorialPrompt&&<div className="oneMuslimEditorialPrompt"><button type="button" onClick={()=>continueEditorialRef.current()}>Continue Video</button><span>Next in {editorialCountdown}s</span></div>}
+      {editorialPrompt&&<div className="oneMuslimEditorialPrompt"><button type="button" onClick={()=>continueEditorialRef.current()}>{typeof window!=="undefined"&&window.location.pathname==="/"? "Finish Watching":"Continue Video"}</button><span>Next in {editorialCountdown}s</span></div>}
       <span className="oneMuslimThemeBrand" aria-hidden="true">1Muslim</span>
       <button type="button" className={"oneMuslimPlaylistArrow is-left"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
       <button type="button" className={"oneMuslimPlaylistArrow is-right"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
