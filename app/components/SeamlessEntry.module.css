@@ -41,3 +41,37 @@
 .backdrop .particles i:nth-child(1){--p:1}.backdrop .particles i:nth-child(2){--p:2}.backdrop .particles i:nth-child(3){--p:3}.backdrop .particles i:nth-child(4){--p:4}.backdrop .particles i:nth-child(5){--p:5}.backdrop .particles i:nth-child(6){--p:6}.backdrop .particles i:nth-child(7){--p:7}.backdrop .particles i:nth-child(8){--p:8}.backdrop .particles i:nth-child(9){--p:9}.backdrop .particles i:nth-child(10){--p:10}.backdrop .particles i:nth-child(11){--p:11}.backdrop .particles i:nth-child(12){--p:12}
 @keyframes entryParticle{0%{transform:translateY(0);opacity:0}18%{opacity:.55}80%{opacity:.3}100%{transform:translateY(-380px);opacity:0}}
 @media(prefers-reduced-motion:reduce){.backdrop .particles i{animation:none;opacity:0}}
+
+
+/* Full-screen auth backdrop and vertically centered welcome / sign-in glass. */
+.backdrop{
+ position:fixed!important;
+ inset:0!important;
+ width:100vw!important;
+ height:100dvh!important;
+ display:flex!important;
+ align-items:center!important;
+ justify-content:center!important;
+ padding:clamp(14px,3vw,24px)!important;
+ background:rgba(0,0,0,.38)!important;
+ backdrop-filter:blur(18px) saturate(110%)!important;
+ -webkit-backdrop-filter:blur(18px) saturate(110%)!important;
+ pointer-events:auto!important;
+ box-sizing:border-box;
+}
+.backdrop .card{
+ margin:auto!important;
+ width:min(100%,440px);
+ max-height:calc(100dvh - 48px)!important;
+ overflow-y:auto;
+ pointer-events:auto;
+}
+/* Avoid wandering away from the vertical center while welcome is displayed. */
+.backdrop .wandering[data-entering="true"][data-closing="false"]{
+ animation:none!important;
+ will-change:auto;
+}
+@media(max-width:600px){
+ .backdrop{padding:16px!important}
+ .backdrop .card{max-height:calc(100dvh - 32px)!important}
+}
