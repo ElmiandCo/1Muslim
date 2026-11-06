@@ -495,6 +495,11 @@ const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HT
  const moveWorkspace=(page:number)=>{const next=Math.max(0,Math.min(HOME_SLIDES.length-1,page));workspaceRef.current?.scrollTo({left:next*workspaceRef.current.clientWidth,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});setWorkspacePage(next);try{sessionStorage.setItem("1muslim:workspace-index",String(next))}catch{}};
  useEffect(()=>{const open=()=>moveWorkspace(5);window.addEventListener("1muslim:open-community-posts",open);return()=>window.removeEventListener("1muslim:open-community-posts",open)},[]);
  const fullscreenSnapshot=useRef<{navCollapsed:boolean;navMotionStarted:boolean;workspacePage:number;scrollLeft:number;canvasExpanded:boolean;light:boolean}|null>(null);
+ useEffect(()=>{
+   const onCommentSend=()=>{if(!canvasFullscreen)toggleCanvasFullscreen()};
+   window.addEventListener("1muslim:elmilayerx-fullscreen",onCommentSend);
+   return()=>window.removeEventListener("1muslim:elmilayerx-fullscreen",onCommentSend);
+ },[canvasFullscreen,navCollapsed,navMotionStarted,workspacePage,canvasExpanded,light]);
  const toggleCanvasFullscreen=()=>{
    if(!canvasFullscreen){
      fullscreenSnapshot.current={navCollapsed:navCollapsedRef.current,navMotionStarted,workspacePage,scrollLeft:workspaceRef.current?.scrollLeft??0,canvasExpanded,light};
