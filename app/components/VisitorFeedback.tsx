@@ -1,20 +1,20 @@
 "use client";
 import {useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
-const KEY="1muslim:feedback-v1";
+const KEY="1muslim:feedback-v2";
 export default function VisitorFeedback(){
- const [open,setOpen]=useState(false),[stars,setStars]=useState(0),[message,setMessage]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ const [open,setOpen]=useState(false),[topic,setTopic]=useState(""),[stars,setStars]=useState(0),[message,setMessage]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState("");
  useEffect(()=>{
   if(localStorage.getItem(KEY)==="submitted")return;
   const dismissed=Number(localStorage.getItem(KEY+":later")||0);
-  if(dismissed&&Date.now()-dismissed<7*86400000)return;
+  if(dismissed&&Date.now()-dismissed<14*86400000)return;
   let elapsed=Number(sessionStorage.getItem(KEY+":elapsed")||0);
   let last=Date.now();
   const timer=setInterval(()=>{
    const now=Date.now();const delta=Math.min(now-last,1500);last=now;
-   if(document.visibilityState!=="visible"||!document.hasFocus())return;
+   if(document.visibilityState!=="visible"||!document.hasFocus()||document.querySelector('[role="dialog"]')||/\/streaming\/live|\/streaming\/go-live/.test(location.pathname))return;
    elapsed+=delta;sessionStorage.setItem(KEY+":elapsed",String(elapsed));
-   if(elapsed>=60000){clearInterval(timer);setOpen(true)}
+   if(elapsed>=120000){clearInterval(timer);void createClient().auth.getUser().then(({data})=>{if(data.user)setOpen(true)})}
   },1000);
   return()=>clearInterval(timer);
  },[]);
@@ -27,19 +27,14 @@ export default function VisitorFeedback(){
   if(user.id===adminId)throw Error("This feedback account cannot message itself.");
   const {data:conversationId,error:conversationError}=await db.rpc("dm_start_conversation",{other_user:adminId});
   if(conversationError||!conversationId)throw Error("Could not open the feedback conversation. Please try again.");
-  const body="⭐ 1Muslim Feedback: "+stars+"/5\\nPage: "+location.pathname+"\\n"+(message.trim()||"(No written feedback)");
+  const body="1Muslim feedback: "+stars+"/3\\nFeature: "+(topic||"General")+"\\nPage: "+location.pathname+"\\n"+(message.trim()||"(No written feedback)");
   const {error:sendError}=await db.from("dm_messages").insert({conversation_id:conversationId,sender_id:user.id,body});
   if(sendError)throw Error("Could not send your message. Please try again.");
   localStorage.setItem(KEY,"submitted");setOpen(false);
  }catch(e){setError(e instanceof Error?e.message:"Try again")}finally{setBusy(false)}};
  if(!open)return null;
- return <div role="presentation" style={{position:"fixed",inset:0,zIndex:2147483000,display:"grid",placeItems:"center",background:"rgba(0,12,10,.68)",padding:20}}>
- <section role="dialog" aria-modal="true" aria-label="Rate 1Muslim" style={{width:"min(100%,420px)",padding:28,borderRadius:24,border:"1px solid rgba(129,255,202,.35)",background:"linear-gradient(145deg,rgba(13,65,50,.97),rgba(4,22,19,.98))",color:"#fff",boxShadow:"0 20px 80px #0009",textAlign:"center"}}>
- <h2 style={{fontSize:25,margin:"0 0 10px"}}>How is your 1Muslim experience?</h2><p style={{opacity:.8}}>Your feedback helps us improve the Ummah experience.</p>
- <div aria-label="Rating" style={{display:"flex",justifyContent:"center",gap:8,margin:"20px 0"}}>{[1,2,3,4,5].map(n=><button key={n} type="button" aria-label={n+" stars"} aria-pressed={stars===n} onClick={()=>setStars(n)} style={{fontSize:36,color:n<=stars?"#ffd66e":"#9aa9a2",background:"none",border:0,cursor:"pointer"}}>★</button>)}</div>
- <textarea aria-label="Optional feedback" placeholder="Tell us what you like or what we can improve…" maxLength={2000} value={message} onChange={e=>setMessage(e.target.value)} style={{boxSizing:"border-box",width:"100%",minHeight:110,padding:14,borderRadius:14,background:"#ffffff12",color:"white",border:"1px solid #ffffff44",resize:"vertical"}}/>
- {error&&<p role="alert" style={{color:"#ffb6b6"}}>{error}</p>}
- <button disabled={!stars||busy} onClick={submit} style={{display:"block",width:"100%",marginTop:15,padding:14,border:0,borderRadius:14,background:"#31c889",color:"#062319",fontWeight:700,opacity:!stars||busy?.6:1}}>{busy?"Sending…":"Submit feedback"}</button>
- <button onClick={later} style={{marginTop:14,background:"none",border:0,color:"#d4e5de",cursor:"pointer"}}>Maybe later</button>
- </section></div>;
+ return <div className="sf-wrap"><section role="dialog" aria-label="Quick feedback" className="sf-card"><button className="sf-x" onClick={later} aria-label="Close">×</button><strong>How's 1Muslim feeling?</strong><small>Two taps help us improve.</small><div className="sf-choices">{[["😍","Loving it"],["🙂","It's okay"],["😕","Needs work"]].map(([emoji,label],i)=><button key={label} className={stars===i+1?"selected":""} onClick={()=>setStars(i+1)}><span>{emoji}</span>{label}</button>)}</div>{stars>0&&<div className="sf-extra"><p>{stars===1?"What's working best?":"What should we improve?"}</p><div className="sf-topics">{["Videos","Live","Messages","Design","Performance","Other"].map(t=><button key={t} className={topic===t?"selected":""} onClick={()=>setTopic(t)}>{t}</button>)}</div><input value={message} maxLength={500} onChange={e=>setMessage(e.target.value)} placeholder="Anything else? (optional)"/></div>}{error&&<p role="alert">{error}</p>}<div className="sf-actions">{stars>0&&<button className="sf-send" disabled={busy} onClick={submit}>{busy?"Sending…":"Send feedback →"}</button>}<button onClick={later}>Maybe later</button></div></section><style jsx>{`
+.sf-wrap{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:center;padding:12px 12px max(20px,env(safe-area-inset-bottom));background:rgba(0,0,0,.12)}
+.sf-card{position:relative;box-sizing:border-box;width:min(100%,410px);max-height:48dvh;overflow:auto;padding:15px;border-radius:19px;border:1px solid var(--theme-border,rgba(255,255,255,.22));background:var(--theme-panel,rgba(15,28,30,.8));color:var(--theme-text,#fff);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 14px 44px #0005;animation:sfIn .45s ease both}.sf-card strong{display:block;font-size:15px}.sf-card small{display:block;font-size:11px;opacity:.7;margin-top:3px}.sf-x{position:absolute;top:6px;right:9px;font-size:24px;border:0;background:none;color:inherit}.sf-choices{display:flex;gap:6px;margin-top:12px}.sf-choices button{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px;border:1px solid var(--theme-border,#ffffff33);border-radius:12px;background:#88888816;color:inherit;font-size:10px}.sf-choices span{font-size:22px}.sf-card .selected{border-color:var(--theme-primary,#42cda1);background:color-mix(in srgb,var(--theme-primary,#42cda1) 20%,transparent)}.sf-extra p{font-size:12px;margin:12px 0 7px}.sf-topics{display:flex;flex-wrap:wrap;gap:6px}.sf-topics button{border:1px solid var(--theme-border,#ffffff33);border-radius:20px;background:#88888816;color:inherit;padding:6px 9px;font-size:11px}.sf-extra input{box-sizing:border-box;width:100%;margin-top:9px;border:1px solid var(--theme-border,#ffffff33);border-radius:10px;padding:9px;background:#88888816;color:inherit}.sf-actions{display:flex;justify-content:space-between;align-items:center;margin-top:10px}.sf-actions button{border:0;background:none;color:inherit;padding:8px;font-size:12px}.sf-actions .sf-send{background:var(--theme-primary,#42cda1);color:var(--theme-on-primary,#061913);border-radius:10px;font-weight:700}@keyframes sfIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@media(min-width:800px){.sf-wrap{justify-content:flex-end;padding:24px}.sf-card{width:345px}}@media(prefers-reduced-motion:reduce){.sf-card{animation:none}}
+`}</style></div>;
 }
