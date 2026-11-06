@@ -75,7 +75,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
  // One DOM node and one continuous animation per comment. No reparenting or remounting at crossover.
  // Canvas-to-screen depth is represented by a single viewport portal; its path crosses
  // the carousel boundary without any position or opacity discontinuity.
- return createPortal(<div className="elmi-timed-layers" aria-label="Timed video comments">\n   {spotlight&&<div className="elmi-post-spotlight" aria-hidden="true" style={{"--elmi-focus-x":`${bounds.x+bounds.w/2}px`,"--elmi-focus-y":`${bounds.y+bounds.h/2}px` } as React.CSSProperties}><div className="elmi-post-spotlight-video"/></div>}\n   {spotlight&&<div key={spotlight.started} className="elmi-post-spotlight-comment" role="status"><small>{Math.floor(spotlight.atSeconds/60)}:{String(spotlight.atSeconds%60).padStart(2,"0")}</small><span>{spotlight.body}</span></div>}
+ return createPortal(<div className="elmi-timed-layers" aria-label="Timed video comments">\n   {spotlight&&<div className="elmi-post-spotlight" aria-hidden="true" style={{"--elmi-focus-x":`${bounds.x+bounds.w/2}px`,"--elmi-focus-y":`${bounds.y+bounds.h/2}px` } as React.CSSProperties}><div className="elmi-post-spotlight-video"/></div>}\n   {spotlight&&<div key={spotlight.started} className="elmi-post-spotlight-comment" role="status"><span>{spotlight.body}</span></div>}
    {floating.map((comment,i)=>{
      const canvasStart=comment.lane==="canvas";
      const startX=canvasStart?bounds.x+bounds.w*(.2+(i%3)*.09):Math.max(16,window.innerWidth*.17+(i%3)*28);
@@ -87,7 +87,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
        className={"elmi-timed-comment"+(canvasStart?" is-handoff":" is-screen")+(comment.pinned?" is-pinned":"")+(comment.popping?" is-popping":"")}
        style={{left:startX,top:startY,"--elmi-travel":-distance+"px",animationPlayState:paused?"paused":"running",animationDelay:(i%3)*160+"ms"} as React.CSSProperties}
        aria-label="Floating video comment">
-       <span className="elmi-timed-time">{Math.floor(comment.at_seconds/60)}:{String(comment.at_seconds%60).padStart(2,"0")}</span><span>{comment.body}</span>
+       <span>{comment.body}</span>
      </button>
    })}
    <style>{`
