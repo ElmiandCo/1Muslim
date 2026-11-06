@@ -49,6 +49,8 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const [playerBounds,setPlayerBounds]=useState({x:0,y:0,w:0,h:0});
   const [timedVideoKey,setTimedVideoKey]=useState("");
   const [timedSeconds,setTimedSeconds]=useState(0);
+  useEffect(()=>{window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:timedVideoKey,seconds:timedSeconds,format}}))},[timedVideoKey,timedSeconds,format]);
+  useEffect(()=>()=>window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:"",seconds:0,format}})),[format]);
   const arrowTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const engageCinema=()=>{setCinemaEngaged(true);setImmersive(false);setCinemaSettled(false);window.setTimeout(()=>setCinemaEngaged(false),150);};
   const revealArrows=()=>{setShowArrows(true);if(arrowTimer.current)clearTimeout(arrowTimer.current);arrowTimer.current=setTimeout(()=>setShowArrows(false),5000);};
