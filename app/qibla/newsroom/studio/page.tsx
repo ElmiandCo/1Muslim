@@ -100,23 +100,23 @@ export default function QiblaStudio() {
         <div className={styles.queueTools}><label>Find article<input type="search" value={queueSearch} onChange={e => setQueueSearch(e.target.value)} placeholder="Search title, deck or status" /></label><label>Sort<select value={sort} onChange={e => setSort(e.target.value as "newest" | "oldest" | "title")}><option value="newest">Recently updated</option><option value="oldest">Oldest updated</option><option value="title">Title A–Z</option></select></label></div>
         <p role="status" aria-live="polite">{visible.length} {visible.length === 1 ? "article" : "articles"} shown</p>
         {visible.length === 0 ? <p>No articles in this queue.</p> : visible.map(a =>
-          <button type="button" key={a.id} className={selected === a.id ? styles.active : styles.queueItem} onClick={() => { if (dirty && !window.confirm("Discard unsaved changes?")) return; setSelected(a.id); setPreview(false); }} aria-pressed={selected === a.id}>
+          <button type="button" key={a.id} className={selected === a.id ? styles.active : styles.queueItem} disabled={busy} onClick={() => { if (busy || (dirty && !window.confirm("Discard unsaved changes?"))) return; setSelected(a.id); setPreview(false); }} aria-pressed={selected === a.id}>
             <strong>{a.title || "Untitled draft"}</strong><span>{a.status.replaceAll("_", " ")} · revision {a.revision}</span>
           </button>)}
       </section>
       <section className={styles.editor} aria-label="Article workspace">
         {!active ? <p>Select an article to review its contents.</p> : <>
           <div className={styles.editorHead}><h2>{active.title || "Untitled draft"}</h2><span>{active.status.replaceAll("_", " ")}</span></div>
-          <label>Title<input value={form.title} onChange={e => { if (!canEdit) return; setDirty(true); setForm(f => ({...f, title:e.target.value})); }} maxLength={250} readOnly={!canEdit}/></label>
-          <label>Subtitle<input value={form.subtitle} onChange={e => { if (!canEdit) return; setDirty(true); setForm(f => ({...f, subtitle:e.target.value})); }} maxLength={500} readOnly={!canEdit}/></label>
-          <label>Article body<textarea rows={14} value={form.body} onChange={e => { if (!canEdit) return; setDirty(true); setForm(f => ({...f, body:e.target.value})); }} readOnly={!canEdit}/></label>
+          <label>Title<input value={form.title} onChange={e => { if (!canEdit || busy) return; setDirty(true); setForm(f => ({...f, title:e.target.value})); }} maxLength={250} readOnly={!canEdit || busy}/></label>
+          <label>Subtitle<input value={form.subtitle} onChange={e => { if (!canEdit || busy) return; setDirty(true); setForm(f => ({...f, subtitle:e.target.value})); }} maxLength={500} readOnly={!canEdit || busy}/></label>
+          <label>Article body<textarea rows={14} value={form.body} onChange={e => { if (!canEdit || busy) return; setDirty(true); setForm(f => ({...f, body:e.target.value})); }} readOnly={!canEdit || busy}/></label>
           <div className={styles.editorMetrics} role="status" aria-live="off" aria-label="Article writing statistics">
             <span>{wordCount.toLocaleString()} words</span>
             <span>{readingMinutes} min read</span>
             <span>Headline {titleLength}/250</span>
             <span>Deck {deckLength}/500</span>
           </div>
-          {role === "writer" && active.status === "draft" && <label>Layout template <select value={template} onChange={e => { setTemplate(e.target.value as "classic" | "feature"); setDirty(true); }}><option value="classic">Classic</option><option value="feature">Feature</option></select></label>}
+          {role === "writer" && active.status === "draft" && <label>Layout template <select value={template} disabled={busy} onChange={e => { if (busy) return; setTemplate(e.target.value as "classic" | "feature"); setDirty(true); }}><option value="classic">Classic</option><option value="feature">Feature</option></select></label>}
           {dirty && <p role="status">Unsaved changes — save before submitting, publishing or leaving.</p>}
           <button type="button" className={styles.previewToggle} aria-expanded={preview} onClick={() => setPreview(value => !value)}>{preview ? "Hide reading preview" : "Preview article"}</button>
           {preview && <article className={styles.preview} aria-label="Article reading preview"><p className={styles.previewKicker}>1Qibla · {template === "feature" ? "Feature" : "Classic"} preview</p><h2>{form.title || "Untitled article"}</h2>{form.subtitle && <p className={styles.previewDeck}>{form.subtitle}</p>}<div className={styles.previewBody}>{form.body || "Your article will appear here as you write."}</div><p className={styles.previewFoot}>Draft preview only · Not published</p></article>}
