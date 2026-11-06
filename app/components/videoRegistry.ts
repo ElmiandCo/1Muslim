@@ -1,6 +1,11 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {"videoId":"LlvFLGAqb5A","title":"Prophet Adam (AS) — Creation | Mufti Menk","category":"Prophet Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"d2D6WuKlymM","title":"Prophet Nuh (AS) — The Ark | Quran Stories","category":"Prophet Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"lZu173pTldI","title":"Prophet Ibrahim (AS) — His Story | Quran Stories","category":"Prophet Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"7ENLDycXU_Y","title":"Prophet Yusuf (AS) and Yaqub (AS) | Islamic Cinema","category":"Prophet Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"vjQEHpfRK5w","title":"Prophet Musa (AS) vs Firawn | Islamic Cinema","category":"Prophet Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"0OSDr4LGwEI","title":"Is New-age Spirituality Harming Us? — Omar Suleiman","category":"Faith & Spirituality","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"DwzG2GO53IY","title":"Friends That Affirm You On Truth — Omar Suleiman","category":"Community & Character","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"8-OU0BIhIEY","title":"The Quran’s Purpose & Beauty — Nouman Ali Khan","category":"Quran Studies","startSeconds":0,"endSeconds":null,"format":"desktop"},
