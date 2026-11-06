@@ -17,6 +17,7 @@ export default function QiblaStudio() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [queueError, setQueueError] = useState(false);
   const [filter, setFilter] = useState("all");
   const [queueSearch, setQueueSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "title">("newest");
@@ -30,6 +31,7 @@ export default function QiblaStudio() {
   }, [dirty]);
   const load = useCallback(async () => {
     const db = createClient();
+    setQueueError(false);
     const { data: auth, error: authError } = await db.auth.getUser();
     if (authError || !auth.user) { setMessage("Sign in to access the editorial studio."); setLoading(false); return; }
     const { data: staff, error: staffError } = await db.from("qibla_staff").select("role").eq("user_id", auth.user.id).maybeSingle();
@@ -40,8 +42,8 @@ export default function QiblaStudio() {
     const { data, error } = await db.from("qibla_articles")
       .select("id,author_id,title,subtitle,body,status,template,revision,updated_at")
       .order("updated_at", { ascending: false }).limit(100);
-    if (error) setMessage("Could not load the editorial queue.");
-    else setArticles((data ?? []) as Article[]);
+    if (error) { setQueueError(true); setMessage("Could not load the editorial queue."); }
+    else { setArticles((data ?? []) as Article[]); setMessage(""); }
     setLoading(false);
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -98,6 +100,7 @@ export default function QiblaStudio() {
       <section className={styles.queue} aria-label="Editorial queue">
         <div className={styles.queueHead}><h2>Articles</h2>{role === "writer" && <button type="button" disabled={busy} onClick={() => void createDraft()}>+ New draft</button>}<label>Filter <select value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">All statuses ({articles.length})</option>{queueCounts.map(({ status, count }) => <option key={status} value={status}>{status.replaceAll("_", " ")} ({count})</option>)}</select></label></div>
         <div className={styles.queueTools}><label>Find article<input type="search" value={queueSearch} onChange={e => setQueueSearch(e.target.value)} placeholder="Search title, deck or status" /></label><label>Sort<select value={sort} onChange={e => setSort(e.target.value as "newest" | "oldest" | "title")}><option value="newest">Recently updated</option><option value="oldest">Oldest updated</option><option value="title">Title A–Z</option></select></label></div>
+        {queueError && <div role="alert"><p>The editorial queue could not be refreshed. Existing results may be outdated.</p><button type="button" disabled={busy || dirty} onClick={() => void load()}>Retry loading articles</button>{dirty && <p>Save or discard your changes before retrying.</p>}</div>}
         <p role="status" aria-live="polite">{visible.length} {visible.length === 1 ? "article" : "articles"} shown</p>
         {visible.length === 0 ? <p>No articles in this queue.</p> : visible.map(a =>
           <button type="button" key={a.id} className={selected === a.id ? styles.active : styles.queueItem} disabled={busy} onClick={() => { if (busy || (dirty && !window.confirm("Discard unsaved changes?"))) return; setSelected(a.id); setPreview(false); }} aria-pressed={selected === a.id}>
