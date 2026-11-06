@@ -5,7 +5,6 @@ const seed:RegisteredVideo[]=[
   {"videoId":"DwzG2GO53IY","title":"Friends That Affirm You On Truth — Omar Suleiman","category":"Community & Character","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"8-OU0BIhIEY","title":"The Quran’s Purpose & Beauty — Nouman Ali Khan","category":"Quran Studies","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"LOjDlcA3DkA","title":"Will Every Non-Muslim Enter Hell? — Towards Eternity","category":"Aqeedah & Questions","startSeconds":0,"endSeconds":null,"format":"desktop"},
-  {"videoId":"7YD276KV-ZE","title":"Christian & Muslim Discuss Salvation & Jesus — Muslim Lantern","category":"Dawah & Dialogue","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {videoId:"gTDm-1JpGkw",title:"Featured Video — New",category:"Featured",startSeconds:0,endSeconds:null,format:"desktop"},
   {
     "videoId": "gF7RjyK8gQ0",
