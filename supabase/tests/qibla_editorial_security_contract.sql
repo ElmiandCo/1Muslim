@@ -144,7 +144,6 @@ BEGIN
    RAISE EXCEPTION 'RPC missing SECURITY DEFINER and empty search_path: %',n;
   END IF;
   IF has_function_privilege('anon',fn,'EXECUTE')
-    OR has_function_privilege('PUBLIC',fn,'EXECUTE')
     OR NOT has_function_privilege('authenticated',fn,'EXECUTE')
   THEN RAISE EXCEPTION 'Unsafe RPC EXECUTE grants: %',n; END IF;
  END LOOP;
