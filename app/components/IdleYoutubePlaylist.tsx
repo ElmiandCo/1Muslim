@@ -106,15 +106,23 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       }
       const cutout=document.querySelector<HTMLElement>(".oneMuslimCinemaDimmer .cinema-video-cutout");
       if(rect&&cutout){
-        // Keep the spotlight on the visible iframe, not the surrounding player/chat card.
-        const iframe=video?.querySelector("iframe");
-        const iframeRect=iframe?.getBoundingClientRect();
-        const focus=iframeRect&&iframeRect.width>0&&iframeRect.height>0?iframeRect:rect;
-        const x=Math.max(0,focus.left-4),y=Math.max(0,focus.top-4);
-        const right=Math.min(window.innerWidth,focus.right+4),bottom=Math.min(window.innerHeight,focus.bottom+8);
-        const bounds=[x,y,Math.max(0,right-x),Math.max(0,bottom-y)];
-        const key=bounds.map(n=>n.toFixed(1)).join(",");
-        if(key!==last){last=key;cutout.style.left=bounds[0]+"px";cutout.style.top=bounds[1]+"px";cutout.style.width=bounds[2]+"px";cutout.style.height=bounds[3]+"px";}
+        // The visible video frame is authoritative in BOTH carousel states.
+        // The YouTube iframe can be vertically cropped/oversized and is not a
+        // reliable spotlight target. This rect follows the carousel's motion.
+        const x=Math.max(0,rect.left),y=Math.max(0,rect.top);
+        const right=Math.min(window.innerWidth,rect.right),bottom=Math.min(window.innerHeight,rect.bottom);
+        const width=Math.max(0,right-x),height=Math.max(0,bottom-y);
+        const key=[x,y,width,height].map(n=>n.toFixed(1)).join(",");
+        if(key!==last){
+          last=key;
+          const mask=cutout.parentElement;
+          if(mask){
+            mask.style.setProperty("--deep-focus-x",(x+width/2)+"px");
+            mask.style.setProperty("--deep-focus-y",(y+height/2)+"px");
+            mask.style.setProperty("--deep-focus-rx",(width/2+30)+"px");
+            mask.style.setProperty("--deep-focus-ry",(height/2+28)+"px");
+          }
+        }
       }
       frame=window.requestAnimationFrame(track);
     };
@@ -300,10 +308,11 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     @keyframes oneMuslimReflectionRipple{from{transform:scaleY(-1) scale(1.06) translateX(-.5%)}to{transform:scaleY(-1) scale(1.075) translateX(.5%)}}
     @media(prefers-reduced-motion:reduce){.oneMuslimVideoWaterReflectionImage{animation:none}}
     /* Transparent tracked cutout: darken everything OUTSIDE the video, never the iframe. */
-    .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease;overflow:hidden;isolation:isolate}
+    /* Gradient spotlight follows the VIDEO frame in expanded and collapsed carousel states. */
+    .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease,background-color 2.6s ease;overflow:hidden;isolation:isolate;background:rgba(0,0,0,.68);--deep-focus-x:50vw;--deep-focus-y:45vh;--deep-focus-rx:280px;--deep-focus-ry:180px;-webkit-mask-image:radial-gradient(ellipse var(--deep-focus-rx) var(--deep-focus-ry) at var(--deep-focus-x) var(--deep-focus-y),transparent 0%,transparent 66%,#000 100%);mask-image:radial-gradient(ellipse var(--deep-focus-rx) var(--deep-focus-ry) at var(--deep-focus-x) var(--deep-focus-y),transparent 0%,transparent 66%,#000 100%)}
     .oneMuslimCinemaDimmer.is-active{opacity:1}
-    .oneMuslimCinemaDimmer .cinema-video-cutout{position:fixed;display:block;box-sizing:border-box;border-radius:24px;box-shadow:0 0 0 200vmax rgba(0,0,0,.68),0 0 18px 8px rgba(0,0,0,.12);pointer-events:none;background:transparent}
-    .oneMuslimCinemaDimmer.is-settled .cinema-video-cutout{box-shadow:0 0 0 200vmax rgba(0,0,0,.88),0 0 24px 9px rgba(0,0,0,.16)}
+    .oneMuslimCinemaDimmer.is-settled{background:rgba(0,0,0,.88)}
+    .oneMuslimCinemaDimmer .cinema-video-cutout{display:none}
     @media(prefers-reduced-motion:reduce){.oneMuslimCinemaDimmer,.oneMuslimCinemaDimmer .cinema-video-cutout{transition:none!important}}
   `}</style></>;
 }
