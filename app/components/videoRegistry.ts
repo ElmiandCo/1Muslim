@@ -35,6 +35,7 @@ const seed:RegisteredVideo[]=[
     "endSeconds": 120,
     "format": "desktop"
   },
+  {"videoId":"ylFuM2IcVk8","title":"Community Short","category":"Shorts","startSeconds":0,"endSeconds":null,"format":"phone"},
   {
     "videoId": "KKg-TM8MGlM",
     "title": "Short 1",
