@@ -71,9 +71,10 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     let timer:ReturnType<typeof setInterval>|undefined;
     let cutoffStartedAt:number|null=null;
     let cutoffPaused=false;
+    let pausedAt:number|null=null;
     const continued=new Set<string>();
     try{const raw=JSON.parse(localStorage.getItem("oneMuslimEditorialContinuesV1")||"[]");if(Array.isArray(raw))raw.forEach((id:unknown)=>{if(typeof id==="string")continued.add(id)})}catch{}
-    const resetCutoff=()=>{cutoffStartedAt=null;cutoffPaused=false;setEditorialPrompt(false);setEditorialCountdown(3)};
+    const resetCutoff=()=>{cutoffStartedAt=null;cutoffPaused=false;pausedAt=null;setEditorialPrompt(false);setEditorialCountdown(3)};
     continueEditorialRef.current=()=>{const id=playlist[index]?.videoId;if(!id)return;continued.add(id);try{localStorage.setItem("oneMuslimEditorialContinuesV1",JSON.stringify([...continued]))}catch{}resetCutoff()};
     const next=(step=1)=>{
       if(disposed||!player)return;
@@ -126,7 +127,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
             },250);
           },
-          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPlaying(false);setIsPaused(true);setTapHint(true);if(cutoffStartedAt!==null)cutoffPaused=true}else if(data===1){setIsPlaying(true);setIsPaused(false);if(cutoffPaused){cutoffPaused=false;cutoffStartedAt=performance.now()-(3-editorialCountdown)*1000}}else if(data===3){setIsPlaying(false)}}
+          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPlaying(false);setIsPaused(true);setTapHint(true);if(cutoffStartedAt!==null&&!cutoffPaused){cutoffPaused=true;pausedAt=performance.now()}}else if(data===1){setIsPlaying(true);setIsPaused(false);if(cutoffPaused){if(pausedAt!==null&&cutoffStartedAt!==null)cutoffStartedAt+=performance.now()-pausedAt;pausedAt=null;cutoffPaused=false}}else if(data===3){setIsPlaying(false)}}
         }
       });
     };
