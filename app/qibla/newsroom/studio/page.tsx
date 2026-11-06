@@ -62,6 +62,7 @@ export default function QiblaStudio() {
   const deckLength = form.subtitle.trim().length;
   const createDraft = async () => {
     if (role !== "writer" || busy) return;
+    if (dirty) { setMessage("Save or discard your current article changes before creating another draft."); return; }
     setBusy(true); setMessage("");
     const { data, error } = await createClient().rpc("qibla_create_draft", { p_title: "", p_subtitle: "", p_body: "", p_template: "classic" });
     if (error) setMessage(error.message);
@@ -98,7 +99,7 @@ export default function QiblaStudio() {
     {loading ? <p className={styles.notice}>Loading workspace…</p> : !role ? null :
     <div className={styles.layout}>
       <section className={styles.queue} aria-label="Editorial queue">
-        <div className={styles.queueHead}><h2>Articles</h2>{role === "writer" && <button type="button" disabled={busy} onClick={() => void createDraft()}>+ New draft</button>}<label>Filter <select value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">All statuses ({articles.length})</option>{queueCounts.map(({ status, count }) => <option key={status} value={status}>{status.replaceAll("_", " ")} ({count})</option>)}</select></label></div>
+        <div className={styles.queueHead}><h2>Articles</h2>{role === "writer" && <button type="button" disabled={busy || dirty} onClick={() => void createDraft()}>+ New draft</button>}<label>Filter <select value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">All statuses ({articles.length})</option>{queueCounts.map(({ status, count }) => <option key={status} value={status}>{status.replaceAll("_", " ")} ({count})</option>)}</select></label></div>
         <div className={styles.queueTools}><label>Find article<input type="search" value={queueSearch} onChange={e => setQueueSearch(e.target.value)} placeholder="Search title, deck or status" /></label><label>Sort<select value={sort} onChange={e => setSort(e.target.value as "newest" | "oldest" | "title")}><option value="newest">Recently updated</option><option value="oldest">Oldest updated</option><option value="title">Title A–Z</option></select></label></div>
         {queueError && <div role="alert"><p>The editorial queue could not be refreshed. Existing results may be outdated.</p><button type="button" disabled={busy || dirty} onClick={() => void load()}>Retry loading articles</button>{dirty && <p>Save or discard your changes before retrying.</p>}</div>}
         <p role="status" aria-live="polite">{visible.length} {visible.length === 1 ? "article" : "articles"} shown</p>
@@ -120,7 +121,7 @@ export default function QiblaStudio() {
             <span>Deck {deckLength}/500</span>
           </div>
           {role === "writer" && active.status === "draft" && <label>Layout template <select value={template} disabled={busy} onChange={e => { if (busy) return; setTemplate(e.target.value as "classic" | "feature"); setDirty(true); }}><option value="classic">Classic</option><option value="feature">Feature</option></select></label>}
-          {dirty && <p role="status">Unsaved changes — save before submitting, publishing or leaving.</p>}
+          {dirty && <p role="status">Unsaved changes — save before creating another draft, submitting, publishing or leaving.</p>}
           <button type="button" className={styles.previewToggle} aria-expanded={preview} onClick={() => setPreview(value => !value)}>{preview ? "Hide reading preview" : "Preview article"}</button>
           {preview && <article className={styles.preview} aria-label="Article reading preview"><p className={styles.previewKicker}>1Qibla · {template === "feature" ? "Feature" : "Classic"} preview</p><h2>{form.title || "Untitled article"}</h2>{form.subtitle && <p className={styles.previewDeck}>{form.subtitle}</p>}<div className={styles.previewBody}>{form.body || "Your article will appear here as you write."}</div><p className={styles.previewFoot}>Draft preview only · Not published</p></article>}
           <div className={styles.actions}>
