@@ -217,3 +217,37 @@ BEGIN
  THEN RAISE EXCEPTION 'Editorial application RPC must restrict desired roles to writer/editor'; END IF;
  RAISE NOTICE 'Editorial application role scope checked';
 END $$;
+
+-- Guard once-only publication rewards and first-save event idempotency against
+-- later schema changes. These checks do not award XP or send notifications.
+DO $$
+DECLARE pk_cols text[]; event_cols text[];
+BEGIN
+ SELECT array_agg(a.attname ORDER BY k.ordinality) INTO pk_cols
+ FROM pg_constraint c
+ JOIN pg_class t ON t.oid=c.conrelid
+ JOIN pg_namespace ns ON ns.oid=t.relnamespace
+ JOIN unnest(c.conkey) WITH ORDINALITY AS k(attnum,ordinality) ON true
+ JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=k.attnum
+ WHERE ns.nspname='public' AND t.relname='qibla_xp_awards' AND c.contype='p';
+ IF pk_cols IS DISTINCT FROM ARRAY['article_id']::text[] THEN
+  RAISE EXCEPTION 'XP award idempotency requires article_id-only primary key';
+ END IF;
+ SELECT array_agg(a.attname ORDER BY k.ordinality) INTO event_cols
+ FROM pg_constraint c
+ JOIN pg_class t ON t.oid=c.conrelid
+ JOIN pg_namespace ns ON ns.oid=t.relnamespace
+ JOIN unnest(c.conkey) WITH ORDINALITY AS k(attnum,ordinality) ON true
+ JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=k.attnum
+ WHERE ns.nspname='public' AND t.relname='qibla_editorial_events' AND c.contype='p';
+ IF event_cols IS DISTINCT FROM ARRAY['article_id','event_key']::text[] THEN
+  RAISE EXCEPTION 'First-save event requires article_id,event_key primary key';
+ END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_constraint c JOIN pg_class t ON t.oid=c.conrelid
+  JOIN pg_namespace ns ON ns.oid=t.relnamespace
+  WHERE ns.nspname='public' AND t.relname='qibla_xp_awards'
+   AND c.contype='c' AND pg_get_constraintdef(c.oid) ~ 'amount.*2000'
+ ) THEN RAISE EXCEPTION 'Fixed 2000 XP amount constraint missing'; END IF;
+ RAISE NOTICE 'Once-only reward and first-save event schema keys verified';
+END $$;
