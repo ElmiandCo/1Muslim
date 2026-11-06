@@ -210,7 +210,6 @@ function DailyPostsApp({active}:{active:boolean}){
  const [fypTimedSeconds,setFypTimedSeconds]=useState(0);
  const [fypTimedPlaying,setFypTimedPlaying]=useState(false);
  const [fypTimedBounds,setFypTimedBounds]=useState({x:0,y:0,w:0,h:0});
- useEffect(()=>{if(!fypStart)return;const timer=window.setInterval(()=>{const video=fypVideoRefs.current.get(fypOrder[fypActiveIndex]?.id);if(!video)return;setFypTimedSeconds(Math.floor(video.currentTime||0));setFypTimedPlaying(!video.paused&&!video.ended);const rect=video.getBoundingClientRect();setFypTimedBounds({x:rect.left,y:rect.top,w:rect.width,h:rect.height})},350);return()=>window.clearInterval(timer)},[fypStart,fypActiveIndex,fypOrder]);
 
  const [fypSearchOpen,setFypSearchOpen]=useState(false);
  const [fypSearchQuery,setFypSearchQuery]=useState("");
@@ -235,6 +234,7 @@ function DailyPostsApp({active}:{active:boolean}){
  useEffect(()=>{if(!viewerPost)return;const t=window.setTimeout(()=>setViewerActionsVisible(false),3000);return()=>clearTimeout(t)},[viewerPost,viewerActionsVisible]);
  const videoPosts=posts.filter(p=>postKind(p)==="video");
  const fypOrder=useMemo(()=>{if(!fypStart)return [];const start=videoPosts.find(p=>p.id===fypStart);const others=videoPosts.filter(p=>p.id!==fypStart);return start?[start,...others.sort((x,y)=>x.id.localeCompare(y.id))]:[]},[posts,fypStart]);
+ useEffect(()=>{if(!fypStart)return;const timer=window.setInterval(()=>{const video=fypVideoRefs.current.get(fypOrder[fypActiveIndex]?.id);if(!video)return;setFypTimedSeconds(Math.floor(video.currentTime||0));setFypTimedPlaying(!video.paused&&!video.ended);const rect=video.getBoundingClientRect();setFypTimedBounds({x:rect.left,y:rect.top,w:rect.width,h:rect.height})},350);return()=>window.clearInterval(timer)},[fypStart,fypActiveIndex,fypOrder]);
  const fypSearchResults=useMemo(()=>{const q=fypSearchQuery.trim().toLocaleLowerCase();if(!q)return [];return fypOrder.map((post,index)=>({post,index})).filter(({post})=>[post.body,post.author_name].some(value=>String(value||"").toLocaleLowerCase().includes(q))).slice(0,12)},[fypOrder,fypSearchQuery]);
 
  const [fypWarmingUp,setFypWarmingUp]=useState(false);
