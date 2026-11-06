@@ -64,7 +64,9 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
     refreshRef.current=()=>{void load()};
     void load();
     // Subscribe to database changes for immediate host prompts; polling remains a fallback.
-    const channel=db.channel("live-guest-requests-"+streamId)
+    // Each effect mount gets a unique channel: Supabase can still be removing
+    // the previous subscribed channel during rapid guest state updates.
+    const channel=db.channel("live-guest-requests-"+streamId+"-"+crypto.randomUUID())
       .on("postgres_changes",{event:"*",schema:"public",table:"live_guest_requests",filter:"stream_id=eq."+streamId},()=>{void load()})
       .subscribe();
     // Poll only while visible; refresh immediately on focus or after an action.
