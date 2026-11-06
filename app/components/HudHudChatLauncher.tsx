@@ -55,7 +55,7 @@ export default function HudHudChatLauncher(){
  const [orbAvatar,setOrbAvatar]=useState<string|null>(null);
  const [orbAvatarReady,setOrbAvatarReady]=useState(false);
  const [quranCanvasActive,setQuranCanvasActive]=useState(false);
- useEffect(()=>{const handler=(event:Event)=>setQuranCanvasActive((event as CustomEvent<{active:boolean}>).detail?.active===true);window.addEventListener("1muslim:quran-orb-scope",handler);return()=>window.removeEventListener("1muslim:quran-orb-scope",handler)},[]);
+ useEffect(()=>{const handler=(event:Event)=>setQuranCanvasActive((event as CustomEvent<{active:boolean}>).detail?.active===true);window.addEventListener("1muslim:quran-workspace-focus",handler);return()=>window.removeEventListener("1muslim:quran-workspace-focus",handler)},[]);
  const showHudHud=isQuranOrb||quranCanvasActive;
  const avatarFor=(p:Profile|null)=>{
   if(!p)return null;
