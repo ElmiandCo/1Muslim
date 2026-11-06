@@ -7,7 +7,7 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
 
  const [position,setPosition]=useState(0);
  const [category,setCategory]=useState("All");
- const categories=["All",...Array.from(new Set(videoRegistry.filter(v=>v.format===format).map(v=>v.category)))];
+ const categories=["All",...Array.from(new Set(videoRegistry.filter(v=>v.format===format).map(v=>v.category).filter(item=>item!=="Kids")))];
  const dragged=useRef(false);
  const direction=useRef(1);
  const pointer=useRef<{x:number;position:number}|null>(null);
@@ -61,9 +61,13 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
 
  .homeVideoWheelBody{height:0;opacity:0;overflow:hidden;pointer-events:none;transition:height .35s ease,opacity .35s ease}
  .homeVideoWheel[data-expanded="true"] .homeVideoWheelBody{height:100%;opacity:1;pointer-events:auto}
- .homeVideoWheelCategories{position:absolute;z-index:8;left:0;right:0;bottom:0;display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:2px 8px;justify-content:flex-start;background:transparent}
+ .homeVideoWheelCategories{position:absolute;z-index:8;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:2px 8px;background:transparent;min-width:0}
+ .homeVideoWheelCategoryScroll{display:flex;align-items:center;gap:10px;flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+ .homeVideoWheelCategoryScroll::-webkit-scrollbar{display:none}
+ .homeVideoWheelKids{flex:0 0 auto;margin-left:auto;padding-left:12px!important;border-left:1px solid rgba(255,255,255,.28)!important}
  .homeVideoWheelCategories button{white-space:nowrap;border:0;border-radius:0;padding:2px 4px;background:transparent;color:inherit;font-size:10px;font-weight:400;text-shadow:0 1px 4px #000}
- .homeVideoWheelCategories button[aria-pressed="true"]{color:var(--theme-primary,#a9e7d5);border-bottom:1px solid currentColor}
+ .homeVideoWheelCategories button{transition:transform .18s ease,color .18s ease;transform-origin:center center}
+ .homeVideoWheelCategories button[aria-pressed="true"]{color:var(--theme-primary,#a9e7d5);border-bottom:1px solid currentColor;transform:scale(1.05)}
  .homeVideoWheelTrack{position:relative;height:calc(100% - 20px);overflow:hidden;touch-action:none;overscroll-behavior:contain;user-select:none;cursor:grab}
  .homeVideoWheelTrack:active{cursor:grabbing}
  .homeVideoWheelCard{position:absolute;top:0;left:50%;height:100%;width:clamp(140px,34%,235px);border:1px solid rgba(255,255,255,.35);border-radius:15px;box-shadow:0 12px 25px rgba(0,0,0,.25);display:flex;flex-direction:column;justify-content:end;padding:12px;box-sizing:border-box;overflow:hidden;will-change:transform,opacity;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -72,7 +76,7 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
  @media(prefers-reduced-motion:reduce){.homeVideoWheelBody{transition:none}}
  `}</style>
  
- <div className="homeVideoWheelCategories" role="group" aria-label="Video categories">{categories.map(item=><button key={item} type="button" aria-pressed={category===item} onClick={()=>{setCategory(item);positionRef.current=0;setPosition(0);window.dispatchEvent(new CustomEvent("oneMuslimCarouselCategory",{detail:{category:item,format}}))}}>{item}</button>)}</div>
+ <div className="homeVideoWheelCategories" role="group" aria-label="Video categories"><div className="homeVideoWheelCategoryScroll">{categories.map(item=><button key={item} type="button" aria-pressed={category===item} onClick={()=>{setCategory(item);positionRef.current=0;setPosition(0);window.dispatchEvent(new CustomEvent("oneMuslimCarouselCategory",{detail:{category:item,format}}))}}>{item}</button>)}</div><button className="homeVideoWheelKids" type="button" aria-pressed={category==="Kids"} onClick={()=>{setCategory("Kids");positionRef.current=0;setPosition(0);window.dispatchEvent(new CustomEvent("oneMuslimCarouselCategory",{detail:{category:"Kids",format}}))}}>Kids</button></div>
  <div className="homeVideoWheelBody" aria-hidden={!expanded}>
  {expanded&&<><div className="homeVideoWheelTrack" aria-label="Choose a video to play above" onTouchStart={e=>e.stopPropagation()} onTouchMove={e=>e.stopPropagation()} onTouchEnd={e=>e.stopPropagation()} onPointerDown={e=>{e.stopPropagation();if(resumeTimer.current)clearTimeout(resumeTimer.current);paused.current=true;dragged.current=false;pointer.current={x:e.clientX,position:positionRef.current}}} onPointerMove={e=>{e.stopPropagation();onMove(e.clientX)}} onPointerUp={e=>{e.stopPropagation();onMove(e.clientX);settle()}} onPointerCancel={()=>{settle()}}>
  {items.map((item,i)=>{let offset=((i-position)%count+count)%count;if(offset>count/2)offset-=count;const distance=Math.abs(offset);const scale=Math.max(.24,1-.25*distance*distance);return <div key={item.videoId} className="homeVideoWheelCard" role="button" tabIndex={0} aria-label={`Play ${item.title}`} onClick={()=>{if(dragged.current){return;}paused.current=true;if(resumeTimer.current)clearTimeout(resumeTimer.current);resumeTimer.current=setTimeout(()=>{paused.current=false},500);window.dispatchEvent(new CustomEvent("oneMuslimSelectCarouselVideo",{detail:{videoId:item.videoId,format:item.format}}))}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();window.dispatchEvent(new CustomEvent("oneMuslimSelectCarouselVideo",{detail:{videoId:item.videoId,format:item.format}}))}}} style={{transform:`translateX(calc(-50% + ${offset*110}%)) perspective(550px) rotateY(${-offset*13}deg) scale(${scale})`,opacity:Math.max(.12,1-distance*.28),zIndex:Math.round(20-distance),background:`linear-gradient(145deg,hsla(${190+(i%6)*27},65%,35%,.58),rgba(4,12,25,.8))`}}><img src={`https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`} alt="" loading="lazy" draggable={false} referrerPolicy="no-referrer" onError={e=>{e.currentTarget.style.display="none"}}/><strong>{item.title}</strong></div>})}
