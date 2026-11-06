@@ -172,7 +172,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               const seconds=player.getCurrentTime();
               if(!Number.isFinite(seconds))return;
               setTimedSeconds(Math.floor(seconds));
-              if(!(format==="phone"&&(sessionStay||shortsSeen%6>=2))&&!continuedIds.has(segment.videoId)&&seconds>=segmentStart+15){
+              if(!(format==="phone"&&(sessionStay||shortsSeen%6>=2))&&(format==="phone"||!continuedIds.has(segment.videoId))&&seconds>=segmentStart+15){
                 if(promptStartedAt===null){promptStartedAt=performance.now();setSkipPrompt(true);setSkipCountdown(5)}
                 const elapsed=(performance.now()-promptStartedAt)/1000;
                 const remaining=5-elapsed;
