@@ -120,6 +120,24 @@ export default function HudHudChatLauncher(){
  },[pathname]);
 
  useEffect(()=>{let live=true;const logo=new Image();logo.onload=()=>{if(live)setOrbReady(true)};logo.onerror=()=>{if(live)setOrbReady(true)};logo.src="/assets/hudhud-logo.PNG";if(logo.complete)setOrbReady(true);return()=>{live=false}},[]);
+ const introPlayed=useRef(false);
+ useEffect(()=>{
+  if(!orbReady||introPlayed.current)return;
+  const button=orbButtonRef.current;
+  if(!button)return;
+  introPlayed.current=true;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const rect=button.getBoundingClientRect();
+  const fromX=window.innerWidth*.68-(rect.left+rect.width/2);
+  const fromY=window.innerHeight*.53-(rect.top+rect.height/2);
+  // Animate only the first reveal; keep existing floating, drag and docking animations.
+  const flight=button.animate([
+   {transform:`translate(${fromX}px,${fromY}px) scale(.72)`,opacity:0,offset:0},
+   {transform:`translate(${fromX*.45}px,${fromY*.38}px) scale(.92)`,opacity:1,offset:.55},
+   {transform:"translate(0px,0px) scale(1)",opacity:1,offset:1}
+  ],{duration:1050,easing:"cubic-bezier(.18,.76,.18,1)",fill:"none"});
+  return()=>flight.cancel();
+ },[orbReady]);
  useEffect(()=>{const s=createClient();let active=true;const load=async()=>{const {data:{user}}=await s.auth.getUser();if(!active)return;setUid(user?.id||null);setAdmin((user?.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");if(!user){setProfile(null);return}const {data}=await s.from("profiles").select("display_name,gender,avatar_gender,avatar_package,avatar_config,profile_accent").eq("id",user.id).maybeSingle();if(active)setProfile(data||null)};void load();const {data:sub}=s.auth.onAuthStateChange(()=>{void load()});return()=>{active=false;sub.subscription.unsubscribe()}},[]);
  useEffect(()=>{if(open)bottom.current?.scrollIntoView({block:"end",behavior:"smooth"})},[open,messages]);
  useEffect(()=>{if(!open)return;const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setOpen(false)};document.addEventListener("keydown",key);return()=>document.removeEventListener("keydown",key)},[open]);
