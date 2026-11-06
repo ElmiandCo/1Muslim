@@ -2797,3 +2797,44 @@ main[class*="control"] .canvas-vertical-main > .canvas-live-independent-stage .h
   margin-top:113px!important;
  }
 }
+
+
+/* Guest-only landing polish: preserve the canvas skeleton and member themes. */
+html[data-guest-home="true"] [data-workspace-page="0"] .canvas-vertical-main,
+html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimLiveStage:not(:has(video,iframe)){
+ background-image:none!important;
+}
+html[data-guest-home="true"] [data-workspace-page="0"] .canvas-vertical-main::before,
+html[data-guest-home="true"] [data-workspace-page="0"] .canvas-vertical-main::after{
+ background-image:none!important;
+}
+/* Keep carousel width intact, reduce its vertical footprint by 20%. */
+html[data-guest-home="true"] [data-workspace-page="0"] .oneMuslimHomeWheelSlot{
+ max-height:104px!important;
+}
+/* The selected mode alone has a fill; other modes are fully transparent. */
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab:not([aria-pressed="true"]){
+ background:transparent!important;box-shadow:none!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab{
+ transition:background .5s ease,box-shadow .5s ease,color .5s ease!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassLabel{
+ display:inline-block;max-width:80px;overflow:hidden;white-space:nowrap;
+ opacity:1;transition:max-width .5s ease,opacity .5s ease,transform .5s ease;
+}
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab[aria-pressed="true"] .oneMuslimLiveFormatGlassLabel{
+ max-width:0;opacity:0;transform:scale(.8);
+}
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassIcon{
+ display:inline-block;transform:scale(1);transform-origin:center;
+ transition:transform .5s cubic-bezier(.2,.8,.2,1),filter .5s ease!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab[aria-pressed="true"] .oneMuslimLiveFormatGlassIcon{
+ transform:scale(1.5);filter:drop-shadow(0 0 7px color-mix(in srgb,var(--theme-primary,#79b7ff) 70%,white));
+}
+@media(prefers-reduced-motion:reduce){
+ [data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassIcon,
+ [data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassLabel,
+ [data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab{transition:none!important}
+}
