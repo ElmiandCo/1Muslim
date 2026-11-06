@@ -992,3 +992,8 @@
 .quranTrackerTrack{height:5px;overflow:hidden;border-radius:999px;background:rgba(236,225,199,.19)}
 .quranTrackerTrack>span{display:block;height:100%;min-width:0;border-radius:inherit;background:linear-gradient(90deg,var(--theme-primary,#64d7ac),#f3d39a);transition:width .5s ease}
 @media(max-width:650px){.quranTrackerFooter{padding:10px 12px 12px;border-radius:15px}.quranTrackerHeading{font-size:11px;margin-bottom:7px}}
+
+/* Prevent the legacy blue underlay/strip from showing through the Qur’an footer. */
+.fillArea .slide[data-workspace-page="1"] .quranVerseWidget>.quranTrackerFooter{position:relative!important;flex:0 0 auto!important;display:flex!important;flex-direction:column!important;justify-content:center!important;min-height:64px!important;height:auto!important;max-height:none!important;overflow:visible!important;align-self:stretch!important;margin-top:auto!important;margin-bottom:0!important;background:rgba(5,28,26,.64)!important;background-image:none!important;border:1px solid rgba(231,210,162,.35)!important;z-index:25!important}
+.fillArea .slide[data-workspace-page="1"] .quranTrackerTrack{background:rgba(236,225,199,.18)!important;box-shadow:none!important}
+.fillArea .slide[data-workspace-page="1"] .quranTrackerTrack>span{background:linear-gradient(90deg,#d8b76f,#f3d39a)!important}
