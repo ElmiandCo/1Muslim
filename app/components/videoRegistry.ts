@@ -109,6 +109,8 @@ const seed:RegisteredVideo[]=[
     "format": "phone"
   }
 ];
+export const kidsVideoIds=new Set(["LlvFLGAqb5A","d2D6WuKlymM","lZu173pTldI","7ENLDycXU_Y","vjQEHpfRK5w"]);
+export const isKidsVideo=(video:RegisteredVideo)=>kidsVideoIds.has(video.videoId);
 export const videoRegistry=seed.slice(0,100);
 export function getRegistryVideos(format:"desktop"|"phone"){return videoRegistry.filter(v=>v.format===format)}
 export const VIDEO_REGISTRY_CAPACITY=100;
