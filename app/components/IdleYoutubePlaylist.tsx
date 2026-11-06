@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
+import {createPortal} from "react-dom";
 import {getRegistryVideos,isKidsVideo} from "./videoRegistry";
 import ElmiTimedCommentsLayer from "./ElmiTimedCommentsLayer";
 import {createClient} from "../../utils/supabase/client";
@@ -260,9 +261,9 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       @keyframes oneMuslimRigDrift{0%,100%{transform:translate3d(0,0,0)}25%{transform:translate3d(2px,-1px,0)}50%{transform:translate3d(-2px,1px,0)}75%{transform:translate3d(1px,2px,0)}}
       @media(prefers-reduced-motion:reduce){.oneMuslimFloatingPlayerRig,.oneMuslimIdleYoutubePlayer,.oneMuslimFloatingPlayerShadow,.oneMuslimThemeTapOverlay{animation:none!important}.oneMuslimIdleYoutubePlayer>div:first-child{transition:none!important}}
     `}</style>
-  </div><ElmiTimedCommentsLayer videoKey={timedVideoKey} seconds={timedSeconds} playing={isPlaying&&!isPaused} bounds={playerBounds}/><div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")}>
+  </div><ElmiTimedCommentsLayer videoKey={timedVideoKey} seconds={timedSeconds} playing={isPlaying&&!isPaused} bounds={playerBounds}/>{typeof document!=="undefined"&&createPortal(<div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")}>
     <span className="cinema-video-cutout" style={{left:Math.max(0,playerBounds.x-7)+"px",top:Math.max(0,playerBounds.y-7)+"px",width:Math.max(0,playerBounds.w+14)+"px",height:Math.max(0,playerBounds.h+24)+"px"}}/>
-  </div><style>{`
+  </div>,document.body)}<style>{`
     .oneMuslimReflectiveChat{position:relative;isolation:isolate;overflow:hidden}
     .oneMuslimReflectiveChat>.oneMuslimVideoWaterReflection{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;opacity:.065;mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.45) 40%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.45) 40%,transparent 100%)}
     .oneMuslimVideoWaterReflectionImage{position:absolute;inset:-15% -4%;background-size:cover;background-position:center top;transform:scaleY(-1) scale(1.06);filter:blur(24px) saturate(.55);animation:oneMuslimReflectionRipple 12s ease-in-out infinite alternate}
@@ -270,7 +271,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     @keyframes oneMuslimReflectionRipple{from{transform:scaleY(-1) scale(1.06) translateX(-.5%)}to{transform:scaleY(-1) scale(1.075) translateX(.5%)}}
     @media(prefers-reduced-motion:reduce){.oneMuslimVideoWaterReflectionImage{animation:none}}
     /* Transparent tracked cutout: darken everything OUTSIDE the video, never the iframe. */
-    .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease;overflow:hidden}
+    .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease;overflow:hidden;isolation:isolate}
     .oneMuslimCinemaDimmer.is-active{opacity:1}
     .oneMuslimCinemaDimmer .cinema-video-cutout{position:fixed;display:block;box-sizing:border-box;border-radius:24px;box-shadow:0 0 0 200vmax rgba(0,0,0,.68),0 0 18px 8px rgba(0,0,0,.12);transition:left 240ms ease,top 240ms ease,width 240ms ease,height 240ms ease;pointer-events:none;background:transparent}
     .oneMuslimCinemaDimmer.is-settled .cinema-video-cutout{box-shadow:0 0 0 200vmax rgba(0,0,0,.88),0 0 24px 9px rgba(0,0,0,.16)}
