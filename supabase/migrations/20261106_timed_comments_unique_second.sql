@@ -58,17 +58,16 @@ begin
   if length(trim(p_body)) not between 1 and 180 then raise exception 'Comment must be 1–180 characters'; end if;
   if p_video_key is null or length(p_video_key) not between 3 and 120 then raise exception 'Invalid video key'; end if;
   if p_started_at_seconds is null then raise exception 'Timestamp required'; end if;
+  v_second:=greatest(0,least(86400,p_started_at_seconds));
+  insert into public.featured_video_timed_comments(video_key,user_id,body,at_seconds)
+  values(p_video_key,auth.uid(),trim(p_body),v_second)
+  on conflict(video_key,at_seconds) do nothing returning * into v_result;
+  if found then return v_result; end if;
   for v_radius in 0..28800 loop
     for v_direction in 0..1 loop
       for v_offset in 1..3 loop
-        -- First try the exact typing-start timestamp, then alternate batches of three.
-        if v_radius=0 and v_direction=0 and v_offset=1 then
-          v_second:=greatest(0,least(86400,p_started_at_seconds));
-        else
-          v_second:=greatest(0,least(86400,p_started_at_seconds))
-            +(case when v_direction=0 then 1 else -1 end)
-            *(v_radius*3+v_offset-(case when v_radius=0 then 1 else 0 end));
-        end if;
+        v_second:=greatest(0,least(86400,p_started_at_seconds))
+          +(case when v_direction=0 then 1 else -1 end)*(v_radius*3+v_offset);
         if v_second not between 0 and 86400 then continue; end if;
         insert into public.featured_video_timed_comments(video_key,user_id,body,at_seconds)
         values(p_video_key,auth.uid(),trim(p_body),v_second)
