@@ -5,7 +5,7 @@ import { useState } from "react";
 import { createClient } from "../../../../utils/supabase/client";
 import styles from "./apply.module.css";
 
-type Role = "writer" | "editor" | "approver";
+type Role = "writer" | "editor";
 const allowed = new Set(["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]);
 const maxBytes = 10 * 1024 * 1024;
 
@@ -63,10 +63,10 @@ export default function EditorialApplication() {
   return <main className={styles.root}>
     <div className={styles.shell}>
       <nav className={styles.nav}><Link href="/qibla/newsroom">← 1Qibla Magazine</Link><Link href="/">1Muslim Home</Link></nav>
-      <header><p className={styles.kicker}>JOIN THE EDITORIAL TEAM</p><h1>Help tell the Ummah’s stories.</h1><p>Apply to write, edit, or review stories for 1Qibla. Your résumé stays private to you and authorized Approvers.</p></header>
+      <header><p className={styles.kicker}>JOIN THE EDITORIAL TEAM</p><h1>Help tell the Ummah’s stories.</h1><p>Apply to write or edit stories for 1Qibla. Approver access is assigned separately. Your résumé stays private to you and authorized Approvers.</p></header>
       {message && <p role={done ? "status" : "alert"} className={styles.notice}>{message}</p>}
       {!done && <form onSubmit={e => void submit(e)} className={styles.form}>
-        <label>Editorial role<select value={role} onChange={e => setRole(e.target.value as Role)} disabled={busy}><option value="writer">Writer</option><option value="editor">Editor</option><option value="approver">Approver</option></select></label>
+        <label>Editorial role<select value={role} onChange={e => setRole(e.target.value as Role)} disabled={busy}><option value="writer">Writer</option><option value="editor">Editor</option></select></label>
         <label>Relevant experience<textarea required maxLength={10000} rows={4} value={experience} onChange={e => setExperience(e.target.value)} disabled={busy}/></label>
         <label>Why would you like to join?<textarea required maxLength={10000} rows={4} value={motivation} onChange={e => setMotivation(e.target.value)} disabled={busy}/></label>
         <label>Portfolio URL (optional)<input type="url" maxLength={2000} value={portfolio} onChange={e => setPortfolio(e.target.value)} disabled={busy} placeholder="https://"/></label>
