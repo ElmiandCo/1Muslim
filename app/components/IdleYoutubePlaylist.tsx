@@ -223,7 +223,10 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       .oneMuslimFloatingPlayerRig.is-phone{touch-action:pan-y;max-width:420px;aspect-ratio:9/16;max-height:100%;margin:0 auto 12px}
       .oneMuslimFloatingPlayerRig.is-phone .oneMuslimIdleYoutubePlayer{border-radius:22px}
       /* Shorts-only editorial crop: remove the upper 10% without changing player bounds. */
-      .oneMuslimFloatingPlayerRig.is-phone .oneMuslimIdleYoutubePlayer>div:first-child{transform:translateY(-10%) scaleY(1.11112);transform-origin:top center;transition:transform 650ms cubic-bezier(.2,.7,.2,1);will-change:transform}
+      /* Crop the actual YouTube iframe, not its mount wrapper: fixed viewport, top 10% discarded. */
+      .oneMuslimFloatingPlayerRig.is-phone .oneMuslimIdleYoutubePlayer{overflow:hidden!important}
+      .oneMuslimFloatingPlayerRig.is-phone .oneMuslimIdleYoutubePlayer>div:first-child{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;overflow:hidden!important;transform:none!important}
+      .oneMuslimFloatingPlayerRig.is-phone .oneMuslimIdleYoutubePlayer>div:first-child iframe{position:absolute!important;left:0!important;top:-11.111%!important;width:100%!important;height:111.111%!important;max-width:none!important;transform:none!important;transition:top 650ms cubic-bezier(.2,.7,.2,1),height 650ms cubic-bezier(.2,.7,.2,1)!important}
       /* Shorts-only: 25% less glass blur on the comment surface (12px -> 9px). */
       .oneMuslimShortsViewing .oneMuslimLiveBottom>.homeLiveViewerConversation{backdrop-filter:blur(9px)!important;-webkit-backdrop-filter:blur(9px)!important;transition:backdrop-filter 650ms ease,-webkit-backdrop-filter 650ms ease!important}
 
