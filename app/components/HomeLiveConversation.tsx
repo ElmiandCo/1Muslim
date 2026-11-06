@@ -9,7 +9,7 @@ export default function HomeLiveConversation({room}:{room:Room}){
  const [messages,setMessages]=useState<Message[]>([]);
  const [draft,setDraft]=useState("");
  const [videoTimeline,setVideoTimeline]=useState<{videoKey:string;seconds:number}>({videoKey:"",seconds:0});
- const [timedEntries,setTimedEntries]=useState<{id:string;body:string;at_seconds:number}[]>([]);
+ const [timedEntries,setTimedEntries]=useState<{id:string;body:string;at_seconds:number;user_id:string}[]>([]);
  const draftStartedAt=useRef<number|null>(null);
  useEffect(()=>{
    const onTime=(event:Event)=>{const detail=(event as CustomEvent<{videoKey:string;seconds:number;format:string}>).detail;
@@ -22,7 +22,7 @@ export default function HomeLiveConversation({room}:{room:Room}){
  useEffect(()=>{
    let active=true;setTimedEntries([]);
    if(!videoTimeline.videoKey)return;
-   const load=async()=>{const {data}=await dbRef.current.from("featured_video_timed_comments").select("id,body,at_seconds").eq("video_key",videoTimeline.videoKey).order("at_seconds",{ascending:true}).limit(500);if(active&&data)setTimedEntries(data)};
+   const load=async()=>{const {data}=await dbRef.current.from("featured_video_timed_comments").select("id,body,at_seconds,user_id").eq("video_key",videoTimeline.videoKey).order("at_seconds",{ascending:true}).limit(500);if(active&&data)setTimedEntries(data)};
    void load();const timer=window.setInterval(()=>void load(),5000);
    return()=>{active=false;clearInterval(timer)};
  },[videoTimeline.videoKey]);
@@ -30,6 +30,7 @@ export default function HomeLiveConversation({room}:{room:Room}){
  const [names,setNames]=useState<Record<string,string>>({});
  const [avatars,setAvatars]=useState<Record<string,string|null>>({});
  const [failedAvatars,setFailedAvatars]=useState<Record<string,boolean>>({});
+ useEffect(()=>{const ids=[...new Set(timedEntries.map(c=>c.user_id))].filter(id=>id&&!Object.prototype.hasOwnProperty.call(avatars,id));if(!ids.length)return;let active=true;void dbRef.current.from("profiles").select("id,avatar_url").in("id",ids).then(({data})=>{if(active)setAvatars(old=>({...old,...Object.fromEntries(ids.map(id=>[id,data?.find(p=>p.id===id)?.avatar_url||null]))}))});return()=>{active=false}},[timedEntries,avatars]);
  const [status,setStatus]=useState("");
  const [image,setImage]=useState<File|null>(null);
  const [preview,setPreview]=useState<string|null>(null);
@@ -135,9 +136,9 @@ export default function HomeLiveConversation({room}:{room:Room}){
     const {error}=await dbRef.current.rpc("add_featured_video_timed_comment",{p_video_key:videoTimeline.videoKey,p_body:body.slice(0,180),p_started_at_seconds:started});
     setSending(false);
     if(error){setStatus("Timed comment could not be sent.");return}
-    window.dispatchEvent(new CustomEvent("elmi-layer-x-comment-posted",{detail:{body:body.slice(0,180),atSeconds:Math.floor(started),videoKey:videoTimeline.videoKey}}));
+    window.dispatchEvent(new CustomEvent("elmi-layer-x-comment-posted",{detail:{body:body.slice(0,180),atSeconds:Math.floor(started),videoKey:videoTimeline.videoKey,userId:user}}));
     setDraft("");draftStartedAt.current=null;
-    const {data}=await dbRef.current.from("featured_video_timed_comments").select("id,body,at_seconds").eq("video_key",videoTimeline.videoKey).order("at_seconds",{ascending:true}).limit(500);
+    const {data}=await dbRef.current.from("featured_video_timed_comments").select("id,body,at_seconds,user_id").eq("video_key",videoTimeline.videoKey).order("at_seconds",{ascending:true}).limit(500);
     if(data)setTimedEntries(data);
     return;
   }
@@ -160,7 +161,7 @@ export default function HomeLiveConversation({room}:{room:Room}){
  };
  return <section className="homeLiveViewerConversation" aria-label={room+" Chat"}>
   <header><strong>💬 {videoTimeline.videoKey?"Timed Comments":"Chat"}</strong><small>{videoTimeline.videoKey?"Ordered by video timestamp":room==="phone"?"Mobile":room[0].toUpperCase()+room.slice(1)} · Messages expire after 3 hours</small></header>
-  <div ref={commentsRef} onScroll={onCommentsScroll} onTouchStart={scheduleIdleReturn} onTouchMove={scheduleIdleReturn} onWheel={scheduleIdleReturn} className="homeLiveDemoComments" aria-live="polite">{videoTimeline.videoKey?timedEntries.map(c=><p key={c.id}><span className="homeLiveCommentAvatar">◷</span><span><strong>{Math.floor(c.at_seconds/60)}:{String(c.at_seconds%60).padStart(2,"0")}</strong><small>{c.body}</small></span></p>):messages.length?messages.map(m=><p key={m.id}><span className="homeLiveCommentAvatar">{avatars[m.sender_id]&&!failedAvatars[m.sender_id]?<img src={avatars[m.sender_id]!} alt="" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFailedAvatars(old=>({...old,[m.sender_id]:true}))} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit",display:"block"}}/>:(names[m.sender_id]||"M")[0].toUpperCase()}</span><span><strong>{names[m.sender_id]||"Member"}</strong>{m.body&&<small>{m.body}</small>}{m.image_path&&<a href={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} target="_blank" rel="noopener noreferrer" aria-label="Open chat image"><img src={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} alt="Image shared in chat" loading="lazy" style={{display:"block",maxWidth:"min(220px,65vw)",maxHeight:180,objectFit:"contain",borderRadius:12,marginTop:6}}/></a>}</span></p>):<p>Start the conversation in this room.</p>}</div>
+  <div ref={commentsRef} onScroll={onCommentsScroll} onTouchStart={scheduleIdleReturn} onTouchMove={scheduleIdleReturn} onWheel={scheduleIdleReturn} className="homeLiveDemoComments" aria-live="polite">{videoTimeline.videoKey?timedEntries.map(c=><p key={c.id}><span className="homeLiveCommentAvatar">{avatars[c.user_id]&&!failedAvatars[c.user_id]?<img src={avatars[c.user_id]!} alt="" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFailedAvatars(old=>({...old,[c.user_id]:true}))} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit",display:"block"}}/>:"👤"}</span><span style={{flex:1,minWidth:0}}><small>{c.body}</small></span><time aria-label="Video timestamp" style={{marginLeft:"auto",alignSelf:"center",flexShrink:0,fontSize:9,opacity:.45,fontVariantNumeric:"tabular-nums",paddingRight:3}}>{Math.floor(c.at_seconds/60)}:{String(c.at_seconds%60).padStart(2,"0")}</time></p>):messages.length?messages.map(m=><p key={m.id}><span className="homeLiveCommentAvatar">{avatars[m.sender_id]&&!failedAvatars[m.sender_id]?<img src={avatars[m.sender_id]!} alt="" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFailedAvatars(old=>({...old,[m.sender_id]:true}))} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"inherit",display:"block"}}/>:(names[m.sender_id]||"M")[0].toUpperCase()}</span><span><strong>{names[m.sender_id]||"Member"}</strong>{m.body&&<small>{m.body}</small>}{m.image_path&&<a href={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} target="_blank" rel="noopener noreferrer" aria-label="Open chat image"><img src={dbRef.current.storage.from(BUCKET).getPublicUrl(m.image_path).data.publicUrl} alt="Image shared in chat" loading="lazy" style={{display:"block",maxWidth:"min(220px,65vw)",maxHeight:180,objectFit:"contain",borderRadius:12,marginTop:6}}/></a>}</span></p>):<p>Start the conversation in this room.</p>}</div>
   {user?<form className="homeLiveCommentForm" onSubmit={send}>
    <input ref={pickerRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{display:"none"}} onChange={e=>chooseImage(e.target.files?.[0])} aria-label="Choose chat image"/>
    <button type="button" aria-label="Add image" title="Add image" onClick={()=>pickerRef.current?.click()} disabled={sending} style={{flex:"0 0 36px",borderRadius:"50%",fontSize:24,background:"transparent",color:"inherit",border:"1px solid currentColor",opacity:.85}}>+</button>
