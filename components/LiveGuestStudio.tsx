@@ -31,6 +31,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   const host=uid===hostId;
   const pendingRequests=host?requests.filter(r=>r.status==="pending"):[];
   const nextRequest=pendingRequests[0];
+  useEffect(()=>{if(host&&pendingRequests.length>0)setPanelOpen(true)},[host,pendingRequests.length]);
   useEffect(()=>{if(!host||!pendingRequests.length)return;const missing=[...new Set(pendingRequests.map(r=>r.user_id))].filter(id=>!requesterNames[id]);if(!missing.length)return;let active=true;void createClient().from("profiles").select("id,username,display_name").in("id",missing).then(({data})=>{if(active&&data)setRequesterNames(old=>({...old,...Object.fromEntries(data.map(p=>[p.id,p.display_name||p.username||"Viewer"]))}))});return()=>{active=false}},[host,requests,requesterNames]);
 
   useEffect(()=>{
@@ -233,12 +234,12 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
     {panelOpen&&<section id="live-guest-controls-panel" aria-label="Live guest controls" style={{position:"absolute",right:0,bottom:"calc(100% + 10px)",width:host?"min(340px,calc(100vw - 32px))":"min(230px,calc(100vw - 32px))",maxHeight:"min(55dvh,430px)",overflowY:"auto",overscrollBehavior:"contain",padding:host?14:8,border:"1px solid color-mix(in srgb,var(--theme-border,#48624b) 38%,transparent)",borderRadius:18,background:"color-mix(in srgb,var(--theme-panel,#101a13) 14%,transparent)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",boxShadow:"0 8px 24px #0003",color:"var(--theme-text,#e7f5e6)"}}>
     {host?<div><strong>👑 Guest requests</strong>
       {requests.filter(r=>r.status==="pending").map(r=><div key={r.id} style={{display:"flex",gap:8,alignItems:"center",marginTop:8,flexWrap:"wrap"}}>
-        <span>{r.user_id.slice(0,8)} · {r.mode}</span>
+        <span>{requesterNames[r.user_id]||r.user_id.slice(0,8)} · {r.mode}</span>
         <button type="button" disabled={busy} onClick={()=>void moderate(r.id,"approved")}>Approve</button>
         <button type="button" disabled={busy} onClick={()=>void moderate(r.id,"rejected")}>Decline</button>
       </div>)}
       {requests.filter(r=>r.status==="approved").map(r=><div key={r.id} style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",marginTop:8}}>
-        <span>🎤 {r.user_id.slice(0,8)}</span>
+        <span>🎤 {requesterNames[r.user_id]||r.user_id.slice(0,8)}</span>
         <button type="button" disabled={busy} onClick={()=>void moderate(r.id,r.host_muted?"unmute":"mute")}>{r.host_muted?"Allow mic":"Mute mic"}</button>
         <button type="button" disabled={busy} onClick={()=>void moderate(r.id,"removed")}>Remove</button>
       </div>)}
