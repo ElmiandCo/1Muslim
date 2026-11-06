@@ -33,10 +33,10 @@ export default function QiblaStudio() {
     const db = createClient();
     setQueueError(false);
     const { data: auth, error: authError } = await db.auth.getUser();
-    if (authError || !auth.user) { setMessage("Sign in to access the editorial studio."); setLoading(false); return; }
+    if (authError || !auth.user) { setRole(null); setArticles([]); setSelected(""); setMessage("Sign in to access the editorial studio."); setLoading(false); return; }
     const { data: staff, error: staffError } = await db.from("qibla_staff").select("role").eq("user_id", auth.user.id).maybeSingle();
     if (staffError || !staff || !["writer", "editor", "approver"].includes(staff.role)) {
-      setMessage("Editorial access is restricted to approved team members."); setLoading(false); return;
+      setRole(null); setArticles([]); setSelected(""); setMessage("Editorial access is restricted to approved team members."); setLoading(false); return;
     }
     setRole(staff.role as Role);
     const { data, error } = await db.from("qibla_articles")
