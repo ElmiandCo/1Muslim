@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import LiveKitViewer from "./LiveKitViewer";
 import LiveChat from "./LiveChat";
 import LiveGuestStudio from "./LiveGuestStudio";
+import LiveViewerBoundary from "./LiveViewerBoundary";
 import { cinemaKeyboardOffset, type CinemaMode } from "../lib/live-cinema";
 
 type Props = {
@@ -43,7 +44,7 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
 
   return (
     <section className="omLiveTheater omLiveCinema" data-cinema-mode={mode} data-comment-focus={commentFocused ? "yes" : "no"} style={style} aria-label="Immersive live broadcast">
-      <LiveKitViewer roomName={roomName} streamId={streamId} initialViewMode={initialMode} onViewModeChange={setMode} />
+      <LiveViewerBoundary streamId={streamId} section="player"><LiveKitViewer roomName={roomName} streamId={streamId} initialViewMode={initialMode} onViewModeChange={setMode} /></LiveViewerBoundary>
       <div className="omLiveTheaterInfo">
         {hostAvatar && <img src={hostAvatar} alt="" className="omLiveTheaterAvatar" />}
         <div className="omLiveTheaterIdentity"><strong>{hostName}</strong><small>{title}</small></div>
@@ -57,11 +58,11 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
           setCommentFocused(Boolean(chatRef.current?.contains(document.activeElement) &&
             (document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement)));
         }, 0)}>
-        <LiveChat streamId={streamId} hostId={hostId} overlay />
+        <LiveViewerBoundary streamId={streamId} section="comments"><LiveChat streamId={streamId} hostId={hostId} overlay /></LiveViewerBoundary>
       </div>
       <details className="omLiveTheaterGuests">
         <summary aria-label="Open guest controls">♧ Guests</summary>
-        <div className="omLiveTheaterGuestPanel"><LiveGuestStudio streamId={streamId} roomName={roomName} hostId={hostId} /></div>
+        <div className="omLiveTheaterGuestPanel"><LiveViewerBoundary streamId={streamId} section="guests"><LiveGuestStudio streamId={streamId} roomName={roomName} hostId={hostId} /></LiveViewerBoundary></div>
       </details>
       <style jsx global>{`
         .omLiveCinema{position:fixed;inset:0;width:100vw;height:100dvh;background:#000;overflow:hidden;z-index:1000;isolation:isolate;--cinema-ease:cubic-bezier(.22,.72,.19,1)}
