@@ -75,3 +75,8 @@
  .backdrop{padding:16px!important}
  .backdrop .card{max-height:calc(100dvh - 32px)!important}
 }
+
+/* Welcome overlay must never lock the landing page or intercept background taps. */
+.backdrop{pointer-events:none!important}
+.backdrop .card{pointer-events:auto!important}
+.backdrop .wandering{animation:none!important;will-change:auto!important}

@@ -10,7 +10,7 @@ export default function SeamlessEntry({onClose}:{onClose:()=>void}){
  useEffect(()=>{try{const saved=(localStorage.getItem("1muslim-theme")||localStorage.getItem("1muslim-theme-color")||localStorage.getItem("1muslim:theme")||"jannah").toLowerCase();setEntryTheme(/ruby|red/.test(saved)?"ruby":/pink|hoor/.test(saved)?"hoor":/blue|sapphire|nur/.test(saved)?"nur":/gold|najma/.test(saved)?"najma":/black|obsidian|mulk/.test(saved)?"mulk":"jannah")}catch{}},[]);
  const card=useRef<HTMLDivElement>(null);
  useEffect(()=>{const t=requestAnimationFrame(()=>setEntering(true));return()=>cancelAnimationFrame(t)},[]);
- useEffect(()=>{if(stage!=="welcome"||closing)return;const timer=window.setTimeout(()=>change("signin"),30000);return()=>window.clearTimeout(timer)},[stage,closing]);
+ // Welcome stays interactive until the visitor chooses an action; no forced timed navigation.
  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key==="Escape")close()};document.addEventListener("keydown",key);return()=>document.removeEventListener("keydown",key)},[]);
  function close(){setClosing(true);setTimeout(onClose,240)}
  function change(next:Stage){setMessage("");setStage(next)}
