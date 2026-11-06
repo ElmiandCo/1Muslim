@@ -9,13 +9,13 @@ type Bounds={x:number;y:number;w:number;h:number};
 export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}:{videoKey:string;seconds:number;playing:boolean;bounds:Bounds}){
  const [entries,setEntries]=useState<Comment[]>([]);
  const [floating,setFloating]=useState<Floating[]>([]);
- const [outgoing,setOutgoing]=useState<{id:string;body:string;seconds:number;stage:"rise"|"land"}|null>(null);
+ const [outgoing,setOutgoing]=useState<{id:string;body:string;seconds:number;stage:"rise"|"exit"}|null>(null);
  useEffect(()=>{
    const onSent=(event:Event)=>{
      const detail=(event as CustomEvent<{id:string;body:string;seconds:number}>).detail;
      if(!detail?.id)return;
      setOutgoing({...detail,stage:"rise"});
-     window.setTimeout(()=>setOutgoing(current=>current?.id===detail.id?{...current,stage:"land"}:current),1050);
+     window.setTimeout(()=>setOutgoing(current=>current?.id===detail.id?{...current,stage:"exit"}:current),1050);
      window.setTimeout(()=>setOutgoing(current=>current?.id===detail.id?null:current),2150);
    };
    window.addEventListener("1muslim:elmilayerx-comment-sent",onSent);
@@ -75,7 +75,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
  // Canvas-to-screen depth is represented by a single viewport portal; its path crosses
  // the carousel boundary without any position or opacity discontinuity.
  return createPortal(<div className="elmi-timed-layers" aria-label="Timed video comments">
-   {outgoing&&<div key={outgoing.id} className={"elmilayerx-outgoing "+(outgoing.stage==="land"?"is-landing":"is-rising")} style={{"--elmi-target-x":(document.querySelector(".homeLiveCommentForm")?.getBoundingClientRect().left??bounds.x)+"px","--elmi-target-y":(document.querySelector(".homeLiveCommentForm")?.getBoundingClientRect().top??bounds.y+bounds.h)+"px"} as React.CSSProperties}><small>{Math.floor(outgoing.seconds/60)}:{String(outgoing.seconds%60).padStart(2,"0")}</small><span>{outgoing.body}</span></div>}
+   {outgoing&&<div key={outgoing.id} className={"elmilayerx-outgoing "+(outgoing.stage==="exit"?"is-exiting":"is-rising")}><small>{Math.floor(outgoing.seconds/60)}:{String(outgoing.seconds%60).padStart(2,"0")}</small><span>{outgoing.body}</span></div>}
 
    {floating.map((comment,i)=>{
      const canvasStart=comment.lane==="canvas";
@@ -95,7 +95,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
     .elmilayerx-outgoing{position:fixed;left:50%;top:calc(100vh - 36px);transform:translate(-50%,0) scale(.8);display:flex;flex-direction:column;gap:4px;max-width:min(340px,80vw);padding:8px 14px;border-radius:14px;border:1px solid var(--theme-primary,#a6dce0);background:rgba(12,24,35,.48);backdrop-filter:blur(9px);color:#fff;text-shadow:0 1px 4px #000;box-shadow:0 8px 24px #0004;opacity:0;transition:top 1.05s cubic-bezier(.2,.8,.2,1),left 1.05s cubic-bezier(.2,.8,.2,1),transform 1.05s cubic-bezier(.2,.8,.2,1),opacity .25s ease;pointer-events:none;z-index:10}
     .elmilayerx-outgoing small{font-size:10px;opacity:.8}
     .elmilayerx-outgoing.is-rising{top:50vh;transform:translate(-50%,-50%) scale(1.06);opacity:1}
-    .elmilayerx-outgoing.is-landing{left:var(--elmi-target-x);top:var(--elmi-target-y);transform:translate(0,0) scale(.65);opacity:0}
+    .elmilayerx-outgoing.is-exiting{left:50%;top:-90px;transform:translate(-50%,-100%) scale(.9);opacity:0}
     @media(prefers-reduced-motion:reduce){.elmilayerx-outgoing{transition:none}}
     .elmi-timed-layers{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;isolation:isolate}
     .elmi-timed-comment{position:absolute;display:flex;flex-direction:column;gap:3px;max-width:min(340px,65vw);padding:7px 12px;text-align:left;color:white;font-size:clamp(12px,1.3vw,14px);font-weight:600;line-height:1.35;border:1px solid color-mix(in srgb,var(--theme-primary,#a6dce0) 32%,transparent);border-radius:13px;background:rgba(10,18,26,.24);backdrop-filter:blur(5px);text-shadow:0 1px 5px #000;box-shadow:0 5px 18px #0003;pointer-events:auto;cursor:pointer;animation:elmi-layer-handoff 8s cubic-bezier(.38,.12,.4,.94) both;will-change:transform,opacity;z-index:2}
