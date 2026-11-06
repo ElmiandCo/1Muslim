@@ -57,7 +57,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   useEffect(()=>{if(!isPlaying){setShowArrows(true);return;}setShowArrows(false);const show=window.setTimeout(()=>{setShowArrows(true);arrowTimer.current=setTimeout(()=>setShowArrows(false),5000)},3000);return()=>{window.clearTimeout(show);if(arrowTimer.current)window.clearTimeout(arrowTimer.current)};},[isPlaying,format]);
   useEffect(()=>{
     if(!isPlaying||isPaused){setImmersive(false);setCinemaSettled(false);return;}
-    const timer=setTimeout(()=>setImmersive(true),5000);
+    const timer=setTimeout(()=>setImmersive(true),10000);
     return()=>clearTimeout(timer);
   },[isPlaying,soundEnabled,isPaused,format,cinemaEngaged]);
   useEffect(()=>{if(!immersive)return;const timer=setTimeout(()=>setCinemaSettled(true),23000);return()=>clearTimeout(timer);},[immersive]);
@@ -201,7 +201,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       .oneMuslimIdleYoutubePlayer{mask-image:linear-gradient(90deg,transparent 0%,#000 5%,#000 95%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 5%,#000 95%,transparent 100%);width:100%;height:100%;position:relative;z-index:1;overflow:hidden;border-radius:14px;background:#020b1d;box-shadow:0 7px 16px rgba(0,0,0,.28),0 18px 36px rgba(0,0,0,.16);animation:none}
       .oneMuslimFloatingPlayerShadow{position:absolute;z-index:0;left:7%;right:7%;height:26%;bottom:-10%;border-radius:50%;background:rgba(0,0,0,.65);filter:blur(19px);transform-origin:center;animation:none;pointer-events:none}
       .oneMuslimThemeTapOverlay{position:absolute;inset:0;z-index:3;pointer-events:none;background:transparent;border:1px solid transparent;border-radius:inherit;animation:oneMuslimOverlayBreath 3s ease-in-out infinite;display:grid;place-items:center;box-sizing:border-box}
-      .oneMuslimThemeTapOverlay.is-clear{background:transparent;border-color:transparent;box-shadow:none}
+      .oneMuslimThemeTapOverlay.is-clear{background:transparent!important;border-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
       .oneMuslimAutoSkipCard{position:absolute;z-index:9;left:50%;bottom:15%;transform:translateX(-50%);width:min(190px,50%);display:grid;place-items:center;border:0;border-radius:24px;background:color-mix(in srgb,var(--theme-primary,#65bcb9) 13%,rgba(7,18,28,.22));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:oneMuslimSkipAppear .2s ease-out,oneMuslimOverlayBreath 3s ease-in-out infinite;box-shadow:0 0 24px color-mix(in srgb,var(--theme-primary,#65bcb9) 16%,transparent)}
       .oneMuslimAutoSkipCard button{appearance:none;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 24px;cursor:pointer;width:100%;text-shadow:0 2px 10px rgba(0,0,0,.7)}
       .oneMuslimSkipLabel{font-size:clamp(11px,2vw,15px);font-weight:600;letter-spacing:.04em}
