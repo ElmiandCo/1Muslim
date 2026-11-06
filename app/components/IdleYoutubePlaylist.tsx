@@ -90,7 +90,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   // Track the visible video every animation frame: ResizeObserver alone misses CSS transforms,
   // carousel motion, the floating player's drift, and scroll-driven position changes.
   useEffect(()=>{
-    let frame=0;let last="";let lastComments="";let lastCommentsAt=0;
+    let frame=0;let last="";let lastComments="";let lastCommentsAt=0;let focusYOffset=0;
     const track=()=>{
       const video=mountRef.current?.closest<HTMLElement>(".oneMuslimIdleYoutubePlayer");
       const rect=video?.getBoundingClientRect();
@@ -112,13 +112,20 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
         const x=Math.max(0,rect.left),y=Math.max(0,rect.top);
         const right=Math.min(window.innerWidth,rect.right),bottom=Math.min(window.innerHeight,rect.bottom);
         const width=Math.max(0,right-x),height=Math.max(0,bottom-y);
-        const key=[x,y,width,height].map(n=>n.toFixed(1)).join(",");
+        // Explicitly raise ONLY the Deep Watch light by 100px when the
+        // carousel is hidden. Keep the expanded position untouched.
+        // Ease the offset to avoid a jump during carousel transitions.
+        const collapsed=!!video?.closest(".home-carousel-collapsed");
+        const targetYOffset=collapsed?-100:0;
+        focusYOffset+=(targetYOffset-focusYOffset)*0.16;
+        if(Math.abs(targetYOffset-focusYOffset)<0.15)focusYOffset=targetYOffset;
+        const key=[x,y,width,height,focusYOffset].map(n=>n.toFixed(1)).join(",");
         if(key!==last){
           last=key;
           const mask=cutout.parentElement;
           if(mask){
             mask.style.setProperty("--deep-focus-x",(x+width/2)+"px");
-            mask.style.setProperty("--deep-focus-y",(y+height/2)+"px");
+            mask.style.setProperty("--deep-focus-y",(y+height/2+focusYOffset)+"px");
             mask.style.setProperty("--deep-focus-rx",(width/2+30)+"px");
             mask.style.setProperty("--deep-focus-ry",(height/2+28)+"px");
           }
