@@ -9,6 +9,7 @@ type Bounds={x:number;y:number;w:number;h:number};
 export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}:{videoKey:string;seconds:number;playing:boolean;bounds:Bounds}){
  const [entries,setEntries]=useState<Comment[]>([]);
  const [avatars,setAvatars]=useState<Record<string,string|null>>({});
+ const [spotlight,setSpotlight]=useState<{body:string;atSeconds:number;started:number;userId:string}|null>(null);
  useEffect(()=>{const ids=[...new Set([...entries.map(c=>c.user_id),...(spotlight?.userId?[spotlight.userId]:[])])].filter(id=>id&&!Object.prototype.hasOwnProperty.call(avatars,id));if(!ids.length)return;let active=true;void createClient().from("profiles").select("id,avatar_url").in("id",ids).then(({data})=>{if(active)setAvatars(old=>({...old,...Object.fromEntries(ids.map(id=>[id,data?.find(p=>p.id===id)?.avatar_url||null]))}))});return()=>{active=false}},[entries,avatars,spotlight?.userId]);
  const [floating,setFloating]=useState<Floating[]>([]);
  const seen=useRef(new Set<string>());
@@ -16,7 +17,6 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
  const [ready,setReady]=useState(false);
  const [fullscreen,setFullscreen]=useState(false);
  useEffect(()=>{const sync=()=>setFullscreen(Boolean(document.fullscreenElement));sync();document.addEventListener("fullscreenchange",sync);return()=>document.removeEventListener("fullscreenchange",sync)},[]);
- const [spotlight,setSpotlight]=useState<{body:string;atSeconds:number;started:number;userId:string}|null>(null);
  useEffect(()=>{
    let timer:ReturnType<typeof setTimeout>|undefined;
    const onPosted=(event:Event)=>{
