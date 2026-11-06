@@ -117,3 +117,49 @@ BEGIN
  ) THEN RAISE EXCEPTION 'Storage objects RLS must remain enabled'; END IF;
  RAISE NOTICE 'Private editorial metadata grants and Storage RLS checked';
 END $$;
+
+-- Verify the privileged mutation entry points remain authenticated-only,
+-- definer-owned and search-path pinned. Static assertions; staging execution required.
+DO $$
+DECLARE fn regprocedure; n text; expected text[];
+BEGIN
+ expected := ARRAY[
+  'qibla_create_draft(text,text,text,text)',
+  'qibla_update_draft(uuid,text,text,text,text)',
+  'qibla_submit_article(uuid)',
+  'qibla_save_editor_revision(uuid,text,text,text)',
+  'qibla_publish_article(uuid)',
+  'qibla_apply_to_editorial(text,text,text,text,text)',
+  'qibla_review_application(uuid,text)'
+ ];
+ FOREACH n IN ARRAY expected LOOP
+  fn := to_regprocedure('public.' || n);
+  IF fn IS NULL THEN RAISE EXCEPTION 'Missing editorial RPC: %',n; END IF;
+  IF NOT EXISTS (
+   SELECT 1 FROM pg_proc p WHERE p.oid=fn
+    AND p.prosecdef
+    AND 'search_path=' = ANY(p.proconfig)
+  ) THEN
+   -- Postgres stores an empty pinned path as the literal search_path=.
+   RAISE EXCEPTION 'RPC missing SECURITY DEFINER and empty search_path: %',n;
+  END IF;
+  IF has_function_privilege('anon',fn,'EXECUTE')
+    OR has_function_privilege('PUBLIC',fn,'EXECUTE')
+    OR NOT has_function_privilege('authenticated',fn,'EXECUTE')
+  THEN RAISE EXCEPTION 'Unsafe RPC EXECUTE grants: %',n; END IF;
+ END LOOP;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_trigger t
+  JOIN pg_class c ON c.oid=t.tgrelid
+  JOIN pg_namespace ns ON ns.oid=c.relnamespace
+  WHERE ns.nspname='public' AND c.relname='qibla_editorial_events'
+    AND t.tgname='trg_qibla_first_editor_save' AND t.tgenabled<>'D'
+    AND NOT t.tgisinternal
+ ) THEN RAISE EXCEPTION 'First editor save notification trigger missing'; END IF;
+ IF EXISTS (
+  SELECT 1 FROM pg_policies WHERE schemaname='storage'
+   AND tablename='objects' AND policyname LIKE 'qibla_resume%'
+   AND cmd IN ('UPDATE','ALL')
+ ) THEN RAISE EXCEPTION 'Resume object mutation policy must not allow UPDATE'; END IF;
+ RAISE NOTICE 'Editorial RPC/notification trigger static contract verified';
+END $$;
