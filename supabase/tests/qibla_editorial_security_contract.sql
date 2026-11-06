@@ -206,3 +206,14 @@ BEGIN
  END IF;
  RAISE NOTICE 'No anonymous EXECUTE on discovered editorial mutation RPCs';
 END $$;
+
+-- Public editorial application RPC must not offer approver as an applicant role.
+-- This is a source-level regression guard, not a substitute for execution tests.
+DO $$
+DECLARE body text;
+BEGIN
+ SELECT pg_get_functiondef(to_regprocedure('public.qibla_apply_to_editorial(text,text,text,text,text)')) INTO body;
+ IF body IS NULL OR body NOT LIKE '%p_desired_role not in (''writer'',''editor'')%'
+ THEN RAISE EXCEPTION 'Editorial application RPC must restrict desired roles to writer/editor'; END IF;
+ RAISE NOTICE 'Editorial application role scope checked';
+END $$;
