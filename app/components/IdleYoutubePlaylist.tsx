@@ -54,7 +54,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   useEffect(()=>{if(!immersive)return;const timer=setTimeout(()=>setCinemaSettled(true),23000);return()=>clearTimeout(timer);},[immersive]);
   useEffect(()=>{
     if(!immersive)return;
-    const update=()=>{const rect=mountRef.current?.parentElement?.getBoundingClientRect();if(rect)setPlayerBounds({x:rect.left,y:rect.top,w:rect.width,h:rect.height});};
+    const update=()=>{const rect=mountRef.current?.closest(".oneMuslimIdleYoutubePlayer")?.getBoundingClientRect();if(rect&&rect.width>0&&rect.height>0)setPlayerBounds({x:rect.left,y:rect.top,w:rect.width,h:rect.height});};
     update();window.addEventListener("resize",update);window.addEventListener("scroll",update,true);
     return()=>{window.removeEventListener("resize",update);window.removeEventListener("scroll",update,true);};
   },[immersive]);
@@ -214,8 +214,8 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   </div><style>{`
     .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease}
     .oneMuslimCinemaDimmer.is-active{opacity:1;transition:opacity 13s ease}
-    .oneMuslimCinemaDimmer.is-settled{opacity:.75;transition:opacity 5s ease}\n    .oneMuslimCinemaDimmer .cinema-edge{position:absolute;display:block;pointer-events:none}
-    .oneMuslimCinemaDimmer .cinema-edge.is-top{top:0;left:0;right:0;height:var(--cinema-top);background:linear-gradient(to bottom,rgba(0,0,0,.62),rgba(0,0,0,.48))}
+    .oneMuslimCinemaDimmer.is-settled{opacity:.62;transition:opacity 5s ease}\n    .oneMuslimCinemaDimmer .cinema-edge{position:absolute;display:block;pointer-events:none}
+    .oneMuslimCinemaDimmer .cinema-edge.is-top{top:0;left:0;right:0;height:var(--cinema-top);background:linear-gradient(to bottom,rgba(0,0,0,.54),rgba(0,0,0,.38))}
     .oneMuslimCinemaDimmer .cinema-edge.is-bottom{bottom:0;left:0;right:0;height:var(--cinema-bottom);background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.48))}
     .oneMuslimCinemaDimmer .cinema-edge.is-left{top:var(--cinema-top);bottom:var(--cinema-bottom);left:0;width:var(--cinema-left);background:linear-gradient(to right,rgba(0,0,0,.62),rgba(0,0,0,.48))}
     .oneMuslimCinemaDimmer .cinema-edge.is-right{top:var(--cinema-top);bottom:var(--cinema-bottom);right:0;width:var(--cinema-right);background:linear-gradient(to left,rgba(0,0,0,.62),rgba(0,0,0,.48))}
