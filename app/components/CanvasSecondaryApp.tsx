@@ -214,14 +214,6 @@ function DailyPostsApp({active}:{active:boolean}){
  const [fypSearchQuery,setFypSearchQuery]=useState("");
  const [fypSpeed,setFypSpeed]=useState(1);
  const fypSpeedRef=useRef({timer:0,startY:0,startX:0,holding:false,video:null as HTMLVideoElement|null});
- useEffect(()=>{if(!fypStart){setFypSpeed(1);return;}const reel=fypReelRef.current;if(!reel)return;
-   const reset=()=>{const gesture=fypSpeedRef.current;window.clearTimeout(gesture.timer);if(gesture.video)gesture.video.playbackRate=1;gesture.holding=false;gesture.video=null;setFypSpeed(1)};
-   const start=(event:TouchEvent)=>{if(event.touches.length!==1)return;reset();const video=event.target instanceof HTMLVideoElement?event.target:null;if(!video||video.paused||video!==fypVideoRefs.current.get(fypOrder[fypActiveIndex]?.id))return;const touch=event.touches[0];const gesture=fypSpeedRef.current;gesture.startY=touch.clientY;gesture.startX=touch.clientX;gesture.video=video;gesture.timer=window.setTimeout(()=>{if(gesture.video!==video)return;gesture.holding=true;video.playbackRate=2;setFypSpeed(2)},350)};
-   const move=(event:TouchEvent)=>{const gesture=fypSpeedRef.current;if(!gesture.video||event.touches.length!==1)return;const touch=event.touches[0];if(!gesture.holding){if(Math.abs(touch.clientY-gesture.startY)>12||Math.abs(touch.clientX-gesture.startX)>12)reset();return;}if(event.cancelable)event.preventDefault();const distance=Math.max(0,gesture.startY-touch.clientY);const speed=distance>=160?5:distance>=75?3:2;if(gesture.video.playbackRate!==speed){gesture.video.playbackRate=speed;setFypSpeed(speed)}};
-   reel.addEventListener("touchstart",start,{passive:true});reel.addEventListener("touchmove",move,{passive:false});reel.addEventListener("touchend",reset);reel.addEventListener("touchcancel",reset);
-   return()=>{reset();reel.removeEventListener("touchstart",start);reel.removeEventListener("touchmove",move);reel.removeEventListener("touchend",reset);reel.removeEventListener("touchcancel",reset)};
- },[fypStart,fypActiveIndex,fypOrder]);
-
  const fypReelRef=useRef<HTMLDivElement|null>(null);
  const fypVideoRefs=useRef(new Map<string,HTMLVideoElement>());
  const [viewerPost,setViewerPost]=useState<string|null>(null);
@@ -241,6 +233,14 @@ function DailyPostsApp({active}:{active:boolean}){
  reel.addEventListener("touchstart",start,{passive:true});reel.addEventListener("touchmove",move,{passive:false});reel.addEventListener("touchend",end);reel.addEventListener("touchcancel",cancel);
  return()=>{reel.removeEventListener("touchstart",start);reel.removeEventListener("touchmove",move);reel.removeEventListener("touchend",end);reel.removeEventListener("touchcancel",cancel)};
  },[fypStart]);
+ useEffect(()=>{if(!fypStart){setFypSpeed(1);return;}const reel=fypReelRef.current;if(!reel)return;
+   const reset=()=>{const gesture=fypSpeedRef.current;window.clearTimeout(gesture.timer);if(gesture.video)gesture.video.playbackRate=1;gesture.holding=false;gesture.video=null;setFypSpeed(1)};
+   const start=(event:TouchEvent)=>{if(event.touches.length!==1)return;reset();const video=event.target instanceof HTMLVideoElement?event.target:null;if(!video||video.paused||video!==fypVideoRefs.current.get(fypOrder[fypActiveIndex]?.id))return;const touch=event.touches[0];const gesture=fypSpeedRef.current;gesture.startY=touch.clientY;gesture.startX=touch.clientX;gesture.video=video;gesture.timer=window.setTimeout(()=>{if(gesture.video!==video)return;gesture.holding=true;video.playbackRate=2;setFypSpeed(2)},350)};
+   const move=(event:TouchEvent)=>{const gesture=fypSpeedRef.current;if(!gesture.video||event.touches.length!==1)return;const touch=event.touches[0];if(!gesture.holding){if(Math.abs(touch.clientY-gesture.startY)>12||Math.abs(touch.clientX-gesture.startX)>12)reset();return;}if(event.cancelable)event.preventDefault();const distance=Math.max(0,gesture.startY-touch.clientY);const speed=distance>=160?5:distance>=75?3:2;if(gesture.video.playbackRate!==speed){gesture.video.playbackRate=speed;setFypSpeed(speed)}};
+   reel.addEventListener("touchstart",start,{passive:true});reel.addEventListener("touchmove",move,{passive:false});reel.addEventListener("touchend",reset);reel.addEventListener("touchcancel",reset);
+   return()=>{reset();reel.removeEventListener("touchstart",start);reel.removeEventListener("touchmove",move);reel.removeEventListener("touchend",reset);reel.removeEventListener("touchcancel",reset)};
+ },[fypStart,fypActiveIndex,fypOrder]);
+
  const fypSearchResults=useMemo(()=>{const q=fypSearchQuery.trim().toLocaleLowerCase();if(!q)return [];return fypOrder.map((post,index)=>({post,index})).filter(({post})=>[post.body,post.author_name].some(value=>String(value||"").toLocaleLowerCase().includes(q))).slice(0,12)},[fypOrder,fypSearchQuery]);
 
  const [fypWarmingUp,setFypWarmingUp]=useState(false);
