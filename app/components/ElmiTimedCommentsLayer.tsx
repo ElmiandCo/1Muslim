@@ -9,7 +9,7 @@ type Bounds={x:number;y:number;w:number;h:number};
 export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}:{videoKey:string;seconds:number;playing:boolean;bounds:Bounds}){
  const [entries,setEntries]=useState<Comment[]>([]);
  const [avatars,setAvatars]=useState<Record<string,string|null>>({});
- useEffect(()=>{const ids=[...new Set(entries.map(c=>c.user_id))].filter(id=>id&&!Object.prototype.hasOwnProperty.call(avatars,id));if(!ids.length)return;let active=true;void createClient().from("profiles").select("id,avatar_url").in("id",ids).then(({data})=>{if(active)setAvatars(old=>({...old,...Object.fromEntries(ids.map(id=>[id,data?.find(p=>p.id===id)?.avatar_url||null]))}))});return()=>{active=false}},[entries,avatars]);
+ useEffect(()=>{const ids=[...new Set([...entries.map(c=>c.user_id),...(spotlight?.userId?[spotlight.userId]:[])])].filter(id=>id&&!Object.prototype.hasOwnProperty.call(avatars,id));if(!ids.length)return;let active=true;void createClient().from("profiles").select("id,avatar_url").in("id",ids).then(({data})=>{if(active)setAvatars(old=>({...old,...Object.fromEntries(ids.map(id=>[id,data?.find(p=>p.id===id)?.avatar_url||null]))}))});return()=>{active=false}},[entries,avatars,spotlight?.userId]);
  const [floating,setFloating]=useState<Floating[]>([]);
  const seen=useRef(new Set<string>());
  const previous=useRef(-1);
