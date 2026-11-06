@@ -48,6 +48,9 @@ export default function QiblaNewsroom() {
         .eq("status", "published")
         .order("published_at", { ascending: false })
         .limit(60);
+      // A retry or route change can finish while this second request is in flight.
+      // Ignore the obsolete response rather than overwriting the active magazine state.
+      if (!alive) return;
       if (readError && editorialError) setError("Stories could not be loaded. Please try again.");
       else {
         const legacy = (data ?? []).map((page) => ({ ...page, source: "legacy" as const }));
