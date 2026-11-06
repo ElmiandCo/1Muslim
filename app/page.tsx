@@ -220,6 +220,18 @@ export default function Home(){
  const [callHistory,setCallHistory]=useState<Array<{id:string;created_at:string}>>([]);
  const [lessonPreview,setLessonPreview]=useState<Array<{id:string;title:string}>>([]);
  const [workspacePage,setWorkspacePage]=useState(0);
+ useEffect(()=>{
+   const sections=["Live","Quran","Post","Messages","Elm Tent","Community","Profile"] as const;
+   let last=Date.now();let pending=0;let running=true;
+   const client=createClient();
+   const flush=async(section:string,seconds:number)=>{if(seconds<=0)return;try{const {data:{user}}=await client.auth.getUser();if(user)await client.from("app_engagement_events").insert({user_id:user.id,section,event_type:"active_seconds",duration_seconds:Math.min(120,seconds)})}catch{}};
+   const tick=()=>{const now=Date.now();const delta=Math.min(15,Math.max(0,(now-last)/1000));last=now;if(document.visibilityState==="visible"&&document.hasFocus())pending+=delta;if(pending>=30){const amount=Math.floor(pending);pending-=amount;void flush(sections[workspacePage]||"Live",amount)}};
+   const interval=window.setInterval(tick,5000);
+   const onHide=()=>{tick();const amount=Math.floor(pending);pending=0;void flush(sections[workspacePage]||"Live",amount)};
+   document.addEventListener("visibilitychange",onHide);window.addEventListener("pagehide",onHide);
+   return()=>{running=false;window.clearInterval(interval);document.removeEventListener("visibilitychange",onHide);window.removeEventListener("pagehide",onHide);onHide()};
+ },[workspacePage]);
+
  const workspaceNavRef=useRef<HTMLElement>(null);
  const [profileOverlayBounds,setProfileOverlayBounds]=useState<{top:number;bottom:number;left:number;width:number}|null>(null);
  useEffect(()=>{if(workspacePage!==6||homeSignedIn!==false)return;try{setHudhudGuestLocked(sessionStorage.getItem("1muslim-hudhud-offscreen")==="1")}catch{setHudhudGuestLocked(false)}},[workspacePage,homeSignedIn]);
