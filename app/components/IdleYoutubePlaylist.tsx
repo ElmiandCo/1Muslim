@@ -60,7 +60,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       index=nextIndex;selectedIndexRef.current=index;
       const selected=playlist[index];
       player.loadVideoById({videoId:selected.videoId,startSeconds:selected.startSeconds});
-      setIsPaused(false);setTapHint(false);
+      setIsPaused(false);
     };
     window.addEventListener("oneMuslimSelectCarouselVideo",selectVideo);
     navigateRef.current=(step)=>{
@@ -91,7 +91,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
             },250);
           },
-          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPaused(true);setTapHint(true)}else if(data===1){setIsPaused(false)}}
+          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPaused(true);}else if(data===1){setIsPaused(false)}}
         }
       });
     };
