@@ -1462,6 +1462,13 @@ export default function GoLivePage() {
         @keyframes studioLaunchIllumination{0%{opacity:0;transform:scale(.6)}22%{opacity:.9;transform:scale(1.02)}70%{opacity:.35;transform:scale(1.1)}100%{opacity:0;transform:scale(1.2)}}
         @media(prefers-reduced-motion:reduce){.studioLaunchFlashOn{animation:none}.goLive .layout>.panel:first-child>.preview.studioTransform .newStudioActions *{transition:none!important}}
 
+        /* Fullscreen contains only the camera stage; all studio settings remain outside it. */
+        .broadcastFullscreenToggle{position:absolute;right:12px;top:12px;z-index:60;width:38px;height:38px;border:1px solid #ffffff70;border-radius:12px;background:#071b18a8;color:white;font-size:24px;cursor:pointer;backdrop-filter:blur(10px)}
+        #oneMuslimBroadcastFullscreen:fullscreen{width:100vw!important;height:100dvh!important;max-width:none!important;max-height:none!important;inset:0!important;margin:0!important;border:0!important;border-radius:0!important;background:#000!important;overflow:hidden!important}
+        #oneMuslimBroadcastFullscreen:fullscreen .studioCameraFrame{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important}
+        #oneMuslimBroadcastFullscreen:fullscreen .broadcastFullscreenToggle{opacity:.35}
+        #oneMuslimBroadcastFullscreen:fullscreen .broadcastFullscreenToggle:hover,#oneMuslimBroadcastFullscreen:fullscreen .broadcastFullscreenToggle:focus-visible{opacity:1}
+        #oneMuslimBroadcastFullscreen:fullscreen .placeholder{display:none!important}
         /* Compact glass settings: single source of format selection is the studio mode switcher. */
         .goLive .compactLiveSettings{background:rgba(7,23,18,.68)!important;backdrop-filter:blur(24px) saturate(1.25)!important;-webkit-backdrop-filter:blur(24px) saturate(1.25)!important;border:1px solid rgba(201,255,227,.22)!important;box-shadow:0 20px 65px #0008!important;padding:16px!important;border-radius:20px!important;max-height:min(72dvh,550px)!important;height:auto!important}
         .compactLiveSettingsHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
@@ -1778,7 +1785,8 @@ export default function GoLivePage() {
 
         <div className="layout">
           <section className="panel">
-            <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} data-studio-mode={studioMode} data-guest-count={live&&studioMode!=="voice"?Math.min(3,guestRoster.length):0} className={`preview studioTransform ${studioMorphing?"studioMorphing":""} format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"} ${studioMode==="voice"?"studioVoiceMode":""}`}>
+            <div onTouchEnd={()=>{const now=Date.now();if(now-lastPreviewTapRef.current<320&&cameraReady)void flipCamera();lastPreviewTapRef.current=now}} onDoubleClick={()=>{if(cameraReady)void flipCamera()}} data-studio-mode={studioMode} data-guest-count={live&&studioMode!=="voice"?Math.min(3,guestRoster.length):0} id="oneMuslimBroadcastFullscreen" className={`preview studioTransform ${studioMorphing?"studioMorphing":""} format-${aspectRatio === "9:16" ? "portrait" : aspectRatio === "1:1" ? "square" : "landscape"} ${studioMode==="voice"?"studioVoiceMode":""}`}>
+              <button type="button" className="broadcastFullscreenToggle" aria-label="Fullscreen broadcast preview without settings" onClick={async(e)=>{e.stopPropagation();const target=e.currentTarget.closest(".preview") as HTMLElement|null;if(!target)return;try{if(document.fullscreenElement)await document.exitFullscreen();else{setSettingsOpen(false);await target.requestFullscreen();}}catch{}}}>⛶</button>
               <div className="studioCameraFrame" aria-hidden={studioMode==="voice"}>
                 {cameraReady ? <video ref={videoRef} className={facingMode === "user" ? "frontCamera" : "backCamera"} muted playsInline autoPlay /> : <div className="placeholder"><div className="cameraIcon">◉</div><div>Camera preview is off</div></div>}
               </div>
