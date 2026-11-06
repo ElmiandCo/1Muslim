@@ -1,4 +1,28 @@
 -- One timestamped comment per video second, allocated atomically.
+do $
+declare
+  item record;
+  slot integer;
+begin
+  -- Preserve existing comments: relocate duplicates to the first unoccupied second.
+  for item in
+    select id,video_key,at_seconds from (
+      select id,video_key,at_seconds,
+        row_number() over(partition by video_key,at_seconds order by created_at,id) as ordinal
+      from public.featured_video_timed_comments
+    ) ranked where ordinal>1 order by video_key,at_seconds,id
+  loop
+    slot := item.at_seconds+1;
+    while slot<=86400 and exists(
+      select 1 from public.featured_video_timed_comments
+      where video_key=item.video_key and at_seconds=slot
+    ) loop slot:=slot+1;end loop;
+    if slot<=86400 then
+      update public.featured_video_timed_comments set at_seconds=slot where id=item.id;
+    end if;
+  end loop;
+end $;
+
 create unique index if not exists featured_video_timed_one_per_second
   on public.featured_video_timed_comments(video_key, at_seconds);
 
