@@ -28,8 +28,26 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const navigateRef=useRef<(step:number)=>void>(()=>{});
   const transitionTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
   const [slideDirection,setSlideDirection]=useState<0|1|-1>(0);
+  const [isPlaying,setIsPlaying]=useState(false);
+  const [showArrows,setShowArrows]=useState(true);
+  const [immersive,setImmersive]=useState(false);
+  const [playerBounds,setPlayerBounds]=useState({x:0,y:0,w:0,h:0});
+  const arrowTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+  const revealArrows=()=>{setShowArrows(true);if(arrowTimer.current)clearTimeout(arrowTimer.current);arrowTimer.current=setTimeout(()=>setShowArrows(false),1800);};
+  useEffect(()=>{
+    if(!isPlaying||!soundEnabled||isPaused){setImmersive(false);return;}
+    const timer=setTimeout(()=>setImmersive(true),5000);
+    return()=>clearTimeout(timer);
+  },[isPlaying,soundEnabled,isPaused,format]);
+  useEffect(()=>{
+    if(!immersive)return;
+    const update=()=>{const rect=mountRef.current?.parentElement?.getBoundingClientRect();if(rect)setPlayerBounds({x:rect.left,y:rect.top,w:rect.width,h:rect.height});};
+    update();window.addEventListener("resize",update);window.addEventListener("scroll",update,true);
+    return()=>{window.removeEventListener("resize",update);window.removeEventListener("scroll",update,true);};
+  },[immersive]);
+  useEffect(()=>()=>{if(arrowTimer.current)clearTimeout(arrowTimer.current);},[]);
   const navigate=(step:number)=>navigateRef.current(step);
-  const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);setIsPaused(false);setTapHint(false);playerRef.current?.unMute();playerRef.current?.playVideo();};
+  const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);setIsPaused(false);setTapHint(false);setIsPlaying(false);setImmersive(false);playerRef.current?.unMute();playerRef.current?.playVideo();};
   const selectedIndexRef=useRef<number|null>(null);
   useEffect(()=>{
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
@@ -50,7 +68,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       selectedIndexRef.current=index;
       const video=playlist[index];
       player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
-      setTapHint(true);setIsPaused(false);
+      setTapHint(true);setIsPaused(false);setIsPlaying(false);setImmersive(false);
       if(!soundEnabledRef.current)player.mute();
       try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:video.startSeconds}));}catch{}
     };
@@ -92,7 +110,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
             },250);
           },
-          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPaused(true);setTapHint(true)}else if(data===1){setIsPaused(false)}}
+          onStateChange:({data})=>{if(data===0)next();else if(data===2){setIsPlaying(false);setIsPaused(true);setTapHint(true)}else if(data===1){setIsPlaying(true);setIsPaused(false)}else if(data===3){setIsPlaying(false)}}
         }
       });
     };
@@ -118,15 +136,15 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       if(player){try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:player.getCurrentTime()}));}catch{};player.destroy();}
     };
   },[format]);
-  return <div className={"oneMuslimFloatingPlayerRig"+(format==="phone"?" is-phone":"")} aria-label="Floating featured video player" onTouchStart={e=>{if(format==="phone")swipeStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const start=swipeStart.current;swipeStart.current=null;if(format!=="phone"||!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.2)navigate(dy<0?1:-1)}}>
+  return <><div className={"oneMuslimFloatingPlayerRig"+(format==="phone"?" is-phone":"")} aria-label="Floating featured video player" onPointerMove={revealArrows} onPointerDown={revealArrows} onTouchStart={e=>{if(format==="phone")swipeStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const start=swipeStart.current;swipeStart.current=null;if(format!=="phone"||!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.2)navigate(dy<0?1:-1)}}>
     <div className="oneMuslimFloatingPlayerShadow" aria-hidden="true"/>
     <div className={"oneMuslimIdleYoutubePlayer"+(slideDirection?" is-switching "+(slideDirection>0?"is-next":"is-previous"):"")} aria-label="Featured video playlist while no broadcasts are live">
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
       {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
       <span className="oneMuslimThemeBrand" aria-hidden="true">1Muslim</span>
-      <button type="button" className="oneMuslimPlaylistArrow is-left" aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
-      <button type="button" className="oneMuslimPlaylistArrow is-right" aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
+      <button type="button" className={"oneMuslimPlaylistArrow is-left"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
+      <button type="button" className={"oneMuslimPlaylistArrow is-right"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
     </div>
     <style>{`
       .oneMuslimFloatingPlayerRig.is-phone{touch-action:pan-y;max-width:420px;aspect-ratio:9/16;max-height:100%;margin:0 auto 12px}
@@ -141,7 +159,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       
       .oneMuslimPlayerSoundActivator{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;border:0;background:transparent;cursor:pointer;touch-action:manipulation}
       .oneMuslimPlaylistArrow{position:absolute;z-index:4;top:10px;transform:none;width:24px;height:24px;min-width:24px;min-height:24px;padding:0;border:1px solid color-mix(in srgb,var(--theme-primary,#75bfff) 19%,transparent);border-radius:50%;background:color-mix(in srgb,var(--theme-primary,#75bfff) 3%,transparent);color:color-mix(in srgb,var(--theme-primary,#75bfff) 25%,white);font:300 19px/1 sans-serif;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 0 7px color-mix(in srgb,var(--theme-primary,#75bfff) 11%,transparent);transition:background .25s ease,box-shadow .25s ease,color .25s ease}
-      .oneMuslimPlaylistArrow.is-left{left:10px}.oneMuslimPlaylistArrow.is-right{right:10px}
+      .oneMuslimPlaylistArrow.is-idle{opacity:0;pointer-events:none;transition:opacity 1s ease,background .25s ease,box-shadow .25s ease,color .25s ease}\n      .oneMuslimPlaylistArrow:not(.is-idle){opacity:1;transition:opacity .3s ease,background .25s ease,box-shadow .25s ease,color .25s ease}\n      .oneMuslimPlaylistArrow.is-left{left:10px}.oneMuslimPlaylistArrow.is-right{right:10px}
       .oneMuslimPlaylistArrow:hover,.oneMuslimPlaylistArrow:focus-visible{background:color-mix(in srgb,var(--theme-primary,#75bfff) 9%,transparent);box-shadow:0 0 10px color-mix(in srgb,var(--theme-primary,#75bfff) 18%,transparent);outline-offset:2px}
       .oneMuslimIdleYoutubePlayer>div:first-child{transition:transform .24s cubic-bezier(.2,.7,.2,1),opacity .24s ease}
       .oneMuslimIdleYoutubePlayer.is-switching.is-next>div:first-child{transform:translateX(-8%);opacity:.22}
@@ -151,5 +169,9 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       @keyframes oneMuslimRigDrift{0%,100%{transform:translate3d(0,0,0)}25%{transform:translate3d(2px,-1px,0)}50%{transform:translate3d(-2px,1px,0)}75%{transform:translate3d(1px,2px,0)}}
       @media(prefers-reduced-motion:reduce){.oneMuslimFloatingPlayerRig,.oneMuslimIdleYoutubePlayer,.oneMuslimFloatingPlayerShadow,.oneMuslimThemeTapOverlay{animation:none!important}.oneMuslimIdleYoutubePlayer>div:first-child{transition:none!important}}
     `}</style>
-  </div>;
+  </div>{<div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")} style={{"--cinema-x":(playerBounds.x+playerBounds.w/2)+"px","--cinema-y":(playerBounds.y+playerBounds.h/2)+"px","--cinema-w":Math.max(1,playerBounds.w)+"px","--cinema-h":Math.max(1,playerBounds.h)+"px"} as React.CSSProperties}/>}<style>{`
+    .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;background:rgba(0,0,0,.62);opacity:0;transition:opacity 2.8s ease;mask-image:radial-gradient(ellipse calc(var(--cinema-w)*.87) calc(var(--cinema-h)*1.05) at var(--cinema-x) var(--cinema-y),transparent 38%,rgba(0,0,0,.35) 68%,black 100%);-webkit-mask-image:radial-gradient(ellipse calc(var(--cinema-w)*.87) calc(var(--cinema-h)*1.05) at var(--cinema-x) var(--cinema-y),transparent 38%,rgba(0,0,0,.35) 68%,black 100%)}
+    .oneMuslimCinemaDimmer.is-active{opacity:1;transition:opacity 13s ease}
+    @media(prefers-reduced-motion:reduce){.oneMuslimCinemaDimmer,.oneMuslimCinemaDimmer.is-active{transition:none}}
+  `}</style></>;
 }
