@@ -260,8 +260,8 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       @keyframes oneMuslimRigDrift{0%,100%{transform:translate3d(0,0,0)}25%{transform:translate3d(2px,-1px,0)}50%{transform:translate3d(-2px,1px,0)}75%{transform:translate3d(1px,2px,0)}}
       @media(prefers-reduced-motion:reduce){.oneMuslimFloatingPlayerRig,.oneMuslimIdleYoutubePlayer,.oneMuslimFloatingPlayerShadow,.oneMuslimThemeTapOverlay{animation:none!important}.oneMuslimIdleYoutubePlayer>div:first-child{transition:none!important}}
     `}</style>
-  </div><ElmiTimedCommentsLayer videoKey={timedVideoKey} seconds={timedSeconds} playing={isPlaying&&!isPaused} bounds={playerBounds}/><div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")+(spotlightsGathered?" is-gathered":"")} style={{"--cinema-left":Math.max(0,playerBounds.x)+"px","--cinema-top":Math.max(0,playerBounds.y+playerBounds.h*.12)+"px","--cinema-right":Math.max(0,(typeof window!=="undefined"?window.innerWidth:0)-playerBounds.x-playerBounds.w)+"px","--cinema-bottom":Math.max(0,(typeof window!=="undefined"?window.innerHeight:0)-playerBounds.y-playerBounds.h*.88)+"px"} as React.CSSProperties}>
-    <span className="cinema-edge is-top"/><span className="cinema-edge is-bottom"/><span className="cinema-edge is-left"/><span className="cinema-edge is-right"/><span className="cinema-spotlight cinema-spotlight-left"/><span className="cinema-spotlight cinema-spotlight-right"/><span className="cinema-spotlight cinema-spotlight-top"/>
+  </div><ElmiTimedCommentsLayer videoKey={timedVideoKey} seconds={timedSeconds} playing={isPlaying&&!isPaused} bounds={playerBounds}/><div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")}>
+    <span className="cinema-video-cutout" style={{left:Math.max(0,playerBounds.x-7)+"px",top:Math.max(0,playerBounds.y-7)+"px",width:Math.max(0,playerBounds.w+14)+"px",height:Math.max(0,playerBounds.h+24)+"px"}}/>
   </div><style>{`
     .oneMuslimReflectiveChat{position:relative;isolation:isolate;overflow:hidden}
     .oneMuslimReflectiveChat>.oneMuslimVideoWaterReflection{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;opacity:.065;mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.45) 40%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.45) 40%,transparent 100%)}
@@ -269,21 +269,11 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     .oneMuslimReflectiveChat>:not(.oneMuslimVideoWaterReflection){position:relative;z-index:1}
     @keyframes oneMuslimReflectionRipple{from{transform:scaleY(-1) scale(1.06) translateX(-.5%)}to{transform:scaleY(-1) scale(1.075) translateX(.5%)}}
     @media(prefers-reduced-motion:reduce){.oneMuslimVideoWaterReflectionImage{animation:none}}
-    .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease}
-    .oneMuslimCinemaDimmer.is-active{opacity:1;transition:opacity 2.6s ease}
-    .oneMuslimCinemaDimmer.is-settled{opacity:1;transition:opacity 2.6s ease}\n    .oneMuslimCinemaDimmer .cinema-edge{position:absolute;display:block;pointer-events:none}
-    .oneMuslimCinemaDimmer .cinema-edge.is-top{top:0;left:0;right:0;height:var(--cinema-top);background:linear-gradient(to bottom,rgba(0,0,0,.92) 0%,rgba(0,0,0,.76) 76%,rgba(0,0,0,.10) 100%)}
-    .oneMuslimCinemaDimmer .cinema-edge.is-bottom{bottom:0;left:0;right:0;height:var(--cinema-bottom);background:linear-gradient(to top,rgba(0,0,0,.76) 0%,rgba(0,0,0,.62) 76%,rgba(0,0,0,.10) 100%)}
-    .oneMuslimCinemaDimmer .cinema-edge.is-left{top:var(--cinema-top);bottom:var(--cinema-bottom);left:0;width:var(--cinema-left);background:linear-gradient(to right,rgba(0,0,0,.85),rgba(0,0,0,.60))}
-    .oneMuslimCinemaDimmer .cinema-edge.is-right{top:var(--cinema-top);bottom:var(--cinema-bottom);right:0;width:var(--cinema-right);background:linear-gradient(to left,rgba(0,0,0,.62),rgba(0,0,0,.48))}
-    /* Three restrained beams converge on the player after six seconds of playback. */
-    .oneMuslimCinemaDimmer .cinema-spotlight{position:absolute;pointer-events:none;opacity:0;mix-blend-mode:screen;transition:opacity 2.8s ease,transform 4.5s cubic-bezier(.2,.75,.25,1);filter:blur(24px);border-radius:50%;background:radial-gradient(ellipse at center,rgba(232,248,255,.20) 0%,rgba(180,219,255,.10) 40%,transparent 75%)}
-    .oneMuslimCinemaDimmer .cinema-spotlight-left{left:var(--cinema-left);top:var(--cinema-top);width:32vw;height:52vh;transform:translate(-75%,-15%)}
-    .oneMuslimCinemaDimmer .cinema-spotlight-right{right:var(--cinema-right);top:var(--cinema-top);width:32vw;height:52vh;transform:translate(75%,-15%)}
-    .oneMuslimCinemaDimmer .cinema-spotlight-top{left:calc(50% - 22vw);top:var(--cinema-top);width:44vw;height:35vh;transform:translateY(-80%)}
-    .oneMuslimCinemaDimmer.is-gathered.is-active .cinema-spotlight{opacity:.8;transform:translate(0,0)}
-    .oneMuslimCinemaDimmer.is-settled.is-active .cinema-spotlight{opacity:1;filter:blur(32px);background:radial-gradient(ellipse at center,rgba(242,250,255,.30) 0%,rgba(204,231,255,.16) 48%,transparent 82%)}
-    .oneMuslimCinemaDimmer.is-gathered.is-active .cinema-edge{filter:blur(18px)}
-        /* Feather the cutout so the bright player and its floating shadow remain the focal point. */\n    .oneMuslimCinemaDimmer .cinema-edge{filter:blur(9px)}\n    @media(prefers-reduced-motion:reduce){.oneMuslimCinemaDimmer,.oneMuslimCinemaDimmer.is-active,.oneMuslimCinemaDimmer .cinema-spotlight{transition:none!important}.oneMuslimCinemaDimmer .cinema-spotlight{display:none}}
+    /* Transparent tracked cutout: darken everything OUTSIDE the video, never the iframe. */
+    .oneMuslimCinemaDimmer{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:0;transition:opacity 2.8s ease;overflow:hidden}
+    .oneMuslimCinemaDimmer.is-active{opacity:1}
+    .oneMuslimCinemaDimmer .cinema-video-cutout{position:fixed;display:block;box-sizing:border-box;border-radius:24px;box-shadow:0 0 0 200vmax rgba(0,0,0,.68),0 0 18px 8px rgba(0,0,0,.12);transition:left 240ms ease,top 240ms ease,width 240ms ease,height 240ms ease;pointer-events:none;background:transparent}
+    .oneMuslimCinemaDimmer.is-settled .cinema-video-cutout{box-shadow:0 0 0 200vmax rgba(0,0,0,.88),0 0 24px 9px rgba(0,0,0,.16)}
+    @media(prefers-reduced-motion:reduce){.oneMuslimCinemaDimmer,.oneMuslimCinemaDimmer .cinema-video-cutout{transition:none!important}}
   `}</style></>;
 }
