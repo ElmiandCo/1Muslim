@@ -15,8 +15,8 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   const [requests,setRequests]=useState<GuestRequest[]>([]);
   const [loaded,setLoaded]=useState(false);
   const [requesterNames,setRequesterNames]=useState<Record<string,string>>({});
-  const [mode,setMode]=useState<"pfp"|"camera">("pfp");
-  const [audioOnly,setAudioOnly]=useState(true);
+  const [mode,setMode]=useState<"pfp"|"camera">("camera");
+  const [audioOnly,setAudioOnly]=useState(false);
   const [mediaConsent,setMediaConsent]=useState(false);
   const [joined,setJoined]=useState(false);
   const [busy,setBusy]=useState(false);
@@ -230,46 +230,53 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
       @keyframes guestPromptEnter{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
       @media(prefers-reduced-motion:reduce){.oneMuslimGuestJoinPrompt{animation:none}}
     `}</style>
-    <button type="button" aria-expanded={panelOpen} aria-controls="live-guest-controls-panel" onClick={()=>setPanelOpen(open=>!open)} style={{border:"1px solid var(--theme-border,#8aa398)",borderRadius:999,padding:compactJoin?"8px 12px":"9px 14px",minHeight:compactJoin?36:undefined,fontSize:compactJoin?12:undefined,boxSizing:"border-box",background:"color-mix(in srgb,var(--theme-panel,#101a13) 76%,transparent)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",color:"var(--theme-text,#e7f5e6)",fontWeight:600,cursor:"pointer",boxShadow:"0 8px 24px #0005"}}>{compactJoin?"Join":`👥 Guests${host&&pendingCount>0?` · ${pendingCount}`:""} ${panelOpen?"⌃":"⌄"}`}</button>
-    {panelOpen&&<section id="live-guest-controls-panel" aria-label="Live guest controls" style={{position:"absolute",right:0,bottom:"calc(100% + 10px)",width:host?"min(340px,calc(100vw - 32px))":"min(230px,calc(100vw - 32px))",maxHeight:"min(55dvh,430px)",overflowY:"auto",overscrollBehavior:"contain",padding:host?14:8,border:"1px solid color-mix(in srgb,var(--theme-border,#48624b) 38%,transparent)",borderRadius:18,background:"color-mix(in srgb,var(--theme-panel,#101a13) 14%,transparent)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",boxShadow:"0 8px 24px #0003",color:"var(--theme-text,#e7f5e6)"}}>
-    {host?<div><strong>👑 Guest requests</strong>
-      {requests.filter(r=>r.status==="pending").map(r=><div key={r.id} style={{display:"flex",gap:8,alignItems:"center",marginTop:8,flexWrap:"wrap"}}>
-        <span>{requesterNames[r.user_id]||r.user_id.slice(0,8)} · {r.mode}</span>
-        <button type="button" disabled={busy} onClick={()=>void moderate(r.id,"approved")}>Approve</button>
-        <button type="button" disabled={busy} onClick={()=>void moderate(r.id,"rejected")}>Decline</button>
-      </div>)}
-      {requests.filter(r=>r.status==="approved").map(r=><div key={r.id} style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",marginTop:8}}>
-        <span>🎤 {requesterNames[r.user_id]||r.user_id.slice(0,8)}</span>
-        <button type="button" disabled={busy} onClick={()=>void moderate(r.id,r.host_muted?"unmute":"mute")}>{r.host_muted?"Allow mic":"Mute mic"}</button>
-        <button type="button" disabled={busy} onClick={()=>void moderate(r.id,"removed")}>Remove</button>
-      </div>)}
-      {loaded&&!requests.some(r=>r.status==="pending"||r.status==="approved")&&<p>No guest requests yet.</p>}
-    </div>:<div>
-      {!joined&&me?.status!=="approved"&&me?.status!=="pending"&&<button type="button" disabled={busy} onClick={()=>void request()} style={{width:"100%",padding:"11px 18px",border:"1px solid var(--theme-border,#ffffff55)",borderRadius:999,background:"color-mix(in srgb,var(--theme-panel,#101a13) 12%,transparent)",color:"var(--theme-text,#fff)",fontSize:14,fontWeight:600,backdropFilter:"blur(8px)",cursor:"pointer"}}>{busy?"Requesting…":"Request"}</button>}
-      {me?.status==="pending"&&<p role="status">⏳ Waiting for host approval…</p>}
-      {me?.status==="approved"&&!joined&&<div>
-        <label style={{display:"flex",alignItems:"flex-start",gap:8,fontSize:12,margin:"8px 0"}}>
-          <input type="checkbox" checked={mediaConsent} onChange={e=>setMediaConsent(e.target.checked)} />
-          I agree to share my microphone{me.mode==="camera"&&!audioOnly?" and camera":""} with this Live.
-        </label>
-        <button type="button" disabled={busy||!mediaConsent} onClick={()=>void join()}>Join stage</button>
-      </div>}
-      {joined&&<div><p role="status">🔴 You're on stage</p>
-        {me?.mode==="camera"&&!audioOnly&&<div style={{position:"relative",maxWidth:250}}>
-          <video ref={preview} muted autoPlay playsInline style={{width:"100%",borderRadius:12,filter:background==="blur"?"blur(4px)":"none"}}/>
-          <span style={{fontSize:11}}>Preview effects (local only)</span>
+    <style jsx>{`
+      .guestMainButton,.guestAction{border:1px solid var(--theme-border,#d4b97988);border-radius:999px;background:color-mix(in srgb,var(--theme-primary,#075e45) 58%,#071713);color:var(--theme-text,#fff);padding:10px 18px;font:inherit;font-weight:750;cursor:pointer;box-shadow:0 8px 25px #0006}
+      .guestMainButton:disabled,.guestAction:disabled{opacity:.55;cursor:wait}
+      .guestSheetBackdrop{position:fixed;inset:0;z-index:10020;background:#0009;backdrop-filter:blur(7px);display:flex;align-items:flex-end;justify-content:center}
+      .guestSheet{position:relative;width:min(100%,480px);max-height:min(83dvh,750px);overflow-y:auto;padding:22px 20px calc(22px + env(safe-area-inset-bottom));border:1px solid var(--theme-border,#c7b27c88);border-radius:26px 26px 0 0;background:color-mix(in srgb,var(--theme-panel,#071c15) 94%,#000);color:var(--theme-text,#fff);box-shadow:0 -20px 65px #0009;animation:guestSheetRise .28s ease-out}
+      .guestSheet h2{margin:5px 0 12px;font-size:20px}.guestSheet p{font-size:13px;opacity:.85}.guestSheetClose{position:absolute;right:16px;top:12px;border:0;border-radius:50%;background:#ffffff1b;color:inherit;width:35px;height:35px;font-size:23px;cursor:pointer}
+      .guestRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}.guestRow button{border:1px solid var(--theme-border,#ffffff55);border-radius:999px;background:#ffffff12;color:inherit;padding:9px 13px;cursor:pointer}.guestRow button[aria-pressed=true]{background:var(--theme-primary,#087750);color:#fff}
+      .guestSheet .guestAction{width:100%;margin-top:12px;padding:13px}.guestSheet label{display:flex;align-items:center;gap:10px;margin:12px 0;font-size:13px}.guestSheet select{background:#111;color:white;border:1px solid #ffffff55;border-radius:12px;padding:8px}
+      @keyframes guestSheetRise{from{transform:translateY(30px);opacity:.3}to{transform:translateY(0);opacity:1}}
+      @media(prefers-reduced-motion:reduce){.guestSheet{animation:none}}
+    `}</style>
+    {!host&&<button type="button" className="guestMainButton" aria-expanded={panelOpen} onClick={()=>setPanelOpen(true)}>{joined?"● On stage":me?.status==="pending"?"⏳ Requested":me?.status==="approved"?"Join":"Join"}</button>}
+    {host&&<button type="button" className="guestMainButton" aria-expanded={panelOpen} onClick={()=>setPanelOpen(true)}>👥 Guests{pendingCount>0?` · ${pendingCount}`:""}</button>}
+    {panelOpen&&<div className="guestSheetBackdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setPanelOpen(false)}}>
+      <section className="guestSheet" role="dialog" aria-modal="true" aria-label={host?"Guest requests":"Join Live settings"}>
+        <button className="guestSheetClose" type="button" aria-label="Close guest settings" onClick={()=>setPanelOpen(false)}>×</button>
+        <h2>{host?"👥 Guest requests":joined?"You're on stage":me?.status==="pending"?"Request sent":me?.status==="approved"?"Ready to join":"Join this Live"}</h2>
+        {host?<div>
+          {pendingRequests.map(r=><div className="guestRow" key={r.id}><strong>{requesterNames[r.user_id]||r.user_id.slice(0,8)}</strong><small>{r.mode==="camera"?"📷 Camera":"🎙 Audio"}</small><button disabled={busy} onClick={()=>void moderate(r.id,"approved")}>✓ Approve</button><button disabled={busy} onClick={()=>void moderate(r.id,"rejected")}>Decline</button></div>)}
+          {requests.filter(r=>r.status==="approved").map(r=><div className="guestRow" key={r.id}><strong>{requesterNames[r.user_id]||r.user_id.slice(0,8)}</strong><button disabled={busy} onClick={()=>void moderate(r.id,r.host_muted?"unmute":"mute")}>{r.host_muted?"Allow mic":"Mute mic"}</button><button disabled={busy} onClick={()=>void moderate(r.id,"removed")}>Remove</button></div>)}
+          {loaded&&!requests.some(r=>r.status==="pending"||r.status==="approved")&&<p>No guest requests yet.</p>}
+        </div>:<div>
+          {!joined&&me?.status!=="approved"&&me?.status!=="pending"&&<>
+            <p>Choose how you'll appear when the host invites you on stage.</p>
+            <div className="guestRow" role="group" aria-label="Guest media mode">
+              <button type="button" aria-pressed={mode==="camera"&&!audioOnly} disabled={audioOnly} onClick={()=>setMode("camera")}>📷 Camera</button>
+              <button type="button" aria-pressed={mode==="pfp"||audioOnly} onClick={()=>setMode("pfp")}>🎙 Audio only</button>
+            </div>
+            {audioOnly&&<p>This is an audio Live. Camera is unavailable in this room.</p>}
+            <button className="guestAction" disabled={busy} onClick={()=>void request()}>{busy?"Requesting…":"Request to join"}</button>
+          </>}
+          {me?.status==="pending"&&<p role="status">⏳ Waiting for host approval. You can close this sheet while waiting.</p>}
+          {me?.status==="approved"&&!joined&&<>
+            <p>The host approved your request. Your {me.mode==="camera"&&!audioOnly?"camera and microphone":"microphone"} will be shared only after you join.</p>
+            <label><input type="checkbox" checked={mediaConsent} onChange={e=>setMediaConsent(e.target.checked)}/> I agree to share my {me.mode==="camera"&&!audioOnly?"camera and microphone":"microphone"} with this Live.</label>
+            <button className="guestAction" disabled={busy||!mediaConsent} onClick={()=>void join()}>{busy?"Connecting…":"Join stage"}</button>
+          </>}
+          {joined&&<>
+            <p role="status">🔴 You're on stage</p>
+            {me?.mode==="camera"&&!audioOnly&&<video ref={preview} muted autoPlay playsInline style={{width:"100%",maxHeight:200,objectFit:"cover",borderRadius:14,filter:background==="blur"?"blur(4px)":"none"}}/>}
+            <div className="guestRow"><button disabled={busy||!!me?.host_muted} onClick={()=>void toggleMic()}>{mic?"🎙 Mute mic":"🎙 Unmute mic"}</button>{me?.mode==="camera"&&!audioOnly&&<button disabled={busy} onClick={toggleCamera}>{camera?"📷 Camera off":"📷 Camera on"}</button>}</div>
+            {me?.mode==="camera"&&!audioOnly&&<label>Preview <select value={background} onChange={e=>setBackground(e.target.value)}><option value="none">Normal</option><option value="blur">Blur</option></select></label>}
+            <button className="guestAction" onClick={()=>{leave();setPanelOpen(false)}}>Leave stage</button>
+          </>}
         </div>}
-        <button type="button" disabled={busy||!!me?.host_muted} onClick={()=>void toggleMic()}>{mic?"Mute mic":"Unmute mic"}</button>{" "}
-        {me?.mode==="camera"&&!audioOnly&&<button type="button" disabled={busy} onClick={toggleCamera}>{camera?"Camera off":"Camera on"}</button>}{" "}
-        <button type="button" onClick={leave}>Leave stage</button>
-        <label style={{display:"block",marginTop:8}}>Background preview{" "}
-          <select value={background} onChange={e=>setBackground(e.target.value)}>
-            <option value="none">Normal</option><option value="blur">Blur preview</option>
-          </select>
-        </label>
-      </div>}
+        {error&&<p role="alert" style={{color:"#ffb5b5"}}>{error}</p>}
+      </section>
     </div>}
-    {error&&<p role="alert" style={{color:"#ffb5b5"}}>{error}</p>}
-    </section>}
   </div>;
 }
