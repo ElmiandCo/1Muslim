@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {getRegistryVideos} from "./videoRegistry";
+import {shouldOfferContinue,countdownRemaining} from "./editorialCutoff";
 
 type YTPlayer={
   loadVideoById:(video:{videoId:string;startSeconds:number})=>void;
@@ -131,11 +132,10 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               if(!Number.isFinite(seconds))return;
               // Only editorially configured cutoffs may trigger an advance.
               // User-selected Continue is remembered and bypasses the cutoff forever.
-              const cutoff=segment.endSeconds;
-              if(cutoff!==null&&Number.isFinite(cutoff)&&cutoff>segment.startSeconds&&!continuedIds.has(segment.videoId)&&seconds>=cutoff){
+              if(shouldOfferContinue(segment,seconds,continuedIds)){
                 if(promptStartedAt===null){promptStartedAt=performance.now();setSkipPrompt(true);setSkipCountdown(3)}
                 const elapsed=(performance.now()-promptStartedAt)/1000;
-                setSkipCountdown(Math.max(1,3-Math.floor(elapsed)));
+                setSkipCountdown(countdownRemaining(elapsed));
                 if(elapsed>=3&&!autoSkipHandled){autoSkipHandled=true;next();return;}
               }else if(promptStartedAt!==null){clearPrompt();}
               try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds}));}catch{}
