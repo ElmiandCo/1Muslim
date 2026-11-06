@@ -1,6 +1,9 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {"videoId":"rx-mz9qGQ4I","title":"6,000 Bodies Washed and Buried | Omar Suleiman & Muslim Undertaker","category":"Death Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"xABo3FJufzg","title":"The Deeper Questions About Death, Graves and Barzakh | Omar Suleiman","category":"Afterlife Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
+  {"videoId":"Dh8a8-UOEv0","title":"How Many Lives Do You Really Have? | The Other Side","category":"Muslim Vibes","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"LlvFLGAqb5A","title":"Prophet Adam (AS) — Creation | Mufti Menk","category":"Prophet Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"d2D6WuKlymM","title":"Prophet Nuh (AS) — The Ark | Quran Stories","category":"Prophet Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
   {"videoId":"lZu173pTldI","title":"Prophet Ibrahim (AS) — His Story | Quran Stories","category":"Prophet Stories","startSeconds":0,"endSeconds":null,"format":"desktop"},
