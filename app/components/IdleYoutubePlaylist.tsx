@@ -9,7 +9,7 @@ type YTPlayer={
   mute:()=>void;
   unMute:()=>void;
   playVideo:()=>void;
-  getCurrentTime:()=>number;
+  getCurrentTime:()=>number;\n  pauseVideo:()=>void;
   destroy:()=>void;
 };
 type YTApi={Player:new(element:HTMLElement,options:{
@@ -69,6 +69,12 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   useEffect(()=>()=>{if(arrowTimer.current)clearTimeout(arrowTimer.current);},[]);
   const navigate=(step:number)=>navigateRef.current(step);
   const enableSound=()=>{soundEnabledRef.current=true;setSoundEnabled(true);setIsPaused(false);setTapHint(false);setIsPlaying(false);setImmersive(false);setCinemaEngaged(false);setCinemaSettled(false);playerRef.current?.unMute();playerRef.current?.playVideo();};
+  // Do not pause on Qur'an navigation; pause only when Posts or Qur'an audio takes focus.
+  useEffect(()=>{
+    const pause=()=>{playerRef.current?.pauseVideo();setIsPaused(true);setIsPlaying(false);};
+    window.addEventListener("1muslim:pause-home-video",pause);
+    return()=>window.removeEventListener("1muslim:pause-home-video",pause);
+  },[]);
   const selectedIndexRef=useRef<number|null>(null);
   useEffect(()=>{
     const ytWindow=window as unknown as {YT?:YTApi;onYouTubeIframeAPIReady?:(()=>void)|undefined};
