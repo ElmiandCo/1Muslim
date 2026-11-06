@@ -54,7 +54,7 @@ export default function QiblaStudio() {
   const canEdit = !!active && ((role === "writer" && active.status === "draft") || ((role === "editor" || role === "approver") && ["submitted", "editing", "awaiting_approval"].includes(active.status)));
   const canPublish = !!active && role === "approver" && active.status === "awaiting_approval";
   // Live editorial metrics are derived from the current form, not stale saved data.
-  const wordCount = form.body.trim() ? form.body.trim().split(/\\s+/u).length : 0;
+  const wordCount = form.body.trim() ? form.body.trim().split(/\s+/u).length : 0;
   const readingMinutes = Math.max(1, Math.ceil(wordCount / 220));
   const titleLength = form.title.trim().length;
   const deckLength = form.subtitle.trim().length;
