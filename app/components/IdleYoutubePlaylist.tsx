@@ -87,6 +87,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   },[isPlaying,soundEnabled,isPaused,format,cinemaEngaged]);
   useEffect(()=>{if(!immersive)return;const timer=setTimeout(()=>setCinemaSettled(true),20000);return()=>clearTimeout(timer);},[immersive]);
   useEffect(()=>{setSpotlightsGathered(false);if(!immersive||!isPlaying||isPaused)return;const timer=window.setTimeout(()=>setSpotlightsGathered(true),6000);return()=>window.clearTimeout(timer)},[immersive,isPlaying,isPaused,timedVideoKey,format]);
+  useEffect(()=>{window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video",{detail:{active:immersive&&isPlaying&&!isPaused}}));return()=>window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video",{detail:{active:false}}))},[immersive,isPlaying,isPaused]);
   // Track the visible video every animation frame: ResizeObserver alone misses CSS transforms,
   // carousel motion, the floating player's drift, and scroll-driven position changes.
   useEffect(()=>{
@@ -125,6 +126,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
           const mask=cutout.parentElement;
           if(mask){
             mask.style.setProperty("--deep-focus-x",(x+width/2)+"px");
+            window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video-bounds",{detail:{x:x+width/2,y:y+height/2+focusYOffset,rx:width/2+30,ry:height/2+28}}));
             mask.style.setProperty("--deep-focus-y",(y+height/2+focusYOffset)+"px");
             mask.style.setProperty("--deep-focus-rx",(width/2+30)+"px");
             mask.style.setProperty("--deep-focus-ry",(height/2+28)+"px");
