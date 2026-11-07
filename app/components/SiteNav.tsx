@@ -272,20 +272,29 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
   return <header ref={navRef} className={`${compact ? "siteNav compact" : "siteNav"} muslimTopGlass ${navHidden && !openMenu ? "muslimTopHidden" : ""} ${pageGlow ? "muslimPageGlow" : ""}`}>
     <button type="button" className="siteBrand hudhudTopOrb" aria-label="HudHud Mode menu" aria-expanded={openMenu==="hudhud"} onClick={()=>{setWakeUp(false);setOpenMenu(openMenu==="hudhud"?null:"hudhud")}}><img src="/assets/hudhud-logo.PNG" alt="" /><span className="hudhudTopGlow" aria-hidden="true"/></button>
 
-    {openMenu==="hudhud"&&<div className="hudhudJarvis" role="menu" aria-label="HudHud quick actions">
-      <span className="hudhudJarvisArc" aria-hidden="true"/>
-      <Link role="menuitem" href="/streaming/go-live" onClick={closeMenu} className="hudhudJarvisAction" style={{animationDelay:"30ms"}}><span className="hudhudJarvisSymbol" aria-hidden="true">◉</span><span>Go Live</span></Link>
-      <Link role="menuitem" href="/quran-studio" onClick={closeMenu} className="hudhudJarvisAction" style={{animationDelay:"110ms"}}><span className="hudhudJarvisSymbol" aria-hidden="true">۞</span><span>Qur’an</span></Link>
+    {openMenu==="hudhud"&&<div className="hudhudModeMenu" role="menu" aria-label="HudHud Mode quick actions">
+      <div className="hudhudModeTitle"><span className="hudhudModeSpark">✦</span><strong>HUDHUD MODE</strong><button type="button" onClick={closeMenu} aria-label="Close HudHud Mode">×</button></div>
+      <p className="hudhudModeHint">Your illuminated shortcuts</p>
+      {[
+        {icon:"◉",title:"Go Live",href:"/streaming/go-live",ar:"بث مباشر"},
+        {icon:"۞",title:"Quran Studio",href:"/quran-studio",ar:"القرآن"},
+        {icon:"✧",title:"Tajweed AI",href:"/quran-studio",ar:"تجويد"},
+        {icon:"✦",title:"Elm Tent",href:"/learn/elm-tent",ar:"خيمة العلم"},
+        {icon:"♧",title:"Video Chat 💬",href:"/messages",ar:"محادثة"},
+      ].map((item,index)=><Link key={item.title} role="menuitem" href={item.href} onClick={()=>{closeMenu();if(item.title==="Tajweed AI")sessionStorage.setItem("1muslim-hudhud-tajweed","1")}} className="hudhudModeItem" style={{animationDelay:index*65+"ms"}}><span className="hudhudModeIcon" aria-hidden="true">{item.icon}</span><span className="hudhudModeText"><strong>{item.title}</strong><small lang="ar">{item.ar}</small></span><span className="hudhudModeArrow">↗</span></Link>)}
+      <button type="button" className="hudhudModeSignOut" role="menuitem" onClick={()=>void signOut()}><span aria-hidden="true">⇥</span> Sign Out</button>
+    </div>}
+    {openMenu==="hudhud"&&<div className="hudhudJarvisOrbits" aria-label="HudHud floating shortcuts">
+      <Link href="/streaming/go-live" onClick={closeMenu} className="hudhudJarvisOrbit hudhudJarvisOrbitLive" aria-label="Go Live"><span aria-hidden="true">◉</span><small>Go Live</small></Link>
+      <Link href="/quran-studio" onClick={closeMenu} className="hudhudJarvisOrbit hudhudJarvisOrbitQuran" aria-label="Qur’an Studio"><span aria-hidden="true">۞</span><small>Qur’an</small></Link>
     </div>}
     <style jsx global>{`
-      .hudhudJarvis{position:absolute;z-index:1001;top:calc(100% - 2px);left:clamp(12px,2vw,36px);display:flex;align-items:center;gap:12px;padding:20px 8px 12px;isolation:isolate;filter:drop-shadow(0 12px 24px #0007)}
-      .hudhudJarvisArc{position:absolute;pointer-events:none;z-index:-1;inset:3px 0 0;border-top:1px solid #91dfff80;border-radius:55% 55% 0 0;box-shadow:0 -5px 20px #5acaff24}
-      .hudhudJarvisAction{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;width:85px;height:82px;border:1px solid #b8eaff66;border-radius:22px;background:linear-gradient(155deg,#7cd8ff1c,#020910a6);color:#e7faff;text-decoration:none!important;backdrop-filter:blur(22px) saturate(130%);-webkit-backdrop-filter:blur(22px) saturate(130%);box-shadow:inset 0 0 20px #9ceaff12,0 0 18px #43c6ff1b;font-size:11px;font-weight:600;letter-spacing:.03em;animation:hudhudJarvisReveal .48s cubic-bezier(.18,.88,.22,1.2) both;transition:transform .2s,border-color .2s,box-shadow .2s}
-      .hudhudJarvisSymbol{font-size:24px;color:#a5eaff;text-shadow:0 0 12px #57d5ff}
-      .hudhudJarvisAction:hover,.hudhudJarvisAction:focus-visible{transform:translateY(-5px);border-color:#b8f0ff;box-shadow:0 0 28px #40caff65;outline:none}
-      @keyframes hudhudJarvisReveal{from{opacity:0;transform:translateY(-14px) scale(.7);filter:blur(7px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
-      @media(max-width:600px){.hudhudJarvis{left:8px;gap:8px}.hudhudJarvisAction{width:74px;height:76px}}
-      @media(prefers-reduced-motion:reduce){.hudhudJarvisAction{animation:none;transition:none}}
+      .hudhudJarvisOrbits{position:fixed;top:clamp(105px,16vh,170px);right:clamp(16px,6vw,110px);z-index:9997;display:flex;flex-direction:column;gap:18px;pointer-events:none}
+      .hudhudJarvisOrbit{pointer-events:auto;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;width:96px;height:96px;border:1px solid #9ce7ff99;border-radius:50%;color:#e7faff!important;text-decoration:none!important;background:radial-gradient(circle at 35% 28%,#6bdcff36,#06111bc9 67%,#02050bdb);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 0 0 5px #6bdcff0c,inset 0 0 28px #53ceff3b,0 0 26px #35baff4d;animation:hudhudOrbitPop .55s cubic-bezier(.17,.89,.24,1.2) both,hudhudOrbitFloat 3.5s ease-in-out infinite alternate;transition:box-shadow .2s,scale .2s}
+      .hudhudJarvisOrbitQuran{animation-delay:.13s,.13s}.hudhudJarvisOrbit span{font-size:30px;color:#b6edff;text-shadow:0 0 15px #62d4ff}.hudhudJarvisOrbit small{font-size:11px;font-weight:700;letter-spacing:.04em}.hudhudJarvisOrbit:hover,.hudhudJarvisOrbit:focus-visible{scale:1.09;box-shadow:inset 0 0 30px #6ee4ff77,0 0 35px #43caffaa;outline:2px solid #a2eaff;outline-offset:4px}
+      @keyframes hudhudOrbitPop{from{opacity:0;scale:.4;filter:blur(8px)}to{opacity:1;scale:1;filter:blur(0)}}@keyframes hudhudOrbitFloat{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+      @media(max-width:600px){.hudhudJarvisOrbits{top:110px;right:14px;gap:13px}.hudhudJarvisOrbit{width:76px;height:76px}.hudhudJarvisOrbit span{font-size:24px}}
+      @media(prefers-reduced-motion:reduce){.hudhudJarvisOrbit{animation:none;transition:none}}
     `}</style>
     <nav className="siteNavLinks" aria-label="Primary navigation">
       <Link href="/" className="siteHomeLink">Home</Link>
