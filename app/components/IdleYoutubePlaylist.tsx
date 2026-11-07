@@ -308,7 +308,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       @keyframes oneMuslimRigDrift{0%,100%{transform:translate3d(0,0,0)}25%{transform:translate3d(2px,-1px,0)}50%{transform:translate3d(-2px,1px,0)}75%{transform:translate3d(1px,2px,0)}}
       @media(prefers-reduced-motion:reduce){.oneMuslimFloatingPlayerRig,.oneMuslimIdleYoutubePlayer,.oneMuslimFloatingPlayerShadow,.oneMuslimThemeTapOverlay{animation:none!important}.oneMuslimIdleYoutubePlayer>div:first-child{transition:none!important}}
     `}</style>
-  </div><ElmiTimedCommentsLayer videoKey={timedVideoKey} seconds={timedSeconds} playing={isPlaying&&!isPaused} bounds={playerBounds}/>{typeof document!=="undefined"&&createPortal(<div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(immersive?" is-active":"")+(cinemaSettled?" is-settled":"")}>
+  </div><ElmiTimedCommentsLayer videoKey={timedVideoKey} seconds={timedSeconds} playing={isPlaying&&!isPaused} bounds={playerBounds}/>{typeof document!=="undefined"&&createPortal(<div aria-hidden="true" className={"oneMuslimCinemaDimmer"+(false?" is-active":"")+(cinemaSettled?" is-settled":"")}>
     <span className="cinema-video-cutout" style={{left:0,top:0,width:0,height:0}}/>
   </div>,document.body)}<style>{`
     .oneMuslimReflectiveChat{position:relative;isolation:isolate;overflow:hidden}
