@@ -42,7 +42,7 @@ export default function QiblaNewsroom(){
     <button className={styles.splitIcon} aria-label="Show both publications" onClick={()=>setView("split")}>◫</button>
    </nav>
   </header>
-  <div className={styles.contributeBar} data-publication={view}><span>YOUR VOICE. OUR PUBLICATION.</span><Link className={styles.contributeButton} href={contributor?"/qibla/studio":"/qibla/newsroom/apply"}><><span>{contributor?"CREATE A POST":"APPLY TO CONTRIBUTE"}</span><span aria-hidden="true">↗</span></></Link></div>
+  <div className={styles.contributeBar} data-publication={view}><span>YOUR VOICE. OUR PUBLICATION.</span><Link className={styles.contributeButton} href={contributor?"/qibla/studio":"/qibla/newsroom/apply"}><><span>{contributor?"CREATE A POST":"APPLY TO CONTRIBUTE"}</span></></Link></div>
   <div className={styles.stage} data-view={view}>
    <div className={styles.entrance} aria-hidden={view!=="split"}>
     <button className={styles.magPanel} onClick={()=>setView("magazine")} tabIndex={view==="split"?0:-1}>
