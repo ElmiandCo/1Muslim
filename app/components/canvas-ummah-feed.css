@@ -578,3 +578,35 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 .ummah-author-words{display:block;color:inherit;white-space:pre-wrap}
 .ummah-unified-text .ummah-verse-block,.ummah-unified-caption .ummah-verse-block{max-width:100%}
 @media(prefers-reduced-motion:reduce){.ummah-verse-block{transition:none}}
+
+
+/* Profile HudHud containment: keep the shared portrait above cards without
+   letting the oversized hero cover editor fields on narrow screens. */
+.profile-shared-avatar-portal{
+  width:min(128px,32vw)!important;
+  z-index:2147483000!important;
+  pointer-events:none!important;
+}
+.profile-shared-avatar-portal .profile-shared-avatar-hero,
+.profile-shared-avatar-portal .profile-glass-avatar{
+  width:100%!important;
+  min-height:0!important;
+  pointer-events:none!important;
+}
+.profile-shared-avatar-portal .profile-avatar-portrait{
+  width:100%!important;
+  aspect-ratio:1!important;
+  max-height:128px!important;
+  overflow:hidden!important;
+  pointer-events:none!important;
+}
+.profile-shared-avatar-portal .profile-avatar-portrait .profileAvatar{
+  max-width:90%!important;
+  max-height:90%!important;
+}
+.profile-with-shared-avatar{padding-top:150px!important;}
+@media(max-width:480px){
+  .profile-shared-avatar-portal{width:min(112px,30vw)!important;}
+  .profile-shared-avatar-portal .profile-avatar-portrait{max-height:112px!important;}
+  .profile-with-shared-avatar{padding-top:132px!important;}
+}
