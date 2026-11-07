@@ -2,6 +2,7 @@
 import Link from "next/link";
 import {useCallback,useEffect,useState} from "react";
 import {createClient} from "../../../utils/supabase/client";
+import EditorialApplication from "./EditorialApplication";
 import PublicationDesigner,{pack,unpack,templates,type Design} from "./PublicationDesigner";
 type Status="draft"|"submitted"|"changes_requested"|"approved"|"published"|"rejected";
 type Item={id:string;title:string;kind:"article"|"newsletter";subtitle:string;body:string;cover_url:string;status:Status;review_note:string;updated_at:string};
@@ -19,7 +20,7 @@ export default function QiblaStudio(){
  const review=async(id:string,action:"approved"|"changes_requested"|"rejected"|"publish")=>{setBusy(true);setMessage("");const db=createClient();const {error}=action==="publish"?await db.rpc("qibla_publish_submission",{p_id:id}):await db.rpc("qibla_review_submission",{p_id:id,p_action:action,p_note:note});setBusy(false);setMessage(error?error.message:action==="publish"?"Published to 1Qibla.":"Review saved.");if(!error){setNote("");await refresh()}};
  const storyLength=form.body.trim().length+(design.sections||[]).reduce((n,s)=>n+s.body.trim().length,0);const selected=items.find(i=>i.id===active);const editable=!selected||["draft","changes_requested","rejected"].includes(selected.status);
  return <main className="studio"><header><Link href="/qibla">← 1Qibla</Link><span>1QIBLA · EDITORIAL STUDIO</span><Link href="/qibla/command">Editorial Command ↗</Link></header><section className="hero"><p>EDITORIAL WORKSPACE</p><h1>Stories worth sharing.</h1><p>Write, submit, review and publish articles and newsletters.</p></section>
- {!user?<p className="notice">Sign in to 1Muslim to use Studio.</p>:<>
+ {!user?<p className="notice">Sign in to 1Muslim to use Studio.</p>:<><EditorialApplication/>
  <nav className="tabs"><button onClick={()=>setTab("write")} className={tab==="write"?"on":""}>✍️ Write</button>{admin&&<button onClick={()=>setTab("approvals")} className={tab==="approvals"?"on":""}>✓ Approvals ({items.filter(i=>i.status==="submitted").length})</button>}</nav>
  {message&&<p role="status" className="notice">{message}</p>}
  {tab==="write"?<div className="grid"><aside><button className="new" onClick={()=>{setActive(null);setForm(empty);setDesign({layout:"cover",media:[]});setMessage("")}}>＋ New publication</button><h3>Your publications</h3>{items.map(i=><button key={i.id} className={"item "+(active===i.id?"selected":"")} onClick={()=>open(i)}><strong>{i.title}</strong><small>{i.kind} · {i.status.replaceAll("_"," ")}</small></button>)}</aside><section className="editor"><div className="row"><select aria-label="Publication format" disabled={!editable} value={form.kind} onChange={e=>{setForm({...form,kind:e.target.value as "article"|"newsletter"});setDesign({layout:"cover",media:[]})}}><option value="article">📰 Article</option><option value="newsletter">✉️ Newsletter</option></select><span className="status">{selected?.status.replaceAll("_"," ")||"New draft"}</span></div>{selected?.review_note&&<p className="notice">Editor's note: {selected.review_note}</p>}
