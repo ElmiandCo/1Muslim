@@ -34,11 +34,11 @@ export default function ElmiLayerX(){
   const exit=()=>{if(settleTimer.current)clearTimeout(settleTimer.current);setSoftDim(false);suppressed.current=true;setActive(false);setExpanded(false);setQuran(false);setVideoMode(false)};
   const onHudHudTap=()=>{if(!activeRef.current)return;setExpanded(v=>{if(v){queueMicrotask(exit);return false}return true})};
   const onHudHudMove=(e:Event)=>{if(!activeRef.current)return;const d=(e as CustomEvent<{x:number;y:number}>).detail;if(!d)return;if(settleTimer.current)clearTimeout(settleTimer.current);setSoftDim(false);positioned.current=true;setFocus(f=>({...f,x:clamp(d.x/innerWidth*100,5,95),y:clamp(d.y/innerHeight*100,5,95)}))};
-  const onSettled=()=>{if(!activeRef.current)return;if(settleTimer.current)clearTimeout(settleTimer.current);settleTimer.current=setTimeout(()=>{if(activeRef.current)setSoftDim(true)},2000)};
-  window.addEventListener("1muslim:deep-watch-hudhud-settled",onSettled);
+  const onReleased=()=>{if(!activeRef.current)return;positioned.current=false;if(settleTimer.current)clearTimeout(settleTimer.current);settleTimer.current=setTimeout(()=>{if(activeRef.current)setSoftDim(true)},2000)};
+  window.addEventListener("1muslim:deep-watch-hudhud-released",onReleased);
   window.addEventListener("1muslim:deep-watch-video-bounds",onVideoBounds);window.addEventListener("1muslim:deep-watch-video",onVideo);window.addEventListener("1muslim:deep-watch-quran",onQuran);
   window.addEventListener("1muslim:deep-watch-exit",exit);window.addEventListener("1muslim:deep-watch-hudhud-tap",onHudHudTap);window.addEventListener("1muslim:deep-watch-hudhud-move",onHudHudMove);
-  return()=>{if(settleTimer.current)clearTimeout(settleTimer.current);window.removeEventListener("1muslim:deep-watch-hudhud-settled",onSettled);window.removeEventListener("1muslim:deep-watch-video-bounds",onVideoBounds);window.removeEventListener("1muslim:deep-watch-video",onVideo);window.removeEventListener("1muslim:deep-watch-quran",onQuran);window.removeEventListener("1muslim:deep-watch-exit",exit);window.removeEventListener("1muslim:deep-watch-hudhud-tap",onHudHudTap);window.removeEventListener("1muslim:deep-watch-hudhud-move",onHudHudMove)};
+  return()=>{if(settleTimer.current)clearTimeout(settleTimer.current);window.removeEventListener("1muslim:deep-watch-hudhud-released",onReleased);window.removeEventListener("1muslim:deep-watch-video-bounds",onVideoBounds);window.removeEventListener("1muslim:deep-watch-video",onVideo);window.removeEventListener("1muslim:deep-watch-quran",onQuran);window.removeEventListener("1muslim:deep-watch-exit",exit);window.removeEventListener("1muslim:deep-watch-hudhud-tap",onHudHudTap);window.removeEventListener("1muslim:deep-watch-hudhud-move",onHudHudMove)};
  },[]);
  useEffect(()=>{
   if(!active)return;
