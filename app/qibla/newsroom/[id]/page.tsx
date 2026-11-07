@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "../../../../utils/supabase/client";
 import styles from "./article.module.css";
+import OneMuslimVideo from "../../../components/OneMuslimVideo";
+import {unpack} from "../../studio/PublicationDesigner";
 
 type Article = {
   id: string;
@@ -64,6 +66,9 @@ export default function QiblaArticlePage() {
     return () => { active = false; };
   }, [articleId]);
 
+  const parsed = article?.section_one?.text ? unpack(article.section_one.text) : null;
+  const media = parsed?.design.media.filter(m=>m.url.trim()) || [];
+  const videoId = (url:string) => {try {const u=new URL(url);const parts=u.pathname.split("/");const id=u.hostname==="youtu.be"?parts[1]:["youtube.com","www.youtube.com","m.youtube.com","youtube-nocookie.com","www.youtube-nocookie.com"].includes(u.hostname)?u.searchParams.get("v")||(["shorts","embed"].includes(parts[1])?parts[2]:null):null;return id&&id.length===11&&Array.from(id).every(c=>"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-".includes(c))?id:null}catch{return null}};
   return <main className={styles.root}>
     <div className={styles.shell}>
       <nav className={styles.nav} aria-label="Article navigation">
@@ -81,8 +86,10 @@ export default function QiblaArticlePage() {
           </header>
           {article.hero_media_path && article.template_type === "image" ?
             <div className={styles.cover} style={{ backgroundImage: `url("${encodeURI(article.hero_media_path)}")` }} role="img" aria-label="Article cover" /> : null}
+          {article.template_type === "video" && article.hero_media_path && <OneMuslimVideo videoKey={"qibla:"+article.id+":hero"} src={article.hero_media_path} youtubeId={videoId(article.hero_media_path)} title={article.title}/>}
           <div className={styles.body}>
-            {article.section_one?.text && <p>{article.section_one.text}</p>}
+            {parsed?.body && <p>{parsed.body}</p>}
+            {media.map((m,i)=>m.type==="video"?<figure key={i} style={{margin:"24px 0"}}><OneMuslimVideo videoKey={"qibla:"+article.id+":media:"+i} src={m.url} youtubeId={videoId(m.url)} title={m.caption||article.title}/>{m.caption&&<figcaption>{m.caption}</figcaption>}</figure>:<figure key={i} style={{margin:"24px 0"}}><img src={m.url} alt={m.caption||"Article image"} style={{width:"100%",height:"auto"}}/>{m.caption&&<figcaption>{m.caption}</figcaption>}</figure>)}
             {article.section_two?.text && <p>{article.section_two.text}</p>}
           </div>
           <footer className={styles.footer}><Link href="/qibla/newsroom">Explore more stories →</Link></footer>
