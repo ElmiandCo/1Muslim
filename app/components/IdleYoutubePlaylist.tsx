@@ -87,7 +87,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   },[isPlaying,soundEnabled,isPaused,format,cinemaEngaged]);
   useEffect(()=>{if(!immersive)return;const timer=setTimeout(()=>setCinemaSettled(true),20000);return()=>clearTimeout(timer);},[immersive]);
   useEffect(()=>{setSpotlightsGathered(false);if(!immersive||!isPlaying||isPaused)return;const timer=window.setTimeout(()=>setSpotlightsGathered(true),6000);return()=>window.clearTimeout(timer)},[immersive,isPlaying,isPaused,timedVideoKey,format]);
-  useEffect(()=>{window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video",{detail:{active:immersive&&isPlaying&&!isPaused}}));return()=>window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video",{detail:{active:false}}))},[immersive,isPlaying,isPaused]);
+  useEffect(()=>{window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video",{detail:{active:immersive&&isPlaying&&!isPaused}}));return()=>{window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video",{detail:{active:false}}));}},[immersive,isPlaying,isPaused]);
   // Track the visible video every animation frame: ResizeObserver alone misses CSS transforms,
   // carousel motion, the floating player's drift, and scroll-driven position changes.
   useEffect(()=>{
