@@ -13,6 +13,8 @@ export default function QiblaNewsroom(){
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
  const [query,setQuery]=useState("");
+ const [contributor,setContributor]=useState(false);
+ useEffect(()=>{let alive=true;const db=createClient();(async()=>{const {data:{user}}=await db.auth.getUser();if(!user)return;const [staff,superAdmin,legacyAdmin]=await Promise.all([db.from("qibla_staff").select("role").eq("user_id",user.id).maybeSingle(),db.rpc("qibla_is_superadmin"),db.rpc("qibla_is_admin")]);if(alive)setContributor(Boolean(staff.data?.role||superAdmin.data===true||legacyAdmin.data===true))})();return()=>{alive=false}},[]);
  useEffect(()=>{let active=true;const db=createClient();(async()=>{
   const [legacy,editorial]=await Promise.all([
    db.from("qibla_pages").select("id,title,template_type,hero_media_path,section_one,created_at").eq("published",true).order("created_at",{ascending:false}).limit(60),
@@ -38,6 +40,7 @@ export default function QiblaNewsroom(){
     <button className={styles.splitIcon} aria-label="Show both publications" onClick={()=>setView("split")}>◫</button>
    </nav>
   </header>
+  <div className={styles.contributeBar}><span>YOUR VOICE. OUR PUBLICATION.</span><Link className={styles.contributeButton} href={contributor?"/qibla/studio":"/qibla/newsroom/apply"}>{contributor?"✎ CREATE A POST ↗":"✦ APPLY TO CONTRIBUTE ↗"}</Link></div>
   <div className={styles.stage} data-view={view}>
    <div className={styles.entrance} aria-hidden={view!=="split"}>
     <button className={styles.magPanel} onClick={()=>setView("magazine")} tabIndex={view==="split"?0:-1}>
