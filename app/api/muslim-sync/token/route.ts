@@ -9,7 +9,8 @@ export async function POST(request:Request){
  const {sessionId}=await request.json().catch(()=>({}));
  if(typeof sessionId!=="string"||!/^[0-9a-f-]{36}$/i.test(sessionId))return NextResponse.json({error:"Invalid session"},{status:400});
  const {data:session,error}=await db.from("muslim_sync_sessions").select("id,initiator_id,invitee_id,status").eq("id",sessionId).maybeSingle();
- if(error||!session||session.status!=="accepted"||![session.initiator_id,session.invitee_id].includes(user.id))return NextResponse.json({error:"Accepted invitation required"},{status:403});
+ const {data:member}=await db.from("muslim_sync_members").select("user_id").eq("session_id",sessionId).eq("user_id",user.id).eq("status","accepted").maybeSingle();
+ if(error||!session||session.status!=="accepted"||(![session.initiator_id,session.invitee_id].includes(user.id)&&!member))return NextResponse.json({error:"Accepted invitation required"},{status:403});
  const key=process.env.LIVEKIT_API_KEY,secret=process.env.LIVEKIT_API_SECRET,url=process.env.LIVEKIT_URL;
  if(!key||!secret||!url)return NextResponse.json({error:"Voice service unavailable"},{status:503});
  const token=new AccessToken(key,secret,{identity:user.id,ttl:"30m"});
