@@ -17,7 +17,7 @@ export default function HudHudGestureRecorder({onClose}:{onClose:()=>void}){
  const frame=useRef<number|null>(null);
  const playback=useRef<number|null>(null);
  const [history,setHistory]=useState<Stroke[]>([]);
- const [live,setLive]=useState({speed:0,pressure:0,area:0,distance:0,duration:0,pointers:0});
+ const [live,setLive]=useState({speed:0,pressure:0,area:0,distance:0,duration:0,pointers:0,pointerType:"none"});
  const [status,setStatus]=useState("Touch the tray to record. Traces remain visible until release.");
  const [replaying,setReplaying]=useState(false);
  const [sessionName,setSessionName]=useState("Gesture test");
@@ -42,12 +42,12 @@ export default function HudHudGestureRecorder({onClose}:{onClose:()=>void}){
  useEffect(()=>{const old=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.body.style.overflow=old}},[]);
  const point=(e:React.PointerEvent<HTMLCanvasElement>):Sample=>{const r=e.currentTarget.getBoundingClientRect();return {t:e.timeStamp,x:e.clientX-r.left,y:e.clientY-r.top,pressure:pressureOf(e),area:areaOf(e),pointerId:e.pointerId,pointerType:e.pointerType}};
  const paint=()=>{draw(Array.from(active.current.values()));};
- const down=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(replaying)return;stopFrame();try{e.currentTarget.setPointerCapture(e.pointerId)}catch{};active.current.set(e.pointerId,[point(e)]);paint();setLive(v=>({...v,pointers:active.current.size}));setStatus("Recording gesture…")};
+ const down=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(replaying)return;stopFrame();try{e.currentTarget.setPointerCapture(e.pointerId)}catch{};active.current.set(e.pointerId,[point(e)]);paint();setLive(v=>({...v,pointers:active.current.size,pointerType:e.pointerType}));setStatus("Recording gesture…")};
  const move=(e:React.PointerEvent<HTMLCanvasElement>)=>{const list=active.current.get(e.pointerId);if(!list||replaying)return;
    const coalesced=typeof e.nativeEvent.getCoalescedEvents==="function"?e.nativeEvent.getCoalescedEvents():[];
    const events=coalesced.length?coalesced:[e.nativeEvent];
    for(const p of events){if(list.length>=MAX_SAMPLES)break;const r=e.currentTarget.getBoundingClientRect();const last=list[list.length-1];const t=finite(p.timeStamp,last.t);if(t<last.t)continue;const x=finite(p.clientX-r.left,last.x),y=finite(p.clientY-r.top,last.y);list.push({t,x,y,pressure:pressureOf(p),area:areaOf(p),pointerId:e.pointerId,pointerType:p.pointerType||e.pointerType});}
-   if(frame.current===null)frame.current=requestAnimationFrame(()=>{frame.current=null;paint();const a=list[0],b=list[list.length-1],prev=list[Math.max(0,list.length-2)];setLive({speed:Math.round(Math.hypot(b.x-prev.x,b.y-prev.y)/Math.max(1,b.t-prev.t)*1000),pressure:Math.round(b.pressure*100),area:Math.round(b.area),distance:Math.round(Math.hypot(b.x-a.x,b.y-a.y)),duration:Math.round(b.t-a.t),pointers:active.current.size})});
+   if(frame.current===null)frame.current=requestAnimationFrame(()=>{frame.current=null;paint();const a=list[0],b=list[list.length-1],prev=list[Math.max(0,list.length-2)];setLive({speed:Math.round(Math.hypot(b.x-prev.x,b.y-prev.y)/Math.max(1,b.t-prev.t)*1000),pressure:Math.round(b.pressure*100),area:Math.round(b.area),distance:Math.round(Math.hypot(b.x-a.x,b.y-a.y)),duration:Math.round(b.t-a.t),pointers:active.current.size,pointerType:b.pointerType})});
  };
  const end=(e:React.PointerEvent<HTMLCanvasElement>,cancelled=false)=>{const list=active.current.get(e.pointerId);if(!list)return;const last=point(e);if(!cancelled&&list.length<MAX_SAMPLES)list.push({...last,t:Math.max(last.t,list[list.length-1].t)});active.current.delete(e.pointerId);
    const a=list[0],b=list[list.length-1],duration=Math.max(1,b.t-a.t),distance=Math.hypot(b.x-a.x,b.y-a.y);
@@ -67,8 +67,8 @@ export default function HudHudGestureRecorder({onClose}:{onClose:()=>void}){
    <header className="hh-record-header"><div><strong>🔵 Gesture Test Space</strong><small>Device-local session · no global gestures changed</small></div><button type="button" onClick={()=>{stopPlayback();stopFrame();onClose()}}>✕ Close</button></header>
    <div className="hh-record-body"><div className="hh-record-toolbar"><label>Session name <input value={sessionName} maxLength={50} onChange={e=>setSessionName(e.target.value)}/></label><button type="button" onClick={demoSwipe}>Demo swipe (synthetic)</button><button type="button" onClick={exportData} disabled={!history.length}>Export JSON</button><button type="button" onClick={clear}>Clear</button></div>
    <div className="hh-record-tray"><canvas ref={canvas} aria-label="Gesture recording touch surface" onPointerDown={down} onPointerMove={move} onPointerUp={e=>end(e)} onPointerCancel={e=>end(e,true)} onLostPointerCapture={e=>end(e,true)}/><span className="hh-record-hint" aria-hidden="true">TOUCH · SWIPE · TRACE</span></div>
-   <div className="hh-record-metrics" aria-live="off"><span>Velocity <b>{live.speed} px/s</b></span><span>Pressure <b>{live.pressure}%</b></span><span>Contact <b>{live.area} px²</b></span><span>Distance <b>{live.distance} px</b></span><span>Duration <b>{live.duration} ms</b></span><span>Fingers <b>{live.pointers}</b></span></div>
-   <p className="hh-record-status" role="status">{status}</p>
+   <div className="hh-record-metrics" aria-live="off"><span>Velocity <b>{live.speed} px/s</b></span><span>Pressure <b>{live.pointerType==="mouse"?"Mouse button":live.pointerType==="none"?"—":live.pressure+"%*"}</b></span><span>Contact <b>{live.pointerType==="mouse"||live.pointerType==="none"?"Not measured":live.area+" px²*"}</b></span><span>Distance <b>{live.distance} px</b></span><span>Duration <b>{live.duration} ms</b></span><span>Fingers <b>{live.pointers}</b></span></div>
+   <p className="hh-record-status" role="status">{status}</p><p className="hh-record-status">* Browser-reported estimates, not calibrated force or contact area. Mouse pressure is a button-state placeholder. Exported samples retain raw reported values.</p>
    <div className="hh-record-history"><strong>Captured strokes ({history.length}/{MAX_STROKES})</strong><p>Each stroke stores timestamped pointer samples, position, speed-derived motion, pressure and contact area. Replay reproduces recorded position and timing, not physical pressure. Synthetic demo strokes are labeled and must not be used as device stability evidence.</p>{history.map(s=><div className="hh-record-row" key={s.id}><span>{s.kind} · {s.duration} ms · {s.distance} px · avg {s.velocity} px/s · peak {s.peakVelocity} px/s · {s.samples.length} points</span><button type="button" onClick={()=>{replay(s)}} disabled={replaying}>Replay</button></div>)}</div>
    </div><style jsx>{`
    .hh-record-overlay{position:fixed;inset:0;z-index:2147483000;background:#030b19;color:#e6f8ff;display:flex;flex-direction:column;font-family:inherit}
