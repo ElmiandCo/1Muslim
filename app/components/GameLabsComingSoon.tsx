@@ -1,0 +1,17 @@
+"use client";
+export default function GameLabsComingSoon(){
+ return <section aria-label="1Muslim Game Labs coming soon" style={{position:"relative",width:"100%",height:"100%",minHeight:250,overflow:"hidden",borderRadius:18,background:"radial-gradient(ellipse at 70% 48%,#27385f 0%,#111a36 43%,#080d1d 100%)",display:"grid",placeItems:"center",isolation:"isolate"}}>
+ <style>{`@keyframes labsHalo{0%,100%{opacity:.4;transform:scale(.94)}50%{opacity:.9;transform:scale(1.06)}}@keyframes labsShine{0%,100%{opacity:.35}50%{opacity:.85}}@media(prefers-reduced-motion:reduce){.labs-halo,.labs-shine{animation:none!important}}`}</style>
+ <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={{position:"absolute",inset:0,width:"100%",height:"100%",zIndex:-1}}>
+ <defs><linearGradient id="labsSky" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#0b1431"/><stop offset=".56" stopColor="#3b315e"/><stop offset="1" stopColor="#b46c5e"/></linearGradient><radialGradient id="labsSun"><stop stopColor="#ffd4a3" stopOpacity=".9"/><stop offset="1" stopColor="#ffd4a3" stopOpacity="0"/></radialGradient><linearGradient id="labsHill" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#1b2849"/><stop offset="1" stopColor="#050a1a"/></linearGradient></defs>
+ <rect width="1200" height="600" fill="url(#labsSky)"/><ellipse cx="150" cy="360" rx="450" ry="270" fill="url(#labsSun)" opacity=".8"/><path d="M0 460L130 360 260 450 370 370 500 465 630 400 770 465 930 360 1050 440 1200 340V600H0Z" fill="#18213f"/><path d="M0 505L190 430 380 510 590 430 770 500 990 400 1200 465V600H0Z" fill="url(#labsHill)"/>
+ <g fill="#0b122b" stroke="#cf965a" strokeWidth="2" opacity=".95"><path d="M965 510V340H1170V510Z"/><path d="M1000 340Q1068 225 1138 340Z"/><rect x="938" y="280" width="20" height="230"/><path d="M943 280L948 240 953 280Z"/><rect x="1170" y="260" width="17" height="250"/><path d="M1173 260L1178 212 1184 260Z"/></g>
+ <g fill="#10182d" stroke="#d49a60" strokeWidth="2"><path d="M35 600L65 385 115 320 153 335 190 405 220 600Z"/><path d="M74 330Q104 255 151 332L166 380 60 380Z"/><path d="M52 590Q125 480 228 565L220 600Z"/></g><path d="M96 320L124 305 146 330 139 372 105 370Z" fill="#070e20"/><path d="M78 395Q120 450 195 410L230 595 45 595Z" fill="#101729" stroke="#9c704e" strokeWidth="3"/>
+ </svg>
+ <div style={{position:"relative",zIndex:1,textAlign:"center",padding:"28px 18px",marginLeft:"min(20%,140px)",maxWidth:"78%",color:"#f5f7ff",textShadow:"0 2px 22px #040716"}}>
+ <div className="labs-halo" style={{animation:"labsHalo 4s ease-in-out infinite",margin:"0 auto 12px",width:72,height:72,border:"2px solid #58c8ff",borderRadius:"50%",display:"grid",placeItems:"center",boxShadow:"0 0 30px #2c9df966"}}><span style={{fontSize:38}}>🎮</span></div>
+ <h2 style={{fontSize:"clamp(25px,4.5vw,62px)",fontWeight:900,lineHeight:1.05,letterSpacing:"-.035em",margin:0}}>1Muslim<br/>Game Labs</h2>
+ <div className="labs-shine" style={{animation:"labsShine 3.8s ease-in-out infinite",margin:"20px auto 13px",display:"inline-block",border:"1px solid #f8c77c",boxShadow:"0 0 18px #ffb95a88",borderRadius:999,padding:"10px 24px",fontWeight:800,fontSize:"clamp(14px,2.4vw,26px)",letterSpacing:".13em",background:"#301d2baf",color:"#ffe3a7"}}>COMING SOON</div>
+ <p style={{fontSize:"clamp(9px,1.3vw,13px)",letterSpacing:".2em",fontWeight:600,margin:"8px 0 0"}}>FAITH · ADVENTURE · SKILLS · PURPOSE</p></div>
+ </section>
+}
