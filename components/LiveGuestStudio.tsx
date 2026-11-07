@@ -185,7 +185,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
       const wantsCamera=me.mode==="camera"&&data.mode==="video";
       const wantsMic=!me.host_muted;
       const media=wantsCamera||wantsMic
-        ?await navigator.mediaDevices.getUserMedia({audio:wantsMic,video:wantsCamera})
+        ?await navigator.mediaDevices.getUserMedia({audio:wantsMic,video:wantsCamera?{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}}:false})
         :new MediaStream();
       stream.current=media;
       // Explicit LiveKit track sources are required by Bot A's restricted JWT.
