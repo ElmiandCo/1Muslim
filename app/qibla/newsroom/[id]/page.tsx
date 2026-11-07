@@ -68,7 +68,7 @@ export default function QiblaArticlePage() {
 
   const parsed = article?.section_one?.text ? unpack(article.section_one.text) : null;
   const media = parsed?.design.media.filter(m=>m.url.trim()) || [];
-  const videoId = (url:string) => {try {const u=new URL(url);const id=u.hostname==="youtu.be"?u.pathname.slice(1):["youtube.com","www.youtube.com","m.youtube.com","youtube-nocookie.com","www.youtube-nocookie.com"].includes(u.hostname)?u.searchParams.get("v")||u.pathname.match(/\\/(?:shorts|embed)\\/([\\w-]{11})/)?.[1]:null;return id&&/^[\\w-]{11}$/.test(id)?id:null}catch{return null}};
+  const videoId = (url:string) => {try {const u=new URL(url);const parts=u.pathname.split("/");const id=u.hostname==="youtu.be"?parts[1]:["youtube.com","www.youtube.com","m.youtube.com","youtube-nocookie.com","www.youtube-nocookie.com"].includes(u.hostname)?u.searchParams.get("v")||(["shorts","embed"].includes(parts[1])?parts[2]:null):null;return id&&id.length===11&&Array.from(id).every(c=>"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-".includes(c))?id:null}catch{return null}};
   return <main className={styles.root}>
     <div className={styles.shell}>
       <nav className={styles.nav} aria-label="Article navigation">
