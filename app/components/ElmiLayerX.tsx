@@ -14,6 +14,7 @@ export default function ElmiLayerX(){
  const [quran,setQuran]=useState(false);
  const start=useRef<{x:number;y:number;at:number}|null>(null);
  const activeRef=useRef(false);
+ const positioned=useRef(false);
  useEffect(()=>{activeRef.current=active},[active]);
  useEffect(()=>{
   const syncTheme=()=>{const root=document.documentElement;setDay(root.classList.contains("light")||root.dataset.themeMode==="day"||localStorage.getItem("1muslim-theme")==="light")};
@@ -23,12 +24,12 @@ export default function ElmiLayerX(){
  },[]);
  useEffect(()=>{setActive(false);setExpanded(false);setQuran(false)},[pathname]);
  useEffect(()=>{
-  const onVideo=(e:Event)=>{const d=(e as CustomEvent<{active?:boolean}>).detail;if(typeof d?.active!=="boolean")return;setQuran(false);setActive(d.active);if(!d.active)setExpanded(false)};
+  const onVideo=(e:Event)=>{const d=(e as CustomEvent<{active?:boolean}>).detail;if(typeof d?.active!=="boolean")return;setQuran(false);if(!d.active)positioned.current=false;setActive(d.active);if(!d.active)setExpanded(false)};
   const onQuran=(e:Event)=>{const d=(e as CustomEvent<{playing?:boolean;target?:DOMRect}>).detail;if(typeof d?.playing!=="boolean")return;setQuran(d.playing);setActive(d.playing);if(!d.playing)setExpanded(false);if(d.playing&&d.target){const r=d.target;setFocus({x:clamp((r.left+r.width/2)/innerWidth*100,5,95),y:clamp((r.top+r.height/2)/innerHeight*100,5,95),rx:clamp(r.width/innerWidth*50+5,15,48),ry:clamp(r.height/innerHeight*50+5,8,45)})}};
-  const onVideoBounds=(e:Event)=>{if(!activeRef.current)return;const d=(e as CustomEvent<{x:number;y:number;rx:number;ry:number}>).detail;if(!d)return;setFocus(f=>({...f,rx:clamp(d.rx/innerWidth*100,15,48),ry:clamp(d.ry/innerHeight*100,8,45)}))};
+  const onVideoBounds=(e:Event)=>{if(!activeRef.current)return;const d=(e as CustomEvent<{x:number;y:number;rx:number;ry:number}>).detail;if(!d)return;setFocus(f=>({...f,x:positioned.current?f.x:clamp(d.x/innerWidth*100,5,95),y:positioned.current?f.y:clamp(d.y/innerHeight*100,5,95),rx:clamp(d.rx/innerWidth*100,15,48),ry:clamp(d.ry/innerHeight*100,8,45)}))};
   const exit=()=>{setActive(false);setExpanded(false);setQuran(false)};
   const onHudHudTap=()=>{if(!activeRef.current)return;setExpanded(v=>{if(v){queueMicrotask(exit);return false}return true})};
-  const onHudHudMove=(e:Event)=>{if(!activeRef.current)return;const d=(e as CustomEvent<{x:number;y:number}>).detail;if(!d)return;setFocus(f=>({...f,x:clamp(d.x/innerWidth*100,5,95),y:clamp(d.y/innerHeight*100,5,95)}))};
+  const onHudHudMove=(e:Event)=>{if(!activeRef.current)return;const d=(e as CustomEvent<{x:number;y:number}>).detail;if(!d)return;positioned.current=true;setFocus(f=>({...f,x:clamp(d.x/innerWidth*100,5,95),y:clamp(d.y/innerHeight*100,5,95)}))};
   window.addEventListener("1muslim:deep-watch-video-bounds",onVideoBounds);window.addEventListener("1muslim:deep-watch-video",onVideo);window.addEventListener("1muslim:deep-watch-quran",onQuran);
   window.addEventListener("1muslim:deep-watch-exit",exit);window.addEventListener("1muslim:deep-watch-hudhud-tap",onHudHudTap);window.addEventListener("1muslim:deep-watch-hudhud-move",onHudHudMove);
   return()=>{window.removeEventListener("1muslim:deep-watch-video-bounds",onVideoBounds);window.removeEventListener("1muslim:deep-watch-video",onVideo);window.removeEventListener("1muslim:deep-watch-quran",onQuran);window.removeEventListener("1muslim:deep-watch-exit",exit);window.removeEventListener("1muslim:deep-watch-hudhud-tap",onHudHudTap);window.removeEventListener("1muslim:deep-watch-hudhud-move",onHudHudMove)};
@@ -36,7 +37,7 @@ export default function ElmiLayerX(){
  useEffect(()=>{
   if(!active)return;
   const down=(e:PointerEvent)=>{const el=e.target as Element;if(el.closest("button,a,input,textarea,[role=button],.hh-chat-orb"))return;start.current={x:e.clientX,y:e.clientY,at:performance.now()}};
-  const up=(e:PointerEvent)=>{const s=start.current;start.current=null;if(!s)return;const dx=e.clientX-s.x,dy=e.clientY-s.y;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.3){window.dispatchEvent(new Event("1muslim:deep-watch-exit"));return}if(Math.abs(dy)<25||Math.abs(dy)<Math.abs(dx)*1.2||performance.now()-s.at<110)return;setFocus(f=>({...f,y:dy<0?f.y>65?50:25:f.y<40?50:72,ry:dy<0?20:20}))};
+  const up=(e:PointerEvent)=>{const s=start.current;start.current=null;if(!s)return;const dx=e.clientX-s.x,dy=e.clientY-s.y;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.3){window.dispatchEvent(new Event("1muslim:deep-watch-exit"));return}if(Math.abs(dy)<25||Math.abs(dy)<Math.abs(dx)*1.2||performance.now()-s.at<110)return;positioned.current=true;setFocus(f=>({...f,y:dy<0?f.y>65?50:25:f.y<40?50:72,ry:dy<0?20:20}))};
   document.addEventListener("pointerdown",down,{capture:true,passive:true});document.addEventListener("pointerup",up,{capture:true,passive:true});
   return()=>{document.removeEventListener("pointerdown",down,true);document.removeEventListener("pointerup",up,true)};
  },[active]);
