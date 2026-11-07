@@ -87,7 +87,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   },[isPlaying,soundEnabled,isPaused,format,cinemaEngaged]);
   useEffect(()=>{if(!immersive)return;const timer=setTimeout(()=>setCinemaSettled(true),20000);return()=>clearTimeout(timer);},[immersive]);
   useEffect(()=>{setSpotlightsGathered(false);if(!immersive||!isPlaying||isPaused)return;const timer=window.setTimeout(()=>setSpotlightsGathered(true),6000);return()=>window.clearTimeout(timer)},[immersive,isPlaying,isPaused,timedVideoKey,format]);
-  useEffect(()=>{window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video",{detail:{active:immersive&&isPlaying&&!isPaused}}));return()=>{window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video",{detail:{active:false}}));}},[immersive,isPlaying,isPaused]);
+  useEffect(()=>{window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video",{detail:{active:immersive&&isPlaying&&!isPaused,format}}));return()=>{window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video",{detail:{active:false}}));}},[immersive,isPlaying,isPaused,format]);
   // Track the visible video every animation frame: ResizeObserver alone misses CSS transforms,
   // carousel motion, the floating player's drift, and scroll-driven position changes.
   useEffect(()=>{
@@ -117,7 +117,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
         // carousel is hidden. Keep the expanded position untouched.
         // Ease the offset to avoid a jump during carousel transitions.
         const collapsed=!!video?.closest(".home-carousel-collapsed");
-        const targetYOffset=collapsed?-320:0;
+        const targetYOffset=0;
         focusYOffset+=(targetYOffset-focusYOffset)*0.16;
         if(Math.abs(targetYOffset-focusYOffset)<0.15)focusYOffset=targetYOffset;
         const key=[x,y,width,height,focusYOffset].map(n=>n.toFixed(1)).join(",");
@@ -126,7 +126,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
           const mask=cutout.parentElement;
           if(mask){
             mask.style.setProperty("--deep-focus-x",(x+width/2)+"px");
-            window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video-bounds",{detail:{x:x+width/2,y:y+height/2+focusYOffset,rx:width/2+30,ry:height/2+28}}));
+            window.dispatchEvent(new CustomEvent("1muslim:deep-watch-video-bounds",{detail:{x:x+width/2,y:y+height/2+focusYOffset,rx:width/2+70,ry:height/2+70}}));
             mask.style.setProperty("--deep-focus-y",(y+height/2+focusYOffset)+"px");
             mask.style.setProperty("--deep-focus-rx",(width/2+30)+"px");
             mask.style.setProperty("--deep-focus-ry",(height/2+28)+"px");
