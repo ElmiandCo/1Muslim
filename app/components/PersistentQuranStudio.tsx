@@ -31,6 +31,7 @@ export default function PersistentQuranStudio(){
   if(playing){stop();return}
   if(!verse)return;
   stop();
+  window.dispatchEvent(new Event("1muslim:audio-focus"));
   const key=verse.key;const reciter=verse.reciter;
   let url="https://cdn.islamic.network/quran/audio/128/"+encodeURIComponent(reciter)+"/"+key.replace(":","/")+".mp3";
   try{const [chapter,ayah]=key.split(":");const response=await fetch("/api/quran-audio?reciter="+encodeURIComponent(reciter)+"&chapter="+chapter+"&verse="+ayah);if(response.ok){const result=await response.json();if(result.available&&result.url)url=result.url}}catch{}
