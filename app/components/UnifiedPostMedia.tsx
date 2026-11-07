@@ -1,4 +1,5 @@
 "use client";
+import OneMuslimVideo from "./OneMuslimVideo";
 import {useCallback,useEffect,useState,type FormEvent} from "react";
 type Comment={id:string;body:string;name:string;created_at:string};
 type Props={postId:string;mediaUrl?:string|null;mediaType?:string|null;youtubeId?:string|null};
@@ -11,7 +12,7 @@ export default function UnifiedPostMedia({postId,mediaUrl,mediaType,youtubeId}:P
  async function share(){const url=window.location.href;try{if(navigator.share)await navigator.share({url});else await navigator.clipboard.writeText(url)}catch{}}
  const hasVideo=!!youtubeId||!!(mediaUrl&&mediaType?.startsWith("video/"));
  return <section className="unifiedPostMedia" aria-label="Post media and conversation">
- {hasVideo&&<div className="unifiedStage">{youtubeId?<iframe title="Post video" src={"https://www.youtube-nocookie.com/embed/"+youtubeId} allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowFullScreen/>:<video src={mediaUrl||undefined} controls playsInline preload="metadata"/>}{float&&<div key={float.id} className="unifiedFloat" aria-live="polite"><b>{float.name}</b><span>{float.body}</span></div>}</div>}
+ {hasVideo&&<OneMuslimVideo videoKey={youtubeId?"youtube:"+youtubeId:"public-post:"+postId} src={mediaUrl||""} youtubeId={youtubeId} title="Public Post video"/>}
  <div className="unifiedActions"><button type="button" onClick={()=>setOpen(v=>!v)} aria-expanded={open}>♡ &nbsp; 💬 {comments.length} {open?"Hide discussion":"Discuss"}</button><button type="button" onClick={()=>void share()}>↗ Share</button></div>
  {open&&<div className="unifiedDiscussion"><div className="unifiedComments">{comments.length?comments.map(c=><div key={c.id} className="unifiedComment"><b>{c.name}</b><p>{c.body}</p></div>):<p>Start the conversation.</p>}</div><form onSubmit={e=>void send(e)}><input aria-label="Write a comment" placeholder="Add to the conversation…" value={draft} maxLength={1500} onChange={e=>setDraft(e.target.value)}/><button disabled={busy||!draft.trim()}>{busy?"Sending…":"Send ↗"}</button></form>{error&&<p role="alert">{error}</p>}</div>}
  <style jsx>{`
