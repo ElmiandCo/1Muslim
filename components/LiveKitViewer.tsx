@@ -14,12 +14,49 @@ import LiveGuestStudio from "./LiveGuestStudio";
 import { cinemaAudioActive, type CinemaMode } from "../lib/live-cinema";
 import { playLiveCinemaMorphSound } from "../lib/live-cinema-sound";
 
-export default function LiveKitViewer({ roomName, streamId, embedded = false, onViewModeChange, initialViewMode = "phone", reconnectSignal = 0 }: { roomName: string; streamId?: string; embedded?: boolean; onViewModeChange?: (mode: CinemaMode) => void; initialViewMode?: CinemaMode; reconnectSignal?: number }) {
+export default function LiveKitViewer({ roomName, streamId, embedded = false, onViewModeChange, initialViewMode = "phone", reconnectSignal = 0, smartMobileCrop = false }: { roomName: string; streamId?: string; embedded?: boolean; onViewModeChange?: (mode: CinemaMode) => void; initialViewMode?: CinemaMode; reconnectSignal?: number; smartMobileCrop?: boolean }) {
   const router=useRouter();
   const [hostEnded,setHostEnded]=useState(false);
   const endedOnce=useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const screenVideoRef = useRef<HTMLVideoElement>(null);
+  // Motion-based framing is opt-in for landscape desktop broadcasts shown on Home's Phone tab.
+  // No video frames leave the browser; sample a tiny canvas at a low rate.
+  const [smartCropX,setSmartCropX]=useState(50);
+  useEffect(()=>{
+    if(!smartMobileCrop)return;
+    const video=videoRef.current;
+    if(!video)return;
+    const canvas=document.createElement("canvas");
+    canvas.width=48;canvas.height=27;
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});
+    if(!ctx)return;
+    let previous:Uint8ClampedArray|null=null;
+    let smoothed=50;
+    const sample=()=>{
+      if(document.hidden||video.paused||video.readyState<2||video.videoWidth<video.videoHeight)return;
+      try{
+        ctx.drawImage(video,0,0,48,27);
+        const pixels=ctx.getImageData(0,0,48,27).data;
+        if(previous){
+          let weighted=0,total=0;
+          for(let y=2;y<25;y+=2)for(let x=2;x<46;x+=2){
+            const idx=(y*48+x)*4;
+            const diff=Math.abs(pixels[idx]-previous[idx])+Math.abs(pixels[idx+1]-previous[idx+1])+Math.abs(pixels[idx+2]-previous[idx+2]);
+            if(diff>48){const weight=Math.min(diff,180);weighted+=x*weight;total+=weight}
+          }
+          // Ignore camera noise and scene-wide transitions; return toward center when still.
+          const target=total>1500&&total<180000?Math.max(28,Math.min(72,weighted/total/47*100)):50;
+          smoothed+=Math.max(-4,Math.min(4,(target-smoothed)*.22));
+          setSmartCropX(Math.round(smoothed*10)/10);
+        }
+        previous=new Uint8ClampedArray(pixels);
+      }catch{previous=null}
+    };
+    const timer=window.setInterval(sample,1100);
+    return()=>{window.clearInterval(timer);setSmartCropX(50)};
+  },[smartMobileCrop]);
+
   const reflectionRef = useRef<HTMLCanvasElement>(null);
   const [viewMode,setViewMode] = useState<CinemaMode>(initialViewMode);
   useEffect(()=>{if(embedded)setViewMode(initialViewMode)},[embedded,initialViewMode]);
@@ -489,8 +526,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       {hostEnded&&<div role="status" aria-live="assertive" className="omHostEndedNotice"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>{embedded?"Closing your floating player…":"Taking you Home…"}</small><button type="button" onClick={()=>{if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));else router.replace("/")}}>Go Home now →</button></div>}
       {!embedded && <canvas ref={reflectionRef} width={160} height={90} className="omLiveCinemaBackdrop" aria-hidden="true" />}
       <LiveGuestsStage mode={guestStageMode} guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostSpeaking={voiceEnergy>.12}>
-        <div className="omLiveVideoStage" data-screen={hasScreenVideo?"yes":"no"} data-layout={hasScreenVideo&&hasCameraVideo?shareLayout:"solo"}>
-          <video ref={videoRef} className="omCameraVideo" autoPlay muted playsInline controls={false} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block"}} />
+        <div className="omLiveVideoStage" data-smart-mobile-crop={smartMobileCrop?"yes":"no"} data-screen={hasScreenVideo?"yes":"no"} data-layout={hasScreenVideo&&hasCameraVideo?shareLayout:"solo"}>
+          <video ref={videoRef} className={"omCameraVideo"+(smartMobileCrop?" omSmartMobileCrop":"")} autoPlay muted playsInline controls={false} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block",...(smartMobileCrop?{objectFit:"cover" as const,objectPosition:`${smartCropX}% 50%`,background:"transparent"}:{})}} />
           <video ref={screenVideoRef} className="omScreenVideo" autoPlay muted playsInline aria-label="Shared screen" style={{display:hasScreenVideo?"block":"none"}} />
         </div>
       </LiveGuestsStage>
@@ -526,6 +563,8 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       @keyframes omVoiceViewerBreathe{0%,100%{opacity:.65}50%{opacity:1}}
       .omLiveVideoStage{position:relative;width:100%;height:100%;overflow:hidden;background:#000}
       .omLiveVideoStage video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+      .omLiveVideoStage[data-smart-mobile-crop="yes"] .omCameraVideo{object-fit:cover!important;background:transparent!important;transition:object-position 900ms ease-out}
+      @media(prefers-reduced-motion:reduce){.omLiveVideoStage[data-smart-mobile-crop="yes"] .omCameraVideo{transition:none}}
       .omLiveTheater .omLiveVideoStage{background:#050b0b}
       .omLiveTheater .omLiveVideoStage video{object-fit:cover!important;background:transparent}
       .omLiveTheater .omLiveVideoStage[data-screen="yes"] .omScreenVideo{object-fit:contain!important;background:#030707}
