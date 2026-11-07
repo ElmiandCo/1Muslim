@@ -18,7 +18,7 @@ export default function QiblaCommand(){
  const visible=useMemo(()=>items.filter(i=>filter==="all"||i.status===filter),[items,filter]);const active=items.find(i=>i.id===selected);
  const [edit,setEdit]=useState({title:"",subtitle:"",body:"",cover_url:""});
  const open=(i:Item)=>{setSelected(i.id);setEdit({title:i.title,subtitle:i.subtitle,body:i.body,cover_url:i.cover_url});setNote("");setMessage("")};
- const action=async(fn:()=>Promise<{error: {message:string}|null}>,success:string)=>{setBusy(true);const {error}=await fn();setBusy(false);setMessage(error?error.message:success);if(!error)await refresh()};
+ const action=async(fn:()=>PromiseLike<{error: {message:string}|null}>,success:string)=>{setBusy(true);const {error}=await fn();setBusy(false);setMessage(error?error.message:success);if(!error)await refresh()};
  const review=(kind:"approved"|"changes_requested"|"rejected")=>{if(!active)return;void action(()=>db.rpc("qibla_review_submission",{p_id:active.id,p_action:kind,p_note:note}),"Review recorded.")};
  const publish=()=>{if(!active)return;void action(()=>db.rpc("qibla_publish_submission",{p_id:active.id}),"Published successfully.")};
  const liveEdit=()=>{if(!active)return;void action(()=>db.rpc("qibla_update_published",{p_id:active.id,p_title:edit.title,p_subtitle:edit.subtitle,p_body:edit.body,p_cover:edit.cover_url}),"Live changes saved.")};
