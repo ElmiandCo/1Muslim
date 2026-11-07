@@ -4,8 +4,8 @@ type Vec=[number,number,number];
 type AvatarId="guardian"|"phantom"|"tidal"|"champion";
 const AVATARS:{id:AvatarId;name:string;accent:string;description:string}[]=[{id:"guardian",name:"Royal Guardian",accent:"#e4b95f",description:"Black & gold · balanced defense"},{id:"phantom",name:"Amethyst Phantom",accent:"#ba71ff",description:"Purple & gold · agility"},{id:"tidal",name:"Tidal Warrior",accent:"#8edfff",description:"Crystal blue · resilience"},{id:"champion",name:"Golden Champion",accent:"#ffd879",description:"Gold · strength"}];
 type Entity={x:number;z:number;hp:number;phase:number};
-const VERT=`attribute vec3 position;attribute vec3 color;uniform mat4 projection;uniform mat4 view;uniform mat4 model;varying vec3 tint;void main(){tint=color;gl_Position=projection*view*model*vec4(position,1.0);}`;
-const FRAG=`precision mediump float;varying vec3 tint;void main(){gl_FragColor=vec4(tint,1.0);}`;
+const VERT=`attribute vec3 position;attribute vec3 color;uniform mat4 projection;uniform mat4 view;uniform mat4 model;varying vec3 tint;varying vec3 worldPos;void main(){tint=color;worldPos=(model*vec4(position,1.0)).xyz;gl_Position=projection*view*model*vec4(position,1.0);}`;
+const FRAG=`precision mediump float;varying vec3 tint;varying vec3 worldPos;uniform float time;void main(){float glow=.12+.12*sin(time*.0015+worldPos.y*2.0);float key=clamp(.78+.16*worldPos.y/3.0+.08*sin(worldPos.x*.7+time*.0003),.55,1.15);vec3 lit=tint*key+vec3(.04,.07,.11)+glow*vec3(.03,.05,.08);gl_FragColor=vec4(lit,1.0);}`;
 const perspective=(aspect:number):Float32Array=>{const f=1/Math.tan(Math.PI/6),n=.1,far=120;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+n)/(n-far),-1,0,0,2*far*n/(n-far),0])};
 const look=(eye:Vec,target:Vec):Float32Array=>{const norm=(v:Vec):Vec=>{const l=Math.hypot(...v)||1;return[v[0]/l,v[1]/l,v[2]/l]};const cross=(a:Vec,b:Vec):Vec=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];const z=norm([eye[0]-target[0],eye[1]-target[1],eye[2]-target[2]]),x=norm(cross([0,1,0],z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-(x[0]*eye[0]+x[1]*eye[1]+x[2]*eye[2]),-(y[0]*eye[0]+y[1]*eye[1]+y[2]*eye[2]),-(z[0]*eye[0]+z[1]*eye[1]+z[2]*eye[2]),1])};
 const model=(x:number,y:number,z:number,sx:number,sy:number,sz:number):Float32Array=>new Float32Array([sx,0,0,0,0,sy,0,0,0,0,sz,0,x,y,z,1]);
@@ -26,19 +26,29 @@ function createScene(canvas:HTMLCanvasElement,avatar:AvatarId,onUpdate:(v:{xp:nu
  if(active(" ")||active("attack")){if(now-attackAt>420){attackAt=now;for(const b of bots){if(b.hp>0&&Math.hypot(player.x-b.x,player.z-b.z)<3.3){b.hp=Math.max(0,b.hp-20);if(!b.hp){player.xp+=50;message="Training bot defeated · +50 XP";if(player.xp>=player.level*100)player.level++}}}}}
  if(active("shield")&&player.resources>0&&player.shield<95){player.resources--;player.shield=Math.min(100,player.shield+35);message="Shield restored using one resource"}
  if(player.hp<=0){player.hp=100;player.shield=50;player.x=0;player.z=0;message="Training reset · patience builds mastery"}
- resize();gl.clearColor(.012,.035,.075,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(projection,false,perspective(canvas.width/canvas.height));gl.uniformMatrix4fv(view,false,look([player.x+12,16,player.z+18],[player.x,0,player.z]));
+ resize();gl.uniform1f(timeUniform,now);gl.clearColor(.012,.035,.075,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(projection,false,perspective(canvas.width/canvas.height));gl.uniformMatrix4fv(view,false,look([player.x+12,16,player.z+18],[player.x,0,player.z]));
  draw(0,0,-.4,0,36,.8,36);for(let i=-16;i<=16;i+=4){draw(1,i,.015,0,.045,.03,32);draw(1,0,.015,i,32,.03,.045)}
  for(const [x,z] of [[-11,-10],[11,10],[-11,10],[11,-10]]){draw(6,x,1,z,3,2.2,3);draw(3,x,2.4,z,3.4,.3,3.4);draw(2,x,1.3,z,1.2,.6,.08)}
  for(const c of crystals)if(!c.got){draw(2,c.x,.65+Math.sin(now/420+c.x)*.14,c.z,.55,1,.55);draw(6,c.x,.1,c.z,1,.2,1)}
  for(const b of bots)if(b.hp>0){draw(4,b.x,.8,b.z,.8,1.5,.8);draw(7,b.x,1.85,b.z,.65,.55,.65);draw(3,b.x,2.25,b.z,.7,.12,.7)}
  const armor=avatar==="guardian"?8:avatar==="phantom"?9:avatar==="tidal"?10:11;const trim=avatar==="phantom"?9:avatar==="tidal"?2:3;
- // Distinct low-poly 3D armor silhouettes, inspired by the four uploaded concepts; not textured 3D replicas.
- draw(armor,player.x,.82,player.z,.84,1.32,.7);draw(armor,player.x,1.57,player.z,1.4,.28,.88);
- draw(armor,player.x-.69,.93,player.z,.35,1.13,.5);draw(armor,player.x+.69,.93,player.z,.35,1.13,.5);
- draw(trim,player.x-.38,.8,player.z+.37,.08,1.4,.06);draw(trim,player.x+.38,.8,player.z+.37,.08,1.4,.06);
- draw(armor,player.x,2.04,player.z,.79,.86,.76);draw(7,player.x,2.08,player.z+.39,.56,.63,.06);
- draw(trim,player.x,2.51,player.z,.88,.11,.81);draw(trim,player.x,.17,player.z,1.1,.12,1.1);
- if(avatar==="phantom"){draw(9,player.x,2.65,player.z+.18,.18,.3,.19)}else if(avatar==="tidal"){draw(10,player.x,2.58,player.z,.8,.18,.8)}else if(avatar==="champion"){draw(11,player.x,2.64,player.z,.85,.24,.86)}else{draw(3,player.x,2.57,player.z,.8,.15,.8)}
+ const moving=Math.hypot(dx,dz)>0;const stride=moving?Math.sin(now*.012)*.16:0;const bob=moving?Math.abs(Math.sin(now*.012))*.08:Math.sin(now*.002)*.018;
+ const sway=Math.sin(now*.004)*(moving?.12:.055);const px=player.x,pz=player.z;
+ // Layered articulated armor, fabric panels and an unmarked faceplate. Keep original faceless avatar identity.
+ draw(7,px,.07,pz,1.4,.08,1.4); // contact shadow
+ draw(armor,px-.25,.43+stride,pz,.35,.84,.42);draw(armor,px+.25,.43-stride,pz,.35,.84,.42);
+ draw(trim,px-.25,.08+stride,pz+.13,.4,.19,.58);draw(trim,px+.25,.08-stride,pz+.13,.4,.19,.58);
+ draw(armor,px,.95+bob,pz,.9,1.25,.68);draw(trim,px,1.54+bob,pz,1.02,.12,.78);
+ draw(armor,px-.69,1.12+bob-stride*.5,pz,.36,1.12,.45);draw(armor,px+.69,1.12+bob+stride*.5,pz,.36,1.12,.45);
+ draw(trim,px-.7,1.58+bob,pz,.58,.28,.64);draw(trim,px+.7,1.58+bob,pz,.58,.28,.64);
+ draw(trim,px-.34,.98+bob,pz+.35,.06,1.02,.07);draw(trim,px+.34,.98+bob,pz+.35,.06,1.02,.07);
+ // Animated mantle folds: segmented geometry reacts to gait rather than being a rigid cuboid.
+ for(let i=0;i<5;i++){const offset=(i-2)*.21;draw(armor,px+offset+sway*(1+i*.07),1.03+bob-i*.025,pz-.48-.06*i,.21,1.35-i*.09,.12);draw(trim,px+offset+sway*(1+i*.07),.39+bob,pz-.4-.06*i,.025,.22,.13)}
+ draw(armor,px,1.91+bob,pz,.87,.72,.77);draw(7,px,1.94+bob,pz+.39,.64,.55,.065);
+ draw(trim,px,2.31+bob,pz,.91,.13,.84);draw(trim,px,2.37+bob,pz+.14,.23,.12,.12);
+ if(avatar==="phantom"){draw(9,px,2.49+bob,pz+.18,.19,.29,.2)}else if(avatar==="tidal"){draw(10,px,2.47+bob,pz,.84,.16,.82)}else if(avatar==="champion"){draw(11,px,2.5+bob,pz,.88,.23,.86)}else{draw(3,px,2.43+bob,pz,.81,.13,.82)}
+ // Slow cinematic pulses, deliberately limited to a few geometry draws on mobile.
+ if(avatar==="phantom"||avatar==="tidal"){const pulse=.12+.09*Math.sin(now*.003);draw(trim,px,2.72+bob,pz,.12+pulse,.1,.12+pulse)}
  if(now-lastUI>120){lastUI=now;onUpdate({xp:player.xp,hp:Math.round(player.hp),shield:Math.round(player.shield),resources:player.resources,level:player.level,message})}
  raf=requestAnimationFrame(loop)};
  raf=requestAnimationFrame(loop);return()=>{running=false;cancelAnimationFrame(raf);for(const b of meshes)gl.deleteBuffer(b);gl.deleteProgram(program);const ext=gl.getExtension("WEBGL_lose_context");ext?.loseContext()};
