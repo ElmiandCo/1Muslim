@@ -11,7 +11,7 @@ export default function MessengerLayout({children}:{children:React.ReactNode}){
   {children}
   <nav className="muslimMessengerDock" aria-label="Messenger navigation">
    <Link href="/" aria-label="Home"><span>⌂</span><small>Home</small></Link>
-   <Link href="/messages/groups" aria-label="Add: select members and create a group"><span>＋</span><small>Add</small></Link>
+   <Link href="/messages/sync" aria-label="1Muslim Sync"><span>🔗</span><small>Sync</small></Link><Link href="/messages/groups" aria-label="Add: select members and create a group"><span>＋</span><small>Add</small></Link>
   </nav>
   <style>{`
   .muslimMessengerDock{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:50%;transform:translateX(-50%);width:min(95vw,620px);height:68px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:80;border-radius:30px;background:rgba(255,255,255,.94);border:1px solid #dfe7e4;box-shadow:0 6px 30px #0002;backdrop-filter:blur(20px);padding:5px}

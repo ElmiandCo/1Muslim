@@ -78,14 +78,14 @@ export default function NotificationToaster(){
       .omNoticePortal{position:fixed;inset:0;z-index:10020;pointer-events:none}
       .omNoticeBlur{position:absolute;inset:0;background:rgba(4,7,16,.10);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);animation:omNoticeBlurPulse 1.5s ease both}
       @keyframes omNoticeBlurPulse{0%,100%{opacity:0}20%,75%{opacity:1}}
-      .omNoticeStack{position:absolute;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(450px,calc(100vw - 20px));max-height:25dvh;display:flex;flex-direction:column;gap:4px;pointer-events:auto;color:var(--theme-text,#f7f5ff)}
-      .omNoticeTop{display:flex;justify-content:space-between;align-items:center;flex:0 0 auto;padding:3px 9px;border-radius:10px;border:1px solid color-mix(in srgb,var(--theme-border,#b3a5d2) 35%,transparent);background:color-mix(in srgb,var(--theme-panel,#151520) 32%,transparent);backdrop-filter:blur(16px);font-size:10px;letter-spacing:.05em}
+      .omNoticeStack{position:absolute;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(560px,calc(100vw - 24px));max-height:38dvh;display:flex;flex-direction:column;gap:4px;pointer-events:auto;color:var(--theme-text,#f7f5ff)}
+      .omNoticeTop{display:flex;justify-content:space-between;align-items:center;flex:0 0 auto;padding:6px 14px;border-radius:18px;border:1px solid color-mix(in srgb,var(--theme-border,#b3a5d2) 35%,transparent);background:rgba(35,43,42,.38);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);font-size:10px;letter-spacing:.05em}
       .omNoticeTop button{border:0;background:none;color:inherit;font-size:21px;cursor:pointer}
-      .omNoticeScroll{overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:5px;min-height:0;scrollbar-width:thin}
-      .omNoticeCard{display:flex;align-items:flex-start;gap:8px;padding:7px 9px;border:1px solid color-mix(in srgb,var(--theme-border,#b3a5d2) 45%,transparent);border-radius:12px;background:color-mix(in srgb,var(--theme-panel,#101322) 34%,transparent);backdrop-filter:blur(17px);-webkit-backdrop-filter:blur(17px);box-shadow:0 5px 22px #0003;animation:omNoticeEnter .25s ease-out both}
-      .omNoticeAvatar{width:29px;height:29px;flex:0 0 29px;object-fit:cover;border-radius:50%;border:1px solid var(--theme-border,#ffffff55)}.omNoticeIcon{font-size:15px}.omNoticeContent{flex:1;min-width:0}.omNoticeContent a{color:inherit;text-decoration:none}.omNoticeContent strong{font-size:11px}.omNoticeContent p{margin:3px 0 0;font-size:10px;line-height:1.35;opacity:.85;overflow-wrap:anywhere}
+      .omNoticeScroll{overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:9px;min-height:0;scrollbar-width:thin}
+      .omNoticeCard{display:flex;align-items:flex-start;gap:13px;padding:16px 18px;border:1px solid rgba(255,255,255,.28);border-radius:28px;background:linear-gradient(135deg,rgba(62,75,70,.65),rgba(45,49,42,.40));backdrop-filter:blur(28px) saturate(130%);-webkit-backdrop-filter:blur(28px) saturate(130%);box-shadow:0 14px 36px #0004,inset 0 1px #ffffff22;animation:omNoticeEnter .36s cubic-bezier(.2,.8,.2,1) both}
+      .omNoticeAvatar{width:46px;height:46px;flex:0 0 46px;object-fit:cover;border-radius:50%;border:1px solid var(--theme-border,#ffffff55)}.omNoticeIcon{font-size:29px;min-width:42px;text-align:center}.omNoticeContent{flex:1;min-width:0}.omNoticeContent a{color:inherit;text-decoration:none}.omNoticeContent strong{font-size:15px;font-weight:650;line-height:1.3}.omNoticeContent p{margin:7px 0 0;font-size:13px;line-height:1.45;opacity:.9;overflow-wrap:anywhere}
       .omNoticeToggle,.omNoticeDismiss{background:transparent;color:inherit;border:0;padding:0 3px;font-size:16px;cursor:pointer}
-      @keyframes omNoticeEnter{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes omNoticeEnter{from{opacity:0;transform:translateY(-25px) scale(.97)}to{opacity:1;transform:translateY(0)}}
       @media(prefers-reduced-motion:reduce){.omNoticeCard,.omNoticeBlur{animation:none}}
     `}</style>
   </div>;
