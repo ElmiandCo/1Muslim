@@ -284,18 +284,6 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       ].map((item,index)=><Link key={item.title} role="menuitem" href={item.href} onClick={()=>{closeMenu();if(item.title==="Tajweed AI")sessionStorage.setItem("1muslim-hudhud-tajweed","1")}} className="hudhudModeItem" style={{animationDelay:index*65+"ms"}}><span className="hudhudModeIcon" aria-hidden="true">{item.icon}</span><span className="hudhudModeText"><strong>{item.title}</strong><small lang="ar">{item.ar}</small></span><span className="hudhudModeArrow">↗</span></Link>)}
       <button type="button" className="hudhudModeSignOut" role="menuitem" onClick={()=>void signOut()}><span aria-hidden="true">⇥</span> Sign Out</button>
     </div>}
-    {openMenu==="hudhud"&&<div className="hudhudJarvisOrbits" aria-label="HudHud floating shortcuts">
-      <Link href="/streaming/go-live" onClick={closeMenu} className="hudhudJarvisOrbit hudhudJarvisOrbitLive" aria-label="Go Live"><span aria-hidden="true">◉</span><small>Go Live</small></Link>
-      <Link href="/quran-studio" onClick={closeMenu} className="hudhudJarvisOrbit hudhudJarvisOrbitQuran" aria-label="Qur’an Studio"><span aria-hidden="true">۞</span><small>Qur’an</small></Link>
-    </div>}
-    <style jsx global>{`
-      .hudhudJarvisOrbits{position:fixed;top:clamp(105px,16vh,170px);right:clamp(16px,6vw,110px);z-index:9997;display:flex;flex-direction:column;gap:18px;pointer-events:none}
-      .hudhudJarvisOrbit{pointer-events:auto;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;width:96px;height:96px;border:1px solid #9ce7ff99;border-radius:50%;color:#e7faff!important;text-decoration:none!important;background:radial-gradient(circle at 35% 28%,#6bdcff36,#06111bc9 67%,#02050bdb);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 0 0 5px #6bdcff0c,inset 0 0 28px #53ceff3b,0 0 26px #35baff4d;animation:hudhudOrbitPop .55s cubic-bezier(.17,.89,.24,1.2) both,hudhudOrbitFloat 3.5s ease-in-out infinite alternate;transition:box-shadow .2s,scale .2s}
-      .hudhudJarvisOrbitQuran{animation-delay:.13s,.13s}.hudhudJarvisOrbit span{font-size:30px;color:#b6edff;text-shadow:0 0 15px #62d4ff}.hudhudJarvisOrbit small{font-size:11px;font-weight:700;letter-spacing:.04em}.hudhudJarvisOrbit:hover,.hudhudJarvisOrbit:focus-visible{scale:1.09;box-shadow:inset 0 0 30px #6ee4ff77,0 0 35px #43caffaa;outline:2px solid #a2eaff;outline-offset:4px}
-      @keyframes hudhudOrbitPop{from{opacity:0;scale:.4;filter:blur(8px)}to{opacity:1;scale:1;filter:blur(0)}}@keyframes hudhudOrbitFloat{from{transform:translateY(0)}to{transform:translateY(-8px)}}
-      @media(max-width:600px){.hudhudJarvisOrbits{top:110px;right:14px;gap:13px}.hudhudJarvisOrbit{width:76px;height:76px}.hudhudJarvisOrbit span{font-size:24px}}
-      @media(prefers-reduced-motion:reduce){.hudhudJarvisOrbit{animation:none;transition:none}}
-    `}</style>
     <nav className="siteNavLinks" aria-label="Primary navigation">
       <Link href="/" className="siteHomeLink">Home</Link>
 
