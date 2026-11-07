@@ -5,6 +5,10 @@ type Sample={t:number;x:number;y:number;pressure:number;area:number;pointerId:nu
 type Stroke={id:number;kind:string;duration:number;distance:number;velocity:number;peakVelocity:number;maxArea:number;maxPressure:number;samples:Sample[]};
 const MAX_SAMPLES=6000;
 const MAX_STROKES=24;
+// PointerEvent contact geometry and pressure are optional browser estimates.
+const finite=(value:number,fallback=0)=>Number.isFinite(value)?value:fallback;
+const pressureOf=(p:{pointerType:string;buttons:number;pressure:number})=>p.pointerType==="mouse"?(p.buttons?0.5:0):Math.max(0,Math.min(1,finite(p.pressure)));
+const areaOf=(p:{width:number;height:number})=>Math.min(100000,Math.max(0,finite(p.width))*Math.max(0,finite(p.height)));
 const classify=(dx:number,dy:number,duration:number)=>{const dist=Math.hypot(dx,dy);if(dist<15)return duration>450?"Long press":"Tap";if(Math.abs(dx)>Math.abs(dy)*1.4)return dx>0?"Swipe right":"Swipe left";if(Math.abs(dy)>Math.abs(dx)*1.4)return dy>0?"Swipe down":"Swipe up";return "Diagonal swipe";};
 export default function HudHudGestureRecorder({onClose}:{onClose:()=>void}){
  const canvas=useRef<HTMLCanvasElement>(null);
@@ -35,15 +39,16 @@ export default function HudHudGestureRecorder({onClose}:{onClose:()=>void}){
  const stopPlayback=()=>{if(playback.current!==null)cancelAnimationFrame(playback.current);playback.current=null;setReplaying(false)};
  useEffect(()=>()=>{if(frame.current!==null)cancelAnimationFrame(frame.current);if(playback.current!==null)cancelAnimationFrame(playback.current)},[]);
  useEffect(()=>{const old=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.body.style.overflow=old}},[]);
- const point=(e:React.PointerEvent<HTMLCanvasElement>):Sample=>{const r=e.currentTarget.getBoundingClientRect();return {t:e.timeStamp,x:e.clientX-r.left,y:e.clientY-r.top,pressure:e.pointerType==="mouse"?(e.buttons?0.5:0):Math.max(0,Math.min(1,e.pressure||0)),area:Math.max(0,(e.width||0)*(e.height||0)),pointerId:e.pointerId,pointerType:e.pointerType}};
+ const point=(e:React.PointerEvent<HTMLCanvasElement>):Sample=>{const r=e.currentTarget.getBoundingClientRect();return {t:e.timeStamp,x:e.clientX-r.left,y:e.clientY-r.top,pressure:pressureOf(e),area:areaOf(e),pointerId:e.pointerId,pointerType:e.pointerType}};
  const paint=()=>{draw(Array.from(active.current.values()));};
  const down=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(replaying)return;try{e.currentTarget.setPointerCapture(e.pointerId)}catch{};active.current.set(e.pointerId,[point(e)]);paint();setLive(v=>({...v,pointers:active.current.size}));setStatus("Recording gesture…")};
  const move=(e:React.PointerEvent<HTMLCanvasElement>)=>{const list=active.current.get(e.pointerId);if(!list||replaying)return;
-   const events=typeof e.nativeEvent.getCoalescedEvents==="function"?e.nativeEvent.getCoalescedEvents():[e.nativeEvent];
-   for(const p of events){if(list.length>=MAX_SAMPLES)break;const r=e.currentTarget.getBoundingClientRect();list.push({t:p.timeStamp,x:p.clientX-r.left,y:p.clientY-r.top,pressure:p.pointerType==="mouse"?(p.buttons?0.5:0):Math.max(0,Math.min(1,p.pressure||0)),area:Math.max(0,(p.width||0)*(p.height||0)),pointerId:e.pointerId,pointerType:p.pointerType});}
+   const coalesced=typeof e.nativeEvent.getCoalescedEvents==="function"?e.nativeEvent.getCoalescedEvents():[];
+   const events=coalesced.length?coalesced:[e.nativeEvent];
+   for(const p of events){if(list.length>=MAX_SAMPLES)break;const r=e.currentTarget.getBoundingClientRect();const last=list[list.length-1];const t=finite(p.timeStamp,last.t);if(t<last.t)continue;const x=finite(p.clientX-r.left,last.x),y=finite(p.clientY-r.top,last.y);list.push({t,x,y,pressure:pressureOf(p),area:areaOf(p),pointerId:e.pointerId,pointerType:p.pointerType||e.pointerType});}
    if(frame.current===null)frame.current=requestAnimationFrame(()=>{frame.current=null;paint();const a=list[0],b=list[list.length-1],prev=list[Math.max(0,list.length-2)];setLive({speed:Math.round(Math.hypot(b.x-prev.x,b.y-prev.y)/Math.max(1,b.t-prev.t)*1000),pressure:Math.round(b.pressure*100),area:Math.round(b.area),distance:Math.round(Math.hypot(b.x-a.x,b.y-a.y)),duration:Math.round(b.t-a.t),pointers:active.current.size})});
  };
- const end=(e:React.PointerEvent<HTMLCanvasElement>,cancelled=false)=>{const list=active.current.get(e.pointerId);if(!list)return;const last=point(e);if(!cancelled&&list.length<MAX_SAMPLES)list.push(last);active.current.delete(e.pointerId);
+ const end=(e:React.PointerEvent<HTMLCanvasElement>,cancelled=false)=>{const list=active.current.get(e.pointerId);if(!list)return;const last=point(e);if(!cancelled&&list.length<MAX_SAMPLES)list.push({...last,t:Math.max(last.t,list[list.length-1].t)});active.current.delete(e.pointerId);
    const a=list[0],b=list[list.length-1],duration=Math.max(1,b.t-a.t),distance=Math.hypot(b.x-a.x,b.y-a.y);
    if(!cancelled){let peak=0;for(let i=1;i<list.length;i++)peak=Math.max(peak,Math.hypot(list[i].x-list[i-1].x,list[i].y-list[i-1].y)/Math.max(1,list[i].t-list[i-1].t)*1000);
      const stroke:Stroke={id:Date.now()+Math.random(),kind:classify(b.x-a.x,b.y-a.y,duration),duration:Math.round(duration),distance:Math.round(distance),velocity:Math.round(distance/duration*1000),peakVelocity:Math.round(peak),maxArea:Math.round(Math.max(...list.map(p=>p.area))),maxPressure:Math.round(Math.max(...list.map(p=>p.pressure))*100),samples:list.map(p=>({...p,t:Math.round(p.t-a.t)}))};
