@@ -16,7 +16,6 @@ export default function HudHudGestureRecorder({onClose}:{onClose:()=>void}){
  const [live,setLive]=useState({speed:0,pressure:0,area:0,distance:0,duration:0,pointers:0});
  const [status,setStatus]=useState("Touch the tray to record. Traces remain visible until release.");
  const [replaying,setReplaying]=useState(false);
- const [replayIndex,setReplayIndex]=useState(0);
  const [sessionName,setSessionName]=useState("Gesture test");
  const draw=useCallback((current:Sample[][],fade=1)=>{
    const el=canvas.current;if(!el)return;const ctx=el.getContext("2d");if(!ctx)return;
@@ -36,12 +35,12 @@ export default function HudHudGestureRecorder({onClose}:{onClose:()=>void}){
  const stopPlayback=()=>{if(playback.current!==null)cancelAnimationFrame(playback.current);playback.current=null;setReplaying(false)};
  useEffect(()=>()=>{if(frame.current!==null)cancelAnimationFrame(frame.current);if(playback.current!==null)cancelAnimationFrame(playback.current)},[]);
  useEffect(()=>{const old=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.body.style.overflow=old}},[]);
- const point=(e:React.PointerEvent<HTMLCanvasElement>):Sample=>{const r=e.currentTarget.getBoundingClientRect();return {t:performance.now(),x:e.clientX-r.left,y:e.clientY-r.top,pressure:e.pointerType==="mouse"?(e.buttons?0.5:0):Math.max(0,Math.min(1,e.pressure||0)),area:Math.max(0,(e.width||0)*(e.height||0)),pointerId:e.pointerId,pointerType:e.pointerType}};
+ const point=(e:React.PointerEvent<HTMLCanvasElement>):Sample=>{const r=e.currentTarget.getBoundingClientRect();return {t:e.timeStamp,x:e.clientX-r.left,y:e.clientY-r.top,pressure:e.pointerType==="mouse"?(e.buttons?0.5:0):Math.max(0,Math.min(1,e.pressure||0)),area:Math.max(0,(e.width||0)*(e.height||0)),pointerId:e.pointerId,pointerType:e.pointerType}};
  const paint=()=>{draw(Array.from(active.current.values()));};
  const down=(e:React.PointerEvent<HTMLCanvasElement>)=>{if(replaying)return;try{e.currentTarget.setPointerCapture(e.pointerId)}catch{};active.current.set(e.pointerId,[point(e)]);paint();setLive(v=>({...v,pointers:active.current.size}));setStatus("Recording gesture…")};
  const move=(e:React.PointerEvent<HTMLCanvasElement>)=>{const list=active.current.get(e.pointerId);if(!list||replaying)return;
    const events=typeof e.nativeEvent.getCoalescedEvents==="function"?e.nativeEvent.getCoalescedEvents():[e.nativeEvent];
-   for(const p of events){if(list.length>=MAX_SAMPLES)break;const r=e.currentTarget.getBoundingClientRect();list.push({t:performance.now(),x:p.clientX-r.left,y:p.clientY-r.top,pressure:p.pointerType==="mouse"?(p.buttons?0.5:0):Math.max(0,Math.min(1,p.pressure||0)),area:Math.max(0,(p.width||0)*(p.height||0)),pointerId:e.pointerId,pointerType:p.pointerType});}
+   for(const p of events){if(list.length>=MAX_SAMPLES)break;const r=e.currentTarget.getBoundingClientRect();list.push({t:p.timeStamp,x:p.clientX-r.left,y:p.clientY-r.top,pressure:p.pointerType==="mouse"?(p.buttons?0.5:0):Math.max(0,Math.min(1,p.pressure||0)),area:Math.max(0,(p.width||0)*(p.height||0)),pointerId:e.pointerId,pointerType:p.pointerType});}
    if(frame.current===null)frame.current=requestAnimationFrame(()=>{frame.current=null;paint();const a=list[0],b=list[list.length-1],prev=list[Math.max(0,list.length-2)];setLive({speed:Math.round(Math.hypot(b.x-prev.x,b.y-prev.y)/Math.max(1,b.t-prev.t)*1000),pressure:Math.round(b.pressure*100),area:Math.round(b.area),distance:Math.round(Math.hypot(b.x-a.x,b.y-a.y)),duration:Math.round(b.t-a.t),pointers:active.current.size})});
  };
  const end=(e:React.PointerEvent<HTMLCanvasElement>,cancelled=false)=>{const list=active.current.get(e.pointerId);if(!list)return;const last=point(e);if(!cancelled&&list.length<MAX_SAMPLES)list.push(last);active.current.delete(e.pointerId);
@@ -63,7 +62,7 @@ export default function HudHudGestureRecorder({onClose}:{onClose:()=>void}){
    <div className="hh-record-tray"><canvas ref={canvas} aria-label="Gesture recording touch surface" onPointerDown={down} onPointerMove={move} onPointerUp={e=>end(e)} onPointerCancel={e=>end(e,true)} onLostPointerCapture={e=>end(e,true)}/><span className="hh-record-hint" aria-hidden="true">TOUCH · SWIPE · TRACE</span></div>
    <div className="hh-record-metrics" aria-live="off"><span>Velocity <b>{live.speed} px/s</b></span><span>Pressure <b>{live.pressure}%</b></span><span>Contact <b>{live.area} px²</b></span><span>Distance <b>{live.distance} px</b></span><span>Duration <b>{live.duration} ms</b></span><span>Fingers <b>{live.pointers}</b></span></div>
    <p className="hh-record-status" role="status">{status}</p>
-   <div className="hh-record-history"><strong>Captured strokes ({history.length}/{MAX_STROKES})</strong><p>Each stroke stores timestamped pointer samples, position, speed-derived motion, pressure and contact area. Replay reproduces recorded position and timing, not physical pressure.</p>{history.map((s,i)=><div className="hh-record-row" key={s.id}><span>{s.kind} · {s.duration} ms · {s.distance} px · avg {s.velocity} px/s · peak {s.peakVelocity} px/s · {s.samples.length} points</span><button type="button" onClick={()=>{setReplayIndex(i);replay(s)}} disabled={replaying}>Replay</button></div>)}</div>
+   <div className="hh-record-history"><strong>Captured strokes ({history.length}/{MAX_STROKES})</strong><p>Each stroke stores timestamped pointer samples, position, speed-derived motion, pressure and contact area. Replay reproduces recorded position and timing, not physical pressure.</p>{history.map(s=><div className="hh-record-row" key={s.id}><span>{s.kind} · {s.duration} ms · {s.distance} px · avg {s.velocity} px/s · peak {s.peakVelocity} px/s · {s.samples.length} points</span><button type="button" onClick={()=>{replay(s)}} disabled={replaying}>Replay</button></div>)}</div>
    </div><style jsx>{`
    .hh-record-overlay{position:fixed;inset:0;z-index:2147483000;background:#030b19;color:#e6f8ff;display:flex;flex-direction:column;font-family:inherit}
    .hh-record-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#07172d;border-bottom:1px solid #248aff66}.hh-record-header div{display:grid;gap:3px}.hh-record-header strong{font-size:17px}.hh-record-header small{font-size:11px;color:#b5d8f2}
