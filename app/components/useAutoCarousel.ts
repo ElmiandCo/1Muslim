@@ -6,7 +6,7 @@ export function useAutoCarousel<T extends HTMLElement>(count:number,delay=4200){
   const el=ref.current;
   if(!el||count<2||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   let resumeAt=Date.now()+delay;
-  const pause=()=>{resumeAt=Date.now()+8500};
+  const pause=()=>{resumeAt=Date.now()+2000};
   const advance=()=>{
    if(document.hidden||Date.now()<resumeAt||el.scrollWidth<=el.clientWidth+3)return;
    const cards=Array.from(el.children) as HTMLElement[];
