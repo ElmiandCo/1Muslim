@@ -18,7 +18,7 @@ export default function PersistentQuranStudio(){
  const [verse,setVerse]=useState<VerseSnapshot|null>(null),[mode,setMode]=useState<Mode>("mini"),[playing,setPlaying]=useState(false);
  const audio=useRef<HTMLAudioElement|null>(null);
  const studio=pathname?.startsWith("/elm-tent/quran");
- const stop=useCallback(()=>{audio.current?.pause();audio.current=null;setPlaying(false)},[]);
+ const stop=useCallback(()=>{audio.current?.pause();audio.current=null;setPlaying(false);window.dispatchEvent(new CustomEvent("1muslim:deep-watch-quran",{detail:{playing:false}}))},[]);
  useEffect(()=>{
   try{const saved=sessionStorage.getItem(STORAGE);if(saved){const state=JSON.parse(saved);setVerse(safe(state.verse));setMode(state.mode==="widget"?"widget":"mini")}}catch{}
   const onUpdate=(event:Event)=>{const detail=(event as CustomEvent<VerseSnapshot>).detail;const next=safe(detail);if(!next)return;setVerse(next);setMode("mini")};
@@ -34,7 +34,7 @@ export default function PersistentQuranStudio(){
   const key=verse.key;const reciter=verse.reciter;
   let url="https://cdn.islamic.network/quran/audio/128/"+encodeURIComponent(reciter)+"/"+key.replace(":","/")+".mp3";
   try{const [chapter,ayah]=key.split(":");const response=await fetch("/api/quran-audio?reciter="+encodeURIComponent(reciter)+"&chapter="+chapter+"&verse="+ayah);if(response.ok){const result=await response.json();if(result.available&&result.url)url=result.url}}catch{}
-  const next=new Audio(url);audio.current=next;next.onended=()=>{if(audio.current===next){audio.current=null;setPlaying(false)}};next.onerror=()=>{if(audio.current===next){audio.current=null;setPlaying(false)}};try{await next.play();setPlaying(true)}catch{setPlaying(false)}
+  const next=new Audio(url);audio.current=next;next.onended=()=>{if(audio.current===next){audio.current=null;setPlaying(false);window.dispatchEvent(new CustomEvent("1muslim:deep-watch-quran",{detail:{playing:false}}))}};next.onerror=()=>{if(audio.current===next){audio.current=null;setPlaying(false);window.dispatchEvent(new CustomEvent("1muslim:deep-watch-quran",{detail:{playing:false}}))}};try{await next.play();setPlaying(true);window.dispatchEvent(new CustomEvent("1muslim:deep-watch-quran",{detail:{playing:true,target:document.querySelector(".quranFloatBody")?.getBoundingClientRect()||document.querySelector(".quranFloat")?.getBoundingClientRect()}}))}catch{setPlaying(false)}
  };
  useEffect(()=>{return()=>{audio.current?.pause();audio.current=null}},[]);
  if(!verse||studio)return null;
