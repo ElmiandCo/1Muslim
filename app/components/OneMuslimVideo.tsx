@@ -2,8 +2,8 @@
 import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
 import {createClient} from "../../utils/supabase/client";
 type Entry={id:string;body:string;at_seconds:number;user_id:string};
-type YTPlayer={getCurrentTime:()=>number;getPlayerState:()=>number;destroy:()=>void};
-type YTAPI={Player:new(el:HTMLElement,opts:{videoId:string;playerVars:Record<string,number|string>;events:{onReady:()=>void}})=>YTPlayer};
+type YTPlayer={getCurrentTime:()=>number;getPlayerState:()=>number;mute:()=>void;destroy:()=>void};
+type YTAPI={Player:new(element:HTMLElement,options:{videoId:string;playerVars:Record<string,number|string>;events:{onReady:()=>void}})=>YTPlayer};
 declare global {interface Window{YT?:YTAPI;onYouTubeIframeAPIReady? :()=>void}}
 type Props={videoKey:string;src:string;youtubeId?:string|null;title?:string;preview?:boolean};
 const clock=(s:number)=>Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
