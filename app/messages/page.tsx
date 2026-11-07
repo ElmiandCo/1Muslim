@@ -885,6 +885,32 @@ body:has(.muslimMessengerFrame){overflow:hidden!important}
 .omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread .omUnreadBadge{position:absolute!important;right:8px!important;top:8px!important}
 .omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:focus-visible{outline:3px solid #b08c54!important;outline-offset:4px!important}
 @media(max-width:520px){.omImessagePage.omMessengerUnified .omMessengerShell--list .omMessengerThreadList{gap:15px 10px!important}.omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread{min-height:200px!important}.omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread>.omThreadAvatar{height:clamp(120px,38vw,200px)!important}}
+/* Magazine stagger: alternating card proportions and offset columns, even on phones. */
+.omImessagePage.omMessengerUnified .omMessengerShell--list .omMessengerThreadList{
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ grid-auto-flow:row dense!important;align-items:start!important;
+ column-gap:clamp(10px,2.2vw,22px)!important;row-gap:clamp(18px,3vw,32px)!important;
+}
+.omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:nth-child(2n){
+ transform:translateY(34px)!important;
+ margin-top:0!important;
+}
+.omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:nth-child(4n+1)>.omThreadAvatar{height:clamp(155px,28vw,310px)!important}
+.omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:nth-child(4n+2)>.omThreadAvatar{height:clamp(190px,35vw,365px)!important}
+.omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:nth-child(4n+3)>.omThreadAvatar{height:clamp(125px,22vw,240px)!important}
+.omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:nth-child(4n)>.omThreadAvatar{height:clamp(205px,37vw,390px)!important}
+.omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread{transition:filter .3s ease!important}
+.omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:hover{filter:brightness(1.08)}
+@media(max-width:700px){
+ .omImessagePage.omMessengerUnified .omMessengerShell--list .omMessengerThreadList{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:20px 12px!important}
+ .omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:nth-child(2n){transform:translateY(26px)!important}
+ .omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:nth-child(4n+1)>.omThreadAvatar{height:clamp(130px,39vw,220px)!important}
+ .omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:nth-child(4n+2)>.omThreadAvatar{height:clamp(160px,48vw,270px)!important}
+ .omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:nth-child(4n+3)>.omThreadAvatar{height:clamp(110px,31vw,180px)!important}
+ .omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread:nth-child(4n)>.omThreadAvatar{height:clamp(170px,51vw,285px)!important}
+}
+@media(prefers-reduced-motion:reduce){.omImessagePage.omMessengerUnified .omMessengerShell--list .omEditorialThread{transition:none!important}}
+
 /* Reading a conversation keeps the existing secure messaging, calls and composer. */
 .omImessagePage.omMessengerUnified .omMessengerShell--chat .omMessagesFeed{background:linear-gradient(155deg,#eee9df,#e4eadf)!important;color:#26342f!important}
 .omImessagePage.omMessengerUnified .omMessengerShell--chat .omMessageBubble{box-shadow:0 9px 22px #17291c1a!important;border:1px solid #bca78260!important}
