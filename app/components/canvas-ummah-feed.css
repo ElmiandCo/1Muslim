@@ -610,3 +610,17 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
   .profile-shared-avatar-portal .profile-avatar-portrait{max-height:112px!important;}
   .profile-with-shared-avatar{padding-top:132px!important;}
 }
+
+
+/* Shared HudHud portrait must render above the Profile Editor and info cards.
+   Portal lives at document level, outside the editor's stacking context. */
+.profile-shared-avatar-portal{
+  position:fixed!important;
+  isolation:isolate!important;
+  z-index:2147483647!important;
+}
+.profile-shared-avatar-portal .profile-shared-avatar-hero,
+.profile-shared-avatar-portal .profile-avatar-portrait{
+  position:relative;
+  z-index:1;
+}
