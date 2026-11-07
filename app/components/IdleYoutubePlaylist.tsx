@@ -10,6 +10,7 @@ type YTPlayer={
   mute:()=>void;
   unMute:()=>void;
   playVideo:()=>void;
+  pauseVideo:()=>void;
   getCurrentTime:()=>number;
   destroy:()=>void;
 };
@@ -28,6 +29,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const mountRef=useRef<HTMLDivElement>(null);
   const swipeStart=useRef<{x:number;y:number}|null>(null);
   const playerRef=useRef<YTPlayer|null>(null);
+  useEffect(()=>{const pause=()=>{playerRef.current?.pauseVideo();setIsPaused(true);setIsPlaying(false)};const onMedia=(e:Event)=>{if(e.target instanceof HTMLMediaElement&&!e.target.muted)pause()};window.addEventListener("1muslim:audio-focus",pause);document.addEventListener("play",onMedia,true);return()=>{window.removeEventListener("1muslim:audio-focus",pause);document.removeEventListener("play",onMedia,true)}},[]);
   const [soundEnabled,setSoundEnabled]=useState(false);
   const [isPaused,setIsPaused]=useState(false);
   const [tapHint,setTapHint]=useState(true);
