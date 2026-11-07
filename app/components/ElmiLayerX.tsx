@@ -14,6 +14,8 @@ export default function ElmiLayerX(){
  const [quran,setQuran]=useState(false);
  const start=useRef<{x:number;y:number;at:number;id:number}|null>(null);
  const suppressed=useRef(false);
+ const swipeDistance=useRef(45);
+ useEffect(()=>{try{const n=Number(localStorage.getItem("1muslim:deep-watch-swipe-px"));if(n>=20&&n<=120)swipeDistance.current=n}catch{}const onConfig=(e:Event)=>{const n=(e as CustomEvent<{distance:number}>).detail?.distance;if(Number.isFinite(n)&&n>=20&&n<=120)swipeDistance.current=n};window.addEventListener("1muslim:deep-watch-gesture-config",onConfig);return()=>window.removeEventListener("1muslim:deep-watch-gesture-config",onConfig)},[]);
  const activeRef=useRef(false);
  const positioned=useRef(false);
  const [videoMode,setVideoMode]=useState(false);
@@ -58,7 +60,7 @@ export default function ElmiLayerX(){
    const s=start.current;start.current=null;
    if(!s||s.id!==e.pointerId)return;
    const dx=e.clientX-s.x,dy=e.clientY-s.y,elapsed=performance.now()-s.at;
-   if(elapsed<140||elapsed>1100||Math.abs(dy)<65||Math.abs(dy)<Math.abs(dx)*1.7)return;
+   if(elapsed<140||elapsed>1100||Math.abs(dy)<swipeDistance.current||Math.abs(dy)<Math.abs(dx)*1.3)return;
    positioned.current=true;
    setFocus(f=>({...f,y:dy<0?(f.y>60?50:25):(f.y<40?50:75)}));
   };
