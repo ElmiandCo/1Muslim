@@ -62,7 +62,7 @@ export default function ElmiLayerX(){
    const s=start.current;start.current=null;
    if(!s||s.id!==e.pointerId)return;
    const dx=e.clientX-s.x,dy=e.clientY-s.y,elapsed=performance.now()-s.at;
-   if(elapsed<140||elapsed>1100||Math.abs(dy)<65||Math.abs(dy)<Math.abs(dx)*1.7)return;
+   // A short tap on inert dimmed canvas relocates the spotlight without intercepting the tap.\n   if(elapsed<600&&Math.hypot(dx,dy)<12){\n    positioned.current=true;\n    if(settleTimer.current)clearTimeout(settleTimer.current);\n    setFocus(f=>({...f,x:clamp(e.clientX/innerWidth*100,5,95),y:clamp(e.clientY/innerHeight*100,5,95)}));\n    return;\n   }\n   if(elapsed<140||elapsed>1100||Math.abs(dy)<65||Math.abs(dy)<Math.abs(dx)*1.7)return;
    positioned.current=true;
    setFocus(f=>({...f,y:dy<0?(f.y>60?50:25):(f.y<40?50:75)}));
   };
