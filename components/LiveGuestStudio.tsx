@@ -14,6 +14,9 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   const [panelOpen,setPanelOpen]=useState(false);
   const [requests,setRequests]=useState<GuestRequest[]>([]);
   const [loaded,setLoaded]=useState(false);
+  const [viewerRoster,setViewerRoster]=useState<Array<{id:string;username:string;avatar:string|null;xp:number|null}>>([]);
+  const [rosterLoading,setRosterLoading]=useState(false);
+  const [invitations,setInvitations]=useState<Array<{id:string;viewer_id:string;status:string}>>([]);
   const [requesterNames,setRequesterNames]=useState<Record<string,string>>({});
   const [mode,setMode]=useState<"pfp"|"camera">("camera");
   const [audioOnly,setAudioOnly]=useState(false);
@@ -31,6 +34,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   const host=uid===hostId;
   const pendingRequests=host?requests.filter(r=>r.status==="pending"):[];
   const nextRequest=pendingRequests[0];
+  useEffect(()=>{if(!panelOpen)return;let cancelled=false;const load=async()=>{setRosterLoading(true);try{const response=await fetch("/api/livekit/viewers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName}),cache:"no-store"});if(!response.ok)throw new Error("Viewer list unavailable");const data=await response.json();if(!cancelled)setViewerRoster(Array.isArray(data.viewers)?data.viewers:[])}catch{if(!cancelled)setViewerRoster([])}finally{if(!cancelled)setRosterLoading(false)}};void load();const timer=window.setInterval(()=>void load(),12000);return()=>{cancelled=true;window.clearInterval(timer)}},[panelOpen,roomName]);
   useEffect(()=>{if(host&&pendingRequests.length>0)setPanelOpen(true)},[host,pendingRequests.length]);
   useEffect(()=>{if(!host||!pendingRequests.length)return;const missing=[...new Set(pendingRequests.map(r=>r.user_id))].filter(id=>!requesterNames[id]);if(!missing.length)return;let active=true;void createClient().from("profiles").select("id,username,display_name").in("id",missing).then(({data})=>{if(active&&data)setRequesterNames(old=>({...old,...Object.fromEntries(data.map(p=>[p.id,p.display_name||p.username||"Viewer"]))}))});return()=>{active=false}},[host,requests,requesterNames]);
 
@@ -46,6 +50,8 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
         setAudioOnly(audio);
         if(audio)setMode("pfp");
       }
+      const {data:invites}=await db.from("live_guest_invitations").select("id,viewer_id,status").eq("stream_id",streamId);
+      if(active&&invites)setInvitations(invites);
       const {data,error:loadError}=await db.from("live_guest_requests")
         .select("id,user_id,status,mode,host_muted").eq("stream_id",streamId);
       if(!active)return;
@@ -113,6 +119,14 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
     setMic(false);
   },[joined,me?.host_muted]);
 
+  async function inviteViewer(viewerId:string){
+    if(busy)return;setBusy(true);setError("");
+    try{const {error:e}=await createClient().rpc("invite_live_viewer",{p_stream:streamId,p_viewer:viewerId});if(e)throw e;setInvitations(v=>[...v.filter(i=>i.viewer_id!==viewerId),{id:"pending",viewer_id:viewerId,status:"pending"}]);refreshRef.current()}catch(e){setError(e instanceof Error?e.message:"Could not invite viewer")}finally{setBusy(false)}
+  }
+  async function respondInvite(invitationId:string,accept:boolean){
+    if(busy)return;setBusy(true);setError("");
+    try{const {error:e}=await createClient().rpc("respond_live_invitation",{p_invitation:invitationId,p_accept:accept});if(e)throw e;refreshRef.current();if(accept)setPanelOpen(true)}catch(e){setError(e instanceof Error?e.message:"Could not respond to invitation")}finally{setBusy(false)}
+  }
   async function request(){
     if(busy)return;
     setBusy(true);setError("");
@@ -209,6 +223,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
 
   if(!uid)return null;
   const pendingCount=requests.filter(r=>r.status==="pending").length;
+  const myInvite=invitations.find(i=>i.viewer_id===uid&&i.status==="pending");
   return <div style={{position:"relative",zIndex:30,width:"fit-content",maxWidth:"100%"}}>
     {host&&nextRequest&&<div role="alertdialog" aria-label="Guest join request" aria-live="assertive" className="oneMuslimGuestJoinPrompt">
       <span className="oneMuslimGuestJoinPromptName">{requesterNames[nextRequest.user_id]||"A viewer"} wants to join</span>
@@ -233,20 +248,21 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
     <style jsx>{`
       .guestMainButton,.guestAction{border:1px solid var(--theme-border,#d4b97988);border-radius:999px;background:color-mix(in srgb,var(--theme-primary,#075e45) 58%,#071713);color:var(--theme-text,#fff);padding:10px 18px;font:inherit;font-weight:750;cursor:pointer;box-shadow:0 8px 25px #0006}
       .guestMainButton:disabled,.guestAction:disabled{opacity:.55;cursor:wait}
-      .guestSheetBackdrop{position:fixed;inset:0;z-index:10020;background:#0009;backdrop-filter:blur(7px);display:flex;align-items:flex-end;justify-content:center}
-      .guestSheet{position:relative;width:min(100%,480px);max-height:min(83dvh,750px);overflow-y:auto;padding:22px 20px calc(22px + env(safe-area-inset-bottom));border:1px solid var(--theme-border,#c7b27c88);border-radius:26px 26px 0 0;background:color-mix(in srgb,var(--theme-panel,#071c15) 94%,#000);color:var(--theme-text,#fff);box-shadow:0 -20px 65px #0009;animation:guestSheetRise .28s ease-out}
-      .guestSheet h2{margin:5px 0 12px;font-size:20px}.guestSheet p{font-size:13px;opacity:.85}.guestSheetClose{position:absolute;right:16px;top:12px;border:0;border-radius:50%;background:#ffffff1b;color:inherit;width:35px;height:35px;font-size:23px;cursor:pointer}
+      .guestSheetBackdrop{position:fixed;inset:0;z-index:10020;background:transparent;display:flex;align-items:flex-end;justify-content:center;isolation:isolate}\n      .guestSheetBackdrop::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,rgba(0,0,0,.8) 0%,rgba(0,0,0,.8) 15%,rgba(255,255,255,.14) 48%,rgba(255,255,255,.25) 58%,rgba(0,0,0,.7) 85%,rgba(0,0,0,.88) 100%);opacity:1;animation:elmiLayerZFocus .85s cubic-bezier(.22,1,.36,1) both}\n      .guestSheetBackdrop.guestRequestSent::before{background:linear-gradient(to bottom,rgba(0,0,0,.9) 0%,rgba(0,0,0,.9) 38%,rgba(255,255,255,.05) 66%,rgba(255,255,255,.25) 83%,rgba(255,255,255,.33) 100%)}\n      @keyframes elmiLayerZFocus{from{opacity:0;transform:translateY(5%)}to{opacity:1;transform:translateY(0)}}
+      .guestSheet{position:relative;width:min(100%,480px);height:52dvh;max-height:78dvh;display:flex;flex-direction:column;overflow-y:auto;padding:22px 20px calc(22px + env(safe-area-inset-bottom));border:1px solid var(--theme-border,#c7b27c88);border-radius:26px 26px 0 0;background:color-mix(in srgb,var(--theme-panel,#071c15) 94%,#000);color:var(--theme-text,#fff);box-shadow:0 -20px 65px #0009;animation:guestSheetRise .45s cubic-bezier(.22,1,.36,1)}
+      .guestViewerRoster{flex:1;min-height:80px;overflow-y:auto;margin:10px 0;padding:2px 0}.guestViewerPerson{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid #ffffff16;font-size:14px}.guestViewerPerson img,.guestViewerFallback{width:38px;height:38px;flex:0 0 38px;border-radius:50%;object-fit:cover;background:#ffffff20;display:grid;place-items:center}.guestViewerPerson span:nth-child(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.guestViewerPerson small{opacity:.65}.guestSheet{z-index:1}.guestSheet button{position:relative;z-index:2;visibility:visible;isolation:isolate}.guestSheet .guestAction,.guestSheet .guestRow button,.guestViewerPerson button{background:color-mix(in srgb,var(--theme-primary,#087750) 80%,#111);color:#fff;border:1px solid color-mix(in srgb,var(--theme-primary,#087750) 65%,white);box-shadow:0 2px 12px #0008}.guestSheet .guestAction:disabled,.guestSheet .guestRow button:disabled,.guestViewerPerson button:disabled{opacity:.6}.guestSheet h2{margin:5px 0 12px;font-size:20px}.guestSheet p{font-size:13px;opacity:.85}.guestSheetClose{position:absolute;right:16px;top:12px;border:0;border-radius:50%;background:#ffffff1b;color:inherit;width:35px;height:35px;font-size:23px;cursor:pointer}
       .guestRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}.guestRow button{border:1px solid var(--theme-border,#ffffff55);border-radius:999px;background:#ffffff12;color:inherit;padding:9px 13px;cursor:pointer}.guestRow button[aria-pressed=true]{background:var(--theme-primary,#087750);color:#fff}
       .guestSheet .guestAction{width:100%;margin-top:12px;padding:13px}.guestSheet label{display:flex;align-items:center;gap:10px;margin:12px 0;font-size:13px}.guestSheet select{background:#111;color:white;border:1px solid #ffffff55;border-radius:12px;padding:8px}
       @keyframes guestSheetRise{from{transform:translateY(30px);opacity:.3}to{transform:translateY(0);opacity:1}}
-      @media(prefers-reduced-motion:reduce){.guestSheet{animation:none}}
+      @media(prefers-reduced-motion:reduce){.guestSheet{animation:none}.guestSheetBackdrop::before{animation:none}}
     `}</style>
     {!host&&<button type="button" className="guestMainButton" aria-expanded={panelOpen} onClick={()=>setPanelOpen(true)}>{joined?"● On stage":me?.status==="pending"?"⏳ Requested":me?.status==="approved"?"Join":"Join"}</button>}
     {host&&<button type="button" className="guestMainButton" aria-expanded={panelOpen} onClick={()=>setPanelOpen(true)}>👥 Guests{pendingCount>0?` · ${pendingCount}`:""}</button>}
-    {panelOpen&&<div className="guestSheetBackdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setPanelOpen(false)}}>
+    {panelOpen&&<div className={"guestSheetBackdrop"+(!host&&me?.status==="pending"?" guestRequestSent":"")} onMouseDown={e=>{if(e.target===e.currentTarget)setPanelOpen(false)}}>
       <section className="guestSheet" role="dialog" aria-modal="true" aria-label={host?"Guest requests":"Join Live settings"}>
         <button className="guestSheetClose" type="button" aria-label="Close guest settings" onClick={()=>setPanelOpen(false)}>×</button>
-        <h2>{host?"👥 Guest requests":joined?"You're on stage":me?.status==="pending"?"Request sent":me?.status==="approved"?"Ready to join":"Join this Live"}</h2>
+        <h2>{host?"👥 Viewers & guest requests":joined?"You're on stage":me?.status==="pending"?"Request sent":me?.status==="approved"?"Ready to join":"Join this Live"}</h2>
+        <div className="guestViewerRoster" aria-label="Current live viewers">{rosterLoading&&viewerRoster.length===0?<p>Loading viewers…</p>:viewerRoster.length===0?<p>No viewers connected yet.</p>:viewerRoster.map(viewer=><div className="guestViewerPerson" key={viewer.id}>{viewer.avatar?<img src={viewer.avatar} alt="" referrerPolicy="no-referrer"/>:<span className="guestViewerFallback">◉</span>}<span>{viewer.username}</span>{host?<button type="button" disabled={busy||invitations.some(i=>i.viewer_id===viewer.id&&i.status==="pending")} onClick={()=>void inviteViewer(viewer.id)}>{invitations.some(i=>i.viewer_id===viewer.id&&i.status==="pending")?"Invited":"Invite"}</button>:<small>Watching</small>}</div>)}</div>
         {host?<div>
           {pendingRequests.map(r=><div className="guestRow" key={r.id}><strong>{requesterNames[r.user_id]||r.user_id.slice(0,8)}</strong><small>{r.mode==="camera"?"📷 Camera":"🎙 Audio"}</small><button disabled={busy} onClick={()=>void moderate(r.id,"approved")}>✓ Approve</button><button disabled={busy} onClick={()=>void moderate(r.id,"rejected")}>Decline</button></div>)}
           {requests.filter(r=>r.status==="approved").map(r=><div className="guestRow" key={r.id}><strong>{requesterNames[r.user_id]||r.user_id.slice(0,8)}</strong><button disabled={busy} onClick={()=>void moderate(r.id,r.host_muted?"unmute":"mute")}>{r.host_muted?"Allow mic":"Mute mic"}</button><button disabled={busy} onClick={()=>void moderate(r.id,"removed")}>Remove</button></div>)}
