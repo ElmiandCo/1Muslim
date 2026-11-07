@@ -1,0 +1,30 @@
+"use client";
+import {useEffect,useRef,useState} from "react";
+
+const KEY="1muslim:deep-watch-swipe-px";
+const presets=[{label:"Sensitive",px:30,detail:"Light, quick flicks"},{label:"Balanced",px:45,detail:"Natural everyday swipes"},{label:"Deliberate",px:65,detail:"Longer, intentional swipes"}] as const;
+const clamp=(n:number)=>Math.min(120,Math.max(20,Math.round(n)));
+export default function HudHudGestureStudio(){
+ const [distance,setDistance]=useState(45);
+ const [open,setOpen]=useState(false);
+ const [result,setResult]=useState<{px:number;ms:number;speed:number;direction:string;recognized:boolean}|null>(null);
+ const start=useRef<{x:number;y:number;at:number;id:number}|null>(null);
+ useEffect(()=>{try{const n=Number(localStorage.getItem(KEY));if(n>=20&&n<=120)setDistance(n)}catch{}},[]);
+ const update=(n:number)=>{const next=clamp(n);setDistance(next);try{localStorage.setItem(KEY,String(next))}catch{}window.dispatchEvent(new CustomEvent("1muslim:deep-watch-gesture-config",{detail:{distance:next}}))};
+ const down=(e:React.PointerEvent<HTMLDivElement>)=>{if(!e.isPrimary)return;start.current={x:e.clientX,y:e.clientY,at:performance.now(),id:e.pointerId};e.currentTarget.setPointerCapture(e.pointerId)};
+ const up=(e:React.PointerEvent<HTMLDivElement>)=>{const s=start.current;start.current=null;if(!s||s.id!==e.pointerId)return;const dx=e.clientX-s.x,dy=e.clientY-s.y,ms=Math.max(1,performance.now()-s.at),px=Math.round(Math.abs(dy)),speed=Math.round(Math.abs(dy)/ms*1000);setResult({px,ms:Math.round(ms),speed,direction:dy<0?"Up":"Down",recognized:Math.abs(dy)>=distance&&Math.abs(dy)>Math.abs(dx)*1.3})};
+ return <section className="hh-gesture-studio" aria-label="Elmi Gesture Studio">
+ <div className="hh-gesture-heading"><div><strong>✋ Elmi Gesture Studio</strong><small>Fine-tune Deep Watch swipe recognition</small></div><button type="button" aria-expanded={open} onClick={()=>setOpen(v=>!v)}>{open?"Close":"Tune"} ↗</button></div>
+ <div className="hh-gesture-presets" role="group" aria-label="Swipe sensitivity">{presets.map(p=><button type="button" key={p.label} aria-pressed={distance===p.px} onClick={()=>update(p.px)}><b>{p.label}</b><small>{p.px}px · {p.detail}</small></button>)}</div>
+ {open&&<div className="hh-gesture-detail"><label htmlFor="hh-swipe-distance">Minimum vertical distance <output>{distance} px</output></label><input id="hh-swipe-distance" type="range" min="20" max="120" step="5" value={distance} onChange={e=>update(Number(e.target.value))}/><p>Swipe up or down inside the test area. It measures CSS pixels, duration, and velocity without navigating the app.</p><div className="hh-gesture-pad" role="region" aria-label="Test vertical swipe here" onPointerDown={down} onPointerUp={up} onPointerCancel={()=>{start.current=null}}>↕<span>Swipe here to test</span></div><div className="hh-gesture-result" aria-live="polite">{result?<><b>{result.recognized?"✓ Recognized":"○ Not recognized"}</b><span>{result.direction} · {result.px}px · {result.ms}ms · {result.speed}px/s</span></>:<span>Your swipe measurements will appear here.</span>}</div><button className="hh-gesture-reset" type="button" onClick={()=>update(45)}>Reset to Balanced · 45px</button></div>}
+ <style jsx>{`
+ .hh-gesture-studio{border:1px solid #77e2bf66;border-radius:22px;padding:17px;background:linear-gradient(140deg,#163e3aeb,#0b262bdc);color:#f5fff9;display:grid;gap:14px;box-shadow:inset 0 1px #ffffff1c}
+ .hh-gesture-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}.hh-gesture-heading>div{display:grid;gap:4px}.hh-gesture-heading strong{font-size:18px}.hh-gesture-heading small,.hh-gesture-presets small{font-size:11px;color:#bed5d0}
+ .hh-gesture-heading button,.hh-gesture-reset{background:#d9e7d115;border:1px solid #9ce8d16b;border-radius:12px;padding:9px 12px;color:inherit;cursor:pointer}
+ .hh-gesture-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.hh-gesture-presets button{min-width:0;display:grid;gap:7px;padding:12px 5px;border-radius:13px;border:1px solid #ffffff39;background:#ffffff0b;color:inherit;cursor:pointer;text-align:center}.hh-gesture-presets button[aria-pressed=true]{background:#66d6ad36;border-color:#b6ebca;box-shadow:0 0 0 1px #c2f3d344}.hh-gesture-presets b{font-size:12px}.hh-gesture-presets small{line-height:1.4}
+ .hh-gesture-detail{display:grid;gap:12px;border-top:1px solid #ffffff24;padding-top:14px}.hh-gesture-detail label{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:700}.hh-gesture-detail output{color:#9af7d3}.hh-gesture-detail input{width:100%;accent-color:#86e9c3}.hh-gesture-detail p{font-size:12px;line-height:1.5;color:#c5d9d2;margin:0}
+ .hh-gesture-pad{height:126px;touch-action:none;user-select:none;border:1px dashed #a4e8c2a8;border-radius:17px;background:radial-gradient(ellipse at center,#73dcb128,transparent 75%);display:grid;place-content:center;text-align:center;gap:4px;font-size:30px;cursor:grab}.hh-gesture-pad span{font-size:12px}.hh-gesture-result{display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;font-size:12px}.hh-gesture-result b{color:#a9f3d1}.hh-gesture-reset{font-size:12px}
+ @media(max-width:390px){.hh-gesture-presets{gap:4px}.hh-gesture-presets button{padding:10px 3px}.hh-gesture-presets b{font-size:11px}}
+ @media(prefers-reduced-motion:reduce){.hh-gesture-studio *{transition:none!important}}
+ `}</style></section>;
+}
