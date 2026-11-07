@@ -41,18 +41,18 @@ export default function QiblaNewsroom(){
   <div className={styles.stage} data-view={view}>
    <div className={styles.entrance} aria-hidden={view!=="split"}>
     <button className={styles.magPanel} onClick={()=>setView("magazine")} tabIndex={view==="split"?0:-1}>
-     <span className={styles.panelOverline}>THE ART OF THE ARGUMENT</span><span className={styles.panelTitle}>The<br/>Magazine</span>
-     <span className={styles.panelDesc}>Faith · Theology · Apologetics · Polemics</span><span className={styles.panelArrow}>Explore the magazine ↗</span>
+     <span className={styles.panelOverline}>FAITH. IDEAS. THE NEXT GENERATION.</span><span className={styles.panelTitle}>The<br/>Magazine</span>
+     <span className={styles.panelDesc}>Youth · Faith · Identity · Debate · Culture</span><span className={styles.panelArrow}>Explore the magazine ↗</span>
     </button>
     <button className={styles.newsPanel} onClick={()=>setView("newsletter")} tabIndex={view==="split"?0:-1}>
-     <span className={styles.panelOverline}>THE WORLD, IN PERSPECTIVE</span><span className={styles.panelTitle}>The<br/>Newsletter</span>
-     <span className={styles.panelDesc}>Reporting · Community · Current affairs</span><span className={styles.panelArrow}>Read the latest ↗</span>
+     <span className={styles.panelOverline}>INDEPENDENT REPORTING. GLOBAL PERSPECTIVE.</span><span className={styles.panelTitle}>The<br/>Newsletter</span>
+     <span className={styles.panelDesc}>World news · Community · Current affairs</span><span className={styles.panelArrow}>Read the latest ↗</span>
     </button>
     <div className={styles.centerLine} aria-hidden="true"/>
    </div>
    <section className={styles.magazine} aria-hidden={view!=="magazine"}>
-    <div className={styles.magHeader}><p>1QIBLA · THE MAGAZINE</p><h1>THE QIBLA</h1><div className={styles.magRule}/><span>IDEAS, FAITH & THE QUESTIONS THAT MATTER</span></div>
-    <div className={styles.magIntro}><span>THE LATEST EDITION</span><span>AN INDEPENDENT MUSLIM PERSPECTIVE</span></div>
+    <div className={styles.magHeader}><p>1QIBLA · THE MAGAZINE</p><h1>THE QIBLA</h1><div className={styles.magRule}/><span>FAITH, IDENTITY & IDEAS FOR A NEW GENERATION</span></div>
+    <div className={styles.magIntro}><span>THE LATEST EDITION</span><span>THE NEXT GENERATION OF MUSLIM VOICES</span></div>
     <label className={styles.search}><span className={styles.srOnly}>Search articles</span><input placeholder="Search the magazine…" value={query} onChange={e=>setQuery(e.target.value)} type="search"/></label>
     {loading?<p className={styles.notice}>Preparing the magazine…</p>:error?<p className={styles.notice} role="alert">{error}</p>:!hero?<p className={styles.notice}>No published articles yet.</p>:<>
      <article className={styles.feature}>
@@ -62,7 +62,7 @@ export default function QiblaNewsroom(){
      <div className={styles.sectionTitle}><h2>THE EDIT</h2><span>RECENT STORIES · {rest.length}</span></div>
      <div className={styles.storyGrid}>{rest.map((s,i)=><article className={styles.story} key={s.id}>
       <Link className={styles.storyVisual} href={`/qibla/newsroom/${encodeURIComponent(s.id)}`} style={s.cover?{backgroundImage:`url("${encodeURI(s.cover)}")`}:undefined}><span>{String(i+1).padStart(2,"0")}</span></Link>
-      <span className={styles.kicker}>THE QIBLA · PERSPECTIVE</span><h3><Link href={`/qibla/newsroom/${encodeURIComponent(s.id)}`}>{s.title}</Link></h3><p>{s.description.slice(0,130)}</p>
+      <span className={styles.kicker}>THE QIBLA · YOUTH & IDEAS</span><h3><Link href={`/qibla/newsroom/${encodeURIComponent(s.id)}`}>{s.title}</Link></h3><p>{s.description.slice(0,130)}</p>
      </article>)}</div>
     </>}
    </section>
@@ -71,6 +71,6 @@ export default function QiblaNewsroom(){
     <div className={styles.newsColumns}><div><span className={styles.kicker}>THE DAILY BRIEF</span><h2>Stay informed.<br/>Stay connected.</h2><p>Explore published newsletters, current affairs, community updates and thoughtful reporting in our growing archive.</p><Link className={styles.newsCTA} href="/qibla/newsletters">OPEN THE NEWSLETTER ARCHIVE ↗</Link></div><aside><span>FROM THE EDITOR</span><p>One community. Many stories. One direction.</p><Link href="/qibla/newsroom/about">ABOUT 1QIBLA →</Link></aside></div>
    </section>
   </div>
-  <footer className={styles.footer}><span>© 1MUSLIM QIBLA</span><Link href="/qibla/studio">EDITORIAL STUDIO</Link><Link href="/qibla/newsroom/apply">CONTRIBUTE</Link><Link href="/">1MUSLIM HOME ↗</Link></footer>
+  <footer className={styles.footer}><span>© 1MUSLIM QIBLA</span><Link href="/qibla/studio">EDITORIAL STUDIO</Link><Link href="/qibla/command">COMMAND CENTER</Link><Link href="/qibla/newsroom/apply">CONTRIBUTE</Link><Link href="/">1MUSLIM HOME ↗</Link></footer>
  </main>
 }
