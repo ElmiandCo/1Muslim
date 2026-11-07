@@ -13,7 +13,10 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   const [uid,setUid]=useState<string|null>(null);
   const [panelOpen,setPanelOpen]=useState(false);
   const [requests,setRequests]=useState<GuestRequest[]>([]);
-  const [loaded,setLoaded]=useState(false);\n  const [viewerRoster,setViewerRoster]=useState<Array<{id:string;username:string;avatar:string|null;xp:number|null}>>([]);\n  const [rosterLoading,setRosterLoading]=useState(false);
+  const [loaded,setLoaded]=useState(false);
+  const [viewerRoster,setViewerRoster]=useState<Array<{id:string;username:string;avatar:string|null;xp:number|null}>>([]);
+  const [rosterLoading,setRosterLoading]=useState(false);
+  const [invitations,setInvitations]=useState<Array<{id:string;viewer_id:string;status:string}>>([]);
   const [requesterNames,setRequesterNames]=useState<Record<string,string>>({});
   const [mode,setMode]=useState<"pfp"|"camera">("camera");
   const [audioOnly,setAudioOnly]=useState(false);
@@ -30,7 +33,8 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
   const me=requests.find(r=>r.user_id===uid);
   const host=uid===hostId;
   const pendingRequests=host?requests.filter(r=>r.status==="pending"):[];
-  const nextRequest=pendingRequests[0];\n  useEffect(()=>{if(!panelOpen)return;let cancelled=false;const load=async()=>{setRosterLoading(true);try{const response=await fetch("/api/livekit/viewers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName}),cache:"no-store"});if(!response.ok)throw new Error("Viewer list unavailable");const data=await response.json();if(!cancelled)setViewerRoster(Array.isArray(data.viewers)?data.viewers:[])}catch{if(!cancelled)setViewerRoster([])}finally{if(!cancelled)setRosterLoading(false)}};void load();const timer=window.setInterval(()=>void load(),12000);return()=>{cancelled=true;window.clearInterval(timer)}},[panelOpen,roomName]);
+  const nextRequest=pendingRequests[0];
+  useEffect(()=>{if(!panelOpen)return;let cancelled=false;const load=async()=>{setRosterLoading(true);try{const response=await fetch("/api/livekit/viewers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName}),cache:"no-store"});if(!response.ok)throw new Error("Viewer list unavailable");const data=await response.json();if(!cancelled)setViewerRoster(Array.isArray(data.viewers)?data.viewers:[])}catch{if(!cancelled)setViewerRoster([])}finally{if(!cancelled)setRosterLoading(false)}};void load();const timer=window.setInterval(()=>void load(),12000);return()=>{cancelled=true;window.clearInterval(timer)}},[panelOpen,roomName]);
   useEffect(()=>{if(host&&pendingRequests.length>0)setPanelOpen(true)},[host,pendingRequests.length]);
   useEffect(()=>{if(!host||!pendingRequests.length)return;const missing=[...new Set(pendingRequests.map(r=>r.user_id))].filter(id=>!requesterNames[id]);if(!missing.length)return;let active=true;void createClient().from("profiles").select("id,username,display_name").in("id",missing).then(({data})=>{if(active&&data)setRequesterNames(old=>({...old,...Object.fromEntries(data.map(p=>[p.id,p.display_name||p.username||"Viewer"]))}))});return()=>{active=false}},[host,requests,requesterNames]);
 
@@ -46,6 +50,8 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
         setAudioOnly(audio);
         if(audio)setMode("pfp");
       }
+      const {data:invites}=await db.from("live_guest_invitations").select("id,viewer_id,status").eq("stream_id",streamId);
+      if(active&&invites)setInvitations(invites);
       const {data,error:loadError}=await db.from("live_guest_requests")
         .select("id,user_id,status,mode,host_muted").eq("stream_id",streamId);
       if(!active)return;
@@ -113,6 +119,14 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
     setMic(false);
   },[joined,me?.host_muted]);
 
+  async function inviteViewer(viewerId:string){
+    if(busy)return;setBusy(true);setError("");
+    try{const {error:e}=await createClient().rpc("invite_live_viewer",{p_stream:streamId,p_viewer:viewerId});if(e)throw e;setInvitations(v=>[...v.filter(i=>i.viewer_id!==viewerId),{id:"pending",viewer_id:viewerId,status:"pending"}]);refreshRef.current()}catch(e){setError(e instanceof Error?e.message:"Could not invite viewer")}finally{setBusy(false)}
+  }
+  async function respondInvite(invitationId:string,accept:boolean){
+    if(busy)return;setBusy(true);setError("");
+    try{const {error:e}=await createClient().rpc("respond_live_invitation",{p_invitation:invitationId,p_accept:accept});if(e)throw e;refreshRef.current();if(accept)setPanelOpen(true)}catch(e){setError(e instanceof Error?e.message:"Could not respond to invitation")}finally{setBusy(false)}
+  }
   async function request(){
     if(busy)return;
     setBusy(true);setError("");
@@ -209,6 +223,7 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
 
   if(!uid)return null;
   const pendingCount=requests.filter(r=>r.status==="pending").length;
+  const myInvite=invitations.find(i=>i.viewer_id===uid&&i.status==="pending");
   return <div style={{position:"relative",zIndex:30,width:"fit-content",maxWidth:"100%"}}>
     {host&&nextRequest&&<div role="alertdialog" aria-label="Guest join request" aria-live="assertive" className="oneMuslimGuestJoinPrompt">
       <span className="oneMuslimGuestJoinPromptName">{requesterNames[nextRequest.user_id]||"A viewer"} wants to join</span>
@@ -247,7 +262,8 @@ export default function LiveGuestStudio({streamId,roomName,hostId,compactJoin=fa
       <section className="guestSheet" role="dialog" aria-modal="true" aria-label={host?"Guest requests":"Join Live settings"}>
         <button className="guestSheetClose" type="button" aria-label="Close guest settings" onClick={()=>setPanelOpen(false)}>×</button>
         <h2>{host?"👥 Viewers & guest requests":joined?"You're on stage":me?.status==="pending"?"Request sent":me?.status==="approved"?"Ready to join":"Join this Live"}</h2>
-        <div className="guestViewerRoster" aria-label="Current live viewers">{rosterLoading&&viewerRoster.length===0?<p>Loading viewers…</p>:viewerRoster.length===0?<p>No viewers connected yet.</p>:viewerRoster.map(viewer=><div className="guestViewerPerson" key={viewer.id}>{viewer.avatar?<img src={viewer.avatar} alt="" referrerPolicy="no-referrer"/>:<span className="guestViewerFallback">◉</span>}<span>{viewer.username}</span><small>Watching</small></div>)}</div>\n        {host?<div>
+        <div className="guestViewerRoster" aria-label="Current live viewers">{rosterLoading&&viewerRoster.length===0?<p>Loading viewers…</p>:viewerRoster.length===0?<p>No viewers connected yet.</p>:viewerRoster.map(viewer=><div className="guestViewerPerson" key={viewer.id}>{viewer.avatar?<img src={viewer.avatar} alt="" referrerPolicy="no-referrer"/>:<span className="guestViewerFallback">◉</span>}<span>{viewer.username}</span>{host?<button type="button" disabled={busy||invitations.some(i=>i.viewer_id===viewer.id&&i.status==="pending")} onClick={()=>void inviteViewer(viewer.id)}>{invitations.some(i=>i.viewer_id===viewer.id&&i.status==="pending")?"Invited":"Invite"}</button>:<small>Watching</small>}</div>)}</div>
+        {host?<div>
           {pendingRequests.map(r=><div className="guestRow" key={r.id}><strong>{requesterNames[r.user_id]||r.user_id.slice(0,8)}</strong><small>{r.mode==="camera"?"📷 Camera":"🎙 Audio"}</small><button disabled={busy} onClick={()=>void moderate(r.id,"approved")}>✓ Approve</button><button disabled={busy} onClick={()=>void moderate(r.id,"rejected")}>Decline</button></div>)}
           {requests.filter(r=>r.status==="approved").map(r=><div className="guestRow" key={r.id}><strong>{requesterNames[r.user_id]||r.user_id.slice(0,8)}</strong><button disabled={busy} onClick={()=>void moderate(r.id,r.host_muted?"unmute":"mute")}>{r.host_muted?"Allow mic":"Mute mic"}</button><button disabled={busy} onClick={()=>void moderate(r.id,"removed")}>Remove</button></div>)}
           {loaded&&!requests.some(r=>r.status==="pending"||r.status==="approved")&&<p>No guest requests yet.</p>}
