@@ -1906,3 +1906,6 @@
    position:relative!important;top:auto!important;
  }
 }
+
+/* No decorative gold frames on video player cards. */
+.control .customGrid .livePreviewCard{border:0!important}
