@@ -75,7 +75,7 @@ export default function QiblaNewsroom() {
     <main className={styles.root}>
       <div className={styles.shell}>
         <aside className={styles.sidebar} aria-label="1Qibla navigation">
-          <Link className={styles.brand} href="/">1Muslim <span>/ 1Qibla</span></Link>
+          <div className={styles.brand}>The Qibla</div>
           <nav className={styles.nav}>
             <Link href="/">Home</Link>
             <Link href="/qibla/newsroom" aria-current="page">Magazine</Link>
