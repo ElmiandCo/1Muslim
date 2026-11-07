@@ -2892,3 +2892,8 @@ main:has([data-workspace-page="6"]) .profile-shared-avatar-hero{display:none!imp
 [data-workspace-page="0"] .oneMuslimLiveStage.home-carousel-collapsed .oneMuslimLiveTop > .oneMuslimLiveVideo{margin-top:0!important}
 [data-workspace-page="0"] .oneMuslimLiveStage.home-carousel-collapsed .homeVideoWheel{height:0!important;opacity:0!important;pointer-events:none!important}
 @media(prefers-reduced-motion:reduce){[data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop > .oneMuslimLiveVideo{transition:none!important}}
+
+/* Player surfaces stay borderless across Live, replay, and guest layouts.
+   Keep button focus outlines and navigation borders intact. */
+.oneMuslimLiveVideo,.homeLiveChannelPlayer,.home-live-demo-screen,.homeLiveDemoScreen,.homeLiveStreamTile,.oneMuslimLiveBottom > *,.homeLiveCommentDock,.homeLiveViewerConversation{border:0!important;border-color:transparent!important;outline:0!important}
+main[class*="control"] .homeLiveStreamTileActive{border:0!important;border-color:transparent!important}
