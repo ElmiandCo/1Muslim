@@ -21,7 +21,6 @@ create policy "eligible member submits one application" on public.qibla_staff_ap
   applicant_id=(select auth.uid()) and status='pending' and reviewer_id is null and reviewed_at is null
   and not public.qibla_has_role(array['admin'])
   and not exists(select 1 from public.qibla_staff s where s.user_id=(select auth.uid()))
-  and not exists(select 1 from public.qibla_staff_applications a where a.applicant_id=(select auth.uid()) and a.status='pending')
  );
 -- Admin review is atomic with role assignment, never trust browser authorization.
 create or replace function public.qibla_review_staff_application(p_id uuid,p_approve boolean,p_note text default '')
