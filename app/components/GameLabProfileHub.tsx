@@ -33,14 +33,7 @@ export default function GameLabProfileHub({active,profile,avatarHero,renderProfi
   frame=requestAnimationFrame(track);
   return ()=>cancelAnimationFrame(frame);
  },[active]);
- return <>{false&&active&&heroPosition&&typeof document!=="undefined"&&createPortal(<div className="profile-shared-avatar-overlay profile-shared-avatar-portal" style={{top:heroPosition.top,left:heroPosition.left}}><div key={tab} className="profile-avatar-tab-motion">{avatarHero}</div></div>,document.body)}{false&&active&&heroPosition&&typeof document!=="undefined"&&createPortal(<div className="profile-construction-portal" style={{position:"fixed",left:heroPosition.left,top:Math.min(heroPosition.top+Math.max(320,heroPosition.height*.40),window.innerHeight-180),width:Math.min(Math.max(260,heroPosition.width-48),480),transform:"translate(-50%,-50%)",zIndex:60,pointerEvents:"none",color:"var(--theme-foreground,#fff)"}}>    <div className="profile-construction" role="status" aria-label="Profile 2.0 coming soon">
-      <div className="profile-construction-copy">
-        <span className="profile-construction-symbol" aria-hidden="true">✧</span>
-        <h2>Under Construction</h2>
-        <p><strong>Profile 2.0</strong> Coming Soon.</p>
-        <span className="profile-construction-return">Come Back 👋🏼</span>
-      </div>
-    </div></div>,document.body)}<section ref={workspaceRef} aria-label="Profile workspace" style={{height:"100%",maxHeight:"100%",minHeight:0,width:"100%",minWidth:0,display:"flex",flexDirection:"column",boxSizing:"border-box",color:"#f7f0da",background:"transparent",overflow:"visible",position:"relative"}}>
+ return <><section ref={workspaceRef} aria-label="Profile workspace" style={{height:"100%",maxHeight:"100%",minHeight:0,width:"100%",minWidth:0,display:"flex",flexDirection:"column",boxSizing:"border-box",color:"#f7f0da",background:"transparent",overflow:"visible",position:"relative"}}>
   <div style={{flex:"1 1 auto",height:"100%",minHeight:0,width:"100%",boxSizing:"border-box",display:"flex",flexDirection:"column",overflow:"visible",background:"color-mix(in srgb,var(--theme-base,#101114) 26%,transparent)",backdropFilter:"blur(20px)",border:"1px solid color-mix(in srgb,var(--theme-secondary,#d8c38e) 42%,transparent)",borderRadius:28,padding:"12px 10px 14px",boxShadow:"inset 0 1px 0 #ffffff25,0 16px 48px #0007"}}>
    <div style={{position:"absolute",top:48,left:0,right:"auto",display:"none",flexShrink:0,zIndex:30,alignItems:"center",flexDirection:"column",gap:6,background:"color-mix(in srgb,var(--theme-base,#101114) 70%,transparent)",backdropFilter:"blur(12px)",borderRadius:"0 12px 12px 0",padding:"6px 3px",marginBottom:0,border:"1px solid color-mix(in srgb,var(--theme-secondary,#d8c38e) 55%,transparent)"}}>
     <button type="button" aria-label="Profile settings" title="Settings" aria-pressed={settingsOpen} onClick={()=>{setTab("My Profile");setSettingsOpen(v=>!v)}} style={{border:0,borderRadius:8,background:"transparent",color:"#f5df9c",padding:"5px 7px",fontSize:16,lineHeight:1,cursor:"pointer"}}>⚙</button>
