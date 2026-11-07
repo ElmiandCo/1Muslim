@@ -534,7 +534,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       .omLiveTheater .omViewerTapCounter{top:calc(env(safe-area-inset-top) + 65px)}
       .omLiveTheater .omViewerExit{top:calc(env(safe-area-inset-top) + 14px)}
       .omLiveVideoStage[data-screen="yes"] .omScreenVideo{z-index:1}
-      .omLiveVideoStage[data-screen="yes"] .omCameraVideo{position:absolute;inset:auto 12px 70px auto;width:27%;height:30%;max-height:210px;border:2px solid #d6e7b8;border-radius:14px;z-index:2;box-shadow:0 8px 28px #000b;background:#0b1510}
+      .omLiveVideoStage[data-screen="yes"] .omCameraVideo{position:absolute;inset:auto 12px 70px auto;width:27%;height:30%;max-height:210px;border:0;border-radius:14px;z-index:2;box-shadow:0 8px 28px #000b;background:#0b1510}
       .omLiveVideoStage[data-screen="yes"][data-layout="split"]{display:grid;grid-template-columns:minmax(0,3fr) minmax(145px,1fr);gap:5px}
       .omLiveVideoStage[data-screen="yes"][data-layout="split"] .omScreenVideo{position:relative;grid-column:1;grid-row:1;min-width:0}
       .omLiveVideoStage[data-screen="yes"][data-layout="split"] .omCameraVideo{position:relative;inset:auto;grid-column:2;grid-row:1;width:100%;height:100%;max-height:none;border-radius:0;border:0}
