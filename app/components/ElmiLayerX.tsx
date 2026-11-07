@@ -12,7 +12,8 @@ export default function ElmiLayerX(){
  const [focus,setFocus]=useState<Focus>({x:50,y:65,rx:38,ry:20});
  const [day,setDay]=useState(false);
  const [quran,setQuran]=useState(false);
- const start=useRef<{x:number;y:number;at:number}|null>(null);
+ const start=useRef<{x:number;y:number;at:number;id:number}|null>(null);
+ const suppressed=useRef(false);
  const activeRef=useRef(false);
  const positioned=useRef(false);
  const [videoMode,setVideoMode]=useState(false);
@@ -23,12 +24,12 @@ export default function ElmiLayerX(){
   window.addEventListener("storage",syncTheme);
   return()=>{observer.disconnect();window.removeEventListener("storage",syncTheme)};
  },[]);
- useEffect(()=>{setActive(false);setExpanded(false);setQuran(false)},[pathname]);
+ useEffect(()=>{setActive(false);setExpanded(false);setQuran(false);setVideoMode(false);suppressed.current=false;positioned.current=false},[pathname]);
  useEffect(()=>{
-  const onVideo=(e:Event)=>{const d=(e as CustomEvent<{active?:boolean}>).detail;if(typeof d?.active!=="boolean")return;setQuran(false);setVideoMode(d.active);if(!d.active)positioned.current=false;setActive(d.active);if(!d.active)setExpanded(false)};
-  const onQuran=(e:Event)=>{const d=(e as CustomEvent<{playing?:boolean;target?:DOMRect}>).detail;if(typeof d?.playing!=="boolean")return;setQuran(d.playing);setVideoMode(false);setActive(d.playing);if(!d.playing)setExpanded(false);if(d.playing&&d.target){const r=d.target;setFocus({x:clamp((r.left+r.width/2)/innerWidth*100,5,95),y:clamp((r.top+r.height/2)/innerHeight*100,5,95),rx:clamp(r.width/innerWidth*50+5,15,48),ry:clamp(r.height/innerHeight*50+5,8,45)})}};
+  const onVideo=(e:Event)=>{const d=(e as CustomEvent<{active?:boolean}>).detail;if(typeof d?.active!=="boolean")return;setQuran(false);setVideoMode(d.active&&!suppressed.current);if(!d.active){positioned.current=false;suppressed.current=false}setActive(d.active&&!suppressed.current);if(!d.active)setExpanded(false)};
+  const onQuran=(e:Event)=>{const d=(e as CustomEvent<{playing?:boolean;target?:DOMRect}>).detail;if(typeof d?.playing!=="boolean")return;setQuran(d.playing&&!suppressed.current);setVideoMode(false);if(!d.playing)suppressed.current=false;setActive(d.playing&&!suppressed.current);if(!d.playing)setExpanded(false);if(d.playing&&d.target){const r=d.target;setFocus({x:clamp((r.left+r.width/2)/innerWidth*100,5,95),y:clamp((r.top+r.height/2)/innerHeight*100,5,95),rx:clamp(r.width/innerWidth*50+5,15,48),ry:clamp(r.height/innerHeight*50+5,8,45)})}};
   const onVideoBounds=(e:Event)=>{if(!activeRef.current)return;const d=(e as CustomEvent<{x:number;y:number;rx:number;ry:number}>).detail;if(!d)return;setFocus(f=>({...f,x:positioned.current?f.x:clamp(d.x/innerWidth*100,5,95),y:positioned.current?f.y:clamp(d.y/innerHeight*100,5,95),rx:clamp(d.rx/innerWidth*100,15,48),ry:clamp(d.ry/innerHeight*100,8,45)}))};
-  const exit=()=>{setActive(false);setExpanded(false);setQuran(false);setVideoMode(false)};
+  const exit=()=>{suppressed.current=true;setActive(false);setExpanded(false);setQuran(false);setVideoMode(false)};
   const onHudHudTap=()=>{if(!activeRef.current)return;setExpanded(v=>{if(v){queueMicrotask(exit);return false}return true})};
   const onHudHudMove=(e:Event)=>{if(!activeRef.current)return;const d=(e as CustomEvent<{x:number;y:number}>).detail;if(!d)return;positioned.current=true;setFocus(f=>({...f,x:clamp(d.x/innerWidth*100,5,95),y:clamp(d.y/innerHeight*100,5,95)}))};
   window.addEventListener("1muslim:deep-watch-video-bounds",onVideoBounds);window.addEventListener("1muslim:deep-watch-video",onVideo);window.addEventListener("1muslim:deep-watch-quran",onQuran);
@@ -37,10 +38,40 @@ export default function ElmiLayerX(){
  },[]);
  useEffect(()=>{
   if(!active)return;
-  const down=(e:PointerEvent)=>{const el=e.target as Element;if(el.closest("button,a,input,textarea,[role=button],.hh-chat-orb"))return;start.current={x:e.clientX,y:e.clientY,at:performance.now()}};
-  const up=(e:PointerEvent)=>{const s=start.current;start.current=null;if(!s)return;const dx=e.clientX-s.x,dy=e.clientY-s.y;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.3){window.dispatchEvent(new Event("1muslim:deep-watch-exit"));return}if(Math.abs(dy)<25||Math.abs(dy)<Math.abs(dx)*1.2||performance.now()-s.at<110)return;positioned.current=true;setFocus(f=>({...f,y:dy<0?f.y>65?50:25:f.y<40?50:72,ry:dy<0?20:20}))};
-  document.addEventListener("pointerdown",down,{capture:true,passive:true});document.addEventListener("pointerup",up,{capture:true,passive:true});
-  return()=>{document.removeEventListener("pointerdown",down,true);document.removeEventListener("pointerup",up,true)};
+  // Observe only deliberate gestures on inert, non-scrollable backdrop.
+  // Never preventDefault, capture pointers, or interfere with native page navigation.
+  const blocked="button,a,input,textarea,select,[contenteditable],[role=button],[role=slider],[data-no-deep-watch],.hh-chat-orb,.oneMuslimIdleYoutubePlayer,.quranFloat";
+  const down=(e:PointerEvent)=>{
+   start.current=null;
+   if(!e.isPrimary||e.button!==0)return;
+   const el=e.target;
+   if(!(el instanceof Element)||el.closest(blocked))return;
+   if(el.closest('[data-widget],[data-workspace-page],[class*="quranVerseArticle"],[class*="Comments"],[class*="chat"],[class*="carousel"]'))return;
+   for(let node:Element|null=el;node&&node!==document.body;node=node.parentElement){
+    const css=getComputedStyle(node);
+    if(/auto|scroll/.test(css.overflowY+css.overflowX)&&(node.scrollHeight>node.clientHeight+2||node.scrollWidth>node.clientWidth+2))return;
+   }
+   start.current={x:e.clientX,y:e.clientY,at:performance.now(),id:e.pointerId};
+  };
+  const cancel=()=>{start.current=null};
+  const up=(e:PointerEvent)=>{
+   const s=start.current;start.current=null;
+   if(!s||s.id!==e.pointerId)return;
+   const dx=e.clientX-s.x,dy=e.clientY-s.y,elapsed=performance.now()-s.at;
+   if(elapsed<140||elapsed>1100||Math.abs(dy)<65||Math.abs(dy)<Math.abs(dx)*1.7)return;
+   positioned.current=true;
+   setFocus(f=>({...f,y:dy<0?(f.y>60?50:25):(f.y<40?50:75)}));
+  };
+  document.addEventListener("pointerdown",down,{capture:true,passive:true});
+  document.addEventListener("pointerup",up,{capture:true,passive:true});
+  document.addEventListener("pointercancel",cancel,{capture:true,passive:true});
+  window.addEventListener("blur",cancel);
+  return()=>{
+   document.removeEventListener("pointerdown",down,true);
+   document.removeEventListener("pointerup",up,true);
+   document.removeEventListener("pointercancel",cancel,true);
+   window.removeEventListener("blur",cancel);
+  };
  },[active]);
  const video=videoMode&&!quran;
  return <div data-elmi-layer="X" aria-hidden="true" className={"elmi-layer-x"+(active?" active":"")+(video?" video":"")} style={{"--x":focus.x+"%","--y":focus.y+"%","--rx":(expanded?Math.min(65,focus.rx*1.25):focus.rx)+"vw","--ry":(expanded?Math.min(55,focus.ry*1.75):focus.ry)+"vh","--mask":day?"rgba(255,255,255,.8)":"rgba(0,0,0,.8)"} as React.CSSProperties}><style>{`
