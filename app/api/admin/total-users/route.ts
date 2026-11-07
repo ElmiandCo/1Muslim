@@ -8,7 +8,7 @@ export async function GET(){
  const {data:{user},error:authError}=await db.auth.getUser();
  if(authError||!user||user.email?.toLowerCase()!=="hudhudbyelmi@gmail.com")return NextResponse.json({error:"Unauthorized"},{status:403});
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
- if(!url||!key)return NextResponse.json({error:"Analytics unavailable"},{status:503});
+ if(!url||!key)return NextResponse.json({error:"Service credentials not configured",code:"SERVICE_CONFIG_MISSING"},{status:503});
  const admin=createAdminClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
  try{
   let total=0;
@@ -20,5 +20,5 @@ export async function GET(){
    if(page===1000)throw Error("Pagination limit exceeded");
   }
   return NextResponse.json({totalUsers:total},{headers:{"Cache-Control":"private, no-store, max-age=0"}});
- }catch{return NextResponse.json({error:"Analytics unavailable"},{status:503,headers:{"Cache-Control":"no-store"}})}
+ }catch(error){console.error("Admin account count unavailable",error instanceof Error?error.message:"Unknown error");return NextResponse.json({error:"Supabase Auth account count unavailable",code:"AUTH_COUNT_FAILED"},{status:503,headers:{"Cache-Control":"no-store"}})}
 }
