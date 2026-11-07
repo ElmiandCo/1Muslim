@@ -12,6 +12,7 @@ import ImmersiveVideoEntry from "./components/ImmersiveVideoEntry";
 import ProfileThemeSync from "./components/ProfileThemeSync";
 import PersistentQuranStudio from "./components/PersistentQuranStudio";
 import PersistentMessengerCall from "./components/PersistentMessengerCall";
+import PersistentMuslimSync from "./components/PersistentMuslimSync";
 import PersistentDailyVideo from "../components/PersistentDailyVideo";
 import OneMuslimShare from "./components/OneMuslimShare";
 import HudHudChatLauncher from "./components/HudHudChatLauncher";
@@ -33,7 +34,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><SitePresenceHeartbeat /><ProfileThemeSync /><HudHudMotionShell>{children}</HudHudMotionShell><ImmersiveVideoEntry /><PersistentMessengerCall /><PersistentDailyVideo /><VisitorFeedback /><HudHudDimensionDust /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><ElmiLayerX /><XPTracker /><PersistentQuranStudio /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
+  return <html lang="en"><body><SitePresenceHeartbeat /><ProfileThemeSync /><HudHudMotionShell>{children}</HudHudMotionShell><ImmersiveVideoEntry /><PersistentMessengerCall /><PersistentMuslimSync /><PersistentDailyVideo /><VisitorFeedback /><HudHudDimensionDust /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><ElmiLayerX /><XPTracker /><PersistentQuranStudio /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag("js", new Date());
 gtag("config", "G-DSLVB0HSGV");`}</Script></body></html>;
