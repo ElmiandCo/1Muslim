@@ -111,7 +111,7 @@
 .magPanel .splitPreview:nth-child(3n+1) .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1634047113150-0b729c5cedc9?auto=format&fit=crop&w=1000&q=80")}
 .magPanel .splitPreview:nth-child(3n+2) .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1726665937344-6856211760ad?auto=format&fit=crop&w=1000&q=80")}
 .magPanel .splitPreview:nth-child(3n) .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1000&q=80")}
-.newsPanel .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1726665937344-6856211760ad?auto=format&fit=crop&w=1000&q=80");filter:grayscale(.35) sepia(.1)}
+.newsPanel .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1634047113150-0b729c5cedc9?auto=format&fit=crop&w=1000&q=80");filter:grayscale(.35) sepia(.1)}
 .entrance .splitPreviewArt>span{position:relative;z-index:1;text-shadow:0 2px 16px #0007}
 .magPanel .splitPreviewArt>span{opacity:.25}
 .newsPanel .splitPreviewArt>span{opacity:.38;font-size:clamp(14px,3vw,32px)}
