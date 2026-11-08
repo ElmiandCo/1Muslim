@@ -23,22 +23,6 @@ export default function HudHudChatLauncher(){
  const landingOrb=pathname==="/"||["/community","/profile","/streaming","/videos","/messages"].includes(pathname);
  const [orbSlot,setOrbSlot]=useState<"bottom"|"top">("bottom");
  const [profileDock,setProfileDock]=useState<{top:number;left:number;width:number}|null>(null);
- const isProfileEntrance=pathname==="/profile";
- const [profileSettled,setProfileSettled]=useState(false);
- useEffect(()=>{
-  if(!isProfileEntrance){setProfileSettled(false);return;}
-  setProfileSettled(false);
-  // Preserve the existing enlarged profile entrance for two seconds, then dock left.
-  const timer=window.setTimeout(()=>{
-   setProfileDock(null);
-   setDismissed(false);
-   const target={x:16,y:Math.max(96,Math.round(window.innerHeight*.42))};
-   setPosition(target);
-   orbCoords.current=target;
-   setProfileSettled(true);
-  },2000);
-  return()=>window.clearTimeout(timer);
- },[isProfileEntrance,pathname]);
  const [orbInMotion,setOrbInMotion]=useState(false);
  const [magneticSignal,setMagneticSignal]=useState<{x:number;y:number;id:number}|null>(null);
  const signalSeq=useRef(0);
@@ -46,6 +30,15 @@ export default function HudHudChatLauncher(){
  const orbFrame=useRef<number|null>(null);
  const orbCoords=useRef<{x:number;y:number}|null>(null);
  const velocity=useRef({x:0,y:0});
+ // Profile always uses the regular-sized HudHud in its left safe pocket.
+ useEffect(()=>{
+  if(pathname!=="/profile")return;
+  setProfileDock(null);
+  setDismissed(false);
+  const target={x:16,y:Math.max(96,Math.round(window.innerHeight*.42))};
+  setPosition(target);
+  orbCoords.current=target;
+ },[pathname]);
  const lastPointer=useRef<{x:number;y:number;t:number}|null>(null);
  const cancelOrbMotion=()=>{if(orbFrame.current!==null){cancelAnimationFrame(orbFrame.current);orbFrame.current=null}setMagneticSignal(null)};
  const throwCount=useRef(0);
@@ -59,7 +52,7 @@ export default function HudHudChatLauncher(){
  const slotPosition=(slot:"bottom"|"top")=>slot==="bottom"?{x:Math.round((window.innerWidth-54)/2),y:Math.round(window.innerHeight-(window.matchMedia("(max-width: 800px)").matches?116:96))}:{x:window.matchMedia("(max-width: 800px)").matches?14:24,y:window.matchMedia("(max-width: 800px)").matches?18:22};
  const switchOrbSlot=(requested?:"bottom"|"top")=>{const next=requested??(orbSlot==="bottom"?"top":"bottom");setOrbSlot(next);animateOrb(slotPosition(next));setQuickOpen(false);try{localStorage.setItem("1muslim-hudhud-orb-slot",next)}catch{}};
  useEffect(()=>{if(!landingOrb)return;const sync=(event:Event)=>{const detail=(event as CustomEvent<{collapsed?:boolean}>).detail;if(typeof detail?.collapsed==="boolean")switchOrbSlot(detail.collapsed?"top":"bottom")};window.addEventListener("1muslim:hudhud-nav-state",sync);return()=>window.removeEventListener("1muslim:hudhud-nav-state",sync)},[landingOrb,orbSlot]);
- useEffect(()=>{const onDock=(event:Event)=>{const d=(event as CustomEvent<{active:boolean;top:number;left:number;width:number}>).detail;if(!d?.active){setProfileDock(null);return}if(pathname==="/profile"&&profileSettled)return;setProfileDock({top:d.top,left:d.left,width:d.width});setDismissed(false);try{sessionStorage.removeItem("1muslim-hudhud-offscreen")}catch{}const target={x:Math.round(d.left+d.width/2-54),y:Math.round(d.top+10)};requestAnimationFrame(()=>animateOrb(target))};window.addEventListener("1muslim:profile-hudhud-dock",onDock);return()=>window.removeEventListener("1muslim:profile-hudhud-dock",onDock)},[pathname,profileSettled]);
+ useEffect(()=>{const onDock=(event:Event)=>{const d=(event as CustomEvent<{active:boolean;top:number;left:number;width:number}>).detail;if(!d?.active){setProfileDock(null);return}if(pathname==="/profile")return;setProfileDock({top:d.top,left:d.left,width:d.width});setDismissed(false);try{sessionStorage.removeItem("1muslim-hudhud-offscreen")}catch{}const target={x:Math.round(d.left+d.width/2-54),y:Math.round(d.top+10)};requestAnimationFrame(()=>animateOrb(target))};window.addEventListener("1muslim:profile-hudhud-dock",onDock);return()=>window.removeEventListener("1muslim:profile-hudhud-dock",onDock)},[pathname]);
  const [lightEnabled,setLightEnabled]=useState(true);
  const [tourStep,setTourStep]=useState(-1);
  const holdTimer=useRef<ReturnType<typeof setTimeout>|null>(null),held=useRef(false),movedOnce=useRef(false);
@@ -200,11 +193,11 @@ export default function HudHudChatLauncher(){
  {farewell&&<div className="hh-farewell" role="status"><span>HudHud</span><strong>See you next time! 💚</strong><small>Assalamu alaikum ✨</small><button type="button" aria-label="Dismiss farewell" onClick={()=>setFarewell(false)}>✕</button></div>}
  {observation&&!dismissed&&!open&&tourStep<0&&<div className="hh-orb-observation" style={{left:Math.max(8,Math.min(position.x-30,typeof window!=="undefined"?window.innerWidth-294:250)),top:Math.max(10,position.y-95)}} role="status"><span>{observation}</span><button type="button" aria-label="Dismiss HudHud message" onClick={()=>setObservation("")}>×</button></div>}
  {magneticSignal&&!dragged&&!dismissed&&<div key={magneticSignal.id} className="hh-magnetic-signal" aria-hidden="true" style={{left:magneticSignal.x,top:magneticSignal.y}}><i className="hh-magnetic-ring"/><i className="hh-magnetic-ring"/><i className="hh-magnetic-ring"/>{Array.from({length:9},(_,i)=><b key={i} className="hh-magnetic-particle" style={{"--a":(i*40)+"deg","--delay":(i%3)*.07+"s"} as React.CSSProperties}/>)}</div>}
- {profileDock&&!profileSettled&&<style>{`.hh-chat-orb.hh-orb-profile-hero{width:108px!important;height:108px!important;max-width:none!important;max-height:none!important;transition:width .45s ease,height .45s ease}`}</style>}
+ 
  {dragged&&!dismissed&&<div className={"hh-dismiss-target "+(overDismiss?"active":"")} aria-hidden="true">✕</div>}
  {poof&&<div className="hh-dismiss-poof" aria-hidden="true">✧ ✦ ✧</div>}
  {dismissed?(pathname==="/messages"?null:<button type="button" className="hh-restore-tab" onClick={()=>{setDismissed(false);try{sessionStorage.removeItem("1muslim-hudhud-offscreen")}catch{}setPosition(magneticPocket(20,170));setDragged(false)}} aria-label="Restore HudHud">✦ HudHud</button>):
- <button ref={orbButtonRef} className={"hh-chat-orb hh-chat-orb-small hh-orb-route-nav "+((isProfileEntrance&&!profileSettled)||(!isProfileEntrance&&profileDock)?" hh-orb-profile-hero ":"")+(showHudHud?" hh-orb-quran-mode ":"")+(landingOrb?"hh-orb-landing ":"hh-orb-header ")+(overDismiss?"hh-over-dismiss":"")+(orbInMotion&&!dragged?" hh-orb-docking":"")+(dragged?" hh-orb-dragging":"")} style={{left:isQiblaRoute?(qiblaDock?.x??12):isProfileEntrance&&profileSettled?16:isProfileOrb?"calc(50% - 64px)":position.x,top:isQiblaRoute?(qiblaDock?.y??12):isProfileEntrance&&profileSettled?position.y:isProfileOrb?82:position.y,zIndex:2147483002,visibility:orbReady&&(!isQiblaRoute||qiblaDock?.visible)?"visible":"hidden",opacity:isQiblaRoute&&!qiblaDock?.visible?0:1,transition:isQiblaRoute?"left .7s cubic-bezier(.22,1,.36,1),top .7s cubic-bezier(.22,1,.36,1),opacity .25s ease":undefined}} aria-label={isQiblaRoute?"HudHud: back to previous Qibla page":"HudHud: tap to toggle navigation, hold for settings, drag to move"} aria-pressed={sightOn} onPointerDown={e=>{if(isQiblaRoute)return;held.current=false;endHold();velocity.current={x:0,y:0};lastPointer.current=null;holdTimer.current=setTimeout(()=>{if(!dragged){held.current=true;drag.current=null;openLanguage()}},950);drag.current={x:e.clientX,y:e.clientY,px:position.x,py:position.y};setDragged(false);e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={move} onPointerUp={finishDrag} onPointerCancel={finishDrag} onClick={()=>{if(isQiblaRoute){chirp();if(pathname==="/qibla/newsroom"&&document.querySelector('[aria-label="Return to both publications"]')?.getAttribute("aria-pressed")==="false"){window.dispatchEvent(new Event("1muslim:qibla-back"));return}if(window.history.length>1){router.back()}else{router.push("/qibla/newsroom")}return}if(document.querySelector(".elmi-layer-x.active")||document.querySelector(".oneMuslimCinemaDimmer.is-active")){if(!dragged&&!held.current){window.dispatchEvent(new Event("1muslim:deep-watch-hudhud-tap"));return}}chirp();if(held.current){held.current=false;return}if(dragged){setDragged(false);return}if(quranTapScoped.current){window.dispatchEvent(new Event("1muslim:quran-next-verse"));setQuickOpen(false);return}if(landingOrb){const center=slotPosition("bottom");const actual=orbCoords.current??position;const bottomCenter=orbSlot==="bottom"&&Math.abs(actual.x-center.x)<35&&Math.abs(actual.y-center.y)<35;if(bottomCenter){if(quickOpen){setQuickOpen(false);window.dispatchEvent(new Event("1muslim:hudhud-nav-toggle"));}else{setQuickOpen(true)}return}window.dispatchEvent(new Event("1muslim:hudhud-nav-toggle"));setQuickOpen(false);return}switchOrbSlot()}}><img className="hh-orb-logo" src="/assets/hudhud-logo.PNG" alt="" width={53} height={53} decoding="async"/>{orbAvatar&&<img className={"hh-orb-signed-avatar"+(orbAvatarReady?" hh-orb-signed-avatar-ready":"")} src={orbAvatar} alt="" aria-hidden="true" draggable={false}/>}<span className="hh-avatar-swipe" aria-hidden="true"/></button>}
+ <button ref={orbButtonRef} className={"hh-chat-orb hh-chat-orb-small hh-orb-route-nav "+(pathname!=="/profile"&&profileDock?" hh-orb-profile-hero ":"")+(showHudHud?" hh-orb-quran-mode ":"")+(landingOrb?"hh-orb-landing ":"hh-orb-header ")+(overDismiss?"hh-over-dismiss":"")+(orbInMotion&&!dragged?" hh-orb-docking":"")+(dragged?" hh-orb-dragging":"")} style={{left:isQiblaRoute?(qiblaDock?.x??12):isProfileOrb?16:position.x,top:isQiblaRoute?(qiblaDock?.y??12):position.y,zIndex:2147483002,visibility:orbReady&&(!isQiblaRoute||qiblaDock?.visible)?"visible":"hidden",opacity:isQiblaRoute&&!qiblaDock?.visible?0:1,transition:isQiblaRoute?"left .7s cubic-bezier(.22,1,.36,1),top .7s cubic-bezier(.22,1,.36,1),opacity .25s ease":undefined}} aria-label={isQiblaRoute?"HudHud: back to previous Qibla page":"HudHud: tap to toggle navigation, hold for settings, drag to move"} aria-pressed={sightOn} onPointerDown={e=>{if(isQiblaRoute)return;held.current=false;endHold();velocity.current={x:0,y:0};lastPointer.current=null;holdTimer.current=setTimeout(()=>{if(!dragged){held.current=true;drag.current=null;openLanguage()}},950);drag.current={x:e.clientX,y:e.clientY,px:position.x,py:position.y};setDragged(false);e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={move} onPointerUp={finishDrag} onPointerCancel={finishDrag} onClick={()=>{if(isQiblaRoute){chirp();if(pathname==="/qibla/newsroom"&&document.querySelector('[aria-label="Return to both publications"]')?.getAttribute("aria-pressed")==="false"){window.dispatchEvent(new Event("1muslim:qibla-back"));return}if(window.history.length>1){router.back()}else{router.push("/qibla/newsroom")}return}if(document.querySelector(".elmi-layer-x.active")||document.querySelector(".oneMuslimCinemaDimmer.is-active")){if(!dragged&&!held.current){window.dispatchEvent(new Event("1muslim:deep-watch-hudhud-tap"));return}}chirp();if(held.current){held.current=false;return}if(dragged){setDragged(false);return}if(quranTapScoped.current){window.dispatchEvent(new Event("1muslim:quran-next-verse"));setQuickOpen(false);return}if(landingOrb){const center=slotPosition("bottom");const actual=orbCoords.current??position;const bottomCenter=orbSlot==="bottom"&&Math.abs(actual.x-center.x)<35&&Math.abs(actual.y-center.y)<35;if(bottomCenter){if(quickOpen){setQuickOpen(false);window.dispatchEvent(new Event("1muslim:hudhud-nav-toggle"));}else{setQuickOpen(true)}return}window.dispatchEvent(new Event("1muslim:hudhud-nav-toggle"));setQuickOpen(false);return}switchOrbSlot()}}><img className="hh-orb-logo" src="/assets/hudhud-logo.PNG" alt="" width={53} height={53} decoding="async"/>{orbAvatar&&<img className={"hh-orb-signed-avatar"+(orbAvatarReady?" hh-orb-signed-avatar-ready":"")} src={orbAvatar} alt="" aria-hidden="true" draggable={false}/>}<span className="hh-avatar-swipe" aria-hidden="true"/></button>}
 
  <style jsx global>{`
  html.hh-quran-flashlight-active [data-workspace-page="1"] [data-widget="Qur’an"] [class*="quranVerseArticle"]{isolation:isolate;position:relative}
