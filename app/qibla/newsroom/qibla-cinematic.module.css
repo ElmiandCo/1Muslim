@@ -260,3 +260,8 @@
  .stage[data-view="split"] .magPanel .splitPreview:nth-child(2n) .splitPreviewArt,
  .stage[data-view="split"] .magPanel .splitPreview:nth-child(3n) .splitPreviewArt{animation:none!important;will-change:auto}
 }
+
+/* Depth without jitter: static soft shadow, only the artwork moves vertically. */
+.stage[data-view="split"] .magPanel .splitPreviewArt{
+ box-shadow:0 12px 24px rgba(12,10,30,.24),0 3px 9px rgba(12,10,30,.13)!important;
+}
