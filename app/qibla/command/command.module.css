@@ -44,3 +44,6 @@
 .memberControls select{background:#fff;color:#17212c;border-color:#bdcbd5}
 .memberControls button{background:#fff1f2!important;color:#9d3943!important;border-color:#dfb7bb!important}
 .teamAdd{background:#fcfbf8;border:1px solid #e4e1d9;box-shadow:0 6px 16px #1d2b3b0c}
+
+/* Registered member directory picker */
+.memberLookup{display:grid;gap:8px;margin:12px 0 16px}.memberLookup>input{width:100%;min-width:0;border:1px solid #c5d4df;border-radius:12px;padding:13px 14px;background:#fff;color:#1b354a;font:inherit}.memberLookup>small{color:#6a7884;padding:8px}.memberResult,.chosenMember{display:flex;flex-wrap:wrap;align-items:center;gap:5px 12px;text-align:left;border:1px solid #d2dee6;border-radius:12px;background:#f8fbfd;color:#19364d;padding:12px 14px;box-shadow:none}.memberResult strong,.chosenMember strong{font-weight:700}.memberResult span,.chosenMember span{font-size:.9em;color:#4e697b;overflow-wrap:anywhere}.chosenMember{border-color:#397ca7;background:#e7f2fa}.chosenMember b{margin-left:auto;color:#17648b}.teamAdd{border-radius:14px}.teamAdd summary{cursor:pointer}
