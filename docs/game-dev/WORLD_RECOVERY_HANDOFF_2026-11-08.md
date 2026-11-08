@@ -63,3 +63,24 @@ Fetched `app/components/SharedGameLobby.tsx` from six historical branches. The v
 **Important:** Jurassic-pterosaurs and Future-sky-couriers resolve to the *identical lobby blob*, so these are not two independent source implementations at that path. Branch titles alone cannot prove unique content. The string presence of world names, portal, or projectile does not prove runtime behavior. No historical source was copied into the target game runtime in this run.
 
 **Integration plan:** First compare the distinct lobby blobs and inspect imported scene modules and assets. Extract the missing Rome/Moses/Egypt components into isolated game-only modules, avoiding replacement of current SharedGameLobby and preserving joystick/camera/projectiles. Then connect portals and record actual build/runtime tests. Bot 2 should use the above blob identities to avoid duplicate asset work; Bot 3 should not mark physics QA complete based on these source reads. All world-level restoration/integration/navigation/gameplay/QA percentages remain **0% verified**, except prior source references (unverified behavior). Overall unification **0% verified end-to-end**; graphics/physics percentages **unverified**; gameplay-test readiness **not verified**. Production untouched.
+
+
+## Run 3 — concrete missing scene modules and provenance (2026-11-08)
+
+Compared the **historical Rome grand-arena lobby** against the unified target lobby, then fetched five historical scene modules at exact paths. Historical lobby blob `f5e9ce5d0bd5db63c6767088eb3537011157b019` imports Moses, Rome, Egypt and lunar modules, while target lobby blob `45cc9ab2b673b8c0f806065e6010ec2fcfe6a62b` imports only JurassicScene, FutureCityScene and gamePhysics (besides shared UI). These are code-path differences, not proof of runtime operation.
+
+| Historical module path (under app/components/) | Git blob SHA from `game/living-worlds-rome-grand-arena-cats-20261027-2130` | Characters | Same path in unified target |
+|---|---|---:|---|
+| `PartedSeaScene.ts` | `5a3acba3d1680130e104e8eac4299e4847da8ef4` | 9,449 | Not found |
+| `RomanJudeaScene.ts` | `de71aa5740685f2a79b6be200c9bfbea0e2f3037` | 5,972 | Not found |
+| `LunarResearchScene.ts` | `de9938f1fdf05f529e4d9e76c6d9b131854ecad9` | 2,810 | Not found |
+| `AncientEgyptRiverScene.ts` | `6d3446fb31c4a76a691e8c46c1919521f396b43e` | 16,452 | Not found |
+| `gameEgyptWorld.ts` | `18108a13889a2fbb445d87d442478595b97730dd` | 6,586 | Not found |
+
+**Major new finding:** The historical Egypt-riverlife lobby blob `dc1ac60b62a17f8269a8228b880df7ac2c124425` does not import any Egypt module, despite the branch name. Do not infer restoration from branch naming; use the later Rome grand-arena branch as a more complete candidate for scene-module provenance. The historical Moses-playable and lunar-research lobbies do import `PartedSeaScene`, and lunar-research also imports `RomanJudeaScene` and `LunarResearchScene`.
+
+**Integration blocker now concrete:** Five required scene modules are absent from the target at their historical paths. Their content was read and provenance verified, but **none has yet been restored**. Directly copying the old 177 KB lobby would overwrite newer controls and collision code; instead isolate the five modules, check their transitive dependencies, then adapt the world router and bidirectional portal interfaces without changing the existing joystick, camera swipe or projectile mechanics.
+
+**Bot 2:** Start art/geometry comparisons using these five exact blob SHAs; do not recreate them blindly or treat them as high-end 3D meshes. **Bot 3:** Add missing-scene module tests and per-world portal/analog/projectile smoke tests after restoration. In particular, test Egypt ↔ Moses and Rome travel before approving gameplay readiness.
+
+**Verified progress:** Discovery/provenance is 100% for the seven world families already enumerated, with five exact missing module blobs now verified. Restoration, integration, navigation, gameplay and QA remain **0% verified** for Rome, Moses, Egypt, Jurassic, Future, Moon and other worlds in this target. Overall cross-world unification **0% end-to-end verified**; graphics and physics completion percentages **unverified**; gameplay-test readiness **not verified**. No production merge and no claims of passed gameplay tests.
