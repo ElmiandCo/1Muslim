@@ -98,3 +98,8 @@
 .footerGrid a:hover{text-decoration:underline}
 .footerCopyright{width:100%;text-align:center;border-top:1px solid #ffffff2b;padding-top:20px;font-size:11px;letter-spacing:.08em;color:#b4b4b4}
 @media(max-width:600px){.footerGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px}.footer{padding-top:30px}.splitPreviewArt{height:115px}.newsExcerpt{font-size:12px}.stage{min-height:calc(100dvh - 135px)}}
+
+/* Keep the newsletter's placeholder masthead contained inside its preview art. */
+.newsPanel .splitPreviewArt{overflow:hidden;min-width:0;padding:10px;box-sizing:border-box}
+.newsPanel .splitPreviewArt>span{display:block;max-width:100%;font:italic 700 clamp(15px,3.1vw,38px)/1.05 Georgia,serif;letter-spacing:-.035em;text-align:center;overflow-wrap:anywhere;word-break:normal;opacity:.34}
+@media(max-width:800px){.newsPanel .splitPreviewArt>span{font-size:clamp(14px,3.8vw,24px);letter-spacing:-.04em}}
