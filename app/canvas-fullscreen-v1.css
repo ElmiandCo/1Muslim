@@ -2853,8 +2853,7 @@ html:not([data-guest-home="true"]) [data-workspace-page="0"] .canvas-vertical-ma
 }
 
 /* Home profile: one avatar only. The floating HudHud avatar is the profile hero. */
-main:has([data-workspace-page="6"]) .profile-shared-avatar-portal,
-main:has([data-workspace-page="6"]) .profile-shared-avatar-hero{display:none!important}
+/* Profile avatar stays visible above the editor on the Profile slide. */
 
 /* Elmi timed-comment composer: slimmer glass, restrained traveling highlight. */
 [data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm{
@@ -2897,3 +2896,13 @@ main:has([data-workspace-page="6"]) .profile-shared-avatar-hero{display:none!imp
    Keep button focus outlines and navigation borders intact. */
 .oneMuslimLiveVideo,.homeLiveChannelPlayer,.home-live-demo-screen,.homeLiveDemoScreen,.homeLiveStreamTile,.oneMuslimLiveBottom > *,.homeLiveCommentDock,.homeLiveViewerConversation{border:0!important;border-color:transparent!important;outline:0!important}
 main[class*="control"] .homeLiveStreamTileActive{border:0!important;border-color:transparent!important}
+
+/* Profile: position the shared portrait in the upper artwork halo, clear of the editor. */
+main:has(.canvas-native-profile) .profile-shared-avatar-portal{
+ position:fixed!important;top:clamp(190px,27vh,300px)!important;left:50%!important;right:auto!important;bottom:auto!important;
+ transform:translate(-50%,-50%)!important;z-index:2147483647!important;
+ width:clamp(100px,21vw,132px)!important;pointer-events:none!important;
+}
+main:has(.canvas-native-profile) .profile-shared-avatar-hero{display:block!important;opacity:1!important}
+main:has(.canvas-native-profile) .profile-with-shared-avatar{padding-top:145px!important}
+@media(max-width:480px){main:has(.canvas-native-profile) .profile-shared-avatar-portal{top:clamp(205px,29vh,290px)!important;width:112px!important}main:has(.canvas-native-profile) .profile-with-shared-avatar{padding-top:140px!important}}
