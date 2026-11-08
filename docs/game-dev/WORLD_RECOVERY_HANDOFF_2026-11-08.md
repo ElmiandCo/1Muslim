@@ -46,3 +46,20 @@ Inspect the historical `game/world-engine-*` branches and existing `gamePhysics`
 3. Wire a single world-travel selector and bidirectional portals while preserving original camera/joystick/projectile contracts.
 4. Run TypeScript/build and per-world navigation smoke tests; update matrix based on actual results.
 5. Coordinate integration conflicts via this document; production remains untouched until tested and explicitly approved.
+
+
+## Run 2 — direct historical file verification (2026-11-08)
+Fetched `app/components/SharedGameLobby.tsx` from six historical branches. The values below are **Git blob SHAs** (not commit IDs), and sizes are text-character lengths, not compiled bundle sizes:
+
+| Historical branch | Blob SHA | Characters |
+|---|---|---:|
+| `game/living-worlds-rome-grand-arena-cats-20261027-2130` | `f5e9ce5d0bd5db63c6767088eb3537011157b019` | 177017 |
+| `game/living-worlds-moses-playable-20261027-1100` | `1577012a2a1d7816297dce0488165c5184eeaedc` | 164590 |
+| `game/living-worlds-ancient-egypt-riverlife-20261027-1530` | `dc1ac60b62a17f8269a8228b880df7ac2c124425` | 161494 |
+| `game/living-worlds-jurassic-pterosaurs-20261028-0230-b` | `b9ace47c6053e8216da881212cad73552026547d` | 178417 |
+| `game/living-worlds-future-sky-couriers-20261028-0130-b` | `b9ace47c6053e8216da881212cad73552026547d` | 178417 |
+| `game/living-worlds-lunar-research-20261027-1330` | `ee74618bc30772cbbeae5ecab428445c52ff6a6a` | 166820 |
+
+**Important:** Jurassic-pterosaurs and Future-sky-couriers resolve to the *identical lobby blob*, so these are not two independent source implementations at that path. Branch titles alone cannot prove unique content. The string presence of world names, portal, or projectile does not prove runtime behavior. No historical source was copied into the target game runtime in this run.
+
+**Integration plan:** First compare the distinct lobby blobs and inspect imported scene modules and assets. Extract the missing Rome/Moses/Egypt components into isolated game-only modules, avoiding replacement of current SharedGameLobby and preserving joystick/camera/projectiles. Then connect portals and record actual build/runtime tests. Bot 2 should use the above blob identities to avoid duplicate asset work; Bot 3 should not mark physics QA complete based on these source reads. All world-level restoration/integration/navigation/gameplay/QA percentages remain **0% verified**, except prior source references (unverified behavior). Overall unification **0% verified end-to-end**; graphics/physics percentages **unverified**; gameplay-test readiness **not verified**. Production untouched.
