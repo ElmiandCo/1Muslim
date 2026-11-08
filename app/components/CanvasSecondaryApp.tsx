@@ -374,7 +374,7 @@ function DailyPostsApp({active}:{active:boolean}){
   };
   frame=requestAnimationFrame(tick);
   return()=>{cancelAnimationFrame(frame);stopVerse();clearMotion();events.forEach(event=>window.removeEventListener(event,interrupt))};
- },[active,selected,expandedImage,posts.length,playingVideo,finishedVideo,fypStart,viewerPost,wideFeed]);
+ },[active,selected,expandedImage,posts.length,playingVideo,finishedVideo,fypStart,viewerPost]);
 
  useEffect(()=>{if(!active)return;let alive=true;
   const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)throw Error();const data=await r.json();if(alive){setPosts((data.posts||[]).map((p:UmmahPost)=>{if(!p.media_url)return p;const cached=mediaUrlCache.current.get(p.id);if(cached&&Date.now()-cached.at<25*60*1000)return {...p,media_url:cached.url};mediaUrlCache.current.set(p.id,{url:p.media_url,at:Date.now()});return p}));setLikeCounts(Object.fromEntries((data.posts||[]).map((p:UmmahPost)=>[p.id,Number((p as UmmahPost & {like_count?:number}).like_count||0)])));setCommentCounts(Object.fromEntries((data.posts||[]).map((p:UmmahPost)=>[p.id,Number((p as UmmahPost & {comment_count?:number}).comment_count||0)])));setStatus(data.posts?.length?"":"No posts yet. Be the first to share.");}}catch{if(alive)setStatus("Unable to load the Ummah feed.");}};
@@ -436,7 +436,7 @@ function DailyPostsApp({active}:{active:boolean}){
     timers.push(timer);
   }
   return()=>{timers.forEach(clearInterval);cleanups.forEach(fn=>fn())};
- },[active,posts.length,selected,expandedImage,fypStart,viewerPost,wideFeed]);
+ },[active,posts.length,selected,expandedImage,fypStart,viewerPost]);
 
 
  const renderFeedPost=(post:UmmahPost)=><article data-post-id={post.id} data-post-theme={postThemeClass(post.post_theme)} className={`community-post-card ummah-template ummah-template-${postKind(post)} ummah-variant-${(post.id.charCodeAt(0)+layoutSeed)%3}`} key={post.id}>
