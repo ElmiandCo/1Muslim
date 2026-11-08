@@ -178,3 +178,12 @@
 .stage[data-zoom=newsletter] .entrance{transform:scale(1.16) translateX(-8%);transform-origin:75% 48%;filter:brightness(1.09);transition:transform .39s cubic-bezier(.2,.8,.25,1),filter .39s ease}
 .stage[data-zoom]:not([data-zoom=none]) .entrance{pointer-events:none}
 @media(prefers-reduced-motion:reduce){.stage[data-zoom=magazine] .entrance,.stage[data-zoom=newsletter] .entrance{transform:none;filter:none;transition:none}}
+
+/* Slower reverse camera pull-back, used by HudHud and split-screen back. */
+.stage[data-reverse=magazine] .entrance,.stage[data-reverse=newsletter] .entrance{visibility:visible;opacity:1;pointer-events:none;z-index:5;animation:qiblaPullBack .86s cubic-bezier(.16,.7,.22,1) both}
+.stage[data-reverse=magazine] .entrance{transform-origin:25% 48%}
+.stage[data-reverse=newsletter] .entrance{transform-origin:75% 48%}
+.stage[data-reverse=magazine] .magazine,.stage[data-reverse=newsletter] .newsletter{animation:qiblaStoryFade .86s ease both}
+@keyframes qiblaPullBack{0%{transform:scale(1.23);filter:brightness(1.2);opacity:0}25%{opacity:1}100%{transform:scale(1);filter:brightness(1);opacity:1}}
+@keyframes qiblaStoryFade{0%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.stage[data-reverse=magazine] .entrance,.stage[data-reverse=newsletter] .entrance,.stage[data-reverse=magazine] .magazine,.stage[data-reverse=newsletter] .newsletter{animation:none}}

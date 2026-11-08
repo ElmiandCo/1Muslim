@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
 import {createClient} from "../../../utils/supabase/client";
 import styles from "./qibla-cinematic.module.css";
 
@@ -10,8 +10,10 @@ type View="split"|"magazine"|"newsletter";
 export default function QiblaNewsroom(){
  const [view,setView]=useState<View>("split");
  const [zooming,setZooming]=useState<"magazine"|"newsletter"|null>(null);
+ const [reversing,setReversing]=useState<"magazine"|"newsletter"|null>(null);
  const zoomTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const enterPublication=(target:"magazine"|"newsletter")=>{if(zooming)return;setZooming(target);try{const Ctx=window.AudioContext;const ctx=new Ctx();const osc=ctx.createOscillator(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();osc.type="sine";osc.frequency.setValueAtTime(240,ctx.currentTime);osc.frequency.exponentialRampToValueAtTime(760,ctx.currentTime+.24);filter.type="lowpass";filter.frequency.value=1200;gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.055,ctx.currentTime+.04);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.32);osc.connect(filter);filter.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.33);osc.onended=()=>void ctx.close()}catch{}zoomTimer.current=setTimeout(()=>{setView(target);setZooming(null)},390)};
+ const reverseToSplit=()=>{if(zooming||reversing||view==="split")return;const from=view;setReversing(from);try{const Ctx=window.AudioContext;const ctx=new Ctx();const osc=ctx.createOscillator(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();osc.type="sine";osc.frequency.setValueAtTime(620,ctx.currentTime);osc.frequency.exponentialRampToValueAtTime(165,ctx.currentTime+.78);filter.type="lowpass";filter.frequency.setValueAtTime(1450,ctx.currentTime);filter.frequency.exponentialRampToValueAtTime(420,ctx.currentTime+.78);gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.038,ctx.currentTime+.11);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.82);osc.connect(filter);filter.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.83);osc.onended=()=>void ctx.close()}catch{}zoomTimer.current=setTimeout(()=>{setView("split");setReversing(null)},860)};
  useEffect(()=>()=>{if(zoomTimer.current)clearTimeout(zoomTimer.current)},[]);
  const [stories,setStories]=useState<Story[]>([]);
  const [loading,setLoading]=useState(true);
@@ -19,7 +21,7 @@ export default function QiblaNewsroom(){
  const [query,setQuery]=useState("");
  const [contributor,setContributor]=useState(false);
  const [newsletterExpanded,setNewsletterExpanded]=useState(false);
- useEffect(()=>{const back=()=>setView("split");window.addEventListener("1muslim:qibla-back",back);return()=>window.removeEventListener("1muslim:qibla-back",back)},[]);
+ useEffect(()=>{const back=()=>reverseToSplit();window.addEventListener("1muslim:qibla-back",back);return()=>window.removeEventListener("1muslim:qibla-back",back)});
  useEffect(()=>{let alive=true;const db=createClient();(async()=>{const {data:{user}}=await db.auth.getUser();if(!user)return;const [staff,superAdmin,legacyAdmin]=await Promise.all([db.from("qibla_staff").select("role").eq("user_id",user.id).maybeSingle(),db.rpc("qibla_is_superadmin"),db.rpc("qibla_is_admin")]);if(alive)setContributor(Boolean(staff.data?.role||superAdmin.data===true||legacyAdmin.data===true))})();return()=>{alive=false}},[]);
  useEffect(()=>{let active=true;const db=createClient();(async()=>{
   const [legacy,editorial]=await Promise.all([
@@ -41,15 +43,15 @@ export default function QiblaNewsroom(){
  return <main className={styles.root}>
   <header className={styles.topbar} aria-label="1Qibla navigation">
    <span className={styles.hudhudSpace} aria-hidden="true"/>
-   <button className={styles.masthead} onClick={()=>setView("split")} aria-label="Return to both publications" aria-pressed={view==="split"}>1MUSLIM <em>QIBLA</em></button>
+   <button className={styles.masthead} onClick={reverseToSplit} aria-label="Return to both publications" aria-pressed={view==="split"}>1MUSLIM <em>QIBLA</em></button>
    <nav className={styles.topnav} aria-label="Publications">
     <button aria-pressed={view==="magazine"} onClick={()=>setView("magazine")}>Magazine</button>
     <button aria-pressed={view==="newsletter"} onClick={()=>setView("newsletter")}>Newsletter</button>
-    <button className={styles.splitIcon} aria-label="Show both publications" onClick={()=>setView("split")}>◫</button>
+    <button className={styles.splitIcon} aria-label="Show both publications" onClick={reverseToSplit}>◫</button>
    </nav>
   </header>
   <div className={styles.contributeBar}><span>YOUR VOICE. OUR PUBLICATION.</span><Link className={styles.contributeButton} href={contributor?"/qibla/studio":"/qibla/newsroom/apply"}>{contributor?"✎ CREATE A POST":"✦ APPLY TO CONTRIBUTE"}</Link></div>
-  <div className={styles.stage} data-view={view} data-zoom={zooming||"none"}>
+  <div className={styles.stage} data-view={view} data-zoom={zooming||"none"} data-reverse={reversing||"none"}>
    <div className={styles.entrance} aria-hidden={view!=="split"}>
     <button className={styles.magPanel} onClick={()=>enterPublication("magazine")} tabIndex={view==="split"?0:-1}>
      <span className={styles.panelOverline}>FAITH. IDEAS. THE NEXT GENERATION.</span><span className={styles.panelTitle}>The<br/>Magazine</span>
