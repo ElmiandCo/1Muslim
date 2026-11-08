@@ -9,6 +9,10 @@ type View="split"|"magazine"|"newsletter";
 
 export default function QiblaNewsroom(){
  const [view,setView]=useState<View>("split");
+ const [zooming,setZooming]=useState<"magazine"|"newsletter"|null>(null);
+ const zoomTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const enterPublication=(target:"magazine"|"newsletter")=>{if(zooming)return;setZooming(target);try{const Ctx=window.AudioContext;const ctx=new Ctx();const osc=ctx.createOscillator(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();osc.type="sine";osc.frequency.setValueAtTime(240,ctx.currentTime);osc.frequency.exponentialRampToValueAtTime(760,ctx.currentTime+.24);filter.type="lowpass";filter.frequency.value=1200;gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.055,ctx.currentTime+.04);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.32);osc.connect(filter);filter.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.33);osc.onended=()=>void ctx.close()}catch{}zoomTimer.current=setTimeout(()=>{setView(target);setZooming(null)},390)};
+ useEffect(()=>()=>{if(zoomTimer.current)clearTimeout(zoomTimer.current)},[]);
  const [stories,setStories]=useState<Story[]>([]);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
@@ -45,15 +49,15 @@ export default function QiblaNewsroom(){
    </nav>
   </header>
   <div className={styles.contributeBar}><span>YOUR VOICE. OUR PUBLICATION.</span><Link className={styles.contributeButton} href={contributor?"/qibla/studio":"/qibla/newsroom/apply"}>{contributor?"✎ CREATE A POST":"✦ APPLY TO CONTRIBUTE"}</Link></div>
-  <div className={styles.stage} data-view={view}>
+  <div className={styles.stage} data-view={view} data-zoom={zooming||"none"}>
    <div className={styles.entrance} aria-hidden={view!=="split"}>
-    <button className={styles.magPanel} onClick={()=>setView("magazine")} tabIndex={view==="split"?0:-1}>
+    <button className={styles.magPanel} onClick={()=>enterPublication("magazine")} tabIndex={view==="split"?0:-1}>
      <span className={styles.panelOverline}>FAITH. IDEAS. THE NEXT GENERATION.</span><span className={styles.panelTitle}>The<br/>Magazine</span>
      <span className={styles.panelDesc}>Youth · Faith · Identity · Debate · Culture</span>
      <span className={styles.splitPreviews}>{(stories.length?stories.slice(0,4).map(story=>({title:story.title,summary:story.description,cover:story.cover})):magazineSamples.concat([{title:"Voices Across the Ummah",category:"CULTURE & COMMUNITY",summary:"A preview of conversations, community, and creativity across generations.",body:"Sample magazine content."},{title:"What Comes Next?",category:"THE FUTURE",summary:"Youth perspectives on education, belonging, and building together.",body:"Sample magazine content."}]).map(story=>({title:story.title,summary:story.summary,cover:null}))).map((story,i)=><span className={styles.splitPreview} key={i}><span className={styles.splitPreviewArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>{String(i+1).padStart(2,"0")}</span>}</span><span className={styles.splitPreviewCopy}><strong>{story.title}</strong><small>{story.summary.slice(0,140)}</small><span className={styles.previewRead}>READ FULL ARTICLE <span aria-hidden="true">{["🔥","⭐️","💜","👀"][i%4]}</span></span></span></span>)}</span>
      <span className={styles.panelArrow}>Explore the magazine</span>
     </button>
-    <div className={styles.newsPanel} role="button" onClick={()=>setView("newsletter")} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setView("newsletter")}}} tabIndex={view==="split"?0:-1}>
+    <div className={styles.newsPanel} role="button" onClick={()=>enterPublication("newsletter")} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();enterPublication("newsletter")}}} tabIndex={view==="split"?0:-1}>
      <span className={styles.panelOverline}>INDEPENDENT REPORTING. GLOBAL PERSPECTIVE.</span><span className={styles.panelTitle}>The<br/>Newsletter</span>
      <span className={styles.panelDesc}>World news · Community · Current affairs</span>
      <span className={styles.splitPreviews}><span className={styles.splitPreview}><span className={styles.splitPreviewArt}><span>QIBLA REPORT</span></span><span className={styles.splitPreviewCopy}><strong>{newsSamples[0].title}</strong><small>{newsSamples[0].summary}</small><span className={styles.newsExcerpt}>{newsSamples[0].body} {newsletterExpanded&&<span>{newsSamples[1].body} The full publication will include supporting sources, verified reporting, and context for readers. This demonstration illustrates how long-form reporting will expand within the column rather than replacing the entire newsroom.</span>}</span><span className={styles.previewRead}>{newsletterExpanded?"SHOW LESS ↑":"CONTINUE READING ↓"}</span></span></span></span>
