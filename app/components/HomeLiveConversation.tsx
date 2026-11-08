@@ -137,7 +137,7 @@ export default function HomeLiveConversation({room}:{room:Room}){
     if(error){setStatus("Timed comment could not be sent.");return}
     window.dispatchEvent(new CustomEvent("elmi-layer-x-comment-posted",{detail:{body:body.slice(0,180),atSeconds:Math.floor(started),videoKey:videoTimeline.videoKey}}));
     setDraft("");draftStartedAt.current=null;
-    const {data}=await dbRef.current.from("featured_video_timed_comments").select("id,body,at_seconds").eq("video_key",videoTimeline.videoKey).order("at_seconds",{ascending:true}).limit(500);
+    const {data}=await dbRef.current.from("featured_video_timed_comments").select("id,body,at_seconds,user_id").eq("video_key",videoTimeline.videoKey).order("at_seconds",{ascending:true}).limit(500);
     if(data)setTimedEntries(data);
     return;
   }
