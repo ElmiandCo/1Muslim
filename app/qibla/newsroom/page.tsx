@@ -26,15 +26,15 @@ export default function QiblaNewsroom(){
  useEffect(()=>{let active=true;const db=createClient();(async()=>{
   const [legacy,editorial]=await Promise.all([
    db.from("qibla_pages").select("id,title,template_type,hero_media_path,section_one,section_two,created_at").eq("published",true).order("created_at",{ascending:false}).limit(60),
-   db.from("qibla_articles").select("id,title,subtitle,body,published_at").eq("status","published").order("published_at",{ascending:false}).limit(60)
+   db.from("qibla_articles").select("id,title,subtitle,body,cover_url,published_at").eq("status","published").order("published_at",{ascending:false}).limit(60)
   ]);
   const submissions=await db.from("qibla_submissions").select("published_page_id,kind").eq("status","published");
   if(!active)return;
   const publicationKinds=new Map((submissions.data??[]).map(p=>[p.published_page_id,p.kind]));
   if(legacy.error&&editorial.error)setError("Unable to load published stories.");
   else setStories([
-   ...(legacy.data??[]).map(p=>({id:p.id,title:p.title,description:p.section_one?.text??"",cover:p.hero_media_path||null,date:p.created_at??"",source:"legacy" as const,kind:publicationKinds.get(p.id)==="newsletter"?"newsletter" as const:"magazine" as const})),
-   ...(editorial.data??[]).map(p=>({id:p.id,title:p.title,description:p.subtitle||p.body||"",cover:null,date:p.published_at??"",source:"editorial" as const,kind:"magazine" as const}))
+   ...(legacy.data??[]).map(p=>({id:p.id,title:p.title,description:p.section_one?.text??"",cover:p.hero_media_path||null,date:p.created_at??"",source:"legacy" as const,kind:publicationKinds.get(p.id)==="newsletter"||(!publicationKinds.has(p.id)&&String(p.template_type??"").toLowerCase().includes("newsletter"))?"newsletter" as const:"magazine" as const})),
+   ...(editorial.data??[]).map(p=>({id:p.id,title:p.title,description:p.subtitle||p.body||"",cover:p.cover_url||null,date:p.published_at??"",source:"editorial" as const,kind:publicationKinds.get(p.id)==="newsletter"?"newsletter" as const:"magazine" as const}))
   ].sort((a,b)=>b.date.localeCompare(a.date)));
   setLoading(false);
  })();return()=>{active=false}},[]);
@@ -91,7 +91,16 @@ export default function QiblaNewsroom(){
    <section className={styles.newsletter} aria-hidden={view!=="newsletter"}>
     <div className={styles.paperMasthead}><div className={styles.paperTopline}><span>1MUSLIM · INDEPENDENT UMMAH REPORTING</span><span>{new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}</span></div><h1 className={styles.paperLogo}>The Qibla</h1><div className={styles.paperEdition}><span>THE QIBLA REPORT</span><span>WORLD · COMMUNITY · PERSPECTIVES</span><span>EST. 2026</span></div></div>
     <nav className={styles.paperNav} aria-label="Newsletter sections"><a href="#qibla-latest">LATEST</a><a href="#qibla-world">WORLD</a><a href="#qibla-community">COMMUNITY</a><Link href="/qibla/newsletters">ARCHIVE</Link></nav>
-    <div id="qibla-latest" className={styles.paperContent}><div className={styles.paperSectionLabel}>THE LATEST <span>DEMONSTRATION LAYOUT · FICTIONAL SAMPLE CONTENT</span></div><div className={styles.paperLead}><div className={styles.paperLeadCopy}><span className={styles.paperKicker}>COMMUNITY · SAMPLE</span><h2>{newsSamples[0].title}</h2><p>{newsSamples[0].summary}</p><small>3 MIN READ · SAMPLE STORY</small></div><div className={styles.paperLeadVisual} aria-label="Illustrative community news placeholder"><span>COMMUNITY</span></div><p className={styles.paperCaption}>ILLUSTRATIVE PLACEHOLDER · NOT AN ACTUAL NEWS PHOTOGRAPH</p></div><div className={styles.paperRows}><article id="qibla-world" className={styles.paperRow}><span className={styles.paperKicker}>WORLD REPORT · SAMPLE</span><h3>{newsSamples[1].title}</h3><p>{newsSamples[1].summary}</p><details><summary>Read sample report</summary><p>{newsSamples[1].body}</p></details></article><article id="qibla-community" className={styles.paperRow}><span className={styles.paperKicker}>COMMUNITY · SAMPLE</span><h3>{newsSamples[0].title}</h3><p>{newsSamples[0].body}</p><details><summary>Read sample report ↗</summary><p>{newsSamples[0].body}</p></details></article></div></div>
+    <div id="qibla-latest" className={styles.paperContent}>
+     <div className={styles.paperSectionLabel}>THE LATEST <span>{newsletterStories.length?"PUBLISHED NEWSLETTER STORIES":"NO PUBLISHED NEWSLETTERS YET"}</span></div>
+     {newsletterStories.length? <>
+      <div className={styles.paperLead}>
+       <div className={styles.paperLeadCopy}><span className={styles.paperKicker}>LATEST REPORT</span><h2><Link href={`/qibla/newsroom/${encodeURIComponent(newsletterStories[0].id)}`}>{newsletterStories[0].title}</Link></h2><p>{newsletterStories[0].description.slice(0,340)}</p><small>1MUSLIM QIBLA · PUBLISHED NEWSLETTER</small></div>
+       <Link href={`/qibla/newsroom/${encodeURIComponent(newsletterStories[0].id)}`} className={styles.paperLeadVisual} style={newsletterStories[0].cover?{backgroundImage:`url("${encodeURI(newsletterStories[0].cover)}")`,backgroundSize:"cover",backgroundPosition:"center"}:undefined} aria-label={`Read ${newsletterStories[0].title}`}>{!newsletterStories[0].cover&&<span>THE QIBLA</span>}</Link>
+      </div>
+      <div className={styles.paperRows}>{newsletterStories.slice(1).map((story,i)=><article className={styles.paperRow} id={i===0?"qibla-world":i===1?"qibla-community":undefined} key={story.id}><span className={styles.paperKicker}>QIBLA REPORT</span><h3><Link href={`/qibla/newsroom/${encodeURIComponent(story.id)}`}>{story.title}</Link></h3>{story.cover&&<Link href={`/qibla/newsroom/${encodeURIComponent(story.id)}`}><img src={story.cover} alt={story.title} style={{width:"100%",maxHeight:360,objectFit:"cover",borderRadius:4}}/></Link>}<p>{story.description.slice(0,350)}</p><Link href={`/qibla/newsroom/${encodeURIComponent(story.id)}`}>READ FULL REPORT ↗</Link></article>)}</div>
+     </>:<p className={styles.paperCaption}>Published newsletter articles will appear here automatically.</p>}
+    </div>
     <div className={styles.newsColumns}><div><span className={styles.kicker}>THE DAILY BRIEF</span><h2>Stay informed.<br/>Stay connected.</h2><p>Explore published newsletters, current affairs, community updates and thoughtful reporting in our growing archive.</p><Link className={styles.newsCTA} href="/qibla/newsletters">OPEN THE NEWSLETTER ARCHIVE</Link></div><aside><span>FROM THE EDITOR</span><p>One community. Many stories. One direction.</p><Link href="/qibla/newsroom/about">ABOUT 1QIBLA</Link></aside></div>
    </section>
   </div>
