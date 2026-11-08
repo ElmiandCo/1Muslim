@@ -7,7 +7,7 @@ export function gravityForWorld(world:string,moonWalking=false):number{
 }
 /** Advances position in world units; existing laser weapons remain straight unless gravity is explicitly supplied. */
 export function stepProjectile<T extends BallisticBody>(shot:T,dt:number,gravity=0):T{
- const step=Math.max(0,Math.min(dt,.05));
+ const step=Number.isFinite(dt)?Math.max(0,Math.min(dt,.05)):0;
  shot.x+=shot.vx*step;
  shot.y+=(shot.vy??0)*step-.5*gravity*step*step;
  shot.vy=(shot.vy??0)-gravity*step;
