@@ -207,3 +207,11 @@
  .feature,.storyGrid,.newsColumns,.demoGrid{max-width:100%;min-width:0}
  .feature>*,.storyGrid>*,.newsColumns>*,.demoGrid>*{min-width:0;max-width:100%}
 }
+
+/* Editorial cover images: responsive frames, edge-to-edge crop, no letterbox bars. */
+.featureVisual,.storyVisual,.splitPreviewArt{background-repeat:no-repeat;background-size:cover;background-position:center center;overflow:hidden}
+.featureVisual{height:auto;min-height:280px;aspect-ratio:4/3}
+.storyVisual{height:auto;min-height:170px;aspect-ratio:4/3}
+.splitPreviewArt{height:auto;min-height:105px;aspect-ratio:16/9}
+@media(max-width:800px){.featureVisual{min-height:220px;aspect-ratio:4/3}.storyVisual{min-height:160px;aspect-ratio:4/3}.splitPreviewArt{min-height:90px;aspect-ratio:16/9}}
+@media(max-width:480px){.featureVisual{min-height:0;aspect-ratio:3/4}.storyVisual{min-height:0;aspect-ratio:4/3}}
