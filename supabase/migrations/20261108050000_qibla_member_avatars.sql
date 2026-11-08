@@ -1,3 +1,4 @@
+drop function if exists public.qibla_search_registered_members(text);
 create or replace function public.qibla_search_registered_members(p_query text)
 returns table(user_id uuid,display_name text,email text,role text,avatar_url text)
 language plpgsql stable security definer set search_path=public as $$
