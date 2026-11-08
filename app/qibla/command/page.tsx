@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import {useSearchParams} from "next/navigation";
 import {useCallback,useEffect,useMemo,useState} from "react";
 import {createClient} from "../../../utils/supabase/client";
 import styles from "./command.module.css";
@@ -17,8 +16,8 @@ const statuses:Status[]=["draft","submitted","changes_requested","approved","pub
 const canSearch=(q:string)=>q.trim().length>=3;
 const roleNames=["writer","editor","approver","publisher","admin"];
 export default function QiblaCommand(){
- const searchParams=useSearchParams();
- const editPageId=searchParams.get("editPage");
+ const [editPageId,setEditPageId]=useState<string|null>(null);
+ useEffect(()=>{setEditPageId(new URLSearchParams(window.location.search).get("editPage"))},[]);
  const [roleRequests,setRoleRequests]=useState<RoleRequest[]>([]),[applications,setApplications]=useState<Application[]>([]),[applicationNote,setApplicationNote]=useState("");
  const [uid,setUid]=useState<string|null>(null),[role,setRole]=useState(""),[superAdmin,setSuperAdmin]=useState(false),[items,setItems]=useState<Item[]>([]),[staff,setStaff]=useState<Staff[]>([]),[teamDirectory,setTeamDirectory]=useState<TeamMember[]>([]),[audit,setAudit]=useState<Audit[]>([]),[filter,setFilter]=useState("all"),[selected,setSelected]=useState<string|null>(null),[note,setNote]=useState(""),[newUser,setNewUser]=useState(""),[newRole,setNewRole]=useState("writer"),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[loading,setLoading]=useState(true);
  const [memberQuery,setMemberQuery]=useState(""),[matches,setMatches]=useState<MemberMatch[]>([]),[lookupBusy,setLookupBusy]=useState(false);
