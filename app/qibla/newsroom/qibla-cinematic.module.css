@@ -215,3 +215,17 @@
 .splitPreviewArt{height:auto;min-height:105px;aspect-ratio:16/9}
 @media(max-width:800px){.featureVisual{min-height:220px;aspect-ratio:4/3}.storyVisual{min-height:160px;aspect-ratio:4/3}.splitPreviewArt{min-height:90px;aspect-ratio:16/9}}
 @media(max-width:480px){.featureVisual{min-height:0;aspect-ratio:3/4}.storyVisual{min-height:0;aspect-ratio:4/3}}
+
+/* Issue 001: magazine art-direction, typographic contrast without comic fonts. */
+.magPanel .splitPreviewCopy strong{display:block;font-family:"Playfair Display",Georgia,serif;font-weight:800;line-height:1.02;letter-spacing:-.045em}
+.editorialTitle{display:block;max-width:100%;overflow-wrap:break-word}
+.editorialTitle>span{display:block;font-family:"Playfair Display",Georgia,serif;font-size:1.32em;font-weight:800;line-height:1.02;letter-spacing:-.055em}
+.editorialTitle>em{display:block;font-family:"DM Serif Display",Georgia,serif;font-size:.85em;font-weight:400;font-style:italic;line-height:1.12;letter-spacing:-.025em;margin-top:.12em}
+.magPanel .splitPreviewCopy strong{font-size:clamp(18px,2vw,29px)}
+.magPanel .splitPreviewCopy small{font-family:"Inter",Arial,sans-serif;font-size:clamp(10px,1vw,13px);line-height:1.5;letter-spacing:.015em;opacity:.88}
+.magPanel .previewRead{font-family:"Space Grotesk",Arial,sans-serif;font-weight:700;letter-spacing:.12em}
+.magazine .featureText h2{font-family:"Playfair Display",Georgia,serif;font-weight:800;font-size:clamp(36px,5vw,78px);line-height:1.04;letter-spacing:-.055em}
+.magazine .featureText h2 .editorialTitle>span{font-size:1em}
+.magazine .featureText h2 .editorialTitle>em{font-size:.7em}
+.magazine .editorialDeck{font-family:"Inter",Arial,sans-serif;font-size:clamp(15px,1.35vw,19px);line-height:1.65;max-width:54ch}
+@media(max-width:600px){.magPanel .splitPreviewCopy strong{font-size:clamp(15px,4vw,22px)}.magazine .featureText h2{font-size:clamp(31px,8vw,48px)}}
