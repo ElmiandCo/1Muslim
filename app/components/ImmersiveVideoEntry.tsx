@@ -28,6 +28,11 @@ function FloatingLiveComments({streamId}:{streamId:string}){
 export default function ImmersiveVideoEntry(){
  const pathname=usePathname();
  const [feed,setFeed]=useState<Clip[]>([]);
+ const warmPlayers=useRef<HTMLVideoElement[]>([]);
+ // Prioritize the next three clips; reuse the browser media cache and release distant buffers.
+ useEffect(()=>{if(!feed.length)return;const upcoming=feed.slice(index+1,index+4).filter(c=>!c.liveRoom&&c.kind!=="image"&&c.kind!=="text"&&/^https?:|^\\//.test(c.src));const players=warmPlayers.current;upcoming.forEach((clip,i)=>{let player=players[i];if(!player){player=document.createElement("video");player.muted=true;player.playsInline=true;player.preload="auto";players[i]=player}if(player.src!==new URL(clip.src,location.href).href){player.src=clip.src;player.load()}});for(let i=upcoming.length;i<players.length;i++){players[i].removeAttribute("src");players[i].load()}},[feed,index]);
+ useEffect(()=>()=>{warmPlayers.current.forEach(v=>{v.pause();v.removeAttribute("src");v.load()});warmPlayers.current=[]},[]);
+
  const [open,setOpen]=useState(false),[clips,setClips]=useState<Clip[]>([]),[index,setIndex]=useState(0),[muted,setMuted]=useState(false);
  const discovery=useLiveDiscovery();
  const liveClips=useMemo<Clip[]>(()=>discovery.lives.slice(0,20).map(x=>({id:"live:"+x.id,liveId:x.id,liveRoom:x.room_name,liveHostId:x.host_id,liveAudioOnly:x.aspect_ratio==="1:1",src:"",creator:"LIVE · "+(x.viewer_count||0)+" watching",caption:x.title||"1Muslim Live"})),[discovery.lives]);
