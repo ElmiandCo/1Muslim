@@ -1,5 +1,5 @@
-import ProfileMagazinePosts from "./components/ProfileMagazinePosts";
 "use client";
+import ProfileMagazinePosts from "./components/ProfileMagazinePosts";
 import AdminParallaxDashboard from "./components/AdminParallaxDashboard";
 import Profile2AppearanceEditor from "./components/Profile2AppearanceEditor";
 import ProfileNotificationsGallery from "./components/ProfileNotificationsGallery";
