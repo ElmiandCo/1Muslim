@@ -3,6 +3,7 @@ import Link from "next/link";
 import {useCallback,useEffect,useMemo,useState} from "react";
 import {createClient} from "../../../utils/supabase/client";
 import styles from "./command.module.css";
+import EditorialMasthead from "../EditorialMasthead";
 type Status="draft"|"submitted"|"changes_requested"|"approved"|"published"|"rejected";
 type Item={id:string;title:string;kind:"article"|"newsletter";subtitle:string;body:string;cover_url:string;status:Status;review_note:string;updated_at:string;author_id:string};
 type Application={id:string;applicant_id:string;requested_role:string;ideas:string;status:string;created_at:string;reviewer_note:string|null};
@@ -28,7 +29,7 @@ export default function QiblaCommand(){
  const assign=()=>{if(!newUser.trim())return;void action(()=>db.rpc("qibla_assign_role",{p_user_id:newUser.trim(),p_role:newRole}),"Role assigned.")};
  const reviewApplication=(id:string,approve:boolean)=>{void action(()=>db.rpc("qibla_review_staff_application",{p_id:id,p_approve:approve,p_note:applicationNote}),approve?"Application approved and role assigned.":"Application denied.");setApplicationNote("")};
  const remove=(id:string)=>{if(!window.confirm("Remove this staff member's Qibla role?"))return;void action(()=>db.rpc("qibla_remove_role",{p_user_id:id}),"Role removed.")};
- return <main className={styles.root}><header className={styles.nav}><Link href="/qibla/newsroom">← 1MUSLIM QIBLA</Link><strong>EDITORIAL COMMAND</strong><Link href="/qibla/studio">WRITE ↗</Link></header>
+ return <main className={styles.root}><EditorialMasthead current="command"/>
  <div className={styles.heading}><span>ONE PUBLISHING HOUSE · TWO DISTINCT VOICES</span><h1>The Editorial<br/><em>Desk.</em></h1><p>Plan, review, approve and publish. Every story has a journey.</p></div>
  {!uid?<p className={styles.notice}>Sign in to access the editorial desk.</p>:loading?<p className={styles.notice}>Loading editorial activity…</p>:<>
  <div className={styles.identity}>SIGNED IN AS <b>{role.toUpperCase()}</b> {superAdmin&&<span>✦ SUPERADMIN</span>}<button onClick={()=>void refresh()}>↻ Refresh</button></div>
