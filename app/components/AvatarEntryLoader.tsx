@@ -26,7 +26,9 @@ export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,sh
  const portraits=useRef<(HTMLDivElement|null)[]>([]);
  const elapsed=useRef(0);
  const readyRef=useRef(ready);
+ const signedInRef=useRef(signedIn);
  readyRef.current=ready;
+ signedInRef.current=signedIn;
  useEffect(()=>{window.dispatchEvent(new Event("1muslim:prepare-for-you"))},[]);
  useEffect(()=>{
   let cancelled=false;
@@ -44,7 +46,7 @@ export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,sh
  },[]);
  useEffect(()=>{
   if(phase!=="orbit")return;
-  if(signedIn&&ready){setPhase("reveal");return;}
+  if(signedInRef.current&&readyRef.current){setPhase("reveal");return;}
   const started=performance.now();
   let raf=0;
   const tick=(now:number)=>{
@@ -70,7 +72,7 @@ export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,sh
   };
   raf=requestAnimationFrame(tick);
   return()=>cancelAnimationFrame(raf);
- },[phase,loaded,signedIn,ready]);
+ },[phase,loaded]);
  useEffect(()=>{
   if(phase!=="orbit"||elapsed.current<INTRO_MS||!ready)return;
   setPhase("reveal");
