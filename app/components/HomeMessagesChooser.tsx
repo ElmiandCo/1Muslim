@@ -25,6 +25,7 @@ export default function HomeMessagesChooser(){
  const [peopleLoading,setPeopleLoading]=useState(false);
  const [unread,setUnread]=useState<Record<string,number>>({});
  const [previews,setPreviews]=useState<Record<string,string>>({});
+ const [lastActivity,setLastActivity]=useState<Record<string,string>>({});
  const [mobileThread,setMobileThread]=useState(false);
  useEffect(()=>{let active=true;db.auth.getUser().then(({data})=>{if(active)setUid(data.user?.id||null)});return()=>{active=false}},[db]);
  const loadThreads=useCallback(async()=>{if(!uid)return;
@@ -40,8 +41,8 @@ export default function HomeMessagesChooser(){
    const last=new Map((reads||[]).map(x=>[x.conversation_id,x.last_read_at]));const counts:Record<string,number>={};
    for(const m of recent||[]){if(m.sender_id!==uid&&(!last.get(m.conversation_id)||new Date(m.created_at)>new Date(last.get(m.conversation_id)!)))counts[m.conversation_id]=(counts[m.conversation_id]||0)+1}
    if(selected)counts[selected]=0;setUnread(counts);
-   const latest:Record<string,string>={};for(const m of recent||[]){if(!(m.conversation_id in latest))latest[m.conversation_id]=m.body||""}
-   setPreviews(latest)}else{setUnread({});setPreviews({})}
+   const latest:Record<string,string>={};const times:Record<string,string>={};for(const m of recent||[]){if(!(m.conversation_id in latest)){latest[m.conversation_id]=m.body||"";times[m.conversation_id]=m.created_at}}
+   setPreviews(latest);setLastActivity(times)}else{setUnread({});setPreviews({});setLastActivity({})}
  },[db,uid,selected]);
  useEffect(()=>{void loadThreads();const t=setInterval(()=>void loadThreads(),12000);return()=>clearInterval(t)},[loadThreads]);
  const loadMessages=useCallback(async()=>{if(!selected)return;const {data,error:err}=await db.from("dm_messages").select("id,conversation_id,sender_id,body,created_at,attachment_path,attachment_type").eq("conversation_id",selected).order("created_at",{ascending:true}).limit(200);if(err)setError(err.message);else {setMessages((data||[]) as Msg[]);if(uid){const {error:readError}=await db.from("dm_participants").update({last_read_at:new Date().toISOString()}).eq("conversation_id",selected).eq("user_id",uid);if(!readError)setUnread(prev=>({...prev,[selected]:0}));}}},[db,selected,uid]);
@@ -87,7 +88,7 @@ export default function HomeMessagesChooser(){
  const portrait=(p?:Profile)=> <span className={styles.avatar}>{avatar(p)?<img src={avatar(p)} alt="" loading="lazy" onError={e=>{if(!e.currentTarget.src.endsWith("/assets/avatars/default-male.jpg"))e.currentTarget.src="/assets/avatars/default-male.jpg"}}/>:(p?.display_name||p?.username||"M").charAt(0).toUpperCase()}</span>;
  const snippet=(value:string)=>{const Segmenter=(Intl as unknown as {Segmenter?:new (locale:string,options:{granularity:"grapheme"})=>{segment:(s:string)=>Iterable<{segment:string}>}}).Segmenter;const chars=Segmenter?Array.from(new Segmenter("en",{granularity:"grapheme"}).segment(value),x=>x.segment):Array.from(value);return chars.slice(0,40).join("")+(chars.length>40?"…":"")};
  const current=threads.find(t=>t.conversation_id===selected);
- const shown=threads.filter(t=>(filter!=="unread"||unread[t.conversation_id]>0)&& (filter!=="groups")&&name(t.user_id).toLowerCase().includes(search.toLowerCase()));
+ const shown=threads.filter(t=>(filter!=="unread"||unread[t.conversation_id]>0)&& (filter!=="groups")&&name(t.user_id).toLowerCase().includes(search.toLowerCase())).sort((a,b)=>(Date.parse(lastActivity[b.conversation_id]||"")||0)-(Date.parse(lastActivity[a.conversation_id]||"")||0));
  return <div className={styles.root}><header className={styles.heading}><strong>CONNECT WITH THE UMMAH</strong><span lang="ar" dir="rtl">رسائل</span></header>
  <div className={styles.panel}>
  <aside className={`${styles.sidebar} ${mobileThread?styles.mobileHidden:""}`}>
