@@ -624,3 +624,23 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
   position:relative;
   z-index:1;
 }
+
+
+/* My Clips-inspired editorial Community, retaining original post interactions and motion. */
+.canvas-community-posts-only .community-simple-feed{background:#f2ede4!important;color:#2d2028!important;border-radius:5px;padding:clamp(9px,2.4vw,22px)!important;box-shadow:0 18px 42px #080b1880,inset 0 0 0 1px #bda16b}
+.canvas-community-posts-only .community-simple-feed .community-posts-list{background:#f2ede4!important;padding:8px!important;overflow:hidden}
+.canvas-community-posts-only .ummah-dual-lanes{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:start;gap:clamp(9px,2.5vw,22px)!important;width:100%;min-width:0}
+.canvas-community-posts-only .ummah-dual-lane{min-width:0;min-height:0;max-height:min(73dvh,1050px);overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;padding:6px 3px 22px;scroll-behavior:auto}
+.canvas-community-posts-only .ummah-dual-lane::-webkit-scrollbar{display:none}
+.canvas-community-posts-only .ummah-dual-lane[data-lane="right"]{padding-top:32px}
+.canvas-community-posts-only .community-simple-feed .community-post-card{color:#2c2027!important;background:linear-gradient(145deg,#fffefa,#f4efeb)!important;border:1px solid #d6c4a3!important;border-radius:4px!important;box-shadow:0 12px 25px #24182430,0 2px 5px #00000013!important;min-width:0;overflow:hidden;animation:communityMagazineFloat 8.8s ease-in-out infinite}
+.canvas-community-posts-only .ummah-dual-lane[data-lane="right"] .community-post-card{animation-duration:11.4s;animation-delay:-4s}
+.canvas-community-posts-only .ummah-dual-lane .community-post-card:nth-child(3n+2){animation-delay:-2.8s}
+.canvas-community-posts-only .ummah-dual-lane .community-post-card:nth-child(3n){animation-delay:-6.1s}
+.canvas-community-posts-only .community-post-card header,.canvas-community-posts-only .community-post-card footer{color:#342632!important}
+.canvas-community-posts-only .community-post-card small{color:#74646d!important}
+.canvas-community-posts-only .community-post-card .ummah-post-body{color:#30242c!important}
+.canvas-community-posts-only .community-post-card.ummah-reading-main,.canvas-community-posts-only .community-post-card.ummah-reading-before,.canvas-community-posts-only .community-post-card.ummah-reading-after{animation-play-state:paused!important}
+@keyframes communityMagazineFloat{0%,100%{translate:0 0}50%{translate:0 -4px}}
+@media(max-width:560px){.canvas-community-posts-only .community-simple-feed{padding:8px!important}.canvas-community-posts-only .community-simple-feed .community-posts-list{padding:3px!important}.canvas-community-posts-only .ummah-dual-lanes{gap:9px!important}.canvas-community-posts-only .community-simple-feed .community-post-card{padding:8px!important}.canvas-community-posts-only .community-post-card header{flex-wrap:wrap}.canvas-community-posts-only .community-post-card footer{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.canvas-community-posts-only .community-post-card{animation:none!important}}
