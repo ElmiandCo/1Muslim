@@ -12,7 +12,7 @@ export default function ProfileMagazinePosts(){
  const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){if(alive)setError("Sign in to view your posts.");return}
  const {data,error:postsError}=await db.from("posts").select("id,body,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(60);if(postsError)throw postsError;
  const rows:Post[]=(data||[]).map(p=>({id:p.id,body:p.body||"",created_at:p.created_at||""}));
- if(rows.length){const {data:media}=await db.from("post_media").select("post_id,storage_path,mime_type").in("post_id",rows.map(p=>p.id));if(media?.length){const {data:urls}=await db.storage.from("community-media").createSignedUrls(media.map(m=>m.storage_path),3600);for(let i=0;i<media.length;i++){const row=rows.find(p=>p.id===media[i].post_id);if(row&&!row.media&&urls?.[i]?.signedUrl){row.media=urls[i].signedUrl;row.video=media[i].mime_type?.startsWith("video/")}}}}
+ if(rows.length){const {data:media}=await db.from("post_media").select("post_id,storage_path,mime_type").in("post_id",rows.map(p=>p.id));if(media?.length){const {data:urls}=await db.storage.from("community-media").createSignedUrls(media.map(m=>m.storage_path||""),3600);for(let i=0;i<media.length;i++){const row=rows.find(p=>p.id===media[i].post_id);if(row&&!row.media&&urls?.[i]?.signedUrl){row.media=urls[i].signedUrl;row.video=media[i].mime_type?.startsWith("video/")??false}}}}
  if(alive)setPosts(rows);
  }catch{if(alive)setError("Posts could not be loaded. Please try again.");}finally{if(alive)setLoading(false)}})();return()=>{alive=false}},[]);
  return <section className="profileMagazine" aria-label="My published posts">
