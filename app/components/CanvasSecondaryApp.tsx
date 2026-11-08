@@ -165,17 +165,6 @@ type UmmahComment={id:string;post_id:string;parent_id:string|null;name:string;av
 function DailyPostsApp({active}:{active:boolean}){
  const [wideFeed,setWideFeed]=useState(false);
  useEffect(()=>{const media=window.matchMedia("(min-width: 320px)");const sync=()=>setWideFeed(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync)},[]);
- const singleRailRef=useRef<HTMLDivElement|null>(null);
- useEffect(()=>{
-  if(!active||selected||expandedImage||fypStart||viewerPost)return;
-  const rail=singleRailRef.current;if(!rail||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
-  let frame=0,last=0,pausedUntil=performance.now()+1500;
-  const pause=()=>{pausedUntil=performance.now()+3500};
-  ["pointerdown","touchstart","wheel","keydown"].forEach(name=>rail.addEventListener(name,pause,{passive:true}));
-  const tick=(now:number)=>{if(last&&now<pausedUntil){last=now}else if(last){const max=rail.scrollHeight-rail.clientHeight;if(max>0){rail.scrollTop+=Math.min(35,(now-last)*.024);if(rail.scrollTop>=max-2){rail.scrollTop=0}}last=now}else last=now;frame=requestAnimationFrame(tick)};
-  frame=requestAnimationFrame(tick);
-  return()=>{cancelAnimationFrame(frame);["pointerdown","touchstart","wheel","keydown"].forEach(name=>rail.removeEventListener(name,pause))};
- },[active,selected,expandedImage,fypStart,viewerPost,posts.length]);
  const [posts,setPosts]=useState<UmmahPost[]>([]); const mediaUrlCache=useRef(new Map<string,{url:string,at:number}>()); 
  const [status,setStatus]=useState("Loading Ummah posts…");
  const [selected,setSelected]=useState<string|null>(null);
@@ -243,6 +232,17 @@ function DailyPostsApp({active}:{active:boolean}){
  const fypReelRef=useRef<HTMLDivElement|null>(null);
  const fypVideoRefs=useRef(new Map<string,HTMLVideoElement>());
  const [viewerPost,setViewerPost]=useState<string|null>(null);
+ const singleRailRef=useRef<HTMLDivElement|null>(null);
+ useEffect(()=>{
+  if(!active||selected||expandedImage||fypStart||viewerPost)return;
+  const rail=singleRailRef.current;if(!rail||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  let frame=0,last=0,pausedUntil=performance.now()+1500;
+  const pause=()=>{pausedUntil=performance.now()+3500};
+  ["pointerdown","touchstart","wheel","keydown"].forEach(name=>rail.addEventListener(name,pause,{passive:true}));
+  const tick=(now:number)=>{if(last&&now<pausedUntil){last=now}else if(last){const max=rail.scrollHeight-rail.clientHeight;if(max>0){rail.scrollTop+=Math.min(35,(now-last)*.024);if(rail.scrollTop>=max-2){rail.scrollTop=0}}last=now}else last=now;frame=requestAnimationFrame(tick)};
+  frame=requestAnimationFrame(tick);
+  return()=>{cancelAnimationFrame(frame);["pointerdown","touchstart","wheel","keydown"].forEach(name=>rail.removeEventListener(name,pause))};
+ },[active,selected,expandedImage,fypStart,viewerPost,posts.length]);
  useEffect(()=>{if(!viewerPost){setViewerCommentPreview([]);return}let live=true;fetch("/api/ummah-comments?postId="+encodeURIComponent(viewerPost),{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(d=>{if(live)setViewerCommentPreview((d.comments||[]).filter((c:UmmahComment)=>!c.parent_id).slice(-4))}).catch(()=>{if(live)setViewerCommentPreview([])});return()=>{live=false}},[viewerPost]);
  const [viewerDraft,setViewerDraft]=useState("");
  const [viewerSending,setViewerSending]=useState(false);
