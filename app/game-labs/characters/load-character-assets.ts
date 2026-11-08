@@ -3,7 +3,7 @@ import type { CharacterPresentation, RiggedCharacterAsset } from "./character-co
 
 export const MAX_CHARACTER_GLB_BYTES = 32 * 1024 * 1024;
 export type CharacterLoadState = { status: "ready" | "unavailable"; assets: Record<CharacterPresentation, CharacterAssetReadiness>; errors: string[] };
-type FetchLike = (url: string, init: { signal?: AbortSignal; cache: "no-store" }) => Promise<Pick<Response, "ok" | "status" | "headers" | "arrayBuffer">>;
+type FetchLike = (url: string, init: { signal?: AbortSignal; cache: "no-store" }) => Promise<Pick<Response, "ok" | "status" | "headers" | "arrayBuffer"> & { body?: ReadableStream<Uint8Array> | null }>;
 
 /** Fetch and inspect BOTH original skinned GLBs; never synthesize a humanoid fallback.
  * A successful preflight is not proof of runtime GPU skinning, art quality or legal rights.
@@ -28,7 +28,35 @@ export async function loadStoryModeCharacters(
       if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > maxBytes)) {
         return { id, ready: false, inspection: null, errors: ["GLB exceeds download budget"] };
       }
-      const bytes = await response.arrayBuffer();
+      // Bound memory even if the server omits or misreports Content-Length.
+      let bytes: ArrayBuffer;
+      if (response.body) {
+        const reader = response.body.getReader();
+        const chunks: Uint8Array[] = [];
+        let total = 0;
+        try {
+          while (true) {
+            if (options.signal?.aborted) throw new Error("GLB loading cancelled");
+            const { done, value } = await reader.read();
+            if (done) break;
+            total += value.byteLength;
+            if (total > maxBytes) {
+              await reader.cancel("GLB download budget exceeded");
+              return { id, ready: false, inspection: null, errors: ["GLB exceeds download budget"] };
+            }
+            chunks.push(value);
+          }
+        } finally {
+          reader.releaseLock();
+        }
+        const joined = new Uint8Array(total);
+        let offset = 0;
+        for (const chunk of chunks) { joined.set(chunk, offset); offset += chunk.byteLength; }
+        bytes = joined.buffer;
+      } else {
+        // Compatibility for minimal injected test fetchers.
+        bytes = await response.arrayBuffer();
+      }
       if (!bytes.byteLength || bytes.byteLength > maxBytes) {
         return { id, ready: false, inspection: null, errors: ["GLB missing or exceeds download budget"] };
       }
