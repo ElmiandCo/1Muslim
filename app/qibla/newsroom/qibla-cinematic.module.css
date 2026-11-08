@@ -229,3 +229,7 @@
 .magazine .featureText h2 .editorialTitle>em{font-size:.7em}
 .magazine .editorialDeck{font-family:"Inter",Arial,sans-serif;font-size:clamp(15px,1.35vw,19px);line-height:1.65;max-width:54ch}
 @media(max-width:600px){.magPanel .splitPreviewCopy strong{font-size:clamp(15px,4vw,22px)}.magazine .featureText h2{font-size:clamp(31px,8vw,48px)}}
+
+/* Published covers must never be obscured by the old decorative stock photography. */
+.entrance .splitPreviewArt::before{content:none!important;background-image:none!important}
+.entrance .splitPreviewArt{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
