@@ -27,7 +27,7 @@ export default function VisitorFeedback(){
   if(user.id===adminId)throw Error("This feedback account cannot message itself.");
   const {data:conversationId,error:conversationError}=await db.rpc("dm_start_conversation",{other_user:adminId});
   if(conversationError||!conversationId)throw Error("Could not open the feedback conversation. Please try again.");
-  const body="1Muslim feedback: "+stars+"/3\\nFeature: "+(topic||"General")+"\\nPage: "+location.pathname+"\\n"+(message.trim()||"(No written feedback)");
+  const body="1Muslim feedback: "+stars+"/3\nFeature: "+(topic||"General")+"\nPage: "+location.pathname+"\n"+(message.trim()||"(No written feedback)");
   const {error:sendError}=await db.from("dm_messages").insert({conversation_id:conversationId,sender_id:user.id,body});
   if(sendError)throw Error("Could not send your message. Please try again.");
   localStorage.setItem(KEY,"submitted");setOpen(false);
