@@ -162,7 +162,7 @@ type UmmahComment={id:string;post_id:string;parent_id:string|null;name:string;av
 
 function DailyPostsApp({active}:{active:boolean}){
  const [wideFeed,setWideFeed]=useState(false);
- useEffect(()=>{const media=window.matchMedia("(min-width: 768px), (orientation: landscape)");const sync=()=>setWideFeed(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync)},[]);
+ useEffect(()=>{const media=window.matchMedia("(min-width: 320px)");const sync=()=>setWideFeed(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync)},[]);
  const [posts,setPosts]=useState<UmmahPost[]>([]); const mediaUrlCache=useRef(new Map<string,{url:string,at:number}>()); 
  const [status,setStatus]=useState("Loading Ummah posts…");
  const [selected,setSelected]=useState<string|null>(null);
@@ -375,8 +375,8 @@ function DailyPostsApp({active}:{active:boolean}){
   if(motion.matches)return;
   const timers:ReturnType<typeof setTimeout>[]=[];
   const cleanups:Array<()=>void>=[];
-  for(const lane of lanes){
-    let pausedUntil=performance.now()+3000;
+  for(const [laneIndex,lane] of lanes.entries()){
+    let pausedUntil=performance.now()+2500+laneIndex*900;
     let index=0;
     let moving=false;
     const cards=()=>Array.from(lane.querySelectorAll<HTMLElement>(".community-post-card"));
@@ -394,7 +394,7 @@ function DailyPostsApp({active}:{active:boolean}){
       moving=true;
       const target=index===0?0:all[index].offsetTop-all[0].offsetTop;
       const start=lane.scrollTop, distance=target-start;
-      const duration=900,begin=performance.now();
+      const duration=laneIndex===0?1250:1850,begin=performance.now();
       let raf=0;
       const step=(now:number)=>{
         if(performance.now()<pausedUntil||document.hidden){moving=false;return}
@@ -406,7 +406,7 @@ function DailyPostsApp({active}:{active:boolean}){
       raf=requestAnimationFrame(step);
       cleanups.push(()=>cancelAnimationFrame(raf));
     };
-    const timer=setInterval(advance,3000);
+    const timer=setInterval(advance,laneIndex===0?3300:4600);
     timers.push(timer);
   }
   return()=>{timers.forEach(clearInterval);cleanups.forEach(fn=>fn())};
