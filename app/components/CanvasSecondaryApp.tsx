@@ -237,7 +237,16 @@ function DailyPostsApp({active}:{active:boolean}){
   let frame=0,last=0,pausedUntil=performance.now()+1500;
   const pause=()=>{pausedUntil=performance.now()+3500};
   ["pointerdown","touchstart","wheel","keydown"].forEach(name=>rail.addEventListener(name,pause,{passive:true}));
-  const tick=(now:number)=>{if(last&&now<pausedUntil){last=now}else if(last){const max=rail.scrollHeight-rail.clientHeight;if(max>0){rail.scrollTop+=Math.min(2.2,(now-last)*.024);if(rail.scrollTop>=max-2){rail.scrollTop=0}}last=now}else last=now;frame=requestAnimationFrame(tick)};
+  let focusedId="";let focusStart=0;
+  const tick=(now:number)=>{
+   const cards=Array.from(rail.querySelectorAll<HTMLElement>(".community-post-card"));
+   const center=rail.getBoundingClientRect().top+rail.clientHeight*.48;
+   const closest=cards.reduce<HTMLElement|null>((best,card)=>!best||Math.abs(card.getBoundingClientRect().top+card.offsetHeight*.5-center)<Math.abs(best.getBoundingClientRect().top+best.offsetHeight*.5-center)?card:best,null);
+   const id=closest?.dataset.postId||"";
+   if(id!==focusedId){focusedId=id;focusStart=now;cards.forEach(card=>card.classList.toggle("ummah-spotlight",card===closest))}
+   if(last&&now>=pausedUntil&&now-focusStart>2200){const max=rail.scrollHeight-rail.clientHeight;if(max>0){rail.scrollTop+=Math.min(2.5,(now-last)*.045);if(rail.scrollTop>=max-2){rail.scrollTop=0;focusedId="";focusStart=now}}}
+   last=now;frame=requestAnimationFrame(tick)
+  };
   frame=requestAnimationFrame(tick);
   return()=>{cancelAnimationFrame(frame);["pointerdown","touchstart","wheel","keydown"].forEach(name=>rail.removeEventListener(name,pause))};
  },[active,selected,expandedImage,fypStart,viewerPost,posts.length]);
