@@ -68,9 +68,9 @@ export async function POST(request:Request){
  }
  if(media){
   const {data:post,error:postError}=await db.from("posts").insert({user_id:user.id,body:text||"Shared a video"}).select("id").single();
-  if(postError){await db.from("ummah_feed_posts").delete().eq("id",data.id).eq("author_id",user.id);return NextResponse.json({error:"Media post could not be created; your uploaded file remains saved.",code:postError.code},{status:503})}
+  if(postError){await db.from("ummah_feed_posts").delete().eq("id",data.id).eq("author_id",user.id);console.error("community-media-post-insert",{code:postError.code,message:postError.message,details:postError.details,hint:postError.hint});return NextResponse.json({error:postError.code==="23514"?"The post exceeds the media post text limit. Your uploaded file remains saved.":postError.code==="42501"?"Media publishing is blocked by database permissions. Your uploaded file remains saved.":"Media post could not be created; your uploaded file remains saved.",code:postError.code||"MEDIA_POST_INSERT_FAILED"},{status:postError.code==="23514"?422:503})}
   const {error:attachError}=await db.from("post_media").insert({post_id:post.id,community_post_id:data.id,user_id:user.id,storage_path:media.storage_path,file_name:String(media.file_name||"upload").slice(0,255),mime_type:media.mime_type});
-  if(attachError){await db.from("posts").delete().eq("id",post.id).eq("user_id",user.id);await db.from("ummah_feed_posts").delete().eq("id",data.id).eq("author_id",user.id);return NextResponse.json({error:"Media attachment could not be published; your upload remains saved.",code:attachError.code},{status:503})}
+  if(attachError){await db.from("posts").delete().eq("id",post.id).eq("user_id",user.id);await db.from("ummah_feed_posts").delete().eq("id",data.id).eq("author_id",user.id);console.error("community-media-attachment-insert",{code:attachError.code,message:attachError.message,details:attachError.details,hint:attachError.hint});return NextResponse.json({error:"Media attachment could not be published; your upload remains saved.",code:attachError.code||"MEDIA_ATTACHMENT_INSERT_FAILED"},{status:503})}
  }
  // The server awards XP only after the complete post (including media) is published.
  // RPC is idempotent by post ID and updates profiles.xp_total atomically.
