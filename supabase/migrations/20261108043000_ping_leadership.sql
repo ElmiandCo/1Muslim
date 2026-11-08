@@ -1,6 +1,6 @@
 -- Ping leadership is independent from the original invitation creator.
 alter table public.muslim_sync_sessions add column if not exists leader_id uuid references auth.users(id);
-update public.muslim_sync_sessions set leader_id=initiator_id where leader_id is null;
+update public.muslim_sync_sessions set leader_id=initiator_id where leader_id is null and status in ('pending','accepted');
 create table if not exists public.muslim_sync_lead_requests (
  id uuid primary key default gen_random_uuid(),
  session_id uuid not null references public.muslim_sync_sessions(id) on delete cascade,
