@@ -84,3 +84,34 @@ Compared the **historical Rome grand-arena lobby** against the unified target lo
 **Bot 2:** Start art/geometry comparisons using these five exact blob SHAs; do not recreate them blindly or treat them as high-end 3D meshes. **Bot 3:** Add missing-scene module tests and per-world portal/analog/projectile smoke tests after restoration. In particular, test Egypt ↔ Moses and Rome travel before approving gameplay readiness.
 
 **Verified progress:** Discovery/provenance is 100% for the seven world families already enumerated, with five exact missing module blobs now verified. Restoration, integration, navigation, gameplay and QA remain **0% verified** for Rome, Moses, Egypt, Jurassic, Future, Moon and other worlds in this target. Overall cross-world unification **0% end-to-end verified**; graphics and physics completion percentages **unverified**; gameplay-test readiness **not verified**. No production merge and no claims of passed gameplay tests.
+
+
+## Run 4 — isolated historical source restoration (2026-11-08 06:26 America/Chicago)
+
+Six exact historical source modules have been **copied into the unified game branch** from `game/living-worlds-rome-grand-arena-cats-20261027-2130`. This is **source restoration only**: no imports into the live lobby, no portal wiring, no successful compile or browser gameplay test, no production change.
+
+| Restored path under app/components | Historical blob SHA | Restoration commit |
+|---|---|---|
+| PartedSeaScene.ts | 5a3acba3d1680130e104e8eac4299e4847da8ef4 | 7b9a2ea23a5e2fff8e732af86098fc88d81d697d |
+| AncientEgyptRiverScene.ts | 6d3446fb31c4a76a691e8c46c1919521f396b43e | b7687f2b09ffd61adfc84b2b9306078bb9182c43 |
+| gameEgyptWorld.ts | 18108a13889a2fbb445d87d442478595b97730dd | a99e7710ed481cd64d09eacbc0d34bb051fd4bde |
+| LunarResearchScene.ts | de9938f1fdf05f529e4d9e76c6d9b131854ecad9 | 386b079425d4f2ec7c90ff9ec5f72404aca618b5 |
+| RomanArenaScene.ts | 429c82357cec1ec6dec3fa35aac4e502bc59905a | 4bab70a66a249247211328bdbf0246d29bb5cf67 |
+| RomanJudeaScene.ts | de71aa5740685f2a79b6be200c9bfbea0e2f3037 | db0fa12c03acc23d5d00000308e82216a7840713 |
+
+RomanJudeaScene depends on RomanArenaScene and gamePhysics; both paths now exist in target. gameEgyptWorld depends on AncientEgyptRiverScene and gamePhysics; both exist. Other historical modules are self-contained at import level. These checks are **import path checks**, not compile evidence.
+
+### Per-world conservative evidence matrix (percentage is of defined verification gates, NOT estimated feature quality)
+| World | Discovery | Source restoration | Runtime integration | Portal/navigation | Gameplay | QA |
+|---|---:|---:|---:|---:|---:|---:|
+| Rome / lions / cats | 100% | 100% scene files copied | 0% | 0% | 0% | 0% |
+| Moses / parted sea | 100% | 100% identified scene copied | 0% | 0% | 0% | 0% |
+| Egypt / Nile | 100% | 100% identified scene files copied | 0% | 0% | 0% | 0% |
+| Jurassic | 100% | unverified (existing target scene) | 0% verified | 0% | 0% | 0% |
+| Future | 100% | unverified (existing target scene) | 0% verified | 0% | 0% | 0% |
+| Moon | 100% | 100% identified historical scene copied | 0% | 0% | 0% | 0% |
+| Hajj / Nabawi / Madinah | 100% | 0% | 0% | 0% | 0% | 0% |
+
+**Overall verified end-to-end world unification 0%; graphics completion unverified; physics completion unverified; gameplay-test readiness 0% of cross-world smoke tests verified.** Do not confuse source restoration with playable completion.
+
+**Bot 2 handoff:** six modules above now exist on shared branch; preserve signatures and independently upgrade geometry/lighting/materials without replacing controls. **Bot 3 handoff:** verify TypeScript/build and physics compatibility of restored modules; then smoke-test Rome, Moses, Egypt, Moon, Jurassic, Future, including joystick, swipe camera, shots, portals and respawn. **Bot 1 next:** inspect original lobby invocation contracts; integrate scene calls and world-specific travel into current lobby in small changes, protect newer projectiles and controls. PRs #114/#119/#120/#128/#129/#771/#775 remain historical evidence; no new integration PR or production merge was made in this run.
