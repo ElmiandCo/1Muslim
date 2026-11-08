@@ -1,6 +1,7 @@
 "use client";
 import {Fragment,useEffect,useMemo,useRef,useState} from "react";
 import ElmiTimedCommentsLayer from "./ElmiTimedCommentsLayer";
+import {cleanPostBody} from "../lib/cleanPostBody";
 import {createPortal} from "react-dom";
 import Link from "next/link";
 import GameLabProfileHub from "./GameLabProfileHub";
@@ -146,7 +147,8 @@ const youtubePreview=(body:string)=>{const match=body.match(/(?:youtube\.com\/wa
 const postThemes=["emerald","gold","makkah","midnight","garden","purple"] as const;
 const backgroundForPost=(id:string)=>{let hash=2166136261;for(let i=0;i<id.length;i++)hash=Math.imul(hash^id.charCodeAt(i),16777619);return `/post-backgrounds/${postThemes[(hash>>>0)%postThemes.length]}.svg`};
 type UmmahComment={id:string;post_id:string;parent_id:string|null;name:string;avatar_url?:string|null;body:string;created_at:string;likes:number;liked:boolean};
-  const renderPostBody=(body:string)=>{
+  const renderPostBody=(rawBody:string)=>{
+   const body=cleanPostBody(rawBody);
    // The Add Verse selector inserts a reference, Arabic, and translation as separate paragraphs.
    // Highlight only the selected verse segment; preserve the author's own words separately.
    const match=/Qur[’']an\s+\d{1,3}:\d{1,3}/i.exec(body);
