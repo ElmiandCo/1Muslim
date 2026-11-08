@@ -67,10 +67,10 @@ export default function QiblaArticlePage() {
     return () => { active = false; };
   }, [articleId]);
 
-  const parsed = article?.section_one?.text ? unpack(article.section_one.text) : null;
+  const parsed = article?.section_two?.text ? unpack(article.section_two.text) : article?.section_one?.text ? unpack(article.section_one.text) : null;
   const media = parsed?.design.media.filter(m=>m.url.trim()) || [];
   const clean=(value:string)=>value.replace(/\\r\\n/g,"\n").replace(/\\n/g,"\n").replace(/\\t/g," ").replace(/\\\"/g,'"').replace(/\}\}\s*→\s*$/,"").trim();
-  const story=clean([parsed?.body||(!parsed?article?.section_one?.text||"":""),article?.section_two?.text||""].filter(Boolean).join("\n\n"));
+  const story=clean(parsed?.body||article?.section_two?.text||article?.section_one?.text||"");
   const blocks=story.split(/\n\s*\n/).map(t=>t.trim()).filter(Boolean).flatMap(t=>t.length>950&&!t.includes("\n")?(t.match(/.{1,750}(?:[.!?](?:\\s|$)|$)/g)||[t]):[t]);
   const leadImage=media.find(m=>m.type==="image")?.url||((article?.hero_media_path&&!article.hero_media_path.includes("youtu"))?article.hero_media_path:null);
   const otherMedia=media.filter(m=>m.url!==leadImage);
