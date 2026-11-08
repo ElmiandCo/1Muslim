@@ -172,3 +172,9 @@
   50%{transform:translate3d(0,-5px,0) rotate(.15deg);box-shadow:0 24px 27px -9px rgba(0,0,0,.55),0 38px 55px -20px rgba(0,0,0,.43)}
 }
 @media(prefers-reduced-motion:reduce){.stage[data-view="split"] .magPanel .splitPreviewArt{animation:none;will-change:auto}}
+
+/* Qibla publication entry: focused camera zoom before the full editorial view opens. */
+.stage[data-zoom=magazine] .entrance{transform:scale(1.16) translateX(8%);transform-origin:25% 48%;filter:brightness(1.09);transition:transform .39s cubic-bezier(.2,.8,.25,1),filter .39s ease}
+.stage[data-zoom=newsletter] .entrance{transform:scale(1.16) translateX(-8%);transform-origin:75% 48%;filter:brightness(1.09);transition:transform .39s cubic-bezier(.2,.8,.25,1),filter .39s ease}
+.stage[data-zoom]:not([data-zoom=none]) .entrance{pointer-events:none}
+@media(prefers-reduced-motion:reduce){.stage[data-zoom=magazine] .entrance,.stage[data-zoom=newsletter] .entrance{transform:none;filter:none;transition:none}}
