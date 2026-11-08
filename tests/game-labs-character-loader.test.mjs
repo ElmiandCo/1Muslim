@@ -24,3 +24,22 @@ test("unsafe manifest path is rejected before network request",async()=>{
  const result=await loadStoryModeCharacters({...manifests,male:{...manifests.male,glbUrl:"/../secrets.glb"}},{fetcher:async()=>{calls++;return reply(new ArrayBuffer(16),null)}});
  assert.equal(calls,1);assert.match(result.assets.male.errors.join(" "),/Invalid or missing/);
 });
+
+test("streamed body without Content-Length is cancelled at budget",async()=>{
+ let cancelled=0, reads=0;
+ const fetcher=async()=>({ok:true,status:200,headers:{get:()=>null},arrayBuffer:async()=>{throw Error("must stream")},body:new ReadableStream({
+  pull(controller){reads++;controller.enqueue(new Uint8Array(80));},
+  cancel(){cancelled++;}
+ })});
+ const result=await loadStoryModeCharacters(manifests,{fetcher,maxBytes:100});
+ assert.equal(result.status,"unavailable");
+ assert.equal(cancelled,2);
+ assert.equal(reads,4);
+ assert.match(result.assets.female.errors.join(" "),/budget/);
+});
+test("streamed empty GLB fails closed",async()=>{
+ const fetcher=async()=>({ok:true,status:200,headers:{get:()=>null},arrayBuffer:async()=>{throw Error("must stream")},body:new ReadableStream({start(controller){controller.close()}})});
+ const result=await loadStoryModeCharacters(manifests,{fetcher});
+ assert.equal(result.status,"unavailable");
+ assert.match(result.assets.male.errors.join(" "),/missing/);
+});
