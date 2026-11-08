@@ -11,26 +11,26 @@ const themes:Record<string,{base:string;accent:string;secondary:string;surface:s
  titanium:{base:"#111419",accent:"#b6c3d1",secondary:"#e1e7ef",surface:"#222932",edge:"#cbd5e1",tint:"rgba(5,8,14,.52)"},
  obsidian:{base:"#0b0b0c",accent:"#e2b75e",secondary:"#ffdb8b",surface:"#1c1914",edge:"#e6bc65",tint:"rgba(0,0,0,.62)"}
 };
-const fallback="obsidian";
+const fallback="none";
 function applyTheme(value:unknown,persist=true){
  const requested=typeof value==="string"?value:fallback;
  const wallpaper=aliases[requested]||requested;
  const colorFamily:Record<string,string>={"emerald-mosaic":"emerald","sapphire-mosaic":"sapphire","golden-geometry":"ruby","silver-eclipse":"titanium","amethyst-mirage":"amethyst","ruby-red":"ruby","ruby-gold":"ruby"};
  const theme=wallpaper==="none"?"obsidian":colorFamily[wallpaper]|| (themes[wallpaper]?wallpaper:fallback);
  const t=themes[theme];const root=document.documentElement;
- root.dataset.profileBackground=wallpaper;root.dataset.muslimTheme=theme;
- root.style.setProperty("--theme-base",t.base);root.style.setProperty("--theme-accent",t.accent);root.style.setProperty("--theme-secondary",t.secondary);root.style.setProperty("--theme-surface",t.surface);root.style.setProperty("--theme-edge",t.edge);
+ root.dataset.profileBackground=wallpaper;
+ 
  root.style.setProperty("--profile-scene-image",wallpaper==="none"?"none":`url("/assets/profile-backgrounds/${root.dataset.guestHome==="true"&&wallpaper==="sapphire"?"sapphire-home":({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[wallpaper]||wallpaper}.PNG")`);
- root.style.setProperty("--profile-scene-tint",t.tint);
+ root.style.setProperty("--profile-scene-tint",wallpaper==="none"?"transparent":t.tint);
  if(persist){try{localStorage.setItem("1muslim:profile-background",wallpaper)}catch{}}
 }
 export default function ProfileThemeSync(){
  const [recognizing,setRecognizing]=useState(true);
  const [visible,setVisible]=useState(true);
- const [preview,setPreview]=useState("obsidian");
+ const [preview,setPreview]=useState("none");
  useEffect(()=>{
   let active=true;let settled=false;
-  const palette=["obsidian"];
+  const palette=["none"];
   let index=0;
   const cycle=window.setInterval(()=>{if(!active||settled)return;index=(index+1)%palette.length;const next=palette[index];applyTheme(next,false);setPreview(next)},1250);
   applyTheme(palette[0],false);
@@ -42,7 +42,7 @@ export default function ProfileThemeSync(){
    try{
     const {data:{user}}=await db.auth.getUser();
     if(!active)return;
-    if(!user){document.documentElement.dataset.guestHome="true";settle("obsidian");return}
+    if(!user){document.documentElement.dataset.guestHome="true";settle("none");return}
     delete document.documentElement.dataset.guestHome;
     const {data}=await db.from("profiles").select("avatar_config").eq("id",user.id).maybeSingle();
     settle((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||initial);
@@ -55,7 +55,7 @@ export default function ProfileThemeSync(){
   return()=>{active=false;window.clearInterval(cycle);subscription.unsubscribe();window.removeEventListener("1muslim:profile-background-changed",onChange)};
  },[]);
  return <>
-  {recognizing&&<div className={visible?"themeRecognitionIntro":"themeRecognitionIntro themeRecognitionDone"} aria-hidden="true"><div className="themeRecognitionWallpaper" style={{backgroundImage:`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[preview]||preview}.PNG")`}}/><div className="themeRecognitionGlow"/><div className="themeRecognitionButtons"><i/><i/><i/><i/><i/><i/></div></div>}
+  {recognizing&&<div className={visible?"themeRecognitionIntro":"themeRecognitionIntro themeRecognitionDone"} aria-hidden="true"><div className="themeRecognitionWallpaper" style={{backgroundImage:preview==="none"?"none":`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[preview]||preview}.PNG")`}}/><div className="themeRecognitionGlow"/><div className="themeRecognitionButtons"><i/><i/><i/><i/><i/><i/></div></div>}
   <style>{`
    .themeRecognitionIntro{position:fixed;inset:0;z-index:15;pointer-events:none;overflow:hidden;opacity:.78;transition:opacity 1.4s ease;background:linear-gradient(125deg,rgba(9,74,61,.18),rgba(30,83,159,.2),rgba(104,42,129,.17),rgba(127,81,35,.16));background-size:400% 400%;animation:themeIntroShift 9s ease-in-out infinite}
    .themeRecognitionDone{opacity:0!important}\n   .themeRecognitionWallpaper{position:absolute;inset:0;opacity:.16;background-size:cover;background-position:center;filter:blur(9px);animation:themeIntroFloat 7s ease-in-out infinite alternate}\n   html:has(.themeRecognitionIntro) button{transition:background-color 1.1s ease,border-color 1.1s ease,color 1.1s ease,box-shadow 1.1s ease!important}\n   .themeRecognitionGlow{position:absolute;inset:-20%;background:radial-gradient(circle at 25% 35%,rgba(42,167,222,.16),transparent 55%),radial-gradient(circle at 80% 70%,rgba(209,115,215,.12),transparent 55%);animation:themeIntroFloat 7s ease-in-out infinite alternate}
