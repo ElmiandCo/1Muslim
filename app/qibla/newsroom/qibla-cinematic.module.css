@@ -155,3 +155,20 @@
 .stage[data-view="magazine"]>.newsletter{display:none!important}
 .stage[data-view="split"]{display:block;min-height:0!important}
 .stage[data-view="split"]>.entrance{display:flex;position:relative;inset:auto;height:auto;min-height:0!important}
+
+
+/* Magazine-only editorial imagery: quiet floating lift with synchronized shadow.
+   Text and page scrolling remain stationary; respect reduced motion. */
+.stage[data-view="split"] .magPanel .splitPreviewArt{
+  transform:translate3d(0,0,0);
+  box-shadow:0 16px 22px -9px rgba(0,0,0,.65),0 28px 44px -20px rgba(0,0,0,.52);
+  animation:qiblaMagFloat 9.5s ease-in-out infinite;
+  will-change:transform,box-shadow;
+}
+.stage[data-view="split"] .magPanel .splitPreview:nth-child(2n) .splitPreviewArt{animation-delay:-4.7s;animation-duration:11.3s}
+.stage[data-view="split"] .magPanel .splitPreview:nth-child(3n) .splitPreviewArt{animation-delay:-2.3s;animation-duration:10.7s}
+@keyframes qiblaMagFloat{
+  0%,100%{transform:translate3d(0,0,0) rotate(-.15deg);box-shadow:0 16px 22px -9px rgba(0,0,0,.65),0 28px 44px -20px rgba(0,0,0,.52)}
+  50%{transform:translate3d(0,-5px,0) rotate(.15deg);box-shadow:0 24px 27px -9px rgba(0,0,0,.55),0 38px 55px -20px rgba(0,0,0,.43)}
+}
+@media(prefers-reduced-motion:reduce){.stage[data-view="split"] .magPanel .splitPreviewArt{animation:none;will-change:auto}}
