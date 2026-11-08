@@ -70,7 +70,7 @@ const spaces=[
  {name:"1Muslim Shop",arabic:"المتجر",symbol:"✦",image:"",href:"#",cls:"quran"},
  {name:"Quick Post",arabic:"انشر الآن",symbol:"✎",image:"",href:"#",cls:"message"}
 ];
-export default function enterQiblaCinematic(){
+function enterQiblaCinematic(){
  if(typeof window==="undefined"||document.getElementById("qibla-home-zoom-overlay"))return;
  const source=document.querySelector('[aria-label="Qibla Magazine and Newsletter"]') as HTMLElement|null;
  const rect=source?.getBoundingClientRect();
@@ -81,7 +81,7 @@ export default function enterQiblaCinematic(){
  try{const ctx=new AudioContext();const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type="sine";osc.frequency.setValueAtTime(180,ctx.currentTime);osc.frequency.exponentialRampToValueAtTime(780,ctx.currentTime+.58);gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.055,ctx.currentTime+.09);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.65);osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.66);osc.onended=()=>void ctx.close()}catch{}
  window.setTimeout(()=>{window.location.assign("/qibla/newsroom")},740);
 }
-function Home(){
+export default function Home(){
  const [quickOpen,setQuickOpen]=useState(false);
  const [quickType,setQuickType]=useState<"post"|"live"|"message">("post");
  const [quickFormat,setQuickFormat]=useState<"text"|"image"|"video"|"camera"|"file">("text");

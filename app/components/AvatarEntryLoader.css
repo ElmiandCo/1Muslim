@@ -11,7 +11,7 @@
 .avatarEntryProgress{width:min(56vw,230px);height:3px;background:#c6a76a3b;overflow:hidden;border-radius:10px;margin-top:11px}
 .avatarEntryProgress i{display:block;width:35%;height:100%;background:linear-gradient(90deg,transparent,#ffe3a2,#d8ac53);box-shadow:0 0 13px #ffdb8b;animation:avatarEntrySweep 2.6s ease-in-out infinite}
 .avatarEntry--black .avatarEntryStage,.avatarEntry--black .avatarEntryBrand,.avatarEntry--black .avatarEntryCaption,.avatarEntry--black .avatarEntryProgress{opacity:0;transition:opacity .45s ease}
-.avatarEntry--reveal{opacity:0;transition:opacity 1.2s ease}
+.avatarEntry--reveal{opacity:0;pointer-events:none;transition:opacity .65s cubic-bezier(.22,1,.36,1)}
 @keyframes avatarEntryGoldPulse{50%{filter:drop-shadow(0 0 16px #f6c774aa);opacity:.78}}
 @keyframes avatarEntrySpark{to{offset-distance:100%}}
 @keyframes avatarEntrySweep{0%{transform:translateX(-110%)}100%{transform:translateX(330%)}}
@@ -21,5 +21,5 @@
 
 /* First second is intentionally pure black while authentication resolves. */
 .avatarEntry--waiting .avatarEntryStage,.avatarEntry--waiting .avatarEntryBrand,.avatarEntry--waiting .avatarEntryCaption,.avatarEntry--waiting .avatarEntryProgress,.avatarEntry--waiting .avatarEntrySignup{opacity:0}
-.avatarEntry--orbit .avatarEntryStage,.avatarEntry--orbit .avatarEntryBrand,.avatarEntry--orbit .avatarEntryCaption,.avatarEntry--orbit .avatarEntryProgress{animation:avatarEntrySoftAppear .8s ease both}
+.avatarEntry--orbit .avatarEntryStage,.avatarEntry--orbit .avatarEntryBrand,.avatarEntry--orbit .avatarEntryCaption,.avatarEntry--orbit .avatarEntryProgress{animation:avatarEntrySoftAppear .65s ease-out both}
 @keyframes avatarEntrySoftAppear{from{opacity:0;filter:blur(5px)}to{opacity:1;filter:blur(0)}}
