@@ -243,7 +243,7 @@ export default function Home(){
    const stage=document.querySelector<HTMLElement>(".profile-scroll-stage");
    if(stage){
     const sr=stage.getBoundingClientRect();
-    const top=Math.max(92,Math.min(Math.round(sr.top+8),window.innerHeight-260));
+    const top=window.innerWidth<=650?Math.min(176,Math.max(118,Math.round(window.innerHeight*.19))):Math.max(92,Math.min(Math.round(sr.top+8),window.innerHeight-260));
     // The profile stage can collapse to a shallow strip when its navigation changes.
     // Never derive the glass height from that stage: anchor the floor to the viewport.
     const bottom=Math.max(20,Math.round(window.innerHeight*.045));
