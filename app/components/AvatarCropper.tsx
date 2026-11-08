@@ -1,0 +1,17 @@
+"use client";
+import {useEffect,useRef,useState} from "react";
+export default function AvatarCropper({file,onConfirm,onCancel,busy}:{file:File;onConfirm:(blob:Blob)=>void;onCancel:()=>void;busy:boolean}){
+ const canvas=useRef<HTMLCanvasElement>(null),image=useRef<HTMLImageElement|null>(null),drag=useRef<{x:number;y:number;ox:number;oy:number}|null>(null);
+ const [zoom,setZoom]=useState(1),[offset,setOffset]=useState({x:0,y:0}),[ready,setReady]=useState(false);
+ useEffect(()=>{const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{image.current=img;setReady(true)};img.src=url;return()=>{URL.revokeObjectURL(url);image.current=null}},[file]);
+ useEffect(()=>{const ctx=canvas.current?.getContext("2d"),img=image.current;if(!ctx||!img)return;const size=320;ctx.clearRect(0,0,size,size);ctx.save();ctx.beginPath();ctx.arc(160,160,158,0,Math.PI*2);ctx.clip();const scale=Math.max(size/img.width,size/img.height)*zoom;const w=img.width*scale,h=img.height*scale;const maxX=Math.max(0,(w-size)/2),maxY=Math.max(0,(h-size)/2);const x=Math.max(-maxX,Math.min(maxX,offset.x)),y=Math.max(-maxY,Math.min(maxY,offset.y));ctx.drawImage(img,(size-w)/2+x,(size-h)/2+y,w,h);ctx.restore();ctx.strokeStyle="#e5cda0";ctx.lineWidth=3;ctx.beginPath();ctx.arc(160,160,158,0,Math.PI*2);ctx.stroke()},[ready,zoom,offset]);
+ const confirm=()=>{const img=image.current;if(!img)return;const output=document.createElement("canvas");output.width=512;output.height=512;const ctx=output.getContext("2d");if(!ctx)return;const scale=Math.max(320/img.width,320/img.height)*zoom;const w=img.width*scale,h=img.height*scale;const maxX=Math.max(0,(w-320)/2),maxY=Math.max(0,(h-320)/2);const x=Math.max(-maxX,Math.min(maxX,offset.x)),y=Math.max(-maxY,Math.min(maxY,offset.y));ctx.scale(512/320,512/320);ctx.drawImage(img,(320-w)/2+x,(320-h)/2+y,w,h);output.toBlob(blob=>{if(blob)onConfirm(blob)},"image/png")};
+ return <div style={{padding:14,border:"1px solid #d5b88588",borderRadius:16,background:"#141a23",display:"grid",justifyItems:"center",gap:12}}>
+ <strong>Position your avatar</strong><p style={{margin:0,fontSize:12,opacity:.8}}>Drag the image inside the circle, then zoom to fit.</p>
+ <canvas ref={canvas} width={320} height={320} aria-label="Circular avatar crop preview" style={{width:"min(100%,320px)",height:"auto",aspectRatio:"1",borderRadius:"50%",touchAction:"none",cursor:"grab",background:"#25313b"}}
+ onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);drag.current={x:e.clientX,y:e.clientY,ox:offset.x,oy:offset.y}}}
+ onPointerMove={e=>{if(!drag.current)return;const ratio=320/e.currentTarget.getBoundingClientRect().width;setOffset({x:drag.current.ox+(e.clientX-drag.current.x)*ratio,y:drag.current.oy+(e.clientY-drag.current.y)*ratio})}}
+ onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}}/>
+ <label style={{width:"100%",display:"grid",gap:6}}>Zoom: {zoom.toFixed(1)}×<input aria-label="Avatar zoom" type="range" min="1" max="3" step=".05" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
+ <div style={{display:"flex",gap:10}}><button type="button" disabled={busy||!ready} onClick={confirm}>Use this crop ✓</button><button type="button" disabled={busy} onClick={onCancel}>Cancel</button></div></div>
+}
