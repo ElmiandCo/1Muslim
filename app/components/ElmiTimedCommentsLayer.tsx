@@ -3,11 +3,12 @@ import {useEffect,useRef,useState} from "react";
 import {createPortal} from "react-dom";
 import {createClient} from "../../utils/supabase/client";
 
-type Comment={id:string;body:string;at_seconds:number};
+type Comment={id:string;body:string;at_seconds:number;user_id:string};
 type Floating=Comment&{born:number;until:number;lane:"screen"|"canvas";pinned:boolean;pausedUntil:number;popping?:boolean};
 type Bounds={x:number;y:number;w:number;h:number};
 export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}:{videoKey:string;seconds:number;playing:boolean;bounds:Bounds}){
  const [entries,setEntries]=useState<Comment[]>([]);
+ const [avatarUrls,setAvatarUrls]=useState<Record<string,string|null>>({});
  const [floating,setFloating]=useState<Floating[]>([]);
  const seen=useRef(new Set<string>());
  const previous=useRef(-1);
@@ -30,10 +31,11 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
    let live=true;seen.current.clear();previous.current=-1;setEntries([]);setFloating([]);
    if(!videoKey)return;
    const db=createClient();
-   const load=async()=>{const {data,error}=await db.from("featured_video_timed_comments").select("id,body,at_seconds").eq("video_key",videoKey).order("at_seconds",{ascending:true}).limit(500);if(live&&!error)setEntries((data||[]) as Comment[])};
+   const load=async()=>{const {data,error}=await db.from("featured_video_timed_comments").select("id,body,at_seconds,user_id").eq("video_key",videoKey).order("at_seconds",{ascending:true}).limit(500);if(live&&!error)setEntries((data||[]) as Comment[])};
    void load();const timer=window.setInterval(()=>void load(),15000);
    return()=>{live=false;window.clearInterval(timer)};
  },[videoKey]);
+ useEffect(()=>{let live=true;const ids=[...new Set(entries.map(c=>c.user_id))].filter(Boolean);if(!ids.length)return;void createClient().from("profiles").select("id,avatar_url").in("id",ids).then(({data})=>{if(live&&data)setAvatarUrls(Object.fromEntries(data.map(p=>[p.id,p.avatar_url||null])))});return()=>{live=false}},[entries]);
  useEffect(()=>{
    if(!playing||!videoKey)return;
    if(previous.current>=0&&(seconds<previous.current-2||seconds>previous.current+4)){seen.current.clear();setFloating([])}
@@ -87,7 +89,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
        className={"elmi-timed-comment"+(canvasStart?" is-handoff":" is-screen")+(comment.pinned?" is-pinned":"")+(comment.popping?" is-popping":"")}
        style={{left:startX,top:startY,"--elmi-travel":-distance+"px",animationPlayState:paused?"paused":"running",animationDelay:(i%3)*160+"ms"} as React.CSSProperties}
        aria-label="Floating video comment">
-       <span className="elmi-timed-time">{Math.floor(comment.at_seconds/60)}:{String(comment.at_seconds%60).padStart(2,"0")}</span><span>{comment.body}</span>
+       <span className="elmi-timed-comment-head"><span className="elmi-timed-comment-avatar">{avatarUrls[comment.user_id]?<img src={avatarUrls[comment.user_id]!} alt="" loading="lazy" referrerPolicy="no-referrer"/>:<span aria-hidden="true">●</span>}</span><span className="elmi-timed-time">{Math.floor(comment.at_seconds/60)}:{String(comment.at_seconds%60).padStart(2,"0")}</span></span><span>{comment.body}</span>
      </button>
    })}
    <style>{`
@@ -97,6 +99,7 @@ export default function ElmiTimedCommentsLayer({videoKey,seconds,playing,bounds}
     .elmi-timed-comment.is-popping{animation:elmi-comment-pop .24s ease-out forwards!important;pointer-events:none}
     @keyframes elmi-comment-pop{0%{opacity:1;scale:1}55%{opacity:.95;scale:1.24}100%{opacity:0;scale:.25}}
     .elmi-timed-comment.is-pinned{border-color:color-mix(in srgb,var(--theme-primary,#a6dce0) 65%,transparent)}
+    .elmi-timed-comment-head{display:flex;align-items:center;gap:6px}.elmi-timed-comment-avatar{width:23px;height:23px;flex:none;border-radius:50%;background:rgba(18,18,20,.65);border:1px solid rgba(255,255,255,.4);display:grid;place-items:center;overflow:hidden}.elmi-timed-comment-avatar img{width:100%;height:100%;object-fit:cover}.elmi-timed-comment-avatar span{font-size:11px;opacity:.7}
     .elmi-timed-time{font-size:10px;font-weight:700;opacity:.85}
     @keyframes elmi-layer-handoff{
       0%{opacity:0;transform:translate3d(0,25px,0) scale(.88) rotate(-.8deg)}
