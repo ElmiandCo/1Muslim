@@ -23,6 +23,13 @@ export default function HudHudChatLauncher(){
  const landingOrb=pathname==="/"||["/community","/profile","/streaming","/videos","/messages"].includes(pathname);
  const [orbSlot,setOrbSlot]=useState<"bottom"|"top">("bottom");
  const [profileDock,setProfileDock]=useState<{top:number;left:number;width:number}|null>(null);
+ const [orbInMotion,setOrbInMotion]=useState(false);
+ const [magneticSignal,setMagneticSignal]=useState<{x:number;y:number;id:number}|null>(null);
+ const signalSeq=useRef(0);
+ const orbButtonRef=useRef<HTMLButtonElement|null>(null);
+ const orbFrame=useRef<number|null>(null);
+ const orbCoords=useRef<{x:number;y:number}|null>(null);
+ const velocity=useRef({x:0,y:0});
  // Profile always uses the regular-sized HudHud in its left safe pocket.
  useEffect(()=>{
   if(pathname!=="/profile")return;
@@ -32,13 +39,6 @@ export default function HudHudChatLauncher(){
   setPosition(target);
   orbCoords.current=target;
  },[pathname]);
- const [orbInMotion,setOrbInMotion]=useState(false);
- const [magneticSignal,setMagneticSignal]=useState<{x:number;y:number;id:number}|null>(null);
- const signalSeq=useRef(0);
- const orbButtonRef=useRef<HTMLButtonElement|null>(null);
- const orbFrame=useRef<number|null>(null);
- const orbCoords=useRef<{x:number;y:number}|null>(null);
- const velocity=useRef({x:0,y:0});
  const lastPointer=useRef<{x:number;y:number;t:number}|null>(null);
  const cancelOrbMotion=()=>{if(orbFrame.current!==null){cancelAnimationFrame(orbFrame.current);orbFrame.current=null}setMagneticSignal(null)};
  const throwCount=useRef(0);
@@ -52,7 +52,7 @@ export default function HudHudChatLauncher(){
  const slotPosition=(slot:"bottom"|"top")=>slot==="bottom"?{x:Math.round((window.innerWidth-54)/2),y:Math.round(window.innerHeight-(window.matchMedia("(max-width: 800px)").matches?116:96))}:{x:window.matchMedia("(max-width: 800px)").matches?14:24,y:window.matchMedia("(max-width: 800px)").matches?18:22};
  const switchOrbSlot=(requested?:"bottom"|"top")=>{const next=requested??(orbSlot==="bottom"?"top":"bottom");setOrbSlot(next);animateOrb(slotPosition(next));setQuickOpen(false);try{localStorage.setItem("1muslim-hudhud-orb-slot",next)}catch{}};
  useEffect(()=>{if(!landingOrb)return;const sync=(event:Event)=>{const detail=(event as CustomEvent<{collapsed?:boolean}>).detail;if(typeof detail?.collapsed==="boolean")switchOrbSlot(detail.collapsed?"top":"bottom")};window.addEventListener("1muslim:hudhud-nav-state",sync);return()=>window.removeEventListener("1muslim:hudhud-nav-state",sync)},[landingOrb,orbSlot]);
- useEffect(()=>{const onDock=(event:Event)=>{const d=(event as CustomEvent<{active:boolean;top:number;left:number;width:number}>).detail;if(!d?.active){setProfileDock(null);return}if(pathname==="/profile")return;setProfileDock({top:d.top,left:d.left,width:d.width});setDismissed(false);try{sessionStorage.removeItem("1muslim-hudhud-offscreen")}catch{}const target={x:Math.round(d.left+d.width/2-54),y:Math.round(d.top+10)};requestAnimationFrame(()=>animateOrb(target))};window.addEventListener("1muslim:profile-hudhud-dock",onDock);return()=>window.removeEventListener("1muslim:profile-hudhud-dock",onDock)},[pathname,profileSettled]);
+ useEffect(()=>{const onDock=(event:Event)=>{const d=(event as CustomEvent<{active:boolean;top:number;left:number;width:number}>).detail;if(!d?.active){setProfileDock(null);return}if(pathname==="/profile")return;setProfileDock({top:d.top,left:d.left,width:d.width});setDismissed(false);try{sessionStorage.removeItem("1muslim-hudhud-offscreen")}catch{}const target={x:Math.round(d.left+d.width/2-54),y:Math.round(d.top+10)};requestAnimationFrame(()=>animateOrb(target))};window.addEventListener("1muslim:profile-hudhud-dock",onDock);return()=>window.removeEventListener("1muslim:profile-hudhud-dock",onDock)},[pathname]);
  const [lightEnabled,setLightEnabled]=useState(true);
  const [tourStep,setTourStep]=useState(-1);
  const holdTimer=useRef<ReturnType<typeof setTimeout>|null>(null),held=useRef(false),movedOnce=useRef(false);
