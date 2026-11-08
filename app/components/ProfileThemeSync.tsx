@@ -11,26 +11,26 @@ const themes:Record<string,{base:string;accent:string;secondary:string;surface:s
  titanium:{base:"#111419",accent:"#b6c3d1",secondary:"#e1e7ef",surface:"#222932",edge:"#cbd5e1",tint:"rgba(5,8,14,.52)"},
  obsidian:{base:"#0b0b0c",accent:"#e2b75e",secondary:"#ffdb8b",surface:"#1c1914",edge:"#e6bc65",tint:"rgba(0,0,0,.62)"}
 };
-const fallback="emerald";
+const fallback="obsidian";
 function applyTheme(value:unknown,persist=true){
  const requested=typeof value==="string"?value:fallback;
  const wallpaper=aliases[requested]||requested;
  const colorFamily:Record<string,string>={"emerald-mosaic":"emerald","sapphire-mosaic":"sapphire","golden-geometry":"ruby","silver-eclipse":"titanium","amethyst-mirage":"amethyst","ruby-red":"ruby","ruby-gold":"ruby"};
- const theme=colorFamily[wallpaper]|| (themes[wallpaper]?wallpaper:fallback);
+ const theme=wallpaper==="none"?"obsidian":colorFamily[wallpaper]|| (themes[wallpaper]?wallpaper:fallback);
  const t=themes[theme];const root=document.documentElement;
  root.dataset.profileBackground=wallpaper;root.dataset.muslimTheme=theme;
  root.style.setProperty("--theme-base",t.base);root.style.setProperty("--theme-accent",t.accent);root.style.setProperty("--theme-secondary",t.secondary);root.style.setProperty("--theme-surface",t.surface);root.style.setProperty("--theme-edge",t.edge);
- root.style.setProperty("--profile-scene-image",`url("/assets/profile-backgrounds/${root.dataset.guestHome==="true"&&wallpaper==="sapphire"?"sapphire-home":({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[wallpaper]||wallpaper}.PNG")`);
+ root.style.setProperty("--profile-scene-image",wallpaper==="none"?"none":`url("/assets/profile-backgrounds/${root.dataset.guestHome==="true"&&wallpaper==="sapphire"?"sapphire-home":({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[wallpaper]||wallpaper}.PNG")`);
  root.style.setProperty("--profile-scene-tint",t.tint);
  if(persist){try{localStorage.setItem("1muslim:profile-background",wallpaper)}catch{}}
 }
 export default function ProfileThemeSync(){
  const [recognizing,setRecognizing]=useState(true);
  const [visible,setVisible]=useState(true);
- const [preview,setPreview]=useState("emerald");
+ const [preview,setPreview]=useState("obsidian");
  useEffect(()=>{
   let active=true;let settled=false;
-  const palette=["emerald","sapphire","ruby","amethyst","titanium","obsidian"];
+  const palette=["obsidian"];
   let index=0;
   const cycle=window.setInterval(()=>{if(!active||settled)return;index=(index+1)%palette.length;const next=palette[index];applyTheme(next,false);setPreview(next)},1250);
   applyTheme(palette[0],false);
@@ -42,7 +42,7 @@ export default function ProfileThemeSync(){
    try{
     const {data:{user}}=await db.auth.getUser();
     if(!active)return;
-    if(!user){document.documentElement.dataset.guestHome="true";settle("sapphire");return}
+    if(!user){document.documentElement.dataset.guestHome="true";settle("obsidian");return}
     delete document.documentElement.dataset.guestHome;
     const {data}=await db.from("profiles").select("avatar_config").eq("id",user.id).maybeSingle();
     settle((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||initial);
