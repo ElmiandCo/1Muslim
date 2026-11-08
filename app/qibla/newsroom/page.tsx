@@ -15,6 +15,7 @@ export default function QiblaNewsroom(){
  const [query,setQuery]=useState("");
  const [contributor,setContributor]=useState(false);
  const [newsletterExpanded,setNewsletterExpanded]=useState(false);
+ useEffect(()=>{const back=()=>setView("split");window.addEventListener("1muslim:qibla-back",back);return()=>window.removeEventListener("1muslim:qibla-back",back)},[]);
  useEffect(()=>{let alive=true;const db=createClient();(async()=>{const {data:{user}}=await db.auth.getUser();if(!user)return;const [staff,superAdmin,legacyAdmin]=await Promise.all([db.from("qibla_staff").select("role").eq("user_id",user.id).maybeSingle(),db.rpc("qibla_is_superadmin"),db.rpc("qibla_is_admin")]);if(alive)setContributor(Boolean(staff.data?.role||superAdmin.data===true||legacyAdmin.data===true))})();return()=>{alive=false}},[]);
  useEffect(()=>{let active=true;const db=createClient();(async()=>{
   const [legacy,editorial]=await Promise.all([
@@ -36,7 +37,7 @@ export default function QiblaNewsroom(){
  return <main className={styles.root}>
   <header className={styles.topbar} aria-label="1Qibla navigation">
    <span className={styles.hudhudSpace} aria-hidden="true"/>
-   <button className={styles.masthead} onClick={()=>setView("split")} aria-label="Return to both publications">1MUSLIM <em>QIBLA</em></button>
+   <button className={styles.masthead} onClick={()=>setView("split")} aria-label="Return to both publications" aria-pressed={view==="split"}>1MUSLIM <em>QIBLA</em></button>
    <nav className={styles.topnav} aria-label="Publications">
     <button aria-pressed={view==="magazine"} onClick={()=>setView("magazine")}>Magazine</button>
     <button aria-pressed={view==="newsletter"} onClick={()=>setView("newsletter")}>Newsletter</button>
