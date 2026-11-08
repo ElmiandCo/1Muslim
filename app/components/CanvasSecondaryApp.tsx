@@ -191,7 +191,6 @@ function DailyPostsApp({active}:{active:boolean}){
  const [likeCounts,setLikeCounts]=useState<Record<string,number>>({});
  const [commentCounts,setCommentCounts]=useState<Record<string,number>>({});
  const [viewerCommentPreview,setViewerCommentPreview]=useState<UmmahComment[]>([]);
- useEffect(()=>{if(!viewerPost){setViewerCommentPreview([]);return}let live=true;fetch("/api/ummah-comments?postId="+encodeURIComponent(viewerPost),{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(d=>{if(live)setViewerCommentPreview((d.comments||[]).filter((c:UmmahComment)=>!c.parent_id).slice(-4))}).catch(()=>{if(live)setViewerCommentPreview([])});return()=>{live=false}},[viewerPost]);
  const [layoutSeed]=useState(0);
   const refreshThread=async(id:string)=>{const r=await fetch("/api/ummah-comments?postId="+encodeURIComponent(id),{cache:"no-store"});if(!r.ok)throw Error("Comments unavailable");const d=await r.json();setComments(d.comments||[])};
   const likeComment=async(id:string)=>{try{const r=await fetch("/api/ummah-comment-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({commentId:id})});if(!r.ok)throw Error("Sign in to like comments");if(selected)await refreshThread(selected)}catch(e){setNotice(e instanceof Error?e.message:"Unable to like comment")}};
@@ -231,6 +230,7 @@ function DailyPostsApp({active}:{active:boolean}){
  const fypReelRef=useRef<HTMLDivElement|null>(null);
  const fypVideoRefs=useRef(new Map<string,HTMLVideoElement>());
  const [viewerPost,setViewerPost]=useState<string|null>(null);
+ useEffect(()=>{if(!viewerPost){setViewerCommentPreview([]);return}let live=true;fetch("/api/ummah-comments?postId="+encodeURIComponent(viewerPost),{cache:"no-store"}).then(r=>r.ok?r.json():Promise.reject()).then(d=>{if(live)setViewerCommentPreview((d.comments||[]).filter((c:UmmahComment)=>!c.parent_id).slice(-4))}).catch(()=>{if(live)setViewerCommentPreview([])});return()=>{live=false}},[viewerPost]);
  const [viewerActionsVisible,setViewerActionsVisible]=useState(true);
  const viewerVideoRef=useRef<HTMLVideoElement|null>(null);
  const videoStartAt=useRef(0);
