@@ -6,8 +6,9 @@ import {videoRegistry,isKidsVideo} from "./videoRegistry";
 export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"phone"}){
  const [expanded,setExpanded]=useState(true);
  const [canExpand,setCanExpand]=useState(false);
+ const firstOpen=useRef(true);
  const [exploreStage,setExploreStage]=useState<HTMLElement|null>(null);
- useEffect(()=>{if(expanded){setCanExpand(false);const timer=window.setTimeout(()=>setExpanded(false),1000);return()=>clearTimeout(timer)}const timer=window.setTimeout(()=>setCanExpand(true),30000);return()=>clearTimeout(timer)},[expanded]);
+ useEffect(()=>{if(expanded){setCanExpand(false);if(!firstOpen.current)return;firstOpen.current=false;const timer=window.setTimeout(()=>setExpanded(false),1000);return()=>clearTimeout(timer)}const timer=window.setTimeout(()=>setCanExpand(true),30000);return()=>clearTimeout(timer)},[expanded]);
  const [stageNode,setStageNode]=useState<HTMLElement|null>(null);
  useEffect(()=>{if(!stageNode)return;stageNode.classList.toggle("home-carousel-collapsed",!expanded);return()=>stageNode.classList.remove("home-carousel-collapsed")},[stageNode,expanded]);
 
