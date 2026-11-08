@@ -29,7 +29,7 @@ export default function ProfilePersonalVideos(){
  @keyframes p2Float{50%{transform:translateY(-4px)}}@keyframes p2Wiggle{from{transform:rotate(-.7deg)}to{transform:rotate(.7deg)}}@keyframes p2Swivel{from{opacity:0;transform:perspective(800px) rotateY(-65deg) scale(.85)}to{opacity:1;transform:perspective(800px) rotateY(0) scale(1)}}@keyframes p2Fly{to{opacity:0;transform:translate3d(120vw,-90px,0) rotate(24deg) scale(.65)}}@keyframes p2ModalIn{from{opacity:0}to{opacity:1}}
  @media(min-width:780px){.p2VideoGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(prefers-reduced-motion:reduce){.p2VideoCard,.p2VideoGrid.isEditing .p2VideoCard,.p2VideoCard.isLeaving,.p2Modal{animation:none}}
  `}</style>
- <div className="p2VideoHead"><h3>Videos</h3><button type="button" aria-label={editMode?"Finish editing videos":"Edit videos"} aria-pressed={editMode} onClick={()=>{setEditMode(v=>!v);sound()}}>{editMode?"✓":"✎"}</button></div>
+ <div className="p2VideoHead"><h3>MY CLIPS</h3><button type="button" aria-label={editMode?"Finish editing videos":"Edit videos"} aria-pressed={editMode} onClick={()=>{setEditMode(v=>!v);sound()}}>{editMode?"✓":"✎"}</button></div>
  {notice&&<p role="status">{notice}</p>}
  {loading?<p className="p2VideoEmpty">Loading your videos…</p>:!sorted.length?<p className="p2VideoEmpty">Your uploaded videos will appear here.</p>:<div className={`p2VideoGrid ${editMode?"isEditing":""}`}>{sorted.map(clip=><article key={clip.id} className={`p2VideoCard ${leaving===clip.id?"isLeaving":""}`}>
  {editMode&&<button type="button" className="p2VideoDelete" aria-label="Delete video" onClick={()=>{setDeleting(clip.id);sound()}}>×</button>}
