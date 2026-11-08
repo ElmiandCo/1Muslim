@@ -2,7 +2,7 @@
 
 import {useCallback,useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
-import {stepProjectile} from "./gamePhysics";
+import {stepProjectile,hitSweptSphere} from "./gamePhysics";
 import LiveHomePreview from "./LiveHomePreview";
 import styles from "./SharedGameLobby.module.css";
 import {drawJurassic,updateJurassicDinos,jurassicBlocked,jurassicTerrain,JURASSIC_LIMIT,hitJurassicApex} from "./JurassicScene";
@@ -214,7 +214,7 @@ export default function SharedGameLobby(){
    if(meetingSeatRef.current!==null){const a=meetingSeatRef.current*Math.PI/6;p.x=-125+Math.cos(a)*15;p.z=-120+Math.sin(a)*15;p.y=45;p.yaw=a+Math.PI;p.flying=false;p.boost=false;}
    const damage=(kind:"animal"|"blaster")=>{if(meetingSeatRef.current!==null)return;recentDamage.current=recentDamage.current.filter(hit=>now-hit.at<=10000);recentDamage.current.push({kind,at:now});if(recentDamage.current.filter(hit=>hit.kind===kind).length>=3){recentDamage.current=[];p.x=0;p.z=0;p.y=terrain(0,0)+1;p.flying=false;p.boost=false;setDowned(false);knockdownUntil.current=now+2000;setHint(kind==="animal"?"🐾 Three animal attacks — respawned!":"💥 Three blaster hits — respawned!");}else setHint(`${kind==="animal"?"🐾 Animal attack":"💥 Blaster hit"} — ${recentDamage.current.filter(hit=>hit.kind===kind).length}/3 strikes in 10 seconds`);};
    for(const [id,until] of damagedStructures.current)if(Date.now()>=until)damagedStructures.current.delete(id);for(const [id,damage] of structureHits.current)if(Date.now()>=damage.until)structureHits.current.delete(id);
-   for(const shot of projectiles.current){stepProjectile(shot,dt);if(shot.owner!==p.id&&now>knockdownUntil.current&&Math.hypot(shot.x-p.x,shot.z-p.z)<1.3&&Math.abs(shot.y-(p.y+1.4))<2.2){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shield&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldLevel>=2||shot.power<2);if(!guarded){damage("blaster");}else setHint("🛡️ Shield absorbed the shot.");}}
+   for(const shot of projectiles.current){const previous={x:shot.x,y:shot.y,z:shot.z};stepProjectile(shot,dt);if(shot.owner!==p.id&&now>knockdownUntil.current&&hitSweptSphere(previous,shot,{x:p.x,y:p.y+1.4,z:p.z},2.2)){shot.life=0;const incomingYaw=Math.atan2(-shot.vx,-shot.vz);const facingDifference=Math.atan2(Math.sin(incomingYaw-p.yaw),Math.cos(incomingYaw-p.yaw));const guarded=shield&&Math.abs(facingDifference)<=Math.PI*.3&&(shieldLevel>=2||shot.power<2);if(!guarded){damage("blaster");}else setHint("🛡️ Shield absorbed the shot.");}}
    projectiles.current=projectiles.current.filter(s=>s.life>0);
    // Deterministic dangerous wildlife, shared by all clients without per-frame networking.
    if(!jurassicWorldRef.current&&!futureWorldRef.current&&!propheticWorldRef.current&&!moonModeRef.current.landed&&!ship.current.active&&meetingSeatRef.current===null&&p.y<terrain(p.x,p.z)+3){for(let i=0;i<30;i++){const ax=Math.sin(i*83.17)*650,az=Math.cos(i*41.83)*650;if(Math.hypot(p.x-ax,p.z-az)>2.8||now-(animalContact.current.get(i)??0)<1200)continue;animalContact.current.set(i,now);damage("animal");break;}}
