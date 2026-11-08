@@ -26,7 +26,9 @@ export default function QiblaArticlePage() {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [superAdmin,setSuperAdmin]=useState(false);
 
+  useEffect(()=>{let mounted=true;const db=createClient();const check=async()=>{const {data:{user}}=await db.auth.getUser();if(!user){if(mounted)setSuperAdmin(false);return}const {data}=await db.rpc("qibla_is_superadmin");if(mounted)setSuperAdmin(data===true)};void check();const {data:{subscription}}=db.auth.onAuthStateChange(()=>void check());return()=>{mounted=false;subscription.unsubscribe()}},[]);
   useEffect(() => {
     let active = true;
     if (!articleId) {
@@ -79,6 +81,7 @@ export default function QiblaArticlePage() {
   return <main className={styles.root}>
     <div className={styles.shell}>
       <nav className={styles.nav} aria-label="Article navigation"><Link href="/qibla/newsroom">← 1Qibla</Link><span>THE QIBLA EDITORIAL HOUSE</span><Link href="/">1Muslim Home</Link></nav>
+      {superAdmin&&article&&<Link className={styles.editShortcut} href={"/qibla/command?editPage="+encodeURIComponent(article.id)} aria-label="Edit this live publication">✎ Edit live</Link>}
       {loading?<p className={styles.message}>Loading article…</p>:error?<p className={styles.message}>{error}</p>:article?<article className={styles.article}>
         <header className={styles.header}><div className={styles.masthead}>1QIBLA <span>·</span> {article.kind==="newsletter"?"THE NEWSLETTER":"THE MAGAZINE"}</div><p className={styles.kicker}>{article.kind==="newsletter"?"NEWS DESK · FEATURE REPORT":"FEATURE STORY · CULTURE & COMMUNITY"}</p><h1>{article.title}</h1>{article.subtitle&&<p className={styles.subtitle}>{clean(article.subtitle)}</p>}<div className={styles.byline}><span>1Qibla Editorial</span><time dateTime={article.created_at}>{new Date(article.created_at).toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"})}</time></div></header>
         {leadImage&&<figure className={styles.heroFigure}><img src={leadImage} alt={media.find(m=>m.url===leadImage)?.caption||article.title} loading="eager"/>{media.find(m=>m.url===leadImage)?.caption&&<figcaption>{media.find(m=>m.url===leadImage)?.caption}</figcaption>}</figure>}
