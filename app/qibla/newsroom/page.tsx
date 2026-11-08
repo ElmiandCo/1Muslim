@@ -47,11 +47,15 @@ export default function QiblaNewsroom(){
    <div className={styles.entrance} aria-hidden={view!=="split"}>
     <button className={styles.magPanel} onClick={()=>setView("magazine")} tabIndex={view==="split"?0:-1}>
      <span className={styles.panelOverline}>FAITH. IDEAS. THE NEXT GENERATION.</span><span className={styles.panelTitle}>The<br/>Magazine</span>
-     <span className={styles.panelDesc}>Youth · Faith · Identity · Debate · Culture</span><span className={styles.panelArrow}>Explore the magazine ↗</span>
+     <span className={styles.panelDesc}>Youth · Faith · Identity · Debate · Culture</span>
+     <span className={styles.splitPreviews}>{stories.length?stories.slice(0,2).map(story=><span className={styles.splitPreview} key={story.id}><span className={styles.splitPreviewArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>Q</span>}</span><span className={styles.splitPreviewCopy}><strong>{story.title}</strong><small>{story.description.slice(0,85)}</small></span></span>):<><span className={styles.splitPreview}><span className={styles.splitPreviewArt}><span>Q</span></span><span className={styles.splitPreviewCopy}><strong>Stories coming soon</strong><small>Faith, identity and ideas from a new generation.</small></span></span><span className={styles.splitPreviewPlaceholder}>YOUR NEXT FEATURE WILL APPEAR HERE</span></>}</span>
+     <span className={styles.panelArrow}>Explore the magazine ↗</span>
     </button>
     <button className={styles.newsPanel} onClick={()=>setView("newsletter")} tabIndex={view==="split"?0:-1}>
      <span className={styles.panelOverline}>INDEPENDENT REPORTING. GLOBAL PERSPECTIVE.</span><span className={styles.panelTitle}>The<br/>Newsletter</span>
-     <span className={styles.panelDesc}>World news · Community · Current affairs</span><span className={styles.panelArrow}>Read the latest ↗</span>
+     <span className={styles.panelDesc}>World news · Community · Current affairs</span>
+     <span className={styles.splitPreviews}>{stories.length?stories.slice(2,4).concat(stories.length<3?stories.slice(0,1):[]).map(story=><span className={styles.splitPreview} key={story.id}><span className={styles.splitPreviewArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>Q</span>}</span><span className={styles.splitPreviewCopy}><strong>{story.title}</strong><small>{story.description.slice(0,85)}</small></span></span>):<><span className={styles.splitPreview}><span className={styles.splitPreviewArt}><span>Q</span></span><span className={styles.splitPreviewCopy}><strong>Reporting coming soon</strong><small>World news, community and current affairs.</small></span></span><span className={styles.splitPreviewPlaceholder}>THE NEXT REPORT WILL APPEAR HERE</span></>}</span>
+     <span className={styles.panelArrow}>Read the latest ↗</span>
     </button>
     <div className={styles.centerLine} aria-hidden="true"/>
    </div>
