@@ -30,11 +30,12 @@ export default function ImmersiveVideoEntry(){
  const [feed,setFeed]=useState<Clip[]>([]);
  const [open,setOpen]=useState(false),[clips,setClips]=useState<Clip[]>([]),[index,setIndex]=useState(0),[muted,setMuted]=useState(false);
  const warmPlayers=useRef<HTMLVideoElement[]>([]);
+ const introPrewarmRequested=useRef(false);
  // Prioritize the next three clips; reuse the browser media cache and release distant buffers.
  useEffect(()=>{if(!feed.length)return;const upcoming=feed.slice(index+1,index+4).filter(c=>!c.liveRoom&&c.kind!=="image"&&c.kind!=="text"&&(c.src.startsWith("http://")||c.src.startsWith("https://")||c.src.startsWith("/")));const players=warmPlayers.current;upcoming.forEach((clip,i)=>{let player=players[i];if(!player){player=document.createElement("video");player.muted=true;player.playsInline=true;player.preload="auto";players[i]=player}if(player.src!==new URL(clip.src,location.href).href){player.src=clip.src;player.load()}});for(let i=upcoming.length;i<players.length;i++){players[i].removeAttribute("src");players[i].load()}},[feed,index]);
  useEffect(()=>()=>{warmPlayers.current.forEach(v=>{v.pause();v.removeAttribute("src");v.load()});warmPlayers.current=[]},[]);
  // Prepare the first hosted clip while the avatar intro is still visible.
- useEffect(()=>{const prepare=()=>{const first=feed.find(c=>!c.liveRoom&&c.kind!=="image"&&c.kind!=="text"&&!!c.src);if(!first)return;let player=warmPlayers.current[3];if(!player){player=document.createElement("video");player.muted=true;player.playsInline=true;player.preload="auto";warmPlayers.current[3]=player}const absolute=new URL(first.src,location.href).href;if(player.src!==absolute){player.src=first.src;player.load()}};window.addEventListener("1muslim:prepare-for-you",prepare);return()=>window.removeEventListener("1muslim:prepare-for-you",prepare)},[feed]);
+ useEffect(()=>{const prepare=()=>{introPrewarmRequested.current=true;const first=feed.find(c=>!c.liveRoom&&c.kind!=="image"&&c.kind!=="text"&&!!c.src);if(!first)return;let player=warmPlayers.current[3];if(!player){player=document.createElement("video");player.muted=true;player.playsInline=true;player.preload="auto";warmPlayers.current[3]=player}const absolute=new URL(first.src,location.href).href;if(player.src!==absolute){player.src=first.src;player.load()}};window.addEventListener("1muslim:prepare-for-you",prepare);if(introPrewarmRequested.current)prepare();return()=>window.removeEventListener("1muslim:prepare-for-you",prepare)},[feed]);
 
 
 
