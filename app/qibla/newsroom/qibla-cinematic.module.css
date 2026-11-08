@@ -136,3 +136,12 @@
 /* Publication-specific image transparency: Magazine 30%, Newsletter 100%. */
 .entrance .magPanel .splitPreviewArt::before{opacity:.3}
 .entrance .newsPanel .splitPreviewArt::before{opacity:1}
+
+
+/* Keep the editorial footer directly beneath the last preview card on mobile.
+   Previous viewport min-heights stretched the cream stage into a blank band. */
+.stage[data-view="split"]{flex:0 0 auto;min-height:0;height:auto}
+.stage[data-view="split"] .entrance{min-height:0;height:auto;position:relative;inset:auto}
+.stage[data-view="split"] .magPanel,.stage[data-view="split"] .newsPanel{min-height:0}
+.root:has(.stage[data-view="split"]) .footer{margin-top:0}
+@media(max-width:800px){.stage[data-view="split"]{min-height:0!important}.stage[data-view="split"] .entrance{min-height:0!important}}
