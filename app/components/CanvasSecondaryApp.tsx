@@ -163,8 +163,6 @@ type UmmahComment={id:string;post_id:string;parent_id:string|null;name:string;av
   };
 
 function DailyPostsApp({active}:{active:boolean}){
- const [wideFeed,setWideFeed]=useState(false);
- useEffect(()=>{const media=window.matchMedia("(min-width: 320px)");const sync=()=>setWideFeed(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync)},[]);
  const [posts,setPosts]=useState<UmmahPost[]>([]); const mediaUrlCache=useRef(new Map<string,{url:string,at:number}>()); 
  const [status,setStatus]=useState("Loading Ummah posts…");
  const [selected,setSelected]=useState<string|null>(null);
@@ -239,7 +237,7 @@ function DailyPostsApp({active}:{active:boolean}){
   let frame=0,last=0,pausedUntil=performance.now()+1500;
   const pause=()=>{pausedUntil=performance.now()+3500};
   ["pointerdown","touchstart","wheel","keydown"].forEach(name=>rail.addEventListener(name,pause,{passive:true}));
-  const tick=(now:number)=>{if(last&&now<pausedUntil){last=now}else if(last){const max=rail.scrollHeight-rail.clientHeight;if(max>0){rail.scrollTop+=Math.min(35,(now-last)*.024);if(rail.scrollTop>=max-2){rail.scrollTop=0}}last=now}else last=now;frame=requestAnimationFrame(tick)};
+  const tick=(now:number)=>{if(last&&now<pausedUntil){last=now}else if(last){const max=rail.scrollHeight-rail.clientHeight;if(max>0){rail.scrollTop+=Math.min(2.2,(now-last)*.024);if(rail.scrollTop>=max-2){rail.scrollTop=0}}last=now}else last=now;frame=requestAnimationFrame(tick)};
   frame=requestAnimationFrame(tick);
   return()=>{cancelAnimationFrame(frame);["pointerdown","touchstart","wheel","keydown"].forEach(name=>rail.removeEventListener(name,pause))};
  },[active,selected,expandedImage,fypStart,viewerPost,posts.length]);
@@ -386,7 +384,7 @@ function DailyPostsApp({active}:{active:boolean}){
   setComments(previous=>[...previous,d.comment]);setCommentCounts(previous=>({...previous,[selected]:(previous[selected]||0)+1}));setDraft("");
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
  useEffect(()=>{
-  if(!active||!wideFeed||selected||expandedImage||fypStart||viewerPost)return;
+  if(!active||selected||expandedImage||fypStart||viewerPost)return;
   const root=feedRef.current;
   if(!root)return;
   const lanes=Array.from(root.querySelectorAll<HTMLElement>(".ummah-dual-lane"));
@@ -439,11 +437,7 @@ function DailyPostsApp({active}:{active:boolean}){
    </article>;
   return <div className="community-simple-feed">
   <div className="community-posts-list" ref={feedRef} aria-label="Community posts">
-   {!wideFeed&&<div className="ummah-feed-single ummah-vertical-carousel" ref={singleRailRef}>{posts.map(renderFeedPost)}</div>}
-   {wideFeed&&<div className="ummah-dual-lanes" aria-label="Two independent post lanes">
-    <div className="ummah-dual-lane" data-lane="left" aria-label="Left posts lane">{posts.filter((_,i)=>i%2===0).map(renderFeedPost)}</div>
-    <div className="ummah-dual-lane" data-lane="right" aria-label="Right posts lane">{posts.filter((_,i)=>i%2===1).map(renderFeedPost)}</div>
-   </div>}
+   {<div className="ummah-feed-single ummah-vertical-carousel" ref={singleRailRef}>{posts.map(renderFeedPost)}</div>}
    {!posts.length?<p className="community-feed-empty">{status}</p>:null}
    {notice&&!selected&&<p role="status">{notice}</p>}
   </div>
