@@ -239,3 +239,24 @@
 .entrance .splitPreviewArt::after{content:none!important}
 .magPanel .splitPreviewArt,.newsPanel .splitPreviewArt{isolation:auto}
 .featureVisual{filter:none!important;opacity:1!important;background-blend-mode:normal!important}
+
+/* Single stable four-second vertical drift for the magazine artwork only.
+   Override previous alternating durations, rotation and shadow animation. */
+.stage[data-view="split"] .magPanel .splitPreviewArt,
+.stage[data-view="split"] .magPanel .splitPreview:nth-child(2n) .splitPreviewArt,
+.stage[data-view="split"] .magPanel .splitPreview:nth-child(3n) .splitPreviewArt{
+ animation:qiblaGentleFloat 4s ease-in-out infinite!important;
+ animation-delay:0s!important;
+ transform:translate3d(0,0,0);
+ will-change:transform;
+ backface-visibility:hidden;
+}
+@keyframes qiblaGentleFloat{
+ 0%,100%{transform:translate3d(0,0,0)}
+ 50%{transform:translate3d(0,-4px,0)}
+}
+@media(prefers-reduced-motion:reduce){
+ .stage[data-view="split"] .magPanel .splitPreviewArt,
+ .stage[data-view="split"] .magPanel .splitPreview:nth-child(2n) .splitPreviewArt,
+ .stage[data-view="split"] .magPanel .splitPreview:nth-child(3n) .splitPreviewArt{animation:none!important;will-change:auto}
+}
