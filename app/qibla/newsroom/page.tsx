@@ -26,15 +26,15 @@ export default function QiblaNewsroom(){
  useEffect(()=>{let active=true;const db=createClient();(async()=>{
   const [legacy,editorial]=await Promise.all([
    db.from("qibla_pages").select("id,title,template_type,hero_media_path,section_one,section_two,created_at").eq("published",true).order("created_at",{ascending:false}).limit(60),
-   db.from("qibla_articles").select("id,title,subtitle,body,published_at").eq("status","published").order("published_at",{ascending:false}).limit(60)
+   db.from("qibla_articles").select("id,title,subtitle,body,cover_url,published_at").eq("status","published").order("published_at",{ascending:false}).limit(60)
   ]);
   const submissions=await db.from("qibla_submissions").select("published_page_id,kind").eq("status","published");
   if(!active)return;
   const publicationKinds=new Map((submissions.data??[]).map(p=>[p.published_page_id,p.kind]));
   if(legacy.error&&editorial.error)setError("Unable to load published stories.");
   else setStories([
-   ...(legacy.data??[]).map(p=>({id:p.id,title:p.title,description:p.section_one?.text??"",cover:p.hero_media_path||null,date:p.created_at??"",source:"legacy" as const,kind:publicationKinds.get(p.id)==="newsletter"?"newsletter" as const:"magazine" as const})),
-   ...(editorial.data??[]).map(p=>({id:p.id,title:p.title,description:p.subtitle||p.body||"",cover:null,date:p.published_at??"",source:"editorial" as const,kind:"magazine" as const}))
+   ...(legacy.data??[]).map(p=>({id:p.id,title:p.title,description:p.section_one?.text??"",cover:p.hero_media_path||null,date:p.created_at??"",source:"legacy" as const,kind:publicationKinds.get(p.id)==="newsletter"||(!publicationKinds.has(p.id)&&String(p.template_type??"").toLowerCase().includes("newsletter"))?"newsletter" as const:"magazine" as const})),
+   ...(editorial.data??[]).map(p=>({id:p.id,title:p.title,description:p.subtitle||p.body||"",cover:p.cover_url||null,date:p.published_at??"",source:"editorial" as const,kind:publicationKinds.get(p.id)==="newsletter"?"newsletter" as const:"magazine" as const}))
   ].sort((a,b)=>b.date.localeCompare(a.date)));
   setLoading(false);
  })();return()=>{active=false}},[]);
