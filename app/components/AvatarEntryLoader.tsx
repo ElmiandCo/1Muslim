@@ -19,61 +19,62 @@ const avatars=[
  ["Default Male","/assets/avatars/default-male.jpg"],
  ["Default Female","/assets/avatars/Default-women.png"],
 ] as const;
-const FRAME=260;
 const INTRO_MS=3000;
 export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,showSignUp}:{ready:boolean;signedIn:boolean;onComplete:()=>void;onSignUp:()=>void;showSignUp:boolean}){
- const [phase,setPhase]=useState<"waiting"|"orbit"|"black"|"reveal">("waiting");
- const started=useRef(false);
- useEffect(()=>{window.dispatchEvent(new Event("1muslim:prepare-for-you"))},[]);
- const readyRef=useRef(ready);
- const signedInRef=useRef(signedIn);
- readyRef.current=ready;
- signedInRef.current=signedIn;
+ const [phase,setPhase]=useState<"waiting"|"orbit"|"reveal">("waiting");
+ const [loaded,setLoaded]=useState<number[]>([]);
  const portraits=useRef<(HTMLDivElement|null)[]>([]);
  const elapsed=useRef(0);
+ const readyRef=useRef(ready);
+ readyRef.current=ready;
+ useEffect(()=>{window.dispatchEvent(new Event("1muslim:prepare-for-you"))},[]);
  useEffect(()=>{
-  const timer=window.setTimeout(()=>{started.current=true;setPhase("orbit")},250);
-  return()=>clearTimeout(timer);
+  let cancelled=false;
+  // Decode images BEFORE the first animation frame. Never animate an empty portrait.
+  Promise.all(avatars.map(([,src],index)=>new Promise<number|null>(resolve=>{
+   const image=new window.Image();
+   let settled=false;
+   const finish=(ok:boolean)=>{if(settled)return;settled=true;resolve(ok?index:null)};
+   image.onload=()=>{if(image.decode){image.decode().then(()=>finish(true)).catch(()=>finish(true))}else finish(true)};
+   image.onerror=()=>finish(false);
+   image.src=src;
+   if(image.complete)finish(image.naturalWidth>0);
+  }))).then(indices=>{if(cancelled)return;setLoaded(indices.filter((n):n is number=>n!==null));setPhase("orbit")});
+  return()=>{cancelled=true};
  },[]);
  useEffect(()=>{
-  if(!ready)return;
-  if(signedIn){setPhase("reveal");return;}
-  const remaining=Math.max(0,INTRO_MS-elapsed.current);
-  const timer=window.setTimeout(()=>setPhase(current=>current==="orbit"?"reveal":current),remaining);
-  return()=>clearTimeout(timer);
- },[ready,signedIn,phase==="orbit"]);
- useEffect(()=>{
-  if(phase==="waiting")return;
+  if(phase!=="orbit")return;
+  if(signedIn&&ready){setPhase("reveal");return;}
+  const started=performance.now();
   let raf=0;
-  let previous=0;
   const tick=(now:number)=>{
-   if(!previous)previous=now;
-   elapsed.current+=Math.min(48,now-previous);
-   
-   previous=now;
-   const progress=elapsed.current/FRAME;
-   const width=Math.max(300,Math.min(520,window.innerWidth*.95));
+   elapsed.current=Math.min(INTRO_MS,now-started);
+   const width=Math.max(320,window.innerWidth);
+   const spacing=Math.min(170,Math.max(108,width*.28));
+   const count=loaded.length;
+   // First avatar starts completely off the right edge, then glides left.
+   const travel=elapsed.current/INTRO_MS*(count+2)*spacing;
    portraits.current.forEach((node,i)=>{
     if(!node)return;
-    const angle=(i-progress)*Math.PI*2/avatars.length;
-    const depth=Math.cos(angle);
-    const x=Math.sin(angle)*width;
-    const y=(1-depth)*70;
-    const scale=.78+.22*(depth+1)/2;
-    node.style.transform=`translate3d(${x}px,${y}px,0) scale(${scale})`;
-    node.style.opacity=String(Math.max(0,Math.min(1,(depth-.02)*2.5)));
-    node.style.zIndex=String(Math.round(50+depth*20));
+    const order=loaded.indexOf(i);
+    if(order<0){node.style.opacity="0";return}
+    const x=width/2+110+order*spacing-travel;
+    const visible=x<width/2+70&&x>-(width/2+100);
+    const center=Math.max(0,1-Math.abs(x)/(width*.8));
+    node.style.transform=`translate3d(${x}px,0,0) scale(${.88+.12*center})`;
+    node.style.opacity=visible?String(Math.min(1,(width/2+70-x)/65,(x+width/2+100)/65)): "0";
+    node.style.zIndex=String(50+Math.round(center*10));
    });
-   raf=requestAnimationFrame(tick);
+   if(elapsed.current<INTRO_MS)raf=requestAnimationFrame(tick);
+   else if(readyRef.current)setPhase("reveal");
   };
   raf=requestAnimationFrame(tick);
   return()=>cancelAnimationFrame(raf);
- },[phase]);
+ },[phase,loaded,signedIn,ready]);
  useEffect(()=>{
-  if(phase!=="black")return;
-  const fade=window.setTimeout(()=>setPhase("reveal"),500);
-  return()=>clearTimeout(fade);
- },[phase]);
+  if(phase!=="orbit"||elapsed.current<INTRO_MS||!ready)return;
+  setPhase("reveal");
+ },[ready,phase]);
  useEffect(()=>{
   if(phase!=="reveal")return;
   const done=window.setTimeout(onComplete,650);
@@ -86,7 +87,7 @@ export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,sh
    <div className="avatarEntryOrbitRing avatarEntryOrbitRing--inner"/>
    <div className="avatarEntryOrbitSpark" />
    {avatars.map(([label,src],i)=><div key={src} ref={node=>{portraits.current[i]=node}} className="avatarEntryPortrait" title={label}>
-     <img src={src} alt="" loading={i<6?"eager":"lazy"} onError={e=>{e.currentTarget.style.opacity="0"}}/>
+     <img src={src} alt="" loading="eager" decoding="async" style={{opacity:loaded.includes(i)?1:0}}/>
    </div>)}
   </div>
   <strong className="avatarEntryBrand">1Muslim</strong>
