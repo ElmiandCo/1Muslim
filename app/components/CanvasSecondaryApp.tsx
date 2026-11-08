@@ -300,7 +300,7 @@ function DailyPostsApp({active}:{active:boolean}){
  useEffect(()=>{const onVisibility=()=>{if(document.hidden)videoRefs.current.forEach(v=>v.pause());else if(playingVideo&&!fypStart){const v=videoRefs.current.get(playingVideo);if(v)void v.play().catch(()=>{})}};document.addEventListener("visibilitychange",onVisibility);return()=>document.removeEventListener("visibilitychange",onVisibility)},[playingVideo,fypStart]);
  const autoPause=useRef(0);
  useEffect(()=>{
-  if(!active||selected||expandedImage||fypStart||viewerPost||wideFeed)return;
+  if(!active||selected||expandedImage||fypStart||viewerPost)return;
   const feed=feedRef.current;if(!feed)return;
   let frame=0,last=0,elapsed=0,activeIndex=-1,fromScroll=0,toScroll=0,transitioning=false;
   let scroll:HTMLElement|null=feed;
