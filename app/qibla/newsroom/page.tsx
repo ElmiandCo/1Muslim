@@ -4,7 +4,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import {createClient} from "../../../utils/supabase/client";
 import styles from "./qibla-cinematic.module.css";
 
-type Story={id:string;title:string;description:string;cover:string|null;date:string;source:"editorial"|"legacy"};
+type Story={id:string;title:string;description:string;cover:string|null;date:string;source:"editorial"|"legacy";kind:"article"|"newsletter"};
 type View="split"|"magazine"|"newsletter";
 
 export default function QiblaNewsroom(){
@@ -26,18 +26,20 @@ export default function QiblaNewsroom(){
  useEffect(()=>{let active=true;const db=createClient();(async()=>{
   const [legacy,editorial]=await Promise.all([
    db.from("qibla_pages").select("id,title,template_type,hero_media_path,section_one,created_at").eq("published",true).order("created_at",{ascending:false}).limit(60),
-   db.from("qibla_articles").select("id,title,subtitle,body,published_at").eq("status","published").order("published_at",{ascending:false}).limit(60)
+   db.from("qibla_articles").select("id,title,subtitle,body,cover_url,kind,published_at").eq("status","published").order("published_at",{ascending:false}).limit(60)
   ]);
   if(!active)return;
   if(legacy.error&&editorial.error)setError("Unable to load published stories.");
   else setStories([
-   ...(legacy.data??[]).map(p=>({id:p.id,title:p.title,description:p.section_one?.text??"",cover:p.template_type==="image"?p.hero_media_path:null,date:p.created_at??"",source:"legacy" as const})),
-   ...(editorial.data??[]).map(p=>({id:p.id,title:p.title,description:p.subtitle||p.body||"",cover:null,date:p.published_at??"",source:"editorial" as const}))
+   ...(legacy.data??[]).map(p=>({id:p.id,title:p.title,description:p.section_one?.text??"",cover:p.template_type==="image"?p.hero_media_path:null,date:p.created_at??"",source:"legacy" as const,kind:"article" as const})),
+   ...(editorial.data??[]).map(p=>({id:p.id,title:p.title,description:p.subtitle||p.body||"",cover:p.cover_url||null,date:p.published_at??"",source:"editorial" as const,kind:p.kind==="newsletter"?"newsletter" as const:"article" as const}))
   ].sort((a,b)=>b.date.localeCompare(a.date)));
   setLoading(false);
  })();return()=>{active=false}},[]);
  const visible=useMemo(()=>stories.filter(s=>(s.title+" "+s.description).toLowerCase().includes(query.toLowerCase())),[stories,query]);
- const [hero,...rest]=visible;
+ const magazineStories=visible.filter(s=>s.kind==="article");
+ const newsletterStories=stories.filter(s=>s.kind==="newsletter");
+ const [hero,...rest]=magazineStories;
  const magazineSamples=[{title:"Faith in the Age of Algorithms",category:"IDENTITY & TECHNOLOGY",summary:"A new generation is navigating faith, creativity and belonging in an always-connected world.",body:"How can young Muslims build a thoughtful digital identity without losing their values? This sample feature explores intentional screen time, online community, and meaningful conversations about faith."},{title:"The Questions We Are Not Afraid to Ask",category:"FAITH & REASON",summary:"Curiosity, thoughtful debate and the courage to seek understanding.",body:"This sample magazine essay introduces the importance of respectful theological discussion, careful research and listening to different perspectives."}];
  const newsSamples=[{title:"Community Spotlight: A New Generation of Volunteers",category:"COMMUNITY · SAMPLE",summary:"An illustrative look at how local initiatives can bring neighbors together.",body:"DEMONSTRATION ARTICLE — This fictional example shows how a community report could present interviews, verified facts and local impact. No real event is being reported."},{title:"The Global Brief: Education, Culture and Community",category:"WORLD BRIEF · SAMPLE",summary:"A sample international news roundup format, designed for clarity and context.",body:"DEMONSTRATION ARTICLE — This is a layout preview, not a factual news report. Published editions will include sources, datelines and editorial verification."}];
  return <main className={styles.root}>
@@ -56,13 +58,13 @@ export default function QiblaNewsroom(){
     <button className={styles.magPanel} onClick={()=>enterPublication("magazine")} tabIndex={view==="split"?0:-1}>
      <span className={styles.panelOverline}>FAITH. IDEAS. THE NEXT GENERATION.</span><span className={styles.panelTitle}>The<br/>Magazine</span>
      <span className={styles.panelDesc}>Youth · Faith · Identity · Debate · Culture</span>
-     <span className={styles.splitPreviews}>{(stories.length?stories.slice(0,4).map(story=>({title:story.title,summary:story.description,cover:story.cover})):magazineSamples.concat([{title:"Voices Across the Ummah",category:"CULTURE & COMMUNITY",summary:"A preview of conversations, community, and creativity across generations.",body:"Sample magazine content."},{title:"What Comes Next?",category:"THE FUTURE",summary:"Youth perspectives on education, belonging, and building together.",body:"Sample magazine content."}]).map(story=>({title:story.title,summary:story.summary,cover:null}))).map((story,i)=><span className={styles.splitPreview} key={i}><span className={styles.splitPreviewArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>{String(i+1).padStart(2,"0")}</span>}</span><span className={styles.splitPreviewCopy}><strong>{story.title}</strong><small>{story.summary.slice(0,140)}</small><span className={styles.previewRead}>READ FULL ARTICLE <span aria-hidden="true">{["🔥","⭐️","💜","👀"][i%4]}</span></span></span></span>)}</span>
+     <span className={styles.splitPreviews}>{(magazineStories.length?magazineStories.slice(0,4).map(story=>({title:story.title,summary:story.description,cover:story.cover})):magazineSamples.concat([{title:"Voices Across the Ummah",category:"CULTURE & COMMUNITY",summary:"A preview of conversations, community, and creativity across generations.",body:"Sample magazine content."},{title:"What Comes Next?",category:"THE FUTURE",summary:"Youth perspectives on education, belonging, and building together.",body:"Sample magazine content."}]).map(story=>({title:story.title,summary:story.summary,cover:null}))).map((story,i)=><span className={styles.splitPreview} key={i}><span className={styles.splitPreviewArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>{String(i+1).padStart(2,"0")}</span>}</span><span className={styles.splitPreviewCopy}><strong>{story.title}</strong><small>{story.summary.slice(0,140)}</small><span className={styles.previewRead}>READ FULL ARTICLE <span aria-hidden="true">{["🔥","⭐️","💜","👀"][i%4]}</span></span></span></span>)}</span>
      <span className={styles.panelArrow}>Explore the magazine</span>
     </button>
     <div className={styles.newsPanel} role="button" onClick={()=>enterPublication("newsletter")} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();enterPublication("newsletter")}}} tabIndex={view==="split"?0:-1}>
      <span className={styles.panelOverline}>INDEPENDENT REPORTING. GLOBAL PERSPECTIVE.</span><span className={styles.panelTitle}>The<br/>Newsletter</span>
      <span className={styles.panelDesc}>World news · Community · Current affairs</span>
-     <span className={styles.splitPreviews}><span className={styles.splitPreview}><span className={styles.splitPreviewArt}><span>QIBLA REPORT</span></span><span className={styles.splitPreviewCopy}><strong>{newsSamples[0].title}</strong><small>{newsSamples[0].summary}</small><span className={styles.newsExcerpt}>{newsSamples[0].body} {newsletterExpanded&&<span>{newsSamples[1].body} The full publication will include supporting sources, verified reporting, and context for readers. This demonstration illustrates how long-form reporting will expand within the column rather than replacing the entire newsroom.</span>}</span><span className={styles.previewRead}>{newsletterExpanded?"SHOW LESS ↑":"CONTINUE READING ↓"}</span></span></span></span>
+     <span className={styles.splitPreviews}>{newsletterStories.length?newsletterStories.slice(0,4).map(story=><span className={styles.splitPreview} key={story.id}><span className={styles.splitPreviewArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`,backgroundSize:"cover",backgroundPosition:"center"}:undefined}>{!story.cover&&<span>QIBLA REPORT</span>}</span><span className={styles.splitPreviewCopy}><strong>{story.title}</strong><small>{story.description.slice(0,180)}</small></span></span>):<span className={styles.splitPreview}><span className={styles.splitPreviewArt}><span>QIBLA REPORT</span></span><span className={styles.splitPreviewCopy}><strong>{newsSamples[0].title}</strong><small>{newsSamples[0].summary}</small><span className={styles.newsExcerpt}>{newsSamples[0].body} {newsletterExpanded&&<span>{newsSamples[1].body}</span>}</span></span></span>}</span>
      <button type="button" className={styles.expandPreview} onClick={e=>{e.stopPropagation();setNewsletterExpanded(v=>!v)}}>{newsletterExpanded?"SHOW LESS ↑":"CONTINUE READING ↓"}</button>
      <span className={styles.panelArrow}>Read the latest</span>
     </div>
