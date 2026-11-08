@@ -27,6 +27,8 @@ export default function PersistentMuslimSync(){
  }catch(e){if(!cancelled){setVoiceState("Voice unavailable");setError(e instanceof Error?e.message:"Unable to connect voice")}}};
  void connect();return()=>{cancelled=true;void room.current?.disconnect();room.current=null;document.querySelectorAll("[data-muslim-sync-audio]").forEach(e=>e.remove())}},[session?.id,session?.status]);
  useEffect(()=>{if(session?.status!=="accepted")return;const next=session.current_page;if(!next)return;
+ const verseMatch=next.match(/^\/elm-tent\/quran\?verse=((?:[1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2})$/);
+ if(verseMatch){if(pathname==="/elm-tent/quran"){remotePage.current=pathname;window.dispatchEvent(new CustomEvent("1muslim:ping-remote-verse",{detail:{verseKey:verseMatch[1]}}));return}remotePage.current="/elm-tent/quran";router.push(next);return}
  const match=next.match(/^\/\?pingWorkspace=(\d+)$/);
  if(match){const index=Number(match[1]);if(index>=0&&index<=6&&pathname==="/"){if(index!==lastSyncedWorkspace.current){remoteWorkspaceUntil.current=Date.now()+3000;lastSyncedWorkspace.current=index;window.dispatchEvent(new CustomEvent("1muslim:ping-remote-workspace",{detail:{index}}))}return}
  if(pathname!=="/"){remotePage.current="/";router.push("/");}return}
@@ -40,6 +42,9 @@ export default function PersistentMuslimSync(){
  void db.from("muslim_sync_sessions").update({current_page:target}).eq("id",session.id).eq("status","accepted").then(({error:e})=>{if(e)setError("Navigation sync: "+e.message)})};
  window.addEventListener("1muslim:ping-local-workspace",onWorkspace);return()=>window.removeEventListener("1muslim:ping-local-workspace",onWorkspace)
  },[session?.id,session?.status,session?.current_page,session?.initiator_id,uid,pathname,db]);
+ useEffect(()=>{if(session?.status!=="accepted"||session.initiator_id!==uid||pathname!=="/elm-tent/quran")return;
+ const onVerse=(event:Event)=>{const key=(event as CustomEvent<{verseKey:string}>).detail?.verseKey;if(!/^([1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(key||""))return;const target="/elm-tent/quran?verse="+key;if(session.current_page===target)return;void db.from("muslim_sync_sessions").update({current_page:target}).eq("id",session.id).eq("initiator_id",uid).eq("status","accepted").then(({error:e})=>{if(e)setError("Verse sync: "+e.message)})};
+ window.addEventListener("1muslim:ping-local-verse",onVerse);return()=>window.removeEventListener("1muslim:ping-local-verse",onVerse)},[db,session?.id,session?.status,session?.initiator_id,session?.current_page,uid,pathname]);
  const inviteMore=async()=>{if(!session||session.status!=="accepted")return;if(!/^[0-9a-f-]{36}$/i.test(inviteId)){setError("Enter a valid member ID.");return}const {error:e}=await db.from("muslim_sync_members").insert({session_id:session.id,user_id:inviteId});setError(e?.message||"GroupSync invitation sent.");if(!e)setInviteId("")};
  useEffect(()=>{if(!deepWatch)return;const timer=setTimeout(()=>setDeepWatch(false),30000);return()=>clearTimeout(timer)},[deepWatch]);
  const respond=async(status:"accepted"|"declined"|"ended")=>{if(!session)return;const {error:e}=await db.from("muslim_sync_sessions").update({status}).eq("id",session.id);if(e)setError(e.message);else if(status!=="accepted")setSession(null)};
