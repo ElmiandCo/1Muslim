@@ -19,8 +19,8 @@ const avatars=[
  ["Default Male","/assets/avatars/default-male.jpg"],
  ["Default Female","/assets/avatars/Default-women.png"],
 ] as const;
-const FRAME=520;
-const CYCLE=avatars.length*FRAME;
+const FRAME=260;
+const INTRO_MS=3000;
 export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,showSignUp}:{ready:boolean;signedIn:boolean;onComplete:()=>void;onSignUp:()=>void;showSignUp:boolean}){
  const [phase,setPhase]=useState<"waiting"|"orbit"|"black"|"reveal">("waiting");
  const started=useRef(false);
@@ -32,18 +32,16 @@ export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,sh
  const portraits=useRef<(HTMLDivElement|null)[]>([]);
  const elapsed=useRef(0);
  useEffect(()=>{
-  const timer=window.setTimeout(()=>{
-   if(readyRef.current&&signedInRef.current){setPhase("reveal");return;}
-   started.current=true;
-   setPhase("orbit");
-  },1000);
+  const timer=window.setTimeout(()=>{started.current=true;setPhase("orbit")},250);
   return()=>clearTimeout(timer);
  },[]);
  useEffect(()=>{
-  if(!ready||!signedIn||!started.current)return;
-  // Never force an authenticated visitor to watch a full carousel.
-  setPhase(current=>current==="orbit"?"black":current);
- },[ready]);
+  if(!ready)return;
+  if(signedIn){setPhase("reveal");return;}
+  const remaining=Math.max(0,INTRO_MS-elapsed.current);
+  const timer=window.setTimeout(()=>setPhase(current=>current==="orbit"?"reveal":current),remaining);
+  return()=>clearTimeout(timer);
+ },[ready,signedIn,phase==="orbit"]);
  useEffect(()=>{
   if(phase==="waiting")return;
   let raf=0;
@@ -51,7 +49,7 @@ export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,sh
   const tick=(now:number)=>{
    if(!previous)previous=now;
    elapsed.current+=Math.min(48,now-previous);
-   if(phase==="orbit"&&readyRef.current&&!signedInRef.current&&elapsed.current>=CYCLE){setPhase("black");}
+   
    previous=now;
    const progress=elapsed.current/FRAME;
    const width=Math.max(300,Math.min(520,window.innerWidth*.95));
@@ -78,7 +76,7 @@ export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,sh
  },[phase]);
  useEffect(()=>{
   if(phase!=="reveal")return;
-  const done=window.setTimeout(onComplete,1200);
+  const done=window.setTimeout(onComplete,650);
   return()=>clearTimeout(done);
  },[phase,onComplete]);
  return <div className={`avatarEntry avatarEntry--${phase}`} role="status" aria-label="Preparing your 1Muslim experience">
