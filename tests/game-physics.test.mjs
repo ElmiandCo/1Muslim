@@ -47,3 +47,11 @@ test("stationary projectile and tangential hits",()=>{
  assert.equal(hitSweptSphere(point(-2,1,0),point(2,1,0),point(0,0,0),1),true);
  assert.equal(hitSweptSphere(point(-2,1.01,0),point(2,1.01,0),point(0,0,0),1),false);
 });
+
+test("non-finite frame delta does not corrupt projectile position",()=>{
+ const s={x:1,y:2,z:3,vx:10,vy:0,vz:4,life:1};
+ stepProjectile(s,Number.NaN,9.81);
+ assert.deepEqual(s,{x:1,y:2,z:3,vx:10,vy:0,vz:4,life:1});
+ stepProjectile(s,Infinity,9.81);
+ assert.deepEqual(s,{x:1,y:2,z:3,vx:10,vy:0,vz:4,life:1});
+});
