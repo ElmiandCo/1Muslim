@@ -163,8 +163,6 @@ type UmmahComment={id:string;post_id:string;parent_id:string|null;name:string;av
   };
 
 function DailyPostsApp({active}:{active:boolean}){
- const [wideFeed,setWideFeed]=useState(false);
- useEffect(()=>{const media=window.matchMedia("(min-width: 320px)");const sync=()=>setWideFeed(media.matches);sync();media.addEventListener("change",sync);return()=>media.removeEventListener("change",sync)},[]);
  const [posts,setPosts]=useState<UmmahPost[]>([]); const mediaUrlCache=useRef(new Map<string,{url:string,at:number}>()); 
  const [status,setStatus]=useState("Loading Ummah posts…");
  const [selected,setSelected]=useState<string|null>(null);
@@ -239,7 +237,16 @@ function DailyPostsApp({active}:{active:boolean}){
   let frame=0,last=0,pausedUntil=performance.now()+1500;
   const pause=()=>{pausedUntil=performance.now()+3500};
   ["pointerdown","touchstart","wheel","keydown"].forEach(name=>rail.addEventListener(name,pause,{passive:true}));
-  const tick=(now:number)=>{if(last&&now<pausedUntil){last=now}else if(last){const max=rail.scrollHeight-rail.clientHeight;if(max>0){rail.scrollTop+=Math.min(35,(now-last)*.024);if(rail.scrollTop>=max-2){rail.scrollTop=0}}last=now}else last=now;frame=requestAnimationFrame(tick)};
+  let focusedId="";let focusStart=0;
+  const tick=(now:number)=>{
+   const cards=Array.from(rail.querySelectorAll<HTMLElement>(".community-post-card"));
+   const center=rail.getBoundingClientRect().top+rail.clientHeight*.48;
+   const closest=cards.reduce<HTMLElement|null>((best,card)=>!best||Math.abs(card.getBoundingClientRect().top+card.offsetHeight*.5-center)<Math.abs(best.getBoundingClientRect().top+best.offsetHeight*.5-center)?card:best,null);
+   const id=closest?.dataset.postId||"";
+   if(id!==focusedId){focusedId=id;focusStart=now;cards.forEach(card=>card.classList.toggle("ummah-spotlight",card===closest))}
+   if(last&&now>=pausedUntil&&now-focusStart>2200){const max=rail.scrollHeight-rail.clientHeight;if(max>0){rail.scrollTop+=Math.min(2.5,(now-last)*.045);if(rail.scrollTop>=max-2){rail.scrollTop=0;focusedId="";focusStart=now}}}
+   last=now;frame=requestAnimationFrame(tick)
+  };
   frame=requestAnimationFrame(tick);
   return()=>{cancelAnimationFrame(frame);["pointerdown","touchstart","wheel","keydown"].forEach(name=>rail.removeEventListener(name,pause))};
  },[active,selected,expandedImage,fypStart,viewerPost,posts.length]);
@@ -293,7 +300,7 @@ function DailyPostsApp({active}:{active:boolean}){
  useEffect(()=>{const onVisibility=()=>{if(document.hidden)videoRefs.current.forEach(v=>v.pause());else if(playingVideo&&!fypStart){const v=videoRefs.current.get(playingVideo);if(v)void v.play().catch(()=>{})}};document.addEventListener("visibilitychange",onVisibility);return()=>document.removeEventListener("visibilitychange",onVisibility)},[playingVideo,fypStart]);
  const autoPause=useRef(0);
  useEffect(()=>{
-  if(!active||selected||expandedImage||fypStart||viewerPost||wideFeed)return;
+  if(!active||selected||expandedImage||fypStart||viewerPost)return;
   const feed=feedRef.current;if(!feed)return;
   let frame=0,last=0,elapsed=0,activeIndex=-1,fromScroll=0,toScroll=0,transitioning=false;
   let scroll:HTMLElement|null=feed;
@@ -367,7 +374,7 @@ function DailyPostsApp({active}:{active:boolean}){
   };
   frame=requestAnimationFrame(tick);
   return()=>{cancelAnimationFrame(frame);stopVerse();clearMotion();events.forEach(event=>window.removeEventListener(event,interrupt))};
- },[active,selected,expandedImage,posts.length,playingVideo,finishedVideo,fypStart,viewerPost,wideFeed]);
+ },[active,selected,expandedImage,posts.length,playingVideo,finishedVideo,fypStart,viewerPost]);
 
  useEffect(()=>{if(!active)return;let alive=true;
   const load=async()=>{try{const r=await fetch("/api/community-posts",{cache:"no-store"});if(!r.ok)throw Error();const data=await r.json();if(alive){setPosts((data.posts||[]).map((p:UmmahPost)=>{if(!p.media_url)return p;const cached=mediaUrlCache.current.get(p.id);if(cached&&Date.now()-cached.at<25*60*1000)return {...p,media_url:cached.url};mediaUrlCache.current.set(p.id,{url:p.media_url,at:Date.now()});return p}));setLikeCounts(Object.fromEntries((data.posts||[]).map((p:UmmahPost)=>[p.id,Number((p as UmmahPost & {like_count?:number}).like_count||0)])));setCommentCounts(Object.fromEntries((data.posts||[]).map((p:UmmahPost)=>[p.id,Number((p as UmmahPost & {comment_count?:number}).comment_count||0)])));setStatus(data.posts?.length?"":"No posts yet. Be the first to share.");}}catch{if(alive)setStatus("Unable to load the Ummah feed.");}};
@@ -386,7 +393,7 @@ function DailyPostsApp({active}:{active:boolean}){
   setComments(previous=>[...previous,d.comment]);setCommentCounts(previous=>({...previous,[selected]:(previous[selected]||0)+1}));setDraft("");
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
  useEffect(()=>{
-  if(!active||!wideFeed||selected||expandedImage||fypStart||viewerPost)return;
+  if(!active||selected||expandedImage||fypStart||viewerPost)return;
   const root=feedRef.current;
   if(!root)return;
   const lanes=Array.from(root.querySelectorAll<HTMLElement>(".ummah-dual-lane"));
@@ -429,7 +436,7 @@ function DailyPostsApp({active}:{active:boolean}){
     timers.push(timer);
   }
   return()=>{timers.forEach(clearInterval);cleanups.forEach(fn=>fn())};
- },[active,posts.length,selected,expandedImage,fypStart,viewerPost,wideFeed]);
+ },[active,posts.length,selected,expandedImage,fypStart,viewerPost]);
 
 
  const renderFeedPost=(post:UmmahPost)=><article data-post-id={post.id} data-post-theme={postThemeClass(post.post_theme)} className={`community-post-card ummah-template ummah-template-${postKind(post)} ummah-variant-${(post.id.charCodeAt(0)+layoutSeed)%3}`} key={post.id}>
@@ -439,11 +446,7 @@ function DailyPostsApp({active}:{active:boolean}){
    </article>;
   return <div className="community-simple-feed">
   <div className="community-posts-list" ref={feedRef} aria-label="Community posts">
-   {!wideFeed&&<div className="ummah-feed-single ummah-vertical-carousel" ref={singleRailRef}>{posts.map(renderFeedPost)}</div>}
-   {wideFeed&&<div className="ummah-dual-lanes" aria-label="Two independent post lanes">
-    <div className="ummah-dual-lane" data-lane="left" aria-label="Left posts lane">{posts.filter((_,i)=>i%2===0).map(renderFeedPost)}</div>
-    <div className="ummah-dual-lane" data-lane="right" aria-label="Right posts lane">{posts.filter((_,i)=>i%2===1).map(renderFeedPost)}</div>
-   </div>}
+   {<div className="ummah-feed-single ummah-vertical-carousel" ref={singleRailRef}>{posts.map(renderFeedPost)}</div>}
    {!posts.length?<p className="community-feed-empty">{status}</p>:null}
    {notice&&!selected&&<p role="status">{notice}</p>}
   </div>
