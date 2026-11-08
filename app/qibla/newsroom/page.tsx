@@ -14,6 +14,7 @@ export default function QiblaNewsroom(){
  const [error,setError]=useState("");
  const [query,setQuery]=useState("");
  const [contributor,setContributor]=useState(false);
+ const [newsletterExpanded,setNewsletterExpanded]=useState(false);
  useEffect(()=>{let alive=true;const db=createClient();(async()=>{const {data:{user}}=await db.auth.getUser();if(!user)return;const [staff,superAdmin,legacyAdmin]=await Promise.all([db.from("qibla_staff").select("role").eq("user_id",user.id).maybeSingle(),db.rpc("qibla_is_superadmin"),db.rpc("qibla_is_admin")]);if(alive)setContributor(Boolean(staff.data?.role||superAdmin.data===true||legacyAdmin.data===true))})();return()=>{alive=false}},[]);
  useEffect(()=>{let active=true;const db=createClient();(async()=>{
   const [legacy,editorial]=await Promise.all([
@@ -48,15 +49,16 @@ export default function QiblaNewsroom(){
     <button className={styles.magPanel} onClick={()=>setView("magazine")} tabIndex={view==="split"?0:-1}>
      <span className={styles.panelOverline}>FAITH. IDEAS. THE NEXT GENERATION.</span><span className={styles.panelTitle}>The<br/>Magazine</span>
      <span className={styles.panelDesc}>Youth · Faith · Identity · Debate · Culture</span>
-     <span className={styles.splitPreviews}>{stories.length?stories.slice(0,2).map(story=><span className={styles.splitPreview} key={story.id}><span className={styles.splitPreviewArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>Q</span>}</span><span className={styles.splitPreviewCopy}><strong>{story.title}</strong><small>{story.description.slice(0,85)}</small></span></span>):<><span className={styles.splitPreview}><span className={styles.splitPreviewArt}><span>Q</span></span><span className={styles.splitPreviewCopy}><strong>Stories coming soon</strong><small>Faith, identity and ideas from a new generation.</small></span></span><span className={styles.splitPreviewPlaceholder}>YOUR NEXT FEATURE WILL APPEAR HERE</span></>}</span>
+     <span className={styles.splitPreviews}>{(stories.length?stories.slice(0,4).map(story=>({title:story.title,summary:story.description,cover:story.cover})):magazineSamples.concat([{title:"Voices Across the Ummah",category:"CULTURE & COMMUNITY",summary:"A preview of conversations, community, and creativity across generations.",body:"Sample magazine content."},{title:"What Comes Next?",category:"THE FUTURE",summary:"Youth perspectives on education, belonging, and building together.",body:"Sample magazine content."}]).map(story=>({title:story.title,summary:story.summary,cover:null}))).map((story,i)=><span className={styles.splitPreview} key={i}><span className={styles.splitPreviewArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>{String(i+1).padStart(2,"0")}</span>}</span><span className={styles.splitPreviewCopy}><strong>{story.title}</strong><small>{story.summary.slice(0,140)}</small><span className={styles.previewRead}>READ FULL ARTICLE ↗</span></span></span>)}</span>
      <span className={styles.panelArrow}>Explore the magazine ↗</span>
     </button>
-    <button className={styles.newsPanel} onClick={()=>setView("newsletter")} tabIndex={view==="split"?0:-1}>
+    <div className={styles.newsPanel} role="button" onClick={()=>setView("newsletter")} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setView("newsletter")}}} tabIndex={view==="split"?0:-1}>
      <span className={styles.panelOverline}>INDEPENDENT REPORTING. GLOBAL PERSPECTIVE.</span><span className={styles.panelTitle}>The<br/>Newsletter</span>
      <span className={styles.panelDesc}>World news · Community · Current affairs</span>
-     <span className={styles.splitPreviews}>{stories.length?stories.slice(2,4).concat(stories.length<3?stories.slice(0,1):[]).map(story=><span className={styles.splitPreview} key={story.id}><span className={styles.splitPreviewArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>Q</span>}</span><span className={styles.splitPreviewCopy}><strong>{story.title}</strong><small>{story.description.slice(0,85)}</small></span></span>):<><span className={styles.splitPreview}><span className={styles.splitPreviewArt}><span>Q</span></span><span className={styles.splitPreviewCopy}><strong>Reporting coming soon</strong><small>World news, community and current affairs.</small></span></span><span className={styles.splitPreviewPlaceholder}>THE NEXT REPORT WILL APPEAR HERE</span></>}</span>
+     <span className={styles.splitPreviews}><span className={styles.splitPreview}><span className={styles.splitPreviewArt}><span>QIBLA REPORT</span></span><span className={styles.splitPreviewCopy}><strong>{newsSamples[0].title}</strong><small>{newsSamples[0].summary}</small><span className={styles.newsExcerpt}>{newsSamples[0].body} {newsletterExpanded&&<span>{newsSamples[1].body} The full publication will include supporting sources, verified reporting, and context for readers. This demonstration illustrates how long-form reporting will expand within the column rather than replacing the entire newsroom.</span>}</span><span className={styles.previewRead}>{newsletterExpanded?"SHOW LESS ↑":"CONTINUE READING ↓"}</span></span></span></span>
+     <button type="button" className={styles.expandPreview} onClick={e=>{e.stopPropagation();setNewsletterExpanded(v=>!v)}}>{newsletterExpanded?"SHOW LESS ↑":"CONTINUE READING ↓"}</button>
      <span className={styles.panelArrow}>Read the latest ↗</span>
-    </button>
+    </div>
     <div className={styles.centerLine} aria-hidden="true"/>
    </div>
    <section className={styles.magazine} aria-hidden={view!=="magazine"}>
@@ -82,6 +84,6 @@ export default function QiblaNewsroom(){
     <div className={styles.newsColumns}><div><span className={styles.kicker}>THE DAILY BRIEF</span><h2>Stay informed.<br/>Stay connected.</h2><p>Explore published newsletters, current affairs, community updates and thoughtful reporting in our growing archive.</p><Link className={styles.newsCTA} href="/qibla/newsletters">OPEN THE NEWSLETTER ARCHIVE ↗</Link></div><aside><span>FROM THE EDITOR</span><p>One community. Many stories. One direction.</p><Link href="/qibla/newsroom/about">ABOUT 1QIBLA →</Link></aside></div>
    </section>
   </div>
-  <footer className={styles.footer}><span>© 1MUSLIM QIBLA</span><Link href="/qibla/studio">EDITORIAL STUDIO</Link><Link href="/qibla/command">COMMAND CENTER</Link><Link href="/qibla/newsroom/apply">CONTRIBUTE</Link><Link href="/">1MUSLIM HOME ↗</Link></footer>
+  <footer className={styles.footer}><nav className={styles.footerGrid} aria-label="Qibla footer"><Link href="/qibla/studio">EDITORIAL STUDIO</Link><Link href="/qibla/command">COMMAND CENTER</Link><Link href="/qibla/newsroom/apply">CONTRIBUTE</Link><Link href="/">1MUSLIM HOME ↗</Link><Link href="/terms">TERMS & CONDITIONS</Link><Link href="/privacy">PRIVACY POLICY</Link><Link href="/data-policy">DATA POLICY</Link></nav><div className={styles.footerCopyright}>© 2026 1Muslim. All rights reserved.</div></footer>
  </main>
 }
