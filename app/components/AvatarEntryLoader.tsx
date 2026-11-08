@@ -24,6 +24,7 @@ const CYCLE=avatars.length*FRAME;
 export default function AvatarEntryLoader({ready,signedIn,onComplete,onSignUp,showSignUp}:{ready:boolean;signedIn:boolean;onComplete:()=>void;onSignUp:()=>void;showSignUp:boolean}){
  const [phase,setPhase]=useState<"waiting"|"orbit"|"black"|"reveal">("waiting");
  const started=useRef(false);
+ useEffect(()=>{window.dispatchEvent(new Event("1muslim:prepare-for-you"))},[]);
  const readyRef=useRef(ready);
  const signedInRef=useRef(signedIn);
  readyRef.current=ready;
