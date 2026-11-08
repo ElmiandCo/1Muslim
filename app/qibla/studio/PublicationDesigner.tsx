@@ -4,7 +4,7 @@ export type Publication="article"|"newsletter";
 export type Layout="cover"|"gallery"|"motion";
 export type Media={type:"image"|"video";url:string;caption?:string};
 export type StorySection={heading:string;subtitle:string;body:string};
-export type Design={layout:Layout;media:Media[];sections?:StorySection[];subtitles?:string[]};
+export type Design={layout:Layout;media:Media[];columns?:"single"|"double"|"mixed";sections?:StorySection[];subtitles?:string[]};
 export const templates:Record<Publication,{id:Layout;name:string;description:string;slots:("image"|"video")[]}[]>={
  article:[
   {id:"cover",name:"Cover Story",description:"Youth magazine · bold hero and image-led narrative",slots:["image","image","image","image"]},
