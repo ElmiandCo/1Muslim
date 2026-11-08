@@ -26,3 +26,29 @@ Visual transformation: mesh 10%, rig 0%, textures/PBR 0%, animation 10% (procedu
 - Additional historical PRs: [#119](https://github.com/ElmiandCo/1Muslim/pull/119), [#120](https://github.com/ElmiandCo/1Muslim/pull/120), [#771](https://github.com/ElmiandCo/1Muslim/pull/771), [#775](https://github.com/ElmiandCo/1Muslim/pull/775), [#796](https://github.com/ElmiandCo/1Muslim/pull/796), [#812](https://github.com/ElmiandCo/1Muslim/pull/812). Particularly inspect #775 rigged-character contract and #796 bounded GLB streaming before creating a duplicate loader.
 - Bot 3: please run browser/mobile tests for standing, walking, flying, prayer postures, projectile combat, camera orbit, ground clearance and multiplayer avatar rendering; inspect visual-only draw calls for draw order/depth.
 - Progress remains **unchanged from prior evidence coverage estimates**: world Jurassic 25%, Moses 10%, Jesus 10%, Muhammad 10%, Today 10%, Future 30%; mesh 10%, rig 0%, textures/PBR 0%, animation 10%, lighting 10%. These are NOT gameplay percentages. Physics, overall completion, build readiness and playtest readiness are **unverified**. Do not merge production.
+
+
+## 05:45 CST audit — asset pipeline and preservation gate
+
+Inspected the actual unified renderer at `app/components/SharedGameLobby.tsx` on this branch. It uses a custom matrix/WebGL draw pipeline (`draw(vp,...)`) and currently builds the humanoid from procedural box primitives. The newly added chest/visor/shoulder decorations remain box draw calls; they do **not** provide a skeleton, skin weights, GLB model, or PBR texture sampling. World picker IDs are exactly Jurassic, Time of Moses, Time of Jesus, Time of Muhammad ﷺ, Today, Future; `JurassicScene` and `FutureCityScene` are explicit imports. No world content was deleted or replaced in this audit.
+
+Historical [PR #775](https://github.com/ElmiandCo/1Muslim/pull/775) explicitly describes a male/female skinned-GLB *metadata contract*, nine animation mappings, license/LOD validation, **but no real GLBs or playable scene**. [PR #796](https://github.com/ElmiandCo/1Muslim/pull/796) explicitly describes bounded GLB streaming and cancellation, **but no assets or verified gameplay**. Neither should be represented as a finished 3D character. Reuse their contracts only after reviewing compatibility with the current custom WebGL renderer.
+
+### Non-destructive visual migration sequence
+1. Bot 1: preserve all six picker IDs and compare historical branches by file/scene/portal; publish per-world import and gameplay evidence. Never overwrite unified game with an older partial batch.
+2. Bot 2: obtain licensed GLB with humanoid skeleton, skinned mesh, UV/PBR maps and clips (idle/walk/run/jump/fall/land/fly/attack/prayer); validate clip names, triangle count, scale, orientation and material limits using #775/#796. Keep procedural player as fallback.
+3. Bot 2: integrate a **separate** model renderer (or documented GLB-to-custom-WebGL adapter) behind an explicit feature flag. Current draw pipeline does not directly accept glTF or skeletal transforms. Preserve existing position/yaw/flight/collision as authoritative; animation consumes motion state but never writes it.
+4. Bot 3: run paired old/new avatar comparisons for movement speed, jump height, collision capsule, camera orbit, touchscreen analog+swipe, combat and world portal transitions. Log FPS/frame times on mobile and desktop, including GLB load failure fallback.
+5. Only after verified build + real browser/device gameplay tests consider enabling the flag in preview; **no production merge**.
+
+### Updated evidence table
+| World | Historical evidence coverage (estimate) | Actual integrated world % | Playability verified |
+| --- | ---: | --- | --- |
+| Jurassic | 25% | Unknown | No |
+| Time of Moses | 10% | Unknown | No |
+| Time of Jesus | 10% | Unknown | No |
+| Time of Muhammad ﷺ | 10% | Unknown | No |
+| Today | 10% | Unknown | No |
+| Future | 30% | Unknown | No |
+
+Visual milestones (rough implementation evidence only): procedural mesh detailing 10%; actual skinned humanoid mesh 0%; rig 0%; PBR textures 0%; procedural animation 10%, skeletal animation 0%; lighting 10%. Physics completion unknown; overall game completion unknown; gameplay-test readiness **not verified**. The percentages are *not* a measured completion forecast. This audit adds documentation only, not an untested renderer replacement.
