@@ -108,9 +108,10 @@
 /* Editorial cover imagery: half-opacity photographs softly dissolved into each publication. */
 .entrance .splitPreviewArt{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(145deg,#ffffff1c,#00000024);border-color:#ffffff38;box-shadow:0 14px 30px #0003}
 .entrance .splitPreviewArt::before{content:"";position:absolute;inset:-2px;z-index:-1;background-size:cover;background-position:center;opacity:.5;-webkit-mask-image:radial-gradient(ellipse 83% 79% at center,#000 38%,transparent 100%);mask-image:radial-gradient(ellipse 83% 79% at center,#000 38%,transparent 100%);filter:saturate(.9) contrast(1.05)}
-.magPanel .splitPreview:nth-child(odd) .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=75")}
-.magPanel .splitPreview:nth-child(even) .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=75")}
-.newsPanel .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=75");filter:grayscale(.35) sepia(.1)}
+.magPanel .splitPreview:nth-child(3n+1) .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1634047113150-0b729c5cedc9?auto=format&fit=crop&w=1000&q=80")}
+.magPanel .splitPreview:nth-child(3n+2) .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1726665937344-6856211760ad?auto=format&fit=crop&w=1000&q=80")}
+.magPanel .splitPreview:nth-child(3n) .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1000&q=80")}
+.newsPanel .splitPreviewArt::before{background-image:url("https://images.unsplash.com/photo-1726665937344-6856211760ad?auto=format&fit=crop&w=1000&q=80");filter:grayscale(.35) sepia(.1)}
 .entrance .splitPreviewArt>span{position:relative;z-index:1;text-shadow:0 2px 16px #0007}
 .magPanel .splitPreviewArt>span{opacity:.25}
 .newsPanel .splitPreviewArt>span{opacity:.38;font-size:clamp(14px,3vw,32px)}
