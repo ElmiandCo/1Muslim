@@ -60,10 +60,10 @@ export default function PersistentMuslimSync(){
  void connect();return()=>{cancelled=true;void room.current?.disconnect();room.current=null;document.querySelectorAll("[data-muslim-sync-audio]").forEach(e=>e.remove())}},[session?.id,session?.status]);
  useEffect(()=>{if(session?.status!=="accepted"||(session.leader_id||session.initiator_id)===uid)return;const next=session.current_page;if(!next)return;
  const verseMatch=next.match(/^\/elm-tent\/quran\?verse=((?:[1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2})$/);
- if(verseMatch){if(pathname==="/elm-tent/quran"){remotePage.current=pathname;lastApplied.current=next;window.dispatchEvent(new CustomEvent("1muslim:ping-remote-verse",{detail:{verseKey:verseMatch[1]}}));return}remotePage.current="/elm-tent/quran";router.push(next);return}
+ if(verseMatch){if(pathname==="/elm-tent/quran"){remotePage.current=pathname;lastApplied.current=next;window.dispatchEvent(new CustomEvent("1muslim:ping-remote-verse",{detail:{verseKey:verseMatch[1]}}));return}remotePage.current="/elm-tent/quran";lastApplied.current=next;router.push(next);return}
  const match=next.match(/^\/\?pingWorkspace=(\d+)$/);
  if(match){const index=Number(match[1]);if(index>=0&&index<=6&&pathname==="/"){if(index!==lastSyncedWorkspace.current){remoteWorkspaceUntil.current=Date.now()+3000;lastSyncedWorkspace.current=index;window.dispatchEvent(new CustomEvent("1muslim:ping-remote-workspace",{detail:{index}}))}return}
- if(pathname!=="/"){remotePage.current="/";router.push("/");}return}
+ if(pathname!=="/"){remotePage.current="/";lastSyncedWorkspace.current=index;router.push("/");}return}
  if(next!==pathname&&next.startsWith("/")&&!next.startsWith("//")&&!next.includes("://")&&!next.startsWith("/messages/sync")){remotePage.current=next;router.push(next)}
  },[session?.current_page,session?.status,pathname,router]);
  useEffect(()=>{if(session?.status!=="accepted"||!pathname||pathname==="/messages/sync")return;if(remotePage.current===pathname){remotePage.current="";lastPage.current=pathname;return}if(lastPage.current===pathname)return;lastPage.current=pathname;if((session.leader_id||session.initiator_id)!==uid)return;void db.from("muslim_sync_sessions").update({current_page:pathname}).eq("id",session.id).eq("leader_id",uid).eq("status","accepted")},[pathname,session?.id,session?.status,session?.initiator_id,uid,db]);
