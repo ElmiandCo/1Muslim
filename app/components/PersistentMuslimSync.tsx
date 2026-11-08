@@ -23,11 +23,11 @@ export default function PersistentMuslimSync(){
  if(cancelled)return;const r=new Room();room.current=r;
  r.on(RoomEvent.TrackSubscribed,track=>{if(track.kind!==Track.Kind.Audio)return;const el=track.attach();el.setAttribute("data-muslim-sync-audio","true");el.setAttribute("autoplay","true");el.style.display="none";document.body.appendChild(el);void (el as HTMLMediaElement).play().catch(()=>setVoiceState("Tap Enable Audio to hear your guest"))});
  r.on(RoomEvent.TrackUnsubscribed,track=>track.detach().forEach(el=>el.remove()));
- await r.connect(json.url,json.token);if(cancelled)return;await r.startAudio().then(()=>setAudioReady(true)).catch(()=>setVoiceState("Tap Enable Audio to hear your guest"));await r.localParticipant.setMicrophoneEnabled(true);setVoiceState("Voice active");
+ await r.connect(json.url,json.token);if(cancelled)return;await r.startAudio().then(()=>setAudioReady(true)).catch(()=>setVoiceState("Tap Enable Audio to hear your guest"));await r.localParticipant.setMicrophoneEnabled(true);setVoiceState("Voice connected");
  }catch(e){if(!cancelled){setVoiceState("Voice unavailable");setError(e instanceof Error?e.message:"Unable to connect voice")}}};
  void connect();return()=>{cancelled=true;void room.current?.disconnect();room.current=null;document.querySelectorAll("[data-muslim-sync-audio]").forEach(e=>e.remove())}},[session?.id,session?.status]);
  useEffect(()=>{if(session?.status!=="accepted")return;const next=session.current_page;if(!next)return;
- const match=next.match(/^\\/\\?pingWorkspace=(\\d+)$/);
+ const match=next.match(/^\/\?pingWorkspace=(\d+)$/);
  if(match){const index=Number(match[1]);if(index>=0&&index<=6&&pathname==="/"){if(index!==lastSyncedWorkspace.current){remoteWorkspaceUntil.current=Date.now()+3000;lastSyncedWorkspace.current=index;window.dispatchEvent(new CustomEvent("1muslim:ping-remote-workspace",{detail:{index}}))}return}
  if(pathname!=="/"){remotePage.current="/";router.push("/");}return}
  if(next!==pathname&&next.startsWith("/")&&!next.startsWith("//")&&!next.includes("://")&&!next.startsWith("/messages/sync")){remotePage.current=next;router.push(next)}
