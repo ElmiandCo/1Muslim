@@ -2,3 +2,36 @@
 .editShortcut{position:fixed;right:clamp(14px,4vw,40px);bottom:clamp(84px,12vh,130px);z-index:90;background:#fff;color:#173c60;border:1px solid #b8cbd7;border-radius:999px;padding:12px 19px;text-decoration:none;font:700 14px Arial,sans-serif;box-shadow:0 8px 30px #1d364b32;transition:transform .2s}.editShortcut:hover{transform:translateY(-3px)}
 
 @media(min-width:900px){.story.doubleColumns,.story.mixedColumns{max-width:1000px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:44px;align-items:start}.story.doubleColumns .storySection{min-width:0}.story.mixedColumns .storySection:nth-child(3n+1){grid-column:1/-1;max-width:760px;margin-left:auto;margin-right:auto}.story.doubleColumns .inlineMedia,.story.mixedColumns .inlineMedia{margin:24px 0}.story.doubleColumns .gallery,.story.mixedColumns .gallery{grid-column:1/-1}}
+
+
+/* Qibla-only expanded reading viewport: independent scroll, white canvas, post-inspired composition. */
+.root{background:#fff!important;color:#22212a!important;padding:0!important;height:100dvh;overflow:hidden}
+.shell{max-width:1100px;height:100%;display:flex;flex-direction:column;overflow:hidden;background:#fff}
+.nav{flex:0 0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:clamp(13px,2.5vh,24px) clamp(15px,4vw,38px)!important;background:#fff;border-bottom:2px solid #2c2830;z-index:2}
+.nav a{font-size:clamp(10px,1.7vw,13px);color:#29232c!important}
+.nav a:last-child{text-align:right}
+.qiblaBrand{font:700 clamp(18px,4vw,32px) Georgia,serif;letter-spacing:-.045em;white-space:nowrap;color:#24232a}
+.qiblaBrand span{color:#a74d38}
+.article{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;background:#fff!important;border:0!important;margin:0!important;box-shadow:none!important;padding-bottom:env(safe-area-inset-bottom)}
+.header{padding:clamp(22px,4vw,44px) clamp(18px,5vw,54px) 22px!important;text-align:left!important}
+.masthead{margin-bottom:22px!important;border-top:0!important;border-bottom:2px solid #302831!important;color:#2b2530!important}
+.masthead span{color:#a74d38}
+.header h1{margin:16px 0!important;max-width:none!important;font-size:clamp(32px,6vw,64px)!important}
+.subtitle{margin:12px 0 22px!important;max-width:none!important;color:#56515a!important}
+.byline{justify-content:flex-start!important;align-items:center;gap:12px!important;border-top:1px solid #e5e0da}
+.editorAvatar{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:50%;background:#28232b;color:#fff!important;font:700 20px Georgia,serif}
+.heroFigure{width:calc(100% - clamp(36px,10vw,108px))!important;max-width:none!important;margin:0 auto 14px!important}
+.heroFigure img{aspect-ratio:16/10;max-height:66dvh;object-fit:cover;border-radius:3px}
+.story{max-width:920px!important;padding:clamp(22px,4vw,48px) clamp(20px,6vw,68px) 70px!important;color:#28242a!important}
+.storySection h2{color:#28242a!important;border-top-color:#d4c9c2!important}
+.storySection .lead{color:#3c3036!important}
+.inlineMedia{margin:30px 0 34px!important;max-width:100%!important}
+.inlineMedia img{border-radius:3px;max-height:66dvh;object-fit:contain}
+.footer{background:#fff!important;border-top:2px solid #302831!important}
+.newsletter .masthead{font-family:Georgia,serif;letter-spacing:.14em;border-bottom:3px double #24384b!important}
+.newsletter .kicker{color:#31546a!important}
+.newsletter .qiblaBrand span{color:#31546a}
+.magazine .masthead{font-family:Georgia,serif;letter-spacing:.2em}
+.magazine .kicker{color:#a74d38!important}
+.message{overflow-y:auto}
+@media(max-width:640px){.nav{padding:14px 12px!important}.nav span{display:inline}.header{padding:24px 18px 16px!important}.heroFigure{width:100%!important}.heroFigure img{aspect-ratio:4/3;max-height:65dvh;border-radius:0}.story{padding:24px 20px 55px!important}.inlineMedia{margin:24px 0!important}.article{margin:0!important}}
