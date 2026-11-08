@@ -145,3 +145,13 @@
 .stage[data-view="split"] .magPanel,.stage[data-view="split"] .newsPanel{min-height:0}
 .root:has(.stage[data-view="split"]) .footer{margin-top:0}
 @media(max-width:800px){.stage[data-view="split"]{min-height:0!important}.stage[data-view="split"] .entrance{min-height:0!important}}
+
+
+/* Hidden Magazine was still in normal flow (visibility:hidden only), leaving a
+   full-screen cream block between the split previews and the footer. */
+.stage[data-view="split"]>.magazine,
+.stage[data-view="split"]>.newsletter{display:none!important}
+.stage[data-view="newsletter"]>.magazine,
+.stage[data-view="magazine"]>.newsletter{display:none!important}
+.stage[data-view="split"]{display:block;min-height:0!important}
+.stage[data-view="split"]>.entrance{display:flex;position:relative;inset:auto;height:auto;min-height:0!important}
