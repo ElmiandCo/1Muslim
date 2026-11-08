@@ -254,6 +254,8 @@ export default function GoLivePage() {
     return()=>{stopped=true;cancelAnimationFrame(frame);source?.disconnect();if(context)void context.close().catch(()=>{})};
   },[studioMode,micOn,cameraReady]);
   const [error, setError] = useState("");
+  const [syncCapacity,setSyncCapacity]=useState<{member_count:number}|null>(null);
+  useEffect(()=>{let alive=true;const check=async()=>{const db=createClient();const {data}=await db.rpc("muslim_sync_live_capacity");if(alive)setSyncCapacity(data?.[0]?{member_count:Number(data[0].member_count)}:null)};void check();const timer=setInterval(()=>void check(),2500);return()=>{alive=false;clearInterval(timer)}},[]);
   const [live, setLive] = useState(false);
   const [connectingLive,setConnectingLive] = useState(false);
   const [liveSeconds,setLiveSeconds] = useState(0);
@@ -1078,6 +1080,12 @@ export default function GoLivePage() {
   };
 
   const startLive = async (fromSchedule = false) => {
+    const capacityClient=createClient();
+    const {data:syncRows,error:capacityError}=await capacityClient.rpc("muslim_sync_live_capacity");
+    if(capacityError)return setError("Unable to verify Sync group size. Try again.");
+    const syncCount=Number(syncRows?.[0]?.member_count||0);
+    if(syncCount>11)return setError("GroupSync exceeds 11 members. Go Live is disabled.");
+    if(syncCount>4&&studioMode!=="voice")return setError("GroupSync has more than 4 members. Choose Audio to go live.");
     if (!cameraReady) return setError("Turn on your camera and microphone first.");
     if (!effectiveLiveTitle.trim()) return setError("Give your live stream a title first.");
     if (fromSchedule && scheduledSlot) {
@@ -1817,8 +1825,8 @@ export default function GoLivePage() {
               {cameraReady && false && <div className="status"><span>{cameraOn ? "Camera on" : "Camera off"}</span><span>{facingMode === "user" ? "Front camera" : "Back camera"}</span><span>{micOn ? "Mic on" : "Mic off"}</span>{hostCheckedIn && !live ? <span>✓ Host checked in</span> : null}</div>}
             <div className={`newStudioActions ${launchVisual||live?"studioLaunchActive":""} ${live?"studioLaunchComplete":""}`} aria-label="Broadcast controls">
               <div className="newStudioModes" role="group" aria-label="Live format">
-                <button type="button" aria-pressed={studioMode==="desktop"} className={studioMode==="desktop"?"selected":""} onClick={()=>selectStudioMode("desktop")}><StudioGlyph kind="desktop"/>Desktop</button>
-                <button type="button" aria-pressed={studioMode==="phone"} className={studioMode==="phone"?"selected":""} onClick={()=>selectStudioMode("phone")}><StudioGlyph kind="phone"/>Phone</button>
+                <button type="button" disabled={Boolean(syncCapacity&&syncCapacity.member_count>4)} title={syncCapacity&&syncCapacity.member_count>4?"GroupSync over 4 members: Audio only":undefined} aria-pressed={studioMode==="desktop"} className={studioMode==="desktop"?"selected":""} onClick={()=>selectStudioMode("desktop")}><StudioGlyph kind="desktop"/>Desktop</button>
+                <button type="button" disabled={Boolean(syncCapacity&&syncCapacity.member_count>4)} title={syncCapacity&&syncCapacity.member_count>4?"GroupSync over 4 members: Audio only":undefined} aria-pressed={studioMode==="phone"} className={studioMode==="phone"?"selected":""} onClick={()=>selectStudioMode("phone")}><StudioGlyph kind="phone"/>Phone</button>
                 <button type="button" aria-pressed={studioMode==="voice"} className={studioMode==="voice"?"selected":""} onClick={()=>selectStudioMode("voice")}><StudioGlyph kind="voice"/>Voice</button>
               </div>
               {!live && <button type="button" data-go-live-start className={`newStudioGo ${launchPressed?"launchPressed":""}`} disabled={saving||connectingLive||launchCountdown!==null} onPointerDown={()=>setLaunchPressed(true)} onPointerUp={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onPointerCancel={()=>{if(launchCountdown===null)setLaunchPressed(false)}} onClick={launchBroadcast}>{launchCountdown!==null?`Going live in ${launchCountdown}…`:connectingLive?"Connecting…":cameraReady?"● Go Live":studioMode==="voice"?"● Go Live":"Enable Camera"}</button>}
