@@ -187,3 +187,23 @@
 @keyframes qiblaPullBack{0%{transform:scale(1.23);filter:brightness(1.2);opacity:0}25%{opacity:1}100%{transform:scale(1);filter:brightness(1);opacity:1}}
 @keyframes qiblaStoryFade{0%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.stage[data-reverse=magazine] .entrance,.stage[data-reverse=newsletter] .entrance,.stage[data-reverse=magazine] .magazine,.stage[data-reverse=newsletter] .newsletter{animation:none}}
+
+/* Mobile Qibla: keep the editorial canvas in the visual viewport; vertical scrolling only.
+   Preserve native pinch-to-zoom accessibility rather than disabling user scaling. */
+.root{width:100%;max-width:100%;min-width:0;overflow-x:clip;box-sizing:border-box}
+.root *{box-sizing:border-box}
+.stage{width:100%;max-width:100%;min-width:0;overflow-x:clip}
+.magazine,.newsletter{width:100%;max-width:100%;min-width:0;overflow-x:clip}
+.magazine img,.newsletter img,.root video{max-width:100%;height:auto}
+@media(max-width:800px){
+ .root{width:100%;max-width:100%;overflow-x:clip}
+ .topbar{width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+ .topbar>*{min-width:0;max-width:100%}
+ .topnav{min-width:0;max-width:100%;flex-wrap:wrap;justify-content:flex-end}
+ .stage{width:100%;max-width:100%;min-height:calc(100dvh - 68px)}
+ .entrance{width:100%;max-width:100%;min-width:0}
+ .magPanel,.newsPanel{min-width:0;max-width:50%;overflow:hidden}
+ .magazine,.newsletter{padding-inline:clamp(12px,4vw,22px);overflow-wrap:anywhere}
+ .feature,.storyGrid,.newsColumns,.demoGrid{max-width:100%;min-width:0}
+ .feature>*,.storyGrid>*,.newsColumns>*,.demoGrid>*{min-width:0;max-width:100%}
+}
