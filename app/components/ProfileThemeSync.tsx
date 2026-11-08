@@ -11,12 +11,12 @@ const themes:Record<string,{base:string;accent:string;secondary:string;surface:s
  titanium:{base:"#111419",accent:"#b6c3d1",secondary:"#e1e7ef",surface:"#222932",edge:"#cbd5e1",tint:"rgba(5,8,14,.52)"},
  obsidian:{base:"#0b0b0c",accent:"#e2b75e",secondary:"#ffdb8b",surface:"#1c1914",edge:"#e6bc65",tint:"rgba(0,0,0,.62)"}
 };
-const fallback="emerald";
+const fallback="obsidian";
 function applyTheme(value:unknown,persist=true){
  const requested=typeof value==="string"?value:fallback;
  const wallpaper=aliases[requested]||requested;
  const colorFamily:Record<string,string>={"emerald-mosaic":"emerald","sapphire-mosaic":"sapphire","golden-geometry":"ruby","silver-eclipse":"titanium","amethyst-mirage":"amethyst","ruby-red":"ruby","ruby-gold":"ruby"};
- const theme=colorFamily[wallpaper]|| (themes[wallpaper]?wallpaper:fallback);
+ const theme=wallpaper==="none"?"obsidian":colorFamily[wallpaper]|| (themes[wallpaper]?wallpaper:fallback);
  const t=themes[theme];const root=document.documentElement;
  root.dataset.profileBackground=wallpaper;root.dataset.muslimTheme=theme;
  root.style.setProperty("--theme-base",t.base);root.style.setProperty("--theme-accent",t.accent);root.style.setProperty("--theme-secondary",t.secondary);root.style.setProperty("--theme-surface",t.surface);root.style.setProperty("--theme-edge",t.edge);
