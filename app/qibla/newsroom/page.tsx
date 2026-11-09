@@ -73,6 +73,17 @@ export default function QiblaNewsroom(){
     <div className={styles.centerLine} aria-hidden="true"/>
    </div>
    <section className={styles.magazine} aria-hidden={view!=="magazine"}>
+    <div className={styles.magCinemaHero} style={hero?.cover?{backgroundImage:`linear-gradient(90deg,rgba(7,9,13,.98) 2%,rgba(7,9,13,.88) 40%,rgba(7,9,13,.12) 100%),url("${encodeURI(hero.cover)}")`}:undefined}>
+     <div className={styles.magCinemaCopy}>
+      <span className={styles.magCinemaEyebrow}>1QIBLA · THE FEATURED EDITION</span>
+      <h2>{hero?hero.title:"Stories worth reading."}</h2>
+      <p>{hero?hero.description.slice(0,240):"A new perspective on faith, identity, culture and the next generation."}</p>
+      {hero?<Link className={styles.magCinemaRead} href={`/qibla/newsroom/${encodeURIComponent(hero.id)}`}>READ MORE <span aria-hidden="true">↗</span></Link>:<span className={styles.magCinemaComing}>THE NEXT EDITION IS COMING</span>}
+     </div>
+     <span className={styles.magCinemaMark} aria-hidden="true">THE QIBLA / MAGAZINE</span>
+    </div>
+    {magazineStories.length>1&&<div className={styles.magCinemaShelf}><div className={styles.magCinemaShelfHead}><strong>FEATURED STORIES</strong><span>SWIPE TO EXPLORE ↗</span></div><div className={styles.magCinemaRail}>{magazineStories.slice(0,12).map((story,i)=><Link key={story.id} className={styles.magCinemaTile} href={`/qibla/newsroom/${encodeURIComponent(story.id)}`}><div className={styles.magCinemaTileArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>Q</span>}</div><small>THE QIBLA · {String(i+1).padStart(2,"0")}</small><strong>{story.title}</strong></Link>)}</div></div>}
+
     <div className={styles.magHeader}><p>1QIBLA · THE MAGAZINE</p><h1>THE QIBLA</h1><div className={styles.magRule}/><span>FAITH, IDENTITY & IDEAS FOR A NEW GENERATION</span></div>
     <div className={styles.magIntro}><span>THE LATEST EDITION</span><span>THE NEXT GENERATION OF MUSLIM VOICES</span></div>
     <label className={styles.search}><span className={styles.srOnly}>Search articles</span><input placeholder="Search the magazine…" value={query} onChange={e=>setQuery(e.target.value)} type="search"/></label>
