@@ -2920,7 +2920,7 @@ main[class*="control"] .homeLiveStreamTileActive{border:0!important;border-color
 }
 
 /* Homepage Qibla selected navigation: reverse the pink/teal split beneath it. */
-[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab[aria-pressed="true"]:has(.oneMuslimLiveFormatGlassIcon svg[viewBox="0 0 48 48"]){
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab[data-home-format="qibla"][aria-pressed="true"]{
  background:linear-gradient(105deg,rgba(12,177,171,.88) 0%,rgba(29,127,151,.83) 43%,rgba(192,55,143,.87) 100%)!important;
  border-color:rgba(170,233,224,.4)!important;
  box-shadow:inset 0 1px 0 rgba(255,255,255,.23),0 0 14px rgba(77,195,183,.22)!important;
