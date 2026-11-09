@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
+import {parseLiveCaptionPacket} from "../lib/live-captions";
 import { createClient } from "../utils/supabase/client";
 import { shouldApplyPresenceEvent, type PresenceVersion } from "../lib/live-discovery-state";
 import { useRouter } from "next/navigation";
@@ -17,6 +18,9 @@ import { playLiveCinemaMorphSound } from "../lib/live-cinema-sound";
 export default function LiveKitViewer({ roomName, streamId, embedded = false, onViewModeChange, initialViewMode = "phone", reconnectSignal = 0, smartMobileCrop = false }: { roomName: string; streamId?: string; embedded?: boolean; onViewModeChange?: (mode: CinemaMode) => void; initialViewMode?: CinemaMode; reconnectSignal?: number; smartMobileCrop?: boolean }) {
   const router=useRouter();
   const [hostEnded,setHostEnded]=useState(false);
+  const [liveCaption,setLiveCaption]=useState("");
+  const captionSequenceRef=useRef(-1);
+  const captionTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
   const endedOnce=useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const screenVideoRef = useRef<HTMLVideoElement>(null);
@@ -422,6 +426,15 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
         });
         room.on(RoomEvent.DataReceived, (payload, participant, _kind, topic) => {
           if(!mounted||!hostIdRef.current||participant?.identity!==hostIdRef.current)return;
+          const caption=parseLiveCaptionPacket(payload,topic);
+          if(caption){
+            if(caption.sequence<=captionSequenceRef.current)return;
+            captionSequenceRef.current=caption.sequence;
+            if(captionTimerRef.current)clearTimeout(captionTimerRef.current);
+            setLiveCaption(caption.enabled?caption.text:"");
+            if(caption.enabled)captionTimerRef.current=setTimeout(()=>setLiveCaption(""),caption.final?4500:2500);
+            return;
+          }
           if(topic==="live-soundboard"){try{const message=JSON.parse(new TextDecoder().decode(payload));if(["boom","crickets","laughter"].includes(message.sound))playLiveSound(message.sound as LiveSound)}catch{}return;}
           if(topic!=="live-status")return;
           try{const message=JSON.parse(new TextDecoder().decode(payload));if(message.type==="live-ended")hostEndSignalRef.current()}catch{}
