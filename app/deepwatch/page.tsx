@@ -17,7 +17,14 @@ const verifiedYaqeenEpisodes:RegisteredVideo[]=[
  {videoId:"e7TzVR84PLc",title:"Servants of the Most Merciful — Ep. 1: Those Who Walk on the Earth Humbly | Dr. Omar Suleiman",category:"Series",categories:["Shows","Educational Series","Yaqeen Institute"],startSeconds:0,endSeconds:null,format:"desktop"},
  {videoId:"5kfDmMFWbMs",title:"Servants of the Most Merciful — Episode 1: The Benefits of Being Called Servants of the Most Merciful (2020)",category:"Series",categories:["Shows","Educational Series","Yaqeen Institute"],startSeconds:0,endSeconds:null,format:"desktop"}
 ];
-const deepwatchCatalog=[...verifiedYaqeenEpisodes,...videoRegistry.filter(v=>v.format!=="phone"&&!verifiedYaqeenEpisodes.some(ep=>ep.videoId===v.videoId))];
+/* Full-length official uploads: Islamic and general educational kids content. */
+const curatedKidsVideos:RegisteredVideo[]=[
+ {videoId:"XbgHiacEFgM",title:"Omar & Hana — Have Patience Daddy, Sweet Raju & More Episodes | Official English",category:"Kids",categories:["Kids","Animation","Islamic","Omar & Hana"],startSeconds:0,endSeconds:null,format:"desktop"},
+ {videoId:"hJX3UGgIRVU",title:"Wild Kratts — Butternut Tree | Full Episode | PBS KIDS",category:"Kids",categories:["Kids","Animation","Science","PBS KIDS"],startSeconds:0,endSeconds:null,format:"desktop"}
+];
+const kidsCatalogIds=new Set([...curatedKidsVideos.map(v=>v.videoId),...videoRegistry.filter(isKidsVideo).map(v=>v.videoId)]);
+const isDeepWatchKids=(v:RegisteredVideo)=>kidsCatalogIds.has(v.videoId);
+const deepwatchCatalog=[...curatedKidsVideos,...verifiedYaqeenEpisodes,...videoRegistry.filter(v=>v.format!=="phone"&&!curatedKidsVideos.some(k=>k.videoId===v.videoId)&&!verifiedYaqeenEpisodes.some(ep=>ep.videoId===v.videoId))];
 const tabs=["Home","Kids","Movies","TV Shows","Series","Animation","International","Live","My List"] as const;
 type Tab=typeof tabs[number];
 const image=(id:string)=>`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
@@ -42,11 +49,11 @@ export default function DeepWatch(){
  const player=useRef<HTMLIFrameElement>(null);
  const selectedRef=useRef<RegisteredVideo|null>(null);
  useEffect(()=>{try{const value=JSON.parse(localStorage.getItem("1muslim:deepwatch-list")||"[]");if(Array.isArray(value))setSaved(value.filter((x):x is string=>typeof x==="string"))}catch{}},[]);
- const filtered=useMemo(()=>deepwatchCatalog.filter(v=>(tab==="Home"||(tab==="Kids"?isKidsVideo(v):tab==="My List"?saved.includes(v.videoId):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
+ const filtered=useMemo(()=>deepwatchCatalog.filter(v=>(tab==="Home"||(tab==="Kids"?isDeepWatchKids(v):tab==="My List"?saved.includes(v.videoId):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
  const heroSlides=useMemo(()=>{
   const categories:Tab[]=tab==="Home"?["Kids","Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
   const used=new Set<string>();
-  const picks=categories.map(category=>filtered.find(v=>!used.has(v.videoId)&&(category==="My List"||(category==="Kids"?isKidsVideo(v):group(v)===category)))).filter((v):v is RegisteredVideo=>Boolean(v));
+  const picks=categories.map(category=>filtered.find(v=>!used.has(v.videoId)&&(category==="My List"||(category==="Kids"?isDeepWatchKids(v):group(v)===category)))).filter((v):v is RegisteredVideo=>Boolean(v));
   picks.forEach(v=>used.add(v.videoId));
   for(const v of filtered){if(picks.length>=5)break;if(!used.has(v.videoId)){picks.push(v);used.add(v.videoId)}}
   return picks;
