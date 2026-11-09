@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from "react";
 import {createPortal} from "react-dom";
 import {getRegistryVideos,isKidsVideo} from "./videoRegistry";
 import ElmiTimedCommentsLayer from "./ElmiTimedCommentsLayer";
+import HomeWordCaptions from "./HomeWordCaptions";
 import {createClient} from "../../utils/supabase/client";
 
 type YTPlayer={
@@ -221,7 +222,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       if(disposed||!mountRef.current||!ytWindow.YT?.Player||player)return;
       player=new ytWindow.YT.Player(mountRef.current,{
         videoId:playlist[index].videoId,
-        playerVars:{autoplay:1,mute:1,controls:1,playsinline:1,rel:0,start:Math.floor(initialSeconds),enablejsapi:1},
+        playerVars:{autoplay:1,mute:1,controls:1,playsinline:1,rel:0,start:Math.floor(initialSeconds),enablejsapi:1,cc_load_policy:0},
         events:{
           onReady:({target})=>{
             if(disposed)return;
@@ -233,7 +234,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
               const segment=playlist[index];
               const seconds=player.getCurrentTime();
               if(!Number.isFinite(seconds))return;
-              setTimedSeconds(Math.floor(seconds));
+              setTimedSeconds(seconds);
               if(!(format==="phone"&&(sessionStay||shortsSeen%6>=2))&&(format==="phone"||!continuedIds.has(segment.videoId))&&seconds>=segmentStart+15){
                 if(promptStartedAt===null){promptStartedAt=performance.now();setSkipPrompt(true);setSkipCountdown(5)}
                 const elapsed=(performance.now()-promptStartedAt)/1000;
@@ -281,6 +282,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
         <div className="oneMuslimSeamlessPanel"><img src={`https://i.ytimg.com/vi/${carouselPreview.to}/maxresdefault.jpg`} alt="" onError={e=>{e.currentTarget.src=`https://i.ytimg.com/vi/${carouselPreview.to}/hqdefault.jpg`}}/></div>
       </div>}
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
+      {playlist[index]?.videoId&&<HomeWordCaptions videoId={playlist[index].videoId} seconds={timedSeconds}/>}
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
       {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay is-silver" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
       {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Next video countdown"><button type="button" aria-label="Tap to stay on this video" onClick={()=>continueVideoRef.current()}><span className="oneMuslimSkipLabel">{skipCountdown===5?"Next Video":"Tap To Stay"}</span><span className="oneMuslimSkipNumber">{skipCountdown}</span></button></div>}
