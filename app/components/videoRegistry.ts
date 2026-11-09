@@ -1,6 +1,7 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"PDfCJRqOXQI",title:"The Story Of Prophets Ibrahim & Yunus | Animated Full Movies — One Islam Productions",category:"Animated Movies",categories:["Movies","Animation","Kids","Prophet Stories","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"Qdm70F47b5k",title:"The Story of Dajjal — Hasan Ali",category:"Afterlife",categories:["One Islam Productions","Islamic Lectures","Afterlife"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"iVtFN5NDkCw",title:"Your First Hour in the Grave — Ahmad Ali",category:"Afterlife",categories:["One Islam Productions","Islamic Lectures","Afterlife"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"XFX5q0JILd0",title:"Letters From Jannah | EP5 — The Palace Built for Me",category:"Shows",categories:["Shows","Letters From Jannah"],startSeconds:0,endSeconds:null,format:"desktop"},
