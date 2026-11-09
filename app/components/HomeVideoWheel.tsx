@@ -14,6 +14,29 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
 
  const [position,setPosition]=useState(0);
  const [category,setCategory]=useState("All");
+ const [controlsVisible,setControlsVisible]=useState(false);
+ const controlsWindow=useRef(0);
+ const controlsTimers=useRef<ReturnType<typeof setTimeout>[]>([]);
+ const lastGesture=useRef(0);
+ const clearControlsTimers=()=>{controlsTimers.current.forEach(clearTimeout);controlsTimers.current=[]};
+ const engageControls=()=>{
+  const now=Date.now();
+  // A burst of gestures shares its original three-second deadline.
+  if(now>=controlsWindow.current){
+   clearControlsTimers();
+   controlsWindow.current=now+3000;
+   setControlsVisible(true);
+   controlsTimers.current.push(setTimeout(()=>setControlsVisible(false),3000));
+  }
+  lastGesture.current=now;
+  const deadline=controlsWindow.current;
+  controlsTimers.current.push(setTimeout(()=>{
+   if(lastGesture.current!==now||Date.now()>=deadline)return;
+   setControlsVisible(true);
+   controlsTimers.current.push(setTimeout(()=>setControlsVisible(false),Math.min(1500,Math.max(0,deadline-Date.now()))));
+  },1000));
+ };
+ useEffect(()=>()=>clearControlsTimers(),[]);
  const dragged=useRef(false);
  const direction=useRef(1);
  const pointer=useRef<{x:number;position:number}|null>(null);
@@ -74,6 +97,11 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
  .homeVideoWheelCategories{position:absolute;z-index:8;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:2px 8px;background:transparent;min-width:0}
  .homeVideoWheelCollapse{position:absolute;right:8px;top:3px;z-index:30;width:30px;height:30px;border:1px solid rgba(255,255,255,.45);border-radius:10px;background:rgba(0,0,0,.22);color:white;font-size:25px;line-height:1;display:grid;place-items:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);cursor:pointer;transition:background .3s ease,transform .3s ease}
  .homeVideoWheelCollapse:active{transform:scale(.92)}
+ .homeVideoWheelControls{opacity:0;transition:opacity 450ms ease;pointer-events:none}
+ .homeVideoWheelControls[data-visible="true"]{opacity:1;pointer-events:auto}
+ /* The invisible close hit target remains available without displaying its icon. */
+ .homeVideoWheelCollapse.homeVideoWheelControls{pointer-events:auto}
+ @media(prefers-reduced-motion:reduce){.homeVideoWheelControls{transition:none}}
  .homeVideoWheelKids{flex:0 0 auto;margin-left:auto}
  .homeVideoWheelCategories button{white-space:nowrap;border:0;border-radius:0;padding:2px 4px;background:transparent;color:inherit;font-size:10px;font-weight:400;text-shadow:0 1px 4px #000}
  .homeVideoWheelCategories button{transition:transform .18s ease,color .18s ease;transform-origin:center center}
@@ -86,12 +114,12 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
  @media(prefers-reduced-motion:reduce){.homeVideoWheelBody{transition:none}}
  `}</style>
  
- <button type="button" className="homeVideoWheelCollapse" onClick={()=>setExpanded(false)} aria-label="Collapse video carousel" title="Collapse carousel">×</button>
- <div className="homeVideoWheelCategories" role="group" aria-label="Video categories">{(["All","Kids"] as const).map(item=><button key={item} className={item==="Kids"?"homeVideoWheelKids":undefined} type="button" aria-pressed={category===item} onClick={()=>{setCategory(item);positionRef.current=0;setPosition(0);window.dispatchEvent(new CustomEvent("oneMuslimCarouselCategory",{detail:{category:item,format}}))}}>{item}</button>)}</div>
+ <button type="button" className="homeVideoWheelCollapse homeVideoWheelControls" data-visible={controlsVisible} onClick={()=>setExpanded(false)} aria-label="Collapse video carousel" title="Collapse carousel">×</button>
+ <div className="homeVideoWheelCategories homeVideoWheelControls" data-visible={controlsVisible} role="group" aria-label="Video categories">{(["All","Kids"] as const).map(item=><button key={item} className={item==="Kids"?"homeVideoWheelKids":undefined} type="button" aria-pressed={category===item} onClick={()=>{engageControls();setCategory(item);positionRef.current=0;setPosition(0);window.dispatchEvent(new CustomEvent("oneMuslimCarouselCategory",{detail:{category:item,format}}))}}>{item}</button>)}</div>
 
  <div className="homeVideoWheelBody" aria-hidden={!expanded}>
- {expanded&&<><div className="homeVideoWheelTrack" aria-label="Choose a video to play above" onTouchStart={e=>e.stopPropagation()} onTouchMove={e=>e.stopPropagation()} onTouchEnd={e=>e.stopPropagation()} onPointerDown={e=>{e.stopPropagation();if(resumeTimer.current)clearTimeout(resumeTimer.current);paused.current=true;dragged.current=false;pointer.current={x:e.clientX,position:positionRef.current}}} onPointerMove={e=>{e.stopPropagation();onMove(e.clientX)}} onPointerUp={e=>{e.stopPropagation();onMove(e.clientX);settle()}} onPointerCancel={()=>{settle()}}>
- {items.map((item,i)=>{let offset=((i-position)%count+count)%count;if(offset>count/2)offset-=count;const distance=Math.abs(offset);const scale=Math.max(.24,1-.25*distance*distance);return <div key={item.videoId} className="homeVideoWheelCard" role="button" tabIndex={0} aria-label={`Play ${item.title}`} onClick={()=>{if(dragged.current){return;}paused.current=true;if(resumeTimer.current)clearTimeout(resumeTimer.current);resumeTimer.current=setTimeout(()=>{paused.current=false},500);window.dispatchEvent(new CustomEvent("oneMuslimSelectCarouselVideo",{detail:{videoId:item.videoId,format:item.format}}))}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();window.dispatchEvent(new CustomEvent("oneMuslimSelectCarouselVideo",{detail:{videoId:item.videoId,format:item.format}}))}}} style={{transform:`translateX(calc(-50% + ${offset*110}%)) perspective(550px) rotateY(${-offset*13}deg) scale(${scale})`,opacity:Math.max(.12,1-distance*.28),zIndex:Math.round(20-distance),background:`linear-gradient(145deg,hsla(${190+(i%6)*27},65%,35%,.58),rgba(4,12,25,.8))`}}><img src={`https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`} alt="" loading="lazy" draggable={false} referrerPolicy="no-referrer" onError={e=>{e.currentTarget.style.display="none"}}/><strong>{item.title}</strong></div>})}
+ {expanded&&<><div className="homeVideoWheelTrack" aria-label="Choose a video to play above" onTouchStart={e=>e.stopPropagation()} onTouchMove={e=>e.stopPropagation()} onTouchEnd={e=>e.stopPropagation()} onPointerDown={e=>{engageControls();e.stopPropagation();if(resumeTimer.current)clearTimeout(resumeTimer.current);paused.current=true;dragged.current=false;pointer.current={x:e.clientX,position:positionRef.current}}} onPointerMove={e=>{e.stopPropagation();onMove(e.clientX)}} onPointerUp={e=>{engageControls();e.stopPropagation();onMove(e.clientX);settle()}} onPointerCancel={()=>{settle()}}>
+ {items.map((item,i)=>{let offset=((i-position)%count+count)%count;if(offset>count/2)offset-=count;const distance=Math.abs(offset);const scale=Math.max(.24,1-.25*distance*distance);return <div key={item.videoId} className="homeVideoWheelCard" role="button" tabIndex={0} aria-label={`Play ${item.title}`} onClick={()=>{engageControls();if(dragged.current){return;}paused.current=true;if(resumeTimer.current)clearTimeout(resumeTimer.current);resumeTimer.current=setTimeout(()=>{paused.current=false},500);window.dispatchEvent(new CustomEvent("oneMuslimSelectCarouselVideo",{detail:{videoId:item.videoId,format:item.format}}))}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();engageControls();window.dispatchEvent(new CustomEvent("oneMuslimSelectCarouselVideo",{detail:{videoId:item.videoId,format:item.format}}))}}} style={{transform:`translateX(calc(-50% + ${offset*110}%)) perspective(550px) rotateY(${-offset*13}deg) scale(${scale})`,opacity:Math.max(.12,1-distance*.28),zIndex:Math.round(20-distance),background:`linear-gradient(145deg,hsla(${190+(i%6)*27},65%,35%,.58),rgba(4,12,25,.8))`}}><img src={`https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`} alt="" loading="lazy" draggable={false} referrerPolicy="no-referrer" onError={e=>{e.currentTarget.style.display="none"}}/><strong>{item.title}</strong></div>})}
  </div></>}
- </div>{!expanded&&exploreStage&&createPortal(<div className="homeCarouselExploreLabel" aria-hidden="true">✦ Explore More <span>✦</span></div>,exploreStage)}{!expanded&&canExpand&&stageNode&&createPortal(<button type="button" onClick={()=>setExpanded(true)} aria-label="Expand video carousel" title="Show carousel" style={{position:"absolute",right:12,top:86,zIndex:40,border:"1px solid rgba(255,255,255,.3)",borderRadius:12,background:"rgba(0,0,0,.35)",color:"#fff",fontSize:18,padding:"5px 11px",backdropFilter:"blur(5px)",cursor:"pointer"}}>▤</button>,stageNode)}</div>;
+ </div>{!expanded&&exploreStage&&createPortal(<div className="homeCarouselExploreLabel" aria-hidden="true">✦ Explore More <span>✦</span></div>,exploreStage)}{!expanded&&canExpand&&stageNode&&createPortal(<button type="button" onClick={()=>setExpanded(true)} aria-label="Expand video carousel" title="Show carousel" style={{position:"absolute",right:14,top:48,zIndex:40,border:"1px solid rgba(255,255,255,.22)",borderRadius:10,background:"rgba(0,0,0,.35)",color:"#fff",fontSize:15,padding:"3px 7px",backdropFilter:"blur(5px)",cursor:"pointer"}}>▤</button>,stageNode)}</div>;
 }
