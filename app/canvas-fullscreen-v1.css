@@ -2906,3 +2906,15 @@ main[class*="control"] .homeLiveStreamTileActive{border:0!important;border-color
  }
  [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom{bottom:8px!important;}
 }
+
+/* Home Live composer: 12px thinner field, 10px smaller Send, no blue fill. */
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm>div>input{
+ height:30px!important;min-height:30px!important;padding:3px 10px!important;
+ background:transparent!important;border-color:rgba(255,255,255,.25)!important;
+ box-shadow:none!important;color:#fff!important;
+}
+[data-workspace-page="0"] .oneMuslimLiveBottom .homeLiveCommentForm>button[type="submit"]{
+ height:32px!important;min-height:32px!important;padding:2px 9px!important;
+ background:transparent!important;border-color:rgba(255,255,255,.25)!important;
+ box-shadow:none!important;color:#fff!important;
+}
