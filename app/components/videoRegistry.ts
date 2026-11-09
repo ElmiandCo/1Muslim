@@ -1,6 +1,12 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"k4hRONalWU4",title:"Stories of the Prophets | EP1 — Introduction",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"jktPehmOlmo",title:"Stories of the Prophets | EP2 — Creation of Adam (AS)",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"hzoo_llwzBI",title:"Stories of the Prophets | EP3 — Creation of Hawwa (AS)",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"kYJLOA3Ku20",title:"Stories of the Prophets | EP4 — The Arrogance of Iblees",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"LgzRb5SYAvo",title:"The 25 Prophets in Islam Explained",category:"Series",categories:["Shows","Prophet Stories","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"Zor1et-rT8c",title:"Khalid Yasin — The Purpose of Life | Part 1 of 3",category:"Series",categories:["Shows","Islamic Lectures","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"PDfCJRqOXQI",title:"The Story Of Prophets Ibrahim & Yunus | Animated Full Movies — One Islam Productions",category:"Animated Movies",categories:["Movies","Animation","Kids","Prophet Stories","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"Qdm70F47b5k",title:"The Story of Dajjal — Hasan Ali",category:"Afterlife",categories:["One Islam Productions","Islamic Lectures","Afterlife"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"iVtFN5NDkCw",title:"Your First Hour in the Grave — Ahmad Ali",category:"Afterlife",categories:["One Islam Productions","Islamic Lectures","Afterlife"],startSeconds:0,endSeconds:null,format:"desktop"},
