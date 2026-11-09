@@ -255,7 +255,7 @@ export default function Home(){
  const navSoftExitTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const navVisibleTime=useRef(0);
  const navTickTime=useRef(Date.now());
- const resetNavIdle=()=>{if(navSoftExitTimer.current)clearTimeout(navSoftExitTimer.current);setNavSoftExit(false);navVisibleTime.current=0;navTickTime.current=Date.now();navLastActivity.current=Date.now();setNavIdleElapsed(0);setNavDismissed(false)};
+ const resetNavIdle=()=>{if(navRetentionRecorded.current){navRetentionCycle.current+=1;navRetentionRecorded.current=false}if(navSoftExitTimer.current)clearTimeout(navSoftExitTimer.current);setNavSoftExit(false);navVisibleTime.current=0;navTickTime.current=Date.now();navLastActivity.current=Date.now();setNavIdleElapsed(0);setNavDismissed(false)};
  const dismissNavAnimation=()=>{if(navSoftExit)return;setNavSoftExit(true);if(navSoftExitTimer.current)clearTimeout(navSoftExitTimer.current);navSoftExitTimer.current=setTimeout(()=>{resetNavIdle();navFaithCycle.current=-1},650)};
  useEffect(()=>{const timer=window.setInterval(()=>{const now=Date.now();const delta=Math.min(1000,Math.max(0,now-navTickTime.current));navTickTime.current=now;if(document.visibilityState==="visible")navVisibleTime.current+=delta;setNavIdleElapsed(navVisibleTime.current)},200);return()=>{window.clearInterval(timer);if(navSoftExitTimer.current)clearTimeout(navSoftExitTimer.current)}},[]);
  useEffect(()=>{const onToggle=(event:Event)=>{const detail=(event as CustomEvent<{expanded:boolean}>).detail;setCarouselSearchOpen(Boolean(detail?.expanded));resetNavIdle()};window.addEventListener("oneMuslimHomeCarouselExpanded",onToggle);return()=>window.removeEventListener("oneMuslimHomeCarouselExpanded",onToggle)},[]);
@@ -278,6 +278,7 @@ export default function Home(){
  const navRetentionVisit=useRef("");
  const navRetentionVisitor=useRef("");
  const navRetentionRecorded=useRef(false);
+ const navRetentionCycle=useRef(1);
  const navRetentionPage=useRef(-1);
  const navRetentionPageName=["Live","Qur’an","Posts","Messages","Elm Tent","Community","Profile"][workspacePage]||"Live";
  useEffect(()=>{
@@ -285,6 +286,7 @@ export default function Home(){
   navRetentionPage.current=workspacePage;
   resetNavIdle();
   navRetentionRecorded.current=false;
+  navRetentionCycle.current=1;
   navRetentionVisit.current=crypto.randomUUID();
   try{let id=localStorage.getItem("1muslim:nav-retention-visitor");if(!id){id=crypto.randomUUID();localStorage.setItem("1muslim:nav-retention-visitor",id)}navRetentionVisitor.current=id}catch{navRetentionVisitor.current=crypto.randomUUID()}
   void fetch("/api/nav-retention",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:navRetentionPageName,event:"visit",visitor:navRetentionVisitor.current,visit:navRetentionVisit.current,cycle:0})}).catch(()=>{});
@@ -292,7 +294,7 @@ export default function Home(){
  useEffect(()=>{
   if(navIdleElapsed<90000||navRetentionRecorded.current||!navRetentionVisit.current||document.visibilityState!=="visible")return;
   navRetentionRecorded.current=true;
-  void fetch("/api/nav-retention",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:navRetentionPageName,event:"milestone",visitor:navRetentionVisitor.current,visit:navRetentionVisit.current,cycle:1})}).catch(()=>{});
+  void fetch("/api/nav-retention",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:navRetentionPageName,event:"milestone",visitor:navRetentionVisitor.current,visit:navRetentionVisit.current,cycle:navRetentionCycle.current})}).catch(()=>{});
  },[navIdleElapsed,workspacePage]);
  const navCycleTime=Math.max(0,navIdleElapsed-10000);
  const navCyclePhase=Math.floor(navCycleTime/30000)%4;
