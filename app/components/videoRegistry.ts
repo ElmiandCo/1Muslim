@@ -1,6 +1,8 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"Av2JfPcNgsE",title:"Stories of Dead People — S2 EP16: She Died Then Turned Into This",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"4QBftmqAGFI",title:"Stories of Dead People — S2 EP18: Girl Who Cried After Her Death",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"e87KDhW3biE",title:"Stories of Dead People — S2 EP11: A Man Who Jokes About Death",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"y1wrwkjR-NM",title:"Stories of Dead People — S2 EP12: 7 Months After His Death, He Was Still Bleeding",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"qAVVG3-Iqv8",title:"Stories of Dead People — S2 EP13: Dead Man With Snakes & Rats, Why?",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
