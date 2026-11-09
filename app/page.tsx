@@ -98,6 +98,7 @@ export default function Home(){
  useEffect(()=>()=>{if(shopTimer.current)clearTimeout(shopTimer.current)},[]);
  useEffect(()=>{try{sessionStorage.setItem("1muslim:homepage-visited-v1","yes")}catch{}},[]);
  const [homeSignedIn,setHomeSignedIn]=useState<boolean|null>(null);
+ const signedInVisualDemo=typeof window!=="undefined"&&window.location.hostname.endsWith(".vercel.app")&&new URLSearchParams(window.location.search).get("signedInDemo")==="1";
  const [hudhudGuestLocked,setHudhudGuestLocked]=useState(false);
  const [entryLoading,setEntryLoading]=useState(true);
 
@@ -120,7 +121,7 @@ export default function Home(){
  useEffect(()=>{if(homeSignedIn!==false||shahadaDismissed){setShahadaOverlay(false);return;}const timer=window.setTimeout(()=>setShahadaOverlay(true),5000);return()=>window.clearTimeout(timer)},[homeSignedIn,shahadaDismissed]);
  useEffect(()=>{if(homeSignedIn!==false)return;let timer:ReturnType<typeof setTimeout>;let active=true;let cycle=0;let step=0;const timings=[1250,1000,780,560,390,260,170,120,95,150,240,420,720,1100,1450,1800];const advance=()=>{if(!active)return;setGuestTitleIndex(i=>(i+1+Math.floor(Math.random()*3))%guestTitles.length);setGuestTitleTick(i=>i+1);step++;if(step>=timings.length){step=0;cycle++;setGuestTitleZoom(true);timer=setTimeout(()=>{setGuestTitleZoom(false);timer=setTimeout(advance,350)},800);return}timer=setTimeout(advance,timings[step])};timer=setTimeout(advance,timings[0]);return()=>{active=false;clearTimeout(timer);setGuestTitleZoom(false)}},[homeSignedIn]);
  const [homeNames,setHomeNames]=useState<{english:string;arabic:string}|null>(null);
- useEffect(()=>{let active=true;const db=createClient();const check=async()=>{const {data:{user}}=await db.auth.getUser();if(active){setHomeSignedIn(!!user);setAdminHudHud(user?.email?.toLowerCase()==="hudhudbyelmi@gmail.com");if(!user){setHomeNames(null);setHudHudPanel(null)}else{const meta=user.user_metadata||{};const english=String(meta.display_name||meta.full_name||meta.name||user.email?.split("@")[0]||"Member").trim();const arabic=String(meta.arabic_name||meta.name_ar||"").trim();setHomeNames({english,arabic:arabic||"اسمك بالعربية"})}}};void check();const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void check()});return()=>{active=false;subscription.unsubscribe()}},[]);
+ useEffect(()=>{let active=true;const db=createClient();const check=async()=>{const {data:{user}}=await db.auth.getUser();if(active){setHomeSignedIn(!!user||signedInVisualDemo);setAdminHudHud(user?.email?.toLowerCase()==="hudhudbyelmi@gmail.com");if(!user){setHomeNames(null);setHudHudPanel(null)}else{const meta=user.user_metadata||{};const english=String(meta.display_name||meta.full_name||meta.name||user.email?.split("@")[0]||"Member").trim();const arabic=String(meta.arabic_name||meta.name_ar||"").trim();setHomeNames({english,arabic:arabic||"اسمك بالعربية"})}}};void check();const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void check()});return()=>{active=false;subscription.unsubscribe()}},[]);
  const [upgradeVisible,setUpgradeVisible]=useState(false);
  const [guestFadeKey,setGuestFadeKey]=useState(0);
  // Guest-only intro: black/gold -> purple -> emerald -> black -> blue.
