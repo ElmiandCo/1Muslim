@@ -82,6 +82,7 @@ export default function QiblaNewsroom(){
      </div>
      <span className={styles.magCinemaMark} aria-hidden="true">THE QIBLA / MAGAZINE</span>
     </div>
+    <div className={styles.magCinemaExplore}><Link href="/deepwatch" aria-label="Explore more on DeepWatch"><span>✦</span> EXPLORE MORE <span>✦</span></Link></div>
     {magazineStories.length>1&&<div className={styles.magCinemaShelf}><div className={styles.magCinemaShelfHead}><strong>FEATURED STORIES</strong><span>SWIPE TO EXPLORE ↗</span></div><div className={styles.magCinemaRail}>{magazineStories.slice(0,12).map((story,i)=><Link key={story.id} className={styles.magCinemaTile} href={`/qibla/newsroom/${encodeURIComponent(story.id)}`}><div className={styles.magCinemaTileArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>Q</span>}</div><small>THE QIBLA · {String(i+1).padStart(2,"0")}</small><strong>{story.title}</strong></Link>)}</div></div>}
 
     <div className={styles.magHeader}><p>1QIBLA · THE MAGAZINE</p><h1>THE QIBLA</h1><div className={styles.magRule}/><span>FAITH, IDENTITY & IDEAS FOR A NEW GENERATION</span></div>
