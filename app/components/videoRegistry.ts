@@ -1,6 +1,9 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"XFX5q0JILd0",title:"Letters From Jannah | EP5 — The Palace Built for Me",category:"Shows",categories:["Shows","Letters From Jannah"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"XWiVlPH8ycw",title:"Letters From Jannah | EP4 — The Gardens You Were Promised",category:"Shows",categories:["Shows","Letters From Jannah"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"3JJpHR59598",title:"Letters From Jannah | EP3 — The First Welcome in Paradise",category:"Shows",categories:["Shows","Letters From Jannah"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"oVFGrvEwgdE",title:"Letters From Jannah | EP2 — My First Step In Jannah",category:"Shows",categories:["Shows","Letters From Jannah"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"6W3MDgUsrG0",title:"Letters From Jannah | EP1 — The Final Breath",category:"Shows",categories:["Shows","Letters From Jannah"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"QuxSwXGvCDE",title:"The Story of a Crying Sahabi | Animated Film",category:"Islamic History",categories:["Animated Movies","Kids","Islamic History"],startSeconds:0,endSeconds:null,format:"desktop"},
