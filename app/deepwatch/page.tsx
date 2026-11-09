@@ -38,11 +38,13 @@ const curatedKidsVideos:RegisteredVideo[]=[
 const kidsCatalogIds=new Set([...officialIslamicFilms.map(v=>v.videoId),...curatedKidsVideos.map(v=>v.videoId),...videoRegistry.filter(isKidsVideo).map(v=>v.videoId)]);
 const isDeepWatchKids=(v:RegisteredVideo)=>kidsCatalogIds.has(v.videoId);
 const deepwatchCatalog=Array.from(new Map([featuredLive,...officialIslamicFilms,...curatedKidsVideos,...verifiedYaqeenEpisodes,...videoRegistry.filter(v=>v.format==="desktop")].filter(v=>v.format==="desktop"&&!/shorts?/i.test([v.category,...(v.categories||[])].join(" "))).map(v=>[v.videoId,v] as const)).values());
-const oneIslamIds=new Set(["ZtmfL6uZfa4","wuNAlw5kmW8","W-C-qyaTJ9A","bBHSA4l8LJQ","QuxSwXGvCDE","6W3MDgUsrG0","oVFGrvEwgdE","3JJpHR59598","XWiVlPH8ycw","XFX5q0JILd0","iVtFN5NDkCw","Qdm70F47b5k","PDfCJRqOXQI","k4hRONalWU4","jktPehmOlmo","hzoo_llwzBI","kYJLOA3Ku20","LgzRb5SYAvo","Zor1et-rT8c","RerLVM4pWeE","4elQ8MMqq6Q","74an2nHujZU","eRMdvy0oWKw","GWHggtbGQ4s","Dyf-hcQHVSg","-O7LWSejY0E","q2_NhdYU_Tg","w9pnYXQcxrs"]);
+const oneIslamIds=new Set(["ZtmfL6uZfa4","wuNAlw5kmW8","W-C-qyaTJ9A","bBHSA4l8LJQ","QuxSwXGvCDE","6W3MDgUsrG0","oVFGrvEwgdE","3JJpHR59598","XWiVlPH8ycw","XFX5q0JILd0","iVtFN5NDkCw","Qdm70F47b5k","PDfCJRqOXQI","k4hRONalWU4","jktPehmOlmo","hzoo_llwzBI","kYJLOA3Ku20","LgzRb5SYAvo","Zor1et-rT8c","RerLVM4pWeE","4elQ8MMqq6Q","74an2nHujZU","eRMdvy0oWKw","GWHggtbGQ4s","Dyf-hcQHVSg","-O7LWSejY0E","q2_NhdYU_Tg","w9pnYXQcxrs","M-qTbC0ST_A","50o4JLaFfY4","C7XZEcvQTXM","xsJg5cV_BYw","dsgc7wOATtU","N6vkcVBd5-M","eNRdgzVgt-o","HXHzI7FSQc8","O38OhlRifrk","l3mfoSVXFrQ","KjHaAItddDo","2-BVXtBdxw8","e87KDhW3biE","y1wrwkjR-NM","qAVVG3-Iqv8","JTJ37FNaPSU","Av2JfPcNgsE","4QBftmqAGFI"]);
 const oneIslamVideos=deepwatchCatalog.filter(v=>oneIslamIds.has(v.videoId)).sort((a,b)=>{const ep=(v:RegisteredVideo)=>Number(v.title.match(/\bEP(\d+)\b/i)?.[1]||999);return /Stories of the Prophets/i.test(a.title)&&/Stories of the Prophets/i.test(b.title)?ep(a)-ep(b):0});
-const tabs=["Home","Kids","Movies","TV Shows","Series","The Prophets","Animation","International","Live","My List"] as const;
+const tabs=["Home","Kids","Movies","TV Shows","Series","The Prophets","Scary","Animation","International","Live","My List"] as const;
 type Tab=typeof tabs[number];
 const isProphetVideo=(v:RegisteredVideo)=>/prophet|adam|hawwa|ibrahim|yunus|nooh|nuh|hud \(as\)|idrees|sheeth|habil|qabil|iblees|iblis/i.test([v.title,v.category,...(v.categories||[])].join(" "));
+/* Scary is a curated Islamic reminders collection, not fictional horror. */
+const isScaryVideo=(v:RegisteredVideo)=>oneIslamIds.has(v.videoId)&&/dajjal|grave|death|dead people|afterlife|judgment|jahannam|hell|qiyamah|akhirah|punishment|torment|scary/i.test([v.title,v.category,...(v.categories||[])].join(" "));
 const image=(id:string)=>`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const group=(v:RegisteredVideo):Tab=>{
  const value=[v.category,...(v.categories||[]),v.title].join(" ").toLowerCase();
@@ -65,11 +67,11 @@ export default function DeepWatch(){
  const player=useRef<HTMLIFrameElement>(null);
  const selectedRef=useRef<RegisteredVideo|null>(null);
  useEffect(()=>{try{const value=JSON.parse(localStorage.getItem("1muslim:deepwatch-list")||"[]");if(Array.isArray(value))setSaved(value.filter((x):x is string=>typeof x==="string"))}catch{}},[]);
- const filtered=useMemo(()=>deepwatchCatalog.filter(v=>(tab==="Home"||(tab==="Kids"?isDeepWatchKids(v):tab==="My List"?saved.includes(v.videoId):tab==="The Prophets"?isProphetVideo(v):tab==="Movies"?(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId)):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
+ const filtered=useMemo(()=>deepwatchCatalog.filter(v=>(tab==="Home"||(tab==="Kids"?isDeepWatchKids(v):tab==="My List"?saved.includes(v.videoId):tab==="The Prophets"?isProphetVideo(v):tab==="Scary"?isScaryVideo(v):tab==="Movies"?(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId)):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
  const heroSlides=useMemo(()=>{
-  const categories:Tab[]=tab==="Home"?["Kids","The Prophets","Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
+  const categories:Tab[]=tab==="Home"?["Kids","The Prophets","Scary","Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
   const used=new Set<string>();
-  const picks=categories.map(category=>filtered.find(v=>!used.has(v.videoId)&&(category==="My List"||(category==="Kids"?isDeepWatchKids(v):category==="The Prophets"?isProphetVideo(v):category==="Movies"?(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId)):group(v)===category)))).filter((v):v is RegisteredVideo=>Boolean(v));
+  const picks=categories.map(category=>filtered.find(v=>!used.has(v.videoId)&&(category==="My List"||(category==="Kids"?isDeepWatchKids(v):category==="The Prophets"?isProphetVideo(v):category==="Scary"?isScaryVideo(v):category==="Movies"?(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId)):group(v)===category)))).filter((v):v is RegisteredVideo=>Boolean(v));
   picks.forEach(v=>used.add(v.videoId));
   for(const v of filtered){if(picks.length>=5)break;if(!used.has(v.videoId)){picks.push(v);used.add(v.videoId)}}
   return picks;
@@ -85,6 +87,8 @@ export default function DeepWatch(){
  const collections=useMemo(()=>tab==="Home"?[
   {name:"Featured Tonight",items:deepwatchCatalog.slice(0,14)},
   {name:"The Prophets",items:deepwatchCatalog.filter(isProphetVideo)},
+  {name:"Scary · Afterlife & Warnings",items:deepwatchCatalog.filter(isScaryVideo)},
+  {name:"Stories of Dead People · One Islam Productions",items:deepwatchCatalog.filter(v=>(v.categories||[]).includes("Stories of Dead People"))},
   {name:"Series to Get Into",items:deepwatchCatalog.filter(v=>group(v)==="Series")},
   {name:"Movie Night",items:deepwatchCatalog.filter(v=>group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId))},
   {name:"Animated Adventures",items:deepwatchCatalog.filter(v=>group(v)==="Animation")},
@@ -106,10 +110,11 @@ export default function DeepWatch(){
    </div>)}
    {heroSlides.length>1&&<><button type="button" className="deepwatchHeroArrow previous" aria-label="Previous featured title" onClick={()=>setHeroIndex(i=>(i-1+heroSlides.length)%heroSlides.length)}>‹</button><button type="button" className="deepwatchHeroArrow next" aria-label="Next featured title" onClick={()=>setHeroIndex(i=>(i+1)%heroSlides.length)}>›</button><div className="deepwatchHeroDots" aria-label="Choose featured title">{heroSlides.map((v,i)=><button key={v.videoId} type="button" aria-label={`Show slide ${i+1}: ${v.title}`} aria-current={i===heroIndex?"true":undefined} onClick={()=>setHeroIndex(i)}/>)}</div></>}
   </section>
-  {(tab==="Home"||tab==="Series"||tab==="The Prophets"||tab==="Movies"||tab==="Animation")&&<section className="deepwatchRow" aria-label="One Islam Productions official channel collection" style={{padding:"12px 24px"}}><h2>🎬 One Islam Productions · Official Collection</h2><p style={{opacity:.8,fontSize:13}}>Animated Islamic films, Prophet Stories, and Letters From Jannah · No Shorts</p><div className="deepwatchRail">{oneIslamVideos.filter(v=>!search||v.title.toLowerCase().includes(search.toLowerCase())).map(v=><button key={v.videoId} type="button" className="deepwatchTile" onClick={()=>open(v)}><img src={image(v.videoId)} alt="" loading="lazy"/><span>{v.title}</span><small>One Islam Productions · ▶ Play</small></button>)}</div></section>}
+  {(tab==="Home"||tab==="Series"||tab==="Scary"||tab==="The Prophets"||tab==="Movies"||tab==="Animation")&&<section className="deepwatchRow" aria-label="One Islam Productions official channel collection" style={{padding:"12px 24px"}}><h2>🎬 One Islam Productions · Official Collection</h2><p style={{opacity:.8,fontSize:13}}>Animated Islamic films, Prophet Stories, and Letters From Jannah · No Shorts</p><div className="deepwatchRail">{oneIslamVideos.filter(v=>!search||v.title.toLowerCase().includes(search.toLowerCase())).map(v=><button key={v.videoId} type="button" className="deepwatchTile" onClick={()=>open(v)}><img src={image(v.videoId)} alt="" loading="lazy"/><span>{v.title}</span><small>One Islam Productions · ▶ Play</small></button>)}</div></section>}
   {(tab==="Home"||tab==="Series"||tab==="Movies"||tab==="Animation")&&[
    {name:"One Islam · Stories of the Prophets (Mufti Menk)",test:(v:RegisteredVideo)=>/Stories of the Prophets/i.test(v.title)},
    {name:"One Islam · Islamic Education & Lectures",test:(v:RegisteredVideo)=>/25 Prophets|Purpose of Life/i.test(v.title)},
+   {name:"One Islam · Stories of Dead People",test:(v:RegisteredVideo)=>(v.categories||[]).includes("Stories of Dead People")},
    {name:"One Islam · Letters From Jannah",test:(v:RegisteredVideo)=>/Letters From Jannah/i.test(v.title)},
    {name:"One Islam · Prophet Stories & Animated Films",test:(v:RegisteredVideo)=>/Prophet|Animated|Ibrahim|Yunus/i.test(v.title)},
    {name:"One Islam · Afterlife & Reminders",test:(v:RegisteredVideo)=>/Grave|Dajjal|Afterlife/i.test(v.title)}
