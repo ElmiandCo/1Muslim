@@ -30,7 +30,22 @@ export default function DeepWatch(){
  const selectedRef=useRef<RegisteredVideo|null>(null);
  useEffect(()=>{try{const value=JSON.parse(localStorage.getItem("1muslim:deepwatch-list")||"[]");if(Array.isArray(value))setSaved(value.filter((x):x is string=>typeof x==="string"))}catch{}},[]);
  const filtered=useMemo(()=>videoRegistry.filter(v=>(tab==="Home"||(tab==="My List"?saved.includes(v.videoId):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
- const featured=filtered[0]||videoRegistry[0];
+ const heroSlides=useMemo(()=>{
+  const categories:Tab[]=tab==="Home"?["Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
+  const used=new Set<string>();
+  const picks=categories.map(category=>filtered.find(v=>!used.has(v.videoId)&&(category==="My List"||group(v)===category))).filter((v):v is RegisteredVideo=>Boolean(v));
+  picks.forEach(v=>used.add(v.videoId));
+  for(const v of filtered){if(picks.length>=5)break;if(!used.has(v.videoId)){picks.push(v);used.add(v.videoId)}}
+  return picks;
+ },[filtered,tab]);
+ const [heroIndex,setHeroIndex]=useState(0);
+ const [heroPaused,setHeroPaused]=useState(false);
+ useEffect(()=>{setHeroIndex(0)},[tab,search]);
+ useEffect(()=>{if(heroPaused||selected||heroSlides.length<2||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const timer=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),4000);
+  return()=>window.clearInterval(timer);
+ },[heroPaused,selected,heroSlides.length]);
+ const featured=heroSlides[heroIndex]||heroSlides[0];
  const collections=useMemo(()=>tab==="Home"?[
   {name:"Featured Tonight",items:videoRegistry.slice(0,14)},
   {name:"Series to Get Into",items:videoRegistry.filter(v=>group(v)==="Series")},
@@ -47,7 +62,12 @@ export default function DeepWatch(){
  const toggleSaved=(id:string)=>setSaved(prev=>{const value=prev.includes(id)?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem("1muslim:deepwatch-list",JSON.stringify(value))}catch{}return value});
  return <main className="deepwatch">
   <header className="deepwatchHeader"><Link href="/" className="deepwatchBrand">DEEP<span>WATCH</span><small>BY 1MUSLIM</small></Link><nav aria-label="DeepWatch categories">{tabs.map(item=><button type="button" key={item} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}>{item}</button>)}</nav><input type="search" aria-label="Search DeepWatch" placeholder="Search titles" value={search} onChange={e=>setSearch(e.target.value)}/></header>
-  <section className="deepwatchHero" style={{backgroundImage:featured?`linear-gradient(90deg,#07090d 4%,rgba(7,9,13,.92) 38%,rgba(7,9,13,.3)),url("${image(featured.videoId)}")`:undefined}}><div className="deepwatchHeroText"><p>1MUSLIM ORIGINAL COLLECTIONS</p><h1>{featured?.title||"Stories worth watching."}</h1><span>Movie night starts here. Discover something worth your time.</span><div><button onClick={()=>featured&&open(featured)}>▶ Play Now</button><button onClick={()=>featured&&toggleSaved(featured.videoId)}>{featured&&saved.includes(featured.videoId)?"✓ In My List":"+ My List"}</button></div></div></section>
+  <section className="deepwatchHeroCarousel" aria-label="Featured DeepWatch titles" onMouseEnter={()=>setHeroPaused(true)} onMouseLeave={()=>setHeroPaused(false)} onFocusCapture={()=>setHeroPaused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))setHeroPaused(false)}}>
+   {heroSlides.map((v,i)=><div key={v.videoId} className={`deepwatchHero ${i===heroIndex?"isActive":""}`} aria-hidden={i!==heroIndex} style={{backgroundImage:`linear-gradient(90deg,#07090d 4%,rgba(7,9,13,.92) 38%,rgba(7,9,13,.3)),url("${image(v.videoId)}")`}}>
+    <div className="deepwatchHeroText"><p>1MUSLIM · {group(v).toUpperCase()}</p><h1>{v.title}</h1><span>Movie night starts here. Discover something worth your time.</span><div><button type="button" tabIndex={i===heroIndex?0:-1} onClick={()=>open(v)}>▶ Play Now</button><button type="button" tabIndex={i===heroIndex?0:-1} onClick={()=>toggleSaved(v.videoId)}>{saved.includes(v.videoId)?"✓ In My List":"+ My List"}</button></div></div>
+   </div>)}
+   {heroSlides.length>1&&<><button type="button" className="deepwatchHeroArrow previous" aria-label="Previous featured title" onClick={()=>setHeroIndex(i=>(i-1+heroSlides.length)%heroSlides.length)}>‹</button><button type="button" className="deepwatchHeroArrow next" aria-label="Next featured title" onClick={()=>setHeroIndex(i=>(i+1)%heroSlides.length)}>›</button><div className="deepwatchHeroDots" aria-label="Choose featured title">{heroSlides.map((v,i)=><button key={v.videoId} type="button" aria-label={`Show slide ${i+1}: ${v.title}`} aria-current={i===heroIndex?"true":undefined} onClick={()=>setHeroIndex(i)}/>)}</div></>}
+  </section>
   <div className="deepwatchCollections">{collections.map(collection=>collection.items.length>0&&<section key={collection.name} className="deepwatchRow"><h2>{collection.name}</h2><div className="deepwatchRail">{collection.items.map(v=><button type="button" className="deepwatchTile" key={v.videoId} onClick={()=>open(v)}><img src={image(v.videoId)} alt="" loading="lazy"/><span>{v.title}</span><small>{group(v)} · Watch now</small></button>)}</div></section>)}</div>
   {selected&&<div className="deepwatchScreen" role="dialog" aria-modal="true" aria-label={selected.title}><div className="deepwatchScreenInner"><div className="deepwatchScreenTop"><button onClick={close}>← DeepWatch</button><strong>{selected.title}</strong><button onClick={()=>toggleSaved(selected.videoId)}>{saved.includes(selected.videoId)?"✓ Saved":"+ My List"}</button></div><div className="deepwatchWatchCanvas"><div className="deepwatchPlayer"><iframe key={selected.videoId} ref={player} title={selected.title} src={`https://www.youtube-nocookie.com/embed/${selected.videoId}?enablejsapi=1&autoplay=1&playsinline=1&controls=0&rel=0&start=${selected.startSeconds||0}`} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen/></div><div className="deepwatchControls"><button onClick={()=>setSettings(v=>!v)}>⚙ Settings</button><button onClick={()=>send("seekTo",[Math.max(0,seconds-10),true])}>↶ 10s</button><button className="deepwatchPlay" onClick={()=>{send(playing?"pauseVideo":"playVideo");setPlaying(!playing)}}>{playing?"Ⅱ Pause":"▶ Play"}</button><button onClick={()=>send("seekTo",[seconds+10,true])}>10s ↷</button><button onClick={next}>Next Episode →</button></div>{settings&&<div className="deepwatchSettings"><button onClick={()=>{setCaptions(!captions);send(captions?"unloadModule":"loadModule",["captions"])}}>Captions: {captions?"On":"Off"}</button><button onClick={()=>send("setPlaybackRate",[1])}>Speed: Normal</button></div>}<div className="deepwatchTimed"><HomeLiveConversation room="desktop"/></div></div></div></div>}
  </main>;
