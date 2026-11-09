@@ -275,6 +275,25 @@ export default function Home(){
   setNavFaithIndex(next);
   try{localStorage.setItem("1muslim:last-nav-faith-message",String(next))}catch{}
  },[navIdleElapsed,navDismissed,carouselSearchOpen]);
+ const navRetentionVisit=useRef("");
+ const navRetentionVisitor=useRef("");
+ const navRetentionRecorded=useRef(false);
+ const navRetentionPage=useRef(-1);
+ const navRetentionPageName=["Live","Qur’an","Posts","Messages","Elm Tent","Community","Profile"][workspacePage]||"Live";
+ useEffect(()=>{
+  if(navRetentionPage.current===workspacePage)return;
+  navRetentionPage.current=workspacePage;
+  resetNavIdle();
+  navRetentionRecorded.current=false;
+  navRetentionVisit.current=crypto.randomUUID();
+  try{let id=localStorage.getItem("1muslim:nav-retention-visitor");if(!id){id=crypto.randomUUID();localStorage.setItem("1muslim:nav-retention-visitor",id)}navRetentionVisitor.current=id}catch{navRetentionVisitor.current=crypto.randomUUID()}
+  void fetch("/api/nav-retention",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:navRetentionPageName,event:"visit",visitor:navRetentionVisitor.current,visit:navRetentionVisit.current,cycle:0})}).catch(()=>{});
+ },[workspacePage]);
+ useEffect(()=>{
+  if(navIdleElapsed<90000||navRetentionRecorded.current||!navRetentionVisit.current||document.visibilityState!=="visible")return;
+  navRetentionRecorded.current=true;
+  void fetch("/api/nav-retention",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:navRetentionPageName,event:"milestone",visitor:navRetentionVisitor.current,visit:navRetentionVisit.current,cycle:1})}).catch(()=>{});
+ },[navIdleElapsed,workspacePage]);
  const navCycleTime=Math.max(0,navIdleElapsed-10000);
  const navCyclePhase=Math.floor(navCycleTime/30000)%4;
  const navPhaseElapsed=navCycleTime%30000;
