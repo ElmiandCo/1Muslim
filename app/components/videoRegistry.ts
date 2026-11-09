@@ -1,6 +1,10 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"e87KDhW3biE",title:"Stories of Dead People — S2 EP11: A Man Who Jokes About Death",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"y1wrwkjR-NM",title:"Stories of Dead People — S2 EP12: 7 Months After His Death, He Was Still Bleeding",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"qAVVG3-Iqv8",title:"Stories of Dead People — S2 EP13: Dead Man With Snakes & Rats, Why?",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"JTJ37FNaPSU",title:"Stories of Dead People — S2 EP15: Old Man Died Then Came Back To Life",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"O38OhlRifrk",title:"Stories of Dead People — S2 EP7: He Was Buried With a Remote, But Why?",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"l3mfoSVXFrQ",title:"Stories of Dead People — S2 EP8: He Died in Jail Giving Dawah, Face Smiling After 8 Days",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"KjHaAItddDo",title:"Stories of Dead People — S2 EP9: A Person Who Killed Her Own Sister!",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
