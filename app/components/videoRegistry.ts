@@ -1,6 +1,10 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"Dyf-hcQHVSg",title:"Stories of the Prophets | EP10 — Nooh (AS) & 950 Years Of Da'wah",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"-O7LWSejY0E",title:"Stories of the Prophets | EP11 — The Final Call Before Destruction",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"q2_NhdYU_Tg",title:"Stories of the Prophets | EP12 — Nooh (AS)'s Ark & The Great Flood",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"w9pnYXQcxrs",title:"Stories of the Prophets | EP14 — Final Warnings & The Torment Upon Aad",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"RerLVM4pWeE",title:"Stories of the Prophets | EP5 — Adam (AS) & Hawwa (AS) On Earth",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"4elQ8MMqq6Q",title:"Stories of the Prophets | EP6 — Habil & Qabil — The Sons of Adam (AS)",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"74an2nHujZU",title:"Stories of the Prophets | EP7 — The Death of Adam (AS)",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
