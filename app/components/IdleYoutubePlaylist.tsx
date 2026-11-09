@@ -174,14 +174,14 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     try{const ids=JSON.parse(localStorage.getItem("oneMuslimContinueVideoIdsV1")||"[]");if(Array.isArray(ids))ids.forEach((id:unknown)=>{if(typeof id==="string")continuedIds.add(id)})}catch{}
     const clearPrompt=()=>{promptStartedAt=null;autoSkipHandled=false;setSkipPrompt(false);setSkipCountdown(5)};
     const next=(step=1)=>{
-      if(disposed||!player)return;
+      if(disposed||!player||!playlist.length)return;
       index=((selectedIndexRef.current??index)+step+playlist.length)%playlist.length;
       selectedIndexRef.current=index;
       setTimedVideoKey(playlist[index].videoId);
       const video=playlist[index];
       segmentStart=video.startSeconds;clearPrompt();
       if(format==="phone"){shortsSeen++;try{sessionStorage.setItem("oneMuslimShortsSeenSessionV1",String(shortsSeen))}catch{}}
-      player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});
+      try{player.loadVideoById({videoId:video.videoId,startSeconds:video.startSeconds});}catch{setIsPlaying(false);setTapHint(true);}
       setTapHint(true);setIsPaused(false);setIsPlaying(false);setImmersive(false);
       if(!soundEnabledRef.current)player.mute();
       try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:video.startSeconds}));}catch{}
@@ -200,7 +200,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     continueVideoRef.current=()=>{const id=playlist[index].videoId;void (async()=>{try{const {createClient}=await import("../../utils/supabase/client");const client=createClient();const {data:{user}}=await client.auth.getUser();if(user)await client.from("app_engagement_events").insert({user_id:user.id,section:"Home Video",event_type:"finish_watching_tap",video_id:id})}catch{}})();continuedIds.add(id);if(format==="phone"){sessionStay=true;try{sessionStorage.setItem("oneMuslimShortsStaySessionV1","true")}catch{}}else{try{localStorage.setItem("oneMuslimContinueVideoIdsV1",JSON.stringify([...continuedIds]))}catch{}}clearPrompt();};
     nextVideoRef.current=()=>next();
     navigateRef.current=(step)=>{
-      if(disposed||!player||transitionTimerRef.current||!playlist.length)return;
+      if(disposed||!player||transitionTimerRef.current||playlist.length<2||!Number.isInteger(step)||Math.abs(step)!==1)return;
       const current=selectedIndexRef.current??index;
       const target=(current+step+playlist.length)%playlist.length;
       const from=playlist[current]?.videoId,to=playlist[target]?.videoId;
@@ -210,9 +210,11 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       // Both panels are flush, with the destination arriving exactly as the
       // source exits. Swap the real YouTube iframe under the destination panel.
       transitionTimerRef.current=setTimeout(()=>{
-        next(step);
+        if(disposed){transitionTimerRef.current=null;return;}
+        try{next(step)}catch{setIsPlaying(false);setTapHint(true)}
         transitionTimerRef.current=setTimeout(()=>{
           transitionTimerRef.current=null;
+          if(disposed)return;
           setSlideDirection(0);
           setCarouselPreview(null);
         },180);
@@ -278,8 +280,8 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     <div className="oneMuslimFloatingPlayerShadow" aria-hidden="true"/>
     <div className={"oneMuslimIdleYoutubePlayer"+(slideDirection?" is-switching "+(slideDirection>0?"is-next":"is-previous"):"")} aria-label="Featured video playlist while no broadcasts are live">
       {carouselPreview&&<div className={"oneMuslimSeamlessTrack"+(carouselPreview.direction>0?" is-forward":" is-backward")} aria-hidden="true">
-        <div className="oneMuslimSeamlessPanel"><img src={`https://i.ytimg.com/vi/${carouselPreview.from}/maxresdefault.jpg`} alt="" onError={e=>{e.currentTarget.src=`https://i.ytimg.com/vi/${carouselPreview.from}/hqdefault.jpg`}}/></div>
-        <div className="oneMuslimSeamlessPanel"><img src={`https://i.ytimg.com/vi/${carouselPreview.to}/maxresdefault.jpg`} alt="" onError={e=>{e.currentTarget.src=`https://i.ytimg.com/vi/${carouselPreview.to}/hqdefault.jpg`}}/></div>
+        <div className="oneMuslimSeamlessPanel"><img src={`https://i.ytimg.com/vi/${carouselPreview.from}/maxresdefault.jpg`} alt="" onError={e=>{const img=e.currentTarget;img.onerror=null;img.src=`https://i.ytimg.com/vi/${carouselPreview.from}/hqdefault.jpg`}}/></div>
+        <div className="oneMuslimSeamlessPanel"><img src={`https://i.ytimg.com/vi/${carouselPreview.to}/maxresdefault.jpg`} alt="" onError={e=>{const img=e.currentTarget;img.onerror=null;img.src=`https://i.ytimg.com/vi/${carouselPreview.to}/hqdefault.jpg`}}/></div>
       </div>}
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {playlist[index]?.videoId&&<HomeWordCaptions videoId={playlist[index].videoId} seconds={timedSeconds}/>}
