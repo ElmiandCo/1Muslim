@@ -36,7 +36,7 @@ const curatedKidsVideos:RegisteredVideo[]=[
 const kidsCatalogIds=new Set([...officialIslamicFilms.map(v=>v.videoId),...curatedKidsVideos.map(v=>v.videoId),...videoRegistry.filter(isKidsVideo).map(v=>v.videoId)]);
 const isDeepWatchKids=(v:RegisteredVideo)=>kidsCatalogIds.has(v.videoId);
 const deepwatchCatalog=Array.from(new Map([...officialIslamicFilms,...curatedKidsVideos,...verifiedYaqeenEpisodes,...videoRegistry.filter(v=>v.format==="desktop")].filter(v=>v.format==="desktop"&&!/shorts?/i.test([v.category,...(v.categories||[])].join(" "))).map(v=>[v.videoId,v] as const)).values());
-const oneIslamIds=new Set(["ZtmfL6uZfa4","wuNAlw5kmW8","W-C-qyaTJ9A","bBHSA4l8LJQ","QuxSwXGvCDE","6W3MDgUsrG0","oVFGrvEwgdE","3JJpHR59598","XWiVlPH8ycw","XFX5q0JILd0","iVtFN5NDkCw","Qdm70F47b5k","PDfCJRqOXQI","k4hRONalWU4","jktPehmOlmo","hzoo_llwzBI","kYJLOA3Ku20","LgzRb5SYAvo","Zor1et-rT8c"]);
+const oneIslamIds=new Set(["ZtmfL6uZfa4","wuNAlw5kmW8","W-C-qyaTJ9A","bBHSA4l8LJQ","QuxSwXGvCDE","6W3MDgUsrG0","oVFGrvEwgdE","3JJpHR59598","XWiVlPH8ycw","XFX5q0JILd0","iVtFN5NDkCw","Qdm70F47b5k","PDfCJRqOXQI","k4hRONalWU4","jktPehmOlmo","hzoo_llwzBI","kYJLOA3Ku20","LgzRb5SYAvo","Zor1et-rT8c","RerLVM4pWeE","4elQ8MMqq6Q","74an2nHujZU","eRMdvy0oWKw","GWHggtbGQ4s"]);
 const oneIslamVideos=deepwatchCatalog.filter(v=>oneIslamIds.has(v.videoId));
 const tabs=["Home","Kids","Movies","TV Shows","Series","Animation","International","Live","My List"] as const;
 type Tab=typeof tabs[number];
