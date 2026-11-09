@@ -10,3 +10,15 @@
 .deepwatchHeroDots button[aria-current=true]{width:30px;background:white}
 @media(max-width:700px){.deepwatchHeroCarousel{min-height:350px}.deepwatchHeroCarousel .deepwatchHero{padding-left:45px;padding-right:45px}.deepwatchHeroArrow{width:32px;height:32px;font-size:24px}.deepwatchHeroText h1{font-size:clamp(26px,6vw,42px)}}
 @media(prefers-reduced-motion:reduce){.deepwatchHeroCarousel .deepwatchHero,.deepwatchHeroDots button{transition:none;transform:none}}
+
+/* DeepWatch Live: distinctive nav and spotlight */
+.deepwatchLiveNav,.deepwatchLiveBadge{display:inline-flex;align-items:center;gap:7px;font-weight:800;letter-spacing:.08em;color:#ff646b}
+.deepwatchLivePulse{display:inline-block;width:8px;height:8px;flex:none;border-radius:50%;background:#ff3349;box-shadow:0 0 0 0 rgba(255,51,73,.55);animation:deepwatchLivePulse 2s ease-out infinite}
+@keyframes deepwatchLivePulse{0%{box-shadow:0 0 0 0 rgba(255,51,73,.55)}70%,100%{box-shadow:0 0 0 9px rgba(255,51,73,0)}}
+.deepwatchLiveSpotlight{display:grid;grid-template-columns:1fr minmax(220px,42%);align-items:center;gap:22px;padding:30px 34px;margin:20px 24px;border:1px solid rgba(255,255,255,.18);border-radius:22px;background:linear-gradient(115deg,#17131b,#0c101a);color:#fff;overflow:hidden}
+.deepwatchLiveSpotlightCopy h1{font-size:clamp(30px,5vw,58px);margin:12px 0}
+.deepwatchLiveSpotlightCopy p{color:#cbd0db;line-height:1.5}
+.deepwatchLiveSpotlightCopy button{background:#e72f47;color:white;border:0;border-radius:12px;padding:13px 22px;font-weight:800;cursor:pointer;margin-top:14px}
+.deepwatchLiveSpotlight>img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:14px}
+@media(max-width:650px){.deepwatchLiveSpotlight{grid-template-columns:1fr;margin:12px;padding:22px}.deepwatchLiveSpotlight>img{order:-1}}
+@media(prefers-reduced-motion:reduce){.deepwatchLivePulse{animation:none}}
