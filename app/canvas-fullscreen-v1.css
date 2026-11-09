@@ -2957,3 +2957,13 @@ html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveVideo {
  background-image:none!important;
  border-color:transparent!important;
 }
+
+/* Day-mode Home Live: reveal the existing white grid underneath.
+   Do not paint a replacement white/grid background. Keep the video and
+   comments themselves untouched. */
+html.light [data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage),
+html.light [data-workspace-page="0"] .canvas-vertical-portal:has(.oneMuslimLiveStage) {
+ background:transparent!important;
+ background-color:transparent!important;
+ background-image:none!important;
+}
