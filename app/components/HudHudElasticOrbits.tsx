@@ -7,7 +7,7 @@ type Action={name:string;href:string;symbol:string};
 const actions:Action[]=[
  {name:"DeepWatch",href:"/deepwatch",symbol:"▷"},
  {name:"Go Live",href:"/streaming",symbol:"◉"},
- {name:"News",href:"/qibla/newsroom",symbol:"▤"},
+ {name:"Qibla",href:"/qibla/newsroom",symbol:"qibla"},
 ];
 const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
 /** Elmi Light Labs Ascension touch-grab motion: elastic follower with two articulated joints per orb. */
@@ -73,9 +73,11 @@ export default function HudHudElasticOrbits({position,open,onClose}:{position:Po
   raf=requestAnimationFrame(tick);
   return()=>cancelAnimationFrame(raf);
  },[]);
+ const qiblaIcon=<svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="hh-qibla-gradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#ff61ad"/><stop offset="50%" stopColor="#f07fb9"/><stop offset="50%" stopColor="#43d8cf"/><stop offset="100%" stopColor="#28bdbd"/></linearGradient></defs><path d="M16 3 27 9v14L16 29 5 23V9Z" stroke="url(#hh-qibla-gradient)" strokeWidth="2" fill="none"/><path d="M16 8v16M9 12l7-4 7 4M9 20l7 4 7-4" stroke="url(#hh-qibla-gradient)" strokeWidth="2" fill="none" strokeLinejoin="round"/><circle cx="16" cy="16" r="3" fill="url(#hh-qibla-gradient)"/></svg>;
  return <div ref={root} className="hh-elastic-orbits" role="group" aria-label="HudHud magnetic actions" aria-hidden={!open}>
  <style>{`
  .hh-elastic-orbits{position:fixed;inset:0;z-index:2147483003;pointer-events:none;overflow:hidden;visibility:hidden}
+ .hh-elastic-dismiss{position:absolute;inset:0;background:transparent;border:0;cursor:default;pointer-events:auto}
  .hh-elastic-arm{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
  .hh-elastic-arm path{fill:none;stroke:rgba(183,222,248,.38);stroke-width:1.5;stroke-linecap:round}
  .hh-elastic-arm circle{r:5;fill:rgba(178,221,247,.16);stroke:rgba(226,246,255,.65);stroke-width:1.1;filter:drop-shadow(0 0 4px rgba(145,207,255,.45))}
@@ -84,7 +86,8 @@ export default function HudHudElasticOrbits({position,open,onClose}:{position:Po
  .hh-elastic-bubble:active{scale:.91}.hh-elastic-name{font-size:10px;font-weight:650;letter-spacing:.02em;color:white;text-shadow:0 2px 5px #000,0 0 8px #000;white-space:nowrap}
  @media(prefers-reduced-motion:reduce){.hh-elastic-action,.hh-elastic-arm{transition:none!important}}
  `}</style>
+ {open&&<button type="button" className="hh-elastic-dismiss" aria-label="Close HudHud options" onClick={onClose}/>}
  {actions.map((a,i)=><svg key={"arm"+i} data-elastic-arm={i} className="hh-elastic-arm" aria-hidden="true"><path/><circle/><circle/></svg>)}
- {actions.map((a,i)=><div key={a.name} data-elastic-orb={i} className="hh-elastic-action"><Link className="hh-elastic-bubble" href={a.href} aria-label={a.name} onClick={onClose}>{a.symbol}</Link><span className="hh-elastic-name">{a.name}</span></div>)}
+ {actions.map((a,i)=><div key={a.name} data-elastic-orb={i} className="hh-elastic-action"><Link className="hh-elastic-bubble" href={a.href} aria-label={a.name} onClick={onClose}>{a.symbol==="qibla"?qiblaIcon:a.symbol}</Link><span className="hh-elastic-name">{a.name}</span></div>)}
  </div>;
 }
