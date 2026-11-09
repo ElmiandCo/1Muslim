@@ -40,6 +40,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const navigateRef=useRef<(step:number)=>void>(()=>{});
   const transitionTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
   const [slideDirection,setSlideDirection]=useState<0|1|-1>(0);
+  const [carouselPreview,setCarouselPreview]=useState<{from:string;to:string;direction:number}|null>(null);
   const [isPlaying,setIsPlaying]=useState(false);
   const [skipPrompt,setSkipPrompt]=useState(false);
   const [skipCountdown,setSkipCountdown]=useState(5);
@@ -198,13 +199,23 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
     continueVideoRef.current=()=>{const id=playlist[index].videoId;void (async()=>{try{const {createClient}=await import("../../utils/supabase/client");const client=createClient();const {data:{user}}=await client.auth.getUser();if(user)await client.from("app_engagement_events").insert({user_id:user.id,section:"Home Video",event_type:"finish_watching_tap",video_id:id})}catch{}})();continuedIds.add(id);if(format==="phone"){sessionStay=true;try{sessionStorage.setItem("oneMuslimShortsStaySessionV1","true")}catch{}}else{try{localStorage.setItem("oneMuslimContinueVideoIdsV1",JSON.stringify([...continuedIds]))}catch{}}clearPrompt();};
     nextVideoRef.current=()=>next();
     navigateRef.current=(step)=>{
-      if(disposed||!player||transitionTimerRef.current)return;
+      if(disposed||!player||transitionTimerRef.current||!playlist.length)return;
+      const current=selectedIndexRef.current??index;
+      const target=(current+step+playlist.length)%playlist.length;
+      const from=playlist[current]?.videoId,to=playlist[target]?.videoId;
+      if(!from||!to)return;
+      setCarouselPreview({from,to,direction:step>0?1:-1});
       setSlideDirection(step>0?1:-1);
+      // Both panels are flush, with the destination arriving exactly as the
+      // source exits. Swap the real YouTube iframe under the destination panel.
       transitionTimerRef.current=setTimeout(()=>{
-        transitionTimerRef.current=null;
         next(step);
-        setSlideDirection(0);
-      },240);
+        transitionTimerRef.current=setTimeout(()=>{
+          transitionTimerRef.current=null;
+          setSlideDirection(0);
+          setCarouselPreview(null);
+        },180);
+      },420);
     };
     const create=()=>{
       if(disposed||!mountRef.current||!ytWindow.YT?.Player||player)return;
@@ -262,9 +273,13 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       if(player){try{sessionStorage.setItem(storageKey,JSON.stringify({index,seconds:player.getCurrentTime()}));}catch{};player.destroy();}
     };
   },[format,category]);
-  return <><div className={"oneMuslimFloatingPlayerRig"+(format==="phone"?" is-phone":"")} aria-label="Floating featured video player" onPointerMove={revealArrows} onPointerDown={()=>{revealArrows();engageCinema();}} onTouchStart={e=>{if(format==="phone")swipeStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const start=swipeStart.current;swipeStart.current=null;if(format!=="phone"||!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.2)navigate(dy<0?1:-1)}}>
+  return <><div className={"oneMuslimFloatingPlayerRig"+(format==="phone"?" is-phone":"")} aria-label="Floating featured video player" onPointerMove={revealArrows} onPointerDown={()=>{revealArrows();engageCinema();}} onTouchStart={e=>{swipeStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const start=swipeStart.current;swipeStart.current=null;if(!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.15){navigate(dx<0?1:-1)}else if(format==="phone"&&Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.2){navigate(dy<0?1:-1)}}}>
     <div className="oneMuslimFloatingPlayerShadow" aria-hidden="true"/>
     <div className={"oneMuslimIdleYoutubePlayer"+(slideDirection?" is-switching "+(slideDirection>0?"is-next":"is-previous"):"")} aria-label="Featured video playlist while no broadcasts are live">
+      {carouselPreview&&<div className={"oneMuslimSeamlessTrack"+(carouselPreview.direction>0?" is-forward":" is-backward")} aria-hidden="true">
+        <div className="oneMuslimSeamlessPanel"><img src={`https://i.ytimg.com/vi/${carouselPreview.from}/maxresdefault.jpg`} alt="" onError={e=>{e.currentTarget.src=`https://i.ytimg.com/vi/${carouselPreview.from}/hqdefault.jpg`}}/></div>
+        <div className="oneMuslimSeamlessPanel"><img src={`https://i.ytimg.com/vi/${carouselPreview.to}/maxresdefault.jpg`} alt="" onError={e=>{e.currentTarget.src=`https://i.ytimg.com/vi/${carouselPreview.to}/hqdefault.jpg`}}/></div>
+      </div>}
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
       {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay is-silver" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
@@ -307,6 +322,16 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       .oneMuslimPlaylistArrow{position:absolute;z-index:4;top:25%;transform:translateY(-50%);width:34px;height:44px;min-width:34px;min-height:44px;padding:0;border:0;border-radius:12px;background:transparent!important;color:#fff!important;font:300 25px/1 sans-serif;display:grid;place-items:center;cursor:pointer;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none!important;text-shadow:0 1px 3px rgba(0,0,0,.7);transition:opacity .45s ease!important}
       .oneMuslimPlaylistArrow.is-idle{opacity:0;pointer-events:none}\n      .oneMuslimPlaylistArrow:not(.is-idle){opacity:1}\n      .oneMuslimPlaylistArrow.is-left{left:0}.oneMuslimPlaylistArrow.is-right{right:0}
       .oneMuslimPlaylistArrow:hover,.oneMuslimPlaylistArrow:focus-visible{background:transparent!important;box-shadow:none!important;outline-offset:2px}
+      /* Edge-to-edge carousel: two 100% width panels touch without gutters.
+         Animate the strip and reveal the actual player after the center snap. */
+      .oneMuslimIdleYoutubePlayer{overflow:hidden!important}
+      .oneMuslimSeamlessTrack{position:absolute;inset:0 auto 0 0;width:200%;height:100%;z-index:8;display:flex;gap:0;pointer-events:none;will-change:transform;animation:oneMuslimCarouselForward 420ms cubic-bezier(.22,.78,.18,1) forwards}
+      .oneMuslimSeamlessTrack.is-backward{flex-direction:row-reverse;left:-100%;animation:oneMuslimCarouselBackward 420ms cubic-bezier(.22,.78,.18,1) forwards}
+      .oneMuslimSeamlessPanel{position:relative;flex:0 0 50%;width:50%;height:100%;overflow:hidden;background:#050505}
+      .oneMuslimSeamlessPanel img{display:block;width:100%;height:100%;object-fit:cover}
+      @keyframes oneMuslimCarouselForward{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+      @keyframes oneMuslimCarouselBackward{from{transform:translateX(0)}to{transform:translateX(50%)}}
+      @media(prefers-reduced-motion:reduce){.oneMuslimSeamlessTrack{animation-duration:1ms!important}}
       .oneMuslimIdleYoutubePlayer>div:first-child{transition:transform .24s cubic-bezier(.2,.7,.2,1),opacity .24s ease}
       .oneMuslimIdleYoutubePlayer.is-switching.is-next>div:first-child{transform:translateX(-8%);opacity:.22}
       .oneMuslimIdleYoutubePlayer.is-switching.is-previous>div:first-child{transform:translateX(8%);opacity:.22}
