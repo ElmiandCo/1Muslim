@@ -8,6 +8,35 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
  const [canExpand,setCanExpand]=useState(false);
  const firstOpen=useRef(true);
  const [exploreStage,setExploreStage]=useState<HTMLElement|null>(null);
+ const [hudhudNavCollapsed,setHudhudNavCollapsed]=useState(false);
+ const [exploreTop,setExploreTop]=useState<number|null>(null);
+ useEffect(()=>{
+  const onNav=(event:Event)=>setHudhudNavCollapsed(Boolean((event as CustomEvent<{collapsed:boolean}>).detail?.collapsed));
+  window.addEventListener("1muslim:hudhud-nav-state",onNav);
+  return()=>window.removeEventListener("1muslim:hudhud-nav-state",onNav);
+ },[]);
+ useEffect(()=>{
+  if(!exploreStage||!hudhudNavCollapsed||expanded)return;
+  const measure=()=>{
+   const video=exploreStage.querySelector(".oneMuslimLiveVideo");
+   const chat=exploreStage.querySelector(".oneMuslimLiveBottom");
+   if(!video||!chat)return;
+   const stageRect=exploreStage.getBoundingClientRect();
+   const videoRect=video.getBoundingClientRect();
+   const chatRect=chat.getBoundingClientRect();
+   setExploreTop(Math.max(0,Math.min(stageRect.height-35,(videoRect.bottom+chatRect.top)/2-stageRect.top)));
+  };
+  const observer=new ResizeObserver(measure);
+  observer.observe(exploreStage);
+  const video=exploreStage.querySelector(".oneMuslimLiveVideo");
+  const chat=exploreStage.querySelector(".oneMuslimLiveBottom");
+  if(video)observer.observe(video);
+  if(chat)observer.observe(chat);
+  window.addEventListener("resize",measure);
+  measure();
+  return()=>{observer.disconnect();window.removeEventListener("resize",measure)};
+ },[exploreStage,hudhudNavCollapsed,expanded]);
+
  useEffect(()=>{if(expanded){setCanExpand(false);if(!firstOpen.current)return;firstOpen.current=false;const timer=window.setTimeout(()=>setExpanded(false),1000);return()=>clearTimeout(timer)}const timer=window.setTimeout(()=>setCanExpand(true),30000);return()=>clearTimeout(timer)},[expanded]);
  const [stageNode,setStageNode]=useState<HTMLElement|null>(null);
  useEffect(()=>{if(!stageNode)return;stageNode.classList.toggle("home-carousel-collapsed",!expanded);return()=>stageNode.classList.remove("home-carousel-collapsed")},[stageNode,expanded]);
@@ -126,6 +155,11 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
  @media(prefers-reduced-motion:reduce){.homeVideoWheelBody{transition:none}}
  `}</style>
  
+ <style>{`
+ .homeCarouselExplorePulse{animation:homeExploreBreath 5s ease-in-out infinite;opacity:1;text-shadow:0 2px 14px rgba(0,0,0,.9);filter:drop-shadow(0 2px 8px rgba(0,0,0,.6))}
+ @keyframes homeExploreBreath{0%,100%{opacity:0}20%,70%{opacity:1}90%{opacity:0}}
+ @media(prefers-reduced-motion:reduce){.homeCarouselExplorePulse{animation:none;opacity:1}}
+ `}</style>
  <button type="button" className="homeVideoWheelCollapse homeVideoWheelControls" data-visible={controlsVisible} onClick={()=>setExpanded(false)} aria-label="Collapse video carousel" title="Collapse carousel">×</button>
  <div className="homeVideoWheelCategories homeVideoWheelControls" data-visible={controlsVisible} role="group" aria-label="Video categories">{(["All","Kids"] as const).map(item=><button key={item} className={item==="Kids"?"homeVideoWheelKids":undefined} type="button" aria-pressed={category===item} onClick={()=>{engageControls();setCategory(item);positionRef.current=0;setPosition(0);window.dispatchEvent(new CustomEvent("oneMuslimCarouselCategory",{detail:{category:item,format}}))}}>{item}</button>)}</div>
 
@@ -133,5 +167,5 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
  {expanded&&<>{count===0&&<p role="status" style={{textAlign:"center",fontSize:13,padding:12}}>No videos match your search.</p>}<div className="homeVideoWheelTrack" aria-label="Choose a video to play above" onTouchStart={e=>e.stopPropagation()} onTouchMove={e=>e.stopPropagation()} onTouchEnd={e=>e.stopPropagation()} onPointerDown={e=>{engageControls();e.stopPropagation();if(resumeTimer.current)clearTimeout(resumeTimer.current);paused.current=true;dragged.current=false;pointer.current={x:e.clientX,position:positionRef.current}}} onPointerMove={e=>{e.stopPropagation();onMove(e.clientX)}} onPointerUp={e=>{engageControls();e.stopPropagation();onMove(e.clientX);settle()}} onPointerCancel={()=>{settle()}}>
  {items.map((item,i)=>{let offset=((i-position)%count+count)%count;if(offset>count/2)offset-=count;const distance=Math.abs(offset);const scale=Math.max(.24,1-.25*distance*distance);return <div key={item.videoId} className="homeVideoWheelCard" role="button" tabIndex={0} aria-label={`Play ${item.title}`} onClick={()=>{engageControls();if(dragged.current){return;}paused.current=true;if(resumeTimer.current)clearTimeout(resumeTimer.current);resumeTimer.current=setTimeout(()=>{paused.current=false},500);window.dispatchEvent(new CustomEvent("oneMuslimSelectCarouselVideo",{detail:{videoId:item.videoId,format:item.format}}))}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();engageControls();window.dispatchEvent(new CustomEvent("oneMuslimSelectCarouselVideo",{detail:{videoId:item.videoId,format:item.format}}))}}} style={{transform:`translateX(calc(-50% + ${offset*110}%)) perspective(550px) rotateY(${-offset*13}deg) scale(${scale})`,opacity:Math.max(.12,1-distance*.28),zIndex:Math.round(20-distance),background:`linear-gradient(145deg,hsla(${190+(i%6)*27},65%,35%,.58),rgba(4,12,25,.8))`}}><img src={`https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`} alt="" loading="lazy" draggable={false} referrerPolicy="no-referrer" onError={e=>{e.currentTarget.style.display="none"}}/><strong>{item.title}</strong></div>})}
  </div></>}
- </div>{!expanded&&exploreStage&&createPortal(<a href="/deepwatch" className="homeCarouselExploreLabel" aria-label="Open DeepWatch streaming library" style={{cursor:"pointer",textDecoration:"none",pointerEvents:"auto",position:"relative",zIndex:3}}>✦ Explore More <span>✦</span></a>,exploreStage)}{!expanded&&canExpand&&stageNode&&createPortal(<button type="button" onClick={()=>setExpanded(true)} aria-label="Expand video carousel" title="Show carousel" className={"homeVideoWheelExpandHint"+(expandHintVisible?" is-visible":"")} style={{position:"absolute",right:14,top:43,zIndex:40,border:"1px solid rgba(255,255,255,.32)",borderRadius:9,background:"rgba(0,0,0,.22)",color:"#fff",fontSize:12,width:27,height:27,padding:0,display:"grid",placeItems:"center",backdropFilter:"blur(5px)",cursor:"pointer",opacity:expandHintVisible?1:0,transform:expandHintVisible?"translateY(0) scale(1)":"translateY(1px) scale(.76)",transition:"opacity 650ms ease,transform 650ms cubic-bezier(.2,.8,.2,1)",pointerEvents:"auto"}}>▤</button>,stageNode)}</div>;
+ </div>{!expanded&&hudhudNavCollapsed&&exploreStage&&exploreTop!==null&&createPortal(<a href="/deepwatch" className="homeCarouselExploreLabel homeCarouselExplorePulse" aria-label="Explore more videos on DeepWatch" style={{cursor:"pointer",textDecoration:"none",pointerEvents:"auto",position:"absolute",top:exploreTop,left:"50%",transform:"translate(-50%,-50%)",zIndex:45,whiteSpace:"nowrap"}}>✦ Explore More <span>✦</span></a>,exploreStage)}{!expanded&&canExpand&&stageNode&&createPortal(<button type="button" onClick={()=>setExpanded(true)} aria-label="Expand video carousel" title="Show carousel" className={"homeVideoWheelExpandHint"+(expandHintVisible?" is-visible":"")} style={{position:"absolute",right:14,top:43,zIndex:40,border:"1px solid rgba(255,255,255,.32)",borderRadius:9,background:"rgba(0,0,0,.22)",color:"#fff",fontSize:12,width:27,height:27,padding:0,display:"grid",placeItems:"center",backdropFilter:"blur(5px)",cursor:"pointer",opacity:expandHintVisible?1:0,transform:expandHintVisible?"translateY(0) scale(1)":"translateY(1px) scale(.76)",transition:"opacity 650ms ease,transform 650ms cubic-bezier(.2,.8,.2,1)",pointerEvents:"auto"}}>▤</button>,stageNode)}</div>;
 }
