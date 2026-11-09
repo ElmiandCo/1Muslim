@@ -536,6 +536,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
 
   return (
     <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} data-view-mode={viewMode} data-audible={audible?"yes":"no"} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:guestStageMode==="audio"?"4/5":"16/9",overflow:"hidden"}}>
+      {liveCaption&&<div aria-live="polite" style={{position:"absolute",bottom:"12%",right:"5%",maxWidth:"85%",zIndex:30,pointerEvents:"none",color:"#fff",fontWeight:750,fontSize:liveCaption.split(/\s+/).length<3?48:24,lineHeight:1.15,textAlign:"right",textShadow:"0 2px 9px #000",overflowWrap:"anywhere"}}>{liveCaption}</div>}
       {hostEnded&&<div role="status" aria-live="assertive" className="omHostEndedNotice"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>{embedded?"Closing your floating player…":"Taking you Home…"}</small><button type="button" onClick={()=>{if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));else router.replace("/")}}>Go Home now →</button></div>}
       {!embedded && <canvas ref={reflectionRef} width={160} height={90} className="omLiveCinemaBackdrop" aria-hidden="true" />}
       <LiveGuestsStage mode={guestStageMode} guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostSpeaking={voiceEnergy>.12}>
