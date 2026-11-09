@@ -2948,3 +2948,12 @@ html.light .canvas-vertical-main > .oneMuslimLiveStage .oneMuslimLiveBottom > * 
 html.light .canvas-vertical-main > .oneMuslimLiveStage .oneMuslimLiveBottom > * {
   backdrop-filter:none!important;
 }
+
+/* Day mode: remove only the opaque Live video-stage backdrop.
+   The video/iframe stays visible; the comments area and its scrim are untouched. */
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveVideo {
+ background:transparent!important;
+ background-color:transparent!important;
+ background-image:none!important;
+ border-color:transparent!important;
+}
