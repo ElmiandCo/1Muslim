@@ -549,7 +549,7 @@ export default function GoLivePage() {
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const roomRef = useRef<Room | null>(null);
   const guestRoster=useLiveGuestRoster(roomRef,live,currentUserId,studioMode==="voice"?11:3);
-  const liveCaptions=useHostLiveCaptions(live?roomRef.current:null);
+  const liveCaptions=useHostLiveCaptions(live?roomRef.current:null,live?liveStreamIdRef.current:null);
   const qualityMap = { "480p": { width: 854, height: 480 }, "720p": { width: 1280, height: 720 }, "1080p": { width: 1920, height: 1080 } } as const;
   const getCaptureSize = () => qualityMap[videoQuality];
   const refreshCameraCapabilities = (track?: MediaStreamTrack) => {
