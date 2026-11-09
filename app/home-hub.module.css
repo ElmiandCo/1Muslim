@@ -1919,3 +1919,10 @@
  .control{padding-left:max(5px,env(safe-area-inset-left))!important;padding-right:max(5px,env(safe-area-inset-right))!important;padding-bottom:max(5px,env(safe-area-inset-bottom))!important}
  .surface{max-width:none!important;width:100%!important;min-width:0!important;margin-left:auto!important;margin-right:auto!important}
 }
+
+/* Home canvas background artwork blends into transparent toward the top from midpoint.
+   Mask only the artwork layer; keep frame, player, navigation and comments fully opaque. */
+.control .decoratedSurface>.surfaceArtwork{
+ -webkit-mask-image:linear-gradient(to top,#000 0%,#000 48%,rgba(0,0,0,.55) 70%,transparent 100%)!important;
+ mask-image:linear-gradient(to top,#000 0%,#000 48%,rgba(0,0,0,.55) 70%,transparent 100%)!important;
+}
