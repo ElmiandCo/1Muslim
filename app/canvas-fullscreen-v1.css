@@ -2902,11 +2902,11 @@ main[class*="control"] .homeLiveStreamTileActive{border:0!important;border-color
    Keep the comment composer at its existing viewport position. */
 @media (max-width:767px){
  [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage{
-  height:calc(100% + 150px)!important;
+  height:calc(100% + 300px)!important;
  }
  [data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="desktop"] > .oneMuslimLiveBottom,
  [data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="phone"] > .oneMuslimLiveBottom,
  [data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="audio"] > .oneMuslimLiveBottom{
-  bottom:158px!important;
+  bottom:8px!important;
  }
 }
