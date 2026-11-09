@@ -2897,3 +2897,12 @@ main:has([data-workspace-page="6"]) .profile-shared-avatar-hero{display:none!imp
    Keep button focus outlines and navigation borders intact. */
 .oneMuslimLiveVideo,.homeLiveChannelPlayer,.home-live-demo-screen,.homeLiveDemoScreen,.homeLiveStreamTile,.oneMuslimLiveBottom > *,.homeLiveCommentDock,.homeLiveViewerConversation{border:0!important;border-color:transparent!important;outline:0!important}
 main[class*="control"] .homeLiveStreamTileActive{border:0!important;border-color:transparent!important}
+
+/* Home Live mobile: double vertical distance from player to comment dock. */
+@media (max-width:767px){
+ [data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage){overflow:visible!important;}
+ [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage{
+  height:200%!important;min-height:0!important;overflow:visible!important;
+ }
+ [data-workspace-page="0"] .oneMuslimLiveStage > .oneMuslimLiveBottom{bottom:8px!important;}
+}
