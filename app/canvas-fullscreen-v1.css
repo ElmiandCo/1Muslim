@@ -2934,3 +2934,17 @@ main[class*="control"] .homeLiveStreamTileActive{border:0!important;border-color
  border-color:rgba(220,229,239,.45)!important;
  box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 3px 13px rgba(122,135,153,.22)!important;
 }
+
+/* Day mode: let the canvas artwork show through the live player/comment surround.
+   Keep the video iframe and controls intact; night mode is unchanged. */
+html.light .canvas-vertical-main > .oneMuslimLiveStage,
+html.light .canvas-vertical-main > .oneMuslimLiveStage .oneMuslimLiveTop,
+html.light .canvas-vertical-main > .oneMuslimLiveStage .oneMuslimLiveBottom,
+html.light .canvas-vertical-main > .oneMuslimLiveStage .oneMuslimLiveBottom > * {
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+}
+html.light .canvas-vertical-main > .oneMuslimLiveStage .oneMuslimLiveBottom > * {
+  backdrop-filter:none!important;
+}
