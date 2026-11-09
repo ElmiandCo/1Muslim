@@ -7,6 +7,8 @@ import "./deepwatch.css";
 
 const tabs=["Home","Movies","TV Shows","Series","Animation","International","Live","My List"] as const;
 type Tab=typeof tabs[number];
+// DeepWatch is for long-form viewing; shorts remain available elsewhere in 1Muslim.
+const deepwatchVideos=videoRegistry.filter(v=>v.format!=="phone"&&!/\bshorts?\b/i.test([v.category,...(v.categories||[])].join(" ")));
 const image=(id:string)=>`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const group=(v:RegisteredVideo):Tab=>{
  const value=[v.category,...(v.categories||[]),v.title].join(" ").toLowerCase();
@@ -29,7 +31,7 @@ export default function DeepWatch(){
  const player=useRef<HTMLIFrameElement>(null);
  const selectedRef=useRef<RegisteredVideo|null>(null);
  useEffect(()=>{try{const value=JSON.parse(localStorage.getItem("1muslim:deepwatch-list")||"[]");if(Array.isArray(value))setSaved(value.filter((x):x is string=>typeof x==="string"))}catch{}},[]);
- const filtered=useMemo(()=>videoRegistry.filter(v=>(tab==="Home"||(tab==="My List"?saved.includes(v.videoId):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
+ const filtered=useMemo(()=>deepwatchVideos.filter(v=>(tab==="Home"||(tab==="My List"?saved.includes(v.videoId):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
  const heroSlides=useMemo(()=>{
   const categories:Tab[]=tab==="Home"?["Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
   const used=new Set<string>();
@@ -47,17 +49,17 @@ export default function DeepWatch(){
  },[heroPaused,selected,heroSlides.length]);
  const featured=heroSlides[heroIndex]||heroSlides[0];
  const collections=useMemo(()=>tab==="Home"?[
-  {name:"Featured Tonight",items:videoRegistry.slice(0,14)},
-  {name:"Series to Get Into",items:videoRegistry.filter(v=>group(v)==="Series")},
-  {name:"Movie Night",items:videoRegistry.filter(v=>group(v)==="Movies")},
-  {name:"Animated Adventures",items:videoRegistry.filter(v=>group(v)==="Animation")},
-  {name:"International Spotlight",items:videoRegistry.filter(v=>group(v)==="International")},
-  {name:"More to Explore",items:videoRegistry.slice(14,44)}
+  {name:"Featured Tonight",items:deepwatchVideos.slice(0,14)},
+  {name:"Series to Get Into",items:deepwatchVideos.filter(v=>group(v)==="Series")},
+  {name:"Movie Night",items:deepwatchVideos.filter(v=>group(v)==="Movies")},
+  {name:"Animated Adventures",items:deepwatchVideos.filter(v=>group(v)==="Animation")},
+  {name:"International Spotlight",items:deepwatchVideos.filter(v=>group(v)==="International")},
+  {name:"More to Explore",items:deepwatchVideos.slice(14,44)}
  ]:[{name:tab==="My List"?"Your Watchlist":tab,items:filtered}], [tab,filtered]);
  const send=(func:string,args?:unknown[])=>{player.current?.contentWindow?.postMessage(JSON.stringify({event:"command",func,args:args||[]}),"*")};
  const open=(v:RegisteredVideo)=>{selectedRef.current=v;setSelected(v);setSeconds(v.startSeconds||0);setPlaying(true);setSettings(false)};
  const close=()=>{setSelected(null);selectedRef.current=null;setSettings(false)};
- const next=()=>{const index=videoRegistry.findIndex(v=>v.videoId===selectedRef.current?.videoId);open(videoRegistry[(index+1)%videoRegistry.length])};
+ const next=()=>{const index=deepwatchVideos.findIndex(v=>v.videoId===selectedRef.current?.videoId);if(index>=0&&deepwatchVideos.length)open(deepwatchVideos[(index+1)%deepwatchVideos.length])};
  useEffect(()=>{if(!selected)return;const onMessage=(event:MessageEvent)=>{if(!event.origin.includes("youtube.com")&&!event.origin.includes("youtube-nocookie.com"))return;try{const d=typeof event.data==="string"?JSON.parse(event.data):event.data;if(typeof d?.info?.currentTime==="number")setSeconds(Math.floor(d.info.currentTime))}catch{}};window.addEventListener("message",onMessage);const timer=setInterval(()=>{send("getCurrentTime");window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:selected.videoId,seconds,format:"desktop"}}))},900);return()=>{clearInterval(timer);window.removeEventListener("message",onMessage);window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:"",seconds:0,format:"desktop"}}))}},[selected,seconds]);
  const toggleSaved=(id:string)=>setSaved(prev=>{const value=prev.includes(id)?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem("1muslim:deepwatch-list",JSON.stringify(value))}catch{}return value});
  return <main className="deepwatch">
