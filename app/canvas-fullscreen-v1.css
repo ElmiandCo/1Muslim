@@ -2999,3 +2999,34 @@ html.light [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveViewerConversa
 html.light [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveViewerConversation::after {
  content:none!important;background:none!important;box-shadow:none!important;
 }
+
+/* Home player stage: zero backdrop artwork or colored panels in BOTH themes.
+   This does not affect actual media pixels, navigation buttons or comment inputs. */
+html [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage,
+html [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage > .oneMuslimLiveTop,
+html [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage > .oneMuslimLiveBottom,
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveVideo,
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimIdleYoutubePlayer,
+html [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveViewerConversation,
+html [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveDemoComments,
+html [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveCommentDock,
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimReflectiveChat,
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimVideoWaterReflection,
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimVideoWaterReflectionImage {
+ background:transparent!important;background-color:transparent!important;background-image:none!important;
+ box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimVideoWaterReflection,
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimVideoWaterReflectionImage {
+ display:none!important;
+}
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop::before,
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop::after,
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom::before,
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom::after,
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveVideo::before,
+html [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveVideo::after,
+html [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveViewerConversation::before,
+html [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveViewerConversation::after {
+ content:none!important;background:none!important;
+}
