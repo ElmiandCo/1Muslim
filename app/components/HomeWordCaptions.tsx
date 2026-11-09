@@ -1,36 +1,35 @@
 "use client";
-import {useEffect,useState} from "react";
-export type TimedWord={word:string;start:number;end:number};
-const cache=new Map<string,TimedWord[]>();
-/** Renders ONLY actual word-level timestamps. Never guesses speech from playback time. */
+import {useEffect,useMemo,useState} from "react";
+type Word={word:string;start:number;end:number};
 export default function HomeWordCaptions({videoId,seconds}:{videoId:string;seconds:number}){
- const [words,setWords]=useState<TimedWord[]>([]);
- const [revealed,setRevealed]=useState(false);
- useEffect(()=>{setRevealed(false);const onReady=()=>setRevealed(true);window.addEventListener("1muslim:enjoy-animation-complete",onReady);const existing=Array.from(document.querySelectorAll<HTMLElement>("*")).find(el=>el.children.length===0&&el.textContent?.trim().toLowerCase()==="enjoy"&&el.getBoundingClientRect().width>0);if(!existing){const fallback=window.setTimeout(onReady,900);return()=>{window.clearTimeout(fallback);window.removeEventListener("1muslim:enjoy-animation-complete",onReady)}}const complete=()=>{if(!existing.isConnected||getComputedStyle(existing).opacity==="0")onReady()};existing.addEventListener("animationend",onReady,{once:true});existing.addEventListener("transitionend",complete);const fallback=window.setTimeout(onReady,4500);return()=>{window.clearTimeout(fallback);existing.removeEventListener("animationend",onReady);existing.removeEventListener("transitionend",complete);window.removeEventListener("1muslim:enjoy-animation-complete",onReady)}},[videoId]);
- useEffect(()=>{
-  let cancelled=false;
-  if(cache.has(videoId)){setWords(cache.get(videoId)!);return;}
-  setWords([]);
-  fetch("/api/video-word-captions?videoId="+encodeURIComponent(videoId),{cache:"no-store"})
-   .then(r=>r.ok?r.json():null).then(data=>{
-    if(cancelled)return;
-    const valid=Array.isArray(data?.words)?data.words.filter((w:TimedWord)=>typeof w.word==="string"&&Number.isFinite(w.start)&&Number.isFinite(w.end)&&w.end>w.start).sort((a:TimedWord,b:TimedWord)=>a.start-b.start):[];
-    cache.set(videoId,valid);setWords(valid);
-   }).catch(()=>{if(!cancelled)setWords([])});
-  return()=>{cancelled=true};
- },[videoId]);
- const recent=words.filter(w=>w.start<=seconds&&w.end>=seconds-4).slice(-20);
- const upper=recent.slice(0,5),lower=recent.slice(5);
- if(!revealed||recent.length===0)return null;
- return <div className="oneMuslimCaptionHandoff" aria-live="off" aria-label="Spoken captions"><style>{`
- .oneMuslimCaptionHandoff{position:absolute;inset:0;z-index:90;pointer-events:none;overflow:visible;font-family:Inter,"Arial Narrow",system-ui,sans-serif;color:#f4f7fc;text-shadow:0 2px 9px #000,0 0 15px #000}
- .oneMuslimCaptionUpper{position:absolute;bottom:calc(100% + 9px);left:50%;width:min(90vw,420px);min-height:78px;transform:translateX(-50%);display:flex;justify-content:center;align-items:end;align-content:end;flex-wrap:wrap;gap:3px 9px;animation:oneMuslimCaptionAscend .85s cubic-bezier(.2,.8,.2,1) both}
- .oneMuslimCaptionUpper span{display:inline-block;font-weight:850;font-stretch:condensed;line-height:1.02;letter-spacing:-.045em;font-size:clamp(20px,5vw,38px);animation:oneMuslimCaptionStar .38s ease-out both}
- .oneMuslimCaptionUpper span:nth-child(3n+2){font-size:clamp(15px,3.5vw,27px);font-weight:650}.oneMuslimCaptionUpper span:nth-child(3n){font-size:clamp(24px,6vw,48px)}
- .oneMuslimCaptionLower{position:absolute;top:calc(100% + 10px);left:50%;width:min(92vw,560px);transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:4px 6px;font-size:clamp(15px,3.7vw,20px);font-weight:550;line-height:1.4;text-align:center}
- .oneMuslimCaptionLower span{animation:oneMuslimCaptionStar .3s ease-out both}
- @keyframes oneMuslimCaptionAscend{from{opacity:0;clip-path:inset(100% 0 0);translate:0 40px}to{opacity:1;clip-path:inset(0);translate:0 0}}
- @keyframes oneMuslimCaptionStar{from{opacity:0;filter:blur(3px)}to{opacity:1;filter:blur(0)}}
- @media(prefers-reduced-motion:reduce){.oneMuslimCaptionUpper,.oneMuslimCaptionUpper span,.oneMuslimCaptionLower span{animation:none}}
- `}</style><div className="oneMuslimCaptionUpper">{upper.map(w=><span key={w.start+":"+w.word}>{w.word}</span>)}</div><div className="oneMuslimCaptionLower">{lower.map(w=><span key={w.start+":"+w.word}>{w.word}</span>)}</div></div>;
+ const [words,setWords]=useState<Word[]>([]);
+ const [enabled,setEnabled]=useState(false);
+ useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/admin/speechsync",{cache:"no-store"});const d=await r.json();if(active)setEnabled(r.ok&&d.enabled===true)}catch{if(active)setEnabled(false)}};void load();const timer=setInterval(()=>void load(),15000);return()=>{active=false;clearInterval(timer)}},[]);
+ useEffect(()=>{let active=true;setWords([]);if(!enabled)return;fetch("/api/video-word-captions?videoId="+encodeURIComponent(videoId),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(active)setWords(Array.isArray(d?.words)?d.words.filter((w:Word)=>typeof w.word==="string"&&Number.isFinite(w.start)&&Number.isFinite(w.end)&&w.end>w.start).sort((a:Word,b:Word)=>a.start-b.start):[])}).catch(()=>{if(active)setWords([])});return()=>{active=false}},[videoId,enabled]);
+ const activeIndex=useMemo(()=>words.findIndex(w=>w.start<=seconds&&w.end>seconds),[words,seconds]);
+ if(!enabled||activeIndex<0)return null;
+ const current=words[activeIndex];
+ const phrase=words.slice(Math.max(0,activeIndex-2),activeIndex+3);
+ const progress=Math.min(1,Math.max(0,(seconds-current.start)/Math.max(.15,current.end-current.start)));
+ const lane=activeIndex%4;
+ return <div className="elmiCinemaTypography" aria-label="Cinematic speech typography" aria-live="off">
+ <style>{`
+ .elmiCinemaTypography{position:fixed;inset:0;z-index:95;pointer-events:none;overflow:hidden;color:#fff;font-family:Inter,Arial,system-ui,sans-serif;font-weight:900;text-shadow:0 4px 3px #000,0 10px 25px #000,0 0 40px #000;letter-spacing:-.055em}
+ .elmiCinemaTypography:before{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.95) 0%,rgba(0,0,0,.94) 24%,transparent 25%,transparent 45%,rgba(0,0,0,.95) 46%,#000 100%);z-index:-1}
+ .elmiCinemaTypography .elmiUpper{position:absolute;top:10%;height:15%;width:100%;display:flex;justify-content:center;align-items:center;gap:.4em;font-size:clamp(24px,5vw,68px);text-transform:uppercase}
+ .elmiCinemaTypography .elmiHero{position:absolute;top:48%;height:30%;width:100%;display:flex;justify-content:center;align-items:center;padding:0 5%;text-align:center;font-size:clamp(42px,10vw,130px);line-height:.96}
+ .elmiCinemaTypography .elmiLower{position:absolute;top:80%;height:20%;width:100%;display:flex;justify-content:center;align-items:center;font-size:clamp(22px,4vw,52px);text-align:center;padding:0 6%}
+ .elmiCinemaTypography .elmiHero strong{display:block;animation:elmiWordEnter .36s cubic-bezier(.12,.85,.2,1) both;filter:drop-shadow(0 8px 15px #000)}
+ .elmiCinemaTypography .elmiUpper span{animation:elmiWordEnter .5s ease-out both}
+ .elmiCinemaTypography .elmiLower span{animation:elmiWordEnter .42s ease-out both}
+ .elmiCinemaTypography .elmiParticle{position:absolute;top:calc(50% + var(--y));left:var(--x);width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 12px #fff;animation:elmiParticleDrift .8s ease-out both}
+ @keyframes elmiWordEnter{from{opacity:0;transform:translate3d(0,25px,0) scale(.85);filter:blur(2px)}to{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
+ @keyframes elmiParticleDrift{from{opacity:0;transform:translateY(25px) scale(.5)}40%{opacity:.9}to{opacity:0;transform:translateY(-65px) scale(1.5)}}
+ @media(prefers-reduced-motion:reduce){.elmiCinemaTypography *{animation:none!important}}
+ `}</style>
+ <div className="elmiUpper" key={"upper"+activeIndex}>{phrase.slice(0,2).map((w,i)=><span key={i}>{w.word}</span>)}</div>
+ <div className="elmiHero" key={"hero"+activeIndex}><strong style={{transform:lane%2?"translateX(2%)":"translateX(-2%)",opacity:progress>.86?Math.max(.05,(1-progress)/.14):1}}>{current.word}</strong></div>
+ <div className="elmiLower" key={"lower"+activeIndex}><span>{phrase.slice(2).map(w=>w.word).join(" ")}</span></div>
+ {Array.from({length:9},(_,i)=><i key={activeIndex+"-"+i} className="elmiParticle" style={{["--x" as string]:((i*23+activeIndex*7)%90+5)+"%",["--y" as string]:((i*17)%130-65)+"px",animationDelay:i*35+"ms"}}/>)}
+ </div>
 }
