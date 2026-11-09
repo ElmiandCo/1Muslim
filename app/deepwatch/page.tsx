@@ -36,7 +36,7 @@ const curatedKidsVideos:RegisteredVideo[]=[
 const kidsCatalogIds=new Set([...officialIslamicFilms.map(v=>v.videoId),...curatedKidsVideos.map(v=>v.videoId),...videoRegistry.filter(isKidsVideo).map(v=>v.videoId)]);
 const isDeepWatchKids=(v:RegisteredVideo)=>kidsCatalogIds.has(v.videoId);
 const deepwatchCatalog=Array.from(new Map([...officialIslamicFilms,...curatedKidsVideos,...verifiedYaqeenEpisodes,...videoRegistry.filter(v=>v.format==="desktop")].filter(v=>v.format==="desktop"&&!/shorts?/i.test([v.category,...(v.categories||[])].join(" "))).map(v=>[v.videoId,v] as const)).values());
-const oneIslamIds=new Set(["ZtmfL6uZfa4","wuNAlw5kmW8","W-C-qyaTJ9A","bBHSA4l8LJQ","QuxSwXGvCDE","6W3MDgUsrG0","oVFGrvEwgdE","3JJpHR59598","XWiVlPH8ycw","XFX5q0JILd0","iVtFN5NDkCw","Qdm70F47b5k","PDfCJRqOXQI"]);
+const oneIslamIds=new Set(["ZtmfL6uZfa4","wuNAlw5kmW8","W-C-qyaTJ9A","bBHSA4l8LJQ","QuxSwXGvCDE","6W3MDgUsrG0","oVFGrvEwgdE","3JJpHR59598","XWiVlPH8ycw","XFX5q0JILd0","iVtFN5NDkCw","Qdm70F47b5k","PDfCJRqOXQI","k4hRONalWU4","jktPehmOlmo","hzoo_llwzBI","kYJLOA3Ku20","LgzRb5SYAvo","Zor1et-rT8c"]);
 const oneIslamVideos=deepwatchCatalog.filter(v=>oneIslamIds.has(v.videoId));
 const tabs=["Home","Kids","Movies","TV Shows","Series","Animation","International","Live","My List"] as const;
 type Tab=typeof tabs[number];
@@ -103,6 +103,8 @@ export default function DeepWatch(){
   </section>
   {(tab==="Home"||tab==="Series"||tab==="Movies"||tab==="Animation")&&<section className="deepwatchRow" aria-label="One Islam Productions official channel collection" style={{padding:"12px 24px"}}><h2>🎬 One Islam Productions · Official Collection</h2><p style={{opacity:.8,fontSize:13}}>Animated Islamic films, Prophet Stories, and Letters From Jannah · No Shorts</p><div className="deepwatchRail">{oneIslamVideos.filter(v=>!search||v.title.toLowerCase().includes(search.toLowerCase())).map(v=><button key={v.videoId} type="button" className="deepwatchTile" onClick={()=>open(v)}><img src={image(v.videoId)} alt="" loading="lazy"/><span>{v.title}</span><small>One Islam Productions · ▶ Play</small></button>)}</div></section>}
   {(tab==="Home"||tab==="Series"||tab==="Movies"||tab==="Animation")&&[
+   {name:"One Islam · Stories of the Prophets (Mufti Menk)",test:(v:RegisteredVideo)=>/Stories of the Prophets/i.test(v.title)},
+   {name:"One Islam · Islamic Education & Lectures",test:(v:RegisteredVideo)=>/25 Prophets|Purpose of Life/i.test(v.title)},
    {name:"One Islam · Letters From Jannah",test:(v:RegisteredVideo)=>/Letters From Jannah/i.test(v.title)},
    {name:"One Islam · Prophet Stories & Animated Films",test:(v:RegisteredVideo)=>/Prophet|Animated|Ibrahim|Yunus/i.test(v.title)},
    {name:"One Islam · Afterlife & Reminders",test:(v:RegisteredVideo)=>/Grave|Dajjal|Afterlife/i.test(v.title)}
