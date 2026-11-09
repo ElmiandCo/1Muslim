@@ -2948,3 +2948,24 @@ html.light .canvas-vertical-main > .oneMuslimLiveStage .oneMuslimLiveBottom > * 
 html.light .canvas-vertical-main > .oneMuslimLiveStage .oneMuslimLiveBottom > * {
   backdrop-filter:none!important;
 }
+
+/* Day-mode Live canvas: clear the actual opaque video-stage surface and
+   the pseudo-element chat scrim, not only the outer wrappers. Keep the
+   video/YouTube iframe itself opaque for normal playback. */
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveVideo,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveViewerConversation {
+ background:transparent!important;
+ background-color:transparent!important;
+ background-image:none!important;
+}
+html.light [data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="games"]):not([data-live-format="qibla"]) > .oneMuslimLiveBottom::before {
+ content:none!important;
+ display:none!important;
+ backdrop-filter:none!important;
+ -webkit-backdrop-filter:none!important;
+}
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveVideo {
+ border-color:transparent!important;
+}
