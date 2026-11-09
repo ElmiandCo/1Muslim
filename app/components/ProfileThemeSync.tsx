@@ -11,7 +11,7 @@ const themes:Record<string,{base:string;accent:string;secondary:string;surface:s
  titanium:{base:"#111419",accent:"#b6c3d1",secondary:"#e1e7ef",surface:"#222932",edge:"#cbd5e1",tint:"rgba(5,8,14,.52)"},
  obsidian:{base:"#0b0b0c",accent:"#e2b75e",secondary:"#ffdb8b",surface:"#1c1914",edge:"#e6bc65",tint:"rgba(0,0,0,.62)"}
 };
-const fallback="obsidian";
+const fallback="none";
 function applyTheme(value:unknown,persist=true){
  const requested=typeof value==="string"?value:fallback;
  const wallpaper=aliases[requested]||requested;
@@ -30,11 +30,11 @@ export default function ProfileThemeSync(){
  const [preview,setPreview]=useState("obsidian");
  useEffect(()=>{
   let active=true;let settled=false;
-  const palette=["obsidian"];
+  const palette=["none"];
   let index=0;
   const cycle=window.setInterval(()=>{if(!active||settled)return;index=(index+1)%palette.length;const next=palette[index];applyTheme(next,false);setPreview(next)},1250);
   applyTheme(palette[0],false);
-  const initial=(()=>{try{return localStorage.getItem("1muslim:profile-background")||fallback}catch{return fallback}})();
+  const initial=fallback;
   const start=performance.now();
   const settle=(theme:string)=>{if(!active)return;const first=!settled;settled=true;window.clearInterval(cycle);applyTheme(theme);setPreview(aliases[theme]||theme);if(first){window.setTimeout(()=>{if(active){setVisible(false);window.setTimeout(()=>{if(active)setRecognizing(false)},1400)}},Math.max(0,1100-(performance.now()-start)))}};
   const db=createClient();
@@ -42,7 +42,7 @@ export default function ProfileThemeSync(){
    try{
     const {data:{user}}=await db.auth.getUser();
     if(!active)return;
-    if(!user){document.documentElement.dataset.guestHome="true";settle("obsidian");return}
+    if(!user){document.documentElement.dataset.guestHome="true";settle("none");return}
     delete document.documentElement.dataset.guestHome;
     const {data}=await db.from("profiles").select("avatar_config").eq("id",user.id).maybeSingle();
     settle((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||initial);
