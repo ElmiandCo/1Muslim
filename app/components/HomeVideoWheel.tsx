@@ -25,7 +25,7 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
  const [category,setCategory]=useState("All");
  const [videoSearch,setVideoSearch]=useState("");
  useEffect(()=>{const onSearch=(e:Event)=>setVideoSearch(String((e as CustomEvent<{query:string}>).detail?.query??""));window.addEventListener("oneMuslimCarouselSearch",onSearch);return()=>window.removeEventListener("oneMuslimCarouselSearch",onSearch)},[]);
- useEffect(()=>{window.dispatchEvent(new CustomEvent("oneMuslimHomeCarouselExpanded",{detail:{expanded}}));return()=>window.dispatchEvent(new CustomEvent("oneMuslimHomeCarouselExpanded",{detail:{expanded:false}}))},[expanded]);
+ useEffect(()=>{window.dispatchEvent(new CustomEvent("oneMuslimHomeCarouselExpanded",{detail:{expanded}}));return()=>{window.dispatchEvent(new CustomEvent("oneMuslimHomeCarouselExpanded",{detail:{expanded:false}}))}},[expanded]);
  const [controlsVisible,setControlsVisible]=useState(false);
  const controlsWindow=useRef(0);
  const controlsTimers=useRef<ReturnType<typeof setTimeout>[]>([]);
