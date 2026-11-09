@@ -11,6 +11,12 @@ const officialSeries = [
  {title:"The Book of Heart Softeners — Dhul Hijjah 2026",category:"Shows/Series",publisher:"Yaqeen Institute",url:"https://yaqeeninstitute.org/series/the-book-of-heart-softeners-dhul-hijjah-2026"},
  {title:"Servants of the Most Merciful",category:"Shows/Series",publisher:"Yaqeen Institute",url:"https://yaqeeninstitute.org/series/servants-of-the-most-merciful"}
 ] as const;
+/* Official Yaqeen uploads with confirmed YouTube watch pages; do not infer IDs for other episodes. */
+const verifiedYaqeenEpisodes:RegisteredVideo[]=[
+ {videoId:"e7TzVR84PLc",title:"Servants of the Most Merciful — Ep. 1: Those Who Walk on the Earth Humbly | Dr. Omar Suleiman",category:"Series",categories:["Shows","Educational Series","Yaqeen Institute"],startSeconds:0,endSeconds:null,format:"desktop"},
+ {videoId:"5kfDmMFWbMs",title:"Servants of the Most Merciful — Episode 1: The Benefits of Being Called Servants of the Most Merciful (2020)",category:"Series",categories:["Shows","Educational Series","Yaqeen Institute"],startSeconds:0,endSeconds:null,format:"desktop"}
+];
+const deepwatchCatalog=[...verifiedYaqeenEpisodes,...videoRegistry.filter(v=>v.format!=="phone"&&!verifiedYaqeenEpisodes.some(ep=>ep.videoId===v.videoId))];
 const tabs=["Home","Movies","TV Shows","Series","Animation","International","Live","My List"] as const;
 type Tab=typeof tabs[number];
 const image=(id:string)=>`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
@@ -35,7 +41,7 @@ export default function DeepWatch(){
  const player=useRef<HTMLIFrameElement>(null);
  const selectedRef=useRef<RegisteredVideo|null>(null);
  useEffect(()=>{try{const value=JSON.parse(localStorage.getItem("1muslim:deepwatch-list")||"[]");if(Array.isArray(value))setSaved(value.filter((x):x is string=>typeof x==="string"))}catch{}},[]);
- const filtered=useMemo(()=>videoRegistry.filter(v=>(tab==="Home"||(tab==="My List"?saved.includes(v.videoId):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
+ const filtered=useMemo(()=>deepwatchCatalog.filter(v=>(tab==="Home"||(tab==="My List"?saved.includes(v.videoId):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
  const heroSlides=useMemo(()=>{
   const categories:Tab[]=tab==="Home"?["Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
   const used=new Set<string>();
@@ -53,17 +59,17 @@ export default function DeepWatch(){
  },[heroPaused,selected,heroSlides.length]);
  const featured=heroSlides[heroIndex]||heroSlides[0];
  const collections=useMemo(()=>tab==="Home"?[
-  {name:"Featured Tonight",items:videoRegistry.slice(0,14)},
-  {name:"Series to Get Into",items:videoRegistry.filter(v=>group(v)==="Series")},
-  {name:"Movie Night",items:videoRegistry.filter(v=>group(v)==="Movies")},
-  {name:"Animated Adventures",items:videoRegistry.filter(v=>group(v)==="Animation")},
-  {name:"International Spotlight",items:videoRegistry.filter(v=>group(v)==="International")},
-  {name:"More to Explore",items:videoRegistry.slice(14,44)}
+  {name:"Featured Tonight",items:deepwatchCatalog.slice(0,14)},
+  {name:"Series to Get Into",items:deepwatchCatalog.filter(v=>group(v)==="Series")},
+  {name:"Movie Night",items:deepwatchCatalog.filter(v=>group(v)==="Movies")},
+  {name:"Animated Adventures",items:deepwatchCatalog.filter(v=>group(v)==="Animation")},
+  {name:"International Spotlight",items:deepwatchCatalog.filter(v=>group(v)==="International")},
+  {name:"More to Explore",items:deepwatchCatalog.slice(14,44)}
  ]:[{name:tab==="My List"?"Your Watchlist":tab,items:filtered}], [tab,filtered]);
  const send=(func:string,args?:unknown[])=>{player.current?.contentWindow?.postMessage(JSON.stringify({event:"command",func,args:args||[]}),"*")};
  const open=(v:RegisteredVideo)=>{selectedRef.current=v;setSelected(v);setSeconds(v.startSeconds||0);setPlaying(true);setSettings(false)};
  const close=()=>{setSelected(null);selectedRef.current=null;setSettings(false)};
- const next=()=>{const index=videoRegistry.findIndex(v=>v.videoId===selectedRef.current?.videoId);open(videoRegistry[(index+1)%videoRegistry.length])};
+ const next=()=>{const index=deepwatchCatalog.findIndex(v=>v.videoId===selectedRef.current?.videoId);open(deepwatchCatalog[(index+1)%deepwatchCatalog.length])};
  useEffect(()=>{if(!selected)return;const onMessage=(event:MessageEvent)=>{if(!event.origin.includes("youtube.com")&&!event.origin.includes("youtube-nocookie.com"))return;try{const d=typeof event.data==="string"?JSON.parse(event.data):event.data;if(typeof d?.info?.currentTime==="number")setSeconds(Math.floor(d.info.currentTime))}catch{}};window.addEventListener("message",onMessage);const timer=setInterval(()=>{send("getCurrentTime");window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:selected.videoId,seconds,format:"desktop"}}))},900);return()=>{clearInterval(timer);window.removeEventListener("message",onMessage);window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:"",seconds:0,format:"desktop"}}))}},[selected,seconds]);
  const toggleSaved=(id:string)=>setSaved(prev=>{const value=prev.includes(id)?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem("1muslim:deepwatch-list",JSON.stringify(value))}catch{}return value});
  return <main className="deepwatch">
@@ -74,6 +80,7 @@ export default function DeepWatch(){
    </div>)}
    {heroSlides.length>1&&<><button type="button" className="deepwatchHeroArrow previous" aria-label="Previous featured title" onClick={()=>setHeroIndex(i=>(i-1+heroSlides.length)%heroSlides.length)}>‹</button><button type="button" className="deepwatchHeroArrow next" aria-label="Next featured title" onClick={()=>setHeroIndex(i=>(i+1)%heroSlides.length)}>›</button><div className="deepwatchHeroDots" aria-label="Choose featured title">{heroSlides.map((v,i)=><button key={v.videoId} type="button" aria-label={`Show slide ${i+1}: ${v.title}`} aria-current={i===heroIndex?"true":undefined} onClick={()=>setHeroIndex(i)}/>)}</div></>}
   </section>
+  {(tab==="Home"||tab==="Series")&&<section className="deepwatchRow" style={{padding:"12px 24px"}}><h2>Verified Yaqeen Episodes · Play in DeepWatch</h2><div className="deepwatchRail">{verifiedYaqeenEpisodes.map(v=><button key={v.videoId} type="button" className="deepwatchTile" onClick={()=>open(v)}><img src={image(v.videoId)} alt="" loading="lazy"/><span>{v.title}</span><small>Yaqeen Institute · ▶ Play</small></button>)}</div></section>}
   {(tab==="Home"||tab==="Series")&&<section className="deepwatchRow" aria-label="Official Islamic series awaiting video verification" style={{padding:"20px 24px"}}>
    <h2>Official Yaqeen Series · Explore</h2>
    <p style={{opacity:.8,fontSize:13,margin:"8px 0 16px"}}>Publisher-confirmed series. Individual YouTube episodes are not yet verified for DeepWatch playback.</p>
