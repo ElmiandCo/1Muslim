@@ -1,6 +1,8 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"Qdm70F47b5k",title:"The Story of Dajjal — Hasan Ali",category:"Afterlife",categories:["One Islam Productions","Islamic Lectures","Afterlife"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"iVtFN5NDkCw",title:"Your First Hour in the Grave — Ahmad Ali",category:"Afterlife",categories:["One Islam Productions","Islamic Lectures","Afterlife"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"XFX5q0JILd0",title:"Letters From Jannah | EP5 — The Palace Built for Me",category:"Shows",categories:["Shows","Letters From Jannah"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"XWiVlPH8ycw",title:"Letters From Jannah | EP4 — The Gardens You Were Promised",category:"Shows",categories:["Shows","Letters From Jannah"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"3JJpHR59598",title:"Letters From Jannah | EP3 — The First Welcome in Paradise",category:"Shows",categories:["Shows","Letters From Jannah"],startSeconds:0,endSeconds:null,format:"desktop"},
