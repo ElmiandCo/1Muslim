@@ -1926,3 +1926,20 @@
  -webkit-mask-image:linear-gradient(to top,#000 0%,#000 48%,rgba(0,0,0,.55) 70%,transparent 100%)!important;
  mask-image:linear-gradient(to top,#000 0%,#000 48%,rgba(0,0,0,.55) 70%,transparent 100%)!important;
 }
+
+/* Production correction: the visible gold frame is .decoratedSurface, not
+   a separate .surface child. Override the themed green wash on the actual
+   frame and its parent perimeter, without shifting the frame's top edge. */
+.control{
+ background:radial-gradient(ellipse 85% 64% at 50% 57%,rgba(116,39,186,.23),rgba(70,18,117,.10) 56%,transparent 82%),#000!important;
+}
+.control::before,.control::after{background:transparent!important;opacity:0!important}
+.control .decoratedSurface{
+ background:linear-gradient(180deg,rgba(5,5,9,.95),rgba(0,0,0,.94))!important;
+ border-color:rgba(206,178,113,.68)!important;
+ box-shadow:inset 0 0 0 1px rgba(222,191,120,.12),0 0 17px rgba(149,64,235,.34),0 0 46px rgba(105,31,176,.26),0 16px 46px rgba(0,0,0,.58)!important;
+}
+@media(max-width:767px){
+ .control{padding-left:max(5px,env(safe-area-inset-left))!important;padding-right:max(5px,env(safe-area-inset-right))!important;padding-bottom:max(5px,env(safe-area-inset-bottom))!important}
+ .control .decoratedSurface{width:100%!important;max-width:none!important;margin-left:auto!important;margin-right:auto!important;min-width:0!important}
+}
