@@ -19,6 +19,8 @@ const verifiedYaqeenEpisodes:RegisteredVideo[]=[
 ];
 /* Full-length official uploads: Islamic and general educational kids content. */
 const curatedKidsVideos:RegisteredVideo[]=[
+ {videoId:"hm8gkqelr-k",title:"Sesame Street — Library Helpers, Babysitters & More | Four Full Episodes",category:"Kids",categories:["Kids","Educational","Sesame Street","Full Episodes"],startSeconds:0,endSeconds:null,format:"desktop"},
+ {videoId:"YJ1SnN2unTY",title:"Sesame Street — Sharing with Elmo & Friends! | Four Full Episodes",category:"Kids",categories:["Kids","Educational","Sesame Street","Full Episodes"],startSeconds:0,endSeconds:null,format:"desktop"},
  {videoId:"XbgHiacEFgM",title:"Omar & Hana — Have Patience Daddy, Sweet Raju & More Episodes | Official English",category:"Kids",categories:["Kids","Animation","Islamic","Omar & Hana"],startSeconds:0,endSeconds:null,format:"desktop"},
  {videoId:"hJX3UGgIRVU",title:"Wild Kratts — Butternut Tree | Full Episode | PBS KIDS",category:"Kids",categories:["Kids","Animation","Science","PBS KIDS"],startSeconds:0,endSeconds:null,format:"desktop"}
 ];
