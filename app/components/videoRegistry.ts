@@ -1,6 +1,10 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"O38OhlRifrk",title:"Stories of Dead People — S2 EP7: He Was Buried With a Remote, But Why?",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"l3mfoSVXFrQ",title:"Stories of Dead People — S2 EP8: He Died in Jail Giving Dawah, Face Smiling After 8 Days",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"KjHaAItddDo",title:"Stories of Dead People — S2 EP9: A Person Who Killed Her Own Sister!",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"2-BVXtBdxw8",title:"Stories of Dead People — S2 EP10: He Died Then Saw His Family in Jannah",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"dsgc7wOATtU",title:"Stories of Dead People — S2 EP3: His Death Left a Mystery",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"N6vkcVBd5-M",title:"Stories of Dead People — S2 EP4: What Happens to the Body After We Die",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"eNRdgzVgt-o",title:"Stories of Dead People — S2 EP5: He Died Next to Ibrahim (AS)",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
