@@ -1,6 +1,11 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"RerLVM4pWeE",title:"Stories of the Prophets | EP5 — Adam (AS) & Hawwa (AS) On Earth",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"4elQ8MMqq6Q",title:"Stories of the Prophets | EP6 — Habil & Qabil — The Sons of Adam (AS)",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"74an2nHujZU",title:"Stories of the Prophets | EP7 — The Death of Adam (AS)",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"eRMdvy0oWKw",title:"Stories of the Prophets | EP8 — Sheeth (AS) & The Invention of Music",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"GWHggtbGQ4s",title:"Stories of the Prophets | EP9 — Idrees (AS)",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"k4hRONalWU4",title:"Stories of the Prophets | EP1 — Introduction",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"jktPehmOlmo",title:"Stories of the Prophets | EP2 — Creation of Adam (AS)",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"hzoo_llwzBI",title:"Stories of the Prophets | EP3 — Creation of Hawwa (AS)",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
