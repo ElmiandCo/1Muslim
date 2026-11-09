@@ -1,6 +1,8 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"oVFGrvEwgdE",title:"Letters From Jannah | EP2 — My First Step In Jannah",category:"Shows",categories:["Shows","Letters From Jannah"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"6W3MDgUsrG0",title:"Letters From Jannah | EP1 — The Final Breath",category:"Shows",categories:["Shows","Letters From Jannah"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"QuxSwXGvCDE",title:"The Story of a Crying Sahabi | Animated Film",category:"Islamic History",categories:["Animated Movies","Kids","Islamic History"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"bBHSA4l8LJQ",title:"The Story of Prophet Adam (AS) — One Islam Productions",category:"Prophet Stories",categories:["Animated Movies","Kids","Prophet Stories"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"SxJ2OC7iXo0",title:"1001 Inventions and the Library of Secrets — HD Edition",category:"Islamic Civilization",categories:["Movies","Kids","Documentaries"],startSeconds:0,endSeconds:null,format:"desktop"},
