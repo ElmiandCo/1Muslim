@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import HomeLiveConversation from "../components/HomeLiveConversation";
-import {videoRegistry,type RegisteredVideo} from "../components/videoRegistry";
+import {videoRegistry,isKidsVideo,type RegisteredVideo} from "../components/videoRegistry";
 import "./deepwatch.css";
 
 const officialSeries = [
@@ -18,7 +18,7 @@ const verifiedYaqeenEpisodes:RegisteredVideo[]=[
  {videoId:"5kfDmMFWbMs",title:"Servants of the Most Merciful — Episode 1: The Benefits of Being Called Servants of the Most Merciful (2020)",category:"Series",categories:["Shows","Educational Series","Yaqeen Institute"],startSeconds:0,endSeconds:null,format:"desktop"}
 ];
 const deepwatchCatalog=[...verifiedYaqeenEpisodes,...videoRegistry.filter(v=>v.format!=="phone"&&!verifiedYaqeenEpisodes.some(ep=>ep.videoId===v.videoId))];
-const tabs=["Home","Movies","TV Shows","Series","Animation","International","Live","My List"] as const;
+const tabs=["Home","Kids","Movies","TV Shows","Series","Animation","International","Live","My List"] as const;
 type Tab=typeof tabs[number];
 const image=(id:string)=>`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const group=(v:RegisteredVideo):Tab=>{
@@ -42,11 +42,11 @@ export default function DeepWatch(){
  const player=useRef<HTMLIFrameElement>(null);
  const selectedRef=useRef<RegisteredVideo|null>(null);
  useEffect(()=>{try{const value=JSON.parse(localStorage.getItem("1muslim:deepwatch-list")||"[]");if(Array.isArray(value))setSaved(value.filter((x):x is string=>typeof x==="string"))}catch{}},[]);
- const filtered=useMemo(()=>deepwatchCatalog.filter(v=>(tab==="Home"||(tab==="My List"?saved.includes(v.videoId):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
+ const filtered=useMemo(()=>deepwatchCatalog.filter(v=>(tab==="Home"||(tab==="Kids"?isKidsVideo(v):tab==="My List"?saved.includes(v.videoId):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
  const heroSlides=useMemo(()=>{
-  const categories:Tab[]=tab==="Home"?["Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
+  const categories:Tab[]=tab==="Home"?["Kids","Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
   const used=new Set<string>();
-  const picks=categories.map(category=>filtered.find(v=>!used.has(v.videoId)&&(category==="My List"||group(v)===category))).filter((v):v is RegisteredVideo=>Boolean(v));
+  const picks=categories.map(category=>filtered.find(v=>!used.has(v.videoId)&&(category==="My List"||(category==="Kids"?isKidsVideo(v):group(v)===category)))).filter((v):v is RegisteredVideo=>Boolean(v));
   picks.forEach(v=>used.add(v.videoId));
   for(const v of filtered){if(picks.length>=5)break;if(!used.has(v.videoId)){picks.push(v);used.add(v.videoId)}}
   return picks;
