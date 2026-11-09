@@ -19,6 +19,8 @@ const verifiedYaqeenEpisodes:RegisteredVideo[]=[
 ];
 /* Full-length official uploads: Islamic and general educational kids content. */
 const curatedKidsVideos:RegisteredVideo[]=[
+ {videoId:"RAnj0V452f8",title:"Sesame Street — Solve Mysteries on Sesame Street | 4 Full Episodes",category:"Kids",categories:["Kids","Educational","Sesame Street","Full Episodes"],startSeconds:0,endSeconds:null,format:"desktop"},
+ {videoId:"6LmUcFmlaJ0",title:"Sesame Street — Tractors, Submarines, Planes & More with Elmo | 4 Full Episodes",category:"Kids",categories:["Kids","Educational","Sesame Street","Full Episodes"],startSeconds:0,endSeconds:null,format:"desktop"},
  {videoId:"hm8gkqelr-k",title:"Sesame Street — Library Helpers, Babysitters & More | Four Full Episodes",category:"Kids",categories:["Kids","Educational","Sesame Street","Full Episodes"],startSeconds:0,endSeconds:null,format:"desktop"},
  {videoId:"YJ1SnN2unTY",title:"Sesame Street — Sharing with Elmo & Friends! | Four Full Episodes",category:"Kids",categories:["Kids","Educational","Sesame Street","Full Episodes"],startSeconds:0,endSeconds:null,format:"desktop"},
  {videoId:"XbgHiacEFgM",title:"Omar & Hana — Have Patience Daddy, Sweet Raju & More Episodes | Official English",category:"Kids",categories:["Kids","Animation","Islamic","Omar & Hana"],startSeconds:0,endSeconds:null,format:"desktop"},
