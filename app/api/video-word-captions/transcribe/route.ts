@@ -16,6 +16,7 @@ export async function POST(request:NextRequest){
  const audio=form.get("audio");
  if(!/^[A-Za-z0-9_-]{11}$/.test(videoId)||!Number.isFinite(offset)||offset<0||!(audio instanceof File))return NextResponse.json({error:"Provide videoId, optional offsetSeconds, and an audio file"},{status:400});
  if(audio.size>25*1024*1024||audio.size===0)return NextResponse.json({error:"Audio must be 1 byte to 25 MB"},{status:413});
+ const gate=await createClient(url,dbKey,{auth:{persistSession:false,autoRefreshToken:false}}).from("admin_feature_switches").select("enabled").eq("key","speechsync").maybeSingle();if(gate.error||gate.data?.enabled!==true)return NextResponse.json({error:"SpeechSync disabled"},{status:403});
  const payload=new FormData();payload.set("model","whisper-1");payload.set("response_format","verbose_json");payload.set("timestamp_granularities[]","word");payload.set("file",audio,audio.name||"audio.mp3");
  const response=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{Authorization:`Bearer ${key}`},body:payload,signal:AbortSignal.timeout(55000)});
  if(!response.ok)return NextResponse.json({error:"Transcription provider failed",status:response.status},{status:502});
