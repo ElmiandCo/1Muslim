@@ -252,7 +252,7 @@ export default function Home(){
  const [carouselVideoQuery,setCarouselVideoQuery]=useState("");
  const navLastActivity=useRef(Date.now());
  const resetNavIdle=()=>{navLastActivity.current=Date.now();setNavIdleElapsed(0);setNavDismissed(false)};
- const dismissNavAnimation=()=>{setNavDismissed(true);navLastActivity.current=Date.now();setNavIdleElapsed(0)};
+ const dismissNavAnimation=()=>{navLastActivity.current=Date.now();setNavIdleElapsed(0);setNavDismissed(false);navFaithCycle.current=-1};
  useEffect(()=>{const timer=window.setInterval(()=>setNavIdleElapsed(Math.max(0,Date.now()-navLastActivity.current)),200);return()=>window.clearInterval(timer)},[]);
  useEffect(()=>{const onToggle=(event:Event)=>{const detail=(event as CustomEvent<{expanded:boolean}>).detail;setCarouselSearchOpen(Boolean(detail?.expanded));resetNavIdle()};window.addEventListener("oneMuslimHomeCarouselExpanded",onToggle);return()=>window.removeEventListener("oneMuslimHomeCarouselExpanded",onToggle)},[]);
  useEffect(()=>{window.dispatchEvent(new CustomEvent("oneMuslimCarouselSearch",{detail:{query:carouselVideoQuery}}))},[carouselVideoQuery]);
