@@ -12,6 +12,15 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
  const [stageNode,setStageNode]=useState<HTMLElement|null>(null);
  useEffect(()=>{if(!stageNode)return;stageNode.classList.toggle("home-carousel-collapsed",!expanded);return()=>stageNode.classList.remove("home-carousel-collapsed")},[stageNode,expanded]);
 
+ const [expandHintVisible,setExpandHintVisible]=useState(false);
+ const expandHintTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ useEffect(()=>{
+  if(expanded||!canExpand||!stageNode){setExpandHintVisible(false);return;}
+  const reveal=()=>{setExpandHintVisible(true);if(expandHintTimer.current)clearTimeout(expandHintTimer.current);expandHintTimer.current=setTimeout(()=>setExpandHintVisible(false),2000);};
+  reveal();
+  stageNode.addEventListener("pointerdown",reveal);
+  return()=>{stageNode.removeEventListener("pointerdown",reveal);if(expandHintTimer.current)clearTimeout(expandHintTimer.current);};
+ },[expanded,canExpand,stageNode]);
  const [position,setPosition]=useState(0);
  const [category,setCategory]=useState("All");
  const [controlsVisible,setControlsVisible]=useState(false);
@@ -121,5 +130,5 @@ export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"ph
  {expanded&&<><div className="homeVideoWheelTrack" aria-label="Choose a video to play above" onTouchStart={e=>e.stopPropagation()} onTouchMove={e=>e.stopPropagation()} onTouchEnd={e=>e.stopPropagation()} onPointerDown={e=>{engageControls();e.stopPropagation();if(resumeTimer.current)clearTimeout(resumeTimer.current);paused.current=true;dragged.current=false;pointer.current={x:e.clientX,position:positionRef.current}}} onPointerMove={e=>{e.stopPropagation();onMove(e.clientX)}} onPointerUp={e=>{engageControls();e.stopPropagation();onMove(e.clientX);settle()}} onPointerCancel={()=>{settle()}}>
  {items.map((item,i)=>{let offset=((i-position)%count+count)%count;if(offset>count/2)offset-=count;const distance=Math.abs(offset);const scale=Math.max(.24,1-.25*distance*distance);return <div key={item.videoId} className="homeVideoWheelCard" role="button" tabIndex={0} aria-label={`Play ${item.title}`} onClick={()=>{engageControls();if(dragged.current){return;}paused.current=true;if(resumeTimer.current)clearTimeout(resumeTimer.current);resumeTimer.current=setTimeout(()=>{paused.current=false},500);window.dispatchEvent(new CustomEvent("oneMuslimSelectCarouselVideo",{detail:{videoId:item.videoId,format:item.format}}))}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();engageControls();window.dispatchEvent(new CustomEvent("oneMuslimSelectCarouselVideo",{detail:{videoId:item.videoId,format:item.format}}))}}} style={{transform:`translateX(calc(-50% + ${offset*110}%)) perspective(550px) rotateY(${-offset*13}deg) scale(${scale})`,opacity:Math.max(.12,1-distance*.28),zIndex:Math.round(20-distance),background:`linear-gradient(145deg,hsla(${190+(i%6)*27},65%,35%,.58),rgba(4,12,25,.8))`}}><img src={`https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`} alt="" loading="lazy" draggable={false} referrerPolicy="no-referrer" onError={e=>{e.currentTarget.style.display="none"}}/><strong>{item.title}</strong></div>})}
  </div></>}
- </div>{!expanded&&exploreStage&&createPortal(<div className="homeCarouselExploreLabel" aria-hidden="true">✦ Explore More <span>✦</span></div>,exploreStage)}{!expanded&&canExpand&&stageNode&&createPortal(<button type="button" onClick={()=>setExpanded(true)} aria-label="Expand video carousel" title="Show carousel" style={{position:"absolute",right:14,top:48,zIndex:40,border:"1px solid rgba(255,255,255,.22)",borderRadius:10,background:"rgba(0,0,0,.35)",color:"#fff",fontSize:15,padding:"3px 7px",backdropFilter:"blur(5px)",cursor:"pointer"}}>▤</button>,stageNode)}</div>;
+ </div>{!expanded&&exploreStage&&createPortal(<div className="homeCarouselExploreLabel" aria-hidden="true">✦ Explore More <span>✦</span></div>,exploreStage)}{!expanded&&canExpand&&stageNode&&createPortal(<button type="button" onClick={()=>setExpanded(true)} aria-label="Expand video carousel" title="Show carousel" style={{position:"absolute",right:14,top:48,zIndex:40,border:"1px solid rgba(255,255,255,.22)",borderRadius:10,background:"rgba(0,0,0,.22)",color:"#fff",fontSize:15,padding:"3px 7px",backdropFilter:"blur(5px)",cursor:"pointer",opacity:expandHintVisible?1:0,transition:"opacity 450ms ease",pointerEvents:"auto"}}>▤</button>,stageNode)}</div>;
 }
