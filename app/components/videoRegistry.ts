@@ -1,6 +1,7 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"o2iorDE_xHc",title:"Why Some American Muslim Youth Are Doubting Their Faith | Yaqeen Institute",category:"Faith",categories:["Faith","Lectures"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"dAZPkwAo0lE",title:"O Messenger | Ep. 3",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"eOYW4vKaKpc",title:"O Messenger | Ep. 5",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"uSUxDtp-U0Q",title:"O Messenger | Ep. 10",category:"Prophet Stories",categories:["Prophet Stories","Shows","Top 100"],startSeconds:0,endSeconds:null,format:"desktop"},
