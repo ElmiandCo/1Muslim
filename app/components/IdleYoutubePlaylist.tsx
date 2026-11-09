@@ -82,7 +82,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   const engageCinema=()=>{setCinemaEngaged(true);setImmersive(false);setCinemaSettled(false);window.setTimeout(()=>setCinemaEngaged(false),150);};
   // YouTube iframe controls are cross-origin: mirror their interaction window
   // from parent-level gestures rather than claiming access to iframe UI state.
-  const revealArrows=()=>{setShowArrows(true);if(arrowTimer.current)clearTimeout(arrowTimer.current);arrowTimer.current=setTimeout(()=>setShowArrows(false),3000);};
+  const revealArrows=()=>{setShowArrows(true);if(arrowTimer.current)clearTimeout(arrowTimer.current);arrowTimer.current=setTimeout(()=>setShowArrows(false),2000);};
   useEffect(()=>{setShowArrows(false);if(arrowTimer.current)clearTimeout(arrowTimer.current);},[timedVideoKey,format]);
   useEffect(()=>{
     if(!isPlaying||isPaused){setImmersive(false);setCinemaSettled(false);return;}
@@ -271,7 +271,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Next video countdown"><button type="button" aria-label="Tap to stay on this video" onClick={()=>continueVideoRef.current()}><span className="oneMuslimSkipLabel">{skipCountdown===5?"Next Video":"Tap To Stay"}</span><span className="oneMuslimSkipNumber">{skipCountdown}</span></button></div>}
       <span className={"oneMuslimThemeBrand"+(showArrows?" is-visible":"")} aria-hidden="true">1Muslim</span>
       <button type="button" className={"oneMuslimPlaylistArrow is-left"+(showArrows?"":" is-idle")} aria-label="Previous YouTube video" onClick={()=>navigate(-1)}>‹</button>
-      <button type="button" className={"oneMuslimPlaylistArrow is-right"+(showArrows||!soundEnabled||!isPlaying?"":" is-idle")} aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
+      <button type="button" className={"oneMuslimPlaylistArrow is-right"+(showArrows?"":" is-idle")} aria-label="Next YouTube video" onClick={()=>navigate(1)}>›</button>
     </div>
     <style>{`
       .oneMuslimCarouselCategoryBar{width:100%;max-width:1400px;display:flex;gap:12px;align-items:center;overflow-x:auto;scrollbar-width:none;white-space:nowrap;padding:0 4px 5px;margin:0 auto 3px;min-height:21px}.oneMuslimCarouselCategoryBar::-webkit-scrollbar{display:none}.oneMuslimCarouselCategoryBar button{flex:none;border:0;background:transparent;color:color-mix(in srgb,var(--theme-text,#fff) 65%,transparent);font-size:11px;font-weight:400;line-height:18px;letter-spacing:.01em;padding:1px 3px;cursor:pointer}.oneMuslimCarouselCategoryBar button.is-selected{color:var(--theme-primary,#a9e7d5);font-weight:650;border-bottom:1px solid currentColor}.oneMuslimCarouselCategoryBar button:focus-visible{outline:2px solid var(--theme-primary,#a9e7d5);outline-offset:2px}
@@ -304,9 +304,9 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
       @keyframes oneMuslimOverlayBreath{0%,100%{opacity:1}50%{opacity:0}}
       
       .oneMuslimPlayerSoundActivator{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;border:0;background:transparent;cursor:pointer;touch-action:manipulation}
-      .oneMuslimPlaylistArrow{position:absolute;z-index:4;top:10px;transform:none;width:24px;height:24px;min-width:24px;min-height:24px;padding:0;border:1px solid rgba(255,255,255,.2);border-radius:50%;background:rgba(15,19,28,.52);color:#eee;font:300 19px/1 sans-serif;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 0 7px rgba(192,192,192,.05);transition:background .25s ease,box-shadow .25s ease,color .25s ease}
-      .oneMuslimPlaylistArrow.is-idle{opacity:0;pointer-events:none;transition:opacity 1s ease,background .25s ease,box-shadow .25s ease,color .25s ease}\n      .oneMuslimPlaylistArrow:not(.is-idle){opacity:1;transition:opacity .3s ease,background .25s ease,box-shadow .25s ease,color .25s ease}\n      .oneMuslimPlaylistArrow.is-left{left:10px}.oneMuslimPlaylistArrow.is-right{right:10px}
-      .oneMuslimPlaylistArrow:hover,.oneMuslimPlaylistArrow:focus-visible{background:rgba(20,24,34,.65);box-shadow:0 0 10px rgba(192,192,192,.05);outline-offset:2px}
+      .oneMuslimPlaylistArrow{position:absolute;z-index:4;top:25%;transform:translateY(-50%);width:34px;height:44px;min-width:34px;min-height:44px;padding:0;border:0;border-radius:12px;background:transparent!important;color:#fff!important;font:300 25px/1 sans-serif;display:grid;place-items:center;cursor:pointer;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none!important;text-shadow:0 1px 3px rgba(0,0,0,.7);transition:opacity .45s ease!important}
+      .oneMuslimPlaylistArrow.is-idle{opacity:0;pointer-events:none}\n      .oneMuslimPlaylistArrow:not(.is-idle){opacity:1}\n      .oneMuslimPlaylistArrow.is-left{left:0}.oneMuslimPlaylistArrow.is-right{right:0}
+      .oneMuslimPlaylistArrow:hover,.oneMuslimPlaylistArrow:focus-visible{background:transparent!important;box-shadow:none!important;outline-offset:2px}
       .oneMuslimIdleYoutubePlayer>div:first-child{transition:transform .24s cubic-bezier(.2,.7,.2,1),opacity .24s ease}
       .oneMuslimIdleYoutubePlayer.is-switching.is-next>div:first-child{transform:translateX(-8%);opacity:.22}
       .oneMuslimIdleYoutubePlayer.is-switching.is-previous>div:first-child{transform:translateX(8%);opacity:.22}
