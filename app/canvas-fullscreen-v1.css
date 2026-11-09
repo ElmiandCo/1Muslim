@@ -2925,3 +2925,12 @@ main[class*="control"] .homeLiveStreamTileActive{border:0!important;border-color
  border-color:rgba(170,233,224,.4)!important;
  box-shadow:inset 0 1px 0 rgba(255,255,255,.23),0 0 14px rgba(77,195,183,.22)!important;
 }
+
+/* Homepage format navigation: Titanium for Desktop, Phone, Audio and Games.
+   Qibla retains its dedicated teal-to-pink selected gradient. */
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab[data-home-format]:not([data-home-format="qibla"])[aria-pressed="true"]{
+ color:#f8fafc!important;
+ background:linear-gradient(145deg,rgba(195,203,215,.87) 0%,rgba(115,125,141,.91) 46%,rgba(48,57,73,.95) 100%)!important;
+ border-color:rgba(220,229,239,.45)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 3px 13px rgba(122,135,153,.22)!important;
+}
