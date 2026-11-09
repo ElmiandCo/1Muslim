@@ -19,6 +19,8 @@ export default function QiblaNewsroom(){
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
  const [query,setQuery]=useState("");
+ const [magSlide,setMagSlide]=useState(0);
+ const [magPaused,setMagPaused]=useState(false);
  const [contributor,setContributor]=useState(false);
 
  useEffect(()=>{const back=()=>reverseToSplit();window.addEventListener("1muslim:qibla-back",back);return()=>window.removeEventListener("1muslim:qibla-back",back)});
@@ -42,6 +44,14 @@ export default function QiblaNewsroom(){
  const magazineStories=visible.filter(s=>s.kind==="magazine");
  const newsletterStories=visible.filter(s=>s.kind==="newsletter");
  const [hero,...rest]=magazineStories;
+ const magSlides=magazineStories.slice(0,Math.max(5,Math.min(8,magazineStories.length)));
+ useEffect(()=>{setMagSlide(0)},[query]);
+ useEffect(()=>{if(view!=="magazine"||magPaused||magSlides.length<2||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const timer=window.setInterval(()=>setMagSlide(i=>(i+1)%magSlides.length),4000);
+  return()=>window.clearInterval(timer);
+ },[view,magPaused,magSlides.length]);
+ const moveMagSlide=(delta:number)=>setMagSlide(i=>(i+delta+magSlides.length)%magSlides.length);
+ const magazineIcon=(size=19)=><svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 15 15 9M10 9h5v5"/></svg>;
  const editorialTitle=(title:string)=>{const words=title.trim().split(/\s+/);const pivot=Math.max(1,Math.ceil(words.length*.48));return <span className={styles.editorialTitle}><span>{words.slice(0,pivot).join(" ")}</span><em>{words.slice(pivot).join(" ")||" "}</em></span>};
  const magazineSamples=[{title:"Faith in the Age of Algorithms",category:"IDENTITY & TECHNOLOGY",summary:"A new generation is navigating faith, creativity and belonging in an always-connected world.",body:"How can young Muslims build a thoughtful digital identity without losing their values? This sample feature explores intentional screen time, online community, and meaningful conversations about faith."},{title:"The Questions We Are Not Afraid to Ask",category:"FAITH & REASON",summary:"Curiosity, thoughtful debate and the courage to seek understanding.",body:"This sample magazine essay introduces the importance of respectful theological discussion, careful research and listening to different perspectives."}];
  const newsSamples=[{title:"Community Spotlight: A New Generation of Volunteers",category:"COMMUNITY · SAMPLE",summary:"An illustrative look at how local initiatives can bring neighbors together.",body:"DEMONSTRATION ARTICLE — This fictional example shows how a community report could present interviews, verified facts and local impact. No real event is being reported."},{title:"The Global Brief: Education, Culture and Community",category:"WORLD BRIEF · SAMPLE",summary:"A sample international news roundup format, designed for clarity and context.",body:"DEMONSTRATION ARTICLE — This is a layout preview, not a factual news report. Published editions will include sources, datelines and editorial verification."}];
@@ -73,17 +83,14 @@ export default function QiblaNewsroom(){
     <div className={styles.centerLine} aria-hidden="true"/>
    </div>
    <section className={styles.magazine} aria-hidden={view!=="magazine"}>
-    <div className={styles.magCinemaHero} style={hero?.cover?{backgroundImage:`linear-gradient(90deg,rgba(7,9,13,.98) 2%,rgba(7,9,13,.88) 40%,rgba(7,9,13,.12) 100%),url("${encodeURI(hero.cover)}")`}:undefined}>
-     <div className={styles.magCinemaCopy}>
-      <span className={styles.magCinemaEyebrow}>1QIBLA · THE FEATURED EDITION</span>
-      <h2>{hero?hero.title:"Stories worth reading."}</h2>
-      <p>{hero?hero.description.slice(0,240):"A new perspective on faith, identity, culture and the next generation."}</p>
-      {hero?<Link className={styles.magCinemaRead} href={`/qibla/newsroom/${encodeURIComponent(hero.id)}`}>READ MORE <span aria-hidden="true">↗</span></Link>:<span className={styles.magCinemaComing}>THE NEXT EDITION IS COMING</span>}
-     </div>
-     <span className={styles.magCinemaMark} aria-hidden="true">THE QIBLA / MAGAZINE</span>
+    <div className={styles.magCarousel} aria-label="Magazine featured stories" onMouseEnter={()=>setMagPaused(true)} onMouseLeave={()=>setMagPaused(false)} onFocusCapture={()=>setMagPaused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))setMagPaused(false)}}>
+     {(magSlides.length?magSlides:[null]).map((story,i)=><div key={story?.id||"empty"} className={`${styles.magCinemaHero} ${i===magSlide?styles.magSlideActive:""}`} aria-hidden={i!==magSlide} style={story?.cover?{backgroundImage:`linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.92) 37%,rgba(255,255,255,.22) 100%),url("${encodeURI(story.cover)}")`}:undefined}>
+      <div className={styles.magCinemaCopy}><span className={styles.magCinemaEyebrow}>1QIBLA · THE FEATURED EDITION</span><h2>{story?story.title:"Stories worth reading."}</h2><p>{story?story.description.slice(0,240):"A new perspective on faith, identity, culture and the next generation."}</p>{story?<Link tabIndex={i===magSlide?0:-1} className={styles.magCinemaRead} href={`/qibla/newsroom/${encodeURIComponent(story.id)}`}>READ MORE {magazineIcon()}</Link>:<span className={styles.magCinemaComing}>THE NEXT EDITION IS COMING</span>}</div><span className={styles.magCinemaMark} aria-hidden="true">THE QIBLA / MAGAZINE</span>
+     </div>)}
+     {magSlides.length>1&&<><button type="button" className={`${styles.magSlideControl} ${styles.magSlidePrev}`} aria-label="Previous featured story" onClick={()=>moveMagSlide(-1)}>{magazineIcon(22)}</button><button type="button" className={`${styles.magSlideControl} ${styles.magSlideNext}`} aria-label="Next featured story" onClick={()=>moveMagSlide(1)}>{magazineIcon(22)}</button><div className={styles.magSlideDots}>{magSlides.map((story,i)=><button type="button" key={story.id} aria-label={`Show story ${i+1}: ${story.title}`} aria-current={i===magSlide?"true":undefined} onClick={()=>setMagSlide(i)}/>)}</div></>}
     </div>
     <div className={styles.magCinemaExplore}><Link href="/deepwatch" aria-label="Explore more on DeepWatch"><span>✦</span> EXPLORE MORE <span>✦</span></Link></div>
-    {magazineStories.length>1&&<div className={styles.magCinemaShelf}><div className={styles.magCinemaShelfHead}><strong>FEATURED STORIES</strong><span>SWIPE TO EXPLORE ↗</span></div><div className={styles.magCinemaRail}>{magazineStories.slice(0,12).map((story,i)=><Link key={story.id} className={styles.magCinemaTile} href={`/qibla/newsroom/${encodeURIComponent(story.id)}`}><div className={styles.magCinemaTileArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>Q</span>}</div><small>THE QIBLA · {String(i+1).padStart(2,"0")}</small><strong>{story.title}</strong></Link>)}</div></div>}
+    {magazineStories.length>1&&<div className={styles.magCinemaShelf}><div className={styles.magCinemaShelfHead}><strong>FEATURED STORIES</strong><span>SWIPE TO EXPLORE {magazineIcon(15)}</span></div><div className={styles.magCinemaRail}>{magazineStories.slice(0,12).map((story,i)=><Link key={story.id} className={styles.magCinemaTile} href={`/qibla/newsroom/${encodeURIComponent(story.id)}`}><div className={styles.magCinemaTileArt} style={story.cover?{backgroundImage:`url("${encodeURI(story.cover)}")`}:undefined}>{!story.cover&&<span>Q</span>}</div><small>THE QIBLA · {String(i+1).padStart(2,"0")}</small><strong>{story.title}</strong></Link>)}</div></div>}
 
     <div className={styles.magHeader}><p>1QIBLA · THE MAGAZINE</p><h1>THE QIBLA</h1><div className={styles.magRule}/><span>FAITH, IDENTITY & IDEAS FOR A NEW GENERATION</span></div>
     <div className={styles.magIntro}><span>THE LATEST EDITION</span><span>THE NEXT GENERATION OF MUSLIM VOICES</span></div>
