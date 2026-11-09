@@ -2957,3 +2957,13 @@ html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveVideo {
  background-image:none!important;
  border-color:transparent!important;
 }
+
+/* Day-mode Home Live: the dark green was the parent canvas showing through
+   after removing the video backdrop. Supply the intended white grid underlay
+   instead; don't modify video, comment cards, or night mode. */
+html.light [data-workspace-page="0"] .canvas-vertical-main:has(> .oneMuslimLiveStage) {
+ background-color:#fafaf8!important;
+ background-image:
+  repeating-linear-gradient(45deg,transparent 0 32px,rgba(122,131,129,.14) 32px 33px,transparent 33px 65px),
+  repeating-linear-gradient(-45deg,transparent 0 32px,rgba(122,131,129,.14) 32px 33px,transparent 33px 65px)!important;
+}
