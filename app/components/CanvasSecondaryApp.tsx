@@ -385,51 +385,6 @@ function DailyPostsApp({active}:{active:boolean}){
   const d=await r.json();if(!r.ok)throw Error(d.error||"Unable to comment");
   setComments(previous=>[...previous,d.comment]);setCommentCounts(previous=>({...previous,[selected]:(previous[selected]||0)+1}));setDraft("");
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
- useEffect(()=>{
-  if(!active||!wideFeed||selected||expandedImage||fypStart||viewerPost)return;
-  const root=feedRef.current;
-  if(!root)return;
-  const lanes=Array.from(root.querySelectorAll<HTMLElement>(".ummah-dual-lane"));
-  const motion=window.matchMedia("(prefers-reduced-motion: reduce)");
-  if(motion.matches)return;
-  const timers:ReturnType<typeof setTimeout>[]=[];
-  const cleanups:Array<()=>void>=[];
-  for(const [laneIndex,lane] of lanes.entries()){
-    let pausedUntil=performance.now()+2500+laneIndex*900;
-    let index=0;
-    let moving=false;
-    const cards=()=>Array.from(lane.querySelectorAll<HTMLElement>(".community-post-card"));
-    const interrupt=()=>{pausedUntil=performance.now()+2000;moving=false};
-    for(const name of ["wheel","touchstart","pointerdown","keydown"]){
-      lane.addEventListener(name,interrupt,{passive:true});
-      cleanups.push(()=>lane.removeEventListener(name,interrupt));
-    }
-    const advance=()=>{
-      if(document.hidden||performance.now()<pausedUntil||moving)return;
-      const all=cards();
-      if(all.length<2)return;
-      const nearest=all.reduce((best,card,i)=>Math.abs(card.offsetTop-lane.scrollTop)<Math.abs(all[best].offsetTop-lane.scrollTop)?i:best,0);
-      index=(nearest+1)%all.length;
-      moving=true;
-      const target=index===0?0:all[index].offsetTop-all[0].offsetTop;
-      const start=lane.scrollTop, distance=target-start;
-      const duration=laneIndex===0?1250:1850,begin=performance.now();
-      let raf=0;
-      const step=(now:number)=>{
-        if(performance.now()<pausedUntil||document.hidden){moving=false;return}
-        const t=Math.min(1,(now-begin)/duration);
-        const ease=t*t*t*(t*(t*6-15)+10);
-        lane.scrollTop=start+distance*ease;
-        if(t<1)raf=requestAnimationFrame(step);else moving=false;
-      };
-      raf=requestAnimationFrame(step);
-      cleanups.push(()=>cancelAnimationFrame(raf));
-    };
-    const timer=setInterval(advance,laneIndex===0?3300:4600);
-    timers.push(timer);
-  }
-  return()=>{timers.forEach(clearInterval);cleanups.forEach(fn=>fn())};
- },[active,posts.length,selected,expandedImage,fypStart,viewerPost,wideFeed]);
 
 
  const renderFeedPost=(post:UmmahPost)=><article data-post-id={post.id} data-post-theme={postThemeClass(post.post_theme)} className={`community-post-card ummah-template ummah-template-${postKind(post)} ummah-variant-${(post.id.charCodeAt(0)+layoutSeed)%3}`} key={post.id}>
@@ -439,11 +394,7 @@ function DailyPostsApp({active}:{active:boolean}){
    </article>;
   return <div className="community-simple-feed">
   <div className="community-posts-list" ref={feedRef} aria-label="Community posts">
-   {!wideFeed&&<div className="ummah-feed-single ummah-vertical-carousel" ref={singleRailRef}>{posts.map(renderFeedPost)}</div>}
-   {wideFeed&&<div className="ummah-dual-lanes" aria-label="Two independent post lanes">
-    <div className="ummah-dual-lane" data-lane="left" aria-label="Left posts lane">{posts.filter((_,i)=>i%2===0).map(renderFeedPost)}</div>
-    <div className="ummah-dual-lane" data-lane="right" aria-label="Right posts lane">{posts.filter((_,i)=>i%2===1).map(renderFeedPost)}</div>
-   </div>}
+   <div className="ummah-feed-single ummah-static-single-column" ref={singleRailRef}>{posts.map(renderFeedPost)}</div>
    {!posts.length?<p className="community-feed-empty">{status}</p>:null}
    {notice&&!selected&&<p role="status">{notice}</p>}
   </div>
@@ -486,7 +437,7 @@ function DailyPostsApp({active}:{active:boolean}){
 }
 /** Posts-only canvas: the Community Map is a separate destination, not a Posts tab. */
 export function CommunityMap({active}:{active:boolean}){
- return <div className="canvas-community-map-shell canvas-community-posts-only"><div className="canvas-community-posts-scroll"><DailyPostsApp active={active}/></div></div>;
+ return <div className="canvas-community-map-shell canvas-community-posts-only community-static-mode"><style>{` .community-static-mode .ummah-static-single-column{display:flex!important;flex-direction:column!important;gap:18px!important;overflow:visible!important;transform:none!important;scroll-snap-type:none!important}.community-static-mode .community-post-card,.community-static-mode .ummah-floating-pair,.community-static-mode .community-post-card *{animation:none!important;transition:none!important;transform:none!important}.community-static-mode .canvas-community-posts-scroll{overflow-y:auto!important;scroll-behavior:smooth!important}.community-static-mode .community-post-card{width:100%!important;max-width:100%!important;position:relative!important;opacity:1!important}`}</style><div className="canvas-community-posts-scroll"><DailyPostsApp active={active}/></div></div>;
 }
 export default function CanvasSecondaryApp({slot,active}:{slot:number;active:boolean}){
  return <div className={slot===0?"canvas-native-app canvas-profile-mirror":"canvas-native-app"}>{slot!==0&&<header><span>0{slot+6} · 1MUSLIM</span><h2>{titles[slot]}</h2></header>}<div className="canvas-native-body">
