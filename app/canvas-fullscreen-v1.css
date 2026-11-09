@@ -3030,3 +3030,25 @@ html [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveViewerConversation::
 html [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveViewerConversation::after {
  content:none!important;background:none!important;
 }
+
+/* Day mode is a clear canvas: no artwork, image, gradient, scrim, or
+   tinted background anywhere in the Home video/comment stage.
+   Preserve actual media elements and interactive nav/composer controls. */
+html.light [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage,
+html.light [data-workspace-page="0"] .canvas-vertical-main > .oneMuslimLiveStage :not(.oneMuslimLiveFormatGlassNav):not(.oneMuslimLiveFormatGlassTab):not(button):not(input):not(textarea):not(iframe):not(video):not(img):not(svg):not(path) {
+ background:none!important;background-color:transparent!important;background-image:none!important;
+ box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop::before,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop::after,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom::before,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveBottom::after,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage::before,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage::after {
+ content:none!important;display:none!important;
+}
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimVideoWaterReflection,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimVideoWaterReflectionImage,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimCinemaDimmer {
+ display:none!important;
+}
