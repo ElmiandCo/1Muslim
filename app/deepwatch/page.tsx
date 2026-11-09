@@ -23,6 +23,8 @@ const officialIslamicFilms:RegisteredVideo[]=[
  {videoId:"ZtmfL6uZfa4",title:"The Stories of Prophet Adam, Yunus & Ibrahim (AS) — Animated Movie Compilation | One Islam Productions",category:"Animated Movies",categories:["Movies","Animation","Kids","Prophet Stories","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
  {videoId:"wuNAlw5kmW8",title:"The Story of Prophet Ibrahim (AS) — Animated Full Movie | One Islam Productions",category:"Animated Movies",categories:["Movies","Animation","Kids","Prophet Stories","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"}
 ];
+/* User-submitted YouTube livestream. Live status and embed permissions are checked by YouTube at playback time. */
+const featuredLive:RegisteredVideo={videoId:"Xqycaqp0yWU",title:"Featured YouTube Live",category:"Live",categories:["Live","Featured Live"],startSeconds:0,endSeconds:null,format:"desktop"};
 const curatedKidsVideos:RegisteredVideo[]=[
  {videoId:"CoHv_vQ8Gps",title:"Curious George — George Hears Loud Noises, Magnets & Doctor Monkey | 1 Hour",category:"Kids",categories:["Kids","Animation","Educational","Curious George"],startSeconds:0,endSeconds:null,format:"desktop"},
  {videoId:"KilSYa-J3vU",title:"Curious George — 1 Hour Compilation | Official",category:"Kids",categories:["Kids","Animation","Educational","Curious George"],startSeconds:0,endSeconds:null,format:"desktop"},
@@ -35,7 +37,7 @@ const curatedKidsVideos:RegisteredVideo[]=[
 ];
 const kidsCatalogIds=new Set([...officialIslamicFilms.map(v=>v.videoId),...curatedKidsVideos.map(v=>v.videoId),...videoRegistry.filter(isKidsVideo).map(v=>v.videoId)]);
 const isDeepWatchKids=(v:RegisteredVideo)=>kidsCatalogIds.has(v.videoId);
-const deepwatchCatalog=Array.from(new Map([...officialIslamicFilms,...curatedKidsVideos,...verifiedYaqeenEpisodes,...videoRegistry.filter(v=>v.format==="desktop")].filter(v=>v.format==="desktop"&&!/shorts?/i.test([v.category,...(v.categories||[])].join(" "))).map(v=>[v.videoId,v] as const)).values());
+const deepwatchCatalog=Array.from(new Map([featuredLive,...officialIslamicFilms,...curatedKidsVideos,...verifiedYaqeenEpisodes,...videoRegistry.filter(v=>v.format==="desktop")].filter(v=>v.format==="desktop"&&!/shorts?/i.test([v.category,...(v.categories||[])].join(" "))).map(v=>[v.videoId,v] as const)).values());
 const oneIslamIds=new Set(["ZtmfL6uZfa4","wuNAlw5kmW8","W-C-qyaTJ9A","bBHSA4l8LJQ","QuxSwXGvCDE","6W3MDgUsrG0","oVFGrvEwgdE","3JJpHR59598","XWiVlPH8ycw","XFX5q0JILd0","iVtFN5NDkCw","Qdm70F47b5k","PDfCJRqOXQI","k4hRONalWU4","jktPehmOlmo","hzoo_llwzBI","kYJLOA3Ku20","LgzRb5SYAvo","Zor1et-rT8c","RerLVM4pWeE","4elQ8MMqq6Q","74an2nHujZU","eRMdvy0oWKw","GWHggtbGQ4s","Dyf-hcQHVSg","-O7LWSejY0E","q2_NhdYU_Tg","w9pnYXQcxrs"]);
 const oneIslamVideos=deepwatchCatalog.filter(v=>oneIslamIds.has(v.videoId)).sort((a,b)=>{const ep=(v:RegisteredVideo)=>Number(v.title.match(/\bEP(\d+)\b/i)?.[1]||999);return /Stories of the Prophets/i.test(a.title)&&/Stories of the Prophets/i.test(b.title)?ep(a)-ep(b):0});
 const tabs=["Home","Kids","Movies","TV Shows","Series","The Prophets","Animation","International","Live","My List"] as const;
@@ -111,6 +113,7 @@ export default function DeepWatch(){
    {name:"One Islam · Prophet Stories & Animated Films",test:(v:RegisteredVideo)=>/Prophet|Animated|Ibrahim|Yunus/i.test(v.title)},
    {name:"One Islam · Afterlife & Reminders",test:(v:RegisteredVideo)=>/Grave|Dajjal|Afterlife/i.test(v.title)}
   ].map(section=>{const items=oneIslamVideos.filter(v=>section.test(v)&&(!search||v.title.toLowerCase().includes(search.toLowerCase())));return items.length?<section className="deepwatchRow" key={section.name}><h2>{section.name}</h2><div className="deepwatchRail">{items.map(v=><button key={v.videoId} type="button" className="deepwatchTile" onClick={()=>open(v)}><img src={image(v.videoId)} alt="" loading="lazy"/><span>{v.title}</span><small>One Islam Productions · ▶ Play</small></button>)}</div></section>:null})}
+  {(tab==="Home"||tab==="Live")&&<section className="deepwatchRow" aria-label="Featured YouTube livestream"><h2>🔴 Featured Live Stream</h2><div className="deepwatchRail"><button type="button" className="deepwatchTile" onClick={()=>open(featuredLive)}><img src={image(featuredLive.videoId)} alt="" loading="lazy"/><span>{featuredLive.title}</span><small>▶ Watch live or replay when available</small></button></div></section>}
   {(tab==="Home"||tab==="Series")&&<section className="deepwatchRow" style={{padding:"12px 24px"}}><h2>Verified Yaqeen Episodes · Play in DeepWatch</h2><div className="deepwatchRail">{verifiedYaqeenEpisodes.map(v=><button key={v.videoId} type="button" className="deepwatchTile" onClick={()=>open(v)}><img src={image(v.videoId)} alt="" loading="lazy"/><span>{v.title}</span><small>Yaqeen Institute · ▶ Play</small></button>)}</div></section>}
   {(tab==="Home"||tab==="Series")&&<section className="deepwatchRow" aria-label="Official Islamic series awaiting video verification" style={{padding:"20px 24px"}}>
    <h2>Official Yaqeen Series · Explore</h2>
