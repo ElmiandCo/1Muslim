@@ -3068,27 +3068,22 @@ html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveFormatGla
  content:none!important;display:none!important;
 }
 
-/* Day mode: periodically dissolve only the Home stage's dark surfaces so
-   the existing white grid behind the player can be seen. No content fades. */
-@keyframes oneMuslimGridRevealPulse{
-  0%,42%,100%{opacity:1}
-  53%,76%{opacity:0}
-  87%{opacity:1}
+
+/* The dark green panel and speckled particles are painted by the Home
+   workspace page pseudo-elements (home-hub.module.css), not YouTube.
+   Fade those backgrounds, not the player, controls or comments. */
+@keyframes oneMuslimHomeGridReveal{
+  0%,43%,100%{opacity:1}
+  55%,77%{opacity:0}
+  89%{opacity:1}
 }
-html.light [data-workspace-page="0"] .oneMuslimLiveStage{
-  isolation:isolate!important;
-}
-/* A non-interactive tint layer, rather than fading the whole stage:
-   video, comments, navigation and HudHud remain at full opacity. */
-html.light [data-workspace-page="0"] .oneMuslimLiveStage::before{
-  content:""!important;display:block!important;position:absolute!important;
-  inset:0!important;border-radius:24px!important;pointer-events:none!important;
-  background:rgba(3,27,20,.92)!important;
-  z-index:-1!important;
-  animation:oneMuslimGridRevealPulse 8s ease-in-out infinite!important;
+html.light [data-workspace-page="0"]::before,
+html.light [data-workspace-page="0"]::after{
+  animation:oneMuslimHomeGridReveal 8s ease-in-out infinite!important;
 }
 @media(prefers-reduced-motion:reduce){
- html.light [data-workspace-page="0"] .oneMuslimLiveStage::before{
+ html.light [data-workspace-page="0"]::before,
+ html.light [data-workspace-page="0"]::after{
   animation:none!important;opacity:0!important;
  }
 }
