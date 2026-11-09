@@ -13,6 +13,7 @@ const officialSeries = [
 ] as const;
 /* Official Yaqeen uploads with confirmed YouTube watch pages; do not infer IDs for other episodes. */
 const verifiedYaqeenEpisodes:RegisteredVideo[]=[
+ {videoId:"A_8r2hoYDo0",title:"The Book of Heart Softeners — What Happens When We Die? | Dhul Hijjah 2026",category:"Series",categories:["Shows","Educational Series","Yaqeen Institute"],startSeconds:0,endSeconds:null,format:"desktop"},
  {videoId:"e7TzVR84PLc",title:"Servants of the Most Merciful — Ep. 1: Those Who Walk on the Earth Humbly | Dr. Omar Suleiman",category:"Series",categories:["Shows","Educational Series","Yaqeen Institute"],startSeconds:0,endSeconds:null,format:"desktop"},
  {videoId:"5kfDmMFWbMs",title:"Servants of the Most Merciful — Episode 1: The Benefits of Being Called Servants of the Most Merciful (2020)",category:"Series",categories:["Shows","Educational Series","Yaqeen Institute"],startSeconds:0,endSeconds:null,format:"desktop"}
 ];
