@@ -3052,3 +3052,18 @@ html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimVideoWaterRef
 html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimCinemaDimmer {
  display:none!important;
 }
+
+/* Day Home: expose the existing grid through the format navigation only.
+   Keep active tab styling, video and comment surfaces unchanged. */
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveFormatGlassNav{
+ background:transparent!important;
+ background-color:transparent!important;
+ background-image:none!important;
+ backdrop-filter:none!important;
+ -webkit-backdrop-filter:none!important;
+ box-shadow:none!important;
+}
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveFormatGlassNav::before,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveFormatGlassNav::after{
+ content:none!important;display:none!important;
+}
