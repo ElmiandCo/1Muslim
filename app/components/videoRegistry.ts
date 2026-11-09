@@ -1,6 +1,10 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"dsgc7wOATtU",title:"Stories of Dead People — S2 EP3: His Death Left a Mystery",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"N6vkcVBd5-M",title:"Stories of Dead People — S2 EP4: What Happens to the Body After We Die",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"eNRdgzVgt-o",title:"Stories of Dead People — S2 EP5: He Died Next to Ibrahim (AS)",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"HXHzI7FSQc8",title:"Stories of Dead People — S2 EP6: 23-Year-Old Dies Smiling, Find Out Why",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"M-qTbC0ST_A",title:"Stories of Dead People — Season 1 Compilation",category:"Series",categories:["Shows","Scary","Stories of Dead People","Compilation","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"50o4JLaFfY4",title:"Stories of Dead People — S2 EP1: They Opened Grave After 11 Years",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"C7XZEcvQTXM",title:"Stories of Dead People — S2 EP2: The End of a Smoker",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
