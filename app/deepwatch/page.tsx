@@ -104,6 +104,19 @@ export default function DeepWatch(){
     </a>)}
    </div>
   </section>}
+  {(tab==="Home"||tab==="Movies")&&<section className="deepwatchRow" aria-label="Featured Muslim cinema" style={{padding:"20px 24px"}}>
+   <h2>Featured Muslim Cinema</h2>
+   <article style={{border:"1px solid rgba(255,255,255,.2)",borderRadius:18,padding:22,background:"rgba(255,255,255,.06)",display:"flex",flexDirection:"column",gap:12,maxWidth:720}}>
+    <small>2026 · 1h 52m · Rated R · Ages 17+ · Action / Drama</small>
+    <h3 style={{fontSize:"clamp(22px,4vw,32px)",fontWeight:800}}>Your Mother Your Mother Your Mother</h3>
+    <p>Directed by Bassam Tariq and starring Mahershala Ali. After his wife dies, a Muslim father struggles to protect his children while confronting his violent past and his faith.</p>
+    <p style={{fontSize:13,opacity:.8}}>Not available as an authorized free full-length YouTube embed. Watch through a licensed provider. This title is excluded from Kids Mode.</p>
+    <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+     <a href="https://www.primevideo.com/detail/0GCYEXX1RWJO21AQG7IVVUHK2D" target="_blank" rel="noopener noreferrer" style={{padding:"12px 18px",borderRadius:10,background:"#fff",color:"#111",fontWeight:700,textDecoration:"none"}}>Rent or buy on Prime Video ↗</a>
+     <a href="https://tv.apple.com/us/movie/your-mother-your-mother-your-mother/umc.cmc.4toc3jxlokjpogd9hhz472cc0" target="_blank" rel="noopener noreferrer" style={{padding:"12px 18px",borderRadius:10,border:"1px solid currentColor",color:"inherit",textDecoration:"none"}}>View on Apple TV ↗</a>
+    </div>
+   </article>
+  </section>}
   <div className="deepwatchCollections">{collections.map(collection=>collection.items.length>0&&<section key={collection.name} className="deepwatchRow"><h2>{collection.name}</h2><div className="deepwatchRail">{collection.items.map(v=><button type="button" className="deepwatchTile" key={v.videoId} onClick={()=>open(v)}><img src={image(v.videoId)} alt="" loading="lazy"/><span>{v.title}</span><small>{group(v)} · Watch now</small></button>)}</div></section>)}</div>
   {selected&&<div className="deepwatchScreen" role="dialog" aria-modal="true" aria-label={selected.title}><div className="deepwatchScreenInner"><div className="deepwatchScreenTop"><button onClick={close}>← DeepWatch</button><strong>{selected.title}</strong><button onClick={()=>toggleSaved(selected.videoId)}>{saved.includes(selected.videoId)?"✓ Saved":"+ My List"}</button></div><div className="deepwatchWatchCanvas"><div className="deepwatchPlayer"><iframe key={selected.videoId} ref={player} title={selected.title} src={`https://www.youtube-nocookie.com/embed/${selected.videoId}?enablejsapi=1&autoplay=1&playsinline=1&controls=0&rel=0&start=${selected.startSeconds||0}`} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen/></div><div className="deepwatchControls"><button onClick={()=>setSettings(v=>!v)}>⚙ Settings</button><button onClick={()=>send("seekTo",[Math.max(0,seconds-10),true])}>↶ 10s</button><button className="deepwatchPlay" onClick={()=>{send(playing?"pauseVideo":"playVideo");setPlaying(!playing)}}>{playing?"Ⅱ Pause":"▶ Play"}</button><button onClick={()=>send("seekTo",[seconds+10,true])}>10s ↷</button><button onClick={next}>Next Episode →</button></div>{settings&&<div className="deepwatchSettings"><button onClick={()=>{setCaptions(!captions);send(captions?"unloadModule":"loadModule",["captions"])}}>Captions: {captions?"On":"Off"}</button><button onClick={()=>send("setPlaybackRate",[1])}>Speed: Normal</button></div>}<div className="deepwatchTimed"><HomeLiveConversation room="desktop"/></div></div></div></div>}
  </main>;
