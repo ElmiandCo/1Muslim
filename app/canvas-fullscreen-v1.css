@@ -2967,3 +2967,22 @@ html.light [data-workspace-page="0"] .canvas-vertical-portal:has(.oneMuslimLiveS
  background-color:transparent!important;
  background-image:none!important;
 }
+
+/* Home Live DAY: remove the remaining green player-surround surface.
+   The existing white grid belongs to the outer card. Keep comment content,
+   composer and video/iframe pixels intact. */
+html.light [data-workspace-page="0"] .oneMuslimLiveStage:not([data-live-format="qibla"]):not([data-live-format="games"]),
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveVideo,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveChannelPlayer,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveUnifiedStage,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .homeLiveActualPlayer {
+ background:transparent!important;
+ background-color:transparent!important;
+ background-image:none!important;
+}
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop::before,
+html.light [data-workspace-page="0"] .oneMuslimLiveStage .oneMuslimLiveTop::after {
+ background:transparent!important;
+ background-image:none!important;
+}
