@@ -284,7 +284,7 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
         <div className="oneMuslimSeamlessPanel"><img src={`https://i.ytimg.com/vi/${carouselPreview.to}/maxresdefault.jpg`} alt="" onError={e=>{const img=e.currentTarget;img.onerror=null;img.src=`https://i.ytimg.com/vi/${carouselPreview.to}/hqdefault.jpg`}}/></div>
       </div>}
       <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
-      {playlist[index]?.videoId&&<HomeWordCaptions videoId={playlist[index].videoId} seconds={timedSeconds}/>}
+      {timedVideoKey&&<HomeWordCaptions videoId={timedVideoKey} seconds={timedSeconds}/>}
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
       {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay is-silver" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
       {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Next video countdown"><button type="button" aria-label="Tap to stay on this video" onClick={()=>continueVideoRef.current()}><span className="oneMuslimSkipLabel">{skipCountdown===5?"Next Video":"Tap To Stay"}</span><span className="oneMuslimSkipNumber">{skipCountdown}</span></button></div>}
