@@ -1,6 +1,10 @@
 /* Curated YouTube registry: add verified IDs here, up to 100 entries. No fabricated videos. */
 export type RegisteredVideo={videoId:string;title:string;category:string;categories?:string[];startSeconds:number;endSeconds:number|null;format:"desktop"|"phone"};
 const seed:RegisteredVideo[]=[
+  {videoId:"M-qTbC0ST_A",title:"Stories of Dead People — Season 1 Compilation",category:"Series",categories:["Shows","Scary","Stories of Dead People","Compilation","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"50o4JLaFfY4",title:"Stories of Dead People — S2 EP1: They Opened Grave After 11 Years",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"C7XZEcvQTXM",title:"Stories of Dead People — S2 EP2: The End of a Smoker",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
+  {videoId:"xsJg5cV_BYw",title:"Stories of Dead People — S2 EP28: Sinful Man Invited for Iftar",category:"Series",categories:["Shows","Scary","Stories of Dead People","Season 2","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"Dyf-hcQHVSg",title:"Stories of the Prophets | EP10 — Nooh (AS) & 950 Years Of Da'wah",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"-O7LWSejY0E",title:"Stories of the Prophets | EP11 — The Final Call Before Destruction",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
   {videoId:"q2_NhdYU_Tg",title:"Stories of the Prophets | EP12 — Nooh (AS)'s Ark & The Great Flood",category:"Series",categories:["Shows","Stories of the Prophets","One Islam Productions"],startSeconds:0,endSeconds:null,format:"desktop"},
