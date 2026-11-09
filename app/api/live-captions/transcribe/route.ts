@@ -16,7 +16,7 @@ export async function POST(request:Request){
   const key=process.env.OPENAI_API_KEY;
   if(!key)return NextResponse.json({error:"Transcription is not configured"},{status:503});
   const payload=new FormData();
-  payload.append("file",audio,"caption.webm");
+  payload.append("file",audio,audio.type.includes("mp4")?"caption.mp4":"caption.webm");
   payload.append("model","gpt-4o-mini-transcribe");
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),12000);
