@@ -276,11 +276,12 @@ export default function IdleYoutubePlaylist({format="desktop"}:{format?:"desktop
   return <><div className={"oneMuslimFloatingPlayerRig"+(format==="phone"?" is-phone":"")} aria-label="Floating featured video player" onPointerMove={revealArrows} onPointerDown={()=>{revealArrows();engageCinema();}} onTouchStart={e=>{swipeStart.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const start=swipeStart.current;swipeStart.current=null;if(!start)return;const dx=e.changedTouches[0].clientX-start.x,dy=e.changedTouches[0].clientY-start.y;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.15){navigate(dx<0?1:-1)}else if(format==="phone"&&Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.2){navigate(dy<0?1:-1)}}}>
     <div className="oneMuslimFloatingPlayerShadow" aria-hidden="true"/>
     <div className={"oneMuslimIdleYoutubePlayer"+(slideDirection?" is-switching "+(slideDirection>0?"is-next":"is-previous"):"")} aria-label="Featured video playlist while no broadcasts are live">
+      <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
       {carouselPreview&&<div className={"oneMuslimSeamlessTrack"+(carouselPreview.direction>0?" is-forward":" is-backward")} aria-hidden="true">
         <div className="oneMuslimSeamlessPanel"><img src={`https://i.ytimg.com/vi/${carouselPreview.from}/maxresdefault.jpg`} alt="" onError={e=>{e.currentTarget.src=`https://i.ytimg.com/vi/${carouselPreview.from}/hqdefault.jpg`}}/></div>
         <div className="oneMuslimSeamlessPanel"><img src={`https://i.ytimg.com/vi/${carouselPreview.to}/maxresdefault.jpg`} alt="" onError={e=>{e.currentTarget.src=`https://i.ytimg.com/vi/${carouselPreview.to}/hqdefault.jpg`}}/></div>
       </div>}
-      <div ref={mountRef} style={{width:"100%",height:"100%"}}/>
+
       {(!soundEnabled||isPaused)&&<button type="button" className="oneMuslimPlayerSoundActivator" onClick={enableSound} aria-label="Tap to enable video audio or resume playback" title="Tap to play with sound"/>}
       {(!soundEnabled||isPaused)&&tapHint&&<div className="oneMuslimThemeTapOverlay is-silver" aria-hidden="true"><span className="oneMuslimThemeTap">Tap</span></div>}
       {skipPrompt&&<div className="oneMuslimAutoSkipCard" role="group" aria-label="Next video countdown"><button type="button" aria-label="Tap to stay on this video" onClick={()=>continueVideoRef.current()}><span className="oneMuslimSkipLabel">{skipCountdown===5?"Next Video":"Tap To Stay"}</span><span className="oneMuslimSkipNumber">{skipCountdown}</span></button></div>}
