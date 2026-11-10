@@ -1,6 +1,8 @@
 // Hourly discovery: uses official YouTube Data API; never scrapes or invents IDs.
 const {YOUTUBE_API_KEY:youtube,SUPABASE_URL:url,SUPABASE_SERVICE_ROLE_KEY:key}=process.env;
 if(!youtube||!url||!key){console.error("Missing YOUTUBE_API_KEY, SUPABASE_URL, or SUPABASE_SERVICE_ROLE_KEY GitHub Actions secrets");process.exitCode=1;}else{
+const approvedChannels=(process.env.DEEPWATCH_APPROVED_CHANNEL_IDS||"").split(",").map(x=>x.trim()).filter(x=>/^UC[\w-]{22}$/.test(x));
+if(!approvedChannels.length){console.error("No approved channel IDs configured: set DEEPWATCH_APPROVED_CHANNEL_IDS. Discovery will not search arbitrary channels.");process.exit(1)}
 const niches=[
 ["Qur'an recitation","Mishary Alafasy Quran recitation full"],
 ["Qur'an tafsir","Nouman Ali Khan Quran tafsir full lecture"],
@@ -20,12 +22,16 @@ const db=async(path,method="GET",body)=>{const r=await fetch(url.replace(/\/$/,"
 const duration=s=>{const m=/^P(?:([0-9]+)D)?T?(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+)S)?$/.exec(s||"");return m?(+m[1]||0)*86400+(+m[2]||0)*3600+(+m[3]||0)*60+(+m[4]||0):0};
 const blacklist=/\b(shorts?|clips?|tiktok|reels?|reaction|music video|nasheed remix|trailer|preview)\b/i;
 const now=new Date();const niche=niches[now.getUTCHours()%niches.length];const [category,query]=niche;
-const search=await api("search",{part:"snippet",q:query,type:"video",videoDuration:"long",videoEmbeddable:"true",safeSearch:"moderate",maxResults:25,order:"relevance"});
-const ids=[...new Set((search.items||[]).map(x=>x.id?.videoId).filter(Boolean))];if(!ids.length){console.log("No candidates for",category);process.exit(0)}
+const channelId=approvedChannels[Math.floor(Date.now()/3600000)%approvedChannels.length];
+const channel=await api("channels",{part:"contentDetails",id:channelId});
+const uploads=channel.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+if(!uploads)throw Error("Approved channel has no accessible uploads playlist: "+channelId);
+const playlist=await api("playlistItems",{part:"contentDetails",playlistId:uploads,maxResults:50});
+const ids=[...new Set((playlist.items||[]).map(x=>x.contentDetails?.videoId).filter(Boolean))];if(!ids.length){console.log("No candidates for",category);process.exit(0)}
 const details=await api("videos",{part:"snippet,contentDetails,status,statistics",id:ids.join(",")});
 const rows=(details.items||[]).flatMap(v=>{const d=duration(v.contentDetails?.duration),title=v.snippet?.title||"",description=v.snippet?.description||"",channel=v.snippet?.channelTitle||"",language=v.snippet?.defaultAudioLanguage||v.snippet?.defaultLanguage||null;
-if(d<600||d>14400||blacklist.test(title)||v.status?.embeddable!==true||v.status?.privacyStatus!=="public"||!v.snippet?.channelId)return[];
+if(v.snippet?.channelId!==channelId||d<600||d>14400||blacklist.test(title)||v.status?.embeddable!==true||v.status?.privacyStatus!=="public"||!v.snippet?.channelId)return[];
 if(!/islam|muslim|quran|qur.an|allah|hadith|seerah|prophet|salah|تفسير|القرآن|الإسلام|محمد|تلاوة/i.test(title+" "+description.slice(0,500)))return[];
-return [{video_id:v.id,title:title.slice(0,300),channel_id:v.snippet.channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:[category],source_query:query,status:"pending",bot_b_reason:"Hourly YouTube discovery; awaiting approval"}]});
-if(rows.length){await db("islamic_video_registry?on_conflict=video_id","POST",rows)}console.log("Hourly discovery",category,"candidates",ids.length,"saved pending",rows.length);
+return [{video_id:v.id,title:title.slice(0,300),channel_id:v.snippet.channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:[category],source_query:"approved-channel:"+channelId,status:"pending",bot_b_reason:"Hourly YouTube discovery; awaiting approval"}]});
+if(rows.length){await db("islamic_video_registry?on_conflict=video_id","POST",rows)}console.log("Approved-channel discovery",channelId,"candidates",ids.length,"saved pending",rows.length);
 }
