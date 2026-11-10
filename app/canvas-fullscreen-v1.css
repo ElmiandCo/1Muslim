@@ -3087,3 +3087,22 @@ html.light [data-workspace-page="0"]::after{
   animation:none!important;opacity:0!important;
  }
 }
+
+/* DeepWatch home navigation: clear the old titanium selected-button fill.
+   Keep its hit target and other formats unchanged. */
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab[data-home-format="desktop"],
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab[data-home-format="desktop"][aria-pressed="true"]{
+ background:transparent!important;
+ background-color:transparent!important;
+ background-image:none!important;
+ box-shadow:none!important;
+}
+/* Keep the entire logo visible: offset it 4px downward inside the nav. */
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab[data-home-format="desktop"] .oneMuslimLiveFormatGlassIcon{
+ overflow:visible!important;
+ transform:translateY(4px);
+}
+[data-workspace-page="0"] .oneMuslimLiveFormatGlassNav .oneMuslimLiveFormatGlassTab[data-home-format="desktop"] .oneMuslimLiveFormatGlassIcon img{
+ object-fit:contain!important;
+ max-width:none;
+}
