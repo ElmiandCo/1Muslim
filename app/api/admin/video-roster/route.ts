@@ -11,15 +11,18 @@ async function authorize(){
 const sources=["post_media","islamic_video_registry","admin_videos","site_video_placements","lesson_videos"] as const;
 export async function GET(){
  const db=await authorize();if(!db)return NextResponse.json({error:"Forbidden"},{status:403});
- const [media,registry,admin,placements,lessons,excluded]=await Promise.all([
+ const [media,registry,admin,placements,lessons,excluded,registryCount,pendingCount,approvedCount]=await Promise.all([
  db.from("post_media").select("id,post_id,created_at,mime_type").ilike("mime_type","video/%").order("created_at",{ascending:true}).limit(1000),
  db.from("islamic_video_registry").select("video_id,title,categories,discovered_at").order("discovered_at",{ascending:true}).limit(1000),
  db.from("admin_videos").select("id,title,category,created_at").order("created_at",{ascending:true}).limit(1000),
  db.from("site_video_placements").select("id,title,placement,created_at").order("created_at",{ascending:true}).limit(1000),
  db.from("lesson_videos").select("id,title,created_at").order("created_at",{ascending:true}).limit(1000),
- db.from("admin_video_roster_exclusions").select("source,item_id").limit(10000)
+ db.from("admin_video_roster_exclusions").select("source,item_id").limit(10000),
+ db.from("islamic_video_registry").select("video_id",{count:"exact",head:true}),
+ db.from("islamic_video_registry").select("video_id",{count:"exact",head:true}).eq("status","pending"),
+ db.from("islamic_video_registry").select("video_id",{count:"exact",head:true}).eq("status","approved")
  ]);
- for(const result of [media,registry,admin,placements,lessons,excluded])if(result.error)return NextResponse.json({error:result.error.message},{status:500});
+ for(const result of [media,registry,admin,placements,lessons,excluded,registryCount,pendingCount,approvedCount])if(result.error)return NextResponse.json({error:result.error.message},{status:500});
  const postIds=[...new Set((media.data||[]).map(x=>x.post_id))];
  const posts=postIds.length?await db.from("posts").select("id,body").in("id",postIds):{data:[],error:null};
  if(posts.error)return NextResponse.json({error:posts.error.message},{status:500});
@@ -33,7 +36,7 @@ export async function GET(){
  ];
  const hidden=new Set((excluded.data||[]).map(x=>x.source+":"+x.item_id));
  const videos=entries.filter(x=>!hidden.has(x.source+":"+x.id)).sort((a,b)=>new Date(a.added||0).getTime()-new Date(b.added||0).getTime()).map((x,i)=>({...x,number:i+1}));
- return NextResponse.json({videos},{headers:{"Cache-Control":"private, no-store"}});
+ return NextResponse.json({videos,registryCount:registryCount.count??0,pendingCount:pendingCount.count??0,approvedCount:approvedCount.count??0},{headers:{"Cache-Control":"private, no-store"}});
 }
 export async function DELETE(request:NextRequest){
  const db=await authorize();if(!db)return NextResponse.json({error:"Forbidden"},{status:403});
