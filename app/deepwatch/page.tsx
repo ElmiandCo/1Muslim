@@ -1,6 +1,7 @@
 "use client";
 import PlayIcon from "../components/icons/PlayIcon";
 import {useEffect,useMemo,useRef,useState} from "react";
+import {useSearchParams} from "next/navigation";
 import Link from "next/link";
 import HomeLiveConversation from "../components/HomeLiveConversation";
 import {videoRegistry,isKidsVideo,type RegisteredVideo} from "../components/videoRegistry";
@@ -60,6 +61,9 @@ const group=(v:RegisteredVideo):Tab=>{
  return "TV Shows";
 };
 export default function DeepWatch(){
+ const searchParams=useSearchParams();
+ const deepLinkVideo=searchParams.get("video");
+ const handledDeepLink=useRef<string|null>(null);
  const [tab,setTab]=useState<Tab>("Home");
  const [selected,setSelected]=useState<RegisteredVideo|null>(null);
  const [info,setInfo]=useState<RegisteredVideo|null>(null);
@@ -114,6 +118,7 @@ export default function DeepWatch(){
  ]:[{name:tab==="My List"?"Your Watchlist":tab,items:filtered}], [tab,filtered]);
  const send=(func:string,args?:unknown[])=>{player.current?.contentWindow?.postMessage(JSON.stringify({event:"command",func,args:args||[]}),"*")};
  const open=(v:RegisteredVideo)=>{setSeriesInfo(null);setInfo(null);selectedRef.current=v;setSelected(v);setSeconds(v.startSeconds||0);setPlaying(true);setSettings(false)};
+ useEffect(()=>{if(!deepLinkVideo||handledDeepLink.current===deepLinkVideo)return;if(!/^[a-zA-Z0-9_-]{11}$/.test(deepLinkVideo))return;const match=deepwatchCatalog.find(v=>v.videoId===deepLinkVideo)||dbEpisodes.find(v=>v.video_id===deepLinkVideo);if(!match)return;handledDeepLink.current=deepLinkVideo;const v:RegisteredVideo="videoId" in match?match:{videoId:match.video_id,title:match.title,category:"Series",categories:match.categories||[],startSeconds:0,endSeconds:null,format:"desktop"};setInfo(v);},[deepLinkVideo,dbEpisodes]);
  const close=()=>{setSelected(null);selectedRef.current=null;setSettings(false)};
  const next=()=>{const index=deepwatchCatalog.findIndex(v=>v.videoId===selectedRef.current?.videoId);open(deepwatchCatalog[(index+1)%deepwatchCatalog.length])};
  useEffect(()=>{if(!selected)return;const onMessage=(event:MessageEvent)=>{if(!event.origin.includes("youtube.com")&&!event.origin.includes("youtube-nocookie.com"))return;try{const d=typeof event.data==="string"?JSON.parse(event.data):event.data;if(typeof d?.info?.currentTime==="number")setSeconds(Math.floor(d.info.currentTime))}catch{}};window.addEventListener("message",onMessage);const timer=setInterval(()=>{send("getCurrentTime");window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:selected.videoId,seconds,format:"desktop"}}))},900);return()=>{clearInterval(timer);window.removeEventListener("message",onMessage);window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:"",seconds:0,format:"desktop"}}))}},[selected,seconds]);
