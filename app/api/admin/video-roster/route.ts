@@ -9,8 +9,9 @@ async function authorize(){
  return url&&key?createAdminClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}}):null;
 }
 const sources=["post_media","islamic_video_registry","admin_videos","site_video_placements","lesson_videos"] as const;
-export async function GET(){
+export async function GET(request:NextRequest){
  const db=await authorize();if(!db)return NextResponse.json({error:"Forbidden"},{status:403});
+ if(request.nextUrl.searchParams.get("view")==="pending"){const page=Math.max(0,Math.min(10000,Number(request.nextUrl.searchParams.get("page")||0)||0));const {data,error,count}=await db.from("islamic_video_registry").select("video_id,title,thumbnail_url,channel_title,categories,discovered_at",{count:"exact"}).eq("status","pending").order("discovered_at",{ascending:false}).range(page*100,page*100+99);if(error)return NextResponse.json({error:error.message},{status:500});return NextResponse.json({videos:data||[],count:count||0,page},{headers:{"Cache-Control":"private, no-store"}})}
  const [media,registry,admin,placements,lessons,excluded,registryCount,pendingCount,approvedCount]=await Promise.all([
  db.from("post_media").select("id,post_id,created_at,mime_type").ilike("mime_type","video/%").order("created_at",{ascending:true}).limit(1000),
  db.from("islamic_video_registry").select("video_id,title,categories,discovered_at").order("discovered_at",{ascending:true}).limit(1000),
