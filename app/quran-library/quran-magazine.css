@@ -23,3 +23,7 @@
 .qm-verse{scroll-margin-top:100px}
 @media(max-width:400px){.qm-chapter{gap:10px;padding:12px}.qm-number{width:33px;height:33px}.qm-arabic strong{font-size:19px}.qm-arrow{font-size:14px}}
 @media(prefers-reduced-motion:reduce){.qm-hero .qm-bismillah,.qm-chapter{animation:none!important}}
+
+/* Scroll-linked chapter numerals: upright at viewport center, symmetric tilt before/after */
+.qm-number>span{transform:rotate(calc(-45deg + var(--qm-number-tilt, 0deg)));transition:transform .16s linear;will-change:transform}
+@media(prefers-reduced-motion:reduce){.qm-number>span{transform:rotate(-45deg)!important;transition:none!important}}
