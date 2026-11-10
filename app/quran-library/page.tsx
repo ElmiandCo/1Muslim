@@ -1,0 +1,30 @@
+"use client";
+import {useEffect,useMemo,useRef,useState} from "react";
+import Link from "next/link";
+import "./quran-magazine.css";
+type Chapter={id:number;name_simple:string;name_arabic:string;verses_count:number;revelation_order?:number;translated_name?:{name:string}};
+type Verse={verse_key:string;arabic:string;english?:string};
+const API="https://api.quran.com/api/v4";
+export default function QuranMagazine(){
+ const [chapters,setChapters]=useState<Chapter[]>([]),[search,setSearch]=useState(""),[tab,setTab]=useState<"compiled"|"revealed"|"tafsir">("compiled");
+ const [selected,setSelected]=useState<number|null>(null),[verses,setVerses]=useState<Verse[]>([]),[loading,setLoading]=useState(false);
+ const [englishFirst,setEnglishFirst]=useState(false),[showEnglish,setShowEnglish]=useState(true),[floating,setFloating]=useState(false);
+ const reader=useRef<HTMLDivElement>(null),settle=useRef<ReturnType<typeof setTimeout>|null>(null),land=useRef<ReturnType<typeof setTimeout>|null>(null);
+ useEffect(()=>{let alive=true;fetch(API+"/chapters?language=en").then(r=>r.json()).then(d=>{if(alive)setChapters(d.chapters||[])}).catch(()=>{});return()=>{alive=false}},[]);
+ useEffect(()=>{if(selected===null)return;let alive=true;setLoading(true);setVerses([]);fetch("/quran-data/"+selected+".json").then(r=>{if(!r.ok)throw Error("Unavailable");return r.json()}).then((data:Verse[])=>{if(alive&&Array.isArray(data))setVerses(data)}).catch(()=>{if(alive)setVerses([])}).finally(()=>{if(alive)setLoading(false)});return()=>{alive=false}},[selected]);
+ const open=(id:number)=>{setSelected(id);setFloating(false);try{localStorage.setItem("1muslim:quran-magazine-chapter",String(id))}catch{};window.scrollTo({top:0,behavior:"instant"})};
+ const chapter=chapters.find(c=>c.id===selected);
+ const ordered=useMemo(()=>{const s=search.trim().toLowerCase();let list=chapters.filter(c=>!s||String(c.id)===s||c.name_simple.toLowerCase().includes(s)||c.name_arabic.includes(s)||(c.translated_name?.name||"").toLowerCase().includes(s));if(tab==="revealed")list=[...list].sort((a,b)=>(a.revelation_order||a.id)-(b.revelation_order||b.id));return list},[chapters,search,tab]);
+ const onScroll=()=>{setFloating(false);if(settle.current)clearTimeout(settle.current);if(land.current)clearTimeout(land.current);settle.current=setTimeout(()=>{setFloating(true)},1500)};
+ useEffect(()=>{if(selected===null)return;const el=reader.current;if(!el)return;const t=setTimeout(()=>setFloating(true),1500);return()=>{clearTimeout(t);if(settle.current)clearTimeout(settle.current);if(land.current)clearTimeout(land.current)}},[selected,verses.length]);
+ return <main className="qm-page"><header className="qm-top"><Link href="/" aria-label="Home">← 1Muslim</Link><span>QUR’AN</span><Link href="/elm-tent/quran">Studio ↗</Link></header>
+ {selected===null?<><section className="qm-hero"><div className="qm-bismillah" lang="ar" dir="rtl">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div><h1>THE HOLY QUR’AN</h1><p>114 chapters · A lifetime of reflection</p><label className="qm-search"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search chapters or verse references (e.g. 2:255)" aria-label="Search the Qur’an" onKeyDown={e=>{if(e.key==="Enter"){const match=search.trim().match(/^(\d{1,3}):(\d{1,3})$/);if(match){const id=Number(match[1]);if(id>=1&&id<=114)open(id)}}}}/></label></section>
+ <nav className="qm-tabs" aria-label="Qur’an order"><button className={tab==="compiled"?"active":""} onClick={()=>setTab("compiled")}>Compiled</button><button className={tab==="revealed"?"active":""} onClick={()=>setTab("revealed")}>Revealed</button><button className={tab==="tafsir"?"active":""} onClick={()=>setTab("tafsir")}>Tafsir</button></nav>
+ <div className="qm-section"><div className="qm-heading"><span>{tab==="revealed"?"REVELATION ORDER":tab==="tafsir"?"EXPLORE TAFSIR":"THE 114 CHAPTERS"}</span><span>{ordered.length} Surahs</span></div>
+ <div className="qm-list">{ordered.map(c=><button className="qm-chapter" key={c.id} onClick={()=>open(c.id)}><span className="qm-number">{c.id}</span><span className="qm-name"><strong>{c.name_simple}</strong><small>{c.translated_name?.name||"Surah"}</small></span><span className="qm-arabic"><strong lang="ar">{c.name_arabic}</strong><small>{c.verses_count} Ayahs</small></span><span className="qm-arrow">↗</span></button>)}</div></div></>:
+ <><div className="qm-readerbar"><button onClick={()=>{setSelected(null);setFloating(false)}}>← Chapters</button><strong>{chapter?.name_simple||"Surah "+selected}</strong><button onClick={()=>setEnglishFirst(v=>!v)} title="Swap Arabic and English order">⇅ Order</button><button onClick={()=>setShowEnglish(v=>!v)}>{showEnglish?"EN On":"EN Off"}</button></div>
+ <div className="qm-reader" ref={reader} onScroll={onScroll}><div className="qm-readerintro"><span>CHAPTER {selected} · {chapter?.verses_count||verses.length} VERSES</span><h1>{chapter?.name_simple}</h1><div lang="ar" dir="rtl" className="qm-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div></div>
+ {loading?<p className="qm-status">Loading the Qur’an…</p>:verses.length===0?<p className="qm-status">This chapter is temporarily unavailable. Please use Qur’an Studio.</p>:verses.map(v=><article className={"qm-verse"+(floating?" is-floating":"")} key={v.verse_key} id={"ayah-"+v.verse_key.replace(":","-")}><div className="qm-verse-tools"><span>{v.verse_key}</span><button onClick={()=>{try{localStorage.setItem("1muslim:quran-magazine-last",v.verse_key)}catch{}}} aria-label={"Bookmark verse "+v.verse_key}>☆</button><button onClick={()=>navigator.clipboard?.writeText(v.arabic+"\n"+(v.english||""))} aria-label={"Copy verse "+v.verse_key}>⧉</button><Link href={"/elm-tent/quran?verse="+v.verse_key} aria-label={"Open verse "+v.verse_key+" in studio"}>↗ Studio</Link></div><div className={"qm-verse-content"+(englishFirst?" english-first":"")}><p className="qm-verse-arabic" dir="rtl" lang="ar">{v.arabic}</p>{showEnglish&&v.english&&<p className="qm-verse-english">{v.english}</p>}</div></article>)}
+ </div></>}
+ </main>;
+}
