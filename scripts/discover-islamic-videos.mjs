@@ -27,7 +27,7 @@ const now=new Date();const niche=niches[now.getUTCHours()%niches.length];const [
 // Rotate three channels per hour; offset the scan window so older episodes are reached.
 const hour=Math.floor(Date.now()/3600000);
 const quranMission=process.env.DEEPWATCH_QURAN_114==="true";
-let managedChannels=[];
+let managedChannels=[];let educationalChannelIds=new Set();
 try{managedChannels=(await db("deepwatch_discovery_channels?select=channel_id&enabled=eq.true")).map(x=>x.channel_id)}catch(e){console.warn("Managed channel list unavailable",String(e))}
 // Resolve the requested QuranGuy1 channel using the official YouTube API at runtime.
 try{
@@ -36,7 +36,7 @@ try{
  if(channel&&/^UC[\\w-]{22}$/.test(channel.id)){
   const existing=await db("deepwatch_discovery_channels?select=channel_id&channel_id=eq."+channel.id);
   if(!existing.length)await db("deepwatch_discovery_channels?on_conflict=channel_id","POST",[{channel_id:channel.id,channel_title:channel.snippet?.title||"QuranGuy1",channel_url:"https://www.youtube.com/channel/"+channel.id,enabled:true}]);
-  if(!managedChannels.includes(channel.id))managedChannels.push(channel.id);
+  if(!managedChannels.includes(channel.id))managedChannels.push(channel.id);if(handle==="TPDossierYT")educationalChannelIds.add(channel.id);
   console.log("Verified QuranGuy1 discovery channel",channel.id);
  }else console.warn("QuranGuy1 channel could not be verified; skipping");
 }catch(e){console.warn("QuranGuy1 registration failed",String(e))}
@@ -59,8 +59,8 @@ for(const channelId of channelsToScan){
  const uploads=channel.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
  if(!uploads){console.warn("Skipping inaccessible approved channel",channelId);continue}
  const ids=[];let pageToken;
- const offset=quranMission?0:(Math.floor(hour/Math.ceil(channelPool.length/3))%5)*4;
- for(let page=0;page<offset+(quranMission?12:4);page++){
+ const educational=educationalChannelIds.has(channelId);const offset=quranMission||educational?0:(Math.floor(hour/Math.ceil(channelPool.length/3))%5)*4;
+ for(let page=0;page<(educational?1000:offset+(quranMission?12:4));page++){
   const playlist=await api("playlistItems",{part:"contentDetails",playlistId:uploads,maxResults:50,...(pageToken?{pageToken}:{})});
   if(page>=offset)ids.push(...(playlist.items||[]).map(x=>x.contentDetails?.videoId).filter(Boolean));
   pageToken=playlist.nextPageToken;if(!pageToken)break;
@@ -74,13 +74,13 @@ for(const channelId of channelsToScan){
  }
  const rows=videoItems.flatMap(v=>{
   const d=duration(v.contentDetails?.duration),title=v.snippet?.title||"",description=v.snippet?.description||"",channel=v.snippet?.channelTitle||"",language=v.snippet?.defaultAudioLanguage||v.snippet?.defaultLanguage||null;
-  if(v.snippet?.channelId!==channelId||d<120||d>14400||blacklist.test(title)||v.status?.embeddable!==true||v.status?.privacyStatus!=="public")return[];
+  if(v.snippet?.channelId!==channelId||(!educational&&(d<120||d>14400||blacklist.test(title)))||v.status?.embeddable!==true||v.status?.privacyStatus!=="public")return[];
   const surah=quranMission?matchSurah(title):null;
   if(quranMission&&(!surah||!/quran|qur.an|recitation|tilawah|تلاوة|سورة/i.test(title+" "+description.slice(0,200))))return[];
   if(quranMission&&/part\\s*\\d+|verses?\\s*\\d+|ayat?\\s*\\d+|highlight|excerpt|portion/i.test(title))return[];
   if(surah)quranMatches.add(surah);
-  if(!quranMission&&!religiousPattern.test(title+" "+description.slice(0,500))&&!seriesPattern.test(title))return[];
-  return [{video_id:v.id,title:title.slice(0,300),channel_id:channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:quranMission?["Qur’an","Surah "+String(surah).padStart(3,"0")]:[seriesPattern.test(title)?"Historical series":category],source_query:(quranMission?"quran-114:":"approved-channel:")+channelId,status:"pending",bot_b_reason:quranMission?"Qur’an 114 candidate; full recitation and visual aesthetics require manual verification":"Hourly YouTube discovery; awaiting approval"}];
+  if(!quranMission&&!educational&&!religiousPattern.test(title+" "+description.slice(0,500))&&!seriesPattern.test(title))return[];
+  return [{video_id:v.id,title:title.slice(0,300),channel_id:channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:quranMission?["Qur’an","Surah "+String(surah).padStart(3,"0")]:educational?["Educational","TPDossierYT"]:[seriesPattern.test(title)?"Historical series":category],source_query:(quranMission?"quran-114:":"approved-channel:")+channelId,status:"pending",bot_b_reason:quranMission?"Qur’an 114 candidate; full recitation and visual aesthetics require manual verification":educational?"Educational channel import; awaiting admin review":"Hourly YouTube discovery; awaiting approval"}];
  });
  eligible+=rows.length;
  // Check existing records first so reports count actual additions, not ignored duplicates.
