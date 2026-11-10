@@ -4,6 +4,7 @@ export async function GET(){
  const db=await createClient();
  const {data,error}=await db.from("ummah_feed_posts").select("id,author_id,body,created_at,post_theme").order("created_at",{ascending:false}).limit(100);
  if(error)return NextResponse.json({error:"Community feed unavailable"},{status:503});
+ const {data:{user:viewer}}=await db.auth.getUser();
  const posts=data||[];
  const ids=[...new Set(posts.map(p=>p.author_id).filter((id):id is string=>typeof id==="string"))];
  const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username,shahada_verified_at").in("id",ids):{data:[]};
@@ -35,7 +36,7 @@ export async function GET(){
   }
   return {...p,shahada_verified:!!authors.get(p.author_id)?.shahada_verified_at,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member",media_url,media_type:attachment?.mime_type||null};
  }));
- return NextResponse.json({posts:output});
+ return NextResponse.json({posts:output,viewer_id:viewer?.id||null});
 }
 export async function POST(request:Request){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();
@@ -73,4 +74,27 @@ export async function POST(request:Request){
  if(xpError)console.error("community-post-xp",xpError.code,xpError.message);
  const xp=Array.isArray(xpRows)?xpRows[0]:xpRows;
  return NextResponse.json({post:data,xp_awarded:xp?.awarded??0,xp_total:xp?.xp_total??null},{status:201});
+}
+
+export async function PATCH(request:Request){
+ const db=await createClient();const {data:{user}}=await db.auth.getUser();
+ if(!user)return NextResponse.json({error:"Sign in to edit posts"},{status:401});
+ const input=await request.json().catch(()=>({}));const id=typeof input.id==="string"?input.id:"";const body=typeof input.text==="string"?input.text.trim():"";
+ if(!/^[0-9a-f-]{36}$/i.test(id)||!body||body.length>2000)return NextResponse.json({error:"Invalid post or text"},{status:400});
+ const {data,error}=await db.from("ummah_feed_posts").update({body}).eq("id",id).eq("author_id",user.id).select("id").maybeSingle();
+ if(error)return NextResponse.json({error:"Could not update post"},{status:503});
+ if(!data)return NextResponse.json({error:"Post not found or not owned by you"},{status:403});
+ return NextResponse.json({ok:true});
+}
+export async function DELETE(request:Request){
+ const db=await createClient();const {data:{user}}=await db.auth.getUser();
+ if(!user)return NextResponse.json({error:"Sign in to delete posts"},{status:401});
+ const input=await request.json().catch(()=>({}));const id=typeof input.id==="string"?input.id:"";
+ if(!/^[0-9a-f-]{36}$/i.test(id))return NextResponse.json({error:"Invalid post"},{status:400});
+ const {data:owned,error:lookupError}=await db.from("ummah_feed_posts").select("id").eq("id",id).eq("author_id",user.id).maybeSingle();
+ if(lookupError)return NextResponse.json({error:"Could not verify ownership"},{status:503});
+ if(!owned)return NextResponse.json({error:"Post not found or not owned by you"},{status:403});
+ const {error}=await db.from("ummah_feed_posts").delete().eq("id",id).eq("author_id",user.id);
+ if(error)return NextResponse.json({error:"Could not delete post"},{status:503});
+ return NextResponse.json({ok:true});
 }
