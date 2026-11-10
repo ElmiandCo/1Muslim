@@ -1,7 +1,7 @@
 // Hourly discovery: uses official YouTube Data API; never scrapes or invents IDs.
 const {YOUTUBE_API_KEY:youtube,SUPABASE_URL:url,SUPABASE_SERVICE_ROLE_KEY:key}=process.env;
 if(!youtube||!url||!key){console.error("Missing YOUTUBE_API_KEY, SUPABASE_URL, or SUPABASE_SERVICE_ROLE_KEY GitHub Actions secrets");process.exitCode=1;}else{
-const approvedChannels=(process.env.DEEPWATCH_APPROVED_CHANNEL_IDS||"").split(",").map(x=>x.trim()).filter(x=>/^UC[\w-]{22}$/.test(x));
+const approvedChannels=[...new Set([process.env.DEEPWATCH_APPROVED_CHANNEL_IDS||"",process.env.DEEPWATCH_EXTRA_APPROVED_CHANNEL_IDS||""].join(",").split(",").map(x=>x.trim()).filter(x=>/^UC[\w-]{22}$/.test(x)))];
 if(!approvedChannels.length){console.error("No approved channel IDs configured: set DEEPWATCH_APPROVED_CHANNEL_IDS. Discovery will not search arbitrary channels.");process.exit(1)}
 const niches=[
 ["Qur'an recitation","Mishary Alafasy Quran recitation full"],
