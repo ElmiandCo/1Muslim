@@ -12,10 +12,13 @@ export default function HomePullDownGallery({active}:{active:boolean}){
  useEffect(()=>{const stage=document.querySelector<HTMLElement>(".oneMuslimLiveStage");if(!stage)return;stage.classList.toggle("oneMuslimAppGalleryOpen",active&&open);return()=>stage.classList.remove("oneMuslimAppGalleryOpen")},[active,open]);
  useEffect(()=>{if(!active)return;const stage=document.querySelector<HTMLElement>(".oneMuslimLiveStage");if(!stage)return;
  const down=(e:TouchEvent)=>{const t=e.touches[0],target=e.target as Element;if(!t||!target||target.closest("button,a,input,textarea,select,[role=dialog]"))return;start.current={x:t.clientX,y:t.clientY,target}};
+ const move=(e:TouchEvent)=>{const s=start.current,t=e.touches[0];if(!s||!t||!e.cancelable)return;const dy=t.clientY-s.y,dx=t.clientX-s.x;const eligible=open?!!s.target.closest(".oneMuslimAppGallery,.oneMuslimLiveVideo"):!!s.target.closest(".oneMuslimLiveVideo");if(eligible&&Math.abs(dy)>12&&Math.abs(dy)>Math.abs(dx)*1.25&&((!open&&dy<0)||(open&&dy>0)))e.preventDefault()};
  const up=(e:TouchEvent)=>{const s=start.current;start.current=null;const t=e.changedTouches[0];if(!s||!t)return;const dx=t.clientX-s.x,dy=t.clientY-s.y;if(Math.abs(dy)<75||Math.abs(dy)<Math.abs(dx)*1.4)return;if(!open&&dy<0&&s.target.closest(".oneMuslimLiveVideo")){setOpen(true);flash()}else if(open&&dy>0){setOpen(false);flash()}};
- stage.addEventListener("touchstart",down,{passive:true});stage.addEventListener("touchend",up,{passive:true});return()=>{stage.removeEventListener("touchstart",down);stage.removeEventListener("touchend",up)}},[active,open]);
+ stage.addEventListener("touchstart",down,{passive:true});stage.addEventListener("touchmove",move,{passive:false});stage.addEventListener("touchend",up,{passive:true});return()=>{stage.removeEventListener("touchstart",down);stage.removeEventListener("touchmove",move);stage.removeEventListener("touchend",up)}},[active,open]);
  if(!active)return null;
  return <><style>{`
+ .oneMuslimLiveStage .oneMuslimLiveVideo{touch-action:pan-x;overscroll-behavior:contain}
+ .oneMuslimLiveStage.oneMuslimAppGalleryOpen .oneMuslimAppGallery{touch-action:pan-x;overscroll-behavior:contain}
  .oneMuslimAppGalleryOpen .oneMuslimLiveVideo{flex:0 0 auto!important;height:clamp(130px,24%,210px)!important;margin-top:8px!important;transform:scale(.92);transform-origin:center top;transition:height .55s cubic-bezier(.2,.8,.2,1),transform .55s cubic-bezier(.2,.8,.2,1),margin-top .55s ease!important}
  .oneMuslimLiveStage:not(.oneMuslimAppGalleryOpen) .oneMuslimLiveVideo{transition:height .55s cubic-bezier(.2,.8,.2,1),transform .55s cubic-bezier(.2,.8,.2,1),margin-top .55s ease}
  .oneMuslimAppGalleryOpen .oneMuslimLiveBottom{opacity:0;pointer-events:none;max-height:0!important;min-height:0!important;transition:opacity .35s,max-height .4s}
