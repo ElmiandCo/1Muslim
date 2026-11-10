@@ -22,3 +22,46 @@
 .deepwatchLiveSpotlight>img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:14px}
 @media(max-width:650px){.deepwatchLiveSpotlight{grid-template-columns:1fr;margin:12px;padding:22px}.deepwatchLiveSpotlight>img{order:-1}}
 @media(prefers-reduced-motion:reduce){.deepwatchLivePulse{animation:none}}
+
+
+/* Issue #937: editorial discovery surface, presentation only */
+.deepwatch{background:radial-gradient(ellipse 65% 35% at 80% 2%,#19233b 0%,transparent 75%),#07090d;font-family:Inter,Arial,Helvetica,sans-serif}
+.deepwatchHeader{box-shadow:0 12px 40px #0004}
+.deepwatchHeader nav button{display:inline-flex;align-items:center;gap:7px;transition:background .25s ease,transform .25s ease,color .25s ease}
+.deepwatchHeader nav button:hover{background:#ffffff18;transform:translateY(-2px)}
+.deepwatchNavGlyph{display:inline-grid;place-items:center;width:23px;height:23px;border-radius:8px;background:linear-gradient(135deg,#ffffff20,#ffffff05);border:1px solid #ffffff1b;font-family:Georgia,serif;font-size:18px;transition:transform .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s}
+.deepwatchHeader nav button:hover .deepwatchNavGlyph,.deepwatchHeader nav button[aria-current=page] .deepwatchNavGlyph{transform:rotate(-8deg) scale(1.1);box-shadow:0 4px 15px #a3c8ff30}
+.deepwatchHeader nav button[aria-current=page] .deepwatchNavGlyph{background:#121a2b;color:#e9f1ff}
+.deepwatchHeroCarousel{height:clamp(410px,57vw,670px);border-bottom:1px solid #ffffff21;isolation:isolate}
+.deepwatchHeroCarousel:after{content:"";position:absolute;inset:auto 0 0;height:80px;z-index:2;pointer-events:none;background:linear-gradient(transparent,#07090d)}
+.deepwatchHeroCarousel .deepwatchHero{padding:clamp(28px,6vw,90px);background-position:center 35%;transform:translateX(28px) scale(1.055);transition:opacity .85s ease,transform 1.15s cubic-bezier(.18,.75,.2,1),visibility .85s}
+.deepwatchHeroCarousel .deepwatchHero.isActive{transform:translateX(0) scale(1)}
+.deepwatchHeroText{position:relative;z-index:2;max-width:680px;filter:drop-shadow(0 10px 30px #000a)}
+.deepwatchHeroText h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(38px,5.7vw,86px);line-height:1.02;letter-spacing:-.055em;font-weight:700;text-wrap:balance}
+.deepwatchEyebrow{font-size:11px!important;font-weight:800;letter-spacing:.32em!important;color:#d5dfea!important}
+.deepwatchHeroGenre{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#c4d9ed;margin:12px 0}
+.deepwatchHeroDescription{display:block;max-width:450px;font-size:clamp(13px,1.5vw,17px);line-height:1.6;color:#e4e8ee}
+.deepwatchHeroText button{transition:transform .25s ease,box-shadow .25s ease}
+.deepwatchHeroText button:hover{transform:translateY(-3px);box-shadow:0 10px 30px #0009}
+.deepwatchComingSoon{background:radial-gradient(ellipse 50% 85% at 75% 50%,#53678566,transparent 80%),linear-gradient(125deg,#05080e 12%,#1c2538 65%,#080b12)!important}
+.deepwatchComingSoonHalo{position:absolute;right:8%;top:12%;width:min(39vw,430px);aspect-ratio:1;border:1px solid #c7d6ff55;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 90px #8ca9ff20,inset 0 0 80px #d9e5ff14;transform:rotate(-18deg);animation:deepwatchOrbit 11s ease-in-out infinite alternate}
+.deepwatchComingSoonHalo:before,.deepwatchComingSoonHalo:after{content:"";position:absolute;inset:12%;border:1px solid #ffffff28;border-radius:50%;transform:rotate(35deg) scaleX(.55)}
+.deepwatchComingSoonHalo:after{inset:22%;transform:rotate(-30deg) scaleX(.7)}
+.deepwatchComingSoonHalo span{font:900 clamp(50px,12vw,160px) Georgia,serif;letter-spacing:-.14em;color:#e8edff44}
+.deepwatchComingSoon h1 em{font-weight:400;color:#f4f7ff}.deepwatchComingSoon h1 strong{font-weight:900;color:#b7d0ff}
+.deepwatchComingSoonTag{display:inline-block;border:1px solid #bcd1ff66;border-radius:99px;padding:11px 18px;font-size:11px;font-weight:800;letter-spacing:.15em;background:#ffffff12}
+@keyframes deepwatchOrbit{from{transform:rotate(-18deg) translateY(-10px)}to{transform:rotate(6deg) translateY(12px)}}
+.deepwatchRow{position:relative}.deepwatchRow h2{font-family:Georgia,"Times New Roman",serif;font-size:clamp(22px,2.6vw,36px);letter-spacing:-.045em;line-height:1.2}
+.deepwatchSectionKicker{display:block;font:800 10px Arial,sans-serif;letter-spacing:.26em;color:#a4bad8;margin-bottom:7px}
+.deepwatchRail{gap:18px;padding:12px 4px 28px}
+.deepwatchTile{border-radius:17px;background:linear-gradient(150deg,#1c2431,#10141c);box-shadow:0 12px 28px #0006;transform:translateY(0);transition:transform .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s,border-color .4s;will-change:transform}
+.deepwatchTile:hover,.deepwatchTile:focus-visible{transform:translateY(-10px) scale(1.025);box-shadow:0 28px 45px #000a,0 0 0 1px #b3caff55;border-color:#a4b8d1}
+.deepwatchTile img{transition:transform .6s cubic-bezier(.2,.8,.2,1),filter .6s}
+.deepwatchTile:hover img{transform:scale(1.06);filter:contrast(1.06)}
+.deepwatchTile span{font-family:Georgia,"Times New Roman",serif;font-size:16px;letter-spacing:-.015em}
+.deepwatchTile small{line-height:1.5}
+.deepwatchHeroArrow{z-index:4;transition:transform .25s,background .25s}
+.deepwatchHeroArrow:hover{transform:scale(1.1);background:#dbe7ff33}
+.deepwatchHeroDots{z-index:4}
+@media(max-width:700px){.deepwatchHeroCarousel{height:470px}.deepwatchHeroCarousel .deepwatchHero{padding:36px 48px}.deepwatchHeroText h1{font-size:clamp(33px,8vw,52px)}.deepwatchComingSoonHalo{right:-16%;top:10%;width:75vw;opacity:.5}.deepwatchTile:hover{transform:translateY(-4px)}}
+@media(prefers-reduced-motion:reduce){.deepwatchComingSoonHalo{animation:none}.deepwatchTile,.deepwatchTile img,.deepwatchNavGlyph,.deepwatchHeader nav button,.deepwatchHeroCarousel .deepwatchHero{animation:none;transition:none;transform:none}.deepwatchTile:hover,.deepwatchTile:focus-visible{transform:none}}
