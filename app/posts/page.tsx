@@ -5,8 +5,8 @@ import {useEffect,useMemo,useState} from "react";
 import UnifiedPostMedia from "../components/UnifiedPostMedia";
 import styles from "./posts-magazine.module.css";
 type Post={id:string;body:string;author_name:string;author_handle:string;created_at:string;media_url:string|null;media_type:string|null;shahada_verified?:boolean};
-const youtubeId=(text:string)=>text.match(/(?:youtu\\.be\\/|youtube\\.com\\/(?:watch\\?v=|shorts\\/))([\\w-]{11})/)?.[1]||null;
-const clean=(text:string)=>cleanPostBody(text).replace(/https?:\\/\\/\\S+/g,"").trim();
+const youtubeId=(text:string)=>text.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/))([\w-]{11})/)?.[1]||null;
+const clean=(text:string)=>cleanPostBody(text).replace(/https?:\/\/\S+/g,"").trim();
 export default function PublicPostsSocial(){
  const [posts,setPosts]=useState<Post[]>([]),[query,setQuery]=useState(""),[filter,setFilter]=useState<"all"|"photos"|"videos"|"words">("all"),[loading,setLoading]=useState(true),[error,setError]=useState(""),[collection,setCollection]=useState(false),[expanded,setExpanded]=useState<Record<string,boolean>>({});
  useEffect(()=>{let active=true;const load=async()=>{try{const res=await fetch("/api/community-posts",{cache:"no-store"});if(!res.ok)throw Error("Unable to load public posts");const json=await res.json();if(active){setPosts(json.posts||[]);setError("")}}catch(e){if(active)setError(e instanceof Error?e.message:"Unable to load posts")}finally{if(active)setLoading(false)}};void load();const timer=setInterval(()=>void load(),30000);return()=>{active=false;clearInterval(timer)}},[]);
