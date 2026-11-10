@@ -21,7 +21,7 @@ export async function GET(){
  }
  const datePlus=(day:string,offset:number)=>{const d=new Date(day+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10)};
  const eligible=(a:Account,days:number)=>datePlus(a.created_at.slice(0,10),days)<=today;
- const cohort=(days:number)=>{const group=accounts.filter(a=>eligible(a,days)&&a.created_at.slice(0,10)>=since);const retained=group.filter(a=>activity.get(a.id)?.has(datePlus(a.created_at.slice(0,10),days))).length;return{eligible:group.length,retained,rate:group.length?Math.round(retained/group.length*1000)/10:null}};
+ const cohort=(days:number)=>{const group=accounts.filter(a=>eligible(a,days)&&a.created_at.slice(0,10)>="2026-11-10");const retained=group.filter(a=>activity.get(a.id)?.has(datePlus(a.created_at.slice(0,10),days))).length;return{eligible:group.length,retained,rate:group.length?Math.round(retained/group.length*1000)/10:null}};
  const activeWithin=(days:number)=>accounts.filter(a=>[...(activity.get(a.id)||[])].some(d=>d>=datePlus(today,-(days-1)))).length;
  const returned=accounts.filter(a=>(activity.get(a.id)?.size||0)>=2).length;
  const ids=accounts.map(a=>a.id),profiles=new Map<string,{username?:string|null;display_name?:string|null}>();
