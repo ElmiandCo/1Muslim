@@ -603,6 +603,7 @@ const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HT
  useEffect(()=>{const timer=window.setTimeout(()=>window.dispatchEvent(new CustomEvent("1muslim:ping-local-workspace",{detail:{index:workspacePage}})),350);return()=>window.clearTimeout(timer)},[workspacePage]);
  const moveWorkspace=(page:number)=>{const next=Math.max(0,Math.min(HOME_SLIDES.length-1,page));workspaceRef.current?.scrollTo({left:next*workspaceRef.current.clientWidth,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});setWorkspacePage(next);try{sessionStorage.setItem("1muslim:workspace-index",String(next))}catch{}};
  useEffect(()=>{const open=()=>moveWorkspace(5);window.addEventListener("1muslim:open-community-posts",open);return()=>window.removeEventListener("1muslim:open-community-posts",open)},[]);
+ useEffect(()=>{const onGallery=(event:Event)=>{const page=(event as CustomEvent<{page:number}>).detail?.page;if(Number.isInteger(page)&&page>=0&&page<HOME_SLIDES.length)moveWorkspace(page)};window.addEventListener("1muslim:gallery-workspace",onGallery);return()=>window.removeEventListener("1muslim:gallery-workspace",onGallery)},[]);
  const fullscreenSnapshot=useRef<{navCollapsed:boolean;navMotionStarted:boolean;workspacePage:number;scrollLeft:number;canvasExpanded:boolean;light:boolean}|null>(null);
  const toggleCanvasFullscreen=()=>{
    if(!canvasFullscreen){
