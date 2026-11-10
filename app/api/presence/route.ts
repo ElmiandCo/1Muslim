@@ -15,5 +15,12 @@ export async function POST(request:Request){
  const page=typeof body.page==="string"&&body.page.startsWith("/")?body.page.slice(0,100):"/";
  const {error}=await admin.from("site_presence").upsert({session_id:body.sessionId,user_id:user.id,page,last_seen:new Date(now).toISOString(),last_active:safeActive},{onConflict:"session_id"});
  if(error)return NextResponse.json({error:"Unavailable"},{status:503});
+ // Record a daily activity only after a recent user interaction, not passive background presence.
+ if(Date.parse(safeActive)>=now-120000){
+  const day=new Date(now).toISOString().slice(0,10);
+  const {error:activityError}=await admin.from("user_activity_days").upsert({user_id:user.id,activity_date:day,last_seen:new Date(now).toISOString()},{onConflict:"user_id,activity_date"});
+  // Keep presence available if the retention migration has not yet been applied.
+  if(activityError)console.warn("Retention daily rollup unavailable",activityError.code);
+ }
  return NextResponse.json({ok:true},{headers:{"Cache-Control":"no-store"}});
 }
