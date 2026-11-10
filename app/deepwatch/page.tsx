@@ -110,6 +110,7 @@ export default function DeepWatch(){
  const player=useRef<HTMLIFrameElement>(null);
  const selectedRef=useRef<RegisteredVideo|null>(null);
  useEffect(()=>{try{const value=JSON.parse(localStorage.getItem("1muslim:deepwatch-list")||"[]");if(Array.isArray(value))setSaved(value.filter((x):x is string=>typeof x==="string"))}catch{}},[]);
+ useEffect(()=>{if(!isGalleryAdmin)return;let active=true;const refresh=async()=>{try{const response=await fetch("/api/deepwatch/exclusions",{cache:"no-store"});if(!response.ok)return;const rows=await response.json();if(active&&Array.isArray(rows))setExcludedIds(rows.map((row:{item_id:string})=>row.item_id))}catch{}};const timer=window.setInterval(()=>void refresh(),30000);return()=>{active=false;window.clearInterval(timer)}},[isGalleryAdmin]);
  const galleryTotal=useMemo(()=>deepwatchCatalog.filter(v=>!excludedIds.includes(v.videoId)).length,[excludedIds]);
  const filtered=useMemo(()=>deepwatchCatalog.filter(v=>!excludedIds.includes(v.videoId)&&((tab==="Home"||(tab==="Kids"?isDeepWatchKids(v):tab==="My List"?saved.includes(v.videoId):tab==="The Prophets"?isProphetVideo(v):tab==="Scary"?isScaryVideo(v):tab==="Movies"?(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId)):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase())))),[tab,search,saved,excludedIds]);
  const heroSlides=useMemo(()=>{
