@@ -12,7 +12,7 @@ async function toggleSpeech(){setSpeechBusy(true);setSpeechError("");try{const r
 
 const [unique24h,setUnique24h]=useState<{uniqueVisitors:number;visits:number;updatedAt:string;capped:boolean}|null>(null);
 const [unique24hError,setUnique24hError]=useState(false);
-useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/admin/unique-visitors-24h",{cache:"no-store"});if(!r.ok)throw Error("Unavailable");const data=await r.json();if(active){setUnique24h(data);setUnique24hError(false)}}catch{if(active)setUnique24hError(true)}};void load();const timer=setInterval(()=>void load(),30000);return()=>{active=false;clearInterval(timer)}},[]);
+useEffect(()=>{let active=true;const load=async()=>{try{const r=await fetch("/api/admin/unique-visitors-24h",{cache:"no-store"});if(!r.ok)throw Error("Unavailable");const data=await r.json();if(active){setUnique24h(data);setUnique24hError(false)}}catch{if(active)setUnique24hError(true)}};void load();const timer=setInterval(()=>void load(),600000);return()=>{active=false;clearInterval(timer)}},[]);
 const [navRetention,setNavRetention]=useState<{pings:number;unique:number;visits:number;rate:number;byPage:Array<{page:string;pings:number;unique:number;visits:number;rate:number}>}|null>(null);
 useEffect(()=>{let mounted=true;const load=async()=>{try{const r=await fetch("/api/admin/nav-retention",{cache:"no-store"});if(!r.ok)return;const data=await r.json();if(mounted)setNavRetention(data)}catch{}};void load();const timer=setInterval(()=>void load(),30000);return()=>{mounted=false;clearInterval(timer)}},[]);
 
