@@ -1,5 +1,5 @@
-import {cleanPostBody} from "../lib/cleanPostBody";
 "use client";
+import {cleanPostBody} from "../lib/cleanPostBody";
 import {currentPostTheme} from "../lib/post-theme";
 
 import {useEffect,useState} from "react";
