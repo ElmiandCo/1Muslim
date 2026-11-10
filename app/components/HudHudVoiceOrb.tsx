@@ -6,9 +6,9 @@ export default function HudHudVoiceOrb(){
  const [motion,setMotion]=useState({enabled:false,favorite:"Swivel"});
  useEffect(()=>{const load=()=>{try{const p=JSON.parse(localStorage.getItem("1muslim:hudhud-gesture-preferences-v1")||"{}");setMotion({enabled:!!p.enabled,favorite:typeof p.favorite==="string"?p.favorite:"Swivel"})}catch{}};load();window.addEventListener("1muslim:hudhud-gesture-change",load);window.addEventListener("storage",load);return()=>{window.removeEventListener("1muslim:hudhud-gesture-change",load);window.removeEventListener("storage",load)}},[]);
  const [connecting,setConnecting]=useState(false);const [enabled,setEnabled]=useState(false),[state,setState]=useState("OFF"),[error,setError]=useState(""),[level,setLevel]=useState(0),[touch,setTouch]=useState({x:50,y:50});
- const pc=useRef<RTCPeerConnection|null>(null),stream=useRef<MediaStream|null>(null),audio=useRef<HTMLAudioElement|null>(null),ctx=useRef<AudioContext|null>(null),frame=useRef<number>(0);
- const stop=()=>{if(frame.current)cancelAnimationFrame(frame.current);pc.current?.close();pc.current=null;stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;audio.current?.remove();audio.current=null;void ctx.current?.close();ctx.current=null;setLevel(0);setEnabled(false);setState("OFF")};
- useEffect(()=>()=>{if(frame.current)cancelAnimationFrame(frame.current);pc.current?.close();stream.current?.getTracks().forEach(t=>t.stop());audio.current?.remove();void ctx.current?.close()},[]);
+ const reconnectTimer=useRef<ReturnType<typeof setTimeout>|null>(null),channelRef=useRef<RTCDataChannel|null>(null),pc=useRef<RTCPeerConnection|null>(null),stream=useRef<MediaStream|null>(null),audio=useRef<HTMLAudioElement|null>(null),ctx=useRef<AudioContext|null>(null),frame=useRef<number>(0);
+ const stop=()=>{if(reconnectTimer.current){clearTimeout(reconnectTimer.current);reconnectTimer.current=null}channelRef.current=null;if(frame.current)cancelAnimationFrame(frame.current);pc.current?.close();pc.current=null;stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;audio.current?.remove();audio.current=null;void ctx.current?.close();ctx.current=null;setLevel(0);setEnabled(false);setState("OFF")};
+ useEffect(()=>()=>{if(reconnectTimer.current)clearTimeout(reconnectTimer.current);if(frame.current)cancelAnimationFrame(frame.current);pc.current?.close();stream.current?.getTracks().forEach(t=>t.stop());audio.current?.remove();void ctx.current?.close()},[]);
  async function start(){
   if(enabled||connecting)return;
   setConnecting(true);setError("");setState("CONNECTING");
@@ -19,10 +19,10 @@ export default function HudHudVoiceOrb(){
    const peer=new RTCPeerConnection();pc.current=peer;
    const output=document.createElement("audio");output.autoplay=true;output.setAttribute("playsinline","");audio.current=output;
    peer.ontrack=e=>{output.srcObject=e.streams[0];void output.play().catch(()=>{})};
-   peer.onconnectionstatechange=()=>{if(peer.connectionState==="failed"||peer.connectionState==="disconnected"){setError("Voice connection lost");stop()}};
+   peer.onconnectionstatechange=()=>{if(peer.connectionState==="connected"){if(reconnectTimer.current){clearTimeout(reconnectTimer.current);reconnectTimer.current=null}setError("");setState("LISTENING")}else if(peer.connectionState==="disconnected"){setState("RECONNECTING");if(!reconnectTimer.current)reconnectTimer.current=setTimeout(()=>{reconnectTimer.current=null;if(peer.connectionState==="disconnected"||peer.connectionState==="failed"){setError("Voice connection lost. Tap the microphone to reconnect.");stop()}},8000)}else if(peer.connectionState==="failed"||peer.connectionState==="closed"){setError("Voice connection lost. Tap the microphone to reconnect.");stop()}};
    mic.getTracks().forEach(t=>peer.addTrack(t,mic));
-   const channel=peer.createDataChannel("oai-events");
-   channel.onopen=()=>setState("LISTENING");
+   const channel=peer.createDataChannel("oai-events");channelRef.current=channel;
+   channel.onopen=()=>{setState("LISTENING");channel.send(JSON.stringify({type:"session.update",session:{turn_detection:{type:"server_vad",threshold:0.78,prefix_padding_ms:350,silence_duration_ms:1000,create_response:true,interrupt_response:false}}}))};
    channel.onmessage=e=>{try{const event=JSON.parse(e.data);if(event.type==="response.created")setState("HUDHUD SPEAKING");if(event.type==="response.done")setState("LISTENING")}catch{}};
    const offer=await peer.createOffer();await peer.setLocalDescription(offer);
    const sdp=await fetch("https://api.openai.com/v1/realtime/calls",{method:"POST",headers:{"Authorization":`Bearer ${data.clientSecret}`,"Content-Type":"application/sdp"},body:offer.sdp});
