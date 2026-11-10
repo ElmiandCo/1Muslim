@@ -71,6 +71,7 @@ export default function DeepWatch(){
  const [seriesInfo,setSeriesInfo]=useState<DeepWatchSeries|null>(null);
  const [dbSeries,setDbSeries]=useState<DeepWatchSeries[]>([]);
  const [dbEpisodes,setDbEpisodes]=useState<DeepWatchEpisode[]>([]);
+ const [excludedIds,setExcludedIds]=useState<string[]>([]);
  const [episodeSeason,setEpisodeSeason]=useState(1);
  useEffect(()=>{let active=true;const base=process.env.NEXT_PUBLIC_SUPABASE_URL,anon=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!base||!anon)return;
  const headers={apikey:anon,Authorization:`Bearer ${anon}`};
@@ -90,7 +91,7 @@ export default function DeepWatch(){
  const player=useRef<HTMLIFrameElement>(null);
  const selectedRef=useRef<RegisteredVideo|null>(null);
  useEffect(()=>{try{const value=JSON.parse(localStorage.getItem("1muslim:deepwatch-list")||"[]");if(Array.isArray(value))setSaved(value.filter((x):x is string=>typeof x==="string"))}catch{}},[]);
- const filtered=useMemo(()=>deepwatchCatalog.filter(v=>(tab==="Home"||(tab==="Kids"?isDeepWatchKids(v):tab==="My List"?saved.includes(v.videoId):tab==="The Prophets"?isProphetVideo(v):tab==="Scary"?isScaryVideo(v):tab==="Movies"?(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId)):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))),[tab,search,saved]);
+ const filtered=useMemo(()=>deepwatchCatalog.filter(v=>!excludedIds.includes(v.videoId)&&((tab==="Home"||(tab==="Kids"?isDeepWatchKids(v):tab==="My List"?saved.includes(v.videoId):tab==="The Prophets"?isProphetVideo(v):tab==="Scary"?isScaryVideo(v):tab==="Movies"?(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId)):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase())))),[tab,search,saved,excludedIds]);
  const heroSlides=useMemo(()=>{
   const categories:Tab[]=tab==="Home"?["Kids","The Prophets","Scary","Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
   const used=new Set<string>();
