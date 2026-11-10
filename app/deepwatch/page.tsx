@@ -58,7 +58,7 @@ const orderedShowEpisodes=(item:RegisteredVideo)=>{
 };
 const oneIslamIds=new Set(["ZtmfL6uZfa4","wuNAlw5kmW8","W-C-qyaTJ9A","bBHSA4l8LJQ","QuxSwXGvCDE","6W3MDgUsrG0","oVFGrvEwgdE","3JJpHR59598","XWiVlPH8ycw","XFX5q0JILd0","iVtFN5NDkCw","Qdm70F47b5k","PDfCJRqOXQI","k4hRONalWU4","jktPehmOlmo","hzoo_llwzBI","kYJLOA3Ku20","LgzRb5SYAvo","Zor1et-rT8c","RerLVM4pWeE","4elQ8MMqq6Q","74an2nHujZU","eRMdvy0oWKw","GWHggtbGQ4s","Dyf-hcQHVSg","-O7LWSejY0E","q2_NhdYU_Tg","w9pnYXQcxrs","M-qTbC0ST_A","50o4JLaFfY4","C7XZEcvQTXM","xsJg5cV_BYw","dsgc7wOATtU","N6vkcVBd5-M","eNRdgzVgt-o","HXHzI7FSQc8","O38OhlRifrk","l3mfoSVXFrQ","KjHaAItddDo","2-BVXtBdxw8","e87KDhW3biE","y1wrwkjR-NM","qAVVG3-Iqv8","JTJ37FNaPSU","Av2JfPcNgsE","4QBftmqAGFI"]);
 const oneIslamVideos=deepwatchCatalog.filter(v=>oneIslamIds.has(v.videoId)).sort((a,b)=>{const ep=(v:RegisteredVideo)=>Number(v.title.match(/\bEP(\d+)\b/i)?.[1]||999);return /Stories of the Prophets/i.test(a.title)&&/Stories of the Prophets/i.test(b.title)?ep(a)-ep(b):0});
-const tabs=["Home","Kids","Movies","TV Shows","Series","The Prophets","Scary","Animation","International","Live","My List"] as const;
+const tabs=["Home","Kids","Movies","TV Shows","Series","The Prophets","Scary","Animation","International","Live","Qur’an","Aqeedah","History","All Videos","My List"] as const;
 type Tab=typeof tabs[number];
 const isProphetVideo=(v:RegisteredVideo)=>/prophet|adam|hawwa|ibrahim|yunus|nooh|nuh|hud \(as\)|idrees|sheeth|habil|qabil|iblees|iblis/i.test([v.title,v.category,...(v.categories||[])].join(" "));
 /* Scary is a curated Islamic reminders collection, not fictional horror. */
@@ -90,6 +90,18 @@ export default function DeepWatch(){
  const [dbSeries,setDbSeries]=useState<DeepWatchSeries[]>([]);
  const [dbEpisodes,setDbEpisodes]=useState<DeepWatchEpisode[]>([]);
  const [excludedIds,setExcludedIds]=useState<string[]>([]);
+ const [approvedRegistry,setApprovedRegistry]=useState<RegisteredVideo[]>([]);
+ const [libraryLoading,setLibraryLoading]=useState(true);
+ useEffect(()=>{let live=true;const db=createClient();const load=async()=>{try{
+  const pageSize=500;const rows:{video_id:string;title:string;categories:string[]|null;format:string|null;published_at:string|null;discovered_at:string|null}[]=[];
+  for(let offset=0;offset<5000;offset+=pageSize){
+   const {data,error}=await db.from("islamic_video_registry").select("video_id,title,categories,format,published_at,discovered_at").eq("status","approved").order("discovered_at",{ascending:false}).range(offset,offset+pageSize-1);
+   if(error)throw error;
+   rows.push(...(data||[]));if(!data||data.length<pageSize)break;
+  }
+  if(live)setApprovedRegistry(rows.filter(v=>/^[A-Za-z0-9_-]{11}$/.test(v.video_id)).map(v=>({videoId:v.video_id,title:v.title,category:v.categories?.[0]||"Videos",categories:v.categories||[],startSeconds:0,endSeconds:null,format:"desktop" as const})));
+ }catch(e){console.error("DeepWatch approved library unavailable",e)}finally{if(live)setLibraryLoading(false)}};
+ void load();return()=>{live=false}},[]);
  const [episodeSeason,setEpisodeSeason]=useState(1);
  useEffect(()=>{let active=true;const base=process.env.NEXT_PUBLIC_SUPABASE_URL,anon=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!base||!anon)return;
  const headers={apikey:anon,Authorization:`Bearer ${anon}`};
@@ -111,8 +123,14 @@ export default function DeepWatch(){
  const selectedRef=useRef<RegisteredVideo|null>(null);
  useEffect(()=>{try{const value=JSON.parse(localStorage.getItem("1muslim:deepwatch-list")||"[]");if(Array.isArray(value))setSaved(value.filter((x):x is string=>typeof x==="string"))}catch{}},[]);
  useEffect(()=>{if(!isGalleryAdmin)return;let active=true;const refresh=async()=>{try{const response=await fetch("/api/deepwatch/exclusions",{cache:"no-store"});if(!response.ok)return;const rows=await response.json();if(active&&Array.isArray(rows))setExcludedIds(rows.map((row:{item_id:string})=>row.item_id))}catch{}};const timer=window.setInterval(()=>void refresh(),30000);return()=>{active=false;window.clearInterval(timer)}},[isGalleryAdmin]);
- const galleryTotal=useMemo(()=>deepwatchCatalog.filter(v=>!excludedIds.includes(v.videoId)).length,[excludedIds]);
- const filtered=useMemo(()=>deepwatchCatalog.filter(v=>!excludedIds.includes(v.videoId)&&((tab==="Home"||(tab==="Kids"?isDeepWatchKids(v):tab==="My List"?saved.includes(v.videoId):tab==="The Prophets"?isProphetVideo(v):tab==="Scary"?isScaryVideo(v):tab==="Movies"?(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId)):group(v)===tab))&&(!search||v.title.toLowerCase().includes(search.toLowerCase())))),[tab,search,saved,excludedIds]);
+ const fullCatalog=useMemo(()=>Array.from(new Map([...deepwatchCatalog,...approvedRegistry].map(v=>[v.videoId,v] as const)).values()),[approvedRegistry]);
+ const galleryTotal=useMemo(()=>fullCatalog.filter(v=>!excludedIds.includes(v.videoId)).length,[fullCatalog,excludedIds]);
+ const filtered=useMemo(()=>fullCatalog.filter(v=>{
+  if(excludedIds.includes(v.videoId))return false;
+  const tags=[v.title,v.category,...(v.categories||[])].join(" ").toLowerCase();
+  const matches=tab==="Home"||tab==="All Videos"||tab==="Kids"&&isDeepWatchKids(v)||tab==="My List"&&saved.includes(v.videoId)||tab==="The Prophets"&&isProphetVideo(v)||tab==="Scary"&&isScaryVideo(v)||tab==="Movies"&&(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId))||tab==="Qur’an"&&/qur.an|surah|recitation|tilawah/.test(tags)||tab==="Aqeedah"&&/aqeedah|tawheed|belief|creed/.test(tags)||tab==="History"&&/historical|history|ottoman|seerah/.test(tags)||group(v)===tab;
+  return matches&&(!search||tags.includes(search.toLowerCase()));
+ }),[fullCatalog,tab,search,saved,excludedIds]);
  const heroSlides=useMemo(()=>{
   const categories:Tab[]=tab==="Home"?["Kids","The Prophets","Scary","Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
   const used=new Set<string>();
@@ -135,19 +153,17 @@ export default function DeepWatch(){
  },[heroPaused,selected,heroSlides.length]);
  const featured=heroSlides[heroIndex]||heroSlides[0];
  const collections=useMemo(()=>tab==="Home"?[
-  {name:"Featured Tonight",items:deepwatchCatalog.slice(0,14)},
-  {name:"The Prophets",items:deepwatchCatalog.filter(isProphetVideo)},
-  {name:"Scary · Afterlife & Warnings",items:deepwatchCatalog.filter(isScaryVideo)},
-  {name:"Stories of Dead People · One Islam Productions",items:deepwatchCatalog.filter(v=>(v.categories||[]).includes("Stories of Dead People"))},
-  {name:"Series to Get Into",items:deepwatchCatalog.filter(v=>group(v)==="Series")},
-  {name:"Movie Night",items:deepwatchCatalog.filter(v=>group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId))},
-  {name:"Animated Adventures",items:deepwatchCatalog.filter(v=>group(v)==="Animation")},
-  {name:"International Spotlight",items:deepwatchCatalog.filter(v=>group(v)==="International")},
-  {name:"More to Explore",items:deepwatchCatalog.slice(14,44)}
+  {name:"Recently Added · Approved",items:filtered.slice(-40).reverse()},
+  {name:"Qur’an & Recitations",items:filtered.filter(v=>/qur.an|surah|recitation/i.test([v.title,...(v.categories||[])].join(" "))).slice(0,80)},
+  {name:"Aqeedah & Tawheed",items:filtered.filter(v=>/aqeedah|tawheed|creed/i.test([v.title,...(v.categories||[])].join(" "))).slice(0,80)},
+  {name:"Islamic History & Historical Series",items:filtered.filter(v=>/historical|history|seerah/i.test([v.title,...(v.categories||[])].join(" "))).slice(0,80)},
+  {name:"The Prophets",items:filtered.filter(isProphetVideo)},
+  {name:"Movies & Animation",items:filtered.filter(v=>group(v)==="Movies"||group(v)==="Animation")},
+  {name:"Explore the Entire Library",items:filtered}
  ]:[{name:tab==="My List"?"Your Watchlist":tab,items:filtered}], [tab,filtered]);
  const send=(func:string,args?:unknown[])=>{player.current?.contentWindow?.postMessage(JSON.stringify({event:"command",func,args:args||[]}),"*")};
  const open=(v:RegisteredVideo)=>{setSeriesInfo(null);setInfo(null);selectedRef.current=v;setSelected(v);setSeconds(v.startSeconds||0);setPlaying(true);setSettings(false)};
- useEffect(()=>{if(!deepLinkVideo||handledDeepLink.current===deepLinkVideo)return;if(!/^[a-zA-Z0-9_-]{11}$/.test(deepLinkVideo))return;const match=deepwatchCatalog.find(v=>v.videoId===deepLinkVideo)||dbEpisodes.find(v=>v.video_id===deepLinkVideo);if(!match)return;handledDeepLink.current=deepLinkVideo;const v:RegisteredVideo="videoId" in match?match:{videoId:match.video_id,title:match.title,category:"Series",categories:match.categories||[],startSeconds:0,endSeconds:null,format:"desktop"};setInfo(v);},[deepLinkVideo,dbEpisodes]);
+ useEffect(()=>{if(!deepLinkVideo||handledDeepLink.current===deepLinkVideo)return;if(!/^[a-zA-Z0-9_-]{11}$/.test(deepLinkVideo))return;const match=fullCatalog.find(v=>v.videoId===deepLinkVideo)||dbEpisodes.find(v=>v.video_id===deepLinkVideo);if(!match)return;handledDeepLink.current=deepLinkVideo;const v:RegisteredVideo="videoId" in match?match:{videoId:match.video_id,title:match.title,category:"Series",categories:match.categories||[],startSeconds:0,endSeconds:null,format:"desktop"};setInfo(v);},[deepLinkVideo,dbEpisodes]);
  const close=()=>{setSelected(null);selectedRef.current=null;setSettings(false)};
  const episodeQueue=(v:RegisteredVideo)=>{const db=dbEpisodes.find(e=>e.video_id===v.videoId);return db?dbEpisodes.filter(e=>e.series_id===db.series_id).sort((a,b)=>(a.season_number||1)-(b.season_number||1)||(a.episode_number||999)-(b.episode_number||999)).map(e=>({...v,videoId:e.video_id,title:e.title})):orderedShowEpisodes(v)};
  const navigate=(direction:number)=>{const current=selectedRef.current;if(!current)return;const queue=episodeQueue(current);const i=queue.findIndex(v=>v.videoId===current.videoId);const target=queue[i+direction];if(target)open(target)};
@@ -156,7 +172,7 @@ export default function DeepWatch(){
  useEffect(()=>{if(!selected)return;const onMessage=(event:MessageEvent)=>{if(!event.origin.includes("youtube.com")&&!event.origin.includes("youtube-nocookie.com"))return;try{const d=typeof event.data==="string"?JSON.parse(event.data):event.data;if(typeof d?.info?.currentTime==="number")setSeconds(Math.floor(d.info.currentTime))}catch{}};window.addEventListener("message",onMessage);const timer=setInterval(()=>{send("getCurrentTime");window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:selected.videoId,seconds,format:"desktop"}}))},900);return()=>{clearInterval(timer);window.removeEventListener("message",onMessage);window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:"",seconds:0,format:"desktop"}}))}},[selected,seconds]);
  const toggleSaved=(id:string)=>setSaved(prev=>{const value=prev.includes(id)?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem("1muslim:deepwatch-list",JSON.stringify(value))}catch{}return value});
  return <main className="deepwatch"><style>{`.deepwatchInlinePlayIcon{display:inline-block;width:1.25em;height:1.25em;vertical-align:-.27em;flex-shrink:0;margin-right:2px}`}</style>
-  <header className="deepwatchHeader"><Link href="/" className="deepwatchBrand" aria-label="DeepWatch by 1Muslim — Home"><img src="/assets/deepwatch-icon-2.PNG" alt="DeepWatch by 1Muslim" width={160} height={72} style={{display:"block",width:"auto",maxWidth:"min(38vw,160px)",height:64,objectFit:"contain"}}/></Link><nav aria-label="DeepWatch categories">{tabs.map(item=><button type="button" key={item} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}>{item==="Live"?<span className="deepwatchLiveNav"><span className="deepwatchLivePulse" aria-hidden="true"/>LIVE</span>:item}</button>)}</nav><input type="search" aria-label="Search DeepWatch" placeholder="Search titles" value={search} onChange={e=>setSearch(e.target.value)}/>{isGalleryAdmin&&<output aria-live="polite" title="Unique playable titles in DeepWatch, excluding hidden videos" style={{display:"inline-flex",alignItems:"center",gap:8,padding:"9px 13px",border:"1px solid #43536b",borderRadius:14,color:"#f0f5ff",background:"#1a2434",fontSize:12,whiteSpace:"nowrap"}}><span style={{opacity:.7}}>GALLERY</span><strong>{galleryTotal.toLocaleString()}</strong><span style={{opacity:.7}}>· VIEW {filtered.length.toLocaleString()}</span></output>}</header>
+  <header className="deepwatchHeader"><Link href="/" className="deepwatchBrand" aria-label="DeepWatch by 1Muslim — Home"><img src="/assets/deepwatch-icon-2.PNG" alt="DeepWatch by 1Muslim" width={160} height={72} style={{display:"block",width:"auto",maxWidth:"min(38vw,160px)",height:64,objectFit:"contain"}}/></Link><nav aria-label="DeepWatch categories">{tabs.map(item=><button type="button" key={item} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}>{item==="Live"?<span className="deepwatchLiveNav"><span className="deepwatchLivePulse" aria-hidden="true"/>LIVE</span>:item}</button>)}</nav><input type="search" aria-label="Search DeepWatch" placeholder="Search titles" value={search} onChange={e=>setSearch(e.target.value)}/>{isGalleryAdmin&&<output aria-live="polite" title="Unique registered titles in DeepWatch, excluding hidden videos" style={{display:"inline-flex",alignItems:"center",gap:8,padding:"9px 13px",border:"1px solid #43536b",borderRadius:14,color:"#f0f5ff",background:"#1a2434",fontSize:12,whiteSpace:"nowrap"}}><span style={{opacity:.7}}>GALLERY</span><strong>{galleryTotal.toLocaleString()}</strong>{libraryLoading&&<span style={{opacity:.7}}>Syncing…</span>}<span style={{opacity:.7}}>· VIEW {filtered.length.toLocaleString()}</span></output>}</header>
   {(tab==="Live")&&<section className="deepwatchLiveSpotlight" aria-label="DeepWatch Live spotlight"><div className="deepwatchLiveSpotlightCopy"><span className="deepwatchLiveBadge"><span className="deepwatchLivePulse" aria-hidden="true"/> LIVE CHANNEL</span><h1>DeepWatch Live</h1><p>Watch livestreams and available replays, all in one place.</p><button type="button" onClick={()=>open(featuredLive)}><PlayIcon className="deepwatchInlinePlayIcon"/> Watch Featured Stream</button></div><img src={image(featuredLive.videoId)} alt="" loading="lazy"/></section>}
   <section className="deepwatchHeroCarousel" aria-label="Featured DeepWatch titles" onMouseEnter={()=>setHeroPaused(true)} onMouseLeave={()=>setHeroPaused(false)} onTouchStart={e=>{heroTouch.current={x:e.touches[0].clientX,y:e.touches[0].clientY};setHeroPaused(true)}} onTouchEnd={e=>{const p=heroTouch.current;const t=e.changedTouches[0];if(p&&Math.abs(t.clientX-p.x)>45&&Math.abs(t.clientX-p.x)>Math.abs(t.clientY-p.y))setHeroIndex(i=>(i+(t.clientX<p.x?1:heroSlides.length-1))%heroSlides.length);heroTouch.current=null;window.setTimeout(()=>setHeroPaused(false),3500)}} onFocusCapture={()=>setHeroPaused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))setHeroPaused(false)}}>
    {heroSlides.map((v,i)=><div key={v.videoId} className={`deepwatchHero ${i===heroIndex?"isActive":""}`} aria-hidden={i!==heroIndex} style={{backgroundImage:`linear-gradient(90deg,#07090d 4%,rgba(7,9,13,.92) 38%,rgba(7,9,13,.3)),url("${image(v.videoId)}")`}}>
