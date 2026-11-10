@@ -49,3 +49,37 @@ body:has(.mmDemo) .mmDemo{position:relative;z-index:2}
 .mmDemo.hudhudUnifiedMessenger .mmComposer{position:sticky;bottom:0}
 @keyframes mmGlassEnter{from{opacity:.5;transform:translateY(12px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.mmDemo.hudhudUnifiedMessenger .mmChat{animation:none}}
+
+/* Messenger Social Magazine: preserve all existing conversations, Ping, search and filters. */
+.mmDemo.hudhudUnifiedMessenger{--mm-paper:#f0ece4;--mm-ink:#202b27;--mm-gold:#b28c55;background:var(--mm-paper)!important;color:var(--mm-ink)!important}
+.mmDemo.hudhudUnifiedMessenger .mmPage{background:var(--mm-paper)!important;color:var(--mm-ink)!important}
+.mmEditorialHeader{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:14px 4px 12px;margin-top:4px;border-bottom:2px solid #25332b}
+.mmEditorialHeader>div>span,.mmMagazineLabel,.mmRowKicker{font:800 9px/1.4 Arial,sans-serif;letter-spacing:.14em;color:#9d614d}
+.mmEditorialHeader h1{margin:9px 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:800;font-size:clamp(23px,5.5vw,38px);letter-spacing:-.035em;line-height:1.04;color:#24342e}
+.mmEditorialHeader h1 em{font-family:"Palatino Linotype",Palatino,serif;font-weight:400}
+.mmEditorialHeaderLink{white-space:nowrap;font:800 10px Arial,sans-serif;letter-spacing:.08em;color:#9e4c3a;text-decoration:none;padding-bottom:6px}
+.mmMagazineLabel{display:flex;justify-content:space-between;gap:10px;padding:13px 4px 6px;color:#4a554f}
+.mmMagazineLabel span:last-child{color:#9c9385}.mmInboxLabel{padding-top:8px}
+.mmDemo.hudhudUnifiedMessenger .mmSearch{margin-top:12px;background:#fffdf8!important;border:1px solid #d8d0c3!important;border-radius:28px!important;box-shadow:0 4px 18px #25372b0a!important;color:#26352c!important}
+.mmDemo.hudhudUnifiedMessenger .mmSearch input{color:#26352c!important;font-size:13px!important}.mmDemo.hudhudUnifiedMessenger .mmSearch input::placeholder{color:#817f79!important}
+.mmDemo.hudhudUnifiedMessenger .mmStories{margin:5px 0 8px!important;gap:13px!important}
+.mmDemo.hudhudUnifiedMessenger .mmStory small{color:#354039!important;font-weight:700;font-size:10px}
+.mmDemo.hudhudUnifiedMessenger .mmPortrait{border-color:#bda06e!important;box-shadow:0 0 0 2px #fffdf8,0 0 0 4px #d8c5a5!important;background:#1c3a3c!important}
+.mmDemo.hudhudUnifiedMessenger .mmFilters{gap:7px;margin:4px 0 10px!important}
+.mmDemo.hudhudUnifiedMessenger .mmFilters button{background:#fffdf8!important;color:#29382f!important;border:1px solid #d6d0c5!important;border-radius:30px!important;font-size:11px!important;font-weight:800!important;padding:10px 14px!important;box-shadow:none!important}
+.mmDemo.hudhudUnifiedMessenger .mmFilters button.selected{background:#22372f!important;color:#fff!important;border-color:#22372f!important}
+.mmDemo.hudhudUnifiedMessenger .mmThreads{background:transparent!important;padding:0 2px 16px}
+.mmDemo.hudhudUnifiedMessenger .mmRow{min-height:85px!important;margin:0 0 10px!important;padding:12px!important;border:1px solid #dfd8cd!important;border-radius:15px!important;background:#fffdf9!important;color:#24342c!important;box-shadow:0 5px 20px #1d32230d!important;backdrop-filter:none!important;transition:transform .2s ease,box-shadow .2s ease}
+.mmDemo.hudhudUnifiedMessenger .mmRow:active{transform:scale(.99)}.mmDemo.hudhudUnifiedMessenger .mmRowText strong{font-size:16px!important;color:#24342c!important}.mmDemo.hudhudUnifiedMessenger .mmRowText small{font-size:12px!important;color:#77736c!important}
+.mmDemo.hudhudUnifiedMessenger .mmRowKicker{font-size:8px;color:#a86a54}.mmDemo.hudhudUnifiedMessenger .mmRowEnd b{background:#a35442!important}.mmDemo.hudhudUnifiedMessenger .mmRowEnd>span{color:#9c604d!important}
+.mmDemo.hudhudUnifiedMessenger .mmChat{background:#fffdf9!important;color:#24342c!important;border:1px solid #d9d1c5!important}
+.mmDemo.hudhudUnifiedMessenger.night{--mm-paper:#0c1113;--mm-ink:#eeeae2;background:#0c1113!important;color:#eeeae2!important}
+.mmDemo.hudhudUnifiedMessenger.night .mmPage{background:#0c1113!important;color:#eeeae2!important}
+.mmDemo.hudhudUnifiedMessenger.night .mmEditorialHeader{border-color:#b9a078}.mmDemo.hudhudUnifiedMessenger.night .mmEditorialHeader h1{color:#eeeae2}
+.mmDemo.hudhudUnifiedMessenger.night .mmMagazineLabel{color:#d4c7af}.mmDemo.hudhudUnifiedMessenger.night .mmStory small{color:#ddd4c5!important}
+.mmDemo.hudhudUnifiedMessenger.night .mmSearch,.mmDemo.hudhudUnifiedMessenger.night .mmRow,.mmDemo.hudhudUnifiedMessenger.night .mmChat{background:#192125!important;border-color:#394344!important;color:#f1ece4!important}
+.mmDemo.hudhudUnifiedMessenger.night .mmSearch input,.mmDemo.hudhudUnifiedMessenger.night .mmRowText strong{color:#f1ece4!important}
+.mmDemo.hudhudUnifiedMessenger.night .mmRowText small{color:#b6b5b0!important}.mmDemo.hudhudUnifiedMessenger.night .mmFilters button{background:#20292b!important;color:#eeeae2!important;border-color:#49504b!important}
+.mmDemo.hudhudUnifiedMessenger.night .mmFilters button.selected{background:#bda06e!important;color:#15191a!important}
+@media(max-width:700px){.mmEditorialHeader{padding:9px 2px 10px}.mmEditorialHeader h1{font-size:25px}.mmEditorialHeader>div>span{font-size:8px}.mmDemo.hudhudUnifiedMessenger .mmRow{min-height:77px!important;padding:10px!important}.mmDemo.hudhudUnifiedMessenger .mmRow .mmPortrait{width:49px;height:49px;flex-basis:49px}.mmRowKicker{font-size:7px!important}.mmDemo.hudhudUnifiedMessenger .mmPage{padding-left:14px;padding-right:14px}}
+@media(prefers-reduced-motion:reduce){.mmDemo.hudhudUnifiedMessenger .mmRow{transition:none}}
