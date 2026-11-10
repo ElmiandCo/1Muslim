@@ -24,7 +24,12 @@ const blacklist=/\b(shorts?|clips?|tiktok|reels?|reaction|music video|nasheed re
 const now=new Date();const niche=niches[now.getUTCHours()%niches.length];const [category,query]=niche;
 // Rotate three channels per hour; offset the scan window so older episodes are reached.
 const hour=Math.floor(Date.now()/3600000);
-const channelsToScan=[...new Set(Array.from({length:Math.min(3,approvedChannels.length)},(_,i)=>approvedChannels[(hour*3+i)%approvedChannels.length]))];
+const quranMission=process.env.DEEPWATCH_QURAN_114==="true";
+const channelsToScan=quranMission?approvedChannels:[...new Set(Array.from({length:Math.min(3,approvedChannels.length)},(_,i)=>approvedChannels[(hour*3+i)%approvedChannels.length]))];
+const surahNames=["fatihah","baqarah","imran","nisa","maidah","anam","araf","anfal","tawbah","yunus","hud","yusuf","rad","ibrahim","hijr","nahl","isra","kahf","maryam","taha","anbiya","hajj","muminun","nur","furqan","shuara","naml","qasas","ankabut","rum","luqman","sajdah","ahzab","saba","fatir","yasin","saffat","sad","zumar","ghafir","fussilat","shura","zukhruf","dukhan","jathiyah","ahqaf","muhammad","fath","hujurat","qaf","dhariyat","tur","najm","qamar","rahman","waqiah","hadid","mujadila","hashr","mumtahanah","saff","jumuah","munafiqun","taghabun","talaq","tahrim","mulk","qalam","haqqah","maarij","nuh","jinn","muzzammil","muddaththir","qiyamah","insan","mursalat","naba","naziat","abasa","takwir","infitar","mutaffifin","inshiqaq","buruj","tariq","ala","ghashiyah","fajr","balad","shams","layl","duha","sharh","tin","alaq","qadr","bayyinah","zalzalah","adiyat","qariah","takathur","asr","humazah","fil","quraysh","maun","kawthar","kafirun","nasr","masad","ikhlas","falaq","nas"];
+const normalizeSurah=s=>s.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").replace(/\\b(al|surah|surat|sura|chapter|the)\\b/g," ").replace(/\\s+/g," ").trim();
+const matchSurah=title=>{const norm=normalizeSurah(title);const number=norm.match(/(?:^|\\s)(?:surah|chapter)?\\s*(\\d{1,3})(?:\\s|$)/);const name=surahNames.findIndex(n=>norm.split(" ").includes(n));if(name>=0)return name+1;if(number&&+number[1]>=1&&+number[1]<=114&&/surah|surat|sura|chapter/i.test(title))return +number[1];return null};
+const quranMatches=new Set();
 let inserted=0,eligible=0,scanned=0;
 const seriesPattern=/ertugrul|ertuğrul|diriliş|dirilis|kuruluş|kurulus|osman|selçuklu|selcuklu|alparslan|abdülhamid|abdulhamid|payitaht|mehmed|fetihler|episode|episod|bölüm|bolum|season|\\bep\\.?\\s*\\d+|\\bs\\d+e\\d+|الحلقة\\s*[\\d٠-٩]+|مسلسل/i;
 const religiousPattern=/islam|muslim|quran|qur.an|allah|hadith|seerah|prophet|salah|تفسير|القرآن|الإسلام|محمد|تلاوة/i;
@@ -34,8 +39,8 @@ for(const channelId of channelsToScan){
  const uploads=channel.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
  if(!uploads){console.warn("Skipping inaccessible approved channel",channelId);continue}
  const ids=[];let pageToken;
- const offset=(Math.floor(hour/Math.ceil(approvedChannels.length/3))%5)*4;
- for(let page=0;page<offset+4;page++){
+ const offset=quranMission?0:(Math.floor(hour/Math.ceil(approvedChannels.length/3))%5)*4;
+ for(let page=0;page<offset+(quranMission?12:4);page++){
   const playlist=await api("playlistItems",{part:"contentDetails",playlistId:uploads,maxResults:50,...(pageToken?{pageToken}:{})});
   if(page>=offset)ids.push(...(playlist.items||[]).map(x=>x.contentDetails?.videoId).filter(Boolean));
   pageToken=playlist.nextPageToken;if(!pageToken)break;
@@ -50,8 +55,12 @@ for(const channelId of channelsToScan){
  const rows=videoItems.flatMap(v=>{
   const d=duration(v.contentDetails?.duration),title=v.snippet?.title||"",description=v.snippet?.description||"",channel=v.snippet?.channelTitle||"",language=v.snippet?.defaultAudioLanguage||v.snippet?.defaultLanguage||null;
   if(v.snippet?.channelId!==channelId||d<120||d>14400||blacklist.test(title)||v.status?.embeddable!==true||v.status?.privacyStatus!=="public")return[];
-  if(!religiousPattern.test(title+" "+description.slice(0,500))&&!seriesPattern.test(title))return[];
-  return [{video_id:v.id,title:title.slice(0,300),channel_id:channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:[seriesPattern.test(title)?"Historical series":category],source_query:"approved-channel:"+channelId,status:"pending",bot_b_reason:"Hourly YouTube discovery; awaiting approval"}];
+  const surah=quranMission?matchSurah(title):null;
+  if(quranMission&&(!surah||!/quran|qur.an|recitation|tilawah|تلاوة|سورة/i.test(title+" "+description.slice(0,200))))return[];
+  if(quranMission&&/part\\s*\\d+|verses?\\s*\\d+|ayat?\\s*\\d+|highlight|excerpt|portion/i.test(title))return[];
+  if(surah)quranMatches.add(surah);
+  if(!quranMission&&!religiousPattern.test(title+" "+description.slice(0,500))&&!seriesPattern.test(title))return[];
+  return [{video_id:v.id,title:title.slice(0,300),channel_id:channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:quranMission?["Qur’an","Surah "+String(surah).padStart(3,"0")]:[seriesPattern.test(title)?"Historical series":category],source_query:(quranMission?"quran-114:":"approved-channel:")+channelId,status:"pending",bot_b_reason:quranMission?"Qur’an 114 candidate; full recitation and visual aesthetics require manual verification":"Hourly YouTube discovery; awaiting approval"}];
  });
  eligible+=rows.length;
  // Check existing records first so reports count actual additions, not ignored duplicates.
@@ -63,6 +72,7 @@ for(const channelId of channelsToScan){
  console.log("Channel",channelId,"scanned",uniqueIds.length,"eligible",rows.length);
  }catch(error){console.error("Channel scan failed",channelId,String(error));}
 }
+if(quranMission)console.log("Quran 114 mission candidate coverage:",JSON.stringify({candidate_surahs:[...quranMatches].sort((a,b)=>a-b),candidate_count:quranMatches.size,missing_candidate_surahs:Array.from({length:114},(_,i)=>i+1).filter(i=>!quranMatches.has(i)),note:"Candidates only; full recitation and aesthetics require admin review."}));
 console.log("DeepWatch hourly discovery complete:",JSON.stringify({channels:channelsToScan.length,scanned,eligible,new_pending:inserted}));
 if(!scanned)throw Error("All approved channel scans failed or returned no videos");
 }

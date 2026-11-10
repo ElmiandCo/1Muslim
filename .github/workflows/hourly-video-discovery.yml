@@ -3,6 +3,11 @@ on:
   schedule:
     - cron: "7 * * * *"
   workflow_dispatch:
+    inputs:
+      quran_114:
+        description: "Scan all approved channels for Qur’an 114 surah candidates"
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -16,6 +21,7 @@ jobs:
           node-version: "22"
       - name: Discover and curate YouTube videos
         env:
+          DEEPWATCH_QURAN_114: ${{ inputs.quran_114 || false }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           DEEPWATCH_APPROVED_CHANNEL_IDS: ${{ secrets.DEEPWATCH_APPROVED_CHANNEL_IDS }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
