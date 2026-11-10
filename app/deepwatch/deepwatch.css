@@ -35,3 +35,34 @@
 
 
 .dwDiscussionTabs{display:flex;gap:8px;padding:12px;background:#0b0e16}.dwDiscussionTabs button{flex:1;border:1px solid #ffffff36;border-radius:12px;padding:12px 8px;color:#e8e6f5;background:#ffffff0c;font-weight:700}.dwDiscussionTabs button[aria-selected=true]{background:#8161c84d;border-color:#ac8bff}.dwDiscussionPane{min-height:170px;max-height:38dvh;overflow-y:auto;animation:dwPaneIn .25s ease}@keyframes dwPaneIn{from{opacity:.4;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.dwReviews{padding:14px 16px;color:#fff}.dwReviewsSummary{display:flex;gap:12px;align-items:baseline;margin-bottom:12px}.dwReviewsSummary strong{font-size:20px;color:#e9c879}.dwReviewsSummary span{font-size:12px;opacity:.75}.dwReviewForm{display:grid;gap:10px}.dwReviewForm h3{margin:0}.dwStars{display:flex;gap:4px}.dwStars button{border:0;background:none;color:#f5c761;font-size:28px;padding:3px;cursor:pointer}.dwReviewForm textarea{width:100%;resize:vertical;background:#ffffff12;color:white;border:1px solid #ffffff45;border-radius:10px;padding:12px}.dwReviewForm>button{background:#9175d8;border:0;color:#fff;padding:12px;border-radius:10px;font-weight:800}.dwReviewCards{display:grid;gap:8px}.dwReviewCard{border:1px solid #ffffff30;border-radius:12px;background:#ffffff10;overflow:hidden}.dwReviewCard>button{display:flex;width:100%;align-items:flex-start;gap:10px;text-align:left;padding:11px;background:transparent;border:0;color:inherit;cursor:pointer}.dwReviewAvatar{width:34px;height:34px;flex:none;border-radius:50%;background:#ffffff22;display:grid;place-items:center;overflow:hidden}.dwReviewAvatar img{width:100%;height:100%;object-fit:cover}.dwReviewIdentity{display:grid;gap:4px;flex:1;min-width:0}.dwReviewIdentity small{color:#f0cf83}.dwReviewBody{font-size:12px;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow-wrap:anywhere}.dwReviewBody.open{display:block;-webkit-line-clamp:unset;font-size:14px;padding-top:6px}
+
+/* DeepWatch original cinematic player redesign — obsidian, graphite, silver. */
+.dwRedesigned{background:#000!important;color:#eef0f4}
+.dwRedesigned .deepwatchScreenInner{max-width:1280px;margin:auto;padding:clamp(8px,2vw,20px)}
+.dwRedesigned .deepwatchScreenTop{display:flex;align-items:center;gap:12px;padding:8px 4px 14px;max-width:1050px;margin:auto;background:transparent}
+.dwRedesigned .deepwatchScreenTop>button{flex:none;width:36px;height:36px;border:1px solid #ffffff26;background:#15171bd9;color:#e9edf2;border-radius:50%;font-size:18px}
+.dwTitleMarquee{flex:1;min-width:0;overflow:hidden;white-space:nowrap;mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.dwTitleMarquee span{display:inline-block;min-width:max-content;font-size:clamp(12px,2.6vw,17px);font-weight:700;animation:dwTitleTravel 19s linear infinite}
+@keyframes dwTitleTravel{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.dwRedesigned .deepwatchWatchCanvas{max-width:1050px}
+.dwRedesigned .deepwatchPlayer{border:1px solid #bfc6d235;border-radius:20px;box-shadow:0 20px 75px #000b,0 3px 24px #c7d3e10e}
+.dwRedesigned .dwCompactControls{max-width:420px;display:flex;justify-content:center;align-items:center;gap:10px;margin:14px auto 20px;transition:opacity .35s ease,transform .35s ease}
+.dwRedesigned .dwCompactControls.dwIdle{opacity:.14;transform:translateY(-3px)}
+.dwRedesigned .dwCompactControls button{flex:0 0 auto;min-width:0;width:47px;height:47px;padding:0;display:flex;align-items:center;justify-content:center;position:relative;background:#17191dd9;border:1px solid #d6dce03b;color:#e9edf4;border-radius:50%;font-size:23px;box-shadow:0 5px 18px #0008}
+.dwRedesigned .dwCompactControls button small{font-size:10px;position:absolute;bottom:4px}
+.dwRedesigned .dwCompactControls .deepwatchPlay{width:66px;height:66px;background:radial-gradient(circle at 35% 20%,#fff,#d8e0eb 60%,#abb7c9);border-color:#fff;color:#151a22;font-size:28px;box-shadow:0 0 20px #c4d7ff70,0 6px 25px #000a}
+.dwRedesigned .deepwatchSettings{justify-content:center;background:#101216;border:1px solid #ffffff22;border-radius:15px;margin:0 auto 12px;padding:10px;max-width:400px}
+.dwRedesigned .dwDiscussionTabs{max-width:600px;margin:0 auto;gap:14px;background:transparent;padding:8px 0}
+.dwRedesigned .dwDiscussionTabs button{padding:10px 12px;border-radius:30px;border:1px solid #c5cbd34a;background:#16181b;color:#d5dbe3;font-size:12px}
+.dwRedesigned .dwDiscussionTabs button[aria-selected=true]{background:#d8dde7;color:#14181f;border-color:#f5f7fb}
+.dwRedesigned .dwDiscussionPane{max-width:650px;margin:auto;max-height:35dvh;min-height:110px;border:1px solid #ffffff20;background:linear-gradient(135deg,#16191cdd,#0b0d0fe8);border-radius:18px;box-shadow:0 14px 32px #0008}
+.dwTimedPanel{padding:12px 15px;display:grid;gap:10px}.dwTimedHeading{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#dce0e7}
+.dwTimedHeading button{background:transparent;border:1px solid #ffffff35;border-radius:20px;color:#cbd1d9;padding:5px 10px}
+.dwTimedEntries{max-height:150px;overflow:auto;display:grid;gap:6px}.dwTimedEntry{display:flex;align-items:center;gap:9px;padding:7px 10px;background:#ffffff0a;border-radius:12px;font-size:12px}
+.dwTimedAvatar{display:grid;place-items:center;flex:none;width:24px;height:24px;border-radius:50%;background:#b5bcc92a;color:#e8edf4}
+.dwTimedComposer{display:flex;align-items:center;gap:8px;border:1px solid #ffffff2c;border-radius:30px;background:#ffffff08;padding:4px 6px 4px 14px}
+.dwTimedComposer input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#f5f6f8;font-size:13px}
+.dwTimedComposer button{border:0;border-radius:50%;width:32px;height:32px;background:#cbd2de;color:#111821;font-size:16px}
+.dwLandscapeWatermark{text-align:right;font-size:10px;letter-spacing:.12em;color:#cbd2dc80;padding:9px 12px}
+@media(max-width:600px){.dwRedesigned .deepwatchScreenTop{gap:7px}.dwRedesigned .deepwatchScreenTop>button{width:30px;height:30px}.dwRedesigned .dwCompactControls{gap:7px}.dwRedesigned .dwCompactControls button{width:40px;height:40px}.dwRedesigned .dwCompactControls .deepwatchPlay{width:58px;height:58px}}
+@media(prefers-reduced-motion:reduce){.dwTitleMarquee span{animation:none}.dwRedesigned .dwCompactControls{transition:none}}
