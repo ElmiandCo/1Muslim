@@ -286,6 +286,10 @@ export default function Home(){
  const navSoundUnlocked=useRef(false);
  const navSoundContext=useRef<AudioContext|null>(null);
  useEffect(()=>{const unlock=()=>{navSoundUnlocked.current=true};window.addEventListener("pointerdown",unlock,{passive:true});return()=>window.removeEventListener("pointerdown",unlock)},[]);
+ const navCycleTime=Math.max(0,navIdleElapsed-10000);
+ const navCyclePhase=Math.floor(navCycleTime/30000)%4;
+ const navPhaseElapsed=navCycleTime%30000;
+ const navAnimationActive=navIdleElapsed>=10000&&!navDismissed&&!carouselSearchOpen;
  const lastLightBurn=useRef("");
  useEffect(()=>{
   if(!navAnimationActive||navCyclePhase!==0)return;
@@ -339,10 +343,6 @@ export default function Home(){
   navRetentionRecorded.current=true;
   void fetch("/api/nav-retention",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({page:navRetentionPageName,event:"milestone",visitor:navRetentionVisitor.current,visit:navRetentionVisit.current,cycle:navRetentionCycle.current})}).catch(()=>{});
  },[navIdleElapsed,workspacePage]);
- const navCycleTime=Math.max(0,navIdleElapsed-10000);
- const navCyclePhase=Math.floor(navCycleTime/30000)%4;
- const navPhaseElapsed=navCycleTime%30000;
- const navAnimationActive=navIdleElapsed>=10000&&!navDismissed&&!carouselSearchOpen;
  const [profileOverlayBounds,setProfileOverlayBounds]=useState<{top:number;bottom:number;left:number;width:number}|null>(null);
  useEffect(()=>{if(workspacePage!==6||homeSignedIn!==false)return;try{setHudhudGuestLocked(sessionStorage.getItem("1muslim-hudhud-offscreen")==="1")}catch{setHudhudGuestLocked(false)}},[workspacePage,homeSignedIn]);
  useEffect(()=>{
