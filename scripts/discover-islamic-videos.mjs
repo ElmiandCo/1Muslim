@@ -22,17 +22,49 @@ const db=async(path,method="GET",body)=>{const r=await fetch(url.replace(/\/$/,"
 const duration=s=>{const m=/^P(?:([0-9]+)D)?T?(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+)S)?$/.exec(s||"");return m?(+m[1]||0)*86400+(+m[2]||0)*3600+(+m[3]||0)*60+(+m[4]||0):0};
 const blacklist=/\b(shorts?|clips?|tiktok|reels?|reaction|music video|nasheed remix|trailer|preview)\b/i;
 const now=new Date();const niche=niches[now.getUTCHours()%niches.length];const [category,query]=niche;
-const channelId=approvedChannels[Math.floor(Date.now()/3600000)%approvedChannels.length];
-const channel=await api("channels",{part:"contentDetails",id:channelId});
-const uploads=channel.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-if(!uploads)throw Error("Approved channel has no accessible uploads playlist: "+channelId);
-// Scan historical uploads: first episodes often predate the most recent 50.
-const ids=[];let pageToken;
-for(let page=0;page<10;page++){
- const playlist=await api("playlistItems",{part:"contentDetails",playlistId:uploads,maxResults:50,...(pageToken?{pageToken}:{})});
- ids.push(...(playlist.items||[]).map(x=>x.contentDetails?.videoId).filter(Boolean));
- pageToken=playlist.nextPageToken;
- if(!pageToken)break;
+// Rotate three channels per hour; offset the scan window so older episodes are reached.
+const hour=Math.floor(Date.now()/3600000);
+const channelsToScan=[...new Set(Array.from({length:Math.min(3,approvedChannels.length)},(_,i)=>approvedChannels[(hour*3+i)%approvedChannels.length]))];
+let inserted=0,eligible=0,scanned=0;
+const seriesPattern=/ertugrul|ertuğrul|diriliş|dirilis|kuruluş|kurulus|osman|selçuklu|selcuklu|alparslan|abdülhamid|abdulhamid|payitaht|mehmed|fetihler|episode|episod|bölüm|bolum|season|\\bep\\.?\\s*\\d+|\\bs\\d+e\\d+|الحلقة\\s*[\\d٠-٩]+|مسلسل/i;
+const religiousPattern=/islam|muslim|quran|qur.an|allah|hadith|seerah|prophet|salah|تفسير|القرآن|الإسلام|محمد|تلاوة/i;
+for(const channelId of channelsToScan){
+ try{
+ const channel=await api("channels",{part:"contentDetails",id:channelId});
+ const uploads=channel.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+ if(!uploads){console.warn("Skipping inaccessible approved channel",channelId);continue}
+ const ids=[];let pageToken;
+ const offset=(Math.floor(hour/Math.ceil(approvedChannels.length/3))%5)*4;
+ for(let page=0;page<offset+4;page++){
+  const playlist=await api("playlistItems",{part:"contentDetails",playlistId:uploads,maxResults:50,...(pageToken?{pageToken}:{})});
+  if(page>=offset)ids.push(...(playlist.items||[]).map(x=>x.contentDetails?.videoId).filter(Boolean));
+  pageToken=playlist.nextPageToken;if(!pageToken)break;
+ }
+ const uniqueIds=[...new Set(ids)];scanned+=uniqueIds.length;
+ if(!uniqueIds.length)continue;
+ const videoItems=[];
+ for(let i=0;i<uniqueIds.length;i+=50){
+  const details=await api("videos",{part:"snippet,contentDetails,status,statistics",id:uniqueIds.slice(i,i+50).join(",")});
+  videoItems.push(...(details.items||[]));
+ }
+ const rows=videoItems.flatMap(v=>{
+  const d=duration(v.contentDetails?.duration),title=v.snippet?.title||"",description=v.snippet?.description||"",channel=v.snippet?.channelTitle||"",language=v.snippet?.defaultAudioLanguage||v.snippet?.defaultLanguage||null;
+  if(v.snippet?.channelId!==channelId||d<120||d>14400||blacklist.test(title)||v.status?.embeddable!==true||v.status?.privacyStatus!=="public")return[];
+  if(!religiousPattern.test(title+" "+description.slice(0,500))&&!seriesPattern.test(title))return[];
+  return [{video_id:v.id,title:title.slice(0,300),channel_id:channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:[seriesPattern.test(title)?"Historical series":category],source_query:"approved-channel:"+channelId,status:"pending",bot_b_reason:"Hourly YouTube discovery; awaiting approval"}];
+ });
+ eligible+=rows.length;
+ // Check existing records first so reports count actual additions, not ignored duplicates.
+ for(let i=0;i<rows.length;i+=100){
+  const batch=rows.slice(i,i+100),existing=await db("islamic_video_registry?select=video_id&video_id=in.("+batch.map(x=>x.video_id).join(",")+")");
+  const known=new Set(existing.map(x=>x.video_id)),fresh=batch.filter(x=>!known.has(x.video_id));
+  if(fresh.length){await db("islamic_video_registry?on_conflict=video_id","POST",fresh);inserted+=fresh.length}
+ }
+ console.log("Channel",channelId,"scanned",uniqueIds.length,"eligible",rows.length);
+ }catch(error){console.error("Channel scan failed",channelId,String(error));}
+}
+console.log("DeepWatch hourly discovery complete:",JSON.stringify({channels:channelsToScan.length,scanned,eligible,new_pending:inserted}));
+if(!scanned)throw Error("All approved channel scans failed or returned no videos");
 }
 const uniqueIds=[...new Set(ids)];
 if(!uniqueIds.length){console.log("No candidates for",category);process.exit(0)}
