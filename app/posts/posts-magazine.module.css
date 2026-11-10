@@ -52,3 +52,27 @@
 .socialStoryImage{border-radius:12px;margin:0 auto;width:calc(100% - 28px);max-height:75vh;box-shadow:0 10px 30px #0002}
 .socialStoryFooter a{display:inline-flex;align-items:center;justify-content:center;padding:12px 15px;border-radius:11px;background:#1a1b20;color:white;letter-spacing:.08em;box-shadow:0 5px 15px #0002}
 @media(max-width:720px){.socialPostCopy p{font-size:clamp(26px,7vw,36px)}}
+
+/* Posts 2.0 — social-feed interactions within an editorial shell. */
+.socialStory{max-width:680px;margin:22px auto 88px;border-radius:20px;background:#fffdf9;box-shadow:0 10px 38px #19231b16;animation:postEnter .5s ease both}
+.socialStoryEdition{padding:12px 20px;font-size:9px;letter-spacing:.16em;background:#f7f3ea}
+.socialStoryHeader{padding:16px 20px 14px;gap:11px}
+.socialAvatar{width:46px;height:46px;font-size:20px;box-shadow:0 0 0 2px #fff,0 0 0 4px #c9a16d}
+.socialIdentity strong{font-size:15px;letter-spacing:-.02em}.socialIdentity span{font-size:12px;color:#76726c}
+.socialCommunityBadge{font-size:9px;letter-spacing:.02em;text-decoration:none;color:#a14d38;background:#faf6ed;border:1px solid #e8dfd1;padding:8px 10px;border-radius:100px}
+.socialPostCopy{padding:12px 20px 18px;animation:postEnter .55s ease both}
+.socialPostCopy p{font-family:Georgia,"Times New Roman",serif;font-size:clamp(23px,4.4vw,35px);line-height:1.2;letter-spacing:-.025em;font-weight:400}
+.socialStoryImage{width:100%;max-height:none;max-width:100%;height:auto;object-fit:contain;box-shadow:none;border-radius:0;margin:0;background:#f7f3ed;animation:postEnter .65s ease both}
+.socialEngagement{padding:0 18px 8px;background:#fffdf9}
+.socialEngagement :global(.unifiedPostMedia){margin:0!important}
+.socialEngagement :global(.unifiedActions){position:sticky;bottom:env(safe-area-inset-bottom,0px);z-index:5;background:#fffdf9ed;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid #e7dfd2!important;border-bottom:1px solid #e7dfd2!important;padding:10px 4px!important;gap:4px!important}
+.socialEngagement :global(.unifiedActions .actionIcon){flex-direction:column;gap:5px!important;border-radius:12px;padding:10px 2px!important;font-size:11px;min-height:56px;transition:transform .2s ease,background .2s ease}
+.socialEngagement :global(.unifiedActions .actionIcon:hover){background:#f1ece3;transform:translateY(-2px)}
+.socialEngagement :global(.unifiedActions .actionIcon svg){width:26px;height:26px}
+.socialEngagement :global(.unifiedActions .actionIcon span){font-size:10px;white-space:nowrap}
+.socialEngagement :global(.unifiedDiscussion){padding:18px 8px}
+.socialStoryFooter{gap:10px;padding:18px 20px 22px}
+.socialStoryFooter a{font-size:10px;border-radius:30px;padding:12px 15px;box-shadow:none}
+@keyframes postEnter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:720px){.socialStory{margin:12px -8px 56px;border-radius:14px}.socialStoryHeader{padding:14px 14px 12px}.socialStoryEdition{padding:11px 14px}.socialPostCopy{padding:10px 14px 16px}.socialPostCopy p{font-size:clamp(23px,6vw,32px);line-height:1.19}.socialEngagement{padding:0 10px 6px}.socialStoryFooter{padding:14px}.socialCommunityBadge{font-size:8px;padding:7px 8px}}
+@media(prefers-reduced-motion:reduce){.socialStory,.socialPostCopy,.socialStoryImage{animation:none}}
