@@ -24,7 +24,7 @@ jobs:
           DEEPWATCH_QURAN_114: ${{ inputs.quran_114 || false }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           DEEPWATCH_APPROVED_CHANNEL_IDS: ${{ secrets.DEEPWATCH_APPROVED_CHANNEL_IDS }}
-          DEEPWATCH_EXTRA_APPROVED_CHANNEL_IDS: UCKQkz17Nh6BJZBd0eHhWdJQ
+          DEEPWATCH_EXTRA_APPROVED_CHANNEL_IDS: UCKQkz17Nh6BJZBd0eHhWdJQ,UCvv7gvo7ZtNd0FTUGNdKs1w
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/discover-islamic-videos.mjs
