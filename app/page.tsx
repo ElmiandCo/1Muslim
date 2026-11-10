@@ -291,7 +291,7 @@ export default function Home(){
   if(!navAnimationActive||navCyclePhase!==0)return;
   if(navFaithMessages[navFaithIndex].join(" ").toLowerCase()!=="give thanks to allah")return;
   const step=Math.floor((navPhaseElapsed-8000)/3600);
-  if(step!==2)return;
+  if(step!==3)return;
   const token=navFaithCycle.current+":"+navFaithIndex;
   if(lastLightBurn.current===token)return;
   lastLightBurn.current=token;
@@ -300,12 +300,22 @@ export default function Home(){
   try{
    const ac=navSoundContext.current??new AudioContext();navSoundContext.current=ac;
    if(ac.state==="suspended")void ac.resume();
-   const duration=.7;const buffer=ac.createBuffer(1,Math.floor(ac.sampleRate*duration),ac.sampleRate);
-   const samples=buffer.getChannelData(0);let noise=0;
-   for(let i=0;i<samples.length;i++){noise=noise*.91+(Math.random()*2-1)*.09;const t=i/ac.sampleRate;samples[i]=noise*Math.exp(-t*6)*.25}
+   // A crisp lightning strike on the fourth word ("Allah"), followed by a low thunder tail.
+   const duration=1.15,buffer=ac.createBuffer(1,Math.floor(ac.sampleRate*duration),ac.sampleRate);
+   const samples=buffer.getChannelData(0);let low=0;
+   for(let i=0;i<samples.length;i++){
+    const t=i/ac.sampleRate;low=low*.985+(Math.random()*2-1)*.015;
+    const crack=(Math.random()*2-1)*Math.exp(-t*42);
+    const rumble=low*Math.exp(-t*2.8)*.85;
+    samples[i]=Math.max(-1,Math.min(1,crack*.7+rumble));
+   }
    const source=ac.createBufferSource(),gain=ac.createGain(),filter=ac.createBiquadFilter();
-   source.buffer=buffer;filter.type="lowpass";filter.frequency.value=850;gain.gain.value=.16;
-   source.connect(filter);filter.connect(gain);gain.connect(ac.destination);source.start();source.stop(ac.currentTime+duration);
+   source.buffer=buffer;filter.type="lowpass";filter.frequency.value=2300;
+   gain.gain.setValueAtTime(.0001,ac.currentTime);
+   gain.gain.exponentialRampToValueAtTime(.48,ac.currentTime+.012);
+   gain.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+duration);
+   source.connect(filter);filter.connect(gain);gain.connect(ac.destination);
+   source.start();source.stop(ac.currentTime+duration);
   }catch{}
  },[navAnimationActive,navCyclePhase,navPhaseElapsed,navFaithIndex]);
  const navRetentionVisit=useRef("");
