@@ -1,8 +1,10 @@
 // Hourly discovery: uses official YouTube Data API; never scrapes or invents IDs.
 const {YOUTUBE_API_KEY:youtube,SUPABASE_URL:url,SUPABASE_SERVICE_ROLE_KEY:key}=process.env;
 if(!youtube||!url||!key){console.error("Missing YOUTUBE_API_KEY, SUPABASE_URL, or SUPABASE_SERVICE_ROLE_KEY GitHub Actions secrets");process.exitCode=1;}else{
-const approvedChannels=[...new Set([process.env.DEEPWATCH_APPROVED_CHANNEL_IDS||"",process.env.DEEPWATCH_EXTRA_APPROVED_CHANNEL_IDS||""].join(",").split(",").map(x=>x.trim()).filter(x=>/^UC[\w-]{22}$/.test(x)))];
-if(!approvedChannels.length){console.error("No approved channel IDs configured: set DEEPWATCH_APPROVED_CHANNEL_IDS. Discovery will not search arbitrary channels.");process.exit(1)}
+const staticChannels=[process.env.DEEPWATCH_APPROVED_CHANNEL_IDS||"",process.env.DEEPWATCH_EXTRA_APPROVED_CHANNEL_IDS||""].join(",").split(",").map(x=>x.trim()).filter(x=>/^UC[\w-]{22}$/.test(x));
+const selectedChannel=process.env.DEEPWATCH_SELECTED_CHANNEL_ID||"";
+const approvedChannels=[...new Set([...staticChannels,...(selectedChannel?[selectedChannel]:[])])];
+
 const niches=[
 ["Qur'an recitation","Mishary Alafasy Quran recitation full"],
 ["Qur'an tafsir","Nouman Ali Khan Quran tafsir full lecture"],
@@ -25,12 +27,19 @@ const now=new Date();const niche=niches[now.getUTCHours()%niches.length];const [
 // Rotate three channels per hour; offset the scan window so older episodes are reached.
 const hour=Math.floor(Date.now()/3600000);
 const quranMission=process.env.DEEPWATCH_QURAN_114==="true";
-const channelsToScan=quranMission?approvedChannels:[...new Set(Array.from({length:Math.min(3,approvedChannels.length)},(_,i)=>approvedChannels[(hour*3+i)%approvedChannels.length]))];
+let managedChannels=[];
+try{managedChannels=(await db("deepwatch_discovery_channels?select=channel_id&enabled=eq.true")).map(x=>x.channel_id)}catch(e){console.warn("Managed channel list unavailable",String(e))}
+const channelPool=[...new Set([...approvedChannels,...managedChannels])];
+if(!channelPool.length)throw Error("No approved discovery channels configured");
+const channelsToScan=selectedChannel?[selectedChannel]:quranMission?channelPool:[...new Set(Array.from({length:Math.min(3,channelPool.length)},(_,i)=>channelPool[(hour*3+i)%channelPool.length]))];
 const surahNames=["fatihah","baqarah","imran","nisa","maidah","anam","araf","anfal","tawbah","yunus","hud","yusuf","rad","ibrahim","hijr","nahl","isra","kahf","maryam","taha","anbiya","hajj","muminun","nur","furqan","shuara","naml","qasas","ankabut","rum","luqman","sajdah","ahzab","saba","fatir","yasin","saffat","sad","zumar","ghafir","fussilat","shura","zukhruf","dukhan","jathiyah","ahqaf","muhammad","fath","hujurat","qaf","dhariyat","tur","najm","qamar","rahman","waqiah","hadid","mujadila","hashr","mumtahanah","saff","jumuah","munafiqun","taghabun","talaq","tahrim","mulk","qalam","haqqah","maarij","nuh","jinn","muzzammil","muddaththir","qiyamah","insan","mursalat","naba","naziat","abasa","takwir","infitar","mutaffifin","inshiqaq","buruj","tariq","ala","ghashiyah","fajr","balad","shams","layl","duha","sharh","tin","alaq","qadr","bayyinah","zalzalah","adiyat","qariah","takathur","asr","humazah","fil","quraysh","maun","kawthar","kafirun","nasr","masad","ikhlas","falaq","nas"];
 const normalizeSurah=s=>s.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").replace(/\\b(al|surah|surat|sura|chapter|the)\\b/g," ").replace(/\\s+/g," ").trim();
 const matchSurah=title=>{const norm=normalizeSurah(title);const number=norm.match(/(?:^|\\s)(?:surah|chapter)?\\s*(\\d{1,3})(?:\\s|$)/);const name=surahNames.findIndex(n=>norm.split(" ").includes(n));if(name>=0)return name+1;if(number&&+number[1]>=1&&+number[1]<=114&&/surah|surat|sura|chapter/i.test(title))return +number[1];return null};
 const quranMatches=new Set();
 let inserted=0,eligible=0,scanned=0;
+const runId=process.env.DEEPWATCH_DISCOVERY_RUN_ID;
+const updateRun=async(status,message)=>{if(!runId)return;const payload={status,message,scanned,new_pending:inserted,...(["success","failure"].includes(status)?{finished_at:new Date().toISOString()}:{})};await db("deepwatch_discovery_runs?id=eq."+encodeURIComponent(runId),"PATCH",payload)};
+await updateRun("running","Discovery started");
 const seriesPattern=/ertugrul|ertuğrul|diriliş|dirilis|kuruluş|kurulus|osman|selçuklu|selcuklu|alparslan|abdülhamid|abdulhamid|payitaht|mehmed|fetihler|episode|episod|bölüm|bolum|season|\\bep\\.?\\s*\\d+|\\bs\\d+e\\d+|الحلقة\\s*[\\d٠-٩]+|مسلسل/i;
 const religiousPattern=/islam|muslim|quran|qur.an|allah|hadith|seerah|prophet|salah|تفسير|القرآن|الإسلام|محمد|تلاوة/i;
 for(const channelId of channelsToScan){
@@ -39,7 +48,7 @@ for(const channelId of channelsToScan){
  const uploads=channel.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
  if(!uploads){console.warn("Skipping inaccessible approved channel",channelId);continue}
  const ids=[];let pageToken;
- const offset=quranMission?0:(Math.floor(hour/Math.ceil(approvedChannels.length/3))%5)*4;
+ const offset=quranMission?0:(Math.floor(hour/Math.ceil(channelPool.length/3))%5)*4;
  for(let page=0;page<offset+(quranMission?12:4);page++){
   const playlist=await api("playlistItems",{part:"contentDetails",playlistId:uploads,maxResults:50,...(pageToken?{pageToken}:{})});
   if(page>=offset)ids.push(...(playlist.items||[]).map(x=>x.contentDetails?.videoId).filter(Boolean));
@@ -74,5 +83,6 @@ for(const channelId of channelsToScan){
 }
 if(quranMission)console.log("Quran 114 mission candidate coverage:",JSON.stringify({candidate_surahs:[...quranMatches].sort((a,b)=>a-b),candidate_count:quranMatches.size,missing_candidate_surahs:Array.from({length:114},(_,i)=>i+1).filter(i=>!quranMatches.has(i)),note:"Candidates only; full recitation and aesthetics require admin review."}));
 console.log("DeepWatch hourly discovery complete:",JSON.stringify({channels:channelsToScan.length,scanned,eligible,new_pending:inserted}));
+await updateRun(scanned?"success":"failure",JSON.stringify({channels:channelsToScan.length,scanned,eligible,new_pending:inserted}));
 if(!scanned)throw Error("All approved channel scans failed or returned no videos");
 }

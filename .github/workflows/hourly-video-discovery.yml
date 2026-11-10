@@ -4,6 +4,14 @@ on:
     - cron: "7 * * * *"
   workflow_dispatch:
     inputs:
+      channel_id:
+        description: "Approved channel ID to scan now (optional)"
+        type: string
+        default: ""
+      run_id:
+        description: "Admin dashboard run tracking UUID (optional)"
+        type: string
+        default: ""
       quran_114:
         description: "Scan all approved channels for Qur’an 114 surah candidates"
         type: boolean
@@ -21,6 +29,8 @@ jobs:
           node-version: "22"
       - name: Discover and curate YouTube videos
         env:
+          DEEPWATCH_SELECTED_CHANNEL_ID: ${{ inputs.channel_id || '' }}
+          DEEPWATCH_DISCOVERY_RUN_ID: ${{ inputs.run_id || '' }}
           DEEPWATCH_QURAN_114: ${{ inputs.quran_114 || false }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           DEEPWATCH_APPROVED_CHANNEL_IDS: ${{ secrets.DEEPWATCH_APPROVED_CHANNEL_IDS }}
