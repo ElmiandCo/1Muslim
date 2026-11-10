@@ -715,3 +715,12 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 .canvas-community-posts-only .community-post-card .ummah-post-theme-particles{pointer-events:none!important}
 .canvas-community-posts-only .community-post-card .ummah-live-comment{color:#fff!important}
 @media(max-width:600px){.canvas-community-posts-only .ummah-feed-single .community-post-card{padding:12px!important}.canvas-community-posts-only .community-post-card .ummah-post-body{font-size:17px!important}}
+
+
+/* Rotating six theme artworks behind the community post area. */
+.canvas-community-posts-only .community-posts-list{position:relative!important;isolation:isolate!important}
+.canvas-community-posts-only .ummah-rotating-theme-backdrop{position:sticky;top:0;display:block;height:100%;max-height:100dvh;margin-bottom:-100dvh;width:100%;z-index:0;pointer-events:none;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:.36;animation:ummahThemeReveal 2.8s ease-in-out both;filter:saturate(.85)}
+.canvas-community-posts-only .ummah-feed-single{position:relative;z-index:1}
+.canvas-community-posts-only .community-posts-list>.ummah-feed-single{position:relative;z-index:1}
+@keyframes ummahThemeReveal{from{opacity:0;filter:blur(14px) saturate(.6)}to{opacity:.36;filter:blur(0) saturate(.85)}}
+@media(prefers-reduced-motion:reduce){.canvas-community-posts-only .ummah-rotating-theme-backdrop{animation:none;opacity:.36}}
