@@ -116,16 +116,21 @@ export default function DeepWatch(){
  const heroSlides=useMemo(()=>{
   const categories:Tab[]=tab==="Home"?["Kids","The Prophets","Scary","Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
   const used=new Set<string>();
-  const picks=categories.map(category=>filtered.find(v=>!used.has(v.videoId)&&(category==="My List"||(category==="Kids"?isDeepWatchKids(v):category==="The Prophets"?isProphetVideo(v):category==="Scary"?isScaryVideo(v):category==="Movies"?(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId)):group(v)===category)))).filter((v):v is RegisteredVideo=>Boolean(v));
+  const recentIds=new Map(videoRegistry.map((v,i)=>[v.videoId,i]));
+  const ordered=tab==="Home"?[...filtered].sort((a,b)=>(recentIds.get(b.videoId)??-1)-(recentIds.get(a.videoId)??-1)):filtered;
+  const picks=categories.map(category=>ordered.find(v=>!used.has(v.videoId)&&(category==="My List"||(category==="Kids"?isDeepWatchKids(v):category==="The Prophets"?isProphetVideo(v):category==="Scary"?isScaryVideo(v):category==="Movies"?(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId)):group(v)===category)))).filter((v):v is RegisteredVideo=>Boolean(v));
   picks.forEach(v=>used.add(v.videoId));
-  for(const v of filtered){if(picks.length>=5)break;if(!used.has(v.videoId)){picks.push(v);used.add(v.videoId)}}
+  for(const v of ordered){if(picks.length>=5)break;if(!used.has(v.videoId)){picks.push(v);used.add(v.videoId)}}
   return picks;
  },[filtered,tab]);
  const [heroIndex,setHeroIndex]=useState(0);
  const [heroPaused,setHeroPaused]=useState(false);
+ const [heroThumb,setHeroThumb]=useState(false);
+ const heroTouch=useRef<{x:number;y:number}|null>(null);
+ useEffect(()=>{setHeroThumb(false);const timer=window.setTimeout(()=>setHeroThumb(true),3000);return()=>window.clearTimeout(timer)},[heroIndex,tab]);
  useEffect(()=>{setHeroIndex(0)},[tab,search]);
  useEffect(()=>{if(heroPaused||selected||heroSlides.length<2||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
-  const timer=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),4000);
+  const timer=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),8000);
   return()=>window.clearInterval(timer);
  },[heroPaused,selected,heroSlides.length]);
  const featured=heroSlides[heroIndex]||heroSlides[0];
@@ -153,8 +158,12 @@ export default function DeepWatch(){
  return <main className="deepwatch"><style>{`.deepwatchInlinePlayIcon{display:inline-block;width:1.25em;height:1.25em;vertical-align:-.27em;flex-shrink:0;margin-right:2px}`}</style>
   <header className="deepwatchHeader"><Link href="/" className="deepwatchBrand" aria-label="DeepWatch by 1Muslim — Home"><img src="/assets/deepwatch-icon-2.PNG" alt="DeepWatch by 1Muslim" width={160} height={72} style={{display:"block",width:"auto",maxWidth:"min(38vw,160px)",height:64,objectFit:"contain"}}/></Link><nav aria-label="DeepWatch categories">{tabs.map(item=><button type="button" key={item} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}>{item==="Live"?<span className="deepwatchLiveNav"><span className="deepwatchLivePulse" aria-hidden="true"/>LIVE</span>:item}</button>)}</nav><input type="search" aria-label="Search DeepWatch" placeholder="Search titles" value={search} onChange={e=>setSearch(e.target.value)}/>{isGalleryAdmin&&<output aria-live="polite" title="Unique playable titles in DeepWatch, excluding hidden videos" style={{display:"inline-flex",alignItems:"center",gap:8,padding:"9px 13px",border:"1px solid #43536b",borderRadius:14,color:"#f0f5ff",background:"#1a2434",fontSize:12,whiteSpace:"nowrap"}}><span style={{opacity:.7}}>GALLERY</span><strong>{galleryTotal.toLocaleString()}</strong><span style={{opacity:.7}}>· VIEW {filtered.length.toLocaleString()}</span></output>}</header>
   {(tab==="Live")&&<section className="deepwatchLiveSpotlight" aria-label="DeepWatch Live spotlight"><div className="deepwatchLiveSpotlightCopy"><span className="deepwatchLiveBadge"><span className="deepwatchLivePulse" aria-hidden="true"/> LIVE CHANNEL</span><h1>DeepWatch Live</h1><p>Watch livestreams and available replays, all in one place.</p><button type="button" onClick={()=>open(featuredLive)}><PlayIcon className="deepwatchInlinePlayIcon"/> Watch Featured Stream</button></div><img src={image(featuredLive.videoId)} alt="" loading="lazy"/></section>}
-  <section className="deepwatchHeroCarousel" aria-label="Featured DeepWatch titles" onMouseEnter={()=>setHeroPaused(true)} onMouseLeave={()=>setHeroPaused(false)} onFocusCapture={()=>setHeroPaused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))setHeroPaused(false)}}>
+  <section className="deepwatchHeroCarousel" aria-label="Featured DeepWatch titles" onMouseEnter={()=>setHeroPaused(true)} onMouseLeave={()=>setHeroPaused(false)} onTouchStart={e=>{heroTouch.current={x:e.touches[0].clientX,y:e.touches[0].clientY};setHeroPaused(true)}} onTouchEnd={e=>{const p=heroTouch.current;const t=e.changedTouches[0];if(p&&Math.abs(t.clientX-p.x)>45&&Math.abs(t.clientX-p.x)>Math.abs(t.clientY-p.y))setHeroIndex(i=>(i+(t.clientX<p.x?1:heroSlides.length-1))%heroSlides.length);heroTouch.current=null;window.setTimeout(()=>setHeroPaused(false),3500)}} onFocusCapture={()=>setHeroPaused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))setHeroPaused(false)}}>
    {heroSlides.map((v,i)=><div key={v.videoId} className={`deepwatchHero ${i===heroIndex?"isActive":""}`} aria-hidden={i!==heroIndex} style={{backgroundImage:`linear-gradient(90deg,#07090d 4%,rgba(7,9,13,.92) 38%,rgba(7,9,13,.3)),url("${image(v.videoId)}")`}}>
+    {i===heroIndex&&<div aria-hidden="true" style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none"}}>
+      <iframe key={v.videoId} title="" src={`https://www.youtube-nocookie.com/embed/${v.videoId}?autoplay=1&mute=1&controls=0&playsinline=1&loop=1&playlist=${v.videoId}&rel=0`} allow="autoplay; encrypted-media; picture-in-picture" tabIndex={-1} style={{position:"absolute",width:"120%",height:"120%",left:"-10%",top:"-10%",border:0,opacity:heroThumb?0:0.65,transition:"opacity .7s ease"}}/>
+      <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(90deg,#07090d 4%,rgba(7,9,13,.92) 38%,rgba(7,9,13,.3)),url("${image(v.videoId)}")`,backgroundSize:"cover",backgroundPosition:"center",opacity:heroThumb?1:0,transition:"opacity .7s ease"}}/>
+    </div>}
     <div className="deepwatchHeroText"><p>1MUSLIM · {group(v).toUpperCase()}</p><h1>{v.title}</h1><span>Movie night starts here. Discover something worth your time.</span><div><button type="button" tabIndex={i===heroIndex?0:-1} onClick={()=>open(v)}><PlayIcon className="deepwatchInlinePlayIcon"/> Play Now</button><button type="button" tabIndex={i===heroIndex?0:-1} onClick={()=>toggleSaved(v.videoId)}>{saved.includes(v.videoId)?"✓ In My List":"+ My List"}</button></div></div>
    </div>)}
    {heroSlides.length>1&&<><button type="button" className="deepwatchHeroArrow previous" aria-label="Previous featured title" onClick={()=>setHeroIndex(i=>(i-1+heroSlides.length)%heroSlides.length)}>‹</button><button type="button" className="deepwatchHeroArrow next" aria-label="Next featured title" onClick={()=>setHeroIndex(i=>(i+1)%heroSlides.length)}>›</button><div className="deepwatchHeroDots" aria-label="Choose featured title">{heroSlides.map((v,i)=><button key={v.videoId} type="button" aria-label={`Show slide ${i+1}: ${v.title}`} aria-current={i===heroIndex?"true":undefined} onClick={()=>setHeroIndex(i)}/>)}</div></>}
