@@ -27,3 +27,8 @@
 /* Scroll-linked chapter numerals: upright at viewport center, symmetric tilt before/after */
 .qm-number>span{transform:rotate(calc(-45deg + var(--qm-number-tilt, 0deg)));transition:transform .16s linear;will-change:transform}
 @media(prefers-reduced-motion:reduce){.qm-number>span{transform:rotate(-45deg)!important;transition:none!important}}
+
+/* Quiet verse-card-inspired lift after scrolling settles */
+.qm-chapter.qm-gallery-floating{transform:perspective(1100px) translateZ(7px) translateY(-2px) scale(1.006);box-shadow:0 11px 24px #00000038,0 0 18px #d5b27c0b;border-color:#d5b27c32;transition:transform 1.15s cubic-bezier(.2,.8,.2,1),box-shadow 1.15s ease,border-color 1.15s ease}
+.qm-chapter.qm-gallery-floating:active{transform:scale(.975)}
+@media(prefers-reduced-motion:reduce){.qm-chapter.qm-gallery-floating{transform:none!important;box-shadow:none!important}}
