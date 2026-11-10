@@ -5,6 +5,7 @@ import {videoRegistry,isKidsVideo} from "./videoRegistry";
 
 export default function HomeVideoWheel({format="desktop"}:{format?:"desktop"|"phone"}){
  const [expanded,setExpanded]=useState(true);
+ useEffect(()=>{const expand=()=>setExpanded(true);window.addEventListener("oneMuslimRequestCarouselExpand",expand);return()=>window.removeEventListener("oneMuslimRequestCarouselExpand",expand)},[]);
  const [canExpand,setCanExpand]=useState(false);
  const firstOpen=useRef(true);
  const [exploreStage,setExploreStage]=useState<HTMLElement|null>(null);
