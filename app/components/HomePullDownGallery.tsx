@@ -1,12 +1,14 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
+import QiblaIcon from "./icons/QiblaIcon";
 export default function HomePullDownGallery({active}:{active:boolean}){
  const [open,setOpen]=useState(false),[collapsed,setCollapsed]=useState(true),[pulse,setPulse]=useState(false);
  const [navReady,setNavReady]=useState(false);
  const [hudHudOpen,setHudHudOpen]=useState(false);
  const [slide,setSlide]=useState(0);
  const [videoCount,setVideoCount]=useState<number|null>(null);
+ const navigateWorkspace=(page:number)=>{setOpen(false);window.dispatchEvent(new CustomEvent("1muslim:gallery-navigate-workspace",{detail:{page}}))};
  const phrases=["Explore More","1Muslim","Movies","News","Live Stream","Messenger","Games","Qur’an","Connect","And More"];
  useEffect(()=>{if(!active)return;const sync=()=>{const expanded=!!document.querySelector('[data-hudhud-expanded="true"],[data-hudhud-open="true"],.hudhud-expanded,.hudhud-open');setHudHudOpen(expanded)};sync();const observer=new MutationObserver(sync);observer.observe(document.body,{attributes:true,subtree:true,attributeFilter:["class","data-hudhud-expanded","data-hudhud-open"]});return()=>observer.disconnect()},[active]);
  useEffect(()=>{if(!active)return;let live=true;const update=async()=>{const base=process.env.NEXT_PUBLIC_SUPABASE_URL,anon=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!base||!anon)return;try{const res=await fetch(`${base}/rest/v1/islamic_video_registry?select=video_id&status=eq.approved&limit=10000`,{headers:{apikey:anon,Authorization:`Bearer ${anon}`},cache:"no-store"});if(!res.ok)return;const data=await res.json();if(live&&Array.isArray(data))setVideoCount(new Set(data.map((v:{video_id:string})=>v.video_id)).size)}catch{}};update();const interval=window.setInterval(update,30000);return()=>{live=false;clearInterval(interval)}},[active]);
@@ -39,6 +41,11 @@ export default function HomePullDownGallery({active}:{active:boolean}){
  .oneMuslimAppGalleryGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(12px,4vw,36px);width:100%;max-width:580px}
  .oneMuslimAppGalleryTile{display:flex;flex-direction:column;align-items:center;gap:10px;color:white;text-decoration:none;text-align:center;font-size:clamp(11px,2.6vw,15px);font-weight:600}
  .oneMuslimAppGalleryIcon{width:100%;max-width:145px;aspect-ratio:1;border-radius:23%;display:grid;place-items:center;font-size:clamp(30px,9vw,65px);border:1px solid #ffffff44;box-shadow:0 16px 28px #0007,inset 0 1px 2px #fff4;transition:transform .22s}.oneMuslimAppGalleryTile:active .oneMuslimAppGalleryIcon{transform:scale(.9)}
+ .oneMuslimAppGalleryIcon img{width:85%;height:85%;object-fit:contain;display:block}
+ .oneMuslimAppGalleryIcon svg{width:54%;height:54%}
+ .oneMuslimAppGalleryTile:nth-child(4) .oneMuslimAppGalleryIcon{background:linear-gradient(140deg,#155847,#164e68)}
+ .oneMuslimAppGalleryTile:nth-child(5) .oneMuslimAppGalleryIcon{background:linear-gradient(140deg,#282d51,#111c31)}
+ .oneMuslimAppGalleryTile:nth-child(6) .oneMuslimAppGalleryIcon{background:linear-gradient(140deg,#594477,#232a49)}
  .oneMuslimAppGalleryTile:nth-child(1) .oneMuslimAppGalleryIcon{background:linear-gradient(140deg,#102b48,#3a276d)}.oneMuslimAppGalleryTile:nth-child(2) .oneMuslimAppGalleryIcon{background:linear-gradient(140deg,#b55d96,#4e368d)}.oneMuslimAppGalleryTile:nth-child(3) .oneMuslimAppGalleryIcon{background:linear-gradient(140deg,#1e6c87,#223d81)}
  .oneMuslimExplorePrompt{position:absolute;z-index:244;top:68%;left:50%;width:min(74vw,310px);min-height:46px;transform:translateX(-50%);border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(12,14,20,.14);color:#f3f4f7;box-shadow:0 12px 36px rgba(0,0,0,.2);backdrop-filter:blur(4px);display:grid;place-items:center;overflow:visible;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .65s ease,transform .65s ease}
  .oneMuslimExplorePrompt.visible{opacity:1;pointer-events:auto}
@@ -56,6 +63,12 @@ export default function HomePullDownGallery({active}:{active:boolean}){
  `}</style>
  <button className={"oneMuslimExplorePrompt"+(showExplore?" visible":"")} type="button" aria-label="Explore 1Muslim apps" aria-hidden={!showExplore} tabIndex={showExplore?0:-1} onClick={()=>{setOpen(true);flash()}}><span className="oneMuslimExploreParticles" aria-hidden="true">{Array.from({length:13},(_,i)=><i key={i} style={{"--x":`${(i*37)%100}%`,"--y":`${(i*23)%100}%`,"--d":`${2.6+i*.23}s`} as React.CSSProperties}/>)}</span><span key={slide} className={"phrase"+(slides[slide]==="Live Stream"?" livePhrase":"")}>{slides[slide%slides.length]}</span></button>
  {navReady&&collapsed&&<button className={"oneMuslimCarouselCenterControl"+(pulse?" pulse":"")} type="button" aria-label="Expand carousel" onClick={()=>{window.dispatchEvent(new Event("oneMuslimRequestCarouselExpand"));flash()}}>● ● ●</button>}
- <section className="oneMuslimAppGallery" aria-label="1Muslim app gallery" aria-hidden={!open}><strong style={{color:"#e8e4f2",fontSize:14}}>Explore 1Muslim</strong><div className="oneMuslimAppGalleryGrid"><Link className="oneMuslimAppGalleryTile" href="/deepwatch" tabIndex={open?0:-1}><span className="oneMuslimAppGalleryIcon">▶</span><span>DeepWatch</span></Link><Link className="oneMuslimAppGalleryTile" href="/qibla" tabIndex={open?0:-1}><span className="oneMuslimAppGalleryIcon">◈</span><span>Qibla</span></Link><Link className="oneMuslimAppGalleryTile" href="/quran" tabIndex={open?0:-1}><span className="oneMuslimAppGalleryIcon">۞</span><span>Quran Connect</span></Link></div><button type="button" onClick={()=>setOpen(false)} style={{border:"1px solid #ffffff55",background:"#ffffff15",color:"white",padding:"10px 22px",borderRadius:30}}>↑ Return to video</button></section>
+ <section className="oneMuslimAppGallery" aria-label="1Muslim app gallery" aria-hidden={!open}><strong style={{color:"#e8e4f2",fontSize:14}}>Explore 1Muslim</strong><div className="oneMuslimAppGalleryGrid">
+ <Link className="oneMuslimAppGalleryTile" href="/deepwatch" tabIndex={open?0:-1}><span className="oneMuslimAppGalleryIcon"><img src="/assets/deepwatch-icon-2.PNG" alt="" onError={e=>{e.currentTarget.style.display="none";e.currentTarget.parentElement?.insertAdjacentText("beforeend","▶")}}/></span><span>DeepWatch</span></Link>
+ <Link className="oneMuslimAppGalleryTile" href="/qibla/newsroom" tabIndex={open?0:-1}><span className="oneMuslimAppGalleryIcon"><QiblaIcon/></span><span>Qibla</span></Link>
+ <button type="button" className="oneMuslimAppGalleryTile" tabIndex={open?0:-1} onClick={()=>navigateWorkspace(1)}><span className="oneMuslimAppGalleryIcon">۞</span><span>Qur’an</span></button>
+ <button type="button" className="oneMuslimAppGalleryTile" tabIndex={open?0:-1} onClick={()=>navigateWorkspace(0)}><span className="oneMuslimAppGalleryIcon">◉</span><span>Live</span></button>
+ <button type="button" className="oneMuslimAppGalleryTile" tabIndex={open?0:-1} onClick={()=>navigateWorkspace(0)}><span className="oneMuslimAppGalleryIcon">⌂</span><span>Home</span></button>
+ <button type="button" className="oneMuslimAppGalleryTile" tabIndex={open?0:-1} onClick={()=>navigateWorkspace(6)}><span className="oneMuslimAppGalleryIcon">◉</span><span>Profile</span></button></div><button type="button" onClick={()=>setOpen(false)} style={{border:"1px solid #ffffff55",background:"#ffffff15",color:"white",padding:"10px 22px",borderRadius:30}}>↑ Return to video</button></section>
  </>;
 }
