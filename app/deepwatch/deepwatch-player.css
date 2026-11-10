@@ -1,0 +1,29 @@
+/* UI-only player chrome and editorial details. YouTube iframe behavior is unchanged. */
+.deepwatchCinema{background:radial-gradient(ellipse at 50% 0%,#1b2230 0%,#06080d 55%);scrollbar-color:#657083 transparent}
+.deepwatchCinema .deepwatchScreenInner{max-width:1540px;margin:auto}
+.deepwatchCinemaChrome{transition:opacity .32s ease,transform .32s ease;opacity:0;transform:translateY(8px);pointer-events:none}
+.deepwatchCinemaChrome.isVisible,.deepwatchCinemaChrome:focus-within{opacity:1;transform:none;pointer-events:auto}
+.deepwatchCinema .deepwatchScreenTop{position:relative;z-index:3;background:linear-gradient(180deg,rgba(5,8,14,.94),rgba(5,8,14,.18));padding:18px clamp(16px,3vw,42px)}
+.deepwatchCinema .deepwatchScreenTop strong{font-size:clamp(13px,1.5vw,18px);letter-spacing:-.02em;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.deepwatchCinema .deepwatchControls{position:relative;z-index:3;display:flex;flex-wrap:wrap;justify-content:center;gap:9px;background:linear-gradient(0deg,rgba(4,6,10,.95),rgba(4,6,10,.5));padding:16px}
+.deepwatchCinema .deepwatchControls button,.deepwatchCinema .deepwatchScreenTop button{border:1px solid rgba(232,239,249,.26);background:rgba(28,34,45,.6);color:#f6f7fb;border-radius:999px;backdrop-filter:blur(10px);transition:background .2s,transform .2s}
+.deepwatchCinema .deepwatchControls button:hover,.deepwatchCinema .deepwatchScreenTop button:hover{background:rgba(207,219,235,.23);transform:translateY(-2px)}
+.deepwatchCinema button:focus-visible{outline:2px solid #c8d9f1;outline-offset:3px}
+.deepwatchEditorial{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(240px,.8fr);gap:clamp(20px,4vw,64px);margin:26px clamp(16px,4vw,64px) 70px;padding:clamp(22px,4vw,52px);border:1px solid rgba(228,237,255,.12);border-radius:26px;background:linear-gradient(135deg,rgba(255,255,255,.095),rgba(255,255,255,.025));box-shadow:0 24px 80px rgba(0,0,0,.28);animation:deepwatchEditorialRise .55s ease both}
+.deepwatchEditorialEyebrow,.deepwatchRatingKicker{font-size:10px;font-weight:750;letter-spacing:.27em;color:#afc1dc}
+.deepwatchEditorialEyebrow span{color:#657185;padding:0 5px}
+.deepwatchEditorial h2{font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:clamp(27px,3.8vw,58px);line-height:1.08;letter-spacing:-.04em;margin:18px 0 20px;text-wrap:balance}
+.deepwatchEditorialMeta{display:flex;flex-wrap:wrap;gap:8px;color:#d1d9e4;font-size:12px}
+.deepwatchEditorialMeta span+span:before{content:"•";margin-right:8px;color:#778398}
+.deepwatchEditorialDescription{font-size:14px;line-height:1.8;color:#c0c8d5;max-width:64ch;margin:22px 0}
+.deepwatchEditorialGenres{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}
+.deepwatchEditorialGenres span{border:1px solid rgba(220,230,247,.23);border-radius:999px;padding:7px 12px;color:#e4eaf5;font-size:12px}
+.deepwatchEditorialSave{background:#e8eef7;color:#10141c;border:0;border-radius:999px;padding:12px 20px;font-weight:750;cursor:pointer}
+.deepwatchRatingPreview{align-self:start;border-radius:20px;padding:25px;background:rgba(6,9,15,.48);border:1px solid rgba(225,236,250,.12);box-shadow:0 12px 36px rgba(0,0,0,.16)}
+.deepwatchRatingStars{font-size:31px;letter-spacing:4px;color:#d5deed;margin:16px 0 6px}
+.deepwatchRatingPreview strong{display:block;font-size:17px}
+.deepwatchRatingPreview p{font-size:12px;line-height:1.7;color:#aeb9c9}
+.deepwatchRatingStatus{font-size:9px;letter-spacing:.15em;color:#b5c4d9}
+@keyframes deepwatchEditorialRise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:720px){.deepwatchEditorial{grid-template-columns:1fr;margin:16px 12px 48px;padding:22px;border-radius:18px}.deepwatchCinema .deepwatchControls{gap:5px}.deepwatchCinema .deepwatchControls button{font-size:11px;padding:9px}.deepwatchRatingPreview{padding:18px}}
+@media(prefers-reduced-motion:reduce){.deepwatchCinemaChrome,.deepwatchEditorial,.deepwatchCinema button{animation:none!important;transition:none!important}}
