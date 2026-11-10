@@ -46,3 +46,14 @@ export async function DELETE(request:NextRequest){
  if(error)return NextResponse.json({error:error.message},{status:500});
  return NextResponse.json({removed:true});
 }
+
+export async function PATCH(request:NextRequest){
+ const db=await authorize();if(!db)return NextResponse.json({error:"Forbidden"},{status:403});
+ const body=await request.json().catch(()=>null);
+ const ids=body?.ids;
+ if(!Array.isArray(ids)||ids.length<1||ids.length>1000||ids.some((id:unknown)=>typeof id!=="string"||!/^[-_A-Za-z0-9]{11}$/.test(id)))return NextResponse.json({error:"Select 1–1000 valid YouTube videos"},{status:400});
+ const unique=[...new Set(ids as string[])];
+ const {data,error}=await db.from("islamic_video_registry").update({status:"approved"}).in("video_id",unique).eq("status","pending").select("video_id");
+ if(error)return NextResponse.json({error:error.message},{status:500});
+ return NextResponse.json({approved:data?.length||0,requested:unique.length},{headers:{"Cache-Control":"no-store"}});
+}
