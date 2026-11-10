@@ -29,6 +29,17 @@ const hour=Math.floor(Date.now()/3600000);
 const quranMission=process.env.DEEPWATCH_QURAN_114==="true";
 let managedChannels=[];
 try{managedChannels=(await db("deepwatch_discovery_channels?select=channel_id&enabled=eq.true")).map(x=>x.channel_id)}catch(e){console.warn("Managed channel list unavailable",String(e))}
+// Resolve the requested QuranGuy1 channel using the official YouTube API at runtime.
+try{
+ const response=await api("channels",{part:"snippet",forHandle:"QuranGuy1"});
+ const channel=response.items?.[0];
+ if(channel&&/^UC[\\w-]{22}$/.test(channel.id)){
+  const existing=await db("deepwatch_discovery_channels?select=channel_id&channel_id=eq."+channel.id);
+  if(!existing.length)await db("deepwatch_discovery_channels?on_conflict=channel_id","POST",[{channel_id:channel.id,channel_title:channel.snippet?.title||"QuranGuy1",channel_url:"https://www.youtube.com/channel/"+channel.id,enabled:true}]);
+  if(!managedChannels.includes(channel.id))managedChannels.push(channel.id);
+  console.log("Verified QuranGuy1 discovery channel",channel.id);
+ }else console.warn("QuranGuy1 channel could not be verified; skipping");
+}catch(e){console.warn("QuranGuy1 registration failed",String(e))}
 const channelPool=[...new Set([...approvedChannels,...managedChannels])];
 if(!channelPool.length)throw Error("No approved discovery channels configured");
 const channelsToScan=selectedChannel?[selectedChannel]:quranMission?channelPool:[...new Set(Array.from({length:Math.min(3,channelPool.length)},(_,i)=>channelPool[(hour*3+i)%channelPool.length]))];
