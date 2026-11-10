@@ -1,7 +1,6 @@
 "use client";
 import PlayIcon from "../components/icons/PlayIcon";
 import {useEffect,useMemo,useRef,useState} from "react";
-import {useSearchParams} from "next/navigation";
 import Link from "next/link";
 import HomeLiveConversation from "../components/HomeLiveConversation";
 import {videoRegistry,isKidsVideo,type RegisteredVideo} from "../components/videoRegistry";
@@ -61,8 +60,8 @@ const group=(v:RegisteredVideo):Tab=>{
  return "TV Shows";
 };
 export default function DeepWatch(){
- const searchParams=useSearchParams();
- const deepLinkVideo=searchParams.get("video");
+ const [deepLinkVideo,setDeepLinkVideo]=useState<string|null>(null);
+ useEffect(()=>{setDeepLinkVideo(new URLSearchParams(window.location.search).get("video"))},[]);
  const handledDeepLink=useRef<string|null>(null);
  const [tab,setTab]=useState<Tab>("Home");
  const [selected,setSelected]=useState<RegisteredVideo|null>(null);
