@@ -13,7 +13,7 @@ export default function HomePullDownGallery({active}:{active:boolean}){
  useEffect(()=>{if(!active)return;const sync=()=>{const expanded=!!document.querySelector('[data-hudhud-expanded="true"],[data-hudhud-open="true"],.hudhud-expanded,.hudhud-open');setHudHudOpen(expanded)};sync();const observer=new MutationObserver(sync);observer.observe(document.body,{attributes:true,subtree:true,attributeFilter:["class","data-hudhud-expanded","data-hudhud-open"]});return()=>observer.disconnect()},[active]);
  useEffect(()=>{if(!active)return;let live=true;const update=async()=>{const base=process.env.NEXT_PUBLIC_SUPABASE_URL,anon=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!base||!anon)return;try{const res=await fetch(`${base}/rest/v1/islamic_video_registry?select=video_id&status=eq.approved&limit=10000`,{headers:{apikey:anon,Authorization:`Bearer ${anon}`},cache:"no-store"});if(!res.ok)return;const data=await res.json();if(live&&Array.isArray(data))setVideoCount(new Set(data.map((v:{video_id:string})=>v.video_id)).size)}catch{}};update();const interval=window.setInterval(update,30000);return()=>{live=false;clearInterval(interval)}},[active]);
  const showExplore=active&&navReady&&collapsed&&!open&&!hudHudOpen;
- const slides=videoCount===null?[...phrases,"DeepWatch"]:[...phrases,videoCount.toLocaleString(),"Muslim Videos","DeepWatch"];
+ const slides=videoCount===null?[...phrases,"DeepWatch","Swipe Up For Menu ↑"]:[...phrases,videoCount.toLocaleString(),"Muslim Videos","DeepWatch","Swipe Up For Menu ↑"];
  useEffect(()=>{if(!showExplore)return;const interval=window.setInterval(()=>setSlide(v=>(v+1)%slides.length),1800);return()=>clearInterval(interval)},[showExplore,slides.length]);
  const timer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const start=useRef<{x:number;y:number;target:Element}|null>(null);
@@ -47,13 +47,13 @@ export default function HomePullDownGallery({active}:{active:boolean}){
  .oneMuslimAppGalleryTile:nth-child(5) .oneMuslimAppGalleryIcon{background:linear-gradient(140deg,#282d51,#111c31)}
  .oneMuslimAppGalleryTile:nth-child(6) .oneMuslimAppGalleryIcon{background:linear-gradient(140deg,#594477,#232a49)}
  .oneMuslimAppGalleryTile:nth-child(1) .oneMuslimAppGalleryIcon{background:linear-gradient(140deg,#102b48,#3a276d)}.oneMuslimAppGalleryTile:nth-child(2) .oneMuslimAppGalleryIcon{background:linear-gradient(140deg,#b55d96,#4e368d)}.oneMuslimAppGalleryTile:nth-child(3) .oneMuslimAppGalleryIcon{background:linear-gradient(140deg,#1e6c87,#223d81)}
- .oneMuslimExplorePrompt{position:absolute;z-index:244;top:68%;left:50%;width:min(74vw,310px);min-height:46px;transform:translateX(-50%);border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(12,14,20,.14);color:#f3f4f7;box-shadow:0 12px 36px rgba(0,0,0,.2);backdrop-filter:blur(4px);display:grid;place-items:center;overflow:visible;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .65s ease,transform .65s ease}
+ .oneMuslimExplorePrompt{position:absolute;z-index:244;top:54%;left:50%;width:min(74vw,310px);min-height:46px;transform:translateX(-50%);border:0;border-radius:0;background:transparent;color:#f3f4f7;box-shadow:none;backdrop-filter:none;display:grid;place-items:center;overflow:visible;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .65s ease,transform .65s ease}
  .oneMuslimExplorePrompt.visible{opacity:1;pointer-events:auto}
- .oneMuslimExplorePrompt .phrase{position:relative;z-index:2;grid-area:1/1;font-size:clamp(12px,3vw,16px);font-weight:600;letter-spacing:.12em;text-shadow:0 2px 15px #000a;animation:oneMuslimExplorePhrase 1.8s ease-in-out both}
+ .oneMuslimExplorePrompt .phrase{position:relative;z-index:2;grid-area:1/1;font-size:clamp(12px,3vw,16px);font-weight:600;letter-spacing:.12em;text-shadow:0 2px 15px #000a;animation:oneMuslimExplorePhrase 2.8s ease-in-out both}
  .oneMuslimExplorePrompt .livePhrase{color:#ff4545}
  .oneMuslimExploreParticles{position:absolute;inset:-65px -35px;z-index:0;pointer-events:none;overflow:hidden}
  .oneMuslimExploreParticles i{position:absolute;left:var(--x);top:var(--y);width:3px;height:3px;border-radius:50%;background:#e7eaf2;opacity:.32;box-shadow:0 0 9px #fff8;animation:oneMuslimParticleDrift var(--d) ease-in-out infinite alternate}
- @keyframes oneMuslimExplorePhrase{0%{opacity:0;transform:translateY(5px)}22%,68%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-5px)}}
+ @keyframes oneMuslimExplorePhrase{0%{opacity:0;transform:translateY(5px)}18%,79%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-5px)}}
  @keyframes oneMuslimParticleDrift{from{transform:translate3d(0,6px,0)}to{transform:translate3d(5px,-9px,0)}}
  .oneMuslimCarouselCenterControl{position:absolute;z-index:245;top:34px;left:50%;transform:translateX(-50%);border:1px solid rgba(205,174,255,.4);border-radius:6px;background:rgba(15,12,25,.48);color:#e4d5ff;padding:2px 5px;letter-spacing:1px;font-size:7px;line-height:1;min-width:22px;min-height:13px;transition:box-shadow .25s,opacity .55s;opacity:.55}
  .oneMuslimExplorePrompt:not(.visible){visibility:hidden;transition:opacity .65s ease,visibility 0s linear .65s}
