@@ -948,6 +948,25 @@ body:has(.muslimMessengerFrame){overflow:hidden!important}
   width:100%!important;min-width:0!important;max-width:100%!important;
  }
 }
+
+/* Social Magazine: real DM conversation view, retaining realtime, calls, reactions and Ping. */
+.omImessagePage.omMessengerUnified{--chat-paper:#f0ece4;--chat-ink:#25332c;background:#f0ece4!important;color:var(--chat-ink)!important}
+.omImessagePage.omMessengerUnified .omMessengerShell--chat{border:1px solid #d8cec0!important;border-radius:18px!important;box-shadow:0 10px 36px #152d2117!important;background:#fffdf9!important}
+.omImessagePage.omMessengerUnified .omChatHeader{background:#fffdf9!important;border-bottom:1px solid #d9d0c2!important;color:#26352d!important;padding:13px 14px!important;min-height:80px!important}
+.omImessagePage.omMessengerUnified .omChatPeerName{font-family:Georgia,"Times New Roman",serif!important;font-size:clamp(17px,3.5vw,23px)!important;color:#24352d!important;letter-spacing:-.025em}
+.omImessagePage.omMessengerUnified .omChatPresence{font:700 11px Arial,sans-serif!important;color:#8a8378!important}
+.omImessagePage.omMessengerUnified .omBackToChats{background:transparent!important;color:#9e5946!important;border:1px solid #d9c9b5!important;border-radius:24px!important;font-weight:700!important}
+.omImessagePage.omMessengerUnified .omChatCallActions button{background:#f3eee5!important;color:#24372f!important;border:1px solid #d8c8af!important;border-radius:50%!important;box-shadow:none!important}
+.omImessagePage.omMessengerUnified .omMessengerShell--chat .omMessagesFeed{background:linear-gradient(180deg,#f3f0e9,#eae6dd)!important;color:#25352d!important;padding:18px 14px!important}
+.omImessagePage.omMessengerUnified .omMessageRow{margin:11px 0!important}
+.omImessagePage.omMessengerUnified .omMessageBubble{max-width:min(85%,560px)!important;border-radius:20px!important;padding:13px 16px!important;line-height:1.55!important;font-size:14px!important;box-shadow:0 4px 13px #27392b0d!important}
+.omImessagePage.omMessengerUnified .omMessageBubble--theirs{background:#fffdf9!important;color:#26352e!important;border:1px solid #ddd5c9!important;border-bottom-left-radius:5px!important}
+.omImessagePage.omMessengerUnified .omMessageBubble--mine{background:#24382f!important;color:#fffaf2!important;border:1px solid #24382f!important;border-bottom-right-radius:5px!important}
+.omImessagePage.omMessengerUnified .omMessageComposer{background:#fffdf9!important;border-top:1px solid #d9d0c2!important;padding:12px!important;gap:8px!important}
+.omImessagePage.omMessengerUnified .omMessageComposer input{background:#f6f3ec!important;color:#25352d!important;border:1px solid #d9d0c2!important;border-radius:28px!important;font-size:14px!important}
+.omImessagePage.omMessengerUnified .omComposerExpand,.omImessagePage.omMessengerUnified .omComposerSend{border-radius:50%!important;box-shadow:none!important}
+.omImessagePage.omMessengerUnified .omComposerSend{background:#25382f!important;color:#fff!important}
+@media(max-width:700px){.omImessagePage.omMessengerUnified .omMessengerShell--chat{border-radius:0!important}.omImessagePage.omMessengerUnified .omChatHeader{min-height:68px!important;padding:9px!important}.omImessagePage.omMessengerUnified .omMessageBubble{font-size:14px!important;max-width:88%!important}.omImessagePage.omMessengerUnified .omMessageComposer{padding:8px!important}}
 `}</style>
  </main>}</>
 }
