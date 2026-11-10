@@ -26,12 +26,26 @@ const channelId=approvedChannels[Math.floor(Date.now()/3600000)%approvedChannels
 const channel=await api("channels",{part:"contentDetails",id:channelId});
 const uploads=channel.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
 if(!uploads)throw Error("Approved channel has no accessible uploads playlist: "+channelId);
-const playlist=await api("playlistItems",{part:"contentDetails",playlistId:uploads,maxResults:50});
-const ids=[...new Set((playlist.items||[]).map(x=>x.contentDetails?.videoId).filter(Boolean))];if(!ids.length){console.log("No candidates for",category);process.exit(0)}
-const details=await api("videos",{part:"snippet,contentDetails,status,statistics",id:ids.join(",")});
-const rows=(details.items||[]).flatMap(v=>{const d=duration(v.contentDetails?.duration),title=v.snippet?.title||"",description=v.snippet?.description||"",channel=v.snippet?.channelTitle||"",language=v.snippet?.defaultAudioLanguage||v.snippet?.defaultLanguage||null;
+// Scan historical uploads: first episodes often predate the most recent 50.
+const ids=[];let pageToken;
+for(let page=0;page<10;page++){
+ const playlist=await api("playlistItems",{part:"contentDetails",playlistId:uploads,maxResults:50,...(pageToken?{pageToken}:{})});
+ ids.push(...(playlist.items||[]).map(x=>x.contentDetails?.videoId).filter(Boolean));
+ pageToken=playlist.nextPageToken;
+ if(!pageToken)break;
+}
+const uniqueIds=[...new Set(ids)];
+if(!uniqueIds.length){console.log("No candidates for",category);process.exit(0)}
+const videoItems=[];
+for(let i=0;i<uniqueIds.length;i+=50){
+ const details=await api("videos",{part:"snippet,contentDetails,status,statistics",id:uniqueIds.slice(i,i+50).join(",")});
+ videoItems.push(...(details.items||[]));
+}
+const seriesPattern=/\b(ertugrul|ertuğrul|diriliş|dirilis|kuruluş|kurulus|osman|selçuklu|selcuklu|alparslan|abdülhamid|abdulhamid|payitaht|mehmed|fetihler|episode|episod|bölüm|bolum|season)\b|\b(ep\.?\s*\d+|s\d+e\d+)\b|الحلقة\s*[\d٠-٩]+|مسلسل/i;
+const religiousPattern=/islam|muslim|quran|qur.an|allah|hadith|seerah|prophet|salah|تفسير|القرآن|الإسلام|محمد|تلاوة/i;
+const rows=videoItems.flatMap(v=>{const d=duration(v.contentDetails?.duration),title=v.snippet?.title||"",description=v.snippet?.description||"",channel=v.snippet?.channelTitle||"",language=v.snippet?.defaultAudioLanguage||v.snippet?.defaultLanguage||null;
 if(v.snippet?.channelId!==channelId||d<600||d>14400||blacklist.test(title)||v.status?.embeddable!==true||v.status?.privacyStatus!=="public"||!v.snippet?.channelId)return[];
-if(!/islam|muslim|quran|qur.an|allah|hadith|seerah|prophet|salah|تفسير|القرآن|الإسلام|محمد|تلاوة/i.test(title+" "+description.slice(0,500)))return[];
-return [{video_id:v.id,title:title.slice(0,300),channel_id:v.snippet.channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:[category],source_query:"approved-channel:"+channelId,status:"pending",bot_b_reason:"Hourly YouTube discovery; awaiting approval"}]});
-if(rows.length){await db("islamic_video_registry?on_conflict=video_id","POST",rows)}console.log("Approved-channel discovery",channelId,"candidates",ids.length,"saved pending",rows.length);
+if(!religiousPattern.test(title+" "+description.slice(0,500))&&!seriesPattern.test(title))return[];
+return [{video_id:v.id,title:title.slice(0,300),channel_id:v.snippet.channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:[seriesPattern.test(title)?"Historical series":category],source_query:"approved-channel:"+channelId,status:"pending",bot_b_reason:"Hourly YouTube discovery; awaiting approval"}]});
+if(rows.length){await db("islamic_video_registry?on_conflict=video_id","POST",rows)}console.log("Approved-channel discovery",channelId,"candidates",uniqueIds.length,"saved pending",rows.length);
 }
