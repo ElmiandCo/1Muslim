@@ -282,6 +282,7 @@ export default function Home(){
   setNavFaithIndex(next);
   try{localStorage.setItem("1muslim:last-nav-faith-message",String(next))}catch{}
  },[navIdleElapsed,navDismissed,carouselSearchOpen]);
+ const navAnimationActive=navIdleElapsed>=10000&&!navDismissed&&!carouselSearchOpen;
  const [navLightBurn,setNavLightBurn]=useState(0);
  const navSoundUnlocked=useRef(false);
  const navSoundContext=useRef<AudioContext|null>(null);
@@ -342,7 +343,7 @@ export default function Home(){
  const navCycleTime=Math.max(0,navIdleElapsed-10000);
  const navCyclePhase=Math.floor(navCycleTime/30000)%4;
  const navPhaseElapsed=navCycleTime%30000;
- const navAnimationActive=navIdleElapsed>=10000&&!navDismissed&&!carouselSearchOpen;
+
  const [profileOverlayBounds,setProfileOverlayBounds]=useState<{top:number;bottom:number;left:number;width:number}|null>(null);
  useEffect(()=>{if(workspacePage!==6||homeSignedIn!==false)return;try{setHudhudGuestLocked(sessionStorage.getItem("1muslim-hudhud-offscreen")==="1")}catch{setHudhudGuestLocked(false)}},[workspacePage,homeSignedIn]);
  useEffect(()=>{
