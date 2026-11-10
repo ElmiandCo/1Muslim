@@ -74,9 +74,10 @@ for(const channelId of channelsToScan){
  eligible+=rows.length;
  // Check existing records first so reports count actual additions, not ignored duplicates.
  for(let i=0;i<rows.length;i+=100){
-  const batch=rows.slice(i,i+100),existing=await db("islamic_video_registry?select=video_id&video_id=in.("+batch.map(x=>x.video_id).join(",")+")");
+  const batch=rows.slice(i,i+100),blocked=await db("admin_video_roster_exclusions?select=item_id&source=eq.islamic_video_registry&item_id=in.("+rows.slice(i,i+100).map(x=>x.video_id).join(",")+")"),existing=await db("islamic_video_registry?select=video_id&video_id=in.("+batch.map(x=>x.video_id).join(",")+")");
   const known=new Set(existing.map(x=>x.video_id)),fresh=batch.filter(x=>!known.has(x.video_id));
-  if(fresh.length){await db("islamic_video_registry?on_conflict=video_id","POST",fresh);inserted+=fresh.length}
+  const safe=fresh.filter(x=>!blocked.some(b=>b.item_id===x.video_id));
+  if(safe.length){await db("islamic_video_registry?on_conflict=video_id","POST",safe);inserted+=safe.length}
  }
  console.log("Channel",channelId,"scanned",uniqueIds.length,"eligible",rows.length);
  }catch(error){console.error("Channel scan failed",channelId,String(error));}

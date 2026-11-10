@@ -77,7 +77,8 @@ export default function DeepWatch(){
  Promise.all([
  fetch(`${base}/rest/v1/deepwatch_series?select=id,canonical_title,cover_url,categories,genres,language&status=eq.approved&order=canonical_title.asc`,{headers}).then(r=>r.ok?r.json():[]),
  fetch(`${base}/rest/v1/islamic_video_registry?select=video_id,title,canonical_title,original_title,content_type,season_number,episode_number,episode_title,duration_seconds,categories,language,genres,cover_url,series_id&status=eq.approved&series_id=not.is.null&order=season_number.asc,episode_number.asc&limit=1000`,{headers}).then(r=>r.ok?r.json():[])
- ]).then(([series,episodes])=>{if(active){setDbSeries(Array.isArray(series)?series:[]);setDbEpisodes(Array.isArray(episodes)?episodes:[])}}).catch(()=>{});
+ ,fetch("/api/deepwatch/exclusions",{cache:"no-store"}).then(r=>r.ok?r.json():[])
+ ]).then(([series,episodes,exclusions])=>{if(active){setExcludedIds(Array.isArray(exclusions)?exclusions.map((x:{item_id:string})=>x.item_id):[]);setDbSeries(Array.isArray(series)?series:[]);setDbEpisodes(Array.isArray(episodes)?episodes:[])}}).catch(()=>{});
  return()=>{active=false};
  },[]);
  const [playing,setPlaying]=useState(true);

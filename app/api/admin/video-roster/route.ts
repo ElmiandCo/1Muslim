@@ -44,6 +44,7 @@ export async function DELETE(request:NextRequest){
  const body=await request.json().catch(()=>null);
  if(!body||!sources.includes(body.source)||typeof body.id!=="string"||!body.id||body.id.length>128)return NextResponse.json({error:"Invalid video"},{status:400});
  const {error}=await db.from("admin_video_roster_exclusions").upsert({source:body.source,item_id:body.id});
+ if(!error&&body.source==="islamic_video_registry"){const {error:rejectError}=await db.from("islamic_video_registry").update({status:"rejected",bot_b_reason:"Removed by admin; blocked from rediscovery",updated_at:new Date().toISOString()}).eq("video_id",body.id);if(rejectError)return NextResponse.json({error:rejectError.message},{status:500})}
  if(error)return NextResponse.json({error:error.message},{status:500});
  return NextResponse.json({removed:true});
 }
@@ -54,7 +55,10 @@ export async function PATCH(request:NextRequest){
  const ids=body?.ids;
  if(!Array.isArray(ids)||ids.length<1||ids.length>1000||ids.some((id:unknown)=>typeof id!=="string"||!/^[-_A-Za-z0-9]{11}$/.test(id)))return NextResponse.json({error:"Select 1–1000 valid YouTube videos"},{status:400});
  const unique=[...new Set(ids as string[])];
- const {data,error}=await db.from("islamic_video_registry").update({status:"approved"}).in("video_id",unique).eq("status","pending").select("video_id");
+ const {data:blocked,error:blockedError}=await db.from("admin_video_roster_exclusions").select("item_id").eq("source","islamic_video_registry").in("item_id",unique);
+ if(blockedError)return NextResponse.json({error:blockedError.message},{status:500});
+ const allowed=unique.filter(id=>!(blocked||[]).some(x=>x.item_id===id));
+ const {data,error}=await db.from("islamic_video_registry").update({status:"approved"}).in("video_id",allowed.length?allowed:["__none__"]).eq("status","pending").select("video_id");
  if(error)return NextResponse.json({error:error.message},{status:500});
  return NextResponse.json({approved:data?.length||0,requested:unique.length},{headers:{"Cache-Control":"no-store"}});
 }
