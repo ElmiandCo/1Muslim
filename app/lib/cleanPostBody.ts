@@ -1,4 +1,4 @@
-/** Hide internal daily-post markers in all public-facing captions. Keep metadata in storage for eligibility checks. */
+/** Remove legacy system-generated post labels and their literal or real newline separators. */
 export function cleanPostBody(body: string): string {
- return body.replace(/^\s*✦\s*DAILY\s+UMMAH\s*✦\s*(?:(?:\\\\[nr])|\s)*/i, "").replace(/^(?:(?:\\\\[nr])|\s)+/g, "").trim();
+ return body.replace(/^\s*(?:(?:[✦•]\s*)?DAILY\s+UMMAH\s*(?:[✦•])?\s*(?:(?:\\\\[nr])|[\\r\\n])*)+/i, "").replace(/^(?:(?:\\\\[nr])|[\\r\\n])+/g, "").trim();
 }

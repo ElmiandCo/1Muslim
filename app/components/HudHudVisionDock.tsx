@@ -4,8 +4,8 @@ import {useRouter} from "next/navigation";
 import HudHudVoiceCommands from "./HudHudVoiceCommands";
 
 const options=[
- {label:"Regular Post",href:"/?compose=1",description:"Write and share with the Ummah"},
- {label:"Daily Post ✨",href:"/?compose=1",description:"Upgrade to a shiny daily reflection"},
+ {label:"Post",href:"/?compose=1",description:"Write and share with the Ummah"},
+ {label:"Post",href:"/?compose=1",description:"Share with the Ummah"},
  {label:"Watch Live",href:"/streaming",description:"Explore streams happening now"},
  {label:"Go Live",href:"/streaming/go-live",description:"Start your own broadcast"},
  {label:"Scheduled Lives",href:"/streaming/scheduled",description:"See upcoming broadcasts"},
