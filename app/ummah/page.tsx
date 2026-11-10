@@ -1,0 +1,27 @@
+"use client";
+import {useEffect,useMemo,useRef,useState} from "react";
+import Link from "next/link";
+import "./world.css";
+type Post={id:string;body:string;author_name:string;media_url?:string|null;media_type?:string|null};
+type Orb={id:string;kind:"post"|"topic"|"friend";title:string;subtitle:string;image?:string|null;video?:boolean;href:string;angle:number};
+const topics:Orb[]=[{id:"magazine",kind:"topic",title:"Qibla Magazine",subtitle:"Stories from the Ummah",href:"/qibla",angle:0},{id:"newsletter",kind:"topic",title:"Qibla Newsletter",subtitle:"News and perspectives",href:"/qibla",angle:2}];
+export default function UmmahWorld(){
+ const [posts,setPosts]=useState<Post[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(""),[selected,setSelected]=useState<Orb|null>(null),[paused,setPaused]=useState(false);
+ const [magnet,setMagnet]=useState({x:50,y:56}),[friends,setFriends]=useState<{id:string;name:string;avatar:string|null}[]>([]);
+ const stage=useRef<HTMLDivElement>(null);
+ useEffect(()=>{let live=true;const load=async()=>{try{const response=await fetch("/api/community-posts",{cache:"no-store"});if(!response.ok)throw Error("Community posts unavailable");const data=await response.json();if(live){setPosts((data.posts||[]).slice(0,16));setError("")}}catch(e){if(live)setError(e instanceof Error?e.message:"Community unavailable")}finally{if(live)setLoading(false)}};void load();const timer=setInterval(()=>void load(),45000);return()=>{live=false;clearInterval(timer)}},[]);
+ useEffect(()=>{let live=true;const load=async()=>{try{const r=await fetch("/api/ummah-world/presence",{cache:"no-store"});if(!r.ok)return;const data=await r.json();if(live)setFriends(data.members||[])}catch{}};void load();const timer=setInterval(()=>void load(),30000);return()=>{live=false;clearInterval(timer)}},[]);
+ const orbs=useMemo(()=>[...posts.map((p,i):Orb=>({id:p.id,kind:"post",title:p.author_name,subtitle:p.body?.slice(0,110)||"Community post",image:p.media_url,video:p.media_type?.startsWith("video/"),href:"/community",angle:i*.83})),...topics,...friends.slice(0,8).map((f,i):Orb=>({id:"friend-"+f.id,kind:"friend",title:f.name,subtitle:"Online in the Ummah",image:f.avatar,href:"/messages",angle:i*1.13}))].slice(0,25),[posts,friends]);
+ const move=(e:React.PointerEvent<HTMLDivElement>)=>{if(!stage.current)return;const r=stage.current.getBoundingClientRect();setMagnet({x:Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)),y:Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100))})};
+ return <main className="ummah-world"><header className="uw-header"><Link href="/" aria-label="Return home">← 1M</Link><div><strong>ONE MUSLIM UMMAH</strong><small>THE LIVING COMMUNITY</small></div><button type="button" onClick={()=>setPaused(v=>!v)} aria-pressed={paused}>{paused?"▶ Resume":"Ⅱ Pause"}</button></header>
+ <div className="uw-intro"><span>CONNECTED BY FAITH</span><h1>A world of conversations.</h1><p>Draw stories toward your light. Meet people. Discover what the Ummah is sharing.</p></div>
+ <div ref={stage} className={"uw-stage "+(paused?"uw-paused":"")} onPointerMove={move} onPointerDown={move} style={{"--mx":magnet.x+"%","--my":magnet.y+"%"} as React.CSSProperties}>
+ <div className="uw-stars" aria-hidden="true">{Array.from({length:65},(_,i)=><i key={i} style={{left:((i*67.31)%96+2)+"%",top:((i*41.97)%92+4)+"%",animationDelay:-(i%15)*.3+"s"}}/>)}</div>
+ <div className="uw-core" aria-hidden="true"><div className="uw-core-light"/><span>YOU</span></div>
+ {orbs.map((o,i)=>{const a=i*2.3999632;const x=50+Math.cos(a)*(18+(i%4)*8),y=51+Math.sin(a)*(19+(i%3)*9);return <button type="button" key={o.kind+"-"+o.id} className={"uw-object uw-"+o.kind} style={{left:x+"%",top:y+"%",animationDelay:-(i*.67)+"s","--delay":(i%5)*.18+"s"} as React.CSSProperties} onClick={()=>setSelected(o)} aria-label={"Draw in "+o.title}><span className="uw-object-shape">{o.image&&!o.video?<img src={o.image} alt="" loading="lazy"/>:o.video?<span className="uw-video">▶</span>:<span className="uw-symbol">{o.kind==="topic"?"✦":o.kind==="friend"?"◉":"❋"}</span>}</span><span className="uw-object-label">{o.title}</span></button>})}
+ {loading&&<p className="uw-state">Connecting to the Ummah…</p>}{error&&<p className="uw-state">{error}</p>}{!loading&&!orbs.length&&<p className="uw-state">No posts yet. Be the first to share.</p>}
+ </div><div className="uw-footer"><span>✧ MAGNETIC DISCOVERY</span><span>{posts.length} recent posts · {friends.length} members online here</span></div>
+ <nav className="uw-nav"><Link href="/community">Community feed ↗</Link><Link href="/messages">Messages ↗</Link><Link href="/qibla">Qibla ↗</Link></nav>
+ {selected&&<div className="uw-scrim" onClick={()=>setSelected(null)}><section className="uw-sheet" role="dialog" aria-modal="true" aria-label={selected.title} onClick={e=>e.stopPropagation()}><div className="uw-handle"/><button type="button" className="uw-close" onClick={()=>setSelected(null)}>✕</button><small>{selected.kind==="post"?"COMMUNITY POST":selected.kind==="friend"?"MEMBER":"QIBLA EDITORIAL"}</small><h2>{selected.title}</h2>{selected.image&&!selected.video&&<img className="uw-preview" src={selected.image} alt="Post attachment"/>}<p>{selected.subtitle}</p><Link href={selected.href} className="uw-open">{selected.kind==="post"?"Open community conversation":selected.kind==="friend"?"Open messages":"Read in Qibla"} ↗</Link></section></div>}
+ </main>;
+}
