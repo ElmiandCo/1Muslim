@@ -17,6 +17,7 @@ jobs:
       - name: Discover and curate YouTube videos
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          DEEPWATCH_APPROVED_CHANNEL_IDS: ${{ secrets.DEEPWATCH_APPROVED_CHANNEL_IDS }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/discover-islamic-videos.mjs
