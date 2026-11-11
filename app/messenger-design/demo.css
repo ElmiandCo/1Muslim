@@ -83,3 +83,22 @@ body:has(.mmDemo) .mmDemo{position:relative;z-index:2}
 .mmDemo.hudhudUnifiedMessenger.night .mmFilters button.selected{background:#bda06e!important;color:#15191a!important}
 @media(max-width:700px){.mmEditorialHeader{padding:9px 2px 10px}.mmEditorialHeader h1{font-size:25px}.mmEditorialHeader>div>span{font-size:8px}.mmDemo.hudhudUnifiedMessenger .mmRow{min-height:77px!important;padding:10px!important}.mmDemo.hudhudUnifiedMessenger .mmRow .mmPortrait{width:49px;height:49px;flex-basis:49px}.mmRowKicker{font-size:7px!important}.mmDemo.hudhudUnifiedMessenger .mmPage{padding-left:14px;padding-right:14px}}
 @media(prefers-reduced-motion:reduce){.mmDemo.hudhudUnifiedMessenger .mmRow{transition:none}}
+
+/* Messenger 2.0: prioritize inbox content on small screens. */
+.mmDemo.hudhudUnifiedMessenger .mmFilters{display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;gap:8px;scroll-snap-type:x proximity}
+.mmDemo.hudhudUnifiedMessenger .mmFilters button{flex:0 0 auto;scroll-snap-align:start;white-space:nowrap}
+.mmDemo.hudhudUnifiedMessenger .mmRowText small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%}
+@media(max-width:700px){
+.mmDemo.hudhudUnifiedMessenger .mmEditorialHeader{padding:6px 2px 7px!important;margin-bottom:6px!important}
+.mmDemo.hudhudUnifiedMessenger .mmEditorialHeader h1{font-size:23px!important;line-height:1.05!important;margin:6px 0!important}
+.mmDemo.hudhudUnifiedMessenger .mmSearch{margin:8px 0!important;min-height:46px!important}
+.mmDemo.hudhudUnifiedMessenger .mmMagazineLabel{margin:8px 0!important}
+.mmDemo.hudhudUnifiedMessenger .mmStories{padding:3px 0 5px!important;margin:0!important;gap:10px!important}
+.mmDemo.hudhudUnifiedMessenger .mmStory .mmPortrait{width:54px!important;height:54px!important;flex-basis:54px!important}
+.mmDemo.hudhudUnifiedMessenger .mmStory small{font-size:10px!important}
+.mmDemo.hudhudUnifiedMessenger .mmFilters{margin:7px 0 10px!important;padding-bottom:5px!important}
+.mmDemo.hudhudUnifiedMessenger .mmFilters button{padding:9px 13px!important;font-size:12px!important}
+.mmDemo.hudhudUnifiedMessenger .mmRow{min-height:70px!important;padding:9px 11px!important;margin-bottom:8px!important}
+.mmDemo.hudhudUnifiedMessenger .mmRow .mmPortrait{width:46px!important;height:46px!important;flex-basis:46px!important}
+.mmDemo.hudhudUnifiedMessenger .mmRowKicker{font-size:7px!important}
+}
