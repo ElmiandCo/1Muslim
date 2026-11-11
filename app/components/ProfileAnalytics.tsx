@@ -11,13 +11,14 @@ function QuranCompletionGraph({readings,loading}:{readings:Reading[];loading:boo
  for(const r of readings){if(!/^\\d{1,3}:\\d{1,3}$/.test(r.verse_key)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(r.read_on))continue;const previous=firstSeen.get(r.verse_key);if(!previous||r.read_on<previous)firstSeen.set(r.verse_key,r.read_on)}
  const perChapter=new Map<number,number>();for(const key of firstSeen.keys()){const [chapter,verse]=key.split(":").map(Number);if(chapter>=1&&chapter<=114&&verse>=1&&verse<=CHAPTER_VERSE_COUNTS[chapter-1])perChapter.set(chapter,(perChapter.get(chapter)||0)+1)}
  const completed=[...perChapter].some(([chapter,count])=>count>=CHAPTER_VERSE_COUNTS[chapter-1]);
+ const hasProgress=firstSeen.size>0;
  const now=new Date();const months=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);return {key:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`,label:d.toLocaleDateString(undefined,{month:"short"})}});
- const points=months.map((m,i)=>({label:m.label,key:m.key,value:completed?Math.min(100,100*[...firstSeen.values()].filter(date=>monthKey(date)<=m.key).length/6236):DEMO[i]}));
+ const points=months.map((m,i)=>({label:m.label,key:m.key,value:hasProgress?Math.min(100,100*[...firstSeen.values()].filter(date=>monthKey(date)<=m.key).length/6236):DEMO[i]}));
  const width=580,height=290,left=46,right=18,top=18,bottom=37,plotW=width-left-right,plotH=height-top-bottom;
  const x=(i:number)=>left+plotW*i/5,y=(v:number)=>top+plotH*(1-v/100);
  const path=points.map((p,i)=>`${i?"L":"M"} ${x(i)} ${y(p.value)}`).join(" ");
  const [selected,setSelected]=useState<number|null>(null);const index=selected??5;
- return <section className="profileCompletionGraph"><div className="profileCompletionHeading"><div><h3>Qur’an completion over time</h3><small>{completed?"Your reading progress · synced across devices":"Illustrative preview · your graph unlocks after one completed chapter"}</small></div>{!completed&&<span className="profileCompletionDemo">DEMO</span>}</div><div className="profileCompletionMetric"><span>Qur’an completed</span><strong>{points[index].value.toFixed(completed?1:0)}%</strong><small>{points[index].label} {months[index].key.slice(0,4)}</small></div><svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`Qur’an completion trend from ${months[0].label} to ${months[5].label}`}>
+ return <section className="profileCompletionGraph"><div className="profileCompletionHeading"><div><h3>Qur’an completion over time</h3><small>{hasProgress?"Your reading progress · synced across devices":"Illustrative preview · your graph switches to real data after your first saved verse"}</small></div>{!hasProgress&&<span className="profileCompletionDemo">DEMO</span>}</div><div className="profileCompletionMetric"><span>Qur’an completed</span><strong>{points[index].value.toFixed(hasProgress?2:0)}%</strong><small>{points[index].label} {months[index].key.slice(0,4)}</small></div><svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`Qur’an completion trend from ${months[0].label} to ${months[5].label}`}>
  {[0,25,50,75,100].map(t=><g key={t}><line x1={left} x2={width-right} y1={y(t)} y2={y(t)} stroke="#dfe7f0" strokeDasharray="3 6"/><text x={left-10} y={y(t)+4} textAnchor="end" fontSize="12" fill="#75869a">{t}%</text></g>)}
  {selected!==null&&<line x1={x(index)} x2={x(index)} y1={top} y2={height-bottom} stroke="#9caec3" strokeWidth="1"/>}
  <path d={path} fill="none" stroke="#1684ec" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
@@ -53,7 +54,7 @@ export default function ProfileAnalytics({inline=false}:{inline?:boolean}={}){
  useEffect(()=>{if(!open&&!inline)return;let live=true;setLoading(true);try{setScreen(JSON.parse(localStorage.getItem(TIME_KEY)||"{}"))}catch{setScreen({})}
  const load=async()=>{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){if(live)setLoading(false);return}
  const {data}=await db.from("quran_reading_events").select("verse_key,read_on").eq("user_id",user.id).order("read_on",{ascending:false}).limit(15000);
- if(live){setReadings((data||[]) as Reading[]);setLoading(false)}};void load();return()=>{live=false}},[open,inline]);
+ if(live){let local:Reading[]=[];try{const saved=JSON.parse(localStorage.getItem("1muslim:quran-reading-events")||"[]");if(Array.isArray(saved))local=saved.filter((r):r is Reading=>typeof r?.verse_key==="string"&&typeof r?.read_on==="string")}catch{}const merged=new Map([...local,...((data||[]) as Reading[])].map(r=>[r.verse_key+"|"+r.read_on,r]));setReadings([...merged.values()]);setLoading(false)}};void load();return()=>{live=false}},[open,inline]);
  const dates=Array.from({length:7},(_,i)=>day(6-i));
  const chart=dates.map(d=>({date:d,count:new Set(readings.filter(r=>r.read_on===d).map(r=>r.verse_key)).size}));
  const max=Math.max(1,...chart.map(x=>x.count));
