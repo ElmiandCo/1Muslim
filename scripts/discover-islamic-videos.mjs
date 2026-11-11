@@ -36,7 +36,7 @@ try{
  if(channel&&/^UC[\\w-]{22}$/.test(channel.id)){
   const existing=await db("deepwatch_discovery_channels?select=channel_id&channel_id=eq."+channel.id);
   if(!existing.length)await db("deepwatch_discovery_channels?on_conflict=channel_id","POST",[{channel_id:channel.id,channel_title:channel.snippet?.title||"QuranGuy1",channel_url:"https://www.youtube.com/channel/"+channel.id,enabled:true}]);
-  if(!managedChannels.includes(channel.id))managedChannels.push(channel.id);if(handle==="TPDossierYT")educationalChannelIds.add(channel.id);
+  if(!managedChannels.includes(channel.id))managedChannels.push(channel.id);
   console.log("Verified QuranGuy1 discovery channel",channel.id);
  }else console.warn("QuranGuy1 channel could not be verified; skipping");
 }catch(e){console.warn("QuranGuy1 registration failed",String(e))}
