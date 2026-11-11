@@ -32,3 +32,14 @@
 .qm-chapter.qm-gallery-floating{transform:perspective(1100px) translateZ(7px) translateY(-2px) scale(1.006);box-shadow:0 11px 24px #00000038,0 0 18px #d5b27c0b;border-color:#d5b27c32;transition:transform 1.15s cubic-bezier(.2,.8,.2,1),box-shadow 1.15s ease,border-color 1.15s ease}
 .qm-chapter.qm-gallery-floating:active{transform:scale(.975)}
 @media(prefers-reduced-motion:reduce){.qm-chapter.qm-gallery-floating{transform:none!important;box-shadow:none!important}}
+
+/* Magazine reading progress, matched to the gold-on-obsidian Quran theme */
+.qm-progress{width:min(92%,760px);margin:14px auto 20px;padding:15px 16px;border:1px solid #d5b27c32;border-radius:16px;background:linear-gradient(120deg,#242327d9,#19191ddd);color:#c9c4c0}
+.qm-progress-label{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;letter-spacing:.02em;line-height:1.5}
+.qm-progress-label strong{color:#d5b27c;font-size:13px;font-weight:600}
+.qm-progress-track{height:6px;margin:9px 0 13px;border-radius:99px;overflow:hidden;background:#ffffff15}
+.qm-progress-track:last-child{margin-bottom:0}
+.qm-progress-track>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#9e7cbb,#d5b27c);transition:width .35s ease}
+.qm-progress-chapter{margin:15px auto 4px}
+.qm-progress-sub{padding-top:3px;color:#a9a5ad}
+@media(max-width:480px){.qm-progress{padding:12px 14px}.qm-progress-label{font-size:11px}}
