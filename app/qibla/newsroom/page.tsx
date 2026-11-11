@@ -3,6 +3,7 @@ import Link from "next/link";
 import {useEffect,useMemo,useRef,useState} from "react";
 import {createClient} from "../../../utils/supabase/client";
 import styles from "./qibla-cinematic.module.css";
+import QiblaIcon from "../../components/icons/QiblaIcon";
 
 type Story={id:string;title:string;description:string;cover:string|null;date:string;source:"editorial"|"legacy";kind:"magazine"|"newsletter"};
 type View="split"|"magazine"|"newsletter";
@@ -62,7 +63,7 @@ export default function QiblaNewsroom(){
    <nav className={styles.topnav} aria-label="Publications">
     <button aria-pressed={view==="magazine"} onClick={()=>setView("magazine")}>Magazine</button>
     <button aria-pressed={view==="newsletter"} onClick={()=>setView("newsletter")}>Newsletter</button>
-    <button className={styles.splitIcon} aria-label="Show both publications" onClick={reverseToSplit}>◫</button>
+    <button className={styles.splitIcon} aria-label="Show both publications" onClick={reverseToSplit}><QiblaIcon width={27} height={27} style={{display:"block",width:27,height:27}}/></button>
    </nav>
   </header>
   <div className={styles.contributeBar}><span>YOUR VOICE. OUR PUBLICATION.</span><Link className={styles.contributeButton} href={contributor?"/qibla/studio":"/qibla/newsroom/apply"}>{contributor?"✎ CREATE A POST":"✦ APPLY TO CONTRIBUTE"}</Link></div>
