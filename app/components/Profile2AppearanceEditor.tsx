@@ -54,7 +54,7 @@ export default function Profile2AppearanceEditor({onSaved}:{onSaved?:()=>void}){
  const next={...values,display_name:realName,username,password:"",avatar_config:{...values.avatar_config,selectedAvatarUrl:values.selectedAvatarUrl,profileBackgroundTheme:values.profile_background,favoriteVerse:values.favoriteVerse}};
  const {data:refreshed,error:refreshError}=await db.from("profiles").select("avatar_package,avatar_config,profile_accent").eq("id",user.id).single();
  if(refreshError)throw Error("Changes saved, but the avatar refresh failed: "+refreshError.message);
- window.dispatchEvent(new CustomEvent("1muslim:avatar-changed",{detail:{userId:user.id,avatarPackage:refreshed.avatar_package,avatarConfig:refreshed.avatar_config}}));setOriginal(next);setValues(next);setOpen(null);setMessage("Saved successfully. Email changes may require confirmation. Appearance XP is credited when the database reward is enabled.");onSaved?.();
+ window.dispatchEvent(new CustomEvent("1muslim:avatar-changed",{detail:{userId:user.id,avatarPackage:refreshed.avatar_package,avatarConfig:refreshed.avatar_config}}));window.dispatchEvent(new Event("1muslim:profile-updated"));setOriginal(next);setValues(next);setOpen(null);setMessage("Saved successfully. Email changes may require confirmation. Appearance XP is credited when the database reward is enabled.");onSaved?.();
  const scroll=root.current?.closest('[style*="overflow"]') as HTMLElement|null;scroll?.scrollTo({top:0,behavior:"smooth"});root.current?.scrollIntoView({behavior:"smooth",block:"nearest"});
  window.dispatchEvent(new CustomEvent("1muslim:profile-background-changed",{detail:values.profile_background}));window.dispatchEvent(new Event("1muslim:appearance-updated"));window.dispatchEvent(new Event("1muslim:theme-changed"));window.dispatchEvent(new Event("1muslim-settings-updated"));
  }catch(e){setMessage(e instanceof Error?e.message:"Unable to save changes.")}finally{setBusy(false)}};
@@ -67,10 +67,8 @@ export default function Profile2AppearanceEditor({onSaved}:{onSaved?:()=>void}){
  if(saveError)throw Error("Image uploaded, but profile could not be saved: "+saveError.message);
  setValues(old=>({...old,selectedAvatarUrl:url,avatar_config:avatarConfig}));
  setOriginal(old=>({...old,selectedAvatarUrl:url,avatar_config:avatarConfig}));
- window.dispatchEvent(new CustomEvent("1muslim:avatar-changed",{detail:{userId:user.id,avatarConfig}}));
- window.dispatchEvent(new Event("1muslim:profile-updated"));
- window.dispatchEvent(new Event("1muslim:appearance-updated"));
- setAvatarFile(null);setMessage("Custom avatar uploaded and saved successfully.")}catch(e){setMessage(e instanceof Error?"Avatar upload failed: "+e.message:"Avatar upload failed.")}finally{setUploadingAvatar(false)}};
+ // Crop Save persists the image, but the account-wide refresh waits for the main Save button.
+ setAvatarFile(null);setMessage("Avatar saved. Press Save to refresh your profile everywhere.")}catch(e){setMessage(e instanceof Error?"Avatar upload failed: "+e.message:"Avatar upload failed.")}finally{setUploadingAvatar(false)}};
  useEffect(()=>{let active=true;fetch("https://api.alquran.cloud/v1/surah").then(r=>{if(!r.ok)throw Error("Surah list unavailable");return r.json()}).then(json=>{if(active)setSurahs(json.data||[])}).catch(()=>{if(active)setVerseError("Unable to load chapters. Check your connection.")});return()=>{active=false}},[]);
  const chooseVerse=async(chapter:number,verse:number)=>{setVerseLoading(true);setVerseError("");try{const key=chapter+":"+verse;const [ar,en]=await Promise.all([fetch("https://api.alquran.cloud/v1/ayah/"+key+"/ar.alafasy"),fetch("https://api.alquran.cloud/v1/ayah/"+key+"/en.sahih")]);if(!ar.ok||!en.ok)throw Error("Verse unavailable");const [arabic,english]=await Promise.all([ar.json(),en.json()]);if(!arabic.data?.text||!english.data?.text)throw Error("Verse text unavailable");setValues(old=>({...old,favoriteVerse:{chapter,verse,arabic:arabic.data.text,translation:english.data.text}}))}catch{setVerseError("Could not retrieve this verse. Please try again.")}finally{setVerseLoading(false)}};
  const backgroundsRail=useAutoCarousel<HTMLDivElement>(backgrounds.length);
