@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useRouter} from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import HudHudCollapsibleNav from "../components/HudHudCollapsibleNav";
 
 import ProfileAvatar, { ACCESSORIES, AVATAR_TIERS, tierForXp } from "../components/ProfileAvatar";
@@ -58,8 +58,84 @@ const BACKGROUND_CHOICES=[
 
 
 
+
+function ProfileOrbitStudio({profile,onEdit}:{profile:Profile;onEdit:()=>void}){
+ const canvas=useRef<HTMLCanvasElement>(null);
+ const velocity=useRef([0.0013,-0.0008]);
+ const angle=useRef([0,0]);
+ const drag=useRef<{x:number;y:number;t:number}|null>(null);
+ const [created,setCreated]=useState<string|null>(null);
+ const [hours,setHours]=useState<Record<string,number>>({});
+ useEffect(()=>{
+  let live=true;
+  const db=createClient();
+  void db.auth.getUser().then(({data})=>{if(live)setCreated(data.user?.created_at||null)});
+  return()=>{live=false};
+ },[]);
+ useEffect(()=>{
+  const key="oneMuslimProfilePageTimeV1";
+  const read=():Record<string,number>=>{try{return JSON.parse(localStorage.getItem(key)||"{}") as Record<string,number>}catch{return {}}};
+  let previous=Date.now();
+  const tick=()=>{
+   const now=Date.now(),elapsed=Math.min(60000,now-previous);previous=now;
+   if(document.visibilityState!=="visible")return;
+   const pathname=window.location.pathname;
+   const page=pathname.startsWith("/deepwatch")?"DeepWatch":pathname.startsWith("/quran")?"Qur'an":pathname.startsWith("/qibla")?"Qibla":pathname.startsWith("/profile")?"Profile":pathname==="/"?"Home":"Other";
+   const data=read();data[page]=(data[page]||0)+elapsed;
+   try{localStorage.setItem(key,JSON.stringify(data))}catch{}
+   setHours(data);
+  };
+  setHours(read());
+  const interval=window.setInterval(tick,15000);
+  const visibility=()=>{previous=Date.now()};
+  document.addEventListener("visibilitychange",visibility);
+  return()=>{window.clearInterval(interval);document.removeEventListener("visibilitychange",visibility)};
+ },[]);
+ useEffect(()=>{
+  const element=canvas.current;if(!element)return;
+  const ctx=element.getContext("2d");if(!ctx)return;
+  let frame=0,raf=0;
+  const render=()=>{
+   const width=element.clientWidth,height=element.clientHeight;
+   const dpr=Math.min(window.devicePixelRatio||1,2);
+   if(element.width!==Math.round(width*dpr)||element.height!==Math.round(height*dpr)){element.width=Math.round(width*dpr);element.height=Math.round(height*dpr)}
+   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
+   const cx=width/2,cy=height/2,scale=Math.min(width,height);
+   for(let ring=0;ring<2;ring++){
+    const count=ring===0?300:200,radius=scale*(ring===0?.29:.43);
+    const spin=angle.current[ring];
+    for(let i=0;i<count;i++){
+     const theta=i*Math.PI*2/count+spin;
+     const wobble=Math.sin(theta*3+ring)*scale*.014;
+     const x=cx+Math.cos(theta)*(radius+wobble),y=cy+Math.sin(theta)*(radius+wobble)*.81;
+     const size=(i%9===0?1.65:.8)*(ring===0?1:.85);
+     ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);
+     ctx.fillStyle=ring===0?"rgba(185,221,248,.85)":"rgba(236,205,145,.72)";ctx.fill();
+    }
+    if(!drag.current)angle.current[ring]+=velocity.current[ring];
+   }
+   frame++;raf=requestAnimationFrame(render);
+  };
+  raf=requestAnimationFrame(render);
+  return()=>cancelAnimationFrame(raf);
+ },[]);
+ const avatar=typeof profile.avatar_config?.selectedAvatarUrl==="string"?profile.avatar_config.selectedAvatarUrl:profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
+ return <section className="profileOrbitMagazine">
+  <div className="profileOrbitMasthead"><span>1M / THE MEMBER EDITION</span><span>PROFILE STUDIO · {new Date().getFullYear()}</span></div>
+  <h2>THE PERSON <em>BEHIND</em> THE PROFILE</h2>
+  <div className="profileOrbitStage" onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,t:performance.now()};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{const d=drag.current;if(!d)return;const delta=e.clientX-d.x;const elapsed=Math.max(8,performance.now()-d.t);const ring=e.clientY-e.currentTarget.getBoundingClientRect().top<e.currentTarget.clientHeight*.52?0:1;angle.current[ring]+=delta*.009;velocity.current[ring]=Math.max(-.045,Math.min(.045,delta/elapsed*.009));drag.current={x:e.clientX,y:e.clientY,t:performance.now()}}} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}} aria-label="Interactive 300 inner and 200 outer HudHud orbs. Drag to change rotation.">
+   <canvas ref={canvas} aria-hidden="true"/>
+   <div className="profileOrbitAvatar"><img src={avatar} alt="Your profile avatar"/></div>
+   <span className="profileOrbitHint">↔ DRAG TO ROTATE · 500 HUDHUD ORBS</span>
+  </div>
+  <div className="profileOrbitIdentity"><span>THE MEMBER PROFILE</span><h3>{profile.display_name||"Member"}</h3><p>@{profile.username||"member"} · {profile.xp_total.toLocaleString()} XP</p><p>{profile.bio||"Your story starts here. Add your biography in Profile Settings."}</p><button type="button" onClick={onEdit}>✎ Open all profile settings →</button></div>
+  <section className="profileOrbitAnalytics"><h3>YOUR ACTIVITY <em>IN NUMBERS</em></h3><div className="profileOrbitMetrics"><div><small>ACCOUNT CREATED</small><strong>{created?new Date(created).toLocaleDateString():"Loading…"}</strong></div><div><small>THIS DEVICE · TRACKED TIME</small><strong>{(Object.values(hours).reduce((a,b)=>a+b,0)/3600000).toFixed(2)} hrs</strong></div><div><small>EXPERIENCE</small><strong>{profile.xp_total.toLocaleString()} XP</strong></div></div><h4>Time by page</h4><div className="profileOrbitPageTimes">{["Home","DeepWatch","Qur'an","Qibla","Live","Profile","Other"].map(page=><div key={page}><span>{page}</span><strong>{((hours[page]||0)/3600000).toFixed(2)} h</strong></div>)}</div><p>Activity is measured from this device after tracking begins. Previous sessions and other devices are not included.</p></section>
+  <style jsx>{`.profileOrbitMagazine{background:#f5f3ef;color:#172027;border:1px solid #d6d2ca;border-radius:22px;overflow:hidden;margin:12px auto 28px;max-width:1040px;box-shadow:0 20px 70px #0005}.profileOrbitMasthead{display:flex;justify-content:space-between;gap:10px;padding:17px 22px;border-bottom:1px solid #c5bfb5;font-size:10px;letter-spacing:.14em;font-weight:800}.profileOrbitMagazine>h2{text-align:center;font-family:Georgia,serif;font-size:clamp(28px,6vw,65px);letter-spacing:-.06em;margin:24px 14px 0;line-height:1}.profileOrbitMagazine em{font-weight:400}.profileOrbitStage{position:relative;width:min(100%,640px);aspect-ratio:1;margin:0 auto;touch-action:none;cursor:grab;user-select:none}.profileOrbitStage:active{cursor:grabbing}.profileOrbitStage canvas{width:100%;height:100%;display:block;background:radial-gradient(ellipse at center,#0c2639 0%,#08111b 57%,#050b12 80%);border-radius:50%}.profileOrbitAvatar{position:absolute;inset:34%;border-radius:50%;overflow:hidden;border:2px solid #bcdff0;box-shadow:0 0 36px #72c9f866;background:#101d2b;pointer-events:none}.profileOrbitAvatar img{width:100%;height:100%;object-fit:cover}.profileOrbitHint{position:absolute;bottom:10%;left:0;right:0;text-align:center;color:#d8d9e1;font-size:10px;letter-spacing:.13em;pointer-events:none}.profileOrbitIdentity{text-align:center;padding:0 20px 30px}.profileOrbitIdentity>span{font-size:10px;letter-spacing:.18em}.profileOrbitIdentity h3{font:normal clamp(35px,7vw,70px) Georgia,serif;margin:6px}.profileOrbitIdentity p{max-width:580px;margin:8px auto;color:#53606b}.profileOrbitIdentity button{margin-top:15px;background:#17202b;color:#fff;border:0;border-radius:30px;padding:14px 22px;cursor:pointer}.profileOrbitAnalytics{background:#fff;padding:25px clamp(16px,5vw,50px);border-top:1px solid #ddd}.profileOrbitAnalytics h3{font:normal clamp(26px,5vw,45px) Georgia,serif;margin:0 0 22px}.profileOrbitMetrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.profileOrbitMetrics>div{background:#f3f1ed;border:1px solid #e0dcd4;border-radius:12px;padding:15px;display:grid;gap:8px}.profileOrbitMetrics small{font-size:9px;letter-spacing:.1em}.profileOrbitMetrics strong{font-size:clamp(15px,3vw,25px)}.profileOrbitPageTimes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.profileOrbitPageTimes>div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #ddd;padding:9px 0}.profileOrbitAnalytics>p{color:#69747c;font-size:12px;margin-top:20px}@media(max-width:500px){.profileOrbitMetrics{grid-template-columns:1fr}.profileOrbitMasthead{font-size:8px}}`}</style>
+ </section>;
+}
+
 function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,posting,publishFirstPost,onEdit}:{profile:Profile;tier:any;ashab:Profile[];postCount:number;postText:string;setPostText:(v:string)=>void;posting:boolean;publishFirstPost:()=>void;onEdit:()=>void}){
-  return <section className="profileOverview">
+  return <section className="profileOverview">\n    <ProfileOrbitStudio profile={profile} onEdit={onEdit}/>
 
     <header className={"profileOverviewHero header-"+profile.profile_accent}>
       <div className="profileOverviewCover"><div className="backPagesBrand">1Muslim</div><div className="profileOverviewActions"><button type="button" className="profileSignOut" aria-label="Sign out" onClick={()=>window.dispatchEvent(new Event("1muslim:profile-signout"))}>↪</button><Link href="/find" className="ghost">⌕ Discover</Link><button className="primary" onClick={onEdit}>✎ Edit</button></div></div>
