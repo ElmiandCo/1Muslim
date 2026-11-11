@@ -137,6 +137,16 @@ export default function HomePullDownGallery({active,avatarUrl}:{active:boolean;a
  .oneMuslimExplorePrompt:not(.visible){visibility:hidden;transition:opacity .65s ease,visibility 0s linear .65s}
  .oneMuslimCarouselCenterControl.pulse{opacity:1;box-shadow:0 0 13px #b88aff,0 0 26px #9452ff80;animation:oneMuslimCarouselPulse 2s ease-out}
  @keyframes oneMuslimCarouselPulse{0%{box-shadow:0 0 18px #c9a5ff}100%{box-shadow:0 0 0 transparent}}
+ /* Transparent app launcher: the six assets float directly over the live canvas. */
+ .oneMuslimAppGalleryGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(18px,5vw,34px);max-width:560px;align-items:start}
+ .oneMuslimAppGalleryTile{appearance:none;border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;margin:0!important;min-width:0;gap:8px;text-shadow:0 2px 9px #000b}
+ .oneMuslimAppGalleryIcon,.oneMuslimAppGalleryTile:nth-child(n) .oneMuslimAppGalleryIcon{width:min(100%,132px)!important;max-width:132px!important;aspect-ratio:1!important;margin-inline:auto;border:0!important;border-radius:0!important;background:transparent!important;background-image:none!important;box-shadow:none!important;outline:0!important;overflow:visible!important;backdrop-filter:none!important;display:grid;place-items:center;animation:oneMuslimGalleryFloat 5s ease-in-out infinite;animation-delay:calc(var(--float-index,0) * -.7s)}
+ .oneMuslimAppGalleryTile:nth-child(1){--float-index:0}.oneMuslimAppGalleryTile:nth-child(2){--float-index:1}.oneMuslimAppGalleryTile:nth-child(3){--float-index:2}.oneMuslimAppGalleryTile:nth-child(4){--float-index:3}.oneMuslimAppGalleryTile:nth-child(5){--float-index:4}.oneMuslimAppGalleryTile:nth-child(6){--float-index:5}
+ .oneMuslimAppGalleryIcon img{width:100%!important;height:100%!important;object-fit:contain!important;filter:drop-shadow(0 5px 10px #0007)}
+ .oneMuslimAppGalleryIcon svg{width:70%!important;height:70%!important;filter:drop-shadow(0 5px 10px #0007)}
+ .oneMuslimAppGalleryTile:active .oneMuslimAppGalleryIcon{animation-play-state:paused;transform:scale(.94)}
+ @keyframes oneMuslimGalleryFloat{0%,100%{translate:0 0}50%{translate:0 -7px}}
+ @media(prefers-reduced-motion:reduce){.oneMuslimAppGalleryIcon{animation:none!important}}
  @media(prefers-reduced-motion:reduce){.hudhudLaunchBird{display:none!important}.oneMuslimAppGalleryTile{opacity:1!important;transform:none!important;transition:none!important}.hudhudProfileBird{opacity:1!important;transform:none!important}.oneMuslimAppGallery,.oneMuslimLiveVideo,.oneMuslimCarouselCenterControl,.oneMuslimExplorePrompt,.oneMuslimExplorePrompt .phrase,.oneMuslimExploreParticles i{transition:none!important;animation:none!important}}
  `}</style>
  <button className={"oneMuslimExplorePrompt"+(showExplore?" visible":"")} type="button" aria-label="Explore 1Muslim apps" aria-hidden={!showExplore} tabIndex={showExplore?0:-1} onClick={()=>{setOpen(true);flash()}}><span className="oneMuslimExploreParticles" aria-hidden="true">{Array.from({length:13},(_,i)=><i key={i} style={{"--x":`${(i*37)%100}%`,"--y":`${(i*23)%100}%`,"--d":`${2.6+i*.23}s`} as React.CSSProperties}/>)}</span><span key={slide} className={"phrase"+(slides[slide]==="Live Stream"?" livePhrase":"")}>{slides[slide%slides.length]}</span></button>
