@@ -1707,6 +1707,26 @@ export default function GoLivePage() {
             top:clamp(110px,15dvh,190px);
           }
         }
+        /* A portrait phone camera switched to Desktop is a CENTER CROP of
+           the same live camera track into a real 16:9 landscape window.
+           Do not re-acquire the camera or stretch/letterbox its image. */
+        @media(max-width:850px){
+          .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"] .studioCameraFrame{
+            top:clamp(150px,21dvh,230px)!important;
+            left:0!important;width:100%!important;
+            height:auto!important;aspect-ratio:16/9!important;
+            max-height:calc(100dvh - 270px)!important;
+            border-radius:16px!important;overflow:hidden!important;
+          }
+          .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"] .studioCameraFrame>video,
+          .goLive .layout>.panel:first-child>.preview[data-studio-mode="desktop"] .studioCameraFrame>.placeholder{
+            position:absolute!important;inset:0!important;
+            width:100%!important;height:100%!important;
+            object-fit:cover!important;object-position:50% 50%!important;
+            scale:1!important;rotate:0deg!important;
+            background:transparent!important;
+          }
+        }
         /* Viewer count belongs in the existing header; don't resize navigation. */
         .goLive .immersiveHeader{position:absolute!important;top:0!important;left:0!important;right:0!important}
         .goLive .immersiveHeader .liveHeaderViewers{
