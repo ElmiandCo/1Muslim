@@ -9,6 +9,7 @@ import ElmiLightLab from "./ElmiLightLab";
 import HudHudTranslate from "./HudHudTranslate";
 import HudHudVoiceSpiral from "./HudHudVoiceSpiral";
 import HudHudGuidance from "./HudHudGuidance";
+import {ProfileActivityTracker} from "./ProfileAnalytics";
 
 type Profile={display_name:string|null;gender:string|null;avatar_gender:string|null;avatar_package:string|null;avatar_config:Record<string,unknown>|null;profile_accent:string|null};
 type Message={id:number;role:"user"|"hudhud";text:string;image?:string;avatar?:boolean};
@@ -194,6 +195,7 @@ export default function HudHudChatLauncher(){
  const send=(e:React.FormEvent)=>{e.preventDefault();if(!draft.trim()&&!pending)return;const text=draft.trim(),image=pending?.url;setMessages(prev=>[...prev,{id:nextId.current++,role:"user",text,image}]);setDraft("");setPending(null);const reply=answer(text,!!image);window.setTimeout(()=>{setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",...reply}]);window.dispatchEvent(new CustomEvent("1muslim:action-success"))},400)};
  const attach=(e:React.ChangeEvent<HTMLInputElement>)=>{const item=e.target.files?.[0];if(!item)return;if(!item.type.startsWith("image/")){setNotice("Choose an image file.");return}if(item.size>3_000_000){setNotice("Choose an image smaller than 3 MB.");return}const reader=new FileReader();reader.onload=()=>{if(typeof reader.result==="string"){setPending({url:reader.result,name:item.name});setNotice("Image ready for local preview.")}};reader.readAsDataURL(item);e.target.value=""};
  return <>
+ <ProfileActivityTracker />
  <HudHudGuidance />
  {tourStep>=0&&<div className="hh-orb-tour" role="dialog" aria-modal="true" aria-label="HudHud button tutorial"><div className="hh-orb-tour-shade"/><div className="hh-orb-tour-card"><img src="/assets/hudhud-logo.PNG" alt="HudHud"/><small>HUDHUD · STEP {tourStep+1} OF 3</small><h2>{["Drag HudHud anywhere","Tap for three actions","Hold for language settings"][tourStep]}</h2><p>{["You just moved HudHud! Drag the circular button to any comfortable spot on your screen.","Tap HudHud to expand Chat, Voice On/Off, and Guidance. Tap again to collapse the three options. The voice control sits behind HudHud because it is his voice.","Press and hold HudHud for about one second to open his settings, including language and microphone controls. The voice orb lives inside those settings."][tourStep]}</p><div><button type="button" onClick={()=>{setTourStep(-1);try{localStorage.setItem("1muslim-hudhud-orb-tour-v1","done")}catch{}}}>Skip</button><button type="button" onClick={()=>{if(tourStep===2){setTourStep(-1);try{localStorage.setItem("1muslim-hudhud-orb-tour-v1","done")}catch{}}else setTourStep(t=>t+1)}}>{tourStep===2?"Got it ✓":"Next →"}</button></div></div></div>}
  {labOpen&&admin&&<ElmiLightLab onClose={()=>setLabOpen(false)}/>}
