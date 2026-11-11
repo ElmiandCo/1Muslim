@@ -440,6 +440,28 @@ export default function ProfilePage() {
 .profileCommandPage .profileTabs button.active{background:#24548a!important;color:#fff!important}
 .profileCommandPage .profileEditor input,.profileCommandPage .profileEditor textarea{background:#f8fbff;color:#1c3451;border:1px solid #cbd9ea;border-radius:12px}
 @media(min-width:720px){.profileCommandPage .profileTabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Consistent HudHud Command floating-card visual system throughout Profile */
+.profileCommandPage{min-height:100vh;background-color:#f2f6fc!important;background-image:linear-gradient(#2c568009 1px,transparent 1px),linear-gradient(90deg,#2c568009 1px,transparent 1px)!important;background-size:32px 32px!important}
+.profileCommandPage .profileShell{max-width:1120px;margin:auto;padding:clamp(12px,3vw,30px)!important;background:transparent!important}
+.profileCommandPage .profileOrbitMagazine{background:transparent!important;border:0!important;box-shadow:none!important;display:grid;gap:18px}
+.profileCommandPage .profileCoverBanner{border:1px solid #e0e8f3;box-shadow:0 12px 30px #193c631c;border-radius:25px!important}
+.profileCommandPage .profileOrbitMasthead,.profileCommandPage .profileAppearanceControls,.profileCommandPage .profileOrbitIdentity,.profileCommandPage .profileStudioNav,.profileCommandPage .profileFriendsStudio,.profileCommandPage .profileOrbitAnalytics,.profileCommandPage .profileOrbitMetrics,.profileCommandPage .profileOrbitPageTimes,.profileCommandPage .profileOverview,.profileCommandPage .profileOverviewCover,.profileCommandPage .profileOverviewBody,.profileCommandPage .profileOverviewMain,.profileCommandPage .profileOverviewStats,.profileCommandPage .profileOverviewSection,.profileCommandPage .profileHeroTop,.profileCommandPage .profileHeroActions,.profileCommandPage .profileEditorToolbar,.profileCommandPage .profileTabs,.profileCommandPage .profileEditor,.profileCommandPage .profileCoverUploader{background:#fff!important;color:#203954!important;border:1px solid #dce5f1!important;border-radius:24px!important;box-shadow:0 9px 28px #203e6017!important}
+.profileCommandPage .profileOrbitMasthead,.profileCommandPage .profileAppearanceControls,.profileCommandPage .profileOrbitIdentity,.profileCommandPage .profileStudioNav,.profileCommandPage .profileFriendsStudio,.profileCommandPage .profileOrbitAnalytics,.profileCommandPage .profileOrbitMetrics,.profileCommandPage .profileOrbitPageTimes,.profileCommandPage .profileOverviewSection,.profileCommandPage .profileHeroTop,.profileCommandPage .profileHeroActions,.profileCommandPage .profileEditorToolbar{padding:clamp(16px,3vw,26px)!important}
+.profileCommandPage .profileOrbitStage{box-shadow:0 10px 30px #203e601c;border:1px solid #dce5f1}
+.profileCommandPage .profileOrbitMagazine h2,.profileCommandPage .profileOrbitMagazine h3,.profileCommandPage .profileOverview h2,.profileCommandPage .profileEditor h2,.profileCommandPage .profileEditor h3{color:#19395f!important}
+.profileCommandPage .profileOrbitMagazine p,.profileCommandPage .profileOverview p,.profileCommandPage .profileEditor p{line-height:1.6}
+.profileCommandPage .profileOrbitMetrics>*,.profileCommandPage .profileOrbitAnalytics>*,.profileCommandPage .profileOverviewStats>*{border-radius:16px;background:#f7faff;border:1px solid #e2eaf4;padding:12px}
+.profileCommandPage .profileEditor{display:grid;gap:18px}
+.profileCommandPage .profileEditor label{color:#284768}
+.profileCommandPage .profileEditor input,.profileCommandPage .profileEditor textarea,.profileCommandPage .profileEditor select{background:#f8fbff!important;color:#193755!important;border:1px solid #cbd9ea!important;border-radius:12px!important}
+.profileCommandPage .profileStockCovers button{box-shadow:0 4px 12px #244c7517;transition:transform .2s ease,box-shadow .2s ease}
+.profileCommandPage .profileStockCovers button:active{transform:scale(.98)}
+.profileCommandPage .profileTabs{padding:12px!important}
+.profileCommandPage .profileTabs button{box-shadow:0 3px 12px #244c7510}
+.profileCommandPage .profileOrbitMagazine>section,.profileCommandPage .profileOrbitMagazine>article{min-width:0}
+@media(max-width:600px){.profileCommandPage .profileShell{padding:12px!important}.profileCommandPage .profileOrbitMagazine{gap:14px}.profileCommandPage .profileOrbitMasthead,.profileCommandPage .profileAppearanceControls,.profileCommandPage .profileOrbitIdentity,.profileCommandPage .profileStudioNav,.profileCommandPage .profileFriendsStudio,.profileCommandPage .profileOrbitAnalytics,.profileCommandPage .profileOrbitMetrics,.profileCommandPage .profileOrbitPageTimes{padding:16px!important;border-radius:20px!important}.profileCommandPage .profileStockCovers{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 `}</style></main>;
 }
 
