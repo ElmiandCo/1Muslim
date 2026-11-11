@@ -33,6 +33,27 @@ export default function HomePullDownGallery({active}:{active:boolean}){
   const timer=window.setTimeout(()=>{if(!interacted)setOpen(true)},1000);
   return()=>{window.clearTimeout(timer);window.removeEventListener("pointerdown",mark);window.removeEventListener("touchstart",mark)};
  },[active,navReady]);
+ // The first non-interactive tap anywhere on the landing canvas opens Explore.
+ // Wait for pointerup so a swipe or scroll never counts as a tap.
+ useEffect(()=>{
+  if(!active||!navReady||open)return;
+  const stage=document.querySelector<HTMLElement>(".oneMuslimLiveStage");
+  if(!stage)return;
+  let origin:{x:number;y:number}|null=null;
+  const down=(e:PointerEvent)=>{
+   const target=e.target;
+   if(!(target instanceof Element)||!stage.contains(target)||target.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],.oneMuslimAppGallery")){origin=null;return}
+   origin={x:e.clientX,y:e.clientY};
+  };
+  const up=(e:PointerEvent)=>{
+   const point=origin;origin=null;
+   if(!point||Math.hypot(e.clientX-point.x,e.clientY-point.y)>12)return;
+   setOpen(true);flash();
+  };
+  document.addEventListener("pointerdown",down,true);
+  document.addEventListener("pointerup",up,true);
+  return()=>{document.removeEventListener("pointerdown",down,true);document.removeEventListener("pointerup",up,true)};
+ },[active,navReady,open]);
  // Capture vertical gestures across the entire landing canvas, not just the video rectangle.
  useEffect(()=>{
   if(!active||!navReady)return;
