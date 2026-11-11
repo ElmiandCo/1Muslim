@@ -59,137 +59,30 @@ const BACKGROUND_CHOICES=[
 
 
 
-function ProfileOrbitStudio({profile,onEdit,ashab,editing=false,editorTab="profile"}:{profile:Profile;onEdit:()=>void;ashab:Profile[];editing?:boolean;editorTab?:string}){
- const canvas=useRef<HTMLCanvasElement>(null);
- const [profileNight,setProfileNight]=useState(true);
- useEffect(()=>{try{setProfileNight(localStorage.getItem("1muslim-profile-appearance")!=="day")}catch{}},[]);
- const changeProfileMode=(night:boolean)=>{setProfileNight(night);try{localStorage.setItem("1muslim-profile-appearance",night?"night":"day")}catch{}};
- const velocity=useRef([0.0013,-0.0011,-0.0008,0.00062]);
- const savePulse=useRef(0);
- const angle=useRef([0,0,0,0]);
- const drag=useRef<{x:number;y:number;t:number}|null>(null);
- const [aiOpen,setAiOpen]=useState(false);
- const [aiEnabled,setAiEnabled]=useState(false);
- const [friendQuery,setFriendQuery]=useState("");
- const [selectedFriend,setSelectedFriend]=useState<Profile|null>(null);
- const [switching,setSwitching]=useState(false);
- const [switchDirection,setSwitchDirection]=useState<"next"|"back">("next");
- const switchTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
- const viewFriend=(friend:Profile|null)=>{setSwitchDirection(friend?"next":"back");setSwitching(true);if(switchTimer.current)clearTimeout(switchTimer.current);switchTimer.current=setTimeout(()=>{setSelectedFriend(friend);setSwitching(false);try{if(friend)sessionStorage.setItem("oneMuslimProfileVisitedFriend",friend.id);else sessionStorage.removeItem("oneMuslimProfileVisitedFriend")}catch{}},450)};
- useEffect(()=>()=>{if(switchTimer.current)clearTimeout(switchTimer.current)},[]);
- useEffect(()=>{try{const id=sessionStorage.getItem("oneMuslimProfileVisitedFriend");const match=ashab.find(p=>p.id===id);if(match)setSelectedFriend(match)}catch{}},[ashab]);
- const [section,setSection]=useState<"overview"|"friends"|"analytics">("overview");
- const [aiInput,setAiInput]=useState("");
- const [aiReply,setAiReply]=useState("");
- const [aiBusy,setAiBusy]=useState(false);
- const [aiError,setAiError]=useState("");
- const askHudHud=async()=>{
-  if(!aiInput.trim()||aiBusy)return;
-  setAiBusy(true);setAiError("");
-  try{
-   const db=createClient();
-   const {data:{session}}=await db.auth.getSession();
-   if(!session)throw new Error("Sign in to use HudHud AI.");
-   const response=await fetch("/api/hudhud-premium",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({message:aiInput.trim()})});
-   const result=await response.json();
-   if(!response.ok)throw new Error(result.error||"HudHud AI is unavailable.");
-   setAiReply(String(result.reply||""));
-  }catch(e){setAiError(e instanceof Error?e.message:"Something went wrong.")}finally{setAiBusy(false)}
- };
- useEffect(()=>{const onSaved=()=>{savePulse.current=performance.now()};window.addEventListener("1muslim:profile-saved",onSaved);return()=>window.removeEventListener("1muslim:profile-saved",onSaved)},[]);
- const [created,setCreated]=useState<string|null>(null);
- const [hours,setHours]=useState<Record<string,number>>({});
- useEffect(()=>{
-  let live=true;
-  const db=createClient();
-  void db.auth.getUser().then(({data})=>{if(live){setCreated(data.user?.created_at||null);setAiEnabled((data.user?.email||"").toLowerCase()==="hudhudbyelmi@gmail.com")}});
-  return()=>{live=false};
- },[]);
- useEffect(()=>{
-  const key="oneMuslimProfilePageTimeV1";
-  const read=():Record<string,number>=>{try{return JSON.parse(localStorage.getItem(key)||"{}") as Record<string,number>}catch{return {}}};
-  let previous=Date.now();
-  const tick=()=>{
-   const now=Date.now(),elapsed=Math.min(60000,now-previous);previous=now;
-   if(document.visibilityState!=="visible")return;
-   const pathname=window.location.pathname;
-   const page=pathname.startsWith("/deepwatch")?"DeepWatch":pathname.startsWith("/quran")?"Qur'an":pathname.startsWith("/qibla")?"Qibla":pathname.startsWith("/profile")?"Profile":pathname==="/"?"Home":"Other";
-   const data=read();data[page]=(data[page]||0)+elapsed;
-   try{localStorage.setItem(key,JSON.stringify(data))}catch{}
-   setHours(data);
-  };
-  setHours(read());
-  const interval=window.setInterval(tick,15000);
-  const visibility=()=>{previous=Date.now()};
-  document.addEventListener("visibilitychange",visibility);
-  return()=>{window.clearInterval(interval);document.removeEventListener("visibilitychange",visibility)};
- },[]);
- useEffect(()=>{
-  const element=canvas.current;if(!element)return;
-  const ctx=element.getContext("2d");if(!ctx)return;
-  let frame=0,raf=0;
-  const render=()=>{
-   const width=element.clientWidth,height=element.clientHeight;
-   const dpr=Math.min(window.devicePixelRatio||1,2);
-   if(element.width!==Math.round(width*dpr)||element.height!==Math.round(height*dpr)){element.width=Math.round(width*dpr);element.height=Math.round(height*dpr)}
-   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
-   const cx=width/2,cy=height/2,scale=Math.min(width,height);
-   const now=performance.now(),reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-   const elapsed=(now-savePulse.current)/1000;
-   const celebration=elapsed>=0&&elapsed<1.9&&!reduced?Math.sin(Math.PI*elapsed/1.9):0;
-   for(let ring=0;ring<4;ring++){
-    const count=[300,240,200,260][ring];
-    const t=now*.001;
-    const thinking=ring===1&&!reduced?Math.sin(t*.43)*.65+Math.sin(t*.19)*.35:0;
-    const breathing=ring===1&&!reduced?Math.sin(t*.75)*.012:0;
-    const radius=scale*([.285,.355,.414,.475][ring]+breathing+celebration*.012);
-    const spin=angle.current[ring];
-    const tilt=ring===3&&!reduced?Math.sin(t*.23)*.19:0;
-    const ellipse=ring===3?.92:.81;
-    for(let i=0;i<count;i++){
-     const theta=i*Math.PI*2/count+spin;
-     const wobble=Math.sin(theta*3+ring+t*.18)*scale*(ring===3?.004:.011);
-     const orbital=theta+(ring===3&&!reduced?Math.sin(t*.17+i*.08)*.025:0);
-     const rx=Math.cos(orbital)*(radius+wobble);
-     const ry=Math.sin(orbital)*(radius+wobble)*ellipse;
-     const x=cx+rx*Math.cos(tilt)-ry*Math.sin(tilt),y=cy+rx*Math.sin(tilt)+ry*Math.cos(tilt);
-     const size=(i%23===0?2.2:i%9===0?1.5:.72)*(ring===1?1.05:ring===3?.88:ring===0?1:.85)*(1+celebration*.6);
-     ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);
-     ctx.fillStyle=["rgba(185,221,248,.85)","rgba(195,177,255,.86)","rgba(236,205,145,.72)","rgba(211,233,252,.78)"][ring];ctx.fill();
-    }
-    if(!drag.current&&!reduced){
-     const base=ring===1?-.00135:velocity.current[ring];
-     const motion=ring===1?base+thinking*.0025:ring===3?base*(1+.65*Math.sin(t*.31)):base;
-     angle.current[ring]+=motion*(1+celebration*6);
-    }
-   }
-   frame++;raf=requestAnimationFrame(render);
-  };
-  raf=requestAnimationFrame(render);
-  return()=>cancelAnimationFrame(raf);
- },[]);
- const shown=selectedFriend||profile;
- const showAvatar=true;
- const coverUrl=typeof shown.avatar_config?.profileCoverUrl==="string"?shown.avatar_config.profileCoverUrl:COVER_STOCK.find(c=>c.id===shown.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
- const avatar=typeof shown.avatar_config?.selectedAvatarUrl==="string"?shown.avatar_config.selectedAvatarUrl:shown.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
- return <section className={"profileOrbitMagazine"+(profileNight?" profileOrbitNight":" profileOrbitDay")}>
-  <div className="profileCoverBanner" style={coverUrl?{backgroundImage:`url("${coverUrl}")`}:undefined} aria-label="Profile cover photograph"><span className="profileCoverBadge">1M · MEMBER PROFILE</span></div>
-  <div className="profileOrbitMasthead"><span>1M / THE MEMBER EDITION</span><span>PROFILE STUDIO · {new Date().getFullYear()}</span></div>
-  <div className="profileAppearanceControls" role="group" aria-label="Profile appearance"><span>APPEARANCE</span><button type="button" aria-pressed={profileNight} onClick={()=>changeProfileMode(true)}>☾ Night</button><button type="button" aria-pressed={!profileNight} onClick={()=>changeProfileMode(false)}>☀ Day</button></div>
-  <h2>YOUR PROFILE <em>COMMAND CENTER</em></h2>
-  <div className={"profileOrbitStage"+(switching?" profileOrbitSwitching "+switchDirection:"")} onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,t:performance.now()};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{const d=drag.current;if(!d)return;const delta=e.clientX-d.x;const elapsed=Math.max(8,performance.now()-d.t);const relativeY=(e.clientY-e.currentTarget.getBoundingClientRect().top)/e.currentTarget.clientHeight;const ring=relativeY<.3?0:relativeY<.53?1:relativeY<.74?2:3;angle.current[ring]+=delta*.009;velocity.current[ring]=Math.max(-.045,Math.min(.045,delta/elapsed*.009));drag.current={x:e.clientX,y:e.clientY,t:performance.now()}}} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}} aria-label="Interactive 1,000 orbs across four rings. Drag to change rotation.">
-   <canvas ref={canvas} aria-hidden="true"/>
-   <div className={"profileOrbitAvatar"+(!showAvatar?" profileOrbitBird":"")}>{showAvatar?<img key={shown.id+avatar} src={avatar} alt="Your profile avatar"/>:<img src="/assets/hudhud-logo.PNG" alt="HudHud bird companion" />}</div><div className="profileOrbitTransitionVeil" aria-hidden="true">✦</div>
-   
-   <span className="profileOrbitHint">↔ DRAG TO ROTATE · 1,000 PROFILE ORBS · 4 LIVING RINGS</span>
-  </div>
-  
-  {false&&!selectedFriend&&aiOpen&&aiEnabled&&<section className="profileAiPanel" aria-label="HudHud AI"><h3>✦ HudHud AI · Premium</h3><p>Ask about 1Muslim, learning resources, or Qur'an study. Premium access is verified on the server.</p><textarea aria-label="Message HudHud AI" value={aiInput} onChange={e=>setAiInput(e.target.value)} maxLength={1200} placeholder="Ask HudHud…"/><button type="button" disabled={aiBusy||!aiInput.trim()} onClick={()=>void askHudHud()}>{aiBusy?"Thinking…":"Ask HudHud"}</button>{aiError&&<p role="alert">{aiError}</p>}{aiReply&&<div role="status" className="profileAiReply">{aiReply}</div>}</section>}
-  <div className="profileOrbitIdentity"><span>1M · MEMBER PROFILE</span><h3>{shown.display_name||"Member"}</h3><p className="profileIdentityHandle">@{shown.username||"member"} <span>·</span> {shown.xp_total.toLocaleString()} XP</p><p className="profileIdentityBio">{shown.bio||"Your story starts here. Add your biography in Profile Settings."}</p>{selectedFriend?<button type="button" onClick={()=>viewFriend(null)}>← Back to my profile</button>:<button type="button" onClick={onEdit}>⚙ Manage profile settings →</button>}</div>
-  <nav className="profileStudioNav" aria-label="Profile studio sections">{(["overview","friends","analytics"] as const).map(item=><button type="button" key={item} aria-pressed={section===item} onClick={()=>setSection(item)}>{item==="overview"?"✦ Studio":item==="friends"?"◈ Friends":"▥ Analytics"}</button>)}</nav>
-  {section==="friends"&&<section className="profileFriendsStudio"><h3>FRIENDS · {ashab.length}</h3><input aria-label="Search friends" placeholder="Search friends…" value={friendQuery} onChange={e=>setFriendQuery(e.target.value)}/><div>{ashab.filter(p=>[p.display_name,p.username].some(v=>String(v||"").toLowerCase().includes(friendQuery.toLowerCase()))).map(p=><button type="button" key={p.id} onClick={()=>{viewFriend(p);setSection("overview")}}>{p.display_name||p.username||"Member"} <span>View profile →</span></button>)}</div><p>Friend details are shown without private account analytics or editing controls.</p></section>}
-  {section==="analytics"&&!selectedFriend&&<section className="profileOrbitAnalytics"><h3>YOUR ACTIVITY <em>IN NUMBERS</em></h3><div className="profileOrbitMetrics"><div><small>ACCOUNT CREATED</small><strong>{created?new Date(created).toLocaleDateString():"Loading…"}</strong></div><div><small>THIS DEVICE · TRACKED TIME</small><strong>{(Object.values(hours).reduce((a,b)=>a+b,0)/3600000).toFixed(2)} hrs</strong></div><div><small>EXPERIENCE</small><strong>{profile.xp_total.toLocaleString()} XP</strong></div></div><h4>Time by page</h4><div className="profileOrbitPageTimes">{["Home","DeepWatch","Qur'an","Qibla","Live","Profile","Other"].map(page=><div key={page}><span>{page}</span><strong>{((hours[page]||0)/3600000).toFixed(2)} h</strong></div>)}</div><p>Activity is measured from this device after tracking begins. Previous sessions and other devices are not included.</p></section>}
-  <style jsx>{`.profileAppearanceControls{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:12px 20px}.profileAppearanceControls span{font-size:10px;letter-spacing:.13em;margin-right:auto}.profileAppearanceControls button{border:1px solid currentColor;border-radius:20px;background:transparent;color:inherit;padding:7px 13px;cursor:pointer;opacity:.6}.profileAppearanceControls button[aria-pressed="true"]{opacity:1;background:#58677944}.profileOrbitNight{background:#080b11!important;color:#eef1f7!important;border-color:#29303d!important}.profileOrbitNight .profileOrbitIdentity,.profileOrbitNight .profileFriendsStudio,.profileOrbitNight .profileOrbitAnalytics,.profileOrbitNight .profileAiPanel{background:#111824!important;color:#eef1f7!important;border-color:#303a4c!important}.profileOrbitNight .profileOrbitMetrics>div{background:#1b2533!important;border-color:#303a4c!important;color:#eef1f7!important}.profileOrbitNight .profileOrbitMasthead,.profileOrbitNight .profileOrbitHint,.profileOrbitNight .profileIdentityBio,.profileOrbitNight .profileOrbitAnalytics p{color:#b5c3d6!important}.profileOrbitNight .profileStudioNav button{color:#e7edf7!important}.profileOrbitNight .profileOrbitStage{background:radial-gradient(ellipse at center,#162338 0%,#0a101c 57%,#05080f 100%)!important}.profileIdentityHandle{font-size:14px;letter-spacing:.02em;color:#607180}.profileIdentityHandle span{opacity:.45;margin:0 5px}.profileIdentityBio{max-width:660px;line-height:1.6}.profileOrbitMagazine{background:#f5f3ef;color:#172027;border:1px solid #d6d2ca;border-radius:22px;overflow:hidden;margin:12px auto 28px;max-width:1040px;box-shadow:0 20px 70px #0005}.profileOrbitBird{border-color:#c8e7ff;box-shadow:0 0 26px #94cbff55,0 0 65px #6b9bd633;animation:profileBirdFloat 4.8s ease-in-out infinite}.profileOrbitBird img{object-fit:contain!important;animation:profileBirdGlow 5s ease-in-out infinite}@keyframes profileBirdFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}@keyframes profileBirdGlow{0%,100%{filter:drop-shadow(0 0 3px #dcecff)}50%{filter:drop-shadow(0 0 15px #90d8ff)}}@media(prefers-reduced-motion:reduce){.profileOrbitBird,.profileOrbitBird img{animation:none}}.profileOrbitTransitionVeil{position:absolute;inset:21%;border-radius:50%;display:grid;place-items:center;color:#dcefff;font-size:70px;opacity:0;pointer-events:none;background:radial-gradient(circle,#d6eafa 0%,#7095b7 22%,transparent 70%);z-index:3}.profileOrbitSwitching .profileOrbitTransitionVeil{animation:profileOrbCover .9s ease-in-out both}.profileOrbitSwitching .profileOrbitAvatar{animation:profilePlayerSlide .85s cubic-bezier(.22,.9,.32,1.2) both}.profileOrbitSwitching.back .profileOrbitAvatar{animation-direction:reverse}@keyframes profileOrbCover{0%{opacity:0;transform:scale(.35) rotate(0)}40%{opacity:.95;transform:scale(1.1) rotate(100deg)}100%{opacity:0;transform:scale(.4) rotate(220deg)}}@keyframes profilePlayerSlide{0%{opacity:.2;transform:translateX(90px) scale(.85)}55%{opacity:.65;transform:translateX(-14px) scale(1.04)}100%{opacity:1;transform:translateX(0) scale(1)}}@media(prefers-reduced-motion:reduce){.profileOrbitSwitching .profileOrbitTransitionVeil,.profileOrbitSwitching .profileOrbitAvatar{animation:none}}.profileAiComingSoon{text-align:center;padding:10px 15px 20px;font-size:13px;letter-spacing:.02em}.profileAiComingSoon span{display:inline-block;margin-left:8px;border-radius:15px;background:#dce5f0;padding:6px 10px;font-size:10px}.profileStudioNav{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:14px}.profileStudioNav button{border:1px solid #bfc7d2;border-radius:22px;padding:12px 18px;background:#e4e9f2;color:#17202b;cursor:pointer}.profileStudioNav button[aria-pressed=true]{background:#20344d;color:#fff}.profileFriendsStudio{padding:22px;background:#fff}.profileFriendsStudio input{width:100%;padding:14px;border:1px solid #ccc;border-radius:12px;box-sizing:border-box}.profileFriendsStudio>div{display:grid;gap:10px;margin-top:15px}.profileFriendsStudio>div button{display:flex;justify-content:space-between;border:1px solid #ddd;border-radius:12px;padding:14px;background:#f6f7f9;color:#17202b}.profilePremiumOrb{position:absolute;z-index:4;right:21%;top:24%;width:55px;height:55px;border-radius:50%;border:2px solid #c2e9ff;background:radial-gradient(circle at 30% 25%,#d9f5ff,#4177ba 50%,#102040);color:white;box-shadow:0 0 28px #8ecfff;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:23px;cursor:pointer;touch-action:manipulation}.profilePremiumOrb small{font-size:9px;letter-spacing:.1em}.profileAiPanel{background:#121c2a;color:#f5f7ff;margin:0 20px 20px;border-radius:18px;padding:22px;display:grid;gap:12px}.profileAiPanel h3{margin:0}.profileAiPanel p{font-size:13px;opacity:.8}.profileAiPanel textarea{min-height:90px;border-radius:10px;padding:12px;background:#f5f7ff;color:#14202d}.profileAiPanel button{border:0;border-radius:24px;background:#b6dcff;color:#122034;padding:12px;font-weight:700}.profileAiReply{white-space:pre-wrap;line-height:1.5}.profileOrbitMasthead{display:flex;justify-content:space-between;gap:10px;padding:17px 22px;border-bottom:1px solid #c5bfb5;font-size:10px;letter-spacing:.14em;font-weight:800}.profileOrbitMagazine>h2{text-align:center;font-family:Georgia,serif;font-size:clamp(28px,6vw,65px);letter-spacing:-.06em;margin:24px 14px 0;line-height:1}.profileOrbitMagazine em{font-weight:400}.profileOrbitStage{position:relative;width:min(100%,640px);aspect-ratio:1;margin:0 auto;touch-action:none;cursor:grab;user-select:none}.profileOrbitStage:active{cursor:grabbing}.profileOrbitStage canvas{width:100%;height:100%;display:block;background:radial-gradient(ellipse at center,#0c2639 0%,#08111b 57%,#050b12 80%);border-radius:50%}.profileOrbitAvatar{position:absolute;inset:34%;border-radius:50%;overflow:hidden;border:2px solid #bcdff0;box-shadow:0 0 36px #72c9f866;background:#101d2b;pointer-events:none}.profileOrbitAvatar img{width:100%;height:100%;object-fit:cover}.profileOrbitHint{position:absolute;bottom:10%;left:0;right:0;text-align:center;color:#d8d9e1;font-size:10px;letter-spacing:.13em;pointer-events:none}.profileOrbitIdentity{text-align:center;padding:0 20px 30px}.profileOrbitIdentity>span{font-size:10px;letter-spacing:.18em}.profileOrbitIdentity h3{font:normal clamp(35px,7vw,70px) Georgia,serif;margin:6px}.profileOrbitIdentity p{max-width:580px;margin:8px auto;color:#53606b}.profileOrbitIdentity button{margin-top:15px;background:#17202b;color:#fff;border:0;border-radius:30px;padding:14px 22px;cursor:pointer}.profileOrbitAnalytics{background:#fff;padding:25px clamp(16px,5vw,50px);border-top:1px solid #ddd}.profileOrbitAnalytics h3{font:normal clamp(26px,5vw,45px) Georgia,serif;margin:0 0 22px}.profileOrbitMetrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.profileOrbitMetrics>div{background:#f3f1ed;border:1px solid #e0dcd4;border-radius:12px;padding:15px;display:grid;gap:8px}.profileOrbitMetrics small{font-size:9px;letter-spacing:.1em}.profileOrbitMetrics strong{font-size:clamp(15px,3vw,25px)}.profileOrbitPageTimes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.profileOrbitPageTimes>div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #ddd;padding:9px 0}.profileOrbitAnalytics>p{color:#69747c;font-size:12px;margin-top:20px}@media(max-width:500px){.profileOrbitMetrics{grid-template-columns:1fr}.profileOrbitMasthead{font-size:8px}}`}</style>
+function ProfileOrbitStudio({profile,onEdit,ashab}:{profile:Profile;onEdit:()=>void;ashab:Profile[];editing?:boolean;editorTab?:string}){
+ const [section,setSection]=useState<"activity"|"connections"|"analytics">("activity");
+ const coverUrl=typeof profile.avatar_config?.profileCoverUrl==="string"?profile.avatar_config.profileCoverUrl:COVER_STOCK.find(c=>c.id===profile.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
+ const avatar=typeof profile.avatar_config?.selectedAvatarUrl==="string"?profile.avatar_config.selectedAvatarUrl:profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
+ return <section className="profileProfessional">
+  <header className="profileProfessionalCard profileProfessionalHeader">
+   <div className="profileProfessionalCover" style={{backgroundImage:`url("${coverUrl}")`}}><button type="button" className="profileCoverEdit" onClick={onEdit} aria-label="Edit cover photo">✎ Edit cover</button></div>
+   <div className="profileProfessionalIdentity">
+    <img className="profileProfessionalAvatar" src={avatar} alt="Your profile avatar"/>
+    <button className="profileProfessionalEdit" type="button" onClick={onEdit} aria-label="Edit profile">✎</button>
+    <h1>{profile.display_name||"1Muslim Member"}</h1>
+    <p className="profileProfessionalHandle">@{profile.username||"member"} · {profile.xp_total.toLocaleString()} XP</p>
+    <p className="profileProfessionalBio">{profile.bio||"Add a bio to introduce yourself to the 1Muslim community."}</p>
+    {(profile.city||profile.state||profile.country)&&<p className="profileProfessionalLocation">📍 {[profile.city,profile.state,profile.country].filter(Boolean).join(", ")}</p>}
+    <p className="profileProfessionalConnection">{ashab.length} connections · 1Muslim community</p>
+    <div className="profileProfessionalActions"><button type="button" onClick={onEdit}>Edit profile</button><Link href="/find">Discover members</Link><Link href="/community">Community</Link></div>
+   </div>
+  </header>
+  <section className="profileProfessionalCard profileProfessionalSummary"><h2>Profile overview</h2><div className="profileProfessionalStatGrid"><div><strong>{profile.xp_total.toLocaleString()}</strong><span>Total XP</span></div><div><strong>{ashab.length}</strong><span>Connections</span></div><div><strong>{profile.shahada_verified_at?"Verified":"Member"}</strong><span>Shahadah status</span></div></div></section>
+  <section className="profileProfessionalCard profileProfessionalWorkspace"><h2>Command Center</h2><p>Manage your presence and community activity.</p><div className="profileProfessionalNav"><button type="button" aria-pressed={section==="activity"} onClick={()=>setSection("activity")}>Activity</button><button type="button" aria-pressed={section==="connections"} onClick={()=>setSection("connections")}>Connections</button><button type="button" aria-pressed={section==="analytics"} onClick={()=>setSection("analytics")}>Analytics</button></div>
+   {section==="activity"&&<div className="profileProfessionalInner"><h3>Your activity</h3><p>Your posts, recordings and saved content appear below.</p></div>}
+   {section==="connections"&&<div className="profileProfessionalInner"><h3>Connections</h3>{ashab.length?ashab.map(friend=><div key={friend.id} className="profileProfessionalRow">{friend.display_name||friend.username||"1Muslim member"}</div>):<p>No connections to show yet.</p>}</div>}
+   {section==="analytics"&&<div className="profileProfessionalInner"><h3>Member analytics</h3><div className="profileProfessionalStatGrid"><div><strong>{profile.xp_total.toLocaleString()}</strong><span>XP earned</span></div><div><strong>{ashab.length}</strong><span>Connections</span></div></div><p>Profile views and post impressions will appear when verified tracking is available.</p></div>}
+  </section>
  </section>;
 }
 
@@ -462,6 +355,38 @@ export default function ProfilePage() {
 .profileCommandPage .profileOrbitMagazine>section,.profileCommandPage .profileOrbitMagazine>article{min-width:0}
 @media(max-width:600px){.profileCommandPage .profileShell{padding:12px!important}.profileCommandPage .profileOrbitMagazine{gap:14px}.profileCommandPage .profileOrbitMasthead,.profileCommandPage .profileAppearanceControls,.profileCommandPage .profileOrbitIdentity,.profileCommandPage .profileStudioNav,.profileCommandPage .profileFriendsStudio,.profileCommandPage .profileOrbitAnalytics,.profileCommandPage .profileOrbitMetrics,.profileCommandPage .profileOrbitPageTimes{padding:16px!important;border-radius:20px!important}.profileCommandPage .profileStockCovers{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+
+
+.profileCommandPage .profileProfessional{display:grid;gap:20px;max-width:1050px;margin:0 auto;color:#1d3553;font-family:Arial,Helvetica,sans-serif}
+.profileCommandPage .profileProfessionalCard{background:#fff!important;border:1px solid #dce5f0!important;border-radius:22px!important;box-shadow:0 8px 25px #1d42641a!important;overflow:hidden}
+.profileCommandPage .profileProfessionalHeader{padding:0!important}
+.profileCommandPage .profileProfessionalCover{height:clamp(160px,28vw,270px);background-position:center;background-size:cover;position:relative}
+.profileCommandPage .profileCoverEdit{position:absolute;right:18px;top:18px;border:0;border-radius:28px;background:#fffffff0;color:#244b73;padding:10px 15px;font-weight:700}
+.profileCommandPage .profileProfessionalIdentity{padding:0 clamp(18px,4vw,36px) 28px;position:relative}
+.profileCommandPage .profileProfessionalAvatar{display:block;width:112px;height:112px;border-radius:50%;object-fit:cover;border:5px solid #fff;box-shadow:0 4px 15px #203d5b24;margin-top:-56px;position:relative}
+.profileCommandPage .profileProfessionalEdit{position:absolute;right:22px;top:20px;background:#edf4fb;border:1px solid #cddceb;border-radius:50%;width:44px;height:44px;font-size:22px;color:#234d7a}
+.profileCommandPage .profileProfessionalIdentity h1{font-size:clamp(27px,5vw,40px);margin:14px 0 6px;font-weight:800;letter-spacing:-.025em;color:#172d47}
+.profileCommandPage .profileProfessionalIdentity p{margin:8px 0;line-height:1.55}
+.profileCommandPage .profileProfessionalHandle,.profileCommandPage .profileProfessionalLocation{color:#64748b}
+.profileCommandPage .profileProfessionalBio{font-size:17px}
+.profileCommandPage .profileProfessionalConnection{color:#2463a1;font-weight:700}
+.profileCommandPage .profileProfessionalActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.profileCommandPage .profileProfessionalActions button,.profileCommandPage .profileProfessionalActions a,.profileCommandPage .profileProfessionalNav button{border-radius:22px;padding:11px 17px;border:1px solid #b9cee5;background:#f5f9ff;color:#204b79;text-decoration:none;font-weight:700;font-size:14px}
+.profileCommandPage .profileProfessionalActions button:first-child,.profileCommandPage .profileProfessionalNav button[aria-pressed=true]{background:#235a93;color:#fff}
+.profileCommandPage .profileProfessionalSummary,.profileCommandPage .profileProfessionalWorkspace{padding:clamp(20px,4vw,32px)!important}
+.profileCommandPage .profileProfessional h2{font-size:23px;font-weight:800;color:#1a3455;margin:0 0 16px}
+.profileCommandPage .profileProfessional h3{font-size:17px;color:#1a3455}
+.profileCommandPage .profileProfessionalStatGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.profileCommandPage .profileProfessionalStatGrid>div{background:#f7faff;border:1px solid #e2eaf4;border-radius:16px;padding:16px;display:grid;gap:8px}
+.profileCommandPage .profileProfessionalStatGrid strong{font-size:clamp(18px,3vw,26px);color:#204b79;overflow-wrap:anywhere}
+.profileCommandPage .profileProfessionalStatGrid span{color:#667991;font-size:12px}
+.profileCommandPage .profileProfessionalNav{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.profileCommandPage .profileProfessionalInner{background:#f8fbff;border:1px solid #e2eaf4;border-radius:16px;padding:20px}
+.profileCommandPage .profileProfessionalRow{padding:12px;border-bottom:1px solid #dce5f0}
+.profileCommandPage .profileOverviewSection{background:#fff!important;color:#203954!important;border:1px solid #dce5f0!important;box-shadow:0 8px 25px #1d42641a!important}
+.profileCommandPage .profileOverviewSection *{color:inherit}
+.profileCommandPage .profileOverviewSection a{color:#245a95!important}
+@media(max-width:550px){.profileCommandPage .profileProfessionalStatGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.profileCommandPage .profileProfessionalAvatar{width:96px;height:96px;margin-top:-48px}.profileCommandPage .profileProfessionalActions{gap:7px}}
 `}</style></main>;
 }
 
