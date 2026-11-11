@@ -10,7 +10,7 @@ type Props={title:string; participants:GroupCallParticipant[]; onLeave:()=>void;
  onToggleMic?:()=>void;onToggleCamera?:()=>void;onShareScreen?:()=>void;
  micEnabled?:boolean;cameraEnabled?:boolean;screenSharing?:boolean;
  onInvite?:()=>void; onChat?:()=>void; onExpand?: (participantId:string)=>void;};
-export default function HomeGroupCallGrid({title,participants,onLeave,onToggleMic,onToggleCamera,onShareScreen,micEnabled=true,cameraEnabled=true,screenSharing=false,onInvite,onChat,onExpand}:Props){
+export default function HomeGroupCallGrid({title,participants,onLeave,onToggleMic,onToggleCamera,onShareScreen,micEnabled=false,cameraEnabled=false,screenSharing=false,onInvite,onChat,onExpand}:Props){
  const [expanded,setExpanded]=useState<string|null>(null);
  const active=useMemo(()=>participants.find(p=>p.isSpeaking||((p.audioLevel??0)>.08)),[participants]);
  useEffect(()=>{if(expanded&&!participants.some(p=>p.id===expanded))setExpanded(null)},[expanded,participants]);
