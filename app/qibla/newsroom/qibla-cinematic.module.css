@@ -331,3 +331,9 @@
 .magCinemaShelfHead span{display:inline-flex;align-items:center;gap:6px}
 @media(max-width:800px){.magCarousel{margin:-30px -16px 0;min-height:390px}.magCarousel .magCinemaHero{padding:30px 45px}.magSlideControl{width:34px;height:34px}.magSlidePrev{left:5px}.magSlideNext{right:5px}}
 @media(prefers-reduced-motion:reduce){.magCarousel .magCinemaHero,.magSlideDots button{transition:none;transform:none}}
+
+/* Keep Magazine, Newsletter and Qibla split icon in a single horizontal row. */
+.topnav{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:flex-end!important;gap:6px!important;min-width:0}
+.topnav button{flex:0 0 auto!important;white-space:nowrap!important;min-width:0!important}
+.topnav .splitIcon{display:inline-flex!important;align-items:center!important;justify-content:center!important;padding:4px!important;width:32px!important;height:34px!important;min-height:34px!important;line-height:1!important}
+@media(max-width:800px){.topbar{grid-template-columns:60px minmax(0,1fr) 202px!important}.topnav{gap:3px!important}.topnav button{font-size:10px!important;letter-spacing:.025em!important;padding:5px 1px!important}.topnav .splitIcon{width:29px!important;height:30px!important;min-height:30px!important;padding:2px!important}.topnav .splitIcon svg{width:25px!important;height:25px!important}.masthead{font-size:clamp(12px,3.3vw,17px)!important;letter-spacing:.045em!important;white-space:nowrap!important}}
