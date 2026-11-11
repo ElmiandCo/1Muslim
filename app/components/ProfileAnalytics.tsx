@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
+import Link from "next/link";
 
 type Reading={verse_key:string;read_on:string};
 const CHAPTER_VERSE_COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
@@ -75,7 +76,7 @@ export default function ProfileAnalytics({inline=false}:{inline?:boolean}={}){
  <header><div><small>YOUR ACTIVITY</small><h2>Analytics</h2></div>{!inline&&<button type="button" onClick={()=>setOpen(false)} aria-label="Close analytics">✕</button>}</header>
  <h3>Screen time <small>this device · tracked while active</small></h3>
  <div className="profileAnalyticsStats"><div><strong>{fmt(todaySeconds)}</strong><span>Today</span></div><div><strong>{fmt(week)}</strong><span>Last 7 days</span></div></div>
- <h4>Pages visited · last 7 days</h4>{topPages.length?topPages.map(([p,t])=><div className="profileAnalyticsRow" key={p}><span>{p==="/"? "Home":p.replaceAll("/"," / ")}</span><b>{fmt(t)}</b></div>):<p className="profileAnalyticsMuted">Screen time will appear as you use 1Muslim after this update.</p>}
+ <h4>Pages visited · last 7 days</h4>{topPages.length?topPages.map(([p,t])=><div className="profileAnalyticsRow" key={p}><Link className="profileAnalyticsPageLink" href={p.startsWith("/")&&!p.startsWith("//")&&!p.includes("\\")?p:"/"} title={`Open ${p}`}><span>{p==="/"? "Home":p.replaceAll("/"," / ")}</span><span aria-hidden="true">↗</span></Link><b>{fmt(t)}</b></div>):<p className="profileAnalyticsMuted">Screen time will appear as you use 1Muslim after this update.</p>}
  <QuranCompletionGraph readings={readings} loading={loading}/>
  <div className="profileAnalyticsProgressHeading"><h3>Qur’an progress <small>synced across devices · unique verses per reading journey</small></h3><button type="button" onClick={()=>setResetConfirm(true)} disabled={resetBusy}>↻ Start over</button></div>
  {resetConfirm&&<div className="profileAnalyticsResetConfirm" role="group" aria-label="Confirm reset Qur’an progress"><strong>Start a new reading journey?</strong><p>This clears your saved verse history and completion graph across devices. Screen time and other profile information remain unchanged. This cannot be undone.</p><div><button type="button" onClick={()=>setResetConfirm(false)} disabled={resetBusy}>Cancel</button><button type="button" onClick={()=>void resetReading()} disabled={resetBusy}>{resetBusy?"Resetting…":"Reset reading progress"}</button></div></div>}{resetError&&<p role="alert" className="profileAnalyticsResetError">{resetError}</p>}
