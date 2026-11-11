@@ -60,6 +60,12 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
         }, 0)}>
         <LiveViewerBoundary streamId={streamId} section="comments"><LiveChat streamId={streamId} hostId={hostId} overlay /></LiveViewerBoundary>
       </div>
+      <nav className="omCinemaActions" aria-label="Live actions">
+        <button type="button" aria-label="Like live" title="Like live" onClick={() => document.querySelector<HTMLElement>(".omLiveCinema .omLiveVideoStage")?.click()}>♡</button>
+        <button type="button" aria-label="Comments" title="Comments" onClick={() => document.querySelector<HTMLElement>(".omLiveCinema .composer input")?.focus()}>♧</button>
+        <button type="button" aria-label="Share live" title="Share live" onClick={() => document.querySelector<HTMLElement>(".omLiveCinema .omLiveViewerToolbar .omShareCopyLink, .omLiveCinema .omLiveViewerToolbar button[aria-label*=Share]")?.click()}>↗</button>
+        <details className="omCinemaMore"><summary aria-label="More live options and effects">•••</summary><div className="omCinemaMorePanel"><strong>Live options &amp; effects</strong><p>Host-selected effects appear in the broadcast.</p><button type="button" onClick={() => document.querySelector<HTMLElement>(".omLiveCinema .omCinemaModeSwitch summary")?.click()}>Viewing format</button><button type="button" onClick={() => document.querySelector<HTMLElement>(".omLiveCinema .omCinemaAudioButton")?.click()}>Toggle audio</button></div></details>
+      </nav>
       <details className="omLiveTheaterGuests">
         <summary aria-label="Open guest controls">♧ Guests</summary>
         <div className="omLiveTheaterGuestPanel"><LiveViewerBoundary streamId={streamId} section="guests"><LiveGuestStudio streamId={streamId} roomName={roomName} hostId={hostId} /></LiveViewerBoundary></div>
@@ -100,6 +106,18 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
         .omLiveCinema .omLiveTheaterChat .messages{min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
         .omLiveCinema[data-comment-focus="yes"] .omLiveTheaterChat{height:min(32dvh,230px);max-height:calc(100dvh - var(--cinema-keyboard-offset,0px) - 100px);width:min(94vw,390px)}
         .omLiveCinema[data-comment-focus="yes"] .omLiveTheaterGuests{display:none}
+        /* Cinema viewer: only guests, heart, comments, share and More remain visible. */
+        .omLiveCinema .emoteTray,.omLiveCinema .omViewerTapCounter,.omLiveCinema .omCinemaModeSwitch,.omLiveCinema .omLiveViewerToolbar{display:none!important}
+        .omLiveCinema .omCinemaActions{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom) + 132px);z-index:34;display:flex;flex-direction:column;gap:12px;align-items:center}
+        .omLiveCinema .omCinemaActions>button,.omLiveCinema .omCinemaMore>summary{width:48px;height:48px;display:grid;place-items:center;border-radius:50%;border:1px solid #ffffff55;background:#081310b9;backdrop-filter:blur(14px);color:white;font-size:25px;cursor:pointer;list-style:none}
+        .omLiveCinema .omCinemaMore>summary{font-size:18px}.omLiveCinema .omCinemaMore>summary::-webkit-details-marker{display:none}
+        .omLiveCinema .omCinemaMorePanel{position:absolute;right:56px;bottom:0;width:min(260px,72vw);padding:14px;border-radius:16px;background:#081713ed;border:1px solid #ffffff55;backdrop-filter:blur(20px);color:white;display:flex;flex-direction:column;gap:10px;font-size:12px}
+        .omLiveCinema .omCinemaMorePanel button{background:#18372e;color:#fff;border:1px solid #ffffff55;border-radius:12px;padding:10px;cursor:pointer}
+        .omLiveCinema .omLiveTheaterGuests{right:12px;bottom:calc(env(safe-area-inset-bottom) + 400px);z-index:34}
+        .omLiveCinema .omLiveTheaterGuests summary{width:48px;height:48px;display:grid;place-items:center;padding:0;border-radius:50%;font-size:0}
+        .omLiveCinema .omLiveTheaterGuests summary::before{content:"♧";font-size:24px}
+        .omLiveCinema .omLiveTheaterChat .messages{align-items:stretch}
+        .omLiveCinema .omLiveTheaterChat .message{background:transparent;border:0;backdrop-filter:none;text-shadow:0 1px 8px #000}
         .omLiveCinema .omLiveTheaterGuests{z-index:32}
         .omLiveCinema .omViewerExit{z-index:40}
         @media(max-width:700px){.omLiveCinema .omLiveVideoStage video{width:100%!important;height:100%!important}.omLiveCinema .omLiveTheaterChat{width:min(78vw,330px)}.omLiveCinema[data-comment-focus="yes"] .omLiveTheaterChat{width:min(94vw,390px)}}
