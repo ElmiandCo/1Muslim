@@ -11,7 +11,7 @@ const DEMO=[5,9,15,24,38,51];
 const monthKey=(date:string)=>date.slice(0,7);
 function QuranCompletionGraph({readings,loading}:{readings:Reading[];loading:boolean}){
  const firstSeen=new Map<string,string>();
- for(const r of readings){if(!/^\\d{1,3}:\\d{1,3}$/.test(r.verse_key)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(r.read_on))continue;const previous=firstSeen.get(r.verse_key);if(!previous||r.read_on<previous)firstSeen.set(r.verse_key,r.read_on)}
+ for(const r of readings){if(!/^\d{1,3}:\d{1,3}$/.test(r.verse_key)||!/^\d{4}-\d{2}-\d{2}$/.test(r.read_on))continue;const previous=firstSeen.get(r.verse_key);if(!previous||r.read_on<previous)firstSeen.set(r.verse_key,r.read_on)}
 
  const hasProgress=firstSeen.size>0;
  const now=new Date();const months=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);return {key:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`,label:d.toLocaleDateString(undefined,{month:"short"})}});
