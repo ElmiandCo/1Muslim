@@ -1,0 +1,10 @@
+{
+  "edition": "Tanzil Uthmani v1.1",
+  "source": "Tanzil Project",
+  "sourceUrl": "https://tanzil.net/",
+  "license": "CC BY 3.0, verbatim only; see ATTRIBUTION.md",
+  "chapters": 114,
+  "verses": 6236,
+  "arabicSha256": "a56a6f8412802699348a1cb393850812cc8312b9e120be45ef10909857f5ff0e",
+  "englishIncluded": false
+}
