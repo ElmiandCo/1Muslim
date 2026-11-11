@@ -4,6 +4,7 @@ Arabic: Tanzil Uthmani v1.1, verbatim. English: only from an explicitly
 licensed/authorized verse-per-line file (chapter|verse|translation).
 No AI generation or machine translation of Qur'an verses.
 """
+# Import workflow validates all 114 chapters before publishing local files.
 import hashlib
 import json
 import os
