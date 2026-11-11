@@ -89,3 +89,7 @@
 .qm-analytics-heatmap{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:4px}
 .qm-analytics-heatmap span{aspect-ratio:1;background:#e6c991;border-radius:3px}
 .qm-analytics-confirm select{display:block;width:100%;margin-bottom:12px;min-height:44px;padding:8px;background:#2b2930;color:white;border:1px solid #ffffff44;border-radius:8px;font-size:16px}
+
+/* Completed chapter: turn the existing north-east arrow east and mute to gray. */
+.qm-chapter .qm-arrow{display:inline-block;transition:transform .35s ease,color .35s ease,opacity .35s ease}
+.qm-chapter .qm-arrow.qm-arrow-complete{transform:rotate(45deg);color:#99999d!important;opacity:.72}
