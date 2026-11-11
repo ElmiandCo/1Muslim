@@ -146,3 +146,16 @@
 .deepwatchTile::after{content:"▶";position:absolute;top:22%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:#080b10b5;border:1px solid #ffffff80;color:#fff;font-size:14px;opacity:.9;pointer-events:none;backdrop-filter:blur(8px);transition:transform .2s ease}
 .deepwatchTile:focus-visible::after,.deepwatchTile:hover::after{transform:translate(-50%,-50%) scale(1.13)}
 @media(prefers-reduced-motion:reduce){.deepwatchLivePulse{animation:none}.dwCinematicBanner .deepwatchHero{transition:none}}
+
+/* DeepWatch 1Muslim identity: restrained icy-blue neon, accessible category rail. */
+.deepwatch{background:radial-gradient(ellipse 80% 460px at 50% 0%,#0b1930 0%,#070b14 58%,#05070c 100%);color:#f1f7ff}
+.deepwatchHeader{background:rgba(5,9,19,.94);border-bottom:1px solid rgba(111,191,255,.23);box-shadow:0 6px 28px rgba(19,104,206,.09)}
+.deepwatchHeader nav{gap:7px;scroll-snap-type:x proximity;padding:5px 2px}
+.deepwatchHeader nav button{scroll-snap-align:start;border:1px solid transparent;border-radius:999px;padding:10px 16px;color:#b8c7da;letter-spacing:.015em;transition:color .2s,border-color .2s,box-shadow .2s,background .2s}
+.deepwatchHeader nav button:hover,.deepwatchHeader nav button:focus-visible{color:#ecf8ff;border-color:rgba(97,184,255,.55);background:rgba(29,99,161,.16);box-shadow:0 0 15px rgba(65,155,255,.15);outline:none}
+.deepwatchHeader nav button[aria-current=page]{color:#eaf8ff;background:linear-gradient(110deg,rgba(30,100,172,.37),rgba(42,124,190,.13));border-color:rgba(108,201,255,.8);box-shadow:inset 0 0 12px rgba(76,159,246,.15),0 0 18px rgba(46,145,245,.22)}
+.deepwatchClassicsRow{border-top:1px solid rgba(88,176,255,.2);border-bottom:1px solid rgba(88,176,255,.12);background:linear-gradient(100deg,rgba(20,65,115,.16),transparent 65%)}
+.deepwatchClassicsRow h2 small{display:inline-block;margin-left:12px;color:#91b6d7;font-size:12px;font-weight:400;letter-spacing:.03em}
+.deepwatchClassicsRow .deepwatchTile:hover,.deepwatchClassicsRow .deepwatchTile:focus-visible{box-shadow:0 0 24px rgba(67,163,255,.22)}
+@media(max-width:700px){.deepwatchHeader nav button{padding:9px 13px}.deepwatchClassicsRow h2 small{display:block;margin:5px 0 0}}
+@media(prefers-reduced-motion:reduce){.deepwatchHeader nav button{transition:none}}
