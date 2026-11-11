@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import HudHudCollapsibleNav from "../components/HudHudCollapsibleNav";
 
 import ProfileAvatar, { ACCESSORIES, AVATAR_TIERS, tierForXp } from "../components/ProfileAvatar";
 import { createClient } from "../../utils/supabase/client";
@@ -315,12 +314,12 @@ export default function ProfilePage() {
   };
   const toggleAccessory=(id:string)=>{if(!profile)return;const item=ACCESSORIES.find(x=>x.id===id);if(!item)return;const required=AVATAR_TIERS.find(x=>x.key===item.tier)?.minXp??0;if(profile.xp_total<required)return;const current=Array.isArray(profile.avatar_config?.accessories)?profile.avatar_config.accessories.map(String):[];const next=current.includes(id)?current.filter(x=>x!==id):[...current,id];update({avatar_config:{...profile.avatar_config,accessories:next}})};
 
-  if(authRequired)return <main><HudHudCollapsibleNav/><section className="profileEmpty"><h1>Build your profile.</h1><p>Sign in to customize your OneMuslim identity.</p><Link href="/auth" className="primary">Sign in</Link></section></main>;
-  if(!profile)return <main><HudHudCollapsibleNav/><section className="profileEmpty"><p>Loading your profile…</p></section></main>;
+  if(authRequired)return <main><section className="profileEmpty"><h1>Build your profile.</h1><p>Sign in to customize your OneMuslim identity.</p><Link href="/auth" className="primary">Sign in</Link></section></main>;
+  if(!profile)return <main><section className="profileEmpty"><p>Loading your profile…</p></section></main>;
 
   const publishFirstPost=async()=>{const body=postText.trim();if(!body||posting)return;setPosting(true);const s=createClient();const {error}=await s.from("posts").insert({user_id:profile.id,body});if(error){setMessage(error.message);setPosting(false);return;}setPostText("");setPostCount(x=>x+1);setPosting(false);};
 
-  return <main className="profilePage"><HudHudCollapsibleNav/><HudHudTenFriends userId={profile.id} connectionCount={ashab.length}/>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>setEditing(true)}/>:<div className="profileShell">
+  return <main className="profilePage"><HudHudTenFriends userId={profile.id} connectionCount={ashab.length}/>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>setEditing(true)}/>:<div className="profileShell">
     <header className={`profileHero header-${profile.profile_accent}`}><div className="profileHeroTop"><div><span className="eyebrow">YOUR ONE MUSLIM PROFILE</span><h1>{profile.display_name||"Member"}</h1><p>@{profile.username||"member"} · {tier.name} · {profile.xp_total.toLocaleString()} XP</p></div></div><div className="profileHeroActions"><Link href="/find" className="ghost">Find People</Link><button className="primary" onClick={save} disabled={saving||colorSaving}>{saving?"Saving…":"Save & close"}</button></div></header>
     <div className="profileEditorToolbar"><button className="ghost" onClick={()=>setEditing(false)}>← Close editor</button><span>Profile settings</span></div><div style={{padding:"12px 0"}}><FeaturedBadge userId={profile.id} verifiedAt={profile.shahada_verified_at} editable/></div><div className="profileTabs" aria-label="Profile editor sections">{(["profile","avatar","header","live","shahada","badges"] as const).map(x=><button className={tab===x?"active":""} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Profile":x==="avatar"?"Avatars":x==="header"?"Backgrounds":x==="live"?"Settings":x==="badges"?"Ranks":"Verification"}</button>)}</div>
 
