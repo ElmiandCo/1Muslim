@@ -22,11 +22,39 @@ export default function HomePullDownGallery({active}:{active:boolean}){
  useEffect(()=>{const onState=(e:Event)=>setCollapsed(!(e as CustomEvent<{expanded:boolean}>).detail?.expanded);window.addEventListener("oneMuslimHomeCarouselExpanded",onState);return()=>window.removeEventListener("oneMuslimHomeCarouselExpanded",onState)},[]);
  useEffect(()=>{if(!active||!collapsed||!navReady)return;const stage=document.querySelector<HTMLElement>(".oneMuslimLiveStage");if(!stage)return;const onPointer=()=>flash();const onVideo=()=>flash();stage.addEventListener("pointerdown",onPointer);window.addEventListener("elmi-home-video-time",onVideo);return()=>{stage.removeEventListener("pointerdown",onPointer);window.removeEventListener("elmi-home-video-time",onVideo)}},[active,collapsed,navReady]);
  useEffect(()=>{const stage=document.querySelector<HTMLElement>(".oneMuslimLiveStage");if(!stage)return;stage.classList.toggle("oneMuslimAppGalleryOpen",active&&open&&navReady);return()=>stage.classList.remove("oneMuslimAppGalleryOpen")},[active,open,navReady]);
- useEffect(()=>{if(!active||!navReady)return;const stage=document.querySelector<HTMLElement>(".oneMuslimLiveStage");if(!stage)return;
- const down=(e:TouchEvent)=>{const t=e.touches[0],target=e.target as Element;if(!t||!target||target.closest("button,a,input,textarea,select,[role=dialog]"))return;start.current={x:t.clientX,y:t.clientY,target}};
- const move=(e:TouchEvent)=>{const s=start.current,t=e.touches[0];if(!s||!t||!e.cancelable)return;const dy=t.clientY-s.y,dx=t.clientX-s.x;const eligible=open?!!s.target.closest(".oneMuslimAppGallery,.oneMuslimLiveVideo"):!!s.target.closest(".oneMuslimLiveVideo");if(eligible&&Math.abs(dy)>12&&Math.abs(dy)>Math.abs(dx)*1.2&&((!open&&dy<0)||(open&&dy>0)))e.preventDefault()};
- const up=(e:TouchEvent)=>{const s=start.current;start.current=null;const t=e.changedTouches[0];if(!s||!t)return;const dx=t.clientX-s.x,dy=t.clientY-s.y;if(Math.abs(dy)<35||Math.abs(dy)<Math.abs(dx)*1.2)return;if(dy<0&&!open&&s.target.closest(".oneMuslimLiveVideo")){setOpen(true);flash()}else if(dy>0&&open&&s.target.closest(".oneMuslimAppGallery,.oneMuslimLiveVideo")){setOpen(false)}};
- stage.addEventListener("touchstart",down,{passive:true});stage.addEventListener("touchmove",move,{passive:false});stage.addEventListener("touchend",up,{passive:true});return()=>{stage.removeEventListener("touchstart",down);stage.removeEventListener("touchmove",move);stage.removeEventListener("touchend",up)}},[active,open,navReady]);
+ // Automatically reveal the gallery one second after the landing navigation is ready.
+ // Do not interrupt someone already interacting with the page.
+ useEffect(()=>{
+  if(!active||!navReady)return;
+  let interacted=false;
+  const mark=()=>{interacted=true};
+  window.addEventListener("pointerdown",mark,{once:true,passive:true});
+  window.addEventListener("touchstart",mark,{once:true,passive:true});
+  const timer=window.setTimeout(()=>{if(!interacted)setOpen(true)},1000);
+  return()=>{window.clearTimeout(timer);window.removeEventListener("pointerdown",mark);window.removeEventListener("touchstart",mark)};
+ },[active,navReady]);
+ // Capture vertical gestures across the entire landing canvas, not just the video rectangle.
+ useEffect(()=>{
+  if(!active||!navReady)return;
+  const stage=document.querySelector<HTMLElement>(".oneMuslimLiveStage");
+  if(!stage)return;
+  const down=(e:TouchEvent)=>{
+   const t=e.touches[0],target=e.target;
+   if(!t||!(target instanceof Element)||!stage.contains(target)||target.closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true]")){start.current=null;return}
+   start.current={x:t.clientX,y:t.clientY,target};
+  };
+  const up=(e:TouchEvent)=>{
+   const origin=start.current;start.current=null;
+   const t=e.changedTouches[0];if(!origin||!t)return;
+   const dx=t.clientX-origin.x,dy=t.clientY-origin.y;
+   if(Math.abs(dy)<35||Math.abs(dy)<Math.abs(dx)*1.2)return;
+   if(dy<0&&!open){setOpen(true);flash()}
+   else if(dy>0&&open){setOpen(false)}
+  };
+  document.addEventListener("touchstart",down,{capture:true,passive:true});
+  document.addEventListener("touchend",up,{capture:true,passive:true});
+  return()=>{document.removeEventListener("touchstart",down,true);document.removeEventListener("touchend",up,true);start.current=null};
+ },[active,open,navReady]);
  if(!active)return null;
  return <><style>{`
  .oneMuslimLiveStage .oneMuslimLiveVideo{touch-action:pan-x;overscroll-behavior:contain}
