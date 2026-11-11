@@ -129,8 +129,8 @@ function MemberFollowControl({viewerId,memberId}:{viewerId:string;memberId:strin
   if(authError||user?.id!==viewerId){setError("Sign in to follow members.");setSaving(false);return}
   const result=following
    ?await db.from("profile_follows").delete().eq("follower_id",viewerId).eq("following_id",memberId)
-   :await db.from("profile_follows").upsert({follower_id:viewerId,following_id:memberId},{onConflict:"follower_id,following_id",ignoreDuplicates:true});
-  if(result.error){setError("Could not update your follow. Please try again.")}
+   :await db.from("profile_follows").insert({follower_id:viewerId,following_id:memberId});
+  if(result.error&&result.error.code!=="23505"){console.error("Profile follow request failed",result.error);setError(`Could not update your follow (${result.error.code||"unknown"}). Please try again.`)}
   else{setFollowing(!following);window.dispatchEvent(new CustomEvent("1muslim:follow-changed",{detail:{memberId,viewerId}}))}
   setSaving(false);
  };
