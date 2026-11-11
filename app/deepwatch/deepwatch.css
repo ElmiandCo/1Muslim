@@ -91,3 +91,17 @@
 .dwRedesigned .dwLandscapeWatermark{width:min(100% - 28px,650px);margin:0 auto}
 @media(max-width:600px){.dwRedesigned .dwCompactControls button{width:44px;height:44px}.dwRedesigned .dwCompactControls .deepwatchPlay{width:64px;height:64px}.dwRedesigned .dwDiscussionTabs{margin-top:clamp(52px,13dvh,120px)}}
 @media(prefers-reduced-motion:reduce){.dwRedesigned .dwCompactControls button{transition:none}}
+
+/* DeepWatch immersive player: fullscreen where supported, Safari fixed-screen fallback. */
+.dwRedesigned .dwTheater{position:relative;width:100%;background:#000}
+.dwRedesigned .dwTheater .deepwatchPlayer{width:100%;margin:0}
+.dwRedesigned .dwTheaterExit{display:none;position:absolute;z-index:5;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));align-items:center;gap:9px;padding:10px 15px;border:1px solid #ffffff55;border-radius:28px;background:#080b10b8;backdrop-filter:blur(16px);color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+.dwRedesigned .dwTheaterExpanded{position:fixed;inset:0;z-index:1200;width:100vw;height:100dvh;display:grid;place-items:center;background:#000}
+.dwRedesigned .dwTheaterExpanded .deepwatchPlayer{width:100%;height:100%;max-height:100dvh;aspect-ratio:auto;border:0;border-radius:0;box-shadow:none;display:grid;place-items:center}
+.dwRedesigned .dwTheaterExpanded .deepwatchPlayer iframe{width:100%;height:100%;border:0}
+.dwRedesigned .dwTheaterExpanded .dwTheaterExit{display:flex}
+.dwRedesigned .dwTheater:fullscreen{width:100%;height:100%;background:#000}
+.dwRedesigned .dwTheater:fullscreen .deepwatchPlayer{width:100%;height:100%;aspect-ratio:auto;border-radius:0}
+.dwRedesigned .dwTheater:fullscreen .dwTheaterExit{display:flex}
+.dwRedesigned .dwCompactControls .dwExpandButton{font-size:26px;background:linear-gradient(145deg,#2a3443,#11151d);border-color:#a9c6e766}
+@media(orientation:landscape) and (max-height:600px){.dwRedesigned .dwTheaterExpanded .deepwatchPlayer iframe{height:100%;width:100%}}
