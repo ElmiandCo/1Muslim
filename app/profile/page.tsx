@@ -78,13 +78,8 @@ function ProfileOrbitStudio({profile,onEdit,ashab}:{profile:Profile;onEdit:()=>v
     
    </div>
   </header>
-  <section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><a href="#profile-media-library">▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></a><a href="#profile-media-library">♡ <span>Likes &amp; Saved</span><small>My content library</small></a><ProfileAnalytics/><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button></div></section>
-  <section className="profileProfessionalCard profileProfessionalSummary"><h2>Profile overview</h2><div className="profileProfessionalStatGrid"><div><strong>{profile.xp_total.toLocaleString()}</strong><span>Total XP</span></div><div><strong>{ashab.length}</strong><span>Connections</span></div><div><strong>{profile.shahada_verified_at?"Verified":"Member"}</strong><span>Shahadah status</span></div></div></section>
-  <section className="profileProfessionalCard profileProfessionalWorkspace"><h2>Command Center</h2><p>Manage your presence and community activity.</p><div className="profileProfessionalNav"><button type="button" aria-pressed={section==="activity"} onClick={()=>setSection("activity")}>Activity</button><button type="button" aria-pressed={section==="connections"} onClick={()=>setSection("connections")}>Connections</button><button type="button" aria-pressed={section==="analytics"} onClick={()=>setSection("analytics")}>Analytics</button></div>
-   {section==="activity"&&<div className="profileProfessionalInner"><h3>Your activity</h3><p>Your posts, recordings and saved content appear below.</p></div>}
-   {section==="connections"&&<div className="profileProfessionalInner"><h3>Connections</h3>{ashab.length?ashab.map(friend=><div key={friend.id} className="profileProfessionalRow">{friend.display_name||friend.username||"1Muslim member"}</div>):<p>No connections to show yet.</p>}</div>}
-   {section==="analytics"&&<div className="profileProfessionalInner"><h3>Member analytics</h3><div className="profileProfessionalStatGrid"><div><strong>{profile.xp_total.toLocaleString()}</strong><span>XP earned</span></div><div><strong>{ashab.length}</strong><span>Connections</span></div></div><p>Profile views and post impressions will appear when verified tracking is available.</p></div>}
-  </section>
+  <section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><a href="#profile-media-library">▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></a><a href="#profile-media-library">♡ <span>Likes &amp; Saved</span><small>My content library</small></a><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button></div></section>
+  <section className="profileProfessionalCard profileProfessionalWorkspace" aria-label="Your activity analytics"><ProfileAnalytics inline/></section>
  </section>;
 }
 

@@ -48,12 +48,12 @@ export function ProfileActivityTracker(){
  },[]);
  return null;
 }
-export default function ProfileAnalytics(){
+export default function ProfileAnalytics({inline=false}:{inline?:boolean}={}){
  const [open,setOpen]=useState(false),[readings,setReadings]=useState<Reading[]>([]),[screen,setScreen]=useState<Record<string,Record<string,number>>>({}),[loading,setLoading]=useState(false);
- useEffect(()=>{if(!open)return;let live=true;setLoading(true);try{setScreen(JSON.parse(localStorage.getItem(TIME_KEY)||"{}"))}catch{setScreen({})}
+ useEffect(()=>{if(!open&&!inline)return;let live=true;setLoading(true);try{setScreen(JSON.parse(localStorage.getItem(TIME_KEY)||"{}"))}catch{setScreen({})}
  const load=async()=>{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){if(live)setLoading(false);return}
  const {data}=await db.from("quran_reading_events").select("verse_key,read_on").eq("user_id",user.id).order("read_on",{ascending:false}).limit(15000);
- if(live){setReadings((data||[]) as Reading[]);setLoading(false)}};void load();return()=>{live=false}},[open]);
+ if(live){setReadings((data||[]) as Reading[]);setLoading(false)}};void load();return()=>{live=false}},[open,inline]);
  const dates=Array.from({length:7},(_,i)=>day(6-i));
  const chart=dates.map(d=>({date:d,count:new Set(readings.filter(r=>r.read_on===d).map(r=>r.verse_key)).size}));
  const max=Math.max(1,...chart.map(x=>x.count));
@@ -61,9 +61,9 @@ export default function ProfileAnalytics(){
  const todaySeconds=Object.values(today).reduce((a,b)=>a+b,0);
  const topPages=Object.entries(dates.reduce((acc,d)=>{for(const [p,t] of Object.entries(screen[d]||{}))acc[p]=(acc[p]||0)+t;return acc},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,5);
  const uniqueVerses=new Set(readings.map(r=>r.verse_key)).size;
- return <><button type="button" className="profileAnalyticsTile" onClick={()=>setOpen(true)} aria-haspopup="dialog"><span className="profileAnalyticsTileIcon">▥</span><span>Analytics<small>Screen time &amp; Qur’an progress</small></span></button>
- {open&&<div className="profileAnalyticsShade" role="presentation" onClick={()=>setOpen(false)}><section className="profileAnalyticsPanel" role="dialog" aria-modal="true" aria-label="Your activity analytics" onClick={e=>e.stopPropagation()}>
- <header><div><small>YOUR ACTIVITY</small><h2>Analytics</h2></div><button type="button" onClick={()=>setOpen(false)} aria-label="Close analytics">✕</button></header>
+ return <>{!inline&&<button type="button" className="profileAnalyticsTile" onClick={()=>setOpen(true)} aria-haspopup="dialog"><span className="profileAnalyticsTileIcon">▥</span><span>Analytics<small>Screen time &amp; Qur’an progress</small></span></button>}
+ {(open||inline)&&<div className={inline?"profileAnalyticsInline":"profileAnalyticsShade"} role={inline?undefined:"presentation"} onClick={inline?undefined:()=>setOpen(false)}><section className="profileAnalyticsPanel" role={inline?"region":"dialog"} aria-modal={inline?undefined:true} aria-label="Your activity analytics" onClick={e=>e.stopPropagation()}>
+ <header><div><small>YOUR ACTIVITY</small><h2>Analytics</h2></div>{!inline&&<button type="button" onClick={()=>setOpen(false)} aria-label="Close analytics">✕</button>}</header>
  <h3>Screen time <small>this device · tracked while active</small></h3>
  <div className="profileAnalyticsStats"><div><strong>{fmt(todaySeconds)}</strong><span>Today</span></div><div><strong>{fmt(week)}</strong><span>Last 7 days</span></div></div>
  <h4>Pages visited · last 7 days</h4>{topPages.length?topPages.map(([p,t])=><div className="profileAnalyticsRow" key={p}><span>{p==="/"? "Home":p.replaceAll("/"," / ")}</span><b>{fmt(t)}</b></div>):<p className="profileAnalyticsMuted">Screen time will appear as you use 1Muslim after this update.</p>}
@@ -76,6 +76,7 @@ export default function ProfileAnalytics(){
  <style>{`
  .profileCompletionGraph{border:1px solid #e0e9f4;border-radius:20px;background:#fff;padding:16px 12px 12px;margin-top:20px;min-width:0}.profileCompletionHeading{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.profileCompletionHeading h3{margin:0 0 3px;font-size:18px}.profileCompletionHeading small{display:block;font-size:11px;color:#718096;line-height:1.4}.profileCompletionDemo{font-size:10px;letter-spacing:.1em;background:#edf4fc;color:#235a93;border-radius:7px;padding:5px 8px;font-weight:800}.profileCompletionMetric{margin:15px 0 5px;border-left:4px solid #1684ec;padding-left:10px;display:flex;flex-direction:column}.profileCompletionMetric span{font-size:12px;color:#667891}.profileCompletionMetric strong{font-size:28px;color:#172d47}.profileCompletionMetric small{font-size:11px;color:#718096}.profileCompletionGraph svg{display:block;width:100%;height:auto;overflow:visible}.profileCompletionMonths{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}.profileCompletionMonths button{border:0;background:transparent;color:#667891;font-size:11px;border-radius:7px;padding:9px 0}.profileCompletionMonths button[aria-pressed=true]{background:#e8f3ff;color:#176ab3;font-weight:800}
  .profileAnalyticsTile{display:flex!important;align-items:center!important;gap:14px!important;text-align:left!important}.profileAnalyticsTileIcon{font-size:27px;min-width:30px}.profileAnalyticsTile span:last-child{display:flex;flex-direction:column}.profileAnalyticsTile small{display:block;font-size:12px;font-weight:400;color:#718096;margin-top:5px}
+ .profileAnalyticsInline{width:100%;min-width:0}.profileAnalyticsInline .profileAnalyticsPanel{width:100%;max-height:none;overflow:visible;box-sizing:border-box;padding:clamp(14px,3vw,28px);border:1px solid #dce5f0;box-shadow:none;border-radius:20px}.profileAnalyticsInline .profileAnalyticsPanel header h2{font-size:25px}.profileAnalyticsInline .profileCompletionGraph{max-width:100%}
  .profileAnalyticsShade{position:fixed;inset:0;z-index:2147483005;background:#071524a8;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)}
  .profileAnalyticsPanel{background:#fff;color:#172d47;width:min(100%,540px);max-height:88dvh;overflow:auto;border-radius:25px;padding:24px;box-shadow:0 20px 80px #0005}
  .profileAnalyticsPanel header{display:flex;justify-content:space-between;align-items:start}.profileAnalyticsPanel header small{font-size:11px;letter-spacing:.15em;color:#8493a8}.profileAnalyticsPanel header h2{margin:3px 0 15px;font-size:30px}.profileAnalyticsPanel header button{border:0;background:#f1f5fa;border-radius:50%;width:38px;height:38px;font-size:20px;color:#243b55}
