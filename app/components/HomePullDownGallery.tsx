@@ -2,11 +2,13 @@
 import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import QiblaIcon from "./icons/QiblaIcon";
-export default function HomePullDownGallery({active}:{active:boolean}){
+export default function HomePullDownGallery({active,avatarUrl}:{active:boolean;avatarUrl?:string|null}){
  const [open,setOpen]=useState(false),[collapsed,setCollapsed]=useState(true),[pulse,setPulse]=useState(false);
  const [navReady,setNavReady]=useState(false);
  const [hudHudOpen,setHudHudOpen]=useState(false);
  const [hudHudDocked,setHudHudDocked]=useState(false);
+ const [hudHudRevealed,setHudHudRevealed]=useState(false);
+ const [hudHudAvatar,setHudHudAvatar]=useState(false);
  const [slide,setSlide]=useState(0);
  const [videoCount,setVideoCount]=useState<number|null>(null);
  const navigateWorkspace=(page:number)=>{setOpen(false);window.dispatchEvent(new CustomEvent("1muslim:gallery-navigate-workspace",{detail:{page}}))};
@@ -23,7 +25,18 @@ export default function HomePullDownGallery({active}:{active:boolean}){
  useEffect(()=>{const onState=(e:Event)=>setCollapsed(!(e as CustomEvent<{expanded:boolean}>).detail?.expanded);window.addEventListener("oneMuslimHomeCarouselExpanded",onState);return()=>window.removeEventListener("oneMuslimHomeCarouselExpanded",onState)},[]);
  useEffect(()=>{if(!active||!collapsed||!navReady)return;const stage=document.querySelector<HTMLElement>(".oneMuslimLiveStage");if(!stage)return;const onPointer=()=>flash();const onVideo=()=>flash();stage.addEventListener("pointerdown",onPointer);window.addEventListener("elmi-home-video-time",onVideo);return()=>{stage.removeEventListener("pointerdown",onPointer);window.removeEventListener("elmi-home-video-time",onVideo)}},[active,collapsed,navReady]);
  useEffect(()=>{const stage=document.querySelector<HTMLElement>(".oneMuslimLiveStage");if(!stage)return;stage.classList.toggle("oneMuslimAppGalleryOpen",active&&open&&navReady);return()=>stage.classList.remove("oneMuslimAppGalleryOpen")},[active,open,navReady]);
- useEffect(()=>{if(!active||!open){setHudHudDocked(false);return}setHudHudDocked(false);const id=window.setTimeout(()=>setHudHudDocked(true),1550);return()=>window.clearTimeout(id)},[active,open]);
+ useEffect(()=>{
+  if(!active||!open){setHudHudDocked(false);setHudHudRevealed(false);setHudHudAvatar(false);return}
+  setHudHudDocked(false);setHudHudRevealed(false);setHudHudAvatar(false);
+  const appear=window.setTimeout(()=>{
+   setHudHudRevealed(true);
+   // A brief, soft chirp. Browsers may suppress audio until the user interacts.
+   try{const AudioContextClass=window.AudioContext;const context=new AudioContextClass();if(context.state==="running"){const oscillator=context.createOscillator(),gain=context.createGain();oscillator.type="sine";oscillator.frequency.setValueAtTime(980,context.currentTime);oscillator.frequency.exponentialRampToValueAtTime(1480,context.currentTime+.075);oscillator.frequency.exponentialRampToValueAtTime(1100,context.currentTime+.19);gain.gain.setValueAtTime(.0001,context.currentTime);gain.gain.exponentialRampToValueAtTime(.025,context.currentTime+.025);gain.gain.exponentialRampToValueAtTime(.0001,context.currentTime+.21);oscillator.connect(gain);gain.connect(context.destination);oscillator.start();oscillator.stop(context.currentTime+.22);oscillator.onended=()=>void context.close()}else void context.close()}catch{}
+  },1000);
+  const dock=window.setTimeout(()=>setHudHudDocked(true),1500);
+  const avatar=window.setTimeout(()=>setHudHudAvatar(true),1900);
+  return()=>{clearTimeout(appear);clearTimeout(dock);clearTimeout(avatar)}
+ },[active,open]);
  // Automatically reveal the gallery one second after the landing navigation is ready.
  // Do not interrupt someone already interacting with the page.
  useEffect(()=>{
@@ -86,6 +99,12 @@ export default function HomePullDownGallery({active}:{active:boolean}){
  .oneMuslimLiveStage:not(.oneMuslimAppGalleryOpen) .oneMuslimLiveVideo{transition:height .55s cubic-bezier(.2,.8,.2,1),transform .55s cubic-bezier(.2,.8,.2,1),margin-top .55s ease}
  .oneMuslimAppGalleryOpen .oneMuslimLiveBottom{opacity:0;pointer-events:none;max-height:0!important;min-height:0!important;transition:opacity .35s,max-height .4s}
  .oneMuslimAppGalleryOpen .oneMuslimHomeWheelSlot{opacity:0;pointer-events:none}
+ .hudhudTopLeft{position:absolute;top:18px;left:18px;z-index:11;width:54px;height:54px;border:1px solid #7bd6ff9c;border-radius:50%;background:radial-gradient(circle at 40% 25%,#183e65,#050c19);box-shadow:0 0 18px #49b8ff77;display:grid;place-items:center;opacity:0;transform:translateY(18px) scale(.55);transition:opacity .3s,transform .55s cubic-bezier(.2,1.2,.3,1);pointer-events:none;overflow:hidden}
+ .hudhudTopLeft.visible{opacity:1;transform:translateY(0) scale(1)}
+ .hudhudTopLeft img{position:absolute;width:90%;height:90%;object-fit:contain;transition:opacity .35s,transform .35s}
+ .hudhudTopLeft .hudhudRealAvatar{opacity:0;transform:scale(.8)}
+ .hudhudTopLeft.avatarShown .hudhudRealAvatar{opacity:1;transform:scale(1)}
+ .hudhudTopLeft.avatarShown .hudhudBirdImage{opacity:0;transform:scale(.8)}
  .oneMuslimAppGalleryOpen .oneMuslimAppGallery{padding-top:clamp(175px,25vh,270px)}
  .oneMuslimAppGalleryGrid{position:relative;isolation:isolate}
  .oneMuslimAppGalleryTile{position:relative;--launch-x:0px;--launch-y:110px;--launch-delay:0ms;opacity:0;transform:translate(var(--launch-x),var(--launch-y)) scale(.18);transition:transform 950ms cubic-bezier(.18,1.35,.32,1),opacity 280ms ease;transition-delay:0ms}
@@ -133,7 +152,7 @@ export default function HomePullDownGallery({active}:{active:boolean}){
  `}</style>
  <button className={"oneMuslimExplorePrompt"+(showExplore?" visible":"")} type="button" aria-label="Explore 1Muslim apps" aria-hidden={!showExplore} tabIndex={showExplore?0:-1} onClick={()=>{setOpen(true);flash()}}><span className="oneMuslimExploreParticles" aria-hidden="true">{Array.from({length:13},(_,i)=><i key={i} style={{"--x":`${(i*37)%100}%`,"--y":`${(i*23)%100}%`,"--d":`${2.6+i*.23}s`} as React.CSSProperties}/>)}</span><span key={slide} className={"phrase"+(slides[slide]==="Live Stream"?" livePhrase":"")}>{slides[slide%slides.length]}</span></button>
  {navReady&&collapsed&&<button className={"oneMuslimCarouselCenterControl"+(pulse?" pulse":"")} type="button" aria-label="Expand carousel" onClick={()=>{window.dispatchEvent(new Event("oneMuslimRequestCarouselExpand"));flash()}}>● ● ●</button>}
- <section className="oneMuslimAppGallery" aria-label="1Muslim app gallery" aria-hidden={!open} onClick={e=>{if(open&&!(e.target as HTMLElement).closest(".oneMuslimAppGalleryGrid"))setOpen(false)}}><strong style={{color:"#e8e4f2",fontSize:14}}>Explore 1Muslim</strong><div className="oneMuslimAppGalleryGrid"><img className="hudhudLaunchBird" src="/assets/hudhud-logo.PNG" alt="" aria-hidden="true"/>
+ <section className="oneMuslimAppGallery" aria-label="1Muslim app gallery" aria-hidden={!open} onClick={e=>{if(open&&!(e.target as HTMLElement).closest(".oneMuslimAppGalleryGrid"))setOpen(false)}}><div className={"hudhudTopLeft"+(hudHudRevealed?" visible":"")+(hudHudAvatar?" avatarShown":"")} aria-hidden="true"><img className="hudhudBirdImage" src="/assets/hudhud-logo.PNG" alt=""/><img className="hudhudRealAvatar" src={avatarUrl||"/assets/avatars/default-male.jpg"} alt=""/></div><strong style={{color:"#e8e4f2",fontSize:14}}>Explore 1Muslim</strong><div className="oneMuslimAppGalleryGrid"><img className="hudhudLaunchBird" src="/assets/hudhud-logo.PNG" alt="" aria-hidden="true"/>
  <Link className="oneMuslimAppGalleryTile" href="/deepwatch" tabIndex={open?0:-1}><span className="oneMuslimAppGalleryIcon"><img src="/assets/deepwatch-icon-2.PNG" alt="" onError={e=>{e.currentTarget.style.display="none";e.currentTarget.parentElement?.insertAdjacentText("beforeend","▶")}}/></span><span>DeepWatch</span></Link>
  <Link className="oneMuslimAppGalleryTile" href="/qibla/newsroom" tabIndex={open?0:-1}><span className="oneMuslimAppGalleryIcon"><QiblaIcon/></span><span>Qibla</span></Link>
  <button type="button" className="oneMuslimAppGalleryTile" tabIndex={open?0:-1} onClick={()=>{window.location.assign("/quran-library")}}><span className="oneMuslimAppGalleryIcon"><svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs><linearGradient id="quranBook" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff3b5"/><stop offset="1" stopColor="#91e9f7"/></linearGradient></defs><path d="M50 25C37 17 23 19 12 24v52c15-6 27-4 38 3 11-7 23-9 38-3V24c-11-5-25-7-38 1Z" stroke="url(#quranBook)" strokeWidth="4" strokeLinejoin="round"/><path d="M50 25v54M19 34c10-3 18-2 25 2M19 43c10-3 18-2 25 2M56 36c7-4 15-5 25-2M56 45c7-4 15-5 25-2" stroke="#d9f8ff" strokeWidth="2.5" strokeLinecap="round"/><path d="m50 36 4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1Z" fill="#ffe6a4" stroke="#fff" strokeWidth="1.5"/></svg></span><span>Qur’an</span></button>
