@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "../../../../utils/supabase/client";
 import styles from "./article.module.css";
 import OneMuslimVideo from "../../../components/OneMuslimVideo";
+import UnifiedPostMedia from "../../../components/UnifiedPostMedia";
 import {unpack} from "../../studio/PublicationDesigner";
 
 type Article = {
@@ -87,6 +88,7 @@ export default function QiblaArticlePage() {
         {leadImage&&<figure className={styles.heroFigure}><img src={leadImage} alt={media.find(m=>m.url===leadImage)?.caption||article.title} loading="eager"/>{media.find(m=>m.url===leadImage)?.caption&&<figcaption>{media.find(m=>m.url===leadImage)?.caption}</figcaption>}</figure>}
         {!leadImage&&article.template_type==="video"&&article.hero_media_path&&<div className={styles.heroVideo}><OneMuslimVideo videoKey={"qibla:"+article.id+":hero"} src={article.hero_media_path} youtubeId={videoId(article.hero_media_path)} title={article.title}/></div>}
         <div className={`${styles.story} ${parsed?.design.columns==="double"?styles.doubleColumns:parsed?.design.columns==="mixed"?styles.mixedColumns:""}`}>{blocks.map((block,i)=>{const sectionMedia=blocks.length>1&&i>0?otherMedia.filter((_,mediaIndex)=>Math.floor(mediaIndex*(blocks.length-1)/otherMedia.length)===i-1):[];return <section key={i} className={styles.storySection}>{sectionMedia.map((m,mediaIndex)=><figure key={mediaIndex} className={styles.inlineMedia}>{m.type==="video"?<OneMuslimVideo videoKey={"qibla:"+article.id+":media:"+i+":"+mediaIndex} src={m.url} youtubeId={videoId(m.url)} title={m.caption||article.title}/>:<img src={m.url} alt={m.caption||"Story photograph"} loading="lazy"/>}{m.caption&&<figcaption>{m.caption}</figcaption>}</figure>)}{isHeading(block)?<h2>{block}</h2>:<p className={i===0?styles.lead:""}>{block}</p>}</section>})}{!blocks.length&&<p>Story content is being prepared.</p>}{otherMedia.length>0&&blocks.length<=1&&<div className={styles.gallery}>{otherMedia.map((m,i)=><figure key={i}>{m.type==="video"?<OneMuslimVideo videoKey={"qibla:"+article.id+":extra:"+i} src={m.url} youtubeId={videoId(m.url)} title={m.caption||article.title}/>:<img src={m.url} alt={m.caption||"Story photograph"} loading="lazy"/>}{m.caption&&<figcaption>{m.caption}</figcaption>}</figure>)}</div>}</div>
+        {article.kind!=="newsletter"&&<div style={{maxWidth:720,width:"100%",margin:"28px auto 18px",padding:"0 12px",boxSizing:"border-box"}}><UnifiedPostMedia postId={article.id} contentKind="magazine"/></div>}
         <footer className={styles.footer}><Link href="/qibla/newsroom">← Explore more Qibla stories</Link></footer>
       </article>:null}
     </div>
