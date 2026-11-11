@@ -93,3 +93,7 @@
 /* Completed chapter: turn the existing north-east arrow east and mute to gray. */
 .qm-chapter .qm-arrow{display:inline-block;transition:transform .35s ease,color .35s ease,opacity .35s ease}
 .qm-chapter .qm-arrow.qm-arrow-complete{transform:rotate(45deg);color:#99999d!important;opacity:.72}
+
+/* Single last-read indicator: small unobtrusive gold dot in card top-left. */
+.qm-chapter{position:relative}
+.qm-chapter .qm-last-read-dot{position:absolute;top:11px;left:12px;width:7px;height:7px;border-radius:50%;background:#d8b580;box-shadow:0 0 0 2px #d8b58020;pointer-events:none}
