@@ -21,7 +21,7 @@ export async function POST(request:Request){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();if(!user)return NextResponse.json({error:"Sign in to comment"},{status:401});
  const payload=await request.json().catch(()=>({}));const body=typeof payload.body==="string"?payload.body.trim():"";
  if(body.length>1500||typeof payload.postId!=="string")return NextResponse.json({error:"Invalid comment"},{status:400});
- const imagePath=typeof payload.imagePath==="string"?payload.imagePath:"";if(imagePath&&(!imagePath.startsWith(user.id+"/comments/")||!/^[-a-zA-Z0-9_/.]+$/.test(imagePath)||!imagePath.match(/\\.(png|jpe?g|webp|gif)$/i)))return NextResponse.json({error:"Invalid image path"},{status:400});
+ const imagePath=typeof payload.imagePath==="string"?payload.imagePath:"";if(imagePath&&(!imagePath.startsWith(user.id+"/comments/")||!/^[-a-zA-Z0-9_/.]+$/.test(imagePath)||!imagePath.match(/\.(png|jpe?g|webp|gif)$/i)))return NextResponse.json({error:"Invalid image path"},{status:400});
  if(!body&&!imagePath)return NextResponse.json({error:"Add a comment or image"},{status:400});
  const {data:post}=await db.from("ummah_feed_posts").select("id,author_id").eq("id",payload.postId).maybeSingle();
  if(!post)return NextResponse.json({error:"Post not found"},{status:404});
