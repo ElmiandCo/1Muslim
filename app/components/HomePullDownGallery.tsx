@@ -35,7 +35,7 @@ export default function HomePullDownGallery({active}:{active:boolean}){
  .oneMuslimLiveStage:not(.oneMuslimAppGalleryOpen) .oneMuslimLiveVideo{transition:height .55s cubic-bezier(.2,.8,.2,1),transform .55s cubic-bezier(.2,.8,.2,1),margin-top .55s ease}
  .oneMuslimAppGalleryOpen .oneMuslimLiveBottom{opacity:0;pointer-events:none;max-height:0!important;min-height:0!important;transition:opacity .35s,max-height .4s}
  .oneMuslimAppGalleryOpen .oneMuslimHomeWheelSlot{opacity:0;pointer-events:none}
- .oneMuslimAppGallery{position:absolute;inset:0;z-index:240;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:22px;padding:clamp(30px,7vh,75px) 18px 30px;box-sizing:border-box;overflow:auto;border-radius:0;background:transparent;backdrop-filter:none;opacity:0;transform:translateY(90px) scale(.9) perspective(600px) rotateX(9deg);pointer-events:none;transition:opacity .48s,transform .6s cubic-bezier(.18,.8,.2,1)}
+ .oneMuslimAppGallery{position:absolute;inset:0;z-index:240;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:22px;padding:clamp(135px,17vh,190px) 18px 30px;box-sizing:border-box;overflow:auto;border-radius:0;background:transparent;backdrop-filter:none;opacity:0;transform:translateY(90px) scale(.9) perspective(600px) rotateX(9deg);pointer-events:none;transition:opacity .48s,transform .6s cubic-bezier(.18,.8,.2,1)}
  .oneMuslimAppGalleryOpen .oneMuslimAppGallery{opacity:1;transform:translateY(0) scale(1) perspective(600px) rotateX(0);pointer-events:auto}
  .oneMuslimAppGalleryOpen .oneMuslimLiveBottom{visibility:hidden}
  .oneMuslimAppGalleryGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(12px,4vw,36px);width:100%;max-width:580px}
