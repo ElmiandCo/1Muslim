@@ -92,3 +92,6 @@
 .feedPostMenu a,.feedPostMenu button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:11px 12px;font:700 13px Arial,sans-serif;color:#24352e;text-decoration:none;cursor:pointer;border-radius:8px}
 .feedPostMenu a:hover,.feedPostMenu button:hover{background:#f0eae0}.feedPostMenu button:last-child{color:#b33737}
 .feedEditBox{padding:12px 16px;border-block:1px solid #ded8ce}.feedEditBox textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #d3cabd;border-radius:10px;padding:10px;font:inherit;color:#1e2b24;background:#fff}.feedEditBox>div{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}.feedEditBox button{border:1px solid #c7bfb2;border-radius:20px;padding:9px 13px;background:#fff;color:#24352e;font-weight:700}.feedEditBox button:last-child{background:#24352e;color:white}
+
+/* Social Magazine story swipe controls */
+.socialSwipeNav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%;justify-content:space-between}.socialSwipeNav button{border:1px solid #dce4ee;border-radius:20px;padding:9px 13px;background:#f3f7fb;color:#235a93;font-size:12px;font-weight:750;cursor:pointer}.socialSwipeNav button:disabled{opacity:.35;cursor:default}.socialStoryFooter{flex-wrap:wrap}.socialStoryFooter .socialSwipeNav{flex-basis:100%}
