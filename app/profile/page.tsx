@@ -183,7 +183,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,editing=false,editorTab="profi
    
    <span className="profileOrbitHint">↔ DRAG TO ROTATE · 1,000 PROFILE ORBS · 4 LIVING RINGS</span>
   </div>
-  {!selectedFriend&&!aiEnabled&&}
+  
   {false&&!selectedFriend&&aiOpen&&aiEnabled&&<section className="profileAiPanel" aria-label="HudHud AI"><h3>✦ HudHud AI · Premium</h3><p>Ask about 1Muslim, learning resources, or Qur'an study. Premium access is verified on the server.</p><textarea aria-label="Message HudHud AI" value={aiInput} onChange={e=>setAiInput(e.target.value)} maxLength={1200} placeholder="Ask HudHud…"/><button type="button" disabled={aiBusy||!aiInput.trim()} onClick={()=>void askHudHud()}>{aiBusy?"Thinking…":"Ask HudHud"}</button>{aiError&&<p role="alert">{aiError}</p>}{aiReply&&<div role="status" className="profileAiReply">{aiReply}</div>}</section>}
   <div className="profileOrbitIdentity"><span>1M · MEMBER PROFILE</span><h3>{shown.display_name||"Member"}</h3><p className="profileIdentityHandle">@{shown.username||"member"} <span>·</span> {shown.xp_total.toLocaleString()} XP</p><p className="profileIdentityBio">{shown.bio||"Your story starts here. Add your biography in Profile Settings."}</p>{selectedFriend?<button type="button" onClick={()=>viewFriend(null)}>← Back to my profile</button>:<button type="button" onClick={onEdit}>⚙ Manage profile settings →</button>}</div>
   <nav className="profileStudioNav" aria-label="Profile studio sections">{(["overview","friends","analytics"] as const).map(item=><button type="button" key={item} aria-pressed={section===item} onClick={()=>setSection(item)}>{item==="overview"?"✦ Studio":item==="friends"?"◈ Friends":"▥ Analytics"}</button>)}</nav>
