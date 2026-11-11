@@ -9,7 +9,7 @@ export async function GET(){const db=await authorized();if(!db)return fail("Forb
 export async function POST(req:NextRequest){const db=await authorized();if(!db)return fail("Forbidden",403);const body=await req.json().catch(()=>null);if(!body)return fail("Invalid request");
 if(body.action==="add"){
  const raw=String(body.channel||"").trim();if(raw.length>250)return fail("Channel link too long");
- const token=process.env.YOUTUBE_API_KEY;if(!token)return fail("YOUTUBE_API_KEY is required on the server",503);
+ const token=process.env.YOUTUBE_API_KEY||process.env.YOUTUBE_DATA_API_KEY;if(!token)return fail("YouTube Data API key is not configured on the server",503);
  let channelId=validId(raw)?raw:"";let handle="";
  try{const parsed=new URL(raw.startsWith("http")?raw:"https://www.youtube.com/"+raw.replace(/^@?/,"@"));if(!["youtube.com","www.youtube.com","m.youtube.com"].includes(parsed.hostname))return fail("Use a YouTube channel URL or @handle");const match=parsed.pathname.match(/^\/channel\/(UC[A-Za-z0-9_-]{22})\/?$/);if(match)channelId=match[1];else{const h=parsed.pathname.match(/^\/@([A-Za-z0-9._-]+)\/?$/);if(h)handle=h[1];else if(!channelId)return fail("Use a YouTube @handle or /channel/ID URL")}}catch{return fail("Invalid YouTube URL")}
  const params=new URLSearchParams({part:"snippet",key:token,...(channelId?{id:channelId}:{forHandle:handle})});
