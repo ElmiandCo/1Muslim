@@ -10,6 +10,7 @@ import ProfileContentSections from "../components/ProfileContentSections";
 import FeaturedBadge from "../components/FeaturedBadge";
 import PublicBadgeSelector from "../components/PublicBadgeSelector";
 import HudHudTenFriends from "../components/HudHudTenFriends";
+import ProfileAnalytics from "../components/ProfileAnalytics";
 
 type Profile = {
   id: string; display_name: string; username: string | null; first_name: string | null; last_name: string | null;
@@ -77,7 +78,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab}:{profile:Profile;onEdit:()=>v
     
    </div>
   </header>
-  <section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><a href="#profile-media-library">▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></a><a href="#profile-media-library">♡ <span>Likes &amp; Saved</span><small>My content library</small></a><Link href="/quran">☷ <span>Verses</span><small>Qur’an Studio</small></Link><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button></div></section>
+  <section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><a href="#profile-media-library">▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></a><a href="#profile-media-library">♡ <span>Likes &amp; Saved</span><small>My content library</small></a><ProfileAnalytics/><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button></div></section>
   <section className="profileProfessionalCard profileProfessionalSummary"><h2>Profile overview</h2><div className="profileProfessionalStatGrid"><div><strong>{profile.xp_total.toLocaleString()}</strong><span>Total XP</span></div><div><strong>{ashab.length}</strong><span>Connections</span></div><div><strong>{profile.shahada_verified_at?"Verified":"Member"}</strong><span>Shahadah status</span></div></div></section>
   <section className="profileProfessionalCard profileProfessionalWorkspace"><h2>Command Center</h2><p>Manage your presence and community activity.</p><div className="profileProfessionalNav"><button type="button" aria-pressed={section==="activity"} onClick={()=>setSection("activity")}>Activity</button><button type="button" aria-pressed={section==="connections"} onClick={()=>setSection("connections")}>Connections</button><button type="button" aria-pressed={section==="analytics"} onClick={()=>setSection("analytics")}>Analytics</button></div>
    {section==="activity"&&<div className="profileProfessionalInner"><h3>Your activity</h3><p>Your posts, recordings and saved content appear below.</p></div>}
