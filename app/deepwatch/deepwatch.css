@@ -73,3 +73,21 @@
 .deepwatchSurahControls{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:20px auto}.deepwatchSurahControls button,.deepwatchSurahControls a{border:1px solid #514c50;background:#242328;color:#f7f2e8;padding:12px 18px;border-radius:30px;font:inherit;text-decoration:none;cursor:pointer}.deepwatchSurahControls button[aria-pressed=true]{background:#d8b481;color:#18171b;border-color:#d8b481}
 .deepwatchSurahGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,410px),1fr));gap:12px}.deepwatchSurahChapter{border:1px solid #49454a;background:#232227;border-radius:18px;overflow:hidden}.deepwatchSurahHeading{width:100%;display:flex;align-items:center;gap:13px;text-align:left;padding:18px 15px;background:transparent;border:0;color:inherit;cursor:pointer}.deepwatchSurahNumber{display:grid;place-items:center;flex:none;width:45px;height:45px;border:1px solid #9d8060;border-radius:12px;transform:rotate(0deg);color:#d8b481;font-weight:800}.deepwatchSurahTitle{display:flex;flex:1;flex-direction:column;min-width:0;gap:5px}.deepwatchSurahTitle strong{font-size:18px}.deepwatchSurahTitle small{font-size:11px;color:#aaa5ab}.deepwatchSurahArabic{font-family:serif;font-size:23px;color:#f4e7d3}.deepwatchSurahVideos{padding:10px 15px 18px;border-top:1px solid #49454a;display:grid;gap:10px}.deepwatchSurahVideos p{font-size:13px;color:#aaa5ab}.deepwatchSurahVideos a{color:#d8b481}.deepwatchSurahVideo{display:flex;gap:12px;align-items:center;background:#15151a;border:1px solid #39363c;border-radius:10px;color:white;padding:8px;text-align:left;cursor:pointer}.deepwatchSurahVideo img{width:100px;aspect-ratio:16/9;object-fit:cover;border-radius:6px}.deepwatchSurahVideo span{font-size:13px;line-height:1.4}
 @media(max-width:480px){.deepwatchSurahArabic{font-size:19px}.deepwatchSurahHeading{gap:9px;padding:14px 10px}.deepwatchSurahNumber{width:37px;height:37px}.deepwatchSurahTitle strong{font-size:16px}}
+
+/* Mobile theater layout: edge-to-edge player, polished transport, discussion below. */
+.dwRedesigned .deepwatchScreenInner{width:100%;max-width:none;padding:12px 0 max(32px,env(safe-area-inset-bottom))}
+.dwRedesigned .deepwatchScreenTop{width:100%;max-width:none;padding:6px clamp(12px,3vw,28px) 16px}
+.dwRedesigned .deepwatchWatchCanvas{width:100%;max-width:none;margin:0}
+.dwRedesigned .deepwatchPlayer{width:100%;aspect-ratio:16/9;border-radius:0;border-left:0;border-right:0;box-shadow:0 12px 36px #0009}
+.dwRedesigned .deepwatchPlayer iframe{display:block;width:100%;height:100%}
+.dwRedesigned .dwCompactControls{width:min(100% - 32px,440px);max-width:440px;gap:clamp(8px,2.5vw,16px);margin:20px auto 28px}
+.dwRedesigned .dwCompactControls button{width:48px;height:48px;border:1px solid #ffffff30;background:linear-gradient(145deg,#262d38,#10141b);color:#f4f7ff;box-shadow:inset 0 1px #ffffff25,0 6px 18px #0008;font-size:22px;transition:transform .18s ease,background .18s ease}
+.dwRedesigned .dwCompactControls button:active{transform:scale(.92)}
+.dwRedesigned .dwCompactControls button:focus-visible{outline:2px solid #a9c9ff;outline-offset:3px}
+.dwRedesigned .dwCompactControls .deepwatchPlay{width:70px;height:70px;font-size:30px;border:2px solid #fff;background:linear-gradient(145deg,#fff,#b8c7df);box-shadow:0 0 22px #9ebeff55,0 8px 25px #000b}
+.dwRedesigned .dwCompactControls button small{bottom:3px;font-size:9px;font-weight:700}
+.dwRedesigned .dwDiscussionTabs{width:min(100% - 28px,650px);max-width:650px;margin:clamp(48px,12dvh,140px) auto 0}
+.dwRedesigned .dwDiscussionPane{width:min(100% - 28px,650px);max-width:650px;margin:12px auto 0}
+.dwRedesigned .dwLandscapeWatermark{width:min(100% - 28px,650px);margin:0 auto}
+@media(max-width:600px){.dwRedesigned .dwCompactControls button{width:44px;height:44px}.dwRedesigned .dwCompactControls .deepwatchPlay{width:64px;height:64px}.dwRedesigned .dwDiscussionTabs{margin-top:clamp(52px,13dvh,120px)}}
+@media(prefers-reduced-motion:reduce){.dwRedesigned .dwCompactControls button{transition:none}}
