@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
+import {loadLocalQuranChapter} from "../../lib/quran-verses";
 import {createClient} from "../../../utils/supabase/client";
 import SiteNav from "../../components/SiteNav";
 import VerseStudio from "./VerseStudio";
@@ -41,10 +42,7 @@ export default function QuranLessons(){
    const first=(page-1)*50;
    const normalize=(items:Verse[])=>items.map(v=>({...v,words:v.words?.filter(w=>w.char_type_name!=="end"&&!!w.text_uthmani)}));
    const local=async()=>{
-    const response=await fetch("/quran-data/"+chapter+".json");
-    if(!response.ok)throw Error("Local corpus not available");
-    const all=await response.json() as {verse_key:string;arabic:string;english?:string}[];
-    if(!Array.isArray(all)||!all.length)throw Error("Invalid local corpus");
+    const all=await loadLocalQuranChapter(chapter);
     return {items:all.slice(first,first+50).map((v,i)=>({id:first+i+1,verse_key:v.verse_key,text_uthmani:v.arabic,translations:v.english?[{text:v.english}]:[]})) as Verse[],pages:Math.ceil(all.length/50)};
    };
    const primary=async()=>{
