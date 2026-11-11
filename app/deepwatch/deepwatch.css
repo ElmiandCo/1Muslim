@@ -124,3 +124,25 @@
 77%{filter:drop-shadow(0 0 7px #ffd45b30)}
 }
 @media(prefers-reduced-motion:reduce){.dwKidsMode::before,.dwKidsMode .deepwatchHeader{animation:none}}
+
+/* Cinematic hero: noninteractive background preview, invisible navigation zones. */
+.dwCinematicBanner{position:relative;isolation:isolate;overflow:hidden;background:#06080d}
+.dwCinematicBanner .deepwatchHero{overflow:hidden;transition:opacity .85s ease,transform .85s ease}
+.dwCinematicBanner .deepwatchHero iframe{pointer-events:none;user-select:none;filter:brightness(.65) saturate(1.12);transform:translateY(6%) scale(1.08);transform-origin:center}
+.dwCinematicBanner .deepwatchHero::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,#080b12b8 0%,transparent 24%,transparent 55%,#080b12 100%),radial-gradient(ellipse at 80% 80%,#233b7640,transparent 60%);z-index:1}
+.dwCinematicBanner .deepwatchHeroText{position:relative;z-index:4;pointer-events:none}
+.dwCinematicBanner .deepwatchHeroText button{pointer-events:auto}
+.dwCinematicBanner .deepwatchHeroText button:first-child{font-size:14px;padding:11px 18px;min-height:42px;border-radius:13px}
+.dwCinematicBanner .dwHeroTapZone{position:absolute;top:12%;bottom:12%;width:13%;z-index:3;border:0;background:transparent;opacity:0;cursor:pointer}
+.dwCinematicBanner .dwHeroTapLeft{left:0}
+.dwCinematicBanner .dwHeroTapRight{right:0}
+.dwCinematicBanner .dwHeroTapZone:focus-visible{opacity:1;outline:2px solid #b2c6e6;outline-offset:-3px}
+.dwCinematicBanner .dwHeroProgress{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:6px;pointer-events:none}
+.dwCinematicBanner .dwHeroProgress span{width:14px;height:3px;border-radius:6px;background:#ffffff40;transition:width .3s ease}
+.dwCinematicBanner .dwHeroProgress span.active{width:38px;background:#d5e5ff;box-shadow:0 0 10px #8dbaff80}
+.deepwatchLivePulse{animation:dwLiveBlink 1.6s ease-in-out infinite}
+@keyframes dwLiveBlink{0%,100%{opacity:1;box-shadow:0 0 0 0 #ff444466}50%{opacity:.55;box-shadow:0 0 0 5px #ff444400}}
+.deepwatchTile{position:relative}
+.deepwatchTile::after{content:"▶";position:absolute;top:22%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:#080b10b5;border:1px solid #ffffff80;color:#fff;font-size:14px;opacity:.9;pointer-events:none;backdrop-filter:blur(8px);transition:transform .2s ease}
+.deepwatchTile:focus-visible::after,.deepwatchTile:hover::after{transform:translate(-50%,-50%) scale(1.13)}
+@media(prefers-reduced-motion:reduce){.deepwatchLivePulse{animation:none}.dwCinematicBanner .deepwatchHero{transition:none}}
