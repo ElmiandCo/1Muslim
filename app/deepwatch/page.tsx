@@ -115,13 +115,14 @@ export default function DeepWatch(){
 
  const [libraryLoading,setLibraryLoading]=useState(true);
  useEffect(()=>{let live=true;const db=createClient();const load=async()=>{try{
+  const cached=sessionStorage.getItem("1muslim:deepwatch-approved-cache");if(cached){try{const parsed=JSON.parse(cached);if(Array.isArray(parsed)&&live){setApprovedRegistry(parsed);setLibraryLoading(false)}}catch{}}
   const pageSize=500;const rows:{video_id:string;title:string;categories:string[]|null;format:string|null;published_at:string|null;discovered_at:string|null}[]=[];
   for(let offset=0;offset<5000;offset+=pageSize){
    const {data,error}=await db.from("islamic_video_registry").select("video_id,title,categories,format,published_at,discovered_at").eq("status","approved").order("discovered_at",{ascending:false}).range(offset,offset+pageSize-1);
    if(error)throw error;
    rows.push(...(data||[]));if(!data||data.length<pageSize)break;
   }
-  if(live)setApprovedRegistry(rows.filter(v=>/^[A-Za-z0-9_-]{11}$/.test(v.video_id)).map(v=>({videoId:v.video_id,title:v.title,category:v.categories?.[0]||"Videos",categories:v.categories||[],startSeconds:0,endSeconds:null,format:"desktop" as const})));
+  const approved=rows.filter(v=>/^[A-Za-z0-9_-]{11}$/.test(v.video_id)).map(v=>({videoId:v.video_id,title:v.title,category:v.categories?.[0]||"Videos",categories:v.categories||[],startSeconds:0,endSeconds:null,format:"desktop" as const}));if(live){setApprovedRegistry(approved);try{sessionStorage.setItem("1muslim:deepwatch-approved-cache",JSON.stringify(approved))}catch{}}
  }catch(e){console.error("DeepWatch approved library unavailable",e)}finally{if(live)setLibraryLoading(false)}};
  void load();return()=>{live=false}},[]);
  const [episodeSeason,setEpisodeSeason]=useState(1);
@@ -143,6 +144,16 @@ export default function DeepWatch(){
  const [debouncedSearch,setDebouncedSearch]=useState("");
  const [railLimits,setRailLimits]=useState<Record<string,number>>({});
  useEffect(()=>{const timer=window.setTimeout(()=>setDebouncedSearch(search.trim().toLowerCase()),180);return()=>window.clearTimeout(timer)},[search]);
+ const WATCH_KEY="1muslim:deepwatch-watch-priority-v1";
+ const [watchHistory,setWatchHistory]=useState<Record<string,{views:number;last:number}>>({});
+ useEffect(()=>{try{const raw=JSON.parse(localStorage.getItem(WATCH_KEY)||"{}");if(raw&&typeof raw==="object")setWatchHistory(raw)}catch{}},[]);
+ const markWatched=(videoId:string)=>setWatchHistory(prev=>{const next={...prev,[videoId]:{views:(prev[videoId]?.views||0)+1,last:Date.now()}};const trimmed=Object.fromEntries(Object.entries(next).sort((a,b)=>b[1].last-a[1].last).slice(0,250));try{localStorage.setItem(WATCH_KEY,JSON.stringify(trimmed))}catch{}return trimmed});
+ const prioritize=(videos:RegisteredVideo[])=>videos.map((v,i)=>({v,i,history:watchHistory[v.videoId]})).sort((a,b)=>{
+  const score=(x:typeof a)=>x.history?Math.min(x.history.views,10)*100+(Date.now()-x.history.last<604800000?1000:0):0;
+  return score(b)-score(a)||a.i-b.i;
+ }).map(x=>x.v);
+ const [heroPreviewEnabled,setHeroPreviewEnabled]=useState(false);
+ useEffect(()=>{if(search||document.visibilityState!=="visible"){setHeroPreviewEnabled(false);return}const id=window.setTimeout(()=>setHeroPreviewEnabled(true),4500);return()=>window.clearTimeout(id)},[search,tab]);
  const [saved,setSaved]=useState<string[]>([]);
  const player=useRef<HTMLIFrameElement>(null);
  const theaterRef=useRef<HTMLDivElement>(null);
@@ -185,10 +196,10 @@ export default function DeepWatch(){
  const forYou=useMemo(()=>{
   const candidates=fullCatalog.filter(v=>!excludedIds.includes(v.videoId));
   const favorites=candidates.filter(v=>saved.includes(v.videoId));
-  if(!favorites.length)return candidates.slice(0,12);
+  if(!favorites.length)return prioritize(candidates).slice(0,12);
   const favoriteTags=new Set(favorites.flatMap(v=>[v.category,...(v.categories||[])].map(t=>t.toLowerCase())));
   return candidates.filter(v=>!saved.includes(v.videoId)).map(v=>({v,score:[v.category,...(v.categories||[])].filter(t=>favoriteTags.has(t.toLowerCase())).length})).sort((a,b)=>b.score-a.score).slice(0,12).map(x=>x.v);
- },[fullCatalog,saved,excludedIds]);
+ },[fullCatalog,saved,excludedIds,watchHistory]);
  const heroSlides=useMemo(()=>{
   const categories:Tab[]=tab==="Home"?["Classics","Movies","Series","Kids","Live","Comedy","Scary","Animation","Qur’an","History","Documentaries"]:tab==="My List"?["My List"]: [tab];
   const used=new Set<string>();
@@ -211,16 +222,16 @@ export default function DeepWatch(){
  },[heroPaused,selected,heroSlides.length]);
  const featured=heroSlides[heroIndex]||heroSlides[0];
  const collections=useMemo(()=>tab==="Home"?[
-  {name:"Recently Added · Approved",items:filtered.slice(-40).reverse()},
+  {name:"Recently Added · Approved",items:prioritize(filtered.slice(-40).reverse())},
   {name:"Qur’an & Recitations",items:filtered.filter(v=>/qur.an|surah|recitation/i.test([v.title,...(v.categories||[])].join(" "))).slice(0,80)},
   {name:"Aqeedah & Tawheed",items:filtered.filter(v=>/aqeedah|tawheed|creed/i.test([v.title,...(v.categories||[])].join(" "))).slice(0,80)},
   {name:"Islamic History & Historical Series",items:filtered.filter(v=>/historical|history|seerah/i.test([v.title,...(v.categories||[])].join(" "))).slice(0,80)},
-  {name:"The Prophets",items:filtered.filter(isProphetVideo)},
+  {name:"The Prophets",items:prioritize(filtered.filter(isProphetVideo))},
   {name:"Movies & Animation",items:filtered.filter(v=>group(v)==="Movies"||group(v)==="Animation")},
-  {name:"Explore the Entire Library",items:filtered}
- ]:[{name:tab==="My List"?"Your Watchlist":tab,items:filtered}], [tab,filtered]);
+  {name:"Explore the Entire Library",items:prioritize(filtered)}
+ ]:[{name:tab==="My List"?"Your Watchlist":tab,items:prioritize(filtered)}], [tab,filtered,watchHistory]);
  const send=(func:string,args?:unknown[])=>{player.current?.contentWindow?.postMessage(JSON.stringify({event:"command",func,args:args||[]}),"*")};
- const open=(v:RegisteredVideo)=>{setSeriesInfo(null);setInfo(null);selectedRef.current=v;setSelected(v);setSeconds(v.startSeconds||0);setPlaying(true);setSettings(false)};
+ const open=(v:RegisteredVideo)=>{markWatched(v.videoId);setSeriesInfo(null);setInfo(null);selectedRef.current=v;setSelected(v);setSeconds(v.startSeconds||0);setPlaying(true);setSettings(false)};
  useEffect(()=>{if(!deepLinkVideo||handledDeepLink.current===deepLinkVideo)return;if(!/^[a-zA-Z0-9_-]{11}$/.test(deepLinkVideo))return;const match=fullCatalog.find(v=>v.videoId===deepLinkVideo)||dbEpisodes.find(v=>v.video_id===deepLinkVideo);if(!match)return;handledDeepLink.current=deepLinkVideo;const v:RegisteredVideo="videoId" in match?match:{videoId:match.video_id,title:match.title,category:"Series",categories:match.categories||[],startSeconds:0,endSeconds:null,format:"desktop"};setInfo(v);},[deepLinkVideo,dbEpisodes]);
  const close=()=>{if(document.fullscreenElement)void document.exitFullscreen().catch(()=>{});setFullView(false);setSelected(null);selectedRef.current=null;setSettings(false)};
  const episodeQueue=(v:RegisteredVideo)=>{const db=dbEpisodes.find(e=>e.video_id===v.videoId);return db?dbEpisodes.filter(e=>e.series_id===db.series_id).sort((a,b)=>(a.season_number||1)-(b.season_number||1)||(a.episode_number||999)-(b.episode_number||999)).map(e=>({...v,videoId:e.video_id,title:e.title})):orderedShowEpisodes(v)};
@@ -240,7 +251,7 @@ export default function DeepWatch(){
   {(tab==="Live")&&<section className="deepwatchLiveSpotlight" aria-label="DeepWatch Live spotlight"><div className="deepwatchLiveSpotlightCopy"><span className="deepwatchLiveBadge"><span className="deepwatchLivePulse" aria-hidden="true"/> LIVE CHANNEL</span><h1>DeepWatch Live</h1><p>Watch livestreams and available replays, all in one place.</p><button type="button" onClick={()=>open(featuredLive)}><PlayIcon className="deepwatchInlinePlayIcon"/> Watch Featured Stream</button></div><img src={image(featuredLive.videoId)} alt="" loading="lazy"/></section>}
   <section className="deepwatchHeroCarousel dwCinematicBanner" aria-label="Featured DeepWatch titles" onTouchStart={e=>{heroTouch.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const p=heroTouch.current;const t=e.changedTouches[0];if(p&&Math.abs(t.clientX-p.x)>45&&Math.abs(t.clientX-p.x)>Math.abs(t.clientY-p.y))setHeroIndex(i=>(i+(t.clientX<p.x?1:heroSlides.length-1))%heroSlides.length);heroTouch.current=null}}>
    {heroSlides.map((v,i)=><div key={v.videoId} className={`deepwatchHero ${i===heroIndex?"isActive":""}`} aria-hidden={i!==heroIndex} style={{backgroundImage:`linear-gradient(90deg,#07090d 4%,rgba(7,9,13,.92) 38%,rgba(7,9,13,.3)),url("${image(v.videoId)}")`}}>
-    {i===heroIndex&&!search&&<div aria-hidden="true" style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none"}}>
+    {i===heroIndex&&heroPreviewEnabled&&!search&&<div aria-hidden="true" style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none"}}>
       <iframe key={v.videoId} title="" src={`https://www.youtube-nocookie.com/embed/${v.videoId}?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&playsinline=1&start=30&end=35&loop=1&playlist=${v.videoId}&rel=0`} allow="autoplay; encrypted-media; picture-in-picture" tabIndex={-1} style={{position:"absolute",width:"145%",height:"145%",left:"-22.5%",top:"-12%",border:0,opacity:heroThumb?0:0.72,transition:"opacity .7s ease"}}/>
       <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(90deg,#07090d 4%,rgba(7,9,13,.92) 38%,rgba(7,9,13,.3)),url("${image(v.videoId)}")`,backgroundSize:"cover",backgroundPosition:"center",opacity:heroThumb?1:0,transition:"opacity .7s ease"}}/>
     </div>}
