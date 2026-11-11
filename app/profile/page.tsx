@@ -60,9 +60,9 @@ const BACKGROUND_CHOICES=[
 
 function ProfileOrbitStudio({profile,onEdit,ashab,editing=false,editorTab="profile"}:{profile:Profile;onEdit:()=>void;ashab:Profile[];editing?:boolean;editorTab?:string}){
  const canvas=useRef<HTMLCanvasElement>(null);
- const velocity=useRef([0.0013,-0.0011,-0.0008]);
+ const velocity=useRef([0.0013,-0.0011,-0.0008,0.00062]);
  const savePulse=useRef(0);
- const angle=useRef([0,0,0]);
+ const angle=useRef([0,0,0,0]);
  const drag=useRef<{x:number;y:number;t:number}|null>(null);
  const [aiOpen,setAiOpen]=useState(false);
  const [aiEnabled,setAiEnabled]=useState(false);
@@ -133,24 +133,29 @@ function ProfileOrbitStudio({profile,onEdit,ashab,editing=false,editorTab="profi
    const now=performance.now(),reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
    const elapsed=(now-savePulse.current)/1000;
    const celebration=elapsed>=0&&elapsed<1.9&&!reduced?Math.sin(Math.PI*elapsed/1.9):0;
-   for(let ring=0;ring<3;ring++){
-    const count=[300,240,200][ring];
+   for(let ring=0;ring<4;ring++){
+    const count=[300,240,200,260][ring];
     const t=now*.001;
     const thinking=ring===1&&!reduced?Math.sin(t*.43)*.65+Math.sin(t*.19)*.35:0;
     const breathing=ring===1&&!reduced?Math.sin(t*.75)*.012:0;
-    const radius=scale*([.29,.365,.43][ring]+breathing+celebration*.018);
+    const radius=scale*([.285,.355,.414,.475][ring]+breathing+celebration*.012);
     const spin=angle.current[ring];
+    const tilt=ring===3&&!reduced?Math.sin(t*.23)*.19:0;
+    const ellipse=ring===3?.92:.81;
     for(let i=0;i<count;i++){
      const theta=i*Math.PI*2/count+spin;
-     const wobble=Math.sin(theta*3+ring+t*.18)*scale*.011;
-     const x=cx+Math.cos(theta)*(radius+wobble),y=cy+Math.sin(theta)*(radius+wobble)*.81;
-     const size=(i%9===0?1.65:.8)*(ring===1?1.05:ring===0?1:.85)*(1+celebration*.6);
+     const wobble=Math.sin(theta*3+ring+t*.18)*scale*(ring===3?.004:.011);
+     const orbital=theta+(ring===3&&!reduced?Math.sin(t*.17+i*.08)*.025:0);
+     const rx=Math.cos(orbital)*(radius+wobble);
+     const ry=Math.sin(orbital)*(radius+wobble)*ellipse;
+     const x=cx+rx*Math.cos(tilt)-ry*Math.sin(tilt),y=cy+rx*Math.sin(tilt)+ry*Math.cos(tilt);
+     const size=(i%23===0?2.2:i%9===0?1.5:.72)*(ring===1?1.05:ring===3?.88:ring===0?1:.85)*(1+celebration*.6);
      ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);
-     ctx.fillStyle=["rgba(185,221,248,.85)","rgba(195,177,255,.86)","rgba(236,205,145,.72)"][ring];ctx.fill();
+     ctx.fillStyle=["rgba(185,221,248,.85)","rgba(195,177,255,.86)","rgba(236,205,145,.72)","rgba(211,233,252,.78)"][ring];ctx.fill();
     }
     if(!drag.current&&!reduced){
      const base=ring===1?-.00135:velocity.current[ring];
-     const motion=ring===1?base+thinking*.0025:base;
+     const motion=ring===1?base+thinking*.0025:ring===3?base*(1+.65*Math.sin(t*.31)):base;
      angle.current[ring]+=motion*(1+celebration*6);
     }
    }
@@ -165,11 +170,11 @@ function ProfileOrbitStudio({profile,onEdit,ashab,editing=false,editorTab="profi
  return <section className="profileOrbitMagazine">
   <div className="profileOrbitMasthead"><span>1M / THE MEMBER EDITION</span><span>PROFILE STUDIO · {new Date().getFullYear()}</span></div>
   <h2>THE PERSON <em>BEHIND</em> THE PROFILE</h2>
-  <div className={"profileOrbitStage"+(switching?" profileOrbitSwitching "+switchDirection:"")} onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,t:performance.now()};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{const d=drag.current;if(!d)return;const delta=e.clientX-d.x;const elapsed=Math.max(8,performance.now()-d.t);const relativeY=(e.clientY-e.currentTarget.getBoundingClientRect().top)/e.currentTarget.clientHeight;const ring=relativeY<.36?0:relativeY<.66?1:2;angle.current[ring]+=delta*.009;velocity.current[ring]=Math.max(-.045,Math.min(.045,delta/elapsed*.009));drag.current={x:e.clientX,y:e.clientY,t:performance.now()}}} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}} aria-label="Interactive 300 inner and 200 outer HudHud orbs. Drag to change rotation.">
+  <div className={"profileOrbitStage"+(switching?" profileOrbitSwitching "+switchDirection:"")} onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,t:performance.now()};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{const d=drag.current;if(!d)return;const delta=e.clientX-d.x;const elapsed=Math.max(8,performance.now()-d.t);const relativeY=(e.clientY-e.currentTarget.getBoundingClientRect().top)/e.currentTarget.clientHeight;const ring=relativeY<.3?0:relativeY<.53?1:relativeY<.74?2:3;angle.current[ring]+=delta*.009;velocity.current[ring]=Math.max(-.045,Math.min(.045,delta/elapsed*.009));drag.current={x:e.clientX,y:e.clientY,t:performance.now()}}} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}} aria-label="Interactive 300 inner and 200 outer HudHud orbs. Drag to change rotation.">
    <canvas ref={canvas} aria-hidden="true"/>
    <div className={"profileOrbitAvatar"+(!showAvatar?" profileOrbitBird":"")}>{showAvatar?<img key={shown.id+avatar} src={avatar} alt="Your profile avatar"/>:<img src="/assets/hudhud-logo.PNG" alt="HudHud bird companion" />}</div><div className="profileOrbitTransitionVeil" aria-hidden="true">✦</div>
    <button type="button" className="profilePremiumOrb" onPointerDown={e=>e.stopPropagation()} onPointerUp={e=>e.stopPropagation()} onClick={()=>{if(aiEnabled)setAiOpen(v=>!v)}} aria-label={aiEnabled?"Open HudHud AI orb":"HudHud AI coming soon"} aria-expanded={aiOpen}>✦<small>AI</small></button>
-   <span className="profileOrbitHint">↔ DRAG TO ROTATE · 740 HUDHUD ORBS · 3 THINKING LAYERS</span>
+   <span className="profileOrbitHint">↔ DRAG TO ROTATE · 1,000 HUDHUD ORBS · 4 LIVING RINGS</span>
   </div>
   {!selectedFriend&&!aiEnabled&&<div className="profileAiComingSoon">✦ Enable your personal Muslim companion, HudHud <span>Coming soon</span></div>}
   {!selectedFriend&&aiOpen&&aiEnabled&&<section className="profileAiPanel" aria-label="HudHud AI"><h3>✦ HudHud AI · Premium</h3><p>Ask about 1Muslim, learning resources, or Qur'an study. Premium access is verified on the server.</p><textarea aria-label="Message HudHud AI" value={aiInput} onChange={e=>setAiInput(e.target.value)} maxLength={1200} placeholder="Ask HudHud…"/><button type="button" disabled={aiBusy||!aiInput.trim()} onClick={()=>void askHudHud()}>{aiBusy?"Thinking…":"Ask HudHud"}</button>{aiError&&<p role="alert">{aiError}</p>}{aiReply&&<div role="status" className="profileAiReply">{aiReply}</div>}</section>}
