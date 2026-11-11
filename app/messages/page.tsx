@@ -967,6 +967,50 @@ body:has(.muslimMessengerFrame){overflow:hidden!important}
 .omImessagePage.omMessengerUnified .omComposerExpand,.omImessagePage.omMessengerUnified .omComposerSend{border-radius:50%!important;box-shadow:none!important}
 .omImessagePage.omMessengerUnified .omComposerSend{background:#25382f!important;color:#fff!important}
 @media(max-width:700px){.omImessagePage.omMessengerUnified .omMessengerShell--chat{border-radius:0!important}.omImessagePage.omMessengerUnified .omChatHeader{min-height:68px!important;padding:9px!important}.omImessagePage.omMessengerUnified .omMessageBubble{font-size:14px!important;max-width:88%!important}.omImessagePage.omMessengerUnified .omMessageComposer{padding:8px!important}}
+
+/* Mobile Messenger: remove the obsolete 68dvh floating-chat height and the
+   blank page footer beneath the composer. Only the message feed scrolls. */
+@media(max-width:700px){
+ html:has(.muslimMessengerFrame .omMessengerShell--chat),
+ body:has(.muslimMessengerFrame .omMessengerShell--chat){
+  height:100%!important;overflow:hidden!important;
+ }
+ body:has(.muslimMessengerFrame .omMessengerShell--chat){
+  padding-bottom:0!important;margin-bottom:0!important;
+ }
+ .muslimMessengerFrame:has(.omMessengerShell--chat){
+  display:flex!important;flex-direction:column!important;
+  height:100dvh!important;max-height:100dvh!important;
+  min-height:0!important;overflow:hidden!important;
+  margin:0!important;padding:0!important;
+ }
+ .muslimMessengerFrame>.omImessagePage.omMessengerUnified:has(.omMessengerShell--chat){
+  display:flex!important;flex-direction:column!important;
+  flex:1 1 auto!important;min-height:0!important;
+  height:100%!important;max-height:100%!important;
+  overflow:hidden!important;padding:0!important;margin:0!important;
+ }
+ .muslimMessengerFrame .omImessagePage:has(.omMessengerShell--chat) .omMessengerTop{
+  flex:0 0 auto!important;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat{
+  flex:1 1 auto!important;height:auto!important;
+  min-height:0!important;max-height:none!important;
+  margin:0!important;border-radius:0!important;
+  overflow:hidden!important;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat>.omChatPane{
+  flex:1 1 auto!important;height:100%!important;min-height:0!important;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat .omMessagesFeed{
+  flex:1 1 0!important;min-height:0!important;overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch;
+ }
+ .muslimMessengerFrame .omMessengerShell--chat .omMessageComposer{
+  flex:0 0 auto!important;position:relative!important;bottom:auto!important;
+  padding-bottom:max(8px,env(safe-area-inset-bottom,0px))!important;
+ }
+}
 `}</style>
  </main>}</>
 }
