@@ -60,8 +60,9 @@ const BACKGROUND_CHOICES=[
 
 function ProfileOrbitStudio({profile,onEdit,ashab,editing=false,editorTab="profile"}:{profile:Profile;onEdit:()=>void;ashab:Profile[];editing?:boolean;editorTab?:string}){
  const canvas=useRef<HTMLCanvasElement>(null);
- const velocity=useRef([0.0013,-0.0008]);
- const angle=useRef([0,0]);
+ const velocity=useRef([0.0013,-0.0011,-0.0008]);
+ const savePulse=useRef(0);
+ const angle=useRef([0,0,0]);
  const drag=useRef<{x:number;y:number;t:number}|null>(null);
  const [aiOpen,setAiOpen]=useState(false);
  const [aiEnabled,setAiEnabled]=useState(false);
@@ -91,6 +92,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,editing=false,editorTab="profi
    setAiReply(String(result.reply||""));
   }catch(e){setAiError(e instanceof Error?e.message:"Something went wrong.")}finally{setAiBusy(false)}
  };
+ useEffect(()=>{const onSaved=()=>{savePulse.current=performance.now()};window.addEventListener("1muslim:profile-saved",onSaved);return()=>window.removeEventListener("1muslim:profile-saved",onSaved)},[]);
  const [created,setCreated]=useState<string|null>(null);
  const [hours,setHours]=useState<Record<string,number>>({});
  useEffect(()=>{
@@ -128,18 +130,29 @@ function ProfileOrbitStudio({profile,onEdit,ashab,editing=false,editorTab="profi
    if(element.width!==Math.round(width*dpr)||element.height!==Math.round(height*dpr)){element.width=Math.round(width*dpr);element.height=Math.round(height*dpr)}
    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
    const cx=width/2,cy=height/2,scale=Math.min(width,height);
-   for(let ring=0;ring<2;ring++){
-    const count=ring===0?300:200,radius=scale*(ring===0?.29:.43);
+   const now=performance.now(),reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+   const elapsed=(now-savePulse.current)/1000;
+   const celebration=elapsed>=0&&elapsed<1.9&&!reduced?Math.sin(Math.PI*elapsed/1.9):0;
+   for(let ring=0;ring<3;ring++){
+    const count=[300,240,200][ring];
+    const t=now*.001;
+    const thinking=ring===1&&!reduced?Math.sin(t*.43)*.65+Math.sin(t*.19)*.35:0;
+    const breathing=ring===1&&!reduced?Math.sin(t*.75)*.012:0;
+    const radius=scale*([.29,.365,.43][ring]+breathing+celebration*.018);
     const spin=angle.current[ring];
     for(let i=0;i<count;i++){
      const theta=i*Math.PI*2/count+spin;
-     const wobble=Math.sin(theta*3+ring)*scale*.014;
+     const wobble=Math.sin(theta*3+ring+t*.18)*scale*.011;
      const x=cx+Math.cos(theta)*(radius+wobble),y=cy+Math.sin(theta)*(radius+wobble)*.81;
-     const size=(i%9===0?1.65:.8)*(ring===0?1:.85);
+     const size=(i%9===0?1.65:.8)*(ring===1?1.05:ring===0?1:.85)*(1+celebration*.6);
      ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);
-     ctx.fillStyle=ring===0?"rgba(185,221,248,.85)":"rgba(236,205,145,.72)";ctx.fill();
+     ctx.fillStyle=["rgba(185,221,248,.85)","rgba(195,177,255,.86)","rgba(236,205,145,.72)"][ring];ctx.fill();
     }
-    if(!drag.current)angle.current[ring]+=velocity.current[ring];
+    if(!drag.current&&!reduced){
+     const base=ring===1?-.00135:velocity.current[ring];
+     const motion=ring===1?base+thinking*.0025:base;
+     angle.current[ring]+=motion*(1+celebration*6);
+    }
    }
    frame++;raf=requestAnimationFrame(render);
   };
@@ -152,11 +165,11 @@ function ProfileOrbitStudio({profile,onEdit,ashab,editing=false,editorTab="profi
  return <section className="profileOrbitMagazine">
   <div className="profileOrbitMasthead"><span>1M / THE MEMBER EDITION</span><span>PROFILE STUDIO · {new Date().getFullYear()}</span></div>
   <h2>THE PERSON <em>BEHIND</em> THE PROFILE</h2>
-  <div className={"profileOrbitStage"+(switching?" profileOrbitSwitching "+switchDirection:"")} onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,t:performance.now()};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{const d=drag.current;if(!d)return;const delta=e.clientX-d.x;const elapsed=Math.max(8,performance.now()-d.t);const ring=e.clientY-e.currentTarget.getBoundingClientRect().top<e.currentTarget.clientHeight*.52?0:1;angle.current[ring]+=delta*.009;velocity.current[ring]=Math.max(-.045,Math.min(.045,delta/elapsed*.009));drag.current={x:e.clientX,y:e.clientY,t:performance.now()}}} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}} aria-label="Interactive 300 inner and 200 outer HudHud orbs. Drag to change rotation.">
+  <div className={"profileOrbitStage"+(switching?" profileOrbitSwitching "+switchDirection:"")} onPointerDown={e=>{drag.current={x:e.clientX,y:e.clientY,t:performance.now()};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{const d=drag.current;if(!d)return;const delta=e.clientX-d.x;const elapsed=Math.max(8,performance.now()-d.t);const relativeY=(e.clientY-e.currentTarget.getBoundingClientRect().top)/e.currentTarget.clientHeight;const ring=relativeY<.36?0:relativeY<.66?1:2;angle.current[ring]+=delta*.009;velocity.current[ring]=Math.max(-.045,Math.min(.045,delta/elapsed*.009));drag.current={x:e.clientX,y:e.clientY,t:performance.now()}}} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}} aria-label="Interactive 300 inner and 200 outer HudHud orbs. Drag to change rotation.">
    <canvas ref={canvas} aria-hidden="true"/>
    <div className={"profileOrbitAvatar"+(!showAvatar?" profileOrbitBird":"")}>{showAvatar?<img key={shown.id+avatar} src={avatar} alt="Your profile avatar"/>:<img src="/assets/hudhud-logo.PNG" alt="HudHud bird companion" />}</div><div className="profileOrbitTransitionVeil" aria-hidden="true">✦</div>
    <button type="button" className="profilePremiumOrb" onPointerDown={e=>e.stopPropagation()} onPointerUp={e=>e.stopPropagation()} onClick={()=>{if(aiEnabled)setAiOpen(v=>!v)}} aria-label={aiEnabled?"Open HudHud AI orb":"HudHud AI coming soon"} aria-expanded={aiOpen}>✦<small>AI</small></button>
-   <span className="profileOrbitHint">↔ DRAG TO ROTATE · 500 HUDHUD ORBS</span>
+   <span className="profileOrbitHint">↔ DRAG TO ROTATE · 740 HUDHUD ORBS · 3 THINKING LAYERS</span>
   </div>
   {!selectedFriend&&!aiEnabled&&<div className="profileAiComingSoon">✦ Enable your personal Muslim companion, HudHud <span>Coming soon</span></div>}
   {!selectedFriend&&aiOpen&&aiEnabled&&<section className="profileAiPanel" aria-label="HudHud AI"><h3>✦ HudHud AI · Premium</h3><p>Ask about 1Muslim, learning resources, or Qur'an study. Premium access is verified on the server.</p><textarea aria-label="Message HudHud AI" value={aiInput} onChange={e=>setAiInput(e.target.value)} maxLength={1200} placeholder="Ask HudHud…"/><button type="button" disabled={aiBusy||!aiInput.trim()} onClick={()=>void askHudHud()}>{aiBusy?"Thinking…":"Ask HudHud"}</button>{aiError&&<p role="alert">{aiError}</p>}{aiReply&&<div role="status" className="profileAiReply">{aiReply}</div>}</section>}
@@ -281,6 +294,7 @@ export default function ProfilePage() {
     if(error){setMessage(error.message);return;}
     update({display_name:data?.display_name??profile.display_name,username:data?.username??null,display_name_changed_at:data?.display_name_changed_at??profile.display_name_changed_at,username_changed_at:data?.username_changed_at??profile.username_changed_at});
     setMessage(displayChanged||usernameChanged?"Profile identity updated.":"Profile saved.");
+    window.dispatchEvent(new Event("1muslim:profile-saved"));
     setEditing(false);
   };
 
@@ -307,7 +321,7 @@ export default function ProfilePage() {
     const config={...(profile.avatar_config||{}),selectedAvatarUrl:url,...(firstSilver?{silverAvatarFirstChangeShown:true}:{})};
     const {error}=await s.from("profiles").update({avatar_config:config}).eq("id",user.id);
     if(error){setAvatarSaving(false);setMessage("Could not save avatar: "+error.message);return}
-    update({avatar_config:config});setAvatarTransition(firstSilver?"unlock":"change");
+    update({avatar_config:config});window.dispatchEvent(new Event("1muslim:profile-saved"));setAvatarTransition(firstSilver?"unlock":"change");
     setMessage(firstSilver?"✦ Silver avatar equipped!":"Avatar changed and saved.");
     window.setTimeout(()=>setAvatarTransition(null),firstSilver?2600:900);
     setAvatarSaving(false);
