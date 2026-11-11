@@ -74,7 +74,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab}:{profile:Profile;onEdit:()=>v
     <p className="profileProfessionalBio">{profile.bio||"Add a bio to introduce yourself to the 1Muslim community."}</p>
     {(profile.city||profile.state||profile.country)&&<p className="profileProfessionalLocation">📍 {[profile.city,profile.state,profile.country].filter(Boolean).join(", ")}</p>}
     <p className="profileProfessionalConnection">{ashab.length} connections · 1Muslim community</p>
-    <div className="profileProfessionalActions"><button type="button" onClick={onEdit}>Edit profile</button><Link href="/find">Discover members</Link><Link href="/community">Community</Link></div>
+    
    </div>
   </header>
   <section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><a href="#profile-media-library">▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></a><a href="#profile-media-library">♡ <span>Likes &amp; Saved</span><small>My content library</small></a><Link href="/quran">☷ <span>Verses</span><small>Qur’an Studio</small></Link><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button></div></section>
