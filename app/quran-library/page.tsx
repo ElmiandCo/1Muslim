@@ -3,6 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import "./quran-magazine.css";
 import {loadQuranChapter} from "../lib/quran-verses";
+import {createClient} from "../../utils/supabase/client";
 type Chapter={id:number;name_simple:string;name_arabic:string;verses_count:number;revelation_order?:number;translated_name?:{name:string}};
 type Verse={verse_key:string;arabic:string;english?:string};
 const API="https://api.quran.com/api/v4";
@@ -10,6 +11,12 @@ export default function QuranMagazine(){
  const [chapters,setChapters]=useState<Chapter[]>([]),[search,setSearch]=useState(""),[tab,setTab]=useState<"compiled"|"revealed"|"tafsir">("compiled");
  const [selected,setSelected]=useState<number|null>(null),[verses,setVerses]=useState<Verse[]>([]),[loading,setLoading]=useState(false);
  const [visited,setVisited]=useState<string[]>([]);
+ const [readingEvents,setReadingEvents]=useState<{verse_key:string;read_on:string}[]>([]);
+ const [readingUser,setReadingUser]=useState<string|null>(null);
+ const [activityStatus,setActivityStatus]=useState("");
+ const todayKey=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")};
+ const [resetScope,setResetScope]=useState<"history"|"progress"|"both">("both");
+ const [analyticsView,setAnalyticsView]=useState<"daily"|"calendar"|"cumulative">("daily");
  const [progressOpen,setProgressOpen]=useState(false),[resetConfirm,setResetConfirm]=useState(false);
  const [progressMetric,setProgressMetric]=useState<"verses"|"chapters">("verses");
  useEffect(()=>{try{if(localStorage.getItem("1muslim:quran-progress-metric")==="chapters")setProgressMetric("chapters")}catch{}},[]);
@@ -18,11 +25,34 @@ export default function QuranMagazine(){
  const completedChapters=chapters.filter(c=>(chapterVisitCounts.get(c.id)||0)>=c.verses_count).length;
  const progressNumber=progressMetric==="verses"?visited.length:completedChapters;
  const progressTotal=progressMetric==="verses"?6236:114;
- const resetReadingProgress=()=>{try{localStorage.removeItem("1muslim:quran-library-visited")}catch{}setVisited([]);setResetConfirm(false);setProgressOpen(false)};
+ const resetReadingProgress=async()=>{
+  if(resetScope!=="history"){try{localStorage.removeItem("1muslim:quran-library-visited")}catch{}setVisited([])}
+  if(resetScope!=="progress"){
+   try{localStorage.removeItem("1muslim:quran-reading-events")}catch{}setReadingEvents([]);
+   if(readingUser){const {error}=await createClient().from("quran_reading_events").delete().eq("user_id",readingUser);if(error){setActivityStatus("Could not clear cloud history: "+error.message);return}}
+  }
+  setResetConfirm(false);setProgressOpen(false);
+ };
+ const dailyCounts=useMemo(()=>{const byDay=new Map<string,Set<string>>();for(const e of readingEvents){if(!byDay.has(e.read_on))byDay.set(e.read_on,new Set());byDay.get(e.read_on)?.add(e.verse_key)}return new Map([...byDay].map(([date,keys])=>[date,keys.size]))},[readingEvents]);
+ const dayKeys=useMemo(()=>Array.from({length:180},(_,i)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-(179-i));return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")}),[]);
+ const dailySeries=dayKeys.map(date=>({date,count:dailyCounts.get(date)||0}));
+ const todayCount=dailyCounts.get(todayKey())||0;
+ const yesterdayDate=dayKeys[dayKeys.length-2],yesterdayCount=dailyCounts.get(yesterdayDate)||0;
+ const weekCount=dailySeries.slice(-7).reduce((n,d)=>n+d.count,0);
+ const monthCount=dailySeries.filter(d=>d.date.slice(0,7)===todayKey().slice(0,7)).reduce((n,d)=>n+d.count,0);
+ const activeDays=dailySeries.filter(d=>d.count>0).length;
+ const dailyAverage=activeDays?Math.round(dailySeries.reduce((n,d)=>n+d.count,0)/activeDays*10)/10:0;
+ const bestDay=dailySeries.reduce((a,b)=>b.count>a.count?b:a,{date:"",count:0});
+ const streaks=(()=>{let longest=0,run=0;for(const d of dailySeries){run=d.count?run+1:0;longest=Math.max(longest,run)}let current=0;for(let i=dailySeries.length-1;i>=0;i--){if(i===dailySeries.length-1&&!dailySeries[i].count)continue;if(!dailySeries[i].count)break;current++}return {current,longest}})();
+ const mostRead=([...chapterVisitCounts.entries()].sort((a,b)=>b[1]-a[1])[0]||null);
+ const maxDaily=Math.max(1,...dailySeries.map(d=>d.count));
+
  const progressSummary=(context:string)=>progressMetric==="verses"?context+" · "+visited.length.toLocaleString()+"/6,236 verses visited":context+" · "+completedChapters+"/114 chapters completed";
 
  useEffect(()=>{try{const value=JSON.parse(localStorage.getItem("1muslim:quran-library-visited")||"[]");if(Array.isArray(value))setVisited(value.filter((v:unknown)=>typeof v==="string"&&/^\\d{1,3}:\\d{1,3}$/.test(v as string)))}catch{}},[]);
- useEffect(()=>{if(selected===null||!verses.length)return;const root=reader.current;if(!root)return;const observer=new IntersectionObserver(entries=>{const newly=entries.filter(e=>e.isIntersecting&&e.intersectionRatio>=.55).map(e=>e.target.getAttribute("data-verse")).filter((v):v is string=>!!v);if(!newly.length)return;setVisited(previous=>{const combined=[...new Set([...previous,...newly])];if(combined.length===previous.length)return previous;try{localStorage.setItem("1muslim:quran-library-visited",JSON.stringify(combined))}catch{}return combined})},{root:null,threshold:[.55]});root.querySelectorAll("[data-verse]").forEach(node=>observer.observe(node));return()=>observer.disconnect()},[selected,verses]);
+ useEffect(()=>{try{const stored=JSON.parse(localStorage.getItem("1muslim:quran-reading-events")||"[]");if(Array.isArray(stored))setReadingEvents(stored.filter((v:unknown)=>!!v&&typeof v==="object"&&typeof (v as {verse_key?:unknown}).verse_key==="string"&&typeof (v as {read_on?:unknown}).read_on==="string"))}catch{};let active=true;const db=createClient();db.auth.getUser().then(async({data})=>{const user=data.user;if(!active||!user)return;setReadingUser(user.id);const {data:rows,error}=await db.from("quran_reading_events").select("verse_key,read_on").eq("user_id",user.id).order("read_on",{ascending:false}).limit(10000);if(!active)return;if(error){setActivityStatus("Cloud activity unavailable until the reading-events migration is applied.");return}if(rows){setReadingEvents(prev=>{const combined=[...new Map([...prev,...rows].map(e=>[e.verse_key+"|"+e.read_on,e])).values()];try{localStorage.setItem("1muslim:quran-reading-events",JSON.stringify(combined))}catch{}return combined});setVisited(prev=>{const all=[...new Set([...prev,...rows.map(r=>r.verse_key)])];try{localStorage.setItem("1muslim:quran-library-visited",JSON.stringify(all))}catch{}return all})}});return()=>{active=false}},[]);
+ const logReading=(keys:string[])=>{const date=todayKey();setReadingEvents(prev=>{const known=new Set(prev.map(e=>e.verse_key+"|"+e.read_on));const added=keys.filter(k=>!known.has(k+"|"+date));if(!added.length)return prev;const updated=[...prev,...added.map(verse_key=>({verse_key,read_on:date}))];try{localStorage.setItem("1muslim:quran-reading-events",JSON.stringify(updated))}catch{}return updated});if(readingUser){const db=createClient();void db.from("quran_reading_events").upsert(keys.map(verse_key=>({user_id:readingUser,verse_key,read_on:date})),{onConflict:"user_id,verse_key,read_on",ignoreDuplicates:true}).then(({error})=>{if(error)setActivityStatus("Cloud sync pending; activity is saved on this device.")})}};
+ useEffect(()=>{if(selected===null||!verses.length)return;const root=reader.current;if(!root)return;const observer=new IntersectionObserver(entries=>{const newly=entries.filter(e=>e.isIntersecting&&e.intersectionRatio>=.55).map(e=>e.target.getAttribute("data-verse")).filter((v):v is string=>!!v);if(!newly.length)return;logReading(newly);setVisited(previous=>{const combined=[...new Set([...previous,...newly])];if(combined.length===previous.length)return previous;try{localStorage.setItem("1muslim:quran-library-visited",JSON.stringify(combined))}catch{}return combined})},{root:null,threshold:[.55]});root.querySelectorAll("[data-verse]").forEach(node=>observer.observe(node));return()=>observer.disconnect()},[selected,verses,readingUser]);
  const [galleryFloating,setGalleryFloating]=useState(false);const gallerySettle=useRef<ReturnType<typeof setTimeout>|null>(null);
  const [lastVerse,setLastVerse]=useState(""),[englishFirst,setEnglishFirst]=useState(false),[showEnglish,setShowEnglish]=useState(true),[floating,setFloating]=useState(false);
  const reader=useRef<HTMLDivElement>(null),settle=useRef<ReturnType<typeof setTimeout>|null>(null),land=useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -49,8 +79,16 @@ export default function QuranMagazine(){
  <div className="qm-analytics-stats"><div><strong>{visited.length.toLocaleString()}</strong><span>Verses visited</span></div><div><strong>{chapterVisitCounts.size}</strong><span>Chapters started</span></div><div><strong>{completedChapters}</strong><span>Chapters completed</span></div></div>
  <div className="qm-analytics-overall"><span>Entire Qur’an</span><strong>{Math.round(visited.length/6236*100)}%</strong><div className="qm-progress-track"><span style={{width:(visited.length/6236*100)+"%"}}/></div></div>
  <fieldset className="qm-analytics-setting"><legend>Homepage progress metric</legend><div><label><input type="radio" name="quran-progress-metric" checked={progressMetric==="verses"} onChange={()=>chooseMetric("verses")}/> Verses visited</label><label><input type="radio" name="quran-progress-metric" checked={progressMetric==="chapters"} onChange={()=>chooseMetric("chapters")}/> Chapters completed</label></div></fieldset>
+ <h3>Reading activity · last 180 days</h3>
+ <div className="qm-analytics-stats"><div><strong>{todayCount}</strong><span>Today</span></div><div><strong>{yesterdayCount}</strong><span>Yesterday</span></div><div><strong>{weekCount}</strong><span>Last 7 days</span></div><div><strong>{monthCount}</strong><span>This month</span></div><div><strong>{dailyAverage}</strong><span>Daily active average</span></div><div><strong>{streaks.current}d</strong><span>Current streak</span></div><div><strong>{streaks.longest}d</strong><span>Longest streak</span></div><div><strong>{bestDay.count}</strong><span>Best day</span></div><div><strong>{mostRead?mostRead[0]:"—"}</strong><span>Most visited surah #</span></div></div>
+ <div className="qm-analytics-chart-tabs"><button type="button" aria-pressed={analyticsView==="daily"} onClick={()=>setAnalyticsView("daily")}>Daily bars</button><button type="button" aria-pressed={analyticsView==="calendar"} onClick={()=>setAnalyticsView("calendar")}>Calendar</button><button type="button" aria-pressed={analyticsView==="cumulative"} onClick={()=>setAnalyticsView("cumulative")}>Cumulative</button></div>
+ {analyticsView==="daily"&&<div className="qm-analytics-bars" aria-label="Verses visited each day in the last 30 days">{dailySeries.slice(-30).map(d=><div key={d.date} title={d.date+": "+d.count+" verses"} style={{height:Math.max(3,d.count/maxDaily*100)+"%"}}/>)}</div>}
+ {analyticsView==="calendar"&&<div className="qm-analytics-heatmap" aria-label="180 day reading calendar">{dailySeries.map(d=><span key={d.date} title={d.date+": "+d.count+" verses"} style={{opacity:d.count?Math.max(.25,d.count/maxDaily):.08}}/>)}</div>}
+ {analyticsView==="cumulative"&&<div className="qm-analytics-bars" aria-label="Cumulative daily verse visits">{(()=>{let total=0;const points=dailySeries.slice(-30).map(d=>({date:d.date,count:total+=d.count}));const maximum=Math.max(1,total);return points.map(d=><div key={d.date} title={d.date+": "+d.count+" cumulative visits"} style={{height:Math.max(3,d.count/maximum*100)+"%"}}/>)})()}</div>}
+ <p className="qm-analytics-note">Daily counts are unique verses visited per day, not verified reading time. Listening is not tracked yet. History begins when this feature is enabled.</p>
+ {activityStatus&&<p role="status" className="qm-analytics-note">{activityStatus}</p>}
  <h3>Chapter breakdown</h3><div className="qm-analytics-chapters">{chapters.length?chapters.map(c=>{const count=chapterVisitCounts.get(c.id)||0;const pct=Math.min(100,Math.round(count/c.verses_count*100));return <div className="qm-analytics-chapter" key={c.id}><div><span>{c.id}. {c.name_simple}</span><span>{count}/{c.verses_count} · {pct}%</span></div><div className="qm-progress-track"><span style={{width:pct+"%"}}/></div></div>}):<p>Chapter details are loading…</p>}</div>
- <footer className="qm-analytics-footer">{!resetConfirm?<button type="button" className="qm-analytics-reset" onClick={()=>setResetConfirm(true)} aria-label="Reset reading progress">↺ <span>Reset progress</span></button>:<div className="qm-analytics-confirm" role="group" aria-label="Confirm progress reset"><strong>Are you sure? This will erase all reading progress on this device.</strong><div><button type="button" onClick={()=>setResetConfirm(false)}>Cancel</button><button type="button" className="qm-analytics-danger" onClick={resetReadingProgress}>Yes, reset</button></div></div>}</footer>
+ <footer className="qm-analytics-footer">{!resetConfirm?<button type="button" className="qm-analytics-reset" onClick={()=>setResetConfirm(true)} aria-label="Reset reading progress">↺ <span>Reset progress</span></button>:<div className="qm-analytics-confirm" role="group" aria-label="Confirm progress reset"><strong>Are you sure? Choose what to clear. This cannot be undone.</strong><select aria-label="Reset scope" value={resetScope} onChange={e=>setResetScope(e.target.value as "history"|"progress"|"both")}><option value="history">Daily activity history</option><option value="progress">Completion progress</option><option value="both">Both history and progress</option></select><div><button type="button" onClick={()=>setResetConfirm(false)}>Cancel</button><button type="button" className="qm-analytics-danger" onClick={()=>void resetReadingProgress()}>Yes, reset</button></div></div>}</footer>
  <p className="qm-analytics-note">Reading history is saved in this browser.</p>
  </section></div>}
  <nav className="qm-tabs" aria-label="Qur’an order"><button className={tab==="compiled"?"active":""} onClick={()=>setTab("compiled")}>Compiled</button><button className={tab==="revealed"?"active":""} onClick={()=>setTab("revealed")}>Revealed</button><button className={tab==="tafsir"?"active":""} onClick={()=>setTab("tafsir")}>Tafsir</button></nav>
