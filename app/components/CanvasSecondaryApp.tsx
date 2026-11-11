@@ -388,14 +388,28 @@ function DailyPostsApp({active}:{active:boolean}){
  }catch(e){setNotice(e instanceof Error?e.message:"Unable to comment")}finally{setBusy(false)}};
 
 
- const renderFeedPost=(post:UmmahPost)=><article data-post-id={post.id} data-post-theme={postThemeClass(post.post_theme)} className={`community-post-card ummah-template ummah-template-${postKind(post)} ummah-variant-${(post.id.charCodeAt(0)+layoutSeed)%3}`} key={post.id}>
+ const rotatingThemes=["emerald","gold","makkah","midnight","garden","purple"] as const;
+  const rotatingThemeForIndex=(index:number)=>{let group=0,start=0;while(start<=index){const length=1+(group%4);if(index<start+length)break;start+=length;group++}return rotatingThemes[group%rotatingThemes.length]};
+  const [activeTheme,setActiveTheme]=useState<string>("emerald");
+  useEffect(()=>{
+   const root=feedRef.current;if(!root)return;
+   const observer=new IntersectionObserver(entries=>{
+    const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+    if(!visible)return;
+    const index=Number((visible.target as HTMLElement).dataset.themeIndex||0);
+    setActiveTheme(rotatingThemeForIndex(index));
+   },{root,threshold:[0,.2,.45,.7]});
+   root.querySelectorAll("[data-theme-index]").forEach(node=>observer.observe(node));
+   return()=>observer.disconnect();
+  },[posts]);
+  const renderFeedPost=(post:UmmahPost,index:number)=><article data-theme-index={index} data-post-id={post.id} data-post-theme={postThemeClass(post.post_theme)} className={`community-post-card ummah-template ummah-template-${postKind(post)} ummah-variant-${(post.id.charCodeAt(0)+layoutSeed)%3}`} key={post.id}>
     <span className="ummah-post-theme-particles" aria-hidden="true"/>
     <FloatingPostComments postId={post.id}/>
     <header><span className="community-post-avatar">{post.avatar_url?<img src={post.avatar_url} alt="" loading="lazy"/>:(post.author_name||"M").charAt(0).toUpperCase()}</span><div><strong>{post.author_name||"Member"}</strong>{post.shahada_verified&&<span className="ummah-verified-badge" title="Shahada verified" aria-label="Shahada verified">✓</span>}<small>{new Date(post.created_at).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})} · {post.author_handle||"1Muslim"}</small></div><div className="ummah-post-menu-wrap"><button type="button" className="ummah-post-more" aria-label="Post options" onClick={()=>setPostMenu(postMenu===post.id?null:post.id)}>•••</button>{postMenu===post.id&&<div className="ummah-post-menu"><button type="button" onClick={()=>{void sharePost(post.id);setPostMenu(null)}}>↗ Share post</button><button type="button" onClick={()=>{toggleBookmark(post.id);setPostMenu(null)}}>▢ {bookmarks[post.id]?"Remove saved":"Save post"}</button></div>}</div></header>
     <div className="ummah-post-package" onClick={e=>{if((e.target as HTMLElement).closest("button,a,video"))return;openPostViewer(post)}}>{postKind(post)==="verse"&&<div className="ummah-verse-ornament" aria-hidden="true">۞</div>}<span className="ummah-package-label">{postKind(post)==="verse"?"✦ QUR’AN & REFLECTION":postKind(post)==="video"?"▶ VIDEO":postKind(post)==="image"?"✧ PHOTO":"✎ REFLECTION"}</span>{mediaFor(post)&&(postKind(post)==="video"?<div className="ummah-video-frame"><video ref={el=>{if(el)videoRefs.current.set(post.id,el);else videoRefs.current.delete(post.id)}} key={post.id} src={mediaFor(post)} muted playsInline preload="auto" onClick={()=>openPostViewer(post)} onPlay={()=>setFinishedVideo(null)} onEnded={()=>{setFinishedVideo(post.id);autoPause.current=0}} className="ummah-package-media ummah-video-preview" aria-label="Post video"/><button type="button" className="ummah-video-fyp-open" aria-label="Open video in For You player" onClick={()=>setFypStart(post.id)}><span>▶</span></button></div>:<button type="button" className="ummah-media-expand" onClick={()=>openPostViewer(post)} onDoubleClick={e=>{e.preventDefault();void likePost(post.id)}} aria-label="Expand post image"><img src={mediaFor(post)} alt="Post attachment" loading="lazy" className="ummah-package-media"/></button>)}<p className="ummah-post-body">{renderPostBody(post.body.replace(/^✦ DAILY UMMAH ✦(?:\\n|\r?\n)?\s*/,""))}</p>{!mediaFor(post)&&youtubePreview(post.body)&&<a className="ummah-youtube-preview" href={youtubePreview(post.body)!.url} target="_blank" rel="noopener noreferrer" aria-label="Watch YouTube video"><img src={youtubePreview(post.body)!.thumbnail} alt="YouTube video thumbnail" loading="lazy"/><span>▶ Watch on YouTube</span></a>}</div><footer className="ummah-social-actions"><button type="button" aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}><span className="ummah-action-symbol">{likes[post.id]?"♥":"♡"}</span> {likeCounts[post.id]||""}</button><button type="button" onClick={()=>{setSelected(post.id);setThreadPath([]);setComments([]);setNotice("")}}><span className="ummah-action-symbol">▢</span> {commentCounts[post.id]||""}</button><button type="button" aria-pressed={!!bookmarks[post.id]} onClick={()=>toggleBookmark(post.id)} aria-label={bookmarks[post.id]?"Remove bookmark":"Bookmark post"}><span className="ummah-action-symbol">{bookmarks[post.id]?"▣":"▯"}</span> {bookmarks[post.id]?"Saved":"Save"}</button><button type="button" onClick={()=>void sharePost(post.id)} aria-label="Share post"><span className="ummah-action-symbol">↗</span> Share</button></footer>
    </article>;
   return <div className="community-simple-feed">
-  <div className="community-posts-list" ref={feedRef} aria-label="Community posts">
+  <div className="community-posts-list" ref={feedRef} aria-label="Community posts"><div className="ummah-rotating-theme-backdrop" aria-hidden="true" key={activeTheme} style={{backgroundImage:`url(/post-backgrounds/${activeTheme}.svg)`}}/>
    <div className="ummah-feed-single ummah-static-single-column" ref={singleRailRef}>{posts.map(renderFeedPost)}</div>
    {!posts.length?<p className="community-feed-empty">{status}</p>:null}
    {notice&&!selected&&<p role="status">{notice}</p>}
