@@ -1,0 +1,24 @@
+-- Social Magazine v2: comment images, dislikes and server-backed post reactions.
+alter table public.ummah_post_comments add column if not exists image_path text;
+create table if not exists public.ummah_comment_dislikes(comment_id uuid not null references public.ummah_post_comments(id) on delete cascade,user_id uuid not null references auth.users(id) on delete cascade,created_at timestamptz not null default now(),primary key(comment_id,user_id));
+alter table public.ummah_comment_dislikes enable row level security;
+drop policy if exists "Read comment dislikes" on public.ummah_comment_dislikes;
+create policy "Read comment dislikes" on public.ummah_comment_dislikes for select to authenticated using(true);
+drop policy if exists "Dislike comments" on public.ummah_comment_dislikes;
+create policy "Dislike comments" on public.ummah_comment_dislikes for insert to authenticated with check(user_id=auth.uid());
+drop policy if exists "Remove own comment dislikes" on public.ummah_comment_dislikes;
+create policy "Remove own comment dislikes" on public.ummah_comment_dislikes for delete to authenticated using(user_id=auth.uid());
+create table if not exists public.ummah_post_reactions(post_id uuid not null references public.ummah_feed_posts(id) on delete cascade,user_id uuid not null references auth.users(id) on delete cascade,kind text not null check(kind in ('like','save')),created_at timestamptz not null default now(),primary key(post_id,user_id,kind));
+alter table public.ummah_post_reactions enable row level security;
+drop policy if exists "Read post reactions" on public.ummah_post_reactions;
+create policy "Read post reactions" on public.ummah_post_reactions for select to authenticated using(true);
+drop policy if exists "Add own post reactions" on public.ummah_post_reactions;
+create policy "Add own post reactions" on public.ummah_post_reactions for insert to authenticated with check(user_id=auth.uid());
+drop policy if exists "Remove own post reactions" on public.ummah_post_reactions;
+create policy "Remove own post reactions" on public.ummah_post_reactions for delete to authenticated using(user_id=auth.uid());
+create table if not exists public.ummah_post_shares(id uuid primary key default gen_random_uuid(),post_id uuid not null references public.ummah_feed_posts(id) on delete cascade,user_id uuid references auth.users(id) on delete set null,created_at timestamptz not null default now());
+alter table public.ummah_post_shares enable row level security;
+drop policy if exists "Read post shares" on public.ummah_post_shares;
+create policy "Read post shares" on public.ummah_post_shares for select to authenticated using(true);
+drop policy if exists "Record own shares" on public.ummah_post_shares;
+create policy "Record own shares" on public.ummah_post_shares for insert to authenticated with check(user_id=auth.uid());
