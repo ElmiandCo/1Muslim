@@ -14,7 +14,37 @@ export default function QuranMagazine(){
  useEffect(()=>{try{setLastVerse(localStorage.getItem("1muslim:quran-magazine-last")||"")}catch{}},[]);
  useEffect(()=>{let alive=true;fetch(API+"/chapters?language=en").then(r=>r.json()).then(d=>{if(alive)setChapters(d.chapters||[])}).catch(()=>{});return()=>{alive=false}},[]);
  useEffect(()=>{if(selected!==null)return;let frame=0;const update=()=>{frame=0;setGalleryFloating(false);if(gallerySettle.current)clearTimeout(gallerySettle.current);gallerySettle.current=setTimeout(()=>setGalleryFloating(true),1100);const center=window.innerHeight/2;document.querySelectorAll<HTMLElement>(".qm-chapter").forEach(card=>{const rect=card.getBoundingClientRect();const distance=(rect.top+rect.height/2-center)/(window.innerHeight*.5);const tilt=Math.max(-24,Math.min(24,distance*24));card.style.setProperty("--qm-number-tilt",tilt.toFixed(2)+"deg")})};const schedule=()=>{if(!frame)frame=requestAnimationFrame(update)};update();window.addEventListener("scroll",schedule,{passive:true});window.addEventListener("resize",schedule);return()=>{window.removeEventListener("scroll",schedule);window.removeEventListener("resize",schedule);if(frame)cancelAnimationFrame(frame);if(gallerySettle.current)clearTimeout(gallerySettle.current)}},[selected,chapters.length,tab,search]);
- useEffect(()=>{if(selected===null)return;let alive=true;setLoading(true);setVerses([]);fetch("/quran-data/"+selected+".json").then(r=>{if(!r.ok)throw Error("Unavailable");return r.json()}).then((data:Verse[])=>{if(alive&&Array.isArray(data))setVerses(data)}).catch(()=>{if(alive)setVerses([])}).finally(()=>{if(alive)setLoading(false)});return()=>{alive=false}},[selected]);
+ useEffect(()=>{if(selected===null)return;let alive=true;const controller=new AbortController();setLoading(true);setVerses([]);
+ const load=async()=>{
+  const signal=controller.signal;
+  const local=async():Promise<Verse[]>=>{const r=await fetch("/quran-data/"+selected+".json",{signal});if(!r.ok)throw Error("Local corpus unavailable");const rows=await r.json();if(!Array.isArray(rows)||!rows.length)throw Error("Empty local corpus");return rows};
+  const primary=async():Promise<Verse[]>=>{
+   const output:Verse[]=[];let page=1;let pages=1;
+   do{const url=API+"/verses/by_chapter/"+selected+"?language=en&fields=text_uthmani&translations=131&per_page=50&page="+page;
+    const r=await fetch(url,{signal});if(!r.ok)throw Error("Quran.com verse request failed");const data=await r.json();
+    const rows=data.verses||[];if(!Array.isArray(rows)||!rows.length)throw Error("Empty Quran.com verses");
+    output.push(...rows.map((v:{verse_key:string;text_uthmani?:string;translations?:{text:string}[]})=>({verse_key:v.verse_key,arabic:v.text_uthmani||"",english:v.translations?.[0]?.text?.replace(/<[^>]*>/g,"")||""})));
+    pages=Math.min(20,Number(data.pagination?.total_pages)||1);page++;
+   }while(page<=pages);
+   if(!output.length||output.some(v=>!v.arabic))throw Error("Incomplete Quran.com corpus");
+   return output;
+  };
+  const backup=async():Promise<Verse[]>=>{
+   const base="https://api.alquran.cloud/v1/surah/"+selected+"/";
+   const [arResponse,enResponse]=await Promise.all([fetch(base+"quran-uthmani",{signal}),fetch(base+"en.sahih",{signal})]);
+   if(!arResponse.ok||!enResponse.ok)throw Error("Backup Quran source unavailable");
+   const [ar,en]=await Promise.all([arResponse.json(),enResponse.json()]);
+   const arabic=ar?.data?.ayahs||[],english=en?.data?.ayahs||[];
+   if(!arabic.length)throw Error("Backup Quran source returned no verses");
+   const translations=new Map<number,string>(english.map((v:{numberInSurah:number;text:string})=>[v.numberInSurah,v.text]));
+   return arabic.map((v:{numberInSurah:number;text:string})=>({verse_key:selected+":"+v.numberInSurah,arabic:v.text,english:translations.get(v.numberInSurah)||""}));
+  };
+  try{let rows:Verse[];try{rows=await local()}catch{try{rows=await primary()}catch{rows=await backup()}}
+   if(alive)setVerses(rows);
+  }catch{if(alive)setVerses([])}finally{if(alive)setLoading(false)}
+ };
+ void load();return()=>{alive=false;controller.abort()};
+},[selected]);
  const open=(id:number,verse?:number)=>{setSelected(id);if(verse){setTimeout(()=>document.getElementById("ayah-"+id+"-"+verse)?.scrollIntoView({behavior:"smooth",block:"start"}),850)}setFloating(false);try{localStorage.setItem("1muslim:quran-magazine-chapter",String(id))}catch{};window.scrollTo({top:0,behavior:"instant"})};
  const chapter=chapters.find(c=>c.id===selected);
  const ordered=useMemo(()=>{const s=search.trim().toLowerCase();const verseQuery=s.match(/^(\d{1,3}):(\d{1,3})$/);let list=chapters.filter(c=>!s||(verseQuery?c.id===Number(verseQuery[1]):false)||String(c.id)===s||c.name_simple.toLowerCase().includes(s)||c.name_arabic.includes(s)||(c.translated_name?.name||"").toLowerCase().includes(s));if(tab==="revealed")list=[...list].sort((a,b)=>(a.revelation_order||a.id)-(b.revelation_order||b.id));return list},[chapters,search,tab]);
