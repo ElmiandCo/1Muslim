@@ -79,3 +79,13 @@
 .qm-analytics-confirm button{padding:10px 15px;min-height:44px;border-radius:8px;border:1px solid #ffffff44;background:transparent;color:white}
 .qm-analytics-confirm .qm-analytics-danger{background:#aa3434;border-color:#aa3434}
 .qm-analytics-note{font-size:11px;color:#9e9b9c;margin:10px 0 0}
+
+
+.qm-analytics-chart-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+.qm-analytics-chart-tabs button{min-height:38px;padding:8px 12px;border:1px solid #ffffff33;background:transparent;border-radius:8px;color:#eee;cursor:pointer}
+.qm-analytics-chart-tabs button[aria-pressed=true]{border-color:#d8b580;color:#d8b580}
+.qm-analytics-bars{height:125px;display:flex;gap:3px;align-items:flex-end;border-bottom:1px solid #ffffff44;padding:8px 0 0}
+.qm-analytics-bars>div{flex:1;min-width:2px;background:linear-gradient(#e6c991,#846641);border-radius:3px 3px 0 0}
+.qm-analytics-heatmap{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:4px}
+.qm-analytics-heatmap span{aspect-ratio:1;background:#e6c991;border-radius:3px}
+.qm-analytics-confirm select{display:block;width:100%;margin-bottom:12px;min-height:44px;padding:8px;background:#2b2930;color:white;border:1px solid #ffffff44;border-radius:8px;font-size:16px}
