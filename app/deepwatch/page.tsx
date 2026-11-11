@@ -1,5 +1,5 @@
-import CinemaControls from "../components/CinemaControls";
 "use client";
+import CinemaControls from "../components/CinemaControls";
 import PlayIcon from "../components/icons/PlayIcon";
 import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
