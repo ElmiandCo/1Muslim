@@ -109,6 +109,31 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
   </section>
 }
 
+function ProfileSocialHub({profile,children}:{profile:Profile;children:React.ReactNode}){
+ const [active,setActive]=useState<"feed"|"profile"|"muslimeen">("profile");
+ const [arabic,setArabic]=useState<string|null>(null);
+ const [messenger,setMessenger]=useState(false);
+ const [feed,setFeed]=useState<Array<{id:string;body:string|null;created_at:string;user_id:string}>>([]);
+ const [members,setMembers]=useState<Array<{id:string;display_name:string|null;username:string|null;bio:string|null;avatar_config:Record<string,unknown>|null}>>([]);
+ const [search,setSearch]=useState("");
+ const [selected,setSelected]=useState<string|null>(null);
+ const [memberProfile,setMemberProfile]=useState<Profile|null>(null);
+ const positions=useRef<Record<string,number>>({});
+ const timeout=useRef<ReturnType<typeof setTimeout>|null>(null);
+ useEffect(()=>{const client=createClient();void client.from("community_posts").select("id,body,created_at,author_id").order("created_at",{ascending:false}).limit(35).then(({data})=>setFeed((data||[]).map((p:any)=>({id:p.id,body:p.body,created_at:p.created_at,user_id:p.author_id}))));void client.from("profiles").select("id,display_name,username,bio,avatar_config").limit(70).then(({data})=>setMembers((data||[]).filter(x=>x.id!==profile.id)));},[profile.id]);
+ useEffect(()=>{if(!selected){setMemberProfile(null);return;}void createClient().from("profiles").select("*").eq("id",selected).single().then(({data})=>setMemberProfile(data as Profile|null));},[selected]);
+ useEffect(()=>()=>{if(timeout.current)clearTimeout(timeout.current)},[]);
+ const switchTab=(next:typeof active)=>{positions.current[active]=window.scrollY;setActive(next);setSelected(null);setArabic(next);if(timeout.current)clearTimeout(timeout.current);timeout.current=setTimeout(()=>setArabic(null),1000);requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:positions.current[next]||0,behavior:"instant"})));};
+ const names:{id:typeof active;en:string;ar:string}[]=[{id:"feed",en:"Feed",ar:"الأمة"},{id:"profile",en:"My Profile",ar:"ملفي الشخصي"},{id:"muslimeen",en:"1Muslimeen",ar:"المسلمون"}];
+ return <div className={"profileSocialHub profileSocial-"+active}>
+  <nav className="profileSocialTop" aria-label="Social profile navigation"><div className="profileSocialTabs">{names.map(n=><button type="button" key={n.id} aria-current={active===n.id?"page":undefined} onClick={()=>switchTab(n.id)} lang={arabic===n.id?"ar":undefined}>{arabic===n.id?n.ar:n.en}</button>)}</div><button type="button" className="profileMessengerTrigger" aria-label="Open Messenger" onClick={()=>setMessenger(true)}>✉ <span>Messenger</span></button></nav>
+  <div hidden={active!=="profile"}>{children}</div>
+  <section hidden={active!=="feed"} className="profileSocialContent"><header><h1>Feed</h1><p>Updates from the 1Muslim community.</p></header>{feed.length?feed.map(p=><article className="profileSocialItem" key={p.id}><button type="button" onClick={()=>{setSelected(p.user_id);setActive("muslimeen")}}>{members.find(m=>m.id===p.user_id)?.display_name||"1Muslim member"} ↗</button><p>{p.body}</p><small>{new Date(p.created_at).toLocaleDateString()}</small><Link href={"/?post="+p.id}>Open post ↗</Link></article>):<p>No community posts to show yet.</p>}</section>
+  <section hidden={active!=="muslimeen"} className="profileSocialContent"><header><h1>1Muslimeen</h1><p>Discover members of our Ummah.</p></header><label className="profileSocialSearch">Search members<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search names or usernames"/></label>{selected&&<button className="profileSocialBack" type="button" onClick={()=>setSelected(null)}>← Back to members</button>}{selected&&memberProfile?<div className="profileSocialMemberDetail"><ProfileOrbitStudio profile={memberProfile} onEdit={()=>{}} ashab={[]}/><Link href={"/messages?user="+selected}>Message member ↗</Link></div>:<div className="profileSocialMembers">{members.filter(m=>(m.display_name+" "+m.username).toLowerCase().includes(search.toLowerCase())).map(m=><button type="button" key={m.id} onClick={()=>setSelected(m.id)}><strong>{m.display_name||"1Muslim member"}</strong><span>@{m.username||"member"}</span><small>{m.bio||"View member profile"}</small></button>)}</div>}</section>
+  {messenger&&<div className="profileMessengerBackdrop" onClick={()=>setMessenger(false)}><aside className="profileMessengerDrawer" aria-label="Messenger" onClick={e=>e.stopPropagation()}><header><h2>Messenger</h2><button type="button" onClick={()=>setMessenger(false)} aria-label="Close Messenger">✕</button></header><p>Your conversations and messages.</p><Link href="/messages">Open Messenger →</Link><Link href="/messages">Start a conversation →</Link></aside></div>}
+ </div>;
+}
+
 export default function ProfilePage() {
   const router=useRouter();
   const [signingOut,setSigningOut]=useState(false);
