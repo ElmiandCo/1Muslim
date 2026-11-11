@@ -62,27 +62,27 @@ const BACKGROUND_CHOICES=[
 
 
 
-function ProfileOrbitStudio({profile,onEdit,ashab}:{profile:Profile;onEdit:()=>void;ashab:Profile[];editing?:boolean;editorTab?:string}){
+function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true}:{profile:Profile;onEdit:()=>void;ashab:Profile[];isOwner?:boolean;editing?:boolean;editorTab?:string}){
  const [section,setSection]=useState<"activity"|"connections"|"analytics">("activity");
  const coverUrl=typeof profile.avatar_config?.profileCoverUrl==="string"?profile.avatar_config.profileCoverUrl:COVER_STOCK.find(c=>c.id===profile.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
  const avatar=typeof profile.avatar_config?.selectedAvatarUrl==="string"?profile.avatar_config.selectedAvatarUrl:profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
  return <section className="profileProfessional">
   <header className="profileProfessionalCard profileProfessionalHeader">
-   <div className="profileProfessionalCover" style={{backgroundImage:`url("${coverUrl}")`}}><button type="button" className="profileCoverEdit" onClick={onEdit} aria-label="Edit cover photo">✎ Edit cover</button></div>
+   <div className="profileProfessionalCover" style={{backgroundImage:`url("${coverUrl}")`}}>{isOwner&&<button type="button" className="profileCoverEdit" onClick={onEdit} aria-label="Edit cover photo">✎ Edit cover</button>}</div>
    <div className="profileProfessionalIdentity">
     <img className="profileProfessionalAvatar" src={avatar} alt="Your profile avatar"/>
-    <button className="profileProfessionalEdit" type="button" onClick={onEdit} aria-label="Edit profile">✎</button>
+    {isOwner&&<button className="profileProfessionalEdit" type="button" onClick={onEdit} aria-label="Edit profile">✎</button>}
     <h1>{profile.display_name||"1Muslim Member"}</h1>
     <p className="profileProfessionalHandle">@{profile.username||"member"} · {profile.xp_total.toLocaleString()} XP</p>
     <p className="profileProfessionalBio">{profile.bio||"Add a bio to introduce yourself to the 1Muslim community."}</p>
     {(profile.city||profile.state||profile.country)&&<p className="profileProfessionalLocation">📍 {[profile.city,profile.state,profile.country].filter(Boolean).join(", ")}</p>}
-    <p className="profileProfessionalConnection">{ashab.length} connections · 1Muslim community</p>
+    {isOwner&&<p className="profileProfessionalConnection">{ashab.length} connections · 1Muslim community</p>}
     
    </div>
   </header>
-  <ProfileMemberStats userId={profile.id}/>
-  <section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><a href="#profile-media-library">▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></a><a href="#profile-media-library">♡ <span>Likes &amp; Saved</span><small>My content library</small></a><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button></div></section>
-  <section className="profileProfessionalCard profileProfessionalWorkspace" aria-label="Your activity analytics"><ProfileAnalytics inline/></section>
+  <ProfileMemberStats userId={profile.id} displayName={isOwner?undefined:(profile.display_name||profile.username||"Member")} />
+  {isOwner&&<section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><a href="#profile-media-library">▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></a><a href="#profile-media-library">♡ <span>Likes &amp; Saved</span><small>My content library</small></a><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button></div></section>}
+  {isOwner&&<section className="profileProfessionalCard profileProfessionalWorkspace" aria-label="Your activity analytics"><ProfileAnalytics inline/></section>}
  </section>;
 }
 
@@ -128,7 +128,7 @@ function ProfileSocialHub({profile,children}:{profile:Profile;children:React.Rea
   <nav className="profileSocialTop" aria-label="Social profile navigation"><Link href="/" className="profileSocialHome" aria-label="Go to 1Muslim Home" title="Home"><ProfileNavIcon kind="home"/></Link><div className="profileSocialTabs">{names.map(n=><button type="button" key={n.id} aria-label={n.en} title={n.en} aria-current={active===n.id?"page":undefined} onClick={()=>switchTab(n.id)}><ProfileNavIcon kind={n.id==="muslimeen"?"community":n.id}/></button>)}</div><button type="button" className="profileMessengerTrigger" aria-label="Open Messenger" onClick={()=>setMessenger(true)}><ProfileNavIcon kind="messages"/><span>Messenger</span></button></nav>
   <div hidden={active!=="profile"}>{children}</div>
   <section hidden={active!=="feed"} className="profileSocialFeedFrame" aria-label="The Ummah Feed"><iframe title="1Muslim Posts — The Ummah Feed" src="/posts" loading="lazy" className="profileSocialCommunityEmbed"/><div className="profileSocialFeedFooter"><Link href="/posts">Open full Ummah Feed ↗</Link></div></section>
-  <section hidden={active!=="muslimeen"} className="profileSocialContent"><header><h1>1Muslimeen</h1><p>Discover members of our Ummah.</p></header><label className="profileSocialSearch">Search members<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search names or usernames"/></label>{selected&&<button className="profileSocialBack" type="button" onClick={()=>setSelected(null)}>← Back to members</button>}{selected&&memberProfile?<div className="profileSocialMemberDetail"><ProfileOrbitStudio profile={memberProfile} onEdit={()=>{}} ashab={[]}/><Link href={"/messages?user="+selected}>Message member ↗</Link></div>:<div className="profileSocialMembers">{members.filter(m=>(m.display_name+" "+m.username).toLowerCase().includes(search.toLowerCase())).map(m=><button type="button" key={m.id} onClick={()=>setSelected(m.id)}><strong>{m.display_name||"1Muslim member"}</strong><span>@{m.username||"member"}</span><small>{m.bio||"View member profile"}</small></button>)}</div>}</section>
+  <section hidden={active!=="muslimeen"} className="profileSocialContent"><header><h1>1Muslimeen</h1><p>Discover members of our Ummah.</p></header><label className="profileSocialSearch">Search members<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search names or usernames"/></label>{selected&&<button className="profileSocialBack" type="button" onClick={()=>setSelected(null)}>← Back to members</button>}{selected&&memberProfile?<div className="profileSocialMemberDetail"><ProfileOrbitStudio profile={memberProfile} onEdit={()=>{}} ashab={[]} isOwner={false}/><Link href={"/messages?user="+selected}>Message member ↗</Link></div>:<div className="profileSocialMembers">{members.filter(m=>(m.display_name+" "+m.username).toLowerCase().includes(search.toLowerCase())).map(m=><button type="button" key={m.id} onClick={()=>setSelected(m.id)}><strong>{m.display_name||"1Muslim member"}</strong><span>@{m.username||"member"}</span><small>{m.bio||"View member profile"}</small></button>)}</div>}</section>
   {messenger&&<div className="profileMessengerBackdrop" onClick={()=>setMessenger(false)}><aside className="profileMessengerDrawer" aria-label="Messenger" onClick={e=>e.stopPropagation()}><header><h2>Messenger</h2><button type="button" onClick={()=>setMessenger(false)} aria-label="Close Messenger">✕</button></header><iframe title="1Muslim Messenger conversations" src="/messages" className="profileMessengerFrame" loading="lazy"/><Link href="/messages" className="profileMessengerFullLink">Open full Messenger ↗</Link></aside></div>}
  </div>;
 }
