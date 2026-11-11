@@ -1,0 +1,10 @@
+"use client";
+import {useEffect,useState} from "react";
+import {createClient} from "../../utils/supabase/client";
+export default function PostAuthorFollow({authorId,viewerId}:{authorId:string;viewerId?:string|null}){
+ const [following,setFollowing]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ useEffect(()=>{if(!viewerId||viewerId===authorId)return;let live=true;void createClient().from("profile_follows").select("follower_id").eq("follower_id",viewerId).eq("following_id",authorId).maybeSingle().then(({data})=>{if(live)setFollowing(!!data)});return()=>{live=false}},[authorId,viewerId]);
+ if(!viewerId||viewerId===authorId)return null;
+ const toggle=async()=>{setBusy(true);setError("");try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(user?.id!==viewerId)throw Error("Sign in again to follow.");const {error}=following?await db.from("profile_follows").delete().eq("follower_id",viewerId).eq("following_id",authorId):await db.from("profile_follows").insert({follower_id:viewerId,following_id:authorId});if(error&&error.code!=="23505")throw Error("Unable to follow ("+error.code+")");setFollowing(!following);window.dispatchEvent(new CustomEvent("1muslim:follow-changed",{detail:{memberId:authorId,viewerId}}))}catch(e){setError(e instanceof Error?e.message:"Follow failed")}finally{setBusy(false)}};
+ return <div className="postAuthorFollow"><button type="button" onClick={()=>void toggle()} disabled={busy} aria-pressed={following}>{busy?"Saving…":following?"Following":"+ Follow"}</button>{error&&<small role="alert">{error}</small>}<style jsx>{`.postAuthorFollow{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}.postAuthorFollow button{border:1px solid #245a91;border-radius:22px;padding:8px 13px;background:#245a91;color:white;font-size:12px;font-weight:800;cursor:pointer}.postAuthorFollow button[aria-pressed=true]{background:#fff;color:#245a91}.postAuthorFollow button:disabled{opacity:.5}.postAuthorFollow small{font-size:10px;color:#a23b3b}`}</style></div>
+}
