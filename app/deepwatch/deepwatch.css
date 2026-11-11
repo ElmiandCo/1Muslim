@@ -105,3 +105,22 @@
 .dwRedesigned .dwTheater:fullscreen .dwTheaterExit{display:flex}
 .dwRedesigned .dwCompactControls .dwExpandButton{font-size:26px;background:linear-gradient(145deg,#2a3443,#11151d);border-color:#a9c6e766}
 @media(orientation:landscape) and (max-height:600px){.dwRedesigned .dwTheaterExpanded .deepwatchPlayer iframe{height:100%;width:100%}}
+/* Kids-only gentle welcome shimmer: purple → green → yellow → transparent. */
+.dwKidsMode{position:relative;isolation:isolate}
+.dwKidsMode::before{content:"";pointer-events:none;position:absolute;inset:0;z-index:3;border-radius:inherit;border:2px solid transparent;box-shadow:inset 0 0 0 1px transparent;animation:dwKidsGlow 5.8s ease-in-out 1 both}
+.dwKidsMode .deepwatchHeader{animation:dwKidsHeader 5.8s ease-in-out 1 both}
+@keyframes dwKidsGlow{
+0%{border-color:#a66bff00;box-shadow:inset 0 0 18px #a66bff00}
+12%{border-color:#a66bff88;box-shadow:inset 0 0 22px #a66bff30}
+34%{border-color:#a66bff66;box-shadow:inset 0 0 20px #a66bff24}
+54%{border-color:#48d79b77;box-shadow:inset 0 0 18px #48d79b25}
+73%{border-color:#ffd45b66;box-shadow:inset 0 0 18px #ffd45b20}
+100%{border-color:transparent;box-shadow:none}
+}
+@keyframes dwKidsHeader{
+0%,100%{filter:none}
+18%{filter:drop-shadow(0 0 9px #a66bff45)}
+55%{filter:drop-shadow(0 0 8px #48d79b35)}
+77%{filter:drop-shadow(0 0 7px #ffd45b30)}
+}
+@media(prefers-reduced-motion:reduce){.dwKidsMode::before,.dwKidsMode .deepwatchHeader{animation:none}}
