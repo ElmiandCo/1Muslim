@@ -53,7 +53,7 @@ export default function ProfileMemberStats({userId,displayName}:{userId:string;d
   ];
   if(active){setGroups(next);setMemberSince(profile.data?.created_at||null);setLoading(false)}
  };
- void load();return()=>{active=false};
+ void load();const refresh=(event:Event)=>{const detail=(event as CustomEvent<{memberId:string;viewerId:string}>).detail;if(detail?.memberId===userId||detail?.viewerId===userId)void load()};window.addEventListener("1muslim:follow-changed",refresh);return()=>{active=false;window.removeEventListener("1muslim:follow-changed",refresh)};
  },[userId]);
  return <section className="profileMemberInsights" aria-label="Member activity statistics"><div className="profileMemberInsightsHeading"><div><small>MEMBER INSIGHTS</small><h2>{displayName?`${displayName}’s Journey`:"Your 1Muslim journey"}</h2></div><span>Swipe to explore →</span></div>
  <div className="profileMemberInsightsRail">{(loading?Array.from({length:4},(_,i)=>({name:["Membership","Community","Content","Qibla & Live"][i],subtitle:"Loading your activity",stats:[]})):groups).map(g=><article className="profileMemberInsightsCard" key={g.name}><div className="profileMemberInsightsCardHead"><h3>{g.name}</h3><p>{g.subtitle}</p></div><div className="profileMemberInsightsStats">{g.stats.map(st=><div key={st.label}><strong>{st.label==="Member since"?membershipLabel(memberSince):countFormat(st.value)}</strong><span>{st.label}</span></div>)}{loading&&<p>Loading verified totals…</p>}</div></article>)}</div>

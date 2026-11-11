@@ -108,6 +108,36 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
   </section>
 }
 
+function MemberFollowControl({viewerId,memberId}:{viewerId:string;memberId:string}){
+ const [following,setFollowing]=useState(false);
+ const [loading,setLoading]=useState(true);
+ const [saving,setSaving]=useState(false);
+ const [error,setError]=useState("");
+ useEffect(()=>{
+  let live=true;setLoading(true);setError("");setFollowing(false);
+  const db=createClient();
+  void db.from("profile_follows").select("follower_id").eq("follower_id",viewerId).eq("following_id",memberId).maybeSingle()
+   .then(({data,error})=>{if(!live)return;if(error)setError("Unable to check follow status.");else setFollowing(!!data);setLoading(false)});
+  return()=>{live=false};
+ },[viewerId,memberId]);
+ const toggle=async()=>{
+  if(saving||loading||viewerId===memberId)return;
+  setSaving(true);setError("");
+  const db=createClient();
+  const {data:{user},error:authError}=await db.auth.getUser();
+  if(authError||user?.id!==viewerId){setError("Sign in to follow members.");setSaving(false);return}
+  const result=following
+   ?await db.from("profile_follows").delete().eq("follower_id",viewerId).eq("following_id",memberId)
+   :await db.from("profile_follows").upsert({follower_id:viewerId,following_id:memberId},{onConflict:"follower_id,following_id",ignoreDuplicates:true});
+  if(result.error){setError("Could not update your follow. Please try again.")}
+  else{setFollowing(!following);window.dispatchEvent(new CustomEvent("1muslim:follow-changed",{detail:{memberId,viewerId}}))}
+  setSaving(false);
+ };
+ if(viewerId===memberId)return null;
+ return <div className="profileMemberFollowWrap"><button type="button" className={"profileMemberFollowButton"+(following?" isFollowing":"")} disabled={loading||saving} aria-pressed={following} onClick={()=>void toggle()}>{loading?"Checking…":saving?"Saving…":following?"✓ Following":"+ Follow"}</button>{error&&<span role="alert" className="profileMemberFollowError">{error}</span>}
+ <style>{`.profileMemberFollowWrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}.profileMemberFollowButton{min-width:128px;padding:12px 19px;border:1px solid #285d99;border-radius:14px;background:#285d99;color:white;font-size:15px;font-weight:750;cursor:pointer}.profileMemberFollowButton.isFollowing{background:white;color:#285d99}.profileMemberFollowButton:disabled{opacity:.55;cursor:wait}.profileMemberFollowError{color:#9b3333;font-size:12px}`}</style></div>;
+}
+
 function ProfileSocialHub({profile,children}:{profile:Profile;children:React.ReactNode}){
  const [active,setActive]=useState<"feed"|"profile"|"muslimeen">("profile");
  const [arabic,setArabic]=useState<string|null>(null);
@@ -128,7 +158,7 @@ function ProfileSocialHub({profile,children}:{profile:Profile;children:React.Rea
   <nav className="profileSocialTop" aria-label="Social profile navigation"><Link href="/" className="profileSocialHome" aria-label="Go to 1Muslim Home" title="Home"><ProfileNavIcon kind="home"/></Link><div className="profileSocialTabs">{names.map(n=><button type="button" key={n.id} aria-label={n.en} title={n.en} aria-current={active===n.id?"page":undefined} onClick={()=>switchTab(n.id)}><ProfileNavIcon kind={n.id==="muslimeen"?"community":n.id}/></button>)}</div><button type="button" className="profileMessengerTrigger" aria-label="Open Messenger" onClick={()=>setMessenger(true)}><ProfileNavIcon kind="messages"/><span>Messenger</span></button></nav>
   <div hidden={active!=="profile"}>{children}</div>
   <section hidden={active!=="feed"} className="profileSocialFeedFrame" aria-label="The Ummah Feed"><iframe title="1Muslim Posts — The Ummah Feed" src="/posts" loading="lazy" className="profileSocialCommunityEmbed"/><div className="profileSocialFeedFooter"><Link href="/posts">Open full Ummah Feed ↗</Link></div></section>
-  <section hidden={active!=="muslimeen"} className="profileSocialContent"><header><h1>1Muslimeen</h1><p>Discover members of our Ummah.</p></header><label className="profileSocialSearch">Search members<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search names or usernames"/></label>{selected&&<button className="profileSocialBack" type="button" onClick={()=>setSelected(null)}>← Back to members</button>}{selected&&memberProfile?<div className="profileSocialMemberDetail"><ProfileOrbitStudio profile={memberProfile} onEdit={()=>{}} ashab={[]} isOwner={false}/><Link href={"/messages?user="+selected}>Message member ↗</Link></div>:<div className="profileSocialMembers">{members.filter(m=>(m.display_name+" "+m.username).toLowerCase().includes(search.toLowerCase())).map(m=><button type="button" key={m.id} onClick={()=>setSelected(m.id)}><strong>{m.display_name||"1Muslim member"}</strong><span>@{m.username||"member"}</span><small>{m.bio||"View member profile"}</small></button>)}</div>}</section>
+  <section hidden={active!=="muslimeen"} className="profileSocialContent"><header><h1>1Muslimeen</h1><p>Discover members of our Ummah.</p></header><label className="profileSocialSearch">Search members<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search names or usernames"/></label>{selected&&<button className="profileSocialBack" type="button" onClick={()=>setSelected(null)}>← Back to members</button>}{selected&&memberProfile?<div className="profileSocialMemberDetail"><ProfileOrbitStudio profile={memberProfile} onEdit={()=>{}} ashab={[]} isOwner={false}/><MemberFollowControl key={selected} viewerId={profile.id} memberId={selected}/><Link href={"/messages?user="+selected}>Message member ↗</Link></div>:<div className="profileSocialMembers">{members.filter(m=>(m.display_name+" "+m.username).toLowerCase().includes(search.toLowerCase())).map(m=><button type="button" key={m.id} onClick={()=>setSelected(m.id)}><strong>{m.display_name||"1Muslim member"}</strong><span>@{m.username||"member"}</span><small>{m.bio||"View member profile"}</small></button>)}</div>}</section>
   {messenger&&<div className="profileMessengerBackdrop" onClick={()=>setMessenger(false)}><aside className="profileMessengerDrawer" aria-label="Messenger" onClick={e=>e.stopPropagation()}><header><h2>Messenger</h2><button type="button" onClick={()=>setMessenger(false)} aria-label="Close Messenger">✕</button></header><iframe title="1Muslim Messenger conversations" src="/messages" className="profileMessengerFrame" loading="lazy"/><Link href="/messages" className="profileMessengerFullLink">Open full Messenger ↗</Link></aside></div>}
  </div>;
 }
