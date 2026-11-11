@@ -140,12 +140,36 @@ export default function DeepWatch(){
  useEffect(()=>{if(!isGalleryAdmin)return;let active=true;const refresh=async()=>{try{const response=await fetch("/api/deepwatch/exclusions",{cache:"no-store"});if(!response.ok)return;const rows=await response.json();if(active&&Array.isArray(rows))setExcludedIds(rows.map((row:{item_id:string})=>row.item_id))}catch{}};const timer=window.setInterval(()=>void refresh(),30000);return()=>{active=false;window.clearInterval(timer)}},[isGalleryAdmin]);
  const fullCatalog=useMemo(()=>Array.from(new Map([...deepwatchCatalog,...approvedRegistry].map(v=>[v.videoId,v] as const)).values()),[approvedRegistry]);
  const galleryTotal=useMemo(()=>fullCatalog.filter(v=>!excludedIds.includes(v.videoId)).length,[fullCatalog,excludedIds]);
+ const classify= (v:RegisteredVideo)=>{
+  const meta=[v.category,...(v.categories||[])].join(" ").toLowerCase();
+  const title=v.title.toLowerCase();
+  const kids=isDeepWatchKids(v)||isKidsVideo(v)||/\\bkids?\\b|children|cartoon/.test(meta);
+  const animated=/animat|cartoon/.test(meta+" "+title);
+  const episodic=/\\b(series|episodes?|tv shows?)\\b/.test(meta)||/\\b(?:episode|ep\\.|season)\\s*[#:. -]*\\d+/.test(title);
+  const movie=/\\b(movie|movies|film|films|cinema)\\b/.test(meta);
+  const international=/international|urdu|turkish|somali|indonesian|malay|bangla|hindi/.test(meta);
+  const quran=/qur.an|surah|recitation|tilawah/.test(meta+" "+title);
+  const prophet=isProphetVideo(v);
+  const scary=isScaryVideo(v);
+  const history=/historical|history|ottoman|seerah/.test(meta);
+  const aqeedah=/\\b(aqeedah|aqidah|tawheed|tawhid|creed)\\b/.test(meta);
+  const live=/\\blive(stream)?\\b/.test(meta);
+  return {Kids:kids,Movies:movie,"TV Shows":episodic,Series:episodic,"The Prophets":prophet,Scary:scary,Animation:animated,International:international,Live:live,"Qur’an":quran,Aqeedah:aqeedah,History:history} as Record<string,boolean>;
+ };
  const filtered=useMemo(()=>fullCatalog.filter(v=>{
   if(excludedIds.includes(v.videoId))return false;
   const tags=[v.title,v.category,...(v.categories||[])].join(" ").toLowerCase();
-  const matches=tab==="Home"||tab==="All Videos"||tab==="Kids"&&isDeepWatchKids(v)||tab==="My List"&&saved.includes(v.videoId)||tab==="The Prophets"&&isProphetVideo(v)||tab==="Scary"&&isScaryVideo(v)||tab==="Movies"&&(group(v)==="Movies"||officialIslamicFilms.some(f=>f.videoId===v.videoId))||tab==="Qur’an"&&/qur.an|surah|recitation|tilawah/.test(tags)||tab==="Aqeedah"&&/aqeedah|tawheed|belief|creed/.test(tags)||tab==="History"&&/historical|history|ottoman|seerah/.test(tags)||group(v)===tab;
+  const matches=tab==="Home"||tab==="All Videos"||(tab==="My List"?saved.includes(v.videoId):classify(v)[tab]===true);
   return matches&&(!search||tags.includes(search.toLowerCase()));
  }),[fullCatalog,tab,search,saved,excludedIds]);
+ const visibleTabs=useMemo(()=>tabs.filter(t=>t==="Home"||t==="All Videos"||t==="My List"||fullCatalog.some(v=>!excludedIds.includes(v.videoId)&&classify(v)[t])),[fullCatalog,excludedIds]);
+ const forYou=useMemo(()=>{
+  const candidates=fullCatalog.filter(v=>!excludedIds.includes(v.videoId));
+  const favorites=candidates.filter(v=>saved.includes(v.videoId));
+  if(!favorites.length)return candidates.slice(0,12);
+  const favoriteTags=new Set(favorites.flatMap(v=>[v.category,...(v.categories||[])].map(t=>t.toLowerCase())));
+  return candidates.filter(v=>!saved.includes(v.videoId)).map(v=>({v,score:[v.category,...(v.categories||[])].filter(t=>favoriteTags.has(t.toLowerCase())).length})).sort((a,b)=>b.score-a.score).slice(0,12).map(x=>x.v);
+ },[fullCatalog,saved,excludedIds]);
  const heroSlides=useMemo(()=>{
   const categories:Tab[]=tab==="Home"?["Kids","The Prophets","Scary","Series","Movies","TV Shows","Animation","International","Live"]:tab==="My List"?["My List"]: [tab];
   const used=new Set<string>();
@@ -187,7 +211,7 @@ export default function DeepWatch(){
  useEffect(()=>{if(!selected)return;const onMessage=(event:MessageEvent)=>{if(!event.origin.includes("youtube.com")&&!event.origin.includes("youtube-nocookie.com"))return;try{const d=typeof event.data==="string"?JSON.parse(event.data):event.data;if(typeof d?.info?.currentTime==="number")setSeconds(Math.floor(d.info.currentTime))}catch{}};window.addEventListener("message",onMessage);const timer=setInterval(()=>{send("getCurrentTime");window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:selected.videoId,seconds,format:"desktop"}}))},900);return()=>{clearInterval(timer);window.removeEventListener("message",onMessage);window.dispatchEvent(new CustomEvent("elmi-home-video-time",{detail:{videoKey:"",seconds:0,format:"desktop"}}))}},[selected,seconds]);
  const toggleSaved=(id:string)=>setSaved(prev=>{const value=prev.includes(id)?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem("1muslim:deepwatch-list",JSON.stringify(value))}catch{}return value});
  return <main className={"deepwatch"+(tab==="Kids"?" dwKidsMode":"")}><style>{`.deepwatchInlinePlayIcon{display:inline-block;width:1.25em;height:1.25em;vertical-align:-.27em;flex-shrink:0;margin-right:2px}`}</style>
-  <header className="deepwatchHeader"><Link href="/" className="deepwatchBrand" aria-label="DeepWatch by 1Muslim — Home"><img src="/assets/deepwatch-icon-2.PNG" alt="DeepWatch by 1Muslim" width={160} height={72} style={{display:"block",width:"auto",maxWidth:"min(38vw,160px)",height:64,objectFit:"contain"}}/></Link><nav aria-label="DeepWatch categories">{tabs.map(item=><button type="button" key={item} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}>{item==="Live"?<span className="deepwatchLiveNav"><span className="deepwatchLivePulse" aria-hidden="true"/>LIVE</span>:item}</button>)}</nav><input type="search" aria-label="Search DeepWatch" placeholder="Search titles" value={search} onChange={e=>setSearch(e.target.value)}/>{isGalleryAdmin&&<output aria-live="polite" title="Unique registered titles in DeepWatch, excluding hidden videos" style={{display:"inline-flex",alignItems:"center",gap:8,padding:"9px 13px",border:"1px solid #43536b",borderRadius:14,color:"#f0f5ff",background:"#1a2434",fontSize:12,whiteSpace:"nowrap"}}><span style={{opacity:.7}}>GALLERY</span><strong>{galleryTotal.toLocaleString()}</strong>{libraryLoading&&<span style={{opacity:.7}}>Syncing…</span>}<span style={{opacity:.7}}>· VIEW {filtered.length.toLocaleString()}</span></output>}</header>
+  <header className="deepwatchHeader"><Link href="/" className="deepwatchBrand" aria-label="DeepWatch by 1Muslim — Home"><img src="/assets/deepwatch-icon-2.PNG" alt="DeepWatch by 1Muslim" width={160} height={72} style={{display:"block",width:"auto",maxWidth:"min(38vw,160px)",height:64,objectFit:"contain"}}/></Link><nav aria-label="DeepWatch categories">{visibleTabs.map(item=><button type="button" key={item} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}>{item==="Live"?<span className="deepwatchLiveNav"><span className="deepwatchLivePulse" aria-hidden="true"/>LIVE</span>:item}</button>)}</nav><input type="search" aria-label="Search DeepWatch" placeholder="Search titles" value={search} onChange={e=>setSearch(e.target.value)}/>{isGalleryAdmin&&<output aria-live="polite" title="Unique registered titles in DeepWatch, excluding hidden videos" style={{display:"inline-flex",alignItems:"center",gap:8,padding:"9px 13px",border:"1px solid #43536b",borderRadius:14,color:"#f0f5ff",background:"#1a2434",fontSize:12,whiteSpace:"nowrap"}}><span style={{opacity:.7}}>GALLERY</span><strong>{galleryTotal.toLocaleString()}</strong>{libraryLoading&&<span style={{opacity:.7}}>Syncing…</span>}<span style={{opacity:.7}}>· IN CATEGORY {filtered.length.toLocaleString()}</span></output>}</header>
   {tab==="Qur’an"&&<section className="deepwatchSurahLibrary" aria-label="114 Qur’an chapters">
    <div className="deepwatchSurahIntro"><span>THE HOLY QUR’AN · VIDEO LIBRARY</span><h2>THE 114 CHAPTERS</h2><p>Explore recitations and videos by Surah, in Qur’anic or revelation order.</p>
     <div className="deepwatchSurahControls"><button type="button" aria-pressed={chapterOrder==="compiled"} onClick={()=>setChapterOrder("compiled")}>Compiled</button><button type="button" aria-pressed={chapterOrder==="revealed"} onClick={()=>setChapterOrder("revealed")}>Revealed</button><Link href="/quran-library">Qur’an Reader ↗</Link></div></div>
@@ -205,6 +229,7 @@ export default function DeepWatch(){
    </div>)}
    {heroSlides.length>1&&<><button type="button" className="dwHeroTapZone dwHeroTapLeft" aria-label="Previous featured title" onClick={()=>setHeroIndex(i=>(i-1+heroSlides.length)%heroSlides.length)}/><button type="button" className="dwHeroTapZone dwHeroTapRight" aria-label="Next featured title" onClick={()=>setHeroIndex(i=>(i+1)%heroSlides.length)}/><div className="dwHeroProgress" aria-label={`Featured title ${heroIndex+1} of ${heroSlides.length}`}>{heroSlides.map((v,i)=><span key={v.videoId} className={i===heroIndex?"active":""}/>)}</div></>}
   </section>
+  {tab==="Home"&&forYou.length>0&&<section className="deepwatchRow" aria-label="For You recommendations"><h2>✦ For You</h2><p style={{opacity:.7,fontSize:13}}>{saved.length?"Because of titles in your list":"Discover titles from the DeepWatch library"}</p><div className="deepwatchRail">{forYou.map(v=><button key={v.videoId} type="button" className="deepwatchTile" onClick={()=>open(v)}><img src={image(v.videoId)} alt="" loading="lazy"/><span>{v.title}</span><small>▶ Watch</small></button>)}</div></section>}
   {(tab==="Home"||tab==="Series"||tab==="Scary"||tab==="The Prophets"||tab==="Movies"||tab==="Animation")&&<section className="deepwatchRow" aria-label="One Islam Productions official channel collection" style={{padding:"12px 24px"}}><h2>🎬 One Islam Productions · Official Collection</h2><p style={{opacity:.8,fontSize:13}}>Animated Islamic films, Prophet Stories, and Letters From Jannah · No Shorts</p><div className="deepwatchRail">{oneIslamVideos.filter(v=>!search||v.title.toLowerCase().includes(search.toLowerCase())).map(v=><button key={v.videoId} type="button" className="deepwatchTile" onClick={()=>setInfo(v)}><img src={image(v.videoId)} alt="" loading="lazy"/><span>{v.title}</span><small>One Islam Productions · <PlayIcon className="deepwatchInlinePlayIcon"/> Play</small></button>)}</div></section>}
   {(tab==="Home"||tab==="Series"||tab==="Movies"||tab==="Animation")&&[
    {name:"One Islam · Stories of the Prophets (Mufti Menk)",test:(v:RegisteredVideo)=>/Stories of the Prophets/i.test(v.title)},
