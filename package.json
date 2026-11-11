@@ -19,7 +19,8 @@
     "@livekit/track-processors": "^0.7.0",
     "web-push": "^3.6.7",
     "tus-js-client": "^4.3.1",
-    "three": "^0.181.0"
+    "three": "^0.181.0",
+    "stripe": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
