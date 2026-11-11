@@ -205,6 +205,10 @@ export default function QuranLessons(){
  const [markerSize,setMarkerSize]=useState(42);
  const markerDrag=useRef<{id:number;x:number;y:number;startX:number;startY:number;key:string}|null>(null);
  const activeVerseKey=verses[focusIndex]?.verse_key||chapter+":"+(focusIndex+1);
+ // Ping DeepSync: emit the precise ayah rather than just the Qur'an page route.
+ useEffect(()=>{if(!verses[focusIndex]?.verse_key)return;window.dispatchEvent(new CustomEvent("1muslim:ping-local-verse",{detail:{verseKey:verses[focusIndex].verse_key}}))},[verses,focusIndex]);
+ useEffect(()=>{const onRemote=(event:Event)=>{const key=(event as CustomEvent<{verseKey:string}>).detail?.verseKey;if(!/^([1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(key||""))return;pendingVerse.current=key;const [ch,num]=key.split(":").map(Number);setChapter(ch);setPage(Math.ceil(num/50))};window.addEventListener("1muslim:ping-remote-verse",onRemote);return()=>window.removeEventListener("1muslim:ping-remote-verse",onRemote)},[]);
+
  // A verse must remain active and visible for two seconds before claiming XP.
  useEffect(()=>{
   const key=verses[focusIndex]?.verse_key;
