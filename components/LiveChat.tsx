@@ -29,12 +29,17 @@ type Message = {
 export default function LiveChat({ streamId, hostId, overlay = false }: { streamId: string; hostId: string; overlay?: boolean }) {
   const supabase = useMemo(() => createClient(), []);
   const [userId, setUserId] = useState<string | null>(null);
+  const [myUsername, setMyUsername] = useState<string | null>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState("");
   const [selected, setSelected] = useState<Message | null>(null);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLInputElement>(null);
   const [reporting, setReporting] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const start = useRef<{x:number;y:number}|null>(null);
@@ -58,6 +63,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUserId(user?.id ?? null);
+    if (user?.id) { const { data: me } = await supabase.from("profiles").select("username").eq("id", user.id).maybeSingle(); setMyUsername(me?.username ?? null); }
 
     const [{ data: rows }, { data: mutes }] = await Promise.all([
       supabase.from("live_chat_messages").select("id,stream_id,sender_id,body,created_at").eq("stream_id", streamId).order("created_at", { ascending: true }).limit(200),
@@ -88,6 +94,15 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
     return () => { void supabase.removeChannel(channel); };
   }, [streamId, supabase]);
 
+  useEffect(() => { const el = messageListRef.current; if (el) el.scrollTo({top:el.scrollHeight,behavior:"smooth"}); }, [messages.length]);
+
+  const reply = (message: Message) => {
+    if (!userId || message.sender_id === userId) return;
+    setReplyTo(message);
+    setDraft(`@${message.profile?.username || displayName(message)} `);
+    requestAnimationFrame(() => composerRef.current?.focus());
+  };
+
   const send = async (event: FormEvent) => {
     event.preventDefault();
     const body = limit35(draft.trim());
@@ -95,7 +110,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
     setSending(true); setNotice("");
     const { error } = await supabase.from("live_chat_messages").insert({ stream_id: streamId, sender_id: userId, body });
     if (error) setNotice(error.message.includes("live_chat_messages") ? "You cannot comment in this Live right now." : error.message);
-    else setDraft("");
+    else { setDraft(""); setReplyTo(null); }
     setSending(false);
   };
 
@@ -126,7 +141,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
         .liveChat{display:flex;flex-direction:column;min-height:300px;background:#080d09}.chatOverlay{min-height:0;height:100%;background:transparent;color:white}.chatOverlay .chatHead{background:rgba(0,0,0,.35);border:0;border-radius:12px;padding:8px 12px}.chatOverlay .messages{min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;mask-image:linear-gradient(to bottom,transparent,black 18%);padding:20px 8px 8px}.chatOverlay .message{background:rgba(0,0,0,.66);border-radius:12px;padding:7px 9px;backdrop-filter:blur(8px);align-items:center}.chatOverlay .message{background:rgba(3,9,12,.55);border:1px solid rgba(255,255,255,.09);border-radius:16px;animation:liveCommentEnter .26s ease-out both}.chatOverlay .messages{scrollbar-width:none}.chatOverlay .messages::-webkit-scrollbar{display:none}.chatOverlay .composer{background:rgba(0,0,0,.22);border-radius:28px;backdrop-filter:blur(14px)}.chatOverlay .composer input{font-size:13px;min-height:42px;background:rgba(12,22,25,.75);border:1px solid rgba(255,255,255,.22)}@keyframes liveCommentEnter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.chatOverlay .message{animation:none}}.chatOverlay .name{color:#fff}.chatOverlay .body{color:#f1f1f1}.chatOverlay .composer{border:0;padding:8px 0}.chatOverlay .composer input{background:rgba(0,0,0,.78)}
         .chatHead{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #1b241f}.chatHead strong{font-size:13px}.chatHead span{font-size:9px;color:#66736b}
         .messages{flex:1;max-height:360px;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px}.message{display:flex;gap:7px;align-items:flex-start}.avatar{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;overflow:hidden;border-radius:50%}.avatar :global(.profileAvatar){width:30px!important;height:30px!important;max-width:30px;max-height:30px;transform:none!important}.avatar :global(.profileAvatar img){width:100%;height:100%;object-fit:cover}.bubble{min-width:0;flex:1;overflow-wrap:anywhere}.bubble{min-width:0;flex:1}.name{font-size:10px;font-weight:800;color:#dce7de}.host{margin-left:5px;padding:2px 5px;border-radius:999px;background:#d6e7b8;color:#071008;font-size:7px;vertical-align:middle}.muted{margin-left:5px;color:#7c8780;font-size:8px}.body{font-size:11px;color:#aeb9b1;line-height:1.45;word-break:break-word}.muteBtn{margin-left:auto;border:1px solid #29352d;background:#0f1511;color:#8d9b91;border-radius:999px;padding:4px 7px;font-size:8px;cursor:pointer}.muteBtn:hover{color:#fff;border-color:#50624f}
-        .message{touch-action:pan-y;-webkit-user-select:none;user-select:none}
+        .message{touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:pointer;transition:border-color .2s,box-shadow .2s}.message.replySelected{border-color:var(--theme-primary,#70d7b1)!important;box-shadow:0 0 12px color-mix(in srgb,var(--theme-primary,#70d7b1) 35%,transparent)}.message.mentioned{border-left:3px solid var(--theme-primary,#70d7b1)!important;background:color-mix(in srgb,var(--theme-primary,#70d7b1) 20%,rgba(3,9,12,.75))}.replyHint{padding:5px 12px;color:var(--theme-primary,#70d7b1);font-size:11px}
         .reportBackdrop{position:fixed;inset:0;z-index:10000;background:#000a;display:grid;place-items:center;padding:20px;animation:reportFade .2s ease-out}
         .reportSheet{width:min(100%,380px);padding:22px;border-radius:20px;background:#132017;border:1px solid #4c6750;box-shadow:0 20px 80px #0009;color:#fff;animation:reportPop .26s cubic-bezier(.2,.85,.25,1.1)}
         .reportSheet button{display:block;width:100%;margin-top:10px;padding:13px;border:1px solid #4c6750;border-radius:12px;background:#203525;color:white;text-align:left;cursor:pointer}
@@ -136,17 +151,18 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
         .emoteTray{display:flex;gap:7px;padding:9px 12px 2px;flex-wrap:wrap}.emoteTray button{background:linear-gradient(135deg,#12342c,#172d40);border:1px solid #80c9b277;border-radius:12px;padding:7px 10px;font-size:19px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}.emoteTray button:hover{transform:translateY(-3px);box-shadow:0 0 16px #75e5b955}.emoteTray button:disabled{opacity:.35;cursor:not-allowed}.composer{display:flex;gap:7px;padding:12px;border-top:1px solid #1b241f}.composer input{flex:1;min-width:0;border:1px solid #263029;background:#0d140f;color:#fff;border-radius:999px;padding:10px 12px;outline:none;font-size:11px}.composer button{border:0;border-radius:999px;padding:0 14px;background:#d6e9b8;color:#071008;font-weight:850;font-size:10px;cursor:pointer}.composer button:disabled{opacity:.45;cursor:not-allowed}.mutedNotice,.notice{margin:10px 12px;padding:9px 11px;border-radius:10px;font-size:9px}.mutedNotice{background:#1b1510;border:1px solid #4a3927;color:#d7bd9c}.notice{background:#1b0f10;border:1px solid #533536;color:#ffcaca}
       `}</style>
       {!overlay && <div className="chatHead"><strong>💬 Live chat</strong><span>{messages.length} messages</span></div>}
-      <div className="messages">
+      <div className="messages" ref={messageListRef}>
         {messages.length ? messages.map((message) => {
           const isHost = message.sender_id === hostId;
           const isMuted = mutedUsers.has(message.sender_id);
           const avatar = <ProfileAvatar name={displayName(message)} gender={message.profile?.gender} avatarGender={message.profile?.avatar_gender} avatarPackage={message.profile?.avatar_package} avatarConfig={message.profile?.avatar_config} accent={message.profile?.profile_accent ?? "emerald"} size="sm" profileId={message.sender_id} />;
-          return <div className="message" key={message.id} role="button" tabIndex={0} aria-label="Hold comment for report options"
+          const mentioned = !!myUsername && new RegExp(`(^|\\s)@${myUsername.replace(/[.*+?^${}()|[\\]\\]/g, "\\const mentioned = !!userId && !!messages.find(m => m.sender_id === userId)?.profile?.username && message.body.toLowerCase().includes("@"+(messages.find(m => m.sender_id === userId)?.profile?.username || "").toLowerCase());")}(?=\\s|$|[.,!?])`, "i").test(message.body);
+          return <div className={`message${replyTo?.id === message.id ? " replySelected" : ""}${mentioned ? " mentioned" : ""}`} key={message.id} role="button" tabIndex={0} aria-label="Tap to reply; hold for report options" onClick={()=>reply(message)}
             onPointerDown={e=>{if(e.pointerType==="mouse"&&e.button!==0)return;cancelHold();start.current={x:e.clientX,y:e.clientY};timer.current=setTimeout(()=>{setSelected(message);navigator.vibrate?.(15)},1000)}}
             onPointerMove={e=>{if(start.current&&Math.hypot(e.clientX-start.current.x,e.clientY-start.current.y)>12)cancelHold()}}
             onPointerUp={cancelHold} onPointerCancel={cancelHold} onPointerLeave={cancelHold}
             onContextMenu={e=>{e.preventDefault();cancelHold();setSelected(message)}}
-            onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setSelected(message)}}}>
+            onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();reply(message)}}}>
             <div className="avatar">{avatar}</div>
             <div className="bubble">
               <div className="name">{displayName(message)}{isHost && <span className="host">HOST</span>}{isMuted && !isHost && <span className="muted">muted</span>}</div>
@@ -155,6 +171,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
             {userId === hostId && !isHost && <button className="muteBtn" onClick={() => void toggleMute(message.sender_id)}>{isMuted ? "Unmute" : "Mute"}</button>}
           </div>;
         }) : <div style={{color:"#66736b",fontSize:10,padding:10}}>Be the first to say something.</div>}
+        <div ref={messagesEndRef} />
       </div>
       {selected && <div className="reportBackdrop" onClick={()=>!reporting&&setSelected(null)}>
         <div className="reportSheet" role="dialog" aria-modal="true" aria-label="Comment options" onClick={e=>e.stopPropagation()}>
@@ -169,8 +186,9 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
       {notice && <div className="notice">{notice}</div>}
       {selfMuted && <div className="mutedNotice">The host has muted you. You can still watch the Live.</div>}
       <div className="emoteTray" aria-label="1Muslim emotes">{EMOTES.map(emote=><button type="button" key={emote} title={"Send "+emote} disabled={!userId||selfMuted||sending} onClick={()=>void sendEmote(emote)}>{emote}</button>)}</div>
+      {replyTo && <div className="replyHint">Replying to @{replyTo.profile?.username || displayName(replyTo)} <button type="button" onClick={()=>{setReplyTo(null);setDraft("");}}>×</button></div>}
       <form className="composer" onSubmit={send}>
-        <input value={draft} onChange={(event) => setDraft(limit35(event.target.value))} maxLength={35} placeholder={selfMuted ? "You are muted" : userId ? (userId === hostId ? "Comment as host…" : "Say something…") : "Sign in to comment"} disabled={!userId || selfMuted || sending} />
+        <input ref={composerRef} value={draft} onChange={(event) => setDraft(limit35(event.target.value))} maxLength={35} placeholder={selfMuted ? "You are muted" : userId ? (userId === hostId ? "Comment as host…" : "Say something…") : "Sign in to comment"} disabled={!userId || selfMuted || sending} />
         <small style={{alignSelf:"center",fontSize:9,opacity:.7}}>{Array.from(draft).length}/35</small><button type="submit" disabled={!userId || selfMuted || !draft.trim() || sending}>{sending ? "…" : "Send"}</button>
       </form>
     </div>
