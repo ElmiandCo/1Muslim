@@ -17,6 +17,7 @@ export default function PublicBadgeSelector({ userId, verifiedAt }: { userId: st
  const [saving, setSaving] = useState(false);
  const [message, setMessage] = useState("");
  const [focusedBadge,setFocusedBadge]=useState(0);
+ const [identityExpanded,setIdentityExpanded]=useState(false);
  const rotate=(step:number)=>setFocusedBadge(i=>(i+step+options.length)%options.length);
  useEffect(() => {
   let active=true;
@@ -37,7 +38,8 @@ export default function PublicBadgeSelector({ userId, verifiedAt }: { userId: st
   setSaving(false);
  };
  return <section className="profileEditor" style={{padding:24,border:"1px solid #49675c",borderRadius:20}}>
-  <h2>🏅 Public Badges</h2><p>Choose which earned badges appear on your public profile. Show up to three earned badges at once. Visibility does not change the benefits or permissions you have earned.</p>
+  <h2>🏅 Public Badges</h2>
+  <div className="identityBadgeCard"><button type="button" className="identityBadgeTrigger" aria-expanded={identityExpanded} onClick={()=>setIdentityExpanded(v=>!v)}><span className="identityBadgeIcon" aria-hidden="true">♢</span><span className="identityBadgeText"><strong>Verified Badge</strong><small>Not verified · Locked</small></span><span aria-hidden="true">{identityExpanded?"⌃":"⌄"}</span></button>{identityExpanded&&<div className="identityBadgeRequirements"><strong>Requirements to unlock</strong><p>Verify ownership of the email registered with your 1Muslim account using a six-digit security code.</p><p>The code expires after 10 minutes. A new code can be requested if it expires.</p><small>Email verification is being prepared. Verification codes are not yet available.</small></div>}</div><p>Choose which earned badges appear on your public profile. Show up to three earned badges at once. Visibility does not change the benefits or permissions you have earned.</p>
   <div className="royalBadgeCarousel" aria-label="Royal Carousel badge selection"><div className="royalBadgeControls"><button type="button" onClick={()=>rotate(-1)} aria-label="Previous badge">‹</button><span>ROYAL CAROUSEL · {focusedBadge+1} / {options.length}</span><button type="button" onClick={()=>rotate(1)} aria-label="Next badge">›</button></div><div className="royalBadgeStage">
    {options.map((b,index)=>{const offset=(index-focusedBadge+options.length)%options.length;const distance=offset>options.length/2?offset-options.length:offset;const earned=b.id==="tiktok"?connected:(b.id==="shahada"&&Boolean(verifiedAt))||earnedKeys.includes(b.id);return <label key={b.id} className={"royalBadgeCard"+(distance===0?" isFocused":"")} style={{"--royal-offset":distance,"--royal-depth":Math.abs(distance)} as React.CSSProperties} onClick={()=>{if(distance!==0)setFocusedBadge(index)}}>
     {b.image?<img src={b.image} alt="" style={{width:48,height:48,objectFit:"contain"}}/>:<span style={{fontSize:32}}>✦</span>}
