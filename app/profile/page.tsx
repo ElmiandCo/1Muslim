@@ -11,6 +11,7 @@ import FeaturedBadge from "../components/FeaturedBadge";
 import PublicBadgeSelector from "../components/PublicBadgeSelector";
 import HudHudTenFriends from "../components/HudHudTenFriends";
 import ProfileAnalytics from "../components/ProfileAnalytics";
+import ProfileMemberStats from "../components/ProfileMemberStats";
 
 type Profile = {
   id: string; display_name: string; username: string | null; first_name: string | null; last_name: string | null;
@@ -78,6 +79,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab}:{profile:Profile;onEdit:()=>v
     
    </div>
   </header>
+  <ProfileMemberStats userId={profile.id}/>
   <section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><a href="#profile-media-library">▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></a><a href="#profile-media-library">♡ <span>Likes &amp; Saved</span><small>My content library</small></a><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button></div></section>
   <section className="profileProfessionalCard profileProfessionalWorkspace" aria-label="Your activity analytics"><ProfileAnalytics inline/></section>
  </section>;
