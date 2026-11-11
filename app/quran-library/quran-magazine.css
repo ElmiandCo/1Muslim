@@ -43,3 +43,6 @@
 .qm-progress-chapter{margin:15px auto 4px}
 .qm-progress-sub{padding-top:3px;color:#a9a5ad}
 @media(max-width:480px){.qm-progress{padding:12px 14px}.qm-progress-label{font-size:11px}}
+
+/* Non-verse breathing room so the final ayah clears mobile browser controls. */
+.qm-chapter-end-spacer{height:clamp(240px,38dvh,440px);min-height:240px;pointer-events:none;flex:none}
