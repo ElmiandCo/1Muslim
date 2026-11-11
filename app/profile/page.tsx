@@ -61,6 +61,12 @@ const BACKGROUND_CHOICES=[
 
 function ProfileOrbitStudio({profile,onEdit,ashab}:{profile:Profile;onEdit:()=>void;ashab:Profile[];editing?:boolean;editorTab?:string}){
  const [section,setSection]=useState<"activity"|"connections"|"analytics">("activity");
+ const [quranVisits,setQuranVisits]=useState<string[]>([]);
+ useEffect(()=>{const refresh=()=>{try{const raw=JSON.parse(localStorage.getItem("1muslim:quran-library-visited")||"[]");setQuranVisits(Array.isArray(raw)?[...new Set(raw.filter((v:unknown)=>typeof v==="string"&&/^(?:[1-9]|[1-9]\\d|1(?:0\\d|1[0-4])):[1-9]\\d*$/.test(v as string))) ] as string[]:[])}catch{setQuranVisits([])}};refresh();window.addEventListener("focus",refresh);window.addEventListener("storage",refresh);return()=>{window.removeEventListener("focus",refresh);window.removeEventListener("storage",refresh)}},[]);
+ const quranChapterProgress=useMemo(()=>{const counts=new Map<number,number>();for(const key of quranVisits){const chapter=Number(key.split(":")[0]);counts.set(chapter,(counts.get(chapter)||0)+1)}return [...counts.entries()].sort((a,b)=>a[0]-b[0])},[quranVisits]);
+ const quranChapterNames=["Al-Fatihah","Al-Baqarah","Ali 'Imran","An-Nisa","Al-Ma'idah","Al-An'am","Al-A'raf","Al-Anfal","At-Tawbah","Yunus","Hud","Yusuf","Ar-Ra'd","Ibrahim","Al-Hijr","An-Nahl","Al-Isra","Al-Kahf","Maryam","Ta-Ha"];
+ const quranChapterCounts=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135];
+
  const coverUrl=typeof profile.avatar_config?.profileCoverUrl==="string"?profile.avatar_config.profileCoverUrl:COVER_STOCK.find(c=>c.id===profile.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
  const avatar=typeof profile.avatar_config?.selectedAvatarUrl==="string"?profile.avatar_config.selectedAvatarUrl:profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
  return <section className="profileProfessional">
@@ -78,6 +84,18 @@ function ProfileOrbitStudio({profile,onEdit,ashab}:{profile:Profile;onEdit:()=>v
    </div>
   </header>
   <section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><a href="#profile-media-library">▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></a><a href="#profile-media-library">♡ <span>Likes &amp; Saved</span><small>My content library</small></a><Link href="/quran">☷ <span>Verses</span><small>Qur’an Studio</small></Link><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button></div></section>
+  <section className="profileProfessionalCard" aria-label="Qur’an reading analytics" style={{padding:"22px",marginTop:18}}>
+   <h2 style={{margin:"0 0 8px"}}>Qur’an Reading Progress</h2>
+   <p style={{color:"#67768a",margin:"0 0 18px"}}>Your chapter-by-chapter reading journey</p>
+   <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",fontSize:14}}><span>Entire Qur’an · {quranVisits.length.toLocaleString()}/6,236 verses visited</span><strong>{Math.round(quranVisits.length/6236*100)}%</strong></div>
+   <div role="progressbar" aria-label="Entire Qur’an verses visited" aria-valuenow={quranVisits.length} aria-valuemin={0} aria-valuemax={6236} style={{height:9,background:"#e8e5ed",borderRadius:99,overflow:"hidden",margin:"10px 0 20px"}}><div style={{width:Math.min(100,quranVisits.length/6236*100)+"%",height:"100%",background:"linear-gradient(90deg,#8c72b4,#c8a46c)",borderRadius:99}}/></div>
+   <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:16,fontSize:13}}><span><strong>{quranChapterProgress.length}</strong> chapters started</span><span><strong>{quranVisits.length}</strong> verses visited</span></div>
+   {quranChapterProgress.length===0?<p style={{color:"#67768a"}}>Your reading progress will appear here after you visit verses in the Qur’an Library.</p>:<div style={{display:"grid",gap:14}}>
+    {quranChapterProgress.map(([number,count])=>{const total=quranChapterCounts[number-1];const percentage=total?Math.min(100,Math.round(count/total*100)):null;return <div key={number}><div style={{display:"flex",justifyContent:"space-between",gap:10,fontSize:13,marginBottom:6}}><span>{number}. {quranChapterNames[number-1]||"Surah "+number}</span><span>{count}{total?"/"+total:" verses"} {percentage!==null?"· "+percentage+"%":""}</span></div>{total&&<div style={{height:6,borderRadius:99,background:"#e8e5ed",overflow:"hidden"}}><div style={{height:"100%",width:percentage+"%",background:"linear-gradient(90deg,#8c72b4,#c8a46c)"}}/></div>}</div>})}
+   </div>}
+   <Link href="/quran-library" style={{display:"inline-block",marginTop:18,color:"#315e8c",fontWeight:600}}>Continue reading →</Link>
+   <p style={{fontSize:11,color:"#788393",margin:"14px 0 0"}}>Progress is currently saved on this device and browser.</p>
+  </section>
   <section className="profileProfessionalCard profileProfessionalSummary"><h2>Profile overview</h2><div className="profileProfessionalStatGrid"><div><strong>{profile.xp_total.toLocaleString()}</strong><span>Total XP</span></div><div><strong>{ashab.length}</strong><span>Connections</span></div><div><strong>{profile.shahada_verified_at?"Verified":"Member"}</strong><span>Shahadah status</span></div></div></section>
   <section className="profileProfessionalCard profileProfessionalWorkspace"><h2>Command Center</h2><p>Manage your presence and community activity.</p><div className="profileProfessionalNav"><button type="button" aria-pressed={section==="activity"} onClick={()=>setSection("activity")}>Activity</button><button type="button" aria-pressed={section==="connections"} onClick={()=>setSection("connections")}>Connections</button><button type="button" aria-pressed={section==="analytics"} onClick={()=>setSection("analytics")}>Analytics</button></div>
    {section==="activity"&&<div className="profileProfessionalInner"><h3>Your activity</h3><p>Your posts, recordings and saved content appear below.</p></div>}
