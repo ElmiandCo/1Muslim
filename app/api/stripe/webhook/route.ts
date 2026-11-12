@@ -34,6 +34,7 @@ export async function POST(req:Request) {
 }
 async function sync(sub:Stripe.Subscription,userId:string,customerId:string,db:ReturnType<typeof adminDb>){
  if(!sub.items.data.some(item=>item.price.id===PRICE_ID))return;
- const {error}=await db.from("unlocked_subscriptions").upsert({user_id:userId,stripe_customer_id:customerId,stripe_subscription_id:sub.id,stripe_price_id:PRICE_ID,status:sub.status,cancel_at_period_end:sub.cancel_at_period_end,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+ const {data:previous}=await db.from("unlocked_subscriptions").select("trial_used").eq("user_id",userId).maybeSingle();
+ const {error}=await db.from("unlocked_subscriptions").upsert({user_id:userId,trial_used:Boolean(previous?.trial_used)||sub.trial_start!=null,stripe_customer_id:customerId,stripe_subscription_id:sub.id,stripe_price_id:PRICE_ID,status:sub.status,cancel_at_period_end:sub.cancel_at_period_end,updated_at:new Date().toISOString()},{onConflict:"user_id"});
  if(error)throw error;
 }
