@@ -82,7 +82,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId}:{profil
    </div>
   </header>
   <ProfileMemberStats userId={profile.id} displayName={isOwner?undefined:(profile.display_name||profile.username||"Member")} />
-  {isOwner&&<section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><a href="#profile-media-library">▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></a><a href="#profile-media-library">♡ <span>Likes &amp; Saved</span><small>My content library</small></a><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button></div></section>}
+  {isOwner&&<section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><a href="#profile-media-library">▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></a><a href="#profile-media-library">♡ <span>Likes &amp; Saved</span><small>My content library</small></a><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button><button type="button" onClick={()=>window.dispatchEvent(new Event("1muslim:open-profile-analytics"))}>▥ <span>Analytics</span><small>Qur’an progress &amp; activity</small></button></div></section>}
   
  </section>;
 }
@@ -186,6 +186,7 @@ export default function ProfilePage() {
   const [posting,setPosting]=useState(false);
   const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live"|"shahada"|"analytics">("profile");
 const [avatarPage,setAvatarPage]=useState(0);
+  useEffect(()=>{const open=()=>{setTab("analytics");setEditing(true);window.setTimeout(()=>document.querySelector(".profileEditorToolbar")?.scrollIntoView({behavior:"smooth",block:"start"}),80)};window.addEventListener("1muslim:open-profile-analytics",open);return()=>window.removeEventListener("1muslim:open-profile-analytics",open)},[]);
   const [avatarTransition,setAvatarTransition]=useState<"unlock"|"change"|null>(null); const [avatarSaving,setAvatarSaving]=useState(false); const [saving,setSaving]=useState(false); const [colorSaving,setColorSaving]=useState(false); const [message,setMessage]=useState(""); const [authRequired,setAuthRequired]=useState(false);
   const [liveConnectors,setLiveConnectors]=useState<Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>>({});
   const [vaultUrl,setVaultUrl]=useState("");
