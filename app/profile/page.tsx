@@ -62,7 +62,23 @@ const BACKGROUND_CHOICES=[
 
 
 
-function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQuickPanel,onQuickPanel}:{profile:Profile;onEdit:()=>void;ashab:Profile[];isOwner?:boolean;viewerId?:string;editing?:boolean;editorTab?:string;activeQuickPanel?:"posts"|"saved"|"analytics"|null;onQuickPanel?:(panel:"posts"|"saved"|"analytics")=>void}){
+function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
+ const [expanded,setExpanded]=useState(true);
+ const items=[
+  {label:"DeepWatch",href:"/deepwatch",icon:"▶",tone:"#d9aa63"},
+  {label:"Qibla",href:"/qibla",icon:"◇",tone:"#d878c8"},
+  {label:"Qur’an",href:"/quran",icon:"۞",tone:"#8ad8cb"},
+  {label:"Live",href:"/streaming",icon:"▣",tone:"#6bd9db"},
+  {label:"Home",href:"/?home=1",icon:"⌂",tone:"#a9bbf4"},
+  {label:"Profile",href:"#profile-details",icon:"♙",tone:"#cbb5ef"},
+  {label:"Ummah",href:"/posts",icon:"☷",tone:"#e3a58d"},
+  {label:"Messages",href:"/messages",icon:"✉",tone:"#8dc8e6"},
+  {label:"Games",href:"/games",icon:"✦",tone:"#c5b5f0"}
+ ];
+ return <section className="profileAppLauncher" aria-label="Explore 1Muslim apps"><div className="profileAppLauncherHeading"><h2>Explore 1Muslim</h2><button type="button" onClick={()=>setExpanded(v=>!v)} aria-expanded={expanded}>{expanded?"Collapse":"Expand"} {expanded?"⌃":"⌄"}</button></div><div className={expanded?"profileAppLauncherGrid":"profileAppLauncherGrid compact"}>{items.map(item=><Link key={item.label} href={item.href} onClick={event=>{if(item.label==="Profile"){event.preventDefault();setExpanded(false);onProfile()}}} className="profileAppTile"><span className="profileAppTileIcon" style={{color:item.tone}} aria-hidden="true">{item.icon}</span><span>{item.label}</span></Link>)}</div><style jsx>{`.profileAppLauncher{margin:16px 0;padding:18px 14px;background:#090b11;color:#f7f8fc;border:1px solid #2e3442;border-radius:22px}.profileAppLauncherHeading{display:flex;align-items:center;justify-content:space-between;gap:10px}.profileAppLauncherHeading h2{margin:0;font-size:20px}.profileAppLauncherHeading button{border:1px solid #667085;border-radius:20px;background:#171b25;color:#fff;padding:7px 13px}.profileAppLauncherGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 6px;margin-top:18px}.profileAppLauncherGrid.compact{display:flex;overflow-x:auto;gap:8px;scrollbar-width:none}.profileAppLauncherGrid.compact :global(.profileAppTile){min-width:72px}.profileAppLauncherGrid.compact :global(.profileAppTileIcon){font-size:25px;height:32px}.profileAppLauncherGrid :global(.profileAppTile){display:flex;flex-direction:column;align-items:center;gap:7px;justify-content:center;min-width:0;text-decoration:none;color:#f7f8fc;font-size:13px;font-weight:700;padding:8px 2px;border-radius:15px;transition:background .2s,transform .2s}.profileAppLauncherGrid :global(.profileAppTile):active{background:#283042;transform:scale(.96)}.profileAppLauncherGrid :global(.profileAppTileIcon){font-size:48px;height:68px;display:grid;place-items:center;text-shadow:0 0 18px currentColor;line-height:1}`}</style></section>
+}
+
+function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQuickPanel,onQuickPanel,showProfileDetails=true}:{profile:Profile;onEdit:()=>void;ashab:Profile[];isOwner?:boolean;viewerId?:string;editing?:boolean;editorTab?:string;activeQuickPanel?:"posts"|"saved"|"analytics"|null;onQuickPanel?:(panel:"posts"|"saved"|"analytics")=>void;showProfileDetails?:boolean}){
  const [section,setSection]=useState<"activity"|"connections"|"analytics">("activity");
  const coverUrl=typeof profile.avatar_config?.profileCoverUrl==="string"?profile.avatar_config.profileCoverUrl:COVER_STOCK.find(c=>c.id===profile.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
  const avatar=typeof profile.avatar_config?.selectedAvatarUrl==="string"?profile.avatar_config.selectedAvatarUrl:profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
@@ -81,17 +97,20 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
     
    </div>
   </header>
-  <ProfileMemberStats userId={profile.id} displayName={isOwner?undefined:(profile.display_name||profile.username||"Member")} />
-  {isOwner&&<section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><button type="button" aria-pressed={activeQuickPanel==="posts"} onClick={()=>onQuickPanel?.("posts")}>▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></button><button type="button" aria-pressed={activeQuickPanel==="saved"} onClick={()=>onQuickPanel?.("saved")}>♡ <span>Likes &amp; Saved</span><small>My content library</small></button><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button><button type="button" aria-pressed={activeQuickPanel==="analytics"} onClick={()=>onQuickPanel?.("analytics")}>▥ <span>Analytics</span><small>Qur’an progress &amp; activity</small></button></div></section>}
+  {showProfileDetails&&<ProfileMemberStats userId={profile.id} displayName={isOwner?undefined:(profile.display_name||profile.username||"Member")} />}
+  {isOwner&&showProfileDetails&&<section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><button type="button" aria-pressed={activeQuickPanel==="posts"} onClick={()=>onQuickPanel?.("posts")}>▦ <span>Posts &amp; Videos</span><small>My clips and posts</small></button><button type="button" aria-pressed={activeQuickPanel==="saved"} onClick={()=>onQuickPanel?.("saved")}>♡ <span>Likes &amp; Saved</span><small>My content library</small></button><button type="button" onClick={onEdit}>⚙ <span>Settings</span><small>Manage profile</small></button><button type="button" aria-pressed={activeQuickPanel==="analytics"} onClick={()=>onQuickPanel?.("analytics")}>▥ <span>Analytics</span><small>Qur’an progress &amp; activity</small></button></div></section>}
   
  </section>;
 }
 
 function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,posting,publishFirstPost,onEdit}:{profile:Profile;tier:any;ashab:Profile[];postCount:number;postText:string;setPostText:(v:string)=>void;posting:boolean;publishFirstPost:()=>void;onEdit:()=>void}){
   const [activeQuickPanel,setActiveQuickPanel]=useState<"posts"|"saved"|"analytics"|null>(null);
+  const [showProfileDetails,setShowProfileDetails]=useState(false);
   const toggleQuickPanel=(panel:"posts"|"saved"|"analytics")=>setActiveQuickPanel(current=>current===panel?null:panel);
   return <section className="profileOverview">
-    <ProfileOrbitStudio profile={profile} onEdit={onEdit} ashab={ashab} activeQuickPanel={activeQuickPanel} onQuickPanel={toggleQuickPanel}/>
+    <ProfileOrbitStudio profile={profile} onEdit={onEdit} ashab={ashab} activeQuickPanel={activeQuickPanel} onQuickPanel={toggleQuickPanel} showProfileDetails={showProfileDetails}/>
+    <ProfileAppLauncher onProfile={()=>setShowProfileDetails(v=>!v)}/>
+    {showProfileDetails&&<div id="profile-details" aria-label="Profile details"/>}
 
     <div className="profileLegacyOverview" hidden>
     <header className={"profileOverviewHero header-"+profile.profile_accent}>
