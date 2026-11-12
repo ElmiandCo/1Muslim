@@ -59,7 +59,7 @@ const orderedShowEpisodes=(item:RegisteredVideo)=>{
 };
 const oneIslamIds=new Set(["ZtmfL6uZfa4","wuNAlw5kmW8","W-C-qyaTJ9A","bBHSA4l8LJQ","QuxSwXGvCDE","6W3MDgUsrG0","oVFGrvEwgdE","3JJpHR59598","XWiVlPH8ycw","XFX5q0JILd0","iVtFN5NDkCw","Qdm70F47b5k","PDfCJRqOXQI","k4hRONalWU4","jktPehmOlmo","hzoo_llwzBI","kYJLOA3Ku20","LgzRb5SYAvo","Zor1et-rT8c","RerLVM4pWeE","4elQ8MMqq6Q","74an2nHujZU","eRMdvy0oWKw","GWHggtbGQ4s","Dyf-hcQHVSg","-O7LWSejY0E","q2_NhdYU_Tg","w9pnYXQcxrs","M-qTbC0ST_A","50o4JLaFfY4","C7XZEcvQTXM","xsJg5cV_BYw","dsgc7wOATtU","N6vkcVBd5-M","eNRdgzVgt-o","HXHzI7FSQc8","O38OhlRifrk","l3mfoSVXFrQ","KjHaAItddDo","2-BVXtBdxw8","e87KDhW3biE","y1wrwkjR-NM","qAVVG3-Iqv8","JTJ37FNaPSU","Av2JfPcNgsE","4QBftmqAGFI"]);
 const oneIslamVideos=deepwatchCatalog.filter(v=>oneIslamIds.has(v.videoId)).sort((a,b)=>{const ep=(v:RegisteredVideo)=>Number(v.title.match(/\bEP(\d+)\b/i)?.[1]||999);return /Stories of the Prophets/i.test(a.title)&&/Stories of the Prophets/i.test(b.title)?ep(a)-ep(b):0});
-const tabs=["Home","Classics","Movies","Series","Kids","Live","Comedy","Scary","Animation","Qur’an","History","The Prophets","Documentaries","TV Shows","International","Aqeedah","All Videos","My List"] as const;
+const tabs=["Home","Classics","Movies","Series","Kids","Live","Comedy","Scary","Animation","Qur’an","History","The Prophets","Documentaries","TV Shows","International","Somali Entertainment","Aqeedah","All Videos","My List"] as const;
 type Tab=typeof tabs[number];
 type QuranChapter={id:number;name_simple:string;name_arabic:string;verses_count:number;revelation_order?:number;translated_name?:{name:string}};
 const normalizeSurah=(v:string)=>v.toLowerCase().normalize("NFKD").replace(/[’']/g,"").replace(/[^a-z0-9]/g,"");
@@ -175,6 +175,7 @@ export default function DeepWatch(){
   const episodic=/\\b(series|episodes?|tv shows?)\\b/.test(meta)||/\\b(?:episode|ep\\.|season)\\s*[#:. -]*\\d+/.test(title);
   const movie=/\\b(movie|movies|film|films|cinema)\\b/.test(meta);
   const international=/international|urdu|turkish|somali|indonesian|malay|bangla|hindi/.test(meta);
+  const somaliEntertainment=/somali|somalia|somaliland|musalsal|af-soomaali|af soomaali/.test(meta+" "+title);
   const quran=/qur.an|surah|recitation|tilawah/.test(meta+" "+title);
   const prophet=isProphetVideo(v);
   const scary=isScaryVideo(v);
@@ -184,7 +185,7 @@ export default function DeepWatch(){
   const comedy=/comedy|funny|humou?r|sketch|stand.up|sitcom|laugh/.test(meta+" "+title);
   const classics=/classic|the message|omar mukhtar|lion of the desert|historical film|old school|legacy|timeless|seerah|prophet stories/.test(meta+" "+title);
   const documentaries=/documentary|documentaries|historical|history|civilization|biography|explained|investigation/.test(meta+" "+title);
-  return {Classics:classics,Comedy:comedy,Documentaries:documentaries,Kids:kids,Movies:movie,"TV Shows":episodic,Series:episodic,"The Prophets":prophet,Scary:scary,Animation:animated,International:international,Live:live,"Qur’an":quran,Aqeedah:aqeedah,History:history} as Record<string,boolean>;
+  return {Classics:classics,Comedy:comedy,Documentaries:documentaries,Kids:kids,Movies:movie,"TV Shows":episodic,Series:episodic,"The Prophets":prophet,Scary:scary,Animation:animated,International:international,"Somali Entertainment":somaliEntertainment,Live:live,"Qur’an":quran,Aqeedah:aqeedah,History:history} as Record<string,boolean>;
  };
  const filtered=useMemo(()=>fullCatalog.filter(v=>{
   if(excludedIds.includes(v.videoId))return false;
@@ -192,7 +193,7 @@ export default function DeepWatch(){
   const matches=tab==="Home"||tab==="All Videos"||(tab==="My List"?saved.includes(v.videoId):classify(v)[tab]===true);
   return matches&&(!debouncedSearch||tags.includes(debouncedSearch));
  }),[fullCatalog,tab,debouncedSearch,saved,excludedIds]);
- const visibleTabs=useMemo(()=>tabs.filter(t=>t==="Home"||t==="All Videos"||t==="My List"||fullCatalog.some(v=>!excludedIds.includes(v.videoId)&&classify(v)[t])),[fullCatalog,excludedIds]);
+ const visibleTabs=useMemo(()=>tabs.filter(t=>t==="Home"||t==="All Videos"||t==="My List"||t==="Somali Entertainment"||fullCatalog.some(v=>!excludedIds.includes(v.videoId)&&classify(v)[t])),[fullCatalog,excludedIds]);
  const forYou=useMemo(()=>{
   const candidates=fullCatalog.filter(v=>!excludedIds.includes(v.videoId));
   const favorites=candidates.filter(v=>saved.includes(v.videoId));
