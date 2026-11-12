@@ -1,5 +1,10 @@
 name: Hourly Islamic Video Discovery
 on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/discover-islamic-videos.mjs"
+      - ".github/workflows/hourly-video-discovery.yml"
   schedule:
     - cron: "7 * * * *"
   workflow_dispatch:
