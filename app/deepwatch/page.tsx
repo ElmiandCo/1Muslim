@@ -215,10 +215,10 @@ export default function DeepWatch(){
  const [heroPaused,setHeroPaused]=useState(false);
  const [heroThumb,setHeroThumb]=useState(false);
  const heroTouch=useRef<{x:number;y:number}|null>(null);
- useEffect(()=>{setHeroThumb(false);const timer=window.setTimeout(()=>setHeroThumb(true),5300);return()=>window.clearTimeout(timer)},[heroIndex,tab]);
+ useEffect(()=>{setHeroThumb(false);const timer=window.setTimeout(()=>setHeroThumb(true),7000);return()=>window.clearTimeout(timer)},[heroIndex,tab]);
  useEffect(()=>{setHeroIndex(0)},[tab,debouncedSearch]);
  useEffect(()=>{if(selected||heroSlides.length<2)return;
-  const timer=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),6500);
+  const timer=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),7000);
   return()=>window.clearInterval(timer);
  },[heroPaused,selected,heroSlides.length]);
  const featured=heroSlides[heroIndex]||heroSlides[0];
@@ -253,7 +253,7 @@ export default function DeepWatch(){
   <section className="deepwatchHeroCarousel dwCinematicBanner" aria-label="Featured DeepWatch titles" onTouchStart={e=>{heroTouch.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const p=heroTouch.current;const t=e.changedTouches[0];if(p&&Math.abs(t.clientX-p.x)>45&&Math.abs(t.clientX-p.x)>Math.abs(t.clientY-p.y))setHeroIndex(i=>(i+(t.clientX<p.x?1:heroSlides.length-1))%heroSlides.length);heroTouch.current=null}}>
    {heroSlides.map((v,i)=><div key={v.videoId} className={`deepwatchHero ${i===heroIndex?"isActive":""}`} aria-hidden={i!==heroIndex} style={{backgroundImage:`linear-gradient(90deg,#07090d 4%,rgba(7,9,13,.92) 38%,rgba(7,9,13,.3)),url("${image(v.videoId)}")`}}>
     {i===heroIndex&&heroPreviewEnabled&&!search&&<div aria-hidden="true" style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none"}}>
-      <iframe key={v.videoId} title="" src={`https://www.youtube-nocookie.com/embed/${v.videoId}?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&playsinline=1&start=30&end=35&loop=1&playlist=${v.videoId}&rel=0`} allow="autoplay; encrypted-media; picture-in-picture" tabIndex={-1} style={{position:"absolute",width:"145%",height:"145%",left:"-22.5%",top:"-12%",border:0,opacity:heroThumb?0:0.72,transition:"opacity .7s ease"}}/>
+      <iframe key={v.videoId} title="" src={`https://www.youtube-nocookie.com/embed/${v.videoId}?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&playsinline=1&start=30&end=37&loop=1&playlist=${v.videoId}&rel=0`} allow="autoplay; encrypted-media; picture-in-picture" tabIndex={-1} style={{position:"absolute",width:"145%",height:"145%",left:"-22.5%",top:"-12%",border:0,opacity:heroThumb?0:0.72,transition:"opacity .7s ease"}}/>
       <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(90deg,#07090d 4%,rgba(7,9,13,.92) 38%,rgba(7,9,13,.3)),url("${image(v.videoId)}")`,backgroundSize:"cover",backgroundPosition:"center",opacity:heroThumb?1:0,transition:"opacity .7s ease"}}/>
     </div>}
     <div className="deepwatchHeroText"><p>1MUSLIM · {group(v).toUpperCase()}</p><h1>{v.title}</h1><span>Movie night starts here. Discover something worth your time.</span><div><button type="button" tabIndex={i===heroIndex?0:-1} onClick={()=>open(v)}><PlayIcon className="deepwatchInlinePlayIcon"/> Watch Now</button><button type="button" tabIndex={i===heroIndex?0:-1} onClick={()=>toggleSaved(v.videoId)}>{saved.includes(v.videoId)?"✓ In My List":"+ My List"}</button></div></div>
