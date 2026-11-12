@@ -70,7 +70,7 @@ for(const channelId of channelsToScan){
  const uploads=channel.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
  if(!uploads){console.warn("Skipping inaccessible approved channel",channelId);continue}
  const ids=[];let pageToken;
- const fluzen=channelId===fluzenChannelId;const educational=educationalChannelIds.has(channelId);const offset=quranMission||educational?0:(Math.floor(hour/Math.ceil(channelPool.length/3))%5)*4;
+ const fluzen=channelId===fluzenChannelId;const educational=educationalChannelIds.has(channelId);const offset=quranMission||educational||fluzen?0:(Math.floor(hour/Math.ceil(channelPool.length/3))%5)*4;
  for(let page=0;page<(fluzen||educational?1000:offset+(quranMission?12:4));page++){
   const playlist=await api("playlistItems",{part:"contentDetails",playlistId:uploads,maxResults:50,...(pageToken?{pageToken}:{})});
   if(fluzen||page>=offset)ids.push(...(playlist.items||[]).map(x=>x.contentDetails?.videoId).filter(Boolean));
@@ -91,7 +91,7 @@ for(const channelId of channelsToScan){
   if(quranMission&&!fluzen&&/part\\s*\\d+|verses?\\s*\\d+|ayat?\\s*\\d+|highlight|excerpt|portion/i.test(title))return[];
   if(surah)quranMatches.add(surah);
   if(!quranMission&&!educational&&!fluzen&&!religiousPattern.test(title+" "+description.slice(0,500))&&!seriesPattern.test(title))return[];
-  return [{video_id:v.id,title:title.slice(0,300),channel_id:channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:fluzen?["Educational","Nature & Science"]:quranMission?["Qur’an","Surah "+String(surah).padStart(3,"0")]:educational?["Educational","TPDossierYT"]:[seriesPattern.test(title)?"Historical series":category],source_query:(fluzen?"approved-channel-fluzen:":quranMission?"quran-114:":"approved-channel:")+channelId,status:"pending",bot_b_reason:fluzen?"Fluzen full-channel import; pending admin review":quranMission?"Qur’an 114 candidate; full recitation and visual aesthetics require manual verification":educational?"Educational channel import; awaiting admin review":"Hourly YouTube discovery; awaiting approval"}];
+  return [{video_id:v.id,title:title.slice(0,300),channel_id:channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:fluzen?["Educational","Nature & Science"]:quranMission?["Qur’an","Surah "+String(surah).padStart(3,"0")]:educational?["Educational","TPDossierYT"]:[seriesPattern.test(title)?"Historical series":category],source_query:(fluzen?"approved-channel-fluzen:":quranMission?"quran-114:":"approved-channel:")+channelId,status:fluzen?"approved":"pending",bot_b_reason:fluzen?"Fluzen full-channel import; pending admin review":quranMission?"Qur’an 114 candidate; full recitation and visual aesthetics require manual verification":educational?"Educational channel import; awaiting admin review":"Hourly YouTube discovery; awaiting approval"}];
  });
  eligible+=rows.length;
  // Check existing records first so reports count actual additions, not ignored duplicates.
