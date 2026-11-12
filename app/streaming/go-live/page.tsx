@@ -316,8 +316,16 @@ export default function GoLivePage() {
       osc.start(now);osc.stop(now+.1);
     }catch{/* A blocked sound must never delay Go Live. */}
   };
-  const launchBroadcast=()=>{
+  const launchBroadcast=async()=>{
     if(launchPendingRef.current||live||connectingLive||saving)return;
+    // Fail closed: a broadcast cannot start until server-side entitlement is confirmed.
+    try {
+      const entitlement=await fetch("/api/stripe/status",{cache:"no-store"});
+      if(entitlement.status===401){window.location.assign("/unlocked");return;}
+      if(!entitlement.ok)throw new Error("Unable to verify your subscription. Please retry.");
+      const access=await entitlement.json();
+      if(access.unlocked!==true){window.location.assign("/unlocked");return;}
+    }catch(e){setError(e instanceof Error?e.message:"Subscription verification failed.");return;}
     if(!cameraReady){
       if(previewCameraAcquiringRef.current){setError("Camera is starting. Please try Go Live in a moment.");return;}
       if(studioMode==="voice"){
