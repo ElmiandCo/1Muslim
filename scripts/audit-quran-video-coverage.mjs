@@ -1,0 +1,17 @@
+/** Read-only Quran video coverage audit against 114 canonical chapters. */
+import fs from "node:fs";
+const base=process.env.SUPABASE_URL?.replace(/\/$/,""),key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+if(!base||!key)throw Error("Missing Supabase credentials");
+const headers={apikey:key,Authorization:"Bearer "+key};
+const rows=[];
+for(let offset=0;offset<20000;offset+=1000){const r=await fetch(base+"/rest/v1/islamic_video_registry?select=video_id,title,description,categories,language,status&status=eq.approved&limit=1000&offset="+offset,{headers});if(!r.ok)throw Error("Supabase "+r.status+" "+(await r.text()).slice(0,300));const page=await r.json();rows.push(...page);if(page.length<1000)break}
+const names=["Al-Fatihah","Al-Baqarah","Ali Imran","An-Nisa","Al-Maidah","Al-Anam","Al-Araf","Al-Anfal","At-Tawbah","Yunus","Hud","Yusuf","Ar-Rad","Ibrahim","Al-Hijr","An-Nahl","Al-Isra","Al-Kahf","Maryam","Ta-Ha","Al-Anbiya","Al-Hajj","Al-Muminun","An-Nur","Al-Furqan","Ash-Shuara","An-Naml","Al-Qasas","Al-Ankabut","Ar-Rum","Luqman","As-Sajdah","Al-Ahzab","Saba","Fatir","Ya-Sin","As-Saffat","Sad","Az-Zumar","Ghafir","Fussilat","Ash-Shura","Az-Zukhruf","Ad-Dukhan","Al-Jathiyah","Al-Ahqaf","Muhammad","Al-Fath","Al-Hujurat","Qaf","Adh-Dhariyat","At-Tur","An-Najm","Al-Qamar","Ar-Rahman","Al-Waqiah","Al-Hadid","Al-Mujadilah","Al-Hashr","Al-Mumtahanah","As-Saff","Al-Jumuah","Al-Munafiqun","At-Taghabun","At-Talaq","At-Tahrim","Al-Mulk","Al-Qalam","Al-Haqqah","Al-Maarij","Nuh","Al-Jinn","Al-Muzzammil","Al-Muddaththir","Al-Qiyamah","Al-Insan","Al-Mursalat","An-Naba","An-Naziat","Abasa","At-Takwir","Al-Infitar","Al-Mutaffifin","Al-Inshiqaq","Al-Buruj","At-Tariq","Al-Ala","Al-Ghashiyah","Al-Fajr","Al-Balad","Ash-Shams","Al-Layl","Ad-Duha","Ash-Sharh","At-Tin","Al-Alaq","Al-Qadr","Al-Bayyinah","Az-Zalzalah","Al-Adiyat","Al-Qariah","At-Takathur","Al-Asr","Al-Humazah","Al-Fil","Quraysh","Al-Maun","Al-Kawthar","Al-Kafirun","An-Nasr","Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"];
+const norm=s=>String(s||"").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+const chapters=names.map((name,i)=>({chapter:i+1,name,videos:[]}));
+for(const row of rows){const title=row.title||"",tags=(row.categories||[]).join(" "),text=title+" "+tags;const quran=/qur.?an|surah|surat|sura|recitation|tilawah|سورة/i.test(text);if(!quran)continue;
+ const numeric=[...text.matchAll(/(?:surah|surat|sura|chapter|سورة)\s*[:#-]?\s*(\d{1,3})/gi)].map(m=>Number(m[1])).filter(n=>n>=1&&n<=114);
+ const hits=new Set(numeric);for(const c of chapters)if(norm(title).includes(norm(c.name)))hits.add(c.chapter);
+ for(const n of hits)chapters[n-1].videos.push({video_id:row.video_id,title:row.title,language:row.language});
+}
+const output={generated_at:new Date().toISOString(),scope:"approved registry videos; title and category evidence only",warning:"A chapter without a matched title is UNCONFIRMED, not proven absent. Partial recitations and compilation videos require manual review.",covered:chapters.filter(c=>c.videos.length),unconfirmed:chapters.filter(c=>!c.videos.length),total_covered:chapters.filter(c=>c.videos.length).length};
+fs.mkdirSync("audit-reports",{recursive:true});fs.writeFileSync("audit-reports/quran-chapter-coverage.json",JSON.stringify(output,null,2));console.log("QURAN_AUDIT",JSON.stringify({covered:output.total_covered,unconfirmed:output.unconfirmed.length}));
