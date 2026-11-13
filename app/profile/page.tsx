@@ -65,6 +65,15 @@ const BACKGROUND_CHOICES=[
 
 
 
+function ProfileSubscriptionStatus(){
+ const [status,setStatus]=useState<"loading"|"unlocked"|"free"|"unavailable">("loading");
+ useEffect(()=>{let live=true;fetch("/api/stripe/status",{cache:"no-store"}).then(async r=>{if(r.status===401)return {unlocked:false};if(!r.ok)throw Error("status unavailable");return r.json()}).then(d=>{if(live)setStatus(d.unlocked?"unlocked":"free")}).catch(()=>{if(live)setStatus("unavailable")});return()=>{live=false}},[]);
+ return <div style={{padding:"16px 18px",margin:"14px 0",border:"1px solid #d6e2f1",borderRadius:16,background:"#fff",color:"#173251"}}>
+  <strong>Membership</strong><div style={{marginTop:8,fontSize:16,fontWeight:700}}>{status==="loading"?"Checking membership…":status==="unlocked"?"1Muslim Unlocked":status==="free"?"Free membership":"Membership status unavailable"}</div>
+  {status==="free"&&<Link href="/unlocked" style={{display:"inline-block",marginTop:12,padding:"9px 16px",borderRadius:12,background:"#183f77",color:"#fff",textDecoration:"none",fontWeight:700}}>Unlocked → Upgrade</Link>}
+  {status==="unlocked"&&<Link href="/unlocked" style={{display:"inline-block",marginTop:10,color:"#225f9a"}}>Manage Unlocked</Link>}
+ </div>;
+}
 function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
  const [expanded,setExpanded]=useState(true);
  const items=[
@@ -458,7 +467,7 @@ const [avatarPage,setAvatarPage]=useState(0);
     </section>}
     {tab==="shahada"&&<section className="profileEditor">
       <div className="editorIntro"><span className="eyebrow">PRIVATE SAFE VAULT</span><h2>Your Shahada verification.</h2><p>Your original voice recording is private. Only your authenticated account can request a short-lived playback link. Your public profile never exposes the recording.</p></div>
-      <div className="shahadaVaultCard">
+      <ProfileSubscriptionStatus/><div className="shahadaVaultCard">
         <div><span className="eyebrow">STATUS</span><h3>{profile.shahada_verified_at?"✓ SHAHADA VERIFIED":"Not verified"}</h3><p>{profile.shahada_language==="ar"?"Arabic":"English"} · {profile.shahada_verified_at?new Date(profile.shahada_verified_at).toLocaleDateString():"—"}</p></div>
         {profile.shahada_audio_path&&vaultUrl?<audio controls preload="metadata" src={vaultUrl}/>:
           <span className="muted">No private recording available.</span>}
