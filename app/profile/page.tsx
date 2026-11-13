@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import HomeAppIcon from "../components/HomeAppIcon";
 import {useRouter} from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -66,8 +67,8 @@ function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
  const [expanded,setExpanded]=useState(true);
  const items=[
   {label:"DeepWatch",href:"/deepwatch",icon:"▶",tone:"#d9aa63"},
-  {label:"Qibla",href:"/qibla",icon:"◇",tone:"#d878c8"},
-  {label:"Qur’an",href:"/quran",icon:"۞",tone:"#8ad8cb"},
+  {label:"Qibla",href:"/qibla/newsroom",icon:"◇",tone:"#d878c8"},
+  {label:"Qur’an",href:"/quran-library",icon:"۞",tone:"#8ad8cb"},
   {label:"Live",href:"/streaming",icon:"▣",tone:"#6bd9db"},
   {label:"",href:"",icon:"",tone:""},
   {label:"Profile",href:"#profile-details",icon:"♙",tone:"#cbb5ef"},
@@ -75,11 +76,13 @@ function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
   {label:"Messages",href:"/messages",icon:"✉",tone:"#8dc8e6"},
   {label:"Games",href:"/games",icon:"✦",tone:"#c5b5f0"}
  ];
- return <section className="profileAppLauncher" aria-label="Explore 1Muslim apps"><div className="profileAppLauncherHeading"><h2>Explore 1Muslim</h2><button type="button" onClick={()=>setExpanded(v=>!v)} aria-expanded={expanded}>{expanded?"Collapse":"Expand"} {expanded?"⌃":"⌄"}</button></div><div className={expanded?"profileAppLauncherGrid":"profileAppLauncherGrid compact"}>{items.map(item=>item.label?<Link key={item.label} href={item.href} onClick={event=>{if(item.label==="Profile"){event.preventDefault();setExpanded(false);onProfile()}}} className="profileAppTile"><span className="profileAppTileIcon" style={{color:item.tone}} aria-hidden="true">{item.icon}</span><span>{item.label}</span></Link>:<span key="open-center" className="profileAppOpenCenter" aria-hidden="true"/>)}</div><style jsx>{`.profileAppLauncher{margin:16px 0;padding:18px 14px;background:#090b11;color:#f7f8fc;border:1px solid #2e3442;border-radius:22px}.profileAppLauncherHeading{display:flex;align-items:center;justify-content:space-between;gap:10px}.profileAppLauncherHeading h2{margin:0;font-size:20px}.profileAppLauncherHeading button{border:1px solid #667085;border-radius:20px;background:#171b25;color:#fff;padding:7px 13px}.profileAppLauncherGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 6px;margin-top:18px}.profileAppLauncherGrid.compact{display:flex;overflow-x:auto;gap:8px;scrollbar-width:none}.profileAppLauncherGrid.compact :global(.profileAppTile){min-width:72px}.profileAppLauncherGrid.compact :global(.profileAppTileIcon){font-size:25px;height:32px}.profileAppLauncherGrid :global(.profileAppOpenCenter){display:block;min-height:94px;pointer-events:none;background:transparent}.profileAppLauncherGrid.compact :global(.profileAppOpenCenter){display:none}.profileAppLauncherGrid :global(.profileAppTile){display:flex;flex-direction:column;align-items:center;gap:7px;justify-content:center;min-width:0;text-decoration:none;color:#f7f8fc;font-size:13px;font-weight:700;padding:8px 2px;border-radius:15px;transition:background .2s,transform .2s}.profileAppLauncherGrid :global(.profileAppTile):active{background:#283042;transform:scale(.96)}.profileAppLauncherGrid :global(.profileAppTileIcon){font-size:48px;height:68px;display:grid;place-items:center;text-shadow:0 0 18px currentColor;line-height:1}`}</style></section>
+ return <section className="profileAppLauncher" aria-label="Explore 1Muslim apps"><div className="profileAppLauncherHeading"><h2>Explore 1Muslim</h2><button type="button" onClick={()=>setExpanded(v=>!v)} aria-expanded={expanded}>{expanded?"Collapse":"Expand"} {expanded?"⌃":"⌄"}</button></div><div className={expanded?"profileAppLauncherGrid":"profileAppLauncherGrid compact"}>{items.map(item=>item.label?<Link key={item.label} href={item.href} onClick={event=>{if(item.label==="Profile"){event.preventDefault();setExpanded(false);onProfile()}}} className="profileAppTile"><span className="profileAppTileIcon" style={{color:item.tone}} aria-hidden="true">{(["DeepWatch","Qibla","Qur’an","Live","Profile"].includes(item.label))?<HomeAppIcon name={item.label as "DeepWatch"|"Qibla"|"Qur’an"|"Live"|"Profile"}/>:item.icon}</span><span>{item.label}</span></Link>:<span key="open-center" className="profileAppOpenCenter" aria-hidden="true"/>)}</div><style jsx>{`.profileAppLauncher{margin:16px 0;padding:18px 14px;background:transparent;color:inherit;border:0;border-radius:22px;box-shadow:none;backdrop-filter:none}.profileAppLauncherHeading{display:flex;align-items:center;justify-content:space-between;gap:10px}.profileAppLauncherHeading h2{margin:0;font-size:20px}.profileAppLauncherHeading button{border:1px solid #667085;border-radius:20px;background:rgba(255,255,255,.10);color:inherit;padding:7px 13px}.profileAppLauncherGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 6px;margin-top:18px}.profileAppLauncherGrid.compact{display:flex;overflow-x:auto;gap:8px;scrollbar-width:none}.profileAppLauncherGrid.compact :global(.profileAppTile){min-width:72px}.profileAppLauncherGrid.compact :global(.profileAppTileIcon){font-size:25px;height:32px}.profileAppLauncherGrid :global(.profileAppOpenCenter){display:block;min-height:94px;pointer-events:none;background:transparent}.profileAppLauncherGrid.compact :global(.profileAppOpenCenter){display:none}.profileAppLauncherGrid :global(.profileAppTile){display:flex;flex-direction:column;align-items:center;gap:7px;justify-content:center;min-width:0;text-decoration:none;color:inherit;font-size:13px;font-weight:700;padding:8px 2px;border-radius:15px;transition:background .2s,transform .2s;animation:profileHomeFloat 4s ease-in-out infinite}.profileAppLauncherGrid :global(.profileAppTile):active{background:#283042;transform:scale(.96)}@keyframes profileHomeFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}@media(prefers-reduced-motion:reduce){.profileAppLauncherGrid :global(.profileAppTile){animation:none!important}}.profileAppLauncherGrid :global(.profileAppTile:nth-child(2n)){animation-delay:-1.4s}.profileAppLauncherGrid :global(.profileAppTile:nth-child(3n)){animation-delay:-2.7s}.profileAppLauncherGrid :global(.profileAppTileIcon .oneMuslimAppGalleryIcon){display:grid;place-items:center;width:68px;height:68px}.profileAppLauncherGrid :global(.profileAppTileIcon svg){width:60px;height:60px}.profileAppLauncherGrid :global(.profileAppTileIcon img){max-width:66px;max-height:66px;object-fit:contain}.profileAppLauncherGrid :global(.profileAppTileIcon){font-size:48px;height:68px;display:grid;place-items:center;text-shadow:0 0 18px currentColor;line-height:1}`}</style></section>
 }
 
 function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQuickPanel,onQuickPanel,showProfileDetails=true}:{profile:Profile;onEdit:()=>void;ashab:Profile[];isOwner?:boolean;viewerId?:string;editing?:boolean;editorTab?:string;activeQuickPanel?:"posts"|"saved"|"analytics"|null;onQuickPanel?:(panel:"posts"|"saved"|"analytics")=>void;showProfileDetails?:boolean}){
  const [section,setSection]=useState<"activity"|"connections"|"analytics">("activity");
+ const [followCounts,setFollowCounts]=useState({followers:0,following:0});
+ useEffect(()=>{let live=true;const db=createClient();void Promise.all([db.from("profile_follows").select("follower_id",{count:"exact",head:true}).eq("following_id",profile.id),db.from("profile_follows").select("following_id",{count:"exact",head:true}).eq("follower_id",profile.id)]).then(([a,b])=>{if(live&&!a.error&&!b.error)setFollowCounts({followers:a.count||0,following:b.count||0})});return()=>{live=false}},[profile.id]);
  const coverUrl=typeof profile.avatar_config?.profileCoverUrl==="string"?profile.avatar_config.profileCoverUrl:COVER_STOCK.find(c=>c.id===profile.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
  const avatar=typeof profile.avatar_config?.selectedAvatarUrl==="string"?profile.avatar_config.selectedAvatarUrl:profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
  return <section className="profileProfessional">
@@ -92,7 +95,8 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
     <p className="profileProfessionalHandle">@{profile.username||"member"} · {profile.xp_total.toLocaleString()} XP</p>
     <p className="profileProfessionalBio">{profile.bio||"Add a bio to introduce yourself to the 1Muslim community."}</p>
     {(profile.city||profile.state||profile.country)&&<p className="profileProfessionalLocation">📍 {[profile.city,profile.state,profile.country].filter(Boolean).join(", ")}</p>}
-    {isOwner&&<p className="profileProfessionalConnection">{ashab.length} connections · 1Muslim community</p>}
+    <p className="profileProfessionalConnection"><span>{followCounts.followers} Followers</span><span aria-hidden="true"> · </span><span>{followCounts.following} Following</span></p>
+    {isOwner&&<button type="button" className="profileVisibleSignOut" onClick={()=>window.dispatchEvent(new Event("1muslim:profile-signout"))}>↪ Sign out</button>}
     {!isOwner&&viewerId&&<MemberFollowControl key={profile.id} viewerId={viewerId} memberId={profile.id}/>}
     
    </div>
@@ -516,6 +520,8 @@ const [avatarPage,setAvatarPage]=useState(0);
 .profileCommandPage .profileHeroActions{gap:10px!important}
 @media(max-width:600px){.profileCommandPage .profileEditorToolbar{padding:12px!important}.profileCommandPage .profileHeroActions{display:flex!important;flex-wrap:wrap!important}.profileCommandPage .profileEditorNav .profileTabs button{min-width:108px!important}.profileCommandPage .profileEditor{padding:18px!important}}
 /* Compact mobile profile editor: preserve all fields and existing save flow. */
+.profileVisibleSignOut{display:inline-flex;align-items:center;gap:6px;margin:14px 0 0;padding:9px 15px;border-radius:999px;border:1px solid #cbd6e2;background:#fff;color:#254b73;font-size:13px;font-weight:750;cursor:pointer}
+.profileAppLauncher{background:transparent!important;border-color:transparent!important;box-shadow:none!important}.profileAppLauncherGrid :global(.profileAppTile){background:transparent!important}
 .profileCommandPage:has(.profileEditorToolbar) .profileHero{padding:12px 16px!important;margin-bottom:8px!important;border-radius:16px!important;box-shadow:none!important}
 .profileCommandPage:has(.profileEditorToolbar) .profileHeroTop{padding:0!important}
 .profileCommandPage:has(.profileEditorToolbar) .profileHeroTop h1{font-size:20px!important;margin:2px 0!important}
