@@ -7,9 +7,9 @@ const entries:{id:GlobalNavDestination;label:string;href?:string}[]=[
 {id:"search",label:"Search"},{id:"profile",label:"Profile",href:"/profile"},
 {id:"muslims",label:"Muslims",href:"/profile?section=muslimeen"},
 {id:"posts",label:"Ummah Posts",href:"/posts"},
-{id:"deepwatch",label:"DeepWatch",href:"/deepwatch"},
-{id:"quran",label:"Qur'an",href:"/quran-library"},
 {id:"messages",label:"Messages",href:"/messages"},
+{id:"quran",label:"Qur'an",href:"/quran-library"},
+{id:"deepwatch",label:"DeepWatch",href:"/deepwatch"},
 {id:"unlocked",label:"Unlocked",href:"/unlocked"},
 {id:"signout",label:"Sign Out"}];
 type Entry=typeof entries[number];
