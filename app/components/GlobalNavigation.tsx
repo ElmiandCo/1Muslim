@@ -5,7 +5,7 @@ import {createClient} from "../../utils/supabase/client";
 import GlobalNavIcon,{type GlobalNavDestination} from "./GlobalNavIcon";
 const entries:{id:GlobalNavDestination;label:string;href?:string}[]=[
 {id:"search",label:"Search"},{id:"deepwatch",label:"DeepWatch",href:"/deepwatch"},
-{id:"muslims",label:"Muslims",href:"/find"},{id:"quran",label:"Qur'an",href:"/quran-library"},
+{id:"muslims",label:"Muslims",href:"/profile?section=muslimeen"},{id:"quran",label:"Qur'an",href:"/quran-library"},
 {id:"messages",label:"Messages",href:"/messages"},{id:"profile",label:"Profile",href:"/profile"},
 {id:"unlocked",label:"Unlocked",href:"/unlocked"},{id:"signout",label:"Sign Out"}];
 type Entry=typeof entries[number];
