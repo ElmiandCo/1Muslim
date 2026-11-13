@@ -14,7 +14,7 @@ export async function loadQuranChapter(chapter:number,signal?:AbortSignal,expect
  pages=Math.min(20,Number(data.pagination?.total_pages)||1);page++;
  }while(page<=pages);const complete=validate(result,chapter,expectedCount);if(complete.every(v=>v.english?.trim()))return complete;if(!localRows)localRows=complete}catch(e){if(signal?.aborted)throw e}
  const [ar,en]=await Promise.all([localRows?Promise.resolve(null):fetch(BACKUP+"/surah/"+chapter+"/quran-uthmani",{signal}),fetch(BACKUP+"/surah/"+chapter+"/en.sahih",{signal})]);
- if(!ar.ok||!en.ok)throw Error("Qur'an sources unavailable");const [arabic,english]=await Promise.all([ar.json(),en.json()]);
+ if((ar&&!ar.ok)||!en.ok)throw Error("Qur'an sources unavailable");const [arabic,english]=await Promise.all([ar?ar.json():Promise.resolve(null),en.json()]);
  const translations=new Map<number,string>((english?.data?.ayahs||[]).map((v:{numberInSurah:number;text:string})=>[v.numberInSurah,v.text]));
  const rows=localRows?localRows.map((v,i)=>({...v,english:v.english?.trim()||translations.get(i+1)||""})):(arabic?.data?.ayahs||[]).map((v:{numberInSurah:number;text:string})=>({verse_key:chapter+":"+v.numberInSurah,arabic:v.text,english:translations.get(v.numberInSurah)||""}));
  return validate(rows,chapter,expectedCount);
