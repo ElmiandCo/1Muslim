@@ -97,3 +97,14 @@
 /* Single last-read indicator: small unobtrusive gold dot in card top-left. */
 .qm-chapter{position:relative}
 .qm-chapter .qm-last-read-dot{position:absolute;top:11px;left:12px;width:7px;height:7px;border-radius:50%;background:#d8b580;box-shadow:0 0 0 2px #d8b58020;pointer-events:none}
+
+
+/* Qur'an Library-only footer; other page footers remain unchanged. */
+.qm-page .qm-site-footer{margin-top:72px;padding:65px 22px 85px;background:#101116;color:#c5c5ca;text-align:center;width:100%;box-sizing:border-box}
+.qm-page .qm-site-footer-title{font-size:clamp(21px,5vw,36px);font-weight:700;letter-spacing:.15em;color:#e7c28b;line-height:1.5}
+.qm-page .qm-site-footer-title span{font-size:.7em;margin:0 .25em}
+.qm-page .qm-site-footer-links{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;column-gap:28px;row-gap:22px;max-width:750px;margin:42px auto 55px}
+.qm-page .qm-site-footer-links a{color:#c7c7cc;text-decoration:none;font-size:clamp(11px,2.7vw,15px);letter-spacing:.11em;white-space:nowrap}
+.qm-page .qm-site-footer-links a:hover,.qm-page .qm-site-footer-links a:focus-visible{color:#e7c28b;text-decoration:underline}
+.qm-page .qm-site-footer-copy{font-size:13px;letter-spacing:.04em;color:#8b8b94}
+@media(max-width:480px){.qm-page .qm-site-footer{padding:54px 16px 75px}.qm-page .qm-site-footer-links{column-gap:19px;row-gap:21px;margin:35px auto 45px}}
