@@ -195,7 +195,12 @@ function MemberFollowControl({viewerId,memberId}:{viewerId:string;memberId:strin
 
 function ProfileSocialHub({profile,children}:{profile:Profile;children:React.ReactNode}){
  const [active,setActive]=useState<"feed"|"profile"|"muslimeen">("profile");
- useEffect(()=>{if(new URLSearchParams(window.location.search).get("section")==="muslimeen")setActive("muslimeen")},[]);
+ useEffect(()=>{
+  const syncSection=()=>{const section=new URLSearchParams(window.location.search).get("section");if(section==="muslimeen")setActive("muslimeen");else if(section==="profile")setActive("profile")};
+  const onSection=(event:Event)=>{if((event as CustomEvent<string>).detail==="muslimeen")setActive("muslimeen")};
+  syncSection();window.addEventListener("popstate",syncSection);window.addEventListener("1muslim:profile-section",onSection);
+  return()=>{window.removeEventListener("popstate",syncSection);window.removeEventListener("1muslim:profile-section",onSection)};
+ },[]);
  const [arabic,setArabic]=useState<string|null>(null);
  const [messenger,setMessenger]=useState(false);
  const [feed,setFeed]=useState<Array<{id:string;body:string|null;created_at:string;user_id:string}>>([]);
