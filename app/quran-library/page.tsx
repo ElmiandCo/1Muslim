@@ -99,5 +99,10 @@ export default function QuranMagazine(){
  <div className="qm-reader" ref={reader} onScroll={onScroll} onTouchStart={onReaderTouchStart} onTouchEnd={onReaderTouchEnd}><div className="qm-readerintro"><span>CHAPTER {selected} · {chapter?.verses_count||verses.length} VERSES</span><h1>{chapter?.name_simple}</h1><div lang="ar" dir="rtl" className="qm-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div></div>
  {loading?<p className="qm-status">Loading the Qur’an…</p>:verses.length===0?<p className="qm-status">This chapter is temporarily unavailable. Please use Qur’an Studio.</p>:verses.map(v=><article className={"qm-verse"+(floating?" is-floating":"")} key={v.verse_key} data-verse={v.verse_key} id={"ayah-"+v.verse_key.replace(":","-")}><div className="qm-verse-tools"><span>{v.verse_key}</span><button onClick={()=>{try{localStorage.setItem("1muslim:quran-magazine-last",v.verse_key);setLastVerse(v.verse_key)}catch{}}} aria-label={"Bookmark verse "+v.verse_key}>☆</button><button onClick={()=>navigator.clipboard?.writeText(v.arabic+"\n"+(v.english||""))} aria-label={"Copy verse "+v.verse_key}>⧉</button><Link href={"/elm-tent/quran?verse="+v.verse_key} aria-label={"Open verse "+v.verse_key+" in studio"}>↗ Studio</Link></div><div className={"qm-verse-content"+(englishFirst?" english-first":"")}><p className="qm-verse-arabic" dir="rtl" lang="ar">{v.arabic}</p>{showEnglish&&v.english&&<p className="qm-verse-english">{v.english}</p>}</div></article>)}
  </div></>}
+ <footer className="qm-site-footer" aria-label="1Quran footer">
+  <div className="qm-site-footer-title">1MUSLIM <span aria-hidden="true">✦</span> 1QURAN</div>
+  <nav className="qm-site-footer-links" aria-label="Footer navigation"><Link href="/qibla/studio">EDITORIAL STUDIO</Link><Link href="/qibla/command">COMMAND CENTER</Link><Link href="/qibla/newsroom/apply">CONTRIBUTE</Link><Link href="/">1MUSLIM HOME</Link><Link href="/terms">TERMS &amp; CONDITIONS</Link><Link href="/privacy">PRIVACY POLICY</Link><Link href="/data-policy">DATA POLICY</Link></nav>
+  <div className="qm-site-footer-copy">© 2026 1Muslim. All rights reserved.</div>
+ </footer>
  </main>;
 }
