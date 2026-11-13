@@ -87,7 +87,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
  const avatar=typeof profile.avatar_config?.selectedAvatarUrl==="string"?profile.avatar_config.selectedAvatarUrl:profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
  return <section className="profileProfessional">
   <header className="profileProfessionalCard profileProfessionalHeader">
-   <div className="profileProfessionalCover" style={{backgroundImage:`url("${coverUrl}")`}}>{isOwner&&<button type="button" className="profileCoverEdit" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"cover"}}))} aria-label="Edit cover photo">✎ Edit cover</button>}</div>
+   <div className="profileProfessionalCover" style={{backgroundImage:`url("${coverUrl}")`}}>{isOwner&&<button type="button" className="profileCoverEdit" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"header"}}))} aria-label="Edit cover photo">✎ Edit cover</button>}</div>
    <div className="profileProfessionalIdentity">
     <img className="profileProfessionalAvatar" src={avatar} alt={isOwner?"Your profile avatar":`${profile.display_name||profile.username||"Member"} profile avatar`}/>
     {isOwner&&<button className="profileProfessionalEdit" type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"avatar"}}))} aria-label="Edit profile avatar">✎</button>}
@@ -212,7 +212,7 @@ export default function ProfilePage() {
   const [posting,setPosting]=useState(false);
   const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live"|"shahada"|"analytics">("profile");
 const [avatarPage,setAvatarPage]=useState(0);
- useEffect(()=>{const open=(e:Event)=>{const tab=(e as CustomEvent<{tab:string}>).detail?.tab;if(tab==="cover"||tab==="avatar"||tab==="profile"){setTab(tab);setEditing(true);window.setTimeout(()=>document.querySelector(".profileEditorToolbar")?.scrollIntoView({behavior:"smooth",block:"start"}),100)}};window.addEventListener("1muslim:edit-profile-tab",open);return()=>window.removeEventListener("1muslim:edit-profile-tab",open)},[]);
+ useEffect(()=>{const open=(e:Event)=>{const tab=(e as CustomEvent<{tab:string}>).detail?.tab;if(tab==="header"||tab==="avatar"||tab==="profile"){setTab(tab);setEditing(true);window.setTimeout(()=>document.querySelector(".profileEditorToolbar")?.scrollIntoView({behavior:"smooth",block:"start"}),100)}};window.addEventListener("1muslim:edit-profile-tab",open);return()=>window.removeEventListener("1muslim:edit-profile-tab",open)},[]);
   useEffect(()=>{const open=()=>{setTab("analytics");setEditing(true);window.setTimeout(()=>document.querySelector(".profileEditorToolbar")?.scrollIntoView({behavior:"smooth",block:"start"}),80)};window.addEventListener("1muslim:open-profile-analytics",open);return()=>window.removeEventListener("1muslim:open-profile-analytics",open)},[]);
   const [avatarTransition,setAvatarTransition]=useState<"unlock"|"change"|null>(null); const [avatarSaving,setAvatarSaving]=useState(false); const [saving,setSaving]=useState(false); const [colorSaving,setColorSaving]=useState(false); const [message,setMessage]=useState(""); const [authRequired,setAuthRequired]=useState(false);
   const [liveConnectors,setLiveConnectors]=useState<Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>>({});
