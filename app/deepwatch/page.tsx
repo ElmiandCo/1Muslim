@@ -108,6 +108,7 @@ export default function DeepWatch(){
  };
 
  const [approvedRegistry,setApprovedRegistry]=useState<RegisteredVideo[]>([]);
+ const [catalogMetadata,setCatalogMetadata]=useState<Record<string,{language:string|null;genres:string[]}>>({});
  const [quranChapters,setQuranChapters]=useState<QuranChapter[]>([]);
  const [chapterOrder,setChapterOrder]=useState<"compiled"|"revealed">("compiled");
  const [expandedSurah,setExpandedSurah]=useState<number|null>(null);
@@ -116,13 +117,13 @@ export default function DeepWatch(){
  const [libraryLoading,setLibraryLoading]=useState(true);
  useEffect(()=>{let live=true;const db=createClient();const load=async()=>{try{
   const cached=sessionStorage.getItem("1muslim:deepwatch-approved-cache");if(cached){try{const parsed=JSON.parse(cached);if(Array.isArray(parsed)&&live){setApprovedRegistry(parsed);setLibraryLoading(false)}}catch{}}
-  const pageSize=500;const rows:{video_id:string;title:string;categories:string[]|null;format:string|null;published_at:string|null;discovered_at:string|null}[]=[];
+  const pageSize=500;const rows:{video_id:string;title:string;categories:string[]|null;language:string|null;format:string|null;published_at:string|null;discovered_at:string|null}[]=[];
   for(let offset=0;offset<5000;offset+=pageSize){
-   const {data,error}=await db.from("islamic_video_registry").select("video_id,title,categories,format,published_at,discovered_at").eq("status","approved").order("discovered_at",{ascending:false}).range(offset,offset+pageSize-1);
+   const {data,error}=await db.from("islamic_video_registry").select("video_id,title,categories,language,format,published_at,discovered_at").eq("status","approved").order("discovered_at",{ascending:false}).range(offset,offset+pageSize-1);
    if(error)throw error;
    rows.push(...(data||[]));if(!data||data.length<pageSize)break;
   }
-  const approved=rows.filter(v=>/^[A-Za-z0-9_-]{11}$/.test(v.video_id)).map(v=>({videoId:v.video_id,title:v.title,category:v.categories?.[0]||"Videos",categories:v.categories||[],startSeconds:0,endSeconds:null,format:"desktop" as const}));if(live){setApprovedRegistry(approved);try{sessionStorage.setItem("1muslim:deepwatch-approved-cache",JSON.stringify(approved))}catch{}}
+  const approved=rows.filter(v=>/^[A-Za-z0-9_-]{11}$/.test(v.video_id)).map(v=>({videoId:v.video_id,title:v.title,category:v.categories?.[0]||"Videos",categories:v.categories||[],startSeconds:0,endSeconds:null,format:"desktop" as const}));if(live){setCatalogMetadata(Object.fromEntries(rows.map(v=>[v.video_id,{language:v.language,genres:[]}])));setApprovedRegistry(approved);try{sessionStorage.setItem("1muslim:deepwatch-approved-cache",JSON.stringify(approved))}catch{}}
  }catch(e){console.error("DeepWatch approved library unavailable",e)}finally{if(live)setLibraryLoading(false)}};
  void load();return()=>{live=false}},[]);
  const [episodeSeason,setEpisodeSeason]=useState(1);
@@ -174,7 +175,8 @@ export default function DeepWatch(){
   const animated=/animat|cartoon/.test(meta+" "+title);
   const episodic=/\\b(series|episodes?|tv shows?)\\b/.test(meta)||/\\b(?:episode|ep\\.|season)\\s*[#:. -]*\\d+/.test(title);
   const movie=/\\b(movie|movies|film|films|cinema)\\b/.test(meta);
-  const international=/international|urdu|turkish|somali|indonesian|malay|bangla|hindi/.test(meta);
+  const language=(catalogMetadata[v.videoId]?.language||dbEpisodes.find(e=>e.video_id===v.videoId)?.language||"").toLowerCase().split("-")[0];
+  const international=/international|urdu|turkish|somali|indonesian|malay|bangla|hindi|arabic/.test(meta)||["ar","tr","so","ur","ms","id","hi","bn"].includes(language);
   const somaliEntertainment=/somali|somalia|somaliland|musalsal|af-soomaali|af soomaali/.test(meta+" "+title);
   const quran=/qur.an|surah|recitation|tilawah/.test(meta+" "+title);
   const prophet=isProphetVideo(v);
@@ -195,12 +197,14 @@ export default function DeepWatch(){
  const [internationalGenre,setInternationalGenre]=useState<(typeof internationalGenres)[number]>("All Genres");
  const matchesInternational=(v:RegisteredVideo)=>{
   if(internationalGroup==="All")return true;
-  const tags=[v.category,...(v.categories||[])].join(" ").toLowerCase();
-  const title=v.title.toLowerCase();
-  const language=tags+" "+title;
-  const arabic=/\\barabic\\b|\\bالعربية\\b|\\bعربي\\b|\\bمسلسل\\b|\\bالحلقة\\b/.test(language);
-  const turkish=/turkish|türk|turk|\\bbölüm\\b|\\bbolum\\b/.test(language);
-  const series=/series|drama|episode|episod|season|\\bbölüm\\b|\\bbolum\\b|مسلسل|الحلقة/.test(language);
+  const dbMeta=catalogMetadata[v.videoId];
+  const episode=dbEpisodes.find(e=>e.video_id===v.videoId);
+  const language=(episode?.language||dbMeta?.language||"").toLowerCase().split("-")[0];
+  const tags=[v.category,...(v.categories||[]),...(episode?.genres||[]),...(episode?.categories||[])].join(" ").toLowerCase();
+  // Language comes from stored language metadata, not guesses based on the title's script.
+  const arabic=language==="ar";
+  const turkish=language==="tr";
+  const series=Boolean(episode?.series_id)||/\\b(series|drama|episodes?|tv shows?)\\b/.test(tags)||/\\b(?:episode|ep\\.?|season)\\s*[#:. -]*\\d+/.test(v.title.toLowerCase());
   if(internationalGroup==="Arabic Videos")return arabic;
   if(internationalGroup==="Shows"){
    if(internationalShow==="All Shows")return series;
@@ -209,13 +213,14 @@ export default function DeepWatch(){
    return series&&!turkish&&!arabic;
   }
   if(internationalGenre==="All Genres")return true;
+  // Only use explicit category/genre tags. No genre inference from video titles.
   const genrePatterns:Record<string,RegExp>={
-   Drama:/drama|dramatic|مسلسل/,Historical:/historical|history|ottoman|period|taariikh|تاريخ/,
-   Action:/action|adventure|battle|war|أكشن/,Romance:/romance|romantic|love|عشق|حب/,
-   Comedy:/comedy|funny|humou?r|كوميديا/,Documentary:/documentary|documentaries|وثائقي/,
-   Family:/family|families|children|عائلة|أسرة/
+   Drama:/\\bdrama\\b/,Historical:/\\b(historical|history|period)\\b/,
+   Action:/\\b(action|adventure)\\b/,Romance:/\\b(romance|romantic)\\b/,
+   Comedy:/\\b(comedy|sitcom)\\b/,Documentary:/\\b(documentar(?:y|ies))\\b/,
+   Family:/\\b(family|families)\\b/
   };
-  return genrePatterns[internationalGenre]?.test(language)??false;
+  return genrePatterns[internationalGenre]?.test(tags)??false;
  };
  const somaliSections=["All","Game Shows","News","Movies","Series","Comedy","Culture","Food & Travel","Talk Shows"] as const;
  const [somaliSection,setSomaliSection]=useState<(typeof somaliSections)[number]>("All");
@@ -241,7 +246,7 @@ export default function DeepWatch(){
   const tags=[v.title,v.category,...(v.categories||[])].join(" ").toLowerCase();
   const matches=tab==="Home"||tab==="All Videos"||(tab==="My List"?saved.includes(v.videoId):classify(v)[tab]===true);
   return matches&&(tab!=="Somali"||matchesSomaliSection(v,somaliSection))&&(tab!=="International"||matchesInternational(v))&&(!debouncedSearch||tags.includes(debouncedSearch));
- }),[fullCatalog,tab,somaliSection,internationalGroup,internationalShow,internationalGenre,debouncedSearch,saved,excludedIds]);
+ }),[fullCatalog,tab,somaliSection,internationalGroup,internationalShow,internationalGenre,catalogMetadata,dbEpisodes,debouncedSearch,saved,excludedIds]);
  const visibleTabs=useMemo(()=>tabs.filter(t=>t==="Home"||t==="All Videos"||t==="My List"||t==="Somali"||fullCatalog.some(v=>!excludedIds.includes(v.videoId)&&classify(v)[t])),[fullCatalog,excludedIds]);
  const forYou=useMemo(()=>{
   const candidates=fullCatalog.filter(v=>!excludedIds.includes(v.videoId));
