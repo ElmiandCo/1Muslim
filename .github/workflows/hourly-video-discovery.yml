@@ -32,6 +32,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Discover Somali and Turkish official videos (pending approval)
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BOT2_MAX_PAGES_PER_CHANNEL: "30"
+        run: node scripts/discover-deepwatch-bot2.mjs
       - name: Discover and curate YouTube videos
         env:
           DEEPWATCH_SELECTED_CHANNEL_ID: ${{ inputs.channel_id || '' }}
@@ -43,10 +50,3 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/discover-islamic-videos.mjs
-      - name: Discover Somali and Turkish official videos (pending approval)
-        env:
-          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          BOT2_MAX_PAGES_PER_CHANNEL: "30"
-        run: node scripts/discover-deepwatch-bot2.mjs
