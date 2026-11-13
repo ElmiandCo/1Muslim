@@ -1849,7 +1849,7 @@ export default function GoLivePage() {
               <label style={{display:"flex",alignItems:"center",gap:7,fontSize:12,color:"#d6e7b8",padding:"8px 10px",border:"1px solid #ffffff30",borderRadius:12,background:"#ffffff0c",cursor:"pointer"}}><input type="checkbox" checked={autoCameraPreview} onChange={e=>{const enabled=e.target.checked;setAutoCameraPreview(enabled);localStorage.setItem("1muslim-go-live-auto-camera",enabled?"on":"off");}} aria-label="Automatically enable camera preview when opening Go Live" /> Auto-start camera preview</label>
               {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In for Scheduled Live</button> : null}<button data-go-live-start className="start" onClick={()=>void startLive(false)} disabled={saving||connectingLive}>{connectingLive?"Connecting to LiveKit…":"● GO LIVE"}</button></div>}
             </div>
-            {cameraReady && <div className="cameraStudio">
+            {cameraReady && studioMode !== "desktop" && <div className="cameraStudio">
               <div className="studioHeader"><strong>Camera Studio</strong><span>{videoQuality} · {zoom.toFixed(1)}×</span></div>
               <div className="studioGrid">
                 <div className="studioControl">
