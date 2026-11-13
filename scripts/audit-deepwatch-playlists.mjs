@@ -6,7 +6,7 @@ const handles=["KOKOBULLE-it5so","astaanmedia","BestEverFoodReviewShow","Turkish
 const api=async(path,params)=>{const url=new URL("https://www.googleapis.com/youtube/v3/"+path);Object.entries({...params,key:KEY}).forEach(([k,v])=>url.searchParams.set(k,String(v)));const r=await fetch(url);if(!r.ok)throw Error(path+" "+r.status+" "+(await r.text()).slice(0,250));return r.json()};
 const paginate=async(path,params,max=100)=>{let all=[],token,complete=true;for(let i=0;i<max;i++){const p=await api(path,{...params,...(token?{pageToken:token}:{})});all.push(...(p.items||[]));token=p.nextPageToken;if(!token)return {items:all,complete:true}}return {items:all,complete:false}};
 const duration=s=>{const m=String(s||"").match(/P(?:([0-9]+)D)?T?(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+)S)?/);return m?(Number(m[1]||0)*86400+Number(m[2]||0)*3600+Number(m[3]||0)*60+Number(m[4]||0)):0};
-const episode=t=>{const x=t.match(/(?:season|s)\\s*(\\d+)\\s*(?:episode|ep|e|bölüm)\\s*(\\d+)/i)||t.match(/(?:episode|ep|bölüm|qaybta|qaybtii|xalqa)\\s*[:#.-]?\\s*(\\d+)/i);return x?(x.length===3?{season:Number(x[1]),episode:Number(x[2])}:{season:null,episode:Number(x[1])}):{season:null,episode:null}};
+const episode=t=>{const x=t.match(/(?:season|s)\s*(\d+)\s*(?:episode|ep|e|bölüm)\s*(\d+)/i)||t.match(/(?:episode|ep|bölüm|qaybta|qaybtii|xalqa)\s*[:#.-]?\s*(\d+)/i);return x?(x.length===3?{season:Number(x[1]),episode:Number(x[2])}:{season:null,episode:Number(x[1])}):{season:null,episode:null}};
 const report={generated_at:new Date().toISOString(),channels:[],roster:[],missing_episodes:[],quran:{covered_chapters:[],missing_chapters:[]},warnings:["Public/embeddable status is not proof of distribution rights.","Missing episode numbers are inferred from parsed titles only; original broadcast numbering requires editorial verification."]};
 const seen=new Set();
 for(const handle of handles){try{
@@ -20,11 +20,11 @@ for(const handle of handles){try{
   const data=await paginate("playlistItems",{part:"snippet,contentDetails",playlistId:list.id,maxResults:50});
   channel.playlists.push({id:list.id,title:list.snippet?.title,count:data.items.length,complete:data.complete});
   if(!data.complete)channel.complete=false;
-  const ids=[...new Set(data.items.map(x=>x.contentDetails?.videoId||x.snippet?.resourceId?.videoId).filter(x=>/^[\\w-]{11}$/.test(x)))];
+  const ids=[...new Set(data.items.map(x=>x.contentDetails?.videoId||x.snippet?.resourceId?.videoId).filter(x=>/^[\w-]{11}$/.test(x)))];
   for(let i=0;i<ids.length;i+=50){const details=await api("videos",{part:"snippet,contentDetails,status",id:ids.slice(i,i+50).join(",")});
    for(const v of details.items||[]){if(seen.has(v.id))continue;seen.add(v.id);
     const title=v.snippet?.title||"",seconds=duration(v.contentDetails?.duration),e=episode(title);
-    const isShort=/\\b(shorts?|trailer|teaser|preview|highlight|clip|reaction)\\b/i.test(title);
+    const isShort=/\b(shorts?|trailer|teaser|preview|highlight|clip|reaction)\b/i.test(title);
     const isTurkish=/turkish/i.test(handle),isSomaliaTravel=handle!=="BestEverFoodReviewShow"||/somali|somalia|somaliland|mogadishu|hargeisa/i.test(title+" "+v.snippet?.description);
     const fullLength=seconds>=(isTurkish?1200:handle==="KOKOBULLE-it5so"?480:600);
     const eligible=v.status?.privacyStatus==="public"&&v.status?.embeddable===true&&v.snippet?.channelId===ch.id&&fullLength&&!isShort&&isSomaliaTravel;
