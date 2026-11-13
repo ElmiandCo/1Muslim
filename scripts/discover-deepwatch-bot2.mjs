@@ -6,15 +6,16 @@
 const YOUTUBE=process.env.YOUTUBE_API_KEY;
 const BASE=process.env.SUPABASE_URL?.replace(/\/$/,"");
 const SERVICE=process.env.SUPABASE_SERVICE_ROLE_KEY;
-const QUOTA=50;
+const QUOTA_PER_CHANNEL=20;
 const SOURCES=[
  {handle:"KOKOBULLE-it5so",group:"somali",kind:"Game Shows"},
  {handle:"astaanmedia",group:"somali",kind:"Somali Entertainment"},
  {handle:"BestEverFoodReviewShow",group:"somali",kind:"Food & Travel"},
  {handle:"TurkishDramas-EnglishSubtitles",group:"turkish",kind:"Series"},
- {handle:"turkishdramatv",group:"turkish",kind:"Series"}
+ {handle:"turkishdramatv",group:"turkish",kind:"Series"},
+ {handle:"SabrNetworkOfficial",group:"additional",kind:"Islamic Programs"}
 ];
-const state={source:"deepwatch-bot2",channels:[],scanned:0,eligible:0,duplicate:0,excluded:0,staged:{somali:0,turkish:0},existing:{somali:0,turkish:0},failures:[]};
+const state={source:"deepwatch-bot2",channels:[],scanned:0,eligible:0,duplicate:0,excluded:0,staged:{somali:0,turkish:0,additional:0},existing:{somali:0,turkish:0,additional:0},per_channel:{},failures:[]};
 const report=()=>console.log("BOT2_REPORT "+JSON.stringify(state));
 function assertEnv(){for(const [k,v] of Object.entries({YOUTUBE_API_KEY:YOUTUBE,SUPABASE_URL:BASE,SUPABASE_SERVICE_ROLE_KEY:SERVICE}))if(!v)throw Error("PREFLIGHT_MISSING_"+k)}
 async function api(endpoint,params){
@@ -67,18 +68,17 @@ async function main(){
    state.channels.push({handle:source.handle,id:channel.id,verified:true});
   }catch(e){state.failures.push({source:source.handle,stage:"channel-resolution",error:String(e)})}
  }
- if(sources.length!==SOURCES.length)throw Error("PREFLIGHT_CHANNEL_RESOLUTION_FAILED");
+ if(!sources.length)throw Error("NO_CHANNELS_RESOLVED");
  // Register official IDs for admin visibility; never enable unrelated sources.
  for(const s of sources){
   await db("deepwatch_discovery_channels?on_conflict=channel_id","POST",[{channel_id:s.id,channel_title:s.title,channel_url:"https://www.youtube.com/channel/"+s.id,enabled:true,priority:s.group==="somali"?10:20}]);
  }
  // Keep quota accounting isolated from generic DeepWatch discovery.
- for(const group of ["somali","turkish"]){
-  const records=await db("islamic_video_registry?select=video_id,source_query&source_query=like.bot2-"+group+"*");
-  state.existing[group]=records.length;
- }
  for(const s of sources){
-  if(state.existing[s.group]+state.staged[s.group]>=QUOTA)continue;
+  const records=await db("islamic_video_registry?select=video_id&source_query=eq."+encodeURIComponent("bot2-"+s.group+":"+s.id));
+  state.per_channel[s.handle]={existing:records.length,staged:0,target:QUOTA_PER_CHANNEL};
+  state.existing[s.group]+=records.length;
+  if(records.length>=QUOTA_PER_CHANNEL)continue;
   try{
    const ids=await allIds(s.id,s.uploads);state.scanned+=ids.length;
    const known=await existingIds(ids);
@@ -91,21 +91,22 @@ async function main(){
      if(v.snippet?.channelId!==s.id||v.status?.privacyStatus!=="public"||v.status?.embeddable!==true||skip.test(title))continue;
      if(s.group==="turkish"&&(!turkishEpisode.test(title)||d<1200))continue;
      if(s.group==="somali"&&(d<480||(s.kind==="Food & Travel"&&!somalia.test(title+" "+description.slice(0,600)))))continue;
+     if(s.group==="additional"&&d<600)continue;
      // An official upload + embeddable=true does not establish external redistribution rights.
      const ep=epNumber(title),season=seasonNumber(title);
-     const meta={source_handle:s.handle,source_channel_id:s.id,original_language:s.group==="turkish"?"tr":s.kind==="Food & Travel"?"en":"so",show_title:null,season,episode:ep,original_broadcast_number:null,official_url:videoLink(v.id),rights_review:"pending_manual_publisher_license_check",embedding_verified:true,availability:"public",published_at:v.snippet.publishedAt,review_note:"Official publisher upload; verify series, episode order and usage rights before approval."};
-     candidates.push({video_id:v.id,title:title.slice(0,300),channel_id:s.id,channel_title:s.title,description:description.slice(0,4500),thumbnail_url:v.snippet?.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language:meta.original_language,published_at:v.snippet.publishedAt,categories:s.group==="somali"?["Somali Entertainment",s.kind]:["Turkish Drama","Series"],source_query:"bot2-"+s.group+":"+s.id,status:"pending",bot_b_reason:JSON.stringify(meta)});
+     const meta={source_handle:s.handle,source_channel_id:s.id,original_language:s.group==="turkish"?"tr":s.group==="additional"?"und":s.kind==="Food & Travel"?"en":"so",show_title:null,season,episode:ep,original_broadcast_number:null,official_url:videoLink(v.id),rights_review:"pending_manual_publisher_license_check",embedding_verified:true,availability:"public",published_at:v.snippet.publishedAt,review_note:"Official publisher upload; verify series, episode order and usage rights before approval."};
+     candidates.push({video_id:v.id,title:title.slice(0,300),channel_id:s.id,channel_title:s.title,description:description.slice(0,4500),thumbnail_url:v.snippet?.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language:meta.original_language,published_at:v.snippet.publishedAt,categories:s.group==="somali"?["Somali Entertainment",s.kind]:s.group==="turkish"?["Turkish Drama","Series"]:["Islamic Programs"],source_query:"bot2-"+s.group+":"+s.id,status:"pending",bot_b_reason:JSON.stringify(meta)});
     }
    }
    state.eligible+=candidates.length;
    // Stable order by episode where present; otherwise broadcast date.
    candidates.sort((a,b)=>{const x=JSON.parse(a.bot_b_reason),y=JSON.parse(b.bot_b_reason);return (x.season??0)-(y.season??0)||(x.episode??99999)-(y.episode??99999)||String(a.published_at).localeCompare(String(b.published_at))});
-   const room=Math.max(0,QUOTA-state.existing[s.group]-state.staged[s.group]);
+   const room=Math.max(0,QUOTA_PER_CHANNEL-state.per_channel[s.handle].existing);
    for(const row of candidates.slice(0,room)){
     const excluded=await db("admin_video_roster_exclusions?select=item_id&source=eq.islamic_video_registry&item_id=eq."+row.video_id);
     if(excluded.length){state.excluded++;continue}
     const result=await db("islamic_video_registry?on_conflict=video_id","POST",[row]);
-    if(result.length)state.staged[s.group]++;
+    if(result.length){state.staged[s.group]++;state.per_channel[s.handle].staged++;}
    }
   }catch(e){state.failures.push({source:s.handle,stage:"scan-or-stage",error:String(e)})}
  }

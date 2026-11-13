@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - "scripts/discover-islamic-videos.mjs"
+      - "scripts/discover-deepwatch-bot2.mjs"
       - ".github/workflows/hourly-video-discovery.yml"
   schedule:
     - cron: "7 * * * *"
