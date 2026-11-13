@@ -59,7 +59,7 @@ const orderedShowEpisodes=(item:RegisteredVideo)=>{
 };
 const oneIslamIds=new Set(["ZtmfL6uZfa4","wuNAlw5kmW8","W-C-qyaTJ9A","bBHSA4l8LJQ","QuxSwXGvCDE","6W3MDgUsrG0","oVFGrvEwgdE","3JJpHR59598","XWiVlPH8ycw","XFX5q0JILd0","iVtFN5NDkCw","Qdm70F47b5k","PDfCJRqOXQI","k4hRONalWU4","jktPehmOlmo","hzoo_llwzBI","kYJLOA3Ku20","LgzRb5SYAvo","Zor1et-rT8c","RerLVM4pWeE","4elQ8MMqq6Q","74an2nHujZU","eRMdvy0oWKw","GWHggtbGQ4s","Dyf-hcQHVSg","-O7LWSejY0E","q2_NhdYU_Tg","w9pnYXQcxrs","M-qTbC0ST_A","50o4JLaFfY4","C7XZEcvQTXM","xsJg5cV_BYw","dsgc7wOATtU","N6vkcVBd5-M","eNRdgzVgt-o","HXHzI7FSQc8","O38OhlRifrk","l3mfoSVXFrQ","KjHaAItddDo","2-BVXtBdxw8","e87KDhW3biE","y1wrwkjR-NM","qAVVG3-Iqv8","JTJ37FNaPSU","Av2JfPcNgsE","4QBftmqAGFI"]);
 const oneIslamVideos=deepwatchCatalog.filter(v=>oneIslamIds.has(v.videoId)).sort((a,b)=>{const ep=(v:RegisteredVideo)=>Number(v.title.match(/\bEP(\d+)\b/i)?.[1]||999);return /Stories of the Prophets/i.test(a.title)&&/Stories of the Prophets/i.test(b.title)?ep(a)-ep(b):0});
-const tabs=["Home","Classics","Movies","Series","Kids","Live","Comedy","Scary","Animation","Qur’an","History","The Prophets","Documentaries","TV Shows","International","Somali Entertainment","Aqeedah","All Videos","My List"] as const;
+const tabs=["Home","Classics","Movies","Series","Kids","Live","Comedy","Scary","Animation","Qur’an","History","The Prophets","Documentaries","TV Shows","International","Somali","Aqeedah","All Videos","My List"] as const;
 type Tab=typeof tabs[number];
 type QuranChapter={id:number;name_simple:string;name_arabic:string;verses_count:number;revelation_order?:number;translated_name?:{name:string}};
 const normalizeSurah=(v:string)=>v.toLowerCase().normalize("NFKD").replace(/[’']/g,"").replace(/[^a-z0-9]/g,"");
@@ -185,15 +185,34 @@ export default function DeepWatch(){
   const comedy=/comedy|funny|humou?r|sketch|stand.up|sitcom|laugh/.test(meta+" "+title);
   const classics=/classic|the message|omar mukhtar|lion of the desert|historical film|old school|legacy|timeless|seerah|prophet stories/.test(meta+" "+title);
   const documentaries=/documentary|documentaries|historical|history|civilization|biography|explained|investigation/.test(meta+" "+title);
-  return {Classics:classics,Comedy:comedy,Documentaries:documentaries,Kids:kids,Movies:movie,"TV Shows":episodic,Series:episodic,"The Prophets":prophet,Scary:scary,Animation:animated,International:international,"Somali Entertainment":somaliEntertainment,Live:live,"Qur’an":quran,Aqeedah:aqeedah,History:history} as Record<string,boolean>;
+  return {Classics:classics,Comedy:comedy,Documentaries:documentaries,Kids:kids,Movies:movie,"TV Shows":episodic,Series:episodic,"The Prophets":prophet,Scary:scary,Animation:animated,International:international,"Somali":somaliEntertainment,Live:live,"Qur’an":quran,Aqeedah:aqeedah,History:history} as Record<string,boolean>;
+ };
+ const somaliSections=["All","Game Shows","News","Movies","Series","Comedy","Culture","Food & Travel","Talk Shows"] as const;
+ const [somaliSection,setSomaliSection]=useState<(typeof somaliSections)[number]>("All");
+ const matchesSomaliSection=(v:RegisteredVideo,section:string)=>{
+  if(section==="All")return true;
+  const tags=[v.category,...(v.categories||[])].join(" ").toLowerCase();
+  const title=v.title.toLowerCase();
+  const explicit=(pattern:RegExp)=>pattern.test(tags);
+  switch(section){
+   case "Game Shows":return explicit(/game shows?|quiz|competition/) || /\\b(game show|tartan|ciyaar|su.aalo)\\b/i.test(title);
+   case "News":return explicit(/news|warar|broadcast/) || /\\b(warar|news|warka|wararka)\\b/i.test(title);
+   case "Movies":return explicit(/movies?|films?|cinema/) || /\\b(filim|film|movie)\\b/i.test(title);
+   case "Series":return explicit(/series|drama|musalsal/) || /\\b(musalsal|episode|qaybta|taxane)\\b/i.test(title);
+   case "Comedy":return explicit(/comedy|funny|sketch/) || /\\b(qosol|maad|comedy)\\b/i.test(title);
+   case "Culture":return explicit(/culture|documentary|heritage/) || /\\b(dhaqan|hiddaha|taariikh)\\b/i.test(title);
+   case "Food & Travel":return explicit(/food|travel|cooking|tourism/) || /\\b(cunto|dalxiis|safar|food|travel)\\b/i.test(title);
+   case "Talk Shows":return explicit(/talk shows?|interviews?|podcast/) || /\\b(waraysi|wareysi|gorfeyn|interview|podcast)\\b/i.test(title);
+   default:return false;
+  }
  };
  const filtered=useMemo(()=>fullCatalog.filter(v=>{
   if(excludedIds.includes(v.videoId))return false;
   const tags=[v.title,v.category,...(v.categories||[])].join(" ").toLowerCase();
   const matches=tab==="Home"||tab==="All Videos"||(tab==="My List"?saved.includes(v.videoId):classify(v)[tab]===true);
-  return matches&&(!debouncedSearch||tags.includes(debouncedSearch));
- }),[fullCatalog,tab,debouncedSearch,saved,excludedIds]);
- const visibleTabs=useMemo(()=>tabs.filter(t=>t==="Home"||t==="All Videos"||t==="My List"||t==="Somali Entertainment"||fullCatalog.some(v=>!excludedIds.includes(v.videoId)&&classify(v)[t])),[fullCatalog,excludedIds]);
+  return matches&&(tab!=="Somali"||matchesSomaliSection(v,somaliSection))&&(!debouncedSearch||tags.includes(debouncedSearch));
+ }),[fullCatalog,tab,somaliSection,debouncedSearch,saved,excludedIds]);
+ const visibleTabs=useMemo(()=>tabs.filter(t=>t==="Home"||t==="All Videos"||t==="My List"||t==="Somali"||fullCatalog.some(v=>!excludedIds.includes(v.videoId)&&classify(v)[t])),[fullCatalog,excludedIds]);
  const forYou=useMemo(()=>{
   const candidates=fullCatalog.filter(v=>!excludedIds.includes(v.videoId));
   const favorites=candidates.filter(v=>saved.includes(v.videoId));
@@ -243,6 +262,9 @@ export default function DeepWatch(){
  const toggleSaved=(id:string)=>setSaved(prev=>{const value=prev.includes(id)?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem("1muslim:deepwatch-list",JSON.stringify(value))}catch{}return value});
  return <main className={"deepwatch"+(tab==="Kids"?" dwKidsMode":"")}><style>{`.deepwatchInlinePlayIcon{display:inline-block;width:1.25em;height:1.25em;vertical-align:-.27em;flex-shrink:0;margin-right:2px}`}</style>
   <header className="deepwatchHeader"><Link href="/" className="deepwatchBrand" aria-label="DeepWatch by 1Muslim — Home"><img src="/assets/deepwatch-icon-2.PNG" alt="DeepWatch by 1Muslim" width={160} height={72} style={{display:"block",width:"auto",maxWidth:"min(38vw,160px)",height:64,objectFit:"contain"}}/></Link><nav aria-label="DeepWatch categories">{visibleTabs.map(item=><button type="button" key={item} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}>{item==="Live"?<span className="deepwatchLiveNav"><span className="deepwatchLivePulse" aria-hidden="true"/>LIVE</span>:item}</button>)}</nav><input type="search" aria-label="Search DeepWatch" placeholder="Search titles" value={search} onChange={e=>setSearch(e.target.value)}/>{isGalleryAdmin&&<output aria-live="polite" title="Unique registered titles in DeepWatch, excluding hidden videos" style={{display:"inline-flex",alignItems:"center",gap:8,padding:"9px 13px",border:"1px solid #43536b",borderRadius:14,color:"#f0f5ff",background:"#1a2434",fontSize:12,whiteSpace:"nowrap"}}><span style={{opacity:.7}}>GALLERY</span><strong>{galleryTotal.toLocaleString()}</strong>{libraryLoading&&<span style={{opacity:.7}}>Syncing…</span>}<span style={{opacity:.7}}>· IN CATEGORY {filtered.length.toLocaleString()}</span></output>}</header>
+  {tab==="Somali"&&<section aria-label="Somali video categories" style={{padding:"12px 24px 4px",display:"flex",gap:8,overflowX:"auto",scrollbarWidth:"thin"}}>
+   {somaliSections.map(section=><button key={section} type="button" aria-pressed={somaliSection===section} onClick={()=>setSomaliSection(section)} style={{flex:"0 0 auto",padding:"9px 15px",borderRadius:999,border:somaliSection===section?"1px solid #8bcaff":"1px solid rgba(255,255,255,.24)",background:somaliSection===section?"rgba(60,137,200,.22)":"rgba(255,255,255,.05)",color:"inherit",fontSize:13,fontWeight:somaliSection===section?700:500}}>{section}</button>)}
+  </section>}
   {tab==="Qur’an"&&<section className="deepwatchSurahLibrary" aria-label="114 Qur’an chapters">
    <div className="deepwatchSurahIntro"><span>THE HOLY QUR’AN · VIDEO LIBRARY</span><h2>THE 114 CHAPTERS</h2><p>Explore recitations and videos by Surah, in Qur’anic or revelation order.</p>
     <div className="deepwatchSurahControls"><button type="button" aria-pressed={chapterOrder==="compiled"} onClick={()=>setChapterOrder("compiled")}>Compiled</button><button type="button" aria-pressed={chapterOrder==="revealed"} onClick={()=>setChapterOrder("revealed")}>Revealed</button><Link href="/quran-library">Qur’an Reader ↗</Link></div></div>
