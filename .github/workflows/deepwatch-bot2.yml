@@ -1,0 +1,26 @@
+name: DeepWatch Bot 2 — Somali and Turkish Verified Discovery
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 * * * *"
+permissions:
+  contents: read
+concurrency:
+  group: deepwatch-bot2
+  cancel-in-progress: false
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Preflight and collect 50 Somali + 50 Turkish pending candidates
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BOT2_MAX_PAGES_PER_CHANNEL: "30"
+        run: node scripts/discover-deepwatch-bot2.mjs
