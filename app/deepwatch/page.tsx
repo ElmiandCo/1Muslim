@@ -179,7 +179,7 @@ export default function DeepWatch(){
  const fullCatalog=useMemo(()=>Array.from(new Map([...deepwatchCatalog,...approvedRegistry].map(v=>[v.videoId,v] as const)).values()),[approvedRegistry]);
  const galleryTotal=useMemo(()=>fullCatalog.filter(v=>!excludedIds.includes(v.videoId)).length,[fullCatalog,excludedIds]);
  const classify= (v:RegisteredVideo)=>{
-  const meta=[v.category,...(v.categories||[])].join(" ").toLowerCase();
+  const meta=[v.category,...(v.categories||[]),...(editorial[v.videoId]?.categories||[]),...(editorial[v.videoId]?.genres||[])].join(" ").toLowerCase();
   const title=v.title.toLowerCase();
   const kids=isDeepWatchKids(v)||isKidsVideo(v)||/\\bkids?\\b|children|cartoon/.test(meta);
   const animated=/animat|cartoon/.test(meta+" "+title);
