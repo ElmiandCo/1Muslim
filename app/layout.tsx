@@ -26,10 +26,12 @@ import NotificationToaster from "./components/NotificationToaster";
 import VisitorFeedback from "./components/VisitorFeedback";
 import HudHudVoiceCommands from "./components/HudHudVoiceCommands";
 
+export const viewport = {themeColor:"#ffffff",width:"device-width",initialScale:1,viewportFit:"cover" as const};
+
 export const metadata = {
   title: "1Muslim",
   applicationName: "1Muslim",
-  appleWebApp: {capable:true,title:"1Muslim",statusBarStyle:"black-translucent" as const},
+  appleWebApp: {capable:true,title:"1Muslim",statusBarStyle:"default" as const},
   icons: {apple:[{url:"/apple-icon",sizes:"180x180",type:"image/png"}],icon:[{url:"/icon.svg",type:"image/svg+xml"},{url:"/app-install-icon",sizes:"512x512",type:"image/png"}]},
   description: "A welcoming Muslim platform for learning, community, media, and discovery."
 };
