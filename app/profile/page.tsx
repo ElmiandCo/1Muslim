@@ -87,10 +87,10 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
  const avatar=typeof profile.avatar_config?.selectedAvatarUrl==="string"?profile.avatar_config.selectedAvatarUrl:profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
  return <section className="profileProfessional">
   <header className="profileProfessionalCard profileProfessionalHeader">
-   <div className="profileProfessionalCover" style={{backgroundImage:`url("${coverUrl}")`}}>{isOwner&&editing&&<button type="button" className="profileCoverEdit" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"header"}}))} aria-label="Edit cover photo">✎ Edit cover</button>}</div>
+   <div className="profileProfessionalCover" style={{backgroundImage:`url("${coverUrl}")`}}>{isOwner&&<button type="button" className="profileCoverEdit" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"header"}}))} aria-label="Edit cover photo">✎ Edit cover</button>}</div>
    <div className="profileProfessionalIdentity">
     <img className="profileProfessionalAvatar" src={avatar} alt={isOwner?"Your profile avatar":`${profile.display_name||profile.username||"Member"} profile avatar`}/>
-    {isOwner&&editing&&<button className="profileProfessionalEdit" type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"avatar"}}))} aria-label="Edit profile avatar">✎</button>}
+    {isOwner&&<button className="profileProfessionalEdit" type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"avatar"}}))} aria-label="Edit profile avatar">✎</button>}
     <h1>{profile.display_name||"1Muslim Member"}</h1>
     <p className="profileProfessionalHandle">@{profile.username||"member"} · {profile.xp_total.toLocaleString()} XP</p>
     <p className="profileProfessionalBio">{profile.bio||"Add a bio to introduce yourself to the 1Muslim community."}</p>
