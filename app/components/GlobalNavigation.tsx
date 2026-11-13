@@ -7,7 +7,7 @@ const entries:{id:GlobalNavDestination;label:string;href?:string}[]=[
 {id:"search",label:"Search"},{id:"deepwatch",label:"DeepWatch",href:"/deepwatch"},
 {id:"muslims",label:"Muslims",href:"/profile?section=muslimeen"},{id:"quran",label:"Qur'an",href:"/quran-library"},
 {id:"messages",label:"Messages",href:"/messages"},{id:"profile",label:"Profile",href:"/profile"},
-{id:"unlocked",label:"1Muslim Unlocked",href:"/profile?panel=unlocked"},{id:"signout",label:"Sign Out"}];
+{id:"unlocked",label:"1Muslim Unlocked",href:"/unlocked"},{id:"signout",label:"Sign Out"}];
 type Entry=typeof entries[number];
 export default function GlobalNavigation(){
  const pathname=usePathname(),router=useRouter();
