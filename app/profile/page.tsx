@@ -96,7 +96,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
     <p className="profileProfessionalBio">{profile.bio||"Add a bio to introduce yourself to the 1Muslim community."}</p>
     {(profile.city||profile.state||profile.country)&&<p className="profileProfessionalLocation">📍 {[profile.city,profile.state,profile.country].filter(Boolean).join(", ")}</p>}
     <p className="profileProfessionalConnection"><span>{followCounts.followers} Followers</span><span aria-hidden="true"> · </span><span>{followCounts.following} Following</span></p>
-    {isOwner&&<button type="button" className="profileVisibleSignOut" onClick={()=>window.dispatchEvent(new Event("1muslim:profile-signout"))}>↪ Sign out</button>}
+    
     {!isOwner&&viewerId&&<MemberFollowControl key={profile.id} viewerId={viewerId} memberId={profile.id}/>}
     
    </div>
@@ -112,7 +112,7 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
   const [showProfileDetails,setShowProfileDetails]=useState(false);
   const toggleQuickPanel=(panel:"posts"|"settings")=>setActiveQuickPanel(current=>current===panel?null:panel);
   return <section className="profileOverview">
-    <ProfileOrbitStudio profile={profile} onEdit={onEdit} ashab={ashab} activeQuickPanel={activeQuickPanel} onQuickPanel={toggleQuickPanel} showProfileDetails={showProfileDetails}/>
+    <ProfileOrbitStudio profile={profile} onEdit={onEdit} ashab={ashab} activeQuickPanel={activeQuickPanel} onQuickPanel={toggleQuickPanel} showProfileDetails={showProfileDetails} editing={false}/>
     <ProfileAppLauncher onProfile={()=>setShowProfileDetails(v=>!v)}/>
     {showProfileDetails&&<div id="profile-details" aria-label="Profile details"/>}
 
@@ -383,7 +383,7 @@ const [avatarPage,setAvatarPage]=useState(0);
 
   const publishFirstPost=async()=>{const body=postText.trim();if(!body||posting)return;setPosting(true);const s=createClient();const {error}=await s.from("posts").insert({user_id:profile.id,body});if(error){setMessage(error.message);setPosting(false);return;}setPostText("");setPostCount(x=>x+1);setPosting(false);};
 
-  return <main className="profilePage profileCommandPage"><ProfileSocialHub profile={profile}>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>setEditing(true)}/>:<div className="profileShell">
+  return <main className="profilePage profileCommandPage"><ProfileSocialHub profile={profile}>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>{setTab("profile");setEditing(true)}}/>:<div className="profileShell">
     <ProfileOrbitStudio profile={profile} onEdit={()=>setEditing(false)} ashab={ashab} editing editorTab={tab}/>
     <header className={`profileHero header-${profile.profile_accent}`}><div className="profileHeroTop"><div><span className="eyebrow">YOUR ONE MUSLIM PROFILE</span><h1>{profile.display_name||"Member"}</h1><p>@{profile.username||"member"} · {tier.name} · {profile.xp_total.toLocaleString()} XP</p></div></div></header>
     <div className="profileEditorToolbar"><button className="ghost" onClick={()=>setEditing(false)}>← Back</button><strong>Edit Profile</strong><button className="primary" onClick={save} disabled={saving||colorSaving}>{saving?"Saving…":"Save ✓"}</button></div><div className="profileEditorNav"><div className="profileTabs" aria-label="Profile editor sections">{(["profile","avatar","header","live","shahada","analytics"] as const).map(x=><button type="button" className={tab===x?"active":""} aria-pressed={tab===x} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Identity":x==="avatar"?"Avatars":x==="header"?"Appearance":x==="live"?"Connections":x==="analytics"?"Analytics":"Verification"}</button>)}</div></div>{tab==="analytics"&&<section className="profileEditor" aria-label="Quran and profile analytics"><ProfileAnalytics inline/></section>}
