@@ -95,3 +95,47 @@
 
 /* Social Magazine story swipe controls */
 .socialSwipeNav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%;justify-content:space-between}.socialSwipeNav button{border:1px solid #dce4ee;border-radius:20px;padding:9px 13px;background:#f3f7fb;color:#235a93;font-size:12px;font-weight:750;cursor:pointer}.socialSwipeNav button:disabled{opacity:.35;cursor:default}.socialStoryFooter{flex-wrap:wrap}.socialStoryFooter .socialSwipeNav{flex-basis:100%}
+
+/* Premium 1Muslim Posts discovery */
+.feedPage{background:#f3efe9;color:#19283d}
+.feedTop{height:72px;min-height:72px;border-bottom:1px solid #ddd9d3;padding-left:0}
+.feedTop .brand{font:800 29px Georgia,serif;letter-spacing:-.06em;color:#19283d}
+.feedTop .brand span{color:#b59a6c}
+.feedIntro{max-width:760px;margin:auto;justify-content:center;text-align:center;padding:20px 0 16px;position:relative}
+.feedIntro h1{font:850 clamp(34px,5vw,46px) Arial,sans-serif;letter-spacing:-.06em;margin:4px 0;color:#19283d}
+.feedTagline{font-size:17px;color:#44516a;margin:5px 0 0}
+.feedCreate{position:absolute;right:0;bottom:18px;background:#192b45}
+.feedStories{max-width:760px}
+.feedSectionLabel a{color:#536176;text-decoration:none}
+.feedStoryRail{gap:13px}
+.feedStoryPerson{flex-basis:75px}
+.feedStoryRing{width:69px;height:69px}
+.feedStoryPerson small{font-size:11px}
+.feedControls{max-width:760px;display:grid;grid-template-columns:1fr;gap:13px}
+.feedTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;overflow:visible}
+.feedTabs button{background:#fffaf8;border:1px solid #d6d8dc;color:#26364b;font-size:13px;border-radius:28px;padding:12px 6px}
+.feedTabs .active{background:#192b45;color:white;border-color:#192b45}
+.feedSearch{display:block;width:100%}
+.feedSearch input{width:100%;font-size:14px;border-radius:28px;padding:14px 18px;background:#fffdfb;border:1px solid #d8d8da}
+.feedStream{max-width:760px;gap:18px}
+.feedPost{background:#fffdfc;border:1px solid #e3e0df;border-radius:23px;box-shadow:0 8px 25px #152b420c}
+.feedPostHeader{padding:18px 19px 14px}
+.feedPostIdentity strong{font-size:16px;color:#18263b}
+.feedPostIdentity small{font-size:12px;color:#69758a}
+.feedPostAvatar{width:48px;height:48px;background:#183e42}
+.feedPostCaption{padding:2px 19px 15px}
+.feedPostCaption p{font-size:clamp(19px,2.5vw,25px);color:#152135}
+.feedMediaLink{margin:0 15px;border-radius:14px;overflow:hidden}
+.feedMediaLink img{max-height:70vh;object-fit:cover}
+.feedPostEngagement{padding:0 15px}
+.feedPostEngagement :global(.omVideoStage){border-radius:14px;overflow:hidden}
+.feedPostBottom{padding:10px 19px 18px}
+@media(max-width:720px){
+.feedPage{padding:0 12px}.feedTop{height:64px;min-height:64px;padding-left:0}.feedTop .brand{font-size:25px}
+.feedIntro{padding:15px 0}.feedIntro h1{font-size:35px}.feedTagline{font-size:15px}
+.feedCreate{position:static;font-size:10px;padding:9px 11px}
+.feedTabs{gap:6px}.feedTabs button{font-size:11px;padding:11px 3px}
+.feedPost{border-radius:19px}.feedPostHeader{padding:14px 13px}.feedPostIdentity strong{font-size:14px}
+.feedPostCaption{padding:2px 13px 12px}.feedMediaLink{margin:0 9px;border-radius:12px}
+.feedPostEngagement{padding:0 9px}.feedPostBottom{padding:9px 13px 15px}
+}
