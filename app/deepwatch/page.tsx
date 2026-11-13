@@ -175,7 +175,8 @@ export default function DeepWatch(){
   const animated=/animat|cartoon/.test(meta+" "+title);
   const episodic=/\\b(series|episodes?|tv shows?)\\b/.test(meta)||/\\b(?:episode|ep\\.|season)\\s*[#:. -]*\\d+/.test(title);
   const movie=/\\b(movie|movies|film|films|cinema)\\b/.test(meta);
-  const international=/international|urdu|turkish|somali|indonesian|malay|bangla|hindi/.test(meta);
+  const language=(catalogMetadata[v.videoId]?.language||dbEpisodes.find(e=>e.video_id===v.videoId)?.language||"").toLowerCase().split("-")[0];
+  const international=/international|urdu|turkish|somali|indonesian|malay|bangla|hindi|arabic/.test(meta)||["ar","tr","so","ur","ms","id","hi","bn"].includes(language);
   const somaliEntertainment=/somali|somalia|somaliland|musalsal|af-soomaali|af soomaali/.test(meta+" "+title);
   const quran=/qur.an|surah|recitation|tilawah/.test(meta+" "+title);
   const prophet=isProphetVideo(v);
