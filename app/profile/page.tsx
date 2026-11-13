@@ -515,7 +515,6 @@ const [avatarPage,setAvatarPage]=useState(0);
 .profileCommandPage .profileHero{padding:18px!important;margin-bottom:12px!important}
 .profileCommandPage .profileHeroActions{gap:10px!important}
 @media(max-width:600px){.profileCommandPage .profileEditorToolbar{padding:12px!important}.profileCommandPage .profileHeroActions{display:flex!important;flex-wrap:wrap!important}.profileCommandPage .profileEditorNav .profileTabs button{min-width:108px!important}.profileCommandPage .profileEditor{padding:18px!important}}
-`}
 /* Compact mobile profile editor: preserve all fields and existing save flow. */
 .profileCommandPage:has(.profileEditorToolbar) .profileHero{padding:12px 16px!important;margin-bottom:8px!important;border-radius:16px!important;box-shadow:none!important}
 .profileCommandPage:has(.profileEditorToolbar) .profileHeroTop{padding:0!important}
@@ -535,6 +534,6 @@ const [avatarPage,setAvatarPage]=useState(0);
 .profileCommandPage .profileEditor .formGrid{gap:12px!important}
 .profileCommandPage .profileEditor input,.profileCommandPage .profileEditor textarea,.profileCommandPage .profileEditor select{padding:10px 12px!important}
 @media(max-width:600px){.profileCommandPage .profileEditor{padding:12px!important}.profileCommandPage .profileEditorToolbar{padding:7px 6px!important}}
-</style></ProfileSocialHub></main>;
+`}</style></ProfileSocialHub></main>;
 }
 
