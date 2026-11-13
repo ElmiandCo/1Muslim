@@ -1,6 +1,6 @@
 /** Read-only Quran video coverage audit against 114 canonical chapters. */
 import fs from "node:fs";
-const base=process.env.SUPABASE_URL?.replace(/\\/$/,""),key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+const base=process.env.SUPABASE_URL?.replace(/\/$/,""),key=process.env.SUPABASE_SERVICE_ROLE_KEY;
 if(!base||!key)throw Error("Missing Supabase credentials");
 const headers={apikey:key,Authorization:"Bearer "+key};
 const rows=[];
