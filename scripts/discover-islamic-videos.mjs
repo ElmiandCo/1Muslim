@@ -41,10 +41,12 @@ try{
  }else console.warn("QuranGuy1 channel could not be verified; skipping");
 }catch(e){console.warn("QuranGuy1 registration failed",String(e))}
 // Sabr Network: resolve canonical publisher ID on every run; keep outside Somali/Turkish 50/50 quotas.
+let sabrChannelId="";
 try {
  const response=await api("channels",{part:"snippet",forHandle:"SabrNetworkOfficial"});
  const item=response.items?.[0];
  if(item&&/^UC[A-Za-z0-9_-]{22}$/.test(item.id)){
+  sabrChannelId=item.id;
   if(!managedChannels.includes(item.id))managedChannels.push(item.id);
   console.log("Verified Sabr Network official channel",item.id);
  }else console.warn("Sabr Network handle could not be verified");
@@ -62,7 +64,7 @@ try {
 }catch(e){console.warn("Fluzen lookup failed",String(e))}
 const channelPool=[...new Set([...managedChannels,...approvedChannels])];
 if(!channelPool.length)throw Error("No approved discovery channels configured");
-const channelsToScan=[...new Set([...(selectedChannel?[selectedChannel]:quranMission?channelPool:channelPool.slice(0,3)),...(fluzenChannelId?[fluzenChannelId]:[])])];
+const channelsToScan=[...new Set([...(selectedChannel?[selectedChannel]:quranMission?channelPool:channelPool.slice(0,3)),...(fluzenChannelId?[fluzenChannelId]:[]),...(sabrChannelId?[sabrChannelId]:[])])];
 const surahNames=["fatihah","baqarah","imran","nisa","maidah","anam","araf","anfal","tawbah","yunus","hud","yusuf","rad","ibrahim","hijr","nahl","isra","kahf","maryam","taha","anbiya","hajj","muminun","nur","furqan","shuara","naml","qasas","ankabut","rum","luqman","sajdah","ahzab","saba","fatir","yasin","saffat","sad","zumar","ghafir","fussilat","shura","zukhruf","dukhan","jathiyah","ahqaf","muhammad","fath","hujurat","qaf","dhariyat","tur","najm","qamar","rahman","waqiah","hadid","mujadila","hashr","mumtahanah","saff","jumuah","munafiqun","taghabun","talaq","tahrim","mulk","qalam","haqqah","maarij","nuh","jinn","muzzammil","muddaththir","qiyamah","insan","mursalat","naba","naziat","abasa","takwir","infitar","mutaffifin","inshiqaq","buruj","tariq","ala","ghashiyah","fajr","balad","shams","layl","duha","sharh","tin","alaq","qadr","bayyinah","zalzalah","adiyat","qariah","takathur","asr","humazah","fil","quraysh","maun","kawthar","kafirun","nasr","masad","ikhlas","falaq","nas"];
 const normalizeSurah=s=>s.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").replace(/\\b(al|surah|surat|sura|chapter|the)\\b/g," ").replace(/\\s+/g," ").trim();
 const matchSurah=title=>{const norm=normalizeSurah(title);const number=norm.match(/(?:^|\\s)(?:surah|chapter)?\\s*(\\d{1,3})(?:\\s|$)/);const name=surahNames.findIndex(n=>norm.split(" ").includes(n));if(name>=0)return name+1;if(number&&+number[1]>=1&&+number[1]<=114&&/surah|surat|sura|chapter/i.test(title))return +number[1];return null};
