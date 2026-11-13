@@ -348,12 +348,12 @@ const [avatarPage,setAvatarPage]=useState(0);
      ctx.drawImage(img,(canvas.width-w)/2,(canvas.height-h)*coverPosition/100,w,h);
      const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Crop failed")),"image/jpeg",.88));
      const client=createClient();const {data:{user}}=await client.auth.getUser();if(!user||user.id!==profile.id)throw new Error("Sign in to save your cover.");
-     const path=`profile-covers/${user.id}/cover-${Date.now()}.jpg`;
+     const path=`${user.id}/profile-covers/cover-${Date.now()}.jpg`;
      const {error:uploadError}=await client.storage.from("avatars").upload(path,blob,{contentType:"image/jpeg",upsert:false});if(uploadError)throw uploadError;
      const url=client.storage.from("avatars").getPublicUrl(path).data.publicUrl;
      const avatar_config={...(profile.avatar_config||{}),profileCoverUrl:url};
      const {error:saveError}=await client.from("profiles").update({avatar_config}).eq("id",user.id);if(saveError)throw saveError;
-     update({avatar_config});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");
+     update({avatar_config});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");window.dispatchEvent(new Event("1muslim:profile-saved"));window.setTimeout(()=>{document.querySelector(".profileProfessionalHeader")?.scrollIntoView({behavior:"smooth",block:"start"});},100);
     }finally{URL.revokeObjectURL(src)}
    }catch(e){setMessage(e instanceof Error?e.message:"Could not upload cover image.")}finally{setCoverUploading(false)}
   };
