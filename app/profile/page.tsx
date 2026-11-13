@@ -85,7 +85,7 @@ function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
   {label:"DeepWatch",href:"/deepwatch",icon:"▶",tone:"#d9aa63"},
   {label:"News",href:"/qibla/newsroom",icon:"◇",tone:"#d878c8"},
   {label:"Qur’an",href:"/quran-library",icon:"۞",tone:"#8ad8cb"},
-  {label:"Live",href:"/streaming",icon:"▣",tone:"#6bd9db"},
+  {label:"Live",href:"/streaming/go-live",icon:"▣",tone:"#6bd9db"},
   {label:"Post",href:"#create-post",icon:"✚",tone:"#77d8c6"},
   {label:"Messages",href:"/messages",icon:"✉",tone:"#8dc8e6"},
   {label:"Ummah",href:"/posts",icon:"☷",tone:"#e3a58d"},
