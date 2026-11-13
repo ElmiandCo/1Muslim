@@ -309,7 +309,7 @@ export default function DeepWatch(){
   const genres:[string,RegExp][]=[["Drama",/\\bdrama\\b/],["Historical",/historical|history/],["Action",/\\baction\\b/],["Comedy",/\\bcomedy\\b/],["Documentaries",/documentar/],["Family",/\\bfamily\\b/]];
   genres.forEach(([name,re])=>add("Genre · "+name,v=>re.test(collectionTags(v))));
   // Ratings and cast rails are shown only when verified structured metadata exists.
-  const rated=dbEpisodes.filter(e=>e.video_id&&typeof e.rating==="number"&&e.rating>=4).map(e=>e.video_id);
+  const rated=dbEpisodes.filter(e=>{const rating=(e as typeof e & {rating?:number}).rating;return e.video_id&&typeof rating==="number"&&rating>=4}).map(e=>e.video_id);
   if(rated.length)add("Highly Rated",v=>rated.includes(v.videoId));
   const castGroups=new Map<string,Set<string>>();
   dbEpisodes.forEach(e=>{const actors=(e as typeof e & {cast?:string[]}).cast;if(!Array.isArray(actors))return;actors.forEach(actor=>{if(typeof actor!=="string"||!actor.trim())return;const name=actor.trim();if(!castGroups.has(name))castGroups.set(name,new Set());castGroups.get(name)?.add(e.video_id)})});
