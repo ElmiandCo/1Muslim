@@ -4,10 +4,14 @@ import {useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import GlobalNavIcon,{type GlobalNavDestination} from "./GlobalNavIcon";
 const entries:{id:GlobalNavDestination;label:string;href?:string}[]=[
-{id:"search",label:"Search"},{id:"deepwatch",label:"DeepWatch",href:"/deepwatch"},
-{id:"muslims",label:"Muslims",href:"/profile?section=muslimeen"},{id:"quran",label:"Qur'an",href:"/quran-library"},
-{id:"messages",label:"Messages",href:"/messages"},{id:"profile",label:"Profile",href:"/profile"},
-{id:"unlocked",label:"Unlocked",href:"/unlocked"},{id:"signout",label:"Sign Out"}];
+{id:"search",label:"Search"},{id:"profile",label:"Profile",href:"/profile"},
+{id:"muslims",label:"Muslims",href:"/profile?section=muslimeen"},
+{id:"posts",label:"Ummah Posts",href:"/posts"},
+{id:"deepwatch",label:"DeepWatch",href:"/deepwatch"},
+{id:"quran",label:"Qur'an",href:"/quran-library"},
+{id:"messages",label:"Messages",href:"/messages"},
+{id:"unlocked",label:"Unlocked",href:"/unlocked"},
+{id:"signout",label:"Sign Out"}];
 type Entry=typeof entries[number];
 export default function GlobalNavigation(){
  const pathname=usePathname(),router=useRouter();
@@ -69,7 +73,7 @@ export default function GlobalNavigation(){
   lastPath.current=pathname;
  },[pathname]);
  const visibleEntries=entries.filter(item=>item.id!=="unlocked"||!isUnlocked||unlockExit);
- const activeEntry=pathname?.startsWith("/deepwatch")?"deepwatch":pathname?.startsWith("/quran")?"quran":pathname?.startsWith("/messages")?"messages":pathname?.startsWith("/unlocked")?"unlocked":pathname==="/profile"?(typeof window!=="undefined"&&new URLSearchParams(window.location.search).get("section")==="muslimeen"?"muslims":"profile"):"muslims";
+ const activeEntry=pathname?.startsWith("/posts")?"posts":pathname?.startsWith("/deepwatch")?"deepwatch":pathname?.startsWith("/quran")?"quran":pathname?.startsWith("/messages")?"messages":pathname?.startsWith("/unlocked")?"unlocked":pathname==="/profile"?(typeof window!=="undefined"&&new URLSearchParams(window.location.search).get("section")==="muslimeen"?"muslims":"profile"):"muslims";
  const centerItem=(id:GlobalNavDestination,behavior:ScrollBehavior="smooth")=>{const rail=railRef.current;const target=rail?.querySelector<HTMLElement>(`[data-nav-id="${id}"]`);if(!rail||!target)return;rail.scrollTo({left:target.offsetLeft+target.offsetWidth/2-rail.clientWidth/2,behavior});setCentered(id)};
  useEffect(()=>{const frame=requestAnimationFrame(()=>centerItem(activeEntry,"instant"));return()=>cancelAnimationFrame(frame)},[pathname,isUnlocked]);
  useEffect(()=>()=>{if(settleTimer.current)clearTimeout(settleTimer.current)},[]);
