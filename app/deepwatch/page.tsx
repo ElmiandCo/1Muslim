@@ -187,6 +187,36 @@ export default function DeepWatch(){
   const documentaries=/documentary|documentaries|historical|history|civilization|biography|explained|investigation/.test(meta+" "+title);
   return {Classics:classics,Comedy:comedy,Documentaries:documentaries,Kids:kids,Movies:movie,"TV Shows":episodic,Series:episodic,"The Prophets":prophet,Scary:scary,Animation:animated,International:international,"Somali":somaliEntertainment,Live:live,"Qur’an":quran,Aqeedah:aqeedah,History:history} as Record<string,boolean>;
  };
+ const internationalGroups=["All","Shows","Genres","Arabic Videos"] as const;
+ const internationalShows=["All Shows","Turkish Dramas","Arabic Series","Other Series"] as const;
+ const internationalGenres=["All Genres","Drama","Historical","Action","Romance","Comedy","Documentary","Family"] as const;
+ const [internationalGroup,setInternationalGroup]=useState<(typeof internationalGroups)[number]>("All");
+ const [internationalShow,setInternationalShow]=useState<(typeof internationalShows)[number]>("All Shows");
+ const [internationalGenre,setInternationalGenre]=useState<(typeof internationalGenres)[number]>("All Genres");
+ const matchesInternational=(v:RegisteredVideo)=>{
+  if(internationalGroup==="All")return true;
+  const tags=[v.category,...(v.categories||[])].join(" ").toLowerCase();
+  const title=v.title.toLowerCase();
+  const language=tags+" "+title;
+  const arabic=/\\barabic\\b|\\bالعربية\\b|\\bعربي\\b|\\bمسلسل\\b|\\bالحلقة\\b/.test(language);
+  const turkish=/turkish|türk|turk|\\bbölüm\\b|\\bbolum\\b/.test(language);
+  const series=/series|drama|episode|episod|season|\\bbölüm\\b|\\bbolum\\b|مسلسل|الحلقة/.test(language);
+  if(internationalGroup==="Arabic Videos")return arabic;
+  if(internationalGroup==="Shows"){
+   if(internationalShow==="All Shows")return series;
+   if(internationalShow==="Turkish Dramas")return turkish&&series;
+   if(internationalShow==="Arabic Series")return arabic&&series;
+   return series&&!turkish&&!arabic;
+  }
+  if(internationalGenre==="All Genres")return true;
+  const genrePatterns:Record<string,RegExp>={
+   Drama:/drama|dramatic|مسلسل/,Historical:/historical|history|ottoman|period|taariikh|تاريخ/,
+   Action:/action|adventure|battle|war|أكشن/,Romance:/romance|romantic|love|عشق|حب/,
+   Comedy:/comedy|funny|humou?r|كوميديا/,Documentary:/documentary|documentaries|وثائقي/,
+   Family:/family|families|children|عائلة|أسرة/
+  };
+  return genrePatterns[internationalGenre]?.test(language)??false;
+ };
  const somaliSections=["All","Game Shows","News","Movies","Series","Comedy","Culture","Food & Travel","Talk Shows"] as const;
  const [somaliSection,setSomaliSection]=useState<(typeof somaliSections)[number]>("All");
  const matchesSomaliSection=(v:RegisteredVideo,section:string)=>{
@@ -210,8 +240,8 @@ export default function DeepWatch(){
   if(excludedIds.includes(v.videoId))return false;
   const tags=[v.title,v.category,...(v.categories||[])].join(" ").toLowerCase();
   const matches=tab==="Home"||tab==="All Videos"||(tab==="My List"?saved.includes(v.videoId):classify(v)[tab]===true);
-  return matches&&(tab!=="Somali"||matchesSomaliSection(v,somaliSection))&&(!debouncedSearch||tags.includes(debouncedSearch));
- }),[fullCatalog,tab,somaliSection,debouncedSearch,saved,excludedIds]);
+  return matches&&(tab!=="Somali"||matchesSomaliSection(v,somaliSection))&&(tab!=="International"||matchesInternational(v))&&(!debouncedSearch||tags.includes(debouncedSearch));
+ }),[fullCatalog,tab,somaliSection,internationalGroup,internationalShow,internationalGenre,debouncedSearch,saved,excludedIds]);
  const visibleTabs=useMemo(()=>tabs.filter(t=>t==="Home"||t==="All Videos"||t==="My List"||t==="Somali"||fullCatalog.some(v=>!excludedIds.includes(v.videoId)&&classify(v)[t])),[fullCatalog,excludedIds]);
  const forYou=useMemo(()=>{
   const candidates=fullCatalog.filter(v=>!excludedIds.includes(v.videoId));
@@ -262,6 +292,14 @@ export default function DeepWatch(){
  const toggleSaved=(id:string)=>setSaved(prev=>{const value=prev.includes(id)?prev.filter(x=>x!==id):[...prev,id];try{localStorage.setItem("1muslim:deepwatch-list",JSON.stringify(value))}catch{}return value});
  return <main className={"deepwatch"+(tab==="Kids"?" dwKidsMode":"")}><style>{`.deepwatchInlinePlayIcon{display:inline-block;width:1.25em;height:1.25em;vertical-align:-.27em;flex-shrink:0;margin-right:2px}`}</style>
   <header className="deepwatchHeader"><Link href="/" className="deepwatchBrand" aria-label="DeepWatch by 1Muslim — Home"><img src="/assets/deepwatch-icon-2.PNG" alt="DeepWatch by 1Muslim" width={160} height={72} style={{display:"block",width:"auto",maxWidth:"min(38vw,160px)",height:64,objectFit:"contain"}}/></Link><nav aria-label="DeepWatch categories">{visibleTabs.map(item=><button type="button" key={item} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}>{item==="Live"?<span className="deepwatchLiveNav"><span className="deepwatchLivePulse" aria-hidden="true"/>LIVE</span>:item}</button>)}</nav><input type="search" aria-label="Search DeepWatch" placeholder="Search titles" value={search} onChange={e=>setSearch(e.target.value)}/>{isGalleryAdmin&&<output aria-live="polite" title="Unique registered titles in DeepWatch, excluding hidden videos" style={{display:"inline-flex",alignItems:"center",gap:8,padding:"9px 13px",border:"1px solid #43536b",borderRadius:14,color:"#f0f5ff",background:"#1a2434",fontSize:12,whiteSpace:"nowrap"}}><span style={{opacity:.7}}>GALLERY</span><strong>{galleryTotal.toLocaleString()}</strong>{libraryLoading&&<span style={{opacity:.7}}>Syncing…</span>}<span style={{opacity:.7}}>· IN CATEGORY {filtered.length.toLocaleString()}</span></output>}</header>
+  {tab==="International"&&<section aria-label="International video categories" style={{padding:"12px 24px 4px"}}>
+   <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:8}}>
+    {internationalGroups.map(section=><button key={section} type="button" aria-pressed={internationalGroup===section} onClick={()=>setInternationalGroup(section)} style={{flex:"0 0 auto",padding:"9px 15px",borderRadius:999,border:internationalGroup===section?"1px solid #8bcaff":"1px solid rgba(255,255,255,.24)",background:internationalGroup===section?"rgba(60,137,200,.22)":"rgba(255,255,255,.05)",color:"inherit",fontSize:13,fontWeight:internationalGroup===section?700:500}}>{section}</button>)}
+   </div>
+   {(internationalGroup==="Shows"||internationalGroup==="Genres")&&<div aria-label={internationalGroup+" filters"} style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:8}}>
+    {(internationalGroup==="Shows"?internationalShows:internationalGenres).map(item=><button key={item} type="button" aria-pressed={internationalGroup==="Shows"?internationalShow===item:internationalGenre===item} onClick={()=>internationalGroup==="Shows"?setInternationalShow(item as (typeof internationalShows)[number]):setInternationalGenre(item as (typeof internationalGenres)[number])} style={{flex:"0 0 auto",padding:"7px 12px",borderRadius:999,border:"1px solid rgba(255,255,255,.24)",background:(internationalGroup==="Shows"?internationalShow===item:internationalGenre===item)?"rgba(255,255,255,.19)":"transparent",color:"inherit",fontSize:12}}>{item}</button>)}
+   </div>}
+  </section>}
   {tab==="Somali"&&<section aria-label="Somali video categories" style={{padding:"12px 24px 4px",display:"flex",gap:8,overflowX:"auto",scrollbarWidth:"thin"}}>
    {somaliSections.map(section=><button key={section} type="button" aria-pressed={somaliSection===section} onClick={()=>setSomaliSection(section)} style={{flex:"0 0 auto",padding:"9px 15px",borderRadius:999,border:somaliSection===section?"1px solid #8bcaff":"1px solid rgba(255,255,255,.24)",background:somaliSection===section?"rgba(60,137,200,.22)":"rgba(255,255,255,.05)",color:"inherit",fontSize:13,fontWeight:somaliSection===section?700:500}}>{section}</button>)}
   </section>}
