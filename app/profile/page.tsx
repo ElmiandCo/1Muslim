@@ -109,6 +109,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
 
 function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,posting,publishFirstPost,onEdit}:{profile:Profile;tier:any;ashab:Profile[];postCount:number;postText:string;setPostText:(v:string)=>void;posting:boolean;publishFirstPost:()=>void;onEdit:()=>void}){
   const [activeQuickPanel,setActiveQuickPanel]=useState<"posts"|"settings"|null>(null);
+  useEffect(()=>{if(new URLSearchParams(window.location.search).get("panel")==="settings")setActiveQuickPanel("settings")},[]);
   const [showProfileDetails,setShowProfileDetails]=useState(false);
   const toggleQuickPanel=(panel:"posts"|"settings")=>setActiveQuickPanel(current=>current===panel?null:panel);
   return <section className="profileOverview">
@@ -167,6 +168,7 @@ function MemberFollowControl({viewerId,memberId}:{viewerId:string;memberId:strin
 
 function ProfileSocialHub({profile,children}:{profile:Profile;children:React.ReactNode}){
  const [active,setActive]=useState<"feed"|"profile"|"muslimeen">("profile");
+ useEffect(()=>{if(new URLSearchParams(window.location.search).get("section")==="muslimeen")setActive("muslimeen")},[]);
  const [arabic,setArabic]=useState<string|null>(null);
  const [messenger,setMessenger]=useState(false);
  const [feed,setFeed]=useState<Array<{id:string;body:string|null;created_at:string;user_id:string}>>([]);
