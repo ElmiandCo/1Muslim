@@ -40,6 +40,15 @@ try{
   console.log("Verified QuranGuy1 discovery channel",channel.id);
  }else console.warn("QuranGuy1 channel could not be verified; skipping");
 }catch(e){console.warn("QuranGuy1 registration failed",String(e))}
+// Sabr Network: resolve canonical publisher ID on every run; keep outside Somali/Turkish 50/50 quotas.
+try {
+ const response=await api("channels",{part:"snippet",forHandle:"SabrNetworkOfficial"});
+ const item=response.items?.[0];
+ if(item&&/^UC[A-Za-z0-9_-]{22}$/.test(item.id)){
+  if(!managedChannels.includes(item.id))managedChannels.push(item.id);
+  console.log("Verified Sabr Network official channel",item.id);
+ }else console.warn("Sabr Network handle could not be verified");
+}catch(e){console.warn("Sabr Network channel verification failed",String(e))}
 // Fluzen (@Fluzentv): discover the complete public, embeddable catalog on every run.
 let fluzenChannelId="";
 try {
