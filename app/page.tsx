@@ -1,3 +1,5 @@
+import {loadQuranChapter} from "./lib/quran-verses";
+const QURAN_CHAPTER_VERSE_COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
 "use client";
 import PlayIcon from "./components/icons/PlayIcon";
 import PhoneIcon from "./components/icons/PhoneIcon";
@@ -462,17 +464,16 @@ export default function Home(){
  const quranLoadSeq=useRef(0);
  const loadQuranVerse=async(chapter:number,verse:number,save=false)=>{
   const seq=++quranLoadSeq.current;
-  if(chapter<1||chapter>114||verse<1||verse>286)return;
-  const key=chapter+":"+verse;
+  if(chapter<1||chapter>114||verse<1)return;
   try{
-   const [ar,en]=await Promise.all([fetch("https://api.alquran.cloud/v1/ayah/"+key+"/ar.alafasy"),fetch("https://api.alquran.cloud/v1/ayah/"+key+"/en.sahih")]);
-   if(!ar.ok||!en.ok)return;
-   const [a,b]=await Promise.all([ar.json(),en.json()]);
-   if(seq!==quranLoadSeq.current||!a.data?.text||!b.data?.text)return;
+   const rows=await loadQuranChapter(chapter);
+   const item=rows[verse-1];
+   if(seq!==quranLoadSeq.current||!item?.arabic||!item.english)return;
+   const globalAyah=QURAN_CHAPTER_VERSE_COUNTS.slice(0,chapter-1).reduce((a,b)=>a+b,0)+verse;
    if(quranContinuous.current&&quranAutoPlayNext.current){quranContinuousVerseCount.current+=1;if(quranContinuousVerseCount.current===1){setQuranParticleBurst(k=>k+1);setQuranParticleBurstVisible(true)}}
-   setQuranPreview({arabic:String(a.data.text),translation:String(b.data.text),chapter,verse,globalAyah:Number(a.data.number)});
+   setQuranPreview({arabic:item.arabic,translation:item.english,chapter,verse,globalAyah});
    if(save){try{localStorage.setItem("1muslim-quran-progress",JSON.stringify({chapter,verse}))}catch{}}
-  }catch{}
+  }catch(error){console.warn("Local Qur'an verse unavailable",error)}
  };
  useEffect(()=>{
   const resume=()=>{let chapter=1,verse=1;try{const saved=JSON.parse(localStorage.getItem("1muslim-quran-progress")||"null");chapter=Number(saved?.chapter)||1;verse=Number(saved?.verse)||1}catch{}void loadQuranVerse(chapter,verse)};
