@@ -78,7 +78,7 @@ export default function GlobalNavigation(){
  useEffect(()=>{const frame=requestAnimationFrame(()=>centerItem(activeEntry,"instant"));return()=>cancelAnimationFrame(frame)},[pathname,isUnlocked]);
  useEffect(()=>()=>{if(settleTimer.current)clearTimeout(settleTimer.current)},[]);
  const onRailScroll=()=>{const rail=railRef.current;if(!rail)return;const middle=rail.scrollLeft+rail.clientWidth/2;let nearest:HTMLElement|null=null;let distance=Infinity;rail.querySelectorAll<HTMLElement>("[data-nav-id]").forEach(el=>{const d=Math.abs(el.offsetLeft+el.offsetWidth/2-middle);const normalized=Math.min(1,d/Math.max(110,rail.clientWidth*.55));el.style.setProperty("--nav-distance",String(normalized));if(d<distance){distance=d;nearest=el}});if(nearest)setCentered((nearest as HTMLElement).dataset.navId as GlobalNavDestination);if(settleTimer.current)clearTimeout(settleTimer.current);settleTimer.current=setTimeout(()=>{const selected=rail.querySelector<HTMLElement>("[data-nav-id].is-centered");if(selected)centerItem(selected.dataset.navId as GlobalNavDestination)},130)};
- if(pathname?.startsWith("/auth")||pathname?.startsWith("/login"))return null;
+ if(pathname?.startsWith("/auth")||pathname?.startsWith("/login")||pathname?.startsWith("/posts/story/"))return null;
  async function perform(item:Entry){
   if(item.id==="search"){setSearch(v=>!v);return}
   if(item.id==="signout"){setBusy(true);try{await createClient().auth.signOut();router.push("/");router.refresh()}finally{setBusy(false)}return}
