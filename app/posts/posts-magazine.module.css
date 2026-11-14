@@ -95,3 +95,52 @@
 
 /* Social Magazine story swipe controls */
 .socialSwipeNav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%;justify-content:space-between}.socialSwipeNav button{border:1px solid #dce4ee;border-radius:20px;padding:9px 13px;background:#f3f7fb;color:#235a93;font-size:12px;font-weight:750;cursor:pointer}.socialSwipeNav button:disabled{opacity:.35;cursor:default}.socialStoryFooter{flex-wrap:wrap}.socialStoryFooter .socialSwipeNav{flex-basis:100%}
+
+
+/* Discover 2026: real-content masonry, independent of immersive post viewer. */
+.discoverPage{background:#f2ece3;color:#17201e;min-height:100dvh;padding-top:18px;padding-bottom:55px}
+.discoverHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px auto 22px;max-width:1200px}
+.discoverTitle{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.discoverTitle h1{font:800 clamp(27px,4vw,39px)/1.1 Arial,sans-serif;letter-spacing:-.045em;margin:0}
+.discoverTitle>span{color:#c89530;font-size:27px}
+.discoverTitle p{font-size:14px;margin:0;color:#39413c}
+.discoverActions{display:flex;align-items:center;gap:10px}
+.discoverActions button,.discoverActions a{border:1px solid #d5d1c9;box-shadow:0 4px 12px #00000017;display:grid;place-items:center;text-decoration:none;cursor:pointer}
+.discoverActions button{background:white;color:#161b1b;border-radius:50%;width:42px;height:42px;font-size:28px}
+.discoverActions a{background:#111417;color:white;padding:12px 20px;border-radius:26px;font-size:13px;font-weight:800}
+.discoverPeople{margin:0 auto 18px;max-width:1200px}
+.discoverPeople .feedStoryRail{gap:18px;padding:4px 2px 12px}
+.discoverPeople .feedStoryPerson{flex-basis:77px}
+.discoverPeople .feedStoryRing{width:70px;height:70px;box-shadow:0 3px 8px #0002}
+.discoverPeople .feedStoryRing>span{border-color:#f2ece3;background:#152d2b}
+.discoverFilters{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 auto 20px;max-width:1200px}
+.discoverFilters .feedTabs{gap:9px;scrollbar-width:none}
+.discoverFilters .feedTabs button{font-size:13px;border-radius:28px;background:#fffcf8;border-color:#ddd7cf;padding:11px 16px;box-shadow:0 3px 8px #00000012}
+.discoverFilters .feedTabs .active{background:#13181a;color:white;border-color:#13181a}
+.discoverSearch{min-width:165px}.discoverSearch input{width:100%;border-radius:25px;background:#fff;border:1px solid #ded8cf;padding:11px 14px;outline:none;font-size:13px}
+.discoverGrid{max-width:1200px;margin:0 auto 50px;columns:3;column-gap:14px}
+.discoverCard{display:inline-block;vertical-align:top;width:100%;break-inside:avoid;margin:0 0 15px;border-radius:19px;overflow:hidden;background:#fffdfb;box-shadow:0 5px 15px #191a1821,0 1px 3px #00000012;transition:transform .3s ease,box-shadow .3s ease;animation:discoverFloat 14s ease-in-out infinite}
+.discoverCard:nth-child(4n+2){animation-delay:-5s}.discoverCard:nth-child(4n+3){animation-delay:-9s}.discoverCard:nth-child(4n){animation-delay:-12s}
+.discoverCard:hover{transform:translateY(-4px);box-shadow:0 12px 24px #191a182a}
+.discoverVisual{display:block;position:relative;overflow:hidden;min-height:180px;background:#17232a;color:white;text-decoration:none}
+.discoverPoster{position:relative;width:100%;min-height:180px;aspect-ratio:4/5;overflow:hidden}
+.discoverCard:nth-child(5n+2) .discoverPoster{aspect-ratio:3/4}.discoverCard:nth-child(5n+3) .discoverPoster{aspect-ratio:5/4}.discoverCard:nth-child(5n+4) .discoverPoster{aspect-ratio:1/1}.discoverCard:nth-child(5n) .discoverPoster{aspect-ratio:4/3}
+.discoverPoster img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:block;background:linear-gradient(135deg,#29384a,#a17c62)}
+.discoverVisual:after{content:"";position:absolute;inset:40% 0 0;background:linear-gradient(transparent,#000a);pointer-events:none}
+.discoverCaption{position:absolute;z-index:2;bottom:14px;left:13px;right:13px;color:#fff;font-size:clamp(13px,1.5vw,18px);font-weight:750;line-height:1.3;text-shadow:0 2px 5px #0008;overflow-wrap:anywhere}
+.discoverPlay{position:absolute;z-index:2;top:50%;left:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:47px;height:47px;background:#000a;border:1px solid #fff8;border-radius:50%;color:white;font-size:20px}
+.discoverYouTube{position:absolute;top:10px;left:10px;z-index:2;border-radius:8px;background:#000b;color:white;font-size:11px;padding:6px 9px;font-weight:800}
+.discoverTextArt{height:100%;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:25px;background:linear-gradient(145deg,#253b4c,#785d71,#bb9c78);box-sizing:border-box}
+.discoverTextArt span{font-size:33px;color:#f9d891}.discoverTextArt p{font:500 clamp(17px,2vw,25px)/1.3 Georgia,serif;margin:0;overflow-wrap:anywhere}
+.discoverVideoFallback{height:100%;display:grid;place-content:center;justify-items:center;gap:10px;background:linear-gradient(135deg,#202d3e,#4b3e56)}.discoverVideoFallback span{font-size:36px}.discoverVideoFallback small{font-size:13px}
+.discoverMeta{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px}
+.discoverAuthor{display:flex;align-items:center;gap:8px;min-width:0;text-decoration:none;color:#202625;font-size:12px;font-weight:750}
+.discoverAuthor>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.discoverMiniAvatar{display:grid;place-items:center;flex:none;width:25px;height:25px;border-radius:50%;background:#263c46;color:#fff;font-size:12px}
+.discoverOpen{text-decoration:none;color:#35413f;font-size:20px}
+@keyframes discoverFloat{0%,100%{box-shadow:0 5px 15px #191a1821,0 1px 3px #00000012}50%{box-shadow:0 9px 20px #191a182b,0 2px 5px #00000017}}
+@media(max-width:900px){.discoverGrid{columns:2}.discoverFilters{flex-wrap:wrap}.discoverSearch{width:100%}}
+@media(max-width:600px){.discoverPage{padding:15px 12px 35px}.discoverHead{margin-bottom:18px}.discoverTitle{gap:7px}.discoverTitle h1{font-size:28px}.discoverTitle p{font-size:12px}.discoverTitle>span{font-size:20px}.discoverActions a{padding:11px 13px;font-size:12px}.discoverActions button{width:38px;height:38px}.discoverPeople .feedStoryPerson{flex-basis:67px}.discoverPeople .feedStoryRing{width:60px;height:60px}.discoverPeople .feedStoryRail{gap:10px}.discoverFilters .feedTabs{width:100%;gap:7px}.discoverFilters .feedTabs button{font-size:11px;padding:9px 12px}.discoverGrid{column-gap:10px}.discoverCard{margin-bottom:11px;border-radius:15px}.discoverPoster{min-height:135px}.discoverCaption{font-size:12px;left:9px;right:9px;bottom:10px}.discoverMeta{padding:8px}.discoverAuthor{font-size:10px;gap:5px}.discoverMiniAvatar{width:21px;height:21px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.discoverCard{animation:none;transition:none}}
+
+.discoverVideoThumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#1b2430;pointer-events:none}
