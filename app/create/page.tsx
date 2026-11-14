@@ -36,26 +36,42 @@ export default function CreatorStudio(){
  const chunksRef=useRef<Blob[]>([]);
  const inputRef=useRef<HTMLInputElement>(null);
  const canvasRef=useRef<HTMLCanvasElement>(null);
- const stopCamera=()=>{streamRef.current?.getTracks().forEach(t=>t.stop());streamRef.current=null;setCameraReady(false)};
- useEffect(()=>{return()=>{streamRef.current?.getTracks().forEach(t=>t.stop())}},[]);
+ const cameraRequestRef=useRef(0);
+ const modeRef=useRef<Mode>("camera");
+ const mountedRef=useRef(true);
+ const recordingWantedRef=useRef(false);
+ const stopCamera=()=>{
+  cameraRequestRef.current++;
+  recordingWantedRef.current=false;
+  const recorder=recorderRef.current;
+  recorderRef.current=null;
+  if(recorder?.state==="recording"){try{recorder.stop()}catch{}}
+  streamRef.current?.getTracks().forEach(t=>t.stop());
+  streamRef.current=null;
+  if(videoRef.current)videoRef.current.srcObject=null;
+  setCameraReady(false);setRecording(false);
+ };
+ useEffect(()=>()=>{mountedRef.current=false;cameraRequestRef.current++;recordingWantedRef.current=false;const recorder=recorderRef.current;recorderRef.current=null;if(recorder?.state==="recording"){try{recorder.stop()}catch{}}streamRef.current?.getTracks().forEach(t=>t.stop())},[]);
  useEffect(()=>{let alive=true;const db=createClient();void db.from("creator_studio_assets").select("id,kind,slug,title,description,category,config,storage_path,attribution,license_name").eq("is_approved",true).eq("is_active",true).order("title").then(({data,error})=>{if(alive&&!error)setCatalog((data||[]) as StudioAsset[])});return()=>{alive=false}},[]);
  const saveDraft=async()=>{setDraftStatus("Saving…");try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setDraftStatus("Sign in to save a draft.");return}const payload={user_id:user.id,title:media?.name||"Untitled creation",theme_slug:theme,filter_slug:filter.toLowerCase(),sound_slug:soundSlug,settings:{mode,has_local_media:!!media},updated_at:new Date().toISOString()};const result=draftId?await db.from("creator_studio_drafts").update(payload).eq("id",draftId).select("id").single():await db.from("creator_studio_drafts").insert(payload).select("id").single();if(result.error)throw result.error;if(result.data?.id)setDraftId(result.data.id);setDraftStatus(media?"Settings saved. Uploading media will be available in Step 3.":"Draft saved.")}catch{setDraftStatus("Could not save draft. Try again.")}};
  useEffect(()=>{if(media)return()=>{URL.revokeObjectURL(media.url)}},[media]);
  const startCamera=async(face=facing)=>{
-  stopCamera();setStreamError("");
+  stopCamera();const request=++cameraRequestRef.current;setStreamError("");
   if(!navigator.mediaDevices?.getUserMedia){setStreamError("Camera access is unavailable in this browser. Upload a photo or video instead.");return}
   try{
    const stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:face}}});
+   if(!mountedRef.current||request!==cameraRequestRef.current||modeRef.current!=="camera"){stream.getTracks().forEach(t=>t.stop());return}
    streamRef.current=stream;
    if(videoRef.current){videoRef.current.srcObject=stream;await videoRef.current.play().catch(()=>{})}
+   if(!mountedRef.current||request!==cameraRequestRef.current||modeRef.current!=="camera"){stream.getTracks().forEach(t=>t.stop());return}
    setCameraReady(true);
-  }catch{setStreamError("Camera access was blocked or unavailable. Enable camera permissions or upload media.")}
+  }catch{if(mountedRef.current&&request===cameraRequestRef.current)setStreamError("Camera access was blocked or unavailable. Enable camera permissions or upload media.")}
  };
  const loadFile=(file?:File)=>{
   if(!file)return;
   if(!file.type.startsWith("image/")&&!file.type.startsWith("video/")){setStreamError("Choose an image or video file.");return}
   setMedia({url:URL.createObjectURL(file),type:file.type.startsWith("image/")?"image":"video",name:file.name});
-  setMode("create");stopCamera();setStreamError("");
+  modeRef.current="create";setMode("create");stopCamera();setStreamError("");
  };
  const capture=()=>{
   if(!videoRef.current||!canvasRef.current||!cameraReady)return;
@@ -65,13 +81,14 @@ export default function CreatorStudio(){
   canvas.toBlob(blob=>{if(blob)loadFile(new File([blob],"1muslim-photo.jpg",{type:"image/jpeg"}))},"image/jpeg",.92);
  };
  const record=()=>{
-  if(recording){recorderRef.current?.stop();setRecording(false);return}
+  if(recording){const recorder=recorderRef.current;if(recorder?.state==="recording")recorder.stop();setRecording(false);return}
   const stream=streamRef.current;
   if(!stream||typeof MediaRecorder==="undefined"){setStreamError("Video recording is not supported in this browser.");return}
   try{
    const recorder=new MediaRecorder(stream);chunksRef.current=[];
    recorder.ondataavailable=e=>{if(e.data.size)chunksRef.current.push(e.data)};
-   recorder.onstop=()=>{const blob=new Blob(chunksRef.current,{type:recorder.mimeType||"video/webm"});loadFile(new File([blob],"1muslim-recording.webm",{type:blob.type}))};
+   recordingWantedRef.current=true;
+   recorder.onstop=()=>{if(recorderRef.current===recorder)recorderRef.current=null;if(mountedRef.current)setRecording(false);if(!recordingWantedRef.current||!mountedRef.current||modeRef.current!=="camera")return;recordingWantedRef.current=false;const blob=new Blob(chunksRef.current,{type:recorder.mimeType||"video/webm"});if(blob.size)loadFile(new File([blob],"1muslim-recording.webm",{type:blob.type}))};
    recorder.start();recorderRef.current=recorder;setRecording(true);
   }catch{setStreamError("Unable to record video on this device.")}
  };
@@ -91,7 +108,7 @@ export default function CreatorStudio(){
   </section>
   {mode==="camera"&&<div className={styles.captureBar}><button type="button" onClick={()=>inputRef.current?.click()} className={styles.upload}>▧<small>Library</small></button><button type="button" className={styles.shutter} aria-label="Take photo" onClick={capture} disabled={!cameraReady}><span/></button><button type="button" onClick={record} className={recording?styles.recording:styles.record} disabled={!cameraReady}>{recording?"■ Stop":"● Record"}</button></div>}
   {mode==="create"&&<div className={styles.createTools}><div className={styles.toolHeader}><strong>Islamic Themes</strong><button type="button" onClick={()=>inputRef.current?.click()}>＋ Add media</button></div><div className={styles.themes}>{(catalog.filter(a=>a.kind==="theme").length?catalog.filter(a=>a.kind==="theme").map(a=>({id:a.slug,title:a.title,subtitle:a.description,tone:String(a.config.tone||"art")})):themes).map(item=><button type="button" key={item.id} className={styles.theme+(theme===item.id?" "+styles.selected:"")} onClick={()=>setTheme(item.id)}><span className={styles[item.tone as keyof typeof styles]||styles.art}>☾</span><strong>{item.title}</strong><small>{item.subtitle}</small></button>)}</div><div className={styles.toolHeader}><button type="button" onClick={()=>void saveDraft()}>Save Draft</button><span aria-live="polite">{draftStatus}</span></div><p className={styles.disclaimer}>Approved templates and filters load from Supabase. Media upload, animation export and publishing arrive in Step 3.</p></div>}
-  <nav className={styles.modes} aria-label="Studio mode"><button type="button" className={mode==="camera"?styles.active:""} onClick={()=>{setMode("camera");setMedia(null)}}>CAMERA</button><button type="button" className={mode==="create"?styles.active:""} onClick={()=>{setMode("create");stopCamera()}}>CREATE</button><button type="button" className={mode==="live"?styles.active:""} onClick={()=>{setMode("live");stopCamera()}}>LIVE</button></nav>
+  <nav className={styles.modes} aria-label="Studio mode"><button type="button" className={mode==="camera"?styles.active:""} onClick={()=>{modeRef.current="camera";setMode("camera");setMedia(null);stopCamera()}}>CAMERA</button><button type="button" className={mode==="create"?styles.active:""} onClick={()=>{modeRef.current="create";setMode("create");stopCamera()}}>CREATE</button><button type="button" className={mode==="live"?styles.active:""} onClick={()=>{modeRef.current="live";setMode("live");stopCamera()}}>LIVE</button></nav>
   <input ref={inputRef} type="file" accept="image/*,video/*" className={styles.hidden} onChange={e=>{loadFile(e.target.files?.[0]);e.target.value=""}}/>
   <canvas ref={canvasRef} className={styles.hidden}/>
  </main>;
