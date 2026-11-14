@@ -113,3 +113,17 @@
 .hint{color:#69717c!important}
 @media(max-width:430px){.quickToolbar{gap:2px}.quickToolbar button,.quickToolbar a{font-size:11px;padding:8px 6px;gap:4px}.quickToolbar svg{width:18px;height:18px}.quickToolbar .studioLink{padding:8px}.studio{border-radius:18px!important}}
 @media(prefers-reduced-motion:reduce){.quickToolbar button,.quickToolbar a{transition:none}}
+
+
+/* Compact one-line attachment toolbar: Photo / Video / Verse / Create Studio. */
+.quickToolbar{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.5fr)!important;align-items:stretch!important;flex-wrap:nowrap!important;gap:4px!important;padding:8px 0!important}
+.quickToolbar button,.quickToolbar a{min-width:0!important;width:100%!important;height:40px!important;min-height:40px!important;max-height:40px!important;padding:0 5px!important;margin:0!important;gap:5px!important;line-height:1!important;font-size:clamp(10px,2.5vw,13px)!important;border-radius:9px!important;white-space:nowrap!important}
+.quickToolbar .studioLink{justify-content:center!important;border:1px solid #dfe2e7!important;background:#f1f2f4!important}
+.quickToolbar .studioLink svg{width:18px!important;height:18px!important}
+.quickToolbar .studioLink span:last-child{display:none!important}
+.quickFooter{margin-top:0!important;padding-top:6px!important;gap:8px!important}
+.quickFooter .postButton{min-height:40px!important}
+.composerRow{margin-bottom:0!important}
+.composer{min-height:88px!important}
+.composer textarea{min-height:86px!important;padding:8px 1px!important}
+@media(max-width:390px){.quickToolbar{grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.45fr)!important;gap:2px!important}.quickToolbar button,.quickToolbar a{font-size:10px!important;gap:3px!important;padding:0 2px!important}.quickToolbar svg{width:17px!important;height:17px!important}.quickToolbar .studioLink svg{width:16px!important;height:16px!important}}
