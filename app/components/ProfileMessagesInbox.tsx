@@ -1,0 +1,35 @@
+"use client";
+import {useEffect,useMemo,useState} from "react";
+import Link from "next/link";
+import {createClient} from "../../utils/supabase/client";
+
+type Thread={id:string;peer:string;preview:string;time:string;unread:boolean;group:boolean};
+export default function ProfileMessagesInbox(){
+ const [client]=useState(()=>createClient());
+ const [user,setUser]=useState<string|null>(null);
+ const [loading,setLoading]=useState(true),[error,setError]=useState("");
+ const [threads,setThreads]=useState<Thread[]>([]);
+ const [query,setQuery]=useState(""),[filter,setFilter]=useState<"All"|"Unread"|"Groups">("All");
+ useEffect(()=>{let active=true;void client.auth.getUser().then(({data,error})=>{if(!active)return;setUser(data.user?.id??null);setError(error?.message||"");setLoading(false)});return()=>{active=false}},[client]);
+ useEffect(()=>{if(!user)return;let active=true;const load=async()=>{
+  const {data:members,error:memberError}=await client.from("dm_participants").select("conversation_id,user_id,last_read_at").eq("user_id",user);
+  if(!active)return;if(memberError){setError(memberError.message);return}
+  const ids=[...new Set((members||[]).map(p=>p.conversation_id))];if(!ids.length){setThreads([]);return}
+  const [peersResult,messagesResult]=await Promise.all([
+   client.from("dm_participants").select("conversation_id,user_id").in("conversation_id",ids),
+   client.from("dm_messages").select("conversation_id,body,created_at,sender_id").in("conversation_id",ids).order("created_at",{ascending:false}).limit(500)
+  ]);
+  if(!active)return;if(peersResult.error||messagesResult.error){setError(peersResult.error?.message||messagesResult.error?.message||"Unable to load messages");return}
+  const peers=(peersResult.data||[]).filter(p=>p.user_id!==user),userIds=[...new Set(peers.map(p=>p.user_id))];
+  const profiles=userIds.length?await client.from("profiles").select("id,display_name,username").in("id",userIds):{data:[],error:null};
+  if(!active)return;
+  const names=new Map((profiles.data||[]).map(p=>[p.id,p.display_name?.trim()||p.username?.trim()||"Member"]));
+  const latest=new Map<string,{body:string;created_at:string}>();
+  const unread=new Set<string>();const reads=new Map((members||[]).map(p=>[p.conversation_id,p.last_read_at]));
+  for(const msg of messagesResult.data||[]){if(!latest.has(msg.conversation_id))latest.set(msg.conversation_id,{body:msg.body||"Media message",created_at:msg.created_at});if(msg.sender_id!==user&&(!reads.get(msg.conversation_id)||Date.parse(msg.created_at)>Date.parse(reads.get(msg.conversation_id)!)))unread.add(msg.conversation_id)}
+  const rows:Thread[]=ids.map(id=>{const people=peers.filter(p=>p.conversation_id===id);const last=latest.get(id);return {id,peer:people.length?people.map(p=>names.get(p.user_id)||"Member").join(", "):"Conversation",preview:last?.body||"Start a conversation",time:last?.created_at||"",unread:unread.has(id),group:people.length>1}});
+  rows.sort((a,b)=>Date.parse(b.time||"1970-01-01")-Date.parse(a.time||"1970-01-01"));setThreads(rows);setError("");
+ };void load();const timer=window.setInterval(()=>void load(),15000);return()=>{active=false;window.clearInterval(timer)}},[client,user]);
+ const visible=useMemo(()=>threads.filter(t=>(filter==="All"||(filter==="Unread"?t.unread:t.group))&&(t.peer+" "+t.preview).toLowerCase().includes(query.toLowerCase())),[threads,filter,query]);
+ return <section className="profileMessagesInbox" aria-label="Messages in Profile"><header className="profileMessagesHeader"><h3>Messages</h3><div className="profileMessagesActions"><Link href="/messages?compose=1" aria-label="Create message">✎</Link><Link href="/messages">Open Messages ↗</Link></div></header><label className="profileMessagesSearch"><span aria-hidden="true">⌕</span><input type="search" placeholder="Search messages…" value={query} onChange={e=>setQuery(e.target.value)} aria-label="Search messages"/></label><div className="profileMessagesFilters" role="group" aria-label="Filter conversations">{(["All","Unread","Groups"] as const).map(f=><button type="button" key={f} aria-pressed={filter===f} onClick={()=>setFilter(f)}>{f}</button>)}</div><div className="profileMessagesThreads" aria-live="polite">{loading?<p>Loading messages…</p>:!user?<p>Sign in to view and send messages. <Link href="/auth?next=%2Fmessages">Sign in ↗</Link></p>:error?<p role="alert">{error}</p>:visible.length?visible.map(t=><Link key={t.id} className="profileMessagesThread" href={"/messages?conversation="+encodeURIComponent(t.id)}><span className="profileMessagesAvatar">{t.group?"♧":t.peer.charAt(0).toUpperCase()}</span><span className="profileMessagesThreadText"><strong>{t.peer}</strong><small>{t.preview}</small></span>{t.unread&&<span className="profileMessagesUnread" aria-label="Unread messages"/>}<span aria-hidden="true">›</span></Link>):<p>{threads.length?"No matching conversations.":"No conversations yet. Open Messages to start one."}</p>}</div><style jsx>{`.profileMessagesInbox{margin-top:16px;scroll-margin-top:85px;border:1.5px solid #171717;border-radius:22px;background:transparent;color:#111;padding:18px 14px;min-width:0}.profileMessagesHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.profileMessagesHeader h3{font-size:23px;margin:0;font-weight:800}.profileMessagesActions{display:flex;gap:8px;align-items:center}.profileMessagesActions :global(a){display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 12px;border:1px solid #111;border-radius:30px;text-decoration:none;color:#111;background:transparent;font-size:13px;font-weight:700}.profileMessagesSearch{margin-top:16px;display:flex;align-items:center;gap:8px;padding:0 14px;border:1px solid #222;border-radius:28px;min-height:52px}.profileMessagesSearch span{font-size:24px}.profileMessagesSearch input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#111;font-size:16px}.profileMessagesFilters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:12px}.profileMessagesFilters button{min-height:44px;border:1px solid #222;border-radius:24px;background:transparent;color:#111;font-size:14px}.profileMessagesFilters button[aria-pressed=true]{background:#111;color:#fff}.profileMessagesThreads{padding-top:12px;min-height:150px}.profileMessagesThreads p{color:#444;text-align:center;padding:38px 10px;font-size:15px}.profileMessagesThreads :global(a){color:inherit}.profileMessagesThread{display:flex;gap:12px;align-items:center;min-height:70px;border-bottom:1px solid #2223;text-decoration:none;padding:8px 3px}.profileMessagesAvatar{width:43px;height:43px;flex-shrink:0;border-radius:50%;border:1px solid #222;display:grid;place-items:center;font-weight:700}.profileMessagesThreadText{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}.profileMessagesThreadText strong,.profileMessagesThreadText small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.profileMessagesThreadText small{color:#555}.profileMessagesUnread{width:9px;height:9px;border-radius:50%;background:#111;flex-shrink:0}`}</style></section>
+}
