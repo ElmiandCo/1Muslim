@@ -1,5 +1,5 @@
 "use client";
-import {usePathname,useRouter} from "next/navigation";
+import {usePathname,useRouter,useSearchParams} from "next/navigation";
 import {useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import GlobalNavIcon,{type GlobalNavDestination} from "./GlobalNavIcon";
@@ -14,7 +14,7 @@ const entries:{id:GlobalNavDestination;label:string;href?:string}[]=[
 {id:"signout",label:"Sign Out"}];
 type Entry=typeof entries[number];
 export default function GlobalNavigation(){
- const pathname=usePathname(),router=useRouter();
+ const pathname=usePathname(),router=useRouter(),searchParams=useSearchParams();
  const railRef=useRef<HTMLElement|null>(null);
  const settleTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const [centered,setCentered]=useState<GlobalNavDestination>("muslims");
@@ -73,9 +73,9 @@ export default function GlobalNavigation(){
   lastPath.current=pathname;
  },[pathname]);
  const visibleEntries=entries.filter(item=>item.id!=="unlocked"||!isUnlocked||unlockExit);
- const activeEntry=pathname?.startsWith("/posts")?"posts":pathname?.startsWith("/deepwatch")?"deepwatch":pathname?.startsWith("/quran")?"quran":pathname?.startsWith("/messages")?"messages":pathname?.startsWith("/unlocked")?"unlocked":pathname==="/profile"?(typeof window!=="undefined"&&new URLSearchParams(window.location.search).get("section")==="muslimeen"?"muslims":"profile"):"muslims";
+ const activeEntry=pathname?.startsWith("/posts")?"posts":pathname?.startsWith("/deepwatch")?"deepwatch":pathname?.startsWith("/quran")?"quran":pathname?.startsWith("/messages")?"messages":pathname?.startsWith("/unlocked")?"unlocked":pathname==="/profile"?(searchParams.get("section")==="muslimeen"?"muslims":"profile"):"muslims";
  const centerItem=(id:GlobalNavDestination,behavior:ScrollBehavior="smooth")=>{const rail=railRef.current;const target=rail?.querySelector<HTMLElement>(`[data-nav-id="${id}"]`);if(!rail||!target)return;rail.scrollTo({left:target.offsetLeft+target.offsetWidth/2-rail.clientWidth/2,behavior});setCentered(id)};
- useEffect(()=>{const frame=requestAnimationFrame(()=>centerItem(activeEntry,"instant"));return()=>cancelAnimationFrame(frame)},[pathname,isUnlocked]);
+ useEffect(()=>{const frame=requestAnimationFrame(()=>centerItem(activeEntry,"instant"));return()=>cancelAnimationFrame(frame)},[pathname,searchParams,isUnlocked]);
  useEffect(()=>()=>{if(settleTimer.current)clearTimeout(settleTimer.current)},[]);
  const onRailScroll=()=>{const rail=railRef.current;if(!rail)return;const middle=rail.scrollLeft+rail.clientWidth/2;let nearest:HTMLElement|null=null;let distance=Infinity;rail.querySelectorAll<HTMLElement>("[data-nav-id]").forEach(el=>{const d=Math.abs(el.offsetLeft+el.offsetWidth/2-middle);const normalized=Math.min(1,d/Math.max(110,rail.clientWidth*.55));el.style.setProperty("--nav-distance",String(normalized));if(d<distance){distance=d;nearest=el}});if(nearest)setCentered((nearest as HTMLElement).dataset.navId as GlobalNavDestination);if(settleTimer.current)clearTimeout(settleTimer.current);settleTimer.current=setTimeout(()=>{const selected=rail.querySelector<HTMLElement>("[data-nav-id].is-centered");if(selected)centerItem(selected.dataset.navId as GlobalNavDestination)},130)};
  if(pathname?.startsWith("/auth")||pathname?.startsWith("/login"))return null;
@@ -99,7 +99,7 @@ export default function GlobalNavigation(){
  return <><button type="button" className={"oneGlobalNavPinnedEmblem"+(emblemPinned?" is-visible":"")} aria-label="Scroll to top" tabIndex={emblemPinned?0:-1} onClick={()=>{window.scrollTo({top:0,behavior:"smooth"});document.scrollingElement?.scrollTo({top:0,behavior:"smooth"})}}><img src="/assets/new-1M-logo.PNG" alt="" /></button><header className={"oneGlobalNav"+(pathname.startsWith("/deepwatch")?" oneGlobalNavDeepWatch":"")} aria-label="1Muslim global navigation">
  <div className="oneGlobalNavBrand"><img src="/assets/new-1M-logo.PNG" alt="1Muslim" onError={e=>{const img=e.currentTarget;if(!img.src.endsWith("/assets/1muslim-mobile-logo.PNG"))img.src="/assets/1muslim-mobile-logo.PNG"}} /></div>
  <div className="oneGlobalNavRailShell"><nav ref={railRef} onScroll={onRailScroll} className="oneGlobalNavRail" aria-label="Global destinations">{previous&&previous!==pathname&&<span className="oneGlobalNavItem oneGlobalNavBack" key="back"><button type="button" title="Back to previous page" aria-label="Back to previous page" onClick={()=>{const target=previous;setPrevious(pathname);router.push(target)}}><span className="oneGlobalNavLabel">Back</span><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m13.5 5-7 7 7 7M7 12h13"/></svg></button></span>}{entries.filter(item=>item.id!=="unlocked"||!isUnlocked||unlockExit).map((item,index)=><span key={item.id} data-nav-id={item.id} style={{"--nav-distance":item.id===centered?0:1} as React.CSSProperties} className={"oneGlobalNavItem"+(item.id===centered?" is-centered":"")+(item.id==="unlocked"&&unlockExit?" oneGlobalNavUnlockedExit":"")}>
- <button type="button" aria-label={item.label} title={item.label} aria-current={item.href&&pathname===item.href?"page":undefined} disabled={busy} onClick={()=>{centerItem(item.id);select(item)}}>
+ <button type="button" aria-label={item.label} title={item.label} aria-current={item.id===activeEntry?"page":undefined} disabled={busy} onClick={()=>{centerItem(item.id);select(item)}}>
  <span className="oneGlobalNavLabel">{item.label}</span><span className="oneGlobalNavIconWrap"><GlobalNavIcon name={item.id}/>{item.id==="profile"&&<span className="oneGlobalNavProfileGear" aria-hidden="true"><GlobalNavIcon name="settings" size={13}/></span>}</span></button></span>)}</nav></div>
  {search&&<form className="oneGlobalNavSearch" onSubmit={e=>{e.preventDefault();router.push("/profile?section=muslimeen&search="+encodeURIComponent(query));setSearch(false)}}><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} aria-label="Search Muslims" placeholder="Search 1Muslim members"/><button type="submit">Search</button></form>}
  {pending&&<div className="oneGlobalNavDialogBackdrop" onClick={()=>setPending(null)}>
