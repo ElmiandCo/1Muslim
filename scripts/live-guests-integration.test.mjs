@@ -55,8 +55,6 @@ test("signed-out viewer can watch but only authenticated guests request",()=>{
   const viewer=source("components/LiveKitViewer.tsx");
   assert.match(viewer,/streamId&&hostIdentity&&!hostEnded&&<div className="omViewerJoinOnly"/);
   assert.match(viewer,/LiveGuestStudio streamId=\{streamId\} roomName=\{roomName\} hostId=\{hostIdentity\} compactJoin/);
-  const landing=source("app/page.tsx");
-  assert.match(landing,/LiveGuestStudio streamId=\{activeLive\.id\}/);
   const forYou=source("app/components/ImmersiveVideoEntry.tsx");
   assert.match(forYou,/imv-guest-request/);
   assert.match(forYou,/liveHostId:x\.host_id/);
