@@ -17,6 +17,7 @@ export default function UnifiedPostMedia({postId,mediaUrl,mediaType,youtubeId,co
  
  const loadEngagement=useCallback(async()=>{try{const r=await fetch(engagementEndpoint+"?"+(articleMode?"articleId=":"postId=")+encodeURIComponent(postId),{cache:"no-store"});if(r.ok){const j=await r.json();setEngagement({likes:j.likes||0,saves:j.saves||0,shares:j.shares||0,comments:j.comments||0});setLiked(!!j.liked);setSaved(!!j.saved)}}catch{}},[postId,engagementEndpoint,articleMode]);
  useEffect(()=>{void loadEngagement()},[loadEngagement]);
+ useEffect(()=>{if(articleMode)return;const refresh=(event:Event)=>{if((event as CustomEvent<{postId:string}>).detail?.postId===postId)void loadEngagement()};window.addEventListener("ummah-post-engagement-changed",refresh);return()=>window.removeEventListener("ummah-post-engagement-changed",refresh)},[articleMode,postId,loadEngagement]);
  useEffect(()=>{if(!image){setImagePreview(null);return}const url=URL.createObjectURL(image);setImagePreview(url);return()=>URL.revokeObjectURL(url)},[image]);
  const roots=useMemo(()=>comments.filter(c=>!c.parent_id),[comments]);
  const children=useMemo(()=>{const map=new Map<string,Comment[]>();for(const c of comments){if(c.parent_id){const a=map.get(c.parent_id)||[];a.push(c);map.set(c.parent_id,a)}}return map},[comments]);
