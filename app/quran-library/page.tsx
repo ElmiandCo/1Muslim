@@ -19,8 +19,8 @@ export default function QuranMagazine(){
  const [resetScope,setResetScope]=useState<"history"|"progress"|"both">("both");
  const [analyticsView,setAnalyticsView]=useState<"daily"|"calendar"|"cumulative">("daily");
  const [progressOpen,setProgressOpen]=useState(false),[resetConfirm,setResetConfirm]=useState(false);
- const [progressMetric,setProgressMetric]=useState<"verses"|"chapters">("verses");
- useEffect(()=>{try{if(localStorage.getItem("1muslim:quran-progress-metric")==="chapters")setProgressMetric("chapters")}catch{}},[]);
+ const [progressMetric,setProgressMetric]=useState<"verses"|"chapters">("chapters");
+ useEffect(()=>{try{if(localStorage.getItem("1muslim:quran-progress-metric")==="verses")setProgressMetric("verses")}catch{}},[]);
  const chooseMetric=(metric:"verses"|"chapters")=>{setProgressMetric(metric);try{localStorage.setItem("1muslim:quran-progress-metric",metric)}catch{}};
  const chapterVisitCounts=useMemo(()=>{const counts=new Map<number,number>();for(const key of visited){const [chapter,verse]=key.split(":").map(Number);if(chapter>=1&&chapter<=114&&verse>=1)counts.set(chapter,(counts.get(chapter)||0)+1)}return counts},[visited]);
  const completedChapters=chapters.filter(c=>(chapterVisitCounts.get(c.id)||0)>=c.verses_count).length;
