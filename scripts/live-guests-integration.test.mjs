@@ -54,7 +54,7 @@ test("signed-out viewer can watch but only authenticated guests request",()=>{
   assert.match(token,/!user && \(role !== "viewer" \|\| liveStream\.visibility !== "public"\)/);
   const viewer=source("components/LiveKitViewer.tsx");
   assert.match(viewer,/streamId&&hostIdentity&&!hostEnded&&<div className="omViewerJoinOnly"/);
-  assert.match(viewer,/Request to Join/);
+  assert.match(viewer,/LiveGuestStudio streamId=\{streamId\} roomName=\{roomName\} hostId=\{hostIdentity\} compactJoin/);
   const landing=source("app/page.tsx");
   assert.match(landing,/homeLiveGuestRequest/);
   assert.match(landing,/LiveGuestStudio streamId=\{activeLive\.id\}/);
