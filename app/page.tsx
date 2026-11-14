@@ -126,7 +126,7 @@ export default function Home(){
  useEffect(()=>{if(homeSignedIn!==false)return;let timer:ReturnType<typeof setTimeout>;let active=true;let cycle=0;let step=0;const timings=[1250,1000,780,560,390,260,170,120,95,150,240,420,720,1100,1450,1800];const advance=()=>{if(!active)return;setGuestTitleIndex(i=>(i+1+Math.floor(Math.random()*3))%guestTitles.length);setGuestTitleTick(i=>i+1);step++;if(step>=timings.length){step=0;cycle++;setGuestTitleZoom(true);timer=setTimeout(()=>{setGuestTitleZoom(false);timer=setTimeout(advance,350)},800);return}timer=setTimeout(advance,timings[step])};timer=setTimeout(advance,timings[0]);return()=>{active=false;clearTimeout(timer);setGuestTitleZoom(false)}},[homeSignedIn]);
  const [homeNames,setHomeNames]=useState<{english:string;arabic:string}|null>(null);
  useEffect(()=>{let active=true;const db=createClient();const check=async()=>{const {data:{user}}=await db.auth.getUser();if(active){setHomeSignedIn(!!user);setAdminHudHud(user?.email?.toLowerCase()==="hudhudbyelmi@gmail.com");if(!user){setHomeNames(null);setHudHudPanel(null)}else{const meta=user.user_metadata||{};const english=String(meta.display_name||meta.full_name||meta.name||user.email?.split("@")[0]||"Member").trim();const arabic=String(meta.arabic_name||meta.name_ar||"").trim();setHomeNames({english,arabic:arabic||"اسمك بالعربية"})}}};void check();const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void check()});return()=>{active=false;subscription.unsubscribe()}},[]);
- useEffect(()=>{if(homeSignedIn===true&&new URLSearchParams(window.location.search).get("profileQuran")!=="1"){window.location.replace("/profile")}},[homeSignedIn]);
+ useEffect(()=>{if(homeSignedIn===true){window.location.replace("/profile")}},[homeSignedIn]);
  // Re-check the persisted session on entry and when Safari restores the tab.
  useEffect(()=>{let active=true;const db=createClient();const route=async()=>{const {data:{session}}=await db.auth.getSession();if(active&&session?.user){window.location.replace("/profile")}};void route();const onVisible=()=>{if(document.visibilityState==="visible")void route()};document.addEventListener("visibilitychange",onVisible);window.addEventListener("pageshow",route);return()=>{active=false;document.removeEventListener("visibilitychange",onVisible);window.removeEventListener("pageshow",route)}},[]);
  const [upgradeVisible,setUpgradeVisible]=useState(false);
@@ -433,9 +433,6 @@ export default function Home(){
  };
 
  const verticalSwipeStart=useRef<{x:number;y:number}|null>(null);
- const [profileQuranEmbed,setProfileQuranEmbed]=useState(false);
- useEffect(()=>{if(new URLSearchParams(window.location.search).get("profileQuran")!=="1")return;setProfileQuranEmbed(true);const style=document.createElement("style");style.textContent=`html,body{background:#fff!important;overflow:hidden!important}body .oneGlobalNav,body .oneGlobalNavPinnedEmblem{display:none!important}body [data-workspace-page]:not([data-workspace-page="1"]){visibility:hidden!important}body [data-workspace-page="1"] .quranVerseWidget{background:#fff!important;color:#111!important;box-shadow:none!important;border:0!important}body [data-workspace-page="1"] .quranVerseWidget *{animation:none!important;text-shadow:none!important}body [data-workspace-page="1"] .quranParticleField{display:none!important}body [data-workspace-page="1"] .quranVerseWidget .quranVerseArticle{background:#fff!important;color:#111!important}body [data-workspace-page="1"] .quranVerseWidget button,body [data-workspace-page="1"] .quranVerseWidget summary{background:#f8f8f8!important;color:#111!important;border-color:#ddd!important}`;document.head.appendChild(style);return()=>style.remove()},[]);
- const [quranEnglishFirst,setQuranEnglishFirst]=useState(false);
  const [quranPreview,setQuranPreview]=useState<{arabic:string;translation:string;chapter:number;verse:number;globalAyah:number}|null>(null);
  const [quranAudioPlaying,setQuranAudioPlaying]=useState(false);
  const [quranAudioLoading,setQuranAudioLoading]=useState(false);
@@ -447,7 +444,6 @@ export default function Home(){
  const quranContinuousVerseCount=useRef(0);
  const [quranParticleBurst,setQuranParticleBurst]=useState(0);
  const [quranParticleBurstVisible,setQuranParticleBurstVisible]=useState(false);
- useEffect(()=>{if(!profileQuranEmbed)return;const handler=(event:MessageEvent)=>{if(event.origin!==location.origin||event.source!==window.parent||event.data?.channel!=="1muslim:profile-quran")return;if(event.data.action==="pause"){quranContinuous.current=false;quranAudioRef.current?.pause();setQuranAudioPlaying(false)}if(event.data.action==="last"){try{const p=JSON.parse(localStorage.getItem("1muslim-quran-progress")||"null");void loadQuranVerse(Number(p?.chapter)||1,Number(p?.verse)||1,false)}catch{}}if(event.data.action==="play")void quranAudioRef.current?.play().then(()=>setQuranAudioPlaying(true)).catch(()=>{})};window.addEventListener("message",handler);return()=>window.removeEventListener("message",handler)},[profileQuranEmbed]);
  const playQuranAudio=async()=>{if(!quranPreview)return;const audio=quranAudioRef.current;if(!audio)return;if(!audio.paused){quranContinuous.current=false;audio.pause();setQuranAudioPlaying(false);return;}quranAudioFinished.current=false;quranContinuous.current=true;quranAutoPlayNext.current=false;setQuranAudioLoading(true);try{await audio.play();setQuranAudioPlaying(true)}catch{setQuranAudioPlaying(false)}finally{setQuranAudioLoading(false)}};
  useEffect(()=>{
   quranAudioRef.current?.pause();setQuranAudioPlaying(false);
@@ -523,7 +519,7 @@ export default function Home(){
  const [guestTitleTick,setGuestTitleTick]=useState(0);
  const [guestTitleZoom,setGuestTitleZoom]=useState(false);
  useEffect(()=>{try{localStorage.removeItem("1muslim-single-widget")}catch{}setSingleWidget(null)},[]);
-const workspaceRef=useRef<HTMLDivElement>(null);useEffect(()=>{if(!profileQuranEmbed)return;const timer=window.setTimeout(()=>{const el=workspaceRef.current;if(!el)return;el.scrollTo({left:el.clientWidth,behavior:"instant"});setWorkspacePage(1)},500);return()=>clearTimeout(timer)},[profileQuranEmbed]);const workspaceAreaRef=useRef<HTMLDivElement>(null);const swipeOrigin=useRef<{x:number;y:number}|null>(null);const upwardSwipeArmed=useRef(false);const horizontalTouch=useRef<{x:number;y:number;left:number;target:HTMLElement}|null>(null);
+const workspaceRef=useRef<HTMLDivElement>(null);const workspaceAreaRef=useRef<HTMLDivElement>(null);const swipeOrigin=useRef<{x:number;y:number}|null>(null);const upwardSwipeArmed=useRef(false);const horizontalTouch=useRef<{x:number;y:number;left:number;target:HTMLElement}|null>(null);
   const upwardSwipeArmedAt=useRef(0);
   const workspaceSettled=useRef(0);
   const workspaceRaf=useRef<number|null>(null);
