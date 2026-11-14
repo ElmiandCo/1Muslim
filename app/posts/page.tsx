@@ -6,7 +6,7 @@ import UnifiedPostMedia from "../components/UnifiedPostMedia";
 import PostAuthorFollow from "../components/PostAuthorFollow";
 import styles from "./posts-magazine.module.css";
 type Post={id:string;body:string;author_name:string;author_handle:string;created_at:string;media_url:string|null;media_type:string|null;shahada_verified?:boolean;author_id:string};
-const youtubeId=(text:string)=>text.match(/(?:youtu\\.be\\/|(?:www\\.|m\\.)?youtube\\.com\\/(?:watch\\?(?:[^#\\s]*?&)?v=|shorts\\/|embed\\/|live\\/))([\\w-]{11})/)?.[1]||null;
+const youtubeId=(text:string)=>text.match(/(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?(?:[^#\s]*?&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/)?.[1]||null;
 const ytThumbnail=(id:string)=>`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const clean=(text:string)=>cleanPostBody(text).replace(/https?:\/\/\S+/g,"").trim();
 export default function PublicPostsSocial(){
