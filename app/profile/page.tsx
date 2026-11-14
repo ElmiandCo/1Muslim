@@ -219,6 +219,7 @@ function ProfileSocialHub({profile,children}:{profile:Profile;children:React.Rea
  const directoryPosition=useRef(0);
  const [search,setSearch]=useState("");
  const [selected,setSelected]=useState<string|null>(null);
+ useEffect(()=>{const params=new URLSearchParams(window.location.search);const member=params.get("member");if(member&&/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(member)){setActive("muslimeen");setSelected(member)}},[]);
  const [memberProfile,setMemberProfile]=useState<Profile|null>(null);
  const [memberProfileError,setMemberProfileError]=useState(false);
  const positions=useRef<Record<string,number>>({});
