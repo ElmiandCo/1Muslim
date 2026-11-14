@@ -5,15 +5,16 @@ import type {CSSProperties} from "react";
  * Inherit page accent via --global-nav-accent / --page-accent / --theme-accent.
  * Each icon retains its own secondary color for recognition.
  */
-export type GlobalNavDestination = "search"|"settings"|"deepwatch"|"muslims"|"quran"|"messages"|"profile"|"unlocked"|"signout";
+export type GlobalNavDestination = "search"|"posts"|"settings"|"deepwatch"|"muslims"|"quran"|"messages"|"profile"|"unlocked"|"signout";
 const secondary:Record<GlobalNavDestination,string>={
- search:"#53d6ef",settings:"#a78bfa",deepwatch:"#f8b85b",muslims:"#ef83bf",
+ posts:"#89aef5",search:"#53d6ef",settings:"#a78bfa",deepwatch:"#f8b85b",muslims:"#ef83bf",
  quran:"#e7c178",messages:"#67dcd2",profile:"#bd9cf6",unlocked:"#f6d26e",signout:"#fa8b91"
 };
 export default function GlobalNavIcon({name,size=28,className="",title}:{
  name:GlobalNavDestination;size?:number;className?:string;title?:string
 }){
  const paths:Record<GlobalNavDestination,React.ReactNode>={
+ posts:<><rect x="4" y="3" width="16" height="18" rx="3"/><path className="accent" d="M8 8h8M8 12h8M8 16h5"/></>,
  search:<><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 5 5"/><path d="M8.2 10.8h5.2" className="accent"/></>,
  settings:<><path d="M10 2.5h4l.7 2.7 2 .8 2.4-1.4 2.8 2.8-1.4 2.4.8 2 2.7.7v4l-2.7.7-.8 2 1.4 2.4-2.8 2.8-2.4-1.4-2 .8-.7 2.7h-4l-.7-2.7-2-.8-2.4 1.4-2.8-2.8 1.4-2.4-.8-2-2.7-.7v-4l2.7-.7.8-2-1.4-2.4 2.8-2.8 2.4 1.4 2-.8z" transform="translate(0 -1) scale(.96)"/><circle className="accent" cx="12" cy="12" r="3.2"/></>,
  deepwatch:<><rect x="2.5" y="5" width="19" height="14" rx="4"/><path className="accent" d="m10 8 6 4-6 4z"/><path d="M6 3.5h12M6 20.5h12" opacity=".6"/></>,
