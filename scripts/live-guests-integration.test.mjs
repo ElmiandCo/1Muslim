@@ -22,7 +22,7 @@ test("audio-only rooms cannot request or publish camera",()=>{
   assert.equal(guestMayPublishCamera("9:16","pfp"),false);
   const studio=source("components/LiveGuestStudio.tsx");
   assert.match(studio,/audioOnly\?"pfp":mode/);
-  assert.match(studio,/audioOnly!==true&&<option value="camera">/);
+  assert.match(studio,/disabled=\{audioOnly\} onClick=\{\(\)=>setMode\("camera"\)\}/);
   assert.match(studio,/if\(!audioOnly\|\|!joined\)return/);
   assert.match(studio,/localParticipant\.unpublishTrack\(track\)/);
   const sql=source("supabase/migrations/20261031071703_liveguests1_capacity_and_roles.sql");
@@ -53,7 +53,7 @@ test("signed-out viewer can watch but only authenticated guests request",()=>{
   const token=source("app/api/livekit/token/route.ts");
   assert.match(token,/!user && \(role !== "viewer" \|\| liveStream\.visibility !== "public"\)/);
   const viewer=source("components/LiveKitViewer.tsx");
-  assert.match(viewer,/embedded&&streamId&&hostIdentity&&!hostEnded/);
+  assert.match(viewer,/streamId&&hostIdentity&&!hostEnded&&<div className="omViewerJoinOnly"/);
   assert.match(viewer,/Request to Join/);
   const landing=source("app/page.tsx");
   assert.match(landing,/homeLiveGuestRequest/);
