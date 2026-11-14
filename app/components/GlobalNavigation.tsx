@@ -26,7 +26,26 @@ export default function GlobalNavigation(){
  const [emblemPinned,setEmblemPinned]=useState(false);
  const [dockHidden,setDockHidden]=useState(false);
  const [immersive,setImmersive]=useState(false);
- useEffect(()=>{let last=window.scrollY;const onScroll=()=>{const y=window.scrollY;const delta=y-last;if(y<80||delta< -7)setDockHidden(false);else if(delta>9&&y>170)setDockHidden(true);last=y};window.addEventListener("scroll",onScroll,{passive:true});return()=>window.removeEventListener("scroll",onScroll)},[]);
+ useEffect(()=>{
+  let last=Math.max(0,window.scrollY),direction=0,travel=0,frame=0;
+  const reveal=()=>{direction=0;travel=0;setDockHidden(false)};
+  const measure=()=>{
+   frame=0;
+   const y=Math.max(0,window.scrollY),delta=y-last;last=y;
+   if(y<90){reveal();return}
+   if(Math.abs(delta)<1)return;
+   const next=delta>0?1:-1;
+   if(next!==direction){direction=next;travel=0}
+   travel+=Math.abs(delta);
+   if(next===1&&y>140&&travel>=22)setDockHidden(true);
+   if(next===-1&&travel>=12)setDockHidden(false);
+  };
+  const onScroll=()=>{if(!frame)frame=requestAnimationFrame(measure)};
+  const onPageShow=()=>{last=Math.max(0,window.scrollY);reveal()};
+  window.addEventListener("scroll",onScroll,{passive:true});
+  window.addEventListener("pageshow",onPageShow);
+  return()=>{window.removeEventListener("scroll",onScroll);window.removeEventListener("pageshow",onPageShow);if(frame)cancelAnimationFrame(frame)};
+ },[]);
  useEffect(()=>{setDockHidden(false)},[pathname]);
  useEffect(()=>{const check=()=>setImmersive(Boolean(document.fullscreenElement));document.addEventListener("fullscreenchange",check);check();return()=>document.removeEventListener("fullscreenchange",check)},[]);
  useEffect(()=>{
