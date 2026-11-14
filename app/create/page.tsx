@@ -2,8 +2,10 @@
 import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import styles from "./creator-studio.module.css";
+import {createClient} from "../../utils/supabase/client";
 
 type Mode="camera"|"create"|"live";
+type StudioAsset={id:string;kind:"theme"|"filter"|"sound";slug:string;title:string;description:string;category:string;config:Record<string,unknown>;storage_path:string|null;attribution:string|null;license_name:string|null};
 type Media={url:string;type:"image"|"video";name:string};
 const themes=[
  {id:"ramadan",title:"Ramadan Nights",subtitle:"Lantern glow · 12 sec",tone:"ramadan"},
@@ -23,6 +25,10 @@ export default function CreatorStudio(){
  const [theme,setTheme]=useState<string>("ramadan");
  const [recording,setRecording]=useState(false);
  const [soundOpen,setSoundOpen]=useState(false);
+ const [catalog,setCatalog]=useState<StudioAsset[]>([]);
+ const [draftStatus,setDraftStatus]=useState("");
+ const [draftId,setDraftId]=useState<string|null>(null);
+ const [soundSlug,setSoundSlug]=useState<string|null>(null);
  const [filter,setFilter]=useState("Original");
  const videoRef=useRef<HTMLVideoElement>(null);
  const streamRef=useRef<MediaStream|null>(null);
@@ -32,6 +38,8 @@ export default function CreatorStudio(){
  const canvasRef=useRef<HTMLCanvasElement>(null);
  const stopCamera=()=>{streamRef.current?.getTracks().forEach(t=>t.stop());streamRef.current=null;setCameraReady(false)};
  useEffect(()=>{return()=>{streamRef.current?.getTracks().forEach(t=>t.stop())}},[]);
+ useEffect(()=>{let alive=true;const db=createClient();void db.from("creator_studio_assets").select("id,kind,slug,title,description,category,config,storage_path,attribution,license_name").eq("is_approved",true).eq("is_active",true).order("title").then(({data,error})=>{if(alive&&!error)setCatalog((data||[]) as StudioAsset[])});return()=>{alive=false}},[]);
+ const saveDraft=async()=>{setDraftStatus("Saving…");try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setDraftStatus("Sign in to save a draft.");return}const payload={user_id:user.id,title:media?.name||"Untitled creation",theme_slug:theme,filter_slug:filter.toLowerCase(),sound_slug:soundSlug,settings:{mode,has_local_media:!!media},updated_at:new Date().toISOString()};const result=draftId?await db.from("creator_studio_drafts").update(payload).eq("id",draftId).select("id").single():await db.from("creator_studio_drafts").insert(payload).select("id").single();if(result.error)throw result.error;if(result.data?.id)setDraftId(result.data.id);setDraftStatus(media?"Settings saved. Uploading media will be available in Step 3.":"Draft saved.")}catch{setDraftStatus("Could not save draft. Try again.")}};
  useEffect(()=>{if(media)return()=>{URL.revokeObjectURL(media.url)}},[media]);
  const startCamera=async(face=facing)=>{
   stopCamera();setStreamError("");
@@ -69,12 +77,12 @@ export default function CreatorStudio(){
  };
  return <main className={styles.studio}>
   <header className={styles.header}><Link href="/posts" aria-label="Close Creator Studio" className={styles.close}>×</Link><strong>CREATOR STUDIO</strong><button className={styles.sound} onClick={()=>setSoundOpen(v=>!v)} type="button">♫ Sounds</button></header>
-  {soundOpen&&<aside className={styles.notice} role="status">Islamic audio library is coming in Step 2. Only licensed, attributed tracks will be available.</aside>}
+  {soundOpen&&<aside className={styles.notice} role="status"><strong>Approved sounds</strong>{catalog.filter(a=>a.kind==="sound").length?catalog.filter(a=>a.kind==="sound").map(a=><button type="button" key={a.id} onClick={()=>{setSoundSlug(a.slug);setSoundOpen(false)}}>{a.title} · {a.attribution||"Licensed audio"}</button>):<p>No licensed tracks have been approved yet.</p>}</aside>}
   <section className={styles.stage} aria-label="Creator preview">
    {mode==="camera"&&!media?<div className={styles.camera}>
     <video ref={videoRef} autoPlay playsInline muted className={styles.cameraVideo} style={{transform:facing==="user"?"scaleX(-1)":undefined,filter:filter==="Warm"?"sepia(.25) saturate(1.2)":filter==="Noir"?"grayscale(1)":undefined}}/>
     {!cameraReady&&<div className={styles.cameraPrompt}><div className={styles.moon}>☾</div><h1>Capture a moment</h1><p>Open your camera or choose something from your library.</p><button type="button" onClick={()=>void startCamera()}>Enable Camera</button></div>}
-    {cameraReady&&<div className={styles.cameraTools}><button type="button" onClick={()=>{const next=facing==="user"?"environment":"user";setFacing(next);void startCamera(next)}}>↻ Flip</button><button type="button" onClick={()=>setFilter(v=>v==="Original"?"Warm":v==="Warm"?"Noir":"Original")}>✧ {filter}</button></div>}
+    {cameraReady&&<div className={styles.cameraTools}><button type="button" onClick={()=>{const next=facing==="user"?"environment":"user";setFacing(next);void startCamera(next)}}>↻ Flip</button><button type="button" onClick={()=>{const filters=catalog.filter(a=>a.kind==="filter");const options=filters.length?filters.map(a=>a.title):["Original","Warm","Noir"];setFilter(v=>options[(options.indexOf(v)+1)%options.length])}}>✧ {filter}</button></div>}
    </div>:mode==="create"?<div className={styles.preview}>
     {media?(media.type==="image"?<img src={media.url} alt="Your selected media"/>:<video src={media.url} controls playsInline/>):<div className={styles.emptyPreview}><span>☾</span><h2>Make something meaningful</h2><p>Choose a template and add your own photos or videos.</p></div>}
     <span className={styles.previewBadge}>{themes.find(t=>t.id===theme)?.title}</span>
@@ -82,7 +90,7 @@ export default function CreatorStudio(){
    {streamError&&<p role="alert" className={styles.error}>{streamError}</p>}
   </section>
   {mode==="camera"&&<div className={styles.captureBar}><button type="button" onClick={()=>inputRef.current?.click()} className={styles.upload}>▧<small>Library</small></button><button type="button" className={styles.shutter} aria-label="Take photo" onClick={capture} disabled={!cameraReady}><span/></button><button type="button" onClick={record} className={recording?styles.recording:styles.record} disabled={!cameraReady}>{recording?"■ Stop":"● Record"}</button></div>}
-  {mode==="create"&&<div className={styles.createTools}><div className={styles.toolHeader}><strong>Islamic Themes</strong><button type="button" onClick={()=>inputRef.current?.click()}>＋ Add media</button></div><div className={styles.themes}>{themes.map(item=><button type="button" key={item.id} className={styles.theme+(theme===item.id?" "+styles.selected:"")} onClick={()=>setTheme(item.id)}><span className={styles[item.tone]}>☾</span><strong>{item.title}</strong><small>{item.subtitle}</small></button>)}</div><p className={styles.disclaimer}>Step 1 preview only. Animated exports, licensed audio, filters and publishing are added in Steps 2–3.</p></div>}
+  {mode==="create"&&<div className={styles.createTools}><div className={styles.toolHeader}><strong>Islamic Themes</strong><button type="button" onClick={()=>inputRef.current?.click()}>＋ Add media</button></div><div className={styles.themes}>{(catalog.filter(a=>a.kind==="theme").length?catalog.filter(a=>a.kind==="theme").map(a=>({id:a.slug,title:a.title,subtitle:a.description,tone:String(a.config.tone||"art")})):themes).map(item=><button type="button" key={item.id} className={styles.theme+(theme===item.id?" "+styles.selected:"")} onClick={()=>setTheme(item.id)}><span className={styles[item.tone as keyof typeof styles]||styles.art}>☾</span><strong>{item.title}</strong><small>{item.subtitle}</small></button>)}</div><div className={styles.toolHeader}><button type="button" onClick={()=>void saveDraft()}>Save Draft</button><span aria-live="polite">{draftStatus}</span></div><p className={styles.disclaimer}>Approved templates and filters load from Supabase. Media upload, animation export and publishing arrive in Step 3.</p></div>}
   <nav className={styles.modes} aria-label="Studio mode"><button type="button" className={mode==="camera"?styles.active:""} onClick={()=>{setMode("camera");setMedia(null)}}>CAMERA</button><button type="button" className={mode==="create"?styles.active:""} onClick={()=>{setMode("create");stopCamera()}}>CREATE</button><button type="button" className={mode==="live"?styles.active:""} onClick={()=>{setMode("live");stopCamera()}}>LIVE</button></nav>
   <input ref={inputRef} type="file" accept="image/*,video/*" className={styles.hidden} onChange={e=>{loadFile(e.target.files?.[0]);e.target.value=""}}/>
   <canvas ref={canvasRef} className={styles.hidden}/>
