@@ -81,3 +81,35 @@
 .previewHeaderActions .previewToggle{width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;max-width:44px!important;flex:0 0 44px!important;padding:0!important;display:grid!important;place-items:center!important;aspect-ratio:1!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.58)!important;background:rgba(255,255,255,.12)!important;color:#fff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14)!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;font-size:23px!important}
 .previewHeaderActions .previewToggle span{display:inline!important;line-height:1!important}
 .previewHeaderActions .previewToggle:active{transform:scale(.94)}
+
+/* Shared homepage + profile Quick Post: white editorial composer, black custom icons. */
+.studio{display:flex;flex-direction:column;gap:12px!important;overflow:visible;background:#fff!important;color:#111318!important;border:1px solid #e3e5e9!important;border-radius:22px!important;padding:clamp(15px,3vw,23px)!important;box-shadow:0 12px 34px rgba(17,24,39,.055)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.studio:before{display:none!important}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#10141a!important}
+.header strong{font-size:clamp(14px,2.7vw,18px)!important;font-weight:750!important;letter-spacing:-.025em!important;color:#10141a!important}
+.identity{display:flex;align-items:center;gap:10px;color:#111318!important}
+.identity strong{color:#111318!important;font-size:14px!important}
+.identity span{background:#f6f7f9!important;color:#424a56!important;border:1px solid #e6e8ec!important;box-shadow:none!important;backdrop-filter:none!important;font-size:11px!important}
+.avatar{background:#15181d!important;color:#fff!important;border:1px solid #252b34!important;box-shadow:none!important}
+.composerRow{display:block!important;min-height:0!important;flex:0 0 auto!important}
+.composer{display:block!important;min-height:120px!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important}
+.composer textarea{display:block!important;width:100%!important;min-height:112px!important;max-height:280px!important;padding:12px 1px!important;border:0!important;outline:0!important;resize:vertical!important;background:transparent!important;color:#151922!important;font-size:clamp(15px,3vw,18px)!important;line-height:1.6!important;box-shadow:none!important}
+.composer textarea::placeholder{color:#8d95a0!important}
+.youtubeInline{display:grid;gap:8px;margin:5px 0 10px;color:#525b66;font-size:11px}
+.youtubeInline iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#f1f2f4}
+.quickToolbar{display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:12px 0;border-top:1px solid #e9ebef;border-bottom:1px solid #e9ebef}
+.quickToolbar button,.quickToolbar a{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:8px 10px;border:0;border-radius:11px;background:transparent;color:#111!important;text-decoration:none;font-size:12px;font-weight:650;cursor:pointer;white-space:nowrap;transition:background .18s}
+.quickToolbar svg{display:block;flex:none;color:#111!important;stroke:#111!important}
+.quickToolbar button:hover,.quickToolbar a:hover{background:#f1f2f4}
+.quickToolbar .studioLink{margin-left:auto;background:#f1f2f4;border:1px solid #dfe2e7;font-weight:750}
+.quickToolbar .studioLink:hover{background:#e6e8ed}
+.quickFooter{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.quickFooter .counter{position:static!important;color:#727985!important;font-size:11px!important;letter-spacing:0!important}
+.quickFooter .postButton{min-height:42px!important;padding:10px 24px!important;border:1px solid #16191e!important;border-radius:12px!important;background:#111318!important;color:white!important;box-shadow:none!important;font-size:13px!important;font-weight:750!important}
+.quickFooter .postButton:disabled{opacity:.35!important;cursor:not-allowed}
+.header .previewToggle{display:grid!important;place-items:center!important;width:39px!important;height:39px!important;min-width:39px!important;min-height:39px!important;padding:0!important;border:1px solid #e1e3e7!important;border-radius:50%!important;background:#f6f7f9!important;color:#111!important;box-shadow:none!important;backdrop-filter:none!important}
+.header .previewToggle svg{stroke:#111!important}
+.attachment{color:#111318!important}
+.hint{color:#69717c!important}
+@media(max-width:430px){.quickToolbar{gap:2px}.quickToolbar button,.quickToolbar a{font-size:11px;padding:8px 6px;gap:4px}.quickToolbar svg{width:18px;height:18px}.quickToolbar .studioLink{padding:8px}.studio{border-radius:18px!important}}
+@media(prefers-reduced-motion:reduce){.quickToolbar button,.quickToolbar a{transition:none}}
