@@ -69,7 +69,7 @@ const surahNames=["fatihah","baqarah","imran","nisa","maidah","anam","araf","anf
 const normalizeSurah=s=>s.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").replace(/\\b(al|surah|surat|sura|chapter|the)\\b/g," ").replace(/\\s+/g," ").trim();
 const matchSurah=title=>{const norm=normalizeSurah(title);const number=norm.match(/(?:^|\\s)(?:surah|chapter)?\\s*(\\d{1,3})(?:\\s|$)/);const name=surahNames.findIndex(n=>norm.split(" ").includes(n));if(name>=0)return name+1;if(number&&+number[1]>=1&&+number[1]<=114&&/surah|surat|sura|chapter/i.test(title))return +number[1];return null};
 const quranMatches=new Set();
-let inserted=0,eligible=0,scanned=0;
+let inserted=0,eligible=0,scanned=0,duplicates=0,excluded=0,filtered=0,channelErrors=0,channelsCompleted=0;
 const runId=process.env.DEEPWATCH_DISCOVERY_RUN_ID;
 const updateRun=async(status,message)=>{if(!runId)return;const payload={status,message,scanned,new_pending:inserted,...(["success","failure"].includes(status)?{finished_at:new Date().toISOString()}:{})};await db("deepwatch_discovery_runs?id=eq."+encodeURIComponent(runId),"PATCH",payload)};
 await updateRun("running","Discovery started");
@@ -79,7 +79,7 @@ for(const channelId of channelsToScan){
  try{
  const channel=await api("channels",{part:"contentDetails",id:channelId});
  const uploads=channel.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
- if(!uploads){console.warn("Skipping inaccessible approved channel",channelId);continue}
+ if(!uploads){channelErrors++;console.warn("Skipping inaccessible approved channel",channelId);continue}
  const ids=[];let pageToken;
  const fluzen=channelId===fluzenChannelId;const educational=educationalChannelIds.has(channelId);const offset=quranMission||educational||fluzen?0:(Math.floor(hour/Math.ceil(channelPool.length/3))%5)*4;
  for(let page=0;page<(fluzen||educational?1000:offset+(quranMission?12:4));page++){
@@ -104,19 +104,20 @@ for(const channelId of channelsToScan){
   if(!quranMission&&!educational&&!fluzen&&!religiousPattern.test(title+" "+description.slice(0,500))&&!seriesPattern.test(title))return[];
   return [{video_id:v.id,title:title.slice(0,300),channel_id:channelId,channel_title:channel.slice(0,250),description:description.slice(0,5000),thumbnail_url:v.snippet.thumbnails?.high?.url||null,duration_seconds:d,format:"full",language,published_at:v.snippet.publishedAt,view_count:Number(v.statistics?.viewCount||0),categories:fluzen?["Educational","Nature & Science"]:quranMission?["Qur’an","Surah "+String(surah).padStart(3,"0")]:educational?["Educational","TPDossierYT"]:[seriesPattern.test(title)?"Historical series":category],source_query:(fluzen?"approved-channel-fluzen:":quranMission?"quran-114:":"approved-channel:")+channelId,status:fluzen?"approved":"pending",bot_b_reason:fluzen?"Fluzen full-channel import; pending admin review":quranMission?"Qur’an 114 candidate; full recitation and visual aesthetics require manual verification":educational?"Educational channel import; awaiting admin review":"Hourly YouTube discovery; awaiting approval"}];
  });
- eligible+=rows.length;
+ eligible+=rows.length;filtered+=Math.max(0,videoItems.length-rows.length);
  // Check existing records first so reports count actual additions, not ignored duplicates.
  for(let i=0;i<rows.length;i+=100){
   const batch=rows.slice(i,i+100),blocked=await db("admin_video_roster_exclusions?select=item_id&source=eq.islamic_video_registry&item_id=in.("+rows.slice(i,i+100).map(x=>x.video_id).join(",")+")"),existing=await db("islamic_video_registry?select=video_id&video_id=in.("+batch.map(x=>x.video_id).join(",")+")");
-  const known=new Set(existing.map(x=>x.video_id)),fresh=batch.filter(x=>!known.has(x.video_id));
-  const safe=fresh.filter(x=>!blocked.some(b=>b.item_id===x.video_id));
+  const known=new Set(existing.map(x=>x.video_id)),fresh=batch.filter(x=>!known.has(x.video_id));duplicates+=batch.length-fresh.length;
+  const safe=fresh.filter(x=>!blocked.some(b=>b.item_id===x.video_id));excluded+=fresh.length-safe.length;
   if(safe.length){await db("islamic_video_registry?on_conflict=video_id","POST",safe);inserted+=safe.length}
  }
- console.log("Channel",channelId,"scanned",uniqueIds.length,"eligible",rows.length);
- }catch(error){console.error("Channel scan failed",channelId,String(error));}
+ channelsCompleted++;console.log("Channel",channelId,"scanned",uniqueIds.length,"eligible",rows.length);
+ }catch(error){channelErrors++;console.error("Channel scan failed",channelId,String(error));}
 }
 if(quranMission)console.log("Quran 114 mission candidate coverage:",JSON.stringify({candidate_surahs:[...quranMatches].sort((a,b)=>a-b),candidate_count:quranMatches.size,missing_candidate_surahs:Array.from({length:114},(_,i)=>i+1).filter(i=>!quranMatches.has(i)),note:"Candidates only; full recitation and aesthetics require admin review."}));
-console.log("DeepWatch hourly discovery complete:",JSON.stringify({channels:channelsToScan.length,scanned,eligible,new_pending:inserted}));
-await updateRun(scanned?"success":"failure",JSON.stringify({channels:channelsToScan.length,scanned,eligible,new_pending:inserted}));
+const report={channels_requested:channelsToScan.length,channels_completed:channelsCompleted,channel_errors:channelErrors,scanned,eligible,filtered,duplicates,excluded,new_pending:inserted,reason:!scanned?"No videos scanned. Check GitHub Actions logs for channel/API errors.":inserted?"New videos processed.":channelErrors?"No new videos; one or more channels failed. Check workflow logs.":eligible===0?"No eligible videos matched the discovery filters.":"All eligible videos were already present or excluded."};
+console.log("DeepWatch discovery report:",JSON.stringify(report));
+await updateRun(scanned?"success":"failure",JSON.stringify(report));
 if(!scanned)throw Error("All approved channel scans failed or returned no videos");
 }
