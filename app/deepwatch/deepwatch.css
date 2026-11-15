@@ -216,3 +216,42 @@ body.deepwatchPlayerActive{padding-bottom:0!important}
 .deepwatchCollections .dwEditorialTile:hover::after,.deepwatchCollections .dwEditorialTile:focus-visible::after{background-color:#27394bc9!important}
 @media(max-width:700px){.deepwatchCollections .dwEditorialTile{flex-basis:clamp(195px,72vw,270px)}.deepwatchCollections .deepwatchRow{padding-block:10px}.deepwatchCollections .deepwatchRail{gap:10px}}
 @media(prefers-reduced-motion:reduce){.deepwatchCollections .deepwatchRail{scroll-behavior:auto}.deepwatchCollections .dwEditorialTile::after{transition:none}}
+
+/* 2026 cinematic library refresh — presentation only; preserves player and Movie Bank. */
+.deepwatch{background:#06080d;color:#f5f6fa}
+.deepwatch .deepwatchRow{content-visibility:visible;contain-intrinsic-size:auto}
+.deepwatch .deepwatchRow:not(.deepwatchClassicsRow){background:transparent}
+.deepwatch .deepwatchRow h2{font-size:clamp(18px,2.2vw,25px);font-weight:760;letter-spacing:-.035em;color:#f7f8fc}
+.deepwatch .deepwatchRow>p{color:#9ca7b7;font-size:12px;line-height:1.5}
+.deepwatch .deepwatchRail{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:20px;overscroll-behavior-inline:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:10px 0 18px}
+.deepwatch .deepwatchRail::-webkit-scrollbar{display:none}
+.deepwatch .deepwatchTile{flex:0 0 clamp(190px,26vw,280px);min-width:0;display:flex;flex-direction:column;overflow:hidden;scroll-snap-align:start;border:1px solid #ffffff16;border-radius:16px;background:linear-gradient(155deg,#151a24,#0c1018);box-shadow:0 10px 24px #0005;text-align:left;transition:border-color .2s ease,box-shadow .2s ease}
+.deepwatch .deepwatchTile>img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;background:#111923;flex-shrink:0}
+.deepwatch .deepwatchTile>span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;padding:12px 13px 0;min-height:2.8em;font-size:14px;line-height:1.38;font-weight:680;letter-spacing:-.015em;color:#f5f6fa}
+.deepwatch .deepwatchTile>small{padding:6px 13px 13px;color:#a2acbc;font-size:11px}
+.deepwatch .deepwatchTile:hover,.deepwatch .deepwatchTile:focus-visible{border-color:#b9d1f76b;box-shadow:0 12px 30px #0009;outline:none}
+.deepwatch .deepwatchClassicsRow{background:transparent;border-top:1px solid #ffffff12;border-bottom:1px solid #ffffff10}
+.deepwatch .deepwatchCollections .deepwatchRow{padding-block:16px 8px;margin:0}
+.deepwatch .deepwatchCollections .dwEditorialTile:nth-child(even){padding-top:0}
+.deepwatch .deepwatchCollections .dwEditorialTile:nth-child(even) img,.deepwatch .deepwatchCollections .dwEditorialTile:nth-child(even)>span,.deepwatch .deepwatchCollections .dwEditorialTile:nth-child(even)>small{order:initial}
+.deepwatch .deepwatchCollections .dwEditorialTile:nth-child(even)::after{top:8px!important}
+.deepwatch .deepwatchCollections .dwEditorialTile>span{padding:12px 13px 0;min-height:2.8em}
+.deepwatch .deepwatchCollections .dwEditorialTile>small{padding:6px 13px 13px}
+.dwCinematicBanner .deepwatchHero{min-height:clamp(320px,47vw,620px)}
+.dwCinematicBanner .deepwatchHeroText{max-width:min(90%,620px)}
+.dwCinematicBanner .dwHeroProgress{bottom:18px}
+@media(max-width:700px){
+ .deepwatch{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+ .deepwatch .deepwatchRow{padding:16px 16px 10px!important}
+ .deepwatch .deepwatchRow h2{font-size:19px;line-height:1.2;margin-bottom:7px}
+ .deepwatch .deepwatchRow>p{margin:0 0 8px}
+ .deepwatch .deepwatchRail{gap:10px;margin-right:-16px;padding:9px 16px 13px 0;scroll-padding-inline:16px}
+ .deepwatch .deepwatchTile,.deepwatch .deepwatchCollections .dwEditorialTile{flex:0 0 clamp(180px,57vw,245px);border-radius:14px}
+ .deepwatch .deepwatchTile>span,.deepwatch .deepwatchCollections .dwEditorialTile>span{font-size:13px;line-height:1.35;padding:10px 11px 0;min-height:2.7em}
+ .deepwatch .deepwatchTile>small,.deepwatch .deepwatchCollections .dwEditorialTile>small{font-size:10px;padding:5px 11px 11px}
+ .deepwatch .deepwatchCollections .deepwatchRow{padding-block:12px 6px!important}
+ .dwCinematicBanner .deepwatchHero{min-height:330px}
+ .dwCinematicBanner .deepwatchHeroText{padding-bottom:38px}
+ .dwCinematicBanner .dwHeroProgress{bottom:10px}
+}
+@media(prefers-reduced-motion:reduce){.deepwatch .deepwatchTile{transition:none}.deepwatch .deepwatchRail{scroll-behavior:auto}}
