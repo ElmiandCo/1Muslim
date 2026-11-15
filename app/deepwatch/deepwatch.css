@@ -567,3 +567,12 @@ body.deepwatchPlayerActive{padding-bottom:0!important}
 @media(prefers-reduced-motion:reduce){
  .deepwatch .deepwatchRail>.deepwatchTile>img{transition:none}
 }
+
+/* Continuous Movie Bank rails: no pagination buttons or visual interruptions. */
+.deepwatch .dwCollectionHeading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-right:12px}
+.deepwatch .dwCollectionHeading h2{min-width:0}
+.deepwatch .dwCollectionCount{font-size:.68em;font-weight:450;color:rgba(210,219,233,.58);white-space:nowrap}
+.deepwatch .dwCollectionViewAll{flex:none;border:0;background:transparent;color:rgba(229,236,249,.82);font:inherit;font-size:12px;font-weight:600;letter-spacing:.025em;cursor:pointer;padding:10px 4px}
+.deepwatch .dwCollectionViewAll:hover,.deepwatch .dwCollectionViewAll:focus-visible{color:#fff;text-decoration:underline;text-underline-offset:4px}
+.deepwatch .dwRailSentinel{display:block;flex:0 0 2px;align-self:stretch;pointer-events:none;opacity:0}
+@media(max-width:600px){.deepwatch .dwCollectionCount{font-size:.58em}.deepwatch .dwCollectionViewAll{font-size:11px}}
