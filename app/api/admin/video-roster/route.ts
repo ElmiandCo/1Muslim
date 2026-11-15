@@ -55,6 +55,59 @@ export async function PATCH(request:NextRequest){
  const ids=body?.ids;
  if(!Array.isArray(ids)||ids.length<1||ids.length>1000||ids.some((id:unknown)=>typeof id!=="string"||!/^[-_A-Za-z0-9]{11}$/.test(id)))return NextResponse.json({error:"Select 1–1000 valid YouTube videos"},{status:400});
  const unique=[...new Set(ids as string[])];
+ // Final-review path: only explicitly submitted, edited AI suggestions are published.
+ if(body?.reviews!==undefined){
+  if(!Array.isArray(body.reviews)||body.reviews.length!==unique.length)return NextResponse.json({error:"Every selected video needs a final review"},{status:400});
+  const reviews=body.reviews as Record<string,unknown>[];
+  const byId=new Map(reviews.map(x=>[x.video_id,x]));
+  if(byId.size!==unique.length||unique.some(id=>!byId.has(id)))return NextResponse.json({error:"Review IDs must match selection"},{status:400});
+  const types=new Set(["movie","series","episode","documentary","show","other"]);
+  for(const item of reviews){
+   if(typeof item.clean_title!=="string"||!item.clean_title.trim()||item.clean_title.length>180||!types.has(String(item.content_type))||
+      !Array.isArray(item.categories)||item.categories.length>8||item.categories.some(x=>typeof x!=="string"||x.length>80)||
+      !Array.isArray(item.genres)||item.genres.length>8||item.genres.some(x=>typeof x!=="string"||x.length>80)||
+      (item.series_title!=null&&(typeof item.series_title!=="string"||item.series_title.length>160))||
+      (item.season_number!=null&&(!Number.isInteger(item.season_number)||Number(item.season_number)<1))||
+      (item.episode_number!=null&&(!Number.isInteger(item.episode_number)||Number(item.episode_number)<1)))
+     return NextResponse.json({error:"Invalid review metadata"},{status:400});
+  }
+  const {data:blocked,error:blockedError}=await db.from("admin_video_roster_exclusions").select("item_id").eq("source","islamic_video_registry").in("item_id",unique);
+  if(blockedError)return NextResponse.json({error:blockedError.message},{status:500});
+  if(blocked?.length)return NextResponse.json({error:"Selection includes blocked videos"},{status:409});
+  const {data:pending,error:pendingError}=await db.from("islamic_video_registry").select("video_id").in("video_id",unique).eq("status","pending");
+  if(pendingError)return NextResponse.json({error:pendingError.message},{status:500});
+  if(pending?.length!==unique.length)return NextResponse.json({error:"Some videos are no longer pending. Refresh before publishing."},{status:409});
+  const seriesIds=new Map<string,string>();let approved=0;
+  for(const id of unique){
+   const item=byId.get(id)!;const seriesTitle=typeof item.series_title==="string"?item.series_title.trim():"";
+   let seriesId:string|null=null;
+   if(seriesTitle&&["series","episode"].includes(String(item.content_type))){
+    const lookup=seriesTitle.toLowerCase();
+    if(seriesIds.has(lookup))seriesId=seriesIds.get(lookup)!;
+    else{
+     const {data:existing,error:lookupError}=await db.from("deepwatch_series").select("id").ilike("canonical_title",seriesTitle).limit(1);
+     if(lookupError)return NextResponse.json({error:lookupError.message,approved},{status:500});
+     if(existing?.[0])seriesId=existing[0].id;
+     else{
+      const {data:created,error:createError}=await db.from("deepwatch_series").insert({canonical_title:seriesTitle,status:"approved"}).select("id").single();
+      if(createError)return NextResponse.json({error:createError.message,approved},{status:500});
+      seriesId=created.id;
+     }
+     seriesIds.set(lookup,seriesId!);
+    }
+   }
+   const {data,error}=await db.from("islamic_video_registry").update({
+    title:(item.clean_title as string).trim(),canonical_title:(item.clean_title as string).trim(),
+    content_type:item.content_type,categories:item.categories,genres:item.genres,
+    series_id:seriesId,season_number:item.season_number??null,episode_number:item.episode_number??null,
+    metadata_review_status:"reviewed",status:"approved",reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()
+   }).eq("video_id",id).eq("status","pending").select("video_id");
+   if(error)return NextResponse.json({error:error.message,approved},{status:500});
+   approved+=data?.length||0;
+  }
+  return NextResponse.json({approved,requested:unique.length},{headers:{"Cache-Control":"no-store"}});
+ }
+
  const {data:blocked,error:blockedError}=await db.from("admin_video_roster_exclusions").select("item_id").eq("source","islamic_video_registry").in("item_id",unique);
  if(blockedError)return NextResponse.json({error:blockedError.message},{status:500});
  const allowed=unique.filter(id=>!(blocked||[]).some(x=>x.item_id===id));
