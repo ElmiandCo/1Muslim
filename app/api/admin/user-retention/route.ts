@@ -10,13 +10,14 @@ export async function GET(){
  if(!url||!key)return NextResponse.json({error:"Unavailable"},{status:503});
  const db=adminClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
  const accounts:Account[]=[];let capped=false;
- for(let page=1;page<=20;page++){const {data,error}=await db.auth.admin.listUsers({page,perPage:1000});if(error)return NextResponse.json({error:"Account directory unavailable"},{status:503});accounts.push(...data.users);if(data.users.length<1000)break;if(page===20)capped=true}
+ for(let page=1;page<=200;page++){const {data,error}=await db.auth.admin.listUsers({page,perPage:100});if(error)return NextResponse.json({error:"Supabase Auth directory failed: "+error.message},{status:503});accounts.push(...data.users);if(data.users.length<100)break;if(page===200)capped=true}
  const now=new Date(),today=now.toISOString().slice(0,10),since=new Date(Date.now()-60*86400000).toISOString().slice(0,10);
  const activity=new Map<string,Set<string>>();let activityCapped=false;
+ // Use existing authenticated HudHud activity: user_activity_days is not deployed.
  for(let offset=0;offset<200000;offset+=1000){
-  const {data,error}=await db.from("user_activity_days").select("user_id,activity_date").gte("activity_date",since).order("activity_date",{ascending:true}).range(offset,offset+999);
-  if(error)return NextResponse.json({error:"Retention activity table unavailable. Apply migration 20261110090000_user_activity_days.sql."},{status:503});
-  for(const row of data||[]){const set=activity.get(row.user_id)||new Set<string>();set.add(row.activity_date);activity.set(row.user_id,set)}
+  const {data,error}=await db.from("hudhud_activity").select("user_id,created_at").gte("created_at",since+"T00:00:00Z").order("created_at",{ascending:true}).range(offset,offset+999);
+  if(error)return NextResponse.json({error:"Account activity unavailable: "+error.message},{status:503});
+  for(const row of data||[]){if(!row.user_id||!row.created_at)continue;const set=activity.get(row.user_id)||new Set<string>();set.add(row.created_at.slice(0,10));activity.set(row.user_id,set)}
   if(!data||data.length<1000)break;if(offset+1000>=200000)activityCapped=true;
  }
  const datePlus=(day:string,offset:number)=>{const d=new Date(day+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10)};
@@ -28,5 +29,5 @@ export async function GET(){
  for(let i=0;i<ids.length;i+=250){const {data}=await db.from("profiles").select("id,username,display_name").in("id",ids.slice(i,i+250));for(const p of data||[])profiles.set(p.id,p)}
  const members=accounts.filter(a=>a.email?.toLowerCase()!=="hudhudbyelmi@gmail.com").map(a=>{const days=[...(activity.get(a.id)||[])].sort(),last=days[days.length-1]||null,age=last?Math.floor((Date.parse(today+"T00:00:00Z")-Date.parse(last+"T00:00:00Z"))/86400000):null;return{id:a.id,name:profiles.get(a.id)?.username||profiles.get(a.id)?.display_name||"Member",joined:a.created_at.slice(0,10),lastActivity:last,activeDays:days.length,status:!last?"Not yet measured":age===0?"Active":age!==null&&age<=7?"Returning":age!==null&&age<=14?"At risk":"Dormant"}}).sort((a,b)=>(b.lastActivity||"").localeCompare(a.lastActivity||"")).slice(0,100);
  const counts={registered:accounts.length,returning:returned,dau:activeWithin(1),wau:activeWithin(7),mau:activeWithin(30)};
- return NextResponse.json({counts,cohorts:{d1:cohort(1),d7:cohort(7),d30:cohort(30)},members,periodStart:since,updatedAt:new Date().toISOString(),capped:capped||activityCapped,method:"Activity from authenticated interactions recorded after retention instrumentation; earlier activity is not backfilled. Cohorts include eligible signup dates within the recorded window; unmeasured days must not be interpreted as confirmed churn."},{headers:{"Cache-Control":"private,no-store"}});
+ return NextResponse.json({counts,cohorts:{d1:cohort(1),d7:cohort(7),d30:cohort(30)},members,periodStart:since,updatedAt:new Date().toISOString(),capped:capped||activityCapped,method:"Activity measured from recorded HudHud authenticated events, not all app visits; earlier activity is not backfilled. Cohorts include eligible signup dates within the recorded window; unmeasured days must not be interpreted as confirmed churn."},{headers:{"Cache-Control":"private,no-store"}});
 }
