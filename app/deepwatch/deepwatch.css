@@ -576,3 +576,24 @@ body.deepwatchPlayerActive{padding-bottom:0!important}
 .deepwatch .dwCollectionViewAll:hover,.deepwatch .dwCollectionViewAll:focus-visible{color:#fff;text-decoration:underline;text-underline-offset:4px}
 .deepwatch .dwRailSentinel{display:block;flex:0 0 2px;align-self:stretch;pointer-events:none;opacity:0}
 @media(max-width:600px){.deepwatch .dwCollectionCount{font-size:.58em}.deepwatch .dwCollectionViewAll{font-size:11px}}
+
+
+/* Cinematic layered-glass watch experience, isolated from catalog and fullscreen. */
+.deepwatch .dwRedesigned{background:radial-gradient(ellipse at top,#34220f,#07090d 48%,#030405)!important}
+.deepwatch .dwRedesigned .deepwatchScreenInner{max-width:1000px;margin:auto;padding:clamp(9px,2vw,20px);border:1px solid #d7dce38a;border-radius:30px;background:linear-gradient(145deg,#33394377,#07090de8 30%,#11151c);box-shadow:inset 0 2px 3px #ffffff8a,inset 0 -2px 3px #ffffff40,0 15px 45px #000b,0 0 30px #d9973a45}
+.deepwatch .dwRedesigned .deepwatchScreenTop{border:1px solid #d3d8de8c;border-radius:24px;background:linear-gradient(#323844b8,#080b11e8);backdrop-filter:blur(20px);box-shadow:inset 0 2px 3px #ffffff55,0 5px 15px #000b,0 2px 12px #df9e4b55;margin-bottom:14px}
+.deepwatch .dwRedesigned .deepwatchScreenTop button{border:1px solid #d5dce09c;border-radius:50%;background:linear-gradient(145deg,#2b303a,#090b10);box-shadow:inset 0 1px 2px #ffffff55,0 3px 12px #000a;color:white}
+.deepwatch .dwRedesigned .dwTheater:not(.dwTheaterExpanded){border:1px solid #f6bc70b0;border-radius:24px;overflow:hidden;box-shadow:0 0 0 2px #ffffff15,0 6px 24px #df9e4b65}
+.deepwatch .dwRedesigned .deepwatchWatchCanvas{display:grid;gap:15px}
+.deepwatch .dwRedesigned .dwDiscussionTabs{padding:5px;border:1px solid #c8cdd38c;border-radius:999px;background:linear-gradient(150deg,#333943,#080a10);box-shadow:inset 0 2px 3px #ffffff55,0 5px 16px #0009}
+.deepwatch .dwRedesigned .dwDiscussionTabs button{border-radius:999px;transition:box-shadow .25s,background .25s}
+.deepwatch .dwRedesigned .dwDiscussionTabs button[aria-selected=true]{border:1px solid #ffc67b;background:linear-gradient(#65452a,#1c1c21);color:#fff3db;box-shadow:inset 0 1px 3px #fff7,0 0 17px #e9a34f9c}
+.deepwatch .dwRedesigned .dwDiscussionPane{border:1px solid #d2d8e080;border-radius:24px;background:linear-gradient(150deg,#343a4488,#090b11e8);box-shadow:inset 0 2px 3px #ffffff40,0 8px 18px #0009,0 2px 12px #d9953d45;overflow:hidden}
+.deepwatch .dwRedesigned .dwTimedPanel{padding:clamp(15px,3vw,25px);gap:15px}
+.deepwatch .dwRedesigned .dwTimedHeading{font-size:clamp(16px,2.5vw,21px);color:white}
+.deepwatch .dwRedesigned .dwTimedHeading button{border:1px solid #dba66b;border-radius:999px;color:#ffe0b0;background:#080a0d;padding:8px 14px}
+.deepwatch .dwRedesigned .dwTimedComposer{border:1px solid #bac3d38c;border-radius:999px;background:linear-gradient(135deg,#2b323d,#11151c);box-shadow:inset 0 1px 3px #ffffff33}
+.deepwatch .dwRedesigned .dwTimedComposer input{background:transparent;color:white}
+.deepwatch .dwRedesigned .dwTimedComposer button{border-radius:50%;background:#c5cbd3;color:#10151c}
+@media(max-width:600px){.deepwatch .dwRedesigned .deepwatchScreenInner{padding:8px;border-radius:24px}.deepwatch .dwRedesigned .dwTheater:not(.dwTheaterExpanded){border-radius:18px}.deepwatch .dwRedesigned .dwDiscussionPane{border-radius:19px}}
+@media(prefers-reduced-motion:reduce){.deepwatch .dwRedesigned .dwDiscussionTabs button{transition:none}}
