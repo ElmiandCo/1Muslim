@@ -106,7 +106,7 @@ export default function GlobalNavigation(){
  async function perform(item:Entry){
   if(item.id==="search"){setSearch(v=>!v);return}
   if(item.id==="signout"){setBusy(true);try{await createClient().auth.signOut();router.push("/");router.refresh()}finally{setBusy(false)}return}
-  if(item.href){if(pathname&&pathname!==item.href.split("?")[0]){setPrevious(pathname);try{sessionStorage.setItem("1muslim:nav-previous",pathname)}catch{}}router.push(item.href)}
+  if(item.href){const destination=item.id==="profile"?"/profile":item.id==="muslims"?"/profile?section=muslimeen":item.id==="posts"?"/posts":item.href;if(pathname&&pathname!==destination.split("?")[0]){setPrevious(pathname);try{sessionStorage.setItem("1muslim:nav-previous",pathname)}catch{}}if(item.id==="profile"||item.id==="muslims"||item.id==="posts"){window.location.assign(destination);return}router.push(destination)}
  }
  function select(item:Entry){
   if(busy)return;
