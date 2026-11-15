@@ -1849,40 +1849,7 @@ export default function GoLivePage() {
               <label style={{display:"flex",alignItems:"center",gap:7,fontSize:12,color:"#d6e7b8",padding:"8px 10px",border:"1px solid #ffffff30",borderRadius:12,background:"#ffffff0c",cursor:"pointer"}}><input type="checkbox" checked={autoCameraPreview} onChange={e=>{const enabled=e.target.checked;setAutoCameraPreview(enabled);localStorage.setItem("1muslim-go-live-auto-camera",enabled?"on":"off");}} aria-label="Automatically enable camera preview when opening Go Live" /> Auto-start camera preview</label>
               {!cameraReady ? <button className="start" onClick={startPreview}>Enable camera & mic</button> : live ? <button className="end" onClick={endLive} disabled={saving}>{saving ? "Saving recording…" : "End live & save"}</button> : <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>{scheduledSlot && !hostCheckedIn ? <button className="start" onClick={()=>void checkInHost()}>✓ Check In for Scheduled Live</button> : null}<button data-go-live-start className="start" onClick={()=>void startLive(false)} disabled={saving||connectingLive}>{connectingLive?"Connecting to LiveKit…":"● GO LIVE"}</button></div>}
             </div>
-            {cameraReady && studioMode !== "desktop" && <div className="cameraStudio">
-              <div className="studioHeader"><strong>Camera Studio</strong><span>{videoQuality} · {zoom.toFixed(1)}×</span></div>
-              <div className="studioGrid">
-                <div className="studioControl">
-                  <label>Quality <span className="studioValue">{videoQuality}</span></label>
-                  <div className="qualityPills">{(["480p","720p","1080p"] as const).map(q=><button key={q} type="button" className={videoQuality===q?"qualityPill active":"qualityPill"} onClick={()=>void setQuality(q)}>{q}</button>)}</div>
-                  <div className="studioHint">Applies a target capture resolution. The device may choose the closest supported mode.</div>
-                </div>
-                <div className={cameraCapabilities?.zoom ? "studioControl" : "studioControl unsupported"}>
-                  <label>Zoom <span className="studioValue">{zoom.toFixed(1)}×</span></label>
-                  <input type="range" min={cameraCapabilities?.zoom?.min ?? 1} max={cameraCapabilities?.zoom?.max ?? 1} step={cameraCapabilities?.zoom?.step ?? 0.1} value={zoom} disabled={!cameraCapabilities?.zoom} onChange={e=>void setCameraZoom(Number(e.target.value))}/>
-                  <div className="studioHint">{cameraCapabilities?.zoom ? "Use the camera's native optical/digital zoom control." : "Zoom isn't exposed by this camera/browser."}</div>
-                </div>
-                <div className={cameraCapabilities?.focus ? "studioControl" : "studioControl unsupported"}>
-                  <label>Focus <span className="studioValue">{focusMode === "auto" ? "Auto" : "Manual"}</span></label>
-                  <div className="focusRow"><button type="button" className={focusMode==="auto"?"active":""} disabled={!cameraCapabilities?.focus} onClick={()=>void setCameraFocus("auto")}>AUTO</button><button type="button" className={focusMode==="manual"?"active":""} disabled={!cameraCapabilities?.focus} onClick={()=>void setCameraFocus("manual")}>MANUAL</button></div>
-                  {focusMode === "manual" && <input type="range" min={cameraCapabilities?.focusDistance?.min ?? 0} max={cameraCapabilities?.focusDistance?.max ?? 1} step={cameraCapabilities?.focusDistance?.step ?? 0.01} value={focusDistance} disabled={!cameraCapabilities?.focusDistance} onChange={e=>{const v=Number(e.target.value);setFocusDistance(v);void setCameraFocus("manual",v)}}/>}
-                  <div className="studioHint">{cameraCapabilities?.focus ? "Focus controls appear when the device exposes them." : "Manual focus isn't exposed by this camera/browser."}</div>
-                </div>
-              </div>
-              <div className="studioControl" style={{gridColumn:"1 / -1"}}>
-                <label>Audio Studio <span className="studioValue">{audioEffect === "studio" ? "Studio — Clear" : "Echo — Mosque"}{nasheedOn ? " · Nasheed Loop ON" : ""}</span></label>
-                <div className="audioPills">
-                  <button type="button" className={audioEffect==="studio" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioEffect("studio")}>Studio — Clear</button>
-                  <button type="button" className={audioEffect==="mosque" ? "audioPill active" : "audioPill"} onClick={()=>void setAudioStudioEffect("mosque")}>Echo — Mosque</button>
-                </div>
-                <div className="studioHint" style={{marginTop:9}}>SOUND</div>
-                <div className="audioPills">
-                  <button type="button" className={nasheedOn ? "audioPill active" : "audioPill"} onClick={()=>void toggleNasheed()}>{nasheedOn ? "Nasheed Loop · ON" : "Nasheed Loop · OFF"}</button>
-                </div>
-                {nasheedOn && <input className="audioVolume" type="range" min="0" max="0.5" step="0.01" value={soundVolume} onChange={e=>void setAudioStudioVolume(Number(e.target.value))}/>} 
-                <div className="audioNote">Toggle the saved Nasheed Loop on or off at any time, including while Live. It loops continuously until you turn it off or end the broadcast.</div>
-              </div>
-            </div>}
+            
           </section>
 
           {settingsOpen && <button type="button" className="liveSettingsScrim" aria-label="Close live settings" onClick={()=>setSettingsOpen(false)} />}
