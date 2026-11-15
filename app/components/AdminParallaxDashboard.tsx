@@ -47,6 +47,35 @@ const [pendingPage,setPendingPage]=useState(0);
 const [pendingTotal,setPendingTotal]=useState(0);
 const [pendingBusy,setPendingBusy]=useState(false);
 const [pendingNotice,setPendingNotice]=useState("");
+type CatalogSuggestion={video_id:string;clean_title:string;content_type:string;series_title:string|null;season_number:number|null;episode_number:number|null;genres:string[];categories:string[];confidence:string;notes:string};
+const [catalogReviews,setCatalogReviews]=useState<CatalogSuggestion[]>([]);
+const [catalogOrganizing,setCatalogOrganizing]=useState(false);
+const [catalogEditing,setCatalogEditing]=useState<string|null>(null);
+const updateCatalogReview=(id:string,patch:Partial<CatalogSuggestion>)=>setCatalogReviews(prev=>prev.map(v=>v.video_id===id?{...v,...patch}:v));
+async function organizePending(){
+ if(!pendingSelected.length||catalogOrganizing)return;
+ setCatalogOrganizing(true);setPendingNotice("");setCatalogReviews([]);
+ try{
+  const r=await fetch("/api/admin/deepwatch-ai-organize",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids:pendingSelected})});
+  const d=await r.json();if(!r.ok)throw Error(d.error||"AI organization failed");
+  const results=(d.suggestions||[]) as CatalogSuggestion[];
+  if(results.length!==pendingSelected.length)throw Error("AI did not return every selected video. No changes were published.");
+  setCatalogReviews(results);setPendingNotice("AI suggestions ready. Review or edit each record before final publishing.");
+ }catch(e){setPendingNotice(e instanceof Error?e.message:"AI organization failed")}finally{setCatalogOrganizing(false)}
+}
+async function publishCatalogReviews(){
+ if(pendingBusy||!catalogReviews.length)return;
+ const ids=catalogReviews.map(x=>x.video_id);
+ if(!window.confirm("Publish "+ids.length+" reviewed videos? These changes will become visible in DeepWatch."))return;
+ setPendingBusy(true);setPendingNotice("");
+ try{
+  const r=await fetch("/api/admin/video-roster",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids,reviews:catalogReviews})});
+  const d=await r.json();if(!r.ok)throw Error((d.error||"Publishing failed")+(d.approved?" ("+d.approved+" already published; refresh before retrying)":""));
+  setPendingNotice(d.approved+" reviewed videos published.");setCatalogReviews([]);setCatalogEditing(null);
+  setRefreshKey(x=>x+1);
+ }catch(e){setPendingNotice(e instanceof Error?e.message:"Publishing failed")}finally{setPendingBusy(false)}
+}
+
 useEffect(()=>{let active=true;fetch("/api/admin/video-roster?view=pending&page="+pendingPage,{cache:"no-store"}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||"Pending videos unavailable");if(active){setPendingVideos(d.videos||[]);setPendingTotal(d.count||0);setPendingSelected([])}}).catch(e=>{if(active)setPendingNotice(e instanceof Error?e.message:"Could not load pending videos")});return()=>{active=false}},[pendingPage,refreshKey]);
 async function approvePending(all:boolean){if(pendingBusy)return;const ids=all?pendingVideos.map(v=>v.video_id):pendingSelected;if(!ids.length)return;if(!window.confirm("Approve "+ids.length+" pending DeepWatch videos from this page? They will become eligible for publishing."))return;setPendingBusy(true);setPendingNotice("");try{const r=await fetch("/api/admin/video-roster",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids})});const d=await r.json();if(!r.ok)throw Error(d.error||"Approval failed");setPendingNotice(d.approved+" videos approved.");setPendingVideos(v=>v.filter(x=>!ids.includes(x.video_id)));setPendingTotal(n=>Math.max(0,n-d.approved));setPendingSelected([]);setVideoStats(s=>s?{...s,pendingCount:Math.max(0,s.pendingCount-d.approved),approvedCount:s.approvedCount+d.approved}:s)}catch(e){setPendingNotice(e instanceof Error?e.message:"Approval failed")}finally{setPendingBusy(false)}}
 const [videoRoster,setVideoRoster]=useState<Array<{source:string;id:string;title:string;category:string;number:number}>>([]);
