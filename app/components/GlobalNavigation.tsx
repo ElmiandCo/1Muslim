@@ -108,15 +108,15 @@ export default function GlobalNavigation(){
    railFrame.current=0;
    const rail=railRef.current;if(!rail)return;
    const middle=rail.scrollLeft+rail.clientWidth/2;
-   let nearest:HTMLElement|null=null,distance=Infinity;
+   let nearestId:GlobalNavDestination|null=null,distance=Infinity;
    rail.querySelectorAll<HTMLElement>("[data-nav-id]").forEach(el=>{
     const d=Math.abs(el.offsetLeft+el.offsetWidth/2-middle);
     const t=Math.min(1,d/Math.max(90,rail.clientWidth*.43));
     const eased=t*t*(3-2*t);
     el.style.setProperty("--nav-distance",String(eased));
-    if(d<distance){distance=d;nearest=el}
+    if(d<distance){distance=d;nearestId=el.dataset.navId as GlobalNavDestination}
    });
-   if(nearest){const id=nearest.dataset.navId as GlobalNavDestination;setCentered(prev=>prev===id?prev:id)}
+   if(nearestId){const id=nearestId;setCentered(prev=>prev===id?prev:id)}
   });
  };
  useEffect(()=>()=>{if(railFrame.current)cancelAnimationFrame(railFrame.current)},[]);
