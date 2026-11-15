@@ -121,8 +121,8 @@ function DailyPostsApp({active}:{active:boolean}){
  const [posts,setPosts]=useState<UmmahPost[]>([]);
  const [status,setStatus]=useState("Loading Ummah posts…");
  const [selected,setSelected]=useState<string|null>(null);
- const [commentViewport,setCommentViewport]=useState({top:0,height:0});
- useEffect(()=>{if(!selected)return;const vv=window.visualViewport;const sync=()=>setCommentViewport({top:vv?.offsetTop||0,height:vv?.height||window.innerHeight});sync();vv?.addEventListener("resize",sync);vv?.addEventListener("scroll",sync);window.addEventListener("resize",sync);const prior=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{vv?.removeEventListener("resize",sync);vv?.removeEventListener("scroll",sync);window.removeEventListener("resize",sync);document.body.style.overflow=prior}},[selected]);
+ const [commentViewport,setCommentViewport]=useState({top:0,height:0,keyboardOpen:false});
+ useEffect(()=>{if(!selected)return;const vv=window.visualViewport;const sync=()=>{const visibleHeight=vv?.height||window.innerHeight;const keyboardOpen=window.innerHeight-visibleHeight-(vv?.offsetTop||0)>120;setCommentViewport({top:vv?.offsetTop||0,height:visibleHeight,keyboardOpen})};sync();vv?.addEventListener("resize",sync);vv?.addEventListener("scroll",sync);window.addEventListener("resize",sync);const prior=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{vv?.removeEventListener("resize",sync);vv?.removeEventListener("scroll",sync);window.removeEventListener("resize",sync);document.body.style.overflow=prior}},[selected]);
 
  const [comments,setComments]=useState<UmmahComment[]>([]);
  const [draft,setDraft]=useState("");
@@ -164,7 +164,7 @@ function DailyPostsApp({active}:{active:boolean}){
     </div>
    </div>):<p className="ummah-feed-status" role="status">{status}</p>}
   </div>
-  {selected&&typeof document!=="undefined"&&createPortal(<div className="ummah-comments-backdrop ummah-comments-viewport" style={{top:commentViewport.top,height:commentViewport.height||"100dvh"}} role="presentation" onClick={()=>setSelected(null)}>
+  {selected&&typeof document!=="undefined"&&createPortal(<div className={"ummah-comments-backdrop ummah-comments-viewport"+(commentViewport.keyboardOpen?" keyboard-open":"")} style={{top:commentViewport.top,height:commentViewport.height||"100dvh"}} role="presentation" onClick={()=>setSelected(null)}>
    <section data-post-theme={posts.find(p=>p.id===selected)?.post_theme||"emerald"} className="ummah-comments-sheet ummah-comments-theme-responsive" role="dialog" aria-modal="true" aria-label="Post comments" onClick={e=>e.stopPropagation()}>
     <header><strong>✦ Conversation</strong><button type="button" onClick={()=>setSelected(null)} aria-label="Close comments">✕</button></header>
     <p className="ummah-comment-post-preview">{posts.find(p=>p.id===selected)?.body}</p>
