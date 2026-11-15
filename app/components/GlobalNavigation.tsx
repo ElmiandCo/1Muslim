@@ -16,7 +16,8 @@ type Entry=typeof entries[number];
 export default function GlobalNavigation(){
  const pathname=usePathname(),router=useRouter();
  const railRef=useRef<HTMLElement|null>(null);
- const settleTimer=useRef<ReturnType<typeof setTimeout>|null>(null);\n const railFrame=useRef(0);
+ const settleTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const railFrame=useRef(0);
  const [centered,setCentered]=useState<GlobalNavDestination>("muslims");
  const [search,setSearch]=useState(false),[query,setQuery]=useState(""),[busy,setBusy]=useState(false);
  const [pending,setPending]=useState<Entry|null>(null),[dontAsk,setDontAsk]=useState(false);
