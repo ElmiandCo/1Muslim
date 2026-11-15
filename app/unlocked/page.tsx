@@ -1,5 +1,5 @@
-import UnlockedFeatureIcon, {type UnlockedFeature} from "../components/icons/UnlockedFeatureIcon";
 "use client";
+import UnlockedFeatureIcon, {type UnlockedFeature} from "../components/icons/UnlockedFeatureIcon";
 import Link from "next/link";
 import {useEffect,useRef,useState} from "react";
 export default function UnlockedPage(){
