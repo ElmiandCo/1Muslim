@@ -243,10 +243,10 @@ export default function DeepWatch(){
  const classify= (v:RegisteredVideo)=>{
   const meta=[v.category,...(v.categories||[]),...(editorial[v.videoId]?.categories||[]),...(editorial[v.videoId]?.genres||[])].join(" ").toLowerCase();
   const title=v.title.toLowerCase();
-  const kids=isDeepWatchKids(v)||isKidsVideo(v)||/\\bkids?\\b|children|cartoon/.test(meta);
+  const kids=isDeepWatchKids(v)||isKidsVideo(v)||/\bkids?\b|children|cartoon/.test(meta);
   const animated=/animat|cartoon/.test(meta+" "+title);
-  const episodic=/\\b(series|episodes?|tv shows?)\\b/.test(meta)||/\\b(?:episode|ep\\.|season)\\s*[#:. -]*\\d+/.test(title);
-  const movie=/\\b(movie|movies|film|films|cinema)\\b/.test(meta);
+  const episodic=/\b(series|episodes?|tv shows?)\b/.test(meta)||/\b(?:episode|ep\.|season)\s*[#:. -]*\d+/.test(title);
+  const movie=/\b(movie|movies|film|films|cinema)\b/.test(meta)||(!episodic&&/\b(full movie|feature film|film|movie)\b/.test(title));
   const language=(catalogMetadata[v.videoId]?.language||dbEpisodes.find(e=>e.video_id===v.videoId)?.language||"").toLowerCase().split("-")[0];
   const international=/international|urdu|turkish|somali|indonesian|malay|bangla|hindi|arabic/.test(meta)||["ar","tr","so","ur","ms","id","hi","bn"].includes(language);
   const somaliEntertainment=/somali|somalia|somaliland|musalsal|af-soomaali|af soomaali/.test(meta+" "+title);
@@ -254,8 +254,8 @@ export default function DeepWatch(){
   const prophet=isProphetVideo(v);
   const scary=isScaryVideo(v);
   const history=/historical|history|ottoman|seerah/.test(meta);
-  const aqeedah=/\\b(aqeedah|aqidah|tawheed|tawhid|creed)\\b/.test(meta);
-  const live=/\\blive(stream)?\\b/.test(meta);
+  const aqeedah=/\b(aqeedah|aqidah|tawheed|tawhid|creed)\b/.test(meta);
+  const live=/\blive(stream)?\b/.test(meta);
   const comedy=/comedy|funny|humou?r|sketch|stand.up|sitcom|laugh/.test(meta+" "+title);
   const classics=/classic|the message|omar mukhtar|lion of the desert|historical film|old school|legacy|timeless|seerah|prophet stories/.test(meta+" "+title);
   const documentaries=/documentary|documentaries|historical|history|civilization|biography|explained|investigation/.test(meta+" "+title);
