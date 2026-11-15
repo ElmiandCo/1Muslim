@@ -22,7 +22,7 @@ test("audio-only rooms cannot request or publish camera",()=>{
   assert.equal(guestMayPublishCamera("9:16","pfp"),false);
   const studio=source("components/LiveGuestStudio.tsx");
   assert.match(studio,/audioOnly\?"pfp":mode/);
-  assert.match(studio,/audioOnly!==true&&<option value="camera">/);
+  assert.match(studio,/disabled=\{audioOnly\} onClick=\{\(\)=>setMode\("camera"\)\}/);
   assert.match(studio,/if\(!audioOnly\|\|!joined\)return/);
   assert.match(studio,/localParticipant\.unpublishTrack\(track\)/);
   const sql=source("supabase/migrations/20261031071703_liveguests1_capacity_and_roles.sql");
