@@ -320,3 +320,23 @@ body.deepwatchPlayerActive{padding-bottom:0!important}
  .dwReferenceCompact .dwReferenceCardTitle{font-size:13px}
 }
 @media(prefers-reduced-motion:reduce){.dwReferenceRail{scroll-behavior:auto}}
+
+/* DeepWatch premium play glyph: consistent black-glass button, no emoji appearance. */
+.deepwatch .dwReferenceCardPlay,
+.deepwatch .deepwatchTile::after{
+ width:clamp(29px,3vw,36px);height:clamp(29px,3vw,36px);
+ border-radius:50%;border:1px solid #ffffff70;
+ background:linear-gradient(145deg,#222630df,#06070be8);
+ box-shadow:0 2px 9px #000b,inset 0 1px 1px #ffffff36;
+ color:#fff;display:grid;place-items:center;backdrop-filter:blur(5px);
+}
+.deepwatch .dwReferenceCardPlay svg{width:16px;height:16px;display:block;margin-left:2px;filter:drop-shadow(0 1px 1px #000)}
+.deepwatch .deepwatchTile::after{content:"";background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='white' d='M8 5.5 19 12 8 18.5Z'/%3E%3C/svg%3E"),linear-gradient(145deg,#222630df,#06070be8);background-size:16px 16px,cover;background-position:54% 50%,center;background-repeat:no-repeat}
+.deepwatch .dwReferenceCard{transition:transform .28s ease,box-shadow .28s ease,border-color .28s ease;transform-origin:center center}
+.deepwatch .dwReferenceFeature .dwReferenceCard:nth-child(3n+1){transform:perspective(900px) rotateY(4deg) rotateZ(-.7deg) scale(.985)}
+.deepwatch .dwReferenceFeature .dwReferenceCard:nth-child(3n+2){transform:perspective(900px) rotateY(-3deg) rotateZ(.5deg) scale(.985)}
+.deepwatch .dwReferenceFeature .dwReferenceCard:nth-child(3n){transform:perspective(900px) rotateY(3deg) rotateZ(-.4deg) scale(.985)}
+.deepwatch .dwReferenceFeature .dwReferenceCard:hover,
+.deepwatch .dwReferenceFeature .dwReferenceCard:focus-visible{transform:perspective(900px) rotateY(0) rotateZ(0) scale(1);box-shadow:0 13px 32px #000c;z-index:2}
+.deepwatch .dwReferenceFeature .dwReferenceRail{padding-top:7px;padding-bottom:16px;perspective:1000px}
+@media(prefers-reduced-motion:reduce){.deepwatch .dwReferenceCard{transition:none}}
