@@ -9,6 +9,51 @@ import DeepWatchReviews from "../components/DeepWatchReviews";
 import {videoRegistry,isKidsVideo,type RegisteredVideo} from "../components/videoRegistry";
 import "./deepwatch.css";
 
+/** A gentle five-second image breath. On interaction, ease from the current frame
+ * back to rest rather than abruptly canceling the running animation. */
+function DeepWatchBreathingImage({src,eager}:{src:string;eager:boolean}){
+ const imageRef=useRef<HTMLImageElement>(null);
+ const activeRef=useRef<Animation|null>(null);
+ const settlingRef=useRef<Animation|null>(null);
+ const interruptedRef=useRef(false);
+ useEffect(()=>{
+  const img=imageRef.current;if(!img)return;
+  const reduce=window.matchMedia("(prefers-reduced-motion: reduce)");
+  const start=()=>{
+   if(reduce.matches||interruptedRef.current||!img.isConnected)return;
+   settlingRef.current?.cancel();settlingRef.current=null;
+   activeRef.current?.cancel();
+   activeRef.current=img.animate([{transform:"scale(1)"},{transform:"scale(1.035)",offset:.5},{transform:"scale(1)"}],{duration:5000,iterations:Infinity,easing:"ease-in-out"});
+  };
+  const stop=()=>{
+   if(interruptedRef.current)return;
+   interruptedRef.current=true;
+   const current=getComputedStyle(img).transform;
+   activeRef.current?.cancel();activeRef.current=null;
+   settlingRef.current?.cancel();
+   settlingRef.current=img.animate([{transform:current==="none"?"scale(1)":current},{transform:"scale(1)"}],{duration:550,easing:"cubic-bezier(.22,1,.36,1)",fill:"none"});
+  };
+  const resume=()=>{
+   if(!interruptedRef.current)return;
+   interruptedRef.current=false;
+   const settling=settlingRef.current;
+   if(settling&&settling.playState==="running"){
+    settling.addEventListener("finish",()=>{if(!interruptedRef.current)start()},{once:true});
+   }else start();
+  };
+  const card=img.closest(".dwReferenceCard");
+  card?.addEventListener("pointerenter",stop);
+  card?.addEventListener("pointerleave",resume);
+  card?.addEventListener("focusin",stop);
+  card?.addEventListener("focusout",resume);
+  card?.addEventListener("pointerdown",stop);
+  const changed=()=>{if(reduce.matches)stop();else resume()};
+  reduce.addEventListener("change",changed);
+  start();
+  return ()=>{card?.removeEventListener("pointerenter",stop);card?.removeEventListener("pointerleave",resume);card?.removeEventListener("focusin",stop);card?.removeEventListener("focusout",resume);card?.removeEventListener("pointerdown",stop);reduce.removeEventListener("change",changed);activeRef.current?.cancel();settlingRef.current?.cancel()};
+ },[src]);
+ return <img ref={imageRef} src={src} alt="" loading={eager?"eager":"lazy"} decoding="async" style={{transformOrigin:"center center",willChange:"transform"}}/>;
+}
 const officialSeries = [
  {title:"The Name I Need — Ramadan 2026",category:"Shows/Series",publisher:"Yaqeen Institute",url:"https://yaqeeninstitute.org/series/the-name-i-need-ramadan-2026"},
  {title:"Qur’an 30 for 30 — Season 7",category:"Educational Series",publisher:"Yaqeen Institute",url:"https://yaqeeninstitute.org/watch/series"},
@@ -395,7 +440,7 @@ export default function DeepWatch(){
    </div>)}
    {heroSlides.length>1&&<><button type="button" className="dwHeroTapZone dwHeroTapLeft" aria-label="Previous featured title" onClick={()=>setHeroIndex(i=>(i-1+heroSlides.length)%heroSlides.length)}/><button type="button" className="dwHeroTapZone dwHeroTapRight" aria-label="Next featured title" onClick={()=>setHeroIndex(i=>(i+1)%heroSlides.length)}/><div className="dwHeroProgress" aria-label={`Featured title ${heroIndex+1} of ${heroSlides.length}`}>{heroSlides.map((v,i)=><span key={v.videoId} className={i===heroIndex?"active":""}/>)}</div></>}
   </section>
-  {tab==="Home"&&<div className="dwReferenceRails">{referenceRails.map(rail=><section className={"dwReferenceRow "+(rail.kind==="compact"?"dwReferenceCompact":"dwReferenceFeature")} key={rail.name} aria-label={rail.name}><div className="dwReferenceRowHeading"><h2>{rail.name}</h2><button type="button" onClick={()=>setTab(rail.name.includes("Prophets")?"The Prophets":rail.name.includes("Somali")?"Somali":rail.name.includes("Series")?"Series":rail.name.includes("Kids")?"Kids":rail.name.includes("International")?"International":rail.name.includes("Documentaries")?"Documentaries":"Movies")}>See All ›</button></div><div className="dwReferenceRail">{rail.items.map((v,i)=><button type="button" className="dwReferenceCard" key={v.videoId} onClick={()=>setInfo(v)} aria-label={"Details: "+editorialTitle(v)}><img src={image(v.videoId)} alt="" loading={i<3?"eager":"lazy"} decoding="async"/><span className="dwReferenceCardShade"/><span className="dwReferenceCardTitle">{editorialTitle(v)}</span><span className="dwReferenceCardPlay" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M8 5.5 19 12 8 18.5Z" fill="currentColor"/></svg></span></button>)}</div></section>)}</div>}
+  {tab==="Home"&&<div className="dwReferenceRails">{referenceRails.map(rail=><section className={"dwReferenceRow "+(rail.kind==="compact"?"dwReferenceCompact":"dwReferenceFeature")} key={rail.name} aria-label={rail.name}><div className="dwReferenceRowHeading"><h2>{rail.name}</h2><button type="button" onClick={()=>setTab(rail.name.includes("Prophets")?"The Prophets":rail.name.includes("Somali")?"Somali":rail.name.includes("Series")?"Series":rail.name.includes("Kids")?"Kids":rail.name.includes("International")?"International":rail.name.includes("Documentaries")?"Documentaries":"Movies")}>See All ›</button></div><div className="dwReferenceRail">{rail.items.map((v,i)=><button type="button" className="dwReferenceCard" key={v.videoId} onClick={()=>setInfo(v)} aria-label={"Details: "+editorialTitle(v)}>{rail.kind==="compact"?<img src={image(v.videoId)} alt="" loading={i<3?"eager":"lazy"} decoding="async"/>:<DeepWatchBreathingImage src={image(v.videoId)} eager={i<3}/>}<span className="dwReferenceCardShade"/><span className="dwReferenceCardTitle">{editorialTitle(v)}</span><span className="dwReferenceCardPlay" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M8 5.5 19 12 8 18.5Z" fill="currentColor"/></svg></span></button>)}</div></section>)}</div>}
   {(tab==="The Prophets"||tab==="Scary")&&<section className="deepwatchRow" aria-label="One Islam Productions official channel collection" style={{padding:"12px 24px"}}><h2>🎬 One Islam Productions · Official Collection</h2><p style={{opacity:.8,fontSize:13}}>Animated Islamic films, Prophet Stories, and Letters From Jannah · No Shorts</p><div className="deepwatchRail">{oneIslamVideos.filter(v=>!excludedIds.includes(v.videoId)&&(!search||v.title.toLowerCase().includes(search.toLowerCase()))).map(v=><button key={v.videoId} type="button" className="deepwatchTile" onClick={()=>setInfo(v)}><img src={image(v.videoId)} alt="" loading="lazy"/><span>{v.title}</span><small>One Islam Productions · <PlayIcon className="deepwatchInlinePlayIcon"/> Play</small></button>)}</div></section>}
   {(tab==="The Prophets")&&[
    {name:"One Islam · Stories of the Prophets (Mufti Menk)",test:(v:RegisteredVideo)=>/Stories of the Prophets/i.test(v.title)},
