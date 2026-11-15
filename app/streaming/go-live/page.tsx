@@ -1603,6 +1603,16 @@ export default function GoLivePage() {
           .preliveMobileActions{gap:5px}
         }
         @media(min-width:851px){.preliveInspire,.preliveIdentity,.preliveMobileActions{display:none!important}}
+        /* iPhone landscape exceeds the desktop width breakpoint: keep the camera unobstructed. */
+        @media(orientation:landscape) and (max-height:600px) and (pointer:coarse){
+          .goLive .shell{top:0!important;bottom:0!important;left:0!important;right:0!important;height:100dvh!important}
+          .goLive .layout{display:block!important;height:100%!important}
+          .goLive .layout>.panel:first-child{position:absolute!important;inset:0!important;border:0!important;border-radius:0!important}
+          .goLive .preview,.goLive .preview.format-portrait,.goLive .preview.format-square,.goLive .preview.format-landscape{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;border-radius:0!important}
+          .goLive .layout>.form.compactLiveSettings{display:none!important}
+          .goLive .settingsOpen .layout>.form.compactLiveSettings{display:block!important;position:fixed!important;top:12px!important;bottom:12px!important;left:auto!important;right:12px!important;transform:none!important;width:min(380px,70vw)!important;height:auto!important;max-height:calc(100dvh - 24px)!important;z-index:60!important}
+          .goLive .immersiveHeader{min-height:44px!important;padding:4px 12px!important}
+        }
 
         /* Gentle pre-live breathing motion; never move the active broadcast controls. */
         @keyframes preliveFloat {0%,100%{translate:0 0}50%{translate:0 -5px}}
