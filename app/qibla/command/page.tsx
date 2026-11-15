@@ -22,6 +22,20 @@ export default function QiblaCommand(){
  const [uid,setUid]=useState<string|null>(null),[role,setRole]=useState(""),[superAdmin,setSuperAdmin]=useState(false),[items,setItems]=useState<Item[]>([]),[staff,setStaff]=useState<Staff[]>([]),[teamDirectory,setTeamDirectory]=useState<TeamMember[]>([]),[audit,setAudit]=useState<Audit[]>([]),[filter,setFilter]=useState("all"),[selected,setSelected]=useState<string|null>(null),[note,setNote]=useState(""),[newUser,setNewUser]=useState(""),[newRole,setNewRole]=useState("writer"),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[loading,setLoading]=useState(true);
  const [memberQuery,setMemberQuery]=useState(""),[matches,setMatches]=useState<MemberMatch[]>([]),[lookupBusy,setLookupBusy]=useState(false);
  const db=createClient();
+ const [aiRunning,setAiRunning]=useState<"article"|"newsletter"|null>(null);
+ const [aiResult,setAiResult]=useState<{ok:boolean;kind:string;title?:string;id?:string;status?:string;error?:string;detail?:string;elapsed:number}|null>(null);
+ const runEditorialAI=async(kind:"article"|"newsletter")=>{
+  if(aiRunning)return;
+  setAiRunning(kind);setAiResult(null);
+  const started=Date.now();
+  try{
+   const response=await fetch("/api/qibla/editorial-bot?kind="+kind,{method:"POST",cache:"no-store"});
+   const result=await response.json();
+   setAiResult({ok:response.ok,kind,title:result.submission?.title,id:result.submission?.id,status:result.submission?.status,error:result.error,detail:typeof result.detail==="string"?result.detail:undefined,elapsed:Math.round((Date.now()-started)/1000)});
+   if(response.ok){await refresh();setFilter("all");if(result.submission?.id)setSelected(result.submission.id)}
+  }catch(error){setAiResult({ok:false,kind,error:error instanceof Error?error.message:"Research service unavailable",elapsed:Math.round((Date.now()-started)/1000)})}
+  finally{setAiRunning(null)}
+ };
  const [imageUploading,setImageUploading]=useState(false);
  const uploadEditorialImage=async(file:File,target:"cover"|number)=>{
   if(!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)){setMessage("Choose a JPG, PNG, WebP or GIF image.");return}
@@ -60,13 +74,28 @@ export default function QiblaCommand(){
  const reviewApplication=(id:string,approve:boolean)=>{void action(()=>db.rpc("qibla_review_staff_application",{p_id:id,p_approve:approve,p_note:applicationNote}),approve?"Application approved and role assigned.":"Application denied.");setApplicationNote("")};
  const remove=(id:string)=>{if(!window.confirm("Remove this staff member's Qibla role?"))return;void action(()=>db.rpc(superAdmin?"qibla_remove_role":"qibla_request_role_change",superAdmin?{p_user_id:id}:{p_user_id:id,p_role:null,p_action:"remove"}),superAdmin?"Role removed.":"Removal sent to SuperAdmin for approval.")};
  return <main className={styles.root}><header className={styles.nav}><Link href="/qibla/newsroom">← 1MUSLIM QIBLA</Link><strong>EDITORIAL COMMAND</strong><Link href="/qibla/studio">WRITE ↗</Link></header>
- {superAdmin&&<section style={{margin:"16px 0",padding:18,border:"1px solid #bbc7d5",borderRadius:16,background:"#f5f8fc",color:"#1c2b3e"}}><strong>✦ QIBLA EDITORIAL AI</strong><p>Generate researched drafts as 1Muslim Editor. Every submission enters this approval desk; nothing publishes automatically.</p><div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{(["article","newsletter"] as const).map(kind=><button key={kind} type="button" disabled={busy} style={{padding:"10px 15px",borderRadius:12,border:"1px solid #8093ab",background:"#17365d",color:"#fff",cursor:"pointer"}} onClick={async()=>{setBusy(true);setMessage("");try{const response=await fetch("/api/qibla/editorial-bot?kind="+kind,{method:"POST"});const result=await response.json();setMessage(response.ok?"New "+kind+" draft queued for approval: "+result.submission.title:(result.error||"Generation failed"));if(response.ok)await refresh()}catch{setMessage("Editorial research service unavailable")}finally{setBusy(false)}}}>Generate {kind==="article"?"Magazine Article":"Newsletter"} ↗</button>)}</div></section>}
+ {superAdmin&&<section aria-label="Qibla AI Editor manual testing" style={{margin:"16px 0",padding:"clamp(16px,3vw,26px)",border:"1px solid #9aabc0",borderRadius:18,background:"linear-gradient(145deg,#f8fafc,#e9eff6)",color:"#172c42",boxShadow:"0 8px 25px #142f4614"}}>
+  <span style={{fontSize:11,letterSpacing:".17em",fontWeight:800,color:"#45637c"}}>SUPER ADMIN · MANUAL RESEARCH CONTROL</span>
+  <h2 style={{margin:"9px 0 7px",fontSize:"clamp(21px,3vw,30px)",fontFamily:"Georgia,serif"}}>✦ Qibla AI Editor</h2>
+  <p style={{maxWidth:670,lineHeight:1.6,margin:"0 0 16px"}}>Start a research run and see its result here immediately when the server responds. Drafts enter the editorial approval queue as <b>1Muslim Editor</b>. Nothing is published automatically.</p>
+  <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+   {(["article","newsletter"] as const).map(kind=><button key={kind} type="button" disabled={!!aiRunning} onClick={()=>void runEditorialAI(kind)} style={{padding:"13px 19px",borderRadius:12,border:"1px solid #68819b",background:aiRunning?"#738399":"#123454",color:"#fff",fontWeight:750,cursor:aiRunning?"wait":"pointer",opacity:aiRunning?.7:1}}>{aiRunning===kind?"Researching…":kind==="article"?"▶ Run Magazine Article":"▶ Run Newsletter"}</button>)}
+  </div>
+  {aiRunning&&<p role="status" aria-live="polite" style={{marginTop:15,padding:14,background:"#dce9f5",borderRadius:10}}>Research in progress: {aiRunning}. This can take up to two minutes. Keep this page open for the result.</p>}
+  {aiResult&&!aiRunning&&<div role="status" aria-live="polite" style={{marginTop:16,padding:16,borderRadius:12,border:aiResult.ok?"1px solid #73a68b":"1px solid #c99595",background:aiResult.ok?"#e6f4eb":"#fff0ef"}}>
+   <strong>{aiResult.ok?"✓ Draft created and sent for approval":"✕ AI Editor could not complete the run"}</strong>
+   <p style={{margin:"8px 0 4px"}}>{aiResult.ok?aiResult.title:aiResult.error}</p>
+   {aiResult.detail&&<p style={{fontSize:12}}>{aiResult.detail}</p>}
+   <small>{aiResult.kind==="article"?"Magazine":"Newsletter"} · {aiResult.elapsed}s {aiResult.status?"· "+aiResult.status:""}</small>
+   {aiResult.id&&<div style={{marginTop:10}}><button type="button" onClick={()=>{setFilter("all");setSelected(aiResult.id||null);document.getElementById("qibla-editorial-pipeline")?.scrollIntoView({behavior:"smooth",block:"start"})}} style={{padding:"9px 13px",borderRadius:8,background:"#123454",color:"#fff",border:0,cursor:"pointer"}}>View in approval queue ↓</button></div>}
+  </div>}
+ </section>}
  <div className={styles.heading}><span>ONE PUBLISHING HOUSE · TWO DISTINCT VOICES</span><h1>The Editorial<br/><em>Desk.</em></h1><p>Plan, review, approve and publish. Every story has a journey.</p></div>
  {!uid?<p className={styles.notice}>Sign in to access the editorial desk.</p>:loading?<p className={styles.notice}>Loading editorial activity…</p>:<>
  <div className={styles.identity}>SIGNED IN AS <b>{superAdmin?"SUPER ADMIN":role.toUpperCase()}</b> {superAdmin&&<span>✦ ALL EDITORIAL PERMISSIONS</span>}<button onClick={()=>void refresh()}>↻ Refresh</button></div>
  <div className={styles.metrics}>{statuses.map(s=><button key={s} onClick={()=>setFilter(filter===s?"all":s)} className={filter===s?styles.active:""}><b>{items.filter(i=>i.status===s).length}</b><span>{s.replaceAll("_"," ")}</span></button>)}</div>
  {message&&<p className={styles.notice} role="status">{message}</p>}
- <div className={styles.layout}><section className={styles.queue}><div className={styles.sectionHeading}><h2>Story pipeline</h2><span>{visible.length} stories</span></div><div className={styles.publications}><span className={styles.magBadge}>◆ MAGAZINE · YOUTH & IDEAS</span><span className={styles.newsBadge}>● NEWSLETTER · WORLD REPORT</span></div>
+ <div className={styles.layout} id="qibla-editorial-pipeline"><section className={styles.queue}><div className={styles.sectionHeading}><h2>Story pipeline</h2><span>{visible.length} stories</span></div><div className={styles.publications}><span className={styles.magBadge}>◆ MAGAZINE · YOUTH & IDEAS</span><span className={styles.newsBadge}>● NEWSLETTER · WORLD REPORT</span></div>
  {visible.length===0?<p>No submissions in this view.</p>:visible.map(i=><button key={i.id} className={selected===i.id?styles.selectedStory:styles.story} onClick={()=>open(i)}><span className={i.kind==="article"?styles.magBadge:styles.newsBadge}>{i.kind==="article"?"MAGAZINE":"NEWSLETTER"}</span><strong>{i.title}</strong><small>{i.status.replaceAll("_"," ")} · {new Date(i.updated_at).toLocaleDateString()}</small></button>)}</section>
  <section className={styles.inspector}>{!active?<div className={styles.placeholder}><span>✦</span><h2>Select a story</h2><p>Open a submission to inspect its status, editorial notes and available actions.</p></div>:<><div className={styles.sectionHeading}><h2>Story details</h2><span>{active.status.replaceAll("_"," ")}</span></div><p className={active.kind==="article"?styles.magBadge:styles.newsBadge}>{active.kind==="article"?"THE MAGAZINE":"THE NEWSLETTER"}</p><h3>{active.title}</h3><p>{active.subtitle}</p><div className={styles.metadata}>WRITER ID <code>{active.author_id}</code><br/>LAST UPDATED {new Date(active.updated_at).toLocaleString()}</div>{active.review_note&&<p className={styles.notice}>EDITOR'S NOTE: {active.review_note}</p>}
  <details><summary>Read submission</summary><div className={styles.body}>{active.body}</div></details>
