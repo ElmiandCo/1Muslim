@@ -681,3 +681,16 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 @keyframes ummahLiveCommentRise{0%,8%{opacity:0;transform:translateY(18px) scale(.92)}18%,70%{opacity:1;transform:translateY(0) scale(1)}88%,100%{opacity:0;transform:translateY(-28px) scale(.96)}}
 @media(max-width:600px){.ummah-live-comment{max-width:52%;padding:7px 8px}.ummah-live-comment-0{left:-2%}.ummah-live-comment-1{right:-2%}.ummah-live-comment-2{left:-2%}.ummah-live-comment-copy{font-size:10px}.canvas-community-posts-only .community-post-card{border-radius:20px!important}}
 @media(prefers-reduced-motion:reduce){.ummah-live-comment{animation:none;opacity:1;transform:none}}
+
+
+/* iOS native-feeling comment composition: keep the visual viewport and input stable. */
+.ummah-comments-viewport{position:fixed!important;left:0!important;right:0!important;bottom:auto!important;width:100%!important;box-sizing:border-box!important;overscroll-behavior:contain!important}
+.ummah-comments-viewport .ummah-comments-theme-responsive{max-height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.ummah-comments-viewport .ummah-comments-list{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.ummah-comments-viewport .ummah-comments-theme-responsive form{flex:0 0 auto!important;position:relative!important;z-index:2;padding-bottom:max(4px,env(safe-area-inset-bottom));}
+.ummah-comments-viewport input,.ummah-comments-viewport textarea{font-size:16px!important;line-height:1.4!important;touch-action:manipulation}
+.ummah-comments-viewport.keyboard-open{align-items:flex-end!important;padding:8px!important}
+.ummah-comments-viewport.keyboard-open .ummah-comments-theme-responsive{width:100%!important;max-width:100%!important;max-height:100%!important;border-radius:20px 20px 0 0!important}
+.ummah-comments-viewport.keyboard-open .ummah-comment-post-preview{display:none!important}
+.ummah-comments-viewport.keyboard-open .ummah-comments-theme-responsive form{padding-bottom:4px!important}
+@media(max-width:767px){.unifiedPostMedia .commentComposer input,.unifiedPostMedia .commentComposer textarea{font-size:16px!important}}
