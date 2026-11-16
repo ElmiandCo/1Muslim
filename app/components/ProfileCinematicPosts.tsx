@@ -1,5 +1,6 @@
-import {youtubeVideoId} from "./YouTubePostLink";
 "use client";
+import {youtubeVideoId} from "./YouTubePostLink";
+
 import Link from "next/link";
 import {useEffect,useRef,useState} from "react";
 import "./ProfileCinematicPosts.css";
