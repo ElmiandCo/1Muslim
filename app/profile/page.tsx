@@ -131,7 +131,27 @@ function ProfileCompactStats({userId,postCount,followers,following}:{userId:stri
 function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQuickPanel,onQuickPanel,showProfileDetails=true}:{profile:Profile;onEdit:()=>void;ashab:Profile[];isOwner?:boolean;viewerId?:string;editing?:boolean;editorTab?:string;activeQuickPanel?:"posts"|"videos"|"settings"|null;onQuickPanel?:(panel:"posts"|"videos"|"settings")=>void;showProfileDetails?:boolean}){
  const [section,setSection]=useState<"activity"|"connections"|"analytics">("activity");
  const [followCounts,setFollowCounts]=useState({followers:0,following:0});
- useEffect(()=>{let live=true;const db=createClient();void Promise.all([db.from("profile_follows").select("follower_id",{count:"exact",head:true}).eq("following_id",profile.id),db.from("profile_follows").select("following_id",{count:"exact",head:true}).eq("follower_id",profile.id)]).then(([a,b])=>{if(live&&!a.error&&!b.error)setFollowCounts({followers:a.count||0,following:b.count||0})});return()=>{live=false}},[profile.id]);
+ useEffect(()=>{
+  let live=true;
+  const db=createClient();
+  let revision=0;
+  const load=async()=>{
+   const request=++revision;
+   const [a,b]=await Promise.all([db.from("profile_follows").select("follower_id",{count:"exact",head:true}).eq("following_id",profile.id),db.from("profile_follows").select("following_id",{count:"exact",head:true}).eq("follower_id",profile.id)]);
+   if(live&&request===revision&&!a.error&&!b.error)setFollowCounts({followers:a.count||0,following:b.count||0});
+  };
+  const onFollow=(event:Event)=>{
+   const detail=(event as CustomEvent<{memberId:string;viewerId:string;following:boolean}>).detail;
+   if(!detail||typeof detail.following!=="boolean")return;
+   revision++;
+   const delta=detail.following?1:-1;
+   if(detail.memberId===profile.id)setFollowCounts(current=>({...current,followers:Math.max(0,current.followers+delta)}));
+   if(detail.viewerId===profile.id)setFollowCounts(current=>({...current,following:Math.max(0,current.following+delta)}));
+  };
+  void load();
+  window.addEventListener("1muslim:follow-changed",onFollow);
+  return()=>{live=false;revision++;window.removeEventListener("1muslim:follow-changed",onFollow)};
+ },[profile.id]);
  const coverUrl=typeof profile.avatar_config?.profileCoverUrl==="string"?profile.avatar_config.profileCoverUrl:COVER_STOCK.find(c=>c.id===profile.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
  const avatar=typeof profile.avatar_config?.selectedAvatarUrl==="string"?profile.avatar_config.selectedAvatarUrl:profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
  return <section className="profileProfessional">
@@ -210,7 +230,7 @@ function MemberFollowControl({viewerId,memberId}:{viewerId:string;memberId:strin
    ?await db.from("profile_follows").delete().eq("follower_id",viewerId).eq("following_id",memberId)
    :await db.from("profile_follows").insert({follower_id:viewerId,following_id:memberId});
   if(result.error&&result.error.code!=="23505"){console.error("Profile follow request failed",result.error);setError(`Could not update your follow (${result.error.code||"unknown"}). Please try again.`)}
-  else{setFollowing(!following);window.dispatchEvent(new CustomEvent("1muslim:follow-changed",{detail:{memberId,viewerId}}))}
+  else{const nextFollowing=!following;setFollowing(nextFollowing);window.dispatchEvent(new CustomEvent("1muslim:follow-changed",{detail:{memberId,viewerId,following:nextFollowing}}))}
   setSaving(false);
  };
  if(viewerId===memberId)return null;
