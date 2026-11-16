@@ -49,7 +49,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/sitemap") || pathname.startsWith("/.well-known/") ||
     /\\.[a-z0-9]{2,6}$/i.test(pathname);
   if (!guestAllowed) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await Promise.race([supabase.auth.getUser().then(({data})=>data.user).catch(()=>null),new Promise<null>(resolve=>setTimeout(()=>resolve(null),3500))]);
     if (!user) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/auth";
@@ -59,8 +59,8 @@ export async function updateSession(request: NextRequest) {
       supabaseResponse.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie));
       return redirect;
     }
-  } else {
-    await supabase.auth.getClaims();
   }
+  // Public routes must not block on an external auth refresh: Supabase latency
+  // can otherwise exhaust the Vercel middleware 25-second response deadline.
   return supabaseResponse;
 }
