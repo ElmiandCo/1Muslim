@@ -47,7 +47,7 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
   return()=>observer.disconnect();
  },[posts]);
  return <section className={"profileCinematicPosts"+(variant==="recentCards"?" profileRecentCards":"")} aria-label={feedMode==="community"?"Ummah community discovery":"Member posts"}>
-  <div className="profileCinematicHeading"><h2>{feedMode==="community"?"Ummah Discovery":"Posts"}</h2><span>{feedMode==="community"?"Newest community posts":`${posts.length} shared`}</span></div>
+  <div className="profileCinematicHeading"><h2>{feedMode==="community"?"Ummah Discovery":"Posts"}</h2>{feedMode==="community"?<Link href="/posts" className="profileCinematicMore" aria-label="Explore more Ummah community posts">More →</Link>:<span>{posts.length} shared</span>}</div>
   {loading?<p className="profileCinematicEmpty">Loading posts…</p>:posts.length===0?<p className="profileCinematicEmpty">{feedMode==="community"?"No community posts to show yet.":"No posts to show yet."}</p>:
   <div className="profileCinematicGrid">{(limit?posts.slice(0,limit):posts).map(p=>{
    const isVideo=p.media_type?.startsWith("video/")||/\.(mp4|webm|mov)(\?|$)/i.test(p.media_url||"");
