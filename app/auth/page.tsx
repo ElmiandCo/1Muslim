@@ -10,7 +10,12 @@ import homeStyles from "../home-hub.module.css";
 import CelestialOrb from "../components/CelestialOrb";
 import AdmissionJourney from "../components/AdmissionJourney";
 
-const safeNext = () => { const p=new URLSearchParams(window.location.search).get("next"); return p?.startsWith("/")&&!p.startsWith("//")&&!p.startsWith("/\\\\") ? p : "/profile"; };
+const safeNext = () => {
+  const p = new URLSearchParams(window.location.search).get("next");
+  if (!p?.startsWith("/") || p.startsWith("//") || p.startsWith("/\\\\") || p.includes("://")) return "/profile";
+  const match = p.match(/^\/profile\/([0-9a-f-]{36})(?:[?#].*)?$/i);
+  return match ? `/profile?member=${encodeURIComponent(match[1])}` : p;
+};
 const safeMethod = () => { const m = new URLSearchParams(window.location.search).get("method"); return m === "declaration" || m === "type" ? "declaration" : "audio"; };
 
 export default function AuthPage() {
