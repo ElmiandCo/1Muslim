@@ -160,12 +160,13 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
   const [activeQuickPanel,setActiveQuickPanel]=useState<"posts"|"videos"|"settings"|null>(null);
   useEffect(()=>{if(new URLSearchParams(window.location.search).get("panel")==="settings")setActiveQuickPanel("settings")},[]);
   const [showProfileDetails,setShowProfileDetails]=useState(false);
-  const toggleQuickPanel=(panel:"posts"|"videos"|"settings")=>setActiveQuickPanel(current=>current===panel?null:panel);
+  const [showCommunityPreview,setShowCommunityPreview]=useState(true);
+  const toggleQuickPanel=(panel:"posts"|"videos"|"settings")=>{setShowCommunityPreview(false);setActiveQuickPanel(current=>current===panel?null:panel)};
   return <section className="profileOverview">
     <ProfileOrbitStudio profile={profile} onEdit={onEdit} ashab={ashab} activeQuickPanel={activeQuickPanel} onQuickPanel={toggleQuickPanel} showProfileDetails={showProfileDetails} editing={false}/>
-    <nav className="profilePremiumTabs" aria-label="Profile content"><button type="button" aria-pressed={activeQuickPanel==="posts"} onClick={()=>{setShowProfileDetails(true);setActiveQuickPanel("posts")}}>▦ Posts</button><button type="button" aria-pressed={activeQuickPanel==="videos"} onClick={()=>{setShowProfileDetails(true);setActiveQuickPanel("videos")}}>▣ Videos</button><button type="button" aria-pressed={activeQuickPanel==="settings"} onClick={()=>{setShowProfileDetails(true);setActiveQuickPanel("settings")}}>▥ Analytics</button></nav>
-    <ProfileAppLauncher onProfile={()=>setShowProfileDetails(v=>!v)}/>
-    <ProfileCinematicPosts profileId={profile.id}/>
+    <nav className="profilePremiumTabs" aria-label="Profile content"><button type="button" aria-pressed={activeQuickPanel==="posts"} onClick={()=>{setShowProfileDetails(true);setShowCommunityPreview(false);setActiveQuickPanel("posts")}}>▦ Posts</button><button type="button" aria-pressed={activeQuickPanel==="videos"} onClick={()=>{setShowProfileDetails(true);setShowCommunityPreview(false);setActiveQuickPanel("videos")}}>▣ Videos</button><button type="button" aria-pressed={activeQuickPanel==="settings"} onClick={()=>{setShowProfileDetails(true);setShowCommunityPreview(false);setActiveQuickPanel("settings")}}>▥ Analytics</button></nav>
+    <ProfileAppLauncher onProfile={()=>{setShowCommunityPreview(v=>!v);setActiveQuickPanel(null)}}/>
+    {showCommunityPreview&&activeQuickPanel===null&&<ProfileCinematicPosts profileId={profile.id} variant="recentCards" limit={4}/>}
     {showProfileDetails&&<div id="profile-details" aria-label="Profile details"/>}
 
     <div className="profileLegacyOverview" hidden>
