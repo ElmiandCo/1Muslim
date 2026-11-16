@@ -4,12 +4,13 @@ import {createClient} from "../../utils/supabase/client";
 import {useEffect,useRef,useState} from "react";
 import "./ProfileCinematicPosts.css";
 
-type Post={id:string;author_id:string;body:string;media_url:string|null;media_type:string|null;thumbnail_url?:string|null;created_at:string};
+type Post={id:string;author_id:string;body:string;media_url:string|null;media_type:string|null;thumbnail_url?:string|null;created_at:string;author_name?:string;author_handle?:string;author_avatar_url?:string|null};
 export default function ProfileCinematicPosts({profileId,variant="grid",limit,feedMode="own"}:{profileId:string;variant?:"grid"|"recentCards";limit?:number;feedMode?:"own"|"community"}){
  const [posts,setPosts]=useState<Post[]>([]);
  const [loading,setLoading]=useState(true);
  const [active,setActive]=useState<string|null>(null);
  const nodes=useRef(new Map<string,HTMLElement>());
+ const carouselRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{
   let mounted=true;
   setLoading(true);
@@ -17,7 +18,20 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
    if(feedMode==="community"){
     const discovery=await fetch("/api/community-posts",{cache:"no-store"}).then(r=>r.ok?r.json():null);
     if(!discovery||!Array.isArray(discovery.posts))throw new Error("Community feed unavailable");
-    if(mounted)setPosts((discovery.posts as Post[]).filter(p=>p.author_id!==profileId).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,limit||4));
+    if(mounted){
+     const candidates=(discovery.posts as Post[]).filter(p=>p.author_id!==profileId);
+     const previousKey="1muslim:profile-ummah-previous";
+     let previous:string[]=[];
+     try{previous=JSON.parse(sessionStorage.getItem(previousKey)||"[]")}catch{}
+     // Favor posts not displayed last time; use the whole available feed, not just the newest four.
+     const fresh=candidates.filter(p=>!previous.includes(p.id));
+     const pool=fresh.length>=Math.min(limit||4,candidates.length)?fresh:candidates;
+     const shuffled=[...pool];
+     for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]}
+     const chosen=shuffled.slice(0,limit||4);
+     try{sessionStorage.setItem(previousKey,JSON.stringify(chosen.map(p=>p.id)))}catch{}
+     setPosts(chosen);
+    }
     return;
    }
    const db=createClient();
@@ -46,22 +60,25 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
   nodes.current.forEach(node=>observer.observe(node));
   return()=>observer.disconnect();
  },[posts]);
- return <section className={"profileCinematicPosts"+(variant==="recentCards"?" profileRecentCards":"")} aria-label={feedMode==="community"?"Ummah community discovery":"Member posts"}>
+ return <section className={"profileCinematicPosts"+(variant==="recentCards"?" profileRecentCards":"")+(feedMode==="community"?" profileUmmahCarousel":"")} aria-label={feedMode==="community"?"Ummah community discovery":"Member posts"}>
   <div className="profileCinematicHeading"><h2>{feedMode==="community"?"Ummah Discovery":"Posts"}</h2>{feedMode==="community"?<Link href="/posts" className="profileCinematicMore" aria-label="Explore more Ummah community posts">More →</Link>:<span>{posts.length} shared</span>}</div>
   {loading?<p className="profileCinematicEmpty">Loading posts…</p>:posts.length===0?<p className="profileCinematicEmpty">{feedMode==="community"?"No community posts to show yet.":"No posts to show yet."}</p>:
-  <div className="profileCinematicGrid">{(limit?posts.slice(0,limit):posts).map(p=>{
+  <div className="profileCinematicGrid" ref={carouselRef}>{(limit?posts.slice(0,limit):posts).map(p=>{
    const isVideo=p.media_type?.startsWith("video/")||/\.(mp4|webm|mov)(\?|$)/i.test(p.media_url||"");
    const isImage=!!p.media_url&&(p.media_type?.startsWith("image/")||/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(p.media_url));
    const playing=active===p.id;
    return <Link key={p.id} href={`/posts/story/${encodeURIComponent(p.id)}`} className={`profileCinematicTile ${playing?"is-active":""}`} data-post-id={p.id} ref={el=>{if(el)nodes.current.set(p.id,el);else nodes.current.delete(p.id)}} aria-label={`View post: ${(p.body||"Community post").slice(0,90)}`}>
+    {feedMode==="community"&&<div className="profileUmmahAuthor"><span className="profileUmmahAvatar">{p.author_avatar_url?<img src={p.author_avatar_url} alt=""/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span><span className="profileUmmahAuthorInfo"><strong>{p.author_name||"Community member"}</strong><small>{p.author_handle||"@member"} · {new Date(p.created_at).toLocaleDateString()}</small></span><span className="profileUmmahOpen" aria-hidden="true">↗</span></div>}
     <div className="profileCinematicVisual">
      {isVideo&&p.media_url?<video src={p.media_url} poster={p.thumbnail_url||undefined} muted playsInline loop autoPlay={playing} preload={playing?"metadata":"none"} ref={el=>{if(!el)return;if(playing){el.play().catch(()=>{});}else el.pause()}}/>:
       isImage?<img src={p.media_url!} alt="" loading="lazy"/>:
       <div className="profileCinematicText"><span>✦</span><p>{(p.body||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,150)}</p></div>}
     </div>
     {variant==="recentCards"&&<div className="profileRecentCardMeta"><strong>{(p.body||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,105)||"View post"}</strong><small>{new Date(p.created_at).toLocaleDateString()} · View post ↗</small></div>}
+    {feedMode==="community"&&<div className="profileUmmahFooter"><span>♡ &nbsp; ◯ &nbsp; ♧</span><span>View post ↗</span></div>}
     {isVideo&&<span className="profileCinematicPlay" aria-hidden="true">▶</span>}
    </Link>;
   })}</div>}
+  {feedMode==="community"&&posts.length>1&&<div className="profileUmmahCarouselControls"><span>Swipe to explore the Ummah</span><div><button type="button" aria-label="Previous community post" onClick={()=>carouselRef.current?.scrollBy({left:-Math.max(250,carouselRef.current.clientWidth*.8),behavior:"smooth"})}>‹</button><button type="button" aria-label="Next community post" onClick={()=>carouselRef.current?.scrollBy({left:Math.max(250,carouselRef.current.clientWidth*.8),behavior:"smooth"})}>›</button></div></div>}
  </section>;
 }
