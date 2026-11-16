@@ -1,4 +1,6 @@
 "use client";
+import YouTubePostLink from "./YouTubePostLink";
+
 import {currentPostTheme} from "../lib/post-theme";
 
 import {useEffect,useRef,useState} from "react";
@@ -70,7 +72,7 @@ export default function PostDesignStudio(){
  <div className={styles.identity}><div className={styles.avatar}>1</div><div><strong>1Muslim</strong><span>◎ Public (Ummah)</span></div></div>
 
  <div className={styles.composerRow}><div className={styles.composer}><textarea ref={editorRef} maxLength={2000} aria-label="What's on your mind?" placeholder="What's on your mind?" value={text} onChange={e=>updateText(e.target.value)}/>{youtubePreview&&<div className={styles.youtubeInline}><span>YouTube preview · included with your post</span><iframe title="YouTube post preview" src={"https://www.youtube-nocookie.com/embed/"+youtubePreview.id} allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen/></div>}</div></div>
- <div className={styles.quickToolbar} aria-label="Post attachments and tools"><button type="button" onClick={()=>mediaRef.current?.click()}><QuickIcon name="photo"/><span>Photo</span></button><button type="button" onClick={()=>mediaRef.current?.click()}><QuickIcon name="video"/><span>Video</span></button><button type="button" onClick={()=>{setVerseError("");setVerseSelected(false);setVersePreview(null);setVerseOpen(true)}}><QuickIcon name="verse"/><span>Verse</span></button><a href="/create" className={styles.studioLink}><QuickIcon name="studio"/><span>Create Studio</span><span aria-hidden="true">↗</span></a></div>
+ <div className={styles.quickToolbar} aria-label="Post attachments and tools"><YouTubePostLink onAdd={url=>updateText(text.trim()?text.trim()+"\n"+url:url)}/><button type="button" onClick={()=>mediaRef.current?.click()}><QuickIcon name="photo"/><span>Photo</span></button><button type="button" onClick={()=>mediaRef.current?.click()}><QuickIcon name="video"/><span>Video</span></button><button type="button" onClick={()=>{setVerseError("");setVerseSelected(false);setVersePreview(null);setVerseOpen(true)}}><QuickIcon name="verse"/><span>Verse</span></button><a href="/create" className={styles.studioLink}><QuickIcon name="studio"/><span>Create Studio</span><span aria-hidden="true">↗</span></a></div>
  <div className={styles.quickFooter}><span className={styles.counter}>{text.length} / 2000</span><button type="button" className={styles.postButton} disabled={(!text.trim()&&!media)||busy} onClick={()=>setConfirm(true)}>{busy?"Posting…":"Post →"}</button></div>
  {media&&<div className={styles.attachment}>{media.type==="image"?<img src={media.url} alt="Attachment preview"/>:<video src={media.url} controls playsInline/>}<button type="button" onClick={()=>setMedia(null)}>Remove {media.name} ×</button></div>}
  {postPreviewOpen&&typeof document!=="undefined"&&createPortal(<div className={styles.previewModalBackdrop} role="presentation" onClick={()=>setPostPreviewOpen(false)}><section className={`${styles.livePostPreview} ${styles.previewModalCard}`} role="dialog" aria-modal="true" aria-label="Post preview" onClick={e=>e.stopPropagation()}>
