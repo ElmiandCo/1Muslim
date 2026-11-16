@@ -5,7 +5,7 @@ import {useEffect,useRef,useState} from "react";
 import "./ProfileCinematicPosts.css";
 
 type Post={id:string;author_id:string;body:string;media_url:string|null;media_type:string|null;thumbnail_url?:string|null;created_at:string};
-export default function ProfileCinematicPosts({profileId}:{profileId:string}){
+export default function ProfileCinematicPosts({profileId,variant="grid",limit}:{profileId:string;variant?:"grid"|"recentCards";limit?:number}){
  const [posts,setPosts]=useState<Post[]>([]);
  const [loading,setLoading]=useState(true);
  const [active,setActive]=useState<string|null>(null);
@@ -40,10 +40,10 @@ export default function ProfileCinematicPosts({profileId}:{profileId:string}){
   nodes.current.forEach(node=>observer.observe(node));
   return()=>observer.disconnect();
  },[posts]);
- return <section className="profileCinematicPosts" aria-label="Member posts">
+ return <section className={"profileCinematicPosts"+(variant==="recentCards"?" profileRecentCards":"")} aria-label="Member posts">
   <div className="profileCinematicHeading"><h2>Posts</h2><span>{posts.length} shared</span></div>
   {loading?<p className="profileCinematicEmpty">Loading posts…</p>:posts.length===0?<p className="profileCinematicEmpty">No posts to show yet.</p>:
-  <div className="profileCinematicGrid">{posts.map(p=>{
+  <div className="profileCinematicGrid">{(limit?posts.slice(0,limit):posts).map(p=>{
    const isVideo=p.media_type?.startsWith("video/")||/\.(mp4|webm|mov)(\?|$)/i.test(p.media_url||"");
    const isImage=!!p.media_url&&(p.media_type?.startsWith("image/")||/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(p.media_url));
    const playing=active===p.id;
@@ -53,6 +53,7 @@ export default function ProfileCinematicPosts({profileId}:{profileId:string}){
       isImage?<img src={p.media_url!} alt="" loading="lazy"/>:
       <div className="profileCinematicText"><span>✦</span><p>{(p.body||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,150)}</p></div>}
     </div>
+    {variant==="recentCards"&&<div className="profileRecentCardMeta"><strong>{(p.body||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,105)||"View post"}</strong><small>{new Date(p.created_at).toLocaleDateString()} · View post ↗</small></div>}
     {isVideo&&<span className="profileCinematicPlay" aria-hidden="true">▶</span>}
    </Link>;
   })}</div>}
