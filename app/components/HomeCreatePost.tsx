@@ -1,5 +1,6 @@
-import YouTubePostLink from "./YouTubePostLink";
 "use client";
+import YouTubePostLink from "./YouTubePostLink";
+
 import {cleanPostBody} from "../lib/cleanPostBody";
 import {currentPostTheme} from "../lib/post-theme";
 
