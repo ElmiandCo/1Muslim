@@ -5,7 +5,7 @@ import {useEffect,useRef,useState} from "react";
 import "./ProfileCinematicPosts.css";
 
 type Post={id:string;author_id:string;body:string;media_url:string|null;media_type:string|null;thumbnail_url?:string|null;created_at:string};
-export default function ProfileCinematicPosts({profileId,variant="grid",limit}:{profileId:string;variant?:"grid"|"recentCards";limit?:number}){
+export default function ProfileCinematicPosts({profileId,variant="grid",limit,feedMode="own"}:{profileId:string;variant?:"grid"|"recentCards";limit?:number;feedMode?:"own"|"community"}){
  const [posts,setPosts]=useState<Post[]>([]);
  const [loading,setLoading]=useState(true);
  const [active,setActive]=useState<string|null>(null);
@@ -14,6 +14,12 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit}:{
   let mounted=true;
   setLoading(true);
   const load=async()=>{
+   if(feedMode==="community"){
+    const discovery=await fetch("/api/community-posts",{cache:"no-store"}).then(r=>r.ok?r.json():null);
+    if(!discovery||!Array.isArray(discovery.posts))throw new Error("Community feed unavailable");
+    if(mounted)setPosts((discovery.posts as Post[]).filter(p=>p.author_id!==profileId).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,limit||4));
+    return;
+   }
    const db=createClient();
    // Query by author: the global discovery endpoint may only return its first page.
    const [community,legacy,discovery]=await Promise.all([
@@ -30,7 +36,7 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit}:{
   };
   void load().catch(()=>{if(mounted)setPosts([])}).finally(()=>{if(mounted)setLoading(false)});
   return()=>{mounted=false};
- },[profileId]);
+ },[profileId,feedMode,limit]);
  useEffect(()=>{
   const observer=new IntersectionObserver(entries=>{
    const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio);
@@ -40,9 +46,9 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit}:{
   nodes.current.forEach(node=>observer.observe(node));
   return()=>observer.disconnect();
  },[posts]);
- return <section className={"profileCinematicPosts"+(variant==="recentCards"?" profileRecentCards":"")} aria-label="Member posts">
-  <div className="profileCinematicHeading"><h2>Posts</h2><span>{posts.length} shared</span></div>
-  {loading?<p className="profileCinematicEmpty">Loading posts…</p>:posts.length===0?<p className="profileCinematicEmpty">No posts to show yet.</p>:
+ return <section className={"profileCinematicPosts"+(variant==="recentCards"?" profileRecentCards":"")} aria-label={feedMode==="community"?"Ummah community discovery":"Member posts"}>
+  <div className="profileCinematicHeading"><h2>{feedMode==="community"?"Ummah Discovery":"Posts"}</h2>{feedMode==="community"?<Link href="/posts" className="profileCinematicMore" aria-label="Explore more Ummah community posts">More →</Link>:<span>{posts.length} shared</span>}</div>
+  {loading?<p className="profileCinematicEmpty">Loading posts…</p>:posts.length===0?<p className="profileCinematicEmpty">{feedMode==="community"?"No community posts to show yet.":"No posts to show yet."}</p>:
   <div className="profileCinematicGrid">{(limit?posts.slice(0,limit):posts).map(p=>{
    const isVideo=p.media_type?.startsWith("video/")||/\.(mp4|webm|mov)(\?|$)/i.test(p.media_url||"");
    const isImage=!!p.media_url&&(p.media_type?.startsWith("image/")||/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(p.media_url));
