@@ -1,4 +1,5 @@
 "use client";
+import {cleanPostBody} from "../lib/cleanPostBody";
 import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
 import {useEffect,useRef,useState} from "react";
