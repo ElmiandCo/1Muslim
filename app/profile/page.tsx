@@ -19,6 +19,7 @@ import ProfileAnalytics from "../components/ProfileAnalytics";
 import ProfileMemberStats from "../components/ProfileMemberStats";
 import ProfileNavIcon from "../components/icons/ProfileNavIcon";
 import MemberDiscoveryContent from "../components/MemberDiscoveryContent";
+import ProfileCinematicPosts from "../components/ProfileCinematicPosts";
 
 type Profile = {
   id: string; display_name: string; username: string | null; first_name: string | null; last_name: string | null;
@@ -164,6 +165,7 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
     <ProfileOrbitStudio profile={profile} onEdit={onEdit} ashab={ashab} activeQuickPanel={activeQuickPanel} onQuickPanel={toggleQuickPanel} showProfileDetails={showProfileDetails} editing={false}/>
     <nav className="profilePremiumTabs" aria-label="Profile content"><button type="button" aria-pressed={activeQuickPanel==="posts"} onClick={()=>{setShowProfileDetails(true);setActiveQuickPanel("posts")}}>▦ Posts</button><button type="button" aria-pressed={activeQuickPanel==="videos"} onClick={()=>{setShowProfileDetails(true);setActiveQuickPanel("videos")}}>▣ Videos</button><button type="button" aria-pressed={activeQuickPanel==="settings"} onClick={()=>{setShowProfileDetails(true);setActiveQuickPanel("settings")}}>▥ Analytics</button></nav>
     <ProfileAppLauncher onProfile={()=>setShowProfileDetails(v=>!v)}/>
+    <ProfileCinematicPosts profileId={profile.id}/>
     {showProfileDetails&&<div id="profile-details" aria-label="Profile details"/>}
 
     <div className="profileLegacyOverview" hidden>
