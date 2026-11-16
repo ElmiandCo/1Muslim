@@ -2,3 +2,11 @@
 /* TikTok-style engagement stack appears only in immersive full screen. */
 .rail.fullscreen{position:absolute;z-index:7;right:8px;bottom:calc(90px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:17px;padding:12px 5px;background:transparent;border:0;animation:railPop .35s .1s both}.rail.fullscreen button{min-width:58px;color:#fff;font-size:12px;text-shadow:0 2px 6px #000,0 1px 2px #000}.rail.fullscreen svg{width:32px;height:32px;filter:drop-shadow(0 2px 5px #000c)}
 @keyframes railPop{from{opacity:0;transform:translateX(24px) scale(.85)}to{opacity:1;transform:translateX(0) scale(1)}}@media(prefers-reduced-motion:reduce){.rail.fullscreen{animation:none}}
+
+/* Dragging comments resizes the media rather than covering it. */
+.inlineDrawer{position:absolute;bottom:0;left:0;right:0;z-index:20;display:flex;align-items:stretch;min-height:0;overflow:hidden;box-shadow:0 -10px 30px #0005}
+.inlineDrawer .drawer{height:100%;max-height:none;border-radius:22px 22px 0 0}
+.dragHandle{touch-action:none;user-select:none;cursor:grab;min-height:70px;flex-direction:column;gap:8px;padding:10px 20px!important}
+.dragHandle:active{cursor:grabbing}
+.grabber{width:40px;height:5px;border-radius:20px;background:#b9bec8;display:block}
+.railHidden{opacity:0!important;pointer-events:none!important;transform:translateX(20px)!important;transition:opacity .15s,transform .15s}
