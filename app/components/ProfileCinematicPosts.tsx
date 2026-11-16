@@ -1,4 +1,5 @@
 "use client";
+import {cleanPostBody} from "../lib/cleanPostBody";
 import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
 import {useEffect,useRef,useState} from "react";
@@ -67,14 +68,14 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
    const isVideo=p.media_type?.startsWith("video/")||/\.(mp4|webm|mov)(\?|$)/i.test(p.media_url||"");
    const isImage=!!p.media_url&&(p.media_type?.startsWith("image/")||/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(p.media_url));
    const playing=active===p.id;
-   return <Link key={p.id} href={`/posts/story/${encodeURIComponent(p.id)}`} className={`profileCinematicTile ${playing?"is-active":""}`} data-post-id={p.id} ref={el=>{if(el)nodes.current.set(p.id,el);else nodes.current.delete(p.id)}} aria-label={`View post: ${(p.body||"Community post").slice(0,90)}`}>
+   return <Link key={p.id} href={`/posts/story/${encodeURIComponent(p.id)}`} className={`profileCinematicTile ${playing?"is-active":""}`} data-post-id={p.id} ref={el=>{if(el)nodes.current.set(p.id,el);else nodes.current.delete(p.id)}} aria-label={`View post: ${(cleanPostBody(p.body)||"Community post").slice(0,90)}`}>
     {feedMode==="community"&&<div className="profileUmmahAuthor"><span className="profileUmmahAvatar">{p.author_avatar_url?<img src={p.author_avatar_url} alt=""/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span><span className="profileUmmahAuthorInfo"><strong>{p.author_name||"Community member"}</strong><small>{p.author_handle||"@member"} · {new Date(p.created_at).toLocaleDateString()}</small></span><span className="profileUmmahOpen" aria-hidden="true">↗</span></div>}
     <div className="profileCinematicVisual">
      {isVideo&&p.media_url?<video src={p.media_url} poster={p.thumbnail_url||undefined} muted playsInline loop autoPlay={playing} preload={playing?"metadata":"none"} ref={el=>{if(!el)return;if(playing){el.play().catch(()=>{});}else el.pause()}}/>:
       isImage?<img src={p.media_url!} alt="" loading="lazy"/>:
-      <div className="profileCinematicText"><span>✦</span><p>{(p.body||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,150)}</p></div>}
+      <div className="profileCinematicText"><span>✦</span><p>{(cleanPostBody(p.body)||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,150)}</p></div>}
     </div>
-    {variant==="recentCards"&&<div className="profileRecentCardMeta"><strong>{(p.body||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,105)||"View post"}</strong><small>{new Date(p.created_at).toLocaleDateString()} · View post ↗</small></div>}
+    {variant==="recentCards"&&<div className="profileRecentCardMeta"><strong>{(cleanPostBody(p.body)||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,105)||"View post"}</strong><small>{new Date(p.created_at).toLocaleDateString()} · View post ↗</small></div>}
     {feedMode==="community"&&<div className="profileUmmahFooter"><span>♡ &nbsp; ◯ &nbsp; ♧</span><span>View post ↗</span></div>}
     {isVideo&&<span className="profileCinematicPlay" aria-hidden="true">▶</span>}
    </Link>;

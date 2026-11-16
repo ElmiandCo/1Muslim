@@ -1,4 +1,5 @@
 "use client";
+import {cleanPostBody} from "../lib/cleanPostBody";
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
@@ -6,7 +7,7 @@ import UmmahThreeRealm,{type RealmItem} from "./UmmahThreeRealm";
 import "./world.css";
 type Post={id:string;body:string;author_name:string;media_url?:string|null;media_type?:string|null;created_at?:string};
 const dateOf=(v?:string)=>{const d=v?new Date(v):new Date();return Number.isNaN(d.getTime())?new Date().toISOString().slice(0,10):d.toISOString().slice(0,10)};
-const cleanBody=(body:string)=>body.replace(/^\s*✦\s*DAILY\s+UMMAH\s*✦\s*/i,"").replace(/^\s*[•·]\s*DAILY\s+UMMAH\s*[•·]?\s*/i,"").trim();
+const cleanBody=(body:string)=>cleanPostBody(body);
 const video=(p:Post)=>p.media_type?.startsWith("video/")||/\.(mp4|webm|mov)(\?|$)/i.test(p.media_url||"");
 export default function UmmahWorld(){
  const [posts,setPosts]=useState<Post[]>([]),[avatar,setAvatar]=useState<string|null>(null),[name,setName]=useState("YOU"),[selected,setSelected]=useState<RealmItem|null>(null),[filter,setFilter]=useState<"all"|"post"|"photo"|"video">("all"),[day,setDay]=useState(dateOf()),[loading,setLoading]=useState(true),[error,setError]=useState("");

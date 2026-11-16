@@ -1,4 +1,5 @@
 "use client";
+import {cleanPostBody} from "../lib/cleanPostBody";
 import Link from "next/link";
 import Image from "next/image";
 import {useEffect,useState} from "react";
@@ -21,7 +22,7 @@ export default function PostViewer({post,author,media=[],actions,share}:{post:Vi
    <Link className={styles.profileLink} href={"/profile/"+post.user_id} aria-label="View creator profile">↗</Link>
   </header>
   <button type="button" className={styles.expandToggle} onClick={()=>setExpanded(x=>!x)} aria-label={expanded?"Exit full screen":"View post full screen"}>{expanded?"✕":"⛶"}</button>
-  <div className={styles.content}>{media.length>0&&<div className={styles.mediaGallery}>{media.map(item=>item.mime_type.startsWith("video/")?<video key={item.id} src={item.url} className={styles.media} controls playsInline preload="metadata" aria-label={item.file_name||"Post video"}/>:item.mime_type.startsWith("image/")?<img key={item.id} src={item.url} alt={item.file_name||"Post image"} className={styles.media} loading="lazy"/>:null)}</div>}{post.body?.trim()&&<p className={styles.caption}>{post.body.replace(/^✦ DAILY UMMAH ✦(?:\\n|\r?\n)?\s*/,"")}</p>}</div>
+  <div className={styles.content}>{media.length>0&&<div className={styles.mediaGallery}>{media.map(item=>item.mime_type.startsWith("video/")?<video key={item.id} src={item.url} className={styles.media} controls playsInline preload="metadata" aria-label={item.file_name||"Post video"}/>:item.mime_type.startsWith("image/")?<img key={item.id} src={item.url} alt={item.file_name||"Post image"} className={styles.media} loading="lazy"/>:null)}</div>}{post.body?.trim()&&<p className={styles.caption}>{cleanPostBody(post.body)}</p>}</div>
   <PostEngagementRail postId={post.id} share={share} fullscreen={expanded}/><footer className={styles.actions}>{actions}</footer>
  </article>
 }

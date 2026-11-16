@@ -1,4 +1,5 @@
 "use client";
+import {cleanPostBody} from "../lib/cleanPostBody";
 import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {createPortal} from "react-dom";
@@ -154,7 +155,7 @@ function DailyPostsApp({active}:{active:boolean}){
    {posts.length?posts.map((post,i)=><div className="ummah-floating-pair" key={post.id} style={{["--ummah-tilt" as string]:(i%2===0?"-3deg":"3deg")}}>
     <button type="button" data-post-theme={posts[i].post_theme||"emerald"} className="ummah-floating-post" style={{backgroundImage:`linear-gradient(180deg,rgba(1,18,16,.22),rgba(1,18,16,.78)),url("${backgroundForPost(post.id)}")`,backgroundSize:"cover",backgroundPosition:"center"}} onClick={()=>{setSelected(post.id);setComments([]);setNotice("")}} aria-label={"Open comments on post by "+post.author_name}>
      <span className="ummah-post-glow" aria-hidden="true"/>
-     <span className="ummah-post-body">{post.body.replace(/^✦ DAILY UMMAH ✦(?:\\n|\r?\n)?\s*/,"")}</span>
+     <span className="ummah-post-body">{cleanPostBody(post.body)}</span>
      <span className="ummah-post-bottom"><span>✦ Ummah</span><span>{new Date(post.created_at).toLocaleDateString()}</span><span>Comments ↗</span></span>
     </button>
     <button type="button" className="ummah-like-button" aria-label={likes[post.id]?"Unlike post":"Like post"} aria-pressed={!!likes[post.id]} onClick={()=>void likePost(post.id)}>{likes[post.id]?"♥":"♡"}</button>
@@ -167,7 +168,7 @@ function DailyPostsApp({active}:{active:boolean}){
   {selected&&typeof document!=="undefined"&&createPortal(<div className="ummah-comments-backdrop ummah-comments-viewport" style={{top:commentViewport.top,height:commentViewport.height||"100dvh"}} role="presentation" onClick={()=>setSelected(null)}>
    <section data-post-theme={posts.find(p=>p.id===selected)?.post_theme||"emerald"} className="ummah-comments-sheet ummah-comments-theme-responsive" role="dialog" aria-modal="true" aria-label="Post comments" onClick={e=>e.stopPropagation()}>
     <header><strong>✦ Conversation</strong><button type="button" onClick={()=>setSelected(null)} aria-label="Close comments">✕</button></header>
-    <p className="ummah-comment-post-preview">{posts.find(p=>p.id===selected)?.body}</p>
+    <p className="ummah-comment-post-preview">{cleanPostBody(posts.find(p=>p.id===selected)?.body||"")}</p>
     <div className="ummah-comments-list">{comments.length?comments.map(c=><article key={c.id} className="ummah-comment-glass"><strong>{c.name}</strong><time dateTime={c.created_at}>{new Date(c.created_at).toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"})}</time><p>{c.body}</p></article>):<p>Be the first to comment.</p>}</div>
     <form onSubmit={e=>void send(e)}><input aria-label="Write a comment" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={1500} placeholder="Write a thoughtful comment…"/><button type="submit" disabled={busy||!draft.trim()}>Send ↗</button></form>
     {notice&&<p role="alert">{notice}</p>}
