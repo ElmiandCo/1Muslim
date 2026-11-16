@@ -44,13 +44,13 @@ export default function ProfileDeepWatchCarousel(){
    <div className="profileDeepWatchFooter"><span>Swipe to discover more</span><div><button type="button" aria-label="Previous DeepWatch titles" onClick={()=>rail.current?.scrollBy({left:-300,behavior:"smooth"})}>‹</button><button type="button" aria-label="Next DeepWatch titles" onClick={()=>rail.current?.scrollBy({left:300,behavior:"smooth"})}>›</button></div></div>
   </>}
   <style jsx>{`
-  .profileDeepWatch{background:#10151e;color:#f9f8f5;padding:27px 18px 30px;margin:0;border-top:1px solid #ffffff16}
+  .profileDeepWatch{background:#fff;color:#193451;padding:27px 18px 30px;margin:0;border-top:1px solid #e2e7ef}
   .profileDeepWatchHeading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
-  .profileDeepWatchKicker{color:#c7a975;font-size:10px;letter-spacing:.18em;font-weight:800}
+  .profileDeepWatchKicker{color:#9d7543;font-size:10px;letter-spacing:.18em;font-weight:800}
   .profileDeepWatchHeading h2{font-size:clamp(21px,5vw,29px);margin:5px 0;font-weight:800;letter-spacing:-.035em}
-  .profileDeepWatchHeading h2 span{color:#e2b975}
-  .profileDeepWatchHeading p{margin:0;color:#aeb9c8;font-size:12px}
-  .profileDeepWatchHeading :global(.profileDeepWatchAll){white-space:nowrap;color:#f3dfbf;font-size:13px;text-decoration:none;font-weight:700}
+  .profileDeepWatchHeading h2 span{color:#b88b4e}
+  .profileDeepWatchHeading p{margin:0;color:#64748b;font-size:12px}
+  .profileDeepWatchHeading :global(.profileDeepWatchAll){white-space:nowrap;color:#1b3d65;font-size:13px;text-decoration:none;font-weight:700}
   .profileDeepWatchRail{display:flex;gap:13px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:15px 8px 22px;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
   .profileDeepWatchRail::-webkit-scrollbar{display:none}
   .profileDeepWatchRail :global(.profileDeepWatchCard){position:relative;flex:0 0 clamp(218px,69vw,320px);aspect-ratio:1.6;display:block;overflow:hidden;border-radius:17px;scroll-snap-align:start;border:1px solid #d8b77a77;box-shadow:0 10px 23px #0009;transform:perspective(800px) rotateY(-3deg) rotateZ(-.6deg);transition:transform .3s ease,box-shadow .3s ease;text-decoration:none;color:white}
@@ -63,9 +63,9 @@ export default function ProfileDeepWatchCarousel(){
   .profileDeepWatchCaption{position:absolute;left:15px;right:12px;bottom:13px;display:flex;flex-direction:column;gap:4px;text-shadow:0 2px 5px #000}
   .profileDeepWatchCaption strong{font-size:16px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .profileDeepWatchCaption small{font-size:11px;color:#e6d5b8}
-  .profileDeepWatchFooter{display:flex;align-items:center;justify-content:space-between;color:#aeb9c8;font-size:12px}
-  .profileDeepWatchFooter div{display:flex;gap:9px}.profileDeepWatchFooter button{width:37px;height:37px;border:1px solid #ffffff5a;border-radius:50%;background:#ffffff0c;color:#fff;font-size:25px;cursor:pointer}
-  .profileDeepWatchLoading{font-size:13px;color:#aeb9c8}
+  .profileDeepWatchFooter{display:flex;align-items:center;justify-content:space-between;color:#64748b;font-size:12px}
+  .profileDeepWatchFooter div{display:flex;gap:9px}.profileDeepWatchFooter button{width:37px;height:37px;border:1px solid #cdd6e1;border-radius:50%;background:#fff;color:#1b3d65;font-size:25px;cursor:pointer}
+  .profileDeepWatchLoading{font-size:13px;color:#64748b}
   @media(prefers-reduced-motion:reduce){.profileDeepWatchRail :global(.profileDeepWatchCard){transition:none;transform:none!important}}
   `}</style>
  </section>;
