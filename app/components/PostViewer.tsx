@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type {ReactNode} from "react";
+import PostEngagementRail from "./PostEngagementRail";
 import styles from "./PostViewer.module.css";
 export type ViewerPost={id:string;user_id:string;body:string;created_at:string};
 export type ViewerMedia={id:string;url:string;mime_type:string;file_name:string|null};
@@ -17,6 +18,6 @@ export default function PostViewer({post,author,media=[],actions,share}:{post:Vi
    <Link className={styles.profileLink} href={"/profile/"+post.user_id} aria-label="View creator profile">↗</Link>
   </header>
   <div className={styles.content}>{media.length>0&&<div className={styles.mediaGallery}>{media.map(item=>item.mime_type.startsWith("video/")?<video key={item.id} src={item.url} className={styles.media} controls playsInline preload="metadata" aria-label={item.file_name||"Post video"}/>:item.mime_type.startsWith("image/")?<img key={item.id} src={item.url} alt={item.file_name||"Post image"} className={styles.media} loading="lazy"/>:null)}</div>}{post.body?.trim()&&<p className={styles.caption}>{post.body.replace(/^✦ DAILY UMMAH ✦(?:\\n|\r?\n)?\s*/,"")}</p>}</div>
-  <footer className={styles.actions}><button type="button" onClick={share}>↗ <span>Share</span></button>{actions}</footer>
+  <PostEngagementRail postId={post.id} share={share}/><footer className={styles.actions}>{actions}</footer>
  </article>
 }
