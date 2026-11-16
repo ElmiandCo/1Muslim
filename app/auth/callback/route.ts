@@ -6,14 +6,14 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   let next = searchParams.get("next") ?? "/";
 
-  if (!next.startsWith("/")) next = "/";
+  if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\\\") || next.includes("://")) next = "/profile";
 
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Session exchange already succeeded; avoid a second blocking network auth call.\n      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         // Google basic profile data comes through Supabase Auth user metadata.
         // Fill missing fields only; never overwrite the member's own edits.
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
         const fullName = str(identity.full_name) || str(meta.full_name) || str(identity.name) || str(meta.name);
         const given = str(identity.given_name) || str(meta.given_name) || (fullName ? fullName.split(/\s+/)[0] : "");
         const family = str(identity.family_name) || str(meta.family_name) || (fullName.includes(" ") ? fullName.split(/\s+/).slice(1).join(" ") : "");
-        const { data: profile } = await supabase.from("profiles").select("gender,display_name,first_name,last_name,username").eq("id", user.id).maybeSingle();
+        const { data: profile } = await Promise.race([\n          supabase.from("profiles").select("gender,display_name,first_name,last_name,username").eq("id", user.id).maybeSingle(),\n          new Promise<{data:null}>(resolve => setTimeout(() => resolve({data:null}), 2500)),\n        ]);
         const updates: Record<string,string> = {};
         if (!str(profile?.display_name) && fullName) updates.display_name = fullName.slice(0,100);
         if (!str(profile?.first_name) && given) updates.first_name = given.slice(0,100);
@@ -36,11 +36,11 @@ export async function GET(request: Request) {
           const last = clean(str(profile?.last_name) || family);
           const suffix = user.id.replace(/-/g, "").slice(0,8).toLowerCase();
           const handle = [first,last,suffix].filter(Boolean).join("_");
-          const { data: taken } = await supabase.from("profiles").select("id").eq("username",handle).neq("id",user.id).maybeSingle();
+          const { data: taken } = await Promise.race([\n            supabase.from("profiles").select("id").eq("username",handle).neq("id",user.id).maybeSingle(),\n            new Promise<{data:{id:string}}>(resolve => setTimeout(() => resolve({data:{id:"unverified"}}), 1500)),\n          ]);
           if (!taken) updates.username = handle;
         }
         if (Object.keys(updates).length) {
-          const { error: profileError } = await supabase.from("profiles").update(updates).eq("id", user.id);
+          const { error: profileError } = await Promise.race([\n            supabase.from("profiles").update(updates).eq("id", user.id),\n            new Promise<{error:{message:string}}>(resolve => setTimeout(() => resolve({error:{message:"Profile update deferred"}}), 2000)),\n          ]);
           if (profileError) console.warn("Google profile autofill skipped:", profileError.message);
         }
         if (!profile?.gender) return NextResponse.redirect(`${origin}/onboarding`);
