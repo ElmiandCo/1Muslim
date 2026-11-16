@@ -1,5 +1,5 @@
-import "./search.css";
 "use client";
+import "./search.css";
 import Link from "next/link";
 import {useEffect,useMemo,useState} from "react";
 type Post={id:string;body:string;author_id:string;author_name:string;author_handle:string;media_url:string|null;media_type:string|null;created_at:string};
