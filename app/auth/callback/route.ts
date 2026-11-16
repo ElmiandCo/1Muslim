@@ -7,6 +7,9 @@ export async function GET(request: Request) {
   let next = searchParams.get("next") ?? "/";
 
   if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\\\") || next.includes("://")) next = "/profile";
+  // Old deep links must never land on the retired public-profile interface.
+  const legacyMember = next.match(/^\/profile\/([0-9a-f-]{36})(?:[?#].*)?$/i);
+  if (legacyMember) next = `/profile?member=${encodeURIComponent(legacyMember[1])}`;
 
   if (code) {
     const supabase = await createClient();
