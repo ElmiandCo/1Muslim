@@ -3,7 +3,7 @@ import {useCallback,useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import styles from "./PostEngagementRail.module.css";
 type Comment={id:string;body:string;created_at:string};
-export default function PostEngagementRail({postId,share}:{postId:string;share:()=>void}){
+export default function PostEngagementRail({postId,share,fullscreen=false}:{postId:string;share:()=>void;fullscreen?:boolean}){
  const [likes,setLikes]=useState(0),[comments,setComments]=useState(0),[liked,setLiked]=useState(false),[saved,setSaved]=useState(false),[open,setOpen]=useState(false),[items,setItems]=useState<Comment[]>([]),[draft,setDraft]=useState(""),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
  const db=createClient();
  const notify=(msg:string)=>{setNotice(msg);window.setTimeout(()=>setNotice(""),2600)};
@@ -24,7 +24,7 @@ export default function PostEngagementRail({postId,share}:{postId:string;share:(
  };
  const openComments=async()=>{setOpen(true);const {data,error}=await db.from("post_comments").select("id,body,created_at").eq("post_id",postId).order("created_at",{ascending:false}).limit(100);if(!error)setItems(data||[])};
  const submit=async()=>{if(!draft.trim()||busy)return;const {data:{user}}=await db.auth.getUser();if(!user){notify("Sign in to comment");return}setBusy(true);const {error}=await db.from("post_comments").insert({post_id:postId,user_id:user.id,body:draft.trim()});if(error)notify("Unable to post comment");else{setDraft("");setComments(n=>n+1);void openComments()}setBusy(false)};
- return <><aside className={styles.rail} aria-label="Post engagement">
+ return <><aside className={`${styles.rail} ${fullscreen?styles.fullscreen:""}`} aria-label="Post engagement">
   <button aria-label={liked?"Unlike post":"Like post"} aria-pressed={liked} onClick={()=>void toggle("like")} className={liked?styles.active:""}><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg><span>{likes}</span></button>
   <button aria-label="Open comments" onClick={()=>void openComments()}><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.8-5.5A8.5 8.5 0 1 1 21 11.5Z"/></svg><span>{comments}</span></button>
   <button aria-label="Share post" onClick={share}><svg viewBox="0 0 24 24"><path d="M12 16V3m0 0L7 8m5-5 5 5M5 14v6h14v-6"/></svg><span>Share</span></button>
