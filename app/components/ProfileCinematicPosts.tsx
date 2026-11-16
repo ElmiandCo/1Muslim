@@ -1,3 +1,4 @@
+import {youtubeVideoId} from "./YouTubePostLink";
 "use client";
 import Link from "next/link";
 import {useEffect,useRef,useState} from "react";
@@ -25,14 +26,15 @@ export default function ProfileCinematicPosts({profileId}:{profileId:string}){
   <div className="profileCinematicGrid">{posts.map(p=>{
    const isVideo=p.media_type?.startsWith("video/")||/\.(mp4|webm|mov)(\?|$)/i.test(p.media_url||"");
    const isImage=!!p.media_url&&(p.media_type?.startsWith("image/")||/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(p.media_url));
+   const youtubeId=youtubeVideoId(p.body||"");
    const playing=active===p.id;
    return <Link key={p.id} href={`/posts/story/${encodeURIComponent(p.id)}`} className={`profileCinematicTile ${playing?"is-active":""}`} data-post-id={p.id} ref={el=>{if(el)nodes.current.set(p.id,el);else nodes.current.delete(p.id)}} aria-label={`View post: ${(p.body||"Community post").slice(0,90)}`}>
     <div className="profileCinematicVisual">
-     {isVideo&&p.media_url?<video src={p.media_url} poster={p.thumbnail_url||undefined} muted playsInline loop autoPlay={playing} preload={playing?"metadata":"none"} ref={el=>{if(!el)return;if(playing){el.play().catch(()=>{});}else el.pause()}}/>:
+     {youtubeId&&!p.media_url?<img src={`https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`} alt="YouTube video thumbnail" loading="lazy"/>:isVideo&&p.media_url?<video src={p.media_url} poster={p.thumbnail_url||undefined} muted playsInline loop autoPlay={playing} preload={playing?"metadata":"none"} ref={el=>{if(!el)return;if(playing){el.play().catch(()=>{});}else el.pause()}}/>:
       isImage?<img src={p.media_url!} alt="" loading="lazy"/>:
       <div className="profileCinematicText"><span>✦</span><p>{(p.body||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,150)}</p></div>}
     </div>
-    {isVideo&&<span className="profileCinematicPlay" aria-hidden="true">▶</span>}
+    {(isVideo||youtubeId)&&<span className="profileCinematicPlay" aria-hidden="true">▶</span>}
    </Link>;
   })}</div>}
  </section>;
