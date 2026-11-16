@@ -80,37 +80,36 @@ export default function AuthPage() {
   const signInWithEmail = async(e:React.FormEvent)=>{e.preventDefault();setLoading(true);setMessage("");const {error}=await createClient().auth.signInWithPassword({email:email.trim(),password});setLoading(false);if(error){setMessage("Sign-in failed. Check your email and password.");return}window.location.assign(safeNext())};
 
   const signInWithGoogle = async () => {
+    if (loading) return;
     setLoading(true);
     setMessage("");
     const destination = isShahadaSignup ? "/onboarding?method=" + safeMethod() : safeNext();
     const callback = new URL("/auth/callback", window.location.origin);
     callback.searchParams.set("next", destination);
     const expectedOrigin = callback.origin;
-
-    // Do not let Supabase silently fall back to its production Site URL.
-    // Inspect the generated OAuth authorization URL before leaving this host.
-    const { data, error } = await createClient().auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: callback.toString(), skipBrowserRedirect: true },
-    });
-    if (error || !data?.url) {
-      setLoading(false);
-      setMessage(error?.message || "Could not start Google sign-in.");
-      return;
-    }
+    // OAuth URL generation should be fast. Never strand the button in Connecting.
+    const timeout = new Promise<never>((_, reject) =>
+      window.setTimeout(() => reject(new Error("Google sign-in is taking too long. Please try again.")), 10000)
+    );
     try {
+      const { data, error } = await Promise.race([
+        createClient().auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: callback.toString(), skipBrowserRedirect: true },
+        }),
+        timeout,
+      ]);
+      if (error || !data?.url) throw new Error(error?.message || "Could not start Google sign-in.");
       const authorize = new URL(data.url);
       const returnUrl = authorize.searchParams.get("redirect_to");
       if (!returnUrl || new URL(returnUrl).origin !== expectedOrigin ||
           new URL(returnUrl).pathname !== "/auth/callback") {
-        setLoading(false);
-        setMessage("Preview sign-in was blocked to prevent a redirect to production. Check the Supabase Auth redirect allowlist for this exact preview callback URL.");
-        return;
+        throw new Error("Google callback destination does not match this site. Please try again.");
       }
       window.location.assign(data.url);
-    } catch {
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to start Google sign-in. Please retry.");
       setLoading(false);
-      setMessage("Unable to verify the sign-in callback destination.");
     }
   };
 
