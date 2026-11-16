@@ -10,6 +10,17 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
  const [loading,setLoading]=useState(true);
  const [active,setActive]=useState<string|null>(null);
  const nodes=useRef(new Map<string,HTMLElement>());
+ const [rotation,setRotation]=useState(0);
+ useEffect(()=>{
+  if(feedMode!=="community")return;
+  const rotate=()=>setRotation(value=>value+1);
+  const onVisibility=()=>{if(document.visibilityState==="visible")rotate()};
+  window.addEventListener("pageshow",rotate);
+  window.addEventListener("popstate",rotate);
+  window.addEventListener("1muslim:profile-page-switch",rotate);
+  document.addEventListener("visibilitychange",onVisibility);
+  return()=>{window.removeEventListener("pageshow",rotate);window.removeEventListener("popstate",rotate);window.removeEventListener("1muslim:profile-page-switch",rotate);document.removeEventListener("visibilitychange",onVisibility)};
+ },[feedMode]);
  useEffect(()=>{
   let mounted=true;
   setLoading(true);
@@ -17,7 +28,12 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
    if(feedMode==="community"){
     const discovery=await fetch("/api/community-posts",{cache:"no-store"}).then(r=>r.ok?r.json():null);
     if(!discovery||!Array.isArray(discovery.posts))throw new Error("Community feed unavailable");
-    if(mounted)setPosts((discovery.posts as Post[]).filter(p=>p.author_id!==profileId).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,limit||4));
+    if(mounted){
+     const pool=(discovery.posts as Post[]).filter(p=>p.author_id!==profileId);
+     // Fisher-Yates: each visit samples from real Ummah posts, not only the newest four.
+     for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+     setPosts(pool.slice(0,limit||4));
+    }
     return;
    }
    const db=createClient();
@@ -36,7 +52,7 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
   };
   void load().catch(()=>{if(mounted)setPosts([])}).finally(()=>{if(mounted)setLoading(false)});
   return()=>{mounted=false};
- },[profileId,feedMode,limit]);
+ },[profileId,feedMode,limit,rotation]);
  useEffect(()=>{
   const observer=new IntersectionObserver(entries=>{
    const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio);
