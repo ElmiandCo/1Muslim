@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {createClient} from "../../utils/supabase/client";
 import {useEffect,useRef,useState} from "react";
 import "./ProfileCinematicPosts.css";
 
@@ -9,7 +10,27 @@ export default function ProfileCinematicPosts({profileId}:{profileId:string}){
  const [loading,setLoading]=useState(true);
  const [active,setActive]=useState<string|null>(null);
  const nodes=useRef(new Map<string,HTMLElement>());
- useEffect(()=>{let mounted=true;setLoading(true);fetch("/api/community-posts",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("Posts unavailable");return r.json()}).then(data=>{if(mounted)setPosts((Array.isArray(data.posts)?data.posts:[]).filter((p:Post)=>p.author_id===profileId))}).catch(()=>{if(mounted)setPosts([])}).finally(()=>{if(mounted)setLoading(false)});return()=>{mounted=false}},[profileId]);
+ useEffect(()=>{
+  let mounted=true;
+  setLoading(true);
+  const load=async()=>{
+   const db=createClient();
+   // Query by author: the global discovery endpoint may only return its first page.
+   const [community,legacy,discovery]=await Promise.all([
+    db.from("community_posts").select("id,author_id,body,created_at").eq("author_id",profileId).order("created_at",{ascending:false}).limit(100),
+    db.from("posts").select("id,body,created_at").eq("user_id",profileId).order("created_at",{ascending:false}).limit(100),
+    fetch("/api/community-posts",{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)
+   ]);
+   const media=new Map<string,Post>((Array.isArray(discovery?.posts)?discovery.posts:[]).filter((p:Post)=>p.author_id===profileId).map((p:Post)=>[p.id,p]));
+   const merged=new Map<string,Post>();
+   for(const row of community.data||[])merged.set(row.id,{...row,media_url:null,media_type:null,...media.get(row.id)});
+   for(const row of legacy.data||[])if(!merged.has(row.id))merged.set(row.id,{...row,author_id:profileId,media_url:null,media_type:null,...media.get(row.id)});
+   for(const row of media.values())if(!merged.has(row.id))merged.set(row.id,row);
+   if(mounted)setPosts([...merged.values()].sort((a,b)=>b.created_at.localeCompare(a.created_at)));
+  };
+  void load().catch(()=>{if(mounted)setPosts([])}).finally(()=>{if(mounted)setLoading(false)});
+  return()=>{mounted=false};
+ },[profileId]);
  useEffect(()=>{
   const observer=new IntersectionObserver(entries=>{
    const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio);
