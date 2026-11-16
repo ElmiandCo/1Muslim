@@ -22,7 +22,7 @@ import MemberDiscoveryContent from "../components/MemberDiscoveryContent";
 import ProfileCinematicPosts from "../components/ProfileCinematicPosts";
 
 type Profile = {
-  id: string; display_name: string; username: string | null; first_name: string | null; last_name: string | null;
+  id: string; created_at?: string | null; display_name: string; username: string | null; first_name: string | null; last_name: string | null;
   city: string | null; state: string | null; country: string | null; gender: string | null; bio: string | null;
   xp_total: number; avatar_gender: string; avatar_package: string; avatar_config: Record<string, unknown>;
   profile_background: string; profile_accent: string; community: string | null;
