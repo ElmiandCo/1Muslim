@@ -358,6 +358,13 @@ export default function DeepWatch(){
   return picks;
  },[filtered,tab]);
  const [heroIndex,setHeroIndex]=useState(0);
+ useEffect(()=>{
+  if(!heroSlides.length)return;
+  for(let step=1;step<=Math.min(2,heroSlides.length-1);step++){
+   const next=heroSlides[(heroIndex+step)%heroSlides.length];
+   if(next)prepareMedia(image(next.videoId));
+  }
+ },[heroIndex,heroSlides]);
  const [heroPaused,setHeroPaused]=useState(false);
  const [heroThumb,setHeroThumb]=useState(false);
  const heroTouch=useRef<{x:number;y:number}|null>(null);
