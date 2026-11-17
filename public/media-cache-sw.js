@@ -20,15 +20,15 @@ self.addEventListener("fetch",event=>{
   const cached=await cache.match(request);
   if(cached)return cached;
   const response=await fetch(request);
-  if(response.ok&&response.type==="basic"&&!response.headers.has("set-cookie")&&response.headers.get("cache-control")?.toLowerCase().includes("private")!==true){
+  if(response.ok&&response.type==="basic"&&!response.headers.has("set-cookie")&&/\bpublic\b/i.test(response.headers.get("cache-control")||"")&&!/\b(?:private|no-store)\b/i.test(response.headers.get("cache-control")||"")){
    const limit=cacheName===IMAGE_CACHE?2_000_000:4_000_000;
    const length=Number(response.headers.get("content-length")||0);
    if(length>0&&length<=limit){
-    event.waitUntil((async()=>{try{
+    try{
      await cache.put(request,response.clone());
      const keys=await cache.keys(),max=cacheName===IMAGE_CACHE?60:24;
      await Promise.all(keys.slice(0,Math.max(0,keys.length-max)).map(k=>cache.delete(k)));
-    }catch{}})());
+    }catch{}
    }
   }
   return response;
