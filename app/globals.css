@@ -845,3 +845,17 @@ html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Main 
 .oneMuslimLiveStage[data-live-format="desktop"] .homeLiveDemoComments p>span:first-child,.oneMuslimLiveStage[data-live-format="phone"] .homeLiveDemoComments p>span:first-child{background:rgba(0,0,0,.7);}
 .oneMuslimLiveStage[data-live-format="desktop"] .homeLiveCommentForm button,.oneMuslimLiveStage[data-live-format="phone"] .homeLiveCommentForm button{background:rgba(0,0,0,.7);}
 .oneMuslimLiveStage[data-live-format="desktop"] .homeLiveCommentForm input,.oneMuslimLiveStage[data-live-format="phone"] .homeLiveCommentForm input{background:rgba(0,0,0,.36)!important;}
+
+/* iOS Safari auto-zooms focused inputs with computed text smaller than 16px.
+   Preserve native pinch zoom and existing desktop typography. */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 767px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]),
+    textarea,
+    select,
+    [contenteditable="true"] {
+      font-size: max(16px, 1em) !important;
+    }
+    html, body { max-width: 100%; overflow-x: clip; }
+  }
+}
