@@ -112,6 +112,7 @@ function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
  const launcherTouch=useRef<{x:number;y:number}|null>(null);
  const learningApps=[
   {label:"Elm Tent",href:"/elm-tent",icon:"✦"},
+  {label:"Notifications",href:"/notifications",icon:"🔔"},
   {label:"Arabic Practice",href:"/elm-tent/training",icon:"ا"},
   {label:"Learning Path",href:"/elm-tent/lessons",icon:"▤"}
  ];
