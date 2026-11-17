@@ -40,7 +40,7 @@ export default function RecordingThumbnail({title,hostName,date,durationSeconds,
       .length{position:absolute;z-index:3;right:9px;bottom:9px;background:rgba(0,0,0,.78);padding:5px 7px;border-radius:6px;font-size:8px;font-weight:850}
       .compact .info{left:10px;right:10px;bottom:9px}.compact .title{font-size:13px}.compact .host{font-size:9px}.compact .meta{font-size:7px}
     `}</style>
-    {photo ? <img src={photo} alt="" /> : <div className="fallback">{initials}</div>}
+    {photo ? <img src={photo} alt="" loading="lazy" decoding="async" fetchPriority="low" /> : <div className="fallback">{initials}</div>}
     <div className="brand">1MUSLIM <span className="live"><span className="dot">●</span> LIVE</span></div>
     <div className="info"><div className="title">{title}</div><div className="host">{hostName}</div><div className="meta"><span className="pill">{date}</span></div></div>
     <span className="length">{duration(durationSeconds)}</span>
