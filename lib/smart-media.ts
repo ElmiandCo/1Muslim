@@ -136,7 +136,13 @@ export function predictVideo(url:string):void{
  if(connection?.saveData||/2g/.test(connection?.effectiveType||""))return;
  let parsed:URL;
  try{parsed=new URL(url,location.href)}catch{return}
- if(parsed.origin!==location.origin||parsed.search||!/\\.(?:mp4|webm)$/i.test(parsed.pathname))return;
+ // Supabase public Storage may be browser-prefetched, never stored in our SW.
+ // Exclude signed/private endpoints and query tokens entirely.
+ const publicCommunityVideo = parsed.protocol==="https:" &&
+   parsed.hostname==="njilnqgdfrvpvgbkodwl.supabase.co" &&
+   parsed.pathname.startsWith("/storage/v1/object/public/community-media/");
+ if(parsed.search || !/\\.(?:mp4|webm)$/i.test(parsed.pathname) ||
+    (parsed.origin!==location.origin && !publicCommunityVideo))return;
  const video=document.createElement("video");
  video.preload="metadata";video.muted=true;video.playsInline=true;
  video.src=parsed.href;
