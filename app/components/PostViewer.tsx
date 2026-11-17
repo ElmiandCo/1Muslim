@@ -2,6 +2,7 @@
 import {cleanPostBody} from "../lib/cleanPostBody";
 import Link from "next/link";
 import Image from "next/image";
+import SmartVideo from "../../lib/SmartVideo";
 import {useEffect,useState} from "react";
 import type {ReactNode} from "react";
 import PostEngagementRail from "./PostEngagementRail";
@@ -23,7 +24,7 @@ export default function PostViewer({post,author,media=[],actions,share}:{post:Vi
    <Link className={styles.profileLink} href={"/profile/"+post.user_id} aria-label="View creator profile">↗</Link>
   </header>
   <button type="button" className={styles.expandToggle} onClick={()=>{setExpanded(x=>!x);setDrawerHeight(0)}} aria-label={expanded?"Exit full screen":"View post full screen"}>{expanded?"✕":"⛶"}</button>
-  <div className={styles.content}>{media.length>0&&<div className={styles.mediaGallery}>{media.map(item=>item.mime_type.startsWith("video/")?<video key={item.id} src={item.url} className={styles.media} controls playsInline preload="metadata" aria-label={item.file_name||"Post video"}/>:item.mime_type.startsWith("image/")?<img key={item.id} src={item.url} alt={item.file_name||"Post image"} className={styles.media} loading="lazy"/>:null)}</div>}{post.body?.trim()&&<p className={styles.caption}>{cleanPostBody(post.body)}</p>}</div>
+  <div className={styles.content}>{media.length>0&&<div className={styles.mediaGallery}>{media.map(item=>item.mime_type.startsWith("video/")?<SmartVideo key={item.id} mediaId={item.id} src={item.url} className={styles.media} controls playsInline aria-label={item.file_name||"Post video"}/>:item.mime_type.startsWith("image/")?<img key={item.id} src={item.url} alt={item.file_name||"Post image"} className={styles.media} loading="lazy"/>:null)}</div>}{post.body?.trim()&&<p className={styles.caption}>{cleanPostBody(post.body)}</p>}</div>
   <PostEngagementRail postId={post.id} share={share} fullscreen={expanded} onDrawerHeightChange={setDrawerHeight}/><footer className={styles.actions}>{actions}</footer>
  </article>
 }
