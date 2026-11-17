@@ -8,6 +8,7 @@ import DeepWatchTimedComments from "../components/DeepWatchTimedComments";
 import DeepWatchReviews from "../components/DeepWatchReviews";
 import {videoRegistry,isKidsVideo,type RegisteredVideo} from "../components/videoRegistry";
 import "./deepwatch.css";
+import {prepareMedia} from "../../lib/smart-media";
 
 /** Preload the next Movie Bank batch when the viewer approaches the rail's end. */
 function DeepWatchRailSentinel({onApproach}:{onApproach:()=>void}){
@@ -29,6 +30,7 @@ function DeepWatchRailSentinel({onApproach}:{onApproach:()=>void}){
  * back to rest rather than abruptly canceling the running animation. */
 function DeepWatchBreathingImage({src,eager}:{src:string;eager:boolean}){
  const imageRef=useRef<HTMLImageElement>(null);
+ useEffect(()=>{if(eager)prepareMedia(src)},[src,eager]);
  const activeRef=useRef<Animation|null>(null);
  const settlingRef=useRef<Animation|null>(null);
  const interruptedRef=useRef(false);
