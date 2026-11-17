@@ -46,3 +46,11 @@ video.media{aspect-ratio:auto}
 .expanded .author{bottom:calc(var(--comments-height,0px) + 85px + env(safe-area-inset-bottom));transition:bottom .18s ease-out}
 .expanded .caption{bottom:calc(var(--comments-height,0px) + 30px + env(safe-area-inset-bottom));transition:bottom .18s ease-out}
 .expanded .mediaGallery>.media{object-fit:contain}
+
+/* Borderless Ummah media: full-bleed at both expanded and collapsed drawer heights. */
+.viewer{border:0!important;border-radius:0!important;box-shadow:none!important;background:#000}
+.content:has(.mediaGallery){padding:0;gap:0;background:#000}
+.mediaGallery{border:0!important;border-radius:0!important;box-shadow:none!important;background:#000}
+.mediaGallery>.media{border:0!important;border-radius:0!important;box-shadow:none!important}
+.expanded,.expanded .content,.expanded .mediaGallery{border:0!important;border-radius:0!important;box-shadow:none!important}
+.expanded .content{inset-inline:0!important}
