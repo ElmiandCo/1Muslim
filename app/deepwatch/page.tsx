@@ -3,6 +3,7 @@ import CinemaControls from "../components/CinemaControls";
 import PlayIcon from "../components/icons/PlayIcon";
 import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
+import SmartImage from "../../lib/SmartImage";
 import {createClient} from "../../utils/supabase/client";
 import DeepWatchTimedComments from "../components/DeepWatchTimedComments";
 import DeepWatchReviews from "../components/DeepWatchReviews";
@@ -70,7 +71,7 @@ function DeepWatchBreathingImage({src,eager}:{src:string;eager:boolean}){
   start();
   return ()=>{card?.removeEventListener("pointerenter",stop);card?.removeEventListener("pointerleave",resume);card?.removeEventListener("focusin",stop);card?.removeEventListener("focusout",resume);card?.removeEventListener("pointerdown",stop);reduce.removeEventListener("change",changed);activeRef.current?.cancel();settlingRef.current?.cancel()};
  },[src]);
- return <img ref={imageRef} src={src} alt="" loading={eager?"eager":"lazy"} decoding="async" style={{transformOrigin:"center center",willChange:"transform"}}/>;
+ return <SmartImage ref={imageRef} src={src} alt="" loading={eager?"eager":"lazy"} decoding="async" style={{transformOrigin:"center center",willChange:"transform"}}/>;
 }
 const officialSeries = [
  {title:"The Name I Need — Ramadan 2026",category:"Shows/Series",publisher:"Yaqeen Institute",url:"https://yaqeeninstitute.org/series/the-name-i-need-ramadan-2026"},
