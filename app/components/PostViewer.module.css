@@ -54,3 +54,9 @@ video.media{aspect-ratio:auto}
 .mediaGallery>.media{border:0!important;border-radius:0!important;box-shadow:none!important}
 .expanded,.expanded .content,.expanded .mediaGallery{border:0!important;border-radius:0!important;box-shadow:none!important}
 .expanded .content{inset-inline:0!important}
+
+/* Immersive post video controls: sound above the like rail; no native skip buttons. */
+.expanded .soundToggle{position:absolute;right:15px;bottom:calc(var(--comments-height,0px) + 365px + env(safe-area-inset-bottom));z-index:15;width:48px;height:48px;display:grid;place-items:center;border:0;border-radius:50%;background:#0008;color:#fff;font-size:24px;backdrop-filter:blur(8px);cursor:pointer}
+.expanded .playbackOverlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:14;border:0;border-radius:50%;width:78px;height:78px;background:#0007;color:white;font-size:44px;display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .2s ease;backdrop-filter:blur(4px)}
+.expanded .playbackOverlay.playbackVisible{opacity:1;pointer-events:auto}
+@media(prefers-reduced-motion:reduce){.expanded .playbackOverlay{transition:none}}
