@@ -6,8 +6,8 @@ function eligible(request){
  const url=new URL(request.url);
  if(url.origin!==self.location.origin||url.search||request.method!=="GET"||request.credentials==="include"||request.headers.has("authorization")||request.headers.has("range"))return null;
  if(!ALLOWED.some(p=>url.pathname.startsWith(p)))return null;
- if(/\\.(png|jpe?g|webp|avif|gif)$/i.test(url.pathname))return IMAGE_CACHE;
- if(/\\.(ts|m4s|mp4)$/i.test(url.pathname)&&url.pathname.includes("/hls/"))return SEGMENT_CACHE;
+ if(/\.(png|jpe?g|webp|avif|gif)$/i.test(url.pathname))return IMAGE_CACHE;
+ if(/\.(ts|m4s|mp4)$/i.test(url.pathname)&&url.pathname.includes("/hls/"))return SEGMENT_CACHE;
  return null;
 }
 self.addEventListener("install",event=>event.waitUntil(self.skipWaiting()));
