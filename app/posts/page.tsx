@@ -3,6 +3,7 @@ import Link from "next/link";
 import {cleanPostBody} from "../lib/cleanPostBody";
 import {useEffect,useMemo,useRef,useState} from "react";
 import UnifiedPostMedia from "../components/UnifiedPostMedia";
+import {observeVideo,recallPlayback,rememberPlayback} from "../../lib/smart-media";
 import PostAuthorFollow from "../components/PostAuthorFollow";
 import styles from "./posts-magazine.module.css";
 type Post={id:string;body:string;author_name:string;author_handle:string;created_at:string;media_url:string|null;media_type:string|null;shahada_verified?:boolean;author_id:string;author_avatar_url?:string|null};
@@ -14,9 +15,9 @@ const PlayPostIcon=()=> <svg aria-hidden="true" viewBox="0 0 24 24" width="22" h
 function VideoPostPreview({src,eager}:{src:string;eager:boolean}){
  const videoRef=useRef<HTMLVideoElement|null>(null);
  const [visible,setVisible]=useState(false);
- useEffect(()=>{const node=videoRef.current;if(!node)return;const observer=new IntersectionObserver(([entry])=>setVisible(entry.isIntersecting&&entry.intersectionRatio>=.55),{threshold:[0,.55,1]});observer.observe(node);return()=>observer.disconnect()},[]);
+ useEffect(()=>{const node=videoRef.current;if(!node)return;const cleanup=observeVideo(node,{onVisibility:setVisible});const restore=()=>{const time=recallPlayback(node.currentSrc||node.src);if(time>0&&node.duration>time+1)node.currentTime=time};node.addEventListener("loadedmetadata",restore);return()=>{cleanup();node.removeEventListener("loadedmetadata",restore)}},[]);
  useEffect(()=>{const node=videoRef.current;if(!node)return;if(visible&&!node.ended){void node.play().catch(()=>{});}else if(!node.paused)node.pause()},[visible]);
- return <video ref={videoRef} src={src} preload={eager?"auto":"metadata"} muted playsInline disablePictureInPicture className={styles.discoverVideoThumb} aria-label="Animated post preview" onEnded={e=>{e.currentTarget.pause()}}/>;
+ return <video ref={videoRef} src={src} preload={eager?"auto":"metadata"} muted playsInline disablePictureInPicture className={styles.discoverVideoThumb} aria-label="Animated post preview" onTimeUpdate={e=>{const node=e.currentTarget;if(Math.floor(node.currentTime)%3===0)rememberPlayback(node.currentSrc||node.src,node.currentTime)}} onEnded={e=>{e.currentTarget.pause()}}/>;
 }
 function DiscoveryCounts({postId}:{postId:string}){
  const ref=useRef<HTMLSpanElement>(null);
