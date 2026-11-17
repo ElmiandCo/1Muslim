@@ -9,11 +9,12 @@ type Props = Omit<VideoHTMLAttributes<HTMLVideoElement>,"src"> & {
 export default function SmartVideo({src,mediaId,preloadDistance="450px",onTimeUpdate,onLoadedMetadata,...props}:Props){
  const ref=useRef<HTMLVideoElement>(null);
  const [near,setNear]=useState(false);
- const key=mediaId||src;
+ const [activated,setActivated]=useState(false);
+ const key=mediaId||src;\n useEffect(()=>{setActivated(false)},[src]);
  useEffect(()=>{
   const node=ref.current;if(!node)return;
   enablePublicMediaCache();
-  const observer=new IntersectionObserver(([entry])=>{setNear(entry.isIntersecting);if(entry.isIntersecting){predictVideo(src);if(src.endsWith(".m3u8"))void bufferPublicHls(src)}},{rootMargin:preloadDistance});
+  const observer=new IntersectionObserver(([entry])=>{setNear(entry.isIntersecting);if(entry.isIntersecting){setActivated(true);predictVideo(src);if(src.endsWith(".m3u8"))void bufferPublicHls(src)}},{rootMargin:preloadDistance});
   observer.observe(node);
   return()=>observer.disconnect();
  },[preloadDistance,src]);
@@ -25,7 +26,7 @@ export default function SmartVideo({src,mediaId,preloadDistance="450px",onTimeUp
   window.addEventListener("pagehide",save);
   return()=>{save();cleanup();node.removeEventListener("pause",save);window.removeEventListener("pagehide",save)};
  },[key]);
- return <video {...props} ref={ref} src={near?src:undefined} preload={near?"metadata":"none"} playsInline
+ return <video {...props} ref={ref} src={activated?src:undefined} preload={near?"metadata":"none"} playsInline
    onLoadedMetadata={event=>{
      const node=event.currentTarget;
      const time=recallPlayback(key);
