@@ -10,7 +10,8 @@ export default function SmartVideo({src,mediaId,preloadDistance="450px",onTimeUp
  const ref=useRef<HTMLVideoElement>(null);
  const [near,setNear]=useState(false);
  const [activated,setActivated]=useState(false);
- const key=mediaId||src;\n useEffect(()=>{setActivated(false)},[src]);
+ const key=mediaId||src;
+ useEffect(()=>{setActivated(false)},[src]);
  useEffect(()=>{
   const node=ref.current;if(!node)return;
   enablePublicMediaCache();
