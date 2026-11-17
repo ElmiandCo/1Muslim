@@ -1,0 +1,285 @@
+-- 1Qibla editorial staging contract checks. Run AFTER all qibla migrations
+-- against an isolated database; never against production.
+-- Read-only assertions: raises an exception on a missing security invariant.
+DO $$
+DECLARE t text; n integer;
+BEGIN
+ FOREACH t IN ARRAY ARRAY['qibla_staff','qibla_articles','qibla_article_revisions',
+  'qibla_editorial_events','qibla_xp_awards','qibla_applications'] LOOP
+  IF NOT EXISTS (
+   SELECT 1 FROM pg_class c JOIN pg_namespace s ON s.oid=c.relnamespace
+   WHERE s.nspname='public' AND c.relname=t AND c.relkind IN ('r','p')
+     AND c.relrowsecurity
+  ) THEN RAISE EXCEPTION 'Missing RLS: %',t; END IF;
+ END LOOP;
+ IF EXISTS (
+  SELECT 1 FROM pg_policies
+  WHERE schemaname='public'
+   AND tablename IN ('qibla_staff','qibla_article_revisions','qibla_editorial_events',
+                    'qibla_xp_awards','qibla_applications')
+   AND (roles @> ARRAY['anon']::name[] OR roles @> ARRAY['public']::name[])
+ ) THEN RAISE EXCEPTION 'Unexpected public policy on private editorial table'; END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_policies WHERE schemaname='public'
+   AND tablename='qibla_articles' AND policyname='qibla_articles_published_anon'
+   AND cmd='SELECT' AND roles @> ARRAY['anon']::name[]
+   AND qual LIKE '%published_at%' AND qual LIKE '%published%'
+ ) THEN RAISE EXCEPTION 'Published-only anon policy absent or changed'; END IF;
+ IF EXISTS (
+  SELECT 1 FROM pg_policies WHERE schemaname='public'
+   AND tablename='qibla_staff' AND cmd IN ('INSERT','UPDATE','DELETE','ALL')
+ ) THEN RAISE EXCEPTION 'Unexpected staff mutation policy'; END IF;
+ IF EXISTS (
+  SELECT 1 FROM (VALUES
+   ('qibla_staff'),('qibla_articles'),('qibla_article_revisions'),
+   ('qibla_editorial_events'),('qibla_xp_awards'),('qibla_applications')
+  ) AS x(table_name)
+  WHERE has_table_privilege('anon',format('public.%I',x.table_name),'INSERT,UPDATE,DELETE')
+     OR has_table_privilege('authenticated',format('public.%I',x.table_name),'INSERT,UPDATE,DELETE')
+ ) THEN RAISE EXCEPTION 'Direct client editorial table write grant exists'; END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM storage.buckets WHERE id='qibla-resumes'
+   AND public=false AND file_size_limit=10485760
+ ) THEN RAISE EXCEPTION 'Private resume bucket or size limit missing'; END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_constraint c JOIN pg_class t ON t.oid=c.conrelid
+  JOIN pg_namespace n ON n.oid=t.relnamespace
+  WHERE n.nspname='public' AND t.relname='qibla_xp_awards'
+   AND c.contype='p'
+ ) THEN RAISE EXCEPTION 'XP award primary key missing'; END IF;
+ -- Resume cleanup is allowed only for the uploader's unclaimed object.
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_policies WHERE schemaname='storage' AND tablename='objects'
+   AND policyname='qibla_resume_delete_orphan_self' AND cmd='DELETE'
+   AND roles @> ARRAY['authenticated']::name[]
+   AND qual LIKE '%qibla-resumes%' AND qual LIKE '%auth.uid%'
+   AND qual LIKE '%qibla_applications%' AND qual LIKE '%resume_path%'
+ ) THEN RAISE EXCEPTION 'Orphan-only resume cleanup policy missing'; END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_index i JOIN pg_class t ON t.oid=i.indrelid
+  JOIN pg_namespace n ON n.oid=t.relnamespace
+  JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=ANY(i.indkey)
+  WHERE n.nspname='public' AND t.relname='qibla_applications'
+   AND i.indisunique AND i.indisvalid AND a.attname='resume_path'
+   AND i.indnatts=1
+ ) THEN RAISE EXCEPTION 'Unique application resume claim missing'; END IF;
+ IF EXISTS (
+  SELECT 1 FROM pg_policies WHERE schemaname='storage' AND tablename='objects'
+   AND cmd='DELETE' AND policyname LIKE 'qibla_resume%'
+   AND policyname <> 'qibla_resume_delete_orphan_self'
+ ) THEN RAISE EXCEPTION 'Unexpected additional Qibla resume deletion policy'; END IF;
+ RAISE NOTICE 'Qibla static schema/RLS/grant contract checks passed (not role/concurrency tests)';
+END $$;
+
+-- Additional REQUIRED isolated integration tests (not covered by this script):
+-- 1. anon published SELECT succeeds; draft/queued/rejected reads fail.
+-- 2. writer cannot edit/approve; approver cannot perform first editor save.
+-- 3. editor first valid save generates exactly one approver notification.
+-- 4. repeat and concurrent publish award exactly 2000 XP once.
+-- 5. applicant A cannot read applicant B resume; approver can.
+-- 6. direct role/XP mutation attempts fail; normal Posts/comments unaffected.
+
+-- Explicitly reject publicly readable resume objects even if bucket remains private.
+-- A permissive object SELECT policy would bypass the intended applicant/staff boundary.
+DO $$
+BEGIN
+ IF EXISTS (
+  SELECT 1 FROM pg_policies
+  WHERE schemaname='storage' AND tablename='objects'
+    AND cmd IN ('SELECT','ALL')
+    AND (roles @> ARRAY['anon']::name[] OR roles @> ARRAY['public']::name[])
+    AND (qual IS NULL OR qual ILIKE '%qibla-resumes%')
+ ) THEN
+  RAISE EXCEPTION 'Potential anonymous resume object SELECT policy: review Storage RLS';
+ END IF;
+ IF has_table_privilege('anon','public.qibla_applications','SELECT') THEN
+  RAISE EXCEPTION 'Anonymous applications table SELECT grant must be revoked';
+ END IF;
+ RAISE NOTICE 'Resume privacy negative grants/policies checked';
+END $$;
+
+-- Private editorial metadata must not be readable with anonymous table grants,
+-- even if RLS policies currently appear restrictive. Keep public magazine reads
+-- scoped to qibla_articles' published-only policy.
+DO $$
+DECLARE t text;
+BEGIN
+ FOREACH t IN ARRAY ARRAY[
+  'qibla_staff','qibla_article_revisions','qibla_editorial_events','qibla_xp_awards'
+ ] LOOP
+  IF has_table_privilege('anon',format('public.%I',t),'SELECT') THEN
+   RAISE EXCEPTION 'Anonymous SELECT grant on private editorial table: %',t;
+  END IF;
+ END LOOP;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+  WHERE n.nspname='storage' AND c.relname='objects' AND c.relrowsecurity
+ ) THEN RAISE EXCEPTION 'Storage objects RLS must remain enabled'; END IF;
+ RAISE NOTICE 'Private editorial metadata grants and Storage RLS checked';
+END $$;
+
+-- Verify the privileged mutation entry points remain authenticated-only,
+-- definer-owned and search-path pinned. Static assertions; staging execution required.
+DO $$
+DECLARE fn regprocedure; n text; expected text[];
+BEGIN
+ expected := ARRAY[
+  'qibla_create_draft(text,text,text,text)',
+  'qibla_update_draft(uuid,text,text,text,text)',
+  'qibla_submit_article(uuid)',
+  'qibla_save_editor_revision(uuid,text,text,text)',
+  'qibla_publish_article(uuid)',
+  'qibla_apply_to_editorial(text,text,text,text,text)',
+  'qibla_review_application(uuid,text)'
+ ];
+ FOREACH n IN ARRAY expected LOOP
+  fn := to_regprocedure('public.' || n);
+  IF fn IS NULL THEN RAISE EXCEPTION 'Missing editorial RPC: %',n; END IF;
+  IF NOT EXISTS (
+   SELECT 1 FROM pg_proc p WHERE p.oid=fn
+    AND p.prosecdef
+    AND 'search_path=' = ANY(p.proconfig)
+  ) THEN
+   -- Postgres stores an empty pinned path as the literal search_path=.
+   RAISE EXCEPTION 'RPC missing SECURITY DEFINER and empty search_path: %',n;
+  END IF;
+  IF has_function_privilege('anon',fn,'EXECUTE')
+    OR NOT has_function_privilege('authenticated',fn,'EXECUTE')
+  THEN RAISE EXCEPTION 'Unsafe RPC EXECUTE grants: %',n; END IF;
+ END LOOP;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_trigger t
+  JOIN pg_class c ON c.oid=t.tgrelid
+  JOIN pg_namespace ns ON ns.oid=c.relnamespace
+  WHERE ns.nspname='public' AND c.relname='qibla_editorial_events'
+    AND t.tgname='trg_qibla_first_editor_save' AND t.tgenabled<>'D'
+    AND NOT t.tgisinternal
+ ) THEN RAISE EXCEPTION 'First editor save notification trigger missing'; END IF;
+ IF EXISTS (
+  SELECT 1 FROM pg_policies WHERE schemaname='storage'
+   AND tablename='objects' AND policyname LIKE 'qibla_resume%'
+   AND cmd IN ('UPDATE','ALL')
+ ) THEN RAISE EXCEPTION 'Resume object mutation policy must not allow UPDATE'; END IF;
+ RAISE NOTICE 'Editorial RPC/notification trigger static contract verified';
+END $$;
+
+-- Anonymous magazine access must have exactly one narrowly scoped SELECT
+-- policy; additional permissive policies can OR around published-only RLS.
+DO $$
+DECLARE policy_count integer;
+BEGIN
+ SELECT count(*) INTO policy_count
+ FROM pg_policies
+ WHERE schemaname='public' AND tablename='qibla_articles'
+   AND cmd IN ('SELECT','ALL')
+   AND (roles @> ARRAY['anon']::name[] OR roles @> ARRAY['public']::name[]);
+ IF policy_count <> 1 THEN
+  RAISE EXCEPTION 'Expected exactly one anonymous Qibla article read policy, found %',policy_count;
+ END IF;
+ IF NOT has_table_privilege('anon','public.qibla_articles','SELECT') THEN
+  RAISE EXCEPTION 'Anonymous published magazine SELECT grant missing';
+ END IF;
+ IF EXISTS (
+  SELECT 1 FROM pg_policies
+  WHERE schemaname='public' AND tablename='qibla_articles'
+    AND cmd IN ('INSERT','UPDATE','DELETE','ALL')
+    AND (roles @> ARRAY['anon']::name[] OR roles @> ARRAY['public']::name[])
+ ) THEN RAISE EXCEPTION 'Anonymous article write policy present'; END IF;
+ RAISE NOTICE 'Anonymous magazine policy uniqueness checked; direct-ID role tests still required';
+END $$;
+
+-- Detect newly introduced mutation RPCs that accidentally retain PostgreSQL's
+-- default EXECUTE-to-PUBLIC privilege. Enumerating only the original seven
+-- RPCs would miss a later helper added during #548/#549 integration.
+DO $$
+DECLARE exposed text;
+BEGIN
+ SELECT string_agg(p.oid::regprocedure::text, ', ' ORDER BY p.oid::regprocedure::text)
+ INTO exposed
+ FROM pg_proc p
+ JOIN pg_namespace n ON n.oid=p.pronamespace
+ WHERE n.nspname='public'
+   AND p.proname ~ '^qibla_(create|update|submit|save|publish|apply|review|award|grant|assign|notify|reject|return|delete|approve|edit)_'
+   AND has_function_privilege('anon',p.oid,'EXECUTE');
+ IF exposed IS NOT NULL THEN
+  RAISE EXCEPTION 'Anonymous EXECUTE on editorial mutation RPC(s): %',exposed;
+ END IF;
+ RAISE NOTICE 'No anonymous EXECUTE on discovered editorial mutation RPCs';
+END $$;
+
+-- Public editorial application RPC must not offer approver as an applicant role.
+-- This is a source-level regression guard, not a substitute for execution tests.
+DO $$
+DECLARE body text;
+BEGIN
+ SELECT pg_get_functiondef(to_regprocedure('public.qibla_apply_to_editorial(text,text,text,text,text)')) INTO body;
+ IF body IS NULL OR body NOT LIKE '%p_desired_role not in (''writer'',''editor'')%'
+ THEN RAISE EXCEPTION 'Editorial application RPC must restrict desired roles to writer/editor'; END IF;
+ RAISE NOTICE 'Editorial application role scope checked';
+END $$;
+
+-- Guard once-only publication rewards and first-save event idempotency against
+-- later schema changes. These checks do not award XP or send notifications.
+DO $$
+DECLARE pk_cols text[]; event_cols text[];
+BEGIN
+ SELECT array_agg(a.attname ORDER BY k.ordinality) INTO pk_cols
+ FROM pg_constraint c
+ JOIN pg_class t ON t.oid=c.conrelid
+ JOIN pg_namespace ns ON ns.oid=t.relnamespace
+ JOIN unnest(c.conkey) WITH ORDINALITY AS k(attnum,ordinality) ON true
+ JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=k.attnum
+ WHERE ns.nspname='public' AND t.relname='qibla_xp_awards' AND c.contype='p';
+ IF pk_cols IS DISTINCT FROM ARRAY['article_id']::text[] THEN
+  RAISE EXCEPTION 'XP award idempotency requires article_id-only primary key';
+ END IF;
+ SELECT array_agg(a.attname ORDER BY k.ordinality) INTO event_cols
+ FROM pg_constraint c
+ JOIN pg_class t ON t.oid=c.conrelid
+ JOIN pg_namespace ns ON ns.oid=t.relnamespace
+ JOIN unnest(c.conkey) WITH ORDINALITY AS k(attnum,ordinality) ON true
+ JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=k.attnum
+ WHERE ns.nspname='public' AND t.relname='qibla_editorial_events' AND c.contype='p';
+ IF event_cols IS DISTINCT FROM ARRAY['article_id','event_key']::text[] THEN
+  RAISE EXCEPTION 'First-save event requires article_id,event_key primary key';
+ END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_constraint c JOIN pg_class t ON t.oid=c.conrelid
+  JOIN pg_namespace ns ON ns.oid=t.relnamespace
+  WHERE ns.nspname='public' AND t.relname='qibla_xp_awards'
+   AND c.contype='c' AND pg_get_constraintdef(c.oid) ~ 'amount.*2000'
+ ) THEN RAISE EXCEPTION 'Fixed 2000 XP amount constraint missing'; END IF;
+ RAISE NOTICE 'Once-only reward and first-save event schema keys verified';
+END $$;
+
+
+-- Verify existing shared systems have the exact integration columns required by
+-- Qibla before any staging rollout. This is read-only and deliberately fails
+-- closed instead of silently creating replacement notifications or XP tables.
+DO $$
+DECLARE missing text;
+BEGIN
+ SELECT string_agg(format('%I.%I', x.table_name, x.column_name), ', ' ORDER BY x.table_name,x.column_name)
+ INTO missing
+ FROM (VALUES
+  ('profiles','id'),('profiles','xp_total'),
+  ('notifications','recipient_id'),('notifications','actor_id'),
+  ('notifications','type'),('notifications','title'),
+  ('notifications','body'),('notifications','entity_type'),
+  ('notifications','entity_id')
+ ) AS x(table_name,column_name)
+ WHERE NOT EXISTS (
+  SELECT 1 FROM information_schema.columns c
+  WHERE c.table_schema='public' AND c.table_name=x.table_name
+   AND c.column_name=x.column_name
+ );
+ IF missing IS NOT NULL THEN
+  RAISE EXCEPTION 'Qibla shared-system integration columns missing: %',missing;
+ END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+  WHERE n.nspname='public' AND p.proname='qibla_notify_first_editor_save'
+   AND p.prosecdef AND 'search_path='=ANY(p.proconfig)
+ ) THEN RAISE EXCEPTION 'First-save notification trigger function must be definer-owned and search-path pinned'; END IF;
+ RAISE NOTICE 'Qibla shared notifications/XP column compatibility checked (not runtime delivery)';
+END $$;
