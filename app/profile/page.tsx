@@ -509,7 +509,7 @@ const [avatarPage,setAvatarPage]=useState(0);
      const url=client.storage.from("avatars").getPublicUrl(path).data.publicUrl;
      const avatar_config={...(profile.avatar_config||{}),profileCoverUrl:url};
      const {error:saveError}=await client.from("profiles").update({avatar_config}).eq("id",user.id);if(saveError)throw saveError;
-     update({avatar_config});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");
+     update({avatar_config});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");setTab("profile");setEditing(false);window.dispatchEvent(new Event("1muslim:profile-saved"));window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})));
     }finally{URL.revokeObjectURL(src)}
    }catch(e){setMessage(e instanceof Error?e.message:"Could not upload cover image.")}finally{setCoverUploading(false)}
   };
