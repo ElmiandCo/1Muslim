@@ -3,11 +3,13 @@ import CinemaControls from "../components/CinemaControls";
 import PlayIcon from "../components/icons/PlayIcon";
 import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
+import SmartImage from "../../lib/SmartImage";
 import {createClient} from "../../utils/supabase/client";
 import DeepWatchTimedComments from "../components/DeepWatchTimedComments";
 import DeepWatchReviews from "../components/DeepWatchReviews";
 import {videoRegistry,isKidsVideo,type RegisteredVideo} from "../components/videoRegistry";
 import "./deepwatch.css";
+import {prepareMedia} from "../../lib/smart-media";
 
 /** Preload the next Movie Bank batch when the viewer approaches the rail's end. */
 function DeepWatchRailSentinel({onApproach}:{onApproach:()=>void}){
@@ -29,6 +31,7 @@ function DeepWatchRailSentinel({onApproach}:{onApproach:()=>void}){
  * back to rest rather than abruptly canceling the running animation. */
 function DeepWatchBreathingImage({src,eager}:{src:string;eager:boolean}){
  const imageRef=useRef<HTMLImageElement>(null);
+ useEffect(()=>{if(eager)prepareMedia(src)},[src,eager]);
  const activeRef=useRef<Animation|null>(null);
  const settlingRef=useRef<Animation|null>(null);
  const interruptedRef=useRef(false);
@@ -68,7 +71,7 @@ function DeepWatchBreathingImage({src,eager}:{src:string;eager:boolean}){
   start();
   return ()=>{card?.removeEventListener("pointerenter",stop);card?.removeEventListener("pointerleave",resume);card?.removeEventListener("focusin",stop);card?.removeEventListener("focusout",resume);card?.removeEventListener("pointerdown",stop);reduce.removeEventListener("change",changed);activeRef.current?.cancel();settlingRef.current?.cancel()};
  },[src]);
- return <img ref={imageRef} src={src} alt="" loading={eager?"eager":"lazy"} decoding="async" style={{transformOrigin:"center center",willChange:"transform"}}/>;
+ return <SmartImage ref={imageRef} src={src} alt="" loading={eager?"eager":"lazy"} decoding="async" style={{transformOrigin:"center center",willChange:"transform"}}/>;
 }
 const officialSeries = [
  {title:"The Name I Need — Ramadan 2026",category:"Shows/Series",publisher:"Yaqeen Institute",url:"https://yaqeeninstitute.org/series/the-name-i-need-ramadan-2026"},
@@ -356,6 +359,13 @@ export default function DeepWatch(){
   return picks;
  },[filtered,tab]);
  const [heroIndex,setHeroIndex]=useState(0);
+ useEffect(()=>{
+  if(!heroSlides.length)return;
+  for(let step=1;step<=Math.min(2,heroSlides.length-1);step++){
+   const next=heroSlides[(heroIndex+step)%heroSlides.length];
+   if(next)prepareMedia(image(next.videoId));
+  }
+ },[heroIndex,heroSlides]);
  const [heroPaused,setHeroPaused]=useState(false);
  const [heroThumb,setHeroThumb]=useState(false);
  const heroTouch=useRef<{x:number;y:number}|null>(null);
