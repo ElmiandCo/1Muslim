@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useRef,useState,type VideoHTMLAttributes} from "react";
-import {observeVideo,recallPlayback,rememberPlayback,predictVideo} from "./smart-media";
+import {observeVideo,recallPlayback,rememberPlayback,predictVideo,bufferPublicHls,enablePublicMediaCache} from "./smart-media";
 
 type Props = Omit<VideoHTMLAttributes<HTMLVideoElement>,"src"> & {
  src:string; mediaId?:string; preloadDistance?:string;
@@ -12,7 +12,8 @@ export default function SmartVideo({src,mediaId,preloadDistance="450px",onTimeUp
  const key=mediaId||src;
  useEffect(()=>{
   const node=ref.current;if(!node)return;
-  const observer=new IntersectionObserver(([entry])=>{setNear(entry.isIntersecting);if(entry.isIntersecting)predictVideo(src)},{rootMargin:preloadDistance});
+  enablePublicMediaCache();
+  const observer=new IntersectionObserver(([entry])=>{setNear(entry.isIntersecting);if(entry.isIntersecting){predictVideo(src);if(src.endsWith(".m3u8"))void bufferPublicHls(src)}},{rootMargin:preloadDistance});
   observer.observe(node);
   return()=>observer.disconnect();
  },[preloadDistance,src]);
