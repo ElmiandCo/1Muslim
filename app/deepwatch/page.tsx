@@ -8,6 +8,7 @@ import DeepWatchTimedComments from "../components/DeepWatchTimedComments";
 import DeepWatchReviews from "../components/DeepWatchReviews";
 import {videoRegistry,isKidsVideo,type RegisteredVideo} from "../components/videoRegistry";
 import "./deepwatch.css";
+import {prepareMedia} from "../../lib/smart-media";
 
 /** Preload the next Movie Bank batch when the viewer approaches the rail's end. */
 function DeepWatchRailSentinel({onApproach}:{onApproach:()=>void}){
@@ -29,6 +30,7 @@ function DeepWatchRailSentinel({onApproach}:{onApproach:()=>void}){
  * back to rest rather than abruptly canceling the running animation. */
 function DeepWatchBreathingImage({src,eager}:{src:string;eager:boolean}){
  const imageRef=useRef<HTMLImageElement>(null);
+ useEffect(()=>{if(eager)prepareMedia(src)},[src,eager]);
  const activeRef=useRef<Animation|null>(null);
  const settlingRef=useRef<Animation|null>(null);
  const interruptedRef=useRef(false);
@@ -356,6 +358,13 @@ export default function DeepWatch(){
   return picks;
  },[filtered,tab]);
  const [heroIndex,setHeroIndex]=useState(0);
+ useEffect(()=>{
+  if(!heroSlides.length)return;
+  for(let step=1;step<=Math.min(2,heroSlides.length-1);step++){
+   const next=heroSlides[(heroIndex+step)%heroSlides.length];
+   if(next)prepareMedia(image(next.videoId));
+  }
+ },[heroIndex,heroSlides]);
  const [heroPaused,setHeroPaused]=useState(false);
  const [heroThumb,setHeroThumb]=useState(false);
  const heroTouch=useRef<{x:number;y:number}|null>(null);

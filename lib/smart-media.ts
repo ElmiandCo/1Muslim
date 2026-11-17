@@ -5,6 +5,20 @@ const MAX_PREPARED = 3;
 const prepared = new Map<string, HTMLLinkElement>();
 const positions = new Map<string, number>();
 const MAX_POSITIONS = 120;
+const STORAGE_KEY = "1muslim:media-positions:v1";
+let hydrated = false;
+function hydratePositions() {
+ if (hydrated || typeof sessionStorage === "undefined") return;
+ hydrated = true;
+ try { const entries = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "[]") as [string,number][];
+  for (const [key,value] of entries.slice(-MAX_POSITIONS)) if (typeof key === "string" && Number.isFinite(value)) positions.set(key,value);
+ } catch { /* private browsing or invalid previous data */ }
+}
+function safeKey(key:string) {
+ // Never persist signed URLs or access tokens to web storage.
+ return !/^https?:/i.test(key) && key.length < 180;
+}
+
 
 export function prepareMedia(url: string, kind: "image" | "video" = "image") {
   if (typeof document === "undefined" || !url || prepared.has(url)) return;
@@ -29,12 +43,15 @@ export function prepareMedia(url: string, kind: "image" | "video" = "image") {
 
 export function rememberPlayback(url: string, seconds: number) {
   if (!url || !Number.isFinite(seconds) || seconds < 0) return;
+  hydratePositions();
   positions.delete(url);
   positions.set(url, seconds);
   if (positions.size > MAX_POSITIONS) positions.delete(positions.keys().next().value!);
+  if (safeKey(url)) try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify([...positions].filter(([key])=>safeKey(key)))); } catch {}
 }
 
 export function recallPlayback(url: string): number {
+  hydratePositions();
   return positions.get(url) ?? 0;
 }
 
