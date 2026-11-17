@@ -83,3 +83,70 @@ export function observeVideo(
     rememberPlayback(video.currentSrc || video.src, video.currentTime);
   };
 }
+
+/** Cache only public same-origin images; never cache authenticated responses or signed URLs. */
+const PUBLIC_CACHE = "1muslim-public-images-v1";
+const MAX_IMAGE_ENTRIES = 60;
+function publicImageUrl(input:string):string|null {
+ if(typeof window==="undefined")return null;
+ try {
+  const u=new URL(input,location.href);
+  if(u.origin!==location.origin||u.search||!/\\.(?:png|jpe?g|webp|avif|gif)$/i.test(u.pathname))return null;
+  if(!u.pathname.startsWith("/assets/")&&!u.pathname.startsWith("/images/"))return null;
+  return u.href;
+ }catch{return null}
+}
+export async function cachePublicImage(url:string):Promise<void>{
+ const href=publicImageUrl(url);
+ if(!href||typeof caches==="undefined"||document.hidden)return;
+ const connection=(navigator as Navigator & {connection?:{saveData?:boolean}}).connection;
+ if(connection?.saveData)return;
+ try{
+  const cache=await caches.open(PUBLIC_CACHE);
+  if(await cache.match(href))return;
+  const response=await fetch(href,{credentials:"omit",mode:"same-origin",cache:"force-cache"});
+  if(!response.ok||response.type==="opaque"||!response.headers.get("content-type")?.startsWith("image/"))return;
+  const size=Number(response.headers.get("content-length")||0);
+  if(size>2_000_000)return;
+  await cache.put(href,response);
+  const keys=await cache.keys();
+  await Promise.all(keys.slice(0,Math.max(0,keys.length-MAX_IMAGE_ENTRIES)).map(key=>cache.delete(key)));
+ }catch{/* Storage quota, private browsing, and network errors are nonfatal. */}
+}
+export async function cachedPublicImage(url:string):Promise<string|null>{
+ const href=publicImageUrl(url);
+ if(!href||typeof caches==="undefined")return null;
+ try{
+  const match=await (await caches.open(PUBLIC_CACHE)).match(href);
+  if(!match)return null;
+  // Browser HTTP cache remains the normal display path; Cache Storage is a fallback.
+  const blob=await match.blob();
+  return URL.createObjectURL(blob);
+ }catch{return null}
+}
+
+/** Warm browser-managed metadata/range requests for at most two upcoming public videos.
+ * This does NOT download full files or bypass platform/CDN restrictions.
+ */
+const videoWarmers=new Map<string,HTMLVideoElement>();
+const MAX_WARMERS=2;
+export function predictVideo(url:string):void{
+ if(typeof document==="undefined"||document.hidden||!url||videoWarmers.has(url))return;
+ const connection=(navigator as Navigator & {connection?:{saveData?:boolean;effectiveType?:string}}).connection;
+ if(connection?.saveData||/2g/.test(connection?.effectiveType||""))return;
+ let parsed:URL;
+ try{parsed=new URL(url,location.href)}catch{return}
+ if(parsed.origin!==location.origin||parsed.search||!/\\.(?:mp4|webm)$/i.test(parsed.pathname))return;
+ const video=document.createElement("video");
+ video.preload="metadata";video.muted=true;video.playsInline=true;
+ video.src=parsed.href;
+ videoWarmers.set(url,video);
+ while(videoWarmers.size>MAX_WARMERS){
+  const first=videoWarmers.keys().next().value;
+  if(!first)break;
+  const old=videoWarmers.get(first);
+  old?.removeAttribute("src");old?.load();
+  videoWarmers.delete(first);
+ }
+ video.load();
+}

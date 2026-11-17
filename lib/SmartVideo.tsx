@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useRef,useState,type VideoHTMLAttributes} from "react";
-import {observeVideo,recallPlayback,rememberPlayback} from "./smart-media";
+import {observeVideo,recallPlayback,rememberPlayback,predictVideo} from "./smart-media";
 
 type Props = Omit<VideoHTMLAttributes<HTMLVideoElement>,"src"> & {
  src:string; mediaId?:string; preloadDistance?:string;
@@ -12,17 +12,17 @@ export default function SmartVideo({src,mediaId,preloadDistance="450px",onTimeUp
  const key=mediaId||src;
  useEffect(()=>{
   const node=ref.current;if(!node)return;
-  const observer=new IntersectionObserver(([entry])=>setNear(entry.isIntersecting),{rootMargin:preloadDistance});
+  const observer=new IntersectionObserver(([entry])=>{setNear(entry.isIntersecting);if(entry.isIntersecting)predictVideo(src)},{rootMargin:preloadDistance});
   observer.observe(node);
   return()=>observer.disconnect();
- },[preloadDistance]);
+ },[preloadDistance,src]);
  useEffect(()=>{
   const node=ref.current;if(!node)return;
   const cleanup=observeVideo(node);
   const save=()=>rememberPlayback(key,node.currentTime);
   node.addEventListener("pause",save);
-  node.addEventListener("pagehide",save);
-  return()=>{save();cleanup();node.removeEventListener("pause",save);node.removeEventListener("pagehide",save)};
+  window.addEventListener("pagehide",save);
+  return()=>{save();cleanup();node.removeEventListener("pause",save);window.removeEventListener("pagehide",save)};
  },[key]);
  return <video {...props} ref={ref} src={near?src:undefined} preload={near?"metadata":"none"} playsInline
    onLoadedMetadata={event=>{

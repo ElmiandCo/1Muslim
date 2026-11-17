@@ -3,7 +3,7 @@ import Link from "next/link";
 import {cleanPostBody} from "../lib/cleanPostBody";
 import {useEffect,useMemo,useRef,useState} from "react";
 import UnifiedPostMedia from "../components/UnifiedPostMedia";
-import {observeVideo,recallPlayback,rememberPlayback} from "../../lib/smart-media";
+import {observeVideo,recallPlayback,rememberPlayback,predictVideo,cachePublicImage} from "../../lib/smart-media";
 import PostAuthorFollow from "../components/PostAuthorFollow";
 import styles from "./posts-magazine.module.css";
 type Post={id:string;body:string;author_name:string;author_handle:string;created_at:string;media_url:string|null;media_type:string|null;shahada_verified?:boolean;author_id:string;author_avatar_url?:string|null};
@@ -30,6 +30,13 @@ export default function PublicPostsSocial(){
  const [posts,setPosts]=useState<Post[]>([]),[query,setQuery]=useState(""),[filter,setFilter]=useState<"all"|"photos"|"videos"|"words">("all"),[loading,setLoading]=useState(true),[error,setError]=useState(""),[collection,setCollection]=useState(false),[expanded,setExpanded]=useState<Record<string,boolean>>({}),[viewerId,setViewerId]=useState<string|null>(null),[menuId,setMenuId]=useState<string|null>(null),[editingId,setEditingId]=useState<string|null>(null),[editText,setEditText]=useState(""),[actionBusy,setActionBusy]=useState(false),[actionError,setActionError]=useState("");
  useEffect(()=>{let active=true;const load=async()=>{try{const res=await fetch("/api/community-posts",{cache:"no-store"});if(!res.ok)throw Error("Unable to load public posts");const json=await res.json();if(active){setPosts(previous=>{return (json.posts||[]).map((p:Post)=>{if(!p.media_url)return p;const cached=mediaUrlCache.current.get(p.id);if(cached&&Date.now()-cached.at<45*60*1000&&cached.url.includes("/storage/v1/object/sign/"))return {...p,media_url:cached.url};mediaUrlCache.current.set(p.id,{url:p.media_url,at:Date.now()});return p})});setViewerId(json.viewer_id||null);setError("")}}catch(e){if(active)setError(e instanceof Error?e.message:"Unable to load posts")}finally{if(active)setLoading(false)}};void load();const timer=setInterval(()=>void load(),30000);return()=>{active=false;clearInterval(timer)}},[]);
  const filtered=useMemo(()=>posts.filter(p=>{const video=Boolean(p.media_type?.startsWith("video/")||youtubeId(p.body)||youtubeId(p.media_url||""));const photo=Boolean(p.media_type?.startsWith("image/"));return(p.body+" "+p.author_name+" "+p.author_handle).toLowerCase().includes(query.toLowerCase())&&(filter==="all"||filter==="videos"&&video||filter==="photos"&&photo||filter==="words"&&!video&&!photo)}),[posts,query,filter]);
+ useEffect(()=>{
+  // Warm the first two public native video candidates, without preloading full files.
+  const upcoming=filtered.filter(p=>p.media_url&&(p.media_type?.startsWith("video/")||/\\.(mp4|webm)(?:\\?|$)/i.test(p.media_url))).slice(0,2);
+  for(const post of upcoming)if(post.media_url)predictVideo(post.media_url);
+  // Cache only public same-origin static images; signed user media is deliberately excluded.
+  for(const post of filtered.slice(0,8))if(post.media_url&&post.media_type?.startsWith("image/"))void cachePublicImage(post.media_url);
+ },[filtered]);
  const stories=useMemo(()=>{const seen=new Set<string>();return posts.filter(p=>{const key=p.author_handle||p.author_name;if(seen.has(key))return false;seen.add(key);return true}).slice(0,12)},[posts]);
  return <main className={styles.page+" "+styles.feedPage+" "+styles.discoverPage}><div className={styles.discoverHead}><div className={styles.discoverTitle}><h1>Discover</h1><span>✧</span><p>Explore your Ummah.</p></div><div className={styles.discoverActions}><Link href="/search" aria-label="Search 1Muslim">⌕</Link><Link href="/create">▣ Create</Link></div></div>
  <section className={styles.discoverPeople} aria-label="Discover community members"><div className={styles.feedStoryRail}><Link href="/create" className={styles.feedStoryPerson}><span className={styles.feedStoryRing}><span>＋</span></span><small>Your Story</small></Link>{stories.map(p=><Link href={`/profile?section=muslimeen&member=${encodeURIComponent(p.author_id)}`} className={styles.feedStoryPerson} key={p.id}><span className={styles.feedStoryRing}><span>{p.author_avatar_url?<img className={styles.authorAvatarImage} src={p.author_avatar_url} alt="" loading="lazy" referrerPolicy="no-referrer"/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span></span><small>{p.author_handle||p.author_name}</small></Link>)}</div></section>
