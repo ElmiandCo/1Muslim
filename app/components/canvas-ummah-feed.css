@@ -681,3 +681,11 @@ html[data-day-mode="true"] .community-simple-feed .community-posts-list,
 @keyframes ummahLiveCommentRise{0%,8%{opacity:0;transform:translateY(18px) scale(.92)}18%,70%{opacity:1;transform:translateY(0) scale(1)}88%,100%{opacity:0;transform:translateY(-28px) scale(.96)}}
 @media(max-width:600px){.ummah-live-comment{max-width:52%;padding:7px 8px}.ummah-live-comment-0{left:-2%}.ummah-live-comment-1{right:-2%}.ummah-live-comment-2{left:-2%}.ummah-live-comment-copy{font-size:10px}.canvas-community-posts-only .community-post-card{border-radius:20px!important}}
 @media(prefers-reduced-motion:reduce){.ummah-live-comment{animation:none;opacity:1;transform:none}}
+
+/* Fullscreen Ummah post viewer: remove theme-derived gold frame. */
+.ummah-unified-viewer{padding:0!important;background:#000!important}
+.ummah-unified-viewer .ummah-unified-stage,
+.ummah-unified-viewer .ummah-unified-stage[data-post-theme]{width:100%!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;border:0!important;border-radius:0!important;outline:0!important;box-shadow:none!important;background:#000!important}
+.ummah-unified-viewer .ummah-unified-media,
+.ummah-unified-viewer .ummah-unified-media video,
+.ummah-unified-viewer .ummah-unified-media img{border:0!important;border-radius:0!important;box-shadow:none!important}
