@@ -150,3 +150,46 @@ export function predictVideo(url:string):void{
  }
  video.load();
 }
+
+/** Install an opt-in, tightly scoped public-media service worker. */
+let workerStarted=false;
+export function enablePublicMediaCache():void{
+ if(workerStarted||typeof navigator==="undefined"||!("serviceWorker" in navigator)||location.protocol!=="https:")return;
+ workerStarted=true;
+ void navigator.serviceWorker.register("/media-cache-sw.js",{scope:"/"}).catch(()=>{workerStarted=false});
+}
+
+/** Prepare up to three first HLS media segments of a public same-origin playlist.
+ * Browser playback uses the cached responses only when its requests pass through our SW.
+ * DRM, signed manifests, YouTube and third-party sources are deliberately unsupported.
+ */
+const activePlaylists=new Set<string>();
+export async function bufferPublicHls(playlist:string):Promise<void>{
+ if(typeof window==="undefined"||document.hidden||activePlaylists.has(playlist))return;
+ const connection=(navigator as Navigator & {connection?:{saveData?:boolean;effectiveType?:string}}).connection;
+ if(connection?.saveData||/2g/.test(connection?.effectiveType||""))return;
+ let url:URL;
+ try{url=new URL(playlist,location.href)}catch{return}
+ if(url.origin!==location.origin||url.search||!url.pathname.startsWith("/media/hls/")||!url.pathname.endsWith(".m3u8"))return;
+ activePlaylists.add(playlist);
+ try{
+  enablePublicMediaCache();
+  const response=await fetch(url.href,{credentials:"omit"});
+  if(!response.ok||Number(response.headers.get("content-length")||0)>150_000)return;
+  const manifest=await response.text();
+  if(manifest.length>150_000||!manifest.startsWith("#EXTM3U")||manifest.includes("#EXT-X-KEY")||manifest.includes("#EXT-X-SESSION-KEY"))return;
+  const lines=manifest.split(/\\r?\\n/).map(line=>line.trim()).filter(line=>line&&!line.startsWith("#"));
+  const segments=lines.filter(line=>/\\.(?:ts|m4s)(?:$|\\?)/i.test(line)).slice(0,3);
+  for(const segment of segments){
+   const target=new URL(segment,url);
+   if(target.origin!==location.origin||target.search||!target.pathname.startsWith("/media/hls/"))continue;
+   try{
+    const head=await fetch(target.href,{method:"HEAD",credentials:"omit"});
+    const size=Number(head.headers.get("content-length")||0);
+    if(!head.ok||!size||size>4_000_000)continue;
+    // Fetch via the service worker; it persists eligible responses to Cache Storage.
+    await fetch(target.href,{credentials:"omit"});
+   }catch{}
+  }
+ }catch{}finally{activePlaylists.delete(playlist)}
+}
