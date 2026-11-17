@@ -141,7 +141,7 @@ export function predictVideo(url:string):void{
  const publicCommunityVideo = parsed.protocol==="https:" &&
    parsed.hostname==="njilnqgdfrvpvgbkodwl.supabase.co" &&
    parsed.pathname.startsWith("/storage/v1/object/public/community-media/");
- if(parsed.search || !/\\.(?:mp4|webm)$/i.test(parsed.pathname) ||
+ if(parsed.search || !/\.(?:mp4|webm)$/i.test(parsed.pathname) ||
     (parsed.origin!==location.origin && !publicCommunityVideo))return;
  const video=document.createElement("video");
  video.preload="metadata";video.muted=true;video.playsInline=true;
