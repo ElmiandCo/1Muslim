@@ -13,3 +13,9 @@ Before each change read this file and WORK_LOG.md. Work in isolated feature bran
 - Added `IsometricLandscape.tsx` and `isometric-landscape.css`, wired into `/one-world/page.tsx` on branch `feat/one-world-visual-gesture-studio-v2`.
 - Supports pointer drag, pinch zoom, camera reset, plot selection, local adjacent claims and building palette. No real XP/auth/ownership changes.
 - Follow-up for QA: run Next.js typecheck/build and mobile pointer regression, then Vercel preview. Integration team should rebase visual PR carefully against World Architect geographic updates.
+
+## Visual Studio V3 handoff — 2026-11-18
+- New branch: `feat/one-world-visual-minimap-v3`, based on V2 visual branch.
+- Changed `IsometricLandscape.tsx`; added `isometric-ambience.css`. No changes to geography, economy, combat or authentication modules.
+- Added minimap selection/recenter and optional day/night visuals. Local-only state; no DB or XP.
+- QA: check minimap touch events, z-index over camera viewport, pinch/drag, screen widths 320–430px, Next.js build and Vercel preview.
