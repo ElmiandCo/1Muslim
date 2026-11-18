@@ -2,7 +2,7 @@ import {strict as assert} from "node:assert";
 import {test} from "node:test";
 import {transact,canAttack,type World,type Player} from "./ledger-core";
 const player=(id:string,mode:"peaceful"|"conquest"="peaceful"):Player=>({id,xp:100,mode,tech:["settlement"],resources:{food:10,wood:10,stone:10,knowledge:10,fuel:10}});
-const seed=():World=>({players:{a:player("a"),b:player("b")},plots:{p:{id:"p",ownerId:"a",terrain:"meadow",building:"home",durability:50},q:{id:"q",ownerId:null,terrain:"forest",durability:100}},ledger:[]});
+const seed=():World=>({players:{a:player("a"),b:player("b")},plots:{p:{id:"p",ownerId:"a",terrain:"meadow",x:0,y:0,regionId:"r",building:"home",durability:50},q:{id:"q",ownerId:null,terrain:"forest",x:1,y:0,regionId:"r",durability:100}},ledger:[]});
 test("land purchase debits once and is idempotent",()=>{const first=transact(seed(),{kind:"land",actorId:"a",plotId:"q",idempotencyKey:"tx1",now:1});assert.equal(first.ok,true);if(!first.ok)return;assert.equal(first.world.players.a.xp,70);const repeat=transact(first.world,{kind:"land",actorId:"a",plotId:"q",idempotencyKey:"tx1",now:2});assert.equal(repeat.ok,true);if(repeat.ok)assert.equal(repeat.world.ledger.length,1);});
 test("idempotency key cannot be reused for another plot",()=>{const first=transact(seed(),{kind:"land",actorId:"a",plotId:"q",idempotencyKey:"tx1",now:1});if(!first.ok)throw Error();assert.equal(transact(first.world,{kind:"repair",actorId:"a",plotId:"p",idempotencyKey:"tx1",now:2}).ok,false);});
 test("repair never changes durability without XP debit",()=>{const world=seed();world.players.a.xp=0;const r=transact(world,{kind:"repair",actorId:"a",plotId:"p",idempotencyKey:"repair1",now:1});assert.equal(r.ok,false);assert.equal(world.plots.p.durability,50);});
@@ -11,3 +11,18 @@ test("no build on another player's land",()=>assert.equal(transact(seed(),{kind:
 test("peaceful immunity applies to both sides",()=>{assert.equal(canAttack(player("a","conquest"),player("b"),1000).allowed,false);assert.equal(canAttack(player("a"),player("b","conquest"),1000).allowed,false);});
 test("repeat raid cooldown prevents chain attack",()=>assert.equal(canAttack(player("a","conquest"),player("b","conquest"),10000,9000).allowed,false));
 test("defender gets first strike on repeat attacks",()=>{const d=player("b","conquest");d.lastAttackedAt=1000;assert.equal(canAttack(player("a","conquest"),d,2000).defenderFirst,true);});
+
+test("land purchase rejects nonadjacent, diagonal, cross-region and missing geometry",()=>{
+ const world=seed();
+ world.plots.far={id:"far",ownerId:null,terrain:"meadow",x:3,y:0,regionId:"r",durability:100};
+ world.plots.diagonal={id:"diagonal",ownerId:null,terrain:"meadow",x:1,y:1,regionId:"r",durability:100};
+ world.plots.other={id:"other",ownerId:null,terrain:"meadow",x:1,y:0,regionId:"other",durability:100};
+ world.plots.unknown={id:"unknown",ownerId:null,terrain:"meadow",durability:100};
+ for(const id of ["far","diagonal","other","unknown"]){
+  const result=transact(world,{kind:"land",actorId:"a",plotId:id,idempotencyKey:"claim-"+id,now:1});
+  assert.equal(result.ok,false,id);
+  assert.equal(world.players.a.xp,100);
+  assert.equal(world.plots[id].ownerId,null);
+  assert.equal(world.ledger.length,0);
+ }
+});
