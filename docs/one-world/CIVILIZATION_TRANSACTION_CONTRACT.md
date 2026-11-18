@@ -27,3 +27,10 @@ GitHub file commits verified. Tests authored but **not executed**; no local chec
 - World Architect: supply canonical plot IDs/coordinates and authoritative adjacency.
 - Visual Studio: display server-returned wallet/ownership and persisted buildings; never debit XP locally.
 - Integration & QA: review guard against #1390 behavior, execute test suite/build, verify mobile page and transaction rollback before any release.
+
+## Civilization Systems follow-up — 2026-11-18 08:42 CT
+- Reviewed current integration-branch STUDIO_HANDOFF.md, WORK_LOG.md, REFERENCE_USAGE.md and QA_STATUS.md, and changed-file lists for PRs #1380, #1386, #1390, #1392. Ledger-core overlap remains unresolved; no merges attempted.
+- Hardened `lib/one-world/purchase-guard.ts` to reject malformed runtime request, blank identity/idempotency key, invalid target fields, non-array ownership and null plot entries without throwing. Expanded `lib/one-world/purchase-guard.test.ts` with adversarial malformed-input cases.
+- Commits: `cf6879d6`, `a0c15997`. These are validation-only changes, not a server transaction.
+- Test execution: not verified; no test runner or Vercel preview used in this pass. Screenshot references actually used: none (filenames: none).
+- Integration lead: keep PR #1392 in draft, merge only after reviewing #1386/#1390 conflicts and executing tests. Civilization Systems next must implement authenticated DB-atomic wallet/ownership/ledger and repair transactions, with replay and rollback tests. No real XP deductions or combat enabled by this patch.
