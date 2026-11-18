@@ -1,0 +1,12 @@
+
+/* V3: original studio minimap and ambient lighting */
+.owIsoViewport.owNight{background:radial-gradient(ellipse at 50% 30%,#28445b,#0b1428 75%);transition:background .35s}
+.owIsoViewport.owNight .owIsoScene{filter:brightness(.67) saturate(.85) drop-shadow(0 0 18px #8db8dd44)}
+.owIsoSceneTools{position:absolute;right:12px;top:12px;display:flex;gap:7px;z-index:6}
+.owIsoSceneTools button{background:#0d273bd9;border:1px solid #c2e2e766;color:white;border-radius:12px;padding:8px 11px;font-size:12px;backdrop-filter:blur(8px)}
+.owIsoMini{position:absolute;bottom:42px;right:12px;width:138px;padding:9px;background:#10252de8;border:1px solid #a4d7d76b;border-radius:14px;box-shadow:0 8px 26px #0008;z-index:6;backdrop-filter:blur(10px)}
+.owIsoMiniGrid{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;aspect-ratio:1}
+.owIsoMiniGrid button{min-width:0;min-height:0;padding:0;border:0;border-radius:2px;background:#73986a;cursor:pointer}
+.owIsoMiniGrid button.forest{background:#275f49}.owIsoMiniGrid button.field{background:#c0a35d}.owIsoMiniGrid button.hill{background:#7b8581}.owIsoMiniGrid button.water{background:#3e92ad}.owIsoMiniGrid button.owned{outline:1px solid #ffdb8a;z-index:1}.owIsoMiniGrid button.selected{outline:2px solid white;z-index:2}
+.owIsoMini>span{display:block;margin-top:7px;color:#c1d8d7;font-size:9px;letter-spacing:.13em;text-align:center}
+@media(max-width:480px){.owIsoMini{width:104px;bottom:42px;right:8px;padding:7px}.owIsoSceneTools{right:8px;top:8px}.owIsoSceneTools button{font-size:11px;padding:7px}}
