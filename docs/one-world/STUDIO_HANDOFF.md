@@ -23,3 +23,7 @@ Before each change read this file and WORK_LOG.md. Work in isolated feature bran
 ## Visual Studio Completion Sprint — 2026-11-18 05:31 CT
 - Branch `fix/one-world-visual-v1-input-build` is stacked on visual V3 PR #1384. It fixes literal `\\n` characters embedded in TSX imports/state declarations, a compile blocker, and prevents minimap/scene toolbar pointer-down events from starting viewport pan/pinch capture.
 - Integration lead: take this fix after visual V2/V3 or cherry-pick the single component commit; do not merge overlapping UI branches independently. No XP/auth or persistence changes. Run `npm run build` and iOS Safari pointer regression before acceptance.
+
+## Visual Studio mobile completion — 2026-11-18 06:25 CT
+- Isolated branch `fix/one-world-mobile-controls-v1` based on `integration/one-world-v1-completion`. Changed CSS only: `app/one-world/isometric-landscape.css` for 44px touch targets, narrow iPhone toolbar layout, viewport overscroll containment, safe-area padding, focus visibility and reduced-motion support. No TSX, economy, map, or navigation edits.
+- Integration lead: review and cherry-pick/merge this CSS-only PR when convenient. Must verify 320/375/390/430px widths, pan/pinch, plot selection, minimap hit targets, and iOS Safari safe area. Build and Vercel preview not verified by Visual Studio.
