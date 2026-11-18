@@ -17,3 +17,13 @@ For each referenced screenshot record filename, origin, date, feature inspired, 
 ## Completion Sprint — 2026-11-18 05:31 CT
 - No new screenshot references accessed or used in this change; filenames: none. No proprietary assets copied.
 - Implementation changes are strictly TSX syntax and touch-event corrections in `app/one-world/IsometricLandscape.tsx`, informed by code review rather than reference imagery.
+
+
+## Pointer handoff — 2026-11-18
+No reference screenshots accessed; exact filenames: none. Change limited to gesture lifecycle and selection safety; no visual assets copied.
+
+## Visual Studio V1 selection safety — 2026-11-18 12:27 CT
+- Reference screenshots accessed or used: none; exact filenames: none. No proprietary assets copied.
+- Changed `app/one-world/IsometricLandscape.tsx` on PR #1391, commit `cc7d080b7fb490d0aa57b80a42dc62a092cd88ec`: fail-closed handling of out-of-range geographic plot selection, disabled claim/place action and explicit empty selection UI rather than silently showing starter plot data.
+- No merge/conflict resolution attempted; PR #1388 remains a geographic integration dependency and is reported nonmergeable. No XP, schema, combat, main navigation or production changes.
+- Verification: GitHub commit only; build, tests, iPhone gesture QA and preview not executed or verified. Next: Integration lead reconcile #1388/#1391, verify authoritative plot IDs and exact-SHA build/mobile flows; Civilization Systems connect persistent ownership and wallet transaction before enabling purchases.

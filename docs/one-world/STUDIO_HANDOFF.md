@@ -33,3 +33,10 @@ Before each change read this file and WORK_LOG.md. Work in isolated feature bran
 ## World Architect plot-selection sync — 2026-11-18 07:10 CT
 - Geographic navigator and valley now share page-level selected plot index (0–143), including minimap selection. This is **sample plot UI synchronization**, not authoritative geography, ownership or persisted data.
 - No new assets or screenshot references. Integration lead: review PR #1388 and validate with Visual Studio before merging; keep all server mutation paths disabled.
+
+
+## Visual Studio pointer handoff — 2026-11-18 07:30 CT
+- Branch `fix/one-world-visual-pointer-handoff-v1` stacked on geography PR #1388. Changed `app/one-world/IsometricLandscape.tsx` only: clear pointer state on lost capture, avoid selection during active pointer gestures, and provide safe tile fallback if geography selection is outside the scene's local tile array.
+- No screenshots accessed; reference filenames: none. No proprietary assets used. No merge or conflict resolution performed.
+- GitHub file commits verified; build, tests, Safari/iPhone gestures and Vercel preview not executed or verified.
+- Integration lead: reconcile this stacked PR with #1389 mobile CSS, test tap, drag, pinch and pointer cancellation, and connect authoritative plot IDs and persisted ownership before release.
