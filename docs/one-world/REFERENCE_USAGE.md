@@ -7,3 +7,9 @@ For each referenced screenshot record filename, origin, date, feature inspired, 
 - Design inspiration: user-described Fantopia-style angled land plots and building placement, implemented with original CSS diamond tiles and emoji placeholders, not copied game art.
 - Implementation: `app/one-world/IsometricLandscape.tsx`, `app/one-world/isometric-landscape.css`.
 - Replace placeholders with original commissioned/generated assets after approved references are available.
+
+## Visual Studio third pass — 2026-11-18
+- Accessible reference screenshots: none inspected; no image filenames available. No proprietary game assets copied.
+- Original additions: 12×12 interactive terrain minimap, selected-plot highlight, owned-plot border, and day/night ambience toggle.
+- Files: `app/one-world/IsometricLandscape.tsx` and `app/one-world/isometric-ambience.css`.
+- Source of design decisions: existing original prototype tile data and user-requested mobile game navigation, not an external screenshot.
