@@ -33,3 +33,10 @@ Created starter route, CSS, and shared studio documentation in a feature branch.
 - Changed: `app/one-world/page.tsx`, `app/one-world/GeographicNavigator.tsx`, `app/one-world/IsometricLandscape.tsx`. No DB, wallet, auth, nav, or combat changes.
 - Screenshots accessed: none; no artwork copied. GitHub file updates succeeded; build/tests/mobile/preview not verified.
 - Blocker: geography regions are illustrative and do not yet map to authoritative region-specific tile IDs, terrain or ownership. Integration lead should confirm one canonical coordinate contract before wiring server persistence; Visual Studio should verify tile/minimap selection and iPhone gestures.
+
+
+## Visual Studio pointer handoff — 2026-11-18 07:30 CT
+- Branch `fix/one-world-visual-pointer-handoff-v1` stacked on geography PR #1388. Changed `app/one-world/IsometricLandscape.tsx` only: clear pointer state on lost capture, avoid selection during active pointer gestures, and provide safe tile fallback if geography selection is outside the scene's local tile array.
+- No screenshots accessed; reference filenames: none. No proprietary assets used. No merge or conflict resolution performed.
+- GitHub file commits verified; build, tests, Safari/iPhone gestures and Vercel preview not executed or verified.
+- Integration lead: reconcile this stacked PR with #1389 mobile CSS, test tap, drag, pinch and pointer cancellation, and connect authoritative plot IDs and persisted ownership before release.
