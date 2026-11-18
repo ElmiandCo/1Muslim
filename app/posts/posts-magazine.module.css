@@ -174,3 +174,18 @@
 
 /* Use member profile photos across Discover stories, cards and feed. */
 .authorAvatarImage{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%;}
+
+/* For You: Feed's editorial hierarchy scaled for the two-column discovery layout. */
+.discoverPage .discoverCard{background:#fffdf9!important;color:#1d2824!important;border:1px solid #ded8ce!important;overflow:hidden;box-shadow:0 4px 14px rgba(30,27,22,.09)}
+.discoverFeedHeader{padding:9px 10px 5px}
+.discoverFeedIdentity{display:flex;align-items:center;gap:7px;min-width:0;color:#1d2824;text-decoration:none}
+.discoverFeedAvatar{flex:0 0 28px;width:28px;height:28px;border-radius:50%;border:1.5px solid #d7ad7c;background:#203e42;color:#fff;display:grid;place-items:center;font:700 12px Arial,sans-serif;overflow:hidden}
+.discoverFeedAvatar img{width:100%;height:100%;object-fit:cover}
+.discoverFeedNames{display:flex;flex-direction:column;min-width:0;gap:2px}
+.discoverFeedNames strong{font:700 11px Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.discoverFeedNames small{font:400 9px Arial,sans-serif;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.discoverFeedBody{font-family:Georgia,serif;font-size:clamp(12px,1.8vw,15px);line-height:1.3;overflow-wrap:anywhere;white-space:pre-wrap;margin:0;padding:5px 10px 9px;color:#24312c}
+.discoverPage .discoverCard .discoverMeta{border-top:1px solid #e6dfd5;background:#fffdf9!important}
+.discoverPage .discoverCard .discoverAuthor{color:#25342e!important}
+.discoverPage .discoverCard .discoverVisual{border-radius:0!important}
+@media(max-width:420px){.discoverFeedHeader{padding:7px 7px 4px}.discoverFeedBody{padding:4px 7px 7px;font-size:12px}.discoverFeedAvatar{flex-basis:25px;width:25px;height:25px}.discoverFeedNames strong{font-size:10px}.discoverFeedNames small{font-size:8px}}
