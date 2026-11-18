@@ -10,7 +10,7 @@ export type Unit = "horse" | "car" | "tank" | "jet";
 export type Mode = "peaceful" | "conquest";
 export type Tech = "settlement" | "agriculture" | "education" | "industry" | "aviation";
 export interface Player { id:string; xp:number; mode:Mode; resources:Record<Resource,number>; tech:Tech[]; lastAttackedAt?:number; }
-export interface Plot { id:string; ownerId:string|null; terrain:Terrain; building?:Building; durability:number; }
+export interface Plot { id:string; ownerId:string|null; terrain:Terrain; x?:number; y?:number; regionId?:string; building?:Building; durability:number; }
 export interface Entry { idempotencyKey:string; playerId:string; kind:"land"|"build"|"repair"; amount:number; plotId:string; timestamp:number; building?:Building; }
 export interface World { players:Record<string,Player>; plots:Record<string,Plot>; ledger:Entry[]; }
 export const BUILDINGS:Record<Building,{xp:number;tech:Tech;resources:Partial<Record<Resource,number>>}>={
@@ -41,6 +41,11 @@ export function transact(world:World,action:Action):Result{
  let cost=0;let resources:Partial<Record<Resource,number>>={};let nextPlot:Plot={...plot};
  if(action.kind==="land"){
   if(plot.ownerId)return fail("land already owned");
+  // Fail closed until the authoritative server provides a regional plot grid.
+  // Orthogonal neighbors only: diagonal and cross-region claims are forbidden.
+  if(!Number.isSafeInteger(plot.x)||!Number.isSafeInteger(plot.y)||!plot.regionId)return fail("plot geometry unavailable");
+  const adjacent=Object.values(world.plots).some(p=>p.ownerId===player.id&&p.regionId===plot.regionId&&Number.isSafeInteger(p.x)&&Number.isSafeInteger(p.y)&&Math.abs(p.x!-plot.x!)+Math.abs(p.y!-plot.y!)===1);
+  if(!adjacent)return fail("land must be adjacent to owned territory");
   cost=30;nextPlot.ownerId=player.id;nextPlot.durability=100;
  }else{
   if(plot.ownerId!==player.id)return fail("not plot owner");
