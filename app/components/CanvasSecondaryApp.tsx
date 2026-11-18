@@ -93,6 +93,12 @@ function ProfileApp({active,section="My Profile",heroOnly=false}:{active:boolean
   setSavingBackground(false);
  };
  const avatars=[
+{name:"GoldenSister",url:"/assets/avatars/GoldenSister-female.jpg",xp:0,gender:"female",category:"Basic",isNew:true},
+{name:"SmoothRed",url:"/assets/avatars/SmoothRed-female.PNG",xp:0,gender:"female",category:"Basic",isNew:true},
+{name:"GreenGem",url:"/assets/avatars/GreenGem-female.PNG",xp:0,gender:"female",category:"Basic",isNew:true},
+{name:"CoolBlue",url:"/assets/avatars/CoolBlue.PNG",xp:0,gender:"female",category:"Basic",isNew:true},
+{name:"Pinkish",url:"/assets/avatars/Pinkish-female.PNG",xp:0,gender:"female",category:"Basic",isNew:true},
+{name:"HawwaTheQueen",url:"/assets/avatars/HawwaTheQueen.PNG",xp:0,gender:"female",category:"Basic",isNew:true},
 {name:"Default",url:"/assets/avatars/default-male.jpg",xp:0,gender:"male",category:"Basic"},
 {name:"Default",url:"/assets/avatars/Default-women.png",xp:0,gender:"female",category:"Basic"},
 ...(["Silver","Gold","Water","Cosmic"] as const).flatMap(name=>(["male","female"] as const).map(gender=>({name,url:`/assets/avatars/${name.toLowerCase()}-avatar-${gender}.${name==="Silver"?"jpg":"PNG"}`,xp:["Silver","Gold","Water"].includes(name)?2000:5000,gender,category:["Silver","Gold","Water"].includes(name)?"Elemental":"Elite"}))),
