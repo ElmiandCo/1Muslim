@@ -484,7 +484,7 @@ const [avatarPage,setAvatarPage]=useState(0);
     setAvatarSaving(false);
   };
   const [stockSaving,setStockSaving]=useState(false);
-  const selectStockCover=async(url:string)=>{if(!profile||stockSaving)return;setStockSaving(true);setMessage("");const avatar_config={...(profile.avatar_config||{}),profileCoverUrl:url};const {error}=await createClient().from("profiles").update({avatar_config}).eq("id",profile.id);if(error)setMessage("Could not save cover: "+error.message);else{update({avatar_config});setMessage("Stock cover saved.")}setStockSaving(false)};
+  const selectStockCover=async(url:string)=>{if(!profile||stockSaving)return;setStockSaving(true);setMessage("");const avatar_config={...(profile.avatar_config||{}),profileCoverUrl:url};const {error}=await createClient().from("profiles").update({avatar_config}).eq("id",profile.id);if(error)setMessage("Could not save cover: "+error.message);else{update({avatar_config});window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:profile.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));setMessage("Stock cover saved.")}setStockSaving(false)};
   const [coverPreview,setCoverPreview]=useState<string|null>(null);
   const [coverFile,setCoverFile]=useState<File|null>(null);
   const [coverZoom,setCoverZoom]=useState(1);
@@ -504,8 +504,8 @@ const [avatarPage,setAvatarPage]=useState(0);
      ctx.drawImage(img,(canvas.width-w)/2,(canvas.height-h)*coverPosition/100,w,h);
      const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Crop failed")),"image/jpeg",.88));
      const client=createClient();const {data:{user}}=await client.auth.getUser();if(!user||user.id!==profile.id)throw new Error("Sign in to save your cover.");
-     const path=`profile-covers/${user.id}/cover-${Date.now()}.jpg`;
-     const {error:uploadError}=await client.storage.from("avatars").upload(path,blob,{contentType:"image/jpeg",upsert:false});if(uploadError)throw uploadError;
+     const path=`${user.id}/profile-covers/cover-${Date.now()}.jpg`;
+     const {error:uploadError}=await client.storage.from("avatars").upload(path,blob,{contentType:"image/jpeg",upsert:false});if(uploadError)throw new Error("Cover upload failed: "+uploadError.message);
      const url=client.storage.from("avatars").getPublicUrl(path).data.publicUrl;
      const avatar_config={...(profile.avatar_config||{}),profileCoverUrl:url};
      const {data:savedProfile,error:saveError}=await client.from("profiles").update({avatar_config}).eq("id",user.id).select("avatar_config").single();
@@ -513,7 +513,7 @@ const [avatarPage,setAvatarPage]=useState(0);
      const savedConfig=savedProfile?.avatar_config as Record<string,unknown>|null;
      if(savedConfig?.profileCoverUrl!==url)throw new Error("Cover uploaded but the saved profile did not confirm the new image.");
      await new Promise<void>((resolve,reject)=>{const check=new Image();check.onload=()=>resolve();check.onerror=()=>reject(new Error("Cover uploaded but the public image cannot be loaded. Check avatars bucket access."));check.src=url;});
-     update({avatar_config:savedConfig});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");setTab("profile");setEditing(false);window.dispatchEvent(new Event("1muslim:profile-saved"));window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})));
+     update({avatar_config:savedConfig});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");setTab("profile");setEditing(false);window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:user.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})));
     }finally{URL.revokeObjectURL(src)}
    }catch(e){setMessage(e instanceof Error?e.message:"Could not upload cover image.")}finally{setCoverUploading(false)}
   };
