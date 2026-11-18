@@ -51,3 +51,14 @@ Integrate one small vertical slice: login → starter plot → place building �
 - Assignments: Civilization Systems — implement and prove authenticated atomic XP wallet/ledger and idempotent purchase/repair with rollback, persistent starter plots/buildings/resources, peaceful-mode server guards; World Architect — bind canonical geographic IDs and server ownership to rendered plots; Visual Studio — connect authoritative plots, test drag/pinch/selection/placement at 320–430px; Integration — test HTTP /one-world, authenticated device flow, exact-SHA tests and safe PR integration.
 - Changed path: `docs/one-world/QA_STATUS.md` only. No app code, production, navigation, schema, or wallet touched. Reference screenshots accessed: none; filenames: none.
 - Release remains BLOCKED until authenticated playable route, persistent ownership, secure wallet and mobile tests are independently verified.
+
+## Integration & QA — 2026-11-18 09:55 CT
+- Re-read the four required files on the integration branch: STUDIO_HANDOFF.md, WORK_LOG.md, REFERENCE_USAGE.md and QA_STATUS.md. Inspected changed-file lists for PRs #1387–#1392. No feature PR merged; overlapping edits remain in page/landscape/docs and ledger-core, requiring manual conflict reconciliation.
+- Fresh Vercel deployment list confirms latest integration commit `7515e4769bc1473668d71b192df9f14b672b39ff` is READY as `dpl_CC4CjRCvbfDeDrkx7dkBVczmXuoW` at `https://1muslim-9meprhe60-elmiandco.vercel.app`. READY does not prove /one-world renders or authenticated gameplay works.
+- Attempted independent HTTP GET of `/one-world` with curl; runner DNS resolution failed (`Could not resolve host`). **HTTP status and page rendering unverified**, not a confirmed application failure.
+- No local checkout/build, automated tests, authenticated iPhone session or persistence/wallet transaction tests executed. No screenshots used or inspected; exact reference filenames: none. No app files, schema, navigation, or production modified in this run.
+- **Civilization Systems:** implement authenticated, atomic, idempotent server ledger for adjacent purchase/repair; preserve XP wallet separately from durability; verify rollback and persistent land/buildings/resources; server-enforce peaceful mode and keep combat off.
+- **World Architect:** deliver canonical server-issued geographic plot IDs and distinct region ownership/resource records, not reused local 12x12 grids.
+- **Visual Studio:** fix cumulative slow-drag threshold, bind real region/ownership data, test drag/pinch/selection/placement on iPhone Safari at 320–430px.
+- **Integration & QA:** reconcile compatible PRs in shared branch without overwriting authors' work; run exact-SHA build/tests; verify authenticated preview HTTP rendering, starter plot, placement, refresh persistence, and wallet replay/rollback before release.
+- Release remains BLOCKED. No primary-nav change or main merge authorized.
