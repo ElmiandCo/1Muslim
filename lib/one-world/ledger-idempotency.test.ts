@@ -1,0 +1,5 @@
+import {strict as assert} from "node:assert";
+import {test} from "node:test";
+import {transact,type World} from "./ledger-core";
+const seed=():World=>({players:{a:{id:"a",xp:100,mode:"peaceful",tech:["settlement"],resources:{food:10,wood:10,stone:10,knowledge:10,fuel:10}}},plots:{p:{id:"p",ownerId:"a",terrain:"meadow",durability:100}},ledger:[]});
+test("build replay is idempotent only for same building",()=>{const first=transact(seed(),{kind:"build",actorId:"a",plotId:"p",building:"home",idempotencyKey:"build-1",now:1});assert.equal(first.ok,true);if(!first.ok)return;const same=transact(first.world,{kind:"build",actorId:"a",plotId:"p",building:"home",idempotencyKey:"build-1",now:2});assert.equal(same.ok,true);if(same.ok){assert.equal(same.replayed,true);assert.equal(same.world.ledger.length,1);assert.equal(same.world.players.a.xp,80)}const changed=transact(first.world,{kind:"build",actorId:"a",plotId:"p",building:"garden",idempotencyKey:"build-1",now:3});assert.equal(changed.ok,false)});
