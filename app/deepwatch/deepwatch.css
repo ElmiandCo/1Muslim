@@ -597,3 +597,16 @@ body.deepwatchPlayerActive{padding-bottom:0!important}
 .deepwatch .dwRedesigned .dwTimedComposer button{border-radius:50%;background:#c5cbd3;color:#10151c}
 @media(max-width:600px){.deepwatch .dwRedesigned .deepwatchScreenInner{padding:8px;border-radius:24px}.deepwatch .dwRedesigned .dwTheater:not(.dwTheaterExpanded){border-radius:18px}.deepwatch .dwRedesigned .dwDiscussionPane{border-radius:19px}}
 @media(prefers-reduced-motion:reduce){.deepwatch .dwRedesigned .dwDiscussionTabs button{transition:none}}
+
+/* Player chrome: compact, safe-area aware, no overlapping title/actions. */
+.dwCleanPlayerHeader{display:grid;grid-template-columns:42px minmax(0,1fr) 42px 42px auto;gap:8px;align-items:center;padding:8px 6px;min-width:0}
+.dwCleanPlayerHeader .dwCleanPlayerTitle{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-size:clamp(12px,3.5vw,17px);font-weight:650}
+.dwCleanPlayerHeader>button{width:42px;height:42px;display:grid;place-items:center;padding:0;border-radius:50%;flex-shrink:0}
+.dwCleanPlayerHeader .dwAdminRemove{width:auto;min-width:64px;border-radius:22px;padding:0 10px;color:#ffbaba}
+.dwDiscussionRegion{transition:opacity .32s ease, max-height .4s ease,transform .32s ease;max-height:1800px;opacity:1;overflow:hidden}
+.dwDiscussionRegion.dwDiscussionCollapsed{max-height:44px;opacity:.45;transform:translateY(4px)}
+.dwDiscussionVisibility{display:flex;justify-content:flex-end;padding:5px 8px}
+.dwDiscussionVisibility button{border:1px solid #ffffff40;border-radius:24px;padding:7px 13px;color:#e8e8eb;background:#ffffff14;cursor:pointer}
+.dwDiscussionCollapsed .dwDiscussionTabs,.dwDiscussionCollapsed .dwDiscussionPane{opacity:0;pointer-events:none}
+@media(max-width:480px){.dwCleanPlayerHeader{grid-template-columns:38px minmax(0,1fr) 38px 38px auto;gap:4px}.dwCleanPlayerHeader>button{width:38px;height:38px}.dwCleanPlayerHeader .dwAdminRemove{min-width:56px;font-size:11px;padding:0 6px}}
+@media(prefers-reduced-motion:reduce){.dwDiscussionRegion{transition:none}}
