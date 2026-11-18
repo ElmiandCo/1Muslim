@@ -16,3 +16,9 @@ Created starter route, CSS, and shared studio documentation in a feature branch.
 - Added independent day/night ambient visual toggle, map visibility toggle and compact mobile styles.
 - No account persistence or XP changes. Tests and Vercel preview are not verified in this run.
 - Next: verify Next.js build and mobile tap/drag/pinch interactions, then integrate after reviewing other PRs.
+
+## Visual Studio Completion Sprint — 2026-11-18 05:31 CT
+- Reviewed PRs #1367, #1368, #1377, #1384, #1383 and #1382. Foundation and visual branches remain open; integration is not verified.
+- Fixed two literal escaped newline sequences in `app/one-world/IsometricLandscape.tsx` that made the TypeScript module syntactically invalid. Added pointer-down propagation isolation to minimap and scene toolbar; released pointer capture on pointer-up/cancel.
+- Changed file: `app/one-world/IsometricLandscape.tsx`; no economy, auth, route, or navigation changes.
+- Verification: GitHub commit succeeded. Build/tests/iPhone gestures/Vercel preview were not executed or verified. Blockers: integration branch and backend persistence still pending. Next: QA to compile and exercise viewport touch gestures on iPhone, integrate geographic tile data, and confirm route preview.
