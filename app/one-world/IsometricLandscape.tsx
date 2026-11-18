@@ -9,9 +9,9 @@ const glyph:Record<Kind,string>={grass:"🌿",forest:"🌲",field:"🌾",water:"
 const buildings=[["🏡","Cottage"],["🌻","Garden"],["🌾","Farm"],["🐎","Stable"],["🏫","School"]] as const;
 const initial:Tile[]=Array.from({length:WIDTH*HEIGHT},(_,id)=>{const x=id%WIDTH,y=Math.floor(id/WIDTH);return {id,kind:((x*13+y*7)%19===0?"water":(x*3+y*11)%13===0?"hill":(x*7+y*3)%9===0?"forest":(x+y)%7===0?"field":"grass") as Kind,owned:id===78,building:id===78?"🏡":""}});
 type TouchPoint={x:number;y:number};
-export default function IsometricLandscape(){
+export default function IsometricLandscape({selectedPlot,onPlotChange}:{selectedPlot:number;onPlotChange:(plot:number)=>void}){
  const [night,setNight]=useState(false),[showMap,setShowMap]=useState(true);
- const [tiles,setTiles]=useState(initial),[selected,setSelected]=useState(78),[scale,setScale]=useState(1),[offset,setOffset]=useState({x:0,y:0}),[tool,setTool]=useState("🏡"),[notice,setNotice]=useState("Tap a plot to select it, or drag to explore.");
+ const [tiles,setTiles]=useState(initial),[scale,setScale]=useState(1),[offset,setOffset]=useState({x:0,y:0}),[tool,setTool]=useState("🏡"),[notice,setNotice]=useState("Tap a plot to select it, or drag to explore.");
  const pointers=useRef(new Map<number,TouchPoint>()),gesture=useRef<{distance:number;scale:number;center:TouchPoint;offset:TouchPoint}|null>(null),dragged=useRef(false);
  const distance=(a:TouchPoint,b:TouchPoint)=>Math.hypot(a.x-b.x,a.y-b.y);
  const clamp=(n:number)=>Math.min(2,Math.max(.65,n));
@@ -19,6 +19,8 @@ export default function IsometricLandscape(){
  const move=useCallback((e:React.PointerEvent<HTMLDivElement>)=>{const old=pointers.current.get(e.pointerId);if(!old)return;const now={x:e.clientX,y:e.clientY};pointers.current.set(e.pointerId,now);if(pointers.current.size===2&&gesture.current){const [a,b]=[...pointers.current.values()];const center={x:(a.x+b.x)/2,y:(a.y+b.y)/2};setScale(clamp(gesture.current.scale*distance(a,b)/Math.max(1,gesture.current.distance)));setOffset({x:gesture.current.offset.x+center.x-gesture.current.center.x,y:gesture.current.offset.y+center.y-gesture.current.center.y});dragged.current=true;}else if(pointers.current.size===1){if(distance(old,now)>1){setOffset(v=>({x:v.x+now.x-old.x,y:v.y+now.y-old.y}));dragged.current=true;}}},[]);
  const up=useCallback((e:React.PointerEvent<HTMLDivElement>)=>{pointers.current.delete(e.pointerId);if(pointers.current.size<2)gesture.current=null;if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);},[]);
  const pick=(id:number)=>{if(dragged.current)return;setSelected(id);setNotice("Plot "+(id+1)+" selected.");};
+ const selected=selectedPlot;
+ const setSelected=onPlotChange;
  const tile=tiles[selected],count=tiles.filter(t=>t.owned).length;
  const claim=()=>{if(tile.owned)return;const x=selected%WIDTH,y=Math.floor(selected/WIDTH);if(tile.kind==="water")return setNotice("Water cannot be claimed in this prototype.");if(!tiles.some(t=>t.owned&&Math.abs(t.id%WIDTH-x)+Math.abs(Math.floor(t.id/WIDTH)-y)===1))return setNotice("Claim a plot next to your land.");setTiles(v=>v.map(t=>t.id===selected?{...t,owned:true}:t));setNotice("Land claimed locally; server saving is not connected.");};
  const place=()=>{if(!tile.owned)return setNotice("Claim this land before building.");setTiles(v=>v.map(t=>t.id===selected?{...t,building:tool}:t));setNotice("Building placed in prototype. No XP charged.");};
