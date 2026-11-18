@@ -17,3 +17,6 @@ For each referenced screenshot record filename, origin, date, feature inspired, 
 ## Completion Sprint — 2026-11-18 05:31 CT
 - No new screenshot references accessed or used in this change; filenames: none. No proprietary assets copied.
 - Implementation changes are strictly TSX syntax and touch-event corrections in `app/one-world/IsometricLandscape.tsx`, informed by code review rather than reference imagery.
+
+## Visual Studio mobile completion — 2026-11-18 06:25 CT
+- Reference screenshots accessed: none. Filenames: none. No screenshot influenced this CSS-only usability fix; decisions follow standard mobile touch-target and responsive layout practices. No proprietary assets used.
