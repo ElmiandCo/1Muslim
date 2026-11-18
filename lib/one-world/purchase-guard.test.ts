@@ -19,3 +19,15 @@ test("rejects negative or fractional costs", () => {
 });
 test("rejects missing trusted coordinates", () => assert.equal(validateAdjacentPurchase({ ...base, target: { ...base.target, x: NaN } }).ok, false));
 test("rejects missing idempotency key", () => assert.equal(validateAdjacentPurchase({ ...base, idempotencyKey: "" }).ok, false));
+
+test("rejects whitespace-only or non-string identity and replay keys", () => {
+  assert.equal(validateAdjacentPurchase({ ...base, actorId: "  " }).ok, false);
+  assert.equal(validateAdjacentPurchase({ ...base, idempotencyKey: "  " }).ok, false);
+  assert.equal(validateAdjacentPurchase({ ...base, idempotencyKey: 123 as unknown as string }).ok, false);
+});
+test("rejects malformed runtime ownership and target payloads", () => {
+  assert.equal(validateAdjacentPurchase(null as unknown as PurchaseRequest).ok, false);
+  assert.equal(validateAdjacentPurchase({ ...base, ownedPlots: null as unknown as PurchaseRequest["ownedPlots"] }).ok, false);
+  assert.equal(validateAdjacentPurchase({ ...base, ownedPlots: [null] as unknown as PurchaseRequest["ownedPlots"] }).ok, false);
+  assert.equal(validateAdjacentPurchase({ ...base, target: { ...base.target, regionId: "  " } }).ok, false);
+});
