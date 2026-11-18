@@ -333,8 +333,8 @@ function ProfileSocialHub({profile,children}:{profile:Profile;children:React.Rea
 .muslimeenRailHeading{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .muslimeenRailHeading h2{font-size:18px;color:#142d50;margin:0}
 .muslimeenRailHeading button{border:0;background:transparent;color:#355577;font-size:12px;font-weight:800}
-.muslimeenRailTrack{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:3px 1px 12px;scrollbar-width:none}
-.muslimeenRailItem{flex:0 0 128px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid #e5eaf1;background:#fff;border-radius:14px;padding:13px 8px;box-shadow:0 3px 11px #112b4b0c;color:#132b49;min-width:0}
+.muslimeenRailTrack{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scroll-padding-inline:12px;padding:3px 12px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;min-width:0;max-width:100%;width:100%;box-sizing:border-box;cursor:grab}.muslimeenRailTrack:active{cursor:grabbing}.muslimeenRailTrack::-webkit-scrollbar{display:none}
+.muslimeenRailItem{flex:0 0 128px;scroll-snap-align:start;scroll-snap-stop:normal;touch-action:pan-x;display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid #e5eaf1;background:#fff;border-radius:14px;padding:13px 8px;box-shadow:0 3px 11px #112b4b0c;color:#132b49;min-width:0}
 .muslimeenRailItem img{width:60px;height:60px;border-radius:50%;object-fit:cover}
 .muslimeenRailItem strong{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .muslimeenRailItem span{font-size:10px;color:#748197;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
