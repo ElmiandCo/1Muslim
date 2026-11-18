@@ -9,6 +9,7 @@ type AvatarOption = {
   xp: number;
   gender: string;
   category: string;
+  isNew?: boolean;
 };
 
 type Props = {
@@ -35,6 +36,7 @@ export default function UnifiedAvatarCarousel({
   const railRef = useRef<HTMLDivElement>(null);
   const [activeCategory, setActiveCategory] = useState("Basic");
   const categories = ["Basic", "Elemental", "Elite", "Mumins"] as const;
+  const showNewBadges = Date.now() < new Date("2026-11-20T10:00:00Z").getTime();
   const groups = categories.map((category) => ({
     category,
     items: avatars.filter((avatar) => avatar.category === category),
@@ -133,9 +135,10 @@ export default function UnifiedAvatarCarousel({
                     color: "#f5e8c8", display: "grid", justifyItems: "center", gap: 5,
                     opacity: 1,
                     boxShadow: selected ? "0 0 0 1px rgba(245,212,122,.38),0 0 18px rgba(245,212,122,.18)" : "none",
-                    transition: "transform .25s ease",
+                    transition: "transform .25s ease", position: "relative",
                   }}
                 >
+                  {avatar.isNew && showNewBadges && <span aria-label="New avatar" style={{position:"absolute",top:3,right:3,zIndex:1,padding:"3px 6px",borderRadius:7,background:"#f0f6ff",color:"#15243b",fontSize:9,fontWeight:800,letterSpacing:".04em",boxShadow:"0 2px 8px rgba(0,0,0,.28)"}}>NEW</span>}
                   <img
                     src={avatar.url}
                     alt={avatar.name + " avatar"}
