@@ -36,3 +36,10 @@
 
 ## Next step
 Integrate one small vertical slice: login → starter plot → place building → refresh → persisted building; then add atomic adjacent purchase and security regression tests. Keep candidate in draft until verified.
+
+## Integration & QA — 2026-11-18 08:00 CT
+- Inspected current ONE WORLD PR search including #1386–#1392 and the four required studio documents on the integration branch.
+- Verified Vercel deployment `dpl_4Ncm2G1AqfG1cYYSGYkHiv528yM8` for integration SHA `a8d7dd8685cd827346832d03f10f86eea4657189` was **ERROR**. Build logs identify `app/one-world/page.tsx` `Expected '}', got '<eof>'`; `npm run build` exited 1. Prior candidate deployment `dpl_BFThgBqgFrrProAnRThBsaA7kqGH` also ERROR.
+- Fixed the missing component closing brace in `app/one-world/page.tsx` on shared integration branch, commit `54a039cf8bfc8f427970273bcfa26a23cf3c9191`. This is a syntax fix, NOT proof that the next build passes.
+- No merges/cherry-picks or destructive schema edits; no reference screenshots accessed or used. Main navigation and production untouched by this change.
+- Next: inspect new Vercel deployment for the exact updated SHA; if READY, independently load `/one-world` authenticated on mobile. Run build/typecheck/unit and touch tests. Civilization Systems owns authenticated atomic XP ledger, starter allocation, persistence and peaceful-mode enforcement; World Architect owns canonical plot ID/coordinate/ownership contract; Visual Studio owns geographic-to-scene selection and iPhone gestures. Do not merge to main until verified.
