@@ -29,3 +29,7 @@ Before each change read this file and WORK_LOG.md. Work in isolated feature bran
 - Earth → country → state → region → sample plot controls for Minnesota, Banaadir, and Istanbul. Geographic labels/biomes/resources are illustrative, not real ownership data. Avoid describing as persisted world or true geographic plot allocations.
 - Integration lead: review for UI coherence, reconcile PR #1383 canonical index separately, connect selected region/plot to the actual scene when authoritative model is chosen. V1 security and persistence gates remain blocked.
 - No reference screenshots accessed; no proprietary art copied. No build or preview verification performed.
+
+## World Architect plot-selection sync — 2026-11-18 07:10 CT
+- Geographic navigator and valley now share page-level selected plot index (0–143), including minimap selection. This is **sample plot UI synchronization**, not authoritative geography, ownership or persisted data.
+- No new assets or screenshot references. Integration lead: review PR #1388 and validate with Visual Studio before merging; keep all server mutation paths disabled.
