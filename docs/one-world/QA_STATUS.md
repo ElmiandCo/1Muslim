@@ -62,3 +62,11 @@ Integrate one small vertical slice: login → starter plot → place building �
 - **Visual Studio:** fix cumulative slow-drag threshold, bind real region/ownership data, test drag/pinch/selection/placement on iPhone Safari at 320–430px.
 - **Integration & QA:** reconcile compatible PRs in shared branch without overwriting authors' work; run exact-SHA build/tests; verify authenticated preview HTTP rendering, starter plot, placement, refresh persistence, and wallet replay/rollback before release.
 - Release remains BLOCKED. No primary-nav change or main merge authorized.
+
+
+## Integration & QA — 2026-11-18 11:01 CT
+- Re-read all four mandatory handoff files on the shared integration branch. Inspected changed-file inventories for PRs #1388–#1392; no code merge performed. Overlaps: `IsometricLandscape.tsx` (#1388/#1391), shared docs (#1388/#1389/#1391), and ledger-core changes (#1386/#1390 per earlier audit). Preserve contributor work during reconciliation.
+- Fresh Vercel branch-filtered deployment list confirms **READY** for commit `bc0bb8a2a6a37c7dfa59a222603cde04a4bb7b36`, deployment `dpl_6qCLbCrkFBKNQGST2rAUB4SDsCEH`, preview `https://1muslim-oxu129hp2-elmiandco.vercel.app`, inspector `https://vercel.com/elmiandco/1muslim/6qCLbCrkFBKNQGST2rAUB4SDsCEH`. This verifies deployment status only, not HTTP rendering or authentication.
+- No local build/test runner, authenticated mobile browser, or direct route HTTP response verified this run. No screenshots inspected or used; filenames: none. No destructive schema, main navigation, production, wallet or gameplay changes.
+- Civilization Systems: deliver server-authenticated atomic/idempotent XP debit and ledger, rollback, starter plot and building/resource persistence, peaceful protections; tests for replay, concurrency and unauthorized repair. World Architect: canonical server-backed geographic plot IDs, distinct region data and ownership boundaries. Visual Studio: integrate geographic selection into isometric viewport, verify slow drag/pinch/placement on iPhone Safari. Integration: reconcile PRs only after contract agreement, run exact-SHA build/tests and independently render authenticated `/one-world` preview.
+- All V1 gameplay/security release gates remain BLOCKED. Do not merge to main without explicit authorization.
