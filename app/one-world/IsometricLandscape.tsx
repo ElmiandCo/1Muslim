@@ -1,6 +1,6 @@
 "use client";
 import {useCallback,useRef,useState} from "react";
-import "./isometric-landscape.css";
+import "./isometric-landscape.css";\nimport "./isometric-ambience.css";
 type Kind="grass"|"forest"|"field"|"water"|"hill";
 type Tile={id:number;kind:Kind;owned:boolean;building:string};
 const WIDTH=12,HEIGHT=12,STEP_X=48,STEP_Y=25;
