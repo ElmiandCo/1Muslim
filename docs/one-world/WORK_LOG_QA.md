@@ -1,0 +1,2 @@
+# ONE WORLD — QA Work Log
+2026-11-18: inspected World Architect branch and main route existence. Created separate QA branch based on foundation to avoid conflicts. Added pure battle/repair validation gates, six automated security tests, and QA_STATUS.md. No production XP changes or database migrations. Next: run tests/build in CI, review PRs #1368/#1369, verify Vercel preview, and implement server-side transaction boundaries.
