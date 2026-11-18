@@ -11,7 +11,7 @@ export type Mode = "peaceful" | "conquest";
 export type Tech = "settlement" | "agriculture" | "education" | "industry" | "aviation";
 export interface Player { id:string; xp:number; mode:Mode; resources:Record<Resource,number>; tech:Tech[]; lastAttackedAt?:number; }
 export interface Plot { id:string; ownerId:string|null; terrain:Terrain; building?:Building; durability:number; }
-export interface Entry { idempotencyKey:string; playerId:string; kind:"land"|"build"|"repair"; amount:number; plotId:string; timestamp:number; }
+export interface Entry { idempotencyKey:string; playerId:string; kind:"land"|"build"|"repair"; amount:number; plotId:string; timestamp:number; building?:Building; }
 export interface World { players:Record<string,Player>; plots:Record<string,Plot>; ledger:Entry[]; }
 export const BUILDINGS:Record<Building,{xp:number;tech:Tech;resources:Partial<Record<Resource,number>>}>={
  home:{xp:20,tech:"settlement",resources:{wood:3}},garden:{xp:12,tech:"settlement",resources:{wood:1}},
@@ -33,7 +33,7 @@ const fail=(reason:string):Result=>({ok:false,reason});
 /** Pure atomic transition: caller must serialize and persist it transactionally. */
 export function transact(world:World,action:Action):Result{
  const existing=world.ledger.find(e=>e.idempotencyKey===action.idempotencyKey);
- if(existing)return existing.playerId===action.actorId&&existing.kind===action.kind&&existing.plotId===action.plotId
+ if(existing)return existing.playerId===action.actorId&&existing.kind===action.kind&&existing.plotId===action.plotId&&(existing.kind!=="build"||existing.building===action.building)
  ?{ok:true,world,entry:existing,replayed:true}:fail("idempotency key conflict");
  const player=world.players[action.actorId],plot=world.plots[action.plotId];
  if(!player||!plot||!action.idempotencyKey)return fail("invalid actor, plot or key");
@@ -57,7 +57,7 @@ export function transact(world:World,action:Action):Result{
  for(const [r,n] of Object.entries(resources))if((player.resources[r as Resource]??0)<n)return fail("insufficient resources");
  const nextResources={...player.resources};
  for(const [r,n] of Object.entries(resources))nextResources[r as Resource]-=n;
- const entry:Entry={idempotencyKey:action.idempotencyKey,playerId:player.id,kind:action.kind,amount:-cost,plotId:plot.id,timestamp:action.now};
+ const entry:Entry={idempotencyKey:action.idempotencyKey,playerId:player.id,kind:action.kind,amount:-cost,plotId:plot.id,timestamp:action.now,...(action.kind==="build"?{building:action.building}: {})};
  return {ok:true,entry,world:{...world,players:{...world.players,[player.id]:{...player,xp:player.xp-cost,resources:nextResources}},plots:{...world.plots,[plot.id]:nextPlot},ledger:[...world.ledger,entry]}};
 }
 export function canAttack(attacker:Player,defender:Player,now:number,defenderLastRaidAt?:number){
