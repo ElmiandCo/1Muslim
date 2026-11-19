@@ -16,7 +16,7 @@ begin
    v_correct := 3;
  elsif p_lesson=5 and p_question between 0 and 83 then
    v_correct := mod(p_question,3);
- elsif p_lesson=6 and p_question between 0 and 19 then
+ elsif p_lesson=6 and p_question=0 then
    v_correct := 0;
  else
    raise exception 'Invalid Elm Tent question';
