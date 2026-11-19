@@ -6,9 +6,9 @@ export async function GET(request:Request){
  if(postId)query=query.eq("post_id",postId);
  const {data,error}=await query;if(error)return NextResponse.json({error:"Comments unavailable"},{status:503});
  const ids=[...new Set((data||[]).map(x=>x.author_id))];
- const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username,avatar_config").in("id",ids):{data:[]};
+ const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username,avatar_config,avatar_url").in("id",ids):{data:[]};
  const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||p.username||"Member"]));
- const avatarMap=new Map((profiles||[]).map(p=>{const c=p.avatar_config as {selectedAvatarUrl?:string;adminAvatarUrl?:string}|null;const url=c?.selectedAvatarUrl||c?.adminAvatarUrl||"";return [p.id,/^(https:\/\/|\/assets\/avatars\/)/.test(url)?url:null]}));
+ const avatarMap=new Map((profiles||[]).map(p=>{const c=p.avatar_config as {adminAvatarUrl?:string;customAvatarUrl?:string;selectedAvatarUrl?:string;avatarUrl?:string}|null;const url=[c?.adminAvatarUrl,c?.customAvatarUrl,c?.selectedAvatarUrl,c?.avatarUrl].find(v=>typeof v==="string"&&/^(https:\/\/|\/assets\/avatars\/)/.test(v));return [p.id,url||p.avatar_url||null]}));
  const commentIds=(data||[]).map(x=>x.id);
  const {data:likes}=commentIds.length?await db.from("ummah_comment_likes").select("comment_id,user_id").in("comment_id",commentIds):{data:[]};
  const {data:dislikes}=commentIds.length?await db.from("ummah_comment_dislikes").select("comment_id,user_id").in("comment_id",commentIds):{data:[]};
