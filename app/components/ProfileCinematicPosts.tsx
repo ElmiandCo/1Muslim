@@ -5,10 +5,29 @@ import {createClient} from "../../utils/supabase/client";
 import {useEffect,useRef,useState} from "react";
 import "./ProfileCinematicPosts.css";
 
-type Post={id:string;author_id:string;body:string;media_url:string|null;media_type:string|null;thumbnail_url?:string|null;created_at:string;author_name?:string;author_handle?:string;author_avatar_url?:string|null};
+type Post={id:string;author_id:string;body:string;media_url:string|null;media_type:string|null;thumbnail_url?:string|null;created_at:string;author_name?:string;author_handle?:string;author_avatar_url?:string|null;source?:"community"|"profile"};
 export default function ProfileCinematicPosts({profileId,variant="grid",limit,feedMode="own"}:{profileId:string;variant?:"grid"|"recentCards";limit?:number;feedMode?:"own"|"community"}){
  const [posts,setPosts]=useState<Post[]>([]);
  const [loading,setLoading]=useState(true);
+ const [isOwner,setIsOwner]=useState(false);
+ const [deleting,setDeleting]=useState<string|null>(null);
+ const [deleteError,setDeleteError]=useState("");
+ useEffect(()=>{let mounted=true;createClient().auth.getUser().then(({data})=>{if(mounted)setIsOwner(data.user?.id===profileId)});return()=>{mounted=false}},[profileId]);
+ const deleteOwnPost=async(p:Post)=>{
+  if(deleting||!window.confirm("Permanently delete this post? This cannot be undone."))return;
+  setDeleting(p.id);setDeleteError("");
+  try{
+   const db=createClient();const {data:{user},error:authError}=await db.auth.getUser();
+   if(authError||!user||user.id!==profileId)throw Error("Only the post owner can delete it.");
+   const table=p.source==="profile"?"posts":"community_posts";
+   const ownerColumn=p.source==="profile"?"user_id":"author_id";
+   const {data,error}=await db.from(table).delete().eq("id",p.id).eq(ownerColumn,user.id).select("id").single();
+   if(error||!data)throw Error("The database did not permit deletion.");
+   setPosts(current=>current.filter(row=>row.id!==p.id));
+  }catch(e){setDeleteError(e instanceof Error?e.message:"Could not delete this post.");}
+  finally{setDeleting(null)}
+ };
+
  const [active,setActive]=useState<string|null>(null);
  const nodes=useRef(new Map<string,HTMLElement>());
  const carouselRef=useRef<HTMLDivElement|null>(null);
@@ -44,9 +63,9 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
    ]);
    const media=new Map<string,Post>((Array.isArray(discovery?.posts)?discovery.posts:[]).filter((p:Post)=>p.author_id===profileId).map((p:Post)=>[p.id,p]));
    const merged=new Map<string,Post>();
-   for(const row of community.data||[])merged.set(row.id,{...row,media_url:null,media_type:null,...media.get(row.id)});
-   for(const row of legacy.data||[])if(!merged.has(row.id))merged.set(row.id,{...row,author_id:profileId,media_url:null,media_type:null,...media.get(row.id)});
-   for(const row of media.values())if(!merged.has(row.id))merged.set(row.id,row);
+   for(const row of community.data||[])merged.set(row.id,{...row,media_url:null,media_type:null,...media.get(row.id),source:"community"});
+   for(const row of legacy.data||[])if(!merged.has(row.id))merged.set(row.id,{...row,author_id:profileId,media_url:null,media_type:null,...media.get(row.id),source:"profile"});
+   for(const row of media.values())if(!merged.has(row.id))merged.set(row.id,{...row,source:"community"});
    if(mounted)setPosts([...merged.values()].sort((a,b)=>b.created_at.localeCompare(a.created_at)));
   };
   void load().catch(()=>{if(mounted)setPosts([])}).finally(()=>{if(mounted)setLoading(false)});
@@ -63,12 +82,13 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
  },[posts]);
  return <section className={"profileCinematicPosts"+(variant==="recentCards"?" profileRecentCards":"")+(feedMode==="community"?" profileUmmahCarousel":"")} aria-label={feedMode==="community"?"Ummah community discovery":"Member posts"}>
   <div className="profileCinematicHeading"><h2>{feedMode==="community"?"Ummah Discovery":"Posts"}</h2>{feedMode==="community"?<Link href="/posts" className="profileCinematicMore" aria-label="Explore more Ummah community posts">More →</Link>:<span>{posts.length} shared</span>}</div>
+  {deleteError&&<p role="alert" className="profileCinematicEmpty">{deleteError}</p>}
   {loading?<p className="profileCinematicEmpty">Loading posts…</p>:posts.length===0?<p className="profileCinematicEmpty">{feedMode==="community"?"No community posts to show yet.":"No posts to show yet."}</p>:
   <div className="profileCinematicGrid" ref={carouselRef}>{(limit?posts.slice(0,limit):posts).map(p=>{
    const isVideo=p.media_type?.startsWith("video/")||/\.(mp4|webm|mov)(\?|$)/i.test(p.media_url||"");
    const isImage=!!p.media_url&&(p.media_type?.startsWith("image/")||/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(p.media_url));
    const playing=active===p.id;
-   return <Link key={p.id} href={`/posts/story/${encodeURIComponent(p.id)}`} className={`profileCinematicTile ${playing?"is-active":""}`} data-post-id={p.id} ref={el=>{if(el)nodes.current.set(p.id,el);else nodes.current.delete(p.id)}} aria-label={`View post: ${(cleanPostBody(p.body)||"Community post").slice(0,90)}`}>
+   return <div key={p.id} className="profileCinematicItem"><Link href={`/posts/story/${encodeURIComponent(p.id)}`} className={`profileCinematicTile ${playing?"is-active":""}`} data-post-id={p.id} ref={el=>{if(el)nodes.current.set(p.id,el);else nodes.current.delete(p.id)}} aria-label={`View post: ${(cleanPostBody(p.body)||"Community post").slice(0,90)}`}>
     {feedMode==="community"&&<div className="profileUmmahAuthor"><span className="profileUmmahAvatar">{p.author_avatar_url?<img src={p.author_avatar_url} alt=""/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span><span className="profileUmmahAuthorInfo"><strong>{p.author_name||"Community member"}</strong><small>{p.author_handle||"@member"} · {new Date(p.created_at).toLocaleDateString()}</small></span><span className="profileUmmahOpen" aria-hidden="true">↗</span></div>}
     <div className="profileCinematicVisual">
      {isVideo&&p.media_url?<video src={p.media_url} poster={p.thumbnail_url||undefined} muted playsInline loop autoPlay={playing} preload={playing?"metadata":"none"} ref={el=>{if(!el)return;if(playing){el.play().catch(()=>{});}else el.pause()}}/>:
@@ -78,7 +98,7 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
     {variant==="recentCards"&&<div className="profileRecentCardMeta"><strong>{(cleanPostBody(p.body)||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,105)||"View post"}</strong><small>{new Date(p.created_at).toLocaleDateString()} · View post ↗</small></div>}
     {feedMode==="community"&&<div className="profileUmmahFooter"><span>♡ &nbsp; ◯ &nbsp; ♧</span><span>View post ↗</span></div>}
     {isVideo&&<span className="profileCinematicPlay" aria-hidden="true">▶</span>}
-   </Link>;
+   </Link>{feedMode==="own"&&isOwner&&<button type="button" className="profileCinematicDelete" disabled={!!deleting} aria-label="Delete this post" title="Delete post" onClick={()=>void deleteOwnPost(p)}>{deleting===p.id?"…":"×"}</button>}</div>;
   })}</div>}
   {feedMode==="community"&&posts.length>1&&<div className="profileUmmahCarouselControls"><span>Swipe to explore the Ummah</span><div><button type="button" aria-label="Previous community post" onClick={()=>carouselRef.current?.scrollBy({left:-Math.max(250,carouselRef.current.clientWidth*.8),behavior:"smooth"})}>‹</button><button type="button" aria-label="Next community post" onClick={()=>carouselRef.current?.scrollBy({left:Math.max(250,carouselRef.current.clientWidth*.8),behavior:"smooth"})}>›</button></div></div>}
  </section>;
