@@ -231,7 +231,7 @@
 
 /* White Elm Tent learning studio with the member's accent reserved for trim.
    Scoped to the profile so other Elm Tent surfaces remain unchanged. */
-:global(.profileFullAccent) :global(.profileElmTentAlphabet){
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .root{
  --elm-white-trim:color-mix(in srgb,var(--member-accent,#151515) 64%,#d7e0e9);
  --elm-white-soft:color-mix(in srgb,var(--member-accent,#151515) 10%,transparent);
  --elm-white-ink:#1b293a;
