@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
+import {createClient} from "../../utils/supabase/client";
 import styles from "./ElmTentAlphabet.module.css";
 const letters=[
 ["ا","Alif","ا","ـا","ـا"],["ب","Bā","بـ","ـبـ","ـب"],["ت","Tā","تـ","ـتـ","ـت"],["ث","Thā","ثـ","ـثـ","ـث"],["ج","Jīm","جـ","ـجـ","ـج"],["ح","Ḥā","حـ","ـحـ","ـح"],["خ","Khā","خـ","ـخـ","ـخ"],["د","Dāl","د","ـد","ـد"],["ذ","Dhāl","ذ","ـذ","ـذ"],["ر","Rā","ر","ـر","ـر"],["ز","Zāy","ز","ـز","ـز"],["س","Sīn","سـ","ـسـ","ـس"],["ش","Shīn","شـ","ـشـ","ـش"],["ص","Ṣād","صـ","ـصـ","ـص"],["ض","Ḍād","ضـ","ـضـ","ـض"],["ط","Ṭā","طـ","ـطـ","ـط"],["ظ","Ẓā","ظـ","ـظـ","ـظ"],["ع","ʿAyn","عـ","ـعـ","ـع"],["غ","Ghayn","غـ","ـغـ","ـغ"],["ف","Fā","فـ","ـفـ","ـف"],["ق","Qāf","قـ","ـقـ","ـق"],["ك","Kāf","كـ","ـكـ","ـك"],["ل","Lām","لـ","ـلـ","ـل"],["م","Mīm","مـ","ـمـ","ـم"],["ن","Nūn","نـ","ـنـ","ـن"],["ه","Hā","هـ","ـهـ","ـه"],["و","Wāw","و","ـو","ـو"],["ي","Yā","يـ","ـيـ","ـي"]
@@ -21,7 +22,9 @@ export default function ElmTentAdvanced({lesson,onComplete}:{lesson:4|5|6,onComp
  const mark=()=>{const next=seen.includes(index)?seen:[...seen,index];setSeen(next);try{localStorage.setItem(key,JSON.stringify(next))}catch{}if(index<total-1)go(index+1);else if(next.length===total)setReview(true)};
  const complete=seen.length===total;
  const options=lesson===4?["Initial","Medial","Final","Isolated"]:lesson===5?["Fatḥah","Kasrah","Ḍammah"]:["door","book","pen","mosque"];
- const correct=lesson===4?3:lesson===5?index%3:Math.max(0,Math.min(3,index));
+ const correct=lesson===4?3:lesson===5?index%3:0;
+ const [rewardMessage,setRewardMessage]=useState("");
+ const chooseAnswer=async(choice:number)=>{if(answer!==null)return;setAnswer(choice);if(choice!==correct)return;try{const {data,error}=await createClient().rpc("claim_elm_tent_answer_xp",{p_lesson:lesson,p_question:index,p_answer:choice});if(error)throw error;const row=Array.isArray(data)?data[0]:data;if(row?.awarded_points===150){setRewardMessage("+150 XP earned!");window.dispatchEvent(new Event("1muslim-xp-updated"))}else setRewardMessage("Correct! XP already claimed for this question.")}catch{setRewardMessage("Correct! Sign in to claim XP, or try again later.")}};
  return <section className={styles.vowelLesson} aria-label={`Lesson ${lesson}`}>
  <header className={styles.vowelHeader}><strong>✦ LESSON {lesson} · {lesson===4?"LETTER SHAPES":lesson===5?"VOWEL PRACTICE":"READING WORDS"}</strong><span>{seen.length} / {total}</span></header>
  <p className={styles.note}>{lesson===4?"Letters change form according to their position. Six letters (ا د ذ ر ز و) do not connect to the following letter.":lesson===5?"Practice each of the 28 letters with fatḥah, kasrah, and ḍammah.": "See letters join into meaningful Arabic words. Read from right to left."}</p>
@@ -37,7 +40,7 @@ export default function ElmTentAdvanced({lesson,onComplete}:{lesson:4|5|6,onComp
  </div>
  <div className={styles.elmJump}><label htmlFor={`elm-jump-${lesson}`}>Jump to item</label><select id={`elm-jump-${lesson}`} value={index} onChange={e=>go(Number(e.target.value))}>{Array.from({length:total},(_,i)=><option key={i} value={i}>{i+1} · {lesson===6?words[i]?.[1]??"":letters[lesson===5?Math.floor(i/3):i]?.[1]??""}</option>)}</select></div>
  {complete&&<div className={styles.vowelToast}><strong>✓ All {total} practiced!</strong><button type="button" onClick={()=>setReview(true)}>Check understanding →</button></div>}
- {review&&<div className={styles.vowelToast}><strong>{lesson===4?"Which form is the standalone form?":lesson===5?"Which vowel mark is shown?":"What is the English meaning of بَاب?"}</strong><div>{(lesson===6?["door","book","pen","mosque"]:options).map((o,i)=><button key={o} type="button" onClick={()=>setAnswer(i)} aria-pressed={answer===i}>{o}</button>)}</div>{answer!==null&&<p>{answer===(lesson===6?0:correct)?"✓ Correct!":"Try again."}</p>}{answer===(lesson===6?0:correct)&&<button type="button" onClick={()=>onComplete?.(lesson)}>Finish lesson →</button>}</div>}
+ {review&&<div className={styles.vowelToast}><strong>{lesson===4?"Which form is the standalone form?":lesson===5?"Which vowel mark is shown?":"What is the English meaning of بَاب?"}</strong><div>{(lesson===6?["door","book","pen","mosque"]:options).map((o,i)=><button key={o} type="button" onClick={()=>void chooseAnswer(i)} aria-pressed={answer===i}>{o}</button>)}</div>{answer!==null&&<p>{answer===correct?"✓ Correct!":"Try again."}</p>}{rewardMessage&&<p role="status">{rewardMessage}</p>}{answer===correct&&<button type="button" onClick={()=>onComplete?.(lesson)}>Finish lesson →</button>}</div>}
  <p className={styles.disclaimer}>Audio uses your device’s speech engine; pronunciation is not verified by a native speaker.</p>
  </section>;
 }
