@@ -7,7 +7,7 @@ import PostDesignStudio from "../components/PostDesignStudio";
 import HomePostsMagazineRail from "../components/HomePostsMagazineRail";
 import AdminParallaxDashboard from "../components/AdminParallaxDashboard";
 import {useRouter} from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import ProfileAvatar, { ACCESSORIES, AVATAR_TIERS, tierForXp } from "../components/ProfileAvatar";
 import { createClient } from "../../utils/supabase/client";
@@ -69,7 +69,7 @@ const AVATAR_CHOICES=[
 const COVER_STOCK=[{id:"emerald",label:"Emerald",url:"/assets/profile-backgrounds/emerald.PNG"},{id:"sapphire",label:"Sapphire",url:"/assets/profile-backgrounds/sapphire.PNG"},{id:"ruby",label:"Ruby",url:"/assets/profile-backgrounds/rose-gold.PNG"},{id:"amethyst",label:"Amethyst",url:"/assets/profile-backgrounds/amethyst.PNG"},{id:"titanium",label:"Titanium",url:"/assets/profile-backgrounds/silver-dust.PNG"},{id:"obsidian",label:"Obsidian",url:"/assets/profile-backgrounds/obsidian.PNG"}] as const;
 const MEMBER_ACCENT_COLORS:Record<string,string>={emerald:"#579879",gold:"#b89b53",blue:"#689bd5",violet:"#9780c4",rose:"#c47e98",slate:"#829392"};
 const memberAccent=(accent:string|null|undefined)=>MEMBER_ACCENT_COLORS[accent||""]||"#a5b4c6";
-const memberAccentStyle=(accent:string|null|undefined)=>({"--member-accent":memberAccent(accent)} as React.CSSProperties);
+const memberAccentStyle=(accent:string|null|undefined)=>({"--member-accent":memberAccent(accent)} as CSSProperties);
 const BACKGROUND_CHOICES=[
   {id:"emerald-night",accent:"emerald",label:"Emerald Night"},
   {id:"gold-dusk",accent:"gold",label:"Gold Dusk"},
