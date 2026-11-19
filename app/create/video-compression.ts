@@ -36,6 +36,6 @@ export async function compressVideo(source:File,onProgress?:(progress:number)=>v
   recorder.stop();const blob=await encoded;await audioContext.close();onProgress?.(100);
   if(!blob.size)throw Error("Compression produced an empty file.");
   const ext=mime.startsWith("video/mp4")?"mp4":"webm";
-  return new File([blob],source.name.replace(/\\.[^.]+$/,"")+"-compressed."+ext,{type:blob.type});
+  return new File([blob],source.name.replace(/\.[^.]+$/,"")+"-compressed."+ext,{type:blob.type});
  }finally{video.pause();video.removeAttribute("src");video.load();URL.revokeObjectURL(url);stream?.getTracks().forEach(track=>track.stop());if(recorder?.state==="recording")recorder.stop();}
 }
