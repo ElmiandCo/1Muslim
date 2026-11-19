@@ -31,7 +31,8 @@ export async function compressVideo(source:File,onProgress?:(progress:number)=>v
   });
   const draw=()=>{if(video.paused||video.ended)return;ctx.drawImage(video,0,0,canvas.width,canvas.height);onProgress?.(Math.min(99,Math.round(video.currentTime/video.duration*100)));requestAnimationFrame(draw)};
   await audioContext.resume();await video.play();ctx.drawImage(video,0,0,canvas.width,canvas.height);
-  recorder.start(1000);requestAnimationFrame(draw);
+  if(!recorder)throw Error("Video encoder was not initialized.");
+  (recorder as MediaRecorder).start(1000);requestAnimationFrame(draw);
   await new Promise<void>((resolve,reject)=>{video.onended=()=>resolve();video.onerror=()=>reject(Error("Video decoding failed during compression."));});
   if(!recorder)throw Error("Video encoder was not initialized.");
   (recorder as MediaRecorder).stop();const blob=await encoded;await audioContext.close();onProgress?.(100);
