@@ -5,7 +5,7 @@ import "./isometric-ambience.css";
 type Kind="grass"|"forest"|"field"|"water"|"hill";
 type Tile={id:number;kind:Kind;owned:boolean;building:string};
 const WIDTH=12,HEIGHT=12,STEP_X=48,STEP_Y=25;
-const glyph:Record<Kind,string>={grass:"🌿",forest:"🌲",field:"🌾",water:"💧",hill:"⛰️"};
+const glyph:Record<Kind,string>={grass:"🌿",forest:"🌳",field:"🌾",water:"💧",hill:"⛰️"};
 const buildings=[["🏡","Cottage"],["🌻","Garden"],["🌾","Farm"],["🐎","Stable"],["🏫","School"]] as const;
 const initial:Tile[]=Array.from({length:WIDTH*HEIGHT},(_,id)=>{const x=id%WIDTH,y=Math.floor(id/WIDTH);return {id,kind:((x*13+y*7)%19===0?"water":(x*3+y*11)%13===0?"hill":(x*7+y*3)%9===0?"forest":(x+y)%7===0?"field":"grass") as Kind,owned:id===78,building:id===78?"🏡":""}});
 type TouchPoint={x:number;y:number};
