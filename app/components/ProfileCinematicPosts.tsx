@@ -18,11 +18,20 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
   setDeleting(p.id);setDeleteError("");
   try{
    const db=createClient();const {data:{user},error:authError}=await db.auth.getUser();
-   if(authError||!user||user.id!==profileId)throw Error("Only the post owner can delete it.");
-   const table=p.source==="profile"?"posts":"community_posts";
-   const ownerColumn=p.source==="profile"?"user_id":"author_id";
-   const {data,error}=await db.from(table).delete().eq("id",p.id).eq(ownerColumn,user.id).select("id").single();
-   if(error||!data)throw Error("The database did not permit deletion.");
+   if(authError||!user)throw Error("Your session expired. Sign in again and retry.");
+   if(user.id!==profileId)throw Error("This profile is not linked to your signed-in account.");
+   // Resolve the actual source from the database rather than trusting feed metadata.
+   // A feed entry may originate from either the legacy or community table.
+   let found:{table:"posts"|"community_posts";ownerColumn:"user_id"|"author_id"}|null=null;
+   for(const candidate of [{table:"posts" as const,ownerColumn:"user_id" as const},{table:"community_posts" as const,ownerColumn:"author_id" as const}]){
+    const {data,error}=await db.from(candidate.table).select("id").eq("id",p.id).eq(candidate.ownerColumn,user.id).maybeSingle();
+    if(error)throw Error("Could not verify ownership ("+error.code+"). Please retry.");
+    if(data){found=candidate;break;}
+   }
+   if(!found)throw Error("This post was not found under your account. Refresh the page and check you are signed in as its author.");
+   const {data,error}=await db.from(found.table).delete().eq("id",p.id).eq(found.ownerColumn,user.id).select("id").maybeSingle();
+   if(error){console.error("Profile post deletion failed",{table:found.table,code:error.code,message:error.message});throw Error("Deletion failed ("+error.code+"): "+error.message);}
+   if(!data)throw Error("The post was not deleted. Refresh and retry; if it persists, contact support.");
    setPosts(current=>current.filter(row=>row.id!==p.id));
   }catch(e){setDeleteError(e instanceof Error?e.message:"Could not delete this post.");}
   finally{setDeleting(null)}
