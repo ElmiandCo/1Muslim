@@ -84,7 +84,7 @@ export default function CreatorStudio(){
  if(!base||!key)throw Error("Video upload is not configured.");
  await new Promise<void>((resolve,reject)=>{
   const upload=new Upload(source,{
-   endpoint:base.replace(/\\/$/,"")+"/storage/v1/upload/resumable",
+   endpoint:base.replace(/\/$/,"")+"/storage/v1/upload/resumable",
    headers:{authorization:"Bearer "+session.access_token,apikey:key},
    uploadDataDuringCreation:true,
    chunkSize:6*1024*1024,
