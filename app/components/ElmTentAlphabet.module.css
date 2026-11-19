@@ -227,3 +227,69 @@
  :global(.profileFullAccent) :global(.profileElmTentAlphabet) .lessonNav button,
  :global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelTabs button{transition:none!important}
 }
+
+
+/* White Elm Tent learning studio with the member's accent reserved for trim.
+   Scoped to the profile so other Elm Tent surfaces remain unchanged. */
+:global(.profileFullAccent) :global(.profileElmTentAlphabet){
+ --elm-white-trim:color-mix(in srgb,var(--member-accent,#151515) 64%,#d7e0e9);
+ --elm-white-soft:color-mix(in srgb,var(--member-accent,#151515) 10%,transparent);
+ --elm-white-ink:#1b293a;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .root,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelLesson,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .lessonQuiz,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelStage,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .stage,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelCard,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizChoices button,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .elmForms>div,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .elmForms>button{
+ background:#fff!important;color:var(--elm-white-ink)!important;
+ border-color:var(--elm-white-trim)!important;
+ box-shadow:0 5px 18px var(--elm-white-soft)!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .lessonNav button,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelTabs button,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelPlay,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelDone,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .hear,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .controls button,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizSpeaker,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizFinish button,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .elmJump select{
+ background:#fff!important;color:var(--elm-white-ink)!important;
+ border:1px solid var(--elm-white-trim)!important;
+ box-shadow:0 3px 12px var(--elm-white-soft)!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .lessonActive,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelTabs button[aria-pressed="true"],
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .tile[aria-pressed="true"]{
+ background:color-mix(in srgb,var(--member-accent,#151515) 10%,white)!important;
+ border-color:var(--elm-white-trim)!important;
+ box-shadow:inset 0 -2px var(--elm-white-trim),0 4px 12px var(--elm-white-soft)!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelHeader,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelHeader strong,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizHeader,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizHeader strong,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelPrompt,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelCard strong,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .letterFocus strong,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .arabic,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelCard>span,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizPhonetic,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .note,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .disclaimer,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelHeader span,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizHeader span{
+ color:var(--elm-white-ink)!important;text-shadow:none!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .progress{background:#e9edf2!important}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .progress span{
+ background:linear-gradient(90deg,var(--elm-white-trim),color-mix(in srgb,var(--elm-white-trim) 65%,#fff))!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelPlay,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizSpeaker{color:#d94444!important}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelPlay[aria-pressed="true"]{color:var(--elm-white-ink)!important}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .elmParts span{background:#fff!important;color:var(--elm-white-ink)!important;border-color:var(--elm-white-trim)!important}
