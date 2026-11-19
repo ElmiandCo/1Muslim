@@ -22,3 +22,15 @@
 .profileLibraryVisualPosts{min-width:0}
 .profileLibraryVisualPosts .profileCinematicPosts:not(.profileRecentCards):not(.profileUmmahCarousel){margin-inline:0}
 @media(max-width:480px){.profileCinematicPosts:not(.profileRecentCards):not(.profileUmmahCarousel) .profileCinematicHeading{padding-inline:8px}}
+
+/* Owner controls sit outside the navigation link so tapping delete never opens the post. */
+.profileCinematicItem{position:relative;min-width:0;min-height:0}
+.profileCinematicItem>.profileCinematicTile{width:100%;height:100%}
+.profileCinematicDelete{position:absolute;right:7px;top:7px;z-index:5;width:30px;height:30px;display:grid;place-items:center;border:1px solid #ffffffb8;border-radius:50%;background:#111827e8;color:#fff;font-size:22px;line-height:1;box-shadow:0 2px 9px #0007;cursor:pointer;touch-action:manipulation}
+.profileCinematicDelete:disabled{opacity:.65;cursor:wait}
+.profileCinematicDelete:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}
+.profileCinematicPosts:not(.profileRecentCards):not(.profileUmmahCarousel) .profileCinematicItem{aspect-ratio:3/4}
+.profileCinematicPosts:not(.profileRecentCards):not(.profileUmmahCarousel) .profileCinematicItem>.profileCinematicTile{aspect-ratio:auto}
+.profileUmmahCarousel .profileCinematicItem{flex:0 0 min(82%,350px);width:min(82%,350px)}
+.profileUmmahCarousel .profileCinematicItem>.profileCinematicTile{width:100%;height:100%;flex:none}
+@media(min-width:760px){.profileUmmahCarousel .profileCinematicItem{flex-basis:min(44%,370px);width:min(44%,370px)}}
