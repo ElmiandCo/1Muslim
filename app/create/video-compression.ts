@@ -33,7 +33,8 @@ export async function compressVideo(source:File,onProgress?:(progress:number)=>v
   await audioContext.resume();await video.play();ctx.drawImage(video,0,0,canvas.width,canvas.height);
   recorder.start(1000);requestAnimationFrame(draw);
   await new Promise<void>((resolve,reject)=>{video.onended=()=>resolve();video.onerror=()=>reject(Error("Video decoding failed during compression."));});
-  recorder.stop();const blob=await encoded;await audioContext.close();onProgress?.(100);
+  if(!recorder)throw Error("Video encoder was not initialized.");
+  (recorder as MediaRecorder).stop();const blob=await encoded;await audioContext.close();onProgress?.(100);
   if(!blob.size)throw Error("Compression produced an empty file.");
   const ext=mime.startsWith("video/mp4")?"mp4":"webm";
   return new File([blob],source.name.replace(/\.[^.]+$/,"")+"-compressed."+ext,{type:blob.type});
