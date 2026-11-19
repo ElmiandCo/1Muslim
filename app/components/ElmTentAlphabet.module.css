@@ -157,7 +157,7 @@
 
 /* Profile-only Elm Tent palette: dark Obsidian learning surface, member-selected trim.
    Black selection gets visible silver edges; Arabic glyphs stay white. */
-:global(.profileFullAccent) :global(.profileElmTentAlphabet){
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .root{
  --elm-profile-trim:color-mix(in srgb,var(--member-accent,#151515) 72%,#d8e0ea);
  --elm-profile-edge:color-mix(in srgb,var(--member-accent,#151515) 55%,#d4dce7);
  --elm-profile-soft:color-mix(in srgb,var(--member-accent,#151515) 18%,transparent);
