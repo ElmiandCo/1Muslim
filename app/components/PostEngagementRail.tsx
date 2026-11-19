@@ -22,9 +22,10 @@ export default function PostEngagementRail({postId,share,fullscreen=false,onDraw
  },[postId]);
  useEffect(()=>{void refresh()},[refresh]);
  const toggle=async(type:"like"|"save")=>{
-  if(busy)return;const {data:{user}}=await db.auth.getUser();if(!user){notify("Sign in to interact with posts");return}
+  if(busy)return;
   setBusy(true);const isLike=type==="like",active=isLike?liked:saved,table=isLike?"post_likes":"post_saves";
   if(isLike){setLiked(!active);setLikes(n=>Math.max(0,n+(active?-1:1)))}else setSaved(!active);
+  const {data:{user}}=await db.auth.getUser();if(!user){if(isLike){setLiked(active);setLikes(n=>Math.max(0,n+(active?1:-1)))}else setSaved(active);setBusy(false);notify("Sign in to interact with posts");return}
   const result=active?await db.from(table).delete().eq("post_id",postId).eq("user_id",user.id):await db.from(table).insert({post_id:postId,user_id:user.id});
   if(result.error){if(isLike){setLiked(active);setLikes(n=>Math.max(0,n+(active?1:-1)))}else setSaved(active);notify("Unable to update. Please try again.")}
   else if(!isLike)notify(active?"Removed from saved posts":"Saved to Library");
