@@ -192,6 +192,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
 }
 
 function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,posting,publishFirstPost,onEdit}:{profile:Profile;tier:any;ashab:Profile[];postCount:number;postText:string;setPostText:(v:string)=>void;posting:boolean;publishFirstPost:()=>void;onEdit:()=>void}){
+  useEffect(()=>{const root=document.documentElement;root.style.setProperty("--profile-dock-accent",memberAccent(profile.profile_accent));root.classList.add("profileDockThemed");return()=>{root.classList.remove("profileDockThemed");root.style.removeProperty("--profile-dock-accent")}},[profile.profile_accent]);
   const [activeQuickPanel,setActiveQuickPanel]=useState<"posts"|"videos"|"settings"|null>(null);
   useEffect(()=>{if(new URLSearchParams(window.location.search).get("panel")==="settings")setActiveQuickPanel("settings")},[]);
   const [showProfileDetails,setShowProfileDetails]=useState(false);
@@ -209,6 +210,12 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
   return <section className="profileOverview profileFullAccent" style={memberAccentStyle(profile.profile_accent)}>
     <style>{`
 /* Personalized trim stays on the owner's profile; embedded posts and members retain their own colors. */
+.profileFullAccent .profileAppLauncherGrid .profileAppTile{position:relative!important;isolation:isolate;overflow:hidden;border:1px solid color-mix(in srgb,var(--member-accent) 44%,#dce3ed)!important;background:radial-gradient(ellipse at 50% 18%,color-mix(in srgb,var(--member-accent) 6%,white),#fff 72%)!important;box-shadow:inset 0 1px #fff,0 8px 22px color-mix(in srgb,var(--member-accent) 12%,transparent)!important;transition:transform .2s ease,box-shadow .2s ease!important}
+.profileFullAccent .profileAppLauncherGrid .profileAppTile::after{content:"";position:absolute;pointer-events:none;left:14%;right:14%;bottom:0;height:2px;border-radius:3px;background:linear-gradient(90deg,transparent,var(--member-accent),transparent);opacity:.65}
+.profileFullAccent .profileAppLauncherGrid .profileAppTile .profileAppTileIcon{filter:drop-shadow(0 3px 5px color-mix(in srgb,var(--member-accent) 14%,transparent))}
+.profileFullAccent .profileAppLauncherGrid .profileAppTile:active{transform:scale(.965)!important;box-shadow:inset 0 1px 8px color-mix(in srgb,var(--member-accent) 9%,transparent),0 2px 8px var(--profile-glow)!important}
+@media(hover:hover){.profileFullAccent .profileAppLauncherGrid .profileAppTile:hover{transform:translateY(-2px);box-shadow:0 12px 26px color-mix(in srgb,var(--member-accent) 16%,transparent)!important}}
+@media(prefers-reduced-motion:reduce){.profileFullAccent .profileAppLauncherGrid .profileAppTile{transition:none!important}.profileFullAccent .profileAppLauncherGrid .profileAppTile:hover,.profileFullAccent .profileAppLauncherGrid .profileAppTile:active{transform:none!important}}
 .profileFullAccent{--profile-trim:color-mix(in srgb,var(--member-accent) 55%,#d8e1eb);--profile-glow:color-mix(in srgb,var(--member-accent) 10%,transparent)}
 .profileFullAccent .profilePremiumTabs{border:1px solid var(--profile-trim)!important;box-shadow:0 6px 20px var(--profile-glow)!important;background:color-mix(in srgb,var(--member-accent) 3%,white)!important}
 .profileFullAccent .profilePremiumTabs button{border-color:var(--profile-trim)!important}
