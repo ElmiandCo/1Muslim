@@ -153,3 +153,77 @@
 .elmForms button{cursor:pointer}.elmParts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;font-family:"Noto Naskh Arabic","Amiri",serif;font-size:38px}.elmParts span{padding:6px 10px;border:1px solid #d7bc7b77;border-radius:12px}
 .elmJump{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.elmJump label{font-size:12px}.elmJump select{flex:1;min-width:130px;max-width:100%;padding:10px;border:1px solid #d7bc7b77;border-radius:12px;background:#242424;color:white}
 @media(max-width:480px){.elmForms{gap:4px}.elmForms>div,.elmForms>button{padding:8px 2px}.elmForms span{font-size:27px}.vowelActions{gap:7px}.vowelPlay{flex-basis:45px;width:45px;height:45px}.vowelDone{padding:10px;font-size:13px}}
+
+
+/* Profile-only Elm Tent palette: dark Obsidian learning surface, member-selected trim.
+   Black selection gets visible silver edges; Arabic glyphs stay white. */
+:global(.profileFullAccent) :global(.profileElmTentAlphabet){
+ --elm-profile-trim:color-mix(in srgb,var(--member-accent,#151515) 72%,#d8e0ea);
+ --elm-profile-edge:color-mix(in srgb,var(--member-accent,#151515) 55%,#d4dce7);
+ --elm-profile-soft:color-mix(in srgb,var(--member-accent,#151515) 18%,transparent);
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .root{
+ background:linear-gradient(145deg,#1c1e24,#111216)!important;
+ border:1px solid var(--elm-profile-edge)!important;
+ box-shadow:inset 0 1px 0 #ffffff20,0 14px 32px #0002,0 0 18px var(--elm-profile-soft)!important;
+ color:#f6f7fa!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .lessonNav button,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelTabs button{
+ background:#202126!important;
+ border-color:var(--elm-profile-edge)!important;
+ color:#f7f8fa!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .lessonActive,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelTabs button[aria-pressed="true"]{
+ background:color-mix(in srgb,var(--elm-profile-trim) 32%,#1b1c20)!important;
+ border-color:var(--elm-profile-trim)!important;
+ box-shadow:0 0 13px var(--elm-profile-soft)!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelLesson,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .lessonQuiz,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelStage,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .stage{
+ background:#191a1e!important;
+ border-color:var(--elm-profile-edge)!important;
+ box-shadow:0 5px 16px var(--elm-profile-soft)!important;
+ color:#f8f8fb!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelCard,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .elmForms>div,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .elmForms>button,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizChoices button{
+ background:#111215!important;
+ border-color:var(--elm-profile-edge)!important;
+ color:#fff!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .progress span{
+ background:linear-gradient(90deg,var(--elm-profile-trim),color-mix(in srgb,var(--elm-profile-trim) 60%,white))!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelHeader span,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizHeader span,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelCard strong,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .letterFocus strong{
+ color:color-mix(in srgb,var(--elm-profile-trim) 60%,white)!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelPlay,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelDone,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .elmJump select,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .elmParts span,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizSpeaker,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .controls button{
+ border-color:var(--elm-profile-edge)!important;
+ box-shadow:0 3px 12px var(--elm-profile-soft)!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelDone,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .elmJump select{
+ background:#16171b!important;color:#fff!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelCard>span,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .arabic{
+ color:#fff!important;
+}
+@media(prefers-reduced-motion:reduce){
+ :global(.profileFullAccent) :global(.profileElmTentAlphabet) .lessonNav button,
+ :global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelTabs button{transition:none!important}
+}
