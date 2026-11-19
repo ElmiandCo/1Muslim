@@ -206,7 +206,26 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
    return()=>window.removeEventListener("1muslim:profile-open-panel",handle);
   },[]);
   const toggleQuickPanel=(panel:"posts"|"videos"|"settings")=>setActiveQuickPanel(current=>current===panel?null:panel);
-  return <section className="profileOverview">
+  return <section className="profileOverview profileFullAccent" style={memberAccentStyle(profile.profile_accent)}>
+    <style>{`
+/* Personalized trim stays on the owner's profile; embedded posts and members retain their own colors. */
+.profileFullAccent{--profile-trim:color-mix(in srgb,var(--member-accent) 55%,#d8e1eb);--profile-glow:color-mix(in srgb,var(--member-accent) 10%,transparent)}
+.profileFullAccent .profilePremiumTabs{border:1px solid var(--profile-trim)!important;box-shadow:0 6px 20px var(--profile-glow)!important;background:color-mix(in srgb,var(--member-accent) 3%,white)!important}
+.profileFullAccent .profilePremiumTabs button{border-color:var(--profile-trim)!important}
+.profileFullAccent .profilePremiumTabs button[aria-pressed="true"]{box-shadow:inset 0 -2px var(--member-accent)!important}
+.profileFullAccent .profileAppLauncherHeading{border-bottom:1px solid var(--profile-trim)!important;padding-bottom:12px!important}
+.profileFullAccent .profileAppLauncherHeading h2{color:var(--member-text)!important}
+.profileFullAccent .profileLauncherToggle{border-color:var(--profile-trim)!important;box-shadow:0 3px 12px var(--profile-glow)!important}
+.profileFullAccent .profileAppTile{border-color:var(--profile-trim)!important;box-shadow:0 6px 18px var(--profile-glow)!important;background:color-mix(in srgb,var(--member-accent) 2%,white)!important}
+.profileFullAccent .profileAppTile:focus-visible{outline:2px solid var(--member-accent);outline-offset:3px}
+.profileFullAccent>.profileOverviewSection,.profileFullAccent>.profileProfessionalWorkspace,.profileFullAccent>.profileElmTentAlphabet{border-top:2px solid var(--profile-trim)!important;box-shadow:0 7px 24px var(--profile-glow)!important}
+.profileFullAccent .profileSettingsHeader{border-bottom:1px solid var(--profile-trim)!important}
+.profileFullAccent :is(.profileCinematicPosts,.profileQiblaCarousel,.profileDeepWatchCarousel){border-top:1px solid var(--profile-trim)!important}
+.profileFullAccent :is(.profileCinematicPosts,.profileQiblaCarousel,.profileDeepWatchCarousel) :is(h2,h3){text-decoration-color:var(--member-accent)}
+.profileFullAccent :is(.profileCinematicPosts,.profileQiblaCarousel,.profileDeepWatchCarousel) button[aria-label*="Previous"],.profileFullAccent :is(.profileCinematicPosts,.profileQiblaCarousel,.profileDeepWatchCarousel) button[aria-label*="Next"]{border-color:var(--profile-trim)!important;box-shadow:0 3px 12px var(--profile-glow)!important}
+.profileFullAccent :is(.profileCinematicPosts,.profileQiblaCarousel,.profileDeepWatchCarousel) article{border-color:var(--profile-trim)!important;box-shadow:0 6px 18px var(--profile-glow)!important}
+@media(prefers-reduced-motion:reduce){.profileFullAccent .profileAppTile{transition:none!important}}
+`}</style>
     <ProfileOrbitStudio profile={profile} onEdit={onEdit} ashab={ashab} activeQuickPanel={activeQuickPanel} onQuickPanel={toggleQuickPanel} showProfileDetails={showProfileDetails} editing={false}/>
     <nav className="profilePremiumTabs" aria-label="Profile content"><button type="button" aria-pressed={activeQuickPanel==="posts"} onClick={()=>openProfilePanel("posts")}>▦ Posts</button><button type="button" aria-pressed={activeQuickPanel==="videos"} onClick={()=>openProfilePanel("videos")}>▣ Videos</button><button type="button" aria-pressed={activeQuickPanel==="settings"} onClick={()=>openProfilePanel("settings")}>⚙ Settings</button></nav>
     <ProfileAppLauncher onProfile={()=>setActiveQuickPanel(null)}/>
