@@ -39,5 +39,5 @@ export async function compressVideo(source:File,onProgress?:(progress:number)=>v
   if(!blob.size)throw Error("Compression produced an empty file.");
   const ext=mime.startsWith("video/mp4")?"mp4":"webm";
   return new File([blob],source.name.replace(/\.[^.]+$/,"")+"-compressed."+ext,{type:blob.type});
- }finally{video.pause();video.removeAttribute("src");video.load();URL.revokeObjectURL(url);stream?.getTracks().forEach(track=>track.stop());if(recorder?.state==="recording")recorder.stop();}
+ }finally{video.pause();video.removeAttribute("src");video.load();URL.revokeObjectURL(url);stream?.getTracks().forEach(track=>track.stop());const activeRecorder=recorder as MediaRecorder|null;if(activeRecorder?.state==="recording")activeRecorder.stop();}
 }
