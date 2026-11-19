@@ -21,6 +21,10 @@ export default function MessengerLayout({children}:{children:React.ReactNode}){
   body:has(.omMessengerNight) .muslimMessengerDock{background:rgba(16,23,32,.95);border-color:#35423e}
   body:has(.omMessengerNight) .muslimMessengerDock a{color:#fff}
   body:has(.omMessengerNight) .muslimMessengerDock a[aria-current]{background:#064a38;color:#b8ffe1}
+  /* A direct-message thread owns the viewport: hide both floating navigation docks. */
+  body:has(.muslimMessengerFrame .omMessengerShell--chat) .oneGlobalNavRailShell,
+  body:has(.muslimMessengerFrame .omMessengerShell--chat) .oneGlobalNavRail,
+  body:has(.muslimMessengerFrame .omMessengerShell--chat) .muslimMessengerDock{display:none!important}
   .muslimMessengerFrame{height:100dvh;max-height:100dvh;overflow:hidden}
   .muslimMessengerDock{bottom:env(safe-area-inset-bottom,0px);height:68px;width:min(100%,620px);border-radius:24px 24px 0 0}
   `}</style>
