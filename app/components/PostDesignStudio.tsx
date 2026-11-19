@@ -63,7 +63,7 @@ export default function PostDesignStudio(){
    const cleanup=()=>{window.clearInterval(watchdog);window.clearTimeout(maxDuration)};
    const fail=(reason:Error)=>{if(settled)return;settled=true;cleanup();void upload.abort();reject(reason)};
    const upload=new tus.Upload(media.file,{
-    endpoint:`${url.replace(/\\/$/,"")}/storage/v1/upload/resumable`,
+    endpoint:`${(url.endsWith("/")?url.slice(0,-1):url)}/storage/v1/upload/resumable`,
     retryDelays:[0,1000,3000,5000,10000],
     chunkSize:6*1024*1024,
     headers:{authorization:`Bearer ${token}`,"x-upsert":"false"},
