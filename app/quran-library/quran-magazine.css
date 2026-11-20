@@ -120,7 +120,11 @@
 .qm-day .qm-progress{background:#fffdf8;color:#444047;border-color:#aaa09a55;box-shadow:0 10px 35px #211a1812}
 .qm-day .qm-progress-sub{color:#6d6770}
 .qm-day .qm-progress-track{background:#28232c17}
-.qm-scroll-progress{opacity:0;visibility:hidden;pointer-events:none;transition:opacity 500ms ease,visibility 0s linear 500ms}
+/* The reading tracker floats over the scrolling verses rather than reserving
+   permanent space. When it fades away, the verse remains visible underneath. */
+.qm-progress-chapter.qm-scroll-progress{position:absolute;top:54px;left:50%;transform:translateX(-50%);z-index:19;margin:8px 0 0;max-width:760px;width:92%;box-sizing:border-box;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 500ms ease,visibility 0s linear 500ms}
+.qm-progress-chapter.qm-scroll-progress-visible{pointer-events:none}
+
 .qm-scroll-progress.qm-scroll-progress-visible{opacity:1;visibility:visible;transition:opacity 500ms ease,visibility 0s}
 @media(prefers-reduced-motion:reduce){.qm-scroll-progress{transition:none}}
 
