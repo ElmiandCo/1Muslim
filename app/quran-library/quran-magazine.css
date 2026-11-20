@@ -108,3 +108,21 @@
 .qm-page .qm-site-footer-links a:hover,.qm-page .qm-site-footer-links a:focus-visible{color:#e7c28b;text-decoration:underline}
 .qm-page .qm-site-footer-copy{font-size:13px;letter-spacing:.04em;color:#8b8b94}
 @media(max-width:480px){.qm-page .qm-site-footer{padding:54px 16px 75px}.qm-page .qm-site-footer-links{column-gap:19px;row-gap:21px;margin:35px auto 45px}}
+
+/* Reader-only day/night palette and transient reading progress. */
+.qm-page.qm-day{background:#f8f6f0;color:#242329}
+.qm-day .qm-top,.qm-day .qm-readerbar{background:#f8f6f0;color:#242329;border-color:#29292924}
+.qm-day .qm-top a,.qm-day .qm-readerbar button{color:#343039}
+.qm-day .qm-readerbar button{background:#eeebe5;border-color:#38323c35}
+.qm-day .qm-reader,.qm-day .qm-readerintro,.qm-day .qm-verse{background:#f8f6f0;color:#242329;border-color:#302b3420}
+.qm-day .qm-verse *,.qm-day .qm-readerintro h1{color:inherit}
+.qm-day .qm-bismillah{color:#6b5545}
+.qm-day .qm-progress{background:#fffdf8;color:#444047;border-color:#aaa09a55;box-shadow:0 10px 35px #211a1812}
+.qm-day .qm-progress-sub{color:#6d6770}
+.qm-day .qm-progress-track{background:#28232c17}
+.qm-scroll-progress{opacity:0;visibility:hidden;pointer-events:none;transition:opacity 500ms ease,visibility 0s linear 500ms}
+.qm-scroll-progress.qm-scroll-progress-visible{opacity:1;visibility:visible;transition:opacity 500ms ease,visibility 0s}
+@media(prefers-reduced-motion:reduce){.qm-scroll-progress{transition:none}}
+
+/* Keep reader theme controls keyboard accessible. */
+.qm-readerbar button:focus-visible{outline:2px solid currentColor;outline-offset:3px}
