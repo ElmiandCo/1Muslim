@@ -3,8 +3,8 @@ import {useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import styles from "./SeamlessEntry.module.css";
 type Stage="welcome"|"membership"|"guest"|"signin"|"signup"|"shahada"|"confirm";
-export default function SeamlessEntry({onClose}:{onClose:()=>void}){
- const [stage,setStage]=useState<Stage>("welcome"),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[method,setMethod]=useState<"audio"|"declaration">("audio"),[affirmed,setAffirmed]=useState(false);
+export default function SeamlessEntry({onClose,initialStage="welcome",returnTo="/profile"}:{onClose:()=>void;initialStage?:Stage;returnTo?:string}){
+ const [stage,setStage]=useState<Stage>(initialStage),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[method,setMethod]=useState<"audio"|"declaration">("audio"),[affirmed,setAffirmed]=useState(false);
  const [showPassword,setShowPassword]=useState(false),[fullName,setFullName]=useState(""),[username,setUsername]=useState("");
  const [closing,setClosing]=useState(false),[entering,setEntering]=useState(false);
  const [entryTheme,setEntryTheme]=useState("jannah");
@@ -17,7 +17,7 @@ export default function SeamlessEntry({onClose}:{onClose:()=>void}){
  function change(next:Stage){setMessage("");setStage(next)}
  async function emailAuth(e:React.FormEvent){e.preventDefault();setBusy(true);setMessage("");try{
  const supabase=createClient();
- if(stage==="signin"){const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;sessionStorage.setItem("1muslim:last-auth","returning");close();window.dispatchEvent(new Event("1muslim:auth-updated"));return}
+ if(stage==="signin"){const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;sessionStorage.setItem("1muslim:last-auth","returning");window.dispatchEvent(new Event("1muslim:auth-updated"));window.location.assign(returnTo);return}
  if(!affirmed)throw Error("Please confirm your Shahada intention.");
  if(!fullName.trim()||!username.trim())throw Error("Enter your name and username.");
  if(password.length<8)throw Error("Use at least eight characters.");
@@ -29,7 +29,7 @@ export default function SeamlessEntry({onClose}:{onClose:()=>void}){
  change("confirm");
  }catch(err){setMessage(err instanceof Error?err.message:"Please try again.")}finally{setBusy(false)}}
  async function google(){setBusy(true);setMessage("");try{
- const next=stage==="signin"?"/":"/onboarding?method="+method;
+ const next=stage==="signin"?returnTo:"/onboarding?method="+method;
  const callback=new URL("/auth/callback",window.location.origin);callback.searchParams.set("next",next);
  const {data,error}=await createClient().auth.signInWithOAuth({provider:"google",options:{redirectTo:callback.toString(),skipBrowserRedirect:true}});
  if(error||!data?.url)throw Error(error?.message||"Google sign-in could not start.");
