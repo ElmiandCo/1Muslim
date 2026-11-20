@@ -1112,6 +1112,51 @@ body:has(.muslimMessengerFrame){overflow:hidden!important}
 .omImessagePage.omMessengerUnified .omComposerSend .omSendText{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important}
 .omImessagePage.omMessengerUnified .omMessageComposer button:disabled{opacity:.5!important;cursor:not-allowed!important;transform:none!important}
 @media(prefers-reduced-motion:reduce){.omImessagePage.omMessengerUnified .omChatHeader button,.omImessagePage.omMessengerUnified .omMessageComposer button{transition:none!important}}
+
+/* Conversation polish: crisp white day-mode surface, calm message hierarchy. */
+.omImessagePage.omMessengerUnified.omMessengerDay,
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessengerShell--chat,
+.omImessagePage.omMessengerUnified.omMessengerDay .omChatPane,
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessagesFeed{
+ background:#ffffff!important;
+ background-image:none!important;
+ color:#1c2926!important;
+}
+.omImessagePage.omMessengerUnified.omMessengerDay .omChatHeader{
+ background:#fff!important;
+ background-image:none!important;
+ border-bottom:1px solid #e8eeeb!important;
+ box-shadow:0 1px 4px rgba(15,40,29,.035)!important;
+ color:#18352a!important;
+}
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessageBubble--theirs{
+ background:#f2f5f3!important;color:#20332b!important;
+ border:1px solid #e7ece9!important;
+ box-shadow:none!important;
+}
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessageBubble--mine{
+ background:#184d3c!important;color:#fff!important;
+ border:1px solid #184d3c!important;
+ box-shadow:0 2px 6px rgba(15,54,37,.08)!important;
+}
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessageComposer{
+ background:#fff!important;background-image:none!important;
+ border-top:1px solid #edf0ee!important;
+ box-shadow:0 -3px 12px rgba(19,50,37,.025)!important;
+}
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessageComposer input{
+ background:#f8faf9!important;color:#1b3027!important;
+ border:1px solid #dce8e1!important;
+ box-shadow:none!important;
+}
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessageComposer input::placeholder{color:#889d94!important}
+.omImessagePage.omMessengerUnified.omMessengerDay .omChatPeerName{color:#20372d!important}
+.omImessagePage.omMessengerUnified.omMessengerDay .omChatPresence{color:#7d8e86!important}
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessageRow{background:transparent!important}
+@media(max-width:700px){
+ .omImessagePage.omMessengerUnified.omMessengerDay .omMessagesFeed{padding:16px 12px!important}
+ .omImessagePage.omMessengerUnified.omMessengerDay .omChatHeader{padding:10px 12px!important}
+}
 `}</style>
  </main>}</>
 }
