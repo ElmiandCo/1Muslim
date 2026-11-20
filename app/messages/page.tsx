@@ -68,7 +68,7 @@ export default function MessagesPage(){
  const [draft,setDraft]=useState("");
  const [showComposerTools,setShowComposerTools]=useState(false);
  const [showReactionTools,setShowReactionTools]=useState(false);
- const [messengerTheme,setMessengerTheme]=useState<"night"|"day">("night");
+ const [messengerTheme,setMessengerTheme]=useState<"night"|"day">("day");
  useEffect(()=>{try{const saved=localStorage.getItem("1muslim:messenger-theme");if(saved==="day"||saved==="night")setMessengerTheme(saved)}catch{}},[]);
  const toggleMessengerTheme=()=>setMessengerTheme(v=>{const next=v==="night"?"day":"night";try{localStorage.setItem("1muslim:messenger-theme",next)}catch{}return next});
 
@@ -271,6 +271,15 @@ export default function MessagesPage(){
 .omMessengerTopNav a span{font-size:10px}
 .omMessengerTopNav a[aria-current="page"]{background:#087e5a;color:white}
 @media(max-width:700px){.omImessagePage.omMessengerUnified .omMessengerTop{height:auto!important;min-height:96px!important}.omMessengerTopNav a span{font-size:9px}.omImessagePage.omMessengerUnified .omMessengerShell--chat{height:calc(100dvh - 215px)!important;min-height:300px!important}.omImessagePage.omMessengerUnified .omMessageComposer{position:relative;z-index:3}}
+ /* Clean white chat canvas in Day mode; Night remains available from the moon control. */
+.omImessagePage.omMessengerUnified.omMessengerDay,
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessengerShell--chat,
+.omImessagePage.omMessengerUnified.omMessengerDay .omChatPane,
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessagesFeed{background:#fff!important;background-image:none!important}
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessagesFeed{color:#141a20!important}
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessageBubble--theirs{background:#f2f4f7!important;color:#15202b!important;border:1px solid #e4e8ee!important}
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessageBubble--mine{background:#173b34!important;color:#fff!important}
+.omImessagePage.omMessengerUnified.omMessengerDay .omMessageComposer{background:#fff!important;border-top:1px solid #edf0f2!important}
  /* Mobile Messenger: conversation fills available screen instead of floating mid-canvas. */ @media(max-width:700px){  .omImessagePage.omMessengerUnified{width:100%!important;max-width:100%!important;margin:0!important;padding:0!important;min-height:0!important}  .omImessagePage.omMessengerUnified .omMessengerShell--chat{height:calc(100dvh - 175px)!important;min-height:420px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}  .omImessagePage.omMessengerUnified .omChatPane{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-height:0!important;overflow:hidden!important}  .omImessagePage.omMessengerUnified .omMessagesFeed{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}  .omImessagePage.omMessengerUnified .omMessageComposer{flex:0 0 auto!important;position:relative!important;bottom:auto!important;margin-top:auto!important} } \n`}</style><div className="omMessengerPattern" aria-hidden="true"/><div className="omMessengerOrnaments" aria-hidden="true"><span className="omMessengerOrnamentNight"/><span className="omMessengerOrnamentDay"/></div>
  <button className="omMessengerNewButton" type="button" onClick={()=>setNewChatOpen(v=>!v)} aria-label="Create message or group" aria-expanded={newChatOpen}>＋</button>
 
