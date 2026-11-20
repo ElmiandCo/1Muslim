@@ -102,3 +102,45 @@ body:has(.mmDemo) .mmDemo{position:relative;z-index:2}
 .mmDemo.hudhudUnifiedMessenger .mmRow .mmPortrait{width:46px!important;height:46px!important;flex-basis:46px!important}
 .mmDemo.hudhudUnifiedMessenger .mmRowKicker{font-size:7px!important}
 }
+
+
+/* Inbox-first mobile layout inspired by a clean professional messaging app.
+   Preserve actual conversations, existing search, filters, and open-thread actions. */
+.mmDemo.hudhudUnifiedMessenger.day{--mm-paper:#fff;--mm-ink:#20262b;background:#fff!important;color:#20262b!important}
+.mmDemo.hudhudUnifiedMessenger.day .mmPage{background:#fff!important;color:#20262b!important}
+.mmDemo.hudhudUnifiedMessenger .mmEditorialHeader{border:0!important;margin:0!important;padding:8px 4px 10px!important}
+.mmDemo.hudhudUnifiedMessenger .mmEditorialHeader>div>span{display:none}
+.mmDemo.hudhudUnifiedMessenger .mmEditorialHeader h1{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;font-size:clamp(23px,5vw,30px)!important;line-height:1.2!important;font-weight:750!important;letter-spacing:-.045em!important;color:#20262b!important;margin:0!important}
+.mmDemo.hudhudUnifiedMessenger .mmEditorialHeader h1 br{display:none}
+.mmDemo.hudhudUnifiedMessenger .mmEditorialHeader h1 em{font-family:inherit!important;font-weight:inherit!important;font-style:normal!important}
+.mmDemo.hudhudUnifiedMessenger .mmSearch{margin:4px 0 10px!important;height:50px!important;min-height:50px!important;background:#edf1f4!important;border:0!important;border-radius:12px!important;box-shadow:none!important;color:#56616a!important}
+.mmDemo.hudhudUnifiedMessenger .mmSearch input{font-size:16px!important;color:#26333b!important}
+.mmDemo.hudhudUnifiedMessenger .mmSearch input::placeholder{color:#707980!important}
+.mmDemo.hudhudUnifiedMessenger .mmSearch button{background:transparent!important;color:#49545d!important}
+.mmDemo.hudhudUnifiedMessenger .mmMagazineLabel{display:none!important}
+.mmDemo.hudhudUnifiedMessenger .mmStories{margin:0 0 9px!important;padding:5px 0 10px!important;border-bottom:1px solid #e8e9eb;gap:14px!important;flex:0 0 auto!important}
+.mmDemo.hudhudUnifiedMessenger .mmStory .mmPortrait{width:48px!important;height:48px!important;flex-basis:48px!important;border:1px solid #e2e6e9!important;box-shadow:none!important}
+.mmDemo.hudhudUnifiedMessenger .mmStory small{font-size:10px!important;color:#4a555e!important;font-weight:550!important}
+.mmDemo.hudhudUnifiedMessenger .mmFilters{padding:4px 0 10px!important;margin:0!important;gap:8px!important;border-bottom:7px solid #f0f1f2;flex:0 0 auto}
+.mmDemo.hudhudUnifiedMessenger .mmFilters button{min-height:36px!important;padding:6px 15px!important;font-size:13px!important;font-weight:650!important;border-radius:999px!important;background:#fff!important;color:#51565b!important;border:1px solid #cdd1d5!important}
+.mmDemo.hudhudUnifiedMessenger .mmFilters button.selected{background:#08754c!important;color:#fff!important;border-color:#08754c!important}
+.mmDemo.hudhudUnifiedMessenger .mmThreads{padding:0!important;margin:0!important;background:#fff!important;overflow-y:auto!important}
+.mmDemo.hudhudUnifiedMessenger .mmRow{display:flex;align-items:center;gap:13px!important;min-height:84px!important;margin:0!important;padding:11px 3px!important;background:#fff!important;border:0!important;border-bottom:1px solid #e7e9eb!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important}
+.mmDemo.hudhudUnifiedMessenger .mmRow:active{background:#f4f7f6!important;transform:none!important}
+.mmDemo.hudhudUnifiedMessenger .mmRow .mmPortrait{width:53px!important;height:53px!important;flex-basis:53px!important;border:0!important;box-shadow:none!important;background:#edf0ee!important}
+.mmDemo.hudhudUnifiedMessenger .mmRowKicker{display:none!important}
+.mmDemo.hudhudUnifiedMessenger .mmRowText{min-width:0!important;flex:1!important;gap:4px!important}
+.mmDemo.hudhudUnifiedMessenger .mmRowText strong{font-size:16px!important;font-weight:650!important;line-height:1.2!important;color:#20262b!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mmDemo.hudhudUnifiedMessenger .mmRowText small{font-size:14px!important;line-height:1.35!important;color:#70747a!important;max-width:100%!important}
+.mmDemo.hudhudUnifiedMessenger .mmRowEnd{align-self:flex-start;padding-top:4px}
+.mmDemo.hudhudUnifiedMessenger .mmRowEnd time{font-size:11px!important;color:#81878b!important}
+.mmDemo.hudhudUnifiedMessenger .mmRowEnd>span{font-size:19px!important;color:#b0b7b8!important}
+.mmDemo.hudhudUnifiedMessenger .mmRowEnd b{background:#08754c!important}
+@media(max-width:700px){.mmDemo.hudhudUnifiedMessenger .mmPage{padding:10px 14px calc(90px + env(safe-area-inset-bottom,0px))!important}.mmDemo.hudhudUnifiedMessenger .mmEditorialHeader h1{font-size:23px!important}.mmDemo.hudhudUnifiedMessenger .mmRow{min-height:82px!important;padding:11px 2px!important}.mmDemo.hudhudUnifiedMessenger .mmRow .mmPortrait{width:52px!important;height:52px!important;flex-basis:52px!important}.mmDemo.hudhudUnifiedMessenger .mmRowText small{font-size:13px!important}}
+.mmDemo.hudhudUnifiedMessenger.night .mmEditorialHeader h1{color:#eeeae2!important}
+.mmDemo.hudhudUnifiedMessenger.night .mmSearch{background:#222c2e!important;color:#fff!important}
+.mmDemo.hudhudUnifiedMessenger.night .mmSearch input{color:#fff!important}
+.mmDemo.hudhudUnifiedMessenger.night .mmRow{background:#0c1113!important;border-bottom-color:#293235!important}
+.mmDemo.hudhudUnifiedMessenger.night .mmRowText strong{color:#f1ece4!important}
+.mmDemo.hudhudUnifiedMessenger.night .mmFilters{border-bottom-color:#222a2c!important}
+@media(prefers-reduced-motion:reduce){.mmDemo.hudhudUnifiedMessenger .mmRow{transition:none!important}}
