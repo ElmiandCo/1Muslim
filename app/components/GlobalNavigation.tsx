@@ -248,6 +248,6 @@ html .oneGlobalNav .oneGlobalNavProfileGear{display:none!important}
 html .oneGlobalNav .oneGlobalNavItem>button:active{background:#f2f5f3!important;transform:none!important}
 html .oneGlobalNav .oneGlobalNavSearch{bottom:calc(100% + 6px)!important}
 }
-</style>
+`}</style>
  </header></>;
 }
