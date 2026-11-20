@@ -11,3 +11,15 @@
 @keyframes hudhud-live-ended-in{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes hudhud-live-end-fold{0%,65%{opacity:1;transform:translateY(0) scale(1)}85%{opacity:.85;transform:translateY(6px) scale(.96)}100%{opacity:0;transform:translateY(35px) scale(.75);filter:blur(7px)}}
 @media(prefers-reduced-motion:reduce){.hudhud-live-mini{transition:none!important}.hudhud-live-mini.is-live-ended,.hudhud-live-ended-toast{animation:none!important}}
+
+/* Compact global live picture-in-picture above the mobile navigation. */
+.hudhud-live-mini{left:12px;bottom:calc(82px + env(safe-area-inset-bottom,0px));width:min(280px,calc(100vw - 24px));border:1px solid #ffffff2b;border-radius:15px;background:#101318;box-shadow:0 12px 34px #0007;overflow:hidden;max-height:450px;animation:none;will-change:translate}
+.hudhud-live-mini-head{padding:6px 8px;gap:7px;background:#161b22;min-height:40px;user-select:none}
+.hudhud-live-mini-copy strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.hudhud-live-mini-badge{color:#ff4b64;font-size:9px}
+.hudhud-live-mini-head button,.hudhud-live-mini-expand{display:grid;place-items:center;flex:0 0 27px;width:27px;height:27px;border:1px solid #ffffff26;border-radius:9px;background:#252c34;color:#fff;font-size:17px;text-decoration:none;cursor:pointer}
+.hudhud-live-mini-video{aspect-ratio:16/9;max-height:175px;overflow:hidden}
+.hudhud-live-mini.is-minimized{width:min(240px,calc(100vw - 24px))}
+@media(max-width:600px){.hudhud-live-mini{left:10px;bottom:calc(83px + env(safe-area-inset-bottom,0px));width:min(260px,calc(100vw - 20px))}.hudhud-live-mini.is-minimized{width:min(230px,calc(100vw - 20px))}}
+/* When a screen deliberately has no dock, keep the player comfortably low. */
+body:has(.omCreatePicker) .hudhud-live-mini{bottom:calc(20px + env(safe-area-inset-bottom,0px))}
