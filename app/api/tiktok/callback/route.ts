@@ -5,7 +5,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
-  const destination = new URL("/tiktok", origin);
+  const destination = new URL("/profile?section=tiktok", origin);
   const finish = (error?: string, connected?: boolean) => {
     if (error) destination.searchParams.set("error", error);
     if (connected) destination.searchParams.set("connected", "1");
