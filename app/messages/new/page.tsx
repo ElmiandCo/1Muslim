@@ -1,9 +1,9 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {Suspense,useEffect,useMemo,useState} from "react";
 import {useRouter,useSearchParams} from "next/navigation";
 import {createClient} from "../../../utils/supabase/client";
 type Person={id:string;display_name:string|null;username:string|null;avatar_config?:{selectedAvatarUrl?:string;adminAvatarUrl?:string}|null};
-export default function NewConversationPage(){
+function NewConversationPicker(){
  const router=useRouter(),params=useSearchParams(),group=params.get("mode")==="group";
  const [db]=useState(()=>createClient()),[uid,setUid]=useState(""),[people,setPeople]=useState<Person[]>([]),[query,setQuery]=useState(""),[selected,setSelected]=useState<string[]>([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[groupName,setGroupName]=useState(""),[groupDescription,setGroupDescription]=useState("");
  useEffect(()=>{let live=true;void (async()=>{const {data:{user}}=await db.auth.getUser();if(!live)return;if(!user){router.replace("/auth?next="+encodeURIComponent("/messages/new?mode="+(group?"group":"message")));return}setUid(user.id);const {data,error}=await db.from("profiles").select("id,display_name,username,avatar_config").neq("id",user.id).order("display_name",{ascending:true}).limit(150);if(live){setPeople(data||[]);setError(error?.message||"");setLoading(false)}})();return()=>{live=false}},[db,router,group]);
@@ -28,3 +28,4 @@ export default function NewConversationPage(){
  <footer className="omCreatePickerFooter"><button type="button" disabled={busy||!selected.length||(group&&!groupName.trim())} onClick={()=>void create()}>{busy?"Creating…":group?"Create":"Message"}</button></footer>
  </main>
 }
+export default function NewConversationPage(){return <Suspense fallback={<main style={{minHeight:"100dvh",background:"#fff",padding:24,color:"#111"}}>Loading Messenger…</main>}><NewConversationPicker/></Suspense>}
