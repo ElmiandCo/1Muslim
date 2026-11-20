@@ -337,3 +337,25 @@
 .topnav button{flex:0 0 auto!important;white-space:nowrap!important;min-width:0!important}
 .topnav .splitIcon{display:inline-flex!important;align-items:center!important;justify-content:center!important;padding:4px!important;width:32px!important;height:34px!important;min-height:34px!important;line-height:1!important}
 @media(max-width:800px){.topbar{grid-template-columns:60px minmax(0,1fr) 202px!important}.topnav{gap:3px!important}.topnav button{font-size:10px!important;letter-spacing:.025em!important;padding:5px 1px!important}.topnav .splitIcon{width:29px!important;height:30px!important;min-height:30px!important;padding:2px!important}.topnav .splitIcon svg{width:25px!important;height:25px!important}.masthead{font-size:clamp(12px,3.3vw,17px)!important;letter-spacing:.045em!important;white-space:nowrap!important}}
+
+/* Keep the blue Newsletter's lower preview area filled, but strictly bounded on mobile.
+   Magazine previews and the overall split-page height are unaffected. */
+@media(max-width:800px){
+ .stage[data-view=split] .newsPanel .splitPreviews{
+  max-height: min(56vh, 520px);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-bottom:0;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 91%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 91%,transparent 100%);
+ }
+ .stage[data-view=split] .newsPanel .splitPreview{flex:0 0 auto;padding:8px 0 12px;gap:7px}
+ .stage[data-view=split] .newsPanel .splitPreviewArt{height:clamp(75px,11vh,120px)}
+ .stage[data-view=split] .newsPanel .splitPreviewCopy small{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;
+  overflow:hidden;line-height:1.45;
+ }
+ .stage[data-view=split] .newsPanel .panelArrow{margin-top:12px!important}
+}
