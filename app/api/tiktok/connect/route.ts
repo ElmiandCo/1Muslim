@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const url = new URL("https://www.tiktok.com/v2/auth/authorize/");
   url.searchParams.set("client_key", key);
   url.searchParams.set("response_type", "code");
-  url.searchParams.set("scope", "user.info.basic");
+  url.searchParams.set("scope", "user.info.basic,video.list");
   url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("state", state);
   const response = NextResponse.redirect(url);
