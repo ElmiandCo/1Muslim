@@ -459,6 +459,8 @@ const [avatarPage,setAvatarPage]=useState(0);
   const [avatarTransition,setAvatarTransition]=useState<"unlock"|"change"|null>(null); const [avatarSaving,setAvatarSaving]=useState(false); const [saving,setSaving]=useState(false); const [colorSaving,setColorSaving]=useState(false); const [backgroundStudioOpen,setBackgroundStudioOpen]=useState(true); const [message,setMessage]=useState(""); const [authRequired,setAuthRequired]=useState(false);
   const [liveConnectors,setLiveConnectors]=useState<Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>>({});
   const [vaultUrl,setVaultUrl]=useState("");
+  const [profileLoadFailed,setProfileLoadFailed]=useState(false);
+  useEffect(()=>{if(profile||authRequired)return;const timer=window.setTimeout(()=>setProfileLoadFailed(true),12000);return()=>window.clearTimeout(timer)},[profile,authRequired]);
   const providers=["tiktok","youtube","twitch"] as const;
 
   useEffect(()=>{window.addEventListener("1muslim:profile-signout",signOut);return()=>window.removeEventListener("1muslim:profile-signout",signOut)},[signingOut]);
@@ -625,7 +627,7 @@ const [avatarPage,setAvatarPage]=useState(0);
   const toggleAccessory=(id:string)=>{if(!profile)return;const item=ACCESSORIES.find(x=>x.id===id);if(!item)return;const required=AVATAR_TIERS.find(x=>x.key===item.tier)?.minXp??0;if(profile.xp_total<required)return;const current=Array.isArray(profile.avatar_config?.accessories)?profile.avatar_config.accessories.map(String):[];const next=current.includes(id)?current.filter(x=>x!==id):[...current,id];update({avatar_config:{...profile.avatar_config,accessories:next}})};
 
   if(authRequired)return <main><section className="profileEmpty"><h1>Build your profile.</h1><p>Sign in to customize your OneMuslim identity.</p><Link href="/auth" className="primary">Sign in</Link></section></main>;
-  if(!profile)return <main><section className="profileEmpty"><p>Loading your profile…</p></section></main>;
+  if(!profile)return <main><section className="profileEmpty"><p>{profileLoadFailed?"Unable to load your profile. The connection may be temporarily unavailable.":"Loading your profile…"}</p>{profileLoadFailed&&<button className="primary" type="button" onClick={()=>window.location.reload()}>Try again</button>}</section></main>;
 
   const publishFirstPost=async()=>{const body=postText.trim();if(!body||posting)return;setPosting(true);const s=createClient();const {error}=await s.from("posts").insert({user_id:profile.id,body});if(error){setMessage(error.message);setPosting(false);return;}setPostText("");setPostCount(x=>x+1);setPosting(false);};
 
