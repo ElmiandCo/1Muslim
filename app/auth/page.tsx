@@ -9,6 +9,7 @@ import RisingEnergyOrbs from "../components/RisingEnergyOrbs";
 import homeStyles from "../home-hub.module.css";
 import CelestialOrb from "../components/CelestialOrb";
 import AdmissionJourney from "../components/AdmissionJourney";
+import SeamlessEntry from "../components/SeamlessEntry";
 
 const safeNext = () => {
   const p = new URLSearchParams(window.location.search).get("next");
@@ -118,6 +119,15 @@ export default function AuthPage() {
     }
   };
 
+  // Reuse the same 1Muslim ID experience for dedicated auth links and in-app entry.
+  // Preserve the legacy guided Shahada route when explicitly requested.
+  const authParams=typeof window!=="undefined"?new URLSearchParams(window.location.search):null;
+  const guidedShahada=authParams?.has("shahada")||authParams?.has("method");
+  if(entryReady&&!guidedShahada){
+    const destination=safeNext();
+    const requestedSignup=authParams?.get("mode")==="signup"||authParams?.get("signup")==="1";
+    return <main style={{minHeight:"100dvh",background:"#f7f9f8"}}><SeamlessEntry initialStage={requestedSignup?"signup":"signin"} returnTo={destination} onClose={()=>window.location.assign("/")}/></main>;
+  }
   const embedded=typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("embedded");
   if(entryStage!=="auth")return <main className={"authPreview "+(day?"authPreviewDay":"")+" authEntryShell"+(embedded?" authEntryEmbedded":"")}>
     <div className="authHomeBackdrop" aria-hidden="true"><div className="authHomeNight"/><div className="authHomeDay"/><div className="authHomeShade"/></div>
