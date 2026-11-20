@@ -15,7 +15,7 @@ declare v_user uuid:=auth.uid();v_post uuid;v_existing uuid;v_body text;
 begin
  if v_user is null then raise exception 'Sign in required';end if;
  if p_video_id is null or p_video_id !~ '^[0-9]{8,30}$' then raise exception 'Invalid TikTok video ID';end if;
- if p_url is null or p_url !~ '^https://(www\.)?tiktok\.com/' then raise exception 'Invalid TikTok URL';end if;
+ if p_url is null or p_url !~ '^https://(www[.])?tiktok[.]com/' then raise exception 'Invalid TikTok URL';end if;
  if not exists(select 1 from public.tiktok_connections where user_id=v_user) then raise exception 'Connect TikTok first';end if;
  select t.post_id into v_existing from public.tiktok_shared_videos t where t.user_id=v_user and t.video_id=p_video_id;
  if v_existing is not null then return query select v_existing,true;return;end if;
