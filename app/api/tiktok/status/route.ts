@@ -19,7 +19,7 @@ export async function GET() {
   let profileUnavailable = false;
   if (data.access_token && (!data.expires_at || Date.parse(data.expires_at) > Date.now())) {
     try {
-      const response = await fetch("https://open.tiktokapis.com/v2/user/info/?fields=display_name,username,avatar_url", {
+      const response = await fetch("https://open.tiktokapis.com/v2/user/info/?fields=display_name,avatar_url", {
         headers: { Authorization: `Bearer ${data.access_token}` }, cache: "no-store",
         signal: AbortSignal.timeout(6000),
       });
