@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {useCallback,useEffect,useMemo,useState} from "react";
 import {createClient} from "../../../utils/supabase/client";
 import styles from "./command.module.css";
@@ -16,6 +17,7 @@ const statuses:Status[]=["draft","submitted","changes_requested","approved","pub
 const canSearch=(q:string)=>q.trim().length>=3;
 const roleNames=["writer","editor","approver","publisher","admin"];
 export default function QiblaCommand(){
+ const router=useRouter();
  const [editPageId,setEditPageId]=useState<string|null>(null);
  useEffect(()=>{setEditPageId(new URLSearchParams(window.location.search).get("editPage"))},[]);
  const [roleRequests,setRoleRequests]=useState<RoleRequest[]>([]),[applications,setApplications]=useState<Application[]>([]),[applicationNote,setApplicationNote]=useState("");
@@ -59,8 +61,8 @@ export default function QiblaCommand(){
  const reviewRole=(id:string,approve:boolean)=>void action(()=>db.rpc("qibla_review_role_request",{p_id:id,p_approve:approve}),approve?"Member change approved.":"Member change denied.");
  const reviewApplication=(id:string,approve:boolean)=>{void action(()=>db.rpc("qibla_review_staff_application",{p_id:id,p_approve:approve,p_note:applicationNote}),approve?"Application approved and role assigned.":"Application denied.");setApplicationNote("")};
  const remove=(id:string)=>{if(!window.confirm("Remove this staff member's Qibla role?"))return;void action(()=>db.rpc(superAdmin?"qibla_remove_role":"qibla_request_role_change",superAdmin?{p_user_id:id}:{p_user_id:id,p_role:null,p_action:"remove"}),superAdmin?"Role removed.":"Removal sent to SuperAdmin for approval.")};
- return <main className={styles.root}><header className={styles.nav}><Link href="/qibla/newsroom">← 1MUSLIM QIBLA</Link><strong>EDITORIAL COMMAND</strong><Link href="/qibla/studio">WRITE ↗</Link></header>
- {superAdmin&&<section style={{margin:"16px 0",padding:18,border:"1px solid #bbc7d5",borderRadius:16,background:"#f5f8fc",color:"#1c2b3e"}}><strong>✦ QIBLA EDITORIAL AI</strong><p>Generate researched drafts as 1Muslim Editor. Every submission enters this approval desk; nothing publishes automatically.</p><div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{(["article","newsletter"] as const).map(kind=><button key={kind} type="button" disabled={busy} style={{padding:"10px 15px",borderRadius:12,border:"1px solid #8093ab",background:"#17365d",color:"#fff",cursor:"pointer"}} onClick={async()=>{setBusy(true);setMessage("");try{const response=await fetch("/api/qibla/editorial-bot?kind="+kind,{method:"POST"});const result=await response.json();setMessage(response.ok?"New "+kind+" draft queued for approval: "+result.submission.title:(result.error||"Generation failed"));if(response.ok)await refresh()}catch{setMessage("Editorial research service unavailable")}finally{setBusy(false)}}}>Generate {kind==="article"?"Magazine Article":"Newsletter"} ↗</button>)}</div></section>}
+ return <main className={styles.root}><header className={styles.nav}><button type="button" className={styles.avatarBack} onClick={()=>{if(window.history.length>1)router.back();else router.push("/qibla/newsroom")}} aria-label="Go back one page"><img src="/assets/qibla-home.PNG" alt="" /><span>1MUSLIM QIBLA</span></button><strong>EDITORIAL COMMAND</strong><Link href="/qibla/studio">WRITE ↗</Link></header>
+ {superAdmin&&<section className={styles.aiPanel}><strong>✦ QIBLA EDITORIAL AI</strong><p>Discover fresh researched stories for Qibla Magazine and Newsletter. Every draft enters editorial review; nothing publishes automatically.</p><div className={styles.aiActions}>{(["article","newsletter"] as const).map(kind=><button key={kind} type="button" disabled={busy} className={kind==="article"?styles.magazineGenerate:styles.newsGenerate} onClick={async()=>{setBusy(true);setMessage("");try{const response=await fetch("/api/qibla/editorial-bot?kind="+kind,{method:"POST"});const result=await response.json();setMessage(response.ok?"New "+kind+" draft queued for approval: "+result.submission.title:(result.error||"Generation failed"));if(response.ok)await refresh()}catch{setMessage("Editorial research service unavailable")}finally{setBusy(false)}}}>Generate {kind==="article"?"Magazine Article":"Newsletter"} ↗</button>)}</div></section>}
  <div className={styles.heading}><span>ONE PUBLISHING HOUSE · TWO DISTINCT VOICES</span><h1>The Editorial<br/><em>Desk.</em></h1><p>Plan, review, approve and publish. Every story has a journey.</p></div>
  {!uid?<p className={styles.notice}>Sign in to access the editorial desk.</p>:loading?<p className={styles.notice}>Loading editorial activity…</p>:<>
  <div className={styles.identity}>SIGNED IN AS <b>{superAdmin?"SUPER ADMIN":role.toUpperCase()}</b> {superAdmin&&<span>✦ ALL EDITORIAL PERMISSIONS</span>}<button onClick={()=>void refresh()}>↻ Refresh</button></div>
