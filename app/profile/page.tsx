@@ -455,6 +455,7 @@ export default function ProfilePage() {
   const [postText,setPostText]=useState("");
   const [posting,setPosting]=useState(false);
   const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live"|"shahada"|"analytics">("profile");
+ useEffect(()=>{if(new URLSearchParams(window.location.search).get("section")==="tiktok"){setTab("live");window.history.replaceState(null,"",window.location.pathname);}},[]);
 const [avatarPage,setAvatarPage]=useState(0);
  const [appearanceMode,setAppearanceMode]=useState<"day"|"night">("day");
  useEffect(()=>{const sync=()=>setAppearanceMode(localStorage.getItem("1muslim-theme")==="light"?"day":document.documentElement.classList.contains("light")?"day":"night");sync();window.addEventListener("1muslim:theme-changed",sync);return()=>window.removeEventListener("1muslim:theme-changed",sync)},[]);
