@@ -296,7 +296,13 @@ export default function MessagesPage(){
  
  
  {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&replyTo&&<div style={{padding:"4px 12px",fontSize:12}}>Replying to: {replyTo.body.slice(0,80)} <button onClick={()=>setReplyTo(null)}>✕</button></div>}
- {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&<div className={"omComposerTools "+(showComposerTools?"omComposerTools--open":"")} style={{padding:"0 12px",display:"flex",gap:8,alignItems:"center"}}><label style={{cursor:"pointer"}}>📎 Attach<input type="file" accept="image/*,video/mp4,video/webm,audio/*,application/pdf,text/plain" hidden disabled={busy} onChange={e=>{const f=e.target.files?.[0];if(f)void upload(f);e.target.value=""}}/></label><button type="button" className="voiceLaunch" disabled={busy} onClick={()=>void toggleRecord()}>{recording?"⏸ Finish":"🎙 Voice note"}</button></div>}
+ {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&showComposerTools&&!recording&&!voicePreview&&<div className="omComposerTools omComposerTools--open" role="group" aria-label="Add to your message">
+  <div className="omAttachmentTrayHeader"><span><strong>Add to message</strong><small>Share a file or record a voice note</small></span><button type="button" aria-label="Close attachment options" className="omAttachmentClose" onClick={()=>setShowComposerTools(false)}>✕</button></div>
+  <div className="omAttachmentActions">
+   <label className="omAttachmentAction"><span aria-hidden="true" className="omAttachmentActionIcon">📎</span><span><strong>Photo or file</strong><small>Images, videos, documents</small></span><input type="file" accept="image/*,video/mp4,video/webm,audio/*,application/pdf,text/plain" hidden disabled={busy} onChange={e=>{const file=e.target.files?.[0];if(file){setShowComposerTools(false);void upload(file)}e.target.value=""}}/></label>
+   <button type="button" className="omAttachmentAction" disabled={busy} onClick={()=>{setShowComposerTools(false);void toggleRecord()}}><span aria-hidden="true" className="omAttachmentActionIcon">🎙</span><span><strong>Voice note</strong><small>Record a message</small></span></button>
+  </div>
+ </div>}
  {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&(recording||voicePreview)&&<section className="voiceStudio" aria-label="Voice message recorder">
  <div className="voiceStudioTop"><div><strong>🎙️ Voice message</strong><small>{recording?"Recording privately · tap Finish to preview":"Listen before sending"}</small></div><span className={recording?"voiceLive":""}>{recording?"● REC":"✓ READY"}</span></div>
  <div className="voiceStudioWave" aria-hidden="true">{voiceLevels.map((h,i)=><i key={i} style={{height:Math.max(5,h*46)+"px"}}/>)}</div>
@@ -309,7 +315,7 @@ export default function MessagesPage(){
  {recording?<button type="button" className="voiceFinish" onClick={()=>void toggleRecord()}>■ Finish</button>:<button type="button" className="voiceSend" disabled={busy} onClick={()=>void sendVoice()}>➤ Send</button>}
  </div></section>}
 
- {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&<form className="omMessageComposer" onSubmit={send} style={{display:"flex",padding:12,gap:8}}><button type="button" className="omComposerExpand" aria-label="Toggle attachment and sound tools" aria-expanded={showComposerTools} onClick={()=>setShowComposerTools(v=>!v)}>{showComposerTools?<svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg>:<svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 4v16M4 12h16"/></svg>}</button><ExpressionKeyboard onInsert={text=>setDraft(prev=>(prev?prev+" ":"")+text)} /><input ref={messageInput} aria-label="Message" maxLength={4000} value={draft} onChange={e=>{setDraft(e.target.value);if(uid&&typingChannel)void typingChannel.send({type:"broadcast",event:"typing",payload:{user_id:uid,typing:!!e.target.value}})}} placeholder="Write a message…" style={{flex:1,minWidth:0,padding:12,borderRadius:12,color:"#111"}}/><button className="omComposerSend" disabled={busy||!draft.trim()} type="submit" style={{padding:"10px 18px",borderRadius:12}} aria-label="Send message"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="m3 20 18-8L3 4l3 7 8 1-8 1-3 7Z"/></svg><span className="omSendText">Send</span></button></form>}
+ {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&<form className="omMessageComposer" onSubmit={send} style={{display:"flex",padding:12,gap:8}}><button type="button" className="omComposerExpand" aria-label="Add attachment or voice note" aria-expanded={showComposerTools} onClick={()=>setShowComposerTools(v=>!v)}>{showComposerTools?<svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg>:<svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 4v16M4 12h16"/></svg>}</button><ExpressionKeyboard onInsert={text=>setDraft(prev=>(prev?prev+" ":"")+text)} /><input ref={messageInput} aria-label="Message" maxLength={4000} value={draft} onChange={e=>{setDraft(e.target.value);if(uid&&typingChannel)void typingChannel.send({type:"broadcast",event:"typing",payload:{user_id:uid,typing:!!e.target.value}})}} placeholder="Write a message…" style={{flex:1,minWidth:0,padding:12,borderRadius:12,color:"#111"}}/><button className="omComposerSend" disabled={busy||!draft.trim()} type="submit" style={{padding:"10px 18px",borderRadius:12}} aria-label="Send message"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="m3 20 18-8L3 4l3 7 8 1-8 1-3 7Z"/></svg><span className="omSendText">Send</span></button></form>}
  </section></div><ExpressionCelebration trigger={expressionEvent} emoji={expressionEmoji}/>{notice&&<p role="status" style={{color:"#a7f3d0"}}>{notice}</p>}{error&&<p role="alert" style={{color:"#f87171"}}>{error}</p>}
 
  <style jsx global>{`
@@ -1157,6 +1163,30 @@ body:has(.muslimMessengerFrame){overflow:hidden!important}
  .omImessagePage.omMessengerUnified.omMessengerDay .omMessagesFeed{padding:16px 12px!important}
  .omImessagePage.omMessengerUnified.omMessengerDay .omChatHeader{padding:10px 12px!important}
 }
+
+/* Compact attachment tray replaces the persistent dark toolbar. */
+.omImessagePage.omMessengerUnified .omComposerTools.omComposerTools--open{
+ display:block!important;flex:0 0 auto!important;
+ margin:0 10px 8px!important;padding:12px!important;
+ background:#fff!important;color:#213b30!important;
+ border:1px solid #e0ebe4!important;border-radius:18px!important;
+ box-shadow:0 6px 24px rgba(21,57,39,.09)!important;
+}
+.omImessagePage .omAttachmentTrayHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.omImessagePage .omAttachmentTrayHeader strong{display:block;font-size:14px;font-weight:700;color:#203f31}
+.omImessagePage .omAttachmentTrayHeader small{display:block;font-size:11px;color:#71877b;margin-top:2px}
+.omImessagePage .omAttachmentClose{width:30px;height:30px;flex:0 0 30px;border:1px solid #e2eae5;border-radius:50%;background:#f5f8f6;color:#466b59}
+.omImessagePage .omAttachmentActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.omImessagePage .omAttachmentAction{min-width:0;min-height:78px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;padding:12px!important;border:1px solid #e0eae3!important;border-radius:14px!important;background:#f7faf8!important;color:#1d5a40!important;cursor:pointer;text-align:left;box-shadow:none!important}
+.omImessagePage .omAttachmentActionIcon{font-size:19px;line-height:1}
+.omImessagePage .omAttachmentAction strong{display:block;font-size:13px;line-height:1.2}
+.omImessagePage .omAttachmentAction small{display:block;font-size:10px;color:#758d7e;margin-top:3px;line-height:1.3}
+.omImessagePage .omAttachmentAction:active{transform:scale(.98)}
+.omImessagePage .omAttachmentAction:focus-within,.omImessagePage .omAttachmentAction:focus-visible{outline:2px solid #29865d;outline-offset:2px}
+.omImessagePage.omMessengerNight .omComposerTools.omComposerTools--open{background:#15221d!important;border-color:#345344!important;color:#eef8f1!important}
+.omImessagePage.omMessengerNight .omAttachmentTrayHeader strong,.omImessagePage.omMessengerNight .omAttachmentAction strong{color:#eef8f1!important}
+.omImessagePage.omMessengerNight .omAttachmentAction{background:#1e3027!important;border-color:#345344!important}
+.omImessagePage.omMessengerNight .omAttachmentAction small,.omImessagePage.omMessengerNight .omAttachmentTrayHeader small{color:#a5c1b0!important}
 `}</style>
  </main>}</>
 }
