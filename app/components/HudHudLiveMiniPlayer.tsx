@@ -6,14 +6,15 @@ import { useLiveDiscovery } from "../../lib/live-discovery-client";
 import LiveKitViewer from "../../components/LiveKitViewer";
 
 type Stream={id:string;title:string;room_name:string;visibility:string|null;started_at:string};
-const DISMISSED="1muslim-live-mini-dismissed";
+const DISMISSED="1muslim-live-mini-dismissed-session";
 export default function HudHudLiveMiniPlayer(){
  const pathname=usePathname();
  const discovery=useLiveDiscovery();
- const isBroadcastScreen=pathname==="/"||pathname.startsWith("/streaming")||pathname.startsWith("/live");
+ const isBroadcastScreen=pathname.startsWith("/streaming/live/")||pathname.startsWith("/streaming/watch/")||pathname==="/streaming/go-live"||pathname.startsWith("/live/");
  const [position,setPosition]=useState({x:0,y:0});
  const drag=useRef<{x:number;y:number;ox:number;oy:number}|null>(null);
  const [stream,setStream]=useState<Stream|null>(null);
+ const activeSession=useRef<string>("");
  const [open,setOpen]=useState(false);
  const [minimized,setMinimized]=useState(false);
  const [exiting,setExiting]=useState(false);
@@ -27,7 +28,7 @@ export default function HudHudLiveMiniPlayer(){
  const dismissed=useRef(false);
 
  useEffect(()=>{
-  dismissed.current=sessionStorage.getItem(DISMISSED)==="yes";
+  const storedDismissal=sessionStorage.getItem(DISMISSED);
   const previous=stream;
   const previousState=previous?.id?discovery.presence[previous.id]?.state:undefined;
   // An existing viewer stays connected during temporary host turbulence.
@@ -37,6 +38,8 @@ export default function HudHudLiveMiniPlayer(){
   const ready=discovery.lives.find(x=>x.id===previous?.id)??discovery.lives[0];
   const current=ready?{id:ready.id,title:ready.title,room_name:ready.room_name,visibility:"public",started_at:ready.started_at}:null;
   const isLive=!!current;
+  const sessionKey=current?current.id+":"+(discovery.presence[current.id]?.session_id||current.started_at):"";
+  if(sessionKey!==activeSession.current){activeSession.current=sessionKey;dismissed.current=storedDismissal===sessionKey;if(sessionKey&&!dismissed.current){setOpen(true);setMinimized(false);setPosition({x:0,y:0})}}
   if(!isLive && hadLive.current===true && discovery.ready){
    dismissed.current=false;sessionStorage.removeItem(DISMISSED);dismissWithMotion(true);
   }
@@ -48,13 +51,13 @@ export default function HudHudLiveMiniPlayer(){
   setInitialized(discovery.ready);setLoading(!discovery.ready);
  },[discovery.lives,discovery.presence,discovery.ready]);
 
- const close=()=>{dismissed.current=true;sessionStorage.setItem(DISMISSED,"yes");dismissWithMotion()};
+ const close=()=>{dismissed.current=true;sessionStorage.setItem(DISMISSED,activeSession.current);dismissWithMotion()};
  if(isBroadcastScreen||!initialized||loading||!open||!stream)return null;
- return <aside className={"hudhud-live-mini"+(minimized?" is-minimized":"")+(exiting?" is-exiting":"")+(endedNotice?" is-live-ended":"")} aria-label="Live stream notification" data-no-translate="true" style={{transform:`translate3d(${position.x}px,${position.y}px,0)`,touchAction:"pan-y"}}>
+ return <aside className={"hudhud-live-mini"+(minimized?" is-minimized":"")+(exiting?" is-exiting":"")+(endedNotice?" is-live-ended":"")} aria-label="Live stream notification" data-no-translate="true" style={{translate:`${position.x}px ${position.y}px`,touchAction:"pan-y"}}>
   <div className="hudhud-live-mini-head" style={{touchAction:"none",cursor:"grab"}} onPointerDown={e=>{if((e.target as HTMLElement).closest("button,a"))return;drag.current={x:e.clientX,y:e.clientY,ox:position.x,oy:position.y};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{if(!drag.current)return;setPosition({x:Math.max(-window.innerWidth*.65,Math.min(window.innerWidth*.65,drag.current.ox+e.clientX-drag.current.x)),y:Math.max(-window.innerHeight*.65,Math.min(window.innerHeight*.65,drag.current.oy+e.clientY-drag.current.y))})}} onPointerUp={()=>{drag.current=null}} onPointerCancel={()=>{drag.current=null}}>
-   <img src="/assets/hudhud-logo.PNG" alt="" className="hudhud-live-bird" onError={e=>{e.currentTarget.style.display="none"}} />
-   <div className="hudhud-live-mini-copy"><span className="hudhud-live-mini-badge">● LIVE NOW</span><strong>HudHud found a live stream!</strong><small>Keep learning while you listen.</small></div>
-   <button type="button" onClick={()=>setMinimized(v=>!v)} aria-label={minimized?"Expand mini player":"Minimize mini player"}>{minimized?"▢":"−"}</button>
+   
+   <div className="hudhud-live-mini-copy"><span className="hudhud-live-mini-badge">● LIVE NOW</span><strong title={stream.title}>{stream.title||"Someone is live"}</strong></div>
+   <Link className="hudhud-live-mini-expand" href={`/streaming/live/${stream.id}`} aria-label="Expand live stream to full screen">⤢</Link><button type="button" onClick={()=>setMinimized(v=>!v)} aria-label={minimized?"Show video":"Collapse video"}>{minimized?"▣":"−"}</button>
    <button type="button" onClick={close} aria-label="Dismiss live notification">×</button>
   </div>
   {endedNotice&&<div className="hudhud-live-ended-toast" role="status" aria-live="polite"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>Closing your player…</small></div>}
