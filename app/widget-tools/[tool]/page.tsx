@@ -1,14 +1,14 @@
 "use client";
 import {useEffect,useState} from "react";
 import Link from "next/link";
-import {useParams} from "next/navigation";
+import {useParams,useRouter} from "next/navigation";
 import DhikrStudio from "./DhikrStudio";
 import PrayerTimes from "./PrayerTimes";
-import NotificationFeed from "./NotificationFeed";
 import ProgressWidget from "./ProgressWidget";
 const names:Record<string,string>={prayer:"Prayer Times",dhikr:"Dhikr",progress:"XP & Progress",notifications:"Notifications"};
 export default function WidgetToolPage(){
- const params=useParams();const tool=String(params.tool||"");
+ const params=useParams();const router=useRouter();const tool=String(params.tool||"");
+ useEffect(()=>{if(tool==="notifications")router.replace("/notifications");},[tool,router]);
  const [location,setLocation]=useState("");const [permission,setPermission]=useState("default");
  useEffect(()=>{if(typeof Notification!=="undefined")setPermission(Notification.permission)},[]);
  if(!names[tool])return <main style={{padding:30}}><Link href="/">← Home</Link><h1>Widget not found</h1></main>;
@@ -18,7 +18,7 @@ export default function WidgetToolPage(){
  {tool==="dhikr"&&<DhikrStudio/>}
  {tool==="prayer"&&<PrayerTimes/>}
  {tool==="progress"&&<ProgressWidget/>}
- {tool==="notifications"&&<NotificationFeed/>}
+ {tool==="notifications"&&<p>Opening notifications…</p>}
  </section></div></main>;
 }
 const button:React.CSSProperties={padding:"13px 18px",background:"#e4d299",color:"#173c2c",border:0,borderRadius:12,fontWeight:750,cursor:"pointer"};
