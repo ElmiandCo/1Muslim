@@ -55,13 +55,36 @@ export default function PostDesignStudio(){
    if(uploadError)throw Error("Image upload failed: "+uploadError.message);
    setUploadProgress(100);
   }else{
-  await new Promise<void>((resolve,reject)=>{const upload=new tus.Upload(media.file,{endpoint:`${(url.endsWith("/")?url.slice(0,-1):url)}/storage/v1/upload/resumable`,retryDelays:[0,1000,3000,5000,10000],chunkSize:6*1024*1024,headers:{authorization:`Bearer ${token}`,"x-upsert":"false"},uploadDataDuringCreation:true,removeFingerprintOnSuccess:true,metadata:{bucketName:"community-media",objectName:path,contentType:media.file.type||"application/octet-stream",cacheControl:"3600"},onError:reject,onSuccess:()=>resolve(),onProgress:(sent,total)=>setUploadProgress(Math.round(sent/total*100))});upload.findPreviousUploads().then(previous=>{if(previous.length)upload.resumeFromPreviousUpload(previous[0]);upload.start()}).catch(reject)});
+  // Never leave users trapped behind an infinite upload overlay. A one-minute
+  // video can be large, but every stalled network request must be recoverable.
+  setUploadProgress(0);
+  await new Promise<void>((resolve,reject)=>{
+   let settled=false;let lastProgress=Date.now();
+   const cleanup=()=>{window.clearInterval(watchdog);window.clearTimeout(maxDuration)};
+   const fail=(reason:Error)=>{if(settled)return;settled=true;cleanup();void upload.abort();reject(reason)};
+   const upload=new tus.Upload(media.file,{
+    endpoint:`${(url.endsWith("/")?url.slice(0,-1):url)}/storage/v1/upload/resumable`,
+    retryDelays:[0,1000,3000,5000,10000],
+    chunkSize:6*1024*1024,
+    headers:{authorization:`Bearer ${token}`,"x-upsert":"false"},
+    uploadDataDuringCreation:true,
+    removeFingerprintOnSuccess:true,
+    metadata:{bucketName:"community-media",objectName:path,contentType:media.file.type||"application/octet-stream",cacheControl:"3600"},
+    onError:error=>fail(error instanceof Error?error:new Error(String(error))),
+    onSuccess:()=>{if(settled)return;settled=true;cleanup();setUploadProgress(100);resolve()},
+    onProgress:(sent,total)=>{lastProgress=Date.now();setUploadProgress(total>0?Math.min(99,Math.round(sent/total*100)):0)}
+   });
+   const watchdog=window.setInterval(()=>{if(Date.now()-lastProgress>45000)fail(new Error("Video upload stalled for 45 seconds. Check your connection and retry; your draft is still here."))},5000);
+   const maxDuration=window.setTimeout(()=>fail(new Error("Video upload timed out. Please retry on a stable connection.")),5*60*1000);
+   // Starting directly avoids a fingerprint lookup hanging before any bytes upload.
+   try{upload.start()}catch(e){fail(e instanceof Error?e:new Error(String(e)))}
+  });
   }
   uploadedPath=path;
  }
- const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:text.trim()||"Shared a video",post_theme:currentPostTheme(),media:uploadedPath?{storage_path:uploadedPath,file_name:media!.name,mime_type:media!.file.type}:null})});const data=await response.json();if(!response.ok)throw Error((data.error||"Unable to publish")+(data.code?" (Error "+data.code+")":""));
+ const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:text.trim()||"Shared a video",post_theme:currentPostTheme(),media:uploadedPath?{storage_path:uploadedPath,file_name:media!.name,mime_type:media!.file.type}:null}),signal:AbortSignal.timeout(30000)});const data=await response.json();if(!response.ok)throw Error((data.error||"Unable to publish")+(data.code?" (Error "+data.code+")":""));
  if(data.flagged&&data.removed)throw Error("Your post was removed for review.");sessionStorage.removeItem(draftKey);setText("");setMedia(null);setUploadProgress(null);setConfirm(false);setPostPreviewOpen(false);setPanel("post");setEligible(false);setDaily(false);setNotice("✓ Post published successfully!");window.dispatchEvent(new Event("1muslim:community-post-published"));
- }catch(e){setError(e instanceof Error?e.message:"Unable to publish")}finally{setBusy(false)}};
+ }catch(e){setError(e instanceof Error?e.message:"Unable to publish")}finally{setBusy(false);setUploadProgress(null)}};
  const updateText=(value:string)=>{setText(value);try{sessionStorage.setItem(draftKey,value)}catch{}};
  const youtubePreview=(()=>{const match=text.match(/https?:\/\/[^\s<>]+/i);if(!match)return null;try{const u=new URL(match[0]);const parts=u.pathname.split("/");const id=u.hostname==="youtu.be"?parts[1]:["youtube.com","www.youtube.com","m.youtube.com","youtube-nocookie.com","www.youtube-nocookie.com"].includes(u.hostname)?u.searchParams.get("v")||(["shorts","embed","live"].includes(parts[1])?parts[2]:null):null;return id&&id.length===11&&Array.from(id).every(c=>"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-".includes(c))?{id}:null}catch{return null}})();
  const title={reflection:"A moment of reflection",reminder:"A gentle reminder",verse:"Qur'an reflection",hadith:"Hadith reflection",question:"A question for the Ummah",announcement:"Community announcement"}[template];
