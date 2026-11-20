@@ -652,17 +652,26 @@ const [avatarPage,setAvatarPage]=useState(0);
       <div className="editorIntro"><span className="eyebrow">SOCIAL CONNECTIONS</span><h2>Connect your world.</h2><p>Replace manual social handles with real account connections. Tap a glowing card to open the connector. Your Elmi Light adds a little magic to every tap.</p></div>
       <ProfileTikTokGallery />
       <div className="socialConnectGrid">
-       {(["youtube","twitch"] as const).map(provider=>{const label=provider==="youtube"?"YouTube":"Twitch";const available=false;return <article className="socialConnectCard" key={provider}>
-        <div className="socialParticleField" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{left:(i*29%91+4)+"%",top:(i*37%76+8)+"%",animationDelay:(i*.16)+"s"}}/>)}</div>
-        <div className="socialConnectTop"><span className="eyebrow">{label.toUpperCase()}</span><span className="socialConnectStatus">{"COMING SOON"}</span></div>
-        <div className="socialConnectIcon" aria-hidden="true">{provider==="youtube"?"▶":"◈"}</div>
-        <h3>{label}</h3><p>{"Account authorization will appear here when this connector is ready."}</p>
-        <button type="button" className="socialConnectAction" disabled>✦ Connect · Soon</button>
-       </article>})}
+        {([{name:"YouTube",icon:"▶",caption:"Creator video library"},{name:"Twitch",icon:"◈",caption:"Live streaming account"}] as const).map(service=><article className="socialConnectCard" key={service.name}>
+          <div className="socialConnectTop"><span className="eyebrow">{service.name.toUpperCase()}</span><span className="socialConnectStatus">PLANNED</span></div>
+          <div className="socialConnectMain"><span className="socialConnectIcon" aria-hidden="true">{service.icon}</span><div><h3>{service.name}</h3><p>{service.caption}</p></div></div>
+          <div className="socialConnectFoot"><span>Integration coming soon</span><span aria-hidden="true">↗</span></div>
+        </article>)}
       </div>
-      <p className="socialConnectNote">Connections only show as verified after platform authorization succeeds. These cards do not manually mark an account live.</p>
+      <p className="socialConnectNote">Your connections are private until you authorize them. TikTok videos are shared only when you choose to post.</p>
       <style jsx>{`
-      .socialConnectGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:22px}.socialConnectCard{position:relative;isolation:isolate;overflow:hidden;min-width:0;border:1px solid #68d6c455;border-radius:22px;padding:22px;background:radial-gradient(circle at 50% 20%,#1d3e4c,#0a151c 75%);box-shadow:0 12px 40px #0004}.socialConnectTop{display:flex;justify-content:space-between;gap:10px;position:relative;z-index:1}.socialConnectStatus{font-size:9px;letter-spacing:.12em;color:#a8f4d8}.socialConnectIcon{position:relative;z-index:1;display:grid;place-items:center;width:66px;height:66px;margin:28px auto 12px;border:1px solid #91eddd88;border-radius:21px;background:#142b35;color:#c6fff0;font-size:35px;box-shadow:0 0 25px #5ddcc333}.socialConnectCard h3{position:relative;text-align:center;font-size:21px;margin:0 0 10px}.socialConnectCard p{position:relative;min-height:75px;text-align:center;color:#b9d4d2;font-size:12px;line-height:1.7}.socialConnectAction{position:relative;z-index:1;display:flex;justify-content:center;align-items:center;gap:11px;width:100%;box-sizing:border-box;padding:15px;border:1px solid #8cf9d6;border-radius:999px;background:linear-gradient(100deg,#155457,#14516a);color:#fff;text-decoration:none;font-weight:900;letter-spacing:.03em;cursor:pointer;box-shadow:0 0 16px #55d7cd55;transition:transform .25s,box-shadow .25s}.socialConnectAction:hover{transform:translateY(-3px);box-shadow:0 0 30px #74fff088}.socialConnectAction:disabled{opacity:.45;cursor:not-allowed}.socialActionSpark{font-size:22px;color:#fff5b9;animation:socialPulse 2s ease-in-out infinite}.socialParticleField{position:absolute;inset:0;pointer-events:none}.socialParticleField i{position:absolute;width:3px;height:18px;border-radius:100%;background:linear-gradient(transparent,#85f7ef,#fff1b2,transparent);box-shadow:0 0 9px #74fff0;animation:socialFall 3s ease-in-out infinite}.socialConnectNote{margin-top:18px;color:#a8bcb9;font-size:12px;line-height:1.6}@keyframes socialFall{0%,100%{opacity:0;transform:translateY(-12px)}40%{opacity:.8}85%{opacity:0;transform:translateY(35px)}}@keyframes socialPulse{50%{filter:drop-shadow(0 0 12px #fff1b2);transform:scale(1.18)}}@media(max-width:850px){.socialConnectGrid{grid-template-columns:1fr}.socialConnectCard p{min-height:0}}@media(prefers-reduced-motion:reduce){.socialParticleField i,.socialActionSpark{animation:none}}
+      .socialConnectGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+      .socialConnectCard{position:relative;min-width:0;overflow:hidden;border:1px solid #c8d6dc;border-radius:19px;padding:17px;background:linear-gradient(145deg,#fff,#f0f5f8);color:#1b2c38;box-shadow:0 7px 20px #142c3d0c}
+      .socialConnectTop{display:flex;justify-content:space-between;gap:10px;align-items:center}
+      .socialConnectTop .eyebrow{font-size:10px;letter-spacing:.16em;color:#526875;font-weight:800}
+      .socialConnectStatus{font-size:9px;letter-spacing:.09em;font-weight:800;color:#6d8291;border:1px solid #d7e1e7;border-radius:20px;padding:6px 9px}
+      .socialConnectMain{display:flex;align-items:center;gap:13px;margin:18px 0 20px}
+      .socialConnectIcon{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:#152c39;color:#fff;font-size:24px}
+      .socialConnectCard h3{margin:0;font-size:18px;color:#182c38;font-weight:800}
+      .socialConnectCard p{margin:5px 0 0;color:#60717e;font-size:12px}
+      .socialConnectFoot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e1e8ec;padding-top:12px;font-size:11px;color:#6b7d89;font-weight:650}
+      .socialConnectNote{margin-top:14px;color:#687b83;font-size:12px;line-height:1.6}
+      @media(max-width:580px){.socialConnectGrid{grid-template-columns:1fr}.socialConnectCard{padding:14px}.socialConnectMain{margin:13px 0}}
       `}</style>
     </section>}
     {tab==="shahada"&&<section className="profileEditor">
