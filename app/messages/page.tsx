@@ -5,7 +5,7 @@ import ExpressionKeyboard from "../components/ExpressionKeyboard";
 import HomeMessagesChooser from "../components/HomeMessagesChooser";
 import MessengerDesignDemo from "../messenger-design/MessengerDesignClient";
 import ExpressiveText from "../components/ExpressiveText";
-import { ExpressionCelebration, ExpressionSettings, playExpressionSound } from "../components/ExpressionEffects";
+import { ExpressionCelebration, playExpressionSound } from "../components/ExpressionEffects";
 
 import { createClient } from "../../utils/supabase/client";
 type Thread = { conversation_id:string; user_id:string };
@@ -308,7 +308,7 @@ export default function MessagesPage(){
  <button type="button" className="voiceDiscard" onClick={discardVoice}>✕ <span>Discard</span></button>
  {recording?<button type="button" className="voiceFinish" onClick={()=>void toggleRecord()}>■ Finish</button>:<button type="button" className="voiceSend" disabled={busy} onClick={()=>void sendVoice()}>➤ Send</button>}
  </div></section>}
-{selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&<div className={"omComposerSettings "+(showComposerTools?"omComposerSettings--open":"")}><ExpressionSettings/></div>}
+
  {selected&&status?.request_status==="accepted"&&!blocked.includes(peerId??"")&&<form className="omMessageComposer" onSubmit={send} style={{display:"flex",padding:12,gap:8}}><button type="button" className="omComposerExpand" aria-label="Toggle attachment and sound tools" aria-expanded={showComposerTools} onClick={()=>setShowComposerTools(v=>!v)}>{showComposerTools?<svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg>:<svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 4v16M4 12h16"/></svg>}</button><ExpressionKeyboard onInsert={text=>setDraft(prev=>(prev?prev+" ":"")+text)} /><input ref={messageInput} aria-label="Message" maxLength={4000} value={draft} onChange={e=>{setDraft(e.target.value);if(uid&&typingChannel)void typingChannel.send({type:"broadcast",event:"typing",payload:{user_id:uid,typing:!!e.target.value}})}} placeholder="Write a message…" style={{flex:1,minWidth:0,padding:12,borderRadius:12,color:"#111"}}/><button className="omComposerSend" disabled={busy||!draft.trim()} type="submit" style={{padding:"10px 18px",borderRadius:12}} aria-label="Send message"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="m3 20 18-8L3 4l3 7 8 1-8 1-3 7Z"/></svg><span className="omSendText">Send</span></button></form>}
  </section></div><ExpressionCelebration trigger={expressionEvent} emoji={expressionEmoji}/>{notice&&<p role="status" style={{color:"#a7f3d0"}}>{notice}</p>}{error&&<p role="alert" style={{color:"#f87171"}}>{error}</p>}
 
@@ -448,6 +448,42 @@ export default function MessagesPage(){
 @media(max-width:600px){.omImessagePage .omDmModeControl{align-items:flex-start}.omImessagePage .omDmModeChoices button{padding:6px 8px!important}}
 `}</style>
  <style jsx>{`.voiceStudio{margin:12px 12px 4px;padding:17px;border-radius:23px;border:1px solid #40886a;background:linear-gradient(145deg,#163d30,#0d211d);box-shadow:0 12px 40px #0004;color:#f4fff9}.voiceStudioTop,.voiceStudioBottom{display:flex;align-items:center;justify-content:space-between;gap:10px}.voiceStudioTop strong{font-size:15px}.voiceStudioTop small{display:block;font-size:11px;color:#aac9b9;margin-top:3px}.voiceStudioTop>span{font-size:10px;font-weight:800;letter-spacing:.08em;color:#b6efc8}.voiceStudioTop .voiceLive{color:#ff9ca6;animation:voicePulse 1.2s infinite}.voiceStudioWave{height:70px;display:flex;align-items:center;justify-content:center;gap:3px;margin:8px 0}.voiceStudioWave i{display:block;flex:1;max-width:6px;min-width:2px;background:linear-gradient(#8ff3bd,#2fa879);border-radius:9px;transition:height .12s}.voiceStudioBottom{justify-content:flex-start;flex-wrap:wrap}.voiceStudioBottom button{border:1px solid #ffffff35;border-radius:99px;padding:10px 13px;color:#e9fff1;background:#ffffff15;cursor:pointer;font-weight:700}.voiceStudioBottom .voiceCircle{background:#b8f6ce;color:#0b2519;border:0;width:43px;height:43px}.voiceStudioBottom .voiceSend{background:#52d68c;color:#062112;border:0}.voiceStudioBottom .voiceDiscard{color:#ffbbc2}.voiceTime{font-variant-numeric:tabular-nums;font-weight:800;font-size:14px}.voiceSeek{flex:1;min-width:65px;accent-color:#70e5a2}.voiceLaunch{border-radius:999px;padding:9px 13px;background:#205d42;color:#e5ffec;border:1px solid #479c6c;cursor:pointer}.voiceSpeed{white-space:nowrap}@keyframes voicePulse{50%{opacity:.4}}@media(max-width:600px){main>div{grid-template-columns:1fr!important}aside{border-right:0!important;border-bottom:1px solid #64748b55}}`}</style>
+<style jsx global>{`
+/* Voice note: compact, single-surface recorder. No effects or sounds settings. */
+.omImessagePage .voiceStudio{
+ position:relative!important;flex:0 0 auto!important;
+ margin:8px 12px 6px!important;padding:16px!important;
+ border:1px solid #dce9e3!important;border-radius:20px!important;
+ background:#f7fbf9!important;color:#173c31!important;
+ box-shadow:0 8px 28px rgba(20,54,43,.08)!important;
+}
+.omImessagePage .voiceStudioTop{gap:10px!important}
+.omImessagePage .voiceStudioTop strong{font-size:15px!important;letter-spacing:-.02em}
+.omImessagePage .voiceStudioTop small{color:#71887e!important;font-size:12px!important}
+.omImessagePage .voiceStudioTop>span{color:#21835d!important;font-size:10px!important}
+.omImessagePage .voiceStudioTop .voiceLive{color:#d44858!important}
+.omImessagePage .voiceStudioWave{height:54px!important;gap:3px!important;margin:12px 0!important;overflow:hidden}
+.omImessagePage .voiceStudioWave i{background:#4eaa86!important;max-width:5px!important;min-width:2px!important;opacity:.86}
+.omImessagePage .voiceStudioBottom{display:flex!important;align-items:center!important;gap:9px!important;flex-wrap:wrap!important}
+.omImessagePage .voiceStudioBottom button{min-height:38px!important;border-radius:999px!important;padding:8px 12px!important;background:#e8f1ec!important;color:#235742!important;border:1px solid #d3e4da!important;font-size:13px!important}
+.omImessagePage .voiceStudioBottom .voiceCircle{width:42px!important;height:42px!important;flex:0 0 42px!important;background:#1d654b!important;color:#fff!important;border:0!important;font-size:18px!important}
+.omImessagePage .voiceStudioBottom .voiceSeek{flex:1 1 80px!important;min-width:55px!important;accent-color:#1d7656!important}
+.omImessagePage .voiceStudioBottom .voiceTime{font-size:13px!important;color:#315c4c!important}
+.omImessagePage .voiceStudioBottom .voiceDiscard{background:transparent!important;color:#ad4955!important;border:0!important}
+.omImessagePage .voiceStudioBottom .voiceSend{background:#147b55!important;color:#fff!important;border:0!important;margin-left:auto!important}
+.omImessagePage .voiceStudioBottom .voiceFinish{background:#1e6550!important;color:#fff!important;border:0!important;margin-left:auto!important}
+.omImessagePage .voiceStudioBottom button:focus-visible{outline:2px solid #147b55!important;outline-offset:2px!important}
+.omImessagePage.omMessengerNight .voiceStudio{background:#14231f!important;border-color:#2e5142!important;color:#e8f8f0!important}
+.omImessagePage.omMessengerNight .voiceStudioTop small{color:#9fb9ab!important}
+.omImessagePage.omMessengerNight .voiceStudioBottom .voiceTime{color:#c5e2d3!important}
+@media(max-width:600px){
+ .omImessagePage .voiceStudio{padding:13px!important;margin:6px 9px!important;border-radius:16px!important}
+ .omImessagePage .voiceStudioWave{height:42px!important;margin:8px 0!important}
+ .omImessagePage .voiceStudioBottom{gap:6px!important}
+ .omImessagePage .voiceStudioBottom .voiceDiscard{margin-left:auto!important}
+ .omImessagePage .voiceStudioBottom .voiceSend{margin-left:0!important}
+}
+`}</style>
 <style jsx global>{`/* Messenger cinematic glass theme — last-in-cascade overrides */
 .omImessagePage{--im-blue:#a780ff!important;max-width:1280px!important;margin:0 auto!important;padding:14px 12px 24px!important;isolation:isolate}
 .omImessagePage .omMessengerHeading{font-size:clamp(28px,4vw,40px)!important;color:#fff;text-shadow:0 2px 20px #9665ff50}
