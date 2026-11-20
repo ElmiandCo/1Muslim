@@ -54,7 +54,7 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
   .on("postgres_changes",{event:"*",schema:"public",table:"dm_calls",filter:"conversation_id=eq."+conversationId},()=>void poll())
   .subscribe();
  return()=>{alive=false;window.removeEventListener("focus",onFocus);void supabase.removeChannel(channel);clearInterval(timer);room.current?.disconnect();room.current=null}},[conversationId]);
- const start=async(mode:"audio"|"video")=>{setError("");try{await request({action:"invite",mode});const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId));const d=await r.json();setCall(d.call??null)}catch(e){setError(e instanceof Error?e.message:"Could not call")}};
+ const start=async(mode:"audio"|"video")=>{setError("");try{if(!ringAudio.current)ringAudio.current=new AudioContext();void ringAudio.current.resume();await request({action:"invite",mode});const r=await fetch("/api/dm-calls?conversationId="+encodeURIComponent(conversationId));const d=await r.json();setCall(d.call??null)}catch(e){setError(e instanceof Error?e.message:"Could not call")}};
  useEffect(()=>{const onStart=(event:Event)=>{const mode=(event as CustomEvent<"audio"|"video">).detail;if(mode!=="audio"&&mode!=="video")return;if(callRef.current||serviceUnavailable)return;void start(mode)};window.addEventListener("1muslim:start-call",onStart);return()=>window.removeEventListener("1muslim:start-call",onStart)},[conversationId,serviceUnavailable]);
  const autoMinimized=useRef(false);
  useEffect(()=>{if(!autoStartMode||phase!=="connected"||autoMinimized.current)return;autoMinimized.current=true;const timer=window.setTimeout(()=>setMinimized(true),1200);return()=>window.clearTimeout(timer)},[autoStartMode,phase]);
@@ -103,6 +103,18 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  useEffect(()=>()=>speechRef.current?.stop(),[]);
  const incoming=call?.status==="ringing"&&call.callee_id===userId;
  const outgoing=call?.status==="ringing"&&call.caller_id===userId;
+ const ringAudio=useRef<AudioContext|null>(null);
+ const ringTimer=useRef<ReturnType<typeof setInterval>|null>(null);
+ const stopRinging=()=>{if(ringTimer.current){clearInterval(ringTimer.current);ringTimer.current=null}if(ringAudio.current){void ringAudio.current.close();ringAudio.current=null}};
+ const playRingTone=()=>{const ctx=ringAudio.current;if(!ctx||ctx.state!=="running")return;const now=ctx.currentTime;
+  for(const [offset,hz] of [[0,440],[.23,480],[.46,440],[.69,480]] as const){const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type="sine";osc.frequency.value=hz;gain.gain.setValueAtTime(0,now+offset);gain.gain.linearRampToValueAtTime(.09,now+offset+.015);gain.gain.setValueAtTime(.09,now+offset+.16);gain.gain.linearRampToValueAtTime(0,now+offset+.2);osc.connect(gain);gain.connect(ctx.destination);osc.start(now+offset);osc.stop(now+offset+.21)}
+ };
+ useEffect(()=>{if(call?.status!=="ringing"||phase==="connected"){stopRinging();return}
+  if(!ringAudio.current){try{ringAudio.current=new AudioContext()}catch{return}}
+  const ctx=ringAudio.current;
+  void ctx.resume().then(()=>{if(ctx.state==="running"){playRingTone();ringTimer.current=setInterval(playRingTone,3200)}}).catch(()=>{});
+  return()=>stopRinging();
+ },[call?.id,call?.status,phase]);
  const [elapsed,setElapsed]=useState(0);
  useEffect(()=>{if(phase!=="connected"||call?.mode!=="audio")return;const r=room.current;if(!r)return;const tick=()=>{const participant=Array.from(r.remoteParticipants.values())[0];setAudioLevel(participant?.audioLevel??0)};tick();const t=setInterval(tick,120);return()=>clearInterval(t)},[phase,call?.mode]);
  const flip=async()=>{const r=room.current;if(!r||flipping)return;setFlipping(true);try{const pub=Array.from(r.localParticipant.videoTrackPublications.values())[0];const track=pub?.track;if(!track)throw Error("Camera unavailable");const current=track.mediaStreamTrack.getSettings().facingMode;await track.restartTrack({facingMode:current==="environment"?"user":"environment"});if(local.current)track.attach(local.current)}catch(e){setError(e instanceof Error?e.message:"Camera flip unavailable")}finally{setFlipping(false)}};
@@ -172,6 +184,24 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  .mc-screen--mini .mc-quranShortcut{position:absolute;bottom:8px;left:8px;z-index:10;border:1px solid #ffffff4d;background:#073b2cdd;color:#fff;padding:8px;border-radius:999px;font-size:10px;font-weight:700}
  @keyframes mcShrink{from{opacity:.7;transform:scale(1.07)}to{opacity:1;transform:scale(1)}}
  @media(prefers-reduced-motion:reduce){.mc-screen--mini{animation:none}}
+
+ /* Native-inspired full-screen call surface; mini-player remains unchanged. */
+ .mc-screen:not(.mc-screen--mini){background:#08090b}
+ .mc-screen:not(.mc-screen--mini) .mc-shell{background:#0c0d10;padding:calc(env(safe-area-inset-top) + 28px) 24px calc(env(safe-area-inset-bottom) + 28px)}
+ .mc-screen:not(.mc-screen--mini) .mc-shell:before{inset:0;background:radial-gradient(ellipse at 50% 42%,#25282a 0%,#111315 38%,#090a0c 76%);filter:none}
+ .mc-screen:not(.mc-screen--mini) .mc-header{justify-content:space-between}
+ .mc-screen:not(.mc-screen--mini) .mc-brand{font-size:11px;letter-spacing:.12em;color:#a4ada9}
+ .mc-screen:not(.mc-screen--mini) .mc-brand>span:first-child{background:#1d2522!important;color:#c6f4d6!important;box-shadow:none!important}
+ .mc-screen:not(.mc-screen--mini) .mc-private{background:#ffffff0d;border-color:#ffffff18;color:#c5cbc8}
+ .mc-screen:not(.mc-screen--mini) .mc-center{position:absolute;top:24%;left:0;right:0;gap:10px;display:flex;flex-direction:column-reverse}
+ .mc-screen:not(.mc-screen--mini) .mc-name{font-size:clamp(28px,6vw,36px)!important;letter-spacing:-.03em!important;font-weight:650;margin:0}
+ .mc-screen:not(.mc-screen--mini) .mc-state{font-size:15px!important;color:#a4aaa9!important;margin:0 0 26px}
+ .mc-screen:not(.mc-screen--mini) .mc-ring{width:min(42vw,190px);height:min(42vw,190px);border:0;box-shadow:none;animation:none;margin-top:44px}
+ .mc-screen:not(.mc-screen--mini) .mc-avatar{width:100%;height:100%;border:2px solid #ffffff25;box-shadow:0 12px 40px #0007}
+ .mc-screen:not(.mc-screen--mini) .mc-controls{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 20px);left:20px;right:20px;background:#242527!important;border:1px solid #ffffff0e;border-radius:32px;padding:22px 16px!important;box-shadow:0 15px 45px #0006}
+ .mc-screen:not(.mc-screen--mini) .mc-control button{border-radius:50%!important;box-shadow:none!important}
+ .mc-screen:not(.mc-screen--mini) .mc-end{background:#e0003b!important;color:#fff!important}
+ @media(max-height:690px){.mc-screen:not(.mc-screen--mini) .mc-center{top:17%}.mc-screen:not(.mc-screen--mini) .mc-ring{width:125px;height:125px;margin-top:18px}}
  .mc-screen{position:fixed;inset:0;z-index:15000;background:#090d13;color:#fff;display:flex;align-items:center;justify-content:center;font-family:inherit}
  .mc-shell{position:relative;width:100%;height:100%;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 50% 34%,#244b47,#111e29 56%,#070d14);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 26px) 18px calc(env(safe-area-inset-bottom) + 26px);box-sizing:border-box}
  .mc-shell:before{content:"";position:absolute;inset:-25%;z-index:-1;background:radial-gradient(circle at 15% 25%,#67e8a31e,transparent 30%),radial-gradient(circle at 85% 80%,#b3c7ff1c,transparent 33%);filter:blur(35px)}
@@ -197,12 +227,12 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  {call&&<div ref={miniPanel} className={"mc-screen "+(minimized?"mc-screen--mini":"")} style={minimized&&miniPosition?{left:miniPosition.x,top:miniPosition.y,right:"auto",bottom:"auto"}:undefined} role="dialog" aria-modal={!minimized} aria-label="1Muslim Messenger call"><div className="mc-shell">
  {!introFinished&&phase!=="idle"&&<video className="mc-intro mc-intro-overlay" src="/videos/prelive-intro.mp4" autoPlay muted playsInline onEnded={()=>setIntroFinished(true)} onError={()=>setIntroFinished(true)}/>}
  {phase==="connected"&&(call.mode==="video"||remoteScreen)&&<div className="mc-stage"><video ref={remote} className="mc-remote" autoPlay playsInline style={{display:remoteScreen||remoteCameraOff?"none":"block"}}/>{remoteCameraOff&&!remoteScreen&&<div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",background:"#071711"}}><div style={{width:"min(62vw,270px)",aspectRatio:"1",borderRadius:"50%",overflow:"hidden",boxShadow:"0 0 50px #3ba66a33"}}>{avatarView}</div></div>}<video ref={screenVideo} autoPlay playsInline style={{display:remoteScreen?"block":"none",width:"100%",height:"100%",objectFit:"contain",background:"#050c0a"}}/><video ref={local} className="mc-self" autoPlay muted playsInline/>{cameraEffects&&<div className={"mc-camera-effects "+cameraEffect} aria-hidden="true">{cameraEffect==="stars"&&Array.from({length:15},(_,i)=><i key={i} style={{["--i" as string]:i} as React.CSSProperties}/>)}</div>}<button type="button" className="mc-effect-badge" onClick={()=>setCameraEffect(v=>v==="glow"?"stars":v==="stars"?"soft":"glow")} aria-label="Change camera overlay effect">✨ {cameraEffects?cameraEffect:"Effects off"}</button></div>}
- <div className="mc-header" onPointerDown={onMiniPointerDown} onPointerMove={onMiniPointerMove} onPointerUp={onMiniPointerUp} onPointerCancel={onMiniPointerUp} aria-label={minimized?"Drag to move minimized call":undefined}><span className="mc-brand" style={{display:"flex",alignItems:"center",gap:9}}><span style={{width:32,height:32,borderRadius:12,display:"grid",placeItems:"center",background:"linear-gradient(140deg,#edc66d,#8c5a20)",color:"#101522",fontSize:22,fontWeight:900,boxShadow:"0 0 18px #e4b45555"}}>1</span>1MUSLIM <span style={{color:"#a8ebc3"}}>MESSENGER</span></span><div className="mc-headerActions">{phase==="connected"&&<button type="button" className="mc-minimize" onClick={()=>setMinimized(v=>!v)} aria-label={minimized?"Expand call":"Minimize call"}>{minimized?"⤢":"↙"}</button>}<span className="mc-private">🔒 Private {call.mode==="video"?"video":"audio"} call</span></div></div>
+ <div className="mc-header" onPointerDown={onMiniPointerDown} onPointerMove={onMiniPointerMove} onPointerUp={onMiniPointerUp} onPointerCancel={onMiniPointerUp} aria-label={minimized?"Drag to move minimized call":undefined}><span className="mc-brand" style={{display:"flex",alignItems:"center",gap:9}}><span style={{width:32,height:32,borderRadius:12,display:"grid",placeItems:"center",background:"linear-gradient(140deg,#edc66d,#8c5a20)",color:"#101522",fontSize:22,fontWeight:900,boxShadow:"0 0 18px #e4b45555"}}>1</span>1MUSLIM <span style={{color:"#a8ebc3"}}>MESSENGER</span></span><div className="mc-headerActions">{phase==="connected"&&<button type="button" className="mc-minimize" onClick={()=>setMinimized(v=>!v)} aria-label={minimized?"Expand call":"Minimize call"}>{minimized?"⤢":"↙"}</button>}<span className="mc-private">🔒 Private call</span></div></div>
  <div className="mc-center">
- {phase==="intro"&&<div className="mc-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>}
+ 
   {phase!=="connected"&&<div className="mc-ring"><div className="mc-avatar">{avatarView}</div></div>}
   {phase==="connected"&&call.mode==="audio"&&<div className="mc-ring" style={{transform:`scale(${1+Math.min(.15,audioLevel*.25)})`,boxShadow:`0 0 ${30+audioLevel*95}px #6af3b4a8`}}><div className="mc-avatar">{avatarView}</div></div>}
- {(phase!=="connected"||call.mode==="audio")&&<><h2 className="mc-name">{peerName}</h2><p className="mc-state">{incoming?"Incoming "+call.mode+" call":outgoing?"Ringing…":phase==="intro"?"Connecting securely…":duration}</p></>}
+ {(phase!=="connected"||call.mode==="audio")&&<><h2 className="mc-name">{peerName}</h2><p className="mc-state">{incoming?"Incoming "+call.mode+" call":outgoing?"Ringing…":phase==="intro"?"Connecting…":duration}</p></>}
  {phase==="connected"&&call.mode==="video"&&<p className="mc-state" style={{background:"#0008",borderRadius:20,padding:"7px 16px"}}>{peerName} · {duration}</p>}
  </div>
  <audio ref={remoteAudio} autoPlay/><audio ref={remoteScreenAudio} autoPlay/>
