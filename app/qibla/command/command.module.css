@@ -62,3 +62,8 @@
 .aiActions button:hover{transform:translateY(-2px)}.aiActions button:disabled{opacity:.6;cursor:wait}
 .magazineGenerate{background:linear-gradient(135deg,#44243c,#96546e)}.newsGenerate{background:linear-gradient(135deg,#143650,#39718d)}
 @media(max-width:640px){.avatarBack span{display:none}.avatarBack img{height:45px;width:45px}.aiPanel{margin:12px 10px;padding:16px}.aiActions{grid-template-columns:1fr}.aiActions button{min-height:65px}.nav{padding:10px 14px!important;gap:8px!important}.nav strong{font-size:10px;letter-spacing:.09em}}
+
+.aiSubjectLabel{display:block;margin:16px 0 7px;font-size:12px;letter-spacing:.05em;font-weight:800;color:#29445c}.aiSubjectLabel span{font-weight:400;color:#768898}
+.aiSubject{display:block;width:100%;max-width:760px;box-sizing:border-box;resize:vertical;border:1px solid #c6d5df;border-radius:12px;padding:12px 14px;background:#fff;color:#18364f;font:inherit;font-size:14px;line-height:1.5;outline-offset:3px}
+.aiSubject:focus{border-color:#3d7496;box-shadow:0 0 0 3px #3876a21b}
+.aiImageOption{display:flex;align-items:center;gap:9px;margin-top:12px;color:#3a5266;font-size:13px;cursor:pointer}.aiImageOption input{width:17px;height:17px;accent-color:#214c70}
