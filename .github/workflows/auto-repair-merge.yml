@@ -1,0 +1,66 @@
+name: Auto Repair and Merge
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Existing PR number'
+        required: true
+        type: number
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+
+concurrency:
+  group: auto-repair-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  repair-and-merge:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.draft == false)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+      REPOSITORY: ${{ github.repository }}
+    steps:
+      - name: Checkout base for trusted automation script
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+          fetch-depth: 0
+      - name: Resolve PR and enforce same-repository policy
+        id: pr
+        run: |
+          gh api "repos/$REPOSITORY/pulls/$PR_NUMBER" > /tmp/auto-pr.json
+          test "$(jq -r '.head.repo.full_name' /tmp/auto-pr.json)" = "$REPOSITORY"
+          test "$(jq -r '.base.ref' /tmp/auto-pr.json)" = main
+          test "$(jq -r '.draft' /tmp/auto-pr.json)" = false
+          echo "branch=$(jq -r '.head.ref' /tmp/auto-pr.json)" >> "$GITHUB_OUTPUT"
+      - name: Checkout PR
+        run: |
+          git fetch origin "${{ steps.pr.outputs.branch }}"
+          git checkout -B "${{ steps.pr.outputs.branch }}" FETCH_HEAD
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Build, optionally repair and retry
+        run: node scripts/auto-repair-pr.mjs
+      - name: Wait for external preview checks and merge
+        env:
+          PR_BRANCH: ${{ steps.pr.outputs.branch }}
+        run: |
+          # Avoid merging while Vercel/other required checks are pending.
+          # GitHub branch protection and required checks remain authoritative.
+          gh pr merge "$PR_NUMBER" --repo "$REPOSITORY" --auto --squash --delete-branch
