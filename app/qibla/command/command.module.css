@@ -67,3 +67,8 @@
 .aiSubject{display:block;width:100%;max-width:760px;box-sizing:border-box;resize:vertical;border:1px solid #c6d5df;border-radius:12px;padding:12px 14px;background:#fff;color:#18364f;font:inherit;font-size:14px;line-height:1.5;outline-offset:3px}
 .aiSubject:focus{border-color:#3d7496;box-shadow:0 0 0 3px #3876a21b}
 .aiImageOption{display:flex;align-items:center;gap:9px;margin-top:12px;color:#3a5266;font-size:13px;cursor:pointer}.aiImageOption input{width:17px;height:17px;accent-color:#214c70}
+
+/* Match the circular 1Muslim avatar used on the Qibla homepage; never frame it in a white tile. */
+.avatarBack{flex:0 0 auto!important;min-width:0!important;width:auto!important;height:auto!important;min-height:0!important;padding:0!important;border:0!important;border-radius:50%!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+.avatarBack img{display:block!important;width:60px!important;height:60px!important;min-width:60px!important;object-fit:cover!important;border:2px solid #50aee4!important;border-radius:50%!important;background:#071522!important;box-shadow:0 0 0 3px #d2eaf455,0 5px 18px #174e8060!important}
+@media(max-width:650px){.avatarBack>span{display:none!important}.avatarBack img{width:60px!important;height:60px!important}}
