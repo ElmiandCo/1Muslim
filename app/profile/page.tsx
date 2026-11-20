@@ -174,7 +174,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
   <header className="profileProfessionalCard profileProfessionalHeader">
    <div className="profileProfessionalCover" style={{backgroundImage:`url("${coverUrl}")`}}><span className="profileCoverBrand">1Muslim</span></div>
    <div className="profileProfessionalIdentity">
-    <img className="profileProfessionalAvatar" src={avatar} alt={isOwner?"Your profile avatar":`${profile.display_name||profile.username||"Member"} profile avatar`}/>
+    <img className="profileProfessionalAvatar" src={avatar} alt={isOwner?"Your profile avatar — tap to edit":`${profile.display_name||profile.username||"Member"} profile avatar`} role={isOwner?"button":undefined} tabIndex={isOwner?0:undefined} title={isOwner?"Change your avatar":undefined} style={isOwner?{cursor:"pointer"}:undefined} onClick={isOwner?()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"avatar"}})):undefined} onKeyDown={isOwner?e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"avatar"}}))}}:undefined}/>
     {isOwner&&<button className="profileProfessionalEdit" type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"header"}}))} aria-label="Edit cover photo" title="Edit cover photo">✎</button>}
     <h1>{profile.display_name||"1Muslim Member"}</h1>
     <p className="profileProfessionalHandle">@{brandedHandle(profile.username)} · {profile.xp_total.toLocaleString()} XP</p>
