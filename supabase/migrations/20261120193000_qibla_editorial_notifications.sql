@@ -22,11 +22,11 @@ begin
        union
        select id from auth.users where lower(email)='hudhudbyelmi@gmail.com' and id<>new.author_id
      loop
-       if not exists(select 1 from public.notification_preferences where user_id=v_recipient and in_app_enabled=false) then
-         insert into public.notifications(recipient_id,actor_id,type,title,body,entity_type,entity_id)
-         values(v_recipient,new.author_id,'qibla_submission_review','📝 New Qibla article awaiting review',
+       if exists(select 1 from public.profiles where id=v_recipient) then
+         insert into public.notifications(recipient_id,actor_id,type,title,body,entity_type,entity_id,metadata)
+         values(v_recipient,null,'system','📝 New Qibla article awaiting review',
            'A '||case when new.kind='newsletter' then 'Newsletter' else 'Magazine' end||' submission is ready: '||left(new.title,180),
-           'qibla_submission',new.id);
+           'qibla_submission',new.id,jsonb_build_object('qibla_event','qibla_submission_review'));
        end if;
      end loop;
      return new;
@@ -46,9 +46,9 @@ begin
      if length(trim(coalesce(new.review_note,'')))>0 then v_body:=v_body||' Feedback: '||left(new.review_note,350);end if;
    else return new;end if;
  else return new;end if;
- if v_recipient is not null and not exists(select 1 from public.notification_preferences where user_id=v_recipient and in_app_enabled=false) then
-   insert into public.notifications(recipient_id,actor_id,type,title,body,entity_type,entity_id)
-   values(v_recipient,v_actor,v_type,v_title,v_body,v_entity,new.id);
+ if v_recipient is not null and exists(select 1 from public.profiles where id=v_recipient) then
+   insert into public.notifications(recipient_id,actor_id,type,title,body,entity_type,entity_id,metadata)
+   values(v_recipient,null,'system',v_title,v_body,v_entity,new.id,jsonb_build_object('qibla_event',v_type));
  end if;
  return new;
 end $$;
