@@ -49,15 +49,8 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/sitemap") || pathname.startsWith("/.well-known/") ||
     /\\.[a-z0-9]{2,6}$/i.test(pathname);
   if (!guestAllowed) {
-    // A slow Supabase auth check is not proof the user signed out.
-    // Keep the page reachable during transient network/auth latency; protected
-    // data and mutations must still enforce their own server-side authorization.
-    const authResult = await Promise.race([
-      supabase.auth.getUser().then(({data,error})=>error?("unavailable" as const):data.user).catch(()=>"unavailable" as const),
-      new Promise<"unavailable">(resolve=>setTimeout(()=>resolve("unavailable"),3500))
-    ]);
-    if (authResult === "unavailable") return supabaseResponse;
-    if (!authResult) {
+    const user = await Promise.race([supabase.auth.getUser().then(({data})=>data.user).catch(()=>null),new Promise<null>(resolve=>setTimeout(()=>resolve(null),3500))]);
+    if (!user) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/auth";
       loginUrl.search = "";
