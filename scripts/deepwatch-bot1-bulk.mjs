@@ -26,15 +26,13 @@ const registry=new Set(),queue=new Set(),dw=new Set();
 for(let i=0;i<list.length;i+=80){
  const chunk=list.slice(i,i+80);
  const filter=chunk.map(x=>'"'+x+'"').join(',');
- for(const [table,column,set] of [['islamic_video_registry','video_id',registry],['dw_videos','youtube_id',dw]]){
+ for(const [table,column,set] of [['islamic_video_registry','video_id',registry],['dw_videos','provider_video_id',dw]]){
   try{const rows=await db(table+'?select='+column+'&'+column+'=in.('+filter+')');for(const row of rows)set.add(row[column])}
   catch(e){counts.errors.push('Dedup '+table+': '+String(e));throw e}
  }
- const sources=chunk.map(id=>encodeURIComponent('https://www.youtube.com/watch?v='+id)).join(',');
- // Acquisition queue has no unique video ID; use existing source URLs for dedup.
- try{const rows=await db('deepwatch_movie_acquisition_queue?select=source_url&source_url=in.('+sources+')');for(const row of rows){const id=new URL(row.source_url).searchParams.get('v');if(id)queue.add(id)}}
- catch(e){counts.errors.push('Dedup queue: '+String(e));throw e}
+
 }
+const acquisition=await db('deepwatch_movie_acquisition_queue?select=source_url&limit=10000');for(const row of acquisition){try{const id=new URL(row.source_url).searchParams.get('v');if(id)queue.add(id)}catch{}}
 const existing=new Set([...registry,...queue,...dw]);
 const candidates=list.filter(id=>!existing.has(id));counts.duplicates=list.length-candidates.length;
 for(let i=0;i<candidates.length&&counts.inserted<limit;i+=50){
