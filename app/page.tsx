@@ -73,7 +73,7 @@ const spaces=[
  {name:"Prayer Times",arabic:"الصلاة",symbol:"☪",image:"",href:"/widget-tools/prayer",cls:"quran"},
  {name:"Dhikr",arabic:"الذكر",symbol:"۞",image:"",href:"/widget-tools/dhikr",cls:"quran"},
  {name:"XP & Progress",arabic:"التقدم",symbol:"✧",image:"",href:"/widget-tools/progress",cls:"lesson"},
- {name:"Notifications",arabic:"الإشعارات",symbol:"♧",image:"",href:"/widget-tools/notifications",cls:"message"},
+ {name:"Notifications",arabic:"الإشعارات",symbol:"♧",image:"",href:"/notifications",cls:"message"},
  {name:"1Muslim Shop",arabic:"المتجر",symbol:"✦",image:"",href:"#",cls:"quran"},
  {name:"Quick Post",arabic:"انشر الآن",symbol:"✎",image:"",href:"#",cls:"message"}
 ];
@@ -892,7 +892,7 @@ const navCollapsedRef=useRef(false);
 </div><p style={{margin:"8px 0",opacity:.8}}>{profile2Data?.bio||"No bio added yet."}</p>{profile2Data?.favoriteVerse&&<div style={{margin:"12px 0 0",padding:"12px 14px",border:"1px solid var(--p2-line)",borderRadius:12}}><strong>Favorite Verse · Quran ({profile2Data.favoriteVerse.chapter}: {profile2Data.favoriteVerse.verse})</strong><p dir="rtl" lang="ar" style={{fontSize:19,lineHeight:1.9,margin:"8px 0"}}>{profile2Data.favoriteVerse.arabic}</p><p style={{fontSize:13,lineHeight:1.5,margin:0}}>“{profile2Data.favoriteVerse.translation}”</p></div>}
 </div>
 <div className="p2Tabs" role="tablist" aria-label="Profile sections" style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:6}}>
-{[["▦","Posts & Videos","All","Videos"],["♡","Likes & Notifications","Likes","Notifications"],["⚙","Settings","Settings","Settings"]].map(([icon,label,first,second])=><button key={label} type="button" role="tab" aria-selected={profilePreviewTab===first||profilePreviewTab===second} className="p2Tab" onClick={()=>setProfilePreviewTab(first)}><span aria-hidden="true" style={{fontSize:19,flexShrink:0}}>{icon}</span><span style={{fontSize:"clamp(11px,1.5vw,14px)",fontWeight:650}}>{label}</span><span aria-hidden="true" style={{marginLeft:"auto",opacity:.5}}>›</span></button>)}
+{[["▦","Posts & Videos","All","Videos"],["♡","Likes & Notifications","Likes","Notifications"],["⚙","Settings","Settings","Settings"]].map(([icon,label,first,second])=><button key={label} type="button" role="tab" aria-selected={profilePreviewTab===first||profilePreviewTab===second} className="p2Tab" onClick={()=>first==="Notifications"?window.location.assign("/notifications"):setProfilePreviewTab(first)}><span aria-hidden="true" style={{fontSize:19,flexShrink:0}}>{icon}</span><span style={{fontSize:"clamp(11px,1.5vw,14px)",fontWeight:650}}>{label}</span><span aria-hidden="true" style={{marginLeft:"auto",opacity:.5}}>›</span></button>)}
 </div>
 <div role="tabpanel" aria-label={profilePreviewTab} className="p2Card" style={{padding:"clamp(12px,2vw,22px)",flex:"1 0 auto"}}>
 {!["Settings","All","Posts","Videos"].includes(profilePreviewTab)&&<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:14}}><h3 style={{margin:0,fontSize:20}}>{profilePreviewTab}</h3></div>}
