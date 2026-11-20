@@ -197,7 +197,8 @@ export default function OnboardingPage() {
       const { data: { user } } = await s.auth.getUser();
       if (!user) { const method=new URLSearchParams(window.location.search).get("method");router.replace("/auth?shahada=1&method="+(method==="declaration"?"declaration":"audio")); return; }
       const { data: p } = await s.from("profiles").select("gender,shahada_verified_at,shahada_language").eq("id", user.id).single();
-      if (p?.gender && p?.shahada_verified_at) { router.replace("/"); return; }
+      if(p?.gender==="male"||p?.gender==="female")setGender(p.gender);
+      if (p?.gender && p?.shahada_verified_at) { router.replace(new URLSearchParams(window.location.search).get("return")==="profile"?"/profile":"/"); return; }
       if (p?.shahada_verified_at) setStep("gender");
       if (p?.shahada_language === "en" || p?.shahada_language === "ar") setLanguage(p.shahada_language);
       setChecking(false);
@@ -395,7 +396,7 @@ export default function OnboardingPage() {
     });
     if (badgeError) { setMessage("Your Shahada was saved, but the badge could not be awarded. Please try again."); setSaving(false); return; }
     try { sessionStorage.setItem("1muslim:shahada-welcome", "yes"); } catch {}
-    router.replace("/");
+    router.replace(new URLSearchParams(window.location.search).get("return")==="profile"?"/profile":"/");
   };
 
   if (checking) return <main className="onboardingPage"><FirstVisitGuide area="shahada"/><section className="onboardingCard"><span className="eyebrow">1MUSLIM</span><h1>Preparing your profile…</h1></section></main>;
