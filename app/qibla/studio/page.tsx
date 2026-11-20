@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {useCallback,useEffect,useState} from "react";
 import {createClient} from "../../../utils/supabase/client";
 import EditorialApplication from "./EditorialApplication";
@@ -9,6 +10,7 @@ type Status="draft"|"submitted"|"changes_requested"|"approved"|"published"|"reje
 type Item={id:string;title:string;kind:"article"|"newsletter";subtitle:string;body:string;cover_url:string;status:Status;review_note:string;updated_at:string};
 const empty={title:"",kind:"article" as const,subtitle:"",body:"",cover_url:""};
 export default function QiblaStudio(){
+ const router=useRouter();
  const [accessChecked,setAccessChecked]=useState(false),[authorized,setAuthorized]=useState(false);
  const [user,setUser]=useState<string|null>(null),[admin,setAdmin]=useState(false),[items,setItems]=useState<Item[]>([]),[tab,setTab]=useState<"write"|"approvals">("write"),[active,setActive]=useState<string|null>(null);
  const [form,setForm]=useState<{title:string;kind:"article"|"newsletter";subtitle:string;body:string;cover_url:string}>(empty);
@@ -25,7 +27,7 @@ export default function QiblaStudio(){
  const review=async(id:string,action:"approved"|"changes_requested"|"rejected"|"publish")=>{setBusy(true);setMessage("");const db=createClient();const {error}=action==="publish"?await db.rpc("qibla_publish_submission",{p_id:id}):await db.rpc("qibla_review_submission",{p_id:id,p_action:action,p_note:note});setBusy(false);setMessage(error?error.message:action==="publish"?"Published to 1Qibla.":"Review saved.");if(!error){setNote("");await refresh()}};
  const uploadImage=async(file:File,target:"cover"|number)=>{if(!editable||uploading)return;if(!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)){setMessage("Choose a JPEG, PNG, WebP or GIF image.");return}if(file.size>15*1024*1024){setMessage("Images must be 15 MB or smaller.");return}setUploading(target==="cover"?"cover":String(target));setMessage("");try{const db=createClient();const {data:{user:u},error:authError}=await db.auth.getUser();if(authError||!u)throw Error("Sign in before uploading.");const extension=({ "image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif"} as Record<string,string>)[file.type];const key=`${u.id}/qibla-${Date.now()}-${crypto.randomUUID()}.${extension}`;const {error}=await db.storage.from("qibla-editorial-media").upload(key,file,{contentType:file.type,upsert:false,cacheControl:"3600"});if(error)throw error;const {data}=db.storage.from("qibla-editorial-media").getPublicUrl(key);if(target==="cover")setForm(v=>({...v,cover_url:data.publicUrl}));else setDesign(d=>({...d,media:d.media.map((m,i)=>i===target?{...m,url:data.publicUrl,type:"image"}:m)}));setMessage("Image uploaded successfully. Save your draft to keep it in the article.")}catch(e){setMessage(e instanceof Error?e.message:"Upload failed. Try again.")}finally{setUploading(null)}};
  const storyLength=form.body.trim().length+(design.sections||[]).reduce((n,s)=>n+s.body.trim().length,0);const selected=items.find(i=>i.id===active);const editable=!selected||["draft","changes_requested","rejected"].includes(selected.status);
- return <main className="studio"><header className="studioNav" aria-label="Editorial navigation"><Link href="/qibla" className="studioNavBack">← QIBLA <span className="studioBrandTag">EDITORIAL STUDIO</span></Link><Link href="/qibla/command" className="studioNavAction">Editorial Command ↗</Link></header><section className="hero"><p>EDITORIAL WORKSPACE</p><h1>The Qibla Editorial House.</h1><p>Two distinct voices. One unmistakable Qibla identity.</p></section>
+ return <main className="studio"><header className="studioNav" aria-label="Editorial navigation"><button type="button" className="studioNavBack studioAvatarBack" onClick={()=>{if(window.history.length>1)router.back();else router.push("/qibla")}} aria-label="Go back one page"><img src="/assets/new-1M-logo.PNG" alt="" /><span>QIBLA <span className="studioBrandTag">EDITORIAL STUDIO</span></span></button><Link href="/qibla/command" className="studioNavAction">Editorial Command ↗</Link></header><section className="hero"><p>EDITORIAL WORKSPACE</p><h1>The Qibla Editorial House.</h1><p>Two distinct voices. One unmistakable Qibla identity.</p></section>
  {!accessChecked?<p className="notice">Checking editorial access…</p>:!user?<p className="notice">Sign in to apply for editorial access.</p>:!authorized?<EditorialApplication/>:<>
  <div className="studioStats" aria-label="Publication overview"><div><strong>{items.filter(i=>i.status==="published").length}</strong><span>Published</span></div><div><strong>{items.filter(i=>i.status==="submitted"||i.status==="approved").length}</strong><span>In review</span></div><div><strong>{items.filter(i=>i.status==="draft"||i.status==="changes_requested").length}</strong><span>Drafts & revisions</span></div></div><nav className="tabs"><button onClick={()=>setTab("write")} className={tab==="write"?"on":""}>✍️ My Publications</button>{admin&&<button onClick={()=>setTab("approvals")} className={tab==="approvals"?"on":""}>✓ Approvals ({items.filter(i=>i.status==="submitted").length})</button>}</nav>
  {message&&<p role="status" className="notice">{message}</p>}
@@ -71,6 +73,9 @@ export default function QiblaStudio(){
 .uploadControl{display:flex;flex-direction:column;gap:8px;background:#edf4f8;border:1px dashed #9ebbd0;border-radius:12px;padding:14px;margin:12px 0;color:#244e6c;font-weight:700}.uploadControl input[type=file]{max-width:100%;font-size:13px}.uploadedPreview{display:block;max-width:100%;max-height:270px;object-fit:cover;border-radius:12px;margin:12px 0}
 
 /* Qibla premium editorial workspace: visual-only improvements, preserving workflows. */
+.studioAvatarBack{display:flex!important;align-items:center;gap:9px;border:0;background:transparent;cursor:pointer;color:#244967;font-weight:800;text-align:left}
+.studioAvatarBack img{height:46px;width:46px;object-fit:cover;border-radius:50%;border:2px solid #90bbd4;box-shadow:0 4px 12px #1d40552c}
+@media(max-width:650px){.studioAvatarBack>span{display:none}}
 .studio{background:#f7f6f2!important;color:#1b3147!important}
 .studioNav{border-bottom:1px solid #dce4e8;padding-bottom:14px!important}
 .studioNavBack{font-weight:800!important;letter-spacing:.035em;text-decoration:none}
