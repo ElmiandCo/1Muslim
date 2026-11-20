@@ -57,8 +57,9 @@ test("signed-out viewer can watch but only authenticated guests request",()=>{
   assert.match(viewer,/streamId&&hostIdentity&&!hostEnded/);
   assert.match(viewer,/<LiveGuestStudio streamId=\{streamId\} roomName=\{roomName\} hostId=\{hostIdentity\} compactJoin\/>/);
   const landing=source("app/page.tsx");
-  assert.match(landing,/homeLiveGuestRequest/);
-  assert.match(landing,/LiveGuestStudio streamId=\{activeLive\.id\}/);
+  // The homepage embeds LiveKitViewer; that viewer owns the guest-request control.
+  assert.match(landing,/<LiveKitViewer key=\{activeLive\.id\} embedded streamId=\{activeLive\.id\}/);
+  assert.match(viewer,/<LiveGuestStudio streamId=\{streamId\} roomName=\{roomName\} hostId=\{hostIdentity\} compactJoin\/>/);
   const forYou=source("app/components/ImmersiveVideoEntry.tsx");
   assert.match(forYou,/imv-guest-request/);
   assert.match(forYou,/liveHostId:x\.host_id/);
