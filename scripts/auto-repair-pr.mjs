@@ -9,7 +9,7 @@ const token = process.env.OPENAI_API_KEY;
 if (!repo || !pr) throw Error('Missing repository or PR number');
 const info = exec('gh', ['api', `repos/${repo}/pulls/${pr}/files?per_page=100`]);
 if (info.status !== 0) throw Error(info.stderr);
-const allowed = new Set(JSON.parse(info.stdout).filter(f => f.status !== 'removed' && /\\.(ts|tsx|js|jsx|mjs|json|css)$/.test(f.filename) && !f.filename.startsWith('.github/') && !f.filename.includes('lock')).map(f => f.filename));
+const allowed = new Set(JSON.parse(info.stdout).filter(f => f.status !== 'removed' && /\.(ts|tsx|js|jsx|mjs|json|css)$/.test(f.filename) && !f.filename.startsWith('.github/') && !f.filename.includes('lock')).map(f => f.filename));
 function build() {
   const result = exec('npm', ['run', 'build'], { timeout: 600000, env: { ...process.env, NEXT_TELEMETRY_DISABLED: '1' } });
   return { ok: result.status === 0, log: (result.stdout + '\n' + result.stderr).slice(-16000) };
