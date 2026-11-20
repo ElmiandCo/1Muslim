@@ -652,12 +652,12 @@ const [avatarPage,setAvatarPage]=useState(0);
       <div className="editorIntro"><span className="eyebrow">SOCIAL CONNECTIONS</span><h2>Connect your world.</h2><p>Replace manual social handles with real account connections. Tap a glowing card to open the connector. Your Elmi Light adds a little magic to every tap.</p></div>
       <ProfileTikTokGallery />
       <div className="socialConnectGrid">
-       {(["youtube","twitch"] as const).map(provider=>{const label=provider==="tiktok"?"TikTok":provider==="youtube"?"YouTube":"Twitch";const available=provider==="tiktok";return <article className="socialConnectCard" key={provider}>
+       {(["youtube","twitch"] as const).map(provider=>{const label=provider==="youtube"?"YouTube":"Twitch";const available=false;return <article className="socialConnectCard" key={provider}>
         <div className="socialParticleField" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{left:(i*29%91+4)+"%",top:(i*37%76+8)+"%",animationDelay:(i*.16)+"s"}}/>)}</div>
-        <div className="socialConnectTop"><span className="eyebrow">{label.toUpperCase()}</span><span className="socialConnectStatus">{available?"SANDBOX":"COMING SOON"}</span></div>
-        <div className="socialConnectIcon" aria-hidden="true">{provider==="tiktok"?"♪":provider==="youtube"?"▶":"◈"}</div>
-        <h3>{label}</h3><p>{available?"Open the 1Muslim TikTok connection experience. Authorization is still being prepared in sandbox.":"Account authorization will appear here when this connector is ready."}</p>
-        {available?<Link href="/tiktok" className="socialConnectAction" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:action-success"))}><span className="socialActionSpark">✦</span> Connect <span aria-hidden="true">↗</span></Link>:<button type="button" className="socialConnectAction" disabled>✦ Connect · Soon</button>}
+        <div className="socialConnectTop"><span className="eyebrow">{label.toUpperCase()}</span><span className="socialConnectStatus">{"COMING SOON"}</span></div>
+        <div className="socialConnectIcon" aria-hidden="true">{provider==="youtube"?"▶":"◈"}</div>
+        <h3>{label}</h3><p>{"Account authorization will appear here when this connector is ready."}</p>
+        <button type="button" className="socialConnectAction" disabled>✦ Connect · Soon</button>
        </article>})}
       </div>
       <p className="socialConnectNote">Connections only show as verified after platform authorization succeeds. These cards do not manually mark an account live.</p>
