@@ -1,6 +1,7 @@
 "use client";
 
 import ProfileQuranCanvas from "../components/ProfileQuranCanvas";
+import ProfileTikTokGallery from "../components/ProfileTikTokGallery";
 import RegionDiscovery, {canonicalCountry} from "../components/RegionDiscovery";
 import Link from "next/link";
 import HomeAppIcon from "../components/HomeAppIcon";
@@ -648,8 +649,9 @@ const [avatarPage,setAvatarPage]=useState(0);
 
     {tab==="live"&&<section className="profileEditor">
       <div className="editorIntro"><span className="eyebrow">SOCIAL CONNECTIONS</span><h2>Connect your world.</h2><p>Replace manual social handles with real account connections. Tap a glowing card to open the connector. Your Elmi Light adds a little magic to every tap.</p></div>
+      <ProfileTikTokGallery />
       <div className="socialConnectGrid">
-       {(["tiktok","youtube","twitch"] as const).map(provider=>{const label=provider==="tiktok"?"TikTok":provider==="youtube"?"YouTube":"Twitch";const available=provider==="tiktok";return <article className="socialConnectCard" key={provider}>
+       {(["youtube","twitch"] as const).map(provider=>{const label=provider==="tiktok"?"TikTok":provider==="youtube"?"YouTube":"Twitch";const available=provider==="tiktok";return <article className="socialConnectCard" key={provider}>
         <div className="socialParticleField" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{left:(i*29%91+4)+"%",top:(i*37%76+8)+"%",animationDelay:(i*.16)+"s"}}/>)}</div>
         <div className="socialConnectTop"><span className="eyebrow">{label.toUpperCase()}</span><span className="socialConnectStatus">{available?"SANDBOX":"COMING SOON"}</span></div>
         <div className="socialConnectIcon" aria-hidden="true">{provider==="tiktok"?"♪":provider==="youtube"?"▶":"◈"}</div>
