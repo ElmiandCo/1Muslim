@@ -16,6 +16,8 @@ export default function NotificationsPage(){
   const [loading,setLoading]=useState(true);
   const [prefs,setPrefs]=useState<Record<string,boolean>>({});
   const [prefsBusy,setPrefsBusy]=useState(false);
+  const [prefsError,setPrefsError]=useState("");
+  const [prefsLoaded,setPrefsLoaded]=useState(false);
   const [settingsOpen,setSettingsOpen]=useState(false);
   const [filter,setFilter]=useState("All");
   const [query,setQuery]=useState("");
@@ -25,11 +27,21 @@ export default function NotificationsPage(){
   useEffect(()=>{let cancelled=false;const ids=[...new Set(items.map(n=>n.actor_id||followerId(n)).filter((id):id is string=>!!id&&/^[0-9a-f-]{36}$/i.test(id)))];if(!ids.length)return;const db=createClient();void db.from("profiles").select("id,display_name,username,avatar_url").in("id",ids).then(({data,error})=>{if(error){void db.from("profiles").select("id,display_name,username").in("id",ids).then(({data:fallback})=>{if(!cancelled&&fallback)setFollowerProfiles(previous=>({...previous,...Object.fromEntries(fallback.map(p=>[p.id,{display_name:p.display_name||p.username||"1Muslim member",username:p.username}]))}));});return;}if(!cancelled&&data)setFollowerProfiles(previous=>({...previous,...Object.fromEntries(data.map(p=>[p.id,{display_name:p.display_name||p.username||"1Muslim member",username:p.username,avatar_url:p.avatar_url}]))}));});return()=>{cancelled=true};},[items]);
   async function markAllRead(){const ids=items.filter(n=>!n.read_at).map(n=>n.id);if(!ids.length)return;const db=createClient();const now=new Date().toISOString();const {error}=await db.from("notifications").update({read_at:now}).in("id",ids);if(!error)setItems(current=>current.map(n=>({...n,read_at:n.read_at??now}))); }
   async function markOne(n:N){if(n.read_at)return;const now=new Date().toISOString();const s=createClient();const {error}=await s.from("notifications").update({read_at:now}).eq("id",n.id);if(!error)setItems(current=>current.map(x=>x.id===n.id?{...x,read_at:now}:x));}
-  async function savePref(key:string,value:boolean){setPrefsBusy(true);const db=createClient();const {data:{user}}=await db.auth.getUser();if(user){const {error}=await db.from("notification_preferences").upsert({user_id:user.id,[key]:value,updated_at:new Date().toISOString()},{onConflict:"user_id"});if(!error)setPrefs(v=>({...v,[key]:value}));}setPrefsBusy(false);}
+  async function savePref(key:string,value:boolean){
+    if(prefsBusy||!prefsLoaded)return;
+    setPrefsBusy(true);setPrefsError("");
+    const db=createClient();const {data:{user},error:authError}=await db.auth.getUser();
+    if(!user||authError){setPrefsError("Sign in to save notification preferences.");setPrefsBusy(false);return;}
+    const next={...prefs,[key]:value};
+    const {error}=await db.from("notification_preferences").upsert({user_id:user.id,email_messages:next.email_messages!==false,email_replies:next.email_replies!==false,email_comments:next.email_comments!==false,email_xp:next.email_xp!==false,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+    if(error)setPrefsError("Could not save your preference. Please try again.");
+    else setPrefs(next);
+    setPrefsBusy(false);
+  }
   useEffect(()=>{let active=true;const s=createClient();(async()=>{const {data:{user}}=await s.auth.getUser();if(!user){setLoading(false);return;}const {data}=await s.from("notifications").select("id,type,title,body,entity_type,entity_id,actor_id,read_at,created_at").order("created_at",{ascending:false}).limit(60);if(active){setItems((data??[]) as N[]);setLoading(false);}
   // Visiting Activity acknowledges the visible notifications and clears the nav badge.
   const unreadIds=(data??[]).filter(n=>!n.read_at).map(n=>n.id);
-  if(unreadIds.length){const now=new Date().toISOString();const {error:readError}=await s.from("notifications").update({read_at:now}).eq("user_id",user.id).in("id",unreadIds);if(active&&!readError)setItems(current=>current.map(n=>unreadIds.includes(n.id)?{...n,read_at:now}:n));}const {data:pref}=await s.from("notification_preferences").select("email_messages,email_replies,email_comments,email_xp").eq("user_id",user.id).maybeSingle();if(active&&pref)setPrefs(pref as Record<string,boolean>);})();const channel=s.channel("my-notifications").on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications"},payload=>{const n=payload.new as N;setItems(prev=>prev.some(x=>x.id===n.id)?prev:[n,...prev].slice(0,60))}).subscribe();return()=>{active=false;void s.removeChannel(channel)};},[]);
+  if(unreadIds.length){const now=new Date().toISOString();const {error:readError}=await s.from("notifications").update({read_at:now}).eq("user_id",user.id).in("id",unreadIds);if(active&&!readError)setItems(current=>current.map(n=>unreadIds.includes(n.id)?{...n,read_at:now}:n));}const {data:pref}=await s.from("notification_preferences").select("email_messages,email_replies,email_comments,email_xp").eq("user_id",user.id).maybeSingle();if(active){if(pref)setPrefs(pref as Record<string,boolean>);setPrefsLoaded(true);}})();const channel=s.channel("my-notifications").on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications"},payload=>{const n=payload.new as N;setItems(prev=>prev.some(x=>x.id===n.id)?prev:[n,...prev].slice(0,60))}).subscribe();return()=>{active=false;void s.removeChannel(channel)};},[]);
   function kind(n:N){const t=(n.type+" "+(n.entity_type||"")).toLowerCase();if(/xp|level|badge|milestone|achievement/.test(t))return "Achievements";if(/follow|profile|friend/.test(t))return "Social";if(/dm|message|conversation|chat/.test(t))return "Messages";if(/comment|reply|like|post|reaction/.test(t))return "Social";return "System";}
   function label(n:N){const id=n.actor_id||followerId(n),p=id?followerProfiles[id]:null;return p?p.display_name+" followed you":n.title;}
   function detail(n:N){const id=n.actor_id||followerId(n),p=id?followerProfiles[id]:null;return p?"@"+(p.username||"member"):n.body;}
@@ -49,7 +61,7 @@ export default function NotificationsPage(){
     <div className="nmFilters" role="group" aria-label="Filter notifications">{["All","Social","Achievements","Messages","System"].map(name=><button key={name} type="button" className={filter===name?"selected":""} aria-pressed={filter===name} onClick={()=>setFilter(name)}>{name}</button>)}</div>
     <label className="nmSearch"><span aria-hidden="true">⌕</span><input type="search" placeholder="Search activity" aria-label="Search notifications" value={query} onChange={e=>setQuery(e.target.value)}/></label>
     <div className="nmSummary"><span>{unread?unread+" unread":"All caught up"}</span><button type="button" aria-pressed={unreadOnly} onClick={()=>setUnreadOnly(v=>!v)}>{unreadOnly?"Show all":"Unread only"}</button></div>
-    {settingsOpen&&<section className="nmPrefs"><h2>Notification controls</h2><p>Choose which updates also arrive by email. In-app notifications remain unchanged.</p>{categories.map(([key,name])=><label key={key}>{name}<input type="checkbox" disabled={prefsBusy} checked={prefs[key]!==false} onChange={e=>void savePref(key,e.target.checked)}/></label>)}</section>}
+    {settingsOpen&&<section className="nmPrefs"><h2>Notification controls</h2><p>Choose which updates also arrive by email. In-app notifications remain unchanged.</p>{categories.map(([key,name])=><label key={key}>{name}<input type="checkbox" disabled={prefsBusy||!prefsLoaded} checked={prefs[key]!==false} onChange={e=>void savePref(key,e.target.checked)}/></label>)}{prefsError&&<p role="alert" style={{color:"#bd3434",fontWeight:650}}>{prefsError}</p>}{prefsBusy&&<p role="status">Saving preferences…</p>}</section>}
     {loading?<div className="nmEmpty">Loading notifications…</div>:!visible.length?<div className="nmEmpty">No notifications to show.</div>:sections.map(([title,list])=>list.length?<section className="nmSection" key={title}><h2>{title}</h2><div className="nmList">{list.map(notificationCard)}</div></section>:null)}
   </div><style jsx global>{`
 .notificationsPage{min-height:100dvh;background:#fff;color:#111;overflow-x:hidden;position:relative;isolation:isolate;z-index:1000}
