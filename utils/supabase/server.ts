@@ -8,6 +8,12 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      global: {
+        fetch: (input, init) => fetch(input, {
+          ...init,
+          signal: AbortSignal.any([...(init?.signal ? [init.signal] : []), AbortSignal.timeout(8000)]),
+        }),
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();
