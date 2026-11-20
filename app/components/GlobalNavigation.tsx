@@ -191,6 +191,64 @@ html.profileDockThemed .oneGlobalNav .oneGlobalNavItem:not(.is-centered) .oneGlo
 .oneGlobalNavSearchClose{display:flex!important;align-items:center!important;justify-content:center!important;width:36px!important;height:36px!important;flex:0 0 36px!important;padding:0!important;background:#ffffff18!important;color:#fff!important;border:1px solid #ffffff35!important;border-radius:50%!important;font-size:26px!important;line-height:1!important}
 }
 @media(prefers-reduced-motion:reduce){.oneGlobalNavItem{transition:none!important;transform:none!important}}
-`}</style>
+`}
+/* Mobile navigation: clean flat five-across tab strip, not the floating 3D carousel. */
+@media(max-width:767px){
+html body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important}
+html.profileDockThemed body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important}
+html .oneGlobalNav,html.profileDockThemed .oneGlobalNav{
+position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;
+display:block!important;width:100%!important;margin:0!important;padding:0 0 env(safe-area-inset-bottom,0px)!important;
+border:0!important;border-top:1px solid #e3e5e8!important;border-radius:0!important;
+background:#fff!important;color:#6a6d72!important;box-shadow:0 -2px 9px #10151a0d!important;
+backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+html .oneGlobalNav .oneGlobalNavFixedBack{display:none!important}
+html .oneGlobalNav .oneGlobalNavRailShell{
+width:100%!important;overflow:hidden!important;border-radius:0!important;
+mask-image:none!important;-webkit-mask-image:none!important;background:#fff!important;
+}
+html .oneGlobalNav .oneGlobalNavRailShell::before{display:none!important}
+html .oneGlobalNav .oneGlobalNavRail{
+display:flex!important;align-items:stretch!important;justify-content:flex-start!important;
+height:72px!important;width:100%!important;gap:0!important;padding:0!important;
+overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:none!important;
+scrollbar-width:none!important;overscroll-behavior-x:contain!important;touch-action:pan-x!important;
+}
+html .oneGlobalNav .oneGlobalNavItem{
+width:20%!important;min-width:20%!important;flex:0 0 20%!important;
+height:72px!important;transform:none!important;opacity:1!important;
+filter:none!important;perspective:none!important;scroll-snap-align:none!important;
+will-change:auto!important;
+}
+html .oneGlobalNav .oneGlobalNavItem>button{
+display:flex!important;flex-direction:column-reverse!important;justify-content:center!important;align-items:center!important;
+width:100%!important;height:72px!important;gap:5px!important;padding:7px 1px!important;
+border:0!important;border-radius:0!important;background:transparent!important;color:#72767b!important;
+box-shadow:none!important;text-shadow:none!important;filter:none!important;
+}
+html .oneGlobalNav .oneGlobalNavItem>button[aria-current=page],
+html .oneGlobalNav .oneGlobalNavItem.is-centered>button{background:transparent!important;box-shadow:none!important}
+html .oneGlobalNav .oneGlobalNavItem>button[aria-current=page]{color:#171c20!important}
+html .oneGlobalNav .oneGlobalNavLabel{
+font-family:system-ui,-apple-system,sans-serif!important;font-size:clamp(9px,2.5vw,12px)!important;
+font-weight:500!important;letter-spacing:0!important;line-height:1.15!important;opacity:1!important;
+color:inherit!important;text-shadow:none!important;max-width:100%!important;
+}
+html .oneGlobalNav .oneGlobalNavIconWrap{height:30px!important;display:grid!important;place-items:center!important}
+html .oneGlobalNav .oneGlobalNavIconWrap svg,
+html .oneGlobalNav .oneGlobalNavItem[data-nav-id="deepwatch"] .oneGlobalNavIconWrap svg,
+html .oneGlobalNav .oneGlobalNavItem[data-nav-id="messages"] .oneGlobalNavIconWrap svg,
+html .oneGlobalNav .oneGlobalNavItem[data-nav-id="quran"] .oneGlobalNavIconWrap svg,
+html .oneGlobalNav .oneGlobalNavItem[data-nav-id="unlocked"] .oneGlobalNavIconWrap svg{
+width:27px!important;height:27px!important;color:currentColor!important;
+filter:none!important;stroke:currentColor!important;
+}
+html .oneGlobalNav .oneGlobalNavItem.is-centered .oneGlobalNavIconWrap svg{filter:none!important}
+html .oneGlobalNav .oneGlobalNavProfileGear{display:none!important}
+html .oneGlobalNav .oneGlobalNavItem>button:active{background:#f2f5f3!important;transform:none!important}
+html .oneGlobalNav .oneGlobalNavSearch{bottom:calc(100% + 6px)!important}
+}
+</style>
  </header></>;
 }
