@@ -44,6 +44,18 @@ export default function MessagesPage(){
  const [selected,setSelected]=useState<string|null>(null);
  useEffect(()=>{document.body.classList.toggle("omFullDmOpen",Boolean(selected));return()=>document.body.classList.remove("omFullDmOpen")},[selected]);
  const [messages,setMessages]=useState<Message[]>([]);
+ const [draft,setDraft]=useState("");
+ const [showComposerTools,setShowComposerTools]=useState(false);
+ const [showReactionTools,setShowReactionTools]=useState(false);
+ const [messengerTheme,setMessengerTheme]=useState<"night"|"day">("day");
+ useEffect(()=>{try{const saved=localStorage.getItem("1muslim:messenger-theme");if(saved==="day"||saved==="night")setMessengerTheme(saved)}catch{}},[]);
+ const toggleMessengerTheme=()=>setMessengerTheme(v=>{const next=v==="night"?"day":"night";try{localStorage.setItem("1muslim:messenger-theme",next)}catch{}return next});
+
+ const [expressionEvent,setExpressionEvent]=useState(0);
+ const [expressionEmoji,setExpressionEmoji]=useState("✨");
+ const [newMessageId,setNewMessageId]=useState<string|null>(null);
+ const [incomingIds,setIncomingIds]=useState<string[]>([]);
+ const [targetMessage,setTargetMessage]=useState<string|null>(null);
  const messageFeedRef=useRef<HTMLDivElement|null>(null);
  const shouldStickToBottom=useRef(true);
  const forceScrollAfterSend=useRef(false);
@@ -65,18 +77,7 @@ export default function MessagesPage(){
   return()=>cancelAnimationFrame(frame);
  },[selected,lastVisibleMessageId,targetMessage]);
 
- const [draft,setDraft]=useState("");
- const [showComposerTools,setShowComposerTools]=useState(false);
- const [showReactionTools,setShowReactionTools]=useState(false);
- const [messengerTheme,setMessengerTheme]=useState<"night"|"day">("day");
- useEffect(()=>{try{const saved=localStorage.getItem("1muslim:messenger-theme");if(saved==="day"||saved==="night")setMessengerTheme(saved)}catch{}},[]);
- const toggleMessengerTheme=()=>setMessengerTheme(v=>{const next=v==="night"?"day":"night";try{localStorage.setItem("1muslim:messenger-theme",next)}catch{}return next});
 
- const [expressionEvent,setExpressionEvent]=useState(0);
- const [expressionEmoji,setExpressionEmoji]=useState("✨");
- const [newMessageId,setNewMessageId]=useState<string|null>(null);
- const [incomingIds,setIncomingIds]=useState<string[]>([]);
- const [targetMessage,setTargetMessage]=useState<string|null>(null);
  const [reactionOpen,setReactionOpen]=useState<string|null>(null);
  const [bubbleSpark,setBubbleSpark]=useState<string|null>(null);
  const sparkleTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
