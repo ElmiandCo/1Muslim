@@ -8,6 +8,7 @@ const entries:{id:GlobalNavDestination;label:string;href?:string}[]=[
 {id:"muslims",label:"Muslims",href:"/profile?section=muslimeen"},
 {id:"posts",label:"Ummah Posts",href:"/posts"},
 {id:"messages",label:"Messages",href:"/messages"},
+{id:"notifications",label:"Notifications",href:"/notifications"},
 {id:"quran",label:"Qur'an",href:"/quran-library"},
 {id:"deepwatch",label:"DeepWatch",href:"/deepwatch"},
 {id:"unlocked",label:"Unlocked",href:"/unlocked"},
@@ -27,6 +28,33 @@ export default function GlobalNavigation(){
  const [emblemPinned,setEmblemPinned]=useState(false);
  const [dockHidden,setDockHidden]=useState(false);
  const [immersive,setImmersive]=useState(false);
+ const [unreadMessages,setUnreadMessages]=useState(0),[unreadNotifications,setUnreadNotifications]=useState(0);
+ useEffect(()=>{
+  const db=createClient();let active=true;let userId:string|null=null;
+  const refresh=async()=>{
+   const {data:{user}}=await db.auth.getUser();if(!active)return;
+   userId=user?.id??null;if(!userId){setUnreadMessages(0);setUnreadNotifications(0);return}
+   const [{count:alerts},{data:participants}]=await Promise.all([
+    db.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null),
+    db.from("dm_participants").select("conversation_id,last_read_at").eq("user_id",userId)
+   ]);
+   if(!active)return;
+   setUnreadNotifications(pathname?.startsWith("/notifications")?0:alerts??0);
+   const reads=participants??[];if(!reads.length){setUnreadMessages(0);return}
+   const ids=reads.map(x=>x.conversation_id);
+   const {data:recent}=await db.from("dm_messages").select("conversation_id,created_at,sender_id").in("conversation_id",ids).order("created_at",{ascending:false}).limit(500);
+   if(!active)return;
+   const lastRead=new Map(reads.map(x=>[x.conversation_id,x.last_read_at]));
+   const unread=(recent??[]).filter(m=>m.sender_id!==userId&&(!lastRead.get(m.conversation_id)||new Date(m.created_at).getTime()>new Date(lastRead.get(m.conversation_id)!).getTime())).length;
+   setUnreadMessages(unread);
+  };
+  void refresh();
+  const interval=window.setInterval(()=>void refresh(),12000);
+  const channel=db.channel("global-nav-alerts").on("postgres_changes",{event:"*",schema:"public",table:"notifications"},()=>void refresh()).on("postgres_changes",{event:"*",schema:"public",table:"dm_messages"},()=>void refresh()).on("postgres_changes",{event:"UPDATE",schema:"public",table:"dm_participants"},()=>void refresh()).subscribe();
+  const onFocus=()=>void refresh();window.addEventListener("focus",onFocus);
+  const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void refresh()});
+  return()=>{active=false;clearInterval(interval);window.removeEventListener("focus",onFocus);subscription.unsubscribe();void db.removeChannel(channel)};
+ },[pathname]);
  useEffect(()=>{
   let lastY=window.scrollY;
   let frame=0;
@@ -153,7 +181,7 @@ export default function GlobalNavigation(){
  <div className="oneGlobalNavBrand"><img src="/assets/new-1M-logo.PNG" alt="1Muslim" onError={e=>{const img=e.currentTarget;if(!img.src.endsWith("/assets/1muslim-mobile-logo.PNG"))img.src="/assets/1muslim-mobile-logo.PNG"}} /></div>
  <button type="button" className="oneGlobalNavFixedBack" aria-label="Go back one page" title="Back" onClick={()=>{if(window.history.length>1){router.back()}else{router.push("/")}}}><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></button><div className="oneGlobalNavRailShell"><nav ref={railRef} onScroll={onRailScroll} className="oneGlobalNavRail" aria-label="Global destinations">{entries.filter(item=>item.id!=="unlocked"||!isUnlocked||unlockExit).map((item,index)=><span key={item.id} data-nav-id={item.id} style={{"--nav-distance":item.id===centered?0:1} as React.CSSProperties} className={"oneGlobalNavItem"+(item.id===centered?" is-centered":"")+(item.id==="unlocked"&&unlockExit?" oneGlobalNavUnlockedExit":"")}>
  <button type="button" aria-label={item.label} title={item.label} aria-current={item.href&&pathname===item.href?"page":undefined} disabled={busy} onClick={()=>{centerItem(item.id);select(item)}}>
- <span className="oneGlobalNavLabel">{item.label}</span><span className="oneGlobalNavIconWrap"><GlobalNavIcon name={item.id}/>{item.id==="profile"&&<span className="oneGlobalNavProfileGear" aria-hidden="true"><GlobalNavIcon name="settings" size={13}/></span>}</span></button></span>)}</nav></div>
+ <span className="oneGlobalNavLabel">{item.label}</span><span className="oneGlobalNavIconWrap"><GlobalNavIcon name={item.id}/>{(item.id==="messages"?unreadMessages:item.id==="notifications"?unreadNotifications:0)>0&&<span className="oneGlobalNavBadge" aria-label={(item.id==="messages"?unreadMessages:unreadNotifications)+" unread"}>{Math.min(99,item.id==="messages"?unreadMessages:unreadNotifications)}{(item.id==="messages"?unreadMessages:unreadNotifications)>99?"+":""}</span>}{item.id==="profile"&&<span className="oneGlobalNavProfileGear" aria-hidden="true"><GlobalNavIcon name="settings" size={13}/></span>}</span></button></span>)}</nav></div>
  {search&&<form role="search" className="oneGlobalNavSearch" onSubmit={e=>{e.preventDefault();router.push("/profile?section=muslimeen&search="+encodeURIComponent(query));setSearch(false)}}><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} aria-label="Search Muslims" placeholder="Search 1Muslim members"/><button type="submit">Search</button><button type="button" className="oneGlobalNavSearchClose" aria-label="Close search" onClick={()=>setSearch(false)}>×</button></form>}
  {pending&&<div className="oneGlobalNavDialogBackdrop" onClick={()=>setPending(null)}>
  <div role="dialog" aria-modal="true" aria-labelledby="oneGlobalNavDialogTitle" className="oneGlobalNavDialog" onClick={e=>e.stopPropagation()}>
@@ -248,6 +276,8 @@ html .oneGlobalNav .oneGlobalNavProfileGear{display:none!important}
 html .oneGlobalNav .oneGlobalNavItem>button:active{background:#f2f5f3!important;transform:none!important}
 html .oneGlobalNav .oneGlobalNavSearch{bottom:calc(100% + 6px)!important}
 }
+
+.oneGlobalNavIconWrap{position:relative!important}.oneGlobalNavBadge{position:absolute;top:-7px;right:-13px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 4px;border-radius:99px;background:#d8314f;color:#fff;font:700 10px/1 system-ui;box-shadow:0 0 0 2px #fff;z-index:4}
 `}</style>
  </header></>;
 }
