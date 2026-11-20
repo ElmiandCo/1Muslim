@@ -170,3 +170,39 @@ body:has(.mmDemo) .mmDemo{position:relative;z-index:2}
 .mmDemo.hudhudUnifiedMessenger.night .mmComposeAction{background:#193b31;color:#b7f5d6}
 .mmDemo.hudhudUnifiedMessenger.night .mmFilters{border-bottom-color:#293235!important}
 @media(max-width:700px){.mmDemo.hudhudUnifiedMessenger .mmPage{padding-top:6px!important}.mmDemo.hudhudUnifiedMessenger .mmEditorialHeader h1{font-size:24px!important}.mmDemo.hudhudUnifiedMessenger .mmRow{min-height:76px!important}}
+
+
+/* Inbox viewport: remove the empty panel beneath the last visible row.
+   The global app navigation owns the bottom 84px; only the thread list scrolls. */
+.muslimMessengerFrame:has(.mmDemo.hudhudUnifiedMessenger) {
+ background:#fff!important;
+ height:calc(100dvh - 84px)!important;
+ max-height:calc(100dvh - 84px)!important;
+ overflow:hidden!important;
+}
+.muslimMessengerFrame .mmDemo.hudhudUnifiedMessenger {
+ height:100%!important;
+ min-height:0!important;
+ max-height:100%!important;
+ background:#fff!important;
+}
+.muslimMessengerFrame .mmDemo.hudhudUnifiedMessenger .mmPage {
+ height:100%!important;
+ min-height:0!important;
+ max-height:100%!important;
+ padding-bottom:0!important;
+ background:#fff!important;
+}
+.muslimMessengerFrame .mmDemo.hudhudUnifiedMessenger .mmThreads {
+ flex:1 1 auto!important;
+ min-height:0!important;
+ overflow-y:auto!important;
+ padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))!important;
+ background:#fff!important;
+}
+@media(max-width:700px){
+ .muslimMessengerFrame .mmDemo.hudhudUnifiedMessenger .mmPage{padding-bottom:0!important}
+}
+.muslimMessengerFrame .mmDemo.hudhudUnifiedMessenger.night,
+.muslimMessengerFrame .mmDemo.hudhudUnifiedMessenger.night .mmPage,
+.muslimMessengerFrame .mmDemo.hudhudUnifiedMessenger.night .mmThreads{background:#090b0d!important}
