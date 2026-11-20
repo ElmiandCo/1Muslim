@@ -191,7 +191,6 @@ html.profileDockThemed .oneGlobalNav .oneGlobalNavItem:not(.is-centered) .oneGlo
 .oneGlobalNavSearchClose{display:flex!important;align-items:center!important;justify-content:center!important;width:36px!important;height:36px!important;flex:0 0 36px!important;padding:0!important;background:#ffffff18!important;color:#fff!important;border:1px solid #ffffff35!important;border-radius:50%!important;font-size:26px!important;line-height:1!important}
 }
 @media(prefers-reduced-motion:reduce){.oneGlobalNavItem{transition:none!important;transform:none!important}}
-`}
 /* Mobile navigation: clean flat five-across tab strip, not the floating 3D carousel. */
 @media(max-width:767px){
 html body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important}
