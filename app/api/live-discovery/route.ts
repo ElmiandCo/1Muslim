@@ -15,7 +15,9 @@ export async function GET() {
   }
   const db = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: (input, init) => fetch(input, { ...init, signal: AbortSignal.any([...(init?.signal ? [init.signal] : []), AbortSignal.timeout(7000)]) }) },
   });
+  try {
   const { data, error } = await db.from("live_streams")
     .select("id,title,category,room_name,viewer_count,started_at,scheduled_end_at,thumbnail_path,aspect_ratio,host_id,live_presence!inner(session_id,state,media_type,version,changed_at)")
     .eq("status", "live")
@@ -34,4 +36,8 @@ export async function GET() {
       "Vary": "Accept-Encoding",
     },
   });
+  } catch (error) {
+    console.error("Verified live discovery temporarily unavailable", error instanceof Error ? error.message : "request failed");
+    return NextResponse.json({ lives: [], degraded: true, serverTime: new Date().toISOString() }, { status: 200, headers: { "Cache-Control": "no-store" } });
+  }
 }
