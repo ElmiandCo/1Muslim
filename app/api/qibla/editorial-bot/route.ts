@@ -13,7 +13,7 @@ const words=(value:string)=>new Set(normalize(value).split(" ").filter(w=>w.leng
 function tooSimilar(title:string,existing:string[]){const key=normalize(title);const a=words(title);return existing.some(old=>{const b=words(old);const overlap=[...a].filter(w=>b.has(w)).length;return key===normalize(old)||(a.size>=3&&b.size>=3&&overlap/Math.min(a.size,b.size)>=0.72)})}
 function json(data:unknown,status=200){return NextResponse.json(data,{status,headers:{"Cache-Control":"no-store"}})}
 async function run(req:NextRequest){
- const token=req.headers.get("authorization")?.replace(/^Bearer\\s+/i,"");
+ const token=req.headers.get("authorization")?.replace(/^Bearer\s+/i,"");
  const scheduled=!!process.env.CRON_SECRET&&token===process.env.CRON_SECRET;
  let userId:string|null=null;
  if(!scheduled){
@@ -73,7 +73,8 @@ async function run(req:NextRequest){
    }catch(error){imageWarnings.push(`${placement} image: ${error instanceof Error?error.message:"generation failed"}`)}
   }
  }
- const body="Written by 1Muslim Editor\n\n"+draft.body+"\n\nSources for editorial verification:\n"+sources.map(s=>"- "+s.title+": "+s.url).join("\n");
+ const paragraphs=draft.body.split(/\n\s*\n/);if(midUrl){const middle=Math.max(1,Math.floor(paragraphs.length/2));paragraphs.splice(middle,0,`![AI-generated editorial illustration for ${draft.title}](${midUrl})\n\n1Muslim Qibla · AI-generated illustration`)}
+ const body="Written by 1Muslim Editor\n\n"+paragraphs.join("\n\n")+"\n\nSources for editorial verification:\n"+sources.map(s=>"- "+s.title+": "+s.url).join("\n");
  const {data,error}=await db.from("qibla_submissions").insert({author_id:userId,title:draft.title.slice(0,200),kind,subtitle:(draft.subtitle||"").slice(0,500),body,cover_url:coverUrl,status:"submitted",submitted_at:new Date().toISOString(),review_note:"AI-generated editorial draft. Verify every source, religious claim and quotation. Approval required before publication."+(midUrl?" Mid-body supporting image: "+midUrl:"")+(imageWarnings.length?" Image warnings: "+imageWarnings.join("; "):"")}).select("id,title,kind,status").single();
  if(error)return json({error:"Could not queue editorial draft",detail:error.message},500);
  return json({ok:true,submission:data,images:{cover:coverUrl,midBody:midUrl},imageWarnings,approvalUrl:"/qibla/command",note:"Pending human editorial approval; no public publishing."});
