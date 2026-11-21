@@ -3,9 +3,11 @@ import {useEffect,useRef,useState} from "react";
 import {Room,RoomEvent,Track} from "livekit-client";
 import {createClient} from "../utils/supabase/client";
 import {usePathname,useRouter} from "next/navigation";
+import {useOnlinePresence} from "../app/components/OnlinePresence";
 type Call={id:string;caller_id:string;callee_id:string;mode:"audio"|"video";status:string};
 export default function ConnectCallExperience({conversationId,userId,peerName,peerAvatar,autoStartMode}:{conversationId:string;userId:string;peerName:string;peerAvatar?:string|null;autoStartMode?:"audio"|"video"}){
  const router=useRouter();const pathname=usePathname();
+ const onlineIds=useOnlinePresence();const [ringSeconds,setRingSeconds]=useState(0);
  const [minimized,setMinimized]=useState(false);
  const [miniPosition,setMiniPosition]=useState<{x:number;y:number}|null>(null);
  const miniDrag=useRef<{pointerId:number;startX:number;startY:number;x:number;y:number}|null>(null);
@@ -73,7 +75,7 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  r.on(RoomEvent.TrackUnmuted,(publication)=>{if(publication.source===Track.Source.Camera)setRemoteCameraOff(false)});
  
  r.on(RoomEvent.DataReceived,(payload,participant)=>{try{const d=JSON.parse(new TextDecoder().decode(payload));if(d.type==="call-chat"&&typeof d.body==="string")setChatMessages(v=>[...v.slice(-39),{sender:participant?.identity||"Peer",body:d.body.slice(0,500)}])}catch{}});
- await r.connect(data.url,data.token);await r.localParticipant.setMicrophoneEnabled(true);
+ await r.connect(data.url,data.token);await r.localParticipant.setMicrophoneEnabled(!muted);
  if(mode==="video"){await r.localParticipant.setCameraEnabled(true);const track=r.localParticipant.videoTrackPublications.values().next().value?.track;if(track&&local.current)track.attach(local.current)}
  activeCallId.current=id;completedCall.current=id;connectingId.current=null;
  setTimeout(()=>{if(room.current===r)setPhase("connected")},700);
@@ -103,6 +105,9 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  useEffect(()=>()=>speechRef.current?.stop(),[]);
  const incoming=call?.status==="ringing"&&call.callee_id===userId;
  const outgoing=call?.status==="ringing"&&call.caller_id===userId;
+ useEffect(()=>{setRingSeconds(0);if(!outgoing)return;const t=window.setInterval(()=>setRingSeconds(n=>n+1),1000);return()=>clearInterval(t)},[call?.id,outgoing]);
+ const peerId=call?.caller_id===userId?call?.callee_id:call?.caller_id;
+ const appearsOffline=Boolean(outgoing&&ringSeconds>=5&&peerId&&!onlineIds.has(peerId));
  const ringAudio=useRef<AudioContext|null>(null);
  const ringTimer=useRef<ReturnType<typeof setInterval>|null>(null);
  const stopRinging=()=>{if(ringTimer.current){clearInterval(ringTimer.current);ringTimer.current=null}if(ringAudio.current){void ringAudio.current.close();ringAudio.current=null}};
@@ -219,27 +224,51 @@ export default function ConnectCallExperience({conversationId,userId,peerName,pe
  .mc-controls{display:flex;gap:clamp(10px,3vw,22px);align-items:center;justify-content:center;flex-wrap:wrap;z-index:3;background:#121c23b8;border:1px solid #ffffff20;backdrop-filter:blur(24px);border-radius:28px;padding:14px 20px;max-width:calc(100% - 16px)}.mc-control{display:flex;flex-direction:column;gap:7px;align-items:center;font-size:11px;color:#dce8e4}.mc-control button{width:57px;height:57px;border-radius:50%;border:1px solid #ffffff38;background:#ffffff25;color:white;font-size:23px;cursor:pointer}.mc-control button[aria-pressed="true"]{background:#f0f5f0;color:#14251e}.mc-control .mc-end{background:#e54857;border-color:#f26c75;color:#fff}.mc-control .mc-answer{background:#28a86d;border-color:#56d597}
  @keyframes mcAppear{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}@keyframes mcBreathe{50%{transform:scale(1.045);box-shadow:0 0 0 20px #a3e8ba12,0 0 0 42px #a3e8ba06,0 0 65px #9dddb375}}
  @media(prefers-reduced-motion:reduce){.mc-ring,.mc-bismillah{animation:none}}
+
+ /* Clean white calling surface: preserve video stage and floating mini player. */
+ .mc-screen:not(.mc-screen--mini){background:#fff;color:#1b3327}
+ .mc-screen:not(.mc-screen--mini) .mc-shell{background:#fff}
+ .mc-screen:not(.mc-screen--mini) .mc-shell:before{inset:0;background:radial-gradient(circle at 50% 44%,#f0f9f3,#fff 70%);filter:none}
+ .mc-screen:not(.mc-screen--mini) .mc-name{color:#1b3327}
+ .mc-screen:not(.mc-screen--mini) .mc-state{color:#62766a!important}
+ .mc-screen:not(.mc-screen--mini) .mc-brand{color:#2c5540}
+ .mc-screen:not(.mc-screen--mini) .mc-private{background:#eef7f1;border-color:#dcebe2;color:#3b624b}
+ .mc-screen:not(.mc-screen--mini) .mc-controls{background:#f2f5f3!important;border-color:#e3ebe6;box-shadow:0 16px 36px #15271a18}
+ .mc-screen:not(.mc-screen--mini) .mc-control{color:#3a5443}
+ .mc-screen:not(.mc-screen--mini) .mc-control button:not(.mc-end):not(.mc-answer){background:#fff;color:#214733;border-color:#d8e7dc}
+ .mc-screen:not(.mc-screen--mini) .mc-control button[aria-pressed="true"]{background:#d3ecdc!important}
+ .mc-screen:not(.mc-screen--mini) .mc-ring{position:relative}
+ .mc-screen:not(.mc-screen--mini) .mc-ring:before,.mc-screen:not(.mc-screen--mini) .mc-ring:after{content:"";position:absolute;inset:-12px;border:2px solid #4bad7a66;border-radius:50%;pointer-events:none;animation:mcCallPulse 2.4s ease-out infinite}
+ .mc-screen:not(.mc-screen--mini) .mc-ring:after{animation-delay:1.2s}
+ .mc-screen:not(.mc-screen--mini) .mc-avatar{border:3px solid #d2eedd;box-shadow:0 14px 48px #276f472e}
+ .mc-screen:not(.mc-screen--mini) .mc-menu,.mc-screen:not(.mc-screen--mini) .mc-callTools,.mc-screen:not(.mc-screen--mini) .mc-chat{background:#fff;color:#254231;border-color:#deebe2}
+ .mc-screen:not(.mc-screen--mini) .mc-menu button,.mc-screen:not(.mc-screen--mini) .mc-callTools button{background:#f4f8f5;color:#254231;border-color:#deebe2}
+ .mc-screen:not(.mc-screen--mini) .mc-chat input{background:#f5f7f6;color:#254231}
+ .mc-screen:not(.mc-screen--mini) .mc-chat-list p{background:#f0f5f2}
+ .mc-screen:not(.mc-screen--mini) .mc-minimize{background:#eef7f1;color:#214733;border-color:#dcebe2}
+ @keyframes mcCallPulse{0%{transform:scale(.9);opacity:.7}100%{transform:scale(1.4);opacity:0}}
+ @media(prefers-reduced-motion:reduce){.mc-screen:not(.mc-screen--mini) .mc-ring:before,.mc-screen:not(.mc-screen--mini) .mc-ring:after{animation:none}}
  `}</style>
  <div className="mc-launch"><button type="button" onClick={voiceCommand} aria-label={voiceListening?"Stop HudHud listening":"Enable HudHud voice commands"} aria-pressed={voiceListening} title={voiceListening?"HudHud is listening — tap to stop":"Tap to speak to HudHud"} style={voiceListening?{animation:"mcBreathe 2s ease-in-out infinite",boxShadow:"0 0 24px #4ade80",background:"radial-gradient(circle,#4ade80,#15803d)",borderColor:"#86efac"}:{}}>{voiceListening?"🌀":"🎙"}</button><span className="mc-call-label">CALLS</span><button type="button" title="Share call link" aria-label="Share link to this 1Muslim call" onClick={()=>void shareCall()}>↗</button>{linkNotice&&<span role="status" style={{fontSize:12}}>{linkNotice}</span>}<button type="button" title="Voice call" aria-label="Start private voice call" onClick={()=>void start("audio")} disabled={!!call||serviceUnavailable}><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5.5 3.8 9 7.2 7.1 9.5a15 15 0 0 0 7.4 7.4l2.3-1.9 3.4 3.5-2 2c-.8.8-2 .9-3.1.5A20.5 20.5 0 0 1 3 8.9c-.4-1.1-.3-2.3.5-3.1l2-2Z"/></svg></button><button type="button" title="Video call" aria-label="Start private video call" onClick={()=>void start("video")} disabled={!!call||serviceUnavailable}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="13.5" height="14" rx="3"/><path d="m16 10 5.5-3v10L16 14"/></svg></button>{openedFromLink&&!call&&<span className="mc-link-hint" role="status">This call is not ringing right now. Start a voice or video call above, or wait for the other member to call.</span>}</div>
  {voiceNotice&&<p role="status" style={{fontSize:12,color:"#86efac"}}>{voiceNotice}</p>}
  {error&&<p role="alert" style={{color:"#fca5a5"}}>{error}</p>}
  {ratingCallId&&<div role="dialog" aria-modal="true" aria-label="Rate call quality" style={{position:"fixed",inset:0,zIndex:9999,display:"grid",placeItems:"center",background:"rgba(8,13,25,.76)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",padding:20}}><div style={{width:"min(100%,390px)",border:"1px solid rgba(28,149,255,.65)",borderRadius:34,padding:"28px 24px 24px",background:"linear-gradient(155deg,rgba(17,40,75,.97),rgba(23,28,39,.98) 60%,rgba(28,30,37,.98))",color:"#fff",boxShadow:"0 26px 80px #0009, inset 0 1px 0 #ffffff18"}}><div style={{width:66,height:66,borderRadius:19,display:"grid",placeItems:"center",background:"linear-gradient(145deg,#102a44,#03060d)",border:"1px solid #339eff80",boxShadow:"0 5px 20px #0007",fontSize:25,fontWeight:800,letterSpacing:-1}}>1M</div><h2 style={{fontSize:23,margin:"22px 0 7px",fontWeight:750,letterSpacing:"-.03em"}}>How was your call?</h2><p style={{fontSize:15,color:"#b5bac6",margin:"0 0 23px"}}>Tap a star to rate the connection quality.</p><div style={{borderTop:"1px solid #ffffff20",display:"flex",justifyContent:"space-around",gap:4,padding:"18px 0 20px"}}>{[1,2,3,4,5].map(n=><button key={n} type="button" aria-label={n+" stars"} aria-pressed={rating===n} onClick={()=>setRating(n)} style={{border:0,background:"none",padding:"4px 2px",fontSize:39,lineHeight:1,color:n<=rating?"#16aaff":"#718196",cursor:"pointer",transition:"color .18s,transform .18s",transform:rating===n?"scale(1.12)":"none"}}>{n<=rating?"★":"☆"}</button>)}</div><button type="button" disabled={!rating||ratingBusy} onClick={()=>void finishRating(rating)} style={{width:"100%",padding:"15px 12px",border:0,borderRadius:999,background:"linear-gradient(100deg,#13b7f5,#0879f7)",color:"#fff",fontSize:17,fontWeight:750,opacity:rating&&!ratingBusy?1:.5,cursor:rating&&!ratingBusy?"pointer":"default"}}>{ratingBusy?"Submitting…":"Submit"}</button><button type="button" onClick={()=>{setRatingCallId(null);setRating(0)}} style={{width:"100%",marginTop:10,padding:"15px 12px",border:0,borderRadius:999,background:"rgba(255,255,255,.10)",color:"#f3f4f7",fontSize:17,fontWeight:650,cursor:"pointer"}}>Cancel</button></div></div>}
  {call&&<div ref={miniPanel} className={"mc-screen "+(minimized?"mc-screen--mini":"")} style={minimized&&miniPosition?{left:miniPosition.x,top:miniPosition.y,right:"auto",bottom:"auto"}:undefined} role="dialog" aria-modal={!minimized} aria-label="1Muslim Messenger call"><div className="mc-shell">
- {!introFinished&&phase!=="idle"&&<video className="mc-intro mc-intro-overlay" src="/videos/prelive-intro.mp4" autoPlay muted playsInline onEnded={()=>setIntroFinished(true)} onError={()=>setIntroFinished(true)}/>}
+ {/* Keep the calling surface uncluttered; no promotional intro video. */}
  {phase==="connected"&&(call.mode==="video"||remoteScreen)&&<div className="mc-stage"><video ref={remote} className="mc-remote" autoPlay playsInline style={{display:remoteScreen||remoteCameraOff?"none":"block"}}/>{remoteCameraOff&&!remoteScreen&&<div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",background:"#071711"}}><div style={{width:"min(62vw,270px)",aspectRatio:"1",borderRadius:"50%",overflow:"hidden",boxShadow:"0 0 50px #3ba66a33"}}>{avatarView}</div></div>}<video ref={screenVideo} autoPlay playsInline style={{display:remoteScreen?"block":"none",width:"100%",height:"100%",objectFit:"contain",background:"#050c0a"}}/><video ref={local} className="mc-self" autoPlay muted playsInline/>{cameraEffects&&<div className={"mc-camera-effects "+cameraEffect} aria-hidden="true">{cameraEffect==="stars"&&Array.from({length:15},(_,i)=><i key={i} style={{["--i" as string]:i} as React.CSSProperties}/>)}</div>}<button type="button" className="mc-effect-badge" onClick={()=>setCameraEffect(v=>v==="glow"?"stars":v==="stars"?"soft":"glow")} aria-label="Change camera overlay effect">✨ {cameraEffects?cameraEffect:"Effects off"}</button></div>}
  <div className="mc-header" onPointerDown={onMiniPointerDown} onPointerMove={onMiniPointerMove} onPointerUp={onMiniPointerUp} onPointerCancel={onMiniPointerUp} aria-label={minimized?"Drag to move minimized call":undefined}><span className="mc-brand" style={{display:"flex",alignItems:"center",gap:9}}><span style={{width:32,height:32,borderRadius:12,display:"grid",placeItems:"center",background:"linear-gradient(140deg,#edc66d,#8c5a20)",color:"#101522",fontSize:22,fontWeight:900,boxShadow:"0 0 18px #e4b45555"}}>1</span>1MUSLIM <span style={{color:"#a8ebc3"}}>MESSENGER</span></span><div className="mc-headerActions">{phase==="connected"&&<button type="button" className="mc-minimize" onClick={()=>setMinimized(v=>!v)} aria-label={minimized?"Expand call":"Minimize call"}>{minimized?"⤢":"↙"}</button>}<span className="mc-private">🔒 Private call</span></div></div>
  <div className="mc-center">
  
   {phase!=="connected"&&<div className="mc-ring"><div className="mc-avatar">{avatarView}</div></div>}
   {phase==="connected"&&call.mode==="audio"&&<div className="mc-ring" style={{transform:`scale(${1+Math.min(.15,audioLevel*.25)})`,boxShadow:`0 0 ${30+audioLevel*95}px #6af3b4a8`}}><div className="mc-avatar">{avatarView}</div></div>}
- {(phase!=="connected"||call.mode==="audio")&&<><h2 className="mc-name">{peerName}</h2><p className="mc-state">{incoming?"Incoming "+call.mode+" call":outgoing?"Ringing…":phase==="intro"?"Connecting…":duration}</p></>}
+ {(phase!=="connected"||call.mode==="audio")&&<><h2 className="mc-name">{peerName}</h2><p className="mc-state">{incoming?"Incoming "+call.mode+" call":outgoing?(appearsOffline?"Appears offline · Still ringing…":"Ringing…"):phase==="intro"?"Connecting…":duration}</p></>}
  {phase==="connected"&&call.mode==="video"&&<p className="mc-state" style={{background:"#0008",borderRadius:20,padding:"7px 16px"}}>{peerName} · {duration}</p>}
  </div>
  <audio ref={remoteAudio} autoPlay/><audio ref={remoteScreenAudio} autoPlay/>
  {showChat&&<div className="mc-chat"><div style={{display:"flex",justifyContent:"space-between"}}><strong>Call messages</strong><button onClick={()=>setShowChat(false)}>✕</button></div><div className="mc-chat-list">{chatMessages.map((m,i)=><p key={i}><strong>{m.sender==="You"?"You":peerName}:</strong> {m.body}</p>)}</div><form onSubmit={e=>{e.preventDefault();void sendChat()}}><input aria-label="Call message" value={chatDraft} maxLength={500} onChange={e=>setChatDraft(e.target.value)} placeholder="Message…"/><button type="submit">Send</button></form></div>}
  {menuOpen&&<div className="mc-menu"><button onClick={()=>{setShowChat(true);setMenuOpen(false)}}>💬 Message during call</button>{call.mode==="video"&&<button onClick={()=>{setCameraEffects(v=>!v);setMenuOpen(false)}}>✨ {cameraEffects?"Turn off camera effects":"Turn on camera effects"}</button>}{call.mode==="video"&&<><button onClick={()=>{void flip();setMenuOpen(false)}}>🔄 Flip camera</button><button onClick={()=>{const track=Array.from(room.current?.localParticipant.videoTrackPublications.values()??[])[0]?.track;void track?.restartTrack({facingMode:"user"});setMenuOpen(false)}}>📷 Front camera</button></>}<button onClick={()=>{void switchSpeaker();setMenuOpen(false)}}>🔊 {speakerOn?"Mute speaker":"Enable speaker"}</button><button onClick={()=>setMenuOpen(false)}>Close settings</button></div>}
  {minimized&&<button className="mc-quranShortcut" type="button" onClick={()=>router.push("/quran-studio")}>📖 Read Quran</button>}
- <div className="mc-controls">{phase!=="connected"&&<div className="mc-control"><button type="button" onClick={()=>void shareCall()} aria-label="Share this call link">↗</button><span>Share link</span></div>}
+ <div className="mc-controls">{phase!=="connected"&&<div className="mc-control"><button type="button" aria-label={muted?"Unmute microphone":"Mute microphone"} aria-pressed={muted} onClick={()=>setMuted(v=>!v)}>{muted?"🔇":"🎙"}</button><span>{muted?"Unmute":"Mute"}</span></div>}
  {incoming&&<div className="mc-control"><button type="button" className="mc-answer" onClick={()=>void accept()} aria-label="Accept call">✓</button><span>Accept</span></div>}
  {call.status==="accepted"&&phase==="idle"&&<div className="mc-control"><button type="button" className="mc-answer" onClick={()=>void connect(call.id,call.mode)} aria-label="Join call">↗</button><span>Join</span></div>}
  {call.status==="accepted"&&connectionState==="failed"&&<div className="mc-control"><button type="button" className="mc-answer" onClick={()=>void connect(call.id,call.mode)} aria-label="Reconnect call">↻</button><span>Reconnect</span></div>}
