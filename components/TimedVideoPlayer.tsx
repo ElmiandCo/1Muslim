@@ -3,9 +3,9 @@ import {useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {createClient} from "../utils/supabase/client";
 type Entry={id:string;body:string;at_seconds:number;user_id:string};
-type Player={getCurrentTime:()=>number;getPlayerState:()=>number;mute:()=>void;destroy:()=>void};
-type YoutubeAPI={Player:new(element:HTMLElement,options:{videoId:string;playerVars:Record<string,number|string>;events:{onReady:()=>void}})=>Player};
-declare global {interface Window {YT?:YoutubeAPI;onYouTubeIframeAPIReady?:()=>void}}
+// Reuse the single YouTube IFrame API Window declaration from OneMuslimVideo.
+// Duplicate global interface declarations with different player shapes break TypeScript builds.
+type Player=InstanceType<NonNullable<Window["YT"]>["Player"]>;
 export default function TimedVideoPlayer({videoId,title,compact=false,startSeconds=0,onMinimize}:{videoId:string;title:string;compact?:boolean;startSeconds?:number;onMinimize?:(seconds:number)=>void}){
 
  const holder=useRef<HTMLDivElement>(null),player=useRef<Player|null>(null),last=useRef(-1),shown=useRef<Set<string>>(new Set());
