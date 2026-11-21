@@ -25,3 +25,14 @@ export async function POST(request:Request){
  token.addGrant({roomJoin:true,room:"1muslim-group-"+id,canPublish:true,canSubscribe:true,canPublishData:true});
  return NextResponse.json({token:await token.toJwt(),url:livekitUrl,mode:call.mode},{headers:{"Cache-Control":"no-store"}});
 }
+
+export async function GET(request:Request){
+ const id=new URL(request.url).searchParams.get("callId");
+ if(typeof id!=="string"||!/^[0-9a-f-]{36}$/i.test(id))return NextResponse.json({error:"Invalid call"},{status:400});
+ const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+ if(!url||!key)return NextResponse.json({error:"Calling service unavailable"},{status:503});
+ const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
+ const {data,error}=await db.from("dm_group_calls").select("id,title,mode").eq("id",id).maybeSingle();
+ if(error||!data)return NextResponse.json({error:"This call link is invalid or has expired"},{status:404});
+ return NextResponse.json({call:data},{headers:{"Cache-Control":"no-store"}});
+}
