@@ -240,7 +240,7 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
     <div className="profileSocialActions" aria-label="Profile actions">
       <button type="button" className="profileSocialPrimary" onClick={onEdit}>✎ Edit profile</button>
       <button type="button" onClick={async()=>{const url=window.location.origin+"/profile?user="+encodeURIComponent(profile.username||profile.id);if(navigator.share){try{await navigator.share({title:profile.display_name||"1Muslim profile",url})}catch{}}else{try{await navigator.clipboard.writeText(url);window.alert("Profile link copied")}catch{window.prompt("Copy profile link",url)}}}}>↗ Share profile</button>
-      <button type="button" onClick={()=>openProfilePanel("settings")}>◷ Insights</button>
+      <button type="button" onClick={()=>window.dispatchEvent(new Event("1muslim:open-profile-analytics"))}>◷ Insights</button>
     </div>
     <div className="profileSocialDiscoveryShortcut"><div><strong>Discover Muslims</strong><p>Meet people and grow your community.</p></div><Link href="/profile?section=muslimeen">Explore people →</Link></div>
     <div className="profileContentIntroduction"><div><strong>Your contributions</strong><p>Posts, videos and community moments</p></div><button type="button" onClick={()=>openProfilePanel("posts")}>View posts →</button></div>
