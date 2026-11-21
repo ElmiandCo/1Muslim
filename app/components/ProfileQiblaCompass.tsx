@@ -18,33 +18,87 @@ export default function ProfileQiblaCompass(){
  const [sensorError,setSensorError]=useState("");
  const [manualHeading,setManualHeading]=useState(0);
  const [manual,setManual]=useState(false);
+ const [sensorActive,setSensorActive]=useState(false);
+ const [sensorWaiting,setSensorWaiting]=useState(false);
+ const [sensorAccuracy,setSensorAccuracy]=useState<number|null>(null);
+ const [locationLoading,setLocationLoading]=useState(false);
+ const lastHeading=useRef<number|null>(null);
+ const lastSensorTick=useRef(0);
+ const orientationSession=useRef(0);
  const [satellite,setSatellite]=useState(false);
- const listener=useRef<((event:DeviceOrientationEvent)=>void)|null>(null);
+
  const bearing=useMemo(()=>coords?qiblaBearing(coords.lat,coords.lon):null,[coords]);
- const direction=bearing===null?null:normalize(bearing-(manual?manualHeading:heading??0));
+ const effectiveHeading=manual?manualHeading:(sensorActive?heading:null);
+ const direction=bearing===null||effectiveHeading===null?null:normalize(bearing-effectiveHeading);
  const directionLabel=direction===null?"":Math.min(direction,360-direction)<8?"You are facing the Qibla":direction<=180?`Turn ${Math.round(direction)}° clockwise`:`Turn ${Math.round(360-direction)}° counterclockwise`;
  const getLocation=()=>{if(!navigator.geolocation){setLocationError("Location is unavailable on this device.");return}
-  setLocationError("");navigator.geolocation.getCurrentPosition(pos=>setCoords({lat:pos.coords.latitude,lon:pos.coords.longitude}),()=>setLocationError("Allow location access to calculate your direction to Makkah."),{enableHighAccuracy:true,timeout:12000,maximumAge:120000})};
- const startCompass=async()=>{
-  if(!("DeviceOrientationEvent" in window)){setManual(true);setSensorError("Compass sensors are unavailable. Use manual heading below.");return}
-  try{const ctor=DeviceOrientationEvent as OrientationPermission;
-   if(typeof ctor.requestPermission==="function"&&(await ctor.requestPermission())!=="granted"){setManual(true);setSensorError("Compass access was denied. Use manual heading below.");return}
-   setSensorError("");setManual(false);
-  }catch{setManual(true);setSensorError("Compass access is unavailable. Use manual heading below.")}
+  setLocationLoading(true);setLocationError("");
+  navigator.geolocation.getCurrentPosition(
+   pos=>{setCoords({lat:pos.coords.latitude,lon:pos.coords.longitude});setLocationLoading(false)},
+   err=>{setLocationLoading(false);setLocationError(err.code===1?"Please allow location access in your browser settings, then tap Update location.":"Could not get your position. Please try again outdoors or check location settings.")},
+   {enableHighAccuracy:true,timeout:14000,maximumAge:60000}
+  );
  };
+ // A relative alpha is NOT a compass direction. iOS reports a compass heading
+ // through webkitCompassHeading; Android can expose a world-referenced alpha
+ // via deviceorientationabsolute or an absolute deviceorientation event.
+ const setSensorHeading=(raw:number,accuracy?:number)=>{
+  if(!Number.isFinite(raw))return;
+  const next=normalize(raw),prior=lastHeading.current;
+  const delta=prior===null?0:((next-prior+540)%360)-180;
+  const smoothed=prior===null?next:normalize(prior+Math.max(-40,Math.min(40,delta))*.35);
+  lastHeading.current=smoothed;
+  setHeading(smoothed);
+  setSensorActive(true);setSensorWaiting(false);setSensorError("");
+  if(typeof accuracy==="number"&&Number.isFinite(accuracy))setSensorAccuracy(accuracy);
+  lastSensorTick.current=Date.now();
+ };
+ const startCompass=async()=>{
+  if(!window.isSecureContext){setSensorWaiting(false);setSensorActive(false);setSensorError("Live compass requires HTTPS. Open 1muslim.live in Safari or Chrome.");return}
+  if(!("DeviceOrientationEvent" in window)){setSensorActive(false);setSensorError("No motion compass is available here. Use Manual heading.");return}
+  try{
+   const ctor=DeviceOrientationEvent as OrientationPermission;
+   if(typeof ctor.requestPermission==="function"&&(await ctor.requestPermission())!=="granted"){
+    setSensorActive(false);setSensorError("Motion permission denied. Enable Motion & Orientation Access in Safari settings, or use Manual heading.");return
+   }
+   lastHeading.current=null;lastSensorTick.current=0;setSensorActive(false);setSensorWaiting(true);setSensorError("");setManual(false);
+   // Incrementing the session triggers a fresh listener and timeout.
+   orientationSession.current+=1;setSession(orientationSession.current);
+  }catch{setSensorActive(false);setSensorWaiting(false);setSensorError("Could not enable motion sensors. Try Safari or Chrome directly, or use Manual heading.")}
+ };
+ const [session,setSession]=useState(0);
  useEffect(()=>{getLocation()},[]);
  useEffect(()=>{
-  if(manual)return;
-  const handler=(event:DeviceOrientationEvent)=>{
+  if(!session||manual)return;
+  let live=true;
+  const onOrientation=(event:DeviceOrientationEvent)=>{
+   if(!live)return;
    const sensor=event as OrientationWithCompass;
-   if(typeof sensor.webkitCompassHeading==="number"&&Number.isFinite(sensor.webkitCompassHeading)){setHeading(normalize(sensor.webkitCompassHeading));return}
-   // Non-iOS deviceorientation alpha is not consistently true north, so do not present it as calibrated.
+   // iPhone heading is clockwise from north, corrected to true north using
+   // the browser's compass implementation where available.
+   if(typeof sensor.webkitCompassHeading==="number"&&Number.isFinite(sensor.webkitCompassHeading)){
+    setSensorHeading(sensor.webkitCompassHeading,sensor.webkitCompassAccuracy);return
+   }
+   // Android absolute alpha is measured anticlockwise: heading = 360 - alpha.
+   if((event.absolute||event.type==="deviceorientationabsolute")&&typeof event.alpha==="number"&&Number.isFinite(event.alpha)){
+    setSensorHeading(360-event.alpha);
+   }
   };
-  listener.current=handler;
-  window.addEventListener("deviceorientation",handler,true);
-  return()=>{window.removeEventListener("deviceorientation",handler,true);listener.current=null};
- },[manual]);
- const compassReady=heading!==null&&!manual;
+  window.addEventListener("deviceorientationabsolute",onOrientation,true);
+  window.addEventListener("deviceorientation",onOrientation,true);
+  const timer=window.setTimeout(()=>{
+   if(live&&Date.now()-lastSensorTick.current>2200){
+    setSensorWaiting(false);setSensorActive(false);
+    setSensorError("No reliable compass reading was received. On iPhone, allow Motion & Orientation Access in Safari. Otherwise use Manual heading.")
+   }
+  },2800);
+  const stale=window.setInterval(()=>{if(lastSensorTick.current&&Date.now()-lastSensorTick.current>3500){
+   setSensorActive(false);setSensorWaiting(false);
+   setSensorError("Live compass signal was lost. Tap Enable compass again or use Manual heading.")
+  }},1500);
+  return()=>{live=false;clearTimeout(timer);clearInterval(stale);window.removeEventListener("deviceorientationabsolute",onOrientation,true);window.removeEventListener("deviceorientation",onOrientation,true)}
+ },[session,manual]);
+  const compassReady=heading!==null&&sensorActive&&!manual;
  return <section className="profileQiblaWidget" aria-label="Qibla Compass">
   <div className="qiblaWidgetHead"><div><h3>Qibla Compass</h3><p>Find the direction of the Kaaba in Makkah.</p></div><span className="qiblaWidgetMark" aria-hidden="true">◈</span></div>
   <div className="qiblaCompass" role="img" aria-label={bearing===null?"Location needed for Qibla direction":`Qibla bearing ${Math.round(bearing)} degrees clockwise from true north`}>
@@ -56,15 +110,17 @@ export default function ProfileQiblaCompass(){
    <div className="qiblaCenterArrow" aria-hidden="true">▲</div>
   </div>
   <strong className="qiblaBearing">{bearing===null?"Location required":`${Math.round(bearing)}° from true north`}</strong>
-  {bearing!==null&&<p className="qiblaDirection" aria-live="polite">{compassReady||manual?directionLabel:"Enable compass for live guidance."}</p>}
+  {bearing!==null&&<p className="qiblaDirection" aria-live="polite">{compassReady||manual?directionLabel:sensorWaiting?"Waiting for motion sensors…":"Tap Enable compass for live guidance."}</p>}
+  {compassReady&&<p className="qiblaSensorStatus" role="status">● Live compass · Heading {Math.round(heading!)}°{sensorAccuracy!==null?" · Accuracy ±"+Math.round(sensorAccuracy)+"°":""}</p>}
+  {manual&&<p className="qiblaSensorStatus" role="status">Manual simulation · Use the slider to enter the direction your phone faces. It does not follow phone movement.</p>}
   {locationError&&<p className="qiblaWarning" role="status">{locationError}</p>}
   {sensorError&&<p className="qiblaWarning" role="status">{sensorError}</p>}
   <div className="qiblaWidgetActions">
-   <button type="button" onClick={getLocation}>⌖ Update location</button>
-   <button type="button" onClick={()=>void startCompass()}>◉ Enable compass</button>
-   <button type="button" onClick={()=>setManual(v=>!v)} aria-pressed={manual}>Manual heading</button>
+   <button type="button" onClick={getLocation} disabled={locationLoading}>⌖ {locationLoading?"Finding location…":"Update location"}</button>
+   <button type="button" onClick={()=>void startCompass()} disabled={sensorWaiting}>◉ {compassReady?"Recalibrate compass":sensorWaiting?"Enabling…":"Enable compass"}</button>
+   <button type="button" onClick={()=>{setManual(v=>!v);setSensorWaiting(false);setSensorError("")}} aria-pressed={manual}>{manual?"Exit manual mode":"Manual heading"}</button>
   </div>
-  {(manual||(!compassReady&&bearing!==null))&&<label className="qiblaManual">Device heading: {manualHeading}°<input aria-label="Adjust device heading" type="range" min="0" max="359" value={manualHeading} onChange={event=>{setManual(true);setManualHeading(Number(event.target.value))}}/></label>}
+  {manual&&<label className="qiblaManual">Manual device heading: {manualHeading}°<input aria-label="Adjust device heading" type="range" min="0" max="359" value={manualHeading} onChange={event=>{setManual(true);setManualHeading(Number(event.target.value))}}/></label>}
   <button className="qiblaSatellite" type="button" aria-pressed={satellite} onClick={()=>setSatellite(v=>!v)}>{satellite?"◈ Satellite mode unavailable in web compass":"◈ Satellite view (coming soon)"}</button>
   <p className="qiblaHelp">For best results, hold your phone flat and move away from magnets or metal. Location and motion access may require HTTPS and your permission.</p>
   <style jsx>{`
@@ -76,6 +132,7 @@ export default function ProfileQiblaCompass(){
    .qiblaDial b{position:absolute;top:50%;left:50%;font-size:20px;color:#23456a}.qiblaPointer{position:absolute;left:50%;top:50%;height:86%;width:3px;transform-origin:50% 50%;transition:transform .18s ease-out}.qiblaNeedle{position:absolute;left:0;top:0;height:49%;width:3px;background:var(--qibla-accent)}.qiblaKaaba{position:absolute;top:-12px;left:-16px;width:35px;height:35px;border:1px solid #fff;border-radius:50%;background:#263747;color:#e8c886;display:grid;place-items:center;font-size:23px;box-shadow:0 2px 10px #0003}
    .qiblaCenterArrow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:48px;color:#fff;text-shadow:0 2px 5px #234c77,-1px -1px 2px #234c77;pointer-events:none}
    .qiblaBearing{display:block;text-align:center;font-size:17px}.qiblaDirection{text-align:center;font-size:13px;min-height:20px}.qiblaWarning{margin:8px 0;color:#9a4c29;font-size:13px}.qiblaWidgetActions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.qiblaWidgetActions button,.qiblaSatellite{background:transparent;border:1px solid #c8d3de;border-radius:24px;padding:10px 12px;color:inherit;font-size:12px;font-weight:650;cursor:pointer;min-height:42px}
+   .qiblaSensorStatus{text-align:center;font-size:12px;margin:6px auto 10px;color:#247c5d;line-height:1.5}.qiblaWidgetActions button:disabled{opacity:.55;cursor:wait}
    .qiblaWidgetActions button:focus-visible,.qiblaSatellite:focus-visible{outline:2px solid var(--qibla-accent);outline-offset:2px}.qiblaManual{display:grid;gap:8px;margin:14px 6px;font-size:13px}.qiblaManual input{width:100%;accent-color:var(--qibla-accent)}.qiblaSatellite{display:block;margin:14px auto 0}.qiblaHelp{text-align:center;font-size:11px;opacity:.64;line-height:1.6;margin:14px auto 0;max-width:420px}
    @media(prefers-reduced-motion:reduce){.profileQiblaWidget{animation:none}.qiblaPointer,.qiblaDial{transition:none}}
   `}</style>
