@@ -65,7 +65,17 @@ export default function ProfileQiblaCompass({motionPermission=null}:{motionPermi
   }catch{setSensorActive(false);setSensorWaiting(false);setSensorError("Could not activate the compass. Tap the compass again, or open this page directly in Safari.")}
  };
  const [session,setSession]=useState(0);
- useEffect(()=>{getLocation();if(motionPermission===false){setSensorError("Motion access was denied. Tap the compass to retry.");return}void startCompass()},[]);
+ useEffect(()=>{
+  getLocation();
+  const ctor=window.DeviceOrientationEvent as OrientationPermission|undefined;
+  // iOS permission is requested by the launcher click, not by this mount effect.
+  if(typeof ctor?.requestPermission==="function")return;
+  void startCompass();
+ },[]);
+ useEffect(()=>{
+  if(motionPermission===true){void startCompass()}
+  else if(motionPermission===false){setSensorWaiting(false);setSensorActive(false);setSensorError("Motion access was denied. Tap the compass to retry.")}
+ },[motionPermission]);
  useEffect(()=>{
   if(!session)return;
   let live=true;
