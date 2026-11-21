@@ -61,7 +61,7 @@ async function handler(request:Request,method:"GET"|"POST"){
   return error?NextResponse.json({error:"Unable to end"},{status:503}):NextResponse.json({status:"ended"});
  }
  if(action==="token"){
-  if(call.status!=="accepted")return NextResponse.json({error:"Call not accepted"},{status:403});
+  if(call.status!=="accepted"&&!(call.status==="ringing"&&call.caller_id===user.id))return NextResponse.json({error:"Call not accepted"},{status:403});
   const apiKey=process.env.LIVEKIT_API_KEY,secret=process.env.LIVEKIT_API_SECRET,livekitUrl=process.env.LIVEKIT_URL;
   if(!apiKey||!secret||!livekitUrl)return NextResponse.json({error:"LiveKit unavailable"},{status:503});
   const token=new AccessToken(apiKey,secret,{identity:user.id,name:user.user_metadata?.full_name||"1Muslim member",ttl:"1h"});
