@@ -115,22 +115,22 @@ export default function ProfileQiblaCompass({motionPermission=null}:{motionPermi
   <div className="qiblaWidgetHead"><div><h3>Qibla Compass</h3><p>Find the direction of the Kaaba in Makkah.</p></div><span className="qiblaWidgetMark" aria-hidden="true">◈</span></div>
   <button type="button" className="qiblaCompass" onClick={()=>void startCompass()} title="Tap to reconnect compass sensors" aria-label={bearing===null?"Location needed to calculate Qibla":`Qibla bearing ${Math.round(bearing)} degrees clockwise from true north. Tap to reconnect compass.`}>
    <svg className="qiblaVisual" viewBox="0 0 320 320" aria-hidden="true">
-    <defs><radialGradient id="qiblaSurface"><stop offset="0%" stopColor="#eaf0f6"/><stop offset="40%" stopColor="#eaf0f6"/><stop offset="41%" stopColor="#dce8f2"/><stop offset="73%" stopColor="#dce8f2"/><stop offset="74%" stopColor="#edf4f9"/><stop offset="100%" stopColor="#fff"/></radialGradient></defs>
+    <defs><radialGradient id="qiblaSurface"><stop offset="0%" stopColor="var(--qibla-surface)"/><stop offset="40%" stopColor="var(--qibla-surface)"/><stop offset="41%" stopColor="var(--qibla-base)"/><stop offset="73%" stopColor="var(--qibla-base)"/><stop offset="74%" stopColor="var(--qibla-surface)"/><stop offset="100%" stopColor="var(--qibla-base)"/></radialGradient></defs>
     <circle cx="160" cy="160" r="158" fill="url(#qiblaSurface)"/>
-    <circle cx="160" cy="160" r="151" fill="none" stroke="#ffffffc4" strokeWidth="5"/>
-    {Array.from({length:72},(_,i)=>{const angle=i*5-shownHeading,major=i%3===0;const p1=point(angle,major?134:141),p2=point(angle,150);return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={major?"#395572":"#90a6b8"} strokeWidth={major?2.4:1.1} strokeLinecap="round"/>})}
-    {(["N","E","S","W"] as const).map((label,i)=>{const p=point(i*90-shownHeading,116);return <text key={label} x={p.x} y={p.y} fill="#23456a" fontSize="21" fontWeight="800" textAnchor="middle" dominantBaseline="central">{label}</text>})}
+    <circle cx="160" cy="160" r="151" fill="none" stroke="var(--qibla-edge)" strokeOpacity=".35" strokeWidth="5"/>
+    {Array.from({length:72},(_,i)=>{const angle=i*5-shownHeading,major=i%3===0;const p1=point(angle,major?134:141),p2=point(angle,150);return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={major?"var(--qibla-edge)":"var(--qibla-secondary)"} strokeOpacity={major?.9:.38} strokeWidth={major?2.4:1.1} strokeLinecap="round"/>})}
+    {(["N","E","S","W"] as const).map((label,i)=>{const p=point(i*90-shownHeading,116);return <text key={label} x={p.x} y={p.y} fill={label==="N"?"var(--qibla-accent)":"var(--qibla-ink)"} fontSize="21" fontWeight="800" textAnchor="middle" dominantBaseline="central">{label}</text>})}
     {destination&&<>
      <line x1="160" y1="160" x2={destination.x} y2={destination.y} stroke="var(--qibla-accent)" strokeWidth="3.5" strokeLinecap="round"/>
-     <circle cx={destination.x} cy={destination.y} r="19" fill="#233747" stroke="#fff" strokeWidth="1.8"/>
+     <circle cx={destination.x} cy={destination.y} r="19" fill="var(--qibla-base)" stroke="var(--qibla-edge)" strokeWidth="1.8"/>
      <g transform={`translate(${destination.x},${destination.y})`}>
-      <rect x="-10" y="-9" width="20" height="18" rx="1" fill="#d8ae57"/>
-      <rect x="-8" y="-5" width="16" height="12" fill="#182632"/>
-      <path d="M-8 -5H8M-8 -2H8" stroke="#e2bf6e" strokeWidth="1.5"/>
+      <rect x="-10" y="-9" width="20" height="18" rx="1" fill="var(--qibla-secondary)"/>
+      <rect x="-8" y="-5" width="16" height="12" fill="var(--qibla-base)"/>
+      <path d="M-8 -5H8M-8 -2H8" stroke="var(--qibla-edge)" strokeWidth="1.5"/>
      </g>
     </>}
-    <path d="M160 145L146 172Q145 175 149 175H171Q175 175 174 172Z" fill="#fff" stroke="#597e9e" strokeWidth="1.6" strokeLinejoin="round"/>
-    <circle cx="160" cy="160" r="3" fill="#597e9e"/>
+    <path d="M160 145L146 172Q145 175 149 175H171Q175 175 174 172Z" fill="var(--qibla-ink)" stroke="var(--qibla-accent)" strokeWidth="1.6" strokeLinejoin="round"/>
+    <circle cx="160" cy="160" r="3" fill="var(--qibla-accent)"/>
    </svg>
   </button>
   <strong className="qiblaBearing">{bearing===null?"Location required":`${Math.round(bearing)}° from true north`}</strong>
@@ -144,13 +144,13 @@ export default function ProfileQiblaCompass({motionPermission=null}:{motionPermi
   </div>
   <p className="qiblaHelp">Compass starts automatically when supported. On iPhone, approve the system motion prompt when opening Qibla. If the heading does not respond, tap the compass to retry. Hold the phone flat and away from metal.</p>
   <style jsx>{`
-   .profileQiblaWidget{--qibla-accent:var(--theme-accent,var(--profile-accent,#789bb9));margin-top:16px;padding:20px 16px 18px;border:1px solid var(--qibla-accent);border-radius:22px;color:var(--foreground,#192739);background:var(--background,#fff);box-shadow:0 12px 32px #263c5212;scroll-margin-top:84px;animation:qiblaEnter .3s ease-out}
+   .profileQiblaWidget{--qibla-base:var(--theme-base,#0b0b0c);--qibla-surface:var(--theme-surface,#1c1914);--qibla-accent:var(--theme-accent,#e2b75e);--qibla-secondary:var(--theme-secondary,#ffdb8b);--qibla-edge:var(--theme-edge,#e6bc65);--qibla-ink:#f4f7fa;margin-top:16px;padding:20px 16px 18px;border:1px solid var(--qibla-edge);border-radius:22px;color:var(--qibla-ink);background:linear-gradient(155deg,var(--qibla-surface),var(--qibla-base));box-shadow:0 12px 32px #00000022;scroll-margin-top:84px;animation:qiblaEnter .3s ease-out;transition:background .35s ease,border-color .35s ease,color .35s ease}
    @keyframes qiblaEnter{from{opacity:.4;transform:translateY(-9px)}to{opacity:1;transform:translateY(0)}}
    .qiblaWidgetHead{display:flex;align-items:center;justify-content:space-between}.qiblaWidgetHead h3{font-size:23px;margin:0;font-weight:800}.qiblaWidgetHead p{margin:4px 0 0;font-size:13px;opacity:.7}.qiblaWidgetMark{font-size:30px;color:var(--qibla-accent)}
-   .qiblaCompass{display:block;cursor:pointer;padding:0;appearance:none;position:relative;width:min(80vw,320px);height:min(80vw,320px);margin:22px auto 16px;border:1px solid var(--qibla-accent);border-radius:50%;background:#eaf0f6;box-shadow:inset 0 0 0 6px #ffffff70,0 9px 27px #263c5220;overflow:hidden}
+   .qiblaCompass{display:block;cursor:pointer;padding:0;appearance:none;position:relative;width:min(80vw,320px);height:min(80vw,320px);margin:22px auto 16px;border:1px solid var(--qibla-edge);border-radius:50%;background:var(--qibla-base);box-shadow:inset 0 0 0 6px #ffffff08,0 9px 27px #00000040,0 0 24px color-mix(in srgb,var(--qibla-accent) 18%,transparent);transition:border-color .35s ease,background .35s ease,box-shadow .35s ease;overflow:hidden}
    .qiblaVisual{display:block;width:100%;height:100%;pointer-events:none}
-   .qiblaBearing{display:block;text-align:center;font-size:17px}.qiblaDirection{text-align:center;font-size:13px;min-height:20px}.qiblaWarning{margin:8px 0;color:#9a4c29;font-size:13px}.qiblaWidgetActions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.qiblaWidgetActions button{background:transparent;border:1px solid #c8d3de;border-radius:24px;padding:10px 12px;color:inherit;font-size:12px;font-weight:650;cursor:pointer;min-height:42px}
-   .qiblaSensorStatus{text-align:center;font-size:12px;margin:6px auto 10px;color:#247c5d;line-height:1.5}.qiblaWidgetActions button:disabled{opacity:.55;cursor:wait}
+   .qiblaBearing{display:block;text-align:center;font-size:17px}.qiblaDirection{text-align:center;font-size:13px;min-height:20px}.qiblaWarning{margin:8px 0;color:#ffbf9b;font-size:13px}.qiblaWidgetActions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.qiblaWidgetActions button{background:transparent;border:1px solid var(--qibla-edge);border-radius:24px;padding:10px 12px;color:inherit;font-size:12px;font-weight:650;cursor:pointer;min-height:42px}
+   .qiblaSensorStatus{text-align:center;font-size:12px;margin:6px auto 10px;color:var(--qibla-secondary);line-height:1.5}.qiblaWidgetActions button:disabled{opacity:.55;cursor:wait}
    .qiblaCompass:focus-visible,.qiblaWidgetActions button:focus-visible{outline:2px solid var(--qibla-accent);outline-offset:2px}.qiblaHelp{text-align:center;font-size:11px;opacity:.64;line-height:1.6;margin:14px auto 0;max-width:420px}
    @media(prefers-reduced-motion:reduce){.profileQiblaWidget{animation:none}}
   `}</style>
