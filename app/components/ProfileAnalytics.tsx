@@ -2,6 +2,7 @@
 import {useCallback,useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import Link from "next/link";
+import ProfileMemberStats from "./ProfileMemberStats";
 
 type Reading={verse_key:string;read_on:string};
 function ArrowIcon(){return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 19 19 5M8 5h11v11"/></svg>}
@@ -51,7 +52,7 @@ export function ProfileActivityTracker(){
  },[]);
  return null;
 }
-export default function ProfileAnalytics({inline=false}:{inline?:boolean}={}){
+export default function ProfileAnalytics({inline=false,userId}:{inline?:boolean;userId?:string}={}){
  const [resetConfirm,setResetConfirm]=useState(false),[resetBusy,setResetBusy]=useState(false),[resetError,setResetError]=useState("");
  const [open,setOpen]=useState(false),[readings,setReadings]=useState<Reading[]>([]),[screen,setScreen]=useState<Record<string,Record<string,number>>>({}),[loading,setLoading]=useState(false),[refreshError,setRefreshError]=useState(""),[refreshedAt,setRefreshedAt]=useState("");
  const reload=useCallback(async()=>{setLoading(true);setRefreshError("");try{setScreen(JSON.parse(localStorage.getItem(TIME_KEY)||"{}"))}catch{setScreen({})}
@@ -90,8 +91,11 @@ export default function ProfileAnalytics({inline=false}:{inline?:boolean}={}){
  <div className="profileAnalyticsStats"><div><strong>{uniqueVerses.toLocaleString()}</strong><span>Unique verses logged</span></div><div><strong>{chart.reduce((n,x)=>n+x.count,0)}</strong><span>Verses · last 7 days</span></div></div>
  <h4>Daily verses read</h4><div className="profileAnalyticsChart" role="img" aria-label="Verses read each day over the last seven days">{chart.map(x=><div className="profileAnalyticsBarSlot" key={x.date}><b>{x.count}</b><div className="profileAnalyticsBarTrack"><i style={{height:`${Math.max(x.count?6:2,x.count/max*100)}%`}}/></div><small>{new Date(x.date+"T12:00:00").toLocaleDateString(undefined,{weekday:"short"})}</small></div>)}</div>
  {loading&&<p className="profileAnalyticsMuted">Loading reading history…</p>}<p className="profileAnalyticsMuted">Reading counts come from saved Qur’an activity. Screen time is recorded on this device only, starting with this release.</p>
- <a className="profileAnalyticsLink" href="/quran-library">Open Qur’an Library →</a></section></div>}
+ <a className="profileAnalyticsLink" href="/quran-library">Open Qur’an Library →</a>
+ {userId&&<div className="profileAnalyticsJourney" aria-label="Member journey insights"><ProfileMemberStats userId={userId}/></div>}
+ </section></div>}
  <style>{`
+ .profileAnalyticsJourney{margin-top:28px;border-top:1px solid #e0e9f4;padding-top:16px;min-width:0}.profileAnalyticsJourney .profileMemberInsightsHeading{padding-left:2px;padding-right:2px}.profileAnalyticsJourney .profileMemberInsightsRail{padding-left:2px;padding-right:2px}.profileAnalyticsJourney .profileMemberInsightsFoot{padding-left:2px;padding-right:2px}
  .profileAnalyticsGraphActions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}.profileAnalyticsGraphActions button{display:inline-flex;align-items:center;gap:7px;border:1px solid #c6d4e5;border-radius:11px;background:#f4f7fb;color:#235a93;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer}.profileAnalyticsGraphActions button:disabled{opacity:.55;cursor:wait}.profileAnalyticsGraphActions small{font-size:11px;color:#718096}.profileAnalyticsPageLink{display:flex;align-items:center;gap:7px;min-width:0;flex:1;color:#235a93;text-decoration:none}.profileAnalyticsPageLink svg{flex-shrink:0}.profileAnalyticsPageLink:hover{text-decoration:underline}
  .profileCompletionGraph{border:1px solid #e0e9f4;border-radius:20px;background:#fff;padding:16px 12px 12px;margin-top:20px;min-width:0}.profileCompletionHeading{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.profileCompletionHeading h3{margin:0 0 3px;font-size:18px}.profileCompletionHeading small{display:block;font-size:11px;color:#718096;line-height:1.4}.profileCompletionDemo{font-size:10px;letter-spacing:.1em;background:#edf4fc;color:#235a93;border-radius:7px;padding:5px 8px;font-weight:800}.profileCompletionMetric{margin:15px 0 5px;border-left:4px solid #1684ec;padding-left:10px;display:flex;flex-direction:column}.profileCompletionMetric span{font-size:12px;color:#667891}.profileCompletionMetric strong{font-size:28px;color:#172d47}.profileCompletionMetric small{font-size:11px;color:#718096}.profileCompletionGraph svg{display:block;width:100%;height:auto;overflow:visible}.profileCompletionMonths{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}.profileCompletionMonths button{border:0;background:transparent;color:#667891;font-size:11px;border-radius:7px;padding:9px 0}.profileCompletionMonths button[aria-pressed=true]{background:#e8f3ff;color:#176ab3;font-weight:800}
  .profileAnalyticsProgressHeading{display:flex;justify-content:space-between;align-items:center;gap:12px}.profileAnalyticsProgressHeading h3{margin:20px 0 14px}.profileAnalyticsProgressHeading>button{border:1px solid #c6d4e5;border-radius:12px;background:#f4f7fb;color:#235a93;padding:9px 12px;white-space:nowrap;font-weight:700}.profileAnalyticsResetConfirm{border:1px solid #d7a4a4;background:#fff8f8;border-radius:14px;padding:14px;margin:8px 0 18px}.profileAnalyticsResetConfirm p{font-size:13px;line-height:1.5}.profileAnalyticsResetConfirm>div{display:flex;gap:10px;flex-wrap:wrap}.profileAnalyticsResetConfirm button{border:1px solid #cbd5e1;border-radius:10px;padding:9px 12px;background:white}.profileAnalyticsResetConfirm button:last-child{background:#9d3434;color:white}.profileAnalyticsResetError{color:#9d3434;font-size:13px}
