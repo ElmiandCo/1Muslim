@@ -129,7 +129,7 @@ function LauncherLineIcon({name}:{name:string}){
  }
 }
 
-function ProfileAppLauncher({onProfile,coverUrl}:{onProfile:()=>void;coverUrl:string}){
+function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
  const magneticGridRef=useRef<HTMLDivElement|null>(null);
  const [postOpen,setPostOpen]=useState(false);
  const [quranOpen,setQuranOpen]=useState(false);
@@ -224,10 +224,9 @@ function ProfileAppLauncher({onProfile,coverUrl}:{onProfile:()=>void;coverUrl:st
  ];
  return <section className="profileAppLauncher" aria-label="Explore 1Muslim apps">
   <div className="profileAppLauncherHeading"><h2>Explore 1Muslim</h2>
-   {expanded&&<span className="profileMagneticHint" aria-hidden="true">Hold + drag to rearrange</span>}
    <button type="button" className="profileLauncherToggle" onClick={toggleExpanded} aria-expanded={expanded} aria-label={expanded?"Collapse Explore 1Muslim":"Expand Explore 1Muslim"} title={expanded?"Collapse":"Expand"}><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={expanded?"M5 15l7-7 7 7":"M5 9l7 7 7-7"}/></svg></button>
   </div>
-  <div ref={magneticGridRef} className={expanded?"profileAppLauncherGrid":"profileAppLauncherGrid compact"} style={{"--profile-grid-cover":`url(${JSON.stringify(coverUrl)})`} as CSSProperties} aria-label="Explore 1Muslim app shortcuts">
+  <div ref={magneticGridRef} className={expanded?"profileAppLauncherGrid":"profileAppLauncherGrid compact"} aria-label="Explore 1Muslim app shortcuts">
    <ProfileMagneticTiles items={items} expanded={expanded} gridRef={magneticGridRef} renderTile={item=><Link key={item.label} href={item.href} onClick={event=>{
     if(item.label==="DeepWatch"||item.label==="News"){try{localStorage.setItem("1muslim:explore-seen:"+(item.label==="News"?"news":"deepwatch"),new Date().toISOString())}catch{}setLauncherBadges(current=>({...current,[item.label]:0}))}
     if(item.label==="Profile"){event.preventDefault();setExpanded(false);onProfile()}
@@ -406,7 +405,7 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
     </section>}
     {activeQuickPanel==="videos"&&<section id="profile-panel-content" className="profileOverviewSection profileLibraryWrapper" aria-label="Your videos"><ProfileContentSections userId={profile.id} initialTab="videos"/></section>}
     {isOwner&&activeQuickPanel==="settings"&&<section id="profile-panel-content" className="profileProfessionalCard profileProfessionalWorkspace profileCompactSettings" aria-label="Profile settings"><div className="profileSettingsHeader"><div><span className="profileSettingsEyebrow">YOUR PROFILE</span><h2>Settings</h2><p>Manage your identity, avatar and appearance.</p></div><button type="button" className="profileSettingsEdit" onClick={onEdit} aria-label="Edit profile" title="Edit profile">✎ <span>Edit</span></button></div><button type="button" className="profileSettingsRestoreId" onClick={()=>window.dispatchEvent(new Event("1muslim:show-profile-id"))}>↺ Show my 1Muslim ID on my profile</button><details id="profile-activity-toggle" className="profileSettingsActivity" open><summary><span>Your Activity</span><small>Screen time, page visits &amp; insights</small><span className="profileActivityChevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary><ProfileAnalytics inline userId={profile.id}/></details></section>}
-    <ProfileAppLauncher onProfile={()=>setActiveQuickPanel(null)} coverUrl={profileCoverImage(profile)}/>
+    <ProfileAppLauncher onProfile={()=>setActiveQuickPanel(null)}/>
     <ProfileCinematicPosts profileId={profile.id} variant="recentCards" feedMode="community" limit={4}/>
     <ProfileQiblaCarousel/>
     <ProfileDeepWatchCarousel/>
@@ -1036,7 +1035,7 @@ const [avatarPage,setAvatarPage]=useState(0);
 /* Compact mobile profile editor: preserve all fields and existing save flow. */
 .profileCommandPage .profileProfessionalQuickGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.profileCommandPage .profileProfessionalQuickGrid>button{box-shadow:0 8px 22px #28466c19;transition:transform .25s,box-shadow .25s}.profileCommandPage .profileProfessionalQuickGrid>button:hover{transform:translateY(-3px);box-shadow:0 12px 26px #28466c30}.profileCommandPage .formGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.profileCommandPage .formGrid label{min-width:0}.profileCommandPage .formGrid input,.profileCommandPage .formGrid select{min-height:40px!important;padding:9px 11px!important}@media(max-width:430px){.profileCommandPage .formGrid{gap:7px!important}}
 .profileVisibleSignOut{display:inline-flex;align-items:center;gap:6px;margin:14px 0 0;padding:9px 15px;border-radius:999px;border:1px solid #cbd6e2;background:#fff;color:#254b73;font-size:13px;font-weight:750;cursor:pointer}
-.profileAppLauncherHeading .profileLauncherToggle{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;min-width:42px;padding:0;border-radius:50%;border:1px solid #cbd6e2;background:#fff;color:#254b73;box-shadow:0 3px 12px #203d5b12;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}.profileAppLauncherHeading .profileLauncherToggle:hover{transform:translateY(-2px);box-shadow:0 5px 16px #203d5b20}.profileAppLauncher{background:transparent!important;border-color:transparent!important;box-shadow:none!important}.profileAppLauncherGrid :global(.profileAppTile){background:transparent!important}
+.profileAppLauncherHeading .profileLauncherToggle{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;min-width:42px;padding:0;border-radius:50%;border:1px solid #cbd6e2;background:#fff;color:#254b73;box-shadow:0 3px 12px #203d5b12;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}.profileAppLauncherHeading .profileLauncherToggle:hover{transform:translateY(-2px);box-shadow:0 5px 16px #203d5b20}.profileAppLauncher{background:transparent!important;border-color:transparent!important;box-shadow:none!important}.profileAppLauncherGrid :global(.profileAppTile){background:#fff!important;background-image:none!important}
 .profileCommandPage:has(.profileEditorToolbar) .profileHero{padding:12px 16px!important;margin-bottom:8px!important;border-radius:16px!important;box-shadow:none!important}
 .profileCommandPage:has(.profileEditorToolbar) .profileHeroTop{padding:0!important}
 .profileCommandPage:has(.profileEditorToolbar) .profileHeroTop h1{font-size:20px!important;margin:2px 0!important}
