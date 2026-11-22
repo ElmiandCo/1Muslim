@@ -183,3 +183,20 @@
  display:block;margin-top:5px;font-size:11px;color:#5b7970;line-height:1.35;
 }
 .profileCommandPage .saveMessage.profileMuslimIdError{margin-top:14px;}
+
+
+/* 1Muslimeen: intentional member pictograms, not playing-card clubs. */
+.profileSocialDiscovery .muslimeenBrand .muslimeenTitle{
+ display:inline-flex;align-items:center;justify-content:center;
+ gap:8px;max-width:100%;
+}
+.profileSocialDiscovery .muslimeenBrand .muslimeenTitle svg{color:var(--member-accent,#28486b);flex:0 0 auto}
+.profileSocialDiscovery .muslimeenTopNav button{
+ display:inline-flex;justify-content:center;align-items:center;gap:6px;
+}
+.profileSocialDiscovery .muslimeenTopNav button svg{flex:0 0 auto;width:17px;height:17px}
+@media(max-width:440px){
+ .profileSocialDiscovery .muslimeenBrand .muslimeenTitle{gap:6px}
+ .profileSocialDiscovery .muslimeenBrand .muslimeenTitle svg{width:25px;height:25px}
+ .profileSocialDiscovery .muslimeenTopNav button{gap:4px}
+}
