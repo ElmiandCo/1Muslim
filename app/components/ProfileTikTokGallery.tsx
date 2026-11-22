@@ -27,6 +27,7 @@ export default function ProfileTikTokGallery(){
    if(!r.ok)throw Error(s.error==="status_unavailable"?"TikTok connection status is temporarily unavailable.":"Could not check your TikTok connection.");
    if(!s.available)throw Error("TikTok review tools are not available for this account.");
    setStatus(s);
+   if(s.connected)setNotice(prev=>prev.startsWith("TikTok redirected back.")?"TikTok connected. Profile and public video access have been checked against TikTok.":prev);
    if(!s.connected){setVideos([]);setLastChecked(new Date().toISOString());return}
    const result=await fetch("/api/tiktok/videos",{cache:"no-store"});
    const data=await result.json().catch(()=>({}));
