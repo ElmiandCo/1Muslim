@@ -1,3 +1,10 @@
+/* Eager invisible loader: fetchPriority=high starts the image early, while
+   opacity:0 avoids introducing an extra tile or a flash in the layout. */
+.profileMosaicPreloader{
+ position:absolute;width:1px;height:1px;top:0;left:0;
+ opacity:0;pointer-events:none;z-index:-1;
+}
+
 /* The cover photograph is a single 3 x 4 mosaic, aligned to the live tile positions.
    nth-child follows DOM order so magnetic drag-sort never breaks the image puzzle. */
 .profileFullAccent .profileAppLauncherGrid:not(.compact){
@@ -26,13 +33,22 @@
  background-repeat:no-repeat!important;
  background-size:calc(300% + var(--mosaic-gap) + var(--mosaic-gap)) calc(400% + var(--mosaic-gap) + var(--mosaic-gap) + var(--mosaic-gap))!important;
  background-position:var(--mosaic-x,50%) var(--mosaic-y,50%)!important;
- opacity:.24!important;
- filter:saturate(.8) contrast(1.08);
- transition:opacity .25s ease,filter .25s ease;
+ /* Keep the photograph concealed until fully decoded. Otherwise slow iOS
+    loads show the top rows first and make lower tiles look reverted/empty. */
+ opacity:0!important;
+ filter:saturate(.78) contrast(1.04);
+ transition:opacity .52s cubic-bezier(.22,1,.36,1),filter .25s ease;
  z-index:0;
 }
-.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTile:hover::before{
- opacity:.31!important;
+/* One photo across all 12 positions, revealed in a single quiet fade.
+   More translucent than before (.16 instead of .24) to keep labels crisp. */
+.profileFullAccent .profileAppLauncherGrid:not(.compact).profileMosaicLoaded > .profileMagneticCell .profileAppTile::before{
+ opacity:.16!important;
+}
+@media(hover:hover){
+ .profileFullAccent .profileAppLauncherGrid:not(.compact).profileMosaicLoaded > .profileMagneticCell .profileAppTile:hover::before{
+  opacity:.21!important;
+ }
 }
 .profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTile::after{
  z-index:1!important;
@@ -53,6 +69,7 @@
 }
 @media(prefers-reduced-motion:reduce){
  .profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTile::before{transition:none!important}
+ .profileFullAccent .profileAppLauncherGrid:not(.compact).profileMosaicLoaded > .profileMagneticCell .profileAppTile::before{transition:none!important}
 }
 /* The large image is a genuine button; pencil and prayer controls retain their own layers. */
 .profileCommandPage .profileProfessionalCover .profileCinematicOpenCover{
