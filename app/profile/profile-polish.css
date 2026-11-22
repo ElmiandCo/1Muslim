@@ -333,3 +333,12 @@
  .profileCommandPage .profileCompactIconMenu :is(.profileAction,.profileTabAction){transition:none!important}
  .profileCommandPage .profileCompactIconMenu .profileActionLabel{animation:none!important}
 }
+
+/* Full profile entry is the cover art itself: no redundant floating arrow pill. */
+.profileCommandPage .profileProfessionalCover[role="button"]{
+ cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.profileCommandPage .profileProfessionalCover[role="button"]:focus-visible{
+ outline:3px solid var(--member-accent,#4b80b9);
+ outline-offset:3px;
+}

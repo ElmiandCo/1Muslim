@@ -270,6 +270,14 @@ export default function MagazineStory(){
 }
 .immersiveStory .immersiveSheetHandle .immersiveGrip{width:35px!important;height:4px!important;min-height:4px!important;border-radius:50px!important;background:#c4c9d1!important;flex:0 0 4px!important}
 .immersiveStory .immersiveCaptionTab{display:flex;align-items:center;justify-content:space-between;gap:9px;width:100%;min-width:0;color:#293b51}
+/* Override the old generic grip-span rule for actual caption text. */
+.immersiveStory .immersiveSheetHandle .immersiveCaptionTab>span{
+ width:auto!important;height:auto!important;min-height:0!important;
+ display:block!important;border-radius:0!important;background:transparent!important;
+}
+.immersiveStory .immersiveSheetHandle .immersiveCaptionTab>.immersiveCaptionOpen{
+ background:#edf4fa!important;border-radius:999px!important;
+}
 .immersiveStory .immersiveCaptionTitle{
  min-width:0;flex:1;font-size:clamp(11px,2.9vw,13px);font-weight:730;line-height:1.25;
  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;letter-spacing:-.012em;text-align:left
