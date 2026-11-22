@@ -7,13 +7,15 @@ export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ available: false, connected: false }, { status: 401 });
-  if (!canUseTikTokReview(user)) return NextResponse.json({ available: false, connected: false }, { headers: { "Cache-Control": "private, no-store" } });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return NextResponse.json({ available: true, connected: false, error: "status_unavailable" }, { status: 503 });
   const admin = createAdminClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await admin.from("tiktok_connections")
     .select("connected_at,access_token,expires_at").eq("user_id", user.id).maybeSingle();
+  if (!canUseTikTokReview(user)) return NextResponse.json({
+    available: false, connected: false, canDisconnect: !error && Boolean(data)
+  }, { headers: { "Cache-Control": "private, no-store" } });
   if (error) return NextResponse.json({ available: true, connected: false, error: "status_unavailable" }, { status: 503 });
   if (!data) return NextResponse.json({ available: true, connected: false }, { headers: { "Cache-Control": "no-store" } });
 
