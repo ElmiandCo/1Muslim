@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./adhan.css";
+import "./prayer-experience.css";
 import "./site-text.css";
 import "./badge-effects.css";
 import "./hudhud-translate.css";

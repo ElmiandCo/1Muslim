@@ -11,6 +11,7 @@ export default function WidgetToolPage(){
  useEffect(()=>{if(tool==="notifications")router.replace("/notifications");},[tool,router]);
  const [location,setLocation]=useState("");const [permission,setPermission]=useState("default");
  useEffect(()=>{if(typeof Notification!=="undefined")setPermission(Notification.permission)},[]);
+ if(tool==="prayer")return <PrayerTimes/>;
  if(!names[tool])return <main style={{padding:30}}><Link href="/">← Home</Link><h1>Widget not found</h1></main>;
  return <main style={{minHeight:"100dvh",background:"radial-gradient(circle at 50% 0%,#205b46,#071c19 70%)",color:"#f3eddb",padding:"clamp(20px,5vw,60px)",fontFamily:"system-ui,sans-serif"}}>
  <div style={{maxWidth:680,margin:"auto"}}><Link href="/" style={{color:"#dfca91",textDecoration:"none"}}>← Home · Widget Gallery</Link><p style={{color:"#d7c38a",letterSpacing:3,fontSize:12,marginTop:40}}>1MUSLIM · WIDGETS</p><h1 style={{fontSize:"clamp(30px,7vw,52px)",margin:"12px 0 24px"}}>{names[tool]}</h1>
