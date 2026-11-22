@@ -106,7 +106,7 @@ export default function QuranRecitationStudio({chapters,initialChapter}:{chapter
  };
  if(!open)return null;
  const liveHref="/streaming/go-live?topic="+encodeURIComponent("Qur'an")+
-  "&title="+encodeURIComponent("Reciting "+chapterName)+
+  "&title="+encodeURIComponent("Qur’an Recitation · "+chapter+" · "+chapterName)+
   "&reciteChapter="+encodeURIComponent(String(chapter))+
   "&reciteMode="+(camera?"phone":"voice")+"&reciteVisual="+visual;
  return <div className="qrsBackdrop" onMouseDown={event=>{if(event.target===event.currentTarget)close()}}>
