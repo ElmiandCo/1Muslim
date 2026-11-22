@@ -3,14 +3,19 @@ import {useEffect,useState} from "react";
 import Link from "next/link";
 import {DAILY_RAKAH,STORY_CHAPTERS} from "./PrayerEducationData";
 import {PrayerScene,PrayerShell} from "./PrayerVisuals";
+import {PrayerTimeIcon,PrayerUiIcon,type PrayerTimeName} from "./icons/PrayerTimeIcon";
 
 const BENEFITS=[
- {icon:"☪",title:"Connection",description:"Renew remembrance"},
- {icon:"▤",title:"Discipline",description:"A daily rhythm"},
- {icon:"❀",title:"Peace",description:"Pause with purpose"},
- {icon:"♡",title:"Gratitude",description:"Give thanks"},
- {icon:"✧",title:"Growth",description:"Return and improve"}
-];
+ {icon:"compass",title:"Connection",description:"Renew remembrance"},
+ {icon:"calendar",title:"Discipline",description:"A daily rhythm"},
+ {icon:"time",title:"Peace",description:"Pause with purpose"},
+ {icon:"compass",title:"Gratitude",description:"Give thanks"},
+ {icon:"next",title:"Growth",description:"Return and improve"}
+] as const;
+function StoryChapterGlyph({index}:{index:number}){
+ if(index===3)return <span className="prayerStoryCountIcon">50 → 5</span>;
+ return <PrayerUiIcon kind={index===0?"next":index===1?"compass":index===2?"calendar":"time"}/>;
+}
 export default function PrayerStory(){
  const [chapter,setChapter]=useState(0);
  const [auto,setAuto]=useState(false);
@@ -28,22 +33,22 @@ export default function PrayerStory(){
   <section className="prayerHero prayerStoryHero">
    <PrayerScene night/>
    <div className="prayerHeroContents">
-    <span className="prayerHeroLabel">✧ THE ORIGIN OF SALAH</span>
+    <span className="prayerHeroLabel">THE ORIGIN OF SALAH</span>
     <h1>The Story of <em>Salah</em></h1>
     <p>From the Night Journey to the gift of five daily prayers — explore the account through authentic sources.</p>
     <button type="button" className="prayerGoldButton" onClick={()=>{setChapter(0);setAuto(x=>!x)}}>{auto?"Ⅱ Pause story":"▶ Play the story"} <span>→</span></button>
    </div>
   </section>
   <section className="prayerCard prayerStoryChapters" aria-labelledby="chapters-heading">
-   <div className="prayerSectionTop"><span className="prayerSectionIcon">⌁</span><div><h2 id="chapters-heading">The journey at a glance</h2><p>Five chapters — scroll, select, and follow the story.</p></div></div>
+   <div className="prayerSectionTop"><span className="prayerSectionIcon"><PrayerUiIcon kind="next"/></span><div><h2 id="chapters-heading">The journey at a glance</h2><p>Five chapters — scroll, select, and follow the story.</p></div></div>
    <div className="prayerStoryTimeline" role="tablist" aria-label="Story chapters">
     {STORY_CHAPTERS.map((item,i)=><button type="button" key={item.title} role="tab" aria-selected={chapter===i} className={chapter===i?"current":""} onClick={()=>go(i)}>
-     <span className="prayerTimelineNumber">{i+1}</span><span className="prayerTimelineIcon" aria-hidden="true">{item.icon}</span>
+     <span className="prayerTimelineNumber">{i+1}</span><span className="prayerTimelineIcon" aria-hidden="true"><StoryChapterGlyph index={i}/></span>
      <strong>{item.title}</strong><small>{item.subtitle}</small>
     </button>)}
    </div>
    <div className="prayerStoryFocus" role="tabpanel">
-    <div className="prayerStoryChapterVisual" aria-hidden="true"><span>{current.icon}</span><small>CHAPTER {chapter+1} OF {STORY_CHAPTERS.length}</small></div>
+    <div className="prayerStoryChapterVisual" aria-hidden="true"><span><StoryChapterGlyph index={chapter}/></span><small>CHAPTER {chapter+1} OF {STORY_CHAPTERS.length}</small></div>
     <div className="prayerStoryChapterText">
      <span className="prayerStepKicker">THE JOURNEY · {current.subtitle.toUpperCase()}</span>
      <h3>{current.title}</h3><p>{current.body}</p>
@@ -57,13 +62,13 @@ export default function PrayerStory(){
   </section>
   <div className="prayerStoryInsightPair">
    <section className="prayerCard prayerHadithInsight">
-    <div className="prayerSectionTop"><span className="prayerSectionIcon">☷</span><div><h2>Hadith insight</h2><p>Five in obligation, fifty in reward.</p></div></div>
+    <div className="prayerSectionTop"><span className="prayerSectionIcon"><PrayerUiIcon kind="calendar"/></span><div><h2>Hadith insight</h2><p>Five in obligation, fifty in reward.</p></div></div>
     <span className="prayerQuoteMark" aria-hidden="true">“</span>
     <blockquote>The authentic narration explains that the prayers became five each day, with the reward of fifty.</blockquote>
     <a href="https://sunnah.com/bukhari:349" target="_blank" rel="noreferrer">Ṣaḥīḥ al-Bukhārī 349 ↗</a>
    </section>
    <section className="prayerCard prayerStoryChart">
-    <div className="prayerSectionTop"><span className="prayerSectionIcon">↗</span><div><h2>Fifty → Five</h2><p>The Miʿrāj in numbers</p></div></div>
+    <div className="prayerSectionTop"><span className="prayerSectionIcon"><PrayerUiIcon kind="next"/></span><div><h2>Fifty → Five</h2><p>The Miʿrāj in numbers</p></div></div>
     <svg className="prayerStoryGraph" viewBox="0 0 440 195" role="img" aria-label="Five prayers were prescribed each day, with the reward described as fifty">
      <defs><linearGradient id="salahChartLine" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#ffe8ab"/><stop offset="1" stopColor="#e2ac50"/></linearGradient></defs>
      <path d="M30 48 C112 53 112 105 204 112 S340 158 414 159" stroke="url(#salahChartLine)" strokeWidth="5" fill="none" strokeLinecap="round"/>
@@ -76,12 +81,12 @@ export default function PrayerStory(){
    </section>
   </div>
   <section className="prayerCard prayerDailyRhythm">
-   <div className="prayerSectionTop"><span className="prayerSectionIcon">◷</span><div><h2>The daily rhythm</h2><p>Five moments of worship, from dawn to night.</p></div></div>
-   <div className="prayerRhythmRail">{DAILY_RAKAH.map(item=><div key={item.name}><span>{item.icon}</span><strong>{item.name}</strong><small>{item.count} farḍ rakʿahs</small></div>)}</div>
+   <div className="prayerSectionTop"><span className="prayerSectionIcon"><PrayerUiIcon kind="time"/></span><div><h2>The daily rhythm</h2><p>Five moments of worship, from dawn to night.</p></div></div>
+   <div className="prayerRhythmRail">{DAILY_RAKAH.map(item=><div key={item.name}><span className="prayerRhythmTimeIcon" aria-hidden="true"><PrayerTimeIcon prayer={item.name as PrayerTimeName}/></span><strong>{item.name}</strong><small>{item.count} farḍ rakʿahs</small></div>)}</div>
   </section>
   <section className="prayerCard prayerStoryImpact">
-   <div className="prayerSectionTop"><span className="prayerSectionIcon">◈</span><div><h2>Prayer &amp; daily life</h2><p>A visual reflection on consistency, remembrance and purpose.</p></div></div>
-   <div className="prayerImpactRail">{BENEFITS.map((benefit,i)=><div className="prayerImpactNode" key={benefit.title}><span className="prayerImpactIcon">{benefit.icon}</span><strong>{benefit.title}</strong><small>{benefit.description}</small>{i<BENEFITS.length-1&&<span className="prayerImpactConnector" aria-hidden="true"/>}</div>)}</div>
+   <div className="prayerSectionTop"><span className="prayerSectionIcon"><PrayerUiIcon kind="compass"/></span><div><h2>Prayer &amp; daily life</h2><p>A visual reflection on consistency, remembrance and purpose.</p></div></div>
+   <div className="prayerImpactRail">{BENEFITS.map((benefit,i)=><div className="prayerImpactNode" key={benefit.title}><span className="prayerImpactIcon"><PrayerUiIcon kind={benefit.icon}/></span><strong>{benefit.title}</strong><small>{benefit.description}</small>{i<BENEFITS.length-1&&<span className="prayerImpactConnector" aria-hidden="true"/>}</div>)}</div>
    <div className="prayerDailyChecklist">
     <div className="prayerDailyScore" style={{background:"conic-gradient(#d8ac58 "+complete*20+"%,#e5e9e7 0)"}}><div><strong>{complete}/5</strong><span>today</span></div></div>
     <div><h3>My five daily prayers</h3><p>Keep a private check-in on this device. This tracker is not a measure of faith.</p>
