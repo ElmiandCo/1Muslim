@@ -58,7 +58,7 @@ function readEditor(node:Node):string {
  const id=node.dataset.emotextId;
  if(id&&byId.has(id))return emotextToken(id);
  if(node.tagName==="BR")return "\n";
- return Array.from(node.childNodes).map(readEditor).join("")+(node.tagName==="DIV"?"\n":"");
+ return Array.from(node.childNodes).map(readEditor).join("")+(node.tagName==="DIV"&&node.getAttribute("role")!=="textbox"?"\n":"");
 }
 
 function populateEditor(element:HTMLElement,value:string) {
@@ -142,6 +142,6 @@ export function EmoTextComposer({value,onChange,maxLength=500,disabled=false,pla
  };
  return <div className={styles.composer}>
   <div ref={editor} className={styles.editable} role="textbox" aria-label={ariaLabel} aria-multiline="true" aria-disabled={disabled} data-placeholder={placeholder} contentEditable={!disabled} suppressContentEditableWarning onInput={sync} onKeyDown={keydown} onPaste={paste}/>
-  <EmoTextKeyboard onInsert={add} onABC={()=>editor.current?.focus()} disabled={disabled}/>
+  <EmoTextKeyboard onInsert={add} onABC={()=>{const el=editor.current;if(!el)return;el.focus();const range=document.createRange();range.selectNodeContents(el);range.collapse(false);const selection=window.getSelection();selection?.removeAllRanges();selection?.addRange(range)}} disabled={disabled}/>
  </div>;
 }
