@@ -6,6 +6,7 @@ import type { DiscoverKind, DiscoverItem, DiscoverResponse } from "../lib/discov
 
 type Tab = "All" | DiscoverKind;
 type ChatLine = { role: "user" | "assistant"; content: string; matches?: DiscoverItem[] };
+type SuggestedCreator = { id:string; handle:string; displayName:string; avatarUrl:string|null; postCount:number; href:string };
 const CATEGORIES: DiscoverKind[] = ["Videos","Posts","People","Movies & Series","Qur’an","Comments","Lessons","Prayer","Live","Qibla"];
 const TABS: Tab[] = ["All", ...CATEGORIES];
 const ICON: Record<DiscoverKind,string> = {
@@ -57,6 +58,8 @@ export default function SearchHub() {
   const [submitted,setSubmitted]=useState("");
   const [tab,setTab]=useState<Tab>("All");
   const [recent,setRecent]=useState<string[]>([]);
+  const [creators,setCreators]=useState<SuggestedCreator[]>([]);
+  const [creatorsLoading,setCreatorsLoading]=useState(true);
   const [result,setResult]=useState<DiscoverResponse|null>(null);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState("");
@@ -79,6 +82,14 @@ export default function SearchHub() {
     catch{}
     const initial=new URLSearchParams(window.location.search).get("q")||"";
     if(initial){setQuery(initial.slice(0,90));setSubmitted(initial.slice(0,90));}
+  },[]);
+  useEffect(()=>{
+    const controller=new AbortController();
+    void fetch("/api/discover/creators",{signal:controller.signal,cache:"no-store"})
+      .then(async response=>{if(!response.ok)throw Error("Unable to load creators");return response.json();})
+      .then(data=>{if(!controller.signal.aborted)setCreators(Array.isArray(data.recommended)?data.recommended.slice(0,7):[]);})
+      .catch(()=>{}).finally(()=>{if(!controller.signal.aborted)setCreatorsLoading(false);});
+    return()=>controller.abort();
   },[]);
   useEffect(()=>{
     const onScroll=()=>setCompactHeader(window.scrollY>140);
@@ -169,12 +180,16 @@ export default function SearchHub() {
         </form>
         <button className="dsSearchSubmit" type="button" onClick={()=>commit(query)}>Search</button>
       </div>
-      <nav className="dsTabs" aria-label="Discover categories">
-        {TABS.map(name=><button key={name} type="button" className={tab===name?"active":""} aria-pressed={tab===name} onClick={()=>{setTab(name);setSubmitted(query.trim());}}>
-          {name}{name!=="All"&&result&&totalFor(name as DiscoverKind)>0?<small>{totalFor(name as DiscoverKind)}</small>:null}
-        </button>)}
-        <button className="dsHudTab" type="button" onClick={()=>void openHudHud()}>✦ Ask HudHud</button>
-      </nav>
+      <div className="dsCategoryBar">
+        <nav className="dsTabs" aria-label="Discover categories">
+          {TABS.map(name=><button key={name} type="button" className={tab===name?"active":""} aria-pressed={tab===name} onClick={()=>{setTab(name);setSubmitted(query.trim());}}>
+            {name}{name!=="All"&&result&&totalFor(name as DiscoverKind)>0?<small>{totalFor(name as DiscoverKind)}</small>:null}
+          </button>)}
+        </nav>
+        <button className="dsHudTab" type="button" title="Ask HudHud" aria-label="Ask HudHud AI search assistant" onClick={()=>void openHudHud()}>
+          <img src="/assets/hudhud-logo.PNG" alt="" aria-hidden="true"/><span>HudHud</span>
+        </button>
+      </div>
     </header>
 
     {showSuggestions&&<section className="dsSuggestions" aria-label="Search suggestions">
@@ -183,22 +198,30 @@ export default function SearchHub() {
       <button className="dsSuggestSearchAll" type="button" onClick={()=>commit(query)}>Search all 1Muslim for “{query}” <span aria-hidden="true">→</span></button>
     </section>}
 
-    {!query.trim()&&<section className="dsHero">
-      <div className="dsHeroGlow" aria-hidden="true"/>
-      <div className="dsHeroCopy"><span className="dsHeroEyebrow">✦ DISCOVER 1MUSLIM</span><h1>One search.<br/><em>Your entire Ummah.</em></h1>
-        <p>Find creators, conversations, videos, films, Qur’an verses, and guides — all in one place.</p>
-        <button type="button" className="dsHeroAsk" onClick={()=>void openHudHud()}>✦ Search with HudHud <span>↗</span></button>
-      </div>
-      <span className="dsHeroMark" aria-hidden="true">۞</span>
-    </section>}
+
 
     <div className="dsContent">
-      {!query.trim()&&<section className="dsRecent">
-        <div className="dsSectionHead"><div><span className="dsSectionKicker">YOUR DISCOVER ACTIVITY</span><h2>Recent searches</h2></div>
-          {recent.length>0&&<button className="dsQuietButton" onClick={()=>{setRecent([]);try{localStorage.removeItem(historyKey)}catch{}}}>Clear all</button>}</div>
-        {recent.length?<div className="dsRecentList">{recent.map(s=><div className="dsRecentItem" key={s}><button type="button" onClick={()=>commit(s)}><span>◷</span>{s}</button><button type="button" aria-label={"Remove "+s} onClick={()=>remove(s)}>×</button></div>)}</div>
-          :<p className="dsEmptyRecent">Your recent searches stay on this device.</p>}
-      </section>}
+      {!query.trim()&&<div className="dsHomeIntro">
+        <section className="dsRecent" aria-labelledby="dsRecentTitle">
+          <div className="dsSectionHead"><div><h2 id="dsRecentTitle">Recent searches</h2></div>
+            {recent.length>0&&<button type="button" className="dsQuietButton" onClick={()=>{setRecent([]);try{localStorage.removeItem(historyKey)}catch{}}}>Clear all</button>}</div>
+          {recent.length?<div className="dsRecentList">{recent.map(s=><div className="dsRecentItem" key={s}><button type="button" onClick={()=>commit(s)}><span>◷</span>{s}</button><button type="button" aria-label={"Remove "+s} onClick={()=>remove(s)}>×</button></div>)}</div>
+            :<p className="dsEmptyRecent">Your searches will appear here, only on this device.</p>}
+        </section>
+        <section className="dsRecommended" aria-label="Recommended creators">
+          <div className="dsSectionHead"><h2>You may like</h2><span className="dsRecommendedLabel">Active creators</span></div>
+          {creatorsLoading
+            ? <div className="dsCreatorLoading" role="status">Finding creators across 1Muslim…</div>
+            : creators.length>0
+              ? <div className="dsCreatorList">{creators.map((creator,index)=><Link className="dsCreatorRow" href={creator.href} key={creator.id} aria-label={"View "+creator.handle+" profile"}>
+                <span className="dsCreatorRank">{String(index+1).padStart(2,"0")}</span>
+                <span className="dsCreatorAvatar">{creator.avatarUrl?<img src={creator.avatarUrl} alt="" loading="lazy"/>:<span>{creator.displayName.slice(0,1).toUpperCase()}</span>}</span>
+                <span className="dsCreatorName"><strong>{creator.handle}</strong><small>{creator.displayName}</small></span>
+                <span className="dsCreatorPostCount">{creator.postCount} {creator.postCount===1?"post":"posts"}</span><span className="dsCreatorChevron" aria-hidden="true">↗</span>
+              </Link>)}</div>
+              : <p className="dsCreatorEmpty">Creator recommendations will appear here as the Ummah posts.</p>}
+        </section>
+      </div>}
 
       {loading&&<div className="dsLoading" role="status"><span className="dsLoadingLine"/><span>Searching the 1Muslim directory…</span><div className="dsSkeletonRow"><i/><i/><i/></div></div>}
       {error&&<div className="dsError" role="alert">{error}<button onClick={()=>setQuery(s=>s+" ")}>Try again</button></div>}
@@ -220,7 +243,7 @@ export default function SearchHub() {
       {!query.trim()&&<section className="dsExplore"><div className="dsSectionHead"><div><span className="dsSectionKicker">QUICK DESTINATIONS</span><h2>Explore 1Muslim</h2><p>Jump into the parts of your community you love most.</p></div></div>
         <div className="dsExploreGrid">{explore.map(x=><Link key={x.href} href={x.href}><span>{x.icon}</span><strong>{x.label}</strong><small>{x.details}</small><b aria-hidden="true">↗</b></Link>)}</div></section>}
     </div>
-    <button className="dsFloatAsk" type="button" onClick={()=>void openHudHud()} aria-label="Ask HudHud for help finding content"><span>✦</span> Ask HudHud</button>
+
 
     {hudOpen&&<div className="dsChatOverlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setHudOpen(false)}}>
       <aside className="dsChat" role="dialog" aria-modal="true" aria-labelledby="dsChatHeading">
