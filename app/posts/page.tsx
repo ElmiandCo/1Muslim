@@ -16,13 +16,29 @@ const clean=(text:string)=>cleanPostBody(text).replace(/https?:\/\/\S+/g,"").tri
 // Near-viewport cards become interactive before the user actually reaches them.
 function VisiblePostEngagement({postId,mediaUrl,mediaType,youtube}:{postId:string;mediaUrl:string|null;mediaType:string|null;youtube:string|null}){
  const container=useRef<HTMLDivElement|null>(null);
+ const content=useRef<HTMLDivElement|null>(null);
  const [near,setNear]=useState(false);
+ // Preserve the engagement region's last measured height when it is virtualized.
+ // Previously every offscreen card collapsed back to 54px, pulling scroll position
+ // under the user's finger and triggering iOS Safari scroll anchoring jumps.
+ const [reservedHeight,setReservedHeight]=useState(154);
  useEffect(()=>{
   const node=container.current;if(!node)return;
-  const observer=new IntersectionObserver(([entry])=>setNear(entry.isIntersecting),{rootMargin:"800px 0px 850px 0px",threshold:0});
+  const observer=new IntersectionObserver(([entry])=>setNear(entry.isIntersecting),{rootMargin:"650px 0px 650px 0px",threshold:0});
   observer.observe(node);return()=>observer.disconnect();
  },[]);
- return <div ref={container} style={{minHeight:54}}>{near?<UnifiedPostMedia postId={postId} mediaUrl={mediaUrl} mediaType={mediaType} youtubeId={youtube}/>:null}</div>;
+ useEffect(()=>{
+  if(!near||!content.current)return;
+  const node=content.current;
+  const measure=()=>{const height=Math.ceil(node.getBoundingClientRect().height);if(height>0)setReservedHeight(old=>Math.max(old,height))};
+  measure();
+  const resize=new ResizeObserver(measure);
+  resize.observe(node);
+  return()=>resize.disconnect();
+ },[near]);
+ return <div ref={container} style={near?{minHeight:reservedHeight}:{height:reservedHeight}}>
+  {near?<div ref={content}><UnifiedPostMedia postId={postId} mediaUrl={mediaUrl} mediaType={mediaType} youtubeId={youtube}/></div>:null}
+ </div>;
 }
 let cachedDiscover:{posts:Post[];viewerId:string|null;at:number}|null=null;
 export default function PublicPostsSocial(){
@@ -84,6 +100,7 @@ export default function PublicPostsSocial(){
   return()=>{window.removeEventListener(UMMAH_WATCH_UPDATED_EVENT,sync);window.removeEventListener("storage",sync);document.removeEventListener("visibilitychange",onVisibility)};
  },[]);
  const postKey=posts.map(p=>p.id).join("|");
+ const stableForYouOrder=useRef<string[]>([]);
  useEffect(()=>{
   if(!postKey){setScores({});setRankStatus("ready");return}
   const abort=new AbortController();
@@ -102,15 +119,26 @@ export default function PublicPostsSocial(){
    return result.filter(p=>index.has(p.id)).sort((a,b)=>(index.get(a.id)??999)-(index.get(b.id)??999));
   }
   if(filter==="popular")return result.sort((a,b)=>(scores[b.id]?.score??0)-(scores[a.id]?.score??0)||b.created_at.localeCompare(a.created_at));
-  // For You combines real site engagement, freshness and your recently watched creators.
-  // With no activity history, it gracefully begins as a fresh discovery feed.
+  // Calculate the rank for newly arrived cards, but NEVER reorder cards that are
+  // already rendered. Engagement scores arrive asynchronously and the second
+  // batch arrives after 600ms: re-sorting the visible list on each arrival
+  // visibly teleports the feed while somebody is swiping.
   const authors=new Set(history.slice(0,18).map(item=>item.authorId));
   const rank=(p:Post)=>{
    const ageHours=Math.max(0,(Date.now()-Date.parse(p.created_at))/3600000);
    const freshness=22/(1+ageHours/48);
    return freshness+Math.log1p(scores[p.id]?.score??0)*4+(authors.has(p.author_id)?9:0);
   };
-  return result.sort((a,b)=>rank(b)-rank(a)||b.created_at.localeCompare(a.created_at));
+  const valid=new Set(posts.map(p=>p.id));
+  const previous=stableForYouOrder.current.filter(id=>valid.has(id));
+  const already=new Set(previous);
+  const newcomers=posts.filter(p=>!already.has(p.id))
+   .sort((a,b)=>rank(b)-rank(a)||b.created_at.localeCompare(a.created_at))
+   .map(p=>p.id);
+  const ordered=previous.concat(newcomers);
+  stableForYouOrder.current=ordered;
+  const position=new Map(ordered.map((id,index)=>[id,index]));
+  return result.sort((a,b)=>(position.get(a.id)??Infinity)-(position.get(b.id)??Infinity));
  },[posts,query,filter,history,scores]);
  const startImmersive=()=>{
   if(!filtered.length)return;
@@ -137,7 +165,7 @@ export default function PublicPostsSocial(){
   {loading?<div className={styles.status}>LOADING YOUR FEED…</div>:error?<div className={styles.status} role="alert">{error}</div>:filter==="popular"&&rankStatus==="loading"?<div className={styles.status}>RANKING POSTS BY REAL ENGAGEMENT…</div>:filter==="popular"&&rankStatus==="error"?<div className={styles.status} role="alert">Popularity rankings are temporarily unavailable. Please try again shortly.</div>:!filtered.length?<div className={styles.status}>{filter==="lastWatched"?"No videos watched yet on this device. Open a video and play it to begin your history.":"NO POSTS FOUND YET."}</div>:<div className={styles.feedStream}>{filtered.map(p=>{const video=youtubeId(p.body),isImage=!!p.media_url&&!!p.media_type?.startsWith("image/"),body=clean(p.body),long=body.length>220;return <article className={styles.feedPost} key={p.id}><div className={styles.feedPostHeader}><Link href={`/profile?section=muslimeen&member=${encodeURIComponent(p.author_id)}`} className={styles.feedPostIdentity}><span className={styles.feedPostAvatar}>{p.author_avatar_url?<img className={styles.authorAvatarImage} src={p.author_avatar_url} alt="" loading="lazy" referrerPolicy="no-referrer"/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span><span><strong>{p.author_name||"Community member"} {p.shahada_verified?"✦":""}</strong><small>{p.author_handle} · {new Date(p.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"})}</small></span></Link><PostAuthorFollow authorId={p.author_id} viewerId={viewerId}/><div className={styles.feedMenuWrap}><button type="button" className={styles.feedPostMore} aria-label="Post options" aria-expanded={menuId===p.id} onClick={()=>{setMenuId(v=>v===p.id?null:p.id);setActionError("")}}>•••</button>{menuId===p.id&&<div className={styles.feedPostMenu}><Link href={`/posts/story/${encodeURIComponent(p.id)}`}>View</Link>{viewerId===p.author_id&&<><button type="button" onClick={()=>{setEditingId(p.id);setEditText(p.body);setMenuId(null)}}>Edit</button><button type="button" disabled={actionBusy} onClick={async()=>{if(!window.confirm("Delete this post permanently?"))return;setActionBusy(true);setActionError("");try{const r=await fetch("/api/community-posts",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id})});if(!r.ok)throw Error((await r.json()).error||"Could not delete post");setPosts(old=>old.filter(x=>x.id!==p.id));setMenuId(null)}catch(e){setActionError(e instanceof Error?e.message:"Delete failed")}finally{setActionBusy(false)}}}>Delete</button></>}</div>}</div></div>
  {editingId===p.id&&<div className={styles.feedEditBox}><textarea aria-label="Edit post text" value={editText} maxLength={2000} onChange={e=>setEditText(e.target.value)}/><div><button type="button" disabled={actionBusy} onClick={()=>setEditingId(null)}>Cancel</button><button type="button" disabled={actionBusy||!editText.trim()} onClick={async()=>{setActionBusy(true);setActionError("");try{const r=await fetch("/api/community-posts",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,text:editText})});if(!r.ok)throw Error((await r.json()).error||"Could not save post");setPosts(old=>old.map(x=>x.id===p.id?{...x,body:editText.trim()}:x));setEditingId(null)}catch(e){setActionError(e instanceof Error?e.message:"Save failed")}finally{setActionBusy(false)}}}>Save changes</button></div></div>}
  {body&&<div className={styles.feedPostCaption}><p>{long&&!expanded[p.id]?body.slice(0,220).trimEnd()+"…":body}</p>{long&&<button type="button" onClick={()=>setExpanded(old=>({...old,[p.id]:!old[p.id]}))}>{expanded[p.id]?"Show less":"Read more"}</button>}</div>}
- {isImage&&<Link href={`/posts/story/${encodeURIComponent(p.id)}`} className={styles.feedMediaLink}><img src={p.media_url!} alt="Community post" loading="lazy" decoding="async" fetchPriority="auto" style={{backgroundColor:"#f1f3f6"}}/></Link>}
+ {isImage&&<Link href={`/posts/story/${encodeURIComponent(p.id)}`} className={styles.feedMediaLink}><img src={p.media_url!} alt="Community post" width={960} height={1200} loading="lazy" decoding="async" fetchPriority="auto" style={{backgroundColor:"#f1f3f6"}}/></Link>}
  <div className={styles.feedPostEngagement}><VisiblePostEngagement postId={p.id} mediaUrl={p.media_url} mediaType={p.media_type} youtube={video}/></div>
  <div className={styles.feedPostBottom}><span>1MUSLIM · COMMUNITY</span><Link href={`/posts/story/${encodeURIComponent(p.id)}`}>VIEW POST ↗</Link></div></article>})}</div>}
  {actionError&&<p role="alert" className={styles.status}>{actionError}</p>}
