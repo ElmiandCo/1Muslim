@@ -315,3 +315,137 @@
  .prayerAudioControl{transition:none}
  .prayerAudioTrack span{transition:none}
 }
+
+
+/* 2026 Prayer dashboard — light, theme-sensitive visual system. No dark green hardcoding. */
+.prayerExperience{
+ --prayer-brand:var(--theme-accent,#a78a5d);
+ --prayer-trim:color-mix(in srgb,var(--prayer-brand) 29%,#e2e8ef);
+ --prayer-haze:color-mix(in srgb,var(--prayer-brand) 7%,#f9fbfc);
+ --prayer-ink:#263745;
+ --prayer-muted:#6a7c88;
+ --prayer-gold:var(--prayer-brand);
+ --prayer-green:var(--prayer-brand);
+ color:var(--prayer-ink);
+ background:
+  radial-gradient(ellipse at 50% 1%,color-mix(in srgb,var(--prayer-brand) 13%,transparent),transparent 620px),
+  linear-gradient(180deg,#f9fbfc 0%,var(--prayer-haze) 500px,#fff 1300px);
+ transition:background .25s ease;
+}
+.prayerExperience .prayerPageHeader{min-height:63px;padding:5px 2px 10px}
+.prayerExperience .prayerHeaderBack{font-size:clamp(19px,3vw,26px);color:#243a4b;letter-spacing:-.035em;gap:9px}
+.prayerExperience .prayerHeaderBack .prayerUiSvg{width:23px;height:23px;color:color-mix(in srgb,var(--prayer-brand) 44%,#40576c);flex:0 0 23px}
+.prayerHeaderPill{display:inline-flex;gap:8px;align-items:center;white-space:nowrap;padding:8px 10px;background:rgba(255,255,255,.67);border:1px solid var(--prayer-trim);border-radius:999px;color:color-mix(in srgb,var(--prayer-brand) 47%,#4c5c6d);font-weight:750;font-size:11px}
+.prayerHeaderPill .prayerUiSvg{width:17px;height:17px}
+.prayerExperience .prayerPageEyebrow{color:color-mix(in srgb,var(--prayer-brand) 66%,#36495e);font-size:10px}
+.prayerExperience .prayerHero{border-color:var(--prayer-trim);box-shadow:0 13px 32px rgba(30,50,73,.08);background:var(--prayer-haze)}
+.prayerExperience .prayerDashboardHero .prayerScene{width:86%;opacity:.29;filter:saturate(.75)}
+.prayerExperience .prayerDashboardHero::after{background:linear-gradient(92deg,rgba(255,255,255,.97),rgba(255,255,255,.80) 58%,rgba(255,255,255,.32))}
+.prayerExperience .prayerDashboardHero .prayerHeroContents{width:min(78%,620px);gap:12px}
+.prayerExperience .prayerDashboardHero .prayerCityButton{color:#24394a;font-size:clamp(17px,3vw,23px);font-weight:770;letter-spacing:-.022em}
+.prayerCityButton .prayerLocationPin{width:23px;height:23px;display:inline-grid;place-items:center;flex:0 0 23px;color:var(--prayer-brand)}
+.prayerCityButton .prayerLocationPin svg{width:22px;height:22px}
+.prayerExperience .prayerDashboardHero .prayerDate{color:#647689!important;font-size:12px!important}
+.prayerExperience .prayerNextFocus{max-width:470px;padding:14px;border:1px solid var(--prayer-trim);border-radius:17px;background:rgba(255,255,255,.64);-webkit-backdrop-filter:blur(18px) saturate(145%);backdrop-filter:blur(18px) saturate(145%);box-shadow:0 7px 24px rgba(22,45,64,.06)}
+.prayerExperience .prayerNextFocus .prayerNextIcon{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:14px;border:1px solid var(--prayer-trim);background:color-mix(in srgb,var(--prayer-brand) 10%,rgba(255,255,255,.68));color:var(--prayer-brand)}
+.prayerExperience .prayerNextIcon svg{width:32px;height:32px}
+.prayerExperience .prayerNextLabel{color:color-mix(in srgb,var(--prayer-brand) 56%,#576778);font-size:9px}
+.prayerExperience .prayerNextFocus b{color:#293b4b;font-size:clamp(20px,4vw,26px);letter-spacing:-.03em}
+.prayerExperience .prayerNextFocus small{color:#6b7b89}
+.prayerExperience .prayerNextFocus>strong{color:color-mix(in srgb,var(--prayer-brand) 63%,#324f62);font-variant-numeric:tabular-nums;white-space:nowrap}
+.prayerExperience .prayerCard,.prayerExperience .prayerLocationEdit{border:1px solid var(--prayer-trim);background:rgba(255,255,255,.88);box-shadow:0 10px 30px rgba(26,48,66,.07)}
+.prayerExperience .prayerSectionIcon{background:color-mix(in srgb,var(--prayer-brand) 9%,#fff);border:1px solid var(--prayer-trim);color:color-mix(in srgb,var(--prayer-brand) 74%,#405365);box-shadow:none}
+.prayerExperience .prayerSectionIcon .prayerUiSvg{width:24px;height:24px}
+.prayerExperience .prayerCalcBadge{background:var(--prayer-haze);border-color:var(--prayer-trim);color:#647789}
+.prayerExperience .prayerScheduleLoading{background:var(--prayer-haze);color:#687b85}
+.prayerExperience .prayerGoldButton{background:color-mix(in srgb,var(--prayer-brand) 18%,#fff);border:1px solid color-mix(in srgb,var(--prayer-brand) 48%,#e9eef2);color:#263d50!important;box-shadow:none}
+.prayerExperience .prayerGoldButton:hover{background:color-mix(in srgb,var(--prayer-brand) 25%,#fff)}
+.prayerExperience .prayerInfoNote,.prayerExperience .prayerPageFooter{color:#75818d}
+/* Six bespoke illustrated moments, centered on the upcoming prayer. */
+.prayerExperience .prayerTimesRail{
+ --prayer-item-width:clamp(138px,26vw,172px);
+ display:flex;
+ gap:11px;
+ padding:8px 0 16px;
+ width:100%;
+ overflow-x:auto;
+ overflow-y:hidden;
+ overscroll-behavior-inline:contain;
+ -webkit-overflow-scrolling:touch;
+ scroll-snap-type:x mandatory;
+ scroll-padding-inline:calc((100% - var(--prayer-item-width))/2);
+ scrollbar-width:none;
+}
+.prayerExperience .prayerTimesRail::before,.prayerExperience .prayerTimesRail::after{content:"";display:block;flex:0 0 max(0px,calc((100% - var(--prayer-item-width))/2))}
+.prayerExperience .prayerTimeCell{
+ position:relative;
+ flex:0 0 var(--prayer-item-width);
+ min-height:163px;
+ padding:16px 9px 13px;
+ border-radius:19px;
+ background:linear-gradient(150deg,#ffffff, color-mix(in srgb,var(--prayer-brand) 3%,#f9fbfd));
+ color:#243949;
+ border:1px solid color-mix(in srgb,var(--prayer-brand) 16%,#e3e9ef);
+ box-shadow:0 3px 11px rgba(32,52,73,.035);
+ scroll-snap-align:center;
+ scroll-snap-stop:normal;
+ display:grid;
+ align-content:center;
+ justify-items:center;
+ gap:7px;
+ transition:background-color .25s ease,border-color .25s ease,box-shadow .25s ease,transform .25s ease;
+}
+.prayerExperience .prayerTimeCell .prayerTimeCellIcon{display:grid;place-items:center;color:color-mix(in srgb,var(--prayer-brand) 73%,#6f7180);width:42px;height:42px;background:color-mix(in srgb,var(--prayer-brand) 5%,#fff);border-radius:14px}
+.prayerExperience .prayerTimeCell .prayerTimeCellIcon svg{width:36px;height:36px;overflow:visible}
+.prayerExperience .prayerTimeCell strong{font-size:14px;color:#283b49;letter-spacing:-.01em}
+.prayerExperience .prayerTimeCell b{font-size:clamp(14px,2.5vw,17px);color:#263848;font-variant-numeric:tabular-nums}
+.prayerExperience .prayerTimeCell small{font-size:10px;color:#7a8a95}
+.prayerExperience .prayerTimeCell.current{
+ background:linear-gradient(146deg,color-mix(in srgb,var(--prayer-brand) 15%,#fff),#fff 88%);
+ border-color:color-mix(in srgb,var(--prayer-brand) 68%,#d9e2ea);
+ box-shadow:0 8px 22px color-mix(in srgb,var(--prayer-brand) 14%,transparent),inset 0 1px #fff;
+ transform:translateY(-3px);
+}
+.prayerExperience .prayerTimeCell.current::after{content:"";position:absolute;top:0;left:25%;width:50%;height:3px;border-radius:0 0 8px 8px;background:var(--prayer-brand);opacity:.8}
+.prayerExperience .prayerTimeCell.current :is(.prayerTimeCellIcon,strong,b,small){color:#233c4d}
+.prayerExperience .prayerTimeCell.current small{font-weight:760;color:color-mix(in srgb,var(--prayer-brand) 65%,#4f6070)}
+.prayerTimeSvg .prayerIconRay{transform-origin:center;animation:prayerRayBreathe 4.6s ease-in-out infinite}
+.prayerTimeSvg-fajr .prayerIconRay{animation-delay:-.3s}
+.prayerTimeSvg-sunrise .prayerIconRay{animation-delay:-1.3s}
+.prayerTimeSvg-dhuhr .prayerIconRay{animation-delay:-2.5s}
+.prayerTimeSvg-asr .prayerIconRay{animation-delay:-3.4s}
+.prayerTimeSvg-maghrib .prayerIconRay{animation-delay:-1.9s}
+@keyframes prayerRayBreathe{0%,100%{opacity:.52}50%{opacity:1}}
+/* Settings and learn cards follow the selected theme rather than fixed green. */
+.prayerExperience .adhanToggle.active,
+.prayerExperience .adhanAudioToggle,
+.prayerExperience .prayerAudioToggle,
+.prayerExperience .adhanSummaryActions button,
+.prayerExperience .adhanWizardFooter .adhanPrimaryAction{
+ background:color-mix(in srgb,var(--prayer-brand) 26%,#263b4e);
+ border-color:color-mix(in srgb,var(--prayer-brand) 65%,#263b4e);
+ color:#fff;
+}
+.prayerExperience .adhanPremium .adhanPrayerCheck.selected{border-color:var(--prayer-trim);background:var(--prayer-haze)}
+.prayerExperience .adhanPremium :is(.adhanEyebrow,.adhanSectionNumber){color:color-mix(in srgb,var(--prayer-brand) 66%,#536377)}
+.prayerExperience .adhanSummaryGrid>div{border-color:var(--prayer-trim);background:var(--prayer-haze)}
+.prayerExperience .prayerAudioTrack span{background:linear-gradient(90deg,var(--prayer-brand),color-mix(in srgb,var(--prayer-brand) 30%,#a3b8ca))}
+.prayerExperience .prayerGuideProgress span{background:linear-gradient(90deg,var(--prayer-brand),color-mix(in srgb,var(--prayer-brand) 25%,#a3b8ca))}
+.prayerExperience .prayerPositionCard>strong,.prayerExperience .prayerInstructionStage{background:color-mix(in srgb,var(--prayer-brand) 22%,#2e4454);color:#fff}
+@media(max-width:720px){
+ .prayerExperience .prayerDashboardHero .prayerHeroContents{width:94%;padding:20px}
+ .prayerExperience .prayerDashboardHero .prayerScene{width:100%;opacity:.19}
+ .prayerExperience .prayerDashboardHero::after{background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,255,255,.73))}
+ .prayerExperience .prayerTimesRail{--prayer-item-width:clamp(132px,37vw,164px)}
+}
+@media(max-width:420px){
+ .prayerHeaderPill{font-size:9px;padding:8px}
+ .prayerExperience .prayerHeaderBack{font-size:20px}
+ .prayerExperience .prayerNextFocus{gap:9px;padding:11px}
+ .prayerExperience .prayerNextFocus .prayerNextIcon{width:42px;height:42px;flex-basis:42px}
+ .prayerExperience .prayerNextIcon svg{width:29px;height:29px}
+ .prayerExperience .prayerNextFocus>strong{font-size:12px}
+ .prayerExperience .prayerTimesRail{--prayer-item-width:138px;gap:9px}
+ .prayerExperience .prayerTimeCell{min-height:151px}
+}
+@media(prefers-reduced-motion:reduce){.prayerTimeSvg .prayerIconRay{animation:none}.prayerExperience .prayerTimeCell{transition:none;transform:none}}

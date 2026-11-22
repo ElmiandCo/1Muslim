@@ -1,20 +1,23 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import LocationPreferences, { readLocation } from "../../components/LocationPreferences";
 import AdhanSettings from "../../components/AdhanSettings";
 import { createClient } from "../../../utils/supabase/client";
 import { PositionIllustration, PrayerScene, PrayerShell } from "../../components/PrayerVisuals";
+import { PrayerTimeIcon, PrayerUiIcon, type PrayerTimeName } from "../../components/icons/PrayerTimeIcon";
 import {
- ADHAN_PRAYERS, ADHAN_SETTINGS_EVENT, displayPrayerTime, fetchPrayerSchedule,
+ ADHAN_PRAYERS, ADHAN_SETTINGS_EVENT, displayPrayerTime, fetchPrayerSchedule, fetchPrayerScheduleOnDate,
  locationClock, prayerMinute, readAdhanPreferences, type AdhanLocation, type PrayerSchedule
 } from "../../lib/adhan";
 
-const PRAYER_ICONS:Record<string,string>={Fajr:"☾",Sunrise:"☀",Dhuhr:"☼",Asr:"✺",Maghrib:"◒",Isha:"☽"};
+const PRAYER_ORDER:PrayerTimeName[]=["Fajr","Sunrise","Dhuhr","Asr","Maghrib","Isha"];
 export default function PrayerTimes(){
  const [place,setPlace]=useState<AdhanLocation>({city:"",state:"",country:""});
  const [method,setMethod]=useState(readAdhanPreferences().method);
  const [schedule,setSchedule]=useState<PrayerSchedule|null>(null);
+ const [tomorrow,setTomorrow]=useState<PrayerSchedule|null>(null);
+ const railRef=useRef<HTMLDivElement|null>(null);
  const [now,setNow]=useState(()=>new Date());
  const [message,setMessage]=useState("");
  const [loading,setLoading]=useState(false);
@@ -37,29 +40,61 @@ export default function PrayerTimes(){
   return()=>abort.abort();
  },[place.city,place.state,place.country,method,now.toDateString()]);
  const clock=schedule?locationClock(schedule.timezone,now):null;
- const nextPrayer=schedule&&clock?.date===schedule.date?ADHAN_PRAYERS.find(prayer=>(prayerMinute(schedule.times[prayer])??-1)>clock.minute):null;
- const nextAt=nextPrayer&&schedule?prayerMinute(schedule.times[nextPrayer]):null;
- const remaining=nextAt!==null&&clock?Math.max(0,nextAt-clock.minute):null;
- const countdown=remaining!==null?(remaining>=60?Math.floor(remaining/60)+"h "+remaining%60+"m":remaining+"m"):"After midnight";
+ const nextToday=schedule&&clock?.date===schedule.date
+   ?ADHAN_PRAYERS.find(prayer=>(prayerMinute(schedule.times[prayer])??-1)>clock.minute):undefined;
+ const needsTomorrow=!!(schedule&&clock?.date===schedule.date&&!nextToday);
+ const nextDate=schedule?new Date(Date.parse(schedule.date+"T12:00:00Z")+86400000).toISOString().slice(0,10):"";
+ useEffect(()=>{
+   if(!needsTomorrow||!nextDate){setTomorrow(null);return}
+   const controller=new AbortController();
+   void fetchPrayerScheduleOnDate(place,method,nextDate,controller.signal)
+    .then(result=>{if(!controller.signal.aborted)setTomorrow(result)})
+    .catch(()=>{if(!controller.signal.aborted)setTomorrow(null)});
+   return()=>controller.abort();
+ },[needsTomorrow,nextDate,place.city,place.state,place.country,method]);
+ const showingTomorrow=needsTomorrow&&tomorrow?.date===nextDate;
+ const railSchedule=showingTomorrow?tomorrow:schedule;
+ const nextPrayer=nextToday||(showingTomorrow?"Fajr":undefined);
+ const centerPrayer=nextPrayer||(needsTomorrow?"Isha":undefined);
+ const nextAt=nextPrayer?(nextToday&&schedule?prayerMinute(schedule.times[nextToday]):tomorrow?prayerMinute(tomorrow.times.Fajr):null):null;
+ const remaining=nextAt!==null&&clock?Math.max(0,(showingTomorrow?1440:0)+nextAt-clock.minute):null;
+ const countdown=remaining!==null?(remaining>=60?Math.floor(remaining/60)+"h "+remaining%60+"m":remaining+"m"):"—";
+ // Focus only when a schedule or next prayer changes. Manual swiping is never reset by ticking the clock.
+ useEffect(()=>{
+   if(!railSchedule||!centerPrayer)return;
+   const timer=window.setTimeout(()=>{
+     const container=railRef.current;
+     const target=container?.querySelector<HTMLElement>(`[data-prayer-time="${centerPrayer}"]`);
+     if(!container||!target)return;
+     const current=target.getBoundingClientRect(),parent=container.getBoundingClientRect();
+     const left=container.scrollLeft+(current.left-parent.left)-(container.clientWidth-target.clientWidth)/2;
+     container.scrollTo({left:Math.max(0,left),behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
+   },140);
+   return()=>window.clearTimeout(timer);
+ },[railSchedule?.date,centerPrayer]);
  const dateLabel=schedule?new Date(schedule.date+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"}):new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
  const locationName=[place.city,place.state,place.country].filter(Boolean).join(", ");
  return <PrayerShell title="Prayer Times" eyebrow="1MUSLIM · PRAYER & ADHAN">
   <div className="prayerHero prayerDashboardHero">
    <PrayerScene/>
    <div className="prayerHeroContents">
-    <button type="button" className="prayerCityButton" onClick={()=>setEditLocation(v=>!v)} aria-expanded={editLocation} aria-controls="prayer-location-editor"><span className="prayerLocationPin">⌖</span> {locationName||"Set your prayer location"} <span aria-hidden="true">⌄</span></button>
+    <button type="button" className="prayerCityButton" onClick={()=>setEditLocation(v=>!v)} aria-expanded={editLocation} aria-controls="prayer-location-editor"><span className="prayerLocationPin"><PrayerUiIcon kind="location"/></span> {locationName||"Set your prayer location"} <span aria-hidden="true">⌄</span></button>
     <p className="prayerDate">{dateLabel} · {schedule?.timezone||"Your local time zone"}</p>
-    <div className="prayerNextFocus"><span className="prayerNextIcon" aria-hidden="true">☪</span><div><span className="prayerNextLabel">{nextPrayer?"NEXT PRAYER":"PRAYER SCHEDULE"}</span><b>{nextPrayer||"Tomorrow's Fajr"}</b><small>{nextPrayer&&schedule?displayPrayerTime(schedule.times[nextPrayer]):"Refreshes after midnight"}</small></div><strong>{nextPrayer?"in "+countdown:"Five daily prayers"}</strong></div>
+    <div className="prayerNextFocus"><span className="prayerNextIcon" aria-hidden="true">{nextPrayer?<PrayerTimeIcon prayer={nextPrayer}/>:<PrayerUiIcon kind="time"/>}</span><div><span className="prayerNextLabel">{nextPrayer?(showingTomorrow?"NEXT PRAYER · TOMORROW":"NEXT PRAYER"):"PRAYER SCHEDULE"}</span><b>{nextPrayer||"Tomorrow's Fajr"}</b><small>{nextPrayer&&railSchedule?displayPrayerTime(railSchedule.times[nextPrayer]):"Checking tomorrow's schedule"}</small></div><strong>{nextPrayer?"in "+countdown:"Updating…"}</strong></div>
    </div>
   </div>
-  {editLocation&&<section id="prayer-location-editor" className="prayerLocationEdit" aria-label="Edit location"><div className="prayerSectionTop"><span className="prayerSectionIcon">⌖</span><div><h2>Choose your city</h2><p>Choose the city used for your personalized daily prayer times.</p></div></div><LocationPreferences onSaved={next=>{setPlace(next);setEditLocation(false)}}/></section>}
+  {editLocation&&<section id="prayer-location-editor" className="prayerLocationEdit" aria-label="Edit location"><div className="prayerSectionTop"><span className="prayerSectionIcon"><PrayerUiIcon kind="location"/></span><div><h2>Choose your city</h2><p>Choose the city used for your personalized daily prayer times.</p></div></div><LocationPreferences onSaved={next=>{setPlace(next);setEditLocation(false)}}/></section>}
   <section className="prayerCard prayerTimesCard" aria-labelledby="prayer-times-heading">
-   <div className="prayerSectionTop"><span className="prayerSectionIcon">▦</span><div><h2 id="prayer-times-heading">Today&apos;s prayer times</h2><p>Calculated for your saved city using your selected convention.</p></div><span className="prayerCalcBadge">Local prayer schedule</span></div>
+   <div className="prayerSectionTop"><span className="prayerSectionIcon"><PrayerUiIcon kind="calendar"/></span><div><h2 id="prayer-times-heading">{showingTomorrow?"Tomorrow's prayer times":"Today's prayer times"}</h2><p>Calculated for your saved city using your selected convention.</p></div><span className="prayerCalcBadge">Local prayer schedule</span></div>
    {loading&&<div className="prayerScheduleLoading" role="status">Updating prayer times…</div>}
    {message&&<p className="prayerScheduleMessage" role="alert">{message}</p>}
-   {schedule&&<div className="prayerTimesRail" role="list">{(["Fajr","Sunrise","Dhuhr","Asr","Maghrib","Isha"] as const).map(prayer=><div role="listitem" key={prayer} className={"prayerTimeCell"+(nextPrayer===prayer?" current":"")}>
-    <span aria-hidden="true">{PRAYER_ICONS[prayer]}</span><strong>{prayer}</strong><b>{displayPrayerTime(schedule.times[prayer])}</b><small>{prayer==="Sunrise"?"Not a salah":prayer===nextPrayer?"Up next":"Prayer"}</small>
-   </div>)}</div>}
+   {railSchedule&&<div ref={railRef} className="prayerTimesRail" role="list" aria-label={showingTomorrow?"Tomorrow's six daily solar markers and prayer times":"Today's six daily solar markers and prayer times"}>
+    {PRAYER_ORDER.map(prayer=><div role="listitem" data-prayer-time={prayer} key={prayer} aria-current={nextPrayer===prayer?"time":undefined} className={"prayerTimeCell"+(nextPrayer===prayer?" current":"")}>
+     <span className="prayerTimeCellIcon" aria-hidden="true"><PrayerTimeIcon prayer={prayer}/></span>
+     <strong>{prayer}</strong><b>{displayPrayerTime(railSchedule.times[prayer])}</b>
+     <small>{prayer==="Sunrise"?"Not a salah":prayer===nextPrayer?"Up next":"Prayer"}</small>
+    </div>)}
+   </div>}
    {!loading&&!schedule&&!message&&<p className="prayerScheduleLoading">Set your city above to see today&apos;s prayer times.</p>}
   </section>
   <section className="prayerCard prayerAdhanCard" aria-label="Adhan settings">

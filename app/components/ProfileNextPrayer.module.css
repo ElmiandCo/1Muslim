@@ -69,3 +69,9 @@
  .chevron{font-size:16px}
 }
 @media(prefers-reduced-motion:reduce){.fill,.card{transition:none}}
+
+/* Match the dashboard's original daylight/salah SVG icon family. */
+.symbol svg{width:27px;height:27px;display:block;stroke-width:2.1}
+.symbol :global(.prayerIconRay){animation:profilePrayerRay 4.8s ease-in-out infinite}
+@keyframes profilePrayerRay{0%,100%{opacity:.52}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.symbol :global(.prayerIconRay){animation:none}}
