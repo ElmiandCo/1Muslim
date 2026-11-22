@@ -48,6 +48,24 @@ export default function MagazineStory(){
    if(!found){
     void (async()=>{
      const db=createClient();
+     // Discover can link to posts older than the latest feed page. Load that exact post.
+     const {data:ummah}=await db.from("ummah_feed_posts").select("id,body,created_at,author_id").eq("id",id).maybeSingle();
+     if(!active)return;
+     if(ummah){
+      const [profile,attachment]=await Promise.all([
+       db.from("profiles").select("display_name,username").eq("id",ummah.author_id).maybeSingle(),
+       db.from("post_media").select("storage_path,mime_type").eq("community_post_id",id).limit(1).maybeSingle()
+      ]);
+      if(!active)return;
+      const media=attachment.data;
+      const mediaUrl=media?.storage_path?db.storage.from("community-media").getPublicUrl(media.storage_path).data.publicUrl:null;
+      setPost({id:ummah.id,body:ummah.body||"",created_at:ummah.created_at,author_id:ummah.author_id,
+       author_name:profile.data?.display_name||profile.data?.username||"1Muslim Member",
+       author_handle:"@"+(profile.data?.username||"member"),media_url:mediaUrl,media_type:media?.mime_type||null});
+      setLegacyPost(false);
+      setPostIds(current=>current.includes(id)?current:[id,...current]);
+      return;
+     }
      const {data:row}=await db.from("posts").select("id,body,created_at,user_id").eq("id",id).maybeSingle();
      if(!row||!active)return;
      const {data:author}=await db.from("profiles").select("display_name,username").eq("id",row.user_id).maybeSingle();
