@@ -1,7 +1,8 @@
 "use client";
-import {useEffect,useRef,useState} from "react";
+import {useRef,useState} from "react";
 import Link from "next/link";
-import {DAILY_RAKAH,SALAH_STEPS,type SalahStep,type SalahStage} from "./PrayerEducationData";
+import {DAILY_RAKAH,SALAH_STEPS,type SalahStage} from "./PrayerEducationData";
+import PrayerAudioPlayer from "./PrayerAudioPlayer";
 import {PositionIllustration,PrayerScene,PrayerShell} from "./PrayerVisuals";
 
 const highlights:{stage:SalahStage;title:string;english:string;phraseIndex:number}[]=[
@@ -14,28 +15,11 @@ const highlights:{stage:SalahStage;title:string;english:string;phraseIndex:numbe
 export default function PrayerLearning(){
  const [selected,setSelected]=useState(0);
  const [guided,setGuided]=useState(false);
- const [playing,setPlaying]=useState(false);
- const [soundMessage,setSoundMessage]=useState("");
+
  const details=useRef<HTMLElement|null>(null);
  const current=SALAH_STEPS[selected];
- useEffect(()=>()=>{if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel()},[]);
- const speak=(step:SalahStep)=>{
-  if(typeof window==="undefined"||!("speechSynthesis" in window)){setSoundMessage("Arabic speech is not supported in this browser.");return;}
-  window.speechSynthesis.cancel();
-  const utterance=new SpeechSynthesisUtterance(step.arabic.replaceAll("۞","،"));
-  utterance.lang="ar-SA";utterance.rate=.78;
-  const voices=window.speechSynthesis.getVoices();
-  const arabicVoice=voices.find(v=>v.lang.toLowerCase().startsWith("ar"));
-  if(arabicVoice)utterance.voice=arabicVoice;
-  utterance.onstart=()=>setPlaying(true);
-  utterance.onend=()=>setPlaying(false);
-  utterance.onerror=()=>{setPlaying(false);setSoundMessage("Arabic voice is unavailable. Read the written pronunciation below.");};
-  setSoundMessage(arabicVoice?"":"Your device will select an available voice. For accurate pronunciation, listen to a qualified teacher.");
-  window.speechSynthesis.speak(utterance);
- };
  const choose=(i:number)=>{
-  if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel();
-  setPlaying(false);setSoundMessage("");setSelected(i);
+  setSelected(i);
   details.current?.scrollIntoView({behavior:"smooth",block:"nearest"});
  };
  const start=()=>{
@@ -86,8 +70,7 @@ export default function PrayerLearning(){
      <div className="prayerArabicRecitation" dir="rtl" lang="ar">{current.arabic}</div>
      <div className="prayerTransliteration"><span>TRANSLITERATION</span><p>{current.transliteration}</p></div>
      <div className="prayerTranslation"><span>ENGLISH MEANING</span><p>{current.meaning}</p></div>
-     <div className="prayerInstructionTools"><button type="button" className="prayerListen" onClick={()=>speak(current)} aria-label={"Hear the Arabic for "+current.title}>{playing?"◼ Restart audio":"▶ Hear Arabic"}</button>{current.source&&<a href={current.source} target="_blank" rel="noreferrer">View source ↗</a>}</div>
-     {soundMessage&&<p className="prayerAudioMessage" role="status">{soundMessage}</p>}
+     <div className="prayerInstructionTools"><PrayerAudioPlayer step={current}/>{current.source&&<a href={current.source} target="_blank" rel="noreferrer">View source ↗</a>}</div>
     </div>
    </div>
    <div className="prayerStepNavigation">
@@ -106,6 +89,6 @@ export default function PrayerLearning(){
    <div><h2>Why do we pray five times?</h2><p>Explore the Night Journey and Miʿrāj through an interactive, source-linked story.</p></div>
    <Link href="/widget-tools/prayer/story" className="prayerGoldButton">Discover the story <span>→</span></Link>
   </section>
-  <p className="prayerLearningCaution">Educational guide based on widely practiced Sunni forms. Details of recitation, hand placement, sitting and congregation can vary among recognized schools. Learn with a trusted teacher. Device text-to-speech is a pronunciation aid, not a substitute for qualified recitation.</p>
+  <p className="prayerLearningCaution">Educational guide based on widely practiced Sunni forms. Details of recitation, hand placement, sitting and congregation can vary among recognized schools. Learn with a trusted teacher. Recorded Qur’an recitations are credited to Mishary Rashid Alafasy. Other phrases use your device’s synthetic Arabic voice as a pronunciation aid, not a substitute for qualified recitation.</p>
  </PrayerShell>;
 }
