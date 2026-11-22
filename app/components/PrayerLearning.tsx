@@ -4,6 +4,7 @@ import Link from "next/link";
 import {DAILY_RAKAH,SALAH_STEPS,type SalahStage} from "./PrayerEducationData";
 import PrayerAudioPlayer from "./PrayerAudioPlayer";
 import {PositionIllustration,PrayerScene,PrayerShell} from "./PrayerVisuals";
+import {PrayerTimeIcon,PrayerUiIcon,type PrayerTimeName} from "./icons/PrayerTimeIcon";
 
 const highlights:{stage:SalahStage;title:string;english:string;phraseIndex:number}[]=[
  {stage:"stand",title:"Qiyām",english:"Standing & recitation",phraseIndex:1},
@@ -29,18 +30,18 @@ export default function PrayerLearning(){
  return <PrayerShell title="Learn Salah" back="/widget-tools/prayer" eyebrow="1MUSLIM · SALAH ACADEMY">
   <div className="prayerHero prayerAcademyHero">
    <PrayerScene/>
-   <div className="prayerHeroContents"><span className="prayerHeroLabel">✧ BEGIN WITH CONFIDENCE</span>
+   <div className="prayerHeroContents"><span className="prayerHeroLabel">BEGIN WITH CONFIDENCE</span>
     <h1>Learn <em>Salah</em></h1>
     <p>Every movement, every word, and every meaning — explained step by step.</p>
     <button type="button" className="prayerGoldButton" onClick={start}>▶ Start guided lesson <span aria-hidden="true">→</span></button>
    </div>
   </div>
   <section className="prayerCard prayerAcademyIntro" aria-label="How to use this guide">
-   <div className="prayerSectionTop"><span className="prayerSectionIcon">✦</span><div><h2>Understand the foundations</h2><p>Illustrated positions • Arabic • Pronunciation • English meaning</p></div></div>
+   <div className="prayerSectionTop"><span className="prayerSectionIcon"><PrayerUiIcon kind="compass"/></span><div><h2>Understand the foundations</h2><p>Illustrated positions • Arabic • Pronunciation • English meaning</p></div></div>
    <div className="prayerConcepts">{["Takbīr","Qiyām","Rukūʿ","Sujūd","Tashahhud","Taslīm"].map(t=><span key={t}>✓ {t}</span>)}</div>
   </section>
   <section className="prayerCard prayerAcademyPositions" aria-labelledby="positions-heading">
-   <div className="prayerSectionTop"><span className="prayerSectionIcon">◉</span><div><h2 id="positions-heading">Prayer positions</h2><p>Tap a position to see how to perform it and what to say.</p></div></div>
+   <div className="prayerSectionTop"><span className="prayerSectionIcon"><PrayerUiIcon kind="calendar"/></span><div><h2 id="positions-heading">Prayer positions</h2><p>Tap a position to see how to perform it and what to say.</p></div></div>
    <div className="prayerPositionRail">
     {highlights.map((item,i)=>{const phrase=SALAH_STEPS[item.phraseIndex];return <button type="button" className="prayerPositionCard" key={item.title} onClick={()=>choose(item.phraseIndex)}>
      <span className="prayerPositionCanvas"><PositionIllustration stage={item.stage}/></span>
@@ -52,7 +53,7 @@ export default function PrayerLearning(){
    </div>
   </section>
   <section className="prayerCard prayerGuidePanel" id="guided-salah-step" ref={details} aria-labelledby="guide-heading">
-   <div className="prayerSectionTop prayerGuideHeading"><span className="prayerSectionIcon">☷</span>
+   <div className="prayerSectionTop prayerGuideHeading"><span className="prayerSectionIcon"><PrayerUiIcon kind="next"/></span>
     <div><h2 id="guide-heading">{guided?"Guided Salah walkthrough":"Words & movements of Salah"}</h2><p>Select any step, read its meaning, then practice the Arabic.</p></div>
     <span className="prayerStepFraction">{selected+1}/{SALAH_STEPS.length}</span>
    </div>
@@ -66,7 +67,7 @@ export default function PrayerLearning(){
     <div className="prayerInstructionVisual"><PositionIllustration stage={current.stage} stepId={current.id}/><span className="prayerInstructionStage">{current.term}</span></div>
     <div className="prayerInstructionCopy">
      <span className="prayerStepKicker">STEP {selected+1} · {current.term.toUpperCase()}</span>
-     <h3>{current.title}</h3><p>{current.instructions}</p>{current.repeat&&<p className="prayerPracticeTip">✦ {current.repeat}</p>}
+     <h3>{current.title}</h3><p>{current.instructions}</p>{current.repeat&&<p className="prayerPracticeTip">{current.repeat}</p>}
      <div className="prayerArabicRecitation" dir="rtl" lang="ar">{current.arabic}</div>
      <div className="prayerTransliteration"><span>TRANSLITERATION</span><p>{current.transliteration}</p></div>
      <div className="prayerTranslation"><span>ENGLISH MEANING</span><p>{current.meaning}</p></div>
@@ -79,9 +80,9 @@ export default function PrayerLearning(){
    </div>
   </section>
   <section className="prayerCard prayerRakahPanel" aria-labelledby="rakah-heading">
-   <div className="prayerSectionTop"><span className="prayerSectionIcon">▦</span><div><h2 id="rakah-heading">How many rakʿahs?</h2><p>Obligatory (farḍ) units for each daily prayer.</p></div></div>
+   <div className="prayerSectionTop"><span className="prayerSectionIcon"><PrayerUiIcon kind="calendar"/></span><div><h2 id="rakah-heading">How many rakʿahs?</h2><p>Obligatory (farḍ) units for each daily prayer.</p></div></div>
    <div className="prayerRakahGrid">{DAILY_RAKAH.map(item=><div className="prayerRakahTile" key={item.name}>
-    <span aria-hidden="true">{item.icon}</span><strong>{item.name}</strong><b>{item.count}</b><small>rakʿahs</small><small className="prayerRakahTotals">{item.count} rukūʿ<br/>{item.count*2} sujūd</small>
+    <span className="prayerRakahTimeIcon" aria-hidden="true"><PrayerTimeIcon prayer={item.name as PrayerTimeName}/></span><strong>{item.name}</strong><b>{item.count}</b><small>rakʿahs</small><small className="prayerRakahTotals">{item.count} rukūʿ<br/>{item.count*2} sujūd</small>
    </div>)}</div>
    <div className="prayerRakahExplainer"><span className="prayerRakahEquation">1 rakʿah = 1 rukūʿ + 2 sujūd</span><p>Every rakʿah includes one bow and two prostrations, separated by a brief sitting. For example, Fajr&apos;s two farḍ rakʿahs have two bows and four prostrations. Additional Sunnah and Witr prayers have their own counts.</p></div>
   </section>
