@@ -104,7 +104,7 @@ async function readDay(location:AdhanLocation,method:AdhanMethod,date:string,sig
  try{
   // The browser must not call a third-party prayer-time service directly:
   // regional filters, CORS and transient upstream failures affected only some accounts.
-  const response=await fetch("/api/prayer-times?"+query,{signal,cache:"no-store"});
+  const response=await fetch("/api/prayer-times?"+query,{signal});
   if(!response.ok)throw new Error("Prayer-time service is temporarily unavailable.");
   const schedule=validatedSchedule(await response.json(),date);
   if(!schedule)throw new Error("Prayer-time service returned invalid times.");
