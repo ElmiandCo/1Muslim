@@ -98,7 +98,7 @@ export default function PrayerLearning(){
   <section className="prayerCard prayerRakahPanel" aria-labelledby="rakah-heading">
    <div className="prayerSectionTop"><span className="prayerSectionIcon">▦</span><div><h2 id="rakah-heading">How many rakʿahs?</h2><p>Obligatory (farḍ) units for each daily prayer.</p></div></div>
    <div className="prayerRakahGrid">{DAILY_RAKAH.map(item=><div className="prayerRakahTile" key={item.name}>
-    <span aria-hidden="true">{item.icon}</span><strong>{item.name}</strong><b>{item.count}</b><small>rakʿahs</small>
+    <span aria-hidden="true">{item.icon}</span><strong>{item.name}</strong><b>{item.count}</b><small>rakʿahs</small><small className="prayerRakahTotals">{item.count} rukūʿ<br/>{item.count*2} sujūd</small>
    </div>)}</div>
    <div className="prayerRakahExplainer"><span className="prayerRakahEquation">1 rakʿah = 1 rukūʿ + 2 sujūd</span><p>Every rakʿah includes one bow and two prostrations, separated by a brief sitting. For example, Fajr&apos;s two farḍ rakʿahs have two bows and four prostrations. Additional Sunnah and Witr prayers have their own counts.</p></div>
   </section>
