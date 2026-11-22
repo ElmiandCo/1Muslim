@@ -1,7 +1,6 @@
 "use client";
 import {useCallback,useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
-import SiteNav from "../components/SiteNav";
 import "./quran-recitals.css";
 type Item={id:string;chapter:number;title:string;author:string;authorId:string;avatar:string|null;duration:number;createdAt:string;audioUrl:string};
 type Chapter={id:number;name_simple:string;name_arabic:string};
@@ -47,7 +46,6 @@ export default function QuranRecitalsPage(){
   if(target)await target.play().catch(()=>{});
  };
  return <main className="qrlPage">
-  <SiteNav/>
   <section className="qrlHero">
    <Link href="/quran-library" className="qrlBack">← Qur’an Reader</Link>
    <span className="qrlEyebrow">1MUSLIM · THE RECITATION LIBRARY</span>
