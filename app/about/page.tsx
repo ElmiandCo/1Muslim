@@ -60,6 +60,7 @@ export default function OurMissionPage() {
             <Link href="/" className={styles.primary}>Explore 1Muslim <span aria-hidden="true">↗</span></Link>
             <Link href="/elm-tent/quran" className={styles.secondary}>Open the Qur’an <span aria-hidden="true">→</span></Link>
             <Link href="/platform" className={styles.secondary}>Our social network &amp; technology <span aria-hidden="true">↗</span></Link>
+            <Link href="/features" className={styles.secondary}>Explore our technology <span aria-hidden="true">↗</span></Link>
           </div>
         </section>
         <footer className={styles.footer}><span>1Muslim · Built with purpose</span><span>May Allah guide our intentions.</span></footer>
