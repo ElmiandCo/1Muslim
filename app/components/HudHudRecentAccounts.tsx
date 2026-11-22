@@ -63,7 +63,7 @@ export default function HudHudRecentAccounts({refreshKey=0}:{refreshKey?:number}
    <div className="hudhudRecentTitle"><div>
      <span className="hudhudRecentEyebrow">ACCOUNT ACTIVITY · VERIFIED APP PRESENCE</span>
      <h4>Recent unique accounts</h4>
-     <p>One row per member, newest activity first.</p>
+     <p>One row per member, newest visit first.</p>
    </div><span className="hudhudRecentUpdated">● AUTO · 60s</span></div>
    {error&&<p className="hudhudRecentError" role="status">{error}{data?" · Showing last successful snapshot.":""}</p>}
    {loading&&!data?<p className="hudhudRecentLoading" role="status">Reading recent account activity…</p>:data&&<>
@@ -85,7 +85,7 @@ export default function HudHudRecentAccounts({refreshKey=0}:{refreshKey?:number}
         <MemberAvatar member={member}/>
         <span className="hudhudRecentWho">
           <strong>{member.name}</strong>
-          <small>{member.handle&&member.name.toLowerCase()!==member.handle.toLowerCase()?"@"+member.handle+" · ":""}{ago(member.lastActive||member.lastSeen,clock)}</small>
+          <small>{member.handle&&member.name.toLowerCase()!==member.handle.toLowerCase()?"@"+member.handle+" · ":""}Seen {ago(member.lastSeen,clock)}{member.lastActive?" · Active "+ago(member.lastActive,clock):""}</small>
         </span>
         <span className={"hudhudRecentBadge "+badge.kind}><i aria-hidden="true"/>{badge.label}</span>
         <span className="hudhudRecentExpand" aria-hidden="true">{open?"−":"+"}</span>
