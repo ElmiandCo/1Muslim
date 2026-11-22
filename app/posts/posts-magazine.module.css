@@ -260,3 +260,180 @@
   transition:none;
   scroll-margin-top:12px;
 }
+
+
+/* Ummah Card Deck 2026 — immersive media, tactile cut corners, glass-edge identity.
+   No forced heights on comment panels: engagement expands at its natural size. */
+.discoverPage{background:radial-gradient(ellipse at 10% 5%,#e9f3ed88,transparent 29%),linear-gradient(180deg,#fafaf8,#f4f8f6 55%,#f9faf9)!important}
+.discoverPage .discoverTitle h1{color:#0c2a25;letter-spacing:-.055em}
+.discoverPage .discoverTitle>span{color:#cba053}
+.discoverPage .discoverActions a:last-child{background:linear-gradient(125deg,#0c4a38,#062b27);border-color:#276452;color:#fff;box-shadow:0 8px 21px #1244322b}
+.discoverPage .feedTabs .active{background:linear-gradient(130deg,#063f31,#0b5d43)!important;border-color:#28644d!important;color:#fff!important;box-shadow:0 6px 18px #084b3433!important}
+.discoverPage .feedTabs .immersivePlayTab{background:linear-gradient(130deg,#e6f8ed,#d5eddf);color:#064531;border-color:#a2cbb4}
+.discoverPage .discoverSearch input{border-radius:32px;min-height:49px;padding-inline:19px}
+.discoverPage .discoverSearch input:focus-visible{outline-color:#599e8099}
+.discoverPage .discoverPeople .feedStoryRing{box-shadow:0 4px 13px #0e3b2c1a}
+.discoverPage .ummahSnapFeed{width:100%;max-width:740px;gap:clamp(30px,4vw,48px);padding:4px 6px 20px;overflow:visible}
+.discoverPage .ummahSnapFeed>.feedPost{
+ position:relative;isolation:isolate;width:100%;min-width:0;overflow:visible;
+ padding:0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;
+ scroll-snap-align:start;scroll-snap-stop:always;scroll-margin-top:14px;
+}
+.discoverPage .feedPostStage{position:relative;isolation:isolate;min-width:0;padding:0;border-radius:0}
+.discoverPage .feedPostStage:before{
+ content:"";position:absolute;inset:8px -5px -5px 7px;z-index:-1;
+ background:linear-gradient(130deg,#d2e9df,#fdfefa 70%);
+ clip-path:polygon(25px 0,calc(100% - 25px) 0,100% 25px,100% calc(100% - 25px),calc(100% - 25px) 100%,25px 100%,0 calc(100% - 25px),0 25px);
+ box-shadow:0 12px 32px #0b3c2b23;
+}
+.discoverPage .feedPostStage .feedMediaLink{
+ display:grid;place-items:center;width:100%;max-height:min(76svh,760px);
+ aspect-ratio:4/5;overflow:hidden;isolation:isolate;
+ border-radius:0;
+ clip-path:polygon(24px 0,calc(100% - 24px) 0,100% 24px,100% calc(100% - 24px),calc(100% - 24px) 100%,24px 100%,0 calc(100% - 24px),0 24px);
+ background:#edf1ef;box-shadow:0 8px 24px #14372b1d;
+}
+.discoverPage .feedPostStage .feedMediaLink img{width:100%;height:100%;max-height:none;object-fit:contain;display:block;transition:none}
+.discoverPage .feedPostGlass{
+ position:relative;z-index:2;min-width:0;min-height:104px;
+ margin:-82px 10px 0;padding:0 0 10px;color:#fff;isolation:isolate;
+ text-shadow:0 1px 4px #0005;
+}
+.discoverPage .feedPostGlass:before{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:linear-gradient(110deg,#172e2acb,#202d31bc 50%,#384741ac);
+ backdrop-filter:blur(16px) saturate(125%);-webkit-backdrop-filter:blur(16px) saturate(125%);
+ clip-path:polygon(19px 0,calc(100% - 19px) 0,100% 19px,100% calc(100% - 19px),calc(100% - 19px) 100%,19px 100%,0 calc(100% - 19px),0 19px);
+ box-shadow:inset 0 0 0 1px #fff5;
+}
+.discoverPage .feedPostGlass:after{
+ content:"";position:absolute;z-index:-1;pointer-events:none;inset:0;
+ border:1px solid #ffffff55;opacity:.4;
+ clip-path:polygon(19px 0,calc(100% - 19px) 0,100% 19px,100% calc(100% - 19px),calc(100% - 19px) 100%,19px 100%,0 calc(100% - 19px),0 19px);
+}
+.discoverPage .feedAvatarEdge{
+ position:absolute;left:19px;top:-27px;z-index:4;width:70px;height:70px;
+ display:grid;place-items:center;border-radius:50%;padding:6px;
+ border:1px solid #ffffffbe;text-decoration:none;
+ background:linear-gradient(130deg,#ffffffa6,#9cdac74a 65%,#ffffffbd);
+ box-shadow:0 4px 18px #101d1c7d,inset 0 0 0 2px #ffffff50;
+ backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+ transition:box-shadow .2s ease;
+}
+.discoverPage .feedAvatarEdge:focus-visible{outline:3px solid #abecbf;outline-offset:3px}
+.discoverPage .feedAvatarEdge .feedPostAvatar{
+ width:57px;height:57px;display:grid;place-items:center;
+ border:2px solid #f8e1b8;color:#fff;overflow:hidden;
+ box-shadow:0 2px 10px #0008;background:#103b35;
+}
+.discoverPage .feedPostHeader{
+ display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;
+ gap:7px;min-height:72px;padding:11px 12px 5px 86px;
+ background:transparent;
+}
+.discoverPage .feedPostIdentity{flex:1 1 100px;min-width:0;color:#fff;text-shadow:0 1px 5px #0008}
+.discoverPage .feedPostIdentity strong{display:block;font-size:clamp(12px,1.75vw,16px);font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.discoverPage .feedPostIdentity small{font-size:clamp(9px,1.4vw,12px);color:#edf2ecdb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.discoverPage .feedPostHeader :global(.postAuthorFollow){flex:0 0 auto;min-width:0;margin:0}
+.discoverPage .feedPostHeader :global(.postAuthorFollow button){
+ background:#ffffff27!important;border:1px solid #d5f3dcbd!important;color:white!important;
+ border-radius:25px!important;padding:7px 11px!important;white-space:nowrap;
+ font-size:11px!important;box-shadow:inset 0 0 12px #ffffff17!important;
+ backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.discoverPage .feedPostHeader :global(.postAuthorFollow button[aria-pressed="true"]){background:#b8ead23a!important}
+.discoverPage .feedPostHeader .feedPostMore{color:white;font-size:18px;line-height:1;padding:8px 3px;background:transparent;border:0;min-width:29px}
+.discoverPage .feedPostGlass .feedPostCaption{padding:0 18px 11px;max-width:100%;background:transparent}
+.discoverPage .feedPostGlass .feedPostCaption p{
+ color:#f9fcfa;font:500 clamp(13px,1.65vw,16px)/1.5 Arial,Helvetica,sans-serif;
+ letter-spacing:0;overflow-wrap:anywhere;white-space:pre-wrap;
+}
+.discoverPage .feedPostGlass .feedPostCaption button{color:#d9fbdc;font-size:12px;padding-top:5px;text-shadow:0 1px 5px #0008}
+.discoverPage .feedPostMenu{z-index:30;background:#f8fffa;color:#14372d;border-color:#c9dacc;text-shadow:none}
+.discoverPage .feedPostMenu a,.discoverPage .feedPostMenu button{color:#173b31;text-shadow:none}
+.discoverPage .feedTextCanvas{
+ min-height:310px;aspect-ratio:4/3;padding:40px 18px 110px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+ color:#e7f7ec;background:radial-gradient(circle at 25% 20%,#316d5f,#17463d 45%,#0b2926);
+ clip-path:polygon(24px 0,calc(100% - 24px) 0,100% 24px,100% calc(100% - 24px),calc(100% - 24px) 100%,24px 100%,0 calc(100% - 24px),0 24px);
+}
+.discoverPage .feedTextCanvas span{font-size:72px;color:#c8e5bd}
+.discoverPage .feedTextCanvas strong{font-size:clamp(17px,3vw,23px);letter-spacing:.17em}
+.discoverPage .feedTextCanvas small{opacity:.82;letter-spacing:.06em}
+.discoverPage .feedVideoStage{position:relative;min-height:220px;overflow:hidden;border-radius:0;clip-path:polygon(24px 0,calc(100% - 24px) 0,100% 24px,100% calc(100% - 24px),calc(100% - 24px) 100%,24px 100%,0 calc(100% - 24px),0 24px);background:#111c20}
+.discoverPage .feedVideoPlaceholder{aspect-ratio:16/9;min-height:220px;display:grid;place-items:center;color:#f4fff8;background:linear-gradient(135deg,#1f453a,#142b2b);position:relative}
+.discoverPage .feedVideoPlaceholder>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.6)}
+.discoverPage .feedVideoPlaceholder>span{font-size:42px;z-index:1;filter:drop-shadow(0 2px 8px #000a)}
+.discoverPage .feedVideoPlaceholder small{position:absolute;left:18px;bottom:18px;z-index:1;color:#f2fff2;font-weight:700}
+.discoverPage .feedVideoStage + .feedPostGlass{margin-top:0}
+.discoverPage .feedVideoStage :global(.omVideoTools){padding:8px 16px;color:#e6f6ef;background:#172e29}
+.discoverPage .feedPostEngagement{padding:15px 12px 0;background:transparent}
+.discoverPage .feedPostEngagement :global(.unifiedPostMedia){margin:0!important}
+.discoverPage .feedPostEngagement :global(.socialActionBar){
+ display:flex!important;flex-flow:row wrap!important;align-items:stretch!important;
+ gap:9px!important;padding:0!important;border:0!important;max-height:none!important;overflow:visible!important;
+}
+.discoverPage .feedPostEngagement :global(.socialActionBar button){
+ display:inline-flex!important;flex:1 1 82px!important;flex-direction:row!important;align-items:center!important;
+ justify-content:center!important;gap:8px!important;white-space:nowrap!important;
+ width:auto!important;min-width:0!important;min-height:49px!important;height:auto!important;
+ padding:11px 9px!important;border:1px solid #e1ebe4!important;
+ border-radius:99px!important;color:#233e39!important;
+ background:linear-gradient(150deg,#ffffffee,#f5faf7ee)!important;
+ box-shadow:0 5px 16px #102b2111,0 1px 4px #142b200a!important;
+ font-size:13px!important;font-weight:750!important;line-height:1.25!important;
+ transition:background .18s ease,box-shadow .18s ease,color .18s ease!important;
+}
+.discoverPage .feedPostEngagement :global(.socialActionBar button[aria-pressed="true"]){
+ color:#085037!important;border-color:#bbe8cc!important;
+ background:linear-gradient(140deg,#e4fae9,#d3eddf)!important;
+ box-shadow:0 3px 15px #17885828!important;
+}
+.discoverPage .feedPostEngagement :global(.socialActionBar button svg){width:22px!important;height:22px!important;min-width:22px!important;min-height:22px!important;max-width:22px!important;max-height:22px!important}
+.discoverPage .feedPostEngagement :global(.socialConversation){
+ margin-top:12px;padding:17px 17px 14px;background:#ffffffec;
+ border:1px solid #e6efea;border-radius:22px 6px 22px 6px;
+ box-shadow:0 6px 20px #153b2e0e;color:#1b3433;
+ transition:box-shadow .18s ease;
+}
+.discoverPage .feedPostEngagement :global(.socialConversation .conversationTitle strong){color:#142b26;font-size:15px}
+.discoverPage .feedPostEngagement :global(.socialConversation .conversationTitle button){color:#14694d}
+.discoverPage .feedPostEngagement :global(.socialConversation .commentComposer){min-width:0;flex-wrap:wrap}
+.discoverPage .feedPostEngagement :global(.socialConversation .commentComposer button[type="submit"]){background:#0e4d3d;color:#fff;border-radius:25px}
+.discoverPage .feedPostBottom{
+ margin:12px 10px 0;padding:5px 3px 8px;
+ display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+ gap:9px;background:transparent;border:0;color:#6c817b;
+ font-size:11px;font-weight:700;letter-spacing:.02em;
+}
+.discoverPage .feedNext{border:0;background:transparent;padding:11px 8px;min-height:42px;color:#5f7771;font-weight:700;font-size:12px;cursor:pointer}
+.discoverPage .feedNext:hover{color:#094c3b}
+.discoverPage .feedPostBottom a{color:#126345;font-size:10px;font-weight:800;letter-spacing:.08em}
+.discoverPage .feedPost:focus-within .feedPostStage:before{background:linear-gradient(130deg,#c0e6d5,#fff 70%)}
+@media(max-width:600px){
+ .discoverPage .ummahSnapFeed{gap:30px;padding:3px 0 15px}
+ .discoverPage .feedPostGlass{margin:-66px 7px 0;padding-bottom:7px}
+ .discoverPage .feedAvatarEdge{left:13px;top:-23px;width:61px;height:61px;padding:5px}
+ .discoverPage .feedAvatarEdge .feedPostAvatar{width:51px;height:51px}
+ .discoverPage .feedPostHeader{padding:11px 11px 5px 76px;gap:5px;min-height:65px}
+ .discoverPage .feedPostIdentity strong{font-size:13px}
+ .discoverPage .feedPostIdentity small{font-size:10px}
+ .discoverPage .feedPostHeader :global(.postAuthorFollow button){font-size:10px!important;padding:6px 8px!important}
+ .discoverPage .feedPostGlass .feedPostCaption{padding:1px 13px 10px}
+ .discoverPage .feedPostGlass .feedPostCaption p{font-size:13px;line-height:1.42}
+ .discoverPage .feedPostEngagement{padding:12px 6px 0}
+ .discoverPage .feedPostEngagement :global(.socialActionBar){gap:6px!important}
+ .discoverPage .feedPostEngagement :global(.socialActionBar button){flex-basis:calc(25% - 6px)!important;min-height:45px!important;padding:8px 5px!important;gap:5px!important;font-size:11px!important}
+ .discoverPage .feedPostEngagement :global(.socialActionBar button svg){width:19px!important;height:19px!important;min-width:19px!important;min-height:19px!important;max-width:19px!important;max-height:19px!important}
+ .discoverPage .feedPostEngagement :global(.socialConversation){padding:13px 12px}
+}
+@media(max-width:360px){
+ .discoverPage .feedPostHeader{padding-left:70px}
+ .discoverPage .feedPostIdentity strong{font-size:12px}
+ .discoverPage .feedPostEngagement :global(.socialActionBar button){flex-basis:calc(50% - 6px)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .discoverPage .feedPostEngagement :global(.socialActionBar button),
+ .discoverPage .feedPostStage .feedMediaLink img,
+ .discoverPage .feedAvatarEdge{transition:none!important}
+}
