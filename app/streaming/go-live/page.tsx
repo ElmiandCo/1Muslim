@@ -1364,7 +1364,7 @@ export default function GoLivePage() {
     return()=>{window.removeEventListener("1muslim:live-guest-pending",onCount);window.removeEventListener("1muslim:live-guest-notification",onNew)};
   },[]);
   return (
-    <main className="goLive"><GoLiveHudHudTip/><style jsx global>{`
+    <main className={live?"goLive goLiveOnAir":"goLive"}><GoLiveHudHudTip/><style jsx global>{`
 .qrlHostBackdrop{position:absolute;inset:0;z-index:0;overflow:hidden;display:flex;align-items:center;justify-content:space-between;flex-direction:column;padding:10% 7% 13%;color:#e3d9b6;pointer-events:none;background:radial-gradient(circle at 60% 20%,#42626155,transparent 45%),linear-gradient(155deg,#17242b,#0e1721)}
 .qrlHostBackdrop.qrlHost-starlight{background:radial-gradient(circle at 20% 12%,#bdc8ee 0 2px,transparent 3px),radial-gradient(circle at 75% 61%,#b3d5ff 0 1px,transparent 3px),radial-gradient(ellipse at center,#292b56,#0a1223)}
 .qrlHostBackdrop.qrlHost-emerald{background:radial-gradient(ellipse at center,#285b49,#0a241c)}
@@ -1813,6 +1813,129 @@ export default function GoLivePage() {
           }
         }
 
+
+        /* Creator Studio 2026: simpler chrome, a single visual hierarchy and
+           touch-friendly controls. All LiveKit / capture handlers stay intact. */
+        .goLive{
+          --studio2026-accent:var(--theme-primary,#81d5b4);
+          --studio2026-ink:#e8f5f1;
+        }
+        .goLive .immersiveHeader{
+          background:linear-gradient(180deg,rgba(7,19,24,.96),rgba(9,24,28,.75))!important;
+          border-bottom:1px solid #ffffff18!important;
+          box-shadow:0 2px 25px #0003!important;
+          -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+        }
+        .goLive .immersiveHeader strong{color:#e8f6ef!important;letter-spacing:.04em}
+        .goLiveOnAir .immersiveHeader>strong{opacity:0;pointer-events:none}
+        .goLiveOnAir .immersiveHeader .liveHeaderViewers{
+          pointer-events:auto!important;cursor:pointer!important;
+          padding:7px 11px!important;font-size:11px!important;font-weight:760!important;
+          border-radius:12px!important;color:#f3fcf8!important;
+          background:rgba(17,36,42,.85)!important;border:1px solid #b5dfd02f!important;
+          box-shadow:inset 0 1px #ffffff12!important;
+        }
+        .goLiveOnAir .liveEndCorner{
+          top:calc(env(safe-area-inset-top,0px) + 13px)!important;left:12px!important;
+          min-height:39px!important;padding:8px 12px!important;
+          border-radius:13px!important;font-size:12px!important;
+          letter-spacing:.015em;background:rgba(103,24,33,.91)!important;
+          border:1px solid #ffacb16b!important;
+          box-shadow:0 4px 18px #0005,inset 0 1px #ffffff24!important;
+          -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+        }
+        .goLiveOnAir .preview .hostLiveGuestControls{
+          position:fixed!important;
+          top:calc(env(safe-area-inset-top,0px) + 13px)!important;
+          right:12px!important;z-index:10002!important;
+          max-width:min(40vw,165px);
+        }
+        .goLiveOnAir .preview .hostLiveGuestControls>button{
+          min-height:39px!important;padding:8px 12px!important;
+          border:1px solid #9dcaba52!important;border-radius:13px!important;
+          color:#e8f7f2!important;font-size:11px!important;white-space:nowrap;
+          background:rgba(18,38,42,.9)!important;
+          box-shadow:inset 0 1px #ffffff18,0 4px 18px #0005!important;
+        }
+        .goLive .previewOverlayTools{top:50%!important;right:12px!important;gap:8px!important}
+        .goLive .previewOverlayTools button{
+          width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;
+          border-radius:13px!important;background:rgba(10,25,31,.76)!important;
+          border:1px solid #ffffff5d!important;
+          box-shadow:0 5px 14px #0006,inset 0 1px #ffffff2b!important;
+          -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+          transition:background-color .2s,border-color .2s!important;
+        }
+        .goLive .previewOverlayTools button svg{width:20px;height:20px}
+        .goLive .previewOverlayTools button.studioToggleOn{
+          background:rgba(8,58,47,.76)!important;border-color:#9bebc37d!important;
+        }
+        .goLive .previewOverlayTools button.studioToggleOff{
+          background:rgba(87,23,33,.82)!important;border-color:#f6a7af85!important;
+        }
+        .goLive .previewOverlayTools button:active{transform:scale(.97)!important}
+        .goLive .preliveIdentity{
+          background:linear-gradient(115deg,rgba(13,34,41,.89),rgba(10,26,32,.82))!important;
+          border:1px solid #ffffff40!important;border-radius:17px!important;
+          box-shadow:0 8px 26px #0004!important;
+        }
+        .goLive .preliveIdentity .preliveTitleButton small{color:#a6dac8!important;letter-spacing:.1em}
+        .goLive .preliveIdentity .preliveIdentityIcon{
+          background:#ffffff10!important;border-color:#acd9c870!important;color:var(--studio2026-accent)!important;
+        }
+        .goLive .newStudioModes{
+          background:rgba(9,26,29,.67)!important;border:1px solid #ffffff35!important;
+          border-radius:16px!important;padding:4px!important;gap:4px!important;
+          box-shadow:inset 0 1px #ffffff18!important;
+        }
+        .goLive .newStudioModes button{
+          min-height:41px!important;border-radius:12px!important;
+          border:1px solid transparent!important;background:transparent!important;
+          color:#c0d7d0!important;font-size:12px!important;
+          transition:background .2s,border-color .2s,color .2s!important;
+        }
+        .goLive .newStudioModes button.selected,.goLive .newStudioModes button[aria-pressed="true"]{
+          color:#fff!important;background:#83d6b324!important;
+          border-color:#b4e8ce70!important;box-shadow:none!important;
+        }
+        .goLive .newStudioGo[data-go-live-start]{
+          border-radius:15px!important;
+          background:linear-gradient(110deg,#0b6c54,#16a57e)!important;
+          border:1px solid #b8f4d37d!important;
+          box-shadow:0 6px 23px #0005,inset 0 1px #ffffff38!important;
+          font-weight:830!important;letter-spacing:.015em;
+        }
+        .goLive .newStudioHint{font-size:10px!important;color:#8fb0aa!important}
+        .goLive .preliveMobileActions .preliveGoButton{
+          min-height:54px!important;border:1px solid #b0f0d37a!important;
+          border-radius:15px!important;animation:none!important;
+          background:linear-gradient(115deg,#0d755a,#169c7b)!important;
+          box-shadow:0 8px 22px #0008,inset 0 1px #ffffff4d!important;
+          font-size:19px!important;letter-spacing:.018em;
+        }
+        .goLive .preliveQuickOptions button{
+          min-height:47px!important;padding:7px 5px!important;
+          border-radius:13px!important;
+          background:rgba(10,30,33,.74)!important;
+          border-color:#ffffff3c!important;
+          box-shadow:inset 0 1px #ffffff16!important;
+        }
+        .goLive .preliveQuickOptions button small{color:#a0cdbb!important}
+        .goLive .layout>.form{
+          border-color:#ffffff32!important;background:linear-gradient(165deg,rgba(18,37,42,.94),rgba(7,20,25,.94))!important;
+        }
+        .goLive .goLivePanelAccent{color:var(--studio2026-accent)}
+        @media(max-width:420px){
+          .goLive .previewOverlayTools{right:9px!important}
+          .goLive .previewOverlayTools button{width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important}
+          .goLiveOnAir .liveEndCorner{font-size:11px!important;padding:7px 10px!important}
+          .goLiveOnAir .preview .hostLiveGuestControls{right:9px!important}
+          .goLiveOnAir .preview .hostLiveGuestControls>button{padding:7px 9px!important;font-size:10px!important}
+          .goLive .newStudioModes button{font-size:11px!important;min-height:39px!important}
+        }
+        @media(prefers-reduced-motion:reduce){
+          .goLive .previewOverlayTools button,.goLive .newStudioModes button{transition:none!important}
+        }
       `}</style>
 
       <header className="immersiveHeader">{!live&&<Link href="/streaming" aria-label="Exit Pre-Live Studio">✕</Link>}<strong><span className="studioBrandMark" aria-hidden="true">✧</span> 1Muslim <span className="studioHeaderLabel">· Creator Studio</span></strong>{live&&<button type="button" className="liveHeaderViewers" aria-label={`${viewers} live viewers; show viewer list`} aria-expanded={viewerRosterOpen} onClick={()=>setViewerRosterOpen(v=>!v)}>● {viewers} <span>viewers</span></button>}</header>
