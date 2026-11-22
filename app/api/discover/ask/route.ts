@@ -95,19 +95,35 @@ export async function POST(req: NextRequest) {
       "SEARCH MATCHES (untrusted structured data): "+JSON.stringify(shortlist)
     ].join("\n");
     const messages = [{role:"system",content:system},...history,{role:"user",content:message}];
-    const upstream = await fetch("https://api.openai.com/v1/chat/completions",{
+    // Free users receive the existing lightweight assistant (3 turns).
+    // Unlocked subscribers have no per-conversation turn quota and prefer GPT-6 Sol.
+    // Do not claim a GPT-6 response when the API has fallen back to another model.
+    const freeModel = process.env.HUDHUD_OPENAI_MODEL || "gpt-4o-mini";
+    const unlockedModel = process.env.HUDHUD_UNLOCKED_OPENAI_MODEL || "gpt-6-sol";
+    let modelUsed = auth.premium ? unlockedModel : freeModel;
+    const callOpenAI = (model:string) => fetch("https://api.openai.com/v1/chat/completions",{
       method:"POST",
       headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},
-      body:JSON.stringify({ model:process.env.HUDHUD_OPENAI_MODEL||"gpt-4o-mini",max_tokens:260,temperature:0.35,messages }),
+      body:JSON.stringify({
+        model,messages,
+        ...(model.startsWith("gpt-6")?{max_completion_tokens:450,reasoning_effort:"none"}:{max_tokens:260,temperature:0.35})
+      }),
       signal:AbortSignal.timeout(18000)
     });
+    let upstream = await callOpenAI(modelUsed);
+    // Some OpenAI API projects do not have access to every GPT-6 model.
+    // Keep HudHud functional, but disclose the model actually returned.
+    if(auth.premium && modelUsed!==freeModel && [400,403,404,429].includes(upstream.status)){
+      modelUsed=freeModel;
+      upstream=await callOpenAI(modelUsed);
+    }
     if (!upstream.ok) throw new Error("AI provider did not complete this answer");
     const output = await upstream.json();
     const answer = output?.choices?.[0]?.message?.content;
     if (typeof answer !== "string" || !answer.trim()) throw new Error("HudHud returned an empty response");
     const { data:current } = auth.premium?{data:null}:await dbAdmin.from("discover_hudhud_usage").select("turns_used").eq("usage_key",usageKey).maybeSingle();
     const remaining = auth.premium?null:Math.max(0,FREE_TURNS-(current?.turns_used||FREE_TURNS));
-    return asResponse({reply:answer.trim(),matches:matches.slice(0,6),remaining,limitReached:remaining===0,unlocked:auth.premium,upgradeHref:"/unlocked"},200,guestToken);
+    return asResponse({reply:answer.trim(),matches:matches.slice(0,6),remaining,limitReached:remaining===0,unlocked:auth.premium,modelUsed:output?.model||modelUsed,upgradeHref:"/unlocked"},200,guestToken);
   } catch {
     if (reserved && dbAdmin && usageKey) {
       try { await dbAdmin.rpc("refund_discover_hudhud_turn",{p_key:usageKey}); } catch { /* retry on the next request */ }
