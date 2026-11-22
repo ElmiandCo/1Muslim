@@ -1,0 +1,23 @@
+.page{min-height:100vh;background:#f7f9fa;color:#172f42;padding:26px 15px 90px;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.shell{max-width:990px;margin:0 auto}
+.nav{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:10px 0 32px;font-size:13px;font-weight:800}
+.nav a,.footer a{color:#24624d;text-decoration:none}
+.nav span,.eyebrow{font-size:11px;letter-spacing:.17em;font-weight:850;color:#ad874e}
+.hero{padding:clamp(25px,5vw,55px);border-radius:28px;border:1px solid #dfe9e6;background:linear-gradient(125deg,#fff,#f5f9f7);box-shadow:0 10px 40px #153c380c}
+.hero h1{font-size:clamp(36px,6vw,68px);letter-spacing:-.055em;line-height:1.07;margin:15px 0 20px}
+.hero h1 em{font-style:normal;color:#155743}
+.hero p{max-width:730px;color:#5a6f78;font-size:clamp(15px,2vw,19px);line-height:1.7}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0 10px}
+.metric{display:grid;align-content:space-between;gap:13px;min-height:175px;padding:25px;border:1px solid #e2e9e9;background:white;border-radius:22px;box-shadow:0 4px 18px #153c3808}
+.metric span{font-size:14px;color:#56716b;font-weight:750}
+.metric strong{font-size:clamp(29px,4vw,48px);color:#153f36;font-variant-numeric:tabular-nums}
+.metric small{font-size:12px;color:#798984}
+.stamp{font-size:11px;line-height:1.5;color:#7e8c91;margin:15px 0 42px}
+.panel{background:#fff;border:1px solid #e1e8ea;border-radius:23px;padding:clamp(22px,4vw,39px);margin-bottom:18px}
+.panel h2,.banner h2{font-size:clamp(25px,3.2vw,38px);letter-spacing:-.035em;margin:12px 0 17px}
+.panel p,.banner p{font-size:15px;line-height:1.77;color:#596e78}
+.banner{margin-top:28px;border-radius:24px;background:#143f35;color:white;padding:clamp(26px,5vw,50px)}
+.banner p{color:#d4e9df;max-width:740px}
+.banner a{display:inline-flex;margin-top:16px;background:#f7d68a;color:#183e32;padding:13px 18px;border-radius:99px;font-size:13px;font-weight:850;text-decoration:none}
+.footer{display:flex;justify-content:center;flex-wrap:wrap;gap:23px;margin-top:44px;font-size:13px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.metric{min-height:135px}.nav span{display:none}.hero{padding:28px 20px}.page{padding:16px 12px 90px}}
