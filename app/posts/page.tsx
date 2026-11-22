@@ -5,6 +5,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import {useRouter} from "next/navigation";
 import {readWatchedPosts,storeImmersiveQueue,UMMAH_WATCH_UPDATED_EVENT,type WatchedPost} from "../lib/ummah-watch-history";
 import UnifiedPostMedia from "../components/UnifiedPostMedia";
+import OneMuslimVideo from "../components/OneMuslimVideo";
 import {predictVideo,cachePublicImage} from "../../lib/smart-media";
 import PostAuthorFollow from "../components/PostAuthorFollow";
 import styles from "./posts-magazine.module.css";
@@ -30,19 +31,38 @@ function VisiblePostEngagement({postId,mediaUrl,mediaType,youtube}:{postId:strin
  useEffect(()=>{
   if(!near||!content.current)return;
   const node=content.current;
-  const measure=()=>{const height=Math.ceil(node.getBoundingClientRect().height);if(height>0)setReservedHeight(old=>Math.max(old,height))};
+  const measure=()=>{const height=Math.ceil(node.getBoundingClientRect().height);if(height>0)setReservedHeight(height)};
   measure();
   const resize=new ResizeObserver(measure);
   resize.observe(node);
   return()=>resize.disconnect();
  },[near]);
  return <div ref={container} style={near?{minHeight:reservedHeight}:{height:reservedHeight}}>
-  {near?<div ref={content}><UnifiedPostMedia postId={postId} mediaUrl={mediaUrl} mediaType={mediaType} youtubeId={youtube}/></div>:null}
+  {near?<div ref={content}><UnifiedPostMedia postId={postId} mediaUrl={mediaUrl} mediaType={mediaType} youtubeId={youtube} showVideo={false}/></div>:null}
  </div>;
 }
+function VisiblePostVideo({postId,mediaUrl,youtube}:{postId:string;mediaUrl:string|null;youtube:string|null}){
+ const node=useRef<HTMLDivElement|null>(null);
+ const [near,setNear]=useState(false);
+ useEffect(()=>{const el=node.current;if(!el)return;if(typeof IntersectionObserver==="undefined"){setNear(true);return}const o=new IntersectionObserver(([entry])=>setNear(entry.isIntersecting),{rootMargin:"800px 0px 800px 0px",threshold:0});o.observe(el);return()=>o.disconnect()},[]);
+ return <div ref={node} className={styles.feedVideoStage}>{near?<OneMuslimVideo videoKey={"public-post:"+postId} src={mediaUrl||""} youtubeId={youtube} title="Ummah video"/>:<div className={styles.feedVideoPlaceholder}>{youtube?<img src={ytThumbnail(youtube)} alt="" loading="lazy"/>:<span aria-hidden="true">▶</span>}<small>Video ready to play</small></div>}</div>;
+}
+
 let cachedDiscover:{posts:Post[];viewerId:string|null;at:number}|null=null;
 export default function PublicPostsSocial(){
  const router=useRouter();
+ // Native proximity snapping stops a fling at the next post. Keep controls and comment
+ // threads on the browser's normal touch/scroll path instead of hijacking gestures.
+ useEffect(()=>{
+  const root=document.scrollingElement as HTMLElement|null;
+  if(!root)return;
+  const previousType=root.style.scrollSnapType;
+  const previousPadding=root.style.scrollPaddingTop;
+  root.style.scrollSnapType="y proximity";
+  root.style.scrollPaddingTop="16px";
+  return()=>{root.style.scrollSnapType=previousType;root.style.scrollPaddingTop=previousPadding};
+ },[]);
+
  const [posts,setPosts]=useState<Post[]>([]),[query,setQuery]=useState(""),[filter,setFilter]=useState<"forYou"|"lastWatched"|"popular">("forYou"),[loading,setLoading]=useState(true),[error,setError]=useState(""),[expanded,setExpanded]=useState<Record<string,boolean>>({}),[viewerId,setViewerId]=useState<string|null>(null),[history,setHistory]=useState<WatchedPost[]>([]),[scores,setScores]=useState<Record<string,{likes:number;comments:number;shares:number;saves:number;score:number}>>({}),[rankStatus,setRankStatus]=useState<"loading"|"ready"|"error">("loading"),[menuId,setMenuId]=useState<string|null>(null),[editingId,setEditingId]=useState<string|null>(null),[editText,setEditText]=useState(""),[actionBusy,setActionBusy]=useState(false),[actionError,setActionError]=useState("");
  useEffect(()=>{
   let active=true;
@@ -162,12 +182,28 @@ export default function PublicPostsSocial(){
  <button type="button" className={filter==="lastWatched"?styles.active:""} aria-pressed={filter==="lastWatched"} onClick={()=>setFilter("lastWatched")}>◷ Last Watched</button>
  <button type="button" className={filter==="popular"?styles.active:""} aria-pressed={filter==="popular"} onClick={()=>setFilter("popular")}>✦ Most Popular</button>
  <button type="button" className={styles.immersivePlayTab} aria-label="Play immersive swipe feed" title="Play full-screen swipe feed" disabled={!filtered.length} onClick={startImmersive}><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M8.2 4.6c0-.9 1-1.4 1.8-.9l10.2 7.1c.8.5.8 1.5 0 2L10 20c-.8.5-1.8 0-1.8-.9V4.6Z"/></svg><span>Play</span></button></div><label className={styles.discoverSearch}><span className={styles.sr}>Search posts or people</span><input id="discover-search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search posts or people…"/></label></div>
-  {loading?<div className={styles.status}>LOADING YOUR FEED…</div>:error?<div className={styles.status} role="alert">{error}</div>:filter==="popular"&&rankStatus==="loading"?<div className={styles.status}>RANKING POSTS BY REAL ENGAGEMENT…</div>:filter==="popular"&&rankStatus==="error"?<div className={styles.status} role="alert">Popularity rankings are temporarily unavailable. Please try again shortly.</div>:!filtered.length?<div className={styles.status}>{filter==="lastWatched"?"No videos watched yet on this device. Open a video and play it to begin your history.":"NO POSTS FOUND YET."}</div>:<div className={styles.feedStream}>{filtered.map(p=>{const video=youtubeId(p.body),isImage=!!p.media_url&&!!p.media_type?.startsWith("image/"),body=clean(p.body),long=body.length>220;return <article className={styles.feedPost} key={p.id}><div className={styles.feedPostHeader}><Link href={`/profile?section=muslimeen&member=${encodeURIComponent(p.author_id)}`} className={styles.feedPostIdentity}><span className={styles.feedPostAvatar}>{p.author_avatar_url?<img className={styles.authorAvatarImage} src={p.author_avatar_url} alt="" loading="lazy" referrerPolicy="no-referrer"/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span><span><strong>{p.author_name||"Community member"} {p.shahada_verified?"✦":""}</strong><small>{p.author_handle} · {new Date(p.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"})}</small></span></Link><PostAuthorFollow authorId={p.author_id} viewerId={viewerId}/><div className={styles.feedMenuWrap}><button type="button" className={styles.feedPostMore} aria-label="Post options" aria-expanded={menuId===p.id} onClick={()=>{setMenuId(v=>v===p.id?null:p.id);setActionError("")}}>•••</button>{menuId===p.id&&<div className={styles.feedPostMenu}><Link href={`/posts/story/${encodeURIComponent(p.id)}`}>View</Link>{viewerId===p.author_id&&<><button type="button" onClick={()=>{setEditingId(p.id);setEditText(p.body);setMenuId(null)}}>Edit</button><button type="button" disabled={actionBusy} onClick={async()=>{if(!window.confirm("Delete this post permanently?"))return;setActionBusy(true);setActionError("");try{const r=await fetch("/api/community-posts",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id})});if(!r.ok)throw Error((await r.json()).error||"Could not delete post");setPosts(old=>old.filter(x=>x.id!==p.id));setMenuId(null)}catch(e){setActionError(e instanceof Error?e.message:"Delete failed")}finally{setActionBusy(false)}}}>Delete</button></>}</div>}</div></div>
+  {loading?<div className={styles.status}>LOADING YOUR FEED…</div>:error?<div className={styles.status} role="alert">{error}</div>:filter==="popular"&&rankStatus==="loading"?<div className={styles.status}>RANKING POSTS BY REAL ENGAGEMENT…</div>:filter==="popular"&&rankStatus==="error"?<div className={styles.status} role="alert">Popularity rankings are temporarily unavailable. Please try again shortly.</div>:!filtered.length?<div className={styles.status}>{filter==="lastWatched"?"No videos watched yet on this device. Open a video and play it to begin your history.":"NO POSTS FOUND YET."}</div>:<div className={styles.feedStream+" "+styles.ummahSnapFeed}>{filtered.map((p,index)=>{const video=youtubeId(p.body),isImage=!!p.media_url&&!!p.media_type?.startsWith("image/"),body=clean(p.body),long=body.length>220,hasVideo=!!video||!!p.media_type?.startsWith("video/");return <article className={styles.feedPost} id={"ummah-post-"+p.id} key={p.id} aria-label={"Post by "+(p.author_name||"Community member")}>
+ <div className={styles.feedPostStage}>
+ {isImage&&<Link href={`/posts/story/${encodeURIComponent(p.id)}`} className={styles.feedMediaLink}><img src={p.media_url!} alt="Community post" width={960} height={1200} loading={index<2?"eager":"lazy"} decoding="async" fetchPriority={index===0?"high":"auto"} style={{backgroundColor:"#f1f3f6"}}/></Link>}
+ 
+ {hasVideo&&<VisiblePostVideo postId={p.id} mediaUrl={p.media_url} youtube={video}/>}
+ {!isImage&&!hasVideo&&<div className={styles.feedTextCanvas} aria-hidden="true"><span>✧</span><strong>FROM THE UMMAH</strong><small>Voices of our community</small></div>}
+ <div className={styles.feedPostGlass}>
+  <Link href={"/profile?section=muslimeen&member="+encodeURIComponent(p.author_id)} className={styles.feedAvatarEdge} aria-label={"View "+(p.author_name||"member")+" profile"}><span className={styles.feedPostAvatar}>{p.author_avatar_url?<img className={styles.authorAvatarImage} src={p.author_avatar_url} alt="" loading="lazy" referrerPolicy="no-referrer"/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span></Link>
+  <div className={styles.feedPostHeader}><Link href={`/profile?section=muslimeen&member=${encodeURIComponent(p.author_id)}`} className={styles.feedPostIdentity}><span><strong>{p.author_name||"Community member"} {p.shahada_verified?"✦":""}</strong><small>{p.author_handle} · {new Date(p.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"})}</small></span></Link><PostAuthorFollow authorId={p.author_id} viewerId={viewerId}/><div className={styles.feedMenuWrap}><button type="button" className={styles.feedPostMore} aria-label="Post options" aria-expanded={menuId===p.id} onClick={()=>{setMenuId(v=>v===p.id?null:p.id);setActionError("")}}>•••</button>{menuId===p.id&&<div className={styles.feedPostMenu}><Link href={`/posts/story/${encodeURIComponent(p.id)}`}>View</Link>{viewerId===p.author_id&&<><button type="button" onClick={()=>{setEditingId(p.id);setEditText(p.body);setMenuId(null)}}>Edit</button><button type="button" disabled={actionBusy} onClick={async()=>{if(!window.confirm("Delete this post permanently?"))return;setActionBusy(true);setActionError("");try{const r=await fetch("/api/community-posts",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id})});if(!r.ok)throw Error((await r.json()).error||"Could not delete post");setPosts(old=>old.filter(x=>x.id!==p.id));setMenuId(null)}catch(e){setActionError(e instanceof Error?e.message:"Delete failed")}finally{setActionBusy(false)}}}>Delete</button></>}</div>}</div></div>
+ 
+  {body&&<div className={styles.feedPostCaption}><p>{long&&!expanded[p.id]?body.slice(0,220).trimEnd()+"…":body}</p>{long&&<button type="button" onClick={()=>setExpanded(old=>({...old,[p.id]:!old[p.id]}))}>{expanded[p.id]?"Show less":"Read more"}</button>}</div>}
+ 
+ </div>
+ </div>
  {editingId===p.id&&<div className={styles.feedEditBox}><textarea aria-label="Edit post text" value={editText} maxLength={2000} onChange={e=>setEditText(e.target.value)}/><div><button type="button" disabled={actionBusy} onClick={()=>setEditingId(null)}>Cancel</button><button type="button" disabled={actionBusy||!editText.trim()} onClick={async()=>{setActionBusy(true);setActionError("");try{const r=await fetch("/api/community-posts",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,text:editText})});if(!r.ok)throw Error((await r.json()).error||"Could not save post");setPosts(old=>old.map(x=>x.id===p.id?{...x,body:editText.trim()}:x));setEditingId(null)}catch(e){setActionError(e instanceof Error?e.message:"Save failed")}finally{setActionBusy(false)}}}>Save changes</button></div></div>}
- {body&&<div className={styles.feedPostCaption}><p>{long&&!expanded[p.id]?body.slice(0,220).trimEnd()+"…":body}</p>{long&&<button type="button" onClick={()=>setExpanded(old=>({...old,[p.id]:!old[p.id]}))}>{expanded[p.id]?"Show less":"Read more"}</button>}</div>}
- {isImage&&<Link href={`/posts/story/${encodeURIComponent(p.id)}`} className={styles.feedMediaLink}><img src={p.media_url!} alt="Community post" width={960} height={1200} loading="lazy" decoding="async" fetchPriority="auto" style={{backgroundColor:"#f1f3f6"}}/></Link>}
+ 
  <div className={styles.feedPostEngagement}><VisiblePostEngagement postId={p.id} mediaUrl={p.media_url} mediaType={p.media_type} youtube={video}/></div>
- <div className={styles.feedPostBottom}><span>1MUSLIM · COMMUNITY</span><Link href={`/posts/story/${encodeURIComponent(p.id)}`}>VIEW POST ↗</Link></div></article>})}</div>}
+ 
+ <div className={styles.feedPostBottom}>
+  {index<filtered.length-1?<button type="button" className={styles.feedNext} onClick={()=>document.getElementById("ummah-post-"+filtered[index+1].id)?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})} aria-label="Go to next Ummah post">◇&nbsp; Swipe up for next post &nbsp;⌄</button>:<span>You're all caught up ✧</span>}
+  <Link href={"/posts/story/"+encodeURIComponent(p.id)}>VIEW POST ↗</Link>
+ </div></article>})}</div>}
  {actionError&&<p role="alert" className={styles.status}>{actionError}</p>}
  <footer className={styles.footer}><span>1MUSLIM / THE PEOPLE'S EDITION</span><Link href="/community">JOIN THE CONVERSATION ↗</Link></footer></main>;
 }
