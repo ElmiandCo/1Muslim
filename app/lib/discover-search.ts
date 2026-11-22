@@ -71,7 +71,11 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
       db.from("live_streams").select("id,title,category,status,created_at").eq("visibility","public").eq("status","live").order("created_at",{ascending:false}).limit(8),
     quranTranslations(query)
   ]);
-  const get=(i:number):any[]=>tasks[i].status==="fulfilled" ? (Array.isArray((tasks[i].value as any)?.data)?(tasks[i].value as any).data: Array.isArray(tasks[i].value)?tasks[i].value:[]) : [];
+  const get=(i:number):any[]=>{
+    const settled=tasks[i];if(!settled||settled.status!=="fulfilled")return [];
+    const value=settled.value as any;
+    return Array.isArray(value?.data)?value.data:Array.isArray(value)?value:[];
+  };
   const groups=Object.fromEntries(DISCOVER_CATEGORIES.map(category=>[category,[] as DiscoverItem[]])) as unknown as Record<DiscoverKind,DiscoverItem[]>;
   const add=(item:DiscoverItem)=>{if(item.href.startsWith("/")&&!item.href.startsWith("//"))groups[item.kind].push(item);};
   const authors=get(1);
