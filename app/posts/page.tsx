@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import {cleanPostBody} from "../lib/cleanPostBody";
-import {useEffect,useMemo,useRef,useState} from "react";
+import {useEffect,useMemo,useRef,useState,type CSSProperties,type TouchEvent} from "react";
 import {useRouter} from "next/navigation";
 import {readWatchedPosts,storeImmersiveQueue,UMMAH_WATCH_UPDATED_EVENT,type WatchedPost} from "../lib/ummah-watch-history";
 import UnifiedPostMedia from "../components/UnifiedPostMedia";
@@ -64,6 +64,32 @@ export default function PublicPostsSocial(){
  },[]);
 
  const [posts,setPosts]=useState<Post[]>([]),[query,setQuery]=useState(""),[filter,setFilter]=useState<"forYou"|"lastWatched"|"popular">("forYou"),[loading,setLoading]=useState(true),[error,setError]=useState(""),[expanded,setExpanded]=useState<Record<string,boolean>>({}),[viewerId,setViewerId]=useState<string|null>(null),[history,setHistory]=useState<WatchedPost[]>([]),[scores,setScores]=useState<Record<string,{likes:number;comments:number;shares:number;saves:number;score:number}>>({}),[rankStatus,setRankStatus]=useState<"loading"|"ready"|"error">("loading"),[menuId,setMenuId]=useState<string|null>(null),[editingId,setEditingId]=useState<string|null>(null),[editText,setEditText]=useState(""),[actionBusy,setActionBusy]=useState(false),[actionError,setActionError]=useState("");
+ // A real card deck: swipe artwork or the card surface, never the native video,
+ // follow/menu buttons, comments, keyboard or other interactive controls.
+ const deckRoot=useRef<HTMLDivElement|null>(null);
+ const [deckActive,setDeckActive]=useState(0);
+ const [deckMotion,setDeckMotion]=useState<{from:number;to:number;direction:1|-1}|null>(null);
+ const activeDeckRef=useRef(0);
+ const deckLocked=useRef(false);
+ const deckTimer=useRef<number|null>(null);
+ const deckTouch=useRef<{index:number;x:number;y:number}|null>(null);
+ useEffect(()=>()=>{if(deckTimer.current)clearTimeout(deckTimer.current)},[]);
+ useEffect(()=>{
+  let frame=0;
+  const sync=()=>{
+   if(deckLocked.current||!deckRoot.current)return;
+   const found=document.elementFromPoint(window.innerWidth*.5,Math.min(window.innerHeight*.46,450))?.closest<HTMLElement>("[data-ummah-index]");
+   if(!found||!deckRoot.current.contains(found))return;
+   const index=Number(found.dataset.ummahIndex);
+   if(Number.isInteger(index)&&index>=0&&index!==activeDeckRef.current){activeDeckRef.current=index;setDeckActive(index)}
+  };
+  const onScroll=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;sync()})};
+  window.addEventListener("scroll",onScroll,{passive:true});
+  window.addEventListener("resize",onScroll,{passive:true});
+  const init=requestAnimationFrame(sync);
+  return()=>{window.removeEventListener("scroll",onScroll);window.removeEventListener("resize",onScroll);cancelAnimationFrame(init);if(frame)cancelAnimationFrame(frame)};
+ },[]);
+ useEffect(()=>{activeDeckRef.current=0;setDeckActive(0);setDeckMotion(null);deckLocked.current=false},[filter,query]);
  useEffect(()=>{
   let active=true;
   let moreTimer:number|undefined;
@@ -160,6 +186,41 @@ export default function PublicPostsSocial(){
   const position=new Map(ordered.map((id,index)=>[id,index]));
   return result.sort((a,b)=>(position.get(a.id)??Infinity)-(position.get(b.id)??Infinity));
  },[posts,query,filter,history,scores]);
+ const moveDeck=(from:number,to:number)=>{
+  if(deckLocked.current||to<0||to>=filtered.length||from===to)return;
+  const item=filtered[to],node=document.getElementById("ummah-post-"+item.id);
+  if(!node)return;
+  const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  deckLocked.current=true;
+  if(deckTimer.current)clearTimeout(deckTimer.current);
+  setDeckMotion(reduced?null:{from,to,direction:to>from?1:-1});
+  activeDeckRef.current=to;
+  setDeckActive(to);
+  // The old card flies off as the next card grows from its blurred preview.
+  window.setTimeout(()=>{
+   node.scrollIntoView({behavior:reduced?"auto":"smooth",block:"start"});
+   if(item.media_url&&item.media_type?.startsWith("video/"))predictVideo(item.media_url);
+  },reduced?0:56);
+  deckTimer.current=window.setTimeout(()=>{setDeckMotion(null);deckLocked.current=false},reduced?90:760);
+ };
+ const onCardTouchStart=(index:number,event:TouchEvent<HTMLElement>)=>{
+  const element=event.target;
+  if(!(element instanceof Element))return;
+  const link=element.closest("a");
+  if((link&&!link.classList.contains(styles.feedMediaLink))||
+     element.closest("button,input,textarea,select,video,audio,iframe,[contenteditable='true']")||
+     element.closest("[class*='feedPostEngagement'],[class*='feedVideoStage'],[class*='feedEditBox']")){deckTouch.current=null;return}
+  const point=event.touches[0];
+  if(!point)return;
+  deckTouch.current={index,x:point.clientX,y:point.clientY};
+ };
+ const onCardTouchEnd=(index:number,event:TouchEvent<HTMLElement>)=>{
+  const start=deckTouch.current;deckTouch.current=null;
+  if(!start||start.index!==index||event.changedTouches.length===0)return;
+  const point=event.changedTouches[0],dy=point.clientY-start.y,dx=point.clientX-start.x;
+  if(Math.abs(dy)<65||Math.abs(dy)<Math.abs(dx)*1.35)return;
+  moveDeck(index,index+(dy<0?1:-1));
+ };
  const startImmersive=()=>{
   if(!filtered.length)return;
   storeImmersiveQueue(filtered.map(p=>p.id));
@@ -182,7 +243,15 @@ export default function PublicPostsSocial(){
  <button type="button" className={filter==="lastWatched"?styles.active:""} aria-pressed={filter==="lastWatched"} onClick={()=>setFilter("lastWatched")}>◷ Last Watched</button>
  <button type="button" className={filter==="popular"?styles.active:""} aria-pressed={filter==="popular"} onClick={()=>setFilter("popular")}>✦ Most Popular</button>
  <button type="button" className={styles.immersivePlayTab} aria-label="Play immersive swipe feed" title="Play full-screen swipe feed" disabled={!filtered.length} onClick={startImmersive}><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M8.2 4.6c0-.9 1-1.4 1.8-.9l10.2 7.1c.8.5.8 1.5 0 2L10 20c-.8.5-1.8 0-1.8-.9V4.6Z"/></svg><span>Play</span></button></div><label className={styles.discoverSearch}><span className={styles.sr}>Search posts or people</span><input id="discover-search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search posts or people…"/></label></div>
-  {loading?<div className={styles.status}>LOADING YOUR FEED…</div>:error?<div className={styles.status} role="alert">{error}</div>:filter==="popular"&&rankStatus==="loading"?<div className={styles.status}>RANKING POSTS BY REAL ENGAGEMENT…</div>:filter==="popular"&&rankStatus==="error"?<div className={styles.status} role="alert">Popularity rankings are temporarily unavailable. Please try again shortly.</div>:!filtered.length?<div className={styles.status}>{filter==="lastWatched"?"No videos watched yet on this device. Open a video and play it to begin your history.":"NO POSTS FOUND YET."}</div>:<div className={styles.feedStream+" "+styles.ummahSnapFeed}>{filtered.map((p,index)=>{const video=youtubeId(p.body),isImage=!!p.media_url&&!!p.media_type?.startsWith("image/"),body=clean(p.body),long=body.length>220,hasVideo=!!video||!!p.media_type?.startsWith("video/");return <article className={styles.feedPost} id={"ummah-post-"+p.id} key={p.id} aria-label={"Post by "+(p.author_name||"Community member")}>
+  {loading?<div className={styles.status}>LOADING YOUR FEED…</div>:error?<div className={styles.status} role="alert">{error}</div>:filter==="popular"&&rankStatus==="loading"?<div className={styles.status}>RANKING POSTS BY REAL ENGAGEMENT…</div>:filter==="popular"&&rankStatus==="error"?<div className={styles.status} role="alert">Popularity rankings are temporarily unavailable. Please try again shortly.</div>:!filtered.length?<div className={styles.status}>{filter==="lastWatched"?"No videos watched yet on this device. Open a video and play it to begin your history.":"NO POSTS FOUND YET."}</div>:<div ref={deckRoot} className={styles.feedStream+" "+styles.ummahSnapFeed} aria-label="Swipeable Ummah card deck">{filtered.map((p,index)=>{const video=youtubeId(p.body),isImage=!!p.media_url&&!!p.media_type?.startsWith("image/"),body=clean(p.body),long=body.length>220,hasVideo=!!video||!!p.media_type?.startsWith("video/");const nextPost=filtered[index+1];
+ const nextVideoId=nextPost?youtubeId(nextPost.body):null;
+ const nextPreview=nextPost?.media_type?.startsWith("image/")?nextPost.media_url:nextVideoId?ytThumbnail(nextVideoId):null;
+ const poster=isImage?p.media_url:video?ytThumbnail(video):null;
+ const state=deckMotion?(index===deckMotion.from?"leaving":index===deckMotion.to?"arriving":index===deckActive+1?"queued":index===deckActive-1?"past":"rest"):index===deckActive?"current":index===deckActive+1?"queued":index===deckActive-1?"past":"rest";
+ const posterStyle=poster&&(index===deckActive||index===deckActive+1)?({"--ummah-poster":"url("+JSON.stringify(poster)+")"} as CSSProperties):undefined;
+ return <article className={styles.feedPost} id={"ummah-post-"+p.id} data-ummah-index={index} data-deck-state={state} data-deck-direction={deckMotion?.direction===-1?"reverse":"forward"} style={posterStyle} onTouchStart={e=>onCardTouchStart(index,e)} onTouchEnd={e=>onCardTouchEnd(index,e)} onTouchCancel={()=>{deckTouch.current=null}} key={p.id} aria-label={"Post by "+(p.author_name||"Community member")}>
+ {index<filtered.length-1&&<div aria-hidden="true" className={styles.feedNextGhost} style={index===deckActive&&nextPreview?{backgroundImage:"url("+JSON.stringify(nextPreview)+")"}:undefined}/>}
+
  <div className={styles.feedPostStage}>
  {isImage&&<Link href={`/posts/story/${encodeURIComponent(p.id)}`} className={styles.feedMediaLink}><img src={p.media_url!} alt="Community post" width={960} height={1200} loading={index<2?"eager":"lazy"} decoding="async" fetchPriority={index===0?"high":"auto"} style={{backgroundColor:"#f1f3f6"}}/></Link>}
  
@@ -201,7 +270,7 @@ export default function PublicPostsSocial(){
  <div className={styles.feedPostEngagement}><VisiblePostEngagement postId={p.id} mediaUrl={p.media_url} mediaType={p.media_type} youtube={video}/></div>
  
  <div className={styles.feedPostBottom}>
-  {index<filtered.length-1?<button type="button" className={styles.feedNext} onClick={()=>document.getElementById("ummah-post-"+filtered[index+1].id)?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})} aria-label="Go to next Ummah post">◇&nbsp; Swipe up for next post &nbsp;⌄</button>:<span>You're all caught up ✧</span>}
+  {index<filtered.length-1?<button type="button" className={styles.feedNext} onClick={()=>moveDeck(index,index+1)} aria-label="Go to next Ummah post">◇&nbsp; Swipe up for next post &nbsp;⌄</button>:<span>You're all caught up ✧</span>}
   <Link href={"/posts/story/"+encodeURIComponent(p.id)}>VIEW POST ↗</Link>
  </div></article>})}</div>}
  {actionError&&<p role="alert" className={styles.status}>{actionError}</p>}
