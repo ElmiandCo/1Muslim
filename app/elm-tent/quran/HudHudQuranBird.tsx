@@ -5,11 +5,12 @@ import "./hudhud-quran-bird.css";
 type QuranWord={text_uthmani?:string;translation?:{text:string};char_type_name?:string};
 type Props={verseKey:string;chapterName:string;words?:QuranWord[];paused?:boolean};
 const KEY="1muslim:hudhud-quran-page-awareness:v1";
+const NO_WORDS:QuranWord[]=[];
 const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,value));
 const normalize=(text:string)=>text.normalize("NFKD").replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g,"").replace(/[^\u0621-\u064A]/g,"");
 const short=(value:string,size=34)=>value.length>size?value.slice(0,size-1)+"…":value;
 
-export default function HudHudQuranBird({verseKey,chapterName,words=[],paused=false}:Props){
+export default function HudHudQuranBird({verseKey,chapterName,words=NO_WORDS,paused=false}:Props){
  const [ready,setReady]=useState(false);
  const [enabled,setEnabled]=useState(false);
  const [bubble,setBubble]=useState(true);
@@ -21,7 +22,6 @@ export default function HudHudQuranBird({verseKey,chapterName,words=[],paused=fa
  const hoverTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const positionRef=useRef(position);
  const lastPointer=useRef({x:0,y:0});
- const enabledRef=useRef(false);
 
  const place=(x:number,y:number)=>{
    positionRef.current={x,y};
@@ -42,7 +42,7 @@ export default function HudHudQuranBird({verseKey,chapterName,words=[],paused=fa
    dismissTimer.current=window.setTimeout(()=>setBubble(false),duration);
  };
  useEffect(()=>{
-   try{const stored=localStorage.getItem(KEY);setEnabled(stored==="on");enabledRef.current=stored==="on"}catch{}
+   try{const stored=localStorage.getItem(KEY);setEnabled(stored==="on")}catch{}
    const query=window.matchMedia("(prefers-reduced-motion: reduce)");
    const sync=()=>setReduceMotion(query.matches);
    sync();query.addEventListener?.("change",sync);
@@ -51,7 +51,6 @@ export default function HudHudQuranBird({verseKey,chapterName,words=[],paused=fa
    scheduleClose(7200);
    return()=>{query.removeEventListener?.("change",sync);if(dismissTimer.current)clearTimeout(dismissTimer.current)};
  },[]);
- useEffect(()=>{enabledRef.current=enabled},[enabled]);
  useEffect(()=>{
    if(!ready||!enabled||paused)return;
    setHoverWord("");setMeaning("");
@@ -98,7 +97,7 @@ export default function HudHudQuranBird({verseKey,chapterName,words=[],paused=fa
    };
  },[ready,enabled,paused,verseKey,words]);
  const setAwareness=(value:boolean)=>{
-   setEnabled(value);enabledRef.current=value;
+   setEnabled(value);
    try{localStorage.setItem(KEY,value?"on":"off")}catch{}
    if(value)park();
    setBubble(true);scheduleClose(6400);
