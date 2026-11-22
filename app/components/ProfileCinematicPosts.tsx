@@ -150,7 +150,7 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
     </div>
     {feedMode==="saved"&&<div className="profileSavedBy"><strong>{p.author_name||"1Muslim member"}</strong><span>{p.author_handle||"@member"}</span></div>}
     {variant==="recentCards"&&<div className="profileRecentCardMeta"><strong>{(cleanPostBody(p.body)||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,105)||"View post"}</strong><small>{new Date(p.created_at).toLocaleDateString()} · View post ↗</small></div>}
-    {feedMode==="community"&&<div className="profileUmmahFooter"><span>♡ &nbsp; ◯ &nbsp; ♧</span><span>View post ↗</span></div>}
+    {feedMode==="community"&&<div className="profileUmmahFooter"><span>♡ &nbsp; ◯ &nbsp; ⤴</span><span>View post ↗</span></div>}
     {isVideo&&<span className="profileCinematicPlay" aria-hidden="true">▶</span>}
    </Link>{feedMode==="own"&&isOwner&&<button type="button" className="profileCinematicDelete" disabled={!!deleting} aria-label="Delete this post" title="Delete post" onClick={()=>void deleteOwnPost(p)}>{deleting===p.id?"…":"×"}</button>}</div>;
   })}</div>}
