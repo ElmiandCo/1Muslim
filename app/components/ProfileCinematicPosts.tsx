@@ -5,8 +5,8 @@ import {createClient} from "../../utils/supabase/client";
 import {useEffect,useRef,useState} from "react";
 import "./ProfileCinematicPosts.css";
 
-type Post={id:string;author_id:string;body:string;media_url:string|null;media_type:string|null;thumbnail_url?:string|null;created_at:string;author_name?:string;author_handle?:string;author_avatar_url?:string|null;source?:"community"|"profile"};
-export default function ProfileCinematicPosts({profileId,variant="grid",limit,feedMode="own"}:{profileId:string;variant?:"grid"|"recentCards";limit?:number;feedMode?:"own"|"community"}){
+type Post={id:string;author_id:string;body:string;media_url:string|null;media_type:string|null;thumbnail_url?:string|null;created_at:string;author_name?:string;author_handle?:string;author_avatar_url?:string|null;source?:"community"|"profile";savedAt?:string};
+export default function ProfileCinematicPosts({profileId,variant="grid",limit,feedMode="own"}:{profileId:string;variant?:"grid"|"recentCards";limit?:number;feedMode?:"own"|"community"|"saved"}){
  const [posts,setPosts]=useState<Post[]>([]);
  const [loading,setLoading]=useState(true);
  const [isOwner,setIsOwner]=useState(false);
@@ -44,6 +44,50 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
   let mounted=true;
   setLoading(true);
   const load=async()=>{
+
+   if(feedMode==="saved"){
+    // Saves from the immersive Ummah viewer live in ummah_post_reactions, not saved_posts.
+    // Both sets are public profile activity. Fetch the actual posts, not the discovery page.
+    const db=createClient();
+    const [recent,legacy]=await Promise.all([
+     db.from("ummah_post_reactions").select("post_id,created_at").eq("user_id",profileId).eq("kind","save").order("created_at",{ascending:false}).limit(150),
+     db.from("saved_posts").select("post_id,created_at").eq("user_id",profileId).order("created_at",{ascending:false}).limit(150)
+    ]);
+    if(recent.error)throw recent.error;
+    if(legacy.error)throw legacy.error;
+    const savedIds=[...new Set((recent.data||[]).map(r=>r.post_id))];
+    const legacyIds=[...new Set((legacy.data||[]).map(r=>r.post_id))];
+    const [feed,older,attachments]=await Promise.all([
+     savedIds.length?db.from("ummah_feed_posts").select("id,author_id,body,created_at").in("id",savedIds):Promise.resolve({data:[],error:null}),
+     legacyIds.length?db.from("posts").select("id,user_id,body,created_at").in("id",legacyIds):Promise.resolve({data:[],error:null}),
+     savedIds.length?db.from("post_media").select("community_post_id,storage_path,mime_type").in("community_post_id",savedIds):Promise.resolve({data:[],error:null})
+    ]);
+    if(feed.error)throw feed.error;
+    if(older.error)throw older.error;
+    const mediaMap=new Map((attachments.data||[]).map(m=>[m.community_post_id,m]));
+    const basePosts:Post[]=[
+     ...(feed.data||[]).map(p=>({...p,media_url:null,media_type:null,savedAt:recent.data?.find(r=>r.post_id===p.id)?.created_at,source:"community" as const})),
+     ...(older.data||[]).map(p=>({id:p.id,author_id:p.user_id,body:p.body,created_at:p.created_at,media_url:null,media_type:null,savedAt:legacy.data?.find(r=>r.post_id===p.id)?.created_at,source:"profile" as const}))
+    ];
+    const authorIds=[...new Set(basePosts.map(p=>p.author_id))];
+    const {data:authors}=authorIds.length?await db.from("profiles").select("id,display_name,username,avatar_url,avatar_config").in("id",authorIds):{data:[]};
+    const people=new Map((authors||[]).map(a=>[a.id,a]));
+    const bucket=db.storage.from("community-media");
+    const hydrated=basePosts.map(p=>{
+     const attachment=mediaMap.get(p.id),author=people.get(p.author_id);
+     const config=(author?.avatar_config||{}) as Record<string,unknown>;
+     const avatar=[config.adminAvatarUrl,config.customAvatarUrl,config.selectedAvatarUrl,config.avatarUrl,author?.avatar_url].find(v=>typeof v==="string"&&(/^(https:\/\/|\/assets\/avatars\/)/).test(v));
+     return {...p,
+      media_url:attachment?.storage_path?bucket.getPublicUrl(attachment.storage_path).data.publicUrl:null,
+      media_type:attachment?.mime_type||null,
+      author_name:author?.display_name||author?.username||"1Muslim member",
+      author_handle:author?.username?"@"+author.username:"@member",
+      author_avatar_url:typeof avatar==="string"?avatar:null
+     };
+    }).sort((a,b)=>(b.savedAt||b.created_at).localeCompare(a.savedAt||a.created_at));
+    if(mounted)setPosts(hydrated);
+    return;
+   }
    if(feedMode==="community"){
     const discovery=await fetch("/api/community-posts",{cache:"no-store"}).then(r=>r.ok?r.json():null);
     if(!discovery||!Array.isArray(discovery.posts))throw new Error("Community feed unavailable");
@@ -89,10 +133,10 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
   nodes.current.forEach(node=>observer.observe(node));
   return()=>observer.disconnect();
  },[posts]);
- return <section className={"profileCinematicPosts"+(variant==="recentCards"?" profileRecentCards":"")+(feedMode==="community"?" profileUmmahCarousel":"")} aria-label={feedMode==="community"?"Ummah community discovery":"Member posts"}>
-  <div className="profileCinematicHeading"><h2>{feedMode==="community"?"Ummah Discovery":"Posts"}</h2>{feedMode==="community"?<Link href="/posts" className="profileCinematicMore" aria-label="Explore more Ummah community posts">More →</Link>:<span>{posts.length} shared</span>}</div>
+ return <section className={"profileCinematicPosts"+(variant==="recentCards"?" profileRecentCards":"")+(feedMode==="community"?" profileUmmahCarousel":feedMode==="saved"?" profileSavedPosts":"")} aria-label={feedMode==="community"?"Ummah community discovery":feedMode==="saved"?"Publicly saved posts":"Member posts"}>
+  <div className="profileCinematicHeading"><h2>{feedMode==="community"?"Ummah Discovery":feedMode==="saved"?"Saved Posts":"Posts"}</h2>{feedMode==="community"?<Link href="/posts" className="profileCinematicMore" aria-label="Explore more Ummah community posts">More →</Link>:<span>{posts.length} shared</span>}</div>
   {deleteError&&<p role="alert" className="profileCinematicEmpty">{deleteError}</p>}
-  {loading?<p className="profileCinematicEmpty">Loading posts…</p>:posts.length===0?<p className="profileCinematicEmpty">{feedMode==="community"?"No community posts to show yet.":"No posts to show yet."}</p>:
+  {loading?<p className="profileCinematicEmpty">Loading posts…</p>:posts.length===0?<p className="profileCinematicEmpty">{feedMode==="community"?"No community posts to show yet.":feedMode==="saved"?"No saved posts yet. Posts you bookmark will appear here for everyone to explore.":"No posts to show yet."}</p>:
   <div className="profileCinematicGrid" ref={carouselRef}>{(limit?posts.slice(0,limit):posts).map(p=>{
    const isVideo=p.media_type?.startsWith("video/")||/\.(mp4|webm|mov)(\?|$)/i.test(p.media_url||"");
    const isImage=!!p.media_url&&(p.media_type?.startsWith("image/")||/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(p.media_url));
@@ -104,6 +148,7 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
       isImage?<img src={p.media_url!} alt="" loading="lazy"/>:
       <div className="profileCinematicText"><span>✦</span><p>{(cleanPostBody(p.body)||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,150)}</p></div>}
     </div>
+    {feedMode==="saved"&&<div className="profileSavedBy"><strong>{p.author_name||"1Muslim member"}</strong><span>{p.author_handle||"@member"}</span></div>}
     {variant==="recentCards"&&<div className="profileRecentCardMeta"><strong>{(cleanPostBody(p.body)||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,105)||"View post"}</strong><small>{new Date(p.created_at).toLocaleDateString()} · View post ↗</small></div>}
     {feedMode==="community"&&<div className="profileUmmahFooter"><span>♡ &nbsp; ◯ &nbsp; ♧</span><span>View post ↗</span></div>}
     {isVideo&&<span className="profileCinematicPlay" aria-hidden="true">▶</span>}
