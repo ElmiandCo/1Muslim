@@ -35,6 +35,11 @@ create policy "Reciter uploads own public recital" on storage.objects
   bucket_id='quran-community-recitals' and
   (storage.foldername(name))[1]=(select auth.uid())::text
  );
+create policy "Reciter lists own uploaded recitals" on storage.objects
+ for select to authenticated using(
+  bucket_id='quran-community-recitals' and
+  (storage.foldername(name))[1]=(select auth.uid())::text
+ );
 create policy "Reciter deletes own public recital" on storage.objects
  for delete to authenticated using(
   bucket_id='quran-community-recitals' and
