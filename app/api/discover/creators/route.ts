@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../utils/supabase/server";
+import { adminDb } from "../../../../lib/stripe-unlocked";
 
 export const runtime = "nodejs";
 type CreatorSuggestion = {
@@ -10,12 +11,12 @@ type CreatorSuggestion = {
 export async function GET() {
   try {
     const db = await createClient();
-    const [{ data: { user } }, { data: posts, error: postError }, { data: profiles, error: profileError }] = await Promise.all([
+    const [{ data: { user } }, { data: posts, error: postError }] = await Promise.all([
       db.auth.getUser(),
-      db.from("ummah_feed_posts").select("author_id,created_at").order("created_at", { ascending: false }).limit(1800),
-      db.from("profiles").select("id,display_name,username,avatar_url,xp_total").order("xp_total", { ascending: false }).limit(36)
+      // Public Ummah posts define the only creators eligible for guest recommendations.
+      db.from("ummah_feed_posts").select("author_id,created_at").order("created_at", { ascending: false }).limit(1800)
     ]);
-    if (postError && profileError) throw postError;
+    if (postError) throw postError;
 
     const counts = new Map<string, { count: number; latest: number }>();
     for (const post of posts || []) {
@@ -26,12 +27,17 @@ export async function GET() {
       counts.set(post.author_id, prior);
     }
     const authorIds = [...counts.keys()].slice(0, 100);
-    const { data: activeProfiles } = authorIds.length
-      ? await db.from("profiles").select("id,display_name,username,avatar_url,xp_total").in("id", authorIds)
-      : { data: [] };
+    // Profile SELECT is restricted to authenticated members by RLS. Guest Discover
+    // still needs to show creators whose posts are publicly visible, as the old page did.
+    // Service role fetches ONLY the safe public display fields of those public-post authors.
+    // Never enumerate or expose non-posting/private profile records to anonymous visitors.
+    const { data: activeProfiles, error: lookupError } = authorIds.length
+      ? await adminDb().from("profiles").select("id,display_name,username,avatar_url,xp_total").in("id", authorIds)
+      : { data: [], error: null };
+    if (lookupError) throw lookupError;
 
     const unique = new Map<string, { id: string; display_name: string | null; username: string | null; avatar_url: string | null; xp_total: number | null }>();
-    for (const profile of [...(activeProfiles || []), ...(profiles || [])]) {
+    for (const profile of activeProfiles || []) {
       if (profile.id && profile.id !== user?.id && !unique.has(profile.id)) unique.set(profile.id, profile);
     }
     const today = Date.now();
