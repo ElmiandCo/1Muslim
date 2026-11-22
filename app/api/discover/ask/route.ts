@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
           if(!item||typeof item!=="object")return false;
           const x=item as Record<string,unknown>;
           return (x.role==="user"||x.role==="assistant") && typeof x.content==="string" && x.content.length<1100;
-        }).map(x=>({role:x.role,content:x.content.slice(0,900)})) : [];
+        }).map((x:{role:"user"|"assistant";content:string})=>({role:x.role,content:x.content.slice(0,900)})) : [];
     const auth = await account(req);
     guestToken = auth.cookie;
     usageKey = auth.usageKey;
