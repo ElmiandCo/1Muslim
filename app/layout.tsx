@@ -43,7 +43,7 @@ export const metadata = {
   openGraph: {
     siteName: "1Muslim",
     title: "1Muslim — Muslim Social Network with Messenger, Live & HudHud AI",
-    description: "More than an online community: real Muslim social networking with individual profiles, TikTok-style video posts, private messages, notifications, live broadcasting, Qur'an tracking, XP and an OpenAI-powered Muslim-themed HudHud AI. Shahada-centered admission.",
+    description: "More than an online community: real Muslim social networking with individual profiles, TikTok-style video posts, private messages, notifications, live broadcasting, Qur'an tracking, XP and HudHud, an OpenAI-powered Muslim-Inspired AI Companion. Shahada-centered admission.",
     url: "https://1muslim.live",
     type: "website" as const,
     locale: "en_US"
@@ -51,7 +51,7 @@ export const metadata = {
   twitter: {
     card: "summary" as const,
     title: "1Muslim — Muslim Social Network & HudHud AI",
-    description: "The Muslim-first social network for posts, videos, followers, Messenger, notifications, live streaming, Qur'an progress, XP and your own HudHud AI companion."
+    description: "The Muslim-first social network for posts, videos, followers, Messenger, notifications, live streaming, Qur'an progress, XP and HudHud — your Muslim-Inspired AI Companion."
   }
 };
 

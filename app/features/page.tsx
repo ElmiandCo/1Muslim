@@ -20,7 +20,7 @@ export default function FeaturesPage(){
   <section className={styles.hero}>
    <p className={styles.eyebrow}>1MUSLIM IS SOCIAL MEDIA</p>
    <h1>A complete social experience.<br/><em>Built for the Ummah.</em></h1>
-   <p>1Muslim is designed around individual people and their relationships: profiles, followers, original posts, short videos, private Messenger, live broadcasts and notifications. Qur'an tracking, XP and a Muslim-themed AI companion work inside that same network.</p>
+   <p>1Muslim is designed around individual people and their relationships: profiles, followers, original posts, short videos, private Messenger, live broadcasts and notifications. Qur'an tracking, XP and HudHud — a Muslim-Inspired AI Companion — works inside that same network.</p>
    <div className={styles.ctaRow}><Link className={styles.primary} href="/auth">Create a free profile ↗</Link><Link className={styles.secondary} href="/growth">Explore public growth figures</Link></div>
   </section>
   <section aria-label="1Muslim product features" className={styles.section}>

@@ -2,8 +2,8 @@ import type {Metadata} from "next";
 import type {ReactNode} from "react";
 
 export const metadata:Metadata={
- title:"1Muslim Unlocked | HudHud Premium AI & Muslim Social Features",
- description:"Upgrade to 1Muslim Unlocked for premium social and learning features and HudHud AI search without the three-reply free cap. GPT-6 Sol is preferred where available.",
+ title:"1Muslim Unlocked | HudHud Muslim-Inspired AI Companion & Premium Social Features",
+ description:"Upgrade to 1Muslim Unlocked for premium social and learning features and HudHud, your Muslim-Inspired AI Companion without the three-reply free cap. GPT-6 Sol is preferred where available.",
  alternates:{canonical:"/unlocked"},
  openGraph:{
   title:"1Muslim Unlocked — Premium AI, Media & Community",
