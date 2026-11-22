@@ -460,3 +460,6 @@
 .prayerExperience .prayerStoryChapterVisual>span svg{width:64px;height:64px;display:block;margin:auto;color:var(--prayer-brand)}
 .prayerExperience .prayerImpactIcon svg{width:25px;height:25px;display:block}
 .prayerExperience .prayerStoryCountIcon{display:block;font-size:17px;font-weight:850;letter-spacing:-.04em}
+
+/* Deep-linked from the floating Next Prayer card; leave breathing room above the setup panel. */
+.prayerExperience .prayerAdhanCard{scroll-margin-top:88px}
