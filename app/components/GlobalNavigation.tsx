@@ -177,7 +177,7 @@ export default function GlobalNavigation(){
   if(dontAsk&&pending.id!=="signout")localStorage.setItem("1muslim:nav-confirm-skip","true");
   const selected=pending;setPending(null);void perform(selected);
  }
- return <><button type="button" className={"oneGlobalNavPinnedEmblem"+(emblemPinned?" is-visible":"")} aria-label="Scroll to top" tabIndex={emblemPinned?0:-1} onClick={()=>{window.scrollTo({top:0,behavior:"smooth"});document.scrollingElement?.scrollTo({top:0,behavior:"smooth"})}}><img src="/assets/new-1M-logo.PNG" alt="" /></button><header className={"oneGlobalNav"+(pathname.startsWith("/deepwatch")?" oneGlobalNavDeepWatch":"")+(dockHidden?" oneGlobalNavHidden":"")+(immersive?" oneGlobalNavImmersive":"")} aria-label="1Muslim global navigation">
+ return <><button type="button" className={"oneGlobalNavPinnedEmblem"+(emblemPinned?" is-visible":"")} aria-label="Scroll to top" tabIndex={emblemPinned?0:-1} onClick={()=>{window.scrollTo({top:0,behavior:"smooth"});document.scrollingElement?.scrollTo({top:0,behavior:"smooth"})}}><img src="/assets/new-1M-logo.PNG" alt="" /></button><header className={"oneGlobalNav"+((pathname.startsWith("/quran")||pathname.startsWith("/elm-tent/quran"))?" oneGlobalNavQuran":"")+(pathname.startsWith("/deepwatch")?" oneGlobalNavDeepWatch":"")+(dockHidden?" oneGlobalNavHidden":"")+(immersive?" oneGlobalNavImmersive":"")} aria-label="1Muslim global navigation">
  <div className="oneGlobalNavBrand"><img src="/assets/new-1M-logo.PNG" alt="1Muslim" onError={e=>{const img=e.currentTarget;if(!img.src.endsWith("/assets/1muslim-mobile-logo.PNG"))img.src="/assets/1muslim-mobile-logo.PNG"}} /></div>
  <button type="button" className="oneGlobalNavFixedBack" aria-label="Go back one page" title="Back" onClick={()=>{if(window.history.length>1){router.back()}else{router.push("/")}}}><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></button><div className="oneGlobalNavRailShell"><nav ref={railRef} onScroll={onRailScroll} className="oneGlobalNavRail" aria-label="Global destinations">{entries.filter(item=>item.id!=="unlocked"||!isUnlocked||unlockExit).map((item,index)=><span key={item.id} data-nav-id={item.id} style={{"--nav-distance":item.id===centered?0:1} as React.CSSProperties} className={"oneGlobalNavItem"+(item.id===centered?" is-centered":"")+(item.id==="unlocked"&&unlockExit?" oneGlobalNavUnlockedExit":"")}>
  <button type="button" aria-label={item.label} title={item.label} aria-current={item.href&&pathname===item.href?"page":undefined} disabled={busy} onClick={()=>{centerItem(item.id);select(item)}}>
@@ -278,6 +278,34 @@ html .oneGlobalNav .oneGlobalNavSearch{bottom:calc(100% + 6px)!important}
 }
 
 .oneGlobalNavIconWrap{position:relative!important}.oneGlobalNavBadge{position:absolute;top:-7px;right:-13px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 4px;border-radius:99px;background:#d8314f;color:#fff;font:700 10px/1 system-ui;box-shadow:0 0 0 2px #fff;z-index:4}
+
+/* Qur'an destination: match the charcoal reader, rather than the white mobile dock. */
+@media(max-width:767px){
+ html .oneGlobalNav.oneGlobalNavQuran,html.profileDockThemed .oneGlobalNav.oneGlobalNavQuran{
+  background:#151519!important;color:#c6c1ba!important;
+  border-top:1px solid rgba(216,177,116,.24)!important;
+  box-shadow:0 -10px 28px rgba(5,5,8,.3)!important;
+ }
+ html .oneGlobalNav.oneGlobalNavQuran .oneGlobalNavRailShell{
+  background:#151519!important;
+ }
+ html .oneGlobalNav.oneGlobalNavQuran .oneGlobalNavItem>button{
+  color:#aaa6a1!important;
+ }
+ html .oneGlobalNav.oneGlobalNavQuran .oneGlobalNavItem>button[aria-current=page],
+ html .oneGlobalNav.oneGlobalNavQuran .oneGlobalNavItem[data-nav-id="quran"]>button{
+  color:#dfbb84!important;
+ }
+ html .oneGlobalNav.oneGlobalNavQuran .oneGlobalNavItem>button[aria-current=page] .oneGlobalNavLabel{
+  font-weight:700!important;
+ }
+ html .oneGlobalNav.oneGlobalNavQuran .oneGlobalNavItem>button:active{
+  background:#252329!important;
+ }
+ html .oneGlobalNav.oneGlobalNavQuran .oneGlobalNavBadge{
+  box-shadow:0 0 0 2px #151519;
+ }
+}
 `}</style>
  </header></>;
 }
