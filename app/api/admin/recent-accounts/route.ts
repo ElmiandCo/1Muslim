@@ -49,7 +49,7 @@ export async function GET(){
  }
  const recent=[...unique.entries()]
   .filter(([id])=>id!==user.id)
-  .sort((a,b)=>Date.parse(b[1].lastActive||b[1].lastSeen)-Date.parse(a[1].lastActive||a[1].lastSeen))
+  .sort((a,b)=>Date.parse(b[1].lastSeen)-Date.parse(a[1].lastSeen))
   .slice(0,200);
  const profiles=new Map<string,{username:string|null;display_name:string|null;avatar_url:string|null;created_at:string|null}>();
  for(let offset=0;offset<recent.length;offset+=100){
@@ -80,9 +80,9 @@ export async function GET(){
   };
  });
  return NextResponse.json({
-  members,uniqueAccounts:unique.size,
+  members,uniqueAccounts:Math.max(0,unique.size-(unique.has(user.id)?1:0)),
   updatedAt:new Date(now).toISOString(),
   cutoff:since,capped,
-  method:"Unique signed-in accounts with a recorded app presence, ordered by latest interaction (or last visit if none). Passive background heartbeats are not counted as interactions; monitoring began November 2026. Session counts are not total page visits."
+  method:"Unique signed-in accounts with a recorded app presence, ordered by most recent recorded presence, with actual interactions reported separately. Passive background heartbeats are not counted as interactions; monitoring began November 2026. Session counts are not total page visits."
  },{headers:{"Cache-Control":"private, no-store"}});
 }
