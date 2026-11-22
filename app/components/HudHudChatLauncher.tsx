@@ -124,6 +124,22 @@ export default function HudHudChatLauncher(){
  const [messages,setMessages]=useState<Message[]>([welcome]),[draft,setDraft]=useState(""),[pending,setPending]=useState<{url:string;name:string}|null>(null),[notice,setNotice]=useState("");
  const [hudhudSending,setHudhudSending]=useState(false),[hudhudRemaining,setHudhudRemaining]=useState<number|null>(null),[hudhudUnlocked,setHudhudUnlocked]=useState(false);
  useEffect(()=>{
+   const onQuranCompanion=(event:Event)=>{
+     const detail=(event as CustomEvent<{verse?:string;chapter?:string;word?:string}>).detail;
+     const verse=String(detail?.verse||"");
+     if(!/^([1-9]|[1-9][0-9]|1[01][0-4]):[1-9][0-9]{0,2}$/.test(verse))return;
+     const chapter=String(detail?.chapter||"the Qur’an").slice(0,65);
+     const word=String(detail?.word||"").slice(0,35);
+     setQuickOpen(false);setDismissed(false);setOpen(true);
+     setDraft("Please guide me through Qur’an "+verse+" ("+chapter+"). "+
+       (word?"I am looking at the Arabic word “"+word+"”. ":"")+
+       "Explain its English meaning and historical or textual context using reliable Qur’an and tafsir sources; clearly distinguish translation from explanation and say if a source is unavailable.");
+   };
+   window.addEventListener("1muslim:hudhud-open-quran",onQuranCompanion);
+   return()=>window.removeEventListener("1muslim:hudhud-open-quran",onQuranCompanion);
+ },[]);
+
+ useEffect(()=>{
    if(!open)return;
    let alive=true;
    fetch("/api/discover/ask",{cache:"no-store"}).then(async r=>{if(!r.ok)throw Error("HudHud connection unavailable");return r.json();})
