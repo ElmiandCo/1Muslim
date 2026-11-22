@@ -7,8 +7,8 @@ export const dynamic="force-dynamic";
 
 // Each row is a browser session. Collapse all sessions by account ID, ranking
 // real recorded interaction ahead of passive presence/heartbeat activity.
-type SessionRow={user_id:string;session_id:string;page:string|null;last_seen:string;last_active:string|null};
-type Person={id:string;name:string;handle:string|null;avatar:string|null;joined:string|null;lastSeen:string;lastActive:string|null;page:string;recordedSessions:number;online:boolean;engaged:boolean};
+type SessionRow={user_id:string;page:string|null;last_seen:string;last_active:string|null};
+type Person={id:string;name:string;handle:string|null;avatar:string|null;joined:string|null;lastSeen:string;lastActive:string|null;page:string;daysObserved:number;online:boolean;engaged:boolean};
 
 export async function GET(){
  const supabase=await createClient();
@@ -21,13 +21,13 @@ export async function GET(){
  const service=serviceClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
  const now=Date.now();
  const since=new Date(now-90*86400_000).toISOString();
- const unique=new Map<string,{lastSeen:string;lastActive:string|null;page:string;sessions:Set<string>}>();
+ const unique=new Map<string,{lastSeen:string;lastActive:string|null;page:string;days:Set<string>}>();
  let capped=false;
  // Bounded database reads. Do not label this all-time coverage or fake
  // activity for users with no recorded presence.
  for(let offset=0;offset<10000;offset+=1000){
   const {data,error}=await service.from("site_presence")
-   .select("user_id,session_id,page,last_seen,last_active")
+   .select("user_id,page,last_seen,last_active")
    .gte("last_seen",since).order("last_seen",{ascending:false}).range(offset,offset+999);
   if(error){
    console.error("Recent account presence query failed",error.code);
@@ -37,12 +37,12 @@ export async function GET(){
    if(!entry.user_id||!entry.last_seen)continue;
    let current=unique.get(entry.user_id);
    if(!current){
-    current={lastSeen:entry.last_seen,lastActive:entry.last_active||null,page:entry.page||"/",sessions:new Set()};
+    current={lastSeen:entry.last_seen,lastActive:entry.last_active||null,page:entry.page||"/",days:new Set()};
     unique.set(entry.user_id,current);
    }else if(entry.last_active&&(!current.lastActive||entry.last_active>current.lastActive)){
     current.lastActive=entry.last_active;
    }
-   if(entry.session_id)current.sessions.add(entry.session_id);
+   current.days.add(entry.last_seen.slice(0,10));
   }
   if(!data||data.length<1000)break;
   if(offset>=9000)capped=true;
@@ -74,7 +74,7 @@ export async function GET(){
    lastSeen:a.lastSeen,
    lastActive:a.lastActive,
    page:a.page,
-   recordedSessions:a.sessions.size,
+   daysObserved:a.days.size,
    online:lastSeenMs>=now-90_000,
    engaged:lastActiveMs>=now-120_000
   };
@@ -83,6 +83,6 @@ export async function GET(){
   members,uniqueAccounts:Math.max(0,unique.size-(unique.has(user.id)?1:0)),
   updatedAt:new Date(now).toISOString(),
   cutoff:since,capped,
-  method:"Unique signed-in accounts with a recorded app presence, ordered by most recent recorded presence, with actual interactions reported separately. Passive background heartbeats are not counted as interactions; monitoring began November 2026. Session counts are not total page visits."
+  method:"Unique signed-in accounts with a recorded app presence, ordered by most recent recorded presence, with actual interactions reported separately. Passive background heartbeats are not counted as interactions; monitoring began November 2026. Observed days reflect recorded app presence, not a count of page visits."
  },{headers:{"Cache-Control":"private, no-store"}});
 }
