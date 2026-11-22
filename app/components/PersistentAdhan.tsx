@@ -6,7 +6,7 @@ import { readLocation } from "./LocationPreferences";
 import {
   ADHAN_AUDIO_URL, ADHAN_PRAYERS, ADHAN_PREVIEW_EVENT, ADHAN_SETTINGS_EVENT,
   ADHAN_STOP_EVENT, type AdhanLocation, type AdhanPrayer,
-  fetchPrayerSchedule, locationClock, prayerMinute, readAdhanPreferences,
+  fetchPrayerSchedule, locationClock, prayerMinute, readAdhanPreferences, saveAdhanPreferences,
   type PrayerSchedule
 } from "../lib/adhan";
 
@@ -42,12 +42,12 @@ export default function PersistentAdhan() {
     setBlocked(false);
   }, []);
 
-  const play = useCallback((prayer: AdhanPrayer | "Sample") => {
+  const play = useCallback((prayer: AdhanPrayer | "Sample", volumeOverride?: number) => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.pause();
     try { audio.currentTime = 0; } catch { /* Stream might not be buffered. */ }
-    audio.volume = readAdhanPreferences().volume;
+    audio.volume = typeof volumeOverride === "number" ? Math.max(0, Math.min(1, volumeOverride)) : readAdhanPreferences().volume;
     setActive(prayer);
     setBlocked(false);
     void audio.play().then(() => setBlocked(false)).catch(() => setBlocked(true));
@@ -59,7 +59,7 @@ export default function PersistentAdhan() {
       setPrefs(next);
       if (!next.enabled) stop();
     };
-    const preview = () => play("Sample");
+    const preview = (event: Event) => play("Sample", (event as CustomEvent<{volume?: number}>).detail?.volume);
     window.addEventListener(ADHAN_SETTINGS_EVENT, updatePrefs);
     window.addEventListener("storage", updatePrefs);
     window.addEventListener(ADHAN_PREVIEW_EVENT, preview);
@@ -71,6 +71,29 @@ export default function PersistentAdhan() {
       window.removeEventListener(ADHAN_STOP_EVENT, stop);
     };
   }, [play, stop]);
+
+  // Restore account-saved reminder settings on every device, not only on the Prayer page.
+  useEffect(() => {
+    let alive = true;
+    const db = createClient();
+    const restore = async () => {
+      const { data: { user } } = await db.auth.getUser();
+      if (!alive || !user) return;
+      const { data } = await db.from("prayer_reminder_preferences")
+        .select("enabled,method,volume,prayers").eq("user_id", user.id).maybeSingle();
+      if (!alive || !data) return;
+      const next = {
+        enabled: data.enabled === true,
+        method: (["2", "3", "4", "5"].includes(data.method) ? data.method : "2") as "2" | "3" | "4" | "5",
+        volume: Math.max(0, Math.min(1, Number(data.volume ?? 0.8))),
+        prayers: Object.fromEntries(ADHAN_PRAYERS.map(prayer => [prayer, data.prayers?.[prayer] !== false])) as Record<AdhanPrayer, boolean>
+      };
+      saveAdhanPreferences(next);
+    };
+    void restore();
+    const { data: { subscription } } = db.auth.onAuthStateChange(() => { window.setTimeout(() => { void restore(); }, 0); });
+    return () => { alive = false; subscription.unsubscribe(); };
+  }, []);
 
   useEffect(() => {
     let alive = true;
