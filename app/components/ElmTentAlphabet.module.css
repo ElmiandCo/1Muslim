@@ -293,3 +293,50 @@
 :global(.profileFullAccent) :global(.profileElmTentAlphabet) .quizSpeaker{color:#d94444!important}
 :global(.profileFullAccent) :global(.profileElmTentAlphabet) .vowelPlay[aria-pressed="true"]{color:var(--elm-white-ink)!important}
 :global(.profileFullAccent) :global(.profileElmTentAlphabet) .elmParts span{background:#fff!important;color:var(--elm-white-ink)!important;border-color:var(--elm-white-trim)!important}
+
+
+/* A smaller in-place Arabic studio for the profile Explore launcher.
+   Only dimensions change: lessons, XP, audio, gestures and progress stay intact. */
+.root.compact{
+  box-sizing:border-box;
+  width:100%;
+  height:auto;
+  min-height:0;
+  overflow:visible;
+  gap:8px;
+  padding:clamp(11px,2.5vw,16px);
+  border-radius:18px;
+}
+.root.compact .title h2{font-size:clamp(18px,3vw,25px)}
+.root.compact .counter strong{font-size:17px}
+.root.compact .top{font-size:10px}
+.root.compact .top span:last-child{font-size:15px}
+.root.compact .stage{
+  flex:0 0 auto;
+  min-height:125px;
+  max-height:170px;
+  height:clamp(126px,23vw,160px);
+  border-radius:15px;
+}
+.root.compact .arabic{
+  font-size:clamp(62px,11vw,84px);
+  line-height:1.3;
+}
+.root.compact .letterFocus strong{font-size:clamp(15px,2.5vw,19px)}
+.root.compact .previous,.root.compact .next{height:52px;font-size:34px}
+.root.compact .controls button{min-height:44px;border-radius:11px}
+.root.compact .grid{gap:4px;max-height:210px}
+.root.compact .tile{min-height:48px;border-radius:9px}
+.root.compact .tile>span{font-size:clamp(22px,3.8vw,28px);line-height:1.35}
+.root.compact .lessonNav{gap:6px}
+.root.compact .lessonNav button{min-height:44px;padding:7px 9px}
+.root.compact .note{font-size:9px}
+.root.compact .quizChoices button{font-size:clamp(50px,9.5vw,84px)!important}
+.root.compact .vowelCard>span{font-size:clamp(64px,12vw,90px)}
+@media(max-width:420px){
+ .root.compact{padding:10px;gap:7px}
+ .root.compact .top{letter-spacing:.06em}
+ .root.compact .tile{min-height:47px}
+ .root.compact .tile>span{font-size:23px}
+ .root.compact .title h2{font-size:19px}
+}

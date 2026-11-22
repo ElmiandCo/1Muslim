@@ -111,8 +111,8 @@ export default function ProfileQiblaCompass({motionPermission=null}:{motionPermi
   return()=>{live=false;clearTimeout(timer);clearInterval(stale);window.removeEventListener("deviceorientationabsolute",onOrientation,true);window.removeEventListener("deviceorientation",onOrientation,true)}
  },[session]);
   const compassReady=heading!==null&&sensorActive;
- return <section className="profileQiblaWidget" aria-label="Qibla Compass">
-  <div className="qiblaWidgetHead"><div><h3>Qibla Compass</h3><p>Find the direction of the Kaaba in Makkah.</p></div><span className="qiblaWidgetMark" aria-hidden="true">◈</span></div>
+ return <section className="profileQiblaWidget" aria-label="Compass · Qibla direction">
+  <div className="qiblaWidgetHead"><div><h3>Compass</h3><p>Find the direction of the Kaaba in Makkah.</p></div><span className="qiblaWidgetMark" aria-hidden="true">◈</span></div>
   <button type="button" className="qiblaCompass" onClick={()=>void startCompass()} title="Tap to reconnect compass sensors" aria-label={bearing===null?"Location needed to calculate Qibla":`Qibla bearing ${Math.round(bearing)} degrees clockwise from true north. Tap to reconnect compass.`}>
    <svg className="qiblaVisual" viewBox="0 0 320 320" aria-hidden="true">
     <defs><radialGradient id="qiblaSurface"><stop offset="0%" stopColor="var(--qibla-surface)"/><stop offset="40%" stopColor="var(--qibla-surface)"/><stop offset="41%" stopColor="var(--qibla-base)"/><stop offset="73%" stopColor="var(--qibla-base)"/><stop offset="74%" stopColor="var(--qibla-surface)"/><stop offset="100%" stopColor="var(--qibla-base)"/></radialGradient></defs>
