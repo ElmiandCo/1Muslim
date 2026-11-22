@@ -24,7 +24,7 @@
  pointer-events:none!important;
  background-image:var(--profile-grid-cover)!important;
  background-repeat:no-repeat!important;
- background-size:calc(300% + 2 * var(--mosaic-gap)) calc(400% + 3 * var(--mosaic-gap))!important;
+ background-size:calc(300% + var(--mosaic-gap) + var(--mosaic-gap)) calc(400% + var(--mosaic-gap) + var(--mosaic-gap) + var(--mosaic-gap))!important;
  background-position:var(--mosaic-x,50%) var(--mosaic-y,50%)!important;
  opacity:.24!important;
  filter:saturate(.8) contrast(1.08);
