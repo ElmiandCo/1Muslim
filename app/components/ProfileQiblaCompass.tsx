@@ -221,7 +221,7 @@ export default function ProfileQiblaCompass({motionPermission=null}:{motionPermi
     </button>
    </div>
    <div className="qcnGuidance" role="status">
-    <span className="qcnInstructionTag">{aligned?"✓ ON COURSE":live?"REAL-TIME GUIDANCE":"GPS QIBLA BEARING"}</span>
+    <span className="qcnInstructionTag">{aligned?"✓ ON COURSE":live?"REAL-TIME GUIDANCE":"LOCATION QIBLA BEARING"}</span>
     <strong className="qcnInstruction">{bearing===null?"Set your location":poorAccuracy?"Calibrate your compass":turnLabel}</strong>
     <p>{bearing===null?"Allow location to calculate the direction to the Kaaba.":aligned?"Your phone is pointing near Makkah. Recheck if you move.":live?poorAccuracy?"Accuracy is limited. Move your phone in a figure eight away from nearby metal.":"Keep the top of your phone pointing forward; the Kaaba marker guides your turn.":"The Kaaba marker shows the bearing from geographic north. Enable your compass to see how far to turn."}</p>
    </div>
@@ -239,7 +239,7 @@ export default function ProfileQiblaCompass({motionPermission=null}:{motionPermi
    {sensorError&&<p className="qcnAlert" role="status">{sensorError}</p>}
    {detailsOpen&&<div className="qcnDetails">
     <strong>About direction accuracy</strong>
-    <p>The Qibla bearing follows the great-circle route from the phone's GPS position to the Kaaba. WMM2025 converts magnetic device heading to true north using magnetic declination for your current location and date. Hardware interference, permission and sensor calibration can still affect alignment accuracy.</p>
+    <p>The Qibla bearing follows the great-circle route from the browser-reported location to the Kaaba. WMM2025 converts magnetic device heading to true north using magnetic declination for your current location and date. Hardware interference, permission and sensor calibration can still affect alignment accuracy.</p>
     {declination!==null&&<p>Local magnetic variation: {declination>=0?"+":""}{declination.toFixed(1)}° ({declination>=0?"east":"west"}). Source: NOAA/UK World Magnetic Model 2025–2030. Sensor: {sensorSource==="magnetic"?"iOS magnetic heading":sensorSource==="absolute"?"absolute device orientation":"not connected"}.</p>}
     {weakField&&<p>Weak horizontal magnetic field detected. Exact phone alignment may be unreliable in this region.</p>}
     {locationHint&&<p>{locationHint}</p>}
