@@ -94,6 +94,19 @@ export default function ProfileMagneticTiles({items,expanded,gridRef,renderTile}
    setOrder(next);
    try{if(navigator.vibrate)navigator.vibrate(6)}catch{}
   }
+  // Edge autoscroll reaches rows outside the current iPhone viewport,
+  // without affecting normal swipes when no drag is active.
+  const edge=85;
+  const topEdge=Math.max(90,window.innerHeight*.12);
+  const bottomEdge=window.innerHeight-Math.max(105,window.innerHeight*.13);
+  let speed=0;
+  if(y<topEdge)speed=-Math.min(11,(topEdge-y)/edge*9);
+  else if(y>bottomEdge)speed=Math.min(11,(y-bottomEdge)/edge*9);
+  if(speed&&window.scrollY>=0){
+   const before=window.scrollY;
+   window.scrollBy(0,speed);
+   if(window.scrollY!==before)requestPaint();
+  }
  };
  const requestPaint=()=>{if(frame.current===null)frame.current=requestAnimationFrame(paint)};
 
@@ -153,11 +166,13 @@ export default function ProfileMagneticTiles({items,expanded,gridRef,renderTile}
   const reduce=isReduced();
   cells.current.forEach((el,id)=>{
    if(id===pressed.current?.label)return;
-   const rect=prior.get(id),next=el.getBoundingClientRect();
+   const rect=prior.get(id);
    if(!rect)return;
+   // Measure the new grid layout without an old spring animation mixed in.
+   for(const animation of el.getAnimations())animation.cancel();
+   const next=el.getBoundingClientRect();
    const dx=rect.left-next.left,dy=rect.top-next.top;
    if(reduce||Math.abs(dx)+Math.abs(dy)<1)return;
-   for(const animation of el.getAnimations())animation.cancel();
    el.animate([
     {transform:`translate3d(${dx}px,${dy}px,0) scale(.975)`},
     {transform:"translate3d(0,0,0) scale(1)"}
