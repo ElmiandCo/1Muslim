@@ -80,3 +80,129 @@
 }
 @media(prefers-reduced-motion:reduce){.qcnRoot,.qcnLivePill.is-live i{animation:none}.qcnControls button,.qcnControls a{transition:none}}
 @supports not (backdrop-filter:blur(1px)){.qcnRoot{background:rgba(249,250,252,.95)}}
+
+
+/* Qibla Cockpit: a single low-profile surface for telemetry + actions.
+   Keep the compass and sensor calculations untouched; use the user's theme
+   for accent and keep native iOS scrolling free of expensive animations. */
+.qcnRoot .qcnCockpit{
+ position:relative;isolation:isolate;
+ max-width:500px;margin:10px auto 1px;
+ padding:3px 5px 6px;
+ border:1px solid color-mix(in srgb,var(--qcn-color) 31%,#e0e6ee);
+ border-radius:19px;
+ background:linear-gradient(130deg,rgba(255,255,255,.87),color-mix(in srgb,var(--qcn-color) 5%,#fff) 70%,rgba(255,255,255,.79));
+ box-shadow:inset 0 1px 0 #fff,0 4px 20px rgba(43,60,82,.055);
+ overflow:hidden;
+}
+.qcnRoot .qcnCockpit::before{
+ content:"";position:absolute;left:12%;right:12%;top:0;height:1.5px;
+ border-radius:100%;
+ background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--qcn-color) 73%,white),transparent);
+ opacity:.7;pointer-events:none;
+}
+.qcnRoot .qcnReadouts{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:0;margin:0;padding:4px 1px 5px;
+ align-items:stretch;min-width:0;
+}
+.qcnRoot .qcnReadouts>div{
+ position:relative;min-width:0;
+ border:none;border-radius:0;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ padding:5px 3px 3px;gap:2px;
+ background:transparent;box-shadow:none;min-height:64px;
+}
+.qcnRoot .qcnReadouts>div+div::before{
+ content:"";position:absolute;left:0;top:14%;height:72%;width:1px;
+ background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--qcn-color) 23%,#b4c0cf),transparent);
+}
+.qcnRoot .qcnReadouts .qcnMetricLabel{
+ display:inline-flex;align-items:center;justify-content:center;gap:5px;
+ font-size:9px;line-height:1.1;letter-spacing:.12em;
+ font-weight:850;color:#7e8c9a;
+}
+.qcnRoot .qcnMetricLabel i{
+ display:block;flex:0 0 4px;width:4px;height:4px;border-radius:50%;
+ background:color-mix(in srgb,var(--qcn-color) 64%,#a5b6c7);
+ box-shadow:0 0 0 2px color-mix(in srgb,var(--qcn-color) 10%,transparent);
+}
+.qcnRoot .qcnReadouts strong{
+ font-size:clamp(15px,3.1vw,19px);line-height:1.14;letter-spacing:-.025em;
+ color:#26384b;font-weight:800;white-space:nowrap;
+ font-variant-numeric:tabular-nums;
+}
+.qcnRoot .qcnReadoutQibla strong{
+ color:color-mix(in srgb,var(--qcn-color) 48%,#25374e);
+}
+.qcnRoot .qcnReadouts small{
+ display:block;max-width:100%;font-size:9px;line-height:1.2;
+ color:#8492a2;text-align:center;white-space:nowrap;overflow:hidden;
+ text-overflow:ellipsis;
+}
+.qcnRoot[data-aligned="yes"] .qcnReadoutTurn strong{
+ color:color-mix(in srgb,var(--qcn-color) 55%,#1c7547);
+}
+.qcnRoot[data-aligned="yes"] .qcnReadoutTurn .qcnMetricLabel i{
+ background:#39a66d;box-shadow:0 0 0 3px #39a66d22;
+}
+.qcnRoot .qcnControls{
+ display:grid;grid-template-columns:1fr 1.05fr 1fr;
+ align-items:stretch;justify-content:stretch;
+ gap:6px;margin:0;padding:7px 3px 0;
+ border-top:1px solid color-mix(in srgb,var(--qcn-color) 16%,#dee6ed);
+}
+.qcnRoot .qcnControls button,
+.qcnRoot .qcnControls a{
+ appearance:none;display:flex;align-items:center;justify-content:center;
+ gap:5px;min-height:38px;min-width:0;max-width:100%;
+ padding:7px 5px;margin:0;
+ border:1px solid color-mix(in srgb,var(--qcn-color) 21%,#dce4ee);
+ border-radius:11px;background:rgba(255,255,255,.69);
+ color:#314760;font-size:clamp(10px,2.15vw,11px);
+ font-weight:790;line-height:1.1;white-space:nowrap;
+ box-shadow:inset 0 1px 0 #fff;
+ transform:none;transition:border-color .18s,background-color .18s,box-shadow .18s;
+}
+.qcnRoot .qcnControls a{
+ color:color-mix(in srgb,var(--qcn-color) 48%,#253a50);
+ background:color-mix(in srgb,var(--qcn-color) 7%,white);
+ border-color:color-mix(in srgb,var(--qcn-color) 35%,#d9e2e8);
+}
+.qcnRoot .qcnControls button:hover,
+.qcnRoot .qcnControls a:hover{
+ transform:none;background:color-mix(in srgb,var(--qcn-color) 9%,white);
+ border-color:color-mix(in srgb,var(--qcn-color) 55%,#dbe4eb);
+ box-shadow:inset 0 1px 0 #fff,0 1px 6px color-mix(in srgb,var(--qcn-color) 12%,transparent);
+}
+.qcnRoot .qcnControls .qcnActionGlyph{
+ flex:0 0 auto;color:var(--qcn-color);font-size:16px;font-weight:850;
+ line-height:1;display:inline-flex;align-items:center;justify-content:center;
+ min-width:13px;
+}
+.qcnRoot .qcnControls .qcnActionArrow{
+ font-size:12px;line-height:1;color:var(--qcn-color);margin-left:-2px;
+}
+@media(max-width:420px){
+ .qcnRoot .qcnCockpit{margin:8px auto 0;padding:2px 4px 5px;border-radius:16px}
+ .qcnRoot .qcnReadouts{padding:4px 0}
+ .qcnRoot .qcnReadouts>div{min-height:61px;padding:5px 2px 3px}
+ .qcnRoot .qcnReadouts strong{font-size:clamp(13px,4vw,17px)}
+ .qcnRoot .qcnReadouts .qcnMetricLabel{font-size:8px;letter-spacing:.09em}
+ .qcnRoot .qcnReadouts small{font-size:8px}
+ .qcnRoot .qcnControls{gap:4px;padding:6px 2px 0}
+ .qcnRoot .qcnControls button,.qcnRoot .qcnControls a{
+  min-height:38px;padding:6px 3px;border-radius:10px;
+  font-size:10px;gap:3px;
+ }
+ .qcnRoot .qcnControls .qcnActionGlyph{font-size:14px;min-width:11px}
+ .qcnRoot .qcnControls .qcnActionArrow{font-size:10px;margin-left:0}
+}
+@media(max-width:340px){
+ .qcnRoot .qcnControls button,.qcnRoot .qcnControls a{font-size:9px}
+ .qcnRoot .qcnReadouts strong{font-size:13px}
+ .qcnRoot .qcnReadouts small{font-size:7.5px}
+}
+@media(prefers-reduced-motion:reduce){
+ .qcnRoot .qcnControls button,.qcnRoot .qcnControls a{transition:none!important}
+}

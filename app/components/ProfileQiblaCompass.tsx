@@ -225,15 +225,38 @@ export default function ProfileQiblaCompass({motionPermission=null}:{motionPermi
     <strong className="qcnInstruction">{bearing===null?"Set your location":poorAccuracy?"Calibrate your compass":turnLabel}</strong>
     <p>{bearing===null?"Allow location to calculate the direction to the Kaaba.":aligned?"Your phone is pointing near Makkah. Recheck if you move.":live?poorAccuracy?"Accuracy is limited. Move your phone in a figure eight away from nearby metal.":"Keep the top of your phone pointing forward; the Kaaba marker guides your turn.":"The Kaaba marker shows the bearing from geographic north. Enable your compass to see how far to turn."}</p>
    </div>
-   <div className="qcnReadouts" aria-label="Navigation measurements">
-    <div><span>QIBLA</span><strong>{bearing===null?"—":`${Math.round(bearing)}° ${compassPoint(bearing)}`}</strong><small>True north</small></div>
-    <div><span>PHONE</span><strong>{trueHeading!==null?`${Math.round(trueHeading)}°`:live?"≈"+Math.round(heading!)+"°":"—"}</strong><small>{trueHeading!==null?"WMM true north":live?"Magnetic north":"Awaiting sensor"}</small></div>
-    <div><span>TURN</span><strong>{turn===null?"—":`${Math.round(Math.abs(turn))}°`}</strong><small>{turn===null?"—":Math.abs(turn)<=6?"Near target":turn>0?"Clockwise ↻":"↺ Counterclockwise"}</small></div>
-   </div>
-   <div className="qcnControls">
-    <button type="button" onClick={locate} disabled={locationBusy} aria-label="Update GPS location">⌖ <span>{locationBusy?"Finding location…":"Update location"}</span></button>
-    <button type="button" onClick={()=>void activate()} aria-label="Start or recalibrate compass">↻ <span>{sensorWaiting?"Connecting…":live?"Recalibrate":"Start compass"}</span></button>
-    <Link href="/widget-tools/prayer" aria-label="View prayer times">Prayer times <span aria-hidden="true">↗</span></Link>
+   <div className="qcnCockpit" aria-label="Qibla navigation dashboard">
+    <div className="qcnReadouts" role="group" aria-label="Navigation measurements">
+     <div className="qcnReadoutQibla">
+      <span className="qcnMetricLabel"><i aria-hidden="true"/>QIBLA</span>
+      <strong>{bearing===null?"—":`${Math.round(bearing)}° ${compassPoint(bearing)}`}</strong>
+      <small>True north</small>
+     </div>
+     <div>
+      <span className="qcnMetricLabel"><i aria-hidden="true"/>PHONE</span>
+      <strong>{trueHeading!==null?`${Math.round(trueHeading)}°`:live?"≈"+Math.round(heading!)+"°":"—"}</strong>
+      <small>{trueHeading!==null?"WMM true north":live?"Magnetic north":"Awaiting sensor"}</small>
+     </div>
+     <div className="qcnReadoutTurn">
+      <span className="qcnMetricLabel"><i aria-hidden="true"/>TURN</span>
+      <strong>{turn===null?"—":`${Math.round(Math.abs(turn))}°`}</strong>
+      <small>{turn===null?"—":Math.abs(turn)<=6?"Near target":turn>0?"↻ Clockwise":"↺ Counterclockwise"}</small>
+     </div>
+    </div>
+    <nav className="qcnControls" aria-label="Qibla navigation actions">
+     <button type="button" onClick={locate} disabled={locationBusy} aria-label={locationBusy?"Finding GPS location":"Update GPS location"}>
+      <span className="qcnActionGlyph" aria-hidden="true">⌖</span>
+      <span>{locationBusy?"Locating…":"Location"}</span>
+     </button>
+     <button type="button" onClick={()=>void activate()} aria-label="Start or recalibrate compass">
+      <span className="qcnActionGlyph" aria-hidden="true">↻</span>
+      <span>{sensorWaiting?"Connecting…":live?"Recalibrate":"Compass"}</span>
+     </button>
+     <Link href="/widget-tools/prayer" aria-label="View prayer times">
+      <span className="qcnActionGlyph" aria-hidden="true">◷</span>
+      <span>Prayer times</span><span className="qcnActionArrow" aria-hidden="true">↗</span>
+     </Link>
+    </nav>
    </div>
    {locationError&&<p className="qcnAlert" role="alert">{locationError}</p>}
    {sensorError&&<p className="qcnAlert" role="status">{sensorError}</p>}
