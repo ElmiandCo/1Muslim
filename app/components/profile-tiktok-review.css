@@ -52,7 +52,7 @@
 .ttReviewEmbed iframe{width:100%;height:310px;border:0;border-radius:8px}
 .ttReviewEmbed a{font-size:11px;color:#356f95}
 .ttReviewEmpty{font-size:11px;color:#778797;line-height:1.7;background:#f8fafb;border:1px dashed #d6e3ea;padding:15px;border-radius:12px}
-.ttReviewSettingsButton{width:100%;border:1px solid #dfe8ec!important;border-radius:12px!important;background:#fff!important;color:#405e70!important;padding:12px 13px!important;margin-top:15px;font:750 11px/1.3 inherit;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.ttReviewSettingsButton{width:100%;border:1px solid #dfe8ec!important;border-radius:12px!important;background:#fff!important;color:#405e70!important;padding:12px 13px!important;margin-top:15px;font-family:inherit;font-size:11px;line-height:1.3;font-weight:750;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
 .ttReviewSettingsButton span{font-size:16px}
 .ttReviewSettings{margin-top:9px;padding:12px;border-radius:12px;border:1px solid #e0e8ed;background:#fafcfd}
 .ttReviewSettings p{font-size:11px;color:#718596;line-height:1.6;margin:0 0 10px}
