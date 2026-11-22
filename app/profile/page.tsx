@@ -114,7 +114,7 @@ function ProfileSubscriptionStatus(){
   {status==="unlocked"&&<Link href="/unlocked" style={{display:"inline-block",marginTop:10,color:"#225f9a"}}>Manage Unlocked</Link>}
  </div>;
 }
-function LauncherLineIcon({name}:{name:string}){
+function LauncherLineIcon({name,prayerIconSrc="/assets/sujud.PNG"}:{name:string;prayerIconSrc?:string}){
  const shared={width:60,height:60,viewBox:"0 0 64 64",fill:"none",stroke:"url(#launcherMetal)",strokeWidth:3.1,strokeLinecap:"round" as const,strokeLinejoin:"round" as const,"aria-hidden":true as const};
  const frame=<defs><linearGradient id="launcherMetal" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#f7f8fa"/><stop offset=".14" stopColor="#9299a5"/><stop offset=".38" stopColor="#12151a"/><stop offset=".68" stopColor="#33363c"/><stop offset="1" stopColor="#050607"/></linearGradient><linearGradient id="launcherGold" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff0d3"/><stop offset=".45" stopColor="#b58c5b"/><stop offset="1" stopColor="#5d4736"/></linearGradient><filter id="launcherRelief" x="-35%" y="-35%" width="170%" height="190%"><feDropShadow dx="0" dy="3" stdDeviation="2" floodColor="#15171c" floodOpacity=".35"/></filter></defs>;
  switch(name){
@@ -122,7 +122,7 @@ function LauncherLineIcon({name}:{name:string}){
  case "News":return <svg {...shared}>{frame}<rect x="13" y="12" width="38" height="42" rx="4"/><path d="M20 21h24M20 27h24M20 45h24M20 49h17"/><rect x="20" y="32" width="13" height="9" rx="1"/><path d="M37 33h7M37 38h7"/></svg>;
  case "Qur’an":return <svg {...shared}>{frame}<path d="M13 11h35a4 4 0 0 1 4 4v36a4 4 0 0 1-4 4H13a4 4 0 0 1-4-4V15a4 4 0 0 1 4-4z"/><path d="M15 11v44M20 17h26v32H20zM32 21l3 5 6 1-4.5 4.5 1 6-5.5-3-5.5 3 1-6L23 27l6-1z"/><path d="M24 44h16"/></svg>;
  case "Compass":return <svg {...shared} strokeWidth="2.4">{frame}<circle cx="32" cy="32" r="26"/><circle cx="32" cy="32" r="20" strokeOpacity=".45"/><circle cx="32" cy="32" r="3" fill="url(#launcherGold)" stroke="none"/><path d="M32 7v6M32 51v6M7 32h6M51 32h6M16 16l4 4M44 44l4 4M48 16l-4 4M20 44l-4 4" strokeWidth="2"/><path d="m41 18-6 19-17 9 9-18z" fill="url(#launcherGold)" strokeWidth="2.1"/><path d="m41 18-14 10 8 9z" stroke="#f4f5f7" fill="#ebe5d6" strokeWidth="1.5"/><circle cx="32" cy="32" r="1.8" fill="#232d39" stroke="none"/></svg>;
- case "Prayer":return <NextImage src="/assets/sujud.PNG" alt="" aria-hidden="true" width={64} height={64} sizes="(max-width: 480px) 54px, 44px" className="profilePrayerSujudIcon" loading="lazy"/>;
+ case "Prayer":return <NextImage src={prayerIconSrc} alt="" aria-hidden="true" width={64} height={64} sizes="(max-width: 480px) 54px, 44px" className="profilePrayerSujudIcon" loading="lazy"/>;
  case "Arabic":return <svg {...shared} strokeWidth="2.5">{frame}<rect x="11" y="8" width="42" height="48" rx="9"/><path d="M17 14h30M17 50h30" strokeOpacity=".45" strokeWidth="1.5"/><text x="32" y="43" textAnchor="middle" fill="url(#launcherGold)" stroke="none" fontFamily="serif" fontSize="36" fontWeight="700" lang="ar">ا</text><path d="M43 18l2-4 2 4 4 2-4 2-2 4-2-4-4-2z" strokeWidth="1.3"/></svg>;
  case "Live":return <svg {...shared}>{frame}<path d="M32 37v17M24 54h16"/><path d="m27 25 11 7-11 7z" fill="url(#launcherGold)" stroke="none"/><path d="M19 19a19 19 0 0 0 0 26M45 19a19 19 0 0 1 0 26M13 13a27 27 0 0 0 0 38M51 13a27 27 0 0 1 0 38"/></svg>;
  case "Post":return <svg {...shared}>{frame}<rect x="11" y="12" width="42" height="42" rx="7"/><path d="m22 43 4-10 16-16 6 6-16 16zM22 43l10-4M38 21l6 6"/></svg>;
@@ -135,7 +135,7 @@ function LauncherLineIcon({name}:{name:string}){
  }
 }
 
-function ProfileAppLauncher({onProfile,coverUrl}:{onProfile:()=>void;coverUrl:string}){
+function ProfileAppLauncher({onProfile,coverUrl,prayerIconSrc}:{onProfile:()=>void;coverUrl:string;prayerIconSrc:string}){
  const magneticGridRef=useRef<HTMLDivElement|null>(null);
  const fastCover=profileMosaicImage(coverUrl);
  const [failedCover,setFailedCover]=useState<string|null>(null);
@@ -263,7 +263,7 @@ function ProfileAppLauncher({onProfile,coverUrl}:{onProfile:()=>void;coverUrl:st
     else if(item.label==="Arabic"){event.preventDefault();openArabic()}
     else if(item.label==="Muslims"){event.preventDefault();window.location.assign("/profile?section=muslimeen")}
    }} className="profileAppTile">
-    <span className="profileAppTileIcon" aria-hidden="true"><LauncherLineIcon name={item.label}/></span>
+    <span className="profileAppTileIcon" aria-hidden="true"><LauncherLineIcon name={item.label} prayerIconSrc={prayerIconSrc}/></span>
     {(launcherBadges[item.label]??0)>0&&<span className={"profileAppBadge "+(item.label==="Live"?"isLive":"")} aria-label={String(launcherBadges[item.label])+" new "+item.label.toLowerCase()+" item"+(launcherBadges[item.label]===1?"":"s")}>{launcherBadges[item.label]>99?"99+":launcherBadges[item.label]}</span>}
     <span className="profileAppTileLabel">{item.label}</span>
    </Link>}/>
@@ -439,7 +439,14 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
     </section>}
     {activeQuickPanel==="videos"&&<section id="profile-panel-content" className="profileOverviewSection profileLibraryWrapper" aria-label="Your videos"><ProfileContentSections userId={profile.id} initialTab="videos"/></section>}
     {isOwner&&activeQuickPanel==="settings"&&<section id="profile-panel-content" className="profileProfessionalCard profileProfessionalWorkspace profileCompactSettings" aria-label="Profile settings"><div className="profileSettingsHeader"><div><span className="profileSettingsEyebrow">YOUR PROFILE</span><h2>Settings</h2><p>Manage your identity, avatar and appearance.</p></div><button type="button" className="profileSettingsEdit" onClick={onEdit} aria-label="Edit profile" title="Edit profile">✎ <span>Edit</span></button></div><button type="button" className="profileSettingsRestoreId" onClick={()=>window.dispatchEvent(new Event("1muslim:show-profile-id"))}>↺ Show my 1Muslim ID on my profile</button><details id="profile-activity-toggle" className="profileSettingsActivity" open><summary><span>Your Activity</span><small>Screen time, page visits &amp; insights</small><span className="profileActivityChevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary><ProfileAnalytics inline userId={profile.id}/></details></section>}
-    <ProfileAppLauncher onProfile={()=>setActiveQuickPanel(null)} coverUrl={profileCoverImage(profile)}/>
+    <ProfileAppLauncher onProfile={()=>setActiveQuickPanel(null)} coverUrl={profileCoverImage(profile)} prayerIconSrc={(() => {
+      // Gender is the member's chosen profile setting, never inferred from their photograph.
+      const genders=[profile.avatar_gender,profile.gender,profile.avatar_config?.gender].map(v=>typeof v==="string"?v.toLowerCase():"");
+      if(!genders.some(v=>v==="female"||v==="woman"||v==="sister"))return "/assets/sujud.PNG";
+      if(profile.profile_accent==="blue")return "/assets/prayer-sujud-women-blue.webp";
+      if(profile.profile_accent==="emerald")return "/assets/prayer-sujud-women-emerald.webp";
+      return "/assets/prayer-sujud-women-platinum.webp";
+    })()}/>
     <ProfileCinematicPosts profileId={profile.id} variant="recentCards" feedMode="community" limit={4}/>
     <ProfileQiblaCarousel/>
     <ProfileDeepWatchCarousel/>
