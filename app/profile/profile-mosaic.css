@@ -1,0 +1,107 @@
+/* The cover photograph is a single 3 x 4 mosaic, aligned to the live tile positions.
+   nth-child follows DOM order so magnetic drag-sort never breaks the image puzzle. */
+.profileFullAccent .profileAppLauncherGrid:not(.compact){
+ --mosaic-gap:10px;
+}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell:nth-child(3n+1){--mosaic-x:0%}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell:nth-child(3n+2){--mosaic-x:50%}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell:nth-child(3n){--mosaic-x:100%}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell:nth-child(-n+3){--mosaic-y:0%}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell:nth-child(n+4):nth-child(-n+6){--mosaic-y:33.333333%}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell:nth-child(n+7):nth-child(-n+9){--mosaic-y:66.666667%}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell:nth-child(n+10):nth-child(-n+12){--mosaic-y:100%}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTile{
+ position:relative!important;isolation:isolate!important;
+ background:linear-gradient(150deg,#fff,#f7f9fa)!important;
+ border-color:color-mix(in srgb,var(--member-accent) 31%,#d4e2ee)!important;
+ box-shadow:0 6px 19px #203a5218,0 1px 0 color-mix(in srgb,var(--member-accent) 18%,transparent),inset 0 1px #fff!important;
+}
+/* Background offset accounts for the actual 10px grid gutters, making the original
+   single photograph continuous even when only the tile portions are visible. */
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTile::before{
+ content:""!important;position:absolute!important;inset:0!important;
+ border:0!important;border-radius:inherit!important;box-shadow:inset 0 0 0 1px #ffffffa0;
+ pointer-events:none!important;
+ background-image:var(--profile-grid-cover)!important;
+ background-repeat:no-repeat!important;
+ background-size:calc(300% + 2 * var(--mosaic-gap)) calc(400% + 3 * var(--mosaic-gap))!important;
+ background-position:var(--mosaic-x,50%) var(--mosaic-y,50%)!important;
+ opacity:.24!important;
+ filter:saturate(.8) contrast(1.08);
+ transition:opacity .25s ease,filter .25s ease;
+ z-index:0;
+}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTile:hover::before{
+ opacity:.31!important;
+}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTile::after{
+ z-index:1!important;
+}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTileIcon,
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTileLabel{
+ position:relative!important;z-index:2!important;
+ color:#101b24!important;
+}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTileLabel{
+ text-shadow:0 1px 1px #fff,0 0 9px #ffffffcc!important;
+}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTileIcon{
+ filter:drop-shadow(0 1px 1px #fff) drop-shadow(0 3px 4px #ffffffa8)!important;
+}
+.profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppBadge{
+ z-index:5!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .profileFullAccent .profileAppLauncherGrid:not(.compact) > .profileMagneticCell .profileAppTile::before{transition:none!important}
+}
+/* The large image is a genuine button; pencil and prayer controls retain their own layers. */
+.profileCommandPage .profileProfessionalCover .profileCinematicOpenCover{
+ position:absolute;inset:0;display:block;width:100%;height:100%;
+ z-index:1;border:0;border-radius:inherit;background:transparent;
+ cursor:pointer;touch-action:manipulation;
+}
+.profileCommandPage .profileProfessionalCover .profileCinematicOpenCover:focus-visible{
+ outline:3px solid var(--member-accent);outline-offset:-4px;
+}
+.profileCommandPage .profileProfessionalCover .profileCinematicOpenLabel{
+ position:absolute;bottom:10px;right:12px;
+ font-size:10px;letter-spacing:.04em;font-weight:800;line-height:1;
+ padding:8px 10px;color:#fff;background:#08192b8a;
+ border:1px solid #ffffff68;backdrop-filter:blur(12px);
+ border-radius:100px;box-shadow:0 4px 12px #0003;
+ opacity:.88;transition:transform .2s ease,opacity .2s ease;
+}
+.profileCommandPage .profileProfessionalCover .profileCinematicOpenCover:hover .profileCinematicOpenLabel{
+ opacity:1;transform:translateY(-2px);
+}
+.profileCommandPage .profileProfessionalCover .profileCoverBrand{
+ z-index:2;pointer-events:none;
+}
+/* Settings opens with activity expanded, while retaining manual collapse. */
+.profileCommandPage .profileSettingsActivity summary{
+ position:relative;min-height:55px;padding:9px 36px 9px 0;
+ display:flex;align-items:center;gap:10px;
+}
+.profileCommandPage .profileSettingsActivity summary::after{content:none!important}
+.profileCommandPage .profileActivityChevron{
+ position:absolute;right:2px;top:50%;width:30px;height:30px;display:grid;
+ place-items:center;transform:translateY(-50%);
+ border-radius:50%;color:color-mix(in srgb,var(--member-accent) 56%,#243c55);
+ background:color-mix(in srgb,var(--member-accent) 5%,#fff);
+ transition:background-color .25s ease;
+}
+.profileCommandPage .profileActivityChevron svg{
+ width:19px;height:19px;transition:transform .3s cubic-bezier(.22,1,.36,1);
+}
+.profileCommandPage .profileSettingsActivity[open] .profileActivityChevron svg{transform:rotate(180deg)}
+.profileCommandPage .profileSettingsActivity[open] > :not(summary){
+ animation:profileAnalyticsRise .33s cubic-bezier(.2,.75,.3,1) both;
+}
+@keyframes profileAnalyticsRise{
+ from{opacity:.5;transform:translateY(-7px)}
+ to{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+ .profileCommandPage .profileSettingsActivity[open] > :not(summary){animation:none}
+ .profileCommandPage .profileActivityChevron svg{transition:none}
+}
