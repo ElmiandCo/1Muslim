@@ -4,6 +4,7 @@ import {createClient} from "../../utils/supabase/client";
 import Link from "next/link";
 import ProfileMemberStats from "./ProfileMemberStats";
 import QuranIntelligenceDashboard from "./QuranIntelligenceDashboard";
+import "./profile-activity-dashboard.css";
 
 type Reading={verse_key:string;read_on:string};
 function ArrowIcon(){return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 19 19 5M8 5h11v11"/></svg>}
@@ -11,6 +12,28 @@ function RefreshIcon(){return <svg width="18" height="18" viewBox="0 0 24 24" fi
 const TIME_KEY="1muslim:page-screen-time-v1";
 const fmt=(s:number)=>s>=3600?`${Math.floor(s/3600)}h ${Math.round(s%3600/60)}m`:`${Math.floor(s/60)}m`;
 const day=(offset:number)=>{const d=new Date();d.setDate(d.getDate()-offset);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")};
+const pageDetails=(path:string)=>{
+ const groups:[string,string,string][]=[
+  ["/profile","Profile","Your space"],["/posts","Ummah Posts","Community"],["/community","Ummah","Community"],["/messages","Messages","Connections"],
+  ["/qibla","Prayer & Qibla","Worship"],["/quran","Qur’an","Reading"],["/elm-tent","Elm Tent","Learning"],
+  ["/deepwatch","DeepWatch","Watching"],["/streaming","Live","Community"],["/search","Search","Discovering"],
+  ["/notifications","Notifications","Updates"],["/prayer","Prayer","Worship"],
+ ];
+ if(path==="/")return {name:"Home",category:"Your space",symbol:"home"};
+ for(const [prefix,name,category] of groups){if(path===prefix||path.startsWith(prefix+"/"))return {name,category,symbol:prefix.includes("quran")?"book":prefix.includes("messages")?"chat":prefix.includes("profile")?"user":prefix.includes("posts")||prefix.includes("community")?"posts":"spark"}}
+ const segment=path.split("/").filter(Boolean).pop()||"Page";
+ return {name:segment.replaceAll("-"," ").replace(/\b\w/g,ch=>ch.toUpperCase()),category:"Exploring",symbol:"spark"};
+};
+function ActivityGlyph({symbol}:{symbol:string}){
+ const common={width:21,height:21,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:1.75,strokeLinecap:"round" as const,strokeLinejoin:"round" as const,"aria-hidden":true as const};
+ if(symbol==="home")return <svg {...common}><path d="m3 10 9-7 9 7v10H3z"/><path d="M9 20v-7h6v7"/></svg>;
+ if(symbol==="user")return <svg {...common}><circle cx="12" cy="8" r="3.5"/><path d="M5.5 21v-2a6.5 6.5 0 0 1 13 0v2"/></svg>;
+ if(symbol==="chat")return <svg {...common}><path d="M20 11.5a8 8 0 0 1-8 8c-1.3 0-2.6-.3-3.8-.9L4 20l1.5-4.3A8 8 0 1 1 20 11.5Z"/></svg>;
+ if(symbol==="book")return <svg {...common}><path d="M12 6c-3-2-6-2.5-9-1.5v14.3c3-1 6-.5 9 1.5m0-14.3c3-2 6-2.5 9-1.5v14.3c-3-1-6-.5-9 1.5V6Z"/></svg>;
+ if(symbol==="posts")return <svg {...common}><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>;
+ return <svg {...common}><path d="m12 2 2.6 7.3L22 12l-7.4 2.7L12 22l-2.6-7.3L2 12l7.4-2.7z"/></svg>;
+}
+
 export function ProfileActivityTracker(){
  useEffect(()=>{
   let last=Date.now();
@@ -55,12 +78,44 @@ export default function ProfileAnalytics({inline=false,userId}:{inline?:boolean;
  const today=screen[day(0)]||{},week=dates.reduce((total,d)=>total+Object.values(screen[d]||{}).reduce((a,b)=>a+b,0),0);
  const todaySeconds=Object.values(today).reduce((a,b)=>a+b,0);
  const topPages=Object.entries(dates.reduce((acc,d)=>{for(const [p,t] of Object.entries(screen[d]||{}))acc[p]=(acc[p]||0)+t;return acc},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ const dayTotals=dates.map(date=>({date,seconds:Object.values(screen[date]||{}).reduce((a,b)=>a+b,0)}));
+ const peak=Math.max(1,...dayTotals.map(d=>d.seconds));
+ const activeDays=dayTotals.filter(d=>d.seconds>0).length;
+ const topTotal=topPages[0]?.[1]||1;
+ const spotlight=topPages[0]?pageDetails(topPages[0][0]):null;
+ const average=Math.round(week/7);
+
  return <>{!inline&&<button type="button" className="profileAnalyticsTile" onClick={()=>setOpen(true)} aria-haspopup="dialog"><span className="profileAnalyticsTileIcon">▥</span><span>Analytics<small>Screen time &amp; Qur’an progress</small></span></button>}
  {(open||inline)&&<div className={inline?"profileAnalyticsInline":"profileAnalyticsShade"} role={inline?undefined:"presentation"} onClick={inline?undefined:()=>setOpen(false)}><section className="profileAnalyticsPanel" role={inline?"region":"dialog"} aria-modal={inline?undefined:true} aria-label="Your activity analytics" onClick={e=>e.stopPropagation()}>
- <header><div><small>YOUR ACTIVITY</small><h2>Analytics</h2></div>{!inline&&<button type="button" onClick={()=>setOpen(false)} aria-label="Close analytics">✕</button>}</header>
- <h3>Screen time <small>this device · tracked while active</small></h3>
- <div className="profileAnalyticsStats"><div><strong>{fmt(todaySeconds)}</strong><span>Today</span></div><div><strong>{fmt(week)}</strong><span>Last 7 days</span></div></div>
- <h4>Pages visited · last 7 days</h4>{topPages.length?topPages.map(([p,t])=><div className="profileAnalyticsRow" key={p}><Link className="profileAnalyticsPageLink" href={p.startsWith("/")&&!p.startsWith("//")&&!p.includes("\\")?p:"/"} title={`Open ${p}`}><span>{p==="/"? "Home":p.replaceAll("/"," / ")}</span><ArrowIcon/></Link><b>{fmt(t)}</b></div>):<p className="profileAnalyticsMuted">Screen time will appear as you use 1Muslim after this update.</p>}
+ <header className="profileActivityTitleBar"><div><small>YOUR ACTIVITY</small><h2>Insights</h2><p className="profileActivitySubheading">A clearer view of your time on 1Muslim.</p></div>{!inline&&<button type="button" onClick={()=>setOpen(false)} aria-label="Close analytics">✕</button>}</header>
+ <section className="activityOverview" aria-label="Screen time overview">
+  <div className="activityOverviewHead"><div><span className="activityEyebrow"><i aria-hidden="true"/> YOUR WEEK AT A GLANCE</span><h3>Time well explored.</h3><p>Your activity, beautifully organized.</p></div><span className="activityPrivacyPill"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> THIS DEVICE</span></div>
+  <div className="activityHeroNumbers">
+   <div className="activityHeroPrimary"><span>Last 7 days</span><strong>{fmt(week)}</strong><small>{activeDays} of 7 days active</small></div>
+   <div className="activityHeroSecondary"><span>Today</span><strong>{fmt(todaySeconds)}</strong><small>Daily average · {fmt(average)}</small></div>
+  </div>
+  <div className="activityWeekGraph" aria-label="Daily screen time for the past seven days">
+   <div className="activityGraphHead"><strong>Daily rhythm</strong><span>LAST 7 DAYS</span></div>
+   <div className="activityGraphGrid">
+    {dayTotals.map(({date,seconds},index)=><div key={date} className={"activityGraphDay"+(index===6?" isToday":"")} title={new Date(date+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})+" · "+fmt(seconds)} aria-label={new Date(date+"T12:00:00").toLocaleDateString(undefined,{weekday:"long"})+": "+fmt(seconds)}>
+     <div className="activityGraphColumn"><div className="activityGraphFill" style={{height:seconds?Math.max(5,Math.round(seconds/peak*100))+"%":"0%"}}/></div>
+     <span>{new Date(date+"T12:00:00").toLocaleDateString(undefined,{weekday:"short"}).slice(0,2)}</span>
+    </div>)}
+   </div>
+  </div>
+  {spotlight&&<p className="activityWeekNote"><span aria-hidden="true">✦</span> You spent the most time in <strong>{spotlight.name}</strong> this week.</p>}
+ </section>
+ <section className="activityPlaces" aria-label="Where your time went">
+  <header className="activityPlacesHeading"><div><span>YOUR TOP SPACES</span><h3>Where your time went</h3><p>Jump back into your favorite corners of the Ummah.</p></div><span className="activityPlacesCount">{topPages.length} spaces</span></header>
+  {topPages.length?<div className="activityPlacesList">{topPages.map(([path,seconds],index)=>{
+   const detail=pageDetails(path);
+   return <Link key={path} className="activityPlaceCard" href={path.startsWith("/")&&!path.startsWith("//")&&!path.includes("\\")?path:"/"} aria-label={detail.name+", "+fmt(seconds)+". Open page."} title={"Open "+path}>
+    <span className="activityPlaceIcon"><ActivityGlyph symbol={detail.symbol}/></span>
+    <span className="activityPlaceContent"><span className="activityPlaceTitle"><strong>{detail.name}</strong><small>{detail.category}</small></span><span className="activityPlaceProgress" aria-hidden="true"><i style={{width:Math.round(seconds/topTotal*100)+"%"}}/></span></span>
+    <span className="activityPlaceDuration">{fmt(seconds)}</span><ArrowIcon/>
+   </Link>
+  })}</div>:<div className="activityEmpty"><span aria-hidden="true">✦</span><strong>Your story starts here</strong><p>Explore 1Muslim and your activity will take shape automatically.</p></div>}
+ </section>
  <div className="profileAnalyticsGraphActions"><button type="button" onClick={()=>void reload()} disabled={loading} aria-label="Refresh Qur’an completion graph"><RefreshIcon/>{loading?"Refreshing…":"Refresh graph"}</button>{refreshedAt&&<small>Updated {refreshedAt}</small>}</div>{refreshError&&<p className="profileAnalyticsResetError" role="alert">{refreshError}</p>}
  <QuranIntelligenceDashboard readings={readings} loading={loading} userId={userId}/>
  <div className="profileAnalyticsProgressHeading"><h3>Reading journey controls <small>Only your Qur’an activity is affected by a reset.</small></h3><button type="button" onClick={()=>setResetConfirm(true)} disabled={resetBusy}>↻ Start new journey</button></div>
