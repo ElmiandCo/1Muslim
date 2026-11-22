@@ -67,10 +67,11 @@ async function quranChapters(q:string):Promise<Array<{id:number;title:string;tra
     if(!response.ok)return [];
     const body=await response.json();
     const chapters=Array.isArray(body?.chapters)?body.chapters:[];
-    const query=q.toLowerCase().replace(/^surah\s+/,"").trim();
+    const normalize=(value:string)=>value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[-_'’]/g," ").replace(/\s+/g," ").trim();
+    const query=normalize(q.replace(/^surah\s+/i,""));
     return chapters.filter((chapter:{id:number;name_simple:string;translated_name?:{name:string}})=>
-      String(chapter.name_simple||"").toLowerCase().includes(query) ||
-      String(chapter.translated_name?.name||"").toLowerCase().includes(query) ||
+      normalize(String(chapter.name_simple||"")).includes(query) ||
+      normalize(String(chapter.translated_name?.name||"")).includes(query) ||
       (q.toLowerCase().startsWith("surah ")&&String(chapter.id)===query))
       .slice(0,12).map((chapter:{id:number;name_simple:string;translated_name?:{name:string};verses_count:number})=>({
         id:chapter.id,title:chapter.name_simple,translated:chapter.translated_name?.name||"",verses:chapter.verses_count
