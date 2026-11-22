@@ -3,7 +3,7 @@
 import ProfileQuranCanvas from "../components/ProfileQuranCanvas";
 import ProfileQiblaCompass from "../components/ProfileQiblaCompass";
 import MemberGlyph from "../components/MemberGlyph";
-import ProfileTikTokGallery from "../components/ProfileTikTokGallery";
+import ProfileConnectionsPanel from "../components/ProfileConnectionsPanel";
 import RegionDiscovery, {canonicalCountry} from "../components/RegionDiscovery";
 import UmmahRegionInvite from "../components/UmmahRegionInvite";
 import Link from "next/link";
@@ -600,6 +600,7 @@ export default function ProfilePage() {
   const router=useRouter();
   const [signingOut,setSigningOut]=useState(false);
   const [isHudHudAdmin,setIsHudHudAdmin]=useState(false);
+  const [adminAccessChecked,setAdminAccessChecked]=useState(false);
   const [secretAdminOpen,setSecretAdminOpen]=useState(false);
   const [secretAdminDraft,setSecretAdminDraft]=useState("");
   const secretSwipeStart=useRef<{x:number;y:number}|null>(null);
@@ -623,7 +624,19 @@ export default function ProfilePage() {
   const [postText,setPostText]=useState("");
   const [posting,setPosting]=useState(false);
   const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live"|"shahada"|"analytics">("profile");
- useEffect(()=>{if(new URLSearchParams(window.location.search).get("section")==="tiktok"){setTab("live");window.history.replaceState(null,"",window.location.pathname);}},[]);
+ useEffect(()=>{
+   const params=new URLSearchParams(window.location.search);
+   if(params.get("section")!=="tiktok")return;
+   // Complete the real OAuth review journey on the exact screen that launched it.
+   setEditing(true);setTab("live");
+   const returned=params.get("connected")==="1",error=params.get("error");
+   if(returned||error)try{
+      sessionStorage.setItem("1muslim:tiktok-oauth-result",returned?"connected":"error:"+String(error||"unknown").replace(/[^a-z_]/gi,""));
+   }catch{}
+   window.history.replaceState(null,"",window.location.pathname);
+   const timer=window.setTimeout(()=>document.querySelector(".profileEditorToolbar")?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}),320);
+   return()=>window.clearTimeout(timer);
+ },[]);
 const [avatarPage,setAvatarPage]=useState(0);
  useEffect(()=>{const open=(e:Event)=>{const tab=(e as CustomEvent<{tab:string}>).detail?.tab;if(tab==="header"||tab==="avatar"||tab==="profile"){setTab(tab);setEditing(true);window.setTimeout(()=>document.querySelector(".profileEditorToolbar")?.scrollIntoView({behavior:"smooth",block:"start"}),100)}};window.addEventListener("1muslim:edit-profile-tab",open);return()=>window.removeEventListener("1muslim:edit-profile-tab",open)},[]);
   useEffect(()=>{const open=()=>{setTab("analytics");setEditing(true);window.setTimeout(()=>document.querySelector(".profileEditorToolbar")?.scrollIntoView({behavior:"smooth",block:"start"}),80)};window.addEventListener("1muslim:open-profile-analytics",open);return()=>window.removeEventListener("1muslim:open-profile-analytics",open)},[]);
@@ -635,7 +648,7 @@ const [avatarPage,setAvatarPage]=useState(0);
   const providers=["tiktok","youtube","twitch"] as const;
 
   useEffect(()=>{window.addEventListener("1muslim:profile-signout",signOut);return()=>window.removeEventListener("1muslim:profile-signout",signOut)},[signingOut]);
-  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}setIsHudHudAdmin((user.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data){setProfile(data as Profile);setSavedUsername(data.username??null);}
+  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}setIsHudHudAdmin((user.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");setAdminAccessChecked(true);const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data){setProfile(data as Profile);setSavedUsername(data.username??null);}
     const [profilePosts,communityPosts]=await Promise.all([s.from("posts").select("id").eq("user_id",user.id),s.from("community_posts").select("id").eq("author_id",user.id)]);setPostCount((profilePosts.data?.length??0)+(communityPosts.data?.length??0));
     const {data:friendships}=await s.from("ashab_friendships").select("requester_id,addressee_id").eq("status","accepted").or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
     const ashabIds=(friendships??[]).map((row:any)=>row.requester_id===user.id?row.addressee_id:row.requester_id).filter(Boolean);
@@ -858,32 +871,7 @@ const [avatarPage,setAvatarPage]=useState(0);
       <label className="wide">Bio <small>{(profile.bio??"").length}/35</small><textarea value={profile.bio??""} maxLength={35} rows={2} onChange={e=>update({bio:e.target.value})}/></label>
     </div>{message&&<div className={message===TAKEN_MUSLIM_ID?"saveMessage profileMuslimIdError":"saveMessage"} role={message===TAKEN_MUSLIM_ID?"alert":"status"}>{message}</div>}</section>}
 
-    {tab==="live"&&<section className="profileEditor">
-      <div className="editorIntro"><span className="eyebrow">SOCIAL CONNECTIONS</span><h2>Connect your world.</h2><p>Replace manual social handles with real account connections. Tap a glowing card to open the connector. Your Elmi Light adds a little magic to every tap.</p></div>
-      <ProfileTikTokGallery />
-      <div className="socialConnectGrid">
-        {([{name:"YouTube",icon:"▶",caption:"Creator video library"},{name:"Twitch",icon:"◈",caption:"Live streaming account"}] as const).map(service=><article className="socialConnectCard" key={service.name}>
-          <div className="socialConnectTop"><span className="eyebrow">{service.name.toUpperCase()}</span><span className="socialConnectStatus">PLANNED</span></div>
-          <div className="socialConnectMain"><span className="socialConnectIcon" aria-hidden="true">{service.icon}</span><div><h3>{service.name}</h3><p>{service.caption}</p></div></div>
-          <div className="socialConnectFoot"><span>Integration coming soon</span><span aria-hidden="true">↗</span></div>
-        </article>)}
-      </div>
-      <p className="socialConnectNote">Your connections are private until you authorize them. TikTok videos are shared only when you choose to post.</p>
-      <style jsx>{`
-      .socialConnectGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
-      .socialConnectCard{position:relative;min-width:0;overflow:hidden;border:1px solid #c8d6dc;border-radius:19px;padding:17px;background:linear-gradient(145deg,#fff,#f0f5f8);color:#1b2c38;box-shadow:0 7px 20px #142c3d0c}
-      .socialConnectTop{display:flex;justify-content:space-between;gap:10px;align-items:center}
-      .socialConnectTop .eyebrow{font-size:10px;letter-spacing:.16em;color:#526875;font-weight:800}
-      .socialConnectStatus{font-size:9px;letter-spacing:.09em;font-weight:800;color:#6d8291;border:1px solid #d7e1e7;border-radius:20px;padding:6px 9px}
-      .socialConnectMain{display:flex;align-items:center;gap:13px;margin:18px 0 20px}
-      .socialConnectIcon{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:#152c39;color:#fff;font-size:24px}
-      .socialConnectCard h3{margin:0;font-size:18px;color:#182c38;font-weight:800}
-      .socialConnectCard p{margin:5px 0 0;color:#60717e;font-size:12px}
-      .socialConnectFoot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e1e8ec;padding-top:12px;font-size:11px;color:#6b7d89;font-weight:650}
-      .socialConnectNote{margin-top:14px;color:#687b83;font-size:12px;line-height:1.6}
-      @media(max-width:580px){.socialConnectGrid{grid-template-columns:1fr}.socialConnectCard{padding:14px}.socialConnectMain{margin:13px 0}}
-      `}</style>
-    </section>}
+    {tab==="live"&&<section className="profileEditor">{adminAccessChecked?<ProfileConnectionsPanel isAdmin={isHudHudAdmin}/>:<div className="profileConnectionsChecking" role="status">Preparing your connections…</div>}</section>}
     {tab==="shahada"&&<section className="profileEditor">
       <div className="editorIntro"><span className="eyebrow">PRIVATE SAFE VAULT</span><h2>Your Shahada verification.</h2><p>Your original voice recording is private. Only your authenticated account can request a short-lived playback link. Your public profile never exposes the recording.</p></div>
       <ProfileSubscriptionStatus/><div className="shahadaVaultCard">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../utils/supabase/server";
 import { timingSafeEqual } from "node:crypto";
+import { canUseTikTokReview } from "../../../../utils/tiktok/review-access";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export async function GET(request: NextRequest) {
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || user.id !== request.cookies.get("tt_oauth_user")?.value) return finish("session_expired");
+  if (!canUseTikTokReview(user)) return finish("review_access_required");
   const clientKey = process.env.TIKTOK_CLIENT_KEY;
   const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
   if (!clientKey || !clientSecret) return finish("configuration");

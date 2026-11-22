@@ -1,8 +1,10 @@
 import {NextResponse} from "next/server";
 import {createClient} from "../../../../utils/supabase/server";
+import { canUseTikTokReview } from "../../../../utils/tiktok/review-access";
 export async function POST(request:Request){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();
  if(!user)return NextResponse.json({error:"Sign in required"},{status:401});
+ if(!canUseTikTokReview(user))return NextResponse.json({error:"TikTok connections are coming soon",available:false},{status:403,headers:{"Cache-Control":"private, no-store"}});
  const input=await request.json().catch(()=>({}));
  const videoId=typeof input.id==="string"?input.id:"";
  const title=typeof input.title==="string"?input.title:"TikTok video";

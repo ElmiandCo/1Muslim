@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../utils/supabase/server";
 import { randomBytes } from "node:crypto";
+import { canUseTikTokReview } from "../../../../utils/tiktok/review-access";
 
 export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const origin = new URL(request.url).origin;
   if (!user) return NextResponse.redirect(new URL("/login?next=/tiktok", origin));
+  if (!canUseTikTokReview(user)) return NextResponse.redirect(new URL("/tiktok?available=0", origin));
   const key = process.env.TIKTOK_CLIENT_KEY;
   if (!key || !process.env.TIKTOK_CLIENT_SECRET) return NextResponse.redirect(new URL("/tiktok?error=configuration", origin));
   const state = randomBytes(32).toString("hex");

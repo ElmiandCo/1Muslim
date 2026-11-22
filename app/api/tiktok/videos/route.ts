@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../utils/supabase/server";
 import { createClient as adminClient } from "@supabase/supabase-js";
+import { canUseTikTokReview } from "../../../../utils/tiktok/review-access";
 
 export async function GET() {
  const db=await createClient();
  const {data:{user}}=await db.auth.getUser();
  if(!user)return NextResponse.json({error:"Sign in first"},{status:401});
+ if(!canUseTikTokReview(user))return NextResponse.json({error:"TikTok connections are coming soon",available:false},{status:403,headers:{"Cache-Control":"private, no-store"}});
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
  if(!url||!key)return NextResponse.json({error:"Connection storage unavailable"},{status:503});
  const admin=adminClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
