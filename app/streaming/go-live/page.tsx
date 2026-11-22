@@ -1,6 +1,7 @@
 "use client";
 
 import SiteNav from "../../components/SiteNav";
+import {loadLocalQuranChapter} from "../../lib/quran-verses";
 import ScheduleMirror from "./ScheduleMirror";
 import GoLiveHudHudTip from "../../components/GoLiveHudHudTip";
 
@@ -424,6 +425,8 @@ export default function GoLivePage() {
   const [thumbnailPreviewUrl,setThumbnailPreviewUrl]=useState<string|null>(null);
   useEffect(()=>{if(!thumbnailFile){setThumbnailPreviewUrl(null);return;}const url=URL.createObjectURL(thumbnailFile);setThumbnailPreviewUrl(url);return()=>URL.revokeObjectURL(url)},[thumbnailFile]);
   const [category, setCategory] = useState("");
+  const [quranRecital,setQuranRecital] = useState<{chapter:number;visual:"clean"|"starlight"|"emerald"}|null>(null);
+  const [quranBackdropText,setQuranBackdropText] = useState("");
   const [topicExpanded, setTopicExpanded] = useState(false);
   const [visibility, setVisibility] = useState<"public" | "ashab">("public");
   const [scheduledSlot, setScheduledSlot] = useState<any | null>(null);
@@ -438,8 +441,27 @@ export default function GoLivePage() {
     const params = new URLSearchParams(window.location.search);
     const topic = params.get("topic");
     if (topic) { setCategory(topic); setTopicExpanded(true); }
+    const chapter=Number(params.get("reciteChapter"));
+    if(Number.isInteger(chapter)&&chapter>=1&&chapter<=114&&topic==="Qur'an"){
+      const v=params.get("reciteVisual");
+      const visual=v==="starlight"||v==="emerald"?v:"clean";
+      setQuranRecital({chapter,visual});
+      const name=params.get("title")?.trim().slice(0,120);
+      if(name)setTitle(name);
+      if(params.get("reciteMode")==="voice"){
+        desiredStudioModeRef.current="voice";setStudioMode("voice");setAspectRatio("1:1");setCameraOn(false);
+      }
+    }
     if (params.get("schedule") === "1") setShowScheduler(true);
   }, []);
+  useEffect(()=>{
+    if(!quranRecital)return;
+    let active=true;
+    void loadLocalQuranChapter(quranRecital.chapter).then(rows=>{
+      if(active)setQuranBackdropText(rows[0]?.arabic||"");
+    }).catch(()=>{if(active)setQuranBackdropText("")});
+    return()=>{active=false};
+  },[quranRecital]);
   useEffect(() => {
     const loadScheduled = async () => {
       const supabase = createClient();
@@ -704,8 +726,9 @@ export default function GoLivePage() {
       rawCameraRef.current?.stop();
       streamRef.current?.getTracks().forEach((track) => track.stop());
       const size = getCaptureSize();
+      const reciteVoiceMode=(()=>{const params=new URLSearchParams(window.location.search);return Number(params.get("reciteChapter"))>=1&&params.get("reciteMode")==="voice"&&params.get("topic")==="Qur'an";})();
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: studioMode==="voice"?false:{ facingMode, width: { ideal: size.width }, height: { ideal: size.height }, frameRate: { ideal: 30, max: 30 } },
+        video: (reciteVoiceMode||studioMode==="voice")?false:{ facingMode, width: { ideal: size.width }, height: { ideal: size.height }, frameRate: { ideal: 30, max: 30 } },
         audio: true,
       });
       rawCameraRef.current=stream.getVideoTracks()[0];
@@ -716,7 +739,7 @@ export default function GoLivePage() {
       }
       streamRef.current = stream;
       setCameraReady(true);
-      setCameraOn(studioMode!=="voice");
+      setCameraOn(!(reciteVoiceMode||studioMode==="voice"));
       setMicOn(true);
       setZoom(1);
       setFocusMode("auto");
@@ -1126,6 +1149,7 @@ export default function GoLivePage() {
         scheduled_end_at: fromSchedule ? scheduledSlot?.ends_at ?? null : null,
         thumbnail_path: liveThumbnailPath,
         aspect_ratio: aspectRatio,
+        ...(quranRecital?{recital_chapter:quranRecital.chapter,recital_visual:quranRecital.visual}:{}),
         video_width: formats.find(f => f.key === aspectRatio)?.width ?? 720,
         video_height: formats.find(f => f.key === aspectRatio)?.height ?? 1280,
       }).select("started_at").single();
@@ -1291,6 +1315,11 @@ export default function GoLivePage() {
             body:JSON.stringify({streamId:liveStreamId}),cache:"no-store",keepalive:true
           });
           if(!response.ok)throw new Error("Server End Live returned "+response.status);
+          const result=await response.json().catch(()=>({}));
+          if(Number(result.xpAwarded)>0){
+            setSaveMessage("Jazak Allahu khairan! Your verified Qur’an Live earned +"+Number(result.xpAwarded).toLocaleString()+" XP.");
+            window.dispatchEvent(new Event("1muslim:xp-updated"));
+          }
         }catch(error){
           console.warn("Server End Live failed; attempting direct terminal update",error);
           const {error:dbError}=await supabase.from("live_streams").update({
@@ -1335,7 +1364,15 @@ export default function GoLivePage() {
     return()=>{window.removeEventListener("1muslim:live-guest-pending",onCount);window.removeEventListener("1muslim:live-guest-notification",onNew)};
   },[]);
   return (
-    <main className="goLive"><GoLiveHudHudTip/>{live&&<button type="button" className="liveEndCorner" onClick={()=>{if(window.confirm("End this Live for everyone?"))endLive()}} disabled={saving} aria-label="End livestream">{saving?"Saving…":"■ End Live"}</button>}{liveEndedSurvey&&<div className="omEndSurveyBackdrop" role="presentation"><section className="omEndSurvey" role="dialog" aria-modal="true" aria-label="Live quality survey"><span className="omEndSurveyEyebrow">✦ 1MUSLIM LIVE · SESSION COMPLETE</span><h2>Your Live has ended</h2><p>How was the quality of your Live? This quick rating is optional.</p><div className="omEndSurveyStars" role="group" aria-label="Rate live quality from one to five stars">{[1,2,3,4,5].map(star=><button key={star} type="button" aria-label={`${star} stars`} aria-pressed={liveRating===star} onClick={()=>setLiveRating(star)}>{star<=liveRating?"★":"☆"}</button>)}</div><small>{liveRating?`Thanks for rating your Live ${liveRating} out of 5 stars.`:"Your feedback helps us improve live streaming."}</small><label className="omEndSurveyFeedbackLabel" htmlFor="om-live-feedback">Comments for HudHud admin (optional)</label><textarea id="om-live-feedback" className="omEndSurveyFeedback" rows={3} maxLength={2000} placeholder="Tell us what worked or what we should improve…" value={liveFeedback} onChange={e=>setLiveFeedback(e.target.value)}/><button className="omEndSurveySend" type="button" disabled={!liveFeedback.trim()||feedbackBusy||feedbackSent} onClick={()=>void sendLiveFeedback()}>{feedbackSent?"✓ Feedback sent":feedbackBusy?"Sending…":"Send feedback to admin ↗"}</button>{feedbackNotice&&<small role="status">{feedbackNotice}</small>}<button className="omEndSurveyContinue" type="button" onClick={finishToProfile}>Go to My Profile →</button></section><style>{`.omEndSurveyBackdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:#020a08c9;backdrop-filter:blur(14px)}.omEndSurvey{width:min(100%,390px);border:1px solid #e7c98a80;border-radius:26px;padding:28px;text-align:center;color:#f6f2e8;background:linear-gradient(145deg,#133b32,#071913);box-shadow:0 24px 100px #0009;animation:omSurveyIn .45s cubic-bezier(.2,.8,.2,1) both}.omEndSurveyFeedbackLabel{display:block;text-align:left;font-size:12px;margin:14px 0 6px;color:#e7d5a9}.omEndSurveyFeedback{width:100%;resize:vertical;min-height:70px;max-height:140px;padding:10px 12px;border:1px solid #e7c98a70;border-radius:12px;background:#0006;color:#fff;font:inherit}.omEndSurveySend{width:100%;padding:10px;margin:8px 0;border:1px solid #e7c98a88;border-radius:12px;background:#d9b86a22;color:#f8e7b9;cursor:pointer}.omEndSurveySend:disabled{opacity:.45;cursor:default}.omEndSurvey{max-height:calc(100dvh - 32px);overflow-y:auto}.omEndSurveyEyebrow{font-size:10px;letter-spacing:.17em;color:#ebd59f}.omEndSurvey h2{font-size:25px;margin:16px 0 8px}.omEndSurvey p{color:#c2d1c9;font-size:13px;line-height:1.6}.omEndSurveyStars{display:flex;justify-content:center;gap:6px;margin:22px 0}.omEndSurveyStars button{font-size:38px;color:#f3d186;background:none;border:0;cursor:pointer}.omEndSurvey small{display:block;color:#abc4b6}.omEndSurveyContinue,.omEndSurveySkip{display:block;width:100%;margin-top:20px;padding:13px;border-radius:999px;cursor:pointer}.omEndSurveyContinue{border:1px solid #ebd39e;background:#ebd39e;color:#103027;font-weight:800}.omEndSurveySkip{margin-top:6px;border:0;background:transparent;color:#c8d5ce}@keyframes omSurveyIn{from{opacity:0;transform:translateY(35px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}@media(prefers-reduced-motion:reduce){.omEndSurvey{animation:none}}`}</style></div>}
+    <main className="goLive"><GoLiveHudHudTip/><style jsx global>{`
+.qrlHostBackdrop{position:absolute;inset:0;z-index:0;overflow:hidden;display:flex;align-items:center;justify-content:space-between;flex-direction:column;padding:10% 7% 13%;color:#e3d9b6;pointer-events:none;background:radial-gradient(circle at 60% 20%,#42626155,transparent 45%),linear-gradient(155deg,#17242b,#0e1721)}
+.qrlHostBackdrop.qrlHost-starlight{background:radial-gradient(circle at 20% 12%,#bdc8ee 0 2px,transparent 3px),radial-gradient(circle at 75% 61%,#b3d5ff 0 1px,transparent 3px),radial-gradient(ellipse at center,#292b56,#0a1223)}
+.qrlHostBackdrop.qrlHost-emerald{background:radial-gradient(ellipse at center,#285b49,#0a241c)}
+.qrlHostBackdrop small{font-size:clamp(8px,1vw,13px);font-weight:700;letter-spacing:.2em}
+.qrlHostBackdrop p{font:clamp(28px,4vw,58px)/2 Amiri,"Noto Naskh Arabic",serif;opacity:.40;text-align:center;max-height:75%;overflow:hidden;animation:qrlHostFloat 15s ease-in-out infinite alternate}
+@keyframes qrlHostFloat{from{transform:translateY(-9px);opacity:.25}to{transform:translateY(12px);opacity:.43}}
+@media(prefers-reduced-motion:reduce){.qrlHostBackdrop p{animation:none}}
+`}</style>{live&&<button type="button" className="liveEndCorner" onClick={()=>{if(window.confirm("End this Live for everyone?"))endLive()}} disabled={saving} aria-label="End livestream">{saving?"Saving…":"■ End Live"}</button>}{liveEndedSurvey&&<div className="omEndSurveyBackdrop" role="presentation"><section className="omEndSurvey" role="dialog" aria-modal="true" aria-label="Live quality survey"><span className="omEndSurveyEyebrow">✦ 1MUSLIM LIVE · SESSION COMPLETE</span><h2>Your Live has ended</h2><p>How was the quality of your Live? This quick rating is optional.</p><div className="omEndSurveyStars" role="group" aria-label="Rate live quality from one to five stars">{[1,2,3,4,5].map(star=><button key={star} type="button" aria-label={`${star} stars`} aria-pressed={liveRating===star} onClick={()=>setLiveRating(star)}>{star<=liveRating?"★":"☆"}</button>)}</div><small>{liveRating?`Thanks for rating your Live ${liveRating} out of 5 stars.`:"Your feedback helps us improve live streaming."}</small><label className="omEndSurveyFeedbackLabel" htmlFor="om-live-feedback">Comments for HudHud admin (optional)</label><textarea id="om-live-feedback" className="omEndSurveyFeedback" rows={3} maxLength={2000} placeholder="Tell us what worked or what we should improve…" value={liveFeedback} onChange={e=>setLiveFeedback(e.target.value)}/><button className="omEndSurveySend" type="button" disabled={!liveFeedback.trim()||feedbackBusy||feedbackSent} onClick={()=>void sendLiveFeedback()}>{feedbackSent?"✓ Feedback sent":feedbackBusy?"Sending…":"Send feedback to admin ↗"}</button>{feedbackNotice&&<small role="status">{feedbackNotice}</small>}<button className="omEndSurveyContinue" type="button" onClick={finishToProfile}>Go to My Profile →</button></section><style>{`.omEndSurveyBackdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:#020a08c9;backdrop-filter:blur(14px)}.omEndSurvey{width:min(100%,390px);border:1px solid #e7c98a80;border-radius:26px;padding:28px;text-align:center;color:#f6f2e8;background:linear-gradient(145deg,#133b32,#071913);box-shadow:0 24px 100px #0009;animation:omSurveyIn .45s cubic-bezier(.2,.8,.2,1) both}.omEndSurveyFeedbackLabel{display:block;text-align:left;font-size:12px;margin:14px 0 6px;color:#e7d5a9}.omEndSurveyFeedback{width:100%;resize:vertical;min-height:70px;max-height:140px;padding:10px 12px;border:1px solid #e7c98a70;border-radius:12px;background:#0006;color:#fff;font:inherit}.omEndSurveySend{width:100%;padding:10px;margin:8px 0;border:1px solid #e7c98a88;border-radius:12px;background:#d9b86a22;color:#f8e7b9;cursor:pointer}.omEndSurveySend:disabled{opacity:.45;cursor:default}.omEndSurvey{max-height:calc(100dvh - 32px);overflow-y:auto}.omEndSurveyEyebrow{font-size:10px;letter-spacing:.17em;color:#ebd59f}.omEndSurvey h2{font-size:25px;margin:16px 0 8px}.omEndSurvey p{color:#c2d1c9;font-size:13px;line-height:1.6}.omEndSurveyStars{display:flex;justify-content:center;gap:6px;margin:22px 0}.omEndSurveyStars button{font-size:38px;color:#f3d186;background:none;border:0;cursor:pointer}.omEndSurvey small{display:block;color:#abc4b6}.omEndSurveyContinue,.omEndSurveySkip{display:block;width:100%;margin-top:20px;padding:13px;border-radius:999px;cursor:pointer}.omEndSurveyContinue{border:1px solid #ebd39e;background:#ebd39e;color:#103027;font-weight:800}.omEndSurveySkip{margin-top:6px;border:0;background:transparent;color:#c8d5ce}@keyframes omSurveyIn{from{opacity:0;transform:translateY(35px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}@media(prefers-reduced-motion:reduce){.omEndSurvey{animation:none}}`}</style></div>}
       {live&&guestToast&&<button type="button" className="hostGuestToast" onClick={()=>setGuestRequestsOpen(true)}>✦ New guest request · Tap to review</button>}
       <style jsx>{`
         .hostGuestToast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 68px);right:16px;z-index:10000;padding:10px 14px;border:1px solid var(--theme-secondary,#7fe3b0);border-radius:14px;background:color-mix(in srgb,var(--theme-base,#071b16) 85%,transparent);color:var(--theme-foreground,#fff);backdrop-filter:blur(18px);box-shadow:0 0 22px color-mix(in srgb,var(--theme-secondary,#7fe3b0) 32%,transparent);font-size:12px;font-weight:700;cursor:pointer}
@@ -1800,6 +1837,10 @@ export default function GoLivePage() {
               </div>
                {cameraFreezeFrame && <img src={cameraFreezeFrame} alt="" aria-hidden="true" className="cameraFreezeCrossfade" style={{opacity:cameraFreezeFading?0:1,transition:cameraFreezeFading?"opacity 400ms ease-in-out":"none"}} />}
               {live&&studioMode!=="voice"&&guestRoster.length>0&&<div className="hostLiveGuestColumn"><GuestVideoTiles guests={guestRoster}/></div>}
+              {quranRecital&&studioMode==="voice"&&<div className={"qrlHostBackdrop qrlHost-"+quranRecital.visual} aria-hidden="true">
+                 <small>QUR’AN RECITATION · SURAH {quranRecital.chapter}</small>
+                 <p dir="rtl" lang="ar">{quranBackdropText||"القرآن الكريم"}</p>
+               </div>}
               <div className={`voiceAvatarStage ${studioMode==="voice"?"voiceAvatarStageActive":""}`} aria-hidden={studioMode!=="voice"}>
                 <div className="voiceBackdropOrbs"><i/><i/><i/></div>
                 <div className="voiceAvatarMotion" style={{["--voice-energy" as string]:voiceEnergy} as React.CSSProperties}>
