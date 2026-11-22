@@ -33,11 +33,24 @@ import HudHudVoiceCommands from "./components/HudHudVoiceCommands";
 export const viewport = {themeColor:"#ffffff",width:"device-width",initialScale:1,viewportFit:"cover" as const};
 
 export const metadata = {
-  title: "1Muslim",
+  metadataBase: new URL("https://1muslim.live"),
+  title: "1Muslim — Muslim Social Network, Live, Messaging, Qur'an & HudHud AI",
   applicationName: "1Muslim",
   appleWebApp: {capable:true,title:"1Muslim",statusBarStyle:"default" as const},
   icons: {apple:[{url:"/apple-icon",sizes:"180x180",type:"image/png"}],icon:[{url:"/icon.svg",type:"image/svg+xml"},{url:"/app-install-icon",sizes:"512x512",type:"image/png"}]},
-  description: "A welcoming Muslim platform for learning, community, media, and discovery."
+  description: "A Muslim-focused social network with community posts, short-form video, profiles, messages, calling, live streaming, Qur'an study, DeepWatch and AI-assisted search by HudHud.",
+  openGraph: {
+    siteName: "1Muslim",
+    title: "1Muslim — One Ummah. One Platform.",
+    description: "Muslim community, video, messaging, live streaming, learning and HudHud AI discovery in one network.",
+    url: "https://1muslim.live",
+    type: "website" as const
+  },
+  twitter: {
+    card: "summary" as const,
+    title: "1Muslim — One Ummah. One Platform.",
+    description: "Watch. Share. Connect. Learn. Discover with HudHud AI."
+  }
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
