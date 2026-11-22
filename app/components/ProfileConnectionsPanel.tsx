@@ -1,5 +1,6 @@
 "use client";
 
+import {useEffect,useState} from "react";
 import ProfileTikTokGallery from "./ProfileTikTokGallery";
 import "./profile-connections.css";
 
@@ -10,6 +11,27 @@ const pending=[
 ] as const;
 
 export default function ProfileConnectionsPanel({isAdmin}:{isAdmin:boolean}){
+ const [priorLink,setPriorLink]=useState(false);
+ const [unlinking,setUnlinking]=useState(false);
+ const [unlinkMessage,setUnlinkMessage]=useState("");
+ useEffect(()=>{
+  if(isAdmin)return;
+  let alive=true;
+  void fetch("/api/tiktok/status",{cache:"no-store"})
+   .then(r=>r.json()).then(d=>{if(alive)setPriorLink(d.canDisconnect===true)})
+   .catch(()=>{});
+  return()=>{alive=false};
+ },[isAdmin]);
+ const unlink=async()=>{
+  if(!window.confirm("Disconnect your previously linked TikTok account?"))return;
+  setUnlinking(true);setUnlinkMessage("");
+  try{
+   const r=await fetch("/api/tiktok/disconnect",{method:"POST"});
+   if(!r.ok)throw Error("Could not disconnect. Please try again.");
+   setPriorLink(false);setUnlinkMessage("Your previous TikTok connection has been disconnected.");
+  }catch(e){setUnlinkMessage(e instanceof Error?e.message:"Unable to disconnect")}
+  finally{setUnlinking(false)}
+ };
  return <section className="pcxShell" aria-label="External social connections">
    <div className="pcxIntro">
     <span className="pcxEyebrow">1MUSLIM · CONNECTED ACCOUNTS</span>
@@ -49,6 +71,8 @@ export default function ProfileConnectionsPanel({isAdmin}:{isAdmin:boolean}){
        <span className="pcxSoonLabel">Soon</span>
      </article>)}
    </div>
+   {!isAdmin&&priorLink&&<div className="pcxOldLink"><p>Previously linked TikTok? You can remove that authorization now.</p><button type="button" disabled={unlinking} onClick={()=>void unlink()}>{unlinking?"Disconnecting…":"Disconnect existing TikTok account"}</button></div>}
+   {unlinkMessage&&<p className="pcxLinkFeedback" role="status">{unlinkMessage}</p>}
    <p className="pcxFootnote">External accounts will only connect with your permission. No automatic TikTok video publishing is enabled.</p>
  </section>;
 }
