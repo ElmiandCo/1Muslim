@@ -1,7 +1,6 @@
 "use client";
 
 import {useEffect,useState} from "react";
-import Link from "next/link";
 import styles from "./ProfileNextPrayer.module.css";
 import {readLocation} from "./LocationPreferences";
 import {ADHAN_PRAYERS,ADHAN_SETTINGS_EVENT,displayPrayerTime,fetchPrayerSchedule,fetchPrayerScheduleOnDate,locationClock,prayerMinute,readAdhanPreferences,type AdhanLocation,type PrayerSchedule} from "../lib/adhan";
@@ -100,7 +99,8 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
  if(clock&&targetMinute!==null){
   const end=nextToday?targetMinute:1440+targetMinute;
   const previousIndex=nextToday?ADHAN_PRAYERS.indexOf(nextToday)-1:ADHAN_PRAYERS.length-1;
-  const previous=nextToday&&previousIndex>=0&&schedule?prayerMinute(schedule.times[ADHAN_PRAYERS[previousIndex]]):nextToday?0:schedule?prayerMinute(schedule.times.Isha):0;
+  // A Fajr interval starts at the prior evening's Isha, not at midnight.
+  const previous=nextToday&&previousIndex>=0&&schedule?prayerMinute(schedule.times[ADHAN_PRAYERS[previousIndex]]):nextToday&&schedule?(prayerMinute(schedule.times.Isha)??1140)-1440:schedule?prayerMinute(schedule.times.Isha):0;
   const start=previous??0;
   until=Math.max(0,end-clock.minute-clock.second/60);
   progress=Math.max(0,Math.min(100,(clock.minute-start)/Math.max(1,end-start)*100));
@@ -110,26 +110,26 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
  const formattedTime=time?displayPrayerTime(time):"—";
  const countdown=until!==null?durationText(until):"—";
 
- return <section className={styles.card} aria-label="Your next prayer">
-  <div className={styles.aura} aria-hidden="true"/>
-  <div className={styles.topline}>
-   <span className={styles.eyebrow}><span aria-hidden="true">✦</span> YOUR NEXT PRAYER</span>
-   <Link href="/widget-tools/prayer" className={styles.open} aria-label="Open full prayer times and Adhan settings">Prayer Times <span aria-hidden="true">↗</span></Link>
+ const openCompass=()=>window.dispatchEvent(new Event("1muslim:profile-open-qibla"));
+
+ return <>
+  <div className={styles.seam}
+   role="progressbar" aria-label="Progress toward the next prayer" aria-valuemin={0} aria-valuemax={100}
+   aria-valuenow={isReady?Math.round(progress):0}
+   aria-valuetext={isReady?`${upcoming} ${countdown}`:"Prayer times loading"}>
+   <span className={styles.fill} style={{width:isReady?progress+"%":"0%"}}/>
   </div>
-  <div className={styles.main}>
+  <button type="button" className={styles.card}
+   onClick={openCompass}
+   title="Open Qibla compass and prayer direction"
+   aria-label={isReady?`Open Qibla compass. ${upcoming} at ${formattedTime}, ${countdown}.`:"Open Qibla compass to find the prayer direction"}>
    <span className={styles.symbol} aria-hidden="true">{glyphs[upcoming||""]||"☾"}</span>
-   <div className={styles.identity}>
-    <strong>{isReady?upcoming:!canLoad?"Personalize your prayers":loading?"Finding your next prayer…":error?"Prayer times unavailable":"Next prayer"}</strong>
-    <span className={styles.detail}>{isReady?formattedTime:!canLoad?"Set your city to see your daily schedule":error?"Check your saved city or try again":loading?"Calculating for your city":"Waiting for the next schedule"}</span>
-   </div>
-   {isReady&&<span className={styles.remaining} aria-label={upcoming+" at "+formattedTime+", "+countdown}>{countdown}</span>}
-  </div>
-  {isReady?<div className={styles.bottom}>
-   <div className={styles.meter} role="progressbar" aria-label="Time elapsed since the previous daily prayer" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}><span style={{width:progress+"%"}}/></div>
-   <div className={styles.meta}><span>⌖ {cityLabel}</span><span>{nextToday?"Today's salah":"Tomorrow's Fajr"}</span></div>
-  </div>:<div className={styles.bottom}>
-   <div className={styles.meter} aria-hidden="true"><span style={{width:loading?"38%":"0%"}}/></div>
-   <div className={styles.meta}><span>{canLoad?"⌖ "+cityLabel:"⌖ No location selected"}</span><Link href="/widget-tools/prayer">{canLoad?"Open Prayer Times":"Set location"} →</Link></div>
-  </div>}
- </section>;
+   <span className={styles.identity}>
+    <strong>{isReady?upcoming:!canLoad?"Set prayer location":loading?"Finding prayer…":error?"Prayer unavailable":"Next prayer"}</strong>
+    <small>{isReady?formattedTime:!canLoad?"Choose your city":error?"Check your city":loading?"Loading…":"Updating…"}</small>
+   </span>
+   {isReady&&<span className={styles.remaining}>{countdown}</span>}
+   <span className={styles.chevron} aria-hidden="true">›</span>
+  </button>
+ </>;
 }
