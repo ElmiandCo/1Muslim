@@ -215,7 +215,7 @@
  min-height:35px;
  display:inline-flex;align-items:center;justify-content:center;gap:7px;
  padding:7px 13px;
- font:750 11px/1.2 inherit;
+ font:inherit;font-size:11px;line-height:1.2;font-weight:750;
  text-decoration:none;
  border:1px solid color-mix(in srgb,var(--adhan-nav-accent) 32%,#dce4ea)!important;
  border-radius:999px;
