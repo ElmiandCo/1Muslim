@@ -3,7 +3,7 @@ import {useState} from "react";
 import {usePathname} from "next/navigation";
 import DhikrStudio from "../widget-tools/[tool]/DhikrStudio";
 import Link from "next/link";
-const tools=[{label:"📿 Dhikr",href:"/widget-tools/dhikr"},{label:"☪ Prayer",href:"/widget-tools/prayer"},{label:"✧ Progress",href:"/widget-tools/progress"},{label:"♧ Alerts",href:"/widget-tools/notifications"}];
+const tools=[{label:"📿 Dhikr",href:"/widget-tools/dhikr"},{label:"☪ Prayer",href:"/widget-tools/prayer"},{label:"✧ Progress",href:"/widget-tools/progress"},{label:"🔔 Alerts",href:"/widget-tools/notifications"}];
 export default function PersistentWidgetDock(){
  const [open,setOpen]=useState(false);const [studio,setStudio]=useState(false);
  const pathname=usePathname();
