@@ -54,7 +54,7 @@
 .qcnReadouts strong{font-variant-numeric:tabular-nums;font-size:clamp(13px,3vw,18px);line-height:1.15;color:#293c4b;font-weight:780;white-space:nowrap}
 .qcnReadouts small{font-size:9px;color:#82919b;line-height:1.3}
 .qcnControls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;align-items:center}
-.qcnControls button,.qcnControls a{min-height:42px;display:inline-flex;justify-content:center;align-items:center;gap:7px;padding:10px 13px;border-radius:99px;border:1px solid color-mix(in srgb,var(--qcn-color) 36%,#d4dfe5);color:#31495a;text-decoration:none;font:750 11px/1.2 inherit;background:rgba(255,255,255,.59);cursor:pointer;transition:background-color .17s,border-color .17s,transform .17s}
+.qcnControls button,.qcnControls a{min-height:42px;display:inline-flex;justify-content:center;align-items:center;gap:7px;padding:10px 13px;border-radius:99px;border:1px solid color-mix(in srgb,var(--qcn-color) 36%,#d4dfe5);color:#31495a;text-decoration:none;font:inherit;font-size:11px;line-height:1.2;font-weight:750;background:rgba(255,255,255,.59);cursor:pointer;transition:background-color .17s,border-color .17s,transform .17s}
 .qcnControls button:hover,.qcnControls a:hover{background:color-mix(in srgb,var(--qcn-color) 11%,#fff);border-color:var(--qcn-color);transform:translateY(-1px)}
 .qcnControls button:disabled{cursor:progress;opacity:.6;transform:none}
 .qcnAlert{max-width:480px;margin:11px auto 0;color:#865d35;background:rgba(255,243,224,.65);border:1px solid rgba(165,123,68,.26);padding:11px 12px;border-radius:12px;font-size:11px;line-height:1.55;text-align:center}
