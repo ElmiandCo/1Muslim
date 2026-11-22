@@ -151,6 +151,26 @@ function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
   window.setTimeout(()=>arabicRef.current?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}),160);
  };
  const [expanded,setExpanded]=useState(true);
+ // Deep links from prayer/Adhan must open the existing Qibla tool, not a dead anchor.
+ // Do not request iOS motion permission in an effect: browsers require a tap.
+ useEffect(()=>{
+  const reveal=()=>{
+   setQuranOpen(false);setPostOpen(false);setArabicOpen(false);
+   setExpanded(false);setQiblaOpen(true);
+   window.setTimeout(()=>{
+    qiblaRef.current?.scrollIntoView({
+     behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",
+     block:"start"
+    });
+   },230);
+  };
+  if(new URLSearchParams(window.location.search).get("compass")==="1")reveal();
+  const fromAdhan=()=>reveal();
+  const fromHistory=()=>{if(new URLSearchParams(window.location.search).get("compass")==="1")reveal()};
+  window.addEventListener("1muslim:open-qibla",fromAdhan);
+  window.addEventListener("popstate",fromHistory);
+  return()=>{window.removeEventListener("1muslim:open-qibla",fromAdhan);window.removeEventListener("popstate",fromHistory)};
+ },[]);
  const [launcherBadges,setLauncherBadges]=useState<Record<string,number>>({});
  useEffect(()=>{try{const stored=localStorage.getItem("1muslim:profile-explore-expanded");if(stored!==null)setExpanded(stored==="true")}catch{}},[]);
  useEffect(()=>{

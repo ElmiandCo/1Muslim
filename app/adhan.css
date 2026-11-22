@@ -156,3 +156,100 @@
  .prayerLocationFormIntro{flex-direction:column}
 }
 @media(prefers-reduced-motion:reduce){.adhanFinishing{animation:none}}
+
+
+/* Adhan mini-navigation: pale theme-sensitive glass over the white page, not a black alert. */
+.adhanPlayerToast.adhanGlassNav {
+ --adhan-nav-accent:var(--member-accent,var(--theme-accent,#ba9a62));
+ --adhan-nav-color:#273847;
+ position:fixed;
+ z-index:2147481000;
+ top:calc(env(safe-area-inset-top,0px) + 12px);
+ left:50%;right:auto;
+ transform:translateX(-50%);
+ width:min(94vw,475px);
+ border:1px solid color-mix(in srgb,var(--adhan-nav-accent) 38%,rgba(255,255,255,.8));
+ border-radius:21px;
+ background:
+  linear-gradient(142deg,rgba(255,255,255,.88),color-mix(in srgb,var(--adhan-nav-accent) 8%,rgba(255,255,255,.78))),
+  radial-gradient(ellipse at 0% 0%,color-mix(in srgb,var(--adhan-nav-accent) 14%,transparent),transparent 58%);
+ color:var(--adhan-nav-color);
+ -webkit-backdrop-filter:saturate(155%) blur(25px);
+ backdrop-filter:saturate(155%) blur(25px);
+ box-shadow:0 15px 45px rgba(27,47,65,.17),inset 0 1px rgba(255,255,255,.86);
+ display:grid;
+ gap:0;
+ padding:13px 15px 10px;
+ overflow:hidden;
+ box-sizing:border-box;
+ isolation:isolate;
+ animation:adhanGlassArrive .28s cubic-bezier(.2,.7,.2,1) both;
+}
+.adhanGlassNav *, .adhanGlassNav *::before,.adhanGlassNav *::after{box-sizing:border-box}
+.adhanGlassTop{display:flex;align-items:center;justify-content:space-between;gap:9px;padding-bottom:8px}
+.adhanGlassBrand{font-size:10px;letter-spacing:.17em;font-weight:840;color:color-mix(in srgb,var(--adhan-nav-accent) 70%,#364a61);white-space:nowrap}
+.adhanGlassBrand span:first-child{font-size:16px;vertical-align:-1px;margin-right:4px}
+.adhanPlayerToast.adhanGlassNav .adhanGlassClose{
+ display:grid;place-items:center;flex:0 0 26px;width:26px;height:26px;
+ padding:0!important;border:1px solid rgba(114,132,145,.2)!important;border-radius:50%!important;
+ background:rgba(255,255,255,.48)!important;color:#50616d!important;font-size:19px;line-height:1;cursor:pointer
+}
+.adhanGlassMain{display:flex;align-items:center;gap:12px;padding:4px 0 13px}
+.adhanGlassSymbol{flex:0 0 43px;width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:color-mix(in srgb,var(--adhan-nav-accent) 10%,rgba(255,255,255,.7));border:1px solid color-mix(in srgb,var(--adhan-nav-accent) 30%,rgba(255,255,255,.75));color:color-mix(in srgb,var(--adhan-nav-accent) 66%,#253a56)}
+.adhanGlassText{flex:1;min-width:0;display:grid;gap:4px}
+.adhanPlayerToast.adhanGlassNav .adhanGlassText strong{font-size:16px;line-height:1.15;letter-spacing:-.025em;font-weight:780;color:#273745;white-space:normal}
+.adhanPlayerToast.adhanGlassNav .adhanGlassText p{color:#5e6c7a;font-size:11px;line-height:1.4;margin:0}
+.adhanGlassPulse{height:22px;display:flex;align-items:center;gap:3px;flex:0 0 26px;justify-content:center}
+.adhanGlassPulse i{display:block;width:3px;border-radius:6px;background:var(--adhan-nav-accent);height:7px;opacity:.75;animation:adhanGlassWave 1.3s ease-in-out infinite}
+.adhanGlassPulse i:nth-child(2){animation-delay:.17s;height:15px}
+.adhanGlassPulse i:nth-child(3){animation-delay:.33s;height:10px}
+.adhanGlassPulse i:nth-child(4){animation-delay:.5s;height:18px}
+.adhanGlassPulse.is-paused i{animation:none;height:5px;opacity:.35}
+.adhanGlassProgress{height:2px;width:100%;border-radius:99px;background:color-mix(in srgb,var(--adhan-nav-accent) 17%,transparent);overflow:hidden}
+.adhanGlassProgress>span{display:block;height:100%;background:var(--adhan-nav-accent);transition:width .25s linear}
+.adhanGlassActions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px}
+.adhanGlassPlace{min-width:0;max-width:155px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:10px;font-weight:700;color:#6b7b85}
+.adhanGlassActionButtons{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-left:auto}
+.adhanPlayerToast.adhanGlassNav .adhanGlassActionButtons button,
+.adhanPlayerToast.adhanGlassNav .adhanGlassActionButtons a{
+ min-height:35px;
+ display:inline-flex;align-items:center;justify-content:center;gap:7px;
+ padding:7px 13px;
+ font:inherit;font-size:11px;line-height:1.2;font-weight:750;
+ text-decoration:none;
+ border:1px solid color-mix(in srgb,var(--adhan-nav-accent) 32%,#dce4ea)!important;
+ border-radius:999px;
+ background:rgba(255,255,255,.52)!important;
+ color:#364d5e!important;
+ box-shadow:none;
+ cursor:pointer;
+ transition:background .15s ease,border-color .15s ease,transform .15s ease;
+}
+.adhanPlayerToast.adhanGlassNav .adhanGlassActionButtons a{
+ background:color-mix(in srgb,var(--adhan-nav-accent) 11%,rgba(255,255,255,.62))!important;
+ border-color:color-mix(in srgb,var(--adhan-nav-accent) 50%,#dce4ea)!important;
+}
+.adhanPlayerToast.adhanGlassNav .adhanGlassActionButtons button:hover,
+.adhanPlayerToast.adhanGlassNav .adhanGlassActionButtons a:hover{
+ background:color-mix(in srgb,var(--adhan-nav-accent) 16%,white)!important;
+ transform:translateY(-1px);
+}
+.adhanPlayerToast.adhanGlassNav .adhanGlassActionButtons button.adhanGlassStop{border-color:rgba(147,166,180,.35)!important;background:transparent!important;color:#5c6a77!important}
+.adhanPlayerToast.adhanGlassNav :is(button,a):focus-visible{outline:3px solid var(--adhan-nav-accent);outline-offset:2px}
+@keyframes adhanGlassArrive{from{opacity:.5;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes adhanGlassWave{0%,100%{transform:scaleY(.55)}50%{transform:scaleY(1.3)}}
+@media(max-width:480px){
+ .adhanPlayerToast.adhanGlassNav{top:calc(env(safe-area-inset-top,0px) + 9px);padding:11px 12px 10px;border-radius:18px}
+ .adhanGlassMain{gap:9px}
+ .adhanGlassSymbol{flex-basis:38px;width:38px;height:38px}
+ .adhanGlassSymbol svg{width:27px;height:27px}
+ .adhanPlayerToast.adhanGlassNav .adhanGlassText strong{font-size:15px}
+ .adhanGlassPlace{font-size:9px}
+ .adhanGlassActionButtons{gap:5px}
+ .adhanPlayerToast.adhanGlassNav .adhanGlassActionButtons button,.adhanPlayerToast.adhanGlassNav .adhanGlassActionButtons a{padding:7px 10px;min-height:34px}
+}
+@media(prefers-reduced-motion:reduce){
+ .adhanPlayerToast.adhanGlassNav,.adhanGlassPulse i{animation:none!important}
+ .adhanGlassProgress>span{transition:none}
+}
+@supports not (backdrop-filter:blur(1px)){.adhanPlayerToast.adhanGlassNav{background:rgba(248,250,252,.97)}}

@@ -1,0 +1,82 @@
+/* Qibla Navigator — theme-tinted, translucent daylight glass over the white profile canvas. */
+.qcnRoot {
+ --qcn-color: var(--member-accent,var(--theme-accent,#b69465));
+ --qcn-color-soft: color-mix(in srgb,var(--qcn-color) 12%,#fff);
+ --qcn-ink: #263544;
+ --qcn-muted: #6e7c89;
+ --qcn-ring: color-mix(in srgb,var(--qcn-color) 48%,#e4e9ef);
+ --qcn-inner: color-mix(in srgb,var(--qcn-color) 5%,rgba(255,255,255,.72));
+ --qcn-tick: color-mix(in srgb,var(--qcn-color) 72%,#445369);
+ --qcn-badge:#fafdff;
+ box-sizing:border-box;
+ color:var(--qcn-ink);
+ background:
+  radial-gradient(ellipse at 14% 0%,color-mix(in srgb,var(--qcn-color) 10%,transparent),transparent 60%),
+  linear-gradient(156deg,rgba(255,255,255,.79),color-mix(in srgb,var(--qcn-color) 7%,rgba(255,255,255,.64)) 78%,rgba(255,255,255,.82));
+ -webkit-backdrop-filter:saturate(150%) blur(22px);
+ backdrop-filter:saturate(150%) blur(22px);
+ border:1px solid color-mix(in srgb,var(--qcn-color) 29%,rgba(255,255,255,.84));
+ border-radius:25px;
+ box-shadow:0 14px 38px rgba(27,43,67,.07),inset 0 1px rgba(255,255,255,.75);
+ padding:clamp(16px,3.8vw,27px);
+ margin:15px 0 18px;
+ scroll-margin-top:96px;
+ overflow:hidden;
+ isolation:isolate;
+ font-family:inherit;
+ animation:qcnEnter .33s ease-out both;
+}
+.qcnRoot *, .qcnRoot *::before,.qcnRoot *::after{box-sizing:border-box}
+.qcnHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.qcnKicker{font-size:10px;letter-spacing:.17em;font-weight:800;color:color-mix(in srgb,var(--qcn-color) 65%,#344c5b)}
+.qcnHeader h3{font-size:clamp(21px,4.6vw,29px);font-weight:780;letter-spacing:-.052em;line-height:1.16;margin:6px 0 4px;color:var(--qcn-ink)}
+.qcnHeader p{font-size:12px;line-height:1.5;margin:0;color:var(--qcn-muted)}
+.qcnInfo{display:grid;place-items:center;width:31px;height:31px;min-width:31px;border:1px solid var(--qcn-ring);color:var(--qcn-ink);border-radius:50%;background:rgba(255,255,255,.58);font-family:Georgia,serif;font-size:15px;font-weight:800;cursor:pointer}
+.qcnStatusRow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin:18px 0 8px}
+.qcnLivePill{display:inline-flex;align-items:center;gap:7px;font-size:9px;letter-spacing:.12em;font-weight:850;padding:8px 11px;color:#677787;background:rgba(255,255,255,.62);border:1px solid rgba(160,177,193,.45);border-radius:999px}
+.qcnLivePill i{height:7px;width:7px;border-radius:50%;background:#9aa9b2;display:block;box-shadow:0 0 0 3px #a2aeb01c}
+.qcnLivePill.is-live{color:color-mix(in srgb,var(--qcn-color) 55%,#274b5d);border-color:color-mix(in srgb,var(--qcn-color) 43%,#fff)}
+.qcnLivePill.is-live i{background:var(--qcn-color);box-shadow:0 0 0 3px color-mix(in srgb,var(--qcn-color) 15%,transparent);animation:qcnBlink 2.6s ease-in-out infinite}
+.qcnLocationPill{font-size:10px;color:#788796;white-space:nowrap}
+.qcnCompassWrap{display:grid;place-items:center;position:relative;margin:4px auto 10px}
+.qcnCompass{position:relative;display:block;aspect-ratio:1;width:min(100%,460px);max-width:460px;border-radius:50%;padding:0;margin:0;border:0;overflow:visible;cursor:pointer;background:transparent;touch-action:manipulation;filter:drop-shadow(0 11px 20px rgba(52,75,98,.12));transition:filter .2s ease}
+.qcnCompass::before{content:"";position:absolute;inset:3%;border:1px solid color-mix(in srgb,var(--qcn-color) 14%,transparent);border-radius:50%;pointer-events:none}
+.qcnDial{width:100%;height:100%;overflow:visible;display:block}
+.qcnForward{position:absolute;bottom:26%;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:.15em;font-weight:850;color:var(--qcn-muted);white-space:nowrap;pointer-events:none}
+.qcnGuidance{text-align:center;max-width:440px;margin:0 auto;display:grid;justify-items:center;gap:6px;min-height:99px}
+.qcnInstructionTag{color:color-mix(in srgb,var(--qcn-color) 64%,#415469);font-size:9px;font-weight:850;letter-spacing:.16em}
+.qcnInstruction{display:block;font-size:clamp(20px,4vw,27px);font-weight:760;letter-spacing:-.038em;line-height:1.2;color:#243449}
+.qcnGuidance p{font-size:11px;line-height:1.6;color:#6c7b88;margin:0;max-width:370px}
+.qcnRoot[data-aligned="yes"] .qcnInstruction{color:color-mix(in srgb,var(--qcn-color) 50%,#276445)}
+.qcnReadouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:17px 0 19px}
+.qcnReadouts>div{padding:12px 8px 11px;min-width:0;text-align:center;border:1px solid color-mix(in srgb,var(--qcn-color) 16%,#e5ebef);background:rgba(255,255,255,.51);border-radius:13px;display:grid;justify-items:center;gap:5px}
+.qcnReadouts span{font-size:9px;font-weight:860;letter-spacing:.11em;color:#84939f}
+.qcnReadouts strong{font-variant-numeric:tabular-nums;font-size:clamp(13px,3vw,18px);line-height:1.15;color:#293c4b;font-weight:780;white-space:nowrap}
+.qcnReadouts small{font-size:9px;color:#82919b;line-height:1.3}
+.qcnControls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;align-items:center}
+.qcnControls button,.qcnControls a{min-height:42px;display:inline-flex;justify-content:center;align-items:center;gap:7px;padding:10px 13px;border-radius:99px;border:1px solid color-mix(in srgb,var(--qcn-color) 36%,#d4dfe5);color:#31495a;text-decoration:none;font:inherit;font-size:11px;line-height:1.2;font-weight:750;background:rgba(255,255,255,.59);cursor:pointer;transition:background-color .17s,border-color .17s,transform .17s}
+.qcnControls button:hover,.qcnControls a:hover{background:color-mix(in srgb,var(--qcn-color) 11%,#fff);border-color:var(--qcn-color);transform:translateY(-1px)}
+.qcnControls button:disabled{cursor:progress;opacity:.6;transform:none}
+.qcnAlert{max-width:480px;margin:11px auto 0;color:#865d35;background:rgba(255,243,224,.65);border:1px solid rgba(165,123,68,.26);padding:11px 12px;border-radius:12px;font-size:11px;line-height:1.55;text-align:center}
+.qcnDetails{margin-top:17px;border-top:1px solid color-mix(in srgb,var(--qcn-color) 23%,#e7edf0);padding-top:15px;color:#536676;font-size:11px;line-height:1.72}
+.qcnDetails strong{font-size:12px;color:#304654}
+.qcnDetails p{margin:7px 0}
+.qcnInfo:focus-visible,.qcnCompass:focus-visible,.qcnControls button:focus-visible,.qcnControls a:focus-visible{outline:3px solid var(--qcn-color);outline-offset:3px}
+@keyframes qcnEnter{from{opacity:.4;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes qcnBlink{50%{opacity:.4}}
+@media(min-width:700px){.qcnCompass{width:min(100%,420px)}.qcnStatusRow{margin-top:15px}}
+@media(max-width:420px){
+ .qcnRoot{margin-top:12px;padding:16px 13px 19px;border-radius:21px}
+ .qcnHeader h3{font-size:23px}
+ .qcnStatusRow{margin:12px 0 4px}
+ .qcnCompass{width:min(100%,352px)}
+ .qcnGuidance{min-height:105px}
+ .qcnReadouts{gap:6px;margin:11px 0 14px}
+ .qcnReadouts>div{padding:11px 5px}
+ .qcnReadouts strong{font-size:13px}
+ .qcnReadouts small{font-size:8px}
+ .qcnControls{gap:6px}
+ .qcnControls button,.qcnControls a{padding:10px 9px;font-size:10px;min-height:41px}
+}
+@media(prefers-reduced-motion:reduce){.qcnRoot,.qcnLivePill.is-live i{animation:none}.qcnControls button,.qcnControls a{transition:none}}
+@supports not (backdrop-filter:blur(1px)){.qcnRoot{background:rgba(249,250,252,.95)}}

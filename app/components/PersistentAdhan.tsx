@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { createClient } from "../../utils/supabase/client";
 import { readLocation } from "./LocationPreferences";
 import {
@@ -21,15 +22,22 @@ export default function PersistentAdhan() {
   const [refresh, setRefresh] = useState(0);
   const [active, setActive] = useState<AdhanPrayer | "Sample" | null>(null);
   const [blocked, setBlocked] = useState(false);
+  const [playback, setPlayback] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const audio = new Audio(ADHAN_AUDIO_URL);
     audio.preload = "none";
-    const ended = () => setActive(null);
+    const ended = () => {setActive(null);setPlayback(0)};
+    const progress = () => {
+      if(Number.isFinite(audio.duration)&&audio.duration>0){
+        setPlayback(Math.min(100,Math.max(0,(audio.currentTime/audio.duration)*100)));
+      }
+    };
     audio.addEventListener("ended", ended);
+    audio.addEventListener("timeupdate", progress);
     audioRef.current = audio;
-    return () => { audio.pause(); audio.removeEventListener("ended", ended); audioRef.current = null; };
+    return () => { audio.pause(); audio.removeEventListener("ended", ended);audio.removeEventListener("timeupdate",progress);audioRef.current = null; };
   }, []);
 
   const stop = useCallback(() => {
@@ -40,6 +48,7 @@ export default function PersistentAdhan() {
     }
     setActive(null);
     setBlocked(false);
+    setPlayback(0);
   }, []);
 
   const play = useCallback((prayer: AdhanPrayer | "Sample", volumeOverride?: number) => {
@@ -50,6 +59,7 @@ export default function PersistentAdhan() {
     audio.volume = typeof volumeOverride === "number" ? Math.max(0, Math.min(1, volumeOverride)) : readAdhanPreferences().volume;
     setActive(prayer);
     setBlocked(false);
+    setPlayback(0);
     void audio.play().then(() => setBlocked(false)).catch(() => setBlocked(true));
   }, []);
 
@@ -163,15 +173,30 @@ export default function PersistentAdhan() {
   }, [prefs, schedule, place, play]);
 
   if (!active) return null;
-  return <aside className="adhanPlayerToast" role="status" aria-live="polite" aria-label="Call to prayer player">
-    <span className="adhanEyebrow">🕌 1MUSLIM · ADHAN</span>
-    <strong>{active === "Sample" ? "Adhan audio preview" : active + " · Time for Salah"}</strong>
-    <p>{blocked
-      ? "Your browser blocked automatic audio. Tap Play to listen. On iPhone, scheduled sounds require the site to remain active."
-      : "Allahu Akbar · Allah is Greatest"}</p>
-    <div className="adhanPlayerToastActions">
-      <button type="button" onClick={() => play(active)}>▶ {blocked ? "Play Adhan" : "Replay"}</button>
-      <button type="button" onClick={stop}>■ Stop & close</button>
+  const preview=active==="Sample";
+  return <aside className="adhanPlayerToast adhanGlassNav" role="region" aria-label="Adhan prayer time and navigation">
+    <div className="adhanGlassTop">
+      <span className="adhanGlassBrand"><span aria-hidden="true">◈</span> 1MUSLIM <span aria-hidden="true">·</span> ADHAN</span>
+      <button type="button" className="adhanGlassClose" onClick={stop} aria-label="Stop Adhan and close notification">×</button>
     </div>
+    <div className="adhanGlassMain">
+      <span className="adhanGlassSymbol" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round"><path d="M7 26V14l5-3 4 3 4-3 5 3v12"/><path d="M4 27h24M11 26v-7h4v7M19 26v-7h4v7M16 5V2M13 8a5 5 0 0 0 7-5"/></svg>
+      </span>
+      <div className="adhanGlassText">
+        <strong>{preview?"Adhan sound preview":`${active} · Time for Salah`}</strong>
+        <p>{blocked?"Audio is paused by your browser. Tap Enable sound.":"Allahu Akbar · Allah is Greatest"}</p>
+      </div>
+      <span className={"adhanGlassPulse"+(blocked?" is-paused":"")} aria-label={blocked?"Sound blocked":"Adhan playing"} aria-hidden="true"><i/><i/><i/><i/></span>
+    </div>
+    <div className="adhanGlassProgress" aria-hidden="true"><span style={{width:`${playback}%`}}/></div>
+    <nav className="adhanGlassActions" aria-label="Adhan actions">
+      <span className="adhanGlassPlace">{place.city?<>⌖ {place.city}</>:"Prayer reminder"}</span>
+      <div className="adhanGlassActionButtons">
+        {blocked&&<button type="button" className="adhanGlassEnable" onClick={()=>play(active)} aria-label="Enable Adhan audio">▶ Enable sound</button>}
+        <Link href="/profile?compass=1" onClick={()=>window.dispatchEvent(new Event("1muslim:open-qibla"))}>⌖ Qibla <span aria-hidden="true">↗</span></Link>
+        <button type="button" className="adhanGlassStop" onClick={stop}>Stop <span aria-hidden="true">×</span></button>
+      </div>
+    </nav>
   </aside>;
 }
