@@ -3,14 +3,14 @@ import Link from "next/link";
 import Image from "next/image";
 import type {ReactNode} from "react";
 import type {SalahStage} from "./PrayerEducationData";
+import {PrayerUiIcon} from "./icons/PrayerTimeIcon";
 
 export function PrayerShell({title,back="/",children,eyebrow}:{title:string;back?:string;children:ReactNode;eyebrow?:string}){
  return <main className="prayerExperience">
   <div className="prayerPageShell">
    <header className="prayerPageHeader">
-    <Link href={back} className="prayerHeaderBack" aria-label="Go back one page">← <span>{title}</span></Link>
-    <Link className="prayerPageBrand" href="/" aria-label="1Muslim home"><span>☪</span>1Muslim</Link>
-    <span className="prayerHeaderBadge" aria-hidden="true">✦</span>
+    <Link href={back} className="prayerHeaderBack" aria-label={`Back from ${title}`}><PrayerUiIcon kind="back"/> <span>{title}</span></Link>
+    <span className="prayerHeaderPill"><PrayerUiIcon kind="calendar"/> Daily salah</span>
    </header>
    {eyebrow&&<div className="prayerPageEyebrow">{eyebrow}</div>}
    {children}
