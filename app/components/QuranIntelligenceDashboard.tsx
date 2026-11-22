@@ -21,11 +21,13 @@ const utc=(date:string)=>Date.parse(date+"T12:00:00Z");
 const iso=(timestamp:number)=>new Date(timestamp).toISOString().slice(0,10);
 const shift=(date:string,n:number)=>iso(utc(date)+n*86400000);
 const labelDate=(date:string,weekday=false)=>new Date(utc(date)).toLocaleDateString("en-US",weekday?{weekday:"short",timeZone:"UTC"}:{month:"short",day:"numeric",timeZone:"UTC"});
-const formatRange=(start:number,end:number)=>{
- const chunks:string[]=[];let a=start,b=start;
- const push=()=>chunks.push(a===b?String(a):String(a)+"–"+String(b));
- for(let n=start+1;n<=end;n++){if(n===b+1)b=n;else{push();a=n;b=n;}}
- push();return chunks.join(", ");
+const formatReadVerses=(keys:string[])=>{
+ if(!keys.length)return "";
+ const numbers=keys.map(key=>Number(key.split(":")[1])).sort((a,b)=>a-b);
+ const groups:string[]=[];let a=numbers[0],b=a;
+ const push=()=>{groups.push(a===b?String(a):String(a)+"–"+String(b));};
+ for(const n of numbers.slice(1)){if(n===b+1)b=n;else{push();a=n;b=n;}}
+ push();return groups.slice(0,18).join(", ")+(groups.length>18?" + more":"");
 };
 type Indexed={unique:Map<string,string>;byDate:Map<string,Set<string>>;chapterKeys:Map<number,string[]>;latest:string|null;activeDays:Set<string>};
 function indexReadings(readings:QuranReading[]):Indexed{
@@ -50,7 +52,7 @@ function computeStreak(days:Set<string>,today:string){
 }
 function buildChart(data:Indexed,today:string,period:Period){
  const earliest=[...data.unique.values()].sort()[0]||shift(today,-29);
- const count=period==="7D"?7:period==="30D"?30:period==="90D"?90:period==="1Y"?365:Math.min(1096,Math.max(7,Math.round((utc(today)-utc(earliest))/86400000)+1));
+ const count=period==="7D"?7:period==="30D"?30:period==="90D"?90:period==="1Y"?365:Math.min(3650,Math.max(7,Math.round((utc(today)-utc(earliest))/86400000)+1));
  const start=shift(today,-count+1);
  const firstCount=[...data.unique.values()].filter(d=>d<start).length;
  const increments=new Map<string,number>();
@@ -86,7 +88,6 @@ function Confidence({readings,loading,userId}:{readings:QuranReading[];loading:b
  const line=view.map((point,i)=>(i===0?"M ":"L ")+x(i).toFixed(1)+" "+y(point.percent).toFixed(1)).join(" ");
  const fill=line+" L "+x(view.length-1).toFixed(1)+" "+(H-B)+" L "+L+" "+(H-B)+" Z";
  const chosenIndex=Math.max(0,view.findIndex(p=>p.date===chosen.date));
- const dates=new Set(view.map(p=>p.date));
  const weeks=Array.from({length:14},(_,i)=>shift(today,i-13));
  const maxVisits=Math.max(1,...weeks.map(d=>indexed.byDate.get(d)?.size||0));
  const chapters=VERSES.map((total,i)=>{
@@ -94,8 +95,6 @@ function Confidence({readings,loading,userId}:{readings:QuranReading[];loading:b
   return {id:i+1,name:SURAHS[i]||"Surah "+(i+1),total,count:keys.length,keys};
  });
  const visibleChapters=chapters.filter(c=>(showChapters==="all"||showChapters==="started"&&c.count>0||showChapters==="finished"&&c.count===c.total)&&(!filter.trim()||c.name.toLowerCase().includes(filter.trim().toLowerCase())||String(c.id)===filter.trim()));
- const activeChapter=selectedChapter?chapters[selectedChapter-1]:null;
- const chosenVerse=activeChapter?.keys[0]||null;
  const starKey="1muslim:quran-starred-verses-v1:"+String(userId||"self");
  useEffect(()=>{try{const data=JSON.parse(localStorage.getItem(starKey)||"[]") as unknown;setSaved(Array.isArray(data)?data.filter((k):k is string=>typeof k==="string"&&valid(k)!==null).slice(0,300):[]);}catch{setSaved([]);}setStarsReady(true);},[starKey]);
  const toggleSaved=(key:string)=>{
@@ -135,7 +134,8 @@ function Confidence({readings,loading,userId}:{readings:QuranReading[];loading:b
    const response=await fetch("/api/quran/analytics-insight",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({favoriteVerse:preferred||null})});
    const json=await response.json().catch(()=>({}));
    if(!response.ok||!json||typeof json.headline!=="string"||typeof json.message!=="string")throw Error(typeof json.error==="string"?json.error:"AI overview couldn't load. Your reading statistics are still available.");
-   setInsight({headline:json.headline,message:json.message,nextStep:json.nextStep||"",source:"ai"});
+   setInsight({headline:json.headline,message:json.message,nextStep:json.nextStep||"",source:json.source==="ai"?"ai":"local"});
+   if(json.source!=="ai"&&typeof json.notice==="string")setInsightError(json.notice);
   }catch(error){setInsightError(error instanceof Error?error.message:"AI summary unavailable. Try again.");}
   finally{setInsightBusy(false);}
  };
@@ -212,7 +212,7 @@ function Confidence({readings,loading,userId}:{readings:QuranReading[];loading:b
     return <div className={styles.chapterBlock} key={ch.id}><button type="button" className={styles.chapterRow} aria-expanded={opened} onClick={()=>{setSelectedChapter(opened?null:ch.id);setShowAllVerses(false);}}>
       <span className={styles.chapterNumber}>{String(ch.id).padStart(2,"0")}</span><span className={styles.chapterInfo}><strong>{ch.name}</strong><span><i style={{width:completion+"%"}}/></span></span><span className={styles.chapterCount}><b>{number(ch.count)} <small>/ {ch.total}</small></b><small>{percent(completion)} · {ch.count===0?"Not started":completion===100?"Complete":"In progress"}</small></span><span className={styles.chevron}>{opened?"⌃":"⌄"}</span>
      </button>{opened&&<div className={styles.chapterOpen}>
-      <p>{ch.count?formatRange(Number(ch.keys[0].split(":")[1]),Number(ch.keys[ch.keys.length-1].split(":")[1])):"No verse history in this chapter yet."} {ch.count?"· Tap the exact verse numbers below.":""}</p>
+      <p>{ch.count?formatReadVerses(ch.keys):"No verse history in this chapter yet."} {ch.count?"· Tap the exact verse numbers below.":""}</p>
       <div className={styles.verseGrid}>{(showAllVerses?ch.keys:ch.keys.slice(0,24)).map(key=><div className={styles.verseChip} key={key}><Link href={"/elm-tent/quran?verse="+encodeURIComponent(key)} aria-label={"Open Qur'an verse "+key}>{key}</Link><button type="button" aria-label={saved.includes(key)?"Remove "+key+" from saved verses":"Save "+key} aria-pressed={saved.includes(key)} onClick={()=>toggleSaved(key)}>{saved.includes(key)?"★":"☆"}</button></div>)}</div>
       {ch.keys.length>24&&<button className={styles.moreVerses} type="button" onClick={()=>setShowAllVerses(v=>!v)}>{showAllVerses?"Show fewer verses":"Show all "+number(ch.keys.length)+" read verses"}</button>}
       <div className={styles.chapterFoot}><span>Unique logged verses: {number(ch.count)} · Remaining: {number(ch.total-ch.count)}</span><Link href={"/elm-tent/quran?chapter="+ch.id}>Open Surah ↗</Link></div>
