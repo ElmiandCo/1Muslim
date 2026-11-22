@@ -428,6 +428,15 @@ function MemberFollowControl({viewerId,memberId}:{viewerId:string;memberId:strin
    .then(({data,error})=>{if(!live)return;if(error)setError("Unable to check follow status.");else setFollowing(!!data);setLoading(false)});
   return()=>{live=false};
  },[viewerId,memberId]);
+ // Both the normal profile and full-screen view share the same follow state.
+ useEffect(()=>{
+  const sync=(event:Event)=>{
+   const detail=(event as CustomEvent<{memberId:string;viewerId:string;following:boolean}>).detail;
+   if(detail?.memberId===memberId&&detail.viewerId===viewerId)setFollowing(!!detail.following);
+  };
+  window.addEventListener("1muslim:follow-changed",sync);
+  return()=>window.removeEventListener("1muslim:follow-changed",sync);
+ },[viewerId,memberId]);
  const toggle=async()=>{
   if(saving||loading||viewerId===memberId)return;
   setSaving(true);setError("");
