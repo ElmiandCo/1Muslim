@@ -92,7 +92,7 @@ export function EmoTextKeyboard({onInsert,disabled=false}:{onInsert:(id:string)=
  const [dragY,setDragY]=useState(0);
  const [search,setSearch]=useState("");
  const [category,setCategory]=useState("All");
- const timeout=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const timeout=useRef<number|null>(null);
  const gesture=useRef<{pointerId:number;startY:number;startTime:number}|null>(null);
 
  useEffect(()=>setMounted(true),[]);
