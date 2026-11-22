@@ -1,3 +1,9 @@
+-- Optional visual metadata for *existing* LiveKit streams.
+-- Audio-only viewers render the selected ambience locally without any extra video bandwidth.
+alter table public.live_streams
+ add column if not exists recital_chapter integer check (recital_chapter between 1 and 114),
+ add column if not exists recital_visual text check (recital_visual in ('clean','starlight','emerald'));
+
 -- Public, opt-in audio-only recitations. Microphone recordings stay local until Publish.
 -- Strict RLS; no public write or user-selected XP amount.
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
