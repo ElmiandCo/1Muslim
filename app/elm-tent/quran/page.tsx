@@ -18,6 +18,7 @@ import HudHudQuranBird from "./HudHudQuranBird";
 import ElmiVerseMoment from "./ElmiVerseMoment";
 import VersePostStudio from "./VersePostStudio";
 import QuranFloatingSearch from "./QuranFloatingSearch";
+import QuranHarakatLens from "./QuranHarakatLens";
 import ReadingAtmosphere from "./ReadingAtmosphere";
 import QuranLiveWidget from "../../components/QuranLiveWidget";
 type Chapter={id:number;name_simple:string;name_arabic:string;verses_count:number;revelation_place?:string;revelation_order?:number;translated_name?:{name:string}};
@@ -340,7 +341,15 @@ export default function QuranLessons(){
    {Array.from({length:17},(_,i)=><i key={i} style={{left:((i*43+9)%94+3)+"%",top:((i*31+17)%86+7)+"%",width:(2+i%3)+"px",height:(2+i%3)+"px",animationDelay:((i*0.47)%7)+"s",animationDuration:(8+(i%6)*1.7)+"s"}}/>)}
   </div>
   <div className="omQuranGlassPageHead"><span>{versePosition}</span><button type="button" aria-label="Spin Quran verse card like roulette" className="omQuranFlipAction omQuranRouletteButton" onPointerDown={startCardSpin} onPointerMove={moveCardSpin} onPointerUp={endCardSpin} onPointerCancel={()=>{spinPointer.current=null}}><span className="omQuranRouletteIcon" style={{transform:`rotate(${spinAngle}deg)`}}>⟳</span> Spin</button></div>
-  <p lang="ar" dir="rtl" className={"omQuranGlassArabic omQuranTextSwipe "+(verseSwipeDirection==="next"?"omQuranTextFromRight":"omQuranTextFromLeft")}>{(verses[focusIndex]?.text_uthmani||"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ").split(/\s+/).map((word,i)=><span key={i} className={"omQuranAnnotatedWord "+((verseNotes[verses[focusIndex]?.verse_key||""]?.highlights||[]).includes(i)?"omQuranWordGlow ":"")+((verseNotes[verses[focusIndex]?.verse_key||""]?.underlines||[]).includes(i)?"omQuranWordUnderline":"")}>{word}{" "}</span>)}</p>
+  <QuranHarakatLens
+    verseKey={verses[focusIndex]?.verse_key||chapter+":"+versePosition}
+    text={verses[focusIndex]?.text_uthmani||"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"}
+    words={verses[focusIndex]?.words}
+    highlights={verseNotes[verses[focusIndex]?.verse_key||""]?.highlights}
+    underlines={verseNotes[verses[focusIndex]?.verse_key||""]?.underlines}
+    arabicClassName={"omQuranGlassArabic omQuranTextSwipe "+(verseSwipeDirection==="next"?"omQuranTextFromRight":"omQuranTextFromLeft")}
+    onPlayVerse={()=>void playSelectedRecitation()}
+   />
   {showTranslation&&<p className={"omQuranGlassTranslation omQuranTextSwipe "+(verseSwipeDirection==="next"?"omQuranTextFromRight":"omQuranTextFromLeft")}>{strip(verses[focusIndex]?.translations?.[0]?.text||"In the name of Allah, the Entirely Merciful, the Especially Merciful.")}</p>}
   <small className="omQuranGlassCitation">— {active?.name_simple||"Al-Fatihah"} ({verses[focusIndex]?.verse_key||"1:1"})</small>
  </div>
