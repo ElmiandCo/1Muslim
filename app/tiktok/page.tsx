@@ -12,7 +12,7 @@ export default function TikTokConnectionPage(){
  useEffect(()=>{
   let live=true;
   void fetch("/api/tiktok/status",{cache:"no-store"})
-   .then(async r=>r.ok?r.json():({available:false}))
+   .then(async r=>r.json().catch(()=>({available:false})))
    .then(data=>{if(live)setAccess(data.available?"admin":"upcoming")})
    .catch(()=>{if(live)setAccess("upcoming")});
   return()=>{live=false};
