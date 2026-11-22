@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect,useState} from "react";
+import {useEffect,useRef,useState} from "react";
 import {useRouter} from "next/navigation";
 import styles from "./ProfileNextPrayer.module.css";
 import {PrayerTimeIcon,PrayerUiIcon,type PrayerTimeName} from "./icons/PrayerTimeIcon";
@@ -34,6 +34,8 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
  const [tomorrow,setTomorrow]=useState<PrayerSchedule|null>(null);
  const [loading,setLoading]=useState(false);
  const [error,setError]=useState("");
+ const [retry,setRetry]=useState(0);
+ const requestedKey=useRef("");
 
  useEffect(()=>{
   const profilePlace=normalize(initialLocation||{});
@@ -63,20 +65,35 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
  const calendarDay=locationClock(timezone,now).date;
 
  useEffect(()=>{
-  if(!canLoad){setSchedule(null);setTomorrow(null);setLoading(false);setError("");return}
+  if(!canLoad){
+   setSchedule(null);setTomorrow(null);setLoading(false);setError("");requestedKey.current="";return;
+  }
+  const key=placeKey+"|"+method;
+  if(requestedKey.current!==key){
+   // Switching accounts, cities or methods cannot reuse the previous schedule.
+   setSchedule(null);setTomorrow(null);requestedKey.current=key;
+  }else{
+   // On daily refresh retain only a schedule for the same local calendar day.
+   setSchedule(previous=>previous?.date===calendarDay?previous:null);
+  }
   const controller=new AbortController();
-  setLoading(true);setError("");setSchedule(null);setTomorrow(null);
+  setLoading(true);setError("");
   void fetchPrayerSchedule(place,method,controller.signal).then(data=>{
    if(!controller.signal.aborted){setSchedule(data);setTimezone(data.timezone);}
-  }).catch(err=>{
-   if(!controller.signal.aborted)setError(err instanceof Error?err.message:"Could not load your prayer times.");
+  }).catch(()=>{
+   if(!controller.signal.aborted)setError("Prayer times could not be refreshed.");
   }).finally(()=>{
    if(!controller.signal.aborted)setLoading(false);
   });
   return()=>controller.abort();
   // calendarDay changes at midnight in the selected city's timezone.
   // eslint-disable-next-line react-hooks/exhaustive-deps
- },[placeKey,method,calendarDay]);
+ },[placeKey,method,calendarDay,retry]);
+ useEffect(()=>{
+  if(!error||!canLoad)return;
+  const timer=window.setTimeout(()=>setRetry(current=>current+1),45_000);
+  return()=>window.clearTimeout(timer);
+ },[error,canLoad]);
 
  const clock=schedule?locationClock(schedule.timezone,now):null;
  const todayIsCurrent=!!schedule&&clock?.date===schedule.date;
