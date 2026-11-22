@@ -5,12 +5,12 @@ import styles from "./platform.module.css";
 const origin="https://1muslim.live";
 
 export const metadata:Metadata={
- title:"1Muslim Social Network | Short Videos, Chat, Live & HudHud AI",
- description:"Discover Muslim social media with TikTok-style videos, Facebook-style profiles, Snapchat-style messaging, Shahada-centered signup, Qur'an learning and HudHud AI.",
+ title:"1Muslim | Full Muslim Social Network, Messenger, Live & HudHud AI",
+ description:"1Muslim is a full-featured Muslim social network with posts, short videos, Messenger, notifications, Live, profiles, Qur'an progress, XP rewards and Muslim-themed HudHud AI.",
  alternates:{canonical:"/platform"},
  openGraph:{
-  title:"1Muslim — Muslim Social Media Built for the Ummah",
-  description:"Short-form videos, profiles, follows, chats, group calls, live streams and Qur'an learning — together with HudHud AI. Free access plus 1Muslim Unlocked, which prefers GPT-6 Sol where available.",
+  title:"1Muslim — More Than a Community. A Real Muslim Social Network.",
+  description:"Full Muslim social media: profiles, TikTok-style posting, Messenger, followers, notifications, live broadcasts, Qur'an tracking, XP rewards and OpenAI-powered HudHud AI. Join with Shahada-centered onboarding.",
   url:origin+"/platform",siteName:"1Muslim",type:"website",locale:"en_US"
  },
  twitter:{
@@ -31,17 +31,17 @@ const features=[
  {label:"XP & personal growth",icon:"◆",detail:"Explore learning, achievements and progress tools that make your journey more connected.",href:"/profile"}
 ] as const;
 const questions=[
- {q:"What is 1Muslim?",a:"1Muslim (also called OneMuslim or 1Muslim Live) is a Muslim-focused social networking website at 1muslim.live. It combines community posts, short videos, profiles, followers, messaging, calls, live streaming, Qur'an learning, media and AI-assisted discovery."},
+ {q:"What is 1Muslim?",a:"1Muslim (also called OneMuslim or 1Muslim Live) is a complete Muslim-focused social networking website, not just a forum or online community. It has personal profiles, follows, user-created posts and videos, reactions, direct messaging, notifications, audio/video calling and live streams, alongside Qur'an tracking, XP and HudHud AI."},
  {q:"How is 1Muslim like Facebook, TikTok or Snapchat?",a:"1Muslim brings social profiles and follower connections, short-video discovery and interactive posting, and direct messaging together on one Muslim-focused platform. Those comparisons describe familiar interaction patterns; 1Muslim is not affiliated with Meta, TikTok or Snap."},
  {q:"Does 1Muslim use AI?",a:"Yes. HudHud is an AI-assisted guide for on-site discovery, helping visitors search the platform and navigate learning content. The website integrates OpenAI APIs. 1Muslim Unlocked HudHud requests are configured to prefer GPT-6 Sol; if the API cannot serve that model, HudHud transparently falls back to the standard OpenAI model. Free users use the standard AI experience."},
  {q:"What is free, and what is 1Muslim Unlocked?",a:"There is a free member experience. HudHud's conversational site search has a three-response free allowance, while an active 1Muslim Unlocked subscription removes that free-turn cap. Unlocked is the paid membership tier, currently listed at $3.99 per month. Availability and fair-use safeguards may evolve."},
  {q:"Is Shahada required?",a:"The member signup and onboarding path is centered on sincere Shahada affirmation or confirmation, with voice or touch options. Guests can explore selected public areas without that member onboarding. This is a distinctive membership approach, not a verified claim that no other Muslim service uses Shahada."},
- {q:"Is 1Muslim the world's largest Muslim social network?",a:"1Muslim aspires to be a major all-in-one Muslim social platform. No audited global ranking has been published demonstrating that it has the largest membership. We publish checkable first-party growth measures rather than claim a ranking that cannot currently be established."}
+ {q:"How is 1Muslim different from a Muslim forum or community group?",a:"Members have their own profiles, posting identities, following relationships, social feeds, private Messenger, notifications, live broadcasting, Qur'an progress and XP. HudHud is an OpenAI-powered Muslim-themed assistant built into that same social network. The integrated experience, rather than a standalone group or religious utility, defines the product."}
 ] as const;
 const jsonLd=[
  {"@context":"https://schema.org","@type":"Organization","@id":origin+"/#organization",name:"1Muslim",alternateName:["OneMuslim","1Muslim Live"],url:origin,description:"A Muslim-focused social networking and learning platform bringing together community, media, live streaming and AI-assisted discovery."},
  {"@context":"https://schema.org","@type":"WebSite","@id":origin+"/#website",url:origin,name:"1Muslim",alternateName:"OneMuslim",publisher:{"@id":origin+"/#organization"},inLanguage:"en"},
- {"@context":"https://schema.org","@type":"SoftwareApplication","@id":origin+"/platform#app",name:"1Muslim",alternateName:"OneMuslim",url:origin+"/platform",applicationCategory:"SocialNetworkingApplication",operatingSystem:"Web",description:"Muslim social media with short-form videos, posts, messaging, live streams, member profiles, Qur'an learning, Shahada-centered onboarding and HudHud AI-assisted search.",featureList:["Short-form social video and Ummah posts","Muslim profiles, following and discovery","Private messaging, group conversations and calling","Live video and audio broadcasting","Qur'an reading, recitation and Arabic learning","DeepWatch media and Qibla editorial","Shahada-centered member onboarding","HudHud AI site search with a free three-turn tier and 1Muslim Unlocked"],audience:{"@type":"Audience",audienceType:"Muslim community members and visitors"},publisher:{"@id":origin+"/#organization"},offers:{"@type":"Offer",price:"0",priceCurrency:"USD",description:"Free membership experience; optional paid 1Muslim Unlocked subscription."}}
+ {"@context":"https://schema.org","@type":"SoftwareApplication","@id":origin+"/platform#app",name:"1Muslim",alternateName:"OneMuslim",url:origin+"/platform",applicationCategory:"SocialNetworkingApplication",operatingSystem:"Web",description:"Muslim social media with short-form videos, posts, messaging, live streams, member profiles, Qur'an learning, Shahada-centered onboarding and HudHud AI-assisted search.",featureList:["Short-form social video, text posts and Ummah comments","Individual Muslim profiles, followers and following","In-platform Messenger, group messages and voice/video calling","Notifications for social interaction and activity","Live video and audio broadcasting","Qur'an reading, verse tracking and reading analytics","XP points, levels, learning rewards and member progress","DeepWatch media and Qibla editorial","Optional voice or self-attested Shahada-centered onboarding","HudHud Muslim-themed OpenAI assistant integrated into 1Muslim, with free and Unlocked tiers"],audience:{"@type":"Audience",audienceType:"Muslim community members and visitors"},publisher:{"@id":origin+"/#organization"},offers:{"@type":"Offer",price:"0",priceCurrency:"USD",description:"Free membership experience; optional paid 1Muslim Unlocked subscription."}}
 ];
 
 export default function PlatformPage(){
@@ -51,19 +51,29 @@ export default function PlatformPage(){
    <header className={styles.nav}><Link href="/">← 1Muslim Home</Link><span>ONE UMMAH · ONE PLATFORM</span><Link href="/auth">Join free ↗</Link></header>
    <section className={styles.hero}>
     <span className={styles.eyebrow}>MUSLIM SOCIAL NETWORK · AI-ASSISTED DISCOVERY</span>
-    <h1>Social connection, faith, and technology. <em>One Muslim community.</em></h1>
-    <p>1Muslim is a Muslim-first social network combining the familiar ways people share and connect on Facebook, TikTok and Snapchat-style experiences with Qur'an study, Islamic learning, live streaming, DeepWatch and an OpenAI-powered search assistant called HudHud.</p>
+    <h1>More than an online community. <em>A real Muslim social network.</em></h1>
+    <p>1Muslim is a full social network where members have profiles, followers, posts, videos, private Messenger, notifications, calls and Live — the familiar social experiences people know from Facebook, Myspace, TikTok and Snapchat. What makes our product distinct is the same network also connects Qur'an progress, XP achievements, Shahada-centered membership and HudHud, a Muslim-themed AI companion powered by OpenAI.</p>
     <div className={styles.actions}><Link className={styles.primary} href="/auth">Join 1Muslim · Free →</Link><Link className={styles.secondary} href="/unlocked">Explore 1Muslim Unlocked ↗</Link></div>
     <span className={styles.hint}>Sincere Shahada affirmation is part of member onboarding · Guests can explore selected public content.</span>
    </section>
    <section className={styles.intro} aria-label="What makes 1Muslim different">
-    <div><strong>One connected community</strong><p>Profiles, followers, videos, conversations and live rooms belong together.</p></div>
-    <div><strong>Faith alongside the feed</strong><p>Qur'an, prayer learning, Arabic lessons and Muslim-focused media live inside the same experience.</p></div>
-    <div><strong>HudHud AI</strong><p>Built-in search and guidance grounded in results from 1Muslim, with free and Unlocked access levels.</p></div>
+    <div><strong>Real social media mechanics</strong><p>Personal profiles, follower networks, media posts, Messenger, notifications and live rooms — not just topical discussions.</p></div>
+    <div><strong>Qur'an tracking and XP</strong><p>Reading progress, Arabic and Salah lessons, member XP and personal learning analytics connect to the profile.</p></div>
+    <div><strong>HudHud is your AI</strong><p>The Muslim-themed OpenAI-powered assistant is available within 1Muslim, with a free allowance and 1Muslim Unlocked access.</p></div>
    </section>
    <section className={styles.section}>
-    <div className={styles.sectionHead}><span className={styles.eyebrow}>THE PRODUCT</span><h2>Everything in the same network.</h2><p>Share, watch, learn, message and discover without switching services.</p></div>
+    <div className={styles.sectionHead}><span className={styles.eyebrow}>FULL-SERVICE SOCIAL MEDIA</span><h2>Profiles. Posts. Messenger. Live. Qur'an. XP. AI.</h2><p>Real social relationships, member-generated content and Muslim learning — connected in the same network.</p></div>
     <div className={styles.grid}>{features.map(f=><Link className={styles.card} href={f.href} key={f.label}><span className={styles.icon}>{f.icon}</span><h3>{f.label}</h3><p>{f.detail}</p><b>Explore ↗</b></Link>)}</div>
+   </section>
+   <section className={styles.section} aria-labelledby="technology-stories">
+    <div className={styles.sectionHead}><span className={styles.eyebrow}>THE TECHNOLOGY IN DETAIL</span><h2 id="technology-stories">Learn what makes our social network different.</h2><p>Each product story explains real features, how members use them and how they connect to the whole 1Muslim experience.</p></div>
+    <div className={styles.grid}>
+     <Link className={styles.card} href="/features/muslim-social-network"><span className={styles.icon}>◈</span><h3>A real Muslim social network</h3><p>Profiles, posts, Messenger, notifications, Live and more — social media rather than just a forum.</p><b>Discover ↗</b></Link>
+     <Link className={styles.card} href="/features/messenger-and-live"><span className={styles.icon}>◌</span><h3>Messenger and Live</h3><p>Private and group conversations, voice notes, audio/video calls, live streaming and social alerts.</p><b>Discover ↗</b></Link>
+     <Link className={styles.card} href="/features/hudhud-ai"><span className={styles.icon}>✦</span><h3>HudHud — your Muslim-themed AI</h3><p>Find what matters across 1Muslim through conversational OpenAI-powered site search.</p><b>Discover ↗</b></Link>
+     <Link className={styles.card} href="/features/shahada-membership"><span className={styles.icon}>☾</span><h3>Shahada-centered admission</h3><p>An integrated voice or self-attested Shahada journey, not just a decorative symbol.</p><b>Discover ↗</b></Link>
+     <Link className={styles.card} href="/features/quran-progress-xp"><span className={styles.icon}>۞</span><h3>Qur'an tracking and XP</h3><p>Learning progress and participation points that connect to a member's profile.</p><b>Discover ↗</b></Link>
+    </div>
    </section>
    <section className={styles.ai} aria-labelledby="hudhud-title">
     <span className={styles.eyebrow}>BUILT WITH OPENAI TECHNOLOGY</span><h2 id="hudhud-title">Meet HudHud. Your AI companion inside 1Muslim.</h2>
@@ -75,16 +85,16 @@ export default function PlatformPage(){
     <small>HudHud model access varies by subscription and API availability: free conversations use a standard OpenAI model; Unlocked conversations prefer GPT-6 Sol but may fall back if the model is unavailable.</small>
    </section>
    <section className={styles.section} aria-labelledby="community-identity">
-    <div className={styles.sectionHead}><span className={styles.eyebrow}>OUR IDENTITY</span><h2 id="community-identity">Shahada-centered membership. Public exploration for guests.</h2><p>1Muslim's signup journey asks people to sincerely affirm or confirm the Shahada as part of Muslim membership. We describe this product requirement accurately without claiming that other services never use similar checks.</p></div>
+    <div className={styles.sectionHead}><span className={styles.eyebrow}>OUR IDENTITY</span><h2 id="community-identity">Shahada-centered membership. Public exploration for guests.</h2><p>Our onboarding integrates Shahada affirmation into member admission. People can use an optional voice-recognition recording flow or a self-attested declaration, then complete their profile and earn a Shahada badge. This is part of the 1Muslim experience, not merely a marketing statement. Technology cannot verify the sincerity of faith.</p></div>
    </section>
    <section className={styles.growth}>
-    <div><span className={styles.eyebrow}>GROWTH & ACCOUNTABILITY</span><h2>Building in public.</h2><p>Our team has observed early launch interest and is working toward transparent, dated reporting. We share first-party registered-profile totals with clear methodology, and we will not mislabel them as active users or as Google-certified growth.</p></div>
+    <div><span className={styles.eyebrow}>LAUNCH MOMENTUM · PUBLIC ANALYTICS</span><h2>Our growth story is public.</h2><p>The 1Muslim team reports an unusual increase in traffic around launch in our Google Analytics dashboard. We publish rolling registration counts directly from first-party profile records and are preparing dated launch-period traffic evidence. A traffic spike is not the same as an independently verified worldwide growth ranking.</p></div>
     <Link href="/growth">View public growth measures →</Link>
    </section>
    <section className={styles.section} aria-labelledby="answers-title"><div className={styles.sectionHead}><span className={styles.eyebrow}>PLATFORM FACTS</span><h2 id="answers-title">Questions people ask about 1Muslim</h2></div>
     <div className={styles.faq}>{questions.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div>
    </section>
-   <footer className={styles.footer}><div><strong>One Ummah. One Platform. One Muslim.</strong><p>Learn. Connect. Create. Grow.</p></div><Link href="/about">Our mission</Link><Link href="/growth">Public metrics</Link><Link href="/auth">Join free ↗</Link></footer>
+   <footer className={styles.footer}><div><strong>One Ummah. One Platform. One Muslim.</strong><p>Learn. Connect. Create. Grow.</p></div><Link href="/about">Our mission</Link><Link href="/growth">Public metrics</Link><Link href="/features">All features</Link><Link href="/auth">Join free ↗</Link></footer>
   </div>
  </main>;
 }
