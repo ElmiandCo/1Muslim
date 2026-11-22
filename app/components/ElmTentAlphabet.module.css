@@ -340,3 +340,218 @@
  .root.compact .tile>span{font-size:23px}
  .root.compact .title h2{font-size:19px}
 }
+
+/* 1Muslim light learning widgets, aligned with the Qur'an and Posts cards.
+   Accent follows the member's profile setting when available, otherwise the
+   active site theme. No lesson logic, progress or answer interactions change. */
+:global(html) .root{
+ --elm-accent:var(--member-accent,var(--theme-accent,#b89a5d));
+ --elm-ink:#18304f;
+ --elm-muted:#68798d;
+ --elm-outline:color-mix(in srgb,var(--elm-accent) 32%,#dfe5ec);
+ --elm-highlight:color-mix(in srgb,var(--elm-accent) 13%,#fff);
+ --elm-soft-shadow:color-mix(in srgb,var(--elm-accent) 8%,transparent);
+ color:var(--elm-ink)!important;
+ background:#fff!important;
+ border:1px solid var(--elm-outline)!important;
+ box-shadow:0 12px 32px #142c4212,inset 0 1px #fff!important;
+ backdrop-filter:none;
+}
+:global(html) .root .lessonQuiz,
+:global(html) .root .vowelLesson,
+:global(html) .root .vowelStage,
+:global(html) .root .stage{
+ color:var(--elm-ink)!important;
+ background:#fff!important;
+ border:1px solid var(--elm-outline)!important;
+ box-shadow:0 5px 18px var(--elm-soft-shadow)!important;
+ backdrop-filter:none;
+}
+:global(html) .root .lessonQuiz{
+ gap:clamp(12px,3vw,20px);
+ padding:clamp(14px,3vw,23px);
+ border-radius:23px;
+}
+:global(html) .root .lessonNav button,
+:global(html) .root .vowelTabs button,
+:global(html) .root .quizSpeaker,
+:global(html) .root .vowelPlay,
+:global(html) .root .vowelDone,
+:global(html) .root .hear,
+:global(html) .root .mark,
+:global(html) .root .controls button,
+:global(html) .root .quizFinish button,
+:global(html) .root .elmJump select{
+ background:#fff!important;
+ color:var(--elm-ink)!important;
+ border:1px solid var(--elm-outline)!important;
+ box-shadow:0 3px 12px #20364f0b!important;
+}
+:global(html) .root .lessonNav button{
+ border-radius:16px;
+ min-width:44px;
+ align-items:center;
+}
+:global(html) .root .lessonNav button:disabled{
+ background:#f4f5f7!important;
+ color:#88919b!important;
+ opacity:.66!important;
+}
+:global(html) .root .lessonNav button[aria-current="step"],
+:global(html) .root .vowelTabs button[aria-pressed="true"],
+:global(html) .root .tile[aria-pressed="true"]{
+ background:var(--elm-highlight)!important;
+ border:1px solid color-mix(in srgb,var(--elm-accent) 72%,#d8dee7)!important;
+ color:var(--elm-ink)!important;
+ box-shadow:inset 0 -2px var(--elm-outline),0 4px 12px var(--elm-soft-shadow)!important;
+}
+:global(html) .root .lessonNav button:focus-visible,
+:global(html) .root .quizChoices button:focus-visible,
+:global(html) .root .quizSpeaker:focus-visible{
+ outline:3px solid var(--elm-accent)!important;
+ outline-offset:3px;
+}
+:global(html) .root .quizHeader,
+:global(html) .root .quizHeader strong,
+:global(html) .root .vowelHeader,
+:global(html) .root .vowelHeader strong,
+:global(html) .root .title h2,
+:global(html) .root .vowelPrompt,
+:global(html) .root .arabic,
+:global(html) .root .vowelCard>span,
+:global(html) .root .quizPhonetic,
+:global(html) .root .quizHint{
+ color:var(--elm-ink)!important;
+ text-shadow:none!important;
+}
+:global(html) .root .quizHeader strong{
+ font-weight:850;
+ letter-spacing:.015em;
+}
+:global(html) .root .quizHeader span,
+:global(html) .root .vowelHeader span,
+:global(html) .root .counter strong,
+:global(html) .root .top,
+:global(html) .root .letterFocus strong{
+ color:color-mix(in srgb,var(--elm-accent) 65%,#253348)!important;
+}
+:global(html) .root .progress{
+ height:6px;
+ flex-basis:6px;
+ background:#e9edf2!important;
+}
+:global(html) .root .progress span{
+ background:linear-gradient(90deg,var(--elm-accent),color-mix(in srgb,var(--elm-accent) 72%,#fff))!important;
+}
+:global(html) .root .quizSpeaker{
+ width:70px!important;
+ height:70px!important;
+ border-radius:50%!important;
+ color:var(--elm-ink)!important;
+ box-shadow:0 5px 15px #15294214!important;
+}
+:global(html) .root .quizSpeakerPlaying{
+ background:var(--elm-highlight)!important;
+ box-shadow:0 0 0 5px var(--elm-highlight)!important;
+}
+:global(html) .root .quizChoices button,
+:global(html) .root .vowelCard,
+:global(html) .root .elmForms>div,
+:global(html) .root .elmForms>button,
+:global(html) .root .tile{
+ background:#fff!important;
+ color:var(--elm-ink)!important;
+ border:1px solid var(--elm-outline)!important;
+ box-shadow:0 5px 18px #1a334b0a!important;
+ backdrop-filter:none;
+}
+:global(html) .root .quizChoices button{
+ border-radius:22px;
+}
+:global(html) .root .quizChoices button:not(:disabled):active{
+ transform:scale(.975);
+ background:var(--elm-highlight)!important;
+ border-color:var(--elm-accent)!important;
+}
+:global(html) .root .quizChoices button:disabled{opacity:.78}
+:global(html) .root .quizPhonetic{
+ font-size:clamp(43px,9vw,72px);
+ font-weight:500;
+}
+:global(html) .root .quizFeedback,
+:global(html) .root .quizFinish h3{
+ color:var(--elm-ink)!important;
+}
+:global(html) .root .quizFinish p,
+:global(html) .root .note,
+:global(html) .root .disclaimer,
+:global(html) .root .title p,
+:global(html) .root .counter small,
+:global(html) .root .letterFocus small{
+ color:var(--elm-muted)!important;
+}
+:global(html) .root .vowelCard strong,
+:global(html) .root .bottom a,
+:global(html) .root .browseToggle{
+ color:var(--elm-ink)!important;
+}
+:global(html) .root .vowelToast,
+:global(html) .root .elmParts span{
+ background:#fff!important;
+ color:var(--elm-ink)!important;
+ border-color:var(--elm-outline)!important;
+}
+:global(html) .root .vowelToast button{
+ color:var(--elm-ink)!important;
+ border-color:var(--elm-outline)!important;
+}
+:global(html) .root .vowelDone,
+:global(html) .root .mark{
+ background:var(--elm-highlight)!important;
+ border-color:var(--elm-accent)!important;
+}
+:global(html) .root .previous,
+:global(html) .root .next{
+ color:var(--elm-ink)!important;
+}
+:global(html) .root .stage{
+ background:radial-gradient(circle at center,var(--elm-highlight),#fff 75%)!important;
+}
+:global(html) .root .quizPronunciation{
+ gap:clamp(12px,4vw,34px);
+}
+:global(html) .root .quizSpeaker span{
+ color:var(--elm-ink);
+}
+/* The profile's older dark/white overrides use !important and higher specificity.
+   Explicitly keep the same modern surface there, including its custom accent. */
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .root{
+ background:#fff!important;
+ color:var(--elm-ink)!important;
+ border-color:var(--elm-outline)!important;
+ box-shadow:0 12px 32px #142c4212,inset 0 1px #fff!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .root .lessonNav button[aria-current="step"],
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .root .vowelTabs button[aria-pressed="true"]{
+ background:var(--elm-highlight)!important;
+ border-color:var(--elm-accent)!important;
+ color:var(--elm-ink)!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .root .progress span{
+ background:linear-gradient(90deg,var(--elm-accent),color-mix(in srgb,var(--elm-accent) 72%,#fff))!important;
+}
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .root .quizSpeaker,
+:global(.profileFullAccent) :global(.profileElmTentAlphabet) .root .vowelPlay{
+ color:var(--elm-ink)!important;
+}
+@media(max-width:600px){
+ :global(html) .root .lessonQuiz{padding:13px;gap:14px;min-height:0!important}
+ :global(html) .root .quizChoices{gap:11px!important}
+ :global(html) .root .quizChoices button{min-height:130px!important;height:clamp(130px,30vw,150px)!important}
+ :global(html) .root .quizHeader{font-size:clamp(14px,3.6vw,20px)}
+ :global(html) .root .quizPronunciation{min-height:78px}
+}
+@media(prefers-reduced-motion:reduce){
+ :global(html) .root .quizChoices button,
+ :global(html) .root .lessonNav button{transition:none!important}
+}
