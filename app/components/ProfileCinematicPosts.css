@@ -34,3 +34,9 @@
 .profileUmmahCarousel .profileCinematicItem{flex:0 0 min(82%,350px);width:min(82%,350px)}
 .profileUmmahCarousel .profileCinematicItem>.profileCinematicTile{width:100%;height:100%;flex:none}
 @media(min-width:760px){.profileUmmahCarousel .profileCinematicItem{flex-basis:min(44%,370px);width:min(44%,370px)}}
+
+/* Public bookmarks reuse the profile Posts three-column, edge-to-edge grid. */
+.profileSavedPosts .profileCinematicTile{position:relative}
+.profileSavedPosts .profileSavedBy{position:absolute;bottom:0;left:0;right:0;z-index:3;display:flex;flex-direction:column;gap:2px;padding:18px 8px 8px;background:linear-gradient(transparent,#07121cda);color:white;pointer-events:none;text-shadow:0 1px 3px #0008}
+.profileSavedPosts .profileSavedBy strong{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profileSavedPosts .profileSavedBy span{font-size:10px;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
