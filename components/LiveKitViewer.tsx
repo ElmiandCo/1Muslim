@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {loadLocalQuranChapter} from "../app/lib/quran-verses";
 import { Room, RoomEvent, Track } from "livekit-client";
 import { createClient } from "../utils/supabase/client";
 import { shouldApplyPresenceEvent, type PresenceVersion } from "../lib/live-discovery-state";
@@ -123,6 +124,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
   },[reconnectSignal]);
 
   const [isAudioBroadcast,setIsAudioBroadcast] = useState(false);
+  const [quranLiveMeta,setQuranLiveMeta]=useState<{chapter:number;visual:"clean"|"starlight"|"emerald";arabic:string}|null>(null);
   const [hasRemoteAudio,setHasRemoteAudio] = useState(false);
   const [hostConnecting,setHostConnecting] = useState(false);
   const [voiceAvatar,setVoiceAvatar] = useState<string|null>(null);
@@ -173,11 +175,19 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
     let cancelled=false;
     const db=createClient();
     void (async()=>{
-      const {data:stream}=await db.from("live_streams").select("host_id,aspect_ratio").eq("id",streamId).maybeSingle();
+      const {data:stream}=await db.from("live_streams").select("host_id,aspect_ratio,recital_chapter,recital_visual").eq("id",streamId).maybeSingle();
       if(cancelled||!stream)return;
       hostIdRef.current=stream.host_id;
       setHostIdentity(stream.host_id);
       setIsAudioBroadcast(stream.aspect_ratio==="1:1");
+      const recitalChapter=Number(stream.recital_chapter);
+      if(Number.isInteger(recitalChapter)&&recitalChapter>=1&&recitalChapter<=114){
+        const visual=stream.recital_visual==="starlight"||stream.recital_visual==="emerald"?stream.recital_visual:"clean";
+        setQuranLiveMeta({chapter:recitalChapter,visual,arabic:""});
+        void loadLocalQuranChapter(recitalChapter).then(rows=>{
+          if(!cancelled)setQuranLiveMeta(current=>current?.chapter===recitalChapter?{...current,arabic:rows[0]?.arabic||""}:current);
+        }).catch(()=>{});
+      }else setQuranLiveMeta(null);
       const {data:profile}=await db.from("profiles").select("*").eq("id",stream.host_id).maybeSingle();
       if(cancelled||!profile)return;
       setVoiceName(String(profile.display_name||profile.username||"1Muslim Creator"));
@@ -525,7 +535,12 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
     <div ref={playerRef} onClick={registerTap} className={embedded?"omLiveEmbeddedPlayer":"omLiveImmersiveViewer"} data-view-mode={viewMode} data-audible={audible?"yes":"no"} style={{position:"relative",background:"#000",width:"100%",height:embedded?"100%":undefined,aspectRatio:embedded?undefined:guestStageMode==="audio"?"4/5":"16/9",overflow:"hidden"}}>
       {hostEnded&&<div role="status" aria-live="assertive" className="omHostEndedNotice"><span>✦ LIVE COMPLETE</span><strong>The host has ended this Live</strong><small>{embedded?"Closing your floating player…":"Taking you Home…"}</small><button type="button" onClick={()=>{if(embedded)window.dispatchEvent(new CustomEvent("1muslim:live-ended",{detail:{streamId}}));else router.replace("/")}}>Go Home now →</button></div>}
       {!embedded && <canvas ref={reflectionRef} width={160} height={90} className="omLiveCinemaBackdrop" aria-hidden="true" />}
-      <LiveGuestsStage mode={guestStageMode} guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostSpeaking={voiceEnergy>.12}>
+      <LiveGuestsStage mode={guestStageMode} guests={guestRoster} hostName={voiceName} hostAvatar={voiceAvatar} hostSpeaking={voiceEnergy>.12}
+        ambient={quranLiveMeta&&guestStageMode==="audio"?<div className={"qrlViewerAmbient qrlViewer-"+quranLiveMeta.visual} aria-hidden="true">
+          <span>QUR’AN RECITATION · SURAH {quranLiveMeta.chapter}</span>
+          <p lang="ar" dir="rtl">{quranLiveMeta.arabic||"القرآن الكريم"}</p>
+          <small>1MUSLIM · LIVE</small>
+        </div>:null}>
         <div className="omLiveVideoStage" data-smart-mobile-crop={smartMobileCrop?"yes":"no"} data-screen={hasScreenVideo?"yes":"no"} data-layout={hasScreenVideo&&hasCameraVideo?shareLayout:"solo"}>
           <video ref={videoRef} className={"omCameraVideo"+(smartMobileCrop?" omSmartMobileCrop":"")} autoPlay muted playsInline controls={false} aria-label="Host camera" style={{display:hasScreenVideo&&!hasCameraVideo?"none":"block",...(smartMobileCrop?{objectFit:"cover" as const,objectPosition:`${smartCropX}% 50%`,background:"transparent"}:{})}} />
           <video ref={screenVideoRef} className="omScreenVideo" autoPlay muted playsInline aria-label="Shared screen" style={{display:hasScreenVideo?"block":"none"}} />
@@ -553,7 +568,14 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       ) : error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
       <style jsx>{`
       .omThemeTapHint{position:absolute;z-index:10;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;border:1px solid color-mix(in srgb,var(--theme-primary,#26b985) 45%,transparent);border-radius:20px;background:color-mix(in srgb,var(--theme-primary,#26b985) 14%,transparent);backdrop-filter:blur(10px);color:white;font-size:clamp(24px,5vw,42px);font-weight:900;padding:10px 28px;text-shadow:0 3px 14px #000b;animation:omThemeTapFade 2s ease-out forwards}@keyframes omThemeTapFade{0%,65%{opacity:1}100%{opacity:0}}
-      .omVoiceViewerStage{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#164938,#081b18 60%,#020706 100%);color:#e5f9f0}
+       .qrlViewerAmbient{position:absolute;inset:0;z-index:0;pointer-events:none;display:flex;align-items:center;justify-content:space-between;flex-direction:column;padding:7% 6%;background:linear-gradient(155deg,#172d2d,#091c20);overflow:hidden;color:#deca9f}
+ .qrlViewerAmbient.qrlViewer-starlight{background:radial-gradient(circle at 16% 16%,#f3eddf 0 1px,transparent 2px),radial-gradient(circle at 82% 47%,#c4d4e8 0 1px,transparent 2px),linear-gradient(125deg,#17183b,#0a112a)}
+ .qrlViewerAmbient.qrlViewer-emerald{background:radial-gradient(circle at center,#2a644a,#061c17)}
+ .qrlViewerAmbient span,.qrlViewerAmbient small{font-size:clamp(8px,1.3vw,11px);letter-spacing:.18em;font-weight:720;opacity:.8}
+ .qrlViewerAmbient p{font:clamp(27px,6vw,50px)/2 Amiri,"Noto Naskh Arabic",serif;text-align:center;opacity:.27;max-width:94%;max-height:67%;overflow:hidden;animation:qrlViewerDrift 16s ease-in-out infinite alternate}
+ @keyframes qrlViewerDrift{from{transform:translateY(-12px);opacity:.18}to{transform:translateY(12px);opacity:.30}}
+ @media(prefers-reduced-motion:reduce){.qrlViewerAmbient p{animation:none}}
+ .omVoiceViewerStage{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#164938,#081b18 60%,#020706 100%);color:#e5f9f0}
       .omVoiceViewerAura{position:absolute;width:min(66vw,260px);aspect-ratio:1;border-radius:50%;border:2px solid #87f8ce80;box-shadow:0 0 45px #34e5a555;animation:omVoiceViewerBreathe 3.6s ease-in-out infinite;pointer-events:none}
       .omVoiceViewerPortrait{position:relative;width:min(56vw,220px);aspect-ratio:1;display:grid;place-items:center;border-radius:50%;border:3px solid #c8fce6;overflow:hidden;background:radial-gradient(circle at 35% 25%,#28755f,#07261c 75%);box-shadow:0 0 35px #20c78c55;transition:transform .12s linear}
       .omVoiceViewerPortrait img{width:100%;height:100%;object-fit:cover}.omVoiceViewerPortrait span{font-size:80px}
