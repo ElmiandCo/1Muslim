@@ -40,6 +40,7 @@ type Profile = {
   city: string | null; state: string | null; country: string | null; gender: string | null; bio: string | null;
   xp_total: number; avatar_gender: string; avatar_package: string; avatar_config: Record<string, unknown>;
   profile_main_image_url?:string|null;
+  profile_background_image_url?:string|null;
   profile_background: string; profile_accent: string; community: string | null;
   display_name_changed_at: string | null; username_changed_at: string | null; shahada_verified_at: string | null; shahada_audio_path: string | null; shahada_language: "ar" | "en" | null;
 };
@@ -80,7 +81,7 @@ const AVATAR_CHOICES=[
 ] as const;
 const COVER_STOCK=[{id:"emerald",label:"Emerald",url:"/assets/profile-backgrounds/emerald.PNG"},{id:"sapphire",label:"Sapphire",url:"/assets/profile-backgrounds/sapphire.PNG"},{id:"ruby",label:"Ruby",url:"/assets/profile-backgrounds/rose-gold.PNG"},{id:"amethyst",label:"Amethyst",url:"/assets/profile-backgrounds/amethyst.PNG"},{id:"titanium",label:"Titanium",url:"/assets/profile-backgrounds/silver-dust.PNG"},{id:"obsidian",label:"Obsidian",url:"/assets/profile-backgrounds/obsidian.PNG"}] as const;
 // Always use the exact cover selection already displayed at the top of this profile.
-const profileCoverImage=(profile:Pick<Profile,"avatar_config">)=>typeof profile.avatar_config?.profileCoverUrl==="string"?profile.avatar_config.profileCoverUrl:COVER_STOCK.find(c=>c.id===profile.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
+const profileCoverImage=(profile:Pick<Profile,"avatar_config"|"profile_background_image_url">)=>typeof profile.avatar_config?.profileCoverUrl==="string"?profile.avatar_config.profileCoverUrl:profile.profile_background_image_url||COVER_STOCK.find(c=>c.id===profile.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
 const MEMBER_ACCENT_COLORS:Record<string,string>={emerald:"#579879",gold:"#b89b53",blue:"#689bd5",violet:"#9780c4",rose:"#c47e98",slate:"#829392",black:"#151515"};
 const MEMBER_TEXT_COLORS:Record<string,string>={emerald:"#174635",gold:"#58400c",blue:"#173e70",violet:"#42276a",rose:"#692a42",slate:"#293c3b",black:"#141414"};
 const memberAccent=(accent:string|null|undefined)=>MEMBER_ACCENT_COLORS[accent||""]||MEMBER_ACCENT_COLORS.black;
@@ -688,7 +689,7 @@ const [avatarPage,setAvatarPage]=useState(0);
     setAvatarSaving(false);
   };
   const [stockSaving,setStockSaving]=useState(false);
-  const selectStockCover=async(url:string)=>{if(!profile||stockSaving)return;setStockSaving(true);setMessage("");const avatar_config={...(profile.avatar_config||{}),profileCoverUrl:url};const {error}=await createClient().from("profiles").update({avatar_config}).eq("id",profile.id);if(error)setMessage("Could not save cover: "+error.message);else{update({avatar_config});window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:profile.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));setMessage("Stock cover saved.")}setStockSaving(false)};
+  const selectStockCover=async(url:string)=>{if(!profile||stockSaving)return;setStockSaving(true);setMessage("");const avatar_config={...(profile.avatar_config||{}),profileCoverUrl:url};const {error}=await createClient().from("profiles").update({avatar_config,profile_background_image_url:url}).eq("id",profile.id);if(error)setMessage("Could not save cover: "+error.message);else{update({avatar_config,profile_background_image_url:url});window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:profile.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));setMessage("Stock cover saved.")}setStockSaving(false)};
   const [coverPreview,setCoverPreview]=useState<string|null>(null);
   const [coverFile,setCoverFile]=useState<File|null>(null);
   const [coverZoom,setCoverZoom]=useState(1);
@@ -712,12 +713,12 @@ const [avatarPage,setAvatarPage]=useState(0);
      const {error:uploadError}=await client.storage.from("avatars").upload(path,blob,{contentType:"image/jpeg",upsert:false});if(uploadError)throw new Error("Cover upload failed: "+uploadError.message);
      const url=client.storage.from("avatars").getPublicUrl(path).data.publicUrl;
      const avatar_config={...(profile.avatar_config||{}),profileCoverUrl:url};
-     const {data:savedProfile,error:saveError}=await client.from("profiles").update({avatar_config}).eq("id",user.id).select("avatar_config").single();
+     const {data:savedProfile,error:saveError}=await client.from("profiles").update({avatar_config,profile_background_image_url:url}).eq("id",user.id).select("avatar_config,profile_background_image_url").single();
      if(saveError)throw new Error("Cover uploaded but profile update failed: "+saveError.message);
      const savedConfig=savedProfile?.avatar_config as Record<string,unknown>|null;
      if(savedConfig?.profileCoverUrl!==url)throw new Error("Cover uploaded but the saved profile did not confirm the new image.");
      await new Promise<void>((resolve,reject)=>{const check=new Image();check.onload=()=>resolve();check.onerror=()=>reject(new Error("Cover uploaded but the public image cannot be loaded. Check avatars bucket access."));check.src=url;});
-     update({avatar_config:savedConfig});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");setTab("profile");setEditing(false);window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:user.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})));
+     update({avatar_config:savedConfig,profile_background_image_url:url});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");setTab("profile");setEditing(false);window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:user.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})));
     }finally{URL.revokeObjectURL(src)}
    }catch(e){setMessage(e instanceof Error?e.message:"Could not upload cover image.")}finally{setCoverUploading(false)}
   };
