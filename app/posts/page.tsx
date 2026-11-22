@@ -31,7 +31,7 @@ function VisiblePostEngagement({postId,mediaUrl,mediaType,youtube}:{postId:strin
  useEffect(()=>{
   if(!near||!content.current)return;
   const node=content.current;
-  const measure=()=>{const height=Math.ceil(node.getBoundingClientRect().height);if(height>0)setReservedHeight(old=>Math.max(old,height))};
+  const measure=()=>{const height=Math.ceil(node.getBoundingClientRect().height);if(height>0)setReservedHeight(height)};
   measure();
   const resize=new ResizeObserver(measure);
   resize.observe(node);
@@ -51,6 +51,18 @@ function VisiblePostVideo({postId,mediaUrl,youtube}:{postId:string;mediaUrl:stri
 let cachedDiscover:{posts:Post[];viewerId:string|null;at:number}|null=null;
 export default function PublicPostsSocial(){
  const router=useRouter();
+ // Native proximity snapping stops a fling at the next post. Keep controls and comment
+ // threads on the browser's normal touch/scroll path instead of hijacking gestures.
+ useEffect(()=>{
+  const root=document.scrollingElement as HTMLElement|null;
+  if(!root)return;
+  const previousType=root.style.scrollSnapType;
+  const previousPadding=root.style.scrollPaddingTop;
+  root.style.scrollSnapType="y proximity";
+  root.style.scrollPaddingTop="16px";
+  return()=>{root.style.scrollSnapType=previousType;root.style.scrollPaddingTop=previousPadding};
+ },[]);
+
  const [posts,setPosts]=useState<Post[]>([]),[query,setQuery]=useState(""),[filter,setFilter]=useState<"forYou"|"lastWatched"|"popular">("forYou"),[loading,setLoading]=useState(true),[error,setError]=useState(""),[expanded,setExpanded]=useState<Record<string,boolean>>({}),[viewerId,setViewerId]=useState<string|null>(null),[history,setHistory]=useState<WatchedPost[]>([]),[scores,setScores]=useState<Record<string,{likes:number;comments:number;shares:number;saves:number;score:number}>>({}),[rankStatus,setRankStatus]=useState<"loading"|"ready"|"error">("loading"),[menuId,setMenuId]=useState<string|null>(null),[editingId,setEditingId]=useState<string|null>(null),[editText,setEditText]=useState(""),[actionBusy,setActionBusy]=useState(false),[actionError,setActionError]=useState("");
  useEffect(()=>{
   let active=true;
