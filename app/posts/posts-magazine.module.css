@@ -189,3 +189,48 @@
 .discoverPage .discoverCard .discoverAuthor{color:#25342e!important}
 .discoverPage .discoverCard .discoverVisual{border-radius:0!important}
 @media(max-width:420px){.discoverFeedHeader{padding:7px 7px 4px}.discoverFeedBody{padding:4px 7px 7px;font-size:12px}.discoverFeedAvatar{flex-basis:25px;width:25px;height:25px}.discoverFeedNames strong{font-size:10px}.discoverFeedNames small{font-size:8px}}
+
+
+/* 2026 Discover: single-column social cards by default, brighter than the former
+   masonry layout. Keep the original header, story rail, search and generous spacing. */
+.discoverPage{background:linear-gradient(180deg,#f7f5f0 0%,#f9f8f5 60%,#f2f2ef 100%);color:#1a242b}
+.discoverPage .discoverHead{margin-bottom:23px}
+.discoverPage .discoverFilters{align-items:flex-start;gap:13px;margin-bottom:23px}
+.discoverPage .feedTabs{flex:1;min-width:0;gap:10px;overflow-x:auto;scrollbar-width:none;align-items:center;padding:4px 2px 8px}
+.discoverPage .feedTabs::-webkit-scrollbar{display:none}
+.discoverPage .feedTabs button{font-family:Arial,Helvetica,sans-serif;font-size:13px;letter-spacing:-.015em;font-weight:800;background:#fff;border:1px solid #e3e3df;color:#2d343b;box-shadow:0 5px 16px #28364a0d;min-height:44px;padding:11px 17px;white-space:nowrap;transition:background .18s,color .18s,border-color .18s,transform .18s,box-shadow .18s}
+.discoverPage .feedTabs button:hover{border-color:#d5b987;box-shadow:0 6px 16px #23304420}
+.discoverPage .feedTabs button:active{transform:scale(.97)}
+.discoverPage .feedTabs .active{background:#121820;color:#fff;border-color:#121820;box-shadow:0 6px 17px #19202a22}
+.discoverPage .feedTabs .immersivePlayTab{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(145deg,#263d3f,#132f30);color:#fff;border-color:#335753;box-shadow:0 5px 14px #0d342b26}
+.discoverPage .feedTabs .immersivePlayTab:disabled{opacity:.48;cursor:not-allowed}
+.discoverPage .feedTabs .immersivePlayTab svg{flex:none;filter:drop-shadow(0 1px 2px #0003)}
+.discoverPage .discoverSearch input{background:#fff;border:1px solid #deded9;color:#18242d;box-shadow:inset 0 1px 3px #17243705,0 4px 13px #35404b09;min-height:44px}
+.discoverPage .discoverSearch input:focus-visible{outline:3px solid #79aebf88;outline-offset:2px}
+.discoverPage .feedTabs button:focus-visible{outline:3px solid #8ea5b9;outline-offset:2px}
+.discoverPage .feedStream{width:100%;max-width:730px;margin:0 auto 70px;display:grid;grid-template-columns:minmax(0,1fr);gap:21px}
+.discoverPage .feedPost{width:100%;min-width:0;background:#fff;border:1px solid #e7e9e8;border-radius:19px;overflow:hidden;box-shadow:0 11px 30px #202c3b0f,0 2px 6px #26313b08}
+.discoverPage .feedPostHeader{padding:17px 18px 14px}
+.discoverPage .feedPostAvatar{background:#243c45;border:2px solid #ddc39c;overflow:hidden}
+.discoverPage .feedPostIdentity strong{font-size:15px;color:#1a2930}
+.discoverPage .feedPostIdentity small{font-size:12px;color:#68767c}
+.discoverPage .feedPostCaption{padding:1px 19px 15px}
+.discoverPage .feedPostCaption p{font-family:Arial,Helvetica,sans-serif;font-size:clamp(15px,1.8vw,18px);line-height:1.62;font-weight:440;color:#20303b;letter-spacing:-.01em}
+.discoverPage .feedPostBottom{background:#fff}
+.discoverPage .feedMediaLink{background:#f0f3f4}
+.discoverPage .feedMediaLink img{max-height:580px;object-fit:contain}
+.discoverPage .feedPostEngagement{background:#fff}
+.discoverPage .status{max-width:730px;margin:20px auto;padding:40px 22px;border-radius:18px;background:#fff;color:#374b56;box-shadow:0 8px 27px #0000000d;line-height:1.6;text-align:center}
+@media(max-width:900px){.discoverPage .discoverFilters{flex-wrap:wrap}.discoverPage .discoverSearch{width:100%}.discoverPage .discoverSearch input{width:100%}}
+@media(max-width:600px){
+ .discoverPage{padding:15px 12px 35px}
+ .discoverPage .discoverFilters{margin-bottom:17px;gap:9px}
+ .discoverPage .feedTabs{gap:8px;padding:4px 1px 9px;touch-action:pan-x}
+ .discoverPage .feedTabs button{font-size:12px;min-height:43px;padding:10px 13px}
+ .discoverPage .feedStream{gap:17px}
+ .discoverPage .feedPost{border-radius:17px;box-shadow:0 7px 20px #202c3b0e}
+ .discoverPage .feedPostHeader{padding:12px 14px}
+ .discoverPage .feedPostCaption{padding:0 14px 13px}
+ .discoverPage .feedPostCaption p{font-size:15px;line-height:1.55}
+}
+@media(prefers-reduced-motion:reduce){.discoverPage .feedTabs button{transition:none}}
