@@ -20,8 +20,8 @@ export default function PrayerTimes(){
  const [loading,setLoading]=useState(false);
  const [editLocation,setEditLocation]=useState(false);
  useEffect(()=>{
-  let active=true;const local=readLocation();setPlace(local);setEditLocation(!local.city||!local.country);
-  void(async()=>{try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user||!active)return;const {data}=await db.from("profiles").select("city,state,country").eq("id",user.id).maybeSingle();if(!active||!data)return;const next={city:data.city||local.city,state:data.state||local.state,country:data.country||local.country};setPlace(next);setEditLocation(!next.city||!next.country)}catch{}})();
+  let active=true;const local=readLocation();setPlace(local);setEditLocation(false);
+  void(async()=>{try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user||!active)return;const {data}=await db.from("profiles").select("city,state,country").eq("id",user.id).maybeSingle();if(!active||!data)return;const next={city:data.city||local.city,state:data.state||local.state,country:data.country||local.country};setPlace(next)}catch{}})();
   const sync=()=>setMethod(readAdhanPreferences().method);
   window.addEventListener(ADHAN_SETTINGS_EVENT,sync);
   window.addEventListener("storage",sync);
@@ -52,9 +52,9 @@ export default function PrayerTimes(){
     <div className="prayerNextFocus"><span className="prayerNextIcon" aria-hidden="true">☪</span><div><span className="prayerNextLabel">{nextPrayer?"NEXT PRAYER":"PRAYER SCHEDULE"}</span><b>{nextPrayer||"Tomorrow's Fajr"}</b><small>{nextPrayer&&schedule?displayPrayerTime(schedule.times[nextPrayer]):"Refreshes after midnight"}</small></div><strong>{nextPrayer?"in "+countdown:"Five daily prayers"}</strong></div>
    </div>
   </div>
-  {editLocation&&<section id="prayer-location-editor" className="prayerLocationEdit" aria-label="Edit location"><div className="prayerSectionTop"><span className="prayerSectionIcon">⌖</span><div><h2>Choose your city</h2><p>Used for prayer times and the Adhan on this device.</p></div></div><LocationPreferences onSaved={next=>{setPlace(next);setEditLocation(false)}}/></section>}
+  {editLocation&&<section id="prayer-location-editor" className="prayerLocationEdit" aria-label="Edit location"><div className="prayerSectionTop"><span className="prayerSectionIcon">⌖</span><div><h2>Choose your city</h2><p>Choose the city used for your personalized daily prayer times.</p></div></div><LocationPreferences onSaved={next=>{setPlace(next);setEditLocation(false)}}/></section>}
   <section className="prayerCard prayerTimesCard" aria-labelledby="prayer-times-heading">
-   <div className="prayerSectionTop"><span className="prayerSectionIcon">▦</span><div><h2 id="prayer-times-heading">Today&apos;s prayer times</h2><p>Calculated for your saved city.</p></div><span className="prayerCalcBadge">Local prayer schedule</span></div>
+   <div className="prayerSectionTop"><span className="prayerSectionIcon">▦</span><div><h2 id="prayer-times-heading">Today&apos;s prayer times</h2><p>Calculated for your saved city using your selected convention.</p></div><span className="prayerCalcBadge">Local prayer schedule</span></div>
    {loading&&<div className="prayerScheduleLoading" role="status">Updating prayer times…</div>}
    {message&&<p className="prayerScheduleMessage" role="alert">{message}</p>}
    {schedule&&<div className="prayerTimesRail" role="list">{(["Fajr","Sunrise","Dhuhr","Asr","Maghrib","Isha"] as const).map(prayer=><div role="listitem" key={prayer} className={"prayerTimeCell"+(nextPrayer===prayer?" current":"")}>
@@ -63,7 +63,7 @@ export default function PrayerTimes(){
    {!loading&&!schedule&&!message&&<p className="prayerScheduleLoading">Set your city above to see today&apos;s prayer times.</p>}
   </section>
   <section className="prayerCard prayerAdhanCard" aria-label="Adhan settings">
-   <AdhanSettings inPrayerPage />
+   <AdhanSettings inPrayerPage location={place} onLocationSaved={next=>{setPlace(next);setEditLocation(false)}} />
   </section>
   <section className="prayerCard prayerActionCard">
    <div><h2>Learn Salah</h2><p>Master each position through guided illustrations, Arabic recitations, transliterations and English meanings.</p><Link className="prayerGoldButton" href="/widget-tools/prayer/learn">Start learning <span>→</span></Link></div>

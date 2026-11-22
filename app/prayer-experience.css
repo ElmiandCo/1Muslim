@@ -251,3 +251,26 @@
  .prayerExperience .adhanButtons button{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.prayerExperience *, .prayerExperience *:before,.prayerExperience *:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Prayer page hosts the same refined settings surface without nested white cards. */
+.prayerExperience .prayerAdhanCard{background:transparent;border:0;box-shadow:none;padding:0;border-radius:0}
+.prayerExperience .adhanSettings.adhanPremium,.prayerExperience .adhanSettings.adhanConfigured{
+ padding:clamp(18px,3vw,30px);border:1px solid #e3e8e7;border-radius:18px;
+ background:#fff;color:#172e35;box-shadow:0 12px 32px rgba(13,39,41,.055);
+}
+.prayerExperience .adhanPremium .adhanSettingsBody{margin-top:12px;display:grid;gap:0;background:transparent;border:0;border-radius:0;padding:0}
+.prayerExperience .adhanPremium .adhanSettingsTitle h3,.prayerExperience .adhanConfigured .adhanSettingsTitle h3{font-size:clamp(21px,3vw,28px);color:#172e35}
+.prayerExperience .adhanPremium .adhanSettingsTitle p,.prayerExperience .adhanConfigured .adhanSettingsTitle p{font-size:13px;color:#64747b}
+.prayerExperience .adhanPremium .adhanEyebrow,.prayerExperience .adhanConfigured .adhanEyebrow{color:#99713a}
+.prayerExperience .adhanPremium .adhanPrayerCheck{border:1px solid #dfe6e4;border-radius:11px;background:#fff;color:#405458;padding:12px 10px;font-size:13px}
+.prayerExperience .adhanPremium .adhanPrayerCheck.selected{border-color:#d1ba90;background:#fbf8f0;color:#1d3935}
+.prayerExperience .adhanPremium .adhanPrayerCheck input{position:absolute;width:100%;height:100%;inset:0;opacity:0;margin:0}
+.prayerExperience .adhanPremium .adhanDisclaimer{color:#748082;font-size:11px}
+.prayerExperience .prayerLocationEdit{border:1px solid #e3e8e7;padding:16px;background:#fff;border-radius:16px}
+.prayerExperience .prayerLocationEdit :is(label,button){color:inherit}
+.prayerExperience .prayerLocationEdit .prayerLocationSave{color:#fff}
+.prayerExperience .prayerLocationEdit .prayerLocateAction{color:#25443e}
+@media(max-width:560px){
+ .prayerExperience .adhanSettings.adhanPremium,.prayerExperience .adhanSettings.adhanConfigured{padding:17px;border-radius:16px}
+ .prayerExperience .prayerLocationEdit{padding:12px}
+}
