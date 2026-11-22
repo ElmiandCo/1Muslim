@@ -280,7 +280,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
         {icon:"۞",title:"Quran Studio",href:"/quran-studio",ar:"القرآن"},
         {icon:"✧",title:"Tajweed AI",href:"/quran-studio",ar:"تجويد"},
         {icon:"✦",title:"Elm Tent",href:"/learn/elm-tent",ar:"خيمة العلم"},
-        {icon:"♧",title:"Video Chat 💬",href:"/messages",ar:"محادثة"},
+        {icon:"◎",title:"Video Chat 💬",href:"/messages",ar:"محادثة"},
       ].map((item,index)=><Link key={item.title} role="menuitem" href={item.href} onClick={()=>{closeMenu();if(item.title==="Tajweed AI")sessionStorage.setItem("1muslim-hudhud-tajweed","1")}} className="hudhudModeItem" style={{animationDelay:index*65+"ms"}}><span className="hudhudModeIcon" aria-hidden="true">{item.icon}</span><span className="hudhudModeText"><strong>{item.title}</strong><small lang="ar">{item.ar}</small></span><span className="hudhudModeArrow">↗</span></Link>)}
       <button type="button" className="hudhudModeSignOut" role="menuitem" onClick={()=>void signOut()}><span aria-hidden="true">⇥</span> Sign Out</button>
     </div>}
@@ -353,7 +353,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
         <Link href="/learn/elm-tent" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">☪</span><span className="muslimNavTileText"><strong>Elm Tent</strong><small>الخيمة</small></span></Link>
         <Link href="/streaming/library" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">▣</span><span className="muslimNavTileText"><strong>Videos</strong><small>الفيديوهات</small></span></Link>
         <Link href="/videos" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">▷</span><span className="muslimNavTileText"><strong>1Muslim Videos</strong><small>مقاطع</small></span></Link>
-        <Link href="/ashab" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">♧</span><span className="muslimNavTileText"><strong>Ashab</strong><small>أصحاب</small></span></Link>
+        <Link href="/ashab" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">👥</span><span className="muslimNavTileText"><strong>Ashab</strong><small>أصحاب</small></span></Link>
         <Link href="/find" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">⌕</span><span className="muslimNavTileText"><strong>Find People</strong><small>بحث</small></span></Link>
       </div></section>
       <section className="muslimNavSection"><span className="mobileMenuSection">◉ LIVE & CREATE</span><div className="muslimNavGalleryGrid">
@@ -362,7 +362,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       </div></section>
       {user && <section className="muslimNavSection muslimNavAccount"><span className="mobileMenuSection">⚙ YOUR SPACE & SETTINGS</span><div className="muslimNavGalleryGrid">
         <Link href="/profile" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">◎</span><span className="muslimNavTileText"><strong>Profile</strong><small>الملف الشخصي</small></span></Link>
-        <Link href="/notifications" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">♧</span><span className="muslimNavTileText"><strong>Notifications {unreadCount>0?`(${unreadCount>99?"99+":unreadCount})`:""}</strong><small>الإشعارات</small></span></Link>
+        <Link href="/notifications" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">◉</span><span className="muslimNavTileText"><strong>Notifications {unreadCount>0?`(${unreadCount>99?"99+":unreadCount})`:""}</strong><small>الإشعارات</small></span></Link>
         <Link href="/settings" className="muslimNavTile muslimNavSettings" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">⚙</span><span className="muslimNavTileText"><strong>Settings</strong><small>الإعدادات</small></span></Link>
         <Link href="/support" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">✧</span><span className="muslimNavTileText"><strong>Support</strong><small>الدعم</small></span></Link>
       </div></section>}
