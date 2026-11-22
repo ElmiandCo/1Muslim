@@ -4,9 +4,9 @@ import { createClient } from "../utils/supabase/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import ProfileAvatar from "../app/components/ProfileAvatar";
+import {EmoTextComposer,EmoTextContent} from "../app/components/EmoTexts";
 
-const EMOTES = ["💚","🤲","☪️","✨","🦅","🌙"];
-const limit35=(value:string)=>Array.from(value).slice(0,35).join("");
+const limit500=(value:string)=>Array.from(value).slice(0,500).join("");
 type Profile = {
   id: string;
   display_name: string | null;
@@ -90,7 +90,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
 
   const send = async (event: FormEvent) => {
     event.preventDefault();
-    const body = limit35(draft.trim());
+    const body = limit500(draft.trim());
     if (!body || !userId || sending || userId !== hostId && mutedUsers.has(userId)) return;
     setSending(true); setNotice("");
     const { error } = await supabase.from("live_chat_messages").insert({ stream_id: streamId, sender_id: userId, body });
@@ -98,8 +98,6 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
     else setDraft("");
     setSending(false);
   };
-
-  const sendEmote = async (emote:string) => {if(!userId||sending||(userId!==hostId&&mutedUsers.has(userId)))return;setSending(true);setNotice("");const {error}=await supabase.from("live_chat_messages").insert({stream_id:streamId,sender_id:userId,body:emote});if(error)setNotice(error.message);setSending(false)};
 
   const toggleMute = async (targetUserId: string) => {
     if (userId !== hostId || targetUserId === hostId) return;
@@ -150,7 +148,7 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
             <div className="avatar">{avatar}</div>
             <div className="bubble">
               <div className="name">{displayName(message)}{isHost && <span className="host">HOST</span>}{isMuted && !isHost && <span className="muted">muted</span>}</div>
-              <div className="body">{message.body}</div>
+              <div className="body"><EmoTextContent text={message.body}/></div>
             </div>
             {userId === hostId && !isHost && <button className="muteBtn" onClick={() => void toggleMute(message.sender_id)}>{isMuted ? "Unmute" : "Mute"}</button>}
           </div>;
@@ -168,10 +166,9 @@ export default function LiveChat({ streamId, hostId, overlay = false }: { stream
       </div>}
       {notice && <div className="notice">{notice}</div>}
       {selfMuted && <div className="mutedNotice">The host has muted you. You can still watch the Live.</div>}
-      <div className="emoteTray" aria-label="1Muslim emotes">{EMOTES.map(emote=><button type="button" key={emote} title={"Send "+emote} disabled={!userId||selfMuted||sending} onClick={()=>void sendEmote(emote)}>{emote}</button>)}</div>
       <form className="composer" onSubmit={send}>
-        <input value={draft} onChange={(event) => setDraft(limit35(event.target.value))} maxLength={35} placeholder={selfMuted ? "You are muted" : userId ? (userId === hostId ? "Comment as host…" : "Say something…") : "Sign in to comment"} disabled={!userId || selfMuted || sending} />
-        <small style={{alignSelf:"center",fontSize:9,opacity:.7}}>{Array.from(draft).length}/35</small><button type="submit" disabled={!userId || selfMuted || !draft.trim() || sending}>{sending ? "…" : "Send"}</button>
+        <EmoTextComposer value={draft} onChange={value=>setDraft(limit500(value))} maxLength={500} placeholder={selfMuted ? "You are muted" : userId ? (userId === hostId ? "Comment as host…" : "Say something…") : "Sign in to comment"} disabled={!userId || selfMuted || sending}/>
+        <small style={{alignSelf:"center",fontSize:9,opacity:.7}}>{Array.from(draft).length}/500</small><button type="submit" disabled={!userId || selfMuted || !draft.trim() || sending}>{sending ? "…" : "Send"}</button>
       </form>
     </div>
   );

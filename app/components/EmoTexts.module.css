@@ -1,0 +1,46 @@
+/* EmoTexts are foreground-only artwork. The checkered preview was not an asset. */
+.composer{display:flex;align-items:center;gap:7px;min-width:0;flex:1 1 auto;max-width:100%}
+.editable{flex:1 1 auto;min-width:0;max-height:110px;min-height:42px;box-sizing:border-box;overflow-y:auto;overflow-wrap:anywhere;white-space:pre-wrap;text-align:start;padding:10px 13px;border:1px solid rgba(156,174,174,.37);border-radius:23px;background:rgba(19,30,31,.2);color:inherit;font-size:16px;line-height:1.35;outline-offset:2px;-webkit-user-select:text;user-select:text}
+.editable:empty::before{content:attr(data-placeholder);opacity:.55;pointer-events:none}
+.editable[aria-disabled="true"]{opacity:.55;cursor:not-allowed}
+.toggle{appearance:none;border:1px solid rgba(220,173,74,.38)!important;border-radius:14px!important;background:rgba(219,164,60,.1)!important;color:#ebc677!important;display:inline-flex!important;align-items:center!important;gap:3px!important;justify-content:center!important;flex-shrink:0!important;min-width:37px!important;max-width:92px!important;padding:7px 8px!important;min-height:36px!important;height:auto!important;font-size:18px!important;line-height:1!important;font-weight:850!important;cursor:pointer!important;box-shadow:none!important}
+.toggle span{font-size:9px;letter-spacing:-.025em;font-weight:750}
+.toggle:disabled{opacity:.45;cursor:not-allowed}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:2147483000}
+.panel{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(620px,100%);height:min(60dvh,530px);min-height:310px;box-sizing:border-box;z-index:2147483001;display:flex;flex-direction:column;background:linear-gradient(153deg,#20242c 0%,#090c11 90%);color:#fff;border:1px solid rgba(215,182,113,.3);border-radius:24px 24px 0 0;box-shadow:0 -14px 70px #0009;padding:11px 12px max(10px,env(safe-area-inset-bottom));overscroll-behavior:contain}
+.grabber{height:5px;width:45px;background:#9da1a8;border-radius:99px;margin:0 auto 10px;flex:0 0 auto}
+.header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:0 6px 10px}
+.header strong{font-size:19px;letter-spacing:-.05em;font-weight:850}
+.header strong em{font-style:normal;color:#f1be56;text-shadow:0 0 12px #f0b54955}
+.header small{display:block;font-size:10px;color:#aeb4bc;margin-top:3px;letter-spacing:0}
+.close{font-size:23px;border:0;background:transparent;color:#dadada;cursor:pointer;width:35px;height:35px}
+.search{width:100%;height:38px;box-sizing:border-box;flex:0 0 auto;border:1px solid #555b67;border-radius:16px;padding:0 13px;color:#fff;background:#262b34;font-size:13px;outline-color:#b98d41}
+.categories{display:flex;gap:6px;flex:0 0 auto;overflow:auto;scrollbar-width:none;padding:10px 0 6px}
+.categories::-webkit-scrollbar{display:none}
+.categories button{border:1px solid #474a4e;background:#242831;color:#cdd0d5;border-radius:99px;padding:6px 12px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;min-height:30px}
+.categories .active{border-color:#ffd478;background:#533f1f;color:#ffdb85;box-shadow:0 0 13px #e3b64a48}
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:minmax(68px,1fr);gap:3px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;flex:1 1 auto;min-height:0;padding:5px 2px}
+.key{appearance:none;background:transparent!important;border:1px solid transparent!important;border-radius:12px;display:flex;align-items:center;justify-content:center;min-width:0;min-height:65px;padding:4px!important;cursor:pointer;transition:background .18s,transform .18s}
+.key:focus-visible{outline:2px solid #eac568}
+.key:active{transform:scale(.93);background:#ffffff10!important}
+.key:hover{background:#ffffff0a!important;border-color:#ffffff16!important}
+.art{display:inline-block;max-width:100%;font-weight:900;line-height:1.14;text-align:center;overflow-wrap:anywhere;font-size:clamp(12px,2.5vw,22px);background:transparent!important;border:0!important;padding:0!important;white-space:normal;vertical-align:middle;isolation:isolate}
+.latin{font-family:"Trebuchet MS",system-ui,sans-serif;font-style:italic;letter-spacing:-.065em;transform:rotate(-4deg)}
+.arabic{font-family:"Geeza Pro","Noto Naskh Arabic","Traditional Arabic","Amiri",serif;font-size:clamp(16px,3.2vw,27px);font-style:normal;line-height:1.35;letter-spacing:0;direction:rtl}
+.symbol{font-size:clamp(27px,4vw,43px);line-height:1;transform:none}
+.red{color:#fa2729;text-shadow:0 1px 0 #6b0000,1px 2px 0 #71030b,0 0 5px #ff3a28,0 0 14px #eb121188;-webkit-text-stroke:.4px #ff7a4b}
+.gold{color:#ffd675;text-shadow:0 1px 1px #5c3212,0 0 8px #d6a23e50,1px 2px 1px #9c671e}
+.white{color:#fcfcfe;text-shadow:0 1px 1px #69707f,0 0 7px #fdfdfd32}
+.green{color:#63d89b;text-shadow:0 1px 2px #194b31,0 0 8px #8afbbd50}
+.small{font-size:1.05em;line-height:1.25;white-space:nowrap;max-width:100%;vertical-align:baseline}
+.small.arabic{font-size:1.25em;white-space:normal}
+.small.symbol{font-size:1.3em}
+.inEditor{font-size:1em;line-height:1;white-space:nowrap;margin:0 2px;border-radius:3px;cursor:default}
+.inEditor.arabic{font-size:1.2em}
+.inEditor.symbol{font-size:1.25em}
+.empty{grid-column:1/-1;text-align:center;font-size:12px;color:#aeb4bc;margin:auto}
+.footer{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #ffffff24;padding-top:9px}
+.footer button{border:1px solid #be9045;background:#513b1b;color:#ffdb83;border-radius:12px;padding:8px 16px;font-size:12px;font-weight:800;cursor:pointer;min-width:75px}
+.footer span{font-size:10px;color:#a7a9af;text-align:center}
+@media(max-width:450px){.panel{height:min(56dvh,480px);padding-inline:8px}.grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:74px;gap:2px}.art{font-size:15px}.arabic{font-size:19px}.symbol{font-size:34px}.small{font-size:1.05em}.small.arabic{font-size:1.25em}.small.symbol{font-size:1.3em}.inEditor{font-size:1em}.inEditor.arabic{font-size:1.2em}.inEditor.symbol{font-size:1.25em}.toggle span{display:none}.toggle{min-width:35px!important}.header strong{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.key{transition:none}}
