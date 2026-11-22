@@ -126,8 +126,8 @@ function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
  const arabicRef=useRef<HTMLElement|null>(null);
  const [qiblaMotionPermission,setQiblaMotionPermission]=useState<boolean|null>(null);
  const qiblaRef=useRef<HTMLDivElement|null>(null);
- const openQibla=()=>{
-  if(qiblaOpen){setQiblaOpen(false);return}
+ const openQibla=(forceOpen=false)=>{
+  if(qiblaOpen){if(forceOpen){qiblaRef.current?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});return}setQiblaOpen(false);return}
   // iOS requires requestPermission() in the actual tile-tap gesture.
   // Do not wait for the widget to mount before asking.
   const orientation=typeof window!=="undefined"?(window as Window&{DeviceOrientationEvent?:typeof DeviceOrientationEvent}).DeviceOrientationEvent:undefined;
@@ -138,6 +138,7 @@ function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
   setQuranOpen(false);setPostOpen(false);setArabicOpen(false);setExpanded(false);setQiblaOpen(true);
   window.setTimeout(()=>qiblaRef.current?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}),160)
  };
+ useEffect(()=>{const open=()=>openQibla(true);window.addEventListener("1muslim:profile-open-qibla",open);return()=>window.removeEventListener("1muslim:profile-open-qibla",open)},[qiblaOpen]);
  const quranRef=useRef<HTMLDivElement|null>(null);
  
  const openQuran=()=>{setQiblaOpen(false);setArabicOpen(false);if(quranOpen){setQuranOpen(false);return}setPostOpen(false);setExpanded(false);setQuranOpen(true);window.setTimeout(()=>quranRef.current?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}),160)};
@@ -232,6 +233,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
    <div className="profileProfessionalIdentity">
     <img className="profileProfessionalAvatar" src={avatar} alt={isOwner?"Your profile avatar — tap to edit":`${profile.display_name||profile.username||"Member"} profile avatar`} role={isOwner?"button":undefined} tabIndex={isOwner?0:undefined} title={isOwner?"Change your avatar":undefined} style={isOwner?{cursor:"pointer"}:undefined} onClick={isOwner?()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"avatar"}})):undefined} onKeyDown={isOwner?e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"avatar"}}))}}:undefined}/>
     {isOwner&&<button className="profileProfessionalEdit" type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"header"}}))} aria-label="Edit cover photo" title="Edit cover photo">✎</button>}
+    {isOwner&&<ProfileNextPrayer initialLocation={{city:profile.city,state:profile.state,country:profile.country}}/>}
     <h1>{profile.display_name||"1Muslim Member"}</h1>
     <p className="profileProfessionalHandle">@{brandedHandle(profile.username)} · {profile.xp_total.toLocaleString()} XP</p>
     {(profile.bio?.trim()||isOwner)&&<p className="profileProfessionalBio">{profile.bio||"Add a bio to introduce yourself to the 1Muslim community."}</p>}
@@ -290,7 +292,6 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
 @media(prefers-reduced-motion:reduce){.profileFullAccent .profileAppTile{transition:none!important}}
 `}</style>
     <ProfileOrbitStudio profile={profile} onEdit={onEdit} ashab={ashab} isOwner={isOwner} viewerId={viewerId} activeQuickPanel={activeQuickPanel} onQuickPanel={toggleQuickPanel} showProfileDetails={showProfileDetails}/>
-    {isOwner&&<ProfileNextPrayer initialLocation={{city:profile.city,state:profile.state,country:profile.country}}/>}
     <div className="profileCommandBar" aria-label="Profile controls">
      <div className="profileSocialActions" aria-label="Profile actions">
       {isOwner?<button type="button" className="profileSocialPrimary" onClick={onEdit}><span aria-hidden="true">✎</span> Edit profile</button>:<Link className="profileSocialPrimary" href={"/messages?to="+encodeURIComponent(profile.id)+"&from=profile"}><span aria-hidden="true">✉</span> Message</Link>}
