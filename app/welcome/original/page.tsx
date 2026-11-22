@@ -123,7 +123,7 @@ export default function Home() {
         <Link href="/" className="homeLogo" aria-label="1Muslim Home"><img src="/assets/1muslim-mobile-logo.PNG" alt="1Muslim" /></Link>
         <nav>
           {[
-            ["Home","/","⌂"],["Learn","/#paths","◈"],["Explore","/#explore","◎"],["Community","/community","♧"],["Streaming","/streaming","▶"]
+            ["Home","/","⌂"],["Learn","/#paths","◈"],["Explore","/#explore","◎"],["Community","/community","◎"],["Streaming","/streaming","▶"]
           ].map(([item,href,icon]) => <Link key={item} href={href} className={active === item ? "nav active" : "nav"} onClick={() => setActive(item)}><span className="navIcon">{icon}</span>{item}</Link>)}
         </nav>
         <button className="primary sideCta" onClick={() => document.getElementById("paths")?.scrollIntoView({behavior:"smooth"})}>Start learning</button>
