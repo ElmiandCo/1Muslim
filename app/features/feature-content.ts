@@ -20,7 +20,7 @@ export const featurePages:FeatureData[]=[
    {title:"Live broadcasting with audience interaction",body:"Hosts can go live and interact with viewers, messages and invited guests. Live sessions are part of the social network rather than an unrelated video directory."},
    {title:"Notifications that bring you back",body:"Followers, replies, saved-content activity and other platform interactions can trigger notifications, making individual relationships and activity easy to follow."},
    {title:"Qur'an progress and XP in your profile",body:"Read Qur'an, track your journey and participate in learning or other eligible platform activities that award XP. The network connects social identity with personal progress."},
-   {title:"HudHud, a Muslim-themed AI companion",body:"HudHud helps users navigate and search 1Muslim through conversational AI. Free users have a short on-site conversational allowance and 1Muslim Unlocked users can continue beyond that free-turn limit."},
+   {title:"HudHud, your Muslim-Inspired AI Companion",body:"HudHud helps users navigate and search 1Muslim through conversational AI. Free users have a short on-site conversational allowance and 1Muslim Unlocked users can continue beyond that free-turn limit."},
    {title:"Shahada-centered member admission",body:"Muslim membership includes sincere Shahada affirmation, with a voice-recognition path or a self-attested declaration. Guests can explore selected public areas first."}
   ],
   questions:[
@@ -58,11 +58,11 @@ export const featurePages:FeatureData[]=[
  },
  {
   slug:"hudhud-ai",
-  title:"HudHud AI | Muslim-Themed AI Search Inside 1Muslim",
-  description:"Meet HudHud, 1Muslim's Muslim-themed AI guide built into a real social network. Search videos, posts, people, Qur'an, lessons and media; free and 1Muslim Unlocked tiers.",
+  title:"HudHud — Muslim-Inspired AI Companion | 1Muslim",
+  description:"Meet HudHud, 1Muslim's Muslim-Inspired AI Companion built into a real social network. Search videos, posts, people, Qur'an, lessons and media; free and 1Muslim Unlocked tiers.",
   label:"YOUR AI INSIDE YOUR SOCIAL NETWORK",
   headline:"HudHud isn't another search box. It's your AI inside 1Muslim.",
-  lead:"HudHud is 1Muslim's named, Muslim-themed AI companion, designed to help people explore the social network, discover what members have shared and find educational resources. OpenAI technology powers its conversational responses while 1Muslim provides the experience and the searchable site context.",
+  lead:"HudHud is 1Muslim's own Muslim-Inspired AI Companion, designed to help people explore the social network, discover what members have shared and find educational resources. OpenAI technology powers its conversational responses while 1Muslim provides the experience and the searchable site context.",
   summary:"Unlike a generic external chatbot, HudHud belongs to the 1Muslim product. It can use relevant site search matches to guide people toward posts, videos, profiles, Qur'an verses, learning pages, prayer resources and more. It is intended as a discovery and learning companion, not a substitute for a scholar.",
   highlights:[
    {title:"AI available to actual members",body:"HudHud is surfaced from 1Muslim's own interface, not merely an AI tool used by the development team behind the scenes."},
@@ -74,7 +74,7 @@ export const featurePages:FeatureData[]=[
   ],
   questions:[
    {question:"Does 1Muslim really use artificial intelligence?",answer:"Yes. HudHud's conversational search calls OpenAI APIs from the site's backend. The platform also has other AI-related tooling, but not every feature uses the same model."},
-   {question:"Is HudHud a Muslim AI?",answer:"HudHud is a Muslim-themed assistant created as part of the 1Muslim experience. It helps users find content and navigate faith-related learning resources. It is not a religious authority or a human scholar."},
+   {question:"What does Muslim-Inspired AI Companion mean?",answer:"HudHud is a Muslim-inspired AI companion created as part of the 1Muslim experience. It helps users find content and navigate faith-related learning resources. It is not a religious authority or a human scholar."},
    {question:"Is GPT-6 available?",answer:"1Muslim Unlocked HudHud requests are configured to prefer GPT-6 Sol where the configured API account supports it. The system can fall back to a standard OpenAI model, so a particular model is not guaranteed for every answer."},
    {question:"Is HudHud unlimited?",answer:"The free tier has a three-reply conversational cap. Unlocked removes that specific cap in the supported search flow; technical capacity, abuse prevention and upstream API limits still apply."}
   ],
