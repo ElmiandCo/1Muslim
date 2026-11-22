@@ -130,3 +130,162 @@
 
 /* Keep reader theme controls keyboard accessible. */
 .qm-readerbar button:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+
+
+/* 1Quran Library 3.0 — Sandline: fast native scrolling and quieter, thinner chapters.
+   The user's profile theme provides the accent (gold/sand by default); preserve
+   the reader's separate day/night controls and never move the scroll container. */
+.qm-page{
+ --qm-accent:var(--theme-accent,#d0af7b);
+ --qm-sand:var(--theme-secondary,#e4c99f);
+ --qm-edge:color-mix(in srgb,var(--qm-accent) 32%,#55505b);
+ --qm-soft-ink:#9a969d;
+}
+.qm-page .qm-top{height:60px;background:#17171bc7;border-color:#ffffff12;letter-spacing:.115em}
+.qm-page .qm-top a{color:var(--qm-sand)}
+.qm-page .qm-hero{padding:22px 14px 11px}
+.qm-hero-eyebrow{font-size:9px;letter-spacing:.29em;font-weight:780;color:var(--qm-accent);line-height:1.4}
+.qm-hero-eyebrow span{padding:0 9px;font-size:9px}
+.qm-page .qm-hero .qm-bismillah{
+ font-size:clamp(28px,6.1vw,43px);line-height:1.75;
+ letter-spacing:0;animation:none;text-wrap:balance;margin:5px auto 0;
+ color:#e8e3db;text-shadow:none;
+}
+.qm-page .qm-hero .qm-bismillah .qm-allah{
+ color:var(--qm-sand);font-weight:800;font-size:1.18em;
+ text-shadow:0 0 15px color-mix(in srgb,var(--qm-accent) 25%,transparent);
+ display:inline-block;
+}
+.qm-page .qm-hero h1{font-family:Georgia,serif;font-size:clamp(25px,5.4vw,37px);letter-spacing:.055em;line-height:1.1;margin:0 0 9px;font-weight:680}
+.qm-page .qm-hero p{color:#ada9a6;font-size:12px;line-height:1.45;letter-spacing:.02em}
+.qm-hero-allah-en{color:var(--qm-sand);font-weight:720}
+.qm-page .qm-search{margin:17px auto 0;min-height:44px;border-color:color-mix(in srgb,var(--qm-accent) 27%,#343338);background:#ffffff08;border-radius:14px}
+.qm-page .qm-search span{color:var(--qm-accent)}
+.qm-page .qm-search:focus-within{border-color:var(--qm-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--qm-accent) 11%,transparent)}
+.qm-page .qm-continue{border-color:var(--qm-edge)}
+.qm-page .qm-continue-icon,.qm-page .qm-continue small,.qm-page .qm-continue-arrow{color:var(--qm-sand)}
+.qm-page .qm-tabs{padding:9px 12px 12px;gap:6px}
+.qm-page .qm-tabs button{padding:8px 14px;font-size:12px}
+.qm-page .qm-tabs button.active{color:#1a1713;background:var(--qm-sand);border-color:var(--qm-sand);font-weight:800}
+.qm-page .qm-section{max-width:820px;margin:0 auto;padding:5px 12px 56px;overflow:visible}
+.qm-page .qm-heading{
+ position:sticky;top:0;z-index:10;box-sizing:border-box;min-height:54px;
+ display:flex;align-items:center;justify-content:space-between;gap:8px;
+ margin:0 -3px 10px;padding:7px 7px 8px;background:rgba(19,19,23,.96);
+ border-bottom:1px solid color-mix(in srgb,var(--qm-accent) 17%,transparent);
+ -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+}
+.qm-page .qm-heading-label{display:flex;flex-direction:column;gap:3px;min-width:0}
+.qm-page .qm-heading-label>span{font-size:10px;font-weight:850;letter-spacing:.14em;color:var(--qm-sand);white-space:nowrap}
+.qm-page .qm-heading-label>small{font-size:10px;letter-spacing:.075em;color:var(--qm-soft-ink);font-weight:600}
+.qm-page .qm-jump{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.qm-page .qm-jump>span{font-size:9px;letter-spacing:.12em;color:#aaa6aa;white-space:nowrap}
+.qm-page .qm-jump select{
+ max-width:150px;height:36px;min-height:36px;appearance:none;-webkit-appearance:none;
+ border:1px solid var(--qm-edge);border-radius:999px;
+ padding:6px 26px 6px 12px;color:#eee7db;cursor:pointer;
+ background-color:#27262b;
+ background-image:linear-gradient(45deg,transparent 50%,var(--qm-sand) 50%),linear-gradient(135deg,var(--qm-sand) 50%,transparent 50%);
+ background-position:calc(100% - 16px) 15px,calc(100% - 11px) 15px;
+ background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+ font-size:12px;font-weight:650;
+}
+.qm-page .qm-jump select:focus-visible{outline:2px solid var(--qm-accent);outline-offset:2px}
+.qm-page .qm-jump option{background:#27262b;color:#fff}
+.qm-page .qm-list{display:grid;gap:6px;min-width:0}
+.qm-page .qm-chapter{
+ position:relative;box-sizing:border-box;display:flex;align-items:center;
+ width:100%;min-height:66px;gap:12px;padding:9px 12px;
+ border-radius:11px;border:1px solid rgba(226,218,209,.17);
+ background:linear-gradient(105deg,#242428,#201f24);color:#f3f0eb;
+ box-shadow:none;opacity:1;animation:none!important;
+ transform:none!important;transition:border-color .22s ease,background-color .22s ease,box-shadow .22s ease;
+ touch-action:pan-y;-webkit-tap-highlight-color:transparent;
+ cursor:pointer;scroll-margin-top:75px;
+}
+.qm-page .qm-chapter::before{
+ content:"";position:absolute;left:0;top:17%;height:66%;width:2px;
+ border-radius:0 4px 4px 0;background:var(--qm-accent);opacity:0;
+ transition:opacity .22s ease;pointer-events:none
+}
+.qm-page .qm-chapter:active{background:#292930}
+.qm-page .qm-chapter:hover,.qm-page .qm-chapter:focus-visible{
+ border-color:var(--qm-edge);background:#28272d;box-shadow:0 2px 12px #0002
+}
+.qm-page .qm-chapter:focus-visible{outline:2px solid var(--qm-accent);outline-offset:2px}
+.qm-page .qm-list[data-scroll-state="settled"] .qm-chapter[data-focus="true"]{
+ border-color:color-mix(in srgb,var(--qm-accent) 34%,#3d3b43);
+ background:linear-gradient(100deg,color-mix(in srgb,var(--qm-accent) 9%,#222226),#202024);
+}
+.qm-page .qm-list[data-scroll-state="settled"] .qm-chapter[data-focus="true"]::before{opacity:.82}
+.qm-page .qm-list[data-scroll-state="fast"] .qm-chapter,
+.qm-page .qm-list[data-scroll-state="fast"] .qm-chapter::before{
+ transition:none!important;box-shadow:none!important;
+}
+.qm-page .qm-number{
+ width:32px;height:32px;flex:0 0 32px;border-radius:7px;
+ font-size:12px;color:var(--qm-sand);
+ border-color:color-mix(in srgb,var(--qm-accent) 50%,transparent);
+}
+.qm-page .qm-number>span{transform:rotate(-45deg)!important;transition:none!important;will-change:auto!important}
+.qm-page .qm-name{gap:2px;flex:1 1 auto;min-width:0}
+.qm-page .qm-name strong{font-size:clamp(15px,3.4vw,18px);font-weight:740;letter-spacing:-.022em;line-height:1.22}
+.qm-page .qm-name small{font-size:10px;line-height:1.25;color:#9e9a9d}
+.qm-page .qm-arabic{flex:0 0 auto;min-width:0;gap:0;align-items:end;text-align:right}
+.qm-page .qm-arabic strong{
+ font-size:clamp(18px,4.15vw,22px);line-height:1.35;font-weight:700;
+ color:#f4f0ec;letter-spacing:0;white-space:nowrap
+}
+.qm-page .qm-arabic small{font-size:10px;line-height:1.25;color:#979399}
+.qm-page .qm-arrow{font-size:14px;color:var(--qm-accent);opacity:.7;flex-shrink:0}
+.qm-page .qm-chapter .qm-last-read-dot{background:var(--qm-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--qm-accent) 13%,transparent);width:5px;height:5px;left:7px;top:7px}
+.qm-page .qm-chapter .qm-arrow.qm-arrow-complete{color:#9b999e!important}
+@media(max-width:430px){
+ .qm-page .qm-section{padding-left:9px;padding-right:9px}
+ .qm-page .qm-chapter{gap:9px;min-height:64px;padding:8px 10px}
+ .qm-page .qm-number{width:29px;height:29px;flex-basis:29px}
+ .qm-page .qm-arabic strong{font-size:18px}
+ .qm-page .qm-name strong{font-size:15px}
+ .qm-page .qm-name small,.qm-page .qm-arabic small{font-size:10px}
+ .qm-page .qm-jump>span{display:none}
+ .qm-page .qm-jump select{max-width:132px}
+}
+@media(prefers-reduced-motion:reduce){
+ .qm-page .qm-chapter,.qm-page .qm-chapter::before{transition:none!important}
+ .qm-page .qm-hero .qm-bismillah .qm-allah{text-shadow:none}
+}
+/* The directory responds to the site-wide member theme. Day mode retains contrast,
+   without changing any typography or functionality inside the verse reader. */
+.qm-page.qm-day{--qm-accent:color-mix(in srgb,var(--theme-accent,#b38a57) 68%,#55452b);--qm-sand:color-mix(in srgb,var(--theme-secondary,#a67e48) 72%,#4b3a26)}
+.qm-page.qm-day .qm-hero .qm-bismillah{color:#332c23}
+.qm-page.qm-day .qm-hero p,.qm-page.qm-day .qm-heading-label>small{color:#66616a}
+.qm-page.qm-day .qm-heading{background:#f8f6f0eF;border-color:#c9b99d45}
+.qm-page.qm-day .qm-chapter{background:linear-gradient(110deg,#fffefa,#f3f1ed);color:#232329;border-color:#b9b1a74f}
+.qm-page.qm-day .qm-chapter[data-focus="true"]{background:#f5eee3;border-color:var(--qm-edge)}
+.qm-page.qm-day .qm-chapter .qm-name small,.qm-page.qm-day .qm-chapter .qm-arabic small{color:#746d73}
+.qm-page.qm-day .qm-chapter .qm-arabic strong{color:#252329}
+.qm-page.qm-day .qm-jump select{background-color:#f1ede6;color:#34302d}
+.qm-page.qm-day .qm-jump option{background:#f1ede6;color:#34302d}
+
+
+/* Quiet recitation access for the active, supported Qur’an Library. */
+.qmRecitalHomeLinks{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:16px auto 0;max-width:650px}
+.qmRecitalHomeLinks button,.qmRecitalHomeLinks a{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 13px;min-height:40px;border-radius:11px;border:1px solid rgba(210,177,117,.45);background:rgba(211,175,103,.10);color:#eddab7!important;font:700 12px/1.3 inherit;text-decoration:none;cursor:pointer}
+.qmRecitalHomeLinks button span{font-size:12px;color:#c59e5b}
+.qmRecitalHomeLinks a{background:transparent;color:#c8c0b0!important}
+.qmReciteLaunch{display:inline-flex!important;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;border-color:#d5bb7c7d!important;background:#d7b97c18!important;color:#e5d4ae!important;font-weight:750!important}
+.qmReciteLaunch svg{width:17px;height:17px;flex:0 0 17px}
+.qmReciteLaunch:focus-visible,.qmRecitalHomeLinks :focus-visible{outline:2px solid #dab879;outline-offset:3px}
+@media(max-width:760px){
+ .qm-readerbar{gap:5px!important;padding:9px 7px!important}
+ .qm-readerbar strong{min-width:0;font-size:12px!important;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+ .qm-readerbar button{padding:8px 7px!important;font-size:11px!important;white-space:nowrap}
+ .qmReciteLaunch{min-width:34px;padding:8px!important}
+ .qmReciteLaunch span{display:none}
+ .qmRecitalHomeLinks{gap:7px;margin-top:13px}
+ .qmRecitalHomeLinks button,.qmRecitalHomeLinks a{font-size:11px;padding:10px}
+}
+.qm-day .qmRecitalHomeLinks button{color:#3c3323!important;border-color:#a18856;background:#e8c47b2a}
+.qm-day .qmRecitalHomeLinks a{color:#5e5544!important;border-color:#baa477}
+.qm-day .qmReciteLaunch{color:#3a3323!important;border-color:#b89e69!important}
+@media(prefers-reduced-motion:reduce){.qmReciteLaunch,.qmRecitalHomeLinks button,.qmRecitalHomeLinks a{transition:none}}
