@@ -449,3 +449,14 @@
  .prayerExperience .prayerTimeCell{min-height:151px}
 }
 @media(prefers-reduced-motion:reduce){.prayerTimeSvg .prayerIconRay{animation:none}.prayerExperience .prayerTimeCell{transition:none;transform:none}}
+
+
+/* Continue one bespoke prayer icon language through Academy and Story. */
+.prayerExperience .prayerRakahTimeIcon,
+.prayerExperience .prayerRhythmTimeIcon{display:grid;place-items:center;color:color-mix(in srgb,var(--prayer-brand) 70%,#43576a)}
+.prayerExperience .prayerRakahTimeIcon svg{width:32px;height:32px}
+.prayerExperience .prayerRhythmTimeIcon svg{width:25px;height:25px}
+.prayerExperience .prayerTimelineIcon svg{width:24px;height:24px;stroke:currentColor;display:block}
+.prayerExperience .prayerStoryChapterVisual>span svg{width:64px;height:64px;display:block;margin:auto;color:var(--prayer-brand)}
+.prayerExperience .prayerImpactIcon svg{width:25px;height:25px;display:block}
+.prayerExperience .prayerStoryCountIcon{display:block;font-size:17px;font-weight:850;letter-spacing:-.04em}
