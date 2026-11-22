@@ -76,23 +76,48 @@ function dateForApi(date: string) {
   const [y, m, d] = date.split("-");
   return d + "-" + m + "-" + y;
 }
-async function readDay(location: AdhanLocation, method: AdhanMethod, date: string, signal?: AbortSignal): Promise<PrayerSchedule> {
-  const query = new URLSearchParams({ city: location.city, country: location.country, method, school: "0" });
-  if (location.state) query.set("state", location.state);
-  const response = await fetch("https://api.aladhan.com/v1/timingsByCity/" + dateForApi(date) + "?" + query.toString(), {
-    signal, cache: "no-store"
-  });
-  if (!response.ok) throw new Error("Prayer-time service is unavailable.");
-  const body = await response.json();
-  const data = body?.data;
-  if (body?.code !== 200 || !data?.timings || !data?.meta?.timezone) throw new Error("Could not calculate prayer times for this location.");
-  const raw = data.timings as Record<string, string>;
-  const names = [...ADHAN_PRAYERS, "Sunrise"] as const;
-  if (names.some(name => prayerMinute(raw[name] || "") === null)) throw new Error("Prayer-time service returned invalid times.");
-  return {
-    date, timezone: String(data.meta.timezone),
-    times: Object.fromEntries(names.map(name => [name, raw[name]])) as PrayerSchedule["times"]
-  };
+function scheduleCacheKey(location:AdhanLocation,method:AdhanMethod,date:string) {
+ const key=[location.city,location.state,location.country].map(part=>part.trim().toLowerCase()).join("|");
+ return "1muslim:prayer-times:v2:"+key+"|"+method+"|"+date;
+}
+function validatedSchedule(value:unknown,date:string):PrayerSchedule|null {
+ if(!value||typeof value!=="object")return null;
+ const data=value as Partial<PrayerSchedule>;
+ if(data.date!==date||typeof data.timezone!=="string"||!data.times)return null;
+ try{new Intl.DateTimeFormat("en-US",{timeZone:data.timezone})}catch{return null}
+ const names=[...ADHAN_PRAYERS,"Sunrise"] as const;
+ if(names.some(name=>prayerMinute(data.times?.[name]||"")===null))return null;
+ return data as PrayerSchedule;
+}
+function cachedPrayerSchedule(key:string,date:string):PrayerSchedule|null {
+ if(typeof window==="undefined")return null;
+ try{return validatedSchedule(JSON.parse(localStorage.getItem(key)||"null"),date)}catch{return null}
+}
+function savePrayerSchedule(key:string,schedule:PrayerSchedule) {
+ if(typeof window==="undefined")return;
+ try{localStorage.setItem(key,JSON.stringify(schedule))}catch{/* Restricted device storage is optional. */}
+}
+async function readDay(location:AdhanLocation,method:AdhanMethod,date:string,signal?:AbortSignal):Promise<PrayerSchedule> {
+ const key=scheduleCacheKey(location,method,date);
+ const query=new URLSearchParams({city:location.city,country:location.country,method,date});
+ if(location.state)query.set("state",location.state);
+ try{
+  // The browser must not call a third-party prayer-time service directly:
+  // regional filters, CORS and transient upstream failures affected only some accounts.
+  const response=await fetch("/api/prayer-times?"+query,{signal,cache:"no-store"});
+  if(!response.ok)throw new Error("Prayer-time service is temporarily unavailable.");
+  const schedule=validatedSchedule(await response.json(),date);
+  if(!schedule)throw new Error("Prayer-time service returned invalid times.");
+  savePrayerSchedule(key,schedule);
+  return schedule;
+ }catch(error){
+  if(signal?.aborted)throw error;
+  // Preserve the exact city's already verified times when connectivity drops.
+  // Never substitute another city, date or calculation method.
+  const cached=cachedPrayerSchedule(key,date);
+  if(cached)return cached;
+  throw error;
+ }
 }
 export async function fetchPrayerSchedule(location: AdhanLocation, method: AdhanMethod, signal?: AbortSignal): Promise<PrayerSchedule> {
   const browserDate = locationClock(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC").date;
