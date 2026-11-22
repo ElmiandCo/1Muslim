@@ -21,6 +21,8 @@ export default function PrayerTimes(){
  const [now,setNow]=useState(()=>new Date());
  const [message,setMessage]=useState("");
  const [loading,setLoading]=useState(false);
+ const [refresh,setRefresh]=useState(0);
+ const requestedKey=useRef("");
  const [editLocation,setEditLocation]=useState(false);
  useEffect(()=>{
   const focus=new URLSearchParams(window.location.search).get("focus");
@@ -43,14 +45,31 @@ export default function PrayerTimes(){
   const timer=window.setInterval(()=>setNow(new Date()),30000);
   return()=>{active=false;window.removeEventListener(ADHAN_SETTINGS_EVENT,sync);window.removeEventListener("storage",sync);window.clearInterval(timer)};
  },[]);
+ const cityDay=locationClock(schedule?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC",now).date;
  useEffect(()=>{
-  if(!place.city.trim()||!place.country.trim()){setSchedule(null);return}
+  if(!place.city.trim()||!place.country.trim()){
+   setSchedule(null);setTomorrow(null);setMessage("");setLoading(false);requestedKey.current="";return;
+  }
+  const key=[place.city,place.state,place.country,method].join("|");
+  if(requestedKey.current!==key){
+   // A new member/city must never display an unrelated city's old prayer schedule.
+   setSchedule(null);setTomorrow(null);requestedKey.current=key;
+  }
   const abort=new AbortController();setLoading(true);setMessage("");
-  void fetchPrayerSchedule(place,method,abort.signal).then(data=>{if(!abort.signal.aborted)setSchedule(data)})
-  .catch(e=>{if(!abort.signal.aborted)setMessage(e instanceof Error?e.message:"Could not load prayer times.")})
-  .finally(()=>{if(!abort.signal.aborted)setLoading(false)});
+  void fetchPrayerSchedule(place,method,abort.signal)
+   .then(data=>{if(!abort.signal.aborted)setSchedule(data)})
+   .catch(()=>{if(!abort.signal.aborted){
+     setSchedule(previous=>previous?.date===cityDay?previous:null);
+     setMessage("Unable to refresh prayer times right now. Please try again.");
+   }})
+   .finally(()=>{if(!abort.signal.aborted)setLoading(false)});
   return()=>abort.abort();
- },[place.city,place.state,place.country,method,now.toDateString()]);
+ },[place.city,place.state,place.country,method,cityDay,refresh]);
+ useEffect(()=>{
+  if(!message)return;
+  const timer=window.setTimeout(()=>setRefresh(n=>n+1),45_000);
+  return()=>window.clearTimeout(timer);
+ },[message]);
  const clock=schedule?locationClock(schedule.timezone,now):null;
  const nextToday=schedule&&clock?.date===schedule.date
    ?ADHAN_PRAYERS.find(prayer=>(prayerMinute(schedule.times[prayer])??-1)>clock.minute):undefined;
@@ -99,7 +118,7 @@ export default function PrayerTimes(){
   <section className="prayerCard prayerTimesCard" aria-labelledby="prayer-times-heading">
    <div className="prayerSectionTop"><span className="prayerSectionIcon"><PrayerUiIcon kind="calendar"/></span><div><h2 id="prayer-times-heading">{showingTomorrow?"Tomorrow's prayer times":"Today's prayer times"}</h2><p>Calculated for your saved city using your selected convention.</p></div><span className="prayerCalcBadge">Local prayer schedule</span></div>
    {loading&&<div className="prayerScheduleLoading" role="status">Updating prayer times…</div>}
-   {message&&<p className="prayerScheduleMessage" role="alert">{message}</p>}
+   {message&&<div className="prayerScheduleMessage" role="alert">{message} <button type="button" onClick={()=>setRefresh(n=>n+1)} aria-label="Retry loading prayer times" style={{marginLeft:8,border:"1px solid currentColor",borderRadius:10,padding:"6px 12px",background:"transparent",color:"inherit",fontWeight:700}}>↻ Retry</button></div>}
    {railSchedule&&<div ref={railRef} className="prayerTimesRail" role="list" aria-label={showingTomorrow?"Tomorrow's six daily solar markers and prayer times":"Today's six daily solar markers and prayer times"}>
     {PRAYER_ORDER.map(prayer=><div role="listitem" data-prayer-time={prayer} key={prayer} aria-current={nextPrayer===prayer?"time":undefined} className={"prayerTimeCell"+(nextPrayer===prayer?" current":"")}>
      <span className="prayerTimeCellIcon" aria-hidden="true"><PrayerTimeIcon prayer={prayer}/></span>
