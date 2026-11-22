@@ -22,6 +22,8 @@ import PublicBadgeSelector from "../components/PublicBadgeSelector";
 import HudHudTenFriends from "../components/HudHudTenFriends";
 import ProfileAnalytics from "../components/ProfileAnalytics";
 import ProfileNextPrayer from "../components/ProfileNextPrayer";
+import ProfileControlGlyph from "../components/ProfileControlGlyph";
+import "./profile-polish.css";
 import ProfileFirstPostPrompt from "../components/ProfileFirstPostPrompt";
 import ProfileNavIcon from "../components/icons/ProfileNavIcon";
 import ProfileCinematicPosts from "../components/ProfileCinematicPosts";
@@ -224,6 +226,16 @@ function ProfileCompactStats({userId,postCount,followers,following}:{userId:stri
 
 function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQuickPanel,onQuickPanel,showProfileDetails=true}:{profile:Profile;onEdit:()=>void;ashab:Profile[];isOwner?:boolean;viewerId?:string;editing?:boolean;editorTab?:string;activeQuickPanel?:"posts"|"videos"|"settings"|null;onQuickPanel?:(panel:"posts"|"videos"|"settings")=>void;showProfileDetails?:boolean}){
  const [section,setSection]=useState<"activity"|"connections"|"analytics">("activity");
+ const [ownerIdVisible,setOwnerIdVisible]=useState(false);
+ useEffect(()=>{
+  if(!isOwner){setOwnerIdVisible(false);return}
+  const key="1muslim:owner-id-hidden:"+profile.id;
+  try{setOwnerIdVisible(localStorage.getItem(key)!=="1")}catch{setOwnerIdVisible(true)}
+  const restore=()=>{setOwnerIdVisible(true);try{localStorage.removeItem(key)}catch{}};
+  window.addEventListener("1muslim:show-profile-id",restore);
+  return()=>window.removeEventListener("1muslim:show-profile-id",restore);
+ },[isOwner,profile.id]);
+ const hideOwnerId=()=>{setOwnerIdVisible(false);try{localStorage.setItem("1muslim:owner-id-hidden:"+profile.id,"1")}catch{}};
  const [followCounts,setFollowCounts]=useState({followers:0,following:0});
  useEffect(()=>{
   let live=true;
@@ -255,8 +267,14 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
     <img className="profileProfessionalAvatar" src={avatar} alt={isOwner?"Your profile avatar — tap to edit":`${profile.display_name||profile.username||"Member"} profile avatar`} role={isOwner?"button":undefined} tabIndex={isOwner?0:undefined} title={isOwner?"Change your avatar":undefined} style={isOwner?{cursor:"pointer"}:undefined} onClick={isOwner?()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"avatar"}})):undefined} onKeyDown={isOwner?e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"avatar"}}))}}:undefined}/>
     {isOwner&&<button className="profileProfessionalEdit" type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"header"}}))} aria-label="Edit cover photo" title="Edit cover photo">✎</button>}
     {isOwner&&<ProfileNextPrayer initialLocation={{city:profile.city,state:profile.state,country:profile.country}}/>}
-    <h1>{profile.display_name||"1Muslim Member"}</h1>
-    <p className="profileProfessionalHandle">@{brandedHandle(profile.username)} · {profile.xp_total.toLocaleString()} XP</p>
+    <div className="profileIdentityNameRow">
+     <h1>{profile.display_name||"1Muslim Member"}</h1>
+     <div className="profileEngravedXP" aria-label={profile.xp_total.toLocaleString()+" experience points"}><strong>{profile.xp_total.toLocaleString()}</strong><small>XP</small></div>
+    </div>
+    {isOwner&&ownerIdVisible&&<div className="profileOwnerId" aria-label="Your private profile ID badge">
+     <span className="profileOwnerIdLabel">@{brandedHandle(profile.username)}</span>
+     <button type="button" className="profileOwnerIdClose" onClick={hideOwnerId} aria-label="Hide my 1Muslim ID" title="Hide this ID from my profile">×</button>
+    </div>}
     {(profile.bio?.trim()||isOwner)&&<p className="profileProfessionalBio">{profile.bio||"Add a bio to introduce yourself to the 1Muslim community."}</p>}
     {(profile.city||profile.state||profile.country)&&<p className="profileProfessionalLocation">📍 {[profile.city,profile.state,profile.country].filter(Boolean).join(", ")}</p>}
     <ProfileCompactStats userId={profile.id} postCount={null} followers={followCounts.followers} following={followCounts.following}/>
@@ -315,12 +333,15 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
     <ProfileOrbitStudio profile={profile} onEdit={onEdit} ashab={ashab} isOwner={isOwner} viewerId={viewerId} activeQuickPanel={activeQuickPanel} onQuickPanel={toggleQuickPanel} showProfileDetails={showProfileDetails}/>
     <div className="profileCommandBar" aria-label="Profile controls">
      <div className="profileSocialActions" aria-label="Profile actions">
-      {isOwner?<button type="button" className="profileSocialPrimary" onClick={onEdit}><span aria-hidden="true">✎</span> Edit profile</button>:<Link className="profileSocialPrimary" href={"/messages?to="+encodeURIComponent(profile.id)+"&from=profile"}><span aria-hidden="true">✉</span> Message</Link>}
-      <button type="button" onClick={async()=>{const url=window.location.origin+"/profile/"+encodeURIComponent(profile.id);if(navigator.share){try{await navigator.share({title:profile.display_name||"1Muslim profile",url})}catch{}}else{try{await navigator.clipboard.writeText(url);window.alert("Profile link copied")}catch{window.prompt("Copy profile link",url)}}}}><span aria-hidden="true">↗</span> Share</button>
-      {isOwner&&<button type="button" onClick={()=>window.dispatchEvent(new Event("1muslim:open-profile-analytics"))}><span aria-hidden="true">◷</span> Insights</button>}
-      {isOwner&&<button type="button" onClick={()=>openProfilePanel("settings")} aria-pressed={activeQuickPanel==="settings"}><span aria-hidden="true">⚙</span> Settings</button>}
+      {isOwner?<button type="button" className="profileAction profileSocialPrimary" onClick={onEdit} aria-label="Edit profile"><ProfileControlGlyph kind="edit"/><span className="profileActionLabel"><span className="profileActionLabelFull">Edit profile</span><span className="profileActionLabelShort">Edit</span></span></button>:<Link className="profileAction profileSocialPrimary" href={"/messages?to="+encodeURIComponent(profile.id)+"&from=profile"} aria-label="Message member"><ProfileControlGlyph kind="message"/><span className="profileActionLabel">Message</span></Link>}
+      <button type="button" className="profileAction" aria-label="Share profile" onClick={async()=>{const url=window.location.origin+"/profile/"+encodeURIComponent(profile.id);if(navigator.share){try{await navigator.share({title:profile.display_name||"1Muslim profile",url})}catch{}}else{try{await navigator.clipboard.writeText(url);window.alert("Profile link copied")}catch{window.prompt("Copy profile link",url)}}}}><ProfileControlGlyph kind="share"/><span className="profileActionLabel">Share</span></button>
+      {isOwner&&<button type="button" className="profileAction" aria-label="Open profile insights" onClick={()=>window.dispatchEvent(new Event("1muslim:open-profile-analytics"))}><ProfileControlGlyph kind="insights"/><span className="profileActionLabel">Insights</span></button>}
+      {isOwner&&<button type="button" className="profileAction" aria-label="Open profile settings" title="Settings" onClick={()=>openProfilePanel("settings")} aria-pressed={activeQuickPanel==="settings"}><ProfileControlGlyph kind="settings"/><span className="profileActionLabel">Settings</span></button>}
      </div>
-     <nav className="profilePremiumTabs" aria-label="Profile content"><button type="button" aria-pressed={activeQuickPanel==="posts"} onClick={()=>openProfilePanel("posts")}>▦ Posts</button><button type="button" aria-pressed={activeQuickPanel==="videos"} onClick={()=>openProfilePanel("videos")}>▣ Videos</button></nav>
+     <nav className="profilePremiumTabs" aria-label="Profile content">
+      <button type="button" className="profileTabAction" aria-label="Show profile posts" title="Posts" aria-pressed={activeQuickPanel==="posts"} onClick={()=>openProfilePanel("posts")}><ProfileControlGlyph kind="posts"/><span className="profileActionLabel">Posts</span></button>
+      <button type="button" className="profileTabAction" aria-label="Show profile videos" title="Videos" aria-pressed={activeQuickPanel==="videos"} onClick={()=>openProfilePanel("videos")}><ProfileControlGlyph kind="videos"/><span className="profileActionLabel">Videos</span></button>
+     </nav>
     </div>
     <div className="profileSocialDiscoveryShortcut"><span className="profileDiscoveryGlyph" aria-hidden="true">◎</span><div><strong>Discover Muslims</strong><p>Connect with the Ummah</p></div><Link href="/profile?section=muslimeen">Explore →</Link></div>
     {showProfileDetails&&<div id="profile-details" aria-label="Profile details"/>}
@@ -340,7 +361,7 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
       <ProfileContentSections userId={profile.id} initialTab="posts"/>
     </section>}
     {activeQuickPanel==="videos"&&<section id="profile-panel-content" className="profileOverviewSection profileLibraryWrapper" aria-label="Your videos"><ProfileContentSections userId={profile.id} initialTab="videos"/></section>}
-    {isOwner&&activeQuickPanel==="settings"&&<section id="profile-panel-content" className="profileProfessionalCard profileProfessionalWorkspace profileCompactSettings" aria-label="Profile settings"><div className="profileSettingsHeader"><div><span className="profileSettingsEyebrow">YOUR PROFILE</span><h2>Settings</h2><p>Manage your identity, avatar and appearance.</p></div><button type="button" className="profileSettingsEdit" onClick={onEdit} aria-label="Edit profile" title="Edit profile">✎ <span>Edit</span></button></div><details className="profileSettingsActivity"><summary><span>Your Activity</span><small>Screen time, page visits &amp; insights</small></summary><ProfileAnalytics inline userId={profile.id}/></details></section>}
+    {isOwner&&activeQuickPanel==="settings"&&<section id="profile-panel-content" className="profileProfessionalCard profileProfessionalWorkspace profileCompactSettings" aria-label="Profile settings"><div className="profileSettingsHeader"><div><span className="profileSettingsEyebrow">YOUR PROFILE</span><h2>Settings</h2><p>Manage your identity, avatar and appearance.</p></div><button type="button" className="profileSettingsEdit" onClick={onEdit} aria-label="Edit profile" title="Edit profile">✎ <span>Edit</span></button></div><button type="button" className="profileSettingsRestoreId" onClick={()=>window.dispatchEvent(new Event("1muslim:show-profile-id"))}>↺ Show my 1Muslim ID on my profile</button><details className="profileSettingsActivity"><summary><span>Your Activity</span><small>Screen time, page visits &amp; insights</small></summary><ProfileAnalytics inline userId={profile.id}/></details></section>}
     <ProfileAppLauncher onProfile={()=>setActiveQuickPanel(null)}/>
     <ProfileCinematicPosts profileId={profile.id} variant="recentCards" feedMode="community" limit={4}/>
     <ProfileQiblaCarousel/>
