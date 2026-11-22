@@ -119,8 +119,9 @@ export default function ProfileMagneticTiles({items,expanded,gridRef,renderTile}
   grid.classList.add("profileMagneticGridActive");
   el.style.zIndex="20";
   el.style.willChange="transform";
-  // Pointer capture keeps the tile attached to the finger beyond its bounds.
-  try{el.setPointerCapture(drag.pointerId)}catch{}
+  // Capture on the STABLE grid, not the keyed tile: React may move the
+  // dragged node while reordering, which otherwise releases pointer capture.
+  try{grid.setPointerCapture(drag.pointerId)}catch{}
   setActiveLabel(drag.label);
   requestPaint();
   try{if(navigator.vibrate)navigator.vibrate(9)}catch{}
@@ -136,6 +137,7 @@ export default function ProfileMagneticTiles({items,expanded,gridRef,renderTile}
   const el=cells.current.get(drag.label);
   const grid=gridRef.current;
   grid?.classList.remove("profileMagneticGridActive");
+  try{if(grid?.hasPointerCapture(drag.pointerId))grid.releasePointerCapture(drag.pointerId)}catch{}
   if(grid){["--magnet-slot-x","--magnet-slot-y","--magnet-slot-w","--magnet-slot-h"].forEach(x=>grid.style.removeProperty(x))}
   suppressClick.current=drag.label;
   window.setTimeout(()=>{if(suppressClick.current===drag.label)suppressClick.current=null},480);
@@ -144,7 +146,7 @@ export default function ProfileMagneticTiles({items,expanded,gridRef,renderTile}
    el.style.transform="";
    el.style.zIndex="";
    el.style.willChange="";
-   try{if(el.hasPointerCapture(drag.pointerId))el.releasePointerCapture(drag.pointerId)}catch{}
+
    if(!isReduced()&&!cancel&&previous){
     el.animate([{transform:previous,filter:"drop-shadow(0 10px 14px rgba(35,60,85,.19))"},{transform:"none",filter:"none"}],{
      duration:385,easing:"cubic-bezier(.17,.92,.25,1.14)"
@@ -186,10 +188,31 @@ export default function ProfileMagneticTiles({items,expanded,gridRef,renderTile}
   // Safari: cancel page scrolling only *after* deliberate drag activation.
   const stopScroll=(event:TouchEvent)=>{if(pressed.current?.active&&event.cancelable)event.preventDefault()};
   document.addEventListener("touchmove",stopScroll,{passive:false});
+  // Pointer events captured by the grid no longer bubble through a moved
+  // tile. Global listeners keep the moving tile locked to the finger.
+  const windowMove=(event:PointerEvent)=>{
+   const drag=pressed.current;
+   if(!drag?.active||drag.pointerId!==event.pointerId)return;
+   drag.x=event.clientX;drag.y=event.clientY;
+   if(event.cancelable)event.preventDefault();
+   requestPaint();
+  };
+  const windowEnd=(event:PointerEvent)=>{
+   if(pressed.current?.active&&pressed.current.pointerId===event.pointerId)finish();
+  };
+  const windowCancel=(event:PointerEvent)=>{
+   if(pressed.current?.pointerId===event.pointerId)finish(true);
+  };
   const release=()=>finish(true);
+  window.addEventListener("pointermove",windowMove,{passive:false});
+  window.addEventListener("pointerup",windowEnd);
+  window.addEventListener("pointercancel",windowCancel);
   window.addEventListener("blur",release);
   return()=>{
    document.removeEventListener("touchmove",stopScroll);
+   window.removeEventListener("pointermove",windowMove);
+   window.removeEventListener("pointerup",windowEnd);
+   window.removeEventListener("pointercancel",windowCancel);
    window.removeEventListener("blur",release);
    if(pressed.current?.timer!==null&&pressed.current?.timer!==undefined)clearTimeout(pressed.current.timer);
    if(frame.current!==null)cancelAnimationFrame(frame.current);
