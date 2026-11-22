@@ -14,7 +14,7 @@ export async function GET() {
   const admin = createAdminClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await admin.from("tiktok_connections")
     .select("connected_at,access_token,expires_at").eq("user_id", user.id).maybeSingle();
-  if (error) return NextResponse.json({ connected: false, error: "status_unavailable" }, { status: 503 });
+  if (error) return NextResponse.json({ available: true, connected: false, error: "status_unavailable" }, { status: 503 });
   if (!data) return NextResponse.json({ available: true, connected: false }, { headers: { "Cache-Control": "no-store" } });
 
   let profile: { displayName: string; username: string; avatarUrl: string } | null = null;
