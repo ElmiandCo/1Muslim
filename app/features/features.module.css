@@ -1,0 +1,44 @@
+.page{min-height:100vh;background:radial-gradient(circle at 91% -2%,#f8e8c7 0,transparent 32%),linear-gradient(180deg,#f7fafc,#fff);color:#192f43;padding:26px 14px 90px;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.shell{max-width:1100px;margin:auto}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;font-weight:800;padding:9px 0 28px}
+.nav a,.footer a{color:#285646;text-decoration:none}
+.nav span{font-size:10px;letter-spacing:.19em;color:#a77c35}
+.hero{position:relative;overflow:hidden;border-radius:28px;padding:clamp(26px,5.2vw,68px);border:1px solid #d8e4df;background:linear-gradient(119deg,#fff 20%,#f4faf7);box-shadow:0 18px 50px #1a403b0d}
+.hero:after{content:"۞";position:absolute;right:-50px;top:-85px;font-size:330px;line-height:1;color:#d1b97a1b;pointer-events:none}
+.hero h1{position:relative;max-width:900px;line-height:1.075;font-size:clamp(36px,5.7vw,65px);letter-spacing:-.058em;margin:18px 0 23px;font-weight:850}
+.hero em{font-style:normal;color:#14634b}
+.hero>p:not(.eyebrow){position:relative;max-width:810px;font-size:clamp(15px,1.9vw,19px);line-height:1.75;color:#526b70;margin:0}
+.eyebrow{font-size:10px;font-weight:900;letter-spacing:.2em;line-height:1.55;color:#a37c35}
+.ctaRow{position:relative;display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:27px}
+.ctaRow a{font-size:13px;font-weight:850;text-decoration:none;padding:14px 18px;border-radius:99px}
+.primary{background:linear-gradient(125deg,#185b46,#104037);color:#fff;box-shadow:0 5px 20px #17574325}
+.secondary{color:#154b40;background:#fff;border:1px solid #cadbd4}
+.intro{padding:34px 10px 0;max-width:900px}
+.intro p{font-size:clamp(16px,1.9vw,20px);line-height:1.7;color:#526b70}
+.section{padding:49px 0 30px}
+.section h2,.faqSection h2,.related h2,.note h2{font-size:clamp(27px,4.1vw,43px);letter-spacing:-.04em;line-height:1.2;margin:9px 0 27px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.card{display:flex;flex-direction:column;min-height:218px;padding:25px;border:1px solid #e0e7e7;border-radius:19px;background:#fff;box-shadow:0 5px 25px #163c4108;color:inherit;text-decoration:none;transition:transform .18s,box-shadow .18s}
+a.card:hover{transform:translateY(-3px);box-shadow:0 10px 30px #14383b16}
+.number{display:inline-flex;align-items:center;justify-content:center;background:#eff6f3;border:1px solid #dbe8e0;border-radius:12px;color:#1a644e;font-weight:900;font-size:13px;width:40px;height:37px}
+.cardLabel{font-weight:900;color:#957438;text-transform:uppercase;font-size:10px;letter-spacing:.13em;margin-top:20px;line-height:1.55}
+.card h3{font-size:18px;line-height:1.3;letter-spacing:-.02em;margin:17px 0 10px}
+.card p{font-size:14px;line-height:1.67;color:#65747f;margin:0 0 19px;flex:1}
+.card b{font-size:12px;color:#1c795b}
+.faqSection{padding:42px 0 20px}
+.faq{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.faq article{border:1px solid #e4e8e9;padding:25px;border-radius:20px;background:#fff}
+.faq h3{font-size:17px;line-height:1.35;margin:0 0 12px}
+.faq p{font-size:14px;line-height:1.68;color:#586f78;margin:0}
+.related{margin:20px 0 30px}
+.relatedLinks{display:flex;flex-wrap:wrap;gap:10px}
+.relatedLinks a{border:1px solid #d5e1df;border-radius:40px;padding:12px 17px;font-size:12px;color:#205c46;background:#fff;font-weight:800;text-decoration:none}
+.note{background:linear-gradient(125deg,#143f37,#0b493e);border:1px solid #a0ac7b;border-radius:26px;padding:clamp(25px,4.5vw,45px);margin:28px 0;color:#fff;box-shadow:0 12px 32px #163c3b19}
+.note .eyebrow{color:#e3c47a}
+.note h2{max-width:720px;margin:12px 0}
+.note p{font-size:15px;line-height:1.7;max-width:840px;color:#e0e9e7}
+.note a{display:inline-flex;margin-top:15px;color:#1e463e;background:#f4d28a;text-decoration:none;font-size:13px;font-weight:850;padding:13px 20px;border-radius:99px}
+.footer{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:22px;padding-top:22px;border-top:1px solid #e1e9e8;font-size:13px}
+@media(max-width:920px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.page{padding:14px 12px 92px}.nav span{display:none}.hero{padding:29px 21px;border-radius:23px}.hero:after{font-size:210px;top:5px;right:-40px}.grid,.faq{grid-template-columns:1fr}.section{padding:33px 0 10px}.card{min-height:170px;padding:21px}.relatedLinks a{flex:1 1 auto;text-align:center}.footer{gap:15px}}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
