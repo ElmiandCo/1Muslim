@@ -1,11 +1,85 @@
 "use client";
-import {useEffect,useState} from "react";
-import LocationPreferences,{readLocation} from "../../components/LocationPreferences";
-import {createClient} from "../../../utils/supabase/client";
-const prayers=["Fajr","Sunrise","Dhuhr","Asr","Maghrib","Isha"];
-export default function PrayerTimes(){
- const [city,setCity]=useState("");const [country,setCountry]=useState("");const [method,setMethod]=useState("2");const [times,setTimes]=useState<Record<string,string>|null>(null);const [message,setMessage]=useState("");const [busy,setBusy]=useState(false);const [editLocation,setEditLocation]=useState(false);
- useEffect(()=>{let active=true;const local=readLocation();setCity(local.city);setCountry(local.country);setEditLocation(!local.city||!local.country);void(async()=>{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user||!active)return;const {data}=await db.from("profiles").select("city,country").eq("id",user.id).maybeSingle();if(!active||!data)return;const nextCity=data.city||local.city,nextCountry=data.country||local.country;setCity(nextCity);setCountry(nextCountry);setEditLocation(!nextCity||!nextCountry)})();return()=>{active=false}},[]);
- const load=async()=>{if(!city.trim()||!country.trim())return;setBusy(true);setMessage("Loading prayer times…");setTimes(null);try{const params=new URLSearchParams({city:city.trim(),country:country.trim(),method});const response=await fetch("https://api.aladhan.com/v1/timingsByCity?"+params.toString());if(!response.ok)throw new Error("Prayer time service unavailable");const result=await response.json();if(result.code!==200||!result.data?.timings)throw new Error("Location not found");setTimes(result.data.timings);setMessage("Calculated prayer times for "+city.trim()+", "+country.trim()+".")}catch(e){setMessage(e instanceof Error?e.message:"Unable to load prayer times")}finally{setBusy(false)}};
- return <div style={{display:"grid",gap:12}}><p style={{opacity:.8}}>Prayer times use your saved location. Times may differ from your mosque.</p>{city&&country&&!editLocation?<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><strong>📍 {city}, {country}</strong><button type="button" onClick={()=>setEditLocation(true)}>Change</button></div>:<LocationPreferences onSaved={v=>{setCity(v.city);setCountry(v.country);setEditLocation(false)}}/>}<label>Calculation method<select value={method} onChange={e=>setMethod(e.target.value)} style={{display:"block",padding:12,width:"100%",borderRadius:10}}><option value="2">ISNA</option><option value="3">Muslim World League</option><option value="4">Umm al-Qura</option><option value="5">Egyptian Authority</option></select></label><button type="button" disabled={busy||!city.trim()||!country.trim()} onClick={load} style={{padding:13,border:0,borderRadius:12,background:"#e4d299",color:"#173c2c",fontWeight:750}}>{busy?"Calculating…":"Show Prayer Times"}</button><p role="status">{message}</p>{times&&<div style={{display:"grid",gap:7}}>{prayers.map(name=><div key={name} style={{display:"flex",justifyContent:"space-between",padding:12,borderRadius:10,background:"#ffffff0d"}}><span>{name}</span><strong>{String(times[name]||"—").split(" ")[0]}</strong></div>)}</div>}<small style={{opacity:.65}}>Uses the AlAdhan prayer-times service. Sunrise is informational, not a prayer.</small></div>;
+import { useEffect, useState } from "react";
+import LocationPreferences, { readLocation } from "../../components/LocationPreferences";
+import AdhanSettings from "../../components/AdhanSettings";
+import { createClient } from "../../../utils/supabase/client";
+import {
+  ADHAN_PRAYERS, ADHAN_SETTINGS_EVENT, displayPrayerTime, fetchPrayerSchedule,
+  locationClock, prayerMinute, readAdhanPreferences, type AdhanLocation, type PrayerSchedule
+} from "../../lib/adhan";
+
+export default function PrayerTimes() {
+  const [place, setPlace] = useState<AdhanLocation>({ city: "", state: "", country: "" });
+  const [method, setMethod] = useState(readAdhanPreferences().method);
+  const [schedule, setSchedule] = useState<PrayerSchedule | null>(null);
+  const [now, setNow] = useState(() => new Date());
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [editLocation, setEditLocation] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const local = readLocation();
+    setPlace(local);
+    setEditLocation(!local.city || !local.country);
+    void (async () => {
+      try {
+        const db = createClient();
+        const { data: { user } } = await db.auth.getUser();
+        if (!user || !active) return;
+        const { data } = await db.from("profiles").select("city,state,country").eq("id", user.id).maybeSingle();
+        if (!active || !data) return;
+        const next = { city: data.city || local.city, state: data.state || local.state, country: data.country || local.country };
+        setPlace(next);
+        setEditLocation(!next.city || !next.country);
+      } catch { /* Continue with saved location. */ }
+    })();
+    const sync = () => setMethod(readAdhanPreferences().method);
+    window.addEventListener(ADHAN_SETTINGS_EVENT, sync);
+    window.addEventListener("storage", sync);
+    const timer = window.setInterval(() => setNow(new Date()), 30000);
+    return () => { active = false; window.removeEventListener(ADHAN_SETTINGS_EVENT, sync); window.removeEventListener("storage", sync); clearInterval(timer); };
+  }, []);
+  useEffect(() => {
+    if (!place.city.trim() || !place.country.trim()) { setSchedule(null); return; }
+    const abort = new AbortController();
+    setLoading(true); setMessage(""); setSchedule(null);
+    void fetchPrayerSchedule(place, method, abort.signal)
+      .then(data => { if (!abort.signal.aborted) setSchedule(data); })
+      .catch(error => { if (!abort.signal.aborted) setMessage(error instanceof Error ? error.message : "Could not load prayer times."); })
+      .finally(() => { if (!abort.signal.aborted) setLoading(false); });
+    return () => abort.abort();
+  }, [place.city, place.state, place.country, method, now.toDateString()]);
+
+  const clock = schedule ? locationClock(schedule.timezone, now) : null;
+  const nextPrayer = schedule && clock?.date === schedule.date
+    ? ADHAN_PRAYERS.find(prayer => (prayerMinute(schedule.times[prayer]) ?? -1) > clock.minute)
+    : null;
+
+  return <div style={{ display: "grid", gap: 16 }}>
+    <p style={{ opacity: .8, margin: 0 }}>Accurate local prayer times and a personalized Adhan. Configure your city below, then enable the call to prayer.</p>
+    {place.city && place.country && !editLocation
+      ? <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <strong>📍 {[place.city, place.state, place.country].filter(Boolean).join(", ")}</strong>
+          <button type="button" onClick={() => setEditLocation(true)} style={{ border: "1px solid #b6a76b88", color: "inherit", borderRadius: 12, background: "transparent", padding: 10, cursor: "pointer" }}>Change location</button>
+        </div>
+      : <LocationPreferences onSaved={location => { setPlace(location); setEditLocation(false); }} />}
+    {loading && <p role="status">Calculating prayer times…</p>}
+    {message && <p role="alert">{message}</p>}
+    {schedule && <section aria-label="Today's prayer times" style={{ display: "grid", gap: 8 }}>
+      <div style={{ fontSize: 12, opacity: .72 }}>Today · {schedule.date} · {schedule.timezone}
+        {nextPrayer ? " · Next: " + nextPrayer + " at " + displayPrayerTime(schedule.times[nextPrayer]) : " · The next day's schedule updates after midnight"}
+      </div>
+      {(["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"] as const).map(prayer =>
+        <div key={prayer} style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 15px", borderRadius: 13,
+          background: nextPrayer === prayer ? "#c6a85b25" : "#ffffff0d", border: nextPrayer === prayer ? "1px solid #d7bf76" : "1px solid #ffffff13"
+        }}>
+          <span>{prayer}{prayer === "Sunrise" ? " · not a salah" : ""}</span>
+          <strong>{displayPrayerTime(schedule.times[prayer])}</strong>
+        </div>)}
+    </section>}
+    <AdhanSettings inPrayerPage />
+    <small style={{ opacity: .65 }}>Times are calculated by the AlAdhan API. Different calculation methods, mosque timetables, and local adjustments can vary by several minutes. Sunrise is not one of the five daily prayers.</small>
+  </div>;
 }
