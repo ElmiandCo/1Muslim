@@ -1,42 +1,59 @@
 import {NextResponse} from "next/server";
 import {createClient} from "../../../utils/supabase/server";
-export async function GET(){
+export async function GET(request:Request){
+ const url=new URL(request.url);
+ const limitInput=Number(url.searchParams.get("limit")||100);
+ const offsetInput=Number(url.searchParams.get("offset")||0);
+ const limit=Number.isInteger(limitInput)?Math.max(1,Math.min(100,limitInput)):100;
+ const offset=Number.isInteger(offsetInput)?Math.max(0,Math.min(1000,offsetInput)):0;
  const db=await createClient();
- const {data,error}=await db.from("ummah_feed_posts").select("id,author_id,body,created_at,post_theme").order("created_at",{ascending:false}).limit(100);
+ // The user lookup and initial post read are independent. The first page is intentionally
+ // small on Discover: don't block the first screen on 100 posts and their video metadata.
+ const [{data,error},{data:auth}]=await Promise.all([
+  db.from("ummah_feed_posts").select("id,author_id,body,created_at,post_theme").order("created_at",{ascending:false}).range(offset,offset+limit-1),
+  db.auth.getUser()
+ ]);
  if(error)return NextResponse.json({error:"Community feed unavailable"},{status:503});
- const {data:{user:viewer}}=await db.auth.getUser();
  const posts=data||[];
  const ids=[...new Set(posts.map(p=>p.author_id).filter((id):id is string=>typeof id==="string"))];
- const {data:profiles}=ids.length?await db.from("profiles").select("id,display_name,username,avatar_url,avatar_config,shahada_verified_at").in("id",ids):{data:[]};
+ // Both queries are independent. Preserve the safe legacy lookup for old uploads.
+ const [{data:profiles},{data:mediaPosts}]=await Promise.all([
+  ids.length?db.from("profiles").select("id,display_name,username,avatar_url,avatar_config,shahada_verified_at").in("id",ids):Promise.resolve({data:[]}),
+  ids.length?db.from("posts").select("id,user_id,body,created_at").in("user_id",ids).order("created_at",{ascending:false}).limit(500):Promise.resolve({data:[]})
+ ]);
  const authors=new Map((profiles||[]).map(p=>[p.id,p]));
- // Historical uploads were saved in posts/post_media separately from the feed row.
- // Match only the same author, identical body and a tight creation-time window.
- // Ambiguous matches are intentionally omitted rather than attaching someone else's media.
- const authorIds=ids;
- const {data:mediaPosts}=authorIds.length?await db.from("posts").select("id,user_id,body,created_at").in("user_id",authorIds).order("created_at",{ascending:false}).limit(500):{data:[]};
- const candidates=new Map<string,typeof mediaPosts>();
+ const candidates=new Map<string,NonNullable<typeof mediaPosts>>();
  for(const p of mediaPosts||[]){const key=p.user_id+"|"+p.body;const arr=candidates.get(key)||[];arr.push(p);candidates.set(key,arr)}
- const links=new Map<string,string>();
- const claimed=new Set<string>();
+ const links=new Map<string,string>(),claimed=new Set<string>();
  for(const p of posts){
-  const options=(candidates.get(p.author_id+"|"+p.body)||[]).filter(m=>Math.abs(new Date(m.created_at).getTime()-new Date(p.created_at).getTime())<=5000&&!claimed.has(m.id));
-  if(options.length===1){links.set(p.id,options[0].id);claimed.add(options[0].id)}
+  const matches=(candidates.get(p.author_id+"|"+p.body)||[]).filter(m=>Math.abs(Date.parse(m.created_at)-Date.parse(p.created_at))<=5000&&!claimed.has(m.id));
+  if(matches.length===1){links.set(p.id,matches[0].id);claimed.add(matches[0].id)}
  }
  const mediaIds=[...links.values()];
- const {data:attachments}=mediaIds.length?await db.from("post_media").select("post_id,storage_path,mime_type,community_post_id").in("post_id",mediaIds):{data:[]};
- const {data:directAttachments}=posts.length?await db.from("post_media").select("post_id,storage_path,mime_type,community_post_id").in("community_post_id",posts.map(p=>p.id)):{data:[]};
+ const [{data:attachments},{data:directAttachments}]=await Promise.all([
+  mediaIds.length?db.from("post_media").select("post_id,storage_path,mime_type,community_post_id").in("post_id",mediaIds):Promise.resolve({data:[]}),
+  posts.length?db.from("post_media").select("post_id,storage_path,mime_type,community_post_id").in("community_post_id",posts.map(p=>p.id)):Promise.resolve({data:[]})
+ ]);
  const directByFeed=new Map((directAttachments||[]).map(a=>[a.community_post_id,a]));
  const attachmentByPost=new Map((attachments||[]).map(a=>[a.post_id,a]));
- const output=await Promise.all(posts.map(async p=>{
+ // community-media is a PUBLIC Supabase Storage bucket. No per-video signing request
+ // is needed: public URLs resolve through the CDN. The old path did one signing
+ // network request per attachment, delaying the entire feed response.
+ const bucket=db.storage.from("community-media");
+ const output=posts.map(p=>{
   const attachment=directByFeed.get(p.id)||attachmentByPost.get(links.get(p.id)||"");
-  let media_url:string|null=null;
-  if(attachment?.storage_path){
-   const {data:signed,error:signError}=await db.storage.from("community-media").createSignedUrl(attachment.storage_path,3600);
-   if(!signError)media_url=signed?.signedUrl||null;
-  }
-  return {...p,shahada_verified:!!authors.get(p.author_id)?.shahada_verified_at,author_name:authors.get(p.author_id)?.display_name||authors.get(p.author_id)?.username||"Community member",author_handle:authors.get(p.author_id)?.username?"@"+authors.get(p.author_id)?.username:"@member",author_avatar_url:(()=>{const profile=authors.get(p.author_id);const config=profile?.avatar_config as Record<string,unknown>|null;const chosen=[config?.adminAvatarUrl,config?.customAvatarUrl,config?.selectedAvatarUrl,config?.avatarUrl].find(v=>typeof v==="string"&&(/^(https:\/\/|\/assets\/avatars\/)/.test(v)));return chosen||profile?.avatar_url||null})(),media_url,media_type:attachment?.mime_type||null};
- }));
- return NextResponse.json({posts:output,viewer_id:viewer?.id||null});
+  const media_url=attachment?.storage_path?bucket.getPublicUrl(attachment.storage_path).data.publicUrl:null;
+  const profile=authors.get(p.author_id);
+  const config=profile?.avatar_config as Record<string,unknown>|null;
+  const chosen=[config?.adminAvatarUrl,config?.customAvatarUrl,config?.selectedAvatarUrl,config?.avatarUrl].find(v=>typeof v==="string"&&/^(https:\/\/|\/assets\/avatars\/)/.test(v));
+  return {...p,shahada_verified:!!profile?.shahada_verified_at,
+   author_name:profile?.display_name||profile?.username||"Community member",
+   author_handle:profile?.username?"@"+profile.username:"@member",
+   author_avatar_url:chosen||profile?.avatar_url||null,
+   media_url,media_type:attachment?.mime_type||null};
+ });
+ return NextResponse.json({posts:output,viewer_id:auth.user?.id||null,has_more:posts.length===limit},
+  {headers:{"cache-control":"private, max-age=0, no-store"}});
 }
 export async function POST(request:Request){
  const db=await createClient();const {data:{user}}=await db.auth.getUser();
