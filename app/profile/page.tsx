@@ -539,7 +539,7 @@ function ProfileSocialHub({profile,children}:{profile:Profile;children:React.Rea
 const brandedHandle=(handle:string|null|undefined)=>handle?.replace(/^1muslim_(?=[0-9a-f]{8}$)/i,"1Muslim_")||"member";
 const normalizeMuslimId=(value:string|null|undefined)=>(value||"").trim().replace(/^@+/,"").toLowerCase();
 /** Escape LIKE wildcard characters so an underscore in an ID is matched literally. */
-const escapeMuslimIdPattern=(value:string)=>value.replace(/[\\%_]/g,"\\const brandedHandle=(handle:string|null|undefined)=>handle?.replace(/^1muslim_(?=[0-9a-f]{8}$)/i,"1Muslim_")||"member";");
+const escapeMuslimIdPattern=(value:string)=>value.replace(/[\\%_]/g,"\\$&");
 const TAKEN_MUSLIM_ID="1Muslim ID is already taken.";
 const isUsernameConflict=(error:{code?:string;message?:string;details?:string;hint?:string})=>
  error.code==="23505" && /username|profiles_username/i.test([error.message,error.details,error.hint].join(" "));
