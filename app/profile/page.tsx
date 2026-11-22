@@ -13,7 +13,7 @@ import PostDesignStudio from "../components/PostDesignStudio";
 import HomePostsMagazineRail from "../components/HomePostsMagazineRail";
 import AdminParallaxDashboard from "../components/AdminParallaxDashboard";
 import {useRouter} from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type SyntheticEvent } from "react";
 
 import ProfileAvatar, { ACCESSORIES, AVATAR_TIERS, tierForXp } from "../components/ProfileAvatar";
 import { createClient } from "../../utils/supabase/client";
@@ -82,6 +82,12 @@ const AVATAR_CHOICES=[
 const COVER_STOCK=[{id:"emerald",label:"Emerald",url:"/assets/profile-backgrounds/emerald.PNG"},{id:"sapphire",label:"Sapphire",url:"/assets/profile-backgrounds/sapphire.PNG"},{id:"ruby",label:"Ruby",url:"/assets/profile-backgrounds/rose-gold.PNG"},{id:"amethyst",label:"Amethyst",url:"/assets/profile-backgrounds/amethyst.PNG"},{id:"titanium",label:"Titanium",url:"/assets/profile-backgrounds/silver-dust.PNG"},{id:"obsidian",label:"Obsidian",url:"/assets/profile-backgrounds/obsidian.PNG"}] as const;
 // Keep the existing cover and optional new portrait art distinct.
 const profileCoverImage=(profile:Pick<Profile,"avatar_config"|"profile_background_image_url">)=>typeof profile.avatar_config?.profileCoverUrl==="string"?profile.avatar_config.profileCoverUrl:profile.profile_background_image_url||COVER_STOCK.find(c=>c.id===profile.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
+// Pre-size built-in cover art for the 3×4 Explore mosaic, rather than loading
+// the multi-megabyte original in twelve independently painted tiles.
+const profileMosaicImage=(url:string)=>
+ url.startsWith("/assets/profile-backgrounds/")
+  ? "/_next/image?url="+encodeURIComponent(url)+"&w=1080&q=60"
+  : url;
 const MEMBER_ACCENT_COLORS:Record<string,string>={emerald:"#579879",gold:"#b89b53",blue:"#689bd5",violet:"#9780c4",rose:"#c47e98",slate:"#829392",black:"#151515"};
 const MEMBER_TEXT_COLORS:Record<string,string>={emerald:"#174635",gold:"#58400c",blue:"#173e70",violet:"#42276a",rose:"#692a42",slate:"#293c3b",black:"#141414"};
 const memberAccent=(accent:string|null|undefined)=>MEMBER_ACCENT_COLORS[accent||""]||MEMBER_ACCENT_COLORS.black;
@@ -131,6 +137,22 @@ function LauncherLineIcon({name}:{name:string}){
 
 function ProfileAppLauncher({onProfile,coverUrl}:{onProfile:()=>void;coverUrl:string}){
  const magneticGridRef=useRef<HTMLDivElement|null>(null);
+ const fastCover=profileMosaicImage(coverUrl);
+ const [failedCover,setFailedCover]=useState<string|null>(null);
+ const mosaicUrl=failedCover===fastCover?coverUrl:fastCover;
+ const [decodedCover,setDecodedCover]=useState<string|null>(null);
+ const mosaicLoaded=decodedCover===mosaicUrl;
+ const onMosaicLoaded=async(event:SyntheticEvent<HTMLImageElement>)=>{
+  const img=event.currentTarget;
+  const source=mosaicUrl;
+  // An incomplete progressive image must not appear as blank lower rows.
+  try{await img.decode()}catch{if(!img.complete||!img.naturalWidth)return}
+  setDecodedCover(source);
+ };
+ const onMosaicError=()=>{
+  if(mosaicUrl!==coverUrl)setFailedCover(fastCover);
+  else setDecodedCover(null);
+ };
  const [postOpen,setPostOpen]=useState(false);
  const [quranOpen,setQuranOpen]=useState(false);
  const [qiblaOpen,setQiblaOpen]=useState(false);
@@ -227,7 +249,11 @@ function ProfileAppLauncher({onProfile,coverUrl}:{onProfile:()=>void;coverUrl:st
    {expanded&&<span className="profileMagneticHint" aria-hidden="true">Hold + drag to rearrange</span>}
    <button type="button" className="profileLauncherToggle" onClick={toggleExpanded} aria-expanded={expanded} aria-label={expanded?"Collapse Explore 1Muslim":"Expand Explore 1Muslim"} title={expanded?"Collapse":"Expand"}><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={expanded?"M5 15l7-7 7 7":"M5 9l7 7 7-7"}/></svg></button>
   </div>
-  <div ref={magneticGridRef} className={expanded?"profileAppLauncherGrid":"profileAppLauncherGrid compact"} style={{"--profile-grid-cover":`url(${JSON.stringify(coverUrl)})`} as CSSProperties} aria-label="Explore 1Muslim app shortcuts">
+  {/* Start downloading before the launcher scrolls into view. Not a grid child:
+       the magnetic grid's 3-column positioning depends on exactly 12 cells. */}
+  <img key={mosaicUrl} src={mosaicUrl} alt="" aria-hidden="true" className="profileMosaicPreloader"
+   loading="eager" decoding="async" fetchPriority="high" onLoad={onMosaicLoaded} onError={onMosaicError}/>
+  <div ref={magneticGridRef} className={expanded?"profileAppLauncherGrid"+(mosaicLoaded?" profileMosaicLoaded":""):"profileAppLauncherGrid compact"} style={{"--profile-grid-cover":`url(${JSON.stringify(mosaicUrl)})`} as CSSProperties} aria-label="Explore 1Muslim app shortcuts">
    <ProfileMagneticTiles items={items} expanded={expanded} gridRef={magneticGridRef} renderTile={item=><Link key={item.label} href={item.href} onClick={event=>{
     if(item.label==="DeepWatch"||item.label==="News"){try{localStorage.setItem("1muslim:explore-seen:"+(item.label==="News"?"news":"deepwatch"),new Date().toISOString())}catch{}setLauncherBadges(current=>({...current,[item.label]:0}))}
     if(item.label==="Profile"){event.preventDefault();setExpanded(false);onProfile()}
