@@ -127,7 +127,7 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
       <div className={styles.badgeHeading}><span>✦ MEMBER BADGES</span><strong>Achievements</strong></div>
       <div className={styles.badgeCollection}>
        <div className={styles.featured}><FeaturedBadge userId={profile.id} verifiedAt={profile.shahada_verified_at} compact /></div>
-       <div className={styles.lockedBadge} aria-label="Additional badges coming soon"><span aria-hidden="true">♢</span><strong>More badges</strong><small>COMING SOON · LOCKED</small></div>
+       <div className={styles.lockedBadge} aria-label="Additional badges locked, coming soon"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.3"/><path d="M8.2 11V7a3.8 3.8 0 0 1 7.6 0v4"/><circle cx="12" cy="16" r="1"/></svg></span><strong>More badges</strong><small>COMING SOON · LOCKED</small></div>
       </div>
      </section>
     </main>
