@@ -5,7 +5,7 @@ import "./hudhud-recent-accounts.css";
 
 type RecentMember={
  id:string;name:string;handle:string|null;avatar:string|null;joined:string|null;
- lastSeen:string;lastActive:string|null;page:string;recordedSessions:number;online:boolean;engaged:boolean;
+ lastSeen:string;lastActive:string|null;page:string;daysObserved:number;online:boolean;engaged:boolean;
 };
 type RecentData={members:RecentMember[];uniqueAccounts:number;updatedAt:string;cutoff:string;capped:boolean;method:string};
 
@@ -94,7 +94,7 @@ export default function HudHudRecentAccounts({refreshKey=0}:{refreshKey?:number}
         <div><span>Last interaction</span><strong>{member.lastActive?new Date(member.lastActive).toLocaleString():"Not recorded"}</strong></div>
         <div><span>Last app presence</span><strong>{new Date(member.lastSeen).toLocaleString()}</strong></div>
         <div><span>Last recorded page</span><strong>{member.page}</strong></div>
-        <div><span>Recorded sessions</span><strong>{member.recordedSessions}</strong></div>
+        <div><span>Days observed</span><strong>{member.daysObserved}</strong></div>
         {member.joined&&<div><span>Account created</span><strong>{new Date(member.joined).toLocaleDateString()}</strong></div>}
        </div>}
       </div>;
