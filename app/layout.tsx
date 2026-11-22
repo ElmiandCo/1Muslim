@@ -34,16 +34,16 @@ export const viewport = {themeColor:"#ffffff",width:"device-width",initialScale:
 
 export const metadata = {
   metadataBase: new URL("https://1muslim.live"),
-  title: "1Muslim | Muslim Social Media, Videos, Live & HudHud AI",
+  title: "1Muslim | Muslim Social Network — Posts, Messenger, Live & AI",
   applicationName: "1Muslim",
   appleWebApp: {capable:true,title:"1Muslim",statusBarStyle:"default" as const},
   icons: {apple:[{url:"/apple-icon",sizes:"180x180",type:"image/png"}],icon:[{url:"/icon.svg",type:"image/svg+xml"},{url:"/app-install-icon",sizes:"512x512",type:"image/png"}]},
-  description: "1Muslim is Muslim social media for short videos, posts, messaging, live streams, Qur'an learning, Shahada-centered signup and OpenAI-powered HudHud search.",
+  description: "1Muslim is a full Muslim social network with profiles, video posts, Messenger, notifications, live streaming, Qur'an progress, XP rewards and HudHud AI.",
   category: "social networking",
   openGraph: {
     siteName: "1Muslim",
-    title: "1Muslim — Muslim Social Media, Live Video & HudHud AI",
-    description: "One Muslim-focused social network for TikTok-style short videos, Facebook-style profiles, Snapchat-style messaging, live streams, Qur'an learning and HudHud AI. Join free; explore 1Muslim Unlocked.",
+    title: "1Muslim — Muslim Social Network with Messenger, Live & HudHud AI",
+    description: "More than an online community: real Muslim social networking with individual profiles, TikTok-style video posts, private messages, notifications, live broadcasting, Qur'an tracking, XP and an OpenAI-powered Muslim-themed HudHud AI. Shahada-centered admission.",
     url: "https://1muslim.live",
     type: "website" as const,
     locale: "en_US"
@@ -51,7 +51,7 @@ export const metadata = {
   twitter: {
     card: "summary" as const,
     title: "1Muslim — Muslim Social Network & HudHud AI",
-    description: "Watch, post, message, go live and learn Qur'an in one Muslim social network. Free membership, Shahada-centered onboarding and AI-assisted discovery."
+    description: "The Muslim-first social network for posts, videos, followers, Messenger, notifications, live streaming, Qur'an progress, XP and your own HudHud AI companion."
   }
 };
 
