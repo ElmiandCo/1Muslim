@@ -41,7 +41,14 @@ export async function updateSession(request: NextRequest) {
   // Guests may view the landing page, but must sign in before navigating elsewhere.
   // Keep auth callbacks, static assets, legal pages and API endpoints accessible.
   const pathname = request.nextUrl.pathname;
-  const guestAllowed = pathname === "/" || pathname.startsWith("/quran-recitals") || pathname === "/messages" || pathname.startsWith("/messages/call/") || pathname === "/messenger-design" || pathname.startsWith("/auth") ||
+  // Only editorial/marketing pages are public. Keep member content, profiles,
+  // conversations, and application tools behind the existing auth boundary.
+  // This also allows search and AI crawlers to read genuine product information.
+  const publicInformationPage = pathname === "/about" ||
+    pathname === "/platform" || pathname === "/features" ||
+    pathname.startsWith("/features/") || pathname === "/growth" ||
+    pathname === "/data-policy" || pathname === "/llms.txt";
+  const guestAllowed = publicInformationPage || pathname === "/" || pathname.startsWith("/quran-recitals") || pathname === "/messages" || pathname.startsWith("/messages/call/") || pathname === "/messenger-design" || pathname.startsWith("/auth") ||
     pathname.startsWith("/terms") || pathname.startsWith("/privacy") ||
     pathname.startsWith("/api/") || pathname.startsWith("/_next/") ||
     pathname.startsWith("/assets/") || pathname.startsWith("/videos/") ||
