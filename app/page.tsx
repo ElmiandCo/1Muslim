@@ -67,14 +67,14 @@ const spaces=[
  {name:"Post",arabic:"منشور اليوم",symbol:"✎",image:"/assets/control-center/1ummah.PNG",href:"/community",cls:"ummah"},
  {name:"Messages",arabic:"رسائل",symbol:"◌",image:"/assets/control-center/1messenger.PNG",href:"/messages",cls:"message"},
  {name:"Elm Tent",arabic:"خيمة العلم",symbol:"أ",image:"/assets/control-center/elm-tent-en.PNG",href:"/elm-tent",cls:"lesson"},
- {name:"Calls",arabic:"اتصال",symbol:"♧",image:"/assets/control-center/1calls.PNG",href:"/messages",cls:"call"},
+ {name:"Calls",arabic:"اتصال",symbol:"◎",image:"/assets/control-center/1calls.PNG",href:"/messages",cls:"call"},
  {name:"Lessons",arabic:"العلم",symbol:"✦",image:"/assets/control-center/elm-tent-en.PNG",href:"/elm-tent/lessons",cls:"lesson"},
  {name:"Islam Trivia",arabic:"اختبار إسلامي",symbol:"✦",image:"",href:"/elm-tent/islam-trivia",cls:"lesson"},
  {name:"People",arabic:"أصحاب",symbol:"♙",image:"/assets/control-center/1profile%20.PNG",href:"/find",cls:"people"},
  {name:"Prayer Times",arabic:"الصلاة",symbol:"☪",image:"",href:"/widget-tools/prayer",cls:"quran"},
  {name:"Dhikr",arabic:"الذكر",symbol:"۞",image:"",href:"/widget-tools/dhikr",cls:"quran"},
  {name:"XP & Progress",arabic:"التقدم",symbol:"✧",image:"",href:"/widget-tools/progress",cls:"lesson"},
- {name:"Notifications",arabic:"الإشعارات",symbol:"♧",image:"",href:"/notifications",cls:"message"},
+ {name:"Notifications",arabic:"الإشعارات",symbol:"◉",image:"",href:"/notifications",cls:"message"},
  {name:"1Muslim Shop",arabic:"المتجر",symbol:"✦",image:"",href:"#",cls:"quran"},
  {name:"Quick Post",arabic:"انشر الآن",symbol:"✎",image:"",href:"#",cls:"message"}
 ];
