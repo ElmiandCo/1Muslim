@@ -7,6 +7,7 @@ import {createClient} from "../../utils/supabase/client";
 type Notice={id:string;type:string;title:string;body:string;entity_type:string|null;entity_id:string|null;actor_id?:string|null;created_at:string};
 const uuid=(value:string|null)=>!!value&&/^[0-9a-f-]{36}$/i.test(value);
 function destination(n:Notice){
+  if(["ummah_post","post","ummah_comment","post_comment"].includes(n.entity_type||"")&&uuid(n.entity_id))return "/posts/story/"+encodeURIComponent(n.entity_id!);
   if(n.entity_type==="live_stream"&&n.entity_id)return "/streaming/live/"+encodeURIComponent(n.entity_id);
   if(n.entity_type==="live_schedule")return "/streaming/scheduled";
   if(["dm_message","message"].includes(n.entity_type||"")&&uuid(n.entity_id))return "/messages?message="+encodeURIComponent(n.entity_id!);
@@ -15,7 +16,7 @@ function destination(n:Notice){
   if(n.type.toLowerCase().includes("follow")&&uuid(n.actor_id||n.entity_id))return "/profile?member="+encodeURIComponent((n.actor_id||n.entity_id)!);
   return "/notifications";
 }
-function icon(n:Notice){const t=n.type.toLowerCase();return t.includes("follow")?"👤":t.includes("message")||t.includes("dm")?"✉️":t.includes("like")?"♡":t.includes("share")?"↗":t.includes("live")?"🔴":"🔔"}
+function icon(n:Notice){const t=n.type.toLowerCase();return t.includes("follow")?"👤":t.includes("message")||t.includes("dm")?"✉️":(t.includes("like")||t.includes("reaction"))?"♡":t.includes("share")?"↗":t.includes("live")?"🔴":"🔔"}
 
 export default function NotificationToaster(){
   const [items,setItems]=useState<Notice[]>([]);
