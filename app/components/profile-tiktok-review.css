@@ -33,7 +33,7 @@
 .ttReviewConnected strong{font-size:14px;font-weight:810;color:#2f4655;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ttReviewConnected small{font-size:10px;color:#718696}
 .ttReviewCheck{white-space:nowrap;font-size:10px;font-weight:750;color:#278065}
-.ttReviewGalleryHeader{margin:22px 0 12px;display:flex;align-items:end;justify-content:space-between;gap:9px;flex-wrap:wrap}
+.ttReviewGalleryHeader{margin:22px 0 12px;display:flex;align-items:flex-end;justify-content:space-between;gap:9px;flex-wrap:wrap}
 .ttReviewGalleryHeader strong{font-size:14px;font-weight:820;color:#304758}
 .ttReviewGalleryHeader p{margin:4px 0 0;color:#778997;font-size:10px;line-height:1.5}
 .ttReviewGalleryHeader>span{font-size:9px;color:#8396a4}
