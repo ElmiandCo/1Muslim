@@ -171,7 +171,7 @@ export default function AdhanSettings({
     <div className="adhanSoundPanel">
       <div className="adhanAudioActions">
         <div><span className="adhanSoundIcon" aria-hidden="true">♫</span><span><strong>Adhan preview</strong><small>Listen before saving</small></span></div>
-        <div><button type="button" aria-label="Play Adhan sample" onClick={() => window.dispatchEvent(new Event(ADHAN_PREVIEW_EVENT))}>▶ Preview</button>
+        <div><button type="button" aria-label="Play Adhan sample" onClick={() => window.dispatchEvent(new CustomEvent(ADHAN_PREVIEW_EVENT, { detail: { volume: prefs.volume } }))}>▶ Preview</button>
         <button type="button" aria-label="Stop Adhan preview" onClick={() => window.dispatchEvent(new Event(ADHAN_STOP_EVENT))}>■ Stop</button></div>
       </div>
       <label className="adhanVolume">Volume
