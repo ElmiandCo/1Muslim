@@ -117,7 +117,7 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
    role="progressbar" aria-label="Progress toward the next prayer" aria-valuemin={0} aria-valuemax={100}
    aria-valuenow={isReady?Math.round(progress):0}
    aria-valuetext={isReady?`${upcoming} ${countdown}`:"Prayer times loading"}>
-   <span className={styles.fill} style={{width:isReady?progress+"%":"0%"}}/>
+   <span className={styles.fill} data-empty={!isReady||progress<=0?"true":"false"} style={{width:isReady?progress+"%":"0%"}}/>
   </div>
   <button type="button" className={styles.card}
    onClick={openCompass}

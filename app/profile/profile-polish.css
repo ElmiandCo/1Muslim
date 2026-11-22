@@ -142,3 +142,22 @@
  .profileCommandPage .profileActionLabel,.profileCommandPage .profileOwnerIdClose{transition:none!important}
  .profileCommandPage #profile-panel-content{animation:none}
 }
+
+
+/* The cover trim is no longer the prayer progress rail. Keep the artwork
+   boundary almost invisible and let the real, live progress rail sit below
+   the prayer card. Only the avatar may layer over its left-hand segment. */
+.profileCommandPage .memberAccentProfile .profileProfessionalCover{
+ border-bottom:1px solid color-mix(in srgb,var(--member-accent) 27%,#e3e9ef)!important;
+}
+.profileCommandPage .profileProfessionalIdentity{
+ position:relative;
+ isolation:isolate;
+}
+.profileCommandPage .profileProfessionalIdentity > .profileProfessionalAvatar{
+ position:relative!important;
+ z-index:8!important;
+}
+.profileCommandPage .profileProfessionalIdentity > .profileProfessionalEdit{
+ z-index:9;
+}
