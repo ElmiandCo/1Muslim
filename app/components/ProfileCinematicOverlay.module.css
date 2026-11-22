@@ -120,3 +120,36 @@
 @media(min-width:540px){.screen{border-radius:32px}}
 @media(max-width:360px){.stats{padding:12px 0}.stats b{font-size:15px}.stats span{font-size:9px}.topbar{padding-left:14px;padding-right:14px}.actions{gap:6px}.actions :is(a,button){font-size:12px}}
 @media(prefers-reduced-motion:reduce){.backdrop,.screen{animation:none}.art{transform:none!important;will-change:auto}.round{transition:none}}
+
+/* Cinematic profile v3: artwork is the exit gesture; XP + badges replace extra nav. */
+.sceneExit{position:absolute;z-index:3;top:calc(74px + env(safe-area-inset-top,0px));left:0;right:0;height:min(170px,21svh);border:0;background:transparent;cursor:pointer}
+.sceneExit:focus-visible{outline:2px solid var(--cm-accent,#f6d58e);outline-offset:-4px}
+.topbar{z-index:5;gap:8px}
+.topbar .brand{font-size:clamp(8px,2vw,10px);letter-spacing:.13em;white-space:nowrap}
+.xpCrown{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;border:1px solid color-mix(in srgb,var(--cm-accent,#f4ca78) 72%,#fff);border-radius:99px;padding:8px 11px;background:color-mix(in srgb,var(--cm-accent,#eeb959) 20%,#091827);box-shadow:0 0 18px color-mix(in srgb,var(--cm-accent,#ddb66d) 26%,transparent),inset 0 1px #fff5;color:#fff6dd;text-shadow:0 0 11px color-mix(in srgb,var(--cm-accent,#f2cd86) 40%,transparent);white-space:nowrap;font-size:12px;font-weight:850;letter-spacing:.025em}
+.xpCrown strong{font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.025em}
+.xpCrown small{font-size:9px;color:#fff3db;font-weight:850;letter-spacing:.05em}
+.xpCrown::first-letter{color:#fbe1a1}
+.round{min-width:41px;width:41px;height:41px;border-radius:12px;color:#f5e6c5}
+.round svg{filter:drop-shadow(0 1px 3px #0007)}
+.verifiedLabel{margin-top:10px;color:#d5f1ed;font-size:11px;font-weight:720;padding:5px 13px;border-radius:99px;border:1px solid #a5cedc50;background:#18304088}
+.actions{margin:15px auto 4px;min-height:58px}
+.actions .mainAction{flex:none;width:58px;height:58px;min-height:58px;padding:0;border-radius:50%;display:grid;place-items:center;color:#15283b;background:linear-gradient(145deg,#fff5d2,color-mix(in srgb,var(--cm-accent,#d7aa65) 60%,#f8ddb4));border:1px solid #ffeed1ad;box-shadow:0 0 0 3px #fff2,0 8px 22px #0005,0 0 25px color-mix(in srgb,var(--cm-accent,#dab469) 27%,transparent);transition:transform .18s,box-shadow .18s}
+.actions .mainAction:hover{transform:translateY(-2px);box-shadow:0 0 0 3px #fff3,0 12px 30px #0006,0 0 32px color-mix(in srgb,var(--cm-accent,#dab469) 42%,transparent)}
+.actions .mainAction:active{transform:scale(.94)}
+.publicLabel{font-size:11px;letter-spacing:.14em;color:#a5bdd0}
+.badgeVault{width:100%;max-width:455px;margin:19px auto 0;border-top:1px solid #ffffff30;padding-top:14px;min-width:0}
+.badgeHeading{display:flex;justify-content:space-between;align-items:baseline;gap:10px;text-align:left;margin-bottom:11px}
+.badgeHeading>span{font-size:10px;color:color-mix(in srgb,var(--cm-accent,#f1d08f) 70%,#fff);letter-spacing:.18em;font-weight:850}
+.badgeHeading>strong{font-size:12px;color:#c4d2df;font-weight:680}
+.badgeCollection{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:stretch;min-width:0}
+.badgeCollection .featured{display:grid;place-items:center;margin:0;min-width:0;max-width:none;min-height:102px;padding:9px 7px;border:1px solid #b5ced04d;border-radius:15px;background:linear-gradient(145deg,#192d3caa,#152634d1)}
+.badgeCollection .featured :global(.featuredBadgeArea){width:100%;justify-content:center}
+.badgeCollection .featured :global(.featuredBadgeChip){max-width:100%;overflow-wrap:anywhere}
+.lockedBadge{min-width:0;min-height:102px;border-radius:15px;border:1px dashed #acbfd05e;background:#152536aa;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;color:#dce8f3}
+.lockedBadge>span{font-size:25px;line-height:1;color:color-mix(in srgb,var(--cm-accent,#d4b47f) 65%,#fff);opacity:.7}
+.lockedBadge>strong{font-size:12px;font-weight:770}
+.lockedBadge>small{font-size:9px;letter-spacing:.09em;font-weight:800;color:#b9c7d3}
+.body{padding-bottom:max(44px,env(safe-area-inset-bottom,0px))}
+@media(max-width:400px){.topbar{padding-left:12px;padding-right:12px}.xpCrown{padding:7px 9px;font-size:11px}.topbar .brand{font-size:8px}.badgeCollection{gap:7px}.badgeHeading>span{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.actions .mainAction{transition:none}.xpCrown{text-shadow:none}}
