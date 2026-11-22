@@ -72,7 +72,7 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
     quranTranslations(query)
   ]);
   const get=(i:number):any[]=>tasks[i].status==="fulfilled" ? (Array.isArray((tasks[i].value as any)?.data)?(tasks[i].value as any).data: Array.isArray(tasks[i].value)?tasks[i].value:[]) : [];
-  const groups=Object.fromEntries(DISCOVER_CATEGORIES.map(category=>[category,[]])) as Record<DiscoverKind,DiscoverItem[]>;
+  const groups=Object.fromEntries(DISCOVER_CATEGORIES.map(category=>[category,[] as DiscoverItem[]])) as unknown as Record<DiscoverKind,DiscoverItem[]>;
   const add=(item:DiscoverItem)=>{if(item.href.startsWith("/")&&!item.href.startsWith("//"))groups[item.kind].push(item);};
   const authors=get(1);
   const byAuthor=new Map(authors.map(p=>[p.id,p]));
