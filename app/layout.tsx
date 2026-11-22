@@ -53,7 +53,7 @@ export const metadata = {
     title: "1Muslim — Muslim Social Network & HudHud AI",
     description: "Watch, post, message, go live and learn Qur'an in one Muslim social network. Free membership, Shahada-centered onboarding and AI-assisted discovery."
   }
-}
+};
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="en"><body><SitePresenceHeartbeat /><ProfileThemeSync /><HudHudMotionShell><GlobalNavigation />{children}</HudHudMotionShell><ImmersiveVideoEntry /><PersistentMessengerCall /><PersistentMuslimSync /><PersistentDailyVideo /><VisitorFeedback /><LocationOnboarding /><PersistentAdhan /><HudHudDimensionDust /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><ElmiLayerX /><XPTracker /><PersistentQuranStudio /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
