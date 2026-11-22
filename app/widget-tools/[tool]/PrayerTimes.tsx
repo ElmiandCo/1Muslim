@@ -23,6 +23,7 @@ export default function PrayerTimes(){
  const [loading,setLoading]=useState(false);
  const [refresh,setRefresh]=useState(0);
  const requestedKey=useRef("");
+ const latestSchedule=useRef<PrayerSchedule|null>(null);
  const [editLocation,setEditLocation]=useState(false);
  useEffect(()=>{
   const focus=new URLSearchParams(window.location.search).get("focus");
@@ -48,18 +49,21 @@ export default function PrayerTimes(){
  const cityDay=locationClock(schedule?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC",now).date;
  useEffect(()=>{
   if(!place.city.trim()||!place.country.trim()){
-   setSchedule(null);setTomorrow(null);setMessage("");setLoading(false);requestedKey.current="";return;
+   setSchedule(null);latestSchedule.current=null;setTomorrow(null);setMessage("");setLoading(false);requestedKey.current="";return;
   }
   const key=[place.city,place.state,place.country,method].join("|");
   if(requestedKey.current!==key){
    // A new member/city must never display an unrelated city's old prayer schedule.
-   setSchedule(null);setTomorrow(null);requestedKey.current=key;
+   setSchedule(null);latestSchedule.current=null;setTomorrow(null);requestedKey.current=key;
   }
   const abort=new AbortController();setLoading(true);setMessage("");
   void fetchPrayerSchedule(place,method,abort.signal)
-   .then(data=>{if(!abort.signal.aborted)setSchedule(data)})
+   .then(data=>{if(!abort.signal.aborted){latestSchedule.current=data;setSchedule(data)}})
    .catch(()=>{if(!abort.signal.aborted){
-     setSchedule(previous=>previous?.date===cityDay?previous:null);
+     // Existing verified times for this same day remain usable: avoid an
+     // alarming "unavailable" banner on top of a fully populated schedule.
+     if(latestSchedule.current?.date===cityDay)return;
+     latestSchedule.current=null;setSchedule(null);
      setMessage("Unable to refresh prayer times right now. Please try again.");
    }})
    .finally(()=>{if(!abort.signal.aborted)setLoading(false)});
