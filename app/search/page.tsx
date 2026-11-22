@@ -1,23 +1,258 @@
 "use client";
 import "./search.css";
 import Link from "next/link";
-import {useEffect,useMemo,useState} from "react";
-type Post={id:string;body:string;author_id:string;author_name:string;author_handle:string;media_url:string|null;media_type:string|null;created_at:string};
-type Tab="Top"|"Posts"|"Videos"|"People";
-const historyKey="1muslim:discover:recent-searches";
-const tabs:Tab[]=["Top","Posts","Videos","People"];
-const video=(p:Post)=>!!p.media_type?.startsWith("video/")||/youtu(?:\.be|be\.com)/.test(p.body);
-const clean=(s:string)=>s.replace(/https?:\/\/\S+/g,"").trim();
-export default function SearchHub(){
- const [query,setQuery]=useState(""),[submitted,setSubmitted]=useState(""),[tab,setTab]=useState<Tab>("Top"),[recent,setRecent]=useState<string[]>([]),[posts,setPosts]=useState<Post[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState("");
- useEffect(()=>{try{const value=JSON.parse(localStorage.getItem(historyKey)||"[]");if(Array.isArray(value))setRecent(value.filter((x):x is string=>typeof x==="string").slice(0,10))}catch{}},[]);
- useEffect(()=>{let active=true;fetch("/api/community-posts",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("Search is temporarily unavailable");return r.json()}).then(j=>{if(active)setPosts(j.posts||[])}).catch(e=>{if(active)setError(e.message)}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[]);
- const commit=(value:string)=>{const q=value.trim();if(!q)return;setQuery(q);setSubmitted(q);setTab("Top");const next=[q,...recent.filter(x=>x.toLowerCase()!==q.toLowerCase())].slice(0,10);setRecent(next);try{localStorage.setItem(historyKey,JSON.stringify(next))}catch{}};
- const remove=(value:string)=>{const next=recent.filter(x=>x!==value);setRecent(next);try{localStorage.setItem(historyKey,JSON.stringify(next))}catch{}};
- const matches=useMemo(()=>posts.filter(p=>(p.body+" "+p.author_name+" "+p.author_handle).toLowerCase().includes(submitted.toLowerCase())),[posts,submitted]);
- const people=useMemo(()=>{const seen=new Set<string>();return posts.filter(p=>{if(seen.has(p.author_id))return false;seen.add(p.author_id);return true}).filter(p=>!submitted||(p.author_name+" "+p.author_handle).toLowerCase().includes(submitted.toLowerCase()))},[posts,submitted]);
- const visible=tab==="Videos"?matches.filter(video):matches;
- const suggestions=useMemo(()=>{const counts=new Map<string,number>();for(const p of posts){const name=p.author_handle||p.author_name;if(name)counts.set(name,(counts.get(name)||0)+1)}return [...counts].sort((a,b)=>b[1]-a[1]).slice(0,8)},[posts]);
- return <main className="searchHub"><header className="searchHeader"><Link href="/posts" aria-label="Back to Discover">‹</Link><form onSubmit={e=>{e.preventDefault();commit(query)}}><span aria-hidden="true">⌕</span><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search 1Muslim" aria-label="Search 1Muslim"/>{query&&<button type="button" aria-label="Clear search" onClick={()=>{setQuery("");setSubmitted("")}}>×</button>}</form><button type="button" onClick={()=>commit(query)}>Search</button></header>
- {!submitted?<><section><div className="sectionHead"><h2>Recent searches</h2>{recent.length>0&&<button onClick={()=>{setRecent([]);try{localStorage.removeItem(historyKey)}catch{}}}>Clear all</button>}</div>{recent.length?recent.map(s=><div className="historyRow" key={s}><button onClick={()=>commit(s)}>◷ &nbsp; {s}</button><button aria-label={"Remove "+s} onClick={()=>remove(s)}>×</button></div>):<p className="muted">Your searches will appear here, only on this device.</p>}</section><section><div className="sectionHead"><h2>You may like</h2><span className="muted">Active creators</span></div>{suggestions.map(([name,count])=><button className="suggestion" key={name} onClick={()=>commit(name)}><span>•</span>{name}<small>{count} posts</small></button>)}</section><section><h2>Explore 1Muslim</h2><div className="exploreTabs"><Link href="/posts">Posts</Link><Link href="/deepwatch">Movies & Shows</Link><Link href="/live">LIVE</Link><Link href="/quran">Qur’an</Link></div></section></>:<><nav className="resultTabs" aria-label="Search result types">{tabs.map(t=><button key={t} className={tab===t?"selected":""} onClick={()=>setTab(t)}>{t}</button>)}<Link href="/deepwatch">Movies & Shows ↗</Link></nav><div className="resultFilters"><button onClick={()=>setTab("Top")}>All</button><button onClick={()=>setTab("Videos")}>Videos</button><button onClick={()=>setTab("People")}>Users</button></div>{loading?<p>Searching…</p>:error?<p role="alert">{error}</p>:<>{(tab==="Top"||tab==="People")&&<section><h2>People</h2>{people.slice(0,tab==="People"?50:4).map(p=><Link className="personRow" key={p.author_id} href={`/profile?section=muslimeen&member=${encodeURIComponent(p.author_id)}`}><span className="avatar">{p.author_name.slice(0,1).toUpperCase()}</span><span><strong>{p.author_name}</strong><small>{p.author_handle}</small></span><span>↗</span></Link>)}{!people.length&&<p className="muted">No matching people.</p>}</section>}{tab!=="People"&&<section><h2>{tab==="Videos"?"Videos":"Posts"}</h2><div className="resultGrid">{visible.map(p=><Link href={`/posts/story/${encodeURIComponent(p.id)}`} className="resultCard" key={p.id}>{p.media_url&&p.media_type?.startsWith("image/")?<img src={p.media_url} alt="" loading="lazy"/>:<div className="textPreview">{video(p)?"▷": "✦"}<p>{clean(p.body).slice(0,110)||"Community post"}</p></div>}<div className="resultMeta"><strong>{clean(p.body).slice(0,80)||"Community post"}</strong><small>{p.author_name}</small></div></Link>)}</div>{!visible.length&&<p className="muted">No matching posts.</p>}</section>}</>}</>}</main>;
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import type { DiscoverKind, DiscoverItem, DiscoverResponse } from "../lib/discover-search";
+
+type Tab = "All" | DiscoverKind;
+type ChatLine = { role: "user" | "assistant"; content: string; matches?: DiscoverItem[] };
+const CATEGORIES: DiscoverKind[] = ["Videos","Posts","People","Movies & Series","Qur’an","Comments","Lessons","Prayer","Live","Qibla"];
+const TABS: Tab[] = ["All", ...CATEGORIES];
+const ICON: Record<DiscoverKind,string> = {
+  "Videos":"▶","Posts":"▤","People":"◉","Movies & Series":"▣","Qur’an":"۞",
+  "Comments":"◌","Lessons":"✦","Prayer":"☾","Live":"●","Qibla":"✧"
+};
+const historyKey = "1muslim:discover:recent-searches";
+const explore: Array<{label:string;href:string;icon:string;details:string}> = [
+  {label:"Ummah Posts",href:"/posts",icon:"▤",details:"What your Ummah is sharing"},
+  {label:"DeepWatch",href:"/deepwatch",icon:"▶",details:"Films, shows and series"},
+  {label:"LIVE",href:"/streaming",icon:"●",details:"Join the conversation"},
+  {label:"Qur’an",href:"/quran-library",icon:"۞",details:"Explore all 114 chapters"},
+  {label:"Prayer Journey",href:"/widget-tools/prayer",icon:"☾",details:"Prayer times and learning"},
+  {label:"Qibla",href:"/qibla/newsroom",icon:"✧",details:"Stories and editorials"}
+];
+function short(s:string,n=130){return s.length>n?s.slice(0,n).trimEnd()+"…":s}
+function ResultCard({item,small=false}:{item:DiscoverItem;small?:boolean}) {
+  const isPeople=item.kind==="People";
+  const isText=["Qur’an","Comments","Lessons","Prayer","Qibla"].includes(item.kind)&&!item.image;
+  return <Link className={"dsCard dsCard"+(isPeople?"Person":isText?"Text":"Media")+(small?" dsCardSmall":"")} href={item.href}
+    aria-label={"Open "+item.kind+": "+item.title}>
+    {isPeople ? <div className="dsPersonAvatar">{item.image?<img src={item.image} alt="" loading="lazy" />:<span>{item.title.slice(0,1).toUpperCase()}</span>}</div>
+    : <div className={"dsCardVisual "+(item.image?"dsCardHasImage":"")} aria-hidden="true">
+      {item.image?<img src={item.image} alt="" loading="lazy" />:<><span className="dsCardGlyph">{ICON[item.kind]}</span><span className="dsCardWatermark">{item.kind}</span></>}
+      {item.media==="video"&&<span className="dsPlayIcon">▶</span>}
+    </div>}
+    <div className="dsCardBody">
+      <div className="dsCardTags"><span>{item.badge||item.kind}</span>{item.score>=85&&<em>Best match</em>}</div>
+      <strong>{short(item.title,104)}</strong>
+      <p>{short(item.description,145)}</p>
+      <div className="dsCardEnd"><span>{short(item.byline||item.kind,28)}</span><span aria-hidden="true">↗</span></div>
+    </div>
+  </Link>;
+}
+
+function ResultRail({title,subtitle,items,category}:{title:string;subtitle:string;items:DiscoverItem[];category?:DiscoverKind}) {
+  const scrollRef=useRef<HTMLDivElement>(null);
+  if(!items.length)return null;
+  return <section className="dsRailSection" aria-label={title}>
+    <div className="dsSectionHead"><div><span className="dsSectionKicker">{category?ICON[category]+" "+category.toUpperCase():"RELEVANT TO YOUR SEARCH"}</span><h2>{title}</h2><p>{subtitle}</p></div>
+      <div className="dsRailArrows"><button type="button" aria-label={"Scroll "+title+" left"} onClick={()=>scrollRef.current?.scrollBy({left:-440,behavior:"smooth"})}>‹</button><button type="button" aria-label={"Scroll "+title+" right"} onClick={()=>scrollRef.current?.scrollBy({left:440,behavior:"smooth"})}>›</button></div>
+    </div>
+    <div ref={scrollRef} className="dsRail" role="list">{items.map(item=><div role="listitem" key={item.kind+":"+item.id}><ResultCard item={item}/></div>)}</div>
+  </section>;
+}
+
+export default function SearchHub() {
+  const [query,setQuery]=useState("");
+  const [submitted,setSubmitted]=useState("");
+  const [tab,setTab]=useState<Tab>("All");
+  const [recent,setRecent]=useState<string[]>([]);
+  const [result,setResult]=useState<DiscoverResponse|null>(null);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState("");
+  const [hudOpen,setHudOpen]=useState(false);
+  const [chat,setChat]=useState<ChatLine[]>([]);
+  const [chatInput,setChatInput]=useState("");
+  const [chatBusy,setChatBusy]=useState(false);
+  const [chatError,setChatError]=useState("");
+  const [remaining,setRemaining]=useState<number|null>(3);
+  const [unlocked,setUnlocked]=useState(false);
+  const [limitReached,setLimitReached]=useState(false);
+  const chatEnd=useRef<HTMLDivElement>(null);
+  const searchField=useRef<HTMLInputElement>(null);
+  const requestCount=useRef(0);
+  const [compactHeader,setCompactHeader]=useState(false);
+
+  useEffect(()=>{
+    try{const saved=JSON.parse(localStorage.getItem(historyKey)||"[]");
+      if(Array.isArray(saved))setRecent(saved.filter((x):x is string=>typeof x==="string").slice(0,10));}
+    catch{}
+    const initial=new URLSearchParams(window.location.search).get("q")||"";
+    if(initial){setQuery(initial.slice(0,90));setSubmitted(initial.slice(0,90));}
+  },[]);
+  useEffect(()=>{
+    const onScroll=()=>setCompactHeader(window.scrollY>140);
+    window.addEventListener("scroll",onScroll,{passive:true});
+    return()=>window.removeEventListener("scroll",onScroll);
+  },[]);
+  useEffect(()=>{
+    const current=++requestCount.current;
+    if(query.trim().length===1){setLoading(false);return;}
+    const controller=new AbortController();
+    const timer=window.setTimeout(async()=>{
+      setLoading(true);setError("");
+      try{
+        const r=await fetch("/api/discover/search?q="+encodeURIComponent(query.trim()),{signal:controller.signal,cache:"no-store"});
+        if(!r.ok)throw new Error("Could not search 1Muslim right now.");
+        const data=await r.json() as DiscoverResponse;
+        if(!controller.signal.aborted&&current===requestCount.current)setResult(data);
+      } catch(e) {
+        if(!controller.signal.aborted&&current===requestCount.current)setError(e instanceof Error?e.message:"Search unavailable");
+      } finally {
+        if(!controller.signal.aborted&&current===requestCount.current)setLoading(false);
+      }
+    },query.trim()?320:25);
+    return()=>{controller.abort();window.clearTimeout(timer);};
+  },[query]);
+  useEffect(()=>{if(hudOpen)chatEnd.current?.scrollIntoView({behavior:"smooth",block:"end"});},[chat,hudOpen,chatBusy]);
+
+  const commit=(value:string)=>{
+    const clean=value.trim().slice(0,90);if(!clean)return;
+    setQuery(clean);setSubmitted(clean);setTab("All");
+    const next=[clean,...recent.filter(x=>x.toLowerCase()!==clean.toLowerCase())].slice(0,10);
+    setRecent(next);try{localStorage.setItem(historyKey,JSON.stringify(next));window.history.replaceState({}, "", "/search?q="+encodeURIComponent(clean));}catch{}
+    searchField.current?.blur();
+  };
+  const clear=()=>{setQuery("");setSubmitted("");setTab("All");try{window.history.replaceState({}, "", "/search");}catch{};searchField.current?.focus();};
+  const remove=(term:string)=>{const next=recent.filter(s=>s!==term);setRecent(next);try{localStorage.setItem(historyKey,JSON.stringify(next))}catch{}};
+  const showSuggestions=Boolean(query.trim().length>=2&&query.trim().toLowerCase()!==submitted.toLowerCase());
+  const suggestions=useMemo(()=>[...new Set([
+    ...result?.best?.filter(x=>x.title.toLowerCase().includes(query.toLowerCase())&&x.title.length<45).map(x=>x.title)||[],
+    ...result?.suggestions?.filter(x=>x.toLowerCase().includes(query.toLowerCase()))||[]
+  ])].slice(0,6),[result,query]);
+  const topMatches=result?.best||[];
+  const visibleCategories=tab==="All"?CATEGORIES:CATEGORIES.filter(c=>c===tab);
+  const totalFor=(name:DiscoverKind)=>(result?.groups?.[name]||[]).length;
+
+  const openHudHud=async()=>{
+    setHudOpen(true);setChatError("");
+    try {
+      const response=await fetch("/api/discover/ask",{cache:"no-store"});
+      const data=await response.json();
+      if(!response.ok)throw new Error(data.error||"Could not check HudHud availability.");
+      setRemaining(typeof data.remaining==="number"?data.remaining:null);
+      setUnlocked(Boolean(data.unlocked));setLimitReached(data.remaining===0);
+    } catch(e){setChatError(e instanceof Error?e.message:"HudHud is unavailable");}
+  };
+  const ask=async(e:FormEvent)=>{
+    e.preventDefault();
+    const message=chatInput.trim();if(!message||chatBusy||limitReached)return;
+    const history=chat.map(x=>({role:x.role,content:x.content})).slice(-6);
+    setChat(previous=>[...previous,{role:"user",content:message}]);
+    setChatInput("");setChatBusy(true);setChatError("");
+    try{
+      const response=await fetch("/api/discover/ask",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({query:submitted||query,message,history})
+      });
+      const data=await response.json();
+      if(data.limitReached&&(!response.ok||data.remaining===0)){setLimitReached(true);setRemaining(0);}
+      if(!response.ok)throw new Error(data.error||"HudHud could not reply.");
+      setChat(previous=>[...previous,{role:"assistant",content:data.reply,matches:data.matches||[]}]);
+      if(typeof data.remaining==="number")setRemaining(data.remaining);
+      if(data.unlocked)setUnlocked(true);
+    }catch(e){
+      // Failed requests do not count as completed turns; keep the draft for retry.
+      setChat(previous=>previous.slice(0,-1));setChatInput(message);
+      setChatError(e instanceof Error?e.message:"Could not ask HudHud");
+    }finally{setChatBusy(false);}
+  };
+  return <main className="dsPage">
+    <header className={"dsHeader"+(compactHeader?" dsHeaderCompact":"")}>
+      <div className="dsHeaderRow">
+        <Link href="/posts" className="dsBack" aria-label="Back to posts">‹</Link>
+        <form className="dsSearchForm" role="search" onSubmit={e=>{e.preventDefault();commit(query);}}>
+          <span aria-hidden="true">⌕</span>
+          <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search videos, creators, verses, movies…" value={query}
+            onChange={e=>setQuery(e.target.value)} />
+          {query&&<button className="dsClear" type="button" aria-label="Clear search" onClick={clear}>×</button>}
+        </form>
+        <button className="dsSearchSubmit" type="button" onClick={()=>commit(query)}>Search</button>
+      </div>
+      <nav className="dsTabs" aria-label="Discover categories">
+        {TABS.map(name=><button key={name} type="button" className={tab===name?"active":""} aria-pressed={tab===name} onClick={()=>{setTab(name);setSubmitted(query.trim());}}>
+          {name}{name!=="All"&&result&&totalFor(name as DiscoverKind)>0?<small>{totalFor(name as DiscoverKind)}</small>:null}
+        </button>)}
+        <button className="dsHudTab" type="button" onClick={()=>void openHudHud()}>✦ Ask HudHud</button>
+      </nav>
+    </header>
+
+    {showSuggestions&&<section className="dsSuggestions" aria-label="Search suggestions">
+      <span className="dsSectionKicker">SUGGESTED MATCHES</span>
+      {suggestions.map(text=><button key={text} type="button" onClick={()=>commit(text)}><span className="dsSuggestIcon">⌕</span><span>{text}</span><b aria-hidden="true">↗</b></button>)}
+      <button className="dsSuggestSearchAll" type="button" onClick={()=>commit(query)}>Search all 1Muslim for “{query}” <span aria-hidden="true">→</span></button>
+    </section>}
+
+    {!query.trim()&&<section className="dsHero">
+      <div className="dsHeroGlow" aria-hidden="true"/>
+      <div className="dsHeroCopy"><span className="dsHeroEyebrow">✦ DISCOVER 1MUSLIM</span><h1>One search.<br/><em>Your entire Ummah.</em></h1>
+        <p>Find creators, conversations, videos, films, Qur’an verses, and guides — all in one place.</p>
+        <button type="button" className="dsHeroAsk" onClick={()=>void openHudHud()}>✦ Search with HudHud <span>↗</span></button>
+      </div>
+      <span className="dsHeroMark" aria-hidden="true">۞</span>
+    </section>}
+
+    <div className="dsContent">
+      {!query.trim()&&<section className="dsRecent">
+        <div className="dsSectionHead"><div><span className="dsSectionKicker">YOUR DISCOVER ACTIVITY</span><h2>Recent searches</h2></div>
+          {recent.length>0&&<button className="dsQuietButton" onClick={()=>{setRecent([]);try{localStorage.removeItem(historyKey)}catch{}}}>Clear all</button>}</div>
+        {recent.length?<div className="dsRecentList">{recent.map(s=><div className="dsRecentItem" key={s}><button type="button" onClick={()=>commit(s)}><span>◷</span>{s}</button><button type="button" aria-label={"Remove "+s} onClick={()=>remove(s)}>×</button></div>)}</div>
+          :<p className="dsEmptyRecent">Your recent searches stay on this device.</p>}
+      </section>}
+
+      {loading&&<div className="dsLoading" role="status"><span className="dsLoadingLine"/><span>Searching the 1Muslim directory…</span><div className="dsSkeletonRow"><i/><i/><i/></div></div>}
+      {error&&<div className="dsError" role="alert">{error}<button onClick={()=>setQuery(s=>s+" ")}>Try again</button></div>}
+      {!loading&&!error&&result&&<>
+        {(query.trim().length>=2||submitted)&&<section className="dsResultIntro"><span className="dsSectionKicker">LIVE DIRECTORY RESULTS</span>
+          <h1>{result.total>0?<>Search results for <em>“{query}”</em></>:"No exact matches yet"}</h1>
+          <p>{result.total} matching results across {CATEGORIES.filter(c=>totalFor(c)>0).length} categories
+            {result.partial?" · Some sources are temporarily unavailable":""}</p>
+          <button className="dsSearchWithHud" type="button" onClick={()=>void openHudHud()}>✦ Need help finding it? Ask HudHud <span>→</span></button>
+        </section>}
+        {tab==="All"&&topMatches.length>0&&query.trim()&&<ResultRail title="Best matches" subtitle="Closest matches across the entire site, ranked by relevance." items={topMatches.slice(0,10)} />}
+        {visibleCategories.map(category=><ResultRail key={category} category={category} title={category==="Movies & Series"?"Movies, shows & series":category==="Qur’an"?"Qur’an verses & chapters":category}
+          subtitle={category==="Comments"?"Conversations happening in Ummah posts.":category==="People"?"Members and creators you can connect with.":category==="Qur’an"?"Verified verse references and English translation search.":"Explore related "+category.toLowerCase()+" on 1Muslim."}
+          items={result.groups[category]||[]} />)}
+        {query.trim()&&result.total===0&&<section className="dsNoResults"><span>⌕</span><h2>Let’s narrow it down</h2>
+          <p>Try a creator name, phrase, film title, surah, or subject. HudHud can help you search the right part of 1Muslim.</p>
+          <button type="button" onClick={()=>void openHudHud()}>Ask HudHud →</button></section>}
+      </>}
+      {!query.trim()&&<section className="dsExplore"><div className="dsSectionHead"><div><span className="dsSectionKicker">QUICK DESTINATIONS</span><h2>Explore 1Muslim</h2><p>Jump into the parts of your community you love most.</p></div></div>
+        <div className="dsExploreGrid">{explore.map(x=><Link key={x.href} href={x.href}><span>{x.icon}</span><strong>{x.label}</strong><small>{x.details}</small><b aria-hidden="true">↗</b></Link>)}</div></section>}
+    </div>
+    <button className="dsFloatAsk" type="button" onClick={()=>void openHudHud()} aria-label="Ask HudHud for help finding content"><span>✦</span> Ask HudHud</button>
+
+    {hudOpen&&<div className="dsChatOverlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setHudOpen(false)}}>
+      <aside className="dsChat" role="dialog" aria-modal="true" aria-labelledby="dsChatHeading">
+        <div className="dsChatTop"><div className="dsChatAvatar">✦</div><div><span className="dsSectionKicker">1MUSLIM SEARCH COMPANION</span><h2 id="dsChatHeading">Ask HudHud <span>◉</span></h2></div>
+          <button className="dsChatClose" aria-label="Close HudHud" type="button" onClick={()=>setHudOpen(false)}>×</button></div>
+        <div className="dsChatScroll">
+          <div className="dsChatWelcome"><strong>Assalamu alaikum. I'm HudHud.</strong><p>I'll sweep 1Muslim for relevant matches, then help you narrow down what you're looking for. What should we find?</p></div>
+          {(result?.best.length||0)>0&&chat.length===0&&<div className="dsChatFound"><span>FOUND ON 1MUSLIM</span>
+            {result?.best.slice(0,4).map(item=><Link key={item.kind+item.id} href={item.href} onClick={()=>setHudOpen(false)}><b>{ICON[item.kind]}</b><span>{short(item.title,58)}<small>{item.kind}</small></span><i>↗</i></Link>)}
+          </div>}
+          {chat.map((line,index)=><div className={"dsChatLine "+(line.role==="user"?"dsChatMine":"dsChatTheirs")} key={index}>
+            <div className="dsChatBubble">{line.content}</div>
+            {line.matches&&line.matches.length>0&&<div className="dsChatMatchLinks">{line.matches.slice(0,4).map(item=><Link key={item.kind+item.id} href={item.href} onClick={()=>setHudOpen(false)}>
+              <span>{ICON[item.kind]}</span>{short(item.title,43)} <b>↗</b></Link>)}</div>}
+          </div>)}
+          {chatBusy&&<div className="dsChatThinking" role="status">✦ HudHud is reviewing relevant matches<span>···</span></div>}
+          {chatError&&<p className="dsChatError" role="alert">{chatError}</p>}
+          {(remaining===0||limitReached)&&!unlocked&&<div className="dsChatLimit">
+            <span>✦ FREE HUDHUD PREVIEW COMPLETE</span><h3>Your three free replies are used.</h3>
+            <p>Make HudHud yours throughout 1Muslim with Unlocked. Explore, learn, and find your way around the Ummah with more help.</p>
+            <Link href="/unlocked">Discover 1Muslim Unlocked <span>↗</span></Link>
+          </div>}
+          <div ref={chatEnd}/>
+        </div>
+        <div className="dsChatBottom">
+          <p className="dsChatRemaining">{unlocked?"✦ 1Muslim Unlocked · HudHud included":remaining===null?"Checking your free HudHud replies…":remaining+" of 3 free HudHud replies remaining"}</p>
+          <form onSubmit={e=>void ask(e)}><input aria-label="Ask HudHud a question" placeholder={limitReached&&!unlocked?"Continue with 1Muslim Unlocked":"Ask about content, verses, movies…"}
+            value={chatInput} onChange={e=>setChatInput(e.target.value)} maxLength={900} disabled={chatBusy||(limitReached&&!unlocked)}/>
+            <button type="submit" aria-label="Send message" disabled={!chatInput.trim()||chatBusy||(limitReached&&!unlocked)}>↑</button></form>
+          <small>Answers may be imperfect. Verify important information and Qur’an interpretations.</small>
+        </div>
+      </aside>
+    </div>}
+  </main>;
 }
