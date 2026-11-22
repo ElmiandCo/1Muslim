@@ -18,8 +18,8 @@ export default function HudHudQuranBird({verseKey,chapterName,words=NO_WORDS,pau
  const [hoverWord,setHoverWord]=useState("");
  const [meaning,setMeaning]=useState("");
  const [reduceMotion,setReduceMotion]=useState(false);
- const dismissTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
- const hoverTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const dismissTimer=useRef<number|null>(null);
+ const hoverTimer=useRef<number|null>(null);
  const positionRef=useRef(position);
  const lastPointer=useRef({x:0,y:0});
 
