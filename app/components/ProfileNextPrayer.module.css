@@ -1,10 +1,10 @@
-/* Next-prayer timeline sits just below the floating prayer card, not on the
-   cover's original border. The avatar is intentionally layered above the
-   left end of the track; everything else stays separate (no collisions).
-   This remains anchored to the profile identity, without layout jumps. */
+/* Track the true bottom edge of the cover artwork. The identity wrapper
+   starts exactly after the cover, so a -2px offset centers this 4px rail on
+   the artwork's bottom trim. The avatar stays above the left side and the
+   floating next-prayer card keeps its independent position. */
 .seam{
  --prayer-accent:var(--member-accent,var(--theme-accent,#b89965));
- position:absolute;left:0;right:0;top:32px;height:4px;z-index:1;
+ position:absolute;left:0;right:0;top:-2px;height:4px;z-index:1;
  border-radius:999px;background:color-mix(in srgb,var(--prayer-accent) 17%,#e8edf2);
  box-shadow:inset 0 1px 0 #ffffffc7,0 1px 3px #172d3d0e;
  pointer-events:none;
@@ -79,10 +79,11 @@
 @media(prefers-reduced-motion:reduce){.symbol :global(.prayerIconRay){animation:none}}
 
 
-/* Restore the original understated floating Next Prayer / theme-light timeline.
-   Keep its deliberately precise positioning beside the avatar, without a bulky tile. */
+/* Restore the original understated Next Prayer glass styling while keeping
+   the progress timeline exactly on the COVER bottom border, not below the card. */
 .seam{
- top:28px;height:3px;left:0;right:0;
+ /* Inherit top:-2px from base so the rail sits ON the cover's bottom trim. */
+ height:3px;left:0;right:0;
  background:color-mix(in srgb,var(--prayer-accent) 15%,#edf1f4);
  box-shadow:inset 0 1px #fff9,0 1px 5px color-mix(in srgb,var(--prayer-accent) 9%,transparent);
 }
@@ -114,7 +115,6 @@
 }
 .chevron{font-size:17px;color:color-mix(in srgb,var(--prayer-accent) 50%,#617484);margin-left:1px}
 @media(max-width:480px){
- .seam{top:26px}
  .card{top:-34px;right:12px;min-height:48px;width:min(228px,calc(100% - 108px));padding:7px 7px;gap:4px;border-radius:13px}
  .symbol{width:20px;height:23px;flex-basis:20px}
  .symbol svg{width:19px;height:19px}
