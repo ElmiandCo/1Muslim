@@ -25,6 +25,8 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
  const closeButton=useRef<HTMLButtonElement>(null);
  const frame=useRef<number|null>(null);
  const dialogTitle="Cinematic profile for "+(profile.display_name||"1Muslim member");
+ const closeRef=useRef(onClose);
+ closeRef.current=onClose;
  useEffect(()=>setMounted(true),[]);
  useEffect(()=>{
   if(!mounted)return;
@@ -33,7 +35,7 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
   document.body.style.overflow="hidden";
   closeButton.current?.focus({preventScroll:true});
   const onKey=(e:KeyboardEvent)=>{
-   if(e.key==="Escape"){e.preventDefault();onClose();}
+   if(e.key==="Escape"){e.preventDefault();closeRef.current();}
    // Keep keyboard focus inside the open profile instead of the page behind it.
    if(e.key==="Tab"&&scroller.current){
     const nodes=Array.from(scroller.current.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],summary,[tabindex]:not([tabindex="-1"])')).filter(node=>node.getClientRects().length>0);
@@ -50,7 +52,7 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
    if(frame.current!==null)cancelAnimationFrame(frame.current);
    previouslyFocused?.focus({preventScroll:true});
   };
- },[mounted,onClose]);
+ },[mounted]);
 
  useEffect(()=>{
   if(!mounted)return;
