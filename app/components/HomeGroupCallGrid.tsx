@@ -16,7 +16,7 @@ export default function HomeGroupCallGrid({title,participants,onLeave,onToggleMi
  useEffect(()=>{if(expanded&&!participants.some(p=>p.id===expanded))setExpanded(null)},[expanded,participants]);
  const shown=expanded?participants.filter(p=>p.id===expanded):participants;
  return <section className={styles.room} aria-label={title+" group call"}>
-  <header className={styles.header}><strong>{title}</strong><span className={styles.count}>{participants.length} in room</span><div className={styles.headerActions}>{onInvite&&<button type="button" onClick={onInvite} aria-label="Invite participants">♧＋</button>}{onChat&&<button type="button" onClick={onChat} aria-label="Open chat">▤</button>}</div></header>
+  <header className={styles.header}><strong>{title}</strong><span className={styles.count}>{participants.length} in room</span><div className={styles.headerActions}>{onInvite&&<button type="button" onClick={onInvite} aria-label="Invite participants">👥＋</button>}{onChat&&<button type="button" onClick={onChat} aria-label="Open chat">▤</button>}</div></header>
   <div className={styles.grid} data-single={shown.length===1}>
    {shown.map(p=>{const level=Math.max(0,Math.min(1,p.audioLevel??0));const speaking=Boolean(p.isSpeaking||level>.08);return <article key={p.id} className={styles.tile} data-speaking={speaking} style={{"--voice-strength":speaking?String(Math.max(.35,level)): "0"} as React.CSSProperties}>
     <div className={styles.voiceRing} aria-hidden="true"/>
