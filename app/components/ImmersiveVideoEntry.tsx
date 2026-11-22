@@ -208,7 +208,7 @@ export default function ImmersiveVideoEntry(){
     <div className="imv-seek-track" aria-hidden="true"><span style={{width:`${Math.min(100,videoTime/videoDuration*100)}%`}}/></div>
     <input className="imv-seek" type="range" min={0} max={videoDuration} step="0.01" value={Math.min(videoTime,videoDuration)} onPointerDown={()=>setScrubbing(true)} onPointerUp={()=>setScrubbing(false)} onPointerCancel={()=>setScrubbing(false)} onBlur={()=>setScrubbing(false)} onChange={e=>seekVideo(Number(e.target.value))} aria-label="Seek video" aria-valuetext={`${Math.floor(videoTime/60)}:${String(Math.floor(videoTime%60)).padStart(2,"0")} of ${Math.floor(videoDuration/60)}:${String(Math.floor(videoDuration%60)).padStart(2,"0")}`}/>
     {scrubbing&&<output className="imv-seek-time" aria-live="off">{Math.floor(videoTime/60)}:{String(Math.floor(videoTime%60)).padStart(2,"0")} / {Math.floor(videoDuration/60)}:{String(Math.floor(videoDuration%60)).padStart(2,"0")}</output>}
-   </div>
+   </div>}
    {fastSpeed>1&&<div className="imv-speed-indicator" aria-live="off"><strong>▶▶ {fastSpeed}×</strong>{fastSpeed===2&&<span>Slide right for 5×</span>}</div>}
    <div className="imv-shade"/>
   <div className="imv-heartBurstLayer" aria-hidden="true">{heartBursts.map(b=><span key={b.id} className="imv-heartBurst" style={{left:b.x+"%",top:b.y+"%"}}>{Array.from({length:12},(_,i)=><i key={i} style={{["--heart-x" as string]:(Math.sin(i*Math.PI/6)*(65+(i%4)*17)).toFixed(1)+"px",["--heart-y" as string]:(-Math.cos(i*Math.PI/6)*(65+(i%4)*17)-45).toFixed(1)+"px",["--heart-delay" as string]:(i%3*25)+"ms"} as React.CSSProperties}>♥</i>)}</span>)}</div>
