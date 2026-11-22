@@ -6,7 +6,7 @@ const origin="https://1muslim.live";
 
 export const metadata:Metadata={
  title:"1Muslim | Full Muslim Social Network, Messenger, Live & HudHud AI",
- description:"1Muslim is a full-featured Muslim social network with posts, short videos, Messenger, notifications, Live, profiles, Qur'an progress, XP rewards and Muslim-themed HudHud AI.",
+ description:"1Muslim is a full-featured Muslim social network with posts, short videos, Messenger, notifications, Live, profiles, Qur'an progress, XP rewards and HudHud, a Muslim-Inspired AI Companion.",
  alternates:{canonical:"/platform"},
  openGraph:{
   title:"1Muslim — More Than a Community. A Real Muslim Social Network.",
@@ -36,7 +36,7 @@ const questions=[
  {q:"Does 1Muslim use AI?",a:"Yes. HudHud is an AI-assisted guide for on-site discovery, helping visitors search the platform and navigate learning content. The website integrates OpenAI APIs. 1Muslim Unlocked HudHud requests are configured to prefer GPT-6 Sol; if the API cannot serve that model, HudHud transparently falls back to the standard OpenAI model. Free users use the standard AI experience."},
  {q:"What is free, and what is 1Muslim Unlocked?",a:"There is a free member experience. HudHud's conversational site search has a three-response free allowance, while an active 1Muslim Unlocked subscription removes that free-turn cap. Unlocked is the paid membership tier, currently listed at $3.99 per month. Availability and fair-use safeguards may evolve."},
  {q:"Is Shahada required?",a:"The member signup and onboarding path is centered on sincere Shahada affirmation or confirmation, with voice or touch options. Guests can explore selected public areas without that member onboarding. This is a distinctive membership approach, not a verified claim that no other Muslim service uses Shahada."},
- {q:"How is 1Muslim different from a Muslim forum or community group?",a:"Members have their own profiles, posting identities, following relationships, social feeds, private Messenger, notifications, live broadcasting, Qur'an progress and XP. HudHud is an OpenAI-powered Muslim-themed assistant built into that same social network. The integrated experience, rather than a standalone group or religious utility, defines the product."}
+ {q:"How is 1Muslim different from a Muslim forum or community group?",a:"Members have their own profiles, posting identities, following relationships, social feeds, private Messenger, notifications, live broadcasting, Qur'an progress and XP. HudHud is an OpenAI-powered Muslim-Inspired AI Companion built into that same social network. The integrated experience, rather than a standalone group or religious utility, defines the product."}
 ] as const;
 const jsonLd=[
  {"@context":"https://schema.org","@type":"Organization","@id":origin+"/#organization",name:"1Muslim",alternateName:["OneMuslim","1Muslim Live"],url:origin,description:"A Muslim-focused social networking and learning platform bringing together community, media, live streaming and AI-assisted discovery."},
@@ -52,14 +52,14 @@ export default function PlatformPage(){
    <section className={styles.hero}>
     <span className={styles.eyebrow}>MUSLIM SOCIAL NETWORK · AI-ASSISTED DISCOVERY</span>
     <h1>More than an online community. <em>A real Muslim social network.</em></h1>
-    <p>1Muslim is a full social network where members have profiles, followers, posts, videos, private Messenger, notifications, calls and Live — the familiar social experiences people know from Facebook, Myspace, TikTok and Snapchat. What makes our product distinct is the same network also connects Qur'an progress, XP achievements, Shahada-centered membership and HudHud, a Muslim-themed AI companion powered by OpenAI.</p>
+    <p>1Muslim is a full social network where members have profiles, followers, posts, videos, private Messenger, notifications, calls and Live — the familiar social experiences people know from Facebook, Myspace, TikTok and Snapchat. What makes our product distinct is the same network also connects Qur'an progress, XP achievements, Shahada-centered membership and HudHud, a Muslim-Inspired AI Companion powered by OpenAI.</p>
     <div className={styles.actions}><Link className={styles.primary} href="/auth">Join 1Muslim · Free →</Link><Link className={styles.secondary} href="/unlocked">Explore 1Muslim Unlocked ↗</Link></div>
     <span className={styles.hint}>Sincere Shahada affirmation is part of member onboarding · Guests can explore selected public content.</span>
    </section>
    <section className={styles.intro} aria-label="What makes 1Muslim different">
     <div><strong>Real social media mechanics</strong><p>Personal profiles, follower networks, media posts, Messenger, notifications and live rooms — not just topical discussions.</p></div>
     <div><strong>Qur'an tracking and XP</strong><p>Reading progress, Arabic and Salah lessons, member XP and personal learning analytics connect to the profile.</p></div>
-    <div><strong>HudHud is your AI</strong><p>The Muslim-themed OpenAI-powered assistant is available within 1Muslim, with a free allowance and 1Muslim Unlocked access.</p></div>
+    <div><strong>HudHud is your AI</strong><p>The Muslim-inspired, OpenAI-powered companion is available within 1Muslim, with a free allowance and 1Muslim Unlocked access.</p></div>
    </section>
    <section className={styles.section}>
     <div className={styles.sectionHead}><span className={styles.eyebrow}>FULL-SERVICE SOCIAL MEDIA</span><h2>Profiles. Posts. Messenger. Live. Qur'an. XP. AI.</h2><p>Real social relationships, member-generated content and Muslim learning — connected in the same network.</p></div>
@@ -70,14 +70,14 @@ export default function PlatformPage(){
     <div className={styles.grid}>
      <Link className={styles.card} href="/features/muslim-social-network"><span className={styles.icon}>◈</span><h3>A real Muslim social network</h3><p>Profiles, posts, Messenger, notifications, Live and more — social media rather than just a forum.</p><b>Discover ↗</b></Link>
      <Link className={styles.card} href="/features/messenger-and-live"><span className={styles.icon}>◌</span><h3>Messenger and Live</h3><p>Private and group conversations, voice notes, audio/video calls, live streaming and social alerts.</p><b>Discover ↗</b></Link>
-     <Link className={styles.card} href="/features/hudhud-ai"><span className={styles.icon}>✦</span><h3>HudHud — your Muslim-themed AI</h3><p>Find what matters across 1Muslim through conversational OpenAI-powered site search.</p><b>Discover ↗</b></Link>
+     <Link className={styles.card} href="/features/hudhud-ai"><span className={styles.icon}>✦</span><h3>HudHud — your Muslim-Inspired AI Companion</h3><p>Find what matters across 1Muslim through conversational OpenAI-powered site search.</p><b>Discover ↗</b></Link>
      <Link className={styles.card} href="/features/shahada-membership"><span className={styles.icon}>☾</span><h3>Shahada-centered admission</h3><p>An integrated voice or self-attested Shahada journey, not just a decorative symbol.</p><b>Discover ↗</b></Link>
      <Link className={styles.card} href="/features/quran-progress-xp"><span className={styles.icon}>۞</span><h3>Qur'an tracking and XP</h3><p>Learning progress and participation points that connect to a member's profile.</p><b>Discover ↗</b></Link>
     </div>
    </section>
    <section className={styles.ai} aria-labelledby="hudhud-title">
-    <span className={styles.eyebrow}>BUILT WITH OPENAI TECHNOLOGY</span><h2 id="hudhud-title">Meet HudHud. Your AI companion inside 1Muslim.</h2>
-    <p>HudHud combines natural-language conversation with site search so people can find posts, members, lessons, Qur'an-related resources and other matching content. Responses should be grounded in available results, and religious guidance is not a substitute for qualified scholarship.</p>
+    <span className={styles.eyebrow}>BUILT WITH OPENAI TECHNOLOGY</span><h2 id="hudhud-title">Meet HudHud. Your Muslim-Inspired AI Companion.</h2>
+    <p>Your Muslim-Inspired AI Companion combines natural-language conversation with site search so people can find posts, members, lessons, Qur'an-related resources and other matching content. Responses should be grounded in available results, and religious guidance is not a substitute for qualified scholarship.</p>
     <div className={styles.tierGrid}>
      <div><strong>HudHud · Free</strong><p>Up to three conversational replies in the free on-site search experience.</p></div>
      <div><strong>HudHud · 1Muslim Unlocked</strong><p>The free-turn cap is removed for subscribers in the supported HudHud search experience. This tier is configured to prefer OpenAI GPT-6 Sol where API access permits, with a reliable fallback. Service availability and safeguards still apply.</p></div>
