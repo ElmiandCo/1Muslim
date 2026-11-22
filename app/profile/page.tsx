@@ -537,6 +537,12 @@ function ProfileSocialHub({profile,children}:{profile:Profile;children:React.Rea
 }
 
 const brandedHandle=(handle:string|null|undefined)=>handle?.replace(/^1muslim_(?=[0-9a-f]{8}$)/i,"1Muslim_")||"member";
+const normalizeMuslimId=(value:string|null|undefined)=>(value||"").trim().replace(/^@+/,"").toLowerCase();
+/** Escape LIKE wildcard characters so an underscore in an ID is matched literally. */
+const escapeMuslimIdPattern=(value:string)=>value.replace(/[\\%_]/g,"\\const brandedHandle=(handle:string|null|undefined)=>handle?.replace(/^1muslim_(?=[0-9a-f]{8}$)/i,"1Muslim_")||"member";");
+const TAKEN_MUSLIM_ID="1Muslim ID is already taken.";
+const isUsernameConflict=(error:{code?:string;message?:string;details?:string;hint?:string})=>
+ error.code==="23505" && /username|profiles_username/i.test([error.message,error.details,error.hint].join(" "));
 export default function ProfilePage() {
   const router=useRouter();
   const [signingOut,setSigningOut]=useState(false);
@@ -555,6 +561,9 @@ export default function ProfilePage() {
     window.setTimeout(()=>{router.replace("/");router.refresh()},1400);
   };
   const [profile,setProfile]=useState<Profile|null>(null);
+  const [savedUsername,setSavedUsername]=useState<string|null>(null);
+  const [usernameStatus,setUsernameStatus]=useState<"idle"|"checking"|"available"|"taken"|"error">("idle");
+  const [usernameError,setUsernameError]=useState("");
   const [editing,setEditing]=useState(false);
   const [ashab,setAshab]=useState<Profile[]>([]);
   const [postCount,setPostCount]=useState(0);
@@ -573,7 +582,7 @@ const [avatarPage,setAvatarPage]=useState(0);
   const providers=["tiktok","youtube","twitch"] as const;
 
   useEffect(()=>{window.addEventListener("1muslim:profile-signout",signOut);return()=>window.removeEventListener("1muslim:profile-signout",signOut)},[signingOut]);
-  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}setIsHudHudAdmin((user.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data)setProfile(data as Profile);
+  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}setIsHudHudAdmin((user.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data){setProfile(data as Profile);setSavedUsername(data.username??null);}
     const [profilePosts,communityPosts]=await Promise.all([s.from("posts").select("id").eq("user_id",user.id),s.from("community_posts").select("id").eq("author_id",user.id)]);setPostCount((profilePosts.data?.length??0)+(communityPosts.data?.length??0));
     const {data:friendships}=await s.from("ashab_friendships").select("requester_id,addressee_id").eq("status","accepted").or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
     const ashabIds=(friendships??[]).map((row:any)=>row.requester_id===user.id?row.addressee_id:row.requester_id).filter(Boolean);
@@ -680,28 +689,73 @@ const [avatarPage,setAvatarPage]=useState(0);
     if(error){update(previous);setMessage("Could not save background: "+error.message);}
     else {setMessage("✓ Changes saved automatically");window.setTimeout(()=>setBackgroundStudioOpen(false),850);}
   };
+  const typedMuslimId=normalizeMuslimId(profile?.username);
+  useEffect(()=>{
+    if(!editing||tab!=="profile"||!profile?.id||!typedMuslimId||typedMuslimId===normalizeMuslimId(savedUsername)||!/^[a-z0-9_.]{3,30}$/.test(typedMuslimId)){
+      setUsernameStatus("idle");setUsernameError("");return;
+    }
+    let active=true;
+    setUsernameStatus("checking");setUsernameError("");
+    const timer=window.setTimeout(()=>{
+      void createClient().from("profiles").select("id,username")
+        .ilike("username",escapeMuslimIdPattern(typedMuslimId)).neq("id",profile.id).limit(1)
+        .then(({data,error})=>{
+          if(!active)return;
+          if(error){setUsernameStatus("error");return}
+          const taken=!!data?.some(row=>normalizeMuslimId(row.username)===typedMuslimId);
+          setUsernameStatus(taken?"taken":"available");
+          setUsernameError(taken?TAKEN_MUSLIM_ID:"");
+        });
+    },400);
+    return()=>{active=false;window.clearTimeout(timer)};
+  },[editing,tab,profile?.id,typedMuslimId,savedUsername]);
   const displayCooldown=cooldownRemaining(profile?.display_name_changed_at??null);
   const usernameCooldown=cooldownRemaining(profile?.username_changed_at??null);
 
   const save=async()=>{
-    if(!profile)return;
+    if(!profile||saving)return;
     setSaving(true);setMessage("");
-    const s=createClient();
-    const original=await s.from("profiles").select("display_name,username").eq("id",profile.id).single();
-    const displayChanged=original.data && profile.display_name!==original.data.display_name;
-    const usernameChanged=original.data && profile.username!==original.data.username;
-    const handle=(profile.username??"").trim().replace(/^@+/,"").toLowerCase();
-    if(usernameChanged && handle && !/^[a-z0-9_.]{3,30}$/.test(handle)){
-      setSaving(false);setMessage("Member handle must be 3–30 characters using letters, numbers, underscores, or periods.");return;
-    }
-    const config={...(profile.avatar_config??{}),gender:profile.avatar_gender,package:profile.avatar_package,accessories:Array.isArray(profile.avatar_config?.accessories)?profile.avatar_config.accessories:[]};
-    const {data,error}=await s.from("profiles").update({display_name:profile.display_name.trim(),username:handle||null,first_name:profile.first_name,last_name:profile.last_name,city:profile.city,state:profile.state,country:profile.country,gender:profile.gender,bio:profile.bio,avatar_gender:profile.avatar_gender,avatar_package:profile.avatar_package,avatar_config:config,profile_background:profile.profile_background,profile_accent:profile.profile_accent}).eq("id",profile.id).select("display_name,username,display_name_changed_at,username_changed_at").single();
-    setSaving(false);
-    if(error){setMessage(error.message);return;}
-    update({display_name:data?.display_name??profile.display_name,username:data?.username??null,display_name_changed_at:data?.display_name_changed_at??profile.display_name_changed_at,username_changed_at:data?.username_changed_at??profile.username_changed_at});
-    setMessage(displayChanged||usernameChanged?"Profile identity updated.":"Profile saved.");
-    window.dispatchEvent(new Event("1muslim:profile-saved"));
-    setEditing(false);
+    try{
+      const s=createClient();
+      const original=await s.from("profiles").select("display_name,username").eq("id",profile.id).single();
+      if(original.error||!original.data){
+        setMessage("Could not verify your profile. Please try again.");return;
+      }
+      const displayChanged=profile.display_name!==original.data.display_name;
+      const handle=normalizeMuslimId(profile.username);
+      const usernameChanged=handle!==normalizeMuslimId(original.data.username);
+      if(usernameChanged&&handle&&!/^[a-z0-9_.]{3,30}$/.test(handle)){
+        setMessage("1Muslim ID must be 3–30 characters using letters, numbers, underscores, or periods.");return;
+      }
+      if(usernameChanged&&handle){
+        // Helpful early feedback. The database's case-insensitive UNIQUE index
+        // is the authoritative protection if two members save simultaneously.
+        const {data:taken,error:lookupError}=await s.from("profiles").select("id,username")
+          .ilike("username",escapeMuslimIdPattern(handle)).neq("id",profile.id).limit(1);
+        if(lookupError){setUsernameStatus("error");setMessage("Unable to verify 1Muslim ID availability. Please try again.");return;}
+        if(taken?.some(row=>normalizeMuslimId(row.username)===handle)){
+          setUsernameStatus("taken");setUsernameError(TAKEN_MUSLIM_ID);
+          setMessage(TAKEN_MUSLIM_ID);setTab("profile");return;
+        }
+      }
+      const config={...(profile.avatar_config??{}),gender:profile.avatar_gender,package:profile.avatar_package,accessories:Array.isArray(profile.avatar_config?.accessories)?profile.avatar_config.accessories:[]};
+      const {data,error}=await s.from("profiles").update({
+        display_name:profile.display_name.trim(),username:handle||null,first_name:profile.first_name,last_name:profile.last_name,city:profile.city,state:profile.state,country:profile.country,gender:profile.gender,bio:profile.bio,avatar_gender:profile.avatar_gender,avatar_package:profile.avatar_package,avatar_config:config,profile_background:profile.profile_background,profile_accent:profile.profile_accent
+      }).eq("id",profile.id).select("display_name,username,display_name_changed_at,username_changed_at").single();
+      if(error){
+        if(isUsernameConflict(error)){
+          setUsernameStatus("taken");setUsernameError(TAKEN_MUSLIM_ID);
+          setMessage(TAKEN_MUSLIM_ID);setTab("profile");
+        }else setMessage(error.message);
+        return;
+      }
+      update({display_name:data?.display_name??profile.display_name,username:data?.username??null,display_name_changed_at:data?.display_name_changed_at??profile.display_name_changed_at,username_changed_at:data?.username_changed_at??profile.username_changed_at});
+      setSavedUsername(data?.username??null);
+      setUsernameStatus("idle");setUsernameError("");
+      setMessage(displayChanged||usernameChanged?"Profile identity updated.":"Profile saved.");
+      window.dispatchEvent(new Event("1muslim:profile-saved"));
+      setEditing(false);
+    }finally{setSaving(false)}
   };
 
   const updateConnector=(provider:string,patch:Partial<{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>)=>setLiveConnectors(x=>({...x,[provider]:{handle:x[provider]?.handle??"",channel_url:x[provider]?.channel_url??"",enabled:x[provider]?.enabled??true,is_live:x[provider]?.is_live??false,live_title:x[provider]?.live_title??"",...patch}}));
@@ -745,11 +799,11 @@ const [avatarPage,setAvatarPage]=useState(0);
     
     <div className="profileEditorToolbar"><button className="ghost" onClick={()=>setEditing(false)}>← Back</button><strong>Edit Profile</strong><button className="primary" onClick={save} disabled={saving||colorSaving}>{saving?"Saving…":"Save ✓"}</button></div><div className="profileEditorNav"><div className="profileTabs" aria-label="Profile editor sections">{(["profile","avatar","header","live","shahada","analytics"] as const).map(x=><button type="button" className={tab===x?"active":""} aria-pressed={tab===x} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Identity":x==="avatar"?"Avatars":x==="header"?"Appearance":x==="live"?"Connections":x==="analytics"?"Analytics":"Verification"}</button>)}</div></div>{tab==="analytics"&&<section className="profileEditor" aria-label="Quran and profile analytics"><ProfileAnalytics inline userId={profile.id}/></section>}
     {tab==="profile"&&<section className="profileEditor"><div className="editorIntro"><h2>Personal Information</h2></div><div className="formGrid">
-      <label>Display name<input value={profile.display_name??""} disabled={!!displayCooldown} onChange={e=>update({display_name:e.target.value})}/><small className="fieldNote">{displayCooldown?`You can change your display name again in ${displayCooldown}.`:"You can change this once every 3 days."}</small></label><label>@ Member handle<input value={profile.username?`@${brandedHandle(profile.username)}`:""} placeholder="@member" disabled={!!usernameCooldown} onChange={e=>update({username:e.target.value.replace(/^@+/,"")})}/><small className="fieldNote">{usernameCooldown?`You can change your handle again in ${usernameCooldown}.`:"You can change this once every 3 days."}</small></label><label>First name<input value={profile.first_name??""} onChange={e=>update({first_name:e.target.value})}/></label><label>Last name<input value={profile.last_name??""} onChange={e=>update({last_name:e.target.value})}/></label>
+      <label>Display name<input value={profile.display_name??""} disabled={!!displayCooldown} onChange={e=>update({display_name:e.target.value})}/><small className="fieldNote">{displayCooldown?`You can change your display name again in ${displayCooldown}.`:"You can change this once every 3 days."}</small></label><label>1Muslim ID<input value={profile.username?`@${brandedHandle(profile.username)}`:""} placeholder="@yourID" disabled={!!usernameCooldown} aria-invalid={usernameStatus==="taken"} aria-describedby="profile-muslim-id-feedback" className={usernameStatus==="taken"?"profileMuslimIdInputTaken":""} onChange={e=>{update({username:e.target.value.replace(/^@+/,"")});setUsernameError("");}}/><small className="fieldNote">{usernameCooldown?`You can change your 1Muslim ID again in ${usernameCooldown}.`:"You can change this once every 3 days."}</small><span id="profile-muslim-id-feedback" aria-live="polite" className={usernameStatus==="taken"?"profileMuslimIdError":"profileMuslimIdHint"}>{usernameError|| (usernameStatus==="checking"?"Checking 1Muslim ID…":usernameStatus==="available"?"✓ 1Muslim ID is available":usernameStatus==="error"?"Unable to check availability. Please try again.":"")}</span></label><label>First name<input value={profile.first_name??""} onChange={e=>update({first_name:e.target.value})}/></label><label>Last name<input value={profile.last_name??""} onChange={e=>update({last_name:e.target.value})}/></label>
       <label>Gender<input value={profile.gender ? profile.gender.charAt(0).toUpperCase()+profile.gender.slice(1) : "Not selected"} disabled /><small className="fieldNote">Gender is selected once during onboarding and cannot be changed.</small></label>
       <label>City<input value={profile.city??""} onChange={e=>update({city:e.target.value})}/></label><label>State<input value={profile.state??""} onChange={e=>update({state:e.target.value})}/></label><label>Country<input value={profile.country??""} onChange={e=>update({country:e.target.value})}/></label>
       <label className="wide">Bio <small>{(profile.bio??"").length}/35</small><textarea value={profile.bio??""} maxLength={35} rows={2} onChange={e=>update({bio:e.target.value})}/></label>
-    </div>{message&&<div className="saveMessage">{message}</div>}</section>}
+    </div>{message&&<div className={message===TAKEN_MUSLIM_ID?"saveMessage profileMuslimIdError":"saveMessage"} role={message===TAKEN_MUSLIM_ID?"alert":"status"}>{message}</div>}</section>}
 
     {tab==="live"&&<section className="profileEditor">
       <div className="editorIntro"><span className="eyebrow">SOCIAL CONNECTIONS</span><h2>Connect your world.</h2><p>Replace manual social handles with real account connections. Tap a glowing card to open the connector. Your Elmi Light adds a little magic to every tap.</p></div>
