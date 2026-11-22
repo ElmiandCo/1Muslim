@@ -104,7 +104,7 @@ export default function HudHudQuranBird({verseKey,chapterName,words=NO_WORDS,pau
      if(event.pointerType!=="touch"||!(event.target instanceof Element))return;
      const wordEl=event.target.closest(".omWord,.omQuranAnnotatedWord,[data-quran-word]") as HTMLElement|null;
      if(!wordEl)return;
-     const text=wordEl.textContent?.trim().replace(/\\s+/g," ").slice(0,35)||"";
+     const text=wordEl.textContent?.trim().replace(/\s+/g," ").slice(0,35)||"";
      if(!text)return;
      const match=words.find(word=>word.char_type_name==="word"&&normalize(word.text_uthmani||"")===normalize(text));
      setHoverWord(short(text));
