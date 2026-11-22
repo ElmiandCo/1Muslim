@@ -161,3 +161,25 @@
 .profileCommandPage .profileProfessionalIdentity > .profileProfessionalEdit{
  z-index:9;
 }
+
+/* Identity editor: unmistakable and accessible duplicate 1Muslim ID feedback. */
+.profileCommandPage .formGrid input.profileMuslimIdInputTaken{
+ border:2px solid #cf243c!important;
+ background:#fff5f6!important;
+ color:#9a1830!important;
+ box-shadow:0 0 0 3px #e53b5720!important;
+}
+.profileCommandPage .formGrid input.profileMuslimIdInputTaken:focus{
+ outline:2px solid #cf243c!important;
+ outline-offset:1px;
+}
+.profileCommandPage .profileMuslimIdError{
+ display:block;margin-top:6px;padding:7px 10px;
+ border:1px solid #f5b6c0;border-radius:9px;
+ background:#fff0f2;color:#b91c37!important;
+ font-size:12px!important;font-weight:800!important;line-height:1.35;
+}
+.profileCommandPage .profileMuslimIdHint{
+ display:block;margin-top:5px;font-size:11px;color:#5b7970;line-height:1.35;
+}
+.profileCommandPage .saveMessage.profileMuslimIdError{margin-top:14px;}
