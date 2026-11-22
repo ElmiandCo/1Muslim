@@ -569,6 +569,7 @@ export default function ProfilePage() {
   const router=useRouter();
   const [signingOut,setSigningOut]=useState(false);
   const [isHudHudAdmin,setIsHudHudAdmin]=useState(false);
+  const [adminAccessChecked,setAdminAccessChecked]=useState(false);
   const [secretAdminOpen,setSecretAdminOpen]=useState(false);
   const [secretAdminDraft,setSecretAdminDraft]=useState("");
   const secretSwipeStart=useRef<{x:number;y:number}|null>(null);
@@ -616,7 +617,7 @@ const [avatarPage,setAvatarPage]=useState(0);
   const providers=["tiktok","youtube","twitch"] as const;
 
   useEffect(()=>{window.addEventListener("1muslim:profile-signout",signOut);return()=>window.removeEventListener("1muslim:profile-signout",signOut)},[signingOut]);
-  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}setIsHudHudAdmin((user.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data){setProfile(data as Profile);setSavedUsername(data.username??null);}
+  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}setIsHudHudAdmin((user.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");setAdminAccessChecked(true);const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data){setProfile(data as Profile);setSavedUsername(data.username??null);}
     const [profilePosts,communityPosts]=await Promise.all([s.from("posts").select("id").eq("user_id",user.id),s.from("community_posts").select("id").eq("author_id",user.id)]);setPostCount((profilePosts.data?.length??0)+(communityPosts.data?.length??0));
     const {data:friendships}=await s.from("ashab_friendships").select("requester_id,addressee_id").eq("status","accepted").or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
     const ashabIds=(friendships??[]).map((row:any)=>row.requester_id===user.id?row.addressee_id:row.requester_id).filter(Boolean);
@@ -839,7 +840,7 @@ const [avatarPage,setAvatarPage]=useState(0);
       <label className="wide">Bio <small>{(profile.bio??"").length}/35</small><textarea value={profile.bio??""} maxLength={35} rows={2} onChange={e=>update({bio:e.target.value})}/></label>
     </div>{message&&<div className={message===TAKEN_MUSLIM_ID?"saveMessage profileMuslimIdError":"saveMessage"} role={message===TAKEN_MUSLIM_ID?"alert":"status"}>{message}</div>}</section>}
 
-    {tab==="live"&&<section className="profileEditor"><ProfileConnectionsPanel isAdmin={isHudHudAdmin}/></section>}
+    {tab==="live"&&<section className="profileEditor">{adminAccessChecked?<ProfileConnectionsPanel isAdmin={isHudHudAdmin}/>:<div className="profileConnectionsChecking" role="status">Preparing your connections…</div>}</section>}
     {tab==="shahada"&&<section className="profileEditor">
       <div className="editorIntro"><span className="eyebrow">PRIVATE SAFE VAULT</span><h2>Your Shahada verification.</h2><p>Your original voice recording is private. Only your authenticated account can request a short-lived playback link. Your public profile never exposes the recording.</p></div>
       <ProfileSubscriptionStatus/><div className="shahadaVaultCard">
