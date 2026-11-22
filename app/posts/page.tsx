@@ -71,7 +71,7 @@ export default function PublicPostsSocial(){
  const [deckMotion,setDeckMotion]=useState<{from:number;to:number;direction:1|-1}|null>(null);
  const activeDeckRef=useRef(0);
  const deckLocked=useRef(false);
- const deckTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const deckTimer=useRef<number|null>(null);
  const deckTouch=useRef<{index:number;x:number;y:number}|null>(null);
  useEffect(()=>()=>{if(deckTimer.current)clearTimeout(deckTimer.current)},[]);
  useEffect(()=>{
