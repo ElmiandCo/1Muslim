@@ -2,11 +2,11 @@
 
 import {useEffect,useState} from "react";
 import styles from "./ProfileNextPrayer.module.css";
+import {PrayerTimeIcon,PrayerUiIcon,type PrayerTimeName} from "./icons/PrayerTimeIcon";
 import {readLocation} from "./LocationPreferences";
 import {ADHAN_PRAYERS,ADHAN_SETTINGS_EVENT,displayPrayerTime,fetchPrayerSchedule,fetchPrayerScheduleOnDate,locationClock,prayerMinute,readAdhanPreferences,type AdhanLocation,type PrayerSchedule} from "../lib/adhan";
 
 type LocationInfo={city?:string|null;state?:string|null;country?:string|null};
-const glyphs:Record<string,string>={Fajr:"☾",Dhuhr:"☼",Asr:"✺",Maghrib:"◒",Isha:"☽"};
 
 function normalize(location:LocationInfo):AdhanLocation{
  return {city:location.city?.trim()||"",state:location.state?.trim()||"",country:location.country?.trim()||""};
@@ -123,7 +123,7 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
    onClick={openCompass}
    title="Open Qibla compass and prayer direction"
    aria-label={isReady?`Open Qibla compass. ${upcoming} at ${formattedTime}, ${countdown}.`:"Open Qibla compass to find the prayer direction"}>
-   <span className={styles.symbol} aria-hidden="true">{glyphs[upcoming||""]||"☾"}</span>
+   <span className={styles.symbol} aria-hidden="true">{upcoming?<PrayerTimeIcon prayer={upcoming as PrayerTimeName}/>:<PrayerUiIcon kind="time"/>}</span>
    <span className={styles.identity}>
     <strong>{isReady?upcoming:!canLoad?"Set prayer location":loading?"Finding prayer…":error?"Prayer unavailable":"Next prayer"}</strong>
     <small>{isReady?formattedTime:!canLoad?"Choose your city":error?"Check your city":loading?"Loading…":"Updating…"}</small>
