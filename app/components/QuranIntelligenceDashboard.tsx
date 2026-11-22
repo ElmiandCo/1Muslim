@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
 import styles from "./QuranIntelligenceDashboard.module.css";
 
 export type QuranReading={verse_key:string;read_on:string};
@@ -67,6 +67,23 @@ function buildChart(data:Indexed,today:string,period:Period){
 function InsightGraphic(){return <span className={styles.aiSpark} aria-hidden="true">✦</span>}
 function Confidence({readings,loading,userId}:{readings:QuranReading[];loading:boolean;userId?:string}){
  const [period,setPeriod]=useState<Period>("30D"),[active,setActive]=useState<string|null>(null),[showChapters,setShowChapters]=useState<"started"|"all"|"finished">("started");
+ const [chartExpanded,setChartExpanded]=useState(true);
+ const [chartWidth,setChartWidth]=useState(340);
+ const chartStageRef=useRef<HTMLDivElement|null>(null);
+ useEffect(()=>{
+  if(!chartExpanded)return;
+  const element=chartStageRef.current;
+  if(!element)return;
+  const resize=()=>{
+   const width=Math.max(260,Math.round(element.clientWidth-16));
+   setChartWidth(current=>current===width?current:width);
+  };
+  resize();
+  if(typeof ResizeObserver==="undefined"){window.addEventListener("resize",resize);return()=>window.removeEventListener("resize",resize)}
+  const observer=new ResizeObserver(resize);
+  observer.observe(element);
+  return()=>observer.disconnect();
+ },[chartExpanded]);
  const [selectedChapter,setSelectedChapter]=useState<number|null>(null),[filter,setFilter]=useState(""),[showAllVerses,setShowAllVerses]=useState(false);
  const [saved,setSaved]=useState<string[]>([]),[starsReady,setStarsReady]=useState(false);
  const [inspiration,setInspiration]=useState<{key:string;text:string}|null>(null),[inspirationBusy,setInspirationBusy]=useState(false);
@@ -83,7 +100,10 @@ function Confidence({readings,loading,userId}:{readings:QuranReading[];loading:b
  const view=series.length>0?series:[{date:today,count:0,percent:0,newVerses:0,visits:0}];
  const minData=view[0],maxData=view[view.length-1];
  const axis=Math.max(2,Math.min(100,Math.ceil(Math.max(maxData.percent,completed)*1.28*2)/2));
- const W=960,H=326,L=63,R=30,T=36,B=47,PW=W-L-R,PH=H-T-B;
+ // Use measured CSS-pixel coordinates instead of shrinking a 960px graph
+ // to a phone width: readable axes and a genuinely taller chart.
+ const W=chartWidth,isMobile=W<540;
+ const H=isMobile?318:370,L=isMobile?49:63,R=isMobile?13:24,T=26,B=40,PW=W-L-R,PH=H-T-B;
  const x=(i:number)=>L+i*PW/Math.max(1,view.length-1),y=(p:number)=>T+PH*(1-p/axis);
  const line=view.map((point,i)=>(i===0?"M ":"L ")+x(i).toFixed(1)+" "+y(point.percent).toFixed(1)).join(" ");
  const fill=line+" L "+x(view.length-1).toFixed(1)+" "+(H-B)+" L "+L+" "+(H-B)+" Z";
@@ -157,11 +177,18 @@ function Confidence({readings,loading,userId}:{readings:QuranReading[];loading:b
    </div>
   </section>
   <section className={styles.market}>
-   <div className={styles.marketHeader}><div><span className={styles.eyebrow}>THE READING MARKET · LIVE HISTORY</span><h3>Qur'an completion over time</h3><p>Your actual saved verses, plotted as a cumulative journey. Scrub or tap the chart to inspect a day.</p></div><span className={styles.marketBadge}>REAL DATA</span></div>
-   <div className={styles.marketControls} role="group" aria-label="Choose reading analytics time range">{(["7D","30D","90D","1Y","ALL"] as Period[]).map(p=><button key={p} type="button" className={period===p?styles.periodActive:""} aria-pressed={period===p} onClick={()=>{setPeriod(p);setActive(null);}}>{p}</button>)}</div>
+   <div className={styles.marketHeader}>
+    <div><span className={styles.eyebrow}>YOUR READING TIMELINE · LIVE HISTORY</span><h3>Qur'an completion over time</h3><p>Follow your saved verses as a real journey. Tap or scrub the chart to inspect each day.</p></div>
+    <div className={styles.marketHeaderActions}>
+     <span className={styles.marketBadge}>REAL DATA</span>
+     <button type="button" className={styles.chartToggle} onClick={()=>setChartExpanded(open=>!open)} aria-controls="quran-reading-progress-chart" aria-expanded={chartExpanded} aria-label={chartExpanded?"Collapse Qur’an completion chart":"Expand Qur’an completion chart"}>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={chartExpanded?"M5 15l7-7 7 7":"M5 9l7 7 7-7"}/></svg>{chartExpanded?"Collapse":"Expand"}
+     </button>
+    </div>
+   </div>
    <div className={styles.activeMetrics}><div><small>{chosen.date===today?"CURRENT COMPLETION":"SELECTED DATE · "+labelDate(chosen.date)}</small><strong>{percent(chosen.percent)}</strong></div><div><small>VERSES LOGGED BY THIS DATE</small><strong>{number(chosen.count)} <span>/ {number(TOTAL)}</span></strong></div><div><small>ADDED IN WINDOW</small><strong>+{number(maxData.count-minData.count+minData.newVerses)}</strong></div></div>
-   <div className={styles.chartStage}>
-    <svg className={styles.stockChart} viewBox={"0 0 "+W+" "+H} role="img" tabIndex={0} aria-label={"Qur'an completion "+percent(chosen.percent)+" on "+labelDate(chosen.date)+". Use arrow keys or touch to inspect progress."}
+   {chartExpanded&&<div id="quran-reading-progress-chart" ref={chartStageRef} className={styles.chartStage} aria-label="Qur’an reading progress timeline">
+    <svg className={styles.stockChart} viewBox={"0 0 "+W+" "+H} width="100%" height={H} role="img" tabIndex={0} aria-label={"Qur'an completion "+percent(chosen.percent)+" on "+labelDate(chosen.date)+". Use arrow keys or touch to inspect progress."}
       onPointerMove={event=>{if(event.pointerType==="mouse"||event.buttons===1){const box=event.currentTarget.getBoundingClientRect();svgInspect(event.clientX,box.left,box.width);}}}
       onPointerDown={event=>{const box=event.currentTarget.getBoundingClientRect();svgInspect(event.clientX,box.left,box.width);}}
       onKeyDown={event=>{if(event.key==="ArrowLeft"||event.key==="ArrowRight"){event.preventDefault();const next=Math.max(0,Math.min(view.length-1,chosenIndex+(event.key==="ArrowRight"?1:-1)));setActive(view[next].date);}}}>
@@ -170,8 +197,8 @@ function Confidence({readings,loading,userId}:{readings:QuranReading[];loading:b
       <linearGradient id="qiLine" x1="0" y1="0" x2="1" y2="0"><stop stopColor="var(--qi-accent, #2866b4)"/><stop offset="100%" stopColor="var(--qi-second, #d0ac6b)"/></linearGradient>
       <filter id="qiShadow" x="-20%" y="-80%" width="150%" height="260%"><feGaussianBlur stdDeviation="6"/></filter>
      </defs>
-     {[0,.25,.5,.75,1].map(t=><g key={t}><line x1={L} x2={W-R} y1={y(t*axis)} y2={y(t*axis)} stroke="#dfe8f0" strokeDasharray="3 7"/><text x={L-11} y={y(t*axis)+4} fontSize="12" textAnchor="end" fill="#8090a5">{percent(t*axis)}</text></g>)}
-     {[0,.25,.5,.75,1].map(t=>{const d=view[Math.round(t*(view.length-1))];return <text key={t} x={L+t*PW} y={H-15} fontSize="13" textAnchor={t===0?"start":t===1?"end":"middle"} fill="#7c8da3">{labelDate(d.date)}</text>})}
+     {[0,.25,.5,.75,1].map(t=><g key={t}><line x1={L} x2={W-R} y1={y(t*axis)} y2={y(t*axis)} stroke="#dfe8f0" strokeDasharray="3 7"/><text x={L-11} y={y(t*axis)+4} fontSize={isMobile?"10":"12"} textAnchor="end" fill="#8090a5">{percent(t*axis)}</text></g>)}
+     {(isMobile?[0,.5,1]:[0,.25,.5,.75,1]).map(t=>{const d=view[Math.round(t*(view.length-1))];return <text key={t} x={L+t*PW} y={H-13} fontSize={isMobile?"10":"12"} textAnchor={t===0?"start":t===1?"end":"middle"} fill="#7c8da3">{labelDate(d.date)}</text>})}
      <g key={period} className={styles.chartReveal}>
       <path d={line} stroke="var(--qi-accent, #2866b4)" strokeWidth="10" opacity=".12" fill="none" filter="url(#qiShadow)" strokeLinecap="round"/>
       <path d={fill} fill="url(#qiArea)"/>
@@ -182,6 +209,11 @@ function Confidence({readings,loading,userId}:{readings:QuranReading[];loading:b
      <circle cx={x(chosenIndex)} cy={y(chosen.percent)} r="5.5" fill="#fff" stroke="var(--qi-accent, #2866b4)" strokeWidth="3"/>
     </svg>
     <div className={styles.chartLower}><span>Focused Y-axis: 0–{percent(axis)} · full Qur'an: 100%</span><span>{loading?"Updating…":"● Synced verse events"}</span></div>
+    {!totalRead&&<div className={styles.chartEmptyNote} aria-hidden="true">Your first saved verse will appear here. ✦</div>}
+   </div>}
+   <div className={styles.periodDock}>
+    <span className={styles.periodLabel}>VIEW TIMELINE</span>
+    <div className={styles.marketControls} role="group" aria-label="Choose reading analytics time range">{(["7D","30D","90D","1Y","ALL"] as Period[]).map(p=><button key={p} type="button" className={period===p?styles.periodActive:""} aria-pressed={period===p} onClick={()=>{setPeriod(p);setActive(null);}}>{p}</button>)}</div>
    </div>
   </section>
   <section className={styles.aiCard} aria-label="Reading AI reflection">
