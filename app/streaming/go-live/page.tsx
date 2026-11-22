@@ -1315,6 +1315,11 @@ export default function GoLivePage() {
             body:JSON.stringify({streamId:liveStreamId}),cache:"no-store",keepalive:true
           });
           if(!response.ok)throw new Error("Server End Live returned "+response.status);
+          const result=await response.json().catch(()=>({}));
+          if(Number(result.xpAwarded)>0){
+            setSaveMessage("Jazak Allahu khairan! Your verified Qur’an Live earned +"+Number(result.xpAwarded).toLocaleString()+" XP.");
+            window.dispatchEvent(new Event("1muslim:xp-updated"));
+          }
         }catch(error){
           console.warn("Server End Live failed; attempting direct terminal update",error);
           const {error:dbError}=await supabase.from("live_streams").update({
