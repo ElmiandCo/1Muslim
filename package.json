@@ -20,7 +20,8 @@
     "web-push": "^3.6.7",
     "tus-js-client": "^4.3.1",
     "three": "^0.181.0",
-    "stripe": "^19.0.0"
+    "stripe": "^19.0.0",
+    "magvar": "2.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
