@@ -22,7 +22,7 @@ export async function GET(request:Request){
   ids.length?db.from("posts").select("id,user_id,body,created_at").in("user_id",ids).order("created_at",{ascending:false}).limit(500):Promise.resolve({data:[]})
  ]);
  const authors=new Map((profiles||[]).map(p=>[p.id,p]));
- const candidates=new Map<string,NonNullable<typeof mediaPosts>>();
+ const candidates=new Map<string,Array<{id:string;user_id:string;body:string;created_at:string}>>();
  for(const p of mediaPosts||[]){const key=p.user_id+"|"+p.body;const arr=candidates.get(key)||[];arr.push(p);candidates.set(key,arr)}
  const links=new Map<string,string>(),claimed=new Set<string>();
  for(const p of posts){
