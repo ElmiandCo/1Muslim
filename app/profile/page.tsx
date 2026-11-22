@@ -25,7 +25,9 @@ import ProfileAnalytics from "../components/ProfileAnalytics";
 import ProfileNextPrayer from "../components/ProfileNextPrayer";
 import ProfileControlGlyph from "../components/ProfileControlGlyph";
 import ProfileMagneticTiles from "../components/ProfileMagneticTiles";
+import ProfileCinematicOverlay from "../components/ProfileCinematicOverlay";
 import "./profile-polish.css";
+import "./profile-mosaic.css";
 import ProfileFirstPostPrompt from "../components/ProfileFirstPostPrompt";
 import ProfileNavIcon from "../components/icons/ProfileNavIcon";
 import ProfileCinematicPosts from "../components/ProfileCinematicPosts";
@@ -37,6 +39,8 @@ type Profile = {
   id: string; created_at?: string | null; display_name: string; username: string | null; first_name: string | null; last_name: string | null;
   city: string | null; state: string | null; country: string | null; gender: string | null; bio: string | null;
   xp_total: number; avatar_gender: string; avatar_package: string; avatar_config: Record<string, unknown>;
+  profile_main_image_url?:string|null;
+  profile_background_image_url?:string|null;
   profile_background: string; profile_accent: string; community: string | null;
   display_name_changed_at: string | null; username_changed_at: string | null; shahada_verified_at: string | null; shahada_audio_path: string | null; shahada_language: "ar" | "en" | null;
 };
@@ -76,6 +80,8 @@ const AVATAR_CHOICES=[
   {url:"/assets/avatars/tina-the-salafi-female.PNG",label:"Tina The Salafi Female",xp:20000}
 ] as const;
 const COVER_STOCK=[{id:"emerald",label:"Emerald",url:"/assets/profile-backgrounds/emerald.PNG"},{id:"sapphire",label:"Sapphire",url:"/assets/profile-backgrounds/sapphire.PNG"},{id:"ruby",label:"Ruby",url:"/assets/profile-backgrounds/rose-gold.PNG"},{id:"amethyst",label:"Amethyst",url:"/assets/profile-backgrounds/amethyst.PNG"},{id:"titanium",label:"Titanium",url:"/assets/profile-backgrounds/silver-dust.PNG"},{id:"obsidian",label:"Obsidian",url:"/assets/profile-backgrounds/obsidian.PNG"}] as const;
+// Keep the existing cover and optional new portrait art distinct.
+const profileCoverImage=(profile:Pick<Profile,"avatar_config"|"profile_background_image_url">)=>typeof profile.avatar_config?.profileCoverUrl==="string"?profile.avatar_config.profileCoverUrl:profile.profile_background_image_url||COVER_STOCK.find(c=>c.id===profile.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
 const MEMBER_ACCENT_COLORS:Record<string,string>={emerald:"#579879",gold:"#b89b53",blue:"#689bd5",violet:"#9780c4",rose:"#c47e98",slate:"#829392",black:"#151515"};
 const MEMBER_TEXT_COLORS:Record<string,string>={emerald:"#174635",gold:"#58400c",blue:"#173e70",violet:"#42276a",rose:"#692a42",slate:"#293c3b",black:"#141414"};
 const memberAccent=(accent:string|null|undefined)=>MEMBER_ACCENT_COLORS[accent||""]||MEMBER_ACCENT_COLORS.black;
@@ -123,7 +129,7 @@ function LauncherLineIcon({name}:{name:string}){
  }
 }
 
-function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
+function ProfileAppLauncher({onProfile,coverUrl}:{onProfile:()=>void;coverUrl:string}){
  const magneticGridRef=useRef<HTMLDivElement|null>(null);
  const [postOpen,setPostOpen]=useState(false);
  const [quranOpen,setQuranOpen]=useState(false);
@@ -221,7 +227,7 @@ function ProfileAppLauncher({onProfile}:{onProfile:()=>void}){
    {expanded&&<span className="profileMagneticHint" aria-hidden="true">Hold + drag to rearrange</span>}
    <button type="button" className="profileLauncherToggle" onClick={toggleExpanded} aria-expanded={expanded} aria-label={expanded?"Collapse Explore 1Muslim":"Expand Explore 1Muslim"} title={expanded?"Collapse":"Expand"}><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={expanded?"M5 15l7-7 7 7":"M5 9l7 7 7-7"}/></svg></button>
   </div>
-  <div ref={magneticGridRef} className={expanded?"profileAppLauncherGrid":"profileAppLauncherGrid compact"} aria-label="Explore 1Muslim app shortcuts">
+  <div ref={magneticGridRef} className={expanded?"profileAppLauncherGrid":"profileAppLauncherGrid compact"} style={{"--profile-grid-cover":`url(${JSON.stringify(coverUrl)})`} as CSSProperties} aria-label="Explore 1Muslim app shortcuts">
    <ProfileMagneticTiles items={items} expanded={expanded} gridRef={magneticGridRef} renderTile={item=><Link key={item.label} href={item.href} onClick={event=>{
     if(item.label==="DeepWatch"||item.label==="News"){try{localStorage.setItem("1muslim:explore-seen:"+(item.label==="News"?"news":"deepwatch"),new Date().toISOString())}catch{}setLauncherBadges(current=>({...current,[item.label]:0}))}
     if(item.label==="Profile"){event.preventDefault();setExpanded(false);onProfile()}
@@ -248,6 +254,7 @@ function ProfileCompactStats({userId,postCount,followers,following}:{userId:stri
 
 function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQuickPanel,onQuickPanel,showProfileDetails=true}:{profile:Profile;onEdit:()=>void;ashab:Profile[];isOwner?:boolean;viewerId?:string;editing?:boolean;editorTab?:string;activeQuickPanel?:"posts"|"videos"|"settings"|null;onQuickPanel?:(panel:"posts"|"videos"|"settings")=>void;showProfileDetails?:boolean}){
  const [section,setSection]=useState<"activity"|"connections"|"analytics">("activity");
+ const [cinematicOpen,setCinematicOpen]=useState(false);
  const [ownerIdVisible,setOwnerIdVisible]=useState(false);
  useEffect(()=>{
   if(!isOwner){setOwnerIdVisible(false);return}
@@ -280,11 +287,12 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
   window.addEventListener("1muslim:follow-changed",onFollow);
   return()=>{live=false;revision++;window.removeEventListener("1muslim:follow-changed",onFollow)};
  },[profile.id]);
- const coverUrl=typeof profile.avatar_config?.profileCoverUrl==="string"?profile.avatar_config.profileCoverUrl:COVER_STOCK.find(c=>c.id===profile.avatar_config?.profileBackgroundTheme)?.url||COVER_STOCK[5].url;
+ const coverUrl=profileCoverImage(profile);
+ const cinematicImage=profile.profile_main_image_url||((typeof profile.avatar_config?.profileMainUrl==="string")?profile.avatar_config.profileMainUrl:null)||coverUrl;
  const avatar=typeof profile.avatar_config?.selectedAvatarUrl==="string"?profile.avatar_config.selectedAvatarUrl:profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
  return <section className="profileProfessional memberAccentProfile" style={memberAccentStyle(profile.profile_accent)}>
   <header className="profileProfessionalCard profileProfessionalHeader">
-   <div className="profileProfessionalCover" style={{backgroundImage:`url("${coverUrl}")`}}><span className="profileCoverBrand">1Muslim</span></div>
+   <div className="profileProfessionalCover" style={{backgroundImage:`url(${JSON.stringify(coverUrl)})`}}><span className="profileCoverBrand">1Muslim</span><button type="button" className="profileCinematicOpenCover" aria-label={`Open full cinematic profile for ${profile.display_name||"member"}`} onClick={()=>setCinematicOpen(true)}><span className="profileCinematicOpenLabel">View full profile ↗</span></button></div>
    <div className="profileProfessionalIdentity">
     <img className="profileProfessionalAvatar" src={avatar} alt={isOwner?"Your profile avatar — tap to edit":`${profile.display_name||profile.username||"Member"} profile avatar`} role={isOwner?"button":undefined} tabIndex={isOwner?0:undefined} title={isOwner?"Change your avatar":undefined} style={isOwner?{cursor:"pointer"}:undefined} onClick={isOwner?()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"avatar"}})):undefined} onKeyDown={isOwner?e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"avatar"}}))}}:undefined}/>
     {isOwner&&<button className="profileProfessionalEdit" type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:edit-profile-tab",{detail:{tab:"header"}}))} aria-label="Edit cover photo" title="Edit cover photo">✎</button>}
@@ -305,6 +313,12 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
     
    </div>
   </header>
+  {cinematicOpen&&<ProfileCinematicOverlay
+    profile={profile} mainImage={cinematicImage} avatar={avatar} accent={memberAccent(profile.profile_accent)}
+    followers={followCounts.followers} following={followCounts.following}
+    isOwner={isOwner} onEdit={onEdit} onClose={()=>setCinematicOpen(false)}
+    followAction={!isOwner&&viewerId?<MemberFollowControl viewerId={viewerId} memberId={profile.id}/>:undefined}
+  />}
   {isOwner&&showProfileDetails&&<section className="profileProfessionalCard profileProfessionalQuickMenu" aria-label="Profile quick menu"><h2>My Profile</h2><div className="profileProfessionalQuickGrid"><button type="button" aria-pressed={activeQuickPanel==="posts"} onClick={()=>onQuickPanel?.("posts")}>▦ <span>Posts &amp; Likes</span><small>Posts, videos, likes &amp; saved</small></button><button type="button" aria-pressed={activeQuickPanel==="settings"} onClick={()=>onQuickPanel?.("settings")}>⚙ <span>Settings</span><small>Identity, avatar, appearance &amp; activity</small></button></div></section>}
   
  </section>;
@@ -318,7 +332,15 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
   const openProfilePanel=(panel:"posts"|"videos"|"settings")=>{
    setShowProfileDetails(true);
    setActiveQuickPanel(panel);
-   window.setTimeout(()=>document.getElementById("profile-panel-content")?.scrollIntoView({behavior:"smooth",block:"start"}),80);
+   window.setTimeout(()=>{
+    if(panel==="settings"){
+     const activity=document.getElementById("profile-activity-toggle") as HTMLDetailsElement|null;
+     if(activity)activity.open=true;
+    }
+    document.getElementById("profile-panel-content")?.scrollIntoView({
+     behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"
+    });
+   },90);
   };
   useEffect(()=>{
    const handle=(event:Event)=>{const panel=(event as CustomEvent<{panel:string}>).detail?.panel;if(panel==="posts"||panel==="videos"||panel==="settings")openProfilePanel(panel)};
@@ -383,8 +405,8 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
       <ProfileContentSections userId={profile.id} initialTab="posts"/>
     </section>}
     {activeQuickPanel==="videos"&&<section id="profile-panel-content" className="profileOverviewSection profileLibraryWrapper" aria-label="Your videos"><ProfileContentSections userId={profile.id} initialTab="videos"/></section>}
-    {isOwner&&activeQuickPanel==="settings"&&<section id="profile-panel-content" className="profileProfessionalCard profileProfessionalWorkspace profileCompactSettings" aria-label="Profile settings"><div className="profileSettingsHeader"><div><span className="profileSettingsEyebrow">YOUR PROFILE</span><h2>Settings</h2><p>Manage your identity, avatar and appearance.</p></div><button type="button" className="profileSettingsEdit" onClick={onEdit} aria-label="Edit profile" title="Edit profile">✎ <span>Edit</span></button></div><button type="button" className="profileSettingsRestoreId" onClick={()=>window.dispatchEvent(new Event("1muslim:show-profile-id"))}>↺ Show my 1Muslim ID on my profile</button><details className="profileSettingsActivity"><summary><span>Your Activity</span><small>Screen time, page visits &amp; insights</small></summary><ProfileAnalytics inline userId={profile.id}/></details></section>}
-    <ProfileAppLauncher onProfile={()=>setActiveQuickPanel(null)}/>
+    {isOwner&&activeQuickPanel==="settings"&&<section id="profile-panel-content" className="profileProfessionalCard profileProfessionalWorkspace profileCompactSettings" aria-label="Profile settings"><div className="profileSettingsHeader"><div><span className="profileSettingsEyebrow">YOUR PROFILE</span><h2>Settings</h2><p>Manage your identity, avatar and appearance.</p></div><button type="button" className="profileSettingsEdit" onClick={onEdit} aria-label="Edit profile" title="Edit profile">✎ <span>Edit</span></button></div><button type="button" className="profileSettingsRestoreId" onClick={()=>window.dispatchEvent(new Event("1muslim:show-profile-id"))}>↺ Show my 1Muslim ID on my profile</button><details id="profile-activity-toggle" className="profileSettingsActivity" open><summary><span>Your Activity</span><small>Screen time, page visits &amp; insights</small><span className="profileActivityChevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary><ProfileAnalytics inline userId={profile.id}/></details></section>}
+    <ProfileAppLauncher onProfile={()=>setActiveQuickPanel(null)} coverUrl={profileCoverImage(profile)}/>
     <ProfileCinematicPosts profileId={profile.id} variant="recentCards" feedMode="community" limit={4}/>
     <ProfileQiblaCarousel/>
     <ProfileDeepWatchCarousel/>
@@ -666,7 +688,7 @@ const [avatarPage,setAvatarPage]=useState(0);
     setAvatarSaving(false);
   };
   const [stockSaving,setStockSaving]=useState(false);
-  const selectStockCover=async(url:string)=>{if(!profile||stockSaving)return;setStockSaving(true);setMessage("");const avatar_config={...(profile.avatar_config||{}),profileCoverUrl:url};const {error}=await createClient().from("profiles").update({avatar_config}).eq("id",profile.id);if(error)setMessage("Could not save cover: "+error.message);else{update({avatar_config});window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:profile.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));setMessage("Stock cover saved.")}setStockSaving(false)};
+  const selectStockCover=async(url:string)=>{if(!profile||stockSaving)return;setStockSaving(true);setMessage("");const avatar_config={...(profile.avatar_config||{}),profileCoverUrl:url};const {error}=await createClient().from("profiles").update({avatar_config,profile_background_image_url:url}).eq("id",profile.id);if(error)setMessage("Could not save cover: "+error.message);else{update({avatar_config,profile_background_image_url:url});window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:profile.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));setMessage("Stock cover saved.")}setStockSaving(false)};
   const [coverPreview,setCoverPreview]=useState<string|null>(null);
   const [coverFile,setCoverFile]=useState<File|null>(null);
   const [coverZoom,setCoverZoom]=useState(1);
@@ -690,12 +712,12 @@ const [avatarPage,setAvatarPage]=useState(0);
      const {error:uploadError}=await client.storage.from("avatars").upload(path,blob,{contentType:"image/jpeg",upsert:false});if(uploadError)throw new Error("Cover upload failed: "+uploadError.message);
      const url=client.storage.from("avatars").getPublicUrl(path).data.publicUrl;
      const avatar_config={...(profile.avatar_config||{}),profileCoverUrl:url};
-     const {data:savedProfile,error:saveError}=await client.from("profiles").update({avatar_config}).eq("id",user.id).select("avatar_config").single();
+     const {data:savedProfile,error:saveError}=await client.from("profiles").update({avatar_config,profile_background_image_url:url}).eq("id",user.id).select("avatar_config,profile_background_image_url").single();
      if(saveError)throw new Error("Cover uploaded but profile update failed: "+saveError.message);
      const savedConfig=savedProfile?.avatar_config as Record<string,unknown>|null;
      if(savedConfig?.profileCoverUrl!==url)throw new Error("Cover uploaded but the saved profile did not confirm the new image.");
      await new Promise<void>((resolve,reject)=>{const check=new Image();check.onload=()=>resolve();check.onerror=()=>reject(new Error("Cover uploaded but the public image cannot be loaded. Check avatars bucket access."));check.src=url;});
-     update({avatar_config:savedConfig});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");setTab("profile");setEditing(false);window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:user.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})));
+     update({avatar_config:savedConfig,profile_background_image_url:url});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");setTab("profile");setEditing(false);window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:user.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})));
     }finally{URL.revokeObjectURL(src)}
    }catch(e){setMessage(e instanceof Error?e.message:"Could not upload cover image.")}finally{setCoverUploading(false)}
   };
