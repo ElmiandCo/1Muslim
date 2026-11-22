@@ -6,7 +6,7 @@ import styles from "./growth.module.css";
 export const dynamic="force-dynamic";
 export const metadata:Metadata={
  title:"1Muslim Growth & Public Analytics | Muslim Social Network",
- description:"Explore 1Muslim's publicly reported membership growth: first-party profile totals, new signups in the last 7 and 30 days, and transparent reporting methods.",
+ description:"Follow 1Muslim, a growing Muslim social network with Messenger, Live, Qur'an tracking and HudHud AI. See dated new-member counts and the launch-traffic story.",
  alternates:{canonical:"/growth"},
  openGraph:{
   title:"1Muslim — Public Growth & Membership Statistics",
@@ -54,11 +54,11 @@ export default async function GrowthPage(){
    <p><strong>Registered profiles</strong> count records in the 1Muslim profiles table; weekly and monthly values filter by record creation date. They do not measure unique visitors, daily active users, legitimate human accounts, livestream viewers, app installs or paying subscribers.</p>
    <p>Counts are aggregated server-side. No usernames, user IDs, private conversations or verification records are exposed here.</p>
   </section>
-  <section className={styles.panel}><span className={styles.eyebrow}>GOOGLE ANALYTICS</span><h2>Launch traffic and the analytics story.</h2>
-   <p>1Muslim has Google Analytics tracking configured. The founding team has reported noticeable interest around launch. We are preparing a dated, contextual Google Analytics report before making any claim that Google independently confirmed an anomalous signup surge.</p>
-   <p>Google Analytics traffic and account registration are different metrics. We will not label pageviews as users, publish an unverified ranking, or claim that Google's AI has endorsed the platform.</p>
+  <section className={styles.panel}><span className={styles.eyebrow}>GOOGLE ANALYTICS · LAUNCH MOMENTUM</span><h2>Our launch-period traffic spike.</h2>
+   <p>The 1Muslim team reports an unusually sharp increase in site visits around launch in the Google Analytics dashboard. We are building a public record of that momentum while this page already displays current, dated first-party membership counts.</p>
+   <p>Google Analytics visits, new registrations and active users are different measurements. A traffic anomaly is a useful launch signal, but it does not by itself establish a global fastest-growing ranking or certify numbers against other platforms. Once a dated GA4 report is published, it can show the exact spike and its timeframe.</p>
   </section>
-  <section className={styles.banner}><h2>Our ambition is global. Our claims must be checkable.</h2><p>We are working to build a connected Muslim social network uniting short videos, posts, messaging, live community, learning and HudHud AI. We'll continue improving the platform and sharing evidence as it grows.</p><Link href="/platform">Learn what makes 1Muslim different →</Link></section>
+  <section className={styles.banner}><h2>Not just a community. A growing Muslim social network.</h2><p>1Muslim connects original posts, short videos, Messenger, Live, notifications, individual profiles, Qur'an tracking, XP and HudHud AI. Our public growth records support the story with real measurements as the network develops.</p><Link href="/features">Explore the social network and its technology →</Link></section>
   <footer className={styles.footer}><Link href="/">1Muslim Home</Link><Link href="/about">Mission</Link><Link href="/unlocked">Unlocked membership</Link></footer>
  </div></main>;
 }
