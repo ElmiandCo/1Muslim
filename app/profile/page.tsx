@@ -247,7 +247,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
 
 function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,posting,publishFirstPost,onEdit,isOwner=true,viewerId}:{profile:Profile;tier:any;ashab:Profile[];postCount:number;postText:string;setPostText:(v:string)=>void;posting:boolean;publishFirstPost:()=>void;onEdit:()=>void;isOwner?:boolean;viewerId?:string}){
   useEffect(()=>{if(!isOwner)return;const root=document.documentElement;root.style.setProperty("--profile-dock-accent",memberAccent(profile.profile_accent));root.classList.add("profileDockThemed");return()=>{root.classList.remove("profileDockThemed");root.style.removeProperty("--profile-dock-accent")}},[profile.profile_accent,isOwner]);
-  const [activeQuickPanel,setActiveQuickPanel]=useState<"posts"|"videos"|"settings"|null>(null);
+  const [activeQuickPanel,setActiveQuickPanel]=useState<"posts"|"videos"|"settings"|null>(isOwner?null:"posts");
   useEffect(()=>{if(new URLSearchParams(window.location.search).get("panel")==="settings")setActiveQuickPanel("settings")},[]);
   const [showProfileDetails,setShowProfileDetails]=useState(false);
   const openProfilePanel=(panel:"posts"|"videos"|"settings")=>{
