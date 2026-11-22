@@ -11,19 +11,80 @@ const relative=(date:string)=>{const seconds=Math.max(0,Math.floor((Date.now()-n
 function Icon({name}:{name:"heart"|"comment"|"save"|"share"|"reply"|"dislike"}){const paths={heart:<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>,comment:<path d="M20 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-4.5a8.5 8.5 0 1 1 15.1-5Z"/>,save:<path d="M6 3h12v18l-6-4-6 4V3Z"/>,share:<path d="M12 16V3m0 0L7 8m5-5 5 5M4 14v6h16v-6"/>,reply:<path d="m9 17-5-5 5-5M4 12h10a6 6 0 0 1 6 6"/>,dislike:<path d="M17 14V2H6a3 3 0 0 0-2.8 2L1 11a3 3 0 0 0 2.8 4H9l-1 6 2 1 7-8Zm0-12h5v12h-5"/>};return <svg width="19" height="19" style={{width:19,height:19,minWidth:19,minHeight:19,maxWidth:19,maxHeight:19,display:"block",flexShrink:0}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>}
 export default function UnifiedPostMedia({postId,mediaUrl,mediaType,youtubeId,contentKind="post",showVideo=true}:Props){
  const articleMode=contentKind==="magazine";const commentsEndpoint=articleMode?"/api/qibla-social/comments":"/api/ummah-comments";const engagementEndpoint=articleMode?"/api/qibla-social/engagement":"/api/ummah-post-engagement";const reactionEndpoint=articleMode?"/api/qibla-social/comment-reactions":"";const entityPayload=articleMode?{articleId:postId}:{postId};
+ const pendingReaction=useRef(new Set<"liked"|"saved">());
+ const pendingCommentReaction=useRef(new Set<string>());
+ const requestEpoch=useRef(0);
  const imageInput=useRef<HTMLInputElement>(null);const [image,setImage]=useState<File|null>(null),[imagePreview,setImagePreview]=useState<string|null>(null),[engagement,setEngagement]=useState({likes:0,saves:0,shares:0,comments:0}),[comments,setComments]=useState<Comment[]>([]),[expanded,setExpanded]=useState(false),[draft,setDraft]=useState(""),[replyTo,setReplyTo]=useState<Comment|null>(null),[repliesOpen,setRepliesOpen]=useState<Record<string,boolean>>({}),[busy,setBusy]=useState(false),[error,setError]=useState(""),[liked,setLiked]=useState(false),[saved,setSaved]=useState(false);
  const load=useCallback(async()=>{try{const r=await fetch(commentsEndpoint+"?"+(articleMode?"articleId=":"postId=")+encodeURIComponent(postId),{cache:"no-store"});if(r.ok){const j=await r.json();setComments(j.comments||[])}}catch{}},[postId,commentsEndpoint,articleMode]);
  useEffect(()=>{void load();const timer=setInterval(()=>void load(),15000);return()=>clearInterval(timer)},[load]);
  
- const loadEngagement=useCallback(async()=>{try{const r=await fetch(engagementEndpoint+"?"+(articleMode?"articleId=":"postId=")+encodeURIComponent(postId),{cache:"no-store"});if(r.ok){const j=await r.json();setEngagement({likes:j.likes||0,saves:j.saves||0,shares:j.shares||0,comments:j.comments||0});setLiked(!!j.liked);setSaved(!!j.saved)}}catch{}},[postId,engagementEndpoint,articleMode]);
+ const loadEngagement=useCallback(async()=>{
+ const version=requestEpoch.current;
+ try{
+  const r=await fetch(engagementEndpoint+"?"+(articleMode?"articleId=":"postId=")+encodeURIComponent(postId),{cache:"no-store"});
+  if(!r.ok)return;
+  const j=await r.json();
+  // Do not replace a just-tapped optimistic heart with an older in-flight GET.
+  if(version!==requestEpoch.current)return;
+  setEngagement(current=>({
+   likes:pendingReaction.current.has("liked")?current.likes:Number(j.likes)||0,
+   saves:pendingReaction.current.has("saved")?current.saves:Number(j.saves)||0,
+   shares:Number(j.shares)||0,comments:Number(j.comments)||0
+  }));
+  if(!pendingReaction.current.has("liked"))setLiked(!!j.liked);
+  if(!pendingReaction.current.has("saved"))setSaved(!!j.saved);
+ }catch{}
+},[postId,engagementEndpoint,articleMode]);
  useEffect(()=>{void loadEngagement()},[loadEngagement]);
  useEffect(()=>{if(articleMode)return;const refresh=(event:Event)=>{if((event as CustomEvent<{postId:string}>).detail?.postId===postId)void loadEngagement()};window.addEventListener("ummah-post-engagement-changed",refresh);return()=>window.removeEventListener("ummah-post-engagement-changed",refresh)},[articleMode,postId,loadEngagement]);
  useEffect(()=>{if(!image){setImagePreview(null);return}const url=URL.createObjectURL(image);setImagePreview(url);return()=>URL.revokeObjectURL(url)},[image]);
  const roots=useMemo(()=>comments.filter(c=>!c.parent_id),[comments]);
  const children=useMemo(()=>{const map=new Map<string,Comment[]>();for(const c of comments){if(c.parent_id){const a=map.get(c.parent_id)||[];a.push(c);map.set(c.parent_id,a)}}return map},[comments]);
- const toggle=async(key:"liked"|"saved")=>{setError("");try{const r=await fetch(engagementEndpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...entityPayload,kind:key==="liked"?"like":"save"})});const j=await r.json();if(!r.ok)throw Error(j.error||"Sign in to react");await loadEngagement()}catch(e){setError(e instanceof Error?e.message:"Unable to save reaction")}};
+ const toggle=async(key:"liked"|"saved")=>{
+ if(pendingReaction.current.has(key))return;
+ const before=key==="liked"?liked:saved;
+ pendingReaction.current.add(key);
+ requestEpoch.current++;
+ setError("");
+ if(key==="liked")setLiked(!before);else setSaved(!before);
+ setEngagement(current=>({...current,[key==="liked"?"likes":"saves"]:Math.max(0,current[key==="liked"?"likes":"saves"]+(before?-1:1))}));
+ try{
+  const response=await fetch(engagementEndpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...entityPayload,kind:key==="liked"?"like":"save"})});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw Error(response.status===401?"Sign in to like and save posts.":data.error||"Could not save reaction");
+  // Reconcile the server's answer, including a like changed in another tab.
+  const confirmed=typeof data.active==="boolean"?data.active:!before;
+  if(key==="liked")setLiked(confirmed);else setSaved(confirmed);
+  setEngagement(current=>({...current,[key==="liked"?"likes":"saves"]:Math.max(0,current[key==="liked"?"likes":"saves"]+(confirmed===!before?0:confirmed?1:-1))}));
+  if(!articleMode)window.dispatchEvent(new CustomEvent("ummah-post-engagement-changed",{detail:{postId}}));
+ }catch(error){
+  if(key==="liked")setLiked(before);else setSaved(before);
+  setEngagement(current=>({...current,[key==="liked"?"likes":"saves"]:Math.max(0,current[key==="liked"?"likes":"saves"]+(before?1:-1))}));
+  setError(error instanceof Error?error.message:"Could not save reaction.");
+ }finally{
+  pendingReaction.current.delete(key);
+  requestEpoch.current++;
+  void loadEngagement();
+ }
+};
  const dislikeComment=async(c:Comment)=>{setError("");try{const r=await fetch(articleMode?reactionEndpoint:"/api/ummah-comment-dislikes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(articleMode?{commentId:c.id,kind:"dislike"}:{commentId:c.id})});const j=await r.json();if(!r.ok)throw Error(j.error||"Could not dislike comment");setComments(old=>old.map(x=>x.id===c.id?{...x,disliked:j.disliked,dislikes:Math.max(0,(x.dislikes||0)+(j.disliked?1:-1))}:x))}catch(e){setError(e instanceof Error?e.message:"Unable to update dislike")}};
- const likeComment=async(c:Comment)=>{setError("");try{const r=await fetch(articleMode?reactionEndpoint:"/api/ummah-comment-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(articleMode?{commentId:c.id,kind:"like"}:{commentId:c.id})});const j=await r.json();if(!r.ok)throw Error(j.error||"Could not like comment");setComments(old=>old.map(x=>x.id===c.id?{...x,liked:j.liked,likes:Math.max(0,x.likes+(j.liked?1:-1))}:x))}catch(e){setError(e instanceof Error?e.message:"Unable to update like")}};
+ const likeComment=async(c:Comment)=>{
+ const key=c.id+":like";if(pendingCommentReaction.current.has(key))return;
+ pendingCommentReaction.current.add(key);setError("");
+ const before=c.liked;
+ setComments(old=>old.map(x=>x.id===c.id?{...x,liked:!before,likes:Math.max(0,x.likes+(before?-1:1))}:x));
+ try{
+  const r=await fetch(articleMode?reactionEndpoint:"/api/ummah-comment-likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(articleMode?{commentId:c.id,kind:"like"}:{commentId:c.id})});
+  const data=await r.json();
+  if(!r.ok)throw Error(data.error||"Could not like comment");
+  if(typeof data.liked==="boolean"&&data.liked!==!before){
+   setComments(old=>old.map(x=>x.id===c.id?{...x,liked:data.liked,likes:Math.max(0,x.likes+(data.liked?1:-1))}:x));
+  }
+ }catch(e){
+  setComments(old=>old.map(x=>x.id===c.id?{...x,liked:before,likes:Math.max(0,x.likes+(before?1:-1))}:x));
+  setError(e instanceof Error?e.message:"Unable to update like");
+ }finally{pendingCommentReaction.current.delete(key)}
+};
  async function send(e:FormEvent){e.preventDefault();if((!draft.trim()&&!image)||busy)return;setBusy(true);setError("");let imagePath="";try{if(image){const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user)throw Error("Sign in to attach an image");const ext=image.type==="image/png"?"png":image.type==="image/webp"?"webp":image.type==="image/gif"?"gif":"jpg";imagePath=user.id+"/comments/"+crypto.randomUUID()+"."+ext;const {error:uploadError}=await db.storage.from("community-media").upload(imagePath,image,{contentType:image.type,upsert:false});if(uploadError)throw Error("Image upload failed: "+uploadError.message)}
  const r=await fetch(commentsEndpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...entityPayload,body:draft.trim(),parentId:replyTo?(replyTo.parent_id||replyTo.id):null,imagePath})});const j=await r.json();if(!r.ok)throw Error(j.error||"Comment failed");if(replyTo){setRepliesOpen(old=>({...old,[replyTo.parent_id||replyTo.id]:true}));setExpanded(true)}setReplyTo(null);setDraft("");setImage(null);await load();await loadEngagement()}catch(e){setError(e instanceof Error?e.message:"Comment failed")}finally{setBusy(false)}}
  async function share(){const url=location.origin+(articleMode?"/qibla/newsroom/":"/posts/story/")+encodeURIComponent(postId);try{if(navigator.share)await navigator.share({url});else await navigator.clipboard.writeText(url);const r=await fetch("/api/ummah-post-engagement",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...entityPayload,kind:"share"})});if(r.ok)await loadEngagement()}catch{}}
