@@ -1,0 +1,25 @@
+.adhanSettings{border:1px solid var(--line,#71847655);border-radius:20px;padding:18px;background:var(--panel2,#10241c);color:inherit}
+.adhanSettingsTitle{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.adhanSettingsTitle h3{font-size:19px;margin:6px 0}.adhanSettingsTitle p{font-size:12px;line-height:1.6;margin:0;opacity:.72;max-width:540px}
+.adhanEyebrow{font-size:10px;letter-spacing:.12em;color:var(--theme-accent,#d7b66a);font-weight:800}
+.adhanToggle{border:1px solid var(--line,#aaa5);border-radius:100px;min-width:78px;padding:12px 14px;background:var(--panel,#15251a);color:inherit;font-weight:800;cursor:pointer;white-space:nowrap}
+.adhanToggle.active{background:#18734a;color:#fff;border-color:#51bf83}
+.adhanSettingsBody{margin-top:17px;display:grid;gap:17px}
+.adhanField{display:grid;gap:8px;font-size:12px;font-weight:700}
+.adhanField select{border:1px solid var(--line,#aaaaaa55);border-radius:11px;padding:12px;background:var(--panel,#f9f9f9);color:inherit;width:100%;min-height:44px}
+.adhanPrayerChoice{display:flex;gap:8px;flex-wrap:wrap}
+.adhanPrayerCheck{border:1px solid var(--line,#aaaaaa55);border-radius:100px;padding:9px 12px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;cursor:pointer}
+.adhanPrayerCheck input{accent-color:var(--theme-accent,#b39b51);width:17px;height:17px}
+.adhanVolume{display:flex;gap:11px;align-items:center;font-size:12px}.adhanVolume input{flex:1;max-width:230px;accent-color:var(--theme-accent,#b39b51)}
+.adhanButtons{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.adhanButtons button,.adhanButtons a{border:1px solid var(--line,#aaa5);border-radius:100px;padding:11px 15px;font-size:12px;cursor:pointer;text-decoration:none;color:inherit;min-height:43px}
+.adhanButtons button:first-child{background:var(--theme-accent,#d7b66a);color:var(--theme-base,#152b1e);border-color:transparent;font-weight:800}
+.adhanButtons .adhanSecondary{background:transparent}
+.adhanDisclaimer{font-size:11px;opacity:.65;line-height:1.7;margin:0}
+.adhanSettings button:focus-visible,.adhanSettings a:focus-visible,.adhanSettings select:focus-visible{outline:3px solid var(--theme-accent,#d7b66a);outline-offset:3px}
+.adhanPlayerToast{position:fixed;z-index:2147481000;top:calc(env(safe-area-inset-top,0px) + 18px);left:50%;transform:translateX(-50%);width:min(94vw,430px);border:1px solid var(--theme-accent,#d7b66a);border-radius:20px;padding:17px;background:var(--theme-surface,#14251c);color:var(--theme-ink,#fff);box-shadow:0 15px 50px #0008;display:grid;gap:9px}
+.adhanPlayerToast strong{font-size:19px}.adhanPlayerToast p{margin:0;font-size:12px;line-height:1.6}
+.adhanPlayerToastActions{display:flex;gap:8px;flex-wrap:wrap}
+.adhanPlayerToast button{padding:10px 15px;border-radius:100px;border:1px solid var(--theme-accent,#d7b66a);background:transparent;color:inherit;cursor:pointer;font-weight:750}
+.adhanPlayerToast button:first-child{background:var(--theme-accent,#d7b66a);color:var(--theme-base,#152b1e)}
+@media(max-width:560px){.adhanSettings{padding:15px}.adhanSettingsTitle{align-items:flex-start}.adhanToggle{min-width:68px;padding:10px}}
