@@ -51,6 +51,7 @@ export default function ProfileAnalytics({inline=false,userId}:{inline?:boolean;
    setReadings([]);setResetConfirm(false);window.dispatchEvent(new Event("1muslim:quran-progress-reset"));
   }catch(e){setResetError(e instanceof Error?e.message:"Unable to reset reading progress. Please retry.")}finally{setResetBusy(false)}
  };
+ const dates=Array.from({length:7},(_,i)=>day(6-i));
  const today=screen[day(0)]||{},week=dates.reduce((total,d)=>total+Object.values(screen[d]||{}).reduce((a,b)=>a+b,0),0);
  const todaySeconds=Object.values(today).reduce((a,b)=>a+b,0);
  const topPages=Object.entries(dates.reduce((acc,d)=>{for(const [p,t] of Object.entries(screen[d]||{}))acc[p]=(acc[p]||0)+t;return acc},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,5);
