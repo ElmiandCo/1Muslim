@@ -234,3 +234,29 @@
  .discoverPage .feedPostCaption p{font-size:15px;line-height:1.55}
 }
 @media(prefers-reduced-motion:reduce){.discoverPage .feedTabs button{transition:none}}
+
+
+/* Stable media geometry: image decoding must never resize an already-scrolled
+   feed card on iPhone Safari. Fit the full image inside a reserved frame. */
+.feedPage .feedMediaLink{
+  display:grid;
+  place-items:center;
+  width:100%;
+  aspect-ratio:4/5;
+  max-height:min(75svh,580px);
+  overflow:hidden;
+  background:#f0f3f4;
+}
+.feedPage .feedMediaLink img{
+  width:100%;
+  height:100%;
+  max-height:none;
+  object-fit:contain;
+  display:block;
+}
+/* Never let translated card animations compete with native momentum scrolling. */
+.feedPage .feedStream>.feedPost{
+  animation:none;
+  transition:none;
+  scroll-margin-top:12px;
+}
