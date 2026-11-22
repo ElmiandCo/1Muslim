@@ -5,7 +5,7 @@ import {useEffect,useRef,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import GlobalNavIcon,{type GlobalNavDestination} from "./GlobalNavIcon";
 const entries:{id:GlobalNavDestination;label:string;href?:string}[]=[
-{id:"search",label:"Search"},{id:"profile",label:"Profile",href:"/profile"},
+{id:"search",label:"Search",href:"/search"},{id:"profile",label:"Profile",href:"/profile"},
 {id:"muslims",label:"Muslims",href:"/profile?section=muslimeen"},
 {id:"posts",label:"Ummah Posts",href:"/posts"},
 {id:"messages",label:"Messages",href:"/messages"},
@@ -21,7 +21,7 @@ export default function GlobalNavigation(){
  const settleTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const railFrame=useRef(0);
  const [centered,setCentered]=useState<GlobalNavDestination>("muslims");
- const [search,setSearch]=useState(false),[query,setQuery]=useState(""),[busy,setBusy]=useState(false);
+ const [busy,setBusy]=useState(false);
  const [pending,setPending]=useState<Entry|null>(null),[dontAsk,setDontAsk]=useState(false);
  const [previous,setPrevious]=useState<string|null>(null);
  const [isUnlocked,setIsUnlocked]=useState(false);
@@ -137,7 +137,7 @@ export default function GlobalNavigation(){
   lastPath.current=pathname;
  },[pathname]);
  const visibleEntries=entries.filter(item=>item.id!=="unlocked"||!isUnlocked||unlockExit);
- const activeEntry=pathname?.startsWith("/posts")?"posts":pathname?.startsWith("/deepwatch")?"deepwatch":pathname?.startsWith("/quran")?"quran":pathname?.startsWith("/messages")?"messages":pathname?.startsWith("/unlocked")?"unlocked":pathname==="/profile"?(typeof window!=="undefined"&&new URLSearchParams(window.location.search).get("section")==="muslimeen"?"muslims":"profile"):"muslims";
+ const activeEntry=pathname?.startsWith("/search")?"search":pathname?.startsWith("/posts")?"posts":pathname?.startsWith("/deepwatch")?"deepwatch":pathname?.startsWith("/quran")?"quran":pathname?.startsWith("/messages")?"messages":pathname?.startsWith("/unlocked")?"unlocked":pathname==="/profile"?(typeof window!=="undefined"&&new URLSearchParams(window.location.search).get("section")==="muslimeen"?"muslims":"profile"):"muslims";
  const centerItem=(id:GlobalNavDestination,behavior:ScrollBehavior="smooth")=>{const rail=railRef.current;const target=rail?.querySelector<HTMLElement>(`[data-nav-id="${id}"]`);if(!rail||!target)return;rail.scrollTo({left:target.offsetLeft+target.offsetWidth/2-rail.clientWidth/2,behavior});setCentered(id)};
  useEffect(()=>{const frame=requestAnimationFrame(()=>{centerItem(activeEntry,"instant");onRailScroll()});return()=>cancelAnimationFrame(frame)},[pathname,isUnlocked]);
  useEffect(()=>()=>{if(settleTimer.current)clearTimeout(settleTimer.current)},[]);
@@ -161,12 +161,14 @@ export default function GlobalNavigation(){
  useEffect(()=>()=>{if(railFrame.current)cancelAnimationFrame(railFrame.current)},[]);
  if(pathname?.startsWith("/streaming/go-live")||pathname?.startsWith("/auth")||pathname?.startsWith("/login")||pathname?.startsWith("/posts/story/")||pathname==="/create")return null;
  async function perform(item:Entry){
-  if(item.id==="search"){setSearch(v=>!v);return}
+  if(item.id==="search"){router.push("/search");return}
   if(item.id==="signout"){setBusy(true);try{await createClient().auth.signOut();router.push("/");router.refresh()}finally{setBusy(false)}return}
-  if(item.href){setSearch(false);const destination=item.id==="profile"?"/profile":item.id==="muslims"?"/profile?section=muslimeen":item.id==="posts"?"/posts":item.href;if(pathname&&pathname!==destination.split("?")[0]){setPrevious(pathname);try{sessionStorage.setItem("1muslim:nav-previous",pathname)}catch{}}if(item.id==="profile"||item.id==="muslims"||item.id==="posts"){window.location.assign(destination);return}router.push(destination)}
+  if(item.href){const destination=item.id==="profile"?"/profile":item.id==="muslims"?"/profile?section=muslimeen":item.id==="posts"?"/posts":item.href;if(pathname&&pathname!==destination.split("?")[0]){setPrevious(pathname);try{sessionStorage.setItem("1muslim:nav-previous",pathname)}catch{}}if(item.id==="profile"||item.id==="muslims"||item.id==="posts"){window.location.assign(destination);return}router.push(destination)}
  }
  function select(item:Entry){
   if(busy)return;
+  // Search is a direct destination, without the old profile-only flyout or confirmation.
+  if(item.id==="search"){void perform(item);return}
   // Sign out always asks, even when navigation confirmations are disabled.
   const skip=item.id!=="signout"&&typeof window!=="undefined"&&localStorage.getItem("1muslim:nav-confirm-skip")==="true";
   if(skip){void perform(item);return}
@@ -182,7 +184,7 @@ export default function GlobalNavigation(){
  <button type="button" className="oneGlobalNavFixedBack" aria-label="Go back one page" title="Back" onClick={()=>{if(window.history.length>1){router.back()}else{router.push("/")}}}><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></button><div className="oneGlobalNavRailShell"><nav ref={railRef} onScroll={onRailScroll} className="oneGlobalNavRail" aria-label="Global destinations">{entries.filter(item=>item.id!=="unlocked"||!isUnlocked||unlockExit).map((item,index)=><span key={item.id} data-nav-id={item.id} style={{"--nav-distance":item.id===centered?0:1} as React.CSSProperties} className={"oneGlobalNavItem"+(item.id===centered?" is-centered":"")+(item.id==="unlocked"&&unlockExit?" oneGlobalNavUnlockedExit":"")}>
  <button type="button" aria-label={item.label} title={item.label} aria-current={item.href&&pathname===item.href?"page":undefined} disabled={busy} onClick={()=>{centerItem(item.id);select(item)}}>
  <span className="oneGlobalNavLabel">{item.label}</span><span className="oneGlobalNavIconWrap"><GlobalNavIcon name={item.id}/>{(item.id==="messages"?unreadMessages:item.id==="notifications"?unreadNotifications:0)>0&&<span className="oneGlobalNavBadge" aria-label={(item.id==="messages"?unreadMessages:unreadNotifications)+" unread"}>{Math.min(99,item.id==="messages"?unreadMessages:unreadNotifications)}{(item.id==="messages"?unreadMessages:unreadNotifications)>99?"+":""}</span>}{item.id==="profile"&&<span className="oneGlobalNavProfileGear" aria-hidden="true"><GlobalNavIcon name="settings" size={13}/></span>}</span></button></span>)}</nav></div>
- {search&&<form role="search" className="oneGlobalNavSearch" onSubmit={e=>{e.preventDefault();router.push("/profile?section=muslimeen&search="+encodeURIComponent(query));setSearch(false)}}><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} aria-label="Search Muslims" placeholder="Search 1Muslim members"/><button type="submit">Search</button><button type="button" className="oneGlobalNavSearchClose" aria-label="Close search" onClick={()=>setSearch(false)}>×</button></form>}
+ 
  {pending&&typeof document!=="undefined"&&createPortal(<div className="oneGlobalNavDialogBackdrop" onClick={()=>setPending(null)}>
  <div role="dialog" aria-modal="true" aria-labelledby="oneGlobalNavDialogTitle" className="oneGlobalNavDialog" onClick={e=>e.stopPropagation()}>
  <p id="oneGlobalNavDialogTitle">{pending.id==="signout"?"Sign out of 1Muslim?":pending.id==="search"?"Open Search?":"Open "+pending.label+"?"}</p>

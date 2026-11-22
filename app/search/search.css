@@ -185,3 +185,113 @@
  .dsExploreGrid a strong{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){.dsPage *, .dsPage *:before,.dsPage *:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+
+/* Discover 2.1: editorial white landing, compact recommendations and persistent HudHud top action. */
+.dsPage {
+  background: #fafbfc;
+  --ds-ink:#1c2a32;
+  --ds-muted:#6f7c83;
+  --ds-line:#e7eaed;
+}
+.dsHeader { background:rgba(255,255,255,.98); box-shadow:0 3px 16px rgba(21,35,46,.035); }
+.dsHeaderRow { padding-top:13px;padding-bottom:9px; }
+.dsSearchForm { background:#f3f5f6;border-color:#e6eaed;box-shadow:inset 0 1px 1px rgba(0,0,0,.018); }
+.dsSearchForm:focus-within { box-shadow:0 0 0 3px rgba(193,161,103,.12);border-color:#d4c29d; }
+.dsSearchForm input::placeholder {color:#8b989e}
+.dsSearchSubmit {color:#253c45}
+.dsCategoryBar {
+  width:min(1200px,100%);margin:0 auto;display:flex;align-items:stretch;
+  padding-left:14px;padding-right:14px;min-width:0;
+}
+.dsCategoryBar .dsTabs {
+  margin:0;min-width:0;flex:1;max-width:none;
+  display:flex;align-items:center;overflow-x:auto;scrollbar-width:none;padding:0 4px;
+}
+.dsCategoryBar .dsTabs button {min-height:43px;font-size:12px;font-weight:650;padding:0 11px;color:#788389}
+.dsCategoryBar .dsTabs button.active {color:#2a3940;border-bottom:2px solid #c39c64}
+.dsCategoryBar .dsTabs button small {background:#eff3f2;color:#60736f;font-size:9px;font-weight:700;margin-left:5px}
+.dsCategoryBar>.dsHudTab {
+  display:flex;flex:0 0 auto;align-items:center;justify-content:center;gap:6px;position:relative;
+  margin-left:5px;padding:0 9px 0 13px;
+  border:0;border-left:1px solid #eaeded;background:#fff;color:#1e4445;
+  font-size:11px;font-weight:800;white-space:nowrap;letter-spacing:.01em;
+  box-shadow:-7px 0 15px rgba(255,255,255,.92);
+}
+.dsCategoryBar>.dsHudTab:hover {background:#f5f7f6}
+.dsCategoryBar>.dsHudTab img {
+  display:block;flex:0 0 28px;width:28px;height:28px;object-fit:contain;
+  border-radius:50%;border:1px solid #dde7e5;background:#152a38;
+}
+.dsContent {padding:0 22px}
+.dsHomeIntro {
+  background:#fff;border:1px solid #eceeef;border-top:0;
+  border-radius:0 0 18px 18px;padding:4px 18px 7px;
+  box-shadow:0 9px 23px rgba(23,40,50,.022);margin-bottom:10px;
+}
+.dsHomeIntro .dsSectionHead {margin-bottom:10px;align-items:center}
+.dsHomeIntro .dsSectionHead h2 {font-size:17px;letter-spacing:-.035em;font-weight:760;margin:0;color:#27343c}
+.dsHomeIntro .dsRecent {padding:20px 0 21px}
+.dsHomeIntro .dsRecentList {gap:7px}
+.dsHomeIntro .dsRecentItem {box-shadow:none;border-radius:9px;background:#f6f8f8}
+.dsHomeIntro .dsRecentItem button {font-size:12px;padding:8px 9px}
+.dsHomeIntro .dsEmptyRecent {font-size:12px;color:#929da2;padding:6px 0 1px;line-height:1.5}
+.dsHomeIntro .dsQuietButton {color:#6d7f80;font-size:11px}
+.dsRecommended {padding:17px 0 7px}
+.dsRecommendedLabel {font-size:11px;font-weight:530;color:#9aa2a8}
+.dsCreatorList {display:grid;gap:0}
+.dsCreatorRow {
+  min-height:55px;display:flex;gap:11px;align-items:center;
+  width:100%;border-bottom:1px solid #f0f2f3;
+  padding:7px 3px;color:#273743;
+  transition:background .15s ease,transform .15s ease;
+}
+.dsCreatorRow:last-child {border-bottom:0}
+.dsCreatorRow:hover {background:#f7f9fa;border-radius:10px}
+.dsCreatorRank {
+  width:19px;flex:0 0 19px;display:block;text-align:center;
+  font-size:10px;letter-spacing:.03em;font-weight:740;color:#a9b2b6;
+  font-variant-numeric:tabular-nums;
+}
+.dsCreatorAvatar {
+  display:grid;place-items:center;width:35px;height:35px;flex:0 0 35px;
+  border:1px solid #e4e8e8;border-radius:50%;
+  background:linear-gradient(135deg,#edf2f1,#dee8e7);
+  color:#677e7b;font-weight:800;font-size:13px;overflow:hidden;
+}
+.dsCreatorAvatar img {display:block;width:100%;height:100%;object-fit:cover}
+.dsCreatorName {display:grid;flex:1;gap:1px;min-width:0}
+.dsCreatorName strong {font-size:13px;font-weight:690;line-height:1.2;letter-spacing:-.015em;color:#2b4558;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsCreatorName small {font-size:10px;line-height:1.3;font-weight:450;color:#8b969c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsCreatorPostCount {margin-left:auto;flex:0 0 auto;color:#89969c;font-size:10px;font-weight:500;white-space:nowrap}
+.dsCreatorChevron {color:#a79c84;flex:0 0 auto;font-size:13px;margin-left:5px}
+.dsCreatorLoading,.dsCreatorEmpty {padding:20px 5px 28px;color:#849095;font-size:12px;line-height:1.5}
+.dsContent>.dsRailSection:first-of-type {padding-top:14px}
+.dsRailSection {border-color:#e9edf0}
+.dsRailSection .dsSectionHead h2 {color:#253944}
+.dsCard {box-shadow:0 5px 18px rgba(21,42,52,.04);border-color:#e7ebed}
+.dsCard:hover {border-color:#d5d9d4;box-shadow:0 10px 24px rgba(21,42,52,.08)}
+@media(max-width:767px){
+  .dsHeaderRow{padding-top:calc(7px + env(safe-area-inset-top,0px));padding-bottom:7px}
+  .dsContent{padding:0 14px}
+  .dsHomeIntro{padding:4px 12px 8px;margin:0 -1px 12px;border-radius:0 0 15px 15px}
+  .dsCategoryBar{padding:0 8px}
+  .dsCategoryBar .dsTabs button {min-height:45px;font-size:12px;padding:0 10px}
+  .dsCategoryBar>.dsHudTab {gap:5px;font-size:11px;padding:0 5px 0 9px}
+  .dsCategoryBar>.dsHudTab img {width:27px;height:27px;flex-basis:27px}
+  .dsHomeIntro .dsSectionHead h2{font-size:16px}
+  .dsHomeIntro .dsRecent{padding:18px 0 18px}
+  .dsRecommended{padding:15px 0 4px}
+  .dsCreatorRow{gap:9px;min-height:52px;padding:6px 2px}
+  .dsCreatorRank{font-size:9px;width:16px;flex-basis:16px}
+  .dsCreatorAvatar{width:32px;height:32px;flex-basis:32px}
+  .dsCreatorName strong{font-size:12.5px}
+  .dsCreatorPostCount{font-size:10px}
+  .dsCreatorChevron{font-size:12px;margin-left:0}
+}
+@media(max-width:390px){
+  .dsCategoryBar>.dsHudTab span {display:none}
+  .dsCategoryBar>.dsHudTab {padding-left:9px;padding-right:5px}
+  .dsCreatorName small{font-size:9.5px}
+}
+@media(prefers-reduced-motion:reduce){.dsCreatorRow{transition:none}}
