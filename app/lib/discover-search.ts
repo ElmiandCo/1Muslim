@@ -9,16 +9,33 @@ export type DiscoverResponse = { query: string; groups: Record<DiscoverKind, Dis
 export const DISCOVER_CATEGORIES: DiscoverKind[] = ["Videos","Posts","People","Movies & Series","Qur’an","Comments","Lessons","Prayer","Live","Qibla"];
 type DB = Awaited<ReturnType<typeof createClient>>;
 const compact = (value: unknown, max = 190) => String(value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
-const searchText = (query: string) => query.toLowerCase().replace(/^@/, "").trim();
+const GENERIC_SEARCH_WORDS = new Set(["show","find","search","me","my","the","for","with","about","what","where","who","when","why","how","can","you","please","videos","video","posts","post","films","movies","movie","series","of","on","in","to","a","an","is","are","i","want","need"]);
+const normalizeSearch = (value: string) => value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[-_'’]+/g," ").replace(/\s+/g," ").trim();
+function meaningfulTerm(query:string) {
+  const cleaned = query.replace(/[%,()\\@]/g," ").trim().slice(0,90);
+  const words=cleaned.split(/\s+/).filter(Boolean);
+  const important=words.filter(word=>!GENERIC_SEARCH_WORDS.has(word.toLowerCase()));
+  return words.length>2||(words.length===2&&words.some(word=>GENERIC_SEARCH_WORDS.has(word.toLowerCase())))
+    ? important.sort((a,b)=>b.length-a.length)[0]||cleaned : cleaned;
+}
+// Avoid matching 'cat' in 'education', or 'ai' in 'said'. Short queries must match whole words.
+function termMatches(value:string,term:string) {
+  const haystack=normalizeSearch(value);
+  const needle=normalizeSearch(term);
+  if(!needle)return true;
+  if(needle.length<=3 && /^[a-z0-9]+$/.test(needle)){
+    return haystack.split(/[^a-z0-9]+/).some(word=>word===needle||word===needle+"s");
+  }
+  return haystack.includes(needle);
+}
 function relevance(query: string, title: string, description: string, base = 0) {
-  if (!query) return base + 10;
-  const q = searchText(query), t = title.toLowerCase(), d = description.toLowerCase();
-  if (t === q) return 100 + base;
-  if (t.startsWith(q) || t.startsWith("@" + q)) return 87 + base;
-  if (t.includes(q)) return 74 + base;
-  if (d.includes(q)) return 48 + base;
-  const words=q.split(/\s+/).filter(w=>w.length>1);
-  return (words.length && words.every(w=>(t+" "+d).includes(w)) ? 35 : 10) + base;
+  if(!query)return base+10;
+  const q=meaningfulTerm(query),t=normalizeSearch(title),needle=normalizeSearch(q);
+  if(t===needle)return 100+base;
+  if(t.startsWith(needle)&&termMatches(title,q))return 87+base;
+  if(termMatches(title,q))return 74+base;
+  if(termMatches(description,q))return 48+base;
+  return base+4;
 }
 const publicLink=(path:unknown) => typeof path==="string" && (/^https:\/\//.test(path)||path.startsWith("/assets/")) ? path : undefined;
 
@@ -81,13 +98,7 @@ async function quranChapters(q:string):Promise<Array<{id:number;title:string;tra
 export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverResponse> {
   const query=compact(rawQuery,90);
   const active=query.length>=2;
-  const cleaned=query.replace(/[%,()\\@]/g," ").trim().slice(0,90);
-  const words=cleaned.split(/\s+/).filter(Boolean);
-  const generic=new Set(["show","find","search","me","my","the","for","with","about","what","where","who","when","why","how","can","you","please","videos","video","posts","post","films","movies","movie","series","of","on","in","to","a","an","is","are","i","want","need"]);
-  const important=words.filter(w=>!generic.has(w.toLowerCase()));
-  // Search intent often includes filler words; use the strongest term instead of matching a literal sentence.
-  const term=words.length>2 || (words.length===2 && words.some(w=>generic.has(w.toLowerCase())))
-    ? important.sort((a,b)=>b.length-a.length)[0]||cleaned : cleaned;
+  const term=meaningfulTerm(query);
   const pattern="%"+term+"%";
   const base = () => ({data:[],error:null});
   // All tables use the caller's Supabase session and RLS. No service-role reads of private content.
@@ -106,7 +117,28 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
     active?db.from("live_streams").select("id,title,category,status,created_at").eq("visibility","public").eq("status","live").or("title.ilike."+pattern+",category.ilike."+pattern).limit(10):
       db.from("live_streams").select("id,title,category,status,created_at").eq("visibility","public").eq("status","live").order("created_at",{ascending:false}).limit(8),
     quranTranslations(query),
-    quranChapters(query)
+    quranChapters(query),
+    (async()=>{
+      // Discover categories are metadata, not necessarily words in a video's title.
+      // Search approved categories directly so Somali or Turkish titles remain discoverable.
+      const intent=normalizeSearch(term);
+      const lookup:Record<string,string[]> = {
+        somali:["Somali Entertainment","Somalia"],turkish:["Turkish Drama"],
+        kids:["kids","Animated"],children:["kids","Animated"],
+        movies:["Movies"],movie:["Movies"],film:["Movies"],
+        series:["Series","series","Historical series"],
+        documentary:["Historical"],history:["Historical","Historical series"],
+        prophets:["Prophets"],prophet:["Prophets"],prayer:["Prayer & worship"],
+        seerah:["Seerah"],arabic:["Arabic tafsir"],quran:["Qur’an","quran"],
+        islam:["Islam","Islamic Programs"],nature:["Nature & Science"]
+      };
+      const labels=lookup[intent]||[];
+      if(!active||labels.length===0)return base();
+      const data=await Promise.all(labels.map(category=>db.from("islamic_video_registry")
+        .select("video_id,title,description,channel_title,thumbnail_url,content_type,series_id,cover_url,categories,published_at")
+        .eq("status","approved").contains("categories",[category]).order("discovered_at",{ascending:false}).limit(22)));
+      return {data:data.flatMap(result=>result.data||[]),error:data.find(result=>result.error)?.error||null};
+    })()
   ]);
   const get=(i:number):any[]=>{
     const settled=tasks[i];if(!settled||settled.status!=="fulfilled")return [];
@@ -114,10 +146,17 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
     return Array.isArray(value?.data)?value.data:Array.isArray(value)?value:[];
   };
   const groups=Object.fromEntries(DISCOVER_CATEGORIES.map(category=>[category,[] as DiscoverItem[]])) as unknown as Record<DiscoverKind,DiscoverItem[]>;
-  const add=(item:DiscoverItem)=>{if(item.href.startsWith("/")&&!item.href.startsWith("//"))groups[item.kind].push(item);};
+  const add=(item:DiscoverItem)=>{
+    if(!item.href.startsWith("/")||item.href.startsWith("//"))return;
+    if(active&&term.length<=3&&!termMatches([item.title,item.description,item.byline||""].join(" "),term))return;
+    groups[item.kind].push(item);
+  };
   const authors=get(1);
-  const byAuthor=new Map(authors.map(p=>[p.id,p]));
   const posts=get(0), postIds=posts.map(p=>p.id);
+  // Populate author names for matching posts even when the creator's name wasn't part of the query.
+  const missingAuthorIds=[...new Set(posts.map(p=>p.author_id).filter((id:string)=>!!id&&!authors.some(a=>a.id===id)))];
+  const extraAuthors=missingAuthorIds.length?await db.from("profiles").select("id,display_name,username,avatar_url").in("id",missingAuthorIds.slice(0,40)):base();
+  const byAuthor=new Map([...authors,...(extraAuthors.data||[])].map(p=>[p.id,p]));
   const mediaQuery=postIds.length ? await db.from("post_media").select("post_id,community_post_id,storage_path,mime_type").in("community_post_id",postIds).limit(120):base();
   const byMedia=new Map<string,{storage_path:string;mime_type:string}>();
   for(const media of mediaQuery.data||[]) if(media.community_post_id&&!byMedia.has(media.community_post_id))byMedia.set(media.community_post_id,media);
@@ -135,12 +174,21 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
   for(const p of authors) add({id:p.id,kind:"People",title:compact(p.display_name||p.username||"1Muslim member",90),description:compact(p.bio||"1Muslim member",130),
     href:"/profile?member="+encodeURIComponent(p.id),image:publicLink(p.avatar_url),byline:p.username?"@"+p.username:"Member",
     badge:Number.isFinite(p.xp_total)?Number(p.xp_total).toLocaleString()+" XP":"MEMBER",score:relevance(query,p.display_name||p.username||"",p.username||"",4)});
-  for(const v of get(2)) {
-    const isSeries=v.content_type==="series"||v.content_type==="episode";
-    add({id:v.video_id,kind:"Movies & Series",title:compact(v.title,130),description:compact(v.description,190),
+  const discoveredVideos=[...get(2),...get(11)];
+  const seenVideos=new Set<string>();
+  for(const v of discoveredVideos) {
+    if(seenVideos.has(v.video_id))continue;
+    seenVideos.add(v.video_id);
+    const mediaType=String(v.content_type||"video").toLowerCase();
+    const categories=(Array.isArray(v.categories)?v.categories:[]).map((x:unknown)=>String(x));
+    const showCategory=categories.some((category:string)=>/\b(movies|series|drama|game shows)\b/i.test(category));
+    const showTitle=/\b(movie|series|season|episode|full film|documentary)\b/i.test(String(v.title||""));
+    const isShow=["movie","film","series","episode","show","documentary"].includes(mediaType)||Boolean(v.series_id)||showCategory||showTitle;
+    const categoryMatch=categories.some((category:string)=>termMatches(category,term));
+    add({id:v.video_id,kind:isShow?"Movies & Series":"Videos",title:compact(v.title,130),description:compact(v.description,190),
       href:"/deepwatch?video="+encodeURIComponent(v.video_id),image:publicLink(v.cover_url)||publicLink(v.thumbnail_url)||"https://i.ytimg.com/vi/"+encodeURIComponent(v.video_id)+"/hqdefault.jpg",
-      byline:v.channel_title||"DeepWatch",badge:isSeries?"SERIES":String(v.content_type||"VIDEO").toUpperCase(),
-      media:"video",score:relevance(query,v.title||"",v.description||"",5),timestamp:v.published_at});
+      byline:v.channel_title||"DeepWatch",badge:isShow?(mediaType==="video"?"SHOW / SERIES":mediaType.toUpperCase()):"DEEPWATCH · VIDEO",
+      media:"video",score:Math.max(relevance(query,v.title||"",v.description||"",isShow?7:5),categoryMatch?47:0),timestamp:v.published_at});
   }
   const series=get(3), seriesIds=series.map(x=>x.id);
   const episodeRows=seriesIds.length?await db.from("islamic_video_registry").select("series_id,video_id").eq("status","approved").in("series_id",seriesIds).order("episode_number",{ascending:true}).limit(60):base();
@@ -172,8 +220,11 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
       if(unique.has(key))return false;unique.add(key);return true;
     }).sort((a,b)=>b.score-a.score).slice(0,22);
   }
-  const best=DISCOVER_CATEGORIES.flatMap(kind=>groups[kind]).sort((a,b)=>b.score-a.score).slice(0,12);
+  const seenBest=new Set<string>();
+  const best=DISCOVER_CATEGORIES.flatMap(kind=>groups[kind]).sort((a,b)=>b.score-a.score).filter(item=>{
+    if(seenBest.has(item.href))return false;seenBest.add(item.href);return true;
+  }).slice(0,12);
   const suggestions=[...new Set([...best.slice(0,6).map(item=>item.title).filter(title=>title.length<44),...KNOWLEDGE.map(x=>x.title)])].slice(0,9);
-  const partial=tasks.some((t,i)=> t.status==="rejected" || (i<9&&t.status==="fulfilled"&&Boolean((t.value as any)?.error)));
+  const partial=tasks.some((t,i)=> t.status==="rejected" || ((i<9||i===11)&&t.status==="fulfilled"&&Boolean((t.value as any)?.error)));
   return {query,groups,best,total:DISCOVER_CATEGORIES.reduce((sum,kind)=>sum+groups[kind].length,0),partial,suggestions};
 }
