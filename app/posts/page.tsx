@@ -35,7 +35,7 @@ export default function PublicPostsSocial(){
    setPosts(cachedDiscover.posts);
    setViewerId(cachedDiscover.viewerId);
    setLoading(false);
-  }
+  }else cachedDiscover=null;
   const merge=(fresh:Post[],replace=false)=>{
    if(!active)return;
    setPosts(old=>{
