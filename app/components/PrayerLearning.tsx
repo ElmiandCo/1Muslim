@@ -79,7 +79,7 @@ export default function PrayerLearning(){
     {SALAH_STEPS.map((step,i)=><button type="button" aria-pressed={selected===i} className={selected===i?"active":""} key={step.id} onClick={()=>choose(i)}>{String(i+1).padStart(2,"0")} <span>{step.term}</span></button>)}
    </div>
    <div className="prayerInstruction">
-    <div className="prayerInstructionVisual"><PositionIllustration stage={current.stage}/><span className="prayerInstructionStage">{current.term}</span></div>
+    <div className="prayerInstructionVisual"><PositionIllustration stage={current.stage} stepId={current.id}/><span className="prayerInstructionStage">{current.term}</span></div>
     <div className="prayerInstructionCopy">
      <span className="prayerStepKicker">STEP {selected+1} · {current.term.toUpperCase()}</span>
      <h3>{current.title}</h3><p>{current.instructions}</p>{current.repeat&&<p className="prayerPracticeTip">✦ {current.repeat}</p>}

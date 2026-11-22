@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import type {ReactNode} from "react";
 import type {SalahStage} from "./PrayerEducationData";
 
@@ -42,43 +43,37 @@ export function PrayerScene({night=false}:{night?:boolean}){
  </svg>;
 }
 
-export function PositionIllustration({stage}:{stage:SalahStage}){
- const colors={robe:"#1b5c4b",shadow:"#0e4135",outline:"#164035",skin:"#c38d65",cap:"#f4e7c8"};
- return <svg className="prayerPositionIllustration" viewBox="0 0 200 160" role="img" aria-label={{stand:"Person standing for prayer",bow:"Person bowing for rukūʿ",rise:"Person standing after bowing",prostrate:"Person in sujūd",sit:"Person sitting for tashahhud"}[stage]}>
- <ellipse cx="103" cy="146" rx="69" ry="6" fill="#cbbca6" opacity=".44"/>
- {stage==="stand"||stage==="rise"?<g>
-  <path d="M80 72 Q100 64 122 73 L134 138 H66Z" fill={colors.robe} stroke={colors.outline} strokeWidth="2"/>
-  <path d="M91 68 V45 H109 V68" fill={colors.skin}/><ellipse cx="100" cy="42" rx="16" ry="20" fill={colors.skin}/>
-  <path d="M84 32 Q100 16 116 32 L116 36 H84Z" fill={colors.cap} stroke="#a8a69b" strokeWidth="1.5"/>
-  <path d="M86 51 Q99 72 113 50 Q109 62 102 64 L94 63Z" fill="#2b2c25"/>
-  {stage==="stand"?<g><path d="M83 78 L98 93 L117 82" fill="none" stroke={colors.skin} strokeWidth="10" strokeLinecap="round"/><path d="M119 79 L105 96 L89 85" fill="none" stroke={colors.skin} strokeWidth="8" strokeLinecap="round"/></g>:<g><path d="M79 79 L73 117 M121 79 L129 117" stroke={colors.skin} strokeWidth="9" strokeLinecap="round"/></g>}
-  <path d="M81 138 V150 M119 138 V150" stroke={colors.skin} strokeWidth="11" strokeLinecap="round"/>
- </g>:null}
- {stage==="bow"?<g>
-  <path d="M76 93 L80 140 M107 94 L112 142" stroke={colors.robe} strokeWidth="21" strokeLinecap="round"/>
-  <path d="M53 68 Q76 60 126 75 L128 95 Q85 98 54 91Z" fill={colors.robe} stroke={colors.outline} strokeWidth="2"/>
-  <path d="M118 78 L143 73" stroke={colors.skin} strokeWidth="15" strokeLinecap="round"/>
-  <ellipse cx="150" cy="76" rx="16" ry="13" fill={colors.skin}/><path d="M135 67 Q145 54 161 66 L164 72 H135Z" fill={colors.cap}/>
-  <path d="M160 84 L150 90 L139 84" stroke="#342920" strokeWidth="5" fill="none"/>
-  <path d="M74 88 L85 107 M107 91 L116 107" stroke={colors.skin} strokeWidth="8" strokeLinecap="round"/>
-  <path d="M80 140 L73 149 M113 141 L125 149" stroke={colors.skin} strokeWidth="9" strokeLinecap="round"/>
- </g>:null}
- {stage==="prostrate"?<g>
-  <path d="M42 133 L54 112 Q67 74 95 88 Q119 96 129 120 L150 133Z" fill={colors.robe} stroke={colors.outline} strokeWidth="2.5"/>
-  <path d="M55 116 L54 140 M91 103 L93 139" stroke={colors.robe} strokeWidth="15" strokeLinecap="round"/>
-  <path d="M125 120 L146 138 M110 113 L121 137" stroke={colors.skin} strokeWidth="9" strokeLinecap="round"/>
-  <ellipse cx="155" cy="126" rx="17" ry="12" fill={colors.skin} transform="rotate(22 155 126)"/>
-  <path d="M143 113 Q159 101 169 117 L168 120 H145Z" fill={colors.cap}/>
-  <path d="M39 140 H67 M83 141 H106" stroke={colors.skin} strokeWidth="9" strokeLinecap="round"/>
- </g>:null}
- {stage==="sit"?<g>
-  <path d="M80 67 Q100 62 117 69 L124 121 L81 123Z" fill={colors.robe} stroke={colors.outline} strokeWidth="2"/>
-  <path d="M91 65 V49 H107 V66" fill={colors.skin}/><ellipse cx="99" cy="42" rx="16" ry="20" fill={colors.skin}/>
-  <path d="M82 33 Q98 15 115 33 V38 H82Z" fill={colors.cap} stroke="#b0a99b" strokeWidth="1.5"/>
-  <path d="M85 50 Q99 68 111 49" stroke="#302a23" strokeWidth="5" fill="none"/>
-  <path d="M84 119 Q111 104 142 130 L152 139 H65 Q65 128 84 119Z" fill={colors.robe} stroke={colors.outline} strokeWidth="2"/>
-  <path d="M78 77 L73 115 L91 122 M120 76 L128 116 L111 126" stroke={colors.skin} strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
-  <path d="M71 142 H145" stroke={colors.skin} strokeWidth="8" strokeLinecap="round"/>
- </g>:null}
- </svg>;
+/** Official user-uploaded Salah illustrations, already merged on main by PR #1512.
+ * Filenames in /public/assets are case-sensitive on Vercel.
+ * A single figure and art style is reused throughout the preview cards and lesson.
+ */
+const SALAH_ILLUSTRATIONS = {
+ takbir: "/assets/takbir.PNG",
+ qiyam: "/assets/qiyam.PNG",
+ ruku: "/assets/ruku.PNG",
+ sujud: "/assets/sujud.PNG",
+ tashahhud: "/assets/tashahhud.PNG",
+ taslim: "/assets/taslim.PNG"
+} as const;
+
+export function PositionIllustration({stage,stepId}:{stage:SalahStage;stepId?:string}){
+ const pose=stepId==="takbir"?"takbir":stepId==="salam"?"taslim":
+  (stage==="bow"?"ruku":stage==="prostrate"?"sujud":stage==="sit"?"tashahhud":"qiyam");
+ const title=({
+  takbir:"Raising both hands to begin Salah",
+  qiyam:"Standing in Salah (Qiyām)",
+  ruku:"Bowing for Rukūʿ",
+  sujud:"Prostrating for Sujūd",
+  tashahhud:"Sitting during Tashahhud",
+  taslim:"Completing Salah with Taslīm"
+ } as const)[pose];
+ return <Image
+  className="prayerPositionIllustration"
+  src={SALAH_ILLUSTRATIONS[pose]}
+  alt={title}
+  width={680}
+  height={840}
+  sizes="(max-width: 480px) 62vw, (max-width: 720px) 40vw, 240px"
+  loading="lazy"
+ />;
 }
