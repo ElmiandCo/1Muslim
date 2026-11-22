@@ -96,6 +96,25 @@ export default function HudHudQuranBird({verseKey,chapterName,words=NO_WORDS,pau
      if(hoverTimer.current)clearTimeout(hoverTimer.current);
    };
  },[ready,enabled,paused,verseKey,words]);
+ // On touch devices, tapping an Arabic word is the equivalent of pointing at it.
+ // Observe the gesture without preventing the reader's own word-meaning action.
+ useEffect(()=>{
+   if(!ready||!enabled||paused)return;
+   const onTouch=(event:PointerEvent)=>{
+     if(event.pointerType!=="touch"||!(event.target instanceof Element))return;
+     const wordEl=event.target.closest(".omWord,.omQuranAnnotatedWord,[data-quran-word]") as HTMLElement|null;
+     if(!wordEl)return;
+     const text=wordEl.textContent?.trim().replace(/\\s+/g," ").slice(0,35)||"";
+     if(!text)return;
+     const match=words.find(word=>word.char_type_name==="word"&&normalize(word.text_uthmani||"")===normalize(text));
+     setHoverWord(short(text));
+     setMeaning(match?.translation?.text?.replace(/<[^>]*>/g,"").slice(0,80)||"");
+     setBubble(true);
+     scheduleClose(3400);
+   };
+   window.addEventListener("pointerdown",onTouch,{passive:true});
+   return()=>window.removeEventListener("pointerdown",onTouch);
+ },[ready,enabled,paused,words]);
  const setAwareness=(value:boolean)=>{
    setEnabled(value);
    try{localStorage.setItem(KEY,value?"on":"off")}catch{}
