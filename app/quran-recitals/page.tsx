@@ -49,12 +49,12 @@ export default function QuranRecitalsPage(){
  return <main className="qrlPage">
   <SiteNav/>
   <section className="qrlHero">
-   <Link href="/elm-tent/quran" className="qrlBack">← Qur’an Reader</Link>
+   <Link href="/quran-library" className="qrlBack">← Qur’an Reader</Link>
    <span className="qrlEyebrow">1MUSLIM · THE RECITATION LIBRARY</span>
    <h1>Voices of the Ummah<span>.</span></h1>
    <p>Every recording is shared by a member. Listen, reflect, or record your own Qur’an recitation without opening a Live room.</p>
    <div className="qrlHeroActions">
-     <Link href="/elm-tent/quran" className="qrlPrimary">🎙 Record a recitation ↗</Link>
+     <Link href="/quran-library" className="qrlPrimary">🎙 Record a recitation ↗</Link>
      <Link href="/streaming/go-live?topic=Qur%27an" className="qrlSecondary">● Recite Live ↗</Link>
    </div>
   </section>
@@ -85,10 +85,10 @@ export default function QuranRecitalsPage(){
          <audio controls preload="none" src={item.audioUrl} ref={node=>{if(node)audioRefs.current.set(item.id,node);else audioRefs.current.delete(item.id)}}
           onPlay={()=>{for(const [id,other] of audioRefs.current)if(id!==item.id)other.pause();setActiveId(item.id)}}
           onEnded={()=>void next(item.id)} aria-label={"Listen to "+(surah?.name_simple||item.title)+" by "+item.author}/>
-         <Link href={"/elm-tent/quran?chapter="+item.chapter} className="qrlRead">Read alongside →</Link>
+         <Link href={"/quran-library?chapter="+item.chapter} className="qrlRead">Read alongside →</Link>
        </div>
       </article>
-    })}</div>:!loading&&!error?<div className="qrlEmpty"><span>✧</span><h3>Be among the first voices</h3><p>No public recitations here yet. You can record one from the Qur’an Reader.</p><Link href="/elm-tent/quran">Open Qur’an Reader →</Link></div>:null}
+    })}</div>:!loading&&!error?<div className="qrlEmpty"><span>✧</span><h3>Be among the first voices</h3><p>No public recitations here yet. You can record one from the Qur’an Reader.</p><Link href="/quran-library">Open Qur’an Reader →</Link></div>:null}
     {loading&&<p className="qrlLoading" role="status">Loading community recitations…</p>}
     {hasMore&&!loading&&<button className="qrlMore" type="button" onClick={()=>{const nextPage=page+1;setPage(nextPage);void load(chapter,nextPage)}}>More recitations ↓</button>}
   </section>
