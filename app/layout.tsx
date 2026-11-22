@@ -34,24 +34,26 @@ export const viewport = {themeColor:"#ffffff",width:"device-width",initialScale:
 
 export const metadata = {
   metadataBase: new URL("https://1muslim.live"),
-  title: "1Muslim — Muslim Social Network, Live, Messaging, Qur'an & HudHud AI",
+  title: "1Muslim | Muslim Social Media, Videos, Live & HudHud AI",
   applicationName: "1Muslim",
   appleWebApp: {capable:true,title:"1Muslim",statusBarStyle:"default" as const},
   icons: {apple:[{url:"/apple-icon",sizes:"180x180",type:"image/png"}],icon:[{url:"/icon.svg",type:"image/svg+xml"},{url:"/app-install-icon",sizes:"512x512",type:"image/png"}]},
-  description: "A Muslim-focused social network with community posts, short-form video, profiles, messages, calling, live streaming, Qur'an study, DeepWatch and AI-assisted search by HudHud.",
+  description: "1Muslim is Muslim social media for short videos, posts, messaging, live streams, Qur'an learning, Shahada-centered signup and OpenAI-powered HudHud search.",
+  category: "social networking",
   openGraph: {
     siteName: "1Muslim",
-    title: "1Muslim — One Ummah. One Platform.",
-    description: "Muslim community, video, messaging, live streaming, learning and HudHud AI discovery in one network.",
+    title: "1Muslim — Muslim Social Media, Live Video & HudHud AI",
+    description: "One Muslim-focused social network for TikTok-style short videos, Facebook-style profiles, Snapchat-style messaging, live streams, Qur'an learning and HudHud AI. Join free; explore 1Muslim Unlocked.",
     url: "https://1muslim.live",
-    type: "website" as const
+    type: "website" as const,
+    locale: "en_US"
   },
   twitter: {
     card: "summary" as const,
-    title: "1Muslim — One Ummah. One Platform.",
-    description: "Watch. Share. Connect. Learn. Discover with HudHud AI."
+    title: "1Muslim — Muslim Social Network & HudHud AI",
+    description: "Watch, post, message, go live and learn Qur'an in one Muslim social network. Free membership, Shahada-centered onboarding and AI-assisted discovery."
   }
-};
+}
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="en"><body><SitePresenceHeartbeat /><ProfileThemeSync /><HudHudMotionShell><GlobalNavigation />{children}</HudHudMotionShell><ImmersiveVideoEntry /><PersistentMessengerCall /><PersistentMuslimSync /><PersistentDailyVideo /><VisitorFeedback /><LocationOnboarding /><PersistentAdhan /><HudHudDimensionDust /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><ElmiLayerX /><XPTracker /><PersistentQuranStudio /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
