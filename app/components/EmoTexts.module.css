@@ -44,3 +44,71 @@
 .footer span{font-size:10px;color:#a7a9af;text-align:center}
 @media(max-width:450px){.panel{height:min(56dvh,480px);padding-inline:8px}.grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:74px;gap:2px}.art{font-size:15px}.arabic{font-size:19px}.symbol{font-size:34px}.small{font-size:1.05em}.small.arabic{font-size:1.25em}.small.symbol{font-size:1.3em}.inEditor{font-size:1em}.inEditor.arabic{font-size:1.2em}.inEditor.symbol{font-size:1.25em}.toggle span{display:none}.toggle{min-width:35px!important}.header strong{font-size:17px}}
 @media(prefers-reduced-motion:reduce){.key{transition:none}}
+
+
+/* Native-feeling EmoTexts bottom sheet. The handle and header are drag targets;
+   search, filter chips and the key grid remain freely tappable/scrollable. */
+.scrim{opacity:0;transition:opacity .26s ease}
+.scrimVisible{opacity:1}
+.panel{
+ height:min(69dvh,640px);
+ transform:translate3d(-50%,calc(100% + 24px),0);
+ transition:transform .28s cubic-bezier(.2,.85,.28,1);
+ will-change:transform;
+ padding-bottom:max(12px,env(safe-area-inset-bottom));
+}
+.panel.visible{transform:translate3d(-50%,var(--drag-y,0px),0)}
+.panel.dragging{transition:none}
+.panel.closing{transform:translate3d(-50%,calc(100% + 24px),0);transition:transform .24s cubic-bezier(.42,0,.88,.54)}
+.dragHandle{
+ display:grid;
+ flex:0 0 29px;
+ align-items:center;
+ justify-content:center;
+ margin:-10px -12px 0;
+ touch-action:none;
+ cursor:grab;
+ -webkit-user-select:none;
+ user-select:none;
+}
+.grabber{display:block;width:52px;height:5px;margin:0;background:#9da1a8;border-radius:99px;pointer-events:none}
+.header{
+ padding:3px 6px 13px;
+ touch-action:none;
+ cursor:grab;
+ -webkit-user-select:none;
+ user-select:none;
+}
+.close{
+ min-width:40px;
+ min-height:40px;
+ display:grid;
+ place-items:center;
+ line-height:1;
+ background:#ffffff0b;
+ border:1px solid #ffffff22;
+ border-radius:13px;
+ color:#f4f1e9;
+ font-size:26px;
+ touch-action:manipulation;
+ cursor:pointer;
+ flex:0 0 auto;
+}
+.close:hover{background:#ffffff1d}
+.close:focus-visible{outline:2px solid #f4cf80;outline-offset:2px}
+.grid{
+ align-content:start;
+ grid-auto-rows:minmax(80px,auto);
+ gap:7px;
+ padding:10px 4px 13px;
+}
+.key{min-height:76px}
+@media(max-width:450px){
+ .panel{height:min(67dvh,590px);padding-inline:10px}
+ .grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:84px;gap:5px}
+ .key{min-height:80px}
+ .header{padding-bottom:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ .panel,.scrim{transition:none}
+}
