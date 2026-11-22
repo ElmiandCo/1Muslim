@@ -183,7 +183,7 @@ export default function SearchHub() {
       <div className="dsCategoryBar">
         <nav className="dsTabs" aria-label="Discover categories">
           {TABS.map(name=><button key={name} type="button" className={tab===name?"active":""} aria-pressed={tab===name} onClick={()=>{setTab(name);setSubmitted(query.trim());}}>
-            {name}{name!=="All"&&result&&totalFor(name as DiscoverKind)>0?<small>{totalFor(name as DiscoverKind)}</small>:null}
+            {name}
           </button>)}
         </nav>
         <button className="dsHudTab" type="button" title="Ask HudHud" aria-label="Ask HudHud AI search assistant" onClick={()=>void openHudHud()}>
