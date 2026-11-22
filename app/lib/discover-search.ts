@@ -117,7 +117,28 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
     active?db.from("live_streams").select("id,title,category,status,created_at").eq("visibility","public").eq("status","live").or("title.ilike."+pattern+",category.ilike."+pattern).limit(10):
       db.from("live_streams").select("id,title,category,status,created_at").eq("visibility","public").eq("status","live").order("created_at",{ascending:false}).limit(8),
     quranTranslations(query),
-    quranChapters(query)
+    quranChapters(query),
+    (async()=>{
+      // Discover categories are metadata, not necessarily words in a video's title.
+      // Search approved categories directly so Somali or Turkish titles remain discoverable.
+      const intent=normalizeSearch(term);
+      const lookup:Record<string,string[]> = {
+        somali:["Somali Entertainment","Somalia"],turkish:["Turkish Drama"],
+        kids:["kids","Animated"],children:["kids","Animated"],
+        movies:["Movies"],movie:["Movies"],film:["Movies"],
+        series:["Series","series","Historical series"],
+        documentary:["Historical"],history:["Historical","Historical series"],
+        prophets:["Prophets"],prophet:["Prophets"],prayer:["Prayer & worship"],
+        seerah:["Seerah"],arabic:["Arabic tafsir"],quran:["Qur’an","quran"],
+        islam:["Islam","Islamic Programs"],nature:["Nature & Science"]
+      };
+      const labels=lookup[intent]||[];
+      if(!active||labels.length===0)return base();
+      const data=await Promise.all(labels.map(category=>db.from("islamic_video_registry")
+        .select("video_id,title,description,channel_title,thumbnail_url,content_type,series_id,cover_url,categories,published_at")
+        .eq("status","approved").contains("categories",[category]).order("discovered_at",{ascending:false}).limit(22)));
+      return {data:data.flatMap(result=>result.data||[]),error:data.find(result=>result.error)?.error||null};
+    })()
   ]);
   const get=(i:number):any[]=>{
     const settled=tasks[i];if(!settled||settled.status!=="fulfilled")return [];
@@ -153,13 +174,21 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
   for(const p of authors) add({id:p.id,kind:"People",title:compact(p.display_name||p.username||"1Muslim member",90),description:compact(p.bio||"1Muslim member",130),
     href:"/profile?member="+encodeURIComponent(p.id),image:publicLink(p.avatar_url),byline:p.username?"@"+p.username:"Member",
     badge:Number.isFinite(p.xp_total)?Number(p.xp_total).toLocaleString()+" XP":"MEMBER",score:relevance(query,p.display_name||p.username||"",p.username||"",4)});
-  for(const v of get(2)) {
+  const discoveredVideos=[...get(2),...get(11)];
+  const seenVideos=new Set<string>();
+  for(const v of discoveredVideos) {
+    if(seenVideos.has(v.video_id))continue;
+    seenVideos.add(v.video_id);
     const mediaType=String(v.content_type||"video").toLowerCase();
-    const isShow=["movie","film","series","episode","show","documentary"].includes(mediaType)||Boolean(v.series_id);
+    const categories=(Array.isArray(v.categories)?v.categories:[]).map((x:unknown)=>String(x));
+    const showCategory=categories.some((category:string)=>/\b(movies|series|drama|game shows)\b/i.test(category));
+    const showTitle=/\b(movie|series|season|episode|full film|documentary)\b/i.test(String(v.title||""));
+    const isShow=["movie","film","series","episode","show","documentary"].includes(mediaType)||Boolean(v.series_id)||showCategory||showTitle;
+    const categoryMatch=categories.some((category:string)=>termMatches(category,term));
     add({id:v.video_id,kind:isShow?"Movies & Series":"Videos",title:compact(v.title,130),description:compact(v.description,190),
       href:"/deepwatch?video="+encodeURIComponent(v.video_id),image:publicLink(v.cover_url)||publicLink(v.thumbnail_url)||"https://i.ytimg.com/vi/"+encodeURIComponent(v.video_id)+"/hqdefault.jpg",
-      byline:v.channel_title||"DeepWatch",badge:isShow?mediaType.toUpperCase():"DEEPWATCH · VIDEO",
-      media:"video",score:relevance(query,v.title||"",v.description||"",isShow?7:5),timestamp:v.published_at});
+      byline:v.channel_title||"DeepWatch",badge:isShow?(mediaType==="video"?"SHOW / SERIES":mediaType.toUpperCase()):"DEEPWATCH · VIDEO",
+      media:"video",score:Math.max(relevance(query,v.title||"",v.description||"",isShow?7:5),categoryMatch?47:0),timestamp:v.published_at});
   }
   const series=get(3), seriesIds=series.map(x=>x.id);
   const episodeRows=seriesIds.length?await db.from("islamic_video_registry").select("series_id,video_id").eq("status","approved").in("series_id",seriesIds).order("episode_number",{ascending:true}).limit(60):base();
@@ -196,6 +225,6 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
     if(seenBest.has(item.href))return false;seenBest.add(item.href);return true;
   }).slice(0,12);
   const suggestions=[...new Set([...best.slice(0,6).map(item=>item.title).filter(title=>title.length<44),...KNOWLEDGE.map(x=>x.title)])].slice(0,9);
-  const partial=tasks.some((t,i)=> t.status==="rejected" || (i<9&&t.status==="fulfilled"&&Boolean((t.value as any)?.error)));
+  const partial=tasks.some((t,i)=> t.status==="rejected" || ((i<9||i===11)&&t.status==="fulfilled"&&Boolean((t.value as any)?.error)));
   return {query,groups,best,total:DISCOVER_CATEGORIES.reduce((sum,kind)=>sum+groups[kind].length,0),partial,suggestions};
 }
