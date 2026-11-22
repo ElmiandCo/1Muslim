@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import styles from "./EmoTexts.module.css";
 
@@ -79,25 +79,101 @@ function populateEditor(element:HTMLElement,value:string) {
  }
 }
 
-export function EmoTextKeyboard({onInsert,onABC,disabled=false}:{onInsert:(id:string)=>void;onABC?:()=>void;disabled?:boolean}) {
+/** A true bottom sheet: rise on open, drag its grab handle or header,
+ * dismiss by throwing it down, tapping the embedded X, scrim, or Escape.
+ * The key grid remains independently scrollable and won't trigger dismissal.
+ */
+export function EmoTextKeyboard({onInsert,disabled=false}:{onInsert:(id:string)=>void;disabled?:boolean}) {
  const [open,setOpen]=useState(false);
  const [mounted,setMounted]=useState(false);
+ const [visible,setVisible]=useState(false);
+ const [closing,setClosing]=useState(false);
+ const [dragging,setDragging]=useState(false);
+ const [dragY,setDragY]=useState(0);
  const [search,setSearch]=useState("");
  const [category,setCategory]=useState("All");
+ const timeout=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const gesture=useRef<{pointerId:number;startY:number;startTime:number}|null>(null);
+
  useEffect(()=>setMounted(true),[]);
- useEffect(()=>{if(!open)return;const key=(e:globalThis.KeyboardEvent)=>{if(e.key==="Escape")setOpen(false)};document.addEventListener("keydown",key);return()=>document.removeEventListener("keydown",key)},[open]);
+ useEffect(()=>{
+  if(!open)return;
+  const frame=window.requestAnimationFrame(()=>setVisible(true));
+  return()=>window.cancelAnimationFrame(frame);
+ },[open]);
+ useEffect(()=>()=>{if(timeout.current)clearTimeout(timeout.current)},[]);
+
+ const closeSheet=useCallback(()=>{
+  if(!open||closing)return;
+  gesture.current=null;
+  setDragging(false);
+  setClosing(true);
+  setDragY(0);
+  if(timeout.current)clearTimeout(timeout.current);
+  timeout.current=window.setTimeout(()=>{
+   setOpen(false);setVisible(false);setClosing(false);setDragY(0);
+   timeout.current=null;
+  },260);
+ },[open,closing]);
+
+ useEffect(()=>{
+  if(!open)return;
+  const onKey=(event:globalThis.KeyboardEvent)=>{if(event.key==="Escape"){event.preventDefault();closeSheet();}};
+  document.addEventListener("keydown",onKey);
+  return()=>document.removeEventListener("keydown",onKey);
+ },[open,closeSheet]);
+
+ const startDrag=(event:ReactPointerEvent<HTMLElement>)=>{
+  if(closing||(event.pointerType==="mouse"&&event.button!==0))return;
+  // The X is an independent control, not part of the drag gesture.
+  if((event.target as HTMLElement).closest("button,input,a"))return;
+  gesture.current={pointerId:event.pointerId,startY:event.clientY,startTime:event.timeStamp};
+  setDragging(true);
+  event.currentTarget.setPointerCapture(event.pointerId);
+ };
+ const moveDrag=(event:ReactPointerEvent<HTMLElement>)=>{
+  const current=gesture.current;
+  if(!current||current.pointerId!==event.pointerId)return;
+  setDragY(Math.min(window.innerHeight,Math.max(0,event.clientY-current.startY)));
+ };
+ const finishDrag=(event:ReactPointerEvent<HTMLElement>)=>{
+  const current=gesture.current;
+  if(!current||current.pointerId!==event.pointerId)return;
+  gesture.current=null;
+  const distance=Math.max(0,event.clientY-current.startY);
+  const speed=distance/Math.max(1,event.timeStamp-current.startTime);
+  if(distance>100||(distance>35&&speed>.7))closeSheet();
+  else{setDragging(false);setDragY(0);}
+ };
+ const cancelDrag=()=>{
+  gesture.current=null;
+  setDragging(false);
+  setDragY(0);
+ };
  const shown=useMemo(()=>EMOTEXTS.filter(item=>(category==="All"||category===item.category)&&(item.label+" "+item.art).toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())),[category,search]);
+
  return <>
-  <button type="button" className={styles.toggle} disabled={disabled} aria-label="Switch to 1Muslim EmoTexts keyboard" aria-expanded={open} aria-controls="om-emotext-sheet" onClick={()=>{if(!open){(document.activeElement as HTMLElement|null)?.blur?.()}setOpen(v=>!v)}} title="1Muslim EmoTexts">✦<span>EmoTexts</span></button>
+  <button type="button" className={styles.toggle} disabled={disabled} aria-label="Switch to 1Muslim EmoTexts keyboard" aria-expanded={open&&!closing} aria-controls="om-emotext-sheet" onClick={()=>{
+   if(open){closeSheet();return;}
+   (document.activeElement as HTMLElement|null)?.blur?.();
+   setDragY(0);setDragging(false);setClosing(false);setVisible(false);setOpen(true);
+  }} title="1Muslim EmoTexts">✦<span>EmoTexts</span></button>
   {open&&mounted&&createPortal(<>
-   <div className={styles.scrim} onClick={()=>setOpen(false)} aria-hidden="true"/>
-   <section id="om-emotext-sheet" className={styles.panel} role="dialog" aria-modal="true" aria-label="1Muslim EmoTexts keyboard">
-    <div className={styles.grabber} aria-hidden="true"/>
-    <header className={styles.header}><div><strong>✦ 1Muslim <em>EmoTexts</em></strong><small>Mix transparent calligraphy and expressions with your words</small></div><button className={styles.close} type="button" onClick={()=>setOpen(false)} aria-label="Close EmoTexts">×</button></header>
+   <div className={[styles.scrim,visible&&!closing?styles.scrimVisible:""].join(" ")} onClick={closeSheet} aria-hidden="true"/>
+   <section id="om-emotext-sheet"
+    className={[styles.panel,visible?styles.visible:"",dragging?styles.dragging:"",closing?styles.closing:""].filter(Boolean).join(" ")}
+    style={{"--drag-y":dragY+"px"} as CSSProperties}
+    role="dialog" aria-modal="true" aria-label="1Muslim EmoTexts keyboard">
+    <div className={styles.dragHandle} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={finishDrag} onPointerCancel={cancelDrag} aria-label="Drag down to close EmoTexts">
+     <span className={styles.grabber} aria-hidden="true"/>
+    </div>
+    <header className={styles.header} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={finishDrag} onPointerCancel={cancelDrag}>
+     <div><strong>✦ 1Muslim <em>EmoTexts</em></strong><small>Mix transparent calligraphy and expressions with your words</small></div>
+     <button className={styles.close} type="button" onClick={closeSheet} aria-label="Close EmoTexts" title="Close EmoTexts">×</button>
+    </header>
     <input className={styles.search} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search EmoTexts…" aria-label="Search EmoTexts"/>
     <div className={styles.categories} role="group" aria-label="EmoText category">{["All","Dhikr","Dua","Arabic","Symbol","Reaction"].map(name=><button type="button" key={name} className={category===name?styles.active:""} onClick={()=>setCategory(name)} aria-pressed={category===name}>{name}</button>)}</div>
     <div className={styles.grid} role="group" aria-label="EmoText keys">{shown.map(item=><button type="button" key={item.id} className={styles.key} title={item.label} aria-label={"Insert "+item.label} onClick={()=>onInsert(item.id)}><EmoTextArt item={item}/></button>)}{!shown.length&&<p className={styles.empty}>No matching EmoTexts.</p>}</div>
-    <footer className={styles.footer}><button type="button" onClick={()=>{setOpen(false);onABC?.()}} className={styles.abc}>⌨ ABC</button><span>First collection · 18 unique keys</span><button type="button" onClick={()=>setOpen(false)} className={styles.done}>Done ✓</button></footer>
    </section>
   </>,document.body)}
  </>;
@@ -142,6 +218,6 @@ export function EmoTextComposer({value,onChange,maxLength=500,disabled=false,pla
  };
  return <div className={styles.composer}>
   <div ref={editor} className={styles.editable} role="textbox" aria-label={ariaLabel} aria-multiline="true" aria-disabled={disabled} data-placeholder={placeholder} contentEditable={!disabled} suppressContentEditableWarning onInput={sync} onKeyDown={keydown} onPaste={paste}/>
-  <EmoTextKeyboard onInsert={add} onABC={()=>{const el=editor.current;if(!el)return;el.focus();const range=document.createRange();range.selectNodeContents(el);range.collapse(false);const selection=window.getSelection();selection?.removeAllRanges();selection?.addRange(range)}} disabled={disabled}/>
+  <EmoTextKeyboard onInsert={add} disabled={disabled}/>
  </div>;
 }
