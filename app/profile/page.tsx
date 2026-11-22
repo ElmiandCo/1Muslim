@@ -329,6 +329,13 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
   const [activeQuickPanel,setActiveQuickPanel]=useState<"posts"|"videos"|"settings"|null>(isOwner?null:"posts");
   useEffect(()=>{if(new URLSearchParams(window.location.search).get("panel")==="settings")setActiveQuickPanel("settings")},[]);
   const [showProfileDetails,setShowProfileDetails]=useState(false);
+  // Passive icon spotlight only. It never changes tabs or the content currently open.
+  const [profileSpotlight,setProfileSpotlight]=useState(0);
+  useEffect(()=>{
+   if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+   const timer=window.setInterval(()=>setProfileSpotlight(index=>(index+1)%(isOwner?6:4)),3000);
+   return()=>window.clearInterval(timer);
+  },[isOwner]);
   const openProfilePanel=(panel:"posts"|"videos"|"settings")=>{
    setShowProfileDetails(true);
    setActiveQuickPanel(panel);
@@ -375,16 +382,16 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
 @media(prefers-reduced-motion:reduce){.profileFullAccent .profileAppTile{transition:none!important}}
 `}</style>
     <ProfileOrbitStudio profile={profile} onEdit={onEdit} ashab={ashab} isOwner={isOwner} viewerId={viewerId} activeQuickPanel={activeQuickPanel} onQuickPanel={toggleQuickPanel} showProfileDetails={showProfileDetails}/>
-    <div className="profileCommandBar" aria-label="Profile controls">
+    <div className="profileCommandBar profileCompactIconMenu" aria-label="Profile controls">
      <div className="profileSocialActions" aria-label="Profile actions">
-      {isOwner?<button type="button" className="profileAction profileSocialPrimary" onClick={onEdit} aria-label="Edit profile"><ProfileControlGlyph kind="edit"/><span className="profileActionLabel"><span className="profileActionLabelFull">Edit profile</span><span className="profileActionLabelShort">Edit</span></span></button>:<Link className="profileAction profileSocialPrimary" href={"/messages?to="+encodeURIComponent(profile.id)+"&from=profile"} aria-label="Message member"><ProfileControlGlyph kind="message"/><span className="profileActionLabel">Message</span></Link>}
-      <button type="button" className="profileAction" aria-label="Share profile" onClick={async()=>{const url=window.location.origin+"/profile/"+encodeURIComponent(profile.id);if(navigator.share){try{await navigator.share({title:profile.display_name||"1Muslim profile",url})}catch{}}else{try{await navigator.clipboard.writeText(url);window.alert("Profile link copied")}catch{window.prompt("Copy profile link",url)}}}}><ProfileControlGlyph kind="share"/><span className="profileActionLabel">Share</span></button>
-      {isOwner&&<button type="button" className="profileAction" aria-label="Open profile insights" onClick={()=>window.dispatchEvent(new Event("1muslim:open-profile-analytics"))}><ProfileControlGlyph kind="insights"/><span className="profileActionLabel">Insights</span></button>}
-      {isOwner&&<button type="button" className="profileAction" aria-label="Open profile settings" title="Settings" onClick={()=>openProfilePanel("settings")} aria-pressed={activeQuickPanel==="settings"}><ProfileControlGlyph kind="settings"/><span className="profileActionLabel">Settings</span></button>}
+      {isOwner?<button type="button" className="profileAction profileSocialPrimary" data-spotlight={profileSpotlight===0} onClick={onEdit} aria-label="Edit profile"><ProfileControlGlyph kind="edit"/><span className="profileActionLabel"><span className="profileActionLabelFull">Edit profile</span><span className="profileActionLabelShort">Edit</span></span></button>:<Link className="profileAction profileSocialPrimary" data-spotlight={profileSpotlight===0} href={"/messages?to="+encodeURIComponent(profile.id)+"&from=profile"} aria-label="Message member"><ProfileControlGlyph kind="message"/><span className="profileActionLabel">Message</span></Link>}
+      <button type="button" className="profileAction" data-spotlight={profileSpotlight===1} aria-label="Share profile" onClick={async()=>{const url=window.location.origin+"/profile/"+encodeURIComponent(profile.id);if(navigator.share){try{await navigator.share({title:profile.display_name||"1Muslim profile",url})}catch{}}else{try{await navigator.clipboard.writeText(url);window.alert("Profile link copied")}catch{window.prompt("Copy profile link",url)}}}}><svg aria-hidden="true" viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4.2 19C13.2 18 15.5 11 20 5"/><path d="M13.1 4.8H20v7"/></svg><span className="profileActionLabel">Share</span></button>
+      {isOwner&&<button type="button" className="profileAction" data-spotlight={profileSpotlight===2} aria-label="Open profile insights" onClick={()=>window.dispatchEvent(new Event("1muslim:open-profile-analytics"))}><ProfileControlGlyph kind="insights"/><span className="profileActionLabel">Insights</span></button>}
+      {isOwner&&<button type="button" className="profileAction" data-spotlight={profileSpotlight===3} aria-label="Open profile settings" title="Settings" onClick={()=>openProfilePanel("settings")} aria-pressed={activeQuickPanel==="settings"}><ProfileControlGlyph kind="settings"/><span className="profileActionLabel">Settings</span></button>}
      </div>
      <nav className="profilePremiumTabs" aria-label="Profile content">
-      <button type="button" className="profileTabAction" aria-label="Show profile posts" title="Posts" aria-pressed={activeQuickPanel==="posts"} onClick={()=>openProfilePanel("posts")}><ProfileControlGlyph kind="posts"/><span className="profileActionLabel">Posts</span></button>
-      <button type="button" className="profileTabAction" aria-label="Show profile videos" title="Videos" aria-pressed={activeQuickPanel==="videos"} onClick={()=>openProfilePanel("videos")}><ProfileControlGlyph kind="videos"/><span className="profileActionLabel">Videos</span></button>
+      <button type="button" className="profileTabAction" data-spotlight={profileSpotlight===(isOwner?4:2)} aria-label="Show profile posts" title="Posts" aria-pressed={activeQuickPanel==="posts"} onClick={()=>openProfilePanel("posts")}><ProfileControlGlyph kind="posts"/><span className="profileActionLabel">Posts</span></button>
+      <button type="button" className="profileTabAction" data-spotlight={profileSpotlight===(isOwner?5:3)} aria-label="Show profile videos" title="Videos" aria-pressed={activeQuickPanel==="videos"} onClick={()=>openProfilePanel("videos")}><ProfileControlGlyph kind="videos"/><span className="profileActionLabel">Videos</span></button>
      </nav>
     </div>
     <div className="profileSocialDiscoveryShortcut"><span className="profileDiscoveryGlyph" aria-hidden="true">◎</span><div><strong>Discover Muslims</strong><p>Connect with the Ummah</p></div><Link href="/profile?section=muslimeen">Explore →</Link></div>

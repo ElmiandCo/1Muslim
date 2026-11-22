@@ -277,3 +277,59 @@
  .profileMagneticGridActive>.profileMagneticCell .profileAppTileIcon{animation:none!important}
  .profileAppLauncherGrid.profileMagneticGridActive::before{transition:none!important}
 }
+
+/* Owner profile: one compact icon dock. A passive, three-second spotlight
+   shows one label at a time; it never changes active panels or routes. */
+.profileCommandPage .profileFullAccent .profileCompactIconMenu{
+ display:flex!important;align-items:center!important;justify-content:stretch!important;
+ gap:6px!important;padding:8px!important;margin:8px 0 10px!important;
+ border:1px solid #dce6ed!important;border-radius:17px!important;
+ background:#ffffffed!important;box-shadow:0 4px 16px #182f4e0c!important;
+}
+.profileCommandPage .profileFullAccent .profileCompactIconMenu .profileSocialActions,
+.profileCommandPage .profileFullAccent .profileCompactIconMenu .profilePremiumTabs{
+ display:contents!important;
+}
+.profileCommandPage .profileFullAccent .profileCompactIconMenu :is(.profileAction,.profileTabAction){
+ box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;
+ flex:1 1 0!important;width:auto!important;min-width:0!important;max-width:none!important;
+ min-height:44px!important;height:47px!important;padding:7px 4px!important;
+ margin:0!important;border-radius:12px!important;border:1px solid #dce6ed!important;
+ background:#f7f9fb!important;color:#334b65!important;
+ box-shadow:inset 0 1px #fff!important;overflow:hidden!important;white-space:nowrap!important;
+ font-size:11px!important;font-weight:780!important;
+ transition:flex-grow .4s cubic-bezier(.22,.9,.27,1),background-color .36s,border-color .36s,box-shadow .36s!important;
+}
+.profileCommandPage .profileFullAccent .profileCompactIconMenu :is(.profileAction,.profileTabAction)>svg{
+ width:22px!important;height:22px!important;min-width:22px!important;flex:0 0 22px!important;
+}
+.profileCommandPage .profileFullAccent .profileCompactIconMenu :is(.profileAction,.profileTabAction) .profileActionLabel{
+ display:none!important;overflow:hidden!important;max-width:0!important;
+}
+.profileCommandPage .profileFullAccent .profileCompactIconMenu :is(.profileAction,.profileTabAction)[data-spotlight="true"]{
+ flex-grow:2.25!important;background:color-mix(in srgb,var(--member-accent,#34628f) 11%,white)!important;
+ color:color-mix(in srgb,var(--member-accent,#34628f) 65%,#152e45)!important;
+ border-color:color-mix(in srgb,var(--member-accent,#34628f) 45%,#e1e6ec)!important;
+ box-shadow:inset 0 1px #fff,0 0 0 1px color-mix(in srgb,var(--member-accent,#34628f) 7%,transparent)!important;
+}
+.profileCommandPage .profileFullAccent .profileCompactIconMenu :is(.profileAction,.profileTabAction)[data-spotlight="true"] .profileActionLabel{
+ display:inline-flex!important;align-items:center!important;max-width:125px!important;
+ font-size:11px!important;font-weight:800!important;white-space:nowrap!important;
+ animation:profileSpotlightLabel .32s ease both;
+}
+.profileCommandPage .profileFullAccent .profileCompactIconMenu :is(.profileAction,.profileTabAction)[data-spotlight="true"] .profileActionLabelShort{display:none!important}
+.profileCommandPage .profileFullAccent .profileCompactIconMenu :is(.profileAction,.profileTabAction)[data-spotlight="true"] .profileActionLabelFull{display:inline!important}
+.profileCommandPage .profileFullAccent .profileCompactIconMenu :is(.profileAction,.profileTabAction):focus-visible{
+ outline:2px solid var(--member-accent,#487db4)!important;outline-offset:2px!important;
+}
+@keyframes profileSpotlightLabel{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
+@media(max-width:380px){
+ .profileCommandPage .profileFullAccent .profileCompactIconMenu{gap:4px!important;padding:6px!important}
+ .profileCommandPage .profileFullAccent .profileCompactIconMenu :is(.profileAction,.profileTabAction){min-height:42px!important;height:44px!important;padding:6px 3px!important;gap:3px!important}
+ .profileCommandPage .profileFullAccent .profileCompactIconMenu :is(.profileAction,.profileTabAction)>svg{width:19px!important;height:19px!important;min-width:19px!important;flex-basis:19px!important}
+ .profileCommandPage .profileFullAccent .profileCompactIconMenu :is(.profileAction,.profileTabAction)[data-spotlight="true"] .profileActionLabel{font-size:10px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .profileCommandPage .profileCompactIconMenu :is(.profileAction,.profileTabAction){transition:none!important}
+ .profileCommandPage .profileCompactIconMenu .profileActionLabel{animation:none!important}
+}

@@ -2,7 +2,6 @@
 
 import {useEffect,useRef,useState,type ReactNode,type CSSProperties} from "react";
 import {createPortal} from "react-dom";
-import Link from "next/link";
 import FeaturedBadge from "./FeaturedBadge";
 import styles from "./ProfileCinematicOverlay.module.css";
 
@@ -94,10 +93,13 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
      <div ref={art} className={styles.art} style={{backgroundImage:`url(${JSON.stringify(mainImage)})`}}/>
      <div className={styles.vignette}/>
     </div>
+    <button ref={closeButton} type="button" className={styles.sceneExit} aria-label="Close full profile by tapping the background" title="Close full profile" onClick={onClose}/>
     <nav className={styles.topbar} aria-label="Full profile controls">
-     <button ref={closeButton} type="button" onClick={onClose} className={styles.round} aria-label="Close full profile">‹</button>
-     <span>1MUSLIM · PROFILE</span>
-     <button type="button" onClick={()=>void share()} className={styles.round} aria-label="Share this profile">↗</button>
+     <span className={styles.xpCrown} aria-label={fmt(profile.xp_total)+" XP"}>✦ <strong>{fmt(profile.xp_total)}</strong> <small>XP</small></span>
+     <span className={styles.brand}>1MUSLIM · PROFILE</span>
+     <button type="button" onClick={()=>void share()} className={styles.round} aria-label="Share this profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" width="22" height="22" aria-hidden="true"><path d="M4 18.5C12 18.5 14.4 9.8 19 5"/><path d="M12 4.5h7.5V12"/></svg>
+     </button>
     </nav>
     <main className={styles.body}>
      <div className={styles.avatarRing}><img src={avatar} alt={profile.display_name?profile.display_name+"'s avatar":"Member avatar"} /></div>
@@ -106,11 +108,7 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
       {profile.shahada_verified_at&&<span className={styles.verified} title="Shahada verified" aria-label="Shahada verified">✓</span>}
      </div>
      <p className={styles.handle}>@{profile.username||"member"}</p>
-     <div className={styles.badgeRow}>
-      {profile.shahada_verified_at&&<span className={styles.chip}>✦ Shahada verified</span>}
-      <span className={styles.chip}>✧ {fmt(profile.xp_total)} XP</span>
-     </div>
-     <div className={styles.featured}><FeaturedBadge userId={profile.id} verifiedAt={profile.shahada_verified_at} compact /></div>
+     {profile.shahada_verified_at&&<span className={styles.verifiedLabel}>✦ Shahada verified</span>}
      {profile.bio?.trim()&&<p className={styles.bio}>{profile.bio}</p>}
      {[profile.city,profile.state,profile.country].some(Boolean)&&<p className={styles.location}>⌖ {[profile.city,profile.state,profile.country].filter(Boolean).join(", ")}</p>}
      <div className={styles.stats} aria-label="Profile activity">
@@ -121,18 +119,17 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
       <div><b>{counts?fmt(counts.articles):"—"}</b><span>Articles</span></div>
      </div>
      <div className={styles.actions}>
-      {isOwner?<button type="button" className={styles.mainAction} onClick={()=>{onClose();onEdit?.()}}>✎ Edit profile</button>
-       :followAction?<div className={styles.followAction}>{followAction}</div>
-       :<Link className={styles.mainAction} href="/auth">Sign in to follow</Link>}
-      <Link className={styles.secondaryAction} href={isOwner?"/posts":"/messages?to="+encodeURIComponent(profile.id)+"&from=profile"} onClick={isOwner?onClose:undefined}>{isOwner?"My posts":"✉ Message"}</Link>
+      {isOwner?<button type="button" className={styles.mainAction} onClick={()=>{onClose();onEdit?.()}} aria-label="Edit profile" title="Edit profile"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="m4 17 12-12 3 3L7 20l-4 1zM14 7l3 3"/></svg></button>
+      :followAction?<div className={styles.followAction}>{followAction}</div>
+      :<span className={styles.publicLabel}>Public profile</span>}
      </div>
-     <div className={styles.tilesHeading}><span>✦ MEMBER WORLD</span><strong>Discover more</strong></div>
-     <div className={styles.shortcutGrid}>
-      <Link href="/quran-library" onClick={onClose}>☷ <span>Qur’an</span></Link>
-      <Link href="/posts" onClick={onClose}>◇ <span>Ummah</span></Link>
-      <Link href="/deepwatch" onClick={onClose}>▷ <span>DeepWatch</span></Link>
-     </div>
-     <div className={styles.bottom}>ONE MUSLIM · ONE UMMAH</div>
+     <section className={styles.badgeVault} aria-label="Member badges">
+      <div className={styles.badgeHeading}><span>✦ MEMBER BADGES</span><strong>Achievements</strong></div>
+      <div className={styles.badgeCollection}>
+       <div className={styles.featured}><FeaturedBadge userId={profile.id} verifiedAt={profile.shahada_verified_at} compact /></div>
+       <div className={styles.lockedBadge} aria-label="Additional badges locked, coming soon"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.3"/><path d="M8.2 11V7a3.8 3.8 0 0 1 7.6 0v4"/><circle cx="12" cy="16" r="1"/></svg></span><strong>More badges</strong><small>COMING SOON · LOCKED</small></div>
+      </div>
+     </section>
     </main>
    </div>
   </div>,document.body
