@@ -17,7 +17,7 @@ type Props={
  arabicClassName:string;
  onPlayVerse:()=>void;
 };
-type MarkKind="fatha"|"kasra"|"damma"|"sukun"|"shadda"|"fathatan"|"kasratan"|"dammatan";
+type MarkKind="fatha"|"kasra"|"damma"|"sukun"|"shadda"|"daggerAlif"|"fathatan"|"kasratan"|"dammatan";
 type MarkInfo={symbol:string;label:string;sound:string;description:string;example:string};
 const MARK_INFO:Record<MarkKind,MarkInfo>={
  fatha:{symbol:"◌َ",label:"Fatḥah",sound:"a",description:"A short ‘a’ vowel after the consonant.",example:"بَ · ba"},
@@ -25,15 +25,16 @@ const MARK_INFO:Record<MarkKind,MarkInfo>={
  damma:{symbol:"◌ُ",label:"Ḍammah",sound:"u",description:"A short ‘u’ vowel after the consonant.",example:"بُ · bu"},
  sukun:{symbol:"◌ْ",label:"Sukūn",sound:"no vowel",description:"The consonant has no following short vowel.",example:"بْ · b"},
  shadda:{symbol:"◌ّ",label:"Shaddah",sound:"double",description:"The consonant is doubled; another vowel sign may appear with it.",example:"بَّ · bba"},
+ daggerAlif:{symbol:"◌ٰ",label:"Small alif",sound:"long ā",description:"The superscript alif marks a long ā sound in Qur’anic script. Exact recitation follows the word and its context.",example:"هَٰذَا · hādhā"},
  fathatan:{symbol:"◌ً",label:"Fatḥatayn",sound:"-an",description:"A double fatḥah (tanwīn). Its sound can change when pausing or applying recitation rules.",example:"ـً · an"},
  kasratan:{symbol:"◌ٍ",label:"Kasratayn",sound:"-in",description:"A double kasrah (tanwīn). Its sound can change when pausing or applying recitation rules.",example:"ـٍ · in"},
  dammatan:{symbol:"◌ٌ",label:"Ḍammatayn",sound:"-un",description:"A double ḍammah (tanwīn). Its sound can change when pausing or applying recitation rules.",example:"ـٌ · un"}
 };
 const KIND_BY_CHAR:Record<string,MarkKind>={
  "\u064e":"fatha","\u0650":"kasra","\u064f":"damma","\u0652":"sukun",
- "\u0651":"shadda","\u064b":"fathatan","\u064d":"kasratan","\u064c":"dammatan"
+ "\u0651":"shadda","\u06e1":"sukun","\u0670":"daggerAlif","\u064b":"fathatan","\u064d":"kasratan","\u064c":"dammatan"
 };
-const teachingOrder:MarkKind[]=["fatha","kasra","damma","sukun","shadda","fathatan","kasratan","dammatan"];
+const teachingOrder:MarkKind[]=["fatha","kasra","damma","sukun","shadda","daggerAlif","fathatan","kasratan","dammatan"];
 const grouping=/[\u064b-\u065f\u0670\u06d6-\u06ed]/;
 function clusters(word:string){
  const parts:string[]=[];
