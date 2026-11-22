@@ -73,8 +73,13 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error("AI configuration unavailable");
     // Retrieval is restricted to the current session's public and otherwise RLS-permitted records.
-    const search = await searchDirectory(auth.db, (query || message).slice(0,90));
-    const shortlist = search.best.slice(0,15).map((item,i)=>({
+    const original = await searchDirectory(auth.db, (query || message).slice(0,90));
+    const refined = query && message.toLowerCase() !== query.toLowerCase()
+      ? await searchDirectory(auth.db, message.slice(0,90)) : null;
+    const merged = [...(refined?.best||[]), ...original.best];
+    const unique = new Set<string>();
+    const matches = merged.filter(item=>{if(unique.has(item.href))return false;unique.add(item.href);return true;}).slice(0,15);
+    const shortlist = matches.map((item,i)=>({
       number:i+1,category:item.kind,title:item.title,summary:item.description.slice(0,190),destination:item.href
     }));
     const system = [
@@ -102,7 +107,7 @@ export async function POST(req: NextRequest) {
     if (typeof answer !== "string" || !answer.trim()) throw new Error("HudHud returned an empty response");
     const { data:current } = auth.premium?{data:null}:await dbAdmin.from("discover_hudhud_usage").select("turns_used").eq("usage_key",usageKey).maybeSingle();
     const remaining = auth.premium?null:Math.max(0,FREE_TURNS-(current?.turns_used||FREE_TURNS));
-    return asResponse({reply:answer.trim(),matches:search.best.slice(0,6),remaining,limitReached:remaining===0,unlocked:auth.premium,upgradeHref:"/unlocked"},200,guestToken);
+    return asResponse({reply:answer.trim(),matches:matches.slice(0,6),remaining,limitReached:remaining===0,unlocked:auth.premium,upgradeHref:"/unlocked"},200,guestToken);
   } catch {
     if (reserved && dbAdmin && usageKey) {
       try { await dbAdmin.rpc("refund_discover_hudhud_turn",{p_key:usageKey}); } catch { /* retry on the next request */ }
