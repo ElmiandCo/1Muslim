@@ -226,7 +226,8 @@ export default function HudHudChatLauncher(){
     if(data.unlocked)setHudhudUnlocked(true);
     const links=(Array.isArray(data.matches)?data.matches:[]).filter((m:{href?:string})=>typeof m.href==="string"&&m.href.startsWith("/")&&!m.href.startsWith("//")).slice(0,3)
       .map((m:{title:string;href:string})=>({title:m.title,href:m.href}));
-    setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:String(data.reply||""),links}]);
+    setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:String(data.reply||""),links},
+      ...(data.limitReached&&!data.unlocked?[{id:nextId.current++,role:"hudhud" as const,text:"That was your third free HudHud reply. To keep HudHud with you across all of 1Muslim, activate 1Muslim Unlocked.",links:[{title:"Make HudHud yours · 1Muslim Unlocked",href:"/unlocked"}]}]:[])]);
     window.dispatchEvent(new CustomEvent("1muslim:action-success"));
   }catch(error){setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:error instanceof Error?error.message:"HudHud could not answer. Please retry."}]);}
   finally{setHudhudSending(false);}
