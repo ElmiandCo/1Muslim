@@ -57,35 +57,34 @@ export default function GlobalNavigation(){
   return()=>{active=false;clearInterval(interval);window.removeEventListener("focus",onFocus);subscription.unsubscribe();void db.removeChannel(channel)};
  },[pathname]);
  useEffect(()=>{
-  let lastY=window.scrollY;
-  let frame=0;
+  // Scroll direction, not finger jitter, drives the floating dock. The former
+  // touchmove and scroll listeners competed every few pixels on iPhone and
+  // repeatedly animated the dock while native momentum scrolling was active.
+  let windowY=window.scrollY;
+  const positions=new WeakMap<Element,number>();
+  let lastSource:Element|null=null;
+  let direction=0;
+  let travel=0;
   const onScroll=(event:Event)=>{
    const target=event.target;
    const element=target instanceof Element?target:null;
-   const scrolling=element&&(element.scrollHeight>element.clientHeight+2)?element:null;
+   const scrolling=element&&element.scrollHeight>element.clientHeight+4?element:null;
+   if(element&&!scrolling)return;
+   if(scrolling?.closest(".oneGlobalNavRail"))return;
    const y=scrolling?scrolling.scrollTop:window.scrollY;
-   const previous=lastY;
-   lastY=y;
-   if(frame)cancelAnimationFrame(frame);
-   frame=requestAnimationFrame(()=>{
-    frame=0;
-    const delta=y-previous;
-    if(delta>1)setDockHidden(true);
-    else if(delta< -1)setDockHidden(false);
-    else if(y<=2)setDockHidden(false);
-   });
-  };
-  const onTouchStart=(event:TouchEvent)=>{const touch=event.touches[0];if(touch)lastTouchY=touch.clientY};
-  let lastTouchY=0;
-  const onTouchMove=(event:TouchEvent)=>{
-   const touch=event.touches[0];if(!touch)return;
-   const delta=lastTouchY-touch.clientY;lastTouchY=touch.clientY;
-   if(Math.abs(delta)>2&&!((event.target as Element)?.closest?.(".oneGlobalNavRail")))setDockHidden(delta>0);
+   const previous=scrolling?(positions.get(scrolling)??y):windowY;
+   if(scrolling)positions.set(scrolling,y);else windowY=y;
+   if(lastSource!==scrolling){lastSource=scrolling;direction=0;travel=0}
+   if(y<=4){direction=0;travel=0;setDockHidden(false);return}
+   const delta=y-previous;
+   if(Math.abs(delta)<.8)return;
+   const nextDirection=Math.sign(delta);
+   if(nextDirection!==direction){direction=nextDirection;travel=0}
+   travel+=Math.abs(delta);
+   if(travel>=22){travel=0;setDockHidden(nextDirection>0)}
   };
   window.addEventListener("scroll",onScroll,{passive:true,capture:true});
-  document.addEventListener("touchstart",onTouchStart,{passive:true});
-  document.addEventListener("touchmove",onTouchMove,{passive:true});
-  return()=>{window.removeEventListener("scroll",onScroll,true);document.removeEventListener("touchstart",onTouchStart);document.removeEventListener("touchmove",onTouchMove);if(frame)cancelAnimationFrame(frame)};
+  return()=>window.removeEventListener("scroll",onScroll,true);
  },[]);
  useEffect(()=>{setDockHidden(false)},[pathname]);
  useEffect(()=>{const check=()=>setImmersive(Boolean(document.fullscreenElement));document.addEventListener("fullscreenchange",check);check();return()=>document.removeEventListener("fullscreenchange",check)},[]);
