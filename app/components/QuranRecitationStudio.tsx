@@ -144,7 +144,7 @@ export default function QuranRecitationStudio({chapters,initialChapter}:{chapter
           <span>I choose to make this audio recitation public for the Ummah to hear.</span></label>
         <button className="qrsMain" onClick={()=>void publish()} type="button" disabled={busy||!consent}>{busy?"Publishing…":"Publish to Recitation Library ↗"}</button>
       </>}
-      <p className="qrsFootnote">Up to <strong>1,000 XP</strong> for an eligible recording of 30+ seconds, once per chapter and at most once per day. XP rewards participation, not recitation accuracy. Audio stays on this device until you publish.</p>
+      <p className="qrsFootnote">Up to <strong>1,000 XP</strong> for an eligible recording of 30+ seconds, once per chapter and at most once per day. XP rewards participation, not recitation accuracy. Live and recorded participation share one daily reward limit. Audio stays on this device until you publish.</p>
     </div>:<div className="qrsLive">
       <p className="qrsExplain">Broadcast your recitation with existing 1Muslim Live. Listeners can join from anywhere, including the floating mini player, and chat respectfully.</p>
       <label className="qrsToggle"><span><b>Camera</b><small>{camera?"Camera and microphone":"Microphone only — lower bandwidth"}</small></span><input type="checkbox" checked={camera} onChange={e=>setCamera(e.target.checked)} /></label>
@@ -152,7 +152,7 @@ export default function QuranRecitationStudio({chapters,initialChapter}:{chapter
         {([["clean","Minimal"],["starlight","Starlight"],["emerald","Emerald"]] as const).map(([key,title])=><button key={key} type="button" className={visual===key?"selected":""} onClick={()=>setVisual(key)}>{title}</button>)}
       </div></div>
       <Link href={liveHref} className="qrsMain" onClick={()=>setOpen(false)}>Continue to Live Studio ↗</Link>
-      <small className="qrsLiveNote">You’ll review your microphone, camera and audience settings before you actually go live. Your selected chapter and background carry over.</small>
+      <small className="qrsLiveNote">You’ll review your microphone, camera and audience settings before going live. Your selected chapter and background carry over. Verified recitation Lives lasting 90+ seconds may earn 1,500 XP once per chapter and day. No XP is given for recitation accuracy.</small>
     </div>}
     {message&&<p className="qrsMessage" role="status">{message}</p>}
     <footer className="qrsFooter"><Link href="/quran-recitals" onClick={()=>{if(!recording)setOpen(false)}}>Browse community recitations →</Link><span>Private by default · you control sharing</span></footer>
