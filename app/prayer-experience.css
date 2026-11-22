@@ -1,0 +1,252 @@
+/* 1Muslim Salah Studio: scoped, responsive, and compatible with the global navigation. */
+.prayerExperience{--prayer-ink:#162d3a;--prayer-muted:#647587;--prayer-gold:#d4a757;--prayer-green:#123c35;min-height:100dvh;background:linear-gradient(180deg,#092b25 0,#145146 350px,#e8efea 1080px,#f5f7f8 100%);color:#f8f6ed;padding:16px 14px calc(128px + env(safe-area-inset-bottom));font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-x:clip}
+.prayerExperience *{box-sizing:border-box}
+.prayerExperience a{cursor:pointer}
+.prayerExperience button{font:inherit;cursor:pointer;touch-action:manipulation}
+.prayerExperience button:disabled{cursor:not-allowed;opacity:.48}
+.prayerExperience :is(button,a,select,input):focus-visible{outline:3px solid var(--prayer-gold);outline-offset:3px}
+.prayerPageShell{width:min(1040px,100%);margin-inline:auto;display:grid;gap:16px}
+.prayerPageHeader{min-height:76px;display:flex;justify-content:space-between;align-items:center;gap:14px}
+.prayerHeaderBack{display:flex;align-items:center;gap:13px;color:#fcf8ec;text-decoration:none;font-weight:800;font-size:clamp(18px,3vw,27px)}
+.prayerHeaderBack>span{letter-spacing:-.035em}
+.prayerPageBrand{color:#f7e4b4;text-decoration:none;font-family:Georgia,serif;font-weight:800;font-style:italic;letter-spacing:-.07em;font-size:clamp(20px,3vw,31px);white-space:nowrap}
+.prayerPageBrand span{font-family:system-ui;font-style:normal;font-size:16px;display:inline-block;margin-right:6px;vertical-align:top}
+.prayerHeaderBadge{height:38px;width:38px;display:grid;place-items:center;border:1px solid #e6c78c88;border-radius:50%;color:#efd697;background:#ffffff0c}
+.prayerPageEyebrow{font-size:11px;letter-spacing:.22em;font-weight:800;color:#e7c888}
+.prayerPageFooter{display:grid;gap:4px;text-align:center;padding:24px 8px 10px;color:#4f6d62;font-size:12px}
+.prayerPageFooter span{opacity:.85}
+.prayerHero{position:relative;isolation:isolate;border:1px solid #dfbb70;border-radius:25px;min-height:250px;overflow:hidden;background:#092821;box-shadow:0 17px 39px #021f1e3b}
+.prayerHero .prayerScene{position:absolute;right:0;top:0;width:75%;height:100%;object-fit:cover;opacity:.95;z-index:0}
+.prayerHero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#092f2aea 0%,#103f34de 38%,#092b2522 100%);z-index:0;pointer-events:none}
+.prayerHeroContents{position:relative;z-index:1;width:min(58%,500px);display:grid;align-content:center;gap:13px;padding:25px 28px;min-height:244px}
+.prayerHeroLabel,.prayerStepKicker{color:#f6d791;font-size:11px;font-weight:850;letter-spacing:.13em}
+.prayerHero h1{font-size:clamp(29px,4.5vw,47px);line-height:1.07;letter-spacing:-.055em;margin:0;color:#fff}
+.prayerHero h1 em{font-style:normal;color:#efca7e}
+.prayerHero p{font-size:clamp(12px,1.55vw,15px);line-height:1.55;margin:0;max-width:430px;color:#f3f5ed}
+.prayerGoldButton{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:12px;width:max-content;max-width:100%;padding:11px 18px;background:linear-gradient(125deg,#f5d892,#dbaa4d);color:#142b27!important;border:0;border-radius:100px;text-decoration:none;font-weight:800!important;font-size:13px;box-shadow:0 4px 13px #ad793a33}
+.prayerGoldButton:hover{filter:brightness(1.04)}
+.prayerCard{padding:22px;border-radius:25px;border:1px solid #dce4e5;background:linear-gradient(145deg,#fff,#fbfcfc);color:var(--prayer-ink);box-shadow:0 12px 26px #172d3320;min-width:0}
+.prayerSectionTop{display:flex;align-items:flex-start;gap:12px;margin-bottom:17px}
+.prayerSectionTop>div{flex:1;min-width:0}
+.prayerSectionTop h2{font-size:clamp(19px,2.6vw,25px);letter-spacing:-.038em;line-height:1.2;margin:0 0 5px;color:#122c34}
+.prayerSectionTop p{margin:0;color:#647385;font-size:13px;line-height:1.4}
+.prayerSectionIcon{flex:0 0 40px;height:40px;width:40px;display:grid;place-items:center;border-radius:13px;background:#0d4336;color:#f5d998;font-size:23px;box-shadow:0 4px 10px #0d403521}
+.prayerDashboardHero .prayerHeroContents{width:min(63%,560px)}
+.prayerCityButton{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#fef6da;border:0;background:transparent;padding:0;text-align:left;font-weight:800;font-size:clamp(16px,2.6vw,24px);line-height:1.25}
+.prayerCityButton .prayerLocationPin{color:#ecc76e}
+.prayerDate{font-size:13px!important;color:#ecdec1!important}
+.prayerNextFocus{display:flex;align-items:center;gap:12px;max-width:415px;width:100%;padding:12px 15px;border-radius:20px;border:1px solid #e2c88b3b;background:#082c2abb;backdrop-filter:blur(8px)}
+.prayerNextFocus .prayerNextIcon{font-size:28px;line-height:1}
+.prayerNextFocus>div{display:grid;gap:2px;flex:1}
+.prayerNextFocus b{font-size:21px;color:#fff}
+.prayerNextFocus small{font-size:12px;color:#c8d2ce}
+.prayerNextFocus>strong{color:#f4cf7d;font-size:clamp(13px,2vw,17px)}
+.prayerNextLabel{font-size:10px;letter-spacing:.15em;font-weight:850;color:#e8c878}
+.prayerLocationEdit{padding:14px 18px;border-radius:18px;border:1px solid #e8d4a488;background:#f8faf9;color:#1d3332}
+.prayerLocationEdit input{color:#173c2c!important}
+.prayerLocationEdit :is(button,label){color:#173c2c}
+.prayerLocationEdit p{color:#547069}
+.prayerScheduleMessage{color:#8d5307;padding:12px;border:1px solid #e4c98d;background:#fff7e2;border-radius:15px;margin:0}
+.prayerScheduleLoading{padding:20px;border-radius:17px;color:#566e64;background:#fff;font-weight:700}
+.prayerTimesRail{display:grid;grid-auto-columns:minmax(116px,1fr);grid-auto-flow:column;overflow-x:auto;gap:8px;scroll-snap-type:x proximity;scrollbar-width:none;padding:4px 0 7px}
+.prayerTimesRail::-webkit-scrollbar,.prayerPositionRail::-webkit-scrollbar,.prayerStepChooser::-webkit-scrollbar,.prayerStoryTimeline::-webkit-scrollbar,.prayerRhythmRail::-webkit-scrollbar{display:none}
+.prayerTimeCell{display:grid;align-content:center;justify-items:center;gap:7px;min-height:128px;padding:12px 8px;border:1px solid #e3e8eb;border-radius:16px;background:#f7f9f8;scroll-snap-align:start}
+.prayerTimeCell span{font-size:21px;color:#9a7339}
+.prayerTimeCell strong{font-size:14px;color:#1c3340}
+.prayerTimeCell b{font-size:15px;white-space:nowrap}
+.prayerTimeCell small{font-size:10px;color:#7a8a92}
+.prayerTimeCell.current{background:linear-gradient(160deg,#1b5b47,#092d28);border-color:#dfb964;box-shadow:0 4px 12px #ceac6270}
+.prayerTimeCell.current :is(span,strong,b,small){color:#fff3ce}
+.prayerTimesCard .prayerSectionTop{align-items:center}
+.prayerCalcBadge{font-size:11px;color:#6e7482;background:#f3f5f7;border-radius:100px;padding:9px 12px;border:1px solid #e1e5e8;white-space:nowrap}
+.prayerInfoNote{font-size:12px;color:#5d736d;line-height:1.6;margin:0 5px 12px}
+.prayerActionCard{display:flex;align-items:center;justify-content:space-between;gap:22px;min-height:140px;overflow:hidden}
+.prayerActionCard>div:first-child{flex:1}
+.prayerActionCard h2{font-size:22px;letter-spacing:-.04em;margin:0 0 6px}
+.prayerActionCard p{margin:0 0 13px;font-size:13px;color:#526679;line-height:1.5;max-width:390px}
+.prayerActionArt{min-width:220px;display:flex;align-items:end;justify-content:center;height:116px}
+.prayerActionArt .prayerPositionIllustration{width:89px;height:108px;margin-left:-18px;background:#f5e5ce;border-radius:13px;border:3px solid #fff;box-shadow:0 4px 15px #263a2b24}
+.prayerActionArt .prayerPositionIllustration:nth-child(2){transform:translateY(-6px) rotate(3deg)}
+.prayerActionArt .prayerPositionIllustration:nth-child(3){transform:translateY(1px) rotate(-3deg)}
+.prayerStoryPreview{width:40%;min-width:190px;height:122px;position:relative;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#476c68,#d5a46a)}
+.prayerStoryPreview:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#e4c69a66,transparent)}
+.prayerStoryPreview .prayerScene{width:100%;height:100%}
+.prayerStoryPreview span{position:absolute;z-index:1;top:10px;right:10px;color:#f6edc9;background:#0d302bd9;padding:7px;border-radius:50%}
+.prayerAcademyIntro{padding-bottom:18px}
+.prayerConcepts{display:flex;gap:9px;flex-wrap:wrap}
+.prayerConcepts span{border:1px solid #e6be70;border-radius:100px;padding:9px 13px;background:#fff8e9;color:#3c473e;font-size:12px;font-weight:750}
+.prayerPositionRail{display:flex;overflow-x:auto;gap:12px;scroll-snap-type:x proximity;padding:2px 3px 10px;scrollbar-width:none}
+.prayerPositionCard{flex:0 0 min(210px,72%);min-width:0;border:1px solid #e1e4e5;border-radius:17px;padding:9px 10px 12px;background:#fff;display:flex;align-items:center;flex-direction:column;text-align:center;gap:6px;color:#273c42;scroll-snap-align:start;box-shadow:0 3px 10px #283e3c14}
+.prayerPositionCanvas{width:100%;height:165px;border-radius:12px;background:linear-gradient(145deg,#f2e4ce,#fcf5ed);display:grid;place-items:center}
+.prayerPositionIllustration{width:100%;height:100%;object-fit:contain}
+.prayerPositionCard>strong{font-size:15px;background:#14503e;color:#fff;border-radius:99px;padding:5px 15px}
+.prayerPositionCard small{font-size:11px;color:#62717b}
+.prayerMiniArabic{font-family:"Noto Naskh Arabic","Geeza Pro",serif;font-size:17px;line-height:1.5;min-height:36px;display:flex;align-items:center;justify-content:center}
+.prayerMiniTranslation{font-size:11px;line-height:1.3;min-height:30px;color:#526777}
+.prayerCardAction{color:#926326;font-size:11px;font-weight:800}
+.prayerGuideHeading{align-items:center}
+.prayerStepFraction{border:1px solid #dfb770;background:#fff8e9;border-radius:99px;color:#866332;padding:7px 10px;font-weight:800;font-size:12px;white-space:nowrap}
+.prayerGuideProgress{height:6px;background:#ebf0ee;border-radius:100px;overflow:hidden}
+.prayerGuideProgress span{display:block;height:100%;background:linear-gradient(90deg,#175e46,#ddb15e);border-radius:100px;transition:width .25s ease}
+.prayerStepChooser{display:flex;gap:7px;overflow-x:auto;padding:13px 0 16px;scrollbar-width:none;scroll-snap-type:x proximity}
+.prayerStepChooser button{flex:0 0 auto;border:1px solid #dbe3e4;border-radius:100px;background:#f6f8f8;padding:9px 11px;color:#536472;font-size:11px;font-weight:800;scroll-snap-align:center}
+.prayerStepChooser button.active{color:#fff;border-color:#1d624e;background:#145543}
+.prayerInstruction{display:grid;grid-template-columns:minmax(170px,.35fr) minmax(0,1fr);gap:20px}
+.prayerInstructionVisual{position:relative;min-height:235px;display:flex;align-items:center;justify-content:center;border-radius:18px;background:linear-gradient(160deg,#f5e8d6,#fff7e7);overflow:hidden}
+.prayerInstructionVisual .prayerPositionIllustration{max-height:270px}
+.prayerInstructionStage{position:absolute;left:14px;right:14px;bottom:13px;padding:9px;border-radius:99px;background:#174a39;color:#f9e1a2;text-align:center;font-weight:800;font-size:13px}
+.prayerInstructionCopy{min-width:0}
+.prayerInstructionCopy h3{font-size:25px;letter-spacing:-.04em;margin:7px 0}
+.prayerInstructionCopy>p{font-size:13px;line-height:1.6;color:#566879;margin:0 0 12px}
+.prayerInstructionCopy .prayerPracticeTip{font-weight:700;color:#946a2c}
+.prayerArabicRecitation{font-family:"Noto Naskh Arabic","Geeza Pro","Arabic Typesetting",serif;font-size:clamp(23px,3vw,31px);line-height:2.1;text-align:right;padding:16px;border:1px solid #e5d8b6;background:#fbf5e8;border-radius:15px;color:#172d2c;overflow-wrap:anywhere}
+.prayerTransliteration,.prayerTranslation{margin-top:13px;padding:13px 15px;border:1px solid #e3e9e9;border-radius:13px;background:#f8faf9}
+.prayerTransliteration span,.prayerTranslation span{font-size:10px;letter-spacing:.13em;color:#9a773e;font-weight:850}
+.prayerTransliteration p,.prayerTranslation p{margin:7px 0 0;font-size:13px;line-height:1.65;color:#334b57}
+.prayerInstructionTools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:13px}
+.prayerInstructionTools a{font-size:12px;font-weight:800;color:#27634a}
+.prayerListen{border:1px solid #b99854;background:#174d3c;color:white;border-radius:99px;padding:11px 16px;font-size:12px!important;font-weight:850!important}
+.prayerAudioMessage{font-size:11px!important;color:#a36b32!important;margin-top:9px!important}
+.prayerStepNavigation{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px}
+.prayerStepNavigation>button:first-child{min-height:44px;border:1px solid #cfd9d9;border-radius:100px;background:#f7f9f9;padding:11px 15px;color:#244838;font-size:12px;font-weight:800}
+.prayerRakahGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.prayerRakahTile{padding:13px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#f7f9f8;border:1px solid #e0e8e7;border-radius:16px;text-align:center}
+.prayerRakahTile>span{font-size:25px;color:#9a7838}
+.prayerRakahTile strong{font-size:13px}
+.prayerRakahTile>b{font-size:26px;line-height:1;background:#185643;color:#f2d78e;width:54px;padding:8px;border-radius:15px}
+.prayerRakahTile small{font-size:10px;color:#667b76}
+.prayerRakahExplainer{padding:16px;margin-top:17px;background:#ecf5ef;border-left:4px solid #27715c;border-radius:12px;font-size:13px;color:#47665b;line-height:1.55}
+.prayerRakahExplainer p{margin:8px 0 0}
+.prayerRakahEquation{font-weight:900;color:#174837;font-size:14px}
+.prayerLearnFinish{display:flex;align-items:center;justify-content:space-between;gap:22px}
+.prayerLearnFinish h2{margin:0 0 7px;letter-spacing:-.035em}
+.prayerLearnFinish p{margin:0;line-height:1.55;font-size:13px;color:#637583}
+.prayerLearningCaution{font-size:11px;line-height:1.6;color:#4a6c63;margin:4px 4px 0}
+.prayerStoryHero .prayerHeroContents{width:min(66%,570px)}
+.prayerStoryHero .prayerScene{width:83%}
+.prayerStoryTimeline{display:flex;overflow-x:auto;gap:10px;scrollbar-width:none;scroll-snap-type:x proximity;padding:3px 0 15px}
+.prayerStoryTimeline button{position:relative;min-width:145px;flex:1;border:1px solid #e3e5e7;border-radius:16px;background:#f8faf9;padding:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;color:#263d41;scroll-snap-align:start}
+.prayerStoryTimeline button.current{background:#164b3f;border-color:#d8ad60;color:#fff;box-shadow:0 4px 12px #1357433a}
+.prayerTimelineNumber{position:absolute;top:6px;left:8px;border-radius:50%;height:25px;width:25px;display:grid;place-items:center;background:#f4d28b;color:#533d15;font-weight:850;font-size:12px}
+.prayerTimelineIcon{display:grid;place-items:center;min-height:70px;font-size:32px;color:#b2894f}
+.prayerStoryTimeline button.current .prayerTimelineIcon{color:#f7d18e}
+.prayerStoryTimeline strong{font-size:12px;line-height:1.3}
+.prayerStoryTimeline small{font-size:10px;opacity:.74}
+.prayerStoryFocus{display:grid;grid-template-columns:minmax(165px,.4fr) minmax(0,1fr);gap:20px;background:#eff4f2;border:1px solid #dae4dd;border-radius:17px;padding:15px}
+.prayerStoryChapterVisual{min-height:180px;border-radius:15px;background:radial-gradient(circle at 70% 10%,#ae8956 0,#1c514a 48%,#103c39 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f6d48f;gap:20px}
+.prayerStoryChapterVisual span{font-size:45px;font-weight:800}
+.prayerStoryChapterVisual small{font-size:10px;letter-spacing:.12em;font-weight:800}
+.prayerStoryChapterText{align-self:center}
+.prayerStoryChapterText .prayerStepKicker{color:#966727}
+.prayerStoryChapterText h3{font-size:clamp(22px,3.2vw,29px);margin:10px 0 7px}
+.prayerStoryChapterText p{margin:0 0 14px;line-height:1.65;color:#506577;font-size:14px}
+.prayerStoryChapterText a{font-size:12px;font-weight:850;color:#267357}
+.prayerStoryInsightPair{display:grid;grid-template-columns:1fr 1.25fr;gap:16px}
+.prayerHadithInsight blockquote{margin:0;font-family:Georgia,serif;font-style:italic;font-size:clamp(16px,2.3vw,23px);line-height:1.55;color:#193a37}
+.prayerHadithInsight .prayerQuoteMark{font-family:Georgia,serif;font-size:60px;color:#d1a356;line-height:.6}
+.prayerHadithInsight>a{display:inline-block;margin-top:16px;border-radius:99px;background:#f6e1ad;color:#553f16;text-decoration:none;font-weight:800;font-size:11px;padding:10px 14px}
+.prayerStoryChart{background:linear-gradient(160deg,#1b5347,#082b27);border-color:#caa55c;color:#fff}
+.prayerStoryChart .prayerSectionTop h2{color:#fff}
+.prayerStoryChart .prayerSectionTop p{color:#d0ded7}
+.prayerStoryChart .prayerSectionIcon{background:#ffffff15}
+.prayerStoryGraph{width:100%;height:auto;display:block}
+.prayerRewardChip{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:11px;padding:11px;border:1px solid #f5d89880;border-radius:14px;color:#efddab}
+.prayerRewardChip strong{color:#fff3cd}
+.prayerRhythmRail{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;overflow-x:auto;scrollbar-width:none}
+.prayerRhythmRail>div{padding:12px 4px;display:grid;justify-items:center;gap:5px;background:#f6f9f7;border-radius:14px;border:1px solid #dce6e1;text-align:center}
+.prayerRhythmRail span{font-size:24px;color:#b78b45}
+.prayerRhythmRail strong{font-size:13px}
+.prayerRhythmRail small{font-size:10px;color:#637778}
+.prayerStoryImpact{background:linear-gradient(148deg,#fff 0%,#f5f9f5 60%,#e1ece7 100%)}
+.prayerImpactRail{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:16px 0 22px}
+.prayerImpactNode{position:relative;display:grid;justify-items:center;align-content:start;gap:6px;text-align:center}
+.prayerImpactIcon{width:54px;height:54px;border-radius:50%;border:2px solid #e6ba6a;background:#174c40;color:#f6daa0;display:grid;place-items:center;font-size:25px;box-shadow:0 3px 12px #09452b23}
+.prayerImpactNode strong{font-size:12px}
+.prayerImpactNode small{color:#698080;font-size:10px}
+.prayerImpactConnector{position:absolute;top:27px;left:calc(50% + 28px);width:calc(100% - 47px);height:2px;background:#cfaa6a}
+.prayerDailyChecklist{border-top:1px solid #d9e5e0;padding-top:22px;display:grid;grid-template-columns:125px 1fr;align-items:center;gap:22px}
+.prayerDailyScore{width:120px;height:120px;border-radius:50%;padding:13px;display:grid;place-items:center}
+.prayerDailyScore>div{width:100%;height:100%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;color:#164535}
+.prayerDailyScore strong{font-size:28px}
+.prayerDailyScore span{font-size:11px}
+.prayerDailyChecklist h3{font-size:19px;margin:0 0 5px}
+.prayerDailyChecklist p{font-size:12px;color:#687a7b;margin:0 0 12px}
+.prayerDailyCheckButtons{display:flex;gap:8px;flex-wrap:wrap}
+.prayerDailyCheckButtons button{border:1px solid #dcc38a;border-radius:100px;background:#fff9ec;padding:9px 12px;font-size:12px;font-weight:800;color:#275042}
+.prayerDailyCheckButtons button.checked{background:#165a42;color:#fff;border-color:#165a42}
+.prayerExperience .adhanSettings{border:0;border-radius:0;padding:0;background:transparent;color:#253c43;box-shadow:none}
+.prayerExperience .adhanSettingsTitle{align-items:center}
+.prayerExperience .adhanSettingsTitle h3{font-size:22px;color:#152f36;letter-spacing:-.04em}
+.prayerExperience .adhanSettingsTitle p{color:#607581;font-size:13px;opacity:1}
+.prayerExperience .adhanEyebrow{color:#a5752a}
+.prayerExperience .adhanToggle{border-color:#bac9c4;background:#f0f4f2;color:#24483c}
+.prayerExperience .adhanToggle.active{background:#175b43;color:#fff;border-color:#11543d}
+.prayerExperience .adhanSettingsBody{background:#f7f9f8;border:1px solid #e7ecea;border-radius:17px;padding:16px;gap:15px}
+.prayerExperience .adhanField{font-size:13px;color:#233b43}
+.prayerExperience .adhanField select{background:white;color:#263c40;border:1px solid #d8e0df}
+.prayerExperience .adhanPrayerCheck{border:1px solid #dab870;background:#fff9ec;color:#314b43;font-size:12px}
+.prayerExperience .adhanPrayerCheck input{accent-color:#d4a757}
+.prayerExperience .adhanVolume{color:#263c43}
+.prayerExperience .adhanVolume input{accent-color:#c99b4b}
+.prayerExperience .adhanButtons button{border-color:#d9b56e;color:#233e39}
+.prayerExperience .adhanButtons button:first-child{background:linear-gradient(120deg,#f1d48f,#d9aa51);color:#19372d}
+.prayerExperience .adhanDisclaimer{color:#728080;opacity:1;font-size:11px}
+@media(max-width:720px){
+ .prayerExperience{padding:12px 12px calc(120px + env(safe-area-inset-bottom))}
+ .prayerPageHeader{min-height:60px}
+ .prayerHeaderBadge{display:none}
+ .prayerCard{padding:17px;border-radius:21px}
+ .prayerHero .prayerScene{width:100%;opacity:.65}
+ .prayerHero:after{background:linear-gradient(90deg,#0a302ae8 0%,#0e3c34b8 52%,#082b2542 100%)}
+ .prayerHeroContents,.prayerStoryHero .prayerHeroContents,.prayerDashboardHero .prayerHeroContents{width:min(83%,490px);padding:24px 20px}
+ .prayerTimesRail{grid-auto-columns:124px}
+ .prayerActionArt{min-width:145px}
+ .prayerActionArt .prayerPositionIllustration{width:65px;height:96px;margin-left:-15px}
+ .prayerStoryInsightPair{grid-template-columns:1fr}
+ .prayerStoryTimeline button{flex:0 0 145px}
+}
+@media(max-width:480px){
+ .prayerPageHeader{gap:6px}
+ .prayerHeaderBack{gap:7px;font-size:19px}
+ .prayerPageBrand{font-size:19px}
+ .prayerHero{min-height:232px}
+ .prayerHeroContents,.prayerStoryHero .prayerHeroContents,.prayerDashboardHero .prayerHeroContents{width:95%;min-height:232px;gap:10px;padding:18px}
+ .prayerHero h1{font-size:30px}
+ .prayerHero .prayerScene{opacity:.43}
+ .prayerSectionTop h2{font-size:20px}
+ .prayerCalcBadge{display:none}
+ .prayerActionCard{align-items:flex-start;padding:17px}
+ .prayerActionArt{min-width:95px;height:130px;align-items:center;margin-right:-40px;opacity:.87}
+ .prayerActionArt .prayerPositionIllustration{width:57px;height:92px;margin-left:-22px}
+ .prayerActionCard>div:first-child{position:relative;z-index:1}
+ .prayerStoryPreview{min-width:94px;width:38%;margin-right:-30px}
+ .prayerInstruction,.prayerStoryFocus{grid-template-columns:1fr;gap:13px}
+ .prayerInstructionVisual{min-height:155px;max-height:205px}
+ .prayerInstructionVisual .prayerPositionIllustration{max-height:185px}
+ .prayerRakahGrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+ .prayerRakahTile{padding:9px 1px}
+ .prayerRakahTile>b{width:38px;font-size:21px;padding:7px 1px}
+ .prayerRakahTile strong{font-size:11px}
+ .prayerRakahTile>span{font-size:19px}
+ .prayerRakahTile small{font-size:9px}
+ .prayerRhythmRail{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+ .prayerRhythmRail>div{padding:9px 1px}
+ .prayerRhythmRail strong{font-size:11px}
+ .prayerRhythmRail small{font-size:9px}
+ .prayerImpactRail{gap:2px}
+ .prayerImpactIcon{height:43px;width:43px;font-size:18px}
+ .prayerImpactNode strong{font-size:10px}
+ .prayerImpactNode small{font-size:9px}
+ .prayerImpactConnector{display:none}
+ .prayerDailyChecklist{grid-template-columns:80px 1fr;gap:12px}
+ .prayerDailyScore{width:78px;height:78px;padding:8px}
+ .prayerDailyScore strong{font-size:18px}
+ .prayerDailyCheckButtons{gap:5px}
+ .prayerDailyCheckButtons button{font-size:11px;padding:7px 9px}
+ .prayerLearnFinish{align-items:flex-start;flex-direction:column}
+ .prayerExperience .adhanSettingsTitle h3{font-size:18px}
+ .prayerExperience .adhanSettingsTitle p{font-size:11px}
+ .prayerExperience .adhanToggle{min-width:65px;padding:9px}
+ .prayerExperience .adhanButtons button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.prayerExperience *, .prayerExperience *:before,.prayerExperience *:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
