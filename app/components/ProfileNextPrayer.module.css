@@ -77,3 +77,51 @@
 .symbol :global(.prayerIconRay){animation:profilePrayerRay 4.8s ease-in-out infinite}
 @keyframes profilePrayerRay{0%,100%{opacity:.52}50%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.symbol :global(.prayerIconRay){animation:none}}
+
+
+/* Restore the original understated floating Next Prayer / theme-light timeline.
+   Keep its deliberately precise positioning beside the avatar, without a bulky tile. */
+.seam{
+ top:28px;height:3px;left:0;right:0;
+ background:color-mix(in srgb,var(--prayer-accent) 15%,#edf1f4);
+ box-shadow:inset 0 1px #fff9,0 1px 5px color-mix(in srgb,var(--prayer-accent) 9%,transparent);
+}
+.fill{
+ background:linear-gradient(90deg,color-mix(in srgb,var(--prayer-accent) 40%,#d4dee5),var(--prayer-accent) 80%,color-mix(in srgb,var(--prayer-accent) 65%,#fff));
+ box-shadow:0 0 7px color-mix(in srgb,var(--prayer-accent) 43%,transparent),0 0 13px color-mix(in srgb,var(--prayer-accent) 21%,transparent);
+}
+.card{
+ top:-36px;min-height:51px;width:min(278px,calc(100% - 125px));
+ gap:6px;padding:7px 10px;
+ border-radius:14px;
+ background:linear-gradient(128deg,rgba(255,255,255,.93),color-mix(in srgb,var(--prayer-accent) 4%,rgba(255,255,255,.87)));
+ border-color:color-mix(in srgb,var(--prayer-accent) 30%,#e4e8ec);
+ -webkit-backdrop-filter:saturate(145%) blur(12px);
+ backdrop-filter:saturate(145%) blur(12px);
+ box-shadow:0 5px 15px #1b28351c,0 2px 10px color-mix(in srgb,var(--prayer-accent) 12%,transparent),inset 0 1px rgba(255,255,255,.9);
+}
+.symbol{
+ width:24px;height:27px;flex:0 0 24px;border-radius:0;
+ background:transparent;color:color-mix(in srgb,var(--prayer-accent) 64%,#586d7b);
+}
+.symbol svg{width:22px;height:22px;stroke-width:1.9}
+.identity{gap:3px}
+.identity strong{font-size:13px;letter-spacing:-.012em;font-weight:780;color:#2d3d48}
+.identity small{font-size:10px;color:#79848e}
+.remaining{
+ padding:0;color:color-mix(in srgb,var(--prayer-accent) 59%,#304757);
+ background:none;border-radius:0;font-size:11px;font-weight:790;font-variant-numeric:tabular-nums;
+}
+.chevron{font-size:17px;color:color-mix(in srgb,var(--prayer-accent) 50%,#617484);margin-left:1px}
+@media(max-width:480px){
+ .seam{top:26px}
+ .card{top:-34px;right:12px;min-height:48px;width:min(228px,calc(100% - 108px));padding:7px 7px;gap:4px;border-radius:13px}
+ .symbol{width:20px;height:23px;flex-basis:20px}
+ .symbol svg{width:19px;height:19px}
+ .identity strong{font-size:12px}
+ .identity small{font-size:9px}
+ .remaining{font-size:10px}
+ .chevron{font-size:16px}
+}
+@media(max-width:365px){.card{width:calc(100% - 106px);gap:3px;padding:6px}.symbol{width:18px;flex-basis:18px}.symbol svg{width:17px;height:17px}.remaining{font-size:9px}}
+@supports not (backdrop-filter:blur(1px)){.card{background:rgba(255,255,255,.96)}}

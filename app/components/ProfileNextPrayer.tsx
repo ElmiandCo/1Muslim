@@ -1,6 +1,7 @@
 "use client";
 
 import {useEffect,useState} from "react";
+import {useRouter} from "next/navigation";
 import styles from "./ProfileNextPrayer.module.css";
 import {PrayerTimeIcon,PrayerUiIcon,type PrayerTimeName} from "./icons/PrayerTimeIcon";
 import {readLocation} from "./LocationPreferences";
@@ -24,6 +25,7 @@ function durationText(total:number){
 
 /** Viewer-specific city, time zone and settings; no other member's location is exposed. */
 export default function ProfileNextPrayer({initialLocation}:{initialLocation?:LocationInfo}){
+ const router=useRouter();
  const [place,setPlace]=useState<AdhanLocation>(()=>normalize(initialLocation||{}));
  const [method,setMethod]=useState(readAdhanPreferences().method);
  const [now,setNow]=useState(()=>new Date());
@@ -110,7 +112,10 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
  const formattedTime=time?displayPrayerTime(time):"—";
  const countdown=until!==null?durationText(until):"—";
 
- const openCompass=()=>window.dispatchEvent(new Event("1muslim:profile-open-qibla"));
+ // The entire compact next-prayer indicator is a meaningful shortcut:
+ // first-time visitors land in location/Adhan setup; existing users go straight
+ // to their editable prayer preferences, not the unrelated Qibla compass.
+ const openPrayerSettings=()=>router.push("/widget-tools/prayer?focus="+(canLoad?"settings":"setup"));
 
  return <>
   <div className={styles.seam}
@@ -120,9 +125,9 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
    <span className={styles.fill} data-empty={!isReady||progress<=0?"true":"false"} style={{width:isReady?progress+"%":"0%"}}/>
   </div>
   <button type="button" className={styles.card}
-   onClick={openCompass}
-   title="Open Qibla compass and prayer direction"
-   aria-label={isReady?`Open Qibla compass. ${upcoming} at ${formattedTime}, ${countdown}.`:"Open Qibla compass to find the prayer direction"}>
+   onClick={openPrayerSettings}
+   title={canLoad?"Manage prayer times and Adhan settings":"Set up your prayer location and times"}
+   aria-label={isReady?`${upcoming} at ${formattedTime}, ${countdown}. Open prayer settings.`:"Set up your prayer location and prayer reminders"}>
    <span className={styles.symbol} aria-hidden="true">{upcoming?<PrayerTimeIcon prayer={upcoming as PrayerTimeName}/>:<PrayerUiIcon kind="time"/>}</span>
    <span className={styles.identity}>
     <strong>{isReady?upcoming:!canLoad?"Set prayer location":loading?"Finding prayer…":error?"Prayer unavailable":"Next prayer"}</strong>

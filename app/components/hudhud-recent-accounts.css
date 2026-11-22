@@ -1,0 +1,47 @@
+/* Administrative account activity — condensed, legible, one member per row. */
+.hudhudRecent{margin-top:20px;color:#19314b;max-width:100%;font-family:inherit}
+.hudhudRecent *, .hudhudRecent *::before,.hudhudRecent *::after{box-sizing:border-box}
+.hudhudRecentTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:13px}
+.hudhudRecentEyebrow{display:block;font-size:9px;font-weight:850;letter-spacing:.13em;color:#70839a}
+.hudhudRecentTitle h4{font-size:clamp(18px,4.1vw,22px);margin:5px 0 3px;color:#213c60;letter-spacing:-.03em}
+.hudhudRecentTitle p{font-size:11px;color:#75869a;margin:0}
+.hudhudRecentUpdated{font-size:9px;color:#3f7890;letter-spacing:.09em;font-weight:850;white-space:nowrap}
+.hudhudRecentKpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.hudhudRecentKpis>div{background:#f5f9fc;border:1px solid #dce8f2;border-radius:13px;padding:11px 10px;display:grid;gap:5px;min-width:0}
+.hudhudRecentKpis small{font-size:10px;color:#697e94;white-space:normal}
+.hudhudRecentKpis strong{font-size:21px;font-variant-numeric:tabular-nums;font-weight:850;color:#245481}
+.hudhudRecentSearch{height:43px;padding:0 11px;display:flex;align-items:center;gap:8px;border:1px solid #d4e0ec;border-radius:12px;background:#fff;margin-bottom:12px;color:#6c86a0}
+.hudhudRecentSearch input{width:100%;min-width:0;background:transparent!important;color:#203750!important;border:0!important;box-shadow:none!important;outline:0!important;padding:0!important;font-family:inherit;font-size:13px}
+.hudhudRecentSearch input::placeholder{color:#8294a6}
+.hudhudRecentSearch:focus-within{outline:2px solid #92b2d6;outline-offset:1px}
+.hudhudRecentSearch button{font-size:20px;border:0;background:transparent;color:#7e91a5;cursor:pointer}
+.hudhudRecentList{border:1px solid #dce5ef;border-radius:17px;overflow:hidden;max-height:min(61vh,540px);overflow-y:auto;overscroll-behavior:contain;background:#fff}
+.hudhudRecentEntry+.hudhudRecentEntry{border-top:1px solid #edf1f5}
+.hudhudRecentRow{display:flex;width:100%;min-height:69px;align-items:center;gap:10px;text-align:left;padding:11px 12px;border:0;background:#fff;color:#263d56;font-family:inherit;cursor:pointer;transition:background-color .16s ease}
+.hudhudRecentRow:hover,.hudhudRecentRow[aria-expanded="true"]{background:#f7fafc}
+.hudhudRecentRow:focus-visible{outline:2px solid #699ad3;outline-offset:-3px}
+.hudhudRecentAvatar{flex:0 0 39px;width:39px;height:39px;border:1px solid #dbe6f0;border-radius:14px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,#e9f2fb,#cfe1f1);color:#315b80;font-weight:800;font-size:17px}
+.hudhudRecentAvatar img{width:100%;height:100%;object-fit:cover}
+.hudhudRecentWho{min-width:0;flex:1;display:grid;gap:4px;overflow:hidden}
+.hudhudRecentWho strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#244464;font-weight:800}
+.hudhudRecentWho small{color:#728497;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hudhudRecentBadge{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;max-width:125px;color:#627489;border:1px solid #e0e8ef;background:#f8fafb;border-radius:20px;padding:6px 8px;font-size:10px;font-weight:750}
+.hudhudRecentBadge i{width:6px;height:6px;border-radius:50%;background:#a7b5c4;flex:0 0 6px}
+.hudhudRecentBadge.live{color:#14765b;background:#ecfaf4;border-color:#b9e7d0}
+.hudhudRecentBadge.live i{background:#25af79;box-shadow:0 0 0 3px #25af791a}
+.hudhudRecentBadge.idle{color:#926d31;background:#fffaf0;border-color:#eedfb8}
+.hudhudRecentBadge.idle i{background:#caa34e}
+.hudhudRecentBadge.recent{color:#26639c;background:#f0f7ff;border-color:#d1e6fa}
+.hudhudRecentBadge.recent i{background:#5295cc}
+.hudhudRecentExpand{font-size:16px;color:#9caabc;flex:0 0 11px;font-weight:400}
+.hudhudRecentDetails{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:12px 15px 15px 62px;background:#f8fbfe;border-top:1px solid #e6eef5}
+.hudhudRecentDetails>div{min-width:0;display:grid;gap:3px}
+.hudhudRecentDetails span{font-size:9px;font-weight:700;letter-spacing:.05em;color:#8494a5;text-transform:uppercase}
+.hudhudRecentDetails strong{font-size:11px;line-height:1.5;font-weight:650;color:#314d66;overflow-wrap:anywhere}
+.hudhudRecentFootnote{font-size:10px;color:#8794a4;line-height:1.55;margin:12px 0 0}
+.hudhudRecentError{color:#a34b4b;background:#fff5f4;border:1px solid #f1d8d7;border-radius:10px;padding:10px;font-size:12px}
+.hudhudRecentLoading,.hudhudRecentEmpty{padding:17px;color:#73889b;text-align:center;font-size:12px}
+.hudhudRecentShowMore{display:block;width:100%;margin-top:9px;padding:11px;border:1px solid #dbe5ef;border-radius:12px;color:#285785;font-size:12px;font-weight:750;background:#f8fafc;cursor:pointer}
+.hudhudRecentShowMore:hover{background:#ebf4fc}
+@media(max-width:440px){.hudhudRecentKpis{gap:6px}.hudhudRecentKpis>div{padding:9px 7px}.hudhudRecentKpis small{font-size:9px}.hudhudRecentKpis strong{font-size:18px}.hudhudRecentRow{gap:7px;padding:10px 7px;min-height:66px}.hudhudRecentAvatar{width:34px;height:34px;flex-basis:34px;border-radius:11px}.hudhudRecentWho strong{font-size:12px}.hudhudRecentBadge{padding:5px 6px;font-size:9px}.hudhudRecentDetails{padding-left:12px}}
+@media(prefers-reduced-motion:reduce){.hudhudRecentRow{transition:none}}

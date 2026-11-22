@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "../../utils/supabase/client";
 import LocationPreferences, { readLocation } from "./LocationPreferences";
@@ -40,6 +40,18 @@ export default function AdhanSettings({
   const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const deepLinkOpened = useRef(false);
+  useEffect(() => {
+    if (!inPrayerPage || !ready || deepLinkOpened.current) return;
+    const focus = new URLSearchParams(window.location.search).get("focus");
+    if (focus !== "setup" && focus !== "settings") return;
+    deepLinkOpened.current = true;
+    // An unfinished setup stays in the original one-time wizard.
+    // A configured member lands directly in the editable settings panel.
+    if (completed) setEditing(true);
+    else setStep(0);
+  }, [inPrayerPage, ready, completed]);
+
 
   useEffect(() => {
     let live = true;

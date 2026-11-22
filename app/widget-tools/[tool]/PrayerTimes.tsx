@@ -23,6 +23,18 @@ export default function PrayerTimes(){
  const [loading,setLoading]=useState(false);
  const [editLocation,setEditLocation]=useState(false);
  useEffect(()=>{
+  const focus=new URLSearchParams(window.location.search).get("focus");
+  if(focus!=="setup"&&focus!=="settings")return;
+  const timer=window.setTimeout(()=>{
+   document.getElementById("prayer-settings")?.scrollIntoView({
+    behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",
+    block:"start"
+   });
+  },620);
+  return()=>window.clearTimeout(timer);
+ },[]);
+
+ useEffect(()=>{
   let active=true;const local=readLocation();setPlace(local);setEditLocation(false);
   void(async()=>{try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user||!active)return;const {data}=await db.from("profiles").select("city,state,country").eq("id",user.id).maybeSingle();if(!active||!data)return;const next={city:data.city||local.city,state:data.state||local.state,country:data.country||local.country};setPlace(next)}catch{}})();
   const sync=()=>setMethod(readAdhanPreferences().method);
@@ -97,7 +109,7 @@ export default function PrayerTimes(){
    </div>}
    {!loading&&!schedule&&!message&&<p className="prayerScheduleLoading">Set your city above to see today&apos;s prayer times.</p>}
   </section>
-  <section className="prayerCard prayerAdhanCard" aria-label="Adhan settings">
+  <section id="prayer-settings" className="prayerCard prayerAdhanCard" aria-label="Adhan settings">
    <AdhanSettings inPrayerPage location={place} onLocationSaved={next=>{setPlace(next);setEditLocation(false)}} />
   </section>
   <section className="prayerCard prayerActionCard">
