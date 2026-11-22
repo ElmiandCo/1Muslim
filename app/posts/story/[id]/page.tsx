@@ -259,5 +259,68 @@ export default function MagazineStory(){
 .immersivePlaybackFeedback{position:absolute;z-index:16;top:50%;left:50%;transform:translate(-50%,-50%);font-size:64px;color:#fff;text-shadow:0 3px 15px #000b;pointer-events:none;animation:immersivePlaybackFade .75s ease-out forwards}
 @keyframes immersivePlaybackFade{0%{opacity:1}65%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.immersivePlaybackFeedback{animation:none;opacity:1}}
+`}</style><style jsx global>{`
+/* Streamlined Ummah viewer: caption lives on the sheet handle; never shade video. */
+.immersiveStory .immersiveMedia [class*="socialPostCopy"]{display:none!important;background:none!important}
+.immersiveStory .immersiveSheetHandle{
+ box-sizing:border-box;min-height:0;height:min(5dvh,52px)!important;flex:0 0 min(5dvh,52px)!important;
+ display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+ padding:3px 14px 4px!important;gap:2px!important;touch-action:none!important;cursor:pointer!important;
+ background:linear-gradient(180deg,#fff,#fcfdfe)!important;border-bottom:1px solid #d9e1e927;
+}
+.immersiveStory .immersiveSheetHandle .immersiveGrip{width:35px!important;height:4px!important;min-height:4px!important;border-radius:50px!important;background:#c4c9d1!important;flex:0 0 4px!important}
+.immersiveStory .immersiveCaptionTab{display:flex;align-items:center;justify-content:space-between;gap:9px;width:100%;min-width:0;color:#293b51}
+.immersiveStory .immersiveCaptionTitle{
+ min-width:0;flex:1;font-size:clamp(11px,2.9vw,13px);font-weight:730;line-height:1.25;
+ overflow:hidden;white-space:nowrap;text-overflow:ellipsis;letter-spacing:-.012em;text-align:left
+}
+.immersiveStory .immersiveCaptionOpen{
+ color:#597da0;flex:0 0 auto;font-size:10px;letter-spacing:.02em;font-weight:800;
+ padding:2px 7px;border-radius:999px;background:#edf4fa;white-space:nowrap
+}
+.immersiveStory .immersiveReactionRail{
+ gap:11px!important;right:9px!important;bottom:25px!important;
+ padding:8px 5px!important;border-radius:20px!important;
+ width:43px!important;background:transparent!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ transform:none!important;opacity:1!important;
+ transition:opacity .18s ease,transform .18s ease!important;animation:railEnter .24s both!important;
+}
+.immersiveStory .immersiveReactionRail[aria-hidden="true"]{
+ opacity:0!important;visibility:hidden!important;
+ transform:translateX(10px) scale(.92)!important;
+ pointer-events:none!important;animation:none!important;
+}
+.immersiveStory .immersiveReactionRail button{
+ min-width:38px!important;width:38px!important;min-height:43px!important;
+ padding:4px 1px!important;gap:2px!important;color:#fff!important;
+ background:transparent!important;filter:none!important;text-shadow:0 2px 6px #0009!important;
+ border:0!important;touch-action:manipulation!important;transition:transform .18s ease!important;
+}
+.immersiveStory .immersiveReactionRail button:active{transform:scale(.88)!important}
+.immersiveStory .immersiveReactionRail button>svg{width:24px!important;height:24px!important;filter:drop-shadow(0 2px 3px #0009)}
+.immersiveStory .immersiveReactionRail button>small{font-size:10px!important;line-height:1.1!important;text-shadow:0 1px 5px #000c;font-weight:760!important}
+.immersiveStory .immersiveReactionRail button>svg.railLiked{color:#ff4d78;filter:drop-shadow(0 0 6px #ff4d7880)!important}
+.immersiveStory .immersiveReactionRail .immersiveSoundButton{
+ min-height:40px!important;border-radius:13px!important;
+ background:rgba(255,255,255,.13)!important;color:#fff!important;
+ border:1px solid rgba(255,255,255,.4)!important;backdrop-filter:blur(9px)!important;
+}
+.immersiveStory .immersiveReactionRail .immersiveSoundButton[data-muted="true"]{
+ color:#ff6870!important;border-color:#ff899269!important;background:#4c1517a3!important
+}
+.immersiveStory .immersiveReactionRail .immersiveSoundButton>svg{width:21px!important;height:21px!important}
+.immersiveStory .immersiveMediaBackdrop{opacity:.42!important}
+.immersiveStory .immersiveMedia [class*="socialStoryImage"],.immersiveStory .immersiveStoryVideo{
+ filter:none!important;opacity:1!important;box-shadow:none!important
+}
+@media(max-width:390px){
+ .immersiveStory .immersiveSheetHandle{padding:3px 10px 4px!important}
+ .immersiveStory .immersiveCaptionOpen{font-size:9px!important}
+ .immersiveStory .immersiveReactionRail{right:5px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .immersiveStory .immersiveReactionRail{transition:none!important;animation:none!important}
+}
 `}</style></main>;
 }
