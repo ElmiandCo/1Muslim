@@ -79,7 +79,7 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
 
  const clock=schedule?locationClock(schedule.timezone,now):null;
  const todayIsCurrent=!!schedule&&clock?.date===schedule.date;
- const nextToday=todayIsCurrent?ADHAN_PRAYERS.find(name=>(prayerMinute(schedule.times[name])??-1)>(clock?.minute??0)):undefined;
+ const nextToday=schedule&&clock&&todayIsCurrent?ADHAN_PRAYERS.find(name=>(prayerMinute(schedule.times[name])??-1)>clock.minute):undefined;
  const nextDay=dateAfter(schedule?.date||"2000-01-01");
  const needsTomorrow=!!schedule&&todayIsCurrent&&!nextToday;
  useEffect(()=>{
@@ -107,6 +107,8 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
  }
  const cityLabel=place.city+(place.state?", "+place.state:"");
  const isReady=!!time&&until!==null;
+ const formattedTime=time?displayPrayerTime(time):"—";
+ const countdown=until!==null?durationText(until):"—";
 
  return <section className={styles.card} aria-label="Your next prayer">
   <div className={styles.aura} aria-hidden="true"/>
@@ -118,9 +120,9 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
    <span className={styles.symbol} aria-hidden="true">{glyphs[upcoming||""]||"☾"}</span>
    <div className={styles.identity}>
     <strong>{isReady?upcoming:!canLoad?"Personalize your prayers":loading?"Finding your next prayer…":error?"Prayer times unavailable":"Next prayer"}</strong>
-    <span className={styles.detail}>{isReady?displayPrayerTime(time):!canLoad?"Set your city to see your daily schedule":error?"Check your saved city or try again":loading?"Calculating for your city":"Waiting for the next schedule"}</span>
+    <span className={styles.detail}>{isReady?formattedTime:!canLoad?"Set your city to see your daily schedule":error?"Check your saved city or try again":loading?"Calculating for your city":"Waiting for the next schedule"}</span>
    </div>
-   {isReady&&<span className={styles.remaining} aria-label={upcoming+" at "+displayPrayerTime(time)+", "+durationText(until)}>{durationText(until)}</span>}
+   {isReady&&<span className={styles.remaining} aria-label={upcoming+" at "+formattedTime+", "+countdown}>{countdown}</span>}
   </div>
   {isReady?<div className={styles.bottom}>
    <div className={styles.meter} role="progressbar" aria-label="Time elapsed since the previous daily prayer" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}><span style={{width:progress+"%"}}/></div>
