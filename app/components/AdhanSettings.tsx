@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ADHAN_PRAYERS, ADHAN_PREVIEW_EVENT, ADHAN_SETTINGS_EVENT, ADHAN_STOP_EVENT,
-  type AdhanPreferences, type AdhanPrayer, readAdhanPreferences, saveAdhanPreferences
+  DEFAULT_ADHAN_PREFERENCES, type AdhanPreferences, type AdhanPrayer, readAdhanPreferences, saveAdhanPreferences
 } from "../lib/adhan";
 
 export default function AdhanSettings({ inPrayerPage = false }: { inPrayerPage?: boolean }) {
-  const [prefs, setPrefs] = useState<AdhanPreferences>(readAdhanPreferences);
+  const [prefs, setPrefs] = useState<AdhanPreferences>(DEFAULT_ADHAN_PREFERENCES);
   useEffect(() => {
     const sync = () => setPrefs(readAdhanPreferences());
+    sync();
     window.addEventListener(ADHAN_SETTINGS_EVENT, sync);
     window.addEventListener("storage", sync);
     return () => { window.removeEventListener(ADHAN_SETTINGS_EVENT, sync); window.removeEventListener("storage", sync); };
