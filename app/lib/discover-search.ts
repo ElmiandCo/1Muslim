@@ -51,7 +51,13 @@ async function quranTranslations(q:string): Promise<{key:string;text:string}[]> 
 export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverResponse> {
   const query=compact(rawQuery,90);
   const active=query.length>=2;
-  const term=query.replace(/[%,()\\]/g," ").trim().slice(0,90);
+  const cleaned=query.replace(/[%,()\\@]/g," ").trim().slice(0,90);
+  const words=cleaned.split(/\s+/).filter(Boolean);
+  const generic=new Set(["show","find","search","me","my","the","for","with","about","what","where","who","when","why","how","can","you","please","videos","video","posts","post","films","movies","movie","series","of","on","in","to","a","an","is","are","i","want","need"]);
+  const important=words.filter(w=>!generic.has(w.toLowerCase()));
+  // Search intent often includes filler words; use the strongest term instead of matching a literal sentence.
+  const term=words.length>2 || (words.length===2 && words.some(w=>generic.has(w.toLowerCase())))
+    ? important.sort((a,b)=>b.length-a.length)[0]||cleaned : cleaned;
   const pattern="%"+term+"%";
   const base = () => ({data:[],error:null});
   // All tables use the caller's Supabase session and RLS. No service-role reads of private content.
