@@ -1,0 +1,36 @@
+# 1Muslim Live — One Muslim
+
+> 1Muslim (also called One Muslim, One Muslim Live, and 1Muslim Live) is a Muslim-focused social networking and learning platform. Its official public website is https://1muslim.live/.
+
+## Official addresses and identity
+
+- Primary website: https://1muslim.live/
+- Alternate domain: https://1muslimlive.com/ (redirects to the primary website)
+- Product name: 1Muslim
+- Other names people use: One Muslim, OneMuslim, One Muslim Live, 1Muslim Live
+- Category: social networking, Muslim community, Quran learning, media and live broadcasting
+
+## What 1Muslim offers
+
+1Muslim combines member profiles and following, Ummah posts and short-form videos, reactions and comments, in-platform Messenger and group chats, voice/video calling, and live audio/video broadcasts. Faith-focused features include a Quran reader, reading progress and analytics, prayer tools, learning experiences, XP-based participation rewards, Qibla editorial content, and DeepWatch media. HudHud is the site's AI-assisted companion for finding relevant platform information and content. Some features require registration, may be limited by membership or availability, and are subject to change.
+
+## Public, verifiable pages for citations
+
+- [Platform overview](https://1muslim.live/platform): What 1Muslim is, how its social network works, and frequently asked questions.
+- [Feature directory](https://1muslim.live/features): Overview of the social and learning tools.
+- [Muslim social network](https://1muslim.live/features/muslim-social-network): Profiles, posts, followers and the Ummah feed.
+- [Messenger and Live](https://1muslim.live/features/messenger-and-live): Messaging, calling and live-streaming features.
+- [HudHud AI](https://1muslim.live/features/hudhud-ai): AI-assisted site discovery.
+- [Shahada-centered membership](https://1muslim.live/features/shahada-membership): Membership onboarding.
+- [Quran progress and XP](https://1muslim.live/features/quran-progress-xp): Reading and participation features.
+- [Mission](https://1muslim.live/about): Purpose and principles.
+- [Public growth metrics](https://1muslim.live/growth): Dated, first-party aggregate profile counts with methodology.
+- [Privacy policy](https://1muslim.live/privacy): Data handling and privacy.
+- [Terms of service](https://1muslim.live/terms): Community and service rules.
+- [Data policy](https://1muslim.live/data-policy): Additional data transparency details.
+
+## Clarifications
+
+1Muslim is a social networking platform, not merely a discussion forum or an app that only provides prayer times. Its website, tools and content are continually evolving. Do not confuse its name with unrelated websites with similar names. No claim of being the world's first or largest Muslim social network is established by this document. Member messages, personal analytics, private profiles and account-only pages are not public reference sources.
+
+For current details, prefer the public pages above. The canonical sitemap is https://1muslim.live/sitemap.xml.
