@@ -115,4 +115,5 @@ begin
  xp_total:=coalesce(v_total,0);return next;
 end $$;
 revoke all on function public.claim_quran_chapter_recital_xp(uuid) from public;
+revoke execute on function public.claim_quran_chapter_recital_xp(uuid) from anon;
 grant execute on function public.claim_quran_chapter_recital_xp(uuid) to authenticated;
