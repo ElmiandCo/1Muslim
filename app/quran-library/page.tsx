@@ -63,6 +63,7 @@ export default function QuranMagazine(){
  const [galleryFloating,setGalleryFloating]=useState(false);const gallerySettle=useRef<ReturnType<typeof setTimeout>|null>(null);
  const [lastVerse,setLastVerse]=useState(""),[englishFirst,setEnglishFirst]=useState(false),[showEnglish,setShowEnglish]=useState(true),[floating,setFloating]=useState(false);
  const reader=useRef<HTMLDivElement>(null),settle=useRef<ReturnType<typeof setTimeout>|null>(null),land=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const pendingLegacyVerse=useRef<string|null>(null);
  useEffect(()=>{try{setLastVerse(localStorage.getItem("1muslim:quran-magazine-last")||"")}catch{}},[]);
  useEffect(()=>{let alive=true;fetch(API+"/chapters?language=en").then(r=>r.json()).then(d=>{if(alive)setChapters(d.chapters||[])}).catch(()=>{});return()=>{alive=false}},[]);
  useEffect(()=>{if(selected!==null)return;let frame=0;const update=()=>{frame=0;setGalleryFloating(false);if(gallerySettle.current)clearTimeout(gallerySettle.current);gallerySettle.current=setTimeout(()=>setGalleryFloating(true),1100);const center=window.innerHeight/2;document.querySelectorAll<HTMLElement>(".qm-chapter").forEach(card=>{const rect=card.getBoundingClientRect();const distance=(rect.top+rect.height/2-center)/(window.innerHeight*.5);const tilt=Math.max(-24,Math.min(24,distance*24));card.style.setProperty("--qm-number-tilt",tilt.toFixed(2)+"deg")})};const schedule=()=>{if(!frame)frame=requestAnimationFrame(update)};update();window.addEventListener("scroll",schedule,{passive:true});window.addEventListener("resize",schedule);return()=>{window.removeEventListener("scroll",schedule);window.removeEventListener("resize",schedule);if(frame)cancelAnimationFrame(frame);if(gallerySettle.current)clearTimeout(gallerySettle.current)}},[selected,chapters.length,tab,search]);
@@ -70,7 +71,41 @@ export default function QuranMagazine(){
  loadQuranChapter(selected,controller.signal,chapters.find(c=>c.id===selected)?.verses_count).then(rows=>{if(alive)setVerses(rows)}).catch(()=>{if(alive)setVerses([])}).finally(()=>{if(alive)setLoading(false)});
  return()=>{alive=false;controller.abort()};
  },[selected,chapters]);
- const open=(id:number,verse?:number)=>{setRenderLimit(verse?Math.max(45,verse+12):45);setSelected(id);if(verse){setTimeout(()=>document.getElementById("ayah-"+id+"-"+verse)?.scrollIntoView({behavior:"instant",block:"start"}),850)}setFloating(false);try{localStorage.setItem("1muslim:quran-magazine-chapter",String(id))}catch{};window.scrollTo({top:0,behavior:"instant"})};
+ const open=(id:number,verse?:number)=>{
+  setRenderLimit(verse?Math.max(45,verse+12):45);
+  pendingLegacyVerse.current=verse?id+":"+verse:null;
+  setSelected(id);setFloating(false);
+  try{localStorage.setItem("1muslim:quran-magazine-chapter",String(id))}catch{}
+  window.scrollTo({top:0,behavior:"instant"});
+ };
+ // Every old Studio link now opens the same verse in the supported Qur'an Reader.
+ useEffect(()=>{
+  const params=new URLSearchParams(window.location.search);
+  const candidate=params.get("verse")||(params.get("surah")&&params.get("ayah")?params.get("surah")+":"+params.get("ayah"):"");
+  const matched=/^([1-9]|[1-9][0-9]|1(?:0[0-9]|1[0-4])):([1-9][0-9]{0,2})$/.exec(candidate);
+  if(matched){open(Number(matched[1]),Number(matched[2]));return;}
+  const chapter=Number(params.get("chapter")||params.get("surah")||"");
+  if(Number.isInteger(chapter)&&chapter>=1&&chapter<=114)open(chapter);
+ },[]);
+ useEffect(()=>{
+  const target=pendingLegacyVerse.current;
+  if(!target||selected===null||loading||!verses.length||!reader.current)return;
+  const [chapterNumber,ayahNumber]=target.split(":").map(Number);
+  if(selected!==chapterNumber)return;
+  const index=verses.findIndex(v=>v.verse_key===target);
+  if(index<0){pendingLegacyVerse.current=null;return;}
+  if(index>=renderLimit){setRenderLimit(index+12);return;}
+  const frame=requestAnimationFrame(()=>{
+   const root=reader.current;
+   const element=document.getElementById("ayah-"+chapterNumber+"-"+ayahNumber);
+   if(!root||!element)return;
+   const top=element.getBoundingClientRect().top-root.getBoundingClientRect().top+root.scrollTop-12;
+   root.scrollTo({top:Math.max(0,top),behavior:"instant"});
+   pendingLegacyVerse.current=null;
+  });
+  return()=>cancelAnimationFrame(frame);
+ },[selected,verses,loading,renderLimit]);
+
  const swipeStart=useRef<{x:number;y:number;time:number}|null>(null);
  const onReaderTouchStart=(e:React.TouchEvent)=>{if(e.touches.length!==1){swipeStart.current=null;return}const t=e.touches[0];swipeStart.current={x:t.clientX,y:t.clientY,time:Date.now()}};
  const onReaderTouchEnd=(e:React.TouchEvent)=>{const start=swipeStart.current;swipeStart.current=null;if(!start||e.changedTouches.length!==1)return;const t=e.changedTouches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;if(dx>90&&Math.abs(dx)>Math.abs(dy)*1.5&&Date.now()-start.time<900){setSelected(null);setFloating(false);window.scrollTo({top:0,behavior:"smooth"})}};
@@ -78,7 +113,7 @@ export default function QuranMagazine(){
  const ordered=useMemo(()=>{const s=search.trim().toLowerCase();const verseQuery=s.match(/^(\d{1,3}):(\d{1,3})$/);let list=chapters.filter(c=>!s||(verseQuery?c.id===Number(verseQuery[1]):false)||String(c.id)===s||c.name_simple.toLowerCase().includes(s)||c.name_arabic.includes(s)||(c.translated_name?.name||"").toLowerCase().includes(s));if(tab==="revealed")list=[...list].sort((a,b)=>(a.revelation_order||a.id)-(b.revelation_order||b.id));return list},[chapters,search,tab]);
  const onScroll=()=>{setShowScrollProgress(true);if(progressHideTimer.current)clearTimeout(progressHideTimer.current);progressHideTimer.current=setTimeout(()=>setShowScrollProgress(false),1000);const el=reader.current;if(el&&el.scrollHeight-el.scrollTop-el.clientHeight<Math.max(1100,el.clientHeight*1.5))setRenderLimit(n=>Math.min(verses.length,n+45));setFloating(false);if(settle.current)clearTimeout(settle.current);if(land.current)clearTimeout(land.current);settle.current=setTimeout(()=>{setFloating(true)},1500)};
  useEffect(()=>{if(selected===null)return;const el=reader.current;if(!el)return;const t=setTimeout(()=>setFloating(true),1500);return()=>{clearTimeout(t);if(settle.current)clearTimeout(settle.current);if(land.current)clearTimeout(land.current)}},[selected,verses.length]);
- return <main className={"qm-page "+(readerTheme==="day"?"qm-day":"qm-night")}><header className="qm-top"><Link href="/" aria-label="Home">← 1Muslim</Link><span>QUR’AN</span><Link href="/elm-tent/quran">Studio ↗</Link></header>
+ return <main className={"qm-page "+(readerTheme==="day"?"qm-day":"qm-night")}><header className="qm-top"><Link href="/" aria-label="Home">← 1Muslim</Link><span>QUR’AN</span><Link href="/elm-tent">Arabic lessons ↗</Link></header>
  {selected===null?<><section className="qm-hero"><div className="qm-bismillah" lang="ar" dir="rtl">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div><h1>THE HOLY QUR’AN</h1><p>114 chapters · A lifetime of reflection</p><label className="qm-search"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search chapters or verse references (e.g. 2:255)" aria-label="Search the Qur’an" onKeyDown={e=>{if(e.key==="Enter"){const match=search.trim().match(/^(\d{1,3}):(\d{1,3})$/);if(match){const id=Number(match[1]);if(id>=1&&id<=114)open(id,Number(match[2]))}}}}/></label>{lastVerse&&<button className="qm-continue" onClick={()=>{const [id,verse]=lastVerse.split(":").map(Number);if(id>=1&&id<=114)open(id,verse)}}><span className="qm-continue-icon">↗</span><span><small>CONTINUE READING</small><strong>{chapters.find(c=>c.id===Number(lastVerse.split(":")[0]))?.name_simple||"Qur’an"} · Verse {lastVerse.split(":")[1]}</strong></span><span className="qm-continue-arrow">→</span></button>}</section>
  <button type="button" className="qm-progress qm-progress-action" aria-label="Open Qur’an reading progress analytics" aria-haspopup="dialog" onClick={()=>setProgressOpen(true)}><div className="qm-progress-label"><span>{progressSummary("Entire Qur’an")}</span><strong>{Math.round(progressNumber/progressTotal*100)}%</strong></div><div className="qm-progress-track"><span style={{width:(progressNumber/progressTotal*100)+"%"}}/></div></button>
  {progressOpen&&<div className="qm-analytics-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget){setProgressOpen(false);setResetConfirm(false)}}}><section role="dialog" aria-modal="true" aria-labelledby="qm-analytics-title" className="qm-analytics-dialog" onKeyDown={e=>{if(e.key==="Escape"){setProgressOpen(false);setResetConfirm(false)}}}>
@@ -104,7 +139,7 @@ export default function QuranMagazine(){
  <><div className="qm-readerbar"><button onClick={()=>{setSelected(null);setFloating(false)}}>← Chapters</button><strong>{chapter?.name_simple||"Surah "+selected}</strong>{showEnglish&&<button onClick={()=>setEnglishFirst(v=>!v)} title="Choose which language appears first" aria-label={englishFirst?"English first, switch to Arabic first":"Arabic first, switch to English first"} aria-pressed={englishFirst}>{englishFirst?"EN / ARB":"ARB / EN"}</button>}<button onClick={()=>setShowEnglish(v=>!v)}>{showEnglish?"EN On":"EN Off"}</button><button type="button" onClick={toggleReaderTheme} aria-label={readerTheme==="day"?"Switch to night mode":"Switch to day mode"} aria-pressed={readerTheme==="day"}>{readerTheme==="day"?"☾ Night":"☀ Day"}</button></div>
  <div className={"qm-progress qm-progress-chapter qm-scroll-progress"+(showScrollProgress?" qm-scroll-progress-visible":"")} aria-hidden={!showScrollProgress}><div className="qm-progress-label"><span>{chapter?.name_simple||"Surah"} · {visited.filter(key=>key.startsWith(selected+":")).length}/{chapter?.verses_count||verses.length} verses visited</span><strong>{Math.round(visited.filter(key=>key.startsWith(selected+":")).length/(chapter?.verses_count||verses.length||1)*100)}%</strong></div><div className="qm-progress-track"><span style={{width:(visited.filter(key=>key.startsWith(selected+":")).length/(chapter?.verses_count||verses.length||1)*100)+"%"}}/></div><div className="qm-progress-label qm-progress-sub"><span>Entire Qur’an · {visited.length.toLocaleString()}/6,236 verses visited</span><strong>{Math.round(visited.length/6236*100)}%</strong></div><div className="qm-progress-track"><span style={{width:(visited.length/6236*100)+"%"}}/></div></div>
  <div className="qm-reader" ref={reader} onScroll={onScroll} onTouchStart={onReaderTouchStart} onTouchEnd={onReaderTouchEnd}><div className="qm-readerintro"><span>CHAPTER {selected} · {chapter?.verses_count||verses.length} VERSES</span><h1>{chapter?.name_simple}</h1><div lang="ar" dir="rtl" className="qm-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div></div>
- {loading?<p className="qm-status">Loading the Qur’an…</p>:verses.length===0?<p className="qm-status">This chapter is temporarily unavailable. Please use Qur’an Studio.</p>:verses.slice(0,renderLimit).map(v=><article className={"qm-verse"+(floating?" is-floating":"")} key={v.verse_key} data-verse={v.verse_key} id={"ayah-"+v.verse_key.replace(":","-")}><div className="qm-verse-tools"><span>{v.verse_key}</span><button onClick={()=>{try{localStorage.setItem("1muslim:quran-magazine-last",v.verse_key);setLastVerse(v.verse_key)}catch{}}} aria-label={"Bookmark verse "+v.verse_key}>☆</button><button onClick={()=>navigator.clipboard?.writeText(v.arabic+"\n"+(v.english||""))} aria-label={"Copy verse "+v.verse_key}>⧉</button></div><div className={"qm-verse-content"+(englishFirst?" english-first":"")}><p className="qm-verse-arabic" dir="rtl" lang="ar">{v.arabic}</p>{showEnglish&&v.english&&<p className="qm-verse-english">{v.english}</p>}</div></article>)}
+ {loading?<p className="qm-status">Loading the Qur’an…</p>:verses.length===0?<p className="qm-status">This chapter is temporarily unavailable. Please try again.</p>:verses.slice(0,renderLimit).map(v=><article className={"qm-verse"+(floating?" is-floating":"")} key={v.verse_key} data-verse={v.verse_key} id={"ayah-"+v.verse_key.replace(":","-")}><div className="qm-verse-tools"><span>{v.verse_key}</span><button onClick={()=>{try{localStorage.setItem("1muslim:quran-magazine-last",v.verse_key);setLastVerse(v.verse_key)}catch{}}} aria-label={"Bookmark verse "+v.verse_key}>☆</button><button onClick={()=>navigator.clipboard?.writeText(v.arabic+"\n"+(v.english||""))} aria-label={"Copy verse "+v.verse_key}>⧉</button></div><div className={"qm-verse-content"+(englishFirst?" english-first":"")}><p className="qm-verse-arabic" dir="rtl" lang="ar">{v.arabic}</p>{showEnglish&&v.english&&<p className="qm-verse-english">{v.english}</p>}</div></article>)}
  <footer className="qm-site-footer" aria-label="1Quran footer">
   <div className="qm-site-footer-title">1MUSLIM <span aria-hidden="true">✦</span> 1QURAN</div>
   <nav className="qm-site-footer-links" aria-label="Footer navigation"><Link href="/qibla/studio">EDITORIAL STUDIO</Link><Link href="/qibla/command">COMMAND CENTER</Link><Link href="/qibla/newsroom/apply">CONTRIBUTE</Link><Link href="/">1MUSLIM HOME</Link><Link href="/terms">TERMS &amp; CONDITIONS</Link><Link href="/privacy">PRIVACY POLICY</Link><Link href="/data-policy">DATA POLICY</Link></nav>
