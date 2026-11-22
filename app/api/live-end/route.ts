@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid stream ID" }, { status: 400 });
 
   const { data: stream, error: lookupError } = await session.from("live_streams")
-    .select("id,host_id,room_name,status").eq("id", streamId).eq("host_id", user.id).maybeSingle();
+    .select("id,host_id,room_name,status,recital_chapter").eq("id", streamId).eq("host_id", user.id).maybeSingle();
   if (lookupError) return NextResponse.json({ error: "Unable to verify stream" }, { status: 503 });
   if (!stream) return NextResponse.json({ error: "Host stream not found" }, { status: 404 });
 
@@ -42,6 +42,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Stream cannot be ended from its current state" }, { status: 409 });
   }
 
+  // Award verified Qur’an Live participation only after the authoritative
+  // server has committed ended status. The RPC checks elapsed time, signed
+  // LiveKit webhook evidence, heartbeat history and per-chapter/day limits.
+  // Failures must never stop a broadcast from ending.
+  let xpAwarded=0;
+  if(stream.recital_chapter){
+    const {data:award,error:awardError}=await db.rpc("grant_quran_chapter_live_xp",{
+      p_stream:streamId,p_host:user.id
+    });
+    if(awardError)console.warn("Qur’an Live XP deferred",{code:awardError.code});
+    else xpAwarded=Math.max(0,Number(award)||0);
+  }
   // Best-effort room teardown. The authoritative DB state is already terminal.
   let roomClosed = false;
   const livekitUrl = process.env.LIVEKIT_URL;
@@ -55,5 +67,5 @@ export async function POST(request: Request) {
       console.warn("LiveKit room teardown skipped after terminal status committed", error);
     }
   }
-  return NextResponse.json({ ok: true, ended: true, roomClosed }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ ok: true, ended: true, roomClosed, xpAwarded }, { headers: { "Cache-Control": "no-store" } });
 }

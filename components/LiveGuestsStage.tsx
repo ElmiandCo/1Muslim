@@ -112,7 +112,7 @@ export function GuestVideoTiles({guests}:{guests:LiveStageGuest[]}){
 }
 
 /** The full shared stage is used by viewers; the host retains its persistent preview node. */
-export default function LiveGuestsStage({mode,guests,hostName,hostAvatar,hostMicActive=true,hostSpeaking=false,children}:{
+export default function LiveGuestsStage({mode,guests,hostName,hostAvatar,hostMicActive=true,hostSpeaking=false,children,ambient}:{
   mode:"video"|"audio";
   guests:LiveStageGuest[];
   hostName:string;
@@ -120,10 +120,12 @@ export default function LiveGuestsStage({mode,guests,hostName,hostAvatar,hostMic
   hostMicActive?:boolean;
   hostSpeaking?:boolean;
   children?:ReactNode;
+  ambient?:ReactNode;
 }){
   const visible=guests.slice(0,mode==="video"?3:11);
   const count=visible.length;
   return <section className={styles.stage} data-mode={mode} data-count={count} aria-label={mode==="audio"?"Live audio room":"Live video guests"}>
+    {mode==="audio"?ambient:null}
     <div className={styles.hostVideo} data-speaking={hostSpeaking?"yes":"no"} aria-hidden={mode==="audio"}>
       {children}
       {mode==="video"&&<span className={styles.hostLabel}>👑 {hostName} · Host</span>}

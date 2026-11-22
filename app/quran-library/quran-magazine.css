@@ -266,3 +266,26 @@
 .qm-page.qm-day .qm-chapter .qm-arabic strong{color:#252329}
 .qm-page.qm-day .qm-jump select{background-color:#f1ede6;color:#34302d}
 .qm-page.qm-day .qm-jump option{background:#f1ede6;color:#34302d}
+
+
+/* Quiet recitation access for the active, supported Qur’an Library. */
+.qmRecitalHomeLinks{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:16px auto 0;max-width:650px}
+.qmRecitalHomeLinks button,.qmRecitalHomeLinks a{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 13px;min-height:40px;border-radius:11px;border:1px solid rgba(210,177,117,.45);background:rgba(211,175,103,.10);color:#eddab7!important;font:700 12px/1.3 inherit;text-decoration:none;cursor:pointer}
+.qmRecitalHomeLinks button span{font-size:12px;color:#c59e5b}
+.qmRecitalHomeLinks a{background:transparent;color:#c8c0b0!important}
+.qmReciteLaunch{display:inline-flex!important;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;border-color:#d5bb7c7d!important;background:#d7b97c18!important;color:#e5d4ae!important;font-weight:750!important}
+.qmReciteLaunch svg{width:17px;height:17px;flex:0 0 17px}
+.qmReciteLaunch:focus-visible,.qmRecitalHomeLinks :focus-visible{outline:2px solid #dab879;outline-offset:3px}
+@media(max-width:760px){
+ .qm-readerbar{gap:5px!important;padding:9px 7px!important}
+ .qm-readerbar strong{min-width:0;font-size:12px!important;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+ .qm-readerbar button{padding:8px 7px!important;font-size:11px!important;white-space:nowrap}
+ .qmReciteLaunch{min-width:34px;padding:8px!important}
+ .qmReciteLaunch span{display:none}
+ .qmRecitalHomeLinks{gap:7px;margin-top:13px}
+ .qmRecitalHomeLinks button,.qmRecitalHomeLinks a{font-size:11px;padding:10px}
+}
+.qm-day .qmRecitalHomeLinks button{color:#3c3323!important;border-color:#a18856;background:#e8c47b2a}
+.qm-day .qmRecitalHomeLinks a{color:#5e5544!important;border-color:#baa477}
+.qm-day .qmReciteLaunch{color:#3a3323!important;border-color:#b89e69!important}
+@media(prefers-reduced-motion:reduce){.qmReciteLaunch,.qmRecitalHomeLinks button,.qmRecitalHomeLinks a{transition:none}}

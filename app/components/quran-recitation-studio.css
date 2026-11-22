@@ -1,0 +1,63 @@
+/* Qur'an Studio: precise, quiet audio/live choices. No blocking the verse until explicitly opened. */
+.qrsBackdrop{position:fixed;inset:0;z-index:18000;display:flex;align-items:flex-end;justify-content:center;background:rgba(3,12,18,.66);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);color:#f5f2e8;animation:qrsFade .23s ease both}
+.qrsBackdrop *{box-sizing:border-box}
+.qrsSheet{width:min(640px,100vw);max-height:min(92dvh,860px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;position:relative;border-radius:23px 23px 0 0;background:linear-gradient(155deg,#1b2428,#111c21 80%);border:1px solid rgba(217,190,134,.30);border-bottom:0;padding:8px clamp(18px,4vw,30px) calc(19px + env(safe-area-inset-bottom,0px));box-shadow:0 -22px 70px rgba(0,0,0,.35);animation:qrsRise .35s cubic-bezier(.22,.8,.18,1) both}
+.qrsHandle{height:4px;width:40px;border-radius:8px;background:#8b969c;margin:0 auto 14px;opacity:.65}
+.qrsHeader{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:16px}
+.qrsHeader h2{font-size:clamp(23px,5vw,29px);letter-spacing:-.055em;font-weight:730;margin:4px 0 2px;line-height:1.1;color:#fff}
+.qrsHeader p{color:#aeb8b5;font-size:12px;margin:5px 0}
+.qrsKicker{font-size:9px;letter-spacing:.2em;color:#debf88;font-weight:780}
+.qrsClose{width:36px;height:36px;background:#fff1;border:1px solid #fff3;border-radius:50%;color:#d6d9d8;font-size:23px;cursor:pointer}
+.qrsTabs{display:flex;padding:4px;gap:4px;background:#fff1;border:1px solid #fff2;border-radius:13px;margin:0 0 17px}
+.qrsTabs button{flex:1;padding:10px 6px;border:0;border-radius:9px;background:transparent;color:#b0bbb8;font-size:12px;font-weight:720;cursor:pointer}
+.qrsTabs button.selected{background:#d8bb84;color:#142724;box-shadow:0 2px 7px #0004}
+.qrsField{display:grid;gap:7px;color:#b6c6c4;font-size:11px;font-weight:750;letter-spacing:.01em;margin-bottom:14px}
+.qrsField select{width:100%;border:1px solid #536466;border-radius:10px;padding:11px 12px;background:#253034;color:#faf4e6;font:650 13px system-ui,sans-serif}
+.qrsPreview{isolation:isolate;min-height:136px;overflow:hidden;border-radius:16px;display:grid;align-content:center;justify-items:center;gap:5px;text-align:center;border:1px solid #b9a07a65;padding:16px 20px;background:linear-gradient(130deg,#1f3238,#132225);position:relative}
+.qrsPreview::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.28;z-index:-1;background:radial-gradient(circle at 80% 20%,#e0bb78,transparent 35%);animation:qrsGlow 12s ease-in-out infinite alternate}
+.qrsPreview.qrs-starlight{background:radial-gradient(circle at 20% 20%,#69789b4d 0 1px,transparent 2px),radial-gradient(circle at 76% 52%,#c5e0f2 0 1px,transparent 3px),linear-gradient(125deg,#0d102c,#1b2546)}
+.qrsPreview.qrs-emerald{background:linear-gradient(125deg,#0b2a25,#215448)}
+.qrsPreview>span{font-size:9px;letter-spacing:.16em;color:#d9c195;font-weight:700}
+.qrsPreview>strong{font-family:Amiri,"Noto Naskh Arabic",serif;font-size:clamp(27px,6vw,34px);line-height:1.4;color:#f2e7d0}
+.qrsPreview h3{font:700 16px system-ui,sans-serif;color:#fff;letter-spacing:-.02em;margin:0}
+.qrsPreview small{font-size:10px;color:#bdc8c5}
+.qrsExplain{font-size:12px;color:#b4c1be;line-height:1.65;margin:14px 0}
+.qrsRecordControl{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:14px 0}
+.qrsTimer{font-variant-numeric:tabular-nums;font-size:22px;font-weight:720;letter-spacing:.04em;color:#f0dfb4}
+.qrsTimer.recording{color:#f3b6a2;animation:qrsBeat 1.15s ease-in-out infinite}
+.qrsMain{display:flex;align-items:center;justify-content:center;text-align:center;flex:1;border:1px solid #ddc491;border-radius:11px;background:linear-gradient(120deg,#efd79b,#d6b56e);color:#17312b!important;cursor:pointer;padding:13px 16px;font:750 12px system-ui,sans-serif;text-decoration:none!important;min-height:45px;transition:transform .18s ease,filter .18s ease}
+.qrsMain:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.qrsMain:disabled{opacity:.50;cursor:default;transform:none}
+.qrsStop{background:#a74d49;color:white!important;border-color:#d8887f}
+.qrsTake{flex:1;display:grid;gap:8px;min-width:195px}
+.qrsTake audio{width:100%;height:37px;max-width:100%}
+.qrsTake button{justify-self:end;border:0;background:none;color:#dcccab;cursor:pointer;font-size:11px}
+.qrsConsent{display:flex;gap:10px;align-items:flex-start;font-size:11px;line-height:1.5;color:#c7d2cf;margin:13px 0 12px;cursor:pointer}
+.qrsConsent input{width:17px;height:17px;flex-shrink:0;accent-color:#d6b56e}
+.qrsFootnote{font-size:10px;line-height:1.7;color:#9baca7;margin:14px 0 7px}
+.qrsFootnote strong{color:#efd99d}
+.qrsLive .qrsMain{margin-top:13px}
+.qrsToggle{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 3px;border-top:1px solid #fff2;border-bottom:1px solid #fff2}
+.qrsToggle span{display:grid;gap:4px}
+.qrsToggle b{font-size:13px;color:#edf5ed}
+.qrsToggle small{font-size:10px;color:#97a8a4}
+.qrsToggle input{width:20px;height:20px;accent-color:#d9bd85;cursor:pointer}
+.qrsVisuals{margin-top:13px}
+.qrsVisuals>span{font-size:11px;font-weight:720;color:#b6c2bd}
+.qrsVisuals>div{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:9px 0}
+.qrsVisuals button{border:1px solid #5e6b6a;background:#fff1;color:#e0e9e3;border-radius:10px;padding:10px 4px;font-size:11px;cursor:pointer}
+.qrsVisuals button.selected{border-color:#d8ba81;color:#f5e2b7;background:#bb97651f}
+.qrsLiveNote{font-size:10px;line-height:1.6;color:#a9b9b3;display:block;margin:9px 0}
+.qrsMessage{margin:13px 0;padding:10px 12px;border:1px solid #c9aa776b;border-radius:10px;background:#eac28d15;color:#f1e4ca;font-size:11px;line-height:1.6}
+.qrsFooter{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:9px;border-top:1px solid #fff2;padding-top:14px;margin-top:12px;font-size:11px}
+.qrsFooter a{color:#dfc38d!important;text-decoration:none;font-weight:750}
+.qrsFooter span{font-size:9px;color:#98a9a7}
+.qrsOpenButton{flex:0 0 34px!important;min-width:34px;width:34px!important;height:34px!important;padding:0!important;margin-left:2px!important;display:grid!important;place-items:center!important;border:1px solid #d2b9806e!important;border-radius:50%!important;background:rgba(31,53,51,.68)!important;color:#ecd5a1!important;box-shadow:none!important;cursor:pointer!important;font-size:17px!important}
+.qrsOpenButton:hover,.qrsOpenButton:focus-visible{outline:2px solid #dabb85aa;outline-offset:2px}
+@keyframes qrsFade{from{opacity:0}to{opacity:1}}
+@keyframes qrsRise{from{transform:translateY(30px);opacity:.7}to{transform:translateY(0);opacity:1}}
+@keyframes qrsGlow{from{transform:translateX(-10%) scale(.95)}to{transform:translateX(12%) scale(1.08)}}
+@keyframes qrsBeat{50%{opacity:.50}}
+@media(min-width:800px){.qrsBackdrop{align-items:center}.qrsSheet{border-radius:23px;border-bottom:1px solid #d9be7b55;max-height:90dvh}}
+@media(max-width:430px){.qrsSheet{padding-left:17px;padding-right:17px}.qrsHeader h2{font-size:25px}.qrsPreview{min-height:125px}.qrsOpenButton{flex-basis:31px!important;min-width:31px;width:31px!important;height:31px!important}}
+@media(prefers-reduced-motion:reduce){.qrsBackdrop,.qrsSheet,.qrsTimer,.qrsPreview::before{animation:none!important}.qrsMain{transition:none}}
