@@ -199,7 +199,7 @@ export default function HudHudChatLauncher(){
   if(/(qur|verse|ayah|surah)/.test(q))return {text:"Open Elm Tent → Qur'an Studio. Choose a surah and verse, then use Chat with HudHud or Send Verse to Ashab. For interpretation, consult a reliable tafsir.",avatar:false};
   if(/(live|stream|camera)/.test(q))return {text:"Open Streaming → Go Live. Allow camera access, add a title, and check your microphone and camera before starting.",avatar:false};
   if(hasImage)return {text:"I can display the image you attached in this chat preview, but image recognition and uploads aren't connected yet. Tell me what you're trying to do and I'll guide you through 1Muslim.",avatar:false};
-  return {text:"I can guide you around 1Muslim right now. Try asking: “How can I change my photo?”, “Where are my Ashab?”, or “How do I share a Qur'an verse?” Full AI conversation is not connected yet.",avatar:false};
+  return {text:"I can guide you around 1Muslim right now. Try asking: “How can I change my photo?”, “Where are my Ashab?”, or “How do I share a Qur'an verse?” For live AI-assisted search across 1Muslim, type what you are looking for.",avatar:false};
  };
  const send=async(e:React.FormEvent)=>{
   e.preventDefault();if((!draft.trim()&&!pending)||hudhudSending)return;
