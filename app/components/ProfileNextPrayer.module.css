@@ -1,10 +1,10 @@
-/* Next-prayer timeline sits just below the floating prayer card, not on the
-   cover's original border. The avatar is intentionally layered above the
-   left end of the track; everything else stays separate (no collisions).
-   This remains anchored to the profile identity, without layout jumps. */
+/* Track the true bottom edge of the cover artwork. The identity wrapper
+   starts exactly after the cover, so a -2px offset centers this 4px rail on
+   the artwork's bottom trim. The avatar stays above the left side and the
+   floating next-prayer card keeps its independent position. */
 .seam{
  --prayer-accent:var(--member-accent,var(--theme-accent,#b89965));
- position:absolute;left:0;right:0;top:32px;height:4px;z-index:1;
+ position:absolute;left:0;right:0;top:-2px;height:4px;z-index:1;
  border-radius:999px;background:color-mix(in srgb,var(--prayer-accent) 17%,#e8edf2);
  box-shadow:inset 0 1px 0 #ffffffc7,0 1px 3px #172d3d0e;
  pointer-events:none;
