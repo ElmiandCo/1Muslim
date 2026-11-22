@@ -101,3 +101,8 @@ export async function fetchPrayerSchedule(location: AdhanLocation, method: Adhan
   const actualDate = locationClock(first.timezone).date;
   return actualDate === first.date ? first : readDay(location, method, actualDate, signal);
 }
+
+/** Read a specific day for accurate after-Isha next-Fajr previews. */
+export function fetchPrayerScheduleOnDate(location: AdhanLocation, method: AdhanMethod, date: string, signal?: AbortSignal): Promise<PrayerSchedule> {
+  return readDay(location, method, date, signal);
+}
