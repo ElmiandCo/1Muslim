@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../utils/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { canUseTikTokReview } from "../../../../utils/tiktok/review-access";
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!canUseTikTokReview(user)) return NextResponse.json({error:"TikTok connections are coming soon",available:false},{status:403,headers:{"Cache-Control":"private, no-store"}});
   const origin = request.headers.get("origin");
   if (origin !== new URL(request.url).origin) return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
