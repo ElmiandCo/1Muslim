@@ -19,7 +19,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   {path:"/widget-tools/prayer",priority:.8,frequency:"monthly"},
   {path:"/unlocked",priority:.72,frequency:"monthly"},
   {path:"/learn",priority:.7,frequency:"monthly"},
-  {path:"/elm-tent/quran",priority:.76,frequency:"weekly"},
+  {path:"/quran-library",priority:.76,frequency:"weekly"},
   {path:"/auth",priority:.5,frequency:"monthly"}
  ] as const;
  return pages.map(({path,priority,frequency})=>({
