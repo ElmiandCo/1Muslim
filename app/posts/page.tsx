@@ -12,11 +12,68 @@ type Post={id:string;body:string;author_name:string;author_handle:string;created
 const youtubeId=(text:string)=>text.match(/(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?(?:[^#\s]*?&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/)?.[1]||null;
 const ytThumbnail=(id:string)=>`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const clean=(text:string)=>cleanPostBody(text).replace(/https?:\/\/\S+/g,"").trim();
+// Avoid mounting dozens of individual comment fetchers and autoplay decoders at once.
+// Near-viewport cards become interactive before the user actually reaches them.
+function VisiblePostEngagement({postId,mediaUrl,mediaType,youtube}:{postId:string;mediaUrl:string|null;mediaType:string|null;youtube:string|null}){
+ const container=useRef<HTMLDivElement|null>(null);
+ const [near,setNear]=useState(false);
+ useEffect(()=>{
+  const node=container.current;if(!node)return;
+  const observer=new IntersectionObserver(([entry])=>setNear(entry.isIntersecting),{rootMargin:"800px 0px 850px 0px",threshold:0});
+  observer.observe(node);return()=>observer.disconnect();
+ },[]);
+ return <div ref={container} style={{minHeight:54}}>{near?<UnifiedPostMedia postId={postId} mediaUrl={mediaUrl} mediaType={mediaType} youtubeId={youtube}/>:null}</div>;
+}
+let cachedDiscover:{posts:Post[];viewerId:string|null;at:number}|null=null;
 export default function PublicPostsSocial(){
  const router=useRouter();
- const mediaUrlCache=useRef(new Map<string,{url:string;at:number}>());
  const [posts,setPosts]=useState<Post[]>([]),[query,setQuery]=useState(""),[filter,setFilter]=useState<"forYou"|"lastWatched"|"popular">("forYou"),[loading,setLoading]=useState(true),[error,setError]=useState(""),[expanded,setExpanded]=useState<Record<string,boolean>>({}),[viewerId,setViewerId]=useState<string|null>(null),[history,setHistory]=useState<WatchedPost[]>([]),[scores,setScores]=useState<Record<string,{likes:number;comments:number;shares:number;saves:number;score:number}>>({}),[rankStatus,setRankStatus]=useState<"loading"|"ready"|"error">("loading"),[menuId,setMenuId]=useState<string|null>(null),[editingId,setEditingId]=useState<string|null>(null),[editText,setEditText]=useState(""),[actionBusy,setActionBusy]=useState(false),[actionError,setActionError]=useState("");
- useEffect(()=>{let active=true;const load=async()=>{try{const res=await fetch("/api/community-posts",{cache:"no-store"});if(!res.ok)throw Error("Unable to load public posts");const json=await res.json();if(active){setPosts(previous=>{return (json.posts||[]).map((p:Post)=>{if(!p.media_url)return p;const cached=mediaUrlCache.current.get(p.id);if(cached&&Date.now()-cached.at<45*60*1000&&cached.url.includes("/storage/v1/object/sign/"))return {...p,media_url:cached.url};mediaUrlCache.current.set(p.id,{url:p.media_url,at:Date.now()});return p})});setViewerId(json.viewer_id||null);setError("")}}catch(e){if(active)setError(e instanceof Error?e.message:"Unable to load posts")}finally{if(active)setLoading(false)}};void load();const timer=setInterval(()=>void load(),30000);return()=>{active=false;clearInterval(timer)}},[]);
+ useEffect(()=>{
+  let active=true;
+  let moreTimer:number|undefined;
+  if(cachedDiscover&&Date.now()-cachedDiscover.at<90000){
+   setPosts(cachedDiscover.posts);
+   setViewerId(cachedDiscover.viewerId);
+   setLoading(false);
+  }
+  const merge=(fresh:Post[],replace=false)=>{
+   if(!active)return;
+   setPosts(old=>{
+    const rows=replace||old.length===0?fresh:[...fresh,...old];
+    const unique=[...new Map(rows.map(row=>[row.id,row])).values()];
+    const ordered=unique.sort((a,b)=>b.created_at.localeCompare(a.created_at));
+    cachedDiscover={posts:ordered,viewerId:cachedDiscover?.viewerId||null,at:Date.now()};
+    return ordered;
+   });
+  };
+  const load=async()=>{
+   try{
+    // The first 18 posts are enough to paint a usable feed. The rest loads
+    // unobtrusively after first paint. No 100-video signing waterfall.
+    const response=await fetch("/api/community-posts?limit=18&offset=0",{cache:"no-store"});
+    if(!response.ok)throw Error("Unable to load community posts");
+    const data=await response.json();
+    if(!active)return;
+    merge(Array.isArray(data.posts)?data.posts:[],!(cachedDiscover?.posts.length));
+    setViewerId(data.viewer_id||null);
+    if(cachedDiscover)cachedDiscover.viewerId=data.viewer_id||null;
+    setError("");
+    setLoading(false);
+    if(data.has_more)moreTimer=window.setTimeout(()=>{
+     void fetch("/api/community-posts?limit=82&offset=18",{cache:"no-store"})
+      .then(async res=>res.ok?res.json():null)
+      .then(page=>{if(active&&Array.isArray(page?.posts))merge(page.posts)})
+      .catch(()=>{/* Initial feed remains usable if the background request fails. */});
+    },600);
+   }catch(err){
+    if(active&&!cachedDiscover)setError(err instanceof Error?err.message:"Could not load posts");
+   }finally{if(active)setLoading(false)}
+  };
+  void load();
+  // Background refresh never blanks an already visible feed.
+  const refresh=window.setInterval(()=>{if(document.visibilityState==="visible")void load()},90000);
+  return()=>{active=false;clearInterval(refresh);if(moreTimer!==undefined)clearTimeout(moreTimer)};
+ },[]);
  // Watched means actually played in the immersive viewer; history is kept on this device.
  useEffect(()=>{
   const sync=()=>setHistory(readWatchedPosts());sync();
@@ -81,7 +138,7 @@ export default function PublicPostsSocial(){
  {editingId===p.id&&<div className={styles.feedEditBox}><textarea aria-label="Edit post text" value={editText} maxLength={2000} onChange={e=>setEditText(e.target.value)}/><div><button type="button" disabled={actionBusy} onClick={()=>setEditingId(null)}>Cancel</button><button type="button" disabled={actionBusy||!editText.trim()} onClick={async()=>{setActionBusy(true);setActionError("");try{const r=await fetch("/api/community-posts",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,text:editText})});if(!r.ok)throw Error((await r.json()).error||"Could not save post");setPosts(old=>old.map(x=>x.id===p.id?{...x,body:editText.trim()}:x));setEditingId(null)}catch(e){setActionError(e instanceof Error?e.message:"Save failed")}finally{setActionBusy(false)}}}>Save changes</button></div></div>}
  {body&&<div className={styles.feedPostCaption}><p>{long&&!expanded[p.id]?body.slice(0,220).trimEnd()+"…":body}</p>{long&&<button type="button" onClick={()=>setExpanded(old=>({...old,[p.id]:!old[p.id]}))}>{expanded[p.id]?"Show less":"Read more"}</button>}</div>}
  {isImage&&<Link href={`/posts/story/${encodeURIComponent(p.id)}`} className={styles.feedMediaLink}><img src={p.media_url!} alt="Community post" loading="lazy" decoding="async" fetchPriority="auto" style={{backgroundColor:"#f1f3f6"}}/></Link>}
- <div className={styles.feedPostEngagement}><UnifiedPostMedia postId={p.id} mediaUrl={p.media_url} mediaType={p.media_type} youtubeId={video}/></div>
+ <div className={styles.feedPostEngagement}><VisiblePostEngagement postId={p.id} mediaUrl={p.media_url} mediaType={p.media_type} youtube={video}/></div>
  <div className={styles.feedPostBottom}><span>1MUSLIM · COMMUNITY</span><Link href={`/posts/story/${encodeURIComponent(p.id)}`}>VIEW POST ↗</Link></div></article>})}</div>}
  {actionError&&<p role="alert" className={styles.status}>{actionError}</p>}
  <footer className={styles.footer}><span>1MUSLIM / THE PEOPLE'S EDITION</span><Link href="/community">JOIN THE CONVERSATION ↗</Link></footer></main>;
