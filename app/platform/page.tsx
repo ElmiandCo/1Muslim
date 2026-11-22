@@ -5,13 +5,18 @@ import styles from "./platform.module.css";
 const origin="https://1muslim.live";
 
 export const metadata:Metadata={
- title:"1Muslim | Muslim Social Network, Live Video, Messaging, Qur'an & HudHud AI",
- description:"Discover 1Muslim, a Muslim-focused social network bringing together short-form videos, Ummah posts, private messaging, live streaming, Qur'an learning, DeepWatch, Shahada-centered onboarding, and OpenAI-powered HudHud search.",
+ title:"1Muslim Social Network | Short Videos, Chat, Live & HudHud AI",
+ description:"Discover Muslim social media with TikTok-style videos, Facebook-style profiles, Snapchat-style messaging, Shahada-centered signup, Qur'an learning and HudHud AI.",
  alternates:{canonical:"/platform"},
  openGraph:{
-  title:"1Muslim — One Ummah. One social network.",
-  description:"Muslim community, video, messaging, live streaming, Qur'an education and HudHud AI discovery in one connected experience.",
-  url:origin+"/platform",siteName:"1Muslim",type:"website"
+  title:"1Muslim — Muslim Social Media Built for the Ummah",
+  description:"Short-form videos, profiles, follows, chats, group calls, live streams and Qur'an learning — together with HudHud AI. Free access plus 1Muslim Unlocked, which prefers GPT-6 Sol where available.",
+  url:origin+"/platform",siteName:"1Muslim",type:"website",locale:"en_US"
+ },
+ twitter:{
+  card:"summary",
+  title:"1Muslim — Muslim Social Media + HudHud AI",
+  description:"A Muslim-first social network combining social video, messaging, live streams, Shahada-centered signup, Qur'an learning and OpenAI-powered HudHud."
  }
 };
 
@@ -36,7 +41,7 @@ const questions=[
 const jsonLd=[
  {"@context":"https://schema.org","@type":"Organization","@id":origin+"/#organization",name:"1Muslim",alternateName:["OneMuslim","1Muslim Live"],url:origin,description:"A Muslim-focused social networking and learning platform bringing together community, media, live streaming and AI-assisted discovery."},
  {"@context":"https://schema.org","@type":"WebSite","@id":origin+"/#website",url:origin,name:"1Muslim",alternateName:"OneMuslim",publisher:{"@id":origin+"/#organization"},inLanguage:"en"},
- {"@context":"https://schema.org","@type":"SoftwareApplication","@id":origin+"/platform#app",name:"1Muslim",alternateName:"OneMuslim",url:origin+"/platform",applicationCategory:"SocialNetworkingApplication",operatingSystem:"Web",description:"Muslim social network with video posts, live streaming, messaging, profiles, Qur'an learning and HudHud AI-assisted search.",publisher:{"@id":origin+"/#organization"},offers:{"@type":"Offer",price:"0",priceCurrency:"USD",description:"Free membership experience; optional paid 1Muslim Unlocked subscription."}}
+ {"@context":"https://schema.org","@type":"SoftwareApplication","@id":origin+"/platform#app",name:"1Muslim",alternateName:"OneMuslim",url:origin+"/platform",applicationCategory:"SocialNetworkingApplication",operatingSystem:"Web",description:"Muslim social media with short-form videos, posts, messaging, live streams, member profiles, Qur'an learning, Shahada-centered onboarding and HudHud AI-assisted search.",featureList:["Short-form social video and Ummah posts","Muslim profiles, following and discovery","Private messaging, group conversations and calling","Live video and audio broadcasting","Qur'an reading, recitation and Arabic learning","DeepWatch media and Qibla editorial","Shahada-centered member onboarding","HudHud AI site search with a free three-turn tier and 1Muslim Unlocked"],audience:{"@type":"Audience",audienceType:"Muslim community members and visitors"},publisher:{"@id":origin+"/#organization"},offers:{"@type":"Offer",price:"0",priceCurrency:"USD",description:"Free membership experience; optional paid 1Muslim Unlocked subscription."}}
 ];
 
 export default function PlatformPage(){

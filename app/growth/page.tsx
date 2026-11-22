@@ -5,9 +5,15 @@ import styles from "./growth.module.css";
 
 export const dynamic="force-dynamic";
 export const metadata:Metadata={
- title:"1Muslim Public Growth & Transparency | Platform Analytics",
- description:"See first-party registered profile counts and recent member-join trends for 1Muslim. Understand how the numbers are counted, what Google Analytics measures, and why these totals are not the same as active users.",
- alternates:{canonical:"/growth"}
+ title:"1Muslim Growth & Public Analytics | Muslim Social Network",
+ description:"Explore 1Muslim's publicly reported membership growth: first-party profile totals, new signups in the last 7 and 30 days, and transparent reporting methods.",
+ alternates:{canonical:"/growth"},
+ openGraph:{
+  title:"1Muslim — Public Growth & Membership Statistics",
+  description:"Follow 1Muslim's growth with dated, first-party membership counts and clear reporting methodology. Registered profiles are not unique visitors or active users.",
+  url:"https://1muslim.live/growth",siteName:"1Muslim",type:"website"
+ },
+ twitter:{card:"summary",title:"1Muslim Growth — Public Membership Statistics",description:"See dated first-party 1Muslim profile counts and transparent analytics methodology."}
 };
 
 type ProfileMetrics={total:number|null;last7:number|null;last30:number|null;updated:string};
