@@ -61,7 +61,7 @@ export default function LiveCinemaTheater({ streamId, roomName, hostId, hostName
         <LiveViewerBoundary streamId={streamId} section="comments"><LiveChat streamId={streamId} hostId={hostId} overlay /></LiveViewerBoundary>
       </div>
       <details className="omLiveTheaterGuests">
-        <summary aria-label="Open guest controls">♧ Guests</summary>
+        <summary aria-label="Open guest controls">👥 Guests</summary>
         <div className="omLiveTheaterGuestPanel"><LiveViewerBoundary streamId={streamId} section="guests"><LiveGuestStudio streamId={streamId} roomName={roomName} hostId={hostId} /></LiveViewerBoundary></div>
       </details>
       <style jsx global>{`

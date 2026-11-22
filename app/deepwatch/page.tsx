@@ -452,7 +452,7 @@ export default function DeepWatch(){
     <button type="button" className="dwReferenceSearch" aria-label="Search DeepWatch" onClick={()=>document.getElementById("dw-reference-search")?.focus()}>⌕</button>
    </div>
    <nav className="dwReferenceCategories" aria-label="DeepWatch categories">
-    {([["Home","⌂","Home"],["Movies","▣","Movies"],["Series","▱","Series"],["The Prophets","♧","Prophets"],["Kids","☺","Kids"],["International","◎","International"],["Somali","☆","Somali"],["All Videos","▦","More"]] as [Tab,string,string][]).map(([item,icon,label])=><button type="button" key={item} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}><span aria-hidden="true">{icon}</span>{label}</button>)}
+    {([["Home","⌂","Home"],["Movies","▣","Movies"],["Series","▱","Series"],["The Prophets","✧","Prophets"],["Kids","☺","Kids"],["International","◎","International"],["Somali","☆","Somali"],["All Videos","▦","More"]] as [Tab,string,string][]).map(([item,icon,label])=><button type="button" key={item} aria-current={tab===item?"page":undefined} onClick={()=>setTab(item)}><span aria-hidden="true">{icon}</span>{label}</button>)}
     <button type="button" aria-current={tab==="My List"?"page":undefined} onClick={()=>setTab("My List")}>♡ My List</button>
    </nav>
    <div className="dwReferenceUtility"><input id="dw-reference-search" type="search" aria-label="Search DeepWatch titles" placeholder="Search movies, series and shows" value={search} onChange={e=>setSearch(e.target.value)}/>{isGalleryAdmin&&<span className="dwReferenceCount">{galleryTotal.toLocaleString()} titles {libraryLoading?"· Syncing":""}</span>}</div>
