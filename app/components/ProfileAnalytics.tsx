@@ -3,31 +3,11 @@ import {useCallback,useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import Link from "next/link";
 import ProfileMemberStats from "./ProfileMemberStats";
+import QuranIntelligenceDashboard from "./QuranIntelligenceDashboard";
 
 type Reading={verse_key:string;read_on:string};
 function ArrowIcon(){return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 19 19 5M8 5h11v11"/></svg>}
 function RefreshIcon(){return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.2 6.2M20 4v7h-7"/></svg>}
-const CHAPTER_VERSE_COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
-const DEMO=[5,9,15,24,38,51];
-const monthKey=(date:string)=>date.slice(0,7);
-function QuranCompletionGraph({readings,loading}:{readings:Reading[];loading:boolean}){
- const firstSeen=new Map<string,string>();
- for(const r of readings){if(!/^\d{1,3}:\d{1,3}$/.test(r.verse_key)||!/^\d{4}-\d{2}-\d{2}$/.test(r.read_on))continue;const previous=firstSeen.get(r.verse_key);if(!previous||r.read_on<previous)firstSeen.set(r.verse_key,r.read_on)}
-
- const hasProgress=firstSeen.size>0;
- const now=new Date();const months=Array.from({length:6},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-5+i,1);return {key:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`,label:d.toLocaleDateString(undefined,{month:"short"})}});
- const points=months.map((m,i)=>({label:m.label,key:m.key,value:hasProgress?Math.min(100,100*[...firstSeen.values()].filter(date=>monthKey(date)<=m.key).length/6236):DEMO[i]}));
- const width=580,height=290,left=46,right=18,top=18,bottom=37,plotW=width-left-right,plotH=height-top-bottom;
- const x=(i:number)=>left+plotW*i/5,y=(v:number)=>top+plotH*(1-v/100);
- const path=points.map((p,i)=>`${i?"L":"M"} ${x(i)} ${y(p.value)}`).join(" ");
- const [selected,setSelected]=useState<number|null>(null);const index=selected??5;
- return <section className="profileCompletionGraph"><div className="profileCompletionHeading"><div><h3>Qur’an completion over time</h3><small>{hasProgress?"Your reading progress · synced across devices":"Illustrative preview · your graph switches to real data after your first saved verse"}</small></div>{!hasProgress&&<span className="profileCompletionDemo">DEMO</span>}</div><div className="profileCompletionMetric"><span>Qur’an completed</span><strong>{points[index].value.toFixed(hasProgress?2:0)}%</strong><small>{points[index].label} {months[index].key.slice(0,4)}</small></div><svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`Qur’an completion trend from ${months[0].label} to ${months[5].label}`}>
- {[0,25,50,75,100].map(t=><g key={t}><line x1={left} x2={width-right} y1={y(t)} y2={y(t)} stroke="#dfe7f0" strokeDasharray="3 6"/><text x={left-10} y={y(t)+4} textAnchor="end" fontSize="12" fill="#75869a">{t}%</text></g>)}
- {selected!==null&&<line x1={x(index)} x2={x(index)} y1={top} y2={height-bottom} stroke="#9caec3" strokeWidth="1"/>}
- <path d={path} fill="none" stroke="#1684ec" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
- {points.map((p,i)=><g key={p.key} onClick={()=>setSelected(i)} style={{cursor:"pointer"}}><circle cx={x(i)} cy={y(p.value)} r="16" fill="transparent"/><circle cx={x(i)} cy={y(p.value)} r={i===index?6:3} fill="#1684ec" stroke={i===index?"#fff":"none"} strokeWidth="2"/><text x={x(i)} y={height-12} textAnchor="middle" fontSize="13" fill="#687b90">{p.label}</text></g>)}
- </svg><div className="profileCompletionMonths" aria-label="Select month">{points.map((p,i)=><button type="button" key={p.key} aria-pressed={i===index} onClick={()=>setSelected(i)}>{p.label}</button>)}</div>{loading&&<p className="profileAnalyticsMuted">Loading your Qur’an activity…</p>}</section>
-}
 const TIME_KEY="1muslim:page-screen-time-v1";
 const fmt=(s:number)=>s>=3600?`${Math.floor(s/3600)}h ${Math.round(s%3600/60)}m`:`${Math.floor(s/60)}m`;
 const day=(offset:number)=>{const d=new Date();d.setDate(d.getDate()-offset);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")};
@@ -72,12 +52,9 @@ export default function ProfileAnalytics({inline=false,userId}:{inline?:boolean;
   }catch(e){setResetError(e instanceof Error?e.message:"Unable to reset reading progress. Please retry.")}finally{setResetBusy(false)}
  };
  const dates=Array.from({length:7},(_,i)=>day(6-i));
- const chart=dates.map(d=>({date:d,count:new Set(readings.filter(r=>r.read_on===d).map(r=>r.verse_key)).size}));
- const max=Math.max(1,...chart.map(x=>x.count));
  const today=screen[day(0)]||{},week=dates.reduce((total,d)=>total+Object.values(screen[d]||{}).reduce((a,b)=>a+b,0),0);
  const todaySeconds=Object.values(today).reduce((a,b)=>a+b,0);
  const topPages=Object.entries(dates.reduce((acc,d)=>{for(const [p,t] of Object.entries(screen[d]||{}))acc[p]=(acc[p]||0)+t;return acc},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,5);
- const uniqueVerses=new Set(readings.map(r=>r.verse_key)).size;
  return <>{!inline&&<button type="button" className="profileAnalyticsTile" onClick={()=>setOpen(true)} aria-haspopup="dialog"><span className="profileAnalyticsTileIcon">▥</span><span>Analytics<small>Screen time &amp; Qur’an progress</small></span></button>}
  {(open||inline)&&<div className={inline?"profileAnalyticsInline":"profileAnalyticsShade"} role={inline?undefined:"presentation"} onClick={inline?undefined:()=>setOpen(false)}><section className="profileAnalyticsPanel" role={inline?"region":"dialog"} aria-modal={inline?undefined:true} aria-label="Your activity analytics" onClick={e=>e.stopPropagation()}>
  <header><div><small>YOUR ACTIVITY</small><h2>Analytics</h2></div>{!inline&&<button type="button" onClick={()=>setOpen(false)} aria-label="Close analytics">✕</button>}</header>
@@ -85,12 +62,10 @@ export default function ProfileAnalytics({inline=false,userId}:{inline?:boolean;
  <div className="profileAnalyticsStats"><div><strong>{fmt(todaySeconds)}</strong><span>Today</span></div><div><strong>{fmt(week)}</strong><span>Last 7 days</span></div></div>
  <h4>Pages visited · last 7 days</h4>{topPages.length?topPages.map(([p,t])=><div className="profileAnalyticsRow" key={p}><Link className="profileAnalyticsPageLink" href={p.startsWith("/")&&!p.startsWith("//")&&!p.includes("\\")?p:"/"} title={`Open ${p}`}><span>{p==="/"? "Home":p.replaceAll("/"," / ")}</span><ArrowIcon/></Link><b>{fmt(t)}</b></div>):<p className="profileAnalyticsMuted">Screen time will appear as you use 1Muslim after this update.</p>}
  <div className="profileAnalyticsGraphActions"><button type="button" onClick={()=>void reload()} disabled={loading} aria-label="Refresh Qur’an completion graph"><RefreshIcon/>{loading?"Refreshing…":"Refresh graph"}</button>{refreshedAt&&<small>Updated {refreshedAt}</small>}</div>{refreshError&&<p className="profileAnalyticsResetError" role="alert">{refreshError}</p>}
- <QuranCompletionGraph readings={readings} loading={loading}/>
- <div className="profileAnalyticsProgressHeading"><h3>Qur’an progress <small>synced across devices · unique verses per reading journey</small></h3><button type="button" onClick={()=>setResetConfirm(true)} disabled={resetBusy}>↻ Start over</button></div>
+ <QuranIntelligenceDashboard readings={readings} loading={loading} userId={userId}/>
+ <div className="profileAnalyticsProgressHeading"><h3>Reading journey controls <small>Only your Qur’an activity is affected by a reset.</small></h3><button type="button" onClick={()=>setResetConfirm(true)} disabled={resetBusy}>↻ Start new journey</button></div>
  {resetConfirm&&<div className="profileAnalyticsResetConfirm" role="group" aria-label="Confirm reset Qur’an progress"><strong>Start a new reading journey?</strong><p>This clears your saved verse history and completion graph across devices. Screen time and other profile information remain unchanged. This cannot be undone.</p><div><button type="button" onClick={()=>setResetConfirm(false)} disabled={resetBusy}>Cancel</button><button type="button" onClick={()=>void resetReading()} disabled={resetBusy}>{resetBusy?"Resetting…":"Reset reading progress"}</button></div></div>}{resetError&&<p role="alert" className="profileAnalyticsResetError">{resetError}</p>}
- <div className="profileAnalyticsStats"><div><strong>{uniqueVerses.toLocaleString()}</strong><span>Unique verses logged</span></div><div><strong>{chart.reduce((n,x)=>n+x.count,0)}</strong><span>Verses · last 7 days</span></div></div>
- <h4>Daily verses read</h4><div className="profileAnalyticsChart" role="img" aria-label="Verses read each day over the last seven days">{chart.map(x=><div className="profileAnalyticsBarSlot" key={x.date}><b>{x.count}</b><div className="profileAnalyticsBarTrack"><i style={{height:`${Math.max(x.count?6:2,x.count/max*100)}%`}}/></div><small>{new Date(x.date+"T12:00:00").toLocaleDateString(undefined,{weekday:"short"})}</small></div>)}</div>
- {loading&&<p className="profileAnalyticsMuted">Loading reading history…</p>}<p className="profileAnalyticsMuted">Reading counts come from saved Qur’an activity. Screen time is recorded on this device only, starting with this release.</p>
+ {loading&&<p className="profileAnalyticsMuted">Loading reading history…</p>}<p className="profileAnalyticsMuted">Qur’an Intelligence uses your real saved verse activity. Starred verse shortcuts are currently stored on this device; reading progress remains synced. Screen time is tracked on this device only.</p>
  <a className="profileAnalyticsLink" href="/quran-library">Open Qur’an Library →</a>
  {userId&&<div className="profileAnalyticsJourney" aria-label="Member journey insights"><ProfileMemberStats userId={userId}/></div>}
  </section></div>}
