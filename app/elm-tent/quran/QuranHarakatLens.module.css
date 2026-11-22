@@ -1,0 +1,40 @@
+.controls{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:5px 0 2px;position:relative;z-index:3}
+.microToggle{display:inline-flex!important;gap:8px;align-items:center;justify-content:center;width:auto!important;height:auto!important;min-height:31px!important;padding:6px 12px!important;border:1px solid rgba(176,185,181,.6)!important;border-radius:100px!important;background:rgba(255,255,255,.1)!important;color:inherit!important;font:600 11px/1.25 system-ui,-apple-system,sans-serif!important;letter-spacing:.015em;box-shadow:0 1px 6px #0000000e;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+.microToggle:hover,.microToggle:focus-visible{border-color:#d5b370!important;background:rgba(255,255,255,.17)!important}
+.microToggle:active{transform:scale(.97)}
+.microToggle>span:first-child{font-size:16px;line-height:1;color:#deb975}
+.microActive{border-color:color-mix(in srgb,var(--theme-primary,#c59a55) 58%,#dec789)!important;background:color-mix(in srgb,var(--theme-primary,#365f55) 15%,transparent)!important}
+.hint{font:500 10px/1.5 system-ui,-apple-system,sans-serif;opacity:.75;text-align:center;max-width:220px}
+.wordSlot{display:inline;white-space:pre-wrap}
+.wordButton{display:inline!important;min-width:0!important;width:auto!important;height:auto!important;min-height:0!important;max-width:none!important;margin:0!important;padding:.015em .075em!important;border:0!important;border-radius:.22em!important;background:transparent!important;color:inherit!important;font:inherit!important;line-height:inherit!important;letter-spacing:inherit!important;text-shadow:inherit!important;cursor:zoom-in;box-shadow:none!important;touch-action:pan-y}
+.wordButton:hover,.wordButton:focus-visible{outline:1px solid rgba(220,182,110,.72);outline-offset:1px;background:rgba(223,192,127,.12)!important}
+.wordSelected{outline:1.5px solid #d4a54f!important;outline-offset:1px!important;background:rgba(220,175,94,.16)!important;text-shadow:0 0 14px #dcb77855!important}
+.card{width:min(100%,450px);max-height:min(39dvh,315px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;margin:10px auto 9px;padding:14px;border:1px solid color-mix(in srgb,var(--theme-primary,#c99e64) 23%,#d5e1de);border-radius:17px;background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(247,251,249,.98));color:#183b39;box-shadow:0 15px 34px #010c1438,0 0 0 1px #fff9 inset;position:relative;z-index:8;animation:expand .22s cubic-bezier(.16,.85,.3,1) both;text-shadow:none!important;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;isolation:isolate;color-scheme:light}
+.card *{box-sizing:border-box}
+.cardHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.cardHeader>div{display:flex;flex-direction:column;gap:3px}
+.cardHeader small{font-size:9px;font-weight:800;letter-spacing:.13em;color:#7f9b93}
+.cardHeader strong{font-size:15px;line-height:1.2;letter-spacing:-.025em;color:#163a39}
+.close{border:1px solid #e0e6e3!important;color:#566e6b!important;background:#f3f6f5!important;border-radius:50%!important;font-size:19px!important;width:27px!important;height:27px!important;min-width:27px!important;min-height:27px!important;display:grid!important;place-items:center!important;padding:0!important;cursor:pointer}
+.magnify{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0;min-height:72px;padding:4px 7px 10px;font:normal clamp(42px,8vw,58px)/1.65 "Noto Naskh Arabic","Amiri",serif!important;color:#1f3943;text-shadow:none!important}
+.magnify span{white-space:pre;transition:color .25s,filter .25s,transform .25s}
+.focusCluster{color:#bd8a32;filter:drop-shadow(0 1px 4px #e4b46835);transform:scale(1.12)}
+.markList{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px;margin:5px 0}
+.markList button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:0!important;width:auto!important;height:auto!important;min-height:37px!important;padding:6px 9px!important;border:1px solid #e1e8e5!important;border-radius:10px!important;background:#f8fbfa!important;color:#486866!important;font:700 11px/1.2 system-ui,-apple-system,sans-serif!important;cursor:pointer}
+.markList button span{font:normal 23px/1 serif;color:#9b782e}
+.markList .markChosen{border-color:#d5ad5e!important;background:#fff5e2!important;color:#5c4724!important;box-shadow:0 2px 9px #cdac7044!important}
+.explanation{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(110deg,#f3f8f6,#fdfbf6);border:1px solid #e1eae4;border-radius:12px;padding:10px}
+.lessonSound{font-size:11px;font-weight:850;color:#8a6530;border:1px solid #e8d8bd;background:#fff7e8;border-radius:8px;padding:7px;white-space:nowrap}
+.explanation>span:nth-child(2){display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.explanation strong{font-size:12px;color:#244e49}
+.explanation small{font-size:11px;line-height:1.35;color:#5e7972}
+.explanation b{font:normal 17px/1.3 serif;color:#2a5149;white-space:nowrap}
+.wordMeaning{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-size:12px;color:#677d78;margin:2px 0 9px}
+.wordMeaning strong{font-size:13px;color:#294943}
+.cardFooter{margin-top:9px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.cardFooter small{font-size:9px;line-height:1.4;color:#8b9b98;flex:1 1 180px}
+.cardFooter button{width:auto!important;height:auto!important;min-height:31px!important;border:1px solid #c8d8d1!important;border-radius:100px!important;background:#eaf4f0!important;color:#225848!important;font:700 11px/1.25 system-ui,-apple-system,sans-serif!important;padding:8px 11px!important;white-space:nowrap;cursor:pointer}
+.noMarks{font-size:11px;line-height:1.5;text-align:center;color:#697e77;margin:4px 0 10px!important}
+@keyframes expand{from{opacity:0;transform:translateY(7px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:760px){.card{max-height:min(34dvh,245px);padding:10px 12px}.magnify{min-height:58px;padding:2px 8px 5px}.markList button{min-height:34px!important}.explanation b{font-size:15px}.controls{margin:2px 0}.hint{font-size:9px}.cardFooter small{flex-basis:120px}}
+@media(prefers-reduced-motion:reduce){.card{animation:none}.magnify span,.microToggle{transition:none}}
