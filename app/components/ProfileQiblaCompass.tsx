@@ -2,6 +2,7 @@
 
 import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
+import {magneticField} from "magvar";
 import "./profile-qibla-navigation.css";
 
 const MAKKAH={latitude:21.422487,longitude:39.826206};
@@ -39,20 +40,34 @@ export default function ProfileQiblaCompass({motionPermission=null}:{motionPermi
  const lastPaint=useRef(0);
 
  const bearing=useMemo(()=>coords?bearingToKaaba(coords.latitude,coords.longitude):null,[coords]);
+ const geomagnetic=useMemo(()=>{
+  if(!coords)return null;
+  const currentYear=new Date().getUTCFullYear();
+  if(currentYear<2025||currentYear>=2030)return null; // Never silently extrapolate an expired model.
+  try{
+   const model=magneticField(coords.latitude,coords.longitude,0,new Date());
+   return Number.isFinite(model.declination)&&Number.isFinite(model.h)
+    ?{declination:model.declination,horizontalField:model.h}:null;
+  }catch{return null}
+ },[coords]);
+ const declination=geomagnetic?.declination??null;
+ const weakField=geomagnetic!==null&&geomagnetic.horizontalField<5000;
  const live=sensorActive&&heading!==null;
- // DeviceOrientation exposes a magnetic/world-frame orientation, not verified true north.
- // We keep a true-north GPS bearing distinct and mark turns as estimated.
- const turn=bearing===null||!live?null:((bearing-heading!+540)%360)-180;
+ // Apple WebKit compass and world-frame orientation reference magnetic north.
+ // WMM2025 supplies the local east-positive magnetic variation; apply once to
+ // convert the sensor heading into true-north heading before computing the turn.
+ const trueHeading=live&&declination!==null?wrap(heading!+declination):null;
+ const turn=bearing===null||trueHeading===null?null:((bearing-trueHeading+540)%360)-180;
  const delta=turn===null?null:Math.abs(turn);
- const poorAccuracy=sensorAccuracy!==null&&sensorAccuracy>22;
- const aligned=delta!==null&&delta<=6&&!poorAccuracy&&sensorAccuracy!==null&&sensorAccuracy<=12;
+ const poorAccuracy=weakField||(sensorAccuracy!==null&&sensorAccuracy>22);
+ const aligned=delta!==null&&delta<=6&&!poorAccuracy&&declination!==null&&sensorAccuracy!==null&&sensorAccuracy<=12;
  const approximate=delta!==null&&delta<=10&&!aligned;
- const northOffset=live?heading!:0;
+ const northOffset=trueHeading??(live?heading!:0);
  const kaabaAngle=bearing===null?null:wrap(bearing-northOffset);
  const marker=kaabaAngle===null?null:point(kaabaAngle,126);
  const ray=kaabaAngle===null?null:point(kaabaAngle,103);
  const sector=kaabaAngle===null?null:[point(kaabaAngle-8,108),point(kaabaAngle+8,108)];
- const turnLabel=turn===null?"Enable compass for live guidance":aligned?"Aligned toward Qibla":approximate?"Nearly aligned":turn>0?`Turn ~${Math.round(turn)}° clockwise`:`Turn ~${Math.round(-turn)}° counterclockwise`;
+ const turnLabel=turn===null?live?"Calibrating north reference":"Enable compass for live guidance":aligned?"Aligned toward Qibla":approximate?"Nearly aligned":turn>0?`Turn ~${Math.round(turn)}° clockwise`:`Turn ~${Math.round(-turn)}° counterclockwise`;
  const locationHint=coords?.accuracy!==undefined?coords.accuracy>=1500?`Location is approximate (±${Math.round(coords.accuracy/1000)} km).`:`Location accuracy ±${Math.round(coords.accuracy)} m`:"";
 
  const locate=()=>{
@@ -153,7 +168,7 @@ export default function ProfileQiblaCompass({motionPermission=null}:{motionPermi
     <button type="button" className="qcnInfo" aria-label={detailsOpen?"Hide compass guidance":"Show compass guidance"} aria-expanded={detailsOpen} onClick={()=>setDetailsOpen(v=>!v)}>i</button>
    </div>
    <div className="qcnStatusRow">
-    <span className={"qcnLivePill"+(live?" is-live":"")}><i aria-hidden="true"/>{live?"LIVE COMPASS":sensorWaiting?"CONNECTING":"NORTH REFERENCE"}</span>
+    <span className={"qcnLivePill"+(live?" is-live":"")}><i aria-hidden="true"/>{live?(declination!==null?"TRUE NORTH · LIVE":"MAGNETIC · LIVE"):sensorWaiting?"CONNECTING":"NORTH REFERENCE"}</span>
     <span className="qcnLocationPill" title={locationHint}>{coords?"⌖ Device location":"⌖ Location needed"}</span>
    </div>
    <div className="qcnCompassWrap">
@@ -212,7 +227,7 @@ export default function ProfileQiblaCompass({motionPermission=null}:{motionPermi
    </div>
    <div className="qcnReadouts" aria-label="Navigation measurements">
     <div><span>QIBLA</span><strong>{bearing===null?"—":`${Math.round(bearing)}° ${compassPoint(bearing)}`}</strong><small>True north</small></div>
-    <div><span>PHONE</span><strong>{live?`${Math.round(heading!)}°`:"—"}</strong><small>{live?"Sensor north":"Awaiting sensor"}</small></div>
+    <div><span>PHONE</span><strong>{trueHeading!==null?`${Math.round(trueHeading)}°`:live?"≈"+Math.round(heading!)+"°":"—"}</strong><small>{trueHeading!==null?"WMM true north":live?"Magnetic north":"Awaiting sensor"}</small></div>
     <div><span>TURN</span><strong>{turn===null?"—":`${Math.round(Math.abs(turn))}°`}</strong><small>{turn===null?"—":Math.abs(turn)<=6?"Near target":turn>0?"Clockwise ↻":"↺ Counterclockwise"}</small></div>
    </div>
    <div className="qcnControls">
@@ -224,7 +239,9 @@ export default function ProfileQiblaCompass({motionPermission=null}:{motionPermi
    {sensorError&&<p className="qcnAlert" role="status">{sensorError}</p>}
    {detailsOpen&&<div className="qcnDetails">
     <strong>About direction accuracy</strong>
-    <p>The Qibla bearing is calculated from your device's geographic location to the Kaaba using the great-circle route. Phone compass sensors may reference magnetic rather than true north; small turn angles are estimates until magnetic declination is corrected. This web compass cannot verify exact alignment.</p>
+    <p>The Qibla bearing follows the great-circle route from the phone's GPS position to the Kaaba. WMM2025 converts magnetic device heading to true north using magnetic declination for your current location and date. Hardware interference, permission and sensor calibration can still affect alignment accuracy.</p>
+    {declination!==null&&<p>Local magnetic variation: {declination>=0?"+":""}{declination.toFixed(1)}° ({declination>=0?"east":"west"}). Source: NOAA/UK World Magnetic Model 2025–2030. Sensor: {sensorSource==="magnetic"?"iOS magnetic heading":sensorSource==="absolute"?"absolute device orientation":"not connected"}.</p>}
+    {weakField&&<p>Weak horizontal magnetic field detected. Exact phone alignment may be unreliable in this region.</p>}
     {locationHint&&<p>{locationHint}</p>}
     {sensorAccuracy!==null&&<p>Reported sensor accuracy: ±{Math.round(sensorAccuracy)}°. {poorAccuracy?"Recalibrate before using live guidance.":""}</p>}
     <p>Keep the phone flat and away from metal, magnets and electronic interference. On iPhone, motion access requires a tap. If the compass is unavailable, use the geographic bearing and a calibrated compass.</p>
