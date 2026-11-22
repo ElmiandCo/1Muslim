@@ -1,5 +1,6 @@
 "use client";
 import { useState, type ReactNode } from "react";
+import {EmoTextContent} from "./EmoTexts";
 const pattern = /(🔥|💚|❤️|😂|🤲|✨|🥹|🏆|🌙|🎉|👀|💯|😍|👏|😮|😭|🕊️|⭐|💥|🎊|🤩|😎|😅|🤯|💫|🙌|💪|🌹|💖|💐|☪️)/gu;
 const styles: Record<string,string> = {
 "🔥":"flame","💚":"heart","❤️":"heart","💖":"heart","😍":"heart","😂":"laugh","😅":"laugh",
@@ -17,5 +18,5 @@ export function AnimatedEmoji({emoji}:{emoji:string}){
  </span>;
 }
 export default function ExpressiveText({text}:{text:string}):ReactNode{
- return <>{text.split(pattern).map((part,i)=>styles[part]?<AnimatedEmoji key={i} emoji={part}/>:part)}</>;
+ return <>{text.split(pattern).map((part,i)=>styles[part]?<AnimatedEmoji key={i} emoji={part}/>:<EmoTextContent key={i} text={part}/>)}</>;
 }
