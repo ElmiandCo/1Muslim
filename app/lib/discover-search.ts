@@ -36,17 +36,46 @@ function knowledgeResults(q:string): DiscoverItem[] {
   return KNOWLEDGE.filter(row => !term || row.tokens.some(token=>token.includes(term)||term.includes(token)||(words.length>1&&words.includes(token))))
     .map(row=>({id:"guide:"+row.href,kind:row.href.includes("prayer")?"Prayer":row.href.includes("quran")?"Qur’an":"Lessons",title:row.title,description:row.description,href:row.href,score:relevance(q,row.title,row.description,5),media:"text"}));
 }
-async function quranTranslations(q:string): Promise<{key:string;text:string}[]> {
+async function quranTranslations(q:string): Promise<{key:string;text:string;source:string}[]> {
   if (q.trim().length<2) return [];
+  const direct=/\b(\d{1,3}):(\d{1,3})\b/.exec(q);
+  if(direct&&Number(direct[1])>=1&&Number(direct[1])<=114&&Number(direct[2])>=1) {
+    try{
+      const key=direct[1]+":"+direct[2];
+      const r=await fetch("https://api.alquran.cloud/v1/ayah/"+key+"/en.asad",{signal:AbortSignal.timeout(4800),next:{revalidate:86400}});
+      if(r.ok){
+        const data=await r.json();
+        if(data?.code===200&&typeof data.data?.text==="string")
+          return [{key,text:compact(data.data.text,310),source:"Muhammad Asad · English translation"}];
+      }
+    }catch{}
+  }
   try {
     const url="https://api.quran.com/api/v4/search?"+new URLSearchParams({q,language:"en",size:"14",page:"1"});
     const response=await fetch(url,{signal:AbortSignal.timeout(5500),next:{revalidate:600}});
     if(!response.ok) return [];
     const body=await response.json();
     const results=Array.isArray(body?.search?.results)?body.search.results:[];
-    return results.map((x:{verse_key?:string;text?:string;highlighted?:string})=>({key:String(x.verse_key||""),text:compact(x.text||x.highlighted||"",270)}))
+    return results.map((x:{verse_key?:string;text?:string;highlighted?:string})=>({key:String(x.verse_key||""),text:compact(x.text||x.highlighted||"",310),source:"Qur’an.com · English search"}))
       .filter((x:{key:string;text:string})=>/^\d{1,3}:\d{1,3}$/.test(x.key)&&x.text.length>0);
   } catch { return []; }
+}
+async function quranChapters(q:string):Promise<Array<{id:number;title:string;translated:string;verses:number}>> {
+  if(q.trim().length<2)return [];
+  try {
+    const response=await fetch("https://api.quran.com/api/v4/chapters?language=en",{signal:AbortSignal.timeout(4700),next:{revalidate:86400}});
+    if(!response.ok)return [];
+    const body=await response.json();
+    const chapters=Array.isArray(body?.chapters)?body.chapters:[];
+    const query=q.toLowerCase().replace(/^surah\s+/,"").trim();
+    return chapters.filter((chapter:{id:number;name_simple:string;translated_name?:{name:string}})=>
+      String(chapter.name_simple||"").toLowerCase().includes(query) ||
+      String(chapter.translated_name?.name||"").toLowerCase().includes(query) ||
+      (q.toLowerCase().startsWith("surah ")&&String(chapter.id)===query))
+      .slice(0,12).map((chapter:{id:number;name_simple:string;translated_name?:{name:string};verses_count:number})=>({
+        id:chapter.id,title:chapter.name_simple,translated:chapter.translated_name?.name||"",verses:chapter.verses_count
+      }));
+  }catch{return [];}
 }
 export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverResponse> {
   const query=compact(rawQuery,90);
@@ -75,7 +104,8 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
     active?db.from("qibla_pages").select("id,title,hero_media_path,template_type").eq("published",true).ilike("title",pattern).limit(12):Promise.resolve(base()),
     active?db.from("live_streams").select("id,title,category,status,created_at").eq("visibility","public").eq("status","live").or("title.ilike."+pattern+",category.ilike."+pattern).limit(10):
       db.from("live_streams").select("id,title,category,status,created_at").eq("visibility","public").eq("status","live").order("created_at",{ascending:false}).limit(8),
-    quranTranslations(query)
+    quranTranslations(query),
+    quranChapters(query)
   ]);
   const get=(i:number):any[]=>{
     const settled=tasks[i];if(!settled||settled.status!=="fulfilled")return [];
@@ -130,7 +160,9 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
   for(const live of get(8))add({id:live.id,kind:"Live",title:compact(live.title,120),description:compact(live.category||"Join the conversation",190),
     href:"/streaming/live/"+encodeURIComponent(live.id),badge:"● LIVE",score:relevance(query,live.title||"",live.category||"",11),timestamp:live.created_at});
   for(const verse of get(9))add({id:verse.key,kind:"Qur’an",title:"Qur’an "+verse.key,description:verse.text,
-    href:"/elm-tent/quran?verse="+encodeURIComponent(verse.key),byline:"English translation · Qur’an.com search",badge:"VERSE",score:relevance(query,verse.text,verse.key,9),media:"text"});
+    href:"/elm-tent/quran?verse="+encodeURIComponent(verse.key),byline:verse.source,badge:"VERSE · ENGLISH",score:relevance(query,verse.text,verse.key,9),media:"text"});
+  for(const chapter of get(10))add({id:"surah:"+chapter.id,kind:"Qur’an",title:"Surah "+chapter.title,description:chapter.translated+" · "+chapter.verses+" ayahs",
+    href:"/elm-tent/quran?chapter="+encodeURIComponent(chapter.id),byline:"The Holy Qur’an",badge:"SURAH",score:relevance(query,chapter.title,chapter.translated,15),media:"text"});
   for(const guide of knowledgeResults(query))add(guide);
   const unique=new Set<string>();
   for(const category of DISCOVER_CATEGORIES) {
