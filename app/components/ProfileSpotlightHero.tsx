@@ -19,6 +19,6 @@ export default function ProfileSpotlightHero({userId}:{userId:string}){
  return <section className="profileSpotlightHero" aria-label="Member Spotlight">
   <div className="spotlightHeroHeader"><div><span>✦ 1M SIGNATURE SPOTLIGHT</span><strong>{spotlight.title||"My Spotlight"}</strong></div><span className="spotlightHeroStar" aria-hidden="true">✧</span></div>
   <div className="spotlightHeroMedia"><ProfilePublicMedia url={spotlight.media_url} kind={spotlight.media_kind} title={spotlight.title}/></div>
-  {spotlight.caption?.trim()&&<p>{spotlight.caption}</p>}
+  {spotlight.caption?.trim()&&<p className="spotlightHeroCaption" dir="auto">{spotlight.caption}</p>}
  </section>;
 }
