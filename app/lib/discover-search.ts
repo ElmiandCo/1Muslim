@@ -1,4 +1,5 @@
 import { createClient } from "../../utils/supabase/server";
+import {publicMemberId,publicMemberName} from "./member-id-visibility";
 
 export type DiscoverKind = "Videos" | "Posts" | "People" | "Movies & Series" | "Qur’an" | "Comments" | "Lessons" | "Prayer" | "Live" | "Qibla";
 export type DiscoverItem = {
@@ -118,8 +119,8 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
   const tasks=await Promise.allSettled([
     active?db.from("ummah_feed_posts").select("id,author_id,body,created_at").ilike("body",pattern).order("created_at",{ascending:false}).limit(40):
       db.from("ummah_feed_posts").select("id,author_id,body,created_at").order("created_at",{ascending:false}).limit(16),
-    active?db.from("profiles").select("id,display_name,username,avatar_url,bio,xp_total").or("display_name.ilike."+pattern+",username.ilike."+pattern+",bio.ilike."+pattern).limit(20):
-      db.from("profiles").select("id,display_name,username,avatar_url,bio,xp_total").order("xp_total",{ascending:false}).limit(8),
+    active?db.from("profiles").select("id,display_name,username,hide_1muslim_id,avatar_url,bio,xp_total").or("display_name.ilike."+pattern+",username.ilike."+pattern+",bio.ilike."+pattern).limit(20):
+      db.from("profiles").select("id,display_name,username,hide_1muslim_id,avatar_url,bio,xp_total").order("xp_total",{ascending:false}).limit(8),
     active?db.from("islamic_video_registry").select("video_id,title,description,channel_title,thumbnail_url,content_type,series_id,cover_url,categories,published_at").eq("status","approved").or("title.ilike."+pattern+",description.ilike."+pattern+",channel_title.ilike."+pattern+",canonical_title.ilike."+pattern).limit(35):
       db.from("islamic_video_registry").select("video_id,title,description,channel_title,thumbnail_url,content_type,series_id,cover_url,categories,published_at").eq("status","approved").order("discovered_at",{ascending:false}).limit(18),
     active?db.from("deepwatch_series").select("id,canonical_title,synopsis,cover_url,language").eq("status","approved").or("canonical_title.ilike."+pattern+",synopsis.ilike."+pattern).limit(16):Promise.resolve(base()),
@@ -168,7 +169,7 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
   const posts=get(0), postIds=posts.map(p=>p.id);
   // Populate author names for matching posts even when the creator's name wasn't part of the query.
   const missingAuthorIds=[...new Set(posts.map(p=>p.author_id).filter((id:string)=>!!id&&!authors.some(a=>a.id===id)))];
-  const extraAuthors=missingAuthorIds.length?await db.from("profiles").select("id,display_name,username,avatar_url").in("id",missingAuthorIds.slice(0,40)):base();
+  const extraAuthors=missingAuthorIds.length?await db.from("profiles").select("id,display_name,username,hide_1muslim_id,avatar_url").in("id",missingAuthorIds.slice(0,40)):base();
   const byAuthor=new Map([...authors,...(extraAuthors.data||[])].map(p=>[p.id,p]));
   const mediaQuery=postIds.length ? await db.from("post_media").select("post_id,community_post_id,storage_path,mime_type").in("community_post_id",postIds).limit(120):base();
   const byMedia=new Map<string,{storage_path:string;mime_type:string}>();
@@ -181,12 +182,17 @@ export async function searchDirectory(db:DB, rawQuery:string):Promise<DiscoverRe
     const isVideo=type==="video"||/youtu(?:\.be|be\.com)/i.test(p.body||"");
     const author=byAuthor.get(p.author_id);
     add({id:p.id,kind:isVideo?"Videos":"Posts",title:compact(p.body,105)||"Ummah post",description:compact(p.body,240)||"Shared with the Ummah",
-      href:"/posts/story/"+encodeURIComponent(p.id),image,byline:author?.display_name||author?.username||"1Muslim creator",media:type,
+      href:"/posts/story/"+encodeURIComponent(p.id),image,byline:publicMemberName(author),media:type,
       badge:isVideo?"VIDEO":type==="image"?"PHOTO":"POST",score:relevance(query,p.body||"","Ummah post",isVideo?8:3),timestamp:p.created_at});
   }
-  for(const p of authors) add({id:p.id,kind:"People",title:compact(p.display_name||p.username||"1Muslim member",90),description:compact(p.bio||"1Muslim member",130),
-    href:"/profile?member="+encodeURIComponent(p.id),image:publicLink(p.avatar_url),byline:p.username?"@"+p.username:"Member",
-    badge:Number.isFinite(p.xp_total)?Number(p.xp_total).toLocaleString()+" XP":"MEMBER",score:relevance(query,p.display_name||p.username||"",p.username||"",4)});
+  for(const p of authors) {
+    // Searching for an opted-out handle must not reveal or locate that ID.
+    const searchable=(p.display_name||"")+" "+(p.hide_1muslim_id?"":p.username||"")+" "+(p.bio||"");
+    if(active&&!termMatches(searchable,term))continue;
+    add({id:p.id,kind:"People",title:compact(publicMemberName(p),90),description:compact(p.bio||"1Muslim member",130),
+      href:"/profile?member="+encodeURIComponent(p.id),image:publicLink(p.avatar_url),byline:publicMemberId(p)||"Member",
+      badge:Number.isFinite(p.xp_total)?Number(p.xp_total).toLocaleString()+" XP":"MEMBER",score:relevance(query,publicMemberName(p),p.hide_1muslim_id?"":p.username||"",4)});
+  }
   const discoveredVideos=[...get(2),...get(11)];
   const seenVideos=new Set<string>();
   for(const v of discoveredVideos) {
