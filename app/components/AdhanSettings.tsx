@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { createClient } from "../../utils/supabase/client";
-import LocationPreferences, { readLocation } from "./LocationPreferences";
+import LocationPreferences, { detectPrayerLocation, persistPrayerLocation, readLocation } from "./LocationPreferences";
 import {
   ADHAN_PRAYERS, ADHAN_PREVIEW_EVENT, ADHAN_STOP_EVENT,
   DEFAULT_ADHAN_PREFERENCES, type AdhanPreferences, type AdhanPrayer, type AdhanLocation,
@@ -35,6 +35,7 @@ export default function AdhanSettings({
   const [completed, setCompleted] = useState(false);
   const [editing, setEditing] = useState(false);
   const [locationEditor, setLocationEditor] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [finishing, setFinishing] = useState(false);
@@ -97,7 +98,7 @@ export default function AdhanSettings({
   }, [location?.city, location?.state, location?.country]);
 
   const hasLocation = Boolean(place.city.trim() && place.country.trim());
-  const placeLabel = [place.city, place.state, place.country].filter(Boolean).join(", ");
+  const placeLabel = [place.state, place.country].filter(Boolean).join(" · ");
   const chosenPrayers = ADHAN_PRAYERS.filter(prayer => prefs.prayers[prayer]);
   const update = (patch: Partial<AdhanPreferences>) => { setPrefs(previous => ({ ...previous, ...patch })); setError(""); };
   const togglePrayer = (prayer: AdhanPrayer) => update({ prayers: { ...prefs.prayers, [prayer]: !prefs.prayers[prayer] } });
@@ -146,17 +147,31 @@ export default function AdhanSettings({
     } finally { setBusy(false); }
   };
 
+  const autoLocate = async () => {
+    if (locating) return;
+    setLocating(true); setError("");
+    try {
+      const next = await detectPrayerLocation();
+      await persistPrayerLocation(next);
+      locationSaved(next);
+      setNotice("Prayer location updated.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not detect your location.");
+    } finally { setLocating(false); }
+  };
+
   const locationSection = <div className="adhanSection" key="location">
-    <div className="adhanSectionHeading"><span className="adhanSectionNumber">01</span><div><h4>Saved prayer location</h4><p>Prayer times are calculated for your selected city.</p></div></div>
+    <div className="adhanSectionHeading"><span className="adhanSectionNumber">01</span><div><h4>Prayer location</h4><p>Detect once. Only state and country are shown here.</p></div></div>
     {hasLocation && !locationEditor ? <div className="adhanLocationSummary">
       <span className="adhanLocationMark" aria-hidden="true">⌖</span>
-      <div><strong>{placeLabel}</strong><small>City-level prayer schedule</small></div>
-      <button type="button" onClick={() => setLocationEditor(true)}>Change</button>
+      <div><strong>{placeLabel}</strong><small>City retained for accurate prayer times</small></div>
+      <button type="button" className="adhanAutoLocate" disabled={locating} onClick={() => void autoLocate()} aria-label="Update prayer location automatically">{locating ? "Locating…" : "⌖ Auto"}</button>
+      <button type="button" className="adhanEditLocation" onClick={() => setLocationEditor(true)} aria-label="Edit prayer location manually">Edit</button>
     </div> : <LocationPreferences onSaved={locationSaved} />}
   </div>;
 
   const methodSection = <div className="adhanSection" key="method">
-    <div className="adhanSectionHeading"><span className="adhanSectionNumber">02</span><div><h4>Calculation method</h4><p>Use the convention recommended for your region or mosque.</p></div></div>
+    <div className="adhanSectionHeading"><span className="adhanSectionNumber">02</span><div><h4>Prayer convention</h4><p>Follow your mosque’s method.</p></div></div>
     <label className="adhanMethodField" htmlFor="adhan-method">Prayer time convention
       <select id="adhan-method" value={prefs.method} onChange={event => update({ method: event.target.value as AdhanPreferences["method"] })}>
         {METHODS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
@@ -165,7 +180,7 @@ export default function AdhanSettings({
   </div>;
 
   const prayerSection = <div className="adhanSection" key="prayers">
-    <div className="adhanSectionHeading"><span className="adhanSectionNumber">03</span><div><h4>Choose your prayers</h4><p>Receive an Adhan for the prayer times you select.</p></div></div>
+    <div className="adhanSectionHeading"><span className="adhanSectionNumber">03</span><div><h4>Prayers</h4><p>Tap to include or skip</p></div></div>
     <div className="adhanPrayerChoice" role="group" aria-label="Choose prayers for Adhan">
       {ADHAN_PRAYERS.map(prayer => <label key={prayer} className={"adhanPrayerCheck" + (prefs.prayers[prayer] ? " selected" : "")}>
         <input type="checkbox" checked={prefs.prayers[prayer]} onChange={() => togglePrayer(prayer)} />
@@ -175,24 +190,27 @@ export default function AdhanSettings({
   </div>;
 
   const soundSection = <div className="adhanSection" key="sound">
-    <div className="adhanSectionHeading"><span className="adhanSectionNumber">04</span><div><h4>Sound & reminders</h4><p>Control when the Adhan plays and preview the recitation.</p></div></div>
+    <div className="adhanSectionHeading"><span className="adhanSectionNumber">04</span><div><h4>Adhan sound</h4><p>Choose the volume</p></div></div>
     <label className="adhanSwitchRow"><span><strong>Adhan reminders</strong><small>{prefs.enabled ? "Active while the site is open" : "Reminders are paused"}</small></span>
       <input type="checkbox" role="switch" checked={prefs.enabled} onChange={event => update({ enabled: event.target.checked })} />
       <span className="adhanSwitchVisual" aria-hidden="true" />
     </label>
-    <div className="adhanSoundPanel">
+    <div className="adhanSoundPanel adhanSoundCompact">
       <div className="adhanAudioActions">
-        <div><span className="adhanSoundIcon" aria-hidden="true">♫</span><span><strong>Adhan preview</strong><small>Listen before saving</small></span></div>
-        <div><button type="button" aria-label="Play Adhan sample" onClick={() => window.dispatchEvent(new CustomEvent(ADHAN_PREVIEW_EVENT, { detail: { volume: prefs.volume } }))}>▶ Preview</button>
-        <button type="button" aria-label="Stop Adhan preview" onClick={() => window.dispatchEvent(new Event(ADHAN_STOP_EVENT))}>■ Stop</button></div>
+        <div><span className="adhanSoundIcon" aria-hidden="true">♫</span><span><strong>Call to prayer</strong><small>Listen or adjust</small></span></div>
+        <div className="adhanSoundControls">
+          <button type="button" className="adhanPlayTest" aria-label="Play Adhan" title="Play Adhan" onClick={() => window.dispatchEvent(new CustomEvent(ADHAN_PREVIEW_EVENT, { detail: { volume: prefs.volume } }))}>▶ <span>Play</span></button>
+          <button type="button" className="adhanStopTest" aria-label="Stop Adhan" title="Stop Adhan" onClick={() => window.dispatchEvent(new Event(ADHAN_STOP_EVENT))}>■</button>
+        </div>
       </div>
       <label className="adhanVolume">Volume
-        <input type="range" min="0" max="100" step="5" aria-label="Adhan playback volume" value={Math.round(prefs.volume * 100)}
+        <input type="range" min="0" max="100" step="1" aria-label="Adhan playback volume" value={Math.round(prefs.volume * 100)}
+          style={{ "--adhan-fill": Math.round(prefs.volume * 100) + "%" } as CSSProperties}
           onChange={event => update({ volume: Number(event.target.value) / 100 })} />
-        <span>{Math.round(prefs.volume * 100)}%</span>
+        <output>{Math.round(prefs.volume * 100)}%</output>
       </label>
     </div>
-    <p className="adhanDisclaimer">Your browser needs this site open for scheduled audio, and may require you to tap Preview first. Closed-app alerts require native push support; your device&apos;s silent settings may also limit playback.</p>
+
   </div>;
 
   const reviewSection = <div className="adhanSection" key="review">
@@ -212,7 +230,7 @@ export default function AdhanSettings({
     <div className="adhanSettingsTitle"><div><span className="adhanEyebrow">PRAYER REMINDERS · CONFIGURED</span>
       <h3>Your prayer settings</h3><p>Manage your daily rhythm whenever you need to.</p></div><span className="adhanConfiguredIndicator" aria-hidden="true">✓</span></div>
     <div className="adhanSummaryGrid">
-      <div><span>LOCATION</span><strong>{placeLabel || "Choose city"}</strong></div>
+      <div><span>LOCATION</span><strong>{placeLabel || "Set location"}</strong></div>
       <div><span>METHOD</span><strong>{methodLabel(prefs.method)}</strong></div>
       <div><span>ADHAN</span><strong>{prefs.enabled ? "On" : "Off"}</strong></div>
       <div><span>SELECTED</span><strong>{chosenPrayers.length} prayers</strong></div>
@@ -223,7 +241,7 @@ export default function AdhanSettings({
   </section>;
 
   const wizard = inPrayerPage && !completed && !editing;
-  return <section className={"adhanSettings adhanPremium" + (finishing ? " adhanFinishing" : "")} aria-label="Adhan call to prayer settings">
+  return <section className={"adhanSettings adhanPremium" + (!wizard ? " adhanCompact" : "") + (finishing ? " adhanFinishing" : "")} aria-label="Adhan call to prayer settings">
     <div className="adhanSettingsTitle">
       <div><span className="adhanEyebrow">{wizard ? "ONE-TIME SETUP · 1MUSLIM" : "PRAYER REMINDERS · SETTINGS"}</span>
         <h3>{wizard ? "Begin your prayer journey" : "Adhan preferences"}</h3>
@@ -242,7 +260,7 @@ export default function AdhanSettings({
     <div className="adhanSettingsBody">
       {wizard
         ? [locationSection, methodSection, prayerSection, soundSection, reviewSection][step]
-        : <>{locationSection}{methodSection}{prayerSection}{soundSection}</>}
+        : <><div className="adhanCompactTop">{locationSection}{methodSection}</div><div className="adhanCompactBottom">{prayerSection}{soundSection}</div></>}
     </div>
 
     {error && <p role="alert" className="adhanError">{error}</p>}
