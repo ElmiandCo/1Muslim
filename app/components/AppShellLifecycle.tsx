@@ -22,7 +22,7 @@ export default function AppShellLifecycle(){
   window.addEventListener("1muslim:profile-ready",onReady);
   if(pathname==="/profile"){
    // Keep a solid white surface during a cold auth/profile fetch.
-   const check=()=>{if(document.querySelector(".profileCommandPage, .profileEmpty.isError"))reveal()};
+   const check=()=>{if(document.querySelector(".profileCommandPage, .profileEmpty.isError, .profileEmpty.isAuth"))reveal()};
    frame=requestAnimationFrame(check);
    const observer=new MutationObserver(check);
    observer.observe(document.body,{childList:true,subtree:true});
