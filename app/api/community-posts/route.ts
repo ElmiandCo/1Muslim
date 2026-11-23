@@ -34,15 +34,19 @@ export async function GET(request:Request){
   mediaIds.length?db.from("post_media").select("post_id,storage_path,mime_type,community_post_id").in("post_id",mediaIds):Promise.resolve({data:[]}),
   posts.length?db.from("post_media").select("post_id,storage_path,mime_type,community_post_id").in("community_post_id",posts.map(p=>p.id)):Promise.resolve({data:[]})
  ]);
- const directByFeed=new Map((directAttachments||[]).map(a=>[a.community_post_id,a]));
- const attachmentByPost=new Map((attachments||[]).map(a=>[a.post_id,a]));
+ const directByFeed=new Map<string,typeof directAttachments>();
+ const attachmentByPost=new Map<string,typeof attachments>();
+ for(const asset of directAttachments||[]){if(!asset.community_post_id)continue;const existing=directByFeed.get(asset.community_post_id)||[];existing.push(asset);directByFeed.set(asset.community_post_id,existing)}
+ for(const asset of attachments||[]){if(!asset.post_id)continue;const existing=attachmentByPost.get(asset.post_id)||[];existing.push(asset);attachmentByPost.set(asset.post_id,existing)}
  // community-media is a PUBLIC Supabase Storage bucket. No per-video signing request
  // is needed: public URLs resolve through the CDN. The old path did one signing
  // network request per attachment, delaying the entire feed response.
  const bucket=db.storage.from("community-media");
  const output=posts.map(p=>{
-  const attachment=directByFeed.get(p.id)||attachmentByPost.get(links.get(p.id)||"");
-  const media_url=attachment?.storage_path?bucket.getPublicUrl(attachment.storage_path).data.publicUrl:null;
+  const assets=(directByFeed.get(p.id)||attachmentByPost.get(links.get(p.id)||"")||[]).sort((a,b)=>a.storage_path.localeCompare(b.storage_path));
+  const media_items=assets.map(a=>({url:bucket.getPublicUrl(a.storage_path).data.publicUrl,type:a.mime_type}));
+  const attachment=assets[0];
+  const media_url=media_items[0]?.url||null;
   const profile=authors.get(p.author_id);
   const config=profile?.avatar_config as Record<string,unknown>|null;
   const chosen=[config?.adminAvatarUrl,config?.customAvatarUrl,config?.selectedAvatarUrl,config?.avatarUrl].find(v=>typeof v==="string"&&/^(https:\/\/|\/assets\/avatars\/)/.test(v));
@@ -50,7 +54,7 @@ export async function GET(request:Request){
    author_name:profile?.display_name||profile?.username||"Community member",
    author_handle:profile?.username?"@"+profile.username:"@member",
    author_avatar_url:chosen||profile?.avatar_url||null,
-   media_url,media_type:attachment?.mime_type||null};
+   media_url,media_type:attachment?.mime_type||null,media_items};
  });
  return NextResponse.json({posts:output,viewer_id:auth.user?.id||null,has_more:posts.length===limit},
   {headers:{"cache-control":"private, max-age=0, no-store"}});
@@ -63,9 +67,14 @@ export async function POST(request:Request){
   const requestedTheme=typeof body.post_theme==="string"?body.post_theme:typeof user.user_metadata?.theme==="string"?user.user_metadata.theme:"emerald";
   const post_theme=validThemes.has(requestedTheme)?requestedTheme:"emerald";
   const text=typeof body.text==="string"?body.text.trim():"";
- const media=body.media&&typeof body.media.storage_path==="string"?body.media:null;
- if(media&&(!media.storage_path.startsWith(user.id+"/")||!/^((image|video)\/)\S+$/.test(media.mime_type||"")))return NextResponse.json({error:"Invalid media attachment"},{status:400});
- if((text.length<1&&!media)||text.length>2000)return NextResponse.json({error:"Write a post between 1 and 2,000 characters"},{status:400});
+ const single=body.media&&typeof body.media.storage_path==="string"?body.media:null;
+ const media_items=Array.isArray(body.media_items)?body.media_items:single?[single]:[];
+ if(media_items.length>10||media_items.some((item:unknown)=>{
+  if(!item||typeof item!=="object")return true;
+  const value=item as Record<string,unknown>;
+  return typeof value.storage_path!=="string"||!value.storage_path.startsWith(user.id+"/")||typeof value.mime_type!=="string"||!/^((image|video)\/)\S+$/.test(value.mime_type);
+ }))return NextResponse.json({error:"Invalid media attachment"},{status:400});
+ if((text.length<1&&!media_items.length)||text.length>2000)return NextResponse.json({error:"Write a post between 1 and 2,000 characters"},{status:400});
 
  const profanity=/(^|[^a-z])f[\\W_]*u[\\W_]*c[\\W_]*k(?:[\\W_]*(?:s|e[\\W_]*d|i[\\W_]*n[\\W_]*g))?(?=$|[^a-z])/i.test(text.normalize("NFKC"));
  const {data,error}=await db.from("ummah_feed_posts").insert({author_id:user.id,body:text,post_theme}).select("id,author_id,body,created_at,post_theme").single();
@@ -79,10 +88,11 @@ export async function POST(request:Request){
   if(flagError)console.error("Moderation flag could not be persisted",flagError.message);
   return NextResponse.json({post:data,flagged:true,removed:true,flagRecorded:!flagError},{status:201});
  }
- if(media){
-  // Community media belongs directly to the Ummah post. Do not create a duplicate
-  // legacy posts row: its trigger chain can fail and block an otherwise valid upload.
-  const {error:attachError}=await db.from("post_media").insert({community_post_id:data.id,user_id:user.id,storage_path:media.storage_path,file_name:String(media.file_name||"upload").slice(0,255),mime_type:media.mime_type});
+ if(media_items.length){
+  // Attach every gallery item to this single Ummah post in upload order.
+  // Do not create a duplicate legacy posts row; its triggers can fail.
+  const rows=media_items.map((media:{storage_path:string;file_name?:string;mime_type:string})=>({community_post_id:data.id,user_id:user.id,storage_path:media.storage_path,file_name:String(media.file_name||"upload").slice(0,255),mime_type:media.mime_type}));
+  const {error:attachError}=await db.from("post_media").insert(rows);
   if(attachError){await db.from("ummah_feed_posts").delete().eq("id",data.id).eq("author_id",user.id);console.error("community-media-attachment-insert",{code:attachError.code,message:attachError.message,details:attachError.details,hint:attachError.hint});return NextResponse.json({error:"Media attachment could not be published; your upload remains saved.",code:attachError.code||"MEDIA_ATTACHMENT_INSERT_FAILED"},{status:503})}
  }
  // The server awards XP only after the complete post (including media) is published.
