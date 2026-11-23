@@ -29,7 +29,6 @@ jobs:
       issues: read
     env:
       ISSUE_NUMBER: ${{ github.event.issue.number }}
-      GH_TOKEN: ${{ github.token }}
       REPOSITORY: ${{ github.repository }}
     steps:
       - name: Fetch production baseline — do not expose credentials to coding agent
@@ -41,6 +40,8 @@ jobs:
 
       - name: Create isolated bot branch and exact assignment prompt
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           branch="bot/v39-issue-${ISSUE_NUMBER}-${GITHUB_RUN_ID}"
@@ -93,6 +94,7 @@ jobs:
       - name: Validate, commit only assignment files, and open draft PR
         shell: bash
         env:
+          GH_TOKEN: ${{ github.token }}
           FINAL_MESSAGE: ${{ steps.codex.outputs.final-message }}
         run: |
           set -euo pipefail
