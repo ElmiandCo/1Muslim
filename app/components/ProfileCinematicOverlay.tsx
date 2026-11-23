@@ -37,9 +37,9 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
  };
  // The visitor's close control always closes the cinematic view, including with Escape.
  const closeView=()=>{dismissHints();onClose()};
- closeRef.current=closeView;
  const dialogTitle="Cinematic profile for "+(profile.display_name||"1Muslim member");
  const closeRef=useRef(onClose);
+ closeRef.current=closeView;
  useEffect(()=>setMounted(true),[]);
  useEffect(()=>{
   if(!mounted)return;
