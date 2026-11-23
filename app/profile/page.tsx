@@ -318,8 +318,13 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
  useEffect(()=>{
   if(!isOwner)return;
   const restore=()=>{void changeIdVisibility(false)};
+  const toggle=(event:Event)=>{
+   const hidden=(event as CustomEvent<{hidden?:boolean}>).detail?.hidden;
+   if(typeof hidden==="boolean")void changeIdVisibility(hidden);
+  };
   window.addEventListener("1muslim:show-profile-id",restore);
-  return()=>window.removeEventListener("1muslim:show-profile-id",restore);
+  window.addEventListener("1muslim:toggle-profile-id",toggle);
+  return()=>{window.removeEventListener("1muslim:show-profile-id",restore);window.removeEventListener("1muslim:toggle-profile-id",toggle)};
  },[isOwner,profile.id]);
  const hideOwnerId=()=>{void changeIdVisibility(true)};
  const [followCounts,setFollowCounts]=useState({followers:0,following:0});
@@ -358,6 +363,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
      <h1>{profile.display_name||"1Muslim Member"}</h1>
      <div className="profileEngravedXP" aria-label={profile.xp_total.toLocaleString()+" experience points"}><strong>{profile.xp_total.toLocaleString()}</strong><small>XP</small></div>
     </div>
+    {idVisibilityError&&<p role="alert" className="profileSettingsIdError">{idVisibilityError}</p>}
     {isOwner&&!idHidden&&<div className="profileOwnerId" aria-label="Your private profile ID badge">
      <span className="profileOwnerIdLabel">@{brandedHandle(profile.username)}</span>
      <button type="button" className="profileOwnerIdClose" onClick={hideOwnerId} aria-label="Hide my 1Muslim ID" title="Hide this ID from my profile">×</button>
@@ -470,7 +476,7 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
       <ProfileContentSections userId={profile.id} initialTab="posts"/>
     </section>}
     {activeQuickPanel==="videos"&&<section id="profile-panel-content" className="profileOverviewSection profileLibraryWrapper" aria-label="Your videos"><ProfileContentSections userId={profile.id} initialTab="videos"/></section>}
-    {isOwner&&activeQuickPanel==="settings"&&<section id="profile-panel-content" className="profileProfessionalCard profileProfessionalWorkspace profileCompactSettings" aria-label="Profile settings"><div className="profileSettingsHeader"><div><span className="profileSettingsEyebrow">YOUR PROFILE</span><h2>Settings</h2><p>Manage your identity, avatar and appearance.</p></div><button type="button" className="profileSettingsEdit" onClick={onEdit} aria-label="Edit profile" title="Edit profile">✎ <span>Edit</span></button></div><button type="button" className="profileSettingsRestoreId" onClick={()=>void changeIdVisibility(!idHidden)} aria-pressed={!idHidden}>{idHidden?"↺ Show my 1Muslim ID publicly":"⊘ Hide my 1Muslim ID everywhere"}</button>{idVisibilityError&&<p role="alert" className="profileSettingsIdError">{idVisibilityError}</p>}<details id="profile-activity-toggle" className="profileSettingsActivity" open><summary><span>Your Activity</span><small>Screen time, page visits &amp; insights</small><span className="profileActivityChevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary><ProfileAnalytics inline userId={profile.id}/></details></section>}
+    {isOwner&&activeQuickPanel==="settings"&&<section id="profile-panel-content" className="profileProfessionalCard profileProfessionalWorkspace profileCompactSettings" aria-label="Profile settings"><div className="profileSettingsHeader"><div><span className="profileSettingsEyebrow">YOUR PROFILE</span><h2>Settings</h2><p>Manage your identity, avatar and appearance.</p></div><button type="button" className="profileSettingsEdit" onClick={onEdit} aria-label="Edit profile" title="Edit profile">✎ <span>Edit</span></button></div><button type="button" className="profileSettingsRestoreId" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:toggle-profile-id",{detail:{hidden:!profile.hide_1muslim_id}}))} aria-pressed={!profile.hide_1muslim_id}>{profile.hide_1muslim_id?"↺ Show my 1Muslim ID publicly":"⊘ Hide my 1Muslim ID everywhere"}</button><details id="profile-activity-toggle" className="profileSettingsActivity" open><summary><span>Your Activity</span><small>Screen time, page visits &amp; insights</small><span className="profileActivityChevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></summary><ProfileAnalytics inline userId={profile.id}/></details></section>}
     <ProfileAppLauncher onProfile={()=>setActiveQuickPanel(null)} coverUrl={profileCoverImage(profile)} prayerIconSrc={(() => {
       // Gender is the member's chosen profile setting, never inferred from their photograph.
       const genders=[profile.avatar_gender,profile.gender,profile.avatar_config?.gender].map(v=>typeof v==="string"?v.toLowerCase():"");
