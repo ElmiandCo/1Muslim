@@ -31,6 +31,7 @@ import ProfileMagneticTiles from "../components/ProfileMagneticTiles";
 import ProfileCinematicOverlay from "../components/ProfileCinematicOverlay";
 import "./profile-polish.css";
 import "./profile-mosaic.css";
+import "./appearance-modern.css";
 import ProfileFirstPostPrompt from "../components/ProfileFirstPostPrompt";
 import ProfileNavIcon from "../components/icons/ProfileNavIcon";
 import ProfileCinematicPosts from "../components/ProfileCinematicPosts";
@@ -901,7 +902,7 @@ const [avatarPage,setAvatarPage]=useState(0);
     const {error}=await createClient().from("profiles").update({profile_accent:choice.accent,profile_background:choice.id}).eq("id",profile.id);
     setColorSaving(false);
     if(error){update(previous);setMessage("Could not save background: "+error.message);}
-    else {setMessage("✓ Changes saved automatically");window.setTimeout(()=>setBackgroundStudioOpen(false),850);}
+    else {setMessage("✓ Changes saved automatically");}
   };
   const typedMuslimId=normalizeMuslimId(profile?.username);
   useEffect(()=>{
@@ -1054,11 +1055,70 @@ const [avatarPage,setAvatarPage]=useState(0);
 
     <style>{`@keyframes avatarUnlockGlow{0%{transform:scale(.94)}35%{transform:scale(1.065)}100%{transform:scale(1)}}@keyframes avatarSwapFade{0%{opacity:.35;transform:scale(.96)}100%{opacity:1;transform:scale(1)}}@keyframes avatarUnlockLabel{0%{opacity:0;transform:translateY(12px)}25%,75%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-8px)}}.avatarTransitionStage{position:relative}.avatarUnlock .avatarPreview{animation:avatarUnlockGlow 2.5s ease-in-out both}.avatarSwap .avatarPreview{animation:avatarSwapFade .75s ease-out both}.silverBadgeReveal{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;pointer-events:none;border-radius:20px;overflow:hidden;background:radial-gradient(ellipse at center,#0b332dd9 0%,#071a18ed 74%);animation:silverReveal 2.55s ease-in-out both}.silverBadgeHalo{position:absolute;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,#e7d3a04d,transparent 70%);filter:blur(15px);animation:silverHalo 2.5s ease-in-out both}.silverBadgeArt{position:relative;width:min(48%,150px);height:auto;object-fit:contain;filter:drop-shadow(0 6px 22px #b5e6d07a);animation:silverBadgeEnter 2.5s cubic-bezier(.2,.75,.25,1) both}.silverBadgeTitle{position:relative;color:#f2e3b5;font-size:clamp(12px,2.5vw,18px);font-weight:800;letter-spacing:.13em;text-shadow:0 2px 18px #d9c27c99}.silverBadgeSub{position:relative;color:#c1dacb;font-size:11px;letter-spacing:.04em}@keyframes silverReveal{0%{opacity:0}14%,73%{opacity:1}100%{opacity:0}}@keyframes silverHalo{0%{opacity:0;transform:scale(.5)}35%{opacity:1;transform:scale(1.25)}100%{opacity:0;transform:scale(1.6)}}@keyframes silverBadgeEnter{0%{opacity:0;transform:translateY(18px) scale(.7) rotate(-7deg)}30%,75%{opacity:1;transform:translateY(0) scale(1) rotate(0)}100%{opacity:0;transform:translateY(-8px) scale(1.06)}}@media(prefers-reduced-motion:reduce){.avatarUnlock .avatarPreview,.avatarSwap .avatarPreview,.silverBadgeReveal,.silverBadgeHalo,.silverBadgeArt{animation:none}}`}</style>
     
-{tab==="header"&&<section className="headerEditor"><span className="eyebrow">PROFILE BACKGROUND</span><h2>Choose your profile atmosphere.</h2><div className="profileCoverUploader"><h3>Cover photograph</h3><p>Choose one of our original 1Muslim backgrounds, or upload your own.</p><div className="profileStockCovers">{COVER_STOCK.map(c=><button type="button" key={c.id} disabled={stockSaving} onClick={()=>void selectStockCover(c.url)} aria-label={`Use ${c.label} cover`} className={profile.avatar_config?.profileCoverUrl===c.url?"selected":""}><img src={c.url} alt=""/><span>{c.label}</span></button>)}</div><p>Upload a banner like the one on a professional social profile. Preview and crop it before saving.</p><input aria-label="Upload profile cover image" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>{const file=e.target.files?.[0];if(!file)return;if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>8*1024*1024){setMessage("Choose a JPG, PNG or WebP under 8 MB.");return}setCoverFile(file);setCoverPreview(URL.createObjectURL(file));setCoverZoom(1);setCoverPosition(50);e.target.value=""}}/>{coverPreview&&<><div className="profileCoverCrop" style={{backgroundImage:`url("${coverPreview}")`,backgroundSize:`auto ${coverZoom*100}%`,backgroundPosition:`center ${coverPosition}%`}}/><label>Zoom <input type="range" min="1" max="2.5" step=".05" value={coverZoom} onChange={e=>setCoverZoom(Number(e.target.value))}/></label><label>Vertical position <input type="range" min="0" max="100" value={coverPosition} onChange={e=>setCoverPosition(Number(e.target.value))}/></label><button type="button" disabled={coverUploading} onClick={()=>void uploadProfileCover()}>{coverUploading?"Uploading…":"Crop & save cover"}</button></>}</div><div className="backgroundStudio">
- <div className="backgroundStudioHeading"><div><span className="eyebrow">BACKGROUND STUDIO</span><h3>Your Banner</h3></div><button type="button" className="backgroundStudioToggle" aria-expanded={backgroundStudioOpen} onClick={()=>setBackgroundStudioOpen(v=>!v)}>{backgroundStudioOpen?"Collapse ↑":"Change ✎"}</button></div>
- {backgroundStudioOpen?<><div className={`headerDemo backgroundStudioPreview header-${profile.profile_accent}`}><span className="backgroundLiveBadge">● LIVE PREVIEW</span><strong>{profile.display_name||"1Muslim"}</strong><span>{BACKGROUND_CHOICES.find(c=>c.id===profile.profile_background)?.label||"Obsidian Black"}</span></div><h4 className="backgroundStudioSubheading">Choose a Style</h4><div className="backgroundStudioGrid">{BACKGROUND_CHOICES.map(choice=><button type="button" key={choice.id} className={`backgroundStudioChoice ${profile.profile_background===choice.id?"selected":""}`} onClick={()=>void chooseBackground(choice)} disabled={colorSaving} aria-pressed={profile.profile_background===choice.id}><span className={`backgroundStudioGradient backgroundGradient-${choice.accent}`}>{profile.profile_background===choice.id&&<span className="backgroundStudioCheck">✓</span>}</span><span className="backgroundStudioName">{choice.label}</span></button>)}</div></>:<div className="backgroundStudioCollapsed"><span className={`backgroundStudioDot backgroundGradient-${profile.profile_accent}`}/><strong>{BACKGROUND_CHOICES.find(c=>c.id===profile.profile_background)?.label||"Classic"}</strong><span>✓ Saved</span></div>}
- <p role="status" className="backgroundStudioStatus">{colorSaving?"Saving background…":message.startsWith("Could not save background")?message:"✓ Changes saved automatically"}</p>
- </div><style>{`.backgroundStudio{margin-top:20px;padding:18px;border:1px solid #d8e1ed;border-radius:22px;background:linear-gradient(150deg,#fff,#f6f8fc)}.backgroundStudioHeading{display:flex;justify-content:space-between;align-items:center;gap:12px}.backgroundStudioHeading h3{margin:5px 0 12px;font-size:21px;color:#1d3655}.backgroundStudioToggle{border:1px solid #c6d4e5;background:#fff;border-radius:999px;padding:9px 15px;color:#24466d;font-weight:700}.backgroundStudioPreview{position:relative;min-height:155px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;transition:background .3s ease,border-color .3s ease;border-radius:18px;padding:20px!important;overflow:hidden}.backgroundLiveBadge{position:absolute;top:12px;right:12px;font-size:10px;letter-spacing:.12em;background:#101c2bba;color:#fff;padding:5px 9px;border-radius:99px}.backgroundStudioSubheading{font-size:14px;margin:20px 0 12px;color:#27405d}.backgroundStudioGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.backgroundStudioChoice{min-width:0;border:1px solid #cbd5e2;border-radius:15px;background:#fff;padding:6px;display:flex;flex-direction:column;gap:7px;align-items:stretch;color:#263e5c;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.backgroundStudioChoice:active{transform:scale(.97)}.backgroundStudioChoice.selected{border-color:#4b8bd5;box-shadow:0 0 0 2px #4b8bd52a}.backgroundStudioGradient{height:53px;border-radius:10px;display:flex;align-items:center;justify-content:center}.backgroundStudioName{font-size:11px;font-weight:750;line-height:1.25;text-align:center;padding-bottom:4px}.backgroundStudioCheck{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#ffffffec;color:#22548b;font-weight:900}.backgroundGradient-black{background:linear-gradient(135deg,#252525,#050505)}.backgroundGradient-emerald{background:linear-gradient(135deg,#387b61,#081f1a)}.backgroundGradient-gold{background:linear-gradient(135deg,#c6a557,#35250e)}.backgroundGradient-blue{background:linear-gradient(135deg,#70a6e1,#163c78)}.backgroundGradient-violet{background:linear-gradient(135deg,#a28bce,#33235c)}.backgroundGradient-rose{background:linear-gradient(135deg,#c98098,#3a1929)}.backgroundGradient-slate{background:linear-gradient(135deg,#8a9b9a,#253333)}.backgroundStudioCollapsed{display:flex;align-items:center;gap:12px;background:#f0f4f9;border-radius:14px;padding:14px;color:#223a59}.backgroundStudioCollapsed span:last-child{margin-left:auto;color:#49785d;font-size:12px}.backgroundStudioDot{width:28px;height:28px;border-radius:50%;flex-shrink:0}.backgroundStudioStatus{margin:12px 0 0;color:#648070;font-size:12px}.backgroundStudioChoice:focus-visible,.backgroundStudioToggle:focus-visible{outline:3px solid #4b8bd5;outline-offset:3px}@media(max-width:360px){.backgroundStudio{padding:12px}.backgroundStudioGrid{gap:7px}.backgroundStudioName{font-size:10px}}`}</style></section>}
+{tab==="header"&&<section className="headerEditor profileAppearanceModern">
+  <header className="appearanceModernIntro">
+   <span className="eyebrow">APPEARANCE</span><h2>Make it yours.</h2>
+   <p>Pick your cover and the colors that make your profile feel like you.</p>
+  </header>
+  <div className="profileCoverUploader appearanceModernCover">
+   <div className="appearanceModernSectionTop">
+    <div><h3>Cover photo</h3><small>Swipe to choose</small></div>
+    <label className="appearanceModernUpload">
+     <span aria-hidden="true">↥</span> Upload your own
+     <input aria-label="Upload profile cover image" type="file" accept="image/jpeg,image/png,image/webp"
+      onChange={e=>{const file=e.target.files?.[0];if(!file)return;if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>8*1024*1024){setMessage("Choose a JPG, PNG or WebP under 8 MB.");e.target.value="";return}setCoverFile(file);setCoverPreview(URL.createObjectURL(file));setCoverZoom(1);setCoverPosition(50);e.target.value=""}}/>
+    </label>
+   </div>
+   <div className="profileStockCovers appearanceModernCoverRail" role="region" aria-label="Available profile cover photos, swipe to browse" tabIndex={0}>
+    {COVER_STOCK.map(c=><button type="button" key={c.id} disabled={stockSaving} onClick={()=>void selectStockCover(c.url)}
+      aria-pressed={profileCoverImage(profile)===c.url} aria-label={`Use ${c.label} profile cover`}
+      className={profileCoverImage(profile)===c.url?"selected":""}>
+      <img src={c.url} loading="lazy" alt=""/><span>{c.label}</span>
+    </button>)}
+   </div>
+   {coverPreview&&<div className="appearanceModernCrop">
+    <p role="status">Preview your upload before saving.</p>
+    <div className="profileCoverCrop" style={{backgroundImage:`url("${coverPreview}")`,backgroundSize:`auto ${coverZoom*100}%`,backgroundPosition:`center ${coverPosition}%`}}/>
+    <div className="appearanceModernCropControls">
+     <label>Zoom<input type="range" min="1" max="2.5" step=".05" value={coverZoom} onChange={e=>setCoverZoom(Number(e.target.value))}/></label>
+     <label>Position<input type="range" min="0" max="100" value={coverPosition} onChange={e=>setCoverPosition(Number(e.target.value))}/></label>
+    </div>
+    <div className="appearanceModernCropActions">
+     <button type="button" disabled={coverUploading} onClick={()=>void uploadProfileCover()}>{coverUploading?"Uploading…":"Save cover ✓"}</button>
+     <button type="button" className="appearanceModernCancel" onClick={()=>{setCoverFile(null);setCoverPreview(null)}}>Cancel</button>
+    </div>
+   </div>}
+   {stockSaving&&<small role="status" className="appearanceModernSaving">Saving cover…</small>}
+  </div>
+  <div className="backgroundStudio profileColorStudio" style={{"--theme-preview-accent":memberAccent(profile.profile_accent),"--theme-preview-ink":MEMBER_TEXT_COLORS[profile.profile_accent]||"#20374e"} as CSSProperties}>
+   <div className="backgroundStudioHeading">
+    <div><span className="eyebrow">PROFILE COLORS</span><h3>Choose your vibe</h3></div>
+    <button type="button" className="backgroundStudioToggle" aria-expanded={backgroundStudioOpen} onClick={()=>setBackgroundStudioOpen(v=>!v)}>
+     {backgroundStudioOpen?"Hide colors ↑":"Change colors ↓"}
+    </button>
+   </div>
+   {backgroundStudioOpen?<div className="profileColorStudioBody">
+    <div className="profileThemePreview" aria-label="Live preview showing profile text, borders and shadows">
+     <div className="profileThemePreviewCover" style={{backgroundImage:`url(${JSON.stringify(profileCoverImage(profile))})`}}><span>1Muslim</span></div>
+     <div className="profileThemePreviewIdentity">
+      <img src={typeof profile.avatar_config?.selectedAvatarUrl==="string"?profile.avatar_config.selectedAvatarUrl:profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg"} alt="" />
+      <div><strong>{profile.display_name||"Your profile"}</strong><small>{profile.bio||"Let your message inspire."}</small></div>
+     </div>
+     <div className="profileThemePreviewDetails"><span><b>3</b> Followers</span><span><b>10</b> Following</span><span className="profileThemePreviewAction">✦ Follow</span></div>
+    </div>
+    <div className="backgroundStudioGrid" role="group" aria-label="Select profile accent color">
+     {BACKGROUND_CHOICES.map(choice=><button type="button" key={choice.id}
+      className={`backgroundStudioChoice ${profile.profile_background===choice.id?"selected":""}`}
+      onClick={()=>void chooseBackground(choice)} disabled={colorSaving} aria-pressed={profile.profile_background===choice.id}>
+      <span className={`backgroundStudioGradient backgroundGradient-${choice.accent}`}>{profile.profile_background===choice.id&&<span className="backgroundStudioCheck">✓</span>}</span>
+      <span className="backgroundStudioName">{choice.label}</span>
+     </button>)}
+    </div>
+    <p className="profileColorStudioNote">Updates text, trims, borders and glow.</p>
+   </div>:<div className="backgroundStudioCollapsed"><span className={`backgroundStudioDot backgroundGradient-${profile.profile_accent}`}/><strong>{BACKGROUND_CHOICES.find(c=>c.id===profile.profile_background)?.label||"Your color"}</strong><span>✓ Saved</span></div>}
+   <p role="status" className="backgroundStudioStatus">{colorSaving?"Saving color…":message.startsWith("Could not save background")?message:"✓ Changes save automatically"}</p>
+  </div>
+ </section>}
     {tab==="header"&&<ProfileSpotlightEditor userId={profile.id}/>}
     <ProfileContentSections userId={profile.id}/>
   </div>}<style>{`body:has(.profilePage){overflow-y:auto!important}.profilePage .muslimMobileDock,body:has(.profilePage) .muslimMobileDock{display:none!important}.profilePage{min-height:100dvh;overflow-x:hidden;overflow-y:visible!important}.profileShell{max-width:1100px;margin:0 auto;padding-bottom:110px!important;overflow:visible!important}.profileTabs{display:flex!important;gap:8px!important;overflow-x:auto!important;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:8px 4px 15px!important}.profileTabs::-webkit-scrollbar{display:none}.profileTabs button{flex:0 0 auto!important;scroll-snap-align:start;min-height:43px!important;border-radius:999px!important;padding:10px 16px!important;font-size:13px!important;letter-spacing:.01em!important;white-space:nowrap!important;transition:background .2s ease,border-color .2s ease!important}.profileTabs button.active{box-shadow:0 3px 16px rgba(19,110,79,.2)}.profileEditor textarea{min-height:70px!important;resize:vertical}.profileHero{padding-top:160px!important}.profileOverviewBody{padding-top:150px!important}.avatarPreview{min-height:100px!important;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:45px 20px 16px!important;overflow:visible!important}.avatarTransitionStage{overflow:visible!important}@media(max-width:640px){.profileShell{padding-left:12px!important;padding-right:12px!important}.profileTabs{position:sticky;top:0;z-index:20;backdrop-filter:blur(18px);background:rgba(9,33,29,.9);border-radius:16px}}`}</style><style>{`
