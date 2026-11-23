@@ -70,6 +70,8 @@ jobs:
             echo 'Run offline code audit and implement REAL scoped changes using checked-out files, trusted issue text and installed node dependencies. Deliver a useful narrow working subset if the full task is too large. Open a DRAFT PR through the post-agent workflow step, NOT yourself.'
             echo 'For unresolved external facts (production READY, new approvals, TikTok sandbox credentials, live user data), note verification pending in your report but do not abandon safe independently verifiable work.'
             echo 'Do not use the model to repeat the full master; focus only on the assigned issue, current code, measured build/tests, and a concise final report to avoid token waste.'
+            echo 'TOKEN BUDGET: Use targeted file search and read only the few files needed. Work in one focused increment; do not repeatedly scan the whole repository. No repeated full builds inside the agent; one typecheck/test is enough unless fixing a clear failure. Do not perform more than two repair attempts of the same error.'
+            echo 'Use existing code and tests, do not consume tens of thousands of tokens rewriting design plans. Stop after a meaningful scoped change and report remaining work for later PRs rather than running an unbounded task.'
             echo 'Read AGENTS.md, current release/v3.9 integration baseline, existing code; honor all policies and existing features.'
             echo 'Implement ONLY the issue below. No Stripe live purchases, privileged destructive operations, or changes to production secrets.'
             echo 'Do not change .github/workflows, package manifest, lockfiles, runtime env files or AGENTS.md.'
@@ -99,6 +101,8 @@ jobs:
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: ${{ vars.V39_BOT_MODEL || 'gpt-6.1-terra' }}
+          effort: medium
           permission-profile: ":workspace"
           safety-strategy: drop-sudo
           prompt-file: .codex-v39-task.md
