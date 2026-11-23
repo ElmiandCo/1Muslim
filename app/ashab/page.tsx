@@ -14,6 +14,7 @@ type Profile = {
   id: string;
   display_name: string;
   username: string | null;
+  hide_1muslim_id?: boolean | null;
   bio: string | null;
   xp_total: number;
   avatar_gender: string;
@@ -59,7 +60,7 @@ export default function AshabPage() {
     const ids = (ashabRows ?? []).map((row: { user_id: string }) => row.user_id);
     if (ids.length) {
       const [{ data: people }, { data: liveRows }] = await Promise.all([
-        s.from("profiles").select("id,display_name,username,bio,xp_total,avatar_gender,avatar_package,avatar_config,profile_accent").in("id", ids),
+        s.from("profiles").select("id,display_name,username,hide_1muslim_id,bio,xp_total,avatar_gender,avatar_package,avatar_config,profile_accent").in("id", ids),
         s.from("live_streams").select("host_id").eq("status", "live").in("host_id", ids),
       ]);
       setProfiles((people ?? []) as Profile[]);
@@ -118,7 +119,7 @@ export default function AshabPage() {
                 <ProfileAvatar name={p.display_name} gender={null} avatarGender={p.avatar_gender} avatarPackage={p.avatar_package} avatarConfig={p.avatar_config} accent={p.profile_accent} isLive={liveIds.has(p.id)}/>
                 <div className="ashabCardBody">
                   <h3>{p.display_name || "Member"}</h3>
-                  <span>@{p.username || "member"}</span>
+                  {!p.hide_1muslim_id&&p.username&&<span>@{p.username}</span>}
                   <p>{p.bio || "Building a life of faith, learning and community."}</p>
                   <div className="ashabActions">
                     <Link href={`/profile/${p.id}`} className="ghost">View profile</Link>
