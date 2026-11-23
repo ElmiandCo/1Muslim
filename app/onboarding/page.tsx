@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import FirstVisitGuide from "../components/FirstVisitGuide";
 import GuardianParticles from "../components/GuardianParticles";
 import RisingEnergyOrbs from "../components/RisingEnergyOrbs";
@@ -11,7 +11,7 @@ import { createClient } from "../../utils/supabase/client";
 type Language = "ar" | "en";
 type SpeechRecognitionLike = {
   lang: string; continuous: boolean; interimResults: boolean;
-  start: () => void; stop: () => void;
+  start: () => void; stop: () => void; abort?: () => void;
   onresult: ((event: any) => void) | null;
   onerror: ((event: any) => void) | null;
   onend: (() => void) | null;
@@ -81,7 +81,7 @@ export default function OnboardingPage() {
   const [verificationMode, setVerificationMode] = useState<"audio" | "declaration">("audio");
   useEffect(() => {if(new URLSearchParams(window.location.search).get("method")==="declaration"){setVerificationMode("declaration");}}, []);
   useEffect(()=>{const timer=window.setTimeout(()=>setAlternativeHint(false),4000);return()=>window.clearTimeout(timer)},[]);
-  const chooseDeclaration=()=>{resetRef.current=true;attemptRef.current++;stopMedia();setAudioBlob(null);setAudioPreview(null);setVerified(false);setWrittenDeclaration(true);setVerificationMode("declaration");setMessage("Checkbox option selected. Please read and personally affirm the declaration below.");document.getElementById("shahada-self-attest")?.scrollIntoView({behavior:"smooth",block:"center"});};
+  const chooseDeclaration=()=>{resetShahada();setWrittenDeclaration(true);setVerificationMode("declaration");setMessage("Checkbox option selected. Please read and personally affirm the declaration below.");document.getElementById("shahada-self-attest")?.scrollIntoView({behavior:"smooth",block:"center"});};
   const [language, setLanguage] = useState<Language>("ar");
   const [gender, setGender] = useState<"male" | "female" | "">("");
   const [checking, setChecking] = useState(true);
@@ -411,7 +411,7 @@ export default function OnboardingPage() {
     if (audioBlob || verified) resetShahada();
     void startShahada();
   };
-  const onRecorderPointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+  const onRecorderPointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (event.button !== 0 || startingRecording || recording || listening || processingAudio || audioBlob || verified) return;
     pointerHoldRef.current = { id: event.pointerId, hold: false };
     clearPointerHold();
@@ -423,7 +423,7 @@ export default function OnboardingPage() {
       void startShahada();
     }, SHAHADA_HOLD_DELAY_MS);
   };
-  const onRecorderPointerUp = (event: React.PointerEvent<HTMLButtonElement>) => {
+  const onRecorderPointerUp = (event: ReactPointerEvent<HTMLButtonElement>) => {
     const gesture = pointerHoldRef.current;
     if (!gesture || gesture.id !== event.pointerId) return;
     clearPointerHold();
@@ -517,41 +517,109 @@ export default function OnboardingPage() {
 @keyframes studioVoiceBounce{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
 @media(max-width:600px){.onboardingPage .studioVoiceCompact{padding:12px 14px!important;border-radius:24px!important;gap:6px}.onboardingPage .studioVoiceCompact .hudhudRecord{width:110px!important;height:110px!important;min-height:110px!important}.onboardingPage .studioVoiceCompact .studioVoiceWave{height:32px}.onboardingPage .studioVoiceCompact .transcript{max-height:85px}}
 @media(prefers-reduced-motion:reduce){.onboardingPage .studioVoiceLive .studioVoiceWave i{animation:none;transform:scaleY(.8)}}
+.onboardingPage .shahadaRecorderHint{display:grid;gap:4px;text-align:center}
+.onboardingPage .shahadaRecorderHint span{font-size:10px;font-weight:850;letter-spacing:.16em;color:#e0f7e5}
+.onboardingPage .shahadaRecorderHint small{font-size:11px;color:#b5d5ca}
+.onboardingPage .securityGuardianStatus.shahadaRecLive{color:#ff9c9c!important;text-shadow:0 0 12px #ed475b99!important;animation:shahadaRecBlink 1s ease-in-out infinite}
+.onboardingPage .shahadaOrbRec{position:absolute;top:6px;right:7px;width:16px;height:16px;background:#f36676;border:3px solid #092016;border-radius:50%;box-shadow:0 0 15px #fe6577}
+.onboardingPage .shahadaRecordingClock{width:100%;max-width:410px;padding:0 3px;display:grid;gap:6px}
+.onboardingPage .shahadaRecordingClockLabels{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.onboardingPage .shahadaRecordingClockLabels span{font-size:10px;letter-spacing:.1em;font-weight:850;color:#b4cabf}
+.onboardingPage .shahadaRecordingClock.active .shahadaRecordingClockLabels span{color:#ff9b9f}
+.onboardingPage .shahadaRecordingClockLabels strong{font-size:22px!important;font-variant-numeric:tabular-nums;color:#f4fbf6}
+.onboardingPage .shahadaRecordingTrack{height:7px;width:100%;border-radius:999px;background:#d5ffda25;overflow:hidden;border:1px solid #ffffff29}
+.onboardingPage .shahadaRecordingTrack i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#f5c1bf,#ec6478);transition:width .1s linear}
+.onboardingPage .shahadaRecorderActions{display:flex;justify-content:center;flex-wrap:wrap;gap:9px;width:100%}
+.onboardingPage .shahadaRecorderActions button{min-height:44px;border-radius:100px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer}
+.onboardingPage .shahadaPrimaryAction{background:#cceecb;border:1px solid #d6f8d7;color:#07180f}
+.onboardingPage .shahadaDiscardAction{background:#201015b8;border:1px solid #ef9fa98c;color:#ffd4da}
+.onboardingPage .shahadaRecorderActions button:disabled{opacity:.55;cursor:wait}
+.onboardingPage .shahadaAudioReview{display:grid;gap:7px;width:100%;max-width:420px;text-align:left;border:1px solid #b6f1d962;background:#071c17d9;border-radius:15px;padding:10px 12px}
+.onboardingPage .shahadaAudioReview span{font-size:10px;letter-spacing:.09em;font-weight:850;color:#d9ffe8}
+.onboardingPage .shahadaAudioReview audio{width:100%;height:42px}
+.onboardingPage .shahadaAudioReview small{font-size:10px;color:#b7d2c2;line-height:1.4}
+.onboardingPage .studioVoiceCompact .shahadaRecorderTitle{font-size:16px!important}
+.onboardingPage .studioVoiceCompact .shahadaRecorderSub{font-size:11px!important;max-width:380px}
+@keyframes shahadaRecBlink{50%{opacity:.55}}
+@media(max-width:600px){.onboardingPage .shahadaRecordingClockLabels strong{font-size:19px!important}.onboardingPage .shahadaRecorderActions button{padding:8px 13px;font-size:12px}.onboardingPage .studioVoiceCompact .hudhudRecord{margin:2px auto!important}.onboardingPage .studioVoiceCompact{gap:7px!important}}
+@media(prefers-reduced-motion:reduce){.onboardingPage .securityGuardianStatus.shahadaRecLive{animation:none}}
 `}</style><section className="onboardingCard">
     <AdmissionJourney stage={step==="shahada"?1:3} detail={step==="shahada"?(verified||writtenDeclaration?"Declaration recognized. Agree to the terms to proceed to admission.":"Complete your Shahada by voice or self-attested declaration."):(saving?"Saving admission and awarding your badge…":"Finish your profile to enter 1Muslim and receive your badge. XP is subject to the rewards system.")}/>
     {step === "shahada" ? <>
       <span className="eyebrow">COMMUNITY VERIFICATION</span>
       <h1>Say the Shahada.</h1>
-      <p className="lead">Begin with HudHud recording, or choose Arabic, English, or the written declaration below.</p>
-      <div className={`voiceCard securityGuardianStage studioVoiceCompact ${listening || recording ? "securityGuardianActive studioVoiceLive" : ""}`}><div className="securityGuardianArt" aria-hidden="true"/><RisingEnergyOrbs tone="blue"/><GuardianParticles active={listening || recording} stream={streamRef.current} /><GuardianParticles active={listening || recording} stream={streamRef.current} foreground /><div className="securityGuardianHeader"><span>HUDHUD / SECURE VOICE</span><span className="securityGuardianStatus">{listening || recording ? "● LISTENING" : "● STANDBY"}</span></div>
-        <span className="eyebrow">SECURE · VOICE VERIFICATION</span>
-        <button type="button" className={`hudhudRecord ${listening ? "isListening" : ""} ${verified ? "isVerified" : ""}`} aria-label={listening || recording || verified || processingAudio || voiceStatus==="retry" ? "Start Shahada recording over" : "Enable microphone and begin Shahada"} onClick={() => listening || recording || verified || processingAudio || voiceStatus==="retry" ? resetShahada() : void startShahada()}>
+      <p className="lead">Choose Arabic or English, then tap or hold HudHud to record for up to 10 seconds. Listen before continuing.</p>
+      <div className={`voiceCard securityGuardianStage studioVoiceCompact ${listening || recording ? "securityGuardianActive studioVoiceLive" : ""}`}>
+        <div className="securityGuardianArt" aria-hidden="true"/>
+        <RisingEnergyOrbs tone="blue"/>
+        <GuardianParticles active={listening || recording} stream={streamRef.current}/>
+        <GuardianParticles active={listening || recording} stream={streamRef.current} foreground/>
+        <div className="securityGuardianHeader">
+          <span>HUDHUD / SECURE VOICE</span>
+          <span className={`securityGuardianStatus ${recording ? "shahadaRecLive" : ""}`}>
+            {recording ? "● REC" : startingRecording ? "● MIC ACCESS" : audioPreview ? (verified ? "✓ VERIFIED" : "● REVIEW") : "● STANDBY"}
+          </span>
+        </div>
+        <div className="shahadaRecorderHint">
+          <span>PRIVATE SHAHADA RECORDER</span>
+          <small>Tap to start or press and hold · 10-second limit</small>
+        </div>
+        <button
+          type="button"
+          className={`hudhudRecord ${listening ? "isListening" : ""} ${verified ? "isVerified" : ""}`}
+          aria-label={recording ? "Finish recording and listen" : startingRecording ? "Microphone permission pending" : audioPreview ? "Record your Shahada again" : "Tap to record Shahada, or press and hold"}
+          aria-pressed={recording}
+          disabled={startingRecording || processingAudio}
+          onPointerDown={onRecorderPointerDown}
+          onPointerUp={onRecorderPointerUp}
+          onPointerCancel={onRecorderPointerUp}
+          onClick={onRecorderClick}
+        >
           <span className="hudhudHalo" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{transform:`rotate(${i*30}deg) translateY(-58px)`,animationDelay:`${i*-.18}s`}}/>)}</span>
           <span className="hudhudCore" aria-hidden="true"><img src="/assets/hudhud-logo.PNG" alt="" /></span>
+          {recording && <span className="shahadaOrbRec" aria-hidden="true"/>}
         </button>
-        <div style={{display:"flex",justifyContent:"center",gap:10,flexWrap:"wrap",margin:"12px 0"}}>
-          {(listening || recording || processingAudio || verified || voiceStatus==="retry") && <button type="button" onClick={resetShahada} style={{border:"1px solid #ffffff55",borderRadius:18,padding:"10px 18px",background:"#ffffff12",color:"inherit",cursor:"pointer"}}>↻ Start over</button>}
-          {!listening && !recording && !processingAudio && !verified && <button type="button" onClick={()=>void startShahada()} style={{border:"1px solid #ffffff55",borderRadius:18,padding:"10px 18px",background:"#ffffff12",color:"inherit",cursor:"pointer"}}>🎙 Start recording</button>}
+        <div className={`shahadaRecordingClock ${recording ? "active" : ""}`} aria-label={recording ? `${secondsLeft} seconds remaining` : "Maximum recording time: 10 seconds"}>
+          <div className="shahadaRecordingClockLabels">
+            <span>{recording ? "● RECORDING NOW" : startingRecording ? "ALLOW MICROPHONE" : audioPreview ? "RECORDING COMPLETE" : "READY WHEN YOU ARE"}</span>
+            <strong>{`00:${String(recording ? secondsLeft : SHAHADA_RECORD_SECONDS).padStart(2,"0")}`}</strong>
+          </div>
+          <div className="shahadaRecordingTrack" role="progressbar" aria-label="Shahada recording duration" aria-valuemin={0} aria-valuemax={10} aria-valuenow={recording ? 10-secondsLeft : 0}>
+            <i style={{width:`${recording ? (10-secondsLeft)*10 : 0}%`}}/>
+          </div>
         </div>
         <div className="studioVoiceWave" aria-hidden="true">{Array.from({length:25},(_,i)=><i key={i} style={{height:`${12+Math.abs(Math.sin(i*1.3))*32}px`,transform:`scaleY(${(listening || recording) ? Math.max(.2,Math.min(1.8,.2+voiceLevel*2.3*(.35+.65*Math.abs(Math.sin(i*1.3))))) : .25})`,opacity:(listening || recording) ? .55+voiceLevel*.45 : .35}} />)}</div>
-        <strong role="status" aria-live="polite">{{ready:"Ready to record",recording:"Recording · waiting for speech",speaking:"Recording · hearing your voice",analyzing:"Analyzing your Shahada…",resetting:"Resetting recorder…",recognized:"Shahada recognized",retry:"Ready to try again",processing:"Preparing your recording…"}[voiceStatus]}</strong>
-        <p>{listening ? "Speak in "+(language==="en"?"English":"Arabic")+". A short pause finishes your attempt. Use Start over to discard this attempt." : "Choose Arabic or English below, then tap HudHud to record."}</p>
-        {processingAudio && <p role="status">Preparing your private Shahada clip…</p>}
-        {audioPreview && verified && <div className="transcript"><small>Review your trimmed Shahada</small><audio controls src={audioPreview} style={{width:"100%",marginTop:8}} /></div>}
+        <strong className="shahadaRecorderTitle" role="status" aria-live="polite">
+          {startingRecording ? "Connecting to microphone…" : recording ? (holdingRecord ? "Recording — release to finish" : "Recording your Shahada") : processingAudio ? "Preparing your recording…" : verified ? "✓ Shahada recognized" : audioPreview ? "Listen to your recording" : voiceStatus==="retry" ? "Ready to try again" : "Ready to record"}
+        </strong>
+        <p className="shahadaRecorderSub">
+          {recording ? "Speak clearly in "+(language==="en"?"English":"Arabic")+". Tap Finish or wait for 00:00." : audioPreview ? "Press Play to hear the full take. If anything was missed, record again." : "Say the words below. Tap once to begin, tap again to finish — or hold and release."}
+        </p>
+        <div className="shahadaRecorderActions">
+          <button type="button" className="shahadaPrimaryAction" onClick={onRecorderClick} disabled={startingRecording || processingAudio}>
+            {startingRecording ? "Requesting access…" : recording ? "■ Finish & listen" : audioPreview ? "↻ Record again" : "🎙 Start recording"}
+          </button>
+          {(recording || audioPreview) && <button type="button" className="shahadaDiscardAction" onClick={resetShahada}>× Discard</button>}
+        </div>
+        {audioPreview && <div className="shahadaAudioReview">
+          <span>🎧 LISTEN TO YOUR RECORDING</span>
+          <audio controls preload="metadata" src={audioPreview} aria-label="Play your private Shahada recording"/>
+          <small>Complete take · no automatic cropping · nothing uploaded until you continue.</small>
+        </div>}
         {transcript && <div className="transcript" dir={language === "ar" ? "rtl" : "ltr"}><small>Speech recognition heard</small><span>{transcript}</span></div>}
       </div>
       <div className="languagePicker">
-        <button className={language === "ar" ? "selected" : ""} onClick={() => { resetRef.current = true; attemptRef.current++; stopMedia(); setAudioBlob(null); setAudioPreview(null); setLanguage("ar"); setVerified(false); setMessage(""); }}>العربية <small>Arabic</small></button>
-        <button className={language === "en" ? "selected" : ""} onClick={() => { resetRef.current = true; attemptRef.current++; stopMedia(); setAudioBlob(null); setAudioPreview(null); setLanguage("en"); setVerified(false); setMessage(""); }}>English <small>English</small></button>
+        <button className={language === "ar" ? "selected" : ""} onClick={() => { resetShahada(); setLanguage("ar"); setMessage(""); }}>العربية <small>Arabic</small></button>
+        <button className={language === "en" ? "selected" : ""} onClick={() => { resetShahada(); setLanguage("en"); setMessage(""); }}>English <small>English</small></button>
       </div>
       <div className="phraseCard" dir={language === "ar" ? "rtl" : "ltr"}>{SHAHADA[language]}</div>
       {alternativeHint && !listening && !verified && <button type="button" className="shahadaVisionHint" onClick={chooseDeclaration} aria-label="Select the self-attested checkbox option"><span>✦ HUDHUD VISION · 4-SECOND TIP</span><strong>Recording is optional.</strong><small>Tap here to select the checkbox route. You will still need to personally affirm the Shahada and accept the terms.</small></button>}
-      {!verified && <div className="declarationFallback" id="shahada-self-attest"><strong>Prefer a checkbox?</strong><p>This is an optional alternative to voice recognition. If your Shahada was recognized, no declaration checkbox is needed.</p><label><input type="checkbox" checked={writtenDeclaration} onChange={e => { resetRef.current = true; attemptRef.current++; stopMedia(); setAudioBlob(null); setAudioPreview(null); setVerified(false); setWrittenDeclaration(e.target.checked); setVerificationMode(e.target.checked ? "declaration" : "audio"); setMessage(""); }} /><span>I sincerely affirm the Shahada displayed above and wish to join the 1Muslim community.</span></label>{writtenDeclaration && <small>✓ Written declaration selected. No microphone recording will be required.</small>}</div>}
+      {!verified && <div className="declarationFallback" id="shahada-self-attest"><strong>Prefer a checkbox?</strong><p>This is an optional alternative to voice recognition. If your Shahada was recognized, no declaration checkbox is needed.</p><label><input type="checkbox" checked={writtenDeclaration} onChange={e => { resetShahada(); setWrittenDeclaration(e.target.checked); setVerificationMode(e.target.checked ? "declaration" : "audio"); setMessage(""); }} /><span>I sincerely affirm the Shahada displayed above and wish to join the 1Muslim community.</span></label>{writtenDeclaration && <small>✓ Written declaration selected. No microphone recording will be required.</small>}</div>}
       {message && <div className={verified || writtenDeclaration ? "success" : "error"}>{message}</div>}
       <div className="badgePreview"><div className="badgeSeal" aria-hidden="true"></div><div><span className="badgeKicker">YOUR FIRST 1MUSLIM BADGE</span><strong>Shahada Verified</strong><p>Earn this badge after completing your Shahada verification and profile setup. It will appear on your public profile.</p></div><span className="badgeStatus">{verified || writtenDeclaration ? "✓ Declared" : "🔒 Unlock"}</span></div>
       <div className="legalScroll" role="region" aria-label="Terms and conditions" tabIndex={0}><strong>1Muslim · Terms &amp; Conditions</strong><p>1Muslim is a faith-centered platform supporting Muslim communities, Islamic education, and connections consistent with Islamic principles.</p><p>Our commitment to Islam does not constitute hostility toward any other religion, belief system, or individual. We respect the dignity of people of all religious backgrounds, including those with no religion.</p><strong>Protection of Islamic Values</strong><p>1Muslim may establish and enforce standards for content, conduct, programming, and participation consistent with applicable law. We may prioritize Islamic education, worship, and community development, and are not required to endorse every religious or philosophical viewpoint.</p><strong>Religious Discussions and Differences</strong><p>Respectful theological discussions, comparative religion, scholarly disagreements, and criticism of religious ideas may be permitted. Harassment, threats, targeted abuse, incitement to violence, and dehumanizing treatment are prohibited. Disagreement with a religious belief is not, by itself, harassment or discrimination.</p><strong>Content Moderation</strong><p>1Muslim may review, restrict, remove, or decline to feature content conflicting with published community standards, subject to applicable law. Decisions should follow documented standards rather than hostility toward a person's religious identity.</p><strong>Our Guiding Principle</strong><p>1Muslim exists to preserve, celebrate, and strengthen Muslim identity—not to attack or diminish the dignity of others.</p></div><label className="termsConsent"><input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} required /><span>I have read and agree to the Terms &amp; Conditions above.</span></label>
       <button className="continue secondary" disabled={!(writtenDeclaration || (verified && !!audioBlob && !processingAudio)) || !acceptedTerms} onClick={() => setStep("gender")}>Continue to profile →</button>
-      <small className="fine">Either method qualifies for the Shahada badge. Only the locally silence-trimmed clip is uploaded to the private vault. Review it before continuing; unrelated speech within the clip may still be present. Checkbox verification is self-attested.</small>
+      <small className="fine">Either method qualifies for the Shahada badge. Your complete, untrimmed recording stays private and is uploaded to the secure vault only if you continue. Listen to it first. Checkbox verification is self-attested.</small>
     </> : <>
       <span className="eyebrow">WELCOME TO 1MUSLIM</span><h1>Choose your profile.</h1><p className="lead">Select your gender once. This sets your default profile avatar and stays fixed after setup.</p>
       <div className="genderGrid"><button className={gender === "male" ? "genderCard selected" : "genderCard"} onClick={() => setGender("male")}><img src="/assets/avatars/default-male.jpg" alt="" /><strong>Male</strong><span>Use the male default avatar</span></button><button className={gender === "female" ? "genderCard selected" : "genderCard"} onClick={() => setGender("female")}><img src="/assets/avatars/Default-women.png" alt="" /><strong>Female</strong><span>Use the female default avatar</span></button></div>
