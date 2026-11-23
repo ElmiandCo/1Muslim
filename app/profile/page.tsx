@@ -295,7 +295,9 @@ function ProfileCompactStats({userId,postCount,followers,following}:{userId:stri
 
 function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQuickPanel,onQuickPanel,showProfileDetails=true}:{profile:Profile;onEdit:()=>void;ashab:Profile[];isOwner?:boolean;viewerId?:string;editing?:boolean;editorTab?:string;activeQuickPanel?:"posts"|"videos"|"settings"|null;onQuickPanel?:(panel:"posts"|"videos"|"settings")=>void;showProfileDetails?:boolean}){
  const [section,setSection]=useState<"activity"|"connections"|"analytics">("activity");
- const [cinematicOpen,setCinematicOpen]=useState(false);
+ // Visitors land in the full cinematic profile first; the owner still controls when it opens.
+ const [cinematicOpen,setCinematicOpen]=useState(!isOwner);
+ useEffect(()=>{if(!isOwner)setCinematicOpen(true)},[isOwner,profile.id]);
  const [idHidden,setIdHidden]=useState(!!profile.hide_1muslim_id);
  const [idVisibilityError,setIdVisibilityError]=useState("");
  useEffect(()=>{

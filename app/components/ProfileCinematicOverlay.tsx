@@ -23,17 +23,30 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
  const scroller=useRef<HTMLDivElement>(null);
  const art=useRef<HTMLDivElement>(null);
  const closeButton=useRef<HTMLButtonElement>(null);
+ const visitorCloseButton=useRef<HTMLButtonElement>(null);
  const frame=useRef<number|null>(null);
+ const [hint,setHint]=useState<"close"|"scroll"|null>(null);
+ const hintTimers=useRef<Array<ReturnType<typeof setTimeout>>>([]);
+ const hintDismissed=useRef(false);
+ const dismissHints=()=>{
+  if(hintDismissed.current)return;
+  hintDismissed.current=true;
+  hintTimers.current.forEach(clearTimeout);hintTimers.current=[];
+  setHint(null);
+  try{sessionStorage.setItem("1muslim:cinematic-hints-dismissed:"+profile.id,"1")}catch{}
+ };
+ // The visitor's close control always closes the cinematic view, including with Escape.
+ const closeView=()=>{dismissHints();onClose()};
  const dialogTitle="Cinematic profile for "+(profile.display_name||"1Muslim member");
  const closeRef=useRef(onClose);
- closeRef.current=onClose;
+ closeRef.current=closeView;
  useEffect(()=>setMounted(true),[]);
  useEffect(()=>{
   if(!mounted)return;
   const previouslyFocused=document.activeElement instanceof HTMLElement?document.activeElement:null;
   const formerOverflow=document.body.style.overflow;
   document.body.style.overflow="hidden";
-  closeButton.current?.focus({preventScroll:true});
+  (isOwner?closeButton.current:visitorCloseButton.current)?.focus({preventScroll:true});
   const onKey=(e:KeyboardEvent)=>{
    if(e.key==="Escape"){e.preventDefault();closeRef.current();}
    // Keep keyboard focus inside the open profile instead of the page behind it.
@@ -52,7 +65,25 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
    if(frame.current!==null)cancelAnimationFrame(frame.current);
    previouslyFocused?.focus({preventScroll:true});
   };
- },[mounted]);
+ },[mounted,isOwner]);
+
+ // The two hints appear only once per member per browser session.
+ // A visitor's first tap or scroll cancels all pending hints immediately.
+ useEffect(()=>{
+  if(!mounted||isOwner)return;
+  hintDismissed.current=false;
+  try{if(sessionStorage.getItem("1muslim:cinematic-hints-dismissed:"+profile.id)==="1"){hintDismissed.current=true;return}}catch{}
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  setHint("close");
+  hintTimers.current=[
+   setTimeout(()=>setHint(null),1000),
+   setTimeout(()=>setHint("scroll"),5000),
+   setTimeout(()=>{setHint(null);hintDismissed.current=true;
+    try{sessionStorage.setItem("1muslim:cinematic-hints-dismissed:"+profile.id,"1")}catch{}
+   },6000)
+  ];
+  return()=>{hintTimers.current.forEach(clearTimeout);hintTimers.current=[]};
+ },[mounted,isOwner,profile.id]);
 
  useEffect(()=>{
   if(!mounted)return;
@@ -72,6 +103,7 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
  },[mounted,profile.id]);
 
  const onScroll=()=>{
+  if((scroller.current?.scrollTop??0)>12)dismissHints();
   if(frame.current!==null)return;
   frame.current=requestAnimationFrame(()=>{
    frame.current=null;
@@ -94,7 +126,8 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
      <div ref={art} className={styles.art} style={{backgroundImage:`url(${JSON.stringify(mainImage)})`}}/>
      <div className={styles.vignette}/>
     </div>
-    <button ref={closeButton} type="button" className={styles.sceneExit} aria-label="Close full profile by tapping the background" title="Close full profile" onClick={onClose}/>
+    <button ref={closeButton} type="button" className={styles.sceneExit} aria-label="Close full profile by tapping the background" title="Close full profile" onClick={closeView}/>
+    {!isOwner&&hint&&<span className={`${styles.sceneHint} ${hint==="scroll"?styles.scrollHint:""}`} aria-hidden="true" key={hint}>{hint==="close"?"Tap Here To Close":"Scroll Down ↓"}</span>}
     <nav className={styles.topbar} aria-label="Full profile controls">
      <span className={styles.xpCrown} aria-label={fmt(profile.xp_total)+" XP"}>✦ <strong>{fmt(profile.xp_total)}</strong> <small>XP</small></span>
      <span className={styles.brand}>1MUSLIM · PROFILE</span>
@@ -121,8 +154,13 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
      </div>
      <div className={styles.actions}>
       {isOwner?<button type="button" className={styles.mainAction} onClick={()=>{onClose();onEdit?.()}} aria-label="Edit profile" title="Edit profile"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="m4 17 12-12 3 3L7 20l-4 1zM14 7l3 3"/></svg></button>
-      :followAction?<div className={styles.followAction}>{followAction}</div>
-      :<span className={styles.publicLabel}>Public profile</span>}
+      :<div className={styles.visitorControls}>
+        <button ref={visitorCloseButton} type="button" className={`${styles.mainAction} ${styles.visitorClose}`} onClick={closeView} aria-label="Close full profile" title="Close full profile">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"/></svg>
+          <span>Close</span>
+        </button>
+        {followAction&&<div className={styles.followAction}>{followAction}</div>}
+      </div>}
      </div>
      <ProfileSpotlightHero userId={profile.id}/>
      <section className={styles.badgeVault} aria-label="Member badges">
