@@ -886,3 +886,13 @@ html[data-one-shell-ready="true"] .oneGlobalNav{transition:opacity .4s ease,tran
 .oneWhiteWelcomeMark{display:grid;place-items:center;width:70px;height:70px;border:1px solid #d8ede1;border-radius:20px;font-size:24px;font-weight:900;letter-spacing:-.12em;background:#f8fdf9;animation:oneWelcomePulse 1.2s ease-in-out infinite alternate}
 @keyframes oneWelcomePulse{from{opacity:.65;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){body::after,.oneWhiteWelcomeMark{transition:none!important;animation:none!important}}
+
+
+.profileLoadingWhite{min-height:100dvh;background:#fff!important}
+.profileWhiteSkeleton{display:grid;gap:14px;justify-items:center;width:min(86vw,460px);padding:35px 0}
+.profileWhiteSkeleton>div{border-radius:20px;background:linear-gradient(100deg,#f7f9fa,#eaf1f5,#f7f9fa);background-size:230% 100%;animation:profileSkeletonWave 1.45s linear infinite}
+.profileWhiteSkeleton>div:nth-child(1){width:110px;height:110px;border-radius:50%}
+.profileWhiteSkeleton>div:nth-child(2){width:66%;height:15px}
+.profileWhiteSkeleton>div:nth-child(3){width:44%;height:11px}
+@keyframes profileSkeletonWave{to{background-position-x:-230%}}
+@media(prefers-reduced-motion:reduce){.profileWhiteSkeleton>div{animation:none}}
