@@ -15,6 +15,7 @@ export default function RecentMuslimDiscovery({excludeId}:{excludeId?:string}){
  const [members,setMembers]=useState<Member[]>([]),[index,setIndex]=useState(0),[failed,setFailed]=useState(false);
  const [pictureError,setPictureError]=useState(false);
  const touchStart=useRef<{x:number;y:number}|null>(null);
+ const didSwipe=useRef(false);
  useEffect(()=>{
   let active=true;const db=createClient();
   const load=async()=>{
@@ -42,9 +43,9 @@ export default function RecentMuslimDiscovery({excludeId}:{excludeId?:string}){
  const member=members[index];
  const name=member?.display_name||member?.username||"New member";
  return <section className="profileSocialDiscoveryShortcut recentMuslimDiscovery" aria-label="Discover recently joined Muslims"
-  onTouchStart={e=>{const t=e.touches[0];if(t)touchStart.current={x:t.clientX,y:t.clientY}}}
-  onTouchEnd={e=>{const start=touchStart.current;touchStart.current=null;const t=e.changedTouches[0];if(!start||!t||members.length<2)return;const dx=t.clientX-start.x,dy=t.clientY-start.y;if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)*1.25)advance(dx<0?1:-1)}}
-  onTouchCancel={()=>{touchStart.current=null}}>
+  onTouchStart={e=>{didSwipe.current=false;const t=e.touches[0];if(t)touchStart.current={x:t.clientX,y:t.clientY}}}
+  onTouchEnd={e=>{const start=touchStart.current;touchStart.current=null;const t=e.changedTouches[0];if(!start||!t||members.length<2)return;const dx=t.clientX-start.x,dy=t.clientY-start.y;if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)*1.25){didSwipe.current=true;advance(dx<0?1:-1)}}}
+  onTouchCancel={()=>{touchStart.current=null}} onClickCapture={e=>{if(didSwipe.current){e.preventDefault();e.stopPropagation();didSwipe.current=false}}}>
    <Link className="recentMuslimProfile" href={member?"/profile?section=muslimeen&member="+encodeURIComponent(member.id):"/profile?section=muslimeen"} title={member?"View "+name+"'s profile":"Find Muslims"}>
     <span className="recentMuslimAvatar" key={member?.id||"placeholder"}>
      {member&&!pictureError?<img src={photo(member)} alt={name+"'s avatar"} loading="eager" onError={()=>setPictureError(true)}/>:<span aria-hidden="true">◎</span>}
