@@ -1,6 +1,7 @@
 "use client";
 import {useCallback,useEffect,useMemo,useRef,useState,type PointerEvent as ReactPointerEvent,type MouseEvent as ReactMouseEvent} from "react";
 import {createClient} from "../../utils/supabase/client";
+import {createPortal} from "react-dom";
 import {COUNTRY_POINTS,STATE_POINTS} from "./admin-region-points";
 import "./RegionDiscovery.css";
 
@@ -25,149 +26,262 @@ const usStates:Record<string,string>=Object.fromEntries(("AL:Alabama,AK:Alaska,A
 export function canonicalUsState(value:string|null|undefined){const raw=(value||"").trim();return usStates[raw.toUpperCase()]||Object.values(usStates).find(name=>name.toLowerCase()===raw.toLowerCase())||raw}
 type Stats={countries:{name:string;count:number}[];states:{name:string;count:number}[];optedIn:number;recorded:number;unplaced:number;usCount:number;updatedAt:string;limited:boolean};
 type Mode="world"|"us";
-type Props={members:Array<{country:string|null}>;currentCountry:string|null;userId:string;selected:string;selectedState?:string;onSelect:(value:string)=>void;onSelectState?:(value:string)=>void;onSaved:(value:string)=>void};
-const fmt=(n:number)=>n.toLocaleString();
+type Props={members:Array<{country:string|null}>;currentCountry:string|null;userId:string;selected:string;selectedState?:string;onSelect:(value:string)=>void;onSelectState?:(value:string)=>void;onSaved:(value:string)=>void;backgroundImage?:string};
 const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
-function bound(z:number,x:number,y:number){return {x:clamp(x,720*(1-z),0),y:clamp(y,360*(1-z),0)}}
-export default function RegionDiscovery({currentCountry,userId,selected,selectedState="",onSelect,onSelectState,onSaved}:Props){
+const bound=(zoom:number,x:number,y:number)=>({x:clamp(x,720*(1-zoom),0),y:clamp(y,360*(1-zoom),0)});
+const centerView={zoom:1.06,x:-21.6,y:-10.8};
+const kaabaPoint:[number,number]=[439.7,137.2]; // Makkah, approximate equirectangular map position; never a member location.
+
+export default function RegionDiscovery({currentCountry,userId,selected,selectedState="",onSelect,onSelectState,onSaved,backgroundImage="/assets/profile-backgrounds/obsidian.PNG"}:Props){
  const [stats,setStats]=useState<Stats|null>(null),[fetchError,setFetchError]=useState("");
- const [mode,setMode]=useState<Mode>("world"),[query,setQuery]=useState(""),[editing,setEditing]=useState(false);
+ const [mode,setMode]=useState<Mode>("world"),[editing,setEditing]=useState(false),[expanded,setExpanded]=useState(false);
  const [country,setCountry]=useState(canonicalCountry(currentCountry)),[state,setState]=useState(""),[city,setCity]=useState("");
- const [saving,setSaving]=useState(false),[message,setMessage]=useState("");
- const [zoom,setZoom]=useState(1.12),[pan,setPan]=useState({x:-43.2,y:-21.6}),[dragging,setDragging]=useState(false);
- const gesture=useRef<{id:number;x:number;y:number;dragging:boolean}|null>(null),ignoreClick=useRef(false),mapRef=useRef<SVGSVGElement|null>(null);
+ const [saving,setSaving]=useState(false),[locating,setLocating]=useState(false),[message,setMessage]=useState("");
+ const [consent,setConsent]=useState(false),[optedIn,setOptedIn]=useState(false),[permissionKnown,setPermissionKnown]=useState(false),[browseOnly,setBrowseOnly]=useState(false);
+ const [view,setViewState]=useState(centerView),[dragging,setDragging]=useState(false);
+ const pointerPositions=useRef(new Map<number,{x:number;y:number}>());
+ const lastPinch=useRef<number|null>(null),lastTap=useRef({at:0,x:0,y:0}),ignoreClick=useRef(false);
+ const dragRef=useRef<{id:number;x:number;y:number;moving:boolean}|null>(null);
+ const [listOpen,setListOpen]=useState(false),[listQuery,setListQuery]=useState("");
  useEffect(()=>{setCountry(canonicalCountry(currentCountry))},[currentCountry]);
  useEffect(()=>{
-  if(!editing)return;
-  let active=true;
-  void createClient().from("profiles").select("country,state,city").eq("id",userId).maybeSingle().then(({data})=>{
-   if(!active||!data)return;
-   setCountry(canonicalCountry(data.country));setState(data.state||"");setCity(data.city||"");
+  let mounted=true;setPermissionKnown(false);
+  void createClient().from("member_region_preferences").select("user_id").eq("user_id",userId).maybeSingle().then(({data,error})=>{
+   if(!mounted)return;setOptedIn(Boolean(data)&&!error);setPermissionKnown(true);
   });
-  return()=>{active=false};
+  return()=>{mounted=false};
+ },[userId]);
+ useEffect(()=>{
+  if(!editing)return;let alive=true;
+  void createClient().from("profiles").select("country,state,city").eq("id",userId).maybeSingle().then(({data})=>{
+   if(!alive||!data)return;setCountry(canonicalCountry(data.country));setState(data.state||"");setCity(data.city||"");
+  });
+  return()=>{alive=false};
  },[editing,userId]);
  const load=useCallback(async()=>{
-  try{const response=await fetch("/api/member-regions",{cache:"no-store"});const body=await response.json();
-   if(!response.ok)throw Error(body.error||"Member atlas unavailable");
-   setStats(body as Stats);setFetchError("");
-  }catch(e){setFetchError(e instanceof Error?e.message:"Unable to load member atlas")}
+  try{
+   const response=await fetch("/api/member-regions",{cache:"no-store"});
+   const data=await response.json();
+   if(!response.ok)throw Error(data.error||"Member map unavailable");
+   setStats(data as Stats);setFetchError("");
+  }catch(e){setFetchError(e instanceof Error?e.message:"Unable to load map")}
  },[]);
- useEffect(()=>{void load();const timer=window.setInterval(()=>{if(document.visibilityState==="visible")void load()},120000);
-  const refresh=()=>{if(document.visibilityState==="visible")void load()};document.addEventListener("visibilitychange",refresh);
-  return()=>{clearInterval(timer);document.removeEventListener("visibilitychange",refresh)};
+ useEffect(()=>{
+  void load();
+  const timer=window.setInterval(()=>{if(document.visibilityState==="visible")void load()},120000);
+  const refresh=()=>{if(document.visibilityState==="visible")void load()};
+  document.addEventListener("visibilitychange",refresh);window.addEventListener("1muslim:location-updated",refresh);
+  return()=>{window.clearInterval(timer);document.removeEventListener("visibilitychange",refresh);window.removeEventListener("1muslim:location-updated",refresh)};
  },[load]);
+ useEffect(()=>{
+  if(!expanded)return;
+  const prior=document.body.style.overflow;document.body.style.overflow="hidden";
+  const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setExpanded(false)};
+  window.addEventListener("keydown",key);
+  return()=>{document.body.style.overflow=prior;window.removeEventListener("keydown",key)};
+ },[expanded]);
  const rows=mode==="world"?(stats?.countries||[]):(stats?.states||[]);
- const focusName=mode==="us"?selectedState:selected;
- const selectedCount=(mode==="us"?stats?.states:stats?.countries)?.find(r=>r.name===focusName)?.count||0;
  const lookup=mode==="world"?COUNTRY_POINTS:STATE_POINTS;
  const pins=useMemo(()=>rows.map(({name,count})=>({name,count,point:lookup[name]})).filter(p=>Array.isArray(p.point)),[rows,lookup]);
- const filtered=rows.filter(r=>r.name.toLowerCase().includes(query.trim().toLowerCase()));
- const displayRows=query.trim()?filtered:filtered.slice(0,10);
- const setView=(next:Mode)=>{setMode(next);setZoom(1.12);setPan({x:-43.2,y:-21.6});setQuery("")};
- const changeZoom=(next:number)=>{
-  const z=clamp(next,1,3.6),ratio=z/zoom;
-  setPan(prev=>bound(z,360-(360-prev.x)*ratio,180-(180-prev.y)*ratio));setZoom(z);
+ const focusName=mode==="world"?selected:selectedState;
+ const chosen=rows.find(r=>r.name===focusName);
+ const switchMode=(next:Mode)=>{setMode(next);setViewState(centerView);onSelectState?.("");if(next==="world")onSelect("");else onSelect("United States")};
+ const zoomAt=(factor:number,anchorX=360,anchorY=180)=>{
+  setViewState(prev=>{
+   const z=clamp(prev.zoom*factor,1,5);
+   const ratio=z/prev.zoom;
+   return {zoom:z,...bound(z,anchorX-(anchorX-prev.x)*ratio,anchorY-(anchorY-prev.y)*ratio)};
+  });
  };
- const focusRegion=(name:string,point?:[number,number])=>{
-  // Tapping the same pin again clears the filter without leaving the map.
-  if((mode==="world"&&selected===name)||(mode==="us"&&selectedState===name)){
-   onSelect("");onSelectState?.("");setZoom(1.12);setPan({x:-43.2,y:-21.6});return;
-  }
-  if(mode==="world"){onSelect(name);onSelectState?.("")}
-  else{onSelect("United States");onSelectState?.(name)}
-  if(point){const z=Math.max(zoom,1.55);setZoom(z);setPan(bound(z,360-point[0]*z,180-point[1]*z))}
+ const resetView=()=>setViewState(centerView);
+ const mapPoint=(svg:SVGSVGElement,clientX:number,clientY:number)=>{
+  const pt=svg.createSVGPoint();pt.x=clientX;pt.y=clientY;
+  const ctm=svg.getScreenCTM();if(!ctm)return {x:360,y:180};
+  return pt.matrixTransform(ctm.inverse());
  };
- const resetView=()=>{setZoom(1);setPan({x:0,y:0})};
  const pointerDown=(e:ReactPointerEvent<SVGSVGElement>)=>{
   if(e.pointerType==="mouse"&&e.button!==0)return;
-  gesture.current={id:e.pointerId,x:e.clientX,y:e.clientY,dragging:false};
+  pointerPositions.current.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointerPositions.current.size===1)dragRef.current={id:e.pointerId,x:e.clientX,y:e.clientY,moving:false};
+  if(pointerPositions.current.size===2){
+   const [a,b]=[...pointerPositions.current.values()];lastPinch.current=Math.hypot(a.x-b.x,a.y-b.y);dragRef.current=null;
+  }
+  // Do not capture on tap: the marker must receive its own click.
+  // Capture only after an actual drag, so pressing a country pin still selects it.
  };
  const pointerMove=(e:ReactPointerEvent<SVGSVGElement>)=>{
-  const g=gesture.current;if(!g||g.id!==e.pointerId)return;
+  const old=pointerPositions.current.get(e.pointerId);if(!old)return;
+  pointerPositions.current.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointerPositions.current.size>=2){
+   const [a,b]=[...pointerPositions.current.values()];
+   const distance=Math.hypot(a.x-b.x,a.y-b.y);
+   const oldDistance=lastPinch.current;
+   if(oldDistance&&distance>12){
+    const anchor=mapPoint(e.currentTarget,(a.x+b.x)/2,(a.y+b.y)/2);
+    zoomAt(distance/oldDistance,anchor.x,anchor.y);
+    lastPinch.current=distance;ignoreClick.current=true;
+   }
+   return;
+  }
+  const g=dragRef.current;
+  if(!g||g.id!==e.pointerId)return;
   const dx=e.clientX-g.x,dy=e.clientY-g.y;
-  if(!g.dragging){
-   if(Math.abs(dx)<7)return;
-   // Vertical touch motion still scrolls the page naturally.
-   if(e.pointerType==="touch"&&Math.abs(dx)<Math.abs(dy)*1.25)return;
-   g.dragging=true;setDragging(true);ignoreClick.current=true;
+  if(!g.moving){
+   if(Math.hypot(dx,dy)<7)return;
+   g.moving=true;setDragging(true);ignoreClick.current=true;
    try{e.currentTarget.setPointerCapture(e.pointerId)}catch{}
   }
   g.x=e.clientX;g.y=e.clientY;
-  const rect=mapRef.current?.getBoundingClientRect();
-  const scale=rect?720/Math.max(rect.width,1):1;
-  setPan(prev=>bound(zoom,prev.x+dx*scale,prev.y+dy*scale));
+  const rect=e.currentTarget.getBoundingClientRect();
+  const scale=720/Math.max(rect.width,1);
+  setViewState(prev=>({zoom:prev.zoom,...bound(prev.zoom,prev.x+dx*scale,prev.y+dy*scale)}));
  };
  const pointerUp=(e:ReactPointerEvent<SVGSVGElement>)=>{
-  const g=gesture.current;if(!g||g.id!==e.pointerId)return;
-  if(g.dragging){try{e.currentTarget.releasePointerCapture(e.pointerId)}catch{}}
-  gesture.current=null;setDragging(false);
-  if(ignoreClick.current)window.setTimeout(()=>{ignoreClick.current=false},120);
+  const wasMulti=pointerPositions.current.size>1;
+  const draggingNow=Boolean(dragRef.current?.moving);
+  pointerPositions.current.delete(e.pointerId);
+  if(pointerPositions.current.size<2)lastPinch.current=null;
+  if(pointerPositions.current.size===0){dragRef.current=null;setDragging(false);}
+  if(wasMulti||draggingNow){ignoreClick.current=true;window.setTimeout(()=>{ignoreClick.current=false},350);return;}
+  // Double tap to zoom, including iOS where dblclick may not fire on SVG.
+  if(e.pointerType==="touch"){
+   const last=lastTap.current,now=Date.now();
+   if(now-last.at<350&&Math.hypot(e.clientX-last.x,e.clientY-last.y)<32){
+    const at=mapPoint(e.currentTarget,e.clientX,e.clientY);
+    zoomAt(1.65,at.x,at.y);ignoreClick.current=true;
+   }
+   lastTap.current={at:now,x:e.clientX,y:e.clientY};
+  }
  };
- const swallowDragClick=(e:ReactMouseEvent<SVGSVGElement>)=>{if(ignoreClick.current){e.preventDefault();e.stopPropagation();ignoreClick.current=false}};
+ const selectRegion=(name:string,point?:[number,number])=>{
+  if(mode==="world"){onSelect(name===selected?"":name);onSelectState?.("");}
+  else{onSelect("United States");onSelectState?.(name===selectedState?"":name);}
+  if(name===focusName){resetView();return;}
+  if(point){
+   setViewState(prev=>{
+    const z=Math.max(prev.zoom,1.85);
+    return {zoom:z,...bound(z,360-point[0]*z,180-point[1]*z)};
+   });
+  }
+ };
+ const openEditor=()=>{setExpanded(false);setEditing(true);setConsent(false);setMessage("");setBrowseOnly(true);window.setTimeout(()=>document.querySelector(".ummahAtlas .regionEditor")?.scrollIntoView({behavior:"smooth",block:"center"}),90)};
+ const requestLocation=()=>{
+  if(!navigator.geolocation){setMessage("Device location is unavailable. Choose your region manually.");return}
+  setLocating(true);setMessage("");
+  navigator.geolocation.getCurrentPosition(async position=>{
+   try{
+    const response=await fetch("/api/profile/reverse-geocode",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({latitude:position.coords.latitude,longitude:position.coords.longitude})});
+    const data=await response.json();
+    if(!response.ok||!data.country)throw Error(data.error||"Unable to recognize your region");
+    setCountry(canonicalCountry(data.country));setState(data.state||"");setCity(data.city||"");
+    setMessage("Location found. Review your region and agree to share it before saving.");
+   }catch(e){setMessage(e instanceof Error?e.message:"Enter your region manually.")}
+   finally{setLocating(false)}
+  },error=>{setLocating(false);setMessage(error.code===1?"Location access was declined. You can still choose a country manually.":"Unable to use device location. Choose your region manually.")},{enableHighAccuracy:false,timeout:11000,maximumAge:300000});
+ };
  const save=async()=>{
-  const normalized=canonicalCountry(country);if(!normalized){setMessage("Choose a country before saving.");return}
+  const normalized=canonicalCountry(country);
+  if(!normalized||!consent){setMessage("Choose a country and check the voluntary sharing agreement.");return}
   setSaving(true);setMessage("");
   try{
    const db=createClient();const {data:{user}}=await db.auth.getUser();
-   if(user?.id!==userId)throw Error("Please sign in again to share your region.");
+   if(user?.id!==userId)throw Error("Sign in again to share your region.");
    const {error:profileError}=await db.from("profiles").update({country:normalized,state:state.trim()||null,city:city.trim()||null}).eq("id",userId);
-   if(profileError)throw Error("Could not update your profile region: "+profileError.message);
-   const {error:consentError}=await db.from("member_region_preferences").upsert({
-    user_id:userId,region_level:city.trim()?"city":state.trim()?"state":"country",consented_at:new Date().toISOString()
-   },{onConflict:"user_id"});
-   if(consentError)throw Error("Your profile was saved, but your public map consent was not recorded. Please retry.");
+   if(profileError)throw Error("Could not save your region: "+profileError.message);
+   const {error:consentError}=await db.from("member_region_preferences").upsert({user_id:userId,region_level:city.trim()?"city":state.trim()?"state":"country",consented_at:new Date().toISOString()},{onConflict:"user_id"});
+   if(consentError)throw Error("Region saved privately, but map sharing did not complete. Please retry.");
    onSaved(normalized);onSelect(normalized);onSelectState?.("");
-   setEditing(false);setMessage("✓ Your location is now included on the Ummah map.");
-   void load();window.dispatchEvent(new Event("1muslim:location-updated"));
-  }catch(e){setMessage(e instanceof Error?e.message:"Could not save your region")}finally{setSaving(false)}
+   setOptedIn(true);setPermissionKnown(true);setBrowseOnly(true);setEditing(false);
+   setMessage("✓ You are now part of the Ummah map.");
+   await load();window.dispatchEvent(new Event("1muslim:location-updated"));
+  }catch(e){setMessage(e instanceof Error?e.message:"Could not save region")}
+  finally{setSaving(false)}
  };
  const removeFromMap=async()=>{
   setSaving(true);setMessage("");
   try{
-   const db=createClient();const {data:{user}}=await db.auth.getUser();if(user?.id!==userId)throw Error("Sign in to change map sharing.");
+   const db=createClient();const {data:{user}}=await db.auth.getUser();
+   if(user?.id!==userId)throw Error("Sign in again to change map sharing.");
    const {error}=await db.from("member_region_preferences").delete().eq("user_id",userId);
-   if(error)throw Error("Unable to stop sharing your region.");
-   onSelect("");onSelectState?.("");setMessage("✓ Your location is no longer counted on the Ummah map. Your prayer location stays unchanged.");
-   setEditing(false);void load();
-  }catch(e){setMessage(e instanceof Error?e.message:"Unable to update sharing")}finally{setSaving(false)}
+   if(error)throw Error("Could not stop sharing.");
+   setOptedIn(false);onSelect("");onSelectState?.("");
+   setEditing(false);setBrowseOnly(true);setMessage("✓ Your region is no longer on the community map.");
+   await load();window.dispatchEvent(new Event("1muslim:location-updated"));
+  }catch(e){setMessage(e instanceof Error?e.message:"Unable to update sharing")}
+  finally{setSaving(false)}
  };
- const selectedPlace=focusName|| (mode==="us"?"United States":"Worldwide");
- const chosen=rows.find(r=>r.name===focusName);
- const selectedLabel=mode==="us"&&selectedState?selectedState:selectedPlace;
- return <section className="muslimeenRegionPanel ummahAtlas" aria-label="Interactive member atlas">
-  <div className="atlasHead"><div><span className="atlasEyebrow">1MUSLIM · UMMAH NETWORK</span><h2>Discover our <em>Ummah</em> ✧</h2><p>Explore the world through places Muslims have chosen to share.</p></div><button type="button" className="atlasEdit" onClick={()=>{setEditing(v=>!v);setMessage("");setCountry(canonicalCountry(currentCountry))}} aria-expanded={editing}>⌖ {editing?"Close":"My Region"}</button></div>
-  <div className="atlasMetrics" aria-label="Member location statistics"><div><strong>{stats?fmt(stats.recorded):"—"}</strong><span>Members on map</span></div><div><strong>{stats?fmt(stats.countries.length):"—"}</strong><span>Countries</span></div><div><strong>{stats?fmt(stats.states.length):"—"}</strong><span>U.S. states</span></div></div>
-  <div className="atlasToolbar"><div className="atlasMode" role="group" aria-label="Map view"><button type="button" aria-pressed={mode==="world"} onClick={()=>setView("world")}>◎ World</button><button type="button" aria-pressed={mode==="us"} onClick={()=>setView("us")}>⌖ United States</button></div><span className="atlasRefresh"><i aria-hidden="true"/> Voluntary locations · {stats?"Live counts":"Loading"}</span></div>
-  <div className="atlasStage" aria-label="Drag and zoom the member region map">
-   <div className="atlasTopline"><span>{mode==="world"?"GLOBAL MEMBER ATLAS":"UNITED STATES · MEMBER ATLAS"}</span><span>1MUSLIM ◇ NETWORK</span></div>
-   <svg ref={mapRef} className={"atlasGeography"+(dragging?" isDragging":"")} viewBox="0 0 720 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label={mode==="world"?"Map of the world with voluntarily shared member locations":"Map of U.S. states with voluntarily shared member locations"}
-    onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onClickCapture={swallowDragClick} onDoubleClick={()=>changeZoom(zoom+0.4)}>
-    <defs><radialGradient id="ummahAtlasGlow"><stop offset="0%" stopColor="#7afce4" stopOpacity=".4"/><stop offset="100%" stopColor="#7afce4" stopOpacity="0"/></radialGradient></defs>
-    <g transform={"translate("+pan.x+" "+pan.y+") scale("+zoom+")"}>
-     <image href={mode==="world"?"/maps/ummah-world.svg":"/maps/ummah-united-states.svg"} width="720" height="360" preserveAspectRatio="xMidYMid meet"/>
-     <circle cx="360" cy="180" r="120" className="atlasGridCircle"/><circle cx="360" cy="180" r="205" className="atlasGridCircle"/><circle cx="360" cy="180" r="280" className="atlasGridCircle"/>
-     {pins.map(({name,count,point})=>{
-      const active=name===focusName,r=Math.min(12,4+Math.log2(count+1)*1.7);
-      return <g key={name} role="button" tabIndex={0} aria-label={name+", "+count+" "+(count===1?"member":"members")} className={"atlasMarker"+(active?" isSelected":"")} onClick={()=>focusRegion(name,point)} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();focusRegion(name,point)}}}>
-       <circle cx={point[0]} cy={point[1]} r={r+12} className="atlasMarkerGlow"/>
-       <circle cx={point[0]} cy={point[1]} r={r} className="atlasMarkerCore"/>
-       <circle cx={point[0]} cy={point[1]} r="2.4" fill="#fff"/>
-       {(active||count>=5)&&<text x={point[0]} y={point[1]-r-8} textAnchor="middle" className="atlasMarkerLabel">{active?name:fmt(count)}</text>}
-       <title>{name+": "+fmt(count)+" opted-in "+(count===1?"member":"members")}</title>
-      </g>
-     })}
-    </g>
-   </svg>
-   <div className="atlasZoom" role="group" aria-label="Map zoom controls"><button type="button" onClick={()=>changeZoom(zoom+.35)} aria-label="Zoom in">+</button><button type="button" onClick={()=>changeZoom(zoom-.35)} aria-label="Zoom out">−</button><button type="button" onClick={resetView} aria-label="Reset map view">⌖</button></div>
-   <div className="atlasBottomline"><span><b>●</b> Places with shared members</span><span>Drag horizontally · Zoom + / −</span></div>
+ const mapCanvas=(full=false)=><div className={"atlasStage"+(full?" atlasFullStage":"")+(permissionKnown&&!optedIn&&!browseOnly?" atlasGuest":"")}>
+  <svg className={"atlasGeography"+(dragging?" isDragging":"")} viewBox="0 0 720 360" preserveAspectRatio="xMidYMid meet" tabIndex={0}
+   aria-label="Interactive Ummah map. Drag to pan, pinch or double tap to zoom, tap a location marker to filter. Keyboard: plus, minus and arrow keys."
+   onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}
+   onClickCapture={e=>{if(ignoreClick.current){e.preventDefault();e.stopPropagation();ignoreClick.current=false}}}
+   onDoubleClick={e=>{const at=mapPoint(e.currentTarget,e.clientX,e.clientY);zoomAt(1.45,at.x,at.y)}}
+   onKeyDown={e=>{
+    if(e.key==="+"||e.key==="="){e.preventDefault();zoomAt(1.4)}
+    if(e.key==="-"){e.preventDefault();zoomAt(1/1.4)}
+    if(e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="ArrowUp"||e.key==="ArrowDown"){
+     e.preventDefault();const dx=e.key==="ArrowLeft"?28:e.key==="ArrowRight"?-28:0,dy=e.key==="ArrowUp"?28:e.key==="ArrowDown"?-28:0;
+     setViewState(prev=>({zoom:prev.zoom,...bound(prev.zoom,prev.x+dx,prev.y+dy)}));
+    }
+   }}>
+   <rect width="720" height="360" fill="#f8faf9"/>
+   <g transform={"translate("+view.x+" "+view.y+") scale("+view.zoom+")"}>
+    <image className="atlasLand" href={mode==="world"?"/maps/ummah-world-light.svg":"/maps/ummah-united-states-light.svg"} width="720" height="360" preserveAspectRatio="xMidYMid meet" />
+    {mode==="world"&&<g className="atlasKaaba" transform={"translate("+kaabaPoint[0]+" "+kaabaPoint[1]+")"}>
+      <title>The Kaaba — Makkah, Saudi Arabia (landmark, not a member location)</title>
+      <path d="M-6-5 1-8 8-5 1-2Z" fill="#3d4640"/>
+      <path d="M-6-5 1-2 1 9-6 6Z" fill="#242e2a"/>
+      <path d="M1-2 8-5 8 6 1 9Z" fill="#111c19"/>
+      <path d="M-6-1 1 2 8-1" fill="none" stroke="#e8bb6c" strokeWidth="2"/>
+      <circle r="13" fill="none" stroke="#d5a657" strokeOpacity=".35" />
+    </g>}
+    {pins.map(({name,count,point})=>{
+     const active=name===focusName,r=Math.min(9,4.5+Math.log2(count+1));
+     return <g key={name} className={"atlasMarker"+(active?" isSelected":"")} tabIndex={0} role="button" aria-label={name+", "+count+(count===1?" member":" members")}
+      onClick={e=>{e.stopPropagation();selectRegion(name,point)}}
+      onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();selectRegion(name,point)}}}>
+      <circle cx={point[0]} cy={point[1]} r={r+11} className="atlasMarkerTouch"/>
+      <circle cx={point[0]} cy={point[1]} r={r} className="atlasMarkerCore"/>
+      <circle cx={point[0]} cy={point[1]} r="2.2" fill="#fff"/>
+      <title>{name+": "+count+(count===1?" member":" members")}</title>
+     </g>;
+    })}
+   </g>
+  </svg>
+  <div className="atlasFloatTools">
+   <button type="button" title={mode==="world"?"See United States":"See world"} aria-label={mode==="world"?"Switch to United States map":"Switch to world map"} onClick={()=>switchMode(mode==="world"?"us":"world")}>{mode==="world"?"US":"🌐"}</button>
+   {!full&&<button type="button" aria-label="Expand map studio" title="Full map" onClick={()=>setExpanded(true)}>⤢</button>}
+   {full&&<button type="button" aria-label="Reset map" onClick={resetView}>⌖</button>}
   </div>
-  <div className="atlasInfo" aria-live="polite"><div className="atlasInfoCopy"><strong>⌖ {selectedLabel}</strong><small>{chosen?fmt(selectedCount)+" "+(selectedCount===1?"member has":"members have")+" shared this region":mode==="us"?fmt(stats?.usCount||0)+" U.S. members shared a location":fmt(stats?.recorded||0)+" members have shared their region"} · {mode==="us"?"State-level only":"Country-level only"}</small></div><button type="button" onClick={()=>{if(mode==="us"&&!selectedState)onSelect("United States");document.getElementById("muslimeen-directory")?.scrollIntoView({behavior:"smooth",block:"start"})}}>View Members ↗</button></div>
-  <div className="atlasDirectory"><div className="atlasDirectoryHead"><strong>⌕ Find a {mode==="world"?"country":"state"}</strong><small>{rows.length} locations</small></div><label className="atlasSearch"><span aria-hidden="true">⌕</span><input type="search" aria-label={mode==="world"?"Search countries":"Search U.S. states"} placeholder={mode==="world"?"Search shared countries…":"Search shared states…"} value={query} onChange={e=>setQuery(e.target.value)}/></label>
-   {fetchError&&<div className="atlasError" role="alert">{fetchError} <button type="button" onClick={()=>void load()}>Retry</button></div>}
-   {displayRows.length?<div className="atlasRegions" aria-label="Regions with opted-in members">{displayRows.map(row=><button type="button" key={row.name} aria-pressed={focusName===row.name} onClick={()=>focusRegion(row.name,lookup[row.name])}>⌖ {row.name}<span>{fmt(row.count)} {row.count===1?"member":"members"}</span></button>)}</div>:<div className="atlasEmpty">{stats?(query?"No matching shared regions.":"No members have explicitly shared a location in this view yet."):fetchError?"Atlas data is currently unavailable.":"Checking shared regions…"}</div>}
+  {chosen&&<div className="atlasPlace" role="status"><div><strong>{chosen.name}</strong><small>{chosen.count} {chosen.count===1?"Muslim":"Muslims"} shared this region</small></div><button type="button" onClick={()=>{setExpanded(false);document.getElementById("muslimeen-directory")?.scrollIntoView({behavior:"smooth",block:"start"})}}>See members ↗</button></div>}
+  {permissionKnown&&!optedIn&&!browseOnly&&!full&&<div className="atlasInvitation"><strong>Connect with Muslims around the world</strong><span>📍 Add your region to help grow the Ummah map.</span><div><button type="button" onClick={openEditor}>Add my region</button><button type="button" onClick={()=>setBrowseOnly(true)}>Explore without sharing</button></div></div>}
+  {!chosen&&<div className="atlasTouchHint" aria-hidden="true">Pinch · drag · tap a dot</div>}
+ </div>;
+ return <section className="muslimeenRegionPanel ummahAtlas" aria-label="Community map">
+  <div className="atlasHead">
+   <div><span className="atlasEyebrow">1MUSLIM · CONNECTING THE UMMAH</span><h2>Muslims around the world <span aria-hidden="true">✧</span></h2></div>
+   <button type="button" className="atlasEdit" title="Add or update my region" aria-label="Add or update my region" onClick={openEditor}>⌖</button>
   </div>
-  {editing&&<div className="regionEditor" aria-label="Update my map sharing"><h3>Choose your Ummah region</h3><p>Opt in to display your country on the community map. State and city help your profile but exact coordinates are never requested or shown.</p><label>Country<input list="ummah-atlas-countries" value={country} onChange={e=>setCountry(e.target.value)} placeholder="e.g. United States" maxLength={80}/></label><datalist id="ummah-atlas-countries">{Array.from(new Set([...rows.map(r=>r.name),"United States","Canada","United Kingdom","Somalia","Türkiye","Kenya","Nigeria","Pakistan","Saudi Arabia","Australia"])).map(name=><option key={name} value={name}/>)}</datalist><label>State / Province (optional)<input value={state} onChange={e=>setState(e.target.value)} maxLength={80}/></label><label>City (optional)<input value={city} onChange={e=>setCity(e.target.value)} maxLength={80}/></label><button type="button" disabled={saving||!country.trim()} onClick={()=>void save()}>{saving?"Saving…":"Save My Region ✓"}</button><button type="button" disabled={saving} onClick={()=>void removeFromMap()} style={{background:"transparent",color:"#aacbd5",borderColor:"#5a7182",fontWeight:650}}>Stop sharing my location on map</button></div>}
-  {message&&<p role="status" style={{margin:0}}>{message}</p>}
-  <div className="atlasFoot"><span>🔒 Only members who explicitly saved their region are included. No device GPS, private masjid information or exact locations are displayed.</span><span>{stats?.limited?"Partial results":stats?.updatedAt?"Updated "+new Date(stats.updatedAt).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}):""}</span></div>
+  {mapCanvas()}
+  {fetchError&&<p role="alert" className="atlasError">{fetchError} <button type="button" onClick={()=>void load()}>Retry</button></p>}
+  {message&&!editing&&<p role="status" className="atlasMessage">{message}</p>}
+  {stats&&<div className="atlasQuietFooter"><span>{stats.recorded.toLocaleString()} members sharing a region</span><button type="button" onClick={()=>setListOpen(x=>!x)} aria-expanded={listOpen}>{listOpen?"Hide places":"Browse places"} ⌄</button></div>}
+  {listOpen&&<div className="atlasDirectory"><label className="atlasSearch"><span aria-hidden="true">⌕</span><input type="search" value={listQuery} onChange={e=>setListQuery(e.target.value)} placeholder="Find a country or state" aria-label="Find shared region"/></label><div className="atlasRegions">{rows.filter(r=>r.name.toLowerCase().includes(listQuery.toLowerCase())).map(r=><button type="button" key={r.name} onClick={()=>selectRegion(r.name,lookup[r.name])}>{r.name} · {r.count}</button>)}</div></div>}
+  {editing&&<div className="regionEditor" role="region" aria-label="Opt in to the Ummah map">
+   <div className="atlasEditorTop"><div><h3>📍 My region</h3><p>Share a general location so other Muslims can find your community.</p></div><button type="button" aria-label="Close region settings" onClick={()=>setEditing(false)}>×</button></div>
+   <button type="button" className="atlasDetect" onClick={requestLocation} disabled={locating||saving}>{locating?"Finding location…":"⌖ Use my approximate device location"}</button>
+   <p className="atlasPrivacy">Optional. Device coordinates are used briefly by a geocoding service to suggest your country, state and city. Precise coordinates are not saved to your profile or shown on the map.</p>
+   <label>Country<input list="ummah-atlas-countries" value={country} onChange={e=>setCountry(e.target.value)} placeholder="Country" maxLength={80}/></label>
+   <datalist id="ummah-atlas-countries">{Array.from(new Set([...(stats?.countries||[]).map(r=>r.name),"United States","Canada","United Kingdom","Somalia","Türkiye","Kenya","Nigeria","Pakistan","Saudi Arabia","Australia"])).map(name=><option key={name} value={name}/>)}</datalist>
+   <div className="atlasEditorFields"><label>State / province <small>Optional</small><input value={state} onChange={e=>setState(e.target.value)} placeholder="State or province" maxLength={80}/></label><label>City <small>Optional</small><input value={city} onChange={e=>setCity(e.target.value)} placeholder="City" maxLength={80}/></label></div>
+   <label className="atlasConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>I choose to share my country on the Ummah map. My state and city, if entered, are also public profile fields. I can stop map sharing anytime.</span></label>
+   <div className="atlasEditorButtons"><button type="button" disabled={saving||locating||!country.trim()||!consent} onClick={()=>void save()}>{saving?"Saving…":"Save and join the map"}</button>{optedIn&&<button type="button" className="atlasRemove" disabled={saving} onClick={()=>void removeFromMap()}>Stop sharing on map</button>}</div>
+   {message&&<p role="status" className="atlasMessage">{message}</p>}
+  </div>}
+  {expanded&&typeof document!=="undefined"&&createPortal(<div className="atlasStudioOverlay" role="dialog" aria-modal="true" aria-label="Full-screen Ummah map studio">
+   <div className="atlasStudioBackdrop" aria-hidden="true" style={{backgroundImage:`linear-gradient(180deg,#050e1c55,#071d26d9),url("${backgroundImage.replaceAll("\"","")}")`,transform:"scale(1.045) translate("+(-view.x/80)+"px,"+(-view.y/80)+"px)"}}/>
+   <button type="button" className="atlasStudioBack" onClick={()=>setExpanded(false)} aria-label="Close full map">‹</button>
+   <div className="atlasStudioCanvas">{mapCanvas(true)}</div>
+  </div>,document.body)}
  </section>;
 }

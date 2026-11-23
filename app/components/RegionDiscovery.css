@@ -1,74 +1,83 @@
-/* Ummah Atlas — cartographic data is member-consent-only and rendered as aggregates. */
-.muslimeenRegionPanel.ummahAtlas{--atlas-glow:#70e5df;position:relative;min-width:0;max-width:100%;box-sizing:border-box;overflow:hidden;display:grid;gap:17px;padding:clamp(12px,3vw,24px)!important;border-radius:28px!important;color:#eaf5fb!important;background:radial-gradient(ellipse at 9% 7%,#1f4562,transparent 40%),radial-gradient(ellipse at 95% 0%,#244058,transparent 42%),linear-gradient(145deg,#071525,#0a1c31 64%,#07131f)!important;border:1px solid #4c728d!important;box-shadow:0 23px 50px #071c3540,inset 0 1px #defaff24!important;isolation:isolate}
+/* A welcoming, people-first Ummah atlas. Geographic markers represent opted-in aggregates, never GPS coordinates. */
+.muslimeenRegionPanel.ummahAtlas{display:grid;gap:10px;position:relative;box-sizing:border-box;width:100%;min-width:0;max-width:100%;margin:13px 0 17px;padding:clamp(9px,2.5vw,17px)!important;border:1px solid #d8e5df!important;border-radius:22px!important;background:linear-gradient(145deg,#ffffff,#f5f9f7)!important;box-shadow:0 12px 28px #314d4210!important;color:#173c35!important;isolation:isolate;overflow:visible!important}
 .ummahAtlas *{box-sizing:border-box}
-.ummahAtlas .atlasEyebrow{font-size:10px;font-weight:850;letter-spacing:.2em;color:#8adccf;text-transform:uppercase}
-.ummahAtlas .atlasHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.ummahAtlas .atlasHead h2{font-size:clamp(24px,5vw,36px);letter-spacing:-.045em;color:#f4f9fd;margin:7px 0 4px!important;line-height:1.15}
-.ummahAtlas .atlasHead h2 em{font-style:normal;color:#edd19b}
-.ummahAtlas .atlasHead p{margin:0;font-size:12px;color:#a4baca;line-height:1.45}
-.ummahAtlas .atlasEdit{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:10px 13px;border-radius:999px;color:#e0f4ff;background:#18324a;border:1px solid #4e7490;cursor:pointer;font-weight:700;font-size:12px}
-.ummahAtlas .atlasEdit:focus-visible,.ummahAtlas button:focus-visible,.ummahAtlas input:focus-visible{outline:2px solid #b8f5e8;outline-offset:3px}
-.ummahAtlas .atlasMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.ummahAtlas .atlasMetrics div{min-width:0;display:grid;gap:4px;padding:13px 12px;border:1px solid #315269;border-radius:16px;background:linear-gradient(135deg,#17344cdd,#0b2136d9);box-shadow:inset 0 1px #d7fbfe12}
-.ummahAtlas .atlasMetrics strong{font-size:clamp(21px,4.4vw,30px);color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:1.1}
-.ummahAtlas .atlasMetrics span{font-size:9px;font-weight:750;color:#93b5c7;line-height:1.3;letter-spacing:.06em;text-transform:uppercase}
-.ummahAtlas .atlasToolbar{display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap}
-.ummahAtlas .atlasMode{border:1px solid #43627b;border-radius:100px;display:flex;padding:4px;gap:4px;background:#061626}
-.ummahAtlas .atlasMode button{border:0;border-radius:90px;color:#a3c4d1;padding:10px 13px;font-size:12px;font-weight:750;background:transparent;cursor:pointer}
-.ummahAtlas .atlasMode button[aria-pressed=true]{background:linear-gradient(120deg,#d9faff,#91c9d6);color:#102c41;box-shadow:0 3px 15px #80dfe944}
-.ummahAtlas .atlasRefresh{display:flex;align-items:center;gap:6px;color:#95c7c2;font-size:10px;font-weight:750;letter-spacing:.03em}
-.ummahAtlas .atlasRefresh i{height:7px;width:7px;border-radius:50%;background:#80e7c0;box-shadow:0 0 0 4px #7beab523;display:block}
-.ummahAtlas .atlasStage{position:relative;height:clamp(285px,48vw,495px);overflow:hidden;border:1px solid #4f849d;border-radius:22px;background:radial-gradient(ellipse at 47% 42%,#214d71 0%,#10344d 37%,#07192b 75%,#050e1a 100%);box-shadow:inset 0 0 70px #00101f,0 15px 32px #0007}
-.ummahAtlas .atlasStage:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,#79cde016 1px,transparent 1px),linear-gradient(#79cde016 1px,transparent 1px);background-size:42px 42px;mask-image:radial-gradient(ellipse,#0009,transparent 95%)}
-.ummahAtlas .atlasStage:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 0 1px #ccf8ff11,inset 0 0 48px #071223}
-.ummahAtlas .atlasStage svg.atlasGeography{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
-.ummahAtlas .atlasStage svg.atlasGeography.isDragging{cursor:grabbing}
-.ummahAtlas .atlasStage .atlasGridCircle{fill:none;stroke:#92b8cb;stroke-opacity:.13;stroke-width:.75}
-.ummahAtlas .atlasStage .atlasLink{fill:none;stroke:#6ce6d6;stroke-width:.5;stroke-opacity:.14}
-.ummahAtlas .atlasStage .atlasMarker{cursor:pointer;outline:none;transition:filter .2s}
-.ummahAtlas .atlasStage .atlasMarker:hover,.ummahAtlas .atlasStage .atlasMarker:focus-visible{filter:drop-shadow(0 0 6px #88fff0)}
-.ummahAtlas .atlasStage .atlasMarkerGlow{fill:#5dfff3;opacity:.37}
-.ummahAtlas .atlasStage .atlasMarkerCore{fill:#49e1d5;stroke:#eafff8;stroke-width:1.5;opacity:.97}
-.ummahAtlas .atlasStage .atlasMarker.isSelected .atlasMarkerCore{fill:#f3c981;stroke:#fff9e2;stroke-width:2.4}
-.ummahAtlas .atlasStage .atlasMarker.isSelected .atlasMarkerGlow{fill:#ffe4aa;opacity:.67}
-.ummahAtlas .atlasStage .atlasMarkerLabel{font-size:10px;font-weight:800;fill:#faffff;paint-order:stroke;stroke:#071b2b;stroke-width:3px;stroke-linejoin:round;pointer-events:none}
-.ummahAtlas .atlasTopline{position:absolute;z-index:2;left:14px;top:12px;right:14px;display:flex;gap:10px;justify-content:space-between;align-items:center;pointer-events:none}
-.ummahAtlas .atlasTopline span{font-size:9px;letter-spacing:.11em;color:#d0f5ff;font-weight:800;text-shadow:0 2px 7px #000}
-.ummahAtlas .atlasZoom{position:absolute;right:12px;top:43px;z-index:3;display:grid;gap:7px}
-.ummahAtlas .atlasZoom button{display:grid;place-items:center;border:1px solid #6e98a6;background:#0e3045de;color:#e1fbff;backdrop-filter:blur(12px);height:37px;width:37px;border-radius:12px;font-size:20px;font-weight:600;cursor:pointer}
-.ummahAtlas .atlasZoom button:last-child{font-size:11px}
-.ummahAtlas .atlasBottomline{position:absolute;left:10px;right:10px;bottom:10px;z-index:2;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;pointer-events:none}
-.ummahAtlas .atlasBottomline span{background:#061a29d9;backdrop-filter:blur(9px);border:1px solid #6095a344;border-radius:100px;padding:8px 10px;color:#c4e5f0;font-size:10px;line-height:1.2}
-.ummahAtlas .atlasBottomline b{color:#8af5d8}
-.ummahAtlas .atlasInfo{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:9px;padding:14px 15px;border:1px solid #456d82;background:linear-gradient(115deg,#142e43,#0b2236);border-radius:17px}
-.ummahAtlas .atlasInfo .atlasInfoCopy{display:grid;gap:5px;min-width:0;flex:1}
-.ummahAtlas .atlasInfo strong{font-size:16px;color:#f6fcff;overflow-wrap:anywhere}
-.ummahAtlas .atlasInfo small{font-size:11px;color:#9cc2cb;line-height:1.45}
-.ummahAtlas .atlasInfo button{border:1px solid #81cbd1;border-radius:999px;background:#b7eced;color:#113047;cursor:pointer;padding:10px 12px;font-size:11px;font-weight:850}
-.ummahAtlas .atlasDirectory{display:grid;gap:10px}
-.ummahAtlas .atlasDirectoryHead{display:flex;justify-content:space-between;gap:10px;align-items:center}
-.ummahAtlas .atlasDirectoryHead strong{font-size:14px;color:#e4f2fa}
-.ummahAtlas .atlasDirectoryHead small{color:#9bb7c7;font-size:10px}
-.ummahAtlas .atlasSearch{display:flex;align-items:center;gap:8px;border:1px solid #47667b;border-radius:14px;background:#0a2032;padding:0 14px}
-.ummahAtlas .atlasSearch span{color:#85b9c5;font-size:19px}
-.ummahAtlas .atlasSearch input{flex:1;min-width:0;min-height:46px;border:0!important;outline:none!important;box-shadow:none!important;background:transparent!important;color:#e8f6fb!important;font-size:14px!important;padding:12px 2px!important}
-.ummahAtlas .atlasSearch input::placeholder{color:#819fad}
-.ummahAtlas .atlasRegions{display:flex;gap:7px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:3px 0 7px}
-.ummahAtlas .atlasRegions::-webkit-scrollbar{display:none}
-.ummahAtlas .atlasRegions button{min-width:max-content;scroll-snap-align:start;border:1px solid #436b83;border-radius:100px;background:#143149;color:#c9e4ed;cursor:pointer;padding:9px 12px;display:inline-flex;gap:7px;align-items:center;font-size:12px}
-.ummahAtlas .atlasRegions button[aria-pressed=true]{border-color:#f4d7a2;color:#ffe4b2;background:#33404b}
-.ummahAtlas .atlasRegions button span{font-size:11px;color:#8ed7d0;font-variant-numeric:tabular-nums}
-.ummahAtlas .atlasEmpty{border:1px dashed #5a8492;background:#0d2538;color:#a6c4ce;padding:13px;border-radius:13px;font-size:12px;line-height:1.5}
-.ummahAtlas .atlasFoot{display:flex;justify-content:space-between;align-items:start;gap:8px;color:#9cafbe;font-size:10px;line-height:1.5}
-.ummahAtlas .atlasFoot a{color:#addfe9;text-decoration:underline}
-.ummahAtlas .atlasError{padding:10px;border:1px solid #b9788b;background:#412538;color:#ffe0e8;font-size:12px;border-radius:10px}
-.ummahAtlas .regionEditor{display:grid;gap:12px;padding:16px;border:1px solid #4f738a;border-radius:18px;background:#0b2439}
-.ummahAtlas .regionEditor h3{margin:0;font-size:17px;color:#f8f9ff}
-.ummahAtlas .regionEditor p{color:#b7ccda;font-size:12px;line-height:1.5;margin:0}
-.ummahAtlas .regionEditor label{display:grid;gap:6px;font-size:12px;color:#c5e3eb;font-weight:800}
-.ummahAtlas .regionEditor input{width:100%;min-width:0;border:1px solid #69879b;border-radius:12px;background:#102c40;color:#ecfaff;padding:12px 13px;font-size:15px}
-.ummahAtlas .regionEditor button{border:1px solid #9de3de;border-radius:14px;background:linear-gradient(120deg,#dcf8ed,#8ad8d4);color:#103248;min-height:45px;padding:12px;font-size:14px;font-weight:800;cursor:pointer}
-.ummahAtlas .regionEditor button:disabled{opacity:.55}
-.ummahAtlas [role=status]{color:#b6f0da;font-size:12px}
-@media(max-width:520px){.muslimeenRegionPanel.ummahAtlas{padding:14px!important;gap:13px}.ummahAtlas .atlasMetrics div{padding:12px 9px}.ummahAtlas .atlasMetrics span{font-size:8px;letter-spacing:0}.ummahAtlas .atlasHead h2{font-size:25px}.ummahAtlas .atlasStage{height:340px}.ummahAtlas .atlasTopline span{font-size:8px}.ummahAtlas .atlasBottomline span{font-size:9px}.ummahAtlas .atlasInfo{align-items:flex-start}.ummahAtlas .atlasZoom{right:9px;top:42px}.ummahAtlas .atlasMode button{padding:9px 11px}}
-@media(prefers-reduced-motion:reduce){.ummahAtlas *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+.ummahAtlas button{cursor:pointer;font-family:inherit}
+.ummahAtlas button:focus-visible,.ummahAtlas input:focus-visible,.ummahAtlas svg:focus-visible{outline:2px solid #2b806e;outline-offset:3px}
+.ummahAtlas .atlasHead{display:flex;justify-content:space-between;gap:10px;align-items:center;min-height:47px}
+.ummahAtlas .atlasHead>div{min-width:0}
+.ummahAtlas .atlasEyebrow{display:block;letter-spacing:.13em;color:#6b8980;font-size:9px;font-weight:850}
+.ummahAtlas .atlasHead h2{font-size:clamp(17px,3.4vw,24px)!important;line-height:1.22!important;letter-spacing:-.025em;color:#153d37!important;font-weight:790;margin:3px 0 0!important}
+.ummahAtlas .atlasHead h2 span{color:#caa35e}
+.ummahAtlas .atlasEdit{flex:0 0 44px;width:44px;height:44px;display:grid;place-items:center;border:1px solid #bdd6cd;border-radius:50%;background:#fff;color:#1d6854;font-size:25px;box-shadow:0 3px 12px #385e4a12}
+.ummahAtlas .atlasStage{position:relative;width:100%;height:clamp(245px,48vw,440px);border:1px solid #cfddd6;border-radius:17px;overflow:hidden;background:linear-gradient(135deg,#fcfdfc,#f2f7f5);box-shadow:inset 0 2px 12px #b2c5bb16}
+.ummahAtlas .atlasGeography{display:block;width:100%;height:100%;position:absolute;inset:0;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.ummahAtlas .atlasGeography.isDragging{cursor:grabbing}
+.ummahAtlas .atlasStage svg.atlasGeography image.atlasLand{opacity:.98}
+.ummahAtlas .atlasStage.atlasGuest svg.atlasGeography{opacity:.68;filter:saturate(.65)}
+.ummahAtlas .atlasMarker{cursor:pointer;outline:none}
+.ummahAtlas .atlasMarkerTouch{fill:#ffffff;fill-opacity:0;stroke:none}
+.ummahAtlas .atlasMarkerCore{fill:#38b899;stroke:#fafffe;stroke-width:2.5;filter:drop-shadow(0 1px 3px #136b5866)}
+.ummahAtlas .atlasMarker.isSelected .atlasMarkerCore{fill:#e7b45e;stroke:#fff8e8;stroke-width:2.8}
+.ummahAtlas .atlasMarker:focus-visible .atlasMarkerCore{stroke:#1b7766;stroke-width:3.7}
+.ummahAtlas .atlasKaaba{pointer-events:none;filter:drop-shadow(0 2px 3px #71624755)}
+.ummahAtlas .atlasFloatTools{position:absolute;z-index:3;top:9px;right:9px;display:flex;gap:7px}
+.ummahAtlas .atlasFloatTools button{display:grid;place-items:center;min-width:39px;height:39px;padding:0 8px;background:#fffffff2;color:#24574a;border:1px solid #c5dcd2;border-radius:12px;font-size:17px;font-weight:850;box-shadow:0 3px 12px #235a3c18}
+.ummahAtlas .atlasFloatTools button:first-child{font-size:12px}
+.ummahAtlas .atlasTouchHint{position:absolute;left:50%;bottom:9px;transform:translateX(-50%);pointer-events:none;white-space:nowrap;padding:6px 12px;border-radius:80px;background:#fffffff0;border:1px solid #d8e6df;color:#62827b;font-size:10px;font-weight:700}
+.ummahAtlas .atlasPlace{position:absolute;z-index:4;bottom:9px;left:9px;right:9px;display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border-radius:16px;background:#ffffffed;border:1px solid #d0e1d8;box-shadow:0 5px 18px #1b453b20;backdrop-filter:blur(12px)}
+.ummahAtlas .atlasPlace>div{display:grid;min-width:0;gap:3px}
+.ummahAtlas .atlasPlace strong{font-size:14px;font-weight:850;overflow-wrap:anywhere;color:#1c4b42}
+.ummahAtlas .atlasPlace small{font-size:11px;color:#5f7c72}
+.ummahAtlas .atlasPlace button{border:0;background:#216e57;color:white;font-weight:800;font-size:11px;border-radius:100px;padding:10px 12px;white-space:nowrap}
+.ummahAtlas .atlasInvitation{position:absolute;bottom:0;left:0;right:0;z-index:4;display:grid;gap:8px;padding:15px 14px 13px;background:linear-gradient(0deg,#fffffff8 68%,#fffffff0 83%,#ffffffcc);border-top:1px solid #d7e9df}
+.ummahAtlas .atlasInvitation strong{font-size:14px;color:#174b3b}
+.ummahAtlas .atlasInvitation span{font-size:12px;line-height:1.4;color:#5e796b}
+.ummahAtlas .atlasInvitation>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ummahAtlas .atlasInvitation button{border:1px solid #bdd5c8;border-radius:999px;padding:10px 12px;background:#fff;color:#27584b;font-size:12px;font-weight:780}
+.ummahAtlas .atlasInvitation button:first-child{background:#226f57;color:#fff;border-color:#226f57}
+.ummahAtlas .atlasQuietFooter{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:0 3px;min-height:25px}
+.ummahAtlas .atlasQuietFooter span{font-size:11px;color:#718880}
+.ummahAtlas .atlasQuietFooter button{border:0;background:transparent;color:#387461;font-size:11px;font-weight:760;padding:5px}
+.ummahAtlas .atlasDirectory{display:grid;gap:9px;padding:10px;border:1px solid #dbe7e1;background:#f9fcfa;border-radius:14px}
+.ummahAtlas .atlasSearch{display:flex;align-items:center;border:1px solid #c6dbd0;border-radius:10px;background:#fff;padding:0 11px;color:#517566}
+.ummahAtlas .atlasSearch input{border:0!important;outline:0!important;background:transparent!important;color:#1e4b3c!important;font-size:14px!important;min-width:0;width:100%;padding:10px}
+.ummahAtlas .atlasRegions{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+.ummahAtlas .atlasRegions button{white-space:nowrap;background:#fff;color:#2c6353;border:1px solid #c8ded4;border-radius:999px;padding:9px 11px;font-size:12px}
+.ummahAtlas .atlasError,.ummahAtlas .atlasMessage{margin:0;font-size:12px;padding:8px 10px;border-radius:10px;border:1px solid #c4ded3;background:#f1faf5;color:#285d49;line-height:1.4}
+.ummahAtlas .regionEditor{display:grid;gap:12px;padding:clamp(12px,3vw,20px);border:1px solid #bddbcf;border-radius:16px;background:#fcfffd;color:#174436}
+.ummahAtlas .atlasEditorTop{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.ummahAtlas .atlasEditorTop h3{margin:0;color:#144d39;font-size:19px}
+.ummahAtlas .atlasEditorTop p{font-size:12px;color:#5e7c72;margin:5px 0 0;line-height:1.5}
+.ummahAtlas .atlasEditorTop button{background:transparent;border:1px solid #c6dcd2;border-radius:50%;font-size:22px;color:#376c5b;width:37px;height:37px;flex:none}
+.ummahAtlas .regionEditor label:not(.atlasConsent){display:grid;gap:6px;font-size:12px;font-weight:760;color:#2e5d4b}
+.ummahAtlas .regionEditor label small{font-size:10px;font-weight:500;color:#769283}
+.ummahAtlas .regionEditor input:not([type=checkbox]){width:100%;min-width:0;min-height:43px;padding:11px 12px;border:1px solid #c4d9cb;border-radius:11px;background:#fff;color:#123e2b;font-size:16px}
+.ummahAtlas .atlasEditorFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.ummahAtlas .atlasDetect{border:1px solid #bfd5cc;border-radius:12px;background:#e9f5ef;color:#255f4c;font-weight:800;padding:11px;font-size:12px;min-height:44px}
+.ummahAtlas .atlasPrivacy{font-size:11px;line-height:1.55;color:#6f8579;margin:-5px 0 2px}
+.ummahAtlas .atlasConsent{display:flex;align-items:flex-start;gap:10px;padding:11px;border:1px solid #cfdfd7;border-radius:12px;background:#f3f8f5;font-size:12px;line-height:1.45;color:#315f4e;cursor:pointer}
+.ummahAtlas .atlasConsent input{flex:none;width:19px;height:19px;margin:0;accent-color:#237056}
+.ummahAtlas .atlasEditorButtons{display:flex;flex-wrap:wrap;gap:8px}
+.ummahAtlas .atlasEditorButtons button{min-height:44px;background:#1e6f53;color:#fff;border:1px solid #1e6f53;border-radius:12px;padding:10px 13px;font-weight:800;font-size:12px}
+.ummahAtlas .atlasEditorButtons button.atlasRemove{background:#fff;border-color:#d0e0d5;color:#745e59}
+.ummahAtlas .atlasEditorButtons button:disabled,.ummahAtlas .atlasDetect:disabled{opacity:.55;cursor:wait}
+.atlasStudioOverlay{position:fixed;z-index:2147483000;inset:0;isolation:isolate;display:flex;align-items:center;justify-content:center;padding:20px 10px calc(20px + env(safe-area-inset-bottom,0px));background:#09131de8;overflow:hidden}
+.atlasStudioBackdrop{position:absolute;inset:-14px;background:linear-gradient(180deg,#050e1c55,#071d26d9),url('/assets/profile-backgrounds/obsidian.PNG') center/cover no-repeat;filter:saturate(.85);opacity:.82;transition:transform .28s ease;pointer-events:none}
+.atlasStudioBack{position:absolute;z-index:5;top:calc(env(safe-area-inset-top,0px) + 17px);left:20px;width:44px;height:44px;background:#0b1723b8;color:#fff;border:1px solid #ffffff80;border-radius:50%;font-size:34px;line-height:1}
+.atlasStudioCanvas{position:relative;z-index:2;width:100%;height:100%;max-width:1050px;margin:60px auto 0;min-height:0}
+.atlasStudioCanvas .atlasStage.atlasFullStage{width:100%;height:100%;min-height:0;border:1px solid #ffffff77;border-radius:19px;background:#ffffffd9;box-shadow:0 20px 70px #0005;overflow:hidden}
+.atlasStudioCanvas .atlasFullStage .atlasFloatTools{top:10px;right:10px}
+.atlasStudioCanvas .atlasFullStage .atlasFloatTools button{min-height:44px;min-width:44px}
+.atlasStudioCanvas .atlasFullStage .atlasPlace{left:10px;right:10px;bottom:12px}
+@media(max-width:520px){
+ .muslimeenRegionPanel.ummahAtlas{padding:10px!important;gap:9px;border-radius:19px!important}
+ .ummahAtlas .atlasHead h2{font-size:18px!important}
+ .ummahAtlas .atlasStage{height:310px}
+ .ummahAtlas .atlasEditorFields{grid-template-columns:1fr}
+ .ummahAtlas .atlasInvitation{padding:12px}
+ .ummahAtlas .atlasInvitation strong{font-size:12px}
+ .ummahAtlas .atlasInvitation span{font-size:11px}
+ .atlasStudioCanvas{margin-top:60px}
+ .atlasStudioOverlay{padding-top:calc(16px + env(safe-area-inset-top,0px))}
+}
+@media(prefers-reduced-motion:reduce){.ummahAtlas *, .atlasStudioBackdrop{animation:none!important;transition:none!important}}
