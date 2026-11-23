@@ -1,5 +1,6 @@
 "use client";
 import {cleanPostBody} from "../lib/cleanPostBody";
+import {publicMemberId,publicMemberName} from "../lib/member-id-visibility";
 import Link from "next/link";
 import Image from "next/image";
 import SmartVideo from "../../lib/SmartVideo";
@@ -25,12 +26,12 @@ export default function PostViewer({post,author,media=[],actions,share}:{post:Vi
  useEffect(()=>()=>{if(fadeTimer.current)clearTimeout(fadeTimer.current)},[]);
 
  useEffect(()=>{if(!expanded)return;const old=document.body.style.overflow;document.body.style.overflow="hidden";const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setExpanded(false)};window.addEventListener("keydown",key);return()=>{document.body.style.overflow=old;window.removeEventListener("keydown",key)}},[expanded]);
- const name=author?.display_name||author?.username||"1Muslim member";
+ const name=publicMemberName(author);
  return <article ref={viewerRef} className={`${styles.viewer} ${expanded?styles.expanded:""}`} style={expanded?({"--comments-height":`${drawerHeight}px`} as React.CSSProperties):undefined}>
   <header className={styles.author}>
    <Link href={"/profile/"+post.user_id} className={styles.identity}>
     <span className={styles.avatar}>{author?.avatar_url?<Image src={author.avatar_url} alt="" fill unoptimized sizes="52px"/>:<span aria-hidden="true">✧</span>}</span>
-    <span className={styles.names}><strong>{name}</strong><small>{author?.username?"@"+author.username+" · ":""}{new Date(post.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}</small></span>
+    <span className={styles.names}><strong>{name}</strong><small>{publicMemberId(author)?publicMemberId(author)+" · ":""}{new Date(post.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}</small></span>
    </Link>
    <Link className={styles.profileLink} href={"/profile/"+post.user_id} aria-label="View creator profile">↗</Link>
   </header>
