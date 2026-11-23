@@ -138,6 +138,12 @@ export default function OnboardingPage() {
   };
   const clearSilenceTimer = () => {if(silenceTimerRef.current){clearTimeout(silenceTimerRef.current);silenceTimerRef.current=null;}};
   useEffect(()=>()=>{ 
+    // Leaving onboarding must immediately release the microphone and discard any unsaved take.
+    resetRef.current = true;
+    attemptRef.current++;
+    try { recognitionRef.current?.abort?.(); } catch {}
+    try { if (recorderRef.current?.state === "recording") recorderRef.current.stop(); } catch {}
+    streamRef.current?.getTracks().forEach(track => track.stop());
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     if (recognitionFinishTimerRef.current) clearTimeout(recognitionFinishTimerRef.current);
