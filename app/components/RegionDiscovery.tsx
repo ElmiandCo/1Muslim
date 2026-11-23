@@ -35,6 +35,15 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
  const [zoom,setZoom]=useState(1.12),[pan,setPan]=useState({x:-43.2,y:-21.6}),[dragging,setDragging]=useState(false);
  const gesture=useRef<{id:number;x:number;y:number;dragging:boolean}|null>(null),ignoreClick=useRef(false),mapRef=useRef<SVGSVGElement|null>(null);
  useEffect(()=>{setCountry(canonicalCountry(currentCountry))},[currentCountry]);
+ useEffect(()=>{
+  if(!editing)return;
+  let active=true;
+  void createClient().from("profiles").select("country,state,city").eq("id",userId).maybeSingle().then(({data})=>{
+   if(!active||!data)return;
+   setCountry(canonicalCountry(data.country));setState(data.state||"");setCity(data.city||"");
+  });
+  return()=>{active=false};
+ },[editing,userId]);
  const load=useCallback(async()=>{
   try{const response=await fetch("/api/member-regions",{cache:"no-store"});const body=await response.json();
    if(!response.ok)throw Error(body.error||"Member atlas unavailable");
