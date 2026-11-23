@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
-import {safeMediaUrl,uploadMemberMedia,type MemberMediaKind} from "./profile-member-media";
+import {safeMediaUrl,youtubeEmbed,isDirectVideo,uploadMemberMedia,type MemberMediaKind} from "./profile-member-media";
 import ProfilePublicMedia from "./ProfilePublicMedia";
 import "./ProfileSpotlight.css";
 
@@ -22,6 +22,7 @@ export default function ProfileSpotlightEditor({userId}:{userId:string}){
    let newUrl=safeMediaUrl(url),newKind=kind;
    if(file){const result=await uploadMemberMedia(file,userId);newUrl=result.url;newKind=result.kind}
    if(!newUrl)throw Error("Add a valid HTTPS image/video URL, YouTube link or upload a file.");
+   if(!file&&(youtubeEmbed(newUrl)||isDirectVideo(newUrl)))newKind="video";
    const trimmedTitle=title.trim()||"My Spotlight";
    const patch:Spotlight={user_id:userId,title:trimmedTitle.slice(0,100),caption:caption.trim().slice(0,300),media_kind:newKind,media_url:newUrl};
    const {error}=await db.from("profile_spotlights").upsert({...patch,updated_at:new Date().toISOString()},{onConflict:"user_id"});
