@@ -267,7 +267,7 @@ function ProfileAppLauncher({onProfile,coverUrl,prayerIconSrc}:{onProfile:()=>vo
     else if(item.label==="Qur’an"){event.preventDefault();openQuran()}
     else if(item.label==="Compass"){event.preventDefault();openQibla()}
     else if(item.label==="Arabic"){event.preventDefault();openArabic()}
-    else if(item.label==="Muslims"){event.preventDefault();window.location.assign("/profile?section=muslimeen")}
+    else if(item.label==="Muslims"){event.preventDefault();window.dispatchEvent(new CustomEvent("1muslim:discover-muslims",{detail:{}}))}
    }} className="profileAppTile">
     <span className="profileAppTileIcon" aria-hidden="true"><LauncherLineIcon name={item.label} prayerIconSrc={prayerIconSrc}/></span>
     {(launcherBadges[item.label]??0)>0&&<span className={"profileAppBadge "+(item.label==="Live"?"isLive":"")} aria-label={String(launcherBadges[item.label])+" new "+item.label.toLowerCase()+" item"+(launcherBadges[item.label]===1?"":"s")}>{launcherBadges[item.label]>99?"99+":launcherBadges[item.label]}</span>}
