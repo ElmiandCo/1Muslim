@@ -61,14 +61,96 @@
 .ummahAtlas .atlasEditorButtons button{min-height:44px;background:#1e6f53;color:#fff;border:1px solid #1e6f53;border-radius:12px;padding:10px 13px;font-weight:800;font-size:12px}
 .ummahAtlas .atlasEditorButtons button.atlasRemove{background:#fff;border-color:#d0e0d5;color:#745e59}
 .ummahAtlas .atlasEditorButtons button:disabled,.ummahAtlas .atlasDetect:disabled{opacity:.55;cursor:wait}
-.atlasStudioOverlay{position:fixed;z-index:2147483000;inset:0;isolation:isolate;display:flex;align-items:center;justify-content:center;padding:20px 10px calc(20px + env(safe-area-inset-bottom,0px));background:#09131de8;overflow:hidden}
-.atlasStudioBackdrop{position:absolute;inset:-14px;background:linear-gradient(180deg,#050e1c55,#071d26d9),url('/assets/profile-backgrounds/obsidian.PNG') center/cover no-repeat;filter:saturate(.85);opacity:.82;transition:transform .28s ease;pointer-events:none}
-.atlasStudioBack{position:absolute;z-index:5;top:calc(env(safe-area-inset-top,0px) + 17px);left:20px;width:44px;height:44px;background:#0b1723b8;color:#fff;border:1px solid #ffffff80;border-radius:50%;font-size:34px;line-height:1}
-.atlasStudioCanvas{position:relative;z-index:2;width:100%;height:100%;max-width:1050px;margin:60px auto 0;min-height:0}
-.atlasStudioCanvas .atlasStage.atlasFullStage{width:100%;height:100%;min-height:0;border:1px solid #ffffff77;border-radius:19px;background:#ffffffd9;box-shadow:0 20px 70px #0005;overflow:hidden}
-.atlasStudioCanvas .atlasFullStage .atlasFloatTools{top:10px;right:10px}
-.atlasStudioCanvas .atlasFullStage .atlasFloatTools button{min-height:44px;min-width:44px}
-.atlasStudioCanvas .atlasFullStage .atlasPlace{left:10px;right:10px;bottom:12px}
+
+/* Cinematic full-screen Map Studio. Full map image is cropped with SVG "slice"
+   in portrait so no 16:9 letterboxing or giant empty panel remains. */
+.atlasStudioOverlay{position:fixed;inset:0;z-index:2147483000;isolation:isolate;display:block;overflow:hidden;padding:calc(20px + env(safe-area-inset-top,0px)) 10px calc(20px + env(safe-area-inset-bottom,0px));background:#081a24;animation:atlasStudioRise .38s cubic-bezier(.21,.86,.24,1) both}
+@keyframes atlasStudioRise{from{opacity:.4;transform:translateY(9%)}to{opacity:1;transform:translateY(0)}}
+.atlasStudioBackdrop{position:absolute;inset:-22px;background-position:center;background-size:cover;background-repeat:no-repeat;filter:saturate(.92);opacity:.97;pointer-events:none;transition:transform .34s cubic-bezier(.24,.8,.3,1);will-change:transform}
+.atlasStudioCanvas{height:100%;max-width:1160px;width:100%;position:relative;z-index:2;margin:0 auto;min-height:0;border:1px solid rgba(222,244,229,.42);border-radius:22px;box-shadow:0 20px 75px rgba(2,12,16,.47),inset 0 1px rgba(255,255,255,.7);overflow:hidden;isolation:isolate;background:#f5faf7}
+.atlasStudioCanvas .atlasStage.atlasFullStage{display:block;position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;background:linear-gradient(160deg,#edf5ef,#fafffc 62%,#e4f0e8);border:0;border-radius:0;overflow:hidden;box-shadow:none}
+.atlasStudioCanvas .atlasFullStage svg.atlasGeography{display:block;position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
+.atlasStudioCanvas .atlasFullStage.atlasGuest svg.atlasGeography{opacity:1;filter:none}
+.atlasStudioCanvas .atlasFullStage .atlasMarker{cursor:pointer}
+.atlasStudioCanvas .atlasFullStage .atlasMarkerCore{fill:#119d78;stroke:white;stroke-width:2.5;filter:drop-shadow(0 2px 4px rgba(6,65,47,.4))}
+.atlasStudioCanvas .atlasFullStage .atlasMarkerTouch{fill:transparent;stroke:none;pointer-events:all}
+.atlasStudioCanvas .atlasFullStage .atlasMarker.isSelected .atlasMarkerCore{fill:#eac475}
+.atlasStudioCanvas .atlasFullStage .atlasKaaba{filter:drop-shadow(0 2px 6px rgba(6,39,24,.3))}
+.atlasStudioShade{position:absolute;z-index:1;inset:0;background:linear-gradient(180deg,rgba(11,33,33,.23) 0%,rgba(11,33,33,0) 29%,transparent 52%,rgba(14,40,39,.08) 83%,rgba(9,31,34,.15) 100%);pointer-events:none}
+.atlasStudioHeader{position:absolute;z-index:8;top:12px;left:12px;right:12px;display:flex;align-items:center;gap:12px;min-width:0}
+.atlasStudioHeader button{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.72);color:#fafffc;background:rgba(12,34,40,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 3px 16px #001e2338;cursor:pointer}
+.atlasStudioHeader .atlasStudioClose{font-size:30px;line-height:1;font-weight:400;padding:0 0 4px}
+.atlasStudioHeader .atlasStudioMyRegion{font-size:25px;line-height:1}
+.atlasStudioBrand{display:grid;gap:2px;min-width:0;flex:1;padding:7px 0}
+.atlasStudioBrand small{font-size:9px;font-weight:850;letter-spacing:.12em;color:#eaf8ef;text-shadow:0 1px 5px #16382a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.atlasStudioBrand strong{font-size:clamp(18px,4.4vw,27px);line-height:1.15;color:#fff;letter-spacing:-.035em;text-shadow:0 2px 8px #0e332e90;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.atlasStudioBrand strong span{color:#f1d291}
+.atlasStudioNavigate{position:absolute;z-index:7;left:13px;right:13px;top:78px;display:grid;gap:9px;pointer-events:none}
+.atlasStudioNavigate>*{pointer-events:auto}
+.atlasStudioJourney{display:flex;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:1px 1px 6px;mask-image:linear-gradient(90deg,#000 0%,#000 94%,transparent 100%)}
+.atlasStudioJourney::-webkit-scrollbar{display:none}
+.atlasStudioJourney button{flex:0 0 auto;white-space:nowrap;min-height:35px;border:1px solid rgba(255,255,255,.85);border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#214d3b;font-size:11px;font-weight:800;box-shadow:0 3px 13px #163f3524;cursor:pointer}
+.atlasStudioJourney button:active{transform:scale(.97)}
+.atlasStudioSearchBox{position:relative;display:flex;align-items:center;height:44px;border:1px solid rgba(208,232,221,.94);border-radius:13px;padding:0 12px;gap:8px;background:rgba(255,255,255,.91);box-shadow:0 8px 24px #1b4b3f20;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:#32644e}
+.atlasStudioSearchBox>span{font-size:24px;line-height:1}
+.atlasStudioSearchBox input{flex:1;width:100%;min-width:0;background:transparent;border:0;outline:0;color:#153e33;font-family:inherit;font-size:13px}
+.atlasStudioSearchBox input::placeholder{color:#6d9482}
+.atlasStudioSearchClear{border:0;background:transparent;color:#648675;font-size:21px;padding:2px}
+.atlasStudioSuggestions{position:absolute;z-index:15;top:calc(100% + 7px);left:0;right:0;display:grid;max-height:min(270px,31dvh);overflow:auto;border:1px solid #c4dbce;border-radius:15px;background:#fff;box-shadow:0 14px 36px #0c3c3360;padding:5px}
+.atlasStudioSuggestions button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:12px 11px;min-height:42px;border:0;border-radius:9px;background:transparent;color:#285241;text-align:left;font-weight:760;font-size:13px}
+.atlasStudioSuggestions button:hover,.atlasStudioSuggestions button:focus-visible{background:#eaf4ee}
+.atlasStudioSuggestions button small{font-size:11px;color:#7d9b8a;font-weight:700;white-space:nowrap}
+.atlasStudioSuggestions p{font-size:12px;color:#6a8c7e;padding:10px;margin:0}
+.atlasStudioGestures{position:absolute;z-index:2;top:49%;left:50%;transform:translate(-50%,-50%);pointer-events:none;white-space:nowrap;background:rgba(255,255,255,.65);backdrop-filter:blur(8px);color:#557d6c;border:1px solid rgba(255,255,255,.73);padding:8px 12px;border-radius:999px;font-size:9px;font-weight:850;letter-spacing:.10em;box-shadow:0 2px 13px #244e4422}
+.atlasStudioGestures b{color:#d0a967;margin:0 4px}
+.atlasStudioBottom{position:absolute;z-index:5;left:10px;right:10px;bottom:10px;display:grid;gap:11px;border-radius:20px;padding:16px 14px 12px;background:linear-gradient(150deg,rgba(10,36,44,.93),rgba(12,46,49,.90));border:1px solid rgba(200,242,224,.32);color:#f4fcf7;box-shadow:0 10px 45px #102e3f63;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.atlasStudioMission{display:grid;gap:6px;min-width:0}
+.atlasStudioMission>small,.atlasStudioRegionTitle small{display:block;color:#afdaca;font-size:9px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
+.atlasStudioMission h2,.atlasStudioRegionTitle h2{margin:0;font-size:clamp(20px,4.6vw,28px);color:#f8fff9;font-weight:850;letter-spacing:-.04em;line-height:1.15}
+.atlasStudioMission p,.atlasStudioRegionTitle p{margin:0;font-size:12px;color:#c9e2d9;line-height:1.45}
+.atlasStudioPopular{display:flex;gap:6px;overflow-x:auto;min-width:0;padding:4px 0;scrollbar-width:none}
+.atlasStudioPopular button{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:8px 10px;border:1px solid rgba(184,227,213,.30);background:rgba(255,255,255,.08);color:#ebfff5;border-radius:999px;font-size:11px;font-weight:750;min-height:35px}
+.atlasStudioPopular button span{font-size:11px;color:#b2e5ce}
+.atlasStudioSelected{display:grid;gap:11px;min-width:0}
+.atlasStudioRegionTitle{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.atlasStudioRegionTitle>div{display:grid;gap:4px;min-width:0}
+.atlasStudioRegionTitle h2{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.atlasStudioRegionTitle>button{flex:none;border:0;border-radius:999px;padding:11px 13px;min-height:39px;background:#d2f4e3;color:#194d3a;font-size:11px;font-weight:850;white-space:nowrap;cursor:pointer}
+.atlasStudioPeople{display:flex;align-items:flex-start;gap:12px;overflow-x:auto;min-width:0;scrollbar-width:none;padding:2px 0 4px}
+.atlasStudioPerson{display:flex;align-items:center;flex-direction:column;justify-content:center;gap:6px;flex:0 0 63px;min-width:0;border:0;background:none;color:#f1fff6;cursor:pointer}
+.atlasStudioPerson img{width:51px;height:51px;border-radius:50%;object-fit:cover;border:2px solid #d8f5e7;box-shadow:0 3px 12px #0004;display:block;background:#accbb7}
+.atlasStudioPerson span{max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:780}
+.atlasStudioPeopleStatus{display:block;color:#d7e9e1;font-size:11px;padding:8px 2px}
+.atlasStudioBottomActions{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px solid rgba(200,236,215,.18);padding-top:10px}
+.atlasStudioCount{display:inline-flex;align-items:center;gap:5px;color:#d9efe2;font-size:10px;font-weight:750;white-space:nowrap}
+.atlasStudioCount i{width:7px;height:7px;border-radius:50%;background:#63dfb9;box-shadow:0 0 10px #3bd5a677;flex:none}
+.atlasStudioBottomButtons{display:flex;align-items:center;gap:6px}
+.atlasStudioBottomButtons button{min-height:35px;border:1px solid rgba(221,250,235,.33);border-radius:999px;background:rgba(255,255,255,.12);color:#f0fff6;font-size:11px;font-weight:800;padding:7px 11px;cursor:pointer}
+.atlasStudioBottomButtons button:last-child{width:37px;padding:4px;font-size:21px}
+.atlasStudioPrivacy{margin:0;font-size:9px;color:#accac2;line-height:1.35}
+.atlasStudioOverlay button:focus-visible,.atlasStudioOverlay input:focus-visible,.atlasStudioOverlay svg:focus-visible{outline:2px solid #eed39a;outline-offset:3px}
+@media(max-width:520px){
+ .atlasStudioCanvas{border-radius:18px}
+ .atlasStudioHeader{top:10px;left:9px;right:9px;gap:9px}
+ .atlasStudioNavigate{top:74px;left:10px;right:10px;gap:6px}
+ .atlasStudioJourney{padding-bottom:3px}
+ .atlasStudioJourney button{padding:6px 10px;min-height:32px;font-size:10px}
+ .atlasStudioSearchBox{height:42px}
+ .atlasStudioBottom{left:8px;right:8px;bottom:8px;padding:13px 12px 10px;gap:9px;border-radius:17px}
+ .atlasStudioMission h2,.atlasStudioRegionTitle h2{font-size:21px}
+ .atlasStudioMission p{font-size:11px}
+ .atlasStudioPeople{gap:7px}
+ .atlasStudioPerson{flex-basis:56px}
+ .atlasStudioPerson img{width:44px;height:44px}
+ .atlasStudioCount{font-size:9px}
+ .atlasStudioBottomButtons button{font-size:10px;min-height:33px}
+ .atlasStudioPrivacy{font-size:8.5px}
+}
+@media(max-height:700px){
+ .atlasStudioMission p{display:none}
+ .atlasStudioPopular{display:none}
+ .atlasStudioBottom{gap:7px}
+}
 @media(max-width:520px){
  .muslimeenRegionPanel.ummahAtlas{padding:10px!important;gap:9px;border-radius:19px!important}
  .ummahAtlas .atlasHead h2{font-size:18px!important}
