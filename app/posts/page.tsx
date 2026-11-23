@@ -5,13 +5,14 @@ import {useEffect,useMemo,useRef,useState,type CSSProperties,type TouchEvent} fr
 import {useRouter} from "next/navigation";
 import {readWatchedPosts,storeImmersiveQueue,UMMAH_WATCH_UPDATED_EVENT,type WatchedPost} from "../lib/ummah-watch-history";
 import UnifiedPostMedia from "../components/UnifiedPostMedia";
+import {youtubeIdFromPost,youtubeThumbnail} from "../lib/ummah-youtube";
 import OneMuslimVideo from "../components/OneMuslimVideo";
 import {predictVideo,cachePublicImage} from "../../lib/smart-media";
 import PostAuthorFollow from "../components/PostAuthorFollow";
 import styles from "./posts-magazine.module.css";
 type Post={id:string;body:string;author_name:string;author_handle:string;created_at:string;media_url:string|null;media_type:string|null;shahada_verified?:boolean;author_id:string;author_avatar_url?:string|null};
-const youtubeId=(text:string)=>text.match(/(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?(?:[^#\s]*?&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/)?.[1]||null;
-const ytThumbnail=(id:string)=>`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+const youtubeId=youtubeIdFromPost;
+const ytThumbnail=youtubeThumbnail;
 const clean=(text:string)=>cleanPostBody(text).replace(/https?:\/\/\S+/g,"").trim();
 // Avoid mounting dozens of individual comment fetchers and autoplay decoders at once.
 // Near-viewport cards become interactive before the user actually reaches them.
@@ -243,8 +244,8 @@ export default function PublicPostsSocial(){
  <button type="button" className={filter==="lastWatched"?styles.active:""} aria-pressed={filter==="lastWatched"} onClick={()=>setFilter("lastWatched")}>◷ Last Watched</button>
  <button type="button" className={filter==="popular"?styles.active:""} aria-pressed={filter==="popular"} onClick={()=>setFilter("popular")}>✦ Most Popular</button>
  <button type="button" className={styles.immersivePlayTab} aria-label="Play immersive swipe feed" title="Play full-screen swipe feed" disabled={!filtered.length} onClick={startImmersive}><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M8.2 4.6c0-.9 1-1.4 1.8-.9l10.2 7.1c.8.5.8 1.5 0 2L10 20c-.8.5-1.8 0-1.8-.9V4.6Z"/></svg><span>Play</span></button></div><label className={styles.discoverSearch}><span className={styles.sr}>Search posts or people</span><input id="discover-search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search posts or people…"/></label></div>
-  {loading?<div className={styles.status}>LOADING YOUR FEED…</div>:error?<div className={styles.status} role="alert">{error}</div>:filter==="popular"&&rankStatus==="loading"?<div className={styles.status}>RANKING POSTS BY REAL ENGAGEMENT…</div>:filter==="popular"&&rankStatus==="error"?<div className={styles.status} role="alert">Popularity rankings are temporarily unavailable. Please try again shortly.</div>:!filtered.length?<div className={styles.status}>{filter==="lastWatched"?"No videos watched yet on this device. Open a video and play it to begin your history.":"NO POSTS FOUND YET."}</div>:<div ref={deckRoot} className={styles.feedStream+" "+styles.ummahSnapFeed} aria-label="Swipeable Ummah card deck">{filtered.map((p,index)=>{const video=youtubeId(p.body),isImage=!!p.media_url&&!!p.media_type?.startsWith("image/"),body=clean(p.body),long=body.length>220,hasVideo=!!video||!!p.media_type?.startsWith("video/");const nextPost=filtered[index+1];
- const nextVideoId=nextPost?youtubeId(nextPost.body):null;
+  {loading?<div className={styles.status}>LOADING YOUR FEED…</div>:error?<div className={styles.status} role="alert">{error}</div>:filter==="popular"&&rankStatus==="loading"?<div className={styles.status}>RANKING POSTS BY REAL ENGAGEMENT…</div>:filter==="popular"&&rankStatus==="error"?<div className={styles.status} role="alert">Popularity rankings are temporarily unavailable. Please try again shortly.</div>:!filtered.length?<div className={styles.status}>{filter==="lastWatched"?"No videos watched yet on this device. Open a video and play it to begin your history.":"NO POSTS FOUND YET."}</div>:<div ref={deckRoot} className={styles.feedStream+" "+styles.ummahSnapFeed} aria-label="Swipeable Ummah card deck">{filtered.map((p,index)=>{const isNativeVideo=!!p.media_url&&!!p.media_type?.startsWith("video/"),video=isNativeVideo?null:youtubeIdFromPost(p.body,p.media_url),isImage=!!p.media_url&&!!p.media_type?.startsWith("image/"),body=clean(p.body),long=body.length>220,hasVideo=isNativeVideo;const nextPost=filtered[index+1];
+ const nextVideoId=nextPost&&!nextPost.media_type?.startsWith("video/")?youtubeIdFromPost(nextPost.body,nextPost.media_url):null;
  const nextPreview=nextPost?.media_type?.startsWith("image/")?nextPost.media_url:nextVideoId?ytThumbnail(nextVideoId):null;
  const poster=isImage?p.media_url:video?ytThumbnail(video):null;
  const state=deckMotion?(index===deckMotion.from?"leaving":index===deckMotion.to?"arriving":index===deckActive+1?"queued":index===deckActive-1?"past":"rest"):index===deckActive?"current":index===deckActive+1?"queued":index===deckActive-1?"past":"rest";
@@ -253,9 +254,9 @@ export default function PublicPostsSocial(){
  {index<filtered.length-1&&<div aria-hidden="true" className={styles.feedNextGhost} style={index===deckActive&&nextPreview?{backgroundImage:"url("+JSON.stringify(nextPreview)+")"}:undefined}/>}
 
  <div className={styles.feedPostStage}>
- {isImage&&<Link href={`/posts/story/${encodeURIComponent(p.id)}`} className={styles.feedMediaLink}><img src={p.media_url!} alt="Community post" width={960} height={1200} loading={index<2?"eager":"lazy"} decoding="async" fetchPriority={index===0?"high":"auto"} style={{backgroundColor:"#f1f3f6"}}/></Link>}
+ {poster&&<Link href={`/posts/story/${encodeURIComponent(p.id)}${video?"?play=1":""}`} className={styles.feedMediaLink+(video?" "+styles.feedYoutubeThumbnail:"")} aria-label={video?"Play YouTube video in full Ummah post":"View community post"}><img src={poster} alt={video?"YouTube video thumbnail":"Community post"} width={960} height={1200} loading={index<2?"eager":"lazy"} decoding="async" fetchPriority={index===0?"high":"auto"} style={{backgroundColor:"#f1f3f6"}}/>{video&&<span className={styles.feedYoutubePlay} aria-hidden="true">▶</span>}</Link>}
  
- {hasVideo&&<VisiblePostVideo postId={p.id} mediaUrl={p.media_url} youtube={video}/>}
+ {hasVideo&&<VisiblePostVideo postId={p.id} mediaUrl={p.media_url} youtube={null}/>}
  {!isImage&&!hasVideo&&<div className={styles.feedTextCanvas} aria-hidden="true"><span>✧</span><strong>FROM THE UMMAH</strong><small>Voices of our community</small></div>}
  <div className={styles.feedPostGlass}>
   <Link href={"/profile?section=muslimeen&member="+encodeURIComponent(p.author_id)} className={styles.feedAvatarEdge} aria-label={"View "+(p.author_name||"member")+" profile"}><span className={styles.feedPostAvatar}>{p.author_avatar_url?<img className={styles.authorAvatarImage} src={p.author_avatar_url} alt="" loading="lazy" referrerPolicy="no-referrer"/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span></Link>
