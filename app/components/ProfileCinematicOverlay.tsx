@@ -3,6 +3,7 @@
 import {useEffect,useRef,useState,type ReactNode,type CSSProperties} from "react";
 import {createPortal} from "react-dom";
 import FeaturedBadge from "./FeaturedBadge";
+import ProfileSpotlightHero from "./ProfileSpotlightHero";
 import styles from "./ProfileCinematicOverlay.module.css";
 
 type PublicIdentity={
@@ -123,6 +124,7 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
       :followAction?<div className={styles.followAction}>{followAction}</div>
       :<span className={styles.publicLabel}>Public profile</span>}
      </div>
+     <ProfileSpotlightHero userId={profile.id}/>
      <section className={styles.badgeVault} aria-label="Member badges">
       <div className={styles.badgeHeading}><span>✦ MEMBER BADGES</span><strong>Achievements</strong></div>
       <div className={styles.badgeCollection}>
