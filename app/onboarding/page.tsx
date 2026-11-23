@@ -93,6 +93,7 @@ export default function OnboardingPage() {
   const [recording, setRecording] = useState(false);
   const [startingRecording, setStartingRecording] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(SHAHADA_RECORD_SECONDS);
+  const [recordedDuration, setRecordedDuration] = useState(0);
   const [holdingRecord, setHoldingRecord] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [processingAudio, setProcessingAudio] = useState(false);
@@ -216,6 +217,7 @@ export default function OnboardingPage() {
     setStartingRecording(false);
     setHoldingRecord(false);
     setSecondsLeft(SHAHADA_RECORD_SECONDS);
+    setRecordedDuration(0);
   };
 
   // A tap starts or finishes a take. The 10-second ceiling never waits on silence detection.
@@ -228,7 +230,9 @@ export default function OnboardingPage() {
     endingRecordingRef.current = true;
     activeRecordingRef.current = false;
     clearRecordingTimers();
-    setSecondsLeft(Math.max(0, Math.ceil(SHAHADA_RECORD_SECONDS - (Date.now() - recordingStartedAtRef.current) / 1000)));
+    const elapsed = Math.min(SHAHADA_RECORD_SECONDS, Math.max(0, (Date.now() - recordingStartedAtRef.current) / 1000));
+    setRecordedDuration(elapsed);
+    setSecondsLeft(Math.max(0, Math.ceil(SHAHADA_RECORD_SECONDS - elapsed)));
     setRecording(false);
     setListening(false);
     setHoldingRecord(false);
@@ -261,6 +265,7 @@ export default function OnboardingPage() {
     setTranscript("");
     discardPreview();
     setSecondsLeft(SHAHADA_RECORD_SECONDS);
+    setRecordedDuration(0);
     setStartingRecording(true);
     setVoiceStatus("ready");
     clearSilenceTimer();
@@ -431,7 +436,11 @@ export default function OnboardingPage() {
     if (gesture.hold) {
       setHoldingRecord(false);
       if (recorderRef.current?.state === "recording") finishShahada();
-      else endAfterPermissionRef.current = true;
+      else {
+        // A permission prompt may interrupt the hold; don't end an empty take.
+        endAfterPermissionRef.current = false;
+        setMessage("Microphone access pending. Once recording starts, tap Finish when done.");
+      }
       // Suppress the click that follows a long press, without suppressing a later tap.
       window.setTimeout(() => { ignoreNextClickRef.current = false; }, 0);
     }
@@ -579,13 +588,13 @@ export default function OnboardingPage() {
           <span className="hudhudCore" aria-hidden="true"><img src="/assets/hudhud-logo.PNG" alt="" /></span>
           {recording && <span className="shahadaOrbRec" aria-hidden="true"/>}
         </button>
-        <div className={`shahadaRecordingClock ${recording ? "active" : ""}`} aria-label={recording ? `${secondsLeft} seconds remaining` : "Maximum recording time: 10 seconds"}>
+        <div className={`shahadaRecordingClock ${recording ? "active" : ""}`} aria-label={recording ? `${secondsLeft} seconds remaining` : audioPreview ? `${Math.ceil(recordedDuration)} seconds recorded` : "Maximum recording time: 10 seconds"}>
           <div className="shahadaRecordingClockLabels">
             <span>{recording ? "● RECORDING NOW" : startingRecording ? "ALLOW MICROPHONE" : audioPreview ? "RECORDING COMPLETE" : "READY WHEN YOU ARE"}</span>
-            <strong>{`00:${String(recording ? secondsLeft : SHAHADA_RECORD_SECONDS).padStart(2,"0")}`}</strong>
+            <strong>{`00:${String(recording ? secondsLeft : audioPreview ? Math.ceil(recordedDuration) : SHAHADA_RECORD_SECONDS).padStart(2,"0")}`}</strong>
           </div>
-          <div className="shahadaRecordingTrack" role="progressbar" aria-label="Shahada recording duration" aria-valuemin={0} aria-valuemax={10} aria-valuenow={recording ? 10-secondsLeft : 0}>
-            <i style={{width:`${recording ? (10-secondsLeft)*10 : 0}%`}}/>
+          <div className="shahadaRecordingTrack" role="progressbar" aria-label="Shahada recording duration" aria-valuemin={0} aria-valuemax={10} aria-valuenow={recording ? 10-secondsLeft : audioPreview ? recordedDuration : 0}>
+            <i style={{width:`${recording ? (10-secondsLeft)*10 : audioPreview ? recordedDuration*10 : 0}%`}}/>
           </div>
         </div>
         <div className="studioVoiceWave" aria-hidden="true">{Array.from({length:25},(_,i)=><i key={i} style={{height:`${12+Math.abs(Math.sin(i*1.3))*32}px`,transform:`scaleY(${(listening || recording) ? Math.max(.2,Math.min(1.8,.2+voiceLevel*2.3*(.35+.65*Math.abs(Math.sin(i*1.3))))) : .25})`,opacity:(listening || recording) ? .55+voiceLevel*.45 : .35}} />)}</div>
