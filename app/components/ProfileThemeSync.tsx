@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useState} from "react";
+import {useEffect} from "react";
 import {createClient} from "../../utils/supabase/client";
 
 const aliases:Record<string,string>={"rose-gold":"ruby","silver-dust":"titanium","carbon-fiber":"obsidian"};
@@ -24,48 +24,44 @@ function applyTheme(value:unknown,persist=true){
  root.style.setProperty("--profile-scene-tint",t.tint);
  if(persist){try{localStorage.setItem("1muslim:profile-background",wallpaper)}catch{}}
 }
+/** Apply saved theme tokens without painting the old blue/purple full-screen
+ * recognition animation. That layer was the six-dot interstitial seen on EVERY tab.
+ */
 export default function ProfileThemeSync(){
- const [recognizing,setRecognizing]=useState(true);
- const [visible,setVisible]=useState(true);
- const [preview,setPreview]=useState("obsidian");
  useEffect(()=>{
-  let active=true;let settled=false;
-  const palette=["none"];
-  let index=0;
-  const cycle=window.setInterval(()=>{if(!active||settled)return;index=(index+1)%palette.length;const next=palette[index];applyTheme(next,false);setPreview(next)},1250);
-  applyTheme(palette[0],false);
-  const initial=fallback;
-  const start=performance.now();
-  const settle=(theme:string)=>{if(!active)return;const first=!settled;settled=true;window.clearInterval(cycle);applyTheme(theme);setPreview(aliases[theme]||theme);if(first){window.setTimeout(()=>{if(active){setVisible(false);window.setTimeout(()=>{if(active)setRecognizing(false)},1400)}},Math.max(0,1100-(performance.now()-start)))}};
+  let active=true;
   const db=createClient();
+  // Reuse previously resolved preference immediately while the authenticated
+  // profile preference is fetched, but NEVER show a blocking theme overlay.
+  let previous="none";
+  try{previous=localStorage.getItem("1muslim:profile-background")||"none"}catch{}
+  applyTheme(previous,false);
   const refresh=async()=>{
    try{
     const {data:{user}}=await db.auth.getUser();
     if(!active)return;
-    if(!user){document.documentElement.dataset.guestHome="true";settle("none");return}
+    if(!user){
+     document.documentElement.dataset.guestHome="true";
+     applyTheme("none",false);
+     return;
+    }
     delete document.documentElement.dataset.guestHome;
     const {data}=await db.from("profiles").select("avatar_config").eq("id",user.id).maybeSingle();
-    settle((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||initial);
-   }catch{settle(initial)}
+    if(!active)return;
+    applyTheme((data?.avatar_config as {profileBackgroundTheme?:string}|null)?.profileBackgroundTheme||"none");
+   }catch{if(active)applyTheme(previous,false)}
   };
   void refresh();
-  const {data:{subscription}}=db.auth.onAuthStateChange(()=>{void refresh()});
-  const onChange=(event:Event)=>{const theme=(event as CustomEvent<string>).detail;if(typeof theme==="string")settle(theme);else void refresh()};
+  const {data:{subscription}}=db.auth.onAuthStateChange(event=>{
+   if(event==="SIGNED_OUT"||event==="SIGNED_IN"||event==="USER_UPDATED")void refresh();
+  });
+  const onChange=(event:Event)=>{
+   const theme=(event as CustomEvent<string>).detail;
+   if(typeof theme==="string")applyTheme(theme);
+   else void refresh();
+  };
   window.addEventListener("1muslim:profile-background-changed",onChange);
-  return()=>{active=false;window.clearInterval(cycle);subscription.unsubscribe();window.removeEventListener("1muslim:profile-background-changed",onChange)};
+  return()=>{active=false;subscription.unsubscribe();window.removeEventListener("1muslim:profile-background-changed",onChange)};
  },[]);
- return <>
-  {recognizing&&<div className={visible?"themeRecognitionIntro":"themeRecognitionIntro themeRecognitionDone"} aria-hidden="true"><div className="themeRecognitionWallpaper" style={{backgroundImage:`url("/assets/profile-backgrounds/${({ruby:"rose-gold",titanium:"silver-dust",obsidian:"carbon-fiber"} as Record<string,string>)[preview]||preview}.PNG")`}}/><div className="themeRecognitionGlow"/><div className="themeRecognitionButtons"><i/><i/><i/><i/><i/><i/></div></div>}
-  <style>{`
-   .themeRecognitionIntro{position:fixed;inset:0;z-index:15;pointer-events:none;overflow:hidden;opacity:.78;transition:opacity 1.4s ease;background:linear-gradient(125deg,rgba(9,74,61,.18),rgba(30,83,159,.2),rgba(104,42,129,.17),rgba(127,81,35,.16));background-size:400% 400%;animation:themeIntroShift 9s ease-in-out infinite}
-   .themeRecognitionDone{opacity:0!important}\n   .themeRecognitionWallpaper{position:absolute;inset:0;opacity:.16;background-size:cover;background-position:center;filter:blur(9px);animation:themeIntroFloat 7s ease-in-out infinite alternate}\n   html:has(.themeRecognitionIntro) button{transition:background-color 1.1s ease,border-color 1.1s ease,color 1.1s ease,box-shadow 1.1s ease!important}\n   .themeRecognitionGlow{position:absolute;inset:-20%;background:radial-gradient(circle at 25% 35%,rgba(42,167,222,.16),transparent 55%),radial-gradient(circle at 80% 70%,rgba(209,115,215,.12),transparent 55%);animation:themeIntroFloat 7s ease-in-out infinite alternate}
-   .themeRecognitionButtons{position:absolute;bottom:13%;left:50%;transform:translateX(-50%);display:flex;gap:12px;opacity:.55}
-   .themeRecognitionButtons i{width:8px;height:8px;border-radius:50%;background:#4ec8a5;box-shadow:0 0 12px currentColor;animation:themeIntroButton 6s ease-in-out infinite}
-   .themeRecognitionButtons i:nth-child(2){animation-delay:-1s}.themeRecognitionButtons i:nth-child(3){animation-delay:-2s}.themeRecognitionButtons i:nth-child(4){animation-delay:-3s}.themeRecognitionButtons i:nth-child(5){animation-delay:-4s}.themeRecognitionButtons i:nth-child(6){animation-delay:-5s}
-   @keyframes themeIntroShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-   @keyframes themeIntroFloat{from{transform:translate3d(-1%,1%,0) scale(1)}to{transform:translate3d(1%,-1%,0) scale(1.05)}}
-   @keyframes themeIntroButton{0%,100%{background:#37bb8b;opacity:.4;transform:scale(.8)}33%{background:#4f9eff;opacity:1;transform:scale(1.3)}66%{background:#cf7de7;opacity:.7;transform:scale(1)}}
-   @media(prefers-reduced-motion:reduce){.themeRecognitionIntro,.themeRecognitionGlow,.themeRecognitionButtons i{animation:none!important}}
-  `}</style>
- </>;
+ return null;
 }
