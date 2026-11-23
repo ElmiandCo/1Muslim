@@ -10,8 +10,8 @@ export default function AppShellLifecycle(){
  useEffect(()=>{
   let active=true;
   const root=document.documentElement;
-  let revealTimer:ReturnType<typeof setTimeout>|null=null;
-  let timeout:ReturnType<typeof setTimeout>|null=null;
+  let revealTimer:number|null=null;
+  let timeout:number|null=null;
   let frame=0;
   let profileObserver:MutationObserver|null=null;
   root.dataset.oneRoute=pathname==="/"?"welcome":"app";
