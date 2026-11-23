@@ -25,7 +25,13 @@ const place=(m:Entry,active:FloatEntry[],width:number,height:number,duration:num
  }).sort((a,b)=>a.cost-b.cost);
  const selected=options[0];
  const direction=seed%3-1;
- return {...m,duration,x:selected.x,y:selected.y,dx:direction*(12+seed%17),dy:-(Math.min(42,26+height/40)),scale,lane:selected.lane};
+ // Mobile viewers need comments in a central reading corridor, not the far edges.
+ // Keep a little horizontal variation without pushing a comment outside the stage.
+ const mobile=width<600;
+ const centerOffsets=[-7,0,7,-4,4];
+ const x=mobile?50+centerOffsets[seed%centerOffsets.length]:selected.x;
+ const dx=mobile?direction*7:direction*(12+seed%17);
+ return {...m,duration,x,y:selected.y,dx,dy:-(Math.min(42,26+height/40)),scale:mobile?Math.max(.75,scale):scale,lane:selected.lane};
 };
 export default function LiveLightOverlay({streamId,host=false}:{streamId:string;host?:boolean}){
  const db=useMemo(()=>createClient(),[]);
