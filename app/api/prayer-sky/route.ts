@@ -34,7 +34,7 @@ export async function GET(request:NextRequest){
    Number.isFinite(point.latitude)&&Math.abs(point.latitude)<=90&&Number.isFinite(point.longitude)&&Math.abs(point.longitude)<=180);
   const byRegion=region?places.filter(point=>state(point.admin1||"")===state(region)):[];
   // Never pick an arbitrary homonymous town with no matching state.
-  const verified=region&&byRegion.length===1?byRegion[0]:!region&&places.length===1?places[0]:region&&byRegion.length===0&&places.length===1?places[0]:null;
+  const verified=region?(byRegion.length===1?byRegion[0]:null):(places.length===1?places[0]:null);
   if(!verified)return NextResponse.json({error:"City could not be uniquely matched to the saved region."},{status:404,headers:{"Cache-Control":"no-store"}});
   return NextResponse.json({latitude:verified.latitude,longitude:verified.longitude,timezone:verified.timezone||null,precision:"city-center"},
    {headers:{"Cache-Control":"private, max-age=3600"}});
