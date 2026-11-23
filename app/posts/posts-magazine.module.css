@@ -555,3 +555,24 @@
 .discoverPage .feedPostStage .feedYoutubeThumbnail:focus-visible{outline:3px solid #8de7f5;outline-offset:3px}
 .discoverPage .feedPostStage .feedYoutubeThumbnail:active .feedYoutubePlay{transform:translate(-50%,-50%) scale(.94)}
 @media(prefers-reduced-motion:reduce){.discoverPage .feedPostStage .feedYoutubeThumbnail .feedYoutubePlay{transition:none}}
+
+
+/* Multi-media albums in the Ummah deck */
+.feedMediaGallery{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-height:clamp(340px,65dvh,760px);background:radial-gradient(ellipse at center,#1b1e26,#080a0d 75%);overflow:hidden;touch-action:pan-y}
+.feedMediaGalleryMedia{max-height:100%;width:100%;height:100%;min-height:inherit;object-fit:contain;display:block;animation:album-appear .26s ease both}
+.feedMediaGalleryControls{position:absolute;z-index:4;left:10px;right:10px;bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;pointer-events:none}
+.feedMediaGalleryControls button{pointer-events:auto;border:1px solid #ffffff60;background:#080a0dbb;backdrop-filter:blur(12px);color:white;border-radius:50%;height:38px;width:38px;display:grid;place-items:center;font-size:27px;line-height:1;cursor:pointer}
+.feedMediaGalleryControls span{background:#060708ba;color:#fff;font-size:11px;font-weight:800;letter-spacing:.07em;border-radius:99px;padding:6px 10px}
+.feedMediaGalleryDots{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px}
+.feedMediaGalleryDots span{width:5px;height:5px;border-radius:50%;background:#ffffff60;transition:width .2s,background .2s}
+.feedMediaGalleryDots .feedMediaGalleryDotActive{width:16px;border-radius:5px;background:#fff}
+@keyframes album-appear{from{opacity:.55;transform:scale(.986)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.feedMediaGalleryMedia{animation:none}}
+
+
+/* Full-screen post albums: horizontal moves stay within the post, not between posts. */
+.storyAlbum{position:absolute;inset:0;z-index:2;display:flex;justify-content:center;align-items:center;overflow:hidden;touch-action:pan-y}
+.storyAlbumMedia{width:100%;height:100%;max-height:100%;object-fit:contain;display:block;background:transparent}
+.storyAlbumControls{position:absolute;bottom:calc(26px + env(safe-area-inset-bottom));left:16px;right:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;pointer-events:none}
+.storyAlbumControls button{pointer-events:auto;width:43px;height:43px;border:1px solid #ffffff56;color:#fff;border-radius:50%;background:#101218aa;backdrop-filter:blur(12px);font-size:30px;line-height:1;display:grid;place-items:center}
+.storyAlbumControls span{color:#fff;background:#090b0ecc;border-radius:99px;padding:7px 12px;font-size:12px;font-weight:800}

@@ -10,7 +10,8 @@ import OneMuslimVideo from "../components/OneMuslimVideo";
 import {predictVideo,cachePublicImage} from "../../lib/smart-media";
 import PostAuthorFollow from "../components/PostAuthorFollow";
 import styles from "./posts-magazine.module.css";
-type Post={id:string;body:string;author_name:string;author_handle:string;created_at:string;media_url:string|null;media_type:string|null;shahada_verified?:boolean;author_id:string;author_avatar_url?:string|null};
+type PostMedia={url:string;type:string};
+type Post={id:string;body:string;author_name:string;author_handle:string;created_at:string;media_url:string|null;media_type:string|null;media_items?:PostMedia[];shahada_verified?:boolean;author_id:string;author_avatar_url?:string|null};
 const youtubeId=youtubeIdFromPost;
 const ytThumbnail=youtubeThumbnail;
 const clean=(text:string)=>cleanPostBody(text).replace(/https?:\/\/\S+/g,"").trim();
@@ -47,6 +48,18 @@ function VisiblePostVideo({postId,mediaUrl,youtube}:{postId:string;mediaUrl:stri
  const [near,setNear]=useState(false);
  useEffect(()=>{const el=node.current;if(!el)return;if(typeof IntersectionObserver==="undefined"){setNear(true);return}const o=new IntersectionObserver(([entry])=>setNear(entry.isIntersecting),{rootMargin:"800px 0px 800px 0px",threshold:0});o.observe(el);return()=>o.disconnect()},[]);
  return <div ref={node} className={styles.feedVideoStage}>{near?<OneMuslimVideo videoKey={"public-post:"+postId} src={mediaUrl||""} youtubeId={youtube} title="Ummah video"/>:<div className={styles.feedVideoPlaceholder}>{youtube?<img src={ytThumbnail(youtube)} alt="" loading="lazy"/>:<span aria-hidden="true">▶</span>}<small>Video ready to play</small></div>}</div>;
+}
+
+function PostMediaGallery({items}:{items:PostMedia[]}){
+ const [index,setIndex]=useState(0);
+ const [start,setStart]=useState<number|null>(null);
+ const current=items[index]||items[0];
+ const go=(delta:number)=>setIndex(previous=>(previous+delta+items.length)%items.length);
+ return <div className={styles.feedMediaGallery} aria-label={"Post gallery with "+items.length+" items"} onTouchStart={event=>setStart(event.touches[0]?.clientX??null)} onTouchEnd={event=>{if(start===null)return;const distance=event.changedTouches[0]?.clientX-start;setStart(null);if(Math.abs(distance)>42)go(distance<0?1:-1)}}>
+  {current.type.startsWith("video/")?<video key={current.url} src={current.url} playsInline controls preload="metadata" className={styles.feedMediaGalleryMedia}/>:<img key={current.url} src={current.url} alt={"Gallery item "+(index+1)} className={styles.feedMediaGalleryMedia} loading="lazy"/>}
+  <div className={styles.feedMediaGalleryControls}><button type="button" aria-label="Previous gallery item" onClick={()=>go(-1)}>‹</button><span>{index+1} / {items.length}</span><button type="button" aria-label="Next gallery item" onClick={()=>go(1)}>›</button></div>
+  <div className={styles.feedMediaGalleryDots} aria-hidden="true">{items.map((item,i)=><span className={i===index?styles.feedMediaGalleryDotActive:""} key={item.url}/>)}</div>
+ </div>
 }
 
 let cachedDiscover:{posts:Post[];viewerId:string|null;at:number}|null=null;
@@ -248,16 +261,18 @@ export default function PublicPostsSocial(){
  const nextVideoId=nextPost&&!nextPost.media_type?.startsWith("video/")?youtubeIdFromPost(nextPost.body,nextPost.media_url):null;
  const nextPreview=nextPost?.media_type?.startsWith("image/")?nextPost.media_url:nextVideoId?ytThumbnail(nextVideoId):null;
  const poster=isImage?p.media_url:video?ytThumbnail(video):null;
+ const hasGallery=!!p.media_items&&p.media_items.length>1;
  const state=deckMotion?(index===deckMotion.from?"leaving":index===deckMotion.to?"arriving":index===deckActive+1?"queued":index===deckActive-1?"past":"rest"):index===deckActive?"current":index===deckActive+1?"queued":index===deckActive-1?"past":"rest";
  const posterStyle=poster&&(index===deckActive||index===deckActive+1)?({"--ummah-poster":"url("+JSON.stringify(poster)+")"} as CSSProperties):undefined;
  return <article className={styles.feedPost} id={"ummah-post-"+p.id} data-ummah-index={index} data-deck-state={state} data-deck-direction={deckMotion?.direction===-1?"reverse":"forward"} style={posterStyle} onTouchStart={e=>onCardTouchStart(index,e)} onTouchEnd={e=>onCardTouchEnd(index,e)} onTouchCancel={()=>{deckTouch.current=null}} key={p.id} aria-label={"Post by "+(p.author_name||"Community member")}>
  {index<filtered.length-1&&<div aria-hidden="true" className={styles.feedNextGhost} style={index===deckActive&&nextPreview?{backgroundImage:"url("+JSON.stringify(nextPreview)+")"}:undefined}/>}
 
  <div className={styles.feedPostStage}>
- {poster&&<Link href={`/posts/story/${encodeURIComponent(p.id)}${video?"?play=1":""}`} className={styles.feedMediaLink+(video?" "+styles.feedYoutubeThumbnail:"")} aria-label={video?"Play YouTube video in full Ummah post":"View community post"}><img src={poster} alt={video?"YouTube video thumbnail":"Community post"} width={960} height={1200} loading={index<2?"eager":"lazy"} decoding="async" fetchPriority={index===0?"high":"auto"} style={{backgroundColor:"#f1f3f6"}}/>{video&&<span className={styles.feedYoutubePlay} aria-hidden="true">▶</span>}</Link>}
+ {!hasGallery&&poster&&<Link href={`/posts/story/${encodeURIComponent(p.id)}${video?"?play=1":""}`} className={styles.feedMediaLink+(video?" "+styles.feedYoutubeThumbnail:"")} aria-label={video?"Play YouTube video in full Ummah post":"View community post"}><img src={poster} alt={video?"YouTube video thumbnail":"Community post"} width={960} height={1200} loading={index<2?"eager":"lazy"} decoding="async" fetchPriority={index===0?"high":"auto"} style={{backgroundColor:"#f1f3f6"}}/>{video&&<span className={styles.feedYoutubePlay} aria-hidden="true">▶</span>}</Link>}
  
- {hasVideo&&<VisiblePostVideo postId={p.id} mediaUrl={p.media_url} youtube={null}/>}
- {!poster&&!hasVideo&&<div className={styles.feedTextCanvas} aria-hidden="true"><span>✧</span><strong>FROM THE UMMAH</strong><small>Voices of our community</small></div>}
+ {hasGallery&&<PostMediaGallery items={p.media_items!}/>}
+ {hasVideo&&!hasGallery&&<VisiblePostVideo postId={p.id} mediaUrl={p.media_url} youtube={null}/>}
+ {!hasGallery&&!poster&&!hasVideo&&<div className={styles.feedTextCanvas} aria-hidden="true"><span>✧</span><strong>FROM THE UMMAH</strong><small>Voices of our community</small></div>}
  <div className={styles.feedPostGlass}>
   <Link href={"/profile?section=muslimeen&member="+encodeURIComponent(p.author_id)} className={styles.feedAvatarEdge} aria-label={"View "+(p.author_name||"member")+" profile"}><span className={styles.feedPostAvatar}>{p.author_avatar_url?<img className={styles.authorAvatarImage} src={p.author_avatar_url} alt="" loading="lazy" referrerPolicy="no-referrer"/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span></Link>
   <div className={styles.feedPostHeader}><Link href={`/profile?section=muslimeen&member=${encodeURIComponent(p.author_id)}`} className={styles.feedPostIdentity}><span><strong>{p.author_name||"Community member"} {p.shahada_verified?"✦":""}</strong><small>{p.author_handle} · {new Date(p.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"})}</small></span></Link><PostAuthorFollow authorId={p.author_id} viewerId={viewerId}/><div className={styles.feedMenuWrap}><button type="button" className={styles.feedPostMore} aria-label="Post options" aria-expanded={menuId===p.id} onClick={()=>{setMenuId(v=>v===p.id?null:p.id);setActionError("")}}>•••</button>{menuId===p.id&&<div className={styles.feedPostMenu}><Link href={`/posts/story/${encodeURIComponent(p.id)}`}>View</Link>{viewerId===p.author_id&&<><button type="button" onClick={()=>{setEditingId(p.id);setEditText(p.body);setMenuId(null)}}>Edit</button><button type="button" disabled={actionBusy} onClick={async()=>{if(!window.confirm("Delete this post permanently?"))return;setActionBusy(true);setActionError("");try{const r=await fetch("/api/community-posts",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id})});if(!r.ok)throw Error((await r.json()).error||"Could not delete post");setPosts(old=>old.filter(x=>x.id!==p.id));setMenuId(null)}catch(e){setActionError(e instanceof Error?e.message:"Delete failed")}finally{setActionBusy(false)}}}>Delete</button></>}</div>}</div></div>

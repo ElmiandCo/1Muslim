@@ -11,6 +11,23 @@ import {compressVideo} from "./video-compression";
 type Mode="camera"|"create"|"live";
 type StudioAsset={id:string;kind:"theme"|"filter"|"sound";slug:string;title:string;description:string;category:string;config:Record<string,unknown>;storage_path:string|null;attribution:string|null;license_name:string|null};
 type Media={url:string;type:"image"|"video";name:string};
+type PickedMedia=Media&{id:string;file:File};
+type Step="select"|"edit"|"post";
+type Transition="fade"|"slide"|"none";
+async function bakedImageFilter(file:File,css:string):Promise<File>{
+ if(css==="none"||!file.type.startsWith("image/"))return file;
+ const bitmap=await createImageBitmap(file);
+ try{
+  const canvas=document.createElement("canvas");
+  const scale=Math.min(1,2048/Math.max(bitmap.width,bitmap.height));
+  canvas.width=Math.max(1,Math.round(bitmap.width*scale));
+  canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+  const context=canvas.getContext("2d");if(!context)throw Error("Unable to prepare image effects.");
+  context.filter=css;context.drawImage(bitmap,0,0,canvas.width,canvas.height);
+  const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error("Image processing failed.")),"image/jpeg",.9));
+  return new File([blob],file.name.replace(/\.[^.]+$/,"")+"-effect.jpg",{type:"image/jpeg"});
+ }finally{bitmap.close()}
+}
 const themes=[
  {id:"ramadan",title:"Ramadan Nights",subtitle:"Lantern glow · 12 sec",tone:"ramadan"},
  {id:"masjid",title:"Masjid Moments",subtitle:"Cinematic pan · 10 sec",tone:"masjid"},
@@ -22,7 +39,16 @@ const themes=[
 
 export default function CreatorStudio(){
  const router=useRouter();
- const [mode,setMode]=useState<Mode>("camera");
+ const [mode,setMode]=useState<Mode>("create");
+ const [step,setStep]=useState<Step>("select");
+ const [queue,setQueue]=useState<PickedMedia[]>([]);
+ const [activeIndex,setActiveIndex]=useState(0);
+ const [transition,setTransition]=useState<Transition>("fade");
+ const queueRef=useRef<PickedMedia[]>([]);
+ useEffect(()=>{queueRef.current=queue},[queue]);
+ useEffect(()=>()=>queueRef.current.forEach(item=>URL.revokeObjectURL(item.url)),[]);
+ const activePick=queue[Math.min(activeIndex,Math.max(0,queue.length-1))]||null;
+
  const [file,setFile]=useState<File|null>(null);
  const [caption,setCaption]=useState("");
  const [busy,setBusy]=useState(false);
@@ -61,7 +87,7 @@ export default function CreatorStudio(){
  const inputRef=useRef<HTMLInputElement>(null);
  const canvasRef=useRef<HTMLCanvasElement>(null);
  const cameraRequestRef=useRef(0);
- const modeRef=useRef<Mode>("camera");
+ const modeRef=useRef<Mode>("create");
  const mountedRef=useRef(true);
  const recordingWantedRef=useRef(false);
  const stopCamera=()=>{
@@ -101,13 +127,57 @@ export default function CreatorStudio(){
  const {error}=await db.storage.from("community-media").upload(path,source,{contentType:source.type,upsert:false});if(error)throw error;
  }return path};
  const saveDraft=async()=>{if(busy)return;setBusy(true);setDraftStatus("Saving…");try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user){setDraftStatus("Sign in to save a draft.");return}let path:string|null=null;if(file)path=await uploadMedia(db,user.id,file,"studio-drafts");const payload={user_id:user.id,title:caption.trim().slice(0,120)||file?.name||"Untitled creation",theme_slug:theme,filter_slug:filter,sound_slug:soundSlug,settings:{mode,media_path:path,media_name:file?.name||null,caption:caption.slice(0,2000),personal_sound_path:personalSound?.path||null,personal_sound_name:personalSound?.name||null},updated_at:new Date().toISOString()};const result=draftId?await db.from("creator_studio_drafts").update(payload).eq("id",draftId).eq("user_id",user.id).select("id").single():await db.from("creator_studio_drafts").insert(payload).select("id").single();if(result.error){if(path)await db.storage.from("community-media").remove([path]);throw result.error}if(result.data?.id)setDraftId(result.data.id);setDraftStatus("Draft saved securely.");}catch(e){setDraftStatus(e instanceof Error?e.message:"Could not save draft.")}finally{setBusy(false)}};
- useEffect(()=>{let active=true;const restore=async()=>{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user||!active)return;const {data}=await db.from("creator_studio_drafts").select("id,theme_slug,filter_slug,sound_slug,settings").eq("user_id",user.id).order("updated_at",{ascending:false}).limit(1).maybeSingle();if(!active||!data)return;setDraftId(data.id);setTheme(data.theme_slug||"ramadan");setFilter(data.filter_slug||"original");setSoundSlug(data.sound_slug||null);const settings=data.settings as {caption?:string;media_path?:string;media_name?:string;personal_sound_path?:string;personal_sound_name?:string}|null;setCaption(settings?.caption||"");if(settings?.personal_sound_path){const {data:audioSigned}=await db.storage.from("community-media").createSignedUrl(settings.personal_sound_path,3600);if(audioSigned?.signedUrl&&active)setPersonalSound({path:settings.personal_sound_path,name:settings.personal_sound_name||"My sound.mp3",url:audioSigned.signedUrl})}if(settings?.media_path){const {data:signed}=await db.storage.from("community-media").createSignedUrl(settings.media_path,120);if(signed?.signedUrl&&active){try{const response=await fetch(signed.signedUrl);if(!response.ok)throw Error("download failed");const blob=await response.blob();if(!active)return;const restored=new File([blob],settings.media_name||"studio-media",{type:blob.type});setFile(restored);setMedia({url:URL.createObjectURL(restored),type:blob.type.startsWith("video/")?"video":"image",name:restored.name});modeRef.current="create";setMode("create");}catch{setDraftStatus("Draft settings restored; media unavailable.")}}}else setDraftStatus("Last draft restored.");};void restore();return()=>{active=false}},[]);
- const pendingUploadRef=useRef<{file:File;path:string;uploaded:File}|null>(null);
- const compressedRef=useRef<{original:File;compressed:File}|null>(null);
- const publish=async()=>{if(!file||busy)return;setBusy(true);setExportStatus(file.type.startsWith("video/")?"Uploading video in resumable chunks…":"Uploading media…");let path:string|null=null;let published=false;try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user)throw Error("Sign in before publishing.");let uploaded=file;if(file.type.startsWith("video/")&&file.size>8*1024*1024){if(compressedRef.current?.original===file){uploaded=compressedRef.current.compressed}else{setExportStatus("Compressing video in HD (plays through once)…");try{const encoded=await compressVideo(file,p=>{if(p%10===0)setExportStatus("Compressing HD video… "+p+"%")});if(encoded.size<file.size){uploaded=encoded;compressedRef.current={original:file,compressed:encoded};setExportStatus("HD compression complete. Uploading…")}else{setExportStatus("Compressed file was not smaller; uploading original.")}}catch(e){setExportStatus("Compression unavailable: "+(e instanceof Error?e.message:"unknown error")+". Uploading original.")}}}if(pendingUploadRef.current?.file===file){path=pendingUploadRef.current.path;uploaded=pendingUploadRef.current.uploaded}else{path=await uploadMedia(db,user.id,uploaded,"studio-posts");pendingUploadRef.current={file,path,uploaded}}setExportStatus("Publishing to Ummah…");const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:caption.trim().slice(0,2000),media:{storage_path:path,file_name:uploaded.name,mime_type:uploaded.type}})});const result=await response.json().catch(()=>({}));if(!response.ok)throw Error(result.error||"Publishing failed. Please retry.");if(result.flagged&&result.removed)throw Error("Your post was removed for review.");published=true;pendingUploadRef.current=null;window.dispatchEvent(new Event("1muslim:community-post-published"));setExportStatus("Published to Ummah Posts.");router.push("/posts");}catch(e){setExportStatus((e instanceof Error?e.message:"Publishing failed.")+" Your upload is retained; tap Publish again to retry without re-uploading.")}finally{setBusy(false)}};
- const exportPhoto=async()=>{if(!file||!file.type.startsWith("image/")||busy)return;setBusy(true);setExportStatus("Animating photo…");try{const output=await animatePhoto(file,filterCss);setFile(output);setMedia({url:URL.createObjectURL(output),type:"video",name:output.name});setExportStatus("Animated video ready. Preview and publish it.");}catch(e){setExportStatus(e instanceof Error?e.message:"Animation unavailable on this device.")}finally{setBusy(false)}};
+ useEffect(()=>{let active=true;const restore=async()=>{const db=createClient();const {data:{user}}=await db.auth.getUser();if(!user||!active)return;const {data}=await db.from("creator_studio_drafts").select("id,theme_slug,filter_slug,sound_slug,settings").eq("user_id",user.id).order("updated_at",{ascending:false}).limit(1).maybeSingle();if(!active||!data)return;setDraftId(data.id);setTheme(data.theme_slug||"ramadan");setFilter(data.filter_slug||"original");setSoundSlug(data.sound_slug||null);const settings=data.settings as {caption?:string;media_path?:string;media_name?:string;personal_sound_path?:string;personal_sound_name?:string}|null;setCaption(settings?.caption||"");if(settings?.personal_sound_path){const {data:audioSigned}=await db.storage.from("community-media").createSignedUrl(settings.personal_sound_path,3600);if(audioSigned?.signedUrl&&active)setPersonalSound({path:settings.personal_sound_path,name:settings.personal_sound_name||"My sound.mp3",url:audioSigned.signedUrl})}if(settings?.media_path){const {data:signed}=await db.storage.from("community-media").createSignedUrl(settings.media_path,120);if(signed?.signedUrl&&active){try{const response=await fetch(signed.signedUrl);if(!response.ok)throw Error("download failed");const blob=await response.blob();if(!active)return;const restored=new File([blob],settings.media_name||"studio-media",{type:blob.type});setFile(restored);const url=URL.createObjectURL(restored);const kind=blob.type.startsWith("video/")?"video":"image";setMedia({url,type:kind,name:restored.name});setQueue(old=>{old.forEach(item=>URL.revokeObjectURL(item.url));return [{id:crypto.randomUUID(),file:restored,url,type:kind,name:restored.name}]});setActiveIndex(0);modeRef.current="create";setMode("create");}catch{setDraftStatus("Draft settings restored; media unavailable.")}}}else setDraftStatus("Last draft restored.");};void restore();return()=>{active=false}},[]);
 
- useEffect(()=>{if(media)return()=>{URL.revokeObjectURL(media.url)}},[media]);
+ const pendingUploadsRef=useRef<Map<string,{path:string;uploaded:File}>>(new Map());
+ const compressedRef=useRef<Map<string,File>>(new Map());
+ const publish=async()=>{
+  if(!queue.length||busy)return;
+  setBusy(true);setExportStatus("Preparing your post…");
+  try{
+   const db=createClient();
+   const {data:{user}}=await db.auth.getUser();
+   if(!user)throw Error("Sign in before publishing.");
+   const items:{storage_path:string;file_name:string;mime_type:string}[]=[];
+   for(let index=0;index<queue.length;index++){
+    const picked=queue[index];const source=picked.file;
+    const cacheKey=picked.id+"|"+(picked.type==="image"?filter:"original");
+    let cached=pendingUploadsRef.current.get(cacheKey);
+    if(!cached){
+     setExportStatus("Preparing "+(index+1)+" of "+queue.length+"…");
+     let uploaded=source;
+     if(picked.type==="image")uploaded=await bakedImageFilter(source,filterCss);
+     if(picked.type==="video"&&source.size>8*1024*1024){
+      uploaded=compressedRef.current.get(picked.id)||source;
+      if(uploaded===source){
+       try{
+        setExportStatus("Optimizing video "+(index+1)+" of "+queue.length+"…");
+        const encoded=await compressVideo(source,p=>{if(p%20===0)setExportStatus("Compressing video "+(index+1)+"… "+p+"%")});
+        if(encoded.size<source.size){uploaded=encoded;compressedRef.current.set(picked.id,encoded)}
+       }catch{setExportStatus("Uploading original video "+(index+1)+"…")}
+      }
+     }
+     setExportStatus("Uploading "+(index+1)+" of "+queue.length+"…");
+     const path=await uploadMedia(db,user.id,uploaded,"studio-posts/"+String(index).padStart(2,"0"));
+     cached={path,uploaded};pendingUploadsRef.current.set(cacheKey,cached);
+    }
+    items.push({storage_path:cached.path,file_name:cached.uploaded.name,mime_type:cached.uploaded.type});
+   }
+   setExportStatus("Publishing to Ummah…");
+   const response=await fetch("/api/community-posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:caption.trim().slice(0,2000),media_items:items})});
+   const result=await response.json().catch(()=>({}));
+   if(!response.ok)throw Error(result.error||"Publishing failed. Please retry.");
+   if(result.flagged&&result.removed)throw Error("Your post was removed for review.");
+   pendingUploadsRef.current.clear();
+   window.dispatchEvent(new Event("1muslim:community-post-published"));
+   setExportStatus("Published to Ummah Posts.");
+   router.push("/posts");
+  }catch(e){setExportStatus((e instanceof Error?e.message:"Publishing failed.")+" Your uploaded media remains saved; retry Post without re-uploading.");}
+  finally{setBusy(false)}
+ };
+ const exportPhoto=async()=>{if(!file||!file.type.startsWith("image/")||busy)return;setBusy(true);setExportStatus("Animating photo…");try{const output=await animatePhoto(file,filterCss);setFile(output);const url=URL.createObjectURL(output);setMedia({url,type:"video",name:output.name});setQueue(old=>old.map((item,index)=>{if(index!==0)return item;URL.revokeObjectURL(item.url);return {...item,file:output,url,type:"video",name:output.name}}));setExportStatus("Animated video ready. Preview and publish it.");}catch(e){setExportStatus(e instanceof Error?e.message:"Animation unavailable on this device.")}finally{setBusy(false)}};
+
+
  const startCamera=async(face=facing)=>{
   stopCamera();const request=++cameraRequestRef.current;setStreamError("");
   if(!navigator.mediaDevices?.getUserMedia){setStreamError("Camera access is unavailable in this browser. Upload a photo or video instead.");return}
@@ -120,11 +190,38 @@ export default function CreatorStudio(){
    setCameraReady(true);
   }catch{if(mountedRef.current&&request===cameraRequestRef.current)setStreamError("Camera access was blocked or unavailable. Enable camera permissions or upload media.")}
  };
- const loadFile=(file?:File)=>{
-  if(!file)return;
-  if(!file.type.startsWith("image/")&&!file.type.startsWith("video/")){setStreamError("Choose an image or video file.");return}
-  setFile(file);setMedia({url:URL.createObjectURL(file),type:file.type.startsWith("image/")?"image":"video",name:file.name});
+
+ const addPickedFiles=(files?:FileList|null)=>{
+  if(!files?.length)return;
+  const valid=Array.from(files).filter(item=>item.type.startsWith("image/")||item.type.startsWith("video/"));
+  if(!valid.length){setStreamError("Choose photos or videos.");return}
+  const remaining=Math.max(0,10-queue.length);
+  if(!remaining){setStreamError("You can select up to 10 photos or videos.");return}
+  const additions:PickedMedia[]=valid.slice(0,remaining).map(item=>({id:crypto.randomUUID(),file:item,url:URL.createObjectURL(item),type:item.type.startsWith("video/")?"video":"image",name:item.name}));
+  if(!queue.length){setFile(additions[0].file);setMedia(additions[0]);setActiveIndex(0)}
+  setQueue(old=>[...old,...additions]);
+  setStreamError(valid.length>remaining?"Only the first "+remaining+" items were added (10 maximum).":"");
+  setMode("create");modeRef.current="create";stopCamera();
+ };
+ const loadFile=(newFile?:File)=>{
+  if(!newFile)return;
+  if(!newFile.type.startsWith("image/")&&!newFile.type.startsWith("video/")){setStreamError("Choose a photo or video.");return}
+  const item:PickedMedia={id:crypto.randomUUID(),file:newFile,url:URL.createObjectURL(newFile),type:newFile.type.startsWith("image/")?"image":"video",name:newFile.name};
+  setQueue(old=>{old.forEach(previous=>URL.revokeObjectURL(previous.url));return [item]});
+  setActiveIndex(0);setFile(newFile);setMedia(item);setStep("select");
   modeRef.current="create";setMode("create");stopCamera();setStreamError("");
+ };
+ const removePicked=(index:number)=>{
+  const previous=queue[index];if(!previous)return;
+  URL.revokeObjectURL(previous.url);
+  const next=queue.filter((_,i)=>i!==index);
+  setQueue(next);setActiveIndex(Math.min(activeIndex,next.length-1)<0?0:Math.min(activeIndex,next.length-1));
+  setFile(next[0]?.file||null);setMedia(next[0]||null);if(!next.length)setStep("select");
+ };
+ const shiftPicked=(index:number,delta:number)=>{
+  const nextIndex=index+delta;if(nextIndex<0||nextIndex>=queue.length)return;
+  const next=[...queue];[next[index],next[nextIndex]]=[next[nextIndex],next[index]];
+  setQueue(next);setActiveIndex(nextIndex);setFile(next[0]?.file||null);setMedia(next[0]||null);
  };
  const capture=()=>{
   if(!videoRef.current||!canvasRef.current||!cameraReady)return;
@@ -145,25 +242,76 @@ export default function CreatorStudio(){
    recorder.start();recorderRef.current=recorder;setRecording(true);
   }catch{setStreamError("Unable to record video on this device.")}
  };
- return <main className={styles.studio}>
-  <header className={styles.header}><Link href="/posts" aria-label="Close Creator Studio" className={styles.close}>×</Link><div className={styles.brand}><strong>CREATOR STUDIO</strong><small>OBSIDIAN CINEMA</small></div><div className={styles.headerActions}>{mode==="create"&&<button type="button" className={styles.previewToggle} aria-pressed={previewOnly} onClick={()=>setPreviewOnly(v=>!v)}>{previewOnly?"✎ Edit":"◉ Preview"}</button>}<button className={styles.sound} onClick={()=>{setPreviewOnly(false);setSoundOpen(v=>!v)}} type="button">♫ Sounds</button></div></header>
-  <audio ref={audioRef} onEnded={()=>setSoundPreview(null)} preload="none" />
-  {soundOpen&&<aside className={styles.notice} role="dialog" aria-label="Approved sounds"><div className={styles.toolHeader}><strong>Approved sounds</strong><button type="button" onClick={()=>{audioRef.current?.pause();setSoundPreview(null);setSoundOpen(false)}}>Close</button></div><div className={styles.soundRow}><input ref={soundInputRef} type="file" accept=".mp3,audio/mpeg" style={{display:"none"}} onChange={e=>{void uploadPersonalSound(e.target.files?.[0]);e.currentTarget.value=""}}/><button type="button" onClick={()=>soundInputRef.current?.click()}>＋ Upload MP3</button><span><strong>Your own sound</strong><small>Personal audio · MP3 up to 20 MB</small></span></div>{soundUploadStatus&&<p role="status">{soundUploadStatus}</p>}{personalSound&&<div className={styles.soundRow}><button type="button" onClick={()=>{if(audioRef.current){audioRef.current.src=personalSound.url;setSoundPreview("personal");void audioRef.current.play().catch(()=>setSoundPreview(null))}}}>{soundPreview==="personal"?"♫ Playing":"▶ Preview"}</button><span><strong>{personalSound.name}</strong><small>Personal upload</small></span><button type="button" onClick={()=>{setSoundSlug(null);audioRef.current?.pause();setSoundPreview(null);setSoundOpen(false)}}>Use</button></div>}{sounds.length?sounds.map(a=><div className={styles.soundRow} key={a.id}><button type="button" onClick={()=>void previewSound(a)} aria-label={"Preview "+a.title}>{soundPreview===a.slug?"♫ Playing":"▶ Preview"}</button><span><strong>{a.title}</strong><small>{a.attribution||"Licensed audio"} · {a.license_name||"Approved"}</small></span><button type="button" onClick={()=>{setSoundSlug(a.slug);audioRef.current?.pause();setSoundPreview(null);setSoundOpen(false)}}>{soundSlug===a.slug?"✓ Selected":"Use"}</button></div>):<p>No shared sounds approved yet. You can upload your own MP3 above.</p>}<button type="button" onClick={()=>{setSoundSlug(null);audioRef.current?.pause();setSoundOpen(false)}}>No sound</button></aside>}
-  <section className={styles.stage+(previewOnly?" "+styles.previewStage:"")} aria-label="Creator preview">
-   {mode==="camera"&&!media?<div className={styles.camera}>
-    <video ref={videoRef} autoPlay playsInline muted className={styles.cameraVideo} style={{transform:facing==="user"?"scaleX(-1)":undefined,filter:filterCss}}/>
-    {!cameraReady&&<div className={styles.cameraPrompt}><div className={styles.moon}>◎</div><h1>Your story starts here</h1><p>Enable the camera to capture a moment, or import from your library.</p><button type="button" onClick={()=>void startCamera()}>Enable Camera</button></div>}
-    {cameraReady&&<div className={styles.cameraTools}><span className={styles.cameraLive}>● CAMERA READY</span><button type="button" onClick={()=>{const next=facing==="user"?"environment":"user";setFacing(next);void startCamera(next)}}>↻ Flip</button><button type="button" onClick={()=>{const options=filterOptions.length?filterOptions.map(a=>a.slug):builtInFilters.map(a=>a.slug);setFilter(v=>options[(options.indexOf(v)+1)%options.length])}}>✧ {filter}</button></div>}
-   </div>:mode==="create"?<div className={styles.preview}>
-    {media?(media.type==="image"?<img src={media.url} alt="Your selected media" style={{filter:filterCss}}/>:<video src={media.url} controls playsInline style={{filter:filterCss}}/>):<div className={styles.emptyPreview}><span>✦</span><h2>Start creating</h2><p>Add a photo or video to bring your story to life.</p></div>}
-    <span className={styles.previewBadge}>✦ {themes.find(t=>t.id===theme)?.title}</span>{!media&&<button type="button" className={styles.previewAdd} onClick={()=>inputRef.current?.click()}>＋ Add media</button>}
-   </div>:<div className={styles.emptyPreview}><span>◉</span><h2>Go Live on 1Muslim</h2><p>Use the existing 1Muslim Live experience to connect with your community.</p><Link className={styles.liveLink} href="/">Open 1Muslim Live</Link></div>}
-   {streamError&&<p role="alert" className={styles.error}>{streamError}</p>}
+ return <main className={styles.studio+" "+styles.galleryStudio}>
+  <header className={styles.header}>
+   <Link href="/posts" className={styles.close} aria-label="Close post creator">‹</Link>
+   <div className={styles.brand}><strong>CREATE A POST</strong><small>{step==="select"?"01 / GALLERY":step==="edit"?"02 / CREATIVE TOOLS":"03 / PUBLISH"}</small></div>
+   <Link href="/streaming/go-live" className={styles.liveShortcut}>◉ Go Live</Link>
+  </header>
+  <input ref={inputRef} type="file" accept="image/*,video/*" multiple className={styles.hidden} onChange={e=>{addPickedFiles(e.target.files);e.currentTarget.value=""}}/>
+  <audio ref={audioRef} preload="none" onEnded={()=>setSoundPreview(null)}/>
+  <section className={styles.galleryMain} aria-label="Post media preview">
+   {activePick?<div className={styles.galleryFrame}>
+     <div key={activePick.id+"-"+transition} className={styles.galleryVisual+" "+(transition==="fade"?styles.galleryFade:transition==="slide"?styles.gallerySlide:"")}>
+      {activePick.type==="image"?<img src={activePick.url} alt={"Selected photo "+(activeIndex+1)} style={{filter:filterCss}}/>:<video src={activePick.url} controls playsInline preload="metadata" style={{filter:filterCss}}/>}
+     </div>
+     <div className={styles.gallerySideRail} aria-label="Preview of post engagement">
+      <span title="Likes on your published post">♡<small>Likes</small></span>
+      <span title="Comments on your published post">♧<small>Comments</small></span>
+      <span title="Share your published post">↗<small>Share</small></span>
+     </div>
+     <div className={styles.galleryCounter}>{activeIndex+1} / {queue.length}</div>
+     {queue.length>1&&<div className={styles.galleryArrows}><button type="button" onClick={()=>setActiveIndex(v=>(v-1+queue.length)%queue.length)} aria-label="Previous photo or video">‹</button><button type="button" onClick={()=>setActiveIndex(v=>(v+1)%queue.length)} aria-label="Next photo or video">›</button></div>}
+    </div>:<div className={styles.galleryEmpty}>
+     <span aria-hidden="true">▧</span><h1>Your next Ummah post</h1>
+     <p>Choose photos or videos from your gallery. No camera opens here.</p>
+     <button type="button" onClick={()=>inputRef.current?.click()}>＋ Choose from gallery</button>
+    </div>}
+   {streamError&&<p role="alert" className={styles.galleryError}>{streamError}</p>}
   </section>
-  {mode==="camera"&&<div className={styles.captureBar}>{recording&&<span className={styles.recordIndicator}>● REC</span>}<button type="button" onClick={()=>inputRef.current?.click()} className={styles.upload}>▧<small>Library</small></button><button type="button" className={styles.shutter} aria-label="Take photo" onClick={capture} disabled={!cameraReady}><span/></button><button type="button" onClick={record} className={recording?styles.recording:styles.record} disabled={!cameraReady}>{recording?"■ Stop":"● Record"}</button></div>}
-  {mode==="create"&&!previewOnly&&<div className={styles.createTools+(toolsExpanded?" "+styles.toolsExpanded:"")}><div className={styles.drawerHandle} onClick={()=>setToolsExpanded(v=>!v)} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setToolsExpanded(v=>!v)}}} aria-label={toolsExpanded?"Collapse creative tools":"Expand creative tools"} aria-expanded={toolsExpanded}><span/></div><div className={styles.toolHeader}><strong>Creative tools</strong><button type="button" onClick={()=>inputRef.current?.click()}>＋ Add media</button></div><div className={styles.toolTabs} role="tablist" aria-label="Creation tools">{(["themes","filters","sounds"] as const).map(tab=><button key={tab} type="button" role="tab" aria-selected={toolTab===tab} className={toolTab===tab?styles.selectedTab:""} onClick={()=>{setToolTab(tab);setToolsExpanded(true)}}>{tab==="themes"?"✦ Themes":tab==="filters"?"◐ Filters":"♫ Sounds"}</button>)}</div>{toolTab==="themes"&&<div className={styles.themes}>{(catalog.filter(a=>a.kind==="theme").length?catalog.filter(a=>a.kind==="theme").map(a=>({id:a.slug,title:a.title,subtitle:a.description,tone:String(a.config.tone||"art")})):themes).map(item=><button type="button" key={item.id} className={styles.theme+(theme===item.id?" "+styles.selected:"")} onClick={()=>setTheme(item.id)}><span className={styles[item.tone as keyof typeof styles]||styles.art}>{item.tone==="ramadan"?"✧":item.tone==="masjid"?"⌂":item.tone==="art"?"❖":item.tone==="quran"?"۞":item.tone==="ummah"?"✺":"☾"}</span><strong>{item.title}</strong><small>{item.subtitle}</small></button>)}</div>}{toolTab==="filters"&&<div className={styles.filterStrip}>{(filterOptions.length?filterOptions.map(a=>({slug:a.slug,title:a.title,css:typeof a.config.css_filter==="string"?a.config.css_filter:"none"})):builtInFilters).map(item=><button key={item.slug} type="button" className={filter===item.slug?styles.selected:""} onClick={()=>setFilter(item.slug)}><span style={{filter:item.css}}>◐</span><small>{item.title}</small></button>)}</div>}{toolTab==="sounds"&&<div className={styles.soundPicker}><p>{soundSlug?"Selected: "+(sounds.find(a=>a.slug===soundSlug)?.title||soundSlug):"No sound selected"}</p><button type="button" onClick={()=>setSoundOpen(true)}>Browse approved sounds</button></div>}<label className={styles.captionLabel}>Caption<textarea value={caption} onChange={e=>setCaption(e.target.value)} maxLength={2000} placeholder="Share your moment with the Ummah…" rows={3}/></label><div className={styles.publishActions}><button type="button" disabled={busy} onClick={()=>void saveDraft()}>Save Draft</button><button type="button" disabled={busy||!file||file.type.startsWith("video/")} onClick={()=>void exportPhoto()}>✦ Animate Photo</button><button type="button" disabled={busy||!file} onClick={()=>void publish()}>Publish to Ummah →</button></div><p aria-live="polite">{draftStatus} {exportStatus}</p><p className={styles.disclaimer}>Approved templates and filters are previews. Animation exports a short video; selected audio is preview-only until licensed audio mixing is enabled.</p></div>}
-  <nav className={styles.modes} aria-label="Studio mode"><button type="button" className={mode==="camera"?styles.active:""} onClick={()=>{modeRef.current="camera";setMode("camera");stopCamera()}}>CAMERA</button><button type="button" className={mode==="create"?styles.active:""} onClick={()=>{modeRef.current="create";setMode("create");stopCamera()}}>CREATE</button><button type="button" className={mode==="live"?styles.active:""} onClick={()=>{modeRef.current="live";setMode("live");stopCamera()}}>LIVE</button></nav>
-  <input ref={inputRef} type="file" accept="image/*,video/*" className={styles.hidden} onChange={e=>{loadFile(e.target.files?.[0]);e.target.value=""}}/>
-  <canvas ref={canvasRef} className={styles.hidden}/>
+  {queue.length>0&&<section className={styles.galleryTray} aria-label={"Selected media ("+queue.length+")"}>
+    <div className={styles.galleryTrayTitle}><span>Highlights & clips ({queue.length})</span><button type="button" onClick={()=>inputRef.current?.click()} disabled={queue.length>=10}>＋ Add</button></div>
+    <div className={styles.galleryThumbs}>
+     {queue.map((item,index)=><div className={styles.galleryThumbWrap} key={item.id}>
+      <button type="button" onClick={()=>setActiveIndex(index)} aria-label={"Preview item "+(index+1)} className={styles.galleryThumb+(activeIndex===index?" "+styles.galleryThumbActive:"")}>
+       {item.type==="image"?<img src={item.url} alt=""/>:<video src={item.url} muted playsInline preload="metadata"/>}
+       <span>{index+1}{item.type==="video"?" ▶":""}</span>
+      </button>
+      <button type="button" className={styles.galleryRemove} onClick={()=>removePicked(index)} aria-label={"Remove "+item.name}>×</button>
+     </div>)}
+    </div>
+    {queue.length>1&&<div className={styles.galleryOrder}><button type="button" disabled={activeIndex===0} onClick={()=>shiftPicked(activeIndex,-1)}>← Move earlier</button><span>Tap to preview · reorder your clips</span><button type="button" disabled={activeIndex===queue.length-1} onClick={()=>shiftPicked(activeIndex,1)}>Move later →</button></div>}
+   </section>}
+  {step==="edit"&&<section className={styles.galleryEditor}>
+   <nav className={styles.galleryTabs} aria-label="Creative tools">
+    <button type="button" className={toolTab==="filters"?styles.galleryTabActive:""} onClick={()=>setToolTab("filters")}>✧ Effects</button>
+    <button type="button" className={toolTab==="themes"?styles.galleryTabActive:""} onClick={()=>setToolTab("themes")}>⇄ Transitions</button>
+    <button type="button" className={toolTab==="sounds"?styles.galleryTabActive:""} onClick={()=>setToolTab("sounds")}>♫ Media</button>
+   </nav>
+   {toolTab==="filters"&&<div className={styles.galleryOptionStrip}>{(filterOptions.length?filterOptions.map(a=>({slug:a.slug,title:a.title,css:typeof a.config.css_filter==="string"?a.config.css_filter:"none"})):builtInFilters).map(item=><button type="button" key={item.slug} className={filter===item.slug?styles.galleryOptionActive:""} onClick={()=>setFilter(item.slug)}><span style={{filter:item.css}}>◐</span><small>{item.title}</small></button>)}</div>}
+   {toolTab==="themes"&&<div className={styles.galleryOptionStrip}>{([{slug:"fade",title:"Soft fade",glyph:"◐"},{slug:"slide",title:"Smooth slide",glyph:"⇄"},{slug:"none",title:"Clean cut",glyph:"▣"}] as const).map(item=><button type="button" key={item.slug} className={transition===item.slug?styles.galleryOptionActive:""} onClick={()=>setTransition(item.slug)}><span>{item.glyph}</span><small>{item.title}</small></button>)}</div>}
+   {toolTab==="sounds"&&<div className={styles.gallerySoundTools}><p>{soundSlug?"Selected: "+(sounds.find(a=>a.slug===soundSlug)?.title||soundSlug):personalSound?"Your own audio selected":"Add audio to preview your post."}</p><button type="button" onClick={()=>setSoundOpen(true)}>♫ Choose sound</button></div>}
+   <p className={styles.galleryHint}>Photo effects apply on publish. Video effects, selected sounds and transition styles are previews until export support is enabled.</p>
+   {queue.length===1&&activePick?.type==="image"&&<button className={styles.galleryAnimate} type="button" disabled={busy} onClick={()=>void exportPhoto()}>✦ Animate photo into video</button>}
+  </section>}
+  {step==="post"&&<section className={styles.galleryCaption}>
+    <label htmlFor="gallery-post-caption">Caption</label>
+    <textarea id="gallery-post-caption" value={caption} onChange={event=>setCaption(event.target.value)} placeholder="Share your moment with the Ummah…" maxLength={2000} rows={3}/>
+    <span>{caption.length} / 2000</span>
+    <div className={styles.galleryDraft}><button type="button" disabled={busy||!queue.length} onClick={()=>void saveDraft()}>Save draft</button><small>Draft saves the first selected media item.</small></div>
+   </section>}
+  <footer className={styles.galleryFooter}>
+   {step!=="select"&&<button type="button" className={styles.galleryBack} disabled={busy} onClick={()=>setStep(step==="post"?"edit":"select")}>Back</button>}
+   {step==="select"?<button type="button" className={styles.galleryPrimary} disabled={!queue.length} onClick={()=>{setStep("edit");setToolTab("filters")}}>Next · Effects & media →</button>:step==="edit"?<button type="button" className={styles.galleryPrimary} disabled={!queue.length} onClick={()=>setStep("post")}>Next · Post →</button>:<button type="button" className={styles.galleryPrimary} disabled={busy||!queue.length} onClick={()=>void publish()}>{busy?"Posting…":"Post now"}</button>}
+  </footer>
+  {(exportStatus||draftStatus)&&<p role="status" className={styles.galleryStatus}>{exportStatus||draftStatus}</p>}
+  {soundOpen&&<aside className={styles.notice} role="dialog" aria-label="Audio library">
+   <div className={styles.toolHeader}><strong>Sounds</strong><button type="button" onClick={()=>{audioRef.current?.pause();setSoundPreview(null);setSoundOpen(false)}}>Close</button></div>
+   <div className={styles.soundRow}><input ref={soundInputRef} type="file" accept=".mp3,audio/mpeg" className={styles.hidden} onChange={e=>{void uploadPersonalSound(e.target.files?.[0]);e.currentTarget.value=""}}/><button type="button" onClick={()=>soundInputRef.current?.click()}>＋ Upload MP3</button><span><strong>Your sound</strong><small>MP3 · up to 20 MB</small></span></div>
+   {soundUploadStatus&&<p role="status">{soundUploadStatus}</p>}
+   {personalSound&&<div className={styles.soundRow}><button type="button" onClick={()=>{if(audioRef.current){audioRef.current.src=personalSound.url;setSoundPreview("personal");void audioRef.current.play().catch(()=>setSoundPreview(null))}}}>{soundPreview==="personal"?"♫ Playing":"▶ Listen"}</button><span><strong>{personalSound.name}</strong><small>Personal MP3</small></span><button type="button" onClick={()=>{setSoundSlug(null);setSoundOpen(false)}}>Use</button></div>}
+   {sounds.map(item=><div key={item.id} className={styles.soundRow}><button type="button" onClick={()=>void previewSound(item)}>{soundPreview===item.slug?"♫ Playing":"▶ Listen"}</button><span><strong>{item.title}</strong><small>{item.attribution||"Approved audio"}</small></span><button type="button" onClick={()=>{setSoundSlug(item.slug);audioRef.current?.pause();setSoundOpen(false)}}>Use</button></div>)}
+   <button type="button" onClick={()=>{setSoundSlug(null);audioRef.current?.pause();setSoundOpen(false)}}>No sound</button>
+  </aside>}
  </main>;
 }
