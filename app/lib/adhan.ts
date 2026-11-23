@@ -3,6 +3,8 @@ export const ADHAN_SETTINGS_EVENT = "1muslim:adhan-settings-updated";
 export const ADHAN_PREVIEW_EVENT = "1muslim:adhan-preview";
 export const ADHAN_STOP_EVENT = "1muslim:adhan-stop";
 export const ADHAN_AUDIO_URL = "https://cdn.aladhan.com/audio/adhans/a1.mp3";
+// Skip the silent lead-in of the current Adhan recording. The source remains unchanged.
+export const ADHAN_START_SECONDS = 6;
 export const ADHAN_PRAYERS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"] as const;
 export type AdhanPrayer = (typeof ADHAN_PRAYERS)[number];
 export type AdhanMethod = "2" | "3" | "4" | "5";
