@@ -9,7 +9,7 @@ import PostEngagementRail from "./PostEngagementRail";
 import styles from "./PostViewer.module.css";
 export type ViewerPost={id:string;user_id:string;body:string;created_at:string};
 export type ViewerMedia={id:string;url:string;mime_type:string;file_name:string|null};
-export type ViewerAuthor={display_name:string|null;username:string|null;avatar_url:string|null};
+export type ViewerAuthor={display_name:string|null;username:string|null;hide_1muslim_id?:boolean|null;avatar_url:string|null};
 export default function PostViewer({post,author,media=[],actions,share}:{post:ViewerPost;author:ViewerAuthor|null;media?:ViewerMedia[];actions?:ReactNode;share:()=>void}){
  const [expanded,setExpanded]=useState(false);
  const [drawerHeight,setDrawerHeight]=useState(0);
