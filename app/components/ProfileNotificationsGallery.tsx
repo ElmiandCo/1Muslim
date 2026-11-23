@@ -4,7 +4,7 @@ import Link from "next/link";
 import {createClient} from "../../utils/supabase/client";
 
 type Notice={id:string;type:string;title:string;body:string;entity_type:string|null;entity_id:string|null;read_at:string|null;created_at:string};
-type Person={display_name:string|null;username:string|null};
+type Person={display_name:string|null;username:string|null;hide_1muslim_id?:boolean|null};
 const uuid=/^[0-9a-f-]{36}$/i;
 function followerId(n:Notice){return n.entity_id&&["follow","follower","user_follow","profile","user","member"].includes(n.entity_type||"")&&uuid.test(n.entity_id)?n.entity_id:null;}
 function target(n:Notice){const id=n.entity_id;if(followerId(n))return "/profile/"+encodeURIComponent(id!);if(["ummah_post","post","ummah_comment","post_comment"].includes(n.entity_type||"")&&id)return "/posts/story/"+encodeURIComponent(id);if(n.entity_type==="live_stream"&&id)return "/streaming/live/"+encodeURIComponent(id);if(n.entity_type==="live_schedule")return "/streaming/scheduled";if(["dm_message","message"].includes(n.entity_type||"")&&id&&uuid.test(id))return "/messages?message="+encodeURIComponent(id);if(["dm_conversation","conversation"].includes(n.entity_type||"")&&id&&uuid.test(id))return "/messages?conversation="+encodeURIComponent(id);if(n.entity_type==="featured_video_comment"&&id&&uuid.test(id))return "/?comment="+encodeURIComponent(id)+"#featured-video-comments";return "/notifications";}
@@ -18,7 +18,7 @@ export default function ProfileNotificationsGallery(){
  if(!active)return;if(loadError)setError("Unable to load notifications: "+loadError.message);else setItems((data||[]) as Notice[]);setLoading(false);
  channel=db.channel("profile-notifications-"+user.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:"recipient_id=eq."+user.id},payload=>{const n=payload.new as Notice;setItems(prev=>prev.some(x=>x.id===n.id)?prev:[n,...prev].sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)).slice(0,100));}).subscribe();
  })();return()=>{active=false;if(channel)void db.removeChannel(channel);};},[]);
- useEffect(()=>{let active=true;const ids=[...new Set(items.map(followerId).filter((x):x is string=>!!x))].filter(id=>!people[id]);if(!ids.length)return;const db=createClient();void db.from("profiles").select("id,display_name,username").in("id",ids).then(({data})=>{if(active&&data)setPeople(p=>({...p,...Object.fromEntries(data.map(x=>[x.id,{display_name:x.display_name,username:x.username}]))}));});return()=>{active=false};},[items,people]);
+ useEffect(()=>{let active=true;const ids=[...new Set(items.map(followerId).filter((x):x is string=>!!x))].filter(id=>!people[id]);if(!ids.length)return;const db=createClient();void db.from("profiles").select("id,display_name,username,hide_1muslim_id").in("id",ids).then(({data})=>{if(active&&data)setPeople(p=>({...p,...Object.fromEntries(data.map(x=>[x.id,{display_name:x.display_name,username:x.hide_1muslim_id?null:x.username}]))}));});return()=>{active=false};},[items,people]);
  const unread=items.filter(n=>!n.read_at).length;
  const markRead=(id:string)=>{setItems(prev=>prev.map(n=>n.id===id?{...n,read_at:n.read_at||new Date().toISOString()}:n));void createClient().from("notifications").update({read_at:new Date().toISOString()}).eq("id",id);};
  const markAll=()=>{const ids=items.filter(n=>!n.read_at).map(n=>n.id);if(!ids.length)return;setItems(prev=>prev.map(n=>({...n,read_at:n.read_at||new Date().toISOString()})));void createClient().from("notifications").update({read_at:new Date().toISOString()}).in("id",ids);};
