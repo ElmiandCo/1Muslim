@@ -279,7 +279,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    {message&&<p role="status" className="atlasMessage">{message}</p>}
   </div>}
   {expanded&&typeof document!=="undefined"&&createPortal(<div className="atlasStudioOverlay" role="dialog" aria-modal="true" aria-label="Full-screen Ummah map studio">
-   <div className="atlasStudioBackdrop" aria-hidden="true" style={{backgroundImage:`linear-gradient(180deg,#050e1c55,#071d26d9),url("${backgroundImage.replaceAll("\"","")} " )`,transform:"scale(1.045) translate("+(-view.x/80)+"px,"+(-view.y/80)+"px)"}}/>
+   <div className="atlasStudioBackdrop" aria-hidden="true" style={{backgroundImage:`linear-gradient(180deg,#050e1c55,#071d26d9),url("${backgroundImage.replaceAll("\"","")}")`,transform:"scale(1.045) translate("+(-view.x/80)+"px,"+(-view.y/80)+"px)"}}/>
    <button type="button" className="atlasStudioBack" onClick={()=>setExpanded(false)} aria-label="Close full map">‹</button>
    <div className="atlasStudioCanvas">{mapCanvas(true)}</div>
   </div>,document.body)}
