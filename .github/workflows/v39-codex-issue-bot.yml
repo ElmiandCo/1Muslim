@@ -1,0 +1,134 @@
+name: V3.9 Codex Issue Bot (Draft PR Only)
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  group: v39-issue-bot-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  code:
+    # Explicit owner-only trigger, exact command. Does not run for arbitrary issue discussion or PR comments.
+    if: >-
+      github.actor == 'ElmiandCo' &&
+      !github.event.issue.pull_request &&
+      github.event.comment.body == '/v39-run' &&
+      github.event.issue.number >= 1593 &&
+      github.event.issue.number <= 1606
+    runs-on: ubuntu-latest
+    timeout-minutes: 95
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+    env:
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+      GH_TOKEN: ${{ github.token }}
+      REPOSITORY: ${{ github.repository }}
+    steps:
+      - name: Fetch production baseline — do not expose credentials to coding agent
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Create isolated bot branch and exact assignment prompt
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="bot/v39-issue-${ISSUE_NUMBER}-${GITHUB_RUN_ID}"
+          echo "BOT_BRANCH=$branch" >> "$GITHUB_ENV"
+          git checkout -b "$branch"
+          {
+            echo '/node_modules/'
+            echo '/.next/'
+            echo '/.codex-v39-task.md'
+          } >> .git/info/exclude
+          gh api "repos/$REPOSITORY/issues/1592" --jq .body > /tmp/v39-master.md
+          gh api "repos/$REPOSITORY/issues/$ISSUE_NUMBER" --jq .body > /tmp/v39-issue.md
+          {
+            echo '# Bismillah — 1Muslim v3.9 implementation assignment'
+            echo 'Begin final report: Bismillah. Intention: serve Allah and the Ummah with precise, beautiful, honest, secure engineering.'
+            echo 'Read AGENTS.md, current main, existing code; honor all policies and existing features.'
+            echo 'Implement ONLY the issue below. No Stripe live purchases, privileged destructive operations, or changes to production secrets.'
+            echo 'Do not change .github/workflows, package manifest, lockfiles, runtime env files or AGENTS.md.'
+            echo 'Never overwrite unrelated source; write tested code rather than mockups, placeholders or speculative claims.'
+            echo 'Do not change the public site or deploy; this worker is allowed only to open a DRAFT PR.'
+            echo 'For Qur’an, preserve verified Arabic text, licensing, tashkīl and accurate content; stop if unverifiable.'
+            echo 'For Live and voice, preserve server-authoritative permissions and real media lifecycle.'
+            echo 'Run available tests, document limits. Leave a short report in final response, including files, tests and known risks.'
+            echo ''
+            echo '## Master mission'
+            cat /tmp/v39-master.md
+            echo ''
+            echo '## Assignment'
+            cat /tmp/v39-issue.md
+          } > .codex-v39-task.md
+          echo "Scope: $ISSUE_NUMBER branch $branch; mission file prepared."
+
+      - name: Node setup for existing Next.js project
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install app dependencies — no tracked lockfile
+        run: npm install --no-audit --no-fund --package-lock=false
+
+      - name: Bismillah — implement the workstream with Codex
+        id: codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ":workspace"
+          safety-strategy: drop-sudo
+          prompt-file: .codex-v39-task.md
+          # An agent must never hold GitHub write credentials or arbitrary elevated system privileges.
+
+      - name: Validate, commit only assignment files, and open draft PR
+        shell: bash
+        env:
+          FINAL_MESSAGE: ${{ steps.codex.outputs.final-message }}
+        run: |
+          set -euo pipefail
+          rm -f .codex-v39-task.md
+          git config user.name '1Muslim v3.9 Engineering Bot'
+          git config user.email 'engineering-bot@users.noreply.github.com'
+          # Only tracked edits plus explicit new source/docs/tests; never include generated, key or secret files.
+          git add -u
+          while IFS= read -r -d '' file; do
+            case "$file" in
+              app/*.ts|app/*.tsx|app/*.css|app/**/*.ts|app/**/*.tsx|app/**/*.css|components/*.ts|components/*.tsx|components/*.css|lib/*.ts|lib/*.tsx|docs/*.md|scripts/*.mjs|scripts/*.ts|utils/*.ts|supabase/migrations/*.sql|types/*.ts)
+                git add -- "$file" ;;
+              *) ;;
+            esac
+          done < <(git ls-files --others --exclude-standard -z)
+          if git diff --cached --quiet; then
+            echo 'Codex reported no code changes; no empty PR.'
+            exit 1
+          fi
+          # Never permit the coding agent to modify workflows, credentials, manifests or deployment controls.
+          changed="$(git diff --cached --name-only)"
+          if printf '%s\n' "$changed" | grep -E '(^\.github/|^\.env|package(-lock)?\.json|^AGENTS\.md$|^vercel\.json$|^next\.config\.|\.pem$|\.key$|\.p12$)'; then
+            echo 'Forbidden file edit, refusing to publish.'
+            exit 1
+          fi
+          echo 'Changed files:'; echo "$changed"
+          if NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-https://example.supabase.co}" NEXT_PUBLIC_SUPABASE_ANON_KEY='ci-placeholder-anon-key' NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='ci-placeholder-publishable-key' npx tsc --noEmit && npm run build; then
+            echo 'BOT_TESTS=passed' >> "$GITHUB_ENV"
+          else
+            echo 'BOT_TESTS=failed' >> "$GITHUB_ENV"
+            echo 'Tests failed; PR remains draft. Do not merge without a fix.'
+          fi
+          git commit -m "feat(v3.9): bot implementation for issue #${ISSUE_NUMBER}"
+          # Credential exists ONLY in this step; never inside the Codex runner.
+          gh auth setup-git
+          git push -u origin "$BOT_BRANCH"
+          message="Bismillah. Partial implementation of #$ISSUE_NUMBER, governed by #1592. This is a DRAFT PR requiring CI, mobile/desktop UX, security, Qur'an integrity where applicable, and integrator review before merging. Production unchanged."
+          gh pr create --repo "$REPOSITORY" --base main --head "$BOT_BRANCH" --draft --title "v3.9 Bot #$ISSUE_NUMBER — implementation draft" --body "$message"
+          printf '\nCodex report (not proof of tests or deployment):\n%s\n' "$FINAL_MESSAGE"
