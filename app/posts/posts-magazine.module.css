@@ -539,3 +539,19 @@
  }
  .discoverPage .ummahSnapFeed>.feedPost .feedNextGhost{filter:none;opacity:.24}
 }
+
+/* YouTube links remain still cover art in the Ummah feed.
+   The immersive full post owns the actual embedded playback. */
+.discoverPage .feedPostStage .feedYoutubeThumbnail{position:relative!important;isolation:isolate}
+.discoverPage .feedPostStage .feedYoutubeThumbnail .feedYoutubePlay{
+ position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+ display:grid;place-items:center;z-index:2;pointer-events:none;
+ width:54px;height:54px;padding-left:4px;border-radius:50%;
+ background:rgba(8,16,27,.63);border:1px solid rgba(255,255,255,.79);
+ -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+ box-shadow:0 5px 22px #060b1588,0 0 12px #fff2;
+ color:#fff;font-size:21px;text-shadow:0 1px 8px #0007;
+}
+.discoverPage .feedPostStage .feedYoutubeThumbnail:focus-visible{outline:3px solid #8de7f5;outline-offset:3px}
+.discoverPage .feedPostStage .feedYoutubeThumbnail:active .feedYoutubePlay{transform:translate(-50%,-50%) scale(.94)}
+@media(prefers-reduced-motion:reduce){.discoverPage .feedPostStage .feedYoutubeThumbnail .feedYoutubePlay{transition:none}}
