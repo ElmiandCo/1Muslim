@@ -26,7 +26,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      issues: read
+      issues: write
     env:
       ISSUE_NUMBER: ${{ github.event.issue.number }}
       REPOSITORY: ${{ github.repository }}
@@ -109,6 +109,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           FINAL_MESSAGE: ${{ steps.codex.outputs.final-message }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'ci-placeholder-publishable-key' }}
         run: |
           set -euo pipefail
           rm -f .codex-v39-task.md
@@ -134,7 +137,7 @@ jobs:
             exit 1
           fi
           echo 'Changed files:'; echo "$changed"
-          if NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-https://example.supabase.co}" NEXT_PUBLIC_SUPABASE_ANON_KEY='ci-placeholder-anon-key' NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='ci-placeholder-publishable-key' npx tsc --noEmit && npm run build; then
+          if npx tsc --noEmit && npm run build; then
             echo 'BOT_TESTS=passed' >> "$GITHUB_ENV"
           else
             echo 'BOT_TESTS=failed' >> "$GITHUB_ENV"
@@ -145,5 +148,14 @@ jobs:
           gh auth setup-git
           git push -u origin "$BOT_BRANCH"
           message="Bismillah. Partial implementation of #$ISSUE_NUMBER, governed by #1592. This is a DRAFT PR requiring CI, mobile/desktop UX, security, Qur'an integrity where applicable, and integrator review before merging. Production unchanged."
-          gh pr create --repo "$REPOSITORY" --base main --head "$BOT_BRANCH" --draft --title "v3.9 Bot #$ISSUE_NUMBER — implementation draft" --body "$message"
+          # GitHub Actions may be configured to prohibit creating pull requests.
+          # Push the isolated code branch regardless; notify the coordination issue for connector-backed PR creation.
+          if gh pr create --repo "$REPOSITORY" --base main --head "$BOT_BRANCH" --draft --title "v3.9 Bot #$ISSUE_NUMBER — implementation draft" --body "$message"; then
+            echo "Draft PR opened; await integration review and CI."
+          else
+            echo "::warning::GitHub Actions is not allowed to create PRs; branch pushed, draft PR requires integrator."
+            echo "Pushed branch: $BOT_BRANCH" >> "$GITHUB_STEP_SUMMARY"
+            echo "Review: https://github.com/$REPOSITORY/compare/main...$BOT_BRANCH?expand=1" >> "$GITHUB_STEP_SUMMARY"
+            gh issue comment "$ISSUE_NUMBER" --repo "$REPOSITORY" --body "Bismillah. New code branch [\$BOT_BRANCH](https://github.com/\$REPOSITORY/tree/\$BOT_BRANCH) pushed for review. This repository blocks GitHub Actions from opening PRs. Integrator: [open a draft PR](https://github.com/\$REPOSITORY/compare/main...\$BOT_BRANCH?expand=1) and verify CI + preview + security/mobile before release." || true
+          fi
           printf '\nCodex report (not proof of tests or deployment):\n%s\n' "$FINAL_MESSAGE"
