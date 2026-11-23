@@ -1,0 +1,3 @@
+# v3.9 map privacy integration contract
+
+The map selection in `ProfileSocialHub` must not filter the general member directory using profile country or state fields. Those fields do not establish directory consent. While a region is selected, the general directory is suppressed; the map's authenticated country-preview endpoint is the identity source and requires both aggregate and directory consent. Clearing the selection restores the existing directory and follower controls. State-level identities and aggregates remain unavailable until a separate, explicit map consent supports them. This is a narrow integration boundary for profile and map work; no follower or messaging contracts change.
