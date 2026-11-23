@@ -521,6 +521,21 @@ function ProfileSocialHub({profile,children}:{profile:Profile;children:React.Rea
  useEffect(()=>{try{const saved=sessionStorage.getItem("muslimeen-discovery-preferences");if(!saved)return;const prefs=JSON.parse(saved);if(["all","brothers","sisters","regions","top","recent"].includes(prefs.filter))setDiscoveryFilter(prefs.filter);if(["recent","name"].includes(prefs.sort))setSortMembers(prefs.sort);if(typeof prefs.region==="string")setSelectedRegion(prefs.region)}catch{}},[]);
  useEffect(()=>{try{sessionStorage.setItem("muslimeen-discovery-preferences",JSON.stringify({filter:discoveryFilter,sort:sortMembers,region:selectedRegion}))}catch{}},[discoveryFilter,sortMembers,selectedRegion]);
  const [selected,setSelected]=useState<string|null>(null);
+ // Same-page directory navigation cannot rely on Next Link alone: the profile
+ // stays mounted while only its search params change. Keep UI + history in sync.
+ useEffect(()=>{
+  const resolve=()=>{const params=new URLSearchParams(window.location.search);const id=params.get("member");
+   if(params.get("section")==="muslimeen"){setActive("muslimeen");setSelected(id&&/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(id)?id:null)}
+   else{setActive("profile");setSelected(null)}
+  };
+  const navigate=(event:Event)=>{const id=(event as CustomEvent<{id?:string}>).detail?.id;
+   const next=id?"/profile?section=muslimeen&member="+encodeURIComponent(id):"/profile?section=muslimeen";
+   window.history.pushState(null,"",next);
+   setMemberFilter("all");setSelected(id||null);setActive("muslimeen");window.scrollTo({top:0,behavior:"smooth"});
+  };
+  window.addEventListener("1muslim:discover-muslims",navigate);window.addEventListener("popstate",resolve);
+  return()=>{window.removeEventListener("1muslim:discover-muslims",navigate);window.removeEventListener("popstate",resolve)};
+ },[]);
  useEffect(()=>{const params=new URLSearchParams(window.location.search);const member=params.get("member");if(member&&/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(member)){setActive("muslimeen");setSelected(member)}},[]);
  const [memberProfile,setMemberProfile]=useState<Profile|null>(null);
  const [memberProfileError,setMemberProfileError]=useState(false);
