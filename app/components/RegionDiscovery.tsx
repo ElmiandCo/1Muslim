@@ -121,8 +121,10 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
  };
  const openStudio=()=>{
   pointerPositions.current.clear();lastPinch.current=null;dragRef.current=null;
-  const point=mode==="world"?(COUNTRY_POINTS[selected]||kaabaPoint):(STATE_POINTS[selectedState]||[360,180]);
-  const z=selected||selectedState?1.7:1.18;
+  // Begin where the Ummah is actually represented, not over an empty ocean.
+  // The Kaaba remains a dedicated landmark in the guided tour.
+  const point=mode==="world"?(COUNTRY_POINTS[selected]||pins[0]?.point||kaabaPoint):(STATE_POINTS[selectedState]||pins[0]?.point||[360,180]);
+  const z=selected||selectedState?1.7:pins.length?1.42:1.18;
   setViewState({zoom:z,x:360-point[0]*z,y:Math.min(0,180-point[1]*z)});
   setMakkahFocus(false);setStudioSearch("");
   setExpanded(true);
