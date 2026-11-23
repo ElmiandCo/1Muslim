@@ -16,8 +16,7 @@ jobs:
   code:
     # Explicit owner-only trigger, exact command. Does not run for arbitrary issue discussion or PR comments.
     if: >-
-      github.event.comment.user.login == 'ElmiandCo' &&
-      (github.actor == 'ElmiandCo' || github.actor == 'chatgpt-codex-connector[bot]') &&
+      github.actor == 'ElmiandCo' &&
       !github.event.issue.pull_request &&
       github.event.comment.body == '/v39-run' &&
       github.event.issue.number >= 1593 &&
