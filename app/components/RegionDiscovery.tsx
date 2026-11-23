@@ -106,7 +106,8 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   if(pointerPositions.current.size===2){
    const [a,b]=[...pointerPositions.current.values()];lastPinch.current=Math.hypot(a.x-b.x,a.y-b.y);dragRef.current=null;
   }
-  try{e.currentTarget.setPointerCapture(e.pointerId)}catch{}
+  // Do not capture on tap: the marker must receive its own click.
+  // Capture only after an actual drag, so pressing a country pin still selects it.
  };
  const pointerMove=(e:ReactPointerEvent<SVGSVGElement>)=>{
   const old=pointerPositions.current.get(e.pointerId);if(!old)return;
@@ -126,8 +127,9 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   if(!g||g.id!==e.pointerId)return;
   const dx=e.clientX-g.x,dy=e.clientY-g.y;
   if(!g.moving){
-   if(Math.hypot(e.clientX-old.x+g.x-old.x,e.clientY-old.y+g.y-old.y)<1&&Math.hypot(dx,dy)<7)return;
+   if(Math.hypot(dx,dy)<7)return;
    g.moving=true;setDragging(true);ignoreClick.current=true;
+   try{e.currentTarget.setPointerCapture(e.pointerId)}catch{}
   }
   g.x=e.clientX;g.y=e.clientY;
   const rect=e.currentTarget.getBoundingClientRect();
