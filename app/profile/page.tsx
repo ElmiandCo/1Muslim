@@ -298,7 +298,7 @@ function ProfileOrbitStudio({profile,onEdit,ashab,isOwner=true,viewerId,activeQu
    void createClient().from("profiles").update({hide_1muslim_id:true}).eq("id",profile.id).then(({error})=>{
     if(!mounted)return;
     if(error)setIdVisibilityError("Could not sync hidden ID to your account. Try again in Settings.");
-    else{try{localStorage.removeItem(key)}catch{}}
+    else{try{localStorage.removeItem(key)}catch{}window.dispatchEvent(new CustomEvent("1muslim:member-id-visibility-changed",{detail:{memberId:profile.id,hidden:true}}))}
    });
   }
   return()=>{mounted=false};
@@ -704,6 +704,16 @@ export default function ProfilePage() {
     window.setTimeout(()=>{router.replace("/");router.refresh()},1400);
   };
   const [profile,setProfile]=useState<Profile|null>(null);
+  // Reconcile visibility immediately without waiting for a route reload.
+  useEffect(()=>{
+   const update=(event:Event)=>{
+    const detail=(event as CustomEvent<{memberId:string;hidden:boolean}>).detail;
+    if(!detail)return;
+    setProfile(old=>old?.id===detail.memberId?{...old,hide_1muslim_id:detail.hidden}:old);
+   };
+   window.addEventListener("1muslim:member-id-visibility-changed",update);
+   return()=>window.removeEventListener("1muslim:member-id-visibility-changed",update);
+  },[]);
   const [savedUsername,setSavedUsername]=useState<string|null>(null);
   const [usernameStatus,setUsernameStatus]=useState<"idle"|"checking"|"available"|"taken"|"error">("idle");
   const [usernameError,setUsernameError]=useState("");
