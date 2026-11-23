@@ -3,7 +3,7 @@
 import {useCallback,useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import ProfilePublicMedia from "./ProfilePublicMedia";
-import {safeMediaUrl,uploadMemberMedia,type MemberMediaKind} from "./profile-member-media";
+import {safeMediaUrl,youtubeEmbed,isDirectVideo,uploadMemberMedia,type MemberMediaKind} from "./profile-member-media";
 import "./ProfilePagePosts.css";
 
 type PagePost={id:string;profile_id:string;author_id:string;body:string;media_url:string|null;media_kind:"none"|MemberMediaKind;created_at:string};
@@ -56,7 +56,7 @@ export default function ProfilePagePosts({profileId,isOwner=false}:{profileId:st
   try{
    let url:string|null=null,kind:"none"|MemberMediaKind="none";
    if(file){const uploaded=await uploadMemberMedia(file,viewerId);url=uploaded.url;kind=uploaded.kind}
-   else if(mediaUrl.trim()){url=safeMediaUrl(mediaUrl);if(!url)throw Error("Please enter a valid https:// media link.");kind=mediaKind}
+   else if(mediaUrl.trim()){url=safeMediaUrl(mediaUrl);if(!url)throw Error("Please enter a valid https:// media link.");kind=youtubeEmbed(url)||isDirectVideo(url)?"video":mediaKind}
    const db=createClient();
    const {error}=await db.from("profile_page_posts").insert({profile_id:profileId,author_id:viewerId,body:draft.trim(),media_url:url,media_kind:kind});
    if(error)throw Error(error.message);
