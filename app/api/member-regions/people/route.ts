@@ -16,7 +16,7 @@ const canonical=(name:string)=>{
  return aliases[value]||value;
 };
 type Consent={user_id:string;consented_at:string};
-type Profile={id:string;display_name:string|null;username:string|null;country:string|null;avatar_url:string|null;avatar_gender:string|null;avatar_config:Record<string,unknown>|null};
+type Profile={id:string;display_name:string|null;username:string|null;hide_1muslim_id?:boolean|null;country:string|null;avatar_url:string|null;avatar_gender:string|null;avatar_config:Record<string,unknown>|null};
 
 /** Country-only public member discovery, restricted to explicit map participants.
  * Never returns GPS, city, state, prayer location, masjid, email or private consent details.
@@ -45,7 +45,7 @@ export async function GET(request:NextRequest){
    const ids=rows.map(row=>row.user_id).filter(Boolean);
    if(ids.length){
     const {data:profiles,error:profileError}=await db.from("profiles")
-     .select("id,display_name,username,country,avatar_url,avatar_gender,avatar_config").in("id",ids);
+     .select("id,display_name,username,hide_1muslim_id,country,avatar_url,avatar_gender,avatar_config").in("id",ids);
     if(profileError)throw profileError;
     const byId=new Map(((profiles||[]) as Profile[]).map(p=>[p.id,p]));
     for(const row of rows){
@@ -56,8 +56,8 @@ export async function GET(request:NextRequest){
       ? chosenAvatar as string : profile.avatar_url|| (profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg");
      found.push({
       id:profile.id,
-      name:(profile.display_name||profile.username||"Muslim member").slice(0,80),
-      username:profile.username,
+      name:(profile.display_name||(!profile.hide_1muslim_id?profile.username:null)||"Muslim member").slice(0,80),
+      username:profile.hide_1muslim_id?null:profile.username,
       avatar,
       joinedAt:row.consented_at
      });
