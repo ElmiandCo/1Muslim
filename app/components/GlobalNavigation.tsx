@@ -159,7 +159,7 @@ export default function GlobalNavigation(){
   });
  };
  useEffect(()=>()=>{if(railFrame.current)cancelAnimationFrame(railFrame.current)},[]);
- if(pathname?.startsWith("/streaming/go-live")||pathname?.startsWith("/auth")||pathname?.startsWith("/login")||pathname?.startsWith("/posts/story/")||pathname==="/create")return null;
+ if(pathname?.startsWith("/onboarding")||pathname?.startsWith("/streaming/go-live")||pathname?.startsWith("/auth")||pathname?.startsWith("/login")||pathname?.startsWith("/posts/story/")||pathname==="/create")return null;
  async function perform(item:Entry){
   if(item.id==="search"){router.push("/search");return}
   if(item.id==="signout"){setBusy(true);try{await createClient().auth.signOut();router.push("/");router.refresh()}finally{setBusy(false)}return}
