@@ -21,6 +21,8 @@ export function canonicalCountry(value:string|null|undefined):string{
  if(raw.length===2&&/^[a-z]{2}$/i.test(raw)){const code=raw.toUpperCase();if(codes[code])return codes[code];try{const label=new Intl.DisplayNames(["en"],{type:"region"}).of(code);if(label&&label!==code)return label}catch{}}
  return raw;
 }
+const usStates=Object.fromEntries(("AL:Alabama,AK:Alaska,AZ:Arizona,AR:Arkansas,CA:California,CO:Colorado,CT:Connecticut,DE:Delaware,FL:Florida,GA:Georgia,HI:Hawaii,ID:Idaho,IL:Illinois,IN:Indiana,IA:Iowa,KS:Kansas,KY:Kentucky,LA:Louisiana,ME:Maine,MD:Maryland,MA:Massachusetts,MI:Michigan,MN:Minnesota,MS:Mississippi,MO:Missouri,MT:Montana,NE:Nebraska,NV:Nevada,NH:New Hampshire,NJ:New Jersey,NM:New Mexico,NY:New York,NC:North Carolina,ND:North Dakota,OH:Ohio,OK:Oklahoma,OR:Oregon,PA:Pennsylvania,RI:Rhode Island,SC:South Carolina,SD:South Dakota,TN:Tennessee,TX:Texas,UT:Utah,VT:Vermont,VA:Virginia,WA:Washington,WV:West Virginia,WI:Wisconsin,WY:Wyoming,DC:District of Columbia").split(",").map(x=>x.split(":")));
+export function canonicalUsState(value:string|null|undefined){const raw=(value||"").trim();return usStates[raw.toUpperCase()]||Object.values(usStates).find(name=>name.toLowerCase()===raw.toLowerCase())||raw}
 type Stats={countries:{name:string;count:number}[];states:{name:string;count:number}[];optedIn:number;recorded:number;unplaced:number;usCount:number;updatedAt:string;limited:boolean};
 type Mode="world"|"us";
 type Props={members:Array<{country:string|null}>;currentCountry:string|null;userId:string;selected:string;selectedState?:string;onSelect:(value:string)=>void;onSelectState?:(value:string)=>void;onSaved:(value:string)=>void};
