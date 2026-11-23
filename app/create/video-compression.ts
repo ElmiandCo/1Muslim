@@ -3,6 +3,13 @@
  */
 export async function compressVideo(source:File,onProgress?:(progress:number)=>void):Promise<File>{
  if(typeof document==="undefined"||typeof MediaRecorder==="undefined")throw Error("Video compression is unavailable in this browser.");
+ // Audio preservation is more important than file size. WebKit's canvas +
+ // MediaRecorder pipeline can return a playable movie with a silent audio
+ // track. Let the creator upload the original through resumable TUS instead.
+ const ua=typeof navigator==="undefined"?"":navigator.userAgent;
+ const onIOS=/iPad|iPhone|iPod/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
+ const onSafari=/Safari/i.test(ua)&&!/Chrome|Chromium|CriOS|FxiOS|Edg|OPR/i.test(ua);
+ if(onIOS||onSafari)throw Error("Preserving original video audio on this device.");
  const video=document.createElement("video");
  video.preload="auto";video.muted=true;video.playsInline=true;
  const url=URL.createObjectURL(source);video.src=url;

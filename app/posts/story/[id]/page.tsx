@@ -109,6 +109,9 @@ export default function MagazineStory(){
  const railToggle=async(kind:"like"|"save")=>{if(!post||legacyPost)return;try{const r=await fetch("/api/ummah-post-engagement",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:post.id,kind})});if(r.ok)window.dispatchEvent(new CustomEvent("ummah-post-engagement-changed",{detail:{postId:post.id}}))}catch{}};
  const railShare=async()=>{if(!post)return;const url=location.origin+"/posts/story/"+encodeURIComponent(post.id);try{if(navigator.share)await navigator.share({url});else await navigator.clipboard.writeText(url);await fetch("/api/ummah-post-engagement",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:post.id,kind:"share"})});window.dispatchEvent(new CustomEvent("ummah-post-engagement-changed",{detail:{postId:post.id}}))}catch{}};
  const playerRef=useRef<HTMLVideoElement|null>(null),backdropCanvasRef=useRef<HTMLCanvasElement|null>(null);
+ const scrubRef=useRef<{pointerId:number;time:number}|null>(null);
+ const lastScrubSeekAt=useRef(0);
+ const [scrubPreview,setScrubPreview]=useState<number|null>(null);
  const [videoTime,setVideoTime]=useState(0),[videoDuration,setVideoDuration]=useState(0),[videoSeeking,setVideoSeeking]=useState(false),[playbackBoost,setPlaybackBoost]=useState<1|2|5>(1);
  const holdRef=useRef<{pointerId:number;x:number;y:number;timer:number|null;active:boolean;video:HTMLVideoElement}|null>(null);
  const suppressClickUntil=useRef(0),suppressNavUntil=useRef(0);
@@ -130,20 +133,91 @@ export default function MagazineStory(){
   if(e.cancelable)e.preventDefault();
  };
  const holdUp=()=>{if(holdRef.current?.active){suppressClickUntil.current=Date.now()+550;suppressNavUntil.current=Date.now()+550}releaseHold()};
- const seekStoryVideo=(seconds:number)=>{const el=playerRef.current;if(!el||!Number.isFinite(el.duration)||el.duration<=0)return;el.currentTime=Math.max(0,Math.min(seconds,el.duration));setVideoTime(el.currentTime)};
+ const seekStoryVideo=(seconds:number)=>{const el=playerRef.current;if(!el||!Number.isFinite(el.duration)||el.duration<=0)return;const next=Math.max(0,Math.min(seconds,el.duration));el.currentTime=next;setVideoTime(next)};
+ const timelineTimeAt=(clientX:number,rect:DOMRect)=>videoDuration*Math.min(1,Math.max(0,(clientX-rect.left)/Math.max(1,rect.width)));
+ const scrubTo=(clientX:number,rect:DOMRect,commit=false)=>{
+  const next=timelineTimeAt(clientX,rect);
+  if(scrubRef.current)scrubRef.current.time=next;
+  // Keep the visible line and thumb under the finger, even if remote seeking lags.
+  setScrubPreview(next);
+  if(commit||performance.now()-lastScrubSeekAt.current>110){
+   seekStoryVideo(next);lastScrubSeekAt.current=performance.now();
+  }
+ };
+ const finishScrub=(element:HTMLDivElement,pointerId:number)=>{
+  const scrub=scrubRef.current;
+  if(!scrub||scrub.pointerId!==pointerId)return;
+  seekStoryVideo(scrub.time);
+  scrubRef.current=null;setVideoSeeking(false);setScrubPreview(null);
+  if(element.hasPointerCapture(pointerId))element.releasePointerCapture(pointerId);
+ };
+ const onTimelineDown=(e:React.PointerEvent<HTMLDivElement>)=>{
+  if(e.pointerType==="mouse"&&e.button!==0)return;
+  const player=playerRef.current;
+  if(!player||!Number.isFinite(videoDuration)||videoDuration<=0)return;
+  e.preventDefault();e.stopPropagation();
+  scrubRef.current={pointerId:e.pointerId,time:0};setVideoSeeking(true);
+  lastScrubSeekAt.current=0;
+  e.currentTarget.setPointerCapture(e.pointerId);
+  scrubTo(e.clientX,e.currentTarget.getBoundingClientRect(),true);
+ };
+ const onTimelineMove=(e:React.PointerEvent<HTMLDivElement>)=>{
+  if(scrubRef.current?.pointerId!==e.pointerId)return;
+  e.preventDefault();e.stopPropagation();
+  scrubTo(e.clientX,e.currentTarget.getBoundingClientRect());
+ };
+ const onTimelineUp=(e:React.PointerEvent<HTMLDivElement>)=>{
+  if(scrubRef.current?.pointerId!==e.pointerId)return;
+  e.preventDefault();e.stopPropagation();
+  scrubTo(e.clientX,e.currentTarget.getBoundingClientRect(),true);
+  finishScrub(e.currentTarget,e.pointerId);
+ };
+ const onTimelineCancel=(e:React.PointerEvent<HTMLDivElement>)=>{
+  e.stopPropagation();
+  finishScrub(e.currentTarget,e.pointerId);
+ };
+ useEffect(()=>{scrubRef.current=null;setScrubPreview(null);setVideoSeeking(false);setVideoTime(0);setVideoDuration(0)},[id]);
  useEffect(()=>{
   const release=()=>{const g=holdRef.current;if(!g)return;if(g.active){suppressClickUntil.current=Date.now()+550;suppressNavUntil.current=Date.now()+550}releaseHold()};
   window.addEventListener("pointerup",release);window.addEventListener("pointercancel",release);
   return()=>{window.removeEventListener("pointerup",release);window.removeEventListener("pointercancel",release);const g=holdRef.current;if(g){if(g.timer!==null)window.clearTimeout(g.timer);g.video.playbackRate=1;holdRef.current=null}};
  },[id]);
- const [muted,setMuted]=useState(true),[playing,setPlaying]=useState(true),[playFeedback,setPlayFeedback]=useState(false);
+ // Muted autoplay is required by mobile browsers. A user gesture explicitly
+ // unlocks the track; tapping a playing, muted video should NOT pause it.
+ const [muted,setMuted]=useState(true),[playerHint,setPlayerHint]=useState("");
  const feedbackTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const firstPlaybackHint=useRef<string|null>(null);
  const watchedId=useRef<string|null>(null);
-
- useEffect(()=>{watchedId.current=null},[id]);
+ const showPlayerHint=(message:string)=>{
+  setPlayerHint(message);
+  if(feedbackTimer.current)clearTimeout(feedbackTimer.current);
+  feedbackTimer.current=setTimeout(()=>setPlayerHint(""),1000);
+ };
+ useEffect(()=>{watchedId.current=null;firstPlaybackHint.current=null;setMuted(true);setPlayerHint("")},[id]);
  useEffect(()=>()=>{if(feedbackTimer.current)clearTimeout(feedbackTimer.current)},[]);
- const togglePlayback=()=>{const player=playerRef.current;if(!player)return;if(player.paused){delete player.dataset.userPaused;void player.play().then(()=>setPlaying(true)).catch(()=>setPlaying(false))}else{player.dataset.userPaused="true";player.pause();setPlaying(false)}setPlayFeedback(true);if(feedbackTimer.current)clearTimeout(feedbackTimer.current);feedbackTimer.current=setTimeout(()=>setPlayFeedback(false),750)};
- const toggleSound=()=>{const next=!muted;setMuted(next);if(playerRef.current)playerRef.current.muted=next};
+ const unmutePlayer=(player:HTMLVideoElement)=>{
+  player.muted=false;player.defaultMuted=false;setMuted(false);
+ };
+ const togglePlayback=()=>{
+  const player=playerRef.current;if(!player)return;
+  if(player.paused){
+   delete player.dataset.userPaused;
+   if(player.muted)unmutePlayer(player);
+   void player.play().catch(()=>showPlayerHint("Tap to play"));
+   showPlayerHint("Playing with sound");
+  }else if(player.muted){
+   unmutePlayer(player);
+   showPlayerHint("Sound on");
+  }else{
+   player.dataset.userPaused="true";player.pause();
+   showPlayerHint("Tap to play");
+  }
+ };
+ const toggleSound=()=>{
+  const player=playerRef.current;if(!player)return;
+  if(player.muted){unmutePlayer(player);showPlayerHint("Sound on")}
+  else{player.muted=true;player.defaultMuted=true;setMuted(true);showPlayerHint("Tap for sound")}
+ };
  // Mirror the foreground video into a low-resolution blurred canvas. No second decoder/player.
  useEffect(()=>{
   if(!post?.media_url||!post.media_type?.startsWith("video/"))return;
@@ -165,6 +239,9 @@ export default function MagazineStory(){
  },[post?.id,post?.media_url,post?.media_type]);
  const hasGallery=!!post?.media_items&&post.media_items.length>1;
  const video=post&&!post.media_type?.startsWith("video/")&&!hasGallery?youtubeIdFromPost(post.body,post.media_url):null;
+ const seekDisplayTime=scrubPreview===null?videoTime:scrubPreview;
+ const seekPercent=videoDuration>0?Math.max(0,Math.min(100,seekDisplayTime/videoDuration*100)):0;
+ const fmtPlayback=(time:number)=>Math.floor(time/60)+":"+String(Math.floor(time%60)).padStart(2,"0");
  const index=postIds.indexOf(id);
  const navigate=(step:number)=>{const next=postIds[index+step];if(next)router.push("/posts/story/"+encodeURIComponent(next)+(playMode?"?play=1":""))};
  useEffect(()=>{
@@ -205,11 +282,21 @@ export default function MagazineStory(){
  
  {hasGallery&&post.media_items&&<StoryAlbum media={post.media_items}/>}
  {!hasGallery&&!video&&post.media_url&&post.media_type?.startsWith("image/")?<img className={styles.socialStoryImage} src={post.media_url} alt="Post media; double tap to like" loading="eager" fetchPriority="high" decoding="async" onClick={onMediaTap}/>:null}
- {!hasGallery&&post.media_url&&post.media_type?.startsWith("video/")&&<video ref={playerRef} className="immersiveStoryVideo" src={post.media_url} playsInline autoPlay loop muted={muted} preload="auto" onCanPlay={e=>{const player=e.currentTarget;if(player.paused&&!player.dataset.userPaused)void player.play().catch(()=>{})}} onPlay={()=>setPlaying(true)} onPause={()=>setPlaying(false)} onLoadedMetadata={e=>{setVideoDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setVideoTime(e.currentTarget.currentTime)}} onDurationChange={e=>setVideoDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0)} onTimeUpdate={e=>{setVideoTime(e.currentTarget.currentTime);if(post&&e.currentTarget.currentTime>=3&&!e.currentTarget.paused&&watchedId.current!==post.id){watchedId.current=post.id;rememberWatchedPost(post.id,post.author_id)}}} onPointerDown={holdDown} onPointerMove={holdMove} onPointerUp={holdUp} onPointerCancel={holdUp} onContextMenu={e=>e.preventDefault()} onClick={()=>{if(Date.now()<suppressClickUntil.current)return;togglePlayback()}} aria-label="Post video: tap to play or pause"/>}{!hasGallery&&post.media_url&&post.media_type?.startsWith("video/")&&videoDuration>0&&<div className={videoSeeking?"immersiveTimeline isSeeking":"immersiveTimeline"} onPointerDown={e=>e.stopPropagation()} onPointerMove={e=>e.stopPropagation()} onPointerUp={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()} onTouchMove={e=>e.stopPropagation()} onTouchEnd={e=>e.stopPropagation()}>
-   <div className="immersiveTimelineTrack" aria-hidden="true"><span style={{width:`${Math.min(100,videoTime/videoDuration*100)}%`}}/></div>
-   <input type="range" min={0} max={videoDuration} step={0.01} value={Math.min(videoTime,videoDuration)} aria-label="Scrub video timeline" aria-valuetext={`${Math.floor(videoTime/60)}:${String(Math.floor(videoTime%60)).padStart(2,"0")} of ${Math.floor(videoDuration/60)}:${String(Math.floor(videoDuration%60)).padStart(2,"0")}`} onPointerDown={()=>setVideoSeeking(true)} onPointerUp={()=>setVideoSeeking(false)} onPointerCancel={()=>setVideoSeeking(false)} onBlur={()=>setVideoSeeking(false)} onChange={e=>seekStoryVideo(Number(e.target.value))}/>
-   {videoSeeking&&<output className="immersiveTimelineTime" aria-live="off">{Math.floor(videoTime/60)}:{String(Math.floor(videoTime%60)).padStart(2,"0")} / {Math.floor(videoDuration/60)}:{String(Math.floor(videoDuration%60)).padStart(2,"0")}</output>}
-  </div>}{video&&<ImmersiveYouTubePlayer key={video} videoId={video} postId={post.id} authorId={post.author_id}/>}{post.media_url&&post.media_type?.startsWith("video/")&&playFeedback&&<span className="immersivePlaybackFeedback" aria-hidden="true">{playing?"▶":"Ⅱ"}</span>}{playbackBoost>1&&<div className="immersiveFastForward" aria-live="off"><strong>▶▶ {playbackBoost}×</strong>{playbackBoost===2&&<small>Slide right for 5×</small>}</div>}{heartVisible&&<span className="immersiveLikeHeart" aria-hidden="true">♥</span>}
+ {!hasGallery&&post.media_url&&post.media_type?.startsWith("video/")&&<video ref={playerRef} className="immersiveStoryVideo" src={post.media_url} playsInline autoPlay loop muted={muted} preload="auto" onCanPlay={e=>{const player=e.currentTarget;if(player.paused&&!player.dataset.userPaused)void player.play().catch(()=>showPlayerHint("Tap to play"))}}
+ onPlay={e=>{if(firstPlaybackHint.current!==post.id){firstPlaybackHint.current=post.id;showPlayerHint(e.currentTarget.muted?"Tap for sound":"Playing")}}}
+ onPause={e=>{if(!e.currentTarget.dataset.userPaused)showPlayerHint("Tap to play")}} onLoadedMetadata={e=>{setVideoDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0);setVideoTime(e.currentTarget.currentTime)}} onDurationChange={e=>setVideoDuration(Number.isFinite(e.currentTarget.duration)?e.currentTarget.duration:0)} onTimeUpdate={e=>{if(!scrubRef.current)setVideoTime(e.currentTarget.currentTime);if(post&&e.currentTarget.currentTime>=3&&!e.currentTarget.paused&&watchedId.current!==post.id){watchedId.current=post.id;rememberWatchedPost(post.id,post.author_id)}}} onPointerDown={holdDown} onPointerMove={holdMove} onPointerUp={holdUp} onPointerCancel={holdUp} onContextMenu={e=>e.preventDefault()} onClick={()=>{if(Date.now()<suppressClickUntil.current)return;togglePlayback()}} aria-label="Post video: tap to play or pause"/>}{!hasGallery&&post.media_url&&post.media_type?.startsWith("video/")&&videoDuration>0&&
+  <div className={videoSeeking?"immersiveTimeline isSeeking":"immersiveTimeline"}
+    onPointerDown={onTimelineDown} onPointerMove={onTimelineMove} onPointerUp={onTimelineUp} onPointerCancel={onTimelineCancel}
+    onLostPointerCapture={e=>{if(scrubRef.current)finishScrub(e.currentTarget,scrubRef.current.pointerId)}}
+    onTouchStart={e=>e.stopPropagation()} onTouchMove={e=>e.stopPropagation()} onTouchEnd={e=>e.stopPropagation()}>
+   <div className="immersiveTimelineTrack" aria-hidden="true"><span style={{width:seekPercent+"%"}}/></div>
+   <span className="immersiveTimelineThumb" style={{left:seekPercent+"%"}} aria-hidden="true"/>
+   <input type="range" min={0} max={videoDuration} step={0.01} value={Math.min(seekDisplayTime,videoDuration)}
+     aria-label="Scrub video timeline" aria-valuetext={fmtPlayback(seekDisplayTime)+" of "+fmtPlayback(videoDuration)}
+     onChange={e=>{const next=Number(e.target.value);setScrubPreview(next);seekStoryVideo(next);setScrubPreview(null)}}
+     onKeyDown={e=>e.stopPropagation()}/>
+   {videoSeeking&&<output className="immersiveTimelineTime" style={{left:`clamp(44px, ${seekPercent}%, calc(100% - 44px))`}} aria-live="off">{fmtPlayback(seekDisplayTime)} / {fmtPlayback(videoDuration)}</output>}
+  </div>}{video&&<ImmersiveYouTubePlayer key={video} videoId={video} postId={post.id} authorId={post.author_id}/>}{post.media_url&&post.media_type?.startsWith("video/")&&playerHint&&<span className="immersivePlayerHint" aria-live="off">{playerHint}</span>}{playbackBoost>1&&<div className="immersiveFastForward" aria-live="off"><strong>▶▶ {playbackBoost}×</strong>{playbackBoost===2&&<small>Slide right for 5×</small>}</div>}{heartVisible&&<span className="immersiveLikeHeart" aria-hidden="true">♥</span>}
  {!legacyPost&&<nav className="immersiveReactionRail" aria-hidden={sheetHeight>6} inert={sheetHeight>6} aria-label="Post reactions">{!hasGallery&&post.media_url&&post.media_type?.startsWith("video/")&&<button type="button" className="immersiveSoundButton" data-muted={muted} aria-label={muted?"Unmute video":"Mute video"} aria-pressed={!muted} onClick={toggleSound}><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/>{muted?<path d="m17 9 5 6m0-6-5 6"/>:<><path d="M16 9.2a4.1 4.1 0 0 1 0 5.6"/><path d="M18.6 6.4a8 8 0 0 1 0 11.2"/></>}</svg></button>}<button type="button" aria-label="Like post" aria-pressed={rail.liked} onClick={()=>void railToggle("like")}><svg viewBox="0 0 24 24" width="24" height="24" fill={rail.liked?"currentColor":"none"} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={rail.liked?"railLiked":""} aria-hidden="true"><path d="M20.6 8.2c0 4.7-8.6 10.7-8.6 10.7S3.4 12.9 3.4 8.2a4.4 4.4 0 0 1 8.6-1 4.4 4.4 0 0 1 8.6 1Z"/></svg><small>{rail.likes}</small></button><button type="button" aria-label="Open comments" onClick={()=>{introDone.current=true;setSheetHeight(65)}}><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-4.5a8.5 8.5 0 1 1 15.1-5Z"/></svg><small>{rail.comments}</small></button><button type="button" aria-label="Save post" aria-pressed={rail.saved} onClick={()=>void railToggle("save")}><svg viewBox="0 0 24 24" width="27" height="27" fill={rail.saved?"currentColor":"none"} stroke="currentColor" strokeWidth="2"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg><small>{rail.saves}</small></button><button type="button" aria-label="Share post" onClick={()=>void railShare()}><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 19c6.8 0 11-5.6 16-13"/><path d="M12.5 5.5H20V13"/></svg><small>{rail.shares}</small></button></nav>}
  </div><div className={"immersiveSheet"+(sheetDragging?" isDragging":"")} style={{height:`${sheetHeight}%`}}><div className="immersiveSheetHandle" role="slider" tabIndex={0} aria-label="Comments tab. Tap to open, drag to resize" aria-valuemin={4} aria-valuemax={88} aria-valuenow={Math.round(sheetHeight)} onKeyDown={e=>{introDone.current=true;if(e.key==="Enter"||e.key===" "){e.preventDefault();setSheetHeight(v=>v<=10?65:5);return}if(e.key==="ArrowUp")setSheetHeight(v=>Math.min(88,v+5));if(e.key==="ArrowDown")setSheetHeight(v=>Math.max(4,v-5));if(e.key==="Home")setSheetHeight(4);if(e.key==="End")setSheetHeight(88)}} onPointerDown={e=>{if(e.pointerType==="mouse"&&e.button!==0)return;e.stopPropagation();introDone.current=true;sheetDrag.current={y:e.clientY,height:sheetHeight,at:performance.now()};setSheetDragging(true);e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{if(!sheetDrag.current)return;e.stopPropagation();const {y,height}=sheetDrag.current;setSheetHeight(Math.min(88,Math.max(4,height+(y-e.clientY)/window.innerHeight*100)))}} onPointerUp={e=>{e.stopPropagation();const drag=sheetDrag.current;sheetDrag.current=null;setSheetDragging(false);if(drag){const delta=e.clientY-drag.y;const velocity=delta/Math.max(1,performance.now()-drag.at);if(Math.abs(delta)<11)setSheetHeight(v=>v<=10?65:5);else if(Math.abs(delta)>38&&Math.abs(velocity)>.65)setSheetHeight(velocity>0?5:88);else setSheetHeight(v=>v<25?5:v<65?65:88)}if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId)}} onPointerCancel={()=>{sheetDrag.current=null;setSheetDragging(false)}}><span className="immersiveGrip" aria-hidden="true"/><div className="immersiveCaptionTab"><span className="immersiveCaptionTitle">{cleanPostBody(post.body).replace(/https?:\/\/\S+/g,"").trim()||"Ummah post"}</span><span className="immersiveCaptionOpen">{sheetHeight<=10?"Comments ↑":"Comments ↓"}</span></div></div><div className={styles.socialEngagement}>{legacyPost?<p style={{fontSize:13,color:"#667085"}}>1Muslim community post</p>:<UnifiedPostMedia postId={post.id} mediaUrl={post.media_url} mediaType={post.media_type} youtubeId={video} showVideo={false} focusCommentId={focusCommentId}/>}</div>
  </div><div className={styles.socialStoryFooter}><div className={styles.socialSwipeNav}><button type="button" disabled={index<=0} onClick={()=>navigate(-1)} aria-label="Previous post">← Previous</button><button type="button" disabled={index<0||index>=postIds.length-1} onClick={()=>navigate(1)} aria-label="Next post">Next →</button></div><Link href="/posts">← MORE POSTS</Link><Link href="/community">EXPLORE COMMUNITY ↗</Link></div></article>}<style jsx global>{`.immersiveStoryPage{position:fixed!important;inset:0!important;z-index:90!important;height:100dvh!important;width:100vw!important;overflow:hidden!important;display:flex;flex-direction:column;padding:0!important;margin:0!important;background:#090a0d!important}.immersiveStory{height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;position:relative!important;margin:0 auto!important;width:min(100%,820px)!important}.immersiveStory [class*="socialStoryEdition"]{display:none!important}.immersiveStoryClose{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:16px;z-index:15;width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:#1c2027d9;color:white;text-decoration:none;font-size:32px;line-height:1}.immersiveMedia{position:relative;isolation:isolate}.immersiveMediaBackdrop{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;transition:filter .06s linear}.immersiveVideoBackdropCanvas{display:block;width:100%;height:100%;object-fit:cover;opacity:.65;pointer-events:none}.immersiveMediaBackdrop img,.immersiveMediaBackdrop video{width:100%;height:100%;object-fit:cover;opacity:.65}.immersiveMedia > :not(.immersiveMediaBackdrop){position:relative;z-index:1}.immersiveStoryVideo{display:block;flex:1;min-height:0;width:100%;height:100%;object-fit:contain;background:transparent}.immersiveMedia{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:#090a0d}.immersiveMedia [class*="socialStoryHeader"]{flex:0 0 auto;padding:calc(env(safe-area-inset-top,0px) + 8px) 62px 8px 14px!important;background:#fff}.immersiveMedia [class*="socialPostCopy"]{flex:0 0 auto;padding:6px 14px!important;max-height:16%;overflow:auto;background:#fff}.immersiveMedia [class*="socialStoryImage"]{display:block!important;flex:1!important;min-height:0!important;width:100%!important;height:100%!important;object-fit:contain!important;background:transparent}.immersiveSheet{position:relative;z-index:2;flex:0 0 auto;min-height:0;max-height:85%;background:#fff;color:#17202d;border-radius:22px 22px 0 0;display:flex;flex-direction:column;overflow:hidden;transition:height .24s ease}.immersiveSheetHandle{height:24px;flex:0 0 24px;display:grid;place-items:center;touch-action:none;cursor:ns-resize}.immersiveSheetHandle span{width:42px;height:5px;border-radius:99px;background:#c4c7cd}.immersiveSheet [class*="socialEngagement"]{min-height:0;flex:1;overflow:hidden;display:flex;flex-direction:column}.immersiveSheet .unifiedPostMedia{height:100%;min-height:0;display:flex;flex-direction:column}.immersiveSheet .socialActionBar{flex:0 0 auto}.immersiveSheet .socialConversation{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}.immersiveSheet .commentList{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.immersiveSheet .commentComposer{flex:0 0 auto}.immersiveStory [class*="socialStoryFooter"]{display:none!important}.immersiveStoryPage,.immersiveStoryPage:before,.immersiveStoryPage:after{border:0!important;border-top:0!important;border-radius:0!important;box-shadow:none!important}.immersiveStory{max-width:100vw!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#090a0d!important;animation:none!important}.immersiveMedia{border:0!important;border-radius:0!important}.immersiveMedia [class*="socialStoryHeader"]{background:#090a0d!important;color:#fff!important;border:0!important;gap:10px!important;padding:calc(env(safe-area-inset-top,0px) + 10px) 62px 10px 14px!important}.immersiveMedia [class*="socialIdentity"] strong{color:#fff!important}.immersiveMedia [class*="socialIdentity"] span{color:#bfc3ca!important}.immersiveMedia [class*="socialPostCopy"]{background:#090a0d!important;color:#f5f5f5!important;border:0!important;max-height:12%!important}.immersiveMedia [class*="socialPostCopy"] p{font-family:Arial,Helvetica,sans-serif!important;color:#f5f5f5!important;font-size:15px!important;line-height:1.4!important;letter-spacing:0!important}.immersiveSheet{border:0!important;border-top:0!important;border-radius:20px 20px 0 0!important;box-shadow:none!important}.immersiveSheet .socialComment{display:flex!important;flex-direction:row!important;align-items:flex-start!important;gap:10px!important;padding:10px 0!important}.immersiveSheet .socialComment>.commentAvatar{position:static!important;flex:0 0 32px!important;width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;max-width:32px!important;max-height:32px!important;margin:0!important;float:none!important}.immersiveSheet .socialComment>.commentAvatar img{width:32px!important;height:32px!important;object-fit:cover!important}.immersiveSheet .socialComment>.commentMain{display:block!important;flex:1 1 0!important;min-width:0!important;margin:0!important;padding:0!important;text-align:left!important}.immersiveSheet .commentByline{display:flex!important;flex-direction:row!important;align-items:baseline!important;justify-content:flex-start!important;gap:8px!important;min-height:18px!important;margin:0!important}.immersiveSheet .commentByline a{display:inline!important;font-size:13px!important;font-weight:700!important;line-height:18px!important}.immersiveSheet .commentByline time{display:inline!important;font-size:11px!important}.immersiveSheet .commentMain>p{margin:3px 0 5px!important;font-size:14px!important;line-height:1.45!important}.immersiveSheet .commentActions{margin:0!important;justify-content:flex-start!important}.immersiveSheet .socialComment.child{margin-left:22px!important}.immersiveSheet .commentComposer{position:relative!important;margin:0!important;padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px))!important;background:#fff!important;border-top:1px solid #e6e8ed!important}.immersiveSheet .commentList{padding:0 12px!important}.immersiveSheet .socialConversation{padding:6px 0 0!important}.immersiveSheet .conversationTitle{padding:4px 12px 8px!important}.immersiveSheet .commentComposer input:not([type=file]){background:#f1f2f4!important}.immersiveSheet .commentComposer button[type=submit]{background:#1d2633!important}.immersiveStoryClose{top:calc(env(safe-area-inset-top,0px) + 8px)!important}
@@ -254,16 +341,20 @@ export default function MagazineStory(){
 .immersiveStory:has(.immersiveSheet.isDragging) .immersiveMedia [class*="socialAvatar"],.immersiveStory:has(.immersiveSheet.isDragging) .immersiveMedia [class*="socialIdentity"],.immersiveStory:has(.immersiveSheet.isDragging) .immersiveMedia [class*="socialStoryHeader"] .postAuthorFollow,.immersiveStory:has(.immersiveSheet.isDragging) .immersiveStoryClose{transition:none!important}
 `}</style><style jsx global>{`.immersiveStory .immersiveMedia .immersiveYouTubePlayer{position:absolute!important;inset:0!important;display:grid!important;place-items:center!important;width:100%!important;height:100%!important;background:#07090f!important;overflow:hidden!important;isolation:isolate;z-index:2}.immersiveStory .immersiveMedia .immersiveYouTubeMount{display:grid!important;place-items:center!important;width:100%!important;height:100%!important;min-width:0;overflow:hidden}.immersiveStory .immersiveMedia .immersiveYouTubePlayer iframe{display:block!important;position:relative!important;width:100%!important;height:auto!important;max-height:100%!important;aspect-ratio:16/9!important;border:0!important;background:#000!important}`}</style><style jsx global>{`
 /* Native full-screen playback: a slim 3px rail inside a 48px touch target. */
- .immersiveStory .immersiveMedia > .immersiveTimeline{position:absolute!important;left:10px!important;right:10px!important;bottom:0!important;height:48px!important;z-index:26!important;display:block!important;touch-action:none!important;pointer-events:auto!important}
- .immersiveTimelineTrack{position:absolute;left:0;right:0;bottom:2px;height:3px;border-radius:999px;background:#ffffff66;overflow:hidden;pointer-events:none;transition:height .12s ease}
- .immersiveTimelineTrack span{display:block;width:0;height:100%;background:#fff;border-radius:inherit;box-shadow:0 0 6px #fff8}
+ .immersiveStory .immersiveMedia >
+ .immersiveTimeline{position:absolute!important;left:10px!important;right:10px!important;bottom:0!important;height:48px!important;z-index:26!important;display:block!important;touch-action:none!important;pointer-events:auto!important;cursor:ew-resize}
+ .immersiveTimelineTrack{position:absolute;left:0;right:0;bottom:2px;height:3px;border-radius:999px;background:#ffffff64;pointer-events:none;transition:height .14s ease}
+ .immersiveTimelineTrack span{display:block;width:0;height:100%;background:#f7fbff;border-radius:inherit;box-shadow:0 0 7px #c7e6ff6b}
+ .immersiveTimelineThumb{position:absolute;bottom:3.5px;width:14px;height:14px;border:2px solid #fff;border-radius:50%;background:#d9f2ff;transform:translate(-50%,50%) scale(.8);box-shadow:0 0 0 3px #0e294988,0 0 14px #e6f7ff99;pointer-events:none;opacity:.8;transition:transform .13s ease,opacity .13s ease}
  .immersiveTimeline.isSeeking .immersiveTimelineTrack,.immersiveTimeline:focus-within .immersiveTimelineTrack{height:5px}
- .immersiveTimeline input{position:absolute;inset:0;width:100%;height:48px;margin:0;border:0;appearance:none;-webkit-appearance:none;background:transparent;cursor:pointer;touch-action:none}
- .immersiveTimeline input::-webkit-slider-runnable-track{height:48px;background:transparent}.immersiveTimeline input::-moz-range-track{height:48px;background:transparent}
- .immersiveTimeline input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin-top:15px;background:transparent;border:0}
- .immersiveTimeline input::-moz-range-thumb{width:18px;height:18px;background:transparent;border:0}
- .immersiveTimeline input:focus-visible{outline:2px solid #fff;border-radius:8px}
- .immersiveTimelineTime{position:absolute;right:0;bottom:35px;z-index:1;background:#080d0bd9;color:#fff;border-radius:12px;padding:4px 9px;font-size:12px;font-weight:700;pointer-events:none}
+ .immersiveTimeline.isSeeking .immersiveTimelineThumb,.immersiveTimeline:focus-within .immersiveTimelineThumb{transform:translate(-50%,50%) scale(1.3);opacity:1}
+ .immersiveTimeline input{position:absolute;inset:0;width:100%;height:48px;margin:0;border:0;appearance:none;-webkit-appearance:none;background:transparent;cursor:ew-resize;touch-action:none;opacity:0}
+ .immersiveTimeline input::-webkit-slider-runnable-track{height:48px;background:transparent}
+ .immersiveTimeline input::-moz-range-track{height:48px;background:transparent}
+ .immersiveTimeline input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin-top:15px;border:0}
+ .immersiveTimeline input::-moz-range-thumb{width:18px;height:18px;border:0}
+ .immersiveTimeline input:focus-visible{outline:2px solid #fff;border-radius:8px;opacity:.03}
+ .immersiveTimelineTime{position:absolute;bottom:36px;transform:translateX(-50%);z-index:28;background:#081320db;color:#fff;border:1px solid #ffffff45;box-shadow:0 5px 16px #0007;border-radius:12px;padding:5px 9px;font-size:12px;font-weight:700;white-space:nowrap;pointer-events:none}
  .immersiveStory .immersiveMedia [class*="socialPostCopy"]{bottom:50px!important}
  .immersiveFastForward{position:absolute!important;z-index:24!important;top:21%!important;left:50%!important;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;background:#090d0dcc;backdrop-filter:blur(12px);color:#fff;padding:10px 18px;border:1px solid #ffffff55;border-radius:17px;white-space:nowrap;pointer-events:none}
  .immersiveFastForward strong{font-size:22px}.immersiveFastForward small{font-size:12px}
@@ -272,9 +363,9 @@ export default function MagazineStory(){
 .immersiveStoryPage:has(.immersiveStoryVideo) .immersiveStory{width:100vw!important;max-width:none!important;margin:0!important;padding:0!important}
 .immersiveStoryVideo{-webkit-appearance:none;appearance:none;cursor:pointer;touch-action:pan-y;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 .immersiveStory .immersiveReactionRail .immersiveSoundButton{font-size:25px;line-height:1;min-height:45px;margin-bottom:1px;filter:drop-shadow(0 2px 5px #000c)}
-.immersivePlaybackFeedback{position:absolute;z-index:16;top:50%;left:50%;transform:translate(-50%,-50%);font-size:64px;color:#fff;text-shadow:0 3px 15px #000b;pointer-events:none;animation:immersivePlaybackFade .75s ease-out forwards}
-@keyframes immersivePlaybackFade{0%{opacity:1}65%{opacity:1}100%{opacity:0}}
-@media(prefers-reduced-motion:reduce){.immersivePlaybackFeedback{animation:none;opacity:1}}
+.immersivePlayerHint{position:absolute!important;z-index:27!important;left:50%;bottom:79px;transform:translateX(-50%);border-radius:999px;background:#071322cc;border:1px solid #ffffff5c;backdrop-filter:blur(10px);color:#fff;font-size:13px;font-weight:700;letter-spacing:.02em;padding:9px 14px;box-shadow:0 6px 25px #0006;pointer-events:none;white-space:nowrap;animation:immersiveHintFade 1s ease-out both}
+@keyframes immersiveHintFade{0%{opacity:0;transform:translate(-50%,6px)}14%{opacity:1;transform:translate(-50%,0)}73%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.immersivePlayerHint{animation:none;opacity:1}}
 `}</style><style jsx global>{`
 /* Streamlined Ummah viewer: caption lives on the sheet handle; never shade video. */
 .immersiveStory .immersiveMedia [class*="socialPostCopy"]{display:none!important;background:none!important}
