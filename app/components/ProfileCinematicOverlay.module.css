@@ -40,8 +40,9 @@
  outline:3px solid color-mix(in srgb,var(--cm-accent,#e9c483) 70%,#fff);outline-offset:3px;
 }
 .body{
+ --cm-content-gutter:clamp(18px,5vw,29px);
  box-sizing:border-box;position:relative;z-index:2;
- min-height:600px;padding:clamp(275px,41svh,400px) clamp(18px,5vw,29px) 60px;
+ min-height:600px;padding:clamp(275px,41svh,400px) var(--cm-content-gutter) 60px;
  display:flex;flex-direction:column;align-items:center;text-align:center;
 }
 .avatarRing{
@@ -153,3 +154,28 @@
 .body{padding-bottom:max(44px,env(safe-area-inset-bottom,0px))}
 @media(max-width:400px){.topbar{padding-left:12px;padding-right:12px}.xpCrown{padding:7px 9px;font-size:11px}.topbar .brand{font-size:8px}.badgeCollection{gap:7px}.badgeHeading>span{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.actions .mainAction{transition:none}.xpCrown{text-shadow:none}}
+
+/* Full-profile discovery: transparent artwork hotspot + one-time subtle guidance. */
+.sceneHint{
+ position:absolute;z-index:6;top:clamp(132px,22svh,205px);left:50%;
+ transform:translateX(-50%);max-width:calc(100% - 48px);white-space:nowrap;
+ pointer-events:none;border:1px solid #ffffff34;border-radius:999px;
+ background:#081b2d52;padding:9px 17px;backdrop-filter:blur(7px);
+ color:#fff;font-size:clamp(12px,2.9vw,15px);letter-spacing:.075em;font-weight:630;
+ text-shadow:0 1px 9px #000a;animation:cinematicGentleHint 1s ease-in-out both;
+}
+.scrollHint{top:clamp(200px,35svh,325px)}
+@keyframes cinematicGentleHint{
+ 0%{opacity:0;transform:translate(-50%,5px)}
+ 24%{opacity:.64;transform:translate(-50%,0)}
+ 70%{opacity:.64;transform:translate(-50%,0)}
+ 100%{opacity:0;transform:translate(-50%,-3px)}
+}
+.visitorControls{width:100%;display:flex;flex-direction:column;align-items:center;gap:13px}
+.actions .visitorClose{
+ flex:none;width:72px;height:72px;min-height:72px;padding:5px 7px!important;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+}
+.visitorClose span{font-size:11px;font-weight:850;line-height:1}
+.visitorControls .followAction{width:min(100%,300px);flex:none}
+@media(prefers-reduced-motion:reduce){.sceneHint{animation:none;opacity:.7}}
