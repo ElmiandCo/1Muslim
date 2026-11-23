@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import {useEffect,useRef,useState} from "react";
+import {useEffect,useRef,useState,type MouseEvent} from "react";
 import {createClient} from "../../utils/supabase/client";
 import "./RecentMuslimDiscovery.css";
 
@@ -42,17 +42,18 @@ export default function RecentMuslimDiscovery({excludeId}:{excludeId?:string}){
  const advance=(direction:number)=>setIndex(i=>(i+direction+members.length)%members.length);
  const member=members[index];
  const name=member?.display_name||member?.username||"New member";
+ const open=(event:MouseEvent<HTMLAnchorElement>,id?:string)=>{event.preventDefault();window.dispatchEvent(new CustomEvent("1muslim:discover-muslims",{detail:{id}}))};
  return <section className="profileSocialDiscoveryShortcut recentMuslimDiscovery" aria-label="Discover recently joined Muslims"
   onTouchStart={e=>{didSwipe.current=false;const t=e.touches[0];if(t)touchStart.current={x:t.clientX,y:t.clientY}}}
   onTouchEnd={e=>{const start=touchStart.current;touchStart.current=null;const t=e.changedTouches[0];if(!start||!t||members.length<2)return;const dx=t.clientX-start.x,dy=t.clientY-start.y;if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)*1.25){didSwipe.current=true;advance(dx<0?1:-1)}}}
   onTouchCancel={()=>{touchStart.current=null}} onClickCapture={e=>{if(didSwipe.current){e.preventDefault();e.stopPropagation();didSwipe.current=false}}}>
-   <Link className="recentMuslimProfile" href={member?"/profile?section=muslimeen&member="+encodeURIComponent(member.id):"/profile?section=muslimeen"} title={member?"View "+name+"'s profile":"Find Muslims"}>
+   <Link className="recentMuslimProfile" href={member?"/profile?section=muslimeen&member="+encodeURIComponent(member.id):"/profile?section=muslimeen"} title={member?"View "+name+"'s profile":"Find Muslims"} onClick={e=>open(e,member?.id)}>
     <span className="recentMuslimAvatar" key={member?.id||"placeholder"}>
      {member&&!pictureError?<img src={photo(member)} alt={name+"'s avatar"} loading="eager" onError={()=>setPictureError(true)}/>:<span aria-hidden="true">◎</span>}
     </span>
     <span className="recentMuslimCopy"><strong>Discover Muslims</strong><small>{member?"Recently joined · "+name:failed?"Explore the Ummah":"Recently joined"}</small></span>
    </Link>
-   <Link className="recentMuslimExplore" href="/profile?section=muslimeen" aria-label="Explore all Muslims">Explore <span aria-hidden="true">→</span></Link>
+   <Link className="recentMuslimExplore" href="/profile?section=muslimeen" aria-label="Explore all Muslims" onClick={e=>open(e)}>Explore <span aria-hidden="true">→</span></Link>
    {members.length>1&&<span className="recentMuslimPips" aria-label={"Member "+(index+1)+" of "+members.length}>{members.map((m,i)=><button key={m.id} type="button" className={i===index?"on":""} aria-label={"Show recent member "+(i+1)} aria-pressed={i===index} onClick={()=>setIndex(i)}/>)}</span>}
   </section>;
 }
