@@ -3087,3 +3087,20 @@ html.light [data-workspace-page="0"]::after{
   animation:none!important;opacity:0!important;
  }
 }
+
+
+/* Player + its floating shadow must paint ABOVE the Home Live chat.
+   Preserve chat scroll/touch interaction below the player. */
+[data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="desktop"] > .oneMuslimLiveTop,
+[data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="phone"] > .oneMuslimLiveTop,
+[data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="audio"] > .oneMuslimLiveTop{
+ position:relative!important;
+ z-index:2147483003!important;
+ overflow:visible!important;
+ isolation:isolate;
+}
+[data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="desktop"] > .oneMuslimLiveBottom,
+[data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="phone"] > .oneMuslimLiveBottom,
+[data-workspace-page="0"] .oneMuslimLiveStage[data-live-format="audio"] > .oneMuslimLiveBottom{
+ z-index:2147483001!important;
+}
