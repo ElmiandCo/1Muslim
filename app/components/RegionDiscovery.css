@@ -81,7 +81,7 @@
 .atlasStudioHeader button{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.72);color:#fafffc;background:rgba(12,34,40,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 3px 16px #001e2338;cursor:pointer}
 .atlasStudioHeader .atlasStudioClose{font-size:30px;line-height:1;font-weight:400;padding:0 0 4px}
 .atlasStudioHeader .atlasStudioMyRegion{font-size:25px;line-height:1}
-.atlasStudioBrand{display:grid;gap:2px;min-width:0;flex:1;padding:7px 0}
+.atlasStudioBrand{display:grid;gap:2px;min-width:0;flex:1;padding:8px 11px;background:rgba(8,34,40,.79);border:1px solid rgba(214,246,225,.24);border-radius:14px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 5px 18px #08212438}
 .atlasStudioBrand small{font-size:9px;font-weight:850;letter-spacing:.12em;color:#eaf8ef;text-shadow:0 1px 5px #16382a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .atlasStudioBrand strong{font-size:clamp(18px,4.4vw,27px);line-height:1.15;color:#fff;letter-spacing:-.035em;text-shadow:0 2px 8px #0e332e90;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .atlasStudioBrand strong span{color:#f1d291}
