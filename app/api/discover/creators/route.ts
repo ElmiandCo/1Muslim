@@ -32,17 +32,17 @@ export async function GET() {
     // Service role fetches ONLY the safe public display fields of those public-post authors.
     // Never enumerate or expose non-posting/private profile records to anonymous visitors.
     const { data: activeProfiles, error: lookupError } = authorIds.length
-      ? await adminDb().from("profiles").select("id,display_name,username,avatar_url,xp_total").in("id", authorIds)
+      ? await adminDb().from("profiles").select("id,display_name,username,hide_1muslim_id,avatar_url,xp_total").in("id", authorIds)
       : { data: [], error: null };
     if (lookupError) throw lookupError;
 
-    const unique = new Map<string, { id: string; display_name: string | null; username: string | null; avatar_url: string | null; xp_total: number | null }>();
+    const unique = new Map<string, { id: string; display_name: string | null; username: string | null; hide_1muslim_id?:boolean|null; avatar_url: string | null; xp_total: number | null }>();
     for (const profile of activeProfiles || []) {
       if (profile.id && profile.id !== user?.id && !unique.has(profile.id)) unique.set(profile.id, profile);
     }
     const today = Date.now();
     const ranked = [...unique.values()]
-      .filter(p => Boolean((p.username || p.display_name || "").trim()))
+      .filter(p => Boolean((p.display_name || (!p.hide_1muslim_id?p.username:null) || "").trim()))
       .map(profile => {
         const activity = counts.get(profile.id);
         const ageDays = activity?.latest ? Math.max(0, (today - activity.latest) / 86400000) : 365;
@@ -55,8 +55,8 @@ export async function GET() {
       .slice(0, 7);
     const recommended: CreatorSuggestion[] = ranked.map(({ profile, postCount }) => ({
       id: profile.id,
-      handle: "@" + String(profile.username || "member").replace(/^@/, ""),
-      displayName: (profile.display_name || profile.username || "1Muslim member").trim(),
+      handle: !profile.hide_1muslim_id&&profile.username ? "@"+String(profile.username).replace(/^@/,"") : "",
+      displayName: (profile.display_name || (!profile.hide_1muslim_id?profile.username:null) || "1Muslim member").trim(),
       avatarUrl: profile.avatar_url,
       postCount,
       href: "/profile?member=" + encodeURIComponent(profile.id)
