@@ -13,10 +13,13 @@ export default function AppShellLifecycle(){
   let revealTimer:ReturnType<typeof setTimeout>|null=null;
   let timeout:ReturnType<typeof setTimeout>|null=null;
   let frame=0;
+  let profileObserver:MutationObserver|null=null;
   root.dataset.oneRoute=pathname==="/"?"welcome":"app";
   root.dataset.oneShellReady="false";
   const reveal=()=>{
    if(!active||revealTimer)return;
+   profileObserver?.disconnect();
+   if(timeout)clearTimeout(timeout);
    revealTimer=window.setTimeout(()=>{if(active)root.dataset.oneShellReady="true"},pathname==="/profile"?230:110);
   };
   const onReady=()=>reveal();
@@ -25,10 +28,10 @@ export default function AppShellLifecycle(){
    // Keep a solid white surface during a cold auth/profile fetch.
    const check=()=>{if(document.querySelector(".profileCommandPage, .profileEmpty.isError, .profileEmpty.isAuth"))reveal()};
    frame=requestAnimationFrame(check);
-   const observer=new MutationObserver(check);
-   observer.observe(document.body,{childList:true,subtree:true});
-   timeout=window.setTimeout(()=>{observer.disconnect();reveal()},12500);
-   return()=>{active=false;window.removeEventListener("1muslim:profile-ready",onReady);observer.disconnect();if(frame)cancelAnimationFrame(frame);if(timeout)clearTimeout(timeout);if(revealTimer)clearTimeout(revealTimer)};
+   profileObserver=new MutationObserver(check);
+   profileObserver.observe(document.body,{childList:true,subtree:true});
+   timeout=window.setTimeout(()=>reveal(),12500);
+   return()=>{active=false;window.removeEventListener("1muslim:profile-ready",onReady);profileObserver?.disconnect();if(frame)cancelAnimationFrame(frame);if(timeout)clearTimeout(timeout);if(revealTimer)clearTimeout(revealTimer)};
   }
   frame=requestAnimationFrame(()=>{frame=requestAnimationFrame(reveal)});
   return()=>{active=false;window.removeEventListener("1muslim:profile-ready",onReady);if(frame)cancelAnimationFrame(frame);if(timeout)clearTimeout(timeout);if(revealTimer)clearTimeout(revealTimer)};
