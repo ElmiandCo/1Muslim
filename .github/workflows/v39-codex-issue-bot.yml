@@ -20,7 +20,7 @@ jobs:
       !github.event.issue.pull_request &&
       github.event.comment.body == '/v39-run' &&
       github.event.issue.number >= 1593 &&
-      github.event.issue.number <= 1606
+      (github.event.issue.number <= 1606 || github.event.issue.number == 1610)
     runs-on: ubuntu-latest
     timeout-minutes: 95
     permissions:
@@ -65,6 +65,11 @@ jobs:
           {
             echo '# Bismillah — 1Muslim v3.9 implementation assignment'
             echo 'Begin final report: Bismillah. Intention: serve Allah and the Ummah with precise, beautiful, honest, secure engineering.'
+            echo 'TRUSTED INPUTS ARE ALREADY LOCAL: actions/checkout@v5 checked out latest GitHub main at the start of this job; the issue and master text immediately below came from an authenticated gh api call IN THE PRE-AGENT STEP. Both are authoritative snapshots.'
+            echo 'IMPORTANT: Codex sandbox intentionally has NO NETWORK and NO GH_TOKEN. Do NOT attempt git fetch, gh auth, GitHub API, Vercel API, domain DNS, or declare the task blocked because remote access is unavailable. That is expected.'
+            echo 'Run offline code audit and implement REAL scoped changes using checked-out files, trusted issue text and installed node dependencies. Deliver a useful narrow working subset if the full task is too large. Open a DRAFT PR through the post-agent workflow step, NOT yourself.'
+            echo 'For unresolved external facts (production READY, new approvals, TikTok sandbox credentials, live user data), note verification pending in your report but do not abandon safe independently verifiable work.'
+            echo 'Do not use the model to repeat the full master; focus only on the assigned issue, current code, measured build/tests, and a concise final report to avoid token waste.'
             echo 'Read AGENTS.md, current main, existing code; honor all policies and existing features.'
             echo 'Implement ONLY the issue below. No Stripe live purchases, privileged destructive operations, or changes to production secrets.'
             echo 'Do not change .github/workflows, package manifest, lockfiles, runtime env files or AGENTS.md.'
