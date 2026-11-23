@@ -1,131 +1,86 @@
-/* Track the true bottom edge of the cover artwork. The identity wrapper
-   starts exactly after the cover, so a -2px offset centers this 4px rail on
-   the artwork's bottom trim. The avatar stays above the left side and the
-   floating next-prayer card keeps its independent position. */
+/* The progress strip remains aligned to the real lower border of the cover. */
 .seam{
- --prayer-accent:var(--member-accent,var(--theme-accent,#b89965));
- position:absolute;left:0;right:0;top:-2px;height:4px;z-index:1;
- border-radius:999px;background:color-mix(in srgb,var(--prayer-accent) 17%,#e8edf2);
- box-shadow:inset 0 1px 0 #ffffffc7,0 1px 3px #172d3d0e;
- pointer-events:none;
+ --prayer-accent:var(--member-accent,var(--theme-accent,#aac1d1));
+ position:absolute;left:0;right:0;top:-2px;height:3px;z-index:1;
+ border-radius:100px;pointer-events:none;
+ background:color-mix(in srgb,var(--prayer-accent) 14%,#e6f2f9);
+ box-shadow:inset 0 1px #ffffff66,0 1px 4px #152d3e18;
 }
 .fill{
- position:relative;display:block;height:100%;min-width:0;
- border-radius:999px;
- background:linear-gradient(90deg,color-mix(in srgb,var(--prayer-accent) 72%,#234139),var(--prayer-accent) 75%,color-mix(in srgb,var(--prayer-accent) 62%,#fff));
- box-shadow:0 0 7px color-mix(in srgb,var(--prayer-accent) 58%,transparent),0 0 13px color-mix(in srgb,var(--prayer-accent) 27%,transparent);
+ position:relative;display:block;height:100%;min-width:0;border-radius:100px;
+ background:linear-gradient(90deg,color-mix(in srgb,var(--prayer-accent) 36%,#c0dee6),var(--prayer-accent) 85%,#f1fafa);
+ box-shadow:0 0 6px color-mix(in srgb,var(--prayer-accent) 39%,transparent);
  transition:width .75s cubic-bezier(.22,1,.36,1);
 }
 .fill::after{
- content:"";position:absolute;right:0;top:50%;width:12px;height:12px;border-radius:50%;
- transform:translate(50%,-50%);
- background:radial-gradient(circle,#fff 0 15%,color-mix(in srgb,var(--prayer-accent) 60%,#fff) 25%,transparent 72%);
- box-shadow:0 0 10px 3px color-mix(in srgb,var(--prayer-accent) 43%,transparent);
- opacity:.85;
+ content:"";position:absolute;right:0;top:50%;width:10px;height:10px;
+ border-radius:50%;transform:translate(50%,-50%);
+ background:radial-gradient(circle,#fff 0 20%,color-mix(in srgb,var(--prayer-accent) 65%,#fff) 35%,transparent 72%);
+ box-shadow:0 0 9px color-mix(in srgb,var(--prayer-accent) 35%,transparent);opacity:.8;
 }
 .fill[data-empty="true"]::after{opacity:0}
+
+/* 1M SKY GLASS — roughly 88% transparent, not a white panel.
+   Keep the existing right edge and the left side of the cover open. */
 .card{
- --prayer-accent:var(--member-accent,var(--theme-accent,#b89965));
- position:absolute;top:-38px;right:clamp(13px,3vw,24px);z-index:4;
- display:flex;align-items:center;gap:8px;
- width:min(300px,calc(100% - 126px));min-height:62px;
- box-sizing:border-box;margin:0;padding:9px 10px;
- border:1px solid color-mix(in srgb,var(--prayer-accent) 21%,#e3e8ed);
- border-radius:17px;
- background:linear-gradient(140deg,#fff,#fffdfa);
- color:#20322c;text-align:left;cursor:pointer;
- box-shadow:0 8px 19px #1b283522,0 3px 12px color-mix(in srgb,var(--prayer-accent) 19%,transparent),inset 0 1px #fff;
- transition:box-shadow .25s ease,transform .25s ease;
+ --prayer-accent:var(--member-accent,var(--theme-accent,#d5e9f1));
+ position:absolute;top:-42px;right:clamp(13px,3vw,24px);z-index:4;
+ box-sizing:border-box;display:grid;grid-template-rows:20px minmax(0,1fr);
+ width:min(250px,calc(100% - 144px));height:53px;min-height:53px;
+ padding:6px 11px 3px;gap:0;overflow:hidden;
+ border:1px solid rgba(255,255,255,.39);border-radius:14px;
+ background:rgba(255,255,255,.12);
+ -webkit-backdrop-filter:blur(2.5px) saturate(108%);
+ backdrop-filter:blur(2.5px) saturate(108%);
+ color:#fff;text-align:left;cursor:pointer;
+ box-shadow:0 0 9px rgba(255,255,255,.11),inset 0 1px rgba(255,255,255,.23);
+ transition:transform .18s ease,border-color .18s ease;
 }
-.card:hover{box-shadow:0 10px 21px #1b283528,0 4px 16px color-mix(in srgb,var(--prayer-accent) 28%,transparent)}
-.card:active{transform:scale(.985)}
-.card:focus-visible{outline:2px solid var(--prayer-accent);outline-offset:3px}
-.symbol{
- display:grid;place-items:center;flex:none;width:35px;height:37px;
- border-radius:12px;color:color-mix(in srgb,var(--prayer-accent) 55%,#304638);
- background:color-mix(in srgb,var(--prayer-accent) 8%,#fff);
- font-size:23px;line-height:1;
-}
-.identity{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
-.identity strong{color:#1a2a26;font-weight:850;font-size:15px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.identity small{color:#697773;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.remaining{
- flex:none;white-space:nowrap;font-size:12px;font-weight:850;
- color:color-mix(in srgb,var(--prayer-accent) 43%,#173a32);
- background:color-mix(in srgb,var(--prayer-accent) 12%,#fff);
- border-radius:99px;padding:6px 7px;
-}
-.chevron{flex:none;font-size:22px;font-weight:400;line-height:1;color:#38554c}
+.card:hover{border-color:rgba(255,255,255,.65);box-shadow:0 0 12px rgba(255,255,255,.14),inset 0 1px rgba(255,255,255,.26)}
+.card:active{transform:scale(.986)}
+.card:focus-visible{outline:2px solid #f2f8ff;outline-offset:2px}
+.cardTop{display:flex;align-items:center;gap:5px;min-width:0;min-height:20px}
+.identity{display:flex;gap:6px;align-items:baseline;min-width:0;flex:1 1 auto}
+.identity strong{color:#fff;font-size:13px;font-weight:850;letter-spacing:-.015em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px #0c233bdc,0 0 1px #0a233d}
+.identity small{font-size:10px;color:#f5faff;font-weight:600;white-space:nowrap;text-shadow:0 1px 3px #0b2036ea;flex:none}
+.remaining{font-size:11px;font-weight:850;color:#f7fcff;white-space:nowrap;flex:none;font-variant-numeric:tabular-nums;text-shadow:0 1px 4px #081d36ec}
+.chevron{flex:none;font-size:17px;line-height:1;color:#f8fdff;text-shadow:0 1px 3px #102537;opacity:.84}
+.cardOrbit{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;width:100%;height:100%;position:relative}
+.skyOrbit{position:relative;display:block;width:100%;height:25px;min-width:0;color:rgba(246,252,255,.66)}
+.orbitPath{position:absolute;inset:0;width:100%;height:100%;overflow:visible;opacity:.68}
+.skySun,.skyMoon{position:absolute;display:grid;place-items:center;width:20px;height:20px;transform:translate(-50%,-50%);pointer-events:none;will-change:opacity}
+.skySun svg,.skyMoon svg{width:100%;height:100%;display:block;overflow:visible}
+.skySun{filter:drop-shadow(0 0 3px rgba(255,236,173,.32));animation:skyLightGlow 5.8s ease-in-out infinite}
+.skySunRays{transform-origin:16px 16px;animation:skyRayBreath 7.2s ease-in-out infinite}
+.skyMoon{filter:drop-shadow(0 0 2.5px rgba(232,244,255,.32));animation:skyMoonGlow 6.5s ease-in-out infinite}
+.skyDarkDot{position:absolute;left:50%;top:21%;transform:translate(-50%,-50%);font-size:12px;color:#d7e8f8;opacity:.48}
+.fallbackOrbit{display:flex;align-items:center;justify-content:center;gap:6px;color:#f1faff;font-size:10px;font-weight:650;white-space:nowrap;text-shadow:0 1px 3px #0c2740}
+.symbol{display:grid;place-items:center;flex:0 0 19px;height:19px}
+.symbol svg{width:18px;height:18px;stroke-width:1.8;filter:drop-shadow(0 1px 2px #133046)}
+.orbitPrompt{font-size:10px;color:#f2f8fb;text-shadow:0 1px 3px #142e40}
+@keyframes skyLightGlow{0%,100%{opacity:.88;filter:drop-shadow(0 0 2px rgba(255,235,166,.26))}50%{opacity:1;filter:drop-shadow(0 0 4px rgba(255,235,166,.45))}}
+@keyframes skyRayBreath{0%,100%{opacity:.63;transform:rotate(-3deg)}50%{opacity:1;transform:rotate(3deg)}}
+@keyframes skyMoonGlow{0%,100%{opacity:.76;filter:drop-shadow(0 0 1px rgba(228,242,255,.2))}50%{opacity:1;filter:drop-shadow(0 0 3px rgba(228,242,255,.39))}}
 @media(max-width:480px){
- .card{top:-38px;right:13px;width:min(237px,calc(100% - 112px));padding:8px 7px;gap:5px;min-height:59px;border-radius:16px}
- .symbol{width:30px;height:32px;font-size:20px;border-radius:10px}
- .identity strong{font-size:14px}
- .identity small{font-size:10px}
- .remaining{font-size:11px;padding:5px 6px}
- .chevron{font-size:18px}
-}
-@media(max-width:365px){
- .card{width:calc(100% - 106px);gap:4px;padding:7px 5px}
- .symbol{width:24px;height:29px;font-size:17px}
- .remaining{font-size:10px;padding:4px}
- .chevron{font-size:16px}
-}
-@media(prefers-reduced-motion:reduce){.fill,.card{transition:none}}
-
-/* Match the dashboard's original daylight/salah SVG icon family. */
-.symbol svg{width:27px;height:27px;display:block;stroke-width:2.1}
-.symbol :global(.prayerIconRay){animation:profilePrayerRay 4.8s ease-in-out infinite}
-@keyframes profilePrayerRay{0%,100%{opacity:.52}50%{opacity:1}}
-@media(prefers-reduced-motion:reduce){.symbol :global(.prayerIconRay){animation:none}}
-
-
-/* Restore the original understated Next Prayer glass styling while keeping
-   the progress timeline exactly on the COVER bottom border, not below the card. */
-.seam{
- /* Inherit top:-2px from base so the rail sits ON the cover's bottom trim. */
- height:3px;left:0;right:0;
- background:color-mix(in srgb,var(--prayer-accent) 15%,#edf1f4);
- box-shadow:inset 0 1px #fff9,0 1px 5px color-mix(in srgb,var(--prayer-accent) 9%,transparent);
-}
-.fill{
- background:linear-gradient(90deg,color-mix(in srgb,var(--prayer-accent) 40%,#d4dee5),var(--prayer-accent) 80%,color-mix(in srgb,var(--prayer-accent) 65%,#fff));
- box-shadow:0 0 7px color-mix(in srgb,var(--prayer-accent) 43%,transparent),0 0 13px color-mix(in srgb,var(--prayer-accent) 21%,transparent);
-}
-/* Keep the right edge exactly in place; reclaim cover art on the LEFT.
-   A fixed 44px desktop / 41px mobile height makes the card 7px slimmer.
-   The 5%-opacity smoked glass preserves the user's profile cover artwork. */
-.card{
- top:-36px;right:clamp(13px,3vw,24px);
- height:44px;min-height:44px;width:min(250px,calc(100% - 144px));
- gap:6px;padding:4px 12px;
- border-radius:14px;
- background:rgba(25,35,42,.05);
- border-color:rgba(241,250,246,.46);
- -webkit-backdrop-filter:blur(15px) saturate(80%) brightness(.96);
- backdrop-filter:blur(15px) saturate(80%) brightness(.96);
- box-shadow:0 5px 14px rgba(16,26,32,.22),inset 0 1px rgba(255,255,255,.28);
-}
-.symbol{
- width:24px;height:27px;flex:0 0 24px;border-radius:0;
- background:transparent;color:color-mix(in srgb,var(--prayer-accent) 64%,#586d7b);
-}
-.symbol svg{width:22px;height:22px;stroke-width:1.9}
-.identity{gap:3px}
-.identity strong{font-size:13px;letter-spacing:-.012em;font-weight:780;color:#172b35;text-shadow:0 1px 2px #ffffffbb}
-.identity small{font-size:10px;color:#334b58;text-shadow:0 1px 2px #ffffffc9}
-.remaining{
- padding:0;color:color-mix(in srgb,var(--prayer-accent) 59%,#304757);
- background:none;border-radius:0;font-size:11px;font-weight:790;font-variant-numeric:tabular-nums;
-}
-.chevron{font-size:17px;color:color-mix(in srgb,var(--prayer-accent) 50%,#617484);margin-left:1px}
-@media(max-width:480px){
- .card{top:-34px;right:12px;height:41px;min-height:41px;width:min(208px,calc(100% - 120px));padding:3px 8px;gap:4px;border-radius:13px}
- .symbol{width:20px;height:23px;flex-basis:20px}
- .symbol svg{width:19px;height:19px}
+ .card{top:-40px;right:12px;width:min(208px,calc(100% - 120px));height:49px;min-height:49px;padding:4px 8px 2px;border-radius:13px;grid-template-rows:20px minmax(0,1fr)}
+ .cardTop{gap:4px}
+ .identity{gap:4px}
  .identity strong{font-size:12px}
  .identity small{font-size:9px}
  .remaining{font-size:10px}
- .chevron{font-size:16px}
+ .chevron{font-size:15px}
+ .skyOrbit{height:23px}
+ .skySun,.skyMoon{width:19px;height:19px}
+ .orbitPrompt{font-size:9px}
 }
-@media(max-width:365px){.card{width:calc(100% - 124px);gap:3px;padding:3px 6px}.symbol{width:18px;flex-basis:18px}.symbol svg{width:17px;height:17px}.remaining{font-size:9px}}
-@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.card{background:rgba(235,241,239,.85)}}
+@media(max-width:365px){
+ .card{width:calc(100% - 124px);padding:4px 6px 2px}
+ .identity{gap:3px}.identity strong{font-size:11px}
+ .identity small{font-size:8px}.remaining{font-size:9px}
+ .skySun,.skyMoon{width:17px;height:17px}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.card{background:rgba(24,46,62,.13)}}
+@media(prefers-reduced-motion:reduce){
+ .fill,.card{transition:none}
+ .skySun,.skyMoon,.skySunRays{animation:none!important;will-change:auto}
+}
