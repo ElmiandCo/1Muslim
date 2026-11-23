@@ -37,7 +37,7 @@ export async function GET(request:NextRequest){
   // Latest explicit opt-ins first, with a hard ceiling to prevent unbounded work.
   for(let offset=0;offset<5000&&found.length<8;offset+=200){
    const {data:consents,error}=await db.from("member_region_preferences")
-    .select("user_id,consented_at").not("consented_at","is",null)
+    .select("user_id,consented_at").eq("directory_visible",true).not("consented_at","is",null)
     .order("consented_at",{ascending:false}).range(offset,offset+199);
    if(error)throw error;
    const rows=(consents||[]) as Consent[];

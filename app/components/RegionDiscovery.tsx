@@ -38,7 +38,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
  const [mode,setMode]=useState<Mode>("world"),[editing,setEditing]=useState(false),[expanded,setExpanded]=useState(false);
  const [country,setCountry]=useState(canonicalCountry(currentCountry)),[state,setState]=useState(""),[city,setCity]=useState("");
  const [saving,setSaving]=useState(false),[locating,setLocating]=useState(false),[message,setMessage]=useState("");
- const [consent,setConsent]=useState(false),[optedIn,setOptedIn]=useState(false),[permissionKnown,setPermissionKnown]=useState(false),[browseOnly,setBrowseOnly]=useState(false);
+ const [consent,setConsent]=useState(false),[directoryVisible,setDirectoryVisible]=useState(false),[optedIn,setOptedIn]=useState(false),[permissionKnown,setPermissionKnown]=useState(false),[browseOnly,setBrowseOnly]=useState(false);
  const [view,setViewState]=useState(centerView),[dragging,setDragging]=useState(false);
  const pointerPositions=useRef(new Map<number,{x:number;y:number}>());
  const lastPinch=useRef<number|null>(null),lastTap=useRef({at:0,x:0,y:0}),ignoreClick=useRef(false);
@@ -51,8 +51,8 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
  useEffect(()=>{setCountry(canonicalCountry(currentCountry))},[currentCountry]);
  useEffect(()=>{
   let mounted=true;setPermissionKnown(false);
-  void createClient().from("member_region_preferences").select("user_id").eq("user_id",userId).maybeSingle().then(({data,error})=>{
-   if(!mounted)return;setOptedIn(Boolean(data)&&!error);setPermissionKnown(true);
+  void createClient().from("member_region_preferences").select("user_id,directory_visible").eq("user_id",userId).maybeSingle().then(({data,error})=>{
+   if(!mounted)return;setOptedIn(Boolean(data)&&!error);setDirectoryVisible(Boolean(data?.directory_visible));setPermissionKnown(true);
   });
   return()=>{mounted=false};
  },[userId]);
@@ -261,7 +261,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    if(user?.id!==userId)throw Error("Sign in again to share your region.");
    const {error:profileError}=await db.from("profiles").update({country:normalized,state:state.trim()||null,city:city.trim()||null}).eq("id",userId);
    if(profileError)throw Error("Could not save your region: "+profileError.message);
-   const {error:consentError}=await db.from("member_region_preferences").upsert({user_id:userId,region_level:city.trim()?"city":state.trim()?"state":"country",consented_at:new Date().toISOString()},{onConflict:"user_id"});
+   const {error:consentError}=await db.from("member_region_preferences").upsert({user_id:userId,region_level:city.trim()?"city":state.trim()?"state":"country",directory_visible:directoryVisible,consented_at:new Date().toISOString()},{onConflict:"user_id"});
    if(consentError)throw Error("Region saved privately, but map sharing did not complete. Please retry.");
    onSaved(normalized);onSelect(normalized);onSelectState?.("");
    setOptedIn(true);setPermissionKnown(true);setBrowseOnly(true);setEditing(false);
@@ -277,7 +277,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    if(user?.id!==userId)throw Error("Sign in again to change map sharing.");
    const {error}=await db.from("member_region_preferences").delete().eq("user_id",userId);
    if(error)throw Error("Could not stop sharing.");
-   setOptedIn(false);onSelect("");onSelectState?.("");
+   setOptedIn(false);setDirectoryVisible(false);onSelect("");onSelectState?.("");
    setEditing(false);setBrowseOnly(true);setMessage("✓ Your region is no longer on the community map.");
    await load();window.dispatchEvent(new Event("1muslim:location-updated"));
   }catch(e){setMessage(e instanceof Error?e.message:"Unable to update sharing")}
@@ -346,7 +346,8 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    <label>Country<input list="ummah-atlas-countries" value={country} onChange={e=>setCountry(e.target.value)} placeholder="Country" maxLength={80}/></label>
    <datalist id="ummah-atlas-countries">{Array.from(new Set([...(stats?.countries||[]).map(r=>r.name),"United States","Canada","United Kingdom","Somalia","Türkiye","Kenya","Nigeria","Pakistan","Saudi Arabia","Australia"])).map(name=><option key={name} value={name}/>)}</datalist>
    <div className="atlasEditorFields"><label>State / province <small>Optional</small><input value={state} onChange={e=>setState(e.target.value)} placeholder="State or province" maxLength={80}/></label><label>City <small>Optional</small><input value={city} onChange={e=>setCity(e.target.value)} placeholder="City" maxLength={80}/></label></div>
-   <label className="atlasConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>I voluntarily share my country on the Ummah map. Other signed-in members may discover my public profile through that country's member list. State and city, if entered, also appear in my profile. I can stop sharing at any time.</span></label>
+   <label className="atlasConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>I choose to add my country to the Ummah map's aggregate member counts. State and city, if entered, are public profile fields. I can stop sharing at any time.</span></label>
+   <label className="atlasConsent atlasDirectoryConsent"><input type="checkbox" checked={directoryVisible} onChange={e=>setDirectoryVisible(e.target.checked)}/><span><strong>Optional:</strong> Show my public avatar and name when signed-in Muslims explore my country. This does not disclose my city or exact location.</span></label>
    <div className="atlasEditorButtons"><button type="button" disabled={saving||locating||!country.trim()||!consent} onClick={()=>void save()}>{saving?"Saving…":"Save and join the map"}</button>{optedIn&&<button type="button" className="atlasRemove" disabled={saving} onClick={()=>void removeFromMap()}>Stop sharing on map</button>}</div>
    {message&&<p role="status" className="atlasMessage">{message}</p>}
   </div>}
