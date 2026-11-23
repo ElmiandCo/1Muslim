@@ -31,7 +31,7 @@ export default function AdminRegionIntelligence(){
   const points=mode==="world"?COUNTRY_POINTS:STATE_POINTS;
   return entries.map(entry=>{const name=entry.country||entry.state||"Unknown";return {name,count:entry.count,point:points[name]}}).filter((entry):entry is {name:string;count:number;point:[number,number]}=>Array.isArray(entry.point));
  },[data,mode]);
- const ranking=mode==="world"?data?.countries:data?.usStates;
+ const ranking:RegionCount[]=mode==="world"?(data?.countries||[]):(data?.usStates||[]);
  const mappedStates=data?.usStates.length??0;
  const changeMode=(next:MapMode)=>{setMode(next);setSelected("")};
  return <section className="adminRegionIntel" aria-label="Consent-based Ummah member location atlas">
