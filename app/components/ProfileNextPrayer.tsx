@@ -2,9 +2,12 @@
 
 import {useEffect,useRef,useState} from "react";
 import {useRouter} from "next/navigation";
+import {createClient} from "../../utils/supabase/client";
 import styles from "./ProfileNextPrayer.module.css";
 import {PrayerTimeIcon,PrayerUiIcon,type PrayerTimeName} from "./icons/PrayerTimeIcon";
 import {readLocation} from "./LocationPreferences";
+import ProfileSkyOrbit from "./ProfileSkyOrbit";
+import {localSky} from "../lib/sky-orbit";
 import {ADHAN_PRAYERS,ADHAN_SETTINGS_EVENT,displayPrayerTime,fetchPrayerSchedule,fetchPrayerScheduleOnDate,locationClock,prayerMinute,readAdhanPreferences,type AdhanLocation,type PrayerSchedule} from "../lib/adhan";
 
 type LocationInfo={city?:string|null;state?:string|null;country?:string|null};
@@ -35,6 +38,8 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
  const [loading,setLoading]=useState(false);
  const [error,setError]=useState("");
  const [retry,setRetry]=useState(0);
+ const [skyCity,setSkyCity]=useState<{key:string;latitude:number;longitude:number}|null>(null);
+ const [skyError,setSkyError]=useState(false);
  const requestedKey=useRef("");
 
  useEffect(()=>{
@@ -61,6 +66,38 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
  },[initialLocation?.city,initialLocation?.state,initialLocation?.country]);
 
  const placeKey=[place.city,place.state,place.country].join("|");
+ useEffect(()=>{
+  // Load the same saved prayer calculation method as the full Prayer app,
+  // including on a fresh device that has no local preferences yet.
+  let active=true;
+  void(async()=>{
+   const db=createClient();
+   const {data:{user}}=await db.auth.getUser();
+   if(!active||!user)return;
+   const {data}=await db.from("prayer_reminder_preferences").select("method").eq("user_id",user.id).maybeSingle();
+   if(active&&data&&["2","3","4","5"].includes(String(data.method))){
+    setMethod(data.method as ReturnType<typeof readAdhanPreferences>["method"]);
+   }
+  })();
+  return()=>{active=false};
+ },[]);
+ useEffect(()=>{
+  if(!place.city||!place.country){setSkyCity(null);setSkyError(false);return}
+  const abort=new AbortController();
+  setSkyCity(null);setSkyError(false);
+  const query=new URLSearchParams({city:place.city,country:place.country});
+  if(place.state)query.set("state",place.state);
+  void fetch("/api/prayer-sky?"+query,{signal:abort.signal}).then(async response=>{
+   if(!response.ok)throw Error("Sky location unavailable");
+   return response.json() as Promise<{latitude:number;longitude:number}>;
+  }).then(point=>{
+   if(abort.signal.aborted)return;
+   if(Number.isFinite(point.latitude)&&Number.isFinite(point.longitude)){
+    setSkyCity({key:placeKey,latitude:point.latitude,longitude:point.longitude});
+   }else setSkyError(true);
+  }).catch(()=>{if(!abort.signal.aborted)setSkyError(true)});
+  return()=>abort.abort();
+ },[placeKey]);
  const canLoad=!!place.city&&!!place.country;
  const calendarDay=locationClock(timezone,now).date;
 
@@ -128,6 +165,12 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
  const isReady=!!time&&until!==null;
  const formattedTime=time?displayPrayerTime(time):"—";
  const countdown=until!==null?durationText(until):"—";
+ const sky=schedule&&skyCity?.key===placeKey?localSky(now,skyCity.latitude,skyCity.longitude):null;
+ const skyLabel=sky?sky.sunAndMoonAboveHorizon
+  ?"Sun and Moon above the horizon; Moon "+Math.round(sky.illumination*100)+"% illuminated."
+  :sky.sun.aboveHorizon?"Daytime Sun; "+(sky.moon.aboveHorizon?"Moon also above the horizon.":"Moon below horizon.")
+  :sky.moon.aboveHorizon?"Moon above horizon; "+Math.round(sky.illumination*100)+"% illuminated.":"Sun and Moon below horizon."
+  :skyError?"Sky location unavailable.":"Local sky loading.";
 
  // The entire compact next-prayer indicator is a meaningful shortcut:
  // first-time visitors land in location/Adhan setup; existing users go straight
@@ -143,15 +186,23 @@ export default function ProfileNextPrayer({initialLocation}:{initialLocation?:Lo
   </div>
   <button type="button" className={styles.card}
    onClick={openPrayerSettings}
-   title={canLoad?"Manage prayer times and Adhan settings":"Set up your prayer location and times"}
-   aria-label={isReady?`${upcoming} at ${formattedTime}, ${countdown}. Open prayer settings.`:"Set up your prayer location and prayer reminders"}>
-   <span className={styles.symbol} aria-hidden="true">{upcoming?<PrayerTimeIcon prayer={upcoming as PrayerTimeName}/>:<PrayerUiIcon kind="time"/>}</span>
-   <span className={styles.identity}>
-    <strong>{isReady?upcoming:!canLoad?"Set prayer location":loading?"Finding prayer…":error?"Prayer unavailable":"Next prayer"}</strong>
-    <small>{isReady?formattedTime:!canLoad?"Choose your city":error?"Check your city":loading?"Loading…":"Updating…"}</small>
+   title={canLoad?cityLabel+" · "+(schedule?.timezone||timezone)+" · "+(clock?.date||calendarDay)+". "+skyLabel+" Open prayer settings.":"Set up your prayer location and times"}
+   aria-label={isReady?upcoming+" at "+formattedTime+", "+countdown+". "+skyLabel+" Open prayer settings.":"Set up your prayer location and prayer reminders"}>
+   <span className={styles.cardTop}>
+    <span className={styles.identity}>
+     <strong>{isReady?upcoming:!canLoad?"Set prayer location":loading?"Finding prayer…":error?"Prayer unavailable":"Next prayer"}</strong>
+     <small>{isReady?formattedTime:!canLoad?"Choose city":error?"Check city":loading?"Loading…":"Updating…"}</small>
+    </span>
+    {isReady&&<span className={styles.remaining}>{countdown}</span>}
+    <span className={styles.chevron} aria-hidden="true">›</span>
    </span>
-   {isReady&&<span className={styles.remaining}>{countdown}</span>}
-   <span className={styles.chevron} aria-hidden="true">›</span>
+   <span className={styles.cardOrbit}>
+    {sky?<ProfileSkyOrbit sky={sky}/>:
+     <span className={styles.fallbackOrbit} aria-hidden="true">
+      <span className={styles.symbol}>{upcoming?<PrayerTimeIcon prayer={upcoming as PrayerTimeName}/>:<PrayerUiIcon kind="time"/>}</span>
+      <span className={styles.orbitPrompt}>{!canLoad?"Set your location":skyError?"Sky unavailable":"Local sky loading…"}</span>
+     </span>}
+   </span>
   </button>
  </>;
 }
