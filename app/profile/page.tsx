@@ -48,6 +48,9 @@ type Profile = {
   display_name_changed_at: string | null; username_changed_at: string | null; shahada_verified_at: string | null; shahada_audio_path: string | null; shahada_language: "ar" | "en" | null;
 };
 
+// Cached across client route changes, but only exposed after auth confirms ownership.
+let warmProfile:{userId:string;profile:Profile;at:number}|null=null;
+const WARM_PROFILE_MS=3*60*1000;
 const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
 
 function cooldownRemaining(changedAt: string | null) {
@@ -673,7 +676,9 @@ export default function ProfilePage() {
     if(error){setMessage("Sign out failed: "+error.message);setSigningOut(false);return;}
     try{sessionStorage.setItem("1muslim-hudhud-farewell","1")}catch{}
     window.dispatchEvent(new CustomEvent("1muslim:farewell"));
-    window.setTimeout(()=>{router.replace("/");router.refresh()},1400);
+    warmProfile=null;
+    router.replace("/");
+    router.refresh();
   };
   const [profile,setProfile]=useState<Profile|null>(null);
   const [savedUsername,setSavedUsername]=useState<string|null>(null);
@@ -709,7 +714,11 @@ const [avatarPage,setAvatarPage]=useState(0);
   const providers=["tiktok","youtube","twitch"] as const;
 
   useEffect(()=>{window.addEventListener("1muslim:profile-signout",signOut);return()=>window.removeEventListener("1muslim:profile-signout",signOut)},[signingOut]);
-  useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setAuthRequired(true);return;}setIsHudHudAdmin((user.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");setAdminAccessChecked(true);const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(data){setProfile(data as Profile);setSavedUsername(data.username??null);}
+  useEffect(()=>{let active=true;(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!active)return;if(!user){warmProfile=null;setAuthRequired(true);return;}
+    setIsHudHudAdmin((user.email||"").toLowerCase()==="hudhudbyelmi@gmail.com");setAdminAccessChecked(true);
+    if(warmProfile?.userId===user.id&&Date.now()-warmProfile.at<WARM_PROFILE_MS){setProfile(warmProfile.profile);setSavedUsername(warmProfile.profile.username??null)}
+    const {data}=await s.from("profiles").select("*").eq("id",user.id).single();if(!active)return;
+    if(data){warmProfile={userId:user.id,profile:data as Profile,at:Date.now()};setProfile(data as Profile);setSavedUsername(data.username??null);}
     const [profilePosts,communityPosts]=await Promise.all([s.from("posts").select("id").eq("user_id",user.id),s.from("community_posts").select("id").eq("author_id",user.id)]);setPostCount((profilePosts.data?.length??0)+(communityPosts.data?.length??0));
     const {data:friendships}=await s.from("ashab_friendships").select("requester_id,addressee_id").eq("status","accepted").or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
     const ashabIds=(friendships??[]).map((row:any)=>row.requester_id===user.id?row.addressee_id:row.requester_id).filter(Boolean);
@@ -717,7 +726,7 @@ const [avatarPage,setAvatarPage]=useState(0);
     const {data:connectors}=await s.from("live_connectors").select("provider,handle,channel_url,enabled,is_live,live_title").eq("user_id",user.id);
     const map:Record<string,{handle:string;channel_url:string;enabled:boolean;is_live:boolean;live_title:string}>={};
     for(const row of (connectors??[])) map[row.provider]={handle:row.handle??"",channel_url:row.channel_url??"",enabled:!!row.enabled,is_live:!!row.is_live,live_title:row.live_title??""};
-    setLiveConnectors(map);})()},[]);
+    if(active)setLiveConnectors(map);})();return()=>{active=false}},[]);
 
   useEffect(()=>{if(tab!=="shahada"||!profile?.shahada_audio_path)return;let active=true;(async()=>{const s=createClient();const {data}=await s.storage.from("shahada-safe-vault").createSignedUrl(profile.shahada_audio_path!,600);if(active&&data?.signedUrl)setVaultUrl(data.signedUrl)})();return()=>{active=false}},[tab,profile?.shahada_audio_path]);
 
@@ -805,7 +814,16 @@ const [avatarPage,setAvatarPage]=useState(0);
    }catch(e){setMessage(e instanceof Error?e.message:"Could not upload cover image.")}finally{setCoverUploading(false)}
   };
   const tier=useMemo(()=>tierForXp(profile?.xp_total??0),[profile?.xp_total]);
-  const update=(patch:Partial<Profile>)=>setProfile(p=>p?{...p,...patch}:p);
+  const update=(patch:Partial<Profile>)=>setProfile(p=>{if(!p)return p;const next={...p,...patch};warmProfile={userId:next.id,profile:next,at:Date.now()};return next});
+  useEffect(()=>{
+    if(!profile)return;
+    let frame=requestAnimationFrame(()=>{frame=requestAnimationFrame(()=>{
+      window.dispatchEvent(new Event("1muslim:profile-ready"));
+      const cover=profileCoverImage(profile);
+      if(cover){const img=new Image();img.decoding="async";img.src=cover}
+    })});
+    return()=>cancelAnimationFrame(frame);
+  },[profile?.id]);
   const chooseBackground=async(choice:(typeof BACKGROUND_CHOICES)[number])=>{
     if(!profile||colorSaving||choice.id===profile.profile_background)return;
     const previous={profile_accent:profile.profile_accent,profile_background:profile.profile_background};
@@ -917,7 +935,7 @@ const [avatarPage,setAvatarPage]=useState(0);
   const toggleAccessory=(id:string)=>{if(!profile)return;const item=ACCESSORIES.find(x=>x.id===id);if(!item)return;const required=AVATAR_TIERS.find(x=>x.key===item.tier)?.minXp??0;if(profile.xp_total<required)return;const current=Array.isArray(profile.avatar_config?.accessories)?profile.avatar_config.accessories.map(String):[];const next=current.includes(id)?current.filter(x=>x!==id):[...current,id];update({avatar_config:{...profile.avatar_config,accessories:next}})};
 
   if(authRequired)return <main><section className="profileEmpty"><h1>Build your profile.</h1><p>Sign in to customize your OneMuslim identity.</p><Link href="/auth" className="primary">Sign in</Link></section></main>;
-  if(!profile)return <main><section className="profileEmpty"><p>{profileLoadFailed?"Unable to load your profile. The connection may be temporarily unavailable.":"Loading your profile…"}</p>{profileLoadFailed&&<button className="primary" type="button" onClick={()=>window.location.reload()}>Try again</button>}</section></main>;
+  if(!profile)return <main className="profileLoadingWhite"><section className={"profileEmpty"+(profileLoadFailed?" isError":"")} aria-label="Preparing your profile">{profileLoadFailed?<><p>Unable to load your profile. Please try again.</p><button className="primary" type="button" onClick={()=>window.location.reload()}>Try again</button></>:<div className="profileWhiteSkeleton" aria-hidden="true"><div/><div/><div/></div>}</section></main>;
 
   const publishFirstPost=async()=>{const body=postText.trim();if(!body||posting)return;setPosting(true);const s=createClient();const {error}=await s.from("posts").insert({user_id:profile.id,body});if(error){setMessage(error.message);setPosting(false);return;}setPostText("");setPostCount(x=>x+1);setPosting(false);};
 
