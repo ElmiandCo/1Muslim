@@ -1,0 +1,42 @@
+/* My Spotlight Appearance editor */
+.profileSpotlightEditor{margin:16px 0 18px;padding:clamp(16px,3.5vw,24px);border-radius:22px;border:1px solid #9eb6ce;background:radial-gradient(circle at 96% 8%,#d2edeea4,transparent 43%),linear-gradient(130deg,#fafcfe,#eff4fa);box-shadow:0 13px 30px #1a3d5c17;color:#163550}
+.profileSpotlightEditor *{box-sizing:border-box}
+.spotlightEditorHeading{display:flex;align-items:flex-start;justify-content:space-between;gap:13px;margin-bottom:17px}
+.spotlightEditorHeading>div{flex:1;min-width:0}
+.spotlightEditorHeading span{font-size:10px;letter-spacing:.13em;font-weight:800;color:#63809f}
+.spotlightEditorHeading h2{font-size:clamp(23px,5vw,32px);margin:6px 0!important;color:#173455}
+.spotlightEditorHeading p{font-size:12px;line-height:1.6;color:#687f97;margin:0;max-width:520px}
+.spotlightEditorHeading b{font-size:9px;border:1px solid #b1bcd1;background:#ffffff9c;padding:8px 9px;border-radius:999px;color:#567898;letter-spacing:.08em}
+.spotlightEditorPreview{max-width:480px;overflow:hidden;border-radius:18px;border:1px solid #bfd4e5;background:#15283a;box-shadow:0 7px 19px #22375235;margin-bottom:15px}
+.spotlightEditorPreview img{width:100%;height:auto;display:block;max-height:240px;object-fit:cover}
+.spotlightEditorPreview video,.spotlightEditorPreview iframe{width:100%;aspect-ratio:16/9;display:block;border:0;background:#071725}
+.spotlightEditorFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 12px}
+.spotlightEditorFields label,.spotlightEditorUrl{display:grid;gap:7px;font-size:12px;font-weight:800;color:#355570}
+.spotlightEditorFields input,.spotlightEditorFields textarea,.spotlightEditorUrl input{min-width:0;width:100%;font:inherit;font-size:14px!important;line-height:1.4;border:1px solid #b5cbdc!important;background:#fff!important;border-radius:13px!important;padding:12px 13px!important;color:#1c4057!important;box-shadow:none!important}
+.spotlightEditorFields textarea{resize:vertical}
+.spotlightEditorModes{display:flex;flex-wrap:wrap;gap:7px;margin:15px 0}
+.spotlightEditorModes button{border:1px solid #c5d5df;border-radius:999px;padding:10px 13px;background:white;color:#47677b;font-size:12px;font-weight:750;cursor:pointer}
+.spotlightEditorModes button[aria-pressed=true]{color:white;background:#153d5b;border-color:#153d5b;box-shadow:0 4px 12px #23517144}
+.spotlightEditorOr{margin:11px 0;color:#90a0b0;font-size:11px}
+.spotlightEditorUpload{display:inline-flex;justify-content:center;align-items:center;position:relative;overflow:hidden;border:1px dashed #7ea5bc;background:#eaf5fa;border-radius:13px;padding:13px;color:#285878;font-size:12px;font-weight:750;cursor:pointer}
+.spotlightEditorUpload input{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer}
+.spotlightEditorFile{margin-top:8px;font-size:12px;color:#4d6e84;overflow-wrap:anywhere}.spotlightEditorFile button{background:none;border:0;color:#b24764;font-size:20px}
+.spotlightEditorFooter{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.spotlightEditorFooter button{min-height:43px;border-radius:12px;padding:11px 16px;cursor:pointer;font-size:12px;font-weight:800}
+.spotlightEditorSave{color:white;border:1px solid #173c5c;background:linear-gradient(115deg,#183a57,#32688a)}
+.spotlightEditorRemove{color:#a34a56;border:1px solid #e5c4c9;background:white}
+.spotlightEditorFooter button:disabled{opacity:.45;cursor:wait}
+.spotlightEditorStatus{font-size:12px;color:#3d7b73;line-height:1.5}
+/* Cinematic-only Spotlight, first section below the account details. */
+.profileSpotlightHero{width:100%;max-width:460px;min-width:0;margin:25px auto 2px;padding:12px;border:1px solid #a6c7d44c;border-radius:22px;background:linear-gradient(145deg,#1d33438c,#091c2cb8);box-shadow:0 10px 36px #010d1866,inset 0 1px #ffffff24;text-align:left;color:#eef7fa}
+.spotlightHeroHeader{display:flex;justify-content:space-between;align-items:center;padding:4px 5px 12px;gap:9px}
+.spotlightHeroHeader>div{display:grid;gap:6px;min-width:0}
+.spotlightHeroHeader span{font-size:9px;letter-spacing:.16em;font-weight:850;color:#edcd94}
+.spotlightHeroHeader strong{font-size:17px;line-height:1.2;letter-spacing:-.03em;color:#f6f8fb;overflow-wrap:anywhere}
+.spotlightHeroStar{font-size:29px!important;font-weight:400!important;line-height:1;color:#f4d69c!important;text-shadow:0 0 14px #e6ae5c8c}
+.spotlightHeroMedia{width:100%;overflow:hidden;border:1px solid #9ebfd15b;border-radius:15px;background:linear-gradient(145deg,#0d1b2b,#162d42);min-height:110px}
+.spotlightHeroMedia img{width:100%;max-height:280px;height:auto;display:block;object-fit:cover}
+.spotlightHeroMedia video,.spotlightHeroMedia iframe{width:100%;height:auto;aspect-ratio:16/9;display:block;object-fit:contain;border:0;background:#060f19}
+.profileSpotlightHero>p{margin:12px 5px 5px;color:#bccfda;font-size:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:570px){.spotlightEditorFields{grid-template-columns:1fr}.spotlightEditorHeading b{font-size:8px;padding:7px}.profileSpotlightHero{margin-top:18px;padding:9px}.spotlightHeroHeader{padding-bottom:9px}}
+@media(prefers-reduced-motion:reduce){.profileSpotlightEditor *, .profileSpotlightHero *{animation:none!important;transition:none!important}}
