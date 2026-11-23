@@ -26,13 +26,14 @@ const usStates:Record<string,string>=Object.fromEntries(("AL:Alabama,AK:Alaska,A
 export function canonicalUsState(value:string|null|undefined){const raw=(value||"").trim();return usStates[raw.toUpperCase()]||Object.values(usStates).find(name=>name.toLowerCase()===raw.toLowerCase())||raw}
 type Stats={countries:{name:string;count:number}[];states:{name:string;count:number}[];optedIn:number;recorded:number;unplaced:number;usCount:number;updatedAt:string;limited:boolean};
 type Mode="world"|"us";
-type Props={members:Array<{country:string|null}>;currentCountry:string|null;userId:string;selected:string;selectedState?:string;onSelect:(value:string)=>void;onSelectState?:(value:string)=>void;onSaved:(value:string)=>void;backgroundImage?:string};
+type MapPerson={id:string;name:string;username:string|null;avatar:string;joinedAt:string};
+type Props={members:Array<{country:string|null}>;currentCountry:string|null;userId:string;selected:string;selectedState?:string;onSelect:(value:string)=>void;onSelectState?:(value:string)=>void;onSaved:(value:string)=>void;onOpenMember?:(id:string)=>void;backgroundImage?:string};
 const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
 const bound=(zoom:number,x:number,y:number)=>({x:clamp(x,720*(1-zoom),0),y:clamp(y,360*(1-zoom),0)});
 const centerView={zoom:1.06,x:-21.6,y:-10.8};
 const kaabaPoint:[number,number]=[439.7,137.2]; // Makkah, approximate equirectangular map position; never a member location.
 
-export default function RegionDiscovery({currentCountry,userId,selected,selectedState="",onSelect,onSelectState,onSaved,backgroundImage="/assets/profile-backgrounds/obsidian.PNG"}:Props){
+export default function RegionDiscovery({currentCountry,userId,selected,selectedState="",onSelect,onSelectState,onSaved,onOpenMember,backgroundImage="/assets/profile-backgrounds/obsidian.PNG"}:Props){
  const [stats,setStats]=useState<Stats|null>(null),[fetchError,setFetchError]=useState("");
  const [mode,setMode]=useState<Mode>("world"),[editing,setEditing]=useState(false),[expanded,setExpanded]=useState(false);
  const [country,setCountry]=useState(canonicalCountry(currentCountry)),[state,setState]=useState(""),[city,setCity]=useState("");
@@ -43,6 +44,10 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
  const lastPinch=useRef<number|null>(null),lastTap=useRef({at:0,x:0,y:0}),ignoreClick=useRef(false);
  const dragRef=useRef<{id:number;x:number;y:number;moving:boolean}|null>(null);
  const [listOpen,setListOpen]=useState(false),[listQuery,setListQuery]=useState("");
+ const [studioSearch,setStudioSearch]=useState(""),[studioSearchOpen,setStudioSearchOpen]=useState(false);
+ const [makkahFocus,setMakkahFocus]=useState(false);
+ const [people,setPeople]=useState<MapPerson[]>([]),[peopleLoading,setPeopleLoading]=useState(false),[peopleError,setPeopleError]=useState("");
+ const fullStageRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{setCountry(canonicalCountry(currentCountry))},[currentCountry]);
  useEffect(()=>{
   let mounted=true;setPermissionKnown(false);
@@ -85,15 +90,79 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
  const pins=useMemo(()=>rows.map(({name,count})=>({name,count,point:lookup[name]})).filter(p=>Array.isArray(p.point)),[rows,lookup]);
  const focusName=mode==="world"?selected:selectedState;
  const chosen=rows.find(r=>r.name===focusName);
- const switchMode=(next:Mode)=>{setMode(next);setViewState(centerView);onSelectState?.("");if(next==="world")onSelect("");else onSelect("United States")};
+ const studioResults=rows.filter(r=>r.name.toLowerCase().includes(studioSearch.toLowerCase().trim())).slice(0,8);
+ useEffect(()=>{
+  const name=mode==="world"&&expanded?selected:"";
+  if(!name){setPeople([]);setPeopleLoading(false);setPeopleError("");return}
+  let active=true;
+  const controller=new AbortController();
+  setPeople([]);setPeopleError("");setPeopleLoading(true);
+  void fetch("/api/member-regions/people?country="+encodeURIComponent(name),{cache:"no-store",signal:controller.signal})
+    .then(async response=>{const body=await response.json();if(!response.ok)throw Error(body.error||"Could not load members");return body as {members:MapPerson[]}})
+    .then(data=>{if(active)setPeople(data.members||[])})
+    .catch(error=>{if(active&&!controller.signal.aborted)setPeopleError(error instanceof Error?error.message:"Member previews are unavailable")})
+    .finally(()=>{if(active)setPeopleLoading(false)});
+  return()=>{active=false;controller.abort()};
+ },[selected,mode,expanded]);
+ // In full-screen portrait, the map is intentionally cropped to FILL the panel.
+ // Bounds must use the real on-screen SVG viewport, not the 720x360 overview aspect.
+ const constrain=(zoom:number,x:number,y:number)=>{
+  if(!expanded)return bound(zoom,x,y);
+  const rect=fullStageRef.current?.getBoundingClientRect();
+  if(!rect||!rect.width||!rect.height)return bound(zoom,x,y);
+  const visibleWidth=360*rect.width/rect.height;
+  const left=360-visibleWidth/2,right=360+visibleWidth/2;
+  const lowX=right-720*zoom,highX=left;
+  return {x:clamp(x,Math.min(lowX,highX),Math.max(lowX,highX)),y:clamp(y,360*(1-zoom),0)};
+ };
+ const flyTo=(point:[number,number],zoom=1.45)=>{
+  const z=clamp(zoom,1,6);
+  setViewState({zoom:z,...constrain(z,360-point[0]*z,180-point[1]*z)});
+ };
+ const openStudio=()=>{
+  pointerPositions.current.clear();lastPinch.current=null;dragRef.current=null;
+  // Begin where the Ummah is actually represented, not over an empty ocean.
+  // The Kaaba remains a dedicated landmark in the guided tour.
+  const point=mode==="world"?(COUNTRY_POINTS[selected]||pins[0]?.point||kaabaPoint):(STATE_POINTS[selectedState]||pins[0]?.point||[360,180]);
+  const z=selected||selectedState?1.7:pins.length?1.42:1.18;
+  setViewState({zoom:z,x:360-point[0]*z,y:Math.min(0,180-point[1]*z)});
+  setMakkahFocus(false);setStudioSearch("");
+  setExpanded(true);
+ };
+ const closeStudio=()=>{setExpanded(false);pointerPositions.current.clear();lastPinch.current=null;setStudioSearchOpen(false);setDragging(false)};
+ const focusArea=(name:"World"|"Africa"|"Europe"|"Asia"|"Americas")=>{
+  const centers:Record<typeof name,[number,number]>={
+   World:[360,175],Africa:[378,177],Europe:[387,88],Asia:[520,142],Americas:[211,159]
+  };
+  setMode("world");onSelect("");onSelectState?.("");setMakkahFocus(false);setStudioSearch("");setStudioSearchOpen(false);
+  flyTo(centers[name],name==="World"?1.13:1.48);
+ };
+ const focusMakkah=()=>{
+  setMode("world");onSelect("");onSelectState?.("");setStudioSearch("");setMakkahFocus(true);flyTo(kaabaPoint,1.7);
+ };
+ const focusNamedRegion=(name:string,point?:[number,number])=>{
+  setMakkahFocus(false);setStudioSearchOpen(false);setStudioSearch("");
+  selectRegion(name,point);
+ };
+ const exploreMembers=()=>{
+  closeStudio();
+  window.setTimeout(()=>document.getElementById("muslimeen-directory")?.scrollIntoView({behavior:"smooth",block:"start"}),120);
+ };
+ const switchMode=(next:Mode)=>{
+  setMode(next);setMakkahFocus(false);setStudioSearch("");setStudioSearchOpen(false);
+  onSelectState?.("");if(next==="world")onSelect("");else onSelect("United States");
+  const p: [number,number]=next==="world"?kaabaPoint:[360,180];
+  if(expanded){const z=1.1;setViewState({zoom:z,x:360-p[0]*z,y:Math.min(0,180-p[1]*z)})}
+  else setViewState(centerView);
+ };
  const zoomAt=(factor:number,anchorX=360,anchorY=180)=>{
   setViewState(prev=>{
-   const z=clamp(prev.zoom*factor,1,5);
+   const z=clamp(prev.zoom*factor,1,expanded?8:5);
    const ratio=z/prev.zoom;
-   return {zoom:z,...bound(z,anchorX-(anchorX-prev.x)*ratio,anchorY-(anchorY-prev.y)*ratio)};
+   return {zoom:z,...constrain(z,anchorX-(anchorX-prev.x)*ratio,anchorY-(anchorY-prev.y)*ratio)};
   });
  };
- const resetView=()=>setViewState(centerView);
+ const resetView=()=>{if(expanded)flyTo(mode==="world"?kaabaPoint:[360,180],1.12);else setViewState(centerView)};
  const mapPoint=(svg:SVGSVGElement,clientX:number,clientY:number)=>{
   const pt=svg.createSVGPoint();pt.x=clientX;pt.y=clientY;
   const ctm=svg.getScreenCTM();if(!ctm)return {x:360,y:180};
@@ -132,9 +201,14 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    try{e.currentTarget.setPointerCapture(e.pointerId)}catch{}
   }
   g.x=e.clientX;g.y=e.clientY;
+  // Use the SVG screen matrix: in portrait "slice" mode, screen pixels
+  // correspond to a very different number of map units than the inline map.
+  const inverse=e.currentTarget.getScreenCTM()?.inverse();
   const rect=e.currentTarget.getBoundingClientRect();
-  const scale=720/Math.max(rect.width,1);
-  setViewState(prev=>({zoom:prev.zoom,...bound(prev.zoom,prev.x+dx*scale,prev.y+dy*scale)}));
+  const fallback=720/Math.max(rect.width,1);
+  const worldDx=inverse?dx*inverse.a+dy*inverse.c:dx*fallback;
+  const worldDy=inverse?dx*inverse.b+dy*inverse.d:dy*fallback;
+  setViewState(prev=>({zoom:prev.zoom,...constrain(prev.zoom,prev.x+worldDx,prev.y+worldDy)}));
  };
  const pointerUp=(e:ReactPointerEvent<SVGSVGElement>)=>{
   const wasMulti=pointerPositions.current.size>1;
@@ -154,14 +228,13 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   }
  };
  const selectRegion=(name:string,point?:[number,number])=>{
+  setMakkahFocus(false);
   if(mode==="world"){onSelect(name===selected?"":name);onSelectState?.("");}
   else{onSelect("United States");onSelectState?.(name===selectedState?"":name);}
   if(name===focusName){resetView();return;}
   if(point){
-   setViewState(prev=>{
-    const z=Math.max(prev.zoom,1.85);
-    return {zoom:z,...bound(z,360-point[0]*z,180-point[1]*z)};
-   });
+   const z=Math.max(view.zoom,expanded?1.85:1.55);
+   flyTo(point,z);
   }
  };
  const openEditor=()=>{setExpanded(false);setEditing(true);setConsent(false);setMessage("");setBrowseOnly(true);window.setTimeout(()=>document.querySelector(".ummahAtlas .regionEditor")?.scrollIntoView({behavior:"smooth",block:"center"}),90)};
@@ -210,8 +283,8 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   }catch(e){setMessage(e instanceof Error?e.message:"Unable to update sharing")}
   finally{setSaving(false)}
  };
- const mapCanvas=(full=false)=><div className={"atlasStage"+(full?" atlasFullStage":"")+(permissionKnown&&!optedIn&&!browseOnly?" atlasGuest":"")}>
-  <svg className={"atlasGeography"+(dragging?" isDragging":"")} viewBox="0 0 720 360" preserveAspectRatio="xMidYMid meet" tabIndex={0}
+ const mapCanvas=(full=false)=><div ref={full?fullStageRef:undefined} className={"atlasStage"+(full?" atlasFullStage":"")+(permissionKnown&&!optedIn&&!browseOnly?" atlasGuest":"")}>
+  <svg className={"atlasGeography"+(dragging?" isDragging":"")} viewBox="0 0 720 360" preserveAspectRatio={full?"xMidYMid slice":"xMidYMid meet"} tabIndex={0}
    aria-label="Interactive Ummah map. Drag to pan, pinch or double tap to zoom, tap a location marker to filter. Keyboard: plus, minus and arrow keys."
    onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}
    onClickCapture={e=>{if(ignoreClick.current){e.preventDefault();e.stopPropagation();ignoreClick.current=false}}}
@@ -221,7 +294,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
     if(e.key==="-"){e.preventDefault();zoomAt(1/1.4)}
     if(e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="ArrowUp"||e.key==="ArrowDown"){
      e.preventDefault();const dx=e.key==="ArrowLeft"?28:e.key==="ArrowRight"?-28:0,dy=e.key==="ArrowUp"?28:e.key==="ArrowDown"?-28:0;
-     setViewState(prev=>({zoom:prev.zoom,...bound(prev.zoom,prev.x+dx,prev.y+dy)}));
+     setViewState(prev=>({zoom:prev.zoom,...constrain(prev.zoom,prev.x+dx,prev.y+dy)}));
     }
    }}>
    <rect width="720" height="360" fill="#f8faf9"/>
@@ -248,14 +321,13 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
     })}
    </g>
   </svg>
-  <div className="atlasFloatTools">
+  {!full&&<div className="atlasFloatTools">
    <button type="button" title={mode==="world"?"See United States":"See world"} aria-label={mode==="world"?"Switch to United States map":"Switch to world map"} onClick={()=>switchMode(mode==="world"?"us":"world")}>{mode==="world"?"US":"🌐"}</button>
-   {!full&&<button type="button" aria-label="Expand map studio" title="Full map" onClick={()=>setExpanded(true)}>⤢</button>}
-   {full&&<button type="button" aria-label="Reset map" onClick={resetView}>⌖</button>}
-  </div>
-  {chosen&&<div className="atlasPlace" role="status"><div><strong>{chosen.name}</strong><small>{chosen.count} {chosen.count===1?"Muslim":"Muslims"} shared this region</small></div><button type="button" onClick={()=>{setExpanded(false);document.getElementById("muslimeen-directory")?.scrollIntoView({behavior:"smooth",block:"start"})}}>See members ↗</button></div>}
+   <button type="button" aria-label="Expand map studio" title="Full map" onClick={openStudio}>⤢</button>
+  </div>}
+  {!full&&chosen&&<div className="atlasPlace" role="status"><div><strong>{chosen.name}</strong><small>{chosen.count} {chosen.count===1?"Muslim":"Muslims"} shared this region</small></div><button type="button" onClick={()=>{setExpanded(false);document.getElementById("muslimeen-directory")?.scrollIntoView({behavior:"smooth",block:"start"})}}>See members ↗</button></div>}
   {permissionKnown&&!optedIn&&!browseOnly&&!full&&<div className="atlasInvitation"><strong>Connect with Muslims around the world</strong><span>📍 Add your region to help grow the Ummah map.</span><div><button type="button" onClick={openEditor}>Add my region</button><button type="button" onClick={()=>setBrowseOnly(true)}>Explore without sharing</button></div></div>}
-  {!chosen&&<div className="atlasTouchHint" aria-hidden="true">Pinch · drag · tap a dot</div>}
+  {!full&&!chosen&&<div className="atlasTouchHint" aria-hidden="true">Pinch · drag · tap a dot</div>}
  </div>;
  return <section className="muslimeenRegionPanel ummahAtlas" aria-label="Community map">
   <div className="atlasHead">
@@ -274,14 +346,88 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    <label>Country<input list="ummah-atlas-countries" value={country} onChange={e=>setCountry(e.target.value)} placeholder="Country" maxLength={80}/></label>
    <datalist id="ummah-atlas-countries">{Array.from(new Set([...(stats?.countries||[]).map(r=>r.name),"United States","Canada","United Kingdom","Somalia","Türkiye","Kenya","Nigeria","Pakistan","Saudi Arabia","Australia"])).map(name=><option key={name} value={name}/>)}</datalist>
    <div className="atlasEditorFields"><label>State / province <small>Optional</small><input value={state} onChange={e=>setState(e.target.value)} placeholder="State or province" maxLength={80}/></label><label>City <small>Optional</small><input value={city} onChange={e=>setCity(e.target.value)} placeholder="City" maxLength={80}/></label></div>
-   <label className="atlasConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>I choose to share my country on the Ummah map. My state and city, if entered, are also public profile fields. I can stop map sharing anytime.</span></label>
+   <label className="atlasConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>I voluntarily share my country on the Ummah map. Other signed-in members may discover my public profile through that country's member list. State and city, if entered, also appear in my profile. I can stop sharing at any time.</span></label>
    <div className="atlasEditorButtons"><button type="button" disabled={saving||locating||!country.trim()||!consent} onClick={()=>void save()}>{saving?"Saving…":"Save and join the map"}</button>{optedIn&&<button type="button" className="atlasRemove" disabled={saving} onClick={()=>void removeFromMap()}>Stop sharing on map</button>}</div>
    {message&&<p role="status" className="atlasMessage">{message}</p>}
   </div>}
-  {expanded&&typeof document!=="undefined"&&createPortal(<div className="atlasStudioOverlay" role="dialog" aria-modal="true" aria-label="Full-screen Ummah map studio">
-   <div className="atlasStudioBackdrop" aria-hidden="true" style={{backgroundImage:`linear-gradient(180deg,#050e1c55,#071d26d9),url("${backgroundImage.replaceAll("\"","")}")`,transform:"scale(1.045) translate("+(-view.x/80)+"px,"+(-view.y/80)+"px)"}}/>
-   <button type="button" className="atlasStudioBack" onClick={()=>setExpanded(false)} aria-label="Close full map">‹</button>
-   <div className="atlasStudioCanvas">{mapCanvas(true)}</div>
-  </div>,document.body)}
+  {expanded&&typeof document!=="undefined"&&createPortal(
+   <div className="atlasStudioOverlay" role="dialog" aria-modal="true" aria-label="Explore the Ummah full-screen world map">
+    <div className="atlasStudioBackdrop" aria-hidden="true" style={{
+     backgroundImage:"linear-gradient(145deg,rgba(4,17,20,.56),rgba(7,22,28,.84)),url("+JSON.stringify(backgroundImage)+")",
+     transform:"scale(1.055) translate("+(-view.x/110)+"px,"+(-view.y/110)+"px)"
+    }}/>
+    <div className="atlasStudioCanvas">
+     {mapCanvas(true)}
+     <div className="atlasStudioShade" aria-hidden="true"/>
+     <header className="atlasStudioHeader">
+      <button type="button" className="atlasStudioClose" onClick={closeStudio} aria-label="Close map studio">‹</button>
+      <div className="atlasStudioBrand"><small>1MUSLIM · CONNECTING THE UMMAH</small><strong>Explore the Ummah <span>✧</span></strong></div>
+      <button type="button" className="atlasStudioMyRegion" aria-label="Update my region" title="Update my region" onClick={openEditor}>⌖</button>
+     </header>
+     <div className="atlasStudioNavigate">
+      <nav className="atlasStudioJourney" aria-label="Explore places">
+       <button type="button" onClick={()=>focusArea("World")} aria-label="Explore world">🌍 World</button>
+       <button type="button" onClick={focusMakkah} aria-label="Explore Makkah">🕋 Makkah</button>
+       <button type="button" onClick={()=>focusArea("Africa")}>Africa</button>
+       <button type="button" onClick={()=>focusArea("Europe")}>Europe</button>
+       <button type="button" onClick={()=>focusArea("Asia")}>Asia</button>
+       <button type="button" onClick={()=>focusArea("Americas")}>Americas</button>
+       <button type="button" onClick={()=>switchMode(mode==="world"?"us":"world")}>{mode==="world"?"🇺🇸 U.S. States":"🌐 World map"}</button>
+      </nav>
+      <div className="atlasStudioSearchBox">
+       <span aria-hidden="true">⌕</span>
+       <input type="search" aria-label={"Find "+(mode==="world"?"a country":"a state")+" on the Ummah map"} placeholder={mode==="world"?"Find a country with members…":"Find a state with members…"} value={studioSearch}
+        onChange={e=>{setStudioSearch(e.target.value);setStudioSearchOpen(true)}} onFocus={()=>setStudioSearchOpen(true)} />
+       {studioSearch&&<button type="button" className="atlasStudioSearchClear" aria-label="Clear search" onClick={()=>{setStudioSearch("");setStudioSearchOpen(false)}}>×</button>}
+       {studioSearchOpen&&studioSearch.trim()&&<div className="atlasStudioSuggestions" role="listbox" aria-label="Matching member regions">
+        {studioResults.length?studioResults.map(row=><button type="button" key={row.name} role="option" aria-selected={focusName===row.name}
+         onClick={()=>focusNamedRegion(row.name,lookup[row.name])}>
+         <span>{row.name}</span><small>{row.count} {row.count===1?"member":"members"}</small>
+        </button>):<p>No opted-in regions match yet.</p>}
+       </div>}
+      </div>
+     </div>
+     <div className="atlasStudioGestures" aria-hidden="true">DRAG TO TRAVEL <b>·</b> PINCH TO EXPLORE</div>
+     <div className="atlasStudioBottom">
+      {chosen?<div className="atlasStudioSelected" aria-live="polite">
+       <div className="atlasStudioRegionTitle">
+        <div><small>⌖ {mode==="world"?"COUNTRY CONNECTIONS":"STATE CONNECTIONS"}</small><h2>{chosen.name}</h2><p>{chosen.count} {chosen.count===1?"Muslim has":"Muslims have"} shared this region</p></div>
+        <button type="button" onClick={exploreMembers}>View members ↗</button>
+       </div>
+       {mode==="world"&&<div className="atlasStudioPeople">
+        {peopleLoading?<span className="atlasStudioPeopleStatus">Finding community members…</span>:
+         peopleError?<span className="atlasStudioPeopleStatus">{peopleError}</span>:
+         people.length?people.map(person=><button className="atlasStudioPerson" key={person.id} type="button"
+           title={"Open "+person.name+"'s profile"} aria-label={"Open "+person.name+"'s profile"}
+           onClick={()=>{closeStudio();if(onOpenMember)onOpenMember(person.id);else window.location.assign("/profile?section=muslimeen&member="+encodeURIComponent(person.id))}}>
+           <img alt="" src={person.avatar} loading="lazy" onError={e=>{e.currentTarget.src="/assets/avatars/default-male.jpg"}}/>
+           <span>{person.name}</span>
+          </button>):
+         <span className="atlasStudioPeopleStatus">Explore the members list to connect with Muslims here.</span>}
+       </div>}
+       {mode==="us"&&<span className="atlasStudioPeopleStatus">Member identities are discoverable by country, not by city or state.</span>}
+      </div>:makkahFocus?<div className="atlasStudioMission" aria-live="polite">
+        <small>🕋 MAKKAH AL-MUKARRAMAH</small><h2>Our shared Qibla.</h2>
+        <p>A point of unity for Muslims across the world. Explore the map to meet our Ummah.</p>
+       </div>:<div className="atlasStudioMission" aria-live="polite">
+        <small>ONE UMMAH · MANY PLACES</small><h2>Distance ends where connection begins.</h2>
+        <p>Tap a glowing pin to discover members who chose to share their country.</p>
+        {rows.length>0&&<div className="atlasStudioPopular" aria-label="Places with community members">
+         {rows.slice(0,5).map(row=><button type="button" key={row.name}
+          onClick={()=>focusNamedRegion(row.name,lookup[row.name])}>{row.name} <span>{row.count}</span></button>)}
+        </div>}
+       </div>}
+      <div className="atlasStudioBottomActions">
+       <span className="atlasStudioCount"><i/> {stats?stats.recorded.toLocaleString():"—"} members · {stats?stats.countries.length:"—"} countries</span>
+       <div className="atlasStudioBottomButtons">
+        <button type="button" onClick={openEditor} aria-label="Join or update your region on the Ummah map">＋ My region</button>
+        <button type="button" onClick={resetView} aria-label="Reset map camera" title="Recenter map">⌖</button>
+       </div>
+      </div>
+      <p className="atlasStudioPrivacy">Only voluntarily shared country regions are shown · No precise user locations</p>
+     </div>
+    </div>
+   </div>,document.body)}
+
  </section>;
 }
