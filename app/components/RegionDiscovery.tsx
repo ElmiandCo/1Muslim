@@ -139,15 +139,21 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   closeStudio();
   window.setTimeout(()=>document.getElementById("muslimeen-directory")?.scrollIntoView({behavior:"smooth",block:"start"}),120);
  };
- const switchMode=(next:Mode)=>{setMode(next);setViewState(centerView);onSelectState?.("");if(next==="world")onSelect("");else onSelect("United States")};
+ const switchMode=(next:Mode)=>{
+  setMode(next);setMakkahFocus(false);setStudioSearch("");setStudioSearchOpen(false);
+  onSelectState?.("");if(next==="world")onSelect("");else onSelect("United States");
+  const p: [number,number]=next==="world"?kaabaPoint:[360,180];
+  if(expanded){const z=1.1;setViewState({zoom:z,x:360-p[0]*z,y:Math.min(0,180-p[1]*z)})}
+  else setViewState(centerView);
+ };
  const zoomAt=(factor:number,anchorX=360,anchorY=180)=>{
   setViewState(prev=>{
-   const z=clamp(prev.zoom*factor,1,5);
+   const z=clamp(prev.zoom*factor,1,expanded?8:5);
    const ratio=z/prev.zoom;
-   return {zoom:z,...bound(z,anchorX-(anchorX-prev.x)*ratio,anchorY-(anchorY-prev.y)*ratio)};
+   return {zoom:z,...constrain(z,anchorX-(anchorX-prev.x)*ratio,anchorY-(anchorY-prev.y)*ratio)};
   });
  };
- const resetView=()=>setViewState(centerView);
+ const resetView=()=>{if(expanded)flyTo(mode==="world"?kaabaPoint:[360,180],1.12);else setViewState(centerView)};
  const mapPoint=(svg:SVGSVGElement,clientX:number,clientY:number)=>{
   const pt=svg.createSVGPoint();pt.x=clientX;pt.y=clientY;
   const ctm=svg.getScreenCTM();if(!ctm)return {x:360,y:180};
@@ -186,9 +192,14 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    try{e.currentTarget.setPointerCapture(e.pointerId)}catch{}
   }
   g.x=e.clientX;g.y=e.clientY;
+  // Use the SVG screen matrix: in portrait "slice" mode, screen pixels
+  // correspond to a very different number of map units than the inline map.
+  const inverse=e.currentTarget.getScreenCTM()?.inverse();
   const rect=e.currentTarget.getBoundingClientRect();
-  const scale=720/Math.max(rect.width,1);
-  setViewState(prev=>({zoom:prev.zoom,...bound(prev.zoom,prev.x+dx*scale,prev.y+dy*scale)}));
+  const fallback=720/Math.max(rect.width,1);
+  const worldDx=inverse?dx*inverse.a+dy*inverse.c:dx*fallback;
+  const worldDy=inverse?dx*inverse.b+dy*inverse.d:dy*fallback;
+  setViewState(prev=>({zoom:prev.zoom,...constrain(prev.zoom,prev.x+worldDx,prev.y+worldDy)}));
  };
  const pointerUp=(e:ReactPointerEvent<SVGSVGElement>)=>{
   const wasMulti=pointerPositions.current.size>1;
@@ -208,14 +219,13 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   }
  };
  const selectRegion=(name:string,point?:[number,number])=>{
+  setMakkahFocus(false);
   if(mode==="world"){onSelect(name===selected?"":name);onSelectState?.("");}
   else{onSelect("United States");onSelectState?.(name===selectedState?"":name);}
   if(name===focusName){resetView();return;}
   if(point){
-   setViewState(prev=>{
-    const z=Math.max(prev.zoom,1.85);
-    return {zoom:z,...bound(z,360-point[0]*z,180-point[1]*z)};
-   });
+   const z=Math.max(view.zoom,expanded?1.85:1.55);
+   flyTo(point,z);
   }
  };
  const openEditor=()=>{setExpanded(false);setEditing(true);setConsent(false);setMessage("");setBrowseOnly(true);window.setTimeout(()=>document.querySelector(".ummahAtlas .regionEditor")?.scrollIntoView({behavior:"smooth",block:"center"}),90)};
@@ -264,8 +274,8 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   }catch(e){setMessage(e instanceof Error?e.message:"Unable to update sharing")}
   finally{setSaving(false)}
  };
- const mapCanvas=(full=false)=><div className={"atlasStage"+(full?" atlasFullStage":"")+(permissionKnown&&!optedIn&&!browseOnly?" atlasGuest":"")}>
-  <svg className={"atlasGeography"+(dragging?" isDragging":"")} viewBox="0 0 720 360" preserveAspectRatio="xMidYMid meet" tabIndex={0}
+ const mapCanvas=(full=false)=><div ref={full?fullStageRef:undefined} className={"atlasStage"+(full?" atlasFullStage":"")+(permissionKnown&&!optedIn&&!browseOnly?" atlasGuest":"")}>
+  <svg className={"atlasGeography"+(dragging?" isDragging":"")} viewBox="0 0 720 360" preserveAspectRatio={full?"xMidYMid slice":"xMidYMid meet"} tabIndex={0}
    aria-label="Interactive Ummah map. Drag to pan, pinch or double tap to zoom, tap a location marker to filter. Keyboard: plus, minus and arrow keys."
    onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}
    onClickCapture={e=>{if(ignoreClick.current){e.preventDefault();e.stopPropagation();ignoreClick.current=false}}}
@@ -275,7 +285,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
     if(e.key==="-"){e.preventDefault();zoomAt(1/1.4)}
     if(e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="ArrowUp"||e.key==="ArrowDown"){
      e.preventDefault();const dx=e.key==="ArrowLeft"?28:e.key==="ArrowRight"?-28:0,dy=e.key==="ArrowUp"?28:e.key==="ArrowDown"?-28:0;
-     setViewState(prev=>({zoom:prev.zoom,...bound(prev.zoom,prev.x+dx,prev.y+dy)}));
+     setViewState(prev=>({zoom:prev.zoom,...constrain(prev.zoom,prev.x+dx,prev.y+dy)}));
     }
    }}>
    <rect width="720" height="360" fill="#f8faf9"/>
@@ -302,14 +312,13 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
     })}
    </g>
   </svg>
-  <div className="atlasFloatTools">
+  {!full&&<div className="atlasFloatTools">
    <button type="button" title={mode==="world"?"See United States":"See world"} aria-label={mode==="world"?"Switch to United States map":"Switch to world map"} onClick={()=>switchMode(mode==="world"?"us":"world")}>{mode==="world"?"US":"🌐"}</button>
-   {!full&&<button type="button" aria-label="Expand map studio" title="Full map" onClick={()=>setExpanded(true)}>⤢</button>}
-   {full&&<button type="button" aria-label="Reset map" onClick={resetView}>⌖</button>}
-  </div>
-  {chosen&&<div className="atlasPlace" role="status"><div><strong>{chosen.name}</strong><small>{chosen.count} {chosen.count===1?"Muslim":"Muslims"} shared this region</small></div><button type="button" onClick={()=>{setExpanded(false);document.getElementById("muslimeen-directory")?.scrollIntoView({behavior:"smooth",block:"start"})}}>See members ↗</button></div>}
+   <button type="button" aria-label="Expand map studio" title="Full map" onClick={openStudio}>⤢</button>
+  </div>}
+  {!full&&chosen&&<div className="atlasPlace" role="status"><div><strong>{chosen.name}</strong><small>{chosen.count} {chosen.count===1?"Muslim":"Muslims"} shared this region</small></div><button type="button" onClick={()=>{setExpanded(false);document.getElementById("muslimeen-directory")?.scrollIntoView({behavior:"smooth",block:"start"})}}>See members ↗</button></div>}
   {permissionKnown&&!optedIn&&!browseOnly&&!full&&<div className="atlasInvitation"><strong>Connect with Muslims around the world</strong><span>📍 Add your region to help grow the Ummah map.</span><div><button type="button" onClick={openEditor}>Add my region</button><button type="button" onClick={()=>setBrowseOnly(true)}>Explore without sharing</button></div></div>}
-  {!chosen&&<div className="atlasTouchHint" aria-hidden="true">Pinch · drag · tap a dot</div>}
+  {!full&&!chosen&&<div className="atlasTouchHint" aria-hidden="true">Pinch · drag · tap a dot</div>}
  </div>;
  return <section className="muslimeenRegionPanel ummahAtlas" aria-label="Community map">
   <div className="atlasHead">
