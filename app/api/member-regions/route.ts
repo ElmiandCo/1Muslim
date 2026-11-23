@@ -8,7 +8,8 @@ export const dynamic="force-dynamic";
 // coordinates, or prayer location. Member-region consent is the source of truth.
 type ProfileRegion={id:string;country:string|null;state:string|null};
 type ConsentRow={user_id:string};
-const headers={"Cache-Control":"public, max-age=0, s-maxage=30, stale-while-revalidate=90"};
+// Consent changes must appear on the map immediately, even when a CDN has cached prior counts.
+const headers={"Cache-Control":"private, no-store, max-age=0"};
 const stateNames:Record<string,string>=Object.fromEntries(("AL:Alabama,AK:Alaska,AZ:Arizona,AR:Arkansas,CA:California,CO:Colorado,CT:Connecticut,DE:Delaware,FL:Florida,GA:Georgia,HI:Hawaii,ID:Idaho,IL:Illinois,IN:Indiana,IA:Iowa,KS:Kansas,KY:Kentucky,LA:Louisiana,ME:Maine,MD:Maryland,MA:Massachusetts,MI:Michigan,MN:Minnesota,MS:Mississippi,MO:Missouri,MT:Montana,NE:Nebraska,NV:Nevada,NH:New Hampshire,NJ:New Jersey,NM:New Mexico,NY:New York,NC:North Carolina,ND:North Dakota,OH:Ohio,OK:Oklahoma,OR:Oregon,PA:Pennsylvania,RI:Rhode Island,SC:South Carolina,SD:South Dakota,TN:Tennessee,TX:Texas,UT:Utah,VT:Vermont,VA:Virginia,WA:Washington,WV:West Virginia,WI:Wisconsin,WY:Wyoming,DC:District of Columbia").split(",").map(item=>item.split(":")));
 function normalizeCountry(value:string|null):string{
  const raw=(value||"").trim();const key=raw.toLowerCase().replace(/[.\s]+/g," ").trim();
