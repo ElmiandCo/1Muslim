@@ -54,7 +54,7 @@ function position(at:Date,latitude:number,longitude:number,body:Equatorial,thres
  const progress=crossingAngle>0.001?
   clamp((hourAngle+crossingAngle)/(2*crossingAngle),0,1):
   clamp((hourAngle+Math.PI)/(2*Math.PI),0,1);
- return {aboveHorizon:apparent>(moon?.133:threshold)*RAD,progress,altitudeDegrees:apparent/RAD};
+ return {aboveHorizon:apparent>(moon ? .133 : threshold)*RAD,progress,altitudeDegrees:apparent/RAD};
 }
 
 /** Derives both bodies from the SAME current instant and SAME saved prayer city. */
