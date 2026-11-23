@@ -156,6 +156,6 @@ jobs:
             echo "::warning::GitHub Actions is not allowed to create PRs; branch pushed, draft PR requires integrator."
             echo "Pushed branch: $BOT_BRANCH" >> "$GITHUB_STEP_SUMMARY"
             echo "Review: https://github.com/$REPOSITORY/compare/main...$BOT_BRANCH?expand=1" >> "$GITHUB_STEP_SUMMARY"
-            gh issue comment "$ISSUE_NUMBER" --repo "$REPOSITORY" --body "Bismillah. New code branch [\$BOT_BRANCH](https://github.com/\$REPOSITORY/tree/\$BOT_BRANCH) pushed for review. This repository blocks GitHub Actions from opening PRs. Integrator: [open a draft PR](https://github.com/\$REPOSITORY/compare/main...\$BOT_BRANCH?expand=1) and verify CI + preview + security/mobile before release." || true
+            gh issue comment "$ISSUE_NUMBER" --repo "$REPOSITORY" --body "Bismillah. New code branch [$BOT_BRANCH](https://github.com/$REPOSITORY/tree/$BOT_BRANCH) pushed for review. This repository blocks GitHub Actions from opening PRs. Integrator: [open a draft PR](https://github.com/$REPOSITORY/compare/main...$BOT_BRANCH?expand=1) and verify CI + preview + security/mobile before release." || true
           fi
           printf '\nCodex report (not proof of tests or deployment):\n%s\n' "$FINAL_MESSAGE"
