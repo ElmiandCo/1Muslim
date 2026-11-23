@@ -1943,3 +1943,17 @@
  .control{padding-left:max(5px,env(safe-area-inset-left))!important;padding-right:max(5px,env(safe-area-inset-right))!important;padding-bottom:max(5px,env(safe-area-inset-bottom))!important}
  .control .decoratedSurface{width:100%!important;max-width:none!important;margin-left:auto!important;margin-right:auto!important;min-width:0!important}
 }
+
+/* Day Mode: clean uninterrupted surface. Remove the decorative diamond and
+   ornament artwork behind navigation and Live, without hiding any controls. */
+.control.day .decoratedSurface>.surfaceArtwork{
+ background-image:none!important;
+ opacity:0!important;
+ visibility:hidden!important;
+}
+.control.day .pattern{opacity:0!important;visibility:hidden!important}
+.control.day .decoratedSurface::before,
+.control.day .decoratedSurface::after,
+.control.day .surface::before{
+ background-image:none!important;
+}
