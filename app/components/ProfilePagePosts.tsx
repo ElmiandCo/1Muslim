@@ -3,18 +3,19 @@
 import {useCallback,useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import ProfilePublicMedia from "./ProfilePublicMedia";
+import {publicMemberName} from "../lib/member-id-visibility";
 import {safeMediaUrl,youtubeEmbed,isDirectVideo,uploadMemberMedia,type MemberMediaKind} from "./profile-member-media";
 import "./ProfilePagePosts.css";
 
 type PagePost={id:string;profile_id:string;author_id:string;body:string;media_url:string|null;media_kind:"none"|MemberMediaKind;created_at:string};
 type PageComment={id:string;post_id:string;author_id:string;body:string;created_at:string};
 type PageReaction={post_id:string;user_id:string;reaction:"like"|"heart"};
-type Author={id:string;display_name:string|null;username:string|null;avatar_url:string|null;avatar_gender:string|null;avatar_config:Record<string,unknown>|null};
+type Author={id:string;display_name:string|null;username:string|null;hide_1muslim_id?:boolean|null;avatar_url:string|null;avatar_gender:string|null;avatar_config:Record<string,unknown>|null};
 const profilePicture=(user?:Author)=>{
  const selected=user?.avatar_config?.selectedAvatarUrl;
  return typeof selected==="string"&&selected.trim()?selected:user?.avatar_url||(user?.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg");
 };
-const displayName=(user?:Author)=>user?.display_name||user?.username||"1Muslim member";
+const displayName=(user?:Author)=>publicMemberName(user);
 const when=(iso:string)=>new Date(iso).toLocaleDateString(undefined,{month:"short",day:"numeric"});
 const unique=(values:string[])=>Array.from(new Set(values.filter(Boolean)));
 
@@ -39,7 +40,7 @@ export default function ProfilePagePosts({profileId,isOwner=false}:{profileId:st
   if(!rows.length){setReactions([]);setCommentCounts({});return}
   const ids=rows.map(p=>p.id);
   const [people,reacts,commentList]=await Promise.all([
-   db.from("profiles").select("id,display_name,username,avatar_url,avatar_gender,avatar_config").in("id",unique(rows.map(x=>x.author_id))),
+   db.from("profiles").select("id,display_name,username,hide_1muslim_id,avatar_url,avatar_gender,avatar_config").in("id",unique(rows.map(x=>x.author_id))),
    db.from("profile_page_post_reactions").select("post_id,user_id,reaction").in("post_id",ids),
    db.from("profile_page_post_comments").select("post_id").in("post_id",ids).limit(3000)
   ]);
@@ -89,7 +90,7 @@ export default function ProfilePagePosts({profileId,isOwner=false}:{profileId:st
   setCommentPages(v=>({...v,[postId]:size}));
   const rows=((data||[]).slice(0,size) as PageComment[]).reverse();setComments(v=>({...v,[postId]:rows}));
   const missing=unique(rows.map(c=>c.author_id)).filter(id=>!authors[id]);
-  if(missing.length){const {data:people}=await db.from("profiles").select("id,display_name,username,avatar_url,avatar_gender,avatar_config").in("id",missing);if(people)setAuthors(v=>({...v,...Object.fromEntries((people as Author[]).map(p=>[p.id,p]))}))}
+  if(missing.length){const {data:people}=await db.from("profiles").select("id,display_name,username,hide_1muslim_id,avatar_url,avatar_gender,avatar_config").in("id",missing);if(people)setAuthors(v=>({...v,...Object.fromEntries((people as Author[]).map(p=>[p.id,p]))}))}
  };
  const toggleComments=(id:string)=>{if(openComments===id){setOpenComments(null);return}setOpenComments(id);setCommentDraft("");void loadComments(id)};
  const loadOlder=(id:string)=>{const size=(commentPages[id]||50)+50;void loadComments(id,size)};
