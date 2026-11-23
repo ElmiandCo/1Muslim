@@ -128,6 +128,13 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   setExpanded(true);
  };
  const closeStudio=()=>{setExpanded(false);pointerPositions.current.clear();lastPinch.current=null;setStudioSearchOpen(false);setDragging(false)};
+ const focusArea=(name:"World"|"Africa"|"Europe"|"Asia"|"Americas")=>{
+  const centers:Record<typeof name,[number,number]>={
+   World:[360,175],Africa:[378,177],Europe:[387,88],Asia:[520,142],Americas:[211,159]
+  };
+  setMode("world");onSelect("");onSelectState?.("");setMakkahFocus(false);setStudioSearch("");setStudioSearchOpen(false);
+  flyTo(centers[name],name==="World"?1.13:1.48);
+ };
  const focusMakkah=()=>{
   setMode("world");onSelect("");onSelectState?.("");setStudioSearch("");setMakkahFocus(true);flyTo(kaabaPoint,1.7);
  };
@@ -337,14 +344,88 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    <label>Country<input list="ummah-atlas-countries" value={country} onChange={e=>setCountry(e.target.value)} placeholder="Country" maxLength={80}/></label>
    <datalist id="ummah-atlas-countries">{Array.from(new Set([...(stats?.countries||[]).map(r=>r.name),"United States","Canada","United Kingdom","Somalia","Türkiye","Kenya","Nigeria","Pakistan","Saudi Arabia","Australia"])).map(name=><option key={name} value={name}/>)}</datalist>
    <div className="atlasEditorFields"><label>State / province <small>Optional</small><input value={state} onChange={e=>setState(e.target.value)} placeholder="State or province" maxLength={80}/></label><label>City <small>Optional</small><input value={city} onChange={e=>setCity(e.target.value)} placeholder="City" maxLength={80}/></label></div>
-   <label className="atlasConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>I choose to share my country on the Ummah map. My state and city, if entered, are also public profile fields. I can stop map sharing anytime.</span></label>
+   <label className="atlasConsent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>I voluntarily share my country on the Ummah map. Other signed-in members may discover my public profile through that country's member list. State and city, if entered, also appear in my profile. I can stop sharing at any time.</span></label>
    <div className="atlasEditorButtons"><button type="button" disabled={saving||locating||!country.trim()||!consent} onClick={()=>void save()}>{saving?"Saving…":"Save and join the map"}</button>{optedIn&&<button type="button" className="atlasRemove" disabled={saving} onClick={()=>void removeFromMap()}>Stop sharing on map</button>}</div>
    {message&&<p role="status" className="atlasMessage">{message}</p>}
   </div>}
-  {expanded&&typeof document!=="undefined"&&createPortal(<div className="atlasStudioOverlay" role="dialog" aria-modal="true" aria-label="Full-screen Ummah map studio">
-   <div className="atlasStudioBackdrop" aria-hidden="true" style={{backgroundImage:`linear-gradient(180deg,#050e1c55,#071d26d9),url("${backgroundImage.replaceAll("\"","")}")`,transform:"scale(1.045) translate("+(-view.x/80)+"px,"+(-view.y/80)+"px)"}}/>
-   <button type="button" className="atlasStudioBack" onClick={()=>setExpanded(false)} aria-label="Close full map">‹</button>
-   <div className="atlasStudioCanvas">{mapCanvas(true)}</div>
-  </div>,document.body)}
+  {expanded&&typeof document!=="undefined"&&createPortal(
+   <div className="atlasStudioOverlay" role="dialog" aria-modal="true" aria-label="Explore the Ummah full-screen world map">
+    <div className="atlasStudioBackdrop" aria-hidden="true" style={{
+     backgroundImage:"linear-gradient(145deg,rgba(4,17,20,.56),rgba(7,22,28,.84)),url("+JSON.stringify(backgroundImage)+")",
+     transform:"scale(1.055) translate("+(-view.x/110)+"px,"+(-view.y/110)+"px)"
+    }}/>
+    <div className="atlasStudioCanvas">
+     {mapCanvas(true)}
+     <div className="atlasStudioShade" aria-hidden="true"/>
+     <header className="atlasStudioHeader">
+      <button type="button" className="atlasStudioClose" onClick={closeStudio} aria-label="Close map studio">‹</button>
+      <div className="atlasStudioBrand"><small>1MUSLIM · CONNECTING THE UMMAH</small><strong>Explore the Ummah <span>✧</span></strong></div>
+      <button type="button" className="atlasStudioMyRegion" aria-label="Update my region" title="Update my region" onClick={openEditor}>⌖</button>
+     </header>
+     <div className="atlasStudioNavigate">
+      <nav className="atlasStudioJourney" aria-label="Explore places">
+       <button type="button" onClick={()=>focusArea("World")} aria-label="Explore world">🌍 World</button>
+       <button type="button" onClick={focusMakkah} aria-label="Explore Makkah">🕋 Makkah</button>
+       <button type="button" onClick={()=>focusArea("Africa")}>Africa</button>
+       <button type="button" onClick={()=>focusArea("Europe")}>Europe</button>
+       <button type="button" onClick={()=>focusArea("Asia")}>Asia</button>
+       <button type="button" onClick={()=>focusArea("Americas")}>Americas</button>
+       <button type="button" onClick={()=>switchMode(mode==="world"?"us":"world")}>{mode==="world"?"🇺🇸 U.S. States":"🌐 World map"}</button>
+      </nav>
+      <div className="atlasStudioSearchBox">
+       <span aria-hidden="true">⌕</span>
+       <input type="search" aria-label={"Find "+(mode==="world"?"a country":"a state")+" on the Ummah map"} placeholder={mode==="world"?"Find a country with members…":"Find a state with members…"} value={studioSearch}
+        onChange={e=>{setStudioSearch(e.target.value);setStudioSearchOpen(true)}} onFocus={()=>setStudioSearchOpen(true)} />
+       {studioSearch&&<button type="button" className="atlasStudioSearchClear" aria-label="Clear search" onClick={()=>{setStudioSearch("");setStudioSearchOpen(false)}}>×</button>}
+       {studioSearchOpen&&studioSearch.trim()&&<div className="atlasStudioSuggestions" role="listbox" aria-label="Matching member regions">
+        {studioResults.length?studioResults.map(row=><button type="button" key={row.name} role="option" aria-selected={focusName===row.name}
+         onClick={()=>focusNamedRegion(row.name,lookup[row.name])}>
+         <span>{row.name}</span><small>{row.count} {row.count===1?"member":"members"}</small>
+        </button>):<p>No opted-in regions match yet.</p>}
+       </div>}
+      </div>
+     </div>
+     <div className="atlasStudioGestures" aria-hidden="true">DRAG TO TRAVEL <b>·</b> PINCH TO EXPLORE</div>
+     <div className="atlasStudioBottom">
+      {chosen?<div className="atlasStudioSelected" aria-live="polite">
+       <div className="atlasStudioRegionTitle">
+        <div><small>⌖ {mode==="world"?"COUNTRY CONNECTIONS":"STATE CONNECTIONS"}</small><h2>{chosen.name}</h2><p>{chosen.count} {chosen.count===1?"Muslim has":"Muslims have"} shared this region</p></div>
+        <button type="button" onClick={exploreMembers}>View members ↗</button>
+       </div>
+       {mode==="world"&&<div className="atlasStudioPeople">
+        {peopleLoading?<span className="atlasStudioPeopleStatus">Finding community members…</span>:
+         peopleError?<span className="atlasStudioPeopleStatus">{peopleError}</span>:
+         people.length?people.map(person=><button className="atlasStudioPerson" key={person.id} type="button"
+           title={"Open "+person.name+"'s profile"} aria-label={"Open "+person.name+"'s profile"}
+           onClick={()=>{closeStudio();if(onOpenMember)onOpenMember(person.id);else window.location.assign("/profile?section=muslimeen&member="+encodeURIComponent(person.id))}}>
+           <img alt="" src={person.avatar} loading="lazy" onError={e=>{e.currentTarget.src="/assets/avatars/default-male.jpg"}}/>
+           <span>{person.name}</span>
+          </button>):
+         <span className="atlasStudioPeopleStatus">Explore the members list to connect with Muslims here.</span>}
+       </div>}
+       {mode==="us"&&<span className="atlasStudioPeopleStatus">Member identities are discoverable by country, not by city or state.</span>}
+      </div>:makkahFocus?<div className="atlasStudioMission" aria-live="polite">
+        <small>🕋 MAKKAH AL-MUKARRAMAH</small><h2>Our shared Qibla.</h2>
+        <p>A point of unity for Muslims across the world. Explore the map to meet our Ummah.</p>
+       </div>:<div className="atlasStudioMission" aria-live="polite">
+        <small>ONE UMMAH · MANY PLACES</small><h2>Distance ends where connection begins.</h2>
+        <p>Tap a glowing pin to discover members who chose to share their country.</p>
+        {rows.length>0&&<div className="atlasStudioPopular" aria-label="Places with community members">
+         {rows.slice(0,5).map(row=><button type="button" key={row.name}
+          onClick={()=>focusNamedRegion(row.name,lookup[row.name])}>{row.name} <span>{row.count}</span></button>)}
+        </div>}
+       </div>}
+      <div className="atlasStudioBottomActions">
+       <span className="atlasStudioCount"><i/> {stats?stats.recorded.toLocaleString():"—"} members · {stats?stats.countries.length:"—"} countries</span>
+       <div className="atlasStudioBottomButtons">
+        <button type="button" onClick={openEditor} aria-label="Join or update your region on the Ummah map">＋ My region</button>
+        <button type="button" onClick={resetView} aria-label="Reset map camera" title="Recenter map">⌖</button>
+       </div>
+      </div>
+      <p className="atlasStudioPrivacy">Only voluntarily shared country regions are shown · No precise user locations</p>
+     </div>
+    </div>
+   </div>,document.body)}
+
  </section>;
 }
