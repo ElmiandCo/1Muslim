@@ -27,16 +27,45 @@
 .spotlightEditorRemove{color:#a34a56;border:1px solid #e5c4c9;background:white}
 .spotlightEditorFooter button:disabled{opacity:.45;cursor:wait}
 .spotlightEditorStatus{font-size:12px;color:#3d7b73;line-height:1.5}
-/* Cinematic-only Spotlight, first section below the account details. */
-.profileSpotlightHero{width:100%;max-width:460px;min-width:0;margin:25px auto 2px;padding:12px;border:1px solid #a6c7d44c;border-radius:22px;background:linear-gradient(145deg,#1d33438c,#091c2cb8);box-shadow:0 10px 36px #010d1866,inset 0 1px #ffffff24;text-align:left;color:#eef7fa}
-.spotlightHeroHeader{display:flex;justify-content:space-between;align-items:center;padding:4px 5px 12px;gap:9px}
-.spotlightHeroHeader>div{display:grid;gap:6px;min-width:0}
-.spotlightHeroHeader span{font-size:9px;letter-spacing:.16em;font-weight:850;color:#edcd94}
-.spotlightHeroHeader strong{font-size:17px;line-height:1.2;letter-spacing:-.03em;color:#f6f8fb;overflow-wrap:anywhere}
+/* Cinematic-only Spotlight: edge-to-edge media, no surrounding card or outline. */
+.profileSpotlightHero{
+ width:calc(100% + var(--cm-content-gutter,22px) + var(--cm-content-gutter,22px));
+ max-width:none;min-width:0;box-sizing:border-box;
+ margin:clamp(20px,5vw,31px) calc(0px - var(--cm-content-gutter,22px)) 4px;
+ padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;
+ text-align:left;color:#eef7fa;
+}
+.spotlightHeroHeader{
+ display:flex;justify-content:space-between;align-items:center;
+ padding:5px var(--cm-content-gutter,22px) 16px;gap:12px;
+}
+.spotlightHeroHeader>div{display:grid;gap:5px;min-width:0}
+.spotlightHeroHeader span{font-size:clamp(9px,1.8vw,11px);letter-spacing:.2em;font-weight:850;color:#edcd94}
+.spotlightHeroHeader strong{
+ font-family:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+ font-size:clamp(20px,5.2vw,34px);font-weight:720;font-style:italic;
+ line-height:1.22;letter-spacing:-.035em;color:#f6f8fb;overflow-wrap:anywhere;
+ text-wrap:balance;text-shadow:0 2px 16px #0008;
+}
 .spotlightHeroStar{font-size:29px!important;font-weight:400!important;line-height:1;color:#f4d69c!important;text-shadow:0 0 14px #e6ae5c8c}
-.spotlightHeroMedia{width:100%;overflow:hidden;border:1px solid #9ebfd15b;border-radius:15px;background:linear-gradient(145deg,#0d1b2b,#162d42);min-height:110px}
-.spotlightHeroMedia img{width:100%;max-height:280px;height:auto;display:block;object-fit:cover}
-.spotlightHeroMedia video,.spotlightHeroMedia iframe{width:100%;height:auto;aspect-ratio:16/9;display:block;object-fit:contain;border:0;background:#060f19}
-.profileSpotlightHero>p{margin:12px 5px 5px;color:#bccfda;font-size:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
-@media(max-width:570px){.spotlightEditorFields{grid-template-columns:1fr}.spotlightEditorHeading b{font-size:8px;padding:7px}.profileSpotlightHero{margin-top:18px;padding:9px}.spotlightHeroHeader{padding-bottom:9px}}
+.spotlightHeroMedia{
+ position:relative;width:100%;min-width:0;overflow:hidden;
+ border:0;border-radius:30px;background:#0b1522;box-shadow:none;
+ /* Delicate edge mask, not a new container or a hard outline. */
+ -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 1.8%,#000 98.2%,transparent 100%);
+ mask-image:linear-gradient(90deg,transparent 0%,#000 1.8%,#000 98.2%,transparent 100%);
+}
+.spotlightHeroMedia img{width:100%;max-width:100%;max-height:none;height:auto;display:block;object-fit:contain}
+.spotlightHeroMedia video,.spotlightHeroMedia iframe{
+ width:100%;height:auto;aspect-ratio:16/9;display:block;object-fit:contain;border:0;background:#060f19;
+}
+.profileSpotlightHero>.spotlightHeroCaption{
+ margin:clamp(13px,3.5vw,24px) var(--cm-content-gutter,22px) 8px;
+ font-family:"Palatino Linotype",Palatino,"Book Antiqua","Amiri","Geeza Pro",Georgia,serif;
+ font-size:clamp(15px,3.8vw,23px);font-style:italic;font-weight:470;
+ line-height:1.65;letter-spacing:.012em;color:#efe9df;
+ text-align:center;text-wrap:pretty;white-space:pre-wrap;overflow-wrap:anywhere;
+ text-shadow:0 2px 15px #07111a99;
+}
+@media(max-width:570px){.spotlightEditorFields{grid-template-columns:1fr}.spotlightEditorHeading b{font-size:8px;padding:7px}.profileSpotlightHero{margin-top:18px}.spotlightHeroHeader{padding-bottom:12px}}
 @media(prefers-reduced-motion:reduce){.profileSpotlightEditor *, .profileSpotlightHero *{animation:none!important;transition:none!important}}
