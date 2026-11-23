@@ -80,7 +80,17 @@ export default function ProfileAnalytics({inline=false,userId}:{inline?:boolean;
  const dates=Array.from({length:7},(_,i)=>day(6-i));
  const today=screen[day(0)]||{},week=dates.reduce((total,d)=>total+Object.values(screen[d]||{}).reduce((a,b)=>a+b,0),0);
  const todaySeconds=Object.values(today).reduce((a,b)=>a+b,0);
- const topPages=Object.entries(dates.reduce((acc,d)=>{for(const [p,t] of Object.entries(screen[d]||{}))acc[p]=(acc[p]||0)+t;return acc},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ const timeByPath=dates.reduce((acc,d)=>{for(const [p,t] of Object.entries(screen[d]||{}))acc[p]=(acc[p]||0)+t;return acc},{} as Record<string,number>);
+ // Merge different routes that map to the same space (for example, /posts
+ // and /community) so one section never appears twice in "Top Spaces".
+ const timeBySpace=Object.values(Object.entries(timeByPath).reduce((acc,[path,seconds])=>{
+  const name=pageDetails(path).name;
+  if(!acc[name])acc[name]={path,seconds:0,largestVisit:0};
+  acc[name].seconds+=seconds;
+  if(seconds>acc[name].largestVisit){acc[name].path=path;acc[name].largestVisit=seconds}
+  return acc;
+ },{} as Record<string,{path:string;seconds:number;largestVisit:number}>));
+ const topPages=timeBySpace.sort((a,b)=>b.seconds-a.seconds).slice(0,5).map(({path,seconds})=>[path,seconds] as [string,number]);
  const dayTotals=dates.map(date=>({date,seconds:Object.values(screen[date]||{}).reduce((a,b)=>a+b,0)}));
  const peak=Math.max(1,...dayTotals.map(d=>d.seconds));
  const activeDays=dayTotals.filter(d=>d.seconds>0).length;
