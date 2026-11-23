@@ -5,7 +5,7 @@ import {rememberWatchedPost} from "../lib/ummah-watch-history";
 
 type PlayerStateEvent={data:number};
 type ReadyEvent={target:{mute:()=>void;playVideo:()=>void}};
-type YoutubeApiPlayer={destroy:()=>void};
+type YoutubeApiPlayer={destroy:()=>void;getPlayerState:()=>number;getCurrentTime:()=>number;getPlaybackRate?:()=>number};
 type YoutubeApi={Player:new(frame:HTMLIFrameElement,options:{
  events:{
   onReady?:(event:ReadyEvent)=>void;
@@ -40,17 +40,52 @@ export default function ImmersiveYouTubePlayer({videoId,postId,authorId}:{videoI
   }
   frame.src=src.toString();
   mount.replaceChildren(frame);
-  const onStateChange=(event:PlayerStateEvent)=>{
+  const playback=()=>{
+   try{
+    if(!player||player.getPlayerState()!==1)return null;
+    const time=player.getCurrentTime();
+    if(!Number.isFinite(time))return null;
+    const rate=player.getPlaybackRate?.()||1;
+    return {time,rate:Number.isFinite(rate)&&rate>0?rate:1};
+   }catch{return null}
+  };
+  // Opening the viewer or seeking is not a watch: require three visible,
+  // uninterrupted seconds AND actual video-time progress.
+  const scheduleWatch=()=>{
    clearTimer();
-   if(!live||watched||event.data!==1||document.hidden)return;
+   if(!live||watched||document.hidden)return;
+   const start=playback();
+   if(!start)return;
+   const startedAt=performance.now();
    timer=setTimeout(()=>{
     timer=null;
     if(!live||watched||document.hidden)return;
-    watched=true;
-    rememberWatchedPost(postId,authorId);
-   },3000);
+    const end=playback();
+    if(!end)return;
+    const elapsed=(performance.now()-startedAt)/1000;
+    const moved=end.time-start.time;
+    // Allow YouTube's playback rates (including 2x), but reject a seek jump
+    // masquerading as three seconds watched.
+    const maxProgress=elapsed*Math.max(start.rate,end.rate,1)*1.7+.3;
+    const minProgress=elapsed*Math.max(.25,Math.min(start.rate,end.rate))*.4;
+    if(elapsed>=2.9&&moved>=minProgress&&moved<=maxProgress){
+     watched=true;
+     rememberWatchedPost(postId,authorId);
+    }else if(playback()){
+     // Buffering, slow-start or a scrub: begin a fresh verified interval.
+     scheduleWatch();
+    }
+   },3200);
   };
-  const onVisibility=()=>{if(document.hidden)clearTimer()};
+  const onStateChange=(event:PlayerStateEvent)=>{
+   if(event.data===1)scheduleWatch();
+   else clearTimer();
+  };
+  const onVisibility=()=>{
+   if(document.hidden){clearTimer();return}
+   // Returning to a playing video need not emit a new PLAYING event.
+   if(playback())scheduleWatch();
+  };
   document.addEventListener("visibilitychange",onVisibility);
   const attach=()=>{
    if(!live||player||!frame.isConnected)return;
