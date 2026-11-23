@@ -68,3 +68,59 @@
 .modes{background:#0b0d11}
 @media(max-width:390px){.headerActions{gap:4px}.previewToggle{padding:9px 8px;font-size:11px}.sound{padding-inline:9px!important;font-size:11px!important}.brand strong{letter-spacing:.08em}}
 @media(prefers-reduced-motion:reduce){.createTools,.theme,.toolTabs button{transition:none!important}}
+
+
+/* Gallery-first Ummah Post Creator. Live owns the camera; posts start with files. */
+.galleryStudio{background:#060708;--gallery-edge:#ffffff22}
+.galleryStudio .header{background:#08090b;box-shadow:none;border-bottom:1px solid #ffffff0a}
+.liveShortcut{color:#eff2f5;text-decoration:none;font-size:12px;font-weight:700;border:1px solid #ffffff24;border-radius:99px;padding:9px 13px;background:#ffffff0d;white-space:nowrap}
+.galleryMain{flex:1;min-height:120px;overflow:hidden;position:relative;display:flex;justify-content:center;align-items:center;background:radial-gradient(ellipse at 52% 53%,#1a1b20 0%,#050607 72%)}
+.galleryFrame{width:min(100%,470px);height:100%;position:relative;display:flex;justify-content:center;align-items:center;padding:0 65px 0 18px;box-sizing:border-box}
+.galleryVisual{position:relative;max-width:100%;height:100%;width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:2px;background:#0c0d0f;box-shadow:0 15px 50px #0008}
+.galleryVisual img,.galleryVisual video{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;display:block}
+.galleryFade{animation:gallery-enter-fade .28s ease both}
+.gallerySlide{animation:gallery-enter-slide .28s cubic-bezier(.2,.8,.2,1) both}
+@keyframes gallery-enter-fade{from{opacity:.55;transform:scale(.975)}to{opacity:1;transform:scale(1)}}
+@keyframes gallery-enter-slide{from{opacity:.5;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+.gallerySideRail{position:absolute;right:9px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:21px;color:#f7f8fb}
+.gallerySideRail span{display:grid;justify-items:center;gap:4px;font-size:28px;line-height:1;min-width:51px;filter:drop-shadow(0 1px 8px #000a)}
+.gallerySideRail small{font-size:10px;font-weight:650;opacity:.84}
+.galleryCounter{position:absolute;left:30px;top:14px;color:#fff;font-weight:750;font-size:11px;background:#0009;border:1px solid #ffffff26;padding:6px 10px;border-radius:99px;backdrop-filter:blur(12px)}
+.galleryArrows{position:absolute;bottom:13px;left:30px;right:76px;display:flex;justify-content:space-between;pointer-events:none}
+.galleryArrows button{pointer-events:auto;border:1px solid #ffffff44;border-radius:50%;height:35px;width:35px;color:#fff;background:#080a0cb8;font-size:24px;display:grid;place-items:center}
+.galleryEmpty{display:grid;justify-items:center;text-align:center;gap:13px;padding:18px;color:#fff}
+.galleryEmpty>span{width:76px;height:76px;display:grid;place-items:center;border:1px solid #ffffff26;border-radius:25px;background:#ffffff10;font-size:42px}
+.galleryEmpty h1{font-size:23px;letter-spacing:-.03em;margin:0}.galleryEmpty p{margin:0;color:#aab1bd;font-size:13px;line-height:1.5;max-width:250px}
+.galleryEmpty button{background:#e7ebf2;color:#171a1f;border:0;padding:12px 20px;border-radius:999px;font-weight:800;min-height:43px}
+.galleryError{position:absolute;bottom:9px;left:12px;right:12px;background:#4b1e23ef;border:1px solid #f5a1a34d;border-radius:12px;padding:9px;color:#fff;font-size:12px}
+.galleryTray{background:#101113;border-top:1px solid #ffffff14;flex:none;padding:10px 15px 8px;max-height:165px}
+.galleryTrayTitle{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:0 0 9px;font-size:13px;font-weight:750}
+.galleryTrayTitle button{border:1px solid #ffffff36;border-radius:20px;background:#ffffff0b;color:#fff;padding:6px 14px;font-size:12px;font-weight:700}.galleryTrayTitle button:disabled{opacity:.35}
+.galleryThumbs{display:flex;align-items:center;gap:10px;overflow-x:auto;scrollbar-width:none;padding:1px 4px 3px;scroll-snap-type:x proximity}
+.galleryThumbs::-webkit-scrollbar{display:none}
+.galleryThumbWrap{position:relative;flex:0 0 67px;padding-right:5px;scroll-snap-align:start}
+.galleryThumb{border:2px solid transparent;border-radius:12px;background:#1f2125;position:relative;overflow:hidden;width:65px;height:73px;display:block;padding:0;cursor:pointer}
+.galleryThumb img,.galleryThumb video{width:100%;height:100%;object-fit:cover}
+.galleryThumb span{position:absolute;left:3px;bottom:3px;background:#000b;color:#fff;border-radius:6px;font-size:9px;font-weight:750;padding:2px 5px}
+.galleryThumbActive{border-color:#e5ecf5;box-shadow:0 0 0 2px #ffffff24}
+.galleryRemove{position:absolute;right:-4px;top:-5px;width:20px;height:20px;border:1px solid #ffffff38;border-radius:99px;background:#3b3c42;color:#fff;line-height:15px;font-size:17px;padding:0;display:grid;place-items:center;cursor:pointer}
+.galleryOrder{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:4px;font-size:9px;color:#9ca4ae}
+.galleryOrder button{color:#cbd4df;border:0;background:transparent;font-size:10px;padding:3px 0}.galleryOrder button:disabled{opacity:.3}
+.galleryEditor{background:#121419;border-top:1px solid #ffffff1b;flex:none;padding:9px 14px;max-height:185px;overflow-y:auto}
+.galleryTabs{display:flex;gap:7px;margin-bottom:10px}.galleryTabs button{border:1px solid #ffffff18;background:#ffffff09;color:#b9c1ce;border-radius:99px;flex:1;padding:10px 5px;font-size:12px;font-weight:700}
+.galleryTabs .galleryTabActive{background:#e7eaf1;color:#0f1116}
+.galleryOptionStrip{display:flex;align-items:center;gap:9px;overflow-x:auto;padding-bottom:5px;scrollbar-width:none}
+.galleryOptionStrip button{background:#1d2028;color:#fff;border:1px solid #ffffff22;border-radius:13px;min-width:76px;padding:5px;display:grid;justify-items:center;gap:4px;cursor:pointer}
+.galleryOptionStrip button span{display:grid;place-items:center;height:45px;width:100%;background:linear-gradient(130deg,#323a46,#757d90);border-radius:9px;font-size:28px}
+.galleryOptionStrip button small{font-size:10px}.galleryOptionStrip .galleryOptionActive{border-color:#f5f8ff;box-shadow:0 0 0 1px #ffffffae}
+.gallerySoundTools{display:flex;gap:10px;justify-content:space-between;align-items:center;font-size:12px}.gallerySoundTools p{color:#c5cedd;margin:0}
+.gallerySoundTools button,.galleryAnimate{border:1px solid #ffffff32;background:#ffffff11;border-radius:12px;color:#fff;padding:9px;font-size:12px;flex-shrink:0}
+.galleryHint{font-size:10px;line-height:1.4;color:#949daa;margin:8px 0 2px}.galleryAnimate{margin-top:8px}
+.galleryCaption{background:#121419;border-top:1px solid #ffffff19;flex:none;padding:12px 16px;display:grid;gap:6px}
+.galleryCaption label{font-weight:750;font-size:13px}.galleryCaption textarea{width:100%;box-sizing:border-box;border:1px solid #ffffff28;border-radius:11px;background:#08090b;color:#fff;font:inherit;font-size:13px;padding:10px 12px;resize:vertical;min-height:66px}
+.galleryCaption>span{text-align:right;color:#98a2ae;font-size:10px}.galleryDraft{display:flex;justify-content:space-between;align-items:center;gap:9px}.galleryDraft button{border:0;background:transparent;color:#e9edf6;text-decoration:underline;padding:6px 0;font-weight:650}.galleryDraft small{font-size:10px;color:#8893a1}
+.galleryFooter{height:calc(68px + env(safe-area-inset-bottom));padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;flex:none;background:#101113;border-top:1px solid #ffffff1a;box-sizing:border-box}
+.galleryFooter button{border:0;border-radius:15px;font-weight:800;font-size:14px;min-height:45px;cursor:pointer}.galleryBack{flex:0 0 94px;background:#303135;color:#fff}.galleryPrimary{flex:1;background:#eef0f5;color:#101216}.galleryFooter button:disabled{opacity:.42;cursor:not-allowed}
+.galleryStatus{position:absolute;z-index:5;left:12px;right:12px;bottom:calc(78px + env(safe-area-inset-bottom));background:#1a222c;color:#fff;border:1px solid #ffffff2a;border-radius:11px;margin:0;padding:10px 12px;font-size:11px;box-shadow:0 6px 22px #0008;pointer-events:none}
+@media(max-height:650px){.galleryTray{max-height:125px}.galleryThumb{height:54px}.galleryEditor{max-height:138px}.galleryFrame{padding-left:10px}.galleryCaption textarea{min-height:45px}}
+@media(prefers-reduced-motion:reduce){.galleryFade,.gallerySlide{animation:none}}
