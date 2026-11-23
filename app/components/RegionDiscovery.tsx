@@ -26,13 +26,14 @@ const usStates:Record<string,string>=Object.fromEntries(("AL:Alabama,AK:Alaska,A
 export function canonicalUsState(value:string|null|undefined){const raw=(value||"").trim();return usStates[raw.toUpperCase()]||Object.values(usStates).find(name=>name.toLowerCase()===raw.toLowerCase())||raw}
 type Stats={countries:{name:string;count:number}[];states:{name:string;count:number}[];optedIn:number;recorded:number;unplaced:number;usCount:number;updatedAt:string;limited:boolean};
 type Mode="world"|"us";
-type Props={members:Array<{country:string|null}>;currentCountry:string|null;userId:string;selected:string;selectedState?:string;onSelect:(value:string)=>void;onSelectState?:(value:string)=>void;onSaved:(value:string)=>void;backgroundImage?:string};
+type MapPerson={id:string;name:string;username:string|null;avatar:string;joinedAt:string};
+type Props={members:Array<{country:string|null}>;currentCountry:string|null;userId:string;selected:string;selectedState?:string;onSelect:(value:string)=>void;onSelectState?:(value:string)=>void;onSaved:(value:string)=>void;onOpenMember?:(id:string)=>void;backgroundImage?:string};
 const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
 const bound=(zoom:number,x:number,y:number)=>({x:clamp(x,720*(1-zoom),0),y:clamp(y,360*(1-zoom),0)});
 const centerView={zoom:1.06,x:-21.6,y:-10.8};
 const kaabaPoint:[number,number]=[439.7,137.2]; // Makkah, approximate equirectangular map position; never a member location.
 
-export default function RegionDiscovery({currentCountry,userId,selected,selectedState="",onSelect,onSelectState,onSaved,backgroundImage="/assets/profile-backgrounds/obsidian.PNG"}:Props){
+export default function RegionDiscovery({currentCountry,userId,selected,selectedState="",onSelect,onSelectState,onSaved,onOpenMember,backgroundImage="/assets/profile-backgrounds/obsidian.PNG"}:Props){
  const [stats,setStats]=useState<Stats|null>(null),[fetchError,setFetchError]=useState("");
  const [mode,setMode]=useState<Mode>("world"),[editing,setEditing]=useState(false),[expanded,setExpanded]=useState(false);
  const [country,setCountry]=useState(canonicalCountry(currentCountry)),[state,setState]=useState(""),[city,setCity]=useState("");
@@ -43,6 +44,10 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
  const lastPinch=useRef<number|null>(null),lastTap=useRef({at:0,x:0,y:0}),ignoreClick=useRef(false);
  const dragRef=useRef<{id:number;x:number;y:number;moving:boolean}|null>(null);
  const [listOpen,setListOpen]=useState(false),[listQuery,setListQuery]=useState("");
+ const [studioSearch,setStudioSearch]=useState(""),[studioSearchOpen,setStudioSearchOpen]=useState(false);
+ const [makkahFocus,setMakkahFocus]=useState(false);
+ const [people,setPeople]=useState<MapPerson[]>([]),[peopleLoading,setPeopleLoading]=useState(false),[peopleError,setPeopleError]=useState("");
+ const fullStageRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{setCountry(canonicalCountry(currentCountry))},[currentCountry]);
  useEffect(()=>{
   let mounted=true;setPermissionKnown(false);
@@ -85,6 +90,55 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
  const pins=useMemo(()=>rows.map(({name,count})=>({name,count,point:lookup[name]})).filter(p=>Array.isArray(p.point)),[rows,lookup]);
  const focusName=mode==="world"?selected:selectedState;
  const chosen=rows.find(r=>r.name===focusName);
+ const studioResults=rows.filter(r=>r.name.toLowerCase().includes(studioSearch.toLowerCase().trim())).slice(0,8);
+ useEffect(()=>{
+  const name=mode==="world"&&expanded?selected:"";
+  if(!name){setPeople([]);setPeopleLoading(false);setPeopleError("");return}
+  let active=true;
+  const controller=new AbortController();
+  setPeople([]);setPeopleError("");setPeopleLoading(true);
+  void fetch("/api/member-regions/people?country="+encodeURIComponent(name),{cache:"no-store",signal:controller.signal})
+    .then(async response=>{const body=await response.json();if(!response.ok)throw Error(body.error||"Could not load members");return body as {members:MapPerson[]}})
+    .then(data=>{if(active)setPeople(data.members||[])})
+    .catch(error=>{if(active&&!controller.signal.aborted)setPeopleError(error instanceof Error?error.message:"Member previews are unavailable")})
+    .finally(()=>{if(active)setPeopleLoading(false)});
+  return()=>{active=false;controller.abort()};
+ },[selected,mode,expanded]);
+ // In full-screen portrait, the map is intentionally cropped to FILL the panel.
+ // Bounds must use the real on-screen SVG viewport, not the 720x360 overview aspect.
+ const constrain=(zoom:number,x:number,y:number)=>{
+  if(!expanded)return bound(zoom,x,y);
+  const rect=fullStageRef.current?.getBoundingClientRect();
+  if(!rect||!rect.width||!rect.height)return bound(zoom,x,y);
+  const visibleWidth=360*rect.width/rect.height;
+  const left=360-visibleWidth/2,right=360+visibleWidth/2;
+  const lowX=right-720*zoom,highX=left;
+  return {x:clamp(x,Math.min(lowX,highX),Math.max(lowX,highX)),y:clamp(y,360*(1-zoom),0)};
+ };
+ const flyTo=(point:[number,number],zoom=1.45)=>{
+  const z=clamp(zoom,1,6);
+  setViewState({zoom:z,...constrain(z,360-point[0]*z,180-point[1]*z)});
+ };
+ const openStudio=()=>{
+  pointerPositions.current.clear();lastPinch.current=null;dragRef.current=null;
+  const point=mode==="world"?(COUNTRY_POINTS[selected]||kaabaPoint):(STATE_POINTS[selectedState]||[360,180]);
+  const z=selected||selectedState?1.7:1.18;
+  setViewState({zoom:z,x:360-point[0]*z,y:Math.min(0,180-point[1]*z)});
+  setMakkahFocus(false);setStudioSearch("");
+  setExpanded(true);
+ };
+ const closeStudio=()=>{setExpanded(false);pointerPositions.current.clear();lastPinch.current=null;setStudioSearchOpen(false);setDragging(false)};
+ const focusMakkah=()=>{
+  setMode("world");onSelect("");onSelectState?.("");setStudioSearch("");setMakkahFocus(true);flyTo(kaabaPoint,1.7);
+ };
+ const focusNamedRegion=(name:string,point?:[number,number])=>{
+  setMakkahFocus(false);setStudioSearchOpen(false);setStudioSearch("");
+  selectRegion(name,point);
+ };
+ const exploreMembers=()=>{
+  closeStudio();
+  window.setTimeout(()=>document.getElementById("muslimeen-directory")?.scrollIntoView({behavior:"smooth",block:"start"}),120);
+ };
  const switchMode=(next:Mode)=>{setMode(next);setViewState(centerView);onSelectState?.("");if(next==="world")onSelect("");else onSelect("United States")};
  const zoomAt=(factor:number,anchorX=360,anchorY=180)=>{
   setViewState(prev=>{
