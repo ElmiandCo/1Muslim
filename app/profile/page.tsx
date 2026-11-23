@@ -934,7 +934,7 @@ const [avatarPage,setAvatarPage]=useState(0);
   };
   const toggleAccessory=(id:string)=>{if(!profile)return;const item=ACCESSORIES.find(x=>x.id===id);if(!item)return;const required=AVATAR_TIERS.find(x=>x.key===item.tier)?.minXp??0;if(profile.xp_total<required)return;const current=Array.isArray(profile.avatar_config?.accessories)?profile.avatar_config.accessories.map(String):[];const next=current.includes(id)?current.filter(x=>x!==id):[...current,id];update({avatar_config:{...profile.avatar_config,accessories:next}})};
 
-  if(authRequired)return <main><section className="profileEmpty"><h1>Build your profile.</h1><p>Sign in to customize your OneMuslim identity.</p><Link href="/auth" className="primary">Sign in</Link></section></main>;
+  if(authRequired)return <main className="profileLoadingWhite"><section className="profileEmpty isAuth"><h1>Build your profile.</h1><p>Sign in to customize your OneMuslim identity.</p><Link href="/auth" className="primary">Sign in</Link></section></main>;
   if(!profile)return <main className="profileLoadingWhite"><section className={"profileEmpty"+(profileLoadFailed?" isError":"")} aria-label="Preparing your profile">{profileLoadFailed?<><p>Unable to load your profile. Please try again.</p><button className="primary" type="button" onClick={()=>window.location.reload()}>Try again</button></>:<div className="profileWhiteSkeleton" aria-hidden="true"><div/><div/><div/></div>}</section></main>;
 
   const publishFirstPost=async()=>{const body=postText.trim();if(!body||posting)return;setPosting(true);const s=createClient();const {error}=await s.from("posts").insert({user_id:profile.id,body});if(error){setMessage(error.message);setPosting(false);return;}setPostText("");setPostCount(x=>x+1);setPosting(false);};
