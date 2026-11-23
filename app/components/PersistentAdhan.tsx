@@ -5,7 +5,7 @@ import Link from "next/link";
 import { createClient } from "../../utils/supabase/client";
 import { readLocation } from "./LocationPreferences";
 import {
-  ADHAN_AUDIO_URL, ADHAN_PRAYERS, ADHAN_PREVIEW_EVENT, ADHAN_SETTINGS_EVENT,
+  ADHAN_AUDIO_URL, ADHAN_START_SECONDS, ADHAN_PRAYERS, ADHAN_PREVIEW_EVENT, ADHAN_SETTINGS_EVENT,
   ADHAN_STOP_EVENT, type AdhanLocation, type AdhanPrayer,
   fetchPrayerSchedule, locationClock, prayerMinute, readAdhanPreferences, saveAdhanPreferences,
   type PrayerSchedule
@@ -27,24 +27,31 @@ export default function PersistentAdhan() {
 
   useEffect(() => {
     const audio = new Audio(ADHAN_AUDIO_URL);
-    audio.preload = "none";
+    // Metadata warmup makes the first audible word begin immediately, without the silent intro.
+    audio.preload = readAdhanPreferences().enabled ? "auto" : "metadata";
+    const skipIntro = () => {
+      if (Number.isFinite(audio.duration) && audio.duration > ADHAN_START_SECONDS + 2 && audio.currentTime < ADHAN_START_SECONDS) {
+        try { audio.currentTime = ADHAN_START_SECONDS; } catch { /* Browser may still be loading. */ }
+      }
+    };
+    audio.addEventListener("loadedmetadata", skipIntro);
     const ended = () => {setActive(null);setPlayback(0)};
     const progress = () => {
       if(Number.isFinite(audio.duration)&&audio.duration>0){
-        setPlayback(Math.min(100,Math.max(0,(audio.currentTime/audio.duration)*100)));
+        setPlayback(Math.min(100,Math.max(0,((audio.currentTime-ADHAN_START_SECONDS)/(audio.duration-ADHAN_START_SECONDS))*100)));
       }
     };
     audio.addEventListener("ended", ended);
     audio.addEventListener("timeupdate", progress);
     audioRef.current = audio;
-    return () => { audio.pause(); audio.removeEventListener("ended", ended);audio.removeEventListener("timeupdate",progress);audioRef.current = null; };
+    return () => { audio.pause(); audio.removeEventListener("ended", ended);audio.removeEventListener("timeupdate",progress);audio.removeEventListener("loadedmetadata",skipIntro);audioRef.current = null; };
   }, []);
 
   const stop = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
       audio.pause();
-      try { audio.currentTime = 0; } catch { /* Stream might not be buffered. */ }
+      try { audio.currentTime = ADHAN_START_SECONDS; } catch { /* Stream might not be buffered. */ }
     }
     setActive(null);
     setBlocked(false);
@@ -55,11 +62,13 @@ export default function PersistentAdhan() {
     const audio = audioRef.current;
     if (!audio) return;
     audio.pause();
-    try { audio.currentTime = 0; } catch { /* Stream might not be buffered. */ }
+    try { audio.currentTime = ADHAN_START_SECONDS; } catch { /* Stream might not be buffered. */ }
     audio.volume = typeof volumeOverride === "number" ? Math.max(0, Math.min(1, volumeOverride)) : readAdhanPreferences().volume;
     setActive(prayer);
     setBlocked(false);
     setPlayback(0);
+    // Keep play() in the original user-gesture task when testing sound. Scheduled playback
+    // is attempted automatically, but iOS/Safari may block it until a tap.
     void audio.play().then(() => setBlocked(false)).catch(() => setBlocked(true));
   }, []);
 
@@ -184,16 +193,16 @@ export default function PersistentAdhan() {
         <svg viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round"><path d="M7 26V14l5-3 4 3 4-3 5 3v12"/><path d="M4 27h24M11 26v-7h4v7M19 26v-7h4v7M16 5V2M13 8a5 5 0 0 0 7-5"/></svg>
       </span>
       <div className="adhanGlassText">
-        <strong>{preview?"Adhan sound preview":`${active} · Time for Salah`}</strong>
-        <p>{blocked?"Audio is paused by your browser. Tap Enable sound.":"Allahu Akbar · Allah is Greatest"}</p>
+        <strong>{preview?"Adhan · Sound check":`${active} · Time for Salah`}</strong>
+        <p>{blocked?"Tap Play to enable sound":"Allahu Akbar · Allah is Greatest"}</p>
       </div>
       <span className={"adhanGlassPulse"+(blocked?" is-paused":"")} aria-label={blocked?"Sound blocked":"Adhan playing"} aria-hidden="true"><i/><i/><i/><i/></span>
     </div>
     <div className="adhanGlassProgress" aria-hidden="true"><span style={{width:`${playback}%`}}/></div>
     <nav className="adhanGlassActions" aria-label="Adhan actions">
-      <span className="adhanGlassPlace">{place.city?<>⌖ {place.city}</>:"Prayer reminder"}</span>
+      <span className="adhanGlassPlace">{place.country?<>⌖ {[place.state,place.country].filter(Boolean).join(" · ")}</>:"Prayer reminder"}</span>
       <div className="adhanGlassActionButtons">
-        {blocked&&<button type="button" className="adhanGlassEnable" onClick={()=>play(active)} aria-label="Enable Adhan audio">▶ Enable sound</button>}
+        {blocked&&<button type="button" className="adhanGlassEnable" onClick={()=>play(active)} aria-label="Enable Adhan audio">▶ Play</button>}
         <Link href="/profile?compass=1" onClick={()=>window.dispatchEvent(new Event("1muslim:open-qibla"))}>⌖ Qibla <span aria-hidden="true">↗</span></Link>
         <button type="button" className="adhanGlassStop" onClick={stop}>Stop <span aria-hidden="true">×</span></button>
       </div>
