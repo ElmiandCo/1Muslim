@@ -32,12 +32,12 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const supabase=useMemo(()=>createClient(),[]);
   const discovery=useLiveDiscovery();
   const [lives,setLives]=useState<LiveRow[]>([]);
-  const [hostMap,setHostMap]=useState<Record<string,{display_name:string|null;username:string|null;avatar_url:string|null;gender:string|null}>>({});
+  const [hostMap,setHostMap]=useState<Record<string,{display_name:string|null;username:string|null;hide_1muslim_id?:boolean|null;avatar_url:string|null;gender:string|null}>>({});
   const [live,setLive]=useState<LiveRow|null>(null);
   const [activeIndex,setActiveIndex]=useState(0);
   const [curatedVideos,setCuratedVideos]=useState<CuratedVideo[]>([]);
   const [next,setNext]=useState<Slot|null>(null);
-  const [nextHost,setNextHost]=useState<{display_name:string|null;username:string|null;avatar_url:string|null} | null>(null);
+  const [nextHost,setNextHost]=useState<{display_name:string|null;username:string|null;hide_1muslim_id?:boolean|null;avatar_url:string|null} | null>(null);
   const [now,setNow]=useState(Date.now());
   const [loading,setLoading]=useState(true);
   const [showGoLivePrompt,setShowGoLivePrompt]=useState(false);
@@ -88,13 +88,13 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       setActiveIndex(current=>selected&&keys.includes(selected)?keys.indexOf(selected):Math.min(current,Math.max(0,keys.length-1)));
       const hostIds=Array.from(new Set(rows.map(row=>row.host_id).filter(Boolean)));
       if(hostIds.length){
-        const {data:profiles}=await supabase.from("profiles").select("id,display_name,username,avatar_url,gender").in("id",hostIds);
+        const {data:profiles}=await supabase.from("profiles").select("id,display_name,username,hide_1muslim_id,avatar_url,gender").in("id",hostIds);
         setHostMap(Object.fromEntries((profiles??[]).map(profile=>[profile.id,profile])));
       } else setHostMap({});
       const upcoming=(slots??[]).find((x:any)=>new Date(x.starts_at).getTime()>Date.now() || x.status==="waiting");
       setNext((upcoming??null) as Slot|null);
       if(upcoming?.host_id){
-        const {data:profile}=await supabase.from("profiles").select("display_name,username,avatar_url").eq("id",upcoming.host_id).maybeSingle();
+        const {data:profile}=await supabase.from("profiles").select("display_name,username,hide_1muslim_id,avatar_url").eq("id",upcoming.host_id).maybeSingle();
         setNextHost(profile ?? null);
       } else setNextHost(null);
       setLoading(false);
@@ -116,7 +116,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const primary = active?.kind === "live" ? active.item : null;
   const activeCurated = active?.kind === "video" ? active.item : null;
   const activeHost = primary ? hostMap[(primary as LiveRow & {host_id:string}).host_id] : null;
-  const activeHostName = activeHost?.display_name || (activeHost?.username ? "@"+activeHost.username : "1Muslim Host");
+  const activeHostName = activeHost?.display_name || (!activeHost?.hide_1muslim_id&&activeHost?.username ? "@"+activeHost.username : "1Muslim Host");
   const hasNextStream = queue.length > 1;
   const nextItem = hasNextStream ? queue[(safeIndex + 1) % queue.length] : null;
 
@@ -125,7 +125,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
   const handoffSoon=!!liveEnds && liveEnds-now<=120000 && liveEnds-now>0;
   const nextCountdown=next?countdown(nextStarts-now):"";
   const handoffCountdown=liveEnds?countdown(liveEnds-now):"";
-  const nextHostName=nextHost?.display_name || (nextHost?.username ? "@"+nextHost.username : "Scheduled 1Muslim Host");
+  const nextHostName=nextHost?.display_name || (!nextHost?.hide_1muslim_id&&nextHost?.username ? "@"+nextHost.username : "Scheduled 1Muslim Host");
 
   useEffect(()=>{
     if(!preliveFor) { setIntroNeedsTap(false); return; }
@@ -151,7 +151,7 @@ export default function LiveNowFocus({ mode = "hero" }: { mode?: "hero" | "carou
       {rankedLives.length ? <div className="rail">{rankedLives.map((stream,index)=>{
         const s=stream as LiveRow & {host_id:string}; const profile=hostMap[s.host_id];
         const thumbnail=stream.thumbnail_path ? supabase.storage.from("live-recordings").getPublicUrl(stream.thumbnail_path).data.publicUrl : profile?.avatar_url || (profile?.gender?.toLowerCase()==="female" ? "/assets/avatars/default-female.jpg" : "/assets/avatars/default-male.jpg");
-        const name=profile?.display_name || (profile?.username ? "@"+profile.username : "1Muslim Host");
+        const name=profile?.display_name || (!profile?.hide_1muslim_id&&profile?.username ? "@"+profile.username : "1Muslim Host");
         return <Link href={`/streaming/live/${stream.id}`} className="card" key={stream.id}><div className="thumb"><img src={thumbnail} alt="" /><span className="live">● LIVE</span><span className="rank">#{index+1}</span></div><div className="body"><h3>{stream.title}</h3><div className="topic">{stream.category || "Community"}</div><div className="host">{name}</div><div className="views">👥 {stream.viewer_count ?? 0} watching</div></div></Link>;
       })}</div> : <div className="count">No other Lives are on right now.</div>}
     </section>;

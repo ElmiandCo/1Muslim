@@ -61,7 +61,7 @@ export default function NotificationToaster(){
     return()=>{alive=false;window.clearInterval(timer);window.removeEventListener("focus",focus);document.removeEventListener("visibilitychange",focus);if(channel)void s.removeChannel(channel)};
   },[]);
   const actorId=(n:Notice)=>uuid(n.actor_id||null)?n.actor_id!:n.type.toLowerCase().includes("follow")&&uuid(n.entity_id)?n.entity_id!:null;
-  useEffect(()=>{const ids=[...new Set(items.map(actorId).filter((id):id is string=>!!id&&!actors[id]))];if(!ids.length)return;let active=true;void db.current.from("profiles").select("id,display_name,username,avatar_url").in("id",ids).then(({data})=>{if(active&&data)setActors(prev=>({...prev,...Object.fromEntries(data.map(p=>[p.id,{name:p.display_name||p.username||"1Muslim member",avatar:p.avatar_url||null}]))}))});return()=>{active=false}},[items,actors]);
+  useEffect(()=>{const ids=[...new Set(items.map(actorId).filter((id):id is string=>!!id&&!actors[id]))];if(!ids.length)return;let active=true;void db.current.from("profiles").select("id,display_name,username,hide_1muslim_id,avatar_url").in("id",ids).then(({data})=>{if(active&&data)setActors(prev=>({...prev,...Object.fromEntries(data.map(p=>[p.id,{name:p.display_name||(!p.hide_1muslim_id?p.username:null)||"1Muslim member",avatar:p.avatar_url||null}]))}))});return()=>{active=false}},[items,actors]);
   if(!items.length)return null;
   return <div className="omNoticePortal" aria-label="Recent notifications">
     {flash&&<div className="omNoticeBlur" aria-hidden="true"/>}

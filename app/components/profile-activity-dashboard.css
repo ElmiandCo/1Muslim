@@ -235,3 +235,16 @@
  .profileAnalyticsPanel .activityGraphFill,.profileAnalyticsPanel .activityPlaceProgress i{animation:none!important}
  .profileAnalyticsPanel a.activityPlaceCard{transition:none!important}
 }
+
+/* A single persisted control replaces the decorative count pill. */
+.profileAnalyticsPanel button.activityPlacesToggle{
+ flex:0 0 auto;align-self:center;min-height:34px;border:1px solid #c9d7e3;
+ border-radius:999px;padding:7px 13px;background:linear-gradient(135deg,#fff,#f5f9fd);
+ color:#365b74;font-size:11px;font-weight:750;letter-spacing:.01em;
+ white-space:nowrap;cursor:pointer;transition:border-color .2s,box-shadow .2s;
+}
+.profileAnalyticsPanel button.activityPlacesToggle:hover{border-color:#7eacc3;box-shadow:0 3px 12px #174d7215}
+.profileAnalyticsPanel button.activityPlacesToggle:focus-visible{outline:2px solid #3f93bb;outline-offset:2px}
+.profileAnalyticsPanel #insights-top-spaces-list[hidden]{display:none!important}
+.profileAnalyticsPanel .activityPlaces{margin-bottom:12px}
+@media(prefers-reduced-motion:reduce){.profileAnalyticsPanel button.activityPlacesToggle{transition:none}}

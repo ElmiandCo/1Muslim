@@ -18,7 +18,7 @@ export async function GET(request:Request){
  const ids=[...new Set(posts.map(p=>p.author_id).filter((id):id is string=>typeof id==="string"))];
  // Both queries are independent. Preserve the safe legacy lookup for old uploads.
  const [{data:profiles},{data:mediaPosts}]=await Promise.all([
-  ids.length?db.from("profiles").select("id,display_name,username,avatar_url,avatar_config,shahada_verified_at").in("id",ids):Promise.resolve({data:[]}),
+  ids.length?db.from("profiles").select("id,display_name,username,hide_1muslim_id,avatar_url,avatar_config,shahada_verified_at").in("id",ids):Promise.resolve({data:[]}),
   ids.length?db.from("posts").select("id,user_id,body,created_at").in("user_id",ids).order("created_at",{ascending:false}).limit(500):Promise.resolve({data:[]})
  ]);
  const authors=new Map((profiles||[]).map(p=>[p.id,p]));
@@ -51,8 +51,8 @@ export async function GET(request:Request){
   const config=profile?.avatar_config as Record<string,unknown>|null;
   const chosen=[config?.adminAvatarUrl,config?.customAvatarUrl,config?.selectedAvatarUrl,config?.avatarUrl].find(v=>typeof v==="string"&&/^(https:\/\/|\/assets\/avatars\/)/.test(v));
   return {...p,shahada_verified:!!profile?.shahada_verified_at,
-   author_name:profile?.display_name||profile?.username||"Community member",
-   author_handle:profile?.username?"@"+profile.username:"@member",
+   author_name:profile?.display_name||(!profile?.hide_1muslim_id?profile?.username:null)||"Community member",
+   author_handle:!profile?.hide_1muslim_id&&profile?.username?"@"+profile.username:"",
    author_avatar_url:chosen||profile?.avatar_url||null,
    media_url,media_type:attachment?.mime_type||null,media_items};
  });

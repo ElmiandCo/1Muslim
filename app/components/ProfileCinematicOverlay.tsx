@@ -7,7 +7,7 @@ import ProfileSpotlightHero from "./ProfileSpotlightHero";
 import styles from "./ProfileCinematicOverlay.module.css";
 
 type PublicIdentity={
- id:string;display_name:string|null;username:string|null;bio:string|null;
+ id:string;display_name:string|null;username:string|null;hide_1muslim_id?:boolean|null;bio:string|null;
  city:string|null;state:string|null;country:string|null;
  xp_total:number;shahada_verified_at:string|null;
 };
@@ -108,7 +108,7 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
       <h1>{profile.display_name||"1Muslim member"}</h1>
       {profile.shahada_verified_at&&<span className={styles.verified} title="Shahada verified" aria-label="Shahada verified">✓</span>}
      </div>
-     <p className={styles.handle}>@{profile.username||"member"}</p>
+     {!profile.hide_1muslim_id&&profile.username?.trim()&&<p className={styles.handle}>@{profile.username.trim()}</p>}
      {profile.shahada_verified_at&&<span className={styles.verifiedLabel}>✦ Shahada verified</span>}
      {profile.bio?.trim()&&<p className={styles.bio}>{profile.bio}</p>}
      {[profile.city,profile.state,profile.country].some(Boolean)&&<p className={styles.location}>⌖ {[profile.city,profile.state,profile.country].filter(Boolean).join(", ")}</p>}

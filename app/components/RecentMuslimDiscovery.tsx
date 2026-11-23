@@ -2,9 +2,10 @@
 import Link from "next/link";
 import {useEffect,useRef,useState,type MouseEvent} from "react";
 import {createClient} from "../../utils/supabase/client";
+import {publicMemberName} from "../lib/member-id-visibility";
 import "./RecentMuslimDiscovery.css";
 
-type Member={id:string;display_name:string|null;username:string|null;avatar_url:string|null;avatar_gender:string|null;avatar_config:Record<string,unknown>|null};
+type Member={id:string;display_name:string|null;username:string|null;hide_1muslim_id?:boolean|null;avatar_url:string|null;avatar_gender:string|null;avatar_config:Record<string,unknown>|null};
 const fallback=(m:Member)=>m.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg";
 const photo=(m:Member)=>{
  const configured=m.avatar_config?.selectedAvatarUrl;
@@ -20,7 +21,7 @@ export default function RecentMuslimDiscovery({excludeId}:{excludeId?:string}){
   let active=true;const db=createClient();
   const load=async()=>{
    const {data,error}=await db.from("profiles")
-    .select("id,display_name,username,avatar_url,avatar_gender,avatar_config")
+    .select("id,display_name,username,hide_1muslim_id,avatar_url,avatar_gender,avatar_config")
     .order("created_at",{ascending:false}).limit(8);
    if(!active)return;
    if(error){setFailed(true);return}
@@ -41,7 +42,7 @@ export default function RecentMuslimDiscovery({excludeId}:{excludeId?:string}){
  useEffect(()=>setPictureError(false),[members,index]);
  const advance=(direction:number)=>setIndex(i=>(i+direction+members.length)%members.length);
  const member=members[index];
- const name=member?.display_name||member?.username||"New member";
+ const name=member?publicMemberName(member):"New member";
  const open=(event:MouseEvent<HTMLAnchorElement>,id?:string)=>{event.preventDefault();window.dispatchEvent(new CustomEvent("1muslim:discover-muslims",{detail:{id}}))};
  return <section className="profileSocialDiscoveryShortcut recentMuslimDiscovery" aria-label="Discover recently joined Muslims"
   onTouchStart={e=>{didSwipe.current=false;const t=e.touches[0];if(t)touchStart.current={x:t.clientX,y:t.clientY}}}

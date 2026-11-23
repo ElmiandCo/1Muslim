@@ -66,7 +66,7 @@ export default function MagazineStory(){
      if(!active)return;
      if(ummah){
       const [profile,attachment]=await Promise.all([
-       db.from("profiles").select("display_name,username").eq("id",ummah.author_id).maybeSingle(),
+       db.from("profiles").select("display_name,username,hide_1muslim_id").eq("id",ummah.author_id).maybeSingle(),
        db.from("post_media").select("storage_path,mime_type").eq("community_post_id",id).order("storage_path",{ascending:true})
       ]);
       if(!active)return;
@@ -75,16 +75,16 @@ export default function MagazineStory(){
       const media_items=assets.map(asset=>({url:db.storage.from("community-media").getPublicUrl(asset.storage_path).data.publicUrl,type:asset.mime_type}));
       const mediaUrl=media_items[0]?.url||null;
       setPost({id:ummah.id,body:ummah.body||"",created_at:ummah.created_at,author_id:ummah.author_id,
-       author_name:profile.data?.display_name||profile.data?.username||"1Muslim Member",
-       author_handle:"@"+(profile.data?.username||"member"),media_url:mediaUrl,media_type:media?.mime_type||null,media_items});
+       author_name:profile.data?.display_name||(!profile.data?.hide_1muslim_id?profile.data?.username:null)||"1Muslim Member",
+       author_handle:!profile.data?.hide_1muslim_id&&profile.data?.username?"@"+profile.data.username:"",media_url:mediaUrl,media_type:media?.mime_type||null,media_items});
       setLegacyPost(false);
       setPostIds(current=>current.includes(id)?current:[id,...current]);
       return;
      }
      const {data:row}=await db.from("posts").select("id,body,created_at,user_id").eq("id",id).maybeSingle();
      if(!row||!active)return;
-     const {data:author}=await db.from("profiles").select("display_name,username").eq("id",row.user_id).maybeSingle();
-     if(active){setPost({id:row.id,body:row.body||"",created_at:row.created_at,author_id:row.user_id,author_name:author?.display_name||"1Muslim Member",author_handle:"@"+(author?.username||"member"),media_url:null,media_type:null});setLegacyPost(true)}
+     const {data:author}=await db.from("profiles").select("display_name,username,hide_1muslim_id").eq("id",row.user_id).maybeSingle();
+     if(active){setPost({id:row.id,body:row.body||"",created_at:row.created_at,author_id:row.user_id,author_name:author?.display_name||"1Muslim Member",author_handle:!author?.hide_1muslim_id&&author?.username?"@"+author.username:"",media_url:null,media_type:null});setLegacyPost(true)}
     })();
    }
   };

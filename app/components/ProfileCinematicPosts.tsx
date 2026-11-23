@@ -70,7 +70,7 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
      ...(older.data||[]).map(p=>({id:p.id,author_id:p.user_id,body:p.body,created_at:p.created_at,media_url:null,media_type:null,savedAt:legacy.data?.find(r=>r.post_id===p.id)?.created_at,source:"profile" as const}))
     ];
     const authorIds=[...new Set(basePosts.map(p=>p.author_id))];
-    const {data:authors}=authorIds.length?await db.from("profiles").select("id,display_name,username,avatar_url,avatar_config").in("id",authorIds):{data:[]};
+    const {data:authors}=authorIds.length?await db.from("profiles").select("id,display_name,username,hide_1muslim_id,avatar_url,avatar_config").in("id",authorIds):{data:[]};
     const people=new Map((authors||[]).map(a=>[a.id,a]));
     const bucket=db.storage.from("community-media");
     const hydrated=basePosts.map(p=>{
@@ -80,8 +80,8 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
      return {...p,
       media_url:attachment?.storage_path?bucket.getPublicUrl(attachment.storage_path).data.publicUrl:null,
       media_type:attachment?.mime_type||null,
-      author_name:author?.display_name||author?.username||"1Muslim member",
-      author_handle:author?.username?"@"+author.username:"@member",
+      author_name:author?.display_name||(!author?.hide_1muslim_id?author?.username:null)||"1Muslim member",
+      author_handle:!author?.hide_1muslim_id&&author?.username?"@"+author.username:"",
       author_avatar_url:typeof avatar==="string"?avatar:null
      };
     }).sort((a,b)=>(b.savedAt||b.created_at).localeCompare(a.savedAt||a.created_at));
@@ -142,13 +142,13 @@ export default function ProfileCinematicPosts({profileId,variant="grid",limit,fe
    const isImage=!!p.media_url&&(p.media_type?.startsWith("image/")||/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(p.media_url));
    const playing=active===p.id;
    return <div key={p.id} className="profileCinematicItem"><Link href={`/posts/story/${encodeURIComponent(p.id)}`} className={`profileCinematicTile ${playing?"is-active":""}`} data-post-id={p.id} ref={el=>{if(el)nodes.current.set(p.id,el);else nodes.current.delete(p.id)}} aria-label={`View post: ${(cleanPostBody(p.body)||"Community post").slice(0,90)}`}>
-    {feedMode==="community"&&<div className="profileUmmahAuthor"><span className="profileUmmahAvatar">{p.author_avatar_url?<img src={p.author_avatar_url} alt=""/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span><span className="profileUmmahAuthorInfo"><strong>{p.author_name||"Community member"}</strong><small>{p.author_handle||"@member"} · {new Date(p.created_at).toLocaleDateString()}</small></span><span className="profileUmmahOpen" aria-hidden="true">↗</span></div>}
+    {feedMode==="community"&&<div className="profileUmmahAuthor"><span className="profileUmmahAvatar">{p.author_avatar_url?<img src={p.author_avatar_url} alt=""/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span><span className="profileUmmahAuthorInfo"><strong>{p.author_name||"Community member"}</strong><small>{p.author_handle||""} · {new Date(p.created_at).toLocaleDateString()}</small></span><span className="profileUmmahOpen" aria-hidden="true">↗</span></div>}
     <div className="profileCinematicVisual">
      {isVideo&&p.media_url?<video src={p.media_url} poster={p.thumbnail_url||undefined} muted playsInline loop autoPlay={playing} preload={playing?"metadata":"none"} ref={el=>{if(!el)return;if(playing){el.play().catch(()=>{});}else el.pause()}}/>:
       isImage?<img src={p.media_url!} alt="" loading="lazy"/>:
       <div className="profileCinematicText"><span>✦</span><p>{(cleanPostBody(p.body)||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,150)}</p></div>}
     </div>
-    {feedMode==="saved"&&<div className="profileSavedBy"><strong>{p.author_name||"1Muslim member"}</strong><span>{p.author_handle||"@member"}</span></div>}
+    {feedMode==="saved"&&<div className="profileSavedBy"><strong>{p.author_name||"1Muslim member"}</strong><span>{p.author_handle||""}</span></div>}
     {variant==="recentCards"&&<div className="profileRecentCardMeta"><strong>{(cleanPostBody(p.body)||"Community post").replace(/https?:\/\/\S+/g,"").slice(0,105)||"View post"}</strong><small>{new Date(p.created_at).toLocaleDateString()} · View post ↗</small></div>}
     {feedMode==="community"&&<div className="profileUmmahFooter"><span>♡ &nbsp; ◯ &nbsp; ⤴</span><span>View post ↗</span></div>}
     {isVideo&&<span className="profileCinematicPlay" aria-hidden="true">▶</span>}

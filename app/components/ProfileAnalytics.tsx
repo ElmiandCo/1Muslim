@@ -8,8 +8,8 @@ import "./profile-activity-dashboard.css";
 
 type Reading={verse_key:string;read_on:string};
 function ArrowIcon(){return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 19 19 5M8 5h11v11"/></svg>}
-function RefreshIcon(){return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.2 6.2M20 4v7h-7"/></svg>}
 const TIME_KEY="1muslim:page-screen-time-v1";
+const SPACES_VISIBILITY_KEY="1muslim:analytics:top-spaces-expanded:v1:";
 const fmt=(s:number)=>s>=3600?`${Math.floor(s/3600)}h ${Math.round(s%3600/60)}m`:`${Math.floor(s/60)}m`;
 const day=(offset:number)=>{const d=new Date();d.setDate(d.getDate()-offset);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")};
 const pageDetails=(path:string)=>{
@@ -57,12 +57,15 @@ export function ProfileActivityTracker(){
 }
 export default function ProfileAnalytics({inline=false,userId}:{inline?:boolean;userId?:string}={}){
  const [resetConfirm,setResetConfirm]=useState(false),[resetBusy,setResetBusy]=useState(false),[resetError,setResetError]=useState("");
- const [open,setOpen]=useState(false),[readings,setReadings]=useState<Reading[]>([]),[screen,setScreen]=useState<Record<string,Record<string,number>>>({}),[loading,setLoading]=useState(false),[refreshError,setRefreshError]=useState(""),[refreshedAt,setRefreshedAt]=useState("");
+ const [placesExpanded,setPlacesExpanded]=useState(true);
+ useEffect(()=>{try{const saved=localStorage.getItem(SPACES_VISIBILITY_KEY+(userId||"device"));setPlacesExpanded(saved!=="0")}catch{setPlacesExpanded(true)}},[userId]);
+ const togglePlaces=()=>setPlacesExpanded(current=>{const next=!current;try{localStorage.setItem(SPACES_VISIBILITY_KEY+(userId||"device"),next?"1":"0")}catch{}return next});
+ const [open,setOpen]=useState(false),[readings,setReadings]=useState<Reading[]>([]),[screen,setScreen]=useState<Record<string,Record<string,number>>>({}),[loading,setLoading]=useState(false),[refreshError,setRefreshError]=useState("");
  const reload=useCallback(async()=>{setLoading(true);setRefreshError("");try{setScreen(JSON.parse(localStorage.getItem(TIME_KEY)||"{}"))}catch{setScreen({})}
   try{const db=createClient();const {data:{user},error:authError}=await db.auth.getUser();if(authError||!user)throw Error("Sign in to refresh your Qur’an progress.");
    const all:Reading[]=[];const batch=1000;
    for(let offset=0;offset<30000;offset+=batch){const {data,error}=await db.from("quran_reading_events").select("verse_key,read_on").eq("user_id",user.id).order("read_on",{ascending:false}).range(offset,offset+batch-1);if(error)throw error;all.push(...((data||[]) as Reading[]));if(!data||data.length<batch)break}
-   setReadings(all);setRefreshedAt(new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}));
+   setReadings(all);
   }catch(e){setRefreshError(e instanceof Error?e.message:"Could not refresh Qur’an progress.")}finally{setLoading(false)}
  },[]);
  useEffect(()=>{if(!open&&!inline)return;void reload();const refresh=()=>{if(document.visibilityState==="visible")void reload()};window.addEventListener("focus",refresh);document.addEventListener("visibilitychange",refresh);window.addEventListener("1muslim:quran-reading-updated",refresh);return()=>{window.removeEventListener("focus",refresh);document.removeEventListener("visibilitychange",refresh);window.removeEventListener("1muslim:quran-reading-updated",refresh)}},[open,inline,reload]);
@@ -77,7 +80,17 @@ export default function ProfileAnalytics({inline=false,userId}:{inline?:boolean;
  const dates=Array.from({length:7},(_,i)=>day(6-i));
  const today=screen[day(0)]||{},week=dates.reduce((total,d)=>total+Object.values(screen[d]||{}).reduce((a,b)=>a+b,0),0);
  const todaySeconds=Object.values(today).reduce((a,b)=>a+b,0);
- const topPages=Object.entries(dates.reduce((acc,d)=>{for(const [p,t] of Object.entries(screen[d]||{}))acc[p]=(acc[p]||0)+t;return acc},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ const timeByPath=dates.reduce((acc,d)=>{for(const [p,t] of Object.entries(screen[d]||{}))acc[p]=(acc[p]||0)+t;return acc},{} as Record<string,number>);
+ // Merge different routes that map to the same space (for example, /posts
+ // and /community) so one section never appears twice in "Top Spaces".
+ const timeBySpace=Object.values(Object.entries(timeByPath).reduce((acc,[path,seconds])=>{
+  const name=pageDetails(path).name;
+  if(!acc[name])acc[name]={path,seconds:0,largestVisit:0};
+  acc[name].seconds+=seconds;
+  if(seconds>acc[name].largestVisit){acc[name].path=path;acc[name].largestVisit=seconds}
+  return acc;
+ },{} as Record<string,{path:string;seconds:number;largestVisit:number}>));
+ const topPages=timeBySpace.sort((a,b)=>b.seconds-a.seconds).slice(0,5).map(({path,seconds})=>[path,seconds] as [string,number]);
  const dayTotals=dates.map(date=>({date,seconds:Object.values(screen[date]||{}).reduce((a,b)=>a+b,0)}));
  const peak=Math.max(1,...dayTotals.map(d=>d.seconds));
  const activeDays=dayTotals.filter(d=>d.seconds>0).length;
@@ -106,17 +119,17 @@ export default function ProfileAnalytics({inline=false,userId}:{inline?:boolean;
   {spotlight&&<p className="activityWeekNote"><span aria-hidden="true">✦</span> You spent the most time in <strong>{spotlight.name}</strong> this week.</p>}
  </section>
  <section className="activityPlaces" aria-label="Where your time went">
-  <header className="activityPlacesHeading"><div><span>YOUR TOP SPACES</span><h3>Where your time went</h3><p>Jump back into your favorite corners of the Ummah.</p></div><span className="activityPlacesCount">{topPages.length} spaces</span></header>
-  {topPages.length?<div className="activityPlacesList">{topPages.map(([path,seconds],index)=>{
+  <header className="activityPlacesHeading"><div><span>YOUR TOP SPACES</span><h3>Where your time went</h3><p>Jump back into your favorite corners of the Ummah.</p></div><button type="button" className="activityPlacesCount activityPlacesToggle" aria-expanded={placesExpanded} aria-controls="insights-top-spaces-list" onClick={togglePlaces} title={placesExpanded?"Collapse your most visited pages":"Expand your most visited pages"}>{placesExpanded?"Close ↑":topPages.length+" spaces ↓"}</button></header>
+  <div id="insights-top-spaces-list" hidden={!placesExpanded}>{placesExpanded&&(topPages.length?<div className="activityPlacesList">{topPages.map(([path,seconds],index)=>{
    const detail=pageDetails(path);
    return <Link key={path} className="activityPlaceCard" href={path.startsWith("/")&&!path.startsWith("//")&&!path.includes("\\")?path:"/"} aria-label={detail.name+", "+fmt(seconds)+". Open page."} title={"Open "+path}>
     <span className="activityPlaceIcon"><ActivityGlyph symbol={detail.symbol}/></span>
     <span className="activityPlaceContent"><span className="activityPlaceTitle"><strong>{detail.name}</strong><small>{detail.category}</small></span><span className="activityPlaceProgress" aria-hidden="true"><i style={{width:Math.round(seconds/topTotal*100)+"%"}}/></span></span>
     <span className="activityPlaceDuration">{fmt(seconds)}</span><ArrowIcon/>
    </Link>
-  })}</div>:<div className="activityEmpty"><span aria-hidden="true">✦</span><strong>Your story starts here</strong><p>Explore 1Muslim and your activity will take shape automatically.</p></div>}
+  })}</div>:<div className="activityEmpty"><span aria-hidden="true">✦</span><strong>Your story starts here</strong><p>Explore 1Muslim and your activity will take shape automatically.</p></div>)}</div>
  </section>
- <div className="profileAnalyticsGraphActions"><button type="button" onClick={()=>void reload()} disabled={loading} aria-label="Refresh Qur’an completion graph"><RefreshIcon/>{loading?"Refreshing…":"Refresh graph"}</button>{refreshedAt&&<small>Updated {refreshedAt}</small>}</div>{refreshError&&<p className="profileAnalyticsResetError" role="alert">{refreshError}</p>}
+ {refreshError&&<p className="profileAnalyticsResetError" role="alert">{refreshError}</p>}
  <QuranIntelligenceDashboard readings={readings} loading={loading} userId={userId}/>
  <div className="profileAnalyticsProgressHeading"><h3>Reading journey controls <small>Only your Qur’an activity is affected by a reset.</small></h3><button type="button" onClick={()=>setResetConfirm(true)} disabled={resetBusy}>↻ Start new journey</button></div>
  {resetConfirm&&<div className="profileAnalyticsResetConfirm" role="group" aria-label="Confirm reset Qur’an progress"><strong>Start a new reading journey?</strong><p>This clears your saved verse history and completion graph across devices. Screen time and other profile information remain unchanged. This cannot be undone.</p><div><button type="button" onClick={()=>setResetConfirm(false)} disabled={resetBusy}>Cancel</button><button type="button" onClick={()=>void resetReading()} disabled={resetBusy}>{resetBusy?"Resetting…":"Reset reading progress"}</button></div></div>}{resetError&&<p role="alert" className="profileAnalyticsResetError">{resetError}</p>}
