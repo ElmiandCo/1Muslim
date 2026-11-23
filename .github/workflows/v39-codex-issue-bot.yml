@@ -31,6 +31,14 @@ jobs:
       ISSUE_NUMBER: ${{ github.event.issue.number }}
       REPOSITORY: ${{ github.repository }}
     steps:
+      - name: Verify GitHub Actions Codex secret before running expensive jobs
+        env:
+          OPENAI_KEY_AVAILABLE: ${{ secrets.OPENAI_API_KEY != '' }}
+        run: |
+          if [ "$OPENAI_KEY_AVAILABLE" != "true" ]; then
+            echo "::error::Missing GitHub Actions secret OPENAI_API_KEY. Vercel environment variables do not automatically appear in GitHub Actions. Add it under repo Settings > Secrets and variables > Actions, then reissue /v39-run."
+            exit 1
+          fi
       - name: Fetch production baseline — do not expose credentials to coding agent
         uses: actions/checkout@v5
         with:
