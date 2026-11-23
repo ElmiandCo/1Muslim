@@ -110,7 +110,7 @@ export default function LocationPreferences({ onSaved }: { onSaved?: (location: 
       setWasShared(shareOnMap);
       setValue(next);
       onSaved?.(next);
-      setStatus(synced ? "Location saved to your account." : "Saved on this device. Sign in to sync.");
+      setStatus(synced ? "Location saved to your account." : shareOnMap ? "Saved on this device. Sign in to join the Ummah map." : "Saved on this device. Sign in to sync.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Unable to save location.");
     } finally { setDetecting(false); }
@@ -124,7 +124,7 @@ export default function LocationPreferences({ onSaved }: { onSaved?: (location: 
       const synced = await persistPrayerLocation(next, shareOnMap, wasShared && !shareOnMap);
       setWasShared(shareOnMap);
       onSaved?.(next);
-      setStatus(synced ? "Location saved to your account." : "Saved on this device. Sign in to sync.");
+      setStatus(synced ? "Location saved to your account." : shareOnMap ? "Saved on this device. Sign in to join the Ummah map." : "Saved on this device. Sign in to sync.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not save location.");
     } finally { setBusy(false); }
@@ -136,7 +136,7 @@ export default function LocationPreferences({ onSaved }: { onSaved?: (location: 
     </button>
     <label className="prayerMapConsent">
       <input type="checkbox" checked={shareOnMap} onChange={event => setShareOnMap(event.target.checked)} />
-      <span>Also include my state/country in anonymous Ummah map counts. Optional; your name and avatar stay private.</span>
+      <span>Include my state/country in anonymous Ummah map counts. Separate map settings control whether your name and avatar appear.</span>
     </label>
     <details className="prayerManualDetails">
       <summary>Set location manually <span aria-hidden="true">⌄</span></summary>
