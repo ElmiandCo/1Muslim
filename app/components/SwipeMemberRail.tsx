@@ -38,7 +38,12 @@ export default function SwipeMemberRail({id,children,label}:{id:string;children:
    const el=e.currentTarget;
    const first=el.firstElementChild as HTMLElement|null;
    const step=(first?.getBoundingClientRect().width||160)+(parseFloat(getComputedStyle(el).columnGap)||12);
-   const left=Math.max(0,Math.round(el.scrollLeft/step)*step);
+   const startingCard=Math.round(g.startScroll/step);
+   const nearestCard=Math.round(el.scrollLeft/step);
+   const travel=e.clientX-g.x;
+   // A short intentional flick must advance at least one card on mobile.
+   const targetCard=travel < -28?Math.max(startingCard+1,nearestCard):travel>28?Math.min(startingCard-1,nearestCard):nearestCard;
+   const left=Math.max(0,targetCard*step);
    el.scrollTo({left,behavior:"smooth"});
    window.setTimeout(()=>{consumed.current=false},140);
   }
