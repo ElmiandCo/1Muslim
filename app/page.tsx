@@ -20,10 +20,10 @@ export default function HomePage(){
    else setStatus("guest");
   };
   void open();
-  const {data:{subscription}}=db.auth.onAuthStateChange((_event,session)=>{
+  const {data:{subscription}}=db.auth.onAuthStateChange((event,session)=>{
    if(!active)return;
+   if(event==="SIGNED_OUT"){setStatus("guest");return}
    if(session?.user){setStatus("member");router.replace("/profile");}
-   else setStatus("guest");
   });
   return()=>{active=false;subscription.unsubscribe()};
  },[router]);
