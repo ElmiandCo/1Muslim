@@ -5,6 +5,7 @@ import ProfileQiblaCompass from "../components/ProfileQiblaCompass";
 import MemberGlyph from "../components/MemberGlyph";
 import ProfileConnectionsPanel from "../components/ProfileConnectionsPanel";
 import RegionDiscovery, {canonicalCountry} from "../components/RegionDiscovery";
+import RecentMuslimDiscovery from "../components/RecentMuslimDiscovery";
 import UmmahRegionInvite from "../components/UmmahRegionInvite";
 import Link from "next/link";
 import NextImage from "next/image";
@@ -420,7 +421,7 @@ function ProfileOverview({profile,tier,ashab,postCount,postText,setPostText,post
       <button type="button" className="profileTabAction" data-spotlight={profileSpotlight===(isOwner?5:3)} aria-label="Show profile videos" title="Videos" aria-pressed={activeQuickPanel==="videos"} onClick={()=>openProfilePanel("videos")}><ProfileControlGlyph kind="videos"/><span className="profileActionLabel">Videos</span></button>
      </nav>
     </div>
-    <div className="profileSocialDiscoveryShortcut"><span className="profileDiscoveryGlyph" aria-hidden="true">◎</span><div><strong>Discover Muslims</strong><p>Connect with the Ummah</p></div><Link href="/profile?section=muslimeen">Explore →</Link></div>
+    <RecentMuslimDiscovery excludeId={isOwner?profile.id:undefined}/>
     {showProfileDetails&&<div id="profile-details" aria-label="Profile details"/>}
 
     <div className="profileLegacyOverview" hidden>
