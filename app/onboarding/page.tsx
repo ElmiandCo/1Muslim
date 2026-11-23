@@ -544,6 +544,8 @@ export default function OnboardingPage() {
 .onboardingPage .shahadaRecordingClockLabels strong{font-size:22px!important;font-variant-numeric:tabular-nums;color:#f4fbf6}
 .onboardingPage .shahadaRecordingTrack{height:7px;width:100%;border-radius:999px;background:#d5ffda25;overflow:hidden;border:1px solid #ffffff29}
 .onboardingPage .shahadaRecordingTrack i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#f5c1bf,#ec6478);transition:width .1s linear}
+.onboardingPage .shahadaRecorderFeedback{width:100%;max-width:420px;padding:8px 11px;border:1px solid #ec9ca75c;border-radius:11px;background:#351a2088;color:#ffced2!important;text-align:center;font-size:11px!important;line-height:1.45}
+.onboardingPage .shahadaRecorderFeedback.ok{border-color:#8de7b17f;background:#082a1eb0;color:#d9ffe9!important}
 .onboardingPage .shahadaRecorderActions{display:flex;justify-content:center;flex-wrap:wrap;gap:9px;width:100%}
 .onboardingPage .shahadaRecorderActions button{min-height:44px;border-radius:100px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer}
 .onboardingPage .shahadaPrimaryAction{background:#cceecb;border:1px solid #d6f8d7;color:#07180f}
@@ -610,6 +612,7 @@ export default function OnboardingPage() {
         <p className="shahadaRecorderSub">
           {recording ? "Speak clearly in "+(language==="en"?"English":"Arabic")+". Tap Finish or wait for 00:00." : audioPreview ? "Press Play to hear the full take. If anything was missed, record again." : "Say the words below. Tap once to begin, tap again to finish — or hold and release."}
         </p>
+        {message && verificationMode === "audio" && <p className={`shahadaRecorderFeedback ${verified ? "ok" : ""}`} role="status">{message}</p>}
         <div className="shahadaRecorderActions">
           <button type="button" className="shahadaPrimaryAction" onClick={onRecorderClick} disabled={startingRecording || processingAudio}>
             {startingRecording ? "Requesting access…" : recording ? "■ Finish & listen" : audioPreview ? "↻ Record again" : "🎙 Start recording"}
