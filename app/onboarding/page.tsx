@@ -613,7 +613,7 @@ export default function OnboardingPage() {
         {audioPreview && <div className="shahadaAudioReview">
           <span>🎧 LISTEN TO YOUR RECORDING</span>
           <audio controls preload="metadata" src={audioPreview} aria-label="Play your private Shahada recording"/>
-          <small>Complete take · no automatic cropping · nothing uploaded until you continue.</small>
+          <small>Complete take · no cropping. Vault upload happens only when you continue; browser speech recognition may use an external service.</small>
         </div>}
         {transcript && <div className="transcript" dir={language === "ar" ? "rtl" : "ltr"}><small>Speech recognition heard</small><span>{transcript}</span></div>}
       </div>
