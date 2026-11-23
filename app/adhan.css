@@ -253,3 +253,77 @@
  .adhanGlassProgress>span{transition:none}
 }
 @supports not (backdrop-filter:blur(1px)){.adhanPlayerToast.adhanGlassNav{background:rgba(248,250,252,.97)}}
+
+
+/* Compact, native-feeling Adhan control deck: only state/country is displayed. */
+.adhanCompact .adhanSettingsTitle p{margin-top:3px}
+.adhanCompact .adhanSettingsBody{gap:12px;margin-top:12px}
+.adhanCompactTop{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(0,1fr);gap:12px;align-items:stretch}
+.adhanCompactBottom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:12px;align-items:start}
+.adhanCompact .adhanSection{border:1px solid #e2e9e6;border-radius:17px;padding:14px!important;background:linear-gradient(150deg,#fff,#f9fbfa)}
+.adhanCompact .adhanSectionHeading{align-items:center;gap:9px;margin:0 0 12px}
+.adhanCompact .adhanSectionNumber{width:26px;height:26px;flex-basis:26px;border-radius:9px}
+.adhanCompact .adhanSectionHeading h4{font-size:14px;margin:0 0 2px}
+.adhanCompact .adhanSectionHeading p{font-size:10px;line-height:1.3;color:#758884}
+.adhanCompact .adhanLocationSummary{gap:8px;border-radius:12px;padding:8px 9px;background:rgba(255,255,255,.76)}
+.adhanCompact .adhanLocationMark{font-size:17px}
+.adhanCompact .adhanLocationSummary strong{font-size:12px;line-height:1.3}
+.adhanCompact .adhanLocationSummary small{font-size:9px;line-height:1.25}
+.adhanCompact .adhanLocationSummary button{min-height:40px;border-radius:11px;padding:7px 9px;font-size:11px;white-space:nowrap}
+.adhanCompact .adhanLocationSummary .adhanAutoLocate{border-color:#bfd8c9;background:#e9f4ee;color:#245742}
+.adhanCompact .adhanMethodField{gap:5px;font-size:10px}
+.adhanCompact .adhanMethodField select{min-height:43px;font-size:12px;padding:9px 11px;border-radius:12px;outline-offset:2px}
+.adhanCompact .adhanPrayerChoice{display:flex;flex-wrap:wrap;gap:7px}
+.adhanCompact .adhanPrayerCheck{flex:1 1 calc(33.33% - 7px);min-width:80px;justify-content:center;border-radius:999px;min-height:43px;padding:9px 11px;box-shadow:0 2px 8px rgba(37,70,61,.035)}
+.adhanCompact .adhanPrayerCheck.selected{background:color-mix(in srgb,var(--member-accent,var(--theme-accent,#b28d53)) 11%,white);border-color:color-mix(in srgb,var(--member-accent,var(--theme-accent,#b28d53)) 53%,white)}
+.adhanCompact .adhanCheckSymbol{width:17px;height:17px;flex-basis:17px;border-radius:50%;font-size:11px}
+.adhanCompact .adhanSwitchRow{padding:2px 0 9px;min-height:48px;cursor:pointer}
+.adhanCompact .adhanSwitchVisual{width:51px;height:29px;flex-basis:51px}
+.adhanCompact .adhanSwitchVisual:after{width:23px;height:23px}
+.adhanCompact .adhanSwitchRow input:checked+.adhanSwitchVisual:after{transform:translateX(22px)}
+.adhanCompact .adhanSoundCompact{padding:10px;border-radius:14px;background:rgba(255,255,255,.78);border-color:#e1e9e5}
+.adhanCompact .adhanAudioActions{gap:6px}
+.adhanCompact .adhanAudioActions strong{font-size:11px}
+.adhanCompact .adhanAudioActions small{font-size:9px}
+.adhanCompact .adhanSoundIcon{width:32px;height:32px;border-radius:10px}
+.adhanCompact .adhanSoundControls{width:auto!important;display:flex;justify-content:flex-end;gap:5px}
+.adhanCompact .adhanSoundControls button{min-width:42px;min-height:42px;border-radius:13px;padding:7px 10px}
+.adhanCompact .adhanSoundControls .adhanStopTest{background:#f8faf9;color:#5d6869;border:1px solid #e0e7e5}
+.adhanCompact .adhanVolume{margin-top:11px;gap:8px;font-size:11px}
+.adhanCompact .adhanVolume input{appearance:none;-webkit-appearance:none;cursor:pointer;height:8px;min-height:35px;border-radius:100px;border:0;outline:0;background:linear-gradient(to right,var(--member-accent,var(--theme-accent,#ae884e)) 0 var(--adhan-fill),#dbe4df var(--adhan-fill) 100%) center/100% 8px no-repeat}
+.adhanCompact .adhanVolume input::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border:4px solid #fff;border-radius:50%;background:#265c49;box-shadow:0 1px 8px #234e4355}
+.adhanCompact .adhanVolume input::-moz-range-thumb{width:16px;height:16px;border:4px solid white;border-radius:50%;background:#265c49;box-shadow:0 1px 8px #234e4355}
+.adhanCompact .adhanVolume input:focus-visible{outline:3px solid #be9f6e;outline-offset:3px}
+.adhanCompact .adhanVolume output{min-width:38px;font-size:12px;text-align:right;color:#29473f;font-variant-numeric:tabular-nums}
+.adhanCompact .adhanWizardFooter{margin-top:12px;padding-top:12px}
+.adhanCompact .adhanPrimaryAction{border-radius:14px;min-width:150px;box-shadow:0 7px 15px rgba(33,70,57,.13)}
+.prayerLocationFast{gap:12px;padding:12px!important;border-radius:14px}
+.prayerLocationFast .prayerLocateAction{min-height:55px;border-radius:13px;background:linear-gradient(130deg,#e9f5ed,#f9fbf9)}
+.prayerLocationFast .prayerMapConsent{display:flex;align-items:flex-start;gap:9px;font-size:11px;line-height:1.45;color:#527067;cursor:pointer}
+.prayerLocationFast .prayerMapConsent input{width:19px;height:19px;flex:0 0 19px;accent-color:#2d624e}
+.prayerManualDetails{border-top:1px solid #e5ede9;padding-top:9px}
+.prayerManualDetails>summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;list-style:none;color:#3c6555;font-size:11px;font-weight:760;min-height:36px}
+.prayerManualDetails>summary::-webkit-details-marker{display:none}
+.prayerManualDetails[open]>summary span{transform:rotate(180deg)}
+.prayerManualDetails .prayerLocationFields{margin-top:12px}
+.prayerManualDetails .prayerLocationSave{margin-top:12px;min-height:43px}
+.adhanPlayerToast.adhanGlassNav .adhanGlassClose{width:42px;height:42px;flex-basis:42px;font-size:23px}
+.adhanPlayerToast.adhanGlassNav .adhanGlassActionButtons :is(button,a){min-height:44px;padding:9px 14px}
+.adhanPlayerToast.adhanGlassNav .adhanGlassActionButtons .adhanGlassEnable{background:#245d49!important;color:#fff!important}
+@media(max-width:760px){
+ .adhanCompactTop,.adhanCompactBottom{grid-template-columns:1fr;gap:9px}
+ .adhanCompact .adhanSection{padding:12px!important}
+ .adhanCompact .adhanSectionHeading{margin-bottom:9px}
+ .adhanCompact .adhanLocationSummary{flex-wrap:wrap}
+ .adhanCompact .adhanLocationSummary>div{flex-basis:40%;min-width:105px}
+ .adhanCompact .adhanPrayerCheck{flex:1 1 calc(33.33% - 9px)}
+ .adhanCompact .adhanAudioActions>div:last-child{width:auto}
+ .adhanCompact .adhanSoundControls{width:auto!important}
+}
+@media(max-width:420px){
+ .adhanCompact .adhanPrayerCheck{flex-basis:calc(50% - 7px)}
+ .adhanCompact .adhanSoundControls .adhanPlayTest span{display:none}
+ .adhanCompact .adhanSettingsTitle h3{font-size:21px}
+ .adhanCompact .adhanLocationSummary button{padding-inline:8px}
+}
+@media(prefers-reduced-motion:reduce){.adhanCompact :is(button,input){transition:none!important}}
