@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import {NextResponse} from "next/server";
-import {adminDb,PRICE_ID,stripe} from "../../../../lib/stripe-unlocked";
+import {adminDb,isRecognizedUnlockedPriceId,stripe} from "../../../../lib/stripe-unlocked";
 export const runtime="nodejs";
 export async function POST(req:Request) {
  const signature=req.headers.get("stripe-signature"), secret=process.env.STRIPE_WEBHOOK_SECRET;
@@ -33,7 +33,8 @@ export async function POST(req:Request) {
  }catch(e){console.error("stripe webhook processing failed",event.id,e);return NextResponse.json({error:"Retry webhook"},{status:500});}
 }
 async function sync(sub:Stripe.Subscription,userId:string,customerId:string,db:ReturnType<typeof adminDb>){
- if(!sub.items.data.some(item=>item.price.id===PRICE_ID))return;
- const {error}=await db.from("unlocked_subscriptions").upsert({user_id:userId,stripe_customer_id:customerId,stripe_subscription_id:sub.id,stripe_price_id:PRICE_ID,status:sub.status,cancel_at_period_end:sub.cancel_at_period_end,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+ const matched=sub.items.data.find(item=>isRecognizedUnlockedPriceId(item.price.id));
+ if(!matched)return;
+ const {error}=await db.from("unlocked_subscriptions").upsert({user_id:userId,stripe_customer_id:customerId,stripe_subscription_id:sub.id,stripe_price_id:matched.price.id,status:sub.status,cancel_at_period_end:sub.cancel_at_period_end,updated_at:new Date().toISOString()},{onConflict:"user_id"});
  if(error)throw error;
 }
