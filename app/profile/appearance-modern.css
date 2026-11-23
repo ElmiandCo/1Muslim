@@ -151,3 +151,22 @@
 @media(prefers-reduced-motion:reduce){
  .appearanceModernCoverRail button,.backgroundStudioChoice{transition:none!important}
 }
+
+/* Theme palette remains visually distinct after retiring the old large grid. */
+.profileColorStudio .backgroundGradient-black{background:linear-gradient(135deg,#32383a,#050707)}
+.profileColorStudio .backgroundGradient-emerald{background:linear-gradient(135deg,#4c9a7b,#082c24)}
+.profileColorStudio .backgroundGradient-gold{background:linear-gradient(135deg,#d6b96c,#4b3212)}
+.profileColorStudio .backgroundGradient-blue{background:linear-gradient(135deg,#79b2e3,#163e7c)}
+.profileColorStudio .backgroundGradient-violet{background:linear-gradient(135deg,#b09bd7,#49306f)}
+.profileColorStudio .backgroundGradient-rose{background:linear-gradient(135deg,#df98ad,#61314c)}
+.profileColorStudio .backgroundGradient-slate{background:linear-gradient(135deg,#a4b7b3,#334c51)}
+.profileColorStudio .backgroundStudioCheck{
+ display:grid;place-items:center;width:22px;height:22px;margin:auto;
+ border-radius:50%;background:#fffffff0;color:#245a4b;font-weight:850;font-size:14px;
+}
+.profileColorStudio .backgroundStudioCollapsed{
+ display:flex;align-items:center;gap:10px;background:#f4f8fa;
+ padding:10px 12px;border-radius:14px;font-size:12px;color:#36536c;
+}
+.profileColorStudio .backgroundStudioCollapsed span:last-child{margin-left:auto;font-size:11px;color:#56816b}
+.profileColorStudio .backgroundStudioDot{width:26px;height:26px;flex:0 0 26px;border-radius:50%}
