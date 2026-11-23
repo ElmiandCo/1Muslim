@@ -69,6 +69,10 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
   setPan(prev=>bound(z,360-(360-prev.x)*ratio,180-(180-prev.y)*ratio));setZoom(z);
  };
  const focusRegion=(name:string,point?:[number,number])=>{
+  // Tapping the same pin again clears the filter without leaving the map.
+  if((mode==="world"&&selected===name)||(mode==="us"&&selectedState===name)){
+   onSelect("");onSelectState?.("");setZoom(1.12);setPan({x:-43.2,y:-21.6});return;
+  }
   if(mode==="world"){onSelect(name);onSelectState?.("")}
   else{onSelect("United States");onSelectState?.(name)}
   if(point){const z=Math.max(zoom,1.55);setZoom(z);setPan(bound(z,360-point[0]*z,180-point[1]*z))}
