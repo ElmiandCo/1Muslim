@@ -56,6 +56,9 @@ export default function RegionDiscovery({members,currentCountry,userId,selected,
   const {data:updated,error}=await db.from("profiles").update({country:normalized,state:state.trim()||null,city:city.trim()||null}).eq("id",userId).select("id,country").single();
   setSaving(false);
   if(error||!updated){setMessage(error?.message||"Region was not saved. Please retry.");return}
+  // Save My Region is an explicit public-sharing choice, unlike private prayer location.
+  const {error:consentError}=await db.from("member_region_preferences").upsert({user_id:userId,region_level:city.trim()?"city":state.trim()?"state":"country",consented_at:new Date().toISOString()},{onConflict:"user_id"});
+  if(consentError){setMessage("Region saved to your profile, but Ummah map consent could not be recorded. Please retry.");return}
   onSaved(normalized);setEditing(false);setMessage("✓ Your profile now appears in "+normalized+".");
  };
  const locations:Record<string,[number,number]>={"United States":[22,38],"Canada":[20,25],"Mexico":[19,48],"Brazil":[34,72],"Argentina":[31,85],"United Kingdom":[47,29],"France":[48,35],"Germany":[51,32],"Spain":[45,39],"Türkiye":[57,39],"Russia":[70,22],"Saudi Arabia":[59,49],"United Arab Emirates":[64,51],"Somalia":[62,63],"Kenya":[59,68],"Egypt":[54,49],"Nigeria":[49,61],"South Africa":[54,83],"India":[71,52],"Pakistan":[67,49],"Bangladesh":[75,56],"China":[79,41],"Japan":[89,42],"Indonesia":[81,68],"Malaysia":[79,65],"Australia":[87,81],"Palestine":[56,44],"Morocco":[44,49]};

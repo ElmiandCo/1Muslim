@@ -1,0 +1,18 @@
+.profileSocialDiscoveryShortcut.recentMuslimDiscovery{position:relative;display:flex;align-items:center;gap:8px;min-height:78px;padding:10px 12px 13px;border:1px solid color-mix(in srgb,var(--member-accent,#5d98c9) 20%,#dbe4e8);border-radius:22px;background:linear-gradient(135deg,#fff 5%,#f6faff 85%);box-shadow:0 8px 24px #15304a0a;touch-action:pan-y;overflow:hidden}
+.recentMuslimDiscovery .recentMuslimProfile{min-width:0;display:flex;align-items:center;gap:12px;flex:1;text-decoration:none;color:#162e40}
+.recentMuslimDiscovery .recentMuslimAvatar{width:55px;height:55px;flex:0 0 55px;display:grid;place-items:center;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#dcece6,#eaf5fc);box-shadow:inset 0 0 0 1px #9bc8bd88,0 5px 14px #1b4e5415;animation:recentMuslimReveal .45s both}
+.recentMuslimDiscovery .recentMuslimAvatar img{width:100%;height:100%;object-fit:cover;display:block}
+.recentMuslimDiscovery .recentMuslimAvatar>span{font-size:36px;color:#437f75}
+.recentMuslimDiscovery .recentMuslimCopy{min-width:0;display:grid;gap:4px}
+.recentMuslimDiscovery .recentMuslimCopy strong{font-size:clamp(14px,3.5vw,18px);line-height:1.15;color:#173449;font-weight:800}
+.recentMuslimDiscovery .recentMuslimCopy small{font-size:12px;line-height:1.25;color:#718695;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:clamp(100px,34vw,320px)}
+.recentMuslimDiscovery .recentMuslimExplore{flex:0 0 auto;border:0!important;padding:10px 3px!important;background:transparent!important;border-radius:12px!important;color:#204a64!important;font-size:14px!important;font-weight:750!important;white-space:nowrap}
+.recentMuslimDiscovery .recentMuslimExplore span{margin-left:3px;transition:transform .25s}
+.recentMuslimDiscovery .recentMuslimExplore:hover span{display:inline-block;transform:translateX(3px)}
+.recentMuslimDiscovery .recentMuslimPips{position:absolute;bottom:5px;left:83px;display:flex;gap:5px;align-items:center}
+.recentMuslimDiscovery .recentMuslimPips button{padding:0;min-height:0!important;width:5px;height:5px;border:0;border-radius:9px;background:#adbfca;transition:width .3s,background .3s}
+.recentMuslimDiscovery .recentMuslimPips button.on{width:16px;background:#316f9a}
+.recentMuslimDiscovery a:focus-visible,.recentMuslimDiscovery .recentMuslimPips button:focus-visible{outline:2px solid #317bca;outline-offset:3px}
+@keyframes recentMuslimReveal{from{opacity:.4;transform:translateX(9px) scale(.93)}to{opacity:1;transform:none}}
+@media (max-width:380px){.recentMuslimDiscovery .recentMuslimAvatar{width:45px;height:45px;flex-basis:45px}.recentMuslimDiscovery .recentMuslimPips{left:72px}.recentMuslimDiscovery .recentMuslimExplore{font-size:12px!important}}
+@media (prefers-reduced-motion:reduce){.recentMuslimDiscovery .recentMuslimAvatar{animation:none}.recentMuslimDiscovery *{transition:none!important}}
