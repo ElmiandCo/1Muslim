@@ -1,0 +1,153 @@
+/* Compact Appearance editor: clear cover selection and honest live profile preview. */
+.profileCommandPage .headerEditor.profileAppearanceModern{
+ display:grid;gap:14px;padding:clamp(14px,3vw,22px)!important;
+ border-radius:23px!important;background:#fff!important;
+}
+.profileAppearanceModern .appearanceModernIntro{margin:0;display:grid;gap:4px}
+.profileAppearanceModern .appearanceModernIntro h2{font-size:clamp(20px,4.8vw,26px)!important;margin:0!important;letter-spacing:-.035em;color:#1b3a52}
+.profileAppearanceModern .appearanceModernIntro p{font-size:12px;line-height:1.4;margin:0;color:#74899a}
+.profileCommandPage .headerEditor.profileAppearanceModern .profileCoverUploader.appearanceModernCover{
+ display:grid;gap:11px;margin:0!important;padding:12px!important;border:1px solid #dce6eb!important;
+ border-radius:18px!important;background:#fafcfd!important;box-shadow:none!important;
+}
+.appearanceModernSectionTop{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.appearanceModernSectionTop h3{font-size:15px;font-weight:850;color:#234058;margin:0}
+.appearanceModernSectionTop small{font-size:11px;color:#7892a0}
+.profileCommandPage .appearanceModernUpload{
+ display:inline-flex!important;flex:0 0 auto;position:relative;align-items:center;justify-content:center;
+ gap:6px;min-height:42px;max-width:60%;box-sizing:border-box;padding:8px 13px!important;
+ background:color-mix(in srgb,var(--profile-editor-accent,#528873) 8%,#fff)!important;
+ border:1px solid color-mix(in srgb,var(--profile-editor-accent,#528873) 32%,#d2e0e2)!important;
+ border-radius:999px;color:#26485b;font-size:12px;font-weight:800;cursor:pointer;overflow:hidden;
+}
+.appearanceModernUpload>span{font-size:19px;line-height:1}
+.appearanceModernUpload input[type=file]{
+ position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;
+}
+.appearanceModernUpload:focus-within{outline:2px solid var(--profile-editor-accent,#528873);outline-offset:2px}
+.profileCommandPage .headerEditor.profileAppearanceModern .profileStockCovers.appearanceModernCoverRail{
+ display:flex!important;flex-wrap:nowrap!important;gap:9px!important;
+ overflow-x:auto!important;overscroll-behavior-x:contain;scroll-snap-type:x proximity;
+ padding:3px 3px 9px!important;margin:0!important;scrollbar-width:none;
+}
+.appearanceModernCoverRail::-webkit-scrollbar{display:none}
+.profileCommandPage .headerEditor.profileAppearanceModern .appearanceModernCoverRail button{
+ flex:0 0 clamp(110px,31vw,138px)!important;min-width:0!important;box-sizing:border-box;
+ padding:4px!important;border:1px solid #d6e1e8!important;
+ border-radius:12px!important;overflow:hidden!important;background:#fff!important;
+ color:#2a435b!important;box-shadow:none!important;scroll-snap-align:start;
+ transition:border-color .18s ease,box-shadow .18s ease;
+}
+.profileCommandPage .headerEditor.profileAppearanceModern .appearanceModernCoverRail button.selected{
+ border-color:var(--profile-editor-accent,#518b70)!important;
+ box-shadow:0 0 0 2px color-mix(in srgb,var(--profile-editor-accent,#518b70) 20%,transparent)!important;
+}
+.profileCommandPage .headerEditor.profileAppearanceModern .appearanceModernCoverRail img{
+ width:100%!important;height:65px!important;object-fit:cover!important;
+ border-radius:8px!important;display:block;
+}
+.profileCommandPage .headerEditor.profileAppearanceModern .appearanceModernCoverRail button span{
+ display:block;font-size:11px!important;padding:6px 2px 3px!important;line-height:1.15;font-weight:750;
+}
+.appearanceModernCrop{display:grid;gap:10px;padding:10px;border-radius:14px;border:1px solid #dfe8ec;background:#fff}
+.appearanceModernCrop>p{font-size:12px;margin:0;color:#536e7c}
+.appearanceModernCrop .profileCoverCrop{aspect-ratio:3/1;max-width:100%;width:100%;border-radius:12px;background-repeat:no-repeat;background-color:#e6eef2}
+.appearanceModernCropControls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.appearanceModernCropControls label{display:grid;gap:5px;font-size:12px;font-weight:700;color:#325369}
+.appearanceModernCropControls input{width:100%;min-width:0;accent-color:var(--profile-editor-accent,#518b70)}
+.appearanceModernCropActions{display:flex;gap:8px;flex-wrap:wrap}
+.profileCommandPage .appearanceModernCropActions button{
+ background:#245f51!important;color:#fff!important;border:0!important;border-radius:12px!important;
+ min-height:43px;padding:10px 16px!important;font-size:13px;font-weight:800;
+}
+.profileCommandPage .appearanceModernCropActions button.appearanceModernCancel{
+ background:#f5f8fa!important;color:#415e74!important;border:1px solid #d7e2e7!important;
+}
+.appearanceModernSaving{color:#597e6c;font-size:12px}
+.profileCommandPage .headerEditor.profileAppearanceModern .backgroundStudio.profileColorStudio{
+ display:grid;gap:11px;padding:13px!important;margin:0!important;
+ border-radius:19px!important;border:1px solid #dbe5eb!important;
+ background:linear-gradient(160deg,#fff,#f7fafc)!important;box-shadow:none!important;
+}
+.profileColorStudio .backgroundStudioHeading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.profileColorStudio .backgroundStudioHeading h3{margin:3px 0 0!important;font-size:15px!important;color:#203d55}
+.profileColorStudio .backgroundStudioHeading .eyebrow{font-size:10px}
+.profileColorStudio .backgroundStudioToggle{
+ border-radius:999px;min-height:38px;padding:6px 12px;border:1px solid #d2dfe8;
+ background:#fff;color:#49647a;font-size:11px;font-weight:760;cursor:pointer;
+}
+.profileColorStudioBody{display:grid;gap:10px}
+.profileThemePreview{
+ display:grid;overflow:hidden;border-radius:16px;
+ border:1px solid color-mix(in srgb,var(--theme-preview-accent,#6a8f83) 52%,#dbe4e8);
+ background:#fff;
+ box-shadow:0 8px 18px color-mix(in srgb,var(--theme-preview-accent,#6a8f83) 17%,transparent);
+}
+.profileThemePreviewCover{
+ height:82px;position:relative;background-size:cover;background-position:center;
+ border-bottom:2px solid var(--theme-preview-accent,#6a8f83);
+}
+.profileThemePreviewCover:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#ffffff99,transparent 60%)}
+.profileThemePreviewCover>span{
+ position:absolute;z-index:1;top:9px;left:12px;padding:3px 8px;border-radius:99px;
+ font-size:11px;font-weight:760;color:#f5faff;background:#122634aa;letter-spacing:.04em;
+}
+.profileThemePreviewIdentity{
+ position:relative;display:flex;align-items:center;gap:12px;min-width:0;
+ padding:0 13px 9px;margin-top:-21px;z-index:1
+}
+.profileThemePreviewIdentity>img{
+ flex:0 0 48px;width:48px;height:48px;border-radius:50%;object-fit:cover;
+ background:#102639;border:3px solid var(--theme-preview-accent,#6a8f83);box-shadow:0 3px 12px #112e3c2a;
+}
+.profileThemePreviewIdentity>div{display:grid;gap:3px;min-width:0;margin-top:14px}
+.profileThemePreviewIdentity strong{
+ font-size:clamp(15px,3.6vw,19px);line-height:1.15;color:var(--theme-preview-ink,#20374e);
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.profileThemePreviewIdentity small{font-size:11px;color:color-mix(in srgb,var(--theme-preview-ink,#20374e) 70%,#8c9aa3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profileThemePreviewDetails{
+ margin:0 13px 11px;padding-top:10px;border-top:1px solid color-mix(in srgb,var(--theme-preview-accent,#6a8f83) 35%,#dbe4e8);
+ display:flex;align-items:center;gap:12px;min-width:0
+}
+.profileThemePreviewDetails>span{font-size:10px;color:var(--theme-preview-ink,#20374e);white-space:nowrap}
+.profileThemePreviewDetails b{font-weight:850}
+.profileThemePreviewAction{
+ margin-left:auto;padding:6px 10px;border-radius:999px;background:var(--theme-preview-accent,#6a8f83);
+ color:#fff!important;font-weight:820!important;
+ box-shadow:0 3px 10px color-mix(in srgb,var(--theme-preview-accent,#6a8f83) 30%,transparent);
+}
+.profileCommandPage .headerEditor.profileAppearanceModern .backgroundStudioGrid{
+ display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;
+ gap:8px!important;margin:0!important;padding:3px 3px 8px!important;
+ scroll-snap-type:x proximity;overscroll-behavior-x:contain;scrollbar-width:none;
+}
+.profileColorStudio .backgroundStudioGrid::-webkit-scrollbar{display:none}
+.profileCommandPage .headerEditor.profileAppearanceModern .backgroundStudioChoice{
+ flex:0 0 84px!important;min-width:0!important;display:flex;align-items:center;
+ padding:5px 5px 7px!important;gap:4px!important;border:1px solid #d9e2e8!important;
+ border-radius:13px!important;background:#fff!important;box-shadow:none!important;scroll-snap-align:start;
+}
+.profileCommandPage .headerEditor.profileAppearanceModern .backgroundStudioChoice.selected{
+ border:1px solid var(--theme-preview-accent,#6a8f83)!important;
+ box-shadow:0 0 0 2px color-mix(in srgb,var(--theme-preview-accent,#6a8f83) 16%,transparent)!important;
+}
+.profileCommandPage .headerEditor.profileAppearanceModern .backgroundStudioGradient{
+ width:100%!important;height:38px!important;border-radius:9px!important;
+}
+.profileColorStudio .backgroundStudioCheck{width:22px;height:22px}
+.profileCommandPage .headerEditor.profileAppearanceModern .backgroundStudioName{
+ font-size:10px!important;line-height:1.13!important;margin:0!important;padding:2px 1px 0!important;
+}
+.profileColorStudioNote{margin:0!important;font-size:11px;color:#6b8592}
+.profileColorStudio .backgroundStudioStatus{margin:0!important;font-size:11px;color:#5a816e}
+.profileColorStudio .backgroundStudioCollapsed{padding:9px 11px!important}
+@media(max-width:385px){
+ .appearanceModernSectionTop h3{font-size:14px}
+ .profileCommandPage .appearanceModernUpload{padding:7px 9px!important;font-size:11px}
+ .profileThemePreviewDetails{gap:7px}
+ .profileThemePreviewDetails>span{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .appearanceModernCoverRail button,.backgroundStudioChoice{transition:none!important}
+}
