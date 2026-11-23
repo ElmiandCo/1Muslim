@@ -874,7 +874,7 @@ html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Main 
    while Next hydrates a new screen. Navigation arrives after content. */
 html,body{background-color:#fff}
 body{background:#fff}
-body::after{content:"";position:fixed;inset:0;z-index:8995;opacity:0;pointer-events:none;background:#fff;transition:opacity .24s ease;will-change:opacity}
+body::after{content:"";position:fixed;inset:0;z-index:2147483000;opacity:0;pointer-events:none;background:#fff;transition:opacity .24s ease;will-change:opacity}
 html:not([data-one-shell-ready="true"]) body::after{opacity:1}
 html:not([data-one-shell-ready="true"]) .oneGlobalNav,
 html:not([data-one-shell-ready="true"]) .oneGlobalNavPinnedEmblem,
@@ -896,3 +896,6 @@ html[data-one-shell-ready="true"] .oneGlobalNav{transition:opacity .4s ease,tran
 .profileWhiteSkeleton>div:nth-child(3){width:44%;height:11px}
 @keyframes profileSkeletonWave{to{background-position-x:-230%}}
 @media(prefers-reduced-motion:reduce){.profileWhiteSkeleton>div{animation:none}}
+
+/* No legacy global HUD layers over the new public landing. */
+html[data-one-route="welcome"] :is(.hh-chat-orb,.hh-restore-tab,.hh-entry-light,.hh-trail-layer,.hh-farewell,.hudhud-live-mini,.imv-root,.sf-wrap,.locationConsentBackdrop,.oneGlobalNav){display:none!important}
