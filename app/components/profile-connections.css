@@ -23,7 +23,7 @@
 .pcxService{display:flex;align-items:center;gap:12px;min-height:72px;padding:12px 14px;opacity:.83}
 .pcxService+.pcxService{border-top:1px solid #edf1f4}
 .pcxLogo{flex:0 0 39px;width:39px;height:39px;border:1px solid #d6e3e9;border-radius:12px;background:linear-gradient(145deg,#f7fafc,#edf3f7);display:grid;place-items:center;font-size:20px;font-weight:850;color:#547083}
-.pcxLogo-tiktok{font-size:25px}.pcxLogo-youtube{font-size:19px}.pcxLogo-twitch{font-size:22px}
+.pcxLogo-tiktok{font-size:25px}.pcxLogo-youtube{font-size:19px}.pcxLogo-instagram{font-size:22px}
 .pcxServiceText{flex:1;min-width:0;display:grid;gap:3px}
 .pcxServiceText strong{font-weight:810;font-size:13px;color:#2c4455}
 .pcxServiceText span{font-size:11px;line-height:1.45;color:#70818f}

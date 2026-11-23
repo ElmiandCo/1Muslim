@@ -7,7 +7,7 @@ import "./profile-connections.css";
 const pending=[
  {name:"TikTok",kind:"tiktok",subtitle:"Bring your public videos into 1Muslim",mark:"♪"},
  {name:"YouTube",kind:"youtube",subtitle:"Connect your creator video library",mark:"▶"},
- {name:"Twitch",kind:"twitch",subtitle:"Link your live streaming account",mark:"◈"}
+ {name:"Instagram (Meta)",kind:"instagram",subtitle:"Connect your Instagram Reels with your permission",mark:"◎"}
 ] as const;
 
 export default function ProfileConnectionsPanel({isAdmin}:{isAdmin:boolean}){
@@ -61,7 +61,7 @@ export default function ProfileConnectionsPanel({isAdmin}:{isAdmin:boolean}){
       </div>
     :<div className="pcxUpcoming">
       <div className="pcxUpcomingMark" aria-hidden="true"><svg viewBox="0 0 32 32" width="27" height="27" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M7 19v7h18v-7M5 12h22v7H5zM8 12V7h16v5M13 7V4h6v3M10 19h12"/></svg></div>
-      <div><strong>Social connections are on the way</strong><p>TikTok, YouTube and Twitch will become available here after integration review. Nothing to set up yet.</p></div>
+      <div><strong>Social connections are on the way</strong><p>TikTok, YouTube and Instagram (Meta) will become available here after integration review. Nothing to set up yet.</p></div>
     </div>}
    <div className="pcxServiceList" aria-label="Connection availability">
     {pending.filter(service=>!isAdmin||service.name!=="TikTok").map(service=>
