@@ -868,3 +868,34 @@ html[data-muslim-theme]:not([data-muslim-theme="emerald"]) nav[aria-label="Main 
 .profileCommandPage .profileEditor .formGrid .wide{grid-column:1/-1}
 .profileCommandPage .profileEditor,.profileCommandPage .profileShell{min-width:0;max-width:100%;box-sizing:border-box}
 @media(max-width:700px){.profileCommandPage .profileEditor .formGrid{grid-template-columns:minmax(0,1fr);gap:16px}.profileCommandPage .profileEditor .formGrid .wide{grid-column:auto}}
+
+
+/* Atomic white-first navigation: the preceding page never leaks its stale layout
+   while Next hydrates a new screen. Navigation arrives after content. */
+html,body{background-color:#fff}
+body{background:#fff}
+body::after{content:"";position:fixed;inset:0;z-index:2147483000;opacity:0;pointer-events:none;background:#fff;transition:opacity .24s ease;will-change:opacity}
+html:not([data-one-shell-ready="true"]) body::after{opacity:1}
+html:not([data-one-shell-ready="true"]) .oneGlobalNav,
+html:not([data-one-shell-ready="true"]) .oneGlobalNavPinnedEmblem,
+html:not([data-one-shell-ready="true"]) .hudhudLaunchBird,
+html:not([data-one-shell-ready="true"]) .hudhud-voice-orb{opacity:0!important;pointer-events:none!important}
+html[data-one-shell-ready="true"] .oneGlobalNav{transition:opacity .4s ease,transform .48s cubic-bezier(.22,.8,.23,1)!important}
+.profileEmpty{background:#fff!important;color:#19354b!important;min-height:75dvh;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.oneWhiteWelcomeLoading{min-height:100dvh;background:#fff;display:grid;place-items:center;color:#119656}
+.oneWhiteWelcomeMark{display:grid;place-items:center;width:70px;height:70px;border:1px solid #d8ede1;border-radius:20px;font-size:24px;font-weight:900;letter-spacing:-.12em;background:#f8fdf9;animation:oneWelcomePulse 1.2s ease-in-out infinite alternate}
+@keyframes oneWelcomePulse{from{opacity:.65;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){body::after,.oneWhiteWelcomeMark{transition:none!important;animation:none!important}}
+
+
+.profileLoadingWhite{min-height:100dvh;background:#fff!important}
+.profileWhiteSkeleton{display:grid;gap:14px;justify-items:center;width:min(86vw,460px);padding:35px 0}
+.profileWhiteSkeleton>div{border-radius:20px;background:linear-gradient(100deg,#f7f9fa,#eaf1f5,#f7f9fa);background-size:230% 100%;animation:profileSkeletonWave 1.45s linear infinite}
+.profileWhiteSkeleton>div:nth-child(1){width:110px;height:110px;border-radius:50%}
+.profileWhiteSkeleton>div:nth-child(2){width:66%;height:15px}
+.profileWhiteSkeleton>div:nth-child(3){width:44%;height:11px}
+@keyframes profileSkeletonWave{to{background-position-x:-230%}}
+@media(prefers-reduced-motion:reduce){.profileWhiteSkeleton>div{animation:none}}
+
+/* No legacy global HUD layers over the new public landing. */
+html[data-one-route="welcome"] :is(.hh-chat-orb,.hh-restore-tab,.hh-entry-light,.hh-trail-layer,.hh-farewell,.hudhud-live-mini,.imv-root,.sf-wrap,.locationConsentBackdrop,.oneGlobalNav){display:none!important}
