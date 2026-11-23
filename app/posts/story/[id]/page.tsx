@@ -191,7 +191,7 @@ export default function MagazineStory(){
  const showPlayerHint=(message:string)=>{
   setPlayerHint(message);
   if(feedbackTimer.current)clearTimeout(feedbackTimer.current);
-  feedbackTimer.current=window.setTimeout(()=>setPlayerHint(""),1000);
+  feedbackTimer.current=setTimeout(()=>setPlayerHint(""),1000);
  };
  useEffect(()=>{watchedId.current=null;firstPlaybackHint.current=null;setMuted(true);setPlayerHint("")},[id]);
  useEffect(()=>()=>{if(feedbackTimer.current)clearTimeout(feedbackTimer.current)},[]);
