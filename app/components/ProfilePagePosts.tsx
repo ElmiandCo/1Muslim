@@ -3,7 +3,7 @@
 import {useCallback,useEffect,useState} from "react";
 import {createClient} from "../../utils/supabase/client";
 import ProfilePublicMedia from "./ProfilePublicMedia";
-import {safeMediaUrl,uploadMemberMedia,type MemberMediaKind} from "./profile-member-media";
+import {safeMediaUrl,youtubeEmbed,isDirectVideo,uploadMemberMedia,type MemberMediaKind} from "./profile-member-media";
 import "./ProfilePagePosts.css";
 
 type PagePost={id:string;profile_id:string;author_id:string;body:string;media_url:string|null;media_kind:"none"|MemberMediaKind;created_at:string};
@@ -23,6 +23,7 @@ export default function ProfilePagePosts({profileId,isOwner=false}:{profileId:st
  const [authors,setAuthors]=useState<Record<string,Author>>({}),[reactions,setReactions]=useState<PageReaction[]>([]);
  const [commentCounts,setCommentCounts]=useState<Record<string,number>>({});
  const [comments,setComments]=useState<Record<string,PageComment[]>>({});
+ const [commentPages,setCommentPages]=useState<Record<string,number>>({}),[olderComments,setOlderComments]=useState<Record<string,boolean>>({});
  const [openComments,setOpenComments]=useState<string|null>(null),[commentDraft,setCommentDraft]=useState("");
  const [expanded,setExpanded]=useState(false),[draft,setDraft]=useState(""),[mediaUrl,setMediaUrl]=useState("");
  const [mediaKind,setMediaKind]=useState<MemberMediaKind>("image"),[file,setFile]=useState<File|null>(null);
@@ -55,7 +56,7 @@ export default function ProfilePagePosts({profileId,isOwner=false}:{profileId:st
   try{
    let url:string|null=null,kind:"none"|MemberMediaKind="none";
    if(file){const uploaded=await uploadMemberMedia(file,viewerId);url=uploaded.url;kind=uploaded.kind}
-   else if(mediaUrl.trim()){url=safeMediaUrl(mediaUrl);if(!url)throw Error("Please enter a valid https:// media link.");kind=mediaKind}
+   else if(mediaUrl.trim()){url=safeMediaUrl(mediaUrl);if(!url)throw Error("Please enter a valid https:// media link.");kind=youtubeEmbed(url)||isDirectVideo(url)?"video":mediaKind}
    const db=createClient();
    const {error}=await db.from("profile_page_posts").insert({profile_id:profileId,author_id:viewerId,body:draft.trim(),media_url:url,media_kind:kind});
    if(error)throw Error(error.message);
@@ -78,15 +79,20 @@ export default function ProfilePagePosts({profileId,isOwner=false}:{profileId:st
   const result=exists?await db.from("profile_page_post_reactions").delete().eq("post_id",postId).eq("user_id",viewerId).eq("reaction",kind):await db.from("profile_page_post_reactions").insert({post_id:postId,user_id:viewerId,reaction:kind});
   if(result.error){setStatus("Could not save your reaction.");void load()}
  };
- const loadComments=async(postId:string)=>{
+ const loadComments=async(postId:string,pageSize?:number)=>{
+  const size=pageSize||commentPages[postId]||50;
   const db=createClient();
-  const {data,error}=await db.from("profile_page_post_comments").select("id,post_id,author_id,body,created_at").eq("post_id",postId).order("created_at",{ascending:true}).limit(100);
+  // Newest first before reversing to chronological display, so no new comment disappears after 100.
+  const {data,error}=await db.from("profile_page_post_comments").select("id,post_id,author_id,body,created_at").eq("post_id",postId).order("created_at",{ascending:false}).order("id",{ascending:false}).limit(size+1);
   if(error){setStatus("Comments are temporarily unavailable.");return}
-  const rows=(data||[]) as PageComment[];setComments(v=>({...v,[postId]:rows}));
+  setOlderComments(v=>({...v,[postId]:(data||[]).length>size}));
+  setCommentPages(v=>({...v,[postId]:size}));
+  const rows=((data||[]).slice(0,size) as PageComment[]).reverse();setComments(v=>({...v,[postId]:rows}));
   const missing=unique(rows.map(c=>c.author_id)).filter(id=>!authors[id]);
   if(missing.length){const {data:people}=await db.from("profiles").select("id,display_name,username,avatar_url,avatar_gender,avatar_config").in("id",missing);if(people)setAuthors(v=>({...v,...Object.fromEntries((people as Author[]).map(p=>[p.id,p]))}))}
  };
  const toggleComments=(id:string)=>{if(openComments===id){setOpenComments(null);return}setOpenComments(id);setCommentDraft("");void loadComments(id)};
+ const loadOlder=(id:string)=>{const size=(commentPages[id]||50)+50;void loadComments(id,size)};
  const sendComment=async(postId:string)=>{
   if(!viewerId){setStatus("Sign in to comment.");return}
   const body=commentDraft.trim();if(!body||body.length>500)return;
@@ -118,7 +124,7 @@ export default function ProfilePagePosts({profileId,isOwner=false}:{profileId:st
     {post.body?.trim()&&<p className="memberPagePostBody">{post.body}</p>}
     {post.media_url&&post.media_kind!=="none"&&<div className="memberPagePostMedia"><ProfilePublicMedia kind={post.media_kind} url={post.media_url} title={"Page post from "+displayName(author)} /></div>}
     <div className="memberPagePostActions"><button type="button" aria-pressed={likes.some(r=>r.user_id===viewerId)} onClick={()=>void react(post.id,"like")} title="Like this page post"><span aria-hidden="true">👍</span> {likes.length||""}</button><button type="button" aria-pressed={hearts.some(r=>r.user_id===viewerId)} onClick={()=>void react(post.id,"heart")} title="Love this page post"><span aria-hidden="true">♡</span> {hearts.length||""}</button><button type="button" aria-expanded={openComments===post.id} onClick={()=>toggleComments(post.id)} title="Read or leave a comment"><span aria-hidden="true">▤</span> {commentCounts[post.id]||""}</button></div>
-    {openComments===post.id&&<div className="memberPageComments"><div className="memberPageCommentList">{(comments[post.id]||[]).map(c=><div className="memberPageComment" key={c.id}><img src={profilePicture(authors[c.author_id])} alt=""/><p><strong>{displayName(authors[c.author_id])}</strong> {c.body}</p>{viewerId&&(viewerId===c.author_id||viewerId===profileId)&&<button type="button" title="Delete comment" aria-label="Delete comment" onClick={()=>void eraseComment(c,post)}>×</button>}</div>)}{!comments[post.id]?.length&&<small>Be the first to comment.</small>}</div>{viewerId&&<form onSubmit={e=>{e.preventDefault();void sendComment(post.id)}}><input aria-label="Your comment" value={commentDraft} onChange={e=>setCommentDraft(e.target.value)} maxLength={500} placeholder="Write a comment…"/><button type="submit" disabled={!commentDraft.trim()||busyComment}>↗</button></form>}</div>}
+    {openComments===post.id&&<div className="memberPageComments"><div className="memberPageCommentList">{(comments[post.id]||[]).map(c=><div className="memberPageComment" key={c.id}><img src={profilePicture(authors[c.author_id])} alt=""/><p><strong>{displayName(authors[c.author_id])}</strong> {c.body}</p>{viewerId&&(viewerId===c.author_id||viewerId===profileId)&&<button type="button" title="Delete comment" aria-label="Delete comment" onClick={()=>void eraseComment(c,post)}>×</button>}</div>)}{!comments[post.id]?.length&&<small>Be the first to comment.</small>}</div>{olderComments[post.id]&&<button type="button" className="memberPageCommentsMore" onClick={()=>loadOlder(post.id)}>Show earlier comments ↑</button>}{viewerId&&<form onSubmit={e=>{e.preventDefault();void sendComment(post.id)}}><input aria-label="Your comment" value={commentDraft} onChange={e=>setCommentDraft(e.target.value)} maxLength={500} placeholder="Write a comment…"/><button type="submit" disabled={!commentDraft.trim()||busyComment}>↗</button></form>}</div>}
    </article>
   })}</div>:<div className="memberPagePostsEmpty">{isOwner?"Your visitors' page posts will appear here.":"No page posts yet. Leave the first one! ✨"}</div>}
   {hasMore&&<button className="memberPagePostsMore" type="button" onClick={()=>setLimit(n=>n+12)}>View more page posts ↓</button>}
