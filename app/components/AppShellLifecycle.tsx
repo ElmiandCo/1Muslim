@@ -13,6 +13,7 @@ export default function AppShellLifecycle(){
   let revealTimer:ReturnType<typeof setTimeout>|null=null;
   let timeout:ReturnType<typeof setTimeout>|null=null;
   let frame=0;
+  root.dataset.oneRoute=pathname==="/"?"welcome":"app";
   root.dataset.oneShellReady="false";
   const reveal=()=>{
    if(!active||revealTimer)return;
