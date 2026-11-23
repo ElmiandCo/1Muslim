@@ -96,6 +96,14 @@ const profileMosaicImage=(url:string)=>
   : url;
 const MEMBER_ACCENT_COLORS:Record<string,string>={emerald:"#579879",gold:"#b89b53",blue:"#689bd5",violet:"#9780c4",rose:"#c47e98",slate:"#829392",black:"#151515"};
 const MEMBER_TEXT_COLORS:Record<string,string>={emerald:"#174635",gold:"#58400c",blue:"#173e70",violet:"#42276a",rose:"#692a42",slate:"#293c3b",black:"#141414"};
+const PROFILE_EDITOR_SECTIONS=[
+  {id:"profile",label:"Identity",glyph:"✎"},
+  {id:"avatar",label:"Avatars",glyph:"◉"},
+  {id:"header",label:"Appearance",glyph:"✧"},
+  {id:"live",label:"Connections",glyph:"◎"},
+  {id:"shahada",label:"Verification",glyph:"✓"},
+  {id:"analytics",label:"Analytics",glyph:"▤"}
+] as const;
 const memberAccent=(accent:string|null|undefined)=>MEMBER_ACCENT_COLORS[accent||""]||MEMBER_ACCENT_COLORS.black;
 const memberAccentStyle=(accent:string|null|undefined)=>({"--member-accent":memberAccent(accent),"--member-text":MEMBER_TEXT_COLORS[accent||""]||MEMBER_TEXT_COLORS.black} as CSSProperties);
 const BACKGROUND_CHOICES=[
@@ -690,6 +698,21 @@ export default function ProfilePage() {
   const [postText,setPostText]=useState("");
   const [posting,setPosting]=useState(false);
   const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live"|"shahada"|"analytics">("profile");
+  const editorRailRef=useRef<HTMLDivElement|null>(null);
+  const editorSwipeStart=useRef<{x:number;y:number}|null>(null);
+  // Keep the selected capsule in view without scrolling the whole page.
+  useEffect(()=>{
+    if(!editing)return;
+    const frame=requestAnimationFrame(()=>{
+      const rail=editorRailRef.current;
+      const active=rail?.querySelector<HTMLElement>('[aria-pressed="true"]');
+      if(!rail||!active)return;
+      const railBox=rail.getBoundingClientRect(),tabBox=active.getBoundingClientRect();
+      const offset=tabBox.left+tabBox.width/2-railBox.left-railBox.width/2;
+      rail.scrollTo({left:rail.scrollLeft+offset,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
+    });
+    return()=>cancelAnimationFrame(frame);
+  },[editing,tab]);
  useEffect(()=>{
    const params=new URLSearchParams(window.location.search);
    if(params.get("section")!=="tiktok")return;
@@ -939,10 +962,32 @@ const [avatarPage,setAvatarPage]=useState(0);
 
   const publishFirstPost=async()=>{const body=postText.trim();if(!body||posting)return;setPosting(true);const s=createClient();const {error}=await s.from("posts").insert({user_id:profile.id,body});if(error){setMessage(error.message);setPosting(false);return;}setPostText("");setPostCount(x=>x+1);setPosting(false);};
 
-  return <main className="profilePage profileCommandPage" onTouchStart={e=>{if(!isHudHudAdmin||secretAdminOpen)return;const t=e.touches[0];if(t&&!((e.target as HTMLElement).closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],.ummahAtlas,.swipeMemberRail")))secretSwipeStart.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const start=secretSwipeStart.current;secretSwipeStart.current=null;const t=e.changedTouches[0];if(start&&t&&t.clientX-start.x>100&&Math.abs(t.clientY-start.y)<65)setSecretAdminOpen(true)}}><ProfileSocialHub profile={profile}>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>{setTab("profile");setEditing(true)}}/>:<div className="profileShell">
+  return <main className="profilePage profileCommandPage" onTouchStart={e=>{if(!isHudHudAdmin||secretAdminOpen)return;const t=e.touches[0];if(t&&!((e.target as HTMLElement).closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],.ummahAtlas,.swipeMemberRail")))secretSwipeStart.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const start=secretSwipeStart.current;secretSwipeStart.current=null;const t=e.changedTouches[0];if(start&&t&&t.clientX-start.x>100&&Math.abs(t.clientY-start.y)<65)setSecretAdminOpen(true)}}><ProfileSocialHub profile={profile}>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>{setTab("profile");setEditing(true)}}/>:<div className="profileShell" style={{"--profile-editor-accent":memberAccent(profile.profile_accent)} as CSSProperties}
+      onTouchStart={e=>{
+        const el=e.target as HTMLElement,t=e.touches[0];
+        editorSwipeStart.current=null;
+        // Blank editor surfaces can swipe between sections; forms, maps, media and carousels keep their gestures.
+        if(!t||t.clientX<24||!el.closest(".profileEditor,.avatarEditor,.headerEditor")||el.closest("button,a,input,textarea,select,canvas,video,audio,[contenteditable=true],[role=slider],.avatarChoiceGrid,.pcxShell,.p2AutoRail,[data-profile-swipe-block]"))return;
+        editorSwipeStart.current={x:t.clientX,y:t.clientY};
+      }}
+      onTouchEnd={e=>{
+        const start=editorSwipeStart.current,t=e.changedTouches[0];
+        editorSwipeStart.current=null;
+        if(!start||!t||Math.abs(t.clientY-start.y)>48||Math.abs(t.clientX-start.x)<110)return;
+        const index=PROFILE_EDITOR_SECTIONS.findIndex(section=>section.id===tab);
+        const next=index+(t.clientX<start.x?1:-1);
+        if(next>=0&&next<PROFILE_EDITOR_SECTIONS.length)setTab(PROFILE_EDITOR_SECTIONS[next].id);
+      }}>
     <ProfileOrbitStudio profile={profile} onEdit={()=>setEditing(false)} ashab={ashab} editing editorTab={tab}/>
     
-    <div className="profileEditorToolbar"><button className="ghost" onClick={()=>setEditing(false)}>← Back</button><strong>Edit Profile</strong><button className="primary" onClick={save} disabled={saving||colorSaving}>{saving?"Saving…":"Save ✓"}</button></div><div className="profileEditorNav"><div className="profileTabs" aria-label="Profile editor sections">{(["profile","avatar","header","live","shahada","analytics"] as const).map(x=><button type="button" className={tab===x?"active":""} aria-pressed={tab===x} onClick={()=>setTab(x)} key={x}>{x==="profile"?"Identity":x==="avatar"?"Avatars":x==="header"?"Appearance":x==="live"?"Connections":x==="analytics"?"Analytics":"Verification"}</button>)}</div></div>{tab==="analytics"&&<section className="profileEditor" aria-label="Quran and profile analytics"><ProfileAnalytics inline userId={profile.id}/></section>}
+    <div className="profileEditorToolbar">
+      <button type="button" className="ghost profileEditorClose" onClick={()=>setEditing(false)} aria-label="Close profile editor"><span aria-hidden="true">×</span>Close</button>
+      <strong>Edit Profile</strong>
+      <button type="button" className="primary profileEditorSave" onClick={save} disabled={saving||colorSaving} aria-label="Save profile changes"><span className="profileEditorSaveIcon" aria-hidden="true">✓</span><span>{saving||colorSaving?"Saving…":<>Save<span className="profileEditorSaveExtended"> changes</span></>}</span></button>
+    </div>
+    <nav className="profileEditorNav" aria-label="Profile editor sections"><div className="profileTabs" ref={editorRailRef}>
+      {PROFILE_EDITOR_SECTIONS.map(section=><button type="button" key={section.id} className={tab===section.id?"active":""} aria-pressed={tab===section.id} onClick={()=>setTab(section.id)}><span className="profileEditorTabGlyph" aria-hidden="true">{section.glyph}</span><span>{section.label}</span></button>)}
+    </div><span className="profileEditorNavCue" aria-hidden="true">›</span></nav>{tab==="analytics"&&<section className="profileEditor" aria-label="Quran and profile analytics"><ProfileAnalytics inline userId={profile.id}/></section>}
     {tab==="profile"&&<section className="profileEditor"><div className="editorIntro"><h2>Personal Information</h2></div><div className="formGrid">
       <label>Display name<input value={profile.display_name??""} disabled={!!displayCooldown} onChange={e=>update({display_name:e.target.value})}/><small className="fieldNote">{displayCooldown?`You can change your display name again in ${displayCooldown}.`:"You can change this once every 3 days."}</small></label><label>1Muslim ID<input value={profile.username?`@${brandedHandle(profile.username)}`:""} placeholder="@yourID" disabled={!!usernameCooldown} aria-invalid={usernameStatus==="taken"} aria-describedby="profile-muslim-id-feedback" className={usernameStatus==="taken"?"profileMuslimIdInputTaken":""} onChange={e=>{update({username:e.target.value.replace(/^@+/,"")});setUsernameError("");}}/><small className="fieldNote">{usernameCooldown?`You can change your 1Muslim ID again in ${usernameCooldown}.`:"You can change this once every 3 days."}</small><span id="profile-muslim-id-feedback" aria-live="polite" className={usernameStatus==="taken"?"profileMuslimIdError":"profileMuslimIdHint"}>{usernameError|| (usernameStatus==="checking"?"Checking 1Muslim ID…":usernameStatus==="available"?"✓ 1Muslim ID is available":usernameStatus==="error"?"Unable to check availability. Please try again.":"")}</span></label><label>First name<input value={profile.first_name??""} onChange={e=>update({first_name:e.target.value})}/></label><label>Last name<input value={profile.last_name??""} onChange={e=>update({last_name:e.target.value})}/></label>
       <label>Gender<input value={profile.gender ? profile.gender.charAt(0).toUpperCase()+profile.gender.slice(1) : "Not selected"} disabled /><small className="fieldNote">Gender is selected once during onboarding and cannot be changed.</small></label>
@@ -1123,6 +1168,103 @@ const [avatarPage,setAvatarPage]=useState(0);
 .profileCommandPage .profileEditor .formGrid{gap:12px!important}
 .profileCommandPage .profileEditor input,.profileCommandPage .profileEditor textarea,.profileCommandPage .profileEditor select{padding:10px 12px!important}
 @media(max-width:600px){.profileCommandPage .profileEditor{padding:12px!important}.profileCommandPage .profileEditorToolbar{padding:7px 6px!important}}
+
+/* Profile editor touch navigation: scoped to avoid modifying the public profile. */
+.profileCommandPage .profileEditorToolbar{
+  min-height:62px!important;padding:8px 12px!important;gap:8px!important;
+  border:1px solid #e0e7ed!important;border-radius:16px!important;
+  margin:0 0 5px!important;box-shadow:0 8px 24px #152d4312!important;
+  background:#fffffff0!important;backdrop-filter:blur(20px)!important;
+}
+.profileCommandPage .profileEditorToolbar .profileEditorClose,
+.profileCommandPage .profileEditorToolbar .profileEditorSave{
+  min-height:48px!important;display:inline-flex!important;align-items:center!important;
+  justify-content:center!important;gap:7px!important;font-weight:800!important;
+  line-height:1!important;white-space:nowrap!important;cursor:pointer;
+}
+.profileCommandPage .profileEditorToolbar .profileEditorClose{
+  padding:10px 12px!important;font-size:13px!important;
+  background:#f8fafc!important;border:1px solid #d7e1eb!important;
+  border-radius:14px!important;color:#324a63!important;
+}
+.profileEditorClose>span{font-size:22px;line-height:.65;font-weight:400}
+.profileCommandPage .profileEditorToolbar .profileEditorSave{
+  min-width:126px!important;padding:11px 16px!important;
+  font-size:14px!important;letter-spacing:.005em!important;
+  background:color-mix(in srgb,var(--profile-editor-accent,#245b55) 74%,#071e28)!important;
+  color:#fff!important;border:1px solid color-mix(in srgb,var(--profile-editor-accent,#245b55) 75%,#071e28)!important;
+  border-radius:15px!important;
+  box-shadow:0 7px 20px color-mix(in srgb,var(--profile-editor-accent,#245b55) 31%,transparent),inset 0 1px #ffffff33!important;
+  transition:transform .18s ease,box-shadow .18s ease,filter .18s ease!important;
+}
+.profileCommandPage .profileEditorSaveIcon{
+  width:23px;height:23px;display:grid;place-items:center;border-radius:50%;
+  background:#ffffff28;border:1px solid #ffffff55;font-size:15px;
+}
+.profileCommandPage .profileEditorToolbar .profileEditorSave:not(:disabled):active{transform:scale(.97)}
+.profileCommandPage .profileEditorToolbar .profileEditorSave:not(:disabled):hover{filter:brightness(1.09)}
+.profileCommandPage .profileEditorToolbar .profileEditorSave:disabled{opacity:.65!important;cursor:wait}
+.profileCommandPage .profileEditorNav{
+  position:sticky!important;top:66px!important;z-index:24!important;
+  margin:0 0 12px!important;padding:6px 0!important;border:0!important;
+  border-radius:18px!important;background:#fffffff0!important;
+  backdrop-filter:blur(20px)!important;box-shadow:0 7px 22px #102b4310!important;
+}
+.profileCommandPage .profileEditorNav .profileTabs{
+  display:flex!important;gap:9px!important;align-items:center!important;
+  overflow-x:auto!important;overscroll-behavior-x:contain;
+  scroll-snap-type:x proximity!important;scroll-padding-inline:12px;
+  padding:6px 16px 8px 8px!important;margin:0!important;
+  scrollbar-width:none!important;
+}
+.profileCommandPage .profileEditorNav .profileTabs::-webkit-scrollbar{display:none}
+.profileCommandPage .profileEditorNav .profileTabs button{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  gap:7px!important;flex:0 0 auto!important;min-width:128px!important;
+  min-height:49px!important;padding:11px 15px!important;
+  border:1px solid #dce5ec!important;border-radius:999px!important;
+  background:#f8fafc!important;color:#304a65!important;box-shadow:none!important;
+  font-size:13px!important;font-weight:750!important;line-height:1.2!important;
+  scroll-snap-align:center!important;transition:background .22s,border-color .22s,box-shadow .22s,transform .22s!important;
+}
+.profileEditorTabGlyph{font-size:18px;line-height:1;flex-shrink:0;opacity:.78}
+.profileCommandPage .profileEditorNav .profileTabs button.active{
+  color:color-mix(in srgb,var(--profile-editor-accent,#245b55) 72%,#071e28)!important;
+  border:1px solid color-mix(in srgb,var(--profile-editor-accent,#245b55) 64%,white)!important;
+  background:color-mix(in srgb,var(--profile-editor-accent,#245b55) 12%,white)!important;
+  box-shadow:0 4px 14px color-mix(in srgb,var(--profile-editor-accent,#245b55) 16%,transparent)!important;
+  transform:translateY(-1px);
+}
+.profileCommandPage .profileEditorNav .profileTabs button.active:after{
+  content:"";position:absolute;bottom:4px;width:24px;height:3px;border-radius:99px;
+  background:var(--profile-editor-accent,#245b55)
+}
+.profileCommandPage .profileEditorNav .profileTabs button{position:relative}
+.profileEditorNavCue{
+  position:absolute;right:0;top:10px;bottom:10px;width:22px;pointer-events:none;
+  display:grid;place-items:center;border-radius:0 18px 18px 0;
+  background:linear-gradient(90deg,transparent,#ffffffed 65%);font-size:25px;color:#5e7185
+}
+.profileCommandPage .profileShell>.profileEditor,
+.profileCommandPage .profileShell>.avatarEditor,
+.profileCommandPage .profileShell>.headerEditor{animation:profileEditorCardEnter .24s ease-out both}
+@keyframes profileEditorCardEnter{from{opacity:.72;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.profileCommandPage .profileEditorToolbar button:focus-visible,
+.profileCommandPage .profileEditorNav button:focus-visible{outline:3px solid var(--profile-editor-accent,#245b55)!important;outline-offset:2px}
+@media(max-width:390px){
+  .profileCommandPage .profileEditorToolbar{padding:7px 8px!important;gap:5px!important}
+  .profileCommandPage .profileEditorToolbar strong{font-size:12px!important}
+  .profileCommandPage .profileEditorToolbar .profileEditorClose{padding:8px!important}
+  .profileCommandPage .profileEditorToolbar .profileEditorSave{min-width:90px!important;padding:9px 11px!important}
+  .profileEditorSaveExtended{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .profileCommandPage .profileShell>.profileEditor,
+  .profileCommandPage .profileShell>.avatarEditor,
+  .profileCommandPage .profileShell>.headerEditor{animation:none}
+  .profileCommandPage .profileEditorNav .profileTabs button,
+  .profileCommandPage .profileEditorToolbar .profileEditorSave{transition:none!important}
+}
 `}</style></ProfileSocialHub><footer className="profileQiblaFooter"><div className="profileQiblaFooterBrand">1MUSLIM</div><nav aria-label="1Muslim Qibla footer"><Link href="/qibla/studio">EDITORIAL STUDIO</Link><Link href="/qibla/command">COMMAND CENTER</Link><Link href="/qibla/newsroom/apply">CONTRIBUTE</Link><Link href="/">1MUSLIM HOME</Link><Link href="/terms">TERMS &amp; CONDITIONS</Link><Link href="/privacy">PRIVACY POLICY</Link><Link href="/data-policy">DATA POLICY</Link></nav><small>© 2026 1Muslim. All rights reserved.</small></footer><style>{`.profileQiblaFooter{background:#101217;color:#e8e5df;padding:42px 20px max(40px,env(safe-area-inset-bottom));text-align:center;border-top:1px solid #c6a97955;margin-top:85px}.profileQiblaFooterBrand{font-size:21px;font-weight:800;letter-spacing:.13em;color:#e4c58a;margin-bottom:25px}.profileQiblaFooterBrand span{color:#f2d49a}.profileQiblaFooter nav{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px 24px;max-width:850px;margin:0 auto 25px}.profileQiblaFooter nav a{font-size:11px;letter-spacing:.08em;color:#d5d2cb;text-decoration:none;transition:color .2s ease}.profileQiblaFooter nav a:hover,.profileQiblaFooter nav a:focus-visible{color:#f5d18c;text-decoration:underline}.profileQiblaFooter small{font-size:11px;color:#999a9e}@media(max-width:600px){.profileQiblaFooter{padding:34px 16px 65px;margin-top:75px}.profileQiblaFooter nav{gap:15px 18px}.profileQiblaFooter nav a{font-size:10px}}`}</style>{isHudHudAdmin&&secretAdminOpen&&<div role="dialog" aria-modal="true" aria-label="Secret admin dashboard" className="profileSecretAdminOverlay"><div className="profileSecretAdminToolbar"><strong>Admin Dashboard</strong><button type="button" onClick={()=>setSecretAdminOpen(false)} aria-label="Close admin dashboard">✕</button></div><div className="profileSecretAdminContent"><AdminParallaxDashboard draft={secretAdminDraft} onDraftChange={setSecretAdminDraft}/></div></div>}<style>{`.profileSecretAdminOverlay{position:fixed;inset:0;z-index:2147483000;background:#020b14;color:#d5f5ff;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}.profileSecretAdminToolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #ffffff25}.profileSecretAdminToolbar button{border:1px solid #ffffff55;border-radius:50%;background:#ffffff15;color:#fff;width:38px;height:38px;cursor:pointer}.profileSecretAdminContent{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}`}</style></main>;
 }
 
