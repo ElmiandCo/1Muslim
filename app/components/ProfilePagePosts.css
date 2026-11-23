@@ -1,0 +1,62 @@
+/* Dedicated guest posts on member profiles — not regular Ummah feed posts. */
+.memberPagePosts{min-width:0;margin:12px 0 13px;padding:13px 13px 12px;border:1px solid #c8d9e7;border-radius:20px;background:linear-gradient(140deg,#ffffff,#f5f9fc 85%);color:#173651;box-shadow:0 7px 27px #1a3b6010}
+.memberPagePosts *{box-sizing:border-box}
+.memberPagePostsHeading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.memberPagePostsHeading h2{font-size:clamp(16px,3.5vw,19px);letter-spacing:-.025em;line-height:1.2;margin:3px 0 0;color:#1b3b58}
+.memberPagePostsHeading h2 small{font-size:10px;color:#7391a8;vertical-align:middle}
+.memberPagePostsEyebrow{color:#66819a;font-size:9px;font-weight:850;letter-spacing:.16em}
+.memberPagePostsLabel{font-size:10px;color:#658098;white-space:nowrap}
+.memberPageComposer{padding:0;margin-bottom:8px}
+.memberPageComposerToggle{border:1px solid #ccddec;border-radius:15px;min-height:46px;display:flex;align-items:center;gap:10px;padding:7px 12px;width:100%;background:#eef5fb;color:#45657d;font-size:13px;text-align:left;cursor:pointer}
+.memberPageComposerToggle>span:nth-child(2){flex:1}
+.memberPageComposerPlus{display:grid;place-items:center;height:28px;width:28px;border-radius:10px;background:#dceef3;color:#24647b;font-size:15px}
+.memberPageComposeFields{display:grid;gap:10px;padding:12px 4px 5px}
+.memberPageComposeFields textarea{resize:vertical;min-height:82px;width:100%;border:1px solid #bfd3e1;border-radius:13px;background:#fff;color:#183b55;padding:11px 12px;font:inherit;font-size:14px}
+.memberPageComposeMedia{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.memberPageComposeMedia label{position:relative;flex:none;display:inline-flex;align-items:center;border:1px solid #b0d1e2;border-radius:11px;padding:9px 10px;color:#245674;font-size:11px;font-weight:750;background:#e9f6fa;cursor:pointer;overflow:hidden}
+.memberPageComposeMedia label input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.memberPageComposeMedia>span{color:#8c9da9;font-size:11px}
+.memberPageComposeMedia>input{flex:2 1 145px;width:110px;min-width:0;border:1px solid #bed0df;border-radius:11px;padding:9px 10px;font-size:12px;color:#2b465d;background:#fff}
+.memberPageComposeMedia>select{flex:0 1 80px;border:1px solid #bcd0dd;border-radius:9px;background:#fff;padding:9px;font-size:11px}
+.memberPageFile{font-size:11px;color:#537589;margin:0;overflow-wrap:anywhere}.memberPageFile button{margin-left:8px;border:0;background:none;color:#b34d64;font-weight:900}
+.memberPageSubmit{justify-self:end;padding:11px 14px;border:1px solid #1c4460;border-radius:12px;background:#173b5b;color:#fff;font-weight:750;cursor:pointer}
+.memberPageSubmit:disabled{opacity:.4;cursor:default}
+.memberPagePostsGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:9px}
+.memberPagePost{display:flex;flex-direction:column;min-width:0;overflow:hidden;border:1px solid #d6e2eb;border-radius:16px;background:#fff;box-shadow:0 4px 13px #0a29410e;color:#153248}
+.memberPagePost-text{grid-column:1/-1}
+.memberPagePost-image{grid-column:span 1}
+.memberPagePost-video{grid-column:span 2}
+.memberPagePostAuthor{display:flex;align-items:center;gap:7px;min-width:0;padding:10px 10px 6px}
+.memberPagePostAuthor img{width:28px;height:28px;flex:0 0 28px;object-fit:cover;border-radius:50%;background:#102333}
+.memberPagePostAuthor>div{flex:1;display:grid;gap:2px;min-width:0}
+.memberPagePostAuthor strong{font-size:11px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;color:#193954}
+.memberPagePostAuthor small{font-size:9px;color:#8797a7}
+.memberPagePostDelete{border:0;background:#eaf1f4;color:#778da0;font-size:19px;line-height:1;padding:0 5px;border-radius:50%;height:25px;min-width:25px;cursor:pointer}
+.memberPagePostDelete:hover{background:#f8e6e8;color:#b04a51}
+.memberPagePostBody{padding:0 10px 7px;margin:0;font-size:12px;line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap;color:#2b445b}
+.memberPagePost-text .memberPagePostBody{font-size:13px;padding:5px 13px 7px}
+.memberPagePostMedia{overflow:hidden;min-width:0;display:grid;background:#0d2335}
+.memberPagePostMedia>img{display:block;width:100%;height:auto;aspect-ratio:1/1;max-height:320px;object-fit:cover}
+.memberPagePostMedia>video,.memberPagePostMedia>iframe{display:block;width:100%;height:auto;aspect-ratio:16/9;min-height:100px;border:0;object-fit:contain;background:#09121c}
+.memberPagePostActions{display:flex;align-items:center;gap:1px;justify-content:space-around;margin-top:auto;padding:6px 6px 8px;border-top:1px solid #edf1f5}
+.memberPagePostActions button{border:0;background:transparent;color:#678199;border-radius:10px;padding:5px 5px;min-width:35px;display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:11px;cursor:pointer;transition:transform .14s,color .14s,background .14s}
+.memberPagePostActions button>span{font-size:15px;line-height:1}
+.memberPagePostActions button:active{transform:scale(.88)}
+.memberPagePostActions button[aria-pressed=true]{background:#edf5ff;color:#245f9b;font-weight:900}
+.memberPagePostActions button[aria-pressed=true]:nth-child(2){color:#c13c65;background:#fff0f6}
+.memberPageComments{padding:9px 10px 11px;border-top:1px solid #d9e5ee;background:#f5f9fc;grid-column:1/-1;min-width:0}
+.memberPageCommentList{max-height:220px;overflow:auto;display:grid;gap:8px}
+.memberPageComment{display:flex;gap:6px;align-items:start}
+.memberPageComment img{width:22px;height:22px;border-radius:50%;object-fit:cover;flex:0 0 22px}
+.memberPageComment p{min-width:0;flex:1;margin:0;font-size:11px;line-height:1.45;overflow-wrap:anywhere;color:#48627a}
+.memberPageComment strong{color:#17374f;font-weight:850}
+.memberPageComment button{border:0;background:none;color:#849ca8;font-size:18px}
+.memberPageCommentList>small{font-size:11px;color:#788fa4}
+.memberPageComments form{margin-top:9px;display:flex;gap:5px}
+.memberPageComments form input{flex:1;min-width:0;border:1px solid #cbdde9;border-radius:11px;padding:8px;font-size:12px;background:#fff;color:#1e445f}
+.memberPageComments form button{padding:8px 10px;border:0;border-radius:11px;background:#183a59;color:white}
+.memberPagePostsEmpty{padding:12px 10px;border:1px dashed #cadce8;border-radius:13px;background:#f7fafc;font-size:12px;line-height:1.4;color:#7991a6}
+.memberPagePostsStatus{font-size:11px;color:#426b79;margin:7px 4px 0;line-height:1.45}
+.memberPagePostsMore{display:block;margin:10px auto 0;border:1px solid #b6d5e1;border-radius:999px;padding:9px 14px;background:#e6f3fa;color:#215370;font-size:11px;font-weight:750;cursor:pointer}
+@media(max-width:520px){.memberPagePosts{padding:11px 9px;border-radius:18px}.memberPagePostsGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.memberPagePost-image{grid-column:span 1}.memberPagePost-video{grid-column:span 2}.memberPagePostAuthor{padding:8px 6px 6px;gap:5px}.memberPagePostAuthor img{width:23px;height:23px;flex-basis:23px}.memberPagePostAuthor strong{font-size:10px}.memberPagePostBody{font-size:11px;padding:0 7px 6px}.memberPagePostActions{padding:5px 2px}.memberPagePostActions button{min-width:26px;gap:2px;padding:5px 2px}.memberPagePostActions button>span{font-size:14px}.memberPagePost-text .memberPagePostBody{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.memberPagePosts *{transition:none!important;animation:none!important}}
