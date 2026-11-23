@@ -41,7 +41,7 @@ export async function detectPrayerLocation(): Promise<LocationPreference> {
 }
 
 /** Save prayer location separately from optional permission to appear in anonymous Ummah map totals. */
-export async function persistPrayerLocation(next: LocationPreference, joinMap = false): Promise<boolean> {
+export async function persistPrayerLocation(next: LocationPreference, joinMap = false, leaveMap = false): Promise<boolean> {
   const location = { city: next.city.trim(), state: next.state.trim(), country: next.country.trim() };
   if (!location.city || !location.country) throw new Error("A city and country are needed for accurate prayer times.");
   const db = createClient();
@@ -51,12 +51,21 @@ export async function persistPrayerLocation(next: LocationPreference, joinMap = 
     const { error } = await db.from("profiles").update(location).eq("id", user.id);
     if (error) throw new Error("Could not save your location: " + error.message);
     if (joinMap) {
-      // A checked opt-in adds only aggregated state/country map counts; never avatar/name.
-      const { error: consentError } = await db.from("member_region_preferences").upsert({
-        user_id: user.id, region_level: location.state ? "state" : "country",
-        directory_visible: false, consented_at: new Date().toISOString()
-      }, { onConflict: "user_id" });
-      if (consentError) throw new Error("Prayer location saved, but map sharing failed. Try again.");
+      const { data: existing, error: readError } = await db.from("member_region_preferences")
+        .select("user_id").eq("user_id", user.id).maybeSingle();
+      if (readError) throw new Error("Unable to check map sharing settings.");
+      if (!existing) {
+        // A new opt-in shares regional counts only, never identifiable member details.
+        const { error: consentError } = await db.from("member_region_preferences").upsert({
+          user_id: user.id, region_level: location.state ? "state" : "country",
+          directory_visible: false, consented_at: new Date().toISOString()
+        }, { onConflict: "user_id" });
+        if (consentError) throw new Error("Prayer location saved, but map sharing failed. Try again.");
+      }
+    } else if (leaveMap) {
+      const { error: consentError } = await db.from("member_region_preferences")
+        .delete().eq("user_id", user.id);
+      if (consentError) throw new Error("Prayer location saved, but map sharing could not be disabled.");
     }
   }
   localStorage.setItem(LOCATION_KEY, JSON.stringify(location));
@@ -70,6 +79,7 @@ export default function LocationPreferences({ onSaved }: { onSaved?: (location: 
   const [busy, setBusy] = useState(false);
   const [detecting, setDetecting] = useState(false);
   const [shareOnMap, setShareOnMap] = useState(false);
+  const [wasShared, setWasShared] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -83,6 +93,7 @@ export default function LocationPreferences({ onSaved }: { onSaved?: (location: 
       const { data: mapPreference } = await db.from("member_region_preferences").select("user_id").eq("user_id", user.id).maybeSingle();
       if (!active) return;
       setShareOnMap(Boolean(mapPreference));
+      setWasShared(Boolean(mapPreference));
       const saved = readLocation();
       const next = { city: data.city || saved.city, state: data.state || saved.state, country: data.country || saved.country };
       setValue(next);
@@ -95,7 +106,8 @@ export default function LocationPreferences({ onSaved }: { onSaved?: (location: 
     setDetecting(true); setStatus("Finding and saving your location…");
     try {
       const next = await detectPrayerLocation();
-      const synced = await persistPrayerLocation(next, shareOnMap);
+      const synced = await persistPrayerLocation(next, shareOnMap, wasShared && !shareOnMap);
+      setWasShared(shareOnMap);
       setValue(next);
       onSaved?.(next);
       setStatus(synced ? "Location saved to your account." : "Saved on this device. Sign in to sync.");
@@ -109,7 +121,8 @@ export default function LocationPreferences({ onSaved }: { onSaved?: (location: 
     setBusy(true); setStatus("");
     try {
       const next = { city: value.city.trim(), state: value.state.trim(), country: value.country.trim() };
-      const synced = await persistPrayerLocation(next, shareOnMap);
+      const synced = await persistPrayerLocation(next, shareOnMap, wasShared && !shareOnMap);
+      setWasShared(shareOnMap);
       onSaved?.(next);
       setStatus(synced ? "Location saved to your account." : "Saved on this device. Sign in to sync.");
     } catch (error) {
@@ -119,7 +132,7 @@ export default function LocationPreferences({ onSaved }: { onSaved?: (location: 
 
   return <div className="prayerLocationForm prayerLocationFast" aria-label="Prayer location preferences">
     <button className="prayerLocateAction" type="button" disabled={busy || detecting} onClick={() => void useDeviceLocation()}>
-      <span aria-hidden="true">⌖</span><span><strong>{detecting ? "Saving your location…" : "Use my location · Save instantly"}</strong><small>One tap · city used privately for prayer accuracy</small></span><span aria-hidden="true">↗</span>
+      <span aria-hidden="true">⌖</span><span><strong>{detecting ? "Saving your location…" : "Use my location · Save instantly"}</strong><small>One tap · city used for prayer-time accuracy</small></span><span aria-hidden="true">↗</span>
     </button>
     <label className="prayerMapConsent">
       <input type="checkbox" checked={shareOnMap} onChange={event => setShareOnMap(event.target.checked)} />
