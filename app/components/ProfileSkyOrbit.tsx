@@ -10,10 +10,14 @@ function location(body:SkyBody):CSSProperties{
 }
 function lunarShape(fraction:number,waxing:boolean){
  const f=Math.min(1,Math.max(0,fraction));
- const control=16+(waxing?1:-1)*(1-2*f)*16;
- // Hemisphere facing the Sun: quarter, crescent and gibbous disks all follow
- // the measured illuminated fraction rather than a rotating decorative icon.
- return `M 16 8 A 8 8 0 0 ${waxing?1:0} 16 24 Q ${control.toFixed(2)} 16 16 8 Z`;
+ // Use an exact elliptical terminator: at new Moon its edge cancels
+ // the outer limb, and at full Moon it becomes the opposite limb.
+ if(f<=0.0001)return "";
+ const outerSweep=waxing?1:0;
+ if(Math.abs(f-.5)<0.0001)return `M 16 8 A 8 8 0 0 ${outerSweep} 16 24 L 16 8 Z`;
+ const radius=8*Math.abs(1-2*f);
+ const terminatorSweep=f<.5?(waxing?0:1):(waxing?1:0);
+ return `M 16 8 A 8 8 0 0 ${outerSweep} 16 24 A ${radius.toFixed(4)} 8 0 0 ${terminatorSweep} 16 8 Z`;
 }
 
 /** A miniature real-time sky, synchronized with the saved Prayer app city. */
