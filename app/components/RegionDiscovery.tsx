@@ -26,13 +26,13 @@ const usStates:Record<string,string>=Object.fromEntries(("AL:Alabama,AK:Alaska,A
 export function canonicalUsState(value:string|null|undefined){const raw=(value||"").trim();return usStates[raw.toUpperCase()]||Object.values(usStates).find(name=>name.toLowerCase()===raw.toLowerCase())||raw}
 type Stats={countries:{name:string;count:number}[];states:{name:string;count:number}[];optedIn:number;recorded:number;unplaced:number;usCount:number;updatedAt:string;limited:boolean};
 type Mode="world"|"us";
-type Props={members:Array<{country:string|null}>;currentCountry:string|null;userId:string;selected:string;selectedState?:string;onSelect:(value:string)=>void;onSelectState?:(value:string)=>void;onSaved:(value:string)=>void};
+type Props={members:Array<{country:string|null}>;currentCountry:string|null;userId:string;selected:string;selectedState?:string;onSelect:(value:string)=>void;onSelectState?:(value:string)=>void;onSaved:(value:string)=>void;backgroundImage?:string};
 const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
 const bound=(zoom:number,x:number,y:number)=>({x:clamp(x,720*(1-zoom),0),y:clamp(y,360*(1-zoom),0)});
 const centerView={zoom:1.06,x:-21.6,y:-10.8};
 const kaabaPoint:[number,number]=[439.7,137.2]; // Makkah, approximate equirectangular map position; never a member location.
 
-export default function RegionDiscovery({currentCountry,userId,selected,selectedState="",onSelect,onSelectState,onSaved}:Props){
+export default function RegionDiscovery({currentCountry,userId,selected,selectedState="",onSelect,onSelectState,onSaved,backgroundImage="/assets/profile-backgrounds/obsidian.PNG"}:Props){
  const [stats,setStats]=useState<Stats|null>(null),[fetchError,setFetchError]=useState("");
  const [mode,setMode]=useState<Mode>("world"),[editing,setEditing]=useState(false),[expanded,setExpanded]=useState(false);
  const [country,setCountry]=useState(canonicalCountry(currentCountry)),[state,setState]=useState(""),[city,setCity]=useState("");
@@ -164,7 +164,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    });
   }
  };
- const openEditor=()=>{setExpanded(false);setEditing(true);setConsent(false);setMessage("");setBrowseOnly(true)};
+ const openEditor=()=>{setExpanded(false);setEditing(true);setConsent(false);setMessage("");setBrowseOnly(true);window.setTimeout(()=>document.querySelector(".ummahAtlas .regionEditor")?.scrollIntoView({behavior:"smooth",block:"center"}),90)};
  const requestLocation=()=>{
   if(!navigator.geolocation){setMessage("Device location is unavailable. Choose your region manually.");return}
   setLocating(true);setMessage("");
@@ -279,7 +279,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    {message&&<p role="status" className="atlasMessage">{message}</p>}
   </div>}
   {expanded&&typeof document!=="undefined"&&createPortal(<div className="atlasStudioOverlay" role="dialog" aria-modal="true" aria-label="Full-screen Ummah map studio">
-   <div className="atlasStudioBackdrop" aria-hidden="true" style={{transform:"scale(1.045) translate("+(-view.x/80)+"px,"+(-view.y/80)+"px)"}}/>
+   <div className="atlasStudioBackdrop" aria-hidden="true" style={{backgroundImage:`linear-gradient(180deg,#050e1c55,#071d26d9),url("${backgroundImage.replaceAll("\"","")} " )`,transform:"scale(1.045) translate("+(-view.x/80)+"px,"+(-view.y/80)+"px)"}}/>
    <button type="button" className="atlasStudioBack" onClick={()=>setExpanded(false)} aria-label="Close full map">‹</button>
    <div className="atlasStudioCanvas">{mapCanvas(true)}</div>
   </div>,document.body)}
