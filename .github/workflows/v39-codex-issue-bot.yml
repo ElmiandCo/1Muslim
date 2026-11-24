@@ -20,7 +20,7 @@ jobs:
       !github.event.issue.pull_request &&
       github.event.comment.body == '/v39-run' &&
       github.event.issue.number >= 1593 &&
-      (github.event.issue.number <= 1606 || github.event.issue.number == 1610)
+      (github.event.issue.number <= 1606 || github.event.issue.number == 1610 || github.event.issue.number == 1643)
     runs-on: ubuntu-latest
     timeout-minutes: 95
     permissions:
@@ -30,6 +30,7 @@ jobs:
     env:
       ISSUE_NUMBER: ${{ github.event.issue.number }}
       REPOSITORY: ${{ github.repository }}
+      BASE_BRANCH: ${{ github.event.issue.number == 1643 && 'main' || 'release/v3.9' }}
     steps:
       - name: Verify GitHub Actions Codex secret before running expensive jobs
         env:
@@ -42,7 +43,7 @@ jobs:
       - name: Fetch production baseline — do not expose credentials to coding agent
         uses: actions/checkout@v5
         with:
-          ref: release/v3.9
+          ref: ${{ env.BASE_BRANCH }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -72,11 +73,11 @@ jobs:
             echo 'Do not use the model to repeat the full master; focus only on the assigned issue, current code, measured build/tests, and a concise final report to avoid token waste.'
             echo 'TOKEN BUDGET: Use targeted file search and read only the few files needed. Work in one focused increment; do not repeatedly scan the whole repository. No repeated full builds inside the agent; one typecheck/test is enough unless fixing a clear failure. Do not perform more than two repair attempts of the same error.'
             echo 'Use existing code and tests, do not consume tens of thousands of tokens rewriting design plans. Stop after a meaningful scoped change and report remaining work for later PRs rather than running an unbounded task.'
-            echo 'Read AGENTS.md, current release/v3.9 integration baseline, existing code; honor all policies and existing features.'
+            echo 'Read AGENTS.md, checked-out base branch and existing code; honor all policies and existing features.'
             echo 'Implement ONLY the issue below. No Stripe live purchases, privileged destructive operations, or changes to production secrets.'
             echo 'Do not change .github/workflows, package manifest, lockfiles, runtime env files or AGENTS.md.'
             echo 'Never overwrite unrelated source; write tested code rather than mockups, placeholders or speculative claims.'
-            echo 'Do not change the public site or deploy; this worker is allowed only to propose a DRAFT PR against release/v3.9.'
+            echo "Do not change the public site or deploy; this worker may only propose a DRAFT PR against $BASE_BRANCH."
             echo 'For Qur’an, preserve verified Arabic text, licensing, tashkīl and accurate content; stop if unverifiable.'
             echo 'For Live and voice, preserve server-authoritative permissions and real media lifecycle.'
             echo 'Run available tests, document limits. Leave a short report in final response, including files, tests and known risks.'
@@ -154,12 +155,12 @@ jobs:
           message="Bismillah. Partial implementation of #$ISSUE_NUMBER, governed by #1592. This is a DRAFT PR requiring CI, mobile/desktop UX, security, Qur'an integrity where applicable, and integrator review before merging. Production unchanged."
           # GitHub Actions may be configured to prohibit creating pull requests.
           # Push the isolated code branch regardless; notify the coordination issue for connector-backed PR creation.
-          if gh pr create --repo "$REPOSITORY" --base release/v3.9 --head "$BOT_BRANCH" --draft --title "v3.9 Bot #$ISSUE_NUMBER — implementation draft" --body "$message"; then
+          if gh pr create --repo "$REPOSITORY" --base "$BASE_BRANCH" --head "$BOT_BRANCH" --draft --title "v3.9 Bot #$ISSUE_NUMBER — implementation draft" --body "$message"; then
             echo "Draft PR opened; await integration review and CI."
           else
             echo "::warning::GitHub Actions is not allowed to create PRs; branch pushed, draft PR requires integrator."
             echo "Pushed branch: $BOT_BRANCH" >> "$GITHUB_STEP_SUMMARY"
-            echo "Review: https://github.com/$REPOSITORY/compare/release/v3.9...$BOT_BRANCH?expand=1" >> "$GITHUB_STEP_SUMMARY"
-            gh issue comment "$ISSUE_NUMBER" --repo "$REPOSITORY" --body "Bismillah. New code branch [$BOT_BRANCH](https://github.com/$REPOSITORY/tree/$BOT_BRANCH) pushed for review. This repository blocks GitHub Actions from opening PRs. Integrator: [open a draft PR](https://github.com/$REPOSITORY/compare/release/v3.9...$BOT_BRANCH?expand=1) and verify CI + preview + security/mobile before release." || true
+            echo "Review: https://github.com/$REPOSITORY/compare/$BASE_BRANCH...$BOT_BRANCH?expand=1" >> "$GITHUB_STEP_SUMMARY"
+            gh issue comment "$ISSUE_NUMBER" --repo "$REPOSITORY" --body "Bismillah. New code branch [$BOT_BRANCH](https://github.com/$REPOSITORY/tree/$BOT_BRANCH) pushed for review. This repository blocks GitHub Actions from opening PRs. Integrator: [open a draft PR](https://github.com/$REPOSITORY/compare/$BASE_BRANCH...$BOT_BRANCH?expand=1) and verify CI + preview + security/mobile before release." || true
           fi
           printf '\nCodex report (not proof of tests or deployment):\n%s\n' "$FINAL_MESSAGE"
