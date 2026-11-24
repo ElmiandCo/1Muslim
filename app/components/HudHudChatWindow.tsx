@@ -56,15 +56,18 @@ export default function HudHudChatWindow({
   const previousOverflow=document.body.style.overflow;
   const previousFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
   document.body.style.overflow="hidden";
+  return()=>{document.body.style.overflow=previousOverflow;recognizer.current?.stop();previousFocus?.focus({preventScroll:true});};
+ },[]);
+
+ useEffect(()=>{
   const key=(event:globalThis.KeyboardEvent)=>{
-   if(event.key==="Escape"){
-    if(menuOpen){setMenuOpen(false);return;}
-    if(settingsOpen){onSettingsChange(false);return;}
-    onClose();
-   }
+   if(event.key!=="Escape")return;
+   if(menuOpen){setMenuOpen(false);return;}
+   if(settingsOpen){onSettingsChange(false);return;}
+   onClose();
   };
   document.addEventListener("keydown",key);
-  return()=>{document.body.style.overflow=previousOverflow;document.removeEventListener("keydown",key);recognizer.current?.stop();previousFocus?.focus({preventScroll:true});};
+  return()=>document.removeEventListener("keydown",key);
  },[menuOpen,settingsOpen,onSettingsChange,onClose]);
 
  useEffect(()=>{
@@ -176,7 +179,7 @@ export default function HudHudChatWindow({
         <div className={styles.composeLeft}>
          <input ref={file} type="file" accept="image/*" hidden onChange={onAttach}/>
          <button type="button" title="Attach image preview" aria-label="Attach image preview" onClick={()=>file.current?.click()}>＋</button>
-         <button type="button" className={listening?styles.recording:""} title="Dictate a message" aria-label={listening?"Stop voice typing":"Start voice typing"} aria-pressed={listening} onClick={toggleDictation}>♩</button>
+         <button type="button" className={listening?styles.recording:""} title="Dictate a message" aria-label={listening?"Stop voice typing":"Start voice typing"} aria-pressed={listening} onClick={toggleDictation}>🎙</button>
         </div>
         <button type="submit" className={styles.sendButton} disabled={sending||(!draft.trim()&&!pending)||(remaining===0&&!unlocked)} aria-label="Send message">{sending?"···":"↑"}</button>
        </div>
