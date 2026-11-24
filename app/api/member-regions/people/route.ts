@@ -1,20 +1,11 @@
 import {NextRequest,NextResponse} from "next/server";
 import {createClient} from "../../../../utils/supabase/server";
 import {createClient as serviceClient} from "@supabase/supabase-js";
+import {canonicalCountry} from "../../../../lib/member-region-country";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const headers={"Cache-Control":"private, no-store, max-age=0"};
-const clean=(name:string)=>name.normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
-const canonical=(name:string)=>{
- const value=clean(name);
- const aliases:Record<string,string>={
-  "us":"united states","usa":"united states","america":"united states","united states of america":"united states",
-  "uk":"united kingdom","u k":"united kingdom","great britain":"united kingdom",
-  "turkey":"turkiye","turkiye":"turkiye","ksa":"saudi arabia","uae":"united arab emirates"
- };
- return aliases[value]||value;
-};
 type Consent={user_id:string;consented_at:string};
 type Profile={id:string;display_name:string|null;username:string|null;hide_1muslim_id?:boolean|null;country:string|null;avatar_url:string|null;avatar_gender:string|null;avatar_config:Record<string,unknown>|null};
 
@@ -31,7 +22,7 @@ export async function GET(request:NextRequest){
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
  if(!url||!key)return NextResponse.json({error:"Member discovery unavailable"},{status:503,headers});
  const db=serviceClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
- const wanted=canonical(country);
+ const wanted=canonicalCountry(country).toLocaleLowerCase("en");
  const found:Array<{id:string;name:string;username:string|null;avatar:string;joinedAt:string}>=[];
  try{
   // Latest explicit opt-ins first, with a hard ceiling to prevent unbounded work.
@@ -50,7 +41,7 @@ export async function GET(request:NextRequest){
     const byId=new Map(((profiles||[]) as Profile[]).map(p=>[p.id,p]));
     for(const row of rows){
      const profile=byId.get(row.user_id);
-     if(!profile||canonical(profile.country||"")!==wanted)continue;
+     if(!profile||canonicalCountry(profile.country).toLocaleLowerCase("en")!==wanted)continue;
      const chosenAvatar=profile.avatar_config?.selectedAvatarUrl;
      const avatar=typeof chosenAvatar==="string"&&chosenAvatar.startsWith("/")||typeof chosenAvatar==="string"&&chosenAvatar.startsWith("https://")
       ? chosenAvatar as string : profile.avatar_url|| (profile.avatar_gender==="female"?"/assets/avatars/Default-women.png":"/assets/avatars/default-male.jpg");

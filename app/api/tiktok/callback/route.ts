@@ -1,3 +1,4 @@
+import { hasTikTokImportScopes, registeredTikTokCallback } from "../../../../utils/tiktok/oauth";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../utils/supabase/server";
 import { timingSafeEqual } from "node:crypto";
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
   };
   const state = request.nextUrl.searchParams.get("state") || "";
   const expected = request.cookies.get("tt_oauth_state")?.value || "";
-  if (!state || !expected || state.length !== expected.length || !timingSafeEqual(Buffer.from(state), Buffer.from(expected))) return finish("invalid_state");
+  if (!/^[a-f0-9]{64}$/.test(state) || !/^[a-f0-9]{64}$/.test(expected) || !timingSafeEqual(Buffer.from(state), Buffer.from(expected))) return finish("invalid_state");
   if (request.nextUrl.searchParams.has("error")) return finish("authorization_declined");
   const code = request.nextUrl.searchParams.get("code");
   if (!code) return finish("missing_code");
@@ -27,12 +28,14 @@ export async function GET(request: NextRequest) {
   if (!canUseTikTokReview(user)) return finish("review_access_required");
   const clientKey = process.env.TIKTOK_CLIENT_KEY;
   const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
-  if (!clientKey || !clientSecret) return finish("configuration");
-  const params = new URLSearchParams({ client_key: clientKey, client_secret: clientSecret, code, grant_type: "authorization_code", redirect_uri: new URL("/api/tiktok/callback", origin).toString() });
+  const redirectUri = registeredTikTokCallback(origin);
+  if (!redirectUri || !clientKey || !clientSecret) return finish("configuration");
+  const params = new URLSearchParams({ client_key: clientKey, client_secret: clientSecret, code, grant_type: "authorization_code", redirect_uri: redirectUri });
   try {
-    const result = await fetch("https://open.tiktokapis.com/v2/oauth/token/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", "Cache-Control": "no-store" }, body: params.toString(), cache: "no-store" });
+    const result = await fetch("https://open.tiktokapis.com/v2/oauth/token/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", "Cache-Control": "no-store" }, body: params.toString(), cache: "no-store", signal: AbortSignal.timeout(10000) });
     const token = await result.json();
     if (!result.ok || !token.access_token || !token.open_id) return finish("token_exchange");
+    if (!hasTikTokImportScopes(token.scope)) return finish("missing_scopes");
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return finish("storage_configuration");
     const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });

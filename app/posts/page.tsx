@@ -7,7 +7,6 @@ import {readWatchedPosts,storeImmersiveQueue,UMMAH_WATCH_UPDATED_EVENT,type Watc
 import UnifiedPostMedia from "../components/UnifiedPostMedia";
 import {youtubeIdFromPost,youtubeThumbnail} from "../lib/ummah-youtube";
 import OneMuslimVideo from "../components/OneMuslimVideo";
-import {predictVideo,cachePublicImage} from "../../lib/smart-media";
 import PostAuthorFollow from "../components/PostAuthorFollow";
 import styles from "./posts-magazine.module.css";
 type PostMedia={url:string;type:string};
@@ -43,20 +42,25 @@ function VisiblePostEngagement({postId,mediaUrl,mediaType,youtube}:{postId:strin
   {near?<div ref={content}><UnifiedPostMedia postId={postId} mediaUrl={mediaUrl} mediaType={mediaType} youtubeId={youtube} showVideo={false}/></div>:null}
  </div>;
 }
-function VisiblePostVideo({postId,mediaUrl,youtube}:{postId:string;mediaUrl:string|null;youtube:string|null}){
+function useVisibleMedia(){
  const node=useRef<HTMLDivElement|null>(null);
- const [near,setNear]=useState(false);
- useEffect(()=>{const el=node.current;if(!el)return;if(typeof IntersectionObserver==="undefined"){setNear(true);return}const o=new IntersectionObserver(([entry])=>setNear(entry.isIntersecting),{rootMargin:"800px 0px 800px 0px",threshold:0});o.observe(el);return()=>o.disconnect()},[]);
- return <div ref={node} className={styles.feedVideoStage}>{near?<OneMuslimVideo videoKey={"public-post:"+postId} src={mediaUrl||""} youtubeId={youtube} title="Ummah video"/>:<div className={styles.feedVideoPlaceholder}>{youtube?<img src={ytThumbnail(youtube)} alt="" loading="lazy"/>:<span aria-hidden="true">▶</span>}<small>Video ready to play</small></div>}</div>;
+ const [visible,setVisible]=useState(false);
+ useEffect(()=>{const el=node.current;if(!el)return;if(typeof IntersectionObserver==="undefined"){setVisible(true);return}const observer=new IntersectionObserver(([entry])=>setVisible(entry.isIntersecting),{threshold:0});observer.observe(el);return()=>observer.disconnect()},[]);
+ return {node,visible};
+}
+function VisiblePostVideo({postId,mediaUrl,active}:{postId:string;mediaUrl:string|null;active:boolean}){
+ const {node,visible}=useVisibleMedia();
+ return <div ref={node} className={styles.feedVideoStage}>{active&&visible?<OneMuslimVideo videoKey={"public-post:"+postId} src={mediaUrl||""} title="Ummah video"/>:<div className={styles.feedVideoPlaceholder}><span aria-hidden="true">▶</span><small>Video ready to play</small></div>}</div>;
 }
 
-function PostMediaGallery({items}:{items:PostMedia[]}){
+function PostMediaGallery({items,active}:{items:PostMedia[];active:boolean}){
+ const {node,visible}=useVisibleMedia();
  const [index,setIndex]=useState(0);
  const [start,setStart]=useState<number|null>(null);
  const current=items[index]||items[0];
  const go=(delta:number)=>setIndex(previous=>(previous+delta+items.length)%items.length);
- return <div className={styles.feedMediaGallery} aria-label={"Post gallery with "+items.length+" items"} onTouchStart={event=>setStart(event.touches[0]?.clientX??null)} onTouchEnd={event=>{if(start===null)return;const distance=event.changedTouches[0]?.clientX-start;setStart(null);if(Math.abs(distance)>42)go(distance<0?1:-1)}}>
-  {current.type.startsWith("video/")?<video key={current.url} src={current.url} playsInline controls preload="metadata" className={styles.feedMediaGalleryMedia}/>:<img key={current.url} src={current.url} alt={"Gallery item "+(index+1)} className={styles.feedMediaGalleryMedia} loading="lazy"/>}
+ return <div ref={node} className={styles.feedMediaGallery} aria-label={"Post gallery with "+items.length+" items"} onTouchStart={event=>setStart(event.touches[0]?.clientX??null)} onTouchEnd={event=>{if(start===null)return;const distance=event.changedTouches[0]?.clientX-start;setStart(null);if(Math.abs(distance)>42)go(distance<0?1:-1)}}>
+  {current.type.startsWith("video/")?(active&&visible?<video key={current.url} src={current.url} playsInline controls preload="metadata" className={styles.feedMediaGalleryMedia}/>:<div className={styles.feedVideoPlaceholder}><span aria-hidden="true">▶</span><small>Video ready to play</small></div>):<img key={current.url} src={current.url} alt={"Gallery item "+(index+1)} className={styles.feedMediaGalleryMedia} loading="lazy"/>}
   <div className={styles.feedMediaGalleryControls}><button type="button" aria-label="Previous gallery item" onClick={()=>go(-1)}>‹</button><span>{index+1} / {items.length}</span><button type="button" aria-label="Next gallery item" onClick={()=>go(1)}>›</button></div>
   <div className={styles.feedMediaGalleryDots} aria-hidden="true">{items.map((item,i)=><span className={i===index?styles.feedMediaGalleryDotActive:""} key={item.url}/>)}</div>
  </div>
@@ -213,7 +217,6 @@ export default function PublicPostsSocial(){
   // The old card flies off as the next card grows from its blurred preview.
   window.setTimeout(()=>{
    node.scrollIntoView({behavior:reduced?"auto":"smooth",block:"start"});
-   if(item.media_url&&item.media_type?.startsWith("video/"))predictVideo(item.media_url);
   },reduced?0:56);
   deckTimer.current=window.setTimeout(()=>{setDeckMotion(null);deckLocked.current=false},reduced?90:760);
  };
@@ -239,16 +242,8 @@ export default function PublicPostsSocial(){
   if(!filtered.length)return;
   storeImmersiveQueue(filtered.map(p=>p.id));
   const first=filtered[0];
-  if(first.media_url&&first.media_type?.startsWith("video/"))predictVideo(first.media_url);
   router.push("/posts/story/"+encodeURIComponent(first.id)+"?play=1");
  };
- useEffect(()=>{
-  // Warm the first two public native video candidates, without preloading full files.
-  const upcoming=filtered.filter(p=>p.media_url&&(p.media_type?.startsWith("video/")||/\\.(mp4|webm)(?:\\?|$)/i.test(p.media_url))).slice(0,2);
-  for(const post of upcoming)if(post.media_url)predictVideo(post.media_url);
-  // Cache only public same-origin static images; signed user media is deliberately excluded.
-  for(const post of filtered.slice(0,8))if(post.media_url&&post.media_type?.startsWith("image/"))void cachePublicImage(post.media_url);
- },[filtered]);
  const stories=useMemo(()=>{const seen=new Set<string>();return posts.filter(p=>{const key=p.author_handle||p.author_name;if(seen.has(key))return false;seen.add(key);return true}).slice(0,12)},[posts]);
  return <main className={styles.page+" "+styles.feedPage+" "+styles.discoverPage}><div className={styles.discoverHead}><div className={styles.discoverTitle}><h1>Discover</h1><span>✧</span><p>Explore your Ummah.</p></div><div className={styles.discoverActions}><Link href="/search" aria-label="Search 1Muslim">⌕</Link><Link href="/create">▣ Create</Link></div></div>
  <section className={styles.discoverPeople} aria-label="Discover community members"><div className={styles.feedStoryRail}><Link href="/create" className={styles.feedStoryPerson}><span className={styles.feedStoryRing}><span>＋</span></span><small>Your Story</small></Link>{stories.map(p=><Link href={`/profile?section=muslimeen&member=${encodeURIComponent(p.author_id)}`} className={styles.feedStoryPerson} key={p.id}><span className={styles.feedStoryRing}><span>{p.author_avatar_url?<img className={styles.authorAvatarImage} src={p.author_avatar_url} alt="" loading="lazy" referrerPolicy="no-referrer"/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span></span><small>{p.author_handle||p.author_name}</small></Link>)}</div></section>
@@ -270,8 +265,8 @@ export default function PublicPostsSocial(){
  <div className={styles.feedPostStage}>
  {!hasGallery&&poster&&<Link href={`/posts/story/${encodeURIComponent(p.id)}${video?"?play=1":""}`} className={styles.feedMediaLink+(video?" "+styles.feedYoutubeThumbnail:"")} aria-label={video?"Play YouTube video in full Ummah post":"View community post"}><img src={poster} alt={video?"YouTube video thumbnail":"Community post"} width={960} height={1200} loading={index<2?"eager":"lazy"} decoding="async" fetchPriority={index===0?"high":"auto"} style={{backgroundColor:"#f1f3f6"}}/>{video&&<span className={styles.feedYoutubePlay} aria-hidden="true">▶</span>}</Link>}
  
- {hasGallery&&<PostMediaGallery items={p.media_items!}/>}
- {hasVideo&&!hasGallery&&<VisiblePostVideo postId={p.id} mediaUrl={p.media_url} youtube={null}/>}
+ {hasGallery&&<PostMediaGallery items={p.media_items!} active={index===deckActive}/>}
+ {hasVideo&&!hasGallery&&<VisiblePostVideo postId={p.id} mediaUrl={p.media_url} active={index===deckActive}/>}
  {!hasGallery&&!poster&&!hasVideo&&<div className={styles.feedTextCanvas} aria-hidden="true"><span>✧</span><strong>FROM THE UMMAH</strong><small>Voices of our community</small></div>}
  <div className={styles.feedPostGlass}>
   <Link href={"/profile?section=muslimeen&member="+encodeURIComponent(p.author_id)} className={styles.feedAvatarEdge} aria-label={"View "+(p.author_name||"member")+" profile"}><span className={styles.feedPostAvatar}>{p.author_avatar_url?<img className={styles.authorAvatarImage} src={p.author_avatar_url} alt="" loading="lazy" referrerPolicy="no-referrer"/>:(p.author_name||"M").slice(0,1).toUpperCase()}</span></Link>

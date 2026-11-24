@@ -2,8 +2,8 @@
 import {useEffect} from "react";
 import {usePathname} from "next/navigation";
 
-/** Single white, atomic reveal boundary shared by every route.
- * Hides the retired loading shells, navigation and HUD overlays until content is usable.
+/** Initial reveal boundary shared by every route.
+ * Once revealed, route changes leave the existing shell visible while Next navigates.
  */
 export default function AppShellLifecycle(){
  const pathname=usePathname()||"/";
@@ -15,6 +15,7 @@ export default function AppShellLifecycle(){
   let frame=0;
   let profileObserver:MutationObserver|null=null;
   root.dataset.oneRoute=pathname==="/"?"welcome":"app";
+  if(root.dataset.oneShellReady==="true")return;
   root.dataset.oneShellReady="false";
   const reveal=()=>{
    if(!active||revealTimer)return;

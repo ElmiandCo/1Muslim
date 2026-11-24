@@ -54,41 +54,6 @@ export default function PrayerAudioPlayer({step}:{step:SalahStep}){
   };
   warmVoice();
   synth?.addEventListener?.("voiceschanged",warmVoice);
-  for(const [id,url] of Object.entries(QURAN_RECORDINGS)){
-   const audio=new Audio(url);
-   audio.preload="auto";
-   audio.addEventListener("playing",()=>{
-    if(activeStep.current!==id)return;
-    clearSlowTimer();
-    setSlowLoad(false);
-    setStatus("playing");
-   });
-   audio.addEventListener("timeupdate",()=>{
-    if(activeStep.current===id)setElapsed(audio.currentTime);
-   });
-   audio.addEventListener("loadedmetadata",()=>{
-    if(activeStep.current===id)setDuration(Number.isFinite(audio.duration)?audio.duration:0);
-   });
-   audio.addEventListener("ended",()=>{
-    if(activeStep.current!==id)return;
-    activeStep.current=null;
-    setStatus("idle");
-    setElapsed(0);
-   });
-   audio.addEventListener("error",()=>{
-    if(activeStep.current!==id)return;
-    clearSlowTimer();
-    fallback.current.add(id);
-    activeStep.current=null;
-    setStatus("idle");
-    setMode("device");
-    setSlowLoad(false);
-    setMessage("Recording unavailable. Tap Hear Arabic to use your device voice instead.");
-   });
-   recordings.current.set(id,audio);
-   // Warm the short recitations before the user taps play.
-   audio.load();
-  }
   return()=>{
    live=false;
    synth?.removeEventListener?.("voiceschanged",warmVoice);
@@ -150,13 +115,53 @@ export default function PrayerAudioPlayer({step}:{step:SalahStep}){
   }
  };
 
+ const getRecording=(id:string)=>{
+   const url=QURAN_RECORDINGS[id];
+   if(!url||fallback.current.has(id))return;
+   const existing=recordings.current.get(id);
+   if(existing)return existing;
+   const audio=new Audio();
+   audio.preload="none";
+   audio.addEventListener("playing",()=>{
+    if(activeStep.current!==id)return;
+    clearSlowTimer();
+    setSlowLoad(false);
+    setStatus("playing");
+   });
+   audio.addEventListener("timeupdate",()=>{
+    if(activeStep.current===id)setElapsed(audio.currentTime);
+   });
+   audio.addEventListener("loadedmetadata",()=>{
+    if(activeStep.current===id)setDuration(Number.isFinite(audio.duration)?audio.duration:0);
+   });
+   audio.addEventListener("ended",()=>{
+    if(activeStep.current!==id)return;
+    activeStep.current=null;
+    setStatus("idle");
+    setElapsed(0);
+   });
+   audio.addEventListener("error",()=>{
+    if(activeStep.current!==id)return;
+    clearSlowTimer();
+    fallback.current.add(id);
+    activeStep.current=null;
+    setStatus("idle");
+    setMode("device");
+    setSlowLoad(false);
+    setMessage("Recording unavailable. Tap Hear Arabic to use your device voice instead.");
+   });
+   recordings.current.set(id,audio);
+   audio.src=url;
+   return audio;
+ };
+
  const play=()=>{
   if(status!=="idle"){stop();setMessage("");return;}
   stop();
   setMessage("");
   window.dispatchEvent(new Event("1muslim:audio-focus"));
-  const audio=recordings.current.get(step.id);
-  if(audio&&!fallback.current.has(step.id)){
+  const audio=getRecording(step.id);
+  if(audio){
    activeStep.current=step.id;
    setMode("recorded");
    setStatus("starting");

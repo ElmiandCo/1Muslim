@@ -5,13 +5,18 @@ import "./profile-tiktok-review.css";
 type Video={id:string;title:string;cover:string;url:string;embed:string;duration:number};
 type Status={available:boolean;connected:boolean;profile?:{displayName:string;username:string;avatarUrl:string}|null;profileUnavailable?:boolean};
 
-function validPreview(url:string){
- try{const u=new URL(url);return u.protocol==="https:"&&(u.hostname==="www.tiktok.com"||u.hostname==="tiktok.com"||u.hostname.endsWith(".tiktok.com"))?u.href:null}
- catch{return null}
+async function fetchVideoPage(cursor?: number) {
+ const query = cursor === undefined ? "" : `?cursor=${cursor}`;
+ const response = await fetch("/api/tiktok/videos"+query,{cache:"no-store"});
+ const data = await response.json();
+ if(!response.ok) throw Error(data.error||"Could not load your public TikTok videos.");
+ return { videos: data.videos as Video[], nextCursor: data.nextCursor as number|null };
 }
+
 export default function ProfileTikTokGallery(){
  const [status,setStatus]=useState<Status|null>(null);
  const [videos,setVideos]=useState<Video[]>([]);
+ const [nextCursor,setNextCursor]=useState<number|null>(null);
  const [error,setError]=useState("");
  const [loading,setLoading]=useState(true);
  const [sharing,setSharing]=useState("");
@@ -20,19 +25,18 @@ export default function ProfileTikTokGallery(){
  const [settingsOpen,setSettingsOpen]=useState(false);
  const [lastChecked,setLastChecked]=useState<string|null>(null);
  const refresh=async()=>{
-  setLoading(true);setError("");
+  setLoading(true);setVideos([]);setNextCursor(null);setPreview(null);setLastChecked(null);
   try{
    const r=await fetch("/api/tiktok/status",{cache:"no-store"});
    const s=await r.json().catch(()=>({}));
    if(!r.ok)throw Error(s.error==="status_unavailable"?"TikTok connection status is temporarily unavailable.":"Could not check your TikTok connection.");
    if(!s.available)throw Error("TikTok review tools are not available for this account.");
    setStatus(s);
-   if(s.connected)setNotice(prev=>prev.startsWith("TikTok redirected back.")?"TikTok connected. Profile and public video access have been checked against TikTok.":prev);
-   if(!s.connected){setVideos([]);setLastChecked(new Date().toISOString());return}
-   const result=await fetch("/api/tiktok/videos",{cache:"no-store"});
-   const data=await result.json().catch(()=>({}));
-   if(!result.ok){setVideos([]);throw Error(data.error||"TikTok video.list could not return public videos. Check sandbox authorization and scopes.");}
-   setVideos(Array.isArray(data.videos)?data.videos:[]);
+   if(!s.connected)return;
+   const page=await fetchVideoPage();
+   setVideos(page.videos);
+   setNextCursor(page.nextCursor);
+   setNotice(prev=>prev.startsWith("TikTok redirected back.")?"TikTok connected. Public video access verified.":prev);
    setLastChecked(new Date().toISOString());
   }catch(e){setError(e instanceof Error?e.message:"Unable to load the TikTok connection");}
   finally{setLoading(false)}
@@ -42,20 +46,40 @@ export default function ProfileTikTokGallery(){
    const result=sessionStorage.getItem("1muslim:tiktok-oauth-result");
    sessionStorage.removeItem("1muslim:tiktok-oauth-result");
    if(result==="connected")setNotice("TikTok redirected back. Verifying your live account and videos…");
-   if(result?.startsWith("error:"))setError("TikTok authorization did not complete ("+result.slice(6)+"). Please retry.");
+   if(result?.startsWith("error:")){
+    const reason=result.slice(6);
+    const messages: Record<string,string>={
+     authorization_declined:"TikTok authorization was declined. Check that you are using an eligible sandbox account and try again.",
+     missing_scopes:"Grant both requested permissions in TikTok to connect.",
+     session_expired:"Your 1Muslim session changed during authorization. Sign in and try again.",
+     token_exchange:"TikTok could not authorize the connection. Check the sandbox account and retry.",
+     configuration:"TikTok review setup is incomplete.",
+    };
+    setNotice(messages[reason]||"TikTok authorization did not complete. Please retry.");
+   }
   }catch{}
   void refresh();
  // Intentionally check live TikTok status on mount for the reviewer recording.
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
+ const loadMore=async()=>{
+  if(nextCursor===null)return;
+  setLoading(true);setError("");
+  try{
+   const page=await fetchVideoPage(nextCursor);
+   setVideos(current=>Array.from(new Map([...current,...page.videos].map(video=>[video.id,video])).values()));
+   setNextCursor(page.nextCursor);
+  }catch(e){setError(e instanceof Error?e.message:"Could not load more videos.");}
+  finally{setLoading(false);}
+ };
  const share=async(video:Video)=>{
   if(!window.confirm("Share this selected public TikTok video to your 1Muslim Ummah feed? This is a manual public post."))return;
   setSharing(video.id);setNotice("");setError("");
   try{
-   const r=await fetch("/api/tiktok/share",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:video.id,title:video.title,url:video.url})});
+   const r=await fetch("/api/tiktok/share",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:video.id})});
    const payload=await r.json().catch(()=>({}));
    if(!r.ok)throw Error(payload.error||"Could not share this video");
-   setNotice(payload.alreadyShared?"This TikTok video was already shared to Ummah.":"Shared to Ummah successfully. Only the selected video was posted.");
+   setNotice(payload.alreadyShared?"Already shared to Ummah.":"Shared to Ummah successfully. Only the selected video was posted.");
   }catch(e){setError(e instanceof Error?e.message:"Sharing failed");}
   finally{setSharing("")}
  };
@@ -65,14 +89,14 @@ export default function ProfileTikTokGallery(){
   try{
    const r=await fetch("/api/tiktok/disconnect",{method:"POST",headers:{"Content-Type":"application/json"}});
    if(!r.ok)throw Error("Could not disconnect TikTok. Please try again.");
-   setStatus({available:true,connected:false});setVideos([]);setPreview(null);setSettingsOpen(false);setNotice("TikTok disconnected.");
+   setStatus({available:true,connected:false});setVideos([]);setNextCursor(null);setPreview(null);setSettingsOpen(false);setNotice("TikTok disconnected.");
   }catch(e){setError(e instanceof Error?e.message:"Disconnect failed");}
   finally{setLoading(false)}
  };
  return <div className="ttReview" aria-label="TikTok authorization review connection">
   <div className="ttReviewHeader">
    <div className="ttReviewIdentity"><span className="ttReviewBrand" aria-hidden="true">♪</span><div><span>INTERNAL INTEGRATION · LOGIN KIT + DISPLAY API</span><h3>TikTok</h3></div></div>
-   <div className="ttReviewHeaderRight"><span className={"ttReviewBadge "+(status?.connected?"on":"")}>{status?.connected?"Connected":loading?"Checking":"Review mode"}</span><button type="button" className="ttReviewRefresh" onClick={()=>void refresh()} disabled={loading} aria-label="Refresh real TikTok account and video data">↻ <span>Refresh</span></button></div>
+   <div className="ttReviewHeaderRight"><span className={"ttReviewBadge "+(status?.connected?"on":"")}>{status?.connected?"Connected":loading?"Checking":"Review mode"}</span><button type="button" className="ttReviewRefresh" onClick={()=>{setError("");void refresh();}} disabled={loading||!!sharing} aria-label="Refresh real TikTok account and video data">↻ <span>Refresh</span></button></div>
   </div>
   <p className="ttReviewIntro">Authorize your TikTok account to display its public profile and videos here. Choose individually whether to share a video to Ummah—nothing is imported or published automatically.</p>
   <div className="ttReviewScope" aria-label="Requested TikTok permissions">
@@ -93,13 +117,15 @@ export default function ProfileTikTokGallery(){
        <i aria-hidden="true">▶</i>
       </button>
       <strong title={video.title}>{video.title}</strong>
-      <div className="ttReviewVideoActions"><button type="button" disabled={!!sharing} onClick={()=>void share(video)}>{sharing===video.id?"Sharing…":"Share to Ummah"}</button><a href={video.url} target="_blank" rel="noopener noreferrer">TikTok ↗</a></div>
-      {preview===video.id&&<div className="ttReviewEmbed">{validPreview(video.embed)?<iframe src={validPreview(video.embed)||undefined} title={"TikTok video preview: "+video.title} allow="fullscreen;encrypted-media" allowFullScreen loading="lazy"/>:<a href={video.url} target="_blank" rel="noopener noreferrer">Watch on TikTok ↗</a>}</div>}
+      {video.duration>0&&<small>{Math.floor(video.duration/60)}:{String(video.duration%60).padStart(2,"0")}</small>}
+      <div className="ttReviewVideoActions"><button type="button" disabled={loading||!!sharing} onClick={()=>void share(video)}>{sharing===video.id?"Sharing…":"Share to Ummah"}</button><a href={video.url} target="_blank" rel="noopener noreferrer">TikTok ↗</a></div>
+      {preview===video.id&&<div className="ttReviewEmbed">{video.embed?<iframe src={video.embed} title={"TikTok video preview: "+video.title} allow="fullscreen;encrypted-media" allowFullScreen loading="lazy"/>:<a href={video.url} target="_blank" rel="noopener noreferrer">Watch on TikTok ↗</a>}</div>}
     </article>)}
    </div>}
+   {nextCursor!==null&&<button type="button" className="ttReviewRefresh" disabled={loading||!!sharing} onClick={()=>void loadMore()}>Load more videos</button>}
    {!loading&&!error&&videos.length===0&&<p className="ttReviewEmpty">No public videos returned. For TikTok's reviewer recording, use a sandbox test account with publicly posted videos and ensure both requested scopes are available.</p>}
    <button type="button" className="ttReviewSettingsButton" onClick={()=>setSettingsOpen(v=>!v)} aria-expanded={settingsOpen} aria-controls="tt-review-settings">Connection settings <span aria-hidden="true">{settingsOpen?"−":"+"}</span></button>
-   {settingsOpen&&<div className="ttReviewSettings" id="tt-review-settings"><p>Only public TikTok videos are retrieved. Each Ummah share requires a separate confirmation. Disconnecting clears stored authorization.</p><button type="button" disabled={loading} onClick={()=>void disconnect()}>Disconnect TikTok</button></div>}
+   {settingsOpen&&<div className="ttReviewSettings" id="tt-review-settings"><p>Only public TikTok videos are retrieved. Each Ummah share requires a separate confirmation. Disconnecting clears stored authorization.</p><a href="/api/tiktok/connect">Reconnect TikTok</a> <button type="button" disabled={loading||!!sharing} onClick={()=>void disconnect()}>Disconnect TikTok</button></div>}
   </>:!loading&&<div className="ttReviewConnect">
     <span className="ttReviewConnectStatus">● Not authorized</span>
     <p>No TikTok account is connected to this test profile.</p>

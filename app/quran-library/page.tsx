@@ -1,10 +1,11 @@
 "use client";
-import {useEffect,useMemo,useRef,useState} from "react";
+import {useEffect,useMemo,useRef,useState,type CSSProperties} from "react";
 import Link from "next/link";
 import "./quran-magazine.css";
 import {loadQuranChapter} from "../lib/quran-verses";
 import {createClient} from "../../utils/supabase/client";
 import QuranRecitationStudio from "../components/QuranRecitationStudio";
+import {MAX_QURAN_ZOOM, MIN_QURAN_ZOOM, useQuranTextZoom} from "../elm-tent/quran/useQuranTextZoom";
 type Chapter={id:number;name_simple:string;name_arabic:string;verses_count:number;revelation_order?:number;translated_name?:{name:string}};
 type Verse={verse_key:string;arabic:string;english?:string};
 const API="https://api.quran.com/api/v4";
@@ -154,6 +155,7 @@ export default function QuranMagazine(){
   return()=>cancelAnimationFrame(frame);
  },[selected,verses,loading,renderLimit]);
 
+ const textZoom=useQuranTextZoom();
  const swipeStart=useRef<{x:number;y:number;time:number}|null>(null);
  const onReaderTouchStart=(e:React.TouchEvent)=>{if(e.touches.length!==1){swipeStart.current=null;return}const t=e.touches[0];swipeStart.current={x:t.clientX,y:t.clientY,time:Date.now()}};
  const onReaderTouchEnd=(e:React.TouchEvent)=>{const start=swipeStart.current;swipeStart.current=null;if(!start||e.changedTouches.length!==1)return;const t=e.changedTouches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;if(dx>90&&Math.abs(dx)>Math.abs(dy)*1.5&&Date.now()-start.time<900){setSelected(null);setFloating(false);window.scrollTo({top:0,behavior:"smooth"})}};
@@ -191,7 +193,18 @@ export default function QuranMagazine(){
 <button type="button" className="qmReciteLaunch" title="Record a surah or recite Live" aria-label="Record a surah or recite Live" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:quran-recitation-studio",{detail:{chapter:selected||1}}))}>
   <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></svg><span>Recite</span></button></div>
  <div className={"qm-progress qm-progress-chapter qm-scroll-progress"+(showScrollProgress?" qm-scroll-progress-visible":"")} aria-hidden={!showScrollProgress}><div className="qm-progress-label"><span>{chapter?.name_simple||"Surah"} · {visited.filter(key=>key.startsWith(selected+":")).length}/{chapter?.verses_count||verses.length} verses visited</span><strong>{Math.round(visited.filter(key=>key.startsWith(selected+":")).length/(chapter?.verses_count||verses.length||1)*100)}%</strong></div><div className="qm-progress-track"><span style={{width:(visited.filter(key=>key.startsWith(selected+":")).length/(chapter?.verses_count||verses.length||1)*100)+"%"}}/></div><div className="qm-progress-label qm-progress-sub"><span>Entire Qur’an · {visited.length.toLocaleString()}/6,236 verses visited</span><strong>{Math.round(visited.length/6236*100)}%</strong></div><div className="qm-progress-track"><span style={{width:(visited.length/6236*100)+"%"}}/></div></div>
- <div className="qm-reader" ref={reader} onScroll={onScroll} onTouchStart={onReaderTouchStart} onTouchEnd={onReaderTouchEnd}><div className="qm-readerintro"><span>CHAPTER {selected} · {chapter?.verses_count||verses.length} VERSES</span><h1>{chapter?.name_simple}</h1><div lang="ar" dir="rtl" className="qm-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div></div>
+ <div className="qm-reader" ref={reader} onScroll={onScroll}
+  style={{"--qm-arabic-scale":textZoom.zoom/100} as CSSProperties}
+  onTouchStart={event=>{onReaderTouchStart(event);textZoom.startPinch(event)}}
+  onTouchMove={textZoom.movePinch}
+  onTouchEnd={event=>{textZoom.finishPinch();onReaderTouchEnd(event)}}
+  onTouchCancel={()=>{swipeStart.current=null;textZoom.finishPinch()}}><div className="qm-readerintro"><span>CHAPTER {selected} · {chapter?.verses_count||verses.length} VERSES</span><h1>{chapter?.name_simple}</h1><div className="qm-text-zoom">
+  <label htmlFor="qm-text-zoom">Arabic text size</label>
+  <input id="qm-text-zoom" type="range" min={MIN_QURAN_ZOOM} max={MAX_QURAN_ZOOM}
+   value={textZoom.zoom} aria-valuetext={textZoom.zoom+"%"}
+   onChange={event=>textZoom.commitZoom(Number(event.currentTarget.value))}/>
+  <span aria-hidden="true">{textZoom.zoom}%</span>
+ </div><div lang="ar" dir="rtl" className="qm-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div></div>
  {loading?<p className="qm-status">Loading the Qur’an…</p>:verses.length===0?<p className="qm-status">This chapter is temporarily unavailable. Please try again.</p>:verses.slice(0,renderLimit).map(v=><article className={"qm-verse"+(floating?" is-floating":"")} key={v.verse_key} data-verse={v.verse_key} id={"ayah-"+v.verse_key.replace(":","-")}><div className="qm-verse-tools"><span>{v.verse_key}</span><button onClick={()=>{try{localStorage.setItem("1muslim:quran-magazine-last",v.verse_key);setLastVerse(v.verse_key)}catch{}}} aria-label={"Bookmark verse "+v.verse_key}>☆</button><button onClick={()=>navigator.clipboard?.writeText(v.arabic+"\n"+(v.english||""))} aria-label={"Copy verse "+v.verse_key}>⧉</button></div><div className={"qm-verse-content"+(englishFirst?" english-first":"")}><p className="qm-verse-arabic" dir="rtl" lang="ar">{v.arabic}</p>{showEnglish&&v.english&&<p className="qm-verse-english">{v.english}</p>}</div></article>)}
  <footer className="qm-site-footer" aria-label="1Quran footer">
   <div className="qm-site-footer-title">1MUSLIM <span aria-hidden="true">✦</span> 1QURAN</div>
