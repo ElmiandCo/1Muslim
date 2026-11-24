@@ -1,9 +1,10 @@
 "use client";
 
-import {useEffect,useRef,useState,type ReactNode,type CSSProperties} from "react";
+import {useEffect,useRef,useState,type ReactNode,type CSSProperties,type PointerEvent} from "react";
 import {createPortal} from "react-dom";
 import FeaturedBadge from "./FeaturedBadge";
 import ProfileSpotlightHero from "./ProfileSpotlightHero";
+import {avatarDragPosition,snapAvatarPosition,type AvatarPosition} from "./profileAvatarPosition";
 import styles from "./ProfileCinematicOverlay.module.css";
 
 type PublicIdentity={
@@ -25,6 +26,52 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
  const closeButton=useRef<HTMLButtonElement>(null);
  const visitorCloseButton=useRef<HTMLButtonElement>(null);
  const frame=useRef<number|null>(null);
+ const avatarTrack=useRef<HTMLDivElement>(null);
+ const avatarElement=useRef<HTMLDivElement>(null);
+ const avatarDrag=useRef<{id:number;startX:number;start:AvatarPosition;travel:number;position:number}|null>(null);
+ const [avatarPosition,setAvatarPosition]=useState<AvatarPosition>(0);
+ const [avatarPreview,setAvatarPreview]=useState<number|null>(null);
+ const [avatarTravel,setAvatarTravel]=useState(0);
+ const moveAvatar=(position:AvatarPosition)=>{
+  if(position!==avatarPosition){
+   setAvatarPosition(position);
+   try{navigator.vibrate?.(8)}catch{}
+  }
+ };
+ const startAvatarDrag=(event:PointerEvent<HTMLDivElement>)=>{
+  if(!event.isPrimary||event.button!==0||avatarDrag.current)return;
+  const track=avatarTrack.current;
+  if(!track)return;
+  const travel=Math.max(0,(track.clientWidth-event.currentTarget.offsetWidth)/2);
+  if(!travel)return;
+  avatarDrag.current={id:event.pointerId,startX:event.clientX,start:avatarPosition,travel,position:avatarPosition};
+  event.currentTarget.setPointerCapture(event.pointerId);
+  setAvatarPreview(avatarPosition);
+ };
+ const updateAvatarDrag=(event:PointerEvent<HTMLDivElement>)=>{
+  const drag=avatarDrag.current;
+  if(!drag||drag.id!==event.pointerId)return;
+  drag.position=avatarDragPosition(drag.start,event.clientX-drag.startX,drag.travel);
+  setAvatarPreview(drag.position);
+ };
+ const finishAvatarDrag=(event:PointerEvent<HTMLDivElement>,cancelled=false)=>{
+  const drag=avatarDrag.current;
+  if(!drag||drag.id!==event.pointerId)return;
+  avatarDrag.current=null;
+  setAvatarPreview(null);
+  if(!cancelled)moveAvatar(snapAvatarPosition(drag.position));
+ };
+ useEffect(()=>{avatarDrag.current=null;setAvatarPosition(0);setAvatarPreview(null)},[profile.id]);
+ useEffect(()=>{
+  const track=avatarTrack.current,avatar=avatarElement.current;
+  if(!mounted||!track||!avatar)return;
+  const measure=()=>setAvatarTravel(Math.max(0,(track.clientWidth-avatar.offsetWidth)/2));
+  measure();
+  const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(measure):null;
+  observer?.observe(track);observer?.observe(avatar);
+  window.addEventListener("resize",measure);
+  return()=>{observer?.disconnect();window.removeEventListener("resize",measure)};
+ },[mounted]);
  const [hint,setHint]=useState<"close"|"scroll"|null>(null);
  const hintTimers=useRef<Array<ReturnType<typeof setTimeout>>>([]);
  const hintDismissed=useRef(false);
@@ -136,7 +183,14 @@ export default function ProfileCinematicOverlay({profile,mainImage,avatar,accent
      </button>
     </nav>
     <main className={styles.body}>
-     <div className={styles.avatarRing}><img src={avatar} alt={profile.display_name?profile.display_name+"'s avatar":"Member avatar"} /></div>
+     <div ref={avatarTrack} className={styles.avatarTrack}>
+      <div ref={avatarElement} className={styles.avatarRing} data-dragging={avatarPreview!==null} style={{transform:`translateX(calc(-50% + ${(avatarPreview??avatarPosition)*avatarTravel}px))`}} onPointerDown={startAvatarDrag} onPointerMove={updateAvatarDrag} onPointerUp={finishAvatarDrag} onPointerCancel={event=>finishAvatarDrag(event,true)} onLostPointerCapture={event=>finishAvatarDrag(event,true)}>
+       <img src={avatar} draggable={false} alt={profile.display_name?profile.display_name+"'s avatar":"Member avatar"} />
+      </div>
+     </div>
+     <div className={styles.avatarPositions} role="group" aria-label="Avatar position">
+      {([{position:-1,label:"Left"},{position:0,label:"Center"},{position:1,label:"Right"}] as const).map(({position,label})=><button key={position} type="button" aria-label={`Move avatar ${label.toLowerCase()}`} aria-pressed={avatarPosition===position} onClick={()=>moveAvatar(position)}>{label}</button>)}
+     </div>
      <div className={styles.identity}>
       <h1>{profile.display_name||"1Muslim member"}</h1>
       {profile.shahada_verified_at&&<span className={styles.verified} title="Shahada verified" aria-label="Shahada verified">✓</span>}

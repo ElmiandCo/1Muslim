@@ -51,3 +51,15 @@ test("reduced motion and iPhone safe-area support", () => {
   assert.match(theater, /prefers-reduced-motion:reduce/);
   assert.match(theater, /env\(safe-area-inset-bottom\)/);
 });
+
+test("viewer fences asynchronous joins across cleanup and broadcast end", () => {
+  assert.match(viewer, /const isCurrent = \(\) => mounted && !endedOnce\.current/);
+  assert.match(viewer, /await response\.json\(\)\.catch\([^\n]+\n\s+if \(!isCurrent\(\)\) return;/);
+  assert.match(viewer, /await room\.connect\([^\n]+\n\s+if \(!isCurrent\(\)\) \{ await room\.disconnect\(\); return; \}/);
+  assert.match(viewer, /mounted = false;\n\s+controller\.abort\(\);/);
+});
+
+test("viewer reconnect status leaves the media stage interactive", () => {
+  assert.match(viewer, /role="status" aria-live="polite" className="omViewerReconnectStatus"/);
+  assert.match(viewer, /\.omViewerReconnectStatus\{[^}]*pointer-events:none/);
+});

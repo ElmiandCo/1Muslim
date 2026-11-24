@@ -10,6 +10,7 @@ import DeepWatchReviews from "../components/DeepWatchReviews";
 import {videoRegistry,isKidsVideo,type RegisteredVideo} from "../components/videoRegistry";
 import "./deepwatch.css";
 import {prepareMedia} from "../../lib/smart-media";
+import {watchHeroPreview} from "./hero-preview";
 
 /** Preload the next Movie Bank batch when the viewer approaches the rail's end. */
 function DeepWatchRailSentinel({onApproach}:{onApproach:()=>void}){
@@ -230,7 +231,10 @@ export default function DeepWatch(){
   return score(b)-score(a)||a.i-b.i;
  }).map(x=>x.v);
  const [heroPreviewEnabled,setHeroPreviewEnabled]=useState(false);
- useEffect(()=>{if(search||document.visibilityState!=="visible"){setHeroPreviewEnabled(false);return}const id=window.setTimeout(()=>setHeroPreviewEnabled(true),4500);return()=>window.clearTimeout(id)},[search,tab]);
+ useEffect(()=>{
+  const connection=(navigator as Navigator & {connection?:{saveData?:boolean;effectiveType?:string;addEventListener?:(type:string,listener:()=>void)=>void;removeEventListener?:(type:string,listener:()=>void)=>void}}).connection;
+  return watchHeroPreview({document,motion:window.matchMedia("(prefers-reduced-motion: reduce)"),connection,setTimeout:window.setTimeout.bind(window),clearTimeout:window.clearTimeout.bind(window)},!search&&!selected,setHeroPreviewEnabled);
+ },[search,tab,selected]);
  const [saved,setSaved]=useState<string[]>([]);
  const player=useRef<HTMLIFrameElement>(null);
  const theaterRef=useRef<HTMLDivElement>(null);
@@ -477,7 +481,7 @@ export default function DeepWatch(){
   {(tab==="Live")&&<section className="deepwatchLiveSpotlight" aria-label="DeepWatch Live spotlight"><div className="deepwatchLiveSpotlightCopy"><span className="deepwatchLiveBadge"><span className="deepwatchLivePulse" aria-hidden="true"/> LIVE CHANNEL</span><h1>DeepWatch Live</h1><p>Watch livestreams and available replays, all in one place.</p><button type="button" onClick={()=>open(featuredLive)}><PlayIcon className="deepwatchInlinePlayIcon"/> Watch Featured Stream</button></div><img src={image(featuredLive.videoId)} alt="" loading="lazy"/></section>}
   <section className="deepwatchHeroCarousel dwCinematicBanner" aria-label="Featured DeepWatch titles" onTouchStart={e=>{heroTouch.current={x:e.touches[0].clientX,y:e.touches[0].clientY}}} onTouchEnd={e=>{const p=heroTouch.current;const t=e.changedTouches[0];if(p&&Math.abs(t.clientX-p.x)>45&&Math.abs(t.clientX-p.x)>Math.abs(t.clientY-p.y))setHeroIndex(i=>(i+(t.clientX<p.x?1:heroSlides.length-1))%heroSlides.length);heroTouch.current=null}}>
    {heroSlides.map((v,i)=><div key={v.videoId} className={`deepwatchHero ${i===heroIndex?"isActive":""}`} aria-hidden={i!==heroIndex} style={{backgroundImage:`linear-gradient(90deg,rgba(5,7,12,.88) 0%,rgba(5,7,12,.48) 38%,rgba(5,7,12,.06) 80%),url("${image(v.videoId)}")`}}>
-    {i===heroIndex&&heroPreviewEnabled&&!search&&<div aria-hidden="true" style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none"}}>
+    {i===heroIndex&&heroPreviewEnabled&&!search&&!selected&&<div aria-hidden="true" style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none"}}>
       <iframe key={v.videoId} title="" src={`https://www.youtube-nocookie.com/embed/${v.videoId}?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&playsinline=1&start=30&end=37&loop=1&playlist=${v.videoId}&rel=0`} allow="autoplay; encrypted-media; picture-in-picture" tabIndex={-1} style={{position:"absolute",width:"145%",height:"145%",left:"-22.5%",top:"-12%",border:0,opacity:heroThumb?0:0.72,transition:"opacity .7s ease"}}/>
       <div style={{position:"absolute",inset:0,backgroundImage:`linear-gradient(90deg,rgba(5,7,12,.88) 0%,rgba(5,7,12,.48) 38%,rgba(5,7,12,.06) 80%),url("${image(v.videoId)}")`,backgroundSize:"cover",backgroundPosition:"center",opacity:heroThumb?1:0,transition:"opacity .7s ease"}}/>
     </div>}

@@ -6,7 +6,6 @@ import { Room, RoomEvent, Track } from "livekit-client";
 import { createClient } from "../utils/supabase/client";
 import { shouldApplyPresenceEvent, type PresenceVersion } from "../lib/live-discovery-state";
 import { useRouter } from "next/navigation";
-import ReconnectTrivia from "../app/components/ReconnectTrivia";
 import ShareLiveButton from "../app/components/ShareLiveButton";
 import LiveLightOverlay from "./LiveLightOverlay";
 import {playLiveSound,type LiveSound} from "../lib/live-soundboard";
@@ -106,7 +105,6 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
   useEffect(()=>{if(!audioNeedsGesture&&!muted){setShowTapHint(false);return}setShowTapHint(true);const timer=window.setTimeout(()=>setShowTapHint(false),2000);return()=>window.clearTimeout(timer)},[audioNeedsGesture,muted]);
   const [audioPlaying,setAudioPlaying] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
-  const [reconnectKey, setReconnectKey] = useState("initial");
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [connectionActive, setConnectionActive] = useState(false);
   const lastManualRetry=useRef(0);
@@ -211,6 +209,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       if(!alive||endedOnce.current)return;
       endedOnce.current=true;
       setHostEnded(true);setHostConnecting(false);setError("");
+      setConnectionActive(false);setAudioPlaying(false);
       roomRef.current?.disconnect();
       window.setTimeout(()=>{
         if(!alive)return;
@@ -296,6 +295,12 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
 
   useEffect(() => {
     let mounted = true;
+    const controller = new AbortController();
+    const isCurrent = () => mounted && !endedOnce.current;
+    setConnectionActive(false);
+    setHasCameraVideo(false);
+    setHasScreenVideo(false);
+    setHasRemoteAudio(false);
     const retryTimers:number[]=[];
     let retryQueued=false;
     const queueRetry=(delay:number)=>{
@@ -307,7 +312,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
     };
 
     const attachTrack = (track: any, source?: string, participantIdentity?: string) => {
-      if (!mounted) return;
+      if (!isCurrent()) return;
       if (track.kind === Track.Kind.Video) {
         const isScreen = source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShare;
         // Guest cameras never replace the host; preserve authorized companion screen share.
@@ -380,21 +385,26 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
         // camera can never be mistaken for the host's video on first paint.
         if(streamId&&!hostIdRef.current){
           const {data:meta}=await createClient().from("live_streams")
-            .select("host_id,aspect_ratio").eq("id",streamId).maybeSingle();
+            .select("host_id,aspect_ratio").eq("id",streamId).abortSignal(controller.signal).maybeSingle();
+          if (!isCurrent()) return;
           if(meta?.host_id){hostIdRef.current=meta.host_id;setHostIdentity(meta.host_id);setIsAudioBroadcast(meta.aspect_ratio==="1:1");}
         }
+        if (!isCurrent()) return;
         const response = await fetch("/api/livekit/token", {
+          signal: controller.signal,
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ room: roomName, role: "viewer" }),
         });
         const data = await response.json().catch(() => ({}));
+        if (!isCurrent()) return;
         if (!response.ok || !data.url || !data.token) throw new Error("Live connection is temporarily unavailable. Please try again.");
 
         const room = new Room({ adaptiveStream: false, dynacast: true });
         roomRef.current = room;
         room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => attachTrack(track, publication.source, participant.identity));
         room.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
+          if (!isCurrent()) return;
           if (track.kind === Track.Kind.Video) {
             const isScreen = publication.source === Track.Source.ScreenShare;
             const host=hostIdRef.current;
@@ -419,39 +429,38 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
             }
           }
         });
-        room.on(RoomEvent.TrackSubscriptionFailed, () => mounted && setError("Live media could not be subscribed to. Please reconnect."));
+        room.on(RoomEvent.TrackSubscriptionFailed, () => isCurrent() && setError("Live media could not be subscribed to. Please reconnect."));
         room.on(RoomEvent.ParticipantConnected, (participant) => {
-          if(!mounted)return;
+          if(!isCurrent())return;
           if(participant.identity===hostIdRef.current){setHostConnecting(false);setStatus("Host connected…")}
         });
         room.on(RoomEvent.ParticipantDisconnected, (participant) => {
-          if(!mounted)return;
+          if(!isCurrent())return;
           if(hostIdRef.current && participant.identity===hostIdRef.current){
             setHostConnecting(true);setStatus("Host reconnecting…");
           }
         });
         room.on(RoomEvent.DataReceived, (payload, participant, _kind, topic) => {
-          if(!mounted||!hostIdRef.current||participant?.identity!==hostIdRef.current)return;
+          if(!isCurrent()||!hostIdRef.current||participant?.identity!==hostIdRef.current)return;
           if(topic==="live-soundboard"){try{const message=JSON.parse(new TextDecoder().decode(payload));if(["boom","crickets","laughter"].includes(message.sound))playLiveSound(message.sound as LiveSound)}catch{}return;}
           if(topic!=="live-status")return;
           try{const message=JSON.parse(new TextDecoder().decode(payload));if(message.type==="live-ended")hostEndSignalRef.current()}catch{}
         });
-        room.on(RoomEvent.Reconnecting, () => {if(mounted){setConnectionActive(false);setAudioPlaying(false);setStatus("Reconnecting…");setReconnecting(true);setReconnectKey(String(Date.now()));}});
-        room.on(RoomEvent.Reconnected, () => {if(mounted){setConnectionActive(true);setAudioPlaying([...attachedAudioRef.current.values()].some(audio=>!audio.muted&&!audio.paused));setReconnecting(false);setError("");setStatus("Waiting for host…");}});
+        room.on(RoomEvent.Reconnecting, () => {if(isCurrent()){setConnectionActive(false);setAudioPlaying(false);setStatus("Reconnecting…");setReconnecting(true);}});
+        room.on(RoomEvent.Reconnected, () => {if(isCurrent()){setConnectionActive(true);setAudioPlaying([...attachedAudioRef.current.values()].some(audio=>!audio.muted&&!audio.paused));setReconnecting(false);setError("");setStatus("Waiting for host…");}});
         room.on(RoomEvent.Disconnected, () => {
-          if(!mounted||endedOnce.current)return;
+          if(!isCurrent())return;
           setConnectionActive(false);setAudioPlaying(false);setStatus("Reconnecting to Live…");setReconnecting(true);
-          setReconnectKey(String(Date.now()));
           queueRetry(1500);
         });
 
         await room.connect(data.url, data.token, { autoSubscribe: true });
-        if (!mounted) { await room.disconnect(); return; }
+        if (!isCurrent()) { await room.disconnect(); return; }
         setConnectionActive(true);
 
         for (const participant of room.remoteParticipants.values()) {
           for (const publication of participant.trackPublications.values()) {
-            if (!publication.isSubscribed) await publication.setSubscribed(true);
+            if (!publication.isSubscribed) publication.setSubscribed(true);
             if (publication.track) attachTrack(publication.track, publication.source, participant.identity);
           }
         }
@@ -463,10 +472,10 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
             setReconnecting(false);
           }
         }
-      } catch (err) {
-        if(mounted&&!endedOnce.current){
+      } catch {
+        if(isCurrent()){
           setConnectionActive(false);setReconnecting(true);setStatus("Reconnecting to Live…");
-          setReconnectKey(String(Date.now()));
+
           queueRetry(Math.min(12000,1200*Math.pow(2,Math.min(retryAttempt,3))));
         }
       }
@@ -474,13 +483,13 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
 
     void connect();
     const refreshViewers = async () => {
-      if (!roomRef.current || roomRef.current.state !== "connected") return;
+      if (!isCurrent() || roomRef.current?.state !== "connected") return;
       try {
-        const response = await fetch("/api/livekit/viewer-count", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName}),cache:"no-store"});
+        const response = await fetch("/api/livekit/viewer-count", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName}),cache:"no-store",signal:controller.signal});
         if (!response.ok) return;
         const data = await response.json();
-        if (mounted && typeof data.viewerCount === "number") {const next=Math.max(0,data.viewerCount);if(previousViewerCount.current!==null&&next>previousViewerCount.current){setViewerPulse(true);window.setTimeout(()=>setViewerPulse(false),1700)}previousViewerCount.current=next;setViewerCount(next)}
-        if (mounted && typeof data.totalViews === "number") setTotalViews(Math.max(0,data.totalViews));
+        if (isCurrent() && typeof data.viewerCount === "number") {const next=Math.max(0,data.viewerCount);if(previousViewerCount.current!==null&&next>previousViewerCount.current){setViewerPulse(true);window.setTimeout(()=>setViewerPulse(false),1700)}previousViewerCount.current=next;setViewerCount(next)}
+        if (isCurrent() && typeof data.totalViews === "number") setTotalViews(Math.max(0,data.totalViews));
       } catch { /* Preserve the last known count during temporary network failures. */ }
     };
     const countTimer = window.setInterval(() => void refreshViewers(), 5000);
@@ -490,6 +499,7 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       window.clearInterval(countTimer);
       retryTimers.forEach(timer=>window.clearTimeout(timer));
       mounted = false;
+      controller.abort();
       const oldRoom = roomRef.current;
       roomRef.current = null;
       if (oldRoom) void oldRoom.disconnect();
@@ -553,20 +563,12 @@ export default function LiveKitViewer({ roomName, streamId, embedded = false, on
       {streamId&&<LiveLightOverlay streamId={streamId}/>}
       {streamId&&hostIdentity&&!hostEnded&&<div className="omViewerJoinOnly" style={{position:"absolute",right:12,top:48,zIndex:45}}><LiveGuestStudio streamId={streamId} roomName={roomName} hostId={hostIdentity} compactJoin/></div>}
       {error ? <div role="alert" style={{position:"absolute",inset:0,zIndex:12,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",gap:14,padding:24,color:"#e6f2e7",background:"#0b1510",fontSize:14,textAlign:"center"}}><strong style={{fontSize:19}}>Live connection unavailable</strong><span>{error}</span><div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}><button type="button" onClick={() => { setError(""); setReconnecting(false); setRetryAttempt(n => n + 1); }} style={{border:"1px solid #76ae83",background:"#173d27",color:"#fff",borderRadius:12,padding:"10px 18px",cursor:"pointer"}}>↻ Retry connection</button><a href="/streaming" style={{border:"1px solid #566b5b",color:"#fff",borderRadius:12,padding:"10px 18px",textDecoration:"none"}}>← All streaming</a></div></div> : reconnecting ? (
-        <div style={{position:"absolute",inset:0,zIndex:10,background:"radial-gradient(circle at 50% 35%,rgba(72,103,68,.2),rgba(3,7,4,.96) 72%)",display:"grid",placeItems:"center",overflow:"hidden"}}>
-          <div style={{position:"absolute",width:190,height:190,borderRadius:"50%",border:"1px solid rgba(214,231,184,.08)",boxShadow:"0 0 80px rgba(126,170,106,.08)",animation:"oneMuslimPulse 3.5s ease-in-out infinite"}} />
-          <div style={{position:"relative",width:180,height:130,display:"grid",placeItems:"center",animation:"oneMuslimButterfly 3.2s ease-in-out infinite"}}>
-            <span style={{fontSize:74,filter:"drop-shadow(0 10px 35px rgba(174,214,143,.18))"}}>🦋</span>
-          </div>
-          <div style={{position:"absolute",top:16,left:16,right:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{padding:"6px 9px",borderRadius:999,background:"rgba(214,231,184,.12)",border:"1px solid rgba(214,231,184,.2)",color:"#d6e7b8",fontSize:9,fontWeight:900}}>1MUSLIM</span>
-            <span style={{padding:"6px 9px",borderRadius:999,background:"rgba(0,0,0,.4)",color:"#d7e0d8",fontSize:9,fontWeight:850}}>● RECONNECTING</span>
-          </div>
-          <ReconnectTrivia mode="reconnect" eventKey={reconnectKey} />
-          
+        !hostEnded && <div role="status" aria-live="polite" className="omViewerReconnectStatus">
+          Reconnecting to Live…
         </div>
-      ) : error ? <div style={{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:24,color:"#ffd0d0",background:"rgba(0,0,0,.72)",fontSize:13,textAlign:"center"}}>{error}</div> : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
+      ) : <span style={{position:"absolute",top:12,left:12,padding:"6px 9px",borderRadius:999,background:"#d6e7b8",color:"#071008",fontSize:10,fontWeight:900}}>● {status}</span>}
       <style jsx>{`
+      .omViewerReconnectStatus{position:absolute;top:12px;left:12px;z-index:10;pointer-events:none;border-radius:999px;padding:6px 10px;background:rgba(0,0,0,.7);color:#fff;font-size:12px}
       .omThemeTapHint{position:absolute;z-index:10;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;border:1px solid color-mix(in srgb,var(--theme-primary,#26b985) 45%,transparent);border-radius:20px;background:color-mix(in srgb,var(--theme-primary,#26b985) 14%,transparent);backdrop-filter:blur(10px);color:white;font-size:clamp(24px,5vw,42px);font-weight:900;padding:10px 28px;text-shadow:0 3px 14px #000b;animation:omThemeTapFade 2s ease-out forwards}@keyframes omThemeTapFade{0%,65%{opacity:1}100%{opacity:0}}
        .qrlViewerAmbient{position:absolute;inset:0;z-index:0;pointer-events:none;display:flex;align-items:center;justify-content:space-between;flex-direction:column;padding:7% 6%;background:linear-gradient(155deg,#172d2d,#091c20);overflow:hidden;color:#deca9f}
  .qrlViewerAmbient.qrlViewer-starlight{background:radial-gradient(circle at 16% 16%,#f3eddf 0 1px,transparent 2px),radial-gradient(circle at 82% 47%,#c4d4e8 0 1px,transparent 2px),linear-gradient(125deg,#17183b,#0a112a)}

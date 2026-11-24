@@ -5,23 +5,8 @@ import {createPortal} from "react-dom";
 import {COUNTRY_POINTS,STATE_POINTS} from "./admin-region-points";
 import "./RegionDiscovery.css";
 
-const aliases:Record<string,string>={
- "usa":"United States","us":"United States","u s a":"United States","united states of america":"United States","america":"United States",
- "uk":"United Kingdom","u k":"United Kingdom","great britain":"United Kingdom","britain":"United Kingdom",
- "uae":"United Arab Emirates","u a e":"United Arab Emirates","emirates":"United Arab Emirates",
- "ksa":"Saudi Arabia","kingdom of saudi arabia":"Saudi Arabia",
- "republic of somalia":"Somalia","turkiye":"Türkiye","turkey":"Türkiye",
- "ivory coast":"Côte d’Ivoire","cote d ivoire":"Côte d’Ivoire","drc":"Democratic Republic of the Congo",
- "the netherlands":"Netherlands","holland":"Netherlands","palestinian territories":"Palestine","state of palestine":"Palestine"
-};
-const codes:Record<string,string>={"US":"United States","GB":"United Kingdom","AE":"United Arab Emirates","SA":"Saudi Arabia","SO":"Somalia","TR":"Türkiye","PS":"Palestine","KR":"South Korea","KP":"North Korea","RU":"Russia","CI":"Côte d’Ivoire","CD":"Democratic Republic of the Congo"};
-const clean=(v:string)=>v.normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
-export function canonicalCountry(value:string|null|undefined):string{
- const raw=(value||"").trim();if(!raw)return "";
- const key=clean(raw);if(aliases[key])return aliases[key];
- if(raw.length===2&&/^[a-z]{2}$/i.test(raw)){const code=raw.toUpperCase();if(codes[code])return codes[code];try{const label=new Intl.DisplayNames(["en"],{type:"region"}).of(code);if(label&&label!==code)return label}catch{}}
- return raw;
-}
+import {canonicalCountry} from "../../lib/member-region-country";
+export {canonicalCountry} from "../../lib/member-region-country";
 const usStates:Record<string,string>=Object.fromEntries(("AL:Alabama,AK:Alaska,AZ:Arizona,AR:Arkansas,CA:California,CO:Colorado,CT:Connecticut,DE:Delaware,FL:Florida,GA:Georgia,HI:Hawaii,ID:Idaho,IL:Illinois,IN:Indiana,IA:Iowa,KS:Kansas,KY:Kentucky,LA:Louisiana,ME:Maine,MD:Maryland,MA:Massachusetts,MI:Michigan,MN:Minnesota,MS:Mississippi,MO:Missouri,MT:Montana,NE:Nebraska,NV:Nevada,NH:New Hampshire,NJ:New Jersey,NM:New Mexico,NY:New York,NC:North Carolina,ND:North Dakota,OH:Ohio,OK:Oklahoma,OR:Oregon,PA:Pennsylvania,RI:Rhode Island,SC:South Carolina,SD:South Dakota,TN:Tennessee,TX:Texas,UT:Utah,VT:Vermont,VA:Virginia,WA:Washington,WV:West Virginia,WI:Wisconsin,WY:Wyoming,DC:District of Columbia").split(",").map(x=>x.split(":")));
 export function canonicalUsState(value:string|null|undefined){const raw=(value||"").trim();return usStates[raw.toUpperCase()]||Object.values(usStates).find(name=>name.toLowerCase()===raw.toLowerCase())||raw}
 type Stats={countries:{name:string;count:number}[];states:{name:string;count:number}[];optedIn:number;recorded:number;unplaced:number;usCount:number;updatedAt:string;limited:boolean};
@@ -143,10 +128,6 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
  const focusNamedRegion=(name:string,point?:[number,number])=>{
   setMakkahFocus(false);setStudioSearchOpen(false);setStudioSearch("");
   selectRegion(name,point);
- };
- const exploreMembers=()=>{
-  closeStudio();
-  window.setTimeout(()=>document.getElementById("muslimeen-directory")?.scrollIntoView({behavior:"smooth",block:"start"}),120);
  };
  const switchMode=(next:Mode)=>{
   setMode(next);setMakkahFocus(false);setStudioSearch("");setStudioSearchOpen(false);
@@ -322,10 +303,9 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
    </g>
   </svg>
   {!full&&<div className="atlasFloatTools">
-   <button type="button" title={mode==="world"?"See United States":"See world"} aria-label={mode==="world"?"Switch to United States map":"Switch to world map"} onClick={()=>switchMode(mode==="world"?"us":"world")}>{mode==="world"?"US":"🌐"}</button>
    <button type="button" aria-label="Expand map studio" title="Full map" onClick={openStudio}>⤢</button>
   </div>}
-  {!full&&chosen&&<div className="atlasPlace" role="status"><div><strong>{chosen.name}</strong><small>{chosen.count} {chosen.count===1?"Muslim":"Muslims"} shared this region</small></div><button type="button" onClick={()=>{setExpanded(false);document.getElementById("muslimeen-directory")?.scrollIntoView({behavior:"smooth",block:"start"})}}>See members ↗</button></div>}
+  {!full&&chosen&&<div className="atlasPlace" role="status"><div><strong>{chosen.name}</strong><small>{chosen.count} {chosen.count===1?"Muslim":"Muslims"} shared this region</small></div><button type="button" onClick={openStudio}>See members ↗</button></div>}
   {permissionKnown&&!optedIn&&!browseOnly&&!full&&<div className="atlasInvitation"><strong>Connect with Muslims around the world</strong><span>📍 Add your region to help grow the Ummah map.</span><div><button type="button" onClick={openEditor}>Add my region</button><button type="button" onClick={()=>setBrowseOnly(true)}>Explore without sharing</button></div></div>}
   {!full&&!chosen&&<div className="atlasTouchHint" aria-hidden="true">Pinch · drag · tap a dot</div>}
  </div>;
@@ -373,7 +353,6 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
        <button type="button" onClick={()=>focusArea("Europe")}>Europe</button>
        <button type="button" onClick={()=>focusArea("Asia")}>Asia</button>
        <button type="button" onClick={()=>focusArea("Americas")}>Americas</button>
-       <button type="button" onClick={()=>switchMode(mode==="world"?"us":"world")}>{mode==="world"?"🇺🇸 U.S. States":"🌐 World map"}</button>
       </nav>
       <div className="atlasStudioSearchBox">
        <span aria-hidden="true">⌕</span>
@@ -393,7 +372,6 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
       {chosen?<div className="atlasStudioSelected" aria-live="polite">
        <div className="atlasStudioRegionTitle">
         <div><small>⌖ {mode==="world"?"COUNTRY CONNECTIONS":"STATE CONNECTIONS"}</small><h2>{chosen.name}</h2><p>{chosen.count} {chosen.count===1?"Muslim has":"Muslims have"} shared this region</p></div>
-        <button type="button" onClick={exploreMembers}>View members ↗</button>
        </div>
        {mode==="world"&&<div className="atlasStudioPeople">
         {peopleLoading?<span className="atlasStudioPeopleStatus">Finding community members…</span>:
@@ -404,7 +382,7 @@ export default function RegionDiscovery({currentCountry,userId,selected,selected
            <img alt="" src={person.avatar} loading="lazy" onError={e=>{e.currentTarget.src="/assets/avatars/default-male.jpg"}}/>
            <span>{person.name}</span>
           </button>):
-         <span className="atlasStudioPeopleStatus">Explore the members list to connect with Muslims here.</span>}
+         <span className="atlasStudioPeopleStatus">No member previews are available for this country yet.</span>}
        </div>}
        {mode==="us"&&<span className="atlasStudioPeopleStatus">Member identities are discoverable by country, not by city or state.</span>}
       </div>:makkahFocus?<div className="atlasStudioMission" aria-live="polite">

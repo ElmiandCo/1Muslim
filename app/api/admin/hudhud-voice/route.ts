@@ -1,10 +1,11 @@
 import {NextResponse} from "next/server";
 import {createClient} from "../../../../utils/supabase/server";
+import {canStartAdminVoice} from "./authorization";
 export const runtime="nodejs";
 export async function POST(){
  const db=await createClient();
- const {data:{user}}=await db.auth.getUser();
- if(!user||user.email?.toLowerCase()!=="hudhudbyelmi@gmail.com")return NextResponse.json({error:"Forbidden"},{status:403});
+ const {data:{user},error}=await db.auth.getUser();
+ if(!canStartAdminVoice(user,error))return NextResponse.json({error:"Forbidden"},{status:403});
  const key=process.env.OPENAI_API_KEY;
  if(!key)return NextResponse.json({error:"OPENAI_API_KEY is not configured on the server"},{status:503});
  try{

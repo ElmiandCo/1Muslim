@@ -1,3 +1,4 @@
+import { registeredTikTokCallback } from "../../../../utils/tiktok/oauth";
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../utils/supabase/server";
 import { randomBytes } from "node:crypto";
@@ -10,9 +11,9 @@ export async function GET(request: Request) {
   if (!user) return NextResponse.redirect(new URL("/login?next=/tiktok", origin));
   if (!canUseTikTokReview(user)) return NextResponse.redirect(new URL("/tiktok?available=0", origin));
   const key = process.env.TIKTOK_CLIENT_KEY;
-  if (!key || !process.env.TIKTOK_CLIENT_SECRET) return NextResponse.redirect(new URL("/tiktok?error=configuration", origin));
+  const redirectUri = registeredTikTokCallback(origin);
+  if (!redirectUri || !key || !process.env.TIKTOK_CLIENT_SECRET) return NextResponse.redirect(new URL("/profile?section=tiktok&error=configuration", origin));
   const state = randomBytes(32).toString("hex");
-  const redirectUri = new URL("/api/tiktok/callback", origin).toString();
   const url = new URL("https://www.tiktok.com/v2/auth/authorize/");
   url.searchParams.set("client_key", key);
   url.searchParams.set("response_type", "code");

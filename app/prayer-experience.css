@@ -463,3 +463,28 @@
 
 /* Deep-linked from the floating Next Prayer card; leave breathing room above the setup panel. */
 .prayerExperience .prayerAdhanCard{scroll-margin-top:88px}
+
+/* Salah Academy */
+.prayerAcademyHero{min-height:0;border:0;box-shadow:none}
+.prayerAcademyHero .prayerHeroContents{min-height:0;padding-block:24px}
+.prayerAcademyNav{display:flex;flex-wrap:wrap;gap:4px 14px;padding-inline:8px}
+.prayerAcademyNav a{display:inline-flex;align-items:center;min-height:44px;color:inherit;font-size:14px;font-weight:700;text-underline-offset:4px}
+.prayerGuidePanel,.prayerAcademyPositions{border-width:0}
+.prayerGuidePanel h3,#guided-salah-step,#positions-heading{scroll-margin-top:88px}
+.prayerStepChooser button{min-height:44px}
+.prayerInstructionVisual{display:block;min-height:0;max-height:none;align-self:start;color:#244838}
+.prayerInstructionVisual summary{min-height:44px;padding:12px;cursor:pointer;font-weight:700}
+.prayerInstructionVisual summary:focus-visible,.prayerInstructionCopy h3:focus-visible{outline:3px solid var(--prayer-gold);outline-offset:-3px}
+.prayerInstructionVisual .prayerPositionIllustration{display:block;height:auto;max-height:380px}
+.prayerInstructionCopy .prayerArabicRecitation{font-size:clamp(26px,4vw,36px);border:0}
+.prayerInstructionCopy :is(.prayerTransliteration,.prayerTranslation){border:0;padding:6px 0;background:transparent}
+@media(prefers-reduced-motion:reduce){
+ .prayerGuideProgress span{transition:none}
+}
+.prayerGuidePanel .prayerInstruction{grid-template-columns:minmax(0,1fr) minmax(0,.45fr)}
+.prayerInstructionCopy:only-child{grid-column:1/-1}
+.prayerInstructionVisual summary .prayerPositionIllustration{max-height:150px;margin-bottom:8px}
+.prayerInstructionVisual[open] summary .prayerPositionIllustration{max-height:380px}
+@media(max-width:720px){
+ .prayerGuidePanel .prayerInstruction{grid-template-columns:minmax(0,1fr)}
+}
