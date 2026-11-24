@@ -1,16 +1,167 @@
 "use client";
-import {useEffect,useState} from "react";
-import {createClient} from "../../utils/supabase/client";
-import {shouldPromptForLocation} from "../../lib/location-onboarding";
 
-type Place={city:string;state:string;country:string};
-export default function LocationOnboarding(){
- const [userId,setUserId]=useState<string|null>(null),[visible,setVisible]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(""),[place,setPlace]=useState<Place|null>(null);
- useEffect(()=>{let active=true;let request=0;const db=createClient();const check=async()=>{const current=++request;const {data:{user}}=await db.auth.getUser();if(!active||current!==request)return;if(!user){setUserId(null);setVisible(false);return}setUserId(user.id);const {data,error}=await db.from("profile_location_prompts").select("decision").eq("user_id",user.id).maybeSingle();if(active&&current===request&&!error)setVisible(shouldPromptForLocation(data))};void check();const {data:{subscription}}=db.auth.onAuthStateChange(()=>{request++;setUserId(null);setVisible(false);setPlace(null);void check()});return()=>{active=false;request++;subscription.unsubscribe()}},[]);
- const record=async(decision:"accepted"|"declined")=>{if(!userId)throw Error("Please sign in.");const {error}=await createClient().from("profile_location_prompts").upsert({user_id:userId,decision,decided_at:new Date().toISOString()},{onConflict:"user_id"});if(error)throw error};
- const decline=async()=>{setBusy(true);setError("");try{await record("declined");setVisible(false)}catch(e){setError(e instanceof Error?e.message:"Could not save your choice.")}finally{setBusy(false)}};
- const locate=()=>{if(!navigator.geolocation){setError("Location isn't supported by this browser.");return}setBusy(true);setError("");navigator.geolocation.getCurrentPosition(async pos=>{try{const response=await fetch("/api/profile/reverse-geocode",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({latitude:pos.coords.latitude,longitude:pos.coords.longitude})});if(!response.ok)throw Error("Could not identify your city and state.");const data=await response.json() as Place;if(!data.state||!data.country)throw Error("Location details are incomplete.");setPlace(data)}catch(e){setError(e instanceof Error?e.message:"Location lookup failed.")}finally{setBusy(false)}},e=>{setError(e.code===1?"Location permission was denied. You can choose Not now.":"Could not access your location. Try again.");setBusy(false)},{enableHighAccuracy:false,timeout:12000,maximumAge:300000})};
- const save=async()=>{if(!place||!userId)return;setBusy(true);setError("");try{const db=createClient();const {data:{user}}=await db.auth.getUser();if(user?.id!==userId)throw Error("Please sign in again.");const {error}=await db.from("profiles").update({city:place.city,state:place.state,country:place.country}).eq("id",userId);if(error)throw error;await record("accepted");window.dispatchEvent(new Event("1muslim:profile-saved"));setVisible(false)}catch(e){setError(e instanceof Error?e.message:"Could not save your location.")}finally{setBusy(false)}};
- if(!visible)return null;
- return <div className="locationConsentBackdrop" role="presentation"><section role="dialog" aria-modal="true" aria-labelledby="locationConsentTitle" className="locationConsentCard"><span aria-hidden="true" style={{fontSize:30}}>📍</span><h2 id="locationConsentTitle">Add your location to 1Muslim?</h2><p>This is optional. If you use your device location, your coordinates are sent to BigDataCloud to find your city, state and country; precise coordinates are not saved to your profile. Your saved location may be visible on your profile. You can review it before saving, or choose Not now and add it later in Settings.</p>{place?<><p><strong>Review your location:</strong><br/>{[place.city,place.state,place.country].filter(Boolean).join(", ")}</p><button disabled={busy} onClick={()=>void save()}>Save location to my profile</button><button disabled={busy} onClick={()=>setPlace(null)}>Try again</button></>:<button disabled={busy} onClick={locate}>{busy?"Finding location…":"Use my location"}</button>}<button disabled={busy} className="locationConsentSkip" onClick={()=>void decline()}>Not now</button>{error&&<p role="alert" className="locationConsentError">{error}</p>}</section><style>{`.locationConsentBackdrop{position:fixed;inset:0;background:#07121caa;z-index:2147482000;display:grid;place-items:center;padding:20px}.locationConsentCard{width:min(430px,100%);max-height:90dvh;overflow:auto;background:#fff;color:#142b49;border-radius:24px;padding:26px;box-shadow:0 25px 90px #0005;text-align:center}.locationConsentCard h2{font-size:23px;margin:10px 0}.locationConsentCard p{line-height:1.55}.locationConsentCard button{display:block;width:100%;padding:13px;margin:10px 0;border:0;border-radius:13px;background:#235b9a;color:#fff;font-weight:750}.locationConsentCard .locationConsentSkip{background:#eef2f7;color:#21354d}.locationConsentError{color:#a32032}`}</style></div>;
+import { useEffect, useRef, useState } from "react";
+import { createClient } from "../../utils/supabase/client";
+import { acceptLocation, shouldPromptForLocation } from "../../lib/location-onboarding";
+
+type Place = { city: string; state: string; country: string };
+type Phase = "idle" | "locating" | "saving" | "declining";
+
+function locate(): Promise<Place> {
+  if (!navigator.geolocation) return Promise.reject(new Error("Location isn't supported by this browser."));
+  return new Promise<GeolocationPosition>((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 });
+  }).catch((error: GeolocationPositionError) => {
+    throw new Error(error.code === 1 ? "Location permission was denied. You can choose Not now." : "Could not access your location. Try again.");
+  }).then(async position => {
+    const response = await fetch("/api/profile/reverse-geocode", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude })
+    });
+    if (!response.ok) throw new Error("Could not identify your location. Try again.");
+    const data = await response.json() as Place;
+    if (typeof data.city !== "string" || typeof data.state !== "string" || !data.state || typeof data.country !== "string" || !data.country) {
+      throw new Error("Location details are incomplete. Try again.");
+    }
+    return { city: data.city, state: data.state, country: data.country };
+  });
+}
+
+export default function LocationOnboarding() {
+  const [visible, setVisible] = useState(false);
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+  const account = useRef<string | null>(null);
+  const generation = useRef(0);
+  const checking = useRef(0);
+  const phaseRef = useRef<Phase>("idle");
+  const decided = useRef(new Set<string>());
+  const dialog = useRef<HTMLElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
+
+  const changePhase = (next: Phase) => { phaseRef.current = next; setPhase(next); };
+
+  useEffect(() => {
+    let active = true;
+    const db = createClient();
+    const check = async () => {
+      const current = ++checking.current;
+      const { data: { user }, error: authError } = await db.auth.getUser();
+      if (!active || current !== checking.current || authError) return;
+      const id = user?.id ?? null;
+      if (id !== account.current) {
+        generation.current++;
+        account.current = id;
+        phaseRef.current = "idle";
+        setPhase("idle"); setVisible(false); setError(""); setSaved(false);
+      }
+      if (!id || phaseRef.current !== "idle" || decided.current.has(id)) return;
+      const { data, error: readError } = await db.from("profile_location_prompts").select("decision").eq("user_id", id).maybeSingle();
+      if (active && current === checking.current && account.current === id && phaseRef.current === "idle" && !decided.current.has(id) && !readError) {
+        setVisible(shouldPromptForLocation(data));
+      }
+    };
+    void check();
+    // Supabase auth callbacks should not await another Supabase call synchronously.
+    const { data: { subscription } } = db.auth.onAuthStateChange(() => { window.setTimeout(() => { if (active) void check(); }, 0); });
+    return () => { active = false; generation.current++; checking.current++; subscription.unsubscribe(); };
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialog.current?.querySelector<HTMLElement>("button")?.focus();
+    return () => { previousFocus.current?.focus(); };
+  }, [visible]);
+
+  useEffect(() => {
+    if (!saved) return;
+    const timer = window.setTimeout(() => setSaved(false), 4000);
+    return () => window.clearTimeout(timer);
+  }, [saved]);
+
+  const record = async (id: string, decision: "accepted" | "declined") => {
+    const db = createClient();
+    const { data: { user }, error: authError } = await db.auth.getUser();
+    if (authError || user?.id !== id || account.current !== id) throw new Error("Please sign in again.");
+    const { error: writeError } = await db.from("profile_location_prompts").upsert({ user_id: id, decision, decided_at: new Date().toISOString() }, { onConflict: "user_id" });
+    if (writeError) throw new Error("Could not save your choice. Please try again.");
+  };
+
+  const decline = async () => {
+    const id = account.current;
+    if (!id || phaseRef.current === "saving" || phaseRef.current === "declining") return;
+    const current = ++generation.current;
+    ++checking.current;
+    changePhase("declining"); setError("");
+    try {
+      await record(id, "declined");
+      if (account.current !== id || current !== generation.current) return;
+      decided.current.add(id); setVisible(false);
+    } catch (cause) {
+      if (account.current === id && current === generation.current) { setVisible(true); setError(cause instanceof Error ? cause.message : "Could not save your choice."); }
+    } finally {
+      if (account.current === id && current === generation.current) changePhase("idle");
+    }
+  };
+
+  const useLocation = async () => {
+    const id = account.current;
+    if (!id || phaseRef.current !== "idle") return;
+    const current = ++generation.current;
+    ++checking.current;
+    const isCurrent = () => account.current === id && generation.current === current;
+    changePhase("locating"); setVisible(false); setError("");
+    try {
+      const completed = await acceptLocation({
+        locate,
+        isCurrent,
+        savePlace: async place => {
+          changePhase("saving");
+          const db = createClient();
+          const { data: { user }, error: authError } = await db.auth.getUser();
+          if (authError || user?.id !== id || !isCurrent()) throw new Error("Please sign in again.");
+          const { data, error: writeError } = await db.from("profiles").update(place).eq("id", id).select("id").maybeSingle();
+          if (writeError || !data) throw new Error("Could not save your location. Please try again.");
+        },
+        recordAccepted: () => record(id, "accepted")
+      });
+      if (completed) {
+        decided.current.add(id); setSaved(true);
+        window.dispatchEvent(new Event("1muslim:profile-saved"));
+      }
+    } catch (cause) {
+      if (isCurrent()) { setVisible(true); setError(cause instanceof Error ? cause.message : "Location lookup failed."); }
+    } finally {
+      if (isCurrent()) changePhase("idle");
+    }
+  };
+
+  return <>
+    {visible && <div className="locationConsentBackdrop" onClick={event => { if (event.target === event.currentTarget) void decline(); }}>
+      <section ref={dialog} role="dialog" aria-modal="true" aria-labelledby="locationConsentTitle" className="locationConsentCard" onKeyDown={event => {
+        if (event.key === "Escape") { event.preventDefault(); void decline(); }
+        if (event.key !== "Tab") return;
+        const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), summary, a[href]'));
+        if (!items.length) return;
+        const first = items[0], last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }}>
+        <h2 id="locationConsentTitle">Add your location?</h2>
+        <p>Optional. Your city may appear on your profile.</p>
+        <details><summary>How it's used</summary><p>We send your coordinates to BigDataCloud to find your city, state and country. Precise coordinates are not saved to your profile. You can change your location in Settings.</p></details>
+        {error && <p role="alert" className="locationConsentError">{error}</p>}
+        <div className="locationConsentActions"><button type="button" disabled={phase !== "idle"} onClick={() => void useLocation()}>Use location</button><button type="button" disabled={phase !== "idle"} onClick={() => void decline()}>Not now</button></div>
+      </section>
+    </div>}
+    {(phase === "locating" || phase === "saving") && <div className="locationConsentStatus" role="status">{phase === "locating" ? "Finding your location…" : "Saving your location…"}{phase === "locating" && <button type="button" onClick={() => void decline()}>Not now</button>}</div>}
+    {saved && <div className="locationConsentStatus" role="status">Location saved.</div>}
+    <style>{`
+      .locationConsentBackdrop{position:fixed;inset:0;z-index:2147482000;display:flex;align-items:flex-end;justify-content:center;background:rgba(6,12,19,.42);backdrop-filter:blur(5px);padding:16px 16px max(16px,env(safe-area-inset-bottom))}
+      .locationConsentCard{width:min(430px,100%);max-height:75dvh;overflow:auto;box-sizing:border-box;border:1px solid rgba(255,255,255,.3);border-radius:24px;padding:18px;background:rgba(28,33,39,.88);color:#fff;box-shadow:0 20px 60px #0005;backdrop-filter:blur(24px)}
+      .locationConsentCard h2{font-size:19px;line-height:1.2;margin:0 0 6px}.locationConsentCard p{font-size:14px;line-height:1.4;margin:0 0 8px}.locationConsentCard details{font-size:13px;color:#e1e4e8}.locationConsentCard summary{cursor:pointer;min-height:30px}.locationConsentCard details p{margin:4px 0 10px}.locationConsentActions{display:flex;gap:10px;margin-top:8px}.locationConsentActions button{min-height:46px;flex:1;border:0;border-radius:14px;background:#fff;color:#20262b;font-weight:700}.locationConsentActions button+button{background:rgba(255,255,255,.14);color:#fff}.locationConsentCard button:focus-visible,.locationConsentCard summary:focus-visible,.locationConsentStatus button:focus-visible{outline:3px solid #fff;outline-offset:2px}.locationConsentCard button:disabled{opacity:.6}.locationConsentError{color:#ffd1d1}.locationConsentStatus{position:fixed;z-index:2147482000;bottom:max(18px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);padding:12px 16px;border-radius:16px;background:#252b30;color:white;box-shadow:0 8px 24px #0004;font-size:14px}.locationConsentStatus button{margin-left:12px;min-height:36px;border:0;background:transparent;color:white;text-decoration:underline}
+    `}</style>
+  </>;
 }
