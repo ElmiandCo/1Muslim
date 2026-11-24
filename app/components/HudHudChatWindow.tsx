@@ -38,6 +38,8 @@ const starters=[
  {title:"Prayer & daily life",prompt:"Where can I find prayer times and Islamic learning on 1Muslim?"}
 ];
 
+const quickLinks=[{title:"DeepWatch",href:"/deepwatch"},{title:"Go Live",href:"/streaming"},{title:"Qibla",href:"/qibla/newsroom"}];
+
 export default function HudHudChatWindow({
  messages,draft,onDraftChange,onSubmit,pending,onAttach,onRemoveAttachment,sending,notice,
  remaining,unlocked,signedIn,admin,onOpenLab,onClose,onNewChat,
@@ -133,6 +135,8 @@ export default function HudHudChatWindow({
     <button type="button" className={styles.currentChat} onClick={()=>{setMenuOpen(false);onSettingsChange(false);}}>✧ <span>Current conversation</span></button>
     <div className={styles.sidebarLabel}>EXPLORE WITH HUDHUD</div>
     <div className={styles.topicList}>{starters.map(item=><button type="button" key={item.title} onClick={()=>choosePrompt(item.prompt)}>{item.title}<span aria-hidden="true">↗</span></button>)}</div>
+    <div className={styles.sidebarLabel}>QUICK ACCESS</div>
+    <nav className={styles.quickNav} aria-label="1Muslim quick access">{quickLinks.map(item=><Link key={item.href} href={item.href} onClick={onClose}>{item.title}<span aria-hidden="true">↗</span></Link>)}</nav>
     <div className={styles.sidebarBottom}><span className={styles.onlineDot} aria-hidden="true"/> {signedIn?"Signed in to 1Muslim":"Guest conversation"}<small>Conversations aren't saved across visits yet.</small></div>
    </aside>
 

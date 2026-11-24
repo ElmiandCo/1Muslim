@@ -150,6 +150,7 @@ export default function HudHudChatLauncher(){
    return()=>{alive=false};
  },[open]);
  const drag=useRef<{x:number;y:number;px:number;py:number}|null>(null),nextId=useRef(1);
+ const chatGeneration=useRef(0),chatRequest=useRef<AbortController|null>(null);
  // Temporarily dock beside the Qur'an workspace; restore the exact pre-dock
  // screen coordinates rather than the default top/bottom slot.
  const quranDockOrigin=useRef<{x:number;y:number}|null>(null);
@@ -222,6 +223,7 @@ export default function HudHudChatLauncher(){
  const send=async(e:React.FormEvent)=>{
   e.preventDefault();if((!draft.trim()&&!pending)||hudhudSending)return;
   const text=draft.trim(),image=pending?.url;
+  const generation=chatGeneration.current;
   if(hudhudRemaining===0&&!hudhudUnlocked){setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:"You've reached your three free HudHud answers. Unlock HudHud everywhere on 1Muslim to keep going.",links:[{title:"1Muslim Unlocked",href:"/unlocked"}]}]);return;}
   const history=messages.filter(m=>m.id!==0).slice(-6).map(m=>({role:m.role==="hudhud"?"assistant":"user",content:m.text}));
   setMessages(prev=>[...prev,{id:nextId.current++,role:"user",text,image}]);
@@ -232,9 +234,11 @@ export default function HudHudChatLauncher(){
     setHudhudSending(false);return;
   }
   try{
-    const response=await fetch("/api/discover/ask",{method:"POST",headers:{"content-type":"application/json"},
+    const controller=new AbortController();chatRequest.current=controller;
+    const response=await fetch("/api/discover/ask",{method:"POST",headers:{"content-type":"application/json"},signal:controller.signal,
       body:JSON.stringify({query:text,message:text,history})});
     const data=await response.json();
+    if(generation!==chatGeneration.current)return;
     if(data.limitReached||data.remaining===0)setHudhudRemaining(0);
     if(!response.ok){
       if(data.limitReached){setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:data.error||"Your free HudHud preview is complete.",links:[{title:"Make HudHud yours with Unlocked",href:"/unlocked"}]}]);return;}
@@ -247,8 +251,8 @@ export default function HudHudChatLauncher(){
     setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:String(data.reply||""),links},
       ...(data.limitReached&&!data.unlocked?[{id:nextId.current++,role:"hudhud" as const,text:"That was your third free HudHud reply. To keep HudHud with you across all of 1Muslim, activate 1Muslim Unlocked.",links:[{title:"Make HudHud yours · 1Muslim Unlocked",href:"/unlocked"}]}]:[])]);
     window.dispatchEvent(new CustomEvent("1muslim:action-success"));
-  }catch(error){setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:error instanceof Error?error.message:"HudHud could not answer. Please retry."}]);}
-  finally{setHudhudSending(false);}
+  }catch(error){if(generation===chatGeneration.current)setMessages(prev=>[...prev,{id:nextId.current++,role:"hudhud",text:error instanceof Error?error.message:"HudHud could not answer. Please retry."}]);}
+  finally{if(generation===chatGeneration.current){setHudhudSending(false);chatRequest.current=null;}}
 };
  const attach=(e:React.ChangeEvent<HTMLInputElement>)=>{const item=e.target.files?.[0];if(!item)return;if(!item.type.startsWith("image/")){setNotice("Choose an image file.");return}if(item.size>3_000_000){setNotice("Choose an image smaller than 3 MB.");return}const reader=new FileReader();reader.onload=()=>{if(typeof reader.result==="string"){setPending({url:reader.result,name:item.name});setNotice("Image ready for local preview.")}};reader.readAsDataURL(item);e.target.value=""};
  if(pathname==="/search")return <><ProfileActivityTracker/><HudHudGuidance/></>;
@@ -285,7 +289,7 @@ export default function HudHudChatLauncher(){
   pending={pending} onAttach={attach} onRemoveAttachment={()=>setPending(null)}
   sending={hudhudSending} notice={notice} remaining={hudhudRemaining} unlocked={hudhudUnlocked}
   signedIn={Boolean(uid)} admin={admin} onOpenLab={()=>{setOpen(false);setLabOpen(true)}}
-  onClose={()=>{setOpen(false);setSettingsOpen(false)}} onNewChat={()=>{setMessages([welcome]);setDraft("");setPending(null);setNotice("");nextId.current=1;}}
+  onClose={()=>{setOpen(false);setSettingsOpen(false)}} onNewChat={()=>{chatGeneration.current++;chatRequest.current?.abort();chatRequest.current=null;setHudhudSending(false);setMessages([welcome]);setDraft("");setPending(null);setNotice("");nextId.current=1;}}
   settingsOpen={settingsOpen} onSettingsChange={setSettingsOpen}
   settings={<div className="hh-settings">
     <div className="hh-visual-settings" role="group" aria-label="HudHud sight and appearance">
