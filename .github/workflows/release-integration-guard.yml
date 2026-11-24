@@ -55,3 +55,31 @@ jobs:
               core.setFailed('Overlapping release PR file ownership requires integrator reconciliation before staging: '+collisions.join('; '));
             } else core.summary.addRaw('No direct shared-file overlaps found. Cross-component dependencies are noted here; GitHub Actions cannot write PR comments under current repository token policy.'); 
             await core.summary.write();
+
+      - name: Checkout v3.9 candidate for isolated regression tests
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use Node 22 for built-in test runner
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run present v3.9 regression tests without new installs or model calls
+        shell: bash
+        run: |
+          set -euo pipefail
+          tests=()
+          for file in \
+            scripts/deepwatch-hero-preview.test.mjs \
+            scripts/location-onboarding.test.mjs \
+            scripts/profile-avatar-position.test.mjs \
+            scripts/member-region-privacy.test.mjs \
+            scripts/tiktok-import.test.mjs; do
+            if [[ -f "$file" ]]; then tests+=("$file"); fi
+          done
+          if (( ${#tests[@]} == 0 )); then
+            echo "No isolated v3.9 regression scripts present on this commit."
+            exit 0
+          fi
+          printf 'Running %s focused v3.9 regression suites\\n' "${#tests[@]}"
+          node --experimental-strip-types --test "${tests[@]}"
