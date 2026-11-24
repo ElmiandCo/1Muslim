@@ -289,3 +289,27 @@
 .qm-day .qmRecitalHomeLinks a{color:#5e5544!important;border-color:#baa477}
 .qm-day .qmReciteLaunch{color:#3a3323!important;border-color:#b89e69!important}
 @media(prefers-reduced-motion:reduce){.qmReciteLaunch,.qmRecitalHomeLinks button,.qmRecitalHomeLinks a{transition:none}}
+
+.qm-text-zoom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem .75rem;
+  font-size: .875rem;
+}
+
+.qm-text-zoom input {
+  width: min(9rem, 40vw);
+  min-height: 44px;
+}
+
+.qm-text-zoom span {
+  min-width: 4ch;
+  font-variant-numeric: tabular-nums;
+}
+
+.qm-verse-arabic {
+  font-size: calc(clamp(30px, 7vw, 48px) * var(--qm-arabic-scale, 1));
+  touch-action: pan-y;
+}

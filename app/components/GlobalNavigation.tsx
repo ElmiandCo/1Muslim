@@ -185,11 +185,8 @@ export default function GlobalNavigation(){
   }
   if(pathname===destination.split("?")[0]&&item.id!=="muslims")return;
   if(pathname){setPrevious(pathname);try{sessionStorage.setItem("1muslim:nav-previous",pathname)}catch{}}
-  document.documentElement.dataset.oneShellReady="false";
   router.prefetch(destination.split("?")[0]);
   router.push(destination);
-  // If a route navigation fails, never strand the entire interface behind white.
-  window.setTimeout(()=>{if(window.location.pathname===pathname)document.documentElement.dataset.oneShellReady="true"},6000);
  }
  function select(item:Entry){
   if(busy)return;

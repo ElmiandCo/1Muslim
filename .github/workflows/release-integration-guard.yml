@@ -1,0 +1,85 @@
+name: Release Branch PR Integration Guard (No Auto-Merge)
+
+on:
+  pull_request:
+    branches: ['release/**']
+    types: [opened, synchronize, reopened, ready_for_review, closed]
+  push:
+    branches: ['release/**']
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: release-integration-guard-${{ github.event.pull_request.base.ref || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  file-ownership-and-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Compare all active release PR files and flag profile integration dependencies
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner, repo = context.repo.repo;
+            const base = context.payload.pull_request?.base?.ref || context.ref.replace('refs/heads/', '');
+            if (!base.startsWith('release/')) return;
+            const open = await github.paginate(github.rest.pulls.list,{owner,repo,state:'open',base,per_page:100});
+            const work = await Promise.all(open.filter(p => p.head.repo?.full_name === owner + '/' + repo).map(async p => ({
+              number:p.number,
+              files:new Set((await github.paginate(github.rest.pulls.listFiles,{owner,repo,pull_number:p.number,per_page:100})).map(f=>f.filename))
+            })));
+            const risks = new Map(work.map(p=>[p.number,[]]));
+            const collisions = [];
+            function isOverlay(path) { return path === 'app/components/ProfileCinematicOverlay.tsx' || path === 'app/components/ProfileCinematicOverlay.module.css'; }
+            for (let i=0;i<work.length;i++) for (let j=i+1;j<work.length;j++) {
+              const a=work[i],b=work[j];
+              const shared=[...a.files].filter(f=>b.files.has(f)).sort();
+              const linked=(a.files.has('app/profile/page.tsx')&&[...b.files].some(isOverlay)) ||
+                           (b.files.has('app/profile/page.tsx')&&[...a.files].some(isOverlay));
+              if (!shared.length&&!linked) continue;
+              if (shared.length) collisions.push('#'+a.number+' / #'+b.number+': '+shared.join(', '));
+              const itemA={other:b.number,shared,linked},itemB={other:a.number,shared,linked};
+              risks.get(a.number).push(itemA); risks.get(b.number).push(itemB);
+            }
+            core.summary.addHeading('Release integration guard: '+base).addRaw('Checked '+work.length+' open draft/feature PR(s). No source changes, Codex calls or Vercel deploys.').addBreak();
+            for (const p of work) for (const risk of risks.get(p.number)||[]) if (p.number<risk.other && risk.linked) {
+              const note='Cross-component QA #'+p.number+' + #'+risk.other+': cinematic profile and map/identity integration need combined iOS, privacy, consent and navigation verification.';
+              core.summary.addRaw(note).addBreak(); core.notice(note);
+            }
+            if (collisions.length) {
+              for (const note of collisions) core.summary.addRaw('Shared files: '+note).addBreak();
+              core.setFailed('Overlapping release PR file ownership requires integrator reconciliation before staging: '+collisions.join('; '));
+            } else core.summary.addRaw('No direct shared-file overlaps found. Cross-component dependencies are noted here; GitHub Actions cannot write PR comments under current repository token policy.'); 
+            await core.summary.write();
+
+      - name: Checkout v3.9 candidate for isolated regression tests
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use Node 22 for built-in test runner
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run present v3.9 regression tests without new installs or model calls
+        shell: bash
+        run: |
+          set -euo pipefail
+          tests=()
+          for file in \
+            scripts/deepwatch-hero-preview.test.mjs \
+            scripts/location-onboarding.test.mjs \
+            scripts/profile-avatar-position.test.mjs \
+            scripts/member-region-privacy.test.mjs \
+            scripts/tiktok-import.test.mjs; do
+            if [[ -f "$file" ]]; then tests+=("$file"); fi
+          done
+          if (( ${#tests[@]} == 0 )); then
+            echo "No isolated v3.9 regression scripts present on this commit."
+            exit 0
+          fi
+          printf 'Running %s focused v3.9 regression suites\\n' "${#tests[@]}"
+          node --experimental-strip-types --test "${tests[@]}"
