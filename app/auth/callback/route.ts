@@ -4,9 +4,9 @@ import { createClient } from "../../../utils/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  let next = searchParams.get("next") ?? "/";
+  let next = searchParams.get("next") ?? "/search";
 
-  if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\\\") || next.includes("://")) next = "/profile";
+  if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\\\") || next.includes("://")) next = "/search";
   // Old deep links must never land on the retired public-profile interface.
   const legacyMember = next.match(/^\/profile\/([0-9a-f-]{36})(?:[?#].*)?$/i);
   if (legacyMember) next = `/profile?member=${encodeURIComponent(legacyMember[1])}`;

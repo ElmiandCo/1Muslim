@@ -5,7 +5,7 @@ import {createClient} from "../utils/supabase/client";
 import GuestWelcomeHome from "./components/GuestWelcomeHome";
 
 /** Root now contains only the guest landing or a white auth handoff.
- * The retired Live workspace cannot render behind profile/navigation.
+ * The retired Live workspace cannot render behind the new search home/navigation.
  */
 export default function HomePage(){
  const router=useRouter();
@@ -16,14 +16,14 @@ export default function HomePage(){
   const open=async()=>{
    const {data:{user}}=await db.auth.getUser();
    if(!active)return;
-   if(user){setStatus("member");router.replace("/profile");}
+   if(user){setStatus("member");router.replace("/search");}
    else setStatus("guest");
   };
   void open();
   const {data:{subscription}}=db.auth.onAuthStateChange((event,session)=>{
    if(!active)return;
    if(event==="SIGNED_OUT"){setStatus("guest");return}
-   if(session?.user){setStatus("member");router.replace("/profile");}
+   if(session?.user){setStatus("member");router.replace("/search");}
   });
   return()=>{active=false;subscription.unsubscribe()};
  },[router]);
