@@ -295,3 +295,41 @@
   .dsCreatorName small{font-size:9.5px}
 }
 @media(prefers-reduced-motion:reduce){.dsCreatorRow{transition:none}}
+
+/* Search Home: one stable search field for both discovery and results. */
+html:has(.dsPage) body{padding-bottom:0!important;background:#fff}
+.dsPage{position:relative;background:#fff;min-height:100dvh;padding:0 0 max(28px,env(safe-area-inset-bottom,0px))}
+.dsShortcuts{position:absolute;z-index:110;top:calc(12px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:7px}
+.dsShortcuts :is(a,button){display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid #e8ecea;border-radius:50%;background:rgba(255,255,255,.86);color:#314b47;box-shadow:0 4px 15px #1a3e3014}
+.dsShortcuts :is(a,button):active,.dsHomeIntro :is(a,button):active{transform:scale(.97)}
+.dsHeader{position:relative;top:auto;z-index:20;background:transparent;border:0;box-shadow:none;backdrop-filter:none;padding-top:clamp(132px,23vh,220px)}
+.dsWordmark{position:relative;width:max-content;max-width:100%;margin:0 auto 25px;color:#172e2a;font-family:Georgia,serif;font-size:clamp(39px,7vw,62px);font-weight:600;letter-spacing:-.055em;line-height:1.1;white-space:nowrap}
+.dsLiveSuffix{position:absolute;left:100%;bottom:.06em;margin-left:4px;font:700 .25em/1 system-ui,sans-serif;letter-spacing:0;color:#478e76;opacity:0;animation:dsLiveReveal 9s ease-in-out 2}
+@keyframes dsLiveReveal{0%,12%,70%,100%{opacity:0;transform:translateY(3px) scale(.9)}20%,52%{opacity:1;transform:translateY(0) scale(1);color:#478e76}40%{color:#a08250}}
+.dsHeaderRow{width:min(680px,100%);padding:0 18px;margin:auto}
+.dsSearchForm{min-height:60px;padding:0 8px 0 18px;gap:10px;border-radius:999px;background:#fff;border:1px solid #dfe7e3;box-shadow:0 8px 28px #183f3010}
+.dsSearchForm input{min-height:56px;font-size:16px}
+.dsClear{width:44px;height:44px;flex:0 0 44px;background:transparent;color:#536a66}
+.dsHudDock{display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;padding:3px;border:0;border-radius:50%;background:#173c37;animation:dsHudArrival 1s cubic-bezier(.2,.7,.25,1) both}
+.dsHudDock:disabled{opacity:1;cursor:default}
+.dsHudDock img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+@keyframes dsHudArrival{0%{transform:translate(-24px,-40px) scale(.8);opacity:.6}60%{transform:translate(2px,-5px) scale(1.04);opacity:1}100%{transform:translate(0,0) scale(1);opacity:1}}
+.dsCategoryBar{width:min(900px,100%);margin:12px auto 0;padding:0 14px}
+.dsCategoryBar .dsTabs{justify-content:flex-start}
+.dsSuggestions{max-width:680px;margin:8px auto 0;padding:10px 20px;border:1px solid #edf0ee;border-radius:18px;box-shadow:0 8px 24px #183f3010}
+.dsContent{padding:0 18px}
+.dsHomeIntro{max-width:680px;margin:0 auto;padding:30px 0 0;border:0;background:transparent;box-shadow:none;text-align:center}
+.dsHomeIntro h2{margin:0 0 12px;color:#6a7a75;font-size:12px;font-weight:650;letter-spacing:.02em}
+.dsHomeRecent,.dsHomePeople{margin:0 0 23px;min-width:0}
+.dsHomePeople p{font-size:12px;color:#788984}
+.dsHomeChips,.dsHomePeopleList,.dsHomeDestinations{display:flex;justify-content:center;flex-wrap:wrap;gap:9px}
+.dsHomeChips button,.dsHomeDestinations a{min-height:44px;padding:10px 14px;border:1px solid #e8eeeb;border-radius:999px;background:#fafcfb;color:#36504a;font-size:12px}
+.dsHomeChips button{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dsHomeRecent .dsQuietButton{min-height:44px;padding:8px 12px}
+.dsHomePeopleList a{display:flex;align-items:center;gap:9px;min-width:0;max-width:215px;min-height:52px;padding:7px 12px 7px 7px;border:1px solid #edf1ef;border-radius:999px;background:#fff;box-shadow:0 5px 16px #1a3e300b;color:#2b4842;font-size:12px;text-align:left;animation:dsPeopleEnter .45s ease-out both}
+.dsHomePeopleList a:nth-child(2){animation-delay:.06s}.dsHomePeopleList a:nth-child(3){animation-delay:.12s}.dsHomePeopleList a:nth-child(4){animation-delay:.18s}
+@keyframes dsPeopleEnter{from{opacity:.75;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.dsHomePeopleList a>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dsHomePeopleList small{display:block;color:#768b84;overflow:hidden;text-overflow:ellipsis}
+.dsHomeDestinations{gap:7px}.dsHomeDestinations a span{margin-right:6px;color:#598878}
+@media(max-width:767px){.dsHeader{padding-top:calc(130px + env(safe-area-inset-top,0px))}.dsHeaderRow{padding:0 16px}.dsSearchForm{padding-left:15px}.dsSearchForm input{font-size:16px}.dsContent{padding:0 16px}.dsHomeIntro{padding-top:26px;margin:0 auto}.dsHomePeopleList a{max-width:calc(50% - 5px)}.dsSuggestions{margin:8px 16px 0}.dsWordmark{font-size:43px}}
+@media(prefers-reduced-motion:reduce){.dsLiveSuffix{animation:none;opacity:1;transform:none}.dsHudDock,.dsHomePeopleList a{animation:none}}

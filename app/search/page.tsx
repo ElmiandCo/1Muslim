@@ -1,6 +1,9 @@
 "use client";
 import "./search.css";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createClient } from "../../utils/supabase/client";
+import GlobalNavIcon from "../components/GlobalNavIcon";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { DiscoverKind, DiscoverItem, DiscoverResponse } from "../lib/discover-search";
 
@@ -54,6 +57,7 @@ function ResultRail({title,subtitle,items,category}:{title:string;subtitle:strin
 }
 
 export default function SearchHub() {
+  const router=useRouter();
   const [query,setQuery]=useState("");
   const [submitted,setSubmitted]=useState("");
   const [tab,setTab]=useState<Tab>("All");
@@ -74,14 +78,22 @@ export default function SearchHub() {
   const chatEnd=useRef<HTMLDivElement>(null);
   const searchField=useRef<HTMLInputElement>(null);
   const requestCount=useRef(0);
-  const [compactHeader,setCompactHeader]=useState(false);
+  const [hudDocked,setHudDocked]=useState(false);
+  const [signingOut,setSigningOut]=useState(false);
 
   useEffect(()=>{
     try{const saved=JSON.parse(localStorage.getItem(historyKey)||"[]");
       if(Array.isArray(saved))setRecent(saved.filter((x):x is string=>typeof x==="string").slice(0,10));}
     catch{}
-    const initial=new URLSearchParams(window.location.search).get("q")||"";
-    if(initial){setQuery(initial.slice(0,90));setSubmitted(initial.slice(0,90));}
+    const syncQuery=()=>{const value=(new URLSearchParams(window.location.search).get("q")||"").slice(0,90);setQuery(value);setSubmitted(value);setTab("All");};
+    syncQuery();
+    window.addEventListener("popstate",syncQuery);
+    return()=>window.removeEventListener("popstate",syncQuery);
+  },[]);
+  useEffect(()=>{
+    if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){setHudDocked(true);return;}
+    const timer=window.setTimeout(()=>setHudDocked(true),1000);
+    return()=>window.clearTimeout(timer);
   },[]);
   useEffect(()=>{
     const controller=new AbortController();
@@ -92,16 +104,11 @@ export default function SearchHub() {
     return()=>controller.abort();
   },[]);
   useEffect(()=>{
-    const onScroll=()=>setCompactHeader(window.scrollY>140);
-    window.addEventListener("scroll",onScroll,{passive:true});
-    return()=>window.removeEventListener("scroll",onScroll);
-  },[]);
-  useEffect(()=>{
     const current=++requestCount.current;
-    if(query.trim().length===1){setLoading(false);return;}
+    if(query.trim().length<2){setLoading(false);setError("");return;}
     const controller=new AbortController();
+    setLoading(true);setError("");
     const timer=window.setTimeout(async()=>{
-      setLoading(true);setError("");
       try{
         const r=await fetch("/api/discover/search?q="+encodeURIComponent(query.trim()),{signal:controller.signal,cache:"no-store"});
         if(!r.ok)throw new Error("Could not search 1Muslim right now.");
@@ -121,11 +128,11 @@ export default function SearchHub() {
     const clean=value.trim().slice(0,90);if(!clean)return;
     setQuery(clean);setSubmitted(clean);setTab("All");
     const next=[clean,...recent.filter(x=>x.toLowerCase()!==clean.toLowerCase())].slice(0,10);
-    setRecent(next);try{localStorage.setItem(historyKey,JSON.stringify(next));window.history.replaceState({}, "", "/search?q="+encodeURIComponent(clean));}catch{}
+    setRecent(next);try{localStorage.setItem(historyKey,JSON.stringify(next));}catch{}
+    if(new URLSearchParams(window.location.search).get("q")!==clean)window.history.pushState({}, "", "/search?q="+encodeURIComponent(clean));
     searchField.current?.blur();
   };
-  const clear=()=>{setQuery("");setSubmitted("");setTab("All");try{window.history.replaceState({}, "", "/search");}catch{};searchField.current?.focus();};
-  const remove=(term:string)=>{const next=recent.filter(s=>s!==term);setRecent(next);try{localStorage.setItem(historyKey,JSON.stringify(next))}catch{}};
+  const clear=()=>{setQuery("");setSubmitted("");setTab("All");try{if(window.location.search)window.history.pushState({}, "", "/search");}catch{};searchField.current?.focus();};
   const showSuggestions=Boolean(query.trim().length>=2&&query.trim().toLowerCase()!==submitted.toLowerCase());
   const suggestions=useMemo(()=>[...new Set([
     ...result?.best?.filter(x=>x.title.toLowerCase().includes(query.toLowerCase())&&x.title.length<45).map(x=>x.title)||[],
@@ -168,28 +175,36 @@ export default function SearchHub() {
       setChatError(e instanceof Error?e.message:"Could not ask HudHud");
     }finally{setChatBusy(false);}
   };
+  const signOut=async()=>{
+    if(signingOut||!window.confirm("Sign out of 1Muslim?"))return;
+    setSigningOut(true);
+    try{const {error}=await createClient().auth.signOut();if(error)throw error;router.replace("/");router.refresh();}
+    catch(e){window.alert(e instanceof Error?e.message:"Could not sign out.");setSigningOut(false);}
+  };
   return <main className="dsPage">
-    <header className={"dsHeader"+(compactHeader?" dsHeaderCompact":"")}>
+    <div className="dsShortcuts" aria-label="Account shortcuts">
+      <Link href="/settings" aria-label="Settings" title="Settings"><GlobalNavIcon name="settings"/></Link>
+      <Link href="/profile" aria-label="Profile" title="Profile"><GlobalNavIcon name="profile"/></Link>
+      <button type="button" aria-label="Sign out" title="Sign out" disabled={signingOut} onClick={()=>void signOut()}><GlobalNavIcon name="signout"/></button>
+    </div>
+    <header className="dsHeader">
+      <h1 className="dsWordmark">One Muslim<span className="dsLiveSuffix" aria-hidden="true">.live</span></h1>
       <div className="dsHeaderRow">
-        <Link href="/posts" className="dsBack" aria-label="Back to posts">‹</Link>
         <form className="dsSearchForm" role="search" onSubmit={e=>{e.preventDefault();commit(query);}}>
           <span aria-hidden="true">⌕</span>
-          <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search videos, creators, verses, movies…" value={query}
+          <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search 1Muslim" value={query}
             onChange={e=>setQuery(e.target.value)} />
           {query&&<button className="dsClear" type="button" aria-label="Clear search" onClick={clear}>×</button>}
+          <button className="dsHudDock" type="button" title="Ask HudHud" aria-label="Ask HudHud AI search assistant" disabled={!hudDocked} onClick={()=>void openHudHud()}>
+            <img src="/assets/hudhud-logo.PNG" alt="" aria-hidden="true"/>
+          </button>
         </form>
-        <button className="dsSearchSubmit" type="button" onClick={()=>commit(query)}>Search</button>
       </div>
-      <div className="dsCategoryBar">
+      {query.trim()&&<div className="dsCategoryBar">
         <nav className="dsTabs" aria-label="Discover categories">
-          {TABS.map(name=><button key={name} type="button" className={tab===name?"active":""} aria-pressed={tab===name} onClick={()=>{setTab(name);setSubmitted(query.trim());}}>
-            {name}
-          </button>)}
+          {TABS.map(name=><button key={name} type="button" className={tab===name?"active":""} aria-pressed={tab===name} onClick={()=>{setTab(name);setSubmitted(query.trim());}}>{name}</button>)}
         </nav>
-        <button className="dsHudTab" type="button" title="Ask HudHud" aria-label="Ask HudHud AI search assistant" onClick={()=>void openHudHud()}>
-          <img src="/assets/hudhud-logo.PNG" alt="" aria-hidden="true"/><span>HudHud</span>
-        </button>
-      </div>
+      </div>}
     </header>
 
     {showSuggestions&&<section className="dsSuggestions" aria-label="Search suggestions">
@@ -202,30 +217,24 @@ export default function SearchHub() {
 
     <div className="dsContent">
       {!query.trim()&&<div className="dsHomeIntro">
-        <section className="dsRecent" aria-labelledby="dsRecentTitle">
-          <div className="dsSectionHead"><div><h2 id="dsRecentTitle">Recent searches</h2></div>
-            {recent.length>0&&<button type="button" className="dsQuietButton" onClick={()=>{setRecent([]);try{localStorage.removeItem(historyKey)}catch{}}}>Clear all</button>}</div>
-          {recent.length?<div className="dsRecentList">{recent.map(s=><div className="dsRecentItem" key={s}><button type="button" onClick={()=>commit(s)}><span>◷</span>{s}</button><button type="button" aria-label={"Remove "+s} onClick={()=>remove(s)}>×</button></div>)}</div>
-            :<p className="dsEmptyRecent">Your searches will appear here, only on this device.</p>}
+        {recent.length>0&&<section className="dsHomeRecent" aria-label="Recent searches">
+          <h2>Recent searches</h2><div className="dsHomeChips">{recent.slice(0,3).map(term=><button type="button" key={term} onClick={()=>commit(term)}>{term}</button>)}</div>
+          <button className="dsQuietButton" type="button" onClick={()=>{setRecent([]);try{localStorage.removeItem(historyKey)}catch{}}}>Clear recent searches</button>
+        </section>}
+        <section className="dsHomePeople" aria-label="Recommended creators">
+          {creatorsLoading?<p role="status">Finding creators…</p>:creators.length>0&&<><h2>People to discover</h2><div className="dsHomePeopleList">
+            {creators.slice(0,4).map(creator=><Link href={creator.href} key={creator.id} aria-label={"View "+creator.handle+" profile"}>
+              <span className="dsCreatorAvatar">{creator.avatarUrl?<img src={creator.avatarUrl} alt="" loading="lazy"/>:<span>{creator.displayName.slice(0,1).toUpperCase()}</span>}</span>
+              <span>{creator.displayName}<small>{creator.handle}</small></span>
+            </Link>)}
+          </div></>}
         </section>
-        <section className="dsRecommended" aria-label="Recommended creators">
-          <div className="dsSectionHead"><h2>You may like</h2><span className="dsRecommendedLabel">Active creators</span></div>
-          {creatorsLoading
-            ? <div className="dsCreatorLoading" role="status">Finding creators across 1Muslim…</div>
-            : creators.length>0
-              ? <div className="dsCreatorList">{creators.map((creator,index)=><Link className="dsCreatorRow" href={creator.href} key={creator.id} aria-label={"View "+creator.handle+" profile"}>
-                <span className="dsCreatorRank">{String(index+1).padStart(2,"0")}</span>
-                <span className="dsCreatorAvatar">{creator.avatarUrl?<img src={creator.avatarUrl} alt="" loading="lazy"/>:<span>{creator.displayName.slice(0,1).toUpperCase()}</span>}</span>
-                <span className="dsCreatorName"><strong>{creator.handle}</strong><small>{creator.displayName}</small></span>
-                <span className="dsCreatorPostCount">{creator.postCount} {creator.postCount===1?"post":"posts"}</span><span className="dsCreatorChevron" aria-hidden="true">↗</span>
-              </Link>)}</div>
-              : <p className="dsCreatorEmpty">Creator recommendations will appear here as the Ummah posts.</p>}
-        </section>
+        <nav className="dsHomeDestinations" aria-label="Explore 1Muslim">{explore.map(x=><Link key={x.href} href={x.href}><span aria-hidden="true">{x.icon}</span>{x.label}</Link>)}</nav>
       </div>}
 
-      {loading&&<div className="dsLoading" role="status"><span className="dsLoadingLine"/><span>Searching the 1Muslim directory…</span><div className="dsSkeletonRow"><i/><i/><i/></div></div>}
-      {error&&<div className="dsError" role="alert">{error}<button onClick={()=>setQuery(s=>s+" ")}>Try again</button></div>}
-      {!loading&&!error&&result&&<>
+      {query.trim().length>=2&&loading&&<div className="dsLoading" role="status"><span className="dsLoadingLine"/><span>Searching the 1Muslim directory…</span><div className="dsSkeletonRow"><i/><i/><i/></div></div>}
+      {query.trim().length>=2&&error&&<div className="dsError" role="alert">{error}<button onClick={()=>setQuery(s=>s+" ")}>Try again</button></div>}
+      {query.trim().length>=2&&!loading&&!error&&result&&<>
         {(query.trim().length>=2||submitted)&&<section className="dsResultIntro"><span className="dsSectionKicker">LIVE DIRECTORY RESULTS</span>
           <h1>{result.total>0?<>Search results for <em>“{query}”</em></>:"No exact matches yet"}</h1>
           <p>{result.total} matching results across {CATEGORIES.filter(c=>totalFor(c)>0).length} categories
@@ -240,8 +249,6 @@ export default function SearchHub() {
           <p>Try a creator name, phrase, film title, surah, or subject. HudHud can help you search the right part of 1Muslim.</p>
           <button type="button" onClick={()=>void openHudHud()}>Ask HudHud →</button></section>}
       </>}
-      {!query.trim()&&<section className="dsExplore"><div className="dsSectionHead"><div><span className="dsSectionKicker">QUICK DESTINATIONS</span><h2>Explore 1Muslim</h2><p>Jump into the parts of your community you love most.</p></div></div>
-        <div className="dsExploreGrid">{explore.map(x=><Link key={x.href} href={x.href}><span>{x.icon}</span><strong>{x.label}</strong><small>{x.details}</small><b aria-hidden="true">↗</b></Link>)}</div></section>}
     </div>
 
 
