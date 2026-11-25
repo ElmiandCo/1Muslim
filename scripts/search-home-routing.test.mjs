@@ -49,12 +49,13 @@ test("signed-in Search Home is centered and preserves the real search implementa
   const page=read("app/search/page.tsx");
   const css=read("app/search/search.css");
   assert.match(page,/const homeMode=!query\.trim\(\)/);
-  assert.match(page,/homeMode&&<h1 className="dsHomeBrand"/);
+  assert.match(page,/<h1 className="dsHomeBrand" aria-hidden=\{!homeMode\}/);
   assert.match(page,/className="dsSearchForm" role="search"/);
   assert.match(page,/creators\.slice\(0,4\)/);
   assert.match(page,/\/api\/discover\/creators/);
   assert.match(page,/\/api\/discover\/search/);
-  assert.match(page,/!homeMode&&<div className="dsCategoryBar"/);
+  assert.match(page,/className="dsCategoryBar"/);
+  assert.match(css,/\.dsHomeMode \.dsCategoryBar\{display:none\}/);
   assert.match(page,/!homeMode&&!loading&&!error&&result/);
   assert.match(page,/!homeMode&&loading/);
   assert.match(css,/\.dsHomeMode \.dsSearchForm/);
