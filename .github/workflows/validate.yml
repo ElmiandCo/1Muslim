@@ -35,6 +35,8 @@ jobs:
           scripts/navigation-shell.test.mjs
           scripts/hudhud-voice-authorization.test.mjs
           scripts/release-receipt.test.mjs
+      - name: HudHud Shahada recognition regression tests
+        run: node --experimental-strip-types --test scripts/shahada-phrase.test.mjs
       - name: TypeScript validation
         run: npx tsc --noEmit
       - name: Production build
