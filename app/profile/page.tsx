@@ -10,6 +10,7 @@ import RecentMuslimDiscovery from "../components/RecentMuslimDiscovery";
 import ProfilePagePosts from "../components/ProfilePagePosts";
 import ProfileSpotlightEditor from "../components/ProfileSpotlightEditor";
 import Link from "next/link";
+import OneSearchBar from "../components/OneSearchBar";
 import NextImage from "next/image";
 import HomeAppIcon from "../components/HomeAppIcon";
 import PostDesignStudio from "../components/PostDesignStudio";
@@ -1011,7 +1012,7 @@ const [avatarPage,setAvatarPage]=useState(0);
 
   const publishFirstPost=async()=>{const body=postText.trim();if(!body||posting)return;setPosting(true);const s=createClient();const {error}=await s.from("posts").insert({user_id:profile.id,body});if(error){setMessage(error.message);setPosting(false);return;}setPostText("");setPostCount(x=>x+1);setPosting(false);};
 
-  return <main className="profilePage profileCommandPage" onTouchStart={e=>{if(!isHudHudAdmin||secretAdminOpen)return;const t=e.touches[0];if(t&&!((e.target as HTMLElement).closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],.ummahAtlas,.swipeMemberRail")))secretSwipeStart.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const start=secretSwipeStart.current;secretSwipeStart.current=null;const t=e.changedTouches[0];if(start&&t&&t.clientX-start.x>100&&Math.abs(t.clientY-start.y)<65)setSecretAdminOpen(true)}}><ProfileSocialHub profile={profile}>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>{setTab("profile");setEditing(true)}}/>:<div className="profileShell" style={{"--profile-editor-accent":memberAccent(profile.profile_accent)} as CSSProperties}
+  return <main className="profilePage profileCommandPage" onTouchStart={e=>{if(!isHudHudAdmin||secretAdminOpen)return;const t=e.touches[0];if(t&&!((e.target as HTMLElement).closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],.ummahAtlas,.swipeMemberRail")))secretSwipeStart.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const start=secretSwipeStart.current;secretSwipeStart.current=null;const t=e.changedTouches[0];if(start&&t&&t.clientX-start.x>100&&Math.abs(t.clientY-start.y)<65)setSecretAdminOpen(true)}}><OneSearchBar/><ProfileSocialHub profile={profile}>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>{setTab("profile");setEditing(true)}}/>:<div className="profileShell" style={{"--profile-editor-accent":memberAccent(profile.profile_accent)} as CSSProperties}
       onTouchStart={e=>{
         const el=e.target as HTMLElement,t=e.touches[0];
         editorSwipeStart.current=null;
