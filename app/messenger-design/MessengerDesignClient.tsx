@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {usePathname} from "next/navigation";
-const avatarFor=(name:string)=>name==="1Muslim AI"?"/assets/hudhud-logo.PNG":name==="Ummah Live"?"/assets/1muslim-live-logo.PNG":/Amina|Najma|Yurri/.test(name)?"/assets/avatars/default-women.png":"/assets/avatars/default-men.png";
+const avatarFor=(name:string)=>name==="1Muslim AI"?"/assets/hudhud-logo.PNG":name==="Ummah Live"?"/assets/1muslim-wordmark.svg":/Amina|Najma|Yurri/.test(name)?"/assets/avatars/default-women.png":"/assets/avatars/default-men.png";
 function Avatar({name,fallback}:{name:string;fallback:string}){const[failed,setFailed]=useState(false);return failed?<>{fallback}</>:<img src={avatarFor(name)} alt={name} loading="lazy" onError={()=>setFailed(true)} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"50%"}}/>;}
 
 import Link from "next/link";
