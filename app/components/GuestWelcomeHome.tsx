@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import styles from "./GuestWelcomeHome.module.css";
+import OneSearchBar from "./OneSearchBar";
 
 type IconName = "ummah" | "watch" | "quran" | "live" | "games" | "home" | "explore" | "about";
 
@@ -76,6 +77,7 @@ export default function GuestWelcomeHome(){
           </div>
         </div>
         <p className={styles.introText}>A global Muslim community to connect, learn, watch, share, and grow together.</p>
+        <OneSearchBar/>
         <div className={styles.mainActions}>
           <Link className={styles.primary} href="/auth?mode=signup&next=%2Fprofile">Join 1Muslim <span aria-hidden="true">→</span></Link>
           <Link className={styles.secondary} href="/auth?next=%2Fprofile">I already have an account</Link>
