@@ -35,6 +35,7 @@ jobs:
           scripts/navigation-shell.test.mjs
           scripts/remove-crescent-star-regression.test.mjs
           scripts/search-home-routing.test.mjs
+          scripts/remove-symbol-appwide.test.mjs
           scripts/hudhud-voice-authorization.test.mjs
           scripts/release-receipt.test.mjs
       - name: TypeScript validation

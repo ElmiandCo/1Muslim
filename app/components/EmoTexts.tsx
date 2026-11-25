@@ -26,7 +26,8 @@ export const EMOTEXTS: readonly EmoTextEntry[] = [
  {id:"tawhid",label:"La ilaha illa Allah",art:"La ilaha illa Allah",category:"Dhikr",kind:"latin",tone:"white"},
  {id:"bismillah",label:"Bismillah",art:"Bismillah",category:"Dhikr",kind:"latin",tone:"gold"},
  {id:"alhamdulillah-ar",label:"Alhamdulillah (Arabic)",art:"الْحَمْدُ لِلَّهِ",category:"Arabic",kind:"arabic",tone:"gold"},
- {id:"crescent",label:"Crescent moon",art:"☾",category:"Symbol",kind:"symbol",tone:"gold"},
+ // Retain legacy sticker ID so previously sent posts display the neutral mark instead.
+ {id:"crescent",label:"1Muslim mark",art:"1M",category:"Symbol",kind:"symbol",tone:"gold"},
  {id:"kaaba",label:"Kaaba",art:"🕋",category:"Symbol",kind:"symbol",tone:"gold"},
  // Previously positioned under the Quran illustration: the text survives independently.
  {id:"subhanallah-ar",label:"SubhanAllah (Arabic)",art:"سُبْحَانَ اللَّهِ",category:"Arabic",kind:"arabic",tone:"gold"},
