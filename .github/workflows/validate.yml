@@ -33,6 +33,7 @@ jobs:
           scripts/member-region-privacy.test.mjs
           scripts/tiktok-import.test.mjs
           scripts/navigation-shell.test.mjs
+          scripts/search-home-routing.test.mjs
           scripts/hudhud-voice-authorization.test.mjs
           scripts/release-receipt.test.mjs
       - name: TypeScript validation
