@@ -7,12 +7,12 @@ export const AVATAR_TIERS = [
   { key: "bronze", name: "Bronze", minXp: 500, icon: "◆", quality: "First accessories" },
   { key: "silver", name: "Silver", minXp: 5000, icon: "✦", quality: "Emerald Aura" },
   { key: "gold", name: "Gold", minXp: 25000, icon: "✧", quality: "Gold Crest" },
-  { key: "elite", name: "Elite", minXp: 50000, icon: "☪", quality: "Light of Iman" },
+  { key: "elite", name: "Elite", minXp: 50000, icon: "◈", quality: "Light of Iman" },
 ] as const;
 
 export const ACCESSORIES = [
   { id: "classic-badge", name: "Classic Badge", tier: "bronze", icon: "◆" },
-  { id: "muslim-badge", name: "Muslim Badge", tier: "bronze", icon: "☪" },
+  { id: "muslim-badge", name: "Muslim Badge", tier: "bronze", icon: "م" },
   { id: "glow", name: "Emerald Aura", tier: "silver", icon: "✦" },
   { id: "crown", name: "Gold Crest", tier: "gold", icon: "♛" },
   { id: "light-iman", name: "Light of Iman", tier: "elite", icon: "✧" },
