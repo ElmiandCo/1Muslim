@@ -1,14 +1,15 @@
 "use client";
 import "./search.css";
 import Link from "next/link";
+import WebSearchPanel from "../components/WebSearchPanel";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { DiscoverKind, DiscoverItem, DiscoverResponse } from "../lib/discover-search";
 
-type Tab = "All" | DiscoverKind;
+type Tab = "All" | "Web" | DiscoverKind;
 type ChatLine = { role: "user" | "assistant"; content: string; matches?: DiscoverItem[] };
 type SuggestedCreator = { id:string; handle:string; displayName:string; avatarUrl:string|null; postCount:number; href:string };
 const CATEGORIES: DiscoverKind[] = ["Videos","Posts","People","Movies & Series","Qur’an","Comments","Lessons","Prayer","Live","Qibla"];
-const TABS: Tab[] = ["All", ...CATEGORIES];
+const TABS: Tab[] = ["All", "Web", ...CATEGORIES];
 const ICON: Record<DiscoverKind,string> = {
   "Videos":"▶","Posts":"▤","People":"◉","Movies & Series":"▣","Qur’an":"۞",
   "Comments":"◌","Lessons":"✦","Prayer":"☾","Live":"●","Qibla":"✧"
@@ -174,7 +175,7 @@ export default function SearchHub() {
         <Link href="/posts" className="dsBack" aria-label="Back to posts">‹</Link>
         <form className="dsSearchForm" role="search" onSubmit={e=>{e.preventDefault();commit(query);}}>
           <span aria-hidden="true">⌕</span>
-          <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search videos, creators, verses, movies…" value={query}
+          <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search the web, Qur’an, creators, videos…" value={query}
             onChange={e=>setQuery(e.target.value)} />
           {query&&<button className="dsClear" type="button" aria-label="Clear search" onClick={clear}>×</button>}
         </form>
@@ -195,12 +196,13 @@ export default function SearchHub() {
     {showSuggestions&&<section className="dsSuggestions" aria-label="Search suggestions">
       <span className="dsSectionKicker">SUGGESTED MATCHES</span>
       {suggestions.map(text=><button key={text} type="button" onClick={()=>commit(text)}><span className="dsSuggestIcon">⌕</span><span>{text}</span><b aria-hidden="true">↗</b></button>)}
-      <button className="dsSuggestSearchAll" type="button" onClick={()=>commit(query)}>Search all 1Muslim for “{query}” <span aria-hidden="true">→</span></button>
+      <button className="dsSuggestSearchAll" type="button" onClick={()=>commit(query)}>Search the web and 1Muslim for “{query}” <span aria-hidden="true">→</span></button>
     </section>}
 
 
 
     <div className="dsContent">
+      {submitted.trim().length>=2&&(tab==="All"||tab==="Web")&&<WebSearchPanel query={submitted} />}
       {!query.trim()&&<div className="dsHomeIntro">
         <section className="dsRecent" aria-labelledby="dsRecentTitle">
           <div className="dsSectionHead"><div><h2 id="dsRecentTitle">Recent searches</h2></div>
@@ -225,7 +227,7 @@ export default function SearchHub() {
 
       {loading&&<div className="dsLoading" role="status"><span className="dsLoadingLine"/><span>Searching the 1Muslim directory…</span><div className="dsSkeletonRow"><i/><i/><i/></div></div>}
       {error&&<div className="dsError" role="alert">{error}<button onClick={()=>setQuery(s=>s+" ")}>Try again</button></div>}
-      {!loading&&!error&&result&&<>
+      {!loading&&!error&&result&&tab!=="Web"&&<>
         {(query.trim().length>=2||submitted)&&<section className="dsResultIntro"><span className="dsSectionKicker">LIVE DIRECTORY RESULTS</span>
           <h1>{result.total>0?<>Search results for <em>“{query}”</em></>:"No exact matches yet"}</h1>
           <p>{result.total} matching results across {CATEGORIES.filter(c=>totalFor(c)>0).length} categories
