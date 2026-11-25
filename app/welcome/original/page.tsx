@@ -120,7 +120,7 @@ export default function Home() {
   return (
     <><InstallAppInvitation /><SiteNav compact /><div className="app">
       <aside className="sidebar">
-        <Link href="/" className="homeLogo" aria-label="1Muslim Home"><img src="/assets/1muslim-wordmark.svg" alt="1Muslim" /></Link>
+        <Link href="/" className="homeLogo" aria-label="1Muslim Home"><img src="/icon.svg" alt="1Muslim" /></Link>
         <nav>
           {[
             ["Home","/","⌂"],["Learn","/#paths","◈"],["Explore","/#explore","◎"],["Community","/community","◎"],["Streaming","/streaming","▶"]
@@ -138,7 +138,7 @@ export default function Home() {
 
       <main className="feed"><form className="mobileHomeSearch" action="/search" method="get"><span aria-hidden="true">⌕</span><input type="search" name="q" placeholder="Search 1Muslim…" aria-label="Search 1Muslim"/><button type="submit">Search</button></form>
         <header className="mobileTop">
-          <Link href="/" className="homeLogo compactLogo" aria-label="1Muslim Home"><img src="/assets/1muslim-wordmark.svg" alt="1Muslim" /></Link>
+          <Link href="/" className="homeLogo compactLogo" aria-label="1Muslim Home"><img src="/icon.svg" alt="1Muslim" /></Link>
           <ThemeToggle />
         </header>
 
