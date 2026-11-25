@@ -185,3 +185,37 @@ export default function ShahadaImmersiveEntry({onRecognized,onFallback,onExit}:P
     <div className={styles.reflection} aria-hidden="true"/>
   </main>;
 }
+
+export function ShahadaImmersiveFinish({
+  gender,onGender,agreed,onAgreement,busy,onContinue,onExit
+}:{
+  gender:"male"|"female"|"";
+  onGender:(value:"male"|"female")=>void;
+  agreed:boolean;
+  onAgreement:(value:boolean)=>void;
+  busy:boolean;
+  onContinue:()=>void;
+  onExit:()=>void;
+}){
+  return <main className={styles.scene} data-success="true">
+    <div className={styles.space} aria-hidden="true"/>
+    <div className={styles.earth} aria-hidden="true"/>
+    <button className={styles.close} type="button" onClick={onExit} aria-label="Leave Shahada onboarding">×</button>
+    <div className={styles.brand} aria-label="1Muslim"><span>1M</span></div>
+    <section className={styles.finish} aria-label="HudHud Shahada recognized">
+      <div className={styles.finishBird}><img src="/assets/hudhud-logo.PNG" alt="HudHud"/></div>
+      <h1>Shahada recognized</h1>
+      <p>Welcome to the Ummah.</p>
+      {!gender&&<div className={styles.finishGender} role="group" aria-label="Choose your default profile avatar">
+        <button type="button" onClick={()=>onGender("female")}>Female avatar</button>
+        <button type="button" onClick={()=>onGender("male")}>Male avatar</button>
+      </div>}
+      <label className={styles.finishConsent}><input type="checkbox" checked={agreed} onChange={e=>onAgreement(e.target.checked)}/>
+        <span>I agree to the <a href="/terms" target="_blank" rel="noreferrer">1Muslim terms</a>.</span>
+      </label>
+      <button type="button" className={styles.finishContinue} disabled={!agreed||!gender||busy} onClick={onContinue}>
+        {busy?"Saving…":"Continue to my profile →"}
+      </button>
+    </section>
+  </main>;
+}
