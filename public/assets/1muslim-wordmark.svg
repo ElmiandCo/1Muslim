@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 130" role="img" aria-labelledby="brand-title">
+<title id="brand-title">1Muslim</title>
+<defs>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff2ce"/><stop offset=".52" stop-color="#e9c78c"/><stop offset="1" stop-color="#b98d49"/></linearGradient>
+  <linearGradient id="silver" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffffff"/><stop offset=".55" stop-color="#f6f7f4"/><stop offset="1" stop-color="#ccd6d0"/></linearGradient>
+</defs>
+<text x="24" y="94" fill="url(#gold)" stroke="#1a342a" stroke-width="4" paint-order="stroke" font-family="Arial,Helvetica,sans-serif" font-size="91" font-weight="900" letter-spacing="-8">1</text>
+<text x="77" y="94" fill="url(#silver)" stroke="#1a342a" stroke-width="4" paint-order="stroke" font-family="Arial,Helvetica,sans-serif" font-size="87" font-weight="850" letter-spacing="-5">Muslim</text>
+<path d="M18 107H441" stroke="#d1a766" stroke-width="3" stroke-linecap="round"/>
+</svg>
