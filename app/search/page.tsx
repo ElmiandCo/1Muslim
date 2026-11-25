@@ -207,21 +207,21 @@ export default function SearchHub() {
       </button>
     </nav>
     <header className={"dsHeader"+(compactHeader?" dsHeaderCompact":"")}>
-      {homeMode&&<h1 className="dsHomeBrand"><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></h1>}
+      <h1 className="dsHomeBrand" aria-hidden={!homeMode}><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></h1>
       <div className="dsHeaderRow">
-        {!homeMode&&<Link href="/search" className="dsBack" aria-label="Back to search home">‹</Link>}
+        <Link href="/search" className="dsBack" aria-label="Back to search home">‹</Link>
         <form className="dsSearchForm" role="search" onSubmit={e=>{e.preventDefault();commit(query);}}>
           <span aria-hidden="true">⌕</span>
           <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search videos, creators, verses, movies…" value={query}
             onChange={e=>setQuery(e.target.value)} />
           {query&&<button className="dsClear" type="button" aria-label="Clear search" onClick={clear}>×</button>}
-          {homeMode&&<button type="button" className={"dsHudDock"+(hudhudDocked?" isDocked":"")} aria-label={hudhudDocked?"Ask HudHud AI search assistant":"HudHud is getting ready"} title="Ask HudHud" disabled={!hudhudDocked} onClick={()=>void openHudHud()}>
+          <button type="button" className={"dsHudDock"+(hudhudDocked?" isDocked":"")} aria-label={hudhudDocked?"Ask HudHud AI search assistant":"HudHud is getting ready"} title="Ask HudHud" aria-hidden={!homeMode} tabIndex={homeMode?0:-1} disabled={!homeMode||!hudhudDocked} onClick={()=>void openHudHud()}>
             <img src="/assets/hudhud-logo.PNG" alt="" aria-hidden="true"/>
-          </button>}
+          </button>
         </form>
         <button className="dsSearchSubmit" type="button" onClick={()=>commit(query)}>Search</button>
       </div>
-      {!homeMode&&<div className="dsCategoryBar">
+      <div className="dsCategoryBar">
         <nav className="dsTabs" aria-label="Discover categories">
           {TABS.map(name=><button key={name} type="button" className={tab===name?"active":""} aria-pressed={tab===name} onClick={()=>{setTab(name);setSubmitted(query.trim());}}>
             {name}
@@ -230,7 +230,7 @@ export default function SearchHub() {
         <button className="dsHudTab" type="button" title="Ask HudHud" aria-label="Ask HudHud AI search assistant" onClick={()=>void openHudHud()}>
           <img src="/assets/hudhud-logo.PNG" alt="" aria-hidden="true"/><span>HudHud</span>
         </button>
-      </div>}
+      </div>
     </header>
 
     {showSuggestions&&<section className="dsSuggestions" aria-label="Search suggestions">
