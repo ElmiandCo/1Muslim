@@ -20,7 +20,8 @@ test("auth defaults to Search Home but preserves explicit deep links",()=>{
   const callback=read("app/auth/callback/route.ts");
   assert.match(callback,/searchParams\.get\("next"\) \?\? "\/search"/);
   assert.match(callback,/next = "\/search";/);
-  assert.match(callback,/NextResponse\.redirect\(\`${origin}${next}\`\)/);
+  assert.match(callback,/return NextResponse\.redirect\(/);
+  assert.match(callback,/\$\{origin\}\$\{next\}/);
 });
 
 test("new visitors keep the guest landing, while its sign-in buttons open Search Home",()=>{
