@@ -1,12 +1,12 @@
 "use client";
 import { useState, type ReactNode } from "react";
 import {EmoTextContent} from "./EmoTexts";
-const pattern = /(🔥|💚|❤️|😂|🤲|✨|🥹|🏆|🌙|🎉|👀|💯|😍|👏|😮|😭|🕊️|⭐|💥|🎊|🤩|😎|😅|🤯|💫|🙌|💪|🌹|💖|💐|☪️)/gu;
+const pattern = /(🔥|💚|❤️|😂|🤲|✨|🥹|🏆|🌙|🎉|👀|💯|😍|👏|😮|😭|🕊️|⭐|💥|🎊|🤩|😎|😅|🤯|💫|🙌|💪|🌹|💖|💐)/gu;
 const styles: Record<string,string> = {
 "🔥":"flame","💚":"heart","❤️":"heart","💖":"heart","😍":"heart","😂":"laugh","😅":"laugh",
 "🤲":"dua","🙌":"dua","✨":"sparkle","⭐":"sparkle","💫":"sparkle","🥹":"heart",
 "🏆":"trophy","🎉":"trophy","🎊":"trophy","👏":"trophy","💯":"trophy","💪":"trophy",
-"🌙":"moon","☪️":"moon","👀":"eyes","😮":"eyes","🤯":"eyes","🤩":"sparkle",
+"🌙":"moon","👀":"eyes","😮":"eyes","🤯":"eyes","🤩":"sparkle",
 "😭":"laugh","🕊️":"dua","🌹":"heart","💐":"heart","💥":"flame","😎":"trophy"
 };
 export function AnimatedEmoji({emoji}:{emoji:string}){

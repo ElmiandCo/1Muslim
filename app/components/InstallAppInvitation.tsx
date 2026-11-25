@@ -28,7 +28,7 @@ export default function InstallAppInvitation(){
  return <div className="installInvitationShade" role="dialog" aria-modal="true" aria-label="Install 1Muslim app" onClick={close}>
   <section className="installInvitation" onClick={e=>e.stopPropagation()}>
    <button className="installClose" onClick={close} aria-label="Close installation invitation">×</button>
-   <img src="/assets/1muslim-live-logo.PNG" alt="" width="58" height="58"/>
+   <img src="/icon.svg" alt="" width="58" height="58"/>
    <span className="installEyebrow">1MUSLIM · ON YOUR PHONE</span>
    <h2>{guide?"Add 1Muslim to your Home Screen":"Take 1Muslim with you"}</h2>
    {guide?<><p>{ios?"In Safari, tap Share (the square with an arrow), choose Add to Home Screen, then tap Add.":"Open your browser menu and choose Install app or Add to Home Screen."}</p><button className="installPrimary" onClick={close}>Got it ✓</button></>:<><p>Open your Ummah, Quran Studio, and Live directly from your Home Screen.</p><button className="installPrimary" onClick={()=>void install()}>✦ {prompt?"Install 1Muslim":"Show me how to install"}</button><button className="installSecondary" onClick={close}>Maybe later</button></>}

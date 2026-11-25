@@ -316,7 +316,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
           ? <button type="button" className={voiceRecording?"dockCenter dockGoLiveReady":"dockCenter"} aria-label={voiceRecording?"Recording in progress":"Tajweed practice recorder (HudHud Mode required)"} onClick={()=>{let active=false;try{active=JSON.parse(localStorage.getItem("1muslim-hudhud-entry-preferences-v1")||"{}").vision===true}catch{}if(!active){window.dispatchEvent(new CustomEvent("hudhud-recorder-locked"));alert("Enable HudHud Vision Beta to use Tajweed recording.");return;}window.dispatchEvent(new Event("1muslim:quran-record"));document.querySelector<HTMLElement>(".omAyahFocused .qrv")?.scrollIntoView({behavior:"smooth",block:"center"})}}><img src="/assets/hudhud-logo.PNG" alt=""/><span className="dockCenterText">{voiceRecording?"● Recording":"Record"}</span></button>
           : pathname==="/streaming/go-live"&&goLiveReady
           ? <button type="button" className="dockCenter dockGoLiveReady" aria-label="Go Live now" onClick={()=>document.querySelector<HTMLButtonElement>("[data-go-live-start]")?.click()}><span className="dockLiveDot" aria-hidden="true">●</span><span className="dockCenterText">Go Live</span></button>
-          : <button type="button" className={wakeUp ? "dockCenter wakeUpSpotlight" : "dockCenter"} onClick={() => {setWakeUp(false);window.location.assign("/streaming")}} aria-label="1Muslim — reset to first Live tab"><img src="/assets/1muslim-mobile-logo.PNG" alt="" /><span className="dockCenterText">{smartLabel}</span></button>}
+          : <button type="button" className={wakeUp ? "dockCenter wakeUpSpotlight" : "dockCenter"} onClick={() => {setWakeUp(false);window.location.assign("/streaming")}} aria-label="1Muslim — reset to first Live tab"><img src="/icon.svg" alt="" /><span className="dockCenterText">{smartLabel}</span></button>}
         <Link href="/messages" className={pathname.startsWith("/messages")?"dockItem selected":"dockItem"} aria-label="Messages and one-to-one Muslim calls"><span className="dockIcon">💬</span><small>Messages</small></Link>
         <button type="button" className="dockItem" aria-label="Create content" aria-expanded={createOpen} onClick={() => setCreateOpen(!createOpen)}><span className="dockIcon">＋</span><small>Create</small></button>
       </div>
@@ -350,7 +350,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       </div>
       <section className="muslimNavSection"><span className="mobileMenuSection">✧ DISCOVER & LEARN</span><div className="muslimNavGalleryGrid">
         <Link href="/#paths" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">✧</span><span className="muslimNavTileText"><strong>Learn</strong><small>تعلّم</small></span></Link>
-        <Link href="/learn/elm-tent" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">☪</span><span className="muslimNavTileText"><strong>Elm Tent</strong><small>الخيمة</small></span></Link>
+        <Link href="/learn/elm-tent" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">ا</span><span className="muslimNavTileText"><strong>Elm Tent</strong><small>الخيمة</small></span></Link>
         <Link href="/streaming/library" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">▣</span><span className="muslimNavTileText"><strong>Videos</strong><small>الفيديوهات</small></span></Link>
         <Link href="/videos" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">▷</span><span className="muslimNavTileText"><strong>1Muslim Videos</strong><small>مقاطع</small></span></Link>
         <Link href="/ashab" className="muslimNavTile" onClick={closeMenu}><span className="muslimNavTileIcon" aria-hidden="true">👥</span><span className="muslimNavTileText"><strong>Ashab</strong><small>أصحاب</small></span></Link>
@@ -402,7 +402,7 @@ export default function SiteNav({ compact = false }: { compact?: boolean }) {
       .newBrand{display:inline-flex;align-items:center;gap:7px;text-decoration:none;white-space:nowrap;color:inherit}
       .brandMark{display:inline-flex;align-items:center;justify-content:center;position:relative;width:37px;height:37px;border:1px solid rgba(194,235,185,.6);border-radius:13px;background:linear-gradient(135deg,#172f23,#07110c);box-shadow:inset 0 1px rgba(255,255,255,.14),0 4px 18px rgba(0,0,0,.18)}
       .brandOne{font-weight:950;font-size:25px;line-height:1;color:#d9f2c7;letter-spacing:-.09em;transform:translateX(-3px)}
-      .brandCrescent{position:absolute;right:3px;top:4px;font-size:12px;color:#b4d7a3}
+      
       .brandWord{font-size:clamp(17px,1.7vw,22px);font-weight:950;letter-spacing:-.07em;color:var(--text,#f2f5f0)}
       .brandPeriod{color:#a9d99a}
       .liveSignal{display:inline-block;width:9px;height:9px;flex:none;border-radius:50%;background:#65726a;vertical-align:middle}
