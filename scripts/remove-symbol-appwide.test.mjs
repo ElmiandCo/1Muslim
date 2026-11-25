@@ -27,3 +27,13 @@ test("website, Apple, and PWA icon assets now show the original 1M identity",()=
   assert.match(readFileSync("app/apple-icon.tsx","utf8"),/>1M<\/div>/);
   assert.match(readFileSync("app/app-install-icon/route.tsx","utf8"),/>1M<\/div>/);
 });
+
+test("all retired logo PNG references have migrated to the 1M vector icons",()=>{
+  const retired=["1muslim-live-logo.PNG","1muslim-mobile-logo.PNG","new-1M-logo.PNG","new-1M-icon.PNG"];
+  const stale=[];
+  for(const path of trackedTextFiles()){
+    const content=readFileSync(path,"utf8");
+    if(retired.some(file=>content.includes("/assets/"+file)))stale.push(path);
+  }
+  assert.deepEqual(stale,[],"One or more routes still reference deleted logo assets");
+});
