@@ -20,7 +20,7 @@ jobs:
       !github.event.issue.pull_request &&
       github.event.comment.body == '/v39-run' &&
       github.event.issue.number >= 1593 &&
-      (github.event.issue.number <= 1606 || github.event.issue.number == 1610 || github.event.issue.number == 1643)
+      (github.event.issue.number <= 1606 || github.event.issue.number == 1610 || github.event.issue.number == 1643 || github.event.issue.number == 1655)
     runs-on: ubuntu-latest
     timeout-minutes: 95
     permissions:
@@ -30,7 +30,7 @@ jobs:
     env:
       ISSUE_NUMBER: ${{ github.event.issue.number }}
       REPOSITORY: ${{ github.repository }}
-      BASE_BRANCH: ${{ github.event.issue.number == 1643 && 'main' || 'release/v3.9' }}
+      BASE_BRANCH: ${{ (github.event.issue.number == 1643 || github.event.issue.number == 1655) && 'main' || 'release/v3.9' }}
     steps:
       - name: Verify GitHub Actions Codex secret before running expensive jobs
         env:
