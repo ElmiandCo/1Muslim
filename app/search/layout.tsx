@@ -2,8 +2,8 @@ import type {Metadata} from "next";
 import type {ReactNode} from "react";
 
 export const metadata:Metadata={
- title:"Explore 1Muslim | HudHud AI Search, Videos, People & Qur'an",
- description:"Search the Muslim social network for videos, posts, profiles, DeepWatch, Qur'an verses, comments, prayer lessons and Qibla articles. Ask HudHud, your Muslim-Inspired AI Companion.",
+ title:"1Muslim Search | Search the Web, Qur’an & Ummah",
+ description:"Search the whole internet and discover Muslim-relevant sources, videos, news, Qur’an, creators, DeepWatch, posts and more with 1Muslim Search.",
  alternates:{canonical:"/search"},
  openGraph:{
   title:"Discover 1Muslim — Search Everything with HudHud AI",
