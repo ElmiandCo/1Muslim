@@ -1,27 +1,115 @@
-.screen{min-height:100dvh;position:relative;background:#fff;color:#182c25;font-family:inherit;overflow:hidden;opacity:0;transition:opacity .48s ease}
-.entered{opacity:1}
-.topbar{position:relative;z-index:4;max-width:1120px;margin:auto;padding:20px clamp(18px,5vw,52px);display:flex;justify-content:space-between;align-items:center;gap:14px}
-.wordmark{text-decoration:none;color:#0f9355;font-size:30px;font-weight:950;letter-spacing:-.11em;white-space:nowrap}.wordmark span{font-size:15px;letter-spacing:.14em;margin-left:5px;color:#183c2e}
-.topActions{display:flex;align-items:center;gap:9px}.topActions a{text-decoration:none;border-radius:99px;padding:11px 16px;font-size:13px;font-weight:800;color:#1b4b34}.topActions .topJoin{color:#fff;background:#119656;box-shadow:0 8px 20px #11965622}
-.hero{position:relative;max-width:1160px;margin:0 auto;min-height:clamp(570px,77dvh,750px);display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center;padding:20px clamp(22px,5vw,65px) 45px}
-.copy{position:relative;z-index:2;max-width:510px}.kicker{font-size:11px;letter-spacing:.22em;font-weight:850;color:#188e55}
-.copy h1{font-size:clamp(40px,5vw,76px);line-height:1.08;letter-spacing:-.065em;margin:22px 0 20px;font-weight:850;color:#17352a}
-.copy h1 em{font-style:normal;color:#16a05a}.copy>p:not(.assurance){font-size:clamp(15px,1.8vw,18px);line-height:1.7;color:#65796e;max-width:430px;margin:0}
-.actions{display:flex;gap:11px;align-items:center;flex-wrap:wrap;margin:26px 0 13px}.actions a{display:inline-flex;align-items:center;gap:12px;text-decoration:none;font-size:14px;font-weight:800;border-radius:16px;padding:14px 20px;transition:transform .25s ease,box-shadow .25s ease}
-.actions a:hover{transform:translateY(-2px)}.primary{background:#119656;color:#fff;box-shadow:0 14px 28px #11965622}.secondary{background:#fff;color:#23583d;border:1px solid #c4d7cb}.assurance{color:#93a59a;font-size:12px}
-.visual{position:relative;min-height:610px;display:grid;place-items:center;isolation:isolate}.visual:before{content:"";position:absolute;width:min(100%,560px);aspect-ratio:1;background:radial-gradient(circle,#ceefde 0%,#eafff12b 61%,transparent 70%);border-radius:50%;z-index:-2}
-.orbit{position:absolute;width:min(115%,660px);aspect-ratio:1;border:2px solid #eaf6ed;border-radius:50%;z-index:-1}.sun,.moon,.mapPin{position:absolute;color:#16aa5f;font-size:52px;font-weight:700;line-height:1;filter:drop-shadow(0 6px 10px #31ad7f15)}.sun{top:4%;left:48%;color:#ffca3d;font-size:42px}.moon{bottom:8%;right:15%;opacity:.35}.mapPin{top:14%;left:6%;font-size:45px;transform:rotate(42deg)}
-.device{width:min(88%,342px);aspect-ratio:0.57;border-radius:48px;border:8px solid #0da45b;box-shadow:0 0 0 2px #87d6a4,0 26px 70px #0a774727;overflow:hidden;background:#0b694a;position:relative;transform:rotate(-1deg)}
-.deviceFrame{position:absolute;inset:0;border-radius:38px;overflow:hidden;background:#2b8cc5}.sky{position:absolute;inset:0;background:linear-gradient(#257cc8 0%,#52bcf4 52%,#b9e2e4 80%,#30795f 100%);overflow:hidden}
-.cloudOne,.cloudTwo{position:absolute;height:40px;width:200px;background:#ffffff77;filter:blur(15px);border-radius:50%;transform:rotate(-12deg)}.cloudOne{left:-30px;top:25%}.cloudTwo{right:-60px;top:46%}
-.location{position:absolute;top:18px;left:20px;color:#fff;font-weight:800;text-shadow:0 1px 8px #003f6b;font-size:15px}.location span{font-size:22px}
-.minaret{position:absolute;width:100px;height:76%;left:50%;transform:translateX(-50%);bottom:0;filter:drop-shadow(6px 7px 8px #093d4d88)}.towerRoof{position:absolute;top:0;left:20px;width:60px;height:76px;background:linear-gradient(120deg,#19556f,#6caea6);clip-path:polygon(50% 0,100% 58%,82% 100%,18% 100%,0 58%)}.towerBody{position:absolute;top:62px;bottom:0;left:10px;right:10px;background:linear-gradient(90deg,#70564d 0%,#d8b6a2 26%,#97765d 64%,#61473e 100%);clip-path:polygon(12% 0,88% 0,100% 100%,0 100%);display:flex;flex-direction:column;align-items:center;justify-content:space-evenly}.towerBody i{height:12%;width:35%;border:5px solid #705e53;background:#365c6c;box-shadow:0 0 0 1px #e9c6a4}
-.mosqueBase{position:absolute;bottom:0;left:-10%;right:-10%;height:23%;background:linear-gradient(160deg,#bd9a78 0%,#b89065 45%,#365a47 47%,#355646 100%);clip-path:polygon(0 30%,30% 0,45% 21%,67% 0,100% 30%,100% 100%,0 100%);opacity:.85}
-.prayerRing{position:absolute;bottom:18%;left:50%;transform:translateX(-50%);height:185px;width:185px;border:12px solid #9ceab8;border-bottom-color:transparent;border-right-color:#9ceab8b0;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#104b3f51;backdrop-filter:blur(4px);color:white;text-shadow:0 1px 4px #0e473f}
-.prayerRing>span{font-size:40px;line-height:1}.prayerRing strong{font-size:12px}.prayerRing small{font-size:10px}.prayerRing b{font-size:21px;letter-spacing:.02em}
-.prayers{position:absolute;bottom:13%;left:9%;right:9%;display:flex;justify-content:space-between}.prayers i{font-style:normal;display:grid;place-items:center;width:31px;height:31px;border-radius:50%;background:#10b65a;color:#fff;font-weight:900;box-shadow:0 3px 10px #105b3455}.prayers .next{background:#183c36d8}
-.phoneNav{position:absolute;bottom:0;left:0;right:0;height:78px;display:flex;justify-content:space-around;align-items:center;background:#092f2c99;backdrop-filter:blur(10px);color:#fff}
-.phoneNav span{font-size:22px;display:grid;justify-items:center;gap:5px;line-height:1}.phoneNav small{font-size:9px}.footer{max-width:1030px;margin:0 auto;padding:15px 24px 44px;display:flex;gap:26px;justify-content:center;flex-wrap:wrap}.footer a{text-decoration:none;color:#47735c;font-size:12px;font-weight:700}
-@media(max-width:790px){.hero{grid-template-columns:1fr;padding-top:25px;gap:10px;max-width:540px}.copy{text-align:center;justify-self:center}.copy>p:not(.assurance){margin:auto}.actions{justify-content:center}.visual{min-height:550px}.device{max-width:292px}.sun{top:2%}.topbar{padding-inline:18px}}
-@media(max-width:430px){.hero{padding-inline:18px;padding-top:10px}.copy h1{font-size:37px;margin:15px 0}.copy>p:not(.assurance){font-size:14px}.actions a{font-size:12px;padding:12px}.visual{min-height:510px}.device{max-width:255px;border-radius:37px}.deviceFrame{border-radius:30px}.prayerRing{width:146px;height:146px;border-width:9px}.topActions a{font-size:11px;padding:9px 12px}.topbar{gap:5px}.wordmark{font-size:24px}.wordmark span{font-size:12px}.sun{top:5%}.location{font-size:13px}}
-@media(prefers-reduced-motion:reduce){.screen,.actions a{transition:none}.screen{opacity:1}}
+/* White, profile-inspired public entry. Decorative only: no member or precise location data. */
+.page{--ink:#193c2e;--gold:#a57d2e;--edge:#e1e5e5;min-height:100dvh;background:radial-gradient(circle at 10% 0%,#fff9f5 0,transparent 48%),#fcfcfb;color:var(--ink);font-family:inherit;padding:0 12px max(24px,env(safe-area-inset-bottom))}
+.page *{box-sizing:border-box}
+.layout{max-width:970px;margin:0 auto;display:grid;gap:14px;padding:12px 0 18px}
+.cover{position:relative;min-height:282px;overflow:hidden;isolation:isolate;border:1px solid #e8d8c6;border-radius:27px 27px 12px 12px;background:linear-gradient(180deg,rgba(250,245,237,.35) 0%,rgba(248,209,174,.18) 47%,rgba(243,177,131,.55) 100%),url("/assets/profile-backgrounds/rose-gold.PNG") center 42% / cover no-repeat,#edc7a6;box-shadow:0 12px 28px #9b794c18}
+.cover:after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 27% 55%,#fff2c37e,transparent 52%),linear-gradient(180deg,#fff8f94d 0%,transparent 30%,#7a3c3a34 100%);pointer-events:none}
+.coverLight{position:absolute;inset:0;z-index:-1;background:linear-gradient(120deg,#f9e8d96b,#f3c5a61e,#eec79f59)}
+.skyline{position:absolute;z-index:-1;bottom:-3px;left:0;width:100%;height:76%;object-fit:cover;filter:drop-shadow(0 5px 16px #703d3355);opacity:.72}
+.topbar{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:17px 20px}
+.logo{text-decoration:none;white-space:nowrap;border:1px solid #a7a7a75a;border-radius:99px;background:rgba(9,40,31,.91);color:white;padding:10px 16px;font-size:22px;line-height:1.1;font-weight:900;box-shadow:0 4px 15px #452b2936;letter-spacing:-.04em}
+.logo span{color:#e5b967}
+.topActions{display:flex;align-items:center;gap:9px}
+.topActions a{font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 18px;min-height:43px;border-radius:99px;transition:transform .16s ease,box-shadow .16s ease}
+.topActions a:hover,.mainActions a:hover{transform:translateY(-2px)}
+.signIn{background:#fffcf3e0;color:#18382d;border:1px solid #bcaa89;box-shadow:0 3px 12px #47331710}
+.joinTop,.primary{background:linear-gradient(160deg,#15b56d,#068344);color:white!important;box-shadow:0 7px 18px #1488512b;border:1px solid #13b56c}
+.prayerGlass{position:absolute;right:20px;bottom:20px;min-width:min(290px,66%);text-decoration:none;color:#fff;display:flex;flex-direction:column;gap:5px;padding:14px 17px;border-radius:20px;border:1px solid #ffffff8b;background:linear-gradient(135deg,#402d2d88,#79554c56);box-shadow:0 5px 20px #50312a1e;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);text-shadow:0 1px 5px #402a2680}
+.prayerEyebrow{font-size:10px;letter-spacing:.16em;font-weight:800}
+.prayerTitle{font-size:16px;font-weight:760;display:flex;justify-content:space-between;gap:12px}
+.prayerDots{display:flex;align-items:center;gap:8px;margin-top:4px}
+.prayerDots:after{content:"";height:1px;flex:1;background:#fff9}
+.prayerDots i{width:5px;height:5px;border-radius:50%;background:#ffe7ccae}.prayerDots i:first-child{height:11px;width:11px;background:#fff}
+.intro{position:relative;z-index:1;border:1px solid var(--edge);border-radius:25px;background:#fff;box-shadow:0 9px 26px #314a400b;padding:0 26px 24px;margin-top:-24px}
+.identityRow{display:flex;align-items:flex-end;gap:19px;min-height:146px}
+.avatar{width:134px;height:134px;display:grid;place-items:center;flex:0 0 134px;margin-top:-52px;border-radius:50%;border:6px solid white;outline:3px solid #c9a25c;background:radial-gradient(circle at 30% 20%,#2b6553,#0c2d22 73%);box-shadow:0 6px 22px #19482a29;color:#fff;transform:translateY(11px)}
+.avatar span{font-size:42px;font-weight:950;font-style:italic;letter-spacing:-.12em;margin-left:-5px}
+.identityText{padding-bottom:10px}
+.identityText h1{font-size:clamp(24px,4.1vw,43px);letter-spacing:-.052em;line-height:1.09;margin:0;color:#173e30;font-weight:850}
+.identityText h1 em{font-style:normal;color:#ab7c2b}
+.motto{margin:9px 0 0;color:#52605b;font-weight:650;letter-spacing:.09em;font-size:clamp(13px,2.2vw,20px)}
+.introText{margin:24px 0 22px;color:#5a6a63;line-height:1.5;font-size:clamp(14px,2vw,18px);max-width:640px}
+.mainActions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mainActions a{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 12px;border-radius:18px;text-align:center;font-weight:780;font-size:clamp(13px,2vw,19px);text-decoration:none;min-height:53px;transition:transform .16s ease}
+.secondary{border:1px solid #c6c5b9;color:#183e31;background:#fff}
+.shortcuts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.shortcut{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:106px;gap:10px;text-decoration:none;color:#172e27;font-size:clamp(12px,1.6vw,16px);font-weight:700;background:linear-gradient(155deg,#fff,#fdfcf9);border:1px solid #e0e4e2;border-radius:21px;box-shadow:0 4px 18px #2e4d3508;transition:transform .18s ease,box-shadow .18s ease}
+.shortcut svg{color:#ad812e;width:34px;height:34px}
+.shortcut:hover,.watchCard:hover,.discover:hover{transform:translateY(-2px);box-shadow:0 8px 25px #24403017}
+.watchSection{padding:20px 16px 15px;border-radius:27px;border:1px solid var(--edge);background:linear-gradient(150deg,#fff 45%,#fbfaf7);box-shadow:0 7px 25px #1d3b250c}
+.sectionHeading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+.sectionHeading h2{display:flex;align-items:center;gap:8px;margin:0;font-size:clamp(17px,2.7vw,25px);color:#142d25;letter-spacing:-.04em}
+.sectionHeading h2 svg{width:25px;height:25px;color:var(--gold)}
+.sectionHeading>a{font-size:clamp(11px,1.7vw,14px);font-weight:780;white-space:nowrap;text-decoration:none;color:#a67624}
+.watchRail{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.watchCard{position:relative;height:clamp(145px,22vw,240px);overflow:hidden;isolation:isolate;border-radius:19px;border:1px solid #ffffffaf;text-decoration:none;display:flex;align-items:flex-end;padding:14px;color:white;background:#5f4d3e;box-shadow:0 3px 13px #3d2e2818;transition:transform .18s ease,box-shadow .18s ease}
+.watchCard:after{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(180deg,transparent 15%,#0c1317aa 100%)}
+.watchCard.faith{background:linear-gradient(22deg,#d59d69a1,#e3b5811a),url("/assets/profile-backgrounds/ruby-gold.PNG") center/cover,#a2764f}
+.watchCard.history{background:linear-gradient(22deg,#20453e77,#d0aa691d),url("/assets/profile-backgrounds/obsidian.PNG") center/cover,#3c6156}
+.watchCard.series{background:linear-gradient(22deg,#a5606777,#e3b5831d),url("/assets/profile-backgrounds/sapphire.PNG") center/cover,#6a708c}
+.watchArt{position:absolute;z-index:-1;top:17%;left:39%;color:#fff6;transform:scale(2.6);opacity:.6}
+.watchCaption{display:grid;gap:5px;position:relative;z-index:1;padding-right:16px;text-shadow:0 2px 7px #101810bd}
+.watchCaption strong{font-size:clamp(14px,2.3vw,21px);line-height:1.13}
+.watchCaption small{font-size:clamp(10px,1.55vw,13px);line-height:1.2}
+.playGlyph{position:absolute;right:10px;bottom:10px;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;border:2px solid white;background:#0004;font-size:11px}
+.railAccent{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:15px}.railAccent i{width:7px;height:7px;border-radius:50%;background:#d2d3d0}.railAccent i:first-child{width:25px;background:#b68d3e}
+.discover{display:flex;align-items:center;gap:18px;min-height:114px;border:1px solid #e0e3dd;border-radius:25px;background:linear-gradient(140deg,#fff,#f7faf8);text-decoration:none;color:var(--ink);padding:18px 24px;box-shadow:0 5px 18px #34402c09;transition:transform .18s ease,box-shadow .18s ease}
+.avatarStack{display:flex;align-items:center;min-width:0;flex:1 1 48%;max-width:350px;padding-left:3px}
+.avatarStack img{display:block;width:62px;aspect-ratio:1;object-fit:cover;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px #263f2922;margin-left:-9px;background:#f1ecdd}
+.avatarStack img:first-child{margin-left:0}
+.discoverText{display:grid;gap:7px;flex:1 1 42%}
+.discoverText strong{font-size:clamp(16px,2.7vw,25px);letter-spacing:-.02em}
+.discoverText span{color:#53695d;font-size:clamp(11px,1.8vw,14px)}
+.discoverArrow{display:grid;place-items:center;width:41px;height:41px;border-radius:50%;background:#f4ede0;flex:0 0 41px;color:#a37827;font-size:24px}
+.bottomNav{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;align-items:stretch;padding:9px 10px;border:1px solid #e6e6e0;border-radius:30px;background:#fffc;box-shadow:0 9px 30px #3a352a15;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.bottomNav a{min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:22px;text-decoration:none;color:#22372b;font-weight:680;font-size:clamp(11px,1.8vw,15px)}
+.bottomNav a svg{width:27px;height:27px}
+.bottomNav a.active{background:linear-gradient(140deg,#fcf6e9,#f0e3c9);color:#a7771a}
+.page a:focus-visible{outline:3px solid #128b53;outline-offset:3px}
+@media(min-width:800px){.layout{gap:17px;padding-top:18px}.cover{min-height:310px}.intro{padding:0 35px 28px}.identityRow{min-height:150px}.shortcuts{gap:14px}.bottomNav{max-width:660px;justify-self:center;width:100%}}
+@media(max-width:520px){
+ .page{padding-inline:6px}
+ .layout{padding-top:6px;gap:10px}
+ .cover{min-height:242px;border-radius:23px 23px 9px 9px}
+ .topbar{padding:13px 12px;gap:4px}
+ .logo{font-size:19px;padding:10px 11px}
+ .topActions{gap:5px}
+ .topActions a{font-size:11px;padding:8px 11px;min-height:40px}
+ .skyline{height:67%;opacity:.8}
+ .prayerGlass{right:11px;bottom:13px;min-width:52%;max-width:65%;border-radius:15px;padding:10px 11px}
+ .prayerTitle{font-size:12px}.prayerEyebrow{font-size:9px}
+ .intro{padding:0 14px 16px;margin-top:-20px;border-radius:21px}
+ .identityRow{min-height:109px;gap:13px}
+ .avatar{width:91px;height:91px;flex-basis:91px;border-width:4px;margin-top:-34px;outline-width:2px;transform:translateY(6px)}
+ .avatar span{font-size:30px}
+ .identityText{padding-bottom:9px}
+ .identityText h1{font-size:clamp(19px,5vw,26px)}
+ .motto{font-size:12px;letter-spacing:.045em;margin-top:5px}
+ .introText{margin:14px 0 17px;font-size:14px}
+ .mainActions{gap:8px}
+ .mainActions a{font-size:12px;line-height:1.2;padding:12px 8px;min-height:50px;border-radius:15px}
+ .shortcuts{gap:6px}
+ .shortcut{min-height:83px;gap:5px;border-radius:17px;font-size:10px}
+ .shortcut svg{width:26px;height:26px}
+ .watchSection{padding:14px 10px 12px;border-radius:20px}
+ .sectionHeading h2{font-size:17px}
+ .sectionHeading h2 svg{width:19px;height:19px}
+ .watchRail{gap:6px}
+ .watchCard{height:clamp(127px,37vw,165px);border-radius:13px;padding:9px}
+ .watchCaption{padding-right:0}
+ .watchCaption strong{font-size:12px}
+ .watchCaption small{font-size:10px}
+ .playGlyph{width:24px;height:24px;font-size:9px;bottom:auto;top:9px;right:7px}
+ .discover{padding:13px;gap:9px;min-height:91px;border-radius:20px}
+ .avatarStack{max-width:44%;flex-basis:44%}
+ .avatarStack img{width:clamp(27px,8vw,38px);border-width:2px;margin-left:-7px}
+ .discoverText{gap:3px}
+ .discoverText strong{font-size:16px}
+ .discoverText span{font-size:11px}
+ .discoverArrow{height:29px;width:29px;flex-basis:29px;font-size:17px}
+ .bottomNav{padding:7px 4px;border-radius:23px;position:sticky;bottom:max(3px,env(safe-area-inset-bottom));z-index:5}
+ .bottomNav a{min-height:58px;font-size:10px;border-radius:18px}
+ .bottomNav a svg{width:23px;height:23px}
+}
+@media(max-width:360px){.logo{font-size:17px;padding:9px}.topActions a{font-size:10px;padding:7px}.identityText h1{font-size:18px}.motto{font-size:11px}.shortcut span{font-size:9px}.avatarStack img:nth-child(n+5){display:none}}
+@media(prefers-reduced-motion:reduce){.page a{transition:none!important}}
