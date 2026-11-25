@@ -30,7 +30,6 @@ export function recognizeCompleteShahada(speech: string): ShahadaLanguage | null
   const prophet = /\b(?:muhammad|mohammed|mohammad|muhammed|muhammadan)\b/.test(e);
   const second = /\b(?:messenger|prophet)\s+(?:of|from)\s+(?:allah|god)\b/.test(e)
     || /\brasul(?:ullah|allah)\b/.test(e);
-  if (oath && first && exception && prophet && second &&
-      (e.indexOf("muhammad") > -1 || e.indexOf("moh") > -1)) return "en";
+  if (oath && first && exception && prophet && second) return "en";
   return null;
 }
