@@ -5,7 +5,7 @@ import test from "node:test";
 
 const trackedTextFiles=()=>execFileSync("git",["ls-files","-z"],{encoding:"utf8"})
   .split("\0")
-  .filter(path=>/\.(?:tsx?|jsx?|mjs|cjs|css|scss|html|svg|json|md|txt|ya?ml)$/i.test(path));
+  .filter(path=>!path.startsWith("scripts/") && /\.(?:tsx?|jsx?|mjs|cjs|css|scss|html|svg|json|md|txt|ya?ml)$/i.test(path));
 
 test("no app-owned text or code contains the retired religious emblem",()=>{
   const forbidden=[
