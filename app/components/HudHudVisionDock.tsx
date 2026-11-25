@@ -29,7 +29,7 @@ export default function HudHudVisionDock(){
     <div className="hhVisionOptions">{options.map((item,i)=><button type="button" key={item.label} disabled={i===1&&dailyUsed} className={choice===i?"chosen":""} onClick={()=>setChoice(i)}><strong>{i===1&&dailyUsed?"✓ Daily Post Done":item.label}</strong><small>{item.description}</small></button>)}</div>
     {choice!==null&&<button className="hhVisionRun" type="button" onClick={run}>✦ {options[choice].label} →</button>}
    </div>}
-   <button className={"hhVisionOrb "+(vision?"active":"")} type="button" onClick={()=>{if(!vision){setVision(true)}else if(pinned&&choice!==null){run()}else{setVision(false);setPinned(false);setChoice(null)}}} aria-label={vision?(pinned&&choice!==null?"Open selected HudHud action":"Turn HudHud Vision off"):"Turn HudHud Vision on"} aria-pressed={vision}><span className="hhVisionRing"><img src="/assets/1muslim-wordmark.svg" alt="" /></span><span className="hhVisionLabel">HudHud <span aria-hidden="true">✧</span></span></button>
+   <button className={"hhVisionOrb "+(vision?"active":"")} type="button" onClick={()=>{if(!vision){setVision(true)}else if(pinned&&choice!==null){run()}else{setVision(false);setPinned(false);setChoice(null)}}} aria-label={vision?(pinned&&choice!==null?"Open selected HudHud action":"Turn HudHud Vision off"):"Turn HudHud Vision on"} aria-pressed={vision}><span className="hhVisionRing"><img src="/icon.svg" alt="" /></span><span className="hhVisionLabel">HudHud <span aria-hidden="true">✧</span></span></button>
    <style jsx>{`
     .hhVisionRoot{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom,0px));right:14px;z-index:110;display:flex;flex-direction:column;align-items:flex-end;gap:9px;pointer-events:none}
     .hhVisionRoot>*{pointer-events:auto}
