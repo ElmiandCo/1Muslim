@@ -43,3 +43,41 @@ test("Home tab opens Search and Profile remains a distinct destination",()=>{
   assert.match(nav,/{id:"profile",label:"Profile",href:"\/profile"}/);
   assert.match(nav,/router\.push\("\/search"\)/);
 });
+
+
+test("signed-in Search Home is centered and preserves the real search implementation",()=>{
+  const page=read("app/search/page.tsx");
+  const css=read("app/search/search.css");
+  assert.match(page,/const homeMode=!query\.trim\(\)/);
+  assert.match(page,/<h1 className="dsHomeBrand" aria-hidden=\{!homeMode\}/);
+  assert.match(page,/className="dsSearchForm" role="search"/);
+  assert.match(page,/creators\.slice\(0,4\)/);
+  assert.match(page,/\/api\/discover\/creators/);
+  assert.match(page,/\/api\/discover\/search/);
+  assert.match(page,/className="dsCategoryBar"/);
+  assert.match(css,/\.dsHomeMode \.dsCategoryBar\{display:none\}/);
+  assert.match(page,/!homeMode&&!loading&&!error&&result/);
+  assert.match(page,/!homeMode&&loading/);
+  assert.match(css,/\.dsHomeMode \.dsSearchForm/);
+  assert.match(css,/\.dsHomeMode \.dsCreatorList/);
+});
+test("HudHud docks before activation and keeps the existing conversation endpoint",()=>{
+  const page=read("app/search/page.tsx");
+  const css=read("app/search/search.css");
+  assert.match(page,/setTimeout\(\(\)=>setHudhudDocked\(true\),1050\)/);
+  assert.match(page,/disabled=\{!homeMode\|\|!hudhudDocked\}/);
+  assert.match(page,/onClick=\{\(\)=>void openHudHud\(\)\}/);
+  assert.match(page,/\/api\/discover\/ask/);
+  assert.match(css,/@keyframes dsHudDockIn/);
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+});
+test("Home has floating accessible Settings, Profile and Sign out without the global dock",()=>{
+  const page=read("app/search/page.tsx");
+  const nav=read("app/components/GlobalNavigation.tsx");
+  assert.match(page,/href="\/settings" aria-label="Settings"/);
+  assert.match(page,/href="\/profile" aria-label="Profile"/);
+  assert.match(page,/aria-label="Sign out"/);
+  assert.match(page,/const signOut=async\(\)=>/);
+  assert.match(nav,/pathname\?\.startsWith\("\/search"\)/);
+  assert.match(nav,/pathname\?\.startsWith\("\/onboarding"\)/);
+});

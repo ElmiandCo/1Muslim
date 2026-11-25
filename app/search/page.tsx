@@ -1,6 +1,8 @@
 "use client";
 import "./search.css";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createClient } from "../../utils/supabase/client";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { DiscoverKind, DiscoverItem, DiscoverResponse } from "../lib/discover-search";
 
@@ -54,6 +56,7 @@ function ResultRail({title,subtitle,items,category}:{title:string;subtitle:strin
 }
 
 export default function SearchHub() {
+  const router=useRouter();
   const [query,setQuery]=useState("");
   const [submitted,setSubmitted]=useState("");
   const [tab,setTab]=useState<Tab>("All");
@@ -75,6 +78,15 @@ export default function SearchHub() {
   const searchField=useRef<HTMLInputElement>(null);
   const requestCount=useRef(0);
   const [compactHeader,setCompactHeader]=useState(false);
+  const [hudhudDocked,setHudhudDocked]=useState(false);
+  const [signoutConfirm,setSignoutConfirm]=useState(false);
+  const [signoutBusy,setSignoutBusy]=useState(false);
+
+  useEffect(()=>{
+    // HudHud is not interactive during its brief entry animation.
+    const timer=window.setTimeout(()=>setHudhudDocked(true),1050);
+    return()=>window.clearTimeout(timer);
+  },[]);
 
   useEffect(()=>{
     try{const saved=JSON.parse(localStorage.getItem(historyKey)||"[]");
@@ -168,15 +180,44 @@ export default function SearchHub() {
       setChatError(e instanceof Error?e.message:"Could not ask HudHud");
     }finally{setChatBusy(false);}
   };
-  return <main className="dsPage">
+  const signOut=async()=>{
+    if(signoutBusy)return;
+    setSignoutBusy(true);
+    try{
+      const {error}=await createClient().auth.signOut();
+      if(error)throw error;
+      setSignoutConfirm(false);
+      router.replace("/");
+      router.refresh();
+    }catch(e){
+      window.alert(e instanceof Error?e.message:"Could not sign out right now.");
+    }finally{setSignoutBusy(false);}
+  };
+  const homeMode=!query.trim();
+  return <main className={"dsPage "+(homeMode?"dsHomeMode":"dsResultsMode")}>
+    <nav className="dsHomeUtilities" aria-label="Account shortcuts">
+      <Link href="/settings" aria-label="Settings" title="Settings" className="dsUtilityButton">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.6 2.4 1.6.9 2.4-.7 2 3.5-1.8 1.7v1.9l1.8 1.7-2 3.5-2.4-.7-1.6.9L14 20h-4l-.6-2.4-1.6-.9-2.4.7-2-3.5 1.8-1.7v-1.9L3.4 8.6l2-3.5 2.4.7 1.6-.9L10 2Z"/></svg>
+      </Link>
+      <Link href="/profile" aria-label="Profile" title="Profile" className="dsUtilityButton">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg>
+      </Link>
+      <button type="button" aria-label="Sign out" title="Sign out" className="dsUtilityButton" onClick={()=>setSignoutConfirm(true)}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5"/><path d="M14 8l4 4-4 4M18 12H8"/></svg>
+      </button>
+    </nav>
     <header className={"dsHeader"+(compactHeader?" dsHeaderCompact":"")}>
+      <h1 className="dsHomeBrand" aria-hidden={!homeMode}><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></h1>
       <div className="dsHeaderRow">
-        <Link href="/posts" className="dsBack" aria-label="Back to posts">‹</Link>
+        <Link href="/search" className="dsBack" aria-label="Back to search home">‹</Link>
         <form className="dsSearchForm" role="search" onSubmit={e=>{e.preventDefault();commit(query);}}>
           <span aria-hidden="true">⌕</span>
           <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search videos, creators, verses, movies…" value={query}
             onChange={e=>setQuery(e.target.value)} />
           {query&&<button className="dsClear" type="button" aria-label="Clear search" onClick={clear}>×</button>}
+          <button type="button" className={"dsHudDock"+(hudhudDocked?" isDocked":"")} aria-label={hudhudDocked?"Ask HudHud AI search assistant":"HudHud is getting ready"} title="Ask HudHud" aria-hidden={!homeMode} tabIndex={homeMode?0:-1} disabled={!homeMode||!hudhudDocked} onClick={()=>void openHudHud()}>
+            <img src="/assets/hudhud-logo.PNG" alt="" aria-hidden="true"/>
+          </button>
         </form>
         <button className="dsSearchSubmit" type="button" onClick={()=>commit(query)}>Search</button>
       </div>
@@ -201,19 +242,19 @@ export default function SearchHub() {
 
 
     <div className="dsContent">
-      {!query.trim()&&<div className="dsHomeIntro">
-        <section className="dsRecent" aria-labelledby="dsRecentTitle">
+      {homeMode&&<div className="dsHomeIntro">
+        {recent.length>0&&<section className="dsRecent" aria-labelledby="dsRecentTitle">
           <div className="dsSectionHead"><div><h2 id="dsRecentTitle">Recent searches</h2></div>
             {recent.length>0&&<button type="button" className="dsQuietButton" onClick={()=>{setRecent([]);try{localStorage.removeItem(historyKey)}catch{}}}>Clear all</button>}</div>
           {recent.length?<div className="dsRecentList">{recent.map(s=><div className="dsRecentItem" key={s}><button type="button" onClick={()=>commit(s)}><span>◷</span>{s}</button><button type="button" aria-label={"Remove "+s} onClick={()=>remove(s)}>×</button></div>)}</div>
             :<p className="dsEmptyRecent">Your searches will appear here, only on this device.</p>}
-        </section>
+        </section>}
         <section className="dsRecommended" aria-label="Recommended creators">
-          <div className="dsSectionHead"><h2>You may like</h2><span className="dsRecommendedLabel">Active creators</span></div>
+          <div className="dsSectionHead"><h2>Discover your Ummah</h2><span className="dsRecommendedLabel">People to explore</span></div>
           {creatorsLoading
             ? <div className="dsCreatorLoading" role="status">Finding creators across 1Muslim…</div>
             : creators.length>0
-              ? <div className="dsCreatorList">{creators.map((creator,index)=><Link className="dsCreatorRow" href={creator.href} key={creator.id} aria-label={"View "+creator.handle+" profile"}>
+              ? <div className="dsCreatorList">{creators.slice(0,4).map((creator,index)=><Link className="dsCreatorRow" href={creator.href} key={creator.id} aria-label={"View "+creator.handle+" profile"}>
                 <span className="dsCreatorRank">{String(index+1).padStart(2,"0")}</span>
                 <span className="dsCreatorAvatar">{creator.avatarUrl?<img src={creator.avatarUrl} alt="" loading="lazy"/>:<span>{creator.displayName.slice(0,1).toUpperCase()}</span>}</span>
                 <span className="dsCreatorName"><strong>{creator.handle}</strong><small>{creator.displayName}</small></span>
@@ -223,9 +264,9 @@ export default function SearchHub() {
         </section>
       </div>}
 
-      {loading&&<div className="dsLoading" role="status"><span className="dsLoadingLine"/><span>Searching the 1Muslim directory…</span><div className="dsSkeletonRow"><i/><i/><i/></div></div>}
-      {error&&<div className="dsError" role="alert">{error}<button onClick={()=>setQuery(s=>s+" ")}>Try again</button></div>}
-      {!loading&&!error&&result&&<>
+      {!homeMode&&loading&&<div className="dsLoading" role="status"><span className="dsLoadingLine"/><span>Searching the 1Muslim directory…</span><div className="dsSkeletonRow"><i/><i/><i/></div></div>}
+      {!homeMode&&error&&<div className="dsError" role="alert">{error}<button onClick={()=>setQuery(s=>s+" ")}>Try again</button></div>}
+      {!homeMode&&!loading&&!error&&result&&<>
         {(query.trim().length>=2||submitted)&&<section className="dsResultIntro"><span className="dsSectionKicker">LIVE DIRECTORY RESULTS</span>
           <h1>{result.total>0?<>Search results for <em>“{query}”</em></>:"No exact matches yet"}</h1>
           <p>{result.total} matching results across {CATEGORIES.filter(c=>totalFor(c)>0).length} categories
@@ -240,10 +281,20 @@ export default function SearchHub() {
           <p>Try a creator name, phrase, film title, surah, or subject. HudHud can help you search the right part of 1Muslim.</p>
           <button type="button" onClick={()=>void openHudHud()}>Ask HudHud →</button></section>}
       </>}
-      {!query.trim()&&<section className="dsExplore"><div className="dsSectionHead"><div><span className="dsSectionKicker">QUICK DESTINATIONS</span><h2>Explore 1Muslim</h2><p>Jump into the parts of your community you love most.</p></div></div>
+      {homeMode&&<section className="dsExplore"><div className="dsSectionHead"><div><span className="dsSectionKicker">QUICK DESTINATIONS</span><h2>Explore 1Muslim</h2><p>Jump into the parts of your community you love most.</p></div></div>
         <div className="dsExploreGrid">{explore.map(x=><Link key={x.href} href={x.href}><span>{x.icon}</span><strong>{x.label}</strong><small>{x.details}</small><b aria-hidden="true">↗</b></Link>)}</div></section>}
     </div>
 
+
+    {signoutConfirm&&<div className="dsSignoutBackdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSignoutConfirm(false)}}>
+      <div className="dsSignoutDialog" role="dialog" aria-modal="true" aria-labelledby="dsSignoutTitle">
+        <h2 id="dsSignoutTitle">Sign out of One Muslim?</h2>
+        <div className="dsSignoutActions">
+          <button type="button" onClick={()=>setSignoutConfirm(false)} disabled={signoutBusy}>Cancel</button>
+          <button type="button" onClick={()=>void signOut()} disabled={signoutBusy}>{signoutBusy?"Signing out…":"Sign out"}</button>
+        </div>
+      </div>
+    </div>}
 
     {hudOpen&&<div className="dsChatOverlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setHudOpen(false)}}>
       <aside className="dsChat" role="dialog" aria-modal="true" aria-labelledby="dsChatHeading">
