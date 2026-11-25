@@ -405,6 +405,8 @@
 }
 .dsHomeMode .dsSearchForm input::placeholder{color:#98a1a5}
 .dsHomeMode .dsSearchSubmit{display:none}
+.dsHomeMode .dsBack,.dsHomeMode .dsCategoryBar{display:none}
+.dsResultsMode .dsHomeBrand,.dsResultsMode .dsHudDock{display:none}
 .dsHudDock{
   width:49px;height:49px;flex:0 0 49px;
   border-radius:50%;border:1px solid rgba(230,203,151,.68);
