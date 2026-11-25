@@ -57,8 +57,8 @@ export default function GuestWelcomeHome(){
         <header className={styles.topbar}>
           <Link className={styles.logo} href="/" aria-label="1Muslim home"><span>1</span>Muslim</Link>
           <div className={styles.topActions}>
-            <Link href="/auth?next=%2Fprofile" className={styles.signIn}>Sign In</Link>
-            <Link href="/auth?mode=signup&next=%2Fprofile" className={styles.joinTop}>Join 1Muslim <span aria-hidden="true">↗</span></Link>
+            <Link href="/auth?next=%2Fsearch" className={styles.signIn}>Sign In</Link>
+            <Link href="/auth?mode=signup&next=%2Fsearch" className={styles.joinTop}>Join 1Muslim <span aria-hidden="true">↗</span></Link>
           </div>
         </header>
         <Link href="/learn" className={styles.prayerGlass} aria-label="Explore prayer and Salah">
@@ -79,8 +79,8 @@ export default function GuestWelcomeHome(){
         <p className={styles.introText}>A global Muslim community to connect, learn, watch, share, and grow together.</p>
         <OneSearchBar/>
         <div className={styles.mainActions}>
-          <Link className={styles.primary} href="/auth?mode=signup&next=%2Fprofile">Join 1Muslim <span aria-hidden="true">→</span></Link>
-          <Link className={styles.secondary} href="/auth?next=%2Fprofile">I already have an account</Link>
+          <Link className={styles.primary} href="/auth?mode=signup&next=%2Fsearch">Join 1Muslim <span aria-hidden="true">→</span></Link>
+          <Link className={styles.secondary} href="/auth?next=%2Fsearch">I already have an account</Link>
         </div>
       </section>
 
