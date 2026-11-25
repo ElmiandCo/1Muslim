@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useMemo,useRef,useState} from "react";
 import {createClient} from "../utils/supabase/client";
-const EMOTES=new Set(["💚","🤲","☪️","✨","🦅","🌙"]);
+const EMOTES=new Set(["💚","🤲","✨","🦅","🌙"]);
 const devotional=(body:string)=>{const s=body.trim().toLowerCase().replace(/[.!،؟\s]+/g," ").trim();if(/^(ameen|amin|aameen|آمين|امين|🤲)$/.test(s))return "Ameen";if(/^(alhamdulillah|alhamdulilah|alhamdu lillah|الحمد لله)$/.test(s))return "Alhamdulillah";if(/^(astaghfirullah|astagfirullah|astaghfurullah|أستغفر الله|استغفر الله)$/.test(s))return "Astaghfirullah";return null};
 const isTiny=(s:string)=>Array.from(s.trim()).length<=3;
 type Entry={id:string;body:string;sender_id:string;created_at:string};
