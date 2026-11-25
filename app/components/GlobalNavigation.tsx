@@ -166,7 +166,8 @@ export default function GlobalNavigation(){
   });
  };
  useEffect(()=>()=>{if(railFrame.current)cancelAnimationFrame(railFrame.current)},[]);
- if(pathname==="/"||pathname?.startsWith("/onboarding")||pathname?.startsWith("/streaming/go-live")||pathname?.startsWith("/auth")||pathname?.startsWith("/login")||pathname?.startsWith("/posts/story/")||pathname==="/create")return null;
+ // Signed-in Search Home has its own small account controls and immersive search surface.
+ if(pathname==="/"||pathname?.startsWith("/search")||pathname?.startsWith("/onboarding")||pathname?.startsWith("/streaming/go-live")||pathname?.startsWith("/auth")||pathname?.startsWith("/login")||pathname?.startsWith("/posts/story/")||pathname==="/create")return null;
  async function perform(item:Entry){
   if(item.id==="signout"){setBusy(true);try{
    const {error}=await createClient().auth.signOut();
