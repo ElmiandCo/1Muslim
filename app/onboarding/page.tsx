@@ -5,6 +5,7 @@ import FirstVisitGuide from "../components/FirstVisitGuide";
 import GuardianParticles from "../components/GuardianParticles";
 import RisingEnergyOrbs from "../components/RisingEnergyOrbs";
 import AdmissionJourney from "../components/AdmissionJourney";
+import ShahadaImmersiveEntry, {ShahadaImmersiveFinish} from "../components/ShahadaImmersiveEntry";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../utils/supabase/client";
 
@@ -75,6 +76,8 @@ const SHAHADA_HOLD_DELAY_MS = 320;
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState<"shahada" | "gender">("shahada");
+  const [fastStage,setFastStage] = useState<"listening"|"complete"|"legacy">("listening");
+  const [fastVerified,setFastVerified] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [writtenDeclaration, setWrittenDeclaration] = useState(false);
   const [alternativeHint,setAlternativeHint]=useState(true);
@@ -464,8 +467,9 @@ export default function OnboardingPage() {
 
   const finish = async () => {
     if (!gender) { setMessage("Please select a gender to continue."); return; }
+    if (fastVerified && !acceptedTerms) { setMessage("Please agree to the terms before continuing."); return; }
     const declarationVerified = verificationMode === "declaration" && writtenDeclaration;
-    if (!declarationVerified && (!verified || !audioBlob)) { setMessage("Complete voice verification or affirm the Shahada declaration first."); setStep("shahada"); return; }
+    if (!declarationVerified && (!verified || (!audioBlob && !fastVerified))) { setMessage("Complete voice verification or affirm the Shahada declaration first."); setStep("shahada"); return; }
 
     setSaving(true); setMessage("");
     const s = createClient();
@@ -509,10 +513,24 @@ export default function OnboardingPage() {
     });
     if (badgeError) { setMessage("Your Shahada was saved, but the badge could not be awarded. Please try again."); setSaving(false); return; }
     try { sessionStorage.setItem("1muslim:shahada-welcome", "yes"); } catch {}
-    router.replace(new URLSearchParams(window.location.search).get("return")==="profile"?"/profile":"/");
+    router.replace(fastVerified||new URLSearchParams(window.location.search).get("return")==="profile"?"/profile":"/");
   };
 
   if (checking) return <main className="onboardingPage"><FirstVisitGuide area="shahada"/><section className="onboardingCard"><span className="eyebrow">1MUSLIM</span><h1>Preparing your profile…</h1></section></main>;
+
+  // A one-minute, silent HudHud entrance is the default for voice onboarding.
+  // The original detailed recorder remains intact as the safe fallback.
+  if(step==="shahada"&&verificationMode==="audio"&&fastStage==="listening"){
+    return <ShahadaImmersiveEntry
+      onRecognized={spokenLanguage=>{setLanguage(spokenLanguage);setVerified(true);setFastVerified(true);setFastStage("complete");}}
+      onFallback={()=>setFastStage("legacy")}
+      onExit={()=>router.replace("/")}/>;
+  }
+  if(step==="shahada"&&fastStage==="complete"){
+    return <ShahadaImmersiveFinish gender={gender} onGender={setGender}
+      agreed={acceptedTerms} onAgreement={setAcceptedTerms} busy={saving}
+      onContinue={()=>void finish()} onExit={()=>router.replace("/")}/>;
+  }
 
   return <main className="onboardingPage"><style>{`
 .onboardingPage .studioVoiceCompact{position:relative;max-width:560px;width:100%;margin:12px auto;padding:18px 22px 20px!important;border:1px solid #8cba9b75!important;border-radius:30px!important;background:radial-gradient(ellipse at 50% 36%,#104a3b99,#061511 75%)!important;box-shadow:inset 0 1px 0 #e0ffdc4a,0 15px 45px #0006!important;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;overflow:hidden}
