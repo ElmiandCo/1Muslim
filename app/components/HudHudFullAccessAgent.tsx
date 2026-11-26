@@ -249,6 +249,11 @@ export default function HudHudFullAccessAgent(){
  handling.current=(text)=>{void act(text)};
  const startVoice=useCallback(()=>{
   if(document.hidden||speaking.current)return;
+  if(/^\/(auth|login|onboarding|unlocked|admin)(?:\/|$)/.test(pathRef.current)){
+   activated.current=false;clearRecognition();setPaused(true);
+   setStatus("Microphone paused on this sensitive page. Voice capture is disabled here.");
+   return;
+  }
   const host=window as VoiceWindow,Constructor=host.SpeechRecognition||host.webkitSpeechRecognition;
   if(!Constructor){activated.current=false;setPaused(true);setStatus("Voice control is unavailable in this browser. You can still use HudHud chat.");return}
   if(recognition.current)return;
@@ -313,7 +318,13 @@ export default function HudHudFullAccessAgent(){
   return()=>{window.removeEventListener(HUDHUD_ACCESS_EVENT,onChange);window.removeEventListener(HUDHUD_SETTINGS_EVENT,onPrefs);document.removeEventListener("visibilitychange",onHidden)};
  },[clearRecognition,stop,startVoice]);
  useEffect(()=>()=>{activated.current=false;clearRecognition();if(highlightTimer.current)clearTimeout(highlightTimer.current);window.speechSynthesis?.cancel()},[clearRecognition]);
- useEffect(()=>{if(!enabled)return;setStatus(old=>listening||!paused?"Listening on "+hudhudScreenLabel(pathname):old)},[pathname,enabled,listening,paused]);
+ useEffect(()=>{
+  if(!enabled)return;
+  if(/^\/(auth|login|onboarding|unlocked|admin)(?:\/|$)/.test(pathname)){
+   activated.current=false;clearRecognition();setPaused(true);
+   setStatus("Microphone paused on this sensitive page. Voice capture is disabled here.");
+  }else setStatus(old=>listening||!paused?"Listening on "+hudhudScreenLabel(pathname):old);
+ },[pathname,enabled,listening,paused,clearRecognition]);
 
  if(!enabled)return null;
  return <aside className={"hudAgent"+(listening?" hudAgentListening":"")+(speakerActive?" hudAgentSpeaking":"")} aria-label="HudHud Full Access voice control">
