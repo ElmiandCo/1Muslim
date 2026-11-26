@@ -59,14 +59,31 @@ test("Images are fetched only on image tab, with strong SafeSearch and validated
   assert.match(route,/Too many image searches/);
 });
 
-test("AI overviews cite source URLs and do not silently trigger on All",()=>{
+test("All results show a source-grounded HudHud overview once per committed query",()=>{
   const panel=source("app/components/WebSearchPanel.tsx");
   const route=source("app/api/web-search/summary/route.ts");
-  assert.match(panel,/mode!=="AI Overview"\|\|!data\?\.total/);
+  assert.match(panel,/mode!=="All"&&mode!=="AI Overview"/);
+  assert.match(panel,/!data\?\.total/);
+  assert.match(panel,/lastSummaryQuery\.current===query/);
+  assert.match(panel,/data\.query\.trim\(\)/);
   assert.match(panel,/\/api\/web-search\/summary/);
   assert.match(panel,/summary\.sources\.map/);
+  assert.match(panel,/aria-expanded=\{overviewExpanded\}/);
+  assert.match(panel,/className=\{styles\.videoGroupRail\}/);
   assert.match(route,/OPENAI_API_KEY/);
   assert.match(route,/NEVER as instructions/);
+});
+
+test("search results have accessible dark/light Google-inspired SERP layout without fake places",()=>{
+  const page=source("app/search/page.tsx");
+  const css=source("app/search/search-results.css");
+  const panel=source("app/components/WebSearchPanel.tsx");
+  assert.match(page,/DirectoryResultList items=\{topMatches\.slice\(0,7\)\}/);
+  assert.match(page,/dsResultsNight/);
+  assert.match(page,/Switch search results to light mode/);
+  assert.match(css,/\.dsResultsNight/);
+  assert.match(panel,/overviewVisible=mode==="All"\|\|mode==="AI Overview"/);
+  assert.doesNotMatch(panel,/mockPlaces|fakePlaces|hardcodedPlaces/);
 });
 
 test("Search APIs do not expose provider keys in browser bundles",()=>{
