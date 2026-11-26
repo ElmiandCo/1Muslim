@@ -11,6 +11,7 @@ export type WebResult = {
   kind: WebResultKind;
   score: number;
   publishedAt?: string;
+  thumbnailUrl?: string;
 };
 export type WebSearchResponse = {
   query: string;
@@ -29,7 +30,7 @@ const islamicTopic = /\b(islam|islamic|muslim|muslims|allah|quran|qur.an|hadith|
 const clean = (value: unknown, limit: number) =>
   typeof value === "string" ? value.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim().slice(0, limit) : "";
 
-type RawResult = { title?:unknown; url?:unknown; description?:unknown; age?:unknown; page_age?:unknown; video?:{url?:string}; };
+type RawResult = { title?:unknown; url?:unknown; description?:unknown; age?:unknown; page_age?:unknown; video?:{url?:string}; thumbnail?:{src?:unknown}; };
 type BravePayload = {
   web?:{results?:RawResult[]};
   news?:{results?:RawResult[]};
@@ -50,8 +51,12 @@ function mapResult(item: RawResult, kind: WebResultKind, index: number, query: s
   const contentRelevant = islamicTopic.test(title+" "+description);
   // Small preference, never a site restriction or a forced query rewrite.
   const boost = known ? (topical ? 16 : 5) : contentRelevant ? (topical ? 7 : 1) : 0;
+  const image=typeof item.thumbnail?.src==="string"?item.thumbnail.src:"";
+  let thumbnailUrl:string|undefined;
+  try{if(new URL(image).protocol==="https:")thumbnailUrl=image;}catch{}
   return { title, url:url.href, description, source:host, kind, score:100-index*2+boost,
-    ...(typeof item.age==="string"?{publishedAt:item.age}:typeof item.page_age==="string"?{publishedAt:item.page_age}:{}) };
+    ...(typeof item.age==="string"?{publishedAt:item.age}:typeof item.page_age==="string"?{publishedAt:item.page_age}:{}),
+    ...(thumbnailUrl?{thumbnailUrl}:{}) };
 }
 const memory = new Map<string, { expires: number; payload: WebSearchResponse }>();
 export class SearchProviderError extends Error {
