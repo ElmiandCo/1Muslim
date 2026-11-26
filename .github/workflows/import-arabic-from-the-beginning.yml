@@ -1,0 +1,31 @@
+name: Import Arabic from the Beginning into DeepWatch
+# Owner-curated one-time import; original publisher YouTube embeds only.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/import-arabic-from-the-beginning.mjs'
+      - '.github/workflows/import-arabic-from-the-beginning.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deepwatch-arabic-from-the-beginning-import
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate import script syntax
+        run: node --check scripts/import-arabic-from-the-beginning.mjs
+      - name: Verify official YouTube playlist and import embeddable originals
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/import-arabic-from-the-beginning.mjs
