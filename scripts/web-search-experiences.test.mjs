@@ -40,7 +40,9 @@ test("Web, Images, Videos, News and AI all retain 1Muslim directory search",()=>
   assert.match(page,/WebSearchPanel query=\{submitted\}/);
   assert.match(page,/const showDirectory=tab==="All"/);
   assert.match(page,/\/api\/discover\/search/);
-  assert.match(page,/\/api\/discover\/ask/);
+  assert.match(page,/router\.push\("\/hudhud"/);
+  const hudhud=source("app/hudhud/page.tsx");
+  assert.match(hudhud,/\/api\/discover\/ask/);
   for(const vertical of ['"Web"','"Images"','"Videos"','"News"','"AI Overview"']){
     assert.ok(page.includes(vertical),vertical+" tab missing");
   }
