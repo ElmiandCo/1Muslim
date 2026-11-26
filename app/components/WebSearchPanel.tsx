@@ -110,7 +110,7 @@ export default function WebSearchPanel({query,mode="All"}:{query:string;mode?:Gl
         {summary&&<div className={styles.overviewBody}>
           {overviewThumbnail&&<div className={styles.overviewImage}><img src={overviewThumbnail} alt="" loading="lazy" referrerPolicy="no-referrer"/></div>}
           <div className={overviewExpanded?styles.overviewTextExpanded:styles.overviewTextPreview}><p>{summary.summary}</p></div>
-          {overviewExpanded&&<div className={styles.citations} aria-label="Sources for this AI overview">
+          {(overviewExpanded||summary.summary.length<=200)&&<div className={styles.citations} aria-label="Sources for this AI overview">
             {summary.sources.map(item=><a href={item.url} key={item.number} target="_blank" rel="noopener noreferrer">[{item.number}] {item.title}</a>)}
           </div>}
           {summary.summary.length>200&&<button type="button" className={styles.showMore} onClick={()=>setOverviewExpanded(open=>!open)} aria-expanded={overviewExpanded}>{overviewExpanded?"Show less":"Show more"} <span aria-hidden="true">{overviewExpanded?"⌃":"⌄"}</span></button>}
