@@ -238,7 +238,7 @@ export default function HudHudFullAccessAgent(){
      const data=await response.json();
      if(!response.ok)throw Error(String(data?.error||"HudHud could not answer."));
      const responseText=String(data.reply||"No answer was returned.").slice(0,1300);
-     conversation.current=[...conversation.current,{role:"user",content:action.text},{role:"assistant",content:responseText}].slice(-12);
+     conversation.current=[...conversation.current,{role:"user" as const,content:action.text},{role:"assistant" as const,content:responseText}].slice(-12);
      announce(responseText,true);
     }catch(e){announce(e instanceof Error?e.message:"HudHud could not answer.",true)}
     break;
