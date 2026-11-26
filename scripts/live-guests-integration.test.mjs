@@ -57,9 +57,10 @@ test("signed-out viewer can watch but only authenticated guests request",()=>{
   assert.match(viewer,/streamId&&hostIdentity&&!hostEnded/);
   assert.match(viewer,/<LiveGuestStudio streamId=\{streamId\} roomName=\{roomName\} hostId=\{hostIdentity\} compactJoin\/>/);
   const landing=source("app/page.tsx");
-  // The retired homepage is intentionally removed. Guest Live join controls
-  // remain in the persistent immersive feed, not on the white sign-in landing.
-  assert.match(landing,/GuestWelcomeHome/);
+  // All guests now enter the public Search Home, not the obsolete guest splash.
+  // Live viewing and guest-join rules remain enforced in the player and token route.
+  assert.match(landing,/redirect\("\/search"\)/);
+  assert.match(source("utils/supabase/proxy.ts"),/pathname === "\/search"/);
   assert.doesNotMatch(landing,/<LiveKitViewer/);
   assert.match(viewer,/<LiveGuestStudio streamId=\{streamId\} roomName=\{roomName\} hostId=\{hostIdentity\} compactJoin\/>/);
   const forYou=source("app/components/ImmersiveVideoEntry.tsx");
