@@ -60,10 +60,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'ci-placeholder-publishable-key' }}
-      - name: Wait for external preview checks and merge
-        env:
-          PR_BRANCH: ${{ steps.pr.outputs.branch }}
+      - name: Hand off auto-merge to the verified production workflow
         run: |
-          # Avoid merging while Vercel/other required checks are pending.
-          # GitHub branch protection and required checks remain authoritative.
-          gh pr merge "$PR_NUMBER" --repo "$REPOSITORY" --auto --squash --delete-branch
+          # This job may repair a build, but only the production gate checks
+          # the final SHA against completed CI, Vercel READY and branch safety.
+          echo "Build/repair complete; verified-production-auto-merge.yml handles main deployment."

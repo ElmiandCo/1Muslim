@@ -1,0 +1,105 @@
+name: Verified PR Auto-Merge to Vercel Production
+
+# Vercel Git integration deploys every successful merge to main.
+# This workflow never promotes a preview build or bypasses protected-branch checks.
+on:
+  workflow_run:
+    workflows: ["Validate TypeScript and Build"]
+    types: [completed]
+  status:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Retry an existing production PR after validation"
+        required: true
+        type: number
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+  statuses: read
+
+concurrency:
+  group: one-muslim-safe-production-merge
+  cancel-in-progress: false
+
+jobs:
+  verified-merge:
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'pull_request' &&
+       github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'status' &&
+       github.event.context == 'Vercel' &&
+       github.event.state == 'success') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Merge only same-repo main PRs with matching green CI and Vercel
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner,repo}=context.repo;
+            let sha=context.payload.workflow_run?.head_sha || context.payload.sha;
+            let candidates=[];
+            if(context.eventName==='workflow_dispatch'){
+              const number=Number(context.payload.inputs?.pr_number);
+              if(!Number.isSafeInteger(number)||number<=0) throw Error('Invalid pull request number');
+              const response=await github.rest.pulls.get({owner,repo,pull_number:number});
+              candidates=[response.data];
+              sha=response.data.head.sha;
+            }else{
+              if(!/^[0-9a-f]{40}$/.test(sha||'')) return;
+              candidates=await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit,
+                {owner,repo,commit_sha:sha,per_page:100});
+            }
+            for(const item of candidates){
+              const {data:pr}=await github.rest.pulls.get({owner,repo,pull_number:item.number});
+              if(pr.state!=='open'||pr.draft||pr.base.ref!=='main'||
+                 pr.head.repo?.full_name!==owner+'/'+repo||pr.head.sha!==sha) continue;
+              const labels=new Set(pr.labels.map(label=>label.name));
+              if(['do-not-deploy','security-review','needs-integration','release-hold'].some(label=>labels.has(label))){
+                core.notice('PR #'+pr.number+' held by release-review label');continue;
+              }
+              const files=await github.paginate(github.rest.pulls.listFiles,
+                {owner,repo,pull_number:pr.number,per_page:100});
+              const paths=files.map(file=>file.filename);
+              if(paths.some(path=>path.startsWith('supabase/migrations/'))){
+                core.notice('PR #'+pr.number+' includes database migrations: requires deliberate migration review');continue;
+              }
+              const sensitive=paths.some(path=>
+                /^(\.github\/|supabase\/|app\/api\/|utils\/supabase\/|middleware\.|package(-lock)?\.json$|next\.config\.|AGENTS\.md$)/.test(path) ||
+                /(billing|checkout|webhook|stripe|admin|auth|privacy|permissions)/i.test(path));
+              if((sensitive||pr.head.ref.startsWith('release/'))&&!labels.has('production-reviewed')){
+                core.notice('PR #'+pr.number+' requires production-reviewed label for sensitive or integrated changes');continue;
+              }
+              // CI MUST have passed on the exact commit, even when invoked by Vercel status.
+              const result=await github.rest.actions.listWorkflowRuns({
+                owner,repo,workflow_id:'validate.yml',event:'pull_request',
+                head_sha:sha,per_page:100});
+              const verified=result.data.workflow_runs.some(run=>
+                run.head_sha===sha && run.status==='completed' && run.conclusion==='success');
+              if(!verified){core.notice('PR #'+pr.number+' awaits a successful validation build');continue;}
+              // Only Vercel's green commit status confirms its preview finished building.
+              const combined=await github.rest.repos.getCombinedStatusForRef({owner,repo,ref:sha,per_page:100});
+              const vercel=combined.data.statuses.find(status=>status.context==='Vercel');
+              if(vercel?.state!=='success'){
+                core.notice('PR #'+pr.number+' awaits Vercel preview READY');continue;
+              }
+              // Do not merge a PR tested against an outdated main; CI must rerun after rebase.
+              const compare=await github.rest.repos.compareCommits({owner,repo,base:'main',head:sha});
+              if(compare.data.behind_by!==0){
+                core.notice('PR #'+pr.number+' is behind main; rebase/retest before production');continue;
+              }
+              if(pr.mergeable===false||['blocked','dirty'].includes(pr.mergeable_state)){
+                core.notice('PR #'+pr.number+' cannot merge due to required checks/conflicts');continue;
+              }
+              core.info('CI + Vercel preview verified; merging PR #'+pr.number+' into main');
+              const merge=await github.rest.pulls.merge({
+                owner,repo,pull_number:pr.number,sha:sha,merge_method:'squash',
+                commit_title:pr.title+' (#'+pr.number+')'});
+              if(!merge.data.merged) throw Error('GitHub did not merge PR #'+pr.number);
+              core.notice('PR #'+pr.number+' merged. Vercel production deployment runs via main Git integration.');
+            }
