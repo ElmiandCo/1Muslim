@@ -46,3 +46,94 @@
 @media(prefers-reduced-motion:reduce){.imageCard{transition:none}.imageCard:hover{transform:none}}
 
 .videoThumbnail{position:relative;display:block;max-width:320px;aspect-ratio:16/9;overflow:hidden;border-radius:13px;background:#1f3029;margin:12px 0 5px}.videoThumbnail img{width:100%;height:100%;object-fit:cover}.videoThumbnail>span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:#172322c9;color:white;border:1px solid #ffffff8a;font-size:17px}
+
+
+/* Organic search layout. Designed to resemble a modern SERP, not a Google clone. */
+.section{max-width:980px;margin:0;padding:0 0 10px;border:0;border-radius:0;background:transparent;box-shadow:none;color:inherit}
+.metaLine{max-width:750px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:15px 0;color:#74818c;font-size:12px}
+.warning{max-width:740px;margin:14px 0;padding:11px 14px;border-radius:12px;border:1px solid #e6d3b0;background:#fffaf1;font-size:13px}
+.warning p{font-size:13px}.warning small{font-size:11px}
+.status{max-width:740px;margin:14px 0;background:transparent;border:0;border-radius:0;padding:12px 0;font-size:13px}
+.overview{position:relative;max-width:760px;margin:12px 0 34px;border:0;background:transparent;box-shadow:none}
+.overviewHeading{display:flex;align-items:center;flex-wrap:wrap;gap:11px;margin-bottom:17px}
+.aiSpark{display:inline-grid;place-items:center;font-size:23px;line-height:1.2;background:linear-gradient(130deg,#6688ff,#8a65ef,#2a9d96);background-clip:text;color:transparent}
+.overviewHeading h2{font-size:clamp(18px,2vw,23px);font-weight:710;letter-spacing:-.025em;line-height:1.25;margin:0;color:#253342}
+.aiCaption{font-size:11px;color:#7d8994;font-weight:500}
+.overviewBody{position:relative}
+.overviewImage{float:right;margin:2px 0 11px 17px;width:clamp(100px,20vw,168px);aspect-ratio:1.25;border-radius:14px;overflow:hidden;background:#242f3b}
+.overviewImage img{width:100%;height:100%;object-fit:cover}
+.overviewTextPreview{position:relative;max-height:7.4em;overflow:hidden;line-height:1.65}
+.overviewTextPreview:after{content:"";position:absolute;bottom:0;left:0;right:0;height:1.7em;background:linear-gradient(transparent,#fff)}
+.overviewTextExpanded{line-height:1.65}
+.overviewTextPreview p,.overviewTextExpanded p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:clamp(14px,1.6vw,16px);line-height:1.67;color:#36434a;margin:0 0 15px}
+.showMore{clear:both;display:flex;align-items:center;justify-content:center;width:100%;min-height:45px;margin:20px 0 7px;border:1px solid #d7dfeb;border-radius:999px;color:#3c4552;background:transparent;cursor:pointer;font:600 14px system-ui,sans-serif;transition:background .2s}
+.showMore:hover{background:#f2f5fa}
+.showMore span{font-size:22px;margin-left:12px;font-weight:400;line-height:1}
+.overviewNote{display:block;font-size:11px;color:#7b8994;padding:3px 0 0;clear:both}
+.overviewLoading{max-width:700px;min-height:105px;padding:8px 0;color:#7a8692;font-size:13px}
+.overviewLoading i{display:block;height:10px;width:85%;margin:13px 0;border-radius:99px;background:linear-gradient(110deg,#f1f4f7,#e8eef8,#f1f4f7);background-size:200% 100%;animation:searchShimmer 1.5s ease-in-out infinite}
+.overviewLoading i:nth-of-type(2){width:92%}.overviewLoading i:nth-of-type(3){width:59%}
+@keyframes searchShimmer{to{background-position-x:-200%}}
+.overviewUnavailable{max-width:680px;color:#7d8994;font-size:13px}
+.overviewUnavailable p{margin:3px 0 10px}
+.overviewUnavailable button{background:transparent;border:1px solid #d6e1e9;border-radius:999px;padding:8px 14px;color:#38678a;font-size:12px;cursor:pointer}
+.citations{clear:both;margin:16px 0 10px;display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+.citations a{display:inline-block;max-width:230px;padding:8px 11px;border:1px solid #dfe6ed;border-radius:11px;background:#f8fafc;font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#236da1;text-decoration:none}
+.results{max-width:765px;display:grid;gap:22px}
+.result{border:0!important;padding:3px 0 14px!important;margin:0;overflow-wrap:anywhere}
+.site{gap:11px;font-size:13px;color:#33454b;font-weight:650}
+.site small{font-size:11px;color:#748088}
+.globe{width:35px;height:35px;flex-basis:35px;background:#e9eff2;color:#416e80;border:0;font-size:13px}
+.site b{background:#e8eff9;color:#356ab2}
+.result h3{font-size:clamp(18px,2.5vw,21px);font-weight:530;margin:8px 0 6px}
+.result h3 a{color:#1a63ba}.result p{line-height:1.65;font-size:14px;color:#4b5d66;max-width:700px}
+.age{color:#778693}
+.videoGroup{margin:12px 0 29px;max-width:770px}
+.videoGroup h2{font-size:19px;letter-spacing:-.025em;margin:0 0 15px;color:#273744}
+.videoGroupRail{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:5px}
+.videoGroupRail::-webkit-scrollbar{display:none}
+.videoGroupCard{flex:0 0 clamp(180px,31%,235px);display:flex;flex-direction:column;gap:6px;color:inherit;text-decoration:none;scroll-snap-align:start}
+.videoGroupThumbnail{position:relative;display:block;border-radius:13px;overflow:hidden;aspect-ratio:16/9;background:#253547}
+.videoGroupThumbnail img{display:block;width:100%;height:100%;object-fit:cover}
+.videoGroupThumbnail b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:42px;height:42px;border:1px solid #ffffff80;border-radius:50%;display:grid;place-items:center;color:#fff;background:#0009}
+.videoGroupCard strong{font-size:13px;font-weight:650;line-height:1.4;max-height:2.8em;overflow:hidden}
+.videoGroupCard small{font-size:11px;color:#73818c}
+.imageGrid{margin-top:10px}
+@media(max-width:550px){
+ .section{margin:0;padding:0}
+ .metaLine{padding:12px 0;font-size:11px}
+ .overview{margin:12px 0 30px}
+ .overviewHeading{margin-bottom:14px}
+ .overviewImage{width:112px;border-radius:12px;margin-left:12px}
+ .overviewTextPreview p,.overviewTextExpanded p{font-size:15px}
+ .overviewTextPreview{max-height:9em}
+ .videoGroupCard{flex-basis:205px}
+ .result h3{font-size:18px}
+ .result p{font-size:13px}
+}
+@media(prefers-reduced-motion:reduce){.overviewLoading i{animation:none}.showMore{transition:none}}
+/* Search theme follows result-page control, not the guest landing. */
+:global(.dsResultsNight) .section{color:#e8eaed}
+:global(.dsResultsNight) .metaLine{color:#999fa8}
+:global(.dsResultsNight) .warning{border-color:#555056;background:#302e2a;color:#ded7c9}
+:global(.dsResultsNight) .warning p,:global(.dsResultsNight) .warning small{color:#c6b9a4}
+:global(.dsResultsNight) .overviewHeading h2,:global(.dsResultsNight) .videoGroup h2{color:#e8eaed}
+:global(.dsResultsNight) .aiCaption{color:#9aa0a6}
+:global(.dsResultsNight) .overviewTextPreview p,:global(.dsResultsNight) .overviewTextExpanded p{color:#e4e6ed}
+:global(.dsResultsNight) .overviewTextPreview:after{background:linear-gradient(transparent,#202124)}
+:global(.dsResultsNight) .overviewNote,:global(.dsResultsNight) .overviewUnavailable{color:#9aa0a6}
+:global(.dsResultsNight) .overviewLoading{color:#b8bec7}
+:global(.dsResultsNight) .overviewLoading i{background:linear-gradient(110deg,#34353a,#4a4c55,#34353a);background-size:200% 100%}
+:global(.dsResultsNight) .showMore{border-color:#5d6585;background:transparent;color:#e7e8f1}
+:global(.dsResultsNight) .showMore:hover{background:#31323c}
+:global(.dsResultsNight) .citations a{background:#292b32;border-color:#444854;color:#b5c9ff}
+:global(.dsResultsNight) .site,:global(.dsResultsNight) .videoGroupCard{color:#e4e7ec}
+:global(.dsResultsNight) .site small,:global(.dsResultsNight) .age,:global(.dsResultsNight) .videoGroupCard small{color:#a8adb6}
+:global(.dsResultsNight) .globe{background:#32363d;color:#c0cedd}
+:global(.dsResultsNight) .site b{background:#33414f;color:#b3d3ff}
+:global(.dsResultsNight) .result h3 a{color:#a9c7ff}
+:global(.dsResultsNight) .result p{color:#bdc1c6}
+:global(.dsResultsNight) .empty,:global(.dsResultsNight) .status{color:#b9c2cb;border:0;background:transparent}
+:global(.dsResultsNight) .overviewUnavailable button{border-color:#5d6585;color:#acc9ff}
+:global(.dsResultsNight) .imageCard{background:#282a2f;border-color:#3c424b;color:#e1e4e9}
+:global(.dsResultsNight) .imageInfo small{color:#a4acb6}

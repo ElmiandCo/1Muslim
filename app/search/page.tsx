@@ -1,5 +1,6 @@
 "use client";
 import "./search.css";
+import "./search-results.css";
 import Link from "next/link";
 import WebSearchPanel,{type GlobalSearchMode} from "../components/WebSearchPanel";
 import { useRouter } from "next/navigation";
@@ -11,7 +12,7 @@ type Tab = GlobalSearchMode | DiscoverKind;
 type ChatLine = { role: "user" | "assistant"; content: string; matches?: DiscoverItem[] };
 type SuggestedCreator = { id:string; handle:string; displayName:string; avatarUrl:string|null; postCount:number; href:string };
 const CATEGORIES: DiscoverKind[] = ["Videos","Posts","People","Movies & Series","Qur’an","Comments","Lessons","Prayer","Live","Qibla"];
-const TABS: Tab[] = ["All","Web","Images","Videos","News","AI Overview", ...CATEGORIES.filter(c=>c!=="Videos")];
+const TABS: Tab[] = ["All","AI Overview","Web","Images","Videos","News", ...CATEGORIES.filter(c=>c!=="Videos")];
 const ICON: Record<DiscoverKind,string> = {
   "Videos":"▶","Posts":"▤","People":"◉","Movies & Series":"▣","Qur’an":"۞",
   "Comments":"◌","Lessons":"✦","Prayer":"☾","Live":"●","Qibla":"✧"
@@ -56,6 +57,23 @@ function ResultRail({title,subtitle,items,category}:{title:string;subtitle:strin
   </section>;
 }
 
+function DirectoryResultList({items}:{items:DiscoverItem[]}){
+ if(!items.length)return null;
+ return <section className="dsOrganicDirectory" aria-label="Best 1Muslim matches">
+   <div className="dsOrganicHeader"><span className="dsSectionKicker">FROM 1MUSLIM</span><h2>Results from your Ummah</h2></div>
+   <div className="dsOrganicResults">{items.map(item=><article className="dsOrganicResult" key={item.kind+":"+item.id}>
+     <Link href={item.href} className="dsOrganicLink">
+       <span className="dsOrganicSourceIcon" aria-hidden="true">{item.kind==="People"?"◉":item.kind==="Qur’an"?"۞":"1M"}</span>
+       <span className="dsOrganicIdentity"><strong>1Muslim · {item.kind}</strong><small>{item.byline||"1Muslim community"}</small></span>
+     </Link>
+     <div className="dsOrganicBody">
+       <div className="dsOrganicCopy"><h3><Link href={item.href}>{item.title}</Link></h3>
+         {item.description&&<p>{item.description}</p>}</div>
+       {item.image&&<Link href={item.href} className="dsOrganicThumbnail" aria-label={"View "+item.title}><img src={item.image} alt="" loading="lazy"/></Link>}
+     </div>
+   </article>)}</div>
+ </section>;
+}
 export default function SearchHub() {
   const router=useRouter();
   const [query,setQuery]=useState("");
@@ -82,6 +100,9 @@ export default function SearchHub() {
   const [hudhudDocked,setHudhudDocked]=useState(false);
   const [signoutConfirm,setSignoutConfirm]=useState(false);
   const [signoutBusy,setSignoutBusy]=useState(false);
+  const [resultsNight,setResultsNight]=useState(true);
+  useEffect(()=>{try{const saved=localStorage.getItem("1muslim:search-results-theme");if(saved==="day"||saved==="night")setResultsNight(saved==="night");}catch{}},[]);
+  const toggleResultsTheme=()=>setResultsNight(old=>{try{localStorage.setItem("1muslim:search-results-theme",old?"day":"night");}catch{}return !old;});
 
   useEffect(()=>{
     // HudHud is not interactive during its brief entry animation.
@@ -197,8 +218,9 @@ export default function SearchHub() {
     }finally{setSignoutBusy(false);}
   };
   const homeMode=!query.trim();
-  return <main className={"dsPage "+(homeMode?"dsHomeMode":"dsResultsMode")}>
+  return <main className={"dsPage "+(homeMode?"dsHomeMode":"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))}>
     <nav className="dsHomeUtilities" aria-label="Account shortcuts">
+      {!homeMode&&<button type="button" className="dsUtilityButton dsResultsThemeToggle" onClick={toggleResultsTheme} aria-label={resultsNight?"Switch search results to light mode":"Switch search results to dark mode"} title={resultsNight?"Light appearance":"Dark appearance"} aria-pressed={resultsNight}><span aria-hidden="true">{resultsNight?"☼":"◐"}</span></button>}
       <Link href="/settings" aria-label="Settings" title="Settings" className="dsUtilityButton">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.6 2.4 1.6.9 2.4-.7 2 3.5-1.8 1.7v1.9l1.8 1.7-2 3.5-2.4-.7-1.6.9L14 20h-4l-.6-2.4-1.6-.9-2.4.7-2-3.5 1.8-1.7v-1.9L3.4 8.6l2-3.5 2.4.7 1.6-.9L10 2Z"/></svg>
       </Link>
@@ -271,13 +293,11 @@ export default function SearchHub() {
       {!homeMode&&loading&&showDirectory&&<div className="dsLoading" role="status"><span className="dsLoadingLine"/><span>Searching the 1Muslim directory…</span><div className="dsSkeletonRow"><i/><i/><i/></div></div>}
       {!homeMode&&showDirectory&&error&&<div className="dsError" role="alert">{error}<button onClick={()=>setQuery(s=>s+" ")}>Try again</button></div>}
       {!homeMode&&!loading&&!error&&result&&showDirectory&&<>
-        {(query.trim().length>=2||submitted)&&<section className="dsResultIntro"><span className="dsSectionKicker">LIVE DIRECTORY RESULTS</span>
-          <h1>{result.total>0?<>Search results for <em>“{query}”</em></>:"No exact matches yet"}</h1>
-          <p>{result.total} matching results across {CATEGORIES.filter(c=>totalFor(c)>0).length} categories
-            {result.partial?" · Some sources are temporarily unavailable":""}</p>
-          <button className="dsSearchWithHud" type="button" onClick={()=>void openHudHud()}>✦ Need help finding it? Ask HudHud <span>→</span></button>
+        {(query.trim().length>=2||submitted)&&<section className="dsResultIntro">
+          <span className="dsResultStats">{result.total} results on 1Muslim · {CATEGORIES.filter(c=>totalFor(c)>0).length} categories{result.partial?" · Some sources temporarily unavailable":""}</span>
+          <button className="dsSearchWithHud" type="button" onClick={()=>void openHudHud()}>✦ Ask HudHud about these results <span>→</span></button>
         </section>}
-        {tab==="All"&&topMatches.length>0&&query.trim()&&<ResultRail title="Best matches" subtitle="Closest matches across the entire site, ranked by relevance." items={topMatches.slice(0,10)} />}
+        {tab==="All"&&topMatches.length>0&&query.trim()&&<DirectoryResultList items={topMatches.slice(0,7)} />}
         {visibleCategories.map(category=><ResultRail key={category} category={category} title={category==="Movies & Series"?"Movies, shows & series":category==="Qur’an"?"Qur’an verses & chapters":category}
           subtitle={category==="Comments"?"Conversations happening in Ummah posts.":category==="People"?"Members and creators you can connect with.":category==="Qur’an"?"Verified verse references and English translation search.":"Explore related "+category.toLowerCase()+" on 1Muslim."}
           items={result.groups[category]||[]} />)}

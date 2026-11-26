@@ -22,11 +22,13 @@ export default function WebSearchPanel({query,mode="All"}:{query:string;mode?:Gl
   const [summaryBusy,setSummaryBusy]=useState(false);
   const [summaryError,setSummaryError]=useState("");
   const lastSummaryQuery=useRef("");
+  const summaryRequestId=useRef(0);
+  const [overviewExpanded,setOverviewExpanded]=useState(false);
   const isImages=mode==="Images";
   const vertical=mode==="News"?"news":mode==="Videos"?"video":mode==="Web"||mode==="AI Overview"?"web":"all";
 
   useEffect(()=>{
-    setSummary(null);setSummaryError("");lastSummaryQuery.current="";
+    summaryRequestId.current+=1;setSummary(null);setSummaryError("");setOverviewExpanded(false);lastSummaryQuery.current="";
   },[query]);
   useEffect(()=>{
     if(query.trim().length<2||isImages){setData(null);return;}
@@ -52,35 +54,40 @@ export default function WebSearchPanel({query,mode="All"}:{query:string;mode?:Gl
   },[query,isImages]);
 
   const summarize=useCallback(async()=>{
-    setSummaryBusy(true);setSummaryError("");setSummary(null);
+    const requestId=++summaryRequestId.current;
+    setSummaryBusy(true);setSummaryError("");setSummary(null);setOverviewExpanded(false);
     try{
       const response=await fetch("/api/web-search/summary",{
         method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query}),cache:"no-store"
       });
       const json=await response.json();
       if(!response.ok)throw Error(json?.error||"AI overview unavailable");
-      setSummary(json as SummaryData);
-    }catch(reason){setSummaryError(reason instanceof Error?reason.message:"AI overview unavailable");}
-    finally{setSummaryBusy(false);}
+      if(summaryRequestId.current===requestId)setSummary(json as SummaryData);
+    }catch(reason){
+      if(summaryRequestId.current===requestId)setSummaryError(reason instanceof Error?reason.message:"AI overview unavailable");
+    }finally{if(summaryRequestId.current===requestId)setSummaryBusy(false);}
   },[query]);
   useEffect(()=>{
-    if(mode!=="AI Overview"||!data?.total||lastSummaryQuery.current===query)return;
+    // Search engines place the overview above results. Run once per COMMITTED query
+    // only when real web sources have loaded, not for every search-box keystroke.
+    if((mode!=="All"&&mode!=="AI Overview")||!data?.total||
+       data.query.trim().toLowerCase()!==query.trim().toLowerCase()||
+       lastSummaryQuery.current===query)return;
     lastSummaryQuery.current=query;void summarize();
   },[mode,data,query,summarize]);
 
   if(query.trim().length<2)return null;
   const results=data?.results||[];
-  const loading=busy||(mode==="AI Overview"&&summaryBusy);
+  const overviewVisible=mode==="All"||mode==="AI Overview";
+  const relatedVideos=mode==="All"?results.filter(item=>item.kind==="video"&&item.thumbnailUrl).slice(0,3):[];
+  const overviewThumbnail=results.find(item=>item.kind==="video"&&item.thumbnailUrl)?.thumbnailUrl;
+  const regularResults=mode==="All"&&relatedVideos.length?
+    results.filter(item=>!relatedVideos.some(video=>video.url===item.url)):results;
   return <section className={styles.section} aria-label={titles[mode]}>
-    <div className={styles.heading}>
-      <div><span className={styles.eyebrow}>1MUSLIM SEARCH · THE OPEN WEB</span><h2>{titles[mode]}</h2>
-      <p>{mode==="AI Overview"?"AI-generated answers linked to public search sources.":isImages?"Browse images from around the world with strict SafeSearch.":"Find worldwide information alongside the entire 1Muslim community."}</p></div>
-      <span className={styles.provider}>Results by Brave Search</span>
-    </div>
-    {loading&&<div className={styles.status} role="status">{isImages?"Finding images…":mode==="AI Overview"?"Preparing your overview…":"Searching the worldwide web…"}</div>}
-    {error&&<div className={styles.warning} role="status"><strong>Global search not ready</strong><p>{error}</p><small>You can still search the 1Muslim directory below.</small></div>}
+    {busy&&<div className={styles.status} role="status">{isImages?"Finding images…":"Searching the web…"}</div>}
+    {error&&<div className={styles.warning} role="status"><strong>Web results temporarily unavailable</strong><p>{error}</p><small>1Muslim community results remain available below.</small></div>}
     {isImages ? (images&&<div>
-      <p className={styles.resultCount}>{images.total} image previews · Tap an image to visit its original web page.</p>
+      <div className={styles.metaLine}><span>{images.total} image results</span><span>Brave Search · SafeSearch on</span></div>
       <div className={styles.imageGrid}>
         {images.results.map((item,index)=><a key={item.imageUrl+"|"+index} href={item.pageUrl} target="_blank" rel="noopener noreferrer" className={styles.imageCard} aria-label={"View source for "+item.title}>
           <span className={styles.imageCanvas}><img src={item.thumbnailUrl} alt={item.title} loading="lazy" referrerPolicy="no-referrer"/></span>
@@ -89,19 +96,40 @@ export default function WebSearchPanel({query,mode="All"}:{query:string;mode?:Gl
       </div>
       {images.total===0&&<p className={styles.empty}>No safe images were found for this query.</p>}
     </div>) : (data&&<div>
-      {mode==="AI Overview"||mode==="All"||mode==="Web" ? <div className={styles.summaryAction}>
-        {mode!=="AI Overview"&&<button type="button" disabled={summaryBusy||!data.total} onClick={()=>void summarize()}>{summaryBusy?"Reviewing sources…":"✦ Get HudHud AI Overview"}</button>}
-        <small>Source-grounded · Verify important information</small>
-      </div> : <p className={styles.resultCount}>{data.total} {mode.toLowerCase()} results</p>}
-      {summaryError&&<p className={styles.warning} role="alert">{summaryError}</p>}
-      {summary&&<aside className={styles.summary} aria-label="AI overview">
-        <div className={styles.summaryTitle}>✦ HudHud AI Overview <span>Based on linked web excerpts</span></div>
-        <p>{summary.summary}</p>
-        <div className={styles.citations}>{summary.sources.map(item=><a href={item.url} key={item.number} target="_blank" rel="noopener noreferrer">[{item.number}] {item.title}</a>)}</div>
-      </aside>}
-      <div className={styles.results} aria-label="Worldwide results">
-        {mode!=="AI Overview"&&results.map(item=><article className={styles.result} key={item.kind+item.url}>
-          <div className={styles.site}><span className={styles.globe}>{item.kind==="video"?"▶":item.kind==="news"?"◷":"◉"}</span>
+      <div className={styles.metaLine}>
+        <span>{data.total} {data.total===1?"result":"results"} from the open web</span>
+        <span>Powered by {data.provider||"Brave Search"}</span>
+      </div>
+      {overviewVisible&&<section className={styles.overview} aria-label="HudHud AI Overview">
+        <div className={styles.overviewHeading}>
+          <span className={styles.aiSpark} aria-hidden="true">✦</span>
+          <h2>HudHud AI Overview</h2>
+          <span className={styles.aiCaption}>Based on web sources</span>
+        </div>
+        {summaryBusy&&<div className={styles.overviewLoading} role="status"><span>Reading sources and preparing an overview…</span><i/><i/><i/></div>}
+        {summary&&<div className={styles.overviewBody}>
+          {overviewThumbnail&&<div className={styles.overviewImage}><img src={overviewThumbnail} alt="" loading="lazy" referrerPolicy="no-referrer"/></div>}
+          <div className={overviewExpanded?styles.overviewTextExpanded:styles.overviewTextPreview}><p>{summary.summary}</p></div>
+          {(overviewExpanded||summary.summary.length<=200)&&<div className={styles.citations} aria-label="Sources for this AI overview">
+            {summary.sources.map(item=><a href={item.url} key={item.number} target="_blank" rel="noopener noreferrer">[{item.number}] {item.title}</a>)}
+          </div>}
+          {summary.summary.length>200&&<button type="button" className={styles.showMore} onClick={()=>setOverviewExpanded(open=>!open)} aria-expanded={overviewExpanded}>{overviewExpanded?"Show less":"Show more"} <span aria-hidden="true">{overviewExpanded?"⌃":"⌄"}</span></button>}
+          <small className={styles.overviewNote}>AI may make mistakes. Check the linked sources.</small>
+        </div>}
+        {!summaryBusy&&summaryError&&<div className={styles.overviewUnavailable}>
+          <p>HudHud AI Overview isn’t available for this search.</p>
+          {mode==="AI Overview"&&<button type="button" onClick={()=>void summarize()}>Retry overview</button>}
+        </div>}
+      </section>}
+      {mode==="All"&&relatedVideos.length>0&&<section className={styles.videoGroup} aria-label="Videos from the web">
+        <h2>Videos</h2><div className={styles.videoGroupRail}>{relatedVideos.map(item=><a key={item.url} href={item.url} target="_blank" rel="noopener noreferrer" className={styles.videoGroupCard}>
+          <span className={styles.videoGroupThumbnail}><img src={item.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer"/><b aria-hidden="true">▶</b></span>
+          <strong>{item.title}</strong><small>{item.source}</small>
+        </a>)}</div>
+      </section>}
+      {mode!=="AI Overview"&&<div className={styles.results} aria-label="Worldwide results">
+        {regularResults.map(item=><article className={styles.result} key={item.kind+item.url}>
+          <div className={styles.site}><span className={styles.globe} aria-hidden="true">{item.kind==="video"?"▶":item.kind==="news"?"◷":"◉"}</span>
             <span>{item.source}<small>{item.url.length>100?item.url.slice(0,100)+"…":item.url}</small></span>{item.kind!=="web"&&<b>{item.kind}</b>}</div>
           {item.kind==="video"&&item.thumbnailUrl&&<a className={styles.videoThumbnail} href={item.url} target="_blank" rel="noopener noreferrer" aria-label={"Play "+item.title}>
             <img src={item.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer"/><span aria-hidden="true">▶</span>
@@ -110,8 +138,8 @@ export default function WebSearchPanel({query,mode="All"}:{query:string;mode?:Gl
           {item.description&&<p>{item.description}</p>}
           {item.publishedAt&&<small className={styles.age}>{item.publishedAt}</small>}
         </article>)}
-        {!results.length&&mode!=="AI Overview"&&<p className={styles.empty}>No results were found. Try a different query.</p>}
-      </div>
+        {!results.length&&<p className={styles.empty}>No results were found. Try a different query.</p>}
+      </div>}
     </div>)}
   </section>;
 }

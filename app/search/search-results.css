@@ -1,0 +1,111 @@
+/* Reference-inspired search results, intentionally scoped: guest Search Home stays unchanged. */
+.dsPage.dsResultsMode{--ds-results-link:#1a63ba;--ds-results-muted:#667582;background:#fff;min-height:100dvh;color:#242d35;padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+.dsResultsMode .dsHomeUtilities{background:transparent}
+.dsResultsMode .dsHeader{border-bottom:1px solid #eef0f3;box-shadow:none;background:#fff}
+.dsResultsMode .dsHeaderRow{max-width:1050px;padding:15px 20px 12px;gap:10px}
+.dsResultsMode .dsSearchForm{min-height:53px;background:#f2f3f5;border:1px solid #e7ebef;border-radius:999px;padding:0 17px;box-shadow:none}
+.dsResultsMode .dsSearchForm input{min-height:50px;font-size:17px}
+.dsResultsMode .dsSearchSubmit{font-size:14px;font-weight:650;color:#45565f}
+.dsResultsMode .dsBack{color:#35464b!important}
+.dsResultsMode .dsClear{background:#dce1e5}
+.dsResultsMode .dsCategoryBar{max-width:1050px;margin:0 auto;display:flex;align-items:stretch;justify-content:space-between;gap:8px;border-top:0}
+.dsResultsMode .dsTabs{flex:1;max-width:100%;margin:0;min-width:0;padding:0 17px;gap:6px}
+.dsResultsMode .dsTabs button{font-size:13px;font-weight:560;min-height:51px;padding:0 13px;color:#6e7780;border-bottom-width:3px}
+.dsResultsMode .dsTabs button.active{color:#354a60;border-bottom-color:#7396c7}
+.dsResultsMode .dsCategoryBar .dsHudTab{flex:0 0 auto;margin-left:0}
+.dsResultsMode .dsContent{width:min(1020px,100%);padding:0 24px 50px}
+.dsResultsMode .dsResultIntro{max-width:740px;display:flex;align-items:center;flex-wrap:wrap;gap:15px;padding:17px 0 15px;margin:8px 0 15px;border-top:1px solid #e9ecef;border-bottom:0}
+.dsResultsMode .dsResultStats{font-size:12px;color:#7d8791}
+.dsResultsMode .dsSearchWithHud{padding:8px 12px;border:0;background:#eff5fa;border-radius:999px;font-size:12px;color:#3e6377;box-shadow:none}
+.dsResultsMode .dsSectionKicker{font-size:10px;letter-spacing:.08em}
+.dsOrganicDirectory{max-width:765px;margin:16px 0 35px}
+.dsOrganicHeader{margin:12px 0 17px}
+.dsOrganicHeader h2{font-size:19px;font-weight:650;letter-spacing:-.024em;color:#273a43;margin:6px 0 0}
+.dsOrganicResults{display:grid;gap:23px}
+.dsOrganicResult{padding:0;overflow-wrap:anywhere}
+.dsOrganicLink{display:flex!important;align-items:center;gap:11px;text-decoration:none!important;color:inherit}
+.dsOrganicSourceIcon{flex:0 0 35px;width:35px;height:35px;border-radius:50%;background:#dfe9e5;color:#2c6b55;display:grid;place-items:center;font-weight:760;font-size:11px}
+.dsOrganicIdentity{min-width:0;display:flex;flex-direction:column;gap:3px}
+.dsOrganicIdentity strong{font-size:13px;font-weight:650;line-height:1.2}
+.dsOrganicIdentity small{font-size:11px;color:#75818d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dsOrganicBody{display:flex;align-items:flex-start;gap:12px}
+.dsOrganicCopy{flex:1;min-width:0}
+.dsOrganicCopy h3{font-weight:530;font-size:20px;line-height:1.36;margin:7px 0 4px}
+.dsOrganicCopy h3 a{color:#1a63ba;text-decoration:none}
+.dsOrganicCopy h3 a:hover{text-decoration:underline}
+.dsOrganicCopy p{font-size:14px;color:#53636b;line-height:1.56;margin:4px 0 0;overflow-wrap:anywhere}
+.dsOrganicThumbnail{flex:0 0 98px;width:98px;height:84px;margin-top:8px;border-radius:12px;overflow:hidden;background:#e5e8eb}
+.dsOrganicThumbnail img{width:100%;height:100%;object-fit:cover}
+.dsResultsMode .dsRailSection{margin:28px 0 12px;max-width:900px}
+.dsResultsMode .dsRailSection .dsSectionHead{margin-bottom:13px}
+.dsResultsMode .dsCard{border:1px solid #e7e9ec;box-shadow:none}
+.dsResultsMode .dsCardBody{min-height:118px}
+.dsResultsMode .dsCard:hover{box-shadow:0 6px 20px #071a281a}
+.dsResultsMode .dsSuggestions{color:#223d3e;background:#fff}
+.dsResultsMode.dsResultsNight{background:#202124!important;color:#e8eaed;--ds-results-link:#a9c7ff;--ds-results-muted:#9aa0a6}
+.dsResultsNight .dsHeader{background:#202124!important;border-bottom-color:#44474f!important;color:#e8eaed!important}
+.dsResultsNight .dsHomeUtilities .dsUtilityButton{border:1px solid #44474f;background:#292b30;color:#e8eaed!important;box-shadow:none}
+.dsResultsNight .dsHomeUtilities .dsUtilityButton:hover{background:#3a3c44}
+.dsResultsNight .dsSearchForm{background:#4b4e55!important;border:1px solid transparent!important;color:#f1f3f4!important}
+.dsResultsNight .dsSearchForm input{color:#f1f3f4!important}
+.dsResultsNight .dsSearchForm input::placeholder{color:#d2d6df!important}
+.dsResultsNight .dsSearchForm>span{color:#d1d4df!important}
+.dsResultsNight .dsSearchForm:focus-within{box-shadow:0 0 0 2px #8fa8db6b!important}
+.dsResultsNight .dsClear{background:#777b82;color:#f2f3f5}
+.dsResultsNight .dsSearchSubmit,.dsResultsNight .dsBack{color:#e8eaed!important}
+.dsResultsNight .dsTabs button{color:#b8bcc7!important}
+.dsResultsNight .dsTabs button.active{color:#f1f3f4!important;border-bottom-color:#c1cce0!important}
+.dsResultsNight .dsCategoryBar .dsHudTab{color:#e1f1ee!important}
+.dsResultsNight .dsResultIntro{border-top-color:#44464e!important}
+.dsResultsNight .dsResultStats{color:#a3a9b3}
+.dsResultsNight .dsSearchWithHud{background:#303b42!important;color:#d0e9de!important;border:1px solid #45535a!important}
+.dsResultsNight .dsOrganicHeader h2{color:#e8eaed}
+.dsResultsNight .dsOrganicSourceIcon{background:#344440;color:#c1f2d2}
+.dsResultsNight .dsOrganicIdentity small{color:#a9aeb9}
+.dsResultsNight .dsOrganicCopy h3 a{color:#a9c7ff}
+.dsResultsNight .dsOrganicCopy p{color:#bdc1c6}
+.dsResultsNight .dsOrganicThumbnail{background:#333841}
+.dsResultsNight .dsRailSection{border-bottom-color:#44474d}
+.dsResultsNight .dsSectionHead h2,.dsResultsNight .dsSectionHead p{color:#e8eaed}
+.dsResultsNight .dsSectionKicker{color:#c4a66b}
+.dsResultsNight .dsCard{background:#2b2d32!important;border-color:#43464e!important;color:#e8eaed!important}
+.dsResultsNight .dsCardBody strong{color:#e8eaed}
+.dsResultsNight .dsCardBody p,.dsResultsNight .dsCardEnd{color:#aab2b8}
+.dsResultsNight .dsSuggestions{background:#292b30;color:#e8eaed;border-color:#40434b}
+.dsResultsNight .dsSuggestions>button{color:#edf0f4;border-color:#41444b}
+.dsResultsNight .dsSuggestIcon{background:#3d4249;color:#b9c6d6}
+.dsResultsNight .dsLoading,.dsResultsNight .dsNoResults{color:#c0c4c8}
+.dsResultsNight .dsNoResults h2,.dsResultsNight .dsNoResults p{color:#d9dce1}
+.dsResultsNight .dsError{background:#322a2a;color:#f7b6ac;border-color:#654747}
+.dsResultsNight .dsError button{background:#4a3535;color:#fff}
+.dsResultsNight .dsRailArrows button{background:#35373e;color:#e5e7eb;border-color:#555962}
+.dsResultsNight .dsResultIntro h1{color:#f0f0f0}
+.dsResultsNight .dsResultIntro p{color:#aab3bd}
+.dsResultsNight .dsSearchWithHud span{color:inherit}
+.dsResultsNight .dsCardTags span{color:#d0bc95}
+.dsResultsNight .dsCardTags em{background:#364639;color:#a5dbba}
+.dsResultsNight .dsCardEnd span:last-child{color:#a5d1be}
+.dsResultsNight .dsPersonAvatar{border-color:#526b62}
+@media(max-width:767px){
+ .dsResultsMode .dsHomeUtilities{padding:calc(6px + env(safe-area-inset-top,0px)) 14px 6px}
+ .dsResultsMode .dsUtilityButton{width:39px;height:39px;flex-basis:39px}
+ .dsResultsMode .dsHeaderRow{padding:9px 10px;gap:6px}
+ .dsResultsMode .dsBack{width:26px;font-size:30px}
+ .dsResultsMode .dsSearchForm{padding:0 12px;gap:7px;min-height:49px}
+ .dsResultsMode .dsSearchForm input{font-size:16px;min-height:47px}
+ .dsResultsMode .dsSearchSubmit{font-size:13px;padding:5px}
+ .dsResultsMode .dsTabs{padding:0 11px;gap:3px}
+ .dsResultsMode .dsTabs button{min-height:45px;font-size:12px;padding:0 9px}
+ .dsResultsMode .dsContent{padding:0 15px 42px}
+ .dsResultsMode .dsResultIntro{gap:11px;padding:13px 0;margin:6px 0 16px}
+ .dsResultsMode .dsOrganicCopy h3{font-size:18px}
+ .dsResultsMode .dsOrganicCopy p{font-size:13px}
+ .dsResultsMode .dsOrganicThumbnail{flex-basis:78px;width:78px;height:72px}
+ .dsResultsMode .dsRail>div{flex-basis:min(65vw,230px)}
+}
+@media(max-width:380px){
+ .dsResultsMode .dsSearchSubmit{font-size:12px}
+ .dsResultsMode .dsHeaderRow{gap:3px}
+ .dsResultsMode .dsSearchForm input{font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){.dsResultsMode .dsCard{transition:none}}
