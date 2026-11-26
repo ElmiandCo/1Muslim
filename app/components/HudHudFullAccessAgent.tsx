@@ -61,6 +61,7 @@ export default function HudHudFullAccessAgent(){
  const restartTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const highlightTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const pending=useRef<{kind:"legacy"|"ummah";id:string}|null>(null);
+ const conversation=useRef<Array<{role:"user"|"assistant";content:string}>>([]);
  const handling=useRef<(text:string)=>void>(()=>{});
  const startRef=useRef<()=>void>(()=>{});
  const speechChoice=useRef({readAloud:false,voiceURI:"",rate:1});
@@ -233,10 +234,12 @@ export default function HudHudFullAccessAgent(){
     const context="Current 1Muslim page: "+hudhudScreenLabel(pathRef.current)+". Visible section headings: "+pageHeadings().join(", ")+".";
     try{
      const response=await fetch("/api/discover/ask",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({query:"",message:action.text+"\n\nUser-provided browsing context: "+context,history:[]})});
+      body:JSON.stringify({query:"",message:action.text+"\n\nUser-provided browsing context: "+context,history:conversation.current.slice(-6)})});
      const data=await response.json();
      if(!response.ok)throw Error(String(data?.error||"HudHud could not answer."));
-     announce(String(data.reply||"No answer was returned.").slice(0,1300),true);
+     const responseText=String(data.reply||"No answer was returned.").slice(0,1300);
+     conversation.current=[...conversation.current,{role:"user",content:action.text},{role:"assistant",content:responseText}].slice(-12);
+     announce(responseText,true);
     }catch(e){announce(e instanceof Error?e.message:"HudHud could not answer.",true)}
     break;
    }
