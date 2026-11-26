@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import test from "node:test";
+import {parseHudHudCommand,hudhudDeleteTarget,hudhudScreenLabel} from "../app/lib/hudhud-agent-actions.ts";
 
 const read = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
 
@@ -95,4 +96,59 @@ test("results header reuses the animated One Muslim.live brand at the top left",
   assert.match(resultCss,/\.dsResultsMode \.dsHomeUtilities \.dsResultsBrand/);
   assert.match(resultCss,/\.dsResultsNight \.dsHomeUtilities \.dsResultsBrand/);
   assert.match(resultCss,/@media\(max-width:370px\)/);
+});
+
+
+test("HudHud Full Access is opt-in and persists across page navigations without taking hidden mic permission",()=>{
+ const page=read("app/hudhud/page.tsx");
+ const layout=read("app/layout.tsx");
+ const global=read("app/components/HudHudFullAccessAgent.tsx");
+ const panel=read("app/hudhud/HudHudSettingsPanel.tsx");
+ assert.match(layout,/<HudHudFullAccessAgent \/>/);
+ assert.match(page,/setFullAccess\(localStorage\.getItem/);
+ assert.match(panel,/HudHud Full Access/);
+ assert.match(global,/setEnabled\(localStorage\.getItem\(ACCESS_KEY\)==="on"\)/);
+ assert.match(global,/Tap to resume/);
+ assert.match(global,/document\.hidden/);
+ assert.match(global,/rec\.abort\(\)/);
+ assert.match(global,/onClick=\{\(\)=>listening\?stop\(\):activate\(\)\}/);
+ assert.match(global,/Turn off HudHud Full Access/);
+});
+
+test("HudHud Full Access voice grammar rejects arbitrary navigation and requires two-step deletion",()=>{
+ assert.deepEqual(parseHudHudCommand("HudHud open Quran"),{kind:"navigate",path:"/quran-library",label:"Qur’an"});
+ assert.deepEqual(parseHudHudCommand("scroll down"),{kind:"scroll",direction:"down"});
+ assert.deepEqual(parseHudHudCommand("select Videos tab"),{kind:"tab",label:"videos"});
+ assert.deepEqual(parseHudHudCommand("find comments"),{kind:"find",label:"comments"});
+ assert.deepEqual(parseHudHudCommand("what page am I on"),{kind:"describe"});
+ assert.deepEqual(parseHudHudCommand("delete this post"),{kind:"delete"});
+ assert.deepEqual(parseHudHudCommand("go to https://example.com"),{kind:"find",label:"https://example.com"});
+ assert.deepEqual(parseHudHudCommand("turn off full access"),{kind:"disable"});
+ assert.equal(hudhudDeleteTarget("/profile"),null);
+ const id="12345678-1234-4123-8123-123456789abc";
+ assert.deepEqual(hudhudDeleteTarget("/posts/"+id),{kind:"legacy",id});
+ assert.deepEqual(hudhudDeleteTarget("/posts/story/"+id),{kind:"ummah",id});
+ assert.equal(hudhudScreenLabel("/messages"),"Messages");
+ const global=read("app/components/HudHudFullAccessAgent.tsx");
+ assert.match(global,/confirm delete/);
+ assert.match(global,/pending\.current/);
+ assert.match(global,/api\/moderation/);
+ assert.match(global,/api\/community-posts/);
+ assert.match(global,/SpeechSynthesisUtterance/);
+});
+
+test("HudHud shows a concise professional settings panel and timed red highlighter",()=>{
+ const panel=read("app/hudhud/HudHudSettingsPanel.tsx");
+ const css=read("app/hudhud/hudhud.css");
+ const overlay=read("app/components/HudHudFullAccessAgent.css");
+ assert.match(panel,/Preferred voice/);
+ assert.match(panel,/Speaking pace/);
+ assert.match(panel,/Clear learned navigation/);
+ assert.match(panel,/Remember my navigation/);
+ assert.match(panel,/speech recognition may be processed by your browser provider/i);
+ assert.match(css,/\.hudPage \.hudSettings/);
+ assert.match(css,/@keyframes hudToDock/);
+ assert.match(overlay,/@keyframes hudAgentTarget/);
+ assert.match(overlay,/1\.85s/);
+ assert.match(overlay,/@media\(prefers-reduced-motion:reduce\)/);
 });
