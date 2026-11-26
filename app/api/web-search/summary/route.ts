@@ -1,23 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import {claimSearchQuota} from "../../../../lib/server/search-api-quota";
 import { normalizeQuery, searchWholeWeb, SearchProviderError } from "../../../../lib/server/one-muslim-web-search";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
-const windows=new Map<string,{count:number;reset:number}>();
 const respond=(body:unknown,status=200)=>NextResponse.json(body,{status,headers:{"Cache-Control":"private, no-store"}});
 export async function POST(req:NextRequest){
-  const identity=req.headers.get("x-real-ip")||req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||"unknown";
-  const now=Date.now();
-  const prior=windows.get(identity);
-  if(!prior||prior.reset<now) {
-    if(windows.size>2000)windows.clear();
-    windows.set(identity,{count:1,reset:now+900_000});
-  } else if(++prior.count>6) return respond({error:"AI summary limit reached. Try again later."},429);
   const body=await req.json().catch(()=>null);
   const query=normalizeQuery(body?.query);
   if(query.length<2)return respond({error:"Enter a search query."},400);
   const apiKey=process.env.OPENAI_API_KEY;
-  if(!apiKey)return respond({error:"AI summaries are not configured. Web links remain available."},503);
+  if(!apiKey||!process.env.BRAVE_SEARCH_API_KEY)return respond({error:"AI Overviews are being connected. Your 1Muslim search still works."},503);
+  const decision=await claimSearchQuota(req,"summary");
+  if(decision!=="allowed")return respond({error:decision==="limited"?"AI summary limit reached. Try again later.":"AI summary temporarily unavailable."},decision==="limited"?429:503);
   try{
     const found=await searchWholeWeb(query);
     const sources=found.results.slice(0,8).map((r,i)=>({number:i+1,title:r.title,url:r.url,description:r.description.slice(0,240)}));
