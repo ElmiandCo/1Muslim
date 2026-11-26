@@ -5,11 +5,10 @@ import Link from "next/link";
 import WebSearchPanel,{type GlobalSearchMode} from "../components/WebSearchPanel";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../utils/supabase/client";
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DiscoverKind, DiscoverItem, DiscoverResponse } from "../lib/discover-search";
 
 type Tab = GlobalSearchMode | DiscoverKind;
-type ChatLine = { role: "user" | "assistant"; content: string; matches?: DiscoverItem[] };
 type SuggestedCreator = { id:string; handle:string; displayName:string; avatarUrl:string|null; postCount:number; href:string };
 const CATEGORIES: DiscoverKind[] = ["Videos","Posts","People","Movies & Series","Qur’an","Comments","Lessons","Prayer","Live","Qibla"];
 const TABS: Tab[] = ["All","AI Overview","Web","Images","Videos","News", ...CATEGORIES.filter(c=>c!=="Videos")];
@@ -85,15 +84,6 @@ export default function SearchHub() {
   const [result,setResult]=useState<DiscoverResponse|null>(null);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState("");
-  const [hudOpen,setHudOpen]=useState(false);
-  const [chat,setChat]=useState<ChatLine[]>([]);
-  const [chatInput,setChatInput]=useState("");
-  const [chatBusy,setChatBusy]=useState(false);
-  const [chatError,setChatError]=useState("");
-  const [remaining,setRemaining]=useState<number|null>(3);
-  const [unlocked,setUnlocked]=useState(false);
-  const [limitReached,setLimitReached]=useState(false);
-  const chatEnd=useRef<HTMLDivElement>(null);
   const searchField=useRef<HTMLInputElement>(null);
   const requestCount=useRef(0);
   const [compactHeader,setCompactHeader]=useState(false);
@@ -149,7 +139,6 @@ export default function SearchHub() {
     },query.trim()?320:25);
     return()=>{controller.abort();window.clearTimeout(timer);};
   },[query]);
-  useEffect(()=>{if(hudOpen)chatEnd.current?.scrollIntoView({behavior:"smooth",block:"end"});},[chat,hudOpen,chatBusy]);
 
   const commit=(value:string)=>{
     const clean=value.trim().slice(0,90);if(!clean)return;
@@ -171,38 +160,9 @@ export default function SearchHub() {
   const showGlobal=tab==="All"||tab==="Web"||tab==="Images"||tab==="Videos"||tab==="News"||tab==="AI Overview";
   const totalFor=(name:DiscoverKind)=>(result?.groups?.[name]||[]).length;
 
-  const openHudHud=async()=>{
-    setHudOpen(true);setChatError("");
-    try {
-      const response=await fetch("/api/discover/ask",{cache:"no-store"});
-      const data=await response.json();
-      if(!response.ok)throw new Error(data.error||"Could not check HudHud availability.");
-      setRemaining(typeof data.remaining==="number"?data.remaining:null);
-      setUnlocked(Boolean(data.unlocked));setLimitReached(data.remaining===0);
-    } catch(e){setChatError(e instanceof Error?e.message:"HudHud is unavailable");}
-  };
-  const ask=async(e:FormEvent)=>{
-    e.preventDefault();
-    const message=chatInput.trim();if(!message||chatBusy||limitReached)return;
-    const history=chat.map(x=>({role:x.role,content:x.content})).slice(-6);
-    setChat(previous=>[...previous,{role:"user",content:message}]);
-    setChatInput("");setChatBusy(true);setChatError("");
-    try{
-      const response=await fetch("/api/discover/ask",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({query:submitted||query,message,history})
-      });
-      const data=await response.json();
-      if(data.limitReached&&(!response.ok||data.remaining===0)){setLimitReached(true);setRemaining(0);}
-      if(!response.ok)throw new Error(data.error||"HudHud could not reply.");
-      setChat(previous=>[...previous,{role:"assistant",content:data.reply,matches:data.matches||[]}]);
-      if(typeof data.remaining==="number")setRemaining(data.remaining);
-      if(data.unlocked)setUnlocked(true);
-    }catch(e){
-      // Failed requests do not count as completed turns; keep the draft for retry.
-      setChat(previous=>previous.slice(0,-1));setChatInput(message);
-      setChatError(e instanceof Error?e.message:"Could not ask HudHud");
-    }finally{setChatBusy(false);}
+  const openHudHud=()=>{
+    const context=(submitted||query).trim().slice(0,90);
+    router.push("/hudhud"+(context?"?q="+encodeURIComponent(context):""));
   };
   const signOut=async()=>{
     if(signoutBusy)return;
@@ -321,37 +281,6 @@ export default function SearchHub() {
       </div>
     </div>}
 
-    {hudOpen&&<div className="dsChatOverlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setHudOpen(false)}}>
-      <aside className="dsChat" role="dialog" aria-modal="true" aria-labelledby="dsChatHeading">
-        <div className="dsChatTop"><div className="dsChatAvatar">✦</div><div><span className="dsSectionKicker">1MUSLIM SEARCH COMPANION</span><h2 id="dsChatHeading">Ask HudHud <span>◉</span></h2></div>
-          <button className="dsChatClose" aria-label="Close HudHud" type="button" onClick={()=>setHudOpen(false)}>×</button></div>
-        <div className="dsChatScroll">
-          <div className="dsChatWelcome"><strong>Assalamu alaikum. I'm HudHud.</strong><p>I'll sweep 1Muslim for relevant matches, then help you narrow down what you're looking for. What should we find?</p></div>
-          {(result?.best.length||0)>0&&chat.length===0&&<div className="dsChatFound"><span>FOUND ON 1MUSLIM</span>
-            {result?.best.slice(0,4).map(item=><Link key={item.kind+item.id} href={item.href} onClick={()=>setHudOpen(false)}><b>{ICON[item.kind]}</b><span>{short(item.title,58)}<small>{item.kind}</small></span><i>↗</i></Link>)}
-          </div>}
-          {chat.map((line,index)=><div className={"dsChatLine "+(line.role==="user"?"dsChatMine":"dsChatTheirs")} key={index}>
-            <div className="dsChatBubble">{line.content}</div>
-            {line.matches&&line.matches.length>0&&<div className="dsChatMatchLinks">{line.matches.slice(0,4).map(item=><Link key={item.kind+item.id} href={item.href} onClick={()=>setHudOpen(false)}>
-              <span>{ICON[item.kind]}</span>{short(item.title,43)} <b>↗</b></Link>)}</div>}
-          </div>)}
-          {chatBusy&&<div className="dsChatThinking" role="status">✦ HudHud is reviewing relevant matches<span>···</span></div>}
-          {chatError&&<p className="dsChatError" role="alert">{chatError}</p>}
-          {(remaining===0||limitReached)&&!unlocked&&<div className="dsChatLimit">
-            <span>✦ FREE HUDHUD PREVIEW COMPLETE</span><h3>Your three free replies are used.</h3>
-            <p>Make HudHud yours throughout 1Muslim with Unlocked. Explore, learn, and find your way around the Ummah with more help.</p>
-            <Link href="/unlocked">Discover 1Muslim Unlocked <span>↗</span></Link>
-          </div>}
-          <div ref={chatEnd}/>
-        </div>
-        <div className="dsChatBottom">
-          <p className="dsChatRemaining">{unlocked?"✦ 1Muslim Unlocked · HudHud included":remaining===null?"Checking your free HudHud replies…":remaining+" of 3 free HudHud replies remaining"}</p>
-          <form onSubmit={e=>void ask(e)}><input aria-label="Ask HudHud a question" placeholder={limitReached&&!unlocked?"Continue with 1Muslim Unlocked":"Ask about content, verses, movies…"}
-            value={chatInput} onChange={e=>setChatInput(e.target.value)} maxLength={900} disabled={chatBusy||(limitReached&&!unlocked)}/>
-            <button type="submit" aria-label="Send message" disabled={!chatInput.trim()||chatBusy||(limitReached&&!unlocked)}>↑</button></form>
-          <small>Answers may be imperfect. Verify important information and Qur’an interpretations.</small>
-        </div>
-      </aside>
-    </div>}
+
   </main>;
 }

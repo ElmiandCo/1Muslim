@@ -67,7 +67,9 @@ test("HudHud docks before activation and keeps the existing conversation endpoin
   assert.match(page,/setTimeout\(\(\)=>setHudhudDocked\(true\),1050\)/);
   assert.match(page,/disabled=\{!homeMode\|\|!hudhudDocked\}/);
   assert.match(page,/onClick=\{\(\)=>void openHudHud\(\)\}/);
-  assert.match(page,/\/api\/discover\/ask/);
+  assert.match(page,/router\.push\("\/hudhud"/);
+  const hudhud=read("app/hudhud/page.tsx");
+  assert.match(hudhud,/\/api\/discover\/ask/);
   assert.match(css,/@keyframes dsHudDockIn/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
