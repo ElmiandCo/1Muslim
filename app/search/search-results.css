@@ -109,3 +109,31 @@
  .dsResultsMode .dsSearchForm input{font-size:15px}
 }
 @media(prefers-reduced-motion:reduce){.dsResultsMode .dsCard{transition:none}}
+
+
+/* Search-results header: reuse the exact Home .live pulse animation beside the utilities.
+   Scoped to results so the centered animated Search Home identity stays untouched. */
+.dsResultsMode .dsHomeUtilities .dsResultsBrand{
+  display:inline-flex;align-items:baseline;justify-content:flex-start;gap:0;
+  flex:0 1 auto;min-width:0;margin-right:auto;padding:1px 0;
+  color:#252c32;text-decoration:none;white-space:nowrap;
+  font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-weight:730;font-size:clamp(17px,2.4vw,24px);letter-spacing:-.065em;
+  line-height:1.1;
+}
+.dsResultsMode .dsResultsBrand .dsHomeBrandLive{
+  display:inline-block;flex:0 0 auto;
+  /* Inherit the original dsLivePulse keyframes, duration and reduced-motion rules. */
+  font-size:.43em;letter-spacing:-.045em;
+}
+.dsResultsNight .dsHomeUtilities .dsResultsBrand{color:#f4f5f6}
+.dsResultsDay .dsHomeUtilities .dsResultsBrand{color:#252c32}
+.dsResultsMode .dsResultsBrand:focus-visible{outline:2px solid #789bc6;outline-offset:5px;border-radius:3px}
+@media(max-width:767px){
+  .dsResultsMode .dsHomeUtilities .dsResultsBrand{font-size:clamp(15px,4.5vw,21px)}
+}
+@media(max-width:370px){
+  .dsResultsMode .dsHomeUtilities{padding-inline:10px;gap:4px}
+  .dsResultsMode .dsHomeUtilities .dsUtilityButton{width:35px;height:35px;flex-basis:35px}
+  .dsResultsMode .dsHomeUtilities .dsResultsBrand{font-size:clamp(14px,4.3vw,17px)}
+}
