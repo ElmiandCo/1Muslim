@@ -1,0 +1,86 @@
+
+/* 1Muslim native chat — reference-inspired visuals on the REAL Supabase DM view.
+   Only presentation and existing actions; no fabricated streaks/presence data. */
+.omImessagePage.omMessengerUnified.omNativeConversation{--chat-blue:#2878fa;--chat-paper:#fff;--chat-gray:#f2f3f5;--chat-text:#161b22}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay,
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay .omMessengerShell--chat,
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay .omChatPane,
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay .omMessagesFeed{background:#fff!important;background-image:none!important;color:#15191f!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessengerShell--chat{border:0!important;border-radius:0!important;box-shadow:none!important}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay .omChatHeader{background:#fff!important;background-image:none!important;border-bottom:1px solid #f3f4f6!important;box-shadow:none!important;color:#171b22!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatHeader{display:flex!important;gap:10px!important;align-items:center!important;flex-wrap:nowrap!important;min-height:72px!important;padding:10px 16px!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatIdentity{flex:1;min-width:0!important;display:flex!important;align-items:center;gap:11px}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatIdentityText{min-width:0}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatPeerAvatar{width:49px!important;height:49px!important;border:0!important;box-shadow:none!important;background:#e8ecf2!important;color:#5e6570!important}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay .omChatPeerName{font-family:inherit!important;font-weight:750!important;font-size:16px!important;letter-spacing:-.02em;color:#111827!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatPresence{font:400 12px/1.25 system-ui,sans-serif!important;color:#858993!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatHeader .omBackToChats{width:42px!important;height:44px!important;min-width:42px!important;border:0!important;border-radius:12px!important;box-shadow:none!important;background:transparent!important;color:inherit!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omBackToChats::before{content:none!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatHeader .omThemeToggle,
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatCallActions,
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatHeader>div[style*="display:flex"],
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatHeader .omDmModeControl{display:none!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatMoreMenu{position:relative;flex:0 0 auto;z-index:25;margin-left:auto}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatMoreMenu summary{list-style:none;display:grid;place-items:center;cursor:pointer;width:44px;height:44px;border-radius:16px;color:inherit;font-size:23px;line-height:1;letter-spacing:2px}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatMoreMenu summary::-webkit-details-marker{display:none}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatMoreDropdown{position:absolute;right:0;top:calc(100% + 7px);z-index:30;min-width:180px;max-width:calc(100vw - 30px);padding:6px;background:#fff;color:#1f2937;border:1px solid #e6e9ed;border-radius:16px;box-shadow:0 14px 36px #0f172a26}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatMoreDropdown button{display:block;width:100%;text-align:left;padding:11px 13px;min-height:42px;background:transparent!important;color:inherit!important;box-shadow:none!important;border:0!important;border-radius:10px!important;font-size:13px}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatMoreDropdown button:hover{background:#f2f5fa!important;transform:none!important}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay .omMessagesFeed,
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay .omMessagesFeed.omDmNormalMode,
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay .omMessagesFeed.omDmHudHudMode{background:#fff!important;background-image:none!important;padding:20px clamp(13px,4vw,28px)!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessagesFeed::before,
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessagesFeed::after{display:none!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageRow{margin:13px 0!important;min-height:32px}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageBubble{font:400 15px/1.42 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;padding:12px 16px!important;max-width:min(80%,510px)!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;white-space:pre-wrap}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay .omMessageBubble--mine{background:#2878fa!important;background-image:none!important;color:#fff!important;border:0!important;border-radius:23px 23px 7px 23px!important;box-shadow:none!important}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay .omMessageBubble--theirs{background:#f2f3f5!important;background-image:none!important;color:#111827!important;border:0!important;border-radius:23px 23px 23px 7px!important;box-shadow:none!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageRow--mine>small{margin:3px 2px 0!important;font:400 11px system-ui,sans-serif!important;color:#8b9099}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatTimeDivider{display:block;text-align:center;margin:20px 0 16px;color:#8f949d;font:400 12px/1.4 system-ui,sans-serif;letter-spacing:0}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageSenderAvatar{display:inline-flex;vertical-align:bottom;align-items:center;justify-content:center;margin-right:8px;width:29px;height:29px;background:#e9edf2;border-radius:50%;font:700 10px system-ui,sans-serif;color:#506079;overflow:hidden}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageSenderAvatar img{width:100%;height:100%;object-fit:cover}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatQuickActions{display:flex;align-items:center;gap:14px;flex:0 0 auto;overflow-x:auto;padding:7px 12px 8px;scrollbar-width:none;background:#fff}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatQuickActions::-webkit-scrollbar{display:none}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatQuickEmojis,
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatQuickLinks{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatQuickEmojis button,
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatQuickLinks a{min-width:43px;min-height:39px;padding:7px 11px;border:0;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#f3f4f6;color:#172033;text-decoration:none;font-size:18px;white-space:nowrap}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatQuickLinks{border-left:1px solid #e5e7eb;padding-left:14px}
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatQuickLinks a{font-size:12px;font-weight:650;background:#f3f1fc;color:#493e80}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerDay .omMessageComposer{background:#fff!important;background-image:none!important;border-top:0!important;box-shadow:none!important;gap:6px!important;align-items:center!important;padding:8px 12px max(12px,env(safe-area-inset-bottom,0px))!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omChatCameraButton,
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omChatVoiceButton,
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omComposerExpand,
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omComposerSend{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto;width:40px!important;min-width:40px!important;height:42px!important;border-radius:50%!important;padding:0!important;box-shadow:none!important;border:0!important;background:#f3f4f6!important;color:#141920!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omChatCameraButton{order:1}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer input[aria-label="Message"]{order:2;flex:1 1 0!important;min-width:65px!important;border:0!important;border-radius:999px!important;background:#f3f4f6!important;color:#15191f!important;font-size:16px!important;padding:12px 14px!important;box-shadow:none!important;outline-offset:2px!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omComposerExpand{order:3}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omExpressionRoot{order:4;flex:0 0 auto;align-self:center}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omExpressionTrigger{min-width:40px!important;width:40px!important;height:42px!important;padding:0!important;font-size:22px!important;border:0!important;border-radius:50%!important;background:#f3f4f6!important;color:#111827!important;box-shadow:none!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omChatVoiceButton{order:5}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omComposerSend{order:6;background:#2878fa!important;color:#fff!important}
+.omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer button:focus-visible,
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatMoreMenu summary:focus-visible,
+.omImessagePage.omMessengerUnified.omNativeConversation .omChatQuickActions :focus-visible{outline:3px solid #71afff!important;outline-offset:2px}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerNight .omChatQuickActions{background:#111d23}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerNight .omChatQuickEmojis button{background:#28343b;color:#fff}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerNight .omChatMoreDropdown{background:#15212b;color:#eff6ff;border-color:#374555}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerNight .omChatMoreDropdown button:hover{background:#2b3a46!important}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerNight .omMessageBubble--mine{background:#2878fa!important;color:#fff!important}
+.omImessagePage.omMessengerUnified.omNativeConversation.omMessengerNight .omChatTimeDivider{color:#aeb8c7}
+@media(max-width:700px){
+ .omImessagePage.omMessengerUnified.omNativeConversation:has(.omMessengerShell--chat){background:#fff!important;padding:0!important}
+ .omImessagePage.omMessengerUnified.omNativeConversation.omMessengerNight:has(.omMessengerShell--chat){background:#0c151b!important}
+ .omImessagePage.omMessengerUnified.omNativeConversation>.omMessengerShell.omMessengerShell--chat{height:100dvh!important;min-height:0!important;max-height:100dvh!important;border-radius:0!important}
+ .omImessagePage.omMessengerUnified.omNativeConversation .omMessengerShell--chat .omChatHeader{padding:8px 12px!important}
+ .omImessagePage.omMessengerUnified.omNativeConversation .omMessagesFeed{padding:16px 11px!important}
+ .omImessagePage.omMessengerUnified.omNativeConversation .omMessageBubble{font-size:15px!important;max-width:80%!important}
+ .omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer{gap:4px!important;padding:6px 8px max(10px,env(safe-area-inset-bottom,0px))!important}
+ .omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omChatCameraButton,
+ .omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omChatVoiceButton,
+ .omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omComposerExpand,
+ .omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omComposerSend,
+ .omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer .omExpressionTrigger{width:37px!important;min-width:37px!important;height:40px!important}
+ .omImessagePage.omMessengerUnified.omNativeConversation .omMessageComposer input[aria-label="Message"]{padding:10px 12px!important}
+}
+@media(prefers-reduced-motion:reduce){.omImessagePage.omMessengerUnified.omNativeConversation .omMessageRow{animation:none!important}.omImessagePage.omMessengerUnified.omNativeConversation .omChatPane{animation:none!important}}
