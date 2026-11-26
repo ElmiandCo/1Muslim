@@ -165,3 +165,101 @@
  .hudOrbGlow,.hudOrbCloud,.hudDots{animation:none!important}
  .hudOrbGlow,.hudOrbStage,.hudCircle,.hudMic,.hudEnd{transition:none!important}
 }
+
+
+/* HudHud 2.0 — compact product-grade control center and a genuine mode selector. */
+.hudPage .hudTitleButton{display:flex;align-items:center;justify-content:center;gap:9px;min-height:57px;padding:8px 14px 8px 11px;
+ border:1px solid #e4f1e9;background:linear-gradient(155deg,#fff,#f9fffb);border-radius:25px;
+ box-shadow:0 9px 34px #1f624214,0 2px 7px #0c44200a;cursor:pointer;
+ font-size:inherit;line-height:1;color:#0a4a34;transition:transform .2s,box-shadow .2s}
+.hudPage .hudTitleButton:active{transform:translateX(-50%) scale(.98)}
+.hudBrandOrb{width:27px;height:27px;flex:0 0 27px;border:1px solid #a7e6be;border-radius:50%;
+ background:radial-gradient(ellipse at 75% 68%,#eaffea,transparent 49%),radial-gradient(circle at 24% 12%,#044632,#1b9a5a 64%,#adf4d0);
+ box-shadow:0 4px 13px #16845637}
+.hudTitleWords{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.hudTitleWords strong{font-size:18px;letter-spacing:-.04em;line-height:1;font-weight:720}
+.hudTitleWords small{font-size:8px;letter-spacing:.1em;font-weight:710;color:#719788;line-height:1.2}
+.hudPage .hudTitleChevron{font-size:19px;color:#738e81;margin-left:1px;vertical-align:0}
+.hudModeMenu{position:absolute;left:50%;transform:translateX(-50%);top:calc(85px + env(safe-area-inset-top,0px));
+ z-index:21;width:min(284px,calc(100vw - 38px));padding:8px;background:#fff;
+ border:1px solid #e0ede4;border-radius:18px;box-shadow:0 20px 64px #143c2529}
+.hudModeMenu :is(button,a){display:flex;width:100%;align-items:center;gap:13px;min-height:49px;padding:10px 13px;
+ border:0;border-radius:12px;background:transparent;font-size:14px;color:#1c503b;font-weight:600;text-align:left}
+.hudModeMenu :is(button,a):hover{background:#edf8f1}
+.hudModeMenu button>span{display:flex;flex-direction:column;gap:3px}
+.hudModeMenu small{color:#819c8b;font-size:10px;font-weight:500}
+.hudFullAccess .hudOrbStage .hudOrbGlow{animation:hudToDock .65s cubic-bezier(.2,.67,.3,1) both;pointer-events:none}
+.hudFullAccess .hudOrbStage p{color:#52866e;font-size:12px}
+@keyframes hudToDock{
+ from{opacity:1;transform:translate(0,0) scale(1)}
+ to{opacity:0;transform:translate(clamp(70px,33vw,250px),clamp(100px,26vh,310px)) scale(.21)}
+}
+.hudPage .hudSettings{
+ position:absolute;left:auto;right:max(13px,env(safe-area-inset-right,0px));top:calc(75px + env(safe-area-inset-top,0px));bottom:auto;
+ width:min(382px,calc(100vw - 26px));max-height:min(720px,calc(100dvh - 124px - env(safe-area-inset-top,0px)));
+ display:flex;flex-direction:column;gap:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+ padding:0;background:#fff;border:1px solid #e6efe8;border-radius:23px;
+ box-shadow:0 30px 85px #0b352929,0 10px 26px #0b352913;z-index:25;color:#21382e}
+.hudSettingsHeading{display:flex;align-items:center;gap:13px;padding:20px 20px 16px;border-bottom:1px solid #edf2ee;
+ background:linear-gradient(125deg,#fcfffd,#f4fbf7);position:sticky;top:0;z-index:2}
+.hudSettingsMark{width:40px;height:40px;display:grid;place-items:center;flex:0 0 40px;
+ border-radius:14px;background:#e5f5eb;color:#0b7950;font-size:24px;box-shadow:inset 0 0 0 1px #cce7d3}
+.hudSettingsEyebrow{font-size:9px;letter-spacing:.14em;font-weight:780;color:#59947a}
+.hudSettingsHeading h2{font-size:19px;line-height:1.15;margin:5px 0 0;color:#0b4a34;letter-spacing:-.035em}
+.hudSettingsDismiss{width:34px;height:34px;min-width:34px;display:grid;place-items:center;margin-left:auto;
+ font-size:26px;font-weight:300;color:#6a8577;border:1px solid #dcebe1;border-radius:50%;background:white}
+.hudSettingGroup{padding:18px 20px 17px;border-bottom:1px solid #edf2ee}
+.hudSettingGroupHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.hudSettingGroupHeader strong{font-size:12px;letter-spacing:.015em;color:#385d4a}
+.hudSettingGroupHeader>span{font-size:9px;font-weight:720;color:#7c9a89;letter-spacing:.1em}
+.hudPage .hudSettingRow{display:flex;align-items:center;justify-content:space-between;gap:15px;
+ min-height:60px;padding:11px 0;border-top:1px solid #f2f5f2;font-size:13px;cursor:pointer}
+.hudSettingCopy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.hudSettingCopy strong{font-size:13px;line-height:1.2;color:#183e2b;font-weight:680}
+.hudSettingCopy small{font-size:11px;line-height:1.42;font-weight:450;color:#80938a}
+.hudPage .hudSettingSwitch{
+ -webkit-appearance:none;appearance:none;flex:0 0 44px;width:44px;height:26px;border:1px solid #d7e1db;border-radius:999px;
+ background:#dde6df;position:relative;outline:none;cursor:pointer;transition:background .23s,border-color .23s;
+ margin:0;box-shadow:inset 0 1px 3px #28513710}
+.hudPage .hudSettingSwitch:before{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;
+ background:#fff;box-shadow:0 1px 4px #163b2b33;transition:transform .22s}
+.hudPage .hudSettingSwitch:checked{background:#0b7b51;border-color:#0b7b51}
+.hudPage .hudSettingSwitch:checked:before{transform:translateX(18px)}
+.hudPage .hudSettingSwitch:focus-visible{outline:2px solid #0e7d54;outline-offset:3px}
+.hudAccessHint{display:flex;align-items:center;gap:8px;margin:3px 0 9px;padding:8px 10px;border-radius:11px;
+ background:#e8f8ee;font-size:11px;line-height:1.45;color:#146445}
+.hudLiveDot{width:8px;height:8px;border-radius:50%;background:#1caa72;box-shadow:0 0 0 4px #0bb76b1c;flex:0 0 8px}
+.hudAccessExplanation{display:flex;flex-direction:column;gap:6px;background:#f8fbf9;border:1px solid #e8f1eb;
+ border-radius:13px;padding:12px 13px;margin-top:9px}
+.hudAccessExplanation strong{font-size:11px;color:#27664a}
+.hudAccessExplanation span{font-size:11px;line-height:1.6;color:#698576}
+.hudSettingField{display:flex;flex-direction:column;gap:9px;padding:11px 0;border-top:1px solid #f1f5f1}
+.hudSettingField>label,.hudRateLine label{font-size:12px;font-weight:650;color:#315e46}
+.hudPage .hudSettingField select{width:100%;min-height:43px;border-radius:11px;border:1px solid #dbe9e0;
+ background:#f9fcfa;color:#2a503b;padding:8px 10px;font-size:12px;outline:none}
+.hudRateLine{display:flex;justify-content:space-between;align-items:center}
+.hudRateLine output{font-size:11px;color:#1b7650;font-weight:700}
+.hudPage .hudSettingField input[type="range"]{width:100%;accent-color:#0e8555}
+.hudPage .hudVoicePreview{display:flex;align-items:center;gap:12px;justify-content:center;
+ min-height:42px;margin:7px 0 0;width:100%;border-radius:12px;background:#eef8f2;
+ border:1px solid #d4eadd;color:#0c6645;font-size:18px;cursor:pointer}
+.hudVoicePreview span{font-size:12px;font-weight:700}
+.hudPage .hudEraseMemory{border:none;background:transparent;color:#28734f;font-size:11px;font-weight:680;padding:10px 0 0}
+.hudSettingsFooter{padding:17px 20px 19px;background:#f8fcf9}
+.hudSettingsFooter>p{font-size:10px;line-height:1.65;color:#72887a;margin:0 0 16px}
+.hudSettingsFooter>p strong{color:#355c43}
+.hudSettingsFooter .hudSettingsNotice{padding:8px 11px;border-radius:9px;background:#eaf9ef;color:#185c3d}
+.hudPage .hudSettingsClose{width:100%;min-height:44px;border-radius:12px;border:0;background:#0e6947;
+ color:#fff;font-size:13px;font-weight:700;box-shadow:0 8px 21px #0e694727}
+@media(max-width:600px){
+ .hudPage .hudTitleButton{padding:8px 11px;gap:6px;border-radius:19px;min-height:51px}
+ .hudTitleWords strong{font-size:17px}.hudTitleWords small{font-size:7px}
+ .hudBrandOrb{width:23px;height:23px;flex-basis:23px}
+ .hudPage .hudSettings{top:calc(69px + env(safe-area-inset-top,0px));width:min(360px,calc(100vw - 26px));
+  max-height:calc(100dvh - 100px - env(safe-area-inset-top,0px));border-radius:21px}
+ .hudSettingGroup{padding:15px 17px}.hudSettingsHeading{padding:17px}.hudSettingsFooter{padding:16px 17px}
+}
+@media(prefers-reduced-motion:reduce){
+ .hudFullAccess .hudOrbStage .hudOrbGlow{animation:none!important;opacity:0}
+ .hudPage .hudSettingSwitch,.hudPage .hudSettingSwitch:before{transition:none!important}
+}
