@@ -55,7 +55,8 @@ function mapResult(item: RawResult, kind: WebResultKind, index: number, query: s
 }
 const memory = new Map<string, { expires: number; payload: WebSearchResponse }>();
 export class SearchProviderError extends Error {
-  constructor(message:string, public status:number){super(message);}
+  status:number;
+  constructor(message:string,status:number){super(message);this.status=status;}
 }
 export function normalizeQuery(input: unknown): string {
   return typeof input==="string"?input.trim().replace(/\s+/g," ").slice(0,120):"";
