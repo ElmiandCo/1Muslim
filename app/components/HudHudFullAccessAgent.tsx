@@ -184,8 +184,8 @@ export default function HudHudFullAccessAgent(){
     const target=matching(all,action.label);
     if(!target){announce("I couldn't find a visible section called "+action.label+".",true);break}
     target.scrollIntoView({behavior:"smooth",block:"center",inline:"nearest"});
-    setTimeout(()=>mark(target),480);
-    announce("Located "+action.label);break;
+    setTimeout(()=>{mark(target);announce("Here is the "+action.label+" section.",true)},480);
+    break;
    }
    case "tab":{
     const all=[...document.querySelectorAll<HTMLElement>('[role="tab"],button[aria-pressed],button[aria-selected],a[role="tab"]')];
