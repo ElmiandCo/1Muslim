@@ -268,9 +268,9 @@ export default function SearchHub() {
         </section>
       </div>}
 
-      {!homeMode&&showDirectory&&loading&&<div className="dsLoading" role="status"><span className="dsLoadingLine"/><span>Searching the 1Muslim directory…</span><div className="dsSkeletonRow"><i/><i/><i/></div></div>}
+      {!homeMode&&loading&&showDirectory&&<div className="dsLoading" role="status"><span className="dsLoadingLine"/><span>Searching the 1Muslim directory…</span><div className="dsSkeletonRow"><i/><i/><i/></div></div>}
       {!homeMode&&showDirectory&&error&&<div className="dsError" role="alert">{error}<button onClick={()=>setQuery(s=>s+" ")}>Try again</button></div>}
-      {!homeMode&&showDirectory&&!loading&&!error&&result&&<>
+      {!homeMode&&!loading&&!error&&result&&showDirectory&&<>
         {(query.trim().length>=2||submitted)&&<section className="dsResultIntro"><span className="dsSectionKicker">LIVE DIRECTORY RESULTS</span>
           <h1>{result.total>0?<>Search results for <em>“{query}”</em></>:"No exact matches yet"}</h1>
           <p>{result.total} matching results across {CATEGORIES.filter(c=>totalFor(c)>0).length} categories
