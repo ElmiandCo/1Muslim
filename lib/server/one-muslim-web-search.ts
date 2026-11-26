@@ -1,0 +1,107 @@
+/** Server-only global web retrieval for 1Muslim Search.
+ * The user's query remains global: Muslim-relevant results receive a small
+ * transparent ranking preference but other sites are never filtered out.
+ */
+export type WebResultKind = "web" | "news" | "video";
+export type WebResult = {
+  title: string;
+  url: string;
+  description: string;
+  source: string;
+  kind: WebResultKind;
+  score: number;
+  publishedAt?: string;
+};
+export type WebSearchResponse = {
+  query: string;
+  results: WebResult[];
+  total: number;
+  provider: "Brave Search";
+  partial: boolean;
+};
+
+const muslimDomains = new Set([
+  "quran.com", "sunnah.com", "yaqeeninstitute.org", "islamic-relief.org",
+  "islamqa.info", "seekersguidance.org", "aboutislam.net", "muslimmatters.org",
+  "bayyinah.com", "islamicity.org", "alquran.cloud"
+]);
+const islamicTopic = /\b(islam|islamic|muslim|muslims|allah|quran|qur.an|hadith|sunnah|mosque|masjid|salah|prayer|ramadan|hijab|hajj|halal|makkah|mecca|madinah|medina|zakat|prophet|shahada|ummah)\b/i;
+const clean = (value: unknown, limit: number) =>
+  typeof value === "string" ? value.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim().slice(0, limit) : "";
+
+type RawResult = { title?:unknown; url?:unknown; description?:unknown; age?:unknown; page_age?:unknown; video?:{url?:string}; };
+type BravePayload = {
+  web?:{results?:RawResult[]};
+  news?:{results?:RawResult[]};
+  videos?:{results?:RawResult[]};
+};
+
+function mapResult(item: RawResult, kind: WebResultKind, index: number, query: string): WebResult | null {
+  if (typeof item.url !== "string") return null;
+  let url: URL;
+  try { url = new URL(item.url); } catch { return null; }
+  if (!["https:", "http:"].includes(url.protocol)) return null;
+  const title = clean(item.title, 170);
+  if (!title) return null;
+  const description = clean(item.description, 550);
+  const host = url.hostname.toLowerCase().replace(/^www\./, "");
+  const known = [...muslimDomains].some(domain=>host===domain || host.endsWith("."+domain));
+  const topical = islamicTopic.test(query);
+  const contentRelevant = islamicTopic.test(title+" "+description);
+  // Small preference, never a site restriction or a forced query rewrite.
+  const boost = known ? (topical ? 16 : 5) : contentRelevant ? (topical ? 7 : 1) : 0;
+  return { title, url:url.href, description, source:host, kind, score:100-index*2+boost,
+    ...(typeof item.age==="string"?{publishedAt:item.age}:typeof item.page_age==="string"?{publishedAt:item.page_age}:{}) };
+}
+const memory = new Map<string, { expires: number; payload: WebSearchResponse }>();
+export class SearchProviderError extends Error {
+  constructor(message:string, public status:number){super(message);}
+}
+export function normalizeQuery(input: unknown): string {
+  return typeof input==="string"?input.trim().replace(/\s+/g," ").slice(0,120):"";
+}
+export async function searchWholeWeb(query: string): Promise<WebSearchResponse> {
+  const normalized=normalizeQuery(query);
+  if(normalized.length<2)throw new SearchProviderError("Enter at least 2 characters.",400);
+  const key=process.env.BRAVE_SEARCH_API_KEY;
+  if(!key)throw new SearchProviderError("Global web search is awaiting its Brave Search API key. 1Muslim directory search remains available.",503);
+  const cacheKey=normalized.toLowerCase();
+  const saved=memory.get(cacheKey);
+  if(saved && saved.expires>Date.now())return saved.payload;
+  const url=new URL("https://api.search.brave.com/res/v1/web/search");
+  url.searchParams.set("q",normalized);
+  url.searchParams.set("count","20");
+  url.searchParams.set("extra_snippets","false");
+  url.searchParams.set("safesearch","moderate");
+  let response:Response;
+  try {
+    response=await fetch(url.toString(),{
+      headers:{"Accept":"application/json","X-Subscription-Token":key},
+      cache:"no-store",signal:AbortSignal.timeout(9000)
+    });
+  } catch {
+    throw new SearchProviderError("The global search provider did not respond. Try again.",503);
+  }
+  if(response.status===429)throw new SearchProviderError("Search is busy. Please retry in a moment.",429);
+  if(!response.ok)throw new SearchProviderError("Global search is temporarily unavailable.",503);
+  const payload=await response.json() as BravePayload;
+  const combined:WebResult[]=[];
+  for(const [kind,values] of [
+    ["web",payload.web?.results],["news",payload.news?.results],["video",payload.videos?.results]
+  ] as Array<[WebResultKind,RawResult[]|undefined]>){
+    for(const [index,value] of (values||[]).entries()) {
+      const mapped=mapResult(value,kind,index,normalized);
+      if(mapped)combined.push(mapped);
+    }
+  }
+  const seen=new Set<string>();
+  const results=combined.sort((a,b)=>b.score-a.score).filter(item=>{
+    const identity=item.url.replace(/\/$/,"");
+    if(seen.has(identity))return false;
+    seen.add(identity);return true;
+  }).slice(0,35);
+  const result={query:normalized,results,total:results.length,provider:"Brave Search" as const,partial:false};
+  if(memory.size>100)memory.clear();
+  memory.set(cacheKey,{expires:Date.now()+60_000,payload:result});
+  return result;
+}
