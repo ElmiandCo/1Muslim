@@ -160,7 +160,11 @@ export default function SearchHub() {
   const showGlobal=tab==="All"||tab==="Web"||tab==="Images"||tab==="Videos"||tab==="News"||tab==="AI Overview";
   const totalFor=(name:DiscoverKind)=>(result?.groups?.[name]||[]).length;
 
-  const openHudHud=()=>{\n    const context=(submitted||query).trim().slice(0,90);\n    router.push("/hudhud"+(context?"?q="+encodeURIComponent(context):""));\n  };\n  const signOut=async()=>{
+  const openHudHud=()=>{
+    const context=(submitted||query).trim().slice(0,90);
+    router.push("/hudhud"+(context?"?q="+encodeURIComponent(context):""));
+  };
+  const signOut=async()=>{
     if(signoutBusy)return;
     setSignoutBusy(true);
     try{
