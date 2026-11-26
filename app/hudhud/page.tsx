@@ -160,6 +160,7 @@ export default function HudHudPage(){
   }finally{setBusy(false)}
  };
  const startVoice=()=>{
+  if(fullAccess){setError("HudHud Full Access controls the microphone. Use the small floating orb to pause or resume.");return;}
   if(listening){stopVoice();return;}
   setError("");setActionsOpen(false);
   const host=window as RecognitionWindow;
