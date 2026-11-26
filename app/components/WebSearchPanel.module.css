@@ -29,3 +29,18 @@
 .result h3 a{color:#1764a3;text-decoration:none}.result h3 a:hover{text-decoration:underline}
 .result p{color:#526259;font-size:14px;line-height:1.55;margin:5px 0 0}
 @media(max-width:550px){.section{margin:15px 7px 24px;padding:18px 16px;border-radius:20px}.count{width:100%;margin-left:0}.heading h2{font-size:24px}.summaryAction button{width:100%}}
+
+/* Six-mode worldwide search: responsive image previews and legible cards. */
+.resultCount{color:#66766d;font-size:12px;margin:18px 0 14px}
+.imageGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:13px;margin:18px 0}
+.imageCard{min-width:0;display:flex;flex-direction:column;border:1px solid #e7ebea;border-radius:15px;overflow:hidden;text-decoration:none;color:#263f35;background:#fff;transition:transform .15s ease,box-shadow .15s ease}
+.imageCard:hover{transform:translateY(-2px);box-shadow:0 7px 20px #122e2b17}
+.imageCard:focus-visible{outline:3px solid #29966b;outline-offset:3px}
+.imageCanvas{display:block;aspect-ratio:4/3;background:#f1f4f2;overflow:hidden}
+.imageCanvas img{display:block;width:100%;height:100%;object-fit:cover}
+.imageInfo{padding:9px 11px;display:flex;flex-direction:column;gap:5px}
+.imageInfo strong{font-size:12px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.imageInfo small{font-size:11px;color:#6c7c73;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.age{display:block;margin-top:7px;font-size:11px;color:#718074}
+@media(max-width:550px){.imageGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.imageInfo{padding:8px}.section{margin-inline:0}}
+@media(prefers-reduced-motion:reduce){.imageCard{transition:none}.imageCard:hover{transform:none}}
