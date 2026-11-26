@@ -31,6 +31,7 @@ import VisitorFeedback from "./components/VisitorFeedback";
 import LocationOnboarding from "./components/LocationOnboarding";
 import PersistentAdhan from "./components/PersistentAdhan";
 import HudHudVoiceCommands from "./components/HudHudVoiceCommands";
+import HudHudFullAccessAgent from "./components/HudHudFullAccessAgent";
 
 export const viewport = {themeColor:"#ffffff",width:"device-width",initialScale:1,viewportFit:"cover" as const};
 
@@ -58,7 +59,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><AppShellLifecycle /><SitePresenceHeartbeat /><ProfileThemeSync /><HudHudMotionShell><GlobalNavigation />{children}</HudHudMotionShell><ImmersiveVideoEntry /><PersistentMessengerCall /><PersistentMuslimSync /><PersistentDailyVideo /><VisitorFeedback /><LocationOnboarding /><PersistentAdhan /><HudHudDimensionDust /><HudHudChatLauncher /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><ElmiLayerX /><XPTracker /><PersistentQuranStudio /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
+  return <html lang="en"><body><AppShellLifecycle /><SitePresenceHeartbeat /><ProfileThemeSync /><HudHudMotionShell><GlobalNavigation />{children}</HudHudMotionShell><ImmersiveVideoEntry /><PersistentMessengerCall /><PersistentMuslimSync /><PersistentDailyVideo /><VisitorFeedback /><LocationOnboarding /><PersistentAdhan /><HudHudDimensionDust /><HudHudChatLauncher /><HudHudFullAccessAgent /><HudHudTacticalVision /><HudHudSelectionTranslate /><HudHudLiveMiniPlayer /><ElmiLayerX /><XPTracker /><PersistentQuranStudio /><NotificationToaster /><Script src="https://www.googletagmanager.com/gtag/js?id=G-DSLVB0HSGV" strategy="afterInteractive" /><Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
 function gtag(){window.dataLayer.push(arguments);}
 gtag("js", new Date());
 gtag("config", "G-DSLVB0HSGV");`}</Script></body></html>;
