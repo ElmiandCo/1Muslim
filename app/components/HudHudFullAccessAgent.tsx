@@ -270,7 +270,7 @@ export default function HudHudFullAccessAgent(){
    };
    rec.onerror=e=>{
     if(e.error==="not-allowed"||e.error==="service-not-allowed"||e.error==="audio-capture"){
-     activated.current=false;setPaused(true);
+     activated.current=false;clearRecognition();setPaused(true);
      setStatus("Microphone permission unavailable. Tap the orb after allowing microphone access.");
     }else if(e.error!=="no-speech"&&e.error!=="aborted")setStatus("Speech recognition stopped. Tap the orb to retry.");
    };
