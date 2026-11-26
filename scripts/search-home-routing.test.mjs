@@ -82,6 +82,18 @@ test("Home has floating accessible Settings, Profile and Sign out without the gl
   assert.match(nav,/pathname\?\.startsWith\("\/onboarding"\)/);
 });
 
+test("30-second .live wordmark loop is seamless, interactive and reduced-motion safe",()=>{
+  const css=read("app/search/search.css");
+  const page=read("app/search/page.tsx");
+  assert.match(css,/animation:dsLivePulse 30s ease-in-out infinite both/);
+  assert.match(css,/@keyframes dsLivePulse\{\s*0%,100%\{/);
+  assert.match(css,/\.dsHomeBrand:hover \.dsHomeBrandLive/);
+  assert.match(css,/\.dsResultsBrand:hover \.dsHomeBrandLive/);
+  assert.match(css,/\.dsResultsBrand:focus-visible \.dsHomeBrandLive/);
+  assert.match(css,/\.dsHomeBrandLive\{animation:none!important;transition:none!important/);
+  assert.match(page,/className="dsHomeBrandLive" aria-hidden="true">\.live/);
+});
+
 test("results header reuses the animated One Muslim.live brand at the top left",()=>{
   const page=read("app/search/page.tsx");
   const css=read("app/search/search.css");
