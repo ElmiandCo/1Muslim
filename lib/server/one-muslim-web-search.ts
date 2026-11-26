@@ -60,18 +60,20 @@ export class SearchProviderError extends Error {
 export function normalizeQuery(input: unknown): string {
   return typeof input==="string"?input.trim().replace(/\s+/g," ").slice(0,120):"";
 }
-export async function searchWholeWeb(query: string): Promise<WebSearchResponse> {
+export type WebVertical = "all" | "web" | "news" | "video";
+export async function searchWholeWeb(query: string, vertical: WebVertical = "all"): Promise<WebSearchResponse> {
   const normalized=normalizeQuery(query);
   if(normalized.length<2)throw new SearchProviderError("Enter at least 2 characters.",400);
   const key=process.env.BRAVE_SEARCH_API_KEY;
   if(!key)throw new SearchProviderError("Global web search is awaiting its Brave Search API key. 1Muslim directory search remains available.",503);
-  const cacheKey=normalized.toLowerCase();
+  const cacheKey=vertical+":"+normalized.toLowerCase();
   const saved=memory.get(cacheKey);
   if(saved && saved.expires>Date.now())return saved.payload;
-  const url=new URL("https://api.search.brave.com/res/v1/web/search");
+  const endpoint=vertical==="news"?"news":vertical==="video"?"videos":"web";
+  const url=new URL("https://api.search.brave.com/res/v1/"+endpoint+"/search");
   url.searchParams.set("q",normalized);
   url.searchParams.set("count","20");
-  url.searchParams.set("extra_snippets","false");
+  if(endpoint==="web")url.searchParams.set("extra_snippets","false");
   url.searchParams.set("safesearch","moderate");
   let response:Response;
   try {
@@ -84,11 +86,13 @@ export async function searchWholeWeb(query: string): Promise<WebSearchResponse> 
   }
   if(response.status===429)throw new SearchProviderError("Search is busy. Please retry in a moment.",429);
   if(!response.ok)throw new SearchProviderError("Global search is temporarily unavailable.",503);
-  const payload=await response.json() as BravePayload;
+  const payload=await response.json() as BravePayload & {results?:RawResult[]};
   const combined:WebResult[]=[];
-  for(const [kind,values] of [
-    ["web",payload.web?.results],["news",payload.news?.results],["video",payload.videos?.results]
-  ] as Array<[WebResultKind,RawResult[]|undefined]>){
+  const buckets:Array<[WebResultKind,RawResult[]|undefined]>=vertical==="news"?[["news",payload.results]]
+    :vertical==="video"?[["video",payload.results]]
+    :vertical==="web"?[["web",payload.web?.results]]
+    :[["web",payload.web?.results],["news",payload.news?.results],["video",payload.videos?.results]];
+  for(const [kind,values] of buckets){
     for(const [index,value] of (values||[]).entries()) {
       const mapped=mapResult(value,kind,index,normalized);
       if(mapped)combined.push(mapped);
