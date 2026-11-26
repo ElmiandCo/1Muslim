@@ -144,6 +144,10 @@ export default function HudHudFullAccessAgent(){
  const deletePost=async(target:{kind:"legacy"|"ummah";id:string})=>{
   if(working)return;
   if(pending.current?.id!==target.id||pending.current.kind!==target.kind)return;
+  const currentTarget=hudhudDeleteTarget(pathRef.current);
+  if(!currentTarget||currentTarget.id!==target.id||currentTarget.kind!==target.kind){
+   pending.current=null;setConfirmDelete(null);setStatus("The page changed. Deletion canceled.");return;
+  }
   setWorking(true);setStatus("Verifying ownership and removing this post…");
   pending.current=null;setConfirmDelete(null);
   try{
@@ -318,6 +322,9 @@ export default function HudHudFullAccessAgent(){
   return()=>{window.removeEventListener(HUDHUD_ACCESS_EVENT,onChange);window.removeEventListener(HUDHUD_SETTINGS_EVENT,onPrefs);document.removeEventListener("visibilitychange",onHidden)};
  },[clearRecognition,stop,startVoice]);
  useEffect(()=>()=>{activated.current=false;clearRecognition();if(highlightTimer.current)clearTimeout(highlightTimer.current);window.speechSynthesis?.cancel()},[clearRecognition]);
+ useEffect(()=>{
+  pending.current=null;setConfirmDelete(null);
+ },[pathname]);
  useEffect(()=>{
   if(!enabled)return;
   if(/^\/(auth|login|onboarding|unlocked|admin)(?:\/|$)/.test(pathname)){
