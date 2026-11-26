@@ -1,8 +1,10 @@
 "use client";
 import "./search.css";
 import "./search-results.css";
+import "./search-magnetic.css";
 import Link from "next/link";
 import WebSearchPanel,{type GlobalSearchMode} from "../components/WebSearchPanel";
+import { useSearchMagneticMotion } from "./useSearchMagneticMotion";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../utils/supabase/client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -75,6 +77,8 @@ function DirectoryResultList({items}:{items:DiscoverItem[]}){
 }
 export default function SearchHub() {
   const router=useRouter();
+  const magneticRoot=useRef<HTMLElement>(null);
+  useSearchMagneticMotion(magneticRoot);
   const [query,setQuery]=useState("");
   const [submitted,setSubmitted]=useState("");
   const [tab,setTab]=useState<Tab>("All");
@@ -178,7 +182,7 @@ export default function SearchHub() {
     }finally{setSignoutBusy(false);}
   };
   const homeMode=!query.trim();
-  return <main className={"dsPage "+(homeMode?"dsHomeMode":"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))}>
+  return <main ref={magneticRoot} className={"dsPage "+(homeMode?"dsHomeMode":"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))}>
     <nav className="dsHomeUtilities" aria-label="Account shortcuts">
       {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="One Muslim Live — return to search home"><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></Link>}
       {!homeMode&&<button type="button" className="dsUtilityButton dsResultsThemeToggle" onClick={toggleResultsTheme} aria-label={resultsNight?"Switch search results to light mode":"Switch search results to dark mode"} title={resultsNight?"Light appearance":"Dark appearance"} aria-pressed={resultsNight}><span aria-hidden="true">{resultsNight?"☼":"◐"}</span></button>}
