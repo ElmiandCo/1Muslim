@@ -46,3 +46,12 @@ test("the initial reveal stays open across tab and history navigation", () => {
   const nav = readFileSync(new URL("../app/components/GlobalNavigation.tsx", import.meta.url), "utf8");
   assert.doesNotMatch(nav, /dataset\.oneShellReady\s*=/);
 });
+
+test("Qur'an Library and Studio do not render the social bottom navigation",()=>{
+  const nav=readFileSync(new URL("../app/components/GlobalNavigation.tsx",import.meta.url),"utf8");
+  const magazine=readFileSync(new URL("../app/quran-library/quran-magazine.css",import.meta.url),"utf8");
+  assert.match(nav,/if\(pathname\?\.startsWith\("\/quran"\)\|\|pathname\?\.startsWith\("\/elm-tent\/quran"\)\)return null/);
+  assert.match(magazine,/body:has\(\.qm-page\)\{padding-bottom:env\(safe-area-inset-bottom,0px\)!important\}/);
+  // Ordinary routes keep using the global dock.
+  assert.match(nav,/return <>\s*<header className=\{"oneGlobalNav"/);
+});

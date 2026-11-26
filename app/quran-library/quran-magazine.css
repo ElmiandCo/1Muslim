@@ -313,3 +313,10 @@
   font-size: calc(clamp(30px, 7vw, 48px) * var(--qm-arabic-scale, 1));
   touch-action: pan-y;
 }
+
+/* Qur’an Library is a full-screen reading destination, not a docked social tab.
+   The shared mobile body spacing exists for the global dock; remove it only
+   while this page is actually mounted so the final surahs remain unobstructed. */
+@media(max-width:767px){
+ body:has(.qm-page){padding-bottom:env(safe-area-inset-bottom,0px)!important}
+}
