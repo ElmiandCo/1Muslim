@@ -1,5 +1,6 @@
 "use client";
 import "./hudhud.css";
+import HudHudSettingsPanel from "./HudHudSettingsPanel";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
@@ -43,6 +44,8 @@ export default function HudHudPage(){
  const [listening,setListening]=useState(false);
  const [menuOpen,setMenuOpen]=useState(false);
  const [settingsOpen,setSettingsOpen]=useState(false);
+ const [titleMenuOpen,setTitleMenuOpen]=useState(false);
+ const [fullAccess,setFullAccess]=useState(false);
  const [actionsOpen,setActionsOpen]=useState(false);
  const [readAloud,setReadAloud]=useState(false);
  const [stillOrb,setStillOrb]=useState(false);
@@ -55,6 +58,32 @@ export default function HudHudPage(){
  const current=sessions.find(x=>x.id===activeId)||sessions[0];
  const lines=current.lines;
  const exhausted=!unlocked&&remaining===0;
+ useEffect(()=>{
+  try{
+   setReadAloud(localStorage.getItem("1muslim:hudhud-read-aloud")==="on");
+   setStillOrb(localStorage.getItem("1muslim:hudhud-reduce-motion")==="on");
+   setFullAccess(localStorage.getItem("1muslim:hudhud-full-access")==="on");
+  }catch{}
+  const update=(event:Event)=>setFullAccess((event as CustomEvent<{enabled:boolean}>).detail?.enabled===true);
+  window.addEventListener("1muslim:hudhud-access-changed",update);
+  return()=>window.removeEventListener("1muslim:hudhud-access-changed",update);
+ },[]);
+ const toggleFullAccess=(next:boolean)=>{
+  setFullAccess(next);
+  try{localStorage.setItem("1muslim:hudhud-full-access",next?"on":"off")}catch{}
+  if(next)stopVoice(true);
+  window.dispatchEvent(new CustomEvent("1muslim:hudhud-full-access",{detail:{enabled:next}}));
+ };
+ const toggleAloud=(next:boolean)=>{
+  setReadAloud(next);
+  try{localStorage.setItem("1muslim:hudhud-read-aloud",next?"on":"off")}catch{}
+  window.dispatchEvent(new Event("1muslim:hudhud-agent-preferences"));
+  if(!next)window.speechSynthesis?.cancel();
+ };
+ const toggleStill=(next:boolean)=>{
+  setStillOrb(next);
+  try{localStorage.setItem("1muslim:hudhud-reduce-motion",next?"on":"off")}catch{}
+ };
 
  const stopVoice=useCallback((abort=false)=>{
   const rec=recognizer.current;
@@ -82,7 +111,7 @@ export default function HudHudPage(){
  useEffect(()=>{chatEnd.current?.scrollIntoView({block:"end",behavior:busy?"instant":"smooth"});},[lines.length,busy,activeId]);
  useEffect(()=>{
   const onHidden=()=>{if(document.hidden){stopVoice(true);window.speechSynthesis?.cancel()}};
-  const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMenuOpen(false);setSettingsOpen(false);setActionsOpen(false);stopVoice(true)}};
+  const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMenuOpen(false);setSettingsOpen(false);setTitleMenuOpen(false);setActionsOpen(false);stopVoice(true)}};
   document.addEventListener("visibilitychange",onHidden);window.addEventListener("keydown",onKey);
   return()=>{document.removeEventListener("visibilitychange",onHidden);window.removeEventListener("keydown",onKey);stopVoice(true);window.speechSynthesis?.cancel()};
  },[stopVoice]);
@@ -115,7 +144,13 @@ export default function HudHudPage(){
    if(readAloud&&"speechSynthesis" in window){
     window.speechSynthesis.cancel();
     const speech=new SpeechSynthesisUtterance(reply);
-    speech.lang="en-US";speech.rate=1;
+    const saved=localStorage.getItem("1muslim:hudhud-voice-uri")||"";
+    const voices=window.speechSynthesis.getVoices();
+    const selected=voices.find(v=>v.voiceURI===saved)||
+     voices.find(v=>v.lang.startsWith("en")&&v.localService)||voices.find(v=>v.lang.startsWith("en"));
+    if(selected)speech.voice=selected;
+    speech.lang=selected?.lang||"en-US";
+    speech.rate=Math.max(.8,Math.min(1.25,Number(localStorage.getItem("1muslim:hudhud-speech-rate")||1)));
     window.speechSynthesis.speak(speech);
    }
   }catch(caught){
@@ -153,17 +188,26 @@ export default function HudHudPage(){
   router.push("/search");
  };
 
- return <main className={"hudPage"+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
+ return <main className={"hudPage"+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")+(fullAccess?" hudFullAccess":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
   <header className="hudHeader">
    <button className="hudCircle" type="button" aria-label="Open HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button>
-   <div className="hudTitle" aria-label="HudHud — 1Muslim assistant">HudHud <span aria-hidden="true">⌄</span></div>
+   <button className="hudTitle hudTitleButton" type="button" aria-label="HudHud assistant modes" aria-haspopup="menu" aria-expanded={titleMenuOpen}
+      onClick={()=>{setTitleMenuOpen(!titleMenuOpen);setSettingsOpen(false)}}>
+     <span className="hudBrandOrb" aria-hidden="true"/> <span className="hudTitleWords"><strong>HudHud</strong><small>1MUSLIM INTELLIGENCE</small></span>
+     <span className="hudTitleChevron" aria-hidden="true">⌄</span>
+   </button>
+   {titleMenuOpen&&<div className="hudModeMenu" role="menu" aria-label="HudHud modes">
+      <button type="button" role="menuitem" onClick={()=>{setTitleMenuOpen(false);newChat()}}>✦ <span>New conversation</span></button>
+      <button type="button" role="menuitem" onClick={()=>{setTitleMenuOpen(false);setSettingsOpen(true)}}>◉ <span>Full Access <small>{fullAccess?"Enabled":"Off by default"}</small></span></button>
+      <Link href="/search" role="menuitem">⌕ <span>Return to Search</span></Link>
+    </div>}
    <button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button>
   </header>
 
   <section className={"hudMain"+(lines.length?" hudHasChat":"")} aria-label="Conversation">
    {lines.length===0&&<div className="hudOrbStage">
      <div className="hudOrbGlow"><div className="hudOrb" role="img" aria-label={listening?"HudHud is listening":busy?"HudHud is thinking":"HudHud green assistant orb"}><span className="hudOrbCloud"/><span className="hudOrbShine"/></div></div>
-     <p>{listening?"Listening — tap the mic or X to stop":busy?"HudHud is thinking…":"Assalamu alaikum"}</p>
+     <p>{fullAccess?"Full Access is on · Your floating HudHud follows you":listening?"Listening — tap the mic or X to stop":busy?"HudHud is thinking…":"Assalamu alaikum"}</p>
    </div>}
    {lines.length>0&&<div className="hudMessages">
      {lines.map((line,index)=><article key={current.id+"-"+index} className={"hudMessage "+(line.role==="user"?"hudUser":"hudAssistant")}>
@@ -195,14 +239,11 @@ export default function HudHudPage(){
   {actionsOpen&&<div className="hudActionPop" role="menu" aria-label="HudHud shortcuts">
     {destinations.map(item=><Link key={item.href} href={item.href} role="menuitem"><span aria-hidden="true">{item.symbol}</span>{item.label}</Link>)}
    </div>}
-  {settingsOpen&&<div className="hudSettings" role="dialog" aria-label="HudHud settings">
-    <h2>HudHud settings</h2>
-    <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>{setReadAloud(e.target.checked);if(!e.target.checked)window.speechSynthesis?.cancel()}}/></label>
-    <label><span>Reduce orb motion<small>Keep the emerald orb still</small></span><input type="checkbox" checked={stillOrb} onChange={e=>setStillOrb(e.target.checked)}/></label>
-    <p>Microphone activates only when you tap it. Chats in this view stay in memory until you leave the page.</p>
-    <button type="button" onClick={()=>setSettingsOpen(false)}>Close settings</button>
-   </div>}
-  {menuOpen&&<div className="hudDrawerCover" onMouseDown={e=>{if(e.target===e.currentTarget)setMenuOpen(false)}}>
+  {settingsOpen&&<HudHudSettingsPanel fullAccess={fullAccess} onFullAccess={toggleFullAccess}
+    readAloud={readAloud} onReadAloud={toggleAloud}
+    stillOrb={stillOrb} onStillOrb={toggleStill}
+    onClose={()=>setSettingsOpen(false)}/>}
+    {menuOpen&&<div className="hudDrawerCover" onMouseDown={e=>{if(e.target===e.currentTarget)setMenuOpen(false)}}>
     <aside className="hudDrawer" role="dialog" aria-modal="true" aria-label="HudHud menu">
      <div className="hudDrawerTop"><strong>HudHud</strong><button type="button" aria-label="Close menu" onClick={()=>setMenuOpen(false)}><Glyph name="close"/></button></div>
      <button className="hudNewChat" type="button" onClick={newChat} disabled={busy}><Glyph name="new"/> New chat</button>
