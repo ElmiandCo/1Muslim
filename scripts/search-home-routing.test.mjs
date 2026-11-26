@@ -81,3 +81,16 @@ test("Home has floating accessible Settings, Profile and Sign out without the gl
   assert.match(nav,/pathname\?\.startsWith\("\/search"\)/);
   assert.match(nav,/pathname\?\.startsWith\("\/onboarding"\)/);
 });
+
+test("results header reuses the animated One Muslim.live brand at the top left",()=>{
+  const page=read("app/search/page.tsx");
+  const css=read("app/search/search.css");
+  const resultCss=read("app/search/search-results.css");
+  assert.match(page,/!homeMode&&<Link href="\/search" className="dsResultsBrand"/);
+  assert.match(page,/className="dsHomeBrandLive" aria-hidden="true">\.live/);
+  assert.match(css,/@keyframes dsLivePulse/);
+  assert.match(css,/\.dsHomeBrandLive\{/);
+  assert.match(resultCss,/\.dsResultsMode \.dsHomeUtilities \.dsResultsBrand/);
+  assert.match(resultCss,/\.dsResultsNight \.dsHomeUtilities \.dsResultsBrand/);
+  assert.match(resultCss,/@media\(max-width:370px\)/);
+});
