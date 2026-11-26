@@ -103,6 +103,9 @@ export default function WebSearchPanel({query,mode="All"}:{query:string;mode?:Gl
         {mode!=="AI Overview"&&results.map(item=><article className={styles.result} key={item.kind+item.url}>
           <div className={styles.site}><span className={styles.globe}>{item.kind==="video"?"▶":item.kind==="news"?"◷":"◉"}</span>
             <span>{item.source}<small>{item.url.length>100?item.url.slice(0,100)+"…":item.url}</small></span>{item.kind!=="web"&&<b>{item.kind}</b>}</div>
+          {item.kind==="video"&&item.thumbnailUrl&&<a className={styles.videoThumbnail} href={item.url} target="_blank" rel="noopener noreferrer" aria-label={"Play "+item.title}>
+            <img src={item.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer"/><span aria-hidden="true">▶</span>
+          </a>}
           <h3><a href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a></h3>
           {item.description&&<p>{item.description}</p>}
           {item.publishedAt&&<small className={styles.age}>{item.publishedAt}</small>}
