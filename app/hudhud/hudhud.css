@@ -263,3 +263,10 @@
  .hudFullAccess .hudOrbStage .hudOrbGlow{animation:none!important;opacity:0}
  .hudPage .hudSettingSwitch,.hudPage .hudSettingSwitch:before{transition:none!important}
 }
+
+/* Supersede the original generic .hudTitle span typography after upgrading the header to nested controls. */
+.hudPage .hudTitleButton .hudBrandOrb{display:block;margin:0;vertical-align:initial;font-size:0}
+.hudPage .hudTitleButton .hudTitleWords{display:flex;flex-direction:column;gap:3px;align-items:flex-start;margin:0;color:#0a4a34;font-size:inherit;font-weight:inherit;vertical-align:initial}
+.hudPage .hudTitleButton .hudTitleWords strong{color:#0a4a34}
+.hudPage .hudTitleButton .hudTitleWords small{color:#719788}
+.hudPage .hudTitleButton .hudTitleChevron{font-size:19px;color:#738e81;margin-left:1px;vertical-align:initial}
