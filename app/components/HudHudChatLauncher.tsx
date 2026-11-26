@@ -18,6 +18,13 @@ type Message=HudHudMessage;
 const welcome:Message={id:0,role:"hudhud",text:"Assalamu alaikum! I'm HudHud. Ask me how to use 1Muslim, change your profile photo, find your Ashab, or share a verse."};
 export default function HudHudChatLauncher(){
  const pathname=usePathname()||"/";
+ const [fullAgent,setFullAgent]=useState(false);
+ useEffect(()=>{
+  try{setFullAgent(localStorage.getItem("1muslim:hudhud-full-access")==="on")}catch{}
+  const onChange=(e:Event)=>setFullAgent((e as CustomEvent<{enabled:boolean}>).detail?.enabled===true);
+  window.addEventListener("1muslim:hudhud-access-changed",onChange);
+  return()=>window.removeEventListener("1muslim:hudhud-access-changed",onChange);
+ },[]);
  const router=useRouter();
  const isProfileOrb=pathname==="/profile";
  const isQiblaRoute=pathname==="/qibla"||pathname.startsWith("/qibla/");
@@ -255,7 +262,7 @@ export default function HudHudChatLauncher(){
   finally{if(generation===chatGeneration.current){setHudhudSending(false);chatRequest.current=null;}}
 };
  const attach=(e:React.ChangeEvent<HTMLInputElement>)=>{const item=e.target.files?.[0];if(!item)return;if(!item.type.startsWith("image/")){setNotice("Choose an image file.");return}if(item.size>3_000_000){setNotice("Choose an image smaller than 3 MB.");return}const reader=new FileReader();reader.onload=()=>{if(typeof reader.result==="string"){setPending({url:reader.result,name:item.name});setNotice("Image ready for local preview.")}};reader.readAsDataURL(item);e.target.value=""};
- if(pathname==="/search"||pathname==="/hudhud")return <><ProfileActivityTracker/><HudHudGuidance/></>;
+ if(pathname==="/search"||pathname==="/hudhud"||fullAgent)return <><ProfileActivityTracker/><HudHudGuidance/></>;
  return <>
  <ProfileActivityTracker />
  <HudHudGuidance />
