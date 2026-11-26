@@ -1,5 +1,10 @@
 # Bismillah — 1Muslim v3.9 AI Engineering Operating Principles
 
+## Owner-approved continuous production delivery (2026-11-26)
+The owner now authorizes **automatic production deployment of completed, validated changes** without asking again each time. Vercel's Git integration deploys merged `main` commits; `.github/workflows/verified-production-auto-merge.yml` merges eligible, non-draft, same-repository PRs targeting `main` only after exact-head CI and Vercel preview success and a current base. Keep ordinary low-risk UI PRs small and mark them ready after reviewable verification, so the automated gate can finish the job. Never promote preview builds directly as production.
+
+Do not bypass protections: database migrations are not auto-merged; sensitive auth, payments, admin, API, security, workflow, or release-integration changes require an explicit `production-reviewed` label, in addition to green checks; `release-hold`, `security-review`, `needs-integration` and `do-not-deploy` always block auto delivery. The system must not silently merge a draft, merge conflicting branches, or publish while checks are pending. For work staged on `release/v3.9`, create a tested integration PR into `main`; do not deploy the entire branch merely because one feature passed. Verify production READY and conduct smoke checks, alert/fix/rollback on failure. The former prohibition on automated merges is superseded **only under these defined gates**.
+
 **MASTER MISSION:** https://github.com/ElmiandCo/1Muslim/issues/1592  
 **COORDINATION:** https://github.com/ElmiandCo/1Muslim/issues/1593  
 **BOT ISSUES:** #1593–#1606.
