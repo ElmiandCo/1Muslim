@@ -46,7 +46,7 @@ export function useSearchMagneticMotion(rootRef: RefObject<HTMLElement | null>) 
 
     const clearActive = () => {
       if (!active) return;
-      active.classList.remove("dsMagnetNear");
+      active.classList.remove("dsMagnetNear", "dsMagnetTarget");
       active.style.removeProperty("--ds-magnet-scale");
       active.style.removeProperty("--ds-magnet-x");
       active.style.removeProperty("--ds-magnet-y");
@@ -55,7 +55,7 @@ export function useSearchMagneticMotion(rootRef: RefObject<HTMLElement | null>) 
 
     const clearPress = () => {
       window.clearTimeout(tapTimer);
-      if (pressed) pressed.classList.remove("dsMagnetTap");
+      if (pressed) pressed.classList.remove("dsMagnetTap", "dsMagnetTarget");
       pressed = null;
     };
 
