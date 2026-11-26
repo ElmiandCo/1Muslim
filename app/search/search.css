@@ -355,6 +355,8 @@
   line-height:1.04;
   white-space:nowrap;
 }
+/* A 30-second ambient wordmark cycle: always legible, with quiet color,
+   light and position changes. 0% and 100% match for a seamless loop. */
 .dsHomeBrandLive{
   display:inline-block;
   min-width:0;
@@ -362,14 +364,33 @@
   font-weight:720;
   letter-spacing:-.045em;
   transform-origin:left 65%;
-  color:#a98957;
-  animation:dsLivePulse 8s ease-in-out infinite both;
+  color:#9f8052;
+  animation:dsLivePulse 30s ease-in-out infinite both;
+  transition:filter .45s ease,text-shadow .45s ease;
 }
 @keyframes dsLivePulse{
-  0%,7%{opacity:0;transform:translateY(10px) scale(.77)}
-  14%,32%{opacity:1;transform:translateY(0) scale(1);color:#b38c53}
-  42%{opacity:1;color:#3c8274;transform:translateY(0) scale(1)}
-  50%,99%,100%{opacity:0;transform:translateY(-6px) scale(.94)}
+  0%,100%{opacity:.91;transform:translateY(0) scale(1);color:#9f8052}
+  8%{opacity:1;transform:translateY(0) scale(1);color:#aa8956}
+  19%{opacity:.96;transform:translateY(-.5px) scale(1.008);color:#aa8956}
+  30%{opacity:1;transform:translateY(-1px) scale(1.014);color:#3d8073}
+  42%{opacity:.98;transform:translateY(0) scale(1);color:#438475}
+  54%{opacity:.80;transform:translateY(1px) scale(.99);color:#8a8e74}
+  64%{opacity:1;transform:translateY(0) scale(1);color:#ad8a56}
+  74%{opacity:.97;transform:translateY(0) scale(1);color:#a68654}
+  84%{opacity:1;transform:translateY(-.6px) scale(1.009);color:#4e897b}
+  93%{opacity:.95;transform:translateY(0) scale(1);color:#9f8052}
+}
+/* A pointer quietly brings the wordmark into focus; it never hijacks search. */
+@media(hover:hover) and (pointer:fine){
+  .dsHomeBrand:hover .dsHomeBrandLive,
+  .dsResultsBrand:hover .dsHomeBrandLive{
+    filter:brightness(1.12) saturate(1.08);
+    text-shadow:0 0 14px rgba(62,126,108,.17);
+  }
+}
+.dsResultsBrand:focus-visible .dsHomeBrandLive{
+  filter:brightness(1.12);
+  text-shadow:0 0 14px rgba(62,126,108,.17);
 }
 .dsHomeMode .dsHeaderRow{
   width:min(780px,calc(100% - 28px));
@@ -526,7 +547,7 @@
  .dsHomeMode .dsCreatorList{grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){
- .dsHomeBrandLive{animation:none!important;transform:none!important;opacity:1!important;color:#8d7758}
+ .dsHomeBrandLive{animation:none!important;transition:none!important;transform:none!important;opacity:1!important;color:#8d7758;filter:none!important;text-shadow:none!important}
  .dsHudDock,.dsCreatorRow{animation:none!important;transform:none!important;filter:none!important}
  .dsUtilityButton,.dsHomeMode .dsSearchForm,.dsHomeMode .dsCreatorRow{transition:none!important}
 }

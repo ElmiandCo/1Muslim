@@ -84,6 +84,39 @@ test("Home has floating accessible Settings, Profile and Sign out without the gl
   assert.match(nav,/pathname\?\.startsWith\("\/onboarding"\)/);
 });
 
+test("30-second .live wordmark loop is seamless, interactive and reduced-motion safe",()=>{
+  const css=read("app/search/search.css");
+  const page=read("app/search/page.tsx");
+  assert.match(css,/animation:dsLivePulse 30s ease-in-out infinite both/);
+  assert.match(css,/@keyframes dsLivePulse\{\s*0%,100%\{/);
+  assert.match(css,/\.dsHomeBrand:hover \.dsHomeBrandLive/);
+  assert.match(css,/\.dsResultsBrand:hover \.dsHomeBrandLive/);
+  assert.match(css,/\.dsResultsBrand:focus-visible \.dsHomeBrandLive/);
+  assert.match(css,/\.dsHomeBrandLive\{animation:none!important;transition:none!important/);
+  assert.match(page,/className="dsHomeBrandLive" aria-hidden="true">\.live/);
+});
+
+test("magnetic interactions preserve page markup and navigation while staying motion-safe",()=>{
+  const page=read("app/search/page.tsx");
+  const hook=read("app/search/useSearchMagneticMotion.ts");
+  const css=read("app/search/search-magnetic.css");
+  assert.match(page,/import "\.\/search-magnetic\.css"/);
+  assert.match(page,/useSearchMagneticMotion\(magneticRoot\)/);
+  assert.match(page,/return <main ref=\{magneticRoot\}/);
+  assert.match(hook,/REACH_PX = 68/);
+  assert.match(hook,/requestAnimationFrame\(animateClosest\)/);
+  assert.match(hook,/\(hover: hover\) and \(pointer: fine\)/);
+  assert.match(hook,/\(prefers-reduced-motion: reduce\)/);
+  assert.match(hook,/pointerdown/);
+  assert.match(hook,/pointercancel/);
+  assert.match(hook,/\.dsHomeMode \.dsCreatorRow/);
+  assert.match(hook,/\.dsResultsMode \.dsTabs button/);
+  assert.match(css,/transition:transform 500ms/);
+  assert.match(css,/\.dsMagnetTap\.dsMagnetTap/);
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.doesNotMatch(hook,/preventDefault\(|router\.push\(|router\.replace\(/);
+});
+
 test("results header reuses the animated One Muslim.live brand at the top left",()=>{
   const page=read("app/search/page.tsx");
   const css=read("app/search/search.css");
