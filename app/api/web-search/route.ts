@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { normalizeQuery, searchWholeWeb, SearchProviderError } from "../../../lib/server/one-muslim-web-search";
+import { normalizeQuery, searchWholeWeb, SearchProviderError, type WebVertical } from "../../../lib/server/one-muslim-web-search";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,10 +21,12 @@ function allowed(req:NextRequest):boolean {
 }
 export async function GET(req:NextRequest) {
   const query=normalizeQuery(req.nextUrl.searchParams.get("q"));
+  const requested=req.nextUrl.searchParams.get("type");
+  const kind:WebVertical=requested==="news"||requested==="video"||requested==="web"?requested:"all";
   if(query.length<2)return NextResponse.json({error:"Enter at least two characters."},{status:400});
   if(!allowed(req))return NextResponse.json({error:"Too many searches. Try again shortly."},{status:429,headers:{"Cache-Control":"no-store"}});
   try{
-    return NextResponse.json(await searchWholeWeb(query),{headers:{"Cache-Control":"public, max-age=0, s-maxage=45"}});
+    return NextResponse.json(await searchWholeWeb(query,kind),{headers:{"Cache-Control":"public, max-age=0, s-maxage=45"}});
   }catch(error) {
     const status=error instanceof SearchProviderError?error.status:503;
     const message=error instanceof SearchProviderError?error.message:"Unable to search the web right now.";
