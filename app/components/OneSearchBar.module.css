@@ -1,0 +1,13 @@
+.search{position:relative;z-index:2;max-width:980px;margin:12px auto 18px;padding:16px 19px;background:#fff;border:1px solid #e1e9e3;border-radius:22px;box-shadow:0 7px 26px #174d3215;color:#213e2d;box-sizing:border-box;font-family:inherit}
+.search *{box-sizing:border-box}
+.caption{display:flex;align-items:center;gap:10px;font-weight:820;font-size:15px;margin-bottom:12px}
+.caption small{display:block;font-weight:520;font-size:11px;color:#65796b;margin-top:2px}
+.mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#133d2b;color:#e6bd6b;font-size:16px;letter-spacing:-.07em}
+.inputRow{display:flex;gap:10px;align-items:center;min-width:0;min-height:50px;padding:5px 6px 5px 14px;border:1px solid #cbd9ce;border-radius:16px;background:#fdfefd}
+.icon{font-size:28px;color:#397655;line-height:1}
+.inputRow input{flex:1;min-width:0;background:transparent;border:0!important;box-shadow:none!important;outline:0!important;font:inherit;font-size:15px;color:#1b3829;height:38px}
+.inputRow input::placeholder{color:#77867a}
+.inputRow button{border:0;background:#0d7646;color:white;border-radius:12px;min-height:40px;padding:9px 17px;font-weight:750;font-family:inherit;white-space:nowrap;cursor:pointer}
+.search p{margin:10px 0 0;font-size:11px;color:#77847b}
+.inputRow:focus-within{outline:2px solid #58ac79;outline-offset:2px}
+@media(max-width:520px){.search{margin:12px 0;padding:13px 12px;border-radius:18px}.inputRow{gap:6px;padding-left:10px}.inputRow button{padding:10px 12px}.caption{font-size:14px}.search p{font-size:10px}}
