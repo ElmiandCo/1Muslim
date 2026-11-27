@@ -3,6 +3,7 @@ import {readFileSync} from "node:fs";
 import test from "node:test";
 import {passwordWarning} from "../app/lib/auth-password-policy.ts";
 import {hasShahada,SHAHADA_ARABIC,SHAHADA_ENGLISH} from "../app/lib/shahada-recognition.ts";
+import {signAdminGate,validAdminGate} from "../lib/admin-security-gate.ts";
 
 const read = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
 
@@ -275,4 +276,33 @@ test("HudHud pilot keeps one reasoning tier and the 50-action server cap",()=>{
  assert.match(page,/hudExiting/);
  assert.doesNotMatch(page,/of 3 free replies remaining/);
  assert.match(styles,/\.hudMatchCard/);
+});
+
+test("admin password proof is short-lived, role gated and never stores Shahada recordings",()=>{
+ const saved=process.env.HUDHUD_ADMIN_GATE_SECRET;
+ process.env.HUDHUD_ADMIN_GATE_SECRET="test-only-admin-gate-secret-do-not-use-live";
+ try{
+  const token=signAdminGate("admin-user-1");
+  assert.equal(validAdminGate(token,"admin-user-1"),true);
+  assert.equal(validAdminGate(token,"other-user"),false);
+  assert.equal(validAdminGate(token+"tampered","admin-user-1"),false);
+  assert.equal(validAdminGate(signAdminGate("admin-user-1",-5),"admin-user-1"),false);
+ }finally{if(saved===undefined)delete process.env.HUDHUD_ADMIN_GATE_SECRET;else process.env.HUDHUD_ADMIN_GATE_SECRET=saved}
+ const page=read("app/admin/security/page.tsx");
+ const route=read("app/api/admin/security-recheck/route.ts");
+ assert.match(page,/user\.app_metadata/);
+ assert.match(page,/validAdminGate/);
+ assert.match(page,/AdminPasswordGate/);
+ assert.match(route,/signInWithPassword/);
+ assert.match(route,/claim_search_api_quota/);
+ assert.doesNotMatch(route,/shahada-safe-vault/);
+});
+
+test("location cue never interrupts Shahada or blocks the white Search Home",()=>{
+ const location=read("app/components/LocationOnboarding.tsx");
+ assert.match(location,/shahada_verified_at/);
+ assert.match(location,/role="region"/);
+ assert.match(location,/pointer-events:none!important/);
+ assert.match(location,/setTimeout\(\(\)=>/);
+ assert.doesNotMatch(location,/role="dialog" aria-modal="true"/);
 });
