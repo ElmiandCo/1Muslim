@@ -23,7 +23,11 @@ export default function SiteChromeTheme(){
     const onResults=!!document.querySelector(".dsResultsMode");
     night=onResults?(searchResults==="night"||(!searchResults)):false;
    }else if(pathname?.startsWith("/deepwatch")){
-    night=deepwatch==="night"||(deepwatch==="auto"&&media.matches);
+    // DeepWatch's own solar mode may use the saved prayer city's sunset,
+    // so follow the already-rendered mode instead of guessing by device.
+    night=document.querySelector(".dwPlatformNight")?true
+      :document.querySelector(".dwPlatformDay")?false
+      :deepwatch==="night"||(deepwatch==="auto"&&media.matches);
    }else{
     night=mode==="night"||(mode==="auto"?(saved==="dark"||(!saved&&media.matches)):mode!=="day"&&saved==="dark");
    }
@@ -48,7 +52,7 @@ export default function SiteChromeTheme(){
   window.addEventListener("storage",onStorage);
   // Search toggles between Home and results without a navigation event.
   // Watch only its primary main element, never the entire app DOM.
-  const page=document.querySelector(".dsPage");
+  const page=document.querySelector(".dsPage, .dwPlatform");
   const observer=page?new MutationObserver(onChange):null;
   if(page&&observer)observer.observe(page,{attributes:true,attributeFilter:["class"]});
   return()=>{
