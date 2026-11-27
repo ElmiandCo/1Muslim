@@ -163,10 +163,17 @@ export async function POST(req: NextRequest) {
     return asResponse({reply:answer,presentation,matches:presentation.kind==="results"?matches.slice(0,6):[],remaining,limitReached:remaining===0,unlocked:auth.premium,modelUsed},200,guestToken);
   } catch (caught) {
     console.error("[HudHud] Answer request failed",{requestId,type:caught instanceof Error?caught.message:"unknown"});
-    if (reserved && dbAdmin && usageKey) {
-      try { await dbAdmin.rpc("refund_discover_hudhud_turn",{p_key:usageKey}); }
-      catch { console.error("[HudHud] Turn refund failed",{requestId}); }
+    let restored=!reserved;
+    if(reserved&&dbAdmin&&usageKey){
+      try{
+        const {error:refundError}=await dbAdmin.rpc("refund_discover_hudhud_turn",{p_key:usageKey});
+        if(refundError)throw refundError;
+        restored=true;
+      }catch{console.error("[HudHud] Turn refund failed",{requestId})}
     }
-    return asResponse({error:"HudHud couldn't complete that answer. Please try again. No turn was used.",code:"HUDHUD_REPLY_UNAVAILABLE",requestId},503,guestToken);
+    const error=restored
+      ?"HudHud couldn't complete that answer. Please try again. No turn was used."
+      :"HudHud couldn't complete that answer. Please retry; your turn restoration could not be confirmed.";
+    return asResponse({error,code:"HUDHUD_REPLY_UNAVAILABLE",requestId},503,guestToken);
   }
 }
