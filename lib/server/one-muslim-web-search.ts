@@ -1,6 +1,7 @@
 /** Server-only global web retrieval for 1Muslim Search.
- * The user's query remains global: Muslim-relevant results receive a small
- * transparent ranking preference but other sites are never filtered out.
+ * Preserve the search provider's rank order without boosting 1Muslim,
+ * religious websites or sources affiliated with any specific viewpoint.
+ * Islamic context is supplied separately, with cited evidence, in HudHud.
  */
 export type WebResultKind = "web" | "news" | "video";
 export type WebResult = {
@@ -21,12 +22,6 @@ export type WebSearchResponse = {
   partial: boolean;
 };
 
-const muslimDomains = new Set([
-  "quran.com", "sunnah.com", "yaqeeninstitute.org", "islamic-relief.org",
-  "islamqa.info", "seekersguidance.org", "aboutislam.net", "muslimmatters.org",
-  "bayyinah.com", "islamicity.org", "alquran.cloud"
-]);
-const islamicTopic = /\b(islam|islamic|muslim|muslims|allah|quran|qur.an|hadith|sunnah|mosque|masjid|salah|prayer|ramadan|hijab|hajj|halal|makkah|mecca|madinah|medina|zakat|prophet|shahada|ummah)\b/i;
 const clean = (value: unknown, limit: number) =>
   typeof value === "string" ? value.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim().slice(0, limit) : "";
 
@@ -37,7 +32,7 @@ type BravePayload = {
   videos?:{results?:RawResult[]};
 };
 
-function mapResult(item: RawResult, kind: WebResultKind, index: number, query: string): WebResult | null {
+function mapResult(item: RawResult, kind: WebResultKind, index: number): WebResult | null {
   if (typeof item.url !== "string") return null;
   let url: URL;
   try { url = new URL(item.url); } catch { return null; }
@@ -46,15 +41,11 @@ function mapResult(item: RawResult, kind: WebResultKind, index: number, query: s
   if (!title) return null;
   const description = clean(item.description, 550);
   const host = url.hostname.toLowerCase().replace(/^www\./, "");
-  const known = [...muslimDomains].some(domain=>host===domain || host.endsWith("."+domain));
-  const topical = islamicTopic.test(query);
-  const contentRelevant = islamicTopic.test(title+" "+description);
-  // Small preference, never a site restriction or a forced query rewrite.
-  const boost = known ? (topical ? 16 : 5) : contentRelevant ? (topical ? 7 : 1) : 0;
+  // No domain, religion, brand, or keyword-based preference: rank solely by provider order.
   const image=typeof item.thumbnail?.src==="string"?item.thumbnail.src:"";
   let thumbnailUrl:string|undefined;
   try{if(new URL(image).protocol==="https:")thumbnailUrl=image;}catch{}
-  return { title, url:url.href, description, source:host, kind, score:100-index*2+boost,
+  return { title, url:url.href, description, source:host, kind, score:100-index*2,
     ...(typeof item.age==="string"?{publishedAt:item.age}:typeof item.page_age==="string"?{publishedAt:item.page_age}:{}),
     ...(thumbnailUrl?{thumbnailUrl}:{}) };
 }
@@ -100,7 +91,7 @@ export async function searchWholeWeb(query: string, vertical: WebVertical = "all
     :[["web",payload.web?.results],["news",payload.news?.results],["video",payload.videos?.results]];
   for(const [kind,values] of buckets){
     for(const [index,value] of (values||[]).entries()) {
-      const mapped=mapResult(value,kind,index,normalized);
+      const mapped=mapResult(value,kind,index);
       if(mapped)combined.push(mapped);
     }
   }
