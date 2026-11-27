@@ -213,7 +213,7 @@ test("HudHud Shahada uses the original verified recording and account completion
 test("Password policy blocks trivial passwords and user identity leakage",()=>{
  assert.match(passwordWarning("12345678","Sam Yusuf","sam@test.com"),/at least 12/);
  assert.match(passwordWarning("Password123!","Sam Yusuf","sam@test.com"),/predictable/);
- assert.match(passwordWarning("Abcdef!456Sam","Sam Yusuf","sam@test.com"),/name or email/);
+ assert.match(passwordWarning("Violet!Road73_Yusuf","Sam Yusuf","sam@test.com"),/name or email/);
  assert.equal(passwordWarning("Violet!Road73_Mountain","Sam Yusuf","sam@test.com"),"");
  const flow=read("app/components/SearchAuthFlow.tsx");
  assert.match(flow,/pass!==confirm/);
