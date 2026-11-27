@@ -147,10 +147,21 @@ export default function SearchHub() {
     return()=>{active=false;subscription.unsubscribe()};
   },[]);
   useEffect(()=>{
-    if(account==="member"&&authMode==="signin"){
-      setAuthMode(null);
-      if(authReturn!=="/search")router.replace(authReturn);
-    }
+    if(account!=="member"||authMode!=="signin")return;
+    let active=true;
+    // A returning verified member goes straight back to their work.
+    // First-time and unfinished members stay here with HudHud for Shahada.
+    void (async()=>{
+      const db=createClient();
+      const {data:{user}}=await db.auth.getUser();
+      if(!active||!user)return;
+      const {data:profile}=await db.from("profiles").select("shahada_verified_at").eq("id",user.id).maybeSingle();
+      if(!active)return;
+      if(!profile?.shahada_verified_at){setAuthMode("shahada");return}
+      if(authReturn!=="/search"){router.replace(authReturn);return}
+      closeAuth();
+    })();
+    return()=>{active=false};
   },[account,authMode,authReturn,router]);
   useEffect(()=>{try{const saved=localStorage.getItem("1muslim:search-results-theme");if(saved==="day"||saved==="night")setResultsNight(saved==="night");}catch{}},[]);
   const toggleResultsTheme=()=>setResultsNight(old=>{try{localStorage.setItem("1muslim:search-results-theme",old?"day":"night");}catch{}return !old;});
@@ -275,7 +286,7 @@ export default function SearchHub() {
           </button>
         </form>
         <button className="dsSearchSubmit" type="button" onClick={()=>commit(query)}>Search</button>
-        {showAuth&&authMode!=="shahada"&&<SearchAuthFlow mode={authMode!} setMode={next=>{setAuthMode(next);try{window.history.replaceState({}, "", "/search?auth="+next)}catch{}}} onClose={closeAuth} onSignedIn={()=>{setAccount("member");closeAuth()}} returnTo={authReturn}/>}
+        {showAuth&&authMode!=="shahada"&&<SearchAuthFlow mode={authMode!} setMode={next=>{setAuthMode(next);try{window.history.replaceState({}, "", "/search?auth="+next)}catch{}}} onClose={closeAuth} onSignedIn={()=>setAccount("member")} returnTo={authReturn}/>}
         {showAuth&&authMode==="shahada"&&<div className="dsShahadaInlineHeading"><span>HudHud</span></div>}
       </div>
       <div className="dsCategoryBar">
