@@ -5,6 +5,8 @@ import { adminDb } from "../../../../lib/stripe-unlocked";
 import { searchDirectory } from "../../../lib/discover-search";
 import { selectHudHudPresentation } from "../../../lib/hudhud-presentation";
 import { loadVerifiedHudHudVerse } from "../../../lib/hudhud-verified-verse";
+import { searchImages } from "../../../../lib/server/one-muslim-image-search";
+import { claimSearchQuota } from "../../../../lib/server/search-api-quota";
 
 export const runtime = "nodejs";
 const COOKIE = "1muslim_discover_hudhud";
@@ -87,6 +89,24 @@ export async function POST(req: NextRequest) {
       const remaining=Math.max(0,FREE_TURNS-(usage?.turns_used||FREE_TURNS));
       const reply="In the Qur'an, Allah says, in an English translation: "+verse.english+" Surah "+verse.key.replace(":",", verse ")+". The Arabic text is on screen.";
       return asResponse({reply,verses:[verse],presentation,matches:[],remaining,limitReached:remaining===0,unlocked:auth.premium},200,guestToken);
+    }
+    if(presentation.kind==="image"){
+      // Search only for an explicitly requested subject. The image provider
+      // filters results to valid HTTPS media URLs and strict SafeSearch.
+      const imageQuota=await claimSearchQuota(req,"images");
+      if(imageQuota!=="allowed")throw new Error("Image search quota unavailable");
+      const found=await searchImages(presentation.query);
+      // Prefer an original public photo over watermarked stock/licensing previews.
+      const selected=found.results.find(item=>/^(?:www\.)?(?:unsplash\.com|pexels\.com|commons\.wikimedia\.org)$/i.test(item.source))
+        ||found.results.find(item=>!/istockphoto|shutterstock|stock\.adobe|depositphotos|gettyimages|dreamstime|alamy|vecteezy|freepik/i.test(item.source))
+        ||found.results[0];
+      if(!selected)throw new Error("No verified image results");
+      const {data:usage}=await dbAdmin.from("discover_hudhud_usage").select("turns_used").eq("usage_key",usageKey).maybeSingle();
+      const remaining=Math.max(0,FREE_TURNS-(usage?.turns_used||FREE_TURNS));
+      return asResponse({
+        reply:"Here is an image of "+presentation.query+". Tap it for details.",
+        presentation,images:[selected],matches:[],remaining,limitReached:remaining===0,unlocked:auth.premium
+      },200,guestToken);
     }
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error("AI configuration unavailable");

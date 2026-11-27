@@ -282,7 +282,15 @@ test("HudHud pilot keeps one reasoning tier and the 50-action server cap",()=>{
   const brand=read("app/components/AnimatedMuslimBrand.tsx");
   assert.match(brand,/setTimeout\(\(\)=>setCondensed\(true\),4000\)/);
   assert.match(brand,/prefers-reduced-motion/);
- assert.match(page,/HudHudVerseCard/);
+ const focus=read("app/hudhud/HudHudFocusStage.tsx");
+ assert.match(page,/<HudHudFocusStage lines=\{lines\}/);
+ assert.match(focus,/HudHudVerseCard/);
+ assert.match(focus,/hudHistoryOverlay/);
+ assert.match(focus,/hudFocusCard/);
+ assert.doesNotMatch(page,/className="hudMessages"/);
+ assert.match(focus,/20_000/);
+ assert.match(focus,/hudFocusRestore/);
+ assert.match(focus,/hudImageInfoBackdrop/);
  assert.match(page,/askRef\.current\(text\)/);
  assert.match(page,/hudExiting/);
  assert.doesNotMatch(page,/of 3 free replies remaining/);
