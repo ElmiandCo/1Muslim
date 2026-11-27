@@ -4,6 +4,7 @@ import "./search-results.css";
 import "./search-magnetic.css";
 import "./search-feature-rails.css";
 import SearchFeatureRails from "./SearchFeatureRails";
+import SearchMemberHome from "./SearchMemberHome";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import SearchAuthFlow,{type SearchAuthMode} from "../components/SearchAuthFlow";
 import dynamic from "next/dynamic";
@@ -74,13 +75,13 @@ export default function SearchHub() {
   const [signoutBusy,setSignoutBusy]=useState(false);
   const [authMode,setAuthMode]=useState<SearchAuthMode|null>(null);
   const [authLeaving,setAuthLeaving]=useState(false);
-  const [authReturn,setAuthReturn]=useState("/profile");
+  const [authReturn,setAuthReturn]=useState("/search");
   const [authQuery,setAuthQuery]=useState("");
   useEffect(()=>{
     const params=new URLSearchParams(window.location.search);
     const mode=params.get("auth");
     if(["signin","signup","shahada","recover"].includes(mode||""))setAuthMode(mode as SearchAuthMode);
-    const next=params.get("next")||"/profile";
+    const next=params.get("next")||"/search";
     if(next.startsWith("/")&&!next.startsWith("//")&&!next.startsWith("/\\")&&!next.includes("://"))setAuthReturn(next);
   },[]);
   const openAuth=(mode:SearchAuthMode)=>{
@@ -88,12 +89,13 @@ export default function SearchHub() {
     setQuery("");setSubmitted("");setTab("All");setAuthLeaving(false);setAuthMode(mode);
     try{window.history.replaceState({}, "", "/search?auth="+mode);}catch{}
   };
-  const closeAuth=()=>{
+  const closeAuth=(toMemberHome=false)=>{
     setAuthLeaving(true);
     window.setTimeout(()=>{
       setAuthMode(null);setAuthLeaving(false);
-      try{window.history.replaceState({}, "", authQuery?"/search?q="+encodeURIComponent(authQuery):"/search");}catch{}
-      if(authQuery){setQuery(authQuery);setSubmitted(authQuery)}
+      const restore=toMemberHome?"":authQuery;
+      try{window.history.replaceState({}, "", restore?"/search?q="+encodeURIComponent(restore):"/search");}catch{}
+      setQuery(restore);setSubmitted(restore);setAuthQuery("");setTab("All");
     },220);
   };
   const [resultsNight,setResultsNight]=useState(true);
@@ -142,8 +144,8 @@ export default function SearchHub() {
       const {data:profile}=await db.from("profiles").select("shahada_verified_at").eq("id",user.id).maybeSingle();
       if(!active)return;
       if(!profile?.shahada_verified_at){setAuthMode("shahada");return}
-      if(authReturn!=="/search"){try{sessionStorage.setItem("1muslim:profile-arrival","1")}catch{};router.replace(authReturn);return}
-      closeAuth();
+      if(authReturn!=="/search"){try{sessionStorage.setItem("1muslim:member-home-arrival","1")}catch{};router.replace(authReturn);return}
+      closeAuth(true);
     })();
     return()=>{active=false};
   },[account,authMode,authReturn,router]);
@@ -215,12 +217,12 @@ export default function SearchHub() {
     setAccount("member");setAuthLeaving(true);
     try{sessionStorage.removeItem("1muslim:shahada-pending")}catch{}
     const next=authReturn;
-    try{sessionStorage.setItem("1muslim:profile-arrival","1")}catch{}
+    try{sessionStorage.setItem("1muslim:member-home-arrival","1")}catch{}
     if(next!=="/search"&&next.startsWith("/")&&!next.startsWith("//")&&!next.includes("://")){
       window.setTimeout(()=>router.replace(next),240);
       return;
     }
-    closeAuth();
+    closeAuth(true);
   };
   const signOut=async()=>{
     if(signoutBusy)return;
@@ -244,18 +246,21 @@ export default function SearchHub() {
     }));
   },[homeMode,resultsNight]);
   const showAuth=authMode!==null;
+  // Sign-in keeps users on the actual Search Home, not a second Profile page.
+  // Full directory results remain available on explicit /search?q= deep links.
+  if(account==="member"&&!showAuth&&!submitted.trim())return <SearchMemberHome onSignOut={signOut}/>;
   return <main ref={magneticRoot} className={"dsPage "+(homeMode?"dsHomeMode dsIntro"+(introStage==="pending"?"Pending":introStage==="playing"?"Playing":"Done"):"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))+(showAuth?" dsInlineAuthOpen":"")+(authLeaving?" dsInlineAuthLeaving":"")}>
     <nav className="dsHomeUtilities" aria-label="Account shortcuts">
       {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="1Muslim.Live — return to search home" onClick={e=>{e.preventDefault();clear()}}><AnimatedMuslimBrand/><span className="dsHomeBrandLive" aria-hidden="true">.Live</span></Link>}
       {!homeMode&&<button type="button" className="dsUtilityButton dsResultsThemeToggle" onClick={toggleResultsTheme} aria-label={resultsNight?"Switch search results to light mode":"Switch search results to dark mode"} title={resultsNight?"Light appearance":"Dark appearance"} aria-pressed={resultsNight}><span aria-hidden="true">{resultsNight?"☼":"◐"}</span></button>}
       {account==="guest"?<div className="dsGuestAccount" aria-label="Account access">
-        <Link href="/auth?next=%2Fprofile&login=1" onClick={e=>{e.preventDefault();openAuth("signin")}} className="dsGuestSignIn" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg></Link>
-        <Link href="/auth?next=%2Fprofile&mode=signup" onClick={e=>{e.preventDefault();openAuth("signup")}} className="dsGuestJoin"><span className="dsGuestJoinFull">Join 1Muslim</span><span className="dsGuestJoinCompact">Join</span></Link>
+        <Link href="/auth?next=%2Fsearch&login=1" onClick={e=>{e.preventDefault();openAuth("signin")}} className="dsGuestSignIn" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg></Link>
+        <Link href="/auth?next=%2Fsearch&mode=signup" onClick={e=>{e.preventDefault();openAuth("signup")}} className="dsGuestJoin"><span className="dsGuestJoinFull">Join 1Muslim</span><span className="dsGuestJoinCompact">Join</span></Link>
       </div>:account==="member"?<>
       <Link href="/settings" aria-label="Settings" title="Settings" className="dsUtilityButton">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.6 2.4 1.6.9 2.4-.7 2 3.5-1.8 1.7v1.9l1.8 1.7-2 3.5-2.4-.7-1.6.9L14 20h-4l-.6-2.4-1.6-.9-2.4.7-2-3.5 1.8-1.7v-1.9L3.4 8.6l2-3.5 2.4.7 1.6-.9L10 2Z"/></svg>
       </Link>
-      <Link href="/profile" aria-label="Profile" title="Profile" className="dsUtilityButton">
+      <Link href="/search" aria-label="Your personalized Search Home" title="Your Home" className="dsUtilityButton">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg>
       </Link>
       <button type="button" aria-label="Sign out" title="Sign out" className="dsUtilityButton" onClick={()=>setSignoutConfirm(true)}>
