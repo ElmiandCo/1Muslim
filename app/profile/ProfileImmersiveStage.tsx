@@ -8,7 +8,7 @@ export type ProfileSearchRequest={token:number;query:string;mode:"search"|"hudhu
 type HudHudPayload={reply?:string;presentation?:HudHudLine["presentation"];verses?:HudHudLine["verses"];images?:HudHudLine["images"];matches?:HudHudLine["matches"];error?:string};
 
 /** The profile Home and full HudHud screen render the SAME response stage. */
-export default function ProfileImmersiveStage({request,onReply,onSettled,persist=true,showEmpty=true}:{request:ProfileSearchRequest|null;onReply?:(answer:string)=>void;onSettled?:()=>void;persist?:boolean;showEmpty?:boolean}){
+export default function ProfileImmersiveStage({request,onReply,onSettled,persist=true,showEmpty=true,speaking=false,spokenChars=0}:{request:ProfileSearchRequest|null;onReply?:(answer:string)=>void;onSettled?:()=>void;persist?:boolean;showEmpty?:boolean;speaking?:boolean;spokenChars?:number}){
  const onReplyRef=useRef(onReply);onReplyRef.current=onReply;
  const onSettledRef=useRef(onSettled);onSettledRef.current=onSettled;
  const [lines,setLines]=useState<HudHudLine[]>([]);
@@ -66,7 +66,7 @@ export default function ProfileImmersiveStage({request,onReply,onSettled,persist
  },[request]);
  return <section className="profileHudFocusRegion" aria-label="HudHud immersive response stage">
    {showEmpty&&!request&&!lines.length&&<div className="profileHudEmpty" aria-hidden="true"><span>Ask anything.</span><small>One question. One clear view.</small></div>}
-   <HudHudFocusStage lines={lines} sessionId="profile-search" busy={busy} speakingAt={null} speechChar={0} persist={persist}/>
+   <HudHudFocusStage lines={lines} sessionId="profile-search" busy={busy} speakingAt={speaking&&lines.length?{sessionId:"profile-search",index:lines.length-1}:null} speechChar={spokenChars} persist={persist} idleAfterMs={persist?20_000:5_000}/>
    {error&&<p className="profileHudError" role="alert">{error}</p>}
  </section>;
 }
