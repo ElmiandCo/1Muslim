@@ -1,22 +1,11 @@
 "use client";
 
 import {useEffect,useRef,useState} from "react";
-import HudHudFocusStage,{type HudHudLine,type HudHudWebResult} from "../hudhud/HudHudFocusStage";
+import HudHudFocusStage,{type HudHudLine} from "../hudhud/HudHudFocusStage";
+import {getHudHudTopWebResult} from "../lib/hudhud-top-web";
 
 export type ProfileSearchRequest={token:number;query:string;mode:"search"|"hudhud"};
-type WebSearchItem={title:string;url:string;source:string;description?:string;thumbnailUrl?:string};
-type WebSearchPayload={results?:WebSearchItem[];error?:string};
 type HudHudPayload={reply?:string;presentation?:HudHudLine["presentation"];verses?:HudHudLine["verses"];images?:HudHudLine["images"];matches?:HudHudLine["matches"];error?:string};
-
-function safeTopWebResult(data:WebSearchPayload):HudHudWebResult|undefined{
- const result=data.results?.find(item=>{
-  try{const url=new URL(item.url);return (url.protocol==="https:"||url.protocol==="http:")&&!!item.title}catch{return false}
- });
- if(!result)return;
- return {title:result.title,url:result.url,source:result.source||new URL(result.url).hostname,
-  description:result.description||"",
-  thumbnailUrl:result.thumbnailUrl?.startsWith("https://")?result.thumbnailUrl:undefined};
-}
 
 /** The profile Home and full HudHud screen render the SAME response stage. */
 export default function ProfileImmersiveStage({request}:{request:ProfileSearchRequest|null}){
@@ -33,11 +22,7 @@ export default function ProfileImmersiveStage({request}:{request:ProfileSearchRe
   void (async()=>{
    const isPhoto=/\b(photo|photos|picture|pictures|image|images)\b/i.test(q);
    // The web provider remains independent. No first-party or religious-domain boost.
-   const webPromise=isPhoto?Promise.resolve(undefined):fetch("/api/web-search?q="+encodeURIComponent(q.slice(0,120))+"&type=web",
-     {signal:controller.signal,cache:"no-store"}).then(async response=>{
-       if(!response.ok)return undefined;
-       return safeTopWebResult(await response.json() as WebSearchPayload);
-     }).catch(()=>undefined);
+   const webPromise=isPhoto?Promise.resolve(undefined):getHudHudTopWebResult(q,controller.signal).catch(()=>undefined);
    let ai:HudHudPayload|null=null,aiError="";
    try{
     const response=await fetch("/api/discover/ask",{method:"POST",headers:{"Content-Type":"application/json"},
