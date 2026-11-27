@@ -113,6 +113,6 @@ test("HudHud fourth turn does not violate legacy three-turn database constraint"
  assert.match(api,/const FREE_TURNS = 50;/);
  assert.match(api,/reserve_hudhud_v2_turn/);
  assert.match(api,/refund_discover_hudhud_turn/);
- assert.match(api,/HUDHUD_FALLBACK_MODEL\|\|"gpt-4o-mini"/);
+ assert.match(api,/HUDHUD_FALLBACK_MODEL\|\|"gpt-4o"/);
  assert.match(api,/phase="reserve-turn"/);
 });
