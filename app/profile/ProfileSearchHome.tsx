@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {useEffect,useRef,useState,type FormEvent} from "react";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
-import ProfileCinematicPosts from "../components/ProfileCinematicPosts";
 import SearchFeatureRails from "../search/SearchFeatureRails";
 import ProfileImmersiveStage,{type ProfileSearchRequest} from "./ProfileImmersiveStage";
 import "../search/search-feature-rails.css";
@@ -38,9 +37,8 @@ type ProfileSpeechRecognition={
 };
 type ProfileVoiceWindow=Window&{SpeechRecognition?:new()=>ProfileSpeechRecognition;webkitSpeechRecognition?:new()=>ProfileSpeechRecognition};
 
-export default function ProfileSearchHome({profile,postCount,expanded,editing,onExpand,onCollapse,onEdit,onSettings,onPosts,onSignOut}:Props){
+export default function ProfileSearchHome({profile,expanded,editing,onExpand,onCollapse,onSettings,onSignOut}:Props){
   const [search,setSearch]=useState("");
-  const [detailsOpen,setDetailsOpen]=useState(false);
   const [stageRequest,setStageRequest]=useState<ProfileSearchRequest|null>(null);
   const [micListening,setMicListening]=useState(false);
   const [micError,setMicError]=useState("");
@@ -48,9 +46,6 @@ export default function ProfileSearchHome({profile,postCount,expanded,editing,on
   const speechSession=useRef<ProfileSpeechRecognition|null>(null);
   const searchInput=useRef<HTMLInputElement>(null);
   const [arrival,setArrival]=useState(false);
-  const railRoot=useRef<HTMLDivElement>(null);
-  const pauseUntil=useRef(0);
-  const touchStart=useRef<number|null>(null);
   useEffect(()=>{
     let fresh=false;
     try{fresh=sessionStorage.getItem("1muslim:profile-arrival")==="1"||new URLSearchParams(window.location.search).get("arrival")==="1";sessionStorage.removeItem("1muslim:profile-arrival");if(new URLSearchParams(window.location.search).has("arrival"))window.history.replaceState(null,"","/profile")}catch{}
@@ -59,17 +54,6 @@ export default function ProfileSearchHome({profile,postCount,expanded,editing,on
     const id=window.setTimeout(()=>setArrival(false),800);
     return()=>window.clearTimeout(id);
   },[]);
-  useEffect(()=>{
-    if(expanded||editing||reducedMotion())return;
-    const id=window.setInterval(()=>{
-      const rail=railRoot.current?.querySelector<HTMLElement>(".profileCinematicGrid");
-      if(!rail||document.hidden||Date.now()<pauseUntil.current||rail.scrollWidth<=rail.clientWidth+8)return;
-      if(rail.contains(document.activeElement)||rail.matches(":hover"))return;
-      if(rail.scrollLeft+rail.clientWidth>=rail.scrollWidth-16)rail.scrollTo({left:0,behavior:"smooth"});
-      else rail.scrollBy({left:116,behavior:"smooth"});
-    },3500);
-    return()=>window.clearInterval(id);
-  },[expanded,editing]);
   const runStage=(mode:"search"|"hudhud",inputText:string)=>{
     const query=inputText.trim().slice(0,900);
     if(!query)return;
@@ -122,7 +106,6 @@ export default function ProfileSearchHome({profile,postCount,expanded,editing,on
     event.preventDefault();
     runStage("search",search);
   };
-  const location=[profile.city,profile.state,profile.country].filter(Boolean).join(", ");
   return <section className={"profileSearchHome dsHomeMode"+(arrival?" isArriving":"")+(expanded||editing?" hasOpenPanel":"")} aria-label="Your personalized One Muslim Search Home">
     <div className="profileSearchUtilities" aria-label="One Muslim header and account controls">
       <Link href="/search" className="profileSearchBrand" aria-label="One Muslim.Live search home"><AnimatedMuslimBrand/><span className="profileSearchLive" aria-hidden="true">.Live</span></Link>
@@ -144,7 +127,7 @@ export default function ProfileSearchHome({profile,postCount,expanded,editing,on
           <input ref={searchInput} aria-label="Search One Muslim" type="search" autoComplete="off" placeholder="Search with HudHud" value={search} onChange={e=>setSearch(e.target.value)}/>
           <button type="button" className={"profileSearchHud"+(micListening?" isListening":"")} aria-label={micListening?"Stop HudHud microphone":search.trim()?"Ask HudHud this question":"Speak with HudHud"} aria-pressed={micListening}
             onClick={()=>search.trim()?runStage("hudhud",search):speak()}><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 1.8 7.3L21 12l-7.2 2.7L12 22l-1.8-7.3L3 12l7.2-2.7L12 2Z"/><path d="m19.5 3.7.5 1.6 1.6.5-1.6.5-.5 1.6-.5-1.6-1.6-.5 1.6-.5.5-1.6Z"/></svg></button>
-          <button type="button" className="profileSearchAvatarControl" onClick={expanded||editing?onCollapse:()=>setDetailsOpen(o=>!o)} aria-label={expanded||editing?"Return to search profile":detailsOpen?"Collapse profile details":"Show your profile details"} title="My profile">
+          <button type="button" className="profileSearchAvatarControl" onClick={expanded||editing?onCollapse:onExpand} aria-label={expanded||editing?"Return to search profile":"Open your full profile"} title="My profile">
             <img className="profileSearchCurrentAvatar" src={avatarFor(profile)} alt=""/>
           </button>
         </form>
@@ -153,29 +136,6 @@ export default function ProfileSearchHome({profile,postCount,expanded,editing,on
       {micError&&<p className="profileSearchMicError" role="alert">{micError}</p>}
     </div>
     {!expanded&&!editing&&<ProfileImmersiveStage request={stageRequest}/>}
-    {!expanded&&!editing&&<div className="profileSearchPersonal">
-      <div className="profileSearchStoryHeading"><span>Your posts</span><button type="button" onClick={onPosts} className="profileSearchAdd" aria-label="Open posts and add a post" title="Add a post">+</button></div>
-      <div ref={railRoot} className="profileSearchStoryRail" onTouchStart={()=>{pauseUntil.current=Date.now()+7000}} onPointerDown={()=>{pauseUntil.current=Date.now()+7000}}>
-        <ProfileCinematicPosts profileId={profile.id} feedMode="own" limit={16}/>
-      </div>
-      <div className="profileSearchIdentity">
-        <button type="button" className="profileSearchDrag" aria-expanded={detailsOpen} aria-controls="profile-search-identity-details" onClick={()=>setDetailsOpen(o=>!o)} onTouchStart={e=>{touchStart.current=e.touches[0]?.clientY??null}} onTouchEnd={e=>{const from=touchStart.current;touchStart.current=null;const to=e.changedTouches[0]?.clientY;if(from!==null&&to!==undefined&&Math.abs(to-from)>35){e.preventDefault();setDetailsOpen(to>from)}}} aria-label={detailsOpen?"Collapse your profile information":"Expand your profile information"}>
-          <span aria-hidden="true"/>
-          <small>{detailsOpen?"Hide details":"Show details"}</small>
-        </button>
-        <div className={"profileSearchIdentityDetails"+(detailsOpen?" isOpen":"")} id="profile-search-identity-details" aria-hidden={!detailsOpen}>
-          <h2>{profile.display_name||"1Muslim member"}{profile.shahada_verified_at&&<span className="profileSearchVerified" title="Shahada verified" aria-label="Verified">✓</span>}</h2>
-          {profile.username&&!profile.hide_1muslim_id&&<p className="profileSearchHandle">@{profile.username}</p>}
-          {profile.bio&&<p className="profileSearchBio">{profile.bio}</p>}
-          {location&&<p className="profileSearchLocation">{location}</p>}
-          <div className="profileSearchStats"><span><strong>{postCount}</strong> Posts</span><span><strong>{Number(profile.xp_total||0).toLocaleString()}</strong> XP</span></div>
-          <div className="profileSearchActions">
-            <button type="button" onClick={onEdit}>Edit profile</button>
-            <button type="button" onClick={onExpand}>View all profile features <span aria-hidden="true">↗</span></button>
-          </div>
-        </div>
-      </div>
-    </div>}
     {!expanded&&!editing&&<div className="profileSearchFullRail"><SearchFeatureRails/></div>}
     {(expanded||editing)&&<button className="profileSearchReturn" onClick={onCollapse} type="button">‹ Back to Search Profile</button>}
   </section>;

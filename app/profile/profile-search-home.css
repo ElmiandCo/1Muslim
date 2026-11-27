@@ -169,3 +169,47 @@ html[data-one-chrome-theme="night"] .profileHudFocusRegion .hudTopWebsiteCopy>st
 .profileSearchHome .profileSearchHud svg{display:block;width:22px;height:22px;transition:transform .25s ease}
 .profileSearchHome .profileSearchHud:active svg{transform:scale(.87)}
 @media(prefers-reduced-motion:reduce){.profileSearchHome .profileSearchHud svg{transition:none!important}}
+
+/* Search-first Profile Home: remove the intrusive personal-posts circle rail.
+   The account avatar opens the full profile, where members still manage their
+   posts. The independent Explore rail now gets the bottom of the home canvas. */
+.profileSearchHome:not(.hasOpenPanel){min-height:100dvh;min-height:100svh;overflow:visible;padding-bottom:max(26px,env(safe-area-inset-bottom,0px))}
+.profileSearchHome:not(.hasOpenPanel) .profileHudFocusRegion{flex:1 1 auto;height:clamp(305px,45dvh,540px);max-height:540px}
+.profileSearchHome:not(.hasOpenPanel) .profileSearchFullRail{
+ flex:0 0 auto;margin-top:auto;
+ padding:clamp(12px,2.4dvh,26px) clamp(13px,3vw,42px) max(24px,env(safe-area-inset-bottom,0px));
+}
+.profileSearchHome:not(.hasOpenPanel) .profileSearchFullRail .dsExploreFeatureSection{
+ padding:0!important;margin:0!important;max-width:100%!important;
+}
+.profileSearchHome:not(.hasOpenPanel) .profileSearchFullRail .dsFeatureRail{
+ padding-bottom:8px!important;
+}
+.profileSearchHome:not(.hasOpenPanel) .profileSearchFullRail .dsFeatureCard{
+ min-height:94px!important;
+}
+@media(max-width:767px){
+ /* The five-tab global navigation was covering Explore. The profile Home
+    already has a header, an avatar and genuine Explore destinations; hide
+    only this redundant bar. Keep it on actual profile/editor panels. */
+ html:has(.profileSearchHome:not(.hasOpenPanel)) .oneGlobalNav{display:none!important}
+ html:has(.profileSearchHome:not(.hasOpenPanel)) body{
+  padding-bottom:env(safe-area-inset-bottom,0px)!important;
+ }
+ html:has(.profileSearchHome:not(.hasOpenPanel)) body .profileCommandPage{
+  padding-bottom:0!important;
+ }
+ .profileSearchHome:not(.hasOpenPanel) .profileHudFocusRegion{
+  flex:1 1 auto;height:clamp(300px,43dvh,510px);max-height:none;
+ }
+ .profileSearchHome:not(.hasOpenPanel) .profileSearchFullRail{
+  padding:12px 11px max(28px,env(safe-area-inset-bottom,0px));
+ }
+ .profileSearchHome:not(.hasOpenPanel) .profileSearchFullRail .dsFeatureCard{
+  min-height:90px!important;
+ }
+}
+@media(max-height:690px) and (max-width:767px){
+ .profileSearchHome:not(.hasOpenPanel) .profileHudFocusRegion{height:38dvh;min-height:230px}
+ .profileSearchHome:not(.hasOpenPanel) .profileSearchFullRail{padding-top:6px}
+}
