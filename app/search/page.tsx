@@ -6,7 +6,7 @@ import "./search-feature-rails.css";
 import SearchFeatureRails from "./SearchFeatureRails";
 import SearchAuthFlow,{type SearchAuthMode} from "../components/SearchAuthFlow";
 import dynamic from "next/dynamic";
-const ShahadaOnboardingExperience=dynamic(()=>import("../components/ShahadaOnboardingExperience"),{ssr:false,loading:()=>null});
+const HudHudShahadaV2=dynamic(()=>import("../components/HudHudShahadaV2"),{ssr:false,loading:()=>null});
 import Link from "next/link";
 import WebSearchPanel,{type GlobalSearchMode} from "../components/WebSearchPanel";
 import { useSearchMagneticMotion } from "./useSearchMagneticMotion";
@@ -91,6 +91,7 @@ export default function SearchHub() {
   const [authMode,setAuthMode]=useState<SearchAuthMode|null>(null);
   const [authLeaving,setAuthLeaving]=useState(false);
   const [authReturn,setAuthReturn]=useState("/search");
+  const [authQuery,setAuthQuery]=useState("");
   useEffect(()=>{
     const params=new URLSearchParams(window.location.search);
     const mode=params.get("auth");
@@ -99,6 +100,7 @@ export default function SearchHub() {
     if(next.startsWith("/")&&!next.startsWith("//")&&!next.startsWith("/\\")&&!next.includes("://"))setAuthReturn(next);
   },[]);
   const openAuth=(mode:SearchAuthMode)=>{
+    if(!authMode)setAuthQuery(query);
     setQuery("");setSubmitted("");setTab("All");setAuthLeaving(false);setAuthMode(mode);
     try{window.history.replaceState({}, "", "/search?auth="+mode);}catch{}
   };
@@ -106,7 +108,8 @@ export default function SearchHub() {
     setAuthLeaving(true);
     window.setTimeout(()=>{
       setAuthMode(null);setAuthLeaving(false);
-      try{window.history.replaceState({}, "", "/search");}catch{}
+      try{window.history.replaceState({}, "", authQuery?"/search?q="+encodeURIComponent(authQuery):"/search");}catch{}
+      if(authQuery){setQuery(authQuery);setSubmitted(authQuery)}
     },220);
   };
   const [resultsNight,setResultsNight]=useState(true);
@@ -214,6 +217,16 @@ export default function SearchHub() {
     const context=(submitted||query).trim().slice(0,90);
     router.push("/hudhud"+(context?"?q="+encodeURIComponent(context):""));
   };
+  const completeShahada=()=>{
+    setAccount("member");setAuthLeaving(true);
+    try{sessionStorage.removeItem("1muslim:shahada-pending")}catch{}
+    const next=authReturn;
+    if(next!=="/search"&&next.startsWith("/")&&!next.startsWith("//")&&!next.includes("://")){
+      window.setTimeout(()=>router.replace(next),240);
+      return;
+    }
+    closeAuth();
+  };
   const signOut=async()=>{
     if(signoutBusy)return;
     setSignoutBusy(true);
@@ -263,7 +276,7 @@ export default function SearchHub() {
         </form>
         <button className="dsSearchSubmit" type="button" onClick={()=>commit(query)}>Search</button>
         {showAuth&&authMode!=="shahada"&&<SearchAuthFlow mode={authMode!} setMode={next=>{setAuthMode(next);try{window.history.replaceState({}, "", "/search?auth="+next)}catch{}}} onClose={closeAuth} onSignedIn={()=>{setAccount("member");closeAuth()}} returnTo={authReturn}/>}
-        {showAuth&&authMode==="shahada"&&<div className="dsShahadaInlineHeading"><img src="/assets/hudhud-logo.PNG" alt="" /><span>HudHud Shahada</span><button type="button" onClick={closeAuth} aria-label="Return to search">✕</button></div>}
+        {showAuth&&authMode==="shahada"&&<div className="dsShahadaInlineHeading"><span>HudHud</span></div>}
       </div>
       <div className="dsCategoryBar">
         <nav className="dsTabs" aria-label="Discover categories">
@@ -278,7 +291,7 @@ export default function SearchHub() {
     </header>
 
     {showAuth&&authMode==="shahada"&&<section className="dsAuthShahada" aria-label="Shahada verification">
-      {account==="member"?<ShahadaOnboardingExperience embedded onComplete={()=>{setAccount("member");closeAuth()}}/>:account==="checking"?<p role="status">Preparing your secure Shahada session…</p>:<div className="dsAuthShahadaWait"><strong>Confirm your email to begin</strong><p>Once your account is verified, sign in here and HudHud will guide your Shahada.</p><button type="button" onClick={()=>openAuth("signin")}>Sign in</button></div>}
+      {account==="member"?<HudHudShahadaV2 embedded returnTo={authReturn} onComplete={completeShahada} onExit={closeAuth}/>:account==="checking"?<p role="status">Preparing your secure Shahada session…</p>:<div className="dsAuthShahadaWait"><strong>Confirm your email to begin</strong><p>Once your account is verified, sign in here and HudHud will guide your Shahada.</p><button type="button" onClick={()=>openAuth("signin")}>Sign in</button></div>}
     </section>}
     {!showAuth&&showSuggestions&&<section className="dsSuggestions" aria-label="Search suggestions">
       <span className="dsSectionKicker">SUGGESTED MATCHES</span>
