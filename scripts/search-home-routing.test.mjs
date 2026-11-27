@@ -110,7 +110,9 @@ test("signed-in Search Home is the actual personalized experience, not the old P
  assert.match(member,/getUserMedia\(\{audio:true\}\)/);
  assert.match(member,/SpeechRecognition/);
  assert.match(member,/normalizeSpokenHudHudQuestion/);
- assert.match(member,/speechSynthesis\.speak/);
+ assert.match(member,/createHudHudAiVoicePlayer/);
+ assert.match(member,/micCooldown/);
+ assert.doesNotMatch(member,/speechSynthesis\\.speak/);
  assert.match(member,/Assalamu Alaikum Wa Rahmatullahi Wa Barakatuh/);
  assert.match(member,/insert\("Search 1Muslim"/);
  assert.match(member,/insert\(" witg"/);
@@ -409,4 +411,29 @@ test("Shared route-aware mobile chrome stays white on Search Home and supports d
  assert.match(global,/html\[data-one-chrome="day"\]/);
  assert.match(global,/html\[data-one-chrome="night"\]/);
  assert.match(manifest,/"theme_color": "#ffffff"/);
+});
+
+
+test("HudHud speech is AI-generated with a hard microphone playback barrier",()=>{
+ const member=read("app/search/SearchMemberHome.tsx");
+ const hudhud=read("app/hudhud/page.tsx");
+ const window=read("app/components/HudHudChatWindow.tsx");
+ const player=read("app/lib/hudhud-ai-voice-player.ts");
+ const route=read("app/api/hudhud/speech/route.ts");
+ const guard=read("lib/server/search-api-quota.ts");
+ assert.match(member,/stopRecognition\(\);stopAudio\(\)/);
+ assert.match(member,/micCooldown/);
+ assert.match(member,/player\.play\(words\)/);
+ assert.match(hudhud,/setSpeechPending\(true\)/);
+ assert.match(hudhud,/audioCooldown/);
+ assert.match(window,/voiceBusy\.current/);
+ assert.match(player,/audio\.pause\(\)/);
+ assert.match(player,/\/api\/hudhud\/speech/);
+ assert.match(route,/OPENAI_API_KEY/);
+ assert.match(route,/voice:"nova"/);
+ assert.match(route,/claimSearchQuota\(req,"voice"\)/);
+ assert.match(guard,/globalDaily:900/);
+ assert.doesNotMatch(member,/speechSynthesis/);
+ assert.doesNotMatch(hudhud,/speechSynthesis/);
+ assert.doesNotMatch(window,/SpeechSynthesisUtterance/);
 });

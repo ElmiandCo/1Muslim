@@ -3,6 +3,7 @@ import Link from "next/link";
 import {useEffect,useRef,useState,type FormEvent} from "react";
 import {createClient} from "../../utils/supabase/client";
 import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
+import {createHudHudAiVoicePlayer} from "../lib/hudhud-ai-voice-player";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import SearchFeatureRails from "./SearchFeatureRails";
 import ProfileImmersiveStage,{type ProfileSearchRequest} from "../profile/ProfileImmersiveStage";
@@ -56,6 +57,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const [pageVisible,setPageVisible]=useState(true);
  const [paused,setPaused]=useState(false);
  const [speaking,setSpeaking]=useState(false);
+ const [micCooldown,setMicCooldown]=useState(false);
  const [spokenChars,setSpokenChars]=useState(0);
  const [voiceOn,setVoiceOn]=useState(true);
  const [voiceError,setVoiceError]=useState("");
@@ -64,7 +66,9 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const requestSequence=useRef(0);
  const userInput=useRef<HTMLInputElement>(null);
  const pendingGreeting=useRef(false);
- const speechTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const resumeTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const audioEpoch=useRef(0);
+ const voicePlayer=useRef<ReturnType<typeof createHudHudAiVoicePlayer>|null>(null);
  const initialised=useRef(false);
  const speechActive=useRef(false);
  const voiceOnRef=useRef(voiceOn);voiceOnRef.current=voiceOn;
@@ -160,8 +164,10 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   setListening(false);
  };
  const stopAudio=()=>{
-  if(speechTimer.current){window.clearTimeout(speechTimer.current);speechTimer.current=null}
-  window.speechSynthesis?.cancel();speechActive.current=false;setSpeaking(false);
+  audioEpoch.current++;
+  voicePlayer.current?.stop();
+  if(resumeTimer.current){window.clearTimeout(resumeTimer.current);resumeTimer.current=null}
+  speechActive.current=false;setSpeaking(false);setMicCooldown(false);
  };
  // Listening requires browser permission and always has a visible pause control.
  const askMicPermission=async()=>{
@@ -187,26 +193,25 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  },[member?.id]);
 
  const say=(text:string,onEnd?:()=>void)=>{
-  if(!voiceOnRef.current||!("speechSynthesis" in window)){onEnd?.();return}
-  stopAudio();
-  const words=text.trim().slice(0,2500);
-  const utterance=new SpeechSynthesisUtterance(words);
-  setSpokenChars(0);
-  // Hold the microphone before speech starts, not after the browser emits onstart.
-  speechActive.current=true;setSpeaking(true);
-  utterance.lang="en-US";utterance.rate=.99;utterance.volume=.88;
-  let finished=false,started=false;
-  const finish=()=>{if(finished)return;finished=true;speechActive.current=false;setSpeaking(false);
-   if(speechTimer.current){clearTimeout(speechTimer.current);speechTimer.current=null}onEnd?.()};
-  utterance.onstart=()=>{started=true;speechActive.current=true;setSpeaking(true);setGreetingFailed(false)};
-  utterance.onerror=()=>{setGreetingFailed(true);finish()};
-  utterance.onboundary=event=>{if(typeof event.charIndex==="number")setSpokenChars(event.charIndex)};
-  utterance.onend=finish;
-  // iOS may reject sound without a direct user interaction; keep the manual replay control.
-  speechTimer.current=setTimeout(()=>{if(!started)setGreetingFailed(true);finish()},Math.max(4500,words.length*125));
-  try{window.speechSynthesis.speak(utterance)}catch{setGreetingFailed(true);finish()}
+  if(!voiceOnRef.current){onEnd?.();return}
+  // Half duplex: the same microphone must NEVER recognize HudHud's own output.
+  stopRecognition();stopAudio();
+  const epoch=++audioEpoch.current;
+  const words=text.trim().slice(0,1800);
+  speechActive.current=true;setSpeaking(true);setSpokenChars(0);
+  const player=voicePlayer.current||(voicePlayer.current=createHudHudAiVoicePlayer());
+  void player.play(words).then(played=>{
+   if(epoch!==audioEpoch.current)return;
+   speechActive.current=false;setSpeaking(false);setSpokenChars(words.length);
+   if(!played){setGreetingFailed(true);setVoiceError("HudHud's AI voice is unavailable. The reply is still here in text.")}
+   else{setGreetingFailed(false);setVoiceError("")}
+   onEnd?.();
+   // Give iPhone speakers and microphone hardware time to settle after audio.
+   setMicCooldown(true);
+   resumeTimer.current=setTimeout(()=>setMicCooldown(false),1400);
+  });
  };
- const greet=()=>{
+  const greet=()=>{
   setGreetingFailed(false);
   say("Assalamu Alaikum Wa Rahmatullahi Wa Barakatuh");
  };
@@ -230,7 +235,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  };
  const onSettled=()=>setThinking(false);
  const startRecognition=()=>{
-  if(recognition.current||thinking||speaking||speechActive.current||focused||paused||document.hidden)return;
+  if(recognition.current||thinking||speaking||speechActive.current||micCooldown||focused||paused||document.hidden)return;
   const host=window as SpeechWindow;
   const Voice=host.SpeechRecognition||host.webkitSpeechRecognition;
   if(!Voice){setMicPermission("unsupported");setVoiceError("Voice recognition is unavailable here. You can type.");return}
@@ -264,10 +269,10 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   }catch{setPaused(true);setMicPermission("needs-tap");setVoiceError("Tap the microphone to start listening.");}
  };
  useEffect(()=>{
-  if(!member||paused||nameEditor||!pageVisible||micPermission!=="granted"||listening||thinking||speaking||speechActive.current||focused||search.trim()||document.hidden)return;
+  if(!member||paused||nameEditor||!pageVisible||micPermission!=="granted"||listening||thinking||speaking||speechActive.current||micCooldown||focused||search.trim()||document.hidden)return;
   const timer=setTimeout(startRecognition,550);
   return()=>clearTimeout(timer);
- },[member?.id,paused,nameEditor,pageVisible,micPermission,listening,thinking,speaking,focused,search]);
+ },[member?.id,paused,nameEditor,pageVisible,micPermission,listening,thinking,speaking,micCooldown,focused,search]);
  const toggleMic=()=>{
   if(listening){setPaused(true);stopRecognition();return}
   setPaused(false);if(micPermission!=="granted"){void askMicPermission();return}
@@ -321,7 +326,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
       micPermission==="denied"||micPermission==="needs-tap"?<button type="button" onClick={()=>{setPaused(false);void askMicPermission()}}>Enable microphone to speak</button>:
       micPermission==="unsupported"?<span>Type to ask HudHud. Voice recognition is unavailable.</span>:null}
       {greetingFailed&&<button type="button" onClick={greet}>Hear the greeting</button>}
-      <button type="button" className="smhVoiceToggle" aria-pressed={voiceOn} onClick={()=>{setVoiceOn(old=>!old);if(voiceOn)stopAudio()}}>{voiceOn?"Spoken replies on":"Spoken replies off"}</button>
+      <button type="button" className="smhVoiceToggle" aria-pressed={voiceOn} onClick={()=>{setVoiceOn(old=>!old);if(voiceOn)stopAudio()}}>{voiceOn?"AI spoken replies on":"AI spoken replies off"}</button>
     </div>
     {voiceError&&<p className="smhError" role="status">{voiceError}</p>}
   </section>

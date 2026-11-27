@@ -5,12 +5,13 @@
 import {createHmac} from "node:crypto";
 import type {NextRequest} from "next/server";
 
-export type SearchQuotaKind="web"|"images"|"summary";
+export type SearchQuotaKind="web"|"images"|"summary"|"voice";
 export type SearchQuotaDecision="allowed"|"limited"|"unavailable";
 const policies:Record<SearchQuotaKind,{perVisitor:number;windowSeconds:number;globalDaily:number}>={
   web:{perVisitor:30,windowSeconds:300,globalDaily:1500},
   images:{perVisitor:15,windowSeconds:300,globalDaily:400},
-  summary:{perVisitor:6,windowSeconds:900,globalDaily:100}
+  summary:{perVisitor:6,windowSeconds:900,globalDaily:100},
+  voice:{perVisitor:22,windowSeconds:600,globalDaily:900}
 };
 async function claim(url:string,key:string,requestKey:string,max:number,seconds:number):Promise<boolean|null>{
   let response:Response;
