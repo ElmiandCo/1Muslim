@@ -13,7 +13,7 @@
 .hudV2Highlight{position:absolute;left:18%;top:10%;width:54%;height:30%;border-radius:55%;transform:rotate(-26deg);background:radial-gradient(ellipse,#f7fffd81 2%,#d7fff823 56%,transparent 74%);filter:blur(5px)}
 .hudV2Noise{position:absolute;inset:0;border-radius:inherit;background:repeating-radial-gradient(circle at 55% 45%,transparent 0 8px,#defce605 9px 10px);opacity:.6}
 .hudV2Particles{position:absolute;inset:-4%;border-radius:50%;pointer-events:none}
-.hudV2Particles i{position:absolute;top:calc(8% + var(--i)*9%);left:calc(16% + mod(var(--i)*31,67)*1%);width:2px;height:2px;background:#90e5cb;border-radius:50%;box-shadow:0 0 5px #52cdac;opacity:.32;animation:hudV2Blink calc(3s + var(--i)*.35s) ease-in-out infinite alternate}
+.hudV2Particles i{position:absolute;top:calc(8% + var(--i)*9%);left:calc(14% + var(--i)*8%);width:2px;height:2px;background:#90e5cb;border-radius:50%;box-shadow:0 0 5px #52cdac;opacity:.32;animation:hudV2Blink calc(3s + var(--i)*.35s) ease-in-out infinite alternate}
 .hudV2Orb.isListening .hudV2Sphere{filter:brightness(calc(1 + var(--orb-level)*.18)) saturate(1.2);transform:rotateX(var(--orb-tilt-y)) rotateY(var(--orb-tilt-x)) scale(calc(1 + var(--orb-level)*.055))}
 .hudV2Orb.isSpeaking .hudV2Sphere{animation:hudV2Speak .72s ease-in-out infinite alternate}
 .hudV2Orb.isThinking .hudV2Sphere{animation:hudV2Think 1.8s ease-in-out infinite}
