@@ -7,13 +7,21 @@ import "./hudhud-focus.css";
 
 export type HudHudImage={title:string;imageUrl:string;thumbnailUrl:string;pageUrl:string;source:string;width?:number;height?:number};
 export type HudHudMatch={id:string;kind:string;title:string;href:string;image?:string;description?:string};
-export type HudHudLine={role:"user"|"assistant";content:string;matches?:HudHudMatch[];presentation?:HudHudPresentation;verses?:{key:string;arabic:string;english:string;translation:string;source?:string}[];images?:HudHudImage[]};
+export type HudHudWebResult={title:string;url:string;source:string;description?:string;thumbnailUrl?:string};
+export type HudHudLine={role:"user"|"assistant";content:string;matches?:HudHudMatch[];presentation?:HudHudPresentation;verses?:{key:string;arabic:string;english:string;translation:string;source?:string}[];images?:HudHudImage[];webResult?:HudHudWebResult};
 type Props={lines:HudHudLine[];sessionId:string;busy:boolean;speakingAt:{sessionId:string;index:number}|null;speechChar:number};
 
 function Narration({text,spokenChars}:{text:string;spokenChars?:number}){
+ const clean=text.trim();
+ const wordCount=clean.split(/\s+/).filter(Boolean).length;
+ const scale=wordCount<=7?"hudReplyXL":wordCount<=18?"hudReplyL":wordCount<=38?"hudReplyM":"hudReplyStandard";
  const sentences=text.match(/[^.!?]+[.!?]*\s*/g)||[text];
  let offset=0;
- return <p className="hudNarratedReply">{sentences.map((part,index)=>{const start=offset;offset+=part.length;return <span key={index} className={spokenChars===undefined?"":spokenChars>=start?"hudNarratedHeard":"hudNarratedUpcoming"}>{part}</span>})}</p>;
+ return <p className={"hudNarratedReply "+scale}>{sentences.map((part,index)=>{
+  const start=offset;offset+=part.length;
+  const heard=spokenChars===undefined?"":spokenChars>=start?"hudNarratedHeard":"hudNarratedUpcoming";
+  return <span key={index} className={heard+(index===0?" hudNarratedLead":"")}>{part}</span>;
+ })}</p>;
 }
 function Answer({line,index,sessionId,speakingAt,speechChar,onImageOpen}:{line:HudHudLine;index:number;sessionId:string;speakingAt:Props["speakingAt"];speechChar:number;onImageOpen:()=>void}){
  const spoken=speakingAt?.sessionId===sessionId&&speakingAt.index===index?speechChar:undefined;
@@ -28,6 +36,10 @@ function Answer({line,index,sessionId,speakingAt,speechChar,onImageOpen}:{line:H
  }
  return <>
   <Narration text={line.content} spokenChars={spoken}/>
+  {line.webResult&&<a className="hudTopWebsite" href={line.webResult.url} target="_blank" rel="noopener noreferrer" aria-label={"Open web result: "+line.webResult.title}>
+    {line.webResult.thumbnailUrl?.startsWith("https://")&&<img src={line.webResult.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer"/>}
+    <span className="hudTopWebsiteCopy"><small>TOP WEB RESULT · {line.webResult.source}</small><strong>{line.webResult.title}</strong>{line.webResult.description&&<span>{line.webResult.description.slice(0,195)}</span>}<em>Visit website ↗</em></span>
+   </a>}
   {line.presentation?.kind==="results"&&line.matches&&line.matches.length>0&&<div className="hudMatches" role="list" aria-label="Verified search matches">{line.matches.slice(0,3).map(match=><div className="hudMatchCard" role="listitem" key={match.href}>{match.kind==="Qur’an"&&/^\d{1,3}:\d{1,3}$/.test(match.id)
    ?<HudHudVerseCard verseKey={match.id} href={match.href}/>
    :<Link href={match.href}>{match.image?.startsWith("https://")&&<img src={match.image} alt="" loading="lazy"/>}<span className="hudMatchKind">{match.kind}</span><strong>{match.title}</strong>{match.description&&<small>{match.description.slice(0,105)}</small>}<em>View source ↗</em></Link>}</div>)}</div>}
@@ -53,11 +65,11 @@ export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speech
  const markActivity=()=>{const now=Date.now();if(now-lastActivity.current>550){lastActivity.current=now;setActivity(n=>n+1)}};
  useEffect(()=>{if(busy){asked.current=true;setImageInfoOpen(false);setHistoryOpen(false)}},[busy]);
  useEffect(()=>{
-  if(observed.current===null){observed.current=answerKey;return}
+  if(observed.current===null){observed.current=answerKey;if(latest)setVisible(true);return}
   const changed=observed.current!==answerKey;
   if(changed){
    observed.current=answerKey;
-   if(asked.current&&latest){setVisible(true);setIdle(false);setRevealCount(n=>n+1)}
+   if(latest){setVisible(true);setIdle(false);setRevealCount(n=>n+1)}
    else{setVisible(false);setIdle(false)}
   }
   if(!busy&&asked.current&&!changed)setVisible(false);
