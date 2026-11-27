@@ -52,7 +52,7 @@ function VisiblePostEngagement({postId,mediaUrl,mediaType,youtube}:{postId:strin
   return()=>resize.disconnect();
  },[near]);
  return <div ref={container} style={near?{minHeight:reservedHeight}:{height:reservedHeight}}>
-  {near?<div ref={content}><UnifiedPostMedia postId={postId} mediaUrl={mediaUrl} mediaType={mediaType} youtubeId={youtube} showVideo={false} sheetMode/></div>:null}
+  {near?<div ref={content}><UnifiedPostMedia postId={postId} mediaUrl={mediaUrl} mediaType={mediaType} youtubeId={youtube} showVideo={false} sheetMode nightMode={night}/></div>:null}
  </div>;
 }
 function useVisibleMedia(){
@@ -83,6 +83,19 @@ let cachedDiscover:{posts:Post[];viewerId:string|null;at:number}|null=null;
 export default function PublicPostsSocial(){
  const router=useRouter();
  const [view,setView]=useState<"feed"|"explore">("feed");
+ const [night,setNight]=useState(false);
+ useEffect(()=>{
+  const media=window.matchMedia("(prefers-color-scheme: dark)");
+  const update=()=>{
+   let chosen="auto",theme="";
+   try{chosen=localStorage.getItem("1muslim-theme-mode")||"auto";theme=localStorage.getItem("1muslim-theme")||""}catch{}
+   setNight(chosen==="night"||(chosen==="auto"?(theme==="dark"?true:theme==="light"?false:media.matches):chosen!=="day"&&theme==="dark"));
+  };
+  update();media.addEventListener("change",update);
+  window.addEventListener("1muslim:theme-changed",update);
+  window.addEventListener("storage",update);
+  return()=>{media.removeEventListener("change",update);window.removeEventListener("1muslim:theme-changed",update);window.removeEventListener("storage",update)};
+ },[]);
  const [topic,setTopic]=useState<Topic>("All");
  // Native proximity snapping stops a fling at the next post. Keep controls and comment
  // threads on the browser's normal touch/scroll path instead of hijacking gestures.
@@ -92,7 +105,7 @@ export default function PublicPostsSocial(){
   if(!root)return;
   const previousType=root.style.scrollSnapType;
   const previousPadding=root.style.scrollPaddingTop;
-  root.style.scrollSnapType="y proximity";
+  root.style.scrollSnapType="none";
   root.style.scrollPaddingTop="16px";
   return()=>{root.style.scrollSnapType=previousType;root.style.scrollPaddingTop=previousPadding};
  },[view]);
@@ -261,7 +274,7 @@ export default function PublicPostsSocial(){
   router.push("/posts/story/"+encodeURIComponent(first.id)+"?play=1");
  };
  const stories=useMemo(()=>{const seen=new Set<string>();return posts.filter(p=>{const key=p.author_handle||p.author_name;if(seen.has(key))return false;seen.add(key);return true}).slice(0,12)},[posts]);
- return <main className={styles.page+" "+styles.feedPage+" "+styles.discoverPage+" "+styles.igUmmah}>
+ return <main className={styles.page+" "+styles.feedPage+" "+styles.discoverPage+" "+styles.igUmmah+(night?" "+styles.igNight:"")}>
  <header className={styles.igTop} aria-label="Ummah Posts navigation">
   <div className={styles.igTopRow}>
    <Link href="/posts" className={styles.igBrand} aria-label="One Muslim Ummah Posts">One Muslim<span>.live</span></Link>
@@ -286,7 +299,7 @@ export default function PublicPostsSocial(){
  const hasGallery=!!p.media_items&&p.media_items.length>1;
  const state=deckMotion?(index===deckMotion.from?"leaving":index===deckMotion.to?"arriving":index===deckActive+1?"queued":index===deckActive-1?"past":"rest"):index===deckActive?"current":index===deckActive+1?"queued":index===deckActive-1?"past":"rest";
  const posterStyle=poster&&(index===deckActive||index===deckActive+1)?({"--ummah-poster":"url("+JSON.stringify(poster)+")"} as CSSProperties):undefined;
- return <article className={styles.feedPost} id={"ummah-post-"+p.id} data-ummah-index={index} data-deck-state={state} data-deck-direction={deckMotion?.direction===-1?"reverse":"forward"} style={posterStyle} onTouchStart={e=>onCardTouchStart(index,e)} onTouchEnd={e=>onCardTouchEnd(index,e)} onTouchCancel={()=>{deckTouch.current=null}} key={p.id} aria-label={"Post by "+(p.author_name||"Community member")}>
+ return <article className={styles.feedPost} id={"ummah-post-"+p.id} data-ummah-index={index} data-deck-state={state} data-deck-direction={deckMotion?.direction===-1?"reverse":"forward"} style={posterStyle} key={p.id} aria-label={"Post by "+(p.author_name||"Community member")}>
  {index<filtered.length-1&&<div aria-hidden="true" className={styles.feedNextGhost} style={index===deckActive&&nextPreview?{backgroundImage:"url("+JSON.stringify(nextPreview)+")"}:undefined}/>}
 
  <div className={styles.feedPostStage}>
