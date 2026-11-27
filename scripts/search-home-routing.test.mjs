@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import test from "node:test";
 import {passwordWarning} from "../app/lib/auth-password-policy.ts";
+import {hasShahada,SHAHADA_ARABIC,SHAHADA_ENGLISH} from "../app/lib/shahada-recognition.ts";
 
 const read = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
 
@@ -244,4 +245,34 @@ test("1Muslim ID authentication does not reveal email and is distributed rate li
  assert.match(flow,/action:"signin"/);
  assert.match(flow,/action:"recover"/);
  assert.match(reset,/auth\.updateUser\(\{password\}\)/);
+});
+
+test("Shahada recognizer requires both clauses and never accepts a partial phrase",()=>{
+ assert.equal(hasShahada(SHAHADA_ARABIC),true);
+ assert.equal(hasShahada(SHAHADA_ENGLISH),true);
+ assert.equal(hasShahada("Ashhadu an la ilaha illallah wa ashhadu anna Muhammadan rasulullah"),true);
+ assert.equal(hasShahada("I believe in Allah"),false);
+ assert.equal(hasShahada("Muhammad is the Messenger of Allah"),false);
+ assert.equal(hasShahada("I bear witness that there is no god except Allah"),false);
+ assert.equal(hasShahada("Take your time. I'm listening. Just say your Shahada."),false);
+});
+
+test("HudHud pilot keeps one reasoning tier and the 50-action server cap",()=>{
+ const api=read("app/api/discover/ask/route.ts");
+ const page=read("app/hudhud/page.tsx");
+ const styles=read("app/hudhud/hudhud.css");
+ const sql=read("supabase/migrations/20261126200000_hudhud_v2_fifty_premium_turns.sql");
+ assert.match(api,/FREE_TURNS = 50/);
+ assert.match(api,/reserve_hudhud_v2_turn/);
+ assert.match(api,/HUDHUD_REASONING_MODEL/);
+ assert.match(api,/HUDHUD_DAILY_AI_LIMIT/);
+ assert.doesNotMatch(api,/gpt-4o-mini/);
+ assert.match(sql,/turns_used < 50/);
+ assert.match(sql,/REVOKE ALL/);
+ assert.match(page,/HudHudOrb/);
+ assert.match(page,/HudHudVerseCard/);
+ assert.match(page,/askRef\.current\(text\)/);
+ assert.match(page,/hudExiting/);
+ assert.doesNotMatch(page,/of 3 free replies remaining/);
+ assert.match(styles,/\.hudMatchCard/);
 });
