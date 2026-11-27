@@ -197,7 +197,10 @@ test("HudHud docks before activation and keeps the existing conversation endpoin
 test("Home has floating accessible Settings, Profile and Sign out without the global dock",()=>{
   const page=read("app/search/page.tsx");
   const nav=read("app/components/GlobalNavigation.tsx");
-  assert.match(page,/href="\/settings" aria-label="Settings"/);
+  assert.match(page,/aria-label="Settings"[\s\S]{0,250}1muslim:open-settings/);
+ const signedIn=read("app/search/SearchMemberHome.tsx");
+ assert.match(signedIn,/aria-label="Settings"[\s\S]{0,250}1muslim:open-settings/);
+ assert.doesNotMatch(signedIn,/href="\/settings"/);
   assert.match(page,/href="\/search" aria-label="Your personalized Search Home"/);
   assert.match(page,/aria-label="Sign out"/);
   assert.match(page,/const signOut=async\(\)=>/);

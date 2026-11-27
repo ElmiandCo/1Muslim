@@ -4,7 +4,9 @@ import test from "node:test";
 
 const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 test("Settings keeps every functional existing app control, despite the new shell",()=>{
- const page=read("app/settings/page.tsx");
+ const page=read("app/settings/SettingsContent.tsx");
+ const redirect=read("app/settings/page.tsx");
+ assert.match(redirect,/\/search\?settings=1/);
  for(const feature of ["SocialConnectionsWidget","LocationPreferences","AdhanSettings","DeepWatchAppearanceSettings","delete_my_account","deactivateAccount","requestNotifications","saveArabic","saveAppearance","saveHudhudVision"]){
   assert.match(page,new RegExp(feature));
  }

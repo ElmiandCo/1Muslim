@@ -16,7 +16,8 @@ import PostDesignStudio from "../components/PostDesignStudio";
 import HomePostsMagazineRail from "../components/HomePostsMagazineRail";
 import AdminParallaxDashboard from "../components/AdminParallaxDashboard";
 import {useRouter} from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type SyntheticEvent } from "react";
+import { useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type SyntheticEvent } from "react";
+import {SettingsEmbedContext} from "../components/SettingsEmbedContext";
 
 import ProfileAvatar, { ACCESSORIES, AVATAR_TIERS, tierForXp } from "../components/ProfileAvatar";
 import { createClient } from "../../utils/supabase/client";
@@ -709,7 +710,9 @@ const escapeMuslimIdPattern=(value:string)=>value.replace(/[\\%_]/g,"\\$&");
 const TAKEN_MUSLIM_ID="1Muslim ID is already taken.";
 const isUsernameConflict=(error:{code?:string;message?:string;details?:string;hint?:string})=>
  error.code==="23505" && /username|profiles_username/i.test([error.message,error.details,error.hint].join(" "));
+type EmbeddedEditorTab="profile"|"avatar"|"header"|"live"|"shahada"|"analytics";
 export default function ProfilePage() {
+  const embeddedEditorTab=useContext(SettingsEmbedContext);
   const router=useRouter();
   const [signingOut,setSigningOut]=useState(false);
   const [isHudHudAdmin,setIsHudHudAdmin]=useState(false);
@@ -743,8 +746,8 @@ export default function ProfilePage() {
   const [savedUsername,setSavedUsername]=useState<string|null>(null);
   const [usernameStatus,setUsernameStatus]=useState<"idle"|"checking"|"available"|"taken"|"error">("idle");
   const [usernameError,setUsernameError]=useState("");
-  const [editing,setEditing]=useState(false);
-  const [searchProfileExpanded,setSearchProfileExpanded]=useState(false);
+  const [editing,setEditing]=useState(Boolean(embeddedEditorTab));
+  const [searchProfileExpanded,setSearchProfileExpanded]=useState(Boolean(embeddedEditorTab));
   useEffect(()=>{const params=new URLSearchParams(window.location.search);if(["section","panel","member","compass"].some(key=>params.has(key)))setSearchProfileExpanded(true)},[]);
   const closeSearchProfilePanel=()=>{setEditing(false);setSearchProfileExpanded(false);window.scrollTo({top:0,behavior:"smooth"})};
   const openSearchProfilePanel=(panel:"posts"|"settings")=>{setEditing(false);setSearchProfileExpanded(true);window.setTimeout(()=>window.dispatchEvent(new CustomEvent("1muslim:profile-open-panel",{detail:{panel}})),140)};
@@ -752,7 +755,11 @@ export default function ProfilePage() {
   const [postCount,setPostCount]=useState(0);
   const [postText,setPostText]=useState("");
   const [posting,setPosting]=useState(false);
-  const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live"|"shahada"|"analytics">("profile");
+  const [tab,setTab]=useState<EmbeddedEditorTab>(embeddedEditorTab||"profile");
+  useEffect(()=>{
+    if(!embeddedEditorTab)return;
+    setTab(embeddedEditorTab);setSearchProfileExpanded(true);setEditing(true);
+  },[embeddedEditorTab]);
   // Settings slide-out links into the existing full-featured editor.
   // Keep the verified save/upload/connection/vault flows unchanged.
   useEffect(()=>{
@@ -900,7 +907,7 @@ const [avatarPage,setAvatarPage]=useState(0);
      const savedConfig=savedProfile?.avatar_config as Record<string,unknown>|null;
      if(savedConfig?.profileCoverUrl!==url)throw new Error("Cover uploaded but the saved profile did not confirm the new image.");
      await new Promise<void>((resolve,reject)=>{const check=new Image();check.onload=()=>resolve();check.onerror=()=>reject(new Error("Cover uploaded but the public image cannot be loaded. Check avatars bucket access."));check.src=url;});
-     update({avatar_config:savedConfig,profile_background_image_url:url});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");setTab("profile");setEditing(false);window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:user.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})));
+     update({avatar_config:savedConfig,profile_background_image_url:url});setCoverFile(null);setCoverPreview(null);setMessage("Cover image saved to your profile.");if(!embeddedEditorTab){setTab("profile");setEditing(false)}window.dispatchEvent(new CustomEvent("1muslim:profile-cover-changed",{detail:{userId:user.id,url}}));window.dispatchEvent(new Event("1muslim:profile-saved"));if(!embeddedEditorTab)window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})));
     }finally{URL.revokeObjectURL(src)}
    }catch(e){setMessage(e instanceof Error?e.message:"Could not upload cover image.")}finally{setCoverUploading(false)}
   };
@@ -990,7 +997,7 @@ const [avatarPage,setAvatarPage]=useState(0);
       setUsernameStatus("idle");setUsernameError("");
       setMessage(displayChanged||usernameChanged?"Profile identity updated.":"Profile saved.");
       window.dispatchEvent(new Event("1muslim:profile-saved"));
-      setEditing(false);
+      if(!embeddedEditorTab)setEditing(false);
     }finally{setSaving(false)}
   };
 
@@ -1030,7 +1037,7 @@ const [avatarPage,setAvatarPage]=useState(0);
 
   const publishFirstPost=async()=>{const body=postText.trim();if(!body||posting)return;setPosting(true);const s=createClient();const {error}=await s.from("posts").insert({user_id:profile.id,body});if(error){setMessage(error.message);setPosting(false);return;}setPostText("");setPostCount(x=>x+1);setPosting(false);};
 
-  return <main className="profilePage profileCommandPage" onTouchStart={e=>{if(!isHudHudAdmin||secretAdminOpen)return;const t=e.touches[0];if(t&&!((e.target as HTMLElement).closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],.ummahAtlas,.swipeMemberRail")))secretSwipeStart.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const start=secretSwipeStart.current;secretSwipeStart.current=null;const t=e.changedTouches[0];if(start&&t&&t.clientX-start.x>100&&Math.abs(t.clientY-start.y)<65)setSecretAdminOpen(true)}}><ProfileSearchHome profile={profile} postCount={postCount} expanded={searchProfileExpanded} editing={editing} onExpand={()=>setSearchProfileExpanded(true)} onCollapse={closeSearchProfilePanel} onEdit={()=>{setSearchProfileExpanded(true);setTab("profile");setEditing(true)}} onSettings={()=>openSearchProfilePanel("settings")} onPosts={()=>openSearchProfilePanel("posts")} onSignOut={()=>void signOut()}/>{(searchProfileExpanded||editing)&&<ProfileSocialHub profile={profile}>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>{setTab("profile");setEditing(true)}}/>:<div className="profileShell" style={{"--profile-editor-accent":memberAccent(profile.profile_accent)} as CSSProperties}
+  return <main className={"profilePage profileCommandPage"+(embeddedEditorTab?" scEmbeddedProfile":"")} onTouchStart={e=>{if(!isHudHudAdmin||secretAdminOpen)return;const t=e.touches[0];if(t&&!((e.target as HTMLElement).closest("button,a,input,textarea,select,[role=dialog],[contenteditable=true],.ummahAtlas,.swipeMemberRail")))secretSwipeStart.current={x:t.clientX,y:t.clientY}}} onTouchEnd={e=>{const start=secretSwipeStart.current;secretSwipeStart.current=null;const t=e.changedTouches[0];if(start&&t&&t.clientX-start.x>100&&Math.abs(t.clientY-start.y)<65)setSecretAdminOpen(true)}}>{!embeddedEditorTab&&<ProfileSearchHome profile={profile} postCount={postCount} expanded={searchProfileExpanded} editing={editing} onExpand={()=>setSearchProfileExpanded(true)} onCollapse={closeSearchProfilePanel} onEdit={()=>{setSearchProfileExpanded(true);setTab("profile");setEditing(true)}} onSettings={()=>window.dispatchEvent(new CustomEvent("1muslim:open-settings",{detail:{section:"home"}}))} onPosts={()=>openSearchProfilePanel("posts")} onSignOut={()=>void signOut()}/>}{(searchProfileExpanded||editing)&&<ProfileSocialHub profile={profile}>{!editing?<ProfileOverview profile={profile} tier={tier} ashab={ashab} postCount={postCount} postText={postText} setPostText={setPostText} posting={posting} publishFirstPost={publishFirstPost} onEdit={()=>{setTab("profile");setEditing(true)}}/>:<div className="profileShell" style={{"--profile-editor-accent":memberAccent(profile.profile_accent)} as CSSProperties}
       onTouchStart={e=>{
         const el=e.target as HTMLElement,t=e.touches[0];
         editorSwipeStart.current=null;
@@ -1046,10 +1053,10 @@ const [avatarPage,setAvatarPage]=useState(0);
         const next=index+(t.clientX<start.x?1:-1);
         if(next>=0&&next<PROFILE_EDITOR_SECTIONS.length)setTab(PROFILE_EDITOR_SECTIONS[next].id);
       }}>
-    <ProfileOrbitStudio profile={profile} onEdit={()=>setEditing(false)} ashab={ashab} editing editorTab={tab}/>
+    {!embeddedEditorTab&&<ProfileOrbitStudio profile={profile} onEdit={()=>setEditing(false)} ashab={ashab} editing editorTab={tab}/>}
     
     <div className="profileEditorToolbar">
-      <button type="button" className="ghost profileEditorClose" onClick={()=>setEditing(false)} aria-label="Close profile editor"><span aria-hidden="true">×</span>Close</button>
+      <button type="button" className="ghost profileEditorClose" onClick={()=>{if(embeddedEditorTab)window.dispatchEvent(new Event("1muslim:close-settings"));else setEditing(false)}} aria-label="Close profile editor"><span aria-hidden="true">×</span>Close</button>
       <strong>Edit Profile</strong>
       <button type="button" className="primary profileEditorSave" onClick={save} disabled={saving||colorSaving} aria-label="Save profile changes"><span className="profileEditorSaveIcon" aria-hidden="true">✓</span><span>{saving||colorSaving?"Saving…":<>Save<span className="profileEditorSaveExtended"> changes</span></>}</span></button>
     </div>
