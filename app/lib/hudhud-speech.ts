@@ -16,7 +16,7 @@ function asNumber(input:string):number|null{
  }
  return Number.isInteger(value)?value:null;
 }
-const terms="(?:\\d{1,3}|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|and)";
+const terms="(?:\\d{1,3}|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|and)\\b";
 const sequence=terms+"(?:[\\s-]+"+terms+"){0,4}";
 const surahVerse=new RegExp("\\b(?:surah|sura|chapter)\\s+("+sequence+")\\s+(?:verse|ayah|ayat)\\s+("+sequence+")","i");
 const quranVerse=new RegExp("\\b(?:quran|qur['’]?an|koran)\\s+(?:verse|ayah|ayat)\\s+("+sequence+")","i");
