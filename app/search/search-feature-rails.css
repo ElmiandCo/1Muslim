@@ -54,3 +54,13 @@
   .dsHomeMode .dsFeatureCard{transition:none}
   .dsHomeMode .dsFeaturePostPulse{animation:none;opacity:.6}
 }
+
+/* Keep Join 1Muslim; use a compact, recognizable avatar to sign in on Home. */
+.dsHomeMode .dsGuestAccount .dsGuestSignIn{
+  width:42px;height:42px;min-height:42px;flex:0 0 42px;
+  padding:0;border-radius:50%;display:grid;place-items:center;
+}
+.dsHomeMode .dsGuestSignIn svg{width:20px;height:20px;display:block}
+@media(max-width:767px){
+  .dsHomeMode .dsGuestAccount .dsGuestSignIn{width:40px;height:40px;min-height:40px;flex-basis:40px}
+}
