@@ -170,17 +170,26 @@ export default function HudHudPage(){
   window.setTimeout(()=>router.push(safeReturn(originRef.current)),180);
  };
 
- return <main className={"hudPage"+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
+ return <main onTouchStart={event=>{
+    const t=event.target as HTMLElement;
+    if(t.closest("input,.hudMessages,.hudMatches,.hudDrawer,.hudActionPop"))return;
+    setTouchStart({x:event.touches[0]?.clientX||0,y:event.touches[0]?.clientY||0});
+   }} onTouchEnd={event=>{
+    if(!touchStart)return;
+    const dx=(event.changedTouches[0]?.clientX||0)-touchStart.x;
+    const dy=(event.changedTouches[0]?.clientY||0)-touchStart.y;
+    setTouchStart(null);if(dx< -100&&Math.abs(dy)<65)close();
+   }} className={"hudPage"+(exiting?" hudExiting":"")+(speaking?" hudSpeaking":"")+(focused?" hudTyping":"")+(stillOrb?" hudStill":"")+(listening?" hudListening":"")+(busy?" hudThinking":"")} style={viewport?{height:viewport.height,top:viewport.top}:undefined} aria-label="HudHud chat">
   <header className="hudHeader">
-   <button className="hudCircle" type="button" aria-label="Open HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button>
-   <div className="hudTitle" aria-label="HudHud — 1Muslim assistant">HudHud <span aria-hidden="true">⌄</span></div>
-   <button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button>
+   <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}>One Muslim<span>.live</span></button>
+   <div className="hudTitle" aria-label="HudHud — One Muslim voice assistant">HudHud</div>
+   <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
   </header>
 
   <section className={"hudMain"+(lines.length?" hudHasChat":"")} aria-label="Conversation">
    {lines.length===0&&<div className="hudOrbStage">
-     <div className="hudOrbGlow"><div className="hudOrb" role="img" aria-label={listening?"HudHud is listening":busy?"HudHud is thinking":"HudHud green assistant orb"}><span className="hudOrbCloud"/><span className="hudOrbShine"/></div></div>
-     <p>{listening?"Listening — tap the mic or X to stop":busy?"HudHud is thinking…":"Assalamu alaikum"}</p>
+     <HudHudOrb listening={listening} speaking={speaking} thinking={busy} quiet={stillOrb} onClick={()=>{if(listening)stopVoice(true);else if(!busy)startVoice()}}/>
+     <p aria-live="polite">{listening?"Listening…":busy?"One moment…":"As-salāmu ʿalaykum"}</p>
    </div>}
    {lines.length>0&&<div className="hudMessages">
      {lines.map((line,index)=><article key={current.id+"-"+index} className={"hudMessage "+(line.role==="user"?"hudUser":"hudAssistant")}>
