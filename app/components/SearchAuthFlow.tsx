@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState,type FormEvent} from "react";
 import {createClient} from "../../utils/supabase/client";
 import "./search-auth-flow.css";
+import {passwordWarning} from "../lib/auth-password-policy";
 
 export type SearchAuthMode="signin"|"signup"|"recover"|"verify"|"shahada";
 type Props={mode:SearchAuthMode;setMode:(next:SearchAuthMode)=>void;onClose:()=>void;onSignedIn:()=>void;returnTo:string};
@@ -13,16 +14,6 @@ const deriveNames=(name:string,suffix:string)=>{
  const first=parts[0]||"muslim",last=parts.length>1?parts[parts.length-1]:"";
  return [...new Set([[first,last].filter(Boolean).join("_"),[first,"muslim",last].filter(Boolean).join("_"),[first,"ibn",last].filter(Boolean).join("_")].map(s=>s.slice(0,23)+"_"+suffix))].slice(0,3);
 };
-export function passwordWarning(value:string,name:string,email:string){
- if(value.length<12)return "Use at least 12 characters.";
- const classes=[/[a-z]/.test(value),/[A-Z]/.test(value),/\d/.test(value),/[^A-Za-z\d]/.test(value)].filter(Boolean).length;
- if(classes<3)return "Use at least three of: uppercase, lowercase, numbers or symbols.";
- if(/password|passw0rd|qwerty|asdfgh|123456|654321|letmein|admin123|111111|000000|1muslim/i.test(value)||
-    /(.)\1{4,}/.test(value))return "Choose something less predictable.";
- const fragments=[...name.toLowerCase().split(/\s+/),email.split("@")[0]?.toLowerCase()].filter(s=>s&&s.length>=4);
- if(fragments.some(s=>value.toLowerCase().includes(s)))return "Avoid using your name or email in the password.";
- return "";
-}
 function GoogleMark(){
  return <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.25c0-.73-.07-1.42-.2-2.09H12v3.95h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.22c1.88-1.74 3-4.3 3-7.38Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.6-2.37l-3.22-2.5c-.9.6-2.05.96-3.38.96a6 6 0 0 1-5.64-4.17H3.04v2.58A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.36 13.92a6.02 6.02 0 0 1 0-3.84V7.5H3.04A10 10 0 0 0 2 12c0 1.61.39 3.14 1.04 4.5l3.32-2.58Z"/><path fill="#EA4335" d="M12 5.91c1.47 0 2.78.5 3.81 1.49l2.86-2.86A9.78 9.78 0 0 0 12 2a10 10 0 0 0-8.96 5.5l3.32 2.58A6 6 0 0 1 12 5.91Z"/></svg>;
 }
