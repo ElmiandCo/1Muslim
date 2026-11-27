@@ -132,8 +132,9 @@ export default function HudHudPage(){
   finally{setMemoryPending(false)}
  };
  const requestMicrophonePermission=useCallback(async()=>{
-  // Ask when HudHud opens. Never record or upload audio just from landing here.
-  // Some browsers require a user gesture; offer a fallback enable button.
+  // Ask for microphone permission on entry, just like Shahada. Recognition
+  // starts only after browser permission; no raw microphone audio is saved.
+  // On restrictive iOS browsers the user can use the mic button.
   const request=++micPermissionRequest.current;
   if(!navigator.mediaDevices?.getUserMedia){setMicAccess("unavailable");return}
   try{
@@ -225,7 +226,10 @@ export default function HudHudPage(){
     if(speechPendingTimer.current)clearTimeout(speechPendingTimer.current);
     // Browser TTS is not guaranteed to start on iOS. Don't keep the mic
     // disabled indefinitely when Safari silently refuses playback.
-    speechPendingTimer.current=setTimeout(()=>setSpeechPending(false),4500);
+    speechPendingTimer.current=setTimeout(()=>{
+      window.speechSynthesis?.cancel();
+      setSpeechPending(false);
+    },4500);
     window.speechSynthesis.cancel();
     const speech=new SpeechSynthesisUtterance(reply);
     speech.lang="en-US";speech.rate=1.07;speech.volume=.8;
@@ -351,7 +355,7 @@ export default function HudHudPage(){
     <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}><AnimatedMuslimBrand/><span className="hudBrandSuffix">.Live</span></button>
    </div>
    <div className="hudTitle" aria-label="HudHud — 1Muslim voice assistant">HudHud</div>
-   <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false)}}>
+   <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false);setSpeechPending(false)}}>
     <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" fill="none" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{readAloud?<path d="M16 8q4 4 0 8M18 5q7 7 0 14"/>:<path d="m16 9 5 6m0-6-5 6"/>}</svg>
    </button><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
   </header>
@@ -363,6 +367,7 @@ export default function HudHudPage(){
   {error&&<p className="hudError" role="alert">{error}</p>}
   {exhausted&&<aside className="hudUpgrade"><strong>Your HudHud exploration is complete for now.</strong><Link href="/search">Explore 1Muslim Search ↗</Link></aside>}
   <div className="hudComposerArea">
+   {listening&&<span className="hudListeningStatus" role="status"><i aria-hidden="true"/>Listening…</span>}
    {queryContext&&<span className="hudContext">Searching for: {queryContext}</span>}
    <form className="hudComposer" onSubmit={ask}>
     <div className="hudInputPill">
@@ -383,8 +388,8 @@ export default function HudHudPage(){
    </div>}
   {settingsOpen&&<div className="hudSettings" role="dialog" aria-label="HudHud settings">
     <h2>HudHud settings</h2>
-    <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>{setReadAloud(e.target.checked);if(!e.target.checked)window.speechSynthesis?.cancel()}}/></label>
-    <label><span>Auto-listen<small>Start after permission; pauses while HudHud speaks or you type. No audio is saved.</small></span><input type="checkbox" checked={autoListening} onChange={e=>{setAutoListening(e.target.checked);setMicPaused(!e.target.checked);if(!e.target.checked)stopVoice(true)}}/></label>
+    <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>{setReadAloud(e.target.checked);if(!e.target.checked){window.speechSynthesis?.cancel();setSpeaking(false);setSpeechPending(false)}}}/></label>
+    <label><span>Auto-listen<small>Start after permission; pauses while HudHud speaks or you type. Browser recognition may process audio; HudHud does not store raw audio.</small></span><input type="checkbox" checked={autoListening} onChange={e=>{setAutoListening(e.target.checked);setMicPaused(!e.target.checked);if(!e.target.checked)stopVoice(true)}}/></label>
     <div className="hudMicSettings"><span>Microphone access<small>{micAccess==="granted"?(autoListening&&!micPaused?"Allowed · auto-listening is on":"Allowed · tap microphone to speak"):micAccess==="checking"?"Checking browser permission…":"Not enabled · you can still type"}</small></span><button type="button" onClick={()=>void requestMicrophonePermission()}>Enable mic</button></div>
     {memorySignedIn?<><label><span>Remember conversations<small>Private to your account. Off by default.</small></span><input type="checkbox" checked={memoryEnabled} disabled={memoryPending} onChange={e=>void updateMemory(e.target.checked)}/></label>
       <button type="button" disabled={memoryPending} onClick={()=>void clearMemory()}>Clear saved conversations</button></>
