@@ -51,7 +51,10 @@ export async function POST(req:NextRequest){
  if(limit!=="allowed")return reply({error:limit==="limited"?"Try again in a little while.":"Account access is temporarily unavailable."},limit==="limited"?429:503);
  try{
   const db=admin();
-  const {data:profile,error}=await db.from("profiles").select("id").eq("username",id).maybeSingle();
+  // Case-insensitive login for existing 1Muslim_... handles, without treating
+  // underscores as SQL LIKE wildcards or exposing email addresses.
+  const literalId=id.replace(/[\\%_]/g, "\\\  const {data:profile,error}=await db.from("profiles").select("id").eq("username",id).maybeSingle();");
+  const {data:profile,error}=await db.from("profiles").select("id").ilike("username",literalId).limit(1).maybeSingle();
   if(error)throw error;
   if(action==="check")return reply({available:!profile});
   if(action==="recover"){
