@@ -122,7 +122,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
    await move(0);await deleteForward("Welcome ".length);await insert("Search ",31);
    await move(value.length);await backspace(greeting.length,18);await insert("1Muslim.Live",36);
    if(!active)return;
-   frame(true);await pause(1250);frame(false);
+   frame(true);await pause(2040);frame(false);
   };
   void run();
   setDisplayedName("");
@@ -179,14 +179,14 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   // Hold the microphone before speech starts, not after the browser emits onstart.
   speechActive.current=true;setSpeaking(true);
   utterance.lang="en-US";utterance.rate=.99;utterance.volume=.88;
-  let finished=false;
+  let finished=false,started=false;
   const finish=()=>{if(finished)return;finished=true;speechActive.current=false;setSpeaking(false);
    if(speechTimer.current){clearTimeout(speechTimer.current);speechTimer.current=null}onEnd?.()};
-  utterance.onstart=()=>{speechActive.current=true;setSpeaking(true);setGreetingFailed(false)};
+  utterance.onstart=()=>{started=true;speechActive.current=true;setSpeaking(true);setGreetingFailed(false)};
   utterance.onerror=()=>{setGreetingFailed(true);finish()};
   utterance.onend=finish;
   // iOS may reject sound without a direct user interaction; keep the manual replay control.
-  speechTimer.current=setTimeout(finish,Math.max(4500,words.length*125));
+  speechTimer.current=setTimeout(()=>{if(!started)setGreetingFailed(true);finish()},Math.max(4500,words.length*125));
   try{window.speechSynthesis.speak(utterance)}catch{setGreetingFailed(true);finish()}
  };
  const greet=()=>{
@@ -247,10 +247,10 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   }catch{setPaused(true);setMicPermission("needs-tap");setVoiceError("Tap the microphone to start listening.");}
  };
  useEffect(()=>{
-  if(!member||paused||micPermission!=="granted"||listening||thinking||speaking||speechActive.current||focused||search.trim()||document.hidden)return;
+  if(!member||paused||nameEditor||micPermission!=="granted"||listening||thinking||speaking||speechActive.current||focused||search.trim()||document.hidden)return;
   const timer=setTimeout(startRecognition,550);
   return()=>clearTimeout(timer);
- },[member?.id,paused,micPermission,listening,thinking,speaking,focused,search]);
+ },[member?.id,paused,nameEditor,micPermission,listening,thinking,speaking,focused,search]);
  const toggleMic=()=>{
   if(listening){setPaused(true);stopRecognition();return}
   setPaused(false);if(micPermission!=="granted"){void askMicPermission();return}
@@ -282,7 +282,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   </header>
   <section className="smhWelcome">
     <div className="smhIdentity">
-     <button type="button" aria-label="Edit your display name" title="Tap to change your name" onClick={()=>{setNameDraft(displayName);setNameEditor(true);setNameError("")}} className="smhName">{displayedName||"\u00a0"}</button>
+     <button type="button" aria-label="Edit your display name" title="Tap to change your name" onClick={()=>{stopRecognition();setNameDraft(displayName);setNameEditor(true);setNameError("")}} className="smhName">{displayedName||"\u00a0"}</button>
      <span className={"smhWithHudHud"+(showHudLabel?" smhWithVisible":"")}>with HudHud</span>
     </div>
     <form className="smhSearchForm" onSubmit={submit} role="search" aria-label="Search with HudHud">
@@ -304,7 +304,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
       micPermission==="denied"||micPermission==="needs-tap"?<button type="button" onClick={()=>{setPaused(false);void askMicPermission()}}>Enable microphone to speak</button>:
       micPermission==="unsupported"?<span>Type to ask HudHud. Voice recognition is unavailable.</span>:null}
       {greetingFailed&&<button type="button" onClick={greet}>Hear the greeting</button>}
-      <button type="button" className="smhVoiceToggle" aria-pressed={voiceOn} onClick={()=>{setVoiceOn(old=>!old);if(voiceOn)stopAudio()}}>{voiceOn?"Voice on":"Voice off"}</button>
+      <button type="button" className="smhVoiceToggle" aria-pressed={voiceOn} onClick={()=>{setVoiceOn(old=>!old);if(voiceOn)stopAudio()}}>{voiceOn?"Spoken replies on":"Spoken replies off"}</button>
     </div>
     {voiceError&&<p className="smhError" role="status">{voiceError}</p>}
   </section>
