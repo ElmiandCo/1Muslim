@@ -39,7 +39,24 @@ export default function SettingsControlDrawer(){
  useEffect(()=>{if(window.location.hash)setOpen(false)},[]);
  const [profile,setProfile]=useState<ProfileSummary|null>(null);
  const [authenticated,setAuthenticated]=useState<boolean|null>(null);
+ const [recent,setRecent]=useState<Array<{id:string;title:string}>>([]);
  const drawer=useRef<HTMLElement|null>(null);
+ useEffect(()=>{
+  if(!open)return;
+  const controller=new AbortController();
+  void fetch("/api/hudhud/memory",{cache:"no-store",signal:controller.signal})
+   .then(async response=>{if(!response.ok)throw Error("History unavailable");return response.json()})
+   .then(data=>{
+    if(controller.signal.aborted||!data.signedIn||!Array.isArray(data.sessions))return;
+    const items=data.sessions.filter((item:unknown):item is {id:string;title:string}=>{
+     if(!item||typeof item!=="object")return false;
+     const v=item as Record<string,unknown>;
+     return typeof v.id==="string"&&typeof v.title==="string"&&/^[a-z0-9-]{1,64}$/i.test(v.id);
+    }).slice(0,4);
+    setRecent(items);
+   }).catch(()=>{});
+  return()=>controller.abort();
+ },[open]);
  const opener=useRef<HTMLButtonElement|null>(null);
  useEffect(()=>{
   let active=true;
@@ -109,6 +126,12 @@ export default function SettingsControlDrawer(){
      </section>
      <p className="scNavHeading">HUDHUD</p>
      {renderItem(APP_SECTIONS[0])}
+     {recent.length>0&&<div className="scRecentList"><p className="scNavHeading">RECENT CONVERSATIONS</p>
+      {recent.map(item=><Link key={item.id} className="scRecentLink" href={"/hudhud?session="+encodeURIComponent(item.id)} onClick={()=>setOpen(false)} title={item.title}>
+       <span aria-hidden="true">◷</span><span>{item.title}</span>
+      </Link>)}
+      <button className="scSeeAll" type="button" onClick={()=>navigate("hudhud-ai")}>All conversations ↗</button>
+     </div>}
      <p className="scNavHeading">PROFILE</p>
      {EDIT_SECTIONS.map(renderItem)}
      <p className="scNavHeading">APP & PRIVACY</p>
