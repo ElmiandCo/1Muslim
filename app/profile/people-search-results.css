@@ -35,17 +35,17 @@
 .profileSocial-muslimeen .muslimeenTopNav button[aria-pressed=true]{border-bottom-color:#779cca!important;color:var(--people-ink)!important;font-weight:750!important}
 .profileSocial-muslimeen .peopleResultsMeta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;align-items:center;min-height:61px;padding:17px 0 11px;color:var(--people-muted);font-size:12px;line-height:1.5}
 .profileSocial-muslimeen .peopleResultsMeta span:first-child{font-weight:660}
-.profileSocial-muslimeen .muslimeenSpotlight{display:grid!important;position:relative;grid-template-columns:minmax(0,1fr) clamp(96px,19vw,156px);grid-template-rows:auto 1fr auto;column-gap:15px;row-gap:6px;align-items:center;min-height:145px!important;padding:16px 0 22px!important;margin:1px 0 20px!important;background:transparent!important;background-image:none!important;border-bottom:1px solid var(--people-line);border-radius:0!important;box-shadow:none!important;color:var(--people-ink)!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlight{display:grid!important;position:relative;grid-template-columns:minmax(0,1fr) clamp(96px,19vw,156px);grid-template-rows:auto 1fr auto;column-gap:15px;row-gap:6px;align-items:center;min-height:145px!important;padding:16px 0 22px!important;margin:1px 0 20px!important;background:transparent!important;background-image:none!important;border-bottom:1px solid var(--people-line);border-radius:0!important;box-shadow:none!important;color:var(--people-ink)!important}
 .profileSocial-muslimeen .peopleSpotlightCover{grid-column:2;grid-row:1/4;align-self:stretch;width:100%;height:100%;min-height:134px;max-height:174px;object-fit:cover;border-radius:14px}
-.profileSocial-muslimeen .muslimeenSpotlightEyebrow{grid-column:1;grid-row:1;font-size:10px!important;letter-spacing:.09em!important;color:var(--people-muted)!important}
-.profileSocial-muslimeen .muslimeenSpotlightMain{grid-column:1;grid-row:2;display:flex!important;gap:12px!important;margin:5px 0!important;min-width:0}
-.profileSocial-muslimeen .muslimeenSpotlightMain img{width:56px!important;height:56px!important;flex:0 0 56px;border:1px solid var(--people-line)!important;box-shadow:none}
-.profileSocial-muslimeen .muslimeenSpotlightMain div{min-width:0;gap:2px!important}
-.profileSocial-muslimeen .muslimeenSpotlightMain strong{font-size:clamp(17px,2.4vw,22px)!important;line-height:1.22!important;color:var(--people-link)!important;font-weight:650!important}
-.profileSocial-muslimeen .muslimeenSpotlightMain span,.profileSocial-muslimeen .muslimeenSpotlightMain p{font-size:12px!important;color:var(--people-muted)!important}
-.profileSocial-muslimeen .muslimeenSpotlightActions{grid-column:1;grid-row:3;gap:7px!important}
-.profileSocial-muslimeen .muslimeenSpotlightActions>button{background:transparent!important;color:var(--people-link)!important;border:0!important;padding:8px 10px!important;font-size:12px!important}
-.profileSocial-muslimeen .muslimeenSpotlightActions .profileMemberFollowButton{box-shadow:none!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightEyebrow{grid-column:1;grid-row:1;font-size:10px!important;letter-spacing:.09em!important;color:var(--people-muted)!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightMain{grid-column:1;grid-row:2;display:flex!important;gap:12px!important;margin:5px 0!important;min-width:0}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightMain img{width:56px!important;height:56px!important;flex:0 0 56px;border:1px solid var(--people-line)!important;box-shadow:none}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightMain div{min-width:0;gap:2px!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightMain strong{font-size:clamp(17px,2.4vw,22px)!important;line-height:1.22!important;color:var(--people-link)!important;font-weight:650!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightMain span,.profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightMain p{font-size:12px!important;color:var(--people-muted)!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightActions{grid-column:1;grid-row:3;gap:7px!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightActions>button{background:transparent!important;color:var(--people-link)!important;border:0!important;padding:8px 10px!important;font-size:12px!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightActions .profileMemberFollowButton{box-shadow:none!important}
 .profileSocial-muslimeen .muslimeenFilterRow{margin:7px 0!important;padding:5px 0 8px!important;gap:7px!important}
 .profileSocial-muslimeen .muslimeenFilterRow button{border:1px solid var(--people-line)!important;background:var(--people-bg)!important;color:var(--people-ink)!important;box-shadow:none!important;font-size:12px!important}
 .profileSocial-muslimeen .muslimeenFilterRow button[aria-pressed=true]{background:var(--people-ink)!important;color:var(--people-bg)!important;border-color:var(--people-ink)!important}
@@ -59,22 +59,22 @@
 .profileSocial-muslimeen .muslimeenRailItem span,.profileSocial-muslimeen .muslimeenRailItem small{color:var(--people-muted)!important}
 .profileSocial-muslimeen .muslimeenSectionHeading{border-top:1px solid var(--people-line);padding-top:15px!important;margin:19px 0 8px!important}
 .profileSocial-muslimeen .muslimeenSectionHeading span{color:var(--people-muted)!important}
-.profileSocial-muslimeen .muslimeenMemberGrid{display:flex!important;flex-direction:column!important;gap:0!important;margin-top:6px!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryCard{display:flex!important;flex-direction:row!important;align-items:center!important;gap:9px;min-width:0!important;padding:16px 0!important;margin:0!important;background:var(--people-bg)!important;border:0!important;border-bottom:1px solid var(--people-line)!important;border-radius:0!important;box-shadow:none!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryOpen{display:grid!important;flex:1 1 auto!important;grid-template-columns:clamp(53px,8vw,68px) minmax(0,1fr)!important;grid-template-rows:auto auto!important;column-gap:14px!important;align-items:center!important;text-align:left!important;padding:0!important;margin:0!important;min-width:0!important;box-shadow:none!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryCover{display:none!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryAvatar{grid-column:1!important;grid-row:1/3!important;position:static!important;inset:auto!important;display:block!important;width:clamp(53px,8vw,68px)!important;height:clamp(53px,8vw,68px)!important;margin:0!important;border:1px solid var(--people-line)!important;outline:0!important;box-shadow:none!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryIdentity{grid-column:2!important;grid-row:1!important;display:flex!important;align-items:flex-start!important;text-align:left!important;padding:0!important;margin:0!important;gap:4px!important;color:var(--people-ink)!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryIdentity strong{font-size:clamp(15px,2vw,18px)!important;line-height:1.2!important;font-weight:670!important;color:var(--people-link)!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryIdentity span{font-size:12px!important;color:var(--people-muted)!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryIdentity small{font-size:11px!important;color:var(--people-muted)!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryBio{grid-column:2!important;grid-row:2!important;display:block!important;text-align:left!important;max-width:100%!important;margin:5px 0 0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryBioLabel{display:none!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryBioText{display:-webkit-box!important;-webkit-line-clamp:2!important;line-height:1.45!important;color:var(--people-muted)!important;font-size:12px!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileMemberFollowWrap{flex:0 0 auto!important;padding:0!important;margin:0!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileMemberFollowButton{min-width:92px!important;width:auto!important;max-width:118px!important;padding:9px 12px!important;font-size:12px!important;background:var(--people-ink)!important;border:1px solid var(--people-ink)!important;color:var(--people-bg)!important;box-shadow:none!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileMemberFollowButton.isFollowing{background:transparent!important;color:var(--people-ink)!important}
-.profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryCard .profileDiscoveryOpen:focus-visible,
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid{display:flex!important;flex-direction:column!important;gap:0!important;margin-top:6px!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryCard{display:flex!important;flex-direction:row!important;align-items:center!important;gap:9px;min-width:0!important;padding:16px 0!important;margin:0!important;background:var(--people-bg)!important;border:0!important;border-bottom:1px solid var(--people-line)!important;border-radius:0!important;box-shadow:none!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryOpen{display:grid!important;flex:1 1 auto!important;grid-template-columns:clamp(53px,8vw,68px) minmax(0,1fr)!important;grid-template-rows:auto auto!important;column-gap:14px!important;align-items:center!important;text-align:left!important;padding:0!important;margin:0!important;min-width:0!important;box-shadow:none!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryCover{display:none!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryAvatar{grid-column:1!important;grid-row:1/3!important;position:static!important;inset:auto!important;display:block!important;width:clamp(53px,8vw,68px)!important;height:clamp(53px,8vw,68px)!important;margin:0!important;border:1px solid var(--people-line)!important;outline:0!important;box-shadow:none!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryIdentity{grid-column:2!important;grid-row:1!important;display:flex!important;align-items:flex-start!important;text-align:left!important;padding:0!important;margin:0!important;gap:4px!important;color:var(--people-ink)!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryIdentity strong{font-size:clamp(15px,2vw,18px)!important;line-height:1.2!important;font-weight:670!important;color:var(--people-link)!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryIdentity span{font-size:12px!important;color:var(--people-muted)!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryIdentity small{font-size:11px!important;color:var(--people-muted)!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryBio{grid-column:2!important;grid-row:2!important;display:block!important;text-align:left!important;max-width:100%!important;margin:5px 0 0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryBioLabel{display:none!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryBioText{display:-webkit-box!important;-webkit-line-clamp:2!important;line-height:1.45!important;color:var(--people-muted)!important;font-size:12px!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileMemberFollowWrap{flex:0 0 auto!important;padding:0!important;margin:0!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileMemberFollowButton{min-width:92px!important;width:auto!important;max-width:118px!important;padding:9px 12px!important;font-size:12px!important;background:var(--people-ink)!important;border:1px solid var(--people-ink)!important;color:var(--people-bg)!important;box-shadow:none!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileMemberFollowButton.isFollowing{background:transparent!important;color:var(--people-ink)!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryCard .profileDiscoveryOpen:focus-visible,
 .profileSocial-muslimeen .peopleSearchForm button:focus-visible,
 .profileSocial-muslimeen .muslimeenTopNav button:focus-visible{outline:2px solid #7396c7!important;outline-offset:3px!important}
 .profileSocial-muslimeen .profileDiscoveryMore{color:var(--people-ink);border-color:var(--people-line);background:var(--people-bg)}
@@ -100,11 +100,17 @@
  .profileSocial-muslimeen .peopleSearchForm .peopleSearchBack{width:27px;flex-basis:27px}
  .profileSocial-muslimeen .peopleSearchForm .peopleSearchSubmit{padding:8px 5px;font-size:12px}
  .profileSocial-muslimeen .muslimeenTopNav button{padding:0 10px!important}
- .profileSocial-muslimeen .muslimeenMemberGrid .profileDiscoveryOpen{column-gap:9px!important}
- .profileSocial-muslimeen .muslimeenMemberGrid .profileMemberFollowButton{min-width:78px!important;max-width:95px!important;padding:8px 7px!important;font-size:11px!important}
- .profileSocial-muslimeen .muslimeenSpotlightMain img{width:43px!important;height:43px!important;flex-basis:43px}
- .profileSocial-muslimeen .muslimeenSpotlightMain{gap:8px!important}
+ .profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileDiscoveryOpen{column-gap:9px!important}
+ .profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .profileMemberFollowButton{min-width:78px!important;max-width:95px!important;padding:8px 7px!important;font-size:11px!important}
+ .profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightMain img{width:43px!important;height:43px!important;flex-basis:43px}
+ .profileSocial-muslimeen .profileSocialDiscovery .muslimeenSpotlightMain{gap:8px!important}
 }
 @media(prefers-reduced-motion:reduce){
  .profileSocial-muslimeen .peopleSearchForm,.profileSocial-muslimeen .muslimeenRailTrack{transition:none!important;scroll-behavior:auto!important}
 }
+
+/* Member-specific accent colors should remain as avatar rings, not replace readable links. */
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .memberAccentCard .profileDiscoveryIdentity strong{color:var(--people-link)!important}
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .memberAccentCard .profileDiscoveryIdentity span,
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .memberAccentCard .profileDiscoveryIdentity small,
+.profileSocial-muslimeen .profileSocialDiscovery .muslimeenMemberGrid .memberAccentCard .profileDiscoveryBioText{color:var(--people-muted)!important}
