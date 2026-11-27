@@ -25,6 +25,7 @@ test("HudHud parses clearly spoken Quran references without rewriting unrelated 
  assert.equal(normalizeSpokenHudHudQuestion("Show me Quran verse nine sixteen"),"Show me Qur'an 9:16");
  assert.equal(normalizeSpokenHudHudQuestion("Read surah two verse two hundred fifty five"),"Read Surah 2 verse 255");
  assert.equal(normalizeSpokenHudHudQuestion("Where does Allah say He guides whom He wills?"),"Where does Allah say He guides whom He wills?");
+ assert.equal(normalizeSpokenHudHudQuestion("Quran verse ninety nine"),"Quran verse ninety nine");
 });
 
 test("HudHud shows a single verified verse instead of six unrelated results",()=>{
