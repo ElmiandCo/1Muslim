@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import SiteNav from "../components/SiteNav";
 import LocationPreferences from "../components/LocationPreferences";
 import AdhanSettings from "../components/AdhanSettings";
@@ -11,7 +12,14 @@ import { createClient } from "../../utils/supabase/client";
 import SettingsControlDrawer from "./SettingsControlDrawer";
 import SettingsHudHudCenter from "./SettingsHudHudCenter";
 
-export default function SettingsPage() {
+/** Legacy /settings addresses resolve to the signed-in home with the global sheet. */
+export default function SettingsPage(){
+ const router=useRouter();
+ useEffect(()=>{router.replace("/search?settings=1")},[router]);
+ return <main aria-label="Opening your settings"/>;
+}
+/** Existing working preferences, reused inside the same translucent global sheet. */
+export function SettingsContent({embedded=false}:{embedded?:boolean}={}) {
   const [enabled, setEnabled] = useState(false);
   const [notificationPrefs,setNotificationPrefs]=useState<Record<string,boolean>>({messages:true,calls:true,live:true,ashab:true,learning:true});
   const [permission,setPermission]=useState("default");
@@ -101,19 +109,19 @@ export default function SettingsPage() {
     window.location.href = "/";
   };
 
-  if (loading) return <main><SiteNav compact/><section className="settingsShell"><p>Loading settings…</p></section></main>;
+  if (loading) return embedded?<p>Loading your app preferences…</p>:<main><SiteNav compact/><section className="settingsShell"><p>Loading settings…</p></section></main>;
 
-  return <main className="settingsPage">
-    <SiteNav />
+  return <main className={"settingsPage"+(embedded?" gscSettingsEmbedded":"")}>
+    {!embedded&&<SiteNav />}
     <div className="settingsShell">
-      <SettingsControlDrawer/>
-      <header className="settingsHero">
+      {!embedded&&<SettingsControlDrawer/>}
+      {!embedded&&<header className="settingsHero">
         <span className="eyebrow">SETTINGS</span>
         <h1>Your 1Muslim Control Center.</h1>
         <p>Control your HudHud experience, profile, conversations, appearance, community and privacy. Your existing tools remain available below.</p>
-      </header>
+      </header>}
 
-      <SettingsHudHudCenter/>
+      {!embedded&&<SettingsHudHudCenter/>}
       <div id="social-connections"><SocialConnectionsWidget /></div>
       <section id="appearance-settings" className="settingsCard" data-no-tap-shimmer style={{display:"block"}} aria-label="Appearance settings"><div className="settingCopy"><span className="settingIcon">☀</span><div><span className="eyebrow">APPEARANCE · DAY / NIGHT</span><h2>Theme & atmosphere</h2><p>Choose the Canvas lighting. Auto follows your device appearance. Your orb stays a simple day/night toggle.</p></div></div><div role="group" aria-label="Theme mode" style={{display:"flex",flexWrap:"wrap",gap:9,marginTop:16}}>{(["day","night","auto"] as const).map(mode=><button type="button" key={mode} aria-pressed={appearanceMode===mode} onClick={()=>saveAppearance(mode)} style={{minHeight:44,padding:"9px 18px",borderRadius:999,border:appearanceMode===mode?"2px solid #cda65a":"1px solid #698d7b",background:appearanceMode===mode?"#1b6647":"transparent",color:"inherit",cursor:"pointer",fontWeight:700}}>{mode==="day"?"☀ Day":mode==="night"?"☾ Night":"◉ Auto"}</button>)}</div></section>
       <DeepWatchAppearanceSettings />
