@@ -195,7 +195,24 @@ export default function HudHudPage(){
      {lines.map((line,index)=><article key={current.id+"-"+index} className={"hudMessage "+(line.role==="user"?"hudUser":"hudAssistant")}>
        {line.role==="assistant"&&<span className="hudTinyOrb" aria-hidden="true"/>}
        <div className="hudMessageBody"><p>{line.content}</p>
-        {line.matches&&line.matches.length>0&&<div className="hudMatches">{line.matches.slice(0,3).map(item=><Link key={item.href} href={item.href}>{item.title}<span aria-hidden="true">↗</span></Link>)}</div>}
+        {line.matches&&line.matches.length>0&&<div className="hudMatches" role="list" aria-label="HudHud search suggestions">
+ {line.matches.slice(0,6).map(item=><div className="hudMatchCard" role="listitem" key={item.href}>
+  {item.kind==="Qur’an"&&/^\d{1,3}:\d{1,3}$/.test(item.id)
+   ?<HudHudVerseCard verseKey={item.id} href={item.href}/>
+   :<Link href={item.href}>
+    {item.image?.startsWith("https://")&&<img src={item.image} alt="" loading="lazy"/>}
+    <span className="hudMatchKind">{item.kind}</span>
+    <strong>{item.title}</strong>
+    {item.description&&<small>{item.description.slice(0,105)}</small>}
+    <em>View source ↗</em>
+   </Link>}
+  </div>)}
+ </div>}
+ {line.matches&&line.matches.length>0&&<div className="hudQuickChoices" aria-label="Follow-up suggestions">
+  <span>Explore these results?</span>
+  <button type="button" onClick={()=>{setDraft("Yes, show me more about these results.");input.current?.focus()}}>Yes</button>
+  <button type="button" onClick={()=>{setDraft("No, try another approach and explain why.");input.current?.focus()}}>No</button>
+ </div>}
        </div>
      </article>)}
      {busy&&<div className="hudPending" role="status"><span className="hudTinyOrb" aria-hidden="true"/> HudHud is thinking <span className="hudDots">•••</span></div>}
@@ -204,18 +221,18 @@ export default function HudHudPage(){
   </section>
 
   {error&&<p className="hudError" role="alert">{error}</p>}
-  {exhausted&&<aside className="hudUpgrade"><strong>You've used your three free HudHud replies.</strong><Link href="/unlocked">Continue with 1Muslim Unlocked ↗</Link></aside>}
+  {exhausted&&<aside className="hudUpgrade"><strong>Your HudHud exploration is complete for now.</strong><Link href="/search">Explore 1Muslim Search ↗</Link></aside>}
   <div className="hudComposerArea">
    {queryContext&&<span className="hudContext">Searching for: {queryContext}</span>}
    <form className="hudComposer" onSubmit={ask}>
     <div className="hudInputPill">
      <button className="hudPlus" type="button" aria-label="More HudHud actions" aria-expanded={actionsOpen} onClick={()=>setActionsOpen(!actionsOpen)}><Glyph name="plus"/></button>
-     <input ref={input} type="text" inputMode="text" value={draft} maxLength={900} autoComplete="off" aria-label="Ask HudHud" placeholder={exhausted?"Free replies completed":"Ask HudHud"} onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)} onChange={event=>setDraft(event.target.value)} disabled={busy||exhausted}/>
+     <input ref={input} type="text" inputMode="text" value={draft} maxLength={900} autoComplete="off" aria-label="Ask HudHud" placeholder={exhausted?"Explore search instead":"Ask HudHud"} onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)} onChange={event=>setDraft(event.target.value)} disabled={busy||exhausted}/>
     </div>
     {draft.trim()&&!exhausted?<button className="hudMic hudSend" aria-label="Send question" type="submit" disabled={busy}><Glyph name="send"/></button>:<button className={"hudMic"+(listening?" isActive":"")} type="button" aria-label={listening?"Stop listening":"Dictate question with microphone"} aria-pressed={listening} onClick={startVoice} disabled={busy||exhausted}><Glyph name="mic"/></button>}
-    <button className="hudEnd" type="button" aria-label={listening?"Stop microphone":"Close HudHud"} onClick={close}><Glyph name="close"/></button>
+    <button className="hudEnd" type="button" aria-label="Close HudHud" onClick={close}><Glyph name="close"/></button>
    </form>
-   <p className="hudQuota">{unlocked?"HudHud included with your 1Muslim membership":remaining===null?"HudHud · Ask thoughtfully":remaining+" of 3 free replies remaining"} <span aria-hidden="true">·</span> Verify important Islamic references.</p>
+   
   </div>
 
   {actionsOpen&&<div className="hudActionPop" role="menu" aria-label="HudHud shortcuts">
@@ -225,7 +242,7 @@ export default function HudHudPage(){
     <h2>HudHud settings</h2>
     <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>{setReadAloud(e.target.checked);if(!e.target.checked)window.speechSynthesis?.cancel()}}/></label>
     <label><span>Reduce orb motion<small>Keep the emerald orb still</small></span><input type="checkbox" checked={stillOrb} onChange={e=>setStillOrb(e.target.checked)}/></label>
-    <p>Microphone activates only when you tap it. Chats in this view stay in memory until you leave the page.</p>
+    <p>Voice turns send when you finish speaking. You can mute spoken replies. Chats here are temporary.</p>
     <button type="button" onClick={()=>setSettingsOpen(false)}>Close settings</button>
    </div>}
   {menuOpen&&<div className="hudDrawerCover" onMouseDown={e=>{if(e.target===e.currentTarget)setMenuOpen(false)}}>
