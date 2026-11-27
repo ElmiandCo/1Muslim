@@ -191,7 +191,7 @@ export default function HudHudPage(){
    const reply=String(data.reply||"").trim();
    if(!reply)throw Error("HudHud sent an empty reply.");
    const assistantLine:Line={role:"assistant",content:reply,matches:Array.isArray(data.matches)?data.matches:[],presentation:data.presentation,verses:Array.isArray(data.verses)?data.verses:[]};
-   const savedSession:Session={id:conversationId,title:current.lines.length?current.title:message.slice(0,40),lines:[...lines,{role:"user",content:message},assistantLine].slice(-40)};
+   const savedSession:Session={id:conversationId,title:current.lines.length?current.title:message.slice(0,40),lines:[...lines,({role:"user",content:message} satisfies Line),assistantLine].slice(-40)};
    setSessions(old=>old.map(s=>s.id===conversationId?savedSession:s));
    if(memoryEnabled&&memorySignedIn)void memorySave(savedSession).catch(()=>setMemoryNotice("Could not save this reply. Try again later."));
    if(readAloud&&"speechSynthesis" in window){
