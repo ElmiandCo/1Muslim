@@ -245,6 +245,19 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
  voiceRef.current=begin;
  const openHelp=()=>{stop(false);stopGuidance();setState("help");setManual(false);setTerms(false);setMessage("")};
  const back=()=>{setState("ready");setMessage("");setManual(false);setTerms(false)};
+ const reciteExample=()=>{
+  // Only recite the full declaration inside Help after microphone capture
+  // has stopped. This prevents HudHud's own speech from verifying itself.
+  stop(false);
+  if(muted||!("speechSynthesis" in window))return;
+  try{
+   window.speechSynthesis.cancel();
+   const sample=new SpeechSynthesisUtterance(language==="ar"?SHAHADA_ARABIC:SHAHADA_ENGLISH);
+   sample.lang=language==="ar"?"ar-SA":"en-US";sample.rate=.88;sample.volume=.84;
+   sample.onstart=()=>setSpeaking(true);sample.onend=()=>setSpeaking(false);sample.onerror=()=>setSpeaking(false);
+   window.speechSynthesis.speak(sample);
+  }catch{setSpeaking(false)}
+ };
  const completeManual=()=>{
   if(!manual||!terms)return;
   stop(false);stopGuidance();void finalizeRef.current("self-attested-checkbox");
@@ -263,6 +276,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
    {state==="help"?<div className="hudV2Help">
      <p>The Shahada is the declaration of belief in Allah and His Messenger. You can speak it in Arabic or English, or personally affirm it here if recording isn't possible.</p>
      <p className="hudV2Arabic" lang="ar" dir="rtl">{SHAHADA_ARABIC}</p><p>{SHAHADA_ENGLISH}</p>
+     <button type="button" className="hudV2HelpListen" onClick={reciteExample}>▶ Hear the Shahada</button>
      <label className="hudV2Check"><input type="checkbox" checked={manual} onChange={e=>setManual(e.target.checked)}/> I sincerely affirm this Shahada myself.</label>
      <label className="hudV2Check"><input type="checkbox" checked={terms} onChange={e=>setTerms(e.target.checked)}/> I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer">community terms</a>.</label>
      <div className="hudV2HelpActions"><button onClick={back} type="button">← Back</button><button className="isPrimary" disabled={!manual||!terms||saved.current} onClick={completeManual} type="button">Continue →</button></div>
