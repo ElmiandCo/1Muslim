@@ -38,7 +38,12 @@ export default function AuthPage() {
   const [visionVisible,setVisionVisible]=useState(true);
   const [entryStage,setEntryStage]=useState<"welcome"|"membership"|"guest"|"auth">("welcome");
   const [entryReady,setEntryReady]=useState(false);
-  useEffect(()=>{setEntryReady(true)},[]);
+  useEffect(()=>{
+    // Returning from Sign in/Join should give the member the same quiet brand
+    // welcome on Search Home, even if they browsed anonymously first.
+    try{sessionStorage.removeItem("1muslim:search-intro:v1")}catch{}
+    setEntryReady(true);
+  },[]);
 
 
   useEffect(() => {

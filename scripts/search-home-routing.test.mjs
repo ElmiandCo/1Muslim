@@ -4,10 +4,37 @@ import test from "node:test";
 
 const read = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
 
-test("signed-in entry and restored sessions open Search Home",()=>{
+test("signed-in and anonymous visitors enter the same Search Home immediately",()=>{
   const root=read("app/page.tsx");
-  assert.equal((root.match(/router\.replace\("\/search"\)/g)||[]).length,2);
-  assert.doesNotMatch(root,/router\.replace\("\/profile"\)/);
+  const proxy=read("utils/supabase/proxy.ts");
+  assert.match(root,/redirect\("\/search"\)/);
+  assert.doesNotMatch(root,/GuestWelcomeHome|createClient|router\.replace|oneWhiteWelcomeLoading/);
+  assert.match(proxy,/pathname === "\/search"/);
+  assert.match(proxy,/if \(!guestAllowed\)/);
+  assert.match(proxy,/loginUrl\.pathname = "\/auth"/);
+});
+
+test("one-second in-place Search Home reveal is quiet, repeat-safe and motion-safe",()=>{
+  const page=read("app/search/page.tsx");
+  const styles=read("app/search/search.css");
+  const auth=read("app/auth/page.tsx");
+  assert.match(page,/useState<"pending"\|"playing"\|"done">\("pending"\)/);
+  assert.match(page,/sessionStorage\.getItem\(key\)==="seen"/);
+  assert.match(page,/const hasQuery=Boolean\(params\.get\("q"\)\?\.trim\(\)\)/);
+  assert.match(page,/\(prefers-reduced-motion: reduce\)/);
+  assert.match(page,/window\.setTimeout\(\(\)=>setIntroStage\("done"\),1000\)/);
+  assert.match(page,/dsIntro/);
+  assert.match(auth,/sessionStorage\.removeItem\("1muslim:search-intro:v1"\)/);
+  assert.match(styles,/\.dsPage\.dsHomeMode\.dsIntroPending/);
+  assert.match(styles,/@keyframes dsIntroWordmark/);
+  assert.match(styles,/@keyframes dsIntroLive/);
+  assert.match(styles,/@keyframes dsIntroArrive/);
+  assert.match(styles,/dsIntroWordmark 1000ms/);
+  assert.match(styles,/dsIntroLive 1000ms/);
+  assert.match(styles,/dsIntroArrive 1000ms/);
+  assert.match(styles,/@media\(prefers-reduced-motion:reduce\)/);
+  // No hard route changes, duplicate logo, fixed splash or layout replacement.
+  assert.doesNotMatch(page,/setTimeout\(\(\)=>router\.(?:push|replace)/);
 });
 
 test("auth defaults to Search Home but preserves explicit deep links",()=>{
@@ -24,12 +51,21 @@ test("auth defaults to Search Home but preserves explicit deep links",()=>{
   assert.match(callback,/\$\{origin\}\$\{next\}/);
 });
 
-test("new visitors keep the guest landing, while its sign-in buttons open Search Home",()=>{
-  const home=read("app/page.tsx");
-  assert.match(home,/return <GuestWelcomeHome\/>/);
-  const guest=read("app/components/GuestWelcomeHome.tsx");
-  assert.equal((guest.match(/next=%2Fsearch/g)||[]).length,4);
-  assert.doesNotMatch(guest,/next=%2Fprofile/);
+test("visitors can search without signing in, while private account controls are gated",()=>{
+  const page=read("app/search/page.tsx");
+  const webSearch=read("app/components/WebSearchPanel.tsx");
+  const proxy=read("utils/supabase/proxy.ts");
+  const css=read("app/search/search.css");
+  assert.match(page,/const \[account,setAccount\]=useState<"checking"\|"guest"\|"member">\("checking"\)/);
+  assert.match(page,/account==="guest"\?<div className="dsGuestAccount"/);
+  assert.match(page,/account==="member"\?<>/);
+  assert.match(page,/href="\/auth\?next=%2Fsearch&login=1"/);
+  assert.match(page,/href="\/auth\?next=%2Fsearch&mode=signup"/);
+  assert.match(page,/\/api\/discover\/search/);
+  assert.match(page,/<WebSearchPanel query=\{submitted\}/);
+  assert.match(webSearch,/\/api\/web-search\?q=/);
+  assert.match(proxy,/pathname === "\/search"/);
+  assert.match(css,/\.dsResultsNight \.dsGuestAccount/);
 });
 
 test("Shahada only returns explicitly requested profile flows to Profile",()=>{

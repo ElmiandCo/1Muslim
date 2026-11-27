@@ -551,3 +551,85 @@
  .dsHudDock,.dsCreatorRow{animation:none!important;transform:none!important;filter:none!important}
  .dsUtilityButton,.dsHomeMode .dsSearchForm,.dsHomeMode .dsCreatorRow{transition:none!important}
 }
+
+/* Anonymous visitors see the same search surface, with compact auth links in
+   place of member-only Settings/Profile/Sign out. No shift to Search Home layout. */
+.dsGuestAccount{
+  display:inline-flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0;
+}
+.dsGuestAccount a{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;padding:0 15px;border-radius:999px;
+  border:1px solid rgba(215,221,225,.75);
+  font-size:12px;font-weight:710;white-space:nowrap;line-height:1.2;
+  transition:background .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease;
+}
+.dsGuestAccount .dsGuestSignIn{background:rgba(255,255,255,.84);color:#33474c}
+.dsGuestAccount .dsGuestJoin{background:#213f3d;color:#fff;border-color:#213f3d;box-shadow:0 5px 14px rgba(18,46,42,.14)}
+.dsGuestAccount a:hover{transform:translateY(-1px);box-shadow:0 7px 18px rgba(16,38,35,.12)}
+.dsGuestAccount a:active{transform:scale(.98)}
+.dsGuestJoinCompact{display:none}
+.dsResultsNight .dsGuestAccount .dsGuestSignIn{background:#292b30;color:#e8eaed;border-color:#555962}
+.dsResultsNight .dsGuestAccount .dsGuestJoin{background:#e8edea;color:#233d3a;border-color:#e8edea}
+@media(max-width:767px){
+  .dsGuestAccount{gap:6px}
+  .dsGuestAccount a{min-height:39px;padding-inline:11px;font-size:11px}
+  .dsResultsMode .dsGuestJoinFull{display:none}
+  .dsResultsMode .dsGuestJoinCompact{display:inline}
+}
+@media(max-width:370px){
+  .dsResultsMode .dsGuestAccount{gap:4px}
+  .dsResultsMode .dsGuestAccount a{padding-inline:8px;font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .dsGuestAccount a{transition:none!important;transform:none!important}
+}
+
+/* Brand arrives in its FINAL position — no separate splash or layout shift.
+   0–120ms: white quiet screen. 120–680ms: One Muslim draws into place.
+   420–820ms: .live settles. 560–1000ms: the search experience fades in.
+   Only the first landing per tab (and immediately after entering /auth).
+ */
+.dsPage.dsHomeMode.dsIntroPending,
+.dsPage.dsHomeMode.dsIntroPlaying{background:#fff}
+.dsHomeMode.dsIntroPending .dsHomeBrand>span{opacity:0}
+.dsHomeMode.dsIntroPending .dsHomeBrandLive{animation:none!important}
+.dsHomeMode.dsIntroPending .dsHomeUtilities,
+.dsHomeMode.dsIntroPending .dsHeaderRow,
+.dsHomeMode.dsIntroPending .dsContent{opacity:0;pointer-events:none}
+.dsHomeMode.dsIntroPlaying .dsHomeBrand>span:first-child{
+  display:inline-block;
+  animation:dsIntroWordmark 1000ms cubic-bezier(.2,.7,.22,1) both;
+}
+.dsHomeMode.dsIntroPlaying .dsHomeBrandLive{
+  animation:dsIntroLive 1000ms cubic-bezier(.2,.7,.22,1) both!important;
+}
+.dsHomeMode.dsIntroPlaying .dsHomeUtilities,
+.dsHomeMode.dsIntroPlaying .dsHeaderRow,
+.dsHomeMode.dsIntroPlaying .dsContent{
+  animation:dsIntroArrive 1000ms cubic-bezier(.22,.72,.22,1) both;
+  pointer-events:none;
+}
+@keyframes dsIntroWordmark{
+  0%,10%{opacity:0;clip-path:inset(0 100% 0 0);transform:translateX(-9px);filter:blur(3px)}
+  30%{opacity:.9;clip-path:inset(0 65% 0 0);transform:translateX(-4px);filter:blur(1px)}
+  69%,100%{opacity:1;clip-path:inset(0 0 0 0);transform:translateX(0);filter:blur(0)}
+}
+@keyframes dsIntroLive{
+  0%,42%{opacity:0;transform:translateX(7px) scale(.97);color:#9f8052}
+  72%{opacity:1;transform:translateX(0) scale(1);color:#9f8052}
+  100%{opacity:.91;transform:translateX(0) scale(1);color:#9f8052}
+}
+@keyframes dsIntroArrive{
+  0%,54%{opacity:0;transform:translateY(9px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  .dsHomeMode.dsIntroPlaying .dsHomeBrand>span:first-child,
+  .dsHomeMode.dsIntroPlaying .dsHomeBrandLive,
+  .dsHomeMode.dsIntroPlaying .dsHomeUtilities,
+  .dsHomeMode.dsIntroPlaying .dsHeaderRow,
+  .dsHomeMode.dsIntroPlaying .dsContent{
+    animation:none!important;transform:none!important;filter:none!important;opacity:1!important;clip-path:none!important;
+  }
+}

@@ -1,32 +1,9 @@
-"use client";
-import {useEffect,useState} from "react";
-import {useRouter} from "next/navigation";
-import {createClient} from "../utils/supabase/client";
-import GuestWelcomeHome from "./components/GuestWelcomeHome";
+import {redirect} from "next/navigation";
 
-/** Root now contains only the guest landing or a white auth handoff.
- * The retired Live workspace cannot render behind the new search home/navigation.
+/** The public entrance is the exact Search Home used by signed-in members.
+ * A server redirect avoids flashing an obsolete guest landing or auth loader.
+ * The /search route owns the shared UI, search APIs and account-aware shortcuts.
  */
 export default function HomePage(){
- const router=useRouter();
- const [status,setStatus]=useState<"checking"|"guest"|"member">("checking");
- useEffect(()=>{
-  let active=true;
-  const db=createClient();
-  const open=async()=>{
-   const {data:{user}}=await db.auth.getUser();
-   if(!active)return;
-   if(user){setStatus("member");router.replace("/search");}
-   else setStatus("guest");
-  };
-  void open();
-  const {data:{subscription}}=db.auth.onAuthStateChange((event,session)=>{
-   if(!active)return;
-   if(event==="SIGNED_OUT"){setStatus("guest");return}
-   if(session?.user){setStatus("member");router.replace("/search");}
-  });
-  return()=>{active=false;subscription.unsubscribe()};
- },[router]);
- if(status!=="guest")return <main className="oneWhiteWelcomeLoading" aria-label="Opening 1Muslim"><span className="oneWhiteWelcomeMark">1M</span></main>;
- return <GuestWelcomeHome/>;
+  redirect("/search");
 }

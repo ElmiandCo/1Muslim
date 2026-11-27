@@ -95,6 +95,39 @@ export default function SearchHub() {
   const [signoutConfirm,setSignoutConfirm]=useState(false);
   const [signoutBusy,setSignoutBusy]=useState(false);
   const [resultsNight,setResultsNight]=useState(true);
+  // First-visit reveal happens at the wordmark's FINAL layout position.
+  // It never shows a second, floating copy of the brand or blocks repeat searches.
+  const [introStage,setIntroStage]=useState<"pending"|"playing"|"done">("pending");
+  useEffect(()=>{
+    const params=new URLSearchParams(window.location.search);
+    const hasQuery=Boolean(params.get("q")?.trim());
+    const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const key="1muslim:search-intro:v1";
+    let seen=false;
+    try{seen=sessionStorage.getItem(key)==="seen"}catch{}
+    if(hasQuery||reduced||seen){setIntroStage("done");return}
+    try{sessionStorage.setItem(key,"seen")}catch{}
+    // The server paints a completely quiet, white Search Home first.
+    // The wordmark reveals in place, then search controls arrive in one second.
+    setIntroStage("playing");
+    const timer=window.setTimeout(()=>setIntroStage("done"),1000);
+    return()=>window.clearTimeout(timer);
+  },[]);
+  // The same Search Home renders for visitors and members; only account actions differ.
+  const [account,setAccount]=useState<"checking"|"guest"|"member">("checking");
+  useEffect(()=>{
+    let active=true;
+    const db=createClient();
+    void db.auth.getUser().then(({data:{user}})=>{
+      if(active)setAccount(user?"member":"guest");
+    }).catch(()=>{if(active)setAccount("guest")});
+    const {data:{subscription}}=db.auth.onAuthStateChange((event,session)=>{
+      if(!active)return;
+      if(event==="SIGNED_OUT")setAccount("guest");
+      if(event==="SIGNED_IN"&&session?.user)setAccount("member");
+    });
+    return()=>{active=false;subscription.unsubscribe()};
+  },[]);
   useEffect(()=>{try{const saved=localStorage.getItem("1muslim:search-results-theme");if(saved==="day"||saved==="night")setResultsNight(saved==="night");}catch{}},[]);
   const toggleResultsTheme=()=>setResultsNight(old=>{try{localStorage.setItem("1muslim:search-results-theme",old?"day":"night");}catch{}return !old;});
 
@@ -182,10 +215,14 @@ export default function SearchHub() {
     }finally{setSignoutBusy(false);}
   };
   const homeMode=!query.trim();
-  return <main ref={magneticRoot} className={"dsPage "+(homeMode?"dsHomeMode":"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))}>
+  return <main ref={magneticRoot} className={"dsPage "+(homeMode?"dsHomeMode dsIntro"+(introStage==="pending"?"Pending":introStage==="playing"?"Playing":"Done"):"dsResultsMode "+(resultsNight?"dsResultsNight":"dsResultsDay"))}>
     <nav className="dsHomeUtilities" aria-label="Account shortcuts">
-      {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="One Muslim Live — return to search home"><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></Link>}
+      {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="One Muslim Live — return to search home" onClick={e=>{e.preventDefault();clear()}}><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></Link>}
       {!homeMode&&<button type="button" className="dsUtilityButton dsResultsThemeToggle" onClick={toggleResultsTheme} aria-label={resultsNight?"Switch search results to light mode":"Switch search results to dark mode"} title={resultsNight?"Light appearance":"Dark appearance"} aria-pressed={resultsNight}><span aria-hidden="true">{resultsNight?"☼":"◐"}</span></button>}
+      {account==="guest"?<div className="dsGuestAccount" aria-label="Account access">
+        <Link href="/auth?next=%2Fsearch&login=1" className="dsGuestSignIn">Sign in</Link>
+        <Link href="/auth?next=%2Fsearch&mode=signup" className="dsGuestJoin"><span className="dsGuestJoinFull">Join 1Muslim</span><span className="dsGuestJoinCompact">Join</span></Link>
+      </div>:account==="member"?<>
       <Link href="/settings" aria-label="Settings" title="Settings" className="dsUtilityButton">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.6 2.4 1.6.9 2.4-.7 2 3.5-1.8 1.7v1.9l1.8 1.7-2 3.5-2.4-.7-1.6.9L14 20h-4l-.6-2.4-1.6-.9-2.4.7-2-3.5 1.8-1.7v-1.9L3.4 8.6l2-3.5 2.4.7 1.6-.9L10 2Z"/></svg>
       </Link>
@@ -195,11 +232,12 @@ export default function SearchHub() {
       <button type="button" aria-label="Sign out" title="Sign out" className="dsUtilityButton" onClick={()=>setSignoutConfirm(true)}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5"/><path d="M14 8l4 4-4 4M18 12H8"/></svg>
       </button>
+      </>:null}
     </nav>
     <header className={"dsHeader"+(compactHeader?" dsHeaderCompact":"")}>
       <h1 className="dsHomeBrand" aria-hidden={!homeMode}><span>One Muslim</span><span className="dsHomeBrandLive" aria-hidden="true">.live</span></h1>
       <div className="dsHeaderRow">
-        <Link href="/search" className="dsBack" aria-label="Back to search home">‹</Link>
+        <Link href="/search" className="dsBack" aria-label="Back to search home" onClick={e=>{e.preventDefault();clear()}}>‹</Link>
         <form className="dsSearchForm" role="search" onSubmit={e=>{e.preventDefault();commit(query);}}>
           <span aria-hidden="true">⌕</span>
           <input ref={searchField} type="search" autoComplete="off" aria-label="Search all of 1Muslim" placeholder="Search the world, Qur’an, creators, videos…" value={query}
@@ -275,7 +313,7 @@ export default function SearchHub() {
     </div>
 
 
-    {signoutConfirm&&<div className="dsSignoutBackdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSignoutConfirm(false)}}>
+    {account==="member"&&signoutConfirm&&<div className="dsSignoutBackdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSignoutConfirm(false)}}>
       <div className="dsSignoutDialog" role="dialog" aria-modal="true" aria-labelledby="dsSignoutTitle">
         <h2 id="dsSignoutTitle">Sign out of One Muslim?</h2>
         <div className="dsSignoutActions">

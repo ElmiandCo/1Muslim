@@ -38,7 +38,9 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Guests may view the landing page, but must sign in before navigating elsewhere.
+  // The public Search Home is the landing page for everybody. Visitors may search
+  // without an account, while protected profile, post and messaging routes still
+  // require authentication. Never elevate guest access to member-only data.
   // Keep auth callbacks, static assets, legal pages and API endpoints accessible.
   const pathname = request.nextUrl.pathname;
   // Only editorial/marketing pages are public. Keep member content, profiles,
@@ -48,7 +50,7 @@ export async function updateSession(request: NextRequest) {
     pathname === "/platform" || pathname === "/features" ||
     pathname.startsWith("/features/") || pathname === "/growth" ||
     pathname === "/data-policy" || pathname === "/llms.txt";
-  const guestAllowed = publicInformationPage || pathname === "/" || pathname.startsWith("/quran-recitals") || pathname === "/messages" || pathname.startsWith("/messages/call/") || pathname === "/messenger-design" || pathname.startsWith("/auth") ||
+  const guestAllowed = publicInformationPage || pathname === "/" || pathname === "/search" || pathname.startsWith("/quran-recitals") || pathname === "/messages" || pathname.startsWith("/messages/call/") || pathname === "/messenger-design" || pathname.startsWith("/auth") ||
     pathname.startsWith("/terms") || pathname.startsWith("/privacy") ||
     pathname.startsWith("/api/") || pathname.startsWith("/_next/") ||
     pathname.startsWith("/assets/") || pathname.startsWith("/videos/") ||
