@@ -584,3 +584,52 @@
 @media(prefers-reduced-motion:reduce){
   .dsGuestAccount a{transition:none!important;transform:none!important}
 }
+
+/* Brand arrives in its FINAL position — no separate splash or layout shift.
+   0–120ms: white quiet screen. 120–680ms: One Muslim draws into place.
+   420–820ms: .live settles. 560–1000ms: the search experience fades in.
+   Only the first landing per tab (and immediately after entering /auth).
+ */
+.dsPage.dsHomeMode.dsIntroPending,
+.dsPage.dsHomeMode.dsIntroPlaying{background:#fff}
+.dsHomeMode.dsIntroPending .dsHomeBrand>span{opacity:0}
+.dsHomeMode.dsIntroPending .dsHomeBrandLive{animation:none!important}
+.dsHomeMode.dsIntroPending .dsHomeUtilities,
+.dsHomeMode.dsIntroPending .dsHeaderRow,
+.dsHomeMode.dsIntroPending .dsContent{opacity:0;pointer-events:none}
+.dsHomeMode.dsIntroPlaying .dsHomeBrand>span:first-child{
+  display:inline-block;
+  animation:dsIntroWordmark 1000ms cubic-bezier(.2,.7,.22,1) both;
+}
+.dsHomeMode.dsIntroPlaying .dsHomeBrandLive{
+  animation:dsIntroLive 1000ms cubic-bezier(.2,.7,.22,1) both!important;
+}
+.dsHomeMode.dsIntroPlaying .dsHomeUtilities,
+.dsHomeMode.dsIntroPlaying .dsHeaderRow,
+.dsHomeMode.dsIntroPlaying .dsContent{
+  animation:dsIntroArrive 1000ms cubic-bezier(.22,.72,.22,1) both;
+  pointer-events:none;
+}
+@keyframes dsIntroWordmark{
+  0%,10%{opacity:0;clip-path:inset(0 100% 0 0);transform:translateX(-9px);filter:blur(3px)}
+  30%{opacity:.9;clip-path:inset(0 65% 0 0);transform:translateX(-4px);filter:blur(1px)}
+  69%,100%{opacity:1;clip-path:inset(0 0 0 0);transform:translateX(0);filter:blur(0)}
+}
+@keyframes dsIntroLive{
+  0%,42%{opacity:0;transform:translateX(7px) scale(.97);color:#9f8052}
+  72%{opacity:1;transform:translateX(0) scale(1);color:#9f8052}
+  100%{opacity:.91;transform:translateX(0) scale(1);color:#9f8052}
+}
+@keyframes dsIntroArrive{
+  0%,54%{opacity:0;transform:translateY(9px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  .dsHomeMode.dsIntroPlaying .dsHomeBrand>span:first-child,
+  .dsHomeMode.dsIntroPlaying .dsHomeBrandLive,
+  .dsHomeMode.dsIntroPlaying .dsHomeUtilities,
+  .dsHomeMode.dsIntroPlaying .dsHeaderRow,
+  .dsHomeMode.dsIntroPlaying .dsContent{
+    animation:none!important;transform:none!important;filter:none!important;opacity:1!important;clip-path:none!important;
+  }
+}
