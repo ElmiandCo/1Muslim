@@ -157,3 +157,87 @@ html[data-one-chrome="night"] .smhExplore .dsFeatureCopy strong{color:#e6ece8}
 .smhPage.smhNight .smhResponseSpace .hudNarratedReply{color:#edf1ef}
 .smhPage.smhNight .smhExplore .dsFeatureCard{background:#1d2a2b}
 .smhPage.smhNight .smhExplore .dsFeatureCopy strong{color:#e6ece8}
+
+
+/* Live prayer light wordmark — single noninteractive tracker on Search Home.
+   The bar mechanism is concealed BEHIND 1Muslim.Live lettering, not a separate
+   progress strip. No pointer handling, animation loop, labels or countdown. */
+.smhHeaderIdentity{display:flex;flex-direction:column;align-items:flex-start;
+ gap:3px;min-width:0;max-width:min(58vw,590px)}
+.smhHeaderMember{display:flex;align-items:baseline;gap:8px;min-height:20px;
+ max-width:100%;overflow:hidden}
+.smhHeaderMember .smhName{font-size:clamp(19px,2.7vw,32px)!important;
+ font-weight:700;letter-spacing:-.054em;line-height:1.14;text-align:left;
+ max-width:min(50vw,490px);white-space:nowrap;overflow:hidden;
+ text-overflow:ellipsis;flex:0 1 auto}
+.smhHeaderMember .smhWithHudHud{font-size:clamp(10px,1.3vw,14px);
+ overflow:hidden;text-overflow:ellipsis}
+.smhWelcome{margin-top:clamp(16px,2.8vh,43px)}
+.smhPrayerHero{display:flex;justify-content:center;align-items:center;
+ width:100%;min-height:clamp(110px,16vh,175px);
+ padding:8px 0;margin:0 auto clamp(20px,3vh,38px);
+ text-align:center;pointer-events:none;user-select:none}
+.smhPrayerWordmark{--smh-prayer-progress:0%;position:relative;
+ display:inline-block;isolation:isolate;width:max-content;max-width:100%;
+ font-size:clamp(57px,7.6vw,99px);font-weight:745;line-height:1.04;
+ letter-spacing:-.079em;white-space:nowrap;vertical-align:middle;
+ pointer-events:none;user-select:none;
+ animation:smhPrayerBloom 950ms cubic-bezier(.17,.7,.24,1) both;
+ transition:font-size .4s ease}
+.smhPrayerBase,.smhPrayerLit{display:block;font:inherit;line-height:inherit;
+ letter-spacing:inherit;white-space:nowrap;position:relative;z-index:1}
+.smhPrayerBase{color:#263b36;text-shadow:0 1px 1px #142c1b09}
+.smhPrayerBase>span,.smhPrayerLit>span{display:inline;font-size:.51em;
+ font-weight:570;letter-spacing:-.055em;vertical-align:baseline}
+.smhPrayerLit{position:absolute;inset:0;z-index:2;
+ color:#d4f9e7;background:linear-gradient(105deg,#b5e0ce 1%,#f8ffff 48%,#a9bfae 90%);
+ -webkit-background-clip:text;background-clip:text;
+ -webkit-text-fill-color:transparent;
+ clip-path:inset(0 calc(100% - var(--smh-prayer-progress)) 0 0);
+ filter:drop-shadow(0 0 4px #81c59c8c);
+ opacity:0;transition:clip-path 30s linear,opacity .5s ease}
+.smhPrayerReady .smhPrayerLit{opacity:.91}
+.smhPrayerHalo{position:absolute;z-index:0;pointer-events:none;
+ left:var(--smh-prayer-progress);top:52%;
+ width:34%;height:95%;border-radius:100%;
+ transform:translate(-50%,-50%);
+ background:radial-gradient(ellipse at center,#68d3ab48 0%,#e1f5dc3f 33%,transparent 76%);
+ filter:blur(13px);opacity:0;transition:left 30s linear,opacity .6s ease}
+.smhPrayerReady .smhPrayerHalo{opacity:.75}
+.smhPrayerCompact{font-size:clamp(38px,5.3vw,64px)}
+.smhPrayerHero:has(.smhPrayerCompact){min-height:clamp(62px,9vh,100px);
+ margin-bottom:clamp(12px,2vh,23px)}
+@keyframes smhPrayerBloom{from{opacity:.01;transform:translateY(12px) scale(.975)}
+ to{opacity:1;transform:none}}
+@media(max-width:650px){
+ .smhHeaderIdentity{max-width:min(57vw,335px);gap:3px}
+ .smhHeaderMember{gap:4px;min-height:16px}
+ .smhHeaderMember .smhName{font-size:clamp(16px,4.5vw,22px)!important;
+  max-width:48vw;letter-spacing:-.052em}
+ .smhHeaderMember .smhWithHudHud{font-size:9px}
+ .smhWelcome{margin-top:clamp(16px,2.8vh,32px)}
+ .smhPrayerHero{min-height:clamp(94px,15vh,132px);
+  margin-bottom:clamp(18px,2.8vh,27px);padding:3px 0}
+ .smhPrayerWordmark{font-size:clamp(46px,11.6vw,72px)}
+ .smhPrayerCompact{font-size:clamp(31px,8vw,49px)}
+ .smhPrayerHero:has(.smhPrayerCompact){min-height:61px;margin-bottom:14px}
+}
+@media(max-width:360px){
+ .smhHeaderMember .smhName{font-size:15px!important;max-width:45vw}
+ .smhPrayerWordmark{font-size:clamp(42px,11vw,48px)}
+ .smhPrayerCompact{font-size:30px}
+}
+html[data-one-chrome="night"] .smhPrayerBase,
+.smhPage.smhNight .smhPrayerBase{color:#f4f7f5;text-shadow:0 1px 8px #fafffc10}
+html[data-one-chrome="night"] .smhPrayerLit,
+.smhPage.smhNight .smhPrayerLit{
+ color:#fff;background:linear-gradient(105deg,#d6f7e4,#fffef3 52%,#d9faed 95%);
+ -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+ filter:drop-shadow(0 0 8px #72d4ad80)}
+html[data-one-chrome="night"] .smhPrayerHalo,
+.smhPage.smhNight .smhPrayerHalo{
+ background:radial-gradient(ellipse at center,#5bd5a35c,#d8f7e52d 36%,transparent 78%)}
+@media(prefers-reduced-motion:reduce){
+ .smhPrayerWordmark{animation:none!important;transition:none!important}
+ .smhPrayerHalo,.smhPrayerLit{transition:none!important}
+}
