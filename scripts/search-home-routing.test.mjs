@@ -138,10 +138,12 @@ test("Shahada admission returns directly to prior work without forcing profile g
  assert.doesNotMatch(route,/ShahadaOnboardingExperience/);
 });
 
-test("Home tab opens Search and Profile remains a distinct destination",()=>{
+test("Home and Profile shortcuts open the unified Search Home while the directory remains separate",()=>{
   const nav=read("app/components/GlobalNavigation.tsx");
   assert.match(nav,/{id:"search",label:"Home",href:"\/search"}/);
   assert.match(nav,/{id:"profile",label:"Profile",href:"\/profile"}/);
+  assert.match(nav,/item\.id==="profile"\?"\/search"/);
+  assert.match(nav,/item\.id==="muslims"\?"\/profile\?section=muslimeen"/);
   assert.match(nav,/router\.push\("\/search"\)/);
 });
 
