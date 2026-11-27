@@ -43,6 +43,12 @@ export default function HudHudPage(){
  const [remaining,setRemaining]=useState<number|null>(null);
  const [unlocked,setUnlocked]=useState(false);
  const [listening,setListening]=useState(false);
+ // Listening starts after microphone permission, as in the Shahada flow.
+ // It can be paused at any time; mic audio is never stored by this page.
+ const [autoListening,setAutoListening]=useState(true);
+ const [micPaused,setMicPaused]=useState(false);
+ const [speechPending,setSpeechPending]=useState(false);
+ const [pageVisible,setPageVisible]=useState(true);
  const [micAccess,setMicAccess]=useState<"checking"|"granted"|"denied"|"needs-tap"|"unavailable">("checking");
  const [menuOpen,setMenuOpen]=useState(false);
  const [settingsOpen,setSettingsOpen]=useState(false);
@@ -63,6 +69,7 @@ export default function HudHudPage(){
  const [queryContext,setQueryContext]=useState("");
  const [viewport,setViewport]=useState<{height:number;top:number}|null>(null);
  const recognizer=useRef<Recognition|null>(null);
+ const speechPendingTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  const micPermissionRequest=useRef(0);
  const input=useRef<HTMLInputElement>(null);
  const voiceTranscript=useRef("");
@@ -125,8 +132,9 @@ export default function HudHudPage(){
   finally{setMemoryPending(false)}
  };
  const requestMicrophonePermission=useCallback(async()=>{
-  // Ask when HudHud opens. Never record or upload audio just from landing here.
-  // Some browsers require a user gesture; offer a fallback enable button.
+  // Ask for microphone permission on entry, just like Shahada. Recognition
+  // starts only after browser permission; no raw microphone audio is saved.
+  // On restrictive iOS browsers the user can use the mic button.
   const request=++micPermissionRequest.current;
   if(!navigator.mediaDevices?.getUserMedia){setMicAccess("unavailable");return}
   try{
@@ -176,15 +184,18 @@ export default function HudHudPage(){
   return()=>{visual.removeEventListener("resize",sync);visual.removeEventListener("scroll",sync)};
  },[]);
  useEffect(()=>{
-  const onHidden=()=>{if(document.hidden){stopVoice(true);window.speechSynthesis?.cancel()}};
+  const onHidden=()=>{
+   setPageVisible(!document.hidden);
+   if(document.hidden){stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeechPending(false)}
+  };
   const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMenuOpen(false);setSettingsOpen(false);setActionsOpen(false);stopVoice(true)}};
   document.addEventListener("visibilitychange",onHidden);window.addEventListener("keydown",onKey);
-  return()=>{document.removeEventListener("visibilitychange",onHidden);window.removeEventListener("keydown",onKey);stopVoice(true);window.speechSynthesis?.cancel();if(voiceBeatTimer.current)clearTimeout(voiceBeatTimer.current)};
+  return()=>{document.removeEventListener("visibilitychange",onHidden);window.removeEventListener("keydown",onKey);stopVoice(true);window.speechSynthesis?.cancel();if(voiceBeatTimer.current)clearTimeout(voiceBeatTimer.current);if(speechPendingTimer.current)clearTimeout(speechPendingTimer.current)};
  },[stopVoice]);
 
  const newChat=()=>{
   if(busy)return;
-  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);
+  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);
   const id="chat-"+Date.now();
   setSessions(old=>[{id,title:"New chat",lines:[]},...old].slice(0,20));
   setActiveId(id);setDraft("");setError("");setMenuOpen(false);setActionsOpen(false);
@@ -193,7 +204,7 @@ export default function HudHudPage(){
  const ask=async(event?:FormEvent,spokenMessage?:string)=>{
   event?.preventDefault();
   const message=(spokenMessage||draft).trim();if(!message||busy||exhausted)return;
-  stopVoice();window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);
+  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);
   const conversationId=activeId;
   const history=lines.slice(-6).map(x=>({role:x.role,content:x.content}));
   setSessions(old=>old.map(s=>s.id===conversationId?{...s,title:s.lines.length?s.title:message.slice(0,40),lines:[...s.lines,{role:"user",content:message}]}:s));
@@ -211,61 +222,121 @@ export default function HudHudPage(){
    setSessions(old=>old.map(s=>s.id===conversationId?savedSession:s));
    if(memoryEnabled&&memorySignedIn)void memorySave(savedSession).catch(()=>setMemoryNotice("Could not save this reply. Try again later."));
    if(readAloud&&"speechSynthesis" in window){
+    setSpeechPending(true);
+    if(speechPendingTimer.current)clearTimeout(speechPendingTimer.current);
+    // Browser TTS is not guaranteed to start on iOS. Don't keep the mic
+    // disabled indefinitely when Safari silently refuses playback.
+    speechPendingTimer.current=setTimeout(()=>{
+      window.speechSynthesis?.cancel();
+      setSpeechPending(false);
+    },4500);
     window.speechSynthesis.cancel();
     const speech=new SpeechSynthesisUtterance(reply);
     speech.lang="en-US";speech.rate=1.07;speech.volume=.8;
     const target={sessionId:conversationId,index:lines.length+1};
-    speech.onstart=()=>{setSpeaking(true);setSpeakingAt(target);setSpeechChar(0)};
+    speech.onstart=()=>{
+     if(speechPendingTimer.current)clearTimeout(speechPendingTimer.current);
+     setSpeechPending(false);setSpeaking(true);setSpeakingAt(target);setSpeechChar(0);
+    };
     speech.onboundary=e=>{
       if(typeof e.charIndex==="number")setSpeechChar(e.charIndex);
       setVoiceBeat(true);
       if(voiceBeatTimer.current)clearTimeout(voiceBeatTimer.current);
       voiceBeatTimer.current=setTimeout(()=>setVoiceBeat(false),170);
     };
-    const endSpeech=()=>{setSpeaking(false);setSpeakingAt(null);setVoiceBeat(false)};
+    const endSpeech=()=>{
+     if(speechPendingTimer.current)clearTimeout(speechPendingTimer.current);
+     setSpeechPending(false);setSpeaking(false);setSpeakingAt(null);setVoiceBeat(false);
+    };
     speech.onpause=()=>setVoiceBeat(false);speech.onresume=()=>setVoiceBeat(true);
     speech.onend=endSpeech;speech.onerror=endSpeech;
     window.speechSynthesis.speak(speech);
    }
   }catch(caught){
+   setSpeechPending(false);
    setSessions(old=>old.map(s=>s.id===conversationId?{...s,lines:s.lines.slice(0,-1)}:s));
    setDraft(message);
    setError(caught instanceof Error?caught.message:"HudHud is unavailable. Please try again.");
   }finally{setBusy(false)}
  };
  askRef.current=(message:string)=>{void ask(undefined,message)};
- const startVoice=()=>{
-  if(listening){stopVoice();return;}
-  // Prevent the assistant from transcribing its own just-spoken reply.
-  window.speechSynthesis?.cancel();setSpeaking(false);
-  setError("");setActionsOpen(false);
+ const startVoice=useCallback((mode:"auto"|"manual"="manual")=>{
+  // Manual mic button toggles a real pause. Automatic listening only starts
+  // with permission, while the page is visible and no voice reply is active.
+  if(recognizer.current){if(mode==="manual"){setMicPaused(true);stopVoice(true)}return}
+  if(mode==="manual")setMicPaused(false);
+  if(busy||exhausted||focused||speaking||speechPending||document.hidden)return;
   const host=window as RecognitionWindow;
   const Voice=host.SpeechRecognition||host.webkitSpeechRecognition;
-  if(!Voice){setError("Voice dictation is not supported in this browser. You can type your question instead.");return}
+  if(!Voice){
+   setMicAccess("unavailable");
+   if(mode==="manual")setError("Voice recognition is not supported in this browser. You can type your question.");
+   return;
+  }
   try{
    const rec=new Voice();
-   const prefix=draft.trim();voiceTranscript.current="";
+   const prefix=mode==="manual"?draft.trim():"";
+   voiceTranscript.current="";
    rec.lang="en-US";rec.interimResults=true;rec.continuous=false;
+   let completed=false;
    rec.onresult=event=>{
-    let transcript="";
-    for(let i=0;i<event.results.length;i++)transcript+=event.results[i][0].transcript+" ";
-    voiceTranscript.current=normalizeSpokenHudHudQuestion((prefix?prefix+" ":"")+transcript.trim());
-    setDraft(voiceTranscript.current);
+    let transcript="",hasFinal=false;
+    for(let i=0;i<event.results.length;i++){
+     transcript+=(event.results[i][0]?.transcript||"")+" ";
+     if(event.results[i].isFinal)hasFinal=true;
+    }
+    const normalized=normalizeSpokenHudHudQuestion((prefix?prefix+" ":"")+transcript.trim());
+    voiceTranscript.current=normalized;
+    setDraft(normalized);
+    // A complete utterance should send once, without requiring the user to tap.
+    if(hasFinal&&!completed&&normalized.length>2){
+     completed=true;
+     try{rec.stop()}catch{}
+    }
    };
    rec.onerror=event=>{
+    if(recognizer.current!==rec)return;
     recognizer.current=null;setListening(false);
-    if(event.error!=="aborted"&&event.error!=="no-speech")setError(event.error==="not-allowed"?"Microphone permission was denied. Enable it in browser settings to dictate.":"Voice dictation stopped. Please try again.");
+    if(event.error==="aborted"||event.error==="no-speech")return;
+    // Avoid infinite permission loops when Safari requires another tap.
+    if(event.error==="not-allowed"||event.error==="service-not-allowed"){
+     setMicAccess("needs-tap");setMicPaused(true);
+     setError("Speech recognition needs microphone permission. Tap the mic to try again.");
+    }else if(event.error==="audio-capture"){
+     setMicAccess("denied");setMicPaused(true);
+     setError("The microphone is unavailable. Check browser settings or type your question.");
+    }else{
+     setMicPaused(true);
+     setError("Voice recognition stopped. Tap the mic or type your question.");
+    }
    };
    rec.onend=()=>{
+    if(recognizer.current!==rec)return;
     recognizer.current=null;setListening(false);
     const text=normalizeSpokenHudHudQuestion(voiceTranscript.current.trim());
-    if(text.length>2)window.setTimeout(()=>askRef.current(text),190);
+    if(text.length>2)window.setTimeout(()=>askRef.current(text),130);
+    // An empty utterance is retried by the auto-listen effect, subject to
+    // permission and pause controls. No empty API calls are made.
    };
-   rec.start();recognizer.current=rec;setListening(true);
-  }catch{setListening(false);setError("Could not start the microphone. Check browser permissions and try again.")}
- };
+   rec.start();recognizer.current=rec;setListening(true);setError("");
+  }catch{
+   setListening(false);
+   // iOS may reject programmatic SpeechRecognition.start without a gesture.
+   // Keep typed questions usable and provide a manual start instead of looping.
+   setMicPaused(true);setMicAccess("needs-tap");
+   setError("Tap the microphone to enable speech recognition, or type your question.");
+  }
+ },[busy,exhausted,focused,speaking,speechPending,draft,stopVoice]);
+ useEffect(()=>{
+  if(!autoListening||micPaused||micAccess!=="granted"||!pageVisible||
+     listening||busy||speaking||speechPending||exhausted||focused||exiting||
+     menuOpen||settingsOpen||draft.trim()||recognizer.current)return;
+  const timer=setTimeout(()=>startVoice("auto"),350);
+  return()=>clearTimeout(timer);
+ },[autoListening,micPaused,micAccess,pageVisible,listening,busy,speaking,speechPending,
+    exhausted,focused,exiting,menuOpen,settingsOpen,draft,startVoice]);
  const close=()=>{
-  stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);setExiting(true);
+  setMicPaused(true);stopVoice(true);window.speechSynthesis?.cancel();setSpeaking(false);setSpeakingAt(null);setSpeechPending(false);setExiting(true);
   window.setTimeout(()=>router.push(safeReturn(originRef.current)),180);
  };
 
@@ -284,7 +355,7 @@ export default function HudHudPage(){
     <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}><AnimatedMuslimBrand/><span className="hudBrandSuffix">.Live</span></button>
    </div>
    <div className="hudTitle" aria-label="HudHud — 1Muslim voice assistant">HudHud</div>
-   <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false)}}>
+   <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false);setSpeechPending(false)}}>
     <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" fill="none" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{readAloud?<path d="M16 8q4 4 0 8M18 5q7 7 0 14"/>:<path d="m16 9 5 6m0-6-5 6"/>}</svg>
    </button><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
   </header>
@@ -296,13 +367,14 @@ export default function HudHudPage(){
   {error&&<p className="hudError" role="alert">{error}</p>}
   {exhausted&&<aside className="hudUpgrade"><strong>Your HudHud exploration is complete for now.</strong><Link href="/search">Explore 1Muslim Search ↗</Link></aside>}
   <div className="hudComposerArea">
+   {listening&&<span className="hudListeningStatus" role="status"><i aria-hidden="true"/>Listening…</span>}
    {queryContext&&<span className="hudContext">Searching for: {queryContext}</span>}
    <form className="hudComposer" onSubmit={ask}>
     <div className="hudInputPill">
      <button className="hudPlus" type="button" aria-label="More HudHud actions" aria-expanded={actionsOpen} onClick={()=>setActionsOpen(!actionsOpen)}><Glyph name="plus"/></button>
-     <input ref={input} type="text" inputMode="text" value={draft} maxLength={900} autoComplete="off" aria-label="Ask HudHud" placeholder={exhausted?"Explore search instead":"Ask HudHud"} onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)} onChange={event=>setDraft(event.target.value)} disabled={busy||exhausted}/>
+     <input ref={input} type="text" inputMode="text" value={draft} maxLength={900} autoComplete="off" aria-label="Ask HudHud" placeholder={exhausted?"Explore search instead":"Ask HudHud"} onFocus={()=>{setFocused(true);stopVoice(true)}} onBlur={()=>setFocused(false)} onChange={event=>setDraft(event.target.value)} disabled={busy||exhausted}/>
     </div>
-    {draft.trim()&&!exhausted?<button className="hudMic hudSend" aria-label="Send question" type="submit" disabled={busy}><Glyph name="send"/></button>:<button className={"hudMic"+(listening?" isActive":"")} type="button" aria-label={listening?"Stop listening":"Dictate question with microphone"} aria-pressed={listening} onClick={startVoice} disabled={busy||exhausted}><Glyph name="mic"/></button>}
+    {draft.trim()&&!exhausted?<button className="hudMic hudSend" aria-label="Send question" type="submit" disabled={busy}><Glyph name="send"/></button>:<button className={"hudMic"+(listening?" isActive":"")} type="button" aria-label={listening?"Pause HudHud listening":micPaused?"Resume HudHud listening":"Start listening"} aria-pressed={listening} onClick={()=>startVoice("manual")} disabled={busy||exhausted}><Glyph name="mic"/></button>}
     <button className="hudEnd" type="button" aria-label="Close HudHud" onClick={close}><Glyph name="close"/></button>
    </form>
    {(micAccess==="denied"||micAccess==="needs-tap"||micAccess==="unavailable")&&<div className="hudMicAccessHint" role="status">
@@ -316,12 +388,13 @@ export default function HudHudPage(){
    </div>}
   {settingsOpen&&<div className="hudSettings" role="dialog" aria-label="HudHud settings">
     <h2>HudHud settings</h2>
-    <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>{setReadAloud(e.target.checked);if(!e.target.checked)window.speechSynthesis?.cancel()}}/></label>
-    <div className="hudMicSettings"><span>Microphone access<small>{micAccess==="granted"?"Allowed · only listens after you tap the mic":micAccess==="checking"?"Checking browser permission…":"Not enabled · you can still type"}</small></span><button type="button" onClick={()=>void requestMicrophonePermission()}>Enable mic</button></div>
+    <label><span>Read replies aloud<small>Uses your browser's voice</small></span><input type="checkbox" checked={readAloud} onChange={e=>{setReadAloud(e.target.checked);if(!e.target.checked){window.speechSynthesis?.cancel();setSpeaking(false);setSpeechPending(false)}}}/></label>
+    <label><span>Auto-listen<small>Start after permission; pauses while HudHud speaks or you type. Browser recognition may process audio; HudHud does not store raw audio.</small></span><input type="checkbox" checked={autoListening} onChange={e=>{setAutoListening(e.target.checked);setMicPaused(!e.target.checked);if(!e.target.checked)stopVoice(true)}}/></label>
+    <div className="hudMicSettings"><span>Microphone access<small>{micAccess==="granted"?(autoListening&&!micPaused?"Allowed · auto-listening is on":"Allowed · tap microphone to speak"):micAccess==="checking"?"Checking browser permission…":"Not enabled · you can still type"}</small></span><button type="button" onClick={()=>void requestMicrophonePermission()}>Enable mic</button></div>
     {memorySignedIn?<><label><span>Remember conversations<small>Private to your account. Off by default.</small></span><input type="checkbox" checked={memoryEnabled} disabled={memoryPending} onChange={e=>void updateMemory(e.target.checked)}/></label>
       <button type="button" disabled={memoryPending} onClick={()=>void clearMemory()}>Clear saved conversations</button></>
       :<p>Sign in to enable private conversation memory. Guest chats are temporary.</p>}
-    <p>Voice turns send when you finish speaking. You can mute spoken replies.</p>
+    <p>After microphone permission, HudHud listens automatically and sends completed questions. Tap the microphone to pause or resume.</p>
     {memoryNotice&&<p role="status">{memoryNotice}</p>}
     <button type="button" onClick={()=>setSettingsOpen(false)}>Close settings</button>
    </div>}

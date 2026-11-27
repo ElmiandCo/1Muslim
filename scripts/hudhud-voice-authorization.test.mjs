@@ -85,3 +85,34 @@ test("HudHud does not show broken Yes/No feedback controls under replies",()=>{
  // Users may still ask follow-up questions in the existing composer.
  assert.match(page,/className="hudComposer"/);
 });
+
+test("HudHud automatically starts after permission, pauses while speaking, and retries quiet windows",()=>{
+ const page=readFileSync(new URL("../app/hudhud/page.tsx",import.meta.url),"utf8");
+ assert.match(page,/\[autoListening,setAutoListening\]=useState\(true\)/);
+ assert.match(page,/const \[micPaused,setMicPaused\]=useState\(false\)/);
+ assert.match(page,/if\(!autoListening\|\|micPaused\|\|micAccess!=="granted"/);
+ assert.match(page,/listening\|\|busy\|\|speaking\|\|speechPending/);
+ assert.match(page,/const timer=setTimeout\(\(\)=>startVoice\("auto"\),350\)/);
+ assert.match(page,/pageVisible,listening,busy,speaking,speechPending/);
+ assert.match(page,/rec\.onend=\(\)=>\{/);
+ assert.match(page,/rec\.onresult=event=>\{/);
+ assert.match(page,/event\.results\[i\]\.isFinal/);
+ assert.match(page,/askRef\.current\(text\)/);
+ assert.match(page,/stopVoice\(true\)/);
+ assert.match(page,/setMicPaused\(true\)/);
+ assert.match(page,/onFocus=\{\(\)=>\{setFocused\(true\);stopVoice\(true\)\}\}/);
+ assert.match(page,/Start after permission; pauses while HudHud speaks or you type/);
+ assert.doesNotMatch(page,/Allowed · only listens after you tap the mic/);
+});
+
+test("HudHud fourth turn does not violate legacy three-turn database constraint",()=>{
+ const sql=readFileSync(new URL("../supabase/migrations/20261127112000_fix_hudhud_v2_turn_limit.sql",import.meta.url),"utf8");
+ const api=readFileSync(new URL("../app/api/discover/ask/route.ts",import.meta.url),"utf8");
+ assert.match(sql,/drop constraint if exists discover_hudhud_usage_turns_used_check/);
+ assert.match(sql,/turns_used >= 0 and turns_used <= 50/);
+ assert.match(api,/const FREE_TURNS = 50;/);
+ assert.match(api,/reserve_hudhud_v2_turn/);
+ assert.match(api,/refund_discover_hudhud_turn/);
+ assert.match(api,/HUDHUD_FALLBACK_MODEL\|\|"gpt-4o"/);
+ assert.match(api,/phase="reserve-turn"/);
+});

@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
   let dbAdmin: ReturnType<typeof adminDb> | null = null;
   let guestToken: string | undefined;
   const requestId = randomUUID().slice(0,12);
+  let phase="request";
   try {
     const body = await req.json().catch(()=>null);
     const message = typeof body?.message==="string" ? body.message.trim() : "";
@@ -70,18 +71,21 @@ export async function POST(req: NextRequest) {
     dbAdmin = adminDb();
     // The server-side daily budget fuse keeps the pilot affordable even if
     // someone rotates browser cookies. The client cannot choose this ceiling.
+    phase="daily-quota";
     const isoDay=new Date().toISOString().slice(0,10);
     const dailyCeiling=Math.max(10,Math.min(240,Number(process.env.HUDHUD_DAILY_AI_LIMIT)||100));
     const {data:withinDailyBudget,error:budgetError}=await dbAdmin.rpc("claim_search_api_quota",{
       p_key:"hudhud-v2-ai-total:"+isoDay,p_max:dailyCeiling,p_window_seconds:86400
     });
     if(budgetError||!withinDailyBudget)return asResponse({error:"HudHud is taking a short pause. Please try later."},503,guestToken);
+    phase="reserve-turn";
     const { data, error } = await dbAdmin.rpc("reserve_hudhud_v2_turn", { p_key: usageKey });
     if (error) throw error;
     if (!data) return asResponse({ limitReached: true, remaining: 0, error: PROMO }, 429, guestToken);
     reserved = true;
     // An exact verse is delivered from independently verified text, not AI-made
     // Arabic, unrelated matches or user-generated content.
+    phase="answer";
     const presentation=selectHudHudPresentation(message);
     if(presentation.kind==="verse"){
       const verse=await loadVerifiedHudHudVerse(presentation.verseKey);
@@ -141,8 +145,10 @@ export async function POST(req: NextRequest) {
     const messages = [{role:"system",content:system},...history,{role:"user",content:message}];
     // Start with the capable reasoning model and fall back if it times out,
     // rejects the request, or returns an empty answer. Never log user prompts.
-    const preferredModel=process.env.HUDHUD_REASONING_MODEL||"gpt-6";
-    const fallbackModel=process.env.HUDHUD_FALLBACK_MODEL||"gpt-4.1";
+    // The previous gpt-6 default was rejected by this project's API (404).
+    // Honor model environment overrides, but choose stable API defaults.
+    const preferredModel=process.env.HUDHUD_REASONING_MODEL||"gpt-4.1";
+    const fallbackModel=process.env.HUDHUD_FALLBACK_MODEL||"gpt-4o";
     const attempts=[{model:preferredModel,timeout:20000},...(fallbackModel!==preferredModel?[{model:fallbackModel,timeout:12000}]:[])];
     let answer="";
     let modelUsed="";
@@ -182,7 +188,11 @@ export async function POST(req: NextRequest) {
     const remaining=Math.max(0,FREE_TURNS-(current?.turns_used||FREE_TURNS));
     return asResponse({reply:answer,presentation,matches:presentation.kind==="results"?matches.slice(0,6):[],remaining,limitReached:remaining===0,unlocked:auth.premium,modelUsed},200,guestToken);
   } catch (caught) {
-    console.error("[HudHud] Answer request failed",{requestId,type:caught instanceof Error?caught.message:"unknown"});
+    const errorCode=caught&&typeof caught==="object"&&"code" in caught
+      ?String((caught as {code:unknown}).code).slice(0,20):undefined;
+    console.error("[HudHud] Answer request failed",{
+      requestId,phase,errorCode,type:caught instanceof Error?caught.name:"provider-or-database"
+    });
     let restored=!reserved;
     if(reserved&&dbAdmin&&usageKey){
       try{
