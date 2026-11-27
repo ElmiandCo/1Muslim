@@ -89,7 +89,7 @@ test("Home tab opens Search and Profile remains a distinct destination",()=>{
 });
 
 
-test("Search Home retains real search and replaces creators and shortcut pills with two swipable card rows",()=>{
+test("Search Home retains real search and uses a single bottom-aligned, swipeable feature rail",()=>{
   const page=read("app/search/page.tsx");
   const css=read("app/search/search.css");
   const rail=read("app/search/SearchFeatureRails.tsx");
@@ -107,14 +107,14 @@ test("Search Home retains real search and replaces creators and shortcut pills w
   assert.match(page,/!homeMode&&!loading&&!error&&result/);
   assert.match(page,/!homeMode&&loading/);
   assert.match(css,/\.dsHomeMode \.dsSearchForm/);
-  assert.match(rail,/const rows: Destination\[\]\[\]/);
-  assert.match(rail,/rows\.map\(\(items,index\)=>/);
+  assert.match(rail,/const destinations:Destination\[\]=/);
+  assert.match(rail,/destinations\.map\(item=>/);
   assert.match(rail,/href:"\/profile\?compass=1"/);
   assert.match(profile,/get\("compass"\)==="1"/);
-  assert.match(railCss,/scroll-snap-type:x mandatory/);
+  assert.match(railCss,/scroll-snap-type:x proximity/);
   assert.match(railCss,/overflow-x:auto/);
   assert.match(railCss,/border:0/);
-  assert.match(railCss,/\.dsHomeFeatureBreathingSpace\{height:205px/);
+  assert.match(railCss,/\.dsHomeFeatureBreathingSpace\{height:0!important/);
   assert.match(railCss,/@media\(prefers-reduced-motion:reduce\)/);
 });
 test("HudHud docks before activation and keeps the existing conversation endpoint",()=>{
@@ -305,4 +305,35 @@ test("location cue never interrupts Shahada or blocks the white Search Home",()=
  assert.match(location,/pointer-events:none!important/);
  assert.match(location,/setTimeout\(\(\)=>/);
  assert.doesNotMatch(location,/role="dialog" aria-modal="true"/);
+});
+
+test("One Muslim homepage has a single bottom-aligned horizontal carousel and coherent chrome",()=>{
+ const rail=read("app/search/SearchFeatureRails.tsx");
+ const css=read("app/search/search-feature-rails.css");
+ const layout=read("app/layout.tsx");
+ const theme=read("app/components/SiteChromeTheme.tsx");
+ const shell=read("app/site-chrome.css");
+ assert.match(rail,/const destinations:Destination\[\]=/);
+ assert.doesNotMatch(rail,/rows\.map\(/);
+ assert.match(rail,/className="dsFeatureRail"/);
+ assert.match(css,/flex-flow:row nowrap!important/);
+ assert.match(css,/justify-content:flex-end/);
+ assert.match(css,/\.dsHomeMode \.dsHomeFeatureBreathingSpace\{height:0!important/);
+ assert.match(layout,/<SiteChromeTheme\s*\/>/);
+ assert.match(shell,/data-one-chrome-theme="day"/);
+ assert.match(shell,/data-one-chrome-theme="night"/);
+ assert.match(theme,/meta\[name="theme-color"\]/);
+ assert.match(theme,/1muslim:deepwatch-theme-updated/);
+});
+
+test("Ummah feed renders real portrait-oriented video without forced 16:9 letterboxing",()=>{
+ const feed=read("app/posts/page.tsx");
+ const player=read("app/components/OneMuslimVideo.tsx");
+ const styles=read("app/posts/posts-magazine.module.css");
+ assert.match(feed,/<OneMuslimVideo[^>]+feedMode\s*\/>/);
+ assert.match(player,/node\.videoWidth\/node\.videoHeight/);
+ assert.match(player,/setFeedAspect/);
+ assert.match(player,/style=\{feedMode&&!youtubeId\?/);
+ assert.match(styles,/\.igUmmah \.feedVideoStage :global\(\.omVideoTools\)/);
+ assert.match(styles,/position:absolute!important/);
 });
