@@ -279,3 +279,7 @@
  background:#20bb7d;box-shadow:0 0 0 2px #20bb7d24;animation:hudListenPulse 1.7s ease-in-out infinite}
 @keyframes hudListenPulse{50%{box-shadow:0 0 0 6px #20bb7d19;opacity:.64}}
 @media(prefers-reduced-motion:reduce){.hudListeningStatus i{animation:none!important}}
+
+/* Link to the same account-level HudHud privacy and history controls. */
+.hudSettings .hudSettingsControlLink{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;box-sizing:border-box;margin:14px 0 9px;padding:12px 15px;background:color-mix(in srgb,#2e7054 10%,white);border:1px solid #bed9cb;border-radius:13px;color:#205d43;text-decoration:none;font-weight:760;font-size:13px;line-height:1.5}
+.hudSettings .hudSettingsControlLink:focus-visible{outline:3px solid #3e8c68;outline-offset:2px}
