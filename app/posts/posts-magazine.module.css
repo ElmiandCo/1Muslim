@@ -576,3 +576,120 @@
 .storyAlbumControls{position:absolute;bottom:calc(26px + env(safe-area-inset-bottom));left:16px;right:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;pointer-events:none}
 .storyAlbumControls button{pointer-events:auto;width:43px;height:43px;border:1px solid #ffffff56;color:#fff;border-radius:50%;background:#101218aa;backdrop-filter:blur(12px);font-size:30px;line-height:1;display:grid;place-items:center}
 .storyAlbumControls span{color:#fff;background:#090b0ecc;border-radius:99px;padding:7px 12px;font-size:12px;font-weight:800}
+
+
+/* Ummah Social 2026 — edge-to-edge feed and Explore. Theme follows the actual
+   1muslim-theme selection rather than inventing a separate theme toggle. */
+.igUmmah{
+ --ig-bg:#fbfcfc;--ig-paper:#fff;--ig-ink:#142323;--ig-muted:#687476;
+ --ig-hairline:#e5e9e8;--ig-surface:#f1f3f3;--ig-accent:#123e36;
+ background:var(--ig-bg)!important;color:var(--ig-ink)!important;color-scheme:light;
+ min-height:100dvh;overflow-x:clip
+}
+.igUmmah.igNight{
+ --ig-bg:#0d1013;--ig-paper:#11151a;--ig-ink:#f2f4f6;--ig-muted:#a1a8b0;
+ --ig-hairline:#292f37;--ig-surface:#1e232b;--ig-accent:#d5e9df;
+ background:var(--ig-bg)!important;color:var(--ig-ink)!important;color-scheme:dark;
+}
+.igUmmah .igTop{max-width:760px;margin:0 auto 12px;padding:12px clamp(13px,3vw,22px) 0;background:var(--ig-paper);border-bottom:1px solid var(--ig-hairline)}
+.igTopRow{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:58px}
+.igBrand{font-size:clamp(22px,4vw,31px);letter-spacing:-.065em;font-weight:860;text-decoration:none;color:var(--ig-ink);white-space:nowrap}
+.igBrand span{font-size:.58em;letter-spacing:-.025em;color:#a88d54;font-weight:750}
+.igTopActions{display:flex;gap:12px;align-items:center}
+.igTopActions a{width:43px;height:43px;display:grid;place-items:center;text-decoration:none;background:var(--ig-surface);color:var(--ig-ink);border:1px solid var(--ig-hairline);border-radius:50%;font-size:28px;line-height:1;transition:transform .17s ease}
+.igTopActions a:active{transform:scale(.92)}
+.igViewTabs{display:flex;gap:6px;padding:4px 0 12px;align-items:center}
+.igViewTabs button{border:0;border-radius:13px;background:transparent;color:var(--ig-muted);font:750 13px/1.25 system-ui,sans-serif;padding:10px 17px;min-height:42px;display:inline-flex;align-items:center;gap:9px}
+.igViewTabs button:first-letter{font-size:21px}
+.igViewTabs .igViewActive{background:var(--ig-surface);color:var(--ig-ink)}
+.igUmmah .discoverPeople{max-width:760px;margin:0 auto;padding:5px clamp(13px,3vw,22px)}
+.igUmmah .discoverPeople .feedStoryPerson{color:var(--ig-ink)}
+.igUmmah .discoverPeople .feedStoryRing{background:linear-gradient(140deg,#efab50,#e55277,#975be4)}
+.igUmmah .discoverPeople .feedStoryRing>span{background:var(--ig-surface);border-color:var(--ig-paper);color:var(--ig-ink)}
+.igUmmah .discoverFilters{max-width:760px;margin:5px auto 12px;padding:0 clamp(13px,3vw,22px)}
+.igUmmah .discoverFilters .discoverSearch{display:none}
+.igUmmah .feedTabs{gap:8px;padding:4px 0 8px}
+.igUmmah .feedTabs button{background:var(--ig-paper);border-color:var(--ig-hairline);color:var(--ig-ink)}
+.igUmmah .feedTabs .active{background:var(--ig-accent);color:var(--ig-bg);border-color:var(--ig-accent)}
+.igUmmah .feedTabs .immersivePlayTab{background:var(--ig-surface);color:var(--ig-ink)}
+/* Flat native scrolling replaces blurred magnetic cards without sacrificing video. */
+.igUmmah .ummahSnapFeed{max-width:760px!important;gap:17px!important;perspective:none!important;padding-bottom:24px!important}
+.igUmmah .ummahSnapFeed>.feedPost,
+.igUmmah .ummahSnapFeed>.feedPost[data-deck-state]{
+ transform:none!important;filter:none!important;opacity:1!important;animation:none!important;
+ transition:none!important;z-index:auto!important;pointer-events:auto!important;
+ border:0!important;border-radius:0!important;overflow:visible!important;
+ box-shadow:none!important;background:var(--ig-paper)!important;color:var(--ig-ink)!important;
+ scroll-snap-align:none!important
+}
+.igUmmah .ummahSnapFeed>.feedPost::before,.igUmmah .feedNextGhost,.igUmmah .feedPostStage:before{display:none!important}
+.igUmmah .ummahSnapFeed>.feedPost .feedPostStage{filter:none!important;clip-path:none!important;border-radius:0!important}
+.igUmmah .feedPostStage{background:#07090b!important;padding:0!important;isolation:isolate}
+.igUmmah .feedMediaLink{background:#07090b!important;clip-path:none!important;border-radius:0!important;border:0!important}
+.igUmmah .feedMediaLink img{width:100%!important;max-height:min(79dvh,810px)!important;object-fit:contain!important;background:#090b0c!important}
+.igUmmah .feedVideoStage,.igUmmah .feedMediaGallery{background:#090b0c!important;border-radius:0!important;clip-path:none!important}
+.igUmmah .feedPostGlass{margin:0!important;min-height:0!important;padding:0 0 3px!important;isolation:auto!important;z-index:3!important;
+ background:var(--ig-paper)!important;color:var(--ig-ink)!important;text-shadow:none!important;backdrop-filter:none!important}
+.igUmmah .feedPostGlass:before{display:none!important}
+.igUmmah .feedAvatarEdge{top:10px!important;left:12px!important;width:47px!important;height:47px!important;padding:3px!important;border:0!important;background:transparent!important}
+.igUmmah .feedAvatarEdge .feedPostAvatar{width:41px!important;height:41px!important;border:1px solid var(--ig-hairline)!important}
+.igUmmah .feedPostHeader{padding:10px 12px 6px 69px!important;min-height:61px!important;gap:6px!important}
+.igUmmah .feedPostIdentity strong{font:760 clamp(13px,3.6vw,15px)/1.3 system-ui,sans-serif!important;color:var(--ig-ink)!important}
+.igUmmah .feedPostIdentity small{font:450 11px/1.3 system-ui,sans-serif!important;color:var(--ig-muted)!important}
+.igUmmah .feedPostMore{color:var(--ig-ink)!important}
+.igUmmah .feedPostMenu{background:var(--ig-paper)!important;color:var(--ig-ink)!important;border:1px solid var(--ig-hairline)!important}
+.igUmmah .feedPostMenu a,.igUmmah .feedPostMenu button{color:var(--ig-ink)!important}
+.igUmmah .feedPostCaption{padding:5px 15px 13px!important;color:var(--ig-ink)!important;background:transparent!important}
+.igUmmah .feedPostGlass .feedPostCaption p{font:470 clamp(13px,3.7vw,15px)/1.47 system-ui,sans-serif!important;color:var(--ig-ink)!important;
+ letter-spacing:-.015em!important;margin:5px 0 2px;white-space:pre-wrap;overflow-wrap:anywhere}
+.igUmmah .feedPostCaption button{color:var(--ig-muted)!important;text-shadow:none!important}
+.igSuggestedTopic{display:inline-block;color:var(--ig-muted);font:700 10px/1.3 system-ui,sans-serif;
+ padding:4px 8px;border-radius:999px;background:var(--ig-surface);border:1px solid var(--ig-hairline)}
+.igUmmah .feedPostEngagement{background:var(--ig-paper)!important;padding:4px 12px 0!important;color:var(--ig-ink)}
+.igUmmah .feedPostEngagement :global(.socialActionBar){display:flex!important;flex-flow:row nowrap!important;justify-content:space-between!important;gap:3px!important;border:0!important;background:transparent!important}
+.igUmmah .feedPostEngagement :global(.socialActionBar button){flex:0 1 auto!important;min-width:44px!important;min-height:45px!important;
+ padding:7px 3px!important;border-radius:9px!important;gap:5px!important;font-size:12px!important;color:var(--ig-ink)!important}
+.igUmmah .feedPostEngagement :global(.socialActionBar button svg){width:25px!important;height:25px!important;max-width:25px!important;max-height:25px!important;min-width:25px!important;min-height:25px!important}
+.igUmmah .feedPostBottom{margin:0!important;padding:0 13px 10px!important;background:var(--ig-paper)!important;color:var(--ig-muted)!important;font-size:10px!important}
+.igUmmah .feedPostBottom a{color:var(--ig-accent)!important}
+.igUmmah .feedNext{color:var(--ig-muted)!important}
+/* True 3-column discovery, one tap opens the existing post/video player. */
+.igExplorePanel{max-width:980px;margin:0 auto;padding:8px clamp(12px,2vw,23px) 100px}
+.igExploreSearch{position:relative;margin:0 0 12px}
+.igExploreSearch input{background:var(--ig-surface);color:var(--ig-ink);border:1px solid var(--ig-hairline);border-radius:999px;
+ width:100%;padding:14px 45px 14px 18px;font:450 16px/1.2 system-ui,sans-serif;outline-offset:2px}
+.igExploreSearch input::placeholder{color:var(--ig-muted)}
+.igExploreSearch>span{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:26px;color:var(--ig-muted);pointer-events:none}
+.igTopicFilters{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding:5px 0}
+.igTopicFilters::-webkit-scrollbar{display:none}
+.igTopicFilters button{white-space:nowrap;flex:0 0 auto;border:1px solid var(--ig-hairline);background:var(--ig-paper);color:var(--ig-ink);
+ border-radius:999px;min-height:40px;padding:8px 14px;font:680 12px/1.2 system-ui,sans-serif}
+.igTopicFilters .igTopicActive{background:var(--ig-accent);color:var(--ig-bg);border-color:var(--ig-accent)}
+.igTopicNote{color:var(--ig-muted);font:450 11px/1.3 system-ui,sans-serif;margin:3px 0 13px}
+.igExploreGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;background:var(--ig-bg)}
+.igExploreTile{display:block;position:relative;color:#fff;text-decoration:none;min-width:0;aspect-ratio:3/4;overflow:hidden;background:var(--ig-surface)}
+.igExploreVisual{width:100%;height:100%;position:relative;display:grid;place-items:center;overflow:hidden}
+.igExploreVisual img,.igExploreVisual video{width:100%;height:100%;object-fit:cover;display:block}
+.igExploreVisual img{transition:transform .22s ease}.igExploreTile:hover img{transform:scale(1.035)}
+.igTextTile{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden;max-width:100%;padding:12px;font:700 clamp(11px,2vw,20px)/1.3 system-ui,sans-serif;color:var(--ig-ink);overflow-wrap:anywhere}
+.igTileTopic{position:absolute;bottom:5px;left:5px;max-width:calc(100% - 10px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+ padding:3px 6px;border-radius:6px;background:#081014bd;color:#fff;font:650 9px/1.3 system-ui,sans-serif;pointer-events:none}
+.igVideoBadge{position:absolute;top:7px;right:8px;background:#111b20c9;color:#fff;border-radius:5px;padding:4px;font-size:15px}
+.igUmmah .footer{max-width:760px;margin:0 auto;color:var(--ig-muted);border-color:var(--ig-hairline)}
+@media(max-width:720px){
+ .igUmmah{padding:0!important}
+ .igUmmah .ummahSnapFeed{width:100%!important;max-width:none!important;margin:0 auto 45px!important}
+ .igUmmah .ummahSnapFeed>.feedPost{width:100vw!important;max-width:100%!important}
+ .igUmmah .igTop{padding:9px 14px 0;margin-bottom:7px}
+ .igUmmah .igTopRow{min-height:48px}
+ .igUmmah .igViewTabs button{padding:10px 12px}
+ .igUmmah .discoverPeople{padding:5px 12px}
+ .igUmmah .discoverFilters{padding:0 12px;margin-bottom:9px}
+ .igUmmah .feedMediaLink img{max-height:76dvh!important}
+ .igUmmah .feedPostEngagement{padding:3px 11px 0!important}
+ .igUmmah .feedPostBottom{padding-bottom:12px!important}
+ .igUmmah .igExplorePanel{padding:5px 0 85px}
+ .igUmmah .igExploreSearch,.igUmmah .igTopicFilters,.igUmmah .igTopicNote{margin-left:12px;margin-right:12px}
+ .igUmmah .igExploreGrid{gap:1px}
+}
+@media(prefers-reduced-motion:reduce){.igUmmah .igExploreTile img,.igUmmah .igTopActions a{transition:none!important}}
