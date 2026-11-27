@@ -753,6 +753,19 @@ export default function ProfilePage() {
   const [postText,setPostText]=useState("");
   const [posting,setPosting]=useState(false);
   const [tab,setTab]=useState<"profile"|"avatar"|"header"|"live"|"shahada"|"analytics">("profile");
+  // Settings slide-out links into the existing full-featured editor.
+  // Keep the verified save/upload/connection/vault flows unchanged.
+  useEffect(()=>{
+    const requested=new URLSearchParams(window.location.search).get("edit");
+    if(!requested||!["profile","avatar","header","live","shahada","analytics"].includes(requested))return;
+    const selected=requested as "profile"|"avatar"|"header"|"live"|"shahada"|"analytics";
+    setSearchProfileExpanded(true);setTab(selected);setEditing(true);
+    const timer=window.setTimeout(()=>document.querySelector(".profileEditorToolbar")?.scrollIntoView({
+      behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"
+    }),280);
+    return()=>window.clearTimeout(timer);
+  },[]);
+
   const editorRailRef=useRef<HTMLDivElement|null>(null);
   const editorSwipeStart=useRef<{x:number;y:number}|null>(null);
   // Keep the selected capsule in view without scrolling the whole page.

@@ -18,12 +18,12 @@ export async function GET(){
   const {data:preference,error:prefError}=await db.from("hudhud_memory_preferences")
    .select("enabled").eq("user_id",user.id).maybeSingle();
   if(prefError)throw prefError;
-  if(!preference?.enabled)return reply({signedIn:true,enabled:false,sessions:[]});
+  // Even when future memory is paused, users must be able to review and delete previously saved chats.
   const {data:rows,error:sessionError}=await db.from("hudhud_ai_chat_sessions")
    .select("id,title,lines").eq("user_id",user.id)
    .order("updated_at",{ascending:false}).limit(20);
   if(sessionError)throw sessionError;
-  return reply({signedIn:true,enabled:true,sessions:rows||[]});
+  return reply({signedIn:true,enabled:preference?.enabled===true,sessions:rows||[]});
  }catch{return reply({error:"HudHud memory is temporarily unavailable"},503)}
 }
 export async function POST(req:NextRequest){
@@ -46,6 +46,13 @@ export async function POST(req:NextRequest){
     .upsert({user_id:user.id,enabled:false,updated_at:new Date().toISOString()},{onConflict:"user_id"});
    if(disableError)throw disableError;
    return reply({enabled:false,sessions:[]});
+  }
+  if(body.action==="delete"){
+   if(!sessionId(body.id))return reply({error:"Invalid conversation ID"},400);
+   // A member may only delete their own saved chat. RLS also enforces this.
+   const {error:deleteError}=await db.from("hudhud_ai_chat_sessions").delete().eq("user_id",user.id).eq("id",body.id);
+   if(deleteError)throw deleteError;
+   return reply({deleted:true});
   }
   if(body.action!=="save")return reply({error:"Unknown action"},400);
   if(!sessionId(body.id)||typeof body.title!=="string"||body.title.length>100)

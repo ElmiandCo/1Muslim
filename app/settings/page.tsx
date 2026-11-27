@@ -8,6 +8,8 @@ import AdhanSettings from "../components/AdhanSettings";
 import DeepWatchAppearanceSettings from "../deepwatch/DeepWatchAppearanceSettings";
 import SocialConnectionsWidget from "../components/SocialConnectionsWidget";
 import { createClient } from "../../utils/supabase/client";
+import SettingsControlDrawer from "./SettingsControlDrawer";
+import SettingsHudHudCenter from "./SettingsHudHudCenter";
 
 export default function SettingsPage() {
   const [enabled, setEnabled] = useState(false);
@@ -104,14 +106,16 @@ export default function SettingsPage() {
   return <main className="settingsPage">
     <SiteNav />
     <div className="settingsShell">
+      <SettingsControlDrawer/>
       <header className="settingsHero">
         <span className="eyebrow">SETTINGS</span>
-        <h1>Make 1Muslim yours.</h1>
-        <p>Control the small things that follow you around the site.</p>
+        <h1>Your 1Muslim Control Center.</h1>
+        <p>Control your HudHud experience, profile, conversations, appearance, community and privacy. Your existing tools remain available below.</p>
       </header>
 
-      <SocialConnectionsWidget />
-      <section className="settingsCard" data-no-tap-shimmer style={{display:"block"}} aria-label="Appearance settings"><div className="settingCopy"><span className="settingIcon">☀</span><div><span className="eyebrow">APPEARANCE · DAY / NIGHT</span><h2>Theme & atmosphere</h2><p>Choose the Canvas lighting. Auto follows your device appearance. Your orb stays a simple day/night toggle.</p></div></div><div role="group" aria-label="Theme mode" style={{display:"flex",flexWrap:"wrap",gap:9,marginTop:16}}>{(["day","night","auto"] as const).map(mode=><button type="button" key={mode} aria-pressed={appearanceMode===mode} onClick={()=>saveAppearance(mode)} style={{minHeight:44,padding:"9px 18px",borderRadius:999,border:appearanceMode===mode?"2px solid #cda65a":"1px solid #698d7b",background:appearanceMode===mode?"#1b6647":"transparent",color:"inherit",cursor:"pointer",fontWeight:700}}>{mode==="day"?"☀ Day":mode==="night"?"☾ Night":"◉ Auto"}</button>)}</div></section>
+      <SettingsHudHudCenter/>
+      <div id="social-connections"><SocialConnectionsWidget /></div>
+      <section id="appearance-settings" className="settingsCard" data-no-tap-shimmer style={{display:"block"}} aria-label="Appearance settings"><div className="settingCopy"><span className="settingIcon">☀</span><div><span className="eyebrow">APPEARANCE · DAY / NIGHT</span><h2>Theme & atmosphere</h2><p>Choose the Canvas lighting. Auto follows your device appearance. Your orb stays a simple day/night toggle.</p></div></div><div role="group" aria-label="Theme mode" style={{display:"flex",flexWrap:"wrap",gap:9,marginTop:16}}>{(["day","night","auto"] as const).map(mode=><button type="button" key={mode} aria-pressed={appearanceMode===mode} onClick={()=>saveAppearance(mode)} style={{minHeight:44,padding:"9px 18px",borderRadius:999,border:appearanceMode===mode?"2px solid #cda65a":"1px solid #698d7b",background:appearanceMode===mode?"#1b6647":"transparent",color:"inherit",cursor:"pointer",fontWeight:700}}>{mode==="day"?"☀ Day":mode==="night"?"☾ Night":"◉ Auto"}</button>)}</div></section>
       <DeepWatchAppearanceSettings />
       <section id="location-preferences" className="settingsCard" data-no-tap-shimmer style={{display:"block"}}><div className="settingCopy"><span className="settingIcon">📍</span><div><span className="eyebrow">LOCATION · COMMUNITY</span><h2>Your city</h2><p>Set once for Prayer Times and future mosque and event discovery.</p></div></div><div style={{marginTop:16}}><LocationPreferences/></div></section>
        <div className="settingsCard" data-no-tap-shimmer style={{display:"block",padding:0,border:0,background:"transparent"}}><AdhanSettings /></div>
@@ -122,7 +126,7 @@ export default function SettingsPage() {
           <button type="button" onClick={()=>void requestNotifications()} disabled={permission==="granted"} style={{borderRadius:999,padding:"13px 18px",border:"1px solid #7ae1a1",background:"linear-gradient(110deg,#155f39,#24814f)",color:"#fff",fontWeight:800,cursor:"pointer"}}>{permission==="granted"?"✓ Phone permission granted":"🔔 Enable Phone Notifications"}</button>
         </div>
       </section>
-      <section className="settingsCard" data-no-tap-shimmer>
+      <section id="language-effects" className="settingsCard" data-no-tap-shimmer>
         <div className="settingCopy"><span className="settingIcon">🐦</span><div><span className="eyebrow">QUR'AN STUDIO · LEARNING</span><h2>HudHud Vision</h2><p>Enable HudHud's verse connections, contextual explanations, and learning guidance. You can still open and close Vision while studying.</p></div></div>
         <button type="button" className={"switch " + (hudhudVision ? "on" : "")} onClick={() => saveHudhudVision(!hudhudVision)} aria-pressed={hudhudVision} aria-label="Toggle HudHud Vision"><span>{hudhudVision ? "ON" : "OFF"}</span><i /></button>
       </section>
@@ -162,7 +166,7 @@ export default function SettingsPage() {
         <Link href="/ashab" className="ghost">Open Ashab →</Link>
       </section>
 
-      <section className="settingsCard">
+      <section id="account-controls" className="settingsCard">
         <div className="settingCopy"><span className="settingIcon">⏸</span><div><span className="eyebrow">ACCOUNT · TEMPORARY</span><h2>Deactivate account</h2><p>Take a break without deleting your profile or posts. Your account is marked inactive and you will be signed out. Reactivation is available when you return.</p></div></div>
         <button type="button" className="deleteButton" onClick={()=>void deactivateAccount()} disabled={deactivating}>{deactivating?"Deactivating…":"Deactivate"}</button>
       </section>
