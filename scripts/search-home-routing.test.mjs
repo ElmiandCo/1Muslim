@@ -81,7 +81,9 @@ test("personalized Search Profile keeps real search, own-post rail and all origi
  assert.match(profile,/<ProfileSocialHub profile=\{profile\}/);
  assert.match(profile,/\(searchProfileExpanded\|\|editing\)/);
  assert.match(home,/ProfileCinematicPosts profileId=\{profile\.id\} feedMode="own"/);
- assert.match(home,/router\.push\("\/search\?q="/);
+ assert.match(home,/runStage\("search",search\)/);
+ assert.match(home,/<ProfileImmersiveStage request=\{stageRequest\}\/>/);
+ assert.doesNotMatch(home,/router\.push\("\/search\?q="/);
  assert.match(home,/onSettings=|onSettings\}/);
  assert.match(home,/onEdit\}/);
  assert.match(home,/onSignOut\}/);

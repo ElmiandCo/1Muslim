@@ -2,8 +2,8 @@
 .hudPage .hudMain{display:flex;min-height:0;align-items:stretch;justify-content:center;flex:1;overflow:hidden}
 .hudFocusSurface{position:relative;flex:1;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vh,38px) clamp(14px,4.8vw,36px);overflow:hidden;touch-action:pan-y;background:transparent}
 .hudFocusCard{position:relative;z-index:1;width:min(790px,100%);max-height:100%;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding:clamp(20px,3.8vw,36px);border-radius:25px;background:transparent;color:#243b32;animation:hudFocusEnter .96s cubic-bezier(.2,.72,.19,1) both;transition:opacity 3s ease,transform .82s cubic-bezier(.2,.7,.2,1)}
-.hudFocusCard::before{content:"";position:absolute;inset:0;pointer-events:none;border:1px solid rgba(74,117,95,.5);border-radius:inherit;animation:hudFocusBorderBloom 6s ease-out both;transform-origin:center;z-index:0}
-.hudFocusCard.hudFrameFromLeft::before{animation-name:hudFocusBorderLeft}
+/* HudHud response canvas intentionally has no animated outline or visible border. */
+.hudFocusCard::before{content:none!important;display:none!important}
 .hudFocusContent{position:relative;z-index:1;font-size:clamp(15px,2.3vw,18px);line-height:1.68}
 .hudFocusContent p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 .hudFocusContent .hudVersePresentation{width:100%;max-width:100%;animation:none!important}
@@ -50,3 +50,28 @@
 .hudPage .hudFocusSurface .hudFocusCard:focus-visible,.hudPage .hudHistoryTop button:focus-visible,.hudPage .hudFocusRestore:focus-visible{outline:2px solid #275e44;outline-offset:3px}
 @media(max-width:600px){.hudFocusSurface{padding:12px 14px 18px}.hudFocusCard{padding:18px 13px 21px;border-radius:18px}.hudFocusContent .hudVersePresentation .hudVerseHero{padding:4px 0!important}.hudFocusContent .hudVersePresentation .hudVerseArabic{font-size:clamp(26px,8vw,40px)!important}.hudFocusContent .hudVersePresentation .hudVerseEnglish{font-size:clamp(16px,4.5vw,21px)!important}.hudHistoryOverlay{border-radius:0}}
 @media(prefers-reduced-motion:reduce){.hudFocusCard,.hudHistoryOverlay,.hudImageInfoBackdrop,.hudFocusCard::before,.hudFocusLoadingLine{animation:none!important;filter:none!important}.hudFocusCard,.hudFocusCard.hudFocusLeaving,.hudFocusCard.hudFocusIdle{transition:none!important;transform:none!important}.hudFocusCard::before{opacity:0!important}}
+
+/* Reader typography follows the actual response length. One short sentence
+   can reach 40px; long answers retain their established readable minimum. */
+.hudFocusContent .hudNarratedReply{margin:0;max-width:100%;line-height:1.42;font-weight:440;letter-spacing:-.025em;text-wrap:pretty;overflow-wrap:anywhere}
+.hudFocusContent .hudReplyXL{font-size:clamp(28px,6.6vw,40px)!important;line-height:1.28;font-weight:580}
+.hudFocusContent .hudReplyL{font-size:clamp(23px,4.5vw,33px)!important;line-height:1.4;font-weight:510}
+.hudFocusContent .hudReplyM{font-size:clamp(19px,3.3vw,26px)!important;line-height:1.48}
+.hudFocusContent .hudReplyStandard{font-size:clamp(16px,2.35vw,20px)!important;line-height:1.7;letter-spacing:-.012em}
+.hudNarratedLead{display:inline;animation:hudLeadInk .55s cubic-bezier(.25,.7,.24,1) both}
+.hudNarratedLead.hudNarratedHeard{color:#1d805a}
+.hudTopWebsite{display:flex;align-items:flex-start;gap:13px;width:min(690px,100%);
+ margin:clamp(24px,5vh,40px) 0 0;padding:17px 0 0;
+ border:0!important;border-top:1px solid #e7efe9!important;border-radius:0!important;background:transparent!important;
+ box-shadow:none!important;color:#254638!important;text-decoration:none!important}
+.hudTopWebsite>img{flex:0 0 clamp(68px,17vw,116px);width:clamp(68px,17vw,116px);height:clamp(68px,17vw,108px);object-fit:cover;border-radius:12px;background:#f2f6f3}
+.hudTopWebsiteCopy{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+.hudTopWebsiteCopy>small{font-size:10px;color:#72907c;font-weight:760;letter-spacing:.075em}
+.hudTopWebsiteCopy>strong{font-size:clamp(15px,2.1vw,18px);font-weight:680;line-height:1.4;color:#225d47;overflow-wrap:anywhere}
+.hudTopWebsiteCopy>span{font-size:13px;line-height:1.5;color:#536c5d;overflow-wrap:anywhere}
+.hudTopWebsiteCopy>em{font-size:12px;font-style:normal;font-weight:700;color:#197550}
+.hudTopWebsite:hover .hudTopWebsiteCopy>strong{text-decoration:underline;text-underline-offset:3px}
+.hudTopWebsite:focus-visible{outline:2px solid #2a8462;outline-offset:4px}
+@keyframes hudLeadInk{from{opacity:.2;filter:blur(4px);transform:translateY(5px)}to{opacity:1;filter:none;transform:none}}
+@media(max-width:600px){.hudFocusContent .hudReplyXL{font-size:clamp(29px,8.8vw,40px)!important}.hudFocusContent .hudReplyL{font-size:clamp(22px,6.5vw,32px)!important}.hudTopWebsite{gap:10px}}
+@media(prefers-reduced-motion:reduce){.hudNarratedLead{animation:none!important}}
