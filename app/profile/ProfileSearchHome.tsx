@@ -10,7 +10,7 @@ import "../search/search-feature-rails.css";
 import "./profile-search-home.css";
 
 type Identity={
-  id:string;display_name:string;username:string|null;bio:string|null;gender:string|null;
+  id:string;display_name:string;username:string|null;hide_1muslim_id?:boolean|null;bio:string|null;gender:string|null;
   avatar_gender:string;avatar_config:Record<string,unknown>;city:string|null;state:string|null;country:string|null;
   xp_total:number;shahada_verified_at:string|null;
 };
@@ -94,13 +94,13 @@ export default function ProfileSearchHome({profile,postCount,expanded,editing,on
         <ProfileCinematicPosts profileId={profile.id} feedMode="own" limit={16}/>
       </div>
       <div className="profileSearchIdentity">
-        <button type="button" className="profileSearchDrag" aria-expanded={detailsOpen} aria-controls="profile-search-identity-details" onClick={()=>setDetailsOpen(o=>!o)} onTouchStart={e=>{touchStart.current=e.touches[0]?.clientY??null}} onTouchEnd={e=>{const from=touchStart.current;touchStart.current=null;const to=e.changedTouches[0]?.clientY;if(from!==null&&to!==undefined&&Math.abs(to-from)>35)setDetailsOpen(to>from)}} aria-label={detailsOpen?"Collapse your profile information":"Expand your profile information"}>
+        <button type="button" className="profileSearchDrag" aria-expanded={detailsOpen} aria-controls="profile-search-identity-details" onClick={()=>setDetailsOpen(o=>!o)} onTouchStart={e=>{touchStart.current=e.touches[0]?.clientY??null}} onTouchEnd={e=>{const from=touchStart.current;touchStart.current=null;const to=e.changedTouches[0]?.clientY;if(from!==null&&to!==undefined&&Math.abs(to-from)>35){e.preventDefault();setDetailsOpen(to>from)}}} aria-label={detailsOpen?"Collapse your profile information":"Expand your profile information"}>
           <span aria-hidden="true"/>
           <small>{detailsOpen?"Hide details":"Show details"}</small>
         </button>
         <div className={"profileSearchIdentityDetails"+(detailsOpen?" isOpen":"")} id="profile-search-identity-details" aria-hidden={!detailsOpen}>
           <h2>{profile.display_name||"1Muslim member"}{profile.shahada_verified_at&&<span className="profileSearchVerified" title="Shahada verified" aria-label="Verified">✓</span>}</h2>
-          {profile.username&&<p className="profileSearchHandle">@{profile.username}</p>}
+          {profile.username&&!profile.hide_1muslim_id&&<p className="profileSearchHandle">@{profile.username}</p>}
           {profile.bio&&<p className="profileSearchBio">{profile.bio}</p>}
           {location&&<p className="profileSearchLocation">{location}</p>}
           <div className="profileSearchStats"><span><strong>{postCount}</strong> Posts</span><span><strong>{Number(profile.xp_total||0).toLocaleString()}</strong> XP</span></div>
