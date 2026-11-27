@@ -1,0 +1,201 @@
+/* Ummah conversation redesign — intentionally scoped to the real feed modal
+   and immersive story; do not change other page comments or site-wide buttons. */
+.ummahCommentPortal .commentList{
+  padding:13px clamp(13px,4vw,25px) 18px!important;
+  background:var(--sheet-bg);color:var(--sheet-text);
+}
+.ummahCommentPortal .socialComment{
+  display:flex!important;align-items:flex-start!important;gap:11px!important;
+  padding:13px 0 11px!important;min-width:0!important;
+  border-bottom:1px solid var(--sheet-line)!important;
+}
+.ummahCommentPortal .socialComment>.commentAvatar{
+  position:static!important;width:34px!important;height:34px!important;
+  flex:0 0 34px!important;max-width:34px!important;min-width:34px!important;
+  margin:1px 0 0!important;border:0!important;border-radius:50%!important;
+  overflow:hidden!important;
+}
+.ummahCommentPortal .socialComment>.commentAvatar img{width:34px!important;height:34px!important;object-fit:cover!important}
+.ummahCommentPortal .commentMain{flex:1 1 0!important;min-width:0!important}
+.ummahCommentPortal .commentByline{display:flex!important;gap:6px!important;align-items:baseline!important;flex-wrap:wrap!important}
+.ummahCommentPortal .commentByline a{font-size:13px!important;font-weight:760!important;text-decoration:none!important}
+.ummahCommentPortal .commentByline time{font-size:11px!important;color:var(--sheet-muted)!important}
+.ummahCommentPortal .commentMain>p{
+  margin:4px 0 6px!important;font-size:14px!important;line-height:1.45!important;
+  overflow-wrap:anywhere!important;white-space:pre-wrap!important;
+}
+.ummahCommentPortal .commentActions{
+  display:flex!important;flex-flow:row nowrap!important;align-items:center!important;
+  justify-content:flex-end!important;gap:6px!important;
+  width:100%!important;height:auto!important;max-height:none!important;min-height:39px!important;
+  margin:4px 0 0!important;padding:0!important;overflow:visible!important;
+}
+.ummahCommentPortal .commentActions>button{
+  appearance:none!important;-webkit-appearance:none!important;
+  position:static!important;display:inline-flex!important;
+  align-items:center!important;justify-content:center!important;flex:0 0 auto!important;
+  width:auto!important;min-width:40px!important;height:40px!important;min-height:40px!important;max-height:40px!important;
+  margin:0!important;padding:0 8px!important;gap:5px!important;
+  background:transparent!important;background-image:none!important;
+  border:0!important;border-radius:12px!important;box-shadow:none!important;
+  color:var(--sheet-muted)!important;font:500 12px/1.2 system-ui,-apple-system,sans-serif!important;
+  white-space:nowrap!important;text-shadow:none!important;filter:none!important;
+  transition:background .18s ease,color .18s ease!important;
+}
+.ummahCommentPortal .commentActions>button.replyAction{
+  min-width:0!important;margin-right:auto!important;padding-left:0!important;
+}
+.ummahCommentPortal .commentActions>button svg{
+  flex:0 0 20px!important;width:20px!important;height:20px!important;
+  min-width:20px!important;min-height:20px!important;max-width:20px!important;max-height:20px!important;
+  display:block!important;transform:none!important;filter:none!important;
+}
+.ummahCommentPortal .commentActions>button[aria-pressed="true"]{color:#df365f!important}
+.ummahCommentPortal .commentActions>button:active{background:var(--sheet-input)!important}
+.ummahCommentPortal .commentActions>button:focus-visible{
+  outline:2px solid #4f9686!important;outline-offset:1px!important;
+}
+.ummahCommentPortal .viewReplies{
+  display:block!important;min-height:35px!important;margin:0!important;padding:7px 0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  color:var(--sheet-muted)!important;font-size:11px!important;font-weight:690!important;
+  box-shadow:none!important;
+}
+.ummahCommentPortal .socialComment.child{margin-left:14px!important;padding-left:10px!important;border-left:1px solid var(--sheet-line)!important}
+.ummahCommentPortal .ummahCommentSheet{
+  min-height:0!important;max-height:100dvh;
+  transition:bottom .20s ease,height .22s cubic-bezier(.2,.8,.2,1);
+  overscroll-behavior:contain!important;
+}
+.ummahCommentPortal .ummahCommentMain{min-height:0!important;overflow:hidden!important}
+.ummahCommentPortal .commentComposer{
+  display:flex!important;align-items:center!important;gap:6px!important;
+  min-width:0!important;max-width:100%!important;flex-wrap:nowrap!important;
+  padding:8px clamp(8px,2.5vw,14px) max(10px,env(safe-area-inset-bottom,0px))!important;
+  background:var(--sheet-bg)!important;
+}
+.ummahCommentPortal .commentComposer>div:first-child{
+  flex:1 1 auto!important;min-width:0!important;width:auto!important;max-width:none!important;
+}
+.ummahCommentPortal .commentComposer [contenteditable="true"]{
+  min-width:0!important;width:100%!important;max-width:100%!important;
+  font-size:16px!important;color:var(--sheet-text)!important;
+}
+.ummahCommentPortal .commentComposer>button{flex:0 0 auto!important;width:38px!important;min-width:38px!important;height:40px!important;padding:5px!important;border-radius:12px!important}
+.ummahCommentPortal .commentComposer>button.attachGif{width:44px!important;min-width:44px!important}
+.ummahCommentPortal .commentComposer>button[type="submit"]{
+  width:auto!important;min-width:53px!important;padding:0 10px!important;
+}
+.ummahCommentPortal.ummahKeyboardActive .ummahCommentHead{
+  min-height:56px!important;padding-top:6px!important;padding-bottom:9px!important;gap:7px!important;
+}
+.ummahCommentPortal.ummahKeyboardActive .ummahCommentHead button{top:11px!important}
+.ummahCommentPortal.ummahKeyboardActive .ummahEmojiRow{padding-top:4px!important;padding-bottom:3px!important}
+.ummahCommentPortal.ummahKeyboardActive .commentComposer{padding-bottom:7px!important}
+@media(max-width:390px){
+ .ummahCommentPortal .commentActions{gap:2px!important}
+ .ummahCommentPortal .commentActions>button{padding:0 5px!important}
+ .ummahCommentPortal .commentComposer{gap:4px!important}
+ .ummahCommentPortal .commentComposer>button{width:34px!important;min-width:34px!important}
+ .ummahCommentPortal .commentComposer>button.attachGif{width:39px!important;min-width:39px!important}
+}
+
+/* Full-screen viewer retains existing native draggable slider and parallax
+   but uses one integrated, scrollable comment surface and same compact controls. */
+.immersiveStoryPage{height:var(--imm-visual-height,100dvh)!important;top:var(--imm-visual-top,0px)!important;bottom:auto!important;transition:height .18s ease!important}
+.immersiveStoryPage .immersiveStory{height:100%!important}
+.immersiveStoryPage .immersiveSheet{
+ --story-sheet-bg:#fff;--story-sheet-ink:#20282c;--story-sheet-muted:#78858b;
+ --story-sheet-border:#e7eaed;--story-sheet-entry:#f2f4f4;
+ background:var(--story-sheet-bg)!important;color:var(--story-sheet-ink)!important;
+ border-radius:25px 25px 0 0!important;
+ box-shadow:0 -10px 34px #0002!important;
+}
+html[data-one-chrome="night"] .immersiveStoryPage .immersiveSheet{
+ --story-sheet-bg:#171b1f;--story-sheet-ink:#f2f5f6;--story-sheet-muted:#a3acb3;
+ --story-sheet-border:#34393d;--story-sheet-entry:#22282c;
+ color-scheme:dark;
+}
+.immersiveStoryPage .immersiveSheet .immersiveSheetHandle,
+.immersiveStoryPage .immersiveSheet .socialConversation,
+.immersiveStoryPage .immersiveSheet .commentList,
+.immersiveStoryPage .immersiveSheet .socialEngagement{
+ background:var(--story-sheet-bg)!important;color:var(--story-sheet-ink)!important;
+}
+.immersiveStoryPage .immersiveSheet .immersiveSheetHandle{
+ background:var(--story-sheet-bg)!important;
+ border-bottom:1px solid var(--story-sheet-border)!important;
+}
+.immersiveStoryPage .immersiveSheet .immersiveCaptionTab{color:var(--story-sheet-ink)!important}
+.immersiveStoryPage .immersiveSheet .immersiveCaptionOpen{
+ background:var(--story-sheet-entry)!important;color:var(--story-sheet-muted)!important;
+}
+.immersiveStoryPage .immersiveSheet .conversationTitle{color:var(--story-sheet-ink)!important}
+.immersiveStoryPage .immersiveSheet .commentByline a,
+.immersiveStoryPage .immersiveSheet .commentMain p{color:var(--story-sheet-ink)!important}
+.immersiveStoryPage .immersiveSheet .commentByline time{color:var(--story-sheet-muted)!important}
+.immersiveStoryPage .immersiveSheet .socialComment{
+ border-bottom:1px solid var(--story-sheet-border)!important;
+ padding:14px 2px 10px!important;
+}
+.immersiveStoryPage .immersiveSheet .commentActions{
+ display:flex!important;flex-flow:row nowrap!important;
+ align-items:center!important;justify-content:flex-end!important;gap:5px!important;
+ min-height:39px!important;height:auto!important;max-height:none!important;
+ width:100%!important;overflow:visible!important;
+}
+.immersiveStoryPage .immersiveSheet .commentActions>button{
+ display:inline-flex!important;flex:0 0 auto!important;min-width:40px!important;
+ height:40px!important;min-height:40px!important;max-height:40px!important;
+ padding:0 7px!important;margin:0!important;border:0!important;border-radius:12px!important;
+ color:var(--story-sheet-muted)!important;background:transparent!important;box-shadow:none!important;
+ font:500 12px/1.2 system-ui,sans-serif!important;gap:5px!important;
+}
+.immersiveStoryPage .immersiveSheet .commentActions>button.replyAction{margin-right:auto!important}
+.immersiveStoryPage .immersiveSheet .commentActions>button[aria-pressed="true"]{color:#ef4e7b!important}
+.immersiveStoryPage .immersiveSheet .viewReplies{color:var(--story-sheet-muted)!important}
+.immersiveStoryPage .immersiveSheet .commentComposer{
+ display:flex!important;align-items:center!important;gap:6px!important;
+ padding:9px 12px max(11px,env(safe-area-inset-bottom,0px))!important;
+ border-top:1px solid var(--story-sheet-border)!important;
+ background:var(--story-sheet-bg)!important;color:var(--story-sheet-ink)!important;
+}
+.immersiveStoryPage .immersiveSheet .commentComposer>div:first-child{flex:1 1 auto!important;min-width:0!important;width:auto!important}
+.immersiveStoryPage .immersiveSheet .commentComposer [contenteditable="true"]{
+ color:var(--story-sheet-ink)!important;min-width:0!important;font-size:16px!important;
+}
+.immersiveStoryPage .immersiveSheet .commentComposer>button{
+ width:39px!important;min-width:39px!important;flex:0 0 39px!important;
+ height:39px!important;min-height:39px!important;border-radius:12px!important;
+ background:var(--story-sheet-entry)!important;color:var(--story-sheet-ink)!important;
+}
+.immersiveStoryPage .immersiveSheet .commentComposer>button[type="submit"]{
+ width:auto!important;min-width:52px!important;flex:0 0 auto!important;
+ padding:0 9px!important;background:#27684b!important;color:#fff!important;
+}
+.immersiveStoryPage .immersiveSheet .ummahEmojiRow{
+ display:flex;flex:0 0 auto;gap:3px;overflow-x:auto;scrollbar-width:none;
+ padding:6px 10px!important;border-top:1px solid var(--story-sheet-border);
+ background:var(--story-sheet-bg);
+}
+.immersiveStoryPage .immersiveSheet .ummahEmojiRow button{
+ flex:1 0 37px;min-height:40px;border:0;background:transparent;
+ font-size:24px;padding:5px;
+}
+.immersiveStoryPage .immersiveSheet .replyNotice{
+ background:var(--story-sheet-entry)!important;color:var(--story-sheet-ink)!important;
+ margin:0 12px!important;
+}
+.immersiveStoryPage .immersiveSheet .socialActionBar{
+ flex:0 0 auto!important;border-bottom:1px solid var(--story-sheet-border)!important;
+}
+.immersiveStoryPage .immersiveSheet .socialActionBar button{color:var(--story-sheet-ink)!important}
+.immersiveStoryPage .immersiveSheet .commentList{
+ padding:4px 14px 12px!important;min-height:0!important;
+ overscroll-behavior:contain!important;
+}
+.immersiveStoryPage .immersiveSheet .socialComment.child{margin-left:12px!important;padding-left:10px!important;border-left:1px solid var(--story-sheet-border)!important}
+@media(prefers-reduced-motion:reduce){
+ .ummahCommentPortal .ummahCommentSheet,.immersiveStoryPage{transition:none!important}
+ .ummahCommentPortal .commentActions>button{transition:none!important}
+}
