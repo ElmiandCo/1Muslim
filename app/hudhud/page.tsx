@@ -3,6 +3,7 @@ import "./hudhud.css";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
 import HudHudFocusStage,{type HudHudLine} from "./HudHudFocusStage";
 import {normalizeSpokenHudHudQuestion} from "../lib/hudhud-speech";
+import {getHudHudTopWebResult} from "../lib/hudhud-top-web";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
@@ -221,6 +222,20 @@ export default function HudHudPage(){
    const savedSession:Session={id:conversationId,title:current.lines.length?current.title:message.slice(0,40),lines:[...lines,({role:"user",content:message} satisfies Line),assistantLine].slice(-40)};
    setSessions(old=>old.map(s=>s.id===conversationId?savedSession:s));
    if(memoryEnabled&&memorySignedIn)void memorySave(savedSession).catch(()=>setMemoryNotice("Could not save this reply. Try again later."));
+   // A useful independent website can join the current answer without
+   // delaying HudHud's response, audio, or the existing smooth animation.
+   // Never append irrelevant search links to a verse, photo or greeting.
+   const isDirectPresentation=data.presentation?.kind==="verse"||data.presentation?.kind==="image";
+   const isGreeting=/^(hi|hello|hey|salaam|salam|thanks|thank you)[!.,? ]*$/i.test(message);
+   if(!isDirectPresentation&&!isGreeting&&message.length>=4){
+    void getHudHudTopWebResult(message).then(webResult=>{
+      if(!webResult)return;
+      setSessions(old=>old.map(session=>session.id!==conversationId?session:{
+       ...session,lines:session.lines.map((line,index)=>index===lines.length+1&&line.role==="assistant"
+        &&line.content===reply?{...line,webResult}:line)
+      }));
+    }).catch(()=>{});
+   }
    if(readAloud&&"speechSynthesis" in window){
     setSpeechPending(true);
     if(speechPendingTimer.current)clearTimeout(speechPendingTimer.current);
