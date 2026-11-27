@@ -257,7 +257,7 @@ export default function SearchHub() {
         <Link href="/auth?next=%2Fsearch&login=1" onClick={e=>{e.preventDefault();openAuth("signin")}} className="dsGuestSignIn" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg></Link>
         <Link href="/auth?next=%2Fsearch&mode=signup" onClick={e=>{e.preventDefault();openAuth("signup")}} className="dsGuestJoin"><span className="dsGuestJoinFull">Join 1Muslim</span><span className="dsGuestJoinCompact">Join</span></Link>
       </div>:account==="member"?<>
-      <button aria-label="Settings" title="Settings" className="dsUtilityButton"> type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:open-settings",{detail:{section:"home"}}))}
+      <button aria-label="Settings" title="Settings" className="dsUtilityButton" type="button" onClick={()=>window.dispatchEvent(new CustomEvent("1muslim:open-settings",{detail:{section:"home"}}))}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.6 2.4 1.6.9 2.4-.7 2 3.5-1.8 1.7v1.9l1.8 1.7-2 3.5-2.4-.7-1.6.9L14 20h-4l-.6-2.4-1.6-.9-2.4.7-2-3.5 1.8-1.7v-1.9L3.4 8.6l2-3.5 2.4.7 1.6-.9L10 2Z"/></svg>
       </button>
       <Link href="/search" aria-label="Your personalized Search Home" title="Your Home" className="dsUtilityButton">
