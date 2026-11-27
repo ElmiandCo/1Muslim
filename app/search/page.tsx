@@ -74,13 +74,13 @@ export default function SearchHub() {
   const [signoutBusy,setSignoutBusy]=useState(false);
   const [authMode,setAuthMode]=useState<SearchAuthMode|null>(null);
   const [authLeaving,setAuthLeaving]=useState(false);
-  const [authReturn,setAuthReturn]=useState("/search");
+  const [authReturn,setAuthReturn]=useState("/profile");
   const [authQuery,setAuthQuery]=useState("");
   useEffect(()=>{
     const params=new URLSearchParams(window.location.search);
     const mode=params.get("auth");
     if(["signin","signup","shahada","recover"].includes(mode||""))setAuthMode(mode as SearchAuthMode);
-    const next=params.get("next")||"/search";
+    const next=params.get("next")||"/profile";
     if(next.startsWith("/")&&!next.startsWith("//")&&!next.startsWith("/\\")&&!next.includes("://"))setAuthReturn(next);
   },[]);
   const openAuth=(mode:SearchAuthMode)=>{
@@ -142,7 +142,7 @@ export default function SearchHub() {
       const {data:profile}=await db.from("profiles").select("shahada_verified_at").eq("id",user.id).maybeSingle();
       if(!active)return;
       if(!profile?.shahada_verified_at){setAuthMode("shahada");return}
-      if(authReturn!=="/search"){router.replace(authReturn);return}
+      if(authReturn!=="/search"){try{sessionStorage.setItem("1muslim:profile-arrival","1")}catch{};router.replace(authReturn);return}
       closeAuth();
     })();
     return()=>{active=false};
@@ -215,6 +215,7 @@ export default function SearchHub() {
     setAccount("member");setAuthLeaving(true);
     try{sessionStorage.removeItem("1muslim:shahada-pending")}catch{}
     const next=authReturn;
+    try{sessionStorage.setItem("1muslim:profile-arrival","1")}catch{}
     if(next!=="/search"&&next.startsWith("/")&&!next.startsWith("//")&&!next.includes("://")){
       window.setTimeout(()=>router.replace(next),240);
       return;
@@ -248,8 +249,8 @@ export default function SearchHub() {
       {!homeMode&&<Link href="/search" className="dsResultsBrand" aria-label="1Muslim.Live — return to search home" onClick={e=>{e.preventDefault();clear()}}><AnimatedMuslimBrand/><span className="dsHomeBrandLive" aria-hidden="true">.Live</span></Link>}
       {!homeMode&&<button type="button" className="dsUtilityButton dsResultsThemeToggle" onClick={toggleResultsTheme} aria-label={resultsNight?"Switch search results to light mode":"Switch search results to dark mode"} title={resultsNight?"Light appearance":"Dark appearance"} aria-pressed={resultsNight}><span aria-hidden="true">{resultsNight?"☼":"◐"}</span></button>}
       {account==="guest"?<div className="dsGuestAccount" aria-label="Account access">
-        <Link href="/auth?next=%2Fsearch&login=1" onClick={e=>{e.preventDefault();openAuth("signin")}} className="dsGuestSignIn" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg></Link>
-        <Link href="/auth?next=%2Fsearch&mode=signup" onClick={e=>{e.preventDefault();openAuth("signup")}} className="dsGuestJoin"><span className="dsGuestJoinFull">Join 1Muslim</span><span className="dsGuestJoinCompact">Join</span></Link>
+        <Link href="/auth?next=%2Fprofile&login=1" onClick={e=>{e.preventDefault();openAuth("signin")}} className="dsGuestSignIn" aria-label="Sign in" title="Sign in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.4 20c.4-4 2.7-6 6.6-6s6.2 2 6.6 6"/></svg></Link>
+        <Link href="/auth?next=%2Fprofile&mode=signup" onClick={e=>{e.preventDefault();openAuth("signup")}} className="dsGuestJoin"><span className="dsGuestJoinFull">Join 1Muslim</span><span className="dsGuestJoinCompact">Join</span></Link>
       </div>:account==="member"?<>
       <Link href="/settings" aria-label="Settings" title="Settings" className="dsUtilityButton">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.6 2.4 1.6.9 2.4-.7 2 3.5-1.8 1.7v1.9l1.8 1.7-2 3.5-2.4-.7-1.6.9L14 20h-4l-.6-2.4-1.6-.9-2.4.7-2-3.5 1.8-1.7v-1.9L3.4 8.6l2-3.5 2.4.7 1.6-.9L10 2Z"/></svg>
