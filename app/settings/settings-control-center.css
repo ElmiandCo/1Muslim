@@ -99,3 +99,14 @@
 :root:not(.light) .scAiActions .scDanger{background:#3d292b;color:#ffdada;border-color:#704346}
 :root:not(.light) .scAiPrivacy{border-color:#405350}
 @media(max-width:420px){.scProfileActions{gap:6px}.scMenuItem{min-height:58px}.settingsPage .settingsShell{padding-inline:14px}}
+
+.scRecentList{margin:2px 0 9px;padding:4px 0 9px}
+.scRecentList .scNavHeading{margin-top:9px}
+.scRecentLink{min-height:40px;padding:10px 13px;display:flex;align-items:center;gap:12px;border-radius:13px;text-decoration:none!important;color:#415a5e;font-size:13px;overflow:hidden}
+.scRecentLink span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.scRecentLink span:first-child{color:#97aba2;font-size:17px}
+.scRecentLink:hover,.scRecentLink:focus-visible{background:#eaf1ef}
+.scSeeAll{border:0;background:transparent;color:#537064;font-weight:730;font-size:11px;margin:7px 10px;cursor:pointer;text-align:left}
+:root:not(.light) .scRecentLink{color:#d2e0d9}
+:root:not(.light) .scRecentLink:hover,:root:not(.light) .scRecentLink:focus-visible{background:#243637}
+:root:not(.light) .scSeeAll{color:#b1c9ba}
