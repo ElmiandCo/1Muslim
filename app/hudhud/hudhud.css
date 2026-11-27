@@ -226,3 +226,32 @@
  .hudMatchCard{flex-basis:205px}.hudMatchCard img{height:105px}
 }
 @media(prefers-reduced-motion:reduce){.hudPage.hudExiting,.hudMatchCard,.hudVerseCard .hudVerseArabic,.hudVerseCard .hudVerseEnglish,.hudPage.hudSpeaking .hudTinyOrb{animation:none!important;transform:none!important}}
+
+/* HudHud adaptive presentation — intention-first, not a carousel by default. */
+.hudBrandSlot{position:relative;flex:0 0 auto;display:flex;align-items:center;min-width:105px}
+.hudBrandSlot .hudBackBrand{position:relative;z-index:1}
+.hudBrandSlot .hudBrandInitial{display:inline-block;min-width:.75em;transition:opacity .2s ease}
+.hudBrandSlot .hudBrandInitial.hudBrandOrbActive{opacity:0}
+.hudBrandOrb{position:absolute;z-index:3;left:-7px;top:50%;width:39px;height:39px;transform:translateY(-50%);display:grid;place-items:center;animation:hudBrandArrival .35s ease-out both}
+.hudBrandOrb .hudV2Orb{width:42px;height:42px;min-width:42px;min-height:42px;animation:none!important}
+.hudBrandOrb .hudV2Sphere{width:72%;height:72%;border:0}
+.hudBrandOrb .hudV2Particles{opacity:.75}
+.hudPage.hudVoiceBeat .hudBrandOrb .hudV2Particles{opacity:1;filter:brightness(1.6)}
+.hudPage.hudVoiceBeat .hudBrandOrb .hudV2OrbitSwarm{animation-duration:2.2s}
+.hudVerseResponse{max-width:100%!important}
+.hudVersePresentation{width:100%;max-width:720px;animation:hudPresentationFade .56s cubic-bezier(.2,.72,.2,1) both}
+.hudVersePresentation .hudVerseHero{display:flex!important;flex-direction:column;align-items:stretch!important;gap:16px!important;width:100%;height:auto;padding:clamp(16px,4vw,32px)!important;border:0!important;border-radius:0!important;background:transparent!important;color:#123e2c!important;text-align:start;text-decoration:none;white-space:normal;box-shadow:none}
+.hudVersePresentation .hudVerseHero>.hudMatchKind{color:#7b8b7f;font-weight:800;font-size:11px;letter-spacing:.13em}
+.hudVersePresentation .hudVerseHero .hudVerseArabic{display:block;width:100%;font-family:"Amiri","Traditional Arabic","Noto Naskh Arabic",serif;font-size:clamp(31px,6.5vw,58px)!important;line-height:2.05!important;font-weight:800;text-align:center;color:#0a482f;direction:rtl;text-wrap:pretty;overflow-wrap:anywhere}
+.hudVersePresentation .hudVerseHero .hudVerseEnglish{font-size:clamp(18px,3.7vw,26px)!important;line-height:1.65;color:#254936;white-space:normal;overflow-wrap:anywhere}
+.hudVersePresentation .hudVerseHero .hudVerseEnglish span{border-radius:3px;transition:background .16s,color .16s}
+.hudVersePresentation .hudVerseHero .hudVerseEnglish span.hudWordSpoken{color:#096c4c;background:#c6f8df59}
+.hudVersePresentation .hudVerseHero small{font-size:11px;color:#637b6c}
+.hudVersePresentation .hudVerseHero em{font-style:normal;font-weight:700;font-size:12px;color:#0c7750}
+.hudAssistant .hudQuickChoices{margin-top:14px;padding:8px 0;gap:9px}
+.hudAssistant .hudQuickChoices button{min-height:42px;min-width:46px;border-radius:999px;font-size:12px}
+.hudAssistant .hudQuickChoices button:disabled{opacity:.4}
+@keyframes hudBrandArrival{from{opacity:0;transform:translateY(-50%) scale(.5)}to{opacity:1;transform:translateY(-50%) scale(1)}}
+@keyframes hudPresentationFade{from{opacity:0;transform:translateY(12px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@media(max-width:520px){.hudBrandSlot{min-width:108px}.hudBrandOrb{left:-5px}.hudVersePresentation .hudVerseHero{padding:16px 0!important}.hudVersePresentation .hudVerseHero .hudVerseArabic{font-size:clamp(28px,8.2vw,42px)!important}}
+@media(prefers-reduced-motion:reduce){.hudBrandOrb,.hudVersePresentation{animation:none!important}.hudVersePresentation .hudVerseHero .hudVerseEnglish span{transition:none}}
