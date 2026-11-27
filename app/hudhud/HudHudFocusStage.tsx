@@ -48,16 +48,16 @@ export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speech
  const [historyOpen,setHistoryOpen]=useState(false);
  const [imageInfoOpen,setImageInfoOpen]=useState(false);
  const [revealCount,setRevealCount]=useState(0);
- const [reducedMotion,setReducedMotion]=useState(false);
- useEffect(()=>{setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches)},[]);
  useEffect(()=>{if(busy){asked.current=true;setImageInfoOpen(false);setHistoryOpen(false)}},[busy]);
  useEffect(()=>{
   if(observed.current===null){observed.current=answerKey;return}
-  if(observed.current!==answerKey){
+  const changed=observed.current!==answerKey;
+  if(changed){
    observed.current=answerKey;
    if(asked.current&&latest){setVisible(true);setIdle(false);setRevealCount(n=>n+1)}
    else{setVisible(false);setIdle(false)}
   }
+  if(!busy&&asked.current&&!changed)setVisible(false);
   if(!busy)asked.current=false;
  },[answerKey,busy,latest]);
  useEffect(()=>{
@@ -85,7 +85,7 @@ export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speech
   if(dy<0&&historyOpen&&(event.target as HTMLElement).closest(".hudHistoryTop"))setHistoryOpen(false);
  };
  const image=latest?.presentation?.kind==="image"?latest.images?.[0]:undefined;
- return <div className={"hudFocusSurface"+(historyOpen?" hudHistoryIsOpen":"")} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onClick={event=>{if(idle&&!busy&&event.target===event.currentTarget)reveal()}} aria-label="HudHud current answer. Swipe down to view previous answers.">
+ return <div className={"hudFocusSurface"+(historyOpen?" hudHistoryIsOpen":"")} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onClick={event=>{if((idle||!visible)&&!busy&&event.target===event.currentTarget)reveal()}} aria-label="HudHud current answer. Swipe down to view previous answers.">
   {latest&&visible&&<div key={answerKey+":"+revealCount} ref={cardRef} className={"hudFocusCard"+(busy?" hudFocusLeaving":"")+(idle?" hudFocusIdle":"")+(revealCount%2?" hudFrameFromCenter":" hudFrameFromLeft")} onClick={()=>{if(idle)reveal()}} aria-live="polite">
    <div className="hudFocusContent"><Answer line={latest} index={latestIndex} sessionId={sessionId} speakingAt={speakingAt} speechChar={speechChar} onImageOpen={()=>{setImageInfoOpen(true);setIdle(false)}}/></div>
   </div>}
