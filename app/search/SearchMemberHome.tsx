@@ -38,6 +38,7 @@ const nameOf=(member:Member|null)=>member?.display_name?.trim()||
 
 export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void>}){
  const [member,setMember]=useState<Member|null>(null);
+ const [night,setNight]=useState(false);
  const [search,setSearch]=useState("");
  const [focused,setFocused]=useState(false);
  const [request,setRequest]=useState<ProfileSearchRequest|null>(null);
@@ -65,6 +66,18 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
  const initialised=useRef(false);
  const speechActive=useRef(false);
  const voiceOnRef=useRef(voiceOn);voiceOnRef.current=voiceOn;
+ useEffect(()=>{
+  const device=window.matchMedia("(prefers-color-scheme: dark)");
+  const update=()=>{
+   let mode:string|null=null;
+   try{mode=localStorage.getItem("1muslim-theme-mode")||localStorage.getItem("1muslim-theme")}catch{}
+   const dark=mode==="night"||mode==="dark"||(mode==="auto"&&device.matches);
+   setNight(dark);
+   window.dispatchEvent(new CustomEvent("1muslim:route-appearance",{detail:{route:"/search",night:dark}}));
+  };
+  update();window.addEventListener("1muslim:theme-changed",update);device.addEventListener("change",update);
+  return()=>{window.removeEventListener("1muslim:theme-changed",update);device.removeEventListener("change",update)};
+ },[member?.id]);
 
  useEffect(()=>{
   let live=true;
@@ -271,7 +284,7 @@ export default function SearchMemberHome({onSignOut}:{onSignOut:()=>Promise<void
   setNameSaving(false);
  };
  const displayName=nameOf(member);
- return <main className={"smhPage dsPage dsHomeMode"+(arriving?" smhArriving":"")} aria-label="Your One Muslim Search Home">
+ return <main className={"smhPage dsPage dsHomeMode"+(night?" smhNight":"")+(arriving?" smhArriving":"")} aria-label="Your One Muslim Search Home">
   <header className="smhHeader">
    <Link className="smhLogo" href="/search" aria-label="One Muslim.Live home"><AnimatedMuslimBrand/><span className="smhLogoLive">.Live</span></Link>
    <nav aria-label="Account shortcuts" className="smhUtilities">
