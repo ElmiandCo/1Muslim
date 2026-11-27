@@ -75,7 +75,11 @@ export default function HudHudPage(){
   const controller=new AbortController();
   const params=new URLSearchParams(window.location.search);
   setQueryContext((params.get("q")||"").trim().slice(0,90));
-  const source=params.get("from")||sessionStorage.getItem("1muslim:hudhud:return")||"/search";
+  let referring="/search";
+  try{const url=new URL(document.referrer);if(url.origin===window.location.origin)referring=url.pathname+url.search}catch{}
+  let remembered="";
+  try{remembered=sessionStorage.getItem("1muslim:hudhud:return")||""}catch{}
+  const source=params.get("from")||remembered||referring;
   originRef.current=safeReturn(source);
   void fetch("/api/discover/ask",{cache:"no-store",signal:controller.signal})
    .then(async res=>{const data=await res.json();if(!res.ok)throw Error(data.error||"HudHud is unavailable");return data})
@@ -183,7 +187,9 @@ export default function HudHudPage(){
   <header className="hudHeader">
    <button className="hudBackBrand" type="button" aria-label="Return to previous page" onClick={close}>One Muslim<span>.live</span></button>
    <div className="hudTitle" aria-label="HudHud — One Muslim voice assistant">HudHud</div>
-   <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
+   <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false)}}>
+    <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" fill="none" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{readAloud?<path d="M16 8q4 4 0 8M18 5q7 7 0 14"/>:<path d="m16 9 5 6m0-6-5 6"/>}</svg>
+   </button><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
   </header>
 
   <section className={"hudMain"+(lines.length?" hudHasChat":"")} aria-label="Conversation">
