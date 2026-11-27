@@ -24,7 +24,7 @@ const APP_SECTIONS:Section[]=[
  {name:"Social connections",detail:"Existing social account tools",id:"social-connections",symbol:"⊙"},
  {name:"Theme & appearance",detail:"Day, night, and DeepWatch",id:"appearance-settings",symbol:"◐"},
  {name:"Location & prayer",detail:"Prayer times and Adhan",id:"location-preferences",symbol:"⌖"},
- {name:"Notifications",detail:"Messages, calls and live",id:"notifications",symbol:"♧"},
+ {name:"Notifications",detail:"Messages, calls and live",id:"notifications",symbol:"◈"},
  {name:"Language & effects",detail:"HudHud Vision, sounds and Arabic",id:"language-effects",symbol:"ع"},
  {name:"Privacy & account",detail:"Deactivate or delete your account",id:"account-controls",symbol:"⛨"}
 ];
@@ -36,6 +36,7 @@ function safeMedia(value:unknown):string|null{
 }
 export default function SettingsControlDrawer(){
  const [open,setOpen]=useState(true);
+ useEffect(()=>{if(window.location.hash)setOpen(false)},[]);
  const [profile,setProfile]=useState<ProfileSummary|null>(null);
  const [authenticated,setAuthenticated]=useState<boolean|null>(null);
  const drawer=useRef<HTMLElement|null>(null);
