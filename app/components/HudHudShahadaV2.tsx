@@ -146,8 +146,10 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
   if(!navigatorMedia?.getUserMedia||typeof MediaRecorder==="undefined"){
    setState("unavailable");setMessage("Microphone recording isn't available here. Tap Help for a written declaration.");return;
   }
+  let granted:MediaStream|null=null;
   try{
    const stream=await navigatorMedia.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+   granted=stream;
    if(!mounted.current){stream.getTracks().forEach(t=>t.stop());return}
    const mime=["audio/mp4","audio/webm;codecs=opus","audio/webm"].find(x=>MediaRecorder.isTypeSupported(x));
    const recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
@@ -221,6 +223,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
     if(active.current&&!done.current&&!spoken)guide("Take your time. I'm listening. Say your Shahada when you're ready.");
    },30000));
   }catch(e){
+   granted?.getTracks().forEach(track=>track.stop());
    active.current=false;setState("unavailable");
    const permission=e instanceof DOMException&&["NotAllowedError","PermissionDeniedError"].includes(e.name);
    setMessage(permission?"Allow microphone access in your browser, then tap the orb to try again. You can also use Help.":"The microphone isn't ready. Tap HudHud to retry or open Help.");
@@ -253,7 +256,7 @@ export default function HudHudShahadaV2({embedded=false,returnTo="/search",onCom
     </div>:<>
     <div className="hudV2OrbZone">
       <HudHudOrb compact listening={state==="listening"} thinking={state==="saving"||state==="permission"} speaking={speaking} level={level}
-       onClick={()=>{if(state==="ready"||state==="unavailable")void begin();else if(state==="listening")stop(false)}} />
+       onClick={()=>{if(state==="ready"||state==="unavailable")void begin();else if(state==="listening"){stop(false);setState("ready");setMessage("Ready when you are.");}}} />
       {state==="listening"&&<span className="hudV2ListeningPulse" aria-live="off">Listening · {seconds}s</span>}
       {state==="permission"&&<span className="hudV2ListeningPulse">Allow microphone</span>}
     </div>
