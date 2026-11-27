@@ -16,7 +16,8 @@ import PostDesignStudio from "../components/PostDesignStudio";
 import HomePostsMagazineRail from "../components/HomePostsMagazineRail";
 import AdminParallaxDashboard from "../components/AdminParallaxDashboard";
 import {useRouter} from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type SyntheticEvent } from "react";
+import { useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type SyntheticEvent } from "react";
+import {SettingsEmbedContext} from "../components/SettingsEmbedContext";
 
 import ProfileAvatar, { ACCESSORIES, AVATAR_TIERS, tierForXp } from "../components/ProfileAvatar";
 import { createClient } from "../../utils/supabase/client";
@@ -710,7 +711,8 @@ const TAKEN_MUSLIM_ID="1Muslim ID is already taken.";
 const isUsernameConflict=(error:{code?:string;message?:string;details?:string;hint?:string})=>
  error.code==="23505" && /username|profiles_username/i.test([error.message,error.details,error.hint].join(" "));
 type EmbeddedEditorTab="profile"|"avatar"|"header"|"live"|"shahada"|"analytics";
-export default function ProfilePage({embeddedEditorTab}:{embeddedEditorTab?:EmbeddedEditorTab}={}) {
+export default function ProfilePage() {
+  const embeddedEditorTab=useContext(SettingsEmbedContext);
   const router=useRouter();
   const [signingOut,setSigningOut]=useState(false);
   const [isHudHudAdmin,setIsHudHudAdmin]=useState(false);
