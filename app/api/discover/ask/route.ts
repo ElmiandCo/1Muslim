@@ -96,7 +96,10 @@ export async function POST(req: NextRequest) {
       const imageQuota=await claimSearchQuota(req,"images");
       if(imageQuota!=="allowed")throw new Error("Image search quota unavailable");
       const found=await searchImages(presentation.query);
-      const selected=found.results[0];
+      // Prefer an original public photo over watermarked stock/licensing previews.
+      const selected=found.results.find(item=>/^(?:www\.)?(?:unsplash\.com|pexels\.com|commons\.wikimedia\.org)$/i.test(item.source))
+        ||found.results.find(item=>!/istockphoto|shutterstock|stock\.adobe|depositphotos|gettyimages|dreamstime|alamy|vecteezy|freepik/i.test(item.source))
+        ||found.results[0];
       if(!selected)throw new Error("No verified image results");
       const {data:usage}=await dbAdmin.from("discover_hudhud_usage").select("turns_used").eq("usage_key",usageKey).maybeSingle();
       const remaining=Math.max(0,FREE_TURNS-(usage?.turns_used||FREE_TURNS));
