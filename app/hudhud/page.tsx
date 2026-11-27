@@ -1,15 +1,12 @@
 "use client";
 import "./hudhud.css";
 import AnimatedMuslimBrand from "../components/AnimatedMuslimBrand";
-import HudHudVerseCard from "../components/HudHudVerseCard";
-import type {HudHudPresentation} from "../lib/hudhud-presentation";
+import HudHudFocusStage,{type HudHudLine} from "./HudHudFocusStage";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback,useEffect,useRef,useState,type FormEvent} from "react";
 
-type Match={id:string;kind:string;title:string;href:string;image?:string;description?:string};
-type VerifiedVerse={key:string;arabic:string;english:string;translation:string;source?:string};
-type Line={role:"user"|"assistant";content:string;matches?:Match[];presentation?:HudHudPresentation;verses?:VerifiedVerse[]};
+type Line=HudHudLine;
 type Session={id:string;title:string;lines:Line[]};
 type RecognitionEvent={results:ArrayLike<{isFinal:boolean;0:{transcript:string}}>} ;
 type Recognition={lang:string;interimResults:boolean;continuous:boolean;onresult:((event:RecognitionEvent)=>void)|null;onerror:((event:{error:string})=>void)|null;onend:(()=>void)|null;start:()=>void;stop:()=>void;abort:()=>void};
@@ -33,15 +30,6 @@ function Glyph({name}:{name:"menu"|"settings"|"mic"|"plus"|"close"|"send"|"new"|
   back:<path d="m15 5-7 7 7 7"/>
  };
  return <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
-}
-
-function HudHudNarration({text,spokenChars}:{text:string;spokenChars?:number}){
- const sentences=text.match(/[^.!?]+[.!?]*\s*/g)||[text];
- let offset=0;
- return <p className="hudNarratedReply">{sentences.map((part,index)=>{
-  const start=offset;offset+=part.length;
-  return <span key={index} className={spokenChars===undefined?"":spokenChars>=start?"hudNarratedHeard":"hudNarratedUpcoming"}>{part}</span>;
- })}</p>;
 }
 
 export default function HudHudPage(){
@@ -75,7 +63,6 @@ export default function HudHudPage(){
  const [viewport,setViewport]=useState<{height:number;top:number}|null>(null);
  const recognizer=useRef<Recognition|null>(null);
  const micPermissionRequest=useRef(0);
- const chatEnd=useRef<HTMLDivElement>(null);
  const input=useRef<HTMLInputElement>(null);
  const voiceTranscript=useRef("");
  const askRef=useRef<(message:string)=>void>(()=>{});
@@ -187,7 +174,6 @@ export default function HudHudPage(){
   sync();visual.addEventListener("resize",sync);visual.addEventListener("scroll",sync);
   return()=>{visual.removeEventListener("resize",sync);visual.removeEventListener("scroll",sync)};
  },[]);
- useEffect(()=>{chatEnd.current?.scrollIntoView({block:"end",behavior:busy?"instant":"smooth"});},[lines.length,busy,activeId]);
  useEffect(()=>{
   const onHidden=()=>{if(document.hidden){stopVoice(true);window.speechSynthesis?.cancel()}};
   const onKey=(event:KeyboardEvent)=>{if(event.key==="Escape"){setMenuOpen(false);setSettingsOpen(false);setActionsOpen(false);stopVoice(true)}};
@@ -219,7 +205,7 @@ export default function HudHudPage(){
    if(!response.ok)throw Error(data.error||"HudHud could not reply.");
    const reply=String(data.reply||"").trim();
    if(!reply)throw Error("HudHud sent an empty reply.");
-   const assistantLine:Line={role:"assistant",content:reply,matches:Array.isArray(data.matches)?data.matches:[],presentation:data.presentation,verses:Array.isArray(data.verses)?data.verses:[]};
+   const assistantLine:Line={role:"assistant",content:reply,matches:Array.isArray(data.matches)?data.matches:[],presentation:data.presentation,verses:Array.isArray(data.verses)?data.verses:[],images:Array.isArray(data.images)?data.images.slice(0,1):[]};
    const savedSession:Session={id:conversationId,title:current.lines.length?current.title:message.slice(0,40),lines:[...lines,({role:"user",content:message} satisfies Line),assistantLine].slice(-40)};
    setSessions(old=>old.map(s=>s.id===conversationId?savedSession:s));
    if(memoryEnabled&&memorySignedIn)void memorySave(savedSession).catch(()=>setMemoryNotice("Could not save this reply. Try again later."));
@@ -284,7 +270,7 @@ export default function HudHudPage(){
 
  return <main onTouchStart={event=>{
     const t=event.target as HTMLElement;
-    if(t.closest("input,.hudMessages,.hudMatches,.hudDrawer,.hudActionPop"))return;
+    if(t.closest("input,.hudFocusSurface,.hudHistoryOverlay,.hudMatches,.hudDrawer,.hudActionPop"))return;
     setTouchStart({x:event.touches[0]?.clientX||0,y:event.touches[0]?.clientY||0});
    }} onTouchEnd={event=>{
     if(!touchStart)return;
@@ -299,36 +285,11 @@ export default function HudHudPage(){
    <div className="hudTitle" aria-label="HudHud — 1Muslim voice assistant">HudHud</div>
    <div className="hudHeaderActions"><button className="hudCircle" type="button" aria-label={readAloud?"Mute HudHud voice":"Enable HudHud voice"} aria-pressed={readAloud} onClick={()=>{setReadAloud(v=>!v);window.speechSynthesis?.cancel();setSpeaking(false)}}>
     <svg viewBox="0 0 24 24" width="19" height="19" stroke="currentColor" fill="none" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4"/>{readAloud?<path d="M16 8q4 4 0 8M18 5q7 7 0 14"/>:<path d="m16 9 5 6m0-6-5 6"/>}</svg>
-   </button><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
+   </button><button className="hudCircle hudHistoryHeaderButton" type="button" aria-label="Show previous HudHud answers" title="History" disabled={!lines.length} onClick={()=>window.dispatchEvent(new Event("1muslim:hudhud-show-history"))}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M5 8h14M5 12h10M5 16h6"/><path d="m16 16 3 3 3-3m-3-4v7"/></svg></button><button className="hudCircle" type="button" aria-label="HudHud menu" aria-expanded={menuOpen} onClick={()=>{setMenuOpen(true);setSettingsOpen(false)}}><Glyph name="menu"/></button><button className="hudCircle" type="button" aria-label="HudHud settings" aria-expanded={settingsOpen} onClick={()=>{setSettingsOpen(!settingsOpen);setMenuOpen(false)}}><Glyph name="settings"/></button></div>
   </header>
 
   <section className={"hudMain"+(lines.length?" hudHasChat":"")} aria-label="Conversation">
-   {lines.length>0&&<div className="hudMessages">
-     {lines.map((line,index)=><article key={current.id+"-"+index} className={"hudMessage "+(line.role==="user"?"hudUser":"hudAssistant")}>
-       {line.role==="assistant"&&<span className="hudTinyOrb" aria-hidden="true"/>}
-       <div className={"hudMessageBody"+(line.presentation?.kind==="verse"?" hudVerseResponse":"")}>
-        {line.role==="assistant"&&line.presentation?.kind==="verse"&&line.verses?.[0]
-          ?<div className="hudVersePresentation"><HudHudVerseCard featured verseKey={line.verses[0].key} verseData={line.verses[0]} href={"/quran-library?verse="+encodeURIComponent(line.verses[0].key)} spokenChars={speakingAt?.sessionId===current.id&&speakingAt.index===index?speechChar-line.content.indexOf(line.verses[0].english):undefined}/></div>
-          :<HudHudNarration text={line.content} spokenChars={line.role==="assistant"&&speakingAt?.sessionId===current.id&&speakingAt.index===index?speechChar:undefined}/>}
-        {line.presentation?.kind==="results"&&line.matches&&line.matches.length>0&&<div className="hudMatches" role="list" aria-label="HudHud search suggestions">
- {line.matches.slice(0,6).map(item=><div className="hudMatchCard" role="listitem" key={item.href}>
-  {item.kind==="Qur’an"&&/^\d{1,3}:\d{1,3}$/.test(item.id)
-   ?<HudHudVerseCard verseKey={item.id} href={item.href}/>
-   :<Link href={item.href}>
-    {item.image?.startsWith("https://")&&<img src={item.image} alt="" loading="lazy"/>}
-    <span className="hudMatchKind">{item.kind}</span>
-    <strong>{item.title}</strong>
-    {item.description&&<small>{item.description.slice(0,105)}</small>}
-    <em>View source ↗</em>
-   </Link>}
-  </div>)}
- </div>}
-
-       </div>
-     </article>)}
-     {busy&&<div className="hudPending" role="status"><span className="hudTinyOrb" aria-hidden="true"/> HudHud is thinking <span className="hudDots">•••</span></div>}
-     <div ref={chatEnd}/>
-    </div>}
+   <HudHudFocusStage lines={lines} sessionId={activeId} busy={busy} speakingAt={speakingAt} speechChar={speechChar}/>
   </section>
 
   {error&&<p className="hudError" role="alert">{error}</p>}
