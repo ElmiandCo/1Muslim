@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./ummah-conversation-polish.css";
 import "./deepwatch/deepwatch.css";
 import "./adhan.css";
 import "./prayer-experience.css";
