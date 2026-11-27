@@ -42,12 +42,15 @@ export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speech
  const observed=useRef<string|null>(null);
  const asked=useRef(false);
  const touch=useRef<{x:number;y:number;scrollTop:number}|null>(null);
+ const lastActivity=useRef(0);
  const cardRef=useRef<HTMLDivElement>(null);
  const [visible,setVisible]=useState(false);
  const [idle,setIdle]=useState(false);
  const [historyOpen,setHistoryOpen]=useState(false);
  const [imageInfoOpen,setImageInfoOpen]=useState(false);
  const [revealCount,setRevealCount]=useState(0);
+ const [activity,setActivity]=useState(0);
+ const markActivity=()=>{const now=Date.now();if(now-lastActivity.current>550){lastActivity.current=now;setActivity(n=>n+1)}};
  useEffect(()=>{if(busy){asked.current=true;setImageInfoOpen(false);setHistoryOpen(false)}},[busy]);
  useEffect(()=>{
   if(observed.current===null){observed.current=answerKey;return}
@@ -64,7 +67,7 @@ export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speech
   if(!visible||idle||historyOpen||busy||speakingAt?.sessionId===sessionId&&speakingAt?.index===latestIndex)return;
   const timer=window.setTimeout(()=>setIdle(true),20_000);
   return()=>window.clearTimeout(timer);
- },[visible,idle,historyOpen,busy,sessionId,latestIndex,answerKey,speakingAt]);
+ },[visible,idle,historyOpen,busy,sessionId,latestIndex,answerKey,speakingAt,activity]);
  useEffect(()=>{
   const open=()=>{if(lines.length)setHistoryOpen(true)};
   window.addEventListener("1muslim:hudhud-show-history",open);
@@ -77,6 +80,7 @@ export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speech
  },[]);
  const reveal=()=>{if(!latest||busy)return;setVisible(true);setIdle(false);setRevealCount(n=>n+1)};
  const onTouchStart=(event:TouchEvent<HTMLElement>)=>{
+  markActivity();
   if(event.touches.length!==1){touch.current=null;return}
   const t=event.touches[0];
   touch.current={x:t.clientX,y:t.clientY,scrollTop:cardRef.current?.scrollTop||0};
@@ -91,8 +95,8 @@ export default function HudHudFocusStage({lines,sessionId,busy,speakingAt,speech
   if(dy<0&&historyOpen&&(event.target as HTMLElement).closest(".hudHistoryTop"))setHistoryOpen(false);
  };
  const image=latest?.presentation?.kind==="image"?latest.images?.[0]:undefined;
- return <div className={"hudFocusSurface"+(historyOpen?" hudHistoryIsOpen":"")} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onClick={event=>{if((idle||!visible)&&!busy&&event.target===event.currentTarget)reveal()}} aria-label="HudHud current answer. Swipe down to view previous answers.">
-  {latest&&visible&&<div key={answerKey+":"+revealCount} ref={cardRef} className={"hudFocusCard"+(busy?" hudFocusLeaving":"")+(idle?" hudFocusIdle":"")+(revealCount%2?" hudFrameFromCenter":" hudFrameFromLeft")} onClick={()=>{if(idle)reveal()}} aria-live="polite">
+ return <div className={"hudFocusSurface"+(historyOpen?" hudHistoryIsOpen":"")} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}onClick={event=>{markActivity();if((idle||!visible)&&!busy&&event.target===event.currentTarget)reveal()}} aria-label="HudHud current answer. Swipe down to view previous answers.">
+  {latest&&visible&&<div key={answerKey+":"+revealCount} ref={cardRef} onScroll={markActivity} className={"hudFocusCard"+(busy?" hudFocusLeaving":"")+(idle?" hudFocusIdle":"")+(revealCount%2?" hudFrameFromCenter":" hudFrameFromLeft")} onClick={()=>{if(idle)reveal()}} aria-live="polite">
    <div className="hudFocusContent"><Answer line={latest} index={latestIndex} sessionId={sessionId} speakingAt={speakingAt} speechChar={speechChar} onImageOpen={()=>{setImageInfoOpen(true);setIdle(false)}}/></div>
   </div>}
   {latest&&idle&&!busy&&!historyOpen&&<button type="button" className="hudFocusRestore" aria-label="Show the last HudHud answer again" onClick={reveal}/>}
