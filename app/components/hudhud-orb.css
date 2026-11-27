@@ -31,9 +31,9 @@
 .hudV2OrbitNear,.hudV2OrbitFar{position:absolute;inset:14%;border:1px solid #94f3c84d;border-radius:50%;transform:rotateX(67deg) rotate(-23deg);box-shadow:0 0 11px #47de9a25, inset 0 0 8px #34bb8a18}
 .hudV2OrbitFar{inset:4%;border-color:#a1ffd127;transform:rotateY(71deg) rotate(24deg);animation:hudV2OrbitSpin 9s linear infinite reverse}
 .hudV2Satellite{position:absolute;left:50%;top:50%;width:clamp(4px,.8vw,7px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fafff9,#64e1b7 54%,#137552);box-shadow:0 0 9px #59e9ad8f;transform-origin:center center;animation:hudV2SatelliteFlight 6.7s linear infinite}
-.hudV2SatelliteA{--orbit:42%;animation-delay:-.6s}
-.hudV2SatelliteB{--orbit:33%;width:4px;animation-duration:8.4s;animation-delay:-3.5s}
-.hudV2SatelliteC{--orbit:25%;width:5px;animation-duration:5.5s;animation-delay:-4.2s}
+.hudV2SatelliteA{--orbit:42px;animation-delay:-.6s}
+.hudV2SatelliteB{--orbit:33px;width:4px;animation-duration:8.4s;animation-delay:-3.5s}
+.hudV2SatelliteC{--orbit:25px;width:5px;animation-duration:5.5s;animation-delay:-4.2s}
 .hudV2Orb.isSpeaking .hudV2OrbitSwarm,.hudV2Orb.isListening .hudV2OrbitSwarm{animation-duration:3.9s;filter:brightness(1.2)}
 .hudV2Orb.isSpeaking .hudV2Satellite{box-shadow:0 0 13px #78ffd5}
 .hudV2Orb[style*="--orb-level: 1"] .hudV2Satellite{filter:brightness(1.45);transform:scale(1.1)}
