@@ -49,6 +49,14 @@ export function useDeepWatchSolarTheme(){
  const [mode,setMode]=useState<DeepWatchThemeMode>("auto");
  const [appearance,setAppearance]=useState<Appearance>({night:true,source:"device",detail:DEVICE_FALLBACK});
  useEffect(()=>{
+  // This route can select its own theme (including sunrise/sunset Auto).
+  // The site-wide chrome follows the *resolved* day/night value.
+  if(window.location.pathname.startsWith("/deepwatch"))
+   window.dispatchEvent(new CustomEvent("1muslim:route-appearance",{
+    detail:{route:"/deepwatch",night:appearance.night}
+   }));
+ },[appearance.night]);
+ useEffect(()=>{
   let alive=true;
   let schedule:Daylight|null=null;
   let lastLookup="";
