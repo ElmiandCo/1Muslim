@@ -28,7 +28,7 @@ export function selectHudHudPresentation(message:string):HudHudPresentation{
  // A theme-specific question needs a retrieved verse relevant to that theme;
  // don't quietly replace it with a hard-coded unrelated passage.
  const themed=/\b(about|regarding|on|concerning|related to|for|explaining)\b/i.test(text);
- if(simpleVerse&&!themed)return {kind:"verse",verseKey:"1:1"};
+ if(simpleVerse&&!themed&&!detailedQuestion)return {kind:"verse",verseKey:"1:1"};
  // Qur'an questions are not marketplace searches. Suppress irrelevant cards.
  if(QURAN.test(text))return {kind:"text"};
  return SITE.test(text)?{kind:"results"}:{kind:"text"};
