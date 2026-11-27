@@ -30,6 +30,10 @@ export function normalizeSpokenHudHudQuestion(text:string):string{
  const quran=quranVerse.exec(text);
  if(quran){
   const parts=quran[1].trim().replace(/-/g," ").split(/\s+/);
+  // "verse ninety nine" is one number (99), not chapter 90 verse 9.
+  // Don't fabricate a chapter from ambiguous unmarked spoken numerals.
+  if(parts.length===2&&parts[0] in tens&&parts[1] in small&&small[parts[1]]<10)return text;
+  if(parts.length===3&&!/^\d+$/.test(parts[0]))return text;
   const candidates:Array<{chapter:number;verse:number;score:number}>=[];
   for(let split=1;split<parts.length;split++){
    const chapter=asNumber(parts.slice(0,split).join(" ")),verse=asNumber(parts.slice(split).join(" "));
