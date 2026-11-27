@@ -179,12 +179,11 @@ export default function GlobalNavigation(){
    router.refresh();
   }catch(e){window.alert(e instanceof Error?e.message:"Could not sign out.")}finally{setBusy(false)}return}
   if(!item.href)return;
-  const destination=item.id==="muslims"?"/profile?section=muslimeen":item.id==="profile"?"/profile":item.href;
-  // The directory and profile are two panels of the SAME mounted screen.
-  // Switching them must not remount the heavy profile or fetch it again.
-  if(pathname==="/profile"&&(item.id==="profile"||item.id==="muslims")){
-   if(item.id==="muslims")window.dispatchEvent(new CustomEvent("1muslim:discover-muslims",{detail:{}}));
-   else{window.history.pushState(null,"","/profile");window.dispatchEvent(new PopStateEvent("popstate"));window.scrollTo({top:0,behavior:"smooth"})}
+  const destination=item.id==="muslims"?"/profile?section=muslimeen":item.id==="profile"?"/search":item.href;
+  // The Profile shortcut now opens the actual member Search Home. The
+  // existing directory remains on /profile?section=muslimeen.
+  if(pathname==="/profile"&&item.id==="muslims"){
+   window.dispatchEvent(new CustomEvent("1muslim:discover-muslims",{detail:{}}));
    return;
   }
   if(pathname===destination.split("?")[0]&&item.id!=="muslims")return;
