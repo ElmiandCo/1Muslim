@@ -40,18 +40,18 @@ test("one-second in-place Search Home reveal is quiet, repeat-safe and motion-sa
   assert.doesNotMatch(page.slice(page.indexOf("const [introStage"),page.indexOf("// The same Search Home renders")),/setTimeout\(\(\)=>router\.(?:push|replace)/);
 });
 
-test("auth routes verified sign-ins to personalized Search Profile and preserves explicit deep links",()=>{
+test("auth routes verified sign-ins to Search Home and preserves explicit deep links",()=>{
   const auth=read("app/auth/page.tsx");
   assert.match(auth,/const safeNext =/);
-  assert.match(auth,/return "\/profile";/);
+  assert.match(auth,/return "\/search";/);
   assert.match(auth,/return match \? `\/profile\?member=/);
   assert.match(auth,/window\.location\.assign\(safeNext\(\)\)/);
   assert.match(auth,/const destination = isShahadaSignup \? "\/onboarding\?method="/);
   const callback=read("app/auth/callback/route.ts");
-  assert.match(callback,/searchParams\.get\("next"\) \?\? "\/profile"/);
-  assert.match(callback,/next = "\/profile";/);
+  assert.match(callback,/searchParams\.get\("next"\) \?\? "\/search"/);
+  assert.match(callback,/next = "\/search";/);
   assert.match(callback,/return NextResponse\.redirect\(/);
-  assert.match(callback,/\$\{origin\}\$\{next === "\/profile" \? "\/profile\?arrival=1" : next\}/);
+  assert.match(callback,/\$\{origin\}\$\{next === "\/search" \? "\/search\?arrival=1" : next\}/);
 });
 
 test("visitors can search without signing in, while private account controls are gated",()=>{
@@ -62,8 +62,8 @@ test("visitors can search without signing in, while private account controls are
   assert.match(page,/const \[account,setAccount\]=useState<"checking"\|"guest"\|"member">\("checking"\)/);
   assert.match(page,/account==="guest"\?<div className="dsGuestAccount"/);
   assert.match(page,/account==="member"\?<>/);
-  assert.match(page,/href="\/auth\?next=%2Fprofile&login=1"/);
-  assert.match(page,/href="\/auth\?next=%2Fprofile&mode=signup"/);
+  assert.match(page,/href="\/auth\?next=%2Fsearch&login=1"/);
+  assert.match(page,/href="\/auth\?next=%2Fsearch&mode=signup"/);
   assert.match(page,/\/api\/discover\/search/);
   assert.match(page,/<WebSearchPanel query=\{submitted\}/);
   assert.match(webSearch,/\/api\/web-search\?q=/);
@@ -93,7 +93,40 @@ test("personalized Search Profile keeps real search, own-post rail and all origi
  assert.match(css,/profileCinematicGrid\{display:flex!important/);
  assert.match(css,/border-radius:50%!important/);
  assert.match(rail,/\.dsPage\.dsHomeMode \.dsContent\{width:100%;max-width:none\}/);
- assert.match(search,/setAuthReturn\]=useState\("\/profile"\)/);
+ assert.match(search,/setAuthReturn\]=useState\("\/search"\)/);
+});
+test("signed-in Search Home is the actual personalized experience, not the old Profile page",()=>{
+ const page=read("app/search/page.tsx");
+ const member=read("app/search/SearchMemberHome.tsx");
+ const styles=read("app/search/search-member-home.css");
+ const stage=read("app/profile/ProfileImmersiveStage.tsx");
+ const focus=read("app/hudhud/HudHudFocusStage.tsx");
+ const auth=read("app/components/SearchAuthFlow.tsx");
+ assert.match(page,/if\(account==="member"&&!showAuth&&!submitted\.trim\(\)\)return <SearchMemberHome/);
+ assert.match(auth,/1muslim:member-home-arrival/);
+ assert.match(member,/ProfileImmersiveStage request=\{request\}/);
+ assert.match(member,/showEmpty=\{false\}/);
+ assert.match(member,/getUserMedia\(\{audio:true\}\)/);
+ assert.match(member,/SpeechRecognition/);
+ assert.match(member,/normalizeSpokenHudHudQuestion/);
+ assert.match(member,/speechSynthesis\.speak/);
+ assert.match(member,/Assalamu Alaikum Wa Rahmatullahi Wa Barakatuh/);
+ assert.match(member,/insert\("Search 1Muslim"/);
+ assert.match(member,/insert\(" witg"/);
+ assert.match(member,/insert\("1Muslim.Live"/);
+ assert.match(member,/className="smhName"/);
+ assert.match(member,/aria-label="Edit your display name"/);
+ assert.match(member,/display_name:next/);
+ assert.match(member,/href="\/create"/);
+ assert.doesNotMatch(member,/ProfileCinematicPosts|Your posts/);
+ assert.match(member,/onReply=\{onReply\}/);
+ assert.match(member,/setPaused\(true\)/);
+ assert.match(styles,/@keyframes smhAvatarTravel/);
+ assert.match(styles,/smhResponseSpace/);
+ assert.match(styles,/border:0!important/);
+ assert.match(stage,/HudHudFocusStage/);
+ assert.match(stage,/onReplyRef\.current\?\./);
+ assert.match(focus,/hudNarratedReply/);
 });
 test("Shahada admission returns directly to prior work without forcing profile gender",()=>{
  const onboard=read("app/components/HudHudShahadaV2.tsx");
@@ -162,7 +195,7 @@ test("Home has floating accessible Settings, Profile and Sign out without the gl
   const page=read("app/search/page.tsx");
   const nav=read("app/components/GlobalNavigation.tsx");
   assert.match(page,/href="\/settings" aria-label="Settings"/);
-  assert.match(page,/href="\/profile" aria-label="Profile"/);
+  assert.match(page,/href="\/search" aria-label="Your personalized Search Home"/);
   assert.match(page,/aria-label="Sign out"/);
   assert.match(page,/const signOut=async\(\)=>/);
   assert.match(nav,/pathname\?\.startsWith\("\/search"\)/);
